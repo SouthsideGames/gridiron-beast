@@ -1,4 +1,4 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.6
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.7
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -213,3 +213,11 @@ Roster UI (locked): interactive position-based 7-on-7 depth chart with offensive
 **HTML v2.6 status:** Added sixth commissioner introduction step to choose a Challenger rival; saves rival information, labels rival schedule games, stores rivalry in season archives, and shows current tier rival in League Central. Existing saves receive a default same-division rival without overwriting chosen rivals. A distinct higher-tier rival record is initialized upon entering another tier, but **the tier transition and cinematic introduction are not yet playable**. GM names and higher-tier franchise names are provisional. Rival dialogue events, actual head-to-head statistics and rival AI development are planned, not implemented.
 
 **Unity parity:** Reproduce the rival introduction and selection, same-division eligibility, schedule highlighting, per-tier identity, archive persistence and future rivalry-specific match events. Do not claim head-to-head tracking until games update it.
+
+## 22. Automatic rival GM assignment — v2.7 revision
+
+**LOCKED revision:** The player does NOT choose a rival. After the player selects a franchise, randomly assign exactly one of the other three franchises in that same division as their Challenger League rival. The commissioner introduces the randomly assigned rival GM and team in a reveal scene; no reroll control is provided. The rival is generated once and saved so returning to the introduction or reloading does not change it. Selecting a different starting team before confirmation invalidates the previous assignment and generates a new eligible rival.
+
+When entering Vanguard or Sovereign, independently assign a random rival from the owner's division in that tier; never reuse the Challenger rival as the automatic higher-tier rival. Retain each tier's prior rival identity and history. Mark two divisional games per season as rivalry games, once home and once away. Existing saves keep their already-assigned rival; do not overwrite.
+
+**Prototype:** v2.7 replaces radio choices with an automatic rival reveal, uses random assignment for missing tier rival records, and preserves the previous schedule and archive features. Higher-tier entry cutscenes and rival AI development are still pending.
