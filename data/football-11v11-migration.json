@@ -1,10 +1,10 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.5",
+  "effectiveGddVersion": "3.6",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
-  "implementationPhase": "partial_11v11_html_conversion",
+  "implementationPhase": "partial_11v11_html_conversion_v3_6",
   "footballBuildStatus": "partial_prototype_not_complete",
   "offense": {
     "positions": [
@@ -407,5 +407,26 @@
     "medical report and correct per-monster XP",
     "old save compatibility end-to-end",
     "browser interaction test"
-  ]
+  ],
+  "practiceGeometry": {
+    "status": "implemented_schematic",
+    "lineOfScrimmageSvgX": 185,
+    "svgUnitsPerYard": 5,
+    "finalCarrierPositionMatchesReportedYards": true,
+    "collisionDeterminesOutcome": false,
+    "remaining": "replace random outcome with simulated blocking, pursuit, tackles and catch geometry"
+  },
+  "coachingRoles": {
+    "headCoach": "leadership, morale, game management, fatigue, fourth down",
+    "offensiveCoordinator": "offensive playbook",
+    "defensiveCoordinator": "defensive playbook",
+    "headScout": "regional recruitment",
+    "monsterTrainer": "temporary Wednesday bonuses"
+  },
+  "uiUpdates": {
+    "enlargeableCoordinatorPlays": true,
+    "offenseOnlyPreview": true,
+    "starterDetails": true,
+    "injurySusceptibilityRating": true
+  }
 }
