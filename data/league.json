@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "conferences": {
     "Aurora": {
       "divisions": {
@@ -116,7 +116,9 @@
         "morale_penalty",
         "possible_roster_departures"
       ],
-      "permanentMonsterStatReduction": false
+      "permanentMonsterStatReduction": false,
+      "automaticMovement": false,
+      "movementRequiresSuccessfulChallenge": true
     },
     "promotion": {
       "method": "promotion_challenge",
@@ -124,14 +126,36 @@
         "challenger_to_vanguard": 4,
         "vanguard_to_sovereign": 6
       },
-      "badgesPermanent": true
+      "badgesPermanent": true,
+      "matchFormat": "single_game",
+      "automatic": false,
+      "qualificationBadgesConsumed": false,
+      "relegationResetsActiveQualification": true,
+      "priorChampionshipsRemainInHistory": true,
+      "requalificationChampionships": {
+        "challenger_to_vanguard": 4,
+        "vanguard_to_sovereign": 6
+      },
+      "qualificationBasis": "titles earned since most recent entry or relegation into this tier"
     },
     "unresolved": [
-      "Promotion challenge match format and number of attempts",
-      "How promotion and relegation slots are paired to preserve 16 teams per tier",
-      "Whether OVR bands are initial seeding guidelines or hard ongoing restrictions",
-      "How AI franchises earn promotion-challenge eligibility",
-      "Tie-breakers for bottom-four overall finishes"
-    ]
+      "Priority and selection when multiple teams qualify for the single exchange slot",
+      "Tie-breakers for bottom-four overall ranking",
+      "What happens if no qualifying challenger or relegation candidate exists",
+      "Challenge venue, overtime and ties",
+      "How AI championships and eligibility are simulated",
+      "Exact financial and contract consequence amounts"
+    ],
+    "exchange": {
+      "maxPerAdjacentTierPairPerOffseason": 1,
+      "matchFormat": "single_winner_take_all",
+      "pairing": "one eligible lower-tier challenger versus one higher-tier relegation candidate",
+      "success": "swap tier membership, preserving 16 clubs per tier",
+      "failure": "no swap",
+      "eligibilityPriority": "unresolved; multiple qualifying clubs require ranking rules",
+      "relegationCandidate": "eligible after two consecutive bottom-four overall regular-season finishes",
+      "noForcedSwap": true
+    },
+    "overallBands": "initial placement bands only; never ongoing hard limits"
   }
 }
