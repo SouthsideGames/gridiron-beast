@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "conferences": {
+    "Aurora": {
+      "divisions": {
+        "North": [
+          "Frostpeak Howlers",
+          "Glacier Guardians",
+          "Northstar Wolves",
+          "Ironpeak Rams"
+        ],
+        "West": [
+          "Stormport Bolts",
+          "Canyon Crushers",
+          "Sundown Drakes",
+          "Thunder Mesa"
+        ]
+      }
+    },
+    "Titan": {
+      "divisions": {
+        "East": [
+          "Stonehaven Titans",
+          "Eastport Phantoms",
+          "Harbor Sentinels",
+          "Ashford Hawks"
+        ],
+        "South": [
+          "Ember City Beasts",
+          "Bayou Stalkers",
+          "Sunfire Lions",
+          "Palmetto Vipers"
+        ]
+      }
+    }
+  },
+  "season": {
+    "regularSeasonWeeks": 10,
+    "games": 9,
+    "byeWeeks": 1,
+    "divisionalGames": 6,
+    "intraConferenceGames": 2,
+    "interConferenceGames": 1,
+    "postseasonWeeks": [
+      11,
+      12,
+      13
+    ],
+    "postseasonQualifiersPerConference": 4,
+    "championship": "Beast Bowl",
+    "homeAwayAlternation": "5/4 then 4/5"
+  }
+}
