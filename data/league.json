@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "conferences": {
     "Aurora": {
       "divisions": {
@@ -177,5 +177,21 @@
     "historicalRecordsReadOnly": true,
     "missingHistoricalStats": "display unavailable; never fabricate",
     "futureFixtureGeneratorInternalOnly": true
+  },
+  "rivalry": {
+    "startingTier": "challenger",
+    "selection": "After choosing initial franchise, owner chooses one of three other teams in same division as rival",
+    "introduction": "Commissioner introduces another new GM in the division and invites a rivalry",
+    "rivalPerTier": true,
+    "oneDistinctRivalEachTier": true,
+    "teamMustBeInOwnersDivision": true,
+    "markScheduleGames": true,
+    "divisionRivalGamesPerSeason": 2,
+    "archiveRivalBySeason": true,
+    "historyPersistsAcrossPromotionAndRelegation": true,
+    "headToHeadTracking": "planned",
+    "dialogueEvents": "planned",
+    "tierTransitionIntroduction": "planned",
+    "higherTierRivals": "assigned upon entering a new tier; provisional AI GM names until content finalized"
   }
 }
