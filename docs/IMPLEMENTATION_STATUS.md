@@ -1,3 +1,10 @@
+## v3.7 simulation tuning and validation addendum
+- The new engine accepts position-specific starting-monster OVR ratings and uses them to influence movement speed; same play, defense and seed reproduce identical frames.
+- The pass target pool now favors eligible WR/TE rather than repeatedly selecting RB checkdowns. Seeded QB throw accuracy produces some incomplete passes.
+- Retested 300 plays (100 each Power Run, Quick Pass, Deep Pass): mean gains 2.68, 13.74 and 14.97 yards; 15 incompletions total; 300/300 final ball spots consistent with recorded yards. All completed sampled plays still ended in tackles, so outcome diversity and balance need additional work.
+- Practice and Sunday home snaps use engine.js; away drives remain probabilistic. Player OVR is used for movement only, not yet for catches, blocking quality, tackling or decision-making.
+- Full mobile Safari UI test and end-to-end franchise save regression remain outstanding.
+
 ## v3.7 simulation-first football engine (October 11, 2026)
 - Added standalone engine.js and loaded it before the HTML prototype script.
 - Practice now simulates 22 moving actors, pass flight, pass catch/incompletion, defender pursuit, offensive-line interference, contact tackles and sacks. The reported yardage is calculated from the ball's final x-coordinate relative to the line of scrimmage, not randomly awarded in advance.
