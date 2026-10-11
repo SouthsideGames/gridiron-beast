@@ -1,6 +1,6 @@
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v2.3 | GDD: v2.3
+Updated: 2026-10-11 | HTML prototype: v2.4 | GDD: v2.4
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -53,3 +53,15 @@ Every implementation task must update the code, any applicable JSON definitions,
 - Records in other tiers remain 0–0 placeholders, not simulated standings. AI promotion, relegation and tier exchanges are not active.
 - Mandatory pending decisions: promotion/relegation exchange count, promotion challenge format, rating-band enforcement, AI championship accumulation, and relegation economics.
 - JavaScript syntax validated; full Safari interactions not yet tested.
+
+## v2.4 promotion/relegation rule update
+
+- LOCKED: one reciprocal exchange slot per adjacent tier pair per offseason.
+- LOCKED: single winner-take-all challenge; no automatic promotion.
+- LOCKED: team OVR bands are starting classifications only.
+- LOCKED: relegated teams retain historical badges but must earn new qualifying championships.
+- HTML: League Central text, badge qualification display, and pure eligibility/exchange evaluation logic updated. JavaScript syntax checked.
+- JSON: data/league.json version 4 contains the new rules.
+- Not implemented: actual championship awarding, AI standings, challenge match gameplay, tie-breaking, relegation consequences, and tier membership swaps.
+- Unresolved: selection priority when multiple clubs qualify, challenge venue/ties/retries, and AI qualification.
+- Browser playthrough and Unity port remain unverified.
