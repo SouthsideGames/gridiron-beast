@@ -1,10 +1,10 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.6",
+  "effectiveGddVersion": "3.7",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
-  "implementationPhase": "partial_11v11_html_conversion_v3_6",
+  "implementationPhase": "simulation_engine_vertical_slice",
   "footballBuildStatus": "partial_prototype_not_complete",
   "offense": {
     "positions": [
@@ -428,5 +428,31 @@
     "offenseOnlyPreview": true,
     "starterDetails": true,
     "injurySusceptibilityRating": true
+  },
+  "simulationEngine": {
+    "path": "engine.js",
+    "version": "1.0",
+    "status": "partial_prototype",
+    "practiceUsesSimulation": true,
+    "homeMatchUsesSimulation": true,
+    "awayMatchUsesSimulation": false,
+    "reportedYardsFromFinalBallSpot": true,
+    "playerRatingsIntegrated": false,
+    "playAssignmentsIntegrated": false,
+    "headlessTests": {
+      "plays": 300,
+      "spotConsistency": true,
+      "runAverageYards": 2,
+      "allTackles": true
+    },
+    "knownGaps": [
+      "defensive AI and blocking balance",
+      "play-specific assignments",
+      "player stats and abilities",
+      "opponent simulation",
+      "full field camera",
+      "interceptions and fumbles",
+      "Safari interaction testing"
+    ]
   }
 }
