@@ -1,3 +1,35 @@
+# Current implementation status — HTML v3.5, GDD v3.5
+
+The owner has authorized gameplay conversion. HTML now draws 11 players per side and includes a 40-monster roster model, but the football simulation is **not fully migrated**. Historical status below reflects prior milestones.
+
+| System | Status | Notes |
+|---|---|---|
+| Fixed 3-choice offensive and defensive starters | Implemented, browser test pending | One chosen each; OVR 67–70 |
+| 40-monster roster | Implemented, browser test pending | 22 starters, 18 reserves including K/P |
+| 11v11 depth chart and eligible substitutions | Implemented, browser test pending | Secondary group eligibility; penalty balance incomplete |
+| Fifth mandatory Monster Trainer | Implemented, browser test pending | Three candidates |
+| Wednesday temporary trainer bonus | Basic implementation | No permanent stat growth |
+| XP, fatigue and injuries | Basic implementation | XP at completed match, simple injury probabilities |
+| 22-player practice and match diagrams | Implemented schematically | SVG shapes, not finished sprites |
+| 20 plays with 11 assignments in JSON | Provisional | NOT connected to full simulation |
+| Field goals and punts | Basic implementation | Probability model, no special-team animation |
+| Full 11v11 tactical match AI | Not implemented | Legacy stochastic outcome model persists |
+| Legacy save migration and regression | Partial / untested | No data deletion intended; test existing saves |
+| League tiers, schedules, rivals and owner flow | Preserved in code | Full regression not yet verified |
+
+## Immediate acceptance tests
+1. New owner → rival → offensive starter → defensive starter → all five hires → HQ.
+2. Confirm exactly 40 monsters and 22 starting positions; starter is highest-rated on each side.
+3. Switch offensive/defensive depth chart and assign eligible healthy backup.
+4. Run practice and verify 22 shapes and routes.
+5. Wednesday training bonus affects game and expires after game; no permanent stats changed by trainer.
+6. Test game XP, injuries and simplified punts/field goals.
+7. Reload and verify prior league history, staff, rivals and saves.
+
+**Testing completed:** JavaScript syntax checked after each change. Full Safari playthrough and deterministic match integration tests not completed.
+
+---
+
 # Current migration status: 11-on-11 LOCKED, NOT YET IMPLEMENTED
 
 The playable HTML prototype remains v3.0 7-on-7. Do not describe it as 11-on-11. New football development is gated by the migration plan. Non-football franchise systems are preserved. See [audit](FOOTBALL_11V11_MIGRATION_AUDIT.md).
