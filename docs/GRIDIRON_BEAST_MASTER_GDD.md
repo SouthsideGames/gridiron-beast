@@ -2,7 +2,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.7
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.8
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -371,3 +371,17 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 
 ### v3.7 engine tuning addendum
 Seeded movement variation and starting-monster overall ratings now affect player movement. Pass targets favor WR/TE routes; throw dispersion produces some incompletions. A 300-play headless test produced 15 incompletions and consistent field spots for every result, with average gains of 2.68 yards (Power Run), 13.74 (Quick Pass) and 14.97 (Deep Pass). These numbers are prototype diagnostics, **not balanced final football statistics**. Defenders still force tackles too reliably; interceptions, fumbles, scheme-specific individual assignments and the opponent's use of this engine remain pending.
+
+## 33. Quarterback reads, practice controls and coordinator play packages — HTML v3.8
+
+**Quarterback awareness:** QB receiver selection now scores eligible targets by separation from defenders and downfield progress. Higher awareness increases the probability of choosing the highest-scored open receiver; lower awareness creates more imperfect reads. This is a prototype heuristic, not full route-progression AI. QB effective OVR currently proxies awareness; a dedicated awareness attribute and nature adjustments are future work.
+
+**Practice focus:** Player may set QB target to automatic, WR1, WR2, WR3, TE or RB. Target override only applies to passing plays; rushing plays disable the control. The QB attempts the specified target even when defended, enabling comparison of possible play outcomes. Practice results still depend on actual simulated catch, ball flight and tackle checks.
+
+**Practice display:** Show/hide schematic play lines, mirror the play left-to-right across the field's horizontal centerline (flip), and overlay the actual roster's monster type/selected-starter icons on the position markers. These icons are interim stand-ins for final monster sprites; the current prototype does not yet render individual animated monster artwork. The player positions are sourced from the selected 40-monster franchise roster.
+
+**Game-day flip:** Sunday match screen now exposes a Flip Play checkbox. The same simulation renderer mirrors the formation without changing ball spot, scoring or play outcome. Flipped tactical assignments will need full play-schema support in a later milestone.
+
+**Coordinator packages:** Each of the three offensive and three defensive coordinator candidates now brings a ten-play package reflecting Air Raid, Ground Attack, Balanced, Pressure, Zone or Man philosophies. Practice catalogs use the currently hired coordinators' packages, with defaults if staff are not yet hired. The Sunday offensive selector uses the hired coordinator's package unless a five-play Friday game plan overrides it. Package names are stored in `data/football-plays-11v11.json`. Some named plays still share simplified run/short/deep simulation behaviors and lack unique validated 11-player assignments.
+
+**Acceptance and remaining gaps:** Test QB awareness at multiple ratings with consistent seeds, verify forced target selection for all five eligible roles, ensure run plays disable pass targeting, verify flip consistency and correct overlay visibility, confirm hired coordinator packages appear in practice and matches, and implement unique play-specific routes and authentic monster sprites. No claim of fully distinct simulation behavior for all twenty coordinator plays is made.
