@@ -1,4 +1,4 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.3
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.4
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -175,3 +175,19 @@ Roster UI (locked): interactive position-based 7-on-7 depth chart with offensive
 7. Whether a relegated franchise retains badges and must earn new championships to challenge promotion again (historical badges remain permanent regardless).
 
 **Implementation boundary:** v2.3 HTML includes League Central browsing, tier rules and badge-progress fields. It does NOT yet include simulated 48-team standings, promotion challenges, relegation transactions, or dynamic league membership. These are explicitly in development, not approved for final feature review. Canonical tier rules are in data/league.json.
+
+## 19. Promotion and relegation final rules — v2.4
+
+**LOCKED one-slot exchange:** Each adjacent tier pair (Challenger/Vanguard and Vanguard/Sovereign) can exchange **at most one franchise per offseason**. One eligible lower-tier challenger faces one eligible higher-tier relegation candidate in a **single winner-take-all match**. A challenger victory atomically swaps the clubs' tiers; a loss leaves both unchanged. A swap cannot occur without both eligible clubs. Each adjacent boundary may independently conduct one exchange per offseason.
+
+**LOCKED promotion:** Four qualifying Challenger championships unlock a challenge to Vanguard; six qualifying Vanguard championships unlock a challenge to Sovereign. Championships remain permanently recorded in historical badge totals and are not consumed by a challenge. Store historical championships separately from active qualification. Following relegation, the franchise keeps its history but must earn four or six **new championships** in the new tier to qualify again. A failed challenge does not automatically erase qualification; retry timing is pending.
+
+**LOCKED OVR bands:** The <=70 Challenger, 71–82 Vanguard, and >=83 Sovereign bands are **initial placement classifications only**, never permanent stat caps. Relegation can affect finances, contracts, morale and retention, but cannot permanently lower monster attributes.
+
+**LOCKED relegation eligibility:** Two consecutive bottom-four finishes in the **overall 16-team regular-season standings** create relegation eligibility for Vanguard or Sovereign. Finishing outside the bottom four resets the streak. Challenger has no relegation. A relegation candidate moves only after a successful paired challenger under the one-slot rule.
+
+**Required franchise save fields:** tier, championshipBadges (historical), activeQualification (titles earned since last tier entry or relegation), bottomFourStreak, and tierTransactionHistory. An eventual exchange must update both team memberships and standings atomically.
+
+**Still unresolved:** priority if multiple teams qualify for one slot; overall standings tie-breakers; challenge venue/overtime and retry limits; AI championship accumulation and promotion qualification; numerical financial and contract consequences; handling missing eligible opponents.
+
+**Prototype status:** v2.4 displays these rules in League Central and implements eligibility/exchange evaluation functions. It does not yet simulate championship tournaments, promotion matches, 48-team standings, or actual tier swaps. These features remain In Development, not Ready for Testing.
