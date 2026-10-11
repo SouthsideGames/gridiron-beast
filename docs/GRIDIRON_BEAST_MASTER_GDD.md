@@ -1,4 +1,4 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.4
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.5
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -191,3 +191,13 @@ Roster UI (locked): interactive position-based 7-on-7 depth chart with offensive
 **Still unresolved:** priority if multiple teams qualify for one slot; overall standings tie-breakers; challenge venue/overtime and retry limits; AI championship accumulation and promotion qualification; numerical financial and contract consequences; handling missing eligible opponents.
 
 **Prototype status:** v2.4 displays these rules in League Central and implements eligibility/exchange evaluation functions. It does not yet simulate championship tournaments, promotion matches, 48-team standings, or actual tier swaps. These features remain In Development, not Ready for Testing.
+
+## 20. Season visibility and franchise history — v2.5
+
+**LOCKED:** The League Schedule screen must display only the current season and previously completed seasons. Future season fixtures must never be revealed in the player-facing interface. The deterministic fixture generator may internally compute future seasons for league consistency and testing, but this is not exposed until the owner starts that season.
+
+**LOCKED history:** When a season ends, archive its season number, team identity, tier, final W/L record, weekly opponents, home/away designation, bye, game results, postseason result (when implemented), earned championships, and eventually monster/player statistics, franchise milestones, and transactions. Historical records are read-only, persist across subsequent seasons, and are selectable from the League Schedule screen.
+
+**Prototype v2.5:** Archive creation is triggered on explicit Next Season. Current season and archived seasons are selectable; future seasons are hidden. Completed archives store available team records, fixtures and match results. The prototype currently does **not** calculate player season statistics or playoff results; those fields are labeled unavailable rather than fabricated. Archives from seasons completed before this feature was implemented cannot be reconstructed reliably from old saves. Keep the archived season snapshot independent of the newly generated current season schedule.
+
+**Unity parity:** Use versioned save schema with a seasonHistory array. Store immutable snapshots for completed seasons and migrate old saves without inventing missing match statistics. Test current-season-only visibility, archived results after reload, multiple consecutive season transitions and cross-tier historical continuity.
