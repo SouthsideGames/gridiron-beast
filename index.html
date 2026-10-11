@@ -88,27 +88,19 @@ const roleLabel={head_coach:'Head Coach',offensive_coordinator:'Offensive Coordi
 function hired(){return state.staff||{}}
 function nextStaffRole(){return staffRoles.find(r=>!hired()[r])}
 function staffName(r){return staffCandidates.find(c=>c.id===hired()[r])}
-function playDiagram(name,defensive){
-const n=name.toLowerCase(),run=/run|zone$|ground|power/i.test(name)&&!defensive,blitz=defensive&&/blitz|fire|pressure/i.test(name),zone=defensive&&/zone|cover|trap/i.test(name);
-const grid='<rect width="210" height="110" fill="#245e44"/>'+Array.from({length:7},(_,i)=>'<line x1="'+(i*35)+'" y1="0" x2="'+(i*35)+'" y2="110" stroke="#d9e6dc" opacity=".22"/>').join('')+'<line x1="0" y1="82" x2="210" y2="82" stroke="#f4d278" stroke-width="2"/>';
-const offense=[[40,81],[65,81],[88,81],[110,81],[135,81],[165,81],[105,100]].map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="5" fill="#78c3ff" stroke="#fff" stroke-width="1"/>').join('');
-const defense=[[35,55],[62,55],[88,55],[112,55],[140,55],[166,55],[190,55]].map(([x,y])=>'<rect x="'+(x-4)+'" y="'+(y-4)+'" width="8" height="8" fill="#f28d81" stroke="#fff" stroke-width="1"/>').join('');
-let routes='';
-if(defensive){
- if(zone)routes='<rect x="12" y="8" width="90" height="38" rx="9" fill="#ef9a71" opacity=".25" stroke="#ffc8aa"/><rect x="108" y="8" width="90" height="38" rx="9" fill="#ef9a71" opacity=".25" stroke="#ffc8aa"/>';
- else if(blitz)routes='<path d="M35 54 L80 91 M88 54 L105 93 M140 54 L118 93" stroke="#ffcc72" stroke-width="3" fill="none" stroke-linecap="round"/>';
- else routes='<path d="M35 55 L40 77 M88 55 L88 77 M140 55 L135 77 M190 55 L165 77" stroke="#ffbd88" stroke-width="2" stroke-dasharray="4 3"/>';
-}else if(run){
- routes='<path d="M105 99 L118 78 L135 60 L155 39" stroke="#ffdc78" stroke-width="3" fill="none"/><path d="M88 80 L74 62 M110 80 L120 61 M135 80 L151 62" stroke="#9edcfb" stroke-width="2"/>';
-}else if(/deep|vertical|post|corner/i.test(n)){
- routes='<path d="M40 80 L40 40 L85 9 M165 80 L165 10 M105 99 L105 78" stroke="#ffdc78" stroke-width="3" fill="none"/>';
-}else if(/screen/i.test(n)){
- routes='<path d="M40 80 L60 67 L90 62 M165 80 L145 72 M105 99 L75 88" stroke="#ffdc78" stroke-width="3" fill="none"/>';
-}else{
- routes='<path d="M40 80 L72 47 M165 80 L132 48 M105 99 L105 79" stroke="#ffdc78" stroke-width="3" fill="none"/>';
-}
-return '<div style="background:#142b2b;border:1px solid #446b5b;border-radius:7px;overflow:hidden"><svg viewBox="0 0 210 110" width="100%" role="img" aria-label="'+escapeHtml(name)+' play diagram">'+grid+(defensive?offense+defense:offense+defense)+routes+'</svg><div style="font-size:12px;padding:5px 7px;color:#e3f3e8">'+escapeHtml(name)+'</div></div>';
-}
+function playDiagram(name,defensive){const n=name.toLowerCase(),run=!defensive&&/run|zone$|ground|power/i.test(name),scheme=defenseScheme(name);
+const grid='<rect width="210" height="110" fill="#17352e"/>'+Array.from({length:8},(_,i)=>'<line x1="'+(i*30)+'" y1="0" x2="'+(i*30)+'" y2="110" stroke="#e4f5e8" opacity=".17"/>').join('')+'<line x1="0" y1="79" x2="210" y2="79" stroke="#e5c968" stroke-width="1.5"/>';
+const offensePoints=[[30,80],[55,80],[80,80],[110,80],[140,80],[172,80],[105,100]],defensePoints=scheme==='man'?[[32,53],[65,53],[94,48],[120,48],[150,53],[178,53],[105,25]]:scheme==='blitz'?[[62,61],[92,61],[119,61],[148,61],[40,30],[175,30],[105,18]]:[[40,60],[75,60],[105,58],[140,60],[175,60],[70,23],[150,23]];
+let overlays='';
+if(defensive){if(scheme==='zone'){for(const [x,y,rx,ry] of [[40,25,27,16],[105,25,31,17],[170,25,27,16],[70,54,24,16],[140,54,24,16]])overlays+='<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" fill="#278ae2" fill-opacity=".34" stroke="#70caff" stroke-width="1.4"/>'}
+else if(scheme==='man'){defensePoints.forEach(([x,y],i)=>{const [tx,ty]=offensePoints[i];overlays+='<path d="M'+x+' '+y+' L'+tx+' '+ty+'" stroke="#ffdf77" stroke-width="1.7" stroke-dasharray="4 3"/>'})}
+else{[0,1,2,3].forEach(i=>{const [x,y]=defensePoints[i];overlays+='<path d="M'+x+' '+y+' L105 94" stroke="#ff9e60" stroke-width="2" marker-end="url(#diagramArrow)"/>'})}}
+else if(run){overlays='<path d="M105 100 L125 75 L165 45" stroke="#ffda71" stroke-width="3" fill="none" marker-end="url(#diagramArrow)"/>'}
+else if(/deep|vertical|post|corner/i.test(n)){overlays='<path d="M30 80 L30 40 L75 10 M172 80 L172 10 M105 100 L105 78" stroke="#ffda71" stroke-width="2.6" fill="none"/>'}
+else if(/screen/i.test(n)){overlays='<path d="M30 80 L58 65 L95 60 M172 80 L148 70 M105 100 L75 85" stroke="#ffda71" stroke-width="2.6" fill="none"/>'}
+else{overlays='<path d="M30 80 L70 45 M172 80 L133 45 M105 100 L105 79" stroke="#ffda71" stroke-width="2.6" fill="none"/>'}
+const offense=offensePoints.map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="5" fill="#77c5ff" stroke="#fff" stroke-width="1"/>').join(''),defense=defensePoints.map(([x,y])=>'<rect x="'+(x-4)+'" y="'+(y-4)+'" width="8" height="8" rx="1" fill="#f28d81" stroke="#fff" stroke-width="1"/>').join('');
+return '<div style="background:#142b2b;border:1px solid #446b5b;border-radius:7px;overflow:hidden"><svg viewBox="0 0 210 110" width="100%" role="img" aria-label="'+escapeHtml(name)+' play diagram"><defs><marker id="diagramArrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5 Z" fill="#ff9e60"/></marker></defs>'+grid+overlays+offense+defense+'</svg><div style="font-size:12px;padding:5px 7px;color:#e3f3e8">'+escapeHtml(name)+(defensive?' · '+scheme.toUpperCase():'')+'</div></div>'}
 function staffDiagramGrid(c){return staffPlaybooks[c.id]?'<div class="grid" style="gap:6px;margin:12px 0">'+staffPlaybooks[c.id].map(n=>playDiagram(n,c.role==='defensive_coordinator')).join('')+'</div>':'<p><strong>Scouting Specialties:</strong></p>'+Object.entries(c.biomes||{}).map(([k,v])=>'<div style="padding:3px 0">'+scoutRegions[k]+': <strong>'+v+'/100</strong></div>').join('')}
 function renderHiring(){const role=nextStaffRole();$('staffprogress').textContent=role?'Hiring '+(staffRoles.indexOf(role)+1)+' of 4: '+roleLabel[role]:'All staff hired';$('staffcandidates').innerHTML=role?staffCandidates.filter(c=>c.role===role).map(c=>'<div class="panel"><div style="font-size:36px">'+c.emoji+'</div><strong>'+escapeHtml(c.name)+'</strong><p class="muted">'+escapeHtml(c.style)+' / OVR '+c.overall+'</p><p>'+escapeHtml(c.strength)+'</p><h4>Playbook Preview</h4>'+staffDiagramGrid(c)+'<p class="muted">Annual salary: '+c.salary.toLocaleString()+' credits</p><button class="primary" data-action="hirestaff" data-id="'+c.id+'">Hire '+escapeHtml(c.name)+'</button></div>').join(''):'<p>Hiring complete.</p>'}
 function renderStaffRoom(){$('staffsummary').innerHTML=staffRoles.map(r=>{const c=staffName(r);return '<div class="panel"><strong>'+roleLabel[r]+'</strong><p>'+(c?c.emoji+' '+c.name+' / '+c.style+' / OVR '+c.overall:'Vacant')+'</p>'+(c?'<small>'+c.strength+'</small>':'')+(c?staffDiagramGrid(c):'')+'</div>'}).join('')}
