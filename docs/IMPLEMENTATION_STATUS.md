@@ -1,4 +1,13 @@
-# Current implementation status — HTML v3.5, GDD v3.5
+## v3.6 targeted fixes — committed, mobile testing pending
+- Head Coach hiring and staff room now show leadership responsibilities rather than offensive plays; OC/DC retain distinct tactical playbooks.
+- Coordinator play diagrams are tappable and enlarge in a modal; offensive previews hide defenders, defensive previews retain them.
+- Starter selection has a Details button displaying nature, illustrative stats, ability explanation and injury susceptibility.
+- Injury susceptibility is persisted on newly generated monsters and included in preliminary injury-risk calculations.
+- Practice ball carrier/receiver final x-position is tied to the same yard value shown in the result and a visible gain marker; zero-gain plays are labeled accordingly.
+- Important limitation: yardage remains probability-selected BEFORE animation; collisions do not determine gain. Sunday match remains a simplified probabilistic engine and is NOT corrected by this practice-only change.
+- JavaScript syntax checked. Safari end-to-end interactions and actual match outcomes not verified.
+
+# Current implementation status — HTML v3.6, GDD v3.6
 
 The owner has authorized gameplay conversion. HTML now draws 11 players per side and includes a 40-monster roster model, but the football simulation is **not fully migrated**. Historical status below reflects prior milestones.
 
