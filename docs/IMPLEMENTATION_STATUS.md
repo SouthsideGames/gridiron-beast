@@ -1,6 +1,6 @@
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v2.4 | GDD: v2.4
+Updated: 2026-10-11 | HTML prototype: v2.5 | GDD: v2.5
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -65,3 +65,12 @@ Every implementation task must update the code, any applicable JSON definitions,
 - Not implemented: actual championship awarding, AI standings, challenge match gameplay, tie-breaking, relegation consequences, and tier membership swaps.
 - Unresolved: selection priority when multiple clubs qualify, challenge venue/ties/retries, and AI qualification.
 - Browser playthrough and Unity port remain unverified.
+
+## v2.5 season archive update
+
+- LOCKED: no player-facing future-season schedules; selector includes only current and archived years.
+- HTML: current-season schedule and archive selection implemented; Next Season snapshots completed schedule, available W/L record, results, tier and championship badge totals.
+- HTML: archived seasons are read-only and retain original opponents, home/away and bye information.
+- Not implemented: individual monster season statistics, postseason simulation and retroactive recovery of incomplete old saves. These are labeled unavailable.
+- JavaScript syntax checked; full Safari end-to-end save/reload test not yet completed.
+- Unity parity: versioned seasonHistory save data, immutable archive snapshots, migration and season-history regression tests.
