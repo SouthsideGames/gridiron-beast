@@ -2,7 +2,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.8
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.9
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -385,3 +385,15 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Coordinator packages:** Each of the three offensive and three defensive coordinator candidates now brings a ten-play package reflecting Air Raid, Ground Attack, Balanced, Pressure, Zone or Man philosophies. Practice catalogs use the currently hired coordinators' packages, with defaults if staff are not yet hired. The Sunday offensive selector uses the hired coordinator's package unless a five-play Friday game plan overrides it. Package names are stored in `data/football-plays-11v11.json`. Some named plays still share simplified run/short/deep simulation behaviors and lack unique validated 11-player assignments.
 
 **Acceptance and remaining gaps:** Test QB awareness at multiple ratings with consistent seeds, verify forced target selection for all five eligible roles, ensure run plays disable pass targeting, verify flip consistency and correct overlay visibility, confirm hired coordinator packages appear in practice and matches, and implement unique play-specific routes and authentic monster sprites. No claim of fully distinct simulation behavior for all twenty coordinator plays is made.
+
+## 34. Practice toggle defect correction and Unity implementation parity contract — v3.9
+
+**Observed defect and root cause:** In v3.8, changing Show Play Lines or Flip Play did not re-render the practice SVG. The practice entry screen also drew a separate legacy schematic, while simulated playback used a different renderer. This created stale visuals and made the toggles appear broken.
+
+**Implemented v3.9 correction:** Practice entry now uses the same deterministic `GridironEngine` frame renderer as playback. Toggle changes (lines, flip, monster icon visibility, target) invoke immediate practice re-render. The latest completed simulation is retained for visual replay when toggles change. Changing the offensive/defensive play invalidates that replay and creates a new preview. The actual outcome is not recalculated by toggling presentation settings. Show Lines hides/shows route and defensive assignment overlays; Flip Play mirrors player/ball/assignment coordinates across the field's horizontal axis with upright player labels. Practice uses roster-linked monster type icons; actual animated sprite art is still pending. Game-day Flip Play uses the same mirrored rendering option.
+
+**Unity/Claude parity is a product requirement, not a suggestion:** The HTML prototype is the acceptance reference for all approved and implemented systems, but any known bugs are to be fixed, not faithfully reproduced. The C# port must preserve (1) owner onboarding and rivalry; (2) starter selection and 40-monster rosters; (3) five staff roles, coordinator packages and Wednesday temporary training; (4) 11v11 formations and playable match rules; (5) simulation-first physics, receiver reads and player attributes; (6) practice target/flip/line/icon controls; (7) scouting, recruiting, natures, abilities, injury/fatigue, XP and levels; (8) ten-week scheduling, conferences, playoffs and three-tier promotion/relegation; (9) save persistence, historic records and UI navigation. Source-of-truth JSON schemas and deterministic simulation fixtures must accompany the port.
+
+**Mandatory acceptance process:** Before handoff, produce a versioned feature inventory, C# parity mapping for each feature, JSON schema version and sample data, UI screen/transition matrix, football rule/assignment tests, deterministic seeded replay fixtures with expected frames and ball spots, persistence/migration tests, and an explicit known-issues register. Each implemented feature must be demonstrably working in HTML before being marked Unity-ready. The goal is a port with minimal redesign or exploratory playtesting, not a claim that Unity can be accepted without testing.
+
+**Still unverified:** iOS Safari end-to-end interactions, every coordinator play's distinct assignment and outcome, full 22-monster sprite animation, opponent simulation parity and long-term season regression. These must not be represented as complete.
