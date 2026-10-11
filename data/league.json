@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "conferences": {
     "Aurora": {
       "divisions": {
@@ -157,5 +157,25 @@
       "noForcedSwap": true
     },
     "overallBands": "initial placement bands only; never ongoing hard limits"
+  },
+  "seasonVisibility": {
+    "playerCanPreviewFutureSeasons": false,
+    "visibleSeasons": "current and archived completed seasons only",
+    "archiveOn": "explicit season transition",
+    "archiveFields": [
+      "season",
+      "team",
+      "tier",
+      "record",
+      "schedule",
+      "results",
+      "bye",
+      "championships",
+      "postseasonStatus",
+      "playerStatisticsWhenAvailable"
+    ],
+    "historicalRecordsReadOnly": true,
+    "missingHistoricalStats": "display unavailable; never fabricate",
+    "futureFixtureGeneratorInternalOnly": true
   }
 }
