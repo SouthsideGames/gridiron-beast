@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "conferences": {
     "Aurora": {
       "divisions": {
@@ -48,6 +48,18 @@
     ],
     "postseasonQualifiersPerConference": 4,
     "championship": "Beast Bowl",
-    "homeAwayAlternation": "5/4 then 4/5"
+    "homeAwayAlternation": "Every team alternates 5 home / 4 away with 4 home / 5 away each season",
+    "byeWindow": [
+      4,
+      8
+    ],
+    "byeRotation": "4 + ((seasonNumber - 1) mod 5); shared league-wide bye in current prototype",
+    "division": "Each of three division opponents once home and once away",
+    "intraConference": "Two different opponents in partner division, one home and one away; least-recently-played rotation",
+    "interConference": "One opponent from opposite conference; full eight-opponent cycle before repeat",
+    "interConferenceCycleYears": 8,
+    "scheduleGeneration": "Reciprocal league-wide deterministic fixtures",
+    "schedulePreviewYears": 8,
+    "playoffsImplemented": false
   }
 }
