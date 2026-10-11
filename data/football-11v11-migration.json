@@ -1,10 +1,10 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.7",
+  "effectiveGddVersion": "3.8",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
-  "implementationPhase": "simulation_engine_vertical_slice",
+  "implementationPhase": "qb_awareness_practice_controls_coordinator_packages",
   "footballBuildStatus": "partial_prototype_not_complete",
   "offense": {
     "positions": [
@@ -456,5 +456,30 @@
       "field camera and mobile Safari QA",
       "interceptions and fumbles"
     ]
+  },
+  "practiceControls": {
+    "qbTargetOverride": [
+      "auto",
+      "WR1",
+      "WR2",
+      "WR3",
+      "TE",
+      "RB"
+    ],
+    "qbAwarenessHeuristic": true,
+    "showPlayLines": true,
+    "flipPlay": true,
+    "showMonsterIcons": true,
+    "finalSpritesImplemented": false
+  },
+  "matchControls": {
+    "flipPlay": true,
+    "playPackageFromHiredCoordinator": true,
+    "fullFlipAssignmentsImplemented": false
+  },
+  "coordinatorPackages": {
+    "offensivePlaysPerCandidate": 10,
+    "defensivePlaysPerCandidate": 10,
+    "allPlaysHaveDistinctAssignments": false
   }
 }
