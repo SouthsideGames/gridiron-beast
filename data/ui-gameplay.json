@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "prototypeVersion": "2.9",
+  "version": 3,
+  "prototypeVersion": "3.0",
   "coachingStaff": {
     "compareCandidatesAfterHiring": false,
     "hiredStaffPlayDiagrams": true
@@ -21,7 +21,7 @@
     "ballAnimation": true,
     "playAnimationDurationMs": 2300,
     "resultsShownAfterAnimation": true,
-    "limitations": "Simplified SVG positional interpolation, not true collision/football simulation",
+    "limitations": "SVG teaching schematic; exact route execution, pass physics, realistic defensive AI and yardage measurement not yet implemented",
     "defenseSelectionChangesVisual": true,
     "defensiveSchemes": {
       "man": "Assignment lines connect defenders to offensive matchups and defenders track targets",
@@ -29,7 +29,24 @@
       "blitz": "Orange directional arrows show pass-rush paths and rushers move toward quarterback"
     },
     "ballPossession": "Completed pass ends at receiving monster; run ends at ball carrier; incompletion does not show receiver possession",
-    "yardageAlignment": "Approximate 5 SVG units per yard for active carrier; prototype-level only"
+    "yardageAlignment": "Approximate 5 SVG units per yard for active carrier; prototype-level only",
+    "offenseRoutesVisible": true,
+    "offensiveBlockingVisible": true,
+    "sharedFormationWithPlaybooks": true,
+    "coverTwo": {
+      "passRush": [
+        "DL1",
+        "DL2"
+      ],
+      "zoneDefenders": [
+        "LB1",
+        "LB2",
+        "DB1",
+        "DB2",
+        "DB3"
+      ],
+      "zoneCount": 5
+    }
   },
   "playbooks": {
     "offensiveDiagrams": true,
@@ -40,6 +57,36 @@
       "zone",
       "blitz"
     ],
-    "sharedDefensiveSchemeClassifier": true
+    "sharedDefensiveSchemeClassifier": true,
+    "sharedFormationModel": true,
+    "offenseRoutesAndBlocks": true,
+    "positionLabels": true,
+    "coverTwoFiveZones": true
+  },
+  "formation": {
+    "format": "7-on-7",
+    "attackDirection": "right",
+    "offense": [
+      "OL1",
+      "OL2",
+      "OL3",
+      "QB",
+      "WR1",
+      "WR2",
+      "RB"
+    ],
+    "defense": [
+      "DL1",
+      "DL2",
+      "LB1",
+      "LB2",
+      "DB1",
+      "DB2",
+      "DB3"
+    ],
+    "lineOfScrimmageX": 185,
+    "qbBehindLine": true,
+    "qbNeverAlignedWithOffensiveLine": true,
+    "playerLabels": "position abbreviations instead of numeric IDs"
   }
 }
