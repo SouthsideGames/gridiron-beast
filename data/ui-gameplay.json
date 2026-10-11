@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "prototypeVersion": "3.0",
+  "version": 4,
+  "prototypeVersion": "3.0 (legacy 7v7)",
   "coachingStaff": {
     "compareCandidatesAfterHiring": false,
     "hiredStaffPlayDiagrams": true
@@ -46,7 +46,9 @@
         "DB3"
       ],
       "zoneCount": 5
-    }
+    },
+    "legacyPlayerCountPerSide": 7,
+    "targetPlayerCountPerSide": 11
   },
   "playbooks": {
     "offensiveDiagrams": true,
@@ -61,7 +63,9 @@
     "sharedFormationModel": true,
     "offenseRoutesAndBlocks": true,
     "positionLabels": true,
-    "coverTwoFiveZones": true
+    "coverTwoFiveZones": true,
+    "legacyStatus": "7v7 schematic; names not certified for 11v11",
+    "targetAssignmentsPerSide": 11
   },
   "formation": {
     "format": "7-on-7",
@@ -88,5 +92,10 @@
     "qbBehindLine": true,
     "qbNeverAlignedWithOffensiveLine": true,
     "playerLabels": "position abbreviations instead of numeric IDs"
-  }
+  },
+  "targetFootballFormat": "11v11",
+  "currentFootballFormat": "7v7",
+  "migrationStatus": "locked and audited; not implemented",
+  "footballMigrationSource": "data/football-11v11-migration.json",
+  "preserveFranchiseSystems": true
 }
