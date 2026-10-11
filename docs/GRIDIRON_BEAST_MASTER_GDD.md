@@ -1,4 +1,6 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.0
+> **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
+
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.1
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -260,3 +262,23 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **Locked:** Offense is OL1/OL2/OL3 on the line, QB behind the center (under center or shotgun), WR1/WR2 wide, RB behind the line. Position abbreviations replace numeric markers on the field and in play diagrams. Offensive routes and blocking assignments appear in yellow and blue respectively, alongside defensive responsibilities.
 **Locked Cover Two for 7-on-7:** DL1 and DL2 rush the quarterback; exactly five other defenders (LB1, LB2, DB1, DB2, DB3) each own one zone. No single safety owns three independent zones. Man and blitz diagrams must remain coherent with the same seven-player positional structure.
 **Prototype:** v3.0 uses shared offensive/defensive positional definitions, five coverage zones, labeled markers and visible offensive routes in Practice and playbook previews. Schematics are not final player AI, physics, or pixel-art rendering. Canonical JSON: data/ui-gameplay.json.
+
+## 26. LOCKED 11-on-11 football migration — GDD v3.1
+
+**Production lock:** All future Gridiron Beast football gameplay uses eleven offensive and eleven defensive players per snap. No further new 7v7 football features should be built. Earlier 7v7 design locks are superseded only for football-specific systems. The HTML v3.0 football renderer and 14-monster starter roster are legacy implementation, not approved 11v11 output.
+
+**Base offensive personnel:** QB, LT, LG, C, RG, RT, RB, TE, WR1, WR2, WR3. WR3 may be represented by a flexible lineup slot, but FLEX is not a separate football position. Five linemen, QB behind center/shotgun, seven legal on-line players, eligible receiver rules. Future 12/21 personnel and additional formations through substitutions.
+
+**Base defensive personnel:** DE1, DT1, DT2, DE2, LB1, LB2, LB3, CB1, CB2, FS, SS (4-3). 3-4, nickel and dime packages are future packages. All positions retain the ability to blitz, with corresponding coverage/gap responsibility changes.
+
+**Plays and editor:** The ten offensive and ten defensive legacy play names are provisional concepts, NOT certified 11v11 plays. Every play requires a JSON formation, personnel, all eleven assignments, legal positioning, distinct routes or rush/coverage instructions, visualization and gameplay counterplay. The hybrid route editor, unlocks and audibles remain approved, but must use the new 11v11 schema. No generic name-based play templates may be considered finished plays.
+
+**Football engine:** Match and practice must animate 22 actors and the football, with meaningful pass protection, blocking, rushing, route running, coverage, ball control, tackles, turnovers, downs, scoring, game clock and live 40-second play clock. Existing randomized Sunday yardage results are temporary legacy behavior and must be replaced.
+
+**Roster and saves:** Existing 14 starter monsters must not be silently expanded into 22 owned monsters. Preserve every monster's species, nature, progression and eligibility. Map old positions to legal new roles and provide an explicit roster-completion flow. Version saves and preserve legacy snapshots. Active roster size and two-way eligibility are pending.
+
+**Preserved franchise systems (no redesign authorized):** Commissioner/owner creation, staff hiring, monster types and natures, scouting/recruitment, daily weekly actions, coach styles, league and conference structure, rotating 10-week schedule, season archives, three-tier leagues, championship badges, promotion challenges, relegation, and tier-specific rival GMs. UI changes needed to support 11v11 must not discard or reset these systems.
+
+**Migration phases:** M0 audit/schema (complete); M1 roster/personnel; M2 JSON plays/formations; M3 visual practice; M4 full match and AI; M5 franchise regression and save migration. Each phase has explicit acceptance criteria in `data/football-11v11-migration.json` and `docs/FOOTBALL_11V11_MIGRATION_AUDIT.md`.
+
+**Implementation status:** GDD decision and migration documents complete. Actual 11v11 HTML, starter roster, play definitions, match engine and save migration are NOT IMPLEMENTED. Keep v3.0 HTML as the testable legacy prototype until phased replacement passes acceptance testing.
