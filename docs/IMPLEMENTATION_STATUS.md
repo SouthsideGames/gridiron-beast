@@ -4,7 +4,7 @@ The playable HTML prototype remains v3.0 7-on-7. Do not describe it as 11-on-11.
 
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v3.0 (legacy 7v7) | GDD: v3.3 (11v11 design locked)
+Updated: 2026-10-11 | HTML prototype: v3.0 (legacy 7v7) | GDD: v3.4 (11v11 design locked)
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -164,3 +164,14 @@ The fixed three-choice offensive and defensive starter pools, one selection per 
 - NOT IMPLEMENTED: roster conversion, health/injury engine, special teams, trainer effects and 11v11 gameplay.
 - HTML remains v3.0 legacy 7v7. No runtime changes authorized until user says proceed.
 - Open: positional quotas, initial roster population, injured reserve, two-way roles, formulas, special-teams resolution and XP distribution.
+
+## v3.4 design-only approval
+
+- LOCKED: injured monsters remain within the 40-monster cap, replaced from existing eligible roster.
+- LOCKED: compatible secondary positions permitted with reversible effective-performance penalty; no automatic full two-way eligibility.
+- LOCKED: short injury recovery — minor 0–1 weeks, moderate 2–3, severe 4–6.
+- LOCKED: participation XP plus bonuses for meaningful individual contributions; trainer buffs never award permanent growth or XP multipliers.
+- Updated GDD v3.4 and data/football-11v11-migration.json schema v4.
+- NOT IMPLEMENTED: these rules, 11v11 roster, injury engine, XP awards, secondary-position calculations or save migration.
+- HTML remains legacy v3.0. Continue implementation hold until the owner explicitly says proceed.
+- Pending: roster composition, starter definitions, eligibility matrix, penalty rates, injury probabilities, XP scaling, special-teams rules and save migration.
