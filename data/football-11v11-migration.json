@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.3",
+  "effectiveGddVersion": "3.4",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "design_locked_awaiting_explicit_proceed",
@@ -196,7 +196,7 @@
       "id": "M1",
       "name": "Roster and personnel",
       "status": "not_started",
-      "acceptance": "40-monster cap, 22 legal starters, reserves, two fixed starter choices, five staff, injury/fatigue profile schema and non-destructive save migration"
+      "acceptance": "40-monster roster including injured monsters, 22 starters, compatible secondary positions with penalties, fixed starter selection, five staff hires, and non-destructive save migration"
     },
     {
       "id": "M2",
@@ -214,7 +214,7 @@
       "id": "M4",
       "name": "Match engine and AI",
       "status": "not_started",
-      "acceptance": "11v11 drives, AI, balanced injuries/fatigue, XP-only permanent leveling, temporary trainer effects, field goals and punts, simulated other special teams"
+      "acceptance": "11v11 match, AI, 40-second play clock, balanced injuries with 0–1/2–3/4–6 week recovery, participation plus performance XP, temporary trainer buffs, simplified special teams"
     },
     {
       "id": "M5",
@@ -342,14 +342,57 @@
     },
     "rosterDistribution": "proposed, not yet locked",
     "unresolved": [
-      "40-slot positional distribution and game-day activation",
-      "initial full roster composition and starter selection replacements",
-      "injured reserve and replacement rules",
-      "two-way eligibility and cross-position training",
-      "injury risk/fatigue/recovery formulas and caps",
-      "injury severity and recovery duration",
-      "kicker/punter role eligibility and special-teams simulation rules",
-      "how to award XP to bench and special-teams participants"
-    ]
+      "40-slot positional allocation and initial team roster generation",
+      "fixed offensive and defensive starter species, natures, archetypes and ability details",
+      "secondary position eligibility matrix and effective-performance penalty magnitude",
+      "injury risk formula, fatigue thresholds and injury severity distribution",
+      "game XP formula, participation minimum and special-teams XP",
+      "injury timing, substitutions, short recovery and bye-week treatment",
+      "simplified special-teams scoring and eligibility",
+      "old 7v7 save migration and roster gaps"
+    ],
+    "injuredReserve": {
+      "policy": "replacement_from_existing_roster",
+      "injuredMonstersCountTowardCap": true,
+      "rosterCap": 40,
+      "extraIRSlots": 0,
+      "injuredMonstersUnavailableWhenRequired": true
+    },
+    "positionEligibility": {
+      "policy": "compatible_secondary_positions",
+      "secondaryPositionPenalty": true,
+      "penaltyMagnitude": "pending",
+      "unrelatedPositionsNotAutomaticallyEligible": true,
+      "fullTwoWayOffenseDefense": false
+    },
+    "injuryRecovery": {
+      "minor": {
+        "minWeeks": 0,
+        "maxWeeks": 1
+      },
+      "moderate": {
+        "minWeeks": 2,
+        "maxWeeks": 3
+      },
+      "severe": {
+        "minWeeks": 4,
+        "maxWeeks": 6
+      },
+      "balancedIncidence": true
+    },
+    "xpAllocation": {
+      "base": "participation_only",
+      "bonuses": "meaningful_individual_plays",
+      "examples": [
+        "touchdowns",
+        "receptions",
+        "blocks",
+        "sacks",
+        "tackles",
+        "interceptions"
+      ],
+      "benchWithoutSnaps": "pending",
+      "trainerXpMultiplier": false
+    }
   }
 }
