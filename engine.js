@@ -7,7 +7,7 @@ function simulate(play='Quick Pass',defense='Cover Two',seed=1){
 let seedValue=seed>>>0;const rng=()=>{seedValue=(Math.imul(seedValue,1664525)+1013904223)>>>0;return seedValue/4294967296};const off=OFF.map(([id,x,y])=>({id,x,y,speed:.85+rng()*.3})),def=DEF.map(([id,x,y])=>({id,x,y,homeX:x,homeY:y,speed:.85+rng()*.3}));
 const find=id=>off.find(p=>p.id===id),qb=find('QB'),run=/run|power|zone/i.test(play),deep=/deep|post|vertical/i.test(play),blitz=/blitz|fire|pressure/i.test(defense),man=/man|lock|press/i.test(defense);
 let holder='QB',ball={x:qb.x,y:qb.y},phase='held',target=null,flight=0,throwStart=null,throwEnd=null,frames=[],result='',events=[];
-const dt=.075,catchTargets=['WR1','WR2','WR3','TE','RB'];
+const dt=.075,catchTargets=deep?['WR1','WR2','WR3']:['WR1','WR2','WR3','TE'];
 for(let tick=0;tick<92;tick++){
 const time=tick*dt;
 for(const p of off){const id=p.id;if(['LT','LG','C','RG','RT'].includes(id)){p.x+=.4;continue}if(id==='QB'){p.x-=run?0:.12;continue}
