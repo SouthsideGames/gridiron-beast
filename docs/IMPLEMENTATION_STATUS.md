@@ -1,6 +1,6 @@
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v2.9 | GDD: v2.9
+Updated: 2026-10-11 | HTML prototype: v3.0 | GDD: v3.0
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -111,3 +111,13 @@ Every implementation task must update the code, any applicable JSON definitions,
 - Updated data/ui-gameplay.json and master GDD v2.9.
 - JavaScript syntax validated. Mobile Safari visual/interaction tests remain unverified.
 - Limitations: no genuine collision, pass interception, defender reaction AI or true yard-accurate animation yet; full Sunday match still needs animation overhaul.
+
+## v3.0 formation and assignment correction
+
+- Implemented shared offense and defense 7-on-7 positional formation definitions across practice and playbook diagrams.
+- QB now lines up behind OL1/OL2/OL3, with WR1/WR2 wide and RB in the backfield.
+- Replaced numeric player labels with positional abbreviations.
+- Cover Two draws five coverage zones owned by LB1/LB2/DB1/DB2/DB3, plus DL1/DL2 rush arrows.
+- Offensive route arrows and OL blocking directions are visible before and during practice.
+- Schematic motion still lacks true football collision, possession and play-calling AI. Visual validation on Safari remains outstanding.
+- Updated data/ui-gameplay.json and GDD v3.0.
