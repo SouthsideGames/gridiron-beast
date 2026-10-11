@@ -437,22 +437,24 @@
     "homeMatchUsesSimulation": true,
     "awayMatchUsesSimulation": false,
     "reportedYardsFromFinalBallSpot": true,
-    "playerRatingsIntegrated": false,
+    "playerRatingsIntegrated": "movement_speed_only",
     "playAssignmentsIntegrated": false,
     "headlessTests": {
       "plays": 300,
       "spotConsistency": true,
-      "runAverageYards": 2,
-      "allTackles": true
+      "runAverageYards": 2.68,
+      "quickPassAverageYards": 13.74,
+      "deepPassAverageYards": 14.97,
+      "incompletePasses": 15,
+      "completedPlaysAllTackles": true
     },
     "knownGaps": [
-      "defensive AI and blocking balance",
-      "play-specific assignments",
-      "player stats and abilities",
-      "opponent simulation",
-      "full field camera",
-      "interceptions and fumbles",
-      "Safari interaction testing"
+      "run/pass balance and varied results",
+      "catch/block/tackle ratings",
+      "opponent simulation parity",
+      "individual JSON route assignments",
+      "field camera and mobile Safari QA",
+      "interceptions and fumbles"
     ]
   }
 }
