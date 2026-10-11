@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "conferences": {
     "Aurora": {
       "divisions": {
@@ -180,8 +180,8 @@
   },
   "rivalry": {
     "startingTier": "challenger",
-    "selection": "After choosing initial franchise, owner chooses one of three other teams in same division as rival",
-    "introduction": "Commissioner introduces another new GM in the division and invites a rivalry",
+    "selection": "Automatically randomly assign one of the three other teams in the owner's division after franchise selection",
+    "introduction": "Commissioner reveals the randomly assigned rival GM and franchise; player does not select or reroll",
     "rivalPerTier": true,
     "oneDistinctRivalEachTier": true,
     "teamMustBeInOwnersDivision": true,
@@ -192,6 +192,7 @@
     "headToHeadTracking": "planned",
     "dialogueEvents": "planned",
     "tierTransitionIntroduction": "planned",
-    "higherTierRivals": "assigned upon entering a new tier; provisional AI GM names until content finalized"
+    "higherTierRivals": "Randomly assigned on entry into a new tier, from a same-division franchise in that tier",
+    "randomAssignmentPersistent": true
   }
 }
