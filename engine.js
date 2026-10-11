@@ -4,7 +4,7 @@ const DEF=[['DE1',214,70],['DT1',214,110],['DT2',214,148],['DE2',214,186],['LB1'
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(n,l,h)=>Math.max(l,Math.min(h,n));
 function move(a,b,v){const d=distance(a,b);if(d>0){a.x+=(b.x-a.x)/d*Math.min(v,d);a.y+=(b.y-a.y)/d*Math.min(v,d)}}
 function simulate(play='Quick Pass',defense='Cover Two',seed=1,ratings={}){
-let seedValue=seed>>>0;const rng=()=>{seedValue=(Math.imul(seedValue,1664525)+1013904223)>>>0;return seedValue/4294967296};const off=OFF.map(([id,x,y])=>({id,x,y,speed:.85+rng()*.3})),def=DEF.map(([id,x,y])=>({id,x,y,homeX:x,homeY:y,speed:.85+rng()*.3}));
+let seedValue=seed>>>0;const rng=()=>{seedValue=(Math.imul(seedValue,1664525)+1013904223)>>>0;return seedValue/4294967296};const off=OFF.map(([id,x,y])=>({id,x,y,speed:(.85+rng()*.3)*(.8+(ratings[id]||65)/325)})),def=DEF.map(([id,x,y])=>({id,x,y,homeX:x,homeY:y,speed:.85+rng()*.3}));
 const find=id=>off.find(p=>p.id===id),qb=find('QB'),run=/run|power|zone/i.test(play),deep=/deep|post|vertical/i.test(play),blitz=/blitz|fire|pressure/i.test(defense),man=/man|lock|press/i.test(defense);
 let holder='QB',ball={x:qb.x,y:qb.y},phase='held',target=null,flight=0,throwStart=null,throwEnd=null,frames=[],result='',events=[];
 const dt=.075,catchTargets=deep?['WR1','WR2','WR3']:['WR1','WR2','WR3','TE'];
