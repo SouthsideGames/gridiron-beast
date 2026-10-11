@@ -1,3 +1,10 @@
+## v3.9 toggle repair and Unity parity tracking
+- FIXED IN SOURCE: practice line visibility, flip, monster icon and target controls now trigger an immediate redraw rather than waiting for another practice rep. The practice preview and replay use the same simulation renderer.
+- FIXED IN SOURCE: switching plays clears the prior replay preview; toggling display controls does not alter completed simulation outcomes.
+- CONFIRMED: HTML JavaScript syntax validation. NOT YET CONFIRMED: physical iOS Safari tap behavior or full game regression.
+- UNITY PORT CONTRACT: treat working HTML gameplay and the GDD/JSON as the behavioral reference, with explicit acceptance tests and known-issues register. Do not claim all prototype systems are Unity-ready until tests are green.
+- PENDING: C# parity matrix, JSON schema audit, deterministic fixture pack, complete coordinator play implementation, full UI flow and persistence regression.
+
 ## v3.8 practice and coordinator improvements
 - QB awareness now influences receiver-read quality using separation from defenders and downfield progress. Forced WR1/WR2/WR3/TE/RB target selection is available in practice for pass plays; run plays disable it.
 - Practice has Show Play Lines, Flip Play and Show Monster Portraits toggles. The 'portraits' are currently roster-linked elemental/emoji icons rather than finished sprite artwork.
