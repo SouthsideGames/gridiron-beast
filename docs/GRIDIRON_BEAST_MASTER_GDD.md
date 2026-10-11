@@ -236,13 +236,13 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 
 **Prototype status:** v2.8 removes coach comparison and HQ Exhibition Game shortcut, restricts direct match navigation to Sunday, animates practice plays, renders offensive/defensive play diagrams, and highlights the owner's franchise in League Central. Full live-match animation, accurate individual routes and tactical defensive AI are not complete. Source-of-truth UI requirements: data/ui-gameplay.json.
 
-## 24. Defensive coverage visualization and practice ball ownership — v2.9
+## 24. Defensive coverage visualization and practice ball ownership — v3.0
 
 **LOCKED visual alignment:** The practice play result must match visible football action. A completed pass shows the ball traveling from QB to a receiver and finishing attached to the receiving monster. A run ends with the ball at the ball carrier. An incompletion or stopped play must not depict an unrelated receiver holding the ball. Field displacement should approximately reflect announced yards; precise physics and tackles remain future work.
 
 **LOCKED defensive play diagrams:** Defense dropdown selection must immediately redraw alignment and assignments, before a rep starts. Man coverage uses yellow assignment lines between defenders and receivers and tracking motion; zone uses translucent blue ellipses showing each defender's coverage area; blitz/pressure uses orange arrows and forward rusher movement. Defensive playbook diagrams use the same man/zone/blitz visual vocabulary as the practice field. Future JSON-defined plays will specify individual assignments rather than relying on a name-based classifier.
 
-**HTML v2.9:** Shared scheme classification; distinct man, zone and blitz diagrams; defense selector redraws practice field; on-snap defensive tracking/rushing; pass and run ball ownership interpolated to the relevant player; outcome shown at animation end. This is an SVG schematic prototype, not full physics or finalized pixel-art football gameplay. Man matchups and coverage areas are simplified.
+**HTML v3.0:** Shared scheme classification; distinct man, zone and blitz diagrams; defense selector redraws practice field; on-snap defensive tracking/rushing; pass and run ball ownership interpolated to the relevant player; outcome shown at animation end. This is an SVG schematic prototype, not full physics or finalized pixel-art football gameplay. Man matchups and coverage areas are simplified.
 
 **Unity parity:** Reproduce coverage indicators and ball-carrier ownership, then replace prototype interpolation with formation, pursuit, coverage and collision systems. Validate switching defensive looks changes visible assignments; test run handoff, completed pass and incomplete pass separately. Canonical UI specification: data/ui-gameplay.json.
 
@@ -255,3 +255,8 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **LOCKED offensive visualization:** Show receiver route paths with directional arrows and OL blocking directions on the practice field before snapping. Position abbreviations identify the ball carrier, QB, receivers, linemen and defenders. Practice animation should follow those concepts; the playbook preview uses the same formations, labels and route/coverage vocabulary.
 
 **Prototype v3.0:** Shared practiceOffense/practiceDefense coordinate definitions, offenseOverlay and defenseOverlay functions drive both practice and playbook SVG. Zone display reduced from seven to five; two DL rush arrows; QB positioned behind OL; players labeled by football position. The motion engine remains schematic and does not yet simulate individual collisions or full tactical football. These rules are authoritative for Unity parity; canonical UI JSON is data/ui-gameplay.json.
+
+## 25. Corrected 7-on-7 tactical alignment — v3.0
+**Locked:** Offense is OL1/OL2/OL3 on the line, QB behind the center (under center or shotgun), WR1/WR2 wide, RB behind the line. Position abbreviations replace numeric markers on the field and in play diagrams. Offensive routes and blocking assignments appear in yellow and blue respectively, alongside defensive responsibilities.
+**Locked Cover Two for 7-on-7:** DL1 and DL2 rush the quarterback; exactly five other defenders (LB1, LB2, DB1, DB2, DB3) each own one zone. No single safety owns three independent zones. Man and blitz diagrams must remain coherent with the same seven-player positional structure.
+**Prototype:** v3.0 uses shared offensive/defensive positional definitions, five coverage zones, labeled markers and visible offensive routes in Practice and playbook previews. Schematics are not final player AI, physics, or pixel-art rendering. Canonical JSON: data/ui-gameplay.json.
