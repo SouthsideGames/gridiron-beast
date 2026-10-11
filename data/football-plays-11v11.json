@@ -1,0 +1,1307 @@
+{
+  "schemaVersion": 1,
+  "format": "11v11",
+  "status": "provisional_play_definitions_not_simulation_certified",
+  "plays": [
+    {
+      "id": "off_01",
+      "name": "Quick Pass",
+      "side": "offense",
+      "formationId": "shotgun_spread",
+      "personnel": "11",
+      "concept": "short_pass",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "pass_read",
+          "detail": "read progression WR1 > WR2 > TE"
+        },
+        {
+          "position": "LT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "route",
+          "detail": "checkdown route"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "short route"
+        }
+      ]
+    },
+    {
+      "id": "off_02",
+      "name": "Deep Post",
+      "side": "offense",
+      "formationId": "singleback_11",
+      "personnel": "11",
+      "concept": "deep_pass",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "pass_read",
+          "detail": "read progression WR1 > WR2 > TE"
+        },
+        {
+          "position": "LT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "route",
+          "detail": "checkdown route"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "vertical/post concept"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "vertical/post concept"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "vertical/post concept"
+        }
+      ]
+    },
+    {
+      "id": "off_03",
+      "name": "Power Run",
+      "side": "offense",
+      "formationId": "singleback_11",
+      "personnel": "11",
+      "concept": "run",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "handoff",
+          "detail": "RB handoff"
+        },
+        {
+          "position": "LT",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "carry",
+          "detail": "run through assigned gap"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "short route"
+        }
+      ]
+    },
+    {
+      "id": "off_04",
+      "name": "Screen Pass",
+      "side": "offense",
+      "formationId": "shotgun_spread",
+      "personnel": "11",
+      "concept": "screen",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "pass_read",
+          "detail": "read progression WR1 > WR2 > TE"
+        },
+        {
+          "position": "LT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "route",
+          "detail": "checkdown route"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "screen release"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "screen release"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "screen release"
+        }
+      ]
+    },
+    {
+      "id": "off_05",
+      "name": "Outside Run",
+      "side": "offense",
+      "formationId": "singleback_11",
+      "personnel": "11",
+      "concept": "run",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "handoff",
+          "detail": "RB handoff"
+        },
+        {
+          "position": "LT",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "carry",
+          "detail": "run through assigned gap"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "short route"
+        }
+      ]
+    },
+    {
+      "id": "off_06",
+      "name": "Play Action",
+      "side": "offense",
+      "formationId": "singleback_11",
+      "personnel": "11",
+      "concept": "short_pass",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "pass_read",
+          "detail": "read progression WR1 > WR2 > TE"
+        },
+        {
+          "position": "LT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "route",
+          "detail": "checkdown route"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "short route"
+        }
+      ]
+    },
+    {
+      "id": "off_07",
+      "name": "Four Verticals",
+      "side": "offense",
+      "formationId": "shotgun_spread",
+      "personnel": "11",
+      "concept": "deep_pass",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "pass_read",
+          "detail": "read progression WR1 > WR2 > TE"
+        },
+        {
+          "position": "LT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "route",
+          "detail": "checkdown route"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "vertical/post concept"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "vertical/post concept"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "vertical/post concept"
+        }
+      ]
+    },
+    {
+      "id": "off_08",
+      "name": "Slant Combo",
+      "side": "offense",
+      "formationId": "singleback_11",
+      "personnel": "11",
+      "concept": "short_pass",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "pass_read",
+          "detail": "read progression WR1 > WR2 > TE"
+        },
+        {
+          "position": "LT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "route",
+          "detail": "checkdown route"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "short route"
+        }
+      ]
+    },
+    {
+      "id": "off_09",
+      "name": "Inside Zone",
+      "side": "offense",
+      "formationId": "singleback_11",
+      "personnel": "11",
+      "concept": "run",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "handoff",
+          "detail": "RB handoff"
+        },
+        {
+          "position": "LT",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "run_block",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "carry",
+          "detail": "run through assigned gap"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "short route"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "short route"
+        }
+      ]
+    },
+    {
+      "id": "off_10",
+      "name": "Deep Corner",
+      "side": "offense",
+      "formationId": "shotgun_spread",
+      "personnel": "11",
+      "concept": "deep_pass",
+      "assignments": [
+        {
+          "position": "QB",
+          "action": "pass_read",
+          "detail": "read progression WR1 > WR2 > TE"
+        },
+        {
+          "position": "LT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "LG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "C",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RG",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RT",
+          "action": "pass_protect",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "RB",
+          "action": "route",
+          "detail": "checkdown route"
+        },
+        {
+          "position": "TE",
+          "action": "route",
+          "detail": "assigned protection or route"
+        },
+        {
+          "position": "WR1",
+          "action": "route",
+          "detail": "vertical/post concept"
+        },
+        {
+          "position": "WR2",
+          "action": "route",
+          "detail": "vertical/post concept"
+        },
+        {
+          "position": "WR3",
+          "action": "route",
+          "detail": "vertical/post concept"
+        }
+      ]
+    },
+    {
+      "id": "def_01",
+      "name": "Cover Two",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "zone",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB3",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "FS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "SS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        }
+      ]
+    },
+    {
+      "id": "def_02",
+      "name": "Man Lock",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "man",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "LB2",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "LB3",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "CB1",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "CB2",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "FS",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "SS",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        }
+      ]
+    },
+    {
+      "id": "def_03",
+      "name": "Corner Fire",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "pressure",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "blitz",
+          "detail": "pressure toward QB"
+        },
+        {
+          "position": "LB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB3",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "FS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "SS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        }
+      ]
+    },
+    {
+      "id": "def_04",
+      "name": "Run Wall",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "run_fit",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "gap_fit",
+          "detail": "assigned run gap"
+        },
+        {
+          "position": "LB2",
+          "action": "gap_fit",
+          "detail": "assigned run gap"
+        },
+        {
+          "position": "LB3",
+          "action": "gap_fit",
+          "detail": "assigned run gap"
+        },
+        {
+          "position": "CB1",
+          "action": "gap_fit",
+          "detail": "assigned run gap"
+        },
+        {
+          "position": "CB2",
+          "action": "gap_fit",
+          "detail": "assigned run gap"
+        },
+        {
+          "position": "FS",
+          "action": "gap_fit",
+          "detail": "assigned run gap"
+        },
+        {
+          "position": "SS",
+          "action": "gap_fit",
+          "detail": "assigned run gap"
+        }
+      ]
+    },
+    {
+      "id": "def_05",
+      "name": "Zone Trap",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "zone",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB3",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "FS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "SS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        }
+      ]
+    },
+    {
+      "id": "def_06",
+      "name": "All-Out Pressure",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "pressure",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "blitz",
+          "detail": "pressure toward QB"
+        },
+        {
+          "position": "LB2",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "LB3",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "CB1",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "CB2",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "FS",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "SS",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        }
+      ]
+    },
+    {
+      "id": "def_07",
+      "name": "Deep Zone",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "zone",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB3",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "FS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "SS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        }
+      ]
+    },
+    {
+      "id": "def_08",
+      "name": "DB Blitz",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "pressure",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "blitz",
+          "detail": "pressure toward QB"
+        },
+        {
+          "position": "LB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB3",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "FS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "SS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        }
+      ]
+    },
+    {
+      "id": "def_09",
+      "name": "QB Spy",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "zone",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "LB3",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB1",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "CB2",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "FS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        },
+        {
+          "position": "SS",
+          "action": "zone_cover",
+          "detail": "single assigned zone"
+        }
+      ]
+    },
+    {
+      "id": "def_10",
+      "name": "Press Coverage",
+      "side": "defense",
+      "formationId": "base_43",
+      "personnel": "4-3",
+      "concept": "man",
+      "assignments": [
+        {
+          "position": "DE1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT1",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DT2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "DE2",
+          "action": "rush",
+          "detail": "assigned pass-rush lane"
+        },
+        {
+          "position": "LB1",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "LB2",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "LB3",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "CB1",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "CB2",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "FS",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        },
+        {
+          "position": "SS",
+          "action": "man_cover",
+          "detail": "assigned eligible receiver"
+        }
+      ]
+    }
+  ]
+}
