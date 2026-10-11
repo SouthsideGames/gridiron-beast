@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "format": "11v11",
-  "status": "provisional_play_definitions_not_simulation_certified",
+  "status": "coordinator_package_catalog_provisional_assignment_simulation_not_complete",
   "plays": [
     {
       "id": "off_01",
@@ -1303,5 +1303,81 @@
         }
       ]
     }
-  ]
+  ],
+  "coordinatorPackages": {
+    "oc_swift": [
+      "Quick Pass",
+      "Deep Post",
+      "Four Verticals",
+      "Slant Combo",
+      "Screen Pass",
+      "Deep Corner",
+      "Play Action",
+      "Quick Slant",
+      "Spread Screen",
+      "Tempo Slant"
+    ],
+    "oc_brock": [
+      "Power Run",
+      "Inside Zone",
+      "Outside Run",
+      "Inside Run",
+      "Balanced Run",
+      "Play Action",
+      "Quick Pass",
+      "Screen Pass",
+      "Slant Combo",
+      "Deep Post"
+    ],
+    "oc_park": [
+      "Quick Pass",
+      "Inside Zone",
+      "Screen Pass",
+      "Power Run",
+      "Deep Post",
+      "Outside Run",
+      "Slant Combo",
+      "Play Action",
+      "Four Verticals",
+      "Deep Corner"
+    ],
+    "dc_stone": [
+      "Corner Fire Blitz",
+      "All-Out Pressure",
+      "Run Blitz",
+      "DB Blitz",
+      "Run Wall",
+      "QB Spy",
+      "Press Coverage",
+      "Man Lock",
+      "Cover Two",
+      "Zone Trap"
+    ],
+    "dc_ice": [
+      "Cover Two",
+      "Deep Zone",
+      "Zone Trap",
+      "Cover Three",
+      "Cover Four",
+      "Cloud Flats",
+      "QB Spy",
+      "Run Wall",
+      "Man Lock",
+      "Corner Fire Blitz"
+    ],
+    "dc_fox": [
+      "Man Lock",
+      "Press Coverage",
+      "DB Blitz",
+      "Corner Fire Blitz",
+      "QB Spy",
+      "Cover Two",
+      "Deep Zone",
+      "Run Wall",
+      "Zone Trap",
+      "All-Out Pressure"
+    ]
+  },
+  "coordinatorPackagesArePlayNames": true,
+  "knownLimitation": "Some package play names are not yet backed by distinct validated 11-player JSON assignments; simulation still groups plays into run/short/deep concepts"
 }
