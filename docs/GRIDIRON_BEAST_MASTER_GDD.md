@@ -1,4 +1,4 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.2
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.3
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -152,3 +152,26 @@ Roster UI (locked): interactive position-based 7-on-7 depth chart with offensive
 | Annual draft, trades, contracts, free agency | Planned | Complete before feature parity claim |
 
 **Mandatory change control:** Every approved change must update the actual HTML prototype, applicable JSON definitions, this master GDD, and implementation status. Mark untested work In Development. Earlier v2.0 proposals are superseded where they conflict with later locked decisions.
+
+## 18. Three-tier football pyramid — locked v2.3
+
+**Locked league identities:** Tier III Challenger League (initial team OVR <=70), Tier II Vanguard League (initial team OVR 71–82), Tier I Sovereign League (initial team OVR >=83). Each tier contains 16 teams organized as two conferences (Aurora and Titan), each with two four-team divisions (North/West and East/South). Full pyramid: 48 teams. The four initial struggling franchise choices all begin in Challenger, one from each division. The commissioner must explain the tier, championships and relegation before selection.
+
+**Locked promotion:** Earn four Challenger championships to unlock a challenge for entry into Vanguard; earn six Vanguard championships to unlock a challenge for Sovereign. Championship badges are permanent historical achievements. Promotion is not automatic upon reaching the title threshold. AI franchises may also qualify. Specific challenge rules are not yet approved.
+
+**Locked relegation:** In Vanguard or Sovereign, two consecutive bottom-four **overall league** finishes (out of 16, not bottom of division) trigger relegation eligibility. Challenger has no relegation. All AI teams and the player are subject to this rule. Relegation consequences are reduced revenue, contract pressure, morale impact and possible roster departures, **never automatic permanent monster-stat reductions**.
+
+**League Central:** From Headquarters, browse Challenger, Vanguard and Sovereign; inspect divisions, teams, records, standings, championships and relegation risk. Records must be based on actual league simulations, not invented. While league AI is not implemented, show 0–0 placeholders and explicitly mark them unplayed. Other-tier franchise names in HTML are provisional placeholders, not final canon.
+
+**Important distinction:** OVR bands are approved starting classifications, but whether they remain hard restrictions after roster development or promotion is unresolved. No arbitrary cap or nerf is to be applied until the policy is decided.
+
+**Essential unresolved decisions:**
+1. How many teams exchange places between adjacent tiers per offseason, and how promotion challenges pair winners with relegation candidates while maintaining 16 teams per tier.
+2. Promotion challenge format (one match or series, home/away/neutral venue, attempts per year) and whether qualifying badges are consumed.
+3. Whether the initial OVR bands remain enforced after team development, relegation or promotion.
+4. How AI teams earn and attempt promotion, including championship accumulation and relegation replacement.
+5. Bottom-four tie-breakers and whether postseason outcomes affect the relegation standings.
+6. How finances, salary caps, player departures and morale scale on relegation.
+7. Whether a relegated franchise retains badges and must earn new championships to challenge promotion again (historical badges remain permanent regardless).
+
+**Implementation boundary:** v2.3 HTML includes League Central browsing, tier rules and badge-progress fields. It does NOT yet include simulated 48-team standings, promotion challenges, relegation transactions, or dynamic league membership. These are explicitly in development, not approved for final feature review. Canonical tier rules are in data/league.json.
