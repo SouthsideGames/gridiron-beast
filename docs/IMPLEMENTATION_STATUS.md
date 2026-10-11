@@ -1,3 +1,11 @@
+## v3.8 practice and coordinator improvements
+- QB awareness now influences receiver-read quality using separation from defenders and downfield progress. Forced WR1/WR2/WR3/TE/RB target selection is available in practice for pass plays; run plays disable it.
+- Practice has Show Play Lines, Flip Play and Show Monster Portraits toggles. The 'portraits' are currently roster-linked elemental/emoji icons rather than finished sprite artwork.
+- Game-day Flip Play control added; mirrored actor positions retain upright labels. Play geometry remains simplified.
+- Each OC and DC candidate offers ten plays aligned to their philosophy. Practice uses hired staff's catalog; match play selector uses the same package except when Friday's five-play plan overrides it.
+- Coordinator packages synchronized in JSON. Some new play names lack distinct 11-assignment play definitions and unique match behavior; this remains unfinished.
+- Engine test: five forced passing targets selected correctly. Awareness sample shows greater selection of the top-rated open target at high QB awareness. Syntax and direct engine simulation checked, but full Safari click-through has not been verified.
+
 ## v3.7 simulation tuning and validation addendum
 - The new engine accepts position-specific starting-monster OVR ratings and uses them to influence movement speed; same play, defense and seed reproduce identical frames.
 - The pass target pool now favors eligible WR/TE rather than repeatedly selecting RB checkdowns. Seeded QB throw accuracy produces some incomplete passes.
