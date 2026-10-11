@@ -1,6 +1,6 @@
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v2.8 | GDD: v2.8
+Updated: 2026-10-11 | HTML prototype: v2.9 | GDD: v2.9
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -101,3 +101,13 @@ Every implementation task must update the code, any applicable JSON definitions,
 - Updated data/ui-gameplay.json for Unity parity.
 - JavaScript syntax validation passed; actual mobile Safari interactions and animation performance are not yet verified.
 - Known limitation: Sunday match movement remains simplistic; full route animations, defensive pursuit and ball physics are future work.
+
+## v2.9 Madden-style schematic practice improvements
+
+- Defensive dropdown redraws formation instructions before a rep.
+- Man Lock: assignment lines and tracking; Cover Two/zone: coverage circles; Corner Fire/blitz: rush arrows and rusher motion.
+- Completed pass: football interpolates to receiving monster; run: football stays with ball carrier after handoff. Stopped passes do not show receiver possession.
+- Playbook diagrams now vary by man, zone and blitz instead of reusing near-identical overlays.
+- Updated data/ui-gameplay.json and master GDD v2.9.
+- JavaScript syntax validated. Mobile Safari visual/interaction tests remain unverified.
+- Limitations: no genuine collision, pass interception, defender reaction AI or true yard-accurate animation yet; full Sunday match still needs animation overhaul.
