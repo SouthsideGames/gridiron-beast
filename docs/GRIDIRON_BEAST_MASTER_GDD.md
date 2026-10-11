@@ -2,7 +2,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.6
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.7
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -358,3 +358,13 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **Play previews:** Offensive coordinator cards show offense-only diagrams without defenders; defensive coordinator diagrams show both sides. Play cards are tappable to open an enlarged modal. The same modal provides starter-monster details before selection, including ability descriptions, nature, example stats and injury susceptibility. Injury susceptibility is higher when more injury-prone and contributes to the preliminary injury-risk formula.
 
 **Further acceptance work:** Validate all modal buttons and scrolling on iOS Safari, test 0/short/deep gain geometry and ball possession frame-by-frame, eliminate contradictions in the Sunday match engine, and replace stochastic practice gains with genuine collision/assignment-based outcomes. Full playable pixel-art animations remain unimplemented.
+
+## 32. Simulation-first 11v11 engine vertical slice — HTML v3.7
+
+**Implementation:** A standalone deterministic engine (`engine.js`) now advances 22 actor positions in discrete steps, animates pass flight and handoffs, models simplified pass protection, pursuit and proximity tackles, and derives yards from the final ball spot. Practice and the owner's Sunday snaps both replay stored engine frames. This replaces the previous practice pre-rolled gain and home-Sunday randomized yardage logic. It is a **prototype vertical slice**, not a finished physics engine.
+
+**Non-negotiable acceptance rule:** The displayed gain, down-and-distance update, and final visible football position must agree. All game outcomes must eventually come from simulation events, with player stats, fatigue, natures, abilities and coaching schemes affecting actual movement and decisions.
+
+**Known gaps:** Simulation geometry is simplified; the opponent still uses probabilistic drives; JSON play assignments are not yet driving unique actor behaviors; monster ratings are not yet fully integrated; game-day field scrolling and clock logic need QA; interceptions, fumbles, realistic tackles and special teams remain incomplete. Headless test of 300 simulated plays found no runtime exceptions or spot/yardage contradictions, but poor balance and insufficient outcome variety. Safari end-to-end validation is pending.
+
+**Design inspiration:** Mobile football references such as Retro Bowl demonstrate legible routes and moving ball carriers, while franchise sims such as Pocket GM show how roster and staff decisions can drive match outcomes. Gridiron Beast remains a manager-led game, not a requirement for manual QB controls.
