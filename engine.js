@@ -20,3 +20,21 @@ for(const d of def){let aim;if(rushers.includes(d.id))aim=phase==='carried'?find
 for(const o of off.filter(p=>['LT','LG','C','RG','RT'].includes(p.id))){for(const d of def.filter(p=>rushers.includes(p.id))){if(distance(o,d)<22)d.x+=1.8}}
 if(run&&time>.3){phase='carried';holder='RB'}
 if(!run&&phase==='held'&&time>1.45){target=catchTargets.map(id=>find(id)).sort((a,b)=>Math.min(...def.map(d=>distance(d,b)))-Math.min(...def.map(d=>distance(d,a))))[0];throwStart={...qb};throwEnd={x:target.x+9,y:target.y};phase='air';holder=null;events.push('Pass toward '+target.id)}
+if(phase==='air'){flight+=dt;const t=clamp(flight/.6,0,1);ball.x=throwStart.x+(throwEnd.x-throwStart.x)*t;ball.y=throwStart.y+(throwEnd.y-throwStart.y)*t;if(t>=1){if(distance(ball,target)<30&&Math.min(...def.map(d=>distance(d,ball)))>15){phase='carried';holder=target.id;events.push(target.id+' caught the pass')}else{result='incomplete';events.push('Pass falls incomplete')}}}
+if(phase==='held'){ball.x=qb.x;ball.y=qb.y}
+if(phase==='carried'){ball.x=find(holder).x;ball.y=find(holder).y;const tackler=def.find(d=>distance(d,find(holder))<17);if(tackler){result='tackle';events.push(tackler.id+' tackled '+holder)}else if(ball.x>=550)result='touchdown'}
+if(phase==='held'&&def.some(d=>rushers.includes(d.id)&&distance(d,qb)<17)){result='sack';events.push('Quarterback sacked')}
+frames.push({off:off.map(p=>[p.id,+p.x.toFixed(1),+p.y.toFixed(1)]),def:def.map(p=>[p.id,+p.x.toFixed(1),+p.y.toFixed(1)]),ball:[+ball.x.toFixed(1),+ball.y.toFixed(1)],holder,phase});
+if(result)break}
+if(!result)result=phase==='carried'?'tackle':phase==='held'?'sack':'incomplete';
+const last=frames[frames.length-1],yards=['tackle','touchdown','sack'].includes(result)?clamp(Math.round((last.ball[0]-185)/5),-15,70):0;
+return {play,defense,seed,frames,result,yards,events,holder};
+}
+function render(sim,i){const f=sim.frames[clamp(i,0,sim.frames.length-1)];let svg='<rect width="600" height="260" fill="#226647"/>';for(let j=0;j<=12;j++)svg+='<line x1="'+j*50+'" x2="'+j*50+'" y1="0" y2="260" stroke="white" stroke-opacity=".17"/>';svg+='<line x1="185" x2="185" y1="0" y2="260" stroke="#f5d66c" stroke-width="3"/>';
+for(const [id,x,y] of f.off)svg+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="#74c5ff" stroke="'+(f.holder===id?'#ffe26c':'white')+'" stroke-width="2"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" font-weight="bold">'+id+'</text>';
+for(const [id,x,y] of f.def)svg+='<rect x="'+(x-11)+'" y="'+(y-10)+'" width="22" height="20" rx="3" fill="#f18c82" stroke="white"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8">'+id+'</text>';
+svg+='<ellipse cx="'+(f.ball[0]+8)+'" cy="'+(f.ball[1]-6)+'" rx="8" ry="5" fill="#e6a455" stroke="white"/>';
+if(i===sim.frames.length-1)svg+='<rect x="375" y="8" width="215" height="32" rx="6" fill="#102b27"/><text x="482" y="29" text-anchor="middle" font-size="15" fill="white">'+sim.yards+' YDS · '+sim.result.toUpperCase()+'</text>';
+return svg}
+return {simulate,render,version:'1.0'};
+})();
