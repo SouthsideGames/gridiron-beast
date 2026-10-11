@@ -1,6 +1,6 @@
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.1
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.2
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -282,3 +282,21 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **Migration phases:** M0 audit/schema (complete); M1 roster/personnel; M2 JSON plays/formations; M3 visual practice; M4 full match and AI; M5 franchise regression and save migration. Each phase has explicit acceptance criteria in `data/football-11v11-migration.json` and `docs/FOOTBALL_11V11_MIGRATION_AUDIT.md`.
 
 **Implementation status:** GDD decision and migration documents complete. Actual 11v11 HTML, starter roster, play definitions, match engine and save migration are NOT IMPLEMENTED. Keep v3.0 HTML as the testable legacy prototype until phased replacement passes acceptance testing.
+
+## 27. Fixed starter monsters and Monster Trainer — approved design v3.2 (NOT IMPLEMENTED)
+
+**Implementation gate:** The owner explicitly requested design locking and planning only. No HTML, onboarding code, gameplay, save data or runtime behavior may be modified for these additions until the owner explicitly says **proceed**. Current playable HTML remains legacy 7v7 v3.0.
+
+**Commissioner onboarding sequence (LOCKED):** Create franchise owner → select one of four struggling Challenger franchises → reveal automatically assigned same-division rival GM → select **one of three fixed offensive starter monsters** → select **one of three fixed defensive starter monsters** → hire Head Coach, Offensive Coordinator, Defensive Coordinator, Head Scout and **Monster Trainer** → interactive tutorial → Franchise Headquarters. Both selections occur before staff hiring so the player can hire coaches to complement their monsters.
+
+**Starter choices (LOCKED):** The same three offensive candidates and the same three defensive candidates are offered in each new franchise. Player chooses exactly one from each group. Each chosen starter begins at **67–70 OVR** and must be the **strictly highest-rated monster on its side of the ball** at initial roster reveal. The other offensive starters must be lower OVR than the selected offensive monster; the same applies independently to defense. Candidate profiles must display pixel-art sprite, position/archetype, elemental type, nature, base/effective stats, ability and coach-scheme fit. The fixed candidates' species, exact stats, nature rolls and defensive position mix remain to be designed. These two initial gifts are a **one-time onboarding exception** to the rule that future monster acquisition occurs through franchise recruitment/drafting, not a shop.
+
+**Trainer staffing (LOCKED):** Five mandatory hires total: HC, OC, DC, Head Scout, Monster Trainer. The trainer has hireable candidates, quality, philosophy/specialty and cost. Quality and specialization influence **temporary training bonuses for the current game week only**, not permanent stat growth, XP multipliers or level-up stat increases. Normal leveling and nature-based permanent growth continue under existing rules; the trainer does not accelerate them.
+
+**Weekly timing (LOCKED):** Tuesday remains recruitment. Wednesday remains team training, directed by the selected trainer and the player's training focus. Weekly bonuses expire after the relevant Sunday game/week. Trainer bonuses should be visible in effective game-week stats and match calculations, and must not overwrite permanent monster attributes.
+
+**Acceptance tests to design before implementation:** (1) Fixed candidate pools persist across new franchises; (2) only one offensive and one defensive candidate can be chosen; (3) chosen starter OVR is 67–70 and strictly higher than other initial starters on that side; (4) staff hiring cannot begin before both choices; (5) fifth staff slot is Trainer; (6) Tuesday recruitment and Wednesday training remain distinct; (7) trainer bonus affects the week's game, expires afterward, and never changes permanent stats; (8) legacy saves are not erased.
+
+**Open decisions:** exact six starter monsters and defensive position mix; whether fixed species have fixed or randomized natures/attributes; how to populate remaining legal 11v11 positions and preserve old saves; roster/bench size and two-way/special-teams policy; trainer specialties/candidates and temporary bonus formula, caps and stacking; which training focuses affect which monsters and plays. These must be resolved before coding relevant systems.
+
+**Migration sequencing:** Extend M1 to include starter selection, five-staff onboarding, 22-player lineup validation and safe old-save handling. M3 practice must visualize temporary Wednesday training bonuses. M4 match engine must consume bonuses and clear them at the correct boundary. M5 regression must verify all preserved franchise systems. Canonical requirements: `data/football-11v11-migration.json`.
