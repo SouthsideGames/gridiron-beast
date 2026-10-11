@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "prototypeVersion": "2.8",
+  "coachingStaff": {
+    "compareCandidatesAfterHiring": false,
+    "hiredStaffPlayDiagrams": true
+  },
+  "franchiseGame": {
+    "entryPoint": "Sunday weekly action only",
+    "headquartersExhibitionShortcut": false,
+    "nonSundayAccessBlocked": true,
+    "gamePlan": "Friday Head Coach Office, five offense and five defense plays"
+  },
+  "leagueCentral": {
+    "ownerTeamStyle": "bold italic with contrasting background and YOUR TEAM label"
+  },
+  "practice": {
+    "visualField": true,
+    "offensivePlayers": 7,
+    "defensivePlayers": 7,
+    "ballAnimation": true,
+    "playAnimationDurationMs": 2300,
+    "resultsShownAfterAnimation": true,
+    "limitations": "Simplified vector animation, not yet complete pixel-art physics"
+  },
+  "playbooks": {
+    "offensiveDiagrams": true,
+    "defensiveDiagrams": true,
+    "customPlayEditor": "locked until progression; not yet implemented"
+  }
+}
