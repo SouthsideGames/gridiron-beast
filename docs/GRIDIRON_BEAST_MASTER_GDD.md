@@ -1,6 +1,6 @@
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.2
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.3
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -300,3 +300,21 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **Open decisions:** exact six starter monsters and defensive position mix; whether fixed species have fixed or randomized natures/attributes; how to populate remaining legal 11v11 positions and preserve old saves; roster/bench size and two-way/special-teams policy; trainer specialties/candidates and temporary bonus formula, caps and stacking; which training focuses affect which monsters and plays. These must be resolved before coding relevant systems.
 
 **Migration sequencing:** Extend M1 to include starter selection, five-staff onboarding, 22-player lineup validation and safe old-save handling. M3 practice must visualize temporary Wednesday training bonuses. M4 match engine must consume bonuses and clear them at the correct boundary. M5 regression must verify all preserved franchise systems. Canonical requirements: `data/football-11v11-migration.json`.
+
+## 28. Roster cap, fatigue, injuries, special teams and permanent growth — approved design v3.3
+
+**IMPLEMENTATION HOLD:** These decisions are approved design specifications only. Do not modify the playable HTML, runtime saves or simulation until the owner explicitly instructs us to proceed. The HTML remains legacy 7v7 v3.0.
+
+**LOCKED 40-monster franchise roster cap:** Each franchise may roster at most 40 monsters, including 11 offensive starters, 11 defensive starters, reserves and special-teams specialists. Exact position distribution, game-day active limits, two-way eligibility, injured reserve and replacement rules remain to be defined. The previously discussed 40-slot positional breakdown is illustrative, not a mandatory positional quota.
+
+**LOCKED balanced injury frequency:** Football contact, fatigue, durability and injury history should influence injuries, with a balanced frequency that creates meaningful substitutions without routinely destroying seasons. Every monster detail profile must display current fatigue and injury status; headquarters will have a Medical Report showing unavailable monsters, severity, recovery and recommended replacements. Fatigue accumulates through snaps, contact and exertion; recovery occurs through rest, reduced workload and bye weeks. Higher fatigue increases injury risk and temporarily reduces effective performance. Exact formulas, severity distribution and recovery durations are pending balance testing. Injuries do not delete permanent levels, nature, XP or base stats.
+
+**LOCKED simplified special teams for initial 11v11 gameplay:** Include field-goal and punt decisions and outcomes; kickoff, return and other special-teams sequences may be simulated initially. Extra-point/PAT resolution must still be handled by the scoring engine even if it is not fully animated. Dedicated K and P eligibility and depth-chart assignments must be modeled within the 40-monster cap. Full animated kickoffs, returns and coverage are deferred.
+
+**LOCKED permanent progression source:** Monsters gain permanent attributes **only through game-earned XP and level-up progression**. Monster Trainer quality and Wednesday training must NEVER add permanent stat gains, XP multipliers or accelerated leveling. Nature-based growth modifiers remain part of the normal level-up formula, not trainer bonuses.
+
+**LOCKED weekly training:** Tuesday remains monster recruitment. Wednesday is the only weekly team-training decision. The fifth mandatory hire, Monster Trainer, affects the strength and specialization of **temporary game-week performance bonuses** only. Buffs affect effective game calculations, not permanent OVR, and expire after that game/week. Buff magnitude, stacking, affected stats/plays and caps are not yet locked.
+
+**Implementation acceptance:** A legal 40-monster roster supports 22 simultaneous on-field assignments plus backups/specialists; injured/unavailable monsters cannot be illegally selected; fatigue appears on profiles and changes effective performance; injury incidence follows tested balanced probabilities; K/P choices work; XP and leveling are the only permanent stat-growth pathway; trainer bonuses expire without modifying saved base stats; legacy franchise and monster saves remain intact.
+
+**Remaining decisions:** final positional allocation; initial roster-fill and old-save conversion; injured-reserve policy; two-way play; fatigue/injury formulas and injury lengths; simplified special-teams scope (particularly PAT and kickoff outcomes); game XP for low-snap and special-teams monsters. Source of truth: `data/football-11v11-migration.json` schema v3.
