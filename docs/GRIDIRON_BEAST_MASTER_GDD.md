@@ -1,4 +1,4 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.9
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.0
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -245,3 +245,13 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **HTML v2.9:** Shared scheme classification; distinct man, zone and blitz diagrams; defense selector redraws practice field; on-snap defensive tracking/rushing; pass and run ball ownership interpolated to the relevant player; outcome shown at animation end. This is an SVG schematic prototype, not full physics or finalized pixel-art football gameplay. Man matchups and coverage areas are simplified.
 
 **Unity parity:** Reproduce coverage indicators and ball-carrier ownership, then replace prototype interpolation with formation, pursuit, coverage and collision systems. Validate switching defensive looks changes visible assignments; test run handoff, completed pass and incomplete pass separately. Canonical UI specification: data/ui-gameplay.json.
+
+## 25. Shared football formations and Cover Two correction — v3.0
+
+**LOCKED:** All 7-on-7 practice and playbook diagrams use the same canonical formation data and position labels rather than numbers. Offense consists of OL1, OL2, OL3 on the line of scrimmage; QB behind the line (under center or shotgun); WR1 and WR2 wide; RB behind the QB. The QB must never line up even with the offensive linemen. Defense consists of DL1, DL2, LB1, LB2, DB1, DB2, DB3. The attacking offense advances toward the defense.
+
+**LOCKED Cover Two:** Exactly two defensive linemen rush the passer, and exactly five other defenders own five visible zone responsibilities: DB1 and DB3 deep/outer zones, LB1 and LB2 underneath middle zones, and DB2 the remaining central zone. No defender is responsible for multiple independently drawn zones. Draw rush arrows for DL1/DL2. Cover Two remains a schematic 7-on-7 adaptation rather than literal NFL 11-on-11 assignments.
+
+**LOCKED offensive visualization:** Show receiver route paths with directional arrows and OL blocking directions on the practice field before snapping. Position abbreviations identify the ball carrier, QB, receivers, linemen and defenders. Practice animation should follow those concepts; the playbook preview uses the same formations, labels and route/coverage vocabulary.
+
+**Prototype v3.0:** Shared practiceOffense/practiceDefense coordinate definitions, offenseOverlay and defenseOverlay functions drive both practice and playbook SVG. Zone display reduced from seven to five; two DL rush arrows; QB positioned behind OL; players labeled by football position. The motion engine remains schematic and does not yet simulate individual collisions or full tactical football. These rules are authoritative for Unity parity; canonical UI JSON is data/ui-gameplay.json.
