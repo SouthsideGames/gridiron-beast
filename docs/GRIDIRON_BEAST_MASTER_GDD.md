@@ -1,6 +1,8 @@
+> **Implementation update:** HTML v3.5 now has a 40-monster 11v11 roster model, two fixed starter selections, five staff hires, 22-position practice and match drawings, simplified XP/injuries, temporary training and kicking/punting. The match engine and playbook are still provisional; the migration is **PARTIAL**, not feature-complete. Older sections describing a hold were written before explicit implementation authorization and are superseded by Section 30.
+
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.4
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.5
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -334,3 +336,15 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **Required implementation tests:** Injured players still count toward 40; unavailable players cannot start; secondary-position effective ratings apply a reversible penalty; injury recovery windows match severity; XP requires participation and performance bonuses; level-up gains persist, trainer buffs expire; existing 7v7 saves remain intact until migrated.
 
 **Blocking design questions:** exact 40-slot roster distribution; six fixed starter candidates and initial roster completion; secondary-position eligibility matrix/penalty; injury incidence and fatigue formulas; game XP rates and low-snap handling; special-teams XP and PAT/field-goal mechanics; safe migration of existing monster and franchise saves.
+
+## 30. Authorized 11-on-11 HTML conversion — prototype v3.5
+
+**Implementation authorized:** The owner explicitly said "Implement." Previous hold instructions in Sections 26–29 no longer apply to implementing approved features, but remain useful design history.
+
+**Implemented first-pass features:** (1) two fixed three-monster starter selection screens after the rival reveal and before hiring; (2) offensive and defensive chosen monsters at 67–70 OVR, above all initial teammates on their respective side; (3) 40-monster roster model comprising 22 starting slots and 18 reserves including K/P; (4) eleven-player offensive and defensive depth chart, eligible position selection; (5) fifth mandatory hire Monster Trainer; (6) 22 positional player shapes in practice and match diagrams; (7) temporary Wednesday trainer performance bonus; (8) basic game XP/leveling, fatigue and balanced injury rolls with short recovery; (9) simplified field goal and punt actions.
+
+**Still incomplete:** Real 22-actor collision-based simulation, legal formation and eligible receiver validation, 11-assignment playbook integration, defensive coverage AI, animation fidelity, passing/tackling outcomes, fully functional special teams, full medical/injury management, per-monster snap participation tracking, XP for individual performance, league-wide match simulation, full 7v7 save migration and polished pixel-art sprites. Current match still uses simplified stochastic yardage, and 11v11 play JSON is **provisional**, not certified gameplay. Do not claim complete NFL-style rules or production readiness.
+
+**Source files:** `data/football-roster-11v11.json` defines the roster/initial choices, `data/football-plays-11v11.json` defines provisional 11-assignment play concepts, and `data/football-11v11-migration.json` retains migration acceptance criteria. The HTML remains a development prototype.
+
+**Next gates:** Validate new-franchise onboarding and five hires end-to-end in Safari; integrate play JSON and 22-player assignment-driven animations; build actual defensive AI and possession/clock rules; test injury/fatigue and save migration without loss of franchise records; update the GDD and implementation register for every subsequent change.
