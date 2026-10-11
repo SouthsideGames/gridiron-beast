@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "conferences": {
     "Aurora": {
       "divisions": {
@@ -61,5 +61,77 @@
     "scheduleGeneration": "Reciprocal league-wide deterministic fixtures",
     "schedulePreviewYears": 8,
     "playoffsImplemented": false
+  },
+  "tiers": [
+    {
+      "id": "sovereign",
+      "rank": 1,
+      "name": "Sovereign League",
+      "teamOverall": {
+        "min": 83,
+        "max": 100
+      },
+      "relegationEligible": true,
+      "promotionChampionships": null
+    },
+    {
+      "id": "vanguard",
+      "rank": 2,
+      "name": "Vanguard League",
+      "teamOverall": {
+        "min": 71,
+        "max": 82
+      },
+      "relegationEligible": true,
+      "promotionChampionships": 6
+    },
+    {
+      "id": "challenger",
+      "rank": 3,
+      "name": "Challenger League",
+      "teamOverall": {
+        "min": 0,
+        "max": 70
+      },
+      "relegationEligible": false,
+      "promotionChampionships": 4
+    }
+  ],
+  "tierRules": {
+    "teamCountPerTier": 16,
+    "conferencesPerTier": 2,
+    "divisionsPerTier": 4,
+    "teamsPerDivision": 4,
+    "allTeamsEligibleForMovement": true,
+    "relegation": {
+      "consecutiveBottomFourOverallSeasons": 2,
+      "rankingScope": "full 16-team league",
+      "appliesTo": [
+        "sovereign",
+        "vanguard"
+      ],
+      "effects": [
+        "revenue_reduction",
+        "contract_pressure",
+        "morale_penalty",
+        "possible_roster_departures"
+      ],
+      "permanentMonsterStatReduction": false
+    },
+    "promotion": {
+      "method": "promotion_challenge",
+      "requiredChampionships": {
+        "challenger_to_vanguard": 4,
+        "vanguard_to_sovereign": 6
+      },
+      "badgesPermanent": true
+    },
+    "unresolved": [
+      "Promotion challenge match format and number of attempts",
+      "How promotion and relegation slots are paired to preserve 16 teams per tier",
+      "Whether OVR bands are initial seeding guidelines or hard ongoing restrictions",
+      "How AI franchises earn promotion-challenge eligibility",
+      "Tie-breakers for bottom-four overall finishes"
+    ]
   }
 }
