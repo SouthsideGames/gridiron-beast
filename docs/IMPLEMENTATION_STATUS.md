@@ -1,6 +1,10 @@
+# Current migration status: 11-on-11 LOCKED, NOT YET IMPLEMENTED
+
+The playable HTML prototype remains v3.0 7-on-7. Do not describe it as 11-on-11. New football development is gated by the migration plan. Non-football franchise systems are preserved. See [audit](FOOTBALL_11V11_MIGRATION_AUDIT.md).
+
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v3.0 | GDD: v3.0
+Updated: 2026-10-11 | HTML prototype: v3.0 (legacy 7v7) | GDD: v3.1 (11v11 locked)
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -128,3 +132,20 @@ Every implementation task must update the code, any applicable JSON definitions,
 - Offensive routes and line blocking instructions are displayed with defensive instructions.
 - Cover Two now uses five assigned coverage zones and two DL rushers.
 - HTML syntax and source inspection performed; mobile Safari playthrough remains unverified.
+
+## v3.1 football format decision and migration readiness
+
+| Item | Status | Evidence |
+|---|---|---|
+| 11v11 football design decision | LOCKED | GDD Section 26 |
+| Existing 7v7 systems audited | COMPLETE | docs/FOOTBALL_11V11_MIGRATION_AUDIT.md |
+| JSON migration contract | COMPLETE | data/football-11v11-migration.json |
+| 22-player starter roster and depth chart | NOT STARTED | Current HTML remains 14 starters |
+| 11-player offensive/defensive JSON plays | NOT STARTED | Existing names are concepts, not certified plays |
+| 22-player visual practice | NOT STARTED | Current renderer 7+7 |
+| Full 11v11 match engine | NOT STARTED | Current renderer 7+7; stochastic yardage |
+| 11v11 save migration | NOT STARTED | Must preserve existing saves and monster progression |
+| Owner/staff/scouting/leagues/schedules/rivals | PRESERVE | Regression test in migration phase M5 |
+| HTML release version | v3.0 LEGACY | No premature v3.1 gameplay version claim |
+
+**Next development gate:** M1 roster/personnel and legacy-save compatibility. Do not begin M2 playbook implementation until legal 11-player lineups and position eligibility are specified. Existing game data and saves must not be erased or overwritten.
