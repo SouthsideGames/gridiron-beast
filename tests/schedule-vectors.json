@@ -1,0 +1,1967 @@
+{
+  "schemaVersion": 1,
+  "source": "Gridiron Beast HTML v2.2",
+  "description": "Unity parity fixture vectors. Each season's games are reciprocal across the entire league.",
+  "seasons": [
+    {
+      "year": 1,
+      "teams": {
+        "Stonehaven Titans": [
+          {
+            "week": 1,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Ashford Hawks",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "bye": true
+          },
+          {
+            "week": 5,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 6,
+            "opponent": "Harbor Sentinels",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 9,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 10,
+            "opponent": "Frostpeak Howlers",
+            "home": false,
+            "category": "Interconference"
+          }
+        ],
+        "Ember City Beasts": [
+          {
+            "week": 1,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "bye": true
+          },
+          {
+            "week": 5,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 6,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 9,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 10,
+            "opponent": "Stormport Bolts",
+            "home": false,
+            "category": "Interconference"
+          }
+        ],
+        "Frostpeak Howlers": [
+          {
+            "week": 1,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "bye": true
+          },
+          {
+            "week": 5,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 6,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 9,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 10,
+            "opponent": "Stonehaven Titans",
+            "home": true,
+            "category": "Interconference"
+          }
+        ],
+        "Stormport Bolts": [
+          {
+            "week": 1,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Sundown Drakes",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "bye": true
+          },
+          {
+            "week": 5,
+            "opponent": "Canyon Crushers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 6,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 9,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 10,
+            "opponent": "Ember City Beasts",
+            "home": true,
+            "category": "Interconference"
+          }
+        ]
+      }
+    },
+    {
+      "year": 2,
+      "teams": {
+        "Stonehaven Titans": [
+          {
+            "week": 1,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Ashford Hawks",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Harbor Sentinels",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "bye": true
+          },
+          {
+            "week": 6,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 8,
+            "opponent": "Ember City Beasts",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 9,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 10,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Ember City Beasts": [
+          {
+            "week": 1,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "bye": true
+          },
+          {
+            "week": 6,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 8,
+            "opponent": "Stonehaven Titans",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 9,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 10,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Frostpeak Howlers": [
+          {
+            "week": 1,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "bye": true
+          },
+          {
+            "week": 6,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 8,
+            "opponent": "Stormport Bolts",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 9,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 10,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Stormport Bolts": [
+          {
+            "week": 1,
+            "opponent": "Sundown Drakes",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Canyon Crushers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "bye": true
+          },
+          {
+            "week": 6,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 8,
+            "opponent": "Frostpeak Howlers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 9,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 10,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Division"
+          }
+        ]
+      }
+    },
+    {
+      "year": 3,
+      "teams": {
+        "Stonehaven Titans": [
+          {
+            "week": 1,
+            "opponent": "Ashford Hawks",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Harbor Sentinels",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 6,
+            "bye": true
+          },
+          {
+            "week": 7,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 8,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 9,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Ember City Beasts": [
+          {
+            "week": 1,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 6,
+            "bye": true
+          },
+          {
+            "week": 7,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 8,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 9,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Frostpeak Howlers": [
+          {
+            "week": 1,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 6,
+            "bye": true
+          },
+          {
+            "week": 7,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 8,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 9,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Stormport Bolts": [
+          {
+            "week": 1,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Canyon Crushers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 6,
+            "bye": true
+          },
+          {
+            "week": 7,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 8,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 9,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Sundown Drakes",
+            "home": true,
+            "category": "Division"
+          }
+        ]
+      }
+    },
+    {
+      "year": 4,
+      "teams": {
+        "Stonehaven Titans": [
+          {
+            "week": 1,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Harbor Sentinels",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Ember City Beasts",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 5,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 6,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 7,
+            "bye": true
+          },
+          {
+            "week": 8,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Ashford Hawks",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Ember City Beasts": [
+          {
+            "week": 1,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Stonehaven Titans",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 5,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 6,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 7,
+            "bye": true
+          },
+          {
+            "week": 8,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Frostpeak Howlers": [
+          {
+            "week": 1,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Stormport Bolts",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 5,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 6,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 7,
+            "bye": true
+          },
+          {
+            "week": 8,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Division"
+          }
+        ],
+        "Stormport Bolts": [
+          {
+            "week": 1,
+            "opponent": "Canyon Crushers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Frostpeak Howlers",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 5,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 6,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 7,
+            "bye": true
+          },
+          {
+            "week": 8,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Sundown Drakes",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Division"
+          }
+        ]
+      }
+    },
+    {
+      "year": 5,
+      "teams": {
+        "Stonehaven Titans": [
+          {
+            "week": 1,
+            "opponent": "Harbor Sentinels",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 4,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 5,
+            "opponent": "Stormport Bolts",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 6,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "bye": true
+          },
+          {
+            "week": 9,
+            "opponent": "Ashford Hawks",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Ember City Beasts": [
+          {
+            "week": 1,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 4,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 5,
+            "opponent": "Frostpeak Howlers",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 6,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "bye": true
+          },
+          {
+            "week": 9,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Frostpeak Howlers": [
+          {
+            "week": 1,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 4,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 5,
+            "opponent": "Ember City Beasts",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 6,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "bye": true
+          },
+          {
+            "week": 9,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Stormport Bolts": [
+          {
+            "week": 1,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 3,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 4,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 5,
+            "opponent": "Stonehaven Titans",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 6,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Sundown Drakes",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "bye": true
+          },
+          {
+            "week": 9,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Canyon Crushers",
+            "home": false,
+            "category": "Division"
+          }
+        ]
+      }
+    },
+    {
+      "year": 6,
+      "teams": {
+        "Stonehaven Titans": [
+          {
+            "week": 1,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Ember City Beasts",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 3,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 4,
+            "bye": true
+          },
+          {
+            "week": 5,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 6,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Ashford Hawks",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Harbor Sentinels",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Ember City Beasts": [
+          {
+            "week": 1,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Stonehaven Titans",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 3,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 4,
+            "bye": true
+          },
+          {
+            "week": 5,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 6,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Frostpeak Howlers": [
+          {
+            "week": 1,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Stormport Bolts",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 3,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 4,
+            "bye": true
+          },
+          {
+            "week": 5,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 6,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Stormport Bolts": [
+          {
+            "week": 1,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 2,
+            "opponent": "Frostpeak Howlers",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 3,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 4,
+            "bye": true
+          },
+          {
+            "week": 5,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 6,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Sundown Drakes",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Canyon Crushers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Division"
+          }
+        ]
+      }
+    },
+    {
+      "year": 7,
+      "teams": {
+        "Stonehaven Titans": [
+          {
+            "week": 1,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 2,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 3,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 4,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "bye": true
+          },
+          {
+            "week": 6,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Ashford Hawks",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Harbor Sentinels",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Ember City Beasts": [
+          {
+            "week": 1,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 2,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 3,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 4,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "bye": true
+          },
+          {
+            "week": 6,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Frostpeak Howlers": [
+          {
+            "week": 1,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 2,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 3,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 4,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "bye": true
+          },
+          {
+            "week": 6,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Division"
+          }
+        ],
+        "Stormport Bolts": [
+          {
+            "week": 1,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 2,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 3,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 4,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "bye": true
+          },
+          {
+            "week": 6,
+            "opponent": "Sundown Drakes",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 7,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Canyon Crushers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Division"
+          }
+        ]
+      }
+    },
+    {
+      "year": 8,
+      "teams": {
+        "Stonehaven Titans": [
+          {
+            "week": 1,
+            "opponent": "Ember City Beasts",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 2,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 3,
+            "opponent": "Eastport Phantoms",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Harbor Sentinels",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "opponent": "Ashford Hawks",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 6,
+            "bye": true
+          },
+          {
+            "week": 7,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Harbor Sentinels",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Conference"
+          }
+        ],
+        "Ember City Beasts": [
+          {
+            "week": 1,
+            "opponent": "Stonehaven Titans",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 2,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Interconference"
+          },
+          {
+            "week": 3,
+            "opponent": "Bayou Stalkers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Sunfire Lions",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "opponent": "Palmetto Vipers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 6,
+            "bye": true
+          },
+          {
+            "week": 7,
+            "opponent": "Bayou Stalkers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Sunfire Lions",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Eastport Phantoms",
+            "home": false,
+            "category": "Conference"
+          }
+        ],
+        "Frostpeak Howlers": [
+          {
+            "week": 1,
+            "opponent": "Stormport Bolts",
+            "home": false,
+            "category": "Conference"
+          },
+          {
+            "week": 2,
+            "opponent": "Palmetto Vipers",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 3,
+            "opponent": "Glacier Guardians",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Northstar Wolves",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "opponent": "Ironpeak Rams",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 6,
+            "bye": true
+          },
+          {
+            "week": 7,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Northstar Wolves",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Ironpeak Rams",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Conference"
+          }
+        ],
+        "Stormport Bolts": [
+          {
+            "week": 1,
+            "opponent": "Frostpeak Howlers",
+            "home": true,
+            "category": "Conference"
+          },
+          {
+            "week": 2,
+            "opponent": "Ashford Hawks",
+            "home": false,
+            "category": "Interconference"
+          },
+          {
+            "week": 3,
+            "opponent": "Canyon Crushers",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 4,
+            "opponent": "Sundown Drakes",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 5,
+            "opponent": "Thunder Mesa",
+            "home": true,
+            "category": "Division"
+          },
+          {
+            "week": 6,
+            "bye": true
+          },
+          {
+            "week": 7,
+            "opponent": "Canyon Crushers",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 8,
+            "opponent": "Sundown Drakes",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 9,
+            "opponent": "Thunder Mesa",
+            "home": false,
+            "category": "Division"
+          },
+          {
+            "week": 10,
+            "opponent": "Glacier Guardians",
+            "home": false,
+            "category": "Conference"
+          }
+        ]
+      }
+    }
+  ]
+}
