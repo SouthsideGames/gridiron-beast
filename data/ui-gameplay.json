@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "prototypeVersion": "2.8",
+  "version": 2,
+  "prototypeVersion": "2.9",
   "coachingStaff": {
     "compareCandidatesAfterHiring": false,
     "hiredStaffPlayDiagrams": true
@@ -21,11 +21,25 @@
     "ballAnimation": true,
     "playAnimationDurationMs": 2300,
     "resultsShownAfterAnimation": true,
-    "limitations": "Simplified vector animation, not yet complete pixel-art physics"
+    "limitations": "Simplified SVG positional interpolation, not true collision/football simulation",
+    "defenseSelectionChangesVisual": true,
+    "defensiveSchemes": {
+      "man": "Assignment lines connect defenders to offensive matchups and defenders track targets",
+      "zone": "Translucent blue coverage ellipses display each defender's responsibility",
+      "blitz": "Orange directional arrows show pass-rush paths and rushers move toward quarterback"
+    },
+    "ballPossession": "Completed pass ends at receiving monster; run ends at ball carrier; incompletion does not show receiver possession",
+    "yardageAlignment": "Approximate 5 SVG units per yard for active carrier; prototype-level only"
   },
   "playbooks": {
     "offensiveDiagrams": true,
     "defensiveDiagrams": true,
-    "customPlayEditor": "locked until progression; not yet implemented"
+    "customPlayEditor": "locked until progression; not yet implemented",
+    "defensiveSchemesVisualized": [
+      "man",
+      "zone",
+      "blitz"
+    ],
+    "sharedDefensiveSchemeClassifier": true
   }
 }
