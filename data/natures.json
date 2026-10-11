@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "natures": [
+    {
+      "id": "swift",
+      "name": "Swift",
+      "modifiers": {
+        "speed": 1.1,
+        "strength": 0.9
+      },
+      "behavior": "Gets early separation; less effective on physical contact."
+    },
+    {
+      "id": "explosive",
+      "name": "Explosive",
+      "modifiers": {
+        "acceleration": 1.1,
+        "endurance": 0.9
+      },
+      "behavior": "Strong first burst; tires faster on sustained drives."
+    },
+    {
+      "id": "elusive",
+      "name": "Elusive",
+      "modifiers": {
+        "agility": 1.1,
+        "durability": 0.9
+      },
+      "behavior": "Attempts more evasive moves; vulnerable to hard hits."
+    },
+    {
+      "id": "powerful",
+      "name": "Powerful",
+      "modifiers": {
+        "strength": 1.1,
+        "speed": 0.9
+      },
+      "behavior": "Prefers contact and power moves."
+    },
+    {
+      "id": "sturdy",
+      "name": "Sturdy",
+      "modifiers": {
+        "durability": 1.1,
+        "agility": 0.9
+      },
+      "behavior": "Absorbs hits and protects the ball."
+    },
+    {
+      "id": "relentless",
+      "name": "Relentless",
+      "modifiers": {
+        "endurance": 1.1,
+        "acceleration": 0.9
+      },
+      "behavior": "Maintains effort late in drives."
+    },
+    {
+      "id": "precise",
+      "name": "Precise",
+      "modifiers": {
+        "accuracy": 1.1,
+        "strength": 0.9
+      },
+      "behavior": "Chooses safer throwing windows."
+    },
+    {
+      "id": "surehanded",
+      "name": "Surehanded",
+      "modifiers": {
+        "catching": 1.1,
+        "tackling": 0.9
+      },
+      "behavior": "Prioritizes securing receptions."
+    },
+    {
+      "id": "technical",
+      "name": "Technical",
+      "modifiers": {
+        "routeRunning": 1.1,
+        "strength": 0.9
+      },
+      "behavior": "Executes crisp routes."
+    },
+    {
+      "id": "cerebral",
+      "name": "Cerebral",
+      "modifiers": {
+        "intelligence": 1.1,
+        "strength": 0.9
+      },
+      "behavior": "Reads defensive tendencies more accurately."
+    },
+    {
+      "id": "instinctive",
+      "name": "Instinctive",
+      "modifiers": {
+        "instinct": 1.1,
+        "endurance": 0.9
+      },
+      "behavior": "Reacts quickly to loose balls and routes."
+    },
+    {
+      "id": "focused",
+      "name": "Focused",
+      "modifiers": {
+        "awareness": 1.1,
+        "acceleration": 0.9
+      },
+      "behavior": "Makes fewer assignment errors."
+    },
+    {
+      "id": "aggressive",
+      "name": "Aggressive",
+      "modifiers": {
+        "tackling": 1.1,
+        "coverage": 0.9
+      },
+      "behavior": "Pursues big hits; occasionally overcommits."
+    },
+    {
+      "id": "disciplined",
+      "name": "Disciplined",
+      "modifiers": {
+        "coverage": 1.1,
+        "passRush": 0.9
+      },
+      "behavior": "Stays in assigned coverage."
+    },
+    {
+      "id": "ferocious",
+      "name": "Ferocious",
+      "modifiers": {
+        "passRush": 1.1,
+        "coverage": 0.9
+      },
+      "behavior": "Rushes quarterback aggressively."
+    },
+    {
+      "id": "protective",
+      "name": "Protective",
+      "modifiers": {
+        "blocking": 1.1,
+        "agility": 0.9
+      },
+      "behavior": "Stays engaged with blockers."
+    },
+    {
+      "id": "slippery",
+      "name": "Slippery",
+      "modifiers": {
+        "evasion": 1.1,
+        "durability": 0.9
+      },
+      "behavior": "Attempts extra tackle escapes."
+    },
+    {
+      "id": "secure",
+      "name": "Secure",
+      "modifiers": {
+        "ballSecurity": 1.1,
+        "speed": 0.9
+      },
+      "behavior": "Protects possession over extra yardage."
+    },
+    {
+      "id": "gifted",
+      "name": "Gifted",
+      "modifiers": {
+        "abilityPower": 1.1,
+        "durability": 0.9
+      },
+      "behavior": "Uses special abilities more effectively."
+    },
+    {
+      "id": "resistant",
+      "name": "Resistant",
+      "modifiers": {
+        "abilityDefense": 1.1,
+        "abilityPower": 0.9
+      },
+      "behavior": "Resists opponent abilities."
+    },
+    {
+      "id": "adaptive",
+      "name": "Adaptive",
+      "modifiers": {
+        "intelligence": 1.1,
+        "abilityPower": 0.9
+      },
+      "behavior": "Adjusts to repeated play calls."
+    },
+    {
+      "id": "patient",
+      "name": "Patient",
+      "modifiers": {
+        "endurance": 1.1,
+        "speed": 0.9
+      },
+      "behavior": "Waits for openings instead of forcing moves."
+    },
+    {
+      "id": "balanced",
+      "name": "Balanced",
+      "modifiers": {},
+      "behavior": "Neutral: follows standard positional tendencies."
+    },
+    {
+      "id": "calm",
+      "name": "Calm",
+      "modifiers": {},
+      "behavior": "Neutral: follows standard positional tendencies."
+    },
+    {
+      "id": "hardy",
+      "name": "Hardy",
+      "modifiers": {},
+      "behavior": "Neutral: follows standard positional tendencies."
+    }
+  ]
+}
