@@ -1,6 +1,6 @@
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v2.2 | GDD: v2.2
+Updated: 2026-10-11 | HTML prototype: v2.3 | GDD: v2.3
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -14,6 +14,10 @@ This document must be updated together with every prototype and JSON change. **L
 | Bye Weeks 4–8, rotating by year | Locked | Implemented as league-wide bye | Passed | Not started |
 | Schedule viewer, preview eight seasons | Locked | Implemented | Syntax only; browser unverified | Not started |
 | New season transition | Locked | Implemented, postseason bypass warning | Syntax only; browser unverified | Not started |
+| Three-tier League Central browsing | Locked | Tier tabs, division lists and placeholder records implemented | Syntax checked, Safari unverified | Not started |
+| Promotion badges and challenge unlocks | Locked | Badge data initialized; challenges not implemented | Not tested | Not started |
+| Consecutive bottom-four relegation and financial consequences | Locked | Rules documented; movement not implemented | Not tested | Not started |
+| 48-team league simulation and standings | Locked | Placeholder team names/0–0 records only | Not tested | Not started |
 | 8-team, 3-week Beast Bowl playoffs | Locked | Display only | Not tested | Not started |
 | Owner creation and mandatory staff hires | Locked | Partial | Browser verification needed | Not started |
 | 12 monster types and 25 natures | Locked | Partial | Browser verification needed | Not started |
@@ -41,3 +45,11 @@ Fixture parity examples: [tests/schedule-vectors.json](../tests/schedule-vectors
 ## Change control
 
 Every implementation task must update the code, any applicable JSON definitions, the [master GDD](GRIDIRON_BEAST_MASTER_GDD.md), and this status register. For any Unity migration, preserve approved rules and identify any HTML features that are still incomplete rather than treating placeholders as final behavior.
+
+## v2.3 three-tier update
+- League Central added to Headquarters with tabs for Challenger, Vanguard and Sovereign.
+- Commissioner now explains starting tier, four-title promotion challenge unlock and two-season bottom-four relegation rule.
+- Canonical JSON and master GDD updated together.
+- Records in other tiers remain 0–0 placeholders, not simulated standings. AI promotion, relegation and tier exchanges are not active.
+- Mandatory pending decisions: promotion/relegation exchange count, promotion challenge format, rating-band enforcement, AI championship accumulation, and relegation economics.
+- JavaScript syntax validated; full Safari interactions not yet tested.
