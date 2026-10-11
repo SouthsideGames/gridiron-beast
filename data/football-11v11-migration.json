@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.4",
+  "effectiveGddVersion": "3.5",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
-  "implementationPhase": "design_locked_awaiting_explicit_proceed",
-  "footballBuildStatus": "not_yet_migrated",
+  "implementationPhase": "partial_11v11_html_conversion",
+  "footballBuildStatus": "partial_prototype_not_complete",
   "offense": {
     "positions": [
       "QB",
@@ -195,35 +195,35 @@
     {
       "id": "M1",
       "name": "Roster and personnel",
-      "status": "not_started",
+      "status": "partial_implemented",
       "acceptance": "40-monster roster including injured monsters, 22 starters, compatible secondary positions with penalties, fixed starter selection, five staff hires, and non-destructive save migration"
     },
     {
       "id": "M2",
       "name": "JSON playbook",
-      "status": "not_started",
+      "status": "json_provisional",
       "acceptance": "Each play has 11 assignments and distinct diagrams"
     },
     {
       "id": "M3",
       "name": "Practice engine",
-      "status": "not_started",
+      "status": "schematic_22_player_visuals",
       "acceptance": "22 moving players and correct possession/counterplay"
     },
     {
       "id": "M4",
       "name": "Match engine and AI",
-      "status": "not_started",
+      "status": "partial_stochastic_engine",
       "acceptance": "11v11 match, AI, 40-second play clock, balanced injuries with 0–1/2–3/4–6 week recovery, participation plus performance XP, temporary trainer buffs, simplified special teams"
     },
     {
       "id": "M5",
       "name": "Save migration and franchise regression",
-      "status": "not_started",
+      "status": "pending_regression",
       "acceptance": "old saves retained; all non-football systems regression tested"
     }
   ],
-  "implementationAuthorization": "DO_NOT_IMPLEMENT_UNTIL_USER_EXPLICITLY_SAYS_PROCEED",
+  "implementationAuthorization": "AUTHORIZED_BY_USER_IMPLEMENT",
   "starterAndTrainer": {
     "status": "LOCKED_DESIGN_ONLY",
     "introOrder": [
@@ -394,5 +394,18 @@
       "benchWithoutSnaps": "pending",
       "trainerXpMultiplier": false
     }
-  }
+  },
+  "implementedFiles": [
+    "index.html",
+    "data/football-roster-11v11.json",
+    "data/football-plays-11v11.json"
+  ],
+  "remainingCritical": [
+    "connect 11-assignment JSON to actual football simulator",
+    "implement 22-player pathfinding, coverage and blocking",
+    "validate full game rules and possessions",
+    "medical report and correct per-monster XP",
+    "old save compatibility end-to-end",
+    "browser interaction test"
+  ]
 }
