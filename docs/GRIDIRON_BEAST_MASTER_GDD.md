@@ -1,6 +1,6 @@
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.3
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.4
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -318,3 +318,19 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **Implementation acceptance:** A legal 40-monster roster supports 22 simultaneous on-field assignments plus backups/specialists; injured/unavailable monsters cannot be illegally selected; fatigue appears on profiles and changes effective performance; injury incidence follows tested balanced probabilities; K/P choices work; XP and leveling are the only permanent stat-growth pathway; trainer bonuses expire without modifying saved base stats; legacy franchise and monster saves remain intact.
 
 **Remaining decisions:** final positional allocation; initial roster-fill and old-save conversion; injured-reserve policy; two-way play; fatigue/injury formulas and injury lengths; simplified special-teams scope (particularly PAT and kickoff outcomes); game XP for low-snap and special-teams monsters. Source of truth: `data/football-11v11-migration.json` schema v3.
+
+## 29. Injured reserve, secondary positions, recovery and XP — approved v3.4
+
+**IMPLEMENTATION HOLD:** Design only. The owner has not authorized gameplay conversion. HTML remains legacy 7v7 v3.0; do not change runtime code, game saves or football systems before an explicit instruction to proceed.
+
+**LOCKED injured reserve:** All injured monsters continue to occupy one of the franchise's 40 roster slots. No separate injured-reserve capacity or automatic replacement monsters. When a monster cannot play, the owner must use an existing eligible roster member. The Medical Report and depth chart must flag injury unavailability and prevent illegal selections.
+
+**LOCKED secondary positions:** Each monster has a primary position and may have compatible secondary positions, with a temporary effective-performance penalty when assigned outside its primary role. Eligibility must follow a position-compatibility matrix; unrelated positions are not automatically allowed. Full offense/defense two-way eligibility is not approved. Exact compatibility and penalty values are pending.
+
+**LOCKED short injury recovery:** Minor injuries require 0–1 weeks, moderate 2–3 weeks, severe 4–6 weeks. Balanced injury frequency remains approved. Fatigue and durability affect risk; recovery cannot erase earned levels, XP, permanent base stats or natures. Injury severity, exact probability formulas, bye-week recovery and whether a 0-week injury allows return later in the same game require balance rules.
+
+**LOCKED game XP:** A monster earns participation XP for actually taking part in a game, plus bonuses for meaningful football contributions such as receptions, touchdowns, blocking, sacks, tackles and interceptions. XP leads to leveling and is the only source of permanent monster-stat growth. Trainer quality and Wednesday training never add permanent growth or XP multipliers; trainer effects are temporary weekly gameplay buffs. Exact XP weights, per-game caps, special-teams XP and unused-bench eligibility are pending.
+
+**Required implementation tests:** Injured players still count toward 40; unavailable players cannot start; secondary-position effective ratings apply a reversible penalty; injury recovery windows match severity; XP requires participation and performance bonuses; level-up gains persist, trainer buffs expire; existing 7v7 saves remain intact until migrated.
+
+**Blocking design questions:** exact 40-slot roster distribution; six fixed starter candidates and initial roster completion; secondary-position eligibility matrix/penalty; injury incidence and fatigue formulas; game XP rates and low-snap handling; special-teams XP and PAT/field-goal mechanics; safe migration of existing monster and franchise saves.
