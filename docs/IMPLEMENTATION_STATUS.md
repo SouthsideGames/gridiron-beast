@@ -1,6 +1,6 @@
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v2.7 | GDD: v2.7
+Updated: 2026-10-11 | HTML prototype: v2.8 | GDD: v2.8
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -90,3 +90,14 @@ Every implementation task must update the code, any applicable JSON definitions,
 - HTML: commissioner rival reveal replaces selectable radio options; assignment persists across navigation; new tier rival defaults are randomized.
 - Existing save data retains its assigned rival. Higher-tier promotion cutscenes remain unimplemented.
 - Updated data/league.json and master GDD. JavaScript syntax checked, full Safari interaction unverified.
+
+## v2.8 visual gameplay and UI revision
+
+- Removed post-hiring coaching candidate comparison; hired staff diagrams remain.
+- Removed always-available Headquarters Exhibition Game shortcut; official Sunday game remains accessible via the weekly calendar. Direct weekday match navigation is blocked.
+- League Central player-owned franchise highlighted bold italic with contrast and explicit YOUR TEAM.
+- Practice now includes an SVG field with seven offensive and seven defensive players, ball motion, and animated route/run demonstration, with result shown at the end. This is not full pixel-art gameplay.
+- Offensive and defensive playbooks now display play diagrams rather than only play names.
+- Updated data/ui-gameplay.json for Unity parity.
+- JavaScript syntax validation passed; actual mobile Safari interactions and animation performance are not yet verified.
+- Known limitation: Sunday match movement remains simplistic; full route animations, defensive pursuit and ball physics are future work.
