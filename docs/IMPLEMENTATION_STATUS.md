@@ -4,7 +4,7 @@ The playable HTML prototype remains v3.0 7-on-7. Do not describe it as 11-on-11.
 
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v3.0 (legacy 7v7) | GDD: v3.1 (11v11 locked)
+Updated: 2026-10-11 | HTML prototype: v3.0 (legacy 7v7) | GDD: v3.2 (11v11 design locked)
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -149,3 +149,6 @@ Every implementation task must update the code, any applicable JSON definitions,
 | HTML release version | v3.0 LEGACY | No premature v3.1 gameplay version claim |
 
 **Next development gate:** M1 roster/personnel and legacy-save compatibility. Do not begin M2 playbook implementation until legal 11-player lineups and position eligibility are specified. Existing game data and saves must not be erased or overwritten.
+
+## v3.2 specification update
+The fixed three-choice offensive and defensive starter pools, one selection per side, OVR 67-70, and highest-rating-on-side requirement are approved. A fifth mandatory staff role, Monster Trainer, is approved. Tuesday remains recruitment; Wednesday training grants temporary weekly game bonuses only. HTML remains legacy v3.0. No gameplay changes authorized until explicit approval.
