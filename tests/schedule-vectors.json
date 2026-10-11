@@ -533,7 +533,7 @@
           },
           {
             "week": 7,
-            "opponent": "Sunfire Lions",
+            "opponent": "Palmetto Vipers",
             "home": false,
             "category": "Conference"
           },
@@ -593,7 +593,7 @@
           },
           {
             "week": 7,
-            "opponent": "Harbor Sentinels",
+            "opponent": "Eastport Phantoms",
             "home": true,
             "category": "Conference"
           },
@@ -653,7 +653,7 @@
           },
           {
             "week": 7,
-            "opponent": "Sundown Drakes",
+            "opponent": "Thunder Mesa",
             "home": false,
             "category": "Conference"
           },
@@ -713,7 +713,7 @@
           },
           {
             "week": 7,
-            "opponent": "Northstar Wolves",
+            "opponent": "Glacier Guardians",
             "home": true,
             "category": "Conference"
           },
@@ -762,13 +762,13 @@
           },
           {
             "week": 4,
-            "opponent": "Ember City Beasts",
+            "opponent": "Sunfire Lions",
             "home": true,
             "category": "Conference"
           },
           {
             "week": 5,
-            "opponent": "Palmetto Vipers",
+            "opponent": "Ember City Beasts",
             "home": false,
             "category": "Conference"
           },
@@ -822,13 +822,13 @@
           },
           {
             "week": 4,
-            "opponent": "Stonehaven Titans",
+            "opponent": "Harbor Sentinels",
             "home": false,
             "category": "Conference"
           },
           {
             "week": 5,
-            "opponent": "Eastport Phantoms",
+            "opponent": "Stonehaven Titans",
             "home": true,
             "category": "Conference"
           },
@@ -882,13 +882,13 @@
           },
           {
             "week": 4,
-            "opponent": "Stormport Bolts",
+            "opponent": "Sundown Drakes",
             "home": true,
             "category": "Conference"
           },
           {
             "week": 5,
-            "opponent": "Thunder Mesa",
+            "opponent": "Stormport Bolts",
             "home": false,
             "category": "Conference"
           },
@@ -942,13 +942,13 @@
           },
           {
             "week": 4,
-            "opponent": "Frostpeak Howlers",
+            "opponent": "Northstar Wolves",
             "home": false,
             "category": "Conference"
           },
           {
             "week": 5,
-            "opponent": "Glacier Guardians",
+            "opponent": "Frostpeak Howlers",
             "home": true,
             "category": "Conference"
           },
@@ -1007,7 +1007,7 @@
           },
           {
             "week": 4,
-            "opponent": "Sunfire Lions",
+            "opponent": "Palmetto Vipers",
             "home": false,
             "category": "Conference"
           },
@@ -1067,7 +1067,7 @@
           },
           {
             "week": 4,
-            "opponent": "Harbor Sentinels",
+            "opponent": "Eastport Phantoms",
             "home": true,
             "category": "Conference"
           },
@@ -1127,7 +1127,7 @@
           },
           {
             "week": 4,
-            "opponent": "Sundown Drakes",
+            "opponent": "Thunder Mesa",
             "home": false,
             "category": "Conference"
           },
@@ -1187,7 +1187,7 @@
           },
           {
             "week": 4,
-            "opponent": "Northstar Wolves",
+            "opponent": "Glacier Guardians",
             "home": true,
             "category": "Conference"
           },
@@ -1246,7 +1246,7 @@
           },
           {
             "week": 3,
-            "opponent": "Palmetto Vipers",
+            "opponent": "Bayou Stalkers",
             "home": false,
             "category": "Conference"
           },
@@ -1306,7 +1306,7 @@
           },
           {
             "week": 3,
-            "opponent": "Eastport Phantoms",
+            "opponent": "Ashford Hawks",
             "home": true,
             "category": "Conference"
           },
@@ -1366,7 +1366,7 @@
           },
           {
             "week": 3,
-            "opponent": "Thunder Mesa",
+            "opponent": "Canyon Crushers",
             "home": false,
             "category": "Conference"
           },
@@ -1426,7 +1426,7 @@
           },
           {
             "week": 3,
-            "opponent": "Glacier Guardians",
+            "opponent": "Ironpeak Rams",
             "home": true,
             "category": "Conference"
           },
@@ -1479,13 +1479,13 @@
         "Stonehaven Titans": [
           {
             "week": 1,
-            "opponent": "Bayou Stalkers",
+            "opponent": "Sunfire Lions",
             "home": true,
             "category": "Conference"
           },
           {
             "week": 2,
-            "opponent": "Sunfire Lions",
+            "opponent": "Palmetto Vipers",
             "home": false,
             "category": "Conference"
           },
@@ -1539,13 +1539,13 @@
         "Ember City Beasts": [
           {
             "week": 1,
-            "opponent": "Ashford Hawks",
+            "opponent": "Harbor Sentinels",
             "home": false,
             "category": "Conference"
           },
           {
             "week": 2,
-            "opponent": "Harbor Sentinels",
+            "opponent": "Eastport Phantoms",
             "home": true,
             "category": "Conference"
           },
@@ -1599,13 +1599,13 @@
         "Frostpeak Howlers": [
           {
             "week": 1,
-            "opponent": "Canyon Crushers",
+            "opponent": "Sundown Drakes",
             "home": true,
             "category": "Conference"
           },
           {
             "week": 2,
-            "opponent": "Sundown Drakes",
+            "opponent": "Thunder Mesa",
             "home": false,
             "category": "Conference"
           },
@@ -1659,13 +1659,13 @@
         "Stormport Bolts": [
           {
             "week": 1,
-            "opponent": "Ironpeak Rams",
+            "opponent": "Northstar Wolves",
             "home": false,
             "category": "Conference"
           },
           {
             "week": 2,
-            "opponent": "Northstar Wolves",
+            "opponent": "Glacier Guardians",
             "home": true,
             "category": "Conference"
           },
@@ -1776,7 +1776,7 @@
           },
           {
             "week": 10,
-            "opponent": "Palmetto Vipers",
+            "opponent": "Bayou Stalkers",
             "home": true,
             "category": "Conference"
           }
@@ -1836,7 +1836,7 @@
           },
           {
             "week": 10,
-            "opponent": "Eastport Phantoms",
+            "opponent": "Ashford Hawks",
             "home": false,
             "category": "Conference"
           }
@@ -1896,7 +1896,7 @@
           },
           {
             "week": 10,
-            "opponent": "Thunder Mesa",
+            "opponent": "Canyon Crushers",
             "home": true,
             "category": "Conference"
           }
@@ -1956,7 +1956,7 @@
           },
           {
             "week": 10,
-            "opponent": "Glacier Guardians",
+            "opponent": "Ironpeak Rams",
             "home": false,
             "category": "Conference"
           }
