@@ -30,7 +30,7 @@ if(!result)result=phase==='carried'?'tackle':phase==='held'?'sack':'incomplete';
 const last=frames[frames.length-1],yards=['tackle','touchdown','sack'].includes(result)?clamp(Math.round((last.ball[0]-185)/5),-15,70):0;
 return {play,defense,seed,frames,result,yards,events,holder,target:target?.id||null,flip:!!options.flip};
 }
-function render(sim,i){const f=sim.frames[clamp(i,0,sim.frames.length-1)];let svg='<rect width="600" height="260" fill="#226647"/>';for(let j=0;j<=12;j++)svg+='<line x1="'+j*50+'" x2="'+j*50+'" y1="0" y2="260" stroke="white" stroke-opacity=".17"/>';svg+='<line x1="185" x2="185" y1="0" y2="260" stroke="#f5d66c" stroke-width="3"/>';
+function render(sim,i,options={}){const f=sim.frames[clamp(i,0,sim.frames.length-1)];let svg='<rect width="600" height="260" fill="#226647"/>';for(let j=0;j<=12;j++)svg+='<line x1="'+j*50+'" x2="'+j*50+'" y1="0" y2="260" stroke="white" stroke-opacity=".17"/>';svg+='<line x1="185" x2="185" y1="0" y2="260" stroke="#f5d66c" stroke-width="3"/>';
 for(const [id,x,y] of f.off)svg+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="#74c5ff" stroke="'+(f.holder===id?'#ffe26c':'white')+'" stroke-width="2"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" font-weight="bold">'+id+'</text>';
 for(const [id,x,y] of f.def)svg+='<rect x="'+(x-11)+'" y="'+(y-10)+'" width="22" height="20" rx="3" fill="#f18c82" stroke="white"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8">'+id+'</text>';
 svg+='<ellipse cx="'+(f.ball[0]+8)+'" cy="'+(f.ball[1]-6)+'" rx="8" ry="5" fill="#e6a455" stroke="white"/>';
