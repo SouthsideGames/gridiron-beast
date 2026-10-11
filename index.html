@@ -127,7 +127,7 @@ let svg='<defs><marker id="practiceArrow" markerWidth="6" markerHeight="6" refX=
 for(let i=0;i<=12;i++){const x=i*50;svg+='<line x1="'+x+'" x2="'+x+'" y1="0" y2="260" stroke="#fff" stroke-opacity=".23"/><text x="'+(x+4)+'" y="22" font-size="12" fill="#e6f1e9">'+(i*10)+'</text>'}
 svg+='<line x1="185" x2="185" y1="0" y2="260" stroke="#f5db72" stroke-width="3"/>';
 const offense=[[165,118],[165,140],[165,162],[153,40],[153,220],[120,130],[120,175]],defenders=[[210,118],[210,158],[248,50],[248,210],[280,110],[280,175],[325,130]];
-const positions=offense.map(([x,y],i)=>{let xx=x,yy=y;if(i===3){xx+=t*(deep?180:110);yy+=t*(deep?-10:45)}else if(i===4){xx+=t*(deep?160:95);yy-=t*(deep?12:40)}else if(i===5){xx+=t*(run?yards*7:45);yy-=t*8}else if(i===6){xx+=t*(run?yards*7:60);yy+=t*9}else if(i<3)xx+=t*18;return [xx,yy]});
+const positions=offense.map(([x,y],i)=>{let xx=x,yy=y;if(i===3){xx+=t*(completed&&!run&&deep?Math.min(180,yards*5):deep?180:110);yy+=t*(deep?-10:45)}else if(i===4){xx+=t*(completed&&!run&&!deep?Math.min(160,yards*5):deep?160:95);yy-=t*(deep?12:40)}else if(i===5){xx+=t*(run?yards*5:45);yy-=t*8}else if(i===6){xx+=t*(run?yards*5:60);yy+=t*9}else if(i<3)xx+=t*18;return [xx,yy]});
 svg+=defensiveOverlay(scheme,t);
 if(scheme==='zone')svg+='<text x="360" y="246" font-size="11" fill="#d8f5ff">Blue circles = assigned coverage areas</text>';
 const receiverIndex=deep?3:4,carrierIndex=run?5:receiverIndex;
