@@ -1,4 +1,4 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.7
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.8
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -221,3 +221,17 @@ Roster UI (locked): interactive position-based 7-on-7 depth chart with offensive
 When entering Vanguard or Sovereign, independently assign a random rival from the owner's division in that tier; never reuse the Challenger rival as the automatic higher-tier rival. Retain each tier's prior rival identity and history. Mark two divisional games per season as rivalry games, once home and once away. Existing saves keep their already-assigned rival; do not overwrite.
 
 **Prototype:** v2.7 replaces radio choices with an automatic rival reveal, uses random assignment for missing tier rival records, and preserves the previous schedule and archive features. Higher-tier entry cutscenes and rival AI development are still pending.
+
+## 23. Visual practice, playbook, staff and weekly match UX — v2.8
+
+**LOCKED:** Coaching Staff displays hired staff, philosophy, preferred-play field diagrams and scout region ratings. Remove the post-hiring "Compare all coaching candidates" expansion; comparison is relevant only during hiring.
+
+**LOCKED official franchise game access:** The weekly scheduled franchise game is entered on Sunday through the weekly calendar. Do not place a misleading always-active Exhibition Game button in Franchise Headquarters. Weekday football experimentation belongs in Practice. No weekday button may start or reset the official game. A separate exhibition mode, if reintroduced, must be clearly distinct and cannot alter franchise results.
+
+**LOCKED visual practice:** Practice must display a football field with seven offensive and seven defensive monsters, formation positions, route/rush motion and a visible moving football. Results such as 12-yard gains must be animated on-field, not reported only as text. v2.8 uses a 2.3-second SVG motion demonstration, with routes, defenders and ball moving and outcome text displayed at the end. This is an interim visualization, not final pixel-art animation, physics or complete match AI.
+
+**LOCKED visual playbooks:** Both offensive and defensive playbooks display actual field diagrams for each unlocked play. Diagrams show formation, routes, coverage zones or blitz lanes, not names alone. The future hybrid editor must reuse shared JSON play definitions and support offensive routes, defensive assignments, monster positioning, audible variations and preview.
+
+**LOCKED standings legibility:** The player's franchise is visibly distinguished in League Central with bold italic styling, a contrasting background and "YOUR TEAM" label.
+
+**Prototype status:** v2.8 removes coach comparison and HQ Exhibition Game shortcut, restricts direct match navigation to Sunday, animates practice plays, renders offensive/defensive play diagrams, and highlights the owner's franchise in League Central. Full live-match animation, accurate individual routes and tactical defensive AI are not complete. Source-of-truth UI requirements: data/ui-gameplay.json.
