@@ -1,6 +1,6 @@
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v2.6 | GDD: v2.6
+Updated: 2026-10-11 | HTML prototype: v2.7 | GDD: v2.7
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -83,3 +83,10 @@ Every implementation task must update the code, any applicable JSON definitions,
 - JSON: data/league.json version 6 contains rivalry requirements.
 - Planned: Rival head-to-head record calculations, rival GM story events, playable higher-tier introduction, persistent AI rival growth and distinct finalized 48-team roster.
 - Testing: JavaScript syntax verified; end-to-end Safari interaction unverified.
+
+## v2.7 rival assignment correction
+
+- Revised rule: rivals are automatically randomly assigned from the other three franchises in the owner's division; no player selection or reroll.
+- HTML: commissioner rival reveal replaces selectable radio options; assignment persists across navigation; new tier rival defaults are randomized.
+- Existing save data retains its assigned rival. Higher-tier promotion cutscenes remain unimplemented.
+- Updated data/league.json and master GDD. JavaScript syntax checked, full Safari interaction unverified.
