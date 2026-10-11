@@ -1,3 +1,12 @@
+## v3.7 simulation-first football engine (October 11, 2026)
+- Added standalone engine.js and loaded it before the HTML prototype script.
+- Practice now simulates 22 moving actors, pass flight, pass catch/incompletion, defender pursuit, offensive-line interference, contact tackles and sacks. The reported yardage is calculated from the ball's final x-coordinate relative to the line of scrimmage, not randomly awarded in advance.
+- Sunday home-team Snap now uses the same engine and plays back recorded simulation frames before applying the result to down/distance and scoring.
+- Seeded player speed variation added. Engine simulation is deterministic for a given play/defense/seed.
+- Validation: JavaScript compiled and 300 headless simulated plays ran without exceptions; final ball-spot and yardage were consistent. **Balance not acceptable yet**: all sampled plays ended in tackles, runs averaged roughly 2 yards, and deep passes averaged roughly 12 yards. This is a vertical slice, not a completed football engine.
+- Limitations: simplified geometric collisions; route paths not yet fully authored per JSON play; monster-specific attributes not yet wired into the new engine; opposing-team drives still use the old probabilistic simulation; Sunday animation uses a fixed 600×260 field and is not yet tied to world-coordinate field scrolling; limited incomplete/sack diversity; Safari interaction not tested.
+- Next: improve pass rush and blocking balance, distinct play-specific routes, monster attribute effects, opponent simulation parity, accurate match clock/quarter transitions, and mobile visual QA. Preserve all franchise data and saves.
+
 ## v3.6 targeted fixes — committed, mobile testing pending
 - Head Coach hiring and staff room now show leadership responsibilities rather than offensive plays; OC/DC retain distinct tactical playbooks.
 - Coordinator play diagrams are tappable and enlarge in a modal; offensive previews hide defenders, defensive previews retain them.
