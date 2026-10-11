@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.8",
+  "effectiveGddVersion": "3.9",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "qb_awareness_practice_controls_coordinator_packages",
@@ -470,7 +470,11 @@
     "showPlayLines": true,
     "flipPlay": true,
     "showMonsterIcons": true,
-    "finalSpritesImplemented": false
+    "finalSpritesImplemented": false,
+    "immediateRerenderOnToggle": true,
+    "unifiedPreviewAndReplayRenderer": true,
+    "latestReplayPreservedOnVisualToggle": true,
+    "fullMobileSafariTested": false
   },
   "matchControls": {
     "flipPlay": true,
@@ -481,5 +485,18 @@
     "offensivePlaysPerCandidate": 10,
     "defensivePlaysPerCandidate": 10,
     "allPlaysHaveDistinctAssignments": false
+  },
+  "unityHandoff": {
+    "goal": "behavioral_parity_with_approved_working_html",
+    "requires": [
+      "feature_inventory",
+      "csharp_parity_matrix",
+      "json_schema_and_examples",
+      "ui_navigation_matrix",
+      "seeded_simulation_fixtures",
+      "save_migration_tests",
+      "known_issues_register"
+    ],
+    "status": "not_ready_for_final_handoff"
   }
 }
