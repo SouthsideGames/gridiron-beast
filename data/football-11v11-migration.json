@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "decision": "LOCKED",
+  "effectiveGddVersion": "3.1",
+  "targetPlayersPerSide": 11,
+  "previousPlayersPerSide": 7,
+  "implementationPhase": "audit_and_migration_planning",
+  "footballBuildStatus": "not_yet_migrated",
+  "offense": {
+    "positions": [
+      "QB",
+      "LT",
+      "LG",
+      "C",
+      "RG",
+      "RT",
+      "RB",
+      "WR1",
+      "WR2",
+      "TE",
+      "FLEX"
+    ],
+    "basePersonnel": "11 personnel (1 RB, 1 TE, 3 WR) when FLEX=WR3",
+    "note": "FLEX is a formation slot, not a permanent football position; 11-personnel lineup has WR3; alternative packages may substitute FB, TE2, WR4, RB2.",
+    "requiredFormations": [
+      "Singleback",
+      "Shotgun Spread",
+      "Shotgun Trips",
+      "I Formation",
+      "Pistol"
+    ],
+    "rules": [
+      "five offensive linemen on line of scrimmage",
+      "quarterback behind center or shotgun",
+      "seven players on line of scrimmage at snap in conventional formations",
+      "eligible receivers based on alignment and position, not arbitrary names"
+    ]
+  },
+  "defense": {
+    "positions": [
+      "DE1",
+      "DT1",
+      "DT2",
+      "DE2",
+      "LB1",
+      "LB2",
+      "LB3",
+      "CB1",
+      "CB2",
+      "FS",
+      "SS"
+    ],
+    "baseFront": "4-3",
+    "packages": [
+      "4-3",
+      "3-4",
+      "Nickel 4-2-5",
+      "Dime 4-1-6"
+    ],
+    "rules": [
+      "eleven defenders per play",
+      "all positions may blitz",
+      "coverages and rush assignments total eleven",
+      "man coverage assignments explicit",
+      "zone coverage areas individually owned",
+      "nickel and dime use substitution packages"
+    ]
+  },
+  "playbook": {
+    "canonicalFormat": "JSON definitions keyed by stable play IDs",
+    "requiredFields": [
+      "id",
+      "name",
+      "side",
+      "personnel",
+      "formationId",
+      "assignments",
+      "concept",
+      "unlock",
+      "tags",
+      "version"
+    ],
+    "offenseAssignments": [
+      "block",
+      "pass_protect",
+      "route",
+      "handoff",
+      "carry",
+      "play_action",
+      "pass_read"
+    ],
+    "defenseAssignments": [
+      "rush",
+      "gap_fit",
+      "man_cover",
+      "zone_cover",
+      "spy",
+      "contain",
+      "blitz"
+    ],
+    "existingOffense": [
+      "Quick Pass",
+      "Deep Post",
+      "Power Run",
+      "Screen Pass",
+      "Outside Run",
+      "Play Action",
+      "Four Verticals",
+      "Slant Combo",
+      "Inside Zone",
+      "Deep Corner"
+    ],
+    "existingDefense": [
+      "Cover Two",
+      "Man Lock",
+      "Corner Fire",
+      "Run Wall",
+      "Zone Trap",
+      "All-Out Pressure",
+      "Deep Zone",
+      "DB Blitz",
+      "QB Spy",
+      "Press Coverage"
+    ],
+    "migrationPolicy": "retain names as candidate concepts only; no play is certified until its 11 assignments, personnel, diagrams and counters are authored and tested"
+  },
+  "simulation": {
+    "required": [
+      "22-player formations",
+      "snap and 40-second live play clock",
+      "ball possession and handoff",
+      "blocking and pass protection",
+      "routes and coverage",
+      "pass rush",
+      "QB reads",
+      "tackles and pursuit",
+      "downs and distance",
+      "turnovers",
+      "punts and fourth-down choices",
+      "scoring and extra points",
+      "AI possession and coaching",
+      "home/away and match context"
+    ],
+    "legacyStatus": "simplified stochastic yardage model; must be replaced rather than relabeled"
+  },
+  "saveMigration": {
+    "preserve": [
+      "owner",
+      "team",
+      "staff",
+      "monster species and nature",
+      "levels and experience",
+      "scouting and recruits",
+      "league and conference",
+      "division",
+      "rivals",
+      "season records and history",
+      "championship badges",
+      "tier and relegation data"
+    ],
+    "convert": [
+      "lineup slot IDs",
+      "offensive and defensive play IDs",
+      "practice presets",
+      "formation assignments"
+    ],
+    "doNotInvent": [
+      "additional owned monsters",
+      "championship results",
+      "played matches",
+      "historical stats"
+    ],
+    "approach": "versioned non-destructive migration; retain 7v7 save snapshot, assign legacy monsters only where eligible, leave new slots vacant until explicit roster completion"
+  },
+  "excludedFromCurrentImplementation": [
+    "live 11v11 match",
+    "new starter monsters",
+    "full 11v11 diagrams",
+    "rebalanced recruitment",
+    "save migration execution"
+  ],
+  "milestones": [
+    {
+      "id": "M0",
+      "name": "Audit and lock schema",
+      "status": "planning",
+      "acceptance": "GDD, JSON, audit, and status register agree on 11v11"
+    },
+    {
+      "id": "M1",
+      "name": "Roster and personnel",
+      "status": "not_started",
+      "acceptance": "22 legal starters, depth chart, position eligibility and substitutes"
+    },
+    {
+      "id": "M2",
+      "name": "JSON playbook",
+      "status": "not_started",
+      "acceptance": "Each play has 11 assignments and distinct diagrams"
+    },
+    {
+      "id": "M3",
+      "name": "Practice engine",
+      "status": "not_started",
+      "acceptance": "22 moving players and correct possession/counterplay"
+    },
+    {
+      "id": "M4",
+      "name": "Match engine and AI",
+      "status": "not_started",
+      "acceptance": "complete drives, clock, rules, AI and scorekeeping"
+    },
+    {
+      "id": "M5",
+      "name": "Save migration and franchise regression",
+      "status": "not_started",
+      "acceptance": "old saves retained; all non-football systems regression tested"
+    }
+  ]
+}
