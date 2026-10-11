@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.2",
+  "effectiveGddVersion": "3.3",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "design_locked_awaiting_explicit_proceed",
@@ -196,7 +196,7 @@
       "id": "M1",
       "name": "Roster and personnel",
       "status": "not_started",
-      "acceptance": "22 legal starters, depth chart, position eligibility and substitutes"
+      "acceptance": "40-monster cap, 22 legal starters, reserves, two fixed starter choices, five staff, injury/fatigue profile schema and non-destructive save migration"
     },
     {
       "id": "M2",
@@ -214,7 +214,7 @@
       "id": "M4",
       "name": "Match engine and AI",
       "status": "not_started",
-      "acceptance": "complete drives, clock, rules, AI and scorekeeping"
+      "acceptance": "11v11 drives, AI, balanced injuries/fatigue, XP-only permanent leveling, temporary trainer effects, field goals and punts, simulated other special teams"
     },
     {
       "id": "M5",
@@ -292,6 +292,64 @@
       "Trainer candidate roster, specializations, salary and exact temporary buff formulas",
       "Training focus scope, stacking, maximum bonus and whether buffs apply only to Sunday game",
       "Coach hiring order and ability to preview starter fit"
+    ]
+  },
+  "rosterAndHealth": {
+    "status": "LOCKED_DESIGN_ONLY",
+    "rosterCap": 40,
+    "rosterCapIncludes": [
+      "offensive_starters",
+      "defensive_starters",
+      "reserves",
+      "kicker",
+      "punter"
+    ],
+    "onFieldPerSide": 11,
+    "injuryFrequency": "balanced",
+    "injurySeverity": "minor_to_multiweek",
+    "fatigue": {
+      "visibleOnMonsterProfile": true,
+      "affectsTemporaryEffectivePerformance": true,
+      "raisesInjuryRisk": true,
+      "recoveryFromRestAndBye": true,
+      "permanentBaseStatReduction": false
+    },
+    "injuries": {
+      "temporaryAvailabilityAndPerformance": true,
+      "medicalReportRequired": true,
+      "permanentLevelLoss": false,
+      "exactProbabilityFormula": "pending"
+    },
+    "specialTeams": {
+      "phaseOne": "simplified",
+      "playableOrResolved": [
+        "field_goals",
+        "punts"
+      ],
+      "simulatedInitially": [
+        "kickoffs",
+        "returns",
+        "PATs_as_needed"
+      ],
+      "fullSpecialTeamsLater": true
+    },
+    "progression": {
+      "permanentMonsterStatGrowth": "gameplay_xp_and_leveling_only",
+      "trainerAddsPermanentGrowth": false,
+      "trainerEffects": "temporary_current_game_week_performance_bonus",
+      "weeklyTrainingDay": "Wednesday",
+      "recruitmentDay": "Tuesday"
+    },
+    "rosterDistribution": "proposed, not yet locked",
+    "unresolved": [
+      "40-slot positional distribution and game-day activation",
+      "initial full roster composition and starter selection replacements",
+      "injured reserve and replacement rules",
+      "two-way eligibility and cross-position training",
+      "injury risk/fatigue/recovery formulas and caps",
+      "injury severity and recovery duration",
+      "kicker/punter role eligibility and special-teams simulation rules",
+      "how to award XP to bench and special-teams participants"
     ]
   }
 }
