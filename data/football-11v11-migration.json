@@ -1,10 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.1",
+  "effectiveGddVersion": "3.2",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
-  "implementationPhase": "audit_and_migration_planning",
+  "implementationPhase": "design_locked_awaiting_explicit_proceed",
   "footballBuildStatus": "not_yet_migrated",
   "offense": {
     "positions": [
@@ -181,6 +181,12 @@
   ],
   "milestones": [
     {
+      "id": "M0B",
+      "name": "Starter and trainer onboarding design",
+      "status": "locked_not_implemented",
+      "acceptance": "Fixed three choices per side, one selected each, 67–70 OVR, highest on respective side, five staff including trainer, Wednesday temporary buffs; do not modify HTML until explicit proceed"
+    },
+    {
       "id": "M0",
       "name": "Audit and lock schema",
       "status": "planning",
@@ -216,5 +222,76 @@
       "status": "not_started",
       "acceptance": "old saves retained; all non-football systems regression tested"
     }
-  ]
+  ],
+  "implementationAuthorization": "DO_NOT_IMPLEMENT_UNTIL_USER_EXPLICITLY_SAYS_PROCEED",
+  "starterAndTrainer": {
+    "status": "LOCKED_DESIGN_ONLY",
+    "introOrder": [
+      "commissioner_owner_creation",
+      "select_challenger_franchise",
+      "random_divisional_rival_reveal",
+      "select_one_of_three_fixed_offensive_starters",
+      "select_one_of_three_fixed_defensive_starters",
+      "hire_head_coach",
+      "hire_offensive_coordinator",
+      "hire_defensive_coordinator",
+      "hire_head_scout",
+      "hire_monster_trainer",
+      "interactive_tutorial",
+      "franchise_headquarters"
+    ],
+    "offensiveStarters": {
+      "candidateCount": 3,
+      "selectionCount": 1,
+      "candidatePool": "fixed, same three candidates for every new franchise",
+      "proposedPositions": [
+        "QB",
+        "RB",
+        "WR"
+      ],
+      "finalSpeciesAndStats": "pending"
+    },
+    "defensiveStarters": {
+      "candidateCount": 3,
+      "selectionCount": 1,
+      "candidatePool": "fixed, same three candidates for every new franchise",
+      "finalPositionsSpeciesAndStats": "pending"
+    },
+    "starterOverall": {
+      "minimum": 67,
+      "maximum": 70,
+      "rule": "each selected starter is strictly highest overall on its side of the ball; all other starting teammates on that side must be lower"
+    },
+    "staff": {
+      "mandatoryCount": 5,
+      "roles": [
+        "head_coach",
+        "offensive_coordinator",
+        "defensive_coordinator",
+        "head_scout",
+        "monster_trainer"
+      ]
+    },
+    "weeklyActions": {
+      "tuesday": "recruitment_unchanged",
+      "wednesday": "training_unchanged"
+    },
+    "trainerEffects": {
+      "permanentGrowthBoost": false,
+      "temporaryWeeklyGameBonuses": true,
+      "bonusExpiry": "end_of_current_game_week",
+      "normalMonsterLevelingUnaffected": true,
+      "qualityAndSpecialtyModifyBonus": "exact formulas pending"
+    },
+    "acquisition": "the two commissioner-provided starter choices are one-time onboarding exceptions to the normal franchise recruitment-only acquisition loop",
+    "unresolved": [
+      "Defensive starter trio: exact positions, species, natures and abilities",
+      "Offensive starter species, exact stats, nature, ability and whether nature rolls vary",
+      "Initial 11v11 roster completion and existing 7v7 save migration",
+      "Active roster and bench size, two-way eligibility and special teams",
+      "Trainer candidate roster, specializations, salary and exact temporary buff formulas",
+      "Training focus scope, stacking, maximum bonus and whether buffs apply only to Sunday game",
+      "Coach hiring order and ability to preview starter fit"
+    ]
+  }
 }
