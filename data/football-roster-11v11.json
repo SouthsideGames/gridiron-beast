@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "format": "11v11",
+  "status": "prototype_m1_m3_partial",
+  "rosterCap": 40,
+  "starterCount": 22,
+  "benchCount": 18,
+  "offense": [
+    "QB",
+    "LT",
+    "LG",
+    "C",
+    "RG",
+    "RT",
+    "RB",
+    "TE",
+    "WR1",
+    "WR2",
+    "WR3"
+  ],
+  "defense": [
+    "DE1",
+    "DT1",
+    "DT2",
+    "DE2",
+    "LB1",
+    "LB2",
+    "LB3",
+    "CB1",
+    "CB2",
+    "FS",
+    "SS"
+  ],
+  "reservePositions": [
+    "QB",
+    "RB",
+    "WR1",
+    "WR2",
+    "TE",
+    "LT",
+    "C",
+    "RT",
+    "DE1",
+    "DT1",
+    "LB1",
+    "LB2",
+    "CB1",
+    "CB2",
+    "FS",
+    "SS",
+    "K",
+    "P"
+  ],
+  "starterChoices": {
+    "offense": [
+      {
+        "name": "Firestorm",
+        "position": "QB",
+        "overall": 69,
+        "archetype": "Strong Arm"
+      },
+      {
+        "name": "Voltfang",
+        "position": "WR1",
+        "overall": 68,
+        "archetype": "Speedster"
+      },
+      {
+        "name": "Boulderox",
+        "position": "RB",
+        "overall": 70,
+        "archetype": "Power Back"
+      }
+    ],
+    "defense": [
+      {
+        "name": "Stoneguard",
+        "position": "DE1",
+        "overall": 69,
+        "archetype": "Power Rusher"
+      },
+      {
+        "name": "Skywarden",
+        "position": "CB1",
+        "overall": 68,
+        "archetype": "Ball Hawk"
+      },
+      {
+        "name": "Frostclaw",
+        "position": "LB1",
+        "overall": 70,
+        "archetype": "Field General"
+      }
+    ]
+  },
+  "injuries": {
+    "balanced": true,
+    "minorWeeks": [
+      0,
+      1
+    ],
+    "moderateWeeks": [
+      2,
+      3
+    ],
+    "severeWeeks": [
+      4,
+      6
+    ],
+    "countTowardCap": true
+  },
+  "experience": {
+    "baseGameParticipationXP": true,
+    "levelUpThresholdPrototype": 100,
+    "trainerPermanentGrowth": false
+  },
+  "trainer": {
+    "mandatory": true,
+    "weeklyTemporaryBonus": true,
+    "trainingDay": "Wednesday"
+  },
+  "specialTeams": {
+    "fieldGoals": "simplified",
+    "punts": "simplified",
+    "kickoffs": "simulated"
+  },
+  "limitations": [
+    "starter species use placeholder emoji rather than final pixel art",
+    "match outcomes still rely on simplified probabilistic resolution",
+    "play JSON assignments not yet wired to simulation",
+    "no full 22-player collision and route AI",
+    "medical system and XP still basic"
+  ]
+}
