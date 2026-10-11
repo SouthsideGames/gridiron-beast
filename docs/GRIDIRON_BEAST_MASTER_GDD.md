@@ -1,4 +1,4 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.8
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.9
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -235,3 +235,13 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **LOCKED standings legibility:** The player's franchise is visibly distinguished in League Central with bold italic styling, a contrasting background and "YOUR TEAM" label.
 
 **Prototype status:** v2.8 removes coach comparison and HQ Exhibition Game shortcut, restricts direct match navigation to Sunday, animates practice plays, renders offensive/defensive play diagrams, and highlights the owner's franchise in League Central. Full live-match animation, accurate individual routes and tactical defensive AI are not complete. Source-of-truth UI requirements: data/ui-gameplay.json.
+
+## 24. Defensive coverage visualization and practice ball ownership — v2.9
+
+**LOCKED visual alignment:** The practice play result must match visible football action. A completed pass shows the ball traveling from QB to a receiver and finishing attached to the receiving monster. A run ends with the ball at the ball carrier. An incompletion or stopped play must not depict an unrelated receiver holding the ball. Field displacement should approximately reflect announced yards; precise physics and tackles remain future work.
+
+**LOCKED defensive play diagrams:** Defense dropdown selection must immediately redraw alignment and assignments, before a rep starts. Man coverage uses yellow assignment lines between defenders and receivers and tracking motion; zone uses translucent blue ellipses showing each defender's coverage area; blitz/pressure uses orange arrows and forward rusher movement. Defensive playbook diagrams use the same man/zone/blitz visual vocabulary as the practice field. Future JSON-defined plays will specify individual assignments rather than relying on a name-based classifier.
+
+**HTML v2.9:** Shared scheme classification; distinct man, zone and blitz diagrams; defense selector redraws practice field; on-snap defensive tracking/rushing; pass and run ball ownership interpolated to the relevant player; outcome shown at animation end. This is an SVG schematic prototype, not full physics or finalized pixel-art football gameplay. Man matchups and coverage areas are simplified.
+
+**Unity parity:** Reproduce coverage indicators and ball-carrier ownership, then replace prototype interpolation with formation, pursuit, coverage and collision systems. Validate switching defensive looks changes visible assignments; test run handoff, completed pass and incomplete pass separately. Canonical UI specification: data/ui-gameplay.json.
