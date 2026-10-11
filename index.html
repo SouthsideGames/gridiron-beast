@@ -23,7 +23,7 @@ const conferenceFor=division=>['North','West'].includes(division)?'Aurora Confer
 function getTeamIdentity(){const name=(state.coach?.team||'Stonehaven Titans').replace(/ \(.*$/,'');const division=Object.keys(leagueDivisions).find(d=>leagueDivisions[d].includes(name))||'East';return {name,division,conference:conferenceFor(division)}}
 // Deterministic league-wide schedule: every matchup is reciprocal for all 16 clubs.
 const divisionPairings=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
-function conferenceOffsets(season){const recent=[-100,-100,-100,-100];let selected=[0,1];for(let y=1;y<=season;y++){const ranked=[0,1,2,3].sort((a,b)=>recent[a]-recent[b]||((a-y+4)%4)-((b-y+4)%4));selected=ranked.slice(0,2);for(const k of selected)recent[k]=y}return selected}
+function conferenceOffsets(season){const recent=[-100,-100,-100,-100];let selected=[0,1];for(let y=1;y<=season;y++){const ranked=[0,1,2,3].sort((a,b)=>recent[a]-recent[b]||((a-y+4)%4)-((b-y+4)%4));selected=y>=3&&y%3===0?[ranked[0],ranked[2]]:ranked.slice(0,2);for(const k of selected)recent[k]=y}return selected}
 function leagueSeasonFixtures(season){season=Math.max(1,Math.floor(Number(season)||1));const rounds=Array.from({length:9},()=>[]);const add=(round,home,away,category)=>rounds[round].push({home,away,category});
 for(const teams of Object.values(leagueDivisions)){for(let r=0;r<6;r++){for(const [i,j] of divisionPairings[r%3]){const home=r<3?teams[i]:teams[j],away=r<3?teams[j]:teams[i];add(r,home,away,'Division')}}}
 const offsets=conferenceOffsets(season);
