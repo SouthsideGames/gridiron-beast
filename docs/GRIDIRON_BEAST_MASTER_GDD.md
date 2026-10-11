@@ -2,7 +2,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.5
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.6
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -348,3 +348,13 @@ When entering Vanguard or Sovereign, independently assign a random rival from th
 **Source files:** `data/football-roster-11v11.json` defines the roster/initial choices, `data/football-plays-11v11.json` defines provisional 11-assignment play concepts, and `data/football-11v11-migration.json` retains migration acceptance criteria. The HTML remains a development prototype.
 
 **Next gates:** Validate new-franchise onboarding and five hires end-to-end in Safari; integrate play JSON and 22-player assignment-driven animations; build actual defensive AI and possession/clock rules; test injury/fatigue and save migration without loss of franchise records; update the GDD and implementation register for every subsequent change.
+
+## 31. Practice truth, coaching roles, zoomable play previews and starter scouting — HTML v3.6
+
+**Practice field truth (partial fix):** The prototype now uses a shared line-of-scrimmage reference at SVG x=185 and 5 field units per yard. For a completed run or pass, the carrier/receiver's final x-coordinate is x=185+5×awarded yards; the football follows that monster and the field shows a distance indicator. Stopped/incomplete plays display no gain. This removes the specific contradiction where a 12-yard gain was announced despite the ball carrier remaining behind the line. The underlying gain is still sampled from a probability model before animation, **not determined by physical contact**; defensive pursuit, blocking, tackles, and real match play simulation remain incomplete.
+
+**Staff responsibilities:** Head Coach governs leadership, overall game management, morale, fatigue management and situational decision making, not an offensive play catalog. Offensive Coordinator supplies offensive playbooks; Defensive Coordinator supplies defensive schemes; Monster Trainer supplies temporary Wednesday boosts; Head Scout specializes in regional recruitment. Current HC general bonus is a prototype stand-in, not a complete leadership engine.
+
+**Play previews:** Offensive coordinator cards show offense-only diagrams without defenders; defensive coordinator diagrams show both sides. Play cards are tappable to open an enlarged modal. The same modal provides starter-monster details before selection, including ability descriptions, nature, example stats and injury susceptibility. Injury susceptibility is higher when more injury-prone and contributes to the preliminary injury-risk formula.
+
+**Further acceptance work:** Validate all modal buttons and scrolling on iOS Safari, test 0/short/deep gain geometry and ball possession frame-by-frame, eliminate contradictions in the Sunday match engine, and replace stochastic practice gains with genuine collision/assignment-based outcomes. Full playable pixel-art animations remain unimplemented.
