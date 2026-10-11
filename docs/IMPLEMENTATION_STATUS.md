@@ -1,6 +1,6 @@
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v2.5 | GDD: v2.5
+Updated: 2026-10-11 | HTML prototype: v2.6 | GDD: v2.6
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -74,3 +74,12 @@ Every implementation task must update the code, any applicable JSON definitions,
 - Not implemented: individual monster season statistics, postseason simulation and retroactive recovery of incomplete old saves. These are labeled unavailable.
 - JavaScript syntax checked; full Safari end-to-end save/reload test not yet completed.
 - Unity parity: versioned seasonHistory save data, immutable archive snapshots, migration and season-history regression tests.
+
+## v2.6 rival GM feature
+
+- LOCKED: Owner selects a new same-division rival GM after team selection.
+- LOCKED: Separate rivals per league tier; previous rival history remains available across tier movement.
+- HTML: Sixth commissioner onboarding step with rival radio selection and GM names; saved Challenger rival; existing-save default rival migration; current tier rival in League Central; rival schedule labels; archived rival snapshots.
+- JSON: data/league.json version 6 contains rivalry requirements.
+- Planned: Rival head-to-head record calculations, rival GM story events, playable higher-tier introduction, persistent AI rival growth and distinct finalized 48-team roster.
+- Testing: JavaScript syntax verified; end-to-end Safari interaction unverified.
