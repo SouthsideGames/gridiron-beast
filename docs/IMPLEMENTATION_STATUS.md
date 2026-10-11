@@ -102,13 +102,13 @@ Every implementation task must update the code, any applicable JSON definitions,
 - JavaScript syntax validation passed; actual mobile Safari interactions and animation performance are not yet verified.
 - Known limitation: Sunday match movement remains simplistic; full route animations, defensive pursuit and ball physics are future work.
 
-## v2.9 Madden-style schematic practice improvements
+## v3.0 Madden-style schematic practice improvements
 
 - Defensive dropdown redraws formation instructions before a rep.
 - Man Lock: assignment lines and tracking; Cover Two/zone: coverage circles; Corner Fire/blitz: rush arrows and rusher motion.
 - Completed pass: football interpolates to receiving monster; run: football stays with ball carrier after handoff. Stopped passes do not show receiver possession.
 - Playbook diagrams now vary by man, zone and blitz instead of reusing near-identical overlays.
-- Updated data/ui-gameplay.json and master GDD v2.9.
+- Updated data/ui-gameplay.json and master GDD v3.0.
 - JavaScript syntax validated. Mobile Safari visual/interaction tests remain unverified.
 - Limitations: no genuine collision, pass interception, defender reaction AI or true yard-accurate animation yet; full Sunday match still needs animation overhaul.
 
@@ -121,3 +121,10 @@ Every implementation task must update the code, any applicable JSON definitions,
 - Offensive route arrows and OL blocking directions are visible before and during practice.
 - Schematic motion still lacks true football collision, possession and play-calling AI. Visual validation on Safari remains outstanding.
 - Updated data/ui-gameplay.json and GDD v3.0.
+
+## v3.0 position and coverage correction
+- Corrected QB alignment behind three offensive linemen.
+- Position labels replace numeric IDs; WR and RB align as 7-on-7 skill positions.
+- Offensive routes and line blocking instructions are displayed with defensive instructions.
+- Cover Two now uses five assigned coverage zones and two DL rushers.
+- HTML syntax and source inspection performed; mobile Safari playthrough remains unverified.
