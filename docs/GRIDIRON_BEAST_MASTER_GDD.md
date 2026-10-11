@@ -1,4 +1,4 @@
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.5
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v2.6
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -201,3 +201,15 @@ Roster UI (locked): interactive position-based 7-on-7 depth chart with offensive
 **Prototype v2.5:** Archive creation is triggered on explicit Next Season. Current season and archived seasons are selectable; future seasons are hidden. Completed archives store available team records, fixtures and match results. The prototype currently does **not** calculate player season statistics or playoff results; those fields are labeled unavailable rather than fabricated. Archives from seasons completed before this feature was implemented cannot be reconstructed reliably from old saves. Keep the archived season snapshot independent of the newly generated current season schedule.
 
 **Unity parity:** Use versioned save schema with a seasonHistory array. Store immutable snapshots for completed seasons and migrate old saves without inventing missing match statistics. Test current-season-only visibility, archived results after reload, multiple consecutive season transitions and cross-tier historical continuity.
+
+## 21. Franchise rival general manager system — v2.6
+
+**LOCKED:** Following initial team selection, the commissioner introduces another newly appointed GM from the player's division. The player selects one of the other three division franchises as a persistent rival. The rival has a distinct GM name and team identity; the same division pairing meets twice per regular season (once home and once away). Both games must be visibly labeled RIVAL GAME in the schedule. The selection is part of action-driven onboarding, prior to staff hiring.
+
+**LOCKED per-tier rivalry:** The owner has a separate rival in Challenger, Vanguard, and Sovereign. The Challenger rival is not automatically the Vanguard or Sovereign rival. When the player reaches a new tier, introduce a new rival from that tier and the owner's division. Retain historical rival identity and head-to-head history through promotion/relegation and subsequent seasons. Do not delete prior rivalries.
+
+**Data model:** franchise.rivals keyed by tier; each rival stores tier, team, GM name, introduced season and eventual head-to-head wins/losses. Season archives store the rival active that year. Schedule fixture rendering highlights the current rival without changing the league-wide reciprocal schedule.
+
+**HTML v2.6 status:** Added sixth commissioner introduction step to choose a Challenger rival; saves rival information, labels rival schedule games, stores rivalry in season archives, and shows current tier rival in League Central. Existing saves receive a default same-division rival without overwriting chosen rivals. A distinct higher-tier rival record is initialized upon entering another tier, but **the tier transition and cinematic introduction are not yet playable**. GM names and higher-tier franchise names are provisional. Rival dialogue events, actual head-to-head statistics and rival AI development are planned, not implemented.
+
+**Unity parity:** Reproduce the rival introduction and selection, same-division eligibility, schedule highlighting, per-tier identity, archive persistence and future rivalry-specific match events. Do not claim head-to-head tracking until games update it.
