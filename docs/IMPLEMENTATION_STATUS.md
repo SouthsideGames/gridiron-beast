@@ -4,7 +4,7 @@ The playable HTML prototype remains v3.0 7-on-7. Do not describe it as 11-on-11.
 
 # Gridiron Beast — Implementation Status
 
-Updated: 2026-10-11 | HTML prototype: v3.0 (legacy 7v7) | GDD: v3.2 (11v11 design locked)
+Updated: 2026-10-11 | HTML prototype: v3.0 (legacy 7v7) | GDD: v3.3 (11v11 design locked)
 
 This document must be updated together with every prototype and JSON change. **Locked design** does not mean implemented or tested.
 
@@ -152,3 +152,15 @@ Every implementation task must update the code, any applicable JSON definitions,
 
 ## v3.2 specification update
 The fixed three-choice offensive and defensive starter pools, one selection per side, OVR 67-70, and highest-rating-on-side requirement are approved. A fifth mandatory staff role, Monster Trainer, is approved. Tuesday remains recruitment; Wednesday training grants temporary weekly game bonuses only. HTML remains legacy v3.0. No gameplay changes authorized until explicit approval.
+
+## v3.3 design lock — implementation on hold
+
+- LOCKED: 40-monster total franchise roster including starters, reserves and specialists.
+- LOCKED: balanced injury frequency; visible fatigue and injury status, with temporary fatigue-related performance/risk effects.
+- LOCKED: simplified special teams (field goals and punts prioritized; kickoff/returns simulated initially; PAT must be resolved).
+- LOCKED: permanent stat growth only through game XP and level-ups.
+- LOCKED: Wednesday trainer buffs are temporary current-week performance modifiers; never permanent growth or XP multipliers.
+- Updated data/football-11v11-migration.json schema v3 and master GDD v3.3.
+- NOT IMPLEMENTED: roster conversion, health/injury engine, special teams, trainer effects and 11v11 gameplay.
+- HTML remains v3.0 legacy 7v7. No runtime changes authorized until user says proceed.
+- Open: positional quotas, initial roster population, injured reserve, two-way roles, formulas, special-teams resolution and XP distribution.
