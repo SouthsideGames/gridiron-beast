@@ -99,3 +99,5 @@ The present game is not an NFL-style 11-on-11 simulation. The roster has 14 star
 6. Whether on-field monsters have position eligibility based on species, individual archetype or trainable secondary positions.
 
 **Change-control requirement:** Every football migration step must update the HTML, relevant JSON, master GDD and implementation status together. Mark features as not implemented until functional tests pass.
+## v3.2 planning addendum
+Fixed starter pools: three offensive and three defensive candidates; choose one from each before hiring staff. Chosen starters must have OVR 67–70 and exceed other initial starters on their respective side. Five staff hires now include a Monster Trainer. Tuesday remains recruitment, Wednesday training. Trainer quality affects temporary game-week performance only, not permanent leveling or growth. Candidate identities, roster completion, trainer balance and legacy-save migration require further design. Do not implement before explicit user approval.
