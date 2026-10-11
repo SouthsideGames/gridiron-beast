@@ -11,7 +11,7 @@ const dt=.075,catchTargets=['WR1','WR2','WR3','TE','RB'];
 for(let tick=0;tick<92;tick++){
 const time=tick*dt;
 for(const p of off){const id=p.id;if(['LT','LG','C','RG','RT'].includes(id)){p.x+=.4;continue}if(id==='QB'){p.x-=run?0:.12;continue}
-if(id==='RB'&&run){move(p,time<.4?{x:qb.x+12,y:qb.y+8}:{x:510,y:145},time<.4?5.5:3.5);continue}
+if(id==='RB'&&run){move(p,time<.4?{x:qb.x+12,y:qb.y+8}:{x:510,y:145},time<.4?5.5:4.5);continue}
 const sign=p.y<130?1:-1,route=deep?{x:490,y:p.y+sign*22}:{x:355,y:p.y+sign*52};
 move(p,id==='RB'?{x:275,y:170}:route,(id.startsWith('WR')?3.4:2.4)*p.speed)}
 const rushers=blitz?['DE1','DT1','DT2','DE2','LB1','CB1']:['DE1','DT1','DT2','DE2'];
