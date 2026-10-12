@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.2
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.3
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -449,3 +449,13 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Validation completed:** All 54 plays have 11 positional assignments, 54 distinct diagram SVG strings, and 54/54 smoke simulations completed without JavaScript exceptions. Syntax of the main HTML script validated. This is NOT a completed physics engine or mobile-browser acceptance test. Coverage decisions, route timing, legal formations, blocking quality, interceptions, stamina, roster-attribute integration and football realism still require testing and refinement.
 
 **Unity/C# contract:** Treat `data/play-library.json` as the canonical play definition and serialize it into Unity data classes. Rebuild a single assignment evaluator for play previews and gameplay. Do not maintain a separate hand-drawn visual catalog that can diverge from the simulation. Port play definitions and tests before building additional teams or generating thousands of variations.
+
+## 38. Expanded 100-play library and salary visibility — HTML v4.3
+
+**Catalog:** Expanded from 54 to **100** original 11v11 play definitions (58 offensive, 42 defensive), stored in `data/play-library.json` and mirrored in `play-library.js`. All 100 definitions have exactly 11 positional assignments and produce distinct SVG diagram output. New concepts include toss, trap, wham, sweep, option, play-action variants, smash, levels, spacing, drive, screens, additional Cover 0/2/3/4/6 variants, blitzes, simulated pressure, prevent and goal-line defenses. These are prototype approximations, not licensed Madden art or football-coach-certified implementations.
+
+**Execution:** The same runtime assignment data is read by play previews and the first-pass simulation for running lanes, routes, rushers and coverage. The 100-play catalog is a league-wide source of concepts; coordinators continue to bring smaller 15-play identity packages. More play definitions do not automatically imply every team can call all 100 plays. Some variations share formation families and underlying simplified movement logic; unique preview output alone does not establish unique realistic gameplay.
+
+**Salary & Roster Management:** Show a prominently labeled **TOTAL ANNUAL SALARY** equal to all monster contracts plus all five staff salaries, along with cap usage percentage, progress bar, annual cap, and available/over-cap amount. Salary management shows the full summary immediately above the monster release controls. Salary cap enforcement remains unchanged.
+
+**Tests:** 100/100 headless simulation smoke tests completed without exceptions; 100/100 distinct diagram outputs and 11 assignments per play; main inline JavaScript syntax validated. Not yet tested on physical mobile Safari. More work needed on gameplay balancing, route realism, formation variety, special teams, AI play calling and automated end-to-end franchise progression.
