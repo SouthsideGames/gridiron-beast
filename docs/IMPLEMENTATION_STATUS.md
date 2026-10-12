@@ -1,3 +1,12 @@
+## v4.2 — unified play library and visual correction
+- Reviewed Madden School individual Inside Zone/Outside Zone reference pages and playbook organization; authored original Gridiron Beast diagrams rather than copying images.
+- New `data/play-library.json` and `play-library.js`: 54 authored play definitions (30 offensive, 24 defensive), 11 assignments each, 54 distinct SVG previews.
+- Outside Run now shows a real outside rushing lane and run blocking, rather than receiver pass routes. Other run and coverage concepts have separate assignments.
+- Hiring previews, team Playbook and Practice diagrams use the shared library; engine.js now consumes its routes, RB paths, rushers, man targets and zone destinations.
+- Coordinator packages expanded from 10 to 15 plays, and synchronized in `data/football-plays-11v11.json`.
+- Tested: 54/54 play smoke simulations, distinct SVG signatures, main script syntax. Not tested: mobile Safari interaction or full franchise season.
+- Known gaps: physically realistic blocking/tackling, full formation/personal alignment, all AI play-selection logic, accurate run and pass outcomes, and complete Unity parity remain unfinished.
+
 ## v4.1 coaching identity and defensive play-art milestone
 - Implemented: distinct preview assignments for Cloud Flats, QB Spy, Zone Trap, Deep Zone, Cover Two, Cover Three, Cover Four, man and pressure families.
 - Implemented: head coach offense/defense philosophy, coordinator fit scores, staff alignment panel and modest movement-rating effects in the simulation.
