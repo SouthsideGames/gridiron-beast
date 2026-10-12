@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "4.3",
+  "effectiveGddVersion": "4.4",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "qb_awareness_practice_controls_coordinator_packages",
@@ -522,5 +522,27 @@
     "totalAnnualSalaryProminent": true,
     "capUsagePercentage": true,
     "combinedStaffAndMonsterTotal": true
+  },
+  "matchEngine": {
+    "playerDefenseSnaps": true,
+    "opponentDrivesNoLongerAutoSkipped": true,
+    "postCatchCarry": true,
+    "brokenTackles": true,
+    "stiffArm": true,
+    "interception": true,
+    "fumble": true,
+    "importantEventAlerts": true,
+    "persistentMatchLog": true,
+    "logPausesGame": true,
+    "defensiveView": true,
+    "status": "prototype_partial",
+    "knownIssues": [
+      "full player-specific defensive ratings and assignments",
+      "realistic catch-run and pursuit balance",
+      "clock, down and possession football rules QA",
+      "field position and drive direction",
+      "kickoffs, extra points, two-point conversions",
+      "mobile Safari end-to-end QA"
+    ]
   }
 }
