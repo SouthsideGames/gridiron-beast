@@ -1,3 +1,11 @@
+## v4.4 — playable defensive snaps, ball-carrier continuation, match events
+- Defensive possession now displays opponent offense and allows the owner to call a defensive play on each snap. No automatic full opponent drive after touchdowns or punts.
+- Added extended carries, break-tackle/stiff-arm attempts, contested-pass interceptions and fumbles to simulation. Result messages use simulated outcomes and yards remain tied to final ball position.
+- Added touchdown/turnover notifications and a quarter-stamped, save-persisted play log that pauses the game while open.
+- Added defensive-view colors (player defense blue, opponent offense red).
+- Headless engine validation: 600 seeded run/pass plays; ball-spot consistency passed; fumbles, interceptions, and tackle breaks occurred. Offensive/defensive gameplay integration syntax validated, not mobile tested.
+- Outstanding: true player defensive attribute integration, fully realistic clock/field direction, kickoffs/extra points, AI play selection, long-match browser QA, defensive play balance and UI regression.
+
 ## v4.3 — 100-play library and salary total
 - Expanded canonical JSON and runtime library from 54 to 100 original plays (58 offense / 42 defense), all with 11 positional assignments and distinct diagrams.
 - Salary & Roster Management now prominently displays TOTAL ANNUAL SALARY, cap usage percentage and monster/staff totals.
