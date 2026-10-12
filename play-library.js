@@ -22,6 +22,8 @@ for(const p of Object.values(plays)){
      if(p.concept==='counter'){a.RG.action='pull_block';a.RG.points=[[185,156],[157,165],[205,83]]}
      if(p.concept==='draw'){a.QB.points=[[135,130],[112,130],[130,145]]}
      if(p.concept==='option'){a.QB.action='option_read';a.QB.points=[[135,130],[175,158],[223,189]]}
+     if(p.name==='HB Stretch'){a.RB.points=[[105,147],[145,150],[198,207],[290,221]];for(const id of ['RG','RT']){const [x,y]=offensePositions[id];a[id].points=[[x,y],[x+26,y+23],[x+58,y+29]]}}
+     if(p.name==='Inside Run')a.RB.points=[[105,147],[145,147],[201,141],[275,142]];
      if(p.concept==='outside')for(const id of ['WR1','WR3']){const [x,y]=offensePositions[id];a[id].points=[[x,y],[x+30,y-10],[x+55,y-20]]}
    }else{
      if(p.concept==='screenwide'){a.WR1.points=routes.screen(...offensePositions.WR1,1);a.WR2.points=routes.screen(...offensePositions.WR2,-1)}
