@@ -14,9 +14,11 @@ for(const p of off){const id=p.id;if(['LT','LG','C','RG','RT'].includes(id)){p.x
 if(id==='RB'&&run){const pts=playDef?.assignments?.RB?.points;const next=pts?.[Math.min(pts.length-1,time<.4?1:time<1.6?2:3)];move(p,time<.4?{x:qb.x+12,y:qb.y+8}:next?{x:next[0],y:next[1]}:{x:510,y:145},time<.4?5.5:4.5);continue}
 const points=playDef?.assignments?.[id]?.points,stepIndex=Math.min((points?.length||1)-1,time<.9?1:time<2.0?2:3),waypoint=points?.[stepIndex];const sign=p.y<130?1:-1,route=waypoint?{x:waypoint[0],y:waypoint[1]}:deep?{x:490,y:p.y+sign*22}:{x:355,y:p.y+sign*52};
 move(p,id==='RB'&&!waypoint?{x:275,y:170}:route,(id.startsWith('WR')?3.4:2.4)*p.speed)}
+for(const p of off){p.x=clamp(p.x,12,588);p.y=clamp(p.y,15,245)}
 const rushers=defDef?Object.entries(defDef.assignments).filter(([,a])=>a.action==='rush').map(([id])=>id):blitz?['DE1','DT1','DT2','DE2','LB1','CB1']:['DE1','DT1','DT2','DE2'];
 const manTargets={LB1:'RB',LB2:'TE',LB3:'WR3',CB1:'WR1',CB2:'WR2',FS:'WR1',SS:'WR2'};
 for(const d of def){let aim;if(rushers.includes(d.id))aim=phase==='carried'?find(holder):qb;else if(phase==='carried'&&distance(d,find(holder))<105)aim=find(holder);else if(defDef?.assignments?.[d.id]?.action==='spy')aim=qb;else if(defDef?.assignments?.[d.id]?.action==='man')aim=find(defDef.assignments[d.id].target||'WR1');else if(defDef?.assignments?.[d.id]?.action==='zone'){const z=defDef.assignments[d.id].zone;aim={x:z.x,y:z.y}}else if(man)aim=find(manTargets[d.id]||'WR1');else aim={x:d.homeX+40,y:d.homeY};move(d,aim,(2.2+(d.id.startsWith('CB')?.9:0))*d.speed)}
+for(const d of def){d.x=clamp(d.x,12,588);d.y=clamp(d.y,15,245)}
 for(const o of off.filter(p=>['LT','LG','C','RG','RT'].includes(p.id))){for(const d of def.filter(p=>rushers.includes(p.id))){if(distance(o,d)<22)d.x+=1.8}}
 if(run&&time>.3){phase='carried';holder='RB'}
 if(!run&&phase==='held'&&time>1.15){const available=(options.target==='RB'?[...catchTargets,'RB']:catchTargets).map(id=>find(id)),awareness=clamp(options.awareness??ratings.QB??65,0,99),openScore=p=>{const nearest=Math.min(...def.map(d=>distance(d,p)));const separation=nearest+Math.max(0,p.x-185)*.08;return separation};const forced=options.target&&available.find(p=>p.id===options.target);if(forced){target=forced}else{const ranked=available.slice().sort((a,b)=>openScore(b)-openScore(a));const findBest=rng()<(.18+awareness*.008);target=findBest?ranked[0]:ranked[Math.floor(rng()*Math.min(3,ranked.length))]};throwStart={...qb};throwEnd={x:target.x+9+(rng()-.5)*34,y:target.y+(rng()-.5)*26};phase='air';holder=null;events.push('Pass toward '+target.id)}
@@ -30,11 +32,29 @@ if(!result)result=phase==='carried'?'tackle':phase==='held'?'sack':'incomplete';
 const last=frames[frames.length-1],yards=['tackle','touchdown','sack','fumble'].includes(result)?clamp(Math.round((last.ball[0]-185)/5),-15,70):0;
 return {play,defense,seed,frames,result,yards,events,holder,target:target?.id||null,flip:!!options.flip};
 }
-function render(sim,i,options={}){const f=sim.frames[clamp(i,0,sim.frames.length-1)],flip=y=>options.flip?260-y:y,dir=x=>options.direction==='left'?600-x:x;let svg='<rect width="600" height="260" fill="#226647"/>';for(let j=0;j<=12;j++)svg+='<line x1="'+j*50+'" x2="'+j*50+'" y1="0" y2="260" stroke="white" stroke-opacity=".17"/>';svg+='<line x1="'+dir(185)+'" x2="'+dir(185)+'" y1="0" y2="260" stroke="#f5d66c" stroke-width="3"/>';
-if(options.stadiumArt)svg+='<g transform="scale(1 .928571)">'+options.stadiumArt+'</g>';for(const [id,originalX,originalY] of f.off){const x=dir(originalX),y=flip(originalY);svg+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="'+(options.defensiveView?'#f18c82':'#74c5ff')+'" stroke="'+(f.holder===id?'#ffe26c':'white')+'" stroke-width="2"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" font-weight="bold">'+id+'</text>'}
-for(const [id,originalX,originalY] of f.def){const x=dir(originalX),y=flip(originalY);svg+='<rect x="'+(x-11)+'" y="'+(y-10)+'" width="22" height="20" rx="3" fill="'+(options.defensiveView?'#74c5ff':'#f18c82')+'" stroke="white"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8">'+id+'</text>'}
-svg+='<ellipse cx="'+(dir(f.ball[0])+8)+'" cy="'+(flip(f.ball[1])-6)+'" rx="8" ry="5" fill="#e6a455" stroke="white"/>';
-if(i===sim.frames.length-1)svg+='<rect x="375" y="8" width="215" height="32" rx="6" fill="#102b27"/><text x="482" y="29" text-anchor="middle" font-size="15" fill="white">'+sim.yards+' YDS · '+sim.result.toUpperCase()+'</text>';
-return svg}
+function render(sim,i,options={}){
+ const f=sim.frames[clamp(i,0,sim.frames.length-1)];
+ const flip=y=>options.flip?260-y:y,dir=x=>options.direction==='left'?600-x:x;
+ const safe=(v,min,max)=>clamp(v,min,max);
+ let svg='<defs><clipPath id="gbPitchClip"><rect x="1" y="1" width="598" height="258"/></clipPath></defs>';
+ svg+='<rect width="600" height="260" fill="#226647"/>';
+ for(let j=0;j<=12;j++)svg+='<line x1="'+j*50+'" x2="'+j*50+'" y1="0" y2="260" stroke="white" stroke-opacity=".17"/>';
+ svg+='<line x1="'+dir(185)+'" x2="'+dir(185)+'" y1="0" y2="260" stroke="#f5d66c" stroke-width="3"/>';
+ if(options.stadiumArt)svg+='<g transform="scale(1 .928571)">'+options.stadiumArt+'</g>';
+ svg+='<g clip-path="url(#gbPitchClip)">';
+ // Ball carrier and all players are drawn above field markings and route overlays.
+ for(const [id,originalX,originalY] of f.off){
+  const x=safe(dir(originalX),13,587),y=safe(flip(originalY),13,247);
+  svg+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="'+(options.defensiveView?'#f18c82':'#74c5ff')+'" stroke="'+(f.holder===id?'#ffe26c':'white')+'" stroke-width="2"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" font-weight="bold" fill="#10212c">'+id+'</text>';
+ }
+ for(const [id,originalX,originalY] of f.def){
+  const x=safe(dir(originalX),12,588),y=safe(flip(originalY),12,248);
+  svg+='<rect x="'+(x-11)+'" y="'+(y-10)+'" width="22" height="20" rx="3" fill="'+(options.defensiveView?'#74c5ff':'#f18c82')+'" stroke="white"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" fill="#10212c">'+id+'</text>';
+ }
+ svg+='<ellipse cx="'+safe(dir(f.ball[0])+8,8,592)+'" cy="'+safe(flip(f.ball[1])-6,8,252)+'" rx="8" ry="5" fill="#e6a455" stroke="white"/>';
+ svg+='</g>';
+ if(i===sim.frames.length-1)svg+='<rect x="375" y="8" width="215" height="32" rx="6" fill="#102b27"/><text x="482" y="29" text-anchor="middle" font-size="15" fill="white">'+sim.yards+' YDS · '+sim.result.toUpperCase()+'</text>';
+ return svg
+}
 return {simulate,render,version:'1.0'};
 })();
