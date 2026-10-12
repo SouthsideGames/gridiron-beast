@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "3.9",
+  "effectiveGddVersion": "4.1",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "qb_awareness_practice_controls_coordinator_packages",
@@ -498,5 +498,15 @@
       "known_issues_register"
     ],
     "status": "not_ready_for_final_handoff"
+  },
+  "teamIdentity": {
+    "headCoachDefinesOffenseAndDefense": true,
+    "offensiveCoordinatorAlignsToHeadCoach": true,
+    "defensiveCoordinatorAlignsToHeadCoach": true,
+    "schemeFitAffectsEffectiveSimulationMovement": true,
+    "rosterArchetypeFit": "planned",
+    "teamUniquePlaybooks": "planned",
+    "maddenReference": "football concepts only; original diagrams and assignments",
+    "playArtStatus": "selected defensive concepts distinct; complete library pending"
   }
 }
