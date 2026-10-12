@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "4.5",
+  "effectiveGddVersion": "4.6",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "qb_awareness_practice_controls_coordinator_packages",
@@ -565,5 +565,20 @@
     "specialTeamsKickoffAnimation": "planned",
     "fullNFLKickoffAndDriveRules": "incomplete",
     "status": "HTML implemented; browser regression unverified"
+  },
+  "fieldRendering": {
+    "sidelineYardNumbersBothSides": true,
+    "tenYardStripes": true,
+    "fiveYardLines": true,
+    "hashMarks": true,
+    "goalLines": true,
+    "topDownGoalposts": true,
+    "homeMascotMidfield": true,
+    "endZoneWordmarks": true,
+    "playerMarkersAboveRoutes": true,
+    "routeClipping": true,
+    "monsterPositionClamping": true,
+    "finalFrameDirectionUsesDriveDirection": true,
+    "verified": "static JavaScript validation and headless SVG smoke test; mobile Safari unverified"
   }
 }
