@@ -1,3 +1,9 @@
+## v4.1 coaching identity and defensive play-art milestone
+- Implemented: distinct preview assignments for Cloud Flats, QB Spy, Zone Trap, Deep Zone, Cover Two, Cover Three, Cover Four, man and pressure families.
+- Implemented: head coach offense/defense philosophy, coordinator fit scores, staff alignment panel and modest movement-rating effects in the simulation.
+- Incomplete: 7,000+ reference concepts are NOT imported, AI franchises do not yet have unique authored playbooks, roster-archetype synergy is pending, and defensive simulation does not yet consume the same per-play assignment data as the SVG preview.
+- Validation: inline JavaScript syntax check; no full mobile Safari playthrough or tactical gameplay regression completed.
+
 ## v4.0 lightweight salary management — implemented in HTML, mobile QA pending
 - Challenger / Vanguard / Sovereign annual caps: 2,500,000 / 3,700,000 / 5,200,000 credits.
 - All rostered monsters (including injured) and all five staff salaries count against the cap. Existing monster saves without salary use a deterministic fallback; newly generated monsters store a fixed annual salary.
