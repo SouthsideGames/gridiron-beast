@@ -1,3 +1,9 @@
+## v4.3 — 100-play library and salary total
+- Expanded canonical JSON and runtime library from 54 to 100 original plays (58 offense / 42 defense), all with 11 positional assignments and distinct diagrams.
+- Salary & Roster Management now prominently displays TOTAL ANNUAL SALARY, cap usage percentage and monster/staff totals.
+- Validation: 100/100 play simulation smoke tests without exceptions; unique diagram signatures 100/100; main HTML script syntax valid.
+- Limitations: football execution still needs balancing; 100 unique previews are not 100 professionally verified plays; mobile Safari interactions unverified.
+
 ## v4.2 — unified play library and visual correction
 - Reviewed Madden School individual Inside Zone/Outside Zone reference pages and playbook organization; authored original Gridiron Beast diagrams rather than copying images.
 - New `data/play-library.json` and `play-library.js`: 54 authored play definitions (30 offensive, 24 defensive), 11 assignments each, 54 distinct SVG previews.
