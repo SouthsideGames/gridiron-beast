@@ -31,8 +31,8 @@ const last=frames[frames.length-1],yards=['tackle','touchdown','sack','fumble'].
 return {play,defense,seed,frames,result,yards,events,holder,target:target?.id||null,flip:!!options.flip};
 }
 function render(sim,i,options={}){const f=sim.frames[clamp(i,0,sim.frames.length-1)],flip=y=>options.flip?260-y:y;let svg='<rect width="600" height="260" fill="#226647"/>';for(let j=0;j<=12;j++)svg+='<line x1="'+j*50+'" x2="'+j*50+'" y1="0" y2="260" stroke="white" stroke-opacity=".17"/>';svg+='<line x1="185" x2="185" y1="0" y2="260" stroke="#f5d66c" stroke-width="3"/>';
-for(const [id,x,originalY] of f.off){const y=flip(originalY);svg+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="#74c5ff" stroke="'+(f.holder===id?'#ffe26c':'white')+'" stroke-width="2"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" font-weight="bold">'+id+'</text>'}
-for(const [id,x,originalY] of f.def){const y=flip(originalY);svg+='<rect x="'+(x-11)+'" y="'+(y-10)+'" width="22" height="20" rx="3" fill="#f18c82" stroke="white"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8">'+id+'</text>'}
+for(const [id,x,originalY] of f.off){const y=flip(originalY);svg+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="'+(options.defensiveView?'#f18c82':'#74c5ff')+'" stroke="'+(f.holder===id?'#ffe26c':'white')+'" stroke-width="2"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" font-weight="bold">'+id+'</text>'}
+for(const [id,x,originalY] of f.def){const y=flip(originalY);svg+='<rect x="'+(x-11)+'" y="'+(y-10)+'" width="22" height="20" rx="3" fill="'+(options.defensiveView?'#74c5ff':'#f18c82')+'" stroke="white"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8">'+id+'</text>'}
 svg+='<ellipse cx="'+(f.ball[0]+8)+'" cy="'+(flip(f.ball[1])-6)+'" rx="8" ry="5" fill="#e6a455" stroke="white"/>';
 if(i===sim.frames.length-1)svg+='<rect x="375" y="8" width="215" height="32" rx="6" fill="#102b27"/><text x="482" y="29" text-anchor="middle" font-size="15" fill="white">'+sim.yards+' YDS · '+sim.result.toUpperCase()+'</text>';
 return svg}
