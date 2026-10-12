@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.0
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.1
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -421,3 +421,15 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Not yet implemented:** multi-year contracts, negotiation, free agency cap exceptions, AI salary management, salary inflation, trade payroll validation, and realistic market valuation. These are deliberately outside the lightweight v4.0 scope.
 
 **Acceptance tests:** Starting franchise remains under cap after all five hires; each tier shows the correct cap; projected staff hires cannot exceed budget; an imported or relegated over-cap save cannot start a match; releasing a rostered monster reduces committed payroll; salaries survive save/reload; no released monster reappears automatically; monster leveling does not alter the agreed annual salary; existing franchise history remains intact.
+
+## 36. Team identity and original tactical play library — v4.1
+
+**Approved direction:** Head Coach defines the enduring offensive and defensive philosophy of the franchise; the OC and DC implement the philosophy with their own scheme-specific playbooks; the GM recruits monsters whose archetypes, attributes, natures and abilities complement those schemes. A mismatch anywhere in the chain reduces tactical effectiveness but must not make games unwinnable. Team identity persists as a recognizable trait across seasons and evolves primarily with Head Coach turnover, not random weekly playbook changes. AI teams should receive distinct, partially overlapping playbooks. Future expansion can draw on thousands of football concepts but only fully specified and validated original plays should enter the playable catalog.
+
+**Initial identities:** Marcus Flint = physical/run-first + aggressive/blitz; Avery Vale = balanced/flexible + multiple/adaptive; Jordan Reyes = pass-dominant/tempo + coverage/speed. OCs: Swift pass, Brock power run, Park balanced. DCs: Stone pressure, Frost coverage, Fox man. Alignment currently scores 100 exact, 80 when balanced, and 45–68 for conflicting styles; it affects effective movement ratings in the first simulation implementation. Roster archetype synergy, AI team identity, season continuity and full tactical modifiers are pending.
+
+**Defensive play-art correction:** Four formerly near-identical previews (Cloud Flats, QB Spy, Zone Trap, Deep Zone) now have separate original SVG assignment diagrams. Cover Two, Cover Three, Cover Four, man and pressure concepts have separate coverage/rush representations. All are 11v11 schematic approximations, not copied Madden assets or certified Madden assignments. These previews are still generated from named play logic rather than a single unified per-play JSON assignment source. **Must fix:** make the same structured per-player assignments drive diagrams, defensive AI and the future Unity renderer.
+
+**Reference research:** Madden School organizes plays by team playbook, formation, personnel, coverage, blitz, run and passing concept. Use it to research real football tactics; do not bulk-copy proprietary diagrams, protected play-art assets or website content. A large external catalog is a future reference library, not 7,000 implemented game plays.
+
+**Unity port requirement:** Every implemented play needs unique ID, side, personnel, formation, per-position alignment, 11 assignments, zone shapes or man targets, rush lanes, motion/route paths, compatible coaching styles, mirrored variant and deterministic seeded replay test. Every AI franchise needs an identity profile and stable playbook package. Play art and simulation must never silently diverge.
