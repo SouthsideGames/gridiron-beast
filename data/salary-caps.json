@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "currency": "credits",
+  "period": "annual",
+  "caps": {
+    "challenger": 2500000,
+    "vanguard": 3700000,
+    "sovereign": 5200000
+  },
+  "rosterCap": 40,
+  "countsTowardCap": [
+    "all rostered monsters including injured",
+    "all five hired staff"
+  ],
+  "monsterSalaryFormula": {
+    "base": 18000,
+    "perOverallPoint": 280,
+    "selectedCornerstonePremium": 3000,
+    "assignment": "generated once on roster creation; existing salaries preserved"
+  },
+  "rules": {
+    "newFranchiseStartsUnderCap": true,
+    "staffHireMustFitCap": true,
+    "overCapBlocksSundayGame": true,
+    "overCapBlocksAllSnapActions": true,
+    "releaseMonstersToReducePayroll": true,
+    "releaseIsPermanent": true,
+    "noSalaryTaxOrDailyBudgeting": true,
+    "rosterMinimum": 22,
+    "contracts": "single annual amount; renegotiation and free agency later"
+  },
+  "sample": {
+    "rosterMonsterPayroll": 1356280,
+    "fiveStaffPayroll": 755000,
+    "total": 2111280,
+    "challengerRemaining": 388720
+  },
+  "implementationStatus": "prototype; tested salary calculation in isolation; Safari UI not tested"
+}
