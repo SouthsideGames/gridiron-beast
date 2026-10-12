@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "4.2",
+  "effectiveGddVersion": "4.3",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "qb_awareness_practice_controls_coordinator_packages",
@@ -512,12 +512,15 @@
   "playLibrary": {
     "canonical": "data/play-library.json",
     "runtime": "play-library.js",
-    "playCount": 54,
-    "uniqueDiagrams": 54,
+    "playCount": 100,
+    "uniqueDiagrams": 100,
     "assignmentsPerPlay": 11,
-    "simulationIntegration": "partial: route, rush, man, zone and run lane consumed; full physics pending",
-    "coordinatorPlays": 15,
-    "reference": "Madden School concepts; no copied proprietary artwork",
-    "tested": "54/54 smoke simulations passed, syntax validated"
+    "simulationIntegration": "partial",
+    "tested": "100/100 smoke simulations and unique diagram signatures"
+  },
+  "salaryUI": {
+    "totalAnnualSalaryProminent": true,
+    "capUsagePercentage": true,
+    "combinedStaffAndMonsterTotal": true
   }
 }
