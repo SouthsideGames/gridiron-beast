@@ -1,3 +1,12 @@
+## v4.5 — pregame, coin toss, stadium identity and match pacing
+- Home team mascot icon at midfield and split name in end zones, determined by the scheduled home team.
+- Independent offensive and defensive play-line toggles in practice.
+- Full Coaching versus Key Moments: Key Moments fast-forwards up to 16 logged snaps until a major situation, score/turnover, red zone, late down, quarter change or final.
+- Animated plays now retain their final frame until Tap to Continue; play clock pauses during review.
+- New Sunday pregame matchup panel: player's 22 actual starters and explicitly estimated opponent placeholders. Opponent real roster and win/loss record data not yet available.
+- Coin toss includes receive/kick/defer and opening direction; Q2/Q4 reverse Q1/Q3; halftime receiving side stored.
+- JavaScript syntax checked; full browser and long-match regression not yet performed. Wind, real AI rosters, kickoff animations and complete NFL coin-toss edge cases remain pending.
+
 ## v4.4 — playable defensive snaps, ball-carrier continuation, match events
 - Defensive possession now displays opponent offense and allows the owner to call a defensive play on each snap. No automatic full opponent drive after touchdowns or punts.
 - Added extended carries, break-tackle/stiff-arm attempts, contested-pass interceptions and fumbles to simulation. Result messages use simulated outcomes and yards remain tied to final ball position.
