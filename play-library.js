@@ -10,6 +10,44 @@ function offensive(name,kind,concept,side){const pos=offensePositions,assignment
 function defensive(name,concept){const pos=defensePositions,assignments={};const add=(id,action,points,extra={})=>assignments[id]={action,points,...extra};const rushers=concept==='allblitz'?['DE1','DT1','DT2','DE2','LB1','LB2','LB3']:concept==='cornerblitz'?['DE1','DT1','DT2','DE2','CB1']:concept==='dbblitz'?['DE1','DT1','DT2','DE2','CB2']:concept==='runblitz'||concept==='agap'?['DE1','DT1','DT2','DE2','LB1','LB2']:concept==='zoneblitz'||concept==='firezone'?['DE1','DT1','DE2','LB3']:['DE1','DT1','DT2','DE2'];rushers.forEach(id=>{const [x,y]=pos[id];add(id,'rush',[[x,y],[x-60,130]])});const coverage=['LB1','LB2','LB3','CB1','CB2','FS','SS'].filter(id=>!rushers.includes(id));const deep=['cover2','cover3','cover4','deep','cloud','trap','tampa','cover6','quarters','robber','spy','zoneblitz','firezone'].includes(concept);const man=['man','press','nickelman','cover1'].includes(concept);const targets={CB1:'WR1',CB2:'WR2',LB1:'RB',LB2:'TE',LB3:'WR3',FS:'WR1',SS:'WR2'};for(const id of coverage){const [x,y]=pos[id];if(concept==='spy'&&id==='LB2'){add(id,'spy',[[x,y],[245,130],[215,130]],{target:'QB'});continue}if(man){const t=targets[id],dest=offensePositions[t];add(id,'man',[[x,y],[dest[0]+35,dest[1]]],{target:t});continue}let cx=x+42,cy=y,rx=36,ry=26;if(concept==='cloud'&&id.startsWith('CB')){cx=280;rx=31;ry=24}if(concept==='trap'&&id.startsWith('CB')){cx=265;cy=id==='CB1'?80:180;rx=33;ry=27}if(id==='FS'||id==='SS'){cx=concept==='cover4'||concept==='deep'?475:concept==='cover3'?445:455;cy=id==='FS'?concept==='trap'?60:75:concept==='trap'?200:185;rx=concept==='cover4'?45:60;ry=38}if(concept==='runwall'){cx=260;rx=24;ry=22}if(concept==='cover3'&&id==='LB2'){cx=340;cy=130}add(id,'zone',[[x,y],[cx,cy]],{zone:{x:cx,y:cy,rx,ry}})}return {name,side:'defense',concept,formation:concept.includes('blitz')?'Pressure Front':'4-3 / Nickel',assignments}}
 for(const [name,[kind,concept,side]] of Object.entries(OFFENSE))plays[name]=offensive(name,kind,concept,side);
 for(const [name,concept] of Object.entries(DEFENSE))plays[name]=defensive(name,concept);
+// Concept-specific tactical variations: never duplicate a preview simply to fill a package.
+for(const p of Object.values(plays)){
+ const a=p.assignments;
+ if(p.side==='offense'){
+   if(p.kind==='run'){
+     const lane={power:155,zone:126,outside:65,dive:129,balanced:180,counter:80,draw:139,option:200}[p.concept]||130;
+     const rb=a.RB;a.RB.points=[[105,147],[145,145],[199,lane],[290,lane+(p.concept==='outside'?-8:0)]];
+     const blockShift={power:18,zone:8,outside:-26,dive:0,balanced:16,counter:-22,draw:0,option:25}[p.concept]||0;
+     for(const id of ['LT','LG','C','RG','RT']){const [x,y]=offensePositions[id];a[id].points=[[x,y],[x+25,y+blockShift],[x+55,y+blockShift]];}
+     if(p.concept==='counter'){a.RG.action='pull_block';a.RG.points=[[185,156],[157,165],[205,83]]}
+     if(p.concept==='draw'){a.QB.points=[[135,130],[112,130],[130,145]]}
+     if(p.concept==='option'){a.QB.action='option_read';a.QB.points=[[135,130],[175,158],[223,189]]}
+     if(p.concept==='outside')for(const id of ['WR1','WR3']){const [x,y]=offensePositions[id];a[id].points=[[x,y],[x+30,y-10],[x+55,y-20]]}
+   }else{
+     if(p.concept==='screenwide'){a.WR1.points=routes.screen(...offensePositions.WR1,1);a.WR2.points=routes.screen(...offensePositions.WR2,-1)}
+     if(p.concept==='hbscreen'){a.RB.points=[[105,147],[130,184],[185,205],[240,205]];a.TE.action='pass_block'}
+     if(p.concept==='boot'){a.QB.points=[[135,130],[112,155],[153,183]]}
+     if(p.concept==='temposlant')a.WR3.points=[[137,53],[190,70],[255,114]];
+     if(p.concept==='slantquick')a.WR1.points=[[176,25],[212,43],[258,80]];
+   }
+ }else{
+   const z=(id,x,y,rx,ry)=>{if(a[id]?.action==='zone'){a[id].zone={x,y,rx,ry};a[id].points=[[...defensePositions[id]],[x,y]]}};
+   if(p.concept==='deep'){z('FS',505,68,48,37);z('SS',505,190,48,37)}
+   if(p.concept==='cover4'){z('CB1',420,32,39,28);z('CB2',420,225,39,28);z('FS',485,90,37,30);z('SS',485,168,37,30)}
+   if(p.concept==='tampa'){z('LB2',380,130,35,49)}
+   if(p.concept==='quarters'){z('CB1',450,28,40,29);z('CB2',450,232,40,29)}
+   if(p.concept==='cover6'){z('CB1',310,28,35,25);z('FS',485,70,50,38);z('SS',480,186,55,40)}
+   if(p.concept==='robber'){z('SS',330,130,36,27)}
+   if(p.concept==='firezone'){z('LB1',310,65,31,24);z('LB2',355,130,34,28)}
+   if(p.concept==='zoneblitz'){z('CB1',330,30,33,24);z('FS',490,80,42,34)}
+   if(p.concept==='contain')for(const id of ['DE1','DE2']){a[id].points=[[...defensePositions[id]],[180,id==='DE1'?50:210]]}
+   if(p.concept==='runwall')for(const id of ['LB1','LB2','LB3'])z(id,240,defensePositions[id][1],24,22);
+   if(p.concept==='agap')for(const id of ['LB1','LB2'])a[id].points=[[...defensePositions[id]],[190,130]];
+   if(p.concept==='press')for(const id of ['CB1','CB2'])a[id].points=[[...defensePositions[id]],[198,offensePositions[a[id].target][1]]];
+   if(p.concept==='nickelman'){a.LB3.action='man';a.LB3.target='WR3';a.LB3.points=[[...defensePositions.LB3],[210,53]]}
+   if(p.concept==='cover1'){z('FS',470,130,55,43)}
+ }
+}
 function diagram(name){const p=plays[name];if(!p)return '';let out='';for(const [id,a] of Object.entries(p.assignments)){const pts=a.points;if(a.action==='zone'){const z=a.zone;out+='<ellipse cx="'+z.x+'" cy="'+z.y+'" rx="'+z.rx+'" ry="'+z.ry+'" fill="#2889db" fill-opacity=".2" stroke="#72c8ff" stroke-dasharray="5 4" stroke-width="2"/>';continue}const color=a.action==='rush'?'#ff9468':a.action==='man'?'#f4e596':a.action.includes('block')?'#a2ddff':'#f4d067';out+='<polyline points="'+pts.map(v=>v.join(',')).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" '+(a.action==='man'?'stroke-dasharray="5 4"':'')+'/>';const tail=pts.at(-1),prev=pts.at(-2);if(tail&&prev){const angle=Math.atan2(tail[1]-prev[1],tail[0]-prev[0]);out+='<path d="M'+tail[0]+' '+tail[1]+' l'+(-10*Math.cos(angle-.45))+' '+(-10*Math.sin(angle-.45))+' l'+(10*Math.cos(angle+.45)-10*Math.cos(angle-.45))+' '+(10*Math.sin(angle+.45)-10*Math.sin(angle-.45))+' Z" fill="'+color+'"/>'}}return out}
 return {plays,offensePositions,defensePositions,diagram,count:Object.keys(plays).length};
 })();
