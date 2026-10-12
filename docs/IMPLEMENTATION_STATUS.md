@@ -1,3 +1,13 @@
+## v4.0 lightweight salary management — implemented in HTML, mobile QA pending
+- Challenger / Vanguard / Sovereign annual caps: 2,500,000 / 3,700,000 / 5,200,000 credits.
+- All rostered monsters (including injured) and all five staff salaries count against the cap. Existing monster saves without salary use a deterministic fallback; newly generated monsters store a fixed annual salary.
+- Budget summaries are visible in Headquarters, roster and hiring. Hiring cards show projected remaining room and prevent unaffordable hires.
+- Salary Management allows confirmed permanent roster releases, with a 22-monster minimum. Over-cap status blocks Sunday entry, Snap and special-teams actions.
+- Verified in isolated JavaScript test: a 40-monster starter roster with a 755,000-credit staff package totals 2,111,280 credits, leaving 388,720 under Challenger's 2,500,000 cap. This is one sample, not an exhaustive test of all candidate combinations.
+- Updated data/salary-caps.json and data/league.json; master GDD v4.0 records the rules and C# parity requirements.
+- **Known gap:** Tuesday recruitment currently records prospects in a separate recruited list and does not automatically add them to the 40-monster salary roster. Recruit signing, salary validation and replacement decisions must be integrated before this economy is considered complete.
+- Not yet verified: end-to-end iOS Safari UI, import/export salary migration, relegation-to-lower-cap scenario, game lock under all navigation paths, or AI franchise payroll.
+
 ## v3.9 toggle repair and Unity parity tracking
 - FIXED IN SOURCE: practice line visibility, flip, monster icon and target controls now trigger an immediate redraw rather than waiting for another practice rep. The practice preview and replay use the same simulation renderer.
 - FIXED IN SOURCE: switching plays clears the prior replay preview; toggling display controls does not alter completed simulation outcomes.
