@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.3
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.4
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -459,3 +459,17 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Salary & Roster Management:** Show a prominently labeled **TOTAL ANNUAL SALARY** equal to all monster contracts plus all five staff salaries, along with cap usage percentage, progress bar, annual cap, and available/over-cap amount. Salary management shows the full summary immediately above the monster release controls. Salary cap enforcement remains unchanged.
 
 **Tests:** 100/100 headless simulation smoke tests completed without exceptions; 100/100 distinct diagram outputs and 11 assignments per play; main inline JavaScript syntax validated. Not yet tested on physical mobile Safari. More work needed on gameplay balancing, route realism, formation variety, special teams, AI play calling and automated end-to-end franchise progression.
+
+## 39. Interactive defensive snaps, ball-carrier continuation and event history — HTML v4.4
+
+**Problem discovered during playtesting:** The old match loop automatically resolved away-team drives immediately after the player's touchdown, often returning possession to the player without any visible defense. Receiver and running-back motion also stopped prematurely and failed to model yards after catch, tackle breaks or stiff arms. Important events were insufficiently communicated, and no accessible match history existed.
+
+**Current implementation:** Sunday match now alternates offensive and defensive possessions. On defense the owner selects a defensive coordinator play, sees the opposing offense run a simulation against the selected defense, and remains on defense until a scoring play, turnover, or turnover on downs. The defensive view renders the player's defenders blue and the opposing offense red. Automatic opponent drive resolution is no longer called after every player touchdown, punt or field goal. Key Moments can select an available play automatically but still resolves one visible snap at a time.
+
+**Continuation:** After a completed pass or running handoff, the carrier continues advancing until tackled, a simulated fumble, reaching the end zone, or the current simulation time budget ends. Defender proximity triggers tackle attempts; stronger offensive ratings increase the chance of breaking a tackle or stiff-arming a defender. Interceptions are possible on contested throws. Fumbles can occur during extended carries. Ball position and yardage derive from the final simulated ball coordinates; touchdowns are awarded only when accumulated drive yardage reaches the end zone.
+
+**Communication:** Major touchdowns, interceptions, fumbles, and turnovers display visible notifications. The in-game Play Log records play descriptions with quarter and clock, survives save/load as part of the game object, and pauses gameplay while open. Closing the log resumes the match. Special teams outcomes and delay penalties also enter the log. Logging is bounded to 350 entries to avoid unlimited storage growth.
+
+**Simplifications:** Seven points are awarded on touchdowns as an implicit successful extra point; actual kick/try, kickoffs, penalties, field position and complete possession rules still require implementation. The match simulator does not yet use full opponent rosters, fatigue, AI coaching style or all individual defensive monster attributes. Carry and tackle outcomes are heuristic, not physics-grade football. A match should not be declared production-ready without mobile Safari tests, possession regression, scoring and field-position tests, and deterministic event replay.
+
+**Unity parity:** Port the event-driven possession state, simulated tackle/ball carrier continuation, defense play selection, log persistence, pause state and notifications, preserving save compatibility and correct color ownership. Replace remaining shortcuts with validated rules before handoff.
