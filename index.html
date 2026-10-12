@@ -209,7 +209,24 @@ function practiceRatings(){const monsters=ensureFootballRoster();const values={}
 let lastPracticeReplay=null;
 function refreshPracticeView(){if(screen!=='practice'||practiceAnimating)return;if(lastPracticeReplay){$('practicesvg').innerHTML=practiceRender(lastPracticeReplay,lastPracticeReplay.frames.length-1)}else{$('practicesvg').innerHTML=practicePreview($('practiceplay').value,$('practicedef').value)}}
 function practicePreview(play,defense){const sim=GridironEngine.simulate(play,defense,314159,practiceRatings(),{target:$('practicetarget').value||null,awareness:footballSlot('QB')?.ovr||65});return practiceRender(sim,0)}
-function practiceRender(sim,index){let svg=GridironEngine.render(sim,index,{flip:$('practiceflip').checked});if($('practiceofflines').checked||$('practicedeflines').checked){const overlay=($('practiceofflines').checked?offenseOverlay(sim.play):'')+($('practicedeflines').checked?defenseOverlay(sim.defense):'');svg+=$('practiceflip').checked?'<g transform="translate(0 260) scale(1 -1)">'+overlay+'</g>':overlay}if($('practicemonsters').checked){const f=sim.frames[Math.max(0,Math.min(index,sim.frames.length-1))];const typeIcons={Fire:'🔥',Water:'💧',Nature:'🌿',Electric:'⚡',Earth:'🪨',Ice:'❄️',Wind:'🌪️',Dark:'🌑',Light:'✨',Metal:'⚙️',Psychic:'🔮',Dragon:'🐉'};const portraits=Object.fromEntries(OFF11.map(pos=>{const m=footballSlot(pos);return [pos,m?.icon||typeIcons[m?.type]||'🐾']}));svg+='<g>'+f.off.map(([pos,x,y])=>'<text x="'+x+'" y="'+(($('practiceflip').checked?260-y:y)-13)+'" text-anchor="middle" font-size="14">'+portraits[pos]+'</text>').join('')+'</g>'}return svg}
+function practiceRender(sim,index){
+ const flip=$('practiceflip').checked;
+ let svg=GridironEngine.render(sim,index,{flip});
+ const overlay=($('practiceofflines').checked?offenseOverlay(sim.play):'')+($('practicedeflines').checked?defenseOverlay(sim.defense):'');
+ // Play assignments go UNDER the monster markers, and stay inside the pitch.
+ if(overlay){
+  const clipped='<g clip-path="url(#gbPitchClip)" pointer-events="none">'+(flip?'<g transform="translate(0 260) scale(1 -1)">'+overlay+'</g>':overlay)+'</g>';
+  const foreground='<g clip-path="url(#gbPitchClip)">';
+  svg=svg.replace(foreground,clipped+foreground);
+ }
+ if($('practicemonsters').checked){
+  const f=sim.frames[Math.max(0,Math.min(index,sim.frames.length-1))];
+  const icons={Fire:'🔥',Water:'💧',Nature:'🌿',Electric:'⚡',Earth:'🪨',Ice:'❄️',Wind:'🌪️',Dark:'🌑',Light:'✨',Metal:'⚙️',Psychic:'🔮',Dragon:'🐉'};
+  const portraits=Object.fromEntries(OFF11.map(pos=>{const m=footballSlot(pos);return [pos,m?.icon||icons[m?.type]||'🐾']}));
+  svg+='<g clip-path="url(#gbPitchClip)" pointer-events="none">'+f.off.map(([pos,x,y])=>'<text x="'+Math.max(13,Math.min(587,x))+'" y="'+Math.max(16,Math.min(246,(flip?260-y:y)-13))+'" text-anchor="middle" font-size="14">'+portraits[pos]+'</text>').join('')+'</g>';
+ }
+ return svg
+}
 function runPracticeAnimation(play,defense){if(practiceAnimating)return;const sim=GridironEngine.simulate(play,defense,Math.floor(Math.random()*2147483647)+1,practiceRatings(),{target:$('practicetarget').value||null,flip:$('practiceflip').checked,awareness:footballSlot('QB')?.ovr||65});lastPracticeReplay=sim;practiceAnimating=true;const button=$('practicebutton');button.disabled=true;button.textContent='Play in progress…';$('practiceresult').textContent='Snap! '+sim.frames.length+' simulation frames. Watch the play.';const start=performance.now(),duration=Math.max(1600,sim.frames.length*30);const step=now=>{const index=Math.min(sim.frames.length-1,Math.floor((now-start)/duration*sim.frames.length));if(screen==='practice')$('practicesvg').innerHTML=practiceRender(sim,index);if(index<sim.frames.length-1&&screen==='practice'){practiceFrame=requestAnimationFrame(step)}else{practiceAnimating=false;button.disabled=false;button.textContent='▶ Run Practice Rep';if(screen==='practice')$('practiceresult').textContent=sim.play+' vs '+sim.defense+' · Target '+(sim.target||'run')+': '+sim.yards+' yards ('+sim.result+'). '+sim.events.join('. ')}};practiceFrame=requestAnimationFrame(step)}
 function visualPlayGrid(plays,defensive){return '<div class="grid" style="gap:12px">'+plays.map(p=>'<div class="panel" style="padding:8px;margin:0"><strong>'+escapeHtml(p.name)+'</strong><p class="muted" style="margin:4px 0 8px">'+escapeHtml(p.route|| (defensive?'Coverage / pressure':'Route concepts'))+'</p>'+playDiagram(p.name,defensive)+'</div>').join('')+'</div>'}
 function syncPracticeCatalog(){for(const [id,side] of [['practiceplay','offense'],['practicedef','defense']]){const select=$(id),previous=select.value,names=teamPlayNames(side);select.innerHTML=names.map(n=>'<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>').join('');if(names.includes(previous))select.value=previous}const target=$('practicetarget');if(/run|zone|power/i.test($('practiceplay').value)){target.value='';target.disabled=true}else target.disabled=false}
