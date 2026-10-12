@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "format": "11v11",
-  "status": "coordinator_package_catalog_provisional_assignment_simulation_not_complete",
+  "status": "54_unique_play_diagrams_and_assignments_partial_simulation_integration",
   "plays": [
     {
       "id": "off_01",
@@ -1305,6 +1305,9 @@
     }
   ],
   "coordinatorPackages": {
+    "hc_flint": [],
+    "hc_vale": [],
+    "hc_reyes": [],
     "oc_swift": [
       "Quick Pass",
       "Deep Post",
@@ -1315,7 +1318,12 @@
       "Play Action",
       "Quick Slant",
       "Spread Screen",
-      "Tempo Slant"
+      "Tempo Slant",
+      "Mesh",
+      "Flood",
+      "Dagger",
+      "Y Cross",
+      "Wheel Route"
     ],
     "oc_brock": [
       "Power Run",
@@ -1327,7 +1335,12 @@
       "Quick Pass",
       "Screen Pass",
       "Slant Combo",
-      "Deep Post"
+      "Deep Post",
+      "HB Dive",
+      "HB Stretch",
+      "Counter Run",
+      "Draw",
+      "Read Option"
     ],
     "oc_park": [
       "Quick Pass",
@@ -1339,7 +1352,12 @@
       "Slant Combo",
       "Play Action",
       "Four Verticals",
-      "Deep Corner"
+      "Deep Corner",
+      "Curl Flats",
+      "Stick",
+      "HB Slip Screen",
+      "PA Boot",
+      "Mesh"
     ],
     "dc_stone": [
       "Corner Fire Blitz",
@@ -1351,7 +1369,12 @@
       "Press Coverage",
       "Man Lock",
       "Cover Two",
-      "Zone Trap"
+      "Zone Trap",
+      "Zone Blitz",
+      "Fire Zone",
+      "Double A Gap",
+      "Edge Contain",
+      "Cover One"
     ],
     "dc_ice": [
       "Cover Two",
@@ -1363,7 +1386,12 @@
       "QB Spy",
       "Run Wall",
       "Man Lock",
-      "Corner Fire Blitz"
+      "Corner Fire Blitz",
+      "Tampa Two",
+      "Cover Six",
+      "Quarters Match",
+      "Robber",
+      "Fire Zone"
     ],
     "dc_fox": [
       "Man Lock",
@@ -1375,9 +1403,16 @@
       "Deep Zone",
       "Run Wall",
       "Zone Trap",
-      "All-Out Pressure"
+      "All-Out Pressure",
+      "Nickel Man",
+      "Cover One",
+      "Edge Contain",
+      "Cover Six",
+      "Robber"
     ]
   },
   "coordinatorPackagesArePlayNames": true,
-  "knownLimitation": "Some package play names are not yet backed by distinct validated 11-player JSON assignments; simulation still groups plays into run/short/deep concepts"
+  "knownLimitation": "54 original assignment-driven previews; simulation consumes routes, rushers and zone/man destinations, but advanced blocking, formation shifting and catch physics remain simplified.",
+  "canonicalPlayLibrary": "data/play-library.json",
+  "playCount": 54
 }
