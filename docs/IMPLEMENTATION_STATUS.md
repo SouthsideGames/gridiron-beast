@@ -1,3 +1,11 @@
+## v4.6 — field presentation and practice layering fixes
+- Addressed user screenshots: routes/monsters leaving view, monsters obscured by assignment lines, missing goalposts and sideline numbers, and last-frame horizontal reversal.
+- Engine clamps monster positions and uses SVG clipping; player and ball layer remains in foreground.
+- Practice overlays now insert before player-marker layer; monster icons remain topmost.
+- Field uses numbered sidelines, hash marks, mowing stripes, goal lines, top-down goalposts and home franchise branding.
+- Animated and completed frames now consistently use `driveDirection`.
+- Verified JavaScript syntax, SVG rendering smoke test and live/final direction call sites. Full mobile Safari regression not completed.
+
 ## v4.5 — pregame, coin toss, stadium identity and match pacing
 - Home team mascot icon at midfield and split name in end zones, determined by the scheduled home team.
 - Independent offensive and defensive play-line toggles in practice.
