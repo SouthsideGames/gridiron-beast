@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.4
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.5
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -473,3 +473,19 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Simplifications:** Seven points are awarded on touchdowns as an implicit successful extra point; actual kick/try, kickoffs, penalties, field position and complete possession rules still require implementation. The match simulator does not yet use full opponent rosters, fatigue, AI coaching style or all individual defensive monster attributes. Carry and tackle outcomes are heuristic, not physics-grade football. A match should not be declared production-ready without mobile Safari tests, possession regression, scoring and field-position tests, and deterministic event replay.
 
 **Unity parity:** Port the event-driven possession state, simulated tackle/ball carrier continuation, defense play selection, log persistence, pause state and notifications, preserving save compatibility and correct color ownership. Replace remaining shortcuts with validated rules before handoff.
+
+## 40. Match presentation, pregame sequence, key moments and stadium identity — HTML v4.5
+
+**Field branding:** Each of the 16 currently defined franchises has a stable mascot icon. The *actual scheduled home team* owns the midfield logo and end-zone text, including when the player's franchise is the visitor. Home team names are split between end zones (e.g., EMERALD CITY / BEASTS for a future Emerald City Beasts franchise; existing South club is Ember City Beasts). The current field uses original SVG mascot icons and wordmarks; final brand artwork and logos are future assets. Stadium presentation must work in both possession directions and be independent of which team the player controls.
+
+**Practice toggles:** Separate Show Offensive Play Lines and Show Defensive Play Lines, alongside existing Flip Play and Show Monster Portraits. Either toggle immediately re-renders the same practice simulation frame; neither changes the actual play outcome. Both controls default to on.
+
+**Key Moments:** Full Coaching animates one user-called snap at a time. Key Moments now advances multiple simulated snaps automatically, stops at a major event, third/fourth down, red-zone opportunity, quarter boundary or end of match, and records the skipped play events in the log. The button label changes to Simulate to Key Moment. The current threshold and cap (16 plays per activation) are provisional balance rules, not a completed Madden-like broadcast simulation.
+
+**Post-play acknowledgement:** After an animated snap or key-moment sequence, the game shows the outcome and requires Tap to Continue before the next snap. The last animated field frame remains visible while awaiting acknowledgement, and the play clock is frozen. The Play Log remains available and continues to pause the game. This prevents the play from visually disappearing before the user can evaluate it.
+
+**Pregame:** Sunday game entry now opens a matchup screen, displaying the player's 11 offensive and 11 defensive starters with icon, position, name and OVR, versus an opponent panel with 11 offensive and 11 defensive *estimated placeholders*. The opponent roster is not yet generated as persistent, real franchise data, and the opponent record is explicitly marked unavailable rather than fabricated. Continue opens a randomized coin toss. The winner may receive, kick, or defer; the loser chooses initial field direction. For simplicity, the prototype allows the player to choose direction when the AI wins. Choice of kickoff and second-half possession are stored in the game state. Q1 and Q3 use the opening orientation; Q2 and Q4 reverse it. The teams also attack opposite directions on each possession. At halftime, the second-half receiving side is assigned according to the opening choice/defer logic.
+
+**Remaining NFL-rules gaps:** True defer and side-selection priority in every edge case, overtime, physical kickoff/punt return animations, changing ends at quarter boundaries while maintaining exact ball spot, weather/wind vector, scoring tries, actual AI team rosters and records, legal formation/clock enforcement, and automated regression tests. Current field directions are visual; wind and directional gameplay modifiers are not implemented. Treat this milestone as presentation and flow improvement, not complete NFL simulation.
+
+**Unity port contract:** Preserve pregame transitions, franchise field art keyed to home-team ID, coin toss and second-half kickoff state, independently toggled practice overlays, automatic key-moment simulation with event logging, paused post-play review, and alternating quarter directions. Create actual AI franchise roster data before final parity signoff.
