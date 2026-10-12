@@ -5,18 +5,18 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(n,l,h)=>Math.max(l,Math
 function move(a,b,v){const d=distance(a,b);if(d>0){a.x+=(b.x-a.x)/d*Math.min(v,d);a.y+=(b.y-a.y)/d*Math.min(v,d)}}
 function simulate(play='Quick Pass',defense='Cover Two',seed=1,ratings={},options={}){
 let seedValue=seed>>>0;const rng=()=>{seedValue=(Math.imul(seedValue,1664525)+1013904223)>>>0;return seedValue/4294967296};const off=OFF.map(([id,x,y])=>({id,x,y,speed:(.85+rng()*.3)*(.8+(ratings[id]||65)/325)})),def=DEF.map(([id,x,y])=>({id,x,y,homeX:x,homeY:y,speed:.85+rng()*.3}));
-const find=id=>off.find(p=>p.id===id),qb=find('QB'),run=/run|power|zone/i.test(play),deep=/deep|post|vertical/i.test(play),blitz=/blitz|fire|pressure/i.test(defense),man=/man|lock|press/i.test(defense);
+const playDef=window.GridironPlays?.plays?.[play],defDef=window.GridironPlays?.plays?.[defense];const find=id=>off.find(p=>p.id===id),qb=find('QB'),run=playDef?playDef.kind==='run':/run|power|zone/i.test(play),deep=/deep|post|vertical/i.test(play),blitz=defDef?Object.values(defDef.assignments).filter(a=>a.action==='rush').length>4:/blitz|fire|pressure/i.test(defense),man=defDef?Object.values(defDef.assignments).some(a=>a.action==='man'):/man|lock|press/i.test(defense);
 let holder='QB',ball={x:qb.x,y:qb.y},phase='held',target=null,flight=0,throwStart=null,throwEnd=null,frames=[],result='',events=[];
 const dt=.075,catchTargets=deep?['WR1','WR2','WR3']:['WR1','WR2','WR3','TE'];
 for(let tick=0;tick<92;tick++){
 const time=tick*dt;
 for(const p of off){const id=p.id;if(['LT','LG','C','RG','RT'].includes(id)){p.x+=.4;continue}if(id==='QB'){p.x-=run?0:.12;continue}
-if(id==='RB'&&run){move(p,time<.4?{x:qb.x+12,y:qb.y+8}:{x:510,y:145},time<.4?5.5:4.5);continue}
-const sign=p.y<130?1:-1,route=deep?{x:490,y:p.y+sign*22}:{x:355,y:p.y+sign*52};
-move(p,id==='RB'?{x:275,y:170}:route,(id.startsWith('WR')?3.4:2.4)*p.speed)}
-const rushers=blitz?['DE1','DT1','DT2','DE2','LB1','CB1']:['DE1','DT1','DT2','DE2'];
+if(id==='RB'&&run){const pts=playDef?.assignments?.RB?.points;const next=pts?.[Math.min(pts.length-1,time<.4?1:time<1.6?2:3)];move(p,time<.4?{x:qb.x+12,y:qb.y+8}:next?{x:next[0],y:next[1]}:{x:510,y:145},time<.4?5.5:4.5);continue}
+const points=playDef?.assignments?.[id]?.points,stepIndex=Math.min((points?.length||1)-1,time<.9?1:time<2.0?2:3),waypoint=points?.[stepIndex];const sign=p.y<130?1:-1,route=waypoint?{x:waypoint[0],y:waypoint[1]}:deep?{x:490,y:p.y+sign*22}:{x:355,y:p.y+sign*52};
+move(p,id==='RB'&&!waypoint?{x:275,y:170}:route,(id.startsWith('WR')?3.4:2.4)*p.speed)}
+const rushers=defDef?Object.entries(defDef.assignments).filter(([,a])=>a.action==='rush').map(([id])=>id):blitz?['DE1','DT1','DT2','DE2','LB1','CB1']:['DE1','DT1','DT2','DE2'];
 const manTargets={LB1:'RB',LB2:'TE',LB3:'WR3',CB1:'WR1',CB2:'WR2',FS:'WR1',SS:'WR2'};
-for(const d of def){let aim;if(rushers.includes(d.id))aim=phase==='carried'?find(holder):qb;else if(phase==='carried'&&distance(d,find(holder))<105)aim=find(holder);else if(man)aim=find(manTargets[d.id]||'WR1');else aim={x:d.homeX+40,y:d.homeY};move(d,aim,(2.2+(d.id.startsWith('CB')?.9:0))*d.speed)}
+for(const d of def){let aim;if(rushers.includes(d.id))aim=phase==='carried'?find(holder):qb;else if(phase==='carried'&&distance(d,find(holder))<105)aim=find(holder);else if(defDef?.assignments?.[d.id]?.action==='spy')aim=qb;else if(defDef?.assignments?.[d.id]?.action==='man')aim=find(defDef.assignments[d.id].target||'WR1');else if(defDef?.assignments?.[d.id]?.action==='zone'){const z=defDef.assignments[d.id].zone;aim={x:z.x,y:z.y}}else if(man)aim=find(manTargets[d.id]||'WR1');else aim={x:d.homeX+40,y:d.homeY};move(d,aim,(2.2+(d.id.startsWith('CB')?.9:0))*d.speed)}
 for(const o of off.filter(p=>['LT','LG','C','RG','RT'].includes(p.id))){for(const d of def.filter(p=>rushers.includes(p.id))){if(distance(o,d)<22)d.x+=1.8}}
 if(run&&time>.3){phase='carried';holder='RB'}
 if(!run&&phase==='held'&&time>1.15){const available=(options.target==='RB'?[...catchTargets,'RB']:catchTargets).map(id=>find(id)),awareness=clamp(options.awareness??ratings.QB??65,0,99),openScore=p=>{const nearest=Math.min(...def.map(d=>distance(d,p)));const separation=nearest+Math.max(0,p.x-185)*.08;return separation};const forced=options.target&&available.find(p=>p.id===options.target);if(forced){target=forced}else{const ranked=available.slice().sort((a,b)=>openScore(b)-openScore(a));const findBest=rng()<(.18+awareness*.008);target=findBest?ranked[0]:ranked[Math.floor(rng()*Math.min(3,ranked.length))]};throwStart={...qb};throwEnd={x:target.x+9+(rng()-.5)*34,y:target.y+(rng()-.5)*26};phase='air';holder=null;events.push('Pass toward '+target.id)}
