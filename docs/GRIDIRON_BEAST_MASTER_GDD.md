@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.1
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.2
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -433,3 +433,19 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Reference research:** Madden School organizes plays by team playbook, formation, personnel, coverage, blitz, run and passing concept. Use it to research real football tactics; do not bulk-copy proprietary diagrams, protected play-art assets or website content. A large external catalog is a future reference library, not 7,000 implemented game plays.
 
 **Unity port requirement:** Every implemented play needs unique ID, side, personnel, formation, per-position alignment, 11 assignments, zone shapes or man targets, rush lanes, motion/route paths, compatible coaching styles, mirrored variant and deterministic seeded replay test. Every AI franchise needs an identity profile and stable playbook package. Play art and simulation must never silently diverge.
+
+## 37. Unified 54-play original tactical library — v4.2
+
+**User acceptance issue:** The previous Outside Run play art looked like passing routes, and multiple named defensive plays shared nearly identical drawings. This was a schema problem, not merely a styling problem.
+
+**Reference reviewed:** Madden School plays database, including Gun Bunch Str Offset Inside Zone and Outside Zone concepts and team playbook formations. It is a tactical reference, **not a license to copy 7,000 proprietary Madden diagrams or import Madden's original images**. All new Gridiron Beast graphics and assignment coordinates are independently authored.
+
+**Implementation:** A canonical `data/play-library.json` contains **54 unique plays** (30 offense, 24 defense). Each play defines its side, formation label, concept and eleven positional assignments with routes, blocking lanes, handoff/carry paths, coverage zones, man targets or rush lanes. `play-library.js` mirrors those definitions in a browser-loadable runtime, draws the SVG previews, and supplies assignment data to `engine.js`. The prototype's hiring previews, Playbook and Practice overlays now use the new diagrams. Each OC/DC offers a 15-play identity-based package. The old `data/football-plays-11v11.json` coordinator packages now reference the new canonical library.
+
+**Run-play integrity:** Outside Run directs RB to an outside lane with WR/TE run blocking and OL lateral assignments; Inside Zone attacks interior gaps; Counter uses pulling guard; HB Stretch uses the opposite edge; Draw and Read Option have different QB assignments. Receivers must not display vertical passing routes on run plays.
+
+**Defensive integrity:** QB Spy has a designated quarterback tracker; Cloud Flats protects the short sidelines; Zone Trap moves cornerbacks into underneath lanes; Cover Two/Three/Four, Deep Zone, pressure and man schemes differ in assignment data. The same assignments feed diagram rendering and first-pass defender movement.
+
+**Validation completed:** All 54 plays have 11 positional assignments, 54 distinct diagram SVG strings, and 54/54 smoke simulations completed without JavaScript exceptions. Syntax of the main HTML script validated. This is NOT a completed physics engine or mobile-browser acceptance test. Coverage decisions, route timing, legal formations, blocking quality, interceptions, stamina, roster-attribute integration and football realism still require testing and refinement.
+
+**Unity/C# contract:** Treat `data/play-library.json` as the canonical play definition and serialize it into Unity data classes. Rebuild a single assignment evaluator for play previews and gameplay. Do not maintain a separate hand-drawn visual catalog that can diverge from the simulation. Port play definitions and tests before building additional teams or generating thousands of variations.
