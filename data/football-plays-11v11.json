@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "format": "11v11",
-  "status": "54_unique_play_diagrams_and_assignments_partial_simulation_integration",
+  "status": "100_distinct_play_definitions_partial_simulation_and_balance_validation",
   "plays": [
     {
       "id": "off_01",
@@ -1414,5 +1414,5 @@
   "coordinatorPackagesArePlayNames": true,
   "knownLimitation": "54 original assignment-driven previews; simulation consumes routes, rushers and zone/man destinations, but advanced blocking, formation shifting and catch physics remain simplified.",
   "canonicalPlayLibrary": "data/play-library.json",
-  "playCount": 54
+  "playCount": 100
 }
