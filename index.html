@@ -185,7 +185,7 @@ function applyMatchOutcome(g,sim,attackingHome){let msg=sim.play+' against '+sim
 g.time=Math.max(0,g.time-Math.max(7,Math.round(sim.frames.length*.075*5)));g.playClock=40;
 if(sim.result==='interception'||sim.result==='fumble'){msg+=' TURNOVER!';important=true;changePossession(g)}
 else if(sim.result==='incomplete'){g.down++}
-else{g.ball=Math.max(1,g.ball+sim.yards);if(sim.result==='touchdown'||g.ball>=100){if(attackingHome)g.home+=7;else g.away+=7;msg+=' TOUCHDOWN! +7 (simplified conversion).';important=true;changePossession(g)}else if(sim.yards>=g.toGo){g.down=1;g.toGo=10}else{g.toGo=Math.max(1,g.toGo-sim.yards);g.down++}}
+else{g.ball=Math.max(1,g.ball+sim.yards);if(g.ball>=100){if(attackingHome)g.home+=7;else g.away+=7;msg+=' TOUCHDOWN! +7 (simplified conversion).';important=true;changePossession(g)}else if(sim.yards>=g.toGo){g.down=1;g.toGo=10}else{g.toGo=Math.max(1,g.toGo-sim.yards);g.down++}}
 if(g.down>4){msg+=' TURNOVER ON DOWNS.';important=true;changePossession(g)}
 msg+=finishQuarter(g);return {msg,important}}
 function snap(auto=false){if(!canPlayUnderCap())return;const g=game();if(!g||g.finished||paused||logOpen||matchAnimating)return;
@@ -194,7 +194,7 @@ const play=home?(auto?offensiveChoices[Math.floor(Math.random()*offensiveChoices
 const defense=home?['Cover Two','Man Lock','Corner Fire Blitz','Cover Three'][Math.floor(Math.random()*4)]:(auto?defensiveChoices[Math.floor(Math.random()*defensiveChoices.length)]:$('defensecall').value||'Cover Two');
 const sim=GridironEngine.simulate(play,defense,Math.floor(Math.random()*2147483647)+1,home?practiceRatings():{}, {flip:!!$('matchflip')?.checked,awareness:home?(footballSlot('QB')?.ovr||65):67});
 matchAnimating=true;$('matchalert').textContent='';const start=performance.now(),duration=Math.max(1400,sim.frames.length*26);
-const animate=now=>{const i=Math.min(sim.frames.length-1,Math.floor((now-start)/duration*sim.frames.length));matchFrame=GridironEngine.render(sim,i,{flip:!!$('matchflip')?.checked});$('fieldsvg').innerHTML=matchFrame;
+const animate=now=>{const i=Math.min(sim.frames.length-1,Math.floor((now-start)/duration*sim.frames.length));matchFrame=GridironEngine.render(sim,i,{flip:!!$('matchflip')?.checked,defensiveView:!home});$('fieldsvg').innerHTML=matchFrame;
 if(i<sim.frames.length-1&&screen==='match'){requestAnimationFrame(animate);return}
 matchAnimating=false;matchFrame=null;const outcome=applyMatchOutcome(g,sim,home);matchEvent((home?'YOUR OFFENSE: ':'YOUR DEFENSE: ')+outcome.msg,outcome.important);draw();save()};
 requestAnimationFrame(animate)}
@@ -203,6 +203,6 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');
 document.addEventListener('change',e=>{if(['practicelines','practiceflip','practicemonsters','practicetarget'].includes(e.target.id)){refreshPracticeView();return}if(e.target.id==='schedulepreview'){renderSchedule();return}if(e.target.id==='practiceplay'||e.target.id==='practicedef'){if(e.target.id==='practiceplay'){const t=$('practicetarget');t.disabled=/run|zone|power/i.test(e.target.value);if(t.disabled)t.value=''}if(!practiceAnimating){lastPracticeReplay=null;refreshPracticeView()}return}if(e.target.matches('[data-review]')){let i=e.target.dataset.review;state.reviews[i]={...state.reviews[i],decision:e.target.value};save()}if(e.target.matches('[data-note]')){let i=e.target.dataset.note;state.reviews[i]={...state.reviews[i],note:e.target.value};save()}});
 document.addEventListener('input',e=>{if(e.target.matches('[data-note]')){let i=e.target.dataset.note;state.reviews[i]={...state.reviews[i],note:e.target.value};save()}});
 $('importfile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());if(!obj||!Array.isArray(obj.plays)||typeof obj.reviews!=='object')throw Error('Invalid save');state={...defaults,...obj};save();render();alert('JSON imported')}catch(err){alert('Import failed: '+err.message)}e.target.value=''});
-setInterval(()=>{const now=Date.now(),delta=Math.min(2,(now-last)/1000);last=now;if(screen!=='match'||paused||matchAnimating||!game()||game().finished)return;const g=game();g.playClock=Math.max(0,g.playClock-delta);if(g.playClock===0){g.ball=Math.max(1,g.ball-5);g.playClock=40;$('feedback').textContent='Delay of game: 5-yard penalty';save()}draw()},200);show('menu');
+setInterval(()=>{const now=Date.now(),delta=Math.min(2,(now-last)/1000);last=now;if(screen!=='match'||paused||matchAnimating||!game()||game().finished)return;const g=game();g.playClock=Math.max(0,g.playClock-delta);if(g.playClock===0){g.ball=Math.max(1,g.ball-5);g.playClock=40;matchEvent('Delay of game: 5-yard penalty',false);save()}draw()},200);show('menu');
 })();
 </script></body></html>
