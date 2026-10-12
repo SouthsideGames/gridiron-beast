@@ -1,14 +1,16 @@
+> **Current prototype: HTML v4.0, 11-on-11.** Current approved financial rules and implementation are documented in Section 35. Earlier historical 7-on-7 statements are superseded; see the implementation register for remaining football engine limitations.
+
 > **Implementation update:** HTML v3.5 now has a 40-monster 11v11 roster model, two fixed starter selections, five staff hires, 22-position practice and match drawings, simplified XP/injuries, temporary training and kicking/punting. The match engine and playbook are still provisional; the migration is **PARTIAL**, not feature-complete. Older sections describing a hold were written before explicit implementation authorization and are superseded by Section 30.
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v3.9
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.0
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
 
 ## 1. Vision
-Pixel-art 7-on-7 American-football monster franchise RPG. Create a franchise owner, hire a coaching staff, rebuild a struggling team, scout and draft unique monster athletes, develop their stats, build offensive/defensive plays, coach games, and manage a dynasty. Strategic decisions and individual monster identity matter. No monster-purchase shop.
+Pixel-art 11-on-11 American-football monster franchise RPG. Create a franchise owner, hire a coaching staff, rebuild a struggling team, scout and draft unique monster athletes, develop their stats, build offensive/defensive plays, coach games, and manage a dynasty. Strategic decisions and individual monster identity matter. No monster-purchase shop.
 
 **LOCKED:** iOS/Android Unity target, landscape pixel art, HTML/JS/CSS prototypes first, JSON data, four reviewable prototype phases, single-player offline-first franchise, permanent collection history, hybrid play editor, interactive coaching.
 
@@ -397,3 +399,25 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Mandatory acceptance process:** Before handoff, produce a versioned feature inventory, C# parity mapping for each feature, JSON schema version and sample data, UI screen/transition matrix, football rule/assignment tests, deterministic seeded replay fixtures with expected frames and ball spots, persistence/migration tests, and an explicit known-issues register. Each implemented feature must be demonstrably working in HTML before being marked Unity-ready. The goal is a port with minimal redesign or exploratory playtesting, not a claim that Unity can be accepted without testing.
 
 **Still unverified:** iOS Safari end-to-end interactions, every coordinator play's distinct assignment and outcome, full 22-monster sprite animation, opponent simulation parity and long-term season regression. These must not be represented as complete.
+
+## 35. Lightweight salary cap and roster payroll — approved v4.0
+
+**Design intent:** Meaningful franchise ownership decisions without accounting micromanagement. Currency is credits. Each franchise has a simple **annual salary cap** covering the salaries of all rostered monsters (including injured players) and all five hired staff members. No payroll tax, daily expenses, financial spreadsheets, or mandatory contract renegotiation in the initial prototype.
+
+| League | Annual cap |
+| --- | ---: |
+| Challenger League (Tier III) | 2,500,000 credits |
+| Vanguard League (Tier II) | 3,700,000 credits |
+| Sovereign League (Tier I) | 5,200,000 credits |
+
+**Initial roster safety:** The player starts with 40 monsters and a roster payroll below Challenger's cap, leaving enough room to hire all five staff members. The current generated monster salary formula is 18,000 + 280 × initial OVR, with a 3,000 cornerstone premium. Salaries are assigned once on generation and persisted as individual monster properties; XP/leveling does not automatically renegotiate salaries. Staff salaries come from the existing staff candidate data. In an isolated sample using a high-priced five-person staff, the 40-monster roster cost 1,356,280 and staff cost 755,000, totaling 2,111,280 credits, leaving 388,720 under the Challenger cap. All nine cornerstone combinations and all staff combinations should be covered by release acceptance tests.
+
+**UI:** Show current league, annual cap, monster payroll, staff payroll, committed total, and available/over-cap amount at franchise headquarters, staff hiring, roster, and salary management. Coach cards display projected cap room after hiring; hires that exceed the cap are blocked. The roster-management screen lists every monster's salary and permits releasing a monster with explicit irreversible confirmation.
+
+**Game lock:** If total payroll exceeds the current league's cap, block entry into Sunday games and block match actions until the owner reduces payroll. Released monsters free their annual salary immediately and are not automatically replaced or returned via a shop. A minimum 22-monster roster guard prevents releasing below 22, but actual positional lineup validation remains to be completed. The 40-monster cap remains in force. Promotion or relegation changes the applicable cap immediately, so a relegated franchise may need to release players before its next game. Existing saves without explicit monster salaries use the same formula as a fallback; no automatic deletion or reset.
+
+**Source-of-truth files:** `data/salary-caps.json` defines canonical tier caps and salary rules; `data/league.json` mirrors the tier limits for league configuration; `index.html` contains the playable prototype calculations and UI. Unity/C# must read the JSON policy and reproduce the same results, salary persistence, hire validation, roster-release action and game locks.
+
+**Not yet implemented:** multi-year contracts, negotiation, free agency cap exceptions, AI salary management, salary inflation, trade payroll validation, and realistic market valuation. These are deliberately outside the lightweight v4.0 scope.
+
+**Acceptance tests:** Starting franchise remains under cap after all five hires; each tier shows the correct cap; projected staff hires cannot exceed budget; an imported or relegated over-cap save cannot start a match; releasing a rostered monster reduces committed payroll; salaries survive save/reload; no released monster reappears automatically; monster leveling does not alter the agreed annual salary; existing franchise history remains intact.
