@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "4.1",
+  "effectiveGddVersion": "4.2",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "qb_awareness_practice_controls_coordinator_packages",
@@ -508,5 +508,16 @@
     "teamUniquePlaybooks": "planned",
     "maddenReference": "football concepts only; original diagrams and assignments",
     "playArtStatus": "selected defensive concepts distinct; complete library pending"
+  },
+  "playLibrary": {
+    "canonical": "data/play-library.json",
+    "runtime": "play-library.js",
+    "playCount": 54,
+    "uniqueDiagrams": 54,
+    "assignmentsPerPlay": 11,
+    "simulationIntegration": "partial: route, rush, man, zone and run lane consumed; full physics pending",
+    "coordinatorPlays": 15,
+    "reference": "Madden School concepts; no copied proprietary artwork",
+    "tested": "54/54 smoke simulations passed, syntax validated"
   }
 }
