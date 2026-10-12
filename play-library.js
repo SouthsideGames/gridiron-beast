@@ -45,7 +45,7 @@ for(const p of Object.values(plays)){
    if(p.concept==='agap')for(const id of ['LB1','LB2'])a[id].points=[[...defensePositions[id]],[190,130]];
    if(p.concept==='press')for(const id of ['CB1','CB2'])a[id].points=[[...defensePositions[id]],[198,offensePositions[a[id].target][1]]];
    if(p.concept==='nickelman'){a.LB3.action='man';a.LB3.target='WR3';a.LB3.points=[[...defensePositions.LB3],[210,53]]}
-   if(p.concept==='cover1'){z('FS',470,130,55,43)}
+   if(p.concept==='cover1'){a.FS={action:'zone',points:[[405,84],[465,130]],zone:{x:465,y:130,rx:48,ry:36}}}
  }
 }
 function diagram(name){const p=plays[name];if(!p)return '';let out='';for(const [id,a] of Object.entries(p.assignments)){const pts=a.points;if(a.action==='zone'){const z=a.zone;out+='<ellipse cx="'+z.x+'" cy="'+z.y+'" rx="'+z.rx+'" ry="'+z.ry+'" fill="#2889db" fill-opacity=".2" stroke="#72c8ff" stroke-dasharray="5 4" stroke-width="2"/>';continue}const color=a.action==='rush'?'#ff9468':a.action==='man'?'#f4e596':a.action.includes('block')?'#a2ddff':'#f4d067';out+='<polyline points="'+pts.map(v=>v.join(',')).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" '+(a.action==='man'?'stroke-dasharray="5 4"':'')+'/>';const tail=pts.at(-1),prev=pts.at(-2);if(tail&&prev){const angle=Math.atan2(tail[1]-prev[1],tail[0]-prev[0]);out+='<path d="M'+tail[0]+' '+tail[1]+' l'+(-10*Math.cos(angle-.45))+' '+(-10*Math.sin(angle-.45))+' l'+(10*Math.cos(angle+.45)-10*Math.cos(angle-.45))+' '+(10*Math.sin(angle+.45)-10*Math.sin(angle-.45))+' Z" fill="'+color+'"/>'}}return out}
