@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "conferences": {
     "Aurora": {
       "divisions": {
@@ -194,5 +194,16 @@
     "tierTransitionIntroduction": "planned",
     "higherTierRivals": "Randomly assigned on entry into a new tier, from a same-division franchise in that tier",
     "randomAssignmentPersistent": true
+  },
+  "salaryCaps": {
+    "currency": "credits",
+    "period": "annual",
+    "challenger": 2500000,
+    "vanguard": 3700000,
+    "sovereign": 5200000,
+    "source": "data/salary-caps.json",
+    "rosterLimit": 40,
+    "staffSalariesCount": true,
+    "overCapGameLock": true
   }
 }
