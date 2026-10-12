@@ -194,7 +194,7 @@ const play=home?(auto?offensiveChoices[Math.floor(Math.random()*offensiveChoices
 const defense=home?['Cover Two','Man Lock','Corner Fire Blitz','Cover Three'][Math.floor(Math.random()*4)]:(auto?defensiveChoices[Math.floor(Math.random()*defensiveChoices.length)]:$('defensecall').value||'Cover Two');
 const sim=GridironEngine.simulate(play,defense,Math.floor(Math.random()*2147483647)+1,home?practiceRatings():{}, {flip:!!$('matchflip')?.checked,awareness:home?(footballSlot('QB')?.ovr||65):67});
 matchAnimating=true;$('matchalert').textContent='';const start=performance.now(),duration=Math.max(1400,sim.frames.length*26);
-const animate=now=>{const i=Math.min(sim.frames.length-1,Math.floor((now-start)/duration*sim.frames.length));matchFrame=GridironEngine.render(sim,i,{flip:!!$('matchflip')?.checked,defensiveView:!home});$('fieldsvg').innerHTML=matchFrame;
+let pausedElapsed=0,lastTick=start;const animate=now=>{if(logOpen||paused){pausedElapsed+=Math.max(0,now-lastTick);lastTick=now;requestAnimationFrame(animate);return}lastTick=now;const i=Math.min(sim.frames.length-1,Math.floor((now-start-pausedElapsed)/duration*sim.frames.length));matchFrame=GridironEngine.render(sim,i,{flip:!!$('matchflip')?.checked,defensiveView:!home});$('fieldsvg').innerHTML=matchFrame;
 if(i<sim.frames.length-1&&screen==='match'){requestAnimationFrame(animate);return}
 matchAnimating=false;matchFrame=null;const outcome=applyMatchOutcome(g,sim,home);matchEvent((home?'YOUR OFFENSE: ':'YOUR DEFENSE: ')+outcome.msg,outcome.important);draw();save()};
 requestAnimationFrame(animate)}
