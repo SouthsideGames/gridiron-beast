@@ -1,0 +1,10012 @@
+{
+  "schemaVersion": 1,
+  "game": "Gridiron Beast",
+  "source": "Original authored concepts; Madden School used for football reference, not copied art",
+  "playCount": 54,
+  "coordinateSystem": {
+    "width": 600,
+    "height": 260,
+    "lineOfScrimmageX": 185,
+    "direction": "offense left-to-right"
+  },
+  "offensePositions": {
+    "WR1": [
+      176,
+      25
+    ],
+    "WR2": [
+      176,
+      235
+    ],
+    "WR3": [
+      137,
+      53
+    ],
+    "TE": [
+      185,
+      205
+    ],
+    "RB": [
+      105,
+      147
+    ],
+    "QB": [
+      135,
+      130
+    ],
+    "LT": [
+      185,
+      78
+    ],
+    "LG": [
+      185,
+      104
+    ],
+    "C": [
+      185,
+      130
+    ],
+    "RG": [
+      185,
+      156
+    ],
+    "RT": [
+      185,
+      182
+    ]
+  },
+  "defensePositions": {
+    "DE1": [
+      215,
+      78
+    ],
+    "DT1": [
+      215,
+      108
+    ],
+    "DT2": [
+      215,
+      153
+    ],
+    "DE2": [
+      215,
+      182
+    ],
+    "LB1": [
+      285,
+      74
+    ],
+    "LB2": [
+      285,
+      130
+    ],
+    "LB3": [
+      285,
+      190
+    ],
+    "CB1": [
+      295,
+      28
+    ],
+    "CB2": [
+      295,
+      234
+    ],
+    "FS": [
+      405,
+      84
+    ],
+    "SS": [
+      405,
+      176
+    ]
+  },
+  "plays": {
+    "Power Run": {
+      "name": "Power Run",
+      "side": "offense",
+      "kind": "run",
+      "concept": "power",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              145
+            ],
+            [
+              199,
+              155
+            ],
+            [
+              290,
+              155
+            ]
+          ],
+          "lane": 130
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              96
+            ],
+            [
+              240,
+              96
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              122
+            ],
+            [
+              240,
+              122
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              148
+            ],
+            [
+              240,
+              148
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              210,
+              174
+            ],
+            [
+              240,
+              174
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              200
+            ],
+            [
+              240,
+              200
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              202,
+              25
+            ],
+            [
+              222,
+              15
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              163,
+              53
+            ],
+            [
+              183,
+              43
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "Inside Zone": {
+      "name": "Inside Zone",
+      "side": "offense",
+      "kind": "run",
+      "concept": "zone",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              145
+            ],
+            [
+              199,
+              126
+            ],
+            [
+              290,
+              126
+            ]
+          ],
+          "lane": 130
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              86
+            ],
+            [
+              240,
+              86
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              112
+            ],
+            [
+              240,
+              112
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              138
+            ],
+            [
+              240,
+              138
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              210,
+              164
+            ],
+            [
+              240,
+              164
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              190
+            ],
+            [
+              240,
+              190
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              202,
+              25
+            ],
+            [
+              222,
+              15
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              163,
+              53
+            ],
+            [
+              183,
+              43
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "Outside Run": {
+      "name": "Outside Run",
+      "side": "offense",
+      "kind": "run",
+      "concept": "outside",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              145
+            ],
+            [
+              199,
+              65
+            ],
+            [
+              290,
+              57
+            ]
+          ],
+          "lane": 70
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              52
+            ],
+            [
+              240,
+              52
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              78
+            ],
+            [
+              240,
+              78
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              104
+            ],
+            [
+              240,
+              104
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              210,
+              130
+            ],
+            [
+              240,
+              130
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              156
+            ],
+            [
+              240,
+              156
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              206,
+              15
+            ],
+            [
+              231,
+              5
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              167,
+              43
+            ],
+            [
+              192,
+              33
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "Inside Run": {
+      "name": "Inside Run",
+      "side": "offense",
+      "kind": "run",
+      "concept": "dive",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              147
+            ],
+            [
+              201,
+              141
+            ],
+            [
+              275,
+              142
+            ]
+          ],
+          "lane": 130
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              78
+            ],
+            [
+              240,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              104
+            ],
+            [
+              240,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              130
+            ],
+            [
+              240,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              210,
+              156
+            ],
+            [
+              240,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              182
+            ],
+            [
+              240,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              202,
+              25
+            ],
+            [
+              222,
+              15
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              163,
+              53
+            ],
+            [
+              183,
+              43
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "Balanced Run": {
+      "name": "Balanced Run",
+      "side": "offense",
+      "kind": "run",
+      "concept": "balanced",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              145
+            ],
+            [
+              199,
+              180
+            ],
+            [
+              290,
+              180
+            ]
+          ],
+          "lane": 130
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              94
+            ],
+            [
+              240,
+              94
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              120
+            ],
+            [
+              240,
+              120
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              146
+            ],
+            [
+              240,
+              146
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              210,
+              172
+            ],
+            [
+              240,
+              172
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              198
+            ],
+            [
+              240,
+              198
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              202,
+              25
+            ],
+            [
+              222,
+              15
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              163,
+              53
+            ],
+            [
+              183,
+              43
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "HB Dive": {
+      "name": "HB Dive",
+      "side": "offense",
+      "kind": "run",
+      "concept": "dive",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              145
+            ],
+            [
+              199,
+              129
+            ],
+            [
+              290,
+              129
+            ]
+          ],
+          "lane": 130
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              78
+            ],
+            [
+              240,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              104
+            ],
+            [
+              240,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              130
+            ],
+            [
+              240,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              210,
+              156
+            ],
+            [
+              240,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              182
+            ],
+            [
+              240,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              202,
+              25
+            ],
+            [
+              222,
+              15
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              163,
+              53
+            ],
+            [
+              183,
+              43
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "HB Stretch": {
+      "name": "HB Stretch",
+      "side": "offense",
+      "kind": "run",
+      "concept": "outside",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              150
+            ],
+            [
+              198,
+              207
+            ],
+            [
+              290,
+              221
+            ]
+          ],
+          "lane": 188
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              52
+            ],
+            [
+              240,
+              52
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              78
+            ],
+            [
+              240,
+              78
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              104
+            ],
+            [
+              240,
+              104
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              211,
+              179
+            ],
+            [
+              243,
+              185
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              243,
+              211
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              206,
+              15
+            ],
+            [
+              231,
+              5
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              167,
+              43
+            ],
+            [
+              192,
+              33
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "Counter Run": {
+      "name": "Counter Run",
+      "side": "offense",
+      "kind": "run",
+      "concept": "counter",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              145
+            ],
+            [
+              199,
+              80
+            ],
+            [
+              290,
+              80
+            ]
+          ],
+          "lane": 70
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              56
+            ],
+            [
+              240,
+              56
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              82
+            ],
+            [
+              240,
+              82
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              108
+            ],
+            [
+              240,
+              108
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pull_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              157,
+              165
+            ],
+            [
+              205,
+              83
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              160
+            ],
+            [
+              240,
+              160
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              202,
+              25
+            ],
+            [
+              222,
+              15
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              163,
+              53
+            ],
+            [
+              183,
+              43
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "Draw": {
+      "name": "Draw",
+      "side": "offense",
+      "kind": "run",
+      "concept": "draw",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "handoff",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              112,
+              130
+            ],
+            [
+              130,
+              145
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              145
+            ],
+            [
+              199,
+              139
+            ],
+            [
+              290,
+              139
+            ]
+          ],
+          "lane": 130
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              78
+            ],
+            [
+              240,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              104
+            ],
+            [
+              240,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              130
+            ],
+            [
+              240,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              210,
+              156
+            ],
+            [
+              240,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              182
+            ],
+            [
+              240,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              202,
+              25
+            ],
+            [
+              222,
+              15
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              163,
+              53
+            ],
+            [
+              183,
+              43
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "Read Option": {
+      "name": "Read Option",
+      "side": "offense",
+      "kind": "run",
+      "concept": "option",
+      "formation": "I-Form / Singleback",
+      "assignments": {
+        "QB": {
+          "action": "option_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              175,
+              158
+            ],
+            [
+              223,
+              189
+            ]
+          ]
+        },
+        "RB": {
+          "action": "carry",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              145,
+              145
+            ],
+            [
+              199,
+              200
+            ],
+            [
+              290,
+              200
+            ]
+          ],
+          "lane": 130
+        },
+        "LT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              210,
+              103
+            ],
+            [
+              240,
+              103
+            ]
+          ]
+        },
+        "LG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              210,
+              129
+            ],
+            [
+              240,
+              129
+            ]
+          ]
+        },
+        "C": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              210,
+              155
+            ],
+            [
+              240,
+              155
+            ]
+          ]
+        },
+        "RG": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              210,
+              181
+            ],
+            [
+              240,
+              181
+            ]
+          ]
+        },
+        "RT": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              210,
+              207
+            ],
+            [
+              240,
+              207
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              202,
+              25
+            ],
+            [
+              222,
+              15
+            ]
+          ]
+        },
+        "WR2": {
+          "action": "run_block",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              202,
+              235
+            ],
+            [
+              222,
+              245
+            ]
+          ]
+        },
+        "WR3": {
+          "action": "run_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              163,
+              53
+            ],
+            [
+              183,
+              43
+            ]
+          ]
+        },
+        "TE": {
+          "action": "run_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              211,
+              205
+            ],
+            [
+              231,
+              215
+            ]
+          ]
+        }
+      }
+    },
+    "Quick Pass": {
+      "name": "Quick Pass",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "quick",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              218,
+              25
+            ],
+            [
+              281,
+              80
+            ]
+          ],
+          "route": "slant"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              231,
+              235
+            ],
+            [
+              246,
+              290
+            ]
+          ],
+          "route": "out"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              237,
+              53
+            ],
+            [
+              217,
+              61
+            ]
+          ],
+          "route": "curl"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ],
+            [
+              233,
+              252
+            ]
+          ],
+          "route": "flat"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              117,
+              171
+            ],
+            [
+              148,
+              177
+            ]
+          ],
+          "route": "screen"
+        }
+      }
+    },
+    "Deep Post": {
+      "name": "Deep Post",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "post",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              288,
+              25
+            ],
+            [
+              381,
+              90
+            ]
+          ],
+          "route": "post"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              261,
+              235
+            ],
+            [
+              386,
+              235
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              207,
+              53
+            ],
+            [
+              252,
+              103
+            ]
+          ],
+          "route": "in"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              220,
+              188
+            ],
+            [
+              310,
+              115
+            ]
+          ],
+          "route": "drag"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ],
+            [
+              153,
+              194
+            ]
+          ],
+          "route": "flat"
+        }
+      }
+    },
+    "Four Verticals": {
+      "name": "Four Verticals",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "vertical",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              261,
+              25
+            ],
+            [
+              386,
+              25
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              261,
+              235
+            ],
+            [
+              386,
+              235
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              222,
+              53
+            ],
+            [
+              347,
+              53
+            ]
+          ],
+          "route": "streak"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              270,
+              205
+            ],
+            [
+              395,
+              205
+            ]
+          ],
+          "route": "streak"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ],
+            [
+              153,
+              194
+            ]
+          ],
+          "route": "flat"
+        }
+      }
+    },
+    "Slant Combo": {
+      "name": "Slant Combo",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "slant",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              218,
+              25
+            ],
+            [
+              281,
+              80
+            ]
+          ],
+          "route": "slant"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              218,
+              235
+            ],
+            [
+              281,
+              180
+            ]
+          ],
+          "route": "slant"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              207,
+              53
+            ],
+            [
+              252,
+              103
+            ]
+          ],
+          "route": "in"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ],
+            [
+              233,
+              252
+            ]
+          ],
+          "route": "flat"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              143,
+              202
+            ],
+            [
+              255,
+              207
+            ]
+          ],
+          "route": "wheel"
+        }
+      }
+    },
+    "Screen Pass": {
+      "name": "Screen Pass",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "screen",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              261,
+              25
+            ],
+            [
+              386,
+              25
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              188,
+              259
+            ],
+            [
+              219,
+              265
+            ]
+          ],
+          "route": "screen"
+        },
+        "WR3": {
+          "action": "pass_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              159,
+              53
+            ]
+          ],
+          "route": "block"
+        },
+        "TE": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ]
+          ],
+          "route": "block"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              117,
+              171
+            ],
+            [
+              148,
+              177
+            ]
+          ],
+          "route": "screen"
+        }
+      }
+    },
+    "Deep Corner": {
+      "name": "Deep Corner",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "corner",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              288,
+              29
+            ],
+            [
+              381,
+              -21
+            ]
+          ],
+          "route": "corner"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              288,
+              235
+            ],
+            [
+              381,
+              170
+            ]
+          ],
+          "route": "post"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              192,
+              53
+            ],
+            [
+              207,
+              -2
+            ]
+          ],
+          "route": "out"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ],
+            [
+              233,
+              252
+            ]
+          ],
+          "route": "flat"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              143,
+              202
+            ],
+            [
+              255,
+              207
+            ]
+          ],
+          "route": "wheel"
+        }
+      }
+    },
+    "Play Action": {
+      "name": "Play Action",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "playaction",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "play_action",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              288,
+              25
+            ],
+            [
+              381,
+              90
+            ]
+          ],
+          "route": "post"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              288,
+              231
+            ],
+            [
+              381,
+              281
+            ]
+          ],
+          "route": "corner"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              172,
+              70
+            ],
+            [
+              262,
+              143
+            ]
+          ],
+          "route": "drag"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ],
+            [
+              233,
+              252
+            ]
+          ],
+          "route": "flat"
+        },
+        "RB": {
+          "action": "pass_block",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ]
+          ],
+          "route": "block"
+        }
+      }
+    },
+    "Quick Slant": {
+      "name": "Quick Slant",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "slantquick",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              212,
+              43
+            ],
+            [
+              258,
+              80
+            ]
+          ],
+          "route": "slant"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              231,
+              235
+            ],
+            [
+              246,
+              290
+            ]
+          ],
+          "route": "out"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              179,
+              53
+            ],
+            [
+              242,
+              108
+            ]
+          ],
+          "route": "slant"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              220,
+              188
+            ],
+            [
+              310,
+              115
+            ]
+          ],
+          "route": "drag"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ],
+            [
+              153,
+              194
+            ]
+          ],
+          "route": "flat"
+        }
+      }
+    },
+    "Spread Screen": {
+      "name": "Spread Screen",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "screenwide",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              188,
+              1
+            ],
+            [
+              219,
+              -5
+            ]
+          ],
+          "route": "screen"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              188,
+              259
+            ],
+            [
+              219,
+              265
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR3": {
+          "action": "pass_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              159,
+              53
+            ]
+          ],
+          "route": "block"
+        },
+        "TE": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ]
+          ],
+          "route": "block"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              117,
+              171
+            ],
+            [
+              148,
+              177
+            ]
+          ],
+          "route": "screen"
+        }
+      }
+    },
+    "Tempo Slant": {
+      "name": "Tempo Slant",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "temposlant",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              218,
+              25
+            ],
+            [
+              281,
+              80
+            ]
+          ],
+          "route": "slant"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              218,
+              235
+            ],
+            [
+              281,
+              180
+            ]
+          ],
+          "route": "slant"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              190,
+              70
+            ],
+            [
+              255,
+              114
+            ]
+          ],
+          "route": "flat"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              255,
+              205
+            ],
+            [
+              300,
+              155
+            ]
+          ],
+          "route": "in"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              160,
+              147
+            ],
+            [
+              175,
+              202
+            ]
+          ],
+          "route": "out"
+        }
+      }
+    },
+    "Mesh": {
+      "name": "Mesh",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "mesh",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              211,
+              42
+            ],
+            [
+              301,
+              115
+            ]
+          ],
+          "route": "drag"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              211,
+              218
+            ],
+            [
+              301,
+              145
+            ]
+          ],
+          "route": "drag"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              222,
+              53
+            ],
+            [
+              347,
+              53
+            ]
+          ],
+          "route": "streak"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              297,
+              201
+            ],
+            [
+              390,
+              251
+            ]
+          ],
+          "route": "corner"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ],
+            [
+              153,
+              194
+            ]
+          ],
+          "route": "flat"
+        }
+      }
+    },
+    "Flood": {
+      "name": "Flood",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "flood",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              261,
+              25
+            ],
+            [
+              386,
+              25
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              231,
+              235
+            ],
+            [
+              246,
+              290
+            ]
+          ],
+          "route": "out"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              249,
+              57
+            ],
+            [
+              342,
+              7
+            ]
+          ],
+          "route": "corner"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ],
+            [
+              233,
+              252
+            ]
+          ],
+          "route": "flat"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              143,
+              202
+            ],
+            [
+              255,
+              207
+            ]
+          ],
+          "route": "wheel"
+        }
+      }
+    },
+    "Curl Flats": {
+      "name": "Curl Flats",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "curlflat",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              276,
+              25
+            ],
+            [
+              256,
+              33
+            ]
+          ],
+          "route": "curl"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              276,
+              235
+            ],
+            [
+              256,
+              227
+            ]
+          ],
+          "route": "curl"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              222,
+              53
+            ],
+            [
+              347,
+              53
+            ]
+          ],
+          "route": "streak"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ],
+            [
+              233,
+              252
+            ]
+          ],
+          "route": "flat"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ],
+            [
+              153,
+              194
+            ]
+          ],
+          "route": "flat"
+        }
+      }
+    },
+    "Double Post": {
+      "name": "Double Post",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "doublepost",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              288,
+              25
+            ],
+            [
+              381,
+              90
+            ]
+          ],
+          "route": "post"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              288,
+              235
+            ],
+            [
+              381,
+              170
+            ]
+          ],
+          "route": "post"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              222,
+              53
+            ],
+            [
+              347,
+              53
+            ]
+          ],
+          "route": "streak"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              220,
+              188
+            ],
+            [
+              310,
+              115
+            ]
+          ],
+          "route": "drag"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ],
+            [
+              153,
+              194
+            ]
+          ],
+          "route": "flat"
+        }
+      }
+    },
+    "Dagger": {
+      "name": "Dagger",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "dagger",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              261,
+              25
+            ],
+            [
+              386,
+              25
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              246,
+              235
+            ],
+            [
+              291,
+              185
+            ]
+          ],
+          "route": "in"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              249,
+              53
+            ],
+            [
+              342,
+              118
+            ]
+          ],
+          "route": "post"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              220,
+              188
+            ],
+            [
+              310,
+              115
+            ]
+          ],
+          "route": "drag"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ],
+            [
+              153,
+              194
+            ]
+          ],
+          "route": "flat"
+        }
+      }
+    },
+    "Y Cross": {
+      "name": "Y Cross",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "cross",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              288,
+              25
+            ],
+            [
+              381,
+              90
+            ]
+          ],
+          "route": "post"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              246,
+              235
+            ],
+            [
+              291,
+              185
+            ]
+          ],
+          "route": "in"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              207,
+              53
+            ],
+            [
+              252,
+              103
+            ]
+          ],
+          "route": "cross"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              220,
+              188
+            ],
+            [
+              310,
+              115
+            ]
+          ],
+          "route": "drag"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              143,
+              202
+            ],
+            [
+              255,
+              207
+            ]
+          ],
+          "route": "wheel"
+        }
+      }
+    },
+    "Stick": {
+      "name": "Stick",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "stick",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              231,
+              25
+            ],
+            [
+              246,
+              -30
+            ]
+          ],
+          "route": "out"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              261,
+              235
+            ],
+            [
+              386,
+              235
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              179,
+              53
+            ],
+            [
+              242,
+              108
+            ]
+          ],
+          "route": "slant"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              285,
+              205
+            ],
+            [
+              265,
+              197
+            ]
+          ],
+          "route": "curl"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              127,
+              147
+            ],
+            [
+              153,
+              194
+            ]
+          ],
+          "route": "flat"
+        }
+      }
+    },
+    "HB Slip Screen": {
+      "name": "HB Slip Screen",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "hbscreen",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              261,
+              25
+            ],
+            [
+              386,
+              25
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              288,
+              235
+            ],
+            [
+              381,
+              170
+            ]
+          ],
+          "route": "post"
+        },
+        "WR3": {
+          "action": "pass_block",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              159,
+              53
+            ]
+          ],
+          "route": "block"
+        },
+        "TE": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ]
+          ],
+          "route": "block"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              130,
+              184
+            ],
+            [
+              185,
+              205
+            ],
+            [
+              240,
+              205
+            ]
+          ],
+          "route": "screen"
+        }
+      }
+    },
+    "PA Boot": {
+      "name": "PA Boot",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "boot",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "play_action",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              112,
+              155
+            ],
+            [
+              153,
+              183
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              288,
+              25
+            ],
+            [
+              381,
+              90
+            ]
+          ],
+          "route": "post"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              288,
+              231
+            ],
+            [
+              381,
+              281
+            ]
+          ],
+          "route": "corner"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              172,
+              70
+            ],
+            [
+              262,
+              143
+            ]
+          ],
+          "route": "drag"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              207,
+              205
+            ],
+            [
+              233,
+              252
+            ]
+          ],
+          "route": "flat"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              143,
+              202
+            ],
+            [
+              255,
+              207
+            ]
+          ],
+          "route": "wheel"
+        }
+      }
+    },
+    "Wheel Route": {
+      "name": "Wheel Route",
+      "side": "offense",
+      "kind": "pass",
+      "concept": "wheel",
+      "formation": "Shotgun / Spread",
+      "assignments": {
+        "QB": {
+          "action": "pass_read",
+          "points": [
+            [
+              135,
+              130
+            ],
+            [
+              118,
+              130
+            ]
+          ]
+        },
+        "LT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              78
+            ],
+            [
+              203,
+              78
+            ]
+          ]
+        },
+        "LG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              104
+            ],
+            [
+              203,
+              104
+            ]
+          ]
+        },
+        "C": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              130
+            ],
+            [
+              203,
+              130
+            ]
+          ]
+        },
+        "RG": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              156
+            ],
+            [
+              203,
+              156
+            ]
+          ]
+        },
+        "RT": {
+          "action": "pass_block",
+          "points": [
+            [
+              185,
+              182
+            ],
+            [
+              203,
+              182
+            ]
+          ]
+        },
+        "WR1": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              25
+            ],
+            [
+              261,
+              25
+            ],
+            [
+              386,
+              25
+            ]
+          ],
+          "route": "streak"
+        },
+        "WR2": {
+          "action": "route",
+          "points": [
+            [
+              176,
+              235
+            ],
+            [
+              288,
+              235
+            ],
+            [
+              381,
+              170
+            ]
+          ],
+          "route": "post"
+        },
+        "WR3": {
+          "action": "route",
+          "points": [
+            [
+              137,
+              53
+            ],
+            [
+              179,
+              53
+            ],
+            [
+              242,
+              108
+            ]
+          ],
+          "route": "slant"
+        },
+        "TE": {
+          "action": "route",
+          "points": [
+            [
+              185,
+              205
+            ],
+            [
+              220,
+              188
+            ],
+            [
+              310,
+              115
+            ]
+          ],
+          "route": "drag"
+        },
+        "RB": {
+          "action": "route",
+          "points": [
+            [
+              105,
+              147
+            ],
+            [
+              143,
+              202
+            ],
+            [
+              255,
+              207
+            ]
+          ],
+          "route": "wheel"
+        }
+      }
+    },
+    "Cover Two": {
+      "name": "Cover Two",
+      "side": "defense",
+      "concept": "cover2",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Cover Three": {
+      "name": "Cover Three",
+      "side": "defense",
+      "concept": "cover3",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              340,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 340,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              445,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 445,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              445,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 445,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Cover Four": {
+      "name": "Cover Four",
+      "side": "defense",
+      "concept": "cover4",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              420,
+              32
+            ]
+          ],
+          "zone": {
+            "x": 420,
+            "y": 32,
+            "rx": 39,
+            "ry": 28
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              420,
+              225
+            ]
+          ],
+          "zone": {
+            "x": 420,
+            "y": 225,
+            "rx": 39,
+            "ry": 28
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              485,
+              90
+            ]
+          ],
+          "zone": {
+            "x": 485,
+            "y": 90,
+            "rx": 37,
+            "ry": 30
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              485,
+              168
+            ]
+          ],
+          "zone": {
+            "x": 485,
+            "y": 168,
+            "rx": 37,
+            "ry": 30
+          }
+        }
+      }
+    },
+    "Deep Zone": {
+      "name": "Deep Zone",
+      "side": "defense",
+      "concept": "deep",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              505,
+              68
+            ]
+          ],
+          "zone": {
+            "x": 505,
+            "y": 68,
+            "rx": 48,
+            "ry": 37
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              505,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 505,
+            "y": 190,
+            "rx": 48,
+            "ry": 37
+          }
+        }
+      }
+    },
+    "Cloud Flats": {
+      "name": "Cloud Flats",
+      "side": "defense",
+      "concept": "cloud",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              280,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 280,
+            "y": 28,
+            "rx": 31,
+            "ry": 24
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              280,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 280,
+            "y": 234,
+            "rx": 31,
+            "ry": 24
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Zone Trap": {
+      "name": "Zone Trap",
+      "side": "defense",
+      "concept": "trap",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              265,
+              80
+            ]
+          ],
+          "zone": {
+            "x": 265,
+            "y": 80,
+            "rx": 33,
+            "ry": 27
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              265,
+              180
+            ]
+          ],
+          "zone": {
+            "x": 265,
+            "y": 180,
+            "rx": 33,
+            "ry": 27
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              60
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 60,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              200
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 200,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "QB Spy": {
+      "name": "QB Spy",
+      "side": "defense",
+      "concept": "spy",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "spy",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              245,
+              130
+            ],
+            [
+              215,
+              130
+            ]
+          ],
+          "target": "QB"
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Run Wall": {
+      "name": "Run Wall",
+      "side": "defense",
+      "concept": "runwall",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              240,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 240,
+            "y": 74,
+            "rx": 24,
+            "ry": 22
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              240,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 240,
+            "y": 130,
+            "rx": 24,
+            "ry": 22
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              240,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 240,
+            "y": 190,
+            "rx": 24,
+            "ry": 22
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              260,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 260,
+            "y": 28,
+            "rx": 24,
+            "ry": 22
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              260,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 260,
+            "y": 234,
+            "rx": 24,
+            "ry": 22
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              260,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 260,
+            "y": 75,
+            "rx": 24,
+            "ry": 22
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              260,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 260,
+            "y": 185,
+            "rx": 24,
+            "ry": 22
+          }
+        }
+      }
+    },
+    "Man Lock": {
+      "name": "Man Lock",
+      "side": "defense",
+      "concept": "man",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              140,
+              147
+            ]
+          ],
+          "target": "RB"
+        },
+        "LB2": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              220,
+              205
+            ]
+          ],
+          "target": "TE"
+        },
+        "LB3": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              172,
+              53
+            ]
+          ],
+          "target": "WR3"
+        },
+        "CB1": {
+          "action": "man",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              211,
+              25
+            ]
+          ],
+          "target": "WR1"
+        },
+        "CB2": {
+          "action": "man",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              211,
+              235
+            ]
+          ],
+          "target": "WR2"
+        },
+        "FS": {
+          "action": "man",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              211,
+              25
+            ]
+          ],
+          "target": "WR1"
+        },
+        "SS": {
+          "action": "man",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              211,
+              235
+            ]
+          ],
+          "target": "WR2"
+        }
+      }
+    },
+    "Press Coverage": {
+      "name": "Press Coverage",
+      "side": "defense",
+      "concept": "press",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              140,
+              147
+            ]
+          ],
+          "target": "RB"
+        },
+        "LB2": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              220,
+              205
+            ]
+          ],
+          "target": "TE"
+        },
+        "LB3": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              172,
+              53
+            ]
+          ],
+          "target": "WR3"
+        },
+        "CB1": {
+          "action": "man",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              198,
+              25
+            ]
+          ],
+          "target": "WR1"
+        },
+        "CB2": {
+          "action": "man",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              198,
+              235
+            ]
+          ],
+          "target": "WR2"
+        },
+        "FS": {
+          "action": "man",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              211,
+              25
+            ]
+          ],
+          "target": "WR1"
+        },
+        "SS": {
+          "action": "man",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              211,
+              235
+            ]
+          ],
+          "target": "WR2"
+        }
+      }
+    },
+    "Corner Fire Blitz": {
+      "name": "Corner Fire Blitz",
+      "side": "defense",
+      "concept": "cornerblitz",
+      "formation": "Pressure Front",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "CB1": {
+          "action": "rush",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              235,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "All-Out Pressure": {
+      "name": "All-Out Pressure",
+      "side": "defense",
+      "concept": "allblitz",
+      "formation": "Pressure Front",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              225,
+              130
+            ]
+          ]
+        },
+        "LB2": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              225,
+              130
+            ]
+          ]
+        },
+        "LB3": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              225,
+              130
+            ]
+          ]
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Run Blitz": {
+      "name": "Run Blitz",
+      "side": "defense",
+      "concept": "runblitz",
+      "formation": "Pressure Front",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              225,
+              130
+            ]
+          ]
+        },
+        "LB2": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              225,
+              130
+            ]
+          ]
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "DB Blitz": {
+      "name": "DB Blitz",
+      "side": "defense",
+      "concept": "dbblitz",
+      "formation": "Pressure Front",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "CB2": {
+          "action": "rush",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              235,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Zone Blitz": {
+      "name": "Zone Blitz",
+      "side": "defense",
+      "concept": "zoneblitz",
+      "formation": "Pressure Front",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB3": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              225,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              330,
+              30
+            ]
+          ],
+          "zone": {
+            "x": 330,
+            "y": 30,
+            "rx": 33,
+            "ry": 24
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              490,
+              80
+            ]
+          ],
+          "zone": {
+            "x": 490,
+            "y": 80,
+            "rx": 42,
+            "ry": 34
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Tampa Two": {
+      "name": "Tampa Two",
+      "side": "defense",
+      "concept": "tampa",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              380,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 380,
+            "y": 130,
+            "rx": 35,
+            "ry": 49
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Nickel Man": {
+      "name": "Nickel Man",
+      "side": "defense",
+      "concept": "nickelman",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              140,
+              147
+            ]
+          ],
+          "target": "RB"
+        },
+        "LB2": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              220,
+              205
+            ]
+          ],
+          "target": "TE"
+        },
+        "LB3": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              210,
+              53
+            ]
+          ],
+          "target": "WR3"
+        },
+        "CB1": {
+          "action": "man",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              211,
+              25
+            ]
+          ],
+          "target": "WR1"
+        },
+        "CB2": {
+          "action": "man",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              211,
+              235
+            ]
+          ],
+          "target": "WR2"
+        },
+        "FS": {
+          "action": "man",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              211,
+              25
+            ]
+          ],
+          "target": "WR1"
+        },
+        "SS": {
+          "action": "man",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              211,
+              235
+            ]
+          ],
+          "target": "WR2"
+        }
+      }
+    },
+    "Cover One": {
+      "name": "Cover One",
+      "side": "defense",
+      "concept": "cover1",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              140,
+              147
+            ]
+          ],
+          "target": "RB"
+        },
+        "LB2": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              220,
+              205
+            ]
+          ],
+          "target": "TE"
+        },
+        "LB3": {
+          "action": "man",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              172,
+              53
+            ]
+          ],
+          "target": "WR3"
+        },
+        "CB1": {
+          "action": "man",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              211,
+              25
+            ]
+          ],
+          "target": "WR1"
+        },
+        "CB2": {
+          "action": "man",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              211,
+              235
+            ]
+          ],
+          "target": "WR2"
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              465,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 465,
+            "y": 130,
+            "rx": 48,
+            "ry": 36
+          }
+        },
+        "SS": {
+          "action": "man",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              211,
+              235
+            ]
+          ],
+          "target": "WR2"
+        }
+      }
+    },
+    "Cover Six": {
+      "name": "Cover Six",
+      "side": "defense",
+      "concept": "cover6",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              310,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 310,
+            "y": 28,
+            "rx": 35,
+            "ry": 25
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              485,
+              70
+            ]
+          ],
+          "zone": {
+            "x": 485,
+            "y": 70,
+            "rx": 50,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              480,
+              186
+            ]
+          ],
+          "zone": {
+            "x": 480,
+            "y": 186,
+            "rx": 55,
+            "ry": 40
+          }
+        }
+      }
+    },
+    "Fire Zone": {
+      "name": "Fire Zone",
+      "side": "defense",
+      "concept": "firezone",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB3": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              225,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              310,
+              65
+            ]
+          ],
+          "zone": {
+            "x": 310,
+            "y": 65,
+            "rx": 31,
+            "ry": 24
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              355,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 355,
+            "y": 130,
+            "rx": 34,
+            "ry": 28
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Edge Contain": {
+      "name": "Edge Contain",
+      "side": "defense",
+      "concept": "contain",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              180,
+              50
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              180,
+              210
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Double A Gap": {
+      "name": "Double A Gap",
+      "side": "defense",
+      "concept": "agap",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              190,
+              130
+            ]
+          ]
+        },
+        "LB2": {
+          "action": "rush",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              190,
+              130
+            ]
+          ]
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Quarters Match": {
+      "name": "Quarters Match",
+      "side": "defense",
+      "concept": "quarters",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              450,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 450,
+            "y": 28,
+            "rx": 40,
+            "ry": 29
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              450,
+              232
+            ]
+          ],
+          "zone": {
+            "x": 450,
+            "y": 232,
+            "rx": 40,
+            "ry": 29
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              455,
+              185
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 185,
+            "rx": 60,
+            "ry": 38
+          }
+        }
+      }
+    },
+    "Robber": {
+      "name": "Robber",
+      "side": "defense",
+      "concept": "robber",
+      "formation": "4-3 / Nickel",
+      "assignments": {
+        "DE1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              78
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT1": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              108
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DT2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              153
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "DE2": {
+          "action": "rush",
+          "points": [
+            [
+              215,
+              182
+            ],
+            [
+              155,
+              130
+            ]
+          ]
+        },
+        "LB1": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              74
+            ],
+            [
+              327,
+              74
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 74,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB2": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              130
+            ],
+            [
+              327,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 130,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "LB3": {
+          "action": "zone",
+          "points": [
+            [
+              285,
+              190
+            ],
+            [
+              327,
+              190
+            ]
+          ],
+          "zone": {
+            "x": 327,
+            "y": 190,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB1": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              28
+            ],
+            [
+              337,
+              28
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 28,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "CB2": {
+          "action": "zone",
+          "points": [
+            [
+              295,
+              234
+            ],
+            [
+              337,
+              234
+            ]
+          ],
+          "zone": {
+            "x": 337,
+            "y": 234,
+            "rx": 36,
+            "ry": 26
+          }
+        },
+        "FS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              84
+            ],
+            [
+              455,
+              75
+            ]
+          ],
+          "zone": {
+            "x": 455,
+            "y": 75,
+            "rx": 60,
+            "ry": 38
+          }
+        },
+        "SS": {
+          "action": "zone",
+          "points": [
+            [
+              405,
+              176
+            ],
+            [
+              330,
+              130
+            ]
+          ],
+          "zone": {
+            "x": 330,
+            "y": 130,
+            "rx": 36,
+            "ry": 27
+          }
+        }
+      }
+    }
+  },
+  "limitations": [
+    "SVG previews and prototype engine share assignments, but physics/coverage balance remains preliminary",
+    "not all football rules, blocking physics or formations are production-ready"
+  ]
+}
