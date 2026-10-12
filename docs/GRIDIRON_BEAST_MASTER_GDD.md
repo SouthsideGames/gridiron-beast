@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.5
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.6
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -489,3 +489,11 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Remaining NFL-rules gaps:** True defer and side-selection priority in every edge case, overtime, physical kickoff/punt return animations, changing ends at quarter boundaries while maintaining exact ball spot, weather/wind vector, scoring tries, actual AI team rosters and records, legal formation/clock enforcement, and automated regression tests. Current field directions are visual; wind and directional gameplay modifiers are not implemented. Treat this milestone as presentation and flow improvement, not complete NFL simulation.
 
 **Unity port contract:** Preserve pregame transitions, franchise field art keyed to home-team ID, coin toss and second-half kickoff state, independently toggled practice overlays, automatic key-moment simulation with event logging, paused post-play review, and alternating quarter directions. Create actual AI franchise roster data before final parity signoff.
+
+## 41. Field fidelity, render order, boundaries and directional continuity — HTML v4.6
+
+**Playtest defects:** (1) offensive routes and monster markers could leave the visible SVG viewport; (2) route/assignment strokes sometimes rendered above monsters; (3) field lacked appropriate sideline yard numbers, hash marks and goalposts; (4) the last frame of a play could reverse horizontal orientation relative to its start, because the final render used `quarterDirection` while live frames used `driveDirection`.
+
+**Corrections:** Clamp simulated monster positions to the field and use an SVG clip path to keep moving markers and route art inside the 600×260 practice view. Render offensive/defensive assignment lines behind player markers; render monster icons as the topmost visual layer. In match frames, all players and the ball are in the foreground above stadium graphics. The static and animated stadium share an original top-down field renderer, with mowing bands, ten-yard stripes, five-yard lines, hash marks, white goal lines, numbered yards on both sidelines, top-down goalposts, home-team midfield mascot and split end-zone wordmarks. For scheduled away games, stadium identity belongs to the opponent, not the player. Every animation frame and its retained final frame use the same `driveDirection`, so the field does not flip when a play finishes.
+
+**Implementation and validation:** `index.html` and `engine.js` updated, HTML version 4.6. Main JavaScript syntax and standalone engine renderer tested, including clipped foreground markers, stadium SVG and same-direction live/final render call sites. Browser rendering and mobile Safari playtesting are still required. Goalposts are a simplified top-down SVG representation; not a 3D goalpost or special-teams targeting system. Preserve this layering and field geometry in the Unity renderer.
