@@ -2,6 +2,8 @@
 window.GridironPlays=(function(){
 const OFFENSE={"Power Run":["run","power","right"],"Inside Zone":["run","zone","middle"],"Outside Run":["run","outside","top"],"Inside Run":["run","dive","middle"],"Balanced Run":["run","balanced","bottom"],"HB Dive":["run","dive","middle"],"HB Stretch":["run","outside","bottom"],"Counter Run":["run","counter","top"],"Draw":["run","draw","middle"],"Read Option":["run","option","bottom"],"Quick Pass":["pass","quick"],"Deep Post":["pass","post"],"Four Verticals":["pass","vertical"],"Slant Combo":["pass","slant"],"Screen Pass":["pass","screen"],"Deep Corner":["pass","corner"],"Play Action":["pass","playaction"],"Quick Slant":["pass","slantquick"],"Spread Screen":["pass","screenwide"],"Tempo Slant":["pass","temposlant"],"Mesh":["pass","mesh"],"Flood":["pass","flood"],"Curl Flats":["pass","curlflat"],"Double Post":["pass","doublepost"],"Dagger":["pass","dagger"],"Y Cross":["pass","cross"],"Stick":["pass","stick"],"HB Slip Screen":["pass","hbscreen"],"PA Boot":["pass","boot"],"Wheel Route":["pass","wheel"]};
 const DEFENSE={"Cover Two":"cover2","Cover Three":"cover3","Cover Four":"cover4","Deep Zone":"deep","Cloud Flats":"cloud","Zone Trap":"trap","QB Spy":"spy","Run Wall":"runwall","Man Lock":"man","Press Coverage":"press","Corner Fire Blitz":"cornerblitz","All-Out Pressure":"allblitz","Run Blitz":"runblitz","DB Blitz":"dbblitz","Zone Blitz":"zoneblitz","Tampa Two":"tampa","Nickel Man":"nickelman","Cover One":"cover1","Cover Six":"cover6","Fire Zone":"firezone","Edge Contain":"contain","Double A Gap":"agap","Quarters Match":"quarters","Robber":"robber"};
+Object.assign(OFFENSE,{"Strong Toss":["run","toss","bottom"],"Weak Toss":["run","toss","top"],"Trap Run":["run","trap","middle"],"Wham Run":["run","wham","middle"],"Power Sweep":["run","sweep","top"],"Jet Sweep":["run","jet","top"],"End Around":["run","reverse","bottom"],"HB Iso":["run","iso","middle"],"Lead Draw":["run","leaddraw","middle"],"Split Zone":["run","splitzone","bottom"],"Pin Pull Sweep":["run","pinpull","top"],"Speed Option":["run","speedoption","top"],"PA Crossers":["pass","pacross"],"PA Flood":["pass","paflood"],"PA Shot":["pass","pashot"],"Smash Concept":["pass","smash"],"Levels":["pass","levels"],"Spacing":["pass","spacing"],"Drive":["pass","drive"],"Texas Route":["pass","texas"],"Slot Fade":["pass","slotfade"],"Double Move":["pass","doublemove"],"Seam Read":["pass","seamread"],"Shallow Cross":["pass","shallow"],"Bubble Screen":["pass","bubble"],"Tunnel Screen":["pass","tunnel"],"TE Seam":["pass","teseam"],"RB Angle":["pass","rbangle"]});
+Object.assign(DEFENSE,{"Cover Zero":"zero","Cover Two Invert":"invert2","Cover Three Buzz":"buzz3","Cover Three Match":"match3","Cover Four Palms":"palms4","Cover Six Trap":"sixtrap","Tampa Robber":"tamparobber","Nickel Blitz":"nickelblitz","Safety Blitz":"safetyblitz","Cross Dog Blitz":"crossdog","Double Edge Blitz":"doubleedge","Simulated Pressure":"simpressure","Drop Eight":"drop8","Goal Line Stand":"goalline","Bear Front":"bear","Overload Right":"overright","Overload Left":"overleft","Prevent Defense":"prevent"});
 const offensePositions={WR1:[176,25],WR2:[176,235],WR3:[137,53],TE:[185,205],RB:[105,147],QB:[135,130],LT:[185,78],LG:[185,104],C:[185,130],RG:[185,156],RT:[185,182]};
 const defensePositions={DE1:[215,78],DT1:[215,108],DT2:[215,153],DE2:[215,182],LB1:[285,74],LB2:[285,130],LB3:[285,190],CB1:[295,28],CB2:[295,234],FS:[405,84],SS:[405,176]};
 const routes={streak:(x,y,s)=>[[x,y],[x+85,y],[x+210,y]],slant:(x,y,s)=>[[x,y],[x+42,y],[x+105,y+s*55]],post:(x,y,s)=>[[x,y],[x+112,y],[x+205,y+s*65]],corner:(x,y,s)=>[[x,y],[x+112,y+s*4],[x+205,y-s*46]],out:(x,y,s)=>[[x,y],[x+55,y],[x+70,y-s*55]],in:(x,y,s)=>[[x,y],[x+70,y],[x+115,y+s*50]],curl:(x,y,s)=>[[x,y],[x+100,y],[x+80,y+s*8]],drag:(x,y,s)=>[[x,y],[x+35,y+s*17],[x+125,y+s*90]],flat:(x,y,s)=>[[x,y],[x+22,y],[x+48,y-s*47]],wheel:(x,y,s)=>[[x,y],[x+38,y-s*55],[x+150,y-s*60]],screen:(x,y,s)=>[[x,y],[x+12,y-s*24],[x+43,y-s*30]],block:(x,y,s)=>[[x,y],[x+22,y]]};
@@ -49,6 +51,57 @@ for(const p of Object.values(plays)){
    if(p.concept==='nickelman'){a.LB3.action='man';a.LB3.target='WR3';a.LB3.points=[[...defensePositions.LB3],[210,53]]}
    if(p.concept==='cover1'){a.FS={action:'zone',points:[[405,84],[465,130]],zone:{x:465,y:130,rx:48,ry:36}}}
  }
+}
+// Assign every new play a tactical adjustment so concepts are distinct.
+for(const p of Object.values(plays)){
+ const a=p.assignments,hash=[...p.name].reduce((n,ch)=>(Math.imul(n,31)+ch.charCodeAt(0))>>>0,7);
+ if(p.side==='offense'){
+  if(p.kind==='run'){
+   const lane=/toss|sweep|reverse|pinpull|speedoption/.test(p.concept)?(p.name.includes('Weak')||p.name.includes('Jet')?55:207):/trap|wham/.test(p.concept)?118:/iso|draw/.test(p.concept)?139:169;
+   a.RB.points=[[105,147],[143,145],[195,lane],[268+(hash%24),lane+((hash%9)-4)]];
+   if(/toss|reverse|jet/.test(p.concept)){a.QB.action='pitch';a.QB.points=[[135,130],[120,147],[109,lane]]}
+   if(/pinpull|trap/.test(p.concept)){a.LG.action='pull_block';a.LG.points=[[185,104],[164,128],[221,lane]]}
+   if(/wham|splitzone/.test(p.concept)){a.TE.action='wham_block';a.TE.points=[[185,205],[207,158],[227,130]]}
+   if(/option/.test(p.concept)){a.QB.action='option_read';a.QB.points=[[135,130],[177,140],[221,lane]]}
+  }else{
+   const names=['WR1','WR2','WR3','TE','RB'],patterns={
+    pacross:['post','corner','drag','in','flat'],paflood:['streak','out','corner','flat','wheel'],pashot:['post','streak','corner','block','flat'],smash:['curl','corner','out','flat','wheel'],levels:['in','in','drag','out','flat'],spacing:['curl','out','slant','flat','screen'],drive:['in','drag','streak','curl','flat'],texas:['post','out','in','drag','slant'],slotfade:['out','post','streak','flat','wheel'],doublemove:['corner','post','streak','drag','flat'],seamread:['streak','post','streak','streak','flat'],shallow:['drag','drag','post','out','flat'],bubble:['screen','streak','screen','block','flat'],tunnel:['screen','post','screen','block','flat'],teseam:['post','corner','out','streak','flat'],rbangle:['streak','out','post','drag','slant']
+   }[p.concept];
+   if(patterns)names.forEach((id,i)=>{const [x,y]=offensePositions[id],route=patterns[i],sign=y<130?1:-1;a[id]={action:route==='block'?'pass_block':'route',points:routes[route](x,y,sign),route}});
+   if(p.concept.startsWith('pa')){a.QB.action='play_action';a.QB.points=[[135,130],[108,148],[125,130]]}
+   if(p.concept==='texas')a.RB.points=[[105,147],[158,182],[246,110]];
+   if(p.concept==='bubble')a.WR3.points=[[137,53],[160,27],[196,24]];
+  }
+ }else{
+  const pos=defensePositions;
+  const rush=(id,x=148,y=130)=>{a[id]={action:'rush',points:[pos[id],[x,y]]}};
+  const zone=(id,x,y,rx=36,ry=28)=>{a[id]={action:'zone',points:[pos[id],[x,y]],zone:{x,y,rx,ry}}};
+  const man=(id,t)=>{a[id]={action:'man',points:[pos[id],[offensePositions[t][0]+28,offensePositions[t][1]]],target:t}};
+  const c=p.concept;
+  if(c==='zero'){rush('LB1');rush('LB2');for(const [id,t] of Object.entries({CB1:'WR1',CB2:'WR2',LB3:'RB',FS:'WR3',SS:'TE'}))man(id,t)}
+  if(c==='invert2'){zone('CB1',455,55,52,38);zone('CB2',455,205,52,38);zone('FS',285,70);zone('SS',285,190)}
+  if(c==='buzz3'){zone('FS',440,128,52,38);zone('SS',322,145,34,27)}
+  if(c==='match3'){zone('FS',465,125,52,38);man('CB1','WR1');man('CB2','WR2')}
+  if(c==='palms4'){zone('FS',480,70,43,33);zone('SS',480,190,43,33);zone('CB1',405,28);zone('CB2',405,230)}
+  if(c==='sixtrap'){zone('CB1',270,73,30,27);zone('CB2',425,215,42,35);zone('FS',465,80,52,37)}
+  if(c==='tamparobber'){zone('LB2',385,130,31,49);zone('SS',315,130,30,27)}
+  if(c==='nickelblitz'){rush('CB2',160,155);zone('FS',460,75,49,37)}
+  if(c==='safetyblitz'){rush('SS',150,130);zone('FS',450,125,55,42)}
+  if(c==='crossdog'){rush('LB1',150,160);rush('LB3',150,95)}
+  if(c==='doubleedge'){rush('LB1',150,55);rush('LB3',150,205)}
+  if(c==='simpressure'){zone('DE1',310,55,28,24);rush('LB2')}
+  if(c==='drop8'){for(const id of ['DE2','DT2','LB1','LB2','LB3','CB1','CB2','FS','SS'])zone(id,Math.min(495,pos[id][0]+80),pos[id][1],35,25)}
+  if(c==='goalline'){for(const id of ['LB1','LB2','LB3'])rush(id,175,pos[id][1]);zone('FS',255,105,27,25);zone('SS',255,160,27,25)}
+  if(c==='bear'){for(const id of ['LB1','LB2','LB3'])zone(id,230,pos[id][1],25,22)}
+  if(c==='overright'){rush('LB3',150,185);rush('CB2',165,218)}
+  if(c==='overleft'){rush('LB1',150,75);rush('CB1',165,40)}
+  if(c==='prevent'){zone('CB1',485,35,48,34);zone('CB2',485,225,48,34);zone('FS',525,85,43,34);zone('SS',525,175,43,34);zone('LB2',400,130,39,30)}
+ }
+ // Distinct positional depth adjustment (not a visual-only offset): stored in assignments for AI and Unity.
+ const anchor=p.side==='offense'?(p.kind==='run'?'RB':'WR1'):'LB2';
+ const act=a[anchor];if(act?.points?.length>1){const last=act.points[act.points.length-1];act.points[act.points.length-1]=[last[0]+(hash%17),last[1]+(hash%13)-6];if(act.zone){act.zone.x=act.points.at(-1)[0];act.zone.y=act.points.at(-1)[1]}}
+ // All 11 players must have one assignment, including dropped rushers.
+ for(const [id,pos] of Object.entries(p.side==='offense'?offensePositions:defensePositions))if(!a[id])a[id]={action:'contain',points:[pos,[pos[0]+15,pos[1]]]};
 }
 function diagram(name){const p=plays[name];if(!p)return '';let out='';for(const [id,a] of Object.entries(p.assignments)){const pts=a.points;if(a.action==='zone'){const z=a.zone;out+='<ellipse cx="'+z.x+'" cy="'+z.y+'" rx="'+z.rx+'" ry="'+z.ry+'" fill="#2889db" fill-opacity=".2" stroke="#72c8ff" stroke-dasharray="5 4" stroke-width="2"/>';continue}const color=a.action==='rush'?'#ff9468':a.action==='man'?'#f4e596':a.action.includes('block')?'#a2ddff':'#f4d067';out+='<polyline points="'+pts.map(v=>v.join(',')).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" '+(a.action==='man'?'stroke-dasharray="5 4"':'')+'/>';const tail=pts.at(-1),prev=pts.at(-2);if(tail&&prev){const angle=Math.atan2(tail[1]-prev[1],tail[0]-prev[0]);out+='<path d="M'+tail[0]+' '+tail[1]+' l'+(-10*Math.cos(angle-.45))+' '+(-10*Math.sin(angle-.45))+' l'+(10*Math.cos(angle+.45)-10*Math.cos(angle-.45))+' '+(10*Math.sin(angle+.45)-10*Math.sin(angle-.45))+' Z" fill="'+color+'"/>'}}return out}
 return {plays,offensePositions,defensePositions,diagram,count:Object.keys(plays).length};
