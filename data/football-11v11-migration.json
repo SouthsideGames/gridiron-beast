@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
   "decision": "LOCKED",
-  "effectiveGddVersion": "4.4",
+  "effectiveGddVersion": "4.5",
   "targetPlayersPerSide": 11,
   "previousPlayersPerSide": 7,
   "implementationPhase": "qb_awareness_practice_controls_coordinator_packages",
@@ -544,5 +544,26 @@
       "kickoffs, extra points, two-point conversions",
       "mobile Safari end-to-end QA"
     ]
+  },
+  "matchPresentation": {
+    "homeStadiumLogo": true,
+    "splitHomeEndZoneWordmark": true,
+    "actualHomeTeamFieldBasedOnSchedule": true,
+    "pregameLineupOverlay": true,
+    "playerRosterReal": true,
+    "opponentRosterEstimated": true,
+    "opponentRecordAvailable": false,
+    "coinToss": true,
+    "coinTossDefer": true,
+    "openingDirection": true,
+    "quarterDirectionAlternation": true,
+    "halftimeKickoff": true,
+    "keyMomentsFastForward": true,
+    "postPlayTapToContinue": true,
+    "independentPracticeOffenseAndDefenseLines": true,
+    "weatherWind": "planned",
+    "specialTeamsKickoffAnimation": "planned",
+    "fullNFLKickoffAndDriveRules": "incomplete",
+    "status": "HTML implemented; browser regression unverified"
   }
 }
