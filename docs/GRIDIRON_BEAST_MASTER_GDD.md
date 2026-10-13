@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.8
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.9
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -517,3 +517,13 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Bounds:** All play preview polylines are constrained to the 600×260 pitch, and zone ellipses are positioned so their full radii fit inside the pitch. Runtime simulation monster markers remain clamped and clipped. The current approach clips out-of-range routes for visibility; route geometry and play spacing should later be authored inside legal bounds rather than relying on clamps. This matters for Unity parity and for accurate route running.
 
 **QA:** HTML and play-library JavaScript syntax checked and all 100 plays still load. Full mobile Safari interaction and end-to-end practice regression remain unverified.
+
+## 44. Contact-based fumbles and post-possession downfield blocking — Engine v4.9
+
+**Reported bug:** The v4.8 simulation could generate a fumble after a fixed number of carry ticks with no nearby defender, making a turnover visually unearned. It also left receivers, tight ends and linemen following their original pass routes/blocking logic after the ball was caught, creating stationary teammates while the ball carrier ran.
+
+**Rule correction:** A defensive forced fumble can occur only if a defender is within the active tackle-contact radius of the current ball carrier, after at least two carry ticks. The fumble log names the defender who forced the fumble and possession changes on the existing turnover path. No noncontact random fumble is allowed in the current prototype. Noncontact mishandled handoffs, strip attempts before contact and other advanced turnover scenarios are deferred pending explicit animation/physics support.
+
+**Post-catch and post-handoff AI:** Once a monster has possession, all other offensive monsters except the QB switch from their original route/line assignments into pursuit-aware downfield blocking. They seek nearby defenders who could intercept the ball carrier, or advance to support the runner when no defender is within engagement range. When a blocker gets close to a threatening defender, the defender is slowed and displaced slightly. The QB is excluded from this automatic blocking behavior by design. The same engine powers practice and match gameplay.
+
+**Limitations:** This is simplified blocking AI, not a production-quality collision/engagement system. It does not yet implement block shedding, penalties, positional leverage, realistic offensive-line assignments, cut blocks, or individual strength/block ratings. Defensive contact, ball-carrier behavior and all 100 play packages need balancing. Current forced-fumble validation covered 250 seeded practice simulations with no observed noncontact fumbles; complete mobile Safari QA remains pending.
