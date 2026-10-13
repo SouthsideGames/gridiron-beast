@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.7
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.8
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -507,3 +507,13 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Tutorial:** Owner Orientation and its persistent global banner are temporarily hidden, with progress handlers disabled. The feature is deferred pending a separate action-gated tutorial redesign. Retain the planned tutorial specification in the GDD, but do not display incomplete prompts in Settings, schedules, practice or other screens. Previously stored tutorial progress may remain in save data for future migration.
 
 **QA:** Inline JavaScript syntax checked, restart button/handler removed, and the Sunday direct-match bypass removed. Browser end-to-end navigation and mobile Safari tests remain outstanding.
+
+## 43. Franchise navigation and practice field parity — HTML v4.8
+
+**Navigation:** Every normal Franchise Mode subsidiary screen uses the shared bottom navigation to return to Headquarters rather than Main Menu. Monster profile and lineup selection return to Roster; franchise HQ returns to Main Menu. The Monster Types and Practice Field screens additionally provide an explicit Back to Headquarters button inside their panels. Main menu, commissioner introduction, pregame and coin-toss flow retain their own contextual navigation.
+
+**Practice field parity:** Practice renders the same upgraded original SVG stadium field as the live match, including ten-yard and five-yard lines, sideline yard numerals, hash marks, goal lines, goalposts, alternating grass and midfield branding. Practice end zones use PRACTICE and FIELD instead of a team name. The simulation renderer continues to show the offense and defense over the stadium artwork, with tactical routes behind monster markers.
+
+**Bounds:** All play preview polylines are constrained to the 600×260 pitch, and zone ellipses are positioned so their full radii fit inside the pitch. Runtime simulation monster markers remain clamped and clipped. The current approach clips out-of-range routes for visibility; route geometry and play spacing should later be authored inside legal bounds rather than relying on clamps. This matters for Unity parity and for accurate route running.
+
+**QA:** HTML and play-library JavaScript syntax checked and all 100 plays still load. Full mobile Safari interaction and end-to-end practice regression remain unverified.
