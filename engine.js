@@ -36,7 +36,7 @@ return {play,defense,seed,frames,result,yards,events,holder,target:target?.id||n
 function render(sim,i,options={}){
  const f=sim.frames[clamp(i,0,sim.frames.length-1)];
  const flip=y=>options.flip?260-y:y,dir=x=>options.fieldSpot!=null?options.fieldSpot+(options.fieldSign||1)*(x-185):options.direction==='left'?600-x:x;
- const safe=(v,min,max)=>clamp(v,min,max);
+ const safe=(v,min,max)=>clamp(v,min,max),bounded=x=>options.goalX==null?x:(options.fieldSign===-1?Math.max(x,options.goalX+10):Math.min(x,options.goalX-10));
  let svg='<defs><clipPath id="gbPitchClip"><rect x="1" y="1" width="598" height="258"/></clipPath></defs>';
  svg+='<rect width="600" height="260" fill="#226647"/>';
  for(let j=0;j<=12;j++)svg+='<line x1="'+j*50+'" x2="'+j*50+'" y1="0" y2="260" stroke="white" stroke-opacity=".17"/>';
@@ -45,14 +45,14 @@ function render(sim,i,options={}){
  svg+='<g clip-path="url(#gbPitchClip)">';
  // Ball carrier and all players are drawn above field markings and route overlays.
  for(const [id,originalX,originalY] of f.off){
-  const x=safe(dir(originalX),13,587),y=safe(flip(originalY),13,247);
+  const x=safe(bounded(dir(originalX)),13,587),y=safe(flip(originalY),13,247);
   svg+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="'+(options.defensiveView?'#f18c82':'#74c5ff')+'" stroke="'+(f.holder===id?'#ffe26c':'white')+'" stroke-width="2"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" font-weight="bold" fill="#10212c">'+id+'</text>';
  }
  for(const [id,originalX,originalY] of f.def){
-  const x=safe(dir(originalX),12,588),y=safe(flip(originalY),12,248);
+  const x=safe(bounded(dir(originalX)),12,588),y=safe(flip(originalY),12,248);
   svg+='<rect x="'+(x-11)+'" y="'+(y-10)+'" width="22" height="20" rx="3" fill="'+(options.defensiveView?'#74c5ff':'#f18c82')+'" stroke="white"/><text x="'+x+'" y="'+(y+3)+'" text-anchor="middle" font-size="8" fill="#10212c">'+id+'</text>';
  }
- svg+='<ellipse cx="'+safe(dir(f.ball[0])+8,8,592)+'" cy="'+safe(flip(f.ball[1])-6,8,252)+'" rx="8" ry="5" fill="#e6a455" stroke="white"/>';
+ svg+='<ellipse cx="'+safe(bounded(dir(f.ball[0]))+8,8,592)+'" cy="'+safe(flip(f.ball[1])-6,8,252)+'" rx="8" ry="5" fill="#e6a455" stroke="white"/>';
  svg+='</g>';
  if(i===sim.frames.length-1)svg+='<rect x="375" y="8" width="215" height="32" rx="6" fill="#102b27"/><text x="482" y="29" text-anchor="middle" font-size="15" fill="white">'+sim.yards+' YDS · '+sim.result.toUpperCase()+'</text>';
  return svg
