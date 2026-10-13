@@ -155,6 +155,13 @@ for(const p of Object.values(plays)){
  for(const [id,start] of Object.entries(pos))a[id]={action:'rush',points:[start,[155,130]]};
  p.positions=pos;p.assignments=a;p.formation='All-Out Pressure / 11 Rushers';
 }
+// Audit #6: Draw is explicitly a designed QB keeper, not an RB handoff.
+{
+ const p=plays['Draw'];
+ p.ballCarrier='QB';p.formation='QB Draw / Designed Quarterback Run';
+ p.assignments.QB={action:'carry',points:[[135,130],[121,130],[185,130],[280,130]],lane:130};
+ p.assignments.RB={action:'run_block',points:[[105,147],[155,147],[215,151]]};
+}
 // Every pass concept has exactly one designated first read; other routes remain secondary.
 for(const p of Object.values(plays)){
  if(p.side!=='offense'||p.kind!=='pass')continue;
