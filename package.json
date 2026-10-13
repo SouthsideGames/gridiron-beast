@@ -1,0 +1,12 @@
+{
+  "name": "gridiron-beast",
+  "version": "6.0.0-dev",
+  "private": true,
+  "description": "Gridiron Beast — mobile-first 7-on-7 monster football franchise game",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/",
+    "serve": "python3 -m http.server 8080"
+  },
+  "license": "UNLICENSED"
+}
