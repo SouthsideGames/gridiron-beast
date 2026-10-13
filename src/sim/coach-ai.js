@@ -14,7 +14,7 @@ export function teamStrengths(team) {
   const o = team.offense || {}, d = team.defense || {};
   const g = (p, k) => p?.attrs?.[k] ?? 60;
   const pass = (g(o.QB, 'accuracy') * 2 + g(o.QB, 'awareness') + g(o.QB, 'arm') + g(o.WR1, 'catching') + g(o.WR2, 'catching') + g(o.WR1, 'speed')) / 7;
-  const run = (g(o.RB, 'speed') + g(o.RB, 'strength') + g(o.RB, 'agility') + g(o.LG, 'blocking') + g(o.C, 'blocking') + g(o.RG, 'blocking')) / 6;
+  const run = (g(o.RB, 'speed') + g(o.RB, 'strength') + g(o.RB, 'agility') + g(o.LG, 'blocking') + g(o.TE, 'blocking') + g(o.RG, 'blocking')) / 6;
   const passD = (g(d.CB1, 'coverage') + g(d.CB2, 'coverage') + g(d.FS, 'coverage') + g(d.SS, 'coverage') + g(d.LB1, 'coverage')) / 5;
   const runD = (g(d.DL1, 'strength') + g(d.DL2, 'strength') + g(d.LB1, 'tackling') + g(d.LB2, 'tackling')) / 4;
   const kicking = team.kicker?.attrs?.kicking ?? 60;

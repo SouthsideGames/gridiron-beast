@@ -4,20 +4,21 @@
 // Coordinates are play-relative yards: x upfield from the line of scrimmage
 // (offense attacks +x), y lateral (negative = offense's left).
 
-import { OFFENSE_PACKAGES, DEFENSE_PACKAGES, offenseOnField, defenseOnField, LINEMEN } from './personnel.js';
+import { OFFENSE_PACKAGES, DEFENSE_PACKAGES, offenseOnField, defenseOnField, LINEMEN, BASE_LINEMEN } from './personnel.js';
 import { routePoints, ALTERNATE_ROUTES, ZONES, GAPS } from './routes.js';
 
 // ---------------------------------------------------------------- formations
-const OL = { LG: [-0.6, -1.7], C: [-0.4, 0], RG: [-0.6, 1.7] };
+const OL = { LG: [-0.6, -1.7], RG: [-0.6, 1.7] };
+const OL3 = { ...OL, C: [-0.4, 0] }; // tight sets bring the third lineman
 export const OFFENSE_FORMATIONS = Object.freeze({
-  i_pro: { pkg: 'pro', label: 'I-Form', align: { ...OL, QB: [-1.6, 0], RB: [-6.5, 0], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
-  gun_pro: { pkg: 'pro', label: 'Gun Pro', align: { ...OL, QB: [-5, 0], RB: [-5.2, 2.8], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
-  gun_pro_lt: { pkg: 'pro', label: 'Gun Pro Left', align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
-  gun_spread: { pkg: 'spread', label: 'Spread', align: { ...OL, QB: [-5, 0], WR1: [-0.6, -18], WR2: [-1.2, 18], WR3: [-1.2, 10] } },
-  gun_trips: { pkg: 'spread', label: 'Trips Left', align: { ...OL, QB: [-5, 0], WR1: [-0.6, -19], WR3: [-1.2, -12], WR2: [-1.2, 18] } },
-  tight_i: { pkg: 'tight', label: 'Tight I', align: { ...OL, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-0.6, 3.2], WR1: [-0.6, -18] } },
-  tight_gun: { pkg: 'tight', label: 'Tight Gun', align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 3.2], WR1: [-1.2, -18] } },
-  tight_wing: { pkg: 'tight', label: 'Wing', align: { ...OL, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-1.4, 4.2], WR1: [-0.6, -18] } },
+  i_pro: { pkg: 'pro', label: 'I-Form', align: { ...OL, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-0.6, 3.4], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
+  gun_pro: { pkg: 'pro', label: 'Gun Pro', align: { ...OL, QB: [-5, 0], RB: [-5.2, 2.8], TE: [-0.6, 3.4], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
+  gun_pro_lt: { pkg: 'pro', label: 'Gun Pro Left', align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 3.4], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
+  gun_spread: { pkg: 'spread', label: 'Spread', align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], WR1: [-0.6, -18], WR2: [-1.2, 18], WR3: [-1.2, 10] } },
+  gun_trips: { pkg: 'spread', label: 'Trips Left', align: { ...OL, QB: [-5, 0], RB: [-5.2, 2.8], WR1: [-0.6, -19], WR3: [-1.2, -12], WR2: [-1.2, 18] } },
+  tight_i: { pkg: 'tight', label: 'Tight I', align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-0.6, 3.2], WR1: [-0.6, -18] } },
+  tight_gun: { pkg: 'tight', label: 'Tight Gun', align: { ...OL3, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 3.2], WR1: [-1.2, -18] } },
+  tight_wing: { pkg: 'tight', label: 'Wing', align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-1.4, 4.2], WR1: [-0.6, -18] } },
 });
 
 export const DEFENSE_FORMATIONS = Object.freeze({
@@ -247,7 +248,7 @@ function compile(play) {
   const onField = play.side === 'offense' ? offenseOnField(play.pkg) : defenseOnField(play.pkg);
   const compiled = { ...play, onField, assignments: {} };
   for (const slot of onField) {
-    const a = play.assignments[slot];
+    const a = play.assignments[slot] || (['TE', 'RB', 'C'].includes(slot) ? BLOCK : null);
     if (!a) throw new Error(`${play.name}: missing assignment for ${slot}`);
     const align = play.align[slot];
     if (!align) throw new Error(`${play.name}: missing alignment for ${slot}`);
@@ -322,7 +323,7 @@ export function validatePlaybook() {
   for (const p of Object.values(PLAYS)) {
     if (p.onField.length !== 7) problems.push(`${p.name}: ${p.onField.length} on field`);
     if (p.side === 'offense') {
-      if (!LINEMEN.every((s) => p.onField.includes(s))) problems.push(`${p.name}: missing linemen`);
+      if (!BASE_LINEMEN.every((s) => p.onField.includes(s))) problems.push(`${p.name}: missing linemen`);
       if (p.type === 'pass') {
         const routes = eligibleReceivers(p).filter((s) => p.assignments[s].a === 'route');
         if (!p.primary || !routes.includes(p.primary)) problems.push(`${p.name}: primary ${p.primary} is not a route runner`);

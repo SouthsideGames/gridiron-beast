@@ -81,7 +81,6 @@ export function registerMenuScreens(Router, app) {
     title: 'More',
     render({ f }) {
       return `<div class="stack">
-        <button class="btn block" data-action="go" data-screen="staff">👥 Coaching Staff</button>
         <button class="btn block" data-action="go" data-screen="contracts">💰 Salary & Contracts</button>
         <button class="btn block" data-action="go" data-screen="history">📜 Franchise History</button>
         <button class="btn block" data-action="go" data-screen="practice">🎯 Practice Field</button>

@@ -9,7 +9,7 @@ import * as AI from '../../sim/coach-ai.js';
 import { step, aiController, newTendencies } from '../../sim/game-runner.js';
 import { rngFromState } from '../../core/rng.js';
 import { PLAYS } from '../../data/playbook.js';
-import { OFFENSE_SLOTS, DEFENSE_SLOTS } from '../../data/personnel.js';
+import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { fieldSvg, FIELD_VIEWBOX, presnapLook, cameraFor } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite } from '../pixel-monster.js';
@@ -24,8 +24,10 @@ export function registerMatchScreens(Router, app) {
       const m = F.sundayMatchup(f); if (!m) return '<p>No game today.</p>';
       const mine = m[m.playerSide], theirs = m[m.playerSide === 'home' ? 'away' : 'home'];
       const col = (team, label) => `<div class="panel tight"><div class="row"><b style="color:${team.color}">${esc(team.name)}</b><span class="chip">${label}</span></div><div class="muted" style="font-size:12px">OVR ${teamOverall(team)} · ${esc(team.offensePlays.length)} / ${esc(team.defensePlays.length)} plays</div>
-        <h3 style="font-size:12px">Offense</h3>${OFFENSE_SLOTS.map((s) => `<div class="slotline"><span class="mono">${s}</span><span>${esc(team.offense[s]?.name || '—')}</span></div>`).join('')}
-        <h3 style="font-size:12px">Defense</h3>${DEFENSE_SLOTS.map((s) => `<div class="slotline"><span class="mono">${s}</span><span>${esc(team.defense[s]?.name || '—')}</span></div>`).join('')}</div>`;
+        <h3 style="font-size:12px">Offense</h3>${OFFENSE_BASE.map((s) => line(s, team.offense[s])).join('')}
+        <h3 style="font-size:12px">Defense</h3>${DEFENSE_BASE.map((s) => line(s, team.defense[s])).join('')}
+        <h3 style="font-size:12px">Packages</h3>${[...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => line(s, team.offense[s] || team.defense[s])).join('')}</div>`;
+      function line(s, m) { return `<div class="slotline"><span class="mono">${s}</span><span class="row" style="gap:4px;justify-content:flex-end">${m ? monsterSprite(m, 18) : ''}${esc(m?.name || '—')}</span></div>`; }
       const rv = f.rivals[f.tier];
       return `<div class="pregame">${m.rival ? `<div class="rival-banner">⚔️ RIVALRY GAME<div class="muted" style="font-weight:600;font-size:12px">GM ${esc(rv?.gm || '')} · all-time ${rv?.headToHead.w || 0}–${rv?.headToHead.l || 0}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}<div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
         <div class="lineups">${col(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}${col(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>

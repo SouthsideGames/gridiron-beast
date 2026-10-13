@@ -212,6 +212,10 @@ Every decision uses down, distance, field position, score differential, quarter,
 
 Promotion/relegation UI, Multiplayer, Draft Mode, trades, free agency, contracts beyond a single annual salary, custom play editor, penalties beyond delay of game, wind/weather, evolution, equipment, audio.
 
+## 9a. Personnel (revised)
+
+Seven base starters per side are what the owner manages. **Offense:** QB, RB, WR1, WR2, TE, LG, RG. **Defense:** DL1, DL2, LB1, LB2, CB1, CB2, FS. Two package slots per side rotate in for specific groupings and replace a starter for that snap: WR3 (Spread), C (Tight — third lineman), DL3 (Heavy, Pressure), SS (Nickel). Every play still fields exactly seven. Display names are unique within a club (a second monster of the same species gets a numeral).
+
 ## 10a. Platforms
 
 * **Primary target (first release):** iOS and Android phones and tablets, portrait-first, installable as a PWA and wrappable for the stores. Tablets get the same layout with wider margins; nothing depends on a hover state.

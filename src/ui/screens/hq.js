@@ -47,7 +47,7 @@ export function registerHqScreens(Router, app) {
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
         <div class="grid2">
           <button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button>
-          <button class="btn block" data-action="go" data-screen="gameplan">📋 Game plan</button><button class="btn block" data-action="go" data-screen="practice">🎯 Practice</button></div>
+          <button class="btn block" data-action="go" data-screen="staff">👥 Coaching staff</button><button class="btn block" data-action="go" data-screen="practice">🎯 Practice</button></div>
         <h3>News</h3><ul class="news" style="padding-left:18px;margin:0">${f.news.slice(0, 8).map((n) => `<li class="${esc(n.kind)}">${esc(n.text)}</li>`).join('') || '<li class="dim">Nothing yet.</li>'}</ul>`;
     },
     mount(root) {
@@ -141,8 +141,9 @@ export function registerHqScreens(Router, app) {
 
   // ---------------------------------------------------------------- Friday
   Router.registerScreen('gameplan', {
-    title: 'Game Plan',
+    title: 'Friday · Game Plan',
     render({ f }) {
+      if (f.season.day !== 4) return `<div class="panel"><p>The game plan is set on <b>Friday</b>. This week's plan: ${f.week.plan.offense.length ? f.week.plan.offense.map((id) => esc(PLAYS[id].name)).join(', ') : 'coach’s default'} · ${f.week.plan.defense.length ? f.week.plan.defense.map((id) => esc(PLAYS[id].name)).join(', ') : 'coach’s default'}.</p><button class="btn block" data-action="back">Back</button></div>`;
       const sel = { offense: new Set(f.week.plan.offense), defense: new Set(f.week.plan.defense) };
       const side = (s) => `<h3>${s === 'offense' ? 'Offense' : 'Defense'} · <span id="count-${s}">${sel[s].size}</span>/${F.PLAN_SIZE} equipped</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
       return `<p class="muted">Equip ${F.PLAN_SIZE} offensive and ${F.PLAN_SIZE} defensive plays for Sunday. Tap a card to equip, long-press or use Details for the full diagram.</p>
@@ -152,6 +153,7 @@ export function registerHqScreens(Router, app) {
     mount(root) {
       const sel = { offense: new Set(app.f.week.plan.offense), defense: new Set(app.f.week.plan.defense) };
       delegate(root, {
+        back: () => Router.back(),
         toggle: (el) => { const s = el.dataset.side, id = el.dataset.id; if (sel[s].has(id)) sel[s].delete(id); else if (sel[s].size >= F.PLAN_SIZE) { toast(`Only ${F.PLAN_SIZE} ${s} plays. Remove one first.`); return; } else sel[s].add(id); el.classList.toggle('selected', sel[s].has(id)); el.setAttribute('aria-pressed', sel[s].has(id)); root.querySelector(`#count-${s}`).textContent = sel[s].size; },
         details: () => Router.go('playbook'),
         save: () => { const r = F.setGamePlan(app.f, [...sel.offense], [...sel.defense]); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast('Game plan saved.', 'good'); Router.go('hq', {}, { reset: true }); },
@@ -178,7 +180,7 @@ export function registerHqScreens(Router, app) {
     render({ f }) {
       const oc = F.staffMember(f, 'offensive_coordinator'), dc = F.staffMember(f, 'defensive_coordinator');
       const grid = (s) => `<div class="play-grid">${F.catalog(f, s).map((id) => `<button class="card ${f.week.plan[s].includes(id) ? 'selected' : ''}" data-action="open" data-id="${id}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
-      return `<div class="row between"><h3 style="margin:0">Offense · ${esc(oc?.style || '')}</h3><button class="btn small" data-action="plan">Edit game plan</button></div>${grid('offense')}${legendHtml('offense')}
+      return `<div class="row between"><h3 style="margin:0">Offense · ${esc(oc?.style || '')}</h3>${f.season.day === 4 ? '<button class="btn small" data-action="plan">Set game plan</button>' : '<span class="dim">Game plan is set on Fridays</span>'}</div>${grid('offense')}${legendHtml('offense')}
         <h3>Defense · ${esc(dc?.style || '')}</h3>${grid('defense')}${legendHtml('defense')}<p class="dim">Highlighted cards are in this week's game plan. Custom play creation is a future feature.</p>`;
     },
     mount(root) { delegate(root, { open: (el) => Router.go('playdetail', { id: el.dataset.id }), plan: () => Router.go('gameplan') }); },

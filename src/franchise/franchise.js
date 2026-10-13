@@ -198,6 +198,7 @@ export function scoutRegion(f, regionName) {
     const position = r.pick(['QB', 'RB', 'WR', 'WR', 'TE', 'OL', 'OL', 'DL', 'LB', 'CB', 'CB', 'S', 'K']);
     const quality = 52 + r.int(12) + (skill >= 80 ? 3 : 0);
     const m = generateMonster(r, { position, quality, type: r.pick(region.types) });
+    uniqueName(f, m, prospects.map((p) => p.monster.name));
     const revealed = skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1;
     prospects.push({ monster: m, revealed, natureKnown: skill >= 70, potentialKnown: skill >= 55 });
   }
@@ -210,6 +211,14 @@ export const RECRUIT_APPROACHES = Object.freeze([
   { id: 'facilities', label: 'Showcase facilities', text: 'Show off the training complex.', weight: { strong: 0.2 } },
   { id: 'playing_time', label: 'Promise playing time', text: 'A starting role, right away.', weight: { need: 0.3 } },
 ]);
+/** No two monsters on one club share a display name (the species name gets a numeral). */
+export function uniqueName(f, m, extra = []) {
+  const taken = new Set([...f.roster.map((x) => x.name), ...extra]);
+  if (!taken.has(m.name)) return m;
+  const roman = ['II', 'III', 'IV', 'V', 'VI'];
+  for (const n of roman) { const cand = `${m.species} ${n}`; if (!taken.has(cand)) { m.name = cand; return m; } }
+  m.name = `${m.species} ${f.roster.length + 1}`; return m;
+}
 export function recruit(f, prospectIndex, approachId) {
   if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
   const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };

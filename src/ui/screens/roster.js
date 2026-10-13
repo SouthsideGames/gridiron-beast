@@ -3,7 +3,7 @@
 
 import { esc, delegate, toast, sheet, confirmSheet, fmtMoney } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
-import { OFFENSE_SLOTS, DEFENSE_SLOTS, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
+import { OFFENSE_SLOTS, DEFENSE_SLOTS, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS, PACKAGE_SLOT_USE, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
 import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes } from '../../data/monsters.js';
 import { buildDepthChart } from '../../franchise/roster.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
@@ -27,14 +27,17 @@ export function registerRosterScreens(Router, app) {
     render({ f }) {
       const chart = buildDepthChart(f.roster, f.lineupManual);
       const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
-      const rows = side === 'offense' ? [['WR1', 'LG', 'C', 'RG', 'WR2'], ['WR3', 'QB', 'TE'], ['RB']] : [['DL1', 'DL3', 'DL2'], ['LB1', 'LB2'], ['CB1', 'FS', 'SS', 'CB2']];
+      const rows = side === 'offense' ? [['WR1', 'LG', 'RG', 'TE', 'WR2'], ['QB'], ['RB']] : [['DL1', 'DL2'], ['LB1', 'LB2'], ['CB1', 'FS', 'CB2']];
+      const pkgRow = side === 'offense' ? OFFENSE_PACKAGE_SLOTS : DEFENSE_PACKAGE_SLOTS;
       const slot = (s) => { const m = byId[chart[s]]; const sec = m && positionOf(s) !== m.position; return `<button class="slot ${m?.injury ? 'injured' : ''} ${sec ? 'secondary' : ''}" data-action="slot" data-slot="${s}" aria-label="${s}: ${m ? esc(m.name) : 'empty'}"><span class="pos">${s}</span>${m ? monsterSprite(m, 30) : '<span style="height:30px"></span>'}<span class="nm">${m ? esc(m.name) : 'EMPTY'}</span><span class="ov">${m ? monsterOverall(m, { slotPosition: positionOf(s) }) : '—'}${sec ? '*' : ''}</span></button>`; };
       const starters = new Set(Object.values(chart));
       const reserves = f.roster.filter((m) => !starters.has(m.id)).sort((a, b) => monsterOverall(b) - monsterOverall(a));
       const cap = F.salarySummary(f);
       return `<div class="row between" style="margin-bottom:8px"><div class="row"><button class="btn small ${side === 'offense' ? 'primary' : ''}" data-action="side" data-v="offense">Offense</button><button class="btn small ${side === 'defense' ? 'primary' : ''}" data-action="side" data-v="defense">Defense</button></div><span class="chip">${f.roster.length}/26 · ${fmtMoney(cap.remaining)} room</span></div>
         <div class="depth" style="margin-bottom:12px">${rows.map((r) => `<div class="depth-row" style="grid-template-columns:repeat(${r.length},1fr)">${r.map(slot).join('')}</div>`).join('')}</div>
-        <p class="dim">Tap a slot to change the starter. * = playing out of position (−10%). Slots in the two-WR/RB packages rotate automatically by play.</p>
+        <p class="dim">Your seven starters. Tap a slot to change the starter. * = playing out of position (−10%).</p>
+        <h3>Package slots</h3><div class="depth" style="margin-bottom:4px"><div class="depth-row" style="grid-template-columns:repeat(${pkgRow.length},1fr)">${pkgRow.map(slot).join('')}</div></div>
+        <p class="dim">${pkgRow.map((s) => `<b>${s}</b> comes in for ${PACKAGE_SLOT_USE[s]} plays`).join(' · ')}, replacing a starter for that snap.</p>
         <h3>Reserves & specialists (${reserves.length})</h3><div class="list">${reserves.map((m) => monsterRow(m, chart)).join('') || '<p class="dim">No reserves.</p>'}</div>
         <div class="grid2" style="margin-top:12px"><button class="btn block" data-action="go" data-screen="contracts">💰 Contracts</button><button class="btn block" data-action="go" data-screen="staff">👥 Staff</button></div>`;
     },

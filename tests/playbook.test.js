@@ -22,7 +22,7 @@ test('every play fields exactly seven players with an assignment and alignment e
 test('offensive plays have three linemen and exactly one primary route on pass plays', () => {
   for (const id of OFFENSE_IDS) {
     const p = PLAYS[id];
-    assert.ok(LINEMEN.every((s) => p.onField.includes(s)), p.name);
+    assert.ok(['LG', 'RG'].every((s) => p.onField.includes(s)), p.name);
     if (p.type === 'pass') {
       const routes = eligibleReceivers(p).filter((s) => p.assignments[s].a === 'route');
       assert.ok(routes.includes(p.primary), `${p.name} primary`);

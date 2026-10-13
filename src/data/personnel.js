@@ -1,15 +1,24 @@
 // 7-on-7 personnel packages and depth-chart slots (GDD §2).
 
-export const OFFENSE_SLOTS = ['QB', 'RB', 'WR1', 'WR2', 'WR3', 'TE', 'LG', 'C', 'RG'];
-export const DEFENSE_SLOTS = ['DL1', 'DL2', 'DL3', 'LB1', 'LB2', 'CB1', 'CB2', 'FS', 'SS'];
+/** Depth chart. The seven base starters per side are what the owner manages; package slots rotate in for specific personnel groupings. */
+export const OFFENSE_BASE = ['QB', 'RB', 'WR1', 'WR2', 'TE', 'LG', 'RG'];
+export const OFFENSE_PACKAGE_SLOTS = ['WR3', 'C'];
+export const OFFENSE_SLOTS = [...OFFENSE_BASE, ...OFFENSE_PACKAGE_SLOTS];
+export const DEFENSE_BASE = ['DL1', 'DL2', 'LB1', 'LB2', 'CB1', 'CB2', 'FS'];
+export const DEFENSE_PACKAGE_SLOTS = ['DL3', 'SS'];
+export const DEFENSE_SLOTS = [...DEFENSE_BASE, ...DEFENSE_PACKAGE_SLOTS];
+/** Every lineman slot (position group OL). Only LG and RG are on the field in every package; C joins in tight sets. */
 export const LINEMEN = ['LG', 'C', 'RG'];
+export const BASE_LINEMEN = ['LG', 'RG'];
 export const SKILL_SLOTS = ['RB', 'WR1', 'WR2', 'WR3', 'TE'];
+/** Which package slot each grouping brings in (for roster labels). */
+export const PACKAGE_SLOT_USE = Object.freeze({ WR3: 'Spread', C: 'Tight', DL3: 'Heavy & Pressure', SS: 'Nickel' });
 
-/** Offensive packages: which three skill slots join QB + 3 OL. */
+/** Offensive packages: QB + two linemen + four others. */
 export const OFFENSE_PACKAGES = Object.freeze({
-  pro: { label: 'Pro', skill: ['RB', 'WR1', 'WR2'] },
-  spread: { label: 'Spread', skill: ['WR1', 'WR2', 'WR3'] },
-  tight: { label: 'Tight', skill: ['RB', 'TE', 'WR1'] },
+  pro: { label: 'Pro', skill: ['RB', 'WR1', 'WR2', 'TE'] },
+  spread: { label: 'Spread', skill: ['RB', 'WR1', 'WR2', 'WR3'] },
+  tight: { label: 'Tight', skill: ['C', 'RB', 'TE', 'WR1'] },
 });
 
 /** Defensive packages: the seven slots on the field. */
@@ -23,7 +32,7 @@ export const DEFENSE_PACKAGES = Object.freeze({
 export function offenseOnField(pkg) {
   const p = OFFENSE_PACKAGES[pkg];
   if (!p) throw new Error(`Unknown offensive package ${pkg}`);
-  return ['QB', ...LINEMEN, ...p.skill];
+  return ['QB', ...BASE_LINEMEN, ...p.skill];
 }
 
 export function defenseOnField(pkg) {
