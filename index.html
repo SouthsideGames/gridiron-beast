@@ -266,7 +266,7 @@ function finishTry(type){
   if(t<1){requestAnimationFrame(animate);return}
   matchAnimating=false;const points=success?(type==='kick'?1:2):0;
   if(home)g.home+=points;else g.away+=points;
-  g.phase='kickoff';g.kickReceiving=home?'away':'home';g.ball=25;g.down=1;g.toGo=10;
+  g.phase='kickoff';g.kickReceiving=home?'away':'home';g.possession=g.kickReceiving;g.ball=25;g.down=1;g.toGo=10;
   const periodEnd=g.time===0?finishQuarter(g):'';
   matchEvent((home?'Your team':'Visitors')+' '+(type==='kick'?'extra-point kick':'two-point conversion')+(success?' succeeds (+'+points+').':' fails.')+(g.finished?' Final whistle.':periodEnd||' Kickoff follows.'),true);
   draw();save()};
