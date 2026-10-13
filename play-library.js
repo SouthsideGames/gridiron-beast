@@ -106,7 +106,7 @@ for(const p of Object.values(plays)){
 // Reviewed Cover Three: 4-2-5 nickel, three deep thirds and two flats.
 {
  const p=plays['Cover Three'];
- const positions={DE1:[215,78],DT1:[215,108],DT2:[215,153],DE2:[215,182],LB1:[285,105],LB2:[285,155],CB1:[224,28],CB2:[224,234],N:[300,190],FS:[405,130],SS:[350,75]};
+ const positions={DE1:[215,78],DT1:[215,108],DT2:[215,153],DE2:[215,182],LB1:[285,105],LB2:[285,155],CB1:[224,28],CB2:[224,234],CB3:[224,190],FS:[405,130],SS:[350,75]};
  const a={},zone=(id,x,y,rx,ry)=>a[id]={action:'zone',points:[positions[id],[x,y]],zone:{x,y,rx,ry}};
  for(const id of ['DE1','DT1','DT2','DE2'])a[id]={action:'rush',points:[positions[id],[155,130]]};
  zone('CB1',455,42,44,37);zone('FS',455,130,44,37);zone('CB2',455,218,44,37);
