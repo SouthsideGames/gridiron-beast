@@ -377,9 +377,30 @@ else if(sim.result==='incomplete'){g.down++}
 else{g.ball=Math.max(1,g.ball+sim.yards);if(g.ball>=100){if(attackingHome)g.home+=6;else g.away+=6;msg+=' TOUCHDOWN! +6. Conversion attempt follows.';important=true;g.phase='try';g.tryTeam=attackingHome?'home':'away';g.ball=98;g.down=1;g.toGo=2}else if(sim.yards>=g.toGo){g.down=1;g.toGo=10}else{g.toGo=Math.max(1,g.toGo-sim.yards);g.down++}}
 if(g.phase!=='try'&&g.down>4){msg+=' TURNOVER ON DOWNS.';important=true;changePossession(g)}
 if(g.phase!=='try')msg+=finishQuarter(g);return {msg,important}}
-function simulateToKeyMoment(){const g=game();if(!g||g.finished||paused||logOpen||matchAnimating||awaitingNextSnap||g.phase==='kickoff'||g.phase==='try')return;let steps=0,important=false,lastMsg='';const initialQ=g.q;while(steps<16&&!g.finished){const home=g.possession==='home',off=weekState().offensivePlan||teamPlayNames('offense'),defs=weekState().defensivePlan||teamPlayNames('defense');const play=home?off[Math.floor(Math.random()*off.length)]:(Math.random()<.5?'Inside Zone':'Quick Pass');const def=home?['Cover Two','Man Lock','Cover Three'][Math.floor(Math.random()*3)]:defs[Math.floor(Math.random()*defs.length)];const sim=GridironEngine.simulate(play,def,Math.floor(Math.random()*2147483647)+1,home?practiceRatings():{}, {awareness:home?(footballSlot('QB')?.ovr||65):67,rbAwareness:home?(footballSlot('RB')?.effectiveStats?.awareness??footballSlot('RB')?.stats?.awareness??footballSlot('RB')?.ovr??65):65});const result=applyMatchOutcome(g,sim,home);matchEvent((home?'YOUR OFFENSE: ':'YOUR DEFENSE: ')+result.msg,result.important);steps++;lastMsg=result.msg;important=result.important;if(important||g.phase==='kickoff'||g.phase==='try'||g.q!==initialQ||g.down>=3||g.ball>=80||g.finished)break}awaitingNextSnap=!g.finished;$('postplay').classList.toggle('hidden',g.finished);$('postplaytext').textContent='Simulated '+steps+' play'+(steps===1?'':'s')+' to next key moment. '+lastMsg;draw();save()}
+function simulateToKeyMoment(){const g=game();if(!g||g.finished||paused||logOpen||matchAnimating||awaitingNextSnap||g.phase==='kickoff'||g.phase==='try')return;let steps=0,important=false,lastMsg='';const initialQ=g.q;while(steps<16&&!g.finished){const fourth=opponentFourthDownChoice(g);if(fourth!=='go'){opponentFourthDownKick(g,fourth);steps++;break}const home=g.possession==='home',off=weekState().offensivePlan||teamPlayNames('offense'),defs=weekState().defensivePlan||teamPlayNames('defense');const play=home?off[Math.floor(Math.random()*off.length)]:(Math.random()<.5?'Inside Zone':'Quick Pass');const def=home?['Cover Two','Man Lock','Cover Three'][Math.floor(Math.random()*3)]:defs[Math.floor(Math.random()*defs.length)];const sim=GridironEngine.simulate(play,def,Math.floor(Math.random()*2147483647)+1,home?practiceRatings():{}, {awareness:home?(footballSlot('QB')?.ovr||65):67,rbAwareness:home?(footballSlot('RB')?.effectiveStats?.awareness??footballSlot('RB')?.stats?.awareness??footballSlot('RB')?.ovr??65):65});const result=applyMatchOutcome(g,sim,home);matchEvent((home?'YOUR OFFENSE: ':'YOUR DEFENSE: ')+result.msg,result.important);steps++;lastMsg=result.msg;important=result.important;if(important||g.phase==='kickoff'||g.phase==='try'||g.q!==initialQ||g.down>=3||g.ball>=80||g.finished)break}awaitingNextSnap=!g.finished;$('postplay').classList.toggle('hidden',g.finished);$('postplaytext').textContent='Simulated '+steps+' play'+(steps===1?'':'s')+' to next key moment. '+lastMsg;draw();save()}
+function opponentFourthDownChoice(g){
+ if(g.possession!=='away'||g.down!==4||g.phase!=='scrimmage')return 'go';
+ const deficit=g.home-g.away,late=g.q===4,seconds=late?g.time:999,yard=g.ball,need=g.toGo;
+ if(late&&deficit>0&&seconds<=65)return 'go';
+ if(yard<45)return 'punt';
+ if(yard>=65&&need>2)return 'fieldgoal';
+ if(yard>=48&&need<=1)return 'go';
+ if(late&&deficit>0&&seconds<=150&&yard>=45&&need<=7)return 'go';
+ if(yard>=60&&need<=2)return 'go';
+ return yard>=62?'fieldgoal':'punt';
+}
+function opponentFourthDownKick(g,choice){
+ const startBall=g.ball,need=g.toGo;let msg='',important=false;
+ if(choice==='fieldgoal'){
+  const distance=117-startBall,chance=Math.max(.06,Math.min(.96,.83-Math.max(0,distance-30)*.022));
+  if(Math.random()<chance){g.away+=3;g.phase='kickoff';g.kickReceiving='home';g.possession='home';g.ball=25;g.down=1;g.toGo=10;msg='Opponent field goal GOOD from '+distance+' yards. Kickoff follows.';important=true}
+  else{changePossession(g);msg='Opponent misses a '+distance+'-yard field goal.'}
+ }else{changePossession(g);g.ball=Math.max(5,Math.min(45,Math.round(35+(Math.random()-.5)*20)));msg='Opponent punts on 4th & '+need+' from its '+startBall+'-yard line. Your offense takes over at the '+g.ball+'.'}
+ g.time=Math.max(0,g.time-9);g.playClock=40;msg+=finishQuarter(g);
+ matchEvent(msg,important);awaitingNextSnap=!g.finished;$('postplay').classList.toggle('hidden',g.finished);$('postplaytext').textContent=msg;draw();save();
+}
 function snap(auto=false){if(!canPlayUnderCap())return;const g=game();if(!g||g.finished||paused||logOpen||matchAnimating||awaitingNextSnap||g.phase==='kickoff'||g.phase==='try')return;
-if($('mode').value==='key'&&!auto){simulateToKeyMoment();return}const home=g.possession==='home',offensiveChoices=weekState().offensivePlan||teamPlayNames('offense'),defensiveChoices=weekState().defensivePlan||teamPlayNames('defense');
+if($('mode').value==='key'&&!auto){simulateToKeyMoment();return}const decision=opponentFourthDownChoice(g);if(decision!=='go'){opponentFourthDownKick(g,decision);return}const home=g.possession==='home',offensiveChoices=weekState().offensivePlan||teamPlayNames('offense'),defensiveChoices=weekState().defensivePlan||teamPlayNames('defense');
 const pending=presnapPlays(g);const play=auto&&home?gamePlanPlays('offense')[Math.floor(Math.random()*gamePlanPlays('offense').length)]:pending.offense;
 const defense=auto&&!home?gamePlanPlays('defense')[Math.floor(Math.random()*gamePlanPlays('defense').length)]:pending.defense;presnapCall=null;
 const snapSpot=Math.max(80,Math.min(510,(driveDirection(g)==='right'?50+g.ball*5:550-g.ball*5))),snapSign=driveDirection(g)==='right'?1:-1;const sim=GridironEngine.simulate(play,defense,Math.floor(Math.random()*2147483647)+1,home?practiceRatings():{}, {flip:!!$('matchflip')?.checked,awareness:home?(footballSlot('QB')?.effectiveStats?.awareness??footballSlot('QB')?.stats?.awareness??footballSlot('QB')?.ovr??65):67,rbAwareness:home?(footballSlot('RB')?.effectiveStats?.awareness??footballSlot('RB')?.stats?.awareness??footballSlot('RB')?.ovr??65):65});
