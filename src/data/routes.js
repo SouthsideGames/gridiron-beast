@@ -77,5 +77,5 @@ export const ZONES = Object.freeze({
 /** Rush lanes: where the rusher attacks first before pursuing the QB. */
 export const GAPS = Object.freeze({
   A_L: [-1, -0.9], A_R: [-1, 0.9], B_L: [-1.5, -2.6], B_R: [-1.5, 2.6],
-  edge_L: [-3, -5], edge_R: [-3, 5], contain_L: [-5, -7], contain_R: [-5, 7],
+  edge_L: [-2.2, -3.6], edge_R: [-2.2, 3.6], contain_L: [-4.5, -6.5], contain_R: [-4.5, 6.5],
 });

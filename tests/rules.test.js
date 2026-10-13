@@ -180,7 +180,7 @@ test('the runner honours the human side\'s choices', () => {
   assert.equal(s.phase, 'scrimmage'); assert.equal(s.possession, 'home');
   const ev = step(s, teams, controllers, tend, { offensePlayId: 'quick_slants', tempo: 'hurry' });
   assert.equal(ev.kind, 'play'); assert.equal(ev.offensePlayId, 'quick_slants');
-  s.down = 4; s.toGo = 8; s.ballOn = 30;
+  Object.assign(s, { possession: 'home', phase: 'scrimmage', down: 4, toGo: 8, ballOn: 30 });
   const ev2 = step(s, teams, controllers, tend, { fourthDown: 'punt' });
   assert.equal(ev2.kind, 'punt'); assert.equal(s.possession, 'away');
 });

@@ -143,13 +143,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const goal = defenderGoal(d);
     const gx = goal.x - d.x, gy = goal.y - d.y, gd = Math.hypot(gx, gy) || 1;
     const runFit = phase === 'carry' || phase === 'run';
-    const push = clamp((runFit ? 0.2 : 0.55) + edge * 2.5, -0.5, 2.2); // yards/s the defender gains
+    const push = clamp((runFit ? 0.2 : 0.75) + edge * 2.5, -0.5, 2.4); // yards/s the defender gains
     d.x += (gx / gd) * push * DT; d.y += (gy / gd) * push * DT;
     blocker.x = d.x + (gx / gd) * 0.9; blocker.y = d.y + (gy / gd) * 0.9;
     blocker.vx = d.vx = 0; blocker.vy = d.vy = 0;
-    const shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.46) + edge * 1.6, 0.06, 2.2);
+    const shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.58) + edge * 1.6, 0.06, 2.2);
     if (rng.chance(shedPerSec * DT)) {
-      blocker.engaged = null; d.engaged = null; blocker.stun = 0.45; d.noEngage = 0.5;
+      blocker.engaged = null; d.engaged = null; blocker.stun = 0.45; d.noEngage = runFit ? 0.5 : 0.85; // a beaten pass blocker cannot recover at once
       log(`${d.name} sheds ${blocker.name}`, { kind: 'shed', by: d.slot });
     }
   }
@@ -282,6 +282,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const threats = defs.filter((d) => !d.engaged && d.stun <= 0 && ['rush', 'contain'].includes(d.assignment.a) || (!d.engaged && d.x < 2 && d.recognisedPass))
       .map((d) => ({ d, score: dist(d, qb) + Math.abs(d.y - zoneY) * 0.9 })).sort((p, q) => p.score - q.score);
     const threat = threats[0]?.d;
+    // Any rusher who runs into the blocker gets engaged, not only the one he is tracking.
+    const contact = defs.filter((d) => !d.engaged && d.stun <= 0 && d.noEngage <= 0 && dist(d, a) < 1.3).sort((p, q) => dist(p, qb) - dist(q, qb))[0];
+    if (contact && tryEngage(a, contact)) return;
     if (threat && dist(threat, qb) < 8) {
       // Stay between the rusher and the QB.
       const bx = (threat.x + qb.x) / 2, by = (threat.y + qb.y) / 2;
@@ -363,10 +366,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     const dropTime = DROP_TIME[offensePlay.drop] ?? 1.1;
     const hold = asg.hold || 0;
-    const nearestRusher = defs.filter((d) => d.stun <= 0).map((d) => dist(d, a) + (d.engaged ? 1.2 : 0)).sort((p, q) => p - q)[0] ?? 99;
-    const pressured = nearestRusher < 2.8;
+    if (a.windup) { if (t >= a.windup.at) throwTo(a, a.windup.r, a.windup.pressured); return; }
+    const nearestRusher = defs.filter((d) => d.stun <= 0 && !d.engaged).map((d) => dist(d, a)).sort((p, q) => p - q)[0] ?? 99;
+    const pressured = nearestRusher < 3.2;
     if (pressured && pressureAt === Infinity) { pressureAt = t; stats.pressure = true; }
-    if (t < Math.max(dropTime + 0.2, hold)) return; // set the feet first / let a screen develop
+    const readyAt = pressured ? dropTime * (1.0 - 0.35 * norm(a.attrs.awareness)) : dropTime + 0.2; // an aware passer throws hot sooner
+    if (t < Math.max(readyAt, hold)) return; // set the feet first / let a screen develop
     // Reading: step through the progression at a pace set by awareness.
     readClock -= DT;
     const scanPace = 0.42 - 0.26 * norm(a.attrs.awareness);
@@ -375,17 +380,25 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const judgeNoise = 1.3 * (1 - norm(a.attrs.awareness)) + 0.15;
     const openness = (r) => { const o = projectedSeparation(a, r); return o < 0 ? o : o + rng.normal() * judgeNoise; };
     const threshold = (pressured ? 2.1 : 2.9) - 0.6 * norm(a.attrs.awareness);
+    // A route has to develop before it is thrown (except quick game and hot throws).
+    const QUICK = new Set(['slant', 'flat', 'screen', 'bubble', 'hitch', 'stick', 'swing', 'drag', 'shallow']);
+    const ready = (r) => pressured || r.assignment.a !== 'route' || QUICK.has(r.assignment.r) || r.wp >= Math.min(2, r.assignment.points.length - 1) || (r.x > 9 && r.wp >= 1);
     const candidate = bySlot.off[progression[Math.min(readIndex, progression.length - 1)]];
-    if (candidate && openness(candidate) >= threshold) { throwTo(a, candidate, pressured); return; }
+    if (candidate && ready(candidate) && openness(candidate) >= threshold) { throwTo(a, candidate, pressured); return; }
     if (readClock <= 0) { readClock = scanPace; readIndex += 1; }
     if (readIndex >= progression.length) {
       // Progression exhausted: best available, scramble, or wait briefly.
-      const ranked = receivers.map((s) => bySlot.off[s]).filter((r) => r && r.assignment.a === 'route').map((r) => ({ r, o: openness(r) })).sort((p, q) => q.o - p.o);
+      const ranked = receivers.map((s) => bySlot.off[s]).filter((r) => r && r.assignment.a === 'route' && ready(r)).map((r) => ({ r, o: openness(r) })).sort((p, q) => q.o - p.o);
       const best = ranked[0];
       const judge = best ? best.o + (rng.normal() * (1 - norm(a.attrs.awareness)) * 0.8) : -1;
-      if (best && judge >= (pressured ? 1.2 : 1.8)) { throwTo(a, best.r, pressured); return; }
-      if (pressured && !scrambled && norm(a.attrs.agility) > 0.45 && rng.chance(0.5)) { scramble(a); return; }
-      if (t > dropTime + 2.6 || (pressured && t > dropTime + 1.2)) {
+      if (best && judge >= (pressured ? 1.0 : 1.8)) { throwTo(a, best.r, pressured); return; }
+      if (pressured) {
+        // Get rid of it if someone is reasonably open; otherwise scramble, throw it away, or eat the sack.
+        if (best && best.o >= 1.2 && rng.chance(0.5 + 0.35 * norm(a.attrs.awareness))) { throwTo(a, best.r, true); return; }
+        if (!scrambled && norm(a.attrs.agility) > 0.45 && rng.chance(0.3)) { scramble(a); return; }
+        if (rng.chance(0.12)) { throwAway(a); return; }
+      }
+      if (t > dropTime + 2.6) {
         if (best && best.o >= 0.8 && rng.chance(0.6)) { throwTo(a, best.r, pressured); return; }
         throwAway(a); return;
       }
@@ -430,6 +443,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     return nearest - (air > 15 ? 1.0 : 0) - Math.max(0, air - 25) * 0.05;
   }
   function throwTo(passer, r, pressured) {
+    // Wind-up: the ball leaves the hand a beat later; a rusher can still get home.
+    if (!passer.windup) { passer.windup = { r, pressured, at: t + 0.14 + 0.1 * (1 - norm(passer.attrs.arm)) }; return; }
+    passer.windup = null;
     const d = dist(passer, r);
     const velocity = 17 + 13 * norm(passer.attrs.arm);
     const travel = d / velocity + 0.1;
@@ -561,7 +577,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         if (threats.length && dist(d, { x: zx, y: zy }) < radius + 1) {
           const r = threats.sort((p, q) => (q.x - p.x))[0];
           const p = trailPosition(d, r);
-          if (asg.role === 'deep') steer(d, Math.max(p.x + 2.5, zx - 3), p.y, 0.95, 0.3); else steer(d, p.x + 0.5, p.y, 0.9, 0.3);
+          const antic = 0.15 + 0.25 * norm(d.attrs.coverage);
+          if (asg.role === 'deep') {
+            // Stay on top and keep inside leverage toward the zone centre; never abandon the zone.
+            const inward = Math.sign(zy - r.y) || (zy >= 0 ? 1 : -1);
+            const ty = clamp(p.y + r.vy * antic + inward * 1.2, zy - 10, zy + 10);
+            steer(d, Math.max(p.x + r.vx * antic + 2.0, zx - 3), ty, 0.98, 0.3);
+          } else steer(d, p.x + r.vx * antic * 0.5 + 0.5, p.y + r.vy * antic * 0.5, 0.9, 0.3);
           return;
         }
         steer(d, zx, zy, 0.95, 0.5); return;
@@ -611,7 +633,17 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function trySack(d) {
     if (d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false;
     const p = clamp(0.62 + 0.3 * norm(d.attrs.tackling) - 0.35 * norm(qb.attrs.agility), 0.25, 0.92);
-    if (rng.chance(p)) { stats.tackler = d.slot; endPlay('sack', qb.x, qb.y); log(`${d.name} sacks ${qb.name}`, { kind: 'sack', by: d.slot }); return true; }
+    if (rng.chance(p)) {
+      stats.tackler = d.slot;
+      if (qb.windup && rng.chance(0.25)) { // strip sack on the wind-up
+        const near = actors.filter((x) => dist(x, qb) < 2.5); const rec = near.length ? rng.pick(near) : d;
+        qb.windup = null; stats.forcedBy = d.slot;
+        log(`${d.name} strips ${qb.name} as he throws; ${rec.name} recovers`, { kind: 'fumble', by: d.slot, recoveredBy: rec.slot, team: rec.team });
+        if (rec.team === 'def') endPlay('fumble', qb.x, qb.y, { recoveredBy: 'def' }); else endPlay('sack', qb.x, qb.y, { fumbleRecovered: true });
+        return true;
+      }
+      qb.windup = null; endPlay('sack', qb.x, qb.y); log(`${d.name} sacks ${qb.name}`, { kind: 'sack', by: d.slot }); return true;
+    }
     d.stun = 0.7; d.noEngage = 0.3;
     if (!scrambled && rng.chance(0.6)) scramble(qb);
     log(`${qb.name} escapes ${d.name}`, { kind: 'escape' });
@@ -703,6 +735,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       else if (h.team === 'def' && h.x <= B.ownGoal) { endPlay('touchdown', h.x, h.y, { defensiveScore: true }); log(`${h.name} returns it all the way — TOUCHDOWN`, { kind: 'touchdown' }); }
       else if (h.team === 'off' && h.x <= B.ownEndLine + 0.2) { endPlay('safety', h.x, h.y); log('Carrier runs out of the back of the end zone — SAFETY', { kind: 'safety' }); }
     }
+    if (options.debugSlot) { const d = actors.find((a) => a.slot === options.debugSlot); if (d) log(`dbg ${d.slot} x=${d.x.toFixed(2)} y=${d.y.toFixed(2)} v=${Math.hypot(d.vx, d.vy).toFixed(2)} stun=${d.stun.toFixed(2)} eng=${d.engaged ? d.engaged.slot : '-'} st=${d.state} ne=${d.noEngage.toFixed(2)}`, { kind: 'debug' }); }
     if (tick % frameEvery === 0 || result) recordFrame();
   }
   if (!result) { result = 'guard'; log('Simulation guard reached', { kind: 'guard' }); }
