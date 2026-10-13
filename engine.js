@@ -35,7 +35,7 @@ return {play,defense,seed,frames,result,yards,events,holder,target:target?.id||n
 }
 function render(sim,i,options={}){
  const f=sim.frames[clamp(i,0,sim.frames.length-1)];
- const flip=y=>options.flip?260-y:y,dir=x=>options.direction==='left'?600-x:x;
+ const flip=y=>options.flip?260-y:y,dir=x=>options.fieldSpot!=null?options.fieldSpot+(options.fieldSign||1)*(x-185):options.direction==='left'?600-x:x;
  const safe=(v,min,max)=>clamp(v,min,max);
  let svg='<defs><clipPath id="gbPitchClip"><rect x="1" y="1" width="598" height="258"/></clipPath></defs>';
  svg+='<rect width="600" height="260" fill="#226647"/>';
