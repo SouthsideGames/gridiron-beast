@@ -103,6 +103,28 @@ for(const p of Object.values(plays)){
  // All 11 players must have one assignment, including dropped rushers.
  for(const [id,pos] of Object.entries(p.side==='offense'?offensePositions:defensePositions))if(!a[id])a[id]={action:'contain',points:[pos,[pos[0]+15,pos[1]]]};
 }
+// Reviewed Cover Three: 4-2-5 nickel, three deep thirds and two flats.
+{
+ const p=plays['Cover Three'];
+ const positions={DE1:[215,78],DT1:[215,108],DT2:[215,153],DE2:[215,182],LB1:[285,105],LB2:[285,155],CB1:[295,28],CB2:[295,234],N:[300,190],FS:[405,130],SS:[350,75]};
+ const a={},zone=(id,x,y,rx,ry)=>a[id]={action:'zone',points:[positions[id],[x,y]],zone:{x,y,rx,ry}};
+ for(const id of ['DE1','DT1','DT2','DE2'])a[id]={action:'rush',points:[positions[id],[155,130]]};
+ zone('CB1',455,42,44,37);zone('FS',455,130,44,37);zone('CB2',455,218,44,37);
+ zone('SS',305,53,34,30);zone('N',305,210,34,30);
+ zone('LB1',340,104,35,30);zone('LB2',340,156,35,30);
+ p.assignments=a;p.positions=positions;p.formation='4-2-5 Nickel / Cover 3';p.concept='cover3reviewed';
+}
+// Reviewed Cover Four: 3-4 front, four deep quarters and four underneath zones.
+{
+ const p=plays['Cover Four'];
+ const positions={DE1:[215,84],DT1:[215,130],DE2:[215,176],LB1:[278,57],LB2:[280,111],LB3:[280,151],LB4:[278,203],CB1:[295,28],CB2:[295,234],FS:[405,85],SS:[405,175]};
+ const a={},zone=(id,x,y,rx,ry)=>a[id]={action:'zone',points:[positions[id],[x,y]],zone:{x,y,rx,ry}};
+ for(const id of ['DE1','DT1','DE2'])a[id]={action:'rush',points:[positions[id],[155,130]]};
+ zone('CB1',450,35,37,29);zone('FS',460,94,37,29);zone('SS',460,166,37,29);zone('CB2',450,225,37,29);
+ zone('LB1',320,42,33,27);zone('LB4',320,218,33,27);
+ zone('LB2',345,104,33,28);zone('LB3',345,156,33,28);
+ p.assignments=a;p.positions=positions;p.formation='3-4 / Cover 4 Quarters';p.concept='cover4reviewed';
+}
 function diagram(name){const p=plays[name];if(!p)return '';let out='';for(const [id,a] of Object.entries(p.assignments)){const clampField=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));const pts=a.action==='man'&&a.target&&offensePositions[a.target]?[a.points[0],offensePositions[a.target]].map(([x,y])=>[clampField(x,13,587),clampField(y,13,247)]):a.points.map(([x,y])=>[clampField(x,13,587),clampField(y,13,247)]);if(a.action==='zone'){const z=a.zone,rx=Math.min(z.rx,285),ry=Math.min(z.ry,117),zx=clampField(z.x,13+rx,587-rx),zy=clampField(z.y,13+ry,247-ry);out+='<ellipse cx="'+zx+'" cy="'+zy+'" rx="'+rx+'" ry="'+ry+'" fill="#2889db" fill-opacity=".2" stroke="#72c8ff" stroke-dasharray="5 4" stroke-width="2"/>';continue}const color=a.action==='rush'?'#ff9468':a.action==='man'?'#f4e596':a.action.includes('block')?'#a2ddff':'#f4d067';out+='<polyline points="'+pts.map(v=>v.join(',')).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" '+(a.action==='man'?'stroke-dasharray="1 7" stroke-width="3.5"':'')+'/>';const tail=pts.at(-1),prev=pts.at(-2);if(tail&&prev&&a.action!=='man'){const angle=Math.atan2(tail[1]-prev[1],tail[0]-prev[0]);out+='<path d="M'+tail[0]+' '+tail[1]+' l'+(-10*Math.cos(angle-.45))+' '+(-10*Math.sin(angle-.45))+' l'+(10*Math.cos(angle+.45)-10*Math.cos(angle-.45))+' '+(10*Math.sin(angle+.45)-10*Math.sin(angle-.45))+' Z" fill="'+color+'"/>'}}return out}
 return {plays,offensePositions,defensePositions,diagram,count:Object.keys(plays).length};
 })();
