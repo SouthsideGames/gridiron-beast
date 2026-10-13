@@ -162,11 +162,23 @@ for(const p of Object.values(plays)){
  p.assignments.QB={action:'carry',points:[[135,130],[121,130],[185,130],[280,130]],lane:130};
  p.assignments.RB={action:'run_block',points:[[105,147],[155,147],[215,151]]};
 }
+// Audited RB screen: WR3 opposite side, center and guards release to lead RB.
+{
+ const p=plays['Screen Pass'];
+ p.positions={...offensePositions,WR3:[137,220]};
+ p.primaryReceiver='RB';p.screenTarget='RB';p.screenDelay=1.75;
+ p.assignments.QB={action:'pass_read',points:[[135,130],[121,130]]};
+ p.assignments.C={action:'screen_block',points:[[185,130],[215,150],[270,165]]};
+ p.assignments.LG={action:'screen_block',points:[[185,104],[220,140],[285,152]]};
+ p.assignments.RG={action:'screen_block',points:[[185,156],[230,160],[295,175]]};
+ p.assignments.RB={action:'route',route:'screen',points:[[105,147],[130,183],[198,192],[255,188]],read:'primary'};
+ p.assignments.WR3={action:'route',route:'streak',points:[[137,220],[200,220],[300,215]]};
+}
 // Every pass concept has exactly one designated first read; other routes remain secondary.
 for(const p of Object.values(plays)){
  if(p.side!=='offense'||p.kind!=='pass')continue;
  const eligible=['TE','WR1','WR2','WR3','RB'].filter(id=>p.assignments[id]?.action==='route');
- p.primaryReceiver=(p.name==='TE Seam'&&eligible.includes('TE'))?'TE':eligible.includes('WR1')?'WR1':eligible[0]||null;
+ p.primaryReceiver=p.screenTarget||((p.name==='TE Seam'&&eligible.includes('TE'))?'TE':eligible.includes('WR1')?'WR1':eligible[0]||null);
  for(const [id,a] of Object.entries(p.assignments)){
   if(a.action==='route')a.read=id===p.primaryReceiver?'primary':'secondary';
  }
