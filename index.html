@@ -236,7 +236,7 @@ function syncPracticeCatalog(){for(const [id,side] of [['practiceplay','offense'
 function render(){const g=game();if(state.coach?.team)renderBudget();$('typegrid').innerHTML=monsterTypes.map(t=>'<div class="panel"><div style="font-size:28px">'+t[1]+'</div><strong>'+t[0]+'</strong><p class="muted">'+t[2]+'</p></div>').join('');renderWeek();renderStaffRoom();renderTutorial();$('hqname').textContent=((state.coach.team||'Your Team').replace(/ \([^)]*\)$/,''))+' — Headquarters';$('hqcoach').textContent='Owner: '+(state.coach.first||'New')+' '+(state.coach.last||'Owner')+' · Level 1';$('playbooktitle').textContent=playSide==='offense'?'Offensive Playbook':'Defensive Playbook';$('existingplays').innerHTML=visualPlayGrid(teamPlayNames(playSide).map(name=>({name,route:GridironPlays.plays[name]?.formation||''})),playSide==='defense');$('call').innerHTML=(weekState().offensivePlan||teamPlayNames('offense')).map((n,i)=>'<option value="'+i+'">'+escapeHtml(n)+'</option>').join('');$('playlist').innerHTML=state.plays.map((p,i)=>'<p>'+escapeHtml(p.name)+' · '+escapeHtml(p.type)+' · '+escapeHtml(p.route||'')+'</p>').join('');if(state.coach?.team&&(state.franchise?.starterOffense||screen==='roster'))renderDepthChart();$('reviewlist').innerHTML=features.map((f,i)=>'<div style="border-bottom:1px solid #40525a;padding:9px 0"><b>'+f+'</b><select data-review="'+i+'"><option value="">Not reviewed</option><option value="keep">✓ Keep</option><option value="rework">○ Rework</option><option value="remove">✕ Remove</option></select><input data-note="'+i+'" placeholder="Notes"></div>').join('');document.querySelectorAll('[data-review]').forEach(el=>el.value=state.reviews[el.dataset.review]?.decision||'');document.querySelectorAll('[data-note]').forEach(el=>el.value=state.reviews[el.dataset.note]?.note||'');if(g){draw();renderMatchLog()} }
 function renderSpecialPhase(g){
  const el=$('specialphase');if(!el)return;
- const isKick=g.phase==='kickoff',isTry=g.phase==='try';el.classList.toggle('hidden',(!isKick&&!isTry)||awaitingNextSnap);
+ const isKick=g.phase==='kickoff'&&!g.finished,isTry=g.phase==='try'&&!g.finished;el.classList.toggle('hidden',(!isKick&&!isTry)||awaitingNextSnap);
  $('snapbutton').disabled=isKick||isTry;
  if(!isKick&&!isTry)return;
  $('specialtitle').textContent=isKick?'🏈 Kickoff':'🏆 Touchdown — Conversion Attempt';
@@ -267,7 +267,8 @@ function finishTry(type){
   matchAnimating=false;const points=success?(type==='kick'?1:2):0;
   if(home)g.home+=points;else g.away+=points;
   g.phase='kickoff';g.kickReceiving=home?'away':'home';g.ball=25;g.down=1;g.toGo=10;
-  matchEvent((home?'Your team':'Visitors')+' '+(type==='kick'?'extra-point kick':'two-point conversion')+(success?' succeeds (+'+points+').':' fails.')+' Kickoff follows.',true);
+  const periodEnd=g.time===0?finishQuarter(g):'';
+  matchEvent((home?'Your team':'Visitors')+' '+(type==='kick'?'extra-point kick':'two-point conversion')+(success?' succeeds (+'+points+').':' fails.')+(g.finished?' Final whistle.':periodEnd||' Kickoff follows.'),true);
   draw();save()};
  requestAnimationFrame(animate)
 }
@@ -292,7 +293,7 @@ if(sim.result==='interception'||sim.result==='fumble'){msg+=' TURNOVER!';importa
 else if(sim.result==='incomplete'){g.down++}
 else{g.ball=Math.max(1,g.ball+sim.yards);if(g.ball>=100){if(attackingHome)g.home+=6;else g.away+=6;msg+=' TOUCHDOWN! +6. Conversion attempt follows.';important=true;g.phase='try';g.tryTeam=attackingHome?'home':'away';g.ball=98;g.down=1;g.toGo=2}else if(sim.yards>=g.toGo){g.down=1;g.toGo=10}else{g.toGo=Math.max(1,g.toGo-sim.yards);g.down++}}
 if(g.phase!=='try'&&g.down>4){msg+=' TURNOVER ON DOWNS.';important=true;changePossession(g)}
-msg+=finishQuarter(g);return {msg,important}}
+if(g.phase!=='try')msg+=finishQuarter(g);return {msg,important}}
 function simulateToKeyMoment(){const g=game();if(!g||g.finished||paused||logOpen||matchAnimating||awaitingNextSnap||g.phase==='kickoff'||g.phase==='try')return;let steps=0,important=false,lastMsg='';const initialQ=g.q;while(steps<16&&!g.finished){const home=g.possession==='home',off=weekState().offensivePlan||teamPlayNames('offense'),defs=weekState().defensivePlan||teamPlayNames('defense');const play=home?off[Math.floor(Math.random()*off.length)]:(Math.random()<.5?'Inside Zone':'Quick Pass');const def=home?['Cover Two','Man Lock','Cover Three'][Math.floor(Math.random()*3)]:defs[Math.floor(Math.random()*defs.length)];const sim=GridironEngine.simulate(play,def,Math.floor(Math.random()*2147483647)+1,home?practiceRatings():{}, {awareness:home?(footballSlot('QB')?.ovr||65):67,rbAwareness:home?(footballSlot('RB')?.stats?.awareness||footballSlot('RB')?.ovr||65):65});const result=applyMatchOutcome(g,sim,home);matchEvent((home?'YOUR OFFENSE: ':'YOUR DEFENSE: ')+result.msg,result.important);steps++;lastMsg=result.msg;important=result.important;if(important||g.phase==='kickoff'||g.phase==='try'||g.q!==initialQ||g.down>=3||g.ball>=80||g.finished)break}awaitingNextSnap=!g.finished;$('postplay').classList.toggle('hidden',g.finished);$('postplaytext').textContent='Simulated '+steps+' play'+(steps===1?'':'s')+' to next key moment. '+lastMsg;draw();save()}
 function snap(auto=false){if(!canPlayUnderCap())return;const g=game();if(!g||g.finished||paused||logOpen||matchAnimating||awaitingNextSnap)return;
 if($('mode').value==='key'&&!auto){simulateToKeyMoment();return}const home=g.possession==='home',offensiveChoices=weekState().offensivePlan||teamPlayNames('offense'),defensiveChoices=weekState().defensivePlan||teamPlayNames('defense');
