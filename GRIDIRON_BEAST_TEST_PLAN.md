@@ -2,6 +2,10 @@
 
 All automated tests run with `npm test` (`node --test tests/`), no dependencies. UI responsiveness runs with `python3 tests/ui/responsive.py` (requires Playwright; dev-only). Every failing gameplay case is reproducible from its seed.
 
+## 0. Current status
+
+`npm test`: **40 tests, all passing** (≈45 s). `tests/ui/responsive.py`: **all checks pass** at 320×568, 375×667, 390×844 and 412×915, including a complete game played to the final whistle at 390×844.
+
 ## 1. Automated suites
 
 | Suite | File | What it proves |
@@ -22,7 +26,7 @@ All automated tests run with `npm test` (`node --test tests/`), no dependencies.
 | Coaching AI | `coach-ai.test.js` | 4th & long in own territory ⇒ punt; in range ⇒ FG; 4th & 1 at opp 40 ⇒ go; trailing by 4 late ⇒ go; 2-pt chart; kneel when leading at the end; hurry-up when trailing late |
 | Full games | `game.test.js` | 200 headless games complete, scores legal (no 1-point totals impossible), every game has a winner after OT, no stalled phase |
 | Franchise | `franchise.test.js` | Schedule matches golden vectors; season + playoffs complete; injuries respect durability; XP/levels; cap lock; legacy v5 save import preserves owner/team/staff/record |
-| UI smoke (DOM) | `ui/responsive.py` | At 320×568, 375×667, 390×844, 412×915: no horizontal overflow, match Snap visible above the fold, play grid is 3 columns × 2 rows, all buttons ≥ 44 px, no console errors navigating every screen |
+| UI smoke (DOM) | `ui/responsive.py` | At 320×568, 375×667, 390×844, 412×915: no horizontal overflow, match Snap visible above the fold, play grid is 3 columns × 2 rows, all buttons ≥ 44 px, no console errors through onboarding, every tab, the weekly loop, a game to the final whistle, practice, audit, settings and standings |
 
 ## 2. Manual checklist (device QA)
 
@@ -37,4 +41,4 @@ All automated tests run with `npm test` (`node --test tests/`), no dependencies.
 
 ## 3. Reproducing a bug
 
-Every play result stores `{seed, offensePlay, defensePlay, ballOn, ballY, down, toGo}`. The Play Log's "Copy repro" exports this; `node tests/tools/replay.js '<json>'` re-runs it and prints the event trace.
+Every scrimmage play in the in-game Play Log shows a repro code `offense|defense|ballOn|seed`. `node tests/tools/replay.js CODE` re-runs it with generated attributes and prints the event trace; add `--save export.json` (a Settings export) to replay with the franchise's actual starters.

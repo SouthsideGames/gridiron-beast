@@ -1,3 +1,5 @@
+> **Superseded (October 2026):** this document describes the v5.0 11-on-11 prototype now preserved under `legacy/`. The current design and status live in `GRIDIRON_BEAST_GDD.md`, `GRIDIRON_BEAST_AUDIT.md`, `GRIDIRON_BEAST_REBUILD_PLAN.md` and `GRIDIRON_BEAST_TEST_PLAN.md` at the repository root.
+
 > **Current prototype: HTML v5.0, 11-on-11.** Current approved financial rules and implementation are documented in Section 35. Earlier historical 7-on-7 statements are superseded; see the implementation register for remaining football engine limitations.
 
 > **Implementation update:** HTML v3.5 now has a 40-monster 11v11 roster model, two fixed starter selections, five staff hires, 22-position practice and match drawings, simplified XP/injuries, temporary training and kicking/punting. The match engine and playbook are still provisional; the migration is **PARTIAL**, not feature-complete. Older sections describing a hold were written before explicit implementation authorization and are superseded by Section 30.

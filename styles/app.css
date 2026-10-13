@@ -128,7 +128,7 @@ tr.me td { background: #2a3f16; }
 .situation b { color: var(--ink); font-size: 14px; }
 .field-wrap { position: relative; border: 3px solid #b8d7bb; border-radius: 4px; background: #236b49; overflow: hidden; margin-bottom: var(--s2); }
 .field-wrap svg { display: block; width: 100%; height: auto; }
-.field-banner { position: absolute; left: 8px; right: 8px; bottom: 8px; background: #0b1a14e6; border: 2px solid var(--line-2); border-radius: var(--r); padding: 8px 10px; font-size: 13px; }
+.field-banner { position: absolute; left: 8px; right: 8px; top: 8px; background: #0b1a14e6; border: 2px solid var(--line-2); border-radius: var(--r); padding: 8px 10px; font-size: 13px; }
 .field-banner.important { border-color: var(--accent); }
 .field-banner b { color: var(--accent); }
 .match-actions { display: grid; gap: 6px; margin-bottom: var(--s2); }

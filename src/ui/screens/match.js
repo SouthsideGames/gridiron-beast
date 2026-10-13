@@ -73,7 +73,7 @@ export function registerMatchScreens(Router, app) {
       const fieldInner = anim
         ? fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera })
         : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr });
-      const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? R.situationText(s) : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
+      const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
       const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''}" id="banner">${esc(G.lastEvent.text)}</div>` : '';
       return `
         <div class="scoreboard" aria-live="polite">
@@ -81,7 +81,7 @@ export function registerMatchScreens(Router, app) {
           <div class="mid"><b>${s.finished ? 'FINAL' : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}</div>
           <div class="team right"><span class="score">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
         </div>
-        <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(yardLabel(s.ballOn))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
+        <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
         <div class="field-wrap" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>
         <div id="controls">${controlsHtml(f, teams, look)}</div>`;
     },
@@ -117,6 +117,12 @@ export function registerMatchScreens(Router, app) {
   });
 
   // ------------------------------------------------------------ helpers
+  /** Ball spot from the player's point of view. */
+  function spotFor(ballOn, myBall) {
+    if (myBall) return yardLabel(ballOn);
+    if (ballOn === 50) return 'MIDFIELD';
+    return ballOn < 50 ? `THEIR ${ballOn}` : `YOUR ${100 - ballOn}`;
+  }
   function teamsFor(f) { const m = F.sundayMatchup(f); return { home: m.home, away: m.away }; }
 
   /** The AI's call for the current situation is fixed once per situation so the pre-snap look matches the snap. */
@@ -282,14 +288,14 @@ export function registerMatchScreens(Router, app) {
 
   function showLog(f) {
     const s = f.game?.state; if (!s) return;
-    sheet(`<div class="log">${s.log.slice().reverse().map((e) => `<div class="entry ${e.important ? 'important' : ''}"><span class="t">${R.quarterText({ quarter: e.q })} ${fmtClock(e.clock)}</span><span>${esc(e.text)}</span></div>`).join('')}</div>`, { title: 'Play-by-play' });
+    sheet(`<div class="log">${s.log.slice().reverse().map((e) => `<div class="entry ${e.important ? 'important' : ''}"><span class="t">${R.quarterText({ quarter: e.q })} ${fmtClock(e.clock)}</span><span>${esc(e.text)}${e.repro ? `<br><small class="dim mono">repro ${esc(e.repro)}</small>` : ''}</span></div>`).join('')}</div><p class="dim">A repro code replays that exact play: <span class="mono">node tests/tools/replay.js CODE</span>.</p>`, { title: 'Play-by-play' });
   }
 
   function finishGame(f) {
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
-    F.finishSunday(f, s); app.save();
-    const r = f.week.gameResult; const ev = f.week.events || [];
+    const r = F.finishSunday(f, s); app.save();
+    const ev = r.events || [];
     sheet(`<div class="center"><h2>${won ? '🏆 VICTORY' : 'DEFEAT'}</h2><div class="muted">${r.playerScore}–${r.oppScore} vs ${esc(r.opponent)}${r.ot ? ' (OT)' : ''}</div></div>${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured — ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: 'Final', onClose: () => Router.go('hq', {}, { reset: true }) });
   }
 

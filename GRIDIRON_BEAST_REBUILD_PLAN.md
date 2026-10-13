@@ -52,3 +52,22 @@ Rules: no gameplay logic in UI files; Practice, Key Moments, AI-vs-AI league gam
 * **Balance** of a from-scratch engine — mitigated by batch statistics tests with target bands.
 * **Scope** — the franchise loop is simplified to one action per day; trades/free agency/draft remain LATER as in the original GDD.
 * **Safari quirks** — CSS uses only widely supported features; Playwright WebKit run where available.
+
+## Status (end of first build pass)
+
+| Milestone | Status | Notes |
+|---|---|---|
+| M0 Docs & scaffolding | Done | legacy/ preserved and runnable |
+| M1 Football data | Done | 34 offensive / 18 defensive plays, 4 defensive packages, validator |
+| M2 Play engine | Done | 0 guard hits in 5,000+ seeds; balance bands enforced by tests |
+| M3 Rules, special teams, AI | Done | 200 headless games finish; OT, safeties, timeouts, kneel/spike |
+| M4 Franchise | Done | schedule matches v5 golden vectors; full season + playoffs in tests; legacy import |
+| M5 Mobile UI | Done | Playwright pass at 320/375/390/412 px incl. a complete game |
+| M6 QA & polish | In progress | see "Known gaps" |
+
+### Known gaps / next passes
+- **Balance:** sack rate in AI-vs-AI games is ~1.5–3% (target 5–7%); deep passes are still slightly too efficient; the AI calls runs ~17% of the time because passing is more efficient. All tunables live in `src/sim/engine.js` and `src/sim/coach-ai.js`.
+- **Promotion challenge match** is simplified to automatic promotion after the badge goal (GDD §8 keeps the single-game challenge as LATER).
+- **Opponent two-point and kickoff decisions** use the same AI as the player's suggestions; no distinct AI "personalities" beyond aggression/pass bias per club.
+- **Audio, penalties beyond delay of game, weather, trades/free agency/draft** remain LATER as scoped.
+- **Safari device QA** has not been run on physical hardware; the Playwright pass uses Chromium with mobile emulation.

@@ -279,7 +279,9 @@ export function finishSunday(f, gameState) {
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}–${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
   for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR).` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind);
   f.game = null;
+  f.lastGame = { ...f.week.gameResult, events, year: f.season.year, week: f.season.week };
   advanceWeek(f);
+  return f.lastGame;
 }
 export function takeBye(f) {
   if (!isBye(f) || f.season.day !== 6) return { ok: false };

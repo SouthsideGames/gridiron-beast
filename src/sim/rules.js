@@ -168,7 +168,7 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   if (!scored && state.clock <= 0) endOfPeriod(state);
   const text = lines.join(' ');
   state.lastPlay = { text, result: sim.result, yards: gain, offensePlayId, defensePlayId, seed: sim.seed, ballOn: sim.ballOn, stats: sim.stats };
-  log(state, text, 'play', { team: off, result: sim.result, yards: gain, important: !!scored || ['interception', 'fumble', 'touchback_return'].includes(sim.result) });
+  log(state, text, 'play', { team: off, result: sim.result, yards: gain, important: !!scored || ['interception', 'fumble', 'touchback_return'].includes(sim.result), repro: `${offensePlayId || '?'}|${defensePlayId || '?'}|${sim.ballOn}|${sim.seed}` });
   recordPlayerStats(state, sim, off, def);
   if (state.ot) otCheckAfterPlay(state);
   return { text, scored, result: sim.result, yards: gain };

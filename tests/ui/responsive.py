@@ -42,14 +42,27 @@ def tap_targets(page, label):
     small = page.evaluate('''() => Array.from(document.querySelectorAll('button:not(.ghost), .item, .card, .slot, .tab')).filter(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.height > 0 && (r.height < 44 && !b.classList.contains('small')) && !b.classList.contains('tab'); }).map(b => (b.className || b.tagName) + ':' + Math.round(b.getBoundingClientRect().height)).slice(0, 5)''')
     check(len(small) == 0, f'{label}: all primary buttons >= 44px tall {small}')
 
+def settle(page, want=None, limit=40):
+    """Advance the match through transient states (animation, kickoff, try, continue) until `want` is present or scrimmage controls appear."""
+    for _ in range(limit):
+        if want and page.query_selector(want): return True
+        if page.query_selector('.sheet'): page.click('[data-action="sheet-close"]'); page.wait_for_timeout(30); continue
+        for sel in ['[data-action="skip"]', '[data-action="continue"]', '[data-action="kickoff"]', '[data-action="trykick"]']:
+            b = page.query_selector(sel)
+            if b: b.click(); page.wait_for_timeout(80); break
+        else:
+            if page.query_selector('[data-action="finish"]') or page.query_selector('[data-action="snap"]'): return bool(want is None or page.query_selector(want))
+            page.wait_for_timeout(80)
+    return bool(want and page.query_selector(want))
+
 def run_size(pw, port, w, h, name):
     print(f'== {name} {w}x{h}')
     browser = pw.chromium.launch()
     ctx = browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, is_mobile=True, has_touch=True)
     page = ctx.new_page()
     errors = []
-    page.on('pageerror', lambda e: errors.append(str(e)))
-    page.on('console', lambda m: errors.append(m.text) if m.type == 'error' else None)
+    page.on('pageerror', lambda e: (errors.append(str(e)), print('  PAGEERROR', str(e)[:300])))
+    page.on('console', lambda m: (errors.append(m.text), print('  CONSOLE', m.text[:300])) if m.type == 'error' else None)
     page.goto(f'http://127.0.0.1:{port}/index.html')
     page.wait_for_selector('[data-action="new"]')
     no_overflow(page, 'menu'); shot(page, f'{name}-01-menu')
@@ -114,20 +127,40 @@ def run_size(pw, port, w, h, name):
     shot(page, f'{name}-14-presnap')
     # Play several snaps, skipping animations
     for i in range(6):
-        btn = page.query_selector('[data-action="snap"]:not([disabled]), [data-action="punt"], [data-action="kickoff"], [data-action="continue"], [data-action="trykick"]')
-        if not btn: break
-        btn.click(); page.wait_for_timeout(150)
-        if page.query_selector('[data-action="skip"]'): page.click('[data-action="skip"]')
-        page.wait_for_timeout(50)
-        if page.query_selector('.play-grid .card'): page.click('.play-grid .card >> nth=1')
+        settle(page)
+        if page.query_selector('.play-grid .card'): page.click('.play-grid .card >> nth=1'); page.wait_for_timeout(30)
+        b = page.query_selector('[data-action="snap"]:not([disabled])')
+        if b: b.click(); page.wait_for_timeout(120)
+        elif page.query_selector('[data-action="punt"]'): page.click('[data-action="punt"]'); page.wait_for_timeout(120)
+    settle(page)
     shot(page, f'{name}-15-after-plays')
     # Key moments sim
+    settle(page, '[data-action="mode"]')
     page.click('[data-action="mode"]'); page.wait_for_timeout(50)
     if page.query_selector('[data-action="keymoment"]'):
         page.click('[data-action="keymoment"]'); page.wait_for_timeout(300)
         if page.query_selector('.sheet'): page.click('[data-action="sheet-close"]')
     no_overflow(page, 'match after sim'); shot(page, f'{name}-16-keymoment')
     page.click('[data-action="log"]'); page.wait_for_selector('.sheet'); shot(page, f'{name}-17-log'); page.click('[data-action="sheet-close"]')
+    if name == 'iphone-14':
+        # Play the game to the final whistle with Key Moments, answering every decision the UI asks for.
+        for _ in range(400):
+            if page.query_selector('[data-action="finish"]'): break
+            if page.query_selector('.sheet'): page.click('[data-action="sheet-close"]'); continue
+            for sel in ['[data-action="skip"]', '[data-action="continue"]', '[data-action="kickoff"]', '[data-action="trykick"]', '[data-action="keymoment"]']:
+                b = page.query_selector(sel)
+                if b: b.click(); page.wait_for_timeout(60); break
+            else:
+                if page.query_selector('[data-action="punt"]'): page.click('[data-action="punt"]'); page.wait_for_timeout(60); continue
+                if page.query_selector('.play-grid .card'): page.click('.play-grid .card >> nth=2'); page.wait_for_timeout(30)
+                b = page.query_selector('[data-action="snap"]:not([disabled])')
+                if b: b.click(); page.wait_for_timeout(60)
+        check(page.query_selector('[data-action="finish"]') is not None, 'match: reached the final whistle')
+        shot(page, f'{name}-17b-final')
+        page.click('[data-action="finish"]'); page.wait_for_selector('.sheet'); shot(page, f'{name}-17c-postgame'); page.click('[data-action="sheet-close"]')
+        page.wait_for_selector('.tabbar')
+        check('Week 2' in page.inner_text('#screen'), 'hq: advanced to week 2 after the game')
+        shot(page, f'{name}-17d-week2')
     # Practice and audit (reachable from the HQ grid / More tab); the match stays resumable.
     page.goto(f'http://127.0.0.1:{port}/index.html'); page.wait_for_selector('[data-action="continue"]'); page.click('[data-action="continue"]')
     page.wait_for_selector('.tabbar'); page.click('[data-action="router-tab"][data-screen="more"]'); page.click('[data-action="go"][data-screen="practice"]')

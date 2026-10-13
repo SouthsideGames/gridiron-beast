@@ -202,6 +202,12 @@ Every decision uses down, distance, field position, score differential, quarter,
 
 ---
 
-## 10. Out of scope for this build (LATER)
+## 10. Implementation notes (what the build does today)
+
+* Everything in §2–§9 is implemented unless marked LATER, with these simplifications: the promotion challenge game is replaced by automatic promotion once the badge goal is met; relegation uses the two-season bottom-four rule; AI clubs are regenerated each season from a deterministic seed with tier-based quality drift (no persistent AI rosters yet); the opponent's two-point try defense is chosen by the AI rather than the player.
+* The player's scouting report reads the opponent's real coach profile, strengths and favourite plays. Training bonuses are real attribute adds on Sunday only.
+* Engine tunables (speed curve, blocking engagement, shed rates, throw error, catch/interception formulas, tackle resolution, pursuit effort) are constants at the top of the relevant functions in `src/sim/engine.js`; balance bands are enforced by `tests/engine.test.js`.
+
+## 11. Out of scope for this build (LATER)
 
 Multiplayer, Draft Mode, trades, free agency, contracts beyond a single annual salary, custom play editor, penalties beyond delay of game, wind/weather, evolution, equipment, audio.
