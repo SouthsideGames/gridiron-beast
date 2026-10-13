@@ -1,3 +1,10 @@
+## v4.8 — franchise navigation and practice field
+- Global back navigation now returns from Franchise Mode subpanels to Headquarters; roster detail and lineup selection return to Roster.
+- Explicit Back to Headquarters buttons added to Monster Types and Practice Field.
+- Practice reuses the match's upgraded stadium rendering (goalposts, sidelines, yard numbers, hash marks, grass stripes, midfield icon).
+- Play diagram paths and zone ellipses are constrained to the visible pitch; player art remains foreground.
+- Static JavaScript validation completed. Mobile Safari regression remains pending; route coordinates should ultimately be authored in-bounds, not just clamped.
+
 ## v4.7 — Sunday intro and global tutorial fixes
 - Fixed Sunday Weekly Schedule entry bypassing pregame and coin toss; started matches resume instead of resetting.
 - Removed in-match Restart Game button and handler; Settings' full franchise reset remains.
