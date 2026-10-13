@@ -1,3 +1,9 @@
+## v4.7 — Sunday intro and global tutorial fixes
+- Fixed Sunday Weekly Schedule entry bypassing pregame and coin toss; started matches resume instead of resetting.
+- Removed in-match Restart Game button and handler; Settings' full franchise reset remains.
+- Temporarily disabled Owner Orientation progression and hid both the HQ panel and globally persistent tutorial banner until redesign.
+- JavaScript syntax checked; no direct `reset();show('match')` bypass remains. Mobile Safari end-to-end verification pending.
+
 ## v4.6 — field presentation and practice layering fixes
 - Addressed user screenshots: routes/monsters leaving view, monsters obscured by assignment lines, missing goalposts and sideline numbers, and last-frame horizontal reversal.
 - Engine clamps monster positions and uses SVG clipping; player and ball layer remains in foreground.
