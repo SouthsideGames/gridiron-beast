@@ -1,3 +1,11 @@
+## v5.0 — RB awareness, opponent records and initial special-teams flow
+- RBs now evaluate lanes using awareness, defenders and nearby blockers; steering changes gradually. In 200 deterministic test pairs, different awareness levels produced different final running lanes in 148 cases.
+- Removed redundant inline Headquarters buttons, leaving the shared contextual navigation.
+- Pregame now shows opponent season W-L derived from completed Challenger fixtures. Non-player results are deterministic simulated standings, not played AI games; opponent monster cards remain estimates.
+- Touchdowns award 6 points. The owner can select animated one-point kick or simulated two-point play. The opponent currently uses simplified extra-point logic.
+- Opening, halftime and post-score kickoffs now use a simple animated ball and returner and establish receiving possession and first down.
+- Static JS syntax and engine smoke tests passed; full Safari match regression and detailed NFL special teams rules still pending.
+
 ## v4.9 — contact-based turnovers and dynamic offensive blocking
 - Fixed fumbles appearing without any defender near the ball carrier. Forced fumbles now require defender contact and identify the forcing defender.
 - After handoff or reception, all non-QB offensive teammates transition from route/initial blocking instructions to live downfield blocking support.
