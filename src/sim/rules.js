@@ -9,7 +9,7 @@ import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
 export const RUNOFF = { normal: 18, hurry: 8, milk: 30 };
-export const DEFAULT_QUARTER = 300;
+export const DEFAULT_QUARTER = 180;
 
 export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null }) {
   const rng = createRng(seed);

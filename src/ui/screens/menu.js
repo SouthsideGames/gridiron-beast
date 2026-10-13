@@ -39,7 +39,7 @@ export function registerMenuScreens(Router, app) {
       const s = app.settings;
       return `
         <div class="panel">
-          <label class="field">Game length<select data-change="quarter"><option value="180" ${s.quarterLength === 180 ? 'selected' : ''}>Quick — 3-minute quarters, ~25 plays, 3–5 min</option><option value="300" ${s.quarterLength === 300 ? 'selected' : ''}>Standard — 5-minute quarters, ~45 plays, 6–10 min</option><option value="420" ${s.quarterLength === 420 ? 'selected' : ''}>Full — 7-minute quarters, ~60 plays, 10–15 min</option></select></label>
+          <label class="field">Game length<select data-change="quarter"><option value="180" ${s.quarterLength === 180 ? 'selected' : ''}>Standard — 3-minute quarters, ~25 plays, 3–5 min (default)</option><option value="300" ${s.quarterLength === 300 ? 'selected' : ''}>Long — 5-minute quarters, ~45 plays, 6–10 min</option><option value="420" ${s.quarterLength === 420 ? 'selected' : ''}>Full — 7-minute quarters, ~60 plays, 10–15 min</option></select></label>
           <label class="field">Coaching mode<select data-change="mode"><option value="key" ${s.mode === 'key' ? 'selected' : ''}>Key Moments — you coach the big downs (recommended)</option><option value="full" ${s.mode === 'full' ? 'selected' : ''}>Full Coaching — call every play</option></select></label>
           <p class="dim">Times assume Key Moments; Full Coaching roughly doubles them.</p>
           <label class="field">Animation speed<select data-change="speed"><option value="0.7" ${s.speed === 0.7 ? 'selected' : ''}>Slow</option><option value="1" ${s.speed === 1 ? 'selected' : ''}>Normal</option><option value="1.6" ${s.speed === 1.6 ? 'selected' : ''}>Fast</option></select></label>

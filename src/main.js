@@ -13,7 +13,7 @@ import { registerPracticeScreens } from './ui/screens/practice.js';
 const app = {
   f: null, // the franchise state (null before creation)
   get settings() { return this.f?.settings || this.defaultSettings; },
-  defaultSettings: { quarterLength: 300, mode: 'key', speed: 1, reducedMotion: false, liveClock: false },
+  defaultSettings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false },
   save() { if (this.f && !Save.save(this.f)) toast('Could not save (storage full or blocked).', 'bad'); },
   setFranchise(f) { this.f = f; this.save(); applySettings(); },
   reset() { this.f = null; Save.clear(); },

@@ -32,7 +32,7 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
     rivals: { challenger: { team: rivalTeam, gm: RIVAL_GMS[rivalTeam] || 'Rival GM', headToHead: { w: 0, l: 0 } } },
     badges: { challenger: 0, vanguard: 0, sovereign: 0 }, qualification: { challenger: 0, vanguard: 0, sovereign: 0 }, bottomFourStreak: 0,
     history: [], news: [],
-    settings: { quarterLength: 300, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, ...settings },
+    settings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, ...settings },
     tutorial: { seen: {} },
   };
   startSeason(f, 1);
@@ -171,7 +171,7 @@ function simulateLeagueWeek(f) {
     for (const g of fixtures.games) {
       if (g.home === f.club || g.away === f.club) continue;
       const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
-      const game = playGame({ home, away, seed: r.seed(), quarterLength: 240 });
+      const game = playGame({ home, away, seed: r.seed(), quarterLength: 180 });
       const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
       applyResult(f.season.records, res); results.push(res);
     }
@@ -359,7 +359,7 @@ function simulatePlayoffWeek(f) {
   const p = f.season.playoffs; if (!p || p.champion) return;
   const { r, save } = frng(f);
   for (const g of p.fixtures.filter((x) => x.round === p.round && !x.result)) {
-    const game = playGame({ home: aiTeam(f, g.home), away: aiTeam(f, g.away), seed: r.seed(), quarterLength: 240 });
+    const game = playGame({ home: aiTeam(f, g.home), away: aiTeam(f, g.away), seed: r.seed(), quarterLength: 180 });
     const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
     g.result = res; p.results.push({ round: p.round, conf: g.conf, winner: res.homeScore > res.awayScore ? g.home : g.away, ...res });
   }
