@@ -8,7 +8,7 @@ import { OFFENSE_PACKAGES, DEFENSE_PACKAGES, offenseOnField, defenseOnField, LIN
 import { routePoints, ALTERNATE_ROUTES, ZONES, GAPS } from './routes.js';
 
 // ---------------------------------------------------------------- formations
-const OL = { LG: [-0.6, -1.4], C: [-0.4, 0], RG: [-0.6, 1.4] };
+const OL = { LG: [-0.6, -1.7], C: [-0.4, 0], RG: [-0.6, 1.7] };
 export const OFFENSE_FORMATIONS = Object.freeze({
   i_pro: { pkg: 'pro', label: 'I-Form', align: { ...OL, QB: [-1.6, 0], RB: [-6.5, 0], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
   gun_pro: { pkg: 'pro', label: 'Gun Pro', align: { ...OL, QB: [-5, 0], RB: [-5.2, 2.8], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
