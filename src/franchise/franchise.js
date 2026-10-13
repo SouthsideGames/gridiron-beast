@@ -47,11 +47,10 @@ export function news(f, text, kind = 'info') { f.news.unshift({ text, kind, week
 export const staffHired = (f) => STAFF_ROLES.every((r) => f.staff[r]);
 export const nextStaffRole = (f) => STAFF_ROLES.find((r) => !f.staff[r]) || null;
 export const staffMember = (f, role) => staffById(f.staff[role]);
-/** First-week fast path: a sensible plan and lineup, straight to Sunday. The full weekly loop starts in week 2. */
-export function quickStartWeek(f) {
-  f.week.plan = { offense: catalog(f, 'offense').slice(0, PLAN_SIZE), defense: catalog(f, 'defense').slice(0, PLAN_SIZE) };
-  f.week.lineupChecked = true; f.season.day = 6; f.quickStart = true;
-  news(f, 'Welcome, owner. Your first game is today — the weekly routine (scouting, recruiting, training) begins next week.', 'info');
+/** Welcome news for a brand-new franchise: the first week is a normal week, with a short guide. */
+export function firstWeekWelcome(f) {
+  news(f, 'Welcome, owner. A balanced coaching staff has been hired for you — replace anyone from Staff once you know the league.', 'info');
+  news(f, 'Your first week: Monday scout a region, Tuesday recruit, Wednesday train, Thursday scout the opponent, Friday set your game plan, Saturday check the lineup, Sunday play.', 'info');
 }
 export const DEFAULT_STAFF = Object.freeze({ head_coach: 'hc_vale', offensive_coordinator: 'oc_park', defensive_coordinator: 'dc_ice', head_scout: 'sc_moss', monster_trainer: 'tr_focus' });
 /** Quick start: a balanced default staff so a new owner can play immediately. */

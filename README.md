@@ -1,6 +1,6 @@
 # Gridiron Beast
 
-Pixel-style monster football franchise game by Southside Games — **7-on-7, mobile-first, no dependencies**.
+Pixel-style monster football franchise game by Southside Games — **7-on-7, mobile-first, no dependencies**. Built for iOS and Android phones and tablets first; a PC release is possible later.
 
 - **Play:** open `index.html` from any static host (GitHub Pages works as-is) on a phone or desktop. Installable as a PWA.
 - **Test:** `npm test` (Node ≥ 18, zero dependencies) runs 40 tests — play data, engine determinism and balance bands, rules, special teams, coaching AI, 200 headless games, a full franchise season, saves.

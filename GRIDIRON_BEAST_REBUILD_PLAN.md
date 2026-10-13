@@ -71,3 +71,7 @@ Rules: no gameplay logic in UI files; Practice, Key Moments, AI-vs-AI league gam
 - **Opponent two-point and kickoff decisions** use the same AI as the player's suggestions; no distinct AI "personalities" beyond aggression/pass bias per club.
 - **Audio, penalties beyond delay of game, weather, trades/free agency/draft** remain LATER as scoped.
 - **Safari device QA** has not been run on physical hardware; the Playwright pass uses Chromium with mobile emulation.
+
+## Platform note
+
+First release and main target: Apple and Android phones and tablets (portrait-first PWA / store wrapper). A PC release is possible later; the zero-dependency web architecture keeps that open, and a wide/landscape layout plus keyboard and mouse affordances are tracked as later work.

@@ -5,7 +5,7 @@ import { esc, delegate, toast, sheet } from '../dom.js';
 import { STARTER_CLUBS, DIVISIONS, RIVAL_GMS, divisionOf, conferenceFor, TEAM_META } from '../../data/league.js';
 import { CORNERSTONES, NATURES, ABILITIES, TYPES } from '../../data/monsters.js';
 import { STAFF, ROLE_LABEL, STAFF_ROLES } from '../../data/staff.js';
-import { createFranchise, hireStaff, nextStaffRole, salarySummary, staffMember, schemeAlignment, hireDefaultStaff, quickStartWeek } from '../../franchise/franchise.js';
+import { createFranchise, hireStaff, nextStaffRole, salarySummary, staffMember, schemeAlignment, hireDefaultStaff, firstWeekWelcome } from '../../franchise/franchise.js';
 import { portraitSprite, monsterSprite } from '../pixel-monster.js';
 import { playCardSvg } from '../play-art.js';
 import { PLAYBOOKS } from '../../data/staff.js';
@@ -16,7 +16,7 @@ const STEPS = ['name', 'club', 'offense'];
 const LINES = {
   name: 'Ah, there you are! I knew our new franchise owner would be here soon. What should I call you?',
   club: 'The top franchises aren’t for sale. These four clubs finished at the bottom of the league and need an owner willing to rebuild. Pick your opportunity.',
-  offense: 'Last thing: choose the monster who will lead your rebuild. Then get out there — your first game is Sunday.',
+  offense: 'Last thing: choose the monster who will lead your rebuild. Your first week starts Monday — scout, recruit, train, set a game plan, then play on Sunday.',
 };
 
 export function registerOnboardingScreens(Router, app) {
@@ -60,8 +60,8 @@ export function registerOnboardingScreens(Router, app) {
           const e = collect(); if (e) { err(e); return; }
           if (STEPS[draft.step] === 'offense') {
             const f = createFranchise({ owner: { first: draft.first, last: draft.last, gender: draft.gender, portrait: draft.portrait, hometown: draft.hometown }, club: draft.club, rival: draft.rival, cornerstoneOffense: draft.offense, cornerstoneDefense: 'Frostclaw', settings: { ...app.defaultSettings } });
-            hireDefaultStaff(f); quickStartWeek(f);
-            app.setFranchise(f); draft = null; Router.go('pregame', {}, { reset: true }); return;
+            hireDefaultStaff(f); firstWeekWelcome(f);
+            app.setFranchise(f); draft = null; Router.go('hq', {}, { reset: true }); return;
           }
           draft.step += 1; Router.render();
         },

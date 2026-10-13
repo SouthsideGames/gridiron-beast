@@ -230,3 +230,7 @@ Training bonus · opponent scouting report · Friday game-plan style · natures 
 | Tier/rival/archive rules | Coaching AI (offense, defense, 4th down, PAT, clock) | Manual `?v=` cache busting (use versioned module URLs) |
 | Play-art colour & endpoint conventions | Mobile UI and design system | Desktop-first stacked controls |
 | Playbook Audit + Feature Review dev tools | Weekly loop wiring (training, scouting, plan, recruiting) | |
+
+## Platform note
+
+First release and main target: Apple and Android phones and tablets (portrait-first PWA / store wrapper). A PC release is possible later; the zero-dependency web architecture keeps that open, and a wide/landscape layout plus keyboard and mouse affordances are tracked as later work.

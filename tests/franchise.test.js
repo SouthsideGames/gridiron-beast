@@ -115,14 +115,13 @@ test('save round-trips and the legacy v5 import preserves owner, club, staff and
   assert.ok(imported.roster.some((m) => m.name === 'Firestorm' && m.position === 'QB'));
 });
 
-test('quick start: default staff, first-week plan and a Sunday game straight away', () => {
+test('new franchise: default staff, first week starts Monday', () => {
   const f = F.createFranchise({ owner: { first: 'Sam', last: 'Rivera', gender: 'Female', portrait: 1, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 7 });
-  F.hireDefaultStaff(f); F.quickStartWeek(f);
+  F.hireDefaultStaff(f); F.firstWeekWelcome(f);
   assert.equal(Object.keys(f.staff).length, STAFF_ROLES.length);
   assert.equal(F.nextStaffRole(f), null);
-  assert.equal(f.week.plan.offense.length, F.PLAN_SIZE); assert.equal(f.week.plan.defense.length, F.PLAN_SIZE);
-  assert.equal(f.season.day, 6);
-  assert.ok(F.sundayMatchup(f), 'a matchup exists on the first Sunday');
+  assert.equal(f.season.day, 0, 'the first week starts on Monday');
+  assert.ok(f.news.some((n) => n.text.includes('first week')), 'welcome guide posted');
   assert.equal(f.settings.mode, 'key', 'new players default to Key Moments');
   assert.ok(!F.TIERS_ENABLED, 'promotion/relegation is hidden in this release');
   const r = F.replaceStaff(f, f.staff.head_coach); assert.equal(r.ok, false);
