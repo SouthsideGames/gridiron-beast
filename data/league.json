@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "conferences": {
     "Aurora": {
       "divisions": {
@@ -205,5 +205,57 @@
     "rosterLimit": 40,
     "staffSalariesCount": true,
     "overCapGameLock": true
+  },
+  "opponentStandings": {
+    "scope": "All 16 Challenger League teams",
+    "method": "Deterministic results for completed non-player fixtures, actual recorded results for player fixtures",
+    "futureWeeksHidden": true,
+    "source": "leagueSeasonFixtures and stored seasonSchedule results",
+    "persistence": "Derived from fixtures and saved player game results",
+    "status": "prototype",
+    "limitation": "Non-player results are simulated, not produced by full AI match simulation"
+  },
+  "specialTeams": {
+    "kickoff": {
+      "trigger": [
+        "opening coin toss",
+        "halftime",
+        "touchdown conversion",
+        "successful field goal"
+      ],
+      "presentation": "Animated ball and returner on field",
+      "returnYards": "15 to 33 prototype",
+      "full11PlayerKickCoverage": "not yet implemented"
+    },
+    "touchdownPoints": 6,
+    "extraPoint": {
+      "points": 1,
+      "action": "animated kick",
+      "success": "kicker-based probability"
+    },
+    "twoPoint": {
+      "points": 2,
+      "action": "animated short-yardage run against defense",
+      "success": "simulation outcome"
+    },
+    "playerChoice": true,
+    "opponentTry": "simplified automatic selection",
+    "status": "prototype partial",
+    "remaining": [
+      "kick coverage with all 11 monsters",
+      "real returner AI and special teams assignments",
+      "kicker power accuracy and weather",
+      "penalties and blocked kicks",
+      "NFL kickoff formation and touchback rules",
+      "quarter-end try handling"
+    ]
+  },
+  "runningBackVision": {
+    "awarenessBasedLaneChoice": true,
+    "looksForDefensiveGaps": true,
+    "considersBlockers": true,
+    "choiceProbabilityScalesWithAwareness": true,
+    "steering": "gradual lane change",
+    "status": "prototype heuristic"
   }
 }
