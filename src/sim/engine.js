@@ -60,6 +60,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const isRun = offensePlay.type === 'run';
   const isPlayAction = ['play_action', 'boot'].includes(qb.assignment.a);
 
+  // Pre-snap: man defenders align across from their receiver (inside leverage); nobody lines up offside.
+  for (const d of defs) {
+    const a = d.assignment;
+    if (a.a !== 'man') continue;
+    const target = bySlot.off[manKeys[a.key]];
+    if (!target) continue;
+    const leverage = target.y > 0 ? -1 : 1;
+    d.y = clamp(target.y + leverage * 1.2, B.left + 1, B.right - 1);
+    if (Math.abs(target.y) < 6) d.x = Math.max(d.x, 4.5); // inside receivers get an off-man cushion from a linebacker/safety depth
+  }
   // Trail buffer for man coverage reaction delay.
   const history = new Map(actors.map((a) => [a, []]));
 
@@ -137,7 +147,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     d.x += (gx / gd) * push * DT; d.y += (gy / gd) * push * DT;
     blocker.x = d.x + (gx / gd) * 0.9; blocker.y = d.y + (gy / gd) * 0.9;
     blocker.vx = d.vx = 0; blocker.vy = d.vy = 0;
-    const shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.38) + edge * 1.6, 0.06, 2.2);
+    const shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.46) + edge * 1.6, 0.06, 2.2);
     if (rng.chance(shedPerSec * DT)) {
       blocker.engaged = null; d.engaged = null; blocker.stun = 0.45; d.noEngage = 0.5;
       log(`${d.name} sheds ${blocker.name}`, { kind: 'shed', by: d.slot });
@@ -282,7 +292,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   function runBlock(a, landmark, searchRadius = 2.2, soft = false) {
     const [lx, ly] = landmark;
-    const nearby = defs.filter((d) => !d.engaged && d.stun <= 0 && d.noEngage <= 0 && dist(d, a) < searchRadius).sort((p, q) => dist(p, a) - dist(q, a))[0];
+    // Block the most immediate threat: a defender attacking the gap takes priority over the landmark.
+    const threat = (d) => !d.engaged && d.stun <= 0 && d.noEngage <= 0;
+    const attacking = defs.filter((d) => threat(d) && Math.abs(d.y - a.y) < 2.6 && d.x > a.x - 1 && d.x < a.x + 4.5 && (d.vx < -1 || dist(d, a) < 1.8));
+    const nearby = (attacking.length ? attacking : defs.filter((d) => threat(d) && dist(d, a) < searchRadius)).sort((p, q) => dist(p, a) - dist(q, a))[0];
     if (nearby) { steer(a, nearby.x, nearby.y, 1, 0.3); tryEngage(a, nearby, soft); return; }
     if (dist(a, { x: lx, y: ly }) > 0.8) { steer(a, lx, ly, 1, 0.5); return; }
     // At the landmark: climb to the next unblocked defender ahead.
@@ -342,6 +355,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const fakeDone = a.wp >= 2;
       if (!fakeDone) { followPath(a, asg.points.slice(0, 2), 1); qbFakeUntil = t; return; }
       if (asg.a === 'boot' && a.wp < asg.points.length) followPath(a, asg.points, 0.85);
+      else steer(a, a.x, a.y, 0, 0.2); // set up to throw
     } else {
       const dropPt = asg.points[1];
       if (a.state === 'init') { steer(a, dropPt[0], dropPt[1], 1, 0.3); if (dist(a, { x: dropPt[0], y: dropPt[1] }) < 0.5 || t > DROP_TIME[offensePlay.drop] + 0.4) a.state = 'set'; }
@@ -357,8 +371,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     readClock -= DT;
     const scanPace = 0.42 - 0.26 * norm(a.attrs.awareness);
     const progression = options.forcedTarget ? [options.forcedTarget] : (offensePlay.progression.length ? offensePlay.progression : receivers);
-    const openness = (r) => projectedSeparation(a, r);
-    const threshold = (pressured ? 1.9 : 2.6) - 0.6 * norm(a.attrs.awareness);
+    // Judgement: lesser quarterbacks misjudge windows (both ways) more often.
+    const judgeNoise = 1.3 * (1 - norm(a.attrs.awareness)) + 0.15;
+    const openness = (r) => { const o = projectedSeparation(a, r); return o < 0 ? o : o + rng.normal() * judgeNoise; };
+    const threshold = (pressured ? 2.1 : 2.9) - 0.6 * norm(a.attrs.awareness);
     const candidate = bySlot.off[progression[Math.min(readIndex, progression.length - 1)]];
     if (candidate && openness(candidate) >= threshold) { throwTo(a, candidate, pressured); return; }
     if (readClock <= 0) { readClock = scanPace; readIndex += 1; }
@@ -485,12 +501,26 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Run recognition.
     const runLive = (phase === 'carry' || (phase === 'run' && handoffDone)) && c && c.team === 'off';
     if (runLive && !d.recognised) {
-      const delay = 0.3 + 0.5 * (1 - norm(d.attrs.awareness)) - (d.ability?.reaction || 0) + (isPlayAction && t < 1.6 ? 0.3 : 0) + (offensePlay.tags.includes('misdirection') ? 0.3 : 0) + (asg.a === 'man' ? 0.15 : 0);
+      const delay = 0.3 + 0.5 * (1 - norm(d.attrs.awareness)) - (d.ability?.reaction || 0) + (isPlayAction && t < 1.6 ? 0.3 : 0) + (offensePlay.tags.includes('misdirection') ? 0.3 : 0) + (asg.a === 'man' ? 0.35 : 0);
       if (t - runRecognisedAt >= delay) d.recognised = true;
     }
-    if (runLive && d.recognised) { pursue(d); return; }
+    if (runLive && d.recognised) {
+      // Run fit: until the carrier crosses the line, second-level defenders fill their lane rather than chasing the ball.
+      const isFront = ['rush', 'contain'].includes(asg.a);
+      if (!isFront && c.x < 1.5) {
+        const deep = asg.a === 'zone' && asg.role === 'deep';
+        const fitX = deep ? 6.5 : 1.5;
+        const shade = clamp(c.y - d.y, -2.5, 2.5) * (0.4 + 0.5 * norm(d.attrs.awareness));
+        steer(d, fitX, d.y + shade, 0.9, 0.4); return;
+      }
+      pursue(d); return;
+    }
     // Play-action bite: non-rushing defenders step up before they recognise the pass.
-    if (isPlayAction && t < 0.9 && !['rush', 'contain'].includes(asg.a) && asg.a !== 'man' && norm(d.attrs.awareness) < 0.8) { steer(d, d.x - 2, d.y, 0.6, 0.3); return; }
+    if (isPlayAction && !['rush', 'contain', 'man'].includes(asg.a)) {
+      const deepDefender = asg.a === 'zone' && asg.role === 'deep';
+      const biteFor = (deepDefender ? 0.3 : 0.9) * (1.3 - norm(d.attrs.awareness));
+      if (t < biteFor) { steer(d, d.x - 2, d.y, deepDefender ? 0.3 : 0.6, 0.3); return; }
+    }
     switch (asg.a) {
       case 'rush': {
         const gap = asg.points[1];
@@ -525,8 +555,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       }
       case 'zone': {
         const [zx, zy] = asg.at;
-        const radius = asg.role === 'deep' ? 9 : asg.role === 'middle' ? 6 : 6.5;
-        const threats = receivers.map((s) => bySlot.off[s]).filter((r) => r && dist(r, { x: zx, y: zy }) < radius && r.x > -1);
+        const radius = asg.role === 'deep' ? 12 : asg.role === 'middle' ? 6 : 6.5;
+        const inZone = (r) => asg.role === 'deep' ? (Math.abs(r.y - zy) < radius && r.x > 5) : dist(r, { x: zx, y: zy }) < radius;
+        const threats = receivers.map((s) => bySlot.off[s]).filter((r) => r && inZone(r) && r.x > -1);
         if (threats.length && dist(d, { x: zx, y: zy }) < radius + 1) {
           const r = threats.sort((p, q) => (q.x - p.x))[0];
           const p = trailPosition(d, r);
@@ -602,7 +633,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (contested) catchP *= 0.7 + 0.22 * norm(r.attrs.catching) - 0.22 * norm(nearest.d.attrs.coverage);
     if (nearest && nearest.dd < 1.0 && nearest.dd < dr) {
       const pickCatching = nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0);
-      const pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.6 : 0.7);
+      const pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.5);
       if (rng.chance(pickP)) {
         ball.inAir = false; ball.holder = nearest.d; stats.interceptor = nearest.d.slot; nearest.d.x = L.x; nearest.d.y = L.y;
         nearest.d.laneTimer = 0; nearest.d.jukeCooldown = 0;
@@ -686,6 +717,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   return {
     result, yards: Math.round(gain), endYard: Math.round(endYard * 10) / 10, endLat: Math.round((ballLat + endLat) * 10) / 10,
     frames, events, elapsed: +t.toFixed(2), seed, offensePlay: offensePlay.id, defensePlay: defensePlay.id, ballOn, ballLat,
+    names: { off: Object.fromEntries(offs.map((a) => [a.slot, a.name])), def: Object.fromEntries(defs.map((a) => [a.slot, a.name])) },
     stats, turnover: ['interception', 'fumble', 'touchback_return'].includes(result) || !!stats.defensiveScore,
     touchdown: result === 'touchdown', safety: result === 'safety', bounds: B,
   };
