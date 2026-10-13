@@ -275,7 +275,7 @@ function finishTry(type){
   draw();save()};
  requestAnimationFrame(animate)
 }
-function draw(){const g=game();if(!g)return;renderSpecialPhase(g);$('score').textContent=(state.coach?.team||'HOME')+' '+g.home+' — '+g.away+' '+opponentName();$('quarter').textContent='Q'+g.q+' · '+Math.floor(g.time/60)+':'+String(g.time%60).padStart(2,'0');$('situation').textContent=(g.possession==='home'?'HOME BALL':'AWAY BALL')+' · '+g.down+(['st','nd','rd','th'][Math.min(3,g.down-1)])+' & '+g.toGo+' · Yard '+g.ball;$('playclock').textContent=Math.ceil(g.playClock);$('clockbar').style.width=g.playClock/40*100+'%';$('status').textContent=g.finished?'Final':paused?'Paused':'Live';renderField();matchControls()}
+function draw(){const g=game();if(!g)return;renderSpecialPhase(g);$('score').textContent=(state.coach?.team||'HOME')+' '+g.home+' — '+g.away+' '+opponentName();$('quarter').textContent='Q'+g.q+' · '+Math.floor(g.time/60)+':'+String(g.time%60).padStart(2,'0');$('situation').textContent=(g.possession==='home'?'HOME BALL':'AWAY BALL')+' · '+g.down+(['st','nd','rd','th'][Math.min(3,g.down-1)])+' & '+g.toGo+' · Yard '+g.ball;$('playclock').textContent=Math.ceil(g.playClock);$('clockbar').style.width=g.playClock/40*100+'%';$('status').textContent=g.finished?'Final':paused?'Paused':'Live';matchControls();renderField()}
 function quarterDirection(g){const opening=g.openingDirection||'right';return g.q%2===1?opening:(opening==='right'?'left':'right')}
 function driveDirection(g){const d=quarterDirection(g);return g.possession==='home'?d:(d==='right'?'left':'right')}
 // Cache the AI call so the pre-snap art represents the play that will actually run.
