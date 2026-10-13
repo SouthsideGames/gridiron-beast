@@ -4,7 +4,7 @@
 
 > **CURRENT FOOTBALL FORMAT: 11-on-11 (LOCKED, October 11, 2026).** The existing HTML prototype is still 7-on-7 v3.0 and has NOT been converted. Earlier 7-on-7 formations, rosters and play definitions in this historical document are superseded by Section 26. See [migration audit](FOOTBALL_11V11_MIGRATION_AUDIT.md) and [implementation status](IMPLEMENTATION_STATUS.md).
 
-# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.6
+# GRIDIRON BEAST — MASTER GAME DESIGN DOCUMENT v4.7
 Southside Games | October 11, 2026 | HTML prototypes → Unity mobile beta
 
 **Decision key:** LOCKED = approved; PROPOSED = initial design awaiting playtest; FUTURE = deferred. This is a design specification, not an implementation claim.
@@ -497,3 +497,13 @@ Seeded movement variation and starting-monster overall ratings now affect player
 **Corrections:** Clamp simulated monster positions to the field and use an SVG clip path to keep moving markers and route art inside the 600×260 practice view. Render offensive/defensive assignment lines behind player markers; render monster icons as the topmost visual layer. In match frames, all players and the ball are in the foreground above stadium graphics. The static and animated stadium share an original top-down field renderer, with mowing bands, ten-yard stripes, five-yard lines, hash marks, white goal lines, numbered yards on both sidelines, top-down goalposts, home-team midfield mascot and split end-zone wordmarks. For scheduled away games, stadium identity belongs to the opponent, not the player. Every animation frame and its retained final frame use the same `driveDirection`, so the field does not flip when a play finishes.
 
 **Implementation and validation:** `index.html` and `engine.js` updated, HTML version 4.6. Main JavaScript syntax and standalone engine renderer tested, including clipped foreground markers, stadium SVG and same-direction live/final render call sites. Browser rendering and mobile Safari playtesting are still required. Goalposts are a simplified top-down SVG representation; not a 3D goalpost or special-teams targeting system. Preserve this layering and field geometry in the Unity renderer.
+
+## 42. Sunday match entry, restart restriction, tutorial suspension — HTML v4.7
+
+**Entry bug:** The Weekly Franchise Schedule Sunday action was calling `reset();show('match')`, bypassing the pregame matchup and coin toss. The Sunday action now calls `openPregame()` when no match has begun, or resumes the existing match if `introComplete` is true. Direct match-screen navigation follows the same entry rule. A started game must not be reset simply by revisiting Sunday's action.
+
+**Restart restriction:** Removed the Restart Game button and its action handler. No in-progress match restart is permitted. Full franchise reset remains in Settings as an explicitly confirmed destructive operation.
+
+**Tutorial:** Owner Orientation and its persistent global banner are temporarily hidden, with progress handlers disabled. The feature is deferred pending a separate action-gated tutorial redesign. Retain the planned tutorial specification in the GDD, but do not display incomplete prompts in Settings, schedules, practice or other screens. Previously stored tutorial progress may remain in save data for future migration.
+
+**QA:** Inline JavaScript syntax checked, restart button/handler removed, and the Sunday direct-match bypass removed. Browser end-to-end navigation and mobile Safari tests remain outstanding.
