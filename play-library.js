@@ -125,6 +125,36 @@ for(const p of Object.values(plays)){
  zone('LB2',345,104,33,28);zone('LB3',345,156,33,28);
  p.assignments=a;p.positions=positions;p.formation='3-4 / Cover 4 Quarters';p.concept='cover4reviewed';
 }
+// Playbook Audit #5: explicit assignments and personnel alignment override generic variants.
+{
+ const p=plays['Cover Three'],pos=p.positions;
+ pos.SS=[285,75];pos.CB3=[285,190];
+ for(const id of ['SS','CB3'])p.assignments[id].points=[pos[id],[p.assignments[id].zone.x,p.assignments[id].zone.y]];
+ p.assignments.SS.zoneRole='sideline';p.assignments.CB3.zoneRole='sideline';
+}
+{
+ const p=plays['Deep Zone'],pos={...defensePositions},a=p.assignments;
+ // Safeties are already in their deep coverage landmarks and hold those positions.
+ for(const id of ['FS','SS']){const [x,y]=pos[id];a[id]={action:'zone',points:[[x,y],[x,y]],zone:{x,y,rx:43,ry:30},zoneRole:'deep'}}
+ p.positions=pos;
+}
+{
+ const p=plays['Goal Line Stand'],pos={...defensePositions,FS:[264,98],SS:[264,162]};
+ p.positions=pos;
+ for(const id of ['FS','SS']){const a=p.assignments[id];a.points=[pos[id],[a.zone.x,a.zone.y]];a.zoneRole='middle'}
+}
+{
+ const p=plays['Drop Eight'],pos={...defensePositions},a=p.assignments;
+ // DT2 replaces DE1 in the rush; three total rushers, eight in coverage.
+ a.DT2={action:'rush',points:[pos.DT2,[155,130]]};
+ a.DE1={action:'zone',points:[pos.DE1,[310,98]],zone:{x:310,y:98,rx:34,ry:28},zoneRole:'middle'};
+ p.positions=pos;
+}
+{
+ const p=plays['All-Out Pressure'],pos={...defensePositions,FS:[295,102],SS:[295,160]},a={};
+ for(const [id,start] of Object.entries(pos))a[id]={action:'rush',points:[start,[155,130]]};
+ p.positions=pos;p.assignments=a;p.formation='All-Out Pressure / 11 Rushers';
+}
 // Shared semantic play-art palette: applied to every offensive and defensive play.
 const PLAY_COLORS={primary:'#FACC15',receiver:'#EF4444',alternate:'#22C55E',block:'#FFFFFF',deep:'#3B82F6',middle:'#FACC15',sideline:'#A855F7',blitz:'#EF4444',man:'#FACC15'};
 function zoneRole(a){if(a.zoneRole)return a.zoneRole;const z=a.zone||{},start=a.points?.[0]||[0,130];if(z.x>=395)return 'deep';if(z.y<=75||z.y>=185)return 'sideline';return 'middle'}
