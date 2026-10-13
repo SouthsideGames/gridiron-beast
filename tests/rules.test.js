@@ -149,12 +149,13 @@ test('coaching AI: fourth-down, extra point and clock decisions', () => {
 
 test('coaching AI weighs plays by situation and never sees the hidden call', () => {
   const s = scrimmage({ down: 3, toGo: 12 });
-  const w = Object.fromEntries(AI.weighOffense(s, home, home.offensePlays));
+  const ids = ['deep_post', 'inside_zone', 'power_right', 'three_verticals', 'quick_slants'];
+  const w = Object.fromEntries(AI.weighOffense(s, home, ids));
   assert.ok(w.deep_post > w.inside_zone, 'third and long prefers passes');
   const g = scrimmage({ ballOn: 98, toGo: 2 });
-  const wg = Object.fromEntries(AI.weighOffense(g, home, home.offensePlays));
+  const wg = Object.fromEntries(AI.weighOffense(g, home, ids));
   assert.ok(wg.power_right > wg.three_verticals, 'goal line prefers short/power');
-  const wd = Object.fromEntries(AI.weighDefense(s, away, away.defensePlays));
+  const wd = Object.fromEntries(AI.weighDefense(s, away, ['cover_4', 'goal_line', 'cover_3']));
   assert.ok(wd.cover_4 > wd.goal_line, 'third and long defense expects pass');
 });
 
@@ -183,4 +184,28 @@ test('the runner honours the human side\'s choices', () => {
   Object.assign(s, { possession: 'home', phase: 'scrimmage', down: 4, toGo: 8, ballOn: 30 });
   const ev2 = step(s, teams, controllers, tend, { fourthDown: 'punt' });
   assert.equal(ev2.kind, 'punt'); assert.equal(s.possession, 'away');
+});
+
+test('QA regressions: forward progress across the goal line scores; OT punt ends the possession; no free-kick blocks; no OT spikes', async () => {
+  const { simulatePlay } = await import('../src/sim/engine.js');
+  const { PLAYS } = await import('../src/data/playbook.js');
+  const { lineup } = await import('./tools/lineup.js');
+  const L = lineup(7, 60);
+  let crossed = 0;
+  for (let s = 1; s <= 600; s++) {
+    const r = simulatePlay({ offensePlay: PLAYS.trap, defensePlay: PLAYS.tampa_2, ballOn: 93, seed: s, offense: L.offense, defense: L.defense });
+    const last = r.frames[r.frames.length - 1];
+    if (last.ball[0] >= r.bounds.goal - 0.001) { crossed++; assert.equal(r.result, 'touchdown', `seed ${s}: ball at ${last.ball[0]} past goal ${r.bounds.goal} must be a touchdown, got ${r.result}`); }
+    for (const [slot, x] of [...r.frames[0].off, ...r.frames[0].def]) assert.ok(x <= r.bounds.endLine, `${slot} starts inside the end line`);
+  }
+  assert.ok(crossed > 0);
+  const s = scrimmage({ quarter: 4, clock: 0, score: { home: 10, away: 10 } });
+  R.endOfPeriod(s);
+  assert.ok(s.ot, 'overtime started');
+  const first = s.possession; s.down = 4; s.toGo = 9;
+  R.doPunt(s, teams);
+  assert.equal(s.possession, R.opponent(first)); assert.equal(s.ballOn, 75, 'second OT possession starts at the 25');
+  assert.equal(AI.shouldSpike(Object.assign(scrimmage({ quarter: 5, clock: 0, clockRunning: true, score: { home: 7, away: 10 }, timeouts: { home: 0, away: 1 } }), { ot: { period: 1 } })), false);
+  const fk = scrimmage({ phase: 'free_kick', kickingTeam: 'home' });
+  for (let i = 0; i < 60; i++) { const c = structuredClone(fk); c.rngState = (c.rngState + i * 7919) >>> 0; const { text } = R.doKickoff(c, teams); assert.ok(!/BLOCKED/.test(text), 'free kicks are never blocked'); }
 });

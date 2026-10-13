@@ -52,6 +52,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   };
   for (const slot of offensePlay.onField) makeActor('off', slot, offensePlay, offense[slot]);
   for (const slot of defensePlay.onField) makeActor('def', slot, defensePlay, defense[slot]);
+  for (const a of actors) { // nobody lines up beyond the end line or the sideline
+    a.x = clamp(a.x, B.ownEndLine + 0.5, Math.min(B.endLine - 0.5, a.team === 'def' ? B.goal + 8 : B.endLine - 0.5));
+    a.y = clamp(a.y, B.left + 0.6, B.right - 0.6);
+  }
   const offs = actors.filter((a) => a.team === 'off');
   const defs = actors.filter((a) => a.team === 'def');
   const qb = bySlot.off.QB;
@@ -611,6 +615,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const forward = Math.min(1.2, Math.hypot(c.vx, c.vy) * 0.14);
       const dir = c.team === 'off' ? 1 : -1;
       c.x += dir * forward;
+      // Forward progress across the goal line is a score, not a tackle at the 1.
+      if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line — TOUCHDOWN`, { kind: 'touchdown' }); return true; }
+      if (c.team === 'def' && c.x <= B.ownGoal) { stats.tackler = d.slot; endPlay('touchdown', Math.min(c.x, B.ownGoal), c.y, { defensiveScore: true }); log(`${c.name} falls into the end zone — TOUCHDOWN`, { kind: 'touchdown' }); return true; }
       if (rng.chance(fumbleP)) {
         const near = actors.filter((a) => dist(a, c) < 2.5);
         const recoverer = near.length ? rng.pick(near) : d;

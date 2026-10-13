@@ -259,7 +259,7 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   const kicking = state.kickingTeam, receiving = opponent(kicking);
   let res;
   if (state.phase === 'free_kick') {
-    res = ST.punt(r, { ballOn: 20, kicker: teams[kicking].kicker, returner: teams[receiving].returner });
+    res = ST.punt(r, { ballOn: 20, kicker: teams[kicking].kicker, returner: teams[receiving].returner, rushPressure: 0 });
     res.text = 'Free kick: ' + res.text;
   } else res = ST.kickoff(r, { kicker: teams[kicking].kicker, returner: teams[receiving].returner, onside });
   save();
@@ -293,6 +293,7 @@ export function doPunt(state, teams) {
   const text = lines.join(' ');
   state.lastPlay = { text, result: 'punt' };
   log(state, text, 'kick', { team: kicking });
+  if (state.ot) { otAfterPossession(state); return { res, text }; }
   if (state.clock <= 0 && state.phase === 'scrimmage') endOfPeriod(state);
   return { res, text };
 }

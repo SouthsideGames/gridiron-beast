@@ -182,7 +182,7 @@ export function registerMatchScreens(Router, app) {
     const secondary = `<div class="secondary">
       <button class="btn small" data-action="timeout" ${s.timeouts[me] ? '' : 'disabled'}>Timeout (${s.timeouts[me]})</button>
       ${myBall ? `<select class="btn small" data-change="tempo" aria-label="Tempo" style="min-height:36px;margin:0;flex:1"><option value="normal" ${(G.tempo || 'normal') === 'normal' ? 'selected' : ''}>Tempo: normal</option><option value="hurry" ${G.tempo === 'hurry' ? 'selected' : ''}>Tempo: hurry-up</option><option value="milk" ${G.tempo === 'milk' ? 'selected' : ''}>Tempo: milk clock</option></select>` : ''}
-      ${myBall && AI.shouldKneel(s) ? '<button class="btn small" data-action="kneel">Kneel</button>' : ''}${myBall && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? '<button class="btn small" data-action="spike">Spike</button>' : ''}
+      ${myBall && AI.shouldKneel(s) ? '<button class="btn small" data-action="kneel">Kneel</button>' : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? '<button class="btn small" data-action="spike">Spike</button>' : ''}
       <button class="btn small" data-action="mode">${G.mode === 'key' ? 'Key Moments ✓' : 'Full Coaching ✓'}</button>
       ${G.mode === 'key' ? '<button class="btn small good" data-action="keymoment">Sim to key moment ▸</button>' : ''}</div>`;
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">Play clock <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';

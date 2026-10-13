@@ -185,5 +185,5 @@ export function shouldKneel(state) {
 const RUNOFF_MILK = 30;
 export function shouldSpike(state) {
   const s = situation(state);
-  return s.late && s.diff < 0 && state.clockRunning && state.clock <= 12 && state.timeouts[state.possession] === 0 && s.down < 4;
+  return !s.ot && s.late && s.diff < 0 && state.clockRunning && state.clock <= 12 && state.timeouts[state.possession] === 0 && s.down < 4;
 }
