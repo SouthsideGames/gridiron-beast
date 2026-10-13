@@ -26,7 +26,8 @@ export function registerMatchScreens(Router, app) {
       const col = (team, label) => `<div class="panel tight"><div class="row"><b style="color:${team.color}">${esc(team.name)}</b><span class="chip">${label}</span></div><div class="muted" style="font-size:12px">OVR ${teamOverall(team)} · ${esc(team.offensePlays.length)} / ${esc(team.defensePlays.length)} plays</div>
         <h3 style="font-size:12px">Offense</h3>${OFFENSE_SLOTS.map((s) => `<div class="slotline"><span class="mono">${s}</span><span>${esc(team.offense[s]?.name || '—')}</span></div>`).join('')}
         <h3 style="font-size:12px">Defense</h3>${DEFENSE_SLOTS.map((s) => `<div class="slotline"><span class="mono">${s}</span><span>${esc(team.defense[s]?.name || '—')}</span></div>`).join('')}</div>`;
-      return `<div class="pregame"><div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}${m.rival ? ' · ⚔️ RIVALRY GAME' : ''}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
+      const rv = f.rivals[f.tier];
+      return `<div class="pregame">${m.rival ? `<div class="rival-banner">⚔️ RIVALRY GAME<div class="muted" style="font-weight:600;font-size:12px">GM ${esc(rv?.gm || '')} · all-time ${rv?.headToHead.w || 0}–${rv?.headToHead.l || 0}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}<div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
         <div class="lineups">${col(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}${col(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>
         <p class="dim" style="margin-top:8px">${f.week.trainingFocus ? 'Training bonus is active this game. ' : ''}Coaching mode: <b>${f.settings.mode === 'key' ? 'Key Moments' : 'Full Coaching'}</b> (change in Settings).</p>
         <button class="btn primary big block" data-action="toss">Coin toss →</button></div>`;
@@ -49,7 +50,7 @@ export function registerMatchScreens(Router, app) {
   function startGame(f, m, winner, choice) {
     const state = R.newGame({ home: m.home, away: m.away, seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: winner, choice });
     f.rngState = rngFromState(f.rngState).state;
-    f.game = { state, playerSide: m.playerSide, tendencies: { home: newTendencies(), away: newTendencies() }, selected: { offense: null, defense: null }, mode: f.settings.mode, lastEvent: null, simmed: [] };
+    f.game = { state, playerSide: m.playerSide, tendencies: { home: newTendencies(), away: newTendencies() }, selected: { offense: null, defense: null }, mode: f.settings.mode, lastEvent: null, simmed: [], event: m.rival ? 'rival' : m.playoff ? 'playoff' : null, tag: m.tag };
     app.save();
     Router.go('match', {}, { reset: true });
   }
@@ -71,11 +72,12 @@ export function registerMatchScreens(Router, app) {
       const offenseTeamSide = s.possession;
       const offColor = s[offenseTeamSide].color, defColor = s[R.opponent(offenseTeamSide)].color;
       const fieldInner = anim
-        ? fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera })
-        : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr });
+        ? fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event })
+        : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event });
       const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
       const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''}" id="banner">${esc(G.lastEvent.text)}</div>` : '';
-      return `
+      const eventBanner = G.event === 'rival' ? `<div class="rival-banner">⚔️ RIVALRY GAME · ${esc(s[them].name)} · GM ${esc(f.rivals[f.tier]?.gm || '')}</div>` : G.event === 'playoff' ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 PLAYOFFS · ${esc(G.tag || 'Win or go home')}</div>` : '';
+      return `${eventBanner}
         <div class="scoreboard" aria-live="polite">
           <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span><span class="abbr"><span style="color:${s.away.color}">${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score">${s.score.away}</span></div>
           <div class="mid"><b>${s.finished ? 'FINAL' : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}</div>

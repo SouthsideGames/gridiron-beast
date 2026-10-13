@@ -114,3 +114,29 @@ test('save round-trips and the legacy v5 import preserves owner, club, staff and
   assert.equal(imported.badges.challenger, 1); assert.equal(imported.history.length, 2); assert.equal(imported.season.year, 3);
   assert.ok(imported.roster.some((m) => m.name === 'Firestorm' && m.position === 'QB'));
 });
+
+test('quick start: default staff, first-week plan and a Sunday game straight away', () => {
+  const f = F.createFranchise({ owner: { first: 'Sam', last: 'Rivera', gender: 'Female', portrait: 1, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 7 });
+  F.hireDefaultStaff(f); F.quickStartWeek(f);
+  assert.equal(Object.keys(f.staff).length, STAFF_ROLES.length);
+  assert.equal(F.nextStaffRole(f), null);
+  assert.equal(f.week.plan.offense.length, F.PLAN_SIZE); assert.equal(f.week.plan.defense.length, F.PLAN_SIZE);
+  assert.equal(f.season.day, 6);
+  assert.ok(F.sundayMatchup(f), 'a matchup exists on the first Sunday');
+  assert.equal(f.settings.mode, 'key', 'new players default to Key Moments');
+  assert.ok(!F.TIERS_ENABLED, 'promotion/relegation is hidden in this release');
+  const r = F.replaceStaff(f, f.staff.head_coach); assert.equal(r.ok, false);
+});
+
+test('headline attributes derive four values from the twelve', async () => {
+  const { headlineAttributes, HEADLINE } = await import('../src/data/monsters.js');
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 3 });
+  for (const m of f.roster) { const h = headlineAttributes(m); for (const { key: k } of HEADLINE) { assert.ok(Number.isFinite(h[k]) && h[k] >= 1 && h[k] <= 99, `${m.name} ${k}`); } }
+});
+
+test('season awards are produced when a season ends', () => {
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 11 });
+  F.hireDefaultStaff(f);
+  const a = F.seasonAwards(f);
+  assert.ok(a && 'mvp' in a && a.rivalry && a.rivalry.team, 'awards object has an MVP slot and a rivalry line');
+});

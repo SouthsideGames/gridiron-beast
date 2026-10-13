@@ -2,8 +2,7 @@
 
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import * as Save from '../../franchise/save.js';
-import { summary } from '../../franchise/franchise.js';
-import { tierById } from '../../data/league.js';
+import { summary, hireDefaultStaff } from '../../franchise/franchise.js';
 import { portraitSprite } from '../pixel-monster.js';
 
 export function registerMenuScreens(Router, app) {
@@ -14,13 +13,11 @@ export function registerMenuScreens(Router, app) {
       const s = f ? summary(f) : null;
       return `
         <div class="hero"><div class="logo">GRIDIRON BEAST</div><div class="muted">Monster football franchise · 7-on-7</div></div>
-        ${f ? `<div class="panel"><div class="row"><span>${portraitSprite(f.owner.portrait + '|' + f.owner.first, 44)}</span><div class="grow"><div><b>${esc(f.owner.first)} ${esc(f.owner.last)}</b> · ${esc(s.club)}</div><div class="muted">${esc(s.tier)} · Season ${s.year} · Week ${s.week} · ${s.record}</div></div></div>
+        ${f ? `<div class="panel"><div class="row"><span>${portraitSprite(f.owner.portrait + '|' + f.owner.first, 44)}</span><div class="grow"><div><b>${esc(f.owner.first)} ${esc(f.owner.last)}</b> · ${esc(s.club)}</div><div class="muted">Beast League · Season ${s.year} · Week ${s.week} · ${s.record}</div></div></div>
           <div class="stack" style="margin-top:12px"><button class="btn primary big block" data-action="continue">▶ Continue Franchise</button></div></div>` : ''}
         <div class="stack">
           <button class="btn ${f ? '' : 'primary big'} block" data-action="new">${f ? 'Start a New Franchise' : '🏆 New Franchise'}</button>
           ${legacy && !f ? `<button class="btn block" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
-          <button class="btn block" data-action="soon" data-what="Multiplayer">🌐 Multiplayer · Coming soon</button>
-          <button class="btn block" data-action="soon" data-what="Draft Mode">🎲 Draft Mode · Coming soon</button>
           <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block" data-action="go" data-screen="developer">🛠️ Developer</button></div>
         </div>
         <p class="center dim" style="margin-top:16px">v6.0 rebuild · Southside Games</p>`;
@@ -29,7 +26,7 @@ export function registerMenuScreens(Router, app) {
       delegate(root, {
         continue: () => Router.go('hq', {}, { reset: true }),
         new: async () => { if (app.f && !(await confirmSheet('Starting a new franchise replaces your current save. Export it first from Settings if you want to keep it.', { title: 'New franchise', okLabel: 'Start new', danger: true }))) return; Router.go('onboarding', { fresh: true }); },
-        'import-legacy': async () => { try { const f = Save.importLegacy(Save.readLegacy()); app.setFranchise(f); toast('Imported your previous franchise. Your old save is untouched.', 'good'); Router.go(Object.keys(f.staff).length < 5 ? 'hire' : 'hq', {}, { reset: true }); } catch (e) { toast(e.message, 'bad'); } },
+        'import-legacy': async () => { try { const f = Save.importLegacy(Save.readLegacy()); app.setFranchise(f); toast('Imported your previous franchise. Your old save is untouched.', 'good'); if (Object.keys(f.staff).length < 5) hireDefaultStaff(f); app.save(); Router.go('hq', {}, { reset: true }); } catch (e) { toast(e.message, 'bad'); } },
         soon: (el) => toast(`${el.dataset.what} is planned for a later release.`),
         go: (el) => Router.go(el.dataset.screen),
       });
@@ -42,11 +39,12 @@ export function registerMenuScreens(Router, app) {
       const s = app.settings;
       return `
         <div class="panel">
-          <label class="field">Quarter length<select data-change="quarter"><option value="180" ${s.quarterLength === 180 ? 'selected' : ''}>3 minutes (quick)</option><option value="300" ${s.quarterLength === 300 ? 'selected' : ''}>5 minutes (default)</option><option value="420" ${s.quarterLength === 420 ? 'selected' : ''}>7 minutes (long)</option></select></label>
-          <label class="field">Coaching mode<select data-change="mode"><option value="full" ${s.mode === 'full' ? 'selected' : ''}>Full Coaching — call every play</option><option value="key" ${s.mode === 'key' ? 'selected' : ''}>Key Moments — coach the big downs</option></select></label>
+          <label class="field">Game length<select data-change="quarter"><option value="180" ${s.quarterLength === 180 ? 'selected' : ''}>Quick — 3-minute quarters, ~25 plays, 3–5 min</option><option value="300" ${s.quarterLength === 300 ? 'selected' : ''}>Standard — 5-minute quarters, ~45 plays, 6–10 min</option><option value="420" ${s.quarterLength === 420 ? 'selected' : ''}>Full — 7-minute quarters, ~60 plays, 10–15 min</option></select></label>
+          <label class="field">Coaching mode<select data-change="mode"><option value="key" ${s.mode === 'key' ? 'selected' : ''}>Key Moments — you coach the big downs (recommended)</option><option value="full" ${s.mode === 'full' ? 'selected' : ''}>Full Coaching — call every play</option></select></label>
+          <p class="dim">Times assume Key Moments; Full Coaching roughly doubles them.</p>
           <label class="field">Animation speed<select data-change="speed"><option value="0.7" ${s.speed === 0.7 ? 'selected' : ''}>Slow</option><option value="1" ${s.speed === 1 ? 'selected' : ''}>Normal</option><option value="1.6" ${s.speed === 1.6 ? 'selected' : ''}>Fast</option></select></label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (delay of game penalty)</label>
+          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default — not recommended on mobile)</label>
         </div>
         ${app.f ? `<div class="panel"><h3>Save data</h3><div class="stack"><button class="btn block" data-action="export">Export save as JSON</button><label class="btn block" style="cursor:pointer">Import save JSON<input type="file" accept="application/json,.json" data-change="import" class="sr-only"></label><button class="btn danger block" data-action="reset">Delete franchise</button></div></div>` : ''}
         <p class="dim">The previous version's save (if any) is never modified by this build.</p>`;
@@ -76,7 +74,7 @@ export function registerMenuScreens(Router, app) {
 
   Router.registerScreen('about', {
     title: 'About',
-    render() { return `<div class="panel"><p><b>Gridiron Beast v6</b> — a mobile-first 7-on-7 monster football franchise game.</p><p class="muted">Engine, playbook, coaching AI and franchise systems are shared by matches, practice and the simulated league. Every play is reproducible from its seed.</p><p class="muted">Tiers: ${['challenger', 'vanguard', 'sovereign'].map((t) => esc(tierById(t).name)).join(' → ')}.</p></div>`; },
+    render() { return `<div class="panel"><p><b>Gridiron Beast v6</b> — a mobile-first 7-on-7 monster football franchise game.</p><p class="muted">Engine, playbook, coaching AI and franchise systems are shared by matches, practice and the simulated league. Every play is reproducible from its seed.</p><p class="muted">16 clubs, two conferences, a 10-week season and a three-round playoff.</p></div>`; },
   });
 
   Router.registerScreen('more', {

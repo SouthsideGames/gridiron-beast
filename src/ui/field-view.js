@@ -23,7 +23,7 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
@@ -36,6 +36,12 @@ export function fieldSvg(o) {
   }
   if (cam.bottom < 0) s += `<rect x="${-HW}" y="${Y(0)}" width="${HW * 2}" height="${Y(-10) - Y(0)}" fill="#1a4b3b"/><text x="0" y="${Y(-5) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${ownLabel}</text>`;
   if (cam.top > 100) s += `<rect x="${-HW}" y="${Y(110)}" width="${HW * 2}" height="${Y(100) - Y(110)}" fill="#1a4b3b"/><text x="0" y="${Y(105) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${oppLabel}</text>`;
+  // Event field art: rivalry games get a painted midfield crest and purple end-zone stripes; playoffs get gold.
+  if (event) {
+    const accent = event === 'rival' ? '#a855f7' : '#f5c542';
+    if (cam.bottom < 50 && cam.top > 50) s += `<g opacity="0.35"><circle cx="0" cy="${Y(50)}" r="6" fill="none" stroke="${accent}" stroke-width="0.6"/><text x="0" y="${Y(50) + 1.6}" text-anchor="middle" font-size="4.5" font-weight="900" fill="${accent}">${event === 'rival' ? '⚔' : '★'}</text></g>`;
+    for (const ez of [[-10, 0], [100, 110]]) if (cam.bottom < ez[1] && cam.top > ez[0]) s += `<rect x="${-HW}" y="${Y(ez[1])}" width="${HW * 2}" height="${Y(ez[0]) - Y(ez[1])}" fill="${accent}" opacity="0.18"/>`;
+  }
   // Yard lines, hashes, numbers.
   for (let yard = 0; yard <= 100; yard += 5) {
     if (yard < cam.bottom - 1 || yard > cam.top + 1) continue;

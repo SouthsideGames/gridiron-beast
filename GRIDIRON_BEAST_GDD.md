@@ -181,7 +181,7 @@ Every decision uses down, distance, field position, score differential, quarter,
 | Sat | Lineup check | Auto-fills injuries; warns about fatigue |
 | Sun | Game | All other league games are simulated with the same engine |
 
-**League:** 16 teams, 2 conferences, 4 divisions, 10-week regular season (9 games + bye) using the existing deterministic schedule generator. Standings come from simulated games. Ties broken by head-to-head, then point differential. **Postseason:** 8 teams, Weeks 11–13, Beast Bowl. Beast Bowl champion earns a championship badge. Promotion challenge and relegation remain as specified in v4.9 §18–19 (challenge match LATER).
+**League:** 16 teams, 2 conferences, 4 divisions, 10-week regular season (9 games + bye) using the existing deterministic schedule generator. Standings come from simulated games. Ties broken by head-to-head, then point differential. **Postseason:** 8 teams, Weeks 11–13, Beast Bowl. Beast Bowl champion earns a championship badge. Promotion and relegation (v4.9 §18–19) are **hidden in this release** (`TIERS_ENABLED = false`): the data model keeps a single tier so the three-tier pyramid can return later, and the player-facing goal is one great season — rival storyline, playoff race, end-of-season awards.
 
 **Progression:** XP for participation and contributions (yards, TDs, tackles, sacks, interceptions). Each level adds attribute points to the position's key attributes. Trainer bonuses are never permanent.
 
@@ -210,4 +210,13 @@ Every decision uses down, distance, field position, score differential, quarter,
 
 ## 11. Out of scope for this build (LATER)
 
-Multiplayer, Draft Mode, trades, free agency, contracts beyond a single annual salary, custom play editor, penalties beyond delay of game, wind/weather, evolution, equipment, audio.
+Promotion/relegation UI, Multiplayer, Draft Mode, trades, free agency, contracts beyond a single annual salary, custom play editor, penalties beyond delay of game, wind/weather, evolution, equipment, audio.
+
+## 11. Release 6.1 adjustments (focus pass)
+
+* **One season, done well.** Tiers are hidden; HQ shows the rival and the playoff race from week 5; the season ends with an awards sheet (MVP, leaders, rivalry record) that is also stored in franchise history.
+* **Four headline attributes.** Speed, Power, Hands, Smarts are derived per position from the twelve underlying attributes (`headlineAttributes`), which remain in the engine and are visible under a disclosure. Scouting reveals headline values progressively.
+* **Three-step onboarding.** Name and portrait → club (rival revealed inline) → one offensive cornerstone. A balanced default staff is hired automatically; the first Sunday is pre-planned so the first game starts immediately (`quickStartWeek`). The front office opens afterwards via Staff → Replace.
+* **Defaults.** Key Moments is the default coaching mode; game length presets quote play counts and real time; the live play clock stays opt-in.
+* **Practice lessons.** Every play carries a lesson (when to call it, what to watch, what it beats and loses to) shown on the practice field and in play detail.
+* **Rival games are events.** Purple banner, painted midfield crest and end zones, all-time record on the pregame screen; playoff games get the gold variant.

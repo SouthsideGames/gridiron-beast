@@ -4,16 +4,21 @@
 import { esc, delegate, toast, sheet, confirmSheet, fmtMoney } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
-import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel } from '../../data/monsters.js';
+import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes } from '../../data/monsters.js';
 import { buildDepthChart } from '../../franchise/roster.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
-import { ROLE_LABEL, STAFF_ROLES, PLAYBOOKS, TRAINING_FOCI } from '../../data/staff.js';
+import { ROLE_LABEL, STAFF_ROLES, PLAYBOOKS, TRAINING_FOCI, STAFF, staffById } from '../../data/staff.js';
 import { PLAYS } from '../../data/playbook.js';
 import { playCardSvg } from '../play-art.js';
 
 const ATTR_LABEL = { speed: 'Speed', agility: 'Agility', strength: 'Strength', awareness: 'Awareness', catching: 'Catching', arm: 'Arm', accuracy: 'Accuracy', blocking: 'Blocking', tackling: 'Tackling', coverage: 'Coverage', durability: 'Durability', kicking: 'Kicking' };
 const ATTR_HELP = { speed: 'Top speed, pursuit, separation', agility: 'Acceleration, cuts, jukes, catch radius', strength: 'Blocking, shedding, tackling, breaking tackles', awareness: 'Reads, lane choice, reaction, angles', catching: 'Catches, contested balls, ball security', arm: 'Throw velocity and range', accuracy: 'Throw precision', blocking: 'Engagement strength', tackling: 'Finishing tackles and sacks', coverage: 'Staying with receivers, breaking on the ball', durability: 'Injury and fatigue resistance', kicking: 'Kick distance and accuracy' };
 
+/** Four headline bars for a monster. */
+export function headlineHtml(m, opts) {
+  const h = headlineAttributes(m, opts);
+  return `<div class="headline">${HEADLINE.map((x) => `<div class="hl" title="${esc(x.help)}"><span class="hl-v ${h[x.key] >= 70 ? 'hi' : h[x.key] < 50 ? 'lo' : ''}">${h[x.key]}</span><span class="hl-l">${x.label}</span><div class="bar ${h[x.key] < 45 ? 'bad' : h[x.key] < 60 ? 'warn' : ''}"><i style="width:${h[x.key]}%"></i></div></div>`).join('')}</div>`;
+}
 export function registerRosterScreens(Router, app) {
   let side = 'offense';
 
@@ -37,7 +42,7 @@ export function registerRosterScreens(Router, app) {
   });
   function monsterRow(m, chart = {}) {
     const slot = Object.entries(chart).find(([, id]) => id === m.id)?.[0];
-    return `<button class="item" data-action="monster" data-id="${m.id}">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${typeGlyph(m.type)} ${m.cornerstone ? '<span class="chip accent">★</span>' : ''}</div><div class="sub">${m.position}${slot ? ' · ' + slot : ''} · L${m.level} · ${m.injury ? `<span style="color:var(--bad)">${m.injury.severity} injury, ${m.injury.weeks} wk</span>` : m.fatigue >= 60 ? '<span style="color:var(--warn)">fatigued</span>' : 'healthy'}</div></div><span class="ovr ${monsterOverall(m) >= 65 ? 'hi' : ''}">${monsterOverall(m)}</span></button>`;
+    return `<button class="item" data-action="monster" data-id="${m.id}">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${typeGlyph(m.type)} ${m.cornerstone ? '<span class="chip accent">★</span>' : ''}</div><div class="sub">${m.position}${slot ? ' · ' + slot : ''} · L${m.level} · ${m.injury ? `<span style="color:var(--bad)">${m.injury.severity} injury, ${m.injury.weeks} wk</span>` : m.fatigue >= 60 ? '<span style="color:var(--warn)">fatigued</span>' : 'healthy'}</div></div><span class="mini-hl mono">${(() => { const h = headlineAttributes(m); return `${h.speed}·${h.power}·${h.hands}·${h.smarts}`; })()}</span><span class="ovr ${monsterOverall(m) >= 65 ? 'hi' : ''}">${monsterOverall(m)}</span></button>`;
   }
 
   Router.registerScreen('assign', {
@@ -64,8 +69,9 @@ export function registerRosterScreens(Router, app) {
         <div class="panel"><b>Nature: ${esc(nature.name)}</b><p class="muted" style="margin:2px 0">${esc(nature.behavior)}${nature.up ? ` <span class="chip good">+10% ${ATTR_LABEL[nature.up]}</span> <span class="chip bad">−10% ${ATTR_LABEL[nature.down]}</span>` : ''}</p>
           <b>Type: ${esc(m.type)}</b><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}.</p>
           ${ab ? `<b>Signature ability: ${esc(ab.name)}</b><p class="muted" style="margin:2px 0">${esc(ab.text)}</p>` : '<p class="dim">No signature ability.</p>'}</div>
-        <h3>Attributes (effective)</h3><div class="attr-grid">${ATTRIBUTES.map((k) => `<div class="attr" title="${esc(ATTR_HELP[k])}"><span>${ATTR_LABEL[k]}</span><div class="bar ${eff[k] < 45 ? 'bad' : eff[k] < 60 ? 'warn' : ''}"><i style="width:${eff[k]}%"></i></div><span class="v" style="color:${eff[k] > base[k] ? 'var(--good)' : eff[k] < base[k] ? 'var(--bad)' : 'inherit'}">${eff[k]}</span></div>`).join('')}</div>
-        <p class="dim" style="margin-top:8px">Green/red values include nature, fatigue and position penalties. Every attribute affects the simulation.</p>
+        <h3>Ratings</h3>${headlineHtml(m)}
+        <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">All twelve attributes</summary><div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => `<div class="attr" title="${esc(ATTR_HELP[k])}"><span>${ATTR_LABEL[k]}</span><div class="bar ${eff[k] < 45 ? 'bad' : eff[k] < 60 ? 'warn' : ''}"><i style="width:${eff[k]}%"></i></div><span class="v" style="color:${eff[k] > base[k] ? 'var(--good)' : eff[k] < base[k] ? 'var(--bad)' : 'inherit'}">${eff[k]}</span></div>`).join('')}</div>
+        <p class="dim" style="margin-top:8px">Green/red values include nature, fatigue and position penalties. Every attribute affects the simulation.</p></details>
         <h3>Career</h3><div class="kv"><b>Games</b><span>${m.stats.games}</span><b>Yards</b><span>${m.stats.yards}</span><b>TD</b><span>${m.stats.td}</span><b>Catches</b><span>${m.stats.catches}</span><b>Tackles</b><span>${m.stats.tackles}</span><b>Sacks</b><span>${m.stats.sacks}</span><b>INT</b><span>${m.stats.int}</span></div>`;
     },
   });
@@ -87,8 +93,16 @@ export function registerRosterScreens(Router, app) {
     render({ f }) {
       const al = F.schemeAlignment(f);
       return `<div class="panel"><b>Team identity</b><div class="muted">OC scheme fit <b>${al.offense}</b>/100 · DC scheme fit <b>${al.defense}</b>/100 — alignment adds (or costs) a little awareness for every starter.</div></div>
-        <div class="list">${STAFF_ROLES.map((r) => { const c = F.staffMember(f, r); if (!c) return `<div class="item static"><div class="grow"><div class="name">${ROLE_LABEL[r]}</div><div class="sub">Vacant</div></div></div>`; return `<div class="item static">${portraitSprite(c.id, 40)}<div class="grow"><div class="name">${esc(c.name)} <span class="chip">${esc(c.style)}</span></div><div class="sub">${ROLE_LABEL[r]} · OVR ${c.overall} · ${fmtMoney(c.salary)}/yr</div><div class="sub">${esc(c.strength)}</div></div>${c.role.includes('coordinator') ? `<button class="btn small" data-action="plays" data-id="${c.id}" data-name="${esc(c.name)}">Plays</button>` : ''}</div>`; }).join('')}</div>`;
+        <div class="list">${STAFF_ROLES.map((r) => { const c = F.staffMember(f, r); if (!c) return `<div class="item static"><div class="grow"><div class="name">${ROLE_LABEL[r]}</div><div class="sub">Vacant</div></div></div>`; return `<div class="item static">${portraitSprite(c.id, 40)}<div class="grow"><div class="name">${esc(c.name)} <span class="chip">${esc(c.style)}</span></div><div class="sub">${ROLE_LABEL[r]} · OVR ${c.overall} · ${fmtMoney(c.salary)}/yr</div><div class="sub">${esc(c.strength)}</div></div>${c.role.includes('coordinator') ? `<button class="btn small" data-action="plays" data-id="${c.id}" data-name="${esc(c.name)}">Plays</button>` : ''}<button class="btn small" data-action="interview" data-role="${r}">Replace</button></div>`; }).join('')}</div>
+        <p class="dim" style="margin-top:8px">Replacing a staff member is immediate; the new salary must fit under the cap.</p>`;
     },
-    mount(root) { delegate(root, { plays: (el) => { const ids = PLAYBOOKS[el.dataset.id] || []; sheet(`<div class="play-grid">${ids.map((id) => `<div class="card"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></div>`).join('')}</div>`, { title: el.dataset.name }); } }); },
+    mount(root) { delegate(root, {
+      plays: (el) => { const ids = PLAYBOOKS[el.dataset.id] || []; sheet(`<div class="play-grid">${ids.map((id) => `<div class="card"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></div>`).join('')}</div>`, { title: el.dataset.name }); },
+      interview: (el) => {
+        const role = el.dataset.role; const current = app.f.staff[role];
+        const { el: sh, close } = sheet(`<div class="stack">${STAFF.filter((c) => c.role === role).map((c) => { const after = F.salarySummary(app.f, c.salary - (staffById(current)?.salary || 0)); return `<div class="panel"><div class="row">${portraitSprite(c.id, 40)}<div class="grow"><b>${esc(c.name)}</b> <span class="chip">${esc(c.style)}</span>${c.id === current ? ' <span class="chip accent">current</span>' : ''}<div class="muted">${esc(c.strength)} · OVR ${c.overall} · ${fmtMoney(c.salary)}/yr</div></div></div><div class="row between" style="margin-top:6px"><span class="muted">Room after: <b style="color:${after.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(after.remaining)}</b></span><button class="btn small primary" data-hire="${c.id}" ${c.id === current || after.over ? 'disabled' : ''}>Hire</button></div></div>`; }).join('')}</div>`, { title: 'Candidates · ' + ROLE_LABEL[role] });
+        sh.addEventListener('click', (e) => { const id = e.target.closest('[data-hire]')?.dataset.hire; if (!id) return; const r = F.replaceStaff(app.f, id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); close(); toast('Staff updated.', 'good'); Router.render(); });
+      },
+    }); },
   });
 }

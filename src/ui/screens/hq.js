@@ -4,9 +4,10 @@
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import { REGIONS, TRAINING_FOCI, ROLE_LABEL, trainingBonus } from '../../data/staff.js';
-import { PLAYS } from '../../data/playbook.js';
+import { PLAYS, LESSONS } from '../../data/playbook.js';
 import { tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
-import { monsterOverall, NATURES, TYPES, effectiveAttributes } from '../../data/monsters.js';
+import { monsterOverall, NATURES, TYPES, effectiveAttributes, HEADLINE, headlineAttributes } from '../../data/monsters.js';
+import { headlineHtml } from './roster.js';
 import { ATTRIBUTES } from '../../data/personnel.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
@@ -32,12 +33,13 @@ export function registerHqScreens(Router, app) {
       const rival = f.rivals[f.tier];
       const day = f.season.day;
       const next = f.season.finished ? { label: 'Start next season', action: 'nextseason', icon: '🔁' } : nextAction(f);
-      const gameLine = f.season.finished ? `<b>Season ${f.season.year} complete.</b> ${f.season.champion === f.club ? '🏆 Beast Bowl champions!' : f.season.champion ? esc(f.season.champion) + ' won the Beast Bowl.' : ''}`
+      const race = f.season.week >= 5 && !f.season.finished && !F.inPlayoffs(f) ? `<div class="muted" style="margin-top:4px">Playoff race: <b>${esc(F.playoffPicture(f).text)}</b></div>` : '';
+      const gameLine = f.season.finished ? `<b>Season ${f.season.year} complete.</b> ${f.season.champion === f.club ? '🏆 Beast Bowl champions!' : f.season.champion ? esc(f.season.champion) + ' won the Beast Bowl.' : ''} <button class="btn small" data-action="awards">Season awards</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
         : fx?.bye ? '<b>Bye week</b> — rest and recover.' : fx ? `<b>Week ${fx.week}</b> · ${fx.home ? 'vs' : '@'} ${esc(opp)} · ${esc(fx.category)}${rival?.team === opp ? ' · ⚔️ RIVAL' : ''}` : '';
       return `
-        <div class="panel tight"><div class="row between"><div><b>${esc(tier.name)}</b> · Season ${s.year}</div><div class="chip accent">Team OVR ${s.overall}</div></div>
-          <div class="row between" style="margin-top:4px"><span>Record <b class="mono">${s.record}</b></span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div></div>
+        <div class="panel tight"><div class="row between"><div><b>Season ${s.year}</b> · Week ${f.season.week}${rival ? ` · ⚔️ ${esc(rival.team)}` : ''}</div><div class="chip accent">Team OVR ${s.overall}</div></div>
+          <div class="row between" style="margin-top:4px"><span>Record <b class="mono">${s.record}</b></span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
         ${weekStrip(f)}
         <div class="panel"><div class="muted" style="font-size:12px">THIS WEEK</div><div style="margin:4px 0 8px">${gameLine}</div>
           ${next ? `<button class="btn primary big block" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>` : ''}
@@ -49,12 +51,15 @@ export function registerHqScreens(Router, app) {
         <h3>News</h3><ul class="news" style="padding-left:18px;margin:0">${f.news.slice(0, 8).map((n) => `<li class="${esc(n.kind)}">${esc(n.text)}</li>`).join('') || '<li class="dim">Nothing yet.</li>'}</ul>`;
     },
     mount(root) {
+      const f0 = app.f;
+      if (f0?.season.finished && f0.season.awards && !f0.season.awardsShown) { f0.season.awardsShown = true; app.save(); sheet(awardsHtml(f0.season.awards), { title: `Season ${f0.season.year} awards` }); }
       delegate(root, {
         go: (el) => Router.go(el.dataset.screen),
         scout: () => Router.go('scout'), recruit: () => Router.go('recruit'), training: () => Router.go('training'), scoutopp: () => Router.go('scoutopp'), gameplan: () => Router.go('gameplan'), lineup: () => Router.go('lineup'),
         bye: () => { F.takeBye(app.f); app.save(); toast('Bye week taken. Fatigue recovered.'); Router.render(); },
         game: () => { if (!F.canPlayGames(app.f)) { toast('Over the salary cap — release a monster first.', 'bad'); return; } Router.go('pregame'); },
         resume: () => Router.go('match'),
+        awards: () => sheet(awardsHtml(app.f.season.awards || F.seasonAwards(app.f)), { title: `Season ${app.f.season.year} awards` }),
         nextseason: async () => { if (await confirmSheet(`Start season ${app.f.season.year + 1}? Your roster ages one year and the record resets.`, { title: 'New season', okLabel: 'Start' })) { F.startNextSeason(app.f); app.save(); Router.render(); } },
       });
     },
@@ -98,9 +103,9 @@ export function registerHqScreens(Router, app) {
   });
   function prospectCard(p, i) {
     const m = p.monster; const attrs = effectiveAttributes(m);
-    const shown = ATTRIBUTES.slice().sort((a, b) => attrs[b] - attrs[a]).slice(0, p.revealed);
+    const h = headlineAttributes(m); const known = Math.min(4, Math.ceil(p.revealed / 3));
     return `<div class="panel"><div class="row">${monsterSprite(m, 52)}<div class="grow"><b>${esc(m.name)}</b> ${typeGlyph(m.type)}<div class="muted">${m.position} · age ${m.age} · ${p.potentialKnown ? 'potential ' + m.potential : 'potential unknown'} · ${fmtMoney(m.salary)}/yr</div><div class="muted">Nature: ${p.natureKnown ? esc(NATURES[m.nature].name) : '???'}</div></div><span class="ovr">${p.revealed >= 4 ? monsterOverall(m) : '??'}</span></div>
-      <div class="attr-grid" style="margin:8px 0">${shown.map((k) => `<div class="attr"><span>${ATTR_LABEL[k]}</span><div class="bar"><i style="width:${attrs[k]}%"></i></div><span class="v">${attrs[k]}</span></div>`).join('')}${p.revealed < ATTRIBUTES.length ? `<div class="dim">${ATTRIBUTES.length - p.revealed} attributes hidden</div>` : ''}</div>
+      <div class="headline" style="margin:8px 0">${HEADLINE.map((x, i) => `<div class="hl"><span class="hl-v">${i < known ? h[x.key] : '??'}</span><span class="hl-l">${x.label}</span><div class="bar"><i style="width:${i < known ? h[x.key] : 0}%"></i></div></div>`).join('')}</div>${known < 4 ? `<div class="dim">${4 - known} rating${4 - known === 1 ? '' : 's'} hidden — a better scout reveals more</div>` : ''}
       <div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="approach" data-i="${i}" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div></div>`;
   }
 
@@ -188,9 +193,9 @@ export function registerHqScreens(Router, app) {
   Router.registerScreen('league', {
     title: 'League', back: false,
     render({ f }) {
-      const tier = tierById(f.tier); const rival = f.rivals[f.tier];
-      return `<div class="panel"><b>${esc(tier.name)}</b> · Tier ${tier.rank}<div class="muted">Titles here: ${f.badges[f.tier]} · ${tier.badgeGoal ? `promotion after ${tier.badgeGoal} titles (${f.qualification[f.tier]}/${tier.badgeGoal})` : 'top tier'}${tier.rank < 3 ? ` · relegation after two bottom-four seasons (${f.bottomFourStreak}/2)` : ''}</div>
-        ${rival ? `<div class="muted">⚔️ Rival: <b>${esc(rival.team)}</b> (GM ${esc(rival.gm)}) · head-to-head ${rival.headToHead.w}–${rival.headToHead.l}</div>` : ''}</div>
+      const rival = f.rivals[f.tier]; const titles = Object.values(f.badges).reduce((a, b) => a + b, 0);
+      return `<div class="panel"><b>Beast League</b> · 16 clubs · Season ${f.season.year}<div class="muted">Beast Bowl titles: ${titles}${f.season.week >= 5 && !f.season.finished ? ` · ${esc(F.playoffPicture(f).text)}` : ''}</div>
+        ${rival ? `<div class="muted">⚔️ Rival: <b>${esc(rival.team)}</b> (GM ${esc(rival.gm)}) · all-time ${rival.headToHead.w}–${rival.headToHead.l}</div>` : ''}</div>
         <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button></div>`;
     },
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen) }); },
@@ -223,8 +228,9 @@ export function registerHqScreens(Router, app) {
     title: 'Franchise History',
     render({ f }) {
       return `<div class="panel"><div class="kv"><b>Owner</b><span>${esc(f.owner.first)} ${esc(f.owner.last)} · ${esc(f.owner.hometown)}</span><b>Titles</b><span>Challenger ${f.badges.challenger} · Vanguard ${f.badges.vanguard} · Sovereign ${f.badges.sovereign}</span></div></div>
-        ${f.history.length ? `<div class="list">${f.history.slice().reverse().map((h) => `<div class="item static"><div class="grow"><div class="name">Season ${h.year} · ${esc(tierById(h.tier).name)}</div><div class="sub">${h.record.w}–${h.record.l}${h.place ? ` · ${h.place}${['st', 'nd', 'rd'][h.place - 1] || 'th'} overall` : ''}${h.playoffs ? ' · playoffs' : ''}${h.champion === h.club ? ' · 🏆 CHAMPIONS' : h.champion ? ` · champion: ${esc(h.champion)}` : ''}${h.legacy ? ' · imported' : ''}</div></div></div>`).join('')}</div>` : '<p class="muted">No completed seasons yet.</p>'}`;
+        ${f.history.length ? `<div class="list">${f.history.slice().reverse().map((h) => `<div class="item static"><div class="grow"><div class="name">Season ${h.year} · ${esc(h.club)}</div><div class="sub">${h.record.w}–${h.record.l}${h.place ? ` · ${h.place}${['st', 'nd', 'rd'][h.place - 1] || 'th'} overall` : ''}${h.playoffs ? ' · playoffs' : ''}${h.champion === h.club ? ' · 🏆 CHAMPIONS' : h.champion ? ` · champion: ${esc(h.champion)}` : ''}${h.legacy ? ' · imported' : ''}</div>${h.awards ? `<div class="sub">${h.awards.mvp ? `MVP ${esc(h.awards.mvp.name)}` : ''}${h.awards.rivalry ? ` · ⚔️ ${h.awards.rivalry.swept ? 'swept' : h.awards.rivalry.wins + '–' + (h.awards.rivalry.games - h.awards.rivalry.wins) + ' vs'} ${esc(h.awards.rivalry.team)}` : ''}</div>` : ''}</div>${h.awards ? `<button class="btn small" data-action="awards" data-year="${h.year}">Awards</button>` : ''}</div>`).join('')}</div>` : '<p class="muted">No completed seasons yet.</p>'}`;
     },
+    mount(root) { delegate(root, { awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h?.awards) sheet(awardsHtml(h.awards), { title: `Season ${h.year} awards` }); } }); },
   });
 }
 
@@ -232,7 +238,20 @@ export function playDetailHtml(id) {
   const p = PLAYS[id]; if (!p) return '<p>Unknown play.</p>';
   const rows = p.onField.map((slot) => { const a = p.assignments[slot]; const what = a.a === 'route' ? `Route: ${a.r}` : a.a === 'zone' ? `Zone: ${a.zone.replace(/_/g, ' ')}` : a.a === 'man' ? `Man: ${a.key === 'wideL' ? 'widest left receiver' : a.key === 'wideR' ? 'widest right receiver' : 'inside receiver'}` : a.a === 'rush' || a.a === 'contain' ? `${a.a === 'rush' ? 'Rush' : 'Contain'}: ${a.gap.replace('_', ' ')} gap` : a.a === 'block' ? (p.type === 'run' ? 'Run block' : 'Pass protection') : a.a.replace(/_/g, ' '); return `<tr><td class="mono"><b>${slot}</b>${slot === p.primary ? ' ★' : ''}</td><td>${esc(what)}</td></tr>`; }).join('');
   return `<div class="play-preview">${playCardSvg(id, { width: 54, depthUp: 26, depthBack: 9 })}</div>${legendHtml(p.side)}
-    <div class="panel"><div class="kv"><b>Type</b><span>${p.side === 'offense' ? (p.type === 'run' ? 'Run' : 'Pass') : 'Defense'}</span><b>Personnel</b><span>${esc(p.pkg)}${p.side === 'offense' ? ` · ${esc(p.formation.replace(/_/g, ' '))}` : ''}</span>${p.primary ? `<b>Primary read</b><span>${p.primary} (★)</span>` : ''}${p.progression?.length ? `<b>Progression</b><span>${p.progression.join(' → ')}</span>` : ''}<b>Best for</b><span>${p.tags.map((t) => t.replace(/_/g, ' ')).join(', ')}</span></div>${p.desc ? `<p style="margin-top:8px">${esc(p.desc)}</p>` : ''}</div>
+    <div class="panel"><div class="kv"><b>Type</b><span>${p.side === 'offense' ? (p.type === 'run' ? 'Run' : 'Pass') : 'Defense'}</span><b>Personnel</b><span>${esc(p.pkg)}${p.side === 'offense' ? ` · ${esc(p.formation.replace(/_/g, ' '))}` : ''}</span>${p.primary ? `<b>Primary read</b><span>${p.primary} (★)</span>` : ''}${p.progression?.length ? `<b>Progression</b><span>${p.progression.join(' → ')}</span>` : ''}<b>Best for</b><span>${p.tags.map((t) => t.replace(/_/g, ' ')).join(', ')}</span></div>${p.desc ? `<p style="margin-top:8px">${esc(p.desc)}</p>` : ''}</div>${lessonHtml(id)}
     <table><thead><tr><th>Player</th><th>Assignment</th></tr></thead><tbody>${rows}</tbody></table>
     <div style="margin-top:12px"><button class="btn block" data-action="practice" data-id="${id}">Run it in practice</button></div>`;
+}
+
+export function lessonHtml(id) {
+  const L = LESSONS[id]; if (!L) return '';
+  return `<div class="panel lesson"><h3 style="margin-top:0">📖 Lesson</h3><div class="kv"><b>When</b><span>${esc(L.when)}</span><b>Watch</b><span>${esc(L.watch)}</span><b>Beats</b><span>${esc(L.beats)}</span><b>Loses to</b><span>${esc(L.loses)}</span></div></div>`;
+}
+
+export function awardsHtml(a) {
+  if (!a) return '<p>No awards yet.</p>';
+  const line = (label, x) => x ? `<div class="item static"><div class="grow"><div class="name">${esc(label)}</div><div class="sub">${esc(x.name)} (${esc(x.position)})${x.value != null ? ` · ${x.value} ${esc(x.label)}` : ''}</div></div></div>` : '';
+  return `<div class="panel center"><div style="font-size:12px" class="muted">SEASON ${a.year}</div><div style="font-size:20px;font-weight:900">${a.record.w}–${a.record.l}${a.record.t ? '–' + a.record.t : ''} · ${a.place}${['st', 'nd', 'rd'][a.place - 1] || 'th'} overall</div><div class="muted">${a.champion === undefined ? '' : a.playoffs ? 'Made the playoffs' : 'Missed the playoffs'}${a.champion ? ` · Beast Bowl: ${esc(a.champion)}` : ''}</div></div>
+    ${a.rivalry ? `<div class="panel tight" style="border-color:#a855f7">⚔️ Rivalry vs ${esc(a.rivalry.team)}: <b>${a.rivalry.swept ? 'SWEPT — GM ' + esc(a.rivalry.gm) + ' is not happy' : a.rivalry.games ? a.rivalry.wins + '–' + (a.rivalry.games - a.rivalry.wins) : 'not played'}</b></div>` : ''}
+    <div class="list">${a.mvp ? `<div class="item static" style="border-color:var(--accent)"><div class="grow"><div class="name">★ Team MVP</div><div class="sub">${esc(a.mvp.name)} (${esc(a.mvp.position)})</div></div></div>` : ''}${line('Rushing leader', a.rusher)}${line('Receiving leader', a.receiver)}${line('Passing leader', a.passer)}${line('Tackling leader', a.tackler)}${line('Sack leader', a.rusherD)}${line('Ball hawk', a.ballhawk)}</div>`;
 }

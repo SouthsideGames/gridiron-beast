@@ -204,3 +204,26 @@ export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, qua
 
 export const ROSTER_MAX = 26;
 export const ROSTER_MIN = 16;
+
+/**
+ * The four numbers a coach needs (GDD: every number on screen should drive a
+ * decision). Derived from the twelve engine attributes per position.
+ */
+export const HEADLINE = Object.freeze([
+  { key: 'speed', label: 'Speed', help: 'Top speed, acceleration, cuts' },
+  { key: 'power', label: 'Power', help: 'Blocking, tackling, breaking tackles' },
+  { key: 'hands', label: 'Hands', help: 'Catching, throwing, kicking' },
+  { key: 'smarts', label: 'Smarts', help: 'Reads, reactions, coverage' },
+]);
+export function headlineAttributes(m, opts) {
+  const a = effectiveAttributes(m, opts);
+  const avg = (...ks) => Math.round(ks.reduce((s, k) => s + a[k], 0) / ks.length);
+  const pos = opts?.slotPosition || m.position;
+  const offense = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(pos);
+  return {
+    speed: avg('speed', 'agility'),
+    power: pos === 'QB' ? a.strength : pos === 'OL' ? avg('blocking', 'strength') : offense ? avg('strength', 'blocking') : avg('strength', 'tackling'),
+    hands: pos === 'QB' ? avg('accuracy', 'arm') : pos === 'K' ? a.kicking : pos === 'OL' ? a.blocking : offense ? a.catching : avg('coverage', 'catching'),
+    smarts: offense ? a.awareness : avg('awareness', 'coverage'),
+  };
+}

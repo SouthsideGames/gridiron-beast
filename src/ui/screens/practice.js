@@ -8,7 +8,7 @@ import { simulatePlay } from '../../sim/engine.js';
 import { pickSlots } from '../../sim/rules.js';
 import { fieldSvg, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
-import { playDetailHtml } from './hq.js';
+import { playDetailHtml, lessonHtml } from './hq.js';
 import { generatedTeam } from '../../franchise/roster.js';
 import { createRng } from '../../core/rng.js';
 
@@ -39,6 +39,7 @@ export function registerPracticeScreens(Router, app) {
         <div class="row between"><label class="row muted" style="gap:4px"><input type="checkbox" data-change="art" ${prac.showArt ? 'checked' : ''} style="width:auto;min-height:0;margin:0"> Show play art</label><label class="row muted" style="gap:4px">Ball on <input type="number" min="1" max="99" value="${prac.ballOn}" data-change="spot" style="width:64px;min-height:36px;margin:0"></label></div>
         <div class="grid2" style="margin-top:8px"><button class="btn primary big" data-action="run">▶ Run play</button><button class="btn big" data-action="again" ${prac.sim ? '' : 'disabled'}>↻ Same seed</button></div>
         <div class="grid2" style="margin-top:8px"><button class="btn" data-action="detail" data-id="${prac.offense}">Offense details</button><button class="btn" data-action="detail" data-id="${prac.defense}">Defense details</button></div>
+        ${lessonHtml(prac.lessonSide === 'defense' ? prac.defense : prac.offense)}<div class="row" style="justify-content:center"><button class="btn small ${prac.lessonSide !== 'defense' ? 'primary' : ''}" data-action="lesson" data-v="offense">Offense lesson</button><button class="btn small ${prac.lessonSide === 'defense' ? 'primary' : ''}" data-action="lesson" data-v="defense">Defense lesson</button></div>
         ${prac.sim ? `<h3>Events</h3><div class="log">${prac.sim.events.map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text)}</span></div>`).join('')}</div><p class="dim">Seed ${prac.sim.seed} · ${prac.sim.frames.length} frames · ${prac.sim.elapsed}s</p>` : ''}`;
     },
     mount(root, ctx) {
@@ -56,6 +57,7 @@ export function registerPracticeScreens(Router, app) {
         art: (el) => { prac.showArt = el.checked; Router.render(); }, spot: (el) => { prac.ballOn = Math.max(1, Math.min(99, Number(el.value) || 30)); prac.sim = null; Router.render(); },
         run: () => run(createRng(Date.now() >>> 0).seed()), again: () => run(prac.seed),
         detail: (el) => sheet(playDetailHtml(el.dataset.id), { title: PLAYS[el.dataset.id].name }),
+        lesson: (el) => { prac.lessonSide = el.dataset.v; Router.render(); },
       });
     },
     unmount() { cancelAnimationFrame(prac.raf); },

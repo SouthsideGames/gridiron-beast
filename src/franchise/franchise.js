@@ -32,7 +32,7 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
     rivals: { challenger: { team: rivalTeam, gm: RIVAL_GMS[rivalTeam] || 'Rival GM', headToHead: { w: 0, l: 0 } } },
     badges: { challenger: 0, vanguard: 0, sovereign: 0 }, qualification: { challenger: 0, vanguard: 0, sovereign: 0 }, bottomFourStreak: 0,
     history: [], news: [],
-    settings: { quarterLength: 300, mode: 'full', speed: 1, reducedMotion: false, liveClock: false, ...settings },
+    settings: { quarterLength: 300, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, ...settings },
     tutorial: { seen: {} },
   };
   startSeason(f, 1);
@@ -47,6 +47,26 @@ export function news(f, text, kind = 'info') { f.news.unshift({ text, kind, week
 export const staffHired = (f) => STAFF_ROLES.every((r) => f.staff[r]);
 export const nextStaffRole = (f) => STAFF_ROLES.find((r) => !f.staff[r]) || null;
 export const staffMember = (f, role) => staffById(f.staff[role]);
+/** First-week fast path: a sensible plan and lineup, straight to Sunday. The full weekly loop starts in week 2. */
+export function quickStartWeek(f) {
+  f.week.plan = { offense: catalog(f, 'offense').slice(0, PLAN_SIZE), defense: catalog(f, 'defense').slice(0, PLAN_SIZE) };
+  f.week.lineupChecked = true; f.season.day = 6; f.quickStart = true;
+  news(f, 'Welcome, owner. Your first game is today — the weekly routine (scouting, recruiting, training) begins next week.', 'info');
+}
+export const DEFAULT_STAFF = Object.freeze({ head_coach: 'hc_vale', offensive_coordinator: 'oc_park', defensive_coordinator: 'dc_ice', head_scout: 'sc_moss', monster_trainer: 'tr_focus' });
+/** Quick start: a balanced default staff so a new owner can play immediately. */
+export function hireDefaultStaff(f) { for (const [role, id] of Object.entries(DEFAULT_STAFF)) if (!f.staff[role]) f.staff[role] = id; }
+/** Front office: swap one staff member for a candidate (cap permitting). */
+export function replaceStaff(f, id) {
+  const c = staffById(id); if (!c) return { ok: false, reason: 'Unknown candidate.' };
+  if (f.staff[c.role] === id) return { ok: false, reason: 'Already on staff.' };
+  const current = staffById(f.staff[c.role]);
+  const budget = salarySummary(f, c.salary - (current?.salary || 0));
+  if (budget.over) return { ok: false, reason: 'Exceeds the salary cap.' };
+  f.staff[c.role] = id;
+  news(f, `${c.name} hired as ${c.role.replace(/_/g, ' ')}${current ? `, replacing ${current.name}` : ''}.`, 'roster');
+  return { ok: true, replaced: current };
+}
 export function hireStaff(f, id) {
   const c = staffById(id); if (!c) throw new Error('unknown staff');
   if (f.staff[c.role]) throw new Error('role filled');
@@ -121,7 +141,7 @@ export function startSeason(f, year) {
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
   f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club) };
   f.week = blankWeek();
-  for (const m of f.roster) { m.fatigue = 0; }
+  for (const m of f.roster) { m.fatigue = 0; m.season = { games: 0, yards: 0, rushYds: 0, recYds: 0, passYds: 0, td: 0, tackles: 0, sacks: 0, int: 0, catches: 0 }; }
 }
 export const currentFixture = (f) => f.season.schedule.find((g) => g.week === f.season.week) || null;
 export const isBye = (f) => !!currentFixture(f)?.bye;
@@ -133,6 +153,16 @@ export function playerAlive(f) { return !inPlayoffs(f) || !!playoffFixture(f); }
 export function record(f) { return f.season.records[f.club]; }
 export function leagueStandings(f) { return standings(f.season.records); }
 
+/** Where the club stands in the playoff race (conference seed or games back). */
+export function playoffPicture(f) {
+  const st = leagueStandings(f); const conf = conferenceFor(divisionOf(f.club));
+  const c = st.conferences[conf]; const seed = c.seeds.indexOf(f.club);
+  const divLeader = st.divisions[divisionOf(f.club)][0];
+  if (seed >= 0) return { inPlayoffs: true, seed: seed + 1, text: `${conf} #${seed + 1} seed${divLeader === f.club ? ' · division leader' : ' · wild card'}` };
+  const lastIn = c.seeds[c.seeds.length - 1]; const a = f.season.records[f.club], b = f.season.records[lastIn];
+  const back = ((b.w - a.w) + (a.l - b.l)) / 2;
+  return { inPlayoffs: false, seed: null, text: back <= 0 ? 'On the bubble — tiebreakers decide' : `${back} game${back === 1 ? '' : 's'} back of the last playoff spot` };
+}
 /** Simulate every other game of the current week with the real engine. */
 function simulateLeagueWeek(f) {
   const { r, save } = frng(f);
@@ -149,6 +179,9 @@ function simulateLeagueWeek(f) {
   }
   save();
   f.season.results.push(...results);
+  const rival = f.rivals[f.tier]?.team;
+  const rg = results.find((x) => x.home === rival || x.away === rival);
+  if (rg) { const rw = (rg.home === rival ? rg.homeScore > rg.awayScore : rg.awayScore > rg.homeScore); const other = rg.home === rival ? rg.away : rg.home; news(f, `Rival watch: ${rival} ${rw ? 'beat' : 'lost to'} ${other} ${rg.home === rival ? rg.homeScore + '–' + rg.awayScore : rg.awayScore + '–' + rg.homeScore}.`, 'info'); }
   return results;
 }
 
@@ -273,7 +306,8 @@ export function finishSunday(f, gameState) {
   save();
   f.week.events = events;
   f.week.gameResult = { ...res, won, playerScore: gameState.score[side], oppScore: gameState.score[oppSide], opponent: m.opponent, tag: m.tag };
-  if (m.rival) { f.rivals[f.tier].headToHead[won ? 'w' : 'l'] += 1; }
+  if (m.rival) { f.rivals[f.tier].headToHead[won ? 'w' : 'l'] += 1; news(f, won ? `RIVALRY WIN over ${m.opponent} — GM ${f.rivals[f.tier].gm} will remember this.` : `${m.opponent}'s GM ${f.rivals[f.tier].gm} gets bragging rights this time.`, won ? 'win' : 'loss'); }
+  for (const slot of Object.keys(m[side].chart)) { const mon = f.roster.find((x) => x.id === m[side].chart[slot]); const st = gameState.stats[side].players[slot]; if (!mon || !st) continue; mon.season ||= { games: 0, yards: 0, rushYds: 0, recYds: 0, passYds: 0, td: 0, tackles: 0, sacks: 0, int: 0, catches: 0 }; mon.season.games += 1; mon.season.rushYds += st.rushYds || 0; mon.season.recYds += st.recYds || 0; mon.season.passYds += st.passYds || 0; mon.season.yards += (st.rushYds || 0) + (st.recYds || 0); mon.season.td += st.td || 0; mon.season.tackles += st.tackles || 0; mon.season.sacks += st.sacks || 0; mon.season.int += st.int || 0; mon.season.catches += st.rec || 0; }
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}–${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
@@ -346,11 +380,36 @@ function endSeason(f) {
   const place = st.overall.indexOf(f.club) + 1;
   f.bottomFourStreak = place > 12 ? f.bottomFourStreak + 1 : 0;
   f.history.push({ year: s.year, club: f.club, tier: f.tier, record: { w: rec.w, l: rec.l, t: rec.t }, place, champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), schedule: s.schedule.map((g) => ({ ...g })), rival: { ...f.rivals[f.tier] } });
-  // Promotion challenge (simplified): enough titles → promoted at season end.
-  const tier = tierById(f.tier);
-  if (tier.next && f.qualification[f.tier] >= tier.badgeGoal) { f.tier = tier.next; f.qualification[f.tier] = 0; news(f, `PROMOTED to the ${tierById(f.tier).name}!`, 'win'); ensureRival(f); }
-  else if (tier.rank < 3 && f.bottomFourStreak >= 2) { const lower = TIERS.find((t) => t.rank === tier.rank + 1); f.tier = lower.id; f.bottomFourStreak = 0; news(f, `Relegated to the ${lower.name}.`, 'loss'); ensureRival(f); }
+  // Tier movement (promotion challenge / relegation) is designed but switched off for now:
+  // the data model stays, the league stays one great season at a time.
+  if (TIERS_ENABLED) {
+    const tier = tierById(f.tier);
+    if (tier.next && f.qualification[f.tier] >= tier.badgeGoal) { f.tier = tier.next; f.qualification[f.tier] = 0; news(f, `PROMOTED to the ${tierById(f.tier).name}!`, 'win'); ensureRival(f); }
+    else if (tier.rank < 3 && f.bottomFourStreak >= 2) { const lower = TIERS.find((t) => t.rank === tier.rank + 1); f.tier = lower.id; f.bottomFourStreak = 0; news(f, `Relegated to the ${lower.name}.`, 'loss'); ensureRival(f); }
+  }
+  s.awards = seasonAwards(f);
+  f.history[f.history.length - 1].awards = s.awards;
   s.finished = true;
+}
+export const TIERS_ENABLED = false;
+
+/** End-of-season awards from the roster's season stats and the league table. */
+export function seasonAwards(f) {
+  const s = f.season; const st = leagueStandings(f); const rec = record(f);
+  const byStat = (key) => f.roster.slice().sort((a, b) => (b.season?.[key] || 0) - (a.season?.[key] || 0))[0];
+  const line = (m, key, label) => m && (m.season?.[key] || 0) > 0 ? { id: m.id, name: m.name, position: m.position, value: m.season[key], label } : null;
+  const mvpScore = (m) => (m.season?.yards || 0) + (m.season?.td || 0) * 20 + (m.season?.tackles || 0) * 4 + (m.season?.sacks || 0) * 12 + (m.season?.int || 0) * 15 + (m.season?.catches || 0) * 2;
+  const mvp = f.roster.slice().sort((a, b) => mvpScore(b) - mvpScore(a))[0];
+  const rival = f.rivals[f.tier];
+  const rivalGames = s.schedule.filter((g) => g.opponent === rival?.team && g.result);
+  return {
+    year: s.year, record: { w: rec.w, l: rec.l, t: rec.t }, place: st.overall.indexOf(f.club) + 1,
+    champion: s.champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club),
+    mvp: mvp && mvpScore(mvp) > 0 ? { id: mvp.id, name: mvp.name, position: mvp.position, score: mvpScore(mvp) } : null,
+    rusher: line(byStat('rushYds'), 'rushYds', 'rushing yards'), receiver: line(byStat('recYds'), 'recYds', 'receiving yards'), passer: line(byStat('passYds'), 'passYds', 'passing yards'),
+    tackler: line(byStat('tackles'), 'tackles', 'tackles'), ballhawk: line(byStat('int'), 'int', 'interceptions'), rusherD: line(byStat('sacks'), 'sacks', 'sacks'),
+    rivalry: rival ? { team: rival.team, gm: rival.gm, wins: rivalGames.filter((g) => g.result.won).length, games: rivalGames.length, swept: rivalGames.length === 2 && rivalGames.every((g) => g.result.won) } : null,
+  };
 }
 function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); const choices = DIVISIONS[divisionOf(f.club)].filter((t) => t !== f.club); const team = r.pick(choices); save(); f.rivals[f.tier] = { team, gm: RIVAL_GMS[team] || 'Rival GM', headToHead: { w: 0, l: 0 } }; } }
 export function startNextSeason(f) {
