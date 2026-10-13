@@ -1,3 +1,10 @@
+## v4.9 — contact-based turnovers and dynamic offensive blocking
+- Fixed fumbles appearing without any defender near the ball carrier. Forced fumbles now require defender contact and identify the forcing defender.
+- After handoff or reception, all non-QB offensive teammates transition from route/initial blocking instructions to live downfield blocking support.
+- Blockers pursue nearby defenders threatening the ball carrier and apply simplified defender interference when in range.
+- Removed arbitrary extended-run tackle termination without nearby defensive contact; a timed whistle may still end unusually long plays.
+- 250 seeded simulation smoke tests showed no noncontact fumbles. Mobile Safari and complete football balance verification remain pending.
+
 ## v4.8 — franchise navigation and practice field
 - Global back navigation now returns from Franchise Mode subpanels to Headquarters; roster detail and lineup selection return to Roster.
 - Explicit Back to Headquarters buttons added to Monster Types and Practice Field.
