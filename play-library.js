@@ -155,10 +155,19 @@ for(const p of Object.values(plays)){
  for(const [id,start] of Object.entries(pos))a[id]={action:'rush',points:[start,[155,130]]};
  p.positions=pos;p.assignments=a;p.formation='All-Out Pressure / 11 Rushers';
 }
+// Every pass concept has exactly one designated first read; other routes remain secondary.
+for(const p of Object.values(plays)){
+ if(p.side!=='offense'||p.kind!=='pass')continue;
+ const eligible=['TE','WR1','WR2','WR3','RB'].filter(id=>p.assignments[id]?.action==='route');
+ p.primaryReceiver=(p.name==='TE Seam'&&eligible.includes('TE'))?'TE':eligible.includes('WR1')?'WR1':eligible[0]||null;
+ for(const [id,a] of Object.entries(p.assignments)){
+  if(a.action==='route')a.read=id===p.primaryReceiver?'primary':'secondary';
+ }
+}
 // Shared semantic play-art palette: applied to every offensive and defensive play.
 const PLAY_COLORS={primary:'#FACC15',receiver:'#EF4444',alternate:'#22C55E',block:'#FFFFFF',deep:'#3B82F6',middle:'#FACC15',sideline:'#A855F7',blitz:'#EF4444',man:'#FACC15'};
 function zoneRole(a){if(a.zoneRole)return a.zoneRole;const z=a.zone||{},start=a.points?.[0]||[0,130];if(z.x>=395)return 'deep';if(z.y<=75||z.y>=185)return 'sideline';return 'middle'}
-function routeRole(p,id,a){if(a.action.includes('block'))return 'block';if(a.action==='route'){if(id===(p.primaryReceiver||['WR1','WR2','WR3','TE','RB'].find(k=>p.assignments[k]?.action==='route')))return 'primary';return a.route==='flat'||a.route==='screen'||a.route==='wheel'?'alternate':'receiver'}if(a.action==='carry'||a.action==='handoff')return 'primary';return 'alternate'}
+function routeRole(p,id,a){if(a.action.includes('block'))return 'block';if(a.action==='route'){if(id===p.primaryReceiver)return 'primary';return a.route==='flat'||a.route==='screen'||a.route==='wheel'?'alternate':'receiver'}if(a.action==='carry'||a.action==='handoff')return 'primary';return 'alternate'}
 function diagram(name){const p=plays[name];if(!p)return '';let out='';for(const [id,a] of Object.entries(p.assignments)){const clampField=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));const pts=a.action==='man'&&a.target&&offensePositions[a.target]?[a.points[0],offensePositions[a.target]].map(([x,y])=>[clampField(x,13,587),clampField(y,13,247)]):a.points.map(([x,y])=>[clampField(x,13,587),clampField(y,13,247)]);if(a.action==='zone'){const z=a.zone,role=zoneRole(a),tone=PLAY_COLORS[role],fill=role==='deep'?'#3B82F6':role==='middle'?'#FACC15':'#A855F7',rx=Math.min(z.rx,285),ry=Math.min(z.ry,117),zx=clampField(z.x,13+rx,587-rx),zy=clampField(z.y,13+ry,247-ry);if(pts.length>1){out+='<polyline points="'+pts.map(v=>v.join(',')).join(' ')+'" fill="none" stroke="'+tone+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';}out+='<ellipse cx="'+zx+'" cy="'+zy+'" rx="'+rx+'" ry="'+ry+'" fill="'+fill+'" fill-opacity=".16" stroke="'+tone+'" stroke-dasharray="5 4" stroke-width="2"/>';continue}const color=p.side==='defense'?(a.action==='rush'?PLAY_COLORS.blitz:a.action==='man'?PLAY_COLORS.man:PLAY_COLORS.middle):PLAY_COLORS[routeRole(p,id,a)];out+='<polyline points="'+pts.map(v=>v.join(',')).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" '+(a.action==='man'?'stroke-dasharray="1 7" stroke-width="3.5"':'')+'/>';const tail=pts.at(-1),prev=pts.at(-2);if(tail&&prev&&a.action!=='man'){const angle=Math.atan2(tail[1]-prev[1],tail[0]-prev[0]);out+='<path d="M'+tail[0]+' '+tail[1]+' l'+(-10*Math.cos(angle-.45))+' '+(-10*Math.sin(angle-.45))+' l'+(10*Math.cos(angle+.45)-10*Math.cos(angle-.45))+' '+(10*Math.sin(angle+.45)-10*Math.sin(angle-.45))+' Z" fill="'+color+'"/>'}}return out}
 return {plays,offensePositions,defensePositions,diagram,count:Object.keys(plays).length};
 })();
