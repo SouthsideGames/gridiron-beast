@@ -5,7 +5,7 @@
   "description": "Gridiron Beast — mobile-first 7-on-7 monster football franchise game",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test \"tests/**/*.test.js\"",
     "serve": "python3 -m http.server 8080"
   },
   "license": "UNLICENSED"
