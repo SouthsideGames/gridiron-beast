@@ -210,3 +210,14 @@ test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup',
   assert.equal(f.season.day, 6); assert.ok(r.did.length >= 5);
   assert.equal(f.week.plan.offense.length, F.PLAN_SIZE); assert.ok(F.sundayMatchup(f)); assert.ok(f.week.media);
 });
+
+test('award races: league-wide stats accumulate and every award has contenders after a few weeks', () => {
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 77 });
+  F.hireDefaultStaff(f);
+  for (let w = 0; w < 3; w++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
+  const r = F.awardRaces(f);
+  for (const k of ['mvp', 'opoy', 'dpoy', 'coy']) assert.ok(r[k].length === 3, `${k} has three contenders`);
+  assert.ok(r.roy.length >= 1);
+  assert.ok(Object.keys(f.season.leagueStats).length >= 14, 'most clubs have stats');
+  assert.ok(r.opoy[0].score > 0 && r.dpoy[0].score > 0);
+});

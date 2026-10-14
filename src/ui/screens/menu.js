@@ -3,7 +3,7 @@
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import * as Save from '../../franchise/save.js';
 import { cloudStatus } from '../../franchise/cloud-save.js';
-import { summary, hireDefaultStaff } from '../../franchise/franchise.js';
+import { summary, hireDefaultStaff, DIFFICULTY } from '../../franchise/franchise.js';
 import { portraitSprite } from '../pixel-monster.js';
 
 export function registerMenuScreens(Router, app) {
@@ -41,6 +41,7 @@ export function registerMenuScreens(Router, app) {
       return `
         <div class="panel">
           <label class="field">Game length<select data-change="quarter"><option value="180" ${s.quarterLength === 180 ? 'selected' : ''}>Standard — 3-minute quarters, ~25 plays, 3–5 min (default)</option><option value="300" ${s.quarterLength === 300 ? 'selected' : ''}>Long — 5-minute quarters, ~45 plays, 6–10 min</option><option value="420" ${s.quarterLength === 420 ? 'selected' : ''}>Full — 7-minute quarters, ~60 plays, 10–15 min</option></select></label>
+          <label class="field">Difficulty<select data-change="difficulty">${Object.entries(DIFFICULTY).map(([id, d]) => `<option value="${id}" ${(s.difficulty || 'pro') === id ? 'selected' : ''}>${d.label} — ${d.text}</option>`).join('')}</select></label>
           <label class="field">Coaching mode<select data-change="mode"><option value="key" ${s.mode === 'key' ? 'selected' : ''}>Key Moments — you coach the big downs (recommended)</option><option value="full" ${s.mode === 'full' ? 'selected' : ''}>Full Coaching — call every play</option></select></label>
           <p class="dim">Times assume Key Moments; Full Coaching roughly doubles them.</p>
           <label class="field">Animation speed<select data-change="speed"><option value="0.7" ${s.speed === 0.7 ? 'selected' : ''}>Slow</option><option value="1" ${s.speed === 1 ? 'selected' : ''}>Normal</option><option value="1.6" ${s.speed === 1.6 ? 'selected' : ''}>Fast</option></select></label>
@@ -55,7 +56,7 @@ export function registerMenuScreens(Router, app) {
     mount(root, ctx) {
       const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };
       delegate(root, {
-        quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
+        quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), difficulty: (el) => set('difficulty', el.value), speed: (el) => set('speed', Number(el.value)),
         reduced: (el) => set('reducedMotion', el.checked), markers: (el) => set('fieldMarkers', el.value), hints: (el) => set('hints', el.checked), liveclock: (el) => set('liveClock', el.checked),
         export: () => { const blob = new Blob([Save.exportJson(app.f)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `gridiron-beast-${app.f.club.replace(/\s+/g, '-').toLowerCase()}-s${app.f.season.year}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Save exported.', 'good'); },
         import: async (el) => { const file = el.files?.[0]; if (!file) return; try { const f = Save.importJson(await file.text()); app.setFranchise(f); toast('Save imported.', 'good'); Router.go('hq', {}, { reset: true }); } catch (e) { toast('Import failed: ' + e.message, 'bad'); } el.value = ''; },

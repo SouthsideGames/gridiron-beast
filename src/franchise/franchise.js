@@ -34,7 +34,7 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
     rivals: { challenger: { team: rivalTeam, gm: RIVAL_GMS[rivalTeam] || 'Rival GM', headToHead: { w: 0, l: 0 } } },
     badges: { challenger: 0, vanguard: 0, sovereign: 0 }, qualification: { challenger: 0, vanguard: 0, sovereign: 0 }, bottomFourStreak: 0,
     history: [], news: [],
-    settings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, ...settings },
+    settings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, difficulty: 'pro', ...settings },
     tutorial: { seen: {} },
   };
   startSeason(f, 1);
@@ -87,6 +87,27 @@ export function coachProfile(f) {
 /** The club's schemes, from its coordinators. */
 export function clubSchemes(f) { return { offense: staffMember(f, 'offensive_coordinator')?.scheme || 'balanced', defense: staffMember(f, 'defensive_coordinator')?.scheme || 'coverage' }; }
 export function fitFor(f, m) { return schemeFit(m, clubSchemes(f)); }
+/** The coordinator's default six: a balanced mix from their playbook (used until the owner sets a plan). */
+export function defaultPlan(f, side) {
+  const cat = catalog(f, side); const has = (id, t) => PLAYS[id]?.tags.includes(t);
+  const pick = (pred, n, taken) => cat.filter((id) => !taken.has(id) && pred(id)).slice(0, n);
+  const taken = new Set(); const out = [];
+  const add = (pred, n) => { for (const id of pick(pred, n, taken)) { taken.add(id); out.push(id); } };
+  if (side === 'offense') {
+    add((id) => PLAYS[id].type === 'run' && !has(id, 'trick'), 2);
+    add((id) => PLAYS[id].type === 'pass' && (has(id, 'short') || has(id, 'quick')), 2);
+    add((id) => PLAYS[id].type === 'pass' && (has(id, 'medium') || has(id, 'intermediate')), 1);
+    add((id) => PLAYS[id].type === 'pass' && (has(id, 'deep') || has(id, 'shot')) && !has(id, 'desperation'), 1);
+  } else {
+    add((id) => has(id, 'pass') && !has(id, 'blitz') && !has(id, 'prevent') && !has(id, 'risky'), 3);
+    add((id) => has(id, 'blitz') && !has(id, 'risky'), 1);
+    add((id) => has(id, 'run') && !has(id, 'goalline'), 1);
+    add((id) => has(id, 'goalline') || has(id, 'run'), 1);
+  }
+  add((id) => !has(id, 'desperation') && !has(id, 'prevent'), PLAN_SIZE - out.length);
+  add(() => true, PLAN_SIZE - out.length);
+  return out.slice(0, PLAN_SIZE);
+}
 export function catalog(f, side) {
   const role = side === 'offense' ? 'offensive_coordinator' : 'defensive_coordinator';
   const id = f.staff[role];
@@ -119,8 +140,8 @@ export function canPlayGames(f) { return !salarySummary(f).over; }
 export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   const meta = TEAM_META[f.club];
   const plan = f.week.plan;
-  const offense = plan.offense.length ? plan.offense : catalog(f, 'offense').slice(0, PLAN_SIZE);
-  const defense = plan.defense.length ? plan.defense : catalog(f, 'defense').slice(0, PLAN_SIZE);
+  const offense = plan.offense.length ? plan.offense : defaultPlan(f, 'offense');
+  const defense = plan.defense.length ? plan.defense : defaultPlan(f, 'defense');
   const align = schemeAlignment(f);
   const team = buildTeam({ id: f.club, name: f.club, abbr: meta.abbr, color: meta.color, roster: f.roster, manual: f.lineupManual, depth: f.depth, offensePlays: offense, defensePlays: defense, coach: coachProfile(f), trainingBonus: tb });
   // Scheme alignment: a small execution bonus/penalty on awareness for every starter.
@@ -142,20 +163,27 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   return team;
 }
 /** Deterministic AI club for a season (quality drifts per year; the rival is slightly better). */
+/** Difficulty: how good and how smart the other 15 clubs are. */
+export const DIFFICULTY = Object.freeze({
+  rookie: { label: 'Rookie', quality: -4, iq: 0.6, text: 'Weaker clubs that call plays loosely.' },
+  pro: { label: 'Pro', quality: 0, iq: 1, text: 'The standard league.' },
+  allstar: { label: 'All-Star', quality: 4, iq: 1.6, text: 'Stronger clubs whose coaches read the situation sharply.' },
+});
 export function aiTeam(f, name, year = f.season?.year || 1) {
   const meta = TEAM_META[name];
   const tier = tierById(f.tier);
   const base = tier.id === 'challenger' ? 56 : tier.id === 'vanguard' ? 64 : 72;
   const h = hashString(`${name}|${year}|${f.seed}`);
-  const quality = base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0);
-  const coach = { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100 };
+  const D = DIFFICULTY[f.settings?.difficulty] || DIFFICULTY.pro;
+  const quality = base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + D.quality;
+  const coach = { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
   return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach });
 }
 
 // ------------------------------------------------------------ season
 export function startSeason(f, year) {
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
-  f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club) };
+  f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club), leagueStats: {} };
   f.week = blankWeek();
   for (const m of f.roster) { m.fatigue = 0; m.season = { games: 0, yards: 0, rushYds: 0, recYds: 0, passYds: 0, td: 0, tackles: 0, sacks: 0, int: 0, catches: 0 }; }
 }
@@ -180,6 +208,16 @@ export function playoffPicture(f) {
   return { inPlayoffs: false, seed: null, text: back <= 0 ? 'On the bubble — tiebreakers decide' : `${back} game${back === 1 ? '' : 's'} back of the last playoff spot` };
 }
 /** Simulate every other game of the current week with the real engine. */
+/** League-wide per-monster season stats (all 16 clubs) for award races. */
+const LEAGUE_KEYS = ['passYds', 'rushYds', 'recYds', 'td', 'rec', 'tackles', 'sacks', 'int', 'ff', 'broken', 'abilities', 'att', 'comp'];
+export function tallyLeagueStats(f, team, side, gameStats) {
+  const L = (f.season.leagueStats ||= {}); const T = (L[team.name] ||= {});
+  for (const [slot, st] of Object.entries(gameStats?.players || {})) {
+    const p = team.offense[slot] || team.defense[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue;
+    const row = (T[p.id] ||= { id: p.id, name: p.name, type: p.type, species: p.species, position: p.position || slot, age: p.age, slot, games: 0 });
+    row.games += 1; for (const k of LEAGUE_KEYS) if (st[k]) row[k] = (row[k] || 0) + st[k];
+  }
+}
 function simulateLeagueWeek(f) {
   const { r, save } = frng(f);
   const fixtures = leagueSeasonFixtures(f.season.year).find((w) => w.week === f.season.week);
@@ -189,6 +227,7 @@ function simulateLeagueWeek(f) {
       if (g.home === f.club || g.away === f.club) continue;
       const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
       const game = playGame({ home, away, seed: r.seed(), quarterLength: 180 });
+      tallyLeagueStats(f, home, 'home', game.stats.home); tallyLeagueStats(f, away, 'away', game.stats.away);
       const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
       applyResult(f.season.records, res); results.push(res);
     }
@@ -334,7 +373,7 @@ export function setGamePlan(f, offense, defense) {
   const catO = catalog(f, 'offense'), catD = catalog(f, 'defense');
   const o = [...new Set(offense)].filter((id) => catO.includes(id)), d = [...new Set(defense)].filter((id) => catD.includes(id));
   if (o.length !== PLAN_SIZE || d.length !== PLAN_SIZE) return { ok: false, reason: `Pick exactly ${PLAN_SIZE} offensive and ${PLAN_SIZE} defensive plays.` };
-  f.week.plan = { offense: o, defense: d };
+  f.week.plan = { offense: o, defense: d }; f.lastPlan = { offense: [...o], defense: [...d] };
   if (f.season.day === 4) f.season.day = 5;
   return { ok: true };
 }
@@ -386,7 +425,7 @@ export function autoRunToSunday(f) {
     }
     else if (day === 2) { const order = ['passing', 'rushing', 'coverage', 'pass_rush']; const last = (f.trainingHistory || []).slice(-1)[0]; const focus = order[(order.indexOf(last) + 1) % order.length]; const r = setTraining(f, focus, 'normal'); did.push(`${TRAINING_FOCI[focus].label} practice ${r.success ? 'went well' : 'was sloppy'}${r.injury ? `; ${r.injury.name} hurt` : ''}`); }
     else if (day === 3) { const opp = opponentName(f); const side = opp ? (teamStrengths(aiTeam(f, opp)).passD < teamStrengths(aiTeam(f, opp)).runD ? 'defense' : 'offense') : 'offense'; scoutOpponent(f, side); did.push(opp ? `Scouted ${opp}'s ${side}` : 'Bye week'); }
-    else if (day === 4) { const o = f.week.plan.offense.length ? f.week.plan.offense : catalog(f, 'offense').slice(0, PLAN_SIZE); const d = f.week.plan.defense.length ? f.week.plan.defense : catalog(f, 'defense').slice(0, PLAN_SIZE); setGamePlan(f, o, d); did.push('Coordinators set the game plan'); }
+    else if (day === 4) { const o = f.week.plan.offense.length ? f.week.plan.offense : (f.lastPlan?.offense || defaultPlan(f, 'offense')); const d = f.week.plan.defense.length ? f.week.plan.defense : (f.lastPlan?.defense || defaultPlan(f, 'defense')); setGamePlan(f, o, d); did.push('Coordinators set the game plan'); }
     else if (day === 5) { const qs = mediaQuestions(f); answerMedia(f, qs.map((q) => Math.max(0, q.a.findIndex((a) => a.t === 'steady' || a.t === 'calm')))); did.push('Press conference: safe answers'); }
   }
   news(f, `Staff ran the week: ${did.join(' · ')}.`, 'info');
@@ -455,6 +494,7 @@ export function finishSunday(f, gameState) {
     if (f.week.media?.hype) { if (won) news(f, 'You backed up the trash talk. The locker room loves it.', 'win'); else { f.rattled = true; news(f, 'The trash talk backfired. The team is rattled: next week\'s practice is harder.', 'loss'); } }
   }
   for (const slot of Object.keys(m[side].chart)) { const mon = f.roster.find((x) => x.id === m[side].chart[slot]); const st = gameState.stats[side].players[slot]; if (!mon || !st) continue; mon.season ||= { games: 0, yards: 0, rushYds: 0, recYds: 0, passYds: 0, td: 0, tackles: 0, sacks: 0, int: 0, catches: 0 }; mon.season.games += 1; mon.season.rushYds += st.rushYds || 0; mon.season.recYds += st.recYds || 0; mon.season.passYds += st.passYds || 0; mon.season.yards += (st.rushYds || 0) + (st.recYds || 0); mon.season.td += st.td || 0; mon.season.tackles += st.tackles || 0; mon.season.sacks += st.sacks || 0; mon.season.int += st.int || 0; mon.season.catches += st.rec || 0; }
+  if (!m.playoff) { tallyLeagueStats(f, m[side], side, gameState.stats[side]); tallyLeagueStats(f, m[oppSide], oppSide, gameState.stats[oppSide]); }
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}–${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
@@ -541,6 +581,23 @@ function endSeason(f) {
 export const TIERS_ENABLED = false;
 
 /** End-of-season awards from the roster's season stats and the league table. */
+/** Award races across the league: top 3 for each named award. */
+export const AWARDS = Object.freeze({
+  mvp: { label: 'Most Valuable Monster', short: 'MVP' }, opoy: { label: 'Offensive Monster of the Year', short: 'OPOY' }, dpoy: { label: 'Defensive Monster of the Year', short: 'DPOY' },
+  roy: { label: 'Rookie of the Year', short: 'ROY' }, coy: { label: 'Coach of the Year', short: 'COY' },
+});
+const OFF_POS = new Set(['QB', 'RB', 'WR', 'TE', 'OL']);
+const offScore = (r) => (r.passYds || 0) / 25 + (r.rushYds || 0) / 10 + (r.recYds || 0) / 10 + (r.td || 0) * 6 + (r.rec || 0) * 0.5 + (r.broken || 0);
+const defScore = (r) => (r.tackles || 0) * 1.2 + (r.sacks || 0) * 5 + (r.int || 0) * 6 + (r.ff || 0) * 4 + (r.sheds || 0) * 0.3;
+export function awardRaces(f) {
+  const rows = Object.entries(f.season.leagueStats || {}).flatMap(([team, T]) => Object.values(T).map((r) => ({ ...r, team })));
+  const top = (list, score) => list.map((r) => ({ ...r, score: score(r) })).filter((r) => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+  const off = rows.filter((r) => OFF_POS.has(r.position)), def = rows.filter((r) => !OFF_POS.has(r.position) && r.position !== 'K');
+  const mvp = top(rows, (r) => OFF_POS.has(r.position) ? offScore(r) : defScore(r) * 0.9);
+  const coy = Object.entries(f.season.records).map(([team, rec]) => ({ team, w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, coach: team === f.club ? staffMember(f, 'head_coach')?.name || 'Your head coach' : `${team} staff`, score: rec.w * 10 + ((rec.pf || 0) - (rec.pa || 0)) / 20 }))
+    .filter((t) => t.w + t.l > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+  return { mvp, opoy: top(off, offScore), dpoy: top(def, defScore), roy: top(rows.filter((r) => r.age <= 22), (r) => OFF_POS.has(r.position) ? offScore(r) : defScore(r) * 0.9), coy };
+}
 export function seasonAwards(f) {
   const s = f.season; const st = leagueStandings(f); const rec = record(f);
   const byStat = (key) => f.roster.slice().sort((a, b) => (b.season?.[key] || 0) - (a.season?.[key] || 0))[0];
@@ -550,11 +607,12 @@ export function seasonAwards(f) {
   const rival = f.rivals[f.tier];
   const rivalGames = s.schedule.filter((g) => g.opponent === rival?.team && g.result);
   return {
-    year: s.year, record: { w: rec.w, l: rec.l, t: rec.t }, place: st.overall.indexOf(f.club) + 1,
+    year: s.year, club: f.club, record: { w: rec.w, l: rec.l, t: rec.t }, place: st.overall.indexOf(f.club) + 1,
     champion: s.champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club),
     mvp: mvp && mvpScore(mvp) > 0 ? { id: mvp.id, name: mvp.name, position: mvp.position, score: mvpScore(mvp) } : null,
     rusher: line(byStat('rushYds'), 'rushYds', 'rushing yards'), receiver: line(byStat('recYds'), 'recYds', 'receiving yards'), passer: line(byStat('passYds'), 'passYds', 'passing yards'),
     tackler: line(byStat('tackles'), 'tackles', 'tackles'), ballhawk: line(byStat('int'), 'int', 'interceptions'), rusherD: line(byStat('sacks'), 'sacks', 'sacks'),
+    league: Object.fromEntries(Object.entries(awardRaces(f)).map(([k, v]) => [k, v[0] || null])),
     rivalry: rival ? { team: rival.team, gm: rival.gm, wins: rivalGames.filter((g) => g.result.won).length, games: rivalGames.length, swept: rivalGames.length === 2 && rivalGames.every((g) => g.result.won) } : null,
   };
 }

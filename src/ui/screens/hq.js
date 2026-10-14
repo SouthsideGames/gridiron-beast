@@ -196,19 +196,19 @@ export function registerHqScreens(Router, app) {
     title: 'Friday · Game Plan',
     render({ f }) {
       if (f.season.day !== 4) return `<div class="panel"><p>The game plan is set on <b>Friday</b>. This week's plan: ${f.week.plan.offense.length ? f.week.plan.offense.map((id) => esc(PLAYS[id].name)).join(', ') : 'coach’s default'} · ${f.week.plan.defense.length ? f.week.plan.defense.map((id) => esc(PLAYS[id].name)).join(', ') : 'coach’s default'}.</p><button class="btn block" data-action="back">Back</button></div>`;
-      const sel = { offense: new Set(f.week.plan.offense), defense: new Set(f.week.plan.defense) };
+      const sel = { offense: new Set(f.week.plan.offense.length ? f.week.plan.offense : (f.lastPlan?.offense || F.defaultPlan(f, 'offense'))), defense: new Set(f.week.plan.defense.length ? f.week.plan.defense : (f.lastPlan?.defense || F.defaultPlan(f, 'defense'))) };
       const rep = f.week.scoutReport; const hintsOn = f.settings.hints !== false;
       const hintSide = rep?.side === 'defense' ? 'offense' : rep?.side === 'offense' ? 'defense' : null;
       const hints = hintsOn && hintSide ? counterPlays(F.catalog(f, hintSide), rep.plays || []) : [];
       const hintMap = Object.fromEntries(hints.map((h) => [h.id, h]));
       const hintNote = hintsOn && hintSide ? `<div class="panel tight hint-note"><b>💡 Coach's hints</b> — ${hints.length ? `outlined ${hintSide} plays counter what ${esc(F.opponentName(f) || 'they')} showed in scouting. A hint is a lean, not a guarantee.` : `nothing in your ${hintSide} playbook clearly counters their scouted calls.`} <span class="dim">(Settings → Coaching hints)</span></div>` : hintsOn ? '<p class="dim">Scout the opponent on Thursday to get coach\'s hints here.</p>' : '';
       const side = (s) => `<h3>${s === 'offense' ? 'Offense' : 'Defense'} · <span id="count-${s}">${sel[s].size}</span>/${F.PLAN_SIZE} equipped</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''} ${hintMap[id] ? 'hint' : ''}" title="${hintMap[id] ? esc('Counters ' + hintMap[id].beats.join(', ')) : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
-      return `<p class="muted">Equip ${F.PLAN_SIZE} offensive and ${F.PLAN_SIZE} defensive plays for Sunday. Tap a card to equip, long-press or use Details for the full diagram.</p>${hintNote}
+      return `<p class="muted">Equip ${F.PLAN_SIZE} offensive and ${F.PLAN_SIZE} defensive plays for Sunday. Your coordinators' picks are pre-selected; tap a card to swap, or use Details for the full diagram.</p>${hintNote}
         ${side('offense')}${legendHtml('offense')}${side('defense')}${legendHtml('defense')}
         <div class="row between" style="margin-top:12px"><button class="btn" data-action="details">Play details</button><button class="btn primary" data-action="save">Save game plan</button></div>`;
     },
     mount(root) {
-      const sel = { offense: new Set(app.f.week.plan.offense), defense: new Set(app.f.week.plan.defense) };
+      const f0 = app.f; const sel = { offense: new Set(f0.week.plan.offense.length ? f0.week.plan.offense : (f0.lastPlan?.offense || F.defaultPlan(f0, 'offense'))), defense: new Set(f0.week.plan.defense.length ? f0.week.plan.defense : (f0.lastPlan?.defense || F.defaultPlan(f0, 'defense'))) };
       delegate(root, {
         back: () => Router.back(),
         toggle: (el) => { const s = el.dataset.side, id = el.dataset.id; if (sel[s].has(id)) sel[s].delete(id); else if (sel[s].size >= F.PLAN_SIZE) { toast(`Only ${F.PLAN_SIZE} ${s} plays. Remove one first.`); return; } else sel[s].add(id); el.classList.toggle('selected', sel[s].has(id)); el.setAttribute('aria-pressed', sel[s].has(id)); root.querySelector(`#count-${s}`).textContent = sel[s].size; },
@@ -265,9 +265,11 @@ export function registerHqScreens(Router, app) {
     title: 'League', back: false,
     render({ f }) {
       const rival = f.rivals[f.tier]; const titles = Object.values(f.badges).reduce((a, b) => a + b, 0);
+      const races = f.season.week >= 3 || f.season.finished ? F.awardRaces(f) : null;
+      const watch = races ? `<h3>🏅 Award watch</h3><div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const top = races[k]; return `<div class="item static" style="display:block"><div class="name">${esc(a.label)} <span class="dim">${a.short}</span></div>${top.length ? top.map((r, i) => k === 'coy' ? `<div class="row between sub"><span>${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)}</span></span><span class="mono">${r.w}–${r.l}</span></div>` : `<div class="row sub" style="gap:6px"><span class="dim">${i + 1}.</span>${monsterSprite(r, 20)}<span class="grow">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team === f.club ? 'YOU' : r.team)}</span></span><span class="mono">${raceLine(r)}</span></div>`).join('') : '<div class="sub dim">No contenders yet.</div>'}</div>`; }).join('')}</div>` : '';
       return `<div class="panel"><b>Beast League</b> · 16 clubs · Season ${f.season.year}<div class="muted">Beast Bowl titles: ${titles}${f.season.week >= 5 && !f.season.finished ? ` · ${esc(F.playoffPicture(f).text)}` : ''}</div>
         ${rival ? `<div class="muted">⚔️ Rival: <b>${esc(rival.team)}</b> (GM ${esc(rival.gm)}) · all-time ${rival.headToHead.w}–${rival.headToHead.l}</div>` : ''}</div>
-        <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button></div>`;
+        <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button></div>${watch}`;
     },
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen) }); },
   });
@@ -324,10 +326,12 @@ export function lessonHtml(id) {
   return `<div class="panel lesson"><h3 style="margin-top:0">📖 Lesson</h3><div class="kv"><b>When</b><span>${esc(L.when)}</span><b>Watch</b><span>${esc(L.watch)}</span><b>Beats</b><span>${esc(L.beats)}</span><b>Loses to</b><span>${esc(L.loses)}</span></div></div>`;
 }
 
+function raceLine(r) { const b = []; if (r.passYds) b.push(`${r.passYds} pass`); if (r.rushYds) b.push(`${r.rushYds} rush`); if (r.recYds) b.push(`${r.recYds} rec`); if (r.td) b.push(`${r.td} TD`); if (r.tackles) b.push(`${r.tackles} tkl`); if (r.sacks) b.push(`${r.sacks} sk`); if (r.int) b.push(`${r.int} INT`); return b.slice(0, 2).join(' · '); }
 export function awardsHtml(a) {
   if (!a) return '<p>No awards yet.</p>';
   const line = (label, x) => x ? `<div class="item static"><div class="grow"><div class="name">${esc(label)}</div><div class="sub">${esc(x.name)} (${esc(x.position)})${x.value != null ? ` · ${x.value} ${esc(x.label)}` : ''}</div></div></div>` : '';
   return `<div class="panel center"><div style="font-size:12px" class="muted">SEASON ${a.year}</div><div style="font-size:20px;font-weight:900">${a.record.w}–${a.record.l}${a.record.t ? '–' + a.record.t : ''} · ${a.place}${['st', 'nd', 'rd'][a.place - 1] || 'th'} overall</div><div class="muted">${a.champion === undefined ? '' : a.playoffs ? 'Made the playoffs' : 'Missed the playoffs'}${a.champion ? ` · Beast Bowl: ${esc(a.champion)}` : ''}</div></div>
     ${a.rivalry ? `<div class="panel tight" style="border-color:#a855f7">⚔️ Rivalry vs ${esc(a.rivalry.team)}: <b>${a.rivalry.swept ? 'SWEPT — GM ' + esc(a.rivalry.gm) + ' is not happy' : a.rivalry.games ? a.rivalry.wins + '–' + (a.rivalry.games - a.rivalry.wins) : 'not played'}</b></div>` : ''}
-    <div class="list">${a.mvp ? `<div class="item static" style="border-color:var(--accent)"><div class="grow"><div class="name">★ Team MVP</div><div class="sub">${esc(a.mvp.name)} (${esc(a.mvp.position)})</div></div></div>` : ''}${line('Rushing leader', a.rusher)}${line('Receiving leader', a.receiver)}${line('Passing leader', a.passer)}${line('Tackling leader', a.tackler)}${line('Sack leader', a.rusherD)}${line('Ball hawk', a.ballhawk)}</div>`;
+    ${a.league ? `<h3>League awards</h3><div class="list">${Object.entries(F.AWARDS).map(([k, aw]) => { const w = a.league[k]; if (!w) return ''; return `<div class="item static" style="${w.team === a.club ? 'border-color:var(--accent)' : ''}"><div class="grow"><div class="name">🏅 ${esc(aw.label)}</div><div class="sub">${k === 'coy' ? `${esc(w.coach)} · ${esc(w.team)} (${w.w}–${w.l})` : `${esc(w.name)} (${esc(w.position)}, ${esc(w.team)}) · ${esc(raceLine(w))}`}</div></div></div>`; }).join('')}</div>` : ''}
+    <h3>Club awards</h3><div class="list">${a.mvp ? `<div class="item static" style="border-color:var(--accent)"><div class="grow"><div class="name">★ Team MVP</div><div class="sub">${esc(a.mvp.name)} (${esc(a.mvp.position)})</div></div></div>` : ''}${line('Rushing leader', a.rusher)}${line('Receiving leader', a.receiver)}${line('Passing leader', a.passer)}${line('Tackling leader', a.tackler)}${line('Sack leader', a.rusherD)}${line('Ball hawk', a.ballhawk)}</div>`;
 }

@@ -14,7 +14,7 @@ import { registerPracticeScreens } from './ui/screens/practice.js';
 const app = {
   f: null, // the franchise state (null before creation)
   get settings() { return this.f?.settings || this.defaultSettings; },
-  defaultSettings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false },
+  defaultSettings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, difficulty: 'pro' },
   save() { if (!this.f) return; const ok = Save.save(this.f); cloudSave(this.f); if (!ok && !this.warned) { this.warned = true; toast('Saving to this device failed; your cloud save is still kept.', 'bad'); } },
   setFranchise(f) { this.f = f; this.save(); applySettings(); },
   reset() { this.f = null; Save.clear(); cloudClear(); },

@@ -93,12 +93,14 @@ export function weighDefense(state, team, available, oppTendencies = null) {
   return out;
 }
 
+/** Coach IQ sharpens (iq > 1) or flattens (iq < 1) the play-call weights: a smart coach picks the right call more often. */
+const sharpen = (weights, team) => { const k = team.coach?.iq ?? 1; return k === 1 ? weights : weights.map(([id, w]) => [id, Math.pow(w, k)]); };
 export function chooseOffensePlay(rng, state, team, available, tendencies) {
-  const weights = weighOffense(state, team, available, tendencies);
+  const weights = sharpen(weighOffense(state, team, available, tendencies), team);
   return weights.length ? rng.weighted(weights) : null;
 }
 export function chooseDefensePlay(rng, state, team, available, oppTendencies) {
-  const weights = weighDefense(state, team, available, oppTendencies);
+  const weights = sharpen(weighDefense(state, team, available, oppTendencies), team);
   return weights.length ? rng.weighted(weights) : null;
 }
 /** The single best suggestion (no randomness) for the Coach's Suggestion UI. */

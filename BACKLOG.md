@@ -15,7 +15,7 @@ Items the owner has asked to hold. Implement on "PROCEED" (all) or "PROCEED n" (
 1. Recruiting: ⓘ compare prospect with roster — done (sheet with headline ratings, OVR, age, starter/package tags, verdict, cap after signing).
 2. Species-consistent sprites — done (shape from species, colour from type, small per-individual tint).
 
-## Playtest notes, round 2 (held, awaiting PROCEED)
+## Playtest notes, round 2 — done (PROCEED 2026-10-14)
 4. Depth chart view on Roster (Starter / 2nd / 3rd per position, reorderable); injuries promote the next monster in order.
 5. Full-roster week: recruiting signs via "release to make room"; scheme-fit makes recruiting worthwhile.
 6. Scheme-fit outline on prospect and roster cards (based on coordinators' schemes).
