@@ -1,0 +1,310 @@
+<title>Gridiron Beast Dex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a scouting binder. Sticky filter rail on top, card grid of species, editor sheet slides over on tap. */
+:root {
+  --bg: #eef1e8; --panel: #ffffff; --ink: #1d2419; --muted: #5f6a59; --line: #d3d9c9;
+  --turf: #2f6b3a; --turf-ink: #ffffff; --chalk: #f7f8f3;
+  --ok: #2c7a3f; --warn: #b26a00; --bad: #b3362b;
+  --c-common: #6f7a68; --c-uncommon: #2e7bb8; --c-rare: #8a3fc0; --c-legendary: #c08a12;
+  --display: "Pixelify Sans", "Courier New", monospace; --body: "Figtree", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  --shadow: 0 1px 2px rgb(20 30 15 / .08), 0 4px 14px rgb(20 30 15 / .06);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12170f; --panel: #1b2217; --ink: #e8eee0; --muted: #9aa691; --line: #2d3727;
+  --turf: #3f8a4c; --turf-ink: #ffffff; --chalk: #222b1d;
+  --ok: #57b56b; --warn: #e2a03b; --bad: #e0675b;
+  --c-common: #9aa592; --c-uncommon: #5aa7e6; --c-rare: #b67ae8; --c-legendary: #e8b63a;
+  --shadow: 0 1px 2px rgb(0 0 0 / .4); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12170f; --panel: #1b2217; --ink: #e8eee0; --muted: #9aa691; --line: #2d3727;
+  --turf: #3f8a4c; --turf-ink: #ffffff; --chalk: #222b1d;
+  --ok: #57b56b; --warn: #e2a03b; --bad: #e0675b;
+  --c-common: #9aa592; --c-uncommon: #5aa7e6; --c-rare: #b67ae8; --c-legendary: #e8b63a;
+  --shadow: 0 1px 2px rgb(0 0 0 / .4); color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--body); margin: 0 }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1280px; margin: 0 auto }
+header.top { background: var(--turf); color: var(--turf-ink); padding-block: 18px 14px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgb(255 255 255 / .12) calc(10% - 1px) 10%) }
+h1 { font: 700 30px/1.1 var(--display); margin: 0; letter-spacing: .02em; text-wrap: balance }
+.sub { opacity: .9; margin-top: 4px; max-width: 70ch }
+.tally { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; font: 500 12px var(--mono) }
+.tally span { background: rgb(0 0 0 / .18); padding: 3px 8px; border-radius: 4px; font-variant-numeric: tabular-nums }
+.rail { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding-block: 10px }
+.rail .wrap { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+select, input[type=search], input[type=text], textarea { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0 }
+input[type=search] { flex: 1 1 160px }
+button { font: 600 14px var(--body); border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 7px 12px; cursor: pointer }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, .card:focus-visible { outline: 2px solid var(--turf); outline-offset: 2px }
+button.primary { background: var(--turf); color: var(--turf-ink); border-color: var(--turf) }
+main { padding-block: 16px 60px; display: grid; gap: 28px }
+.el-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px }
+.el-head h2 { font: 700 20px var(--display); margin: 0 }
+.el-head .regions { color: var(--muted); font-size: 13px }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 72px 1fr; gap: 4px 12px; cursor: pointer; position: relative; text-align: left; box-shadow: var(--shadow) }
+.card .art { grid-row: span 3; width: 72px; height: 72px; background: var(--chalk); border-radius: 6px; display: grid; place-items: center }
+.card .art svg { width: 64px; height: 64px; image-rendering: pixelated }
+.card .nm { font: 700 17px var(--display); display: flex; gap: 6px; align-items: center; min-width: 0 }
+.meta { font: 500 12px var(--mono); color: var(--muted) }
+.pill { display: inline-block; font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .06em; padding: 1px 6px; border-radius: 3px; color: #fff }
+.r-common { background: var(--c-common) } .r-uncommon { background: var(--c-uncommon) } .r-rare { background: var(--c-rare) } .r-legendary { background: var(--c-legendary) }
+.card .ab { grid-column: 1 / -1; font-size: 13px; color: var(--muted); min-width: 0 }
+.card .ab b { color: var(--ink) }
+.evo { grid-column: 1 / -1; display: flex; gap: 4px; align-items: center; font: 500 11px var(--mono); color: var(--muted); flex-wrap: wrap }
+.evo svg { width: 28px; height: 28px }
+.status { position: absolute; top: 8px; right: 8px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--line) }
+.st-approved { background: var(--ok) } .st-changes { background: var(--warn) } .st-pending { background: transparent } .st-cut { background: var(--bad) }
+.edited { font: 600 10px var(--body); color: var(--warn); text-transform: uppercase; letter-spacing: .06em }
+.rules { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 14px }
+.rules h2 { font: 700 20px var(--display); margin: 0 }
+.rules .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px }
+.rules h3 { margin: 0 0 4px; font-size: 15px }
+.rules p, .rules li { margin: 0; color: var(--muted); font-size: 14px }
+.rules ul { margin: 0; padding-left: 18px; display: grid; gap: 2px }
+.bars { display: grid; gap: 3px; font: 500 12px var(--mono) }
+.bars div { display: grid; grid-template-columns: 34px 1fr 24px; gap: 6px; align-items: center; font-variant-numeric: tabular-nums }
+.bars i { display: block; height: 8px; background: var(--turf); border-radius: 2px }
+/* editor sheet */
+.sheet { position: fixed; inset: 0; z-index: 20; display: grid; grid-template-columns: 1fr min(520px, 100%); background: rgb(0 0 0 / .35) }
+.sheet .panel { background: var(--panel); overflow-y: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) 16px; display: grid; gap: 12px; align-content: start; border-left: 1px solid var(--line) }
+.sheet .preview { display: flex; gap: 12px; align-items: flex-end; background: var(--chalk); border-radius: 8px; padding: 12px; flex-wrap: wrap }
+.sheet .preview svg { image-rendering: pixelated }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.fields label, .full label { display: grid; gap: 3px; font: 600 12px var(--body); color: var(--muted); min-width: 0 }
+.full { grid-column: 1 / -1 }
+textarea { min-height: 64px; resize: vertical }
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chips label { display: inline-flex; gap: 4px; align-items: center; font: 500 13px var(--body); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 3px 9px; cursor: pointer }
+.chips input { margin: 0 }
+.actions { display: flex; flex-wrap: wrap; gap: 8px }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 6px; z-index: 30; font-weight: 600 }
+.note-banner { background: var(--chalk); border: 1px dashed var(--line); border-radius: 6px; padding: 8px 10px; color: var(--muted); font-size: 13px }
+@media (max-width: 560px) { .sheet { grid-template-columns: 0 1fr } .fields { grid-template-columns: 1fr } h1 { font-size: 24px } }
+@media (prefers-reduced-motion: no-preference) { .card { transition: transform .12s } .card:hover { transform: translateY(-2px) } }
+</style>
+
+<header class="top"><div class="wrap">
+  <h1>Gridiron Beast Dex</h1>
+  <div class="sub">72 species for review: 6 per element (2 common, 2 uncommon, 1 rare, 1 legendary) plus 30 evolved forms. Tap a monster to edit it, approve it, or leave a note.</div>
+  <div class="tally" id="tally"></div>
+</div></header>
+<div class="rail"><div class="wrap">
+  <input type="search" id="q" placeholder="Search name, ability, position" aria-label="Search">
+  <select id="fEl" aria-label="Element"><option value="">All elements</option></select>
+  <select id="fRar" aria-label="Rarity"><option value="">All rarities</option><option>common</option><option>uncommon</option><option>rare</option><option>legendary</option></select>
+  <select id="fPos" aria-label="Position"><option value="">All positions</option></select>
+  <select id="fSt" aria-label="Review status"><option value="">Any status</option><option value="pending">Not reviewed</option><option value="approved">Approved</option><option value="changes">Needs changes</option><option value="cut">Cut</option></select>
+</div></div>
+<div class="wrap"><main id="main"></main></div>
+<div class="sheet" id="sheet" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script type="module">
+/*__SPRITE__*/
+const DEX = /*__DEX__*/;
+const META = /*__META__*/;
+const POSITIONS = ['QB','RB','WR','TE','OL','DL','LB','CB','S','K'];
+const BODIES = ['biped','quadruped','serpent','avian','blob','insectoid','shelled'];
+const FEATURES = ['ears','horns','horn','mane','spikes','fins','tail','flametail','wings','claws','crest','antennae','plates','glow','halo','crown','tusks','shell','beak'];
+const LOOKS = ['cute','cool','fierce'];
+const SIZES = ['small','medium','large'];
+const STATUS_LABEL = { pending: 'Not reviewed', approved: 'Approved', changes: 'Needs changes', cut: 'Cut' };
+const EDIT_KEYS = ['name','position','secondary','rarity','body','size','look','features','colors','abilityName','abilityText','personality','evolution'];
+
+let reviews = {}; // id -> {status, note, edits}
+let general = '';
+let db = null, canWrite = true;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function effective(s) {
+  const e = reviews[s.id]?.edits || {};
+  const out = { ...s, ...e };
+  out.ability = s.ability ? { name: e.abilityName ?? s.ability.name, text: e.abilityText ?? s.ability.text } : null;
+  if (e.evolution !== undefined) out.evolution = e.evolution;
+  return out;
+}
+function evoSpec(s, stage) { // evolved forms grow, look fiercer, and add a feature
+  const extra = stage === 1 ? ['claws'] : ['claws', 'spikes'];
+  return { ...s, id: s.id + '_e' + stage, size: stage === 1 ? (s.size === 'small' ? 'medium' : 'large') : 'large', look: stage === 1 ? (s.look === 'cute' ? 'cool' : 'fierce') : 'fierce', features: [...new Set([...s.features, ...extra])] };
+}
+const art = (s, px) => sprite16({ ...s, id: s.id + '|' + JSON.stringify([s.body, s.size, s.look, s.features, s.colors]) }, px, { cls: 'sp' });
+
+function render() {
+  const q = $('#q').value.trim().toLowerCase(), fe = $('#fEl').value, fr = $('#fRar').value, fp = $('#fPos').value, fs = $('#fSt').value;
+  const list = DEX.map(effective).filter((s) => {
+    const st = reviews[s.id]?.status || 'pending';
+    if (fe && s.element !== fe) return false; if (fr && s.rarity !== fr) return false;
+    if (fp && s.position !== fp && s.secondary !== fp) return false; if (fs && st !== fs) return false;
+    if (q && !`${s.name} ${s.ability?.name || ''} ${META.traits[s.trait]?.name || ''} ${s.position} ${s.secondary || ''} ${s.personality}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  let html = '';
+  for (const el of META.elements) {
+    const group = list.filter((s) => s.element === el); if (!group.length) continue;
+    html += `<section><div class="el-head"><h2 style="color:hsl(${META.hues[el]} 55% 42%)">${el}</h2><span class="regions">${esc(META.elementRegions[el].join(' · '))}</span></div><div class="grid">`;
+    for (const s of group) html += cardHtml(s);
+    html += '</div></section>';
+  }
+  if (!list.length) html = '<p class="note-banner">No monsters match these filters.</p>';
+  html += rulesHtml();
+  $('#main').innerHTML = html;
+  tally();
+}
+function cardHtml(s) {
+  const r = reviews[s.id] || {}; const st = r.status || 'pending';
+  const edited = r.edits && Object.keys(r.edits).length;
+  const ab = s.ability ? `<b>${esc(s.ability.name)}</b> ${esc(s.ability.text)}` : `<b>Trait: ${esc(META.traits[s.trait]?.name)}</b> ${esc(META.traits[s.trait]?.text)}`;
+  const evo = s.evolution?.length ? `<div class="evo">${art(s, 28)}${s.evolution.map((e, i) => `→ ${art({ ...evoSpec(s, i + 1), name: e.name }, 28)} ${esc(e.name)} <span>L${e.level}</span>`).join(' ')}</div>` : '';
+  return `<div class="card" tabindex="0" role="button" data-id="${s.id}" aria-label="Edit ${esc(s.name)}">
+    <span class="status st-${st}" title="${STATUS_LABEL[st]}"></span>
+    <div class="art">${art(s, 64)}</div>
+    <div class="nm">${esc(s.name)}</div>
+    <div><span class="pill r-${s.rarity}">${s.rarity}</span> ${edited ? '<span class="edited">edited</span>' : ''}</div>
+    <div class="meta">${s.position}${s.secondary ? ' / ' + s.secondary : ''} · ${s.body} · ${s.size} · ${s.look}</div>
+    <div class="ab">${ab}${s.cornerstone ? ' <span class="meta">(cornerstone)</span>' : ''}${s.fromWeek ? ` <span class="meta">· ${esc((s.regions || []).join(', '))} from week ${s.fromWeek}</span>` : ''}</div>
+    ${r.note ? `<div class="ab"><i>Note: ${esc(r.note)}</i></div>` : ''}
+    ${evo}
+  </div>`;
+}
+function tally() {
+  const eff = DEX.map(effective).filter((s) => (reviews[s.id]?.status || 'pending') !== 'cut');
+  const counts = { approved: 0, changes: 0, pending: 0, cut: 0 };
+  for (const s of DEX) counts[reviews[s.id]?.status || 'pending']++;
+  $('#tally').innerHTML = `<span>${counts.approved} approved</span><span>${counts.changes} need changes</span><span>${counts.pending} not reviewed</span>${counts.cut ? `<span>${counts.cut} cut</span>` : ''}<span>${eff.length} in roster · ${eff.reduce((n, s) => n + (s.evolution?.length || 0), 0)} evolved forms</span>`;
+}
+function rulesHtml() {
+  const eff = DEX.map(effective).filter((s) => (reviews[s.id]?.status || 'pending') !== 'cut');
+  const pos = POSITIONS.map((p) => [p, eff.filter((s) => s.position === p).length]);
+  const max = Math.max(...pos.map((x) => x[1]), 1);
+  return `<section class="rules"><h2>Rules for review</h2><div class="cols">
+    <div><h3>Rarity</h3><ul>${Object.entries(META.rarities).map(([k, r]) => `<li><span class="pill r-${k}">${r.label}</span> ${esc(r.note)}</li>`).join('')}</ul></div>
+    <div><h3>Legend Tracks (working name)</h3><p>Win the Beast Bowl and choose one track toward any legendary no club owns. ${META.legend.tracksNeeded} tracks on the same legendary put it in your recruiting pool in its home region; you still have to sign it. ${META.legend.aiLegendaries} AI clubs start each league with one legendary each, and every legendary exists only once in the league.</p></div>
+    <div><h3>Collection book milestones</h3><ul>${META.milestones.map((m) => `<li><b>${m.at}</b> discovered: ${esc(m.reward)}</li>`).join('')}</ul></div>
+    <div><h3>Natural positions</h3><div class="bars">${pos.map(([p, n]) => `<div><span>${p}</span><i style="width:${(n / max) * 100}%"></i><span>${n}</span></div>`).join('')}</div></div>
+    <div><h3>Evolution</h3><p>Designed now, built in Prototype 2. Only commons evolve: 18 have one evolution, 6 have two. Evolved forms grow a size, look fiercer and gain claws or spikes.</p></div>
+  </div>
+  <label class="full" for="general"><b>General notes for the whole dex</b><textarea id="general" placeholder="Anything about the roster as a whole: names, balance, art direction">${esc(general)}</textarea></label>
+  <div class="actions"><button class="primary" id="saveGeneral">Save general notes</button></div>
+  </section>`;
+}
+
+// ---------------------------------------------------------------- editor
+let editing = null;
+function openEditor(id) {
+  const base = DEX.find((s) => s.id === id); const r = reviews[id] || {};
+  editing = { id, base, draft: JSON.parse(JSON.stringify(effective(base))), status: r.status || 'pending', note: r.note || '' };
+  drawEditor(); $('#sheet').hidden = false; document.body.style.overflow = 'hidden';
+}
+function closeEditor() { $('#sheet').hidden = true; editing = null; document.body.style.overflow = ''; }
+function drawEditor() {
+  const d = editing.draft; const opt = (arr, v) => arr.map((x) => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('');
+  $('#sheet').innerHTML = `<div data-close style="cursor:pointer"></div><div class="panel" role="dialog" aria-label="Edit ${esc(d.name)}">
+    <div class="actions" style="justify-content:space-between"><h2 style="font:700 22px var(--display);margin:0">${esc(d.name)}</h2><button data-close>Close</button></div>
+    <div class="preview" id="pv"></div>
+    <div class="fields">
+      <label>Name<input type="text" id="e-name" value="${esc(d.name)}"></label>
+      <label>Rarity<select id="e-rarity">${opt(['common','uncommon','rare','legendary'], d.rarity)}</select></label>
+      <label>Natural position<select id="e-position">${opt(POSITIONS, d.position)}</select></label>
+      <label>Secondary position<select id="e-secondary"><option value="">none</option>${opt(POSITIONS, d.secondary)}</select></label>
+      <label>Body<select id="e-body">${opt(BODIES, d.body)}</select></label>
+      <label>Size<select id="e-size">${opt(SIZES, d.size)}</select></label>
+      <label>Look<select id="e-look">${opt(LOOKS, d.look)}</select></label>
+      <label>Colours<span style="display:flex;gap:6px"><input type="color" id="e-c0" value="${d.colors[0]}" aria-label="Main colour"><input type="color" id="e-c1" value="${d.colors[1]}" aria-label="Accent colour"></span></label>
+      <div class="full"><label>Features</label><div class="chips">${FEATURES.map((f) => `<label><input type="checkbox" data-feat="${f}" ${d.features.includes(f) ? 'checked' : ''}>${f}</label>`).join('')}</div></div>
+      ${d.ability ? `<label class="full">Ability name<input type="text" id="e-abilityName" value="${esc(d.ability.name)}"></label><label class="full">Ability effect<textarea id="e-abilityText">${esc(d.ability.text)}</textarea></label>` : `<div class="full meta">Trait: ${esc(META.traits[d.trait]?.name)}: ${esc(META.traits[d.trait]?.text)}</div>`}
+      <label class="full">Personality<textarea id="e-personality">${esc(d.personality)}</textarea></label>
+      ${d.evolution?.length ? `<label class="full">Evolutions (Name@level, comma separated)<input type="text" id="e-evolution" value="${esc(d.evolution.map((e) => e.name + '@' + e.level).join(', '))}"></label>` : ''}
+      <label class="full">Note for Claude<textarea id="e-note" placeholder="What should change, or why it is approved">${esc(editing.note)}</textarea></label>
+    </div>
+    <div class="actions">
+      <button class="primary" data-save="approved">Approve</button>
+      <button data-save="changes">Needs changes</button>
+      <button data-save="pending">Save without verdict</button>
+      <button data-save="cut">Cut species</button>
+      <button data-reset>Reset to draft</button>
+    </div>
+    ${canWrite ? '' : '<p class="note-banner">You can view this dex but not save changes.</p>'}
+  </div>`;
+  preview();
+}
+function readDraft() {
+  const d = editing.draft; const v = (id) => document.getElementById(id)?.value;
+  d.name = v('e-name') || d.name; d.rarity = v('e-rarity'); d.position = v('e-position'); d.secondary = v('e-secondary') || null;
+  d.body = v('e-body'); d.size = v('e-size'); d.look = v('e-look'); d.colors = [v('e-c0'), v('e-c1')];
+  d.features = [...document.querySelectorAll('[data-feat]:checked')].map((x) => x.dataset.feat);
+  if (d.ability) { d.ability = { name: v('e-abilityName'), text: v('e-abilityText') }; }
+  d.personality = v('e-personality');
+  const ev = v('e-evolution'); if (ev != null) d.evolution = ev.split(',').map((x) => x.trim()).filter(Boolean).map((x) => { const [n, l] = x.split('@'); return { name: n.trim(), level: +l || 10 }; });
+  editing.note = v('e-note') || '';
+}
+function preview() {
+  const d = editing.draft;
+  $('#pv').innerHTML = art(d, 128) + art(d, 48) + (d.evolution?.length ? d.evolution.map((e, i) => art({ ...evoSpec(d, i + 1), id: d.id + i }, 64)).join('') : '');
+}
+function diffEdits(base, d) {
+  const b = effectiveBase(base), e = {};
+  const flat = (s) => ({ name: s.name, position: s.position, secondary: s.secondary ?? null, rarity: s.rarity, body: s.body, size: s.size, look: s.look, features: s.features, colors: s.colors, abilityName: s.ability?.name, abilityText: s.ability?.text, personality: s.personality, evolution: s.evolution });
+  const fb = flat(b), fd = flat(d);
+  for (const k of EDIT_KEYS) if (JSON.stringify(fb[k]) !== JSON.stringify(fd[k])) e[k] = fd[k];
+  return e;
+}
+const effectiveBase = (s) => ({ ...s });
+
+async function save(status) {
+  readDraft();
+  const { id, base, draft, note } = editing;
+  const edits = diffEdits(base, draft);
+  const doc = { status, note, edits, name: draft.name, updatedAt: new Date().toISOString() };
+  reviews[id] = doc; closeEditor(); render();
+  if (!db) { toast('Saved on this screen only: storage is not available here'); return; }
+  try { await db.doc('reviews/' + id).set(doc); toast(status === 'pending' ? 'Saved' : `Marked ${STATUS_LABEL[status].toLowerCase()}`); }
+  catch (err) { toast(err?.code === 'permission_denied' ? 'You can view but not save' : 'Could not save: ' + (err?.message || 'try again')); }
+}
+async function resetDraft() {
+  const id = editing.id; delete reviews[id]; closeEditor(); render();
+  if (db) { try { await db.doc('reviews/' + id).delete(); toast('Reset to the draft'); } catch { toast('Could not reset'); } }
+}
+let tt; function toast(t) { const el = $('#toast'); el.textContent = t; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => { el.hidden = true; }, 2200); }
+
+// ---------------------------------------------------------------- wiring
+for (const el of META.elements) $('#fEl').insertAdjacentHTML('beforeend', `<option>${el}</option>`);
+for (const p of POSITIONS) $('#fPos').insertAdjacentHTML('beforeend', `<option>${p}</option>`);
+for (const id of ['q', 'fEl', 'fRar', 'fPos', 'fSt']) $('#' + id).addEventListener('input', render);
+$('#main').addEventListener('click', async (e) => {
+  const c = e.target.closest('.card'); if (c) return openEditor(c.dataset.id);
+  if (e.target.id === 'saveGeneral') {
+    general = $('#general').value;
+    if (!db) return toast('Storage is not available here');
+    try { await db.doc('notes/general').set({ text: general, updatedAt: new Date().toISOString() }); toast('General notes saved'); } catch { toast('Could not save notes'); }
+  }
+});
+$('#main').addEventListener('keydown', (e) => { const c = e.target.closest('.card'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openEditor(c.dataset.id); } });
+$('#sheet').addEventListener('click', (e) => {
+  if (e.target.closest('[data-close]')) return closeEditor();
+  const s = e.target.closest('[data-save]'); if (s) return save(s.dataset.save);
+  if (e.target.closest('[data-reset]')) return resetDraft();
+});
+$('#sheet').addEventListener('input', () => { if (editing) { readDraft(); preview(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && editing) closeEditor(); });
+render();
+
+(async () => {
+  const claudeApi = window.claude;
+  if (!claudeApi?.use) return;
+  db = await claudeApi.use('db');
+  const user = await claudeApi.use('user');
+  if (user) { const ok = await user.can?.('data.write'); if (ok === false) canWrite = false; }
+  if (!db) return;
+  db.collection('reviews').onSnapshot((snap) => {
+    const next = {}; for (const d of snap.docs) if (d.exists) next[d.id] = d.data();
+    reviews = next; if (!editing) render(); else tally();
+  }, () => {});
+  db.doc('notes/general').onSnapshot((d) => { const t = d.exists ? d.data().text || '' : ''; if (t !== general) { general = t; const g = document.getElementById('general'); if (g && document.activeElement !== g) g.value = t; } }, () => {});
+})();
+</script>
