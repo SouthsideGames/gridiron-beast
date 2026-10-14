@@ -47,8 +47,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
     const kicking = state.kickingTeam;
     const mode = choices.kickoff || ctrl(kicking).kickoff(state);
     done();
-    const { text } = R.doKickoff(state, teams, { onside: mode === 'onside' && state.phase === 'kickoff' });
-    return { kind: 'kickoff', text };
+    const free = state.phase === 'free_kick';
+    const { text, res } = R.doKickoff(state, teams, { onside: mode === 'onside' && state.phase === 'kickoff' });
+    return { kind: 'kickoff', text, res, kicking, free, scored: res?.touchdown ? { team: R.opponent(kicking) } : null };
   }
   if (state.phase === 'try') {
     const tryTeam = state.tryTeam;
@@ -85,8 +86,8 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   // Fourth down.
   if (state.down === 4) {
     const decision = choices.fourthDown || ctrl(side).fourthDown(state, offTeam);
-    if (decision === 'punt') { done(); const { text } = R.doPunt(state, teams); return { kind: 'punt', text }; }
-    if (decision === 'fg') { done(); const { text, scored } = R.doFieldGoal(state, teams); return { kind: 'field_goal', text, scored }; }
+    if (decision === 'punt') { done(); const from = state.ballOn; const { text, res } = R.doPunt(state, teams); return { kind: 'punt', text, res, kicking: side, from }; }
+    if (decision === 'fg') { done(); const from = state.ballOn; const { text, scored, res } = R.doFieldGoal(state, teams); return { kind: 'field_goal', text, scored, res, kicking: side, from }; }
   }
 
   // Scrimmage play.

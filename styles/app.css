@@ -127,7 +127,7 @@ tr.me td { background: #2a3f16; }
 .situation { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--ink-2); margin-bottom: var(--s2); font-family: var(--mono); }
 .situation b { color: var(--ink); font-size: 14px; }
 .field-wrap { position: relative; border: 3px solid #b8d7bb; border-radius: 4px; background: #236b49; overflow: hidden; margin-bottom: var(--s2); }
-.field-wrap svg { display: block; width: 100%; height: auto; }
+.field-wrap > svg { display: block; width: 100%; height: auto; }
 .field-banner { position: absolute; left: 8px; right: 8px; top: 8px; background: #0b1a14e6; border: 2px solid var(--line-2); border-radius: var(--r); padding: 8px 10px; font-size: 13px; }
 .field-banner.important { border-color: var(--accent); }
 .field-banner b { color: var(--accent); }
@@ -202,3 +202,20 @@ table.compare tr.prospect { background: rgba(245,197,66,.10); }
 table.compare td.best { color: #6ee7a0; font-weight: 800; }
 
 .rival-name { color: #c99bff; font-weight: 800; }
+
+.box-score h3 { margin: 12px 0 6px; }
+.bs-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; }
+.bs-head span:last-child { text-align: right; }
+.bs-score { font-size: 26px; font-variant-numeric: tabular-nums; }
+.bs-row { display: grid; grid-template-columns: 1fr 78px 1fr; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
+.bs-label { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted, #9fb3a8); text-transform: uppercase; letter-spacing: .04em; }
+.bs-cell { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.bs-cell.home { flex-direction: row-reverse; text-align: right; }
+.bs-cell > div { min-width: 0; }
+.bs-v { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.bs-n { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bs-s { font-size: 11px; }
+.bs-totals { width: 100%; border-collapse: collapse; font-size: 14px; }
+.bs-totals td, .bs-totals th { padding: 5px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.07); font-variant-numeric: tabular-nums; }
+.pog-wrap { display: grid; gap: 8px; }
+.pog { display: flex; gap: 10px; align-items: center; padding: 8px; border: 1px solid rgba(245,197,66,.45); border-radius: var(--r); background: rgba(245,197,66,.06); }

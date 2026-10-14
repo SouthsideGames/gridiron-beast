@@ -3,6 +3,7 @@
 // art (transformed to the real ball spot and compressed before the end
 // line), engine frames, and the ball. Coordinates are yards.
 
+import { monsterSprite } from './pixel-monster.js';
 import { FIELD, boundsFor } from '../core/field.js';
 import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
@@ -23,7 +24,7 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
@@ -60,8 +61,12 @@ export function fieldSvg(o) {
   s += `<rect x="${-HW + 0.15}" y="0.1" width="${HW * 2 - 0.3}" height="${SPAN - 0.2}" fill="none" stroke="#f0f6e9" stroke-width="0.3"/>`;
   // Line of scrimmage and line to gain.
   const ltg = Math.min(100, ballOn + toGo);
-  s += `<line x1="${-HW}" y1="${Y(ballOn)}" x2="${HW}" y2="${Y(ballOn)}" stroke="#4aa3ff" stroke-width="0.35"/>`;
-  if (ltg < 100) s += `<line x1="${-HW}" y1="${Y(ltg)}" x2="${HW}" y2="${Y(ltg)}" stroke="#ffb13d" stroke-width="0.35"/>`;
+  if (!noLines) {
+    s += `<line x1="${-HW}" y1="${Y(ballOn)}" x2="${HW}" y2="${Y(ballOn)}" stroke="#4aa3ff" stroke-width="0.35"/>`;
+    if (ltg < 100) s += `<line x1="${-HW}" y1="${Y(ltg)}" x2="${HW}" y2="${Y(ltg)}" stroke="#ffb13d" stroke-width="0.35"/>`;
+  }
+  // Goal posts on the end lines (drawn flat from above: crossbar + uprights).
+  for (const [end, dir] of [[110, 1], [-10, -1]]) if (cam.bottom - 1 < end && cam.top + 1 > end) { const y = Y(end) + dir * 0.6; s += `<g stroke="#ffd84a" stroke-width="0.45" stroke-linecap="round"><line x1="-3" y1="${y}" x2="3" y2="${y}"/><line x1="-3" y1="${y}" x2="-3" y2="${y - dir * 2.4}"/><line x1="3" y1="${y}" x2="3" y2="${y - dir * 2.4}"/></g>`; }
   // Pre-snap art.
   if (presnap?.play) {
     const B = boundsFor(ballOn, ballLat);
@@ -69,13 +74,24 @@ export function fieldSvg(o) {
     s += `<g opacity="0.95">${assignmentLines(presnap.play, proj, { limitX: B.endLine - 0.8, offenseAlign: presnap.offensePlay?.align || null, referenceOffense: presnap.offensePlay?.id })}</g>`;
   }
   // Players.
-  const marker = (slot, x, y, team, engaged, holder) => {
+  const simpleMarker = (slot, x, y, team, engaged, holder) => {
     const cx = X(ballLat + y), cy = Y(ballOn + x);
     const fill = team === 'off' ? colors.off : colors.def;
     const ring = holder ? '#ffe26c' : engaged ? '#ffffff' : '#0b1a14';
     const shape = team === 'off' ? `<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="1.35" fill="${fill}" stroke="${ring}" stroke-width="${holder ? 0.45 : 0.25}"/>` : `<rect x="${(cx - 1.3).toFixed(2)}" y="${(cy - 1.3).toFixed(2)}" width="2.6" height="2.6" rx="0.4" fill="${fill}" stroke="${ring}" stroke-width="${holder ? 0.45 : 0.25}"/>`;
     return shape + `<text x="${cx.toFixed(2)}" y="${(cy + 0.5).toFixed(2)}" text-anchor="middle" font-size="1.35" font-weight="800" font-family="ui-monospace, monospace" fill="#0d1f17">${slot}</text>`;
+  };  // Monster art on a team-coloured base; unknown slots (kick units) draw from the team's pool.
+  const poolIdx = { off: 0, def: 0 };
+  const marker = (slot, x, y, team, engaged, holder) => {
+    const set = sprites?.[team];
+    const m = set ? (set.map[slot] || (set.pool.length ? set.pool[(poolIdx[team]++) % set.pool.length] : null)) : null;
+    if (!m) return simpleMarker(slot, x, y, team, engaged, holder);
+    const cx = X(ballLat + y), cy = Y(ballOn + x);
+    const base = team === 'off' ? colors.off : colors.def;
+    const art = monsterSprite(m, 8, { eyes: true }).replace(/<svg class="sprite" width="8" height="8"/, `<svg x="${(cx - 1.55).toFixed(2)}" y="${(cy - 2.15).toFixed(2)}" width="3.1" height="3.1"`);
+    return `<ellipse cx="${cx.toFixed(2)}" cy="${(cy + 0.75).toFixed(2)}" rx="1.55" ry="0.7" fill="${base}" stroke="${holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17'}" stroke-width="${holder ? 0.4 : 0.2}"/>${art}`;
   };
+
   if (frame) {
     for (const [slot, x, y, eng] of frame.def) s += marker(slot, x, y, 'def', eng, frame.holder === slot && frame.holderTeam === 'def');
     for (const [slot, x, y, eng] of frame.off) s += marker(slot, x, y, 'off', eng, frame.holder === slot && frame.holderTeam === 'off');

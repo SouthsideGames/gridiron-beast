@@ -16,6 +16,8 @@ import { playCardSvg } from '../play-art.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { fieldGoalDistance, yardLabel } from '../../core/field.js';
 import { teamOverall } from '../../franchise/roster.js';
+import { boxScoreHtml } from '../box-score.js';
+import { kickFrames } from '../kick-anim.js';
 
 export function registerMatchScreens(Router, app) {
   // ------------------------------------------------------------ pregame
@@ -65,7 +67,7 @@ export function registerMatchScreens(Router, app) {
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away} — ${f.game.state.home.abbr} ${f.game.state.score.home}` : 'Match', back: false, tabs: false,
-    topRight: () => `<button class="btn ghost small" data-action="log" aria-label="Play log">📋</button>`,
+    topRight: () => `<button class="btn ghost small" data-action="box" aria-label="Box score">📊</button><button class="btn ghost small" data-action="log" aria-label="Play log">📋</button>`,
     render({ f }) {
       const G = f.game; if (!G) return `<div class="panel"><p>No game in progress.</p><button class="btn block" data-action="hq">Headquarters</button></div>`;
       const s = G.state; const me = G.playerSide, them = R.opponent(me);
@@ -75,8 +77,8 @@ export function registerMatchScreens(Router, app) {
       const offenseTeamSide = s.possession;
       const offColor = s[offenseTeamSide].color, defColor = s[R.opponent(offenseTeamSide)].color;
       const fieldInner = anim
-        ? fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event })
-        : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event });
+        ? fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event, noLines: anim.follow, sprites: spritesFor(f, anim.ev.offenseSide) })
+        : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession) });
       const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
       const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''}" id="banner">${esc(G.lastEvent.text)}</div>` : '';
       const eventBanner = G.event === 'rival' ? `<div class="rival-banner">⚔️ RIVALRY GAME · ${esc(s[them].name)} · GM ${esc(f.rivals[f.tier]?.gm || '')}</div>` : G.event === 'playoff' ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 PLAYOFFS · ${esc(G.tag || 'Win or go home')}</div>` : '';
@@ -92,6 +94,7 @@ export function registerMatchScreens(Router, app) {
     },
     mount(root, ctx) {
       const f = app.f; if (!f?.game) { delegate(root, { hq: () => Router.go('hq', {}, { reset: true }) }); return; }
+      { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); sheet(boxScoreHtml(st, teamsFor(f), { title: 'Halftime' }), { title: 'Halftime' }); } }
       startPlayClock(f, root);
       delegate(root, {
         hq: () => Router.go('hq', {}, { reset: true }),
@@ -112,11 +115,13 @@ export function registerMatchScreens(Router, app) {
         keymoment: () => simToKeyMoment(f),
         skip: () => { if (anim) finishAnim(f, true); },
         finish: () => finishGame(f),
+        boxscore: () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box score' }),
         kneel: () => { R.kneel(f.game.state); afterStep(f, { kind: 'kneel', text: f.game.state.lastPlay.text }); },
         spike: () => { R.spike(f.game.state); afterStep(f, { kind: 'spike', text: f.game.state.lastPlay.text }); },
       });
       root.querySelector('#fieldwrap')?.addEventListener('click', () => { if (anim) finishAnim(f, true); });
       document.querySelector('.topbar [data-action="log"]')?.addEventListener('click', () => showLog(f));
+      document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? 'Final' : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box score' }));
     },
     unmount() { stopAnim(); clearInterval(playClockTimer); playClockTimer = null; },
   });
@@ -229,12 +234,16 @@ export function registerMatchScreens(Router, app) {
     const G = f.game;
     if (!ev) { app.save(); Router.render(); return; }
     if (ev.sim && ev.sim.frames?.length > 1 && !f.settings.reducedMotion) { startAnim(f, ev); return; }
+    if (!ev.sim && !f.settings.reducedMotion && (ev.kind === 'kickoff' || ev.kind === 'punt' || ev.kind === 'field_goal')) {
+      const frames = kickFrames(ev);
+      if (frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = { frames, ballOn: 0, ballLat: 0, kick: true }; startAnim(f, ev); return; }
+    }
     G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false };
     app.save(); Router.render();
   }
   function startAnim(f, ev) {
     const G = f.game; const sim = ev.sim;
-    anim = { frames: sim.frames, i: 0, ev, camera: cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / (f.settings.speed || 1) };
+    anim = { frames: sim.frames, i: 0, ev, camera: sim.kick ? cameraFor(Math.max(0, sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / (f.settings.speed || 1), follow: !!sim.kick, sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
     G.lastEvent = null;
     Router.render();
     const svg = document.querySelector('#field');
@@ -244,12 +253,21 @@ export function registerMatchScreens(Router, app) {
       if (idx !== anim.i && svg) {
         anim.i = idx;
         const s = G.state;
-        svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: sim.frames[idx], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera });
+        if (anim.follow) { const target = cameraFor(sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
+        svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: sim.frames[idx], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
       }
       if (idx >= sim.frames.length - 1) { finishAnim(f, false); return; }
       anim.raf = requestAnimationFrame(tick);
     };
     anim.raf = requestAnimationFrame(tick);
+  }
+  /** Monster art for the field (null = simple circles/squares, per Settings). */
+  function spritesFor(f, offSide) {
+    if (f.settings.fieldMarkers === 'simple') return null;
+    const T = teamsFor(f); const defSide = R.opponent(offSide);
+    const pack = (team) => { const map = { ...team.offense, ...team.defense }; const pool = Object.values(map).filter((m) => m?.id); return { map, pool: team.kicker?.id ? [team.kicker, ...pool] : pool }; };
+    const off = pack(T[offSide]), def = pack(T[defSide]);
+    return { off: { map: T[offSide].offense, pool: off.pool }, def: { map: T[defSide].defense, pool: def.pool } };
   }
   function animColors(s, ev) { const o = ev.offenseSide || 'home'; return { off: s[o].color, def: s[R.opponent(o)].color }; }
   function finishAnim(f, skipped) {
@@ -299,9 +317,11 @@ export function registerMatchScreens(Router, app) {
   function finishGame(f) {
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
+    const teams = teamsFor(f);
+    const box = boxScoreHtml(s, teams, { title: `Final${s.ot ? ' (OT)' : ''}` });
     const r = F.finishSunday(f, s); app.save(); Save.backup(f);
     const ev = r.events || [];
-    sheet(`<div class="center"><h2>${won ? '🏆 VICTORY' : 'DEFEAT'}</h2><div class="muted">${r.playerScore}–${r.oppScore} vs ${esc(r.opponent)}${r.ot ? ' (OT)' : ''}</div></div>${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured — ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: 'Final', onClose: () => Router.go('hq', {}, { reset: true }) });
+    sheet(`${box}${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured — ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: 'Final', onClose: () => Router.go('hq', {}, { reset: true }) });
   }
 
   function startPlayClock(f, root) {

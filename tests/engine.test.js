@@ -168,3 +168,18 @@ test('rng helpers are deterministic and well-formed', () => {
   const w = createRng(9).weighted([['x', 0], ['y', 5]]);
   assert.equal(w, 'y');
 });
+
+test('kick animations: every kickoff, punt and field goal from real games yields finite frames', async () => {
+  const { kickFrames } = await import('../src/ui/kick-anim.js');
+  const { generatedTeam } = await import('../src/franchise/roster.js');
+  const { playGame } = await import('../src/sim/game-runner.js');
+  const kinds = new Set(); let n = 0;
+  for (let i = 1; i <= 12; i++) {
+    playGame({ home: generatedTeam(300 + i, { id: 'h', name: 'H' }), away: generatedTeam(400 + i, { id: 'a', name: 'A' }), seed: i, onStep: (ev) => {
+      if (!ev || !['kickoff', 'punt', 'field_goal'].includes(ev.kind)) return;
+      const fr = kickFrames(ev); assert.ok(fr && fr.length > 5, ev.kind); kinds.add(ev.kind); n++;
+      for (const f of fr) { assert.ok([...f.off, ...f.def].every(([, x, y]) => Number.isFinite(x) && Number.isFinite(y))); assert.ok(f.ball.every(Number.isFinite)); }
+    } });
+  }
+  assert.ok(n > 40 && kinds.size === 3, `kinds ${[...kinds]}`);
+});

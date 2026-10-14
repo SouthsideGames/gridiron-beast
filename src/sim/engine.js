@@ -34,6 +34,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const frameEvery = options.frameEvery ?? 2;
   const events = [];
   const log = (text, data = {}) => events.push({ t: +t.toFixed(2), text, ...data });
+  /** Signature ability fired (logged once per monster per play, for the box score). */
+  const abilityUsed = (a) => { if (!a?.abilityName || a.abilityLogged) return; a.abilityLogged = true; log(`${a.name}'s ${a.abilityName} kicks in`, { kind: 'ability', by: a.slot, side: a.team }); };
 
   // ------------------------------------------------------------ actors
   const actors = [];
@@ -41,9 +43,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const makeActor = (team, slot, play, input) => {
     const attrs = { ...DEFAULT_ATTRS, ...(input?.attrs || {}) };
     const ability = input?.ability ? ABILITIES[input.ability]?.effect || null : null;
+    const abilityName = input?.ability ? ABILITIES[input.ability]?.name || null : null;
     const [x, y] = play.align[slot];
     const a = {
-      team, slot, attrs, ability, name: input?.name || slot,
+      team, slot, attrs, ability, abilityName, name: input?.name || slot,
       x, y, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0,
@@ -109,7 +112,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const k = dv > maxDv ? maxDv / dv : 1;
     a.vx += dvx * k; a.vy += dvy * k;
   }
-  function burst(a) { return a.ability?.burst && t < a.ability.burst.until ? 1 + a.ability.burst.speed : 1; }
+  function burst(a) { if (a.ability?.burst && t < a.ability.burst.until) { if (ball.holder === a || a.assignment?.a === 'route' || a.assignment?.a === 'carry') abilityUsed(a); return 1 + a.ability.burst.speed; } return 1; }
   function integrate(a) {
     a.x += a.vx * DT; a.y += a.vy * DT;
     if (a.stun > 0) a.stun -= DT;
@@ -154,7 +157,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.58) + edge * 1.6, 0.06, 2.2);
     if (rng.chance(shedPerSec * DT)) {
       blocker.engaged = null; d.engaged = null; blocker.stun = 0.45; d.noEngage = runFit ? 0.5 : 0.85; // a beaten pass blocker cannot recover at once
-      log(`${d.name} sheds ${blocker.name}`, { kind: 'shed', by: d.slot });
+      log(`${d.name} sheds ${blocker.name}`, { kind: 'shed', by: d.slot, side: d.team }); if (d.ability?.shedStrength) abilityUsed(d);
     }
   }
   function defenderGoal(d) {
@@ -234,7 +237,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         a.laneY = clamp(a.y + (nearest.y > a.y ? -3.5 : 3.5), B.left + 1.5, B.right - 1.5);
         nearest.stun = Math.max(nearest.stun, 0.3);
         a.vx *= 0.65; a.vy *= 0.65; // a cut costs the runner speed too
-        log(`${a.name} jukes ${nearest.name}`, { kind: 'juke', by: a.slot });
+        log(`${a.name} jukes ${nearest.name}`, { kind: 'juke', by: a.slot, side: a.team });
       }
     }
     const goalX = a.team === 'off' ? B.endLine : B.ownEndLine;
@@ -455,7 +458,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const travel = d / velocity + 0.1;
     const lead = predictReceiver(r, travel);
     let acc = passer.attrs.accuracy, arm = passer.attrs.arm;
-    if (passer.ability?.deepThrow && lead.x - passer.x >= 15) { acc += passer.ability.deepThrow.accuracy; arm += passer.ability.deepThrow.arm; }
+    if (passer.ability?.deepThrow && lead.x - passer.x >= 15) { acc += passer.ability.deepThrow.accuracy; arm += passer.ability.deepThrow.arm; abilityUsed(passer); }
     const err = (1.2 + d * 0.07) * (1.3 - norm(acc)) * (pressured ? 1.5 : 1) * (Math.hypot(passer.vx, passer.vy) > 1 ? 1.2 : 1);
     const landing = { x: lead.x + rng.normal() * err * 0.7, y: lead.y + rng.normal() * err };
     landing.x = clamp(landing.x, B.ownEndLine + 0.5, B.endLine - 0.3);
@@ -629,10 +632,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       stats.tackler = d.slot;
       if (c.team === 'off' && c.x <= B.ownGoal) { endPlay('safety', c.x, c.y); log(`${d.name} tackles ${c.name} in the end zone — SAFETY`, { kind: 'safety' }); return true; }
       endPlay('tackle', c.x, c.y);
-      log(`${d.name} tackles ${c.name}`, { kind: 'tackle', by: d.slot });
+      log(`${d.name} tackles ${c.name}`, { kind: 'tackle', by: d.slot }); if (d.ability?.reaction) abilityUsed(d);
       return true;
     }
     d.stun = 0.45; d.noEngage = 0.3; c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1;
+    log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken', by: c.slot, side: c.team }); if (c.ability?.carryStrength) abilityUsed(c);
     c.vx *= 0.55; c.vy *= 0.55; // the arm tackle still slows him down
     log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot });
     return false;
@@ -676,7 +680,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (rng.chance(pickP)) {
         ball.inAir = false; ball.holder = nearest.d; stats.interceptor = nearest.d.slot; nearest.d.x = L.x; nearest.d.y = L.y;
         nearest.d.laneTimer = 0; nearest.d.jukeCooldown = 0;
-        log(`${nearest.d.name} intercepts the pass!`, { kind: 'interception', by: nearest.d.slot });
+        log(`${nearest.d.name} intercepts the pass!`, { kind: 'interception', by: nearest.d.slot }); if (nearest.d.ability?.pickCatching) abilityUsed(nearest.d);
         if (L.x >= B.goal) { endPlay('touchback_return', L.x, L.y, { interception: true }); return; }
         phase = 'carry'; for (const o of offs) o.engaged = null; return;
       }

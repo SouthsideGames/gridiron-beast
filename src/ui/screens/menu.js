@@ -44,6 +44,8 @@ export function registerMenuScreens(Router, app) {
           <label class="field">Coaching mode<select data-change="mode"><option value="key" ${s.mode === 'key' ? 'selected' : ''}>Key Moments — you coach the big downs (recommended)</option><option value="full" ${s.mode === 'full' ? 'selected' : ''}>Full Coaching — call every play</option></select></label>
           <p class="dim">Times assume Key Moments; Full Coaching roughly doubles them.</p>
           <label class="field">Animation speed<select data-change="speed"><option value="0.7" ${s.speed === 0.7 ? 'selected' : ''}>Slow</option><option value="1" ${s.speed === 1 ? 'selected' : ''}>Normal</option><option value="1.6" ${s.speed === 1.6 ? 'selected' : ''}>Fast</option></select></label>
+          <label class="field">Players on the field<select data-change="markers"><option value="sprites" ${s.fieldMarkers !== 'simple' ? 'selected' : ''}>Monster art</option><option value="simple" ${s.fieldMarkers === 'simple' ? 'selected' : ''}>Simple circles and squares</option></select></label>
+          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="hints" ${s.hints !== false ? 'checked' : ''}> Coaching hints (recommended plays after scouting)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default — not recommended on mobile)</label>
         </div>
@@ -54,7 +56,7 @@ export function registerMenuScreens(Router, app) {
       const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
-        reduced: (el) => set('reducedMotion', el.checked), liveclock: (el) => set('liveClock', el.checked),
+        reduced: (el) => set('reducedMotion', el.checked), markers: (el) => set('fieldMarkers', el.value), hints: (el) => set('hints', el.checked), liveclock: (el) => set('liveClock', el.checked),
         export: () => { const blob = new Blob([Save.exportJson(app.f)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `gridiron-beast-${app.f.club.replace(/\s+/g, '-').toLowerCase()}-s${app.f.season.year}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Save exported.', 'good'); },
         import: async (el) => { const file = el.files?.[0]; if (!file) return; try { const f = Save.importJson(await file.text()); app.setFranchise(f); toast('Save imported.', 'good'); Router.go('hq', {}, { reset: true }); } catch (e) { toast('Import failed: ' + e.message, 'bad'); } el.value = ''; },
         restore: async () => { const b = Save.loadBackup(); if (!b) return; if (await confirmSheet(`Roll back to Season ${b.season.year}, Week ${b.season.week} (saved after last Sunday)? Anything since then is lost.`, { title: 'Restore backup', okLabel: 'Restore' })) { app.setFranchise(b); toast('Backup restored.', 'good'); Router.go('hq', {}, { reset: true }); } },

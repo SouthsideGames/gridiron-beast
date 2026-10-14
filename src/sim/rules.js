@@ -183,6 +183,10 @@ function recordPlayerStats(state, sim, off, def) {
   if (sim.touchdown && !sim.stats.defensiveScore) bump(off, sim.stats.carrier, 'td');
   if (sim.stats.tackler) bump(def, sim.stats.tackler, sim.result === 'sack' ? 'sacks' : 'tackles');
   if (sim.stats.interceptor) bump(def, sim.stats.interceptor, 'int');
+  if (sim.stats.forcedBy) bump(def, sim.stats.forcedBy, 'ff');
+  // Monster-football extras from the engine's event stream.
+  const keyOf = { juke: 'jukes', broken: 'broken', shed: 'sheds', ability: 'abilities' };
+  for (const e of sim.events || []) { const k = keyOf[e.kind]; if (!k || !e.by) continue; bump(e.side === 'def' ? def : off, e.by, k); }
 }
 
 function nextDown(state, gain, lines) {
