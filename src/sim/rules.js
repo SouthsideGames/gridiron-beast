@@ -181,7 +181,8 @@ function recordPlayerStats(state, sim, off, def) {
   const bump = (team, slot, key, n = 1) => { if (!slot) return; const p = (state.stats[team].players[slot] ||= {}); p[key] = (p[key] || 0) + n; };
   if (sim.stats.passer) { bump(off, 'QB', 'att'); if (sim.stats.receiver) { bump(off, 'QB', 'comp'); bump(off, 'QB', 'passYds', sim.yards); bump(off, sim.stats.receiver, 'rec'); bump(off, sim.stats.receiver, 'recYds', sim.yards); } }
   if (sim.stats.carrier && !sim.stats.receiver && sim.stats.carrier !== 'QB' && !sim.stats.passer) { bump(off, sim.stats.carrier, 'rush'); bump(off, sim.stats.carrier, 'rushYds', sim.yards); }
-  if (sim.touchdown && !sim.stats.defensiveScore) bump(off, sim.stats.carrier, 'td');
+  if (sim.touchdown && !sim.stats.defensiveScore) { bump(off, sim.stats.carrier, 'td'); if (sim.stats.passer && sim.stats.receiver) bump(off, 'QB', 'passTd'); }
+  if (sim.stats.interceptor && sim.stats.passer) bump(off, 'QB', 'intThrown');
   if (sim.stats.tackler) bump(def, sim.stats.tackler, sim.result === 'sack' ? 'sacks' : 'tackles');
   if (sim.stats.interceptor) bump(def, sim.stats.interceptor, 'int');
   if (sim.stats.forcedBy) bump(def, sim.stats.forcedBy, 'ff');

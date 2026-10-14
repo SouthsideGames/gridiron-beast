@@ -213,7 +213,7 @@ export function playoffPicture(f) {
 }
 /** Simulate every other game of the current week with the real engine. */
 /** League-wide per-monster season stats (all 16 clubs) for award races. */
-const LEAGUE_KEYS = ['passYds', 'rushYds', 'recYds', 'td', 'rec', 'tackles', 'sacks', 'int', 'ff', 'broken', 'abilities', 'att', 'comp'];
+const LEAGUE_KEYS = ['passYds', 'rushYds', 'recYds', 'td', 'passTd', 'intThrown', 'rec', 'rush', 'tackles', 'sacks', 'int', 'ff', 'broken', 'jukes', 'sheds', 'abilities', 'att', 'comp'];
 export function tallyLeagueStats(f, team, side, gameStats) {
   const L = (f.season.leagueStats ||= {}); const T = (L[team.name] ||= {});
   for (const [slot, st] of Object.entries(gameStats?.players || {})) {
@@ -598,22 +598,53 @@ function endSeason(f) {
 export const TIERS_ENABLED = false;
 
 /** End-of-season awards from the roster's season stats and the league table. */
-/** Award races across the league: top 3 for each named award. */
+/**
+ * Award races across the league: top 3 for each named award.
+ * Modelled on how the real awards are judged (no fixed formula, but these questions):
+ *  - MVP: production × efficiency × team success — value to a winning team; QBs weigh most because they touch every play.
+ *  - OPOY / DPOY: the most outstanding season on that side, judged relative to the monster's position (dominance over peers).
+ *  - OROY / DROY: the same, among first-season monsters (age ≤ 22), rookies against rookies.
+ *  - COY: results relative to expectations — wins above what the roster's talent predicted, plus point margin.
+ */
 export const AWARDS = Object.freeze({
   mvp: { label: 'Most Valuable Monster', short: 'MVP' }, opoy: { label: 'Offensive Monster of the Year', short: 'OPOY' }, dpoy: { label: 'Defensive Monster of the Year', short: 'DPOY' },
-  roy: { label: 'Rookie of the Year', short: 'ROY' }, coy: { label: 'Coach of the Year', short: 'COY' },
+  oroy: { label: 'Offensive Rookie of the Year', short: 'OROY' }, droy: { label: 'Defensive Rookie of the Year', short: 'DROY' }, coy: { label: 'Coach of the Year', short: 'COY' },
 });
 const OFF_POS = new Set(['QB', 'RB', 'WR', 'TE', 'OL']);
-const offScore = (r) => (r.passYds || 0) / 25 + (r.rushYds || 0) / 10 + (r.recYds || 0) / 10 + (r.td || 0) * 6 + (r.rec || 0) * 0.5 + (r.broken || 0);
-const defScore = (r) => (r.tackles || 0) * 1.2 + (r.sacks || 0) * 5 + (r.int || 0) * 6 + (r.ff || 0) * 4 + (r.sheds || 0) * 0.3;
+const ROOKIE_AGE = 22;
+/** Production (position-aware), scaled per game so a bye or a missed week doesn't decide it. */
+function offProduction(r) {
+  const g = Math.max(1, r.games || 1);
+  const yds = (r.passYds || 0) / 14 + (r.rushYds || 0) / 10 + (r.recYds || 0) / 10; // a passing yard is shared with the receiver; still, the QB created it
+  const eff = r.att ? ((r.comp || 0) / r.att - 0.55) * 20 : r.rush && r.rushYds ? ((r.rushYds / r.rush) - 4.5) * 2 : r.rec && r.recYds ? ((r.recYds / r.rec) - 9) * 0.5 : 0; // completion %, yards per carry, yards per catch vs league norms
+  return (yds + (r.td || 0) * 6 + (r.passTd || 0) * 5 - (r.intThrown || 0) * 4 + (r.rec || 0) * 0.4 + (r.broken || 0) * 0.8 + (r.jukes || 0) * 0.3 + eff) / g;
+}
+function defProduction(r) {
+  const g = Math.max(1, r.games || 1);
+  return ((r.tackles || 0) * 1.1 + (r.sacks || 0) * 5 + (r.int || 0) * 6 + (r.ff || 0) * 4 + (r.sheds || 0) * 0.4 + (r.abilities || 0) * 0.3) / g;
+}
+/** Dominance relative to peers at the same position (z-ish score against the league's rows). */
+function relativeTo(rows, score) {
+  const by = {}; for (const r of rows) (by[r.position] ||= []).push(score(r));
+  const stats = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length) || 1; return [p, { m, sd }]; }));
+  return (r) => { const st = stats[r.position]; return st ? (score(r) - st.m) / st.sd : 0; };
+}
 export function awardRaces(f) {
-  const rows = Object.entries(f.season.leagueStats || {}).flatMap(([team, T]) => Object.values(T).map((r) => ({ ...r, team })));
+  const rows = Object.entries(f.season.leagueStats || {}).flatMap(([team, T]) => Object.values(T).map((r) => ({ ...r, team }))).filter((r) => (r.games || 0) > 0);
+  const recs = f.season.records; const winPct = (team) => { const r = recs[team]; return r && r.w + r.l ? r.w / (r.w + r.l) : 0.5; };
   const top = (list, score) => list.map((r) => ({ ...r, score: score(r) })).filter((r) => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
   const off = rows.filter((r) => OFF_POS.has(r.position)), def = rows.filter((r) => !OFF_POS.has(r.position) && r.position !== 'K');
-  const mvp = top(rows, (r) => OFF_POS.has(r.position) ? offScore(r) : defScore(r) * 0.9);
-  const coy = Object.entries(f.season.records).map(([team, rec]) => ({ team, w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, coach: team === f.club ? staffMember(f, 'head_coach')?.name || 'Your head coach' : `${team} staff`, score: rec.w * 10 + ((rec.pf || 0) - (rec.pa || 0)) / 20 }))
-    .filter((t) => t.w + t.l > 0).sort((a, b) => b.score - a.score).slice(0, 3);
-  return { mvp, opoy: top(off, offScore), dpoy: top(def, defScore), roy: top(rows.filter((r) => r.age <= 22), (r) => OFF_POS.has(r.position) ? offScore(r) : defScore(r) * 0.9), coy };
+  const relOff = relativeTo(off, offProduction), relDef = relativeTo(def, defProduction);
+  // MVP: production per game × a team-success multiplier; quarterbacks carry more of the offense (responsibility).
+  const mvpScore = (r) => { const base = OFF_POS.has(r.position) ? offProduction(r) * (r.position === 'QB' ? 1.15 : 1) : defProduction(r) * 0.85; return base * (0.6 + 0.8 * winPct(r.team)); };
+  // COY: wins above expectation (expectation = roster talent) + margin; a turnaround beats a talented team coasting.
+  const coy = Object.entries(recs).map(([team, rec]) => { const g = rec.w + rec.l + (rec.t || 0); if (!g) return null; const talent = team === f.club ? teamOverall(playerTeam(f)) : teamOverall(aiTeam(f, team)); const expected = 0.5 + (talent - 60) * 0.025; const over = rec.w / g - expected; return { team, w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, talent, coach: team === f.club ? staffMember(f, 'head_coach')?.name || 'Your head coach' : `${team} staff`, score: rec.w * 6 + over * 40 * g / 10 + ((rec.pf || 0) - (rec.pa || 0)) / 25 }; }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, 3);
+  return {
+    mvp: top(rows, mvpScore),
+    opoy: top(off, (r) => relOff(r) + offProduction(r) * 0.05), dpoy: top(def, (r) => relDef(r) + defProduction(r) * 0.05),
+    oroy: top(off.filter((r) => r.age <= ROOKIE_AGE), (r) => relOff(r) + 3), droy: top(def.filter((r) => r.age <= ROOKIE_AGE), (r) => relDef(r) + 3),
+    coy,
+  };
 }
 export function seasonAwards(f) {
   const s = f.season; const st = leagueStandings(f); const rec = record(f);

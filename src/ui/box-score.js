@@ -9,7 +9,7 @@ const who = (team, slot) => team?.offense?.[slot] || team?.defense?.[slot] || te
 
 function rows(state, side) { return Object.entries(state.stats[side].players || {}).map(([slot, p]) => ({ slot, side, ...p })); }
 
-const OFF_SCORE = (p) => (p.passYds || 0) / 25 + (p.rushYds || 0) / 10 + (p.recYds || 0) / 10 + (p.td || 0) * 6 + (p.rec || 0) * 0.5 + (p.broken || 0) + (p.jukes || 0) * 0.5;
+const OFF_SCORE = (p) => (p.passYds || 0) / 14 + (p.passTd || 0) * 5 - (p.intThrown || 0) * 4 + (p.rushYds || 0) / 10 + (p.recYds || 0) / 10 + (p.td || 0) * 6 + (p.rec || 0) * 0.5 + (p.broken || 0) + (p.jukes || 0) * 0.5;
 const DEF_SCORE = (p) => (p.tackles || 0) + (p.sacks || 0) * 4 + (p.int || 0) * 5 + (p.ff || 0) * 3 + (p.sheds || 0) * 0.5;
 const OFFENSE_SLOTS = new Set(['QB', 'RB', 'WR1', 'WR2', 'WR3', 'TE', 'LG', 'C', 'RG']);
 
@@ -23,7 +23,7 @@ export function playersOfGame(state) {
 
 function line(p) {
   const bits = [];
-  if (p.att) bits.push(`${p.comp || 0}/${p.att}, ${p.passYds || 0} yds`);
+  if (p.att) bits.push(`${p.comp || 0}/${p.att}, ${p.passYds || 0} yds${p.passTd ? `, ${p.passTd} TD` : ''}${p.intThrown ? `, ${p.intThrown} INT` : ''}`);
   if (p.rush) bits.push(`${p.rush} car, ${p.rushYds || 0} yds`);
   if (p.rec) bits.push(`${p.rec} rec, ${p.recYds || 0} yds`);
   if (p.td) bits.push(`${p.td} TD`);

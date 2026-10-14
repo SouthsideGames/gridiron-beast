@@ -217,7 +217,7 @@ test('award races: league-wide stats accumulate and every award has contenders a
   for (let w = 0; w < 3; w++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
   const r = F.awardRaces(f);
   for (const k of ['mvp', 'opoy', 'dpoy', 'coy']) assert.ok(r[k].length === 3, `${k} has three contenders`);
-  assert.ok(r.roy.length >= 1);
+  assert.ok(r.oroy.length >= 1 && r.droy.length >= 1);
   assert.ok(Object.keys(f.season.leagueStats).length >= 14, 'most clubs have stats');
   assert.ok(r.opoy[0].score > 0 && r.dpoy[0].score > 0);
 });
