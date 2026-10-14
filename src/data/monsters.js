@@ -227,3 +227,41 @@ export function headlineAttributes(m, opts) {
     smarts: offense ? a.awareness : avg('awareness', 'coverage'),
   };
 }
+
+/**
+ * Scheme fit: does this monster suit the coordinators' schemes? Each scheme
+ * values certain headline ratings per position; a monster fits when its
+ * average of those ratings is in roughly the top 40% for its position
+ * (thresholds calibrated once against a reference crop of generated monsters).
+ */
+const FIT_KEYS = {
+  offense: {
+    pass: { QB: ['hands', 'smarts'], RB: ['speed', 'hands'], WR: ['speed', 'hands'], TE: ['hands', 'speed'], OL: ['smarts', 'power'], why: 'Air Raid wants speed and hands' },
+    run: { QB: ['smarts', 'speed'], RB: ['power', 'speed'], WR: ['power', 'speed'], TE: ['power'], OL: ['power'], why: 'Ground Attack wants power' },
+    balanced: { QB: ['hands', 'smarts', 'speed'], RB: ['speed', 'power', 'hands'], WR: ['speed', 'hands', 'power'], TE: ['hands', 'power'], OL: ['power', 'smarts'], why: 'Balanced wants all-rounders' },
+  },
+  defense: {
+    pressure: { DL: ['power', 'speed'], LB: ['speed', 'power'], CB: ['speed', 'power'], S: ['speed', 'power'], why: 'Blitz Heavy wants fast, strong rushers' },
+    coverage: { DL: ['power', 'smarts'], LB: ['smarts', 'hands'], CB: ['smarts', 'hands'], S: ['smarts', 'hands'], why: 'Zone Control wants smart cover monsters' },
+    man: { DL: ['power', 'speed'], LB: ['speed', 'smarts'], CB: ['speed', 'hands'], S: ['speed', 'hands'], why: 'Man Coverage wants speed to stay on top' },
+  },
+};
+const keyMean = (m, keys) => { const h = headlineAttributes(m); return keys.reduce((a, k) => a + h[k], 0) / keys.length; };
+let FIT_THRESHOLDS = null;
+function fitThresholds() {
+  if (FIT_THRESHOLDS) return FIT_THRESHOLDS;
+  const rng = createRng(0xf17); const t = {};
+  for (const side of ['offense', 'defense']) for (const [scheme, rule] of Object.entries(FIT_KEYS[side])) for (const [pos, keys] of Object.entries(rule)) {
+    if (pos === 'why') continue;
+    const vals = []; for (let i = 0; i < 160; i++) vals.push(keyMean(generateMonster(rng, { position: pos, quality: 52 + rng.int(14) }), keys));
+    vals.sort((a, b) => a - b); t[`${scheme}:${pos}`] = vals[Math.floor(vals.length * 0.6)];
+  }
+  FIT_THRESHOLDS = t; return t;
+}
+export function schemeFit(m, { offense = 'balanced', defense = 'coverage' } = {}) {
+  const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(m.position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(m.position) ? 'defense' : null;
+  if (!side) return null;
+  const scheme = side === 'offense' ? (FIT_KEYS.offense[offense] ? offense : 'balanced') : (FIT_KEYS.defense[defense] ? defense : 'coverage');
+  const keys = FIT_KEYS[side][scheme][m.position]; if (!keys) return null;
+  return { fits: keyMean(m, keys) >= fitThresholds()[`${scheme}:${m.position}`], why: FIT_KEYS[side][scheme].why, side };
+}

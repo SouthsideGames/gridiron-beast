@@ -11,17 +11,37 @@ export const available = (m) => !m.injury;
 export const DEFAULT_OFFENSE = ['inside_zone', 'power_right', 'outside_zone', 'counter', 'quick_slants', 'curl_flat', 'smash', 'mesh', 'deep_post', 'pa_post', 'rb_screen', 'te_seam', 'stick', 'flood', 'three_verticals', 'hail_mary'];
 export const DEFAULT_DEFENSE = ['cover_2_man', 'cover_3', 'cover_4', 'cover_1', 'tampa_2', 'zone_blitz', 'run_wall', 'goal_line', 'prevent', 'cover_0'];
 
+/** Depth-chart slots per position group, in fill order (base starters first, then the package slot). */
+export const GROUP_SLOTS = Object.freeze({ QB: ['QB'], RB: ['RB'], WR: ['WR1', 'WR2', 'WR3'], TE: ['TE'], OL: ['LG', 'RG', 'C'], DL: ['DL1', 'DL2', 'DL3'], LB: ['LB1', 'LB2'], CB: ['CB1', 'CB2'], S: ['FS', 'SS'], K: ['K'] });
+export const OFFENSE_GROUPS = ['QB', 'RB', 'WR', 'TE', 'OL'];
+export const DEFENSE_GROUPS = ['DL', 'LB', 'CB', 'S'];
+
+/** The owner's order for a position group: their explicit order first, then everyone else at that position by overall. */
+export function depthOrder(roster, depth, group) {
+  const slot = GROUP_SLOTS[group][0];
+  const explicit = (depth?.[group] || []).map((id) => roster.find((m) => m.id === id)).filter((m) => m && canPlay(m.position, slot));
+  const rest = roster.filter((m) => m.position === group && !explicit.includes(m)).sort((a, b) => monsterOverall(b) - monsterOverall(a));
+  return [...explicit, ...rest];
+}
+
 /**
- * Fill every depth-chart slot with the best available monster. Manual
- * assignments (`lineup[slot] = monsterId`) are honoured when legal.
+ * Fill every depth-chart slot. Order of precedence: manual slot assignments
+ * (legacy), the owner's depth order per position (injured monsters are
+ * skipped, so the next one in order steps in), then the best available.
  */
-export function buildDepthChart(roster, manual = {}) {
+export function buildDepthChart(roster, manual = {}, depth = null) {
   const chart = {}; const used = new Set();
   const take = (slot, m) => { chart[slot] = m.id; used.add(m.id); };
   const all = [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'];
   for (const slot of all) {
-    const id = manual[slot]; const m = roster.find((x) => x.id === id);
+    const id = manual?.[slot]; const m = roster.find((x) => x.id === id);
     if (m && !used.has(m.id) && available(m) && canPlay(m.position, slot)) take(slot, m);
+  }
+  if (depth) {
+    for (const [group, slots] of Object.entries(GROUP_SLOTS)) {
+      const order = depthOrder(roster, depth, group).filter((m) => available(m) && !used.has(m.id));
+      for (const slot of slots) { if (chart[slot]) continue; const m = order.shift(); if (m) take(slot, m); }
+    }
   }
   for (const slot of all) {
     if (chart[slot]) continue;
@@ -55,8 +75,8 @@ export function lineupProblems(roster, chart) {
 }
 
 /** A complete team object for the runner from a roster. */
-export function buildTeam({ id, name, abbr, color, roster, manual = {}, offensePlays = null, defensePlays = null, coach = null, trainingBonus = null }) {
-  const chart = buildDepthChart(roster, manual);
+export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = null, offensePlays = null, defensePlays = null, coach = null, trainingBonus = null }) {
+  const chart = buildDepthChart(roster, manual, depth);
   const lineup = lineupFromChart(roster, chart, { trainingBonus });
   return {
     id, name, abbr, color, roster, chart, ...lineup,

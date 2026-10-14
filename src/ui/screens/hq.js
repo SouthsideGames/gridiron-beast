@@ -4,7 +4,8 @@
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import { REGIONS, TRAINING_FOCI, ROLE_LABEL, trainingBonus } from '../../data/staff.js';
-import { PLAYS, LESSONS } from '../../data/playbook.js';
+import { PLAYS, LESSONS, counterPlays } from '../../data/playbook.js';
+import { TEMPERAMENTS, temperamentOf } from '../../data/media.js';
 import { tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
 import { monsterOverall, NATURES, TYPES, effectiveAttributes, HEADLINE, headlineAttributes } from '../../data/monsters.js';
 import { headlineHtml } from './roster.js';
@@ -45,6 +46,7 @@ export function registerHqScreens(Router, app) {
         ${weekStrip(f)}
         <div class="panel"><div class="muted" style="font-size:12px">THIS WEEK</div><div style="margin:4px 0 8px">${gameLine}</div>
           ${next ? `<button class="btn primary big block" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>` : ''}
+          ${!f.season.finished && day < 6 && !cap.over ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
           ${cap.over ? `<p class="muted" style="color:var(--bad);margin-top:8px">Over the cap by ${fmtMoney(-cap.remaining)} — games are locked until you release a monster.</p>` : ''}</div>
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
         <div class="grid2">
@@ -61,6 +63,7 @@ export function registerHqScreens(Router, app) {
         bye: () => { F.takeBye(app.f); app.save(); toast('Bye week taken. Fatigue recovered.'); Router.render(); },
         game: () => { if (!F.canPlayGames(app.f)) { toast('Over the salary cap — release a monster first.', 'bad'); return; } Router.go('pregame'); },
         resume: () => Router.go('match'),
+        autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(awardsHtml(app.f.season.awards || F.seasonAwards(app.f)), { title: `Season ${app.f.season.year} awards` }),
         nextseason: async () => { if (await confirmSheet(`Start season ${app.f.season.year + 1}? Your roster ages one year and the record resets.`, { title: 'New season', okLabel: 'Start' })) { F.startNextSeason(app.f); app.save(); Router.render(); } },
       });
@@ -70,7 +73,7 @@ export function registerHqScreens(Router, app) {
     const d = f.season.day;
     if (f.game && !f.game.state?.finished) return { label: 'Resume game', action: 'resume', icon: '▶' };
     if (d === 6) return F.isBye(f) ? { label: 'Take the bye week', action: 'bye', icon: '😴' } : { label: 'Play Sunday game', action: 'game', icon: '🏈' };
-    return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Recruit', action: 'recruit', icon: '🤝' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Lineup check', action: 'lineup', icon: '✅' }][d];
+    return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Recruit', action: 'recruit', icon: '🤝' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
   }
 
   // ---------------------------------------------------------------- Monday
@@ -100,21 +103,32 @@ export function registerHqScreens(Router, app) {
         back: () => Router.back(),
         skip: () => { F.skipRecruit(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
         compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) sheet(compareHtml(app.f, p), { title: `${p.monster.name} vs your ${p.monster.position}s` }); },
-        approach: (el) => { const r = F.recruit(app.f, Number(el.dataset.i), el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.success) { toast(`${r.monster.name} signed!`, 'good'); Router.go('hq', {}, { reset: true }); } else { toast(r.final ? 'They declined. No attempts left this week.' : 'Not convinced yet. Try another approach.', r.final ? 'bad' : 'info'); if (r.final) Router.go('hq', {}, { reset: true }); else Router.render(); } },
+        approach: (el) => {
+          const i = Number(el.dataset.i), v = el.dataset.v; const p = app.f.week.prospects[i]; const rc = p ? F.releaseCandidates(app.f, p) : { needed: false };
+          if (rc.needed) {
+            const { el: sh, close } = sheet(`<p>${esc(rc.reason)} Choose who leaves if <b>${esc(p.monster.name)}</b> signs (nothing happens if they turn you down).</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}" ${c.capOk ? '' : 'disabled'}><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr${c.capOk ? '' : ' · still over the cap'}</div></div><span class="chip ${c.position === p.monster.position ? 'accent' : ''}">${c.position === p.monster.position ? 'same position' : 'release'}</span></button>`).join('') || '<p class="dim">Nobody can be released.</p>'}</div>`, { title: 'Make room' });
+            sh.addEventListener('click', (e) => { const id = e.target.closest('[data-rel]')?.dataset.rel; if (!id) return; close(); doApproach(i, v, id); });
+            return;
+          }
+          doApproach(i, v, null);
+        },
       });
+      function doApproach(i, v, releaseId) {
+        { const r = F.recruit(app.f, i, v, { releaseId }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.success) { toast(`${r.monster.name} signed!`, 'good'); Router.go('hq', {}, { reset: true }); } else { toast(r.final ? 'They declined. No attempts left this week.' : 'Not convinced yet. Try another approach.', r.final ? 'bad' : 'info'); if (r.final) Router.go('hq', {}, { reset: true }); else Router.render(); } }
+      }
     },
   });
   /** Prospect vs the club's monsters at the same position: headline ratings, OVR, age, salary, and where they'd slot in. */
   function compareHtml(f, p) {
     const m = p.monster; const known = Math.min(4, Math.ceil(p.revealed / 3)); const ovrKnown = p.revealed >= 4;
-    const chart = buildDepthChart(f.roster, f.lineupManual); const starters = new Set([...OFFENSE_BASE, ...DEFENSE_BASE, 'K'].map((s) => chart[s])); const pkg = new Set([...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => chart[s]));
+    const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const starters = new Set([...OFFENSE_BASE, ...DEFENSE_BASE, 'K'].map((s) => chart[s])); const pkg = new Set([...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => chart[s]));
     const mates = f.roster.filter((x) => x.position === m.position).sort((a, b) => monsterOverall(b) - monsterOverall(a));
     const startSlots = STARTERS_BY_POS[m.position] || 1;
     const hp = headlineAttributes(m);
     const cell = (v, best, show = true) => `<td class="mono ${show && v >= best ? 'best' : ''}">${show ? v : '??'}</td>`;
     const rows = [{ m, prospect: true }, ...mates.map((x) => ({ m: x }))];
     const best = Object.fromEntries(HEADLINE.map((x) => [x.key, Math.max(...rows.map((r, i) => (i === 0 && HEADLINE.findIndex((y) => y.key === x.key) >= known) ? 0 : headlineAttributes(r.m)[x.key]))]));
-    const table = `<table class="compare"><thead><tr><th></th>${HEADLINE.map((x) => `<th>${x.label.slice(0, 3)}</th>`).join('')}<th>OVR</th><th>Age</th></tr></thead><tbody>${rows.map((r, idx) => { const h = headlineAttributes(r.m); return `<tr class="${r.prospect ? 'prospect' : ''}"><td><div class="row" style="gap:4px">${monsterSprite(r.m, 22)}<span>${esc(r.m.name)}${r.prospect ? ' <span class="chip accent">new</span>' : starters.has(r.m.id) ? ' <span class="chip">starter</span>' : pkg.has(r.m.id) ? ' <span class="chip">package</span>' : ''}</span></div></td>${HEADLINE.map((x, i) => cell(h[x.key], best[x.key], !r.prospect || i < known)).join('')}<td class="mono"><b>${r.prospect && !ovrKnown ? '??' : monsterOverall(r.m)}</b></td><td class="mono">${r.m.age}</td></tr>`; }).join('')}</tbody></table>`;
+    const table = `<table class="compare"><thead><tr><th></th>${HEADLINE.map((x) => `<th>${x.label.slice(0, 3)}</th>`).join('')}<th>OVR</th><th>Age</th></tr></thead><tbody>${rows.map((r, idx) => { const h = headlineAttributes(r.m); return `<tr class="${r.prospect ? 'prospect' : ''}"><td><div class="row" style="gap:4px">${monsterSprite(r.m, 22)}<span>${esc(r.m.name)}${(!r.prospect || ovrKnown) && F.fitFor(f, r.m)?.fits ? ' <span class="fit-star" title="Fits scheme">✦</span>' : ''}${r.prospect ? ' <span class="chip accent">new</span>' : starters.has(r.m.id) ? ' <span class="chip">starter</span>' : pkg.has(r.m.id) ? ' <span class="chip">package</span>' : ''}</span></div></td>${HEADLINE.map((x, i) => cell(h[x.key], best[x.key], !r.prospect || i < known)).join('')}<td class="mono"><b>${r.prospect && !ovrKnown ? '??' : monsterOverall(r.m)}</b></td><td class="mono">${r.m.age}</td></tr>`; }).join('')}</tbody></table>`;
     let verdict;
     if (!ovrKnown) verdict = `Overall is hidden — a better scout would show where ${esc(m.name)} ranks.`;
     else {
@@ -127,21 +141,31 @@ export function registerHqScreens(Router, app) {
   function prospectCard(p, i) {
     const m = p.monster; const attrs = effectiveAttributes(m);
     const h = headlineAttributes(m); const known = Math.min(4, Math.ceil(p.revealed / 3));
-    return `<div class="panel"><div class="row" style="flex-wrap:nowrap;align-items:flex-start">${monsterSprite(m, 52)}<div class="grow" style="flex:1;min-width:0"><b>${esc(m.name)}</b> ${typeGlyph(m.type)}<div class="muted">${m.position} · age ${m.age} · ${p.potentialKnown ? 'potential ' + m.potential : 'potential unknown'} · ${fmtMoney(m.salary)}/yr</div><div class="muted">Nature: ${p.natureKnown ? esc(NATURES[m.nature].name) : '???'}</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:none"><span class="ovr">${p.revealed >= 4 ? monsterOverall(m) : '??'}</span><button class="info-btn" data-action="compare" data-i="${i}" aria-label="Compare ${esc(m.name)} with your roster">i</button></div></div>
+    const fit = p.revealed >= 4 ? F.fitFor(app.f, m) : null;
+    return `<div class="panel ${fit?.fits ? 'fit' : ''}">${fit?.fits ? `<div class="fitchip-row"><span class="chip fitchip">✦ Fits your scheme</span> <span class="dim">${esc(fit.why)}</span></div>` : ''}<div class="row" style="flex-wrap:nowrap;align-items:flex-start">${monsterSprite(m, 52)}<div class="grow" style="flex:1;min-width:0"><b>${esc(m.name)}</b> ${typeGlyph(m.type)}<div class="muted">${m.position} · age ${m.age} · ${p.potentialKnown ? 'potential ' + m.potential : 'potential unknown'} · ${fmtMoney(m.salary)}/yr</div><div class="muted">Nature: ${p.natureKnown ? esc(NATURES[m.nature].name) : '???'}</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:none"><span class="ovr">${p.revealed >= 4 ? monsterOverall(m) : '??'}</span><button class="info-btn" data-action="compare" data-i="${i}" aria-label="Compare ${esc(m.name)} with your roster">i</button></div></div>
       <div class="headline" style="margin:8px 0">${HEADLINE.map((x, i) => `<div class="hl"><span class="hl-v">${i < known ? h[x.key] : '??'}</span><span class="hl-l">${x.label}</span><div class="bar"><i style="width:${i < known ? h[x.key] : 0}%"></i></div></div>`).join('')}</div>${known < 4 ? `<div class="dim">${4 - known} rating${4 - known === 1 ? '' : 's'} hidden — a better scout reveals more</div>` : ''}
       <div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="approach" data-i="${i}" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div></div>`;
   }
 
   // ---------------------------------------------------------------- Wednesday
+  let intensity = 'normal';
   Router.registerScreen('training', {
     title: 'Wednesday · Training',
     render({ f }) {
       const tr = F.staffMember(f, 'monster_trainer');
-      return `<p class="muted">${esc(tr?.name || 'Your trainer')} runs one focus. The bonus applies on Sunday only — permanent growth comes from games.</p>
-        <div class="stack">${Object.entries(TRAINING_FOCI).map(([id, t]) => { const b = trainingBonus(tr, id); const amt = Object.values(b)[0]; return `<button class="item" data-action="focus" data-v="${id}"><div class="grow"><div class="name">${esc(t.label)}</div><div class="sub">${esc(t.text)}</div></div><span class="chip accent">+${amt} ${t.attrs.map((a) => ATTR_LABEL[a]).join(', ')}</span></button>`; }).join('')}</div>`;
+      if (f.season.day !== 2 && f.week.training) { const t = f.week.training; return `<div class="panel">${trainingResultHtml(t)}</div><button class="btn block" data-action="back">Back</button>`; }
+      const pct = (x) => `${Math.round(x * 100)}%`;
+      return `<p class="muted">${esc(tr?.name || 'Your trainer')} runs one practice. If it goes well, the boost applies on Sunday. Practices can go badly, and monsters can get hurt.</p>
+        <div class="seg" style="margin-bottom:6px">${Object.entries(F.INTENSITIES).map(([id, I]) => `<button class="btn small ${intensity === id ? 'primary' : ''}" data-action="intensity" data-v="${id}">${I.label}</button>`).join('')}</div>
+        <p class="dim" style="margin-top:0">${esc(F.INTENSITIES[intensity].text)}</p>
+        <div class="stack">${Object.entries(TRAINING_FOCI).map(([id, t]) => { const o = F.trainingOdds(f, id, intensity); return `<button class="item" data-action="focus" data-v="${id}"><div class="grow"><div class="name">${esc(t.label)} <span class="chip accent">+${o.amount}</span></div><div class="sub">${esc(t.attrs.map((a) => ATTR_LABEL[a]).join(', '))}</div><div class="sub"><b style="color:${o.success >= 0.7 ? 'var(--good)' : o.success >= 0.45 ? 'var(--warn, #e0a33b)' : 'var(--bad)'}">${pct(o.success)} success</b> · ${pct(o.risk)} injury risk${o.streak >= 2 ? ` · <span style="color:var(--bad)">${o.streak} weeks in a row — monsters are tuning it out</span>` : o.streak === 1 ? ' · same as last week' : ''}</div></div></button>`; }).join('')}</div>`;
     },
-    mount(root) { delegate(root, { focus: (el) => { const r = F.setTraining(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast('Training focus set.', 'good'); Router.go('hq', {}, { reset: true }); } }); },
+    mount(root) { delegate(root, { back: () => Router.back(), intensity: (el) => { intensity = el.dataset.v; Router.render(); }, focus: (el) => { const r = F.setTraining(app.f, el.dataset.v, intensity); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(trainingResultHtml(app.f.week.training), { title: 'Practice report', onClose: () => Router.go('hq', {}, { reset: true }) }); } }); },
   });
+  function trainingResultHtml(t) {
+    const label = TRAINING_FOCI[t.focus]?.label || t.focus;
+    return `<h2 style="margin-top:0">${t.success ? '✅ Good practice' : '❌ Sloppy practice'}</h2><p>${t.success ? `${esc(label)} work paid off: <b>+${t.amount}</b> to ${esc(TRAINING_FOCI[t.focus].attrs.map((a) => ATTR_LABEL[a]).join(', '))} on Sunday.` : `${esc(label)} work didn't stick this week. No boost on Sunday.`}</p>${t.injury ? `<p style="color:var(--bad)">🚑 ${esc(t.injury.name)} was hurt: ${esc(t.injury.severity)}, out ${t.injury.weeks} week${t.injury.weeks === 1 ? '' : 's'}. The next monster on the depth chart steps in.</p>` : '<p class="muted">Everyone came out healthy.</p>'}`;
+  }
 
   // ---------------------------------------------------------------- Thursday
   Router.registerScreen('scoutopp', {
@@ -173,8 +197,13 @@ export function registerHqScreens(Router, app) {
     render({ f }) {
       if (f.season.day !== 4) return `<div class="panel"><p>The game plan is set on <b>Friday</b>. This week's plan: ${f.week.plan.offense.length ? f.week.plan.offense.map((id) => esc(PLAYS[id].name)).join(', ') : 'coach’s default'} · ${f.week.plan.defense.length ? f.week.plan.defense.map((id) => esc(PLAYS[id].name)).join(', ') : 'coach’s default'}.</p><button class="btn block" data-action="back">Back</button></div>`;
       const sel = { offense: new Set(f.week.plan.offense), defense: new Set(f.week.plan.defense) };
-      const side = (s) => `<h3>${s === 'offense' ? 'Offense' : 'Defense'} · <span id="count-${s}">${sel[s].size}</span>/${F.PLAN_SIZE} equipped</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
-      return `<p class="muted">Equip ${F.PLAN_SIZE} offensive and ${F.PLAN_SIZE} defensive plays for Sunday. Tap a card to equip, long-press or use Details for the full diagram.</p>
+      const rep = f.week.scoutReport; const hintsOn = f.settings.hints !== false;
+      const hintSide = rep?.side === 'defense' ? 'offense' : rep?.side === 'offense' ? 'defense' : null;
+      const hints = hintsOn && hintSide ? counterPlays(F.catalog(f, hintSide), rep.plays || []) : [];
+      const hintMap = Object.fromEntries(hints.map((h) => [h.id, h]));
+      const hintNote = hintsOn && hintSide ? `<div class="panel tight hint-note"><b>💡 Coach's hints</b> — ${hints.length ? `outlined ${hintSide} plays counter what ${esc(F.opponentName(f) || 'they')} showed in scouting. A hint is a lean, not a guarantee.` : `nothing in your ${hintSide} playbook clearly counters their scouted calls.`} <span class="dim">(Settings → Coaching hints)</span></div>` : hintsOn ? '<p class="dim">Scout the opponent on Thursday to get coach\'s hints here.</p>' : '';
+      const side = (s) => `<h3>${s === 'offense' ? 'Offense' : 'Defense'} · <span id="count-${s}">${sel[s].size}</span>/${F.PLAN_SIZE} equipped</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''} ${hintMap[id] ? 'hint' : ''}" title="${hintMap[id] ? esc('Counters ' + hintMap[id].beats.join(', ')) : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
+      return `<p class="muted">Equip ${F.PLAN_SIZE} offensive and ${F.PLAN_SIZE} defensive plays for Sunday. Tap a card to equip, long-press or use Details for the full diagram.</p>${hintNote}
         ${side('offense')}${legendHtml('offense')}${side('defense')}${legendHtml('defense')}
         <div class="row between" style="margin-top:12px"><button class="btn" data-action="details">Play details</button><button class="btn primary" data-action="save">Save game plan</button></div>`;
     },
@@ -190,16 +219,28 @@ export function registerHqScreens(Router, app) {
   });
 
   // ---------------------------------------------------------------- Saturday
+  let mediaPicks = [];
   Router.registerScreen('lineup', {
-    title: 'Saturday · Lineup Check',
+    title: 'Saturday · Media Day',
     render({ f }) {
-      const r = F.lineupCheck(f); app.save();
-      return `<div class="panel">${r.ok ? '<p>✅ Every position is filled with a healthy monster.</p>' : `<p style="color:var(--bad)">⚠️ Cannot fill: ${r.problems.join(', ')}. Recruit or move a monster.</p>`}
-        ${r.injured.length ? `<p class="muted">Injured: ${esc(r.injured.join(', '))}</p>` : ''}${r.tired.length ? `<p class="muted" style="color:var(--warn)">Fatigued starters: ${esc(r.tired.join(', '))}</p>` : '<p class="muted">Fatigue is under control.</p>'}
-        ${f.week.trainingFocus ? `<p class="muted">Training bonus active: ${esc(TRAINING_FOCI[f.week.trainingFocus].label)}.</p>` : ''}</div>
-        <div class="grid2"><button class="btn block" data-action="roster">Open depth chart</button><button class="btn primary block" data-action="done">Ready for Sunday →</button></div>`;
+      const r = F.lineupCheck(f, { advance: false });
+      const lineup = r.ok ? `<p class="muted">✅ Lineup set: every position has a healthy monster.${r.tired.length ? ` <span style="color:var(--warn)">Tired: ${esc(r.tired.join(', '))}.</span>` : ''}</p>` : `<p style="color:var(--bad)">⚠️ Can't fill: ${r.problems.join(', ')}. Fix it on the depth chart.</p>`;
+      if (f.week.media) {
+        const md = f.week.media; const groups = Object.entries(md.boosts).map(([t, v]) => `<span class="chip accent">${TEMPERAMENTS[t].label} +${v}</span>`).join(' ');
+        return `<div class="panel"><h3 style="margin-top:0">Press conference done</h3><p>${groups || 'No boosts.'}${md.hype ? ' <span class="chip bad">Trash talk: +2 all, risky</span>' : ''}</p><p class="dim">Monsters with matching natures get the boost on Sunday.</p>${lineup}</div><div class="grid2"><button class="btn block" data-action="roster">Depth chart</button><button class="btn primary block" data-action="done">Ready for Sunday →</button></div>`;
+      }
+      const qs = F.mediaQuestions(f); app.save();
+      const count = Object.fromEntries(Object.keys(TEMPERAMENTS).map((t) => [t, 0])); for (const m of f.roster) count[temperamentOf(m.nature)]++;
+      return `<p class="muted">The press wants answers. How you talk changes how your monsters feel: each answer fires up monsters of one temperament for Sunday.</p>
+        <p class="dim">Your roster: ${Object.entries(count).map(([t, n]) => `${TEMPERAMENTS[t].label} ${n}`).join(' · ')}</p>
+        ${qs.map((q, k) => `<div class="panel"><b>🎤 “${esc(q.q)}”</b><div class="stack" style="margin-top:8px">${q.a.map((a, ai) => `<button class="choice ${mediaPicks[k] === ai ? 'selected' : ''}" data-action="answer" data-q="${k}" data-a="${ai}"><span>${esc(a.text)}</span><span class="dim" style="font-size:12px">${TEMPERAMENTS[a.t].label} monsters${a.hype ? ' · trash talk' : ''}${a.star ? ' · your star' : ''}</span></button>`).join('')}</div></div>`).join('')}
+        ${lineup}<button class="btn primary big block" data-action="submit" ${mediaPicks.filter((x) => x != null).length === qs.length ? '' : 'disabled'}>Finish press conference</button>`;
     },
-    mount(root) { delegate(root, { roster: () => Router.go('roster'), done: () => Router.go('hq', {}, { reset: true }) }); },
+    mount(root) { delegate(root, {
+      roster: () => Router.go('roster'), done: () => Router.go('hq', {}, { reset: true }),
+      answer: (el) => { mediaPicks[Number(el.dataset.q)] = Number(el.dataset.a); Router.render(); },
+      submit: () => { F.answerMedia(app.f, mediaPicks); mediaPicks = []; app.save(); Router.render(); },
+    }); },
   });
 
   // ---------------------------------------------------------------- Playbook browsing

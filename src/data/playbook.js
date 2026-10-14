@@ -407,3 +407,15 @@ export const LESSONS = Object.freeze({
   robber: { when: 'Against an offence that keeps hitting the middle.', watch: 'A safety drops into the short middle looking to jump a route.', beats: 'Quick Slants, Levels and TE Seam.', loses: 'Deep Corner and outside throws.' },
   fire_zone: { when: 'Pressure with three deep behind it — the aggressive yet safe blitz.', watch: 'Five rushers, three deep, three under. Open area is the flats.', beats: 'Y Cross, PA Shot and slow drops.', loses: 'Curl Flat and RB Screen.' },
 });
+
+/**
+ * Coaching hints: which of `candidates` counter the scouted `opponentIds`,
+ * judged from the lessons (a play that names a scouted call under "beats"
+ * scores +1, under "loses to" −1). Returns ids with a positive score, best first.
+ */
+export function counterPlays(candidates, opponentIds) {
+  const names = opponentIds.map((id) => PLAYS[id]?.name).filter(Boolean);
+  const mentions = (text) => names.filter((n) => text.includes(n)).length;
+  return candidates.map((id) => { const L = LESSONS[id]; return L ? { id, score: mentions(L.beats) - mentions(L.loses), beats: names.filter((n) => L.beats.includes(n)) } : { id, score: 0, beats: [] }; })
+    .filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
+}

@@ -45,7 +45,7 @@ test('the weekly loop: scout, recruit, train, scout opponent, plan, lineup', () 
   for (let i = 0; i < 3 && f.season.day === 1; i++) { const r = F.recruit(f, 0, 'playing_time'); if (r.success) signed = true; }
   assert.equal(f.season.day, 2);
   if (signed) assert.equal(f.roster.length, 23);
-  const t = F.setTraining(f, 'passing'); assert.equal(t.ok, true); assert.ok(t.bonus.accuracy >= 1); assert.equal(f.season.day, 3);
+  const t = F.setTraining(f, 'passing'); assert.equal(t.ok, true); assert.ok(t.amount >= 1); assert.equal(f.season.day, 3);
   const o = F.scoutOpponent(f, 'offense'); assert.equal(o.ok, true); assert.ok(o.report.star.name); assert.equal(f.season.day, 4);
   const cat = F.catalog(f, 'offense'), catD = F.catalog(f, 'defense');
   assert.equal(F.setGamePlan(f, cat.slice(0, 5), catD.slice(0, 6)).ok, false, 'needs six and six');
@@ -163,4 +163,50 @@ test('AI clubs carry exactly six offensive and six defensive plays and only call
   for (const id of called) assert.ok(legal.has(id), `${id} was never equipped`);
   f.season.day = 3; const r = F.scoutOpponent(f, 'defense');
   assert.equal(r.report.plays.length, 6); assert.ok(r.report.star.ovr > 40);
+});
+
+test('depth chart: owner order decides starters and the next healthy monster replaces an injured one', () => {
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 33 });
+  F.hireDefaultStaff(f);
+  const wrs = F.depthList(f, 'WR'); assert.ok(wrs.length >= 3);
+  const last = wrs[wrs.length - 1];
+  for (let i = 0; i < wrs.length - 1; i++) F.moveDepth(f, 'WR', last, -1);
+  assert.equal(F.depthList(f, 'WR')[0], last);
+  const chart1 = F.lineupCheck(f).chart; assert.equal(chart1.WR1, last, 'the owner\'s first WR starts');
+  f.roster.find((m) => m.id === last).injury = { severity: 'Minor', weeks: 1 };
+  const chart2 = F.lineupCheck(f).chart; assert.equal(chart2.WR1, F.depthList(f, 'WR')[1], 'next in order steps in');
+  F.assignSlot(f, 'WR2', last); assert.equal(F.depthList(f, 'WR').indexOf(last) >= 1, true);
+});
+
+test('training: odds shown match the rule, the third straight week of one focus usually fails', () => {
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 44 });
+  F.hireDefaultStaff(f);
+  assert.ok(F.trainingOdds(f, 'passing', 'normal').success > 0.7);
+  f.trainingHistory = ['passing', 'passing'];
+  assert.ok(F.trainingOdds(f, 'passing', 'normal').success < 0.4, 'third week running');
+  assert.ok(F.trainingOdds(f, 'rushing', 'normal').success > 0.7, 'switching resets it');
+  assert.ok(F.trainingOdds(f, 'rushing', 'full').amount > F.trainingOdds(f, 'rushing', 'light').amount);
+  f.season.day = 2; const r = F.setTraining(f, 'coverage', 'full'); assert.ok(r.ok); assert.equal(f.season.day, 3);
+  assert.equal(f.week.trainingFocus, r.success ? 'coverage' : null);
+});
+
+test('media day: three questions, answers boost matching temperaments on Sunday', async () => {
+  const { temperamentOf } = await import('../src/data/media.js');
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 55 });
+  F.hireDefaultStaff(f); f.season.day = 5;
+  const qs = F.mediaQuestions(f); assert.equal(qs.length, 3);
+  const before = F.playerTeam(f);
+  const t = qs[0].a[0].t;
+  F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6);
+  const after = F.playerTeam(f);
+  const m = f.roster.find((x) => temperamentOf(x.nature) === t && Object.values(after.offense).concat(Object.values(after.defense)).some((p) => p.id === x.id));
+  if (m) { const slotOf = (team) => [...Object.values(team.offense), ...Object.values(team.defense)].find((p) => p.id === m.id); assert.ok(slotOf(after).attrs.awareness >= slotOf(before).attrs.awareness); }
+});
+
+test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
+  F.hireDefaultStaff(f);
+  const r = F.autoRunToSunday(f);
+  assert.equal(f.season.day, 6); assert.ok(r.did.length >= 5);
+  assert.equal(f.week.plan.offense.length, F.PLAN_SIZE); assert.ok(F.sundayMatchup(f)); assert.ok(f.week.media);
 });

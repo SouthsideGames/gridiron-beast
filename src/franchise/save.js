@@ -27,7 +27,7 @@ export function clear() { const s = storage(); if (s) { s.removeItem(SAVE_KEY); 
 export function migrate(f) {
   if (!f || typeof f !== 'object') return null;
   if (f.schemaVersion !== SCHEMA_VERSION) return null; // future versions migrate here
-  f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.settings ||= {};
+  f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {};
   return f;
 }
 export function exportJson(f) { return JSON.stringify({ app: 'gridiron-beast', schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString(), franchise: f }, null, 0); }

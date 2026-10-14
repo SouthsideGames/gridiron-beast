@@ -219,3 +219,27 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .bs-totals td, .bs-totals th { padding: 5px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.07); font-variant-numeric: tabular-nums; }
 .pog-wrap { display: grid; gap: 8px; }
 .pog { display: flex; gap: 10px; align-items: center; padding: 8px; border: 1px solid rgba(245,197,66,.45); border-radius: var(--r); background: rgba(245,197,66,.06); }
+.seg { display: flex; gap: 6px; align-items: center; }
+.dc-group { border: 1px solid var(--line-2, rgba(255,255,255,.12)); border-radius: var(--r); padding: 6px 8px; margin-bottom: 8px; }
+.dc-group.bad { border-color: var(--bad); } .dc-group.warn { border-color: var(--warn, #e0a33b); }
+.dc-head { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.dc-head .chip { margin-left: auto; }
+.dc-row { display: grid; grid-template-columns: 18px 26px 1fr auto 30px auto; gap: 6px; align-items: center; padding: 3px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.dc-row.out { opacity: .55; }
+.dc-n { color: var(--muted, #9fb3a8); font-size: 12px; text-align: right; }
+.dc-name { background: none; border: 0; color: inherit; font: inherit; font-weight: 700; text-align: left; padding: 0; min-height: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.dc-move { display: flex; gap: 4px; }
+.dc-move .btn { min-width: 40px; min-height: 40px; padding: 0; }
+.chip.bad { border-color: var(--bad); color: var(--bad); } .chip.warn { border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); }
+
+.fit { box-shadow: 0 0 0 2px #f5c542 inset, 0 0 10px rgba(245,197,66,.25); }
+.panel.fit, .item.fit { border-color: #f5c542; }
+.dc-row.fit .dc-name::after { content: ' ✦'; color: #f5c542; }
+.chip.fitchip { border-color: #f5c542; color: #f5c542; }
+.fitchip-row { margin: -2px 0 6px; font-size: 12px; }
+.fit-star { color: #f5c542; }
+.fit-key { color: #f5c542; font-weight: 700; }
+
+.play-grid .card.hint { outline: 2px solid #6ee7a0; outline-offset: -2px; position: relative; }
+.play-grid .card.hint::before { content: '💡'; position: absolute; top: 3px; right: 4px; font-size: 11px; }
+.hint-note { border-color: #6ee7a0; margin-bottom: 8px; }
