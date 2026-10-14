@@ -170,8 +170,8 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
 /** Difficulty: how good and how smart the other 15 clubs are. */
 export const DIFFICULTY = Object.freeze({
   rookie: { label: 'Rookie', quality: -4, iq: 0.6, text: 'Weaker clubs that call plays loosely.' },
-  pro: { label: 'Pro', quality: 0, iq: 1, text: 'The standard league.' },
-  allstar: { label: 'All-Star', quality: 4, iq: 1.6, text: 'Stronger clubs whose coaches read the situation sharply.' },
+  pro: { label: 'Pro', quality: -1, iq: 1, text: 'The standard league.' },
+  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: 'Stronger clubs whose coaches read the situation sharply.' },
 });
 export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } = {}) {
   const meta = TEAM_META[name];

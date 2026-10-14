@@ -241,6 +241,30 @@ const DEFENSE_PLAYS = [
   defense('fire_zone', 'Fire Zone', 'nickel', {
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), SS: RUSH('edge_R'), LB1: ZONE('hook_M'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M'),
   }, { align: { SS: [4, 7] }, tags: ['blitz', 'zone'], desc: 'Safety blitz off the edge with three deep behind it.' }),
+  defense('cover_2_zone', 'Cover 2 Zone', 'nickel', {
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: ZONE('hook_M'), CB1: ZONE('flat_L'), CB2: ZONE('flat_R'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'),
+  }, { tags: ['pass', 'zone', 'balanced'], desc: 'Two deep halves, corners squat in the flats, linebacker in the hook.' }),
+  defense('cover_6', 'Cover 6', 'nickel', {
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: ZONE('hook_M'), CB1: ZONE('deep_quarter_LL'), FS: ZONE('deep_quarter_L'), SS: ZONE('deep_half_R'), CB2: ZONE('flat_R'),
+  }, { align: { SS: [12, 8] }, tags: ['pass', 'zone'], desc: 'Quarters to the left, Cover 2 to the right. Takes away one side deep.' }),
+  defense('corner_blitz', 'Corner Blitz', 'nickel', {
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), CB1: RUSH('edge_L'), LB1: ZONE('hook_M'), SS: ZONE('deep_third_L'), FS: ZONE('deep_third_M'), CB2: ZONE('deep_third_R'),
+  }, { align: { CB1: [2, -12], SS: [10, -10] }, tags: ['blitz', 'zone'], desc: 'The left corner comes off the edge; the safety rotates over the top.' }),
+  defense('safety_blitz', 'Safety Blitz', 'base', {
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), FS: RUSH('A_L'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'),
+  }, { align: { FS: [7, -2] }, tags: ['blitz', 'man', 'risky', 'short'], desc: 'The free safety comes from depth; man across with no deep help.' }),
+  defense('bear_front', 'Bear Front', 'heavy', {
+    DL1: RUSH('A_L'), DL3: RUSH('A_R'), DL2: RUSH('B_R'), LB1: ZONE('short_L'), LB2: ZONE('short_R'), CB1: MAN('wideL'), CB2: MAN('wideR'),
+  }, { align: { DL1: [1, -1.6], DL3: [1, 0.9], DL2: [1, 2.6], LB1: [3.5, -3], LB2: [3.5, 3] }, tags: ['run', 'balanced'], desc: 'Three down linemen over the centre and guards; corners alone in man.' }),
+  defense('double_a_mug', 'Double A Mug', 'pressure', {
+    DL1: RUSH('edge_L'), DL2: RUSH('edge_R'), DL3: RUSH('A_L'), LB1: RUSH('A_R'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: MAN('inside'),
+  }, { align: { DL3: [1, -0.9], LB1: [1.2, 0.9], FS: [7, 0] }, tags: ['blitz', 'man', 'risky', 'interior'], desc: 'Two rushers mugged up in the A gaps, ends wide. Overloads the middle.' }),
+  defense('bracket_left', 'Bracket Left', 'nickel', {
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: MAN('wideL'), SS: ZONE('deep_quarter_LL'), CB2: MAN('wideR'), FS: ZONE('deep_half_R'),
+  }, { align: { SS: [11, -14] }, tags: ['pass', 'man', 'bracket'], desc: 'The left receiver gets a corner underneath and a safety over the top.' }),
+  defense('goal_line_man', 'Goal Line Man', 'heavy', {
+    DL1: RUSH('A_L'), DL3: RUSH('A_R'), DL2: RUSH('B_R'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'),
+  }, { align: { LB1: [2.5, -2], LB2: [2.5, 2] }, tags: ['goalline', 'man', 'short'], desc: 'Three in the gaps, everyone else locked on a receiver. No safety.' }),
 ];
 
 // ------------------------------------------------------------- compilation
@@ -413,6 +437,14 @@ export const LESSONS = Object.freeze({
   prevent: { when: 'Last plays of a half with the lead — give up yards, not points.', watch: 'Everything underneath is open. Tackle in bounds and let the clock run.', beats: 'Hail Mary and Deep Post.', loses: 'Almost every short pass.' },
   man_press: { when: 'Your corners are physical and the offence loves screens and quick throws.', watch: 'Press at the line disrupts timing — but a beaten press is a touchdown.', beats: 'Bubble Screen, Jet Sweep and Quick Slants.', loses: 'Double Move, Slot Fade and Mesh.' },
   robber: { when: 'Against an offence that keeps hitting the middle.', watch: 'A safety drops into the short middle looking to jump a route.', beats: 'Quick Slants, Levels and TE Seam.', loses: 'Deep Corner and outside throws.' },
+  cover_2_zone: { when: 'A sound base call against balanced offences; great against the quick game outside.', watch: 'Corners sit in the flats, safeties split the deep field. The hole is the deep sideline between them.', beats: 'Curl Flat, Bubble Screen and Quick Slants.', loses: 'Smash and Deep Corner — the hole shot.' },
+  cover_6: { when: 'When the offence loves one side: quarters there, Cover 2 the other way.', watch: 'Two deep defenders on the left, a half on the right. Attack the weak-side flat.', beats: 'Three Verticals and Dagger to the quarters side.', loses: 'Flood and Stick to the Cover 2 side.' },
+  corner_blitz: { when: 'Surprise pressure from the boundary on an obvious passing down.', watch: 'The safety has to rotate over the vacated corner in time.', beats: 'PA Shot and Y Cross — slow throws from the left hash.', loses: 'Bubble Screen and Jet Sweep to the blitz side.' },
+  safety_blitz: { when: 'When the quarterback holds the ball too long: pressure from a direction he never sees.', watch: 'No deep safety. If the back picks it up, every receiver is one-on-one.', beats: 'Mesh and Y Cross — long-developing crossers.', loses: 'Slot Fade, Deep Post and RB Screen.' },
+  bear_front: { when: 'Against inside runs when you still need your corners honest.', watch: 'Three linemen over the centre and guards clog every interior gap.', beats: 'Inside Zone, Dive and Trap.', loses: 'Toss Sweep, Outside Zone and Slot Fade on the lone corners.' },
+  double_a_mug: { when: 'Third-and-medium when the offence keeps the back in to block.', watch: 'Two rushers show in the A gaps before the snap; the centre has to choose one.', beats: 'QB Draw, Stick and Levels — the middle collapses.', loses: 'Toss Sweep, Outside Zone and Bubble Screen — nobody is outside.' },
+  bracket_left: { when: 'Take away their best receiver when he lines up left.', watch: 'A corner underneath and a safety over the top on one man. Everyone else is on their own.', beats: 'Deep Post, Slot Fade and Double Move to the left.', loses: 'Flood and TE Seam to the right, and the run.' },
+  goal_line_man: { when: 'Inside your 5 against passing teams — Goal Line Stand with coverage instead of a safety.', watch: 'Four defenders locked in man with three in the gaps. A rub route beats it.', beats: 'Slot Fade, PA Post and Dive.', loses: 'Mesh and Power — nobody comes free to help.' },
   fire_zone: { when: 'Pressure with three deep behind it — the aggressive yet safe blitz.', watch: 'Five rushers, three deep, three under. Open area is the flats.', beats: 'Y Cross, PA Shot and slow drops.', loses: 'Curl Flat and RB Screen.' },
 });
 

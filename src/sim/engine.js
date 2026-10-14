@@ -520,14 +520,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (ball.inAir) {
       const toBall = dist(d, ball.landing);
       // Everybody drives to the ball once it is thrown; the closest defenders sprint, the rest rally.
-      const breakRadius = asg.a === 'man' ? 9 : asg.role === 'deep' ? 12 : 9;
+      const breakRadius = asg.a === 'man' ? 9 : asg.role === 'deep' ? 12 : 11; // zone defenders read the quarterback and break on the throw
       if (toBall < breakRadius) { steer(d, ball.landing.x, ball.landing.y, 1, 0.2); return; }
       if (!['rush', 'contain'].includes(asg.a) || d.x < ball.landing.x) { steer(d, ball.landing.x, ball.landing.y, 0.95, 0.2); return; }
     }
     // Run recognition.
     const runLive = (phase === 'carry' || (phase === 'run' && handoffDone)) && c && c.team === 'off';
     if (runLive && !d.recognised) {
-      const delay = 0.3 + 0.5 * (1 - norm(d.attrs.awareness)) - (d.ability?.reaction || 0) + (isPlayAction && t < 1.6 ? 0.3 : 0) + (offensePlay.tags.includes('misdirection') ? 0.3 : 0) + (asg.a === 'man' ? 0.35 : 0);
+      const expectRun = defensePlay.tags.includes('run') || defensePlay.tags.includes('goalline');
+      const delay = 0.3 + 0.5 * (1 - norm(d.attrs.awareness)) - (d.ability?.reaction || 0) + (isPlayAction && t < 1.6 ? 0.3 : 0) + (offensePlay.tags.includes('misdirection') ? 0.3 : 0) + (asg.a === 'man' ? 0.35 : 0) - (expectRun ? 0.3 : 0); // a run call keys the run
       if (t - runRecognisedAt >= delay) d.recognised = true;
     }
     if (runLive && d.recognised) {
@@ -535,9 +536,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const isFront = ['rush', 'contain'].includes(asg.a);
       if (!isFront && c.x < 1.5) {
         const deep = asg.a === 'zone' && asg.role === 'deep';
-        const fitX = deep ? 6.5 : 1.5;
-        const shade = clamp(c.y - d.y, -2.5, 2.5) * (0.4 + 0.5 * norm(d.attrs.awareness));
-        steer(d, fitX, d.y + shade, 0.9, 0.4); return;
+        const fitX = deep ? 6.5 : (defensePlay.tags.includes('run') || defensePlay.tags.includes('goalline')) ? 0.5 : 1.5; // run calls meet the back at the line
+        // Second-level defenders flow to the ball: a linebacker fills the gap the back chooses, not just his own.
+        const flow = deep ? 2.5 : 5;
+        const shade = clamp(c.y + c.vy * 0.3 - d.y, -flow, flow) * (0.55 + 0.45 * norm(d.attrs.awareness));
+        steer(d, fitX, d.y + shade, 1, 0.3); return;
       }
       pursue(d); return;
     }
@@ -583,7 +586,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       }
       case 'zone': {
         const [zx, zy] = asg.at;
-        const radius = asg.role === 'deep' ? 12 : asg.role === 'middle' ? 6 : 6.5;
+        const radius = asg.role === 'deep' ? 12 : asg.role === 'middle' ? 7.5 : 7;
         const inZone = (r) => asg.role === 'deep' ? (Math.abs(r.y - zy) < radius && r.x > 5) : dist(r, { x: zx, y: zy }) < radius;
         const threats = receivers.map((s) => bySlot.off[s]).filter((r) => r && inZone(r) && r.x > -1);
         if (threats.length && dist(d, { x: zx, y: zy }) < radius + 1) {
@@ -595,7 +598,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
             const inward = Math.sign(zy - r.y) || (zy >= 0 ? 1 : -1);
             const ty = clamp(p.y + r.vy * antic + inward * 1.2, zy - 10, zy + 10);
             steer(d, Math.max(p.x + r.vx * antic + 2.0, zx - 3), ty, 0.98, 0.3);
-          } else steer(d, p.x + r.vx * antic * 0.5 + 0.5, p.y + r.vy * antic * 0.5, 0.9, 0.3);
+          } else steer(d, p.x + r.vx * antic * 0.6 + 0.3, p.y + r.vy * antic * 0.6, 0.95, 0.3); // underneath zones squeeze the receiver harder
           return;
         }
         steer(d, zx, zy, 0.95, 0.5); return;

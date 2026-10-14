@@ -88,8 +88,8 @@ export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = 
 /** Quick generated team (AI clubs, tests). */
 const RUN_PLAYS = ['inside_zone', 'power_right', 'power_left', 'outside_zone', 'stretch_left', 'counter', 'toss_sweep', 'trap', 'dive', 'read_option'];
 const PASS_PLAYS = ['quick_slants', 'curl_flat', 'smash', 'mesh', 'levels', 'dagger', 'flood', 'te_seam', 'stick', 'deep_post', 'deep_corner', 'three_verticals', 'pa_post', 'pa_boot', 'rb_screen', 'wheel', 'y_cross'];
-const ZONE_D = ['cover_3', 'cover_4', 'tampa_2', 'prevent', 'max_drop', 'zone_blitz'];
-const MAN_D = ['cover_2_man', 'cover_1', 'man_press', 'robber', 'db_blitz', 'cover_0'];
+const ZONE_D = ['cover_3', 'cover_4', 'cover_2_zone', 'cover_6', 'tampa_2', 'max_drop', 'zone_blitz', 'corner_blitz'];
+const MAN_D = ['cover_2_man', 'cover_1', 'man_press', 'robber', 'bracket_left', 'db_blitz', 'safety_blitz', 'double_a_mug', 'cover_0'];
 /** A playbook shaped by the coach profile, so scouting an opponent means something. */
 /** AI game plan: exactly 6 offensive and 6 defensive plays, like the player. Mix follows the coach's tendencies. */
 export const AI_PLAN_SIZE = 6;
@@ -100,7 +100,7 @@ export function playbookFor(seed, coach = {}) {
   const runs = passBias >= 0.62 ? 2 : passBias >= 0.5 ? 3 : 4; // run-heavy coaches carry four runs
   const offense = [...pick(RUN_PLAYS, runs), ...pick(PASS_PLAYS, AI_PLAN_SIZE - runs)];
   const primary = aggression > 0.55 ? MAN_D : ZONE_D, secondary = aggression > 0.55 ? ZONE_D : MAN_D;
-  const defense = [...pick(primary, 3), ...pick(secondary, 2), ...pick(['run_wall', 'edge_contain', 'goal_line', 'qb_spy'], 1)];
+  const defense = [...pick(primary, 3), ...pick(secondary, 2), ...pick(['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy'], 1)];
   return { offense, defense };
 }
 /**

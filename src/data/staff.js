@@ -12,9 +12,9 @@ export const PLAYBOOKS = Object.freeze({
   oc_swift: ['quick_slants', 'stick', 'curl_flat', 'smash', 'mesh', 'levels', 'dagger', 'three_verticals', 'deep_post', 'deep_corner', 'slot_fade', 'bubble_screen', 'rb_screen', 'double_move', 'inside_zone', 'qb_draw', 'hail_mary'],
   oc_brock: ['inside_zone', 'power_right', 'power_left', 'dive', 'outside_zone', 'stretch_left', 'counter', 'toss_sweep', 'trap', 'read_option', 'pa_post', 'pa_boot', 'pa_shot', 'te_seam', 'flood', 'quick_slants', 'hail_mary'],
   oc_park: ['inside_zone', 'power_right', 'outside_zone', 'counter', 'jet_sweep', 'qb_draw', 'quick_slants', 'stick', 'curl_flat', 'smash', 'y_cross', 'flood', 'te_seam', 'deep_post', 'pa_boot', 'rb_screen', 'wheel', 'hail_mary'],
-  dc_stone: ['cover_1', 'cover_0', 'db_blitz', 'zone_blitz', 'fire_zone', 'all_out', 'edge_contain', 'man_press', 'qb_spy', 'goal_line', 'run_wall', 'cover_2_man', 'cover_3', 'prevent'],
-  dc_ice: ['cover_2_man', 'cover_3', 'cover_4', 'tampa_2', 'max_drop', 'prevent', 'robber', 'zone_blitz', 'run_wall', 'goal_line', 'qb_spy', 'edge_contain', 'cover_1', 'fire_zone'],
-  dc_fox: ['cover_2_man', 'man_press', 'cover_1', 'cover_0', 'robber', 'db_blitz', 'qb_spy', 'edge_contain', 'goal_line', 'run_wall', 'cover_3', 'tampa_2', 'fire_zone', 'prevent'],
+  dc_stone: ['cover_1', 'cover_0', 'db_blitz', 'zone_blitz', 'fire_zone', 'safety_blitz', 'double_a_mug', 'corner_blitz', 'all_out', 'edge_contain', 'man_press', 'qb_spy', 'bear_front', 'goal_line', 'run_wall', 'cover_2_man', 'cover_3', 'prevent'],
+  dc_ice: ['cover_2_zone', 'cover_3', 'cover_4', 'cover_6', 'tampa_2', 'max_drop', 'prevent', 'robber', 'zone_blitz', 'corner_blitz', 'bracket_left', 'run_wall', 'goal_line', 'qb_spy', 'edge_contain', 'cover_2_man', 'cover_1', 'fire_zone'],
+  dc_fox: ['cover_2_man', 'man_press', 'cover_1', 'cover_0', 'bracket_left', 'robber', 'db_blitz', 'safety_blitz', 'double_a_mug', 'goal_line_man', 'qb_spy', 'edge_contain', 'bear_front', 'goal_line', 'run_wall', 'cover_3', 'tampa_2', 'fire_zone', 'prevent'],
 });
 
 export const STAFF = Object.freeze([
