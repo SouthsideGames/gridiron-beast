@@ -1,6 +1,7 @@
-// Procedural 8×8 pixel monsters: a symmetric sprite seeded by the monster's
-// id, tinted by elemental type. No external art needed; every monster looks
-// like itself every time.
+// Procedural 8×8 pixel monsters. The SHAPE comes from the species, so every
+// Tidepaw is recognisably a Tidepaw; the COLOUR comes from the elemental type,
+// with a small per-individual tint so two of the same species aren't clones.
+// No external art needed.
 
 import { createRng, hashString } from '../core/rng.js';
 import { TYPES } from '../data/monsters.js';
@@ -11,11 +12,14 @@ function hsl(h, s, l) { return `hsl(${h} ${s}% ${l}%)`; }
 
 /** Returns an inline SVG string. `size` is the CSS pixel size. */
 export function monsterSprite(m, size = 48, { eyes = true } = {}) {
-  const key = `${m.id || m.name}|${m.type}|${size}`;
+  const species = m.species || String(m.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '');
+  const key = `${m.id || m.name}|${species}|${m.type}|${size}`;
   if (cache.has(key)) return cache.get(key);
-  const rng = createRng(hashString(`${m.id || ''}|${m.species || m.name}`));
-  const hue = (TYPES[m.type]?.hue ?? 120) + rng.int(16) - 8;
-  const body = hsl(hue, 62, 46), shade = hsl(hue, 60, 32), light = hsl(hue, 70, 64), accent = hsl((hue + 150) % 360, 70, 60);
+  const rng = createRng(hashString(`species|${species}`)); // shape + eyes + accent pattern
+  const ind = createRng(hashString(`ind|${m.id || m.name}`)); // individual tint only
+  const hue = ((TYPES[m.type]?.hue ?? 120) + ind.int(13) - 6 + 360) % 360;
+  const lit = ind.int(7) - 3;
+  const body = hsl(hue, 62, 46 + lit), shade = hsl(hue, 60, 32 + lit), light = hsl(hue, 70, 64 + lit), accent = hsl((hue + 150) % 360, 70, 60);
   const grid = [];
   for (let y = 0; y < 8; y++) {
     const row = [];

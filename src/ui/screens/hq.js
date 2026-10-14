@@ -8,10 +8,12 @@ import { PLAYS, LESSONS } from '../../data/playbook.js';
 import { tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
 import { monsterOverall, NATURES, TYPES, effectiveAttributes, HEADLINE, headlineAttributes } from '../../data/monsters.js';
 import { headlineHtml } from './roster.js';
-import { ATTRIBUTES } from '../../data/personnel.js';
+import { ATTRIBUTES, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
-import { teamOverall } from '../../franchise/roster.js';
+import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
+
+const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
 const ATTR_LABEL = { speed: 'Speed', agility: 'Agility', strength: 'Strength', awareness: 'Awareness', catching: 'Catching', arm: 'Arm', accuracy: 'Accuracy', blocking: 'Blocking', tackling: 'Tackling', coverage: 'Coverage', durability: 'Durability', kicking: 'Kicking' };
 
@@ -97,14 +99,35 @@ export function registerHqScreens(Router, app) {
       delegate(root, {
         back: () => Router.back(),
         skip: () => { F.skipRecruit(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
+        compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) sheet(compareHtml(app.f, p), { title: `${p.monster.name} vs your ${p.monster.position}s` }); },
         approach: (el) => { const r = F.recruit(app.f, Number(el.dataset.i), el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.success) { toast(`${r.monster.name} signed!`, 'good'); Router.go('hq', {}, { reset: true }); } else { toast(r.final ? 'They declined. No attempts left this week.' : 'Not convinced yet. Try another approach.', r.final ? 'bad' : 'info'); if (r.final) Router.go('hq', {}, { reset: true }); else Router.render(); } },
       });
     },
   });
+  /** Prospect vs the club's monsters at the same position: headline ratings, OVR, age, salary, and where they'd slot in. */
+  function compareHtml(f, p) {
+    const m = p.monster; const known = Math.min(4, Math.ceil(p.revealed / 3)); const ovrKnown = p.revealed >= 4;
+    const chart = buildDepthChart(f.roster, f.lineupManual); const starters = new Set([...OFFENSE_BASE, ...DEFENSE_BASE, 'K'].map((s) => chart[s])); const pkg = new Set([...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => chart[s]));
+    const mates = f.roster.filter((x) => x.position === m.position).sort((a, b) => monsterOverall(b) - monsterOverall(a));
+    const startSlots = STARTERS_BY_POS[m.position] || 1;
+    const hp = headlineAttributes(m);
+    const cell = (v, best, show = true) => `<td class="mono ${show && v >= best ? 'best' : ''}">${show ? v : '??'}</td>`;
+    const rows = [{ m, prospect: true }, ...mates.map((x) => ({ m: x }))];
+    const best = Object.fromEntries(HEADLINE.map((x) => [x.key, Math.max(...rows.map((r, i) => (i === 0 && HEADLINE.findIndex((y) => y.key === x.key) >= known) ? 0 : headlineAttributes(r.m)[x.key]))]));
+    const table = `<table class="compare"><thead><tr><th></th>${HEADLINE.map((x) => `<th>${x.label.slice(0, 3)}</th>`).join('')}<th>OVR</th><th>Age</th></tr></thead><tbody>${rows.map((r, idx) => { const h = headlineAttributes(r.m); return `<tr class="${r.prospect ? 'prospect' : ''}"><td><div class="row" style="gap:4px">${monsterSprite(r.m, 22)}<span>${esc(r.m.name)}${r.prospect ? ' <span class="chip accent">new</span>' : starters.has(r.m.id) ? ' <span class="chip">starter</span>' : pkg.has(r.m.id) ? ' <span class="chip">package</span>' : ''}</span></div></td>${HEADLINE.map((x, i) => cell(h[x.key], best[x.key], !r.prospect || i < known)).join('')}<td class="mono"><b>${r.prospect && !ovrKnown ? '??' : monsterOverall(r.m)}</b></td><td class="mono">${r.m.age}</td></tr>`; }).join('')}</tbody></table>`;
+    let verdict;
+    if (!ovrKnown) verdict = `Overall is hidden — a better scout would show where ${esc(m.name)} ranks.`;
+    else {
+      const rank = mates.filter((x) => monsterOverall(x) > monsterOverall(m)).length;
+      verdict = !mates.length ? `You have no ${m.position} — ${esc(m.name)} would start immediately.` : rank < startSlots ? `<b>Would start</b> at ${m.position} (${rank + 1}${['st', 'nd', 'rd'][rank] || 'th'} best of ${mates.length + 1}).` : rank === startSlots ? `<b>First backup</b> at ${m.position}.` : `<b>Depth</b> — ${rank} ${m.position}${rank === 1 ? ' is' : 's are'} better.`;
+    }
+    const cap = F.salarySummary(f, m.salary);
+    return `${table}<p style="margin-top:10px">${verdict}</p><p class="muted">${startSlots} starting ${m.position} slot${startSlots === 1 ? '' : 's'} · Salary ${fmtMoney(m.salary)}/yr · cap room after signing ${cap.over ? `<span style="color:var(--bad)">over by ${fmtMoney(-cap.remaining)}</span>` : fmtMoney(cap.remaining)} · roster ${f.roster.length + 1}/26</p>${known < 4 ? `<p class="dim">?? = not yet scouted.</p>` : ''}`;
+  }
   function prospectCard(p, i) {
     const m = p.monster; const attrs = effectiveAttributes(m);
     const h = headlineAttributes(m); const known = Math.min(4, Math.ceil(p.revealed / 3));
-    return `<div class="panel"><div class="row">${monsterSprite(m, 52)}<div class="grow"><b>${esc(m.name)}</b> ${typeGlyph(m.type)}<div class="muted">${m.position} · age ${m.age} · ${p.potentialKnown ? 'potential ' + m.potential : 'potential unknown'} · ${fmtMoney(m.salary)}/yr</div><div class="muted">Nature: ${p.natureKnown ? esc(NATURES[m.nature].name) : '???'}</div></div><span class="ovr">${p.revealed >= 4 ? monsterOverall(m) : '??'}</span></div>
+    return `<div class="panel"><div class="row" style="flex-wrap:nowrap;align-items:flex-start">${monsterSprite(m, 52)}<div class="grow" style="flex:1;min-width:0"><b>${esc(m.name)}</b> ${typeGlyph(m.type)}<div class="muted">${m.position} · age ${m.age} · ${p.potentialKnown ? 'potential ' + m.potential : 'potential unknown'} · ${fmtMoney(m.salary)}/yr</div><div class="muted">Nature: ${p.natureKnown ? esc(NATURES[m.nature].name) : '???'}</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:none"><span class="ovr">${p.revealed >= 4 ? monsterOverall(m) : '??'}</span><button class="info-btn" data-action="compare" data-i="${i}" aria-label="Compare ${esc(m.name)} with your roster">i</button></div></div>
       <div class="headline" style="margin:8px 0">${HEADLINE.map((x, i) => `<div class="hl"><span class="hl-v">${i < known ? h[x.key] : '??'}</span><span class="hl-l">${x.label}</span><div class="bar"><i style="width:${i < known ? h[x.key] : 0}%"></i></div></div>`).join('')}</div>${known < 4 ? `<div class="dim">${4 - known} rating${4 - known === 1 ? '' : 's'} hidden — a better scout reveals more</div>` : ''}
       <div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="approach" data-i="${i}" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div></div>`;
   }

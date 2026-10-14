@@ -85,6 +85,8 @@ def run_size(pw, port, w, h, name):
     settle(page, '[data-action="scout"]')
     page.click('[data-action="scout"]'); page.wait_for_selector('[data-action="region"]'); page.click('[data-action="region"] >> nth=0')
     page.wait_for_selector('[data-action="skip"], [data-action="approach"]'); no_overflow(page, 'recruit'); shot(page, f'{name}-08-recruit')
+    if page.query_selector('[data-action="compare"]'):
+        page.click('[data-action="compare"] >> nth=0'); page.wait_for_selector('.sheet table.compare'); no_overflow(page, 'recruit compare'); shot(page, f'{name}-08b-compare'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="skip"]')
     page.click('[data-action="training"]'); page.click('[data-action="focus"] >> nth=0')
     page.click('[data-action="scoutopp"]'); page.click('[data-action="side"] >> nth=0'); page.wait_for_selector('.sheet'); shot(page, f'{name}-09-scout'); page.click('[data-action="sheet-close"]')

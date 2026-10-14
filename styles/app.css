@@ -192,3 +192,11 @@ html[data-reduced-motion="1"] * { transition: none !important; animation: none !
 .rival-banner { background: linear-gradient(90deg, #3b1a5a, #1e1038); border: 2px solid #a855f7; border-radius: var(--r); padding: 8px 10px; text-align: center; font-weight: 800; letter-spacing: .04em; margin-bottom: var(--s2); }
 .lesson { border-left: 3px solid #f5c542; margin-top: 8px; }
 .lesson .kv { font-size: 13px; }
+
+.info-btn { display: inline-grid; place-items: center; width: 26px; height: 26px; min-height: 0; padding: 0; margin-left: 4px; border-radius: 50%; border: 1.5px solid var(--accent, #f5c542); background: transparent; color: var(--accent, #f5c542); font: italic 700 14px/1 Georgia, serif; vertical-align: middle; cursor: pointer; position: relative; }
+.info-btn::after { content: ''; position: absolute; inset: -9px; } /* 44px tap target */
+table.compare { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.compare th, table.compare td { padding: 5px 3px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.08); }
+table.compare td:first-child, table.compare th:first-child { text-align: left; }
+table.compare tr.prospect { background: rgba(245,197,66,.10); }
+table.compare td.best { color: #6ee7a0; font-weight: 800; }

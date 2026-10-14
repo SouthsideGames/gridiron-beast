@@ -139,3 +139,12 @@ test('season awards are produced when a season ends', () => {
   const a = F.seasonAwards(f);
   assert.ok(a && 'mvp' in a && a.rivalry && a.rivalry.team, 'awards object has an MVP slot and a rivalry line');
 });
+
+test('sprites: same species share a shape, individuals differ only in colour', async () => {
+  const { monsterSprite } = await import('../src/ui/pixel-monster.js');
+  const shape = (s) => s.replace(/fill="[^"]+"/g, '');
+  const a = monsterSprite({ id: 'x1', species: 'Tidepaw', type: 'Water' }, 8), b = monsterSprite({ id: 'x2', species: 'Tidepaw', type: 'Water' }, 8);
+  const c = monsterSprite({ id: 'x3', species: 'Voltfang', type: 'Water' }, 8);
+  assert.equal(shape(a), shape(b)); assert.notEqual(a, b); assert.notEqual(shape(a), shape(c));
+  assert.equal(shape(monsterSprite({ id: 'x4', name: 'Tidepaw II', type: 'Water' }, 8)), shape(a), 'numbered names map back to the species');
+});
