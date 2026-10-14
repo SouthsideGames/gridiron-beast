@@ -112,7 +112,7 @@ def run_size(pw, port, w, h, name):
     no_overflow(page, 'match'); shot(page, f'{name}-12-kickoff')
     page.click('[data-action="kickoff"]'); page.wait_for_timeout(100)
     # First scrimmage: cards + snap visible without scrolling
-    page.wait_for_selector('.play-grid .card')
+    page.wait_for_selector('.play-grid .card'); settle(page, '[data-action="snap"]')
     grid = page.evaluate('''() => { const g = document.querySelector('.play-grid'); const r = g.getBoundingClientRect(); const cards = Array.from(g.children); const rows = new Set(cards.map(c => Math.round(c.getBoundingClientRect().top))); const snap = document.querySelector('[data-action="snap"]'); const sr = snap ? snap.getBoundingClientRect() : null; return { cols: getComputedStyle(g).gridTemplateColumns.split(' ').length, rows: rows.size, cards: cards.length, snapBottom: sr ? sr.bottom : null, inner: window.innerHeight, gridBottom: r.bottom }; }''')
     check(grid['cols'] == 3 and grid['rows'] == 2 and grid['cards'] == 6, f"match: play cards in 3x2 ({grid['cols']}x{grid['rows']}, {grid['cards']} cards)")
     check(grid['snapBottom'] is not None and grid['snapBottom'] <= grid['inner'], f"match: Snap visible without scrolling ({grid['snapBottom']} <= {grid['inner']})")
