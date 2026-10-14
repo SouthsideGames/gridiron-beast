@@ -251,3 +251,14 @@ test('AI scouting: a rematch opponent swaps in counters to the plays we leaned o
   F.autoRunToSunday(f); F.finishSunday(f, F.simulatePlayerGame(f));
   const p = F.playerProfile(f); assert.ok(p && p.games === 1 && Object.keys(p.offense).length > 0);
 });
+
+test('Thursday scouting shows exactly the six plays the opponent brings on Sunday (after it has prepared)', () => {
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 101 });
+  F.hireDefaultStaff(f);
+  for (let w = 0; w < 2; w++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
+  while (f.season.day < 3) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else F.setTraining(f, 'passing'); }
+  if (!F.opponentName(f)) return;
+  const r = F.scoutOpponent(f, 'defense');
+  const m = F.sundayMatchup(f); const theirs = m.playerSide === 'home' ? m.away : m.home;
+  assert.deepEqual([...r.report.plays].sort(), [...theirs.defensePlays].sort());
+});

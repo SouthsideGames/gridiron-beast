@@ -361,7 +361,7 @@ export function scoutOpponent(f, side) {
   const opp = opponentName(f);
   let report = null;
   if (opp) {
-    const team = aiTeam(f, opp);
+    const team = aiTeam(f, opp, undefined, { scouting: playerProfile(f, { opponent: opp }) }); // the same six they will bring on Sunday
     const str = teamStrengths(team);
     // Star = best starter by positional overall (the same rating shown everywhere else).
     const byId = Object.fromEntries(team.roster.map((m) => [m.id, m]));
