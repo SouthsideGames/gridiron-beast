@@ -95,6 +95,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const { r, save } = rng(state);
   const offense = teams[state.possession], defense = teams[opponent(state.possession)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
+  (state.calls ||= []).push({ side: state.possession, off: offensePlayId, def: defensePlayId });
   const sim = simulatePlay({
     offensePlay, defensePlay,
     offense: pickSlots(offense.offense, offensePlay.onField), defense: pickSlots(defense.defense, defensePlay.onField),

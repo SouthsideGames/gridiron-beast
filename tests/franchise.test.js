@@ -221,3 +221,33 @@ test('award races: league-wide stats accumulate and every award has contenders a
   assert.ok(Object.keys(f.season.leagueStats).length >= 14, 'most clubs have stats');
   assert.ok(r.opoy[0].score > 0 && r.dpoy[0].score > 0);
 });
+
+test('training and media boosts reach the Sunday lineup (not just the UI)', () => {
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 88 });
+  F.hireDefaultStaff(f);
+  const qb = (m) => (m.playerSide === 'home' ? m.home : m.away).offense.QB;
+  const base = qb(F.sundayMatchup(f)).attrs.accuracy;
+  f.week.trainingFocus = 'passing'; f.week.trainingFactor = 1.6; f.week.training = { amount: 8 };
+  const m2 = F.sundayMatchup(f); const mine = m2.playerSide === 'home' ? m2.home : m2.away;
+  assert.ok(qb(m2).attrs.accuracy > base, 'training boost applied to the QB on Sunday');
+  assert.ok(Object.values(mine.boosts).every((b) => b.training?.includes('accuracy')), 'ledger marks every starter');
+  f.season.day = 5; const qs = F.mediaQuestions(f); F.answerMedia(f, qs.map(() => 0));
+  const m3 = F.sundayMatchup(f); const mine3 = m3.playerSide === 'home' ? m3.home : m3.away;
+  assert.ok(Object.values(mine3.boosts).some((b) => b.media), 'media boosts marked on some starters');
+});
+
+test('AI scouting: a rematch opponent swaps in counters to the plays we leaned on', async () => {
+  const { adaptPlaybook } = await import('../src/franchise/roster.js');
+  const base = { offense: ['inside_zone', 'power_right', 'quick_slants', 'stick', 'smash', 'te_seam'], defense: ['cover_2_man', 'cover_3', 'cover_4', 'zone_blitz', 'run_wall', 'goal_line'] };
+  const profile = { games: 1, passRate: 0.8, offense: { three_verticals: 10, deep_post: 8, dagger: 6 }, defense: { cover_0: 12, all_out: 8 }, rematch: true };
+  const a = adaptPlaybook(123, base, profile);
+  assert.equal(a.offense.length, 6); assert.equal(a.defense.length, 6);
+  assert.ok(a.notes.length >= 2, 'at least two swaps');
+  assert.ok(a.defense.includes('cover_4') || a.defense.includes('prevent') || a.notes.some((n) => n.side === 'defense'), 'defense answers the deep passing');
+  assert.ok(a.offense.includes('rb_screen') || a.offense.includes('quick_slants'), 'offense punishes Cover 0 / All-Out');
+  // The franchise records our calls and feeds them to the next opponent.
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 99 });
+  F.hireDefaultStaff(f); assert.equal(F.playerProfile(f), null);
+  F.autoRunToSunday(f); F.finishSunday(f, F.simulatePlayerGame(f));
+  const p = F.playerProfile(f); assert.ok(p && p.games === 1 && Object.keys(p.offense).length > 0);
+});

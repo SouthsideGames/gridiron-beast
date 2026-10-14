@@ -436,18 +436,19 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const travel = d / velocity + 0.35; // release + flight
     const { x: px, y: py } = predictReceiver(r, travel);
     let nearest = 99;
+    const air = px - passer.x;
+    const proj = air > 20 ? 0.95 : 0.8; // a defender sprinting with a deep route keeps closing while the ball is up
     for (const def of defs) {
       if (def.engaged) continue;
-      const dx = def.x + def.vx * travel * 0.8, dy = def.y + def.vy * travel * 0.8;
+      const dx = def.x + def.vx * travel * proj, dy = def.y + def.vy * travel * proj;
       nearest = Math.min(nearest, Math.hypot(dx - px, dy - py));
     }
     // Deep throws need a bigger window; throws beyond arm range are not open.
-    const air = px - passer.x;
     const range = 30 + 30 * norm(passer.attrs.arm);
     if (d > range) return -1;
     if (px > B.endLine - 1 || py < B.left + 0.5 || py > B.right - 0.5) return -1;
     // Deep balls need a real window: a defender in phase a yard behind is still covering.
-    return nearest - (air > 15 ? 1.0 : 0) - Math.max(0, air - 25) * 0.05;
+    return nearest - (air > 20 ? 1.8 : air > 15 ? 1.0 : 0) - Math.max(0, air - 25) * 0.05;
   }
   function throwTo(passer, r, pressured) {
     // Wind-up: the ball leaves the hand a beat later; a rusher can still get home.
@@ -459,7 +460,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const lead = predictReceiver(r, travel);
     let acc = passer.attrs.accuracy, arm = passer.attrs.arm;
     if (passer.ability?.deepThrow && lead.x - passer.x >= 15) { acc += passer.ability.deepThrow.accuracy; arm += passer.ability.deepThrow.arm; abilityUsed(passer); }
-    const err = (1.2 + d * 0.07) * (1.3 - norm(acc)) * (pressured ? 1.5 : 1) * (Math.hypot(passer.vx, passer.vy) > 1 ? 1.2 : 1);
+    const airD = lead.x - passer.x;
+    const deepK = airD > 20 ? 1 + (airD - 20) * 0.03 : 1; // the deep ball is the hardest throw in football
+    const err = (1.2 + d * 0.07) * deepK * (1.3 - norm(acc)) * (pressured ? 1.5 : 1) * (Math.hypot(passer.vx, passer.vy) > 1 ? 1.2 : 1);
     const landing = { x: lead.x + rng.normal() * err * 0.7, y: lead.y + rng.normal() * err };
     landing.x = clamp(landing.x, B.ownEndLine + 0.5, B.endLine - 0.3);
     landing.y = clamp(landing.y, B.left - 1.5, B.right + 1.5);
@@ -563,7 +566,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       }
       case 'man': {
         const target = bySlot.off[manKeys[asg.key]];
-        if (!target) { steer(d, d.x, d.y, 0, 0.2); return; }
+        if (!target) { steer(d, 6, d.y * 0.6, 0.8, 0.3); return; } // nobody to cover (three-receiver set): sit in the short middle
+        // A back who stays in to block frees his man: "green dog" — add to the rush.
+        if (asg.key === 'back' && target.assignment?.a === 'block' && t > 0.5) { if (qb && ball.holder === qb) { pursue(d); return; } }
         const p = trailPosition(d, target);
         // Run with the receiver: react to his breaks late (coverage), but anticipate his current line.
         const antic = 0.12 + 0.3 * norm(d.attrs.coverage);
@@ -671,8 +676,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const dr = dist(r, L);
     const defendersNear = defs.filter((d) => !d.engaged).map((d) => ({ d, dd: dist(d, L) })).sort((p, q) => p.dd - q.dd);
     const nearest = defendersNear[0];
-    const contested = nearest && nearest.dd < 1.1;
+    const deep = (ball.airYards || 0) > 20;
+    const contested = nearest && nearest.dd < (deep ? 1.6 : 1.1); // at full sprint a trailing defender a step away still plays the ball
     let catchP = dr > catchRadius ? 0 : (0.7 + 0.29 * norm(r.attrs.catching)) * (1 - Math.max(0, dr - 0.6) / catchRadius * 0.45);
+    if (deep) catchP *= 0.78 + 0.1 * norm(r.attrs.catching); // tracking the ball over the shoulder
     if (contested) catchP *= 0.7 + 0.22 * norm(r.attrs.catching) - 0.22 * norm(nearest.d.attrs.coverage);
     if (nearest && nearest.dd < 1.0 && nearest.dd < dr) {
       const pickCatching = nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0);

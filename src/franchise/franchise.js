@@ -147,6 +147,9 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   // Scheme alignment: a small execution bonus/penalty on awareness for every starter.
   const bump = (side, pct) => { const delta = Math.round((pct - 80) / 10); for (const p of Object.values(team[side])) if (p.attrs.awareness) p.attrs.awareness = Math.max(1, Math.min(99, p.attrs.awareness + delta)); };
   bump('offense', align.offense); bump('defense', align.defense);
+  // Per-monster boost ledger for the pregame screen: which starters carry a training or media-day boost today.
+  team.boosts = {};
+  if (tb) { const keys = Object.keys(tb); for (const side of ['offense', 'defense']) for (const p of Object.values(team[side])) if (p.id) (team.boosts[p.id] ||= {}).training = keys; }
   // Saturday media day: matching temperaments get a boost to their nature's strength and to awareness.
   const md = f.week.media;
   if (md) {
@@ -157,6 +160,7 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
       if (!amt) continue;
       const up = NATURES[m.nature]?.up || 'awareness';
       p.attrs[up] = Math.min(99, (p.attrs[up] || 0) + amt); if (up !== 'awareness') p.attrs.awareness = Math.min(99, (p.attrs.awareness || 0) + 1);
+      (team.boosts[p.id] ||= {}).media = { amount: amt, attr: up };
     }
   }
   team.alignment = align;
@@ -169,7 +173,7 @@ export const DIFFICULTY = Object.freeze({
   pro: { label: 'Pro', quality: 0, iq: 1, text: 'The standard league.' },
   allstar: { label: 'All-Star', quality: 4, iq: 1.6, text: 'Stronger clubs whose coaches read the situation sharply.' },
 });
-export function aiTeam(f, name, year = f.season?.year || 1) {
+export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } = {}) {
   const meta = TEAM_META[name];
   const tier = tierById(f.tier);
   const base = tier.id === 'challenger' ? 56 : tier.id === 'vanguard' ? 64 : 72;
@@ -177,7 +181,7 @@ export function aiTeam(f, name, year = f.season?.year || 1) {
   const D = DIFFICULTY[f.settings?.difficulty] || DIFFICULTY.pro;
   const quality = base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + D.quality;
   const coach = { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
-  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach });
+  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting });
 }
 
 // ------------------------------------------------------------ season
@@ -467,6 +471,16 @@ export function moveDepth(f, group, monsterId, dir) {
 }
 
 /** The Sunday matchup as team objects (home/away correct) for the game module. */
+/** What the league has seen of the owner's club this season (play-calling tendencies). Opponents use it to prepare. */
+export function playerProfile(f, { opponent = null } = {}) {
+  const S = f.season.scouting || []; if (!S.length) return null;
+  const vs = opponent ? S.filter((g) => g.opponent === opponent) : [];
+  const games = vs.length ? vs : S.slice(-4); // a repeat opponent remembers that game; everyone else reads the recent film
+  const offense = {}, defense = {}; let passes = 0, plays = 0;
+  for (const g of games) { for (const [id, n] of Object.entries(g.offense)) offense[id] = (offense[id] || 0) + n; for (const [id, n] of Object.entries(g.defense)) defense[id] = (defense[id] || 0) + n; passes += g.passes; plays += g.plays; }
+  const D = DIFFICULTY[f.settings?.difficulty] || DIFFICULTY.pro;
+  return { games: games.length, offense, defense, passRate: plays ? passes / plays : 0.5, rematch: vs.length > 0, swaps: D.iq >= 1.5 ? 3 : D.iq < 1 ? 1 : 2 };
+}
 export function sundayMatchup(f) {
   const fx = currentFixture(f); const po = playoffFixture(f);
   let home, away, oppName, tag;
@@ -474,7 +488,7 @@ export function sundayMatchup(f) {
   else if (fx && !fx.bye) { oppName = fx.opponent; home = fx.home ? f.club : oppName; away = fx.home ? oppName : f.club; tag = `Week ${fx.week} · ${fx.category}`; }
   else return null;
   const mine = playerTeam(f, { trainingBonus: f.week.trainingFocus ? scaledBonus(trainingBonus(staffMember(f, 'monster_trainer'), f.week.trainingFocus), f.week.trainingFactor ?? 1) : null });
-  const theirs = aiTeam(f, oppName);
+  const theirs = aiTeam(f, oppName, undefined, { scouting: playerProfile(f, { opponent: oppName }) });
   const rival = f.rivals[f.tier]?.team === oppName;
   return { home: home === f.club ? mine : theirs, away: away === f.club ? mine : theirs, playerSide: home === f.club ? 'home' : 'away', opponent: oppName, tag, rival, playoff: !!po };
 }
@@ -490,6 +504,9 @@ export function finishSunday(f, gameState) {
   save();
   f.week.events = events;
   f.week.gameResult = { ...res, won, playerScore: gameState.score[side], oppScore: gameState.score[oppSide], opponent: m.opponent, tag: m.tag };
+  { const offense = {}, defense = {}; let passes = 0, plays = 0;
+    for (const c of gameState.calls || []) { if (c.side === side) { offense[c.off] = (offense[c.off] || 0) + 1; plays++; if (PLAYS[c.off]?.type === 'pass') passes++; } else defense[c.def] = (defense[c.def] || 0) + 1; }
+    (f.season.scouting ||= []).push({ week: f.season.week, opponent: m.opponent, offense, defense, passes, plays }); }
   if (m.rival) { f.rivals[f.tier].headToHead[won ? 'w' : 'l'] += 1; news(f, won ? `RIVALRY WIN over ${m.opponent} — GM ${f.rivals[f.tier].gm} will remember this.` : `${m.opponent}'s GM ${f.rivals[f.tier].gm} gets bragging rights this time.`, won ? 'win' : 'loss'); 
     if (f.week.media?.hype) { if (won) news(f, 'You backed up the trash talk. The locker room loves it.', 'win'); else { f.rattled = true; news(f, 'The trash talk backfired. The team is rattled: next week\'s practice is harder.', 'loss'); } }
   }

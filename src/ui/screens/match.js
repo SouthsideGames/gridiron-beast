@@ -10,6 +10,7 @@ import * as AI from '../../sim/coach-ai.js';
 import { step, aiController, newTendencies } from '../../sim/game-runner.js';
 import { rngFromState } from '../../core/rng.js';
 import { PLAYS } from '../../data/playbook.js';
+import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { fieldSvg, FIELD_VIEWBOX, presnapLook, cameraFor } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
@@ -27,14 +28,16 @@ export function registerMatchScreens(Router, app) {
       const m = F.sundayMatchup(f); if (!m) return '<p>No game today.</p>';
       const mine = m[m.playerSide], theirs = m[m.playerSide === 'home' ? 'away' : 'home'];
       const col = (team, label) => `<div class="panel tight"><div class="row"><b style="color:${team.color}">${esc(team.name)}</b><span class="chip">${label}</span></div><div class="muted" style="font-size:12px">OVR ${teamOverall(team)} · ${esc(team.offensePlays.length)} / ${esc(team.defensePlays.length)} plays</div>
-        <h3 style="font-size:12px">Offense</h3>${OFFENSE_BASE.map((s) => line(s, team.offense[s])).join('')}
-        <h3 style="font-size:12px">Defense</h3>${DEFENSE_BASE.map((s) => line(s, team.defense[s])).join('')}
-        <h3 style="font-size:12px">Packages</h3>${[...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => line(s, team.offense[s] || team.defense[s])).join('')}</div>`;
-      function line(s, m) { return `<div class="slotline"><span class="mono">${s}</span><span class="row" style="gap:4px;justify-content:flex-end">${m ? monsterSprite(m, 18) : ''}${esc(m?.name || '—')}</span></div>`; }
+        <h3 style="font-size:12px">Offense</h3>${OFFENSE_BASE.map((s) => line(s, team.offense[s], team)).join('')}
+        <h3 style="font-size:12px">Defense</h3>${DEFENSE_BASE.map((s) => line(s, team.defense[s], team)).join('')}
+        <h3 style="font-size:12px">Packages</h3>${[...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => line(s, team.offense[s] || team.defense[s], team)).join('')}</div>`;
+      function line(s, m, team) { const b = team?.boosts?.[m?.id]; const badges = b ? `${b.media ? `<span class="boost media" title="Media day: +${b.media.amount} ${b.media.attr}">+</span>` : ''}${b.training ? `<span class="boost train" title="Training: ${b.training.join(', ')}">T</span>` : ''}` : ''; return `<div class="slotline"><span class="mono">${s}</span><span class="row" style="gap:4px;justify-content:flex-end;flex-wrap:nowrap">${m ? monsterSprite(m, 18) : ''}${esc(m?.name || '—')}${badges}</span></div>`; }
       const rv = f.rivals[f.tier];
       return `<div class="pregame">${m.rival ? `<div class="rival-banner">⚔️ RIVALRY GAME<div class="muted" style="font-weight:600;font-size:12px">GM ${esc(rv?.gm || '')} · all-time ${rv?.headToHead.w || 0}–${rv?.headToHead.l || 0}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}<div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
         <div class="lineups">${col(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}${col(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>
-        <p class="dim" style="margin-top:8px">${f.week.trainingFocus ? 'Training bonus is active this game. ' : ''}Coaching mode: <b>${f.settings.mode === 'key' ? 'Key Moments' : 'Full Coaching'}</b> (change in Settings).</p>
+        ${(() => { const nMedia = Object.values(mine.boosts || {}).filter((b) => b.media).length; const tr = f.week.trainingFocus; return nMedia || tr ? `<div class="panel tight" style="margin-top:8px"><b>Today's boosts</b><div class="muted" style="font-size:13px">${tr ? `<span class="boost train">T</span> Training (${esc(TRAINING_FOCI[tr]?.label || tr)}): +${f.week.training?.amount ?? ''} ${esc((TRAINING_FOCI[tr]?.attrs || []).join(', '))} for every starter` : ''}${tr && nMedia ? '<br>' : ''}${nMedia ? `<span class="boost media">+</span> Media day: ${nMedia} monster${nMedia === 1 ? '' : 's'} fired up` : ''}</div></div>` : ''; })()}
+        ${theirs.scoutingNotes?.length ? `<div class="panel tight" style="margin-top:8px;border-color:#ff9385"><b>🔎 They've scouted you</b><div class="muted" style="font-size:13px">${theirs.scoutingNotes.map((n) => `${esc(PLAYS[n.in]?.name || n.in)} in for ${esc(PLAYS[n.out]?.name || n.out)} — counters ${esc(n.beats.join(', '))}`).join('<br>')}</div></div>` : ''}
+        <p class="dim" style="margin-top:8px">Coaching mode: <b>${f.settings.mode === 'key' ? 'Key Moments' : 'Full Coaching'}</b> (change in Settings).</p>
         <button class="btn primary big block" data-action="toss">Coin toss →</button></div>`;
     },
     mount(root) {

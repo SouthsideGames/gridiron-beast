@@ -257,3 +257,7 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .po-cut { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 11px; color: var(--bad); text-transform: uppercase; letter-spacing: .06em; }
 .po-cut::before, .po-cut::after { content: ''; flex: 1; border-top: 1px dashed var(--bad); }
 .po-game { margin-top: 6px; }
+
+.boost { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; font-size: 11px; font-weight: 900; line-height: 1; margin-left: 2px; flex: none; }
+.boost.media { background: #f5c542; color: #1a1400; }
+.boost.train { background: #6ee7a0; color: #06281a; }

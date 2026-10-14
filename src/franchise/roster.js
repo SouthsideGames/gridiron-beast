@@ -3,7 +3,7 @@
 
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, canPlay } from '../data/personnel.js';
 import { effectiveAttributes, monsterOverall, createRoster } from '../data/monsters.js';
-import { OFFENSE_IDS, DEFENSE_IDS, PLAYS } from '../data/playbook.js';
+import { OFFENSE_IDS, DEFENSE_IDS, PLAYS, counterPlays } from '../data/playbook.js';
 import { createRng } from '../core/rng.js';
 const PLAYS_IDS = new Set(Object.keys(PLAYS));
 
@@ -103,11 +103,49 @@ export function playbookFor(seed, coach = {}) {
   const defense = [...pick(primary, 3), ...pick(secondary, 2), ...pick(['run_wall', 'edge_contain', 'goal_line', 'qb_spy'], 1)];
   return { offense, defense };
 }
-export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null }) {
+/**
+ * AI scouting: adapt a club's 6+6 to what the opponent has shown this season.
+ * `profile` = { passRate, offense: {playId: count}, defense: {playId: count}, games }.
+ * Swaps up to `swaps` plays per side for counters to the opponent's most-used calls
+ * (from the play lessons) and leans the defense toward the opponent's run/pass split.
+ * Deterministic for a given seed + profile. Returns { offense, defense, notes }.
+ */
+export function adaptPlaybook(seed, base, profile, { swaps = 2 } = {}) {
+  if (!profile || !profile.games) return { ...base, notes: [] };
+  const rng = createRng(seed ^ 0x5c07);
+  const top = (counts, n) => Object.entries(counts || {}).sort((a, b) => b[1] - a[1]).slice(0, n).map(([id]) => id);
+  const notes = [];
+  const swapIn = (list, pool, oppTop, n, keepPred) => {
+    const counters = counterPlays(pool.filter((id) => !list.includes(id)), oppTop).slice(0, n);
+    const out = [...list];
+    for (const c of counters) {
+      // Replace the play in our six that counters the opponent least (never the only run / goal-line call).
+      const scored = out.map((id) => ({ id, s: counterPlays([id], oppTop)[0]?.score || 0 })).filter((x) => keepPred(x.id, out));
+      if (!scored.length) break;
+      const weakest = scored.sort((a, b) => a.s - b.s || rng.next() - 0.5)[0];
+      if (weakest.s >= c.score) break;
+      out[out.indexOf(weakest.id)] = c.id; notes.push({ side: pool === OFFENSE_IDS ? 'offense' : 'defense', in: c.id, out: weakest.id, beats: c.beats });
+    }
+    return out;
+  };
+  const oppOff = top(profile.offense, 6), oppDef = top(profile.defense, 6);
+  // Defense: counter their favourite offensive plays; keep at least one run-stopper.
+  let defense = swapIn(base.defense, DEFENSE_IDS, oppOff, swaps, (id, out) => !(PLAYS[id].tags.includes('run') && out.filter((x) => PLAYS[x].tags.includes('run')).length <= 1));
+  // Lean the defense toward their split.
+  if (profile.passRate >= 0.62 && !defense.some((id) => PLAYS[id].tags.includes('blitz'))) { const b = ['fire_zone', 'zone_blitz', 'db_blitz'].find((id) => !defense.includes(id)); const r = defense.find((id) => PLAYS[id].tags.includes('run') && !PLAYS[id].tags.includes('goalline')); if (b && r && defense.filter((id) => PLAYS[id].tags.includes('run')).length > 1) { defense[defense.indexOf(r)] = b; notes.push({ side: 'defense', in: b, out: r, beats: ['a pass-heavy offense'] }); } }
+  if (profile.passRate <= 0.4 && !defense.includes('run_wall') && !defense.includes('edge_contain')) { const victim = defense.find((id) => PLAYS[id].tags.includes('prevent') || PLAYS[id].tags.includes('risky')) || defense.find((id) => PLAYS[id].tags.includes('pass') && !PLAYS[id].tags.includes('blitz')); if (victim) { defense[defense.indexOf(victim)] = 'run_wall'; notes.push({ side: 'defense', in: 'run_wall', out: victim, beats: ['a run-heavy offense'] }); } }
+  // Offense: counter their favourite defensive calls; keep at least two runs.
+  const offense = swapIn(base.offense, OFFENSE_IDS, oppDef, swaps, (id, out) => !(PLAYS[id].type === 'run' && out.filter((x) => PLAYS[x].type === 'run').length <= 2));
+  return { offense: [...new Set(offense)].slice(0, 6), defense: [...new Set(defense)].slice(0, 6), notes };
+}
+export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null, scouting = null }) {
   const roster = createRoster(seed, { quality });
   for (const m of roster) delete m.cornerstone;
-  const pb = playbookFor(seed ^ 0x9e37, coach || {});
-  return buildTeam({ id, name, abbr, color, roster, coach, offensePlays: offensePlays || pb.offense, defensePlays: defensePlays || pb.defense });
+  let pb = playbookFor(seed ^ 0x9e37, coach || {});
+  let notes = [];
+  if (scouting) { const a = adaptPlaybook(seed, pb, scouting, { swaps: scouting.swaps ?? 2 }); pb = a; notes = a.notes; }
+  const team = buildTeam({ id, name, abbr, color, roster, coach, offensePlays: offensePlays || pb.offense, defensePlays: defensePlays || pb.defense });
+  team.scoutingNotes = notes; return team;
 }
 
 export function teamOverall(team) {

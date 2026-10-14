@@ -197,10 +197,10 @@ const DEFENSE_PLAYS = [
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: ZONE('hook_M'), CB1: ZONE('deep_quarter_LL'), CB2: ZONE('deep_quarter_RR'), FS: ZONE('deep_quarter_L'), SS: ZONE('deep_quarter_R'),
   }, { tags: ['pass', 'zone', 'deep', 'prevent_light'], desc: 'Four deep quarters. Gives up the short stuff.' }),
   defense('cover_1', 'Cover 1', 'base', {
-    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), LB2: RUSH('A_R'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle'),
-  }, { tags: ['pass', 'man', 'pressure_light'], desc: 'Man across with one deep safety and a linebacker added to the rush.' }),
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle'),
+  }, { tags: ['pass', 'man'], desc: 'Man across — every receiver and the back are covered — with one deep safety.' }),
   defense('cover_0', 'Cover 0', 'pressure', {
-    DL1: RUSH('B_L'), DL3: RUSH('A_R'), DL2: RUSH('edge_R'), LB1: RUSH('A_L'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: MAN('inside'),
+    DL1: RUSH('B_L'), DL3: RUSH('A_R'), DL2: RUSH('edge_R'), LB1: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: MAN('inside'),
   }, { align: { FS: [6, 0] }, tags: ['blitz', 'man', 'risky', 'short'], desc: 'No deep help. Four rush, three in man.' }),
   defense('tampa_2', 'Tampa 2', 'nickel', {
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: ZONE('deep_middle'), CB1: ZONE('flat_L'), CB2: ZONE('flat_R'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'),
@@ -233,7 +233,7 @@ const DEFENSE_PLAYS = [
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: ZONE('hook_M'), CB1: ZONE('deep_quarter_LL'), CB2: ZONE('deep_quarter_RR'), FS: ZONE('deep_center'), SS: ZONE('deep_quarter_R'),
   }, { align: { FS: [18, -4], SS: [16, 8] }, tags: ['pass', 'deep', 'prevent'], desc: 'Keep everything in front. Late-game lead.' }),
   defense('man_press', 'Man Press', 'base', {
-    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), LB2: ZONE('hook_M'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle'),
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle'),
   }, { align: { CB1: [1.5, -17], CB2: [1.5, 17] }, tags: ['pass', 'man', 'press'], desc: 'Corners jam at the line; one deep safety.' }),
   defense('robber', 'Robber', 'nickel', {
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_middle'), SS: ZONE('robber'),
@@ -284,12 +284,20 @@ export function eligibleReceivers(play) {
  * Resolve man-coverage keys against an actual offensive alignment:
  * wideL = widest left receiver, wideR = widest right, inside = the third.
  */
+/**
+ * Who each man-coverage key points at: the widest receiver each side, the
+ * inside receiver (slot or tight end, never a back) and the back. With only
+ * three receivers the back key is empty; a defender keyed to nobody plays zone-ish.
+ */
 export function manKeyTargets(offensePlay) {
-  const receivers = eligibleReceivers(offensePlay).map((s) => [s, offensePlay.align[s][1]]).sort((a, b) => a[1] - b[1]);
-  const wideL = receivers[0]?.[0];
-  const wideR = receivers[receivers.length - 1]?.[0];
-  const inside = receivers.find(([s]) => s !== wideL && s !== wideR)?.[0] || wideR;
-  return { wideL, wideR, inside };
+  const receivers = eligibleReceivers(offensePlay).map((s) => [s, offensePlay.align[s][1], offensePlay.align[s][0]]).sort((a, b) => a[1] - b[1]);
+  const backs = receivers.filter(([, , x]) => x < -3).map(([s]) => s);
+  const onLine = receivers.filter(([s]) => !backs.includes(s));
+  const wideL = onLine[0]?.[0] || receivers[0]?.[0];
+  const wideR = onLine[onLine.length - 1]?.[0] || receivers[receivers.length - 1]?.[0];
+  const inside = onLine.find(([s]) => s !== wideL && s !== wideR)?.[0] || backs[0] || wideR;
+  const back = backs.find((s) => s !== inside) || null;
+  return { wideL, wideR, inside, back };
 }
 
 /** Colour role for play art (GDD §6). */
@@ -335,7 +343,7 @@ export function validatePlaybook() {
       }
     } else {
       for (const [slot, a] of Object.entries(p.assignments)) {
-        if (a.a === 'man' && !['wideL', 'wideR', 'inside'].includes(a.key)) problems.push(`${p.name}: ${slot} bad man key`);
+        if (a.a === 'man' && !['wideL', 'wideR', 'inside', 'back'].includes(a.key)) problems.push(`${p.name}: ${slot} bad man key`);
         if (a.a === 'zone' && !ZONES[a.zone]) problems.push(`${p.name}: ${slot} bad zone`);
         if ((a.a === 'rush' || a.a === 'contain') && !GAPS[a.gap]) problems.push(`${p.name}: ${slot} bad gap`);
       }
