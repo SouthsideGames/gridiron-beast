@@ -165,7 +165,7 @@ def run_size(pw, port, w, h, name):
     no_overflow(page, 'audit'); shot(page, f'{name}-19-audit')
     page.click('[data-action="router-back"]'); page.click('[data-action="router-back"]'); page.click('[data-action="go"][data-screen="settings"]'); no_overflow(page, 'settings'); shot(page, f'{name}-20-settings')
     page.click('[data-action="router-back"]'); page.click('[data-action="continue"]'); page.wait_for_selector('.tabbar')
-    page.click('[data-action="router-tab"][data-screen="league"]'); page.click('[data-action="go"][data-screen="standings"]'); no_overflow(page, 'standings'); shot(page, f'{name}-21-standings')
+    page.click('[data-action="router-tab"][data-screen="league"]'); no_overflow(page, 'league'); shot(page, f'{name}-21a-league'); page.click('[data-action="go"][data-screen="playoffs"]'); no_overflow(page, 'playoffs'); shot(page, f'{name}-21b-playoffs'); page.click('[data-action="router-back"]'); page.click('[data-action="go"][data-screen="standings"]'); no_overflow(page, 'standings'); shot(page, f'{name}-21-standings')
     check(len(errors) == 0, f'no console errors ({errors[:3]})')
     browser.close()
 

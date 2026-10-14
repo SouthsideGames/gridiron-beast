@@ -265,8 +265,8 @@ export function registerHqScreens(Router, app) {
     title: 'League', back: false,
     render({ f }) {
       const rival = f.rivals[f.tier]; const titles = Object.values(f.badges).reduce((a, b) => a + b, 0);
-      const races = f.season.week >= 3 || f.season.finished ? F.awardRaces(f) : null;
-      const watch = races ? `<h3>🏅 Award watch</h3><div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const top = races[k]; return `<div class="item static" style="display:block"><div class="name">${esc(a.label)} <span class="dim">${a.short}</span></div>${top.length ? top.map((r, i) => k === 'coy' ? `<div class="row between sub"><span>${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)}</span></span><span class="mono">${r.w}–${r.l}</span></div>` : `<div class="row sub" style="gap:6px"><span class="dim">${i + 1}.</span>${monsterSprite(r, 20)}<span class="grow">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team === f.club ? 'YOU' : r.team)}</span></span><span class="mono">${raceLine(r)}</span></div>`).join('') : '<div class="sub dim">No contenders yet.</div>'}</div>`; }).join('')}</div>` : '';
+      const races = F.awardRaces(f); const anyRace = Object.values(races).some((v) => v.length);
+      const watch = `<h3>🏅 Award watch</h3>${anyRace ? '' : '<p class="dim">Races start after the first Sunday. Stats from every club in the league count.</p>'}<div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const top = races[k]; return `<div class="item static" style="display:block"><div class="name">${esc(a.label)} <span class="dim">${a.short}</span></div>${top.length ? top.map((r, i) => k === 'coy' ? `<div class="row between sub"><span>${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)}</span></span><span class="mono">${r.w}–${r.l}</span></div>` : `<div class="row sub" style="gap:6px"><span class="dim">${i + 1}.</span>${monsterSprite(r, 20)}<span class="grow">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team === f.club ? 'YOU' : r.team)}</span></span><span class="mono">${raceLine(r)}</span></div>`).join('') : '<div class="sub dim">No contenders yet.</div>'}</div>`; }).join('')}</div>`;
       return `<div class="panel"><b>Beast League</b> · 16 clubs · Season ${f.season.year}<div class="muted">Beast Bowl titles: ${titles}${f.season.week >= 5 && !f.season.finished ? ` · ${esc(F.playoffPicture(f).text)}` : ''}</div>
         ${rival ? `<div class="muted">⚔️ Rival: <b>${esc(rival.team)}</b> (GM ${esc(rival.gm)}) · all-time ${rival.headToHead.w}–${rival.headToHead.l}</div>` : ''}</div>
         <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button></div>${watch}`;
@@ -292,9 +292,22 @@ export function registerHqScreens(Router, app) {
   Router.registerScreen('playoffs', {
     title: 'Playoffs',
     render({ f }) {
-      const p = f.season.playoffs;
-      if (!p) { const st = F.leagueStandings(f); return `<p class="muted">If the season ended today:</p>${['Aurora', 'Titan'].map((c) => `<div class="panel tight"><b>${c}</b><ol style="margin:4px 0 0 18px;padding:0">${st.conferences[c].seeds.map((t) => `<li class="${t === f.club ? 'mono' : ''}">${esc(t)}${t === f.club ? ' ★' : ''}</li>`).join('')}</ol></div>`).join('')}`; }
-      return `${p.fixtures.map((g) => `<div class="item static"><div class="grow"><div class="name">${esc(g.tag)}</div><div class="sub">${esc(g.home)} vs ${esc(g.away)}</div></div>${g.result ? `<span class="chip">${g.result.homeScore}–${g.result.awayScore}</span>` : '<span class="chip accent">Week ' + g.week + '</span>'}</div>`).join('')}${p.champion ? `<div class="panel center"><h2>🏆 ${esc(p.champion)}</h2><div class="muted">Beast Bowl champions</div></div>` : ''}`;
+      const p = f.season.playoffs; const rec = (t) => f.season.records[t] || { w: 0, l: 0, t: 0 };
+      const recText = (t) => { const r = rec(t); return `${r.w}–${r.l}${r.t ? '–' + r.t : ''}`; };
+      const dot = (t) => `<span class="team-dot" style="background:${TEAM_META[t]?.color || '#888'}"></span>`;
+      const teamRow = (t, seed, tag) => `<div class="po-row ${t === f.club ? 'me' : ''}"><span class="seed">${seed}</span>${dot(t)}<span class="grow po-name">${esc(t)}${t === f.club ? ' <span class="chip accent">YOU</span>' : ''}</span>${tag ? `<span class="chip">${tag}</span>` : ''}<span class="mono po-rec">${recText(t)}</span></div>`;
+      if (!p) {
+        const st = F.leagueStandings(f); const wk = f.season.week;
+        const conf = (c) => { const C = st.conferences[c]; const hunt = C.order.filter((t) => !C.seeds.includes(t)).slice(0, 2); const lastIn = C.seeds[3];
+          const back = (t) => { const a = rec(t), b = rec(lastIn); const gb = ((b.w - a.w) + (a.l - b.l)) / 2; return gb <= 0 ? 'tiebreak' : `${gb} GB`; };
+          return `<div class="panel tight po-conf"><div class="po-head"><b>${c} Conference</b><span class="dim">4 qualify</span></div>${C.seeds.map((t, i) => teamRow(t, i + 1, C.champions.includes(t) ? 'Div' : 'WC')).join('')}<div class="po-cut"><span>playoff line</span></div>${hunt.map((t) => teamRow(t, '·', back(t))).join('')}</div>`; };
+        return `<div class="panel tight"><b>Playoff picture</b> · Week ${wk}<div class="muted">Eight clubs make it: two division winners and two wild cards per conference. ${wk < 5 ? 'Early days — standings will move.' : F.playoffPicture(f).text}</div></div>${conf('Aurora')}${conf('Titan')}<p class="dim">Div = division leader · WC = wild card · GB = games back of the last spot.</p>`;
+      }
+      const rounds = [[1, 'Conference semifinals · Week 11'], [2, 'Conference championships · Week 12'], [3, 'Beast Bowl · Week 13']];
+      const game = (g) => { const w = g.result ? (g.result.homeScore > g.result.awayScore ? g.home : g.away) : null; const side = (t, score) => `<div class="po-row ${t === f.club ? 'me' : ''} ${w && w !== t ? 'lost' : ''}">${dot(t)}<span class="grow po-name">${esc(t)}${t === f.club ? ' <span class="chip accent">YOU</span>' : ''}</span><span class="mono po-rec">${score ?? ''}</span></div>`;
+        return `<div class="panel tight po-game"><div class="dim" style="font-size:12px">${esc(g.tag)}${g.result ? '' : ' · upcoming'}</div>${side(g.away, g.result?.awayScore)}${side(g.home, g.result?.homeScore)}</div>`; };
+      return `${p.champion ? `<div class="panel center" style="border-color:#f5c542"><h2 style="margin:0">🏆 ${esc(p.champion)}</h2><div class="muted">Beast Bowl champions</div></div>` : ''}${rounds.map(([r, label]) => { const gs = p.fixtures.filter((g) => g.round === r); return gs.length ? `<h3>${label}</h3>${gs.map(game).join('')}` : ''; }).join('')}
+        <h3>Seeds</h3>${['Aurora', 'Titan'].map((c) => `<div class="panel tight po-conf"><div class="po-head"><b>${c}</b></div>${p.seeds[c].map((t, i) => teamRow(t, i + 1)).join('')}</div>`).join('')}`;
     },
   });
   Router.registerScreen('history', {
