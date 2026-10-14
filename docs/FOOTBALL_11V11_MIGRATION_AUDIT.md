@@ -1,3 +1,5 @@
+> **Superseded (October 2026):** this document describes the v5.0 11-on-11 prototype now preserved under `legacy/`. The current design and status live in `GRIDIRON_BEAST_GDD.md`, `GRIDIRON_BEAST_AUDIT.md`, `GRIDIRON_BEAST_REBUILD_PLAN.md` and `GRIDIRON_BEAST_TEST_PLAN.md` at the repository root.
+
 # Gridiron Beast — 7v7 → 11v11 Football Systems Audit and Migration Plan
 
 **Decision:** LOCKED — full 11-on-11 American football. **Audit date:** October 11, 2026. **GDD target:** v3.1. **Implementation:** NOT STARTED. The playable HTML prototype remains 7v7 v3.0 pending phased migration.

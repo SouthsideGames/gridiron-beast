@@ -1,3 +1,5 @@
+> **Superseded (October 2026):** this document describes the v5.0 11-on-11 prototype now preserved under `legacy/`. The current design and status live in `GRIDIRON_BEAST_GDD.md`, `GRIDIRON_BEAST_AUDIT.md`, `GRIDIRON_BEAST_REBUILD_PLAN.md` and `GRIDIRON_BEAST_TEST_PLAN.md` at the repository root.
+
 ## v5.0 — RB awareness, opponent records and initial special-teams flow
 - RBs now evaluate lanes using awareness, defenders and nearby blockers; steering changes gradually. In 200 deterministic test pairs, different awareness levels produced different final running lanes in 148 cases.
 - Removed redundant inline Headquarters buttons, leaving the shared contextual navigation.

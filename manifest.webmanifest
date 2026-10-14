@@ -1,0 +1,11 @@
+{
+  "name": "Gridiron Beast",
+  "short_name": "Gridiron",
+  "description": "Monster football franchise game — 7-on-7, mobile-first.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1a14",
+  "theme_color": "#0d1a14",
+  "icons": [{ "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230d1a14'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='15' fill='%23d9924f'/%3E%3Cpath d='M20 32h24M24 27v10M32 27v10M40 27v10' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E", "sizes": "any", "type": "image/svg+xml" }]
+}
