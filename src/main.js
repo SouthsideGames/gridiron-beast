@@ -2,6 +2,7 @@
 
 import * as Router from './ui/router.js';
 import * as Save from './franchise/save.js';
+import { cloudLoad, cloudSave, cloudFlush, cloudClear } from './franchise/cloud-save.js';
 import { $, toast } from './ui/dom.js';
 import { registerMenuScreens } from './ui/screens/menu.js';
 import { registerOnboardingScreens } from './ui/screens/onboarding.js';
@@ -14,9 +15,9 @@ const app = {
   f: null, // the franchise state (null before creation)
   get settings() { return this.f?.settings || this.defaultSettings; },
   defaultSettings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false },
-  save() { if (this.f && !Save.save(this.f)) toast('Could not save (storage full or blocked).', 'bad'); },
+  save() { if (!this.f) return; const ok = Save.save(this.f); cloudSave(this.f); if (!ok && !this.warned) { this.warned = true; toast('Saving to this device failed; your cloud save is still kept.', 'bad'); } },
   setFranchise(f) { this.f = f; this.save(); applySettings(); },
-  reset() { this.f = null; Save.clear(); },
+  reset() { this.f = null; Save.clear(); cloudClear(); },
 };
 
 function applySettings() { document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; }
@@ -38,8 +39,19 @@ export function start() {
   const saved = Save.load();
   if (saved) { app.f = saved; applySettings(); }
   Router.go('menu', {}, { reset: true });
-  window.addEventListener('beforeunload', () => app.save());
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') app.save(); });
+  // The cloud copy wins when it is newer (e.g. the device's storage was cleared while the app sat in the background).
+  cloudLoad().then((remote) => {
+    const f = remote && Save.migrate(remote);
+    if (!f) { if (app.f) cloudSave(app.f, { immediate: true }); return; }
+    if (!app.f || (f.savedAt || 0) > (app.f.savedAt || 0)) {
+      app.f = f; Save.save(f); applySettings();
+      if (!Router.currentScreen() || Router.currentScreen().name === 'menu') Router.go('menu', {}, { reset: true });
+      toast('Restored your franchise from your cloud save.', 'good');
+    }
+  });
+  window.addEventListener('beforeunload', () => { app.save(); cloudFlush(); });
+  window.addEventListener('pagehide', () => { app.save(); cloudFlush(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { app.save(); cloudFlush(); } });
 }
 
 /** Which bottom tab a secondary screen belongs to. */

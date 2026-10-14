@@ -200,3 +200,5 @@ table.compare th, table.compare td { padding: 5px 3px; text-align: center; borde
 table.compare td:first-child, table.compare th:first-child { text-align: left; }
 table.compare tr.prospect { background: rgba(245,197,66,.10); }
 table.compare td.best { color: #6ee7a0; font-weight: 800; }
+
+.rival-name { color: #c99bff; font-weight: 800; }

@@ -71,14 +71,17 @@ const PASS_PLAYS = ['quick_slants', 'curl_flat', 'smash', 'mesh', 'levels', 'dag
 const ZONE_D = ['cover_3', 'cover_4', 'tampa_2', 'prevent', 'max_drop', 'zone_blitz'];
 const MAN_D = ['cover_2_man', 'cover_1', 'man_press', 'robber', 'db_blitz', 'cover_0'];
 /** A playbook shaped by the coach profile, so scouting an opponent means something. */
+/** AI game plan: exactly 6 offensive and 6 defensive plays, like the player. Mix follows the coach's tendencies. */
+export const AI_PLAN_SIZE = 6;
 export function playbookFor(seed, coach = {}) {
   const rng = createRng(seed);
-  const pick = (arr, n) => { const a = [...arr]; const out = []; while (out.length < n && a.length) out.push(a.splice(rng.int(a.length), 1)[0]); return out; };
+  const pick = (arr, n) => { const a = arr.filter((p) => PLAYS_IDS.has(p)); const out = []; while (out.length < n && a.length) out.push(a.splice(rng.int(a.length), 1)[0]); return out; };
   const passBias = coach.passBias ?? 0.55, aggression = coach.aggression ?? 0.5;
-  const runs = Math.round(6 - 4 * (passBias - 0.45) * 2.5);
-  const offense = [...pick(RUN_PLAYS, Math.max(3, Math.min(8, runs))), ...pick(PASS_PLAYS, 9), 'goal_line_run', 'hail_mary'].filter((p) => PLAYS_IDS.has(p));
-  const defense = [...pick(aggression > 0.55 ? MAN_D : ZONE_D, 5), ...pick(aggression > 0.55 ? ZONE_D : MAN_D, 2), 'run_wall', 'goal_line', ...(aggression > 0.6 ? ['all_out'] : ['prevent'])];
-  return { offense: [...new Set(offense)], defense: [...new Set(defense)] };
+  const runs = passBias >= 0.62 ? 2 : passBias >= 0.5 ? 3 : 4; // run-heavy coaches carry four runs
+  const offense = [...pick(RUN_PLAYS, runs), ...pick(PASS_PLAYS, AI_PLAN_SIZE - runs)];
+  const primary = aggression > 0.55 ? MAN_D : ZONE_D, secondary = aggression > 0.55 ? ZONE_D : MAN_D;
+  const defense = [...pick(primary, 3), ...pick(secondary, 2), ...pick(['run_wall', 'edge_contain', 'goal_line', 'qb_spy'], 1)];
+  return { offense, defense };
 }
 export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null }) {
   const roster = createRoster(seed, { quality });

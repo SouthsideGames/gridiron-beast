@@ -2,6 +2,7 @@
 
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import * as Save from '../../franchise/save.js';
+import { cloudStatus } from '../../franchise/cloud-save.js';
 import { summary, hireDefaultStaff } from '../../franchise/franchise.js';
 import { portraitSprite } from '../pixel-monster.js';
 
@@ -46,7 +47,7 @@ export function registerMenuScreens(Router, app) {
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default — not recommended on mobile)</label>
         </div>
-        ${app.f ? `<div class="panel"><h3>Save data</h3><div class="stack"><button class="btn block" data-action="export">Export save as JSON</button><label class="btn block" style="cursor:pointer">Import save JSON<input type="file" accept="application/json,.json" data-change="import" class="sr-only"></label><button class="btn danger block" data-action="reset">Delete franchise</button></div></div>` : ''}
+        ${app.f ? `<div class="panel"><h3>Save data</h3><p class="muted">${(() => { const c = cloudStatus(); return c.state === 'on' ? `☁️ Cloud save on${c.at ? ' · last synced ' + new Date(c.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}` : 'Saved on this device. (Cloud save is available when playing inside Claude.)'; })()}</p><div class="stack">${Save.loadBackup() ? '<button class="btn block" data-action="restore">Restore last week’s backup</button>' : ''}<button class="btn block" data-action="export">Export save as JSON</button><label class="btn block" style="cursor:pointer">Import save JSON<input type="file" accept="application/json,.json" data-change="import" class="sr-only"></label><button class="btn danger block" data-action="reset">Delete franchise</button></div></div>` : ''}
         <p class="dim">The previous version's save (if any) is never modified by this build.</p>`;
     },
     mount(root, ctx) {
@@ -56,6 +57,7 @@ export function registerMenuScreens(Router, app) {
         reduced: (el) => set('reducedMotion', el.checked), liveclock: (el) => set('liveClock', el.checked),
         export: () => { const blob = new Blob([Save.exportJson(app.f)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `gridiron-beast-${app.f.club.replace(/\s+/g, '-').toLowerCase()}-s${app.f.season.year}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Save exported.', 'good'); },
         import: async (el) => { const file = el.files?.[0]; if (!file) return; try { const f = Save.importJson(await file.text()); app.setFranchise(f); toast('Save imported.', 'good'); Router.go('hq', {}, { reset: true }); } catch (e) { toast('Import failed: ' + e.message, 'bad'); } el.value = ''; },
+        restore: async () => { const b = Save.loadBackup(); if (!b) return; if (await confirmSheet(`Roll back to Season ${b.season.year}, Week ${b.season.week} (saved after last Sunday)? Anything since then is lost.`, { title: 'Restore backup', okLabel: 'Restore' })) { app.setFranchise(b); toast('Backup restored.', 'good'); Router.go('hq', {}, { reset: true }); } },
         reset: async () => { if (await confirmSheet('Delete this franchise permanently? Export first if you want a backup.', { title: 'Delete franchise', okLabel: 'Delete', danger: true })) { app.reset(); toast('Franchise deleted.'); Router.go('menu', {}, { reset: true }); } },
       });
     },
@@ -81,8 +83,6 @@ export function registerMenuScreens(Router, app) {
     title: 'More',
     render({ f }) {
       return `<div class="stack">
-        <button class="btn block" data-action="go" data-screen="contracts">💰 Salary & Contracts</button>
-        <button class="btn block" data-action="go" data-screen="history">📜 Franchise History</button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;
     },

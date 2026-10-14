@@ -50,7 +50,7 @@ export function registerHqScreens(Router, app) {
         <div class="grid2">
           <button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button>
           <button class="btn block" data-action="go" data-screen="staff">👥 Coaching staff</button><button class="btn block" data-action="go" data-screen="practice">🎯 Practice</button></div>
-        <h3>News</h3><ul class="news" style="padding-left:18px;margin:0">${f.news.slice(0, 8).map((n) => `<li class="${esc(n.kind)}">${esc(n.text)}</li>`).join('') || '<li class="dim">Nothing yet.</li>'}</ul>`;
+        <h3>News</h3><ul class="news" style="padding-left:18px;margin:0">${f.news.slice(0, 8).map((n) => `<li class="${esc(n.kind)}">${newsText(f, n.text)}</li>`).join('') || '<li class="dim">Nothing yet.</li>'}</ul>`;
     },
     mount(root) {
       const f0 = app.f;
@@ -156,11 +156,16 @@ export function registerHqScreens(Router, app) {
   });
   function reportHtml(r, opp) {
     if (!r) return '<p>No report.</p>';
-    const fav = (ids) => ids.map((id) => esc(PLAYS[id]?.name || id)).join(', ');
+    const ids = r.plays || r.favourite || [];
+    const cards = `<h3 style="margin-bottom:4px">Their ${ids.length} ${r.side === 'offense' ? 'offensive' : 'defensive'} plays</h3><p class="dim" style="margin-top:0">They'll only call these on Sunday. You won't know when. Tap a card for details.</p><div class="play-grid">${ids.map((id) => `<button class="card" data-scout-play="${id}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id]?.name || id)}</span></button>`).join('')}</div>${legendHtml(r.side)}`;
+    const star = r.star ? `<b>Star</b><span>${esc(r.star.name)} (${r.star.slot}, ${r.star.ovr} OVR)</span>` : '';
     return r.side === 'offense'
-      ? `<h2>${esc(opp)} offense</h2><div class="kv"><b>Pass / run split</b><span>${r.passBias}% pass</span><b>Passing strength</b><span>${r.pass}</span><b>Running strength</b><span>${r.run}</span><b>Aggression</b><span>${r.aggression}/100</span><b>Star</b><span>${esc(r.star.name)} (${r.star.slot}, ~${r.star.ovr})</span><b>Favourite plays</b><span>${fav(r.favourite)}</span></div><p class="muted" style="margin-top:8px">${r.passBias >= 60 ? 'They throw a lot — coverage-heavy calls and pass rush pay off.' : r.passBias <= 45 ? 'Run-first team — heavy fronts and run fits matter.' : 'Balanced attack — mix your calls.'}</p>`
-      : `<h2>${esc(opp)} defense</h2><div class="kv"><b>Pass defense</b><span>${r.passD}</span><b>Run defense</b><span>${r.runD}</span><b>Aggression</b><span>${r.aggression}/100</span><b>Star</b><span>${esc(r.star.name)} (${r.star.slot}, ~${r.star.ovr})</span><b>Favourite calls</b><span>${fav(r.favourite)}</span></div><p class="muted" style="margin-top:8px">${r.aggression >= 60 ? 'Blitz-happy — screens and quick throws punish them.' : r.passD > r.runD + 6 ? 'Strong secondary — lean on the run game.' : 'Soft against the pass — take your shots.'}</p>`;
+      ? `<h2>${esc(opp)} offense</h2><div class="kv"><b>Pass / run split</b><span>${r.passBias}% pass</span><b>Passing strength</b><span>${r.pass}</span><b>Running strength</b><span>${r.run}</span><b>Aggression</b><span>${r.aggression}/100</span>${star}</div><p class="muted" style="margin-top:8px">${r.passBias >= 60 ? 'They throw a lot — coverage-heavy calls and pass rush.' : r.passBias <= 48 ? 'Run-first — stack the box and make them throw.' : 'Balanced — mix your calls.'}</p>${cards}`
+      : `<h2>${esc(opp)} defense</h2><div class="kv"><b>Pass defense</b><span>${r.passD}</span><b>Run defense</b><span>${r.runD}</span><b>Aggression</b><span>${r.aggression}/100</span>${star}</div><p class="muted" style="margin-top:8px">${r.aggression >= 60 ? 'Blitz-happy — screens and quick throws punish them.' : r.passD > r.runD + 6 ? 'Strong secondary — lean on the run.' : r.runD > r.passD + 6 ? 'Soft against the pass — take your shots.' : 'No obvious weakness — stay balanced.'}</p>${cards}`;
   }
+  /** Tapping a scouted play card opens its full diagram. */
+  document.addEventListener('click', (e) => { const id = e.target.closest?.('[data-scout-play]')?.dataset.scoutPlay; if (id && PLAYS[id]) sheet(playDetailHtml(id).replace(/<div style="margin-top:12px"><button[^]*?<\/div>$/, ''), { title: PLAYS[id].name }); });
+
 
   // ---------------------------------------------------------------- Friday
   Router.registerScreen('gameplan', {
@@ -268,6 +273,11 @@ export function playDetailHtml(id) {
     <div style="margin-top:12px"><button class="btn block" data-action="practice" data-id="${id}">Run it in practice</button></div>`;
 }
 
+/** News line with the rival club's name in bold. */
+function newsText(f, text) {
+  const rival = f.rivals?.[f.tier]?.team; const safe = esc(text);
+  return rival ? safe.split(esc(rival)).join(`<b class="rival-name">${esc(rival)}</b>`) : safe;
+}
 export function lessonHtml(id) {
   const L = LESSONS[id]; if (!L) return '';
   return `<div class="panel lesson"><h3 style="margin-top:0">📖 Lesson</h3><div class="kv"><b>When</b><span>${esc(L.when)}</span><b>Watch</b><span>${esc(L.watch)}</span><b>Beats</b><span>${esc(L.beats)}</span><b>Loses to</b><span>${esc(L.loses)}</span></div></div>`;

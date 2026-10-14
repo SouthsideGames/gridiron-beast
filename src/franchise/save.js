@@ -14,11 +14,16 @@ export function load() {
   const s = storage(); if (!s) return null;
   try { const raw = s.getItem(SAVE_KEY); if (!raw) return null; const f = JSON.parse(raw); return migrate(f); } catch { return null; }
 }
+export const BACKUP_KEY = 'gridiron-beast-v6-backup';
 export function save(f) {
+  f.savedAt = Date.now();
   const s = storage(); if (!s) return false;
   try { s.setItem(SAVE_KEY, JSON.stringify(f)); return true; } catch { return false; }
 }
-export function clear() { const s = storage(); if (s) s.removeItem(SAVE_KEY); }
+/** Weekly safety copy (taken after each Sunday) so a bad state can be rolled back. */
+export function backup(f) { const s = storage(); if (!s) return; try { s.setItem(BACKUP_KEY, JSON.stringify(f)); } catch { /* full */ } }
+export function loadBackup() { const s = storage(); if (!s) return null; try { const raw = s.getItem(BACKUP_KEY); return raw ? migrate(JSON.parse(raw)) : null; } catch { return null; } }
+export function clear() { const s = storage(); if (s) { s.removeItem(SAVE_KEY); s.removeItem(BACKUP_KEY); } }
 export function migrate(f) {
   if (!f || typeof f !== 'object') return null;
   if (f.schemaVersion !== SCHEMA_VERSION) return null; // future versions migrate here

@@ -7,6 +7,7 @@ import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierB
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI } from '../data/staff.js';
 import { createRoster, generateMonster, monsterOverall, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor } from '../data/monsters.js';
 import { PLAYS } from '../data/playbook.js';
+import { OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, teamOverall } from './roster.js';
 import { afterGame, recoverWeek, offseason } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
@@ -257,10 +258,12 @@ export function scoutOpponent(f, side) {
   if (opp) {
     const team = aiTeam(f, opp);
     const str = teamStrengths(team);
-    const best = (lineup) => Object.entries(lineup).map(([slot, p]) => ({ slot, name: p.name, ovr: Math.round(Object.values(p.attrs).reduce((a, b) => a + b, 0) / 12) })).sort((a, b) => b.ovr - a.ovr)[0];
+    // Star = best starter by positional overall (the same rating shown everywhere else).
+    const byId = Object.fromEntries(team.roster.map((m) => [m.id, m]));
+    const best = (slots) => slots.map((slot) => ({ slot, m: byId[team.chart[slot]] })).filter((x) => x.m).map(({ slot, m }) => ({ slot, name: m.name, ovr: monsterOverall(m, { slotPosition: positionOf(slot) }) })).sort((a, b) => b.ovr - a.ovr)[0];
     report = side === 'offense'
-      ? { side, passBias: Math.round(team.coach.passBias * 100), aggression: Math.round(team.coach.aggression * 100), pass: Math.round(str.pass), run: Math.round(str.run), star: best(team.offense), favourite: team.offensePlays.slice(0, 4) }
-      : { side, passD: Math.round(str.passD), runD: Math.round(str.runD), aggression: Math.round(team.coach.aggression * 100), star: best(team.defense), favourite: team.defensePlays.slice(0, 4) };
+      ? { side, passBias: Math.round(team.coach.passBias * 100), aggression: Math.round(team.coach.aggression * 100), pass: Math.round(str.pass), run: Math.round(str.run), star: best(OFFENSE_BASE), plays: [...team.offensePlays] }
+      : { side, passD: Math.round(str.passD), runD: Math.round(str.runD), aggression: Math.round(team.coach.aggression * 100), star: best(DEFENSE_BASE), plays: [...team.defensePlays] };
   }
   f.week.scoutReport = report; f.season.day = 4;
   return { ok: true, report };

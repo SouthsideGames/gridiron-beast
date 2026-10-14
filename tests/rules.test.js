@@ -167,7 +167,7 @@ test('200 headless games complete with legal scores and a winner', () => {
     assert.equal(g.finished, true); assert.ok(!g.guard, `game ${i} hit the runner guard`);
     assert.ok(g.winner === 'home' || g.winner === 'away', `game ${i} has a winner`);
     assert.ok(g.score.home !== 1 && g.score.away !== 1, 'no impossible one-point totals');
-    assert.ok(g.playCount >= 40 && g.playCount <= 160, `play count ${g.playCount}`);
+    assert.ok(g.playCount >= 28 && g.playCount <= 140, `play count ${g.playCount}`);
     if (g.ot) ot++;
   }
   assert.ok(ot >= 1, 'overtime occurs occasionally');

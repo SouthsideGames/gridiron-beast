@@ -4,6 +4,7 @@
 
 import { esc, delegate, toast, sheet, fmtClock, confirmSheet } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
+import * as Save from '../../franchise/save.js';
 import * as R from '../../sim/rules.js';
 import * as AI from '../../sim/coach-ai.js';
 import { step, aiController, newTendencies } from '../../sim/game-runner.js';
@@ -298,7 +299,7 @@ export function registerMatchScreens(Router, app) {
   function finishGame(f) {
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
-    const r = F.finishSunday(f, s); app.save();
+    const r = F.finishSunday(f, s); app.save(); Save.backup(f);
     const ev = r.events || [];
     sheet(`<div class="center"><h2>${won ? '🏆 VICTORY' : 'DEFEAT'}</h2><div class="muted">${r.playerScore}–${r.oppScore} vs ${esc(r.opponent)}${r.ot ? ' (OT)' : ''}</div></div>${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured — ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: 'Final', onClose: () => Router.go('hq', {}, { reset: true }) });
   }

@@ -148,3 +148,19 @@ test('sprites: same species share a shape, individuals differ only in colour', a
   assert.equal(shape(a), shape(b)); assert.notEqual(a, b); assert.notEqual(shape(a), shape(c));
   assert.equal(shape(monsterSprite({ id: 'x4', name: 'Tidepaw II', type: 'Water' }, 8)), shape(a), 'numbered names map back to the species');
 });
+
+test('AI clubs carry exactly six offensive and six defensive plays and only call those', async () => {
+  const { playbookFor, AI_PLAN_SIZE } = await import('../src/franchise/roster.js');
+  for (let s = 1; s < 40; s++) { const pb = playbookFor(s, { passBias: 0.4 + (s % 5) / 10, aggression: (s % 7) / 7 }); assert.equal(pb.offense.length, AI_PLAN_SIZE); assert.equal(pb.defense.length, AI_PLAN_SIZE); assert.equal(new Set(pb.offense).size, 6); }
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 21 });
+  F.hireDefaultStaff(f);
+  const opp = F.aiTeam(f, F.opponentName(f));
+  const { playGame } = await import('../src/sim/game-runner.js');
+  const called = new Set();
+  playGame({ home: F.playerTeam(f), away: opp, seed: 9, quarterLength: 180, onStep: (ev, st) => { if (ev?.kind === 'play' && ev.sim && opp.offensePlays.concat(opp.defensePlays).length) { called.add(ev.offensePlayId); called.add(ev.defensePlayId); } } });
+  const mine = F.playerTeam(f); const legal = new Set([...opp.offensePlays, ...opp.defensePlays, ...mine.offensePlays, ...mine.defensePlays]);
+  assert.ok(called.size > 4);
+  for (const id of called) assert.ok(legal.has(id), `${id} was never equipped`);
+  f.season.day = 3; const r = F.scoutOpponent(f, 'defense');
+  assert.equal(r.report.plays.length, 6); assert.ok(r.report.star.ovr > 40);
+});

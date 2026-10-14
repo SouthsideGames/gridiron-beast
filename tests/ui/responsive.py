@@ -89,7 +89,7 @@ def run_size(pw, port, w, h, name):
         page.click('[data-action="compare"] >> nth=0'); page.wait_for_selector('.sheet table.compare'); no_overflow(page, 'recruit compare'); shot(page, f'{name}-08b-compare'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="skip"]')
     page.click('[data-action="training"]'); page.click('[data-action="focus"] >> nth=0')
-    page.click('[data-action="scoutopp"]'); page.click('[data-action="side"] >> nth=0'); page.wait_for_selector('.sheet'); shot(page, f'{name}-09-scout'); page.click('[data-action="sheet-close"]')
+    page.click('[data-action="scoutopp"]'); page.click('[data-action="side"] >> nth=0'); page.wait_for_selector('.sheet .play-grid'); check(page.evaluate("() => document.querySelectorAll('.sheet .play-grid .card').length") == 6, 'scouting: six opponent play cards'); shot(page, f'{name}-09-scout'); page.click('[data-action="sheet-close"]')
     page.wait_for_selector('[data-action="gameplan"]'); page.click('[data-action="gameplan"]')
     page.wait_for_selector('.play-grid')
     cols = page.evaluate('''() => { const g = document.querySelector('.play-grid'); const cards = Array.from(g.children); const tops = new Set(cards.map(c => Math.round(c.getBoundingClientRect().top))); return [getComputedStyle(g).gridTemplateColumns.split(' ').length, cards.length, tops.size]; }''')
