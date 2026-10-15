@@ -5,7 +5,7 @@
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI } from '../data/staff.js';
-import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor } from '../data/monsters.js';
+import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName } from '../data/monsters.js';
 import { PLAYS } from '../data/playbook.js';
 import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 import { OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
@@ -33,13 +33,25 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
     season: null, week: blankWeek(), game: null,
     rivals: { challenger: { team: rivalTeam, gm: RIVAL_GMS[rivalTeam] || 'Rival GM', headToHead: { w: 0, l: 0 } } },
     badges: { challenger: 0, vanguard: 0, sovereign: 0 }, qualification: { challenger: 0, vanguard: 0, sovereign: 0 }, bottomFourStreak: 0,
-    history: [], news: [],
+    history: [], news: [], dex: { seen: {}, signed: {} },
     settings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, difficulty: 'pro', ...settings },
     tutorial: { seen: {} },
   };
   startSeason(f, 1);
+  for (const m of roster) dexRecord(f, m, 'signed');
   return f;
 }
+
+// ------------------------------------------------------------ Beast Dex
+/** Mark a species as seen (scouted or faced) or signed; first time only, with the week it happened. */
+export function dexRecord(f, m, how = 'seen') {
+  f.dex ||= { seen: {}, signed: {} };
+  const id = resolveSpecies(m).id; const stamp = { year: f.season?.year || 1, week: f.season?.week || 1 };
+  if (!f.dex.seen[id]) f.dex.seen[id] = stamp;
+  if (how === 'signed' && !f.dex.signed[id]) f.dex.signed[id] = stamp;
+}
+export function dexStatus(f, id) { if (!f?.dex) return 'unknown'; return f.dex.signed[id] ? 'signed' : f.dex.seen[id] ? 'seen' : 'unknown'; }
+export function dexCounts(f) { const seen = Object.keys(f?.dex?.seen || {}).length, signed = Object.keys(f?.dex?.signed || {}).length; return { seen, signed }; }
 function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
 const frng = (f) => { const r = rngFromState(f.rngState); return { r, save: () => { f.rngState = r.state; } }; };
 
@@ -254,11 +266,17 @@ export function scoutRegion(f, regionName) {
   const { r, save } = frng(f);
   const count = skill >= 80 ? 3 : skill >= 45 ? 2 : 1;
   const prospects = [];
+  // Species come from the region's elements by rarity weight; rares only in their home region from their week.
+  const pool = regionSpecies(regionName, region.types, f.season.week);
+  const rarityBonus = skill >= 80 ? 1.6 : skill >= 60 ? 1.25 : 1;
+  const weights = pool.map((sp) => [sp.id, (sp.rarity === 'common' ? 60 : sp.rarity === 'uncommon' ? 30 * rarityBonus : 9 * rarityBonus)]);
   for (let i = 0; i < count; i++) {
-    const position = r.pick(['QB', 'RB', 'WR', 'WR', 'TE', 'OL', 'OL', 'DL', 'LB', 'CB', 'CB', 'S', 'K']);
-    const quality = 52 + r.int(12) + (skill >= 80 ? 3 : 0);
-    const m = generateMonster(r, { position, quality, type: r.pick(region.types) });
+    const pickId = r.weighted(weights); const sp = pool.find((x) => x.id === pickId);
+    const position = sp.secondary && r.chance(0.2) ? sp.secondary : sp.position;
+    const quality = 52 + r.int(12) + (skill >= 80 ? 3 : 0) + (sp.rarity === 'rare' ? 3 : sp.rarity === 'uncommon' ? 1 : 0);
+    const m = generateMonster(r, { position, quality, species: sp.id });
     uniqueName(f, m, prospects.map((p) => p.monster.name));
+    dexRecord(f, m, 'seen');
     const revealed = skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1;
     prospects.push({ monster: m, revealed, natureKnown: skill >= 70, potentialKnown: skill >= 55 });
   }
@@ -276,8 +294,9 @@ export function uniqueName(f, m, extra = []) {
   const taken = new Set([...f.roster.map((x) => x.name), ...extra]);
   if (!taken.has(m.name)) return m;
   const roman = ['II', 'III', 'IV', 'V', 'VI'];
-  for (const n of roman) { const cand = `${m.species} ${n}`; if (!taken.has(cand)) { m.name = cand; return m; } }
-  m.name = `${m.species} ${f.roster.length + 1}`; return m;
+  const base = speciesName(m);
+  for (const n of roman) { const cand = `${base} ${n}`; if (!taken.has(cand)) { m.name = cand; return m; } }
+  m.name = `${base} ${f.roster.length + 1}`; return m;
 }
 /** Who could be released to make room/cap for a prospect (never the only one at a position, never a cornerstone). */
 export function releaseCandidates(f, prospect) {
@@ -308,7 +327,7 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
   save();
   if (success) {
     if (rc.needed && releaseId) { const out = f.roster.find((x) => x.id === releaseId); f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); }
-    f.roster.push(m); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
+    f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
     news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
     return { ok: true, success: true, monster: m };
   }
@@ -497,6 +516,7 @@ export function sundayMatchup(f) {
 export function finishSunday(f, gameState) {
   const m = sundayMatchup(f); if (!m) return;
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
+  for (const x of m[oppSide].roster) dexRecord(f, x, 'seen'); // every monster you face goes in the dex
   const won = gameState.winner === side;
   const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true };
   const { r, save } = frng(f);

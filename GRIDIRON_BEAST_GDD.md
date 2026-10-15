@@ -248,3 +248,113 @@ Seven base starters per side are what the owner manages. **Offense:** QB, RB, WR
 ## 14. Defensive playbook to 26
 
 Eight defensive plays added (60 plays in all: 34 offense, 26 defense): Cover 2 Zone, Cover 6, Corner Blitz, Safety Blitz, Bear Front, Double A Mug, Bracket Left, Goal Line Man — each with a lesson and counters, placed in the coordinators' books and the AI pools. Balance pass alongside: linebackers flow to the ball and run calls key the run (Run Wall had been allowing 16 yd/carry on inside zone; now ~2–3, while play-action beats it badly, as intended), underneath zones squeeze a little tighter. Difficulty: Rookie −4 / Pro −1 / All-Star +3 quality, IQ 0.6 / 1 / 1.5 → AI-coached win rates ≈ 68 / 53 / 26 % over 120 games each.
+
+## 15. Prototype 2 — the campaign (LOCKED design, 2026-10-15)
+
+Agreed with the owner after Prototype 1 sign-off and the monsters pass. Franchise mode *is* the campaign: no new mode, no map, no cutscenes longer than a few lines. The campaign is a layer of goals, characters and consequences on top of the season loop that already exists. Everything below is built on the `prototype-2` branch after the `monsters` branch merges.
+
+### 15.1 The species dex (done on `monsters`, carried into P2)
+
+* 72 species, 6 per element: 2 common, 2 uncommon, 1 rare, 1 legendary. Fixed element, natural + secondary position, rarity, signature ability (uncommon and up) or shared trait (commons). Source of truth: `src/data/species.js`; naming rules and audit in `docs/MONSTER_NAMING.md`.
+* Recruiting draws from the region's elements by rarity weight. Rares appear only in one home region from week 4. Legendaries are never scouted.
+* 16×16 sprites built from each species' design spec (body, size, look, features, pattern, colours).
+* **Beast Dex** lives on the main menu, not inside a franchise, and **carries across franchises** (one dex per player, stored under its own key and mirrored to the cloud save). Species are discovered by scouting them or facing them; signed species are marked. The dex is *not* part of Hall of Fame eligibility: it is the player's collection, the Hall of Fame is the GM's career.
+* Prototype 2 makes species abilities and traits take effect in the simulation (today only the six cornerstone abilities do), and builds evolution (30 evolved forms, commons only, designed now).
+
+### 15.2 Difficulty is chosen at franchise creation and locked
+
+* Rookie / Pro / All-Star is picked on the onboarding screen and never changes for that franchise. Settings shows it read-only ("set when the franchise was created"). To play another difficulty, start a new franchise. Reason: Hall of Fame thresholds, commissioner rules and postseason events all key off it; switching mid-franchise would be unfair or buggy.
+* Settings keeps the safe, cosmetic options: game length, coaching mode, animation speed, field markers, hints, reduced motion.
+
+### 15.3 Gym clubs (fixed, same in every franchise)
+
+Eight of the sixteen clubs are **gym clubs**: a permanent home element, a named head coach with a personality and a scheme, and that element's legendary on the roster (the only copy in the league). The other eight clubs stay ordinary and are the ones a player may choose at creation, so every player meets the same eight gyms. Draft assignment (names are placeholders for the owner to approve on the review page):
+
+| Club | Element | Legendary | Coach (draft) | Scheme | Tier |
+|---|---|---|---|---|---|
+| Harbor Sentinels | Water | Tsunarok | Nadia Reyes | Zone Control | early |
+| Sunfire Lions | Light | Aurelion | Elias Dawn | Air Raid | early |
+| Thunder Mesa | Electric | Voltarch | Lena Volkov | Air Raid / Blitz | mid |
+| Canyon Crushers | Earth | Titanolith | Dolores Crag | Ground Attack | mid |
+| Eastport Phantoms | Dark | Nyxshade | Silas Mourne | Man Coverage | mid |
+| Frostpeak Howlers | Ice | Glacivern | Sigrid Hale | Zone Control | mid |
+| Ironpeak Rams | Metal | Aegistron | Brock Ferris | Ground / Blitz | late |
+| Sundown Drakes | Dragon | Aurodrax | Marcus Vane | Balanced / Man | late |
+
+Fire (Pyroclast), Nature (Elderoot), Wind (Tempestra) and Psychic (Astralux) are not held by any club: they are the four legendaries the player hunts first through Legend Tracks. Gym legendaries can be tracked too once the player holds that gym's badge.
+
+* **Schedule guarantee:** every gym club appears on the player's regular-season schedule at least once a season, ordered by tier so the early gyms come first. Division opponents may appear twice as today.
+* **Strength:** gym clubs have a quality offset by tier (early 0, mid +2, late +4 on top of the difficulty offset) that rises +1.5 per season, plus +1 the first time the player beats them ("they studied tape"). Ordinary clubs rise +0.5 per season. Their legendary levels with the calendar and (once evolution is in) their signature monster evolves around season 3. On any difficulty the first two gym games are winnable with the starting roster; the last two are "come back next year" games for most first-season teams.
+* **No replays.** A loss stands, the season moves on, the standings matter. Nothing in the campaign offers a rematch outside the schedule and the bracket.
+
+### 15.4 Badges
+
+* Beating a gym club, in any game that counts (regular season or playoffs), earns its badge the first time. Badges are permanent for the franchise.
+* A gym club is **not** guaranteed a playoff place. If you lost to them in the season and they missed the bracket, that badge waits until next season. The schedule guarantee makes a missing badge always the player's own doing.
+* HQ shows the badge row: eight slots, dim until earned, with the coach's portrait and the season won. The pregame intro flags "Badge game" with the empty slot before the lineups.
+
+### 15.5 Pregame coach dialogue
+
+Two or three lines on the pregame screen, before the lineups, from the opposing head coach's portrait, with one optional reply from the player (confident / respectful / say nothing). Same presentation as media day; the reply may carry the same small hype/calm boost media day uses, or nothing. Lines are picked by relationship state, never branching: first meeting · they beat you last time · you beat them last time · you hold their badge · you have lost to them three times running · playoffs · they signed a monster that left you (15.7). Gym coaches and the rival GM have full pools; ordinary clubs get a single generic line or none, so the characters stand out.
+
+### 15.6 Budget and the commissioner's office
+
+* Signing a prospect that takes the club over the cap is **allowed**, with a clear warning: "The commissioner reviews the books every Saturday." The player has the week to fix it themselves (release the expensive veteran, keep the cheap young ones).
+* If the club is still over the cap at Saturday's lineup check, a short scene plays: the commissioner calls the GM in ("You're over budget. I'm guessing you didn't read the league rules."). He names **three monsters, the three cheapest that would each alone bring the club under the cap**, and the player must release one. Nothing comes back for it. Cornerstones and legendaries are not protected. If no single monster covers the gap, he names the three most expensive and the player keeps choosing until under. Rookie: five names instead of three.
+* The same commissioner character delivers Hall of Fame eligibility (15.9), so he is not only the bad guy.
+
+### 15.7 Postseason story events
+
+* **Losing season = losing record** (fewer wins than losses). A 5–5 team that misses the bracket pays through no Legend Track and no title, not through an event. A losing record makes one postseason event **mandatory**; a winning season skips them (the goal: "even if I can't win it all this year, keep the team together").
+* Format: one scene, portrait, two or three lines, two or three options; same look as media day. Starting pool:
+  * **Star wants out.** Raise their salary 15% (may push toward the commissioner) · promise a starting spot (benched three games next season and they walk mid-season) · let them go, and they sign with the rival or a gym club, whose coach mentions it before your next game.
+  * **Coordinator has an offer.** Pay a retention bonus from the budget · let them leave and hire from the pool.
+  * **Scheme mutiny.** The coordinator says the roster doesn't fit his scheme: change the scheme to the roster · keep him and reach a fit count by week 4 · fire him now.
+* Rookie events always include a free "talk them into staying" option.
+* Support: a **Roster fit** line on the staff screen ("Offense: 7 of 11 fit Air Raid · Defense: 4 of 9 fit Man") and a one-line fire-and-replace with a cost from the budget, so "my players are run guys but my OC is a pass guy" is a visible, fixable decision.
+
+### 15.8 Getting stronger each season
+
+* Gym clubs scale per 15.3; the rival GM's signature monster evolves between seasons as you keep meeting them.
+* **The title raises the floor:** each Beast Bowl the player wins adds +1 quality to every club for all later seasons, so a champion never cruises through the next year. This replaces the old Challenger / Vanguard / Sovereign tiers (already disabled).
+* **Legend Tracks:** win the Beast Bowl → choose one track toward any legendary no club owns (or a gym legendary whose badge you hold). Three tracks on the same legendary put it in your recruiting pool in its home region; you still have to sign it and fit it under the cap.
+* Rematch scouting: the Thursday report on a club you have faced before shows one extra play.
+
+### 15.9 Hall of Fame and retirement
+
+Eligibility is a checklist visible on HQ from day one. Thresholds scale with the locked difficulty:
+
+| Requirement | Rookie | Pro | All-Star |
+|---|---|---|---|
+| Gym badges | 8 | 8 | 8 |
+| Beast Bowl titles | 1 | 2 | 4 |
+| Career wins | 30 | 50 | 80 |
+| League awards won by the club's monsters | 2 | 3 | 5 |
+
+Badges are the campaign and stay at eight everywhere; the other three rows are the grind. Numbers are a first pass and will be tuned in playtests.
+
+* When the last box ticks, the commissioner calls the GM in: eligible. From then on a **Retire** button sits in HQ.
+* Retiring writes a **Hall of Fame card** to the main menu (name, club, difficulty, seasons, record, titles, badges, awards, best monsters) and keeps the retired franchise read-only. The player then starts a new franchise; nothing carries over mechanically except the dex (15.1). The retired GM may appear once in the next franchise's news.
+* Difficulty ladder by design: Rookie for a first card, Pro or All-Star for the one that counts.
+
+### 15.10 Build order on `prototype-2`
+
+1. Merge `monsters` (dex, sprites, Beast Dex screen, naming).
+2. Species abilities and traits take effect in the simulation.
+3. Difficulty chosen at creation and locked; Settings read-only.
+4. Dex moves to its own store, carried across franchises.
+5. Eight fixed gym clubs: coaches, schemes, legendaries; schedule guarantee; strength tiers and seasonal scaling.
+6. Badges and the Hall of Fame tracker on HQ; pregame "Badge game" flag.
+7. Pregame coach dialogue.
+8. Budget: over-cap signing with warning; commissioner's office.
+9. Postseason story events; roster-fit line; fire-and-replace.
+10. The title raises the floor; rival signature monster.
+11. Legend Tracks.
+12. Retirement and the Hall of Fame card.
+13. Evolution (last: the biggest art and balance job, and nothing else depends on it).
+
+### 15.11 Open for owner review (not blocking)
+
+* Gym coach names, personalities and lines go onto the review page for approval before they ship.
+* Whether the player may choose a gym club at creation (design says no, to keep the campaign identical for everyone).
+* Tuning of all numbers in 15.3, 15.6, 15.8 and 15.9 after the first Prototype 2 playtest.

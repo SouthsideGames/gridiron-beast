@@ -1,49 +1,19 @@
-// Procedural 8×8 pixel monsters. The SHAPE comes from the species, so every
-// Tidepaw is recognisably a Tidepaw; the COLOUR comes from the elemental type,
-// with a small per-individual tint so two of the same species aren't clones.
+// Monster art. Every monster is drawn from its species' design spec by the
+// 16×16 sprite builder (src/ui/sprite16.js), so every Flaroo is recognisably
+// a Flaroo; a small per-individual tint keeps two of the same species apart.
 // No external art needed.
 
 import { createRng, hashString } from '../core/rng.js';
-import { TYPES } from '../data/monsters.js';
-
-const cache = new Map();
+import { TYPES, resolveSpecies } from '../data/monsters.js';
+import { sprite16 } from './sprite16.js';
 
 function hsl(h, s, l) { return `hsl(${h} ${s}% ${l}%)`; }
 
 /** Returns an inline SVG string. `size` is the CSS pixel size. */
-export function monsterSprite(m, size = 48, { eyes = true } = {}) {
-  const species = m.species || String(m.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '');
-  const key = `${m.id || m.name}|${species}|${m.type}|${size}`;
-  if (cache.has(key)) return cache.get(key);
-  const rng = createRng(hashString(`species|${species}`)); // shape + eyes + accent pattern
-  const ind = createRng(hashString(`ind|${m.id || m.name}`)); // individual tint only
-  const hue = ((TYPES[m.type]?.hue ?? 120) + ind.int(13) - 6 + 360) % 360;
-  const lit = ind.int(7) - 3;
-  const body = hsl(hue, 62, 46 + lit), shade = hsl(hue, 60, 32 + lit), light = hsl(hue, 70, 64 + lit), accent = hsl((hue + 150) % 360, 70, 60);
-  const grid = [];
-  for (let y = 0; y < 8; y++) {
-    const row = [];
-    for (let x = 0; x < 4; x++) {
-      const centre = x >= 2, mid = y >= 2 && y <= 6;
-      const p = (centre ? 0.72 : 0.4) + (mid ? 0.2 : -0.1);
-      row.push(rng.chance(p) ? (rng.chance(0.18) ? 2 : 1) : 0);
-    }
-    grid.push([...row, ...row.slice().reverse()]);
-  }
-  // Guarantee a body core and a head row.
-  for (let y = 2; y <= 6; y++) { grid[y][3] = grid[y][3] || 1; grid[y][4] = grid[y][4] || 1; }
-  grid[1][3] = grid[1][3] || 1; grid[1][4] = grid[1][4] || 1;
-  let rects = '';
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-    const v = grid[y][x]; if (!v) continue;
-    const below = y < 7 && grid[y + 1][x];
-    rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${v === 2 ? accent : below ? body : shade}"/>`;
-    if (v === 1 && y > 0 && !grid[y - 1][x]) rects += `<rect x="${x}" y="${y}" width="1" height="0.35" fill="${light}"/>`;
-  }
-  if (eyes) { const ey = 2 + rng.int(2); rects += `<rect x="2" y="${ey}" width="1" height="1" fill="#0b0f12"/><rect x="5" y="${ey}" width="1" height="1" fill="#0b0f12"/><rect x="2.15" y="${ey + 0.15}" width="0.4" height="0.4" fill="#fff"/><rect x="5.15" y="${ey + 0.15}" width="0.4" height="0.4" fill="#fff"/>`; }
-  const svg = `<svg class="sprite" width="${size}" height="${size}" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
-  cache.set(key, svg);
-  return svg;
+export function monsterSprite(m, size = 48, { tint = null, flip = false } = {}) {
+  const sp = resolveSpecies(m);
+  const t = tint ?? (createRng(hashString(`ind|${m?.id || m?.name || sp.id}`)).int(7) - 3);
+  return sprite16(sp, size, { tint: t, flip });
 }
 
 /** Small type glyph (used in lists) as an inline SVG. */

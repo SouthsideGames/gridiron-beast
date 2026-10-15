@@ -10,6 +10,7 @@ import { registerHqScreens } from './ui/screens/hq.js';
 import { registerRosterScreens } from './ui/screens/roster.js';
 import { registerMatchScreens } from './ui/screens/match.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
+import { registerDexScreens } from './ui/screens/dex.js';
 
 const app = {
   f: null, // the franchise state (null before creation)
@@ -36,6 +37,7 @@ export function start() {
   registerRosterScreens(Router, app);
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
+  registerDexScreens(Router, app);
   const saved = Save.load();
   if (saved) { app.f = saved; applySettings(); }
   Router.go('menu', {}, { reset: true });
@@ -60,7 +62,7 @@ export const TAB_OF = {
   roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', staff: 'more',
   playbook: 'playbook', playdetail: 'playbook', practice: 'playbook', audit: 'more',
   league: 'league', schedule: 'league', standings: 'league', history: 'league',
-  more: 'more', settings: 'more', developer: 'more', about: 'more',
+  more: 'more', settings: 'more', developer: 'more', about: 'more', dex: 'more',
 };
 
 start();
