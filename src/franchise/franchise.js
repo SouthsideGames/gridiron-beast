@@ -11,6 +11,7 @@ import { dexRecordGlobal, dexStatusGlobal, noteNewFranchise } from './dex-store.
 import { GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
+import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, teamOverall, depthOrder, GROUP_SLOTS } from './roster.js';
 import { afterGame, recoverWeek, offseason } from './progression.js';
@@ -48,6 +49,24 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
 }
 
 // ------------------------------------------------------------ campaign
+/** The other coach's words before Sunday's game (GDD §15.5), or null on a bye. */
+export function pregameTalk(f) {
+  const opp = opponentName(f); if (!opp) return null;
+  const gym = GYM_BY_CLUB[opp]; const rival = f.rivals[f.tier]?.team === opp;
+  const h2h = f.campaign?.h2h?.[opp] || null;
+  const state = dialogueState({ playoff: inPlayoffs(f), h2h, badgeHeld: !!badgeOf(f, opp) });
+  const star = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+  const vars = { club: f.club, me: opp, star: star?.name || 'star', badge: gym?.badge || '' };
+  const seed = hashString(`${opp}|${f.season?.year}|${f.season?.week}|${f.seed}`);
+  const kind = gym ? 'gym' : rival ? 'rival' : 'ordinary';
+  const speaker = gym ? { name: gym.coach.name, portrait: gym.coach.portrait, hue: null, element: gym.element } : rival ? { name: f.rivals[f.tier].gm, portrait: `gm|${opp}`, hue: null } : { name: `${opp} head coach`, portrait: `hc|${opp}`, hue: null };
+  return { ...pregameDialogue({ kind, club: opp, speaker, state, vars, seed }), kind, opponent: opp, reply: f.week.pregameReply || null, replies: REPLIES };
+}
+export function replyToCoach(f, replyId) {
+  if (f.week.pregameReply) return { ok: false, reason: 'Already answered.' };
+  if (!REPLIES.find((r) => r.id === replyId)) return { ok: false, reason: 'Unknown reply.' };
+  f.week.pregameReply = replyId; return { ok: true };
+}
 /** Hall of Fame progress against the franchise's difficulty (GDD §15.9). */
 export function hallOfFameProgress(f) {
   const c = f.campaign || { badges: {}, titles: 0, wins: 0, awards: 0 };
@@ -190,12 +209,14 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   team.boosts = {};
   if (tb) { const keys = Object.keys(tb); for (const side of ['offense', 'defense']) for (const p of Object.values(team[side])) if (p.id) (team.boosts[p.id] ||= {}).training = keys; }
   // Saturday media day: matching temperaments get a boost to their nature's strength and to awareness.
-  const md = f.week.media;
+  // The pregame reply to the other coach adds one more point to one temperament (GDD §15.5).
+  const reply = REPLIES.find((r) => r.id === f.week.pregameReply)?.effect || null;
+  const md = f.week.media || (reply ? { boosts: {} } : null);
   if (md) {
     const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
     for (const side of ['offense', 'defense']) for (const p of Object.values(team[side])) {
       const m = byId[p.id]; if (!m || !p.attrs) continue;
-      let amt = (md.boosts?.[temperamentOf(m.nature)] || 0) + (md.hype ? HYPE_BOOST : 0) + (md.star === m.id ? 2 : 0);
+      let amt = (md.boosts?.[temperamentOf(m.nature)] || 0) + (md.hype ? HYPE_BOOST : 0) + (md.star === m.id ? 2 : 0) + (reply && temperamentOf(m.nature) === reply.temperament ? reply.amount : 0);
       if (!amt) continue;
       const up = NATURES[m.nature]?.up || 'awareness';
       p.attrs[up] = Math.min(99, (p.attrs[up] || 0) + amt); if (up !== 'awareness') p.attrs.awareness = Math.min(99, (p.attrs.awareness || 0) + 1);
@@ -577,9 +598,13 @@ export function finishSunday(f, gameState) {
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}–${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
-  // Campaign: career wins and gym badges (first win over a gym club, in any game that counts; no replays).
+  // Campaign: career wins, head-to-head memory (drives the pregame dialogue) and gym badges (first win over a gym club, in any counting game; no replays).
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
   if (won) f.campaign.wins += 1;
+  f.campaign.h2h ||= {}; const h2h = (f.campaign.h2h[m.opponent] ||= { w: 0, l: 0, last: null, streakL: 0 });
+  h2h[won ? 'w' : 'l'] += 1; h2h.last = won ? 'w' : 'l'; h2h.streakL = won ? 0 : h2h.streakL + 1;
+  // The pregame reply: a confident word backed up is remembered; one that wasn't rattles the room.
+  if (f.week.pregameReply === 'confident') { if (won) news(f, `You said you'd take it, and you did. ${m.opponent}'s coach will remember.`, 'win'); else { f.rattled = true; news(f, 'The confident talk before the game didn\'t age well. Next week\'s practice is harder.', 'loss'); } }
   const gym = GYM_BY_CLUB[m.opponent];
   if (gym && won) {
     f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;

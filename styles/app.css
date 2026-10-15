@@ -289,3 +289,10 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .badge .badge-nm { font-size: 9px; letter-spacing: .04em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .hof { display: grid; gap: 2px; font-size: 13px; color: var(--ink-2); }
 .hof .done { color: var(--good); }
+
+/* Pregame coach dialogue */
+.talk { background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: var(--s2) var(--s3); margin: 0 0 var(--s3); }
+.talk.gym { border-color: var(--line-2); }
+.talk-line { margin: 4px 0 0; font-style: italic; }
+.talk-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.talk-reply { margin-top: 8px; font-size: 13px; }

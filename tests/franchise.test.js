@@ -308,3 +308,20 @@ test('campaign: beating a gym club earns its badge once; Hall of Fame progress r
   assert.equal(p.rows.find((r) => r.key === 'titles').goal, 2);
   assert.equal(p.eligible, false);
 });
+
+test('campaign: the other coach speaks before the game and remembers the result', () => {
+  const f = newFranchise(8);
+  F.autoRunToSunday(f);
+  const t1 = F.pregameTalk(f);
+  assert.ok(t1 && t1.lines.length >= 1 && t1.lines.length <= 3);
+  assert.equal(t1.kind, 'gym'); assert.equal(t1.state, 'first');
+  assert.equal(F.replyToCoach(f, 'confident').ok, true);
+  assert.equal(F.replyToCoach(f, 'respectful').ok, false, 'one reply per game');
+  const team = F.playerTeam(f);
+  assert.ok(Object.values(team.boosts).some((b) => b.media?.amount >= 1), 'the reply boosts a temperament');
+  const m = F.sundayMatchup(f); const side = m.playerSide; const other = side === 'home' ? 'away' : 'home';
+  const score = { home: 0, away: 0 }; score[other] = 14;
+  F.finishSunday(f, { winner: other, score, stats: { home: { players: {} }, away: { players: {} } }, ot: false });
+  assert.equal(f.rattled, true, 'confident talk before a loss rattles the room');
+  assert.equal(f.campaign.h2h[m.opponent].last, 'l');
+});

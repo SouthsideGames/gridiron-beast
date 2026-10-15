@@ -1,0 +1,119 @@
+// Pregame coach dialogue (GDD §15.5): two or three lines from the opposing
+// head coach before the lineups, picked by relationship state, never
+// branching. Gym coaches and the rival GM have full pools; ordinary clubs get
+// one generic line. The player may reply (confident / respectful / nothing);
+// the reply carries the same small boost media day uses.
+//
+// Placeholders: {club} = player's club, {me} = speaker's club, {star} = the
+// player's best monster, {mine} = the speaker's legendary or star, {badge}.
+
+/** States, checked in order; the first that applies wins. */
+export const DIALOGUE_STATES = ['playoff', 'threeLosses', 'badgeHeld', 'theyWon', 'youWon', 'first'];
+
+const SHARED = {
+  playoff: ['Playoff football. Everything you did in October means nothing now.', 'One game. Bring your best six plays and nothing else.'],
+  threeLosses: ['Three in a row. I am starting to feel bad for {club}.', 'Same plan as last time? Please say yes.'],
+  generic: [
+    'Good luck out there. {me} won’t make it easy.',
+    'We watched your tape. Interesting choices.',
+    'Nothing personal. We need this one as much as you do.',
+    'Your {star} is the real deal. We’ll see about the rest.',
+    'Let’s make it a clean game.',
+  ],
+};
+
+/** Per-gym pools: lines by state, two per state. */
+export const GYM_LINES = Object.freeze({
+  'Harbor Sentinels': {
+    first: ['Welcome to the coast. The tide here comes in slow and leaves nothing behind.', 'Play your game. Mine has been the same for twenty years.'],
+    theyWon: ['You came in high and fast last time. The water doesn’t mind.', 'Patience, coach. Learn it, or lose to it again.'],
+    youWon: ['You beat the tide once. Nobody beats it twice by accident.', 'I made some changes. You will notice.'],
+    badgeHeld: ['You carry my badge. Carry it well; I intend to take it back today.', 'Tsunarok remembers you.'],
+  },
+  'Sunfire Lions': {
+    first: ['Bright day for it. We throw the ball and we smile while we do it.', 'Keep up if you can. Most clubs can’t.'],
+    theyWon: ['Last time you squinted at the sun all afternoon. Bring sunglasses.', 'Aurelion is faster than your corners. That hasn’t changed.'],
+    youWon: ['You found a way to cloud us up. Clever. We practised in the rain all week.', 'Round two. The Lions are rested.'],
+    badgeHeld: ['The Dawn Badge in your pocket. It suits you. It would suit my trophy case better.', 'Let’s light it up.'],
+  },
+  'Thunder Mesa': {
+    first: ['Tempo. Tempo. Tempo. If you blink, we scored.', 'I run plays faster than your coordinator can read them.'],
+    theyWon: ['You were a step slow last time. A step is all we need.', 'Voltarch had fun. He wants more.'],
+    youWon: ['You slowed us down. Nobody slows us down twice.', 'New wrinkles this week. Try to keep up.'],
+    badgeHeld: ['My badge. Your pocket. Temporary.', 'Storms come back around, coach.'],
+  },
+  'Canyon Crushers': {
+    first: ['We run the ball. You know that. Knowing it won’t help.', 'Four yards and a cloud of dust, sixty times.'],
+    theyWon: ['Your front got pushed around last time. Did you fix it or just hope?', 'Titanolith asked if you were bringing a bigger line.'],
+    youWon: ['You stacked the box. Fine. See what happens when we throw.', 'The canyon remembers every loss.'],
+    badgeHeld: ['The Quake Badge. Took me a while to forgive you for that.', 'Today we take it back the hard way.'],
+  },
+  'Eastport Phantoms': {
+    first: ['You won’t see us coming. That’s rather the point.', 'Trust nothing you see before the snap.'],
+    theyWon: ['Last time you kept throwing into Nyxshade. Please, go on.', 'Fooled once. Shall we try for twice?'],
+    youWon: ['Hm. You read us. I have rewritten the whole book since.', 'A ghost learns from being seen.'],
+    badgeHeld: ['The Dusk Badge sits with you. The dusk always returns.', 'Let’s see if you still see in the dark.'],
+  },
+  'Frostpeak Howlers': {
+    first: ['Up here we don’t make mistakes. We can’t afford the cold.', 'Discipline wins in the snow. Bring some.'],
+    theyWon: ['Still running that same cover three? We ate it last time.', 'Glacivern froze your first read. He will do it again.'],
+    youWon: ['You beat us at home. I have not slept well since.', 'We corrected everything. Everything.'],
+    badgeHeld: ['The Frost Badge belongs on this mountain. You know that.', 'Nothing thaws up here, coach. Not even grudges.'],
+  },
+  'Ironpeak Rams': {
+    first: ['We hit. That’s the whole speech.', 'Aegistron doesn’t lose a matchup. Pick a receiver to sacrifice.'],
+    theyWon: ['You limped off last time. Did your trainer earn his money this week?', 'Same hammer. Same nail.'],
+    youWon: ['You beat the hammer. Respect. Won’t happen twice.', 'We forged a few new things.'],
+    badgeHeld: ['The Forge Badge. You earned it, and I will take it back fair.', 'Hit first today, or don’t bother.'],
+  },
+  'Palmetto Vipers': {
+    first: ['So you are the one they talk about. Show me.', 'Aurodrax has never been intercepted on a first read. Try.'],
+    theyWon: ['Last time was a lesson. This one is a test.', 'You looked at the dragon and blinked.'],
+    youWon: ['Once. You beat the dragon once. The dragon remembers.', 'I have waited all year for this game.'],
+    badgeHeld: ['The Wyrm Badge was never meant to leave this stadium.', 'Hold it tight. It is coming home.'],
+  },
+});
+
+/** The rival GM: lines by head-to-head state. */
+export const RIVAL_LINES = Object.freeze({
+  first: ['Division rivals. Same rebuild, different owners. Let’s see who got it right.', 'I’ll be honest: I bet the board you would finish below us.'],
+  theyWon: ['We beat you last time. Everyone in the division noticed.', 'Still running the same six plays? Good.'],
+  youWon: ['You got us once. I have spent every day since thinking about it.', 'This is the one that matters.'],
+  playoff: ['Rivals in the playoffs. Someone’s season ends in the family.', 'No excuses after today.'],
+  threeLosses: ['Three straight. My board is asking why they still call this a rivalry.', 'I would wish you luck, but I like winning.'],
+});
+
+export const REPLIES = Object.freeze([
+  { id: 'confident', label: 'We’re taking this one.', text: 'Confident: the fiery monsters feed off it (+1), but lose and the room is rattled next week.', effect: { temperament: 'fiery', amount: 1, rattleOnLoss: true } },
+  { id: 'respectful', label: 'Respect. It’ll be a good game.', text: 'Respectful: the calm monsters settle (+1 awareness).', effect: { temperament: 'calm', amount: 1 } },
+  { id: 'silent', label: 'Say nothing.', text: 'No effect.', effect: null },
+]);
+
+/** Pick the state for a matchup from the head-to-head record. */
+export function dialogueState({ playoff = false, h2h = null, badgeHeld = false } = {}) {
+  if (playoff) return 'playoff';
+  if ((h2h?.streakL || 0) >= 3) return 'threeLosses';
+  if (badgeHeld) return 'badgeHeld';
+  if (h2h?.last === 'l') return 'theyWon';
+  if (h2h?.last === 'w') return 'youWon';
+  return 'first';
+}
+
+function fill(line, vars) { return line.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? ''); }
+
+/**
+ * Lines for a matchup. `kind` is 'gym' | 'rival' | 'ordinary'. Returns
+ * { speaker, title, lines[], replies: bool }.
+ */
+export function pregameDialogue({ kind, club, speaker, state, vars = {}, seed = 0 }) {
+  const pick = (arr) => arr[Math.abs(seed) % arr.length];
+  if (kind === 'gym') {
+    const pool = GYM_LINES[club]; const lines = (pool && pool[state]) || SHARED[state] || pool?.first || SHARED.generic;
+    return { speaker, title: `Head coach, ${club}`, lines: lines.map((l) => fill(l, vars)), replies: true, state };
+  }
+  if (kind === 'rival') {
+    const lines = RIVAL_LINES[state] || RIVAL_LINES.first;
+    return { speaker, title: `GM, ${club}`, lines: lines.map((l) => fill(l, vars)), replies: true, state };
+  }
+  return { speaker, title: `Head coach, ${club}`, lines: [fill(pick(SHARED.generic), vars)], replies: false, state: 'generic' };
+}
