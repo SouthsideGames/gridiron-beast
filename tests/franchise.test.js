@@ -14,7 +14,7 @@ function newFranchise(seed = 7) {
   return f;
 }
 
-test('schedule generator matches the golden vectors from the v5 prototype', () => {
+test('schedule generator matches the golden vectors (campaign schedule)', () => {
   const v = JSON.parse(fs.readFileSync(new URL('./schedule-vectors.json', import.meta.url)));
   let checked = 0;
   for (const season of v.seasons) for (const [team, games] of Object.entries(season.teams)) {
@@ -268,4 +268,43 @@ test('difficulty is chosen at creation, carried in the save and exposed with Hal
   assert.equal(f.settings.difficulty, 'allstar');
   assert.deepEqual(F.difficultyOf(f).hofGoals, { badges: 8, titles: 4, wins: 80, awards: 5 });
   assert.equal(F.difficultyOf({ settings: {} }).label, 'Pro');
+});
+
+test('campaign: every ordinary club meets all eight gyms each season; gym clubs field their legendary and lean to their element', async () => {
+  const { GYM_CLUBS, GYM_BY_CLUB } = await import('../src/data/gyms.js');
+  const { SPECIES_BY_ID } = await import('../src/data/monsters.js');
+  for (const y of [1, 2, 7]) for (const t of ALL_TEAMS) {
+    const opps = teamSchedule(y, t).filter((g) => !g.bye).map((g) => g.opponent);
+    assert.equal(new Set(opps).size, 9, `${t} plays nine different clubs`);
+    if (!GYM_CLUBS.includes(t)) assert.equal(opps.filter((o) => GYM_CLUBS.includes(o)).length, 8, `${t} meets every gym in season ${y}`);
+  }
+  const f = newFranchise(3);
+  for (const club of GYM_CLUBS) {
+    const g = GYM_BY_CLUB[club]; const team = F.aiTeam(f, club);
+    const leg = team.roster.find((m) => m.species === g.legendary);
+    assert.ok(leg && leg.legendary, `${club} carries ${g.legendary}`);
+    assert.ok(Object.values(team.chart).includes(leg.id), 'the legendary starts');
+    const share = team.roster.filter((m) => SPECIES_BY_ID[m.species].element === g.element).length / team.roster.length;
+    assert.ok(share >= 0.4, `${club} leans ${g.element} (${Math.round(share * 100)}%)`);
+    assert.ok(F.clubQuality(f, club, 3) > F.clubQuality(f, club, 1), 'gym clubs grow by season');
+  }
+  // One legendary in the league: no other club rolls one.
+  for (const t of ALL_TEAMS.filter((x) => !GYM_CLUBS.includes(x) && x !== f.club)) assert.ok(F.aiTeam(f, t).roster.every((m) => SPECIES_BY_ID[m.species].rarity !== 'legendary'), t);
+});
+
+test('campaign: beating a gym club earns its badge once; Hall of Fame progress reads the difficulty goals', () => {
+  const f = newFranchise(4);
+  const gymWeek = f.season.schedule.find((g) => !g.bye && ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers'].includes(g.opponent));
+  assert.ok(gymWeek);
+  while (f.season.week < gymWeek.week) { F.autoRunToSunday(f); F.simulatePlayerGame(f); }
+  F.autoRunToSunday(f);
+  const m = F.sundayMatchup(f); const side = m.playerSide;
+  const score = { home: 0, away: 0 }; score[side] = 21;
+  F.finishSunday(f, { winner: side, score, stats: { home: { players: {} }, away: { players: {} } }, ot: false });
+  assert.ok(f.campaign.badges[gymWeek.opponent], 'badge earned');
+  assert.equal(f.campaign.wins >= 1, true);
+  const p = F.hallOfFameProgress(f);
+  assert.equal(p.rows.find((r) => r.key === 'badges').have, 1);
+  assert.equal(p.rows.find((r) => r.key === 'titles').goal, 2);
+  assert.equal(p.eligible, false);
 });

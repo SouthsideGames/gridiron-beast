@@ -11,6 +11,9 @@ import { monsterOverall, NATURES, TYPES, effectiveAttributes, HEADLINE, headline
 import { headlineHtml } from './roster.js';
 import { ATTRIBUTES, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
+import { GYMS, GYM_BY_CLUB } from '../../data/gyms.js';
+import { SPECIES_BY_ID } from '../../data/monsters.js';
+import { sprite16 } from '../sprite16.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
 import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 
@@ -44,10 +47,11 @@ export function registerHqScreens(Router, app) {
         <div class="panel tight"><div class="row between"><div><b>Season ${s.year}</b> · Week ${f.season.week}${rival ? ` · ⚔️ ${esc(rival.team)}` : ''}</div><div class="chip accent">Team OVR ${s.overall}</div></div>
           <div class="row between" style="margin-top:4px"><span>Record <b class="mono">${s.record}</b></span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
         ${weekStrip(f)}
-        <div class="panel"><div class="muted" style="font-size:12px">THIS WEEK</div><div style="margin:4px 0 8px">${gameLine}</div>
+        <div class="panel"><div class="muted" style="font-size:12px">THIS WEEK</div><div style="margin:4px 0 8px">${gameLine}${(() => { const g = opp && GYM_BY_CLUB[opp]; if (!g || f.season.finished) return ''; const b = F.badgeOf(f, opp); return `<div class="muted" style="margin-top:4px">${b ? `🏅 You hold the ${esc(g.badge)} (S${b.year})` : `<b>Badge game</b> · beat ${esc(g.coach.name)}'s ${esc(opp)} for the ${esc(g.badge)}`}</div>`; })()}</div>
           ${next ? `<button class="btn primary big block" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>` : ''}
           ${!f.season.finished && day < 6 && !cap.over ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
           ${cap.over ? `<p class="muted" style="color:var(--bad);margin-top:8px">Over the cap by ${fmtMoney(-cap.remaining)} — games are locked until you release a monster.</p>` : ''}</div>
+        ${campaignPanel(f)}
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
         <div class="grid2">
           <button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button>
@@ -65,6 +69,7 @@ export function registerHqScreens(Router, app) {
         resume: () => Router.go('match'),
         autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(awardsHtml(app.f.season.awards || F.seasonAwards(app.f)), { title: `Season ${app.f.season.year} awards` }),
+        gym: (el) => { const g = GYM_BY_CLUB[el.dataset.club]; if (!g) return; const b = F.badgeOf(app.f, g.club); const sp = SPECIES_BY_ID[g.legendary]; sheet(`<div class="row">${portraitSprite(g.coach.portrait, 56, { hue: TYPES[g.element]?.hue })}<div><b>${esc(g.coach.name)}</b><div class="muted">Head coach, ${esc(g.club)} · ${esc(g.coach.style)}</div><div class="muted">${esc(g.element)} gym · ${g.tier} tier</div></div></div><p>${b ? `<b>${esc(g.badge)}</b> earned in Season ${b.year}, week ${b.week} (${esc(b.score)}).` : `Beat ${esc(g.club)} in any game that counts to earn the <b>${esc(g.badge)}</b>. No replays: if you lose, the next chance is their next game on your schedule.`}</p><h3>Signature monster</h3><div class="row">${sprite16(sp, 48)}<div><b>${esc(sp.name)}</b><div class="muted">${esc(sp.element)} legendary · ${sp.position}</div><div class="muted">${esc(sp.ability.name)}: ${esc(sp.ability.text)}</div></div></div><p class="dim">Gym clubs grow stronger every season, and study tape after you beat them.</p>`, { title: g.badge }); },
         nextseason: async () => { if (await confirmSheet(`Start season ${app.f.season.year + 1}? Your roster ages one year and the record resets.`, { title: 'New season', okLabel: 'Start' })) { F.startNextSeason(app.f); app.save(); Router.render(); } },
       });
     },
@@ -277,7 +282,7 @@ export function registerHqScreens(Router, app) {
     title: 'Schedule',
     render({ f }) {
       const rival = f.rivals[f.tier]?.team;
-      return `<p class="muted">Season ${f.season.year} · 9 games, 1 bye · playoffs weeks 11–13</p><div class="list">${f.season.schedule.map((g) => { const res = g.result; return `<div class="item static ${g.week === f.season.week ? 'me' : ''}"><div class="grow"><div class="name">Week ${g.week} ${g.bye ? '· BYE' : `· ${g.home ? 'vs' : '@'} ${esc(g.opponent)}`}${g.opponent === rival ? ' ⚔️' : ''}</div><div class="sub">${g.bye ? 'Rest and recover' : esc(g.category)}</div></div>${res ? `<span class="chip ${res.won ? 'good' : 'bad'}">${res.won ? 'W' : 'L'} ${res.playerScore}–${res.oppScore}</span>` : g.week === f.season.week ? '<span class="chip accent">This week</span>' : ''}</div>`; }).join('')}</div>`;
+      return `<p class="muted">Season ${f.season.year} · 9 games, 1 bye · playoffs weeks 11–13</p><div class="list">${f.season.schedule.map((g) => { const res = g.result; return `<div class="item static ${g.week === f.season.week ? 'me' : ''}"><div class="grow"><div class="name">Week ${g.week} ${g.bye ? '· BYE' : `· ${g.home ? 'vs' : '@'} ${esc(g.opponent)}`}${g.opponent === rival ? ' ⚔️' : ''}</div><div class="sub">${g.bye ? 'Rest and recover' : esc(g.category)}${!g.bye && GYM_BY_CLUB[g.opponent] ? ` · 🏅 ${esc(GYM_BY_CLUB[g.opponent].badge)}${F.badgeOf(f, g.opponent) ? ' (held)' : ''}` : ''}</div></div>${res ? `<span class="chip ${res.won ? 'good' : 'bad'}">${res.won ? 'W' : 'L'} ${res.playerScore}–${res.oppScore}</span>` : g.week === f.season.week ? '<span class="chip accent">This week</span>' : ''}</div>`; }).join('')}</div>`;
     },
   });
   Router.registerScreen('standings', {
@@ -347,4 +352,14 @@ export function awardsHtml(a) {
     ${a.rivalry ? `<div class="panel tight" style="border-color:#a855f7">⚔️ Rivalry vs ${esc(a.rivalry.team)}: <b>${a.rivalry.swept ? 'SWEPT — GM ' + esc(a.rivalry.gm) + ' is not happy' : a.rivalry.games ? a.rivalry.wins + '–' + (a.rivalry.games - a.rivalry.wins) : 'not played'}</b></div>` : ''}
     ${a.league ? `<h3>League awards</h3><div class="list">${Object.entries(F.AWARDS).map(([k, aw]) => { const w = a.league[k]; if (!w) return ''; return `<div class="item static" style="${w.team === a.club ? 'border-color:var(--accent)' : ''}"><div class="grow"><div class="name">🏅 ${esc(aw.label)}</div><div class="sub">${k === 'coy' ? `${esc(w.coach)} · ${esc(w.team)} (${w.w}–${w.l})` : `${esc(w.name)} (${esc(w.position)}, ${esc(w.team)}) · ${esc(raceLine(w))}`}</div></div></div>`; }).join('')}</div>` : ''}
     <h3>Club awards</h3><div class="list">${a.mvp ? `<div class="item static" style="border-color:var(--accent)"><div class="grow"><div class="name">★ Team MVP</div><div class="sub">${esc(a.mvp.name)} (${esc(a.mvp.position)})</div></div></div>` : ''}${line('Rushing leader', a.rusher)}${line('Receiving leader', a.receiver)}${line('Passing leader', a.passer)}${line('Tackling leader', a.tackler)}${line('Sack leader', a.rusherD)}${line('Ball hawk', a.ballhawk)}</div>`;
+}
+
+/** Campaign panel on HQ: the eight gym badges and the Hall of Fame checklist (GDD §15.4, §15.9). */
+function campaignPanel(f) {
+  const hof = F.hallOfFameProgress(f);
+  const LABEL = { badges: 'Gym badges', titles: 'Beast Bowl titles', wins: 'Career wins', awards: 'League awards' };
+  const badges = GYMS.map((g) => { const b = F.badgeOf(f, g.club); const hue = TYPES[g.element]?.hue ?? 120; return `<button class="badge ${b ? 'won' : ''}" data-action="gym" data-club="${esc(g.club)}" style="--hue:${hue}" aria-label="${esc(g.badge)}${b ? ', earned' : ', not yet earned'}"><span class="badge-ico">${b ? '★' : '·'}</span><span class="badge-nm">${esc(g.element)}</span></button>`; }).join('');
+  return `<div class="panel"><div class="row between"><b>Campaign</b><span class="dim">${hof.eligible ? '🏛️ Hall of Fame eligible' : `${hof.rows.filter((r) => r.done).length} / ${hof.rows.length} on track`}</span></div>
+    <div class="badge-row">${badges}</div>
+    <div class="hof">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${LABEL[r.key]}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div></div>`;
 }

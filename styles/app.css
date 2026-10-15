@@ -279,3 +279,13 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .dex-bar { height: 6px; background: var(--panel-2); border-radius: 3px; margin-top: 8px; overflow: hidden; }
 .dex-bar i { display: block; height: 100%; background: var(--accent); }
 @media (min-width: 520px) { .dex-grid { grid-template-columns: repeat(6, 1fr); } }
+
+/* Campaign: gym badges and the Hall of Fame checklist */
+.badge-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 8px 0; }
+.badge { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border-radius: var(--r); border: 2px solid var(--line); background: var(--panel-2); color: var(--ink-2); font: inherit; cursor: pointer; min-width: 0; }
+.badge .badge-ico { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: hsl(var(--hue) 20% 22%); color: hsl(var(--hue) 30% 45%); font-size: 13px; font-weight: 900; }
+.badge.won { border-color: hsl(var(--hue) 70% 55%); color: var(--ink); }
+.badge.won .badge-ico { background: hsl(var(--hue) 70% 52%); color: #fff; box-shadow: 0 0 0 2px hsl(var(--hue) 70% 30%); }
+.badge .badge-nm { font-size: 9px; letter-spacing: .04em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.hof { display: grid; gap: 2px; font-size: 13px; color: var(--ink-2); }
+.hof .done { color: var(--good); }

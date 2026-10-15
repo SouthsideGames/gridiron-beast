@@ -32,9 +32,10 @@ export const TEAM_META = Object.freeze({
 });
 
 /** The four rebuilding clubs offered to a new owner (with fictional prior records). */
+/** Clubs a new owner may take: ordinary clubs only, so every franchise meets the same eight gyms (GDD §15.3). */
 export const STARTER_CLUBS = Object.freeze([
   { name: 'Ember City Beasts', record: '2–12' }, { name: 'Stonehaven Titans', record: '1–13' },
-  { name: 'Frostpeak Howlers', record: '3–11' }, { name: 'Stormport Bolts', record: '2–12' },
+  { name: 'Glacier Guardians', record: '3–11' }, { name: 'Stormport Bolts', record: '2–12' },
 ]);
 
 export const RIVAL_GMS = Object.freeze({ 'Glacier Guardians': 'Morgan Vale', 'Northstar Wolves': 'Cameron Frost', 'Ironpeak Rams': 'Jules Stone', 'Canyon Crushers': 'Alex Calder', 'Sundown Drakes': 'Riley Ash', 'Thunder Mesa': 'Blake Storm', 'Eastport Phantoms': 'Taylor Voss', 'Harbor Sentinels': 'Jordan Shore', 'Ashford Hawks': 'Casey Finch', 'Bayou Stalkers': 'Drew Marsh', 'Sunfire Lions': 'Avery Sol', 'Palmetto Vipers': 'Quinn Reed', 'Frostpeak Howlers': 'Sam Rime', 'Stormport Bolts': 'Devon Gale', 'Stonehaven Titans': 'Harper Flint', 'Ember City Beasts': 'Rowan Blaze' });
@@ -47,33 +48,41 @@ export const TIERS = Object.freeze([
 export const tierById = (id) => TIERS.find((t) => t.id === id) || TIERS[0];
 
 // ------------------------------------------------------------ schedule
-const divisionPairings = [[[0, 1], [2, 3]], [[0, 2], [1, 3]], [[0, 3], [1, 2]]];
-function conferenceOffsets(season) {
-  const recent = [-100, -100, -100, -100];
-  let selected = [0, 1];
-  for (let y = 1; y <= season; y++) {
-    const ranked = [0, 1, 2, 3].sort((a, b) => recent[a] - recent[b] || ((a - y + 4) % 4) - ((b - y + 4) % 4));
-    selected = y >= 3 && y % 3 === 0 ? [ranked[0], ranked[2]] : ranked.slice(0, 2);
-    for (const k of selected) recent[k] = y;
-  }
-  return selected;
+// Campaign schedule (GDD §15.3): the eight gym clubs and the eight ordinary
+// clubs form two groups. Rounds 0–7 are the bipartite round robin, so every
+// ordinary club meets every gym club once a season (and vice versa); round 8
+// is the same-group division game, so all three division mates are played.
+// Nine games and a bye in ten weeks. The round order rotates by season, and
+// in a first season the four starter clubs meet the early gyms first and the
+// late gyms last.
+import { GYM_CLUBS } from './gyms.js';
+
+const GYM_ORDER = ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']; // early → late
+const ORDINARY_ORDER = ['Ember City Beasts', 'Stonehaven Titans', 'Glacier Guardians', 'Stormport Bolts', 'Northstar Wolves', 'Sundown Drakes', 'Ashford Hawks', 'Bayou Stalkers']; // starters first
+// 4×4 Latin blocks: ordinary clubs 0–3 meet gyms 0–3 in rounds 0–3 and gyms 4–7 in rounds 4–7; clubs 4–7 the reverse.
+const LATIN = [[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [3, 2, 1, 0]];
+function gymFor(ordinaryIndex, round) {
+  const half = ordinaryIndex < 4 ? 0 : 1, block = round < 4 ? 0 : 1;
+  const gymBlock = (half + block) % 2; // starters: gyms 0–3 then 4–7
+  return GYM_ORDER[gymBlock * 4 + LATIN[ordinaryIndex % 4][round % 4]];
 }
+const categoryOf = (a, b) => (divisionOf(a) === divisionOf(b) ? 'Division' : conferenceFor(divisionOf(a)) === conferenceFor(divisionOf(b)) ? 'Conference' : 'Interconference');
 
 /** All fixtures for a season: [{week, bye, games:[{home, away, category}]}]. */
 export function leagueSeasonFixtures(season) {
   season = Math.max(1, Math.floor(Number(season) || 1));
   const rounds = Array.from({ length: 9 }, () => []);
-  const add = (round, home, away, category) => rounds[round].push({ home, away, category });
+  const add = (round, home, away) => rounds[round].push({ home, away, category: categoryOf(home, away) });
+  for (let r = 0; r < 8; r++) for (let i = 0; i < 8; i++) {
+    const o = ORDINARY_ORDER[i], g = gymFor(i, r);
+    const gymHome = (r + i + season) % 2 === 0;
+    add(r, gymHome ? g : o, gymHome ? o : g);
+  }
+  // Round 8: the division mate from the same group (gym v gym, ordinary v ordinary).
   for (const teams of Object.values(DIVISIONS)) {
-    for (let r = 0; r < 6; r++) for (const [i, j] of divisionPairings[r % 3]) { const home = r < 3 ? teams[i] : teams[j], away = r < 3 ? teams[j] : teams[i]; add(r, home, away, 'Division'); }
+    const gyms = teams.filter((t) => GYM_CLUBS.includes(t)), others = teams.filter((t) => !GYM_CLUBS.includes(t));
+    for (const [a, b] of [gyms, others]) add(8, season % 2 ? a : b, season % 2 ? b : a);
   }
-  const offsets = conferenceOffsets(season);
-  for (const [first, second] of [['North', 'West'], ['East', 'South']]) {
-    const aa = DIVISIONS[first], bb = DIVISIONS[second];
-    for (let r = 0; r < 2; r++) for (let i = 0; i < 4; i++) { const other = bb[(i + offsets[r]) % 4]; add(6 + r, r === 0 ? aa[i] : other, r === 0 ? other : aa[i], 'Conference'); }
-  }
-  const aurora = [...DIVISIONS.North, ...DIVISIONS.West], titan = [...DIVISIONS.East, ...DIVISIONS.South];
-  for (let i = 0; i < 8; i++) { const a = aurora[i], b = titan[(i + season - 1) % 8]; add(8, season % 2 === 1 ? a : b, season % 2 === 1 ? b : a, 'Interconference'); }
   const bye = 4 + (season - 1) % 5;
   const shift = (season - 1) % 9;
   const weeks = [];

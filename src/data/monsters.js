@@ -109,9 +109,12 @@ export function speciesEffect(m) {
 }
 const RARITY_WEIGHT = (s) => RARITIES[s.rarity]?.weight ?? 0;
 /** Pick a species that plays `position` (natural, or secondary at a quarter of the weight), by rarity weight. */
-export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set() } = {}) {
+export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set(), element = null, elementChance = 0.75 } = {}) {
   const cands = pool.filter((s) => !exclude.has(s.id) && (s.position === position || s.secondary === position) && RARITY_WEIGHT(s) > 0);
-  const list = cands.length ? cands : pool.filter((s) => s.position === position || s.secondary === position);
+  let list = cands.length ? cands : pool.filter((s) => s.position === position || s.secondary === position);
+  // A club with a home element (the gym clubs) fills most spots from that element when it has a species for the position.
+  const home = element ? list.filter((s) => s.element === element) : [];
+  if (home.length && rng.chance(elementChance)) list = home;
   const w = list.map((s) => [s.id, Math.max(0.01, RARITY_WEIGHT(s)) * (s.position === position ? 1 : 0.25)]);
   return SPECIES_BY_ID[rng.weighted(w)];
 }
@@ -230,17 +233,35 @@ export const STARTING_ROSTER = Object.freeze([
   ['QB', 2], ['RB', 2], ['WR', 3], ['TE', 1], ['OL', 4], ['DL', 3], ['LB', 2], ['CB', 3], ['S', 1], ['K', 1],
 ]);
 
-export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56 } = {}) {
+export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null } = {}) {
   const rng = createRng(seed);
   const roster = [];
   // No species twice on a fresh roster (cornerstone species included); a second copy would be "Name II".
   const used = new Set([...CORNERSTONES.offense, ...CORNERSTONES.defense].map((c) => c.species));
+  if (legendary) used.add(legendary);
   for (const [position, count] of STARTING_ROSTER) {
     for (let i = 0; i < count; i++) {
       const q = quality + (i === 0 ? 4 : -2) + rng.int(5) - 2;
-      const sp = pickSpeciesForPosition(rng, position, { exclude: used }); used.add(sp.id);
+      const sp = pickSpeciesForPosition(rng, position, { exclude: used, element });
+      if (sp.element !== element) used.add(sp.id); // a gym club may field its home element more than once ("Aquip II")
       roster.push(generateMonster(rng, { position, quality: q, species: sp.id }));
     }
+  }
+  const seen = {}; const roman = ['', ' II', ' III', ' IV', ' V', ' VI'];
+  for (const m of roster) { const n = seen[m.name] = (seen[m.name] || 0) + 1; if (n > 1) m.name = `${m.name}${roman[n - 1] || ' ' + n}`; }
+  // A gym club's legendary takes the first spot at its natural position, a cut above the rest of the roster.
+  if (legendary && SPECIES_BY_ID[legendary]) {
+    const sp = SPECIES_BY_ID[legendary]; const target = roster.find((m) => m.position === sp.position) || roster[0];
+    const star = generateMonster(rng, { position: sp.position, quality: quality + 9, species: sp.id, id: target.id });
+    star.legendary = true; star.salary = salaryFor(star) + 6000;
+    Object.assign(target, star);
+  }
+  // Cornerstones are a player-club thing. AI clubs (no choice given) get two stars of their own instead:
+  // the first quarterback and one defensive starter, a cut above the roster, so every club has faces.
+  if (!cornerstoneOffense && !cornerstoneDefense) {
+    const stars = [roster.find((m) => m.position === 'QB'), roster.find((m) => m.position === rng.pick(['DL', 'LB', 'CB']) && !m.legendary)].filter(Boolean);
+    for (const m of stars) { if (m.legendary) continue; const up = generateMonster(rng, { position: m.position, quality: quality + 10, species: m.species, id: m.id, name: m.name }); Object.assign(m, up); m.star = true; }
+    return roster;
   }
   for (const [side, choice] of [['offense', cornerstoneOffense], ['defense', cornerstoneDefense]]) {
     const c = cornerstoneByName(side, choice) || CORNERSTONES[side][0];

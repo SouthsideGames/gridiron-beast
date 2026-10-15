@@ -8,6 +8,7 @@ import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REG
 import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName } from '../data/monsters.js';
 import { SPECIES_DEX } from '../data/species.js';
 import { dexRecordGlobal, dexStatusGlobal, noteNewFranchise } from './dex-store.js';
+import { GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 import { OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
@@ -36,6 +37,7 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
     rivals: { challenger: { team: rivalTeam, gm: RIVAL_GMS[rivalTeam] || 'Rival GM', headToHead: { w: 0, l: 0 } } },
     badges: { challenger: 0, vanguard: 0, sovereign: 0 }, qualification: { challenger: 0, vanguard: 0, sovereign: 0 }, bottomFourStreak: 0,
     history: [], news: [], dex: { seen: {}, signed: {} },
+    campaign: { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 },
     settings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, difficulty: 'pro', ...settings },
     tutorial: { seen: {} },
   };
@@ -44,6 +46,17 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
   for (const m of roster) dexRecord(f, m, 'signed');
   return f;
 }
+
+// ------------------------------------------------------------ campaign
+/** Hall of Fame progress against the franchise's difficulty (GDD §15.9). */
+export function hallOfFameProgress(f) {
+  const c = f.campaign || { badges: {}, titles: 0, wins: 0, awards: 0 };
+  const goals = difficultyOf(f).hofGoals;
+  const have = { badges: Object.keys(c.badges || {}).length, titles: c.titles || 0, wins: c.wins || 0, awards: c.awards || 0 };
+  const rows = Object.entries(goals).map(([k, goal]) => ({ key: k, have: have[k], goal, done: have[k] >= goal }));
+  return { rows, eligible: rows.every((r) => r.done) };
+}
+export function badgeOf(f, club) { return f.campaign?.badges?.[club] || null; }
 
 // ------------------------------------------------------------ Beast Dex
 /** Mark a species as seen (scouted or faced) or signed; first time only, with the week it happened. */
@@ -201,15 +214,28 @@ export const DIFFICULTY = Object.freeze({
   allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: 'Stronger clubs whose coaches read the situation sharply.', hof: 'Hall of Fame: 8 badges, 4 titles, 80 wins, 5 awards.', hofGoals: { badges: 8, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
 });
 export const difficultyOf = (f) => DIFFICULTY[f?.settings?.difficulty] || DIFFICULTY.pro;
-export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } = {}) {
-  const meta = TEAM_META[name];
+/** Club quality for a season: base by difficulty, gym tier, growth per season, the title raising the floor, and "studied tape" after the player first beats a gym (GDD §15.3, §15.8). */
+export function clubQuality(f, name, year = f.season?.year || 1) {
   const tier = tierById(f.tier);
   const base = tier.id === 'challenger' ? 56 : tier.id === 'vanguard' ? 64 : 72;
+  const h = hashString(`${name}|${f.seed}`); // a club's natural level is fixed for the franchise; seasons add growth on top
+  const D = difficultyOf(f);
+  const gym = GYM_BY_CLUB[name];
+  const seasons = Math.max(0, year - 1);
+  const growth = gym ? GYM_TIER[gym.tier] + seasons * GYM_GROWTH_PER_SEASON + (f.campaign?.gymWins?.[name] ? GYM_STUDIED_TAPE : 0) : seasons * ORDINARY_GROWTH_PER_SEASON;
+  const floor = (f.campaign?.titles || 0) * 1; // every Beast Bowl the player wins lifts the whole league
+  return Math.round(base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + D.quality + growth + floor);
+}
+export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } = {}) {
+  const meta = TEAM_META[name];
   const h = hashString(`${name}|${year}|${f.seed}`);
-  const D = DIFFICULTY[f.settings?.difficulty] || DIFFICULTY.pro;
-  const quality = base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + D.quality;
-  const coach = { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
-  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting });
+  const D = difficultyOf(f);
+  const quality = clubQuality(f, name, year);
+  const gym = GYM_BY_CLUB[name];
+  const coach = gym
+    ? { aggression: gym.coach.aggression, passBias: gym.coach.passBias, iq: D.iq + 0.2, identity: { offense: gym.coach.offense, defense: gym.coach.defense } }
+    : { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
+  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null });
 }
 
 // ------------------------------------------------------------ season
@@ -551,6 +577,14 @@ export function finishSunday(f, gameState) {
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}–${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
+  // Campaign: career wins and gym badges (first win over a gym club, in any game that counts; no replays).
+  f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
+  if (won) f.campaign.wins += 1;
+  const gym = GYM_BY_CLUB[m.opponent];
+  if (gym && won) {
+    f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
+    if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}–${gameState.score[oppSide]}` }; news(f, `BADGE EARNED: the ${gym.badge}. ${gym.coach.name}'s ${m.opponent} fall to ${f.club}.`, 'win'); }
+  }
   for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR).` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind);
   f.game = null;
   f.lastGame = { ...f.week.gameResult, events, year: f.season.year, week: f.season.week };
@@ -615,7 +649,7 @@ function endSeason(f) {
   const s = f.season; const st = leagueStandings(f);
   const champion = s.playoffs?.champion || null;
   const rec = record(f);
-  if (champion === f.club) { f.badges[f.tier] += 1; f.qualification[f.tier] += 1; news(f, `BEAST BOWL CHAMPIONS! ${f.club} win the ${tierById(f.tier).name} title.`, 'win'); }
+  if (champion === f.club) { f.badges[f.tier] += 1; f.qualification[f.tier] += 1; f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.titles += 1; news(f, `BEAST BOWL CHAMPIONS! ${f.club} win the ${tierById(f.tier).name} title.`, 'win'); }
   else if (champion) news(f, `${champion} win the Beast Bowl.`, 'info');
   const place = st.overall.indexOf(f.club) + 1;
   f.bottomFourStreak = place > 12 ? f.bottomFourStreak + 1 : 0;
@@ -629,6 +663,9 @@ function endSeason(f) {
   }
   s.awards = seasonAwards(f);
   f.history[f.history.length - 1].awards = s.awards;
+  // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
+  f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
+  f.campaign.awards += Object.values(s.awards.league || {}).filter((w) => w && w.team === f.club).length;
   s.finished = true;
 }
 export const TIERS_ENABLED = false;

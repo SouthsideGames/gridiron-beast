@@ -279,11 +279,12 @@ Eight of the sixteen clubs are **gym clubs**: a permanent home element, a named 
 | Eastport Phantoms | Dark | Nyxshade | Silas Mourne | Man Coverage | mid |
 | Frostpeak Howlers | Ice | Glacivern | Sigrid Hale | Zone Control | mid |
 | Ironpeak Rams | Metal | Aegistron | Brock Ferris | Ground / Blitz | late |
-| Sundown Drakes | Dragon | Aurodrax | Marcus Vane | Balanced / Man | late |
+| Palmetto Vipers | Dragon | Aurodrax | Marcus Vane | Balanced / Man | late |
 
 Fire (Pyroclast), Nature (Elderoot), Wind (Tempestra) and Psychic (Astralux) are not held by any club: they are the four legendaries the player hunts first through Legend Tracks. Gym legendaries can be tracked too once the player holds that gym's badge.
 
-* **Schedule guarantee:** every gym club appears on the player's regular-season schedule at least once a season, ordered by tier so the early gyms come first. Division opponents may appear twice as today.
+* **Schedule guarantee (implemented):** the old rotation gave each club only six distinct opponents a season, which cannot cover eight gyms, so the campaign schedule replaces it. The sixteen clubs form two groups of eight (gym / ordinary, two of each per division). Rounds 1–8 are the bipartite round robin, so every ordinary club meets every gym club once a season and vice versa; round 9 is the division game against the same-group division mate, so all three division mates are still played once. Nine games and one bye in ten weeks, as before; the conference round is gone. The round order rotates by season; in a first season the four starter clubs meet the early gyms in the first half and the late gyms in the second. Standings, divisions, conferences, the rival and the playoff format are unchanged.
+* **Gym assignment (implemented, two per division):** North: Frostpeak Howlers (Ice), Ironpeak Rams (Metal). West: Thunder Mesa (Electric), Canyon Crushers (Earth). East: Harbor Sentinels (Water), Eastport Phantoms (Dark). South: Sunfire Lions (Light), Palmetto Vipers (Dragon). Sundown Drakes is ordinary. Starter clubs: Ember City Beasts, Stonehaven Titans, Glacier Guardians, Stormport Bolts.
 * **Strength:** gym clubs have a quality offset by tier (early 0, mid +2, late +4 on top of the difficulty offset) that rises +1.5 per season, plus +1 the first time the player beats them ("they studied tape"). Ordinary clubs rise +0.5 per season. Their legendary levels with the calendar and (once evolution is in) their signature monster evolves around season 3. On any difficulty the first two gym games are winnable with the starting roster; the last two are "come back next year" games for most first-season teams.
 * **No replays.** A loss stands, the season moves on, the standings matter. Nothing in the campaign offers a rematch outside the schedule and the bracket.
 
