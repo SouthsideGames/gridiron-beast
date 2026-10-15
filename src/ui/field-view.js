@@ -88,7 +88,7 @@ export function fieldSvg(o) {
     if (!m) return simpleMarker(slot, x, y, team, engaged, holder);
     const cx = X(ballLat + y), cy = Y(ballOn + x);
     const base = team === 'off' ? colors.off : colors.def;
-    const art = monsterSprite(m, 8, { eyes: true }).replace(/<svg class="sprite" width="8" height="8"/, `<svg x="${(cx - 1.55).toFixed(2)}" y="${(cy - 2.15).toFixed(2)}" width="3.1" height="3.1"`);
+    const art = monsterSprite(m, 16, { flip: team === 'def' }).replace(/<svg class="sprite" width="16" height="16"/, `<svg x="${(cx - 1.7).toFixed(2)}" y="${(cy - 2.5).toFixed(2)}" width="3.4" height="3.4"`);
     return `<ellipse cx="${cx.toFixed(2)}" cy="${(cy + 0.75).toFixed(2)}" rx="1.55" ry="0.7" fill="${base}" stroke="${holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17'}" stroke-width="${holder ? 0.4 : 0.2}"/>${art}`;
   };
 

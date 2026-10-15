@@ -264,3 +264,18 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 
 .sub.mine, .sub.mine .dim { font-weight: 800; color: var(--ink, #eef5f0); }
 .sub.mine .mono { font-weight: 800; }
+
+/* Beast Dex */
+.dex-el { margin: 0 0 var(--s3); }
+.dex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-top: var(--s2); }
+.dex-cell { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: 8px 4px 6px; color: inherit; font: inherit; cursor: pointer; min-width: 0; }
+.dex-cell.unknown { opacity: .75; }
+.dex-cell.signed { border-color: var(--accent); }
+.dex-cell .sprite { width: 40px; height: 40px; }
+.dex-name { font-weight: 800; font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dex-r { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); min-height: 12px; }
+.dex-r.r-uncommon { color: #5aa7e6; } .dex-r.r-rare { color: #b67ae8; } .dex-r.r-legendary { color: var(--accent); }
+.dex-tick { position: absolute; top: 4px; right: 6px; color: var(--accent); font-weight: 900; font-size: 12px; }
+.dex-bar { height: 6px; background: var(--panel-2); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+.dex-bar i { display: block; height: 100%; background: var(--accent); }
+@media (min-width: 520px) { .dex-grid { grid-template-columns: repeat(6, 1fr); } }

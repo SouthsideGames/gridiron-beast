@@ -90,7 +90,7 @@ textarea { min-height: 64px; resize: vertical }
 
 <header class="top"><div class="wrap">
   <h1>Gridiron Beast Dex</h1>
-  <div class="sub">72 species for review: 6 per element (2 common, 2 uncommon, 1 rare, 1 legendary) plus 30 evolved forms. Tap a monster to edit it, approve it, or leave a note.</div>
+  <div class="sub">Round 2. Your renames and edits from round 1 are now the baseline (and live in the game). Five monsters are back for another look: Flarynx, Craggo and Tsunarok were redesigned; Statyx and Shardok were renamed. Tap a monster to edit it, approve it, or leave a note.</div>
   <div class="tally" id="tally"></div>
 </div></header>
 <div class="rail"><div class="wrap">
@@ -110,11 +110,12 @@ const DEX = /*__DEX__*/;
 const META = /*__META__*/;
 const POSITIONS = ['QB','RB','WR','TE','OL','DL','LB','CB','S','K'];
 const BODIES = ['biped','quadruped','serpent','avian','blob','insectoid','shelled'];
-const FEATURES = ['ears','horns','horn','mane','spikes','fins','tail','flametail','wings','claws','crest','antennae','plates','glow','halo','crown','tusks','shell','beak'];
+const FEATURES = ['ears','horns','horn','mane','spikes','fins','tail','flametail','wings','claws','crest','antennae','plates','glow','halo','crown','tusks','shell','beak','fangs','whiskers','ridge','collar','bulb'];
+const PATTERNS = ['none','stripes','spots','mask','band','backstripe'];
 const LOOKS = ['cute','cool','fierce'];
 const SIZES = ['small','medium','large'];
 const STATUS_LABEL = { pending: 'Not reviewed', approved: 'Approved', changes: 'Needs changes', cut: 'Cut' };
-const EDIT_KEYS = ['name','position','secondary','rarity','body','size','look','features','colors','abilityName','abilityText','personality','evolution'];
+const EDIT_KEYS = ['name','position','secondary','rarity','body','size','look','features','pattern','colors','abilityName','abilityText','personality','evolution'];
 
 let reviews = {}; // id -> {status, note, edits}
 let general = '';
@@ -124,7 +125,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 
 function effective(s) {
   const e = reviews[s.id]?.edits || {};
-  const out = { ...s, ...e };
+  const out = { ...s, ...e }; if (e.pattern === null) delete out.pattern;
   out.ability = s.ability ? { name: e.abilityName ?? s.ability.name, text: e.abilityText ?? s.ability.text } : null;
   if (e.evolution !== undefined) out.evolution = e.evolution;
   return out;
@@ -133,7 +134,7 @@ function evoSpec(s, stage) { // evolved forms grow, look fiercer, and add a feat
   const extra = stage === 1 ? ['claws'] : ['claws', 'spikes'];
   return { ...s, id: s.id + '_e' + stage, size: stage === 1 ? (s.size === 'small' ? 'medium' : 'large') : 'large', look: stage === 1 ? (s.look === 'cute' ? 'cool' : 'fierce') : 'fierce', features: [...new Set([...s.features, ...extra])] };
 }
-const art = (s, px) => sprite16({ ...s, id: s.id + '|' + JSON.stringify([s.body, s.size, s.look, s.features, s.colors]) }, px, { cls: 'sp' });
+const art = (s, px) => sprite16(s, px, { cls: 'sp' });
 
 function render() {
   const q = $('#q').value.trim().toLowerCase(), fe = $('#fEl').value, fr = $('#fRar').value, fp = $('#fPos').value, fs = $('#fSt').value;
@@ -215,6 +216,7 @@ function drawEditor() {
       <label>Body<select id="e-body">${opt(BODIES, d.body)}</select></label>
       <label>Size<select id="e-size">${opt(SIZES, d.size)}</select></label>
       <label>Look<select id="e-look">${opt(LOOKS, d.look)}</select></label>
+      <label>Pattern<select id="e-pattern">${opt(PATTERNS, d.pattern || 'none')}</select></label>
       <label>Colours<span style="display:flex;gap:6px"><input type="color" id="e-c0" value="${d.colors[0]}" aria-label="Main colour"><input type="color" id="e-c1" value="${d.colors[1]}" aria-label="Accent colour"></span></label>
       <div class="full"><label>Features</label><div class="chips">${FEATURES.map((f) => `<label><input type="checkbox" data-feat="${f}" ${d.features.includes(f) ? 'checked' : ''}>${f}</label>`).join('')}</div></div>
       ${d.ability ? `<label class="full">Ability name<input type="text" id="e-abilityName" value="${esc(d.ability.name)}"></label><label class="full">Ability effect<textarea id="e-abilityText">${esc(d.ability.text)}</textarea></label>` : `<div class="full meta">Trait: ${esc(META.traits[d.trait]?.name)}: ${esc(META.traits[d.trait]?.text)}</div>`}
@@ -236,7 +238,7 @@ function drawEditor() {
 function readDraft() {
   const d = editing.draft; const v = (id) => document.getElementById(id)?.value;
   d.name = v('e-name') || d.name; d.rarity = v('e-rarity'); d.position = v('e-position'); d.secondary = v('e-secondary') || null;
-  d.body = v('e-body'); d.size = v('e-size'); d.look = v('e-look'); d.colors = [v('e-c0'), v('e-c1')];
+  d.body = v('e-body'); d.size = v('e-size'); d.look = v('e-look'); d.pattern = v('e-pattern') === 'none' ? undefined : v('e-pattern'); d.colors = [v('e-c0'), v('e-c1')];
   d.features = [...document.querySelectorAll('[data-feat]:checked')].map((x) => x.dataset.feat);
   if (d.ability) { d.ability = { name: v('e-abilityName'), text: v('e-abilityText') }; }
   d.personality = v('e-personality');
@@ -249,9 +251,10 @@ function preview() {
 }
 function diffEdits(base, d) {
   const b = effectiveBase(base), e = {};
-  const flat = (s) => ({ name: s.name, position: s.position, secondary: s.secondary ?? null, rarity: s.rarity, body: s.body, size: s.size, look: s.look, features: s.features, colors: s.colors, abilityName: s.ability?.name, abilityText: s.ability?.text, personality: s.personality, evolution: s.evolution });
+  const flat = (s) => ({ name: s.name, position: s.position, secondary: s.secondary ?? null, rarity: s.rarity, body: s.body, size: s.size, look: s.look, features: s.features, pattern: s.pattern ?? null, colors: s.colors, abilityName: s.ability?.name, abilityText: s.ability?.text, personality: s.personality, evolution: s.evolution });
   const fb = flat(b), fd = flat(d);
-  for (const k of EDIT_KEYS) if (JSON.stringify(fb[k]) !== JSON.stringify(fd[k])) e[k] = fd[k];
+  const norm = (k, v) => (k === 'features' && Array.isArray(v) ? [...v].sort() : v);
+  for (const k of EDIT_KEYS) if (JSON.stringify(norm(k, fb[k])) !== JSON.stringify(norm(k, fd[k]))) e[k] = fd[k];
   return e;
 }
 const effectiveBase = (s) => ({ ...s });

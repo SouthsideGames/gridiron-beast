@@ -49,3 +49,36 @@ test('sprite16: every species draws a distinct, outlined 16×16 sprite', () => {
     assert.match(sprite16(s, 32), /^<svg/);
   }
 });
+
+test('recruiting follows the dex: region elements only, rares in their home region from week 4, never legendaries', async () => {
+  const F = await import('../src/franchise/franchise.js');
+  const { REGIONS } = await import('../src/data/staff.js');
+  const { SPECIES_BY_ID } = await import('../src/data/monsters.js');
+  const seen = { Fire: new Set(), rarities: new Set() };
+  for (let seed = 1; seed <= 40; seed++) {
+    const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed });
+    f.staff.head_scout = 'sc_ash';
+    const r = F.scoutRegion(f, 'Volcanic Fields'); assert.ok(r.ok);
+    for (const p of r.prospects) {
+      const sp = SPECIES_BY_ID[p.monster.species]; assert.ok(sp, 'prospect has a dex species');
+      assert.ok(REGIONS['Volcanic Fields'].types.includes(sp.element));
+      assert.equal(p.monster.type, sp.element, 'type is fixed by species');
+      assert.ok([sp.position, sp.secondary].includes(p.monster.position));
+      assert.notEqual(sp.rarity, 'rare', 'no rares in week 1');
+      assert.notEqual(sp.rarity, 'legendary');
+      assert.equal(F.dexStatus(f, sp.id) === 'unknown', false, 'scouted prospects enter the dex');
+      seen.rarities.add(sp.rarity);
+    }
+  }
+  assert.ok(seen.rarities.has('common') && seen.rarities.has('uncommon'));
+});
+
+test('old saves migrate: previous species names map onto the dex and keep their numerals', async () => {
+  const { migrateSpecies } = await import('../src/franchise/save.js');
+  const f = { roster: [{ id: 'a', name: 'Emberfox', species: 'Emberfox', type: 'Water', position: 'RB' }, { id: 'b', name: 'Flarehorn II', species: 'Flarehorn', type: 'Fire', position: 'OL' }, { id: 'c', name: 'Firestorm', species: 'Firestorm', type: 'Fire', position: 'QB', cornerstone: true }], week: { prospects: [] }, season: { year: 2, week: 3 } };
+  migrateSpecies(f);
+  assert.deepEqual(f.roster.map((m) => [m.name, m.species, m.type]), [['Flaroo', 'emberfox', 'Fire'], ['Spriglet II', 'thornkit', 'Nature'], ['Pyronix', 'firestorm', 'Fire']]);
+  assert.equal(Object.keys(f.dex.signed).length, 3);
+  migrateSpecies(f); // idempotent
+  assert.equal(f.roster[0].name, 'Flaroo');
+});

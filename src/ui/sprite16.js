@@ -1,6 +1,7 @@
 // 16×16 pixel monsters built from a design spec (see src/data/species.js):
 // a BODY TEMPLATE (biped, quadruped, serpent, avian, blob, insectoid, shelled),
-// a SIZE, FEATURE overlays and two colours. The builder paints shapes on a
+// a SIZE, a LOOK (cute / cool / fierce changes the silhouette), FEATURE
+// overlays, an optional PATTERN (stripes, spots, mask, band, backstripe) and two colours. The builder paints shapes on a
 // grid, then shades (light from above) and outlines automatically, so a new
 // species only needs a spec line, not hand-drawn art.
 //
@@ -70,12 +71,14 @@ function makeCanvas(scale) {
 // ---------------------------------------------------------------- body templates
 // Each returns anchors used by features and eyes. Authored at large size.
 const TEMPLATES = {
-  biped(c, big = 1) {
+  biped(c, big = 1, look = 'cool') {
+    const fierce = look === 'fierce';
     c.rect(5, 13, 6, 15, 'M'); c.rect(9, 13, 10, 15, 'M');
-    c.ellipse(8, 10.5, 3.8, 3.2, 'M'); c.ellipse(8, 11, 2.2, 2.2, 'B');
-    c.ellipse(3.6, 10.2, 1.2, 1.8, 'M'); c.ellipse(12.4, 10.2, 1.2, 1.8, 'M');
+    if (fierce) { c.ellipse(8, 10.2, 4.6, 3.4, 'M'); c.ellipse(8, 8.6, 5.2, 1.4, 'M'); } else c.ellipse(8, 10.5, look === 'cute' ? 4.2 : 3.8, look === 'cute' ? 3.6 : 3.2, 'M');
+    c.ellipse(8, 11, 2.2, 2.2, 'B');
+    c.ellipse(fierce ? 2.8 : 3.6, 10.2, fierce ? 1.5 : 1.2, fierce ? 2.4 : 1.8, 'M'); c.ellipse(fierce ? 13.2 : 12.4, 10.2, fierce ? 1.5 : 1.2, fierce ? 2.4 : 1.8, 'M');
     c.ellipse(8, 5.6, 3.6 * big, 3.1 * big, 'M');
-    return { head: [8, 5.6, 3.6 * big, 3.1 * big], eyeY: 5.4, eyeDx: 1.6, mouth: [8, 7.2], hands: [[3.4, 11.6], [12.4, 11.6]], feet: [[5, 15], [10, 15]], back: [8, 8], tail: [12.5, 13], belly: [8, 11] };
+    return { head: [8, 5.6, 3.6 * big, 3.1 * big], eyeY: 5.4, eyeDx: 1.6, mouth: [8, 7.2], hands: fierce ? [[2.6, 12.4], [13.4, 12.4]] : [[3.4, 11.6], [12.4, 11.6]], feet: [[5, 15], [10, 15]], back: [8, 8], tail: [12.5, 13], belly: [8, 11] };
   },
   blob(c) {
     c.ellipse(8, 10.4, 5.6, 4.8, 'M'); c.ellipse(8, 12, 3, 2.4, 'B');
@@ -94,12 +97,15 @@ const TEMPLATES = {
     c.ellipse(8, 6.4, 3.2, 2.7, 'M');
     return { head: [8, 6.4, 3.2, 2.7], eyeY: 6.2, eyeDx: 1.5, mouth: [8, 8], hands: [[5, 11], [11, 11]], feet: [[5, 15], [10, 15]], back: [8, 10], tail: [8, 15], belly: [8, 12] };
   },
-  quadruped(c, big = 1) { // side view facing left
+  quadruped(c, big = 1, look = 'cool') { // side view facing left
+    const fierce = look === 'fierce', cute = look === 'cute';
     c.rect(5, 12, 6, 15, 'Md'); c.rect(11, 12, 12, 15, 'Md');
-    c.ellipse(9.2, 10.4, 4.6, 2.9, 'M'); c.ellipse(9, 11.8, 3, 1.3, 'B');
+    if (fierce) { c.ellipse(9.4, 10.2, 4.8, 3.1, 'M'); c.ellipse(10.6, 8.4, 2.6, 1.6, 'M'); } else c.ellipse(9.2, 10.4, 4.6, 2.9, 'M');
+    c.ellipse(9, 11.8, 3, 1.3, 'B');
     c.rect(4, 12, 5, 15, 'M'); c.rect(10, 12, 11, 15, 'M');
-    c.ellipse(4.6, 7.2, 3.2 * big, 2.8 * big, 'M'); c.ellipse(4.6 - 2.2 * big, 8.4, 1.5, 1.2, 'B');
-    return { head: [4.6, 7.2, 3.2 * big, 2.8 * big], side: true, eyeX: 3.6, eyeY: 6.8, mouth: [2, 8.6], hands: [[4, 15], [10, 15]], feet: [[4, 15], [10, 15]], back: [10, 7.6], tail: [13.6, 9.4], belly: [9, 11.8] };
+    const hx = fierce ? 4.2 : 4.6, hy = fierce ? 8 : cute ? 6.8 : 7.2, hrx = (fierce ? 3.6 : cute ? 3 : 3.2) * big, hry = (fierce ? 2.3 : cute ? 3 : 2.8) * big;
+    c.ellipse(hx, hy, hrx, hry, 'M'); c.ellipse(hx - hrx * 0.7, hy + 1.2, 1.5, 1.1, 'B');
+    return { head: [hx, hy, hrx, hry], side: true, eyeX: hx - 1, eyeY: hy - 0.4, mouth: [hx - hrx + 0.6, hy + 1.4], hands: [[4, 15], [10, 15]], feet: [[4, 15], [10, 15]], back: [10, fierce ? 7 : 7.6], tail: [13.6, 9.4], belly: [9, 11.8] };
   },
   serpent(c) { // coiled, head raised, facing left
     c.ellipse(9, 12.6, 5.6, 2.6, 'M'); c.ellipse(9, 13.4, 3.6, 1.3, 'B');
@@ -195,11 +201,50 @@ function featureFront(c, f, a, body) {
       if (a.side) c.tri(hx - hrx + 0.6, hy - 0.2, hx - hrx - 1.8, hy + 0.6, hx - hrx + 0.6, hy + 1.4, 'A');
       else c.tri(hx - 1, hy + 0.6, hx, hy + 2.2, hx + 1, hy + 0.6, 'A');
       break;
+    case 'fangs':
+      if (a.side) { c.px(a.mouth[0] + 0.4, a.mouth[1] + 0.4, 'W'); c.px(a.mouth[0] + 1.6, a.mouth[1] + 0.4, 'W'); }
+      else { c.px(hx - 1.2, hy + hry - 0.6, 'W'); c.px(hx + 0.6, hy + hry - 0.6, 'W'); }
+      break;
+    case 'whiskers':
+      if (a.side) { c.rect(hx - hrx - 2, hy + 0.4, hx - hrx, hy + 0.4, 'W'); c.rect(hx - hrx - 1.6, hy + 1.4, hx - hrx, hy + 1.4, 'W'); }
+      else for (const s of sides) { c.rect(hx + s * (hrx + 0.4), hy + 0.6, hx + s * (hrx + 2), hy + 0.6, 'W'); c.rect(hx + s * (hrx + 0.4), hy + 1.6, hx + s * (hrx + 1.6), hy + 1.6, 'W'); }
+      break;
+    case 'ridge': // a row of accent bumps down the spine
+      if (a.side) for (let i = 0; i < 4; i++) c.px(a.back[0] - 2.5 + i * 1.6, a.back[1] - 0.6 - (i === 1 || i === 2 ? 0.6 : 0), 'A');
+      else for (let i = 0; i < 3; i++) c.px(hx - 0.5, top - 0.4 - i * 0.9 + 0.9, 'A');
+      break;
+    case 'collar': // fur or scale ruff at the neck
+      if (a.side) c.ellipse(hx + hrx - 0.4, hy + hry - 0.4, 1.6, 2.2, 'B');
+      else c.ellipse(hx, hy + hry + 0.4, hrx + 0.6, 1.3, 'B');
+      break;
+    case 'bulb': // glowing lure or bulb above the head
+      c.rect(hx - 0.5 + (a.side ? -0.8 : 0), top - 2.2, hx - 0.5 + (a.side ? -0.8 : 0), top, 'K'); c.ellipse(hx + (a.side ? -0.8 : 0), top - 2.8, 1.1, 1.1, 'G');
+      break;
     case 'shell':
       if (a.shell) break;
       c.ellipse(a.back[0] + (a.side ? 0 : 0), a.back[1] + 1.8, 3.4, 2.2, 'A');
       break;
     default: break;
+  }
+}
+
+// ---------------------------------------------------------------- patterns
+// Painted over the body's main-colour cells only, so overlays stay clean.
+function pattern(c, kind, a) {
+  const g = c.g; const onBody = (x, y) => g[y]?.[x] === 'M';
+  const [hx, hy, hrx, hry] = a.head;
+  if (kind === 'stripes') {
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (onBody(x, y) && ((a.side ? x : y) + (a.side ? 0 : x > 7 ? 1 : 0)) % 3 === 0 && y > Math.round(c.ty(hy + hry) - 1)) g[y][x] = 'Ad';
+  } else if (kind === 'spots') {
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (onBody(x, y) && (x * 7 + y * 5) % 11 === 0) g[y][x] = 'Ad';
+  } else if (kind === 'mask') {
+    const X = c.tx(hx), Y = c.ty(a.eyeY ?? hy), RX = Math.max(1, hrx * c.scale * 0.9), RY = Math.max(1, hry * c.scale * 0.45);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const dx = (x + 0.5 - X) / RX, dy = (y + 0.5 - Y) / RY; if (dx * dx + dy * dy <= 1 && (g[y][x] === 'M' || g[y][x] === 'B')) g[y][x] = 'K'; }
+  } else if (kind === 'band') { // accent band across the middle of the body
+    const Y = Math.round(c.ty(a.belly[1] - 1.2));
+    for (let x = 0; x < W; x++) for (const y of [Y, Y + 1]) if (g[y]?.[x] === 'M' || g[y]?.[x] === 'B') g[y][x] = 'A';
+  } else if (kind === 'backstripe') { // dark stripe along the spine (front: down the centre)
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (onBody(x, y) && (a.side ? y === Math.round(c.ty(a.back[1]) + 1) : (x === 7 || x === 8))) g[y][x] = 'Md';
   }
 }
 
@@ -242,11 +287,13 @@ export function spriteGrid(spec) {
   const feats = spec.features || [];
   // Dry run to get anchors (template is deterministic), then paint in layers.
   const big = spec.size === 'small' ? 1.15 : 1; // chibi heads on small monsters
-  const probe = makeCanvas(c.scale); const a = TEMPLATES[body](probe, big);
+  const look = spec.look || 'cool';
+  const probe = makeCanvas(c.scale); const a = TEMPLATES[body](probe, big, look);
   const front = FRONT.has(body);
   const isTail = (f) => f === 'tail' || f === 'flametail';
   for (const f of feats) if (BEHIND.has(f) && !(front && isTail(f))) featureBehind(c, f, a, body);
-  TEMPLATES[body](c, big);
+  TEMPLATES[body](c, big, look);
+  if (spec.pattern && spec.pattern !== 'none') pattern(c, spec.pattern, a);
   for (const f of feats) if (!BEHIND.has(f)) featureFront(c, f, a, body);
   eyes(c, a, spec.look || 'cool');
   if (front) {
@@ -263,7 +310,7 @@ const cache = new Map();
 
 /** Inline SVG for a species spec. `tint` (−6..6) nudges lightness per individual. */
 export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprite' } = {}) {
-  const key = `${spec.id || spec.name}|${size}|${tint}|${flip}`;
+  const key = JSON.stringify([spec.id || spec.name, size, tint, flip, spec.body, spec.size, spec.look, spec.features, spec.colors, spec.pattern || '']);
   if (cache.has(key)) return cache.get(key);
   const pal = palette(spec.colors || ['#888888', '#cccccc'], tint);
   const grid = spriteGrid(spec);
@@ -276,7 +323,8 @@ export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprit
       rects += `<rect x="${x}" y="${y}" width="${n}" height="1" fill="${pal[v] || pal.M}"/>`; x += n;
     }
   }
-  const svg = `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"${flip ? ' style="transform:scaleX(-1)"' : ''}>${rects}</svg>`;
+  const body = flip ? `<g transform="translate(16 0) scale(-1 1)">${rects}</g>` : rects;
+  const svg = `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${body}</svg>`;
   cache.set(key, svg);
   return svg;
 }

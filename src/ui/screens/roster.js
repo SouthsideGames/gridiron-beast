@@ -4,7 +4,9 @@
 import { esc, delegate, toast, sheet, confirmSheet, fmtMoney } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS, PACKAGE_SLOT_USE, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
-import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes } from '../../data/monsters.js';
+import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies } from '../../data/monsters.js';
+import { TRAITS } from '../../data/species.js';
+import { speciesSheet } from './dex.js';
 import { buildDepthChart, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS } from '../../franchise/roster.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
 import { ROLE_LABEL, STAFF_ROLES, PLAYBOOKS, TRAINING_FOCI, STAFF, staffById } from '../../data/staff.js';
@@ -90,11 +92,15 @@ export function registerRosterScreens(Router, app) {
         <div class="row between muted"><span>Fatigue ${m.fatigue}%</span><span>${m.injury ? `<b style="color:var(--bad)">${esc(m.injury.severity)} ${esc(m.injury.type)} — ${m.injury.weeks} wk</b>` : 'Healthy'}</span><span>${fmtMoney(m.salary)}/yr</span></div></div>
         <div class="panel"><b>Nature: ${esc(nature.name)}</b><p class="muted" style="margin:2px 0">${esc(nature.behavior)}${nature.up ? ` <span class="chip good">+10% ${ATTR_LABEL[nature.up]}</span> <span class="chip bad">−10% ${ATTR_LABEL[nature.down]}</span>` : ''}</p>
           <b>Type: ${esc(m.type)}</b><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}.</p>
-          ${ab ? `<b>Signature ability: ${esc(ab.name)}</b><p class="muted" style="margin:2px 0">${esc(ab.text)}</p>` : '<p class="dim">No signature ability.</p>'}</div>
+          ${ab ? `<b>Signature ability: ${esc(ab.name)}</b><p class="muted" style="margin:2px 0">${esc(ab.text)}</p>` : (() => { const sp = resolveSpecies(m); return sp.ability ? `<b>Species ability: ${esc(sp.ability.name)}</b><p class="muted" style="margin:2px 0">${esc(sp.ability.text)} <span class="dim">(active in Prototype 2)</span></p>` : `<b>Species trait: ${esc(TRAITS[sp.trait]?.name)}</b><p class="muted" style="margin:2px 0">${esc(TRAITS[sp.trait]?.text)} <span class="dim">(active in Prototype 2)</span></p>`; })()}
+          <button class="btn small" data-action="species" style="margin-top:6px">📖 ${esc(resolveSpecies(m).name)} in the Beast Dex</button></div>
         <h3>Ratings</h3>${headlineHtml(m)}${(() => { const fit = F.fitFor(f, m); return fit ? `<p class="${fit.fits ? 'fit-key' : 'dim'}" style="margin:6px 0 0">${fit.fits ? '✦ Fits your scheme' : 'Not a scheme fit'} · ${esc(fit.why)}</p>` : ''; })()}
         <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">All twelve attributes</summary><div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => `<div class="attr" title="${esc(ATTR_HELP[k])}"><span>${ATTR_LABEL[k]}</span><div class="bar ${eff[k] < 45 ? 'bad' : eff[k] < 60 ? 'warn' : ''}"><i style="width:${eff[k]}%"></i></div><span class="v" style="color:${eff[k] > base[k] ? 'var(--good)' : eff[k] < base[k] ? 'var(--bad)' : 'inherit'}">${eff[k]}</span></div>`).join('')}</div>
         <p class="dim" style="margin-top:8px">Green/red values include nature, fatigue and position penalties. Every attribute affects the simulation.</p></details>
         <h3>Career</h3><div class="kv"><b>Games</b><span>${m.stats.games}</span><b>Yards</b><span>${m.stats.yards}</span><b>TD</b><span>${m.stats.td}</span><b>Catches</b><span>${m.stats.catches}</span><b>Tackles</b><span>${m.stats.tackles}</span><b>Sacks</b><span>${m.stats.sacks}</span><b>INT</b><span>${m.stats.int}</span></div>`;
+    },
+    mount(root, ctx) {
+      delegate(root, { species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); } });
     },
   });
 

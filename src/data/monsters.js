@@ -3,6 +3,7 @@
 
 import { ATTRIBUTES, POSITION_WEIGHTS } from './personnel.js';
 import { createRng, hashString } from '../core/rng.js';
+import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS } from './species.js';
 
 export const TYPES = Object.freeze({
   Fire: { icon: 'flame', bias: { strength: 4, agility: 2 }, hue: 14, blurb: 'Explosive power' },
@@ -75,9 +76,42 @@ const BASE = {
   K: { speed: 45, agility: 45, strength: 45, awareness: 50, catching: 30, arm: 30, accuracy: 40, blocking: 20, tackling: 25, coverage: 20, durability: 60, kicking: 72 },
 };
 
-const SPECIES = ['Emberfox', 'Voltfang', 'Windlynx', 'Flarehorn', 'Boulderox', 'Ironcub', 'Rootram', 'Stoneguard', 'Magmaw', 'Frostclaw', 'Thornback', 'Skywarden', 'Shadowkit', 'Glaciron', 'Firestorm', 'Metalhorn', 'Rockram', 'Steelpaw', 'Mosswing', 'Ashwing', 'Thornkit', 'Ironjaw', 'Graniteox', 'Cinderclaw', 'Icehorn', 'Duskrunner', 'Stormlynx', 'Nightowl', 'Flicker', 'Mudcub', 'Tidepaw', 'Zephyr', 'Leafhorn', 'Gearwing', 'Ironfin', 'Pebble', 'Ashkit', 'Mossclaw', 'Snowmoth', 'Voltfin', 'Shadewisp', 'Cloudram', 'Duskbeak', 'Glimmer', 'Breezefang', 'Sunwhistle', 'Wavewhistle', 'Reefclaw', 'Tidefin', 'Wavehorn', 'Ashcub', 'Magmabeak', 'Wildcub', 'Stormwing', 'Stonehorn', 'Lumen', 'Prism', 'Nocturne', 'Sablewing', 'Coalpaw', 'Brasshorn', 'Quillback', 'Mireclaw', 'Gustling', 'Pyrelynx', 'Hailfang', 'Terrabull', 'Mindwing', 'Drakeling', 'Wyrmkit'];
-
-const SPECIES_TYPE = (name) => TYPE_NAMES[hashString(name) % TYPE_NAMES.length];
+// ---------------------------------------------------------------- species
+// The dex (src/data/species.js) is the source of truth: every species has a
+// fixed element, a natural and secondary position and a rarity. `m.species`
+// stores the species id. Older saves stored the display name of a previous
+// species list; `resolveSpecies` maps those onto the dex so old rosters keep
+// working (LEGACY_SPECIES_ALIASES below).
+export const SPECIES_BY_ID = Object.freeze(Object.fromEntries(SPECIES_DEX.map((s) => [s.id, s])));
+const BY_NAME = Object.fromEntries(SPECIES_DEX.map((s) => [s.name.toLowerCase(), s]));
+const OLD_SPECIES = ['Emberfox', 'Voltfang', 'Windlynx', 'Flarehorn', 'Boulderox', 'Ironcub', 'Rootram', 'Stoneguard', 'Magmaw', 'Frostclaw', 'Thornback', 'Skywarden', 'Shadowkit', 'Glaciron', 'Firestorm', 'Metalhorn', 'Rockram', 'Steelpaw', 'Mosswing', 'Ashwing', 'Thornkit', 'Ironjaw', 'Graniteox', 'Cinderclaw', 'Icehorn', 'Duskrunner', 'Stormlynx', 'Nightowl', 'Flicker', 'Mudcub', 'Tidepaw', 'Zephyr', 'Leafhorn', 'Gearwing', 'Ironfin', 'Pebble', 'Ashkit', 'Mossclaw', 'Snowmoth', 'Voltfin', 'Shadewisp', 'Cloudram', 'Duskbeak', 'Glimmer', 'Breezefang', 'Sunwhistle', 'Wavewhistle', 'Reefclaw', 'Tidefin', 'Wavehorn', 'Ashcub', 'Magmabeak', 'Wildcub', 'Stormwing', 'Stonehorn', 'Lumen', 'Prism', 'Nocturne', 'Sablewing', 'Coalpaw', 'Brasshorn', 'Quillback', 'Mireclaw', 'Gustling', 'Pyrelynx', 'Hailfang', 'Terrabull', 'Mindwing', 'Drakeling', 'Wyrmkit'];
+const OLD_TYPE = (name) => TYPE_NAMES[hashString(name) % TYPE_NAMES.length];
+/** Old display name → dex id. Names that survived keep their id; the rest map to a common of the type they used to roll as. */
+export const LEGACY_SPECIES_ALIASES = Object.freeze(Object.fromEntries(OLD_SPECIES.map((n) => {
+  const same = SPECIES_DEX.find((s) => s.id === n.toLowerCase());
+  if (same) return [n, same.id];
+  const commons = SPECIES_DEX.filter((s) => s.element === OLD_TYPE(n) && s.rarity === 'common');
+  return [n, commons[hashString(n) % commons.length].id];
+})));
+/** The dex entry for a monster (or a species id / name). Never null: unknown values fall back by hash. */
+export function resolveSpecies(m) {
+  const key = typeof m === 'string' ? m : (m?.species || m?.name || '');
+  const base = String(key).replace(/ (II|III|IV|V|VI|\d+)$/, '');
+  return SPECIES_BY_ID[base] || BY_NAME[base.toLowerCase()] || SPECIES_BY_ID[LEGACY_SPECIES_ALIASES[base]] || SPECIES_DEX[hashString(base) % SPECIES_DEX.length];
+}
+export const speciesName = (m) => resolveSpecies(m).name;
+const RARITY_WEIGHT = (s) => RARITIES[s.rarity]?.weight ?? 0;
+/** Pick a species that plays `position` (natural, or secondary at a quarter of the weight), by rarity weight. */
+export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set() } = {}) {
+  const cands = pool.filter((s) => !exclude.has(s.id) && (s.position === position || s.secondary === position) && RARITY_WEIGHT(s) > 0);
+  const list = cands.length ? cands : pool.filter((s) => s.position === position || s.secondary === position);
+  const w = list.map((s) => [s.id, Math.max(0.01, RARITY_WEIGHT(s)) * (s.position === position ? 1 : 0.25)]);
+  return SPECIES_BY_ID[rng.weighted(w)];
+}
+/** Species scoutable in a region this week: the region's elements, rares only in their home region from their week, never legendaries. */
+export function regionSpecies(regionName, regionTypes, week = 1) {
+  return SPECIES_DEX.filter((s) => regionTypes.includes(s.element) && s.rarity !== 'legendary' && (s.rarity !== 'rare' || ((s.regions || ELEMENT_REGIONS[s.element]).includes(regionName) && week >= (s.fromWeek || 1))));
+}
 
 export function clampAttr(v) { return Math.max(1, Math.min(99, Math.round(v))); }
 
@@ -112,10 +146,13 @@ export function monsterOverall(m, opts) { return overall(effectiveAttributes(m, 
  * Generate a monster. `quality` ≈ target OVR; the generator produces a
  * positional profile around it with type bias and random variance.
  */
-export function generateMonster(rng, { position, quality = 58, type = null, nature = null, name = null, id = null, species = null, age = null }) {
+export function generateMonster(rng, { position = null, quality = 58, type = null, nature = null, name = null, id = null, species = null, age = null }) {
+  // `species` may be a dex id, a species name or an old name; the dex fixes the element.
+  const sp = species || name ? resolveSpecies(species || name) : (position ? pickSpeciesForPosition(rng, position) : rng.pick(SPECIES_DEX));
+  species = sp.id;
+  position = position || sp.position;
+  type = sp.element;
   const base = BASE[position] || BASE.WR;
-  species = species || name || rng.pick(SPECIES);
-  type = type || SPECIES_TYPE(species);
   const bias = TYPES[type].bias;
   const attributes = {};
   // Scale the profile toward the requested quality.
@@ -127,7 +164,7 @@ export function generateMonster(rng, { position, quality = 58, type = null, natu
   }
   const m = {
     id: id || `m_${rng.seed().toString(36)}`,
-    name: name || species,
+    name: name || sp.name,
     species,
     position,
     type,
@@ -165,16 +202,21 @@ export function levelUp(m, rng) {
 /** Cornerstone starters offered during onboarding (GDD §8). */
 export const CORNERSTONES = Object.freeze({
   offense: [
-    { name: 'Firestorm', position: 'QB', type: 'Fire', nature: 'precise', ability: 'meteor_pass', quality: 69, archetype: 'Strong Arm' },
-    { name: 'Voltfang', position: 'WR', type: 'Electric', nature: 'swift', ability: 'lightning_break', quality: 68, archetype: 'Speedster' },
-    { name: 'Boulderox', position: 'RB', type: 'Earth', nature: 'sturdy', ability: 'stone_charge', quality: 70, archetype: 'Power Back' },
+    { name: 'Pyronix', species: 'firestorm', position: 'QB', type: 'Fire', nature: 'precise', ability: 'meteor_pass', quality: 69, archetype: 'Strong Arm' },
+    { name: 'Zappard', species: 'voltfang', position: 'WR', type: 'Electric', nature: 'swift', ability: 'lightning_break', quality: 68, archetype: 'Speedster' },
+    { name: 'Bouldrox', species: 'boulderox', position: 'RB', type: 'Earth', nature: 'sturdy', ability: 'stone_charge', quality: 70, archetype: 'Power Back' },
   ],
   defense: [
-    { name: 'Stoneguard', position: 'DL', type: 'Earth', nature: 'powerful', ability: 'crushing_rush', quality: 69, archetype: 'Power Rusher' },
-    { name: 'Skywarden', position: 'CB', type: 'Wind', nature: 'focused', ability: 'aerial_lock', quality: 68, archetype: 'Ball Hawk' },
-    { name: 'Frostclaw', position: 'LB', type: 'Ice', nature: 'cerebral', ability: 'cold_read', quality: 70, archetype: 'Field General' },
+    { name: 'Granigor', species: 'stoneguard', position: 'DL', type: 'Earth', nature: 'powerful', ability: 'crushing_rush', quality: 69, archetype: 'Power Rusher' },
+    { name: 'Aeralis', species: 'skywarden', position: 'CB', type: 'Wind', nature: 'focused', ability: 'aerial_lock', quality: 68, archetype: 'Ball Hawk' },
+    { name: 'Cryolynx', species: 'frostclaw', position: 'LB', type: 'Ice', nature: 'cerebral', ability: 'cold_read', quality: 70, archetype: 'Field General' },
   ],
 });
+/** A cornerstone by its current name, its species id or the name it had in earlier versions. */
+export function cornerstoneByName(side, v) {
+  const list = CORNERSTONES[side]; if (!v) return null;
+  return list.find((c) => c.name === v || c.species === v || c.species === String(v).toLowerCase()) || null;
+}
 
 /** Starting roster composition: 22 monsters. */
 export const STARTING_ROSTER = Object.freeze([
@@ -184,16 +226,17 @@ export const STARTING_ROSTER = Object.freeze([
 export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56 } = {}) {
   const rng = createRng(seed);
   const roster = [];
-  const used = new Set([...CORNERSTONES.offense, ...CORNERSTONES.defense].map((c) => c.name));
-  const pickName = () => { let n; do n = rng.pick(SPECIES); while (used.has(n)); used.add(n); return n; };
+  // No species twice on a fresh roster (cornerstone species included); a second copy would be "Name II".
+  const used = new Set([...CORNERSTONES.offense, ...CORNERSTONES.defense].map((c) => c.species));
   for (const [position, count] of STARTING_ROSTER) {
     for (let i = 0; i < count; i++) {
       const q = quality + (i === 0 ? 4 : -2) + rng.int(5) - 2;
-      roster.push(generateMonster(rng, { position, quality: q, name: pickName() }));
+      const sp = pickSpeciesForPosition(rng, position, { exclude: used }); used.add(sp.id);
+      roster.push(generateMonster(rng, { position, quality: q, species: sp.id }));
     }
   }
   for (const [side, choice] of [['offense', cornerstoneOffense], ['defense', cornerstoneDefense]]) {
-    const c = CORNERSTONES[side].find((x) => x.name === choice) || CORNERSTONES[side][0];
+    const c = cornerstoneByName(side, choice) || CORNERSTONES[side][0];
     const target = roster.find((m) => m.position === c.position);
     const star = generateMonster(rng, { ...c, id: target.id });
     star.ability = c.ability; star.archetype = c.archetype; star.cornerstone = true; star.salary = salaryFor(star) + 3000;

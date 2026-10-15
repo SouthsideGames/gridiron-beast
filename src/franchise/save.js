@@ -2,8 +2,9 @@
 // a one-way import of the v5 (11v11) prototype's owner, club, staff, rival
 // and records. The legacy key is never modified.
 
-import { SCHEMA_VERSION, createFranchise } from './franchise.js';
+import { SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
 import { hashString } from '../core/rng.js';
+import { resolveSpecies, SPECIES_BY_ID } from '../data/monsters.js';
 
 export const SAVE_KEY = 'gridiron-beast-v6';
 export const LEGACY_KEY = 'gridiron-beast-p1';
@@ -28,7 +29,21 @@ export function migrate(f) {
   if (!f || typeof f !== 'object') return null;
   if (f.schemaVersion !== SCHEMA_VERSION) return null; // future versions migrate here
   f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {};
+  migrateSpecies(f);
   return f;
+}
+/** Saves from before the species dex stored old display names: map every monster onto a dex species and rename it (numerals kept). */
+export function migrateSpecies(f) {
+  const fix = (m) => {
+    if (!m || typeof m !== 'object') return;
+    if (SPECIES_BY_ID[m.species]) return;
+    const sp = resolveSpecies(m); const suffix = String(m.name || '').match(/ (II|III|IV|V|VI|\d+)$/)?.[0] || '';
+    const old = m.species || String(m.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '');
+    m.species = sp.id; m.type = sp.element; if (!m.name || m.name.startsWith(old)) m.name = sp.name + suffix;
+  };
+  for (const m of f.roster || []) fix(m);
+  for (const p of f.week?.prospects || []) fix(p.monster);
+  if (!f.dex) { f.dex = { seen: {}, signed: {} }; for (const m of f.roster || []) dexRecord(f, m, 'signed'); }
 }
 export function exportJson(f) { return JSON.stringify({ app: 'gridiron-beast', schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString(), franchise: f }, null, 0); }
 export function importJson(text) {
@@ -56,7 +71,7 @@ export function importLegacy(legacy) {
   const f = createFranchise({
     owner: { first: legacy.coach.first || 'New', last: legacy.coach.last || 'Owner', gender: legacy.coach.gender || 'Male', portrait: legacy.coach.portrait || 0, hometown: legacy.coach.city || '' },
     club: s.club, rival: legacyRivalOk,
-    cornerstoneOffense: s.starters.offense || 'Firestorm', cornerstoneDefense: s.starters.defense || 'Stoneguard',
+    cornerstoneOffense: s.starters.offense || 'Pyronix', cornerstoneDefense: s.starters.defense || 'Granigor',
     seed: hashString(JSON.stringify(legacy.coach)),
   });
   for (const [role, id] of Object.entries(s.staff)) if (typeof id === 'string') f.staff[role] = id;

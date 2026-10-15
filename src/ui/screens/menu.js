@@ -3,7 +3,7 @@
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import * as Save from '../../franchise/save.js';
 import { cloudStatus } from '../../franchise/cloud-save.js';
-import { summary, hireDefaultStaff, DIFFICULTY } from '../../franchise/franchise.js';
+import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
 import { portraitSprite } from '../pixel-monster.js';
 
 export function registerMenuScreens(Router, app) {
@@ -19,6 +19,7 @@ export function registerMenuScreens(Router, app) {
         <div class="stack">
           <button class="btn ${f ? '' : 'primary big'} block" data-action="new">${f ? 'Start a New Franchise' : '🏆 New Franchise'}</button>
           ${legacy && !f ? `<button class="btn block" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
+          <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex${f ? ` <span class="dim mono">${dexCounts(f).seen}/72</span>` : ''}</button>
           <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block" data-action="go" data-screen="developer">🛠️ Developer</button></div>
         </div>
         <p class="center dim" style="margin-top:16px">v6.0 rebuild · Southside Games</p>`;
@@ -72,9 +73,10 @@ export function registerMenuScreens(Router, app) {
       return `<p class="muted">Inspection tools that work without a franchise.</p><div class="stack">
         <button class="btn block" data-action="go" data-screen="audit">🔎 Playbook Audit</button>
         <button class="btn block" data-action="go" data-screen="practice">🎯 Practice Field</button>
+        <button class="btn block" data-action="dexall">📖 Beast Dex (everything revealed)</button>
         <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button></div>`;
     },
-    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen) }); },
+    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), dexall: () => Router.go('dex', { all: true }) }); },
   });
 
   Router.registerScreen('about', {
@@ -86,6 +88,7 @@ export function registerMenuScreens(Router, app) {
     title: 'More',
     render({ f }) {
       return `<div class="stack">
+        <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;
     },

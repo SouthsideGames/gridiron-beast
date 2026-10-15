@@ -28,7 +28,7 @@ test('schedule generator matches the golden vectors from the v5 prototype', () =
 test('a new franchise has a legal roster, staff, cap room and a rival in its division', () => {
   const f = newFranchise();
   assert.equal(f.roster.length, 22);
-  assert.ok(f.roster.some((m) => m.cornerstone && m.name === 'Voltfang'));
+  assert.ok(f.roster.some((m) => m.cornerstone && m.name === 'Zappard' && m.species === 'voltfang')); // old cornerstone names still resolve
   assert.ok(STAFF_ROLES.every((r) => f.staff[r]));
   assert.equal(F.salarySummary(f).over, false);
   assert.ok(['Bayou Stalkers', 'Sunfire Lions', 'Palmetto Vipers'].includes(f.rivals.challenger.team));
@@ -112,7 +112,7 @@ test('save round-trips and the legacy v5 import preserves owner, club, staff and
   assert.equal(imported.owner.first, 'Dana'); assert.equal(imported.club, 'Stonehaven Titans');
   assert.equal(imported.staff.head_coach, 'hc_flint'); assert.equal(imported.rivals.challenger.team, 'Ashford Hawks');
   assert.equal(imported.badges.challenger, 1); assert.equal(imported.history.length, 2); assert.equal(imported.season.year, 3);
-  assert.ok(imported.roster.some((m) => m.name === 'Firestorm' && m.position === 'QB'));
+  assert.ok(imported.roster.some((m) => m.name === 'Pyronix' && m.position === 'QB'));
 });
 
 test('new franchise: default staff, first week starts Monday', () => {
