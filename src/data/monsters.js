@@ -3,7 +3,7 @@
 
 import { ATTRIBUTES, POSITION_WEIGHTS } from './personnel.js';
 import { createRng, hashString } from '../core/rng.js';
-import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS } from './species.js';
+import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS, TRAITS } from './species.js';
 
 export const TYPES = Object.freeze({
   Fire: { icon: 'flame', bias: { strength: 4, agility: 2 }, hue: 14, blurb: 'Explosive power' },
@@ -100,6 +100,13 @@ export function resolveSpecies(m) {
   return SPECIES_BY_ID[base] || BY_NAME[base.toLowerCase()] || SPECIES_BY_ID[LEGACY_SPECIES_ALIASES[base]] || SPECIES_DEX[hashString(base) % SPECIES_DEX.length];
 }
 export const speciesName = (m) => resolveSpecies(m).name;
+/** The engine effect a monster carries: its signature ability (uncommon and up) or its species' shared trait (commons). */
+export function speciesEffect(m) {
+  const sp = resolveSpecies(m);
+  if (sp.ability?.effect) return { name: sp.ability.name, effect: sp.ability.effect, kind: 'ability' };
+  const t = TRAITS[sp.trait]; if (t?.effect) return { name: t.name, effect: t.effect, kind: 'trait' };
+  return null;
+}
 const RARITY_WEIGHT = (s) => RARITIES[s.rarity]?.weight ?? 0;
 /** Pick a species that plays `position` (natural, or secondary at a quarter of the weight), by rarity weight. */
 export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set() } = {}) {

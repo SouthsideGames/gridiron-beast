@@ -94,3 +94,31 @@ test('sprite export writes valid PNGs and an atlas for every form', async () => 
   assert.ok(fs.existsSync(path.join(dir, 'sheet.png')));
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('every species ability and trait maps to known engine primitives, and they fire in play', async () => {
+  const { simulatePlay } = await import('../src/sim/engine.js');
+  const { PLAYS, OFFENSE_IDS, DEFENSE_IDS } = await import('../src/data/playbook.js');
+  const { lineup } = await import('./tools/lineup.js');
+  const KNOWN = new Set(['attrs', 'deepThrow', 'burst', 'carryStrength', 'shedStrength', 'pickCatching', 'reaction', 'afterCatch', 'anchor', 'blockStrength', 'blockerStun', 'rebound', 'runStuff', 'elusive', 'elusiveFirst', 'forceFumble', 'fumbleResist', 'noFumble', 'contest', 'catchContest', 'manCoverage', 'rushSpeed', 'pursuitSpeed', 'closeSpeed', 'routeAgility', 'openAccuracy', 'throwVelocity', 'pressureSense', 'noPlayActionBite', 'breakRadius', 'zoneRange', 'aura', 'fatigue']);
+  for (const s of SPECIES_DEX) { const e = s.ability?.effect || TRAITS[s.trait]?.effect; assert.ok(e, s.id); for (const k of Object.keys(e)) assert.ok(KNOWN.has(k), `${s.id}: unknown primitive ${k}`); }
+  // Put each species in a slot for its natural position and count how often its ability logs across a batch.
+  const PASSIVE = new Set(['attrs', 'fatigue', 'forceFumble', 'pickCatching']); // passive, or only on rare events (fumbles, picks)
+  const SLOT = { QB: ['QB', 'off'], RB: ['RB', 'off'], WR: ['WR1', 'off'], TE: ['TE', 'off'], OL: ['LG', 'off'], DL: ['DL1', 'def'], LB: ['LB1', 'def'], CB: ['CB1', 'def'], S: ['FS', 'def'] };
+  const L = lineup(11, 60);
+  const quiet = [];
+  for (const sp of SPECIES_DEX) {
+    const e = sp.ability?.effect || TRAITS[sp.trait].effect;
+    if (Object.keys(e).every((k) => PASSIVE.has(k) || k === 'zoneRange') || !SLOT[sp.position]) continue;
+    const [slot, side] = SLOT[sp.position];
+    let n = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const off = { ...L.offense }, def = { ...L.defense };
+      (side === 'off' ? off : def)[slot] = { ...L[side === 'off' ? 'offense' : 'defense'][slot], species: sp.id, name: sp.name, ability: null };
+      const o = PLAYS[OFFENSE_IDS[(seed * 5) % OFFENSE_IDS.length]], d = PLAYS[DEFENSE_IDS[(seed * 7) % DEFENSE_IDS.length]];
+      const r = simulatePlay({ offensePlay: o, defensePlay: d, ballOn: 30 + (seed % 40), seed, offense: off, defense: def });
+      if (r.events.some((ev) => ev.kind === 'ability' && ev.side === side && ev.by === slot)) n++;
+    }
+    if (n === 0) quiet.push(sp.id);
+  }
+  assert.ok(quiet.length <= 3, `species whose ability never fired in 40 plays: ${quiet.join(', ')}`);
+});

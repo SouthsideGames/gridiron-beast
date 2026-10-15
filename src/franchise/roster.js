@@ -2,7 +2,7 @@
 // slot → attributes lineup the engine consumes.
 
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, canPlay } from '../data/personnel.js';
-import { effectiveAttributes, monsterOverall, createRoster } from '../data/monsters.js';
+import { effectiveAttributes, monsterOverall, createRoster, speciesEffect } from '../data/monsters.js';
 import { OFFENSE_IDS, DEFENSE_IDS, PLAYS, counterPlays } from '../data/playbook.js';
 import { createRng } from '../core/rng.js';
 const PLAYS_IDS = new Set(Object.keys(PLAYS));
@@ -65,6 +65,8 @@ export function lineupFromChart(roster, chart, { trainingBonus = null } = {}) {
   const offense = Object.fromEntries(OFFENSE_SLOTS.map((s) => [s, slotInput(s)]));
   const defense = Object.fromEntries(DEFENSE_SLOTS.map((s) => [s, slotInput(s)]));
   const kicker = slotInput('K');
+  const kickBoost = kicker.species ? speciesEffect(kicker.species)?.effect?.attrs?.kicking : 0; // the engine applies effect attrs on scrimmage plays; kicks resolve outside it
+  if (kickBoost && kicker.attrs.kicking) kicker.attrs.kicking = Math.min(99, kicker.attrs.kicking + kickBoost);
   const returnerSlot = ['WR2', 'RB', 'WR1', 'CB2'].find((s) => byId[chart[s]]) || 'RB';
   return { offense, defense, kicker, returner: slotInput(returnerSlot) };
 }
