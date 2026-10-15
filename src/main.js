@@ -31,6 +31,7 @@ function tabs(ctx, screenName) {
 }
 
 export function start() {
+  globalThis.__gb = app; // test hook: the UI check reaches the franchise state through it
   Router.init({ root: $('#app'), context: () => ({ app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }), tabs });
   registerMenuScreens(Router, app);
   registerOnboardingScreens(Router, app);
@@ -62,7 +63,7 @@ export function start() {
 
 /** Which bottom tab a secondary screen belongs to. */
 export const TAB_OF = {
-  hq: 'hq', scout: 'hq', recruit: 'hq', training: 'hq', scoutopp: 'hq', gameplan: 'playbook', lineup: 'roster', pregame: 'hq', match: 'hq',
+  hq: 'hq', commissioner: 'hq', scout: 'hq', recruit: 'hq', training: 'hq', scoutopp: 'hq', gameplan: 'playbook', lineup: 'roster', pregame: 'hq', match: 'hq',
   roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', staff: 'more',
   playbook: 'playbook', playdetail: 'playbook', practice: 'playbook', audit: 'more',
   league: 'league', schedule: 'league', standings: 'league', history: 'league',

@@ -48,6 +48,34 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
   return f;
 }
 
+// ------------------------------------------------------------ the commissioner's office (GDD §15.6)
+/** Saturday: if the club is still over the cap, the commissioner names the monsters the GM must choose between. */
+export function commissionerReview(f) {
+  const cap = salarySummary(f);
+  if (!cap.over) { f.week.commissioner = null; return null; }
+  const over = -cap.remaining;
+  const picks = difficultyOf(f).commissionerPicks || 3;
+  const sal = (m) => m.salary || salaryFor(m);
+  // The cheapest monsters that would each, alone, bring the club under; failing that, the most expensive.
+  const alone = f.roster.filter((m) => sal(m) >= over).sort((a, b) => sal(a) - sal(b));
+  const names = (alone.length ? alone : f.roster.slice().sort((a, b) => sal(b) - sal(a))).slice(0, picks).map((m) => m.id);
+  f.week.commissioner = { over, names, enough: alone.length > 0, visits: (f.week.commissioner?.visits || 0) + 1 };
+  if (f.week.commissioner.visits === 1) news(f, `The commissioner has called you in: over the cap by ${Math.round(over).toLocaleString('en-US')} cr.`, 'loss');
+  return f.week.commissioner;
+}
+/** Release one of the named monsters. Nothing comes back for it. Repeats until the club is under the cap. */
+export function commissionerRelease(f, id) {
+  const c = f.week.commissioner; if (!c) return { ok: false, reason: 'No review pending.' };
+  if (!c.names.includes(id)) return { ok: false, reason: 'The commissioner named other monsters.' };
+  const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not on roster.' };
+  f.roster = f.roster.filter((x) => x.id !== id);
+  for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === id) delete f.lineupManual[slot];
+  f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.commissionerReleases = (f.campaign.commissionerReleases || 0) + 1;
+  news(f, `${m.name} released by order of the commissioner.`, 'loss');
+  const again = commissionerReview(f);
+  return { ok: true, released: m, done: !again };
+}
+
 // ------------------------------------------------------------ campaign
 /** The other coach's words before Sunday's game (GDD §15.5), or null on a bye. */
 export function pregameTalk(f) {
@@ -192,7 +220,8 @@ export function releaseMonster(f, id) {
   news(f, `${m.name} released.`, 'roster');
   return { ok: true };
 }
-export function canPlayGames(f) { return !salarySummary(f).over; }
+/** Games are never locked by the cap itself; the commissioner's review on Saturday is what has to be settled (GDD §15.6). */
+export function canPlayGames(f) { return !f.week?.commissioner; }
 
 // ------------------------------------------------------------ team objects
 export function playerTeam(f, { trainingBonus: tb = null } = {}) {
@@ -363,12 +392,12 @@ export function uniqueName(f, m, extra = []) {
 }
 /** Who could be released to make room/cap for a prospect (never the only one at a position, never a cornerstone). */
 export function releaseCandidates(f, prospect) {
-  const m = prospect.monster; const need = f.roster.length >= ROSTER_MAX; const capNeed = salarySummary(f, m.salary).over;
-  if (!need && !capNeed) return { needed: false, list: [] };
+  const m = prospect.monster; const need = f.roster.length >= ROSTER_MAX;
+  if (!need) return { needed: false, list: [], capWarning: salarySummary(f, m.salary).over };
   const list = f.roster.filter((x) => !x.cornerstone && (f.roster.filter((y) => y.position === x.position).length > 1 || x.position === m.position))
     .map((x) => ({ id: x.id, name: x.name, position: x.position, ovr: monsterOverall(x), salary: x.salary || salaryFor(x), capOk: !salarySummary(f, m.salary - (x.salary || salaryFor(x))).over }))
     .sort((a, b) => (a.position === m.position ? -1 : 0) - (b.position === m.position ? -1 : 0) || a.ovr - b.ovr);
-  return { needed: true, reason: need ? `Roster is full (${ROSTER_MAX}).` : 'Over the cap.', list };
+  return { needed: true, reason: `Roster is full (${ROSTER_MAX}).`, list, capWarning: salarySummary(f, m.salary).over };
 }
 export function recruit(f, prospectIndex, approachId, { releaseId = null } = {}) {
   if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
@@ -377,8 +406,7 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
   const m = p.monster;
   const rc = releaseCandidates(f, p);
   if (rc.needed && !releaseId) return { ok: false, reason: rc.reason, needRelease: true };
-  if (rc.needed) { const cand = rc.list.find((c) => c.id === releaseId); if (!cand) return { ok: false, reason: 'That monster cannot be released.' }; if (!cand.capOk) return { ok: false, reason: 'Still over the cap after that release.' }; }
-  if (!rc.needed && salarySummary(f, m.salary).over) return { ok: false, reason: 'Signing would exceed the salary cap.' };
+  if (rc.needed) { const cand = rc.list.find((c) => c.id === releaseId); if (!cand) return { ok: false, reason: 'That monster cannot be released.' }; }
   const { r, save } = frng(f);
   f.week.recruitAttempts += 1;
   const need = f.roster.filter((x) => x.position === m.position).length <= 1;
@@ -392,7 +420,9 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
     if (rc.needed && releaseId) { const out = f.roster.find((x) => x.id === releaseId); f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); }
     f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
     news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
-    return { ok: true, success: true, monster: m };
+    const cap = salarySummary(f);
+    if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
+    return { ok: true, success: true, monster: m, overCap: cap.over };
   }
   if (f.week.recruitAttempts >= 3) { f.season.day = 2; return { ok: true, success: false, final: true }; }
   return { ok: true, success: false, final: false };
@@ -497,6 +527,7 @@ export function answerMedia(f, answers) {
  * gets safe answers. Stops on Sunday. Returns a summary of what was done.
  */
 export function autoRunToSunday(f) {
+  if (f.week?.commissioner) return { ok: false, reason: 'The commissioner is waiting for your decision.', did: [] };
   const did = [];
   let guard = 0;
   while (f.season.day < 6 && guard++ < 10) {
@@ -522,8 +553,8 @@ export function lineupCheck(f, { advance = true } = {}) {
   const problems = lineupProblems(f.roster, chart);
   const tired = f.roster.filter((m) => Object.values(chart).includes(m.id) && m.fatigue >= 60).map((m) => m.name);
   const injured = f.roster.filter((m) => m.injury).map((m) => `${m.name} (${m.injury.severity}, ${m.injury.weeks} wk)`);
-  if (advance) { f.week.lineupChecked = true; if (f.season.day === 5) f.season.day = 6; }
-  return { ok: problems.length === 0, problems, tired, injured, chart };
+  if (advance) { f.week.lineupChecked = true; if (f.season.day === 5) { f.season.day = 6; commissionerReview(f); } }
+  return { ok: problems.length === 0, problems, tired, injured, chart, commissioner: f.week.commissioner || null };
 }
 /** Put a monster into a slot by moving them to that slot's place in the position's depth order. */
 export function assignSlot(f, slot, monsterId) {

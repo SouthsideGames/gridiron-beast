@@ -325,3 +325,28 @@ test('campaign: the other coach speaks before the game and remembers the result'
   assert.equal(f.rattled, true, 'confident talk before a loss rattles the room');
   assert.equal(f.campaign.h2h[m.opponent].last, 'l');
 });
+
+test('commissioner: signing over the cap is allowed with a warning; Saturday names the cheapest monsters that each get you under; releasing one clears it', () => {
+  const f = newFranchise(12);
+  // Push the club over the cap with an expensive signing.
+  const cap = F.salarySummary(f);
+  const star = { ...f.roster[0], id: 'm_big', name: 'Big Signing', salary: cap.remaining + 40000, cornerstone: false };
+  f.roster.push(star);
+  assert.ok(F.salarySummary(f).over);
+  assert.equal(F.canPlayGames(f), true, 'the cap alone does not lock games');
+  F.autoRunToSunday(f);
+  assert.ok(f.week.commissioner, 'Saturday review pending');
+  assert.equal(F.canPlayGames(f), false);
+  const over = f.week.commissioner.over;
+  const named = f.week.commissioner.names.map((id) => f.roster.find((m) => m.id === id));
+  assert.equal(named.length, 3);
+  for (const m of named) assert.ok(m.salary >= over, 'each named monster alone brings the club under');
+  const cheapestEnough = f.roster.filter((m) => m.salary >= over).sort((a, b) => a.salary - b.salary)[0];
+  assert.ok(named.some((m) => m.id === cheapestEnough.id), 'the cheapest sufficient monster is named');
+  assert.equal(F.commissionerRelease(f, f.roster.find((m) => !f.week.commissioner.names.includes(m.id)).id).ok, false, 'only named monsters');
+  const r = F.commissionerRelease(f, named[0].id);
+  assert.equal(r.ok && r.done, true);
+  assert.equal(f.week.commissioner, null);
+  assert.equal(F.canPlayGames(f), true);
+  assert.equal(f.campaign.commissionerReleases, 1);
+});

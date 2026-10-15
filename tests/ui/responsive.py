@@ -81,6 +81,12 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="pick"][data-side="offense"][data-v="Zappard"]'); shot(page, f'{name}-02c-cornerstone'); page.click('#next')
     page.wait_for_selector('.tabbar')
     no_overflow(page, 'hq'); tap_targets(page, 'hq'); shot(page, f'{name}-04-hq')
+    # Commissioner's office: stage a pending review and open the screen.
+    page.evaluate("() => { const f = __gb.f; f.week.commissioner = { over: 50000, names: f.roster.slice(0, 3).map(m => m.id), enough: true, visits: 1 }; }")
+    page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="commissioner"]')
+    page.click('[data-action="commissioner"]'); page.wait_for_selector('[data-action="release"]'); no_overflow(page, 'commissioner'); tap_targets(page, 'commissioner'); shot(page, f'{name}-04b-commissioner')
+    page.evaluate("() => { __gb.f.week.commissioner = null; __gb.save(); }")
+    page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="scout"], [data-action="autorun"]')
     # Tabs
     for tab in ['roster', 'playbook', 'league', 'more']:
         page.click(f'[data-action="router-tab"][data-screen="{tab}"]'); page.wait_for_timeout(100)

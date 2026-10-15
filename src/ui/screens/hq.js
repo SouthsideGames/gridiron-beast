@@ -49,8 +49,9 @@ export function registerHqScreens(Router, app) {
         ${weekStrip(f)}
         <div class="panel"><div class="muted" style="font-size:12px">THIS WEEK</div><div style="margin:4px 0 8px">${gameLine}${(() => { const g = opp && GYM_BY_CLUB[opp]; if (!g || f.season.finished) return ''; const b = F.badgeOf(f, opp); return `<div class="muted" style="margin-top:4px">${b ? `🏅 You hold the ${esc(g.badge)} (S${b.year})` : `<b>Badge game</b> · beat ${esc(g.coach.name)}'s ${esc(opp)} for the ${esc(g.badge)}`}</div>`; })()}</div>
           ${next ? `<button class="btn primary big block" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>` : ''}
-          ${!f.season.finished && day < 6 && !cap.over ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
-          ${cap.over ? `<p class="muted" style="color:var(--bad);margin-top:8px">Over the cap by ${fmtMoney(-cap.remaining)} — games are locked until you release a monster.</p>` : ''}</div>
+          ${!f.season.finished && day < 6 && !f.week.commissioner ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
+          ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">⚠️ Over the cap by ${fmtMoney(-cap.remaining)}. The commissioner reviews the books on Saturday: get under it by then or he picks who goes.</p>` : ''}
+          ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">🏛️ The commissioner is waiting. Over the cap by ${fmtMoney(f.week.commissioner.over)}.</p>` : ''}</div>
         ${campaignPanel(f)}
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
         <div class="grid2">
@@ -65,7 +66,8 @@ export function registerHqScreens(Router, app) {
         go: (el) => Router.go(el.dataset.screen),
         scout: () => Router.go('scout'), recruit: () => Router.go('recruit'), training: () => Router.go('training'), scoutopp: () => Router.go('scoutopp'), gameplan: () => Router.go('gameplan'), lineup: () => Router.go('lineup'),
         bye: () => { F.takeBye(app.f); app.save(); toast('Bye week taken. Fatigue recovered.'); Router.render(); },
-        game: () => { if (!F.canPlayGames(app.f)) { toast('Over the salary cap — release a monster first.', 'bad'); return; } Router.go('pregame'); },
+        game: () => { if (!F.canPlayGames(app.f)) { Router.go('commissioner'); return; } Router.go('pregame'); },
+        commissioner: () => Router.go('commissioner'),
         resume: () => Router.go('match'),
         autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(awardsHtml(app.f.season.awards || F.seasonAwards(app.f)), { title: `Season ${app.f.season.year} awards` }),
@@ -77,9 +79,35 @@ export function registerHqScreens(Router, app) {
   function nextAction(f) {
     const d = f.season.day;
     if (f.game && !f.game.state?.finished) return { label: 'Resume game', action: 'resume', icon: '▶' };
+    if (f.week.commissioner) return { label: "The commissioner's office", action: 'commissioner', icon: '🏛️' };
     if (d === 6) return F.isBye(f) ? { label: 'Take the bye week', action: 'bye', icon: '😴' } : { label: 'Play Sunday game', action: 'game', icon: '🏈' };
     return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Recruit', action: 'recruit', icon: '🤝' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
   }
+
+  // ---------------------------------------------------------------- the commissioner's office (GDD §15.6)
+  Router.registerScreen('commissioner', {
+    title: "Commissioner's Office", back: true,
+    render({ f }) {
+      const c = f.week.commissioner; if (!c) return `<div class="panel"><p>Nothing to discuss. You're under the cap.</p><button class="btn primary block" data-action="back">Back to HQ</button></div>`;
+      const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
+      const line = c.visits === 1 ? `You're over budget. I'm guessing you didn't read the league rules. ${fmtMoney(c.over)} over, to be exact.` : `Still over by ${fmtMoney(c.over)}. We're not done.`;
+      const rule = c.enough ? `I've picked ${c.names.length}. Any one of them gets you under. Choose who goes. Nothing comes back for it.` : `None of your monsters alone covers it, so I've picked your ${c.names.length} most expensive. Keep choosing until you're under.`;
+      return `<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">LEAGUE COMMISSIONER</div>${esc(line)}<p style="margin:8px 0 0">${esc(rule)}</p></div></div>
+        <div class="list" style="margin-top:12px">${c.names.map((id) => byId[id]).filter(Boolean).map((m) => `<div class="item static">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${m.cornerstone ? '★' : ''}${m.legendary ? ' <span class="chip accent">legendary</span>' : ''}</div><div class="sub">${m.position} · ${monsterOverall(m)} OVR · ${fmtMoney(m.salary)}/yr${(m.salary || 0) >= c.over ? ' · gets you under' : ''}</div></div><button class="btn small danger" data-action="release" data-id="${m.id}" data-name="${esc(m.name)}">Release</button></div>`).join('')}</div>
+        <p class="dim" style="margin-top:8px">Rule: the commissioner names the cheapest monsters that would each bring you under the cap (${F.difficultyOf(f).commissionerPicks} on ${esc(F.difficultyOf(f).label)}). Cornerstones and legendaries are not protected.</p>`;
+    },
+    mount(root) {
+      delegate(root, {
+        back: () => Router.go('hq', {}, { reset: true }),
+        release: async (el) => {
+          if (!(await confirmSheet(`Release ${el.dataset.name}? Nothing comes back for them.`, { title: 'The commissioner is waiting', okLabel: 'Release', danger: true }))) return;
+          const r = F.commissionerRelease(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; }
+          app.save();
+          if (r.done) { toast(`${r.released.name} released. You're under the cap.`, 'info'); Router.go('hq', {}, { reset: true }); } else { toast(`${r.released.name} released. Still over.`, 'bad'); Router.render(); }
+        },
+      });
+    },
+  });
 
   // ---------------------------------------------------------------- Monday
   Router.registerScreen('scout', {
@@ -108,10 +136,11 @@ export function registerHqScreens(Router, app) {
         back: () => Router.back(),
         skip: () => { F.skipRecruit(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
         compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) sheet(compareHtml(app.f, p), { title: `${p.monster.name} vs your ${p.monster.position}s` }); },
-        approach: (el) => {
+        approach: async (el) => {
           const i = Number(el.dataset.i), v = el.dataset.v; const p = app.f.week.prospects[i]; const rc = p ? F.releaseCandidates(app.f, p) : { needed: false };
+          if (!rc.needed && rc.capWarning && !app.f.week.capWarned) { app.f.week.capWarned = true; if (!(await confirmSheet(`Signing ${p.monster.name} puts you over the salary cap. The commissioner reviews the books every Saturday; if you are still over, he names monsters and you release one for nothing. Sign anyway?`, { title: 'Over the cap', okLabel: 'Sign anyway', danger: true }))) { app.f.week.capWarned = false; return; } }
           if (rc.needed) {
-            const { el: sh, close } = sheet(`<p>${esc(rc.reason)} Choose who leaves if <b>${esc(p.monster.name)}</b> signs (nothing happens if they turn you down).</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}" ${c.capOk ? '' : 'disabled'}><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr${c.capOk ? '' : ' · still over the cap'}</div></div><span class="chip ${c.position === p.monster.position ? 'accent' : ''}">${c.position === p.monster.position ? 'same position' : 'release'}</span></button>`).join('') || '<p class="dim">Nobody can be released.</p>'}</div>`, { title: 'Make room' });
+            const { el: sh, close } = sheet(`<p>${esc(rc.reason)} Choose who leaves if <b>${esc(p.monster.name)}</b> signs (nothing happens if they turn you down).</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}"><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr${c.capOk ? '' : ' · still over the cap after this'}</div></div><span class="chip ${c.position === p.monster.position ? 'accent' : ''}">${c.position === p.monster.position ? 'same position' : 'release'}</span></button>`).join('') || '<p class="dim">Nobody can be released.</p>'}</div>`, { title: 'Make room' });
             sh.addEventListener('click', (e) => { const id = e.target.closest('[data-rel]')?.dataset.rel; if (!id) return; close(); doApproach(i, v, id); });
             return;
           }
@@ -119,7 +148,7 @@ export function registerHqScreens(Router, app) {
         },
       });
       function doApproach(i, v, releaseId) {
-        { const r = F.recruit(app.f, i, v, { releaseId }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.success) { toast(`${r.monster.name} signed!`, 'good'); Router.go('hq', {}, { reset: true }); } else { toast(r.final ? 'They declined. No attempts left this week.' : 'Not convinced yet. Try another approach.', r.final ? 'bad' : 'info'); if (r.final) Router.go('hq', {}, { reset: true }); else Router.render(); } }
+        { const r = F.recruit(app.f, i, v, { releaseId }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.success) { toast(r.overCap ? `${r.monster.name} signed. You are over the cap: the commissioner reviews the books on Saturday.` : `${r.monster.name} signed!`, r.overCap ? 'bad' : 'good'); Router.go('hq', {}, { reset: true }); } else { toast(r.final ? 'They declined. No attempts left this week.' : 'Not convinced yet. Try another approach.', r.final ? 'bad' : 'info'); if (r.final) Router.go('hq', {}, { reset: true }); else Router.render(); } }
       }
     },
   });
