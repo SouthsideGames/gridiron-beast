@@ -244,9 +244,32 @@ export const CORNERSTONES = Object.freeze({
     { name: 'Cryolynx', species: 'frostclaw', position: 'LB', type: 'Ice', nature: 'cerebral', ability: 'cold_read', quality: 70, archetype: 'Field General' },
   ],
 });
+/**
+ * Cornerstone offers for a new franchise: three monsters of three different positions and elements
+ * (uncommon or rare species, so each has a signature ability), drawn from the offer seed so every
+ * franchise sees a different trio. Legacy cornerstones (the six above) are among the pool.
+ */
+const ARCHETYPE = { QB: 'Field General', RB: 'Workhorse', WR: 'Playmaker', TE: 'Mismatch', OL: 'Anchor', DL: 'Disruptor', LB: 'Enforcer', CB: 'Shutdown', S: 'Ball Hawk', K: 'Automatic' };
+export function cornerstoneOffers(seed) {
+  const rng = createRng(hashString(`cornerstones|${seed}`));
+  const pool = SPECIES_DEX.filter((s) => (s.rarity === 'uncommon' || s.rarity === 'rare') && s.position !== 'K');
+  const offers = [];
+  const positions = new Set(), elements = new Set();
+  let guard = 0;
+  while (offers.length < 3 && guard++ < 200) {
+    const sp = rng.pick(pool);
+    if (positions.has(sp.position) || elements.has(sp.element)) continue;
+    positions.add(sp.position); elements.add(sp.element);
+    const nature = rng.pick(NATURE_IDS.filter((n) => NATURES[n].up && !['kicking'].includes(NATURES[n].up)));
+    offers.push({ name: sp.name, species: sp.id, position: sp.position, type: sp.element, nature, ability: null, quality: 68 + rng.int(3), archetype: ARCHETYPE[sp.position], abilityName: sp.ability?.name, abilityText: sp.ability?.text, rarity: sp.rarity });
+  }
+  return offers;
+}
 /** A cornerstone by its current name, its species id or the name it had in earlier versions. */
 export function cornerstoneByName(side, v) {
-  const list = CORNERSTONES[side]; if (!v) return null;
+  if (!v) return null;
+  if (typeof v === 'object' && v.species) return v; // an offer from cornerstoneOffers
+  const list = side ? CORNERSTONES[side] : [...CORNERSTONES.offense, ...CORNERSTONES.defense];
   return list.find((c) => c.name === v || c.species === v || c.species === String(v).toLowerCase()) || null;
 }
 
@@ -255,12 +278,13 @@ export const STARTING_ROSTER = Object.freeze([
   ['QB', 2], ['RB', 2], ['WR', 3], ['TE', 1], ['OL', 4], ['DL', 3], ['LB', 2], ['CB', 3], ['S', 1], ['K', 1],
 ]);
 
-export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null, signature = null, evolveStage = 0 } = {}) {
+export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null, signature = null, evolveStage = 0 } = {}) {
   const rng = createRng(seed);
   const roster = [];
   // No species twice on a fresh roster (cornerstone species included); a second copy would be "Name II".
   const used = new Set([...CORNERSTONES.offense, ...CORNERSTONES.defense].map((c) => c.species));
   if (legendary) used.add(legendary);
+  if (cornerstone?.species) used.add(cornerstone.species);
   for (const [position, count] of STARTING_ROSTER) {
     for (let i = 0; i < count; i++) {
       const q = quality + (i === 0 ? 4 : -2) + rng.int(5) - 2;
@@ -290,6 +314,15 @@ export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, qua
   }
   // Cornerstones are a player-club thing. AI clubs (no choice given) get two stars of their own instead:
   // the first quarterback and one defensive starter, a cut above the roster, so every club has faces.
+  // A single cornerstone chosen from the offers (any position).
+  if (cornerstone) {
+    const c = cornerstoneByName(null, cornerstone) || cornerstone;
+    const target = roster.find((m) => m.position === c.position) || roster[0];
+    const star = generateMonster(rng, { position: c.position, quality: c.quality || 69, species: c.species || c.name, nature: c.nature, id: target.id });
+    if (c.ability) star.ability = c.ability; star.archetype = c.archetype; star.cornerstone = true; star.salary = salaryFor(star) + 3000;
+    Object.assign(target, star);
+    return roster;
+  }
   if (!cornerstoneOffense && !cornerstoneDefense) {
     const stars = [roster.find((m) => m.position === 'QB'), roster.find((m) => m.position === rng.pick(['DL', 'LB', 'CB']) && !m.legendary)].filter(Boolean);
     for (const m of stars) { if (m.legendary) continue; const up = generateMonster(rng, { position: m.position, quality: quality + 10, species: m.species, id: m.id, name: m.name }); Object.assign(m, up); m.star = true; }

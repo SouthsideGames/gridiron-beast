@@ -4,7 +4,7 @@
 
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
-import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI } from '../data/staff.js';
+import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
@@ -25,12 +25,12 @@ export const DAY_ACTIONS = ['Scout a region', 'Recruit', 'Training focus', 'Scou
 export const PLAN_SIZE = 6;
 
 // ------------------------------------------------------------ creation
-export function createFranchise({ owner, club, rival = null, cornerstoneOffense, cornerstoneDefense, seed = Date.now() >>> 0, settings = {} }) {
+export function createFranchise({ owner, club, rival = null, cornerstone = null, cornerstoneOffense, cornerstoneDefense, seed = Date.now() >>> 0, settings = {} }) {
   const rng = createRng(seed);
   const division = divisionOf(club);
   const rivalChoices = DIVISIONS[division].filter((t) => t !== club);
   const rivalTeam = rivalChoices.includes(rival) ? rival : rng.pick(rivalChoices);
-  const roster = createRoster(rng.seed(), { cornerstoneOffense, cornerstoneDefense, quality: 56 });
+  const roster = createRoster(rng.seed(), { cornerstone, cornerstoneOffense, cornerstoneDefense, quality: 56 });
   const f = {
     schemaVersion: SCHEMA_VERSION, createdAt: new Date().toISOString(), seed, rngState: rng.state,
     owner: { ...owner }, club, tier: 'challenger', staff: {},
@@ -311,7 +311,8 @@ export function catalog(f, side) {
 }
 
 // ------------------------------------------------------------ economy
-export const capFor = (f) => tierById(f.tier).cap;
+export const ownerPerk = (f) => BACKGROUNDS[f?.owner?.background]?.perk || null;
+export const capFor = (f) => Math.round(tierById(f.tier).cap * (ownerPerk(f) === 'cap' ? 1.04 : 1));
 export function salarySummary(f, proposed = 0) {
   const monsters = f.roster.reduce((s, m) => s + (m.salary || salaryFor(m)), 0);
   const staff = Object.values(f.staff).reduce((s, id) => s + (staffById(id)?.salary || 0), 0);
@@ -490,7 +491,7 @@ export function scoutRegion(f, regionName) {
     const m = generateMonster(r, { position, quality, species: sp.id });
     uniqueName(f, m, prospects.map((p) => p.monster.name));
     dexRecord(f, m, 'seen');
-    const revealed = skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1;
+    const revealed = Math.min(6, (skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1) + (ownerPerk(f) === 'scouting' ? 1 : 0));
     prospects.push({ monster: m, revealed, natureKnown: skill >= 70, potentialKnown: skill >= 55 });
   }
   save();
@@ -565,6 +566,7 @@ export function trainingOdds(f, focus, intensity = 'normal') {
   let success = 0.82 + ((tr?.overall ?? 75) - 75) / 200 + I.success;
   if (streak >= 2) success *= streak >= 3 ? 0.25 : 0.42; // third week running: monsters tune it out
   if (f.rattled) success -= 0.12;
+  if (ownerPerk(f) === 'training') success += 0.06;
   success = Math.max(0.05, Math.min(0.97, success));
   const base = Object.values(trainingBonus(tr, focus) || {})[0] || 1;
   return { success, risk: I.risk, amount: Math.max(1, Math.round(base * I.factor)), streak, factor: I.factor };
@@ -604,7 +606,7 @@ export function scoutOpponent(f, side) {
       : { side, passD: Math.round(str.passD), runD: Math.round(str.runD), aggression: Math.round(team.coach.aggression * 100), star: best(DEFENSE_BASE), plays: [...team.defensePlays] };
     // Rematch scouting (GDD §15.8): a club you have faced before gives up one play from its other side too.
     const h2h = f.campaign?.h2h?.[opp];
-    if (h2h && (h2h.w + h2h.l) > 0) { const other = side === 'offense' ? team.defensePlays : team.offensePlays; const h = hashString(`${opp}|${f.season.year}|${f.season.week}`); report.bonus = { side: side === 'offense' ? 'defense' : 'offense', play: other[h % other.length], games: h2h.w + h2h.l }; }
+    if ((h2h && (h2h.w + h2h.l) > 0) || ownerPerk(f) === 'analyst') { const other = side === 'offense' ? team.defensePlays : team.offensePlays; const h = hashString(`${opp}|${f.season.year}|${f.season.week}`); report.bonus = { side: side === 'offense' ? 'defense' : 'offense', play: other[h % other.length], games: h2h ? h2h.w + h2h.l : 0, analyst: !h2h }; }
   }
   f.week.scoutReport = report; f.season.day = 4;
   return { ok: true, report };

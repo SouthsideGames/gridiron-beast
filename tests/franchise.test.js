@@ -429,3 +429,32 @@ test('Hall of Fame: eligibility follows the checklist; retiring writes a career 
   H.resetHof(); H.addHofCard(r.card); assert.equal(H.hallOfFame().length, 1); H.addHofCard(r.card); assert.equal(H.hallOfFame().length, 1, 'no duplicates');
   H.mergeHof([{ ...r.card, id: 'other' }]); assert.equal(H.hallOfFame().length, 2); H.resetHof();
 });
+
+test('cornerstone offers: three monsters of different positions and elements, each with an ability; the pick leads the roster', async () => {
+  const { cornerstoneOffers } = await import('../src/data/monsters.js');
+  for (const seed of [1, 2, 3, 99]) {
+    const o = cornerstoneOffers(seed);
+    assert.equal(o.length, 3);
+    assert.equal(new Set(o.map((x) => x.position)).size, 3); assert.equal(new Set(o.map((x) => x.type)).size, 3);
+    for (const x of o) assert.ok(x.abilityName && x.quality >= 68);
+    assert.deepEqual(cornerstoneOffers(seed).map((x) => x.name), o.map((x) => x.name), 'deterministic per seed');
+  }
+  const offer = cornerstoneOffers(5)[1];
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Stonehaven Titans', cornerstone: offer, seed: 5 });
+  const star = f.roster.find((m) => m.cornerstone);
+  assert.ok(star && star.species === offer.species && star.position === offer.position);
+  assert.equal(f.roster.filter((m) => m.cornerstone).length, 1, 'one cornerstone, no hidden second one');
+  assert.ok(monsterOverall(star) >= 64);
+});
+
+test('owner backgrounds carry a perk: cap, training odds, scouting reveal, analyst play', () => {
+  const mk = (background) => F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 'custom|1|2|curls|headset|210', hometown: 'X', background }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 61 });
+  const base = mk('player'), biz = mk('business');
+  assert.ok(F.capFor(biz) > F.capFor(base));
+  F.hireDefaultStaff(base); F.hireDefaultStaff(biz);
+  assert.ok(F.trainingOdds(base, 'coverage').success > F.trainingOdds(biz, 'coverage').success);
+  const sc = mk('scout'); F.hireDefaultStaff(sc); const r = F.scoutRegion(sc, 'Coral Coast'); const r2 = F.scoutRegion(F.hireDefaultStaff(biz) || biz, 'Coral Coast');
+  assert.ok(r.prospects[0].revealed > r2.prospects[0].revealed);
+  const an = mk('analyst'); F.hireDefaultStaff(an); F.scoutRegion(an, 'Coral Coast'); F.skipRecruit(an); F.setTraining(an, 'coverage');
+  assert.ok(F.scoutOpponent(an, 'offense').report.bonus?.analyst, 'analyst sees an extra play from week 1');
+});

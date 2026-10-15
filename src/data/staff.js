@@ -72,3 +72,11 @@ export const REGIONS = Object.freeze({
   'Iron Wastes': { biome: 'fire', types: ['Metal', 'Earth', 'Dragon'] },
   'Celestial Highlands': { biome: 'ice', types: ['Light', 'Psychic', 'Wind'] },
 });
+
+/** Owner backgrounds chosen at creation (GDD §15.13): flavour plus one small perk. */
+export const BACKGROUNDS = Object.freeze({
+  player: { label: 'Former player', text: 'You played the game. Training sessions succeed a little more often (+6%).', perk: 'training' },
+  scout: { label: 'Former scout', text: 'You know what to look for. Scouting reveals one more rating on every prospect.', perk: 'scouting' },
+  analyst: { label: 'Analyst', text: 'You live in the tape. Thursday reports show one extra opponent play from week 1.', perk: 'analyst' },
+  business: { label: 'Businessperson', text: 'You know money. The salary cap is 4% higher.', perk: 'cap' },
+});
