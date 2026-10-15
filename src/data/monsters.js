@@ -218,7 +218,7 @@ export function generateMonster(rng, { position = null, quality = 58, type = nul
 export function salaryFor(m) { return 18000 + 280 * monsterOverall(m); }
 
 /** XP needed to reach the next level. */
-export const xpForLevel = (level) => 80 + level * 40;
+export const xpForLevel = (level) => 30 + level * 18; // level 10 in about two seasons of starts; level 20 is a long career
 
 /** Apply a level-up: +1 to three weighted attributes (potential-capped). */
 export function levelUp(m, rng) {

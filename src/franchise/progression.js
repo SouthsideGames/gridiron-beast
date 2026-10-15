@@ -12,9 +12,9 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
   for (const slot of [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K']) {
     const m = byId[chart[slot]]; if (!m) continue;
     const st = playerStats?.[slot] || {};
-    let xp = 10 + (won ? 4 : 0);
-    xp += Math.round((st.rushYds || 0) / 10 + (st.recYds || 0) / 10 + (st.passYds || 0) / 25);
-    xp += (st.td || 0) * 6 + (st.tackles || 0) * 2 + (st.sacks || 0) * 5 + (st.int || 0) * 6 + (st.rec || 0);
+    let xp = 24 + (won ? 10 : 0);
+    xp += Math.round((st.rushYds || 0) / 4 + (st.recYds || 0) / 4 + (st.passYds || 0) / 10);
+    xp += (st.td || 0) * 14 + (st.tackles || 0) * 5 + (st.sacks || 0) * 12 + (st.int || 0) * 14 + (st.rec || 0) * 2;
     m.xp += xp;
     m.stats.games += 1; m.stats.yards += (st.rushYds || 0) + (st.recYds || 0); m.stats.td += st.td || 0; m.stats.tackles += st.tackles || 0; m.stats.sacks += st.sacks || 0; m.stats.int += st.int || 0; m.stats.catches += st.rec || 0;
     while (m.xp >= xpForLevel(m.level)) {

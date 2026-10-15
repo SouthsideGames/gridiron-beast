@@ -2,10 +2,8 @@
 
 Items the owner has asked to hold. Implement on "PROCEED" (all) or "PROCEED n" (some); "DROP n" removes one.
 
-3. **Finalize the monster roster before Prototype 2 (gate).** In progress on the `monsters` branch. Done: 72-species dex with fixed element, natural + secondary position and rarity (`src/data/species.js`); 16×16 body-template sprites with patterns; recruiting by region and rarity (rares in one home region from week 4, legendaries never scouted); Beast Dex screen on the main menu (seen / signed / ???); owner's round-1 names applied; naming guide (`docs/MONSTER_NAMING.md`); old saves migrate. Still open before merge:
-   - Round 2 review on the dex page (Flarynx, Craggo, Tsunarok redesigned; Statyx, Shardok renamed).
-   - Decided: eight fixed gym clubs hold eight of the twelve legendaries (GDD §15.3).
-   - Prototype 2 is specified in GDD §15 (campaign: gym clubs, badges, dialogue, commissioner, postseason events, Hall of Fame, Legend Tracks, evolution) with the build order in §15.10.
+3. **Finalize the monster roster before Prototype 2 (gate).** DONE (merged, PR #27). Done: 72-species dex with fixed element, natural + secondary position and rarity (`src/data/species.js`); 16×16 body-template sprites with patterns; recruiting by region and rarity (rares in one home region from week 4, legendaries never scouted); Beast Dex screen on the main menu (seen / signed / ???); owner's round-1 names applied; naming guide (`docs/MONSTER_NAMING.md`); old saves migrate. Still open before merge:
+   - Prototype 2 (GDD §15) is built on the `prototype-2` branch; see §15.12 for the numbers that need playtest tuning. Gym coach names and lines are drafts for the owner's review.
 
 ## Done
 1. Recruiting: ⓘ compare prospect with roster — done (sheet with headline ratings, OVR, age, starter/package tags, verdict, cap after signing).

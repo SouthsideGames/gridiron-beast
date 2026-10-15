@@ -24,7 +24,7 @@ export const isGymClub = (club) => !!GYM_BY_CLUB[club];
 export const FREE_LEGENDARIES = Object.freeze(['pyroclast', 'elderoot', 'tempestra', 'astralux']);
 
 /** Quality offset by tier, plus growth per season and after the player's first win over them (GDD §15.3). */
-export const GYM_TIER = Object.freeze({ early: 0, mid: 2, late: 4 });
+export const GYM_TIER = Object.freeze({ early: 1, mid: 4, late: 7 });
 export const GYM_GROWTH_PER_SEASON = 1.5;
 export const GYM_STUDIED_TAPE = 1;
 export const ORDINARY_GROWTH_PER_SEASON = 0.5;
