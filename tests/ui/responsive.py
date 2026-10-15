@@ -42,6 +42,10 @@ def tap_targets(page, label):
     small = page.evaluate('''() => Array.from(document.querySelectorAll('button:not(.ghost), .item, .card, .slot, .tab')).filter(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.height > 0 && (r.height < 44 && !b.classList.contains('small')) && !b.classList.contains('tab'); }).map(b => (b.className || b.tagName) + ':' + Math.round(b.getBoundingClientRect().height)).slice(0, 5)''')
     check(len(small) == 0, f'{label}: all primary buttons >= 44px tall {small}')
 
+def tip_ok(page):
+    b = page.query_selector('[data-action="tut-ok"]')
+    if b: b.click(); page.wait_for_timeout(60)
+
 def settle(page, want=None, limit=40):
     """Advance the match through transient states (animation, kickoff, try, continue) until `want` is present or scrimmage controls appear."""
     for _ in range(limit):
@@ -82,7 +86,9 @@ def run_size(pw, port, w, h, name):
     page.wait_for_selector('[data-action="difficulty"]'); page.click('[data-action="difficulty"][data-v="pro"]'); no_overflow(page, 'onboarding difficulty'); shot(page, f'{name}-02bb-difficulty'); page.click('#next')
     page.click('[data-action="reroll"]'); page.wait_for_timeout(50); page.click('[data-action="pick"][data-side="offense"] >> nth=0'); shot(page, f'{name}-02c-cornerstone'); page.click('#next')
     page.wait_for_selector('.tabbar')
-    no_overflow(page, 'hq'); tap_targets(page, 'hq'); shot(page, f'{name}-04-hq')
+    check(page.query_selector('.tip') is not None, 'tutorial: HQ tip shows on the first week')
+    page.click('[data-action="tut-primer"]'); page.wait_for_selector('.sheet'); no_overflow(page, 'primer'); shot(page, f'{name}-03b-primer'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
+    no_overflow(page, 'hq'); tap_targets(page, 'hq'); shot(page, f'{name}-04-hq'); tip_ok(page)
     # Commissioner's office: stage a pending review and open the screen.
     page.evaluate("() => { const f = __gb.f; f.week.commissioner = { over: 50000, names: f.roster.slice(0, 3).map(m => m.id), enough: true, visits: 1 }; }")
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="commissioner"]')
@@ -108,7 +114,7 @@ def run_size(pw, port, w, h, name):
     # Tabs
     for tab in ['roster', 'playbook', 'league', 'more']:
         page.click(f'[data-action="router-tab"][data-screen="{tab}"]'); page.wait_for_timeout(100)
-        no_overflow(page, f'tab {tab}'); shot(page, f'{name}-05-{tab}')
+        no_overflow(page, f'tab {tab}'); shot(page, f'{name}-05-{tab}'); tip_ok(page)
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('.slot >> nth=0'); page.wait_for_timeout(100); no_overflow(page, 'assign'); shot(page, f'{name}-06-assign')
     page.click('[data-action="monster"] >> nth=0'); page.wait_for_timeout(100); no_overflow(page, 'monster'); shot(page, f'{name}-07-monster')
     page.click('[data-action="species"]'); page.wait_for_selector('.sheet'); no_overflow(page, 'species sheet'); shot(page, f'{name}-07b-species'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
@@ -118,16 +124,16 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="router-tab"][data-screen="hq"]')
     # Week
     settle(page, '[data-action="scout"]')
-    page.click('[data-action="scout"]'); page.wait_for_selector('[data-action="region"]'); page.click('[data-action="region"] >> nth=0')
-    page.wait_for_selector('[data-action="skip"], [data-action="approach"]'); no_overflow(page, 'recruit'); shot(page, f'{name}-08-recruit')
+    page.click('[data-action="scout"]'); page.wait_for_selector('[data-action="region"]'); no_overflow(page, 'scout tip'); shot(page, f'{name}-07e-scout'); tip_ok(page); page.click('[data-action="region"] >> nth=0')
+    page.wait_for_selector('[data-action="skip"], [data-action="approach"]'); no_overflow(page, 'recruit'); shot(page, f'{name}-08-recruit'); tip_ok(page)
     if page.query_selector('[data-action="compare"]'):
         page.click('[data-action="compare"] >> nth=0'); page.wait_for_selector('.sheet table.compare'); no_overflow(page, 'recruit compare'); shot(page, f'{name}-08b-compare'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="skip"]')
-    page.click('[data-action="training"]'); page.wait_for_selector('[data-action="focus"]'); no_overflow(page, 'training'); shot(page, f'{name}-08c-training'); page.click('[data-action="focus"] >> nth=0')
+    page.click('[data-action="training"]'); page.wait_for_selector('[data-action="focus"]'); no_overflow(page, 'training'); shot(page, f'{name}-08c-training'); tip_ok(page); page.click('[data-action="focus"] >> nth=0')
     page.wait_for_selector('.sheet'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
-    page.click('[data-action="scoutopp"]'); page.click('[data-action="side"] >> nth=0'); page.wait_for_selector('.sheet .play-grid'); check(page.evaluate("() => document.querySelectorAll('.sheet .play-grid .card').length") == 6, 'scouting: six opponent play cards'); shot(page, f'{name}-09-scout'); page.click('[data-action="sheet-close"]')
+    page.click('[data-action="scoutopp"]'); tip_ok(page); page.click('[data-action="side"] >> nth=0'); page.wait_for_selector('.sheet .play-grid'); check(page.evaluate("() => document.querySelectorAll('.sheet .play-grid .card').length") == 6, 'scouting: six opponent play cards'); shot(page, f'{name}-09-scout'); page.click('[data-action="sheet-close"]')
     page.wait_for_selector('[data-action="gameplan"]'); page.click('[data-action="gameplan"]')
-    page.wait_for_selector('.play-grid')
+    page.wait_for_selector('.play-grid'); tip_ok(page)
     cols = page.evaluate('''() => { const g = document.querySelector('.play-grid'); const cards = Array.from(g.children); const tops = new Set(cards.map(c => Math.round(c.getBoundingClientRect().top))); return [getComputedStyle(g).gridTemplateColumns.split(' ').length, cards.length, tops.size]; }''')
     check(cols[0] == 3, f'gameplan: three columns ({cols[0]})')
     no_overflow(page, 'gameplan'); shot(page, f'{name}-10-gameplan')
@@ -137,16 +143,17 @@ def run_size(pw, port, w, h, name):
     dsel = page.evaluate("() => document.querySelectorAll('[data-side=\"defense\"].selected').length")
     for i in range(6 - dsel): page.click('[data-action="toggle"][data-side="defense"]:not(.selected) >> nth=0')
     page.click('[data-action="save"]')
-    page.wait_for_selector('[data-action="lineup"]'); page.click('[data-action="lineup"]'); page.wait_for_selector('[data-action="answer"]'); no_overflow(page, 'media day'); shot(page, f'{name}-10b-media')
+    page.wait_for_selector('[data-action="lineup"]'); page.click('[data-action="lineup"]'); page.wait_for_selector('[data-action="answer"]'); no_overflow(page, 'media day'); shot(page, f'{name}-10b-media'); tip_ok(page)
     for q in range(3): page.click(f'[data-action="answer"][data-q="{q}"] >> nth=0')
     page.click('[data-action="submit"]'); page.click('[data-action="done"]')
     page.wait_for_selector('[data-action="game"]'); page.click('[data-action="game"]')
-    page.wait_for_selector('[data-action="toss"]'); no_overflow(page, 'pregame'); shot(page, f'{name}-11-pregame')
+    page.wait_for_selector('[data-action="toss"]'); no_overflow(page, 'pregame'); shot(page, f'{name}-11-pregame'); tip_ok(page)
     check(page.query_selector('.talk .talk-line') is not None, 'pregame: the other coach speaks')
     if page.query_selector('[data-action="reply"]'): page.click('[data-action="reply"][data-v="respectful"]'); page.wait_for_selector('.talk-reply'); shot(page, f'{name}-11b-reply')
     page.click('[data-action="toss"]')
     page.wait_for_selector('.sheet [data-choice]'); page.click('.sheet [data-choice] >> nth=0')
     page.wait_for_selector('#field')
+    if page.query_selector('.sheet'): check(page.query_selector('.sheet [data-action="tut-primer"]') is not None, 'tutorial: first-game sheet'); shot(page, f'{name}-11c-firstgame'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     no_overflow(page, 'match'); shot(page, f'{name}-12-kickoff')
     page.click('[data-action="kickoff"]'); page.wait_for_timeout(100)
     # First scrimmage: cards + snap visible without scrolling

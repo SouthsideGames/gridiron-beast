@@ -296,3 +296,8 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .talk-line { margin: 4px 0 0; font-style: italic; }
 .talk-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .talk-reply { margin-top: 8px; font-size: 13px; }
+
+/* Tutorial tips */
+.tip { background: #1e2a3a; border: 2px solid #3b5a7a; border-radius: var(--r); padding: var(--s2) var(--s3); margin: 0 0 var(--s3); }
+.tip p { margin: 6px 0 8px; font-size: 14px; color: var(--ink); }
+.tip .row { gap: 6px; flex-wrap: wrap; }

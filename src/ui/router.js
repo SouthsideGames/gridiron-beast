@@ -10,9 +10,11 @@ let current = null;
 let app = null;
 let ctxProvider = () => ({});
 let tabsProvider = () => null;
+let tipProvider = null; // (ctx, screenName) => html prepended to the screen (tutorial tips)
+let afterMount = null; // (ctx, screenName) => void
 
 export function registerScreen(name, screen) { screens.set(name, screen); }
-export function init({ root, context, tabs }) { app = root; ctxProvider = context; tabsProvider = tabs; }
+export function init({ root, context, tabs, tip = null, mounted = null }) { app = root; ctxProvider = context; tabsProvider = tabs; tipProvider = tip; afterMount = mounted; }
 export function currentScreen() { return stack[stack.length - 1] || null; }
 
 export function go(name, params = {}, { replace = false, reset = false } = {}) {
@@ -41,10 +43,11 @@ export function render() {
       <h1 class="title">${esc(title)}</h1>
       <span class="topbar-right">${screen.topRight ? screen.topRight(ctx) : ''}</span>
     </header>
-    <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''}" id="screen">${screen.render(ctx)}</main>
+    <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${screen.render(ctx)}</main>
     ${tabs ? `<nav class="tabbar" aria-label="Franchise sections">${tabs.map((t) => `<button class="tab ${t.active ? 'active' : ''}" data-action="router-tab" data-screen="${t.screen}" aria-current="${t.active ? 'page' : 'false'}"><span class="tab-icon">${t.icon}</span><span>${esc(t.label)}</span></button>`).join('')}</nav>` : ''}`;
   app.querySelector('[data-action="router-back"]')?.addEventListener('click', back);
   for (const b of app.querySelectorAll('[data-action="router-tab"]')) b.addEventListener('click', () => go(b.dataset.screen, {}, { reset: true }));
   screen.mount?.($('#screen'), ctx);
+  afterMount?.(ctx, top.name);
   window.scrollTo(0, 0);
 }

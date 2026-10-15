@@ -6,6 +6,7 @@ import { cloudStatus } from '../../franchise/cloud-save.js';
 import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
 import { resetDex } from '../../franchise/dex-store.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
+import { resetTutorial, primerHtml } from '../tutorial.js';
 import { DIFFICULTY as DIFF } from '../../franchise/franchise.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { portraitSprite } from '../pixel-monster.js';
@@ -53,6 +54,7 @@ export function registerMenuScreens(Router, app) {
           <label class="field">Animation speed<select data-change="speed"><option value="0.7" ${s.speed === 0.7 ? 'selected' : ''}>Slow</option><option value="1" ${s.speed === 1 ? 'selected' : ''}>Normal</option><option value="1.6" ${s.speed === 1.6 ? 'selected' : ''}>Fast</option></select></label>
           <label class="field">Players on the field<select data-change="markers"><option value="sprites" ${s.fieldMarkers !== 'simple' ? 'selected' : ''}>Monster art</option><option value="simple" ${s.fieldMarkers === 'simple' ? 'selected' : ''}>Simple circles and squares</option></select></label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="hints" ${s.hints !== false ? 'checked' : ''}> Coaching hints (recommended plays after scouting)</label>
+          ${app.f ? `<label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="tutorial" ${s.tutorial !== false ? 'checked' : ''}> Tutorial tips (first-week walkthrough)</label><div class="row"><button class="btn small" data-action="tutreset">Show all tips again</button><button class="btn small" data-action="primer">How football works</button></div>` : ''}
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default — not recommended on mobile)</label>
         </div>
@@ -63,7 +65,9 @@ export function registerMenuScreens(Router, app) {
       const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
-        reduced: (el) => set('reducedMotion', el.checked), markers: (el) => set('fieldMarkers', el.value), hints: (el) => set('hints', el.checked), liveclock: (el) => set('liveClock', el.checked),
+        reduced: (el) => set('reducedMotion', el.checked), markers: (el) => set('fieldMarkers', el.value), hints: (el) => set('hints', el.checked), tutorial: (el) => set('tutorial', el.checked), liveclock: (el) => set('liveClock', el.checked),
+        tutreset: () => { resetTutorial(app.f); app.f.settings.tutorial = true; app.save(); toast('Tips will show again on each screen.', 'good'); Router.render(); },
+        primer: () => sheet(primerHtml(), { title: 'How football works' }),
         export: () => { const blob = new Blob([Save.exportJson(app.f)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `gridiron-beast-${app.f.club.replace(/\s+/g, '-').toLowerCase()}-s${app.f.season.year}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Save exported.', 'good'); },
         import: async (el) => { const file = el.files?.[0]; if (!file) return; try { const f = Save.importJson(await file.text()); app.setFranchise(f); toast('Save imported.', 'good'); Router.go('hq', {}, { reset: true }); } catch (e) { toast('Import failed: ' + e.message, 'bad'); } el.value = ''; },
         restore: async () => { const b = Save.loadBackup(); if (!b) return; if (await confirmSheet(`Roll back to Season ${b.season.year}, Week ${b.season.week} (saved after last Sunday)? Anything since then is lost.`, { title: 'Restore backup', okLabel: 'Restore' })) { app.setFranchise(b); toast('Backup restored.', 'good'); Router.go('hq', {}, { reset: true }); } },

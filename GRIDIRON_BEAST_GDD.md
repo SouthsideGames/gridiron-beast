@@ -372,3 +372,10 @@ All thirteen steps of §15.10 are built. Where the build settled a detail the de
 * **Losing-season event pool:** star wants out (raise / promise a start / let go to the rival), coordinator offer (bonus / let go), scheme mutiny when under half a side's starters fit (change scheme / keep / fire). Raises, bonuses and severance land on next season's cap as dead money; mid-season firings leave the rest of the salary on this season's books.
 * **Commissioner:** three names (five on Rookie), the cheapest that each alone clears the cap, else the three most expensive until under. Games are never locked by the cap itself; the review is what blocks Sunday.
 * **Stores outside the franchise:** the Beast Dex (`gridiron-beast-dex`) and the Hall of Fame (`gridiron-beast-hof`), both mirrored to the cloud save. Evolved forms are revealed in the dex once seen.
+
+### 15.13 Owner's playtest round 1 (2026-10-15)
+
+* **Badge pacing:** four gym games a season, never week 1, alternating with ordinary games; all eight badges take two seasons on every difficulty (see 15.3).
+* **Starter monsters:** three cornerstone offers of different positions and elements per franchise (uncommon or rare, each with its signature ability), two rerolls. One cornerstone, chosen by the player; no hidden second one.
+* **Owner creation:** Look step (gender, skin, hair colour and style, extras, shirt) builds a custom portrait; Background step (hometown + Former player / Former scout / Analyst / Businessperson) gives one small perk: +6 % training success, +1 scouting reveal, an extra opponent play on Thursday from week 1, or +4 % cap.
+* **Tutorial:** a tip panel on each screen the first time it is reached in a new franchise (HQ, Monday to Sunday, pregame, the first game as an overlay, after the game, roster, plays, league), written for someone new to American football, with a "How football works" primer (field, downs, scoring, fourth down, positions, turnovers, what the player controls). Tips are dismissed one by one, can be turned off from any tip, and Settings can bring them back or open the primer.

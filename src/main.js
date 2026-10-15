@@ -4,6 +4,7 @@ import * as Router from './ui/router.js';
 import * as Save from './franchise/save.js';
 import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof } from './franchise/cloud-save.js';
 import { setHofMirror, mergeHof, hallOfFame } from './franchise/hall-of-fame.js';
+import { tipHtml, maybeSheetTip, initTutorial } from './ui/tutorial.js';
 import { setDexMirror, mergeDex, dexData } from './franchise/dex-store.js';
 import { $, toast } from './ui/dom.js';
 import { registerMenuScreens } from './ui/screens/menu.js';
@@ -33,7 +34,9 @@ function tabs(ctx, screenName) {
 
 export function start() {
   globalThis.__gb = app; // test hook: the UI check reaches the franchise state through it
-  Router.init({ root: $('#app'), context: () => ({ app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }), tabs });
+  Router.init({ root: $('#app'), context: () => ({ app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }), tabs,
+    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { if (ctx.f) maybeSheetTip(ctx.f, name, () => app.save()); } });
+  initTutorial({ app, Router });
   registerMenuScreens(Router, app);
   registerOnboardingScreens(Router, app);
   registerHqScreens(Router, app);
