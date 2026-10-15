@@ -77,6 +77,7 @@ def run_size(pw, port, w, h, name):
     page.wait_for_selector('#first')
     page.fill('#first', 'Sam'); page.fill('#last', 'Rivera'); page.click('[data-action="portrait"][data-v="2"]'); no_overflow(page, 'onboarding name'); shot(page, f'{name}-02-name'); page.click('#next')
     page.click('[data-action="club"][data-v="Ember City Beasts"]'); no_overflow(page, 'onboarding club'); shot(page, f'{name}-02b-club'); page.click('#next')
+    page.wait_for_selector('[data-action="difficulty"]'); page.click('[data-action="difficulty"][data-v="pro"]'); no_overflow(page, 'onboarding difficulty'); shot(page, f'{name}-02bb-difficulty'); page.click('#next')
     page.click('[data-action="pick"][data-side="offense"][data-v="Zappard"]'); shot(page, f'{name}-02c-cornerstone'); page.click('#next')
     page.wait_for_selector('.tabbar')
     no_overflow(page, 'hq'); tap_targets(page, 'hq'); shot(page, f'{name}-04-hq')

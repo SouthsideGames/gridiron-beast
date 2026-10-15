@@ -5,23 +5,24 @@ import { esc, delegate, toast, sheet } from '../dom.js';
 import { STARTER_CLUBS, DIVISIONS, RIVAL_GMS, divisionOf, conferenceFor, TEAM_META } from '../../data/league.js';
 import { CORNERSTONES, NATURES, ABILITIES, TYPES } from '../../data/monsters.js';
 import { STAFF, ROLE_LABEL, STAFF_ROLES } from '../../data/staff.js';
-import { createFranchise, hireStaff, nextStaffRole, salarySummary, staffMember, schemeAlignment, hireDefaultStaff, firstWeekWelcome } from '../../franchise/franchise.js';
+import { createFranchise, hireStaff, nextStaffRole, salarySummary, staffMember, schemeAlignment, hireDefaultStaff, firstWeekWelcome, DIFFICULTY } from '../../franchise/franchise.js';
 import { portraitSprite, monsterSprite } from '../pixel-monster.js';
 import { playCardSvg } from '../play-art.js';
 import { PLAYBOOKS } from '../../data/staff.js';
 import { PLAYS } from '../../data/playbook.js';
 import { fmtMoney } from '../dom.js';
 
-const STEPS = ['name', 'club', 'offense'];
+const STEPS = ['name', 'club', 'difficulty', 'offense'];
 const LINES = {
   name: 'Ah, there you are! I knew our new franchise owner would be here soon. What should I call you?',
   club: 'The top franchises aren’t for sale. These four clubs finished at the bottom of the league and need an owner willing to rebuild. Pick your opportunity.',
+  difficulty: 'How hard do you want this league to be? Choose carefully: it is set for the life of your franchise, and the Hall of Fame judges you by it.',
   offense: 'Last thing: choose the monster who will lead your rebuild. Your first week starts Monday — scout, recruit, train, set a game plan, then play on Sunday.',
 };
 
 export function registerOnboardingScreens(Router, app) {
   let draft = null;
-  const fresh = () => ({ step: 0, first: '', last: '', gender: 'Female', portrait: 0, hometown: '', club: null, rival: null, offense: null, defense: null });
+  const fresh = () => ({ step: 0, first: '', last: '', gender: 'Female', portrait: 0, hometown: '', club: null, rival: null, difficulty: 'pro', offense: null, defense: null });
 
   Router.registerScreen('onboarding', {
     title: "Commissioner's Office", back: false, tabs: false,
@@ -34,6 +35,7 @@ export function registerOnboardingScreens(Router, app) {
       if (step === 'home') body = `<label class="field">Hometown<input id="home" maxlength="28" value="${esc(draft.hometown)}" placeholder="City you are from"></label>`;
       if (step === 'club') body = `<div class="stack">${STARTER_CLUBS.map((c) => `<button class="choice ${draft.club === c.name ? 'selected' : ''}" data-action="club" data-v="${esc(c.name)}"><span class="name" style="color:${TEAM_META[c.name].color}">${esc(c.name)}</span><span class="muted">${esc(divisionOf(c.name))} Division · ${esc(conferenceFor(divisionOf(c.name)))} Conference · last season ${c.record}</span></button>`).join('')}</div>${draft.rival ? `<div class="panel tight" style="border-color:#a855f7;margin-top:8px">⚔️ Your division rival: <b>${esc(draft.rival)}</b> — new GM ${esc(RIVAL_GMS[draft.rival])}. You meet twice a season.</div>` : ''}`;
       if (step === 'rival') { const r = draft.rival; body = `<div class="panel center" style="border-color:#a855f7"><div style="font-size:32px">⚔️</div><h2>YOUR RIVAL HAS ARRIVED</h2><div style="font-size:18px;font-weight:800;color:${TEAM_META[r].color}">${esc(r)}</div><div class="muted">New General Manager: <b>${esc(RIVAL_GMS[r])}</b></div><p class="muted" style="margin-top:8px">You meet twice a season, home and away. Rivalry results are tracked for your whole career.</p></div>`; }
+      if (step === 'difficulty') body = `<div class="stack">${Object.entries(DIFFICULTY).map(([id, d]) => `<button class="choice ${draft.difficulty === id ? 'selected' : ''}" data-action="difficulty" data-v="${id}"><span class="name">${esc(d.label)}</span><div class="muted">${esc(d.text)}</div><div class="muted">${esc(d.hof)}</div></button>`).join('')}</div><p class="dim" style="margin-top:8px">Locked once the franchise starts. Game length and coaching mode can still be changed in Settings.</p>`;
       if (step === 'offense') body = cornerstoneGrid('offense') + `<p class="dim" style="margin-top:8px">A balanced coaching staff is hired for you. You can replace anyone later from the Staff screen.</p>`;
       return `<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">LEAGUE COMMISSIONER · ${draft.step + 1} / ${STEPS.length}</div>${esc(LINES[step])}</div></div>
         <div style="margin:12px 0">${body}</div>
@@ -54,12 +56,13 @@ export function registerOnboardingScreens(Router, app) {
         portrait: (el) => { const fi = root.querySelector('#first'), la = root.querySelector('#last'); if (fi) { draft.first = fi.value.trim(); draft.last = la.value.trim(); } draft.portrait = Number(el.dataset.v); Router.render(); },
         club: (el) => { draft.club = el.dataset.v; const others = DIVISIONS[divisionOf(draft.club)].filter((t) => t !== draft.club); draft.rival = others[Math.floor(Math.random() * others.length)]; Router.render(); },
         pick: (el) => { draft[el.dataset.side] = el.dataset.v; Router.render(); },
+        difficulty: (el) => { draft.difficulty = el.dataset.v; Router.render(); },
         details: (el) => { const c = [...CORNERSTONES.offense, ...CORNERSTONES.defense].find((x) => x.name === el.dataset.v); const ab = ABILITIES[c.ability]; sheet(`<div class="row">${monsterSprite({ id: c.name, name: c.name, type: c.type }, 64)}<div><b>${esc(c.name)}</b><div class="muted">${c.position} · ${c.type} · ${c.quality} OVR · ${c.archetype}</div></div></div><h3>Nature</h3><p>${esc(NATURES[c.nature].name)} — ${esc(NATURES[c.nature].behavior)}</p><h3>Signature ability</h3><p><b>${esc(ab.name)}</b>: ${esc(ab.text)}</p><h3>Type</h3><p>${esc(TYPES[c.type].blurb)}.</p>`, { title: c.name }); },
         back: () => { if (draft.step > 0) { draft.step -= 1; Router.render(); } else Router.go('menu', {}, { reset: true }); },
         next: () => {
           const e = collect(); if (e) { err(e); return; }
           if (STEPS[draft.step] === 'offense') {
-            const f = createFranchise({ owner: { first: draft.first, last: draft.last, gender: draft.gender, portrait: draft.portrait, hometown: draft.hometown }, club: draft.club, rival: draft.rival, cornerstoneOffense: draft.offense, cornerstoneDefense: 'Frostclaw', settings: { ...app.defaultSettings } });
+            const f = createFranchise({ owner: { first: draft.first, last: draft.last, gender: draft.gender, portrait: draft.portrait, hometown: draft.hometown }, club: draft.club, rival: draft.rival, cornerstoneOffense: draft.offense, cornerstoneDefense: 'Cryolynx', settings: { ...app.defaultSettings, difficulty: draft.difficulty } });
             hireDefaultStaff(f); firstWeekWelcome(f);
             app.setFranchise(f); draft = null; Router.go('hq', {}, { reset: true }); return;
           }

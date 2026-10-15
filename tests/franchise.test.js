@@ -262,3 +262,10 @@ test('Thursday scouting shows exactly the six plays the opponent brings on Sunda
   const m = F.sundayMatchup(f); const theirs = m.playerSide === 'home' ? m.away : m.home;
   assert.deepEqual([...r.report.plays].sort(), [...theirs.defensePlays].sort());
 });
+
+test('difficulty is chosen at creation, carried in the save and exposed with Hall of Fame goals', () => {
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 5, settings: { difficulty: 'allstar' } });
+  assert.equal(f.settings.difficulty, 'allstar');
+  assert.deepEqual(F.difficultyOf(f).hofGoals, { badges: 8, titles: 4, wins: 80, awards: 5 });
+  assert.equal(F.difficultyOf({ settings: {} }).label, 'Pro');
+});
