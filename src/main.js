@@ -2,7 +2,8 @@
 
 import * as Router from './ui/router.js';
 import * as Save from './franchise/save.js';
-import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex } from './franchise/cloud-save.js';
+import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof } from './franchise/cloud-save.js';
+import { setHofMirror, mergeHof, hallOfFame } from './franchise/hall-of-fame.js';
 import { setDexMirror, mergeDex, dexData } from './franchise/dex-store.js';
 import { $, toast } from './ui/dom.js';
 import { registerMenuScreens } from './ui/screens/menu.js';
@@ -45,6 +46,8 @@ export function start() {
   // The player's dex lives outside the franchise and is mirrored to the cloud like the save.
   setDexMirror((d) => cloudSaveDex(d));
   cloudLoadDex().then((remote) => { if (remote) mergeDex(remote); if (dexData().updatedAt > (remote?.updatedAt || 0)) cloudSaveDex(dexData()); });
+  setHofMirror((cards) => cloudSaveHof(cards));
+  cloudLoadHof().then((remote) => { if (remote) mergeHof(remote); if (hallOfFame().length) cloudSaveHof(hallOfFame()); });
   Router.go('menu', {}, { reset: true });
   // The cloud copy wins when it is newer (e.g. the device's storage was cleared while the app sat in the background).
   cloudLoad().then((remote) => {
@@ -67,7 +70,7 @@ export const TAB_OF = {
   roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', staff: 'more',
   playbook: 'playbook', playdetail: 'playbook', practice: 'playbook', audit: 'more',
   league: 'league', schedule: 'league', standings: 'league', history: 'league',
-  more: 'more', settings: 'more', developer: 'more', about: 'more', dex: 'more',
+  more: 'more', settings: 'more', developer: 'more', about: 'more', dex: 'more', hof: 'more',
 };
 
 start();

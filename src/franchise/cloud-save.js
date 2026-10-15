@@ -96,3 +96,8 @@ export function cloudSaveDex(dex) {
   clearTimeout(dexTimer);
   dexTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('dex').set(JSON.parse(JSON.stringify(dex))); } catch { /* ignore */ } }, 3000);
 }
+
+// ------------------------------------------------------------ the Hall of Fame
+let hofTimer = null;
+export async function cloudLoadHof() { const c = await connect(); if (!c) return null; try { const d = await c.col.doc('hof').get(); return d.exists ? d.data().cards || null : null; } catch { return null; } }
+export function cloudSaveHof(cards) { clearTimeout(hofTimer); hofTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('hof').set({ cards: JSON.parse(JSON.stringify(cards)), updatedAt: Date.now() }); } catch { /* ignore */ } }, 3000); }

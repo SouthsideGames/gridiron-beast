@@ -12,6 +12,7 @@ import { headlineHtml } from './roster.js';
 import { ATTRIBUTES, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
 import { GYMS, GYM_BY_CLUB } from '../../data/gyms.js';
+import { addHofCard } from '../../franchise/hall-of-fame.js';
 import { SPECIES_BY_ID } from '../../data/monsters.js';
 import { sprite16 } from '../sprite16.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
@@ -60,6 +61,7 @@ export function registerHqScreens(Router, app) {
         <h3>News</h3><ul class="news" style="padding-left:18px;margin:0">${f.news.slice(0, 8).map((n) => `<li class="${esc(n.kind)}">${newsText(f, n.text)}</li>`).join('') || '<li class="dim">Nothing yet.</li>'}</ul>`;
     },
     mount(root) {
+      if (F.hallOfFameNotice(app.f)) { app.save(); sheet(`<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">LEAGUE COMMISSIONER</div>Eight badges. The titles. The wins. The awards. I've been doing this a long time and I don't say this often: you're eligible for the Hall of Fame. Retire whenever you like. Or keep going. The league isn't done with you either way.</div></div>`, { title: 'Hall of Fame' }); }
       const f0 = app.f;
       if (f0?.season.finished && f0.season.awards && !f0.season.awardsShown) { f0.season.awardsShown = true; app.save(); sheet(awardsHtml(f0.season.awards), { title: `Season ${f0.season.year} awards` }); }
       delegate(root, {
@@ -70,6 +72,11 @@ export function registerHqScreens(Router, app) {
         commissioner: () => Router.go('commissioner'),
         postseason: () => Router.go('postseason'),
         legend: () => Router.go('legend'),
+        retire: async () => {
+          const r = F.retire(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; }
+          if (!(await confirmSheet(`Retire ${r.card.owner}? Your career (${r.card.seasons} seasons, ${r.card.record.w}–${r.card.record.l}, ${r.card.titles} title${r.card.titles === 1 ? '' : 's'}) is written to the Hall of Fame, this franchise ends, and your Beast Dex carries on. Export the save first if you want to keep playing it elsewhere.`, { title: 'Hall of Fame', okLabel: 'Retire', danger: true }))) return;
+          addHofCard(r.card); app.reset(); toast('Welcome to the Hall of Fame.', 'good', 4000); Router.go('hof', {}, { reset: true });
+        },
         resume: () => Router.go('match'),
         autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(awardsHtml(app.f.season.awards || F.seasonAwards(app.f)), { title: `Season ${app.f.season.year} awards` }),
@@ -426,6 +433,7 @@ function campaignPanel(f) {
   const LABEL = { badges: 'Gym badges', titles: 'Beast Bowl titles', wins: 'Career wins', awards: 'League awards' };
   const badges = GYMS.map((g) => { const b = F.badgeOf(f, g.club); const hue = TYPES[g.element]?.hue ?? 120; return `<button class="badge ${b ? 'won' : ''}" data-action="gym" data-club="${esc(g.club)}" style="--hue:${hue}" aria-label="${esc(g.badge)}${b ? ', earned' : ', not yet earned'}"><span class="badge-ico">${b ? '★' : '·'}</span><span class="badge-nm">${esc(g.element)}</span></button>`; }).join('');
   return `<div class="panel"><div class="row between"><b>Campaign</b><span class="dim">${hof.eligible ? '🏛️ Hall of Fame eligible' : `${hof.rows.filter((r) => r.done).length} / ${hof.rows.length} on track`}</span></div>
+    ${hof.eligible ? `<button class="btn block" data-action="retire" style="margin:8px 0">🏛️ Retire to the Hall of Fame</button>` : ''}
     <div class="badge-row">${badges}</div>
     <div class="hof">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${LABEL[r.key]}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>
     <div class="row between" style="margin-top:8px"><span class="muted">Legend Tracks: ${Object.entries(f.campaign?.tracks || {}).map(([id, n]) => `${esc(SPECIES_BY_ID[id]?.name || id)} ${n}/3`).join(' · ') || 'none yet'}</span><button class="btn small" data-action="legend">🌟 Tracks</button></div></div>`;

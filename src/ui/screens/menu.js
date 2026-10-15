@@ -5,6 +5,9 @@ import * as Save from '../../franchise/save.js';
 import { cloudStatus } from '../../franchise/cloud-save.js';
 import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
 import { resetDex } from '../../franchise/dex-store.js';
+import { hallOfFame } from '../../franchise/hall-of-fame.js';
+import { DIFFICULTY as DIFF } from '../../franchise/franchise.js';
+import { monsterSprite } from '../pixel-monster.js';
 import { portraitSprite } from '../pixel-monster.js';
 
 export function registerMenuScreens(Router, app) {
@@ -21,6 +24,7 @@ export function registerMenuScreens(Router, app) {
           <button class="btn ${f ? '' : 'primary big'} block" data-action="new">${f ? 'Start a New Franchise' : '🏆 New Franchise'}</button>
           ${legacy && !f ? `<button class="btn block" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
           <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
+          ${hallOfFame().length ? `<button class="btn block" data-action="go" data-screen="hof">🏛️ Hall of Fame <span class="dim mono">${hallOfFame().length}</span></button>` : ''}
           <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block" data-action="go" data-screen="developer">🛠️ Developer</button></div>
         </div>
         <p class="center dim" style="margin-top:16px">v6.0 rebuild · Southside Games</p>`;
@@ -79,6 +83,19 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button></div>`;
     },
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet('Wipe every species you have discovered, across all franchises?', { title: 'Reset Beast Dex', okLabel: 'Reset', danger: true })) { resetDex(); toast('Beast Dex reset.'); } } }); },
+  });
+
+  Router.registerScreen('hof', {
+    title: 'Hall of Fame',
+    render() {
+      const cards = hallOfFame();
+      if (!cards.length) return '<div class="panel"><p>No careers enshrined yet. Hit every mark on the Campaign checklist and retire.</p></div>';
+      return `<div class="stack">${cards.map((c) => `<div class="panel hof-card"><div class="row">${portraitSprite(`${c.portrait}|${c.owner.split(' ')[0]}`, 48)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(c.owner)}</div><div class="muted">${esc(c.club)} · ${esc(DIFF[c.difficulty]?.label || c.difficulty)} · ${c.seasons} season${c.seasons === 1 ? '' : 's'}</div></div><span class="chip accent">🏛️</span></div>
+        <div class="kv" style="margin-top:8px"><b>Record</b><span class="mono">${c.record.w}–${c.record.l}</span><b>Beast Bowls</b><span>${c.titles}</span><b>Badges</b><span>${c.badges.length} / 8</span><b>League awards</b><span>${c.awards}</span><b>Species discovered</b><span>${c.dexSeen} / 72</span>${c.rival ? `<b>Rival</b><span>${esc(c.rival)} ${c.rivalRecord ? `(${c.rivalRecord.w}–${c.rivalRecord.l})` : ''}</span>` : ''}</div>
+        ${c.bestMonsters?.length ? `<div class="muted" style="margin-top:8px;font-size:12px">BEST MONSTERS</div><div class="row" style="flex-wrap:wrap;gap:8px">${c.bestMonsters.map((m) => `<span class="row" style="gap:4px">${monsterSprite({ id: m.name, name: m.name, species: m.species }, 28)}<span style="font-size:13px">${esc(m.name)} <span class="dim">${m.position} ${m.ovr}</span></span></span>`).join('')}</div>` : ''}
+        <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Season by season</summary>${(c.seasonsList || []).map((h) => `<div class="row between sub"><span>Season ${h.year}</span><span class="mono">${h.w}–${h.l}${h.champion ? ' 🏆' : h.playoffs ? ' · playoffs' : ''}</span></div>`).join('')}</details>
+        <div class="dim" style="margin-top:6px;font-size:12px">Retired ${new Date(c.retiredAt).toLocaleDateString()}</div></div>`).join('')}</div>`;
+    },
   });
 
   Router.registerScreen('about', {

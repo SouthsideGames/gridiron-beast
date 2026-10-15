@@ -95,6 +95,12 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="legend"]')
     page.click('[data-action="legend"]'); page.wait_for_selector('[data-action="pick"]'); no_overflow(page, 'legend tracks'); shot(page, f'{name}-04d-legend')
     page.evaluate("() => { __gb.f.legendPick = null; __gb.f.season.finished = false; __gb.save(); }")
+    # Hall of Fame: make the franchise eligible, see the commissioner's notice and the retire button, then view a card (without retiring the test franchise).
+    page.evaluate("() => { const f = __gb.f; for (const g of ['Harbor Sentinels','Sunfire Lions','Thunder Mesa','Canyon Crushers','Eastport Phantoms','Frostpeak Howlers','Ironpeak Rams','Palmetto Vipers']) f.campaign.badges[g] = { year: 1, week: 1, score: '1–0' }; Object.assign(f.campaign, { titles: 2, wins: 50, awards: 3 }); }")
+    page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('.sheet'); shot(page, f'{name}-04e-hof-notice'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
+    check(page.query_selector('[data-action="retire"]') is not None, 'hq: retire button when eligible')
+    page.evaluate("() => { const f = __gb.f; f.campaign.badges = {}; Object.assign(f.campaign, { titles: 0, wins: 0, awards: 0, hofNoticed: false }); __gb.save(); }")
+    page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="scout"], [data-action="autorun"]')
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="scout"], [data-action="autorun"]')
     page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="scout"], [data-action="autorun"]')
     # Tabs

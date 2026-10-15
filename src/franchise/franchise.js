@@ -182,6 +182,25 @@ export function hallOfFameProgress(f) {
   return { rows, eligible: rows.every((r) => r.done) };
 }
 export function badgeOf(f, club) { return f.campaign?.badges?.[club] || null; }
+/** First time the checklist completes, the commissioner calls (returns true once). */
+export function hallOfFameNotice(f) {
+  if (!hallOfFameProgress(f).eligible || f.campaign?.hofNoticed) return false;
+  f.campaign.hofNoticed = true; news(f, 'THE COMMISSIONER CALLED: you are eligible for the Hall of Fame. Retire whenever you choose; your career is written.', 'win');
+  return true;
+}
+/** Retire: the career card that goes to the Hall of Fame. The caller stores it and ends the franchise. */
+export function retire(f) {
+  const p = hallOfFameProgress(f); if (!p.eligible) return { ok: false, reason: 'Not yet eligible for the Hall of Fame.' };
+  const seasons = f.history.map((h) => ({ year: h.year, w: h.record.w, l: h.record.l, place: h.place, champion: h.champion === h.club, playoffs: h.playoffs }));
+  const wins = seasons.reduce((a, h) => a + h.w, 0), losses = seasons.reduce((a, h) => a + h.l, 0);
+  const best = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a)).slice(0, 5).map((m) => ({ name: m.name, species: m.species, position: m.position, ovr: monsterOverall(m), level: m.level }));
+  const card = {
+    id: `hof_${f.seed}_${Date.now().toString(36)}`, owner: `${f.owner.first} ${f.owner.last}`, portrait: f.owner.portrait, club: f.club, difficulty: f.settings?.difficulty || 'pro',
+    seasons: seasons.length, record: { w: wins, l: losses }, titles: f.campaign.titles || 0, badges: Object.keys(f.campaign.badges || {}).map((club) => GYM_BY_CLUB[club]?.badge || club), awards: f.campaign.awards || 0,
+    bestMonsters: best, dexSeen: dexCounts(f).seen, retiredAt: Date.now(), seasonsList: seasons, rival: f.rivals[f.tier]?.team || null, rivalRecord: f.rivals[f.tier]?.headToHead || null,
+  };
+  return { ok: true, card };
+}
 
 // ------------------------------------------------------------ Beast Dex
 /** Mark a species as seen (scouted or faced) or signed; first time only, with the week it happened. */

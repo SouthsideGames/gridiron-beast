@@ -403,3 +403,19 @@ test('Legend Tracks: a champion chooses a track; three unlock the legendary in i
   while (f.season.day < 3) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else F.setTraining(f, 'coverage'); }
   const rep = F.scoutOpponent(f, 'offense').report; assert.ok(rep.bonus && rep.bonus.side === 'defense' && rep.bonus.play);
 });
+
+test('Hall of Fame: eligibility follows the checklist; retiring writes a career card', async () => {
+  const H = await import('../src/franchise/hall-of-fame.js');
+  const f = newFranchise(41);
+  assert.equal(F.retire(f).ok, false);
+  assert.equal(F.hallOfFameNotice(f), false);
+  for (const g of ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']) f.campaign.badges[g] = { year: 1, week: 1, score: '1–0' };
+  Object.assign(f.campaign, { titles: 2, wins: 50, awards: 3 });
+  f.history.push({ year: 1, club: f.club, record: { w: 9, l: 0 }, place: 1, champion: f.club, playoffs: true });
+  assert.equal(F.hallOfFameProgress(f).eligible, true);
+  assert.equal(F.hallOfFameNotice(f), true); assert.equal(F.hallOfFameNotice(f), false, 'the commissioner calls once');
+  const r = F.retire(f); assert.equal(r.ok, true);
+  assert.equal(r.card.badges.length, 8); assert.equal(r.card.titles, 2); assert.equal(r.card.record.w, 9); assert.ok(r.card.bestMonsters.length === 5);
+  H.resetHof(); H.addHofCard(r.card); assert.equal(H.hallOfFame().length, 1); H.addHofCard(r.card); assert.equal(H.hallOfFame().length, 1, 'no duplicates');
+  H.mergeHof([{ ...r.card, id: 'other' }]); assert.equal(H.hallOfFame().length, 2); H.resetHof();
+});
