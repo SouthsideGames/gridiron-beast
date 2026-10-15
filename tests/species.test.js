@@ -122,3 +122,21 @@ test('every species ability and trait maps to known engine primitives, and they 
   }
   assert.ok(quiet.length <= 3, `species whose ability never fired in 40 plays: ${quiet.join(', ')}`);
 });
+
+test('the Beast Dex outlives a franchise: discoveries merge into the player store and survive a new franchise', async () => {
+  const F = await import('../src/franchise/franchise.js');
+  const D = await import('../src/franchise/dex-store.js');
+  D.resetDex();
+  const a = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 9 });
+  const signedA = Object.keys(a.dex.signed);
+  assert.ok(signedA.length >= 20);
+  assert.equal(D.dexStatusGlobal(signedA[0]), 'signed');
+  const b = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Stonehaven Titans', cornerstoneOffense: 'Pyronix', cornerstoneDefense: 'Granigor', seed: 10 });
+  assert.equal(F.dexStatus(b, signedA[0]), 'signed', 'a species signed in the previous franchise still counts');
+  assert.equal(F.dexStatus(b, signedA[0], { franchiseOnly: true }) === 'signed', b.dex.signed[signedA[0]] != null);
+  assert.equal(D.dexCountsGlobal().franchises, 2);
+  D.mergeDex({ seen: { aurodrax: { year: 3, week: 2, club: 'x' } } });
+  assert.equal(F.dexStatus(b, 'aurodrax'), 'seen');
+  D.resetDex();
+  assert.equal(D.dexCountsGlobal().seen, 0);
+});

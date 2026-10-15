@@ -83,3 +83,16 @@ export async function cloudClear() {
   const c = await connect(); if (!c) return;
   try { await c.col.doc('save_meta').delete(); } catch { /* ignore */ }
 }
+
+// ------------------------------------------------------------ the player's dex
+let dexTimer = null;
+/** Read the cloud copy of the player's Beast Dex (or null). */
+export async function cloudLoadDex() {
+  const c = await connect(); if (!c) return null;
+  try { const d = await c.col.doc('dex').get(); return d.exists ? d.data() : null; } catch { return null; }
+}
+/** Debounced mirror of the dex document. */
+export function cloudSaveDex(dex) {
+  clearTimeout(dexTimer);
+  dexTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('dex').set(JSON.parse(JSON.stringify(dex))); } catch { /* ignore */ } }, 3000);
+}

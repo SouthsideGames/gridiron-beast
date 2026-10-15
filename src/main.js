@@ -2,7 +2,8 @@
 
 import * as Router from './ui/router.js';
 import * as Save from './franchise/save.js';
-import { cloudLoad, cloudSave, cloudFlush, cloudClear } from './franchise/cloud-save.js';
+import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex } from './franchise/cloud-save.js';
+import { setDexMirror, mergeDex, dexData } from './franchise/dex-store.js';
 import { $, toast } from './ui/dom.js';
 import { registerMenuScreens } from './ui/screens/menu.js';
 import { registerOnboardingScreens } from './ui/screens/onboarding.js';
@@ -39,14 +40,17 @@ export function start() {
   registerPracticeScreens(Router, app);
   registerDexScreens(Router, app);
   const saved = Save.load();
-  if (saved) { app.f = saved; applySettings(); }
+  if (saved) { app.f = saved; applySettings(); mergeDex(saved.dex); }
+  // The player's dex lives outside the franchise and is mirrored to the cloud like the save.
+  setDexMirror((d) => cloudSaveDex(d));
+  cloudLoadDex().then((remote) => { if (remote) mergeDex(remote); if (dexData().updatedAt > (remote?.updatedAt || 0)) cloudSaveDex(dexData()); });
   Router.go('menu', {}, { reset: true });
   // The cloud copy wins when it is newer (e.g. the device's storage was cleared while the app sat in the background).
   cloudLoad().then((remote) => {
     const f = remote && Save.migrate(remote);
     if (!f) { if (app.f) cloudSave(app.f, { immediate: true }); return; }
     if (!app.f || (f.savedAt || 0) > (app.f.savedAt || 0)) {
-      app.f = f; Save.save(f); applySettings();
+      app.f = f; Save.save(f); applySettings(); mergeDex(f.dex);
       if (!Router.currentScreen() || Router.currentScreen().name === 'menu') Router.go('menu', {}, { reset: true });
       toast('Restored your franchise from your cloud save.', 'good');
     }

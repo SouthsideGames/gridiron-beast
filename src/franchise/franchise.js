@@ -6,6 +6,8 @@ import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI } from '../data/staff.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName } from '../data/monsters.js';
+import { SPECIES_DEX } from '../data/species.js';
+import { dexRecordGlobal, dexStatusGlobal, noteNewFranchise } from './dex-store.js';
 import { PLAYS } from '../data/playbook.js';
 import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 import { OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
@@ -38,6 +40,7 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
     tutorial: { seen: {} },
   };
   startSeason(f, 1);
+  noteNewFranchise();
   for (const m of roster) dexRecord(f, m, 'signed');
   return f;
 }
@@ -46,12 +49,23 @@ export function createFranchise({ owner, club, rival = null, cornerstoneOffense,
 /** Mark a species as seen (scouted or faced) or signed; first time only, with the week it happened. */
 export function dexRecord(f, m, how = 'seen') {
   f.dex ||= { seen: {}, signed: {} };
-  const id = resolveSpecies(m).id; const stamp = { year: f.season?.year || 1, week: f.season?.week || 1 };
+  const id = resolveSpecies(m).id; const stamp = { year: f.season?.year || 1, week: f.season?.week || 1, club: f.club };
   if (!f.dex.seen[id]) f.dex.seen[id] = stamp;
   if (how === 'signed' && !f.dex.signed[id]) f.dex.signed[id] = stamp;
+  dexRecordGlobal(id, how, stamp); // the player's dex outlives this franchise
 }
-export function dexStatus(f, id) { if (!f?.dex) return 'unknown'; return f.dex.signed[id] ? 'signed' : f.dex.seen[id] ? 'seen' : 'unknown'; }
-export function dexCounts(f) { const seen = Object.keys(f?.dex?.seen || {}).length, signed = Object.keys(f?.dex?.signed || {}).length; return { seen, signed }; }
+/** Status across the player's whole career (every franchise), or this franchise only with `{ franchiseOnly: true }`. */
+export function dexStatus(f, id, { franchiseOnly = false } = {}) {
+  const mine = !f?.dex ? 'unknown' : f.dex.signed[id] ? 'signed' : f.dex.seen[id] ? 'seen' : 'unknown';
+  if (franchiseOnly) return mine;
+  const all = dexStatusGlobal(id);
+  return all === 'signed' || mine === 'signed' ? 'signed' : all === 'seen' || mine === 'seen' ? 'seen' : 'unknown';
+}
+export function dexCounts(f) {
+  const ids = new Set(SPECIES_DEX.map((s) => s.id)); let seen = 0, signed = 0;
+  for (const id of ids) { const st = dexStatus(f, id); if (st !== 'unknown') seen++; if (st === 'signed') signed++; }
+  return { seen, signed };
+}
 function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
 const frng = (f) => { const r = rngFromState(f.rngState); return { r, save: () => { f.rngState = r.state; } }; };
 
