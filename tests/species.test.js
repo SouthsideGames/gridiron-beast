@@ -82,3 +82,15 @@ test('old saves migrate: previous species names map onto the dex and keep their 
   migrateSpecies(f); // idempotent
   assert.equal(f.roster[0].name, 'Flaroo');
 });
+
+test('sprite export writes valid PNGs and an atlas for every form', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const fs = await import('node:fs'); const os = await import('node:os'); const path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gb-sprites-'));
+  execFileSync(process.execPath, ['tools/export-sprites.mjs', dir, '1']);
+  const atlas = JSON.parse(fs.readFileSync(path.join(dir, 'atlas.json'), 'utf8'));
+  assert.equal(atlas.sprites.length, 102);
+  for (const s of atlas.sprites) { const head = fs.readFileSync(path.join(dir, s.file)).subarray(0, 8); assert.equal(head.toString('hex'), '89504e470d0a1a0a', s.file); }
+  assert.ok(fs.existsSync(path.join(dir, 'sheet.png')));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
