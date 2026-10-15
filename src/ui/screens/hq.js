@@ -38,7 +38,7 @@ export function registerHqScreens(Router, app) {
       const opp = F.opponentName(f);
       const rival = f.rivals[f.tier];
       const day = f.season.day;
-      const next = f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : { label: 'Start next season', action: 'nextseason', icon: '🔁' }) : nextAction(f);
+      const next = f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: 'Choose your Legend Track', action: 'legend', icon: '🌟' } : { label: 'Start next season', action: 'nextseason', icon: '🔁' }) : nextAction(f);
       const race = f.season.week >= 5 && !f.season.finished && !F.inPlayoffs(f) ? `<div class="muted" style="margin-top:4px">Playoff race: <b>${esc(F.playoffPicture(f).text)}</b></div>` : '';
       const gameLine = f.season.finished ? `<b>Season ${f.season.year} complete.</b> ${f.season.champion === f.club ? '🏆 Beast Bowl champions!' : f.season.champion ? esc(f.season.champion) + ' won the Beast Bowl.' : ''} <button class="btn small" data-action="awards">Season awards</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
@@ -69,6 +69,7 @@ export function registerHqScreens(Router, app) {
         game: () => { if (!F.canPlayGames(app.f)) { Router.go('commissioner'); return; } Router.go('pregame'); },
         commissioner: () => Router.go('commissioner'),
         postseason: () => Router.go('postseason'),
+        legend: () => Router.go('legend'),
         resume: () => Router.go('match'),
         autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(awardsHtml(app.f.season.awards || F.seasonAwards(app.f)), { title: `Season ${app.f.season.year} awards` }),
@@ -124,6 +125,22 @@ export function registerHqScreens(Router, app) {
       delegate(root, {
         back: () => Router.go('hq', {}, { reset: true }),
         choose: (el) => { const r = F.resolvePostseason(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.text, 'info', 4000); Router.go('hq', {}, { reset: true }); },
+      });
+    },
+  });
+
+  // ---------------------------------------------------------------- Legend Tracks (GDD §15.8)
+  Router.registerScreen('legend', {
+    title: 'Legend Track', back: true,
+    render({ f }) {
+      const choices = F.legendChoices(f); const pending = f.legendPick && !f.legendPick.resolved;
+      return `<div class="panel"><b>🏆 Beast Bowl champions choose a Legend Track.</b><div class="muted">Three tracks on the same legendary put it in your recruiting pool in its home region. You still have to sign it, and it costs real cap space. Gym legendaries open up once you hold their badge.</div></div>
+        <div class="stack">${choices.map((c) => `<div class="choice"><div class="row" style="align-items:flex-start">${sprite16(c.species, 56)}<div class="grow"><div class="name">${esc(c.species.name)} <span class="dim">${c.species.position}</span></div><div class="muted">${esc(c.species.element)} legendary · home: ${esc((c.species.regions || [])[0] || '')}</div><div class="muted">${esc(c.species.ability.name)}: ${esc(c.species.ability.text)}</div><div class="mono" style="margin-top:4px">Tracks ${'●'.repeat(c.tracks)}${'○'.repeat(Math.max(0, 3 - c.tracks))} ${c.tracks}/3</div></div></div>${pending ? `<button class="btn primary small" data-action="pick" data-v="${c.id}" style="margin-top:6px">Add a track toward ${esc(c.species.name)}</button>` : ''}</div>`).join('') || '<p class="dim">Every legendary you can track is already unlocked or on your roster.</p>'}</div>
+        ${pending ? '' : '<p class="dim" style="margin-top:8px">Win the Beast Bowl to earn a track.</p>'}`;
+    },
+    mount(root) {
+      delegate(root, {
+        pick: (el) => { const r = F.chooseLegendTrack(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.unlocked ? `${r.species.name} unlocked! Scout ${(r.species.regions || [])[0]} to find it.` : `Track ${r.tracks} of 3 toward ${r.species.name}.`, 'good', 4000); Router.go('hq', {}, { reset: true }); },
       });
     },
   });
@@ -236,9 +253,10 @@ export function registerHqScreens(Router, app) {
     const ids = r.plays || r.favourite || [];
     const cards = `<h3 style="margin-bottom:4px">Their ${ids.length} ${r.side === 'offense' ? 'offensive' : 'defensive'} plays</h3><p class="dim" style="margin-top:0">They'll only call these on Sunday. You won't know when. Tap a card for details.</p><div class="play-grid">${ids.map((id) => `<button class="card" data-scout-play="${id}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id]?.name || id)}</span></button>`).join('')}</div>${legendHtml(r.side)}`;
     const star = r.star ? `<b>Star</b><span>${esc(r.star.name)} (${r.star.slot}, ${r.star.ovr} OVR)</span>` : '';
-    return r.side === 'offense'
+    const bonus = r.bonus && PLAYS[r.bonus.play] ? `<div class="panel tight" style="margin-top:8px"><b>Rematch scouting</b><div class="muted">You've faced them ${r.bonus.games} time${r.bonus.games === 1 ? '' : 's'}: one of their ${r.bonus.side === 'offense' ? 'offensive' : 'defensive'} plays is known too.</div><div class="play-grid" style="margin-top:6px"><button class="card" data-action="play" data-id="${r.bonus.play}"><div>${playCardSvg(r.bonus.play)}</div><span class="card-label">${esc(PLAYS[r.bonus.play].name)}</span></button></div></div>` : '';
+    return bonus + (r.side === 'offense'
       ? `<h2>${esc(opp)} offense</h2><div class="kv"><b>Pass / run split</b><span>${r.passBias}% pass</span><b>Passing strength</b><span>${r.pass}</span><b>Running strength</b><span>${r.run}</span><b>Aggression</b><span>${r.aggression}/100</span>${star}</div><p class="muted" style="margin-top:8px">${r.passBias >= 60 ? 'They throw a lot — coverage-heavy calls and pass rush.' : r.passBias <= 48 ? 'Run-first — stack the box and make them throw.' : 'Balanced — mix your calls.'}</p>${cards}`
-      : `<h2>${esc(opp)} defense</h2><div class="kv"><b>Pass defense</b><span>${r.passD}</span><b>Run defense</b><span>${r.runD}</span><b>Aggression</b><span>${r.aggression}/100</span>${star}</div><p class="muted" style="margin-top:8px">${r.aggression >= 60 ? 'Blitz-happy — screens and quick throws punish them.' : r.passD > r.runD + 6 ? 'Strong secondary — lean on the run.' : r.runD > r.passD + 6 ? 'Soft against the pass — take your shots.' : 'No obvious weakness — stay balanced.'}</p>${cards}`;
+      : `<h2>${esc(opp)} defense</h2><div class="kv"><b>Pass defense</b><span>${r.passD}</span><b>Run defense</b><span>${r.runD}</span><b>Aggression</b><span>${r.aggression}/100</span>${star}</div><p class="muted" style="margin-top:8px">${r.aggression >= 60 ? 'Blitz-happy — screens and quick throws punish them.' : r.passD > r.runD + 6 ? 'Strong secondary — lean on the run.' : r.runD > r.passD + 6 ? 'Soft against the pass — take your shots.' : 'No obvious weakness — stay balanced.'}</p>${cards}`);
   }
   /** Tapping a scouted play card opens its full diagram. */
   document.addEventListener('click', (e) => { const id = e.target.closest?.('[data-scout-play]')?.dataset.scoutPlay; if (id && PLAYS[id]) sheet(playDetailHtml(id).replace(/<div style="margin-top:12px"><button[^]*?<\/div>$/, ''), { title: PLAYS[id].name }); });
@@ -409,5 +427,6 @@ function campaignPanel(f) {
   const badges = GYMS.map((g) => { const b = F.badgeOf(f, g.club); const hue = TYPES[g.element]?.hue ?? 120; return `<button class="badge ${b ? 'won' : ''}" data-action="gym" data-club="${esc(g.club)}" style="--hue:${hue}" aria-label="${esc(g.badge)}${b ? ', earned' : ', not yet earned'}"><span class="badge-ico">${b ? '★' : '·'}</span><span class="badge-nm">${esc(g.element)}</span></button>`; }).join('');
   return `<div class="panel"><div class="row between"><b>Campaign</b><span class="dim">${hof.eligible ? '🏛️ Hall of Fame eligible' : `${hof.rows.filter((r) => r.done).length} / ${hof.rows.length} on track`}</span></div>
     <div class="badge-row">${badges}</div>
-    <div class="hof">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${LABEL[r.key]}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div></div>`;
+    <div class="hof">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${LABEL[r.key]}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>
+    <div class="row between" style="margin-top:8px"><span class="muted">Legend Tracks: ${Object.entries(f.campaign?.tracks || {}).map(([id, n]) => `${esc(SPECIES_BY_ID[id]?.name || id)} ${n}/3`).join(' · ') || 'none yet'}</span><button class="btn small" data-action="legend">🌟 Tracks</button></div></div>`;
 }

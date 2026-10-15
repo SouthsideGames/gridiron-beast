@@ -66,6 +66,6 @@ export function speciesSheet(s, f) {
     <div class="muted" style="margin-top:4px">${st === 'signed' ? `Signed${f ? ` · ${owned.length} on your roster` : ''}` : st === 'seen' ? 'Seen, never signed' : 'Not yet discovered'}</div></div></div>
     <p style="font-style:italic">“${esc(s.personality)}”</p>
     <h3>${s.ability ? 'Signature ability' : 'Trait'}</h3>${ab}
-    <h3>Where to find it</h3><p class="muted">${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}${s.fromWeek ? ` · from week ${s.fromWeek}` : ''}${s.rarity === 'legendary' ? ' · Legend Tracks only' : ''}</p>
+    <h3>Where to find it</h3><p class="muted">${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}${s.fromWeek ? ` · from week ${s.fromWeek}` : ''}${s.rarity === 'legendary' ? (f?.campaign?.unlocked?.[s.id] ? ' · unlocked: scoutable there now' : ` · Legend Tracks ${f?.campaign?.tracks?.[s.id] || 0}/3`) : ''}</p>
     ${evo}`;
 }

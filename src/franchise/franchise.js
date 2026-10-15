@@ -6,9 +6,9 @@ import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI } from '../data/staff.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName } from '../data/monsters.js';
-import { SPECIES_DEX } from '../data/species.js';
+import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexRecordGlobal, dexStatusGlobal, noteNewFranchise } from './dex-store.js';
-import { GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON } from '../data/gyms.js';
+import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
@@ -132,6 +132,26 @@ function bestSchemeFor(f, role) {
   const schemes = offense ? ['pass', 'run', 'balanced'] : ['pressure', 'coverage', 'man'];
   const starters = slots.map((s) => byId[chart[s]]).filter(Boolean);
   return schemes.map((sc) => [sc, starters.filter((m) => schemeFit(m, offense ? { offense: sc } : { defense: sc })?.fits).length]).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+// ------------------------------------------------------------ Legend Tracks (GDD §15.8)
+/** Legendaries a champion may track: the four no club holds, plus gym legendaries whose badge the player holds; never one already unlocked or signed. */
+export function legendChoices(f) {
+  const held = Object.keys(f.campaign?.badges || {});
+  const ids = [...FREE_LEGENDARIES, ...GYMS.filter((g) => held.includes(g.club)).map((g) => g.legendary)];
+  return ids.filter((id) => !f.campaign?.unlocked?.[id] && !f.roster.some((m) => m.species === id)).map((id) => ({ id, tracks: f.campaign?.tracks?.[id] || 0, species: SPECIES_DEX.find((s) => s.id === id) }));
+}
+export function chooseLegendTrack(f, speciesId) {
+  if (!f.legendPick || f.legendPick.resolved) return { ok: false, reason: 'No Legend Track to choose.' };
+  if (!legendChoices(f).some((c) => c.id === speciesId)) return { ok: false, reason: 'Not available.' };
+  f.campaign.tracks ||= {}; f.campaign.unlocked ||= {};
+  f.campaign.tracks[speciesId] = (f.campaign.tracks[speciesId] || 0) + 1;
+  const sp = SPECIES_DEX.find((s) => s.id === speciesId); const n = f.campaign.tracks[speciesId];
+  let unlocked = false;
+  if (n >= LEGEND_RULES.tracksNeeded) { f.campaign.unlocked[speciesId] = true; unlocked = true; news(f, `LEGEND UNLOCKED: ${sp.name} can now be scouted in ${(sp.regions || [])[0]}.`, 'win'); }
+  else news(f, `Legend Track ${n} of ${LEGEND_RULES.tracksNeeded} toward ${sp.name}.`, 'win');
+  f.legendPick.resolved = true; f.legendPick.chosen = speciesId;
+  return { ok: true, tracks: n, unlocked, species: sp };
 }
 
 // ------------------------------------------------------------ campaign
@@ -353,7 +373,16 @@ export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } 
   const coach = gym
     ? { aggression: gym.coach.aggression, passBias: gym.coach.passBias, iq: D.iq + 0.2, identity: { offense: gym.coach.offense, defense: gym.coach.defense } }
     : { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
-  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null });
+  const rival = f.rivals[f.tier]?.team === name ? rivalSignature(f) : null;
+  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival });
+}
+/** The rival GM's signature monster: the same species every season, a little stronger each year (GDD §15.8). */
+export function rivalSignature(f) {
+  const team = f.rivals[f.tier]?.team; if (!team) return null;
+  const pool = SPECIES_DEX.filter((s) => (s.rarity === 'uncommon' || s.rarity === 'rare') && ['QB', 'RB', 'WR', 'LB', 'CB'].includes(s.position));
+  const sp = pool[hashString(`rival|${team}|${f.seed}`) % pool.length];
+  const seasons = Math.max(0, (f.season?.year || 1) - 1);
+  return { species: sp.id, bonus: 6 + seasons * 2, seasons };
 }
 
 // ------------------------------------------------------------ season
@@ -427,13 +456,14 @@ export function scoutRegion(f, regionName) {
   const count = skill >= 80 ? 3 : skill >= 45 ? 2 : 1;
   const prospects = [];
   // Species come from the region's elements by rarity weight; rares only in their home region from their week.
-  const pool = regionSpecies(regionName, region.types, f.season.week);
+  const unlocked = Object.keys(f.campaign?.unlocked || {}).map((id) => SPECIES_DEX.find((s) => s.id === id)).filter((sp) => sp && (sp.regions || [])[0] === regionName && !f.roster.some((m) => m.species === sp.id));
+  const pool = [...regionSpecies(regionName, region.types, f.season.week), ...unlocked]; // a legendary with three Legend Tracks is scoutable in its home region
   const rarityBonus = skill >= 80 ? 1.6 : skill >= 60 ? 1.25 : 1;
-  const weights = pool.map((sp) => [sp.id, (sp.rarity === 'common' ? 60 : sp.rarity === 'uncommon' ? 30 * rarityBonus : 9 * rarityBonus)]);
+  const weights = pool.map((sp) => [sp.id, (sp.rarity === 'common' ? 60 : sp.rarity === 'uncommon' ? 30 * rarityBonus : sp.rarity === 'legendary' ? 14 * rarityBonus : 9 * rarityBonus)]);
   for (let i = 0; i < count; i++) {
     const pickId = r.weighted(weights); const sp = pool.find((x) => x.id === pickId);
     const position = sp.secondary && r.chance(0.2) ? sp.secondary : sp.position;
-    const quality = 52 + r.int(12) + (skill >= 80 ? 3 : 0) + (sp.rarity === 'rare' ? 3 : sp.rarity === 'uncommon' ? 1 : 0);
+    const quality = 52 + r.int(12) + (skill >= 80 ? 3 : 0) + (sp.rarity === 'legendary' ? 8 : sp.rarity === 'rare' ? 3 : sp.rarity === 'uncommon' ? 1 : 0);
     const m = generateMonster(r, { position, quality, species: sp.id });
     uniqueName(f, m, prospects.map((p) => p.monster.name));
     dexRecord(f, m, 'seen');
@@ -549,6 +579,9 @@ export function scoutOpponent(f, side) {
     report = side === 'offense'
       ? { side, passBias: Math.round(team.coach.passBias * 100), aggression: Math.round(team.coach.aggression * 100), pass: Math.round(str.pass), run: Math.round(str.run), star: best(OFFENSE_BASE), plays: [...team.offensePlays] }
       : { side, passD: Math.round(str.passD), runD: Math.round(str.runD), aggression: Math.round(team.coach.aggression * 100), star: best(DEFENSE_BASE), plays: [...team.defensePlays] };
+    // Rematch scouting (GDD §15.8): a club you have faced before gives up one play from its other side too.
+    const h2h = f.campaign?.h2h?.[opp];
+    if (h2h && (h2h.w + h2h.l) > 0) { const other = side === 'offense' ? team.defensePlays : team.offensePlays; const h = hashString(`${opp}|${f.season.year}|${f.season.week}`); report.bonus = { side: side === 'offense' ? 'defense' : 'offense', play: other[h % other.length], games: h2h.w + h2h.l }; }
   }
   f.week.scoutReport = report; f.season.day = 4;
   return { ok: true, report };
@@ -792,6 +825,7 @@ function endSeason(f) {
   s.awards = seasonAwards(f);
   f.history[f.history.length - 1].awards = s.awards;
   if (rec.w < rec.l) f.postseason = makePostseasonEvent(f); // a losing record makes one story event mandatory (GDD §15.7)
+  if (champion === f.club && legendChoices(f).length) f.legendPick = { year: s.year, resolved: false }; // Beast Bowl champions choose a Legend Track (GDD §15.8)
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
   f.campaign.awards += Object.values(s.awards.league || {}).filter((w) => w && w.team === f.club).length;
@@ -870,6 +904,7 @@ function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); 
 export function startNextSeason(f) {
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
   if (f.postseason && !f.postseason.resolved) return { ok: false, reason: 'A postseason decision is waiting.' };
+  if (f.legendPick && !f.legendPick.resolved) return { ok: false, reason: 'Choose your Legend Track first.' };
   f.deadCap = f.pendingDeadCap || 0; f.pendingDeadCap = 0; // bonuses and raises agreed in the offseason land on the new season's books
   const { r, save } = frng(f);
   const events = offseason(f.roster, r);

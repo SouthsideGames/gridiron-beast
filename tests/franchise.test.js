@@ -373,3 +373,33 @@ test('commissioner: signing over the cap is allowed with a warning; Saturday nam
   assert.equal(F.canPlayGames(f), true);
   assert.equal(f.campaign.commissionerReleases, 1);
 });
+
+test('Legend Tracks: a champion chooses a track; three unlock the legendary in its home region; the rival keeps a signature monster', () => {
+  const f = newFranchise(31);
+  f.campaign.badges['Harbor Sentinels'] = { year: 1, week: 1, score: '1–0' };
+  const choices = F.legendChoices(f).map((c) => c.id);
+  assert.deepEqual(choices.slice(0, 4), ['pyroclast', 'elderoot', 'tempestra', 'astralux']);
+  assert.ok(choices.includes('tsunarok'), 'a held badge opens that gym legendary');
+  assert.ok(!choices.includes('aurodrax'));
+  assert.equal(F.chooseLegendTrack(f, 'pyroclast').ok, false, 'only after a title');
+  for (let i = 1; i <= 3; i++) { f.legendPick = { year: i, resolved: false }; const r = F.chooseLegendTrack(f, 'pyroclast'); assert.equal(r.ok, true); assert.equal(r.unlocked, i === 3); }
+  assert.ok(f.campaign.unlocked.pyroclast);
+  assert.ok(!F.legendChoices(f).some((c) => c.id === 'pyroclast'), 'unlocked legendaries leave the choice list');
+  // Unlocked: scoutable in its home region (Volcanic Fields) and nowhere else.
+  let found = 0, elsewhere = 0;
+  for (let i = 0; i < 40; i++) {
+    const g = newFranchise(100 + i); g.campaign.unlocked = { pyroclast: true }; g.staff.head_scout = 'sc_ash';
+    const r = F.scoutRegion(g, i % 2 ? 'Volcanic Fields' : 'Coral Coast');
+    for (const p of r.prospects) if (p.monster.species === 'pyroclast') { if (i % 2) found++; else elsewhere++; }
+  }
+  assert.ok(found >= 1, `legendary shows up in its home region (${found})`); assert.equal(elsewhere, 0);
+  // Rival signature monster: same species each season, stronger later.
+  const rival = f.rivals[f.tier].team;
+  const t1 = F.aiTeam(f, rival); const sig1 = t1.roster.find((m) => m.signature); assert.ok(sig1);
+  f.season.year = 3; const t3 = F.aiTeam(f, rival); const sig3 = t3.roster.find((m) => m.signature);
+  assert.equal(sig1.species, sig3.species); assert.ok(monsterOverall(sig3) > monsterOverall(sig1));
+  // Rematch scouting: a second meeting reveals one play from the other side.
+  f.season.year = 1; f.campaign.h2h = { [F.opponentName(f)]: { w: 1, l: 0, last: 'w', streakL: 0 } };
+  while (f.season.day < 3) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else F.setTraining(f, 'coverage'); }
+  const rep = F.scoutOpponent(f, 'offense').report; assert.ok(rep.bonus && rep.bonus.side === 'defense' && rep.bonus.play);
+});

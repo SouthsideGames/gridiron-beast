@@ -233,7 +233,7 @@ export const STARTING_ROSTER = Object.freeze([
   ['QB', 2], ['RB', 2], ['WR', 3], ['TE', 1], ['OL', 4], ['DL', 3], ['LB', 2], ['CB', 3], ['S', 1], ['K', 1],
 ]);
 
-export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null } = {}) {
+export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null, signature = null } = {}) {
   const rng = createRng(seed);
   const roster = [];
   // No species twice on a fresh roster (cornerstone species included); a second copy would be "Name II".
@@ -254,6 +254,13 @@ export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, qua
     const sp = SPECIES_BY_ID[legendary]; const target = roster.find((m) => m.position === sp.position) || roster[0];
     const star = generateMonster(rng, { position: sp.position, quality: quality + 9, species: sp.id, id: target.id });
     star.legendary = true; star.salary = salaryFor(star) + 6000;
+    Object.assign(target, star);
+  }
+  // The rival GM's signature monster: same species every season, stronger each year.
+  if (signature && SPECIES_BY_ID[signature.species]) {
+    const sp = SPECIES_BY_ID[signature.species]; const target = roster.find((m) => m.position === sp.position && !m.legendary) || roster[0];
+    const star = generateMonster(rng, { position: sp.position, quality: quality + signature.bonus, species: sp.id, id: target.id });
+    star.signature = true; star.level = 1 + (signature.seasons || 0) * 3; star.salary = salaryFor(star) + 3000;
     Object.assign(target, star);
   }
   // Cornerstones are a player-club thing. AI clubs (no choice given) get two stars of their own instead:

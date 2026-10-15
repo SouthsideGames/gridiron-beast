@@ -91,7 +91,10 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]')
     page.evaluate("() => { __gb.f.season.finished = true; }"); page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="postseason"]')
     page.click('[data-action="postseason"]'); page.wait_for_selector('[data-action="choose"]'); no_overflow(page, 'postseason'); tap_targets(page, 'postseason'); shot(page, f'{name}-04c-postseason')
-    page.evaluate("() => { __gb.f.postseason = null; __gb.f.season.finished = false; __gb.f.history.pop(); __gb.save(); }")
+    page.evaluate("() => { __gb.f.postseason = null; __gb.f.history.pop(); __gb.f.legendPick = { year: 1, resolved: false }; __gb.save(); }")
+    page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="legend"]')
+    page.click('[data-action="legend"]'); page.wait_for_selector('[data-action="pick"]'); no_overflow(page, 'legend tracks'); shot(page, f'{name}-04d-legend')
+    page.evaluate("() => { __gb.f.legendPick = null; __gb.f.season.finished = false; __gb.save(); }")
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="scout"], [data-action="autorun"]')
     page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="scout"], [data-action="autorun"]')
     # Tabs
