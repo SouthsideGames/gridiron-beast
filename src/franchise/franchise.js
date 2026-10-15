@@ -12,7 +12,8 @@ import { GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINAR
 import { PLAYS } from '../data/playbook.js';
 import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
-import { OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
+import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
+import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, teamOverall, depthOrder, GROUP_SLOTS } from './roster.js';
 import { afterGame, recoverWeek, offseason } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
@@ -74,6 +75,63 @@ export function commissionerRelease(f, id) {
   news(f, `${m.name} released by order of the commissioner.`, 'loss');
   const again = commissionerReview(f);
   return { ok: true, released: m, done: !again };
+}
+
+// ------------------------------------------------------------ postseason story events (GDD §15.7)
+function makePostseasonEvent(f) {
+  const { r, save } = frng(f);
+  const rec = record(f); const rival = f.rivals[f.tier]?.team || 'a rival';
+  const star = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+  const fit = rosterFit(f);
+  const weakSide = ['offense', 'defense'].map((k) => ({ k, ...fit[k] })).filter((x) => x.coach && x.total).sort((a, b) => a.fit / a.total - b.fit / b.total)[0];
+  const kinds = ['star_out', 'coordinator_offer'];
+  if (weakSide && weakSide.fit / weakSide.total < 0.5) kinds.push('scheme_mutiny', 'scheme_mutiny');
+  const kind = r.pick(kinds);
+  const coordRole = kind === 'scheme_mutiny' && weakSide ? weakSide.role : r.pick(['offensive_coordinator', 'defensive_coordinator']);
+  const coach = staffMember(f, coordRole);
+  const other = r.pick(ALL_TEAMS.filter((t) => t !== f.club));
+  save();
+  const vars = { star: star?.name || 'your star', club: f.club, rival, record: `${rec.w}–${rec.l}`, coach: coach?.name || 'Your coordinator', role: coordRole, side: coordRole === 'offensive_coordinator' ? 'offense' : 'defense', other, scheme: coach?.style || 'my scheme', fit: weakSide?.fit ?? 0, total: weakSide?.total ?? 0 };
+  return { kind, starId: star?.id || null, coordRole, vars, resolved: false, chosen: null };
+}
+const fillVars = (t, vars) => String(t).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+/** The pending event rendered for the UI, or null. */
+export function postseasonEvent(f) {
+  const e = f.postseason; if (!e || e.resolved) return null;
+  const def = POSTSEASON_EVENTS[e.kind]; if (!def) return null;
+  const options = def.options.map((o) => ({ ...o, label: fillVars(o.label, e.vars), text: fillVars(o.text, e.vars) }));
+  if (difficultyOf(f) === DIFFICULTY.rookie && def.rookie) options.push({ ...def.rookie });
+  return { kind: e.kind, title: def.title, speaker: def.speaker, lines: def.lines.map((l) => fillVars(l, e.vars)), options, vars: e.vars };
+}
+export function resolvePostseason(f, optionId) {
+  const e = f.postseason; if (!e || e.resolved) return { ok: false, reason: 'No decision pending.' };
+  const ev = postseasonEvent(f); if (!ev.options.find((o) => o.id === optionId)) return { ok: false, reason: 'Not an option.' };
+  const star = f.roster.find((m) => m.id === e.starId); const coach = staffMember(f, e.coordRole); let text = '';
+  const hireBest = (role, { preferScheme = null } = {}) => { const cands = STAFF.filter((c) => c.role === role && c.id !== f.staff[role]).sort((a, b) => (preferScheme ? (b.scheme === preferScheme) - (a.scheme === preferScheme) : 0) || b.overall - a.overall); const c = cands[0]; if (c) f.staff[role] = c.id; return c; };
+  if (e.kind === 'star_out') {
+    if (optionId === 'raise' && star) { star.salary = Math.round((star.salary || salaryFor(star)) * (1 + RAISE_PCT)); text = `${star.name} stays on a raise.`; }
+    else if (optionId === 'promise' && star) { star.promise = { benched: 0 }; text = `${star.name} stays with a promised starting spot.`; }
+    else if (optionId === 'release' && star) { f.roster = f.roster.filter((m) => m.id !== star.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === star.id) delete f.lineupManual[slot]; f.campaign.poached = f.campaign.poached || {}; f.campaign.poached[e.vars.rival] = star.name; text = `${star.name} signs with ${e.vars.rival}.`; }
+    else text = `${star?.name || 'Your star'} stays.`;
+  } else if (e.kind === 'coordinator_offer') {
+    if (optionId === 'bonus' && coach) { f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.round(coach.salary * RETENTION_BONUS_PCT); text = `${coach.name} stays; the bonus hits next season's cap.`; }
+    else if (optionId === 'leave') { const c = hireBest(e.coordRole); text = `${coach?.name || 'Your coordinator'} leaves for ${e.vars.other}. ${c ? c.name + ' is hired.' : ''}`; }
+    else text = `${coach?.name || 'Your coordinator'} stays.`;
+  } else if (e.kind === 'scheme_mutiny') {
+    if (optionId === 'scheme') { const want = bestSchemeFor(f, e.coordRole); const c = hireBest(e.coordRole, { preferScheme: want }); text = `${c ? c.name + ' (' + c.style + ') takes over' : 'No replacement found'}; ${coach?.name || 'the coordinator'} leaves without severance.`; }
+    else if (optionId === 'fire' && coach) { f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.round(coach.salary * 0.5); const c = hireBest(e.coordRole); text = `${coach.name} fired; ${c ? c.name + ' hired' : 'no replacement'}. Half their salary counts against next season.`; }
+    else text = `${coach?.name || 'Your coordinator'} stays; the roster is on you.`;
+  }
+  e.resolved = true; e.chosen = optionId; news(f, `Postseason: ${text}`, 'info');
+  return { ok: true, text };
+}
+/** Which scheme most of the side's starters fit (for "change the scheme to the roster"). */
+function bestSchemeFor(f, role) {
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
+  const offense = role === 'offensive_coordinator'; const slots = offense ? OFFENSE_SLOTS : DEFENSE_SLOTS;
+  const schemes = offense ? ['pass', 'run', 'balanced'] : ['pressure', 'coverage', 'man'];
+  const starters = slots.map((s) => byId[chart[s]]).filter(Boolean);
+  return schemes.map((sc) => [sc, starters.filter((m) => schemeFit(m, offense ? { offense: sc } : { defense: sc })?.fits).length]).sort((a, b) => b[1] - a[1])[0][0];
 }
 
 // ------------------------------------------------------------ campaign
@@ -150,9 +208,12 @@ export function replaceStaff(f, id) {
   const current = staffById(f.staff[c.role]);
   const budget = salarySummary(f, c.salary - (current?.salary || 0));
   if (budget.over) return { ok: false, reason: 'Exceeds the salary cap.' };
+  // Firing mid-season costs: the rest of the outgoing coach's salary stays on the books this season.
+  let severance = 0;
+  if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (10 - (f.season.week || 1)) / 10)); f.deadCap = (f.deadCap || 0) + severance; }
   f.staff[c.role] = id;
-  news(f, `${c.name} hired as ${c.role.replace(/_/g, ' ')}${current ? `, replacing ${current.name}` : ''}.`, 'roster');
-  return { ok: true, replaced: current };
+  news(f, `${c.name} hired as ${c.role.replace(/_/g, ' ')}${current ? `, replacing ${current.name}` : ''}${severance ? ` (${severance.toLocaleString('en-US')} cr severance this season)` : ''}.`, 'roster');
+  return { ok: true, replaced: current, severance };
 }
 export function hireStaff(f, id) {
   const c = staffById(id); if (!c) throw new Error('unknown staff');
@@ -165,6 +226,12 @@ export function hireStaff(f, id) {
 export function schemeAlignment(f) {
   const hc = staffMember(f, 'head_coach');
   return { offense: alignment(hc, staffMember(f, 'offensive_coordinator')), defense: alignment(hc, staffMember(f, 'defensive_coordinator')) };
+}
+/** How many starters fit each coordinator's scheme (the staff-screen line that makes "my players are run guys but my OC is a pass guy" visible). */
+export function rosterFit(f) {
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
+  const side = (slots, role) => { const starters = slots.map((s) => byId[chart[s]]).filter(Boolean); const fit = starters.filter((m) => fitFor(f, m)?.fits).length; const c = staffMember(f, role); return { fit, total: starters.length, scheme: c?.style || '—', coach: c?.name || null, role }; };
+  return { offense: side(OFFENSE_SLOTS, 'offensive_coordinator'), defense: side(DEFENSE_SLOTS, 'defensive_coordinator') };
 }
 export function coachProfile(f) {
   const hc = staffMember(f, 'head_coach');
@@ -206,9 +273,10 @@ export const capFor = (f) => tierById(f.tier).cap;
 export function salarySummary(f, proposed = 0) {
   const monsters = f.roster.reduce((s, m) => s + (m.salary || salaryFor(m)), 0);
   const staff = Object.values(f.staff).reduce((s, id) => s + (staffById(id)?.salary || 0), 0);
+  const dead = f.deadCap || 0; // severance for fired staff and retention bonuses, this season only
   const cap = capFor(f);
-  const total = monsters + staff + proposed;
-  return { cap, monsters, staff, proposed, total, remaining: cap - total, over: total > cap, rosterCount: f.roster.length };
+  const total = monsters + staff + dead + proposed;
+  return { cap, monsters, staff, dead, proposed, total, remaining: cap - total, over: total > cap, rosterCount: f.roster.length };
 }
 export function releaseMonster(f, id) {
   const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not on roster.' };
@@ -629,6 +697,10 @@ export function finishSunday(f, gameState) {
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}–${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
+  // Promised starters: three games on the bench and they walk (GDD §15.7).
+  for (const x of f.roster.filter((p) => p.promise)) {
+    if (!Object.values(m[side].chart).includes(x.id)) { x.promise.benched += 1; if (x.promise.benched >= PROMISE_BENCH_LIMIT) { f.roster = f.roster.filter((p) => p.id !== x.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === x.id) delete f.lineupManual[slot]; news(f, `${x.name} walked out: you promised a starting spot and benched them ${PROMISE_BENCH_LIMIT} times.`, 'loss'); } else news(f, `${x.name} was promised a start and sat (${x.promise.benched}/${PROMISE_BENCH_LIMIT}).`, 'loss'); }
+  }
   // Campaign: career wins, head-to-head memory (drives the pregame dialogue) and gym badges (first win over a gym club, in any counting game; no replays).
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
   if (won) f.campaign.wins += 1;
@@ -719,6 +791,7 @@ function endSeason(f) {
   }
   s.awards = seasonAwards(f);
   f.history[f.history.length - 1].awards = s.awards;
+  if (rec.w < rec.l) f.postseason = makePostseasonEvent(f); // a losing record makes one story event mandatory (GDD §15.7)
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
   f.campaign.awards += Object.values(s.awards.league || {}).filter((w) => w && w.team === f.club).length;
@@ -796,6 +869,8 @@ export function seasonAwards(f) {
 function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); const choices = DIVISIONS[divisionOf(f.club)].filter((t) => t !== f.club); const team = r.pick(choices); save(); f.rivals[f.tier] = { team, gm: RIVAL_GMS[team] || 'Rival GM', headToHead: { w: 0, l: 0 } }; } }
 export function startNextSeason(f) {
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
+  if (f.postseason && !f.postseason.resolved) return { ok: false, reason: 'A postseason decision is waiting.' };
+  f.deadCap = f.pendingDeadCap || 0; f.pendingDeadCap = 0; // bonuses and raises agreed in the offseason land on the new season's books
   const { r, save } = frng(f);
   const events = offseason(f.roster, r);
   save();

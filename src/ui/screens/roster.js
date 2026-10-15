@@ -119,10 +119,12 @@ export function registerRosterScreens(Router, app) {
   Router.registerScreen('staff', {
     title: 'Coaching Staff',
     render({ f }) {
-      const al = F.schemeAlignment(f);
-      return `<div class="panel"><b>Team identity</b><div class="muted">OC scheme fit <b>${al.offense}</b>/100 · DC scheme fit <b>${al.defense}</b>/100 — alignment adds (or costs) a little awareness for every starter.</div></div>
+      const al = F.schemeAlignment(f); const rf = F.rosterFit(f);
+      const fitLine = (x, label) => `<div class="row between"><span>${label}: <b>${x.fit} of ${x.total}</b> starters fit ${esc(x.scheme)}</span><span class="${x.total && x.fit / x.total < 0.5 ? 'chip bad' : 'chip good'}">${x.total ? Math.round(100 * x.fit / x.total) : 0}%</span></div>`;
+      return `<div class="panel"><b>Team identity</b><div class="muted">OC scheme fit <b>${al.offense}</b>/100 · DC scheme fit <b>${al.defense}</b>/100 — alignment adds (or costs) a little awareness for every starter.</div>
+        <div style="margin-top:8px"><b>Roster fit</b>${fitLine(rf.offense, 'Offense')}${fitLine(rf.defense, 'Defense')}<div class="dim" style="font-size:12px;margin-top:4px">Under half fitting is a problem: change the roster, or change the coordinator to one whose scheme fits the roster. Firing mid-season leaves the rest of their salary on this season's books.</div></div></div>
         <div class="list">${STAFF_ROLES.map((r) => { const c = F.staffMember(f, r); if (!c) return `<div class="item static"><div class="grow"><div class="name">${ROLE_LABEL[r]}</div><div class="sub">Vacant</div></div></div>`; return `<div class="item static">${portraitSprite(c.id, 40)}<div class="grow"><div class="name">${esc(c.name)} <span class="chip">${esc(c.style)}</span></div><div class="sub">${ROLE_LABEL[r]} · OVR ${c.overall} · ${fmtMoney(c.salary)}/yr</div><div class="sub">${esc(c.strength)}</div></div>${c.role.includes('coordinator') ? `<button class="btn small" data-action="plays" data-id="${c.id}" data-name="${esc(c.name)}">Plays</button>` : ''}<button class="btn small" data-action="interview" data-role="${r}">Replace</button></div>`; }).join('')}</div>
-        <p class="dim" style="margin-top:8px">Replacing a staff member is immediate; the new salary must fit under the cap.</p>`;
+        <p class="dim" style="margin-top:8px">Replacing a staff member is immediate; the new salary must fit under the cap${f.deadCap ? ` (dead money this season: ${fmtMoney(f.deadCap)})` : ''}.</p>`;
     },
     mount(root) { delegate(root, {
       plays: (el) => { const ids = PLAYBOOKS[el.dataset.id] || []; sheet(`<div class="play-grid">${ids.map((id) => `<div class="card"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></div>`).join('')}</div>`, { title: el.dataset.name }); },

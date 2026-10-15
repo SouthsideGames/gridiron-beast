@@ -78,7 +78,30 @@ test('a full season plus playoffs completes with standings from real games', () 
   for (const t of ALL_TEAMS) { const r = f.season.records[t]; assert.equal(r.w + r.l + r.t, 9, `${t} played nine`); }
   assert.ok(f.history.length === 1 && f.history[0].year === 1);
   assert.ok(f.roster.some((m) => m.stats.games > 0));
+  const ev = F.postseasonEvent(f);
+  if (ev) { assert.ok(F.record(f).w < F.record(f).l, 'an event only after a losing record'); assert.equal(F.startNextSeason(f).ok, false, 'the event gates the next season'); assert.equal(F.resolvePostseason(f, ev.options[0].id).ok, true); }
+  else assert.ok(F.record(f).w >= F.record(f).l, 'no event after a winning season');
   const next = F.startNextSeason(f); assert.equal(next.ok, true); assert.equal(f.season.year, 2); assert.equal(f.season.week, 1);
+});
+
+test('postseason events: a losing record raises one; each option has its consequence; roster fit and severance exist', () => {
+  const f = newFranchise(21);
+  const fit = F.rosterFit(f); assert.ok(fit.offense.total >= 5 && fit.defense.total >= 5 && fit.offense.coach);
+  // Fake a losing season end: 3–6, then run the real end-of-season path by finishing the schedule quickly.
+  while (!f.season.finished) { F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const g = F.simulatePlayerGame(f); const side = F.sundayMatchup(f).playerSide; const other = side === 'home' ? 'away' : 'home'; const score = { home: 0, away: 0 }; score[other] = 21; F.finishSunday(f, { ...g, winner: other, score }); }
+  assert.ok(F.record(f).l > F.record(f).w);
+  const ev = F.postseasonEvent(f); assert.ok(ev, 'event raised'); assert.ok(ev.lines[0].length > 20);
+  assert.ok(!ev.options.find((o) => o.id === 'talk'), 'no free option on Pro');
+  const star = f.roster.find((m) => m.id === f.postseason.starId);
+  if (ev.kind === 'star_out') { const before = star.salary; assert.equal(F.resolvePostseason(f, 'raise').ok, true); assert.ok(star.salary > before); }
+  else if (ev.kind === 'coordinator_offer') { assert.equal(F.resolvePostseason(f, 'bonus').ok, true); assert.ok(f.pendingDeadCap > 0); }
+  else { assert.equal(F.resolvePostseason(f, 'fire').ok, true); assert.ok(f.pendingDeadCap > 0); }
+  assert.equal(F.resolvePostseason(f, 'raise').ok, false, 'resolved once');
+  assert.equal(F.startNextSeason(f).ok, true);
+  if (f.pendingDeadCap === 0 && f.deadCap > 0) assert.ok(F.salarySummary(f).dead > 0, 'offseason bonuses land on the new season');
+  // Mid-season firing leaves severance on the books.
+  const oc = f.staff.offensive_coordinator; const cand = ['oc_swift', 'oc_brock', 'oc_park'].find((id) => id !== oc);
+  const r = F.replaceStaff(f, cand); assert.equal(r.ok, true); assert.ok(r.severance > 0); assert.ok(F.salarySummary(f).dead >= r.severance);
 });
 
 test('economy: cap, release rules and roster limits', () => {

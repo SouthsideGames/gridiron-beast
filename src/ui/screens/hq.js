@@ -38,7 +38,7 @@ export function registerHqScreens(Router, app) {
       const opp = F.opponentName(f);
       const rival = f.rivals[f.tier];
       const day = f.season.day;
-      const next = f.season.finished ? { label: 'Start next season', action: 'nextseason', icon: '🔁' } : nextAction(f);
+      const next = f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : { label: 'Start next season', action: 'nextseason', icon: '🔁' }) : nextAction(f);
       const race = f.season.week >= 5 && !f.season.finished && !F.inPlayoffs(f) ? `<div class="muted" style="margin-top:4px">Playoff race: <b>${esc(F.playoffPicture(f).text)}</b></div>` : '';
       const gameLine = f.season.finished ? `<b>Season ${f.season.year} complete.</b> ${f.season.champion === f.club ? '🏆 Beast Bowl champions!' : f.season.champion ? esc(f.season.champion) + ' won the Beast Bowl.' : ''} <button class="btn small" data-action="awards">Season awards</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
@@ -68,6 +68,7 @@ export function registerHqScreens(Router, app) {
         bye: () => { F.takeBye(app.f); app.save(); toast('Bye week taken. Fatigue recovered.'); Router.render(); },
         game: () => { if (!F.canPlayGames(app.f)) { Router.go('commissioner'); return; } Router.go('pregame'); },
         commissioner: () => Router.go('commissioner'),
+        postseason: () => Router.go('postseason'),
         resume: () => Router.go('match'),
         autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(awardsHtml(app.f.season.awards || F.seasonAwards(app.f)), { title: `Season ${app.f.season.year} awards` }),
@@ -105,6 +106,24 @@ export function registerHqScreens(Router, app) {
           app.save();
           if (r.done) { toast(`${r.released.name} released. You're under the cap.`, 'info'); Router.go('hq', {}, { reset: true }); } else { toast(`${r.released.name} released. Still over.`, 'bad'); Router.render(); }
         },
+      });
+    },
+  });
+
+  // ---------------------------------------------------------------- postseason story event (GDD §15.7)
+  Router.registerScreen('postseason', {
+    title: 'Postseason', back: true,
+    render({ f }) {
+      const ev = F.postseasonEvent(f); if (!ev) return `<div class="panel"><p>Nothing waiting. The offseason is quiet.</p><button class="btn primary block" data-action="back">Back to HQ</button></div>`;
+      const who = ev.speaker === 'agent' ? { seed: `agent|${f.club}`, label: 'AGENT' } : { seed: f.staff[f.postseason.coordRole] || 'coach', label: 'YOUR COORDINATOR' };
+      return `<p class="muted">A ${esc(f.history[f.history.length - 1]?.record.w)}–${esc(f.history[f.history.length - 1]?.record.l)} season has consequences. This one has to be settled before next season starts.</p>
+        <div class="commissioner">${portraitSprite(who.seed, 56)}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">${who.label}</div>${ev.lines.map((l) => esc(l)).join('<br>')}</div></div>
+        <div class="stack" style="margin-top:12px">${ev.options.map((o) => `<button class="choice" data-action="choose" data-v="${o.id}"><span class="name">${esc(o.label)}</span><div class="muted">${esc(o.text)}</div></button>`).join('')}</div>`;
+    },
+    mount(root) {
+      delegate(root, {
+        back: () => Router.go('hq', {}, { reset: true }),
+        choose: (el) => { const r = F.resolvePostseason(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.text, 'info', 4000); Router.go('hq', {}, { reset: true }); },
       });
     },
   });

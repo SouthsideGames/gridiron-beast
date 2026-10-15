@@ -86,6 +86,13 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="commissioner"]')
     page.click('[data-action="commissioner"]'); page.wait_for_selector('[data-action="release"]'); no_overflow(page, 'commissioner'); tap_targets(page, 'commissioner'); shot(page, f'{name}-04b-commissioner')
     page.evaluate("() => { __gb.f.week.commissioner = null; __gb.save(); }")
+    # Postseason story event: stage one and open the screen.
+    page.evaluate("() => { const f = __gb.f; f.postseason = { kind: 'star_out', starId: f.roster[0].id, coordRole: 'offensive_coordinator', vars: { star: f.roster[0].name, club: f.club, rival: 'Bayou Stalkers', record: '3–6', coach: 'Nia Park', side: 'offense', other: 'Ashford Hawks', scheme: 'Balanced', fit: 3, total: 11 }, resolved: false, chosen: null }; f.history.push({ year: 1, record: { w: 3, l: 6 } }); }")
+    page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]')
+    page.evaluate("() => { __gb.f.season.finished = true; }"); page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="postseason"]')
+    page.click('[data-action="postseason"]'); page.wait_for_selector('[data-action="choose"]'); no_overflow(page, 'postseason'); tap_targets(page, 'postseason'); shot(page, f'{name}-04c-postseason')
+    page.evaluate("() => { __gb.f.postseason = null; __gb.f.season.finished = false; __gb.f.history.pop(); __gb.save(); }")
+    page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="scout"], [data-action="autorun"]')
     page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="scout"], [data-action="autorun"]')
     # Tabs
     for tab in ['roster', 'playbook', 'league', 'more']:
