@@ -100,6 +100,28 @@ export function resolveSpecies(m) {
   return SPECIES_BY_ID[base] || BY_NAME[base.toLowerCase()] || SPECIES_BY_ID[LEGACY_SPECIES_ALIASES[base]] || SPECIES_DEX[hashString(base) % SPECIES_DEX.length];
 }
 export const speciesName = (m) => resolveSpecies(m).name;
+/** An evolved form's design: a size up, a fiercer look, claws then spikes (Prototype 2 evolution; see species.evolution). */
+export function evolvedSpec(s, stage) {
+  if (!stage) return s;
+  const extra = stage === 1 ? ['claws'] : ['claws', 'spikes'];
+  return { ...s, id: `${s.id}_e${stage}`, name: s.evolution[stage - 1]?.name || s.name, size: stage === 1 ? (s.size === 'small' ? 'medium' : 'large') : 'large', look: stage === 1 ? (s.look === 'cute' ? 'cool' : 'fierce') : 'fierce', features: [...new Set([...s.features, ...extra])] };
+}
+/** The form a monster currently shows: its species, evolved as far as its stage. */
+export function formOf(m) { const sp = resolveSpecies(m); return evolvedSpec(sp, Math.min(m?.stage || 0, sp.evolution.length)); }
+/** Numeral suffix on a display name ("Flaroo II" → " II"). */
+const SUFFIX = (name) => String(name || '').match(/ (II|III|IV|V|VI|\d+)$/)?.[0] || '';
+/** Evolve a monster one stage if its level allows. Returns the event or null. */
+export function tryEvolve(m) {
+  const sp = resolveSpecies(m); const stage = m.stage || 0; const next = sp.evolution[stage];
+  if (!next || (m.level || 1) < next.level) return null;
+  const from = m.name; const suffix = SUFFIX(m.name);
+  m.stage = stage + 1; m.name = next.name + suffix;
+  const w = POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR;
+  for (const k of ATTRIBUTES) m.attributes[k] = clampAttr(m.attributes[k] + (w[k] ? 3 : 1)); // an evolved form is a cut above: +3 to what its position uses
+  m.potential = clampAttr((m.potential || 70) + 4);
+  m.salary = salaryFor(m);
+  return { kind: 'evolve', id: m.id, name: m.name, from, to: next.name, stage: m.stage, species: sp.id };
+}
 /** The engine effect a monster carries: its signature ability (uncommon and up) or its species' shared trait (commons). */
 export function speciesEffect(m) {
   const sp = resolveSpecies(m);
@@ -233,7 +255,7 @@ export const STARTING_ROSTER = Object.freeze([
   ['QB', 2], ['RB', 2], ['WR', 3], ['TE', 1], ['OL', 4], ['DL', 3], ['LB', 2], ['CB', 3], ['S', 1], ['K', 1],
 ]);
 
-export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null, signature = null } = {}) {
+export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null, signature = null, evolveStage = 0 } = {}) {
   const rng = createRng(seed);
   const roster = [];
   // No species twice on a fresh roster (cornerstone species included); a second copy would be "Name II".
@@ -249,6 +271,8 @@ export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, qua
   }
   const seen = {}; const roman = ['', ' II', ' III', ' IV', ' V', ' VI'];
   for (const m of roster) { const n = seen[m.name] = (seen[m.name] || 0) + 1; if (n > 1) m.name = `${m.name}${roman[n - 1] || ' ' + n}`; }
+  // Later seasons: AI clubs field evolved commons (the league grows with the calendar).
+  if (evolveStage > 0) for (const m of roster) { const sp = SPECIES_BY_ID[m.species]; const st = Math.min(evolveStage, sp.evolution.length); for (let i = 0; i < st; i++) { m.level = Math.max(m.level, sp.evolution[i].level); tryEvolve(m); } }
   // A gym club's legendary takes the first spot at its natural position, a cut above the rest of the roster.
   if (legendary && SPECIES_BY_ID[legendary]) {
     const sp = SPECIES_BY_ID[legendary]; const target = roster.find((m) => m.position === sp.position) || roster[0];
@@ -262,6 +286,7 @@ export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, qua
     const star = generateMonster(rng, { position: sp.position, quality: quality + signature.bonus, species: sp.id, id: target.id });
     star.signature = true; star.level = 1 + (signature.seasons || 0) * 3; star.salary = salaryFor(star) + 3000;
     Object.assign(target, star);
+    while (tryEvolve(target)) { /* the rival's signature evolves as the seasons pass */ }
   }
   // Cornerstones are a player-club thing. AI clubs (no choice given) get two stars of their own instead:
   // the first quarterback and one defensive starter, a cut above the roster, so every club has faces.

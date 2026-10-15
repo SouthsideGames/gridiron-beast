@@ -140,3 +140,25 @@ test('the Beast Dex outlives a franchise: discoveries merge into the player stor
   D.resetDex();
   assert.equal(D.dexCountsGlobal().seen, 0);
 });
+
+test('evolution: commons evolve at their level, keep numerals, grow, and the dex remembers the form', async () => {
+  const { tryEvolve, formOf, generateMonster, createRoster, monsterOverall } = await import('../src/data/monsters.js');
+  const { createRng } = await import('../src/core/rng.js');
+  const F = await import('../src/franchise/franchise.js');
+  const rng = createRng(3);
+  const m = generateMonster(rng, { species: 'emberfox', position: 'RB', quality: 58 }); m.name = 'Flaroo II';
+  assert.equal(tryEvolve(m), null, 'not before level 10');
+  const before = monsterOverall(m);
+  m.level = 10; const e1 = tryEvolve(m);
+  assert.equal(e1.to, 'Blazynx'); assert.equal(m.name, 'Blazynx II'); assert.equal(m.stage, 1); assert.ok(monsterOverall(m) > before);
+  assert.equal(formOf(m).name, 'Blazynx'); assert.equal(formOf(m).size, 'medium');
+  m.level = 20; const e2 = tryEvolve(m); assert.equal(e2.to, 'Infernox'); assert.equal(m.name, 'Infernox II'); assert.equal(tryEvolve(m), null, 'no third evolution');
+  const u = generateMonster(rng, { species: 'voltfang', position: 'WR', quality: 58 }); u.level = 30; assert.equal(tryEvolve(u), null, 'uncommons do not evolve');
+  // AI rosters in later seasons field evolved commons; the dex remembers forms the player has faced.
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 77 });
+  f.season.year = 4;
+  const t = F.aiTeam(f, 'Harbor Sentinels');
+  assert.ok(t.roster.some((x) => x.stage >= 1), 'season 4 gym club fields evolved monsters');
+  const evolved = t.roster.find((x) => x.stage >= 1); F.dexRecord(f, evolved, 'seen');
+  assert.ok(F.dexFormSeen(f, evolved.species) >= 1);
+});

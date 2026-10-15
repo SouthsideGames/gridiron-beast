@@ -9,7 +9,7 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 import { SPECIES_DEX } from '../src/data/species.js';
 import { spriteGrid, palette } from '../src/ui/sprite16.js';
-import { evolvedSpec } from '../src/ui/screens/dex.js';
+import { evolvedSpec } from '../src/data/monsters.js';
 
 const out = process.argv[2] || 'export/sprites';
 const scale = Math.max(1, parseInt(process.argv[3] || '1', 10));

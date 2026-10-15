@@ -1,6 +1,6 @@
 // XP, level-ups, fatigue, injuries and recovery (GDD §5.1 and §8).
 
-import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect } from '../data/monsters.js';
+import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve } from '../data/monsters.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS } from '../data/personnel.js';
 
 const norm = (v) => Math.max(1, Math.min(99, v ?? 60)) / 99;
@@ -22,6 +22,7 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
       const before = monsterOverall(m);
       levelUp(m, rng);
       events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
+      const evo = tryEvolve(m); if (evo) events.push(evo);
     }
     // Fatigue and injury risk.
     const dur = norm(m.attributes.durability);

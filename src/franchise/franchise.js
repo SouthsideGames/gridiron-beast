@@ -7,7 +7,7 @@ import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierB
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI } from '../data/staff.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
-import { dexRecordGlobal, dexStatusGlobal, noteNewFranchise } from './dex-store.js';
+import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
 import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
@@ -210,6 +210,7 @@ export function dexRecord(f, m, how = 'seen') {
   if (!f.dex.seen[id]) f.dex.seen[id] = stamp;
   if (how === 'signed' && !f.dex.signed[id]) f.dex.signed[id] = stamp;
   dexRecordGlobal(id, how, stamp); // the player's dex outlives this franchise
+  if (m?.stage) { f.dex.forms ||= {}; if ((f.dex.forms[id] || 0) < m.stage) f.dex.forms[id] = m.stage; dexFormGlobal(id, m.stage); }
 }
 /** Status across the player's whole career (every franchise), or this franchise only with `{ franchiseOnly: true }`. */
 export function dexStatus(f, id, { franchiseOnly = false } = {}) {
@@ -218,6 +219,8 @@ export function dexStatus(f, id, { franchiseOnly = false } = {}) {
   const all = dexStatusGlobal(id);
   return all === 'signed' || mine === 'signed' ? 'signed' : all === 'seen' || mine === 'seen' ? 'seen' : 'unknown';
 }
+/** Highest evolved stage of a species the player has seen (any franchise). */
+export function dexFormSeen(f, id) { return Math.max(f?.dex?.forms?.[id] || 0, dexFormsGlobal()[id] || 0); }
 export function dexCounts(f) {
   const ids = new Set(SPECIES_DEX.map((s) => s.id)); let seen = 0, signed = 0;
   for (const id of ids) { const st = dexStatus(f, id); if (st !== 'unknown') seen++; if (st === 'signed') signed++; }
@@ -393,12 +396,13 @@ export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } 
     ? { aggression: gym.coach.aggression, passBias: gym.coach.passBias, iq: D.iq + 0.2, identity: { offense: gym.coach.offense, defense: gym.coach.defense } }
     : { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
   const rival = f.rivals[f.tier]?.team === name ? rivalSignature(f) : null;
-  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival });
+  const evolveStage = gym ? (year >= 4 ? 2 : year >= 2 ? 1 : 0) : (year >= 5 ? 2 : year >= 3 ? 1 : 0);
+  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival, evolveStage });
 }
 /** The rival GM's signature monster: the same species every season, a little stronger each year (GDD §15.8). */
 export function rivalSignature(f) {
   const team = f.rivals[f.tier]?.team; if (!team) return null;
-  const pool = SPECIES_DEX.filter((s) => (s.rarity === 'uncommon' || s.rarity === 'rare') && ['QB', 'RB', 'WR', 'LB', 'CB'].includes(s.position));
+  const pool = SPECIES_DEX.filter((s) => s.evolution.length && ['QB', 'RB', 'WR', 'LB', 'CB', 'S'].includes(s.position)); // a signature that evolves as the years pass
   const sp = pool[hashString(`rival|${team}|${f.seed}`) % pool.length];
   const seasons = Math.max(0, (f.season?.year || 1) - 1);
   return { species: sp.id, bonus: 6 + seasons * 2, seasons };
@@ -765,7 +769,8 @@ export function finishSunday(f, gameState) {
     f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
     if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}–${gameState.score[oppSide]}` }; news(f, `BADGE EARNED: the ${gym.badge}. ${gym.coach.name}'s ${m.opponent} fall to ${f.club}.`, 'win'); }
   }
-  for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR).` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind);
+  for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR).` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
+  for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   f.lastGame = { ...f.week.gameResult, events, year: f.season.year, week: f.season.week };
   advanceWeek(f);

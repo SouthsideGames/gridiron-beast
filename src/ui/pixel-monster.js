@@ -4,14 +4,14 @@
 // No external art needed.
 
 import { createRng, hashString } from '../core/rng.js';
-import { TYPES, resolveSpecies } from '../data/monsters.js';
+import { TYPES, formOf } from '../data/monsters.js';
 import { sprite16 } from './sprite16.js';
 
 function hsl(h, s, l) { return `hsl(${h} ${s}% ${l}%)`; }
 
 /** Returns an inline SVG string. `size` is the CSS pixel size. */
 export function monsterSprite(m, size = 48, { tint = null, flip = false } = {}) {
-  const sp = resolveSpecies(m);
+  const sp = formOf(m);
   const t = tint ?? (createRng(hashString(`ind|${m?.id || m?.name || sp.id}`)).int(7) - 3);
   return sprite16(sp, size, { tint: t, flip });
 }
