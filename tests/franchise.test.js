@@ -293,13 +293,19 @@ test('difficulty is chosen at creation, carried in the save and exposed with Hal
   assert.equal(F.difficultyOf({ settings: {} }).label, 'Pro');
 });
 
-test('campaign: every ordinary club meets all eight gyms each season; gym clubs field their legendary and lean to their element', async () => {
+test('campaign: an ordinary club meets four gyms a season (all eight over two), never in week 1, alternating with ordinary games; gym clubs field their legendary and lean to their element', async () => {
   const { GYM_CLUBS, GYM_BY_CLUB } = await import('../src/data/gyms.js');
   const { SPECIES_BY_ID } = await import('../src/data/monsters.js');
   for (const y of [1, 2, 7]) for (const t of ALL_TEAMS) {
-    const opps = teamSchedule(y, t).filter((g) => !g.bye).map((g) => g.opponent);
+    const sched = teamSchedule(y, t).filter((g) => !g.bye); const opps = sched.map((g) => g.opponent);
     assert.equal(new Set(opps).size, 9, `${t} plays nine different clubs`);
-    if (!GYM_CLUBS.includes(t)) assert.equal(opps.filter((o) => GYM_CLUBS.includes(o)).length, 8, `${t} meets every gym in season ${y}`);
+    if (!GYM_CLUBS.includes(t)) {
+      assert.equal(opps.filter((o) => GYM_CLUBS.includes(o)).length, 4, `${t} meets four gyms in season ${y}`);
+      assert.ok(!GYM_CLUBS.includes(opps[0]), `${t}: week 1 is never a badge game`);
+      for (let i = 1; i < opps.length; i++) assert.ok(!(GYM_CLUBS.includes(opps[i]) && GYM_CLUBS.includes(opps[i - 1])), `${t}: no back-to-back badge games`);
+      const both = new Set([...opps, ...teamSchedule(y + 1, t).filter((g) => !g.bye).map((g) => g.opponent)].filter((o) => GYM_CLUBS.includes(o)));
+      assert.equal(both.size, 8, `${t} meets every gym across seasons ${y} and ${y + 1}`);
+    }
   }
   const f = newFranchise(3);
   for (const club of GYM_CLUBS) {
@@ -319,7 +325,7 @@ test('campaign: beating a gym club earns its badge once; Hall of Fame progress r
   const f = newFranchise(4);
   const gymWeek = f.season.schedule.find((g) => !g.bye && ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers'].includes(g.opponent));
   assert.ok(gymWeek);
-  while (f.season.week < gymWeek.week) { F.autoRunToSunday(f); F.simulatePlayerGame(f); }
+  while (f.season.week < gymWeek.week) { F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const g = F.simulatePlayerGame(f); F.finishSunday(f, g); }
   F.autoRunToSunday(f);
   const m = F.sundayMatchup(f); const side = m.playerSide;
   const score = { home: 0, away: 0 }; score[side] = 21;
@@ -337,7 +343,11 @@ test('campaign: the other coach speaks before the game and remembers the result'
   F.autoRunToSunday(f);
   const t1 = F.pregameTalk(f);
   assert.ok(t1 && t1.lines.length >= 1 && t1.lines.length <= 3);
-  assert.equal(t1.kind, 'gym'); assert.equal(t1.state, 'first');
+  assert.equal(t1.kind, t1.kind === 'rival' ? 'rival' : 'ordinary', 'week 1 is an ordinary club (or the rival), never a gym'); assert.equal(t1.state, t1.kind === 'rival' ? 'first' : 'generic');
+  if (t1.kind === 'ordinary') { assert.equal(t1.replies, false); }
+  // Week 2 is a badge game: the gym coach speaks and a reply is allowed.
+  { const g = F.simulatePlayerGame(f); F.finishSunday(f, g); F.autoRunToSunday(f); }
+  const t2 = F.pregameTalk(f); assert.equal(t2.kind, 'gym'); assert.equal(t2.state, 'first');
   assert.equal(F.replyToCoach(f, 'confident').ok, true);
   assert.equal(F.replyToCoach(f, 'respectful').ok, false, 'one reply per game');
   const team = F.playerTeam(f);

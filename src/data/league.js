@@ -48,48 +48,49 @@ export const TIERS = Object.freeze([
 export const tierById = (id) => TIERS.find((t) => t.id === id) || TIERS[0];
 
 // ------------------------------------------------------------ schedule
-// Campaign schedule (GDD §15.3): the eight gym clubs and the eight ordinary
-// clubs form two groups. Rounds 0–7 are the bipartite round robin, so every
-// ordinary club meets every gym club once a season (and vice versa); round 8
-// is the same-group division game, so all three division mates are played.
-// Nine games and a bye in ten weeks. The round order rotates by season, and
-// in a first season the four starter clubs meet the early gyms first and the
-// late gyms last.
+// Campaign schedule (GDD §15.3, revised): the eight gym clubs and the eight
+// ordinary clubs form two groups. Each season an ordinary club meets FOUR of
+// the gyms (the other four the season after, so all eight take two seasons on
+// any difficulty), alternating with games inside its own group, and never in
+// week 1. Nine games and a bye in ten weeks. Within a group the five games
+// come from a seven-round round robin that rotates by season.
 import { GYM_CLUBS } from './gyms.js';
 
 const GYM_ORDER = ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']; // early → late
 const ORDINARY_ORDER = ['Ember City Beasts', 'Stonehaven Titans', 'Glacier Guardians', 'Stormport Bolts', 'Northstar Wolves', 'Sundown Drakes', 'Ashford Hawks', 'Bayou Stalkers']; // starters first
-// 4×4 Latin blocks: ordinary clubs 0–3 meet gyms 0–3 in rounds 0–3 and gyms 4–7 in rounds 4–7; clubs 4–7 the reverse.
 const LATIN = [[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [3, 2, 1, 0]];
-function gymFor(ordinaryIndex, round) {
-  const half = ordinaryIndex < 4 ? 0 : 1, block = round < 4 ? 0 : 1;
-  const gymBlock = (half + block) % 2; // starters: gyms 0–3 then 4–7
+/** The gym an ordinary club meets in gym round r (0–3) of a season: starters take the easier half in odd seasons, the harder half in even ones. */
+function gymFor(ordinaryIndex, round, season) {
+  const half = ordinaryIndex < 4 ? 0 : 1, flip = (season - 1) % 2;
+  const gymBlock = (half + flip) % 2;
   return GYM_ORDER[gymBlock * 4 + LATIN[ordinaryIndex % 4][round % 4]];
+}
+/** Circle-method round robin for eight clubs: 7 rounds of 4 pairings. */
+function roundRobin(teams) {
+  const t = teams.slice(); const rounds = [];
+  for (let r = 0; r < 7; r++) { const pairs = []; for (let i = 0; i < 4; i++) pairs.push([t[i], t[7 - i]]); rounds.push(pairs); t.splice(1, 0, t.pop()); }
+  return rounds;
 }
 const categoryOf = (a, b) => (divisionOf(a) === divisionOf(b) ? 'Division' : conferenceFor(divisionOf(a)) === conferenceFor(divisionOf(b)) ? 'Conference' : 'Interconference');
 
 /** All fixtures for a season: [{week, bye, games:[{home, away, category}]}]. */
 export function leagueSeasonFixtures(season) {
   season = Math.max(1, Math.floor(Number(season) || 1));
-  const rounds = Array.from({ length: 9 }, () => []);
-  const add = (round, home, away) => rounds[round].push({ home, away, category: categoryOf(home, away) });
-  for (let r = 0; r < 8; r++) for (let i = 0; i < 8; i++) {
-    const o = ORDINARY_ORDER[i], g = gymFor(i, r);
-    const gymHome = (r + i + season) % 2 === 0;
-    add(r, gymHome ? g : o, gymHome ? o : g);
-  }
-  // Round 8: the division mate from the same group (gym v gym, ordinary v ordinary).
-  for (const teams of Object.values(DIVISIONS)) {
-    const gyms = teams.filter((t) => GYM_CLUBS.includes(t)), others = teams.filter((t) => !GYM_CLUBS.includes(t));
-    for (const [a, b] of [gyms, others]) add(8, season % 2 ? a : b, season % 2 ? b : a);
-  }
+  const add = (list, home, away) => list.push({ home, away, category: categoryOf(home, away) });
+  // Four gym rounds.
+  const gymRounds = [];
+  for (let r = 0; r < 4; r++) { const games = []; for (let i = 0; i < 8; i++) { const o = ORDINARY_ORDER[i], g = gymFor(i, r, season); const gymHome = (r + i + season) % 2 === 0; add(games, gymHome ? g : o, gymHome ? o : g); } gymRounds.push(games); }
+  // Five in-group rounds (ordinary v ordinary and gym v gym), rotating through the seven-round robin by season.
+  const rrO = roundRobin(ORDINARY_ORDER), rrG = roundRobin(GYM_ORDER);
+  const groupRounds = [];
+  for (let k = 0; k < 5; k++) { const idx = ((season - 1) * 5 + k) % 7; const games = []; for (const [[a, b], [c, d]] of rrO[idx].map((p, i) => [p, rrG[idx][i]])) { const flip = (season + k) % 2; add(games, flip ? a : b, flip ? b : a); add(games, flip ? c : d, flip ? d : c); } groupRounds.push(games); }
+  // Game weeks alternate group / gym / group / gym …, so week 1 is never a badge game; the bye slots in as before.
+  const order = [groupRounds[0], gymRounds[0], groupRounds[1], gymRounds[1], groupRounds[2], gymRounds[2], groupRounds[3], gymRounds[3], groupRounds[4]];
   const bye = 4 + (season - 1) % 5;
-  const shift = (season - 1) % 9;
-  const weeks = [];
+  const weeks = []; let gi = 0;
   for (let week = 1; week <= 10; week++) {
     if (week === bye) { weeks.push({ week, bye: true, games: [] }); continue; }
-    const round = (week - (week > bye ? 2 : 1) + shift) % 9;
-    weeks.push({ week, bye: false, games: rounds[round].map((g) => ({ ...g })) });
+    weeks.push({ week, bye: false, games: order[gi++].map((g) => ({ ...g })) });
   }
   return weeks;
 }
