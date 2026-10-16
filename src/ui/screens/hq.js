@@ -243,7 +243,7 @@ export function registerHqScreens(Router, app) {
   });
   function trainingResultHtml(t) {
     const label = TRAINING_FOCI[t.focus]?.label || t.focus;
-    return `<h2 style="margin-top:0">${t.success ? '✅ Good practice' : '❌ Sloppy practice'}</h2><p>${t.success ? `${esc(label)} work paid off: <b>+${t.amount}</b> to ${esc(TRAINING_FOCI[t.focus].attrs.map((a) => ATTR_LABEL[a]).join(', '))} on Sunday.` : `${esc(label)} work didn't stick this week. No boost on Sunday.`}</p>${t.injury ? `<p style="color:var(--bad)">🚑 ${esc(t.injury.name)} was hurt: ${esc(t.injury.severity)}, out ${t.injury.weeks} week${t.injury.weeks === 1 ? '' : 's'}. The next monster on the depth chart steps in.</p>` : '<p class="muted">Everyone came out healthy.</p>'}`;
+    return `<h2 style="margin-top:0">${t.success ? '✅ Good practice' : '❌ Sloppy practice'}</h2><p>${t.success ? `${esc(label)} work paid off: <b>+${t.amount}</b> to ${esc(TRAINING_FOCI[t.focus].attrs.map((a) => ATTR_LABEL[a]).join(', '))} on Sunday.` : `${esc(label)} work didn't stick this week. No boost on Sunday.`}</p>${t.injury ? `<p style="color:var(--bad)">🚑 ${esc(t.injury.name)} was hurt: ${esc(t.injury.severity)}, out ${t.injury.weeks} week${t.injury.weeks === 1 ? '' : 's'}. The next monster on the depth chart steps in.</p>` : '<p class="muted">Everyone came out healthy.</p>'}${t.fatigue ? `<p class="dim">Practice added ${t.fatigue}% fatigue. Fatigue comes off at Saturday’s lineup check.</p>` : ''}`;
   }
 
   // ---------------------------------------------------------------- Thursday

@@ -5,7 +5,7 @@
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
-import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName } from '../data/monsters.js';
+import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
 import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES } from '../data/gyms.js';
@@ -571,10 +571,15 @@ export function skipRecruit(f) { if (f.season.day === 1) { f.season.day = 2; f.w
 const scaledBonus = (b, k) => b && Object.fromEntries(Object.entries(b).map(([a, v]) => [a, Math.max(1, Math.round(v * k))]));
 /** Practice intensity: bigger boosts cost more injury risk. */
 export const INTENSITIES = Object.freeze({
-  light: { label: 'Light', factor: 0.5, risk: 0.01, success: 0.06, text: 'Walk-through. Small boost, almost no risk.' },
-  normal: { label: 'Normal', factor: 1, risk: 0.04, success: 0, text: 'A regular practice.' },
-  full: { label: 'Full pads', factor: 1.6, risk: 0.09, success: -0.05, text: 'Big boost, real injury risk.' },
+  light: { label: 'Light', factor: 0.5, risk: 0.01, success: 0.06, fatigue: 4, text: 'Walk-through. Small boost, almost no risk, +4% fatigue.' },
+  normal: { label: 'Normal', factor: 1, risk: 0.04, success: 0, fatigue: 8, text: 'A regular practice. +8% fatigue.' },
+  full: { label: 'Full pads', factor: 1.6, risk: 0.09, success: -0.05, fatigue: 14, text: 'Big boost, real injury risk, +14% fatigue.' },
 });
+/** Practice tires the healthy roster; Saturday recovery (−28) takes a game plus a normal practice back to rested. */
+export function practiceFatigue(roster, intensity = 'normal') {
+  const I = INTENSITIES[intensity] || INTENSITIES.normal;
+  for (const m of roster) { if (m.injury) continue; const stamina = speciesEffect(m)?.effect?.fatigue || 1; m.fatigue = Math.min(100, (m.fatigue || 0) + Math.round(I.fatigue * stamina)); }
+}
 /** How many weeks in a row the club has already practised this focus. */
 export function trainingStreak(f, focus) { const h = f.trainingHistory || []; let n = 0; for (let i = h.length - 1; i >= 0 && h[i] === focus; i--) n++; return n; }
 /** Odds shown before choosing: success chance, injury risk, bonus per attribute. */
@@ -605,9 +610,10 @@ export function setTraining(f, focus, intensity = 'normal') {
     if (m) { const severity = r.chance(0.8) ? 'Minor' : 'Moderate'; const weeks = severity === 'Minor' ? 1 : 2; m.injury = { severity, weeks, type: r.pick(['hamstring', 'ankle', 'shoulder', 'wrist']) }; injury = { id: m.id, name: m.name, severity, weeks }; news(f, `${m.name} hurt in practice: ${severity}, out ${weeks} week${weeks === 1 ? '' : 's'}.`, 'injury'); }
   }
   save();
+  practiceFatigue(f.roster, intensity);
   (f.trainingHistory ||= []).push(focus); if (f.trainingHistory.length > 12) f.trainingHistory.shift();
   f.week.trainingFocus = success ? focus : null; f.week.trainingFactor = odds.factor;
-  f.week.training = { focus, intensity, success, injury, amount: odds.amount }; f.rattled = false;
+  f.week.training = { focus, intensity, success, injury, amount: odds.amount, fatigue: (INTENSITIES[intensity] || INTENSITIES.normal).fatigue }; f.rattled = false;
   f.season.day = 3; skipToByeIfIdle(f);
   return { ok: true, success, injury, amount: odds.amount, streak: odds.streak };
 }

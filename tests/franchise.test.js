@@ -466,10 +466,12 @@ test('playtest round 2: fatigue shows all week and recovers Saturday; bye weeks 
   const starters = f.roster.filter((m) => m.fatigue > 0);
   assert.ok(starters.length >= 10, `fatigue visible on Monday (${starters.length} tired)`);
   const before = Math.max(...f.roster.map((m) => m.fatigue));
-  while (f.season.day < 5) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else if (f.season.day === 2) F.setTraining(f, 'coverage'); else if (f.season.day === 3) F.scoutOpponent(f, 'offense'); else F.setGamePlan(f, F.catalog(f, 'offense').slice(0, 6), F.catalog(f, 'defense').slice(0, 6)); }
-  assert.equal(Math.max(...f.roster.map((m) => m.fatigue)), before, 'still tired on Friday');
+  const healthy = f.roster.find((m) => !m.injury); const preMon = healthy.fatigue;
+  while (f.season.day < 5) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else if (f.season.day === 2) { F.setTraining(f, 'coverage', 'full'); assert.equal(f.week.training.fatigue, 14); } else if (f.season.day === 3) F.scoutOpponent(f, 'offense'); else F.setGamePlan(f, F.catalog(f, 'offense').slice(0, 6), F.catalog(f, 'defense').slice(0, 6)); }
+  assert.ok(healthy.fatigue > preMon, 'practice adds fatigue');
+  assert.ok(Math.max(...f.roster.map((m) => m.fatigue)) > before, 'still tired on Friday, more after full pads');
   F.lineupCheck(f);
-  assert.ok(Math.max(...f.roster.map((m) => m.fatigue)) < before, 'Saturday recovery');
+  assert.ok(Math.max(...f.roster.map((m) => m.fatigue)) < before, 'Saturday recovery takes off the game and the practice');
   // Play stats from the first game.
   const used = Object.values(f.playStats[1]); assert.ok(used.length >= 4 && used.every((e) => e.used > 0));
   const some = Object.keys(f.playStats[1])[0]; assert.ok(F.playStat(f, some).avg !== null);
