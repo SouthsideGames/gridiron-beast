@@ -35,7 +35,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const events = [];
   const log = (text, data = {}) => events.push({ t: +t.toFixed(2), text, ...data });
   /** Signature ability fired (logged once per monster per play, for the box score). */
-  const abilityUsed = (a) => { if (!a?.abilityName || a.abilityLogged) return; a.abilityLogged = true; log(`${a.name}'s ${a.abilityName} kicks in`, { kind: 'ability', by: a.slot, side: a.team }); };
+  const abilityUsed = (a) => { if (!a?.abilityName || a.abilityLogged) return; a.abilityLogged = true; log(`${a.name}'s ${a.abilityName} kicks in`, { kind: 'ability', by: a.slot, side: a.team, trait: a.abilityKind === 'trait' }); };
 
   // ------------------------------------------------------------ actors
   const actors = [];
@@ -47,11 +47,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const sp = !legacy && input?.species ? speciesEffect(input.species) : null;
     const ability = legacy?.effect || sp?.effect || null;
     const abilityName = legacy?.name || sp?.name || null;
+    const abilityKind = legacy ? 'ability' : sp?.kind || null;
     if (ability?.attrs) for (const [k, v] of Object.entries(ability.attrs)) attrs[k] = Math.max(1, Math.min(99, (attrs[k] ?? 60) + v));
     if (ability?.routeAgility && play.assignments[slot]?.a === 'route') attrs.agility = Math.min(99, attrs.agility + ability.routeAgility);
     const [x, y] = play.align[slot];
     const a = {
-      team, slot, attrs, ability, abilityName, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
+      team, slot, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
       x, y, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0,

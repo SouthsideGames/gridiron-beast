@@ -301,3 +301,17 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .tip { background: #1e2a3a; border: 2px solid #3b5a7a; border-radius: var(--r); padding: var(--s2) var(--s3); margin: 0 0 var(--s3); }
 .tip p { margin: 6px 0 8px; font-size: 14px; color: var(--ink); }
 .tip .row { gap: 6px; flex-wrap: wrap; }
+
+.card .card-stat { display: block; font: 500 10px ui-monospace, monospace; color: var(--ink-2); margin-top: 2px; }
+
+.ability-strip { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: 12px; color: #ffe36c; font-weight: 700; }
+.ability-strip .mine { color: #ffd84a; }
+.ability-strip .trait { color: var(--ink-2); font-weight: 600; }
+
+/* Badge earned */
+.badge-win { text-align: center; padding: 8px 0; }
+.badge-win-ring { width: 96px; height: 96px; margin: 0 auto 10px; border-radius: 50%; display: grid; place-items: center; font-size: 48px; color: #fff; background: radial-gradient(circle at 35% 30%, hsl(var(--hue) 80% 65%), hsl(var(--hue) 70% 38%)); box-shadow: 0 0 0 6px hsl(var(--hue) 60% 22%), 0 0 40px hsl(var(--hue) 80% 50% / .6); animation: badge-pop .6s cubic-bezier(.2,1.4,.4,1) both; }
+.badge-win-title { font-size: 12px; letter-spacing: .2em; color: hsl(var(--hue) 70% 70%); font-weight: 800; }
+.badge-win-name { font-size: 26px; font-weight: 900; margin: 2px 0 8px; }
+@keyframes badge-pop { from { transform: scale(.4); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+[data-reduced-motion="1"] .badge-win-ring { animation: none; }

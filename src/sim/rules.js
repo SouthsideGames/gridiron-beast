@@ -95,12 +95,14 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const { r, save } = rng(state);
   const offense = teams[state.possession], defense = teams[opponent(state.possession)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
-  (state.calls ||= []).push({ side: state.possession, off: offensePlayId, def: defensePlayId });
+  const call = { side: state.possession, off: offensePlayId, def: defensePlayId };
+  (state.calls ||= []).push(call);
   const sim = simulatePlay({
     offensePlay, defensePlay,
     offense: pickSlots(offense.offense, offensePlay.onField), defense: pickSlots(defense.defense, defensePlay.onField),
     ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options,
   });
+  call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
   save();
   const outcome = applyScrimmageResult(state, sim, offensePlayId, defensePlayId);
   return { sim, outcome };

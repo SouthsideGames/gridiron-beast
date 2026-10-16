@@ -121,6 +121,7 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="router-tab"][data-screen="more"]'); page.click('[data-action="go"][data-screen="dex"]'); page.wait_for_selector('.dex-cell'); no_overflow(page, 'dex in franchise'); shot(page, f'{name}-07c-dex')
     check(page.evaluate("() => document.querySelectorAll('.dex-cell.signed').length") >= 20, 'dex: starting roster species are marked signed')
     page.click('.dex-cell.signed >> nth=0'); page.wait_for_selector('.sheet'); shot(page, f'{name}-07d-dex-species'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
+    page.click('[data-action="router-tab"][data-screen="league"]'); page.wait_for_selector('[data-action="award"]'); page.click('[data-action="award"][data-k="mvp"]'); page.wait_for_selector('.sheet'); no_overflow(page, 'award race'); shot(page, f'{name}-05b-award'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="router-tab"][data-screen="hq"]')
     # Week
     settle(page, '[data-action="scout"]')
@@ -174,6 +175,10 @@ def run_size(pw, port, w, h, name):
         elif page.query_selector('[data-action="punt"]'): page.click('[data-action="punt"]'); page.wait_for_timeout(120)
     settle(page)
     shot(page, f'{name}-15-after-plays')
+    # Auto mode: three plays call themselves, then off.
+    settle(page, '[data-action="auto"]'); page.click('[data-action="auto"]'); page.wait_for_timeout(3500)
+    check(page.evaluate("() => __gb.f.game.state.calls.length") >= 2, 'auto mode plays on its own')
+    settle(page, '[data-action="auto"]'); page.click('[data-action="auto"]'); page.wait_for_timeout(200); shot(page, f'{name}-15b-auto-off')
     # Key moments sim
     settle(page, '[data-action="mode"]')
     page.click('[data-action="mode"]'); page.wait_for_timeout(50)

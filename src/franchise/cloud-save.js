@@ -70,15 +70,18 @@ async function writeNow(f) {
   } catch (e) { setStatus({ error: e?.code || 'unavailable' }); return false; }
 }
 
-/** Debounced mirror (writes at most every few seconds). */
+/**
+ * Mirror with a throttle: a write happens within 4 s of the first pending change
+ * even while saves keep arriving (a match saves every play), and at once for
+ * important changes (a game finished, a week advanced).
+ */
 export function cloudSave(f, { immediate = false } = {}) {
   pending = f;
-  clearTimeout(timer);
-  const run = () => { const p = pending; pending = null; if (p) writeNow(p); };
-  if (immediate) run(); else timer = setTimeout(run, 4000);
+  const run = () => { clearTimeout(timer); timer = null; const p = pending; pending = null; if (p) writeNow(p); };
+  if (immediate) run(); else if (!timer) timer = setTimeout(run, 4000);
 }
 /** Flush a pending write right away (page hidden / unloading). */
-export function cloudFlush() { if (pending) { clearTimeout(timer); const p = pending; pending = null; writeNow(p); } }
+export function cloudFlush() { if (pending) { clearTimeout(timer); timer = null; const p = pending; pending = null; writeNow(p); } }
 export async function cloudClear() {
   const c = await connect(); if (!c) return;
   try { await c.col.doc('save_meta').delete(); } catch { /* ignore */ }

@@ -458,3 +458,31 @@ test('owner backgrounds carry a perk: cap, training odds, scouting reveal, analy
   const an = mk('analyst'); F.hireDefaultStaff(an); F.scoutRegion(an, 'Coral Coast'); F.skipRecruit(an); F.setTraining(an, 'coverage');
   assert.ok(F.scoutOpponent(an, 'offense').report.bonus?.analyst, 'analyst sees an extra play from week 1');
 });
+
+test('playtest round 2: fatigue shows all week and recovers Saturday; bye weeks skip to rest; play stats tally; award races need games played', () => {
+  const f = newFranchise(71);
+  F.autoRunToSunday(f); const g = F.simulatePlayerGame(f); const r = F.finishSunday(f, g);
+  assert.equal(r.newBadge, null, 'week 1 is not a badge game');
+  const starters = f.roster.filter((m) => m.fatigue > 0);
+  assert.ok(starters.length >= 10, `fatigue visible on Monday (${starters.length} tired)`);
+  const before = Math.max(...f.roster.map((m) => m.fatigue));
+  while (f.season.day < 5) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else if (f.season.day === 2) F.setTraining(f, 'coverage'); else if (f.season.day === 3) F.scoutOpponent(f, 'offense'); else F.setGamePlan(f, F.catalog(f, 'offense').slice(0, 6), F.catalog(f, 'defense').slice(0, 6)); }
+  assert.equal(Math.max(...f.roster.map((m) => m.fatigue)), before, 'still tired on Friday');
+  F.lineupCheck(f);
+  assert.ok(Math.max(...f.roster.map((m) => m.fatigue)) < before, 'Saturday recovery');
+  // Play stats from the first game.
+  const used = Object.values(f.playStats[1]); assert.ok(used.length >= 4 && used.every((e) => e.used > 0));
+  const some = Object.keys(f.playStats[1])[0]; assert.ok(F.playStat(f, some).avg !== null);
+  // Award races: a one-game monster does not qualify once the league has played several weeks.
+  f.season.leagueStats['Zed FC'] = { x1: { id: 'x1', name: 'OneGame', type: 'Fire', species: 'emberfox', position: 'QB', age: 25, games: 1, passYds: 400, passTd: 5, att: 20, comp: 18 } };
+  for (const T of Object.values(f.season.leagueStats)) for (const p of Object.values(T)) if (p.id !== 'x1') p.games = Math.max(p.games || 0, 5);
+  assert.ok(!F.awardRaces(f).mvp.some((p) => p.id === 'x1'), 'needs 60% of the weeks played');
+  assert.equal(F.awardRaces(f, { n: 5 }).mvp.length <= 5, true);
+  // Bye week: after Wednesday the week skips to Sunday.
+  const bye = f.season.schedule.find((w) => w.bye).week;
+  while (f.season.week < bye) { F.autoRunToSunday(f); const gg = F.simulatePlayerGame(f); F.finishSunday(f, gg); }
+  assert.ok(F.isBye(f));
+  F.scoutRegion(f, 'Coral Coast'); F.skipRecruit(f); F.setTraining(f, 'coverage');
+  assert.equal(f.season.day, 6, 'bye week goes straight from Wednesday to the bye');
+  assert.equal(F.scoutOpponent(f, 'offense').ok, false);
+});

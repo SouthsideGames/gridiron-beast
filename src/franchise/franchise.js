@@ -49,6 +49,24 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   return f;
 }
 
+// ------------------------------------------------------------ play stats (per season, the player's own calls)
+/** Tally this game's calls: offense plays when we had the ball, defense plays when they did. */
+export function recordPlayStats(f, gameState, side) {
+  const ps = (f.playStats ||= {}); const year = f.season.year; const S = (ps[year] ||= {});
+  for (const c of gameState.calls || []) {
+    const mine = c.side === side ? c.off : c.def; if (!mine) continue;
+    const e = (S[mine] ||= { used: 0, yards: 0, turnovers: 0, big: 0 });
+    e.used += 1; e.yards += c.yards || 0; if (c.turnover) e.turnovers += 1; if ((c.yards || 0) >= 15) e.big += 1;
+  }
+}
+/** {used, avg, turnovers, big} for a play this season (or all seasons with `{ career: true }`). */
+export function playStat(f, playId, { career = false } = {}) {
+  const years = career ? Object.values(f.playStats || {}) : [(f.playStats || {})[f.season?.year] || {}];
+  const t = { used: 0, yards: 0, turnovers: 0, big: 0 };
+  for (const y of years) { const e = y[playId]; if (e) { t.used += e.used; t.yards += e.yards; t.turnovers += e.turnovers; t.big += e.big; } }
+  return { ...t, avg: t.used ? t.yards / t.used : null };
+}
+
 // ------------------------------------------------------------ the commissioner's office (GDD §15.6)
 /** Saturday: if the club is still over the cap, the commissioner names the monsters the GM must choose between. */
 export function commissionerReview(f) {
@@ -571,6 +589,8 @@ export function trainingOdds(f, focus, intensity = 'normal') {
   const base = Object.values(trainingBonus(tr, focus) || {})[0] || 1;
   return { success, risk: I.risk, amount: Math.max(1, Math.round(base * I.factor)), streak, factor: I.factor };
 }
+/** After Wednesday on a bye week the rest of the week is rest: straight to the bye. */
+export function skipToByeIfIdle(f) { if (isBye(f) && f.season.day >= 3 && f.season.day < 6) { f.season.day = 6; news(f, 'Bye week: no opponent, no game plan, no press. Rest up.', 'info'); return true; } return false; }
 export function setTraining(f, focus, intensity = 'normal') {
   if (f.season.day !== 2) return { ok: false, reason: 'Not Wednesday.' };
   if (!TRAINING_FOCI[focus]) return { ok: false, reason: 'Unknown focus.' };
@@ -588,11 +608,12 @@ export function setTraining(f, focus, intensity = 'normal') {
   (f.trainingHistory ||= []).push(focus); if (f.trainingHistory.length > 12) f.trainingHistory.shift();
   f.week.trainingFocus = success ? focus : null; f.week.trainingFactor = odds.factor;
   f.week.training = { focus, intensity, success, injury, amount: odds.amount }; f.rattled = false;
-  f.season.day = 3;
+  f.season.day = 3; skipToByeIfIdle(f);
   return { ok: true, success, injury, amount: odds.amount, streak: odds.streak };
 }
 export function scoutOpponent(f, side) {
   if (f.season.day !== 3) return { ok: false, reason: 'Not Thursday.' };
+  if (isBye(f)) return { ok: false, reason: 'Bye week: nobody to scout.' };
   const opp = opponentName(f);
   let report = null;
   if (opp) {
@@ -658,6 +679,7 @@ export function autoRunToSunday(f) {
   let guard = 0;
   while (f.season.day < 6 && guard++ < 10) {
     const day = f.season.day;
+    if (isBye(f) && day >= 3) { f.season.day = 6; did.push('Bye week: rested'); break; }
     if (day === 0) { const scout = staffMember(f, 'head_scout'); const best = Object.entries(REGIONS).sort((a, b) => (scout?.biomes?.[b[1].biome] ?? 50) - (scout?.biomes?.[a[1].biome] ?? 50))[0][0]; const r = scoutRegion(f, best); did.push(`Scouted ${best}: ${r.prospects?.length || 0} prospects`); }
     else if (day === 1) {
       const pick = f.week.prospects.map((p, i) => ({ p, i })).filter(({ p }) => p.revealed >= 4 && !salarySummary(f, p.monster.salary).over && f.roster.length < ROSTER_MAX)
@@ -679,7 +701,7 @@ export function lineupCheck(f, { advance = true } = {}) {
   const problems = lineupProblems(f.roster, chart);
   const tired = f.roster.filter((m) => Object.values(chart).includes(m.id) && m.fatigue >= 60).map((m) => m.name);
   const injured = f.roster.filter((m) => m.injury).map((m) => `${m.name} (${m.injury.severity}, ${m.injury.weeks} wk)`);
-  if (advance) { f.week.lineupChecked = true; if (f.season.day === 5) { f.season.day = 6; commissionerReview(f); } }
+  if (advance) { f.week.lineupChecked = true; if (f.season.day === 5) { f.season.day = 6; recoverWeek(f.roster); commissionerReview(f); } }
   return { ok: problems.length === 0, problems, tired, injured, chart, commissioner: f.week.commissioner || null };
 }
 /** Put a monster into a slot by moving them to that slot's place in the position's depth order. */
@@ -774,7 +796,8 @@ export function finishSunday(f, gameState) {
   for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR).` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
-  f.lastGame = { ...f.week.gameResult, events, year: f.season.year, week: f.season.week };
+  recordPlayStats(f, gameState, side);
+  f.lastGame = { ...f.week.gameResult, events, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null };
   advanceWeek(f);
   return f.lastGame;
 }
@@ -787,7 +810,7 @@ export function takeBye(f) {
 function advanceWeek(f, { bye = false } = {}) {
   if (!inPlayoffs(f)) simulateLeagueWeek(f);
   else simulatePlayoffWeek(f);
-  recoverWeek(f.roster, { bye });
+  if (bye) recoverWeek(f.roster, { bye: true }); // a normal week recovers on Saturday, so the week shows the fatigue from Sunday
   f.season.week += 1; f.season.day = 0;
   const lastPlan = f.week.plan;
   f.week = blankWeek(); f.week.plan = lastPlan; // keep the plan as the default for next week
@@ -891,16 +914,20 @@ function relativeTo(rows, score) {
   const stats = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length) || 1; return [p, { m, sd }]; }));
   return (r) => { const st = stats[r.position]; return st ? (score(r) - st.m) / st.sd : 0; };
 }
-export function awardRaces(f) {
-  const rows = Object.entries(f.season.leagueStats || {}).flatMap(([team, T]) => Object.values(T).map((r) => ({ ...r, team }))).filter((r) => (r.games || 0) > 0);
+export function awardRaces(f, { n = 3 } = {}) {
+  const all = Object.entries(f.season.leagueStats || {}).flatMap(([team, T]) => Object.values(T).map((r) => ({ ...r, team }))).filter((r) => (r.games || 0) > 0);
+  // Races are per game, so a monster must have played most of the weeks to qualify (no one-game wonders or backups).
+  const weeks = Math.max(1, ...all.map((r) => r.games || 0));
+  const minGames = Math.max(1, Math.ceil(weeks * 0.6));
+  const rows = all.filter((r) => (r.games || 0) >= minGames);
   const recs = f.season.records; const winPct = (team) => { const r = recs[team]; return r && r.w + r.l ? r.w / (r.w + r.l) : 0.5; };
-  const top = (list, score) => list.map((r) => ({ ...r, score: score(r) })).filter((r) => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+  const top = (list, score) => list.map((r) => ({ ...r, score: score(r), minGames })).filter((r) => r.score > 0).sort((a, b) => b.score - a.score).slice(0, n);
   const off = rows.filter((r) => OFF_POS.has(r.position)), def = rows.filter((r) => !OFF_POS.has(r.position) && r.position !== 'K');
   const relOff = relativeTo(off, offProduction), relDef = relativeTo(def, defProduction);
   // MVP: production per game × a team-success multiplier; quarterbacks carry more of the offense (responsibility).
   const mvpScore = (r) => { const base = OFF_POS.has(r.position) ? offProduction(r) * (r.position === 'QB' ? 1.15 : 1) : defProduction(r) * 0.85; return base * (0.6 + 0.8 * winPct(r.team)); };
   // COY: wins above expectation (expectation = roster talent) + margin; a turnaround beats a talented team coasting.
-  const coy = Object.entries(recs).map(([team, rec]) => { const g = rec.w + rec.l + (rec.t || 0); if (!g) return null; const talent = team === f.club ? teamOverall(playerTeam(f)) : teamOverall(aiTeam(f, team)); const expected = 0.5 + (talent - 60) * 0.025; const over = rec.w / g - expected; return { team, w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, talent, coach: team === f.club ? staffMember(f, 'head_coach')?.name || 'Your head coach' : `${team} staff`, score: rec.w * 6 + over * 40 * g / 10 + ((rec.pf || 0) - (rec.pa || 0)) / 25 }; }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, 3);
+  const coy = Object.entries(recs).map(([team, rec]) => { const g = rec.w + rec.l + (rec.t || 0); if (!g) return null; const talent = team === f.club ? teamOverall(playerTeam(f)) : teamOverall(aiTeam(f, team)); const expected = 0.5 + (talent - 60) * 0.025; const over = rec.w / g - expected; return { team, w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, talent, coach: team === f.club ? staffMember(f, 'head_coach')?.name || 'Your head coach' : `${team} staff`, score: rec.w * 6 + over * 40 * g / 10 + ((rec.pf || 0) - (rec.pa || 0)) / 25, expected: Math.round(expected * g * 10) / 10 }; }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, n);
   return {
     mvp: top(rows, mvpScore),
     opoy: top(off, (r) => relOff(r) + offProduction(r) * 0.05), dpoy: top(def, (r) => relDef(r) + defProduction(r) * 0.05),

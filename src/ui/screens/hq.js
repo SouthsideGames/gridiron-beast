@@ -70,6 +70,7 @@ export function registerHqScreens(Router, app) {
         bye: () => { F.takeBye(app.f); app.save(); toast('Bye week taken. Fatigue recovered.'); Router.render(); },
         game: () => { if (!F.canPlayGames(app.f)) { Router.go('commissioner'); return; } Router.go('pregame'); },
         commissioner: () => Router.go('commissioner'),
+        restbye: () => { F.skipToByeIfIdle(app.f); app.save(); Router.render(); },
         postseason: () => Router.go('postseason'),
         legend: () => Router.go('legend'),
         retire: async () => {
@@ -89,6 +90,7 @@ export function registerHqScreens(Router, app) {
     const d = f.season.day;
     if (f.game && !f.game.state?.finished) return { label: 'Resume game', action: 'resume', icon: '▶' };
     if (f.week.commissioner) return { label: "The commissioner's office", action: 'commissioner', icon: '🏛️' };
+    if (F.isBye(f) && d >= 3 && d < 6) return { label: 'Bye week · rest until Sunday', action: 'restbye', icon: '😴' };
     if (d === 6) return F.isBye(f) ? { label: 'Take the bye week', action: 'bye', icon: '😴' } : { label: 'Play Sunday game', action: 'game', icon: '🏈' };
     return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Recruit', action: 'recruit', icon: '🤝' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
   }
@@ -326,15 +328,15 @@ export function registerHqScreens(Router, app) {
     title: 'Playbook', back: false,
     render({ f }) {
       const oc = F.staffMember(f, 'offensive_coordinator'), dc = F.staffMember(f, 'defensive_coordinator');
-      const grid = (s) => `<div class="play-grid">${F.catalog(f, s).map((id) => `<button class="card ${f.week.plan[s].includes(id) ? 'selected' : ''}" data-action="open" data-id="${id}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
+      const grid = (s) => `<div class="play-grid">${F.catalog(f, s).map((id) => { const st = F.playStat(f, id); return `<button class="card ${f.week.plan[s].includes(id) ? 'selected' : ''}" data-action="open" data-id="${id}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span><span class="card-stat">${st.used ? `${st.used}× · ${st.avg.toFixed(1)} yd` : 'not used yet'}</span></button>`; }).join('')}</div>`;
       return `<div class="row between"><h3 style="margin:0">Offense · ${esc(oc?.style || '')}</h3>${f.season.day === 4 ? '<button class="btn small" data-action="plan">Set game plan</button>' : '<span class="dim">Game plan is set on Fridays</span>'}</div>${grid('offense')}${legendHtml('offense')}
-        <h3>Defense · ${esc(dc?.style || '')}</h3>${grid('defense')}${legendHtml('defense')}<p class="dim">Highlighted cards are in this week's game plan. Custom play creation is a future feature.</p>`;
+        <h3>Defense · ${esc(dc?.style || '')}</h3>${grid('defense')}${legendHtml('defense')}<p class="dim">Highlighted cards are in this week's game plan. Under each card: times called this season and average yards (gained on offense, allowed on defense).</p>`;
     },
     mount(root) { delegate(root, { open: (el) => Router.go('playdetail', { id: el.dataset.id }), plan: () => Router.go('gameplan') }); },
   });
   Router.registerScreen('playdetail', {
     title: ({ params }) => PLAYS[params.id]?.name || 'Play',
-    render({ params }) { return playDetailHtml(params.id); },
+    render({ params, f }) { return playDetailHtml(params.id, f); },
     mount(root) { delegate(root, { practice: (el) => Router.go('practice', { play: el.dataset.id }) }); },
   });
 
@@ -344,12 +346,13 @@ export function registerHqScreens(Router, app) {
     render({ f }) {
       const rival = f.rivals[f.tier]; const titles = Object.values(f.badges).reduce((a, b) => a + b, 0);
       const races = F.awardRaces(f); const anyRace = Object.values(races).some((v) => v.length);
-      const watch = `<h3>🏅 Award watch</h3>${anyRace ? '' : '<p class="dim">Races start after the first Sunday. Stats from every club in the league count.</p>'}<div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const top = races[k]; return `<div class="item static" style="display:block"><div class="name">${esc(a.label)} <span class="dim">${a.short}</span></div>${top.length ? top.map((r, i) => { const me = r.team === f.club; return k === 'coy' ? `<div class="row between sub ${me ? 'mine' : ''}"><span>${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)}</span></span><span class="mono">${r.w}–${r.l}</span></div>` : `<div class="row sub ${me ? 'mine' : ''}" style="gap:6px"><span class="dim">${i + 1}.</span>${monsterSprite(r, 20)}<span class="grow">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></span><span class="mono">${raceLine(r)}</span></div>`; }).join('') : '<div class="sub dim">No contenders yet.</div>'}</div>`; }).join('')}</div>`;
+      const watch = `<h3>🏅 Award watch</h3>${anyRace ? '' : '<p class="dim">Races start after the first Sunday. Stats from every club in the league count.</p>'}<div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const top = races[k]; return `<button class="item" style="display:block" data-action="award" data-k="${k}"><div class="row between"><div class="name">${esc(a.label)} <span class="dim">${a.short}</span></div><span class="dim">top 5 ›</span></div>${top.length ? top.map((r, i) => { const me = r.team === f.club; return k === 'coy' ? `<div class="row between sub ${me ? 'mine' : ''}"><span>${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)}</span></span><span class="mono">${r.w}–${r.l}</span></div>` : `<div class="row sub ${me ? 'mine' : ''}" style="gap:6px"><span class="dim">${i + 1}.</span>${monsterSprite(r, 20)}<span class="grow">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></span><span class="mono">${raceLine(r)}</span></div>`; }).join('') : '<div class="sub dim">No contenders yet.</div>'}</button>`; }).join('')}</div>`;
       return `<div class="panel"><b>Beast League</b> · 16 clubs · Season ${f.season.year}<div class="muted">Beast Bowl titles: ${titles}${f.season.week >= 5 && !f.season.finished ? ` · ${esc(F.playoffPicture(f).text)}` : ''}</div>
         ${rival ? `<div class="muted">⚔️ Rival: <b>${esc(rival.team)}</b> (GM ${esc(rival.gm)}) · all-time ${rival.headToHead.w}–${rival.headToHead.l}</div>` : ''}</div>
         <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button></div>${watch}`;
     },
-    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen) }); },
+    mount(root) { delegate(root, {
+        award: (el) => sheet(awardRaceHtml(app.f, el.dataset.k), { title: F.AWARDS[el.dataset.k].label }), go: (el) => Router.go(el.dataset.screen) }); },
   });
   Router.registerScreen('schedule', {
     title: 'Schedule',
@@ -398,10 +401,11 @@ export function registerHqScreens(Router, app) {
   });
 }
 
-export function playDetailHtml(id) {
+export function playDetailHtml(id, f = null) {
   const p = PLAYS[id]; if (!p) return '<p>Unknown play.</p>';
+  const usage = f ? (() => { const s = F.playStat(f, id), c = F.playStat(f, id, { career: true }); const what = p.side === 'offense' ? 'gained' : 'allowed'; return `<div class="panel tight"><b>Your results</b><div class="kv"><b>This season</b><span>${s.used ? `${s.used} call${s.used === 1 ? '' : 's'} · ${s.avg.toFixed(1)} yd ${what} · ${s.big} of 15+${s.turnovers ? ` · ${s.turnovers} turnover${s.turnovers === 1 ? '' : 's'}` : ''}` : 'not called yet'}</span><b>Career</b><span>${c.used ? `${c.used} calls · ${c.avg.toFixed(1)} yd ${what}` : '—'}</span></div></div>`; })() : '';
   const rows = p.onField.map((slot) => { const a = p.assignments[slot]; const what = a.a === 'route' ? `Route: ${a.r}` : a.a === 'zone' ? `Zone: ${a.zone.replace(/_/g, ' ')}` : a.a === 'man' ? `Man: ${a.key === 'wideL' ? 'widest left receiver' : a.key === 'wideR' ? 'widest right receiver' : 'inside receiver'}` : a.a === 'rush' || a.a === 'contain' ? `${a.a === 'rush' ? 'Rush' : 'Contain'}: ${a.gap.replace('_', ' ')} gap` : a.a === 'block' ? (p.type === 'run' ? 'Run block' : 'Pass protection') : a.a.replace(/_/g, ' '); return `<tr><td class="mono"><b>${slot}</b>${slot === p.primary ? ' ★' : ''}</td><td>${esc(what)}</td></tr>`; }).join('');
-  return `<div class="play-preview">${playCardSvg(id, { width: 54, depthUp: 26, depthBack: 9 })}</div>${legendHtml(p.side)}
+  return `<div class="play-preview">${playCardSvg(id, { width: 54, depthUp: 26, depthBack: 9 })}</div>${legendHtml(p.side)}${usage}
     <div class="panel"><div class="kv"><b>Type</b><span>${p.side === 'offense' ? (p.type === 'run' ? 'Run' : 'Pass') : 'Defense'}</span><b>Personnel</b><span>${esc(p.pkg)}${p.side === 'offense' ? ` · ${esc(p.formation.replace(/_/g, ' '))}` : ''}</span>${p.primary ? `<b>Primary read</b><span>${p.primary} (★)</span>` : ''}${p.progression?.length ? `<b>Progression</b><span>${p.progression.join(' → ')}</span>` : ''}<b>Best for</b><span>${p.tags.map((t) => t.replace(/_/g, ' ')).join(', ')}</span></div>${p.desc ? `<p style="margin-top:8px">${esc(p.desc)}</p>` : ''}</div>${lessonHtml(id)}
     <table><thead><tr><th>Player</th><th>Assignment</th></tr></thead><tbody>${rows}</tbody></table>
     <div style="margin-top:12px"><button class="btn block" data-action="practice" data-id="${id}">Run it in practice</button></div>`;
@@ -437,4 +441,19 @@ function campaignPanel(f) {
     <div class="badge-row">${badges}</div>
     <div class="hof">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${LABEL[r.key]}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>
     <div class="row between" style="margin-top:8px"><span class="muted">Legend Tracks: ${Object.entries(f.campaign?.tracks || {}).map(([id, n]) => `${esc(SPECIES_BY_ID[id]?.name || id)} ${n}/3`).join(' · ') || 'none yet'}</span><button class="btn small" data-action="legend">🌟 Tracks</button></div></div>`;
+}
+
+/** One award race in full: the top five with games, the stat line that drives it, and the rule. */
+function awardRaceHtml(f, k) {
+  const a = F.AWARDS[k]; const top = F.awardRaces(f, { n: 5 })[k] || [];
+  const RULE = {
+    mvp: 'Production per game (passing yards count less per yard than rushing or receiving, quarterbacks ×1.15), multiplied by the club’s win rate. Defenders count at 85%.',
+    opoy: 'Offensive production per game compared with others at the same position, so a lineman can win it.', dpoy: 'Defensive production per game (tackles, sacks, interceptions, forced fumbles, blocks shed) compared with others at the same position.',
+    oroy: 'Offensive monsters aged 22 or younger, same scale as OPOY.', droy: 'Defensive monsters aged 22 or younger, same scale as DPOY.',
+    coy: 'Wins above what the roster’s talent predicts, plus point margin. A turnaround beats a talented club coasting.',
+  };
+  const minGames = top[0]?.minGames;
+  if (k === 'coy') return `<p class="muted">${esc(RULE.coy)}</p><div class="list">${top.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}"><div class="grow"><div class="name">${i + 1}. ${esc(r.coach)}</div><div class="sub">${esc(r.team)} · ${r.w}–${r.l} (expected ${r.expected} wins from ${r.talent} OVR) · ${r.pf}–${r.pa} points</div></div></div>`).join('') || '<p class="dim">No contenders yet.</p>'}</div>`;
+  const line = (r) => { const b = []; if (r.att) b.push(`${r.comp || 0}/${r.att}, ${r.passYds || 0} yds, ${r.passTd || 0} TD, ${r.intThrown || 0} INT`); if (r.rush) b.push(`${r.rush} car, ${r.rushYds || 0} yds`); if (r.rec) b.push(`${r.rec} rec, ${r.recYds || 0} yds`); if (r.td) b.push(`${r.td} TD`); if (r.tackles) b.push(`${r.tackles} tkl`); if (r.sacks) b.push(`${r.sacks} sacks`); if (r.int) b.push(`${r.int} INT`); if (r.ff) b.push(`${r.ff} FF`); if (r.sheds) b.push(`${r.sheds} sheds`); if (r.abilities) b.push(`${r.abilities} abilities`); return b.join(' · '); };
+  return `<p class="muted">${esc(RULE[k])}${minGames ? ` Needs ${minGames}+ games played.` : ''}</p><div class="list">${top.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}" style="align-items:flex-start">${monsterSprite(r, 36)}<div class="grow"><div class="name">${i + 1}. ${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}${r.age <= 22 ? ' · rookie' : ''}</span></div><div class="sub">${r.games} game${r.games === 1 ? '' : 's'} · ${esc(line(r))}</div><div class="sub dim">score ${r.score.toFixed(1)}</div></div></div>`).join('') || '<p class="dim">No contenders yet.</p>'}</div>`;
 }

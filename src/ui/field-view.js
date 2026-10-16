@@ -24,7 +24,7 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, flashes = [] } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
@@ -98,6 +98,13 @@ export function fieldSvg(o) {
     const [bx, by, air] = frame.ball;
     const cx = X(ballLat + by), cy = Y(ballOn + bx);
     s += `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : 0.7}" ry="${air ? 0.6 : 0.45}" fill="#d9924f" stroke="#fff" stroke-width="0.18"/>`;
+    // Ability flashes: a ring and the ability's name over the monster for a moment after it fires.
+    for (const fl of flashes) {
+      const list = fl.team === 'off' ? frame.off : frame.def; const a = list.find((p) => p[0] === fl.slot); if (!a) continue;
+      const fx = X(ballLat + a[2]), fy = Y(ballOn + a[1]); const k = Math.max(0, Math.min(1, fl.age)); // 0 fresh → 1 fading
+      s += `<circle cx="${fx.toFixed(2)}" cy="${fy.toFixed(2)}" r="${(2.2 + k * 1.6).toFixed(2)}" fill="none" stroke="#ffe36c" stroke-width="${(0.5 * (1 - k) + 0.1).toFixed(2)}" opacity="${(1 - k).toFixed(2)}"/>`;
+      s += `<text x="${fx.toFixed(2)}" y="${(fy - 3.2 - k).toFixed(2)}" text-anchor="middle" font-size="2.1" font-weight="900" fill="#ffe36c" stroke="#0b1a14" stroke-width="0.35" paint-order="stroke" opacity="${(1 - k * 0.7).toFixed(2)}">⚡ ${fl.label}</text>`;
+    }
   } else if (presnap?.offensePlay || presnap?.defensePlay) {
     const dp = presnap.defensePlay; const op = presnap.offensePlay;
     if (dp) for (const slot of dp.onField) { const [x, y] = dp.align[slot]; s += marker(slot, x, y, 'def', false, false); }
