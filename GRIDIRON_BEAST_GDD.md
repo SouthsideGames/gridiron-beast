@@ -219,6 +219,10 @@ Seven base starters per side are what the owner manages. **Offense:** QB, RB, WR
 ## 10a. Platforms
 
 * **Primary target (first release):** iOS and Android phones and tablets, portrait-first, installable as a PWA and wrappable for the stores. Tablets get the same layout with wider margins; nothing depends on a hover state.
+* **Store release — decision pending (after the prototypes).** Once the prototypes are signed off, the owner decides between two routes to the App Store and Google Play, and nothing in the prototypes should pre-empt it:
+  1. **Capacitor wrapper (default recommendation).** The existing web app ships unchanged inside a native iOS/Android shell; one codebase, the prototype *is* the store build, local saves become reliable. Needs icons/splash, an Apple Developer account ($99/yr), a Google Play account ($25), Xcode on a Mac, and a replacement for the claude.ai cloud save (plain local save or an owner-run backend).
+  2. **Unity port.** A rewrite in C#: sim, sprite builder, UI and balance all rebuilt by hand. Gains the Unity toolchain and asset pipeline; costs a full re-implementation and the risk that the port drifts from the prototype the owner approved. Sprites can be exported as PNG sheets either way (`tools/export-sprites.mjs`).
+  The decision point is a line item at the end of the prototype plan; until then the game stays a zero-dependency web app and every feature is built so either route can carry it.
 * **Possible later release: PC** (Windows/macOS/Linux via a desktop wrapper or the browser). The architecture already supports it — zero-dependency ES modules, no touch-only input paths, keyboard-safe forms — but PC is not a design constraint for v6: layouts stay portrait-first and a landscape/wide layout, keyboard shortcuts and mouse hover affordances are LATER work.
 
 ## 11. Release 6.1 adjustments (focus pass)
@@ -379,3 +383,15 @@ All thirteen steps of §15.10 are built. Where the build settled a detail the de
 * **Starter monsters:** three cornerstone offers of different positions and elements per franchise (uncommon or rare, each with its signature ability), two rerolls. One cornerstone, chosen by the player; no hidden second one.
 * **Owner creation:** Look step (gender, skin, hair colour and style, extras, shirt) builds a custom portrait; Background step (hometown + Former player / Former scout / Analyst / Businessperson) gives one small perk: +6 % training success, +1 scouting reveal, an extra opponent play on Thursday from week 1, or +4 % cap.
 * **Tutorial:** a tip panel on each screen the first time it is reached in a new franchise (HQ, Monday to Sunday, pregame, the first game as an overlay, after the game, roster, plays, league), written for someone new to American football, with a "How football works" primer (field, downs, scoring, fourth down, positions, turnovers, what the player controls). Tips are dismissed one by one, can be turned off from any tip, and Settings can bring them back or open the primer.
+
+### 15.14 Owner's playtest round 2 (2026-10-16)
+
+* **Auto mode** in the match: the coach's suggested play every snap, including fourth-down, try and kneel decisions; toggling it off returns control on the next play.
+* **Fatigue cycle (bug fix + design):** Sunday's fatigue is visible all week; Wednesday practice adds 4 / 8 / 14 % by intensity (Iron Lungs scales it) on top of its 1 / 4 / 9 % injury roll; Saturday's lineup check recovers 28 %, a bye recovers 50 %. Fatigue and injury are separate rolls, in games and in practice.
+* **Play cards** show uses and average yards (gained on offense, allowed on defense) this season; the detail sheet adds career totals. Play levels are LATER.
+* **Ability visuals:** a ring and the ability's name flash over the monster when it fires; the result banner lists what fired (traits dimmer).
+* **Bye week:** Monday to Wednesday as normal, then straight to the bye; no opponent scouting, game plan or media day.
+* **Badge celebration** after the final box score: badge N of 8, the beaten coach's line, legendary now trackable.
+* **Award races** open a top-5 sheet with games, stat line, score and the rule; every race requires at least 60 % of the league's weeks played.
+* **Save loss fix:** the cloud save was debounced by per-play saves and could lag far behind; it now writes within 4 s regardless and immediately after a game or day change. On phones the cloud copy is primary (the in-app local copy can be evicted).
+* **Next:** the owner opens the `prototype-2` pull request when this round feels right; then the platform decision in §10a.
