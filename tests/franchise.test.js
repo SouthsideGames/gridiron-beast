@@ -552,3 +552,24 @@ test('a field goal can be kicked on any down (end of a half with no time for a p
   const ev = GR.step(st, { home: A, away: B }, { home: GR.aiController('home'), away: GR.aiController('away') }, { home: GR.newTendencies(), away: GR.newTendencies() }, { fourthDown: 'fg' });
   assert.equal(ev.kind, 'field_goal'); assert.ok(ev.res.distance > 0); if (ev.res.good) assert.equal(st.score[side], 3);
 });
+
+test('package rule: only primary/secondary positions fill a slot; plays needing an unfillable package are unavailable; no legal base lineup is a forfeit', async () => {
+  const { buildDepthChart, unavailableSlots, lineupProblems } = await import('../src/franchise/roster.js');
+  const { PLAYS } = await import('../src/data/playbook.js');
+  const f = newFranchise(71);
+  for (const m of f.roster.filter((m) => m.position === 'S').slice(1)) f.roster = f.roster.filter((x) => x !== m);
+  for (const m of f.roster.filter((m) => m.position === 'CB').slice(2)) m.injury = { severity: 'Minor', weeks: 2, type: 'ankle' };
+  for (const m of f.roster.filter((m) => m.position === 'LB').slice(1)) m.injury = { severity: 'Minor', weeks: 2, type: 'knee' }; // one healthy LB: a lineman fills LB2, nobody legal is left for SS
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth);
+  assert.equal(f.roster.find((m) => m.id === chart.LB2)?.position, 'DL', 'a lineman covers LB2 (secondary)');
+  assert.deepEqual(unavailableSlots(f.roster, chart), ['SS'], 'nobody with S as primary or secondary: SS cannot be filled');
+  assert.deepEqual(lineupProblems(f.roster, chart), [], 'the base seven are legal');
+  const av = F.playAvailability(f); assert.ok(Object.keys(av.blocked).length && Object.values(av.blocked).every((sl) => sl === 'SS'));
+  assert.ok(Object.keys(av.blocked).every((id) => PLAYS[id].onField.includes('SS')));
+  F.autoRunToSunday(f); const team = F.playerTeam(f);
+  assert.ok(!team.defensePlays.some((id) => PLAYS[id].onField.includes('SS')), 'Nickel plays are not in the Sunday plan');
+  assert.equal(team.forfeit, false);
+  // Every defensive play needing SS → forfeit.
+  const nickel = Object.keys(PLAYS).filter((id) => PLAYS[id].side === 'defense' && PLAYS[id].onField.includes('SS')).slice(0, 6);
+  if (nickel.length === 6) { f.week.plan.defense = nickel; const t2 = F.playerTeam(f); assert.equal(t2.forfeit, true); assert.ok(/package/.test(t2.forfeitReason)); const m = F.sundayMatchup(f); assert.equal(m.forfeit, true); const w = f.season.week; const r = F.forfeitSunday(f); assert.equal(r.ok, true); assert.equal(f.season.records[f.club].l, 1); assert.equal(f.season.week, w + 1); assert.ok(!f.season.leagueStats[f.club], 'no stats from a forfeit'); }
+});

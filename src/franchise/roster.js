@@ -33,24 +33,29 @@ export function buildDepthChart(roster, manual = {}, depth = null) {
   const chart = {}; const used = new Set();
   const take = (slot, m) => { chart[slot] = m.id; used.add(m.id); };
   const all = [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'];
+  const BASE = new Set([...OFFENSE_BASE, ...DEFENSE_BASE, 'K']);
   for (const slot of all) {
     const id = manual?.[slot]; const m = roster.find((x) => x.id === id);
     if (m && !used.has(m.id) && available(m) && canPlay(m.position, slot)) take(slot, m);
   }
-  if (depth) {
-    for (const [group, slots] of Object.entries(GROUP_SLOTS)) {
-      const order = depthOrder(roster, depth, group).filter((m) => available(m) && !used.has(m.id));
-      for (const slot of slots) { if (chart[slot]) continue; const m = order.shift(); if (m) take(slot, m); }
+  // Base starters come first across every group (a spare lineman covers LB2 before he is a third lineman in Heavy), then the package slots.
+  for (const phase of ['base', 'package']) {
+    const slots = all.filter((sl) => (phase === 'base') === BASE.has(sl));
+    if (depth) {
+      for (const [group, gslots] of Object.entries(GROUP_SLOTS)) {
+        const order = depthOrder(roster, depth, group).filter((m) => available(m) && !used.has(m.id));
+        for (const slot of gslots) { if (!slots.includes(slot) || chart[slot]) continue; const m = order.shift(); if (m) take(slot, m); }
+      }
     }
-  }
-  for (const slot of all) {
-    if (chart[slot]) continue;
-    const need = positionOf(slot);
-    const primary = roster.filter((m) => !used.has(m.id) && available(m) && m.position === need).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
-    if (primary) { take(slot, primary); continue; }
-    const secondary = roster.filter((m) => !used.has(m.id) && available(m) && canPlay(m.position, slot)).sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0];
-    if (secondary) { take(slot, secondary); continue; }
-    chart[slot] = null;
+    for (const slot of slots) {
+      if (chart[slot]) continue;
+      const need = positionOf(slot);
+      const primary = roster.filter((m) => !used.has(m.id) && available(m) && m.position === need).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+      if (primary) { take(slot, primary); continue; }
+      const secondary = roster.filter((m) => !used.has(m.id) && available(m) && canPlay(m.position, slot)).sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0];
+      if (secondary) { take(slot, secondary); continue; }
+      chart[slot] = null;
+    }
   }
   return chart;
 }
@@ -72,37 +77,39 @@ export function lineupFromChart(roster, chart, { trainingBonus = null } = {}) {
 }
 
 /**
- * Slots nobody can cover, even in an emergency. Package slots (WR3, C, DL3, SS)
- * never block a game: a package without its own monster borrows the best
- * healthy body not on the field for that snap (see rules.pickSlots). A base
- * slot blocks only when the roster has no healthy monster left at all.
+ * Who may cover an empty slot (GDD §17.2): only a monster whose primary or
+ * secondary position matches it — a healthy reserve first, else a base starter
+ * who sits out in the packages that use the slot. Never a lineman at safety.
  */
-export function lineupProblems(roster, chart) {
+export function legalFiller(roster, chart, slot) {
   const used = new Set(Object.values(chart).filter(Boolean));
-  const spare = roster.some((m) => available(m) && !used.has(m.id));
-  return [...OFFENSE_BASE, ...DEFENSE_BASE, 'K'].filter((s) => !chart[s] && !spare);
+  const need = positionOf(slot);
+  const reserves = roster.filter((m) => available(m) && !used.has(m.id) && canPlay(m.position, slot));
+  const best = (list) => list.sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0] || null;
+  const sitsOut = SITS_OUT[slot] || [];
+  const doubling = sitsOut.map((b) => roster.find((m) => m.id === chart[b])).filter((m) => m && canPlay(m.position, slot));
+  return best(reserves.filter((m) => m.position === need)) || best(reserves) || best(doubling) || null;
 }
-/** Package slots with no dedicated monster: who the packages will borrow (for the lineup check and the roster screen). */
+/** Base starters off the field in the packages that use each package slot. */
+export const SITS_OUT = Object.freeze({ SS: ['LB2'], DL3: ['LB2', 'FS'], WR3: ['TE'], C: ['WR2'] });
+/** Base slots (and the kicker) nobody legal can cover: the game cannot be played — a forfeit. */
+export function lineupProblems(roster, chart) {
+  return [...OFFENSE_BASE, ...DEFENSE_BASE, 'K'].filter((s) => !chart[s] && !legalFiller(roster, chart, s));
+}
+/** Package slots with no dedicated monster: who legally fills in, or null when nobody can (plays using that package are unavailable). */
 export function borrowedSlots(roster, chart) {
   const out = [];
   for (const slot of [...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS]) {
     if (chart[slot]) continue;
     const side = OFFENSE_PACKAGE_SLOTS.includes(slot) ? 'offense' : 'defense';
-    const pick = emergencyPick(roster, chart, slot, side);
-    out.push({ slot, side, name: pick?.name || null, position: pick?.position || null, outOfPosition: pick ? !canPlay(pick.position, slot) : false });
+    const pick = legalFiller(roster, chart, slot);
+    out.push({ slot, side, name: pick?.name || null, position: pick?.position || null, outOfPosition: pick ? pick.position !== positionOf(slot) : false, legal: !!pick });
   }
   return out;
 }
-/** The monster a package would borrow for an empty slot: a healthy reserve first (same position, then any), else a base starter who sits out in that package. */
-export function emergencyPick(roster, chart, slot, side) {
-  const used = new Set(Object.values(chart).filter(Boolean));
-  const need = positionOf(slot);
-  const reserves = roster.filter((m) => available(m) && !used.has(m.id));
-  const best = (list) => list.sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0] || null;
-  const sitsOut = { SS: ['LB2'], DL3: ['LB2', 'FS'], WR3: ['TE'], C: ['WR2'] }[slot] || []; // base starters off the field in the packages that use this slot
-  const doubling = sitsOut.map((b) => roster.find((m) => m.id === chart[b])).filter((m) => m && canPlay(m.position, slot));
-  return best(reserves.filter((m) => m.position === need)) || best(reserves.filter((m) => canPlay(m.position, slot))) || best(doubling) || best(reserves.slice()) || null;
-}
+/** Package slots nobody legal can cover. */
+export function unavailableSlots(roster, chart) { return borrowedSlots(roster, chart).filter((b) => !b.legal).map((b) => b.slot); }
+export const emergencyPick = legalFiller;
 
 /** A complete team object for the runner from a roster. */
 export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = null, offensePlays = null, defensePlays = null, coach = null, trainingBonus = null }) {

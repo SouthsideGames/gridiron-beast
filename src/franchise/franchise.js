@@ -18,8 +18,8 @@ import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BO
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
-import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, teamOverall, depthOrder, GROUP_SLOTS } from './roster.js';
-import { afterGame, recoverWeek, offseason } from './progression.js';
+import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS } from './roster.js';
+import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
 
@@ -363,7 +363,13 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   const offense = plan.offense.length ? plan.offense : defaultPlan(f, 'offense');
   const defense = plan.defense.length ? plan.defense : defaultPlan(f, 'defense');
   const align = schemeAlignment(f);
-  const team = buildTeam({ id: f.club, name: f.club, abbr: meta.abbr, color: meta.color, roster: f.roster, manual: f.lineupManual, depth: f.depth, offensePlays: offense, defensePlays: defense, coach: coachProfile(f), trainingBonus: tb });
+  // Package rule (GDD §17.2): a play whose package needs a slot nobody legal can fill is unavailable this week.
+  const avail = playAvailability(f);
+  const offenseOk = offense.filter((id) => !avail.blocked[id]), defenseOk = defense.filter((id) => !avail.blocked[id]);
+  const team = buildTeam({ id: f.club, name: f.club, abbr: meta.abbr, color: meta.color, roster: f.roster, manual: f.lineupManual, depth: f.depth, offensePlays: offenseOk.length ? offenseOk : offense, defensePlays: defenseOk.length ? defenseOk : defense, coach: coachProfile(f), trainingBonus: tb });
+  team.blockedSlots = avail.slots; team.blockedPlays = Object.keys(avail.blocked).filter((id) => offense.includes(id) || defense.includes(id));
+  team.forfeit = !offenseOk.length || !defenseOk.length || lineupProblems(f.roster, team.chart).length > 0;
+  team.forfeitReason = lineupProblems(f.roster, team.chart).length ? `No legal monster for ${lineupProblems(f.roster, team.chart).join(', ')}` : !offenseOk.length ? 'Every offensive play in the plan needs a package you cannot field' : !defenseOk.length ? 'Every defensive play in the plan needs a package you cannot field' : null;
   { const lock = schemeLock(f); if (lock.offense || lock.defense) team.schemeLock = { offense: lock.offense, defense: lock.defense }; }
   // Scheme alignment: a small execution bonus/penalty on awareness for every starter.
   const bump = (side, pct) => { const delta = Math.round((pct - 80) / 10); for (const p of Object.values(team[side])) if (p.attrs.awareness) p.attrs.awareness = Math.max(1, Math.min(99, p.attrs.awareness + delta)); };
@@ -451,6 +457,28 @@ export function startSeason(f, year) {
     const lr = lastRecords?.[team]; const lastWinPct = lr && lr.w + lr.l ? lr.w / (lr.w + lr.l) : null;
     f.season.expectations[team] = { talent, expectedWinPct: Math.max(0.1, Math.min(0.9, 0.5 + (talent - 60) * 0.025)), lastWinPct };
   }
+}
+/** Which plays are unavailable this week because their package needs a slot nobody legal can fill. {slots, blocked: {playId: slot}} */
+export function playAvailability(f) {
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth);
+  const slots = unavailableSlots(f.roster, chart);
+  const blocked = {};
+  if (slots.length) for (const [id, p] of Object.entries(PLAYS)) { const hit = (p.onField || []).find((sl) => slots.includes(sl)); if (hit) blocked[id] = hit; }
+  return { slots, blocked };
+}
+/** Forfeit (GDD §17.2): no legal lineup, or no legal plays left. Recorded as a 0–21 loss, no stats, no experience. */
+export function forfeitSunday(f) {
+  const m = sundayMatchup(f); if (!m) return { ok: false, reason: 'No game today.' };
+  const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
+  const score = { [side]: 0, [oppSide]: 21 };
+  const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: score.home, awayScore: score.away, ot: false, player: true, forfeit: true };
+  f.week.gameResult = { ...res, won: false, playerScore: 0, oppScore: 21, opponent: m.opponent, tag: m.tag, forfeit: true };
+  if (m.playoff) recordPlayoffResult(f, res); else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: 0, oppScore: 21, won: false, forfeit: true }; }
+  f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.h2h ||= {}; const h2h = (f.campaign.h2h[m.opponent] ||= { w: 0, l: 0, last: null, streakL: 0 }); h2h.l += 1; h2h.last = 'l'; h2h.streakL += 1;
+  news(f, `FORFEIT: ${f.club} could not field a legal lineup against ${m.opponent}. Recorded as a 0–21 loss.`, 'loss');
+  f.game = null; f.lastGame = { ...f.week.gameResult, events: [], year: f.season.year, week: f.season.week, newBadge: null };
+  advanceWeek(f);
+  return { ok: true, result: f.lastGame };
 }
 /** The club's head coach by name (COY recipient). */
 export function coachNameOf(f, team) { return headCoachName(team, { seed: f.seed, playerClub: f.club, playerCoach: staffMember(f, 'head_coach')?.name || null }); }
@@ -631,8 +659,10 @@ export function setTraining(f, focus, intensity = 'normal') {
   let injury = null;
   if (r.chance(odds.risk)) {
     const chart = buildDepthChart(f.roster, f.lineupManual, f.depth);
-    const pool = Object.entries(chart).filter(([slot, id]) => id && slot !== 'K').map(([, id]) => f.roster.find((m) => m.id === id)).filter((m) => m && !m.injury);
-    const m = pool.length ? r.pick(pool) : null;
+    // Out-of-position starters are 1.75× as likely to be the one who gets hurt (GDD §17.2).
+    const pool = Object.entries(chart).filter(([slot, id]) => id && slot !== 'K').map(([slot, id]) => [slot, f.roster.find((m) => m.id === id)]).filter(([, m]) => m && !m.injury);
+    const mId = pool.length ? r.weighted(pool.map(([slot, mon]) => [mon.id, positionOf(slot) !== mon.position ? OUT_OF_POSITION_RISK : 1])) : null;
+    const m = mId ? f.roster.find((x) => x.id === mId) : null;
     if (m) { const severity = r.chance(0.8) ? 'Minor' : 'Moderate'; const weeks = severity === 'Minor' ? 1 : 2; m.injury = { severity, weeks, type: r.pick(['hamstring', 'ankle', 'shoulder', 'wrist']) }; injury = { id: m.id, name: m.name, severity, weeks }; news(f, `${m.name} hurt in practice: ${severity}, out ${weeks} week${weeks === 1 ? '' : 's'}.`, 'injury'); }
   }
   save();
@@ -783,7 +813,7 @@ export function sundayMatchup(f) {
   const mine = playerTeam(f, { trainingBonus: f.week.trainingFocus ? scaledBonus(trainingBonus(staffMember(f, 'monster_trainer'), f.week.trainingFocus), f.week.trainingFactor ?? 1) : null });
   const theirs = aiTeam(f, oppName, undefined, { scouting: playerProfile(f, { opponent: oppName }) });
   const rival = f.rivals[f.tier]?.team === oppName;
-  return { home: home === f.club ? mine : theirs, away: away === f.club ? mine : theirs, playerSide: home === f.club ? 'home' : 'away', opponent: oppName, tag, rival, playoff: !!po };
+  return { home: home === f.club ? mine : theirs, away: away === f.club ? mine : theirs, playerSide: home === f.club ? 'home' : 'away', opponent: oppName, tag, rival, playoff: !!po, forfeit: !!mine.forfeit, forfeitReason: mine.forfeitReason || null };
 }
 
 /** Record the player's finished game and roll the week forward. */

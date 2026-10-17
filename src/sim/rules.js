@@ -142,7 +142,7 @@ export function pickSlots(lineup, slots, team = null) {
     const need = positionOf(s);
     const bench = (team?.bench || []).filter((p) => p?.id && !onField.has(p.id));
     const resting = Object.entries(lineup).filter(([k]) => !slots.includes(k)).map(([, p]) => p).filter((p) => p?.id && !onField.has(p.id));
-    const pick = bench.find((p) => p.position === need) || bench.find((p) => canPlay(p.position, s)) || resting.find((p) => canPlay(p.position, s)) || bench[0] || resting[0] || null;
+    const pick = bench.find((p) => p.position === need) || bench.find((p) => canPlay(p.position, s)) || resting.find((p) => canPlay(p.position, s)) || null; // primary or secondary position only (GDD §17.2)
     if (pick) { out[s] = { ...pick, borrowed: true }; onField.add(pick.id); } else out[s] = { attrs: {}, name: s, id: null };
   }
   return out;

@@ -259,7 +259,7 @@ export function registerMatchScreens(Router, app) {
       ${G.mode === 'key' ? '<button class="btn small good" data-action="keymoment">Sim to key moment ▸</button>' : ''}</div>`;
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">Play clock <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
     return `<div class="match-actions">${primary}${secondary}${clock}</div>
-      <div class="muted" style="font-size:12px;margin:4px 0">${myBall ? 'Your offensive plays' : 'Your defensive plays'} · ★ coach's suggestion · opponent's call is hidden</div>
+      <div class="muted" style="font-size:12px;margin:4px 0">${myBall ? 'Your offensive plays' : 'Your defensive plays'} · ★ coach's suggestion · opponent's call is hidden${teams[me].blockedPlays?.length ? ` · <span style="color:var(--bad)">${teams[me].blockedPlays.length} play${teams[me].blockedPlays.length === 1 ? '' : 's'} unavailable (no legal ${teams[me].blockedSlots.join('/')})</span>` : ''}</div>
       ${cards(plan, side, selected, suggestion)}`;
   }
   function cards(ids, side, selected, suggestion) {

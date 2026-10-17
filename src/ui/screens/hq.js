@@ -53,7 +53,7 @@ export function registerHqScreens(Router, app) {
           <div class="row between" style="margin-top:4px"><span>Record <b class="mono">${s.record}</b></span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
         ${weekStrip(f)}
         <div class="panel"><div class="muted" style="font-size:12px">THIS WEEK</div><div style="margin:4px 0 8px">${gameLine}${(() => { const g = opp && GYM_BY_CLUB[opp]; if (!g || f.season.finished) return ''; const b = F.badgeOf(f, opp); return `<div class="muted" style="margin-top:4px">${b ? `🏅 You hold the ${esc(g.badge)} (S${b.year})` : `<b>Badge game</b> · beat ${esc(g.coach.name)}'s ${esc(opp)} for the ${esc(g.badge)}`}</div>`; })()}</div>
-          ${next ? `<button class="btn primary big block" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>` : ''}
+          ${next ? `<button class="btn primary big block ${next.action === 'forfeit' ? 'danger' : ''}" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>${next.note ? `<p class="dim" style="margin:4px 0 0;color:var(--bad)">${esc(next.note)}. Fix the depth chart or sign a monster; out-of-position bodies must match a primary or secondary position.</p>` : ''}` : ''}
           ${!f.season.finished && day < 6 && !f.week.commissioner ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">⚠️ Over the cap by ${fmtMoney(-cap.remaining)}. The commissioner reviews the books on Saturday: get under it by then or he picks who goes.</p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">🏛️ The commissioner is waiting. Over the cap by ${fmtMoney(f.week.commissioner.over)}.</p>` : ''}</div>
@@ -73,6 +73,7 @@ export function registerHqScreens(Router, app) {
         scout: () => Router.go('scout'), recruit: () => Router.go('recruit'), training: () => Router.go('training'), scoutopp: () => Router.go('scoutopp'), gameplan: () => Router.go('gameplan'), lineup: () => Router.go('lineup'),
         bye: () => { F.takeBye(app.f); app.save(); toast('Bye week taken. Fatigue recovered.'); Router.render(); },
         game: () => { if (!F.canPlayGames(app.f)) { Router.go('commissioner'); return; } Router.go('pregame'); },
+        forfeit: async () => { const m = F.sundayMatchup(app.f); if (!(await confirmSheet(`${m?.forfeitReason || 'No legal lineup'}. Forfeit to ${m?.opponent}? It is recorded as a 0–21 loss with no stats. Sign or heal a monster first if you can.`, { title: 'Forfeit', okLabel: 'Forfeit', danger: true }))) return; F.forfeitSunday(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
         commissioner: () => Router.go('commissioner'),
         restbye: () => { F.skipToByeIfIdle(app.f); app.save(); Router.render(); },
         postseason: () => Router.go('postseason'),
@@ -95,7 +96,7 @@ export function registerHqScreens(Router, app) {
     if (f.game && !f.game.state?.finished) return { label: 'Resume game', action: 'resume', icon: '▶' };
     if (f.week.commissioner) return { label: "The commissioner's office", action: 'commissioner', icon: '🏛️' };
     if (F.isBye(f) && d >= 3 && d < 6) return { label: 'Bye week · rest until Sunday', action: 'restbye', icon: '😴' };
-    if (d === 6) return F.isBye(f) ? { label: 'Take the bye week', action: 'bye', icon: '😴' } : { label: 'Play Sunday game', action: 'game', icon: '🏈' };
+    if (d === 6) { if (F.isBye(f)) return { label: 'Take the bye week', action: 'bye', icon: '😴' }; const m = F.sundayMatchup(f); if (m?.forfeit) return { label: 'Forfeit the game (no legal lineup)', action: 'forfeit', icon: '🏳️', note: m.forfeitReason }; return { label: 'Play Sunday game', action: 'game', icon: '🏈' }; }
     return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Recruit', action: 'recruit', icon: '🤝' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
   }
 
@@ -286,8 +287,10 @@ export function registerHqScreens(Router, app) {
       const hints = hintsOn && hintSide ? counterPlays(F.catalog(f, hintSide), rep.plays || []) : [];
       const hintMap = Object.fromEntries(hints.map((h) => [h.id, h]));
       const hintNote = hintsOn && hintSide ? `<div class="panel tight hint-note"><b>💡 Coach's hints</b> — ${hints.length ? `outlined ${hintSide} plays counter what ${esc(F.opponentName(f) || 'they')} showed in scouting. A hint is a lean, not a guarantee.` : `nothing in your ${hintSide} playbook clearly counters their scouted calls.`} <span class="dim">(Settings → Coaching hints)</span></div>` : hintsOn ? '<p class="dim">Scout the opponent on Thursday to get coach\'s hints here.</p>' : '';
-      const side = (s) => `<h3>${s === 'offense' ? 'Offense' : 'Defense'} · <span id="count-${s}">${sel[s].size}</span>/${F.PLAN_SIZE} equipped</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''} ${hintMap[id] ? 'hint' : ''}" title="${hintMap[id] ? esc('Counters ' + hintMap[id].beats.join(', ')) : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
-      return `<p class="muted">Equip ${F.PLAN_SIZE} offensive and ${F.PLAN_SIZE} defensive plays for Sunday. Your coordinators' picks are pre-selected; tap a card to swap, or use Details for the full diagram.</p>${hintNote}
+      const avail = F.playAvailability(f);
+      const availNote = avail.slots.length ? `<div class="panel tight" style="border-color:var(--bad)"><b>⚠️ No legal monster for ${avail.slots.join(', ')}</b> — plays using ${avail.slots.map((sl) => ({ SS: 'Nickel', DL3: 'Heavy / Pressure', WR3: 'Spread', C: 'Tight' })[sl] || sl).join(' / ')} are greyed out and will not be called. Only a monster whose primary or secondary position fits can fill a slot.</div>` : '';
+      const side = (s) => `<h3>${s === 'offense' ? 'Offense' : 'Defense'} · <span id="count-${s}">${sel[s].size}</span>/${F.PLAN_SIZE} equipped</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''} ${hintMap[id] ? 'hint' : ''} ${avail.blocked[id] ? 'blocked' : ''}" title="${avail.blocked[id] ? esc('Needs ' + avail.blocked[id] + ': nobody legal to fill it') : hintMap[id] ? esc('Counters ' + hintMap[id].beats.join(', ')) : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
+      return `<p class="muted">Equip ${F.PLAN_SIZE} offensive and ${F.PLAN_SIZE} defensive plays for Sunday. Your coordinators' picks are pre-selected; tap a card to swap, or use Details for the full diagram.</p>${availNote}${hintNote}
         ${side('offense')}${legendHtml('offense')}${side('defense')}${legendHtml('defense')}
         <div class="row between" style="margin-top:12px"><button class="btn" data-action="details">Play details</button><button class="btn primary" data-action="save">Save game plan</button></div>`;
     },
@@ -308,8 +311,8 @@ export function registerHqScreens(Router, app) {
     title: 'Saturday · Media Day',
     render({ f }) {
       const r = F.lineupCheck(f, { advance: false });
-      const borrowed = r.borrowed?.length ? `<p class="muted" style="color:var(--warn)">↪ ${r.borrowed.map((b) => `${b.slot}: ${b.name ? `${esc(b.name)} (${esc(b.position)}${b.outOfPosition ? ', out of position' : ''}) fills in` : 'a starter doubles up'}`).join(' · ')}. Sign a ${r.borrowed.map((b) => b.slot.replace(/\d/, '')).join('/')} to stop borrowing.</p>` : '';
-      const lineup = r.ok ? `<p class="muted">✅ Lineup set: every starting position has a healthy monster.${r.tired.length ? ` <span style="color:var(--warn)">Tired: ${esc(r.tired.join(', '))}.</span>` : ''}</p>${borrowed}` : `<p style="color:var(--bad)">⚠️ Not enough healthy monsters for ${r.problems.join(', ')}. Sign anyone on Tuesday; the game will still be played with who you have.</p>${borrowed}`;
+      const borrowed = r.borrowed?.length ? `<p class="muted" style="color:var(--warn)">${r.borrowed.map((b) => b.legal ? `↪ ${b.slot}: ${esc(b.name)} (${esc(b.position)}${b.outOfPosition ? ', 1.75× injury risk' : ''}) fills in` : `⚠️ ${b.slot}: nobody legal — plays using it are unavailable`).join(' · ')}.</p>` : '';
+      const lineup = r.ok ? `<p class="muted">✅ Lineup set: every starting position has a healthy monster.${r.tired.length ? ` <span style="color:var(--warn)">Tired: ${esc(r.tired.join(', '))}.</span>` : ''}</p>${borrowed}` : `<p style="color:var(--bad)">⚠️ No legal monster for ${r.problems.join(', ')}. Unless you fix the depth chart, Sunday is a forfeit (0–21).</p>${borrowed}`;
       if (f.week.media) {
         const md = f.week.media; const groups = Object.entries(md.boosts).map(([t, v]) => `<span class="chip accent">${TEMPERAMENTS[t].label} +${v}</span>`).join(' ');
         return `<div class="panel"><h3 style="margin-top:0">Press conference done</h3><p>${groups || 'No boosts.'}${md.hype ? ' <span class="chip bad">Trash talk: +2 all, risky</span>' : ''}</p><p class="dim">Monsters with matching natures get the boost on Sunday.</p>${lineup}</div><div class="grid2"><button class="btn block" data-action="roster">Depth chart</button><button class="btn primary block" data-action="done">Ready for Sunday →</button></div>`;

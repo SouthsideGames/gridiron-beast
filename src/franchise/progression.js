@@ -1,7 +1,9 @@
 // XP, level-ups, fatigue, injuries and recovery (GDD §5.1 and §8).
 
 import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve } from '../data/monsters.js';
-import { OFFENSE_SLOTS, DEFENSE_SLOTS } from '../data/personnel.js';
+import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
+/** Injury-risk multiplier for a monster playing a secondary position. */
+export const OUT_OF_POSITION_RISK = 1.75;
 
 const norm = (v) => Math.max(1, Math.min(99, v ?? 60)) / 99;
 
@@ -27,7 +29,8 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
     const dur = norm(m.attributes.durability);
     const stamina = speciesEffect(m)?.effect?.fatigue || 1; // Iron Lungs: tires slower
     m.fatigue = Math.min(100, m.fatigue + Math.round((16 + (1 - dur) * 10 + rng.int(6)) * stamina));
-    const risk = 0.012 + (m.fatigue / 100) * 0.03 + (1 - dur) * 0.03;
+    const outOfPosition = slot !== 'K' && positionOf(slot) !== m.position;
+    const risk = (0.012 + (m.fatigue / 100) * 0.03 + (1 - dur) * 0.03) * (outOfPosition ? OUT_OF_POSITION_RISK : 1); // a body doing unfamiliar work breaks more (GDD §17.2)
     if (slot !== 'K' && rng.chance(risk)) {
       const roll = rng.next();
       const severity = roll < 0.6 ? 'Minor' : roll < 0.9 ? 'Moderate' : 'Severe';

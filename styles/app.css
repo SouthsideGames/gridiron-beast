@@ -341,3 +341,6 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .badge-banner{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:8px;border-radius:12px;border:1px solid hsl(var(--hue) 70% 60%);background:linear-gradient(135deg,hsl(var(--hue) 50% 22% / .9),hsl(var(--hue) 40% 12% / .9));box-shadow:0 0 18px hsl(var(--hue) 70% 50% / .35)}
 .badge-banner-star{font-size:26px;color:hsl(var(--hue) 90% 70%);text-shadow:0 0 10px hsl(var(--hue) 90% 60%);animation:edgepulse 1.6s ease-in-out infinite}
 .handshake .talk-name{font-weight:900;margin-bottom:4px}
+
+.card.blocked{opacity:.4;filter:grayscale(.8);position:relative}
+.card.blocked::after{content:'unavailable';position:absolute;inset:auto 4px 4px 4px;font-size:10px;font-weight:800;color:var(--bad);text-transform:uppercase;letter-spacing:.04em}
