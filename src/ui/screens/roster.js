@@ -56,6 +56,7 @@ export function registerRosterScreens(Router, app) {
       if (view === 'depth') return viewBar + depthHtml(f) + `<div class="grid2" style="margin-top:12px"><button class="btn block" data-action="go" data-screen="contracts">💰 Contracts</button><button class="btn block" data-action="go" data-screen="staff">👥 Staff</button></div>`;
       return `${viewBar}<div class="row between" style="margin-bottom:8px"><div class="row"><button class="btn small ${side === 'offense' ? 'primary' : ''}" data-action="side" data-v="offense">Offense</button><button class="btn small ${side === 'defense' ? 'primary' : ''}" data-action="side" data-v="defense">Defense</button></div></div>
         <div class="depth" style="margin-bottom:12px">${rows.map((r) => `<div class="depth-row" style="grid-template-columns:repeat(${r.length},1fr)">${r.map(slot).join('')}</div>`).join('')}</div>
+        ${schemeLockHtml(f, side)}
         <p class="dim">Your seven starters. Tap a slot to change the starter. * = playing out of position (−10%). <span class="fit-key">Gold outline</span> = fits your coordinators' schemes.</p>
         <h3>Package slots</h3><div class="depth" style="margin-bottom:4px"><div class="depth-row" style="grid-template-columns:repeat(${pkgRow.length},1fr)">${pkgRow.map(slot).join('')}</div></div>
         <p class="dim">${pkgRow.map((s) => `<b>${s}</b> comes in for ${PACKAGE_SLOT_USE[s]} plays`).join(' · ')}, replacing a starter for that snap.</p>
@@ -179,4 +180,12 @@ export function monsterStatsHtml(m, f) {
   }
   return `<h3>Statistics</h3><div class="seg">${tabs.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" data-action="stat-tab" data-v="${k}">${l}</button>`).join('')}</div>${body}
     <p class="dim" style="margin-top:6px">${m.yearsPro === 0 ? 'Rookie season' : `${m.yearsPro ?? '?'} season${m.yearsPro === 1 ? '' : 's'} pro`} · regular season and playoffs are kept apart; rates come from the totals.</p>`;
+}
+
+/** Scheme lock banner (GDD §17): all starters on this side fit the coordinator's scheme → the side plays with an edge on Sunday. */
+function schemeLockHtml(f, side) {
+  const lock = F.schemeLock(f); const x = lock.fit[side]; const on = side === 'offense' ? lock.offense : lock.defense;
+  if (on) return `<div class="scheme-lock"><b>✦ SCHEME LOCKED · ${side}</b><div>All ${x.total} ${side === 'offense' ? 'offensive' : 'defensive'} starters fit <b>${esc(x.scheme)}</b>. Every ${side === 'offense' ? 'offensive' : 'defensive'} play has a better chance of succeeding on Sunday: +${F.SCHEME_LOCK_EDGE} to every starter's core ratings while the lock holds.</div></div>`;
+  if (x.total && x.total - x.fit <= 2) return `<p class="dim" style="margin:4px 0">✦ ${x.fit} of ${x.total} starters fit ${esc(x.scheme)}. ${x.total - x.fit} more and the scheme locks for a Sunday edge.</p>`;
+  return '';
 }

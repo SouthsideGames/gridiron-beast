@@ -364,6 +364,7 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   const defense = plan.defense.length ? plan.defense : defaultPlan(f, 'defense');
   const align = schemeAlignment(f);
   const team = buildTeam({ id: f.club, name: f.club, abbr: meta.abbr, color: meta.color, roster: f.roster, manual: f.lineupManual, depth: f.depth, offensePlays: offense, defensePlays: defense, coach: coachProfile(f), trainingBonus: tb });
+  { const lock = schemeLock(f); if (lock.offense || lock.defense) team.schemeLock = { offense: lock.offense, defense: lock.defense }; }
   // Scheme alignment: a small execution bonus/penalty on awareness for every starter.
   const bump = (side, pct) => { const delta = Math.round((pct - 80) / 10); for (const p of Object.values(team[side])) if (p.attrs.awareness) p.attrs.awareness = Math.max(1, Math.min(99, p.attrs.awareness + delta)); };
   bump('offense', align.offense); bump('defense', align.defense);
@@ -391,10 +392,16 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
 /** Deterministic AI club for a season (quality drifts per year; the rival is slightly better). */
 /** Difficulty: how good and how smart the other 15 clubs are. */
 /** Chosen at franchise creation and locked for its life (GDD §15.2). `hof` is the Hall of Fame bar at that difficulty (§15.9). */
+/** Comeback mode (GDD §17): on Pro and All-Star, whichever side trails by 10+ in the fourth quarter gets +5 on every core rating. Symmetric, never on Rookie. */
+export const COMEBACK = Object.freeze({ margin: 10, edge: 5 });
+export function comebackRule(f) { return difficultyOf(f) === DIFFICULTY.rookie ? null : { ...COMEBACK }; }
+/** Scheme lock (GDD §17): when every starter on a side fits the coordinator's scheme, that side plays with +3 on every core rating. */
+export const SCHEME_LOCK_EDGE = 3;
+export function schemeLock(f) { const rf = rosterFit(f); const on = (x) => x.total > 0 && x.fit === x.total; return { offense: on(rf.offense) ? SCHEME_LOCK_EDGE : 0, defense: on(rf.defense) ? SCHEME_LOCK_EDGE : 0, fit: rf }; }
 export const DIFFICULTY = Object.freeze({
   rookie: { label: 'Rookie', quality: -4, iq: 0.6, text: 'Weaker clubs that call plays loosely.', hof: 'Hall of Fame: 8 badges, 1 title, 30 wins, 2 awards.', hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
-  pro: { label: 'Pro', quality: -1, iq: 1, text: 'The standard league.', hof: 'Hall of Fame: 8 badges, 2 titles, 50 wins, 3 awards.', hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
-  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: 'Stronger clubs whose coaches read the situation sharply.', hof: 'Hall of Fame: 8 badges, 4 titles, 80 wins, 5 awards.', hofGoals: { badges: 8, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
+  pro: { label: 'Pro', quality: -1, iq: 1, text: 'The standard league. Comeback mode: a side down 10+ in the fourth quarter gets a lift — you included.', hof: 'Hall of Fame: 8 badges, 2 titles, 50 wins, 3 awards.', hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
+  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: 'Stronger clubs whose coaches read the situation sharply. Comeback mode on.', hof: 'Hall of Fame: 8 badges, 4 titles, 80 wins, 5 awards.', hofGoals: { badges: 8, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
 });
 export const difficultyOf = (f) => DIFFICULTY[f?.settings?.difficulty] || DIFFICULTY.pro;
 /** Club quality for a season: base by difficulty, gym tier, growth per season, the title raising the floor, and "studied tape" after the player first beats a gym (GDD §15.3, §15.8). */
@@ -477,7 +484,7 @@ function simulateLeagueWeek(f) {
     for (const g of fixtures.games) {
       if (g.home === f.club || g.away === f.club) continue;
       const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
-      const game = playGame({ home, away, seed: r.seed(), quarterLength: 180 });
+      const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f) });
       recordGame(f, game, { home, away }, { playoff: false });
       const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
       applyResult(f.season.records, res); results.push(res);
@@ -800,7 +807,7 @@ export function finishSunday(f, gameState) {
   const gym = GYM_BY_CLUB[m.opponent];
   if (gym && won) {
     f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
-    if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}–${gameState.score[oppSide]}` }; news(f, `BADGE EARNED: the ${gym.badge}. ${gym.coach.name}'s ${m.opponent} fall to ${f.club}.`, 'win'); }
+    if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}–${gameState.score[oppSide]}` }; f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length }; news(f, `BADGE EARNED: the ${gym.badge} — badge ${Object.keys(f.campaign.badges).length} of 8. ${gym.coach.name}'s ${m.opponent} fall to ${f.club} ${gameState.score[side]}–${gameState.score[oppSide]}.`, 'win'); }
   }
   for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR).` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
@@ -855,7 +862,7 @@ function simulatePlayoffWeek(f) {
   const { r, save } = frng(f);
   for (const g of p.fixtures.filter((x) => x.round === p.round && !x.result)) {
     const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
-    const game = playGame({ home, away, seed: r.seed(), quarterLength: 180 });
+    const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f) });
     recordGame(f, game, { home, away }, { playoff: true });
     const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
     g.result = res; p.results.push({ round: p.round, conf: g.conf, winner: res.homeScore > res.awayScore ? g.home : g.away, ...res });
@@ -950,7 +957,7 @@ export function startNextSeason(f) {
 export function simulatePlayerGame(f) {
   const m = sundayMatchup(f); if (!m) return null;
   const { r, save } = frng(f);
-  const game = playGame({ home: m.home, away: m.away, seed: r.seed(), quarterLength: f.settings.quarterLength });
+  const game = playGame({ home: m.home, away: m.away, seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f) });
   save();
   return game;
 }

@@ -3,6 +3,7 @@
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import * as Save from '../../franchise/save.js';
 import { cloudStatus } from '../../franchise/cloud-save.js';
+import { buildLabel } from '../../version.js';
 import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
 import { resetDex } from '../../franchise/dex-store.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
@@ -28,7 +29,7 @@ export function registerMenuScreens(Router, app) {
           ${hallOfFame().length ? `<button class="btn block" data-action="go" data-screen="hof">🏛️ Hall of Fame <span class="dim mono">${hallOfFame().length}</span></button>` : ''}
           <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block" data-action="go" data-screen="developer">🛠️ Developer</button></div>
         </div>
-        <p class="center dim" style="margin-top:16px">v6.0 rebuild · Southside Games</p>`;
+        <p class="center dim" style="margin-top:16px">Gridiron Beast · build ${esc(buildLabel())} · Southside Games</p>`;
     },
     mount(root, ctx) {
       delegate(root, {
@@ -59,7 +60,8 @@ export function registerMenuScreens(Router, app) {
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default — not recommended on mobile)</label>
         </div>
         ${app.f ? `<div class="panel"><h3>Save data</h3><p class="muted">${(() => { const c = cloudStatus(); return c.state === 'on' ? `☁️ Cloud save on${c.at ? ' · last synced ' + new Date(c.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}` : 'Saved on this device. (Cloud save is available when playing inside Claude.)'; })()}</p><div class="stack">${Save.loadBackup() ? '<button class="btn block" data-action="restore">Restore last week’s backup</button>' : ''}<button class="btn block" data-action="export">Export save as JSON</button><label class="btn block" style="cursor:pointer">Import save JSON<input type="file" accept="application/json,.json" data-change="import" class="sr-only"></label><button class="btn danger block" data-action="reset">Delete franchise</button></div></div>` : ''}
-        <p class="dim">The previous version's save (if any) is never modified by this build.</p>`;
+        <p class="dim">The previous version's save (if any) is never modified by this build.</p>
+        <p class="center dim">Build ${esc(buildLabel())}. If this does not match the latest build, close the app fully and reopen it.</p>`;
     },
     mount(root, ctx) {
       const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };

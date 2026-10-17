@@ -186,7 +186,13 @@ def run_size(pw, port, w, h, name):
     # Auto mode: three plays call themselves, then off.
     settle(page, '[data-action="auto"]'); page.click('[data-action="auto"]'); page.wait_for_timeout(3500)
     check(page.evaluate("() => __gb.f.game.state.calls.length") >= 2, 'auto mode plays on its own')
+    page.wait_for_selector('[data-action="autospeed"]', timeout=5000); check(True, 'auto: speed toggle shows while Auto is on'); page.click('[data-action="autospeed"]'); page.wait_for_timeout(100); check(page.evaluate("() => __gb.f.game.autoSpeed") == 2, 'auto: 2x')
     settle(page, '[data-action="auto"]'); page.click('[data-action="auto"]'); page.wait_for_timeout(200); shot(page, f'{name}-15b-auto-off')
+    # Comeback mode chip: stage a fourth-quarter deficit (Pro difficulty was chosen at creation).
+    page.evaluate("() => { const G = __gb.f.game; const me = G.playerSide, them = me === 'home' ? 'away' : 'home'; G._q = G.state.quarter; G._s = { ...G.state.score }; G._h = G.halftimeShown; G.halftimeShown = true; G.state.quarter = 4; G.state.score[me] = 3; G.state.score[them] = 20; }")
+    page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.render(); }"); page.wait_for_timeout(80)
+    check(page.query_selector('.edge-chip.comeback') is not None, 'comeback chip shows when trailing by 10+ in the fourth'); shot(page, f'{name}-15c-comeback')
+    page.evaluate("() => { const G = __gb.f.game; G.state.quarter = G._q; Object.assign(G.state.score, G._s); G.halftimeShown = G._h; }"); page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.render(); }"); page.wait_for_timeout(50)
     # Key moments sim
     settle(page, '[data-action="mode"]')
     page.click('[data-action="mode"]'); page.wait_for_timeout(50)
@@ -210,8 +216,16 @@ def run_size(pw, port, w, h, name):
                 if b: b.click(); page.wait_for_timeout(60)
         check(page.query_selector('[data-action="finish"]') is not None, 'match: reached the final whistle')
         shot(page, f'{name}-17b-final')
-        page.click('[data-action="finish"]'); page.wait_for_selector('.sheet'); shot(page, f'{name}-17c-postgame'); page.click('[data-action="sheet-close"]')
-        page.wait_for_selector('.tabbar')
+        # Stage a badge win: make this a gym game the player won, then walk box score → handshake → badge → HQ banner (playtest round 3).
+        page.evaluate("() => { const f = __gb.f; const G = f.game; const me = G.playerSide, them = me === 'home' ? 'away' : 'home'; f.season.schedule.find(g => g.week === f.season.week).opponent = 'Harbor Sentinels'; G.state.score[me] = 31; G.state.score[them] = 10; G.state.winner = me; }")
+        page.click('[data-action="finish"]'); page.wait_for_selector('.sheet'); shot(page, f'{name}-17c-postgame')
+        check('BADGE GAME' in page.inner_text('.sheet'), 'postgame: box score says the badge game was won')
+        page.click('[data-action="sheet-close"]'); page.wait_for_selector('[data-action="shake"]'); no_overflow(page, 'handshake'); shot(page, f'{name}-17c2-handshake')
+        check('Nadia Reyes' in page.inner_text('.sheet'), 'handshake: the beaten coach speaks')
+        page.click('[data-action="shake"]'); page.wait_for_selector('[data-action="badge-ok"]'); no_overflow(page, 'badge sheet'); shot(page, f'{name}-17c3-badge')
+        check('BADGE EARNED' in page.inner_text('.sheet'), 'badge sheet shows')
+        page.click('[data-action="badge-ok"]'); page.wait_for_selector('.tabbar')
+        check(page.query_selector('.badge-banner') is not None, 'hq: fresh badge banner')
         check('Week 2' in page.inner_text('#screen'), 'hq: advanced to week 2 after the game')
         shot(page, f'{name}-17d-week2')
     # Practice (HQ grid) and the audit (Developer tools on the main menu); the match stays resumable.

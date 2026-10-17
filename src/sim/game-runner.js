@@ -102,9 +102,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
 function goalLinePlays(ids) { const short = ids.filter((id) => PLAYS[id]?.tags.includes('short') || PLAYS[id]?.tags.includes('goalline') || PLAYS[id]?.tags.includes('redzone')); return short.length ? short : ids; }
 
 /** Play a complete game headless. Returns the final state. */
-export function playGame({ home, away, seed = 1, quarterLength = R.DEFAULT_QUARTER, maxSteps = 2000, onStep = null }) {
+export function playGame({ home, away, seed = 1, quarterLength = R.DEFAULT_QUARTER, maxSteps = 2000, onStep = null, comeback = null }) {
   const teams = { home, away };
-  const state = R.newGame({ home, away, seed, quarterLength });
+  const state = R.newGame({ home, away, seed, quarterLength, comeback });
   const controllers = { home: aiController('home'), away: aiController('away') };
   const tendencies = { home: newTendencies(), away: newTendencies() };
   let steps = 0;

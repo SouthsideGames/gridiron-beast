@@ -27,6 +27,7 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const sigmoid = (v) => 1 / (1 + Math.exp(-v));
 const norm = (v) => clamp(v, 1, 99) / 99;
 
+const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
   const rng = createRng(seed);
   const B = boundsFor(ballOn, ballLat);
@@ -50,6 +51,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const abilityKind = legacy ? 'ability' : sp?.kind || null;
     if (ability?.attrs) for (const [k, v] of Object.entries(ability.attrs)) attrs[k] = Math.max(1, Math.min(99, (attrs[k] ?? 60) + v));
     if (ability?.routeAgility && play.assignments[slot]?.a === 'route') attrs.agility = Math.min(99, attrs.agility + ability.routeAgility);
+    // Situational edge for a whole side (comeback mode, scheme lock): a few points on every core rating (GDD §17).
+    const edge = options.edge?.[team] || 0;
+    if (edge) for (const k of EDGE_ATTRS) attrs[k] = Math.max(1, Math.min(99, (attrs[k] ?? 60) + edge));
     const [x, y] = play.align[slot];
     const a = {
       team, slot, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,

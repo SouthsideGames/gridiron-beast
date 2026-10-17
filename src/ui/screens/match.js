@@ -16,6 +16,7 @@ import { fieldSvg, FIELD_VIEWBOX, presnapLook, cameraFor } from '../field-view.j
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
+import { beatenLines } from '../../data/dialogue.js';
 import { TYPES, SPECIES_BY_ID } from '../../data/monsters.js';
 const BADGE_LINES = ['Well played. Don’t get used to it.', 'You earned that one. Keep it polished for me.', 'I had you beaten on tape. Tape lies, apparently.', 'My monsters will remember this.', 'The league will hear about you now.', 'Fine. Take it. We’ll talk next season.', 'That was football. Respect.', 'Eight badges is a long road. You’re on it.'];
 import { fieldGoalDistance, yardLabel } from '../../core/field.js';
@@ -60,8 +61,18 @@ export function registerMatchScreens(Router, app) {
     },
   });
 
+  /** Comeback mode and scheme lock, shown while they apply (GDD §17). */
+  function edgeStrip(f, s, teams, me) {
+    const bits = [];
+    const cb = R.comebackSide(s);
+    if (cb) bits.push(`<span class="edge-chip comeback ${cb === me ? 'mine' : ''}">🔥 COMEBACK · ${esc(s[cb].abbr)} +${s.comeback.edge}</span>`);
+    else if (s.comeback && s.quarter < 4 && !s.finished) bits.push(`<span class="edge-chip dim">Comeback mode: trail by ${s.comeback.margin}+ in the 4th</span>`);
+    const lock = teams[me]?.schemeLock; if (lock?.offense) bits.push('<span class="edge-chip scheme mine">✦ SCHEME LOCK · offense</span>'); if (lock?.defense) bits.push('<span class="edge-chip scheme mine">✦ SCHEME LOCK · defense</span>');
+    const them = R.opponent(me); const tl = teams[them]?.schemeLock; if (tl?.offense || tl?.defense) bits.push('<span class="edge-chip scheme">✦ Their scheme is locked</span>');
+    return bits.length ? `<div class="edge-strip">${bits.join('')}</div>` : '';
+  }
   function startGame(f, m, winner, choice) {
-    const state = R.newGame({ home: m.home, away: m.away, seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: winner, choice });
+    const state = R.newGame({ home: m.home, away: m.away, seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: winner, choice, comeback: F.comebackRule(f) });
     f.rngState = rngFromState(f.rngState).state;
     f.game = { state, playerSide: m.playerSide, tendencies: { home: newTendencies(), away: newTendencies() }, selected: { offense: null, defense: null }, mode: f.settings.mode, lastEvent: null, simmed: [], event: m.rival ? 'rival' : m.playoff ? 'playoff' : null, tag: m.tag };
     app.save();
@@ -99,6 +110,7 @@ export function registerMatchScreens(Router, app) {
           <div class="team right"><span class="score">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
         </div>
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
+        ${edgeStrip(f, s, teams, me)}
         <div class="field-wrap" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>
         <div id="controls">${controlsHtml(f, teams, look)}</div>`;
     },
@@ -124,6 +136,7 @@ export function registerMatchScreens(Router, app) {
         tempo: (el) => { f.game.tempo = el.value; app.save(); },
         mode: () => { const G = f.game; G.mode = G.mode === 'key' ? 'full' : 'key'; app.save(); Router.render(); },
         auto: () => { const G = f.game; G.auto = !G.auto; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
+        autospeed: () => { const G = f.game; G.autoSpeed = (G.autoSpeed || 1) === 2 ? 1 : 2; app.save(); Router.render(); },
         keymoment: () => simToKeyMoment(f),
         skip: () => { if (anim) finishAnim(f, true); },
         finish: () => finishGame(f),
@@ -183,7 +196,7 @@ export function registerMatchScreens(Router, app) {
       autoTimer = null; const G2 = app.f?.game; if (!G2?.auto || G2.state.finished || anim) return;
       if (document.querySelector('.sheet')) { scheduleAuto(app.f); return; } // a halftime or tutorial sheet is open: wait
       autoStep(app.f);
-    }, 700);
+    }, (G.autoSpeed || 1) === 2 ? 300 : 700);
   }
   function autoStep(f) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me); const teams = teamsFor(f);
@@ -235,6 +248,7 @@ export function registerMatchScreens(Router, app) {
       ${myBall ? `<select class="btn small" data-change="tempo" aria-label="Tempo" style="min-height:36px;margin:0;flex:1"><option value="normal" ${(G.tempo || 'normal') === 'normal' ? 'selected' : ''}>Tempo: normal</option><option value="hurry" ${G.tempo === 'hurry' ? 'selected' : ''}>Tempo: hurry-up</option><option value="milk" ${G.tempo === 'milk' ? 'selected' : ''}>Tempo: milk clock</option></select>` : ''}
       ${myBall && AI.shouldKneel(s) ? '<button class="btn small" data-action="kneel">Kneel</button>' : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? '<button class="btn small" data-action="spike">Spike</button>' : ''}
       <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="Auto: the coach's suggested plays are called for you, every play animated, until you turn it off">${G.auto ? 'Auto ■ stop' : 'Auto ▶'}</button>
+      ${G.auto ? `<button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="Auto speed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button>` : ''}
       <button class="btn small" data-action="mode">${G.mode === 'key' ? 'Key Moments ✓' : 'Full Coaching ✓'}</button>
       ${G.mode === 'key' ? '<button class="btn small good" data-action="keymoment">Sim to key moment ▸</button>' : ''}</div>`;
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">Play clock <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
@@ -285,7 +299,7 @@ export function registerMatchScreens(Router, app) {
   }
   function startAnim(f, ev) {
     const G = f.game; const sim = ev.sim;
-    anim = { frames: sim.frames, i: 0, ev, camera: sim.kick ? cameraFor(Math.max(0, sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / (f.settings.speed || 1), follow: !!sim.kick, sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
+    anim = { frames: sim.frames, i: 0, ev, camera: sim.kick ? cameraFor(Math.max(0, sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / ((f.settings.speed || 1) * (G.auto ? (G.autoSpeed || 1) : 1)), follow: !!sim.kick, sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
     G.lastEvent = null;
     Router.render();
     const svg = document.querySelector('#field');
@@ -365,11 +379,19 @@ export function registerMatchScreens(Router, app) {
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
     const teams = teamsFor(f);
-    const box = boxScoreHtml(s, teams, { title: `Final${s.ot ? ' (OT)' : ''}` });
     const r = F.finishSunday(f, s); app.save(); Save.backup(f);
     const ev = r.events || [];
     const badgeClub = r.newBadge; const gym = badgeClub ? GYM_BY_CLUB[badgeClub] : null;
+    const box = boxScoreHtml(s, teams, { title: gym ? `Final${s.ot ? ' (OT)' : ''} · 🏅 BADGE GAME WON` : `Final${s.ot ? ' (OT)' : ''}` });
     const toHq = () => Router.go('hq', {}, { reset: true });
+    // Gym cleared: the beaten coach's handshake first, then the badge itself (GDD §15.4, playtest round 3).
+    const handshake = () => {
+      if (!gym) return toHq();
+      const hue = TYPES[gym.element]?.hue ?? 120; const lines = beatenLines(badgeClub);
+      const { close } = sheet(`<div class="talk handshake"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite(gym.coach.portrait, 56, { hue })}<div class="grow"><div class="talk-name">${esc(gym.coach.name)} <span class="dim">· head coach, ${esc(badgeClub)}</span></div>${lines.map((l) => `<p class="talk-line">“${esc(l)}”</p>`).join('')}</div></div>
+        <button class="btn primary big block" data-action="shake" style="margin-top:10px">🤝 Shake hands</button></div>`, { title: 'Midfield', onClose: celebrate });
+      document.querySelector('.sheet [data-action="shake"]')?.addEventListener('click', () => close());
+    };
     const celebrate = () => {
       if (!gym) return toHq();
       const hue = TYPES[gym.element]?.hue ?? 120; const n = Object.keys(f.campaign.badges).length; const sp = SPECIES_BY_ID[gym.legendary];
@@ -380,7 +402,7 @@ export function registerMatchScreens(Router, app) {
         <button class="btn primary big block" data-action="badge-ok" style="margin-top:8px">Continue</button></div>`, { title: 'Gym cleared', onClose: toHq });
       document.querySelector('.sheet [data-action="badge-ok"]')?.addEventListener('click', () => close());
     };
-    sheet(`${box}${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured — ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: 'Final', onClose: () => Router.go('hq', {}, { reset: true }) });
+    sheet(`${box}${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured — ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: gym ? 'Final · badge game' : 'Final', onClose: handshake });
   }
 
   function startPlayClock(f, root) {

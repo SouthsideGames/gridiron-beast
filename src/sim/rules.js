@@ -11,7 +11,7 @@ import * as ST from './special-teams.js';
 export const RUNOFF = { normal: 18, hurry: 8, milk: 30 };
 export const DEFAULT_QUARTER = 180;
 
-export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null }) {
+export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null }) {
   const rng = createRng(seed);
   const winner = coinWinner || (rng.chance(0.5) ? 'home' : 'away');
   const loser = winner === 'home' ? 'away' : 'home';
@@ -34,6 +34,7 @@ export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER,
     log: [], playCount: 0,
     stats: { home: blankStats(), away: blankStats() },
     lastPlay: null,
+    comeback, // { margin, edge } or null: in the fourth quarter the side trailing by `margin`+ gets `edge` on every core rating (GDD §17)
   };
   log(state, `${state[winner].name} wins the toss and elects to ${pick === 'defer' ? 'defer' : pick}.`, 'info');
   return state;
@@ -90,10 +91,29 @@ export function timeout(state, side) {
 
 // --------------------------------------------------------------------------- scrimmage
 /** Build the engine inputs for the current situation and chosen plays, then apply the result. */
+/** Which side comeback mode lifts right now: trailing by the margin in the fourth quarter (not overtime), else null. */
+export function comebackSide(state) {
+  const cb = state.comeback; if (!cb || state.ot || state.quarter < 4 || state.finished) return null;
+  const d = state.score.home - state.score.away;
+  if (d >= cb.margin) return 'away'; if (-d >= cb.margin) return 'home'; return null;
+}
+/** Per-side rating edges for this snap: comeback mode plus each team's scheme lock. */
+export function edgesFor(state, teams) {
+  const off = state.possession, def = opponent(off); const cb = comebackSide(state);
+  const edge = { off: 0, def: 0, why: { off: [], def: [] } };
+  if (cb === off) { edge.off += state.comeback.edge; edge.why.off.push('comeback'); }
+  if (cb === def) { edge.def += state.comeback.edge; edge.why.def.push('comeback'); }
+  const lockO = teams[off]?.schemeLock?.offense || 0, lockD = teams[def]?.schemeLock?.defense || 0;
+  if (lockO) { edge.off += lockO; edge.why.off.push('scheme'); }
+  if (lockD) { edge.def += lockD; edge.why.def.push('scheme'); }
+  return edge;
+}
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
   const { r, save } = rng(state);
   const offense = teams[state.possession], defense = teams[opponent(state.possession)];
+  const edge = edgesFor(state, teams); if (edge.off || edge.def) options = { ...options, edge: { off: edge.off, def: edge.def } };
+  state.lastEdge = edge.off || edge.def ? edge : null;
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
   const call = { side: state.possession, off: offensePlayId, def: defensePlayId };
   (state.calls ||= []).push(call);

@@ -428,3 +428,11 @@ Owner's playtest round 3 found career stats at zero for a 320-yard quarterback: 
 * Ties: score → production component → games → name. Deterministic; no simulated voters.
 * Verified by `tests/stats.test.js`: books add up play by play and determinism holds; reg/post separation; duplicate booking rejected; rollover and careers; legacy migration; scenarios — elite QB on a winner, dominant back over average QBs, edge rusher, shutdown corner with two picks, 21-year-old veteran vs 27-year-old rookie, two-game cameo, rookie MVP, turnaround coach vs talented coaster, alphabetical dead heat; a full season freezes the awards and the history keeps the leaders.
 
+## 17. Playtest round 3 — build 2 (2026-10-17, branch `prototype-2`)
+
+* **Badge win, made a big deal.** Found and fixed the real bug: the "BADGE EARNED" sheet existed but was never called after the box score. Now: box score titled *Final · 🏅 BADGE GAME WON* → a midfield handshake with the beaten coach (two `beaten` lines per gym in `dialogue.js`) → the badge sheet (badge N of 8, legendary now trackable) → HQ, which carries a glowing badge banner for the rest of that week and the next, plus the league news item. `f.campaign.lastBadge` remembers it.
+* **Auto speed.** With Auto on, a 1× / 2× toggle: 2× halves the animation frame time and the pause between plays.
+* **Comeback mode** (`COMEBACK = { margin: 10, edge: 5 }`): on Pro and All-Star, whichever side trails by 10+ in the fourth quarter (never overtime) plays with +5 on every core rating — symmetric, the player included; off on Rookie. Applies identically to played, Auto and simulated games (`rules.comebackSide / edgesFor`, `engine options.edge`), and shows as a pulsing 🔥 COMEBACK chip under the scoreboard. Difficulty text says so.
+* **Scheme lock** (`SCHEME_LOCK_EDGE = 3`): when every starter on a side fits the coordinator's scheme, that side plays with +3 on every core rating; the roster screen shows a glowing *SCHEME LOCKED* banner with the boost, or how many more starters it needs when two or fewer are short; the match shows a ✦ chip (yours and theirs). Carried on `team.schemeLock`, so AI clubs could use it later.
+* **Build label** (`src/version.js`): shown on the main menu and in Settings, so a playtest report can say which build it saw (a stale cached build is the first suspect when a feature "isn't there").
+
