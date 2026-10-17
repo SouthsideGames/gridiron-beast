@@ -543,3 +543,12 @@ test('short-handed positions: Monday scouting always brings a prospect for the t
   assert.ok(r.prospects.some((p) => p.monster.position === 'S'), 'a safety is on the board');
   const f2 = newFranchise(5); for (const m of f2.roster.filter((m) => m.position === 'K')) f2.roster = f2.roster.filter((x) => x !== m); const r2 = F.scoutRegion(f2, 'Coral Coast'); assert.ok(r2.prospects.some((p) => p.monster.position === 'K'), 'a kicker is on the board when the club has none');
 });
+
+test('a field goal can be kicked on any down (end of a half with no time for a play)', async () => {
+  const GR = await import('../src/sim/game-runner.js'); const R = await import('../src/sim/rules.js'); const Ro = await import('../src/franchise/roster.js');
+  const A = Ro.generatedTeam(5, { id: 'A', name: 'A', abbr: 'A', color: '#fff' }), B = Ro.generatedTeam(9, { id: 'B', name: 'B', abbr: 'B', color: '#000' });
+  const st = R.newGame({ home: A, away: B, seed: 3 }); R.doKickoff(st, { home: A, away: B });
+  const side = st.possession; st.ballOn = 78; st.down = 2; st.toGo = 5; st.quarter = 2; st.clock = 7;
+  const ev = GR.step(st, { home: A, away: B }, { home: GR.aiController('home'), away: GR.aiController('away') }, { home: GR.newTendencies(), away: GR.newTendencies() }, { fourthDown: 'fg' });
+  assert.equal(ev.kind, 'field_goal'); assert.ok(ev.res.distance > 0); if (ev.res.good) assert.equal(st.score[side], 3);
+});
