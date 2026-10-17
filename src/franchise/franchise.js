@@ -902,12 +902,22 @@ function advanceWeek(f, { bye = false } = {}) {
   if (f.season.week === 11) startPlayoffs(f);
   if (inPlayoffs(f) && f.season.playoffs?.champion) { endSeason(f); return; }
   if (inPlayoffs(f) && !playoffFixture(f)) {
-    // Eliminated (or never qualified): simulate the remaining rounds and close the season.
-    let guard = 0;
-    while (!f.season.playoffs.champion && guard++ < 4) { simulatePlayoffWeek(f); f.season.week += 1; }
-    endSeason(f);
+    // Eliminated (or never qualified): the owner watches the bracket round by round (advancePlayoffs) or skips to the offseason (skipPlayoffs).
+    f.season.spectating = true;
+    if (f.season.playoffs.champion) endSeason(f);
   }
 }
+/** Spectating: play the next playoff round. Returns that round's results; ends the season after the Beast Bowl. */
+export function advancePlayoffs(f) {
+  if (!inPlayoffs(f) || playoffFixture(f) || f.season.finished) return { ok: false, reason: 'Nothing to advance.' };
+  const p = f.season.playoffs; const round = p.round;
+  simulatePlayoffWeek(f); f.season.week += 1;
+  const results = p.results.filter((x) => x.round === round);
+  if (p.champion) endSeason(f);
+  return { ok: true, round, results, champion: p.champion || null, finished: !!f.season.finished };
+}
+export function skipPlayoffs(f) { let guard = 0; while (!f.season.finished && guard++ < 5) { const r = advancePlayoffs(f); if (!r.ok) break; } return { ok: true }; }
+export const ROUND_NAMES = Object.freeze({ 1: 'Wild Card round', 2: 'Conference finals', 3: 'Beast Bowl' });
 
 // ------------------------------------------------------------ playoffs
 function startPlayoffs(f) {

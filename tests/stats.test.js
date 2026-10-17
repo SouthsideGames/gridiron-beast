@@ -155,7 +155,7 @@ test('awards: Coach of the Year rewards the turnaround against a recorded foreca
 
 test('awards freeze when the playoffs are drawn and a full season books leaders and history', () => {
   const f = mk(71);
-  for (let guard = 0; guard < 40 && !f.season.finished; guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.advanceWeek(f); }
+  for (let guard = 0; guard < 40 && !f.season.finished; guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
   assert.ok(f.season.finished && f.season.awardsFinal, 'season done, awards frozen');
   assert.equal(f.season.awardsFinal.year, 1);
   const w = f.season.awardsFinal.winners; assert.ok(w.mvp && w.opoy && w.dpoy && w.coy, 'all major awards have winners');

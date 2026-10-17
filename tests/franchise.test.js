@@ -60,6 +60,7 @@ test('a full season plus playoffs completes with standings from real games', () 
   const f = newFranchise(3);
   let games = 0;
   while (!f.season.finished && games < 20) {
+    if (F.inPlayoffs(f) && !F.playoffFixture(f)) { F.skipPlayoffs(f); continue; } // eliminated: skip the bracket
     if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast');
     if (f.season.day === 1) F.skipRecruit(f);
     if (f.season.day === 2) F.setTraining(f, 'coverage');
@@ -89,7 +90,7 @@ test('postseason events: a losing record raises one; each option has its consequ
   const f = newFranchise(21);
   const fit = F.rosterFit(f); assert.ok(fit.offense.total >= 5 && fit.defense.total >= 5 && fit.offense.coach);
   // Fake a losing season end: 3–6, then run the real end-of-season path by finishing the schedule quickly.
-  while (!f.season.finished) { F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const g = F.simulatePlayerGame(f); const side = F.sundayMatchup(f).playerSide; const other = side === 'home' ? 'away' : 'home'; const score = { home: 0, away: 0 }; score[other] = 21; F.finishSunday(f, { ...g, winner: other, score }); }
+  while (!f.season.finished) { if (F.inPlayoffs(f) && !F.playoffFixture(f)) { F.skipPlayoffs(f); continue; } F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const g = F.simulatePlayerGame(f); const side = F.sundayMatchup(f).playerSide; const other = side === 'home' ? 'away' : 'home'; const score = { home: 0, away: 0 }; score[other] = 21; F.finishSunday(f, { ...g, winner: other, score }); }
   assert.ok(F.record(f).l > F.record(f).w);
   const ev = F.postseasonEvent(f); assert.ok(ev, 'event raised'); assert.ok(ev.lines[0].length > 20);
   assert.ok(!ev.options.find((o) => o.id === 'talk'), 'no free option on Pro');
@@ -601,7 +602,22 @@ test('board goals: three scaled offers, one commitment per season, settled at se
   g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; v = B.settleGoal(g, { wins: 0 });
   assert.equal(v.status, 'fired'); assert.equal(g.board.fired, true);
   // A full season settles the real goal and a fired owner cannot start the next season.
-  for (let guard = 0; guard < 40 && !f.season.finished; guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.advanceWeek(f); }
+  for (let guard = 0; guard < 40 && !f.season.finished; guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
   assert.ok(f.season.boardVerdict && typeof f.season.boardVerdict.met === 'boolean'); assert.equal(f.board.goal, null); assert.equal(f.board.history.length, 1);
   f.board.fired = true; assert.equal(F.startNextSeason(f).ok, false);
+});
+
+test('spectating the playoffs: an eliminated owner advances the bracket a round at a time, or skips to the offseason', () => {
+  const f = newFranchise(71);
+  for (let guard = 0; guard < 20 && !F.inPlayoffs(f); guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
+  assert.ok(F.inPlayoffs(f) && f.season.playoffs && f.season.awardsFinal, 'playoffs drawn, awards frozen');
+  // Knock the owner out (or play until out), then watch.
+  let guard = 0; while (F.playoffFixture(f) && guard++ < 4) F.finishSunday(f, F.simulatePlayerGame(f));
+  if (!f.season.finished) {
+    assert.equal(f.season.spectating, true);
+    const before = f.season.playoffs.round; const r = F.advancePlayoffs(f); assert.equal(r.ok, true); assert.equal(r.round, before); assert.ok(r.results.length >= 1);
+    F.skipPlayoffs(f);
+  }
+  assert.ok(f.season.finished && f.season.champion, 'season closes with a champion');
+  assert.equal(F.advancePlayoffs(f).ok, false);
 });
