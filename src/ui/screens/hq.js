@@ -18,6 +18,7 @@ import { sprite16 } from '../sprite16.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
 import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
+import { RIVAL_WEEKLY } from '../../data/dialogue.js';
 import { LEADER_CATEGORIES, leaders, statLine } from '../../franchise/stats.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
@@ -57,6 +58,7 @@ export function registerHqScreens(Router, app) {
           ${!f.season.finished && day < 6 && !f.week.commissioner ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">⚠️ Over the cap by ${fmtMoney(-cap.remaining)}. The commissioner reviews the books on Saturday: get under it by then or he picks who goes.</p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">🏛️ The commissioner is waiting. Over the cap by ${fmtMoney(f.week.commissioner.over)}.</p>` : ''}</div>
+        ${rivalCard(f)}
         ${boardPanel(f)}
         ${campaignPanel(f)}
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
@@ -565,4 +567,20 @@ function seasonFinalHtml(f) {
     ${v ? `<div class="panel tight ${v.met ? '' : 'hotseat'}"><b>🎯 Board: ${esc(v.goal.label)} — ${v.met ? 'MET' : 'MISSED'}</b><div class="dim">Confidence ${v.confidence >= 0 ? '+' : ''}${v.confidence} · ${F.confidenceLabel(v.confidence)}${v.met ? ' · expanded scouting next season' : v.status === 'fired' ? ' · the board has let you go' : v.status === 'hot_seat' ? ' · one more miss and you are out' : ''}</div></div>` : ''}
     <div class="panel tight"><b>Hall of Fame progress</b><div class="dim">${hof.rows.map((r) => `${r.done ? '✓' : '○'} ${r.key}: ${r.have}/${r.goal}`).join(' · ')}</div></div>
     ${a ? awardsHtml(a) : ''}`;
+}
+
+/** Rival card on HQ, every week: standings gap, head-to-head, next meeting and the GM's weekly needle (GDD §17.7). */
+function rivalCard(f) {
+  const rv = f.rivals?.[f.tier]; if (!rv || f.season.finished) return '';
+  const mine = f.season.records[f.club] || { w: 0, l: 0 }, theirs = f.season.records[rv.team] || { w: 0, l: 0 };
+  const next = f.season.schedule.find((g) => g.opponent === rv.team && !g.result && !g.bye);
+  const thisWeek = next && next.week === f.season.week;
+  const gb = ((theirs.w - mine.w) + (mine.l - theirs.l)) / 2;
+  const state = thisWeek ? 'gameWeek' : gb < 0 ? 'ahead' : gb > 0 ? 'behind' : 'level';
+  const pool = RIVAL_WEEKLY[state]; const line = pool[(f.season.week + f.season.year * 3) % pool.length];
+  const played = f.season.schedule.filter((g) => g.opponent === rv.team && g.result);
+  const seasonH2h = played.length ? ` · this season ${played.filter((g) => g.result.won).length}–${played.filter((g) => !g.result.won).length}` : '';
+  return `<div class="panel tight rival-card ${thisWeek ? 'hot' : ''}"><div class="row" style="gap:10px;align-items:flex-start">${portraitSprite(`gm|${rv.team}`, 40, { hue: 280 })}<div class="grow"><div class="row between"><b>⚔️ ${esc(rv.team)}</b><span class="chip ${gb < 0 ? 'good' : gb > 0 ? 'bad' : ''}">${gb === 0 ? 'level' : gb < 0 ? `you lead by ${Math.abs(gb)}` : `${gb} back`}</span></div>
+    <div class="dim">GM ${esc(rv.gm)} · they are ${theirs.w}–${theirs.l}, you are ${mine.w}–${mine.l} · all-time ${rv.headToHead.w}–${rv.headToHead.l}${seasonH2h}${next ? ` · ${thisWeek ? '<b>GAME THIS SUNDAY</b>' : `next meeting week ${next.week}`}` : ' · no more meetings this season'}</div>
+    <p class="talk-line" style="margin:4px 0 0">“${esc(line)}”</p></div></div></div>`;
 }

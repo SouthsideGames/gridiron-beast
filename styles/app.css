@@ -352,3 +352,6 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 
 .panel.need-short{border-color:var(--bad)}
 .panel.need-thin{border-color:#f0883e}
+
+.rival-card{border-color:#7c3aed}
+.rival-card.hot{border-color:#a855f7;box-shadow:0 0 14px rgba(168,85,247,.35)}

@@ -128,3 +128,11 @@ export function pregameDialogue({ kind, club, speaker, state, vars = {}, seed = 
   }
   return { speaker, title: `Head coach, ${club}`, lines: [fill(pick(SHARED.generic), vars)], replies: false, state: 'generic' };
 }
+
+/** The rival GM's weekly needle for the HQ rival card: by who is ahead in the standings and whether the game is this week. */
+export const RIVAL_WEEKLY = Object.freeze({
+  ahead: ['Enjoy the view from up there. It never lasts for your lot.', 'Nice start. My scouts say your secondary is held together with tape.', 'The division runs through us. It always has.'],
+  behind: ['We are coming. Tell your board.', 'A game back is nothing. Ask anyone who has lost to us in December.', 'Your schedule gets harder. Ours gets us.'],
+  level: ['Dead even. One of us is lying to their fans.', 'Same record, different futures.', 'Tiebreakers favour the club that wants it. That is us.'],
+  gameWeek: ['Rivalry week. I have cleared my calendar for your excuses.', 'Sunday. Bring the real playbook this time.', 'My monsters have been talking about this one since the schedule came out.'],
+});
