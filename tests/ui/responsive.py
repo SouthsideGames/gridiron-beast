@@ -81,12 +81,16 @@ def run_size(pw, port, w, h, name):
     page.wait_for_selector('#first')
     page.fill('#first', 'Sam'); page.fill('#last', 'Rivera'); no_overflow(page, 'onboarding name'); shot(page, f'{name}-02-name'); page.click('#next')
     page.wait_for_selector('[data-action="opt"]'); page.click('[data-action="opt"][data-k="style"][data-v="curls"]'); page.click('[data-action="opt"][data-k="accessory"][data-v="headset"]'); no_overflow(page, 'onboarding look'); tap_targets(page, 'onboarding look'); shot(page, f'{name}-02a-look'); page.click('#next')
-    page.wait_for_selector('[data-action="background"]'); page.fill('#home', 'Ember City'); page.click('[data-action="background"][data-v="scout"]'); no_overflow(page, 'onboarding background'); shot(page, f'{name}-02ab-background'); page.click('#next')
+    page.wait_for_selector('[data-action="background"]'); page.click('[data-action="background"][data-v="scout"]'); no_overflow(page, 'onboarding background'); shot(page, f'{name}-02ab-background'); page.click('#next')
     page.click('[data-action="club"][data-v="Ember City Beasts"]'); no_overflow(page, 'onboarding club'); shot(page, f'{name}-02b-club'); page.click('#next')
     page.wait_for_selector('[data-action="difficulty"]'); page.click('[data-action="difficulty"][data-v="pro"]'); no_overflow(page, 'onboarding difficulty'); shot(page, f'{name}-02bb-difficulty'); page.click('#next')
     page.click('[data-action="reroll"]'); page.wait_for_timeout(50); page.click('[data-action="pick"][data-side="offense"] >> nth=0'); shot(page, f'{name}-02c-cornerstone'); page.click('#next')
     page.wait_for_selector('.tabbar')
     check(page.query_selector('.tip') is not None, 'tutorial: HQ tip shows on the first week')
+    # The commissioner's goal comes first (GDD §17.4).
+    page.click('[data-action="goals"]'); page.wait_for_selector('[data-action="goal"]'); no_overflow(page, 'goals'); shot(page, f'{name}-03a-goals')
+    page.click('[data-action="goal"][data-id="wins"]'); page.wait_for_selector('.sheet'); page.click('.sheet [data-action="yes"]'); page.wait_for_selector('.tabbar')
+    check(page.evaluate("() => !!__gb.f.board?.goal"), 'goal committed')
     page.click('[data-action="tut-primer"]'); page.wait_for_selector('.sheet'); no_overflow(page, 'primer'); shot(page, f'{name}-03b-primer'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     no_overflow(page, 'hq'); tap_targets(page, 'hq'); shot(page, f'{name}-04-hq'); tip_ok(page)
     # Commissioner's office: stage a pending review and open the screen.
