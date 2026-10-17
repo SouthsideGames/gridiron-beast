@@ -3,7 +3,7 @@
 // mutation goes through a function here so the UI stays thin.
 
 import { createRng, rngFromState, hashString } from '../core/rng.js';
-import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine } from './stats.js';
+import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords } from './stats.js';
 import { AWARDS, computeAwards, headCoachName } from './awards.js';
 import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel } from './board.js';
 export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
@@ -977,6 +977,7 @@ function endSeason(f) {
   }
   s.awards = seasonAwards(f);
   f.history[f.history.length - 1].awards = s.awards;
+  updateSeasonRecords(f, s.year); // the records book (GDD §17.8)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
     const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club });

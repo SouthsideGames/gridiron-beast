@@ -175,3 +175,17 @@ test('awards freeze when the playoffs are drawn and a full season books leaders 
   assert.ok(monsterLine(starter, 'career', 'reg').games >= 5, 'career totals survive');
   assert.ok(f.season.expectations['Ember City Beasts'].lastWinPct != null, 'next season remembers last season for COY');
 });
+
+test('records book: single-game, team and season records are written and only improve', async () => {
+  const { ensureRecords, careerLeaders } = await import('../src/franchise/stats.js');
+  const f = mk(71);
+  F.autoRunToSunday(f); F.finishSunday(f, F.simulatePlayerGame(f));
+  const R = ensureRecords(f);
+  assert.ok(R.game.passYds?.value > 0 && R.game.passYds.year === 1 && R.game.passYds.week === 1);
+  assert.ok(R.team.points?.value >= 0 && R.team.points.team);
+  const was = R.game.passYds.value; R.game.passYds.value = 9999; F.autoRunToSunday(f); F.finishSunday(f, F.simulatePlayerGame(f)); assert.equal(R.game.passYds.value, 9999, 'a record only improves');
+  R.game.passYds.value = was;
+  const L = careerLeaders(f.roster); assert.ok(L.passYds?.[0]?.value > 0);
+  for (let guard = 0; guard < 40 && !f.season.finished; guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
+  assert.ok(R.season.passYds?.value > 0 && R.season.passYds.year === 1, 'season record written at season end');
+});

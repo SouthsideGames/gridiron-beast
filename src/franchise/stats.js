@@ -157,6 +157,7 @@ export function recordGame(f, state, teams, { playoff = false, week = f.season.w
   done.push(key);
   const bucket = playoff ? 'post' : 'reg';
   const table = playoff ? (f.season.playoffStats ||= {}) : (f.season.leagueStats ||= {});
+  updateGameRecords(f, state, teams, { year, week, playoff });
   for (const side of ['home', 'away']) {
     const team = teams[side]; const opp = teams[side === 'home' ? 'away' : 'home'];
     const won = state.score[side] > state.score[side === 'home' ? 'away' : 'home'];
@@ -224,4 +225,42 @@ export function statLine(r) {
   if (d.fga || d.xpa) b.push(`${d.fgm || 0}/${d.fga || 0} FG, ${d.xpm || 0}/${d.xpa || 0} XP`);
   if (d.fumLost) b.push(`${d.fumLost} FL`);
   return b.join(' · ');
+}
+
+// ------------------------------------------------------------ records book (GDD §17.8)
+export const RECORD_CATEGORIES = Object.freeze([
+  { id: 'passYds', label: 'Passing yards', key: 'passYds' }, { id: 'passTd', label: 'Passing TD', key: 'passTd' }, { id: 'rushYds', label: 'Rushing yards', key: 'rushYds' }, { id: 'rushTd', label: 'Rushing TD', key: 'rushTd' },
+  { id: 'recYds', label: 'Receiving yards', key: 'recYds' }, { id: 'rec', label: 'Receptions', key: 'rec' }, { id: 'recTd', label: 'Receiving TD', key: 'recTd' }, { id: 'tacklesTotal', label: 'Tackles', key: 'tacklesTotal' },
+  { id: 'sacks', label: 'Sacks', key: 'sacks' }, { id: 'int', label: 'Interceptions', key: 'int' }, { id: 'pd', label: 'Passes defended', key: 'pd' }, { id: 'fgLong', label: 'Longest field goal', key: 'fgLong' },
+]);
+export const TEAM_RECORDS = Object.freeze([{ id: 'points', label: 'Points in a game' }, { id: 'margin', label: 'Margin of victory' }, { id: 'yards', label: 'Total yards in a game' }]);
+export function ensureRecords(f) { return (f.records ||= { game: {}, season: {}, team: {} }); }
+function better(cur, value) { return value > 0 && (!cur || value > cur.value); }
+/** After a game: single-game player and team records. */
+export function updateGameRecords(f, state, teams, { year, week, playoff }) {
+  const R = ensureRecords(f);
+  for (const side of ['home', 'away']) {
+    const team = teams[side]; const opp = teams[side === 'home' ? 'away' : 'home'];
+    const byId = {};
+    for (const [slot, line] of Object.entries(state.stats[side].players || {})) { const p = team.offense?.[slot] || team.defense?.[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue; addInto((byId[p.id] ||= { p, line: {} }).line, line); }
+    for (const { p, line } of Object.values(byId)) {
+      const d = withDerived(line);
+      for (const c of RECORD_CATEGORIES) { const v = d[c.key]; if (better(R.game[c.id], v)) R.game[c.id] = { value: v, name: p.name, position: p.position, species: p.species, type: p.type, team: team.name, opp: opp.name, year, week, playoff: !!playoff }; }
+    }
+    const pts = state.score[side], margin = state.score[side] - state.score[side === 'home' ? 'away' : 'home'], yards = state.stats[side].yards || 0;
+    const t = (id, v) => { if (better(R.team[id], v)) R.team[id] = { value: v, team: team.name, opp: opp.name, year, week, playoff: !!playoff, score: `${state.score[side]}–${state.score[side === 'home' ? 'away' : 'home']}` }; };
+    t('points', pts); t('margin', margin); t('yards', yards);
+  }
+}
+/** At season end: single-season records from the regular-season table. */
+export function updateSeasonRecords(f, year = f.season.year) {
+  const R = ensureRecords(f);
+  for (const c of RECORD_CATEGORIES) { const top = leagueRows(f.season.leagueStats).map((r) => ({ ...r, ...derive(r) })).filter((r) => (r[c.key] || 0) > 0).sort((a, b) => b[c.key] - a[c.key])[0]; if (top && better(R.season[c.id], top[c.key])) R.season[c.id] = { value: top[c.key], name: top.name, position: top.position, species: top.species, type: top.type, team: top.team, year }; }
+  return R;
+}
+/** Career leaders among the owner's monsters (regular season), live. */
+export function careerLeaders(roster, { n = 1 } = {}) {
+  const out = {};
+  for (const c of RECORD_CATEGORIES) { const rows = roster.map((m) => ({ m, d: withDerived(monsterLine(m, 'career', 'reg')) })).filter((x) => (x.d[c.key] || 0) > 0).sort((a, b) => b.d[c.key] - a.d[c.key]).slice(0, n); if (rows.length) out[c.id] = rows.map((x) => ({ value: x.d[c.key], name: x.m.name, position: x.m.position, species: x.m.species, type: x.m.type, id: x.m.id })); }
+  return out;
 }

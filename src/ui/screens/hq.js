@@ -19,7 +19,7 @@ import { playCardSvg, legendHtml } from '../play-art.js';
 import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
 import { RIVAL_WEEKLY } from '../../data/dialogue.js';
-import { LEADER_CATEGORIES, leaders, statLine } from '../../franchise/stats.js';
+import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, careerLeaders } from '../../franchise/stats.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -393,7 +393,7 @@ export function registerHqScreens(Router, app) {
       const watch = `<h3>🏅 Award watch</h3>${anyRace ? '' : '<p class="dim">Races start after the first Sunday. Stats from every club in the league count.</p>'}<div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const top = races[k]; return `<button class="item" style="display:block" data-action="award" data-k="${k}"><div class="row between"><div class="name">${esc(a.label)} <span class="dim">${a.short}</span></div><span class="dim">top 5 ›</span></div>${top.length ? top.map((r, i) => { const me = r.team === f.club; return k === 'coy' ? `<div class="row between sub ${me ? 'mine' : ''}"><span>${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)}</span></span><span class="mono">${r.w}–${r.l}</span></div>` : `<div class="row sub ${me ? 'mine' : ''}" style="gap:6px"><span class="dim">${i + 1}.</span>${monsterSprite(r, 20)}<span class="grow">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></span><span class="mono">${raceLine(r)}</span></div>`; }).join('') : '<div class="sub dim">No contenders yet.</div>'}</button>`; }).join('')}</div>`;
       return `<div class="panel"><b>Beast League</b> · 16 clubs · Season ${f.season.year}<div class="muted">Beast Bowl titles: ${titles}${f.season.week >= 5 && !f.season.finished ? ` · ${esc(F.playoffPicture(f).text)}` : ''}</div>
         ${rival ? `<div class="muted">⚔️ Rival: <b>${esc(rival.team)}</b> (GM ${esc(rival.gm)}) · all-time ${rival.headToHead.w}–${rival.headToHead.l}</div>` : ''}</div>
-        <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button><button class="btn block" data-action="go" data-screen="leaders">📈 Stats</button><button class="btn block" data-action="go" data-screen="awardhistory">🏅 Award history</button></div>${watch}`;
+        <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button><button class="btn block" data-action="go" data-screen="leaders">📈 Stats</button><button class="btn block" data-action="go" data-screen="awardhistory">🏅 Award history</button><button class="btn block" data-action="go" data-screen="records">📕 Records book</button></div>${watch}`;
     },
     mount(root) { delegate(root, {
         award: (el) => sheet(awardRaceHtml(app.f, el.dataset.k), { title: F.AWARDS[el.dataset.k].label }), go: (el) => Router.go(el.dataset.screen) }); },
@@ -453,6 +453,22 @@ export function registerHqScreens(Router, app) {
       delegate(root, { bucket: (el) => { leaderBucket = el.dataset.v; Router.render(); } });
       root.querySelector('[data-action="cat"]')?.addEventListener('change', (e) => { leaderCat = e.target.value; Router.render(); });
     },
+  });
+  let recordsTab = 'game';
+  Router.registerScreen('records', {
+    title: 'Records book',
+    render({ f }) {
+      const R = ensureRecords(f); const tab = recordsTab;
+      const tabs = [['game', 'Single game'], ['season', 'Season'], ['career', 'Your careers'], ['team', 'Team']];
+      let body = '';
+      const row = (label, r, sub) => `<div class="item static ${r?.team === f.club ? 'mine' : ''}">${r?.species ? monsterSprite(r, 30) : ''}<div class="grow"><div class="name">${esc(label)}</div><div class="sub">${r ? `<b>${esc(r.name || r.team)}</b>${r.position ? ` (${esc(r.position)})` : ''} · ${esc(sub(r))}` : 'no record yet'}</div></div><span class="chip accent">${r ? r.value : '—'}</span></div>`;
+      if (tab === 'game') body = RECORD_CATEGORIES.map((c) => row(c.label, R.game[c.id], (r) => `${r.team} vs ${r.opp} · S${r.year} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`)).join('');
+      else if (tab === 'season') body = RECORD_CATEGORIES.map((c) => row(c.label, R.season[c.id], (r) => `${r.team} · season ${r.year}`)).join('') + '<p class="dim">Season records are written when a season ends.</p>';
+      else if (tab === 'career') { const L = careerLeaders(f.roster); body = RECORD_CATEGORIES.map((c) => row(c.label, L[c.id]?.[0], () => 'regular season, current roster')).join('') + '<p class="dim">League-wide careers need persistent AI rosters (later); these are your monsters.</p>'; }
+      else body = TEAM_RECORDS.map((c) => row(c.label, R.team[c.id], (r) => `${r.score} vs ${r.opp} · S${r.year} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`)).join('');
+      return `<div class="seg" style="margin-bottom:8px">${tabs.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" data-action="rtab" data-v="${k}">${l}</button>`).join('')}</div><div class="list">${body}</div>`;
+    },
+    mount(root) { delegate(root, { rtab: (el) => { recordsTab = el.dataset.v; Router.render(); } }); },
   });
   Router.registerScreen('awardhistory', {
     title: 'Award history',
