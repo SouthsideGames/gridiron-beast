@@ -573,3 +573,16 @@ test('package rule: only primary/secondary positions fill a slot; plays needing 
   const nickel = Object.keys(PLAYS).filter((id) => PLAYS[id].side === 'defense' && PLAYS[id].onField.includes('SS')).slice(0, 6);
   if (nickel.length === 6) { f.week.plan.defense = nickel; const t2 = F.playerTeam(f); assert.equal(t2.forfeit, true); assert.ok(/package/.test(t2.forfeitReason)); const m = F.sundayMatchup(f); assert.equal(m.forfeit, true); const w = f.season.week; const r = F.forfeitSunday(f); assert.equal(r.ok, true); assert.equal(f.season.records[f.club].l, 1); assert.equal(f.season.week, w + 1); assert.ok(!f.season.leagueStats[f.club], 'no stats from a forfeit'); }
 });
+
+test('attribute points: level-ups bank 2 points, spent by hand up to potential, or by the trainer when the setting is on', async () => {
+  const { levelUp, spendPoint, autoSpendPoints, POINTS_PER_LEVEL } = await import('../src/data/monsters.js');
+  const { createRng } = await import('../src/core/rng.js');
+  const f = newFranchise(71); const m = f.roster[0]; const rng = createRng(3);
+  levelUp(m, rng); assert.equal(m.points, POINTS_PER_LEVEL);
+  const k = Object.keys(m.attributes).find((a) => m.attributes[a] < m.potential); const before = m.attributes[k];
+  assert.equal(F.spendAttributePoint(f, m.id, k).ok, true); assert.equal(m.attributes[k], before + 1); assert.equal(m.points, 1);
+  m.attributes.kicking = m.potential; assert.equal(spendPoint(m, 'kicking').ok, false, 'capped at potential');
+  autoSpendPoints(m, rng); assert.equal(m.points, 0);
+  assert.equal(F.unspentPoints(f).length, 0);
+  levelUp(m, rng, { autoSpend: true }); assert.equal(m.points, 0, 'auto-spent');
+});

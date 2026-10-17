@@ -1,6 +1,6 @@
 // XP, level-ups, fatigue, injuries and recovery (GDD §5.1 and §8).
 
-import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve } from '../data/monsters.js';
+import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints } from '../data/monsters.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
 /** Injury-risk multiplier for a monster playing a secondary position. */
 export const OUT_OF_POSITION_RISK = 1.75;
@@ -8,7 +8,7 @@ export const OUT_OF_POSITION_RISK = 1.75;
 const norm = (v) => Math.max(1, Math.min(99, v ?? 60)) / 99;
 
 /** Apply one game's consequences to the roster. `chart` maps slots to monster ids; `playerStats` from the game state. */
-export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45 } = {}) {
+export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false } = {}) {
   const events = [];
   const byId = Object.fromEntries(roster.map((m) => [m.id, m]));
   for (const slot of [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K']) {
@@ -21,7 +21,7 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
     while (m.xp >= xpForLevel(m.level)) {
       m.xp -= xpForLevel(m.level);
       const before = monsterOverall(m);
-      levelUp(m, rng);
+      levelUp(m, rng, { autoSpend });
       events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
       const evo = tryEvolve(m); if (evo) events.push(evo);
     }

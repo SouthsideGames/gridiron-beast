@@ -4,7 +4,7 @@
 import { esc, delegate, toast, sheet, confirmSheet, fmtMoney } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS, PACKAGE_SLOT_USE, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
-import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies } from '../../data/monsters.js';
+import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies, POINTS_PER_LEVEL } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
 import { speciesSheet } from './dex.js';
 import { buildDepthChart, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, borrowedSlots } from '../../franchise/roster.js';
@@ -69,7 +69,7 @@ export function registerRosterScreens(Router, app) {
   function monsterRow(m, chart = {}) {
     const slot = Object.entries(chart).find(([, id]) => id === m.id)?.[0];
     const fit = F.fitFor(app.f, m)?.fits;
-    return `<button class="item ${fit ? 'fit' : ''}" data-action="monster" data-id="${m.id}">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${typeGlyph(m.type)} ${m.cornerstone ? '<span class="chip accent">★</span>' : ''}${fit ? ' <span class="chip fitchip">Fits scheme</span>' : ''}</div><div class="sub">${m.position}${slot ? ' · ' + slot : ''} · L${m.level} · ${m.injury ? `<span style="color:var(--bad)">${m.injury.severity} injury, ${m.injury.weeks} wk</span>` : m.fatigue >= 60 ? '<span style="color:var(--warn)">fatigued</span>' : 'healthy'}</div></div><span class="mini-hl mono">${(() => { const h = headlineAttributes(m); return `${h.speed}·${h.power}·${h.hands}·${h.smarts}`; })()}</span><span class="ovr ${monsterOverall(m) >= 65 ? 'hi' : ''}">${monsterOverall(m)}</span></button>`;
+    return `<button class="item ${fit ? 'fit' : ''}" data-action="monster" data-id="${m.id}">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${typeGlyph(m.type)} ${m.cornerstone ? '<span class="chip accent">★</span>' : ''}${fit ? ' <span class="chip fitchip">Fits scheme</span>' : ''}${(m.points || 0) > 0 ? ` <span class="chip warn">✨ ${m.points} pts</span>` : ''}</div><div class="sub">${m.position}${slot ? ' · ' + slot : ''} · L${m.level} · ${m.injury ? `<span style="color:var(--bad)">${m.injury.severity} injury, ${m.injury.weeks} wk</span>` : m.fatigue >= 60 ? '<span style="color:var(--warn)">fatigued</span>' : 'healthy'}</div></div><span class="mini-hl mono">${(() => { const h = headlineAttributes(m); return `${h.speed}·${h.power}·${h.hands}·${h.smarts}`; })()}</span><span class="ovr ${monsterOverall(m) >= 65 ? 'hi' : ''}">${monsterOverall(m)}</span></button>`;
   }
 
   Router.registerScreen('assign', {
@@ -99,13 +99,15 @@ export function registerRosterScreens(Router, app) {
           ${(() => { const sp = resolveSpecies(m); const st = m.stage || 0; const next = sp.evolution[st]; return sp.evolution.length ? `<b>Evolution</b><p class="muted" style="margin:2px 0">${st ? `Stage ${st + 1} of ${sp.evolution.length + 1} (evolved from ${esc(sp.name)}).` : `Base form.`}${next ? ` Evolves at level ${next.level}${m.level >= next.level - 2 ? ' — soon' : ''}.` : ' Fully evolved.'}</p>` : ''; })()}
           <button class="btn small" data-action="species" style="margin-top:6px">📖 ${esc(resolveSpecies(m).name)} in the Beast Dex</button></div>
         <h3>Ratings</h3>${headlineHtml(m)}${(() => { const fit = F.fitFor(f, m); return fit ? `<p class="${fit.fits ? 'fit-key' : 'dim'}" style="margin:6px 0 0">${fit.fits ? '✦ Fits your scheme' : 'Not a scheme fit'} · ${esc(fit.why)}</p>` : ''; })()}
-        <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">All twelve attributes</summary><div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => `<div class="attr" title="${esc(ATTR_HELP[k])}"><span>${ATTR_LABEL[k]}</span><div class="bar ${eff[k] < 45 ? 'bad' : eff[k] < 60 ? 'warn' : ''}"><i style="width:${eff[k]}%"></i></div><span class="v" style="color:${eff[k] > base[k] ? 'var(--good)' : eff[k] < base[k] ? 'var(--bad)' : 'inherit'}">${eff[k]}</span></div>`).join('')}</div>
+        ${(m.points || 0) > 0 ? `<div class="panel points"><b>✨ ${m.points} attribute point${m.points === 1 ? '' : 's'} to spend</b><div class="dim">Level-ups bank ${POINTS_PER_LEVEL} points. Tap + next to an attribute (capped at potential ${m.potential}).</div></div>` : ''}
+        <details style="margin-top:8px" ${(m.points || 0) > 0 ? 'open' : ''}><summary class="muted" style="cursor:pointer">All twelve attributes</summary><div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => `<div class="attr" title="${esc(ATTR_HELP[k])}"><span>${ATTR_LABEL[k]}</span><div class="bar ${eff[k] < 45 ? 'bad' : eff[k] < 60 ? 'warn' : ''}"><i style="width:${eff[k]}%"></i></div><span class="v" style="color:${eff[k] > base[k] ? 'var(--good)' : eff[k] < base[k] ? 'var(--bad)' : 'inherit'}">${eff[k]}</span>${(m.points || 0) > 0 ? `<button class="btn small plus" data-action="spend" data-attr="${k}" ${base[k] >= m.potential ? 'disabled title="At potential"' : ''}>+</button>` : ''}</div>`).join('')}</div>
         <p class="dim" style="margin-top:8px">Green/red values include nature, fatigue and position penalties. Every attribute affects the simulation.</p></details>
         ${monsterStatsHtml(m, f)}`;
     },
     mount(root, ctx) {
       delegate(root, {
         species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); },
+        spend: (el) => { const r = F.spendAttributePoint(app.f, ctx.params.id, el.dataset.attr); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
         'stat-tab': (el) => { statView.tab = el.dataset.v; Router.render(); }, 'stat-group': (el) => { statView.group = el.dataset.v; Router.render(); }, 'stat-year': (el) => { statView.year = el.dataset.v === 'career' ? null : Number(el.dataset.v); Router.render(); },
       });
     },

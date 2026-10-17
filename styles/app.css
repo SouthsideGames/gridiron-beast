@@ -155,7 +155,7 @@ tr.me td { background: #2a3f16; }
 .slot.injured { border-color: var(--bad); }
 .slot.secondary { border-style: dashed; }
 .attr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px; }
-.attr { display: grid; grid-template-columns: 84px 1fr 32px; align-items: center; gap: 6px; }
+.attr { display: grid; grid-template-columns: 84px 1fr 32px auto; align-items: center; gap: 6px; }
 .attr .bar { height: 7px; }
 .attr .v { font-family: var(--mono); text-align: right; }
 
@@ -344,3 +344,6 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 
 .card.blocked{opacity:.4;filter:grayscale(.8);position:relative}
 .card.blocked::after{content:'unavailable';position:absolute;inset:auto 4px 4px 4px;font-size:10px;font-weight:800;color:var(--bad);text-transform:uppercase;letter-spacing:.04em}
+
+.attr .plus{min-height:28px;padding:0 10px;margin-left:6px;font-weight:900}
+.panel.points{border-color:#f5c542;background:rgba(245,197,66,.08)}

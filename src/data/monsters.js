@@ -222,13 +222,31 @@ export function salaryFor(m) { return 18000 + 280 * monsterOverall(m); }
 export const xpForLevel = (level) => 30 + level * 18; // level 10 in about two seasons of starts; level 20 is a long career
 
 /** Apply a level-up: +1 to three weighted attributes (potential-capped). */
-export function levelUp(m, rng) {
+export const POINTS_PER_LEVEL = 2; // attribute points the owner spends by hand (GDD §17.3)
+export function levelUp(m, rng, { autoSpend = false } = {}) {
   m.level += 1;
   const weights = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR);
   for (let i = 0; i < 3; i++) {
     const k = rng.weighted(weights);
     if (m.attributes[k] < m.potential) m.attributes[k] = clampAttr(m.attributes[k] + 1 + (rng.chance(0.3) ? 1 : 0));
   }
+  m.points = (m.points || 0) + POINTS_PER_LEVEL;
+  if (autoSpend) autoSpendPoints(m, rng);
+  m.salary = salaryFor(m);
+}
+/** Spend one banked point on an attribute (capped by potential). */
+export function spendPoint(m, attr) {
+  if (!(m.points > 0)) return { ok: false, reason: 'No attribute points to spend.' };
+  if (!(attr in m.attributes)) return { ok: false, reason: 'Unknown attribute.' };
+  if (m.attributes[attr] >= m.potential) return { ok: false, reason: `${attr} is at this monster's potential (${m.potential}).` };
+  m.attributes[attr] = clampAttr(m.attributes[attr] + 1); m.points -= 1; m.salary = salaryFor(m);
+  return { ok: true, value: m.attributes[attr], left: m.points };
+}
+/** AI clubs (and the staff, if asked) spend by position weight. */
+export function autoSpendPoints(m, rng) {
+  const weights = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR).filter(([k]) => m.attributes[k] < m.potential);
+  let guard = 20;
+  while ((m.points || 0) > 0 && weights.length && guard-- > 0) { const k = rng.weighted(weights); if (spendPoint(m, k).ok === false) break; }
   m.salary = salaryFor(m);
 }
 
