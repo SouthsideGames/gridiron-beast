@@ -7,7 +7,7 @@ import { OFFENSE_SLOTS, DEFENSE_SLOTS, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SL
 import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
 import { speciesSheet } from './dex.js';
-import { buildDepthChart, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS } from '../../franchise/roster.js';
+import { buildDepthChart, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, borrowedSlots } from '../../franchise/roster.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
 import { ROLE_LABEL, STAFF_ROLES, PLAYBOOKS, TRAINING_FOCI, STAFF, staffById } from '../../data/staff.js';
 import { PLAYS } from '../../data/playbook.js';
@@ -30,12 +30,13 @@ export function registerRosterScreens(Router, app) {
   function depthHtml(f) {
     const chart = buildDepthChart(f.roster, f.lineupManual, f.depth);
     const slotOf = Object.fromEntries(Object.entries(chart).filter(([, id]) => id).map(([s, id]) => [id, s]));
+    const borrowed = borrowedSlots(f.roster, chart);
     const group = (g) => {
       const order = depthOrder(f.roster, f.depth, g); const slots = GROUP_SLOTS[g];
       const healthy = order.filter((m) => !m.injury).length;
       const thin = healthy < slots.length ? 'bad' : healthy === slots.length ? 'warn' : '';
       const rows = order.map((m, i) => { const sl = slotOf[m.id]; const sec = m.position !== g; const fit = F.fitFor(f, m)?.fits; return `<div class="dc-row ${m.injury ? 'out' : ''} ${fit ? 'fit' : ''}"><span class="dc-n">${i + 1}</span>${monsterSprite(m, 26)}<button class="dc-name" data-action="monster" data-id="${m.id}">${esc(m.name)}${sec ? ' <span class="dim">(' + m.position + ')</span>' : ''}</button><span class="dc-tag">${m.injury ? `<span class="chip bad">OUT ${m.injury.weeks}w</span>` : sl ? `<span class="chip ${OFFENSE_PACKAGE_SLOTS.includes(sl) || DEFENSE_PACKAGE_SLOTS.includes(sl) ? '' : 'accent'}">${sl}</span>` : '<span class="dim">backup</span>'}</span><span class="ovr">${monsterOverall(m, { slotPosition: g })}</span><span class="dc-move"><button class="btn small" data-action="up" data-g="${g}" data-id="${m.id}" ${i === 0 ? 'disabled' : ''} aria-label="Move ${esc(m.name)} up">▲</button><button class="btn small" data-action="down" data-g="${g}" data-id="${m.id}" ${i === order.length - 1 ? 'disabled' : ''} aria-label="Move ${esc(m.name)} down">▼</button></span></div>`; }).join('');
-      return `<div class="dc-group ${thin}"><div class="dc-head"><b>${g}</b> <span class="dim">${GROUP_LABEL[g]} · ${slots.length} slot${slots.length === 1 ? '' : 's'}</span>${thin === 'bad' ? '<span class="chip bad">Short-handed</span>' : thin === 'warn' ? '<span class="chip warn">No backup</span>' : ''}</div>${rows || '<p class="dim" style="margin:6px 0">Nobody at this position.</p>'}</div>`;
+      return `<div class="dc-group ${thin}"><div class="dc-head"><b>${g}</b> <span class="dim">${GROUP_LABEL[g]} · ${slots.length} slot${slots.length === 1 ? '' : 's'}</span>${thin === 'bad' ? '<span class="chip bad">Short-handed</span>' : thin === 'warn' ? '<span class="chip warn">No backup</span>' : ''}</div>${rows || '<p class="dim" style="margin:6px 0">Nobody at this position.</p>'}${borrowed.filter((b) => GROUP_SLOTS[g].includes(b.slot)).map((b) => `<p class="dim" style="margin:4px 0 0">↪ ${b.slot} has no monster of its own: ${b.name ? `<b>${esc(b.name)}</b> (${esc(b.position)}${b.outOfPosition ? ', out of position' : ''}) fills in when that package is called` : 'a starter doubles up when that package is called'}. Games go ahead; sign a ${g} on Tuesday to stop borrowing.</p>`).join('')}</div>`;
     };
     return `<p class="dim">Order each position. The top healthy monsters start; if one is hurt, the next in line steps in. ▲▼ to reorder.</p>
       <h3>Offense</h3>${OFFENSE_GROUPS.map(group).join('')}<h3>Defense</h3>${DEFENSE_GROUPS.map(group).join('')}<h3>Special teams</h3>${group('K')}`;

@@ -18,7 +18,7 @@ import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BO
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
-import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, teamOverall, depthOrder, GROUP_SLOTS } from './roster.js';
+import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, teamOverall, depthOrder, GROUP_SLOTS } from './roster.js';
 import { afterGame, recoverWeek, offseason } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
@@ -500,6 +500,12 @@ function simulateLeagueWeek(f) {
 
 // ------------------------------------------------------------ weekly loop
 export function dayIndex(f) { return f.season.day; }
+/** Positions with fewer healthy monsters than depth-chart slots (base + package), thinnest first. */
+export function shortPositions(f) {
+  const out = [];
+  for (const [g, slots] of Object.entries(GROUP_SLOTS)) { const healthy = f.roster.filter((m) => m.position === g && !m.injury).length; if (healthy < slots.length) out.push([g, slots.length - healthy]); }
+  return out.sort((a, b) => b[1] - a[1]).map(([g]) => g);
+}
 export function scoutRegion(f, regionName) {
   if (f.season.day !== 0) return { ok: false, reason: 'Not Monday.' };
   const region = REGIONS[regionName]; if (!region) return { ok: false, reason: 'Unknown region.' };
@@ -523,9 +529,18 @@ export function scoutRegion(f, regionName) {
     const revealed = Math.min(6, (skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1) + (ownerPerk(f) === 'scouting' ? 1 : 0));
     prospects.push({ monster: m, revealed, natureKnown: skill >= 70, potentialKnown: skill >= 55 });
   }
+  // Short-handed somewhere? The scout goes looking for that position too, so a thin spot never stays thin for want of a prospect (playtest round 3).
+  const need = shortPositions(f).find((pos) => !prospects.some((p) => p.monster.position === pos));
+  const needPool = need ? pool.filter((sp) => sp.position === need || sp.secondary === need) : [];
+  if (need && needPool.length) {
+    const sp = needPool[r.int(needPool.length)];
+    const m = generateMonster(r, { position: need, quality: 50 + r.int(10), species: sp.id });
+    uniqueName(f, m, prospects.map((p) => p.monster.name)); dexRecord(f, m, 'seen');
+    prospects.push({ monster: m, revealed: Math.min(6, (skill >= 65 ? 4 : 2) + (ownerPerk(f) === 'scouting' ? 1 : 0)), natureKnown: skill >= 70, potentialKnown: skill >= 55, need: true });
+  }
   save();
   f.week.region = regionName; f.week.prospects = prospects; f.week.recruitAttempts = 0; f.season.day = 1;
-  return { ok: true, prospects, skill, scout: scout?.name || 'Your scout' };
+  return { ok: true, prospects, skill, scout: scout?.name || 'Your scout', need };
 }
 export const RECRUIT_APPROACHES = Object.freeze([
   { id: 'development', label: 'Offer development', text: 'Promise a plan to grow their game.', weight: { young: 0.25 } },
@@ -719,7 +734,7 @@ export function lineupCheck(f, { advance = true } = {}) {
   const tired = f.roster.filter((m) => Object.values(chart).includes(m.id) && m.fatigue >= 60).map((m) => m.name);
   const injured = f.roster.filter((m) => m.injury).map((m) => `${m.name} (${m.injury.severity}, ${m.injury.weeks} wk)`);
   if (advance) { f.week.lineupChecked = true; if (f.season.day === 5) { f.season.day = 6; recoverWeek(f.roster); commissionerReview(f); } }
-  return { ok: problems.length === 0, problems, tired, injured, chart, commissioner: f.week.commissioner || null };
+  return { ok: problems.length === 0, problems, borrowed: borrowedSlots(f.roster, chart), tired, injured, chart, commissioner: f.week.commissioner || null };
 }
 /** Put a monster into a slot by moving them to that slot's place in the position's depth order. */
 export function assignSlot(f, slot, monsterId) {

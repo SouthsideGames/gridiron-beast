@@ -2,6 +2,7 @@
 // teams phases and overtime (GDD §3). Pure functions on a plain state object
 // so the UI, Key Moments and headless league games share one rulebook.
 
+import { positionOf, canPlay } from '../data/personnel.js';
 import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
 import { simulatePlay } from './engine.js';
@@ -119,7 +120,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   (state.calls ||= []).push(call);
   const sim = simulatePlay({
     offensePlay, defensePlay,
-    offense: pickSlots(offense.offense, offensePlay.onField), defense: pickSlots(defense.defense, defensePlay.onField),
+    offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense),
     ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options,
   });
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
@@ -127,7 +128,25 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const outcome = applyScrimmageResult(state, sim, offensePlayId, defensePlayId);
   return { sim, outcome };
 }
-export function pickSlots(lineup, slots) { const out = {}; for (const s of slots) out[s] = lineup[s] || { attrs: {} }; return out; }
+/**
+ * The seven on the field for this play. A slot with no monster (a package slot
+ * the roster cannot staff, an injury with no backup) borrows one: a healthy
+ * bench monster first, then a lineup monster who sits out in this package.
+ * Nobody is ever on the field twice; nobody plays as an empty shell.
+ */
+export function pickSlots(lineup, slots, team = null) {
+  const out = {}; const onField = new Set();
+  for (const s of slots) { const p = lineup[s]; if (p?.id && !onField.has(p.id)) { out[s] = p; onField.add(p.id); } }
+  for (const s of slots) {
+    if (out[s]) continue;
+    const need = positionOf(s);
+    const bench = (team?.bench || []).filter((p) => p?.id && !onField.has(p.id));
+    const resting = Object.entries(lineup).filter(([k]) => !slots.includes(k)).map(([, p]) => p).filter((p) => p?.id && !onField.has(p.id));
+    const pick = bench.find((p) => p.position === need) || bench.find((p) => canPlay(p.position, s)) || resting.find((p) => canPlay(p.position, s)) || bench[0] || resting[0] || null;
+    if (pick) { out[s] = { ...pick, borrowed: true }; onField.add(pick.id); } else out[s] = { attrs: {}, name: s, id: null };
+  }
+  return out;
+}
 
 /** Apply an engine result to the game state. Pure state update; `sim` comes from the engine. */
 export function applyScrimmageResult(state, sim, offensePlayId = null, defensePlayId = null) {
@@ -323,7 +342,7 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   const { r, save } = rng(state);
   const offense = teams[state.tryTeam], defense = teams[opponent(state.tryTeam)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
-  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField), defense: pickSlots(defense.defense, defensePlay.onField), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed() });
+  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed() });
   save();
   const good = sim.touchdown && !sim.stats.defensiveScore;
   if (good) state.score[state.tryTeam] += 2;

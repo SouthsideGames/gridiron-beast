@@ -515,3 +515,31 @@ test('playtest round 3: comeback mode lifts the trailing side in the fourth on P
   const r = F.finishSunday(f, g);
   assert.equal(r.newBadge, 'Harbor Sentinels'); assert.deepEqual(f.campaign.lastBadge, { club: 'Harbor Sentinels', year: 1, week: 1, n: 1 });
 });
+
+test('a roster that cannot staff a package slot still plays: the package borrows a healthy body, the lineup check passes, nobody is on the field twice', async () => {
+  const { buildDepthChart, lineupProblems, borrowedSlots } = await import('../src/franchise/roster.js');
+  const { pickSlots } = await import('../src/sim/rules.js');
+  const f = newFranchise(71);
+  const S = f.roster.filter((m) => m.position === 'S'); for (const m of S.slice(1)) f.roster = f.roster.filter((x) => x !== m);
+  for (const m of f.roster.filter((m) => m.position === 'CB').slice(2)) m.injury = { severity: 'Minor', weeks: 2, type: 'ankle' };
+  for (const m of f.roster.filter((m) => m.position === 'LB').slice(2)) m.injury = { severity: 'Minor', weeks: 1, type: 'knee' };
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth);
+  assert.equal(chart.SS, null, 'no dedicated strong safety');
+  assert.deepEqual(lineupProblems(f.roster, chart), [], 'a package slot never blocks the game');
+  const b = borrowedSlots(f.roster, chart); assert.equal(b.length, 1); assert.equal(b[0].slot, 'SS'); assert.ok(['LB', 'CB', 'S'].includes(b[0].position), 'borrows someone who can cover');
+  F.autoRunToSunday(f); assert.equal(F.lineupCheck(f, { advance: false }).ok, true);
+  const team = F.playerTeam(f); const nickel = ['DL1', 'DL2', 'LB1', 'CB1', 'CB2', 'FS', 'SS'];
+  const on = pickSlots(team.defense, nickel, team);
+  assert.ok(on.SS.id && on.SS.borrowed, 'SS is filled at the snap');
+  assert.equal(new Set(Object.values(on).map((p) => p.id)).size, 7, 'seven different monsters on the field');
+  const g = F.simulatePlayerGame(f); assert.ok(g.finished); F.finishSunday(f, g); assert.equal(f.season.week, 2, 'the week advances');
+});
+
+test('short-handed positions: Monday scouting always brings a prospect for the thinnest one', () => {
+  const f = newFranchise(71);
+  for (const m of f.roster.filter((m) => m.position === 'S').slice(1)) f.roster = f.roster.filter((x) => x !== m);
+  assert.deepEqual(F.shortPositions(f), ['S']);
+  const r = F.scoutRegion(f, 'Coral Coast');
+  assert.ok(r.prospects.some((p) => p.monster.position === 'S'), 'a safety is on the board');
+  const f2 = newFranchise(5); for (const m of f2.roster.filter((m) => m.position === 'K')) f2.roster = f2.roster.filter((x) => x !== m); const r2 = F.scoutRegion(f2, 'Coral Coast'); assert.ok(r2.prospects.some((p) => p.monster.position === 'K'), 'a kicker is on the board when the club has none');
+});
