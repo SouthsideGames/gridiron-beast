@@ -11,6 +11,7 @@ import { buildDepthChart, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUP
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
 import { ROLE_LABEL, STAFF_ROLES, PLAYBOOKS, TRAINING_FOCI, STAFF, staffById } from '../../data/staff.js';
 import { PLAYS } from '../../data/playbook.js';
+import { ensureStats, POSITION_COLUMNS, STAT_GROUPS, GROUP_LABEL, groupsWithData, withDerived, statLine, addInto } from '../../franchise/stats.js';
 import { playCardSvg } from '../play-art.js';
 
 const ATTR_LABEL = { speed: 'Speed', agility: 'Agility', strength: 'Strength', awareness: 'Awareness', catching: 'Catching', arm: 'Arm', accuracy: 'Accuracy', blocking: 'Blocking', tackling: 'Tackling', coverage: 'Coverage', durability: 'Durability', kicking: 'Kicking' };
@@ -98,10 +99,13 @@ export function registerRosterScreens(Router, app) {
         <h3>Ratings</h3>${headlineHtml(m)}${(() => { const fit = F.fitFor(f, m); return fit ? `<p class="${fit.fits ? 'fit-key' : 'dim'}" style="margin:6px 0 0">${fit.fits ? '✦ Fits your scheme' : 'Not a scheme fit'} · ${esc(fit.why)}</p>` : ''; })()}
         <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">All twelve attributes</summary><div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => `<div class="attr" title="${esc(ATTR_HELP[k])}"><span>${ATTR_LABEL[k]}</span><div class="bar ${eff[k] < 45 ? 'bad' : eff[k] < 60 ? 'warn' : ''}"><i style="width:${eff[k]}%"></i></div><span class="v" style="color:${eff[k] > base[k] ? 'var(--good)' : eff[k] < base[k] ? 'var(--bad)' : 'inherit'}">${eff[k]}</span></div>`).join('')}</div>
         <p class="dim" style="margin-top:8px">Green/red values include nature, fatigue and position penalties. Every attribute affects the simulation.</p></details>
-        <h3>Career</h3><div class="kv"><b>Games</b><span>${m.stats.games}</span><b>Yards</b><span>${m.stats.yards}</span><b>TD</b><span>${m.stats.td}</span><b>Catches</b><span>${m.stats.catches}</span><b>Tackles</b><span>${m.stats.tackles}</span><b>Sacks</b><span>${m.stats.sacks}</span><b>INT</b><span>${m.stats.int}</span></div>`;
+        ${monsterStatsHtml(m, f)}`;
     },
     mount(root, ctx) {
-      delegate(root, { species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); } });
+      delegate(root, {
+        species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); },
+        'stat-tab': (el) => { statView.tab = el.dataset.v; Router.render(); }, 'stat-group': (el) => { statView.group = el.dataset.v; Router.render(); }, 'stat-year': (el) => { statView.year = el.dataset.v === 'career' ? null : Number(el.dataset.v); Router.render(); },
+      });
     },
   });
 
@@ -136,4 +140,43 @@ export function registerRosterScreens(Router, app) {
       },
     }); },
   });
+}
+
+// ---------------------------------------------------------------- monster stats (GDD §16)
+const statView = { tab: 'season', group: null, year: null };
+const GROUP_OF_POSITION = { QB: 'passing', RB: 'rushing', WR: 'receiving', TE: 'receiving', OL: 'blocking', DL: 'pass_rush', LB: 'pass_rush', CB: 'coverage', S: 'coverage', K: 'kicking' };
+function statTable(line, position, group) {
+  const colPos = group ? STAT_GROUPS[group][0] : position;
+  const cols = POSITION_COLUMNS[group && group === GROUP_OF_POSITION[position] ? position : colPos] || POSITION_COLUMNS[colPos] || POSITION_COLUMNS.WR;
+  const d = withDerived(line);
+  const cell = (k) => { const v = d[k]; return v == null ? '<span class="dim">—</span>' : v; };
+  return `<div class="stat-table"><table><thead><tr>${cols.map(([, l]) => `<th>${esc(l)}</th>`).join('')}</tr></thead><tbody><tr>${cols.map(([k]) => `<td>${cell(k)}</td>`).join('')}</tr></tbody></table></div>`;
+}
+/** Season / playoffs / career / game log for one monster, with a group switch when it has stats in several roles. */
+export function monsterStatsHtml(m, f) {
+  const s = ensureStats(m, f.season.year);
+  const tab = statView.tab; const pos = m.position;
+  const tabs = [['season', 'Season'], ['post', 'Playoffs'], ['career', 'Career'], ['log', 'Game log']];
+  let body = '';
+  const groupBar = (line) => { const gs = groupsWithData(line); const def = GROUP_OF_POSITION[pos]; const all = [...new Set([def, ...gs])].filter(Boolean); if (all.length <= 1) { statView.group = null; return ''; } const cur = statView.group && all.includes(statView.group) ? statView.group : def; statView.group = cur; return `<div class="seg" style="margin:6px 0">${all.map((g) => `<button class="btn small ${g === cur ? 'primary' : ''}" data-action="stat-group" data-v="${g}">${esc(GROUP_LABEL[g])}</button>`).join('')}</div>`; };
+  if (tab === 'season' || tab === 'post') {
+    const line = tab === 'season' ? s.season.reg : s.season.post;
+    if (!Object.keys(line).length) body = `<p class="dim">${tab === 'post' ? 'No playoff games this season.' : `No games yet in season ${s.season.year ?? f.season.year}.`}</p>`;
+    else body = `${groupBar(line)}${statTable(line, pos, statView.group)}`;
+  } else if (tab === 'career') {
+    const years = s.seasons.map((x) => x.year);
+    const sel = statView.year != null && years.includes(statView.year) ? statView.year : null;
+    const regAll = {}; for (const x of s.seasons) addInto(regAll, x.reg); addInto(regAll, s.season.reg);
+    const postAll = {}; for (const x of s.seasons) addInto(postAll, x.post); addInto(postAll, s.season.post);
+    const line = sel == null ? regAll : s.seasons.find((x) => x.year === sel).reg;
+    const postLine = sel == null ? postAll : s.seasons.find((x) => x.year === sel).post;
+    const yearBar = years.length ? `<div class="seg" style="margin:6px 0"><button class="btn small ${sel == null ? 'primary' : ''}" data-action="stat-year" data-v="career">All</button>${years.slice().reverse().map((y) => `<button class="btn small ${sel === y ? 'primary' : ''}" data-action="stat-year" data-v="${y}">${y}</button>`).join('')}</div>` : '';
+    const legacy = !years.length && Object.keys(s.career.reg).length && !Object.keys(s.season.reg).length;
+    body = `${yearBar}${Object.keys(line).length ? `${groupBar(line)}<div class="dim" style="margin-top:4px">Regular season${sel == null ? ` · ${years.length + 1} season${years.length ? 's' : ''}` : ` ${sel}`}</div>${statTable(line, pos, statView.group)}` : '<p class="dim">No regular-season games yet.</p>'}${Object.keys(postLine).length ? `<div class="dim" style="margin-top:6px">Playoffs</div>${statTable(postLine, pos, statView.group)}` : ''}${legacy ? '<p class="dim">Older saves kept only games, touchdowns, catches, tackles, sacks and interceptions.</p>' : ''}`;
+  } else {
+    const log = s.log.slice().reverse();
+    body = log.length ? `<div class="list">${log.map((g) => `<div class="item static"><div class="grow"><div class="name">Wk ${g.week}${g.playoff ? ' (playoffs)' : ''} ${g.home ? 'vs' : '@'} ${esc(g.opp)} <span class="${g.won ? 'good' : 'bad'}">${g.won ? 'W' : 'L'} ${g.score}</span></div><div class="sub">${esc(statLine(g.line)) || 'no stats'}</div></div></div>`).join('')}</div>` : '<p class="dim">No games this season.</p>';
+  }
+  return `<h3>Statistics</h3><div class="seg">${tabs.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" data-action="stat-tab" data-v="${k}">${l}</button>`).join('')}</div>${body}
+    <p class="dim" style="margin-top:6px">${m.yearsPro === 0 ? 'Rookie season' : `${m.yearsPro ?? '?'} season${m.yearsPro === 1 ? '' : 's'} pro`} · regular season and playoffs are kept apart; rates come from the totals.</p>`;
 }

@@ -3,6 +3,10 @@
 // mutation goes through a function here so the UI stays thin.
 
 import { createRng, rngFromState, hashString } from '../core/rng.js';
+import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine } from './stats.js';
+import { AWARDS, computeAwards, headCoachName } from './awards.js';
+export { AWARDS } from './awards.js';
+export * as Stats from './stats.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect } from '../data/monsters.js';
@@ -430,10 +434,19 @@ export function rivalSignature(f) {
 // ------------------------------------------------------------ season
 export function startSeason(f, year) {
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
-  f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club), leagueStats: {} };
+  const lastRecords = f.season?.records || null;
+  f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club), leagueStats: {}, playoffStats: {}, recorded: [], expectations: {} };
   f.week = blankWeek();
-  for (const m of f.roster) { m.fatigue = 0; m.season = { games: 0, yards: 0, rushYds: 0, recYds: 0, passYds: 0, td: 0, tackles: 0, sacks: 0, int: 0, catches: 0 }; }
+  for (const m of f.roster) { m.fatigue = 0; if (m.yearsPro == null) m.yearsPro = Math.max(0, (m.age || 22) - 22); rolloverMonster(m, { year, team: f.club }); }
+  // Preseason expectations for Coach of the Year: recorded now, never reconstructed from the final table (GDD §16.4).
+  for (const team of ALL_TEAMS) {
+    const talent = team === f.club ? teamOverall(playerTeam(f)) : teamOverall(aiTeam(f, team, year));
+    const lr = lastRecords?.[team]; const lastWinPct = lr && lr.w + lr.l ? lr.w / (lr.w + lr.l) : null;
+    f.season.expectations[team] = { talent, expectedWinPct: Math.max(0.1, Math.min(0.9, 0.5 + (talent - 60) * 0.025)), lastWinPct };
+  }
 }
+/** The club's head coach by name (COY recipient). */
+export function coachNameOf(f, team) { return headCoachName(team, { seed: f.seed, playerClub: f.club, playerCoach: staffMember(f, 'head_coach')?.name || null }); }
 export const currentFixture = (f) => f.season.schedule.find((g) => g.week === f.season.week) || null;
 export const isBye = (f) => !!currentFixture(f)?.bye;
 export const inPlayoffs = (f) => f.season.week > 10;
@@ -456,15 +469,6 @@ export function playoffPicture(f) {
 }
 /** Simulate every other game of the current week with the real engine. */
 /** League-wide per-monster season stats (all 16 clubs) for award races. */
-const LEAGUE_KEYS = ['passYds', 'rushYds', 'recYds', 'td', 'passTd', 'intThrown', 'rec', 'rush', 'tackles', 'sacks', 'int', 'ff', 'broken', 'jukes', 'sheds', 'abilities', 'att', 'comp'];
-export function tallyLeagueStats(f, team, side, gameStats) {
-  const L = (f.season.leagueStats ||= {}); const T = (L[team.name] ||= {});
-  for (const [slot, st] of Object.entries(gameStats?.players || {})) {
-    const p = team.offense[slot] || team.defense[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue;
-    const row = (T[p.id] ||= { id: p.id, name: p.name, type: p.type, species: p.species, position: p.position || slot, age: p.age, slot, games: 0 });
-    row.games += 1; for (const k of LEAGUE_KEYS) if (st[k]) row[k] = (row[k] || 0) + st[k];
-  }
-}
 function simulateLeagueWeek(f) {
   const { r, save } = frng(f);
   const fixtures = leagueSeasonFixtures(f.season.year).find((w) => w.week === f.season.week);
@@ -474,7 +478,7 @@ function simulateLeagueWeek(f) {
       if (g.home === f.club || g.away === f.club) continue;
       const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
       const game = playGame({ home, away, seed: r.seed(), quarterLength: 180 });
-      tallyLeagueStats(f, home, 'home', game.stats.home); tallyLeagueStats(f, away, 'away', game.stats.away);
+      recordGame(f, game, { home, away }, { playoff: false });
       const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
       applyResult(f.season.records, res); results.push(res);
     }
@@ -778,8 +782,7 @@ export function finishSunday(f, gameState) {
   if (m.rival) { f.rivals[f.tier].headToHead[won ? 'w' : 'l'] += 1; news(f, won ? `RIVALRY WIN over ${m.opponent} — GM ${f.rivals[f.tier].gm} will remember this.` : `${m.opponent}'s GM ${f.rivals[f.tier].gm} gets bragging rights this time.`, won ? 'win' : 'loss'); 
     if (f.week.media?.hype) { if (won) news(f, 'You backed up the trash talk. The locker room loves it.', 'win'); else { f.rattled = true; news(f, 'The trash talk backfired. The team is rattled: next week\'s practice is harder.', 'loss'); } }
   }
-  for (const slot of Object.keys(m[side].chart)) { const mon = f.roster.find((x) => x.id === m[side].chart[slot]); const st = gameState.stats[side].players[slot]; if (!mon || !st) continue; mon.season ||= { games: 0, yards: 0, rushYds: 0, recYds: 0, passYds: 0, td: 0, tackles: 0, sacks: 0, int: 0, catches: 0 }; mon.season.games += 1; mon.season.rushYds += st.rushYds || 0; mon.season.recYds += st.recYds || 0; mon.season.passYds += st.passYds || 0; mon.season.yards += (st.rushYds || 0) + (st.recYds || 0); mon.season.td += st.td || 0; mon.season.tackles += st.tackles || 0; mon.season.sacks += st.sacks || 0; mon.season.int += st.int || 0; mon.season.catches += st.rec || 0; }
-  if (!m.playoff) { tallyLeagueStats(f, m[side], side, gameState.stats[side]); tallyLeagueStats(f, m[oppSide], oppSide, gameState.stats[oppSide]); }
+  recordGame(f, gameState, { home: m.home, away: m.away }, { playoff: !!m.playoff });
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}–${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
@@ -836,6 +839,7 @@ function startPlayoffs(f) {
   const seeds = { Aurora: st.conferences.Aurora.seeds, Titan: st.conferences.Titan.seeds };
   const fixtures = playoffRound(1, [], seeds).map((g) => ({ ...g, round: 1, week: 11, result: null }));
   f.season.playoffs = { seeds, round: 1, fixtures, results: [], champion: null };
+  finalizeAwards(f);
   const qualified = Object.values(seeds).flat().includes(f.club);
   news(f, qualified ? `Playoffs! ${f.club} qualified as the ${seedLabel(seeds, f.club)}.` : `Regular season over: ${f.club} missed the playoffs.`, qualified ? 'win' : 'loss');
 }
@@ -850,7 +854,9 @@ function simulatePlayoffWeek(f) {
   const p = f.season.playoffs; if (!p || p.champion) return;
   const { r, save } = frng(f);
   for (const g of p.fixtures.filter((x) => x.round === p.round && !x.result)) {
-    const game = playGame({ home: aiTeam(f, g.home), away: aiTeam(f, g.away), seed: r.seed(), quarterLength: 180 });
+    const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
+    const game = playGame({ home, away, seed: r.seed(), quarterLength: 180 });
+    recordGame(f, game, { home, away }, { playoff: true });
     const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
     g.result = res; p.results.push({ round: p.round, conf: g.conf, winner: res.homeScore > res.awayScore ? g.home : g.away, ...res });
   }
@@ -888,64 +894,30 @@ function endSeason(f) {
 }
 export const TIERS_ENABLED = false;
 
-/** End-of-season awards from the roster's season stats and the league table. */
 /**
- * Award races across the league: top 3 for each named award.
- * Modelled on how the real awards are judged (no fixed formula, but these questions):
- *  - MVP: production × efficiency × team success — value to a winning team; QBs weigh most because they touch every play.
- *  - OPOY / DPOY: the most outstanding season on that side, judged relative to the monster's position (dominance over peers).
- *  - OROY / DROY: the same, among first-season monsters (age ≤ 22), rookies against rookies.
- *  - COY: results relative to expectations — wins above what the roster's talent predicted, plus point margin.
+ * Award races (GDD §16.4): computed from the regular-season league table by
+ * src/franchise/awards.js. Once the regular season ends the result is frozen
+ * (f.season.awardsFinal) so playoff games cannot move it.
  */
-export const AWARDS = Object.freeze({
-  mvp: { label: 'Most Valuable Monster', short: 'MVP' }, opoy: { label: 'Offensive Monster of the Year', short: 'OPOY' }, dpoy: { label: 'Defensive Monster of the Year', short: 'DPOY' },
-  oroy: { label: 'Offensive Rookie of the Year', short: 'OROY' }, droy: { label: 'Defensive Rookie of the Year', short: 'DROY' }, coy: { label: 'Coach of the Year', short: 'COY' },
-});
-const OFF_POS = new Set(['QB', 'RB', 'WR', 'TE', 'OL']);
-const ROOKIE_AGE = 22;
-/** Production (position-aware), scaled per game so a bye or a missed week doesn't decide it. */
-function offProduction(r) {
-  const g = Math.max(1, r.games || 1);
-  const yds = (r.passYds || 0) / 14 + (r.rushYds || 0) / 10 + (r.recYds || 0) / 10; // a passing yard is shared with the receiver; still, the QB created it
-  const eff = r.att ? ((r.comp || 0) / r.att - 0.55) * 20 : r.rush && r.rushYds ? ((r.rushYds / r.rush) - 4.5) * 2 : r.rec && r.recYds ? ((r.recYds / r.rec) - 9) * 0.5 : 0; // completion %, yards per carry, yards per catch vs league norms
-  return (yds + (r.td || 0) * 6 + (r.passTd || 0) * 5 - (r.intThrown || 0) * 4 + (r.rec || 0) * 0.4 + (r.broken || 0) * 0.8 + (r.jukes || 0) * 0.3 + eff) / g;
-}
-function defProduction(r) {
-  const g = Math.max(1, r.games || 1);
-  return ((r.tackles || 0) * 1.1 + (r.sacks || 0) * 5 + (r.int || 0) * 6 + (r.ff || 0) * 4 + (r.sheds || 0) * 0.4 + (r.abilities || 0) * 0.3) / g;
-}
-/** Dominance relative to peers at the same position (z-ish score against the league's rows). */
-function relativeTo(rows, score) {
-  const by = {}; for (const r of rows) (by[r.position] ||= []).push(score(r));
-  const stats = Object.fromEntries(Object.entries(by).map(([p, v]) => { const m = v.reduce((a, b) => a + b, 0) / v.length; const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / v.length) || 1; return [p, { m, sd }]; }));
-  return (r) => { const st = stats[r.position]; return st ? (score(r) - st.m) / st.sd : 0; };
-}
 export function awardRaces(f, { n = 3 } = {}) {
-  const all = Object.entries(f.season.leagueStats || {}).flatMap(([team, T]) => Object.values(T).map((r) => ({ ...r, team }))).filter((r) => (r.games || 0) > 0);
-  // Races are per game, so a monster must have played most of the weeks to qualify (no one-game wonders or backups).
-  const weeks = Math.max(1, ...all.map((r) => r.games || 0));
-  const minGames = Math.max(1, Math.ceil(weeks * 0.6));
-  const rows = all.filter((r) => (r.games || 0) >= minGames);
-  const recs = f.season.records; const winPct = (team) => { const r = recs[team]; return r && r.w + r.l ? r.w / (r.w + r.l) : 0.5; };
-  const top = (list, score) => list.map((r) => ({ ...r, score: score(r), minGames })).filter((r) => r.score > 0).sort((a, b) => b.score - a.score).slice(0, n);
-  const off = rows.filter((r) => OFF_POS.has(r.position)), def = rows.filter((r) => !OFF_POS.has(r.position) && r.position !== 'K');
-  const relOff = relativeTo(off, offProduction), relDef = relativeTo(def, defProduction);
-  // MVP: production per game × a team-success multiplier; quarterbacks carry more of the offense (responsibility).
-  const mvpScore = (r) => { const base = OFF_POS.has(r.position) ? offProduction(r) * (r.position === 'QB' ? 1.15 : 1) : defProduction(r) * 0.85; return base * (0.6 + 0.8 * winPct(r.team)); };
-  // COY: wins above expectation (expectation = roster talent) + margin; a turnaround beats a talented team coasting.
-  const coy = Object.entries(recs).map(([team, rec]) => { const g = rec.w + rec.l + (rec.t || 0); if (!g) return null; const talent = team === f.club ? teamOverall(playerTeam(f)) : teamOverall(aiTeam(f, team)); const expected = 0.5 + (talent - 60) * 0.025; const over = rec.w / g - expected; return { team, w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, talent, coach: team === f.club ? staffMember(f, 'head_coach')?.name || 'Your head coach' : `${team} staff`, score: rec.w * 6 + over * 40 * g / 10 + ((rec.pf || 0) - (rec.pa || 0)) / 25, expected: Math.round(expected * g * 10) / 10 }; }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, n);
-  return {
-    mvp: top(rows, mvpScore),
-    opoy: top(off, (r) => relOff(r) + offProduction(r) * 0.05), dpoy: top(def, (r) => relDef(r) + defProduction(r) * 0.05),
-    oroy: top(off.filter((r) => r.age <= ROOKIE_AGE), (r) => relOff(r) + 3), droy: top(def.filter((r) => r.age <= ROOKIE_AGE), (r) => relDef(r) + 3),
-    coy,
-  };
+  if (f.season.awardsFinal) return Object.fromEntries(Object.entries(f.season.awardsFinal.races).map(([k, v]) => [k, Array.isArray(v) ? v.slice(0, n) : v]));
+  const res = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n });
+  return res;
+}
+/** Freeze the regular-season awards (called when the playoffs are drawn). */
+export function finalizeAwards(f) {
+  if (f.season.awardsFinal) return f.season.awardsFinal;
+  const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5 });
+  f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])) };
+  for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w) news(f, `${AWARDS[k].short}: ${w.name}${w.team ? ` (${w.team})` : ''}${w.team === f.club ? ' — one of yours!' : ''}.`, w.team === f.club ? 'win' : 'info');
+  return f.season.awardsFinal;
 }
 export function seasonAwards(f) {
   const s = f.season; const st = leagueStandings(f); const rec = record(f);
-  const byStat = (key) => f.roster.slice().sort((a, b) => (b.season?.[key] || 0) - (a.season?.[key] || 0))[0];
-  const line = (m, key, label) => m && (m.season?.[key] || 0) > 0 ? { id: m.id, name: m.name, position: m.position, value: m.season[key], label } : null;
-  const mvpScore = (m) => (m.season?.yards || 0) + (m.season?.td || 0) * 20 + (m.season?.tackles || 0) * 4 + (m.season?.sacks || 0) * 12 + (m.season?.int || 0) * 15 + (m.season?.catches || 0) * 2;
+  const L = (m) => monsterLine(m, 'season', 'reg');
+  const byStat = (key) => f.roster.slice().sort((a, b) => (L(b)[key] || 0) - (L(a)[key] || 0))[0];
+  const line = (m, key, label) => m && (L(m)[key] || 0) > 0 ? { id: m.id, name: m.name, position: m.position, value: L(m)[key], label } : null;
+  const mvpScore = (m) => { const x = L(m); return (x.passYds || 0) / 14 * 10 + (x.rushYds || 0) + (x.recYds || 0) + ((x.passTd || 0) + (x.rushTd || 0) + (x.recTd || 0)) * 20 + ((x.tackles || 0) + (x.assists || 0) * 0.5) * 4 + (x.sacks || 0) * 12 + (x.int || 0) * 15 + (x.rec || 0) * 2 + (x.pd || 0) * 4; };
   const mvp = f.roster.slice().sort((a, b) => mvpScore(b) - mvpScore(a))[0];
   const rival = f.rivals[f.tier];
   const rivalGames = s.schedule.filter((g) => g.opponent === rival?.team && g.result);
@@ -954,8 +926,9 @@ export function seasonAwards(f) {
     champion: s.champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club),
     mvp: mvp && mvpScore(mvp) > 0 ? { id: mvp.id, name: mvp.name, position: mvp.position, score: mvpScore(mvp) } : null,
     rusher: line(byStat('rushYds'), 'rushYds', 'rushing yards'), receiver: line(byStat('recYds'), 'recYds', 'receiving yards'), passer: line(byStat('passYds'), 'passYds', 'passing yards'),
-    tackler: line(byStat('tackles'), 'tackles', 'tackles'), ballhawk: line(byStat('int'), 'int', 'interceptions'), rusherD: line(byStat('sacks'), 'sacks', 'sacks'),
-    league: Object.fromEntries(Object.entries(awardRaces(f)).map(([k, v]) => [k, v[0] || null])),
+    tackler: line(byStat('tackles'), 'tackles', 'solo tackles'), ballhawk: line(byStat('int'), 'int', 'interceptions'), rusherD: line(byStat('sacks'), 'sacks', 'sacks'),
+    league: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, (f.season.awardsFinal || finalizeAwards(f)).winners[k] || null])),
+    leaders: leadersSnapshot(f.season.leagueStats), playoffLeaders: leadersSnapshot(f.season.playoffStats),
     rivalry: rival ? { team: rival.team, gm: rival.gm, wins: rivalGames.filter((g) => g.result.won).length, games: rivalGames.length, swept: rivalGames.length === 2 && rivalGames.every((g) => g.result.won) } : null,
   };
 }

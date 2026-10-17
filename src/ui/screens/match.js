@@ -292,6 +292,7 @@ export function registerMatchScreens(Router, app) {
     const tick = (now) => {
       if (!anim) return;
       const idx = Math.min(sim.frames.length - 1, Math.floor((now - anim.start) / anim.msPerFrame));
+      if (idx < 0 || !sim.frames[idx]) { finishAnim(f, false); return; } // a play with no frames (nothing to draw)
       if (idx !== anim.i && svg) {
         anim.i = idx;
         const s = G.state;

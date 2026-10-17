@@ -65,7 +65,7 @@ def run_size(pw, port, w, h, name):
     ctx = browser.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, is_mobile=True, has_touch=True)
     page = ctx.new_page()
     errors = []
-    page.on('pageerror', lambda e: (errors.append(str(e)), print('  PAGEERROR', str(e)[:300])))
+    page.on('pageerror', lambda e: (errors.append(str(e)), print('  PAGEERROR', str(e)[:300], getattr(e, 'stack', '')[:600])))
     page.on('console', lambda m: (errors.append(m.text), print('  CONSOLE', m.text[:300])) if m.type == 'error' else None)
     page.goto(f'http://127.0.0.1:{port}/index.html')
     page.wait_for_selector('[data-action="new"]')
@@ -117,11 +117,19 @@ def run_size(pw, port, w, h, name):
         no_overflow(page, f'tab {tab}'); shot(page, f'{name}-05-{tab}'); tip_ok(page)
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('.slot >> nth=0'); page.wait_for_timeout(100); no_overflow(page, 'assign'); shot(page, f'{name}-06-assign')
     page.click('[data-action="monster"] >> nth=0'); page.wait_for_timeout(100); no_overflow(page, 'monster'); shot(page, f'{name}-07-monster')
+    # Stats tabs on the card (GDD §16): season table, game log, career.
+    for tab in ['log', 'career', 'post', 'season']:
+        page.click(f'[data-action="stat-tab"][data-v="{tab}"]'); page.wait_for_timeout(60); no_overflow(page, f'monster stats {tab}')
+    shot(page, f'{name}-07e-stats')
+    check(page.evaluate("() => !!document.querySelector('.stat-table') || !!document.querySelector('[data-action=\"stat-tab\"]')"), 'monster card shows the stats block')
     page.click('[data-action="species"]'); page.wait_for_selector('.sheet'); no_overflow(page, 'species sheet'); shot(page, f'{name}-07b-species'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="router-tab"][data-screen="more"]'); page.click('[data-action="go"][data-screen="dex"]'); page.wait_for_selector('.dex-cell'); no_overflow(page, 'dex in franchise'); shot(page, f'{name}-07c-dex')
     check(page.evaluate("() => document.querySelectorAll('.dex-cell.signed').length") >= 20, 'dex: starting roster species are marked signed')
     page.click('.dex-cell.signed >> nth=0'); page.wait_for_selector('.sheet'); shot(page, f'{name}-07d-dex-species'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="router-tab"][data-screen="league"]'); page.wait_for_selector('[data-action="award"]'); page.click('[data-action="award"][data-k="mvp"]'); page.wait_for_selector('.sheet'); no_overflow(page, 'award race'); shot(page, f'{name}-05b-award'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
+    page.click('[data-action="go"][data-screen="leaders"]'); page.wait_for_selector('.list'); no_overflow(page, 'leaders'); shot(page, f'{name}-05c-leaders')
+    page.select_option('[data-action="cat"]', 'sacks'); page.wait_for_timeout(80); no_overflow(page, 'leaders sacks'); page.click('[data-action="bucket"][data-v="post"]'); page.wait_for_timeout(80); page.click('[data-action="router-back"]'); page.wait_for_selector('[data-action="award"]')
+    page.click('[data-action="go"][data-screen="awardhistory"]'); page.wait_for_timeout(80); no_overflow(page, 'award history'); page.click('[data-action="router-back"]'); page.wait_for_selector('[data-action="award"]')
     page.click('[data-action="router-tab"][data-screen="hq"]')
     # Week
     settle(page, '[data-action="scout"]')

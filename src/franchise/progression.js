@@ -16,7 +16,6 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
     xp += Math.round((st.rushYds || 0) / 4 + (st.recYds || 0) / 4 + (st.passYds || 0) / 10);
     xp += (st.td || 0) * 14 + (st.tackles || 0) * 5 + (st.sacks || 0) * 12 + (st.int || 0) * 14 + (st.rec || 0) * 2;
     m.xp += xp;
-    m.stats.games += 1; m.stats.yards += (st.rushYds || 0) + (st.recYds || 0); m.stats.td += st.td || 0; m.stats.tackles += st.tackles || 0; m.stats.sacks += st.sacks || 0; m.stats.int += st.int || 0; m.stats.catches += st.rec || 0;
     while (m.xp >= xpForLevel(m.level)) {
       m.xp -= xpForLevel(m.level);
       const before = monsterOverall(m);
@@ -57,7 +56,7 @@ export function recoverWeek(roster, { bye = false } = {}) {
 export function offseason(roster, rng) {
   const events = [];
   for (const m of roster) {
-    m.age += 1; m.fatigue = 0; m.injury = null;
+    m.age += 1; m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
     if (m.age >= 30) {
       for (const k of ['speed', 'agility', 'durability']) m.attributes[k] = Math.max(20, m.attributes[k] - 1 - rng.int(2));
       events.push({ kind: 'decline', id: m.id, name: m.name });

@@ -115,6 +115,7 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   const S = state.stats[off];
   const lines = [];
   const wasGoalToGo = state.ballOn + state.toGo >= 100;
+  const toGoBefore = state.toGo;
   state.playCount += 1; S.plays += 1; state.drive.plays += 1;
   runClock(state, sim.elapsed);
   const name = (team, slot) => state[team === 'off' ? off : def].name;
@@ -157,13 +158,14 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
     }
     case 'interception': case 'fumble': case 'touchback_return': {
       S.turnovers += 1; stops = true;
+      if (sim.result === 'fumble' && (sim.stats.receiver || sim.stats.carrier)) { if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else S.rushYards += gain; S.yards += gain; } // yards to the spot of the fumble still count
       if (sim.result === 'interception' || sim.result === 'touchback_return') lines.push(`INTERCEPTED by ${playerName(sim, 'def', sim.stats.interceptor)}!`);
       else lines.push(`FUMBLE forced by ${playerName(sim, 'def', sim.stats.forcedBy)} — recovered by the defense!`);
       if (sim.result === 'touchback_return' || sim.endYard >= 100) { changePossession(state, FIELD.touchbackOther, lines, 'Touchback.'); }
       else changePossession(state, clamp(100 - sim.endYard, 1, 99), lines);
       break;
     }
-    case 'safety': { lines.push(`${playerName(sim, 'off', sim.stats.carrier)} is tackled in the end zone.`); scored = safety(state, lines); stops = true; break; }
+    case 'safety': { lines.push(`${playerName(sim, 'off', sim.stats.carrier)} is tackled in the end zone.`); if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else if (sim.stats.carrier) S.rushYards += gain; S.yards += gain; scored = safety(state, lines); stops = true; break; }
     default: lines.push(lastEvent); nextDown(state, gain, lines);
   }
   if (!scored && state.phase === 'scrimmage' && !state.finished) state.clockRunning = !stops;
@@ -172,27 +174,84 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   const text = lines.join(' ');
   state.lastPlay = { text, result: sim.result, yards: gain, offensePlayId, defensePlayId, seed: sim.seed, ballOn: sim.ballOn, stats: sim.stats };
   log(state, text, 'play', { team: off, result: sim.result, yards: gain, important: !!scored || ['interception', 'fumble', 'touchback_return'].includes(sim.result), repro: `${offensePlayId || '?'}|${defensePlayId || '?'}|${sim.ballOn}|${sim.seed}` });
-  recordPlayerStats(state, sim, off, def);
+  recordPlayerStats(state, sim, off, def, { toGo: toGoBefore });
   if (state.ot) otCheckAfterPlay(state);
   return { text, scored, result: sim.result, yards: gain };
 }
 
 function playerName(sim, team, slot) { return slot ? (sim.names?.[team]?.[slot] || slot) : team === 'off' ? 'the offense' : 'the defense'; }
 
-function recordPlayerStats(state, sim, off, def) {
-  const bump = (team, slot, key, n = 1) => { if (!slot) return; const p = (state.stats[team].players[slot] ||= {}); p[key] = (p[key] || 0) + n; };
-  if (sim.stats.passer) { bump(off, 'QB', 'att'); if (sim.stats.receiver) { bump(off, 'QB', 'comp'); bump(off, 'QB', 'passYds', sim.yards); bump(off, sim.stats.receiver, 'rec'); bump(off, sim.stats.receiver, 'recYds', sim.yards); } }
-  if (sim.stats.carrier && !sim.stats.receiver && sim.stats.carrier !== 'QB' && !sim.stats.passer) { bump(off, sim.stats.carrier, 'rush'); bump(off, sim.stats.carrier, 'rushYds', sim.yards); }
-  if (sim.touchdown && !sim.stats.defensiveScore) { bump(off, sim.stats.carrier, 'td'); if (sim.stats.passer && sim.stats.receiver) bump(off, 'QB', 'passTd'); }
-  if (sim.stats.interceptor && sim.stats.passer) bump(off, 'QB', 'intThrown');
-  if (sim.stats.tackler) bump(def, sim.stats.tackler, sim.result === 'sack' ? 'sacks' : 'tackles');
-  if (sim.stats.interceptor) bump(def, sim.stats.interceptor, 'int');
-  if (sim.stats.forcedBy) bump(def, sim.stats.forcedBy, 'ff');
+/**
+ * Per-player stat lines for one scrimmage play (GDD §16). Keys are shared by the
+ * box score, the league table, the monster card and the awards; the same code
+ * runs for played and simulated games. Stats belong to the action, not the slot:
+ * a back who throws gets passing stats, a quarterback who scrambles gets a carry.
+ */
+export function recordPlayerStats(state, sim, off, def, { toGo = 10 } = {}) {
+  const bump = (team, slot, key, n = 1) => { if (!slot || !n) return; const p = (state.stats[team].players[slot] ||= {}); p[key] = (p[key] || 0) + n; };
+  const maxOf = (team, slot, key, v) => { if (!slot) return; const p = (state.stats[team].players[slot] ||= {}); if ((p[key] || 0) < v) p[key] = v; };
+  const st = sim.stats || {}; const res = sim.result; const gain = sim.yards;
+  const isTurnover = ['interception', 'fumble', 'touchback_return'].includes(res);
+  const offTd = res === 'touchdown' && !st.defensiveScore;
+  const firstDown = !isTurnover && res !== 'sack' && res !== 'incomplete' && res !== 'throwaway' && gain >= toGo && !offTd;
+  // Snaps: everyone on the field.
+  for (const slot of Object.keys(sim.names?.off || {})) bump(off, slot, 'snapsOff');
+  for (const slot of Object.keys(sim.names?.def || {})) bump(def, slot, 'snapsDef');
+  // Passing. A sack lands on the quarterback whether or not he had started a throw.
+  const passer = st.passer || (res === 'sack' ? (sim.names?.off?.QB ? 'QB' : null) : null);
+  if (passer) {
+    if (res === 'sack') { bump(off, passer, 'sacked'); bump(off, passer, 'sackYds', -gain); if (st.pressure) bump(off, passer, 'pressured'); }
+    else {
+      bump(off, st.passer, 'att');
+      if (st.target) { bump(off, st.target, 'targets'); }
+      if (st.receiver) {
+        bump(off, st.passer, 'comp'); bump(off, st.passer, 'passYds', gain); maxOf(off, st.passer, 'longPass', gain);
+        bump(off, st.receiver, 'rec'); bump(off, st.receiver, 'recYds', gain); bump(off, st.receiver, 'yac', st.yac || 0); maxOf(off, st.receiver, 'longRec', gain);
+        if (firstDown || offTd) { bump(off, st.passer, 'passFd'); bump(off, st.receiver, 'recFd'); }
+        if (offTd) { bump(off, st.passer, 'passTd'); bump(off, st.receiver, 'recTd'); bump(off, st.receiver, 'td'); }
+      }
+      if (st.dropped && st.target) bump(off, st.target, 'drops');
+      if (st.interceptor) bump(off, st.passer, 'intThrown');
+      if (st.pressure) bump(off, st.passer, 'pressured');
+    }
+  }
+  // Rushing: any carry that was not a catch — handoffs, options, keeps and scrambles (a sack is not a carry, a pass attempt is not a run).
+  if (st.carrier && !st.receiver && !st.passer && res !== 'sack' && sim.names?.off?.[st.carrier] && !st.defensiveScore) {
+    bump(off, st.carrier, 'rush'); bump(off, st.carrier, 'rushYds', gain); maxOf(off, st.carrier, 'longRush', gain);
+    if (firstDown) bump(off, st.carrier, 'rushFd');
+    if (offTd) { bump(off, st.carrier, 'rushTd'); bump(off, st.carrier, 'td'); }
+  }
+  // Fumbles: charged to the monster who lost the ball; "lost" only when the defense recovered.
+  if (st.fumbledBy && sim.names?.off?.[st.fumbledBy]) { bump(off, st.fumbledBy, 'fum'); if (st.recoveredTeam === 'def') bump(off, st.fumbledBy, 'fumLost'); }
+  // Blocking: a snap per blocker, split pass/run; blocks lost; sacks and pressures allowed only when a blocker was beaten for them.
+  for (const [slot, b] of Object.entries(st.blockers || {})) { if (b.pass) bump(off, slot, 'pbSnaps'); if (b.run) bump(off, slot, 'rbSnaps'); if (b.lost) bump(off, slot, 'blocksLost', b.lost); }
+  if (st.sackAllowedBy) bump(off, st.sackAllowedBy, 'sacksAllowed');
+  if (st.pressureAllowedBy) bump(off, st.pressureAllowedBy, 'pressuresAllowed');
+  // Defense.
+  if (st.tackler) {
+    if (res === 'sack') { bump(def, st.tackler, 'sacks'); bump(def, st.tackler, 'sackYds', -gain); bump(def, st.tackler, 'tfl'); }
+    else if (!st.defensiveScore) {
+      bump(def, st.tackler, 'tackles');
+      if (gain < 0 && ['tackle', 'out_of_bounds', 'fumble', 'safety'].includes(res)) bump(def, st.tackler, 'tfl');
+      if (st.assistBy && st.assistBy !== st.tackler) bump(def, st.assistBy, 'assists');
+    }
+  }
+  if (st.pressureBy) bump(def, st.pressureBy, 'pressures');
+  if (st.interceptor) { bump(def, st.interceptor, 'int'); bump(def, st.interceptor, 'pd'); if (st.defensiveScore) bump(def, st.interceptor, 'defTd'); }
+  if (st.pbuBy) bump(def, st.pbuBy, 'pd');
+  if (st.forcedBy) bump(def, st.forcedBy, 'ff');
+  if (st.recoveredSlot && st.recoveredTeam === 'def') { bump(def, st.recoveredSlot, 'fr'); if (st.defensiveScore && !st.interceptor) bump(def, st.recoveredBy, 'defTd'); }
+  // Coverage: only the responsible defender (man assignment, or the zone defender who had him), never the nearest body.
+  if (st.coverBy && st.passer && res !== 'sack' && res !== 'throwaway') {
+    bump(def, st.coverBy, 'covTargets');
+    if (st.receiver) { bump(def, st.coverBy, 'recAllowed'); bump(def, st.coverBy, 'ydsAllowed', gain); if (offTd) bump(def, st.coverBy, 'tdAllowed'); }
+  }
   // Monster-football extras from the engine's event stream.
   const keyOf = { juke: 'jukes', broken: 'broken', shed: 'sheds', ability: 'abilities' };
   for (const e of sim.events || []) { const k = keyOf[e.kind]; if (!k || !e.by) continue; bump(e.side === 'def' ? def : off, e.by, k); }
 }
 
+function kickerStat(state, side, key, n = 1) { const p = (state.stats[side].players.K ||= {}); p[key] = (p[key] || 0) + n; }
 function nextDown(state, gain, lines) {
   state.ballOn = clamp(state.ballOn + gain, 1, 99);
   state.ballLat = 0;
@@ -235,6 +294,7 @@ export function attemptTryKick(state, teams) {
   const res = ST.attemptExtraPoint(r, teams[state.tryTeam].kicker);
   save();
   if (res.good) state.score[state.tryTeam] += 1;
+  kickerStat(state, state.tryTeam, 'xpa'); if (res.good) kickerStat(state, state.tryTeam, 'xpm');
   finishTry(state, res.text);
   return res;
 }
@@ -247,6 +307,7 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   save();
   const good = sim.touchdown && !sim.stats.defensiveScore;
   if (good) state.score[state.tryTeam] += 2;
+  { const bumpTwo = (slot) => { if (!slot) return; const p = (state.stats[state.tryTeam].players[slot] ||= {}); p.twoPtAtt = (p.twoPtAtt || 0) + 1; if (good) p.twoPt = (p.twoPt || 0) + 1; }; bumpTwo(sim.stats.passer); if (sim.stats.carrier && sim.stats.carrier !== sim.stats.passer) bumpTwo(sim.stats.carrier); }
   const text = good ? 'Two-point conversion is GOOD!' : sim.stats.defensiveScore ? 'Conversion returned the other way — two points for the defense!' : 'Two-point conversion fails.';
   if (sim.stats.defensiveScore) state.score[opponent(state.tryTeam)] += 2;
   finishTry(state, text);
@@ -312,6 +373,8 @@ export function doFieldGoal(state, teams) {
   const kicking = state.possession;
   const res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
   save();
+  { const bin = res.distance < 30 ? 'fg0' : res.distance < 40 ? 'fg30' : res.distance < 50 ? 'fg40' : 'fg50';
+    kickerStat(state, kicking, 'fga'); kickerStat(state, kicking, bin + 'a'); if (res.good) { kickerStat(state, kicking, 'fgm'); kickerStat(state, kicking, bin + 'm'); const p = state.stats[kicking].players.K; if ((p.fgLong || 0) < res.distance) p.fgLong = res.distance; } }
   runClock(state, 5);
   const lines = [res.text];
   let scored = null;

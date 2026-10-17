@@ -77,7 +77,7 @@ test('a full season plus playoffs completes with standings from real games', () 
   assert.equal(st.overall.length, 16);
   for (const t of ALL_TEAMS) { const r = f.season.records[t]; assert.equal(r.w + r.l + r.t, 9, `${t} played nine`); }
   assert.ok(f.history.length === 1 && f.history[0].year === 1);
-  assert.ok(f.roster.some((m) => m.stats.games > 0));
+  assert.ok(f.roster.some((m) => (m.stats.career.reg.games || 0) > 0), 'career games recorded');
   const ev = F.postseasonEvent(f);
   if (ev) { assert.ok(F.record(f).w < F.record(f).l, 'an event only after a losing record'); assert.equal(F.startNextSeason(f).ok, false, 'the event gates the next season'); assert.equal(F.resolvePostseason(f, ev.options[0].id).ok, true); }
   else assert.ok(F.record(f).w >= F.record(f).l, 'no event after a winning season');
@@ -240,6 +240,7 @@ test('award races: league-wide stats accumulate and every award has contenders a
   for (let w = 0; w < 3; w++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
   const r = F.awardRaces(f);
   for (const k of ['mvp', 'opoy', 'dpoy', 'coy']) assert.ok(r[k].length === 3, `${k} has three contenders`);
+  for (const k of ['mvp', 'opoy', 'dpoy']) assert.ok(r[k][0].why && r[k][0].record, `${k} finalist carries an explanation and a record`);
   assert.ok(r.oroy.length >= 1 && r.droy.length >= 1);
   assert.ok(Object.keys(f.season.leagueStats).length >= 14, 'most clubs have stats');
   assert.ok(r.opoy[0].score > 0 && r.dpoy[0].score > 0);
@@ -476,7 +477,7 @@ test('playtest round 2: fatigue shows all week and recovers Saturday; bye weeks 
   const used = Object.values(f.playStats[1]); assert.ok(used.length >= 4 && used.every((e) => e.used > 0));
   const some = Object.keys(f.playStats[1])[0]; assert.ok(F.playStat(f, some).avg !== null);
   // Award races: a one-game monster does not qualify once the league has played several weeks.
-  f.season.leagueStats['Zed FC'] = { x1: { id: 'x1', name: 'OneGame', type: 'Fire', species: 'emberfox', position: 'QB', age: 25, games: 1, passYds: 400, passTd: 5, att: 20, comp: 18 } };
+  f.season.leagueStats['Zed FC'] = { x1: { id: 'x1', name: 'OneGame', type: 'Fire', species: 'emberfox', position: 'QB', age: 25, yearsPro: 2, team: 'Zed FC', games: 1, snapsOff: 40, passYds: 400, passTd: 5, att: 20, comp: 18 } };
   for (const T of Object.values(f.season.leagueStats)) for (const p of Object.values(T)) if (p.id !== 'x1') p.games = Math.max(p.games || 0, 5);
   assert.ok(!F.awardRaces(f).mvp.some((p) => p.id === 'x1'), 'needs 60% of the weeks played');
   assert.equal(F.awardRaces(f, { n: 5 }).mvp.length <= 5, true);

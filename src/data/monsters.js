@@ -178,7 +178,7 @@ export function monsterOverall(m, opts) { return overall(effectiveAttributes(m, 
  * Generate a monster. `quality` ≈ target OVR; the generator produces a
  * positional profile around it with type bias and random variance.
  */
-export function generateMonster(rng, { position = null, quality = 58, type = null, nature = null, name = null, id = null, species = null, age = null }) {
+export function generateMonster(rng, { position = null, quality = 58, type = null, nature = null, name = null, id = null, species = null, age = null, yearsPro = null }) {
   // `species` may be a dex id, a species name or an old name; the dex fixes the element.
   const sp = species || name ? resolveSpecies(species || name) : (position ? pickSpeciesForPosition(rng, position) : rng.pick(SPECIES_DEX));
   species = sp.id;
@@ -209,8 +209,9 @@ export function generateMonster(rng, { position = null, quality = 58, type = nul
     fatigue: 0,
     injury: null,
     ability: null,
-    stats: { games: 0, yards: 0, td: 0, tackles: 0, sacks: 0, int: 0, catches: 0 },
+    stats: { v: 2, career: { reg: {}, post: {} }, season: { year: null, reg: {}, post: {} }, log: [], seasons: [] },
   };
+  m.yearsPro = yearsPro ?? (m.age <= 21 ? 0 : Math.max(0, m.age - 21 - (m.id.charCodeAt(m.id.length - 1) & 1))); // derived from the id, so the rng stream (and every generated roster) is unchanged // seasons already played; 0 = rookie (GDD §16.4)
   m.salary = salaryFor(m);
   return m;
 }

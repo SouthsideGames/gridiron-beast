@@ -395,3 +395,36 @@ All thirteen steps of §15.10 are built. Where the build settled a detail the de
 * **Award races** open a top-5 sheet with games, stat line, score and the rule; every race requires at least 60 % of the league's weeks played.
 * **Save loss fix:** the cloud save was debounced by per-play saves and could lag far behind; it now writes within 4 s regardless and immediately after a game or day change. On phones the cloud copy is primary (the in-app local copy can be evicted).
 * **Next:** the owner opens the `prototype-2` pull request when this round feels right; then the platform decision in §10a.
+
+## 16. Statistics and season awards (LOCKED design, 2026-10-16; branch `prototype-2`)
+
+Owner's playtest round 3 found career stats at zero for a 320-yard quarterback: the old sheet summed rushing and receiving only. This section replaces it.
+
+### 16.1 Accounting (one path for played and simulated games)
+* The sim writes per-slot lines into `state.stats[side].players` (`src/sim/rules.js → recordPlayerStats`), the same code whether the owner plays the game, Auto plays it, or the league week is simulated. Stats belong to the action, not the slot: a scrambling quarterback gets a carry, a back who throws gets a pass attempt.
+* The engine attributes responsibility (`src/sim/engine.js`): the rusher who brought pressure and the blocker he beat in the last 1.2 s (a rusher nobody touched is *unblocked*, charged to no one); the sack the same way (1.5 s); coverage to the **man defender assigned** to the target, or in zone only to a defender within 2.5 yards of the catch point, otherwise *open* and charged to nobody; a second defender within 1.3 yards at the tackle is the assist; drops vs pass break-ups; who fumbled and who recovered.
+* Sacks are not pass attempts; sack yardage is a separate key. One passing TD credits passer and receiver, one team touchdown. Kneels and spikes never reach the engine. Two-point conversions are their own keys. Rates are never stored: `derive()` computes them from totals (season % = sum of games), and a rate with no denominator is null, shown as —, never 0.
+* `src/franchise/stats.js → recordGame` books each game once (`season.recorded` keys), into the regular table `season.leagueStats` **or** the playoff table `season.playoffStats`, and for the owner's monsters into `m.stats = { season: {reg, post}, career: {reg, post}, log[], seasons[] }`. Playoff production never touches a regular-season total. Rollover archives the season under its year and clears the log. Legacy saves migrate in place (`ensureStats`).
+
+### 16.2 What is recorded
+* All: games, starts, offensive/defensive snaps, TD by type, fumbles / fumbles lost, 2-pt.
+* QB: att, comp, yards, TD, INT, sacked, sack yards, passing first downs, long, times pressured, rushing line; derived: comp %, Y/A, Y/G, NFL passer rating (labelled as such).
+* RB / WR / TE: carries, yards, TD, first downs, long; targets, receptions, yards, TD, first downs, long, YAC, drops; derived: Y/C, Y/R, catch %, scrimmage, touches.
+* OL (and TEs/backs who block): pass-block and run-block snaps, blocks lost, sacks and pressures allowed (only when beaten); derived: block win %.
+* DL / LB / CB / S: solo, assists, TFL, sacks, pressures, FF, FR, PD, INT, defensive TD, coverage targets / receptions / yards / TD allowed; derived: yards per target, comp % allowed.
+* K: FGA/FGM by distance band (<30, 30s, 40s, 50+), long, XPA/XPM, points.
+* **Not recorded, and never shown as zero:** penalties (the engine has none), punter and return stats (no punter position, no returns), QB hits, missed tackles, routes run, EPA / CPOE / RYOE (no defensible model). AI monsters are regenerated each season with new ids, so their careers are per season; the owner's monsters carry full careers.
+
+### 16.3 Screens
+* Monster card → **Statistics**: Season · Playoffs · Career (per year) · Game log, position-appropriate columns, a group switch when a monster has stats in several roles, "N seasons pro".
+* League → **Stats**: leaders by category with regular-season / playoff filter and minimums for rates; **Award history**: winners by season with their explanation.
+* Award watch: every race opens its finalists with record, games, stat line, a one-line explanation from the recorded numbers, and the rule; points are labelled game-generated evaluation points.
+
+### 16.4 Awards (`src/franchise/awards.js`, Gridiron Beast's own models)
+* Regular season only: frozen the moment the playoffs are drawn (`finalizeAwards`), so playoff games cannot move them.
+* Gate: ≥ 60 % of the league's weeks played and ≥ 50 % of the position's maximum snaps (kickers exempt). Rookie = `yearsPro === 0`, an explicit field set at generation and incremented each offseason — never age, rarity, stage or signing date.
+* Components are z-scores within the position group across the league, so nothing is tied to NFL thresholds or season length. Offense: production 45 % · efficiency 30 % · impact 25 % (+0.2 versatility). Defense weights by position — DL rush .4 / run .3 / takeaways .2 / coverage .1; LB .3/.3/.2/.2; CB coverage .45 / takeaways .3 / tackles .15 / rush .1; S .4/.3/.2/.1.
+* MVP = individual × responsibility (QB 1.25, RB/WR 1.0, TE .95, OL .8, defenders .85) × .75 + team (win % − .5) × 4 × .2 + availability × .3. OPOY/DPOY as above, no team factor; the MVP is not excluded. OROY/DROY: rookies on the same scale against the whole league. COY = wins over the **preseason** forecast (talent → expected win %, recorded in week 1) × 2 + improvement on last season + margin × .08 + wins × .15; recipient is the club's head coach (gym coach, the owner's hired coach, or a stable generated name).
+* Ties: score → production component → games → name. Deterministic; no simulated voters.
+* Verified by `tests/stats.test.js`: books add up play by play and determinism holds; reg/post separation; duplicate booking rejected; rollover and careers; legacy migration; scenarios — elite QB on a winner, dominant back over average QBs, edge rusher, shutdown corner with two picks, 21-year-old veteran vs 27-year-old rookie, two-game cameo, rookie MVP, turnaround coach vs talented coaster, alphabetical dead heat; a full season freezes the awards and the history keeps the leaders.
+

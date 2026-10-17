@@ -17,6 +17,8 @@ import { SPECIES_BY_ID } from '../../data/monsters.js';
 import { sprite16 } from '../sprite16.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
 import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
+import { AWARD_RULES } from '../../franchise/awards.js';
+import { LEADER_CATEGORIES, leaders, statLine } from '../../franchise/stats.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -349,7 +351,7 @@ export function registerHqScreens(Router, app) {
       const watch = `<h3>🏅 Award watch</h3>${anyRace ? '' : '<p class="dim">Races start after the first Sunday. Stats from every club in the league count.</p>'}<div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const top = races[k]; return `<button class="item" style="display:block" data-action="award" data-k="${k}"><div class="row between"><div class="name">${esc(a.label)} <span class="dim">${a.short}</span></div><span class="dim">top 5 ›</span></div>${top.length ? top.map((r, i) => { const me = r.team === f.club; return k === 'coy' ? `<div class="row between sub ${me ? 'mine' : ''}"><span>${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)}</span></span><span class="mono">${r.w}–${r.l}</span></div>` : `<div class="row sub ${me ? 'mine' : ''}" style="gap:6px"><span class="dim">${i + 1}.</span>${monsterSprite(r, 20)}<span class="grow">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></span><span class="mono">${raceLine(r)}</span></div>`; }).join('') : '<div class="sub dim">No contenders yet.</div>'}</button>`; }).join('')}</div>`;
       return `<div class="panel"><b>Beast League</b> · 16 clubs · Season ${f.season.year}<div class="muted">Beast Bowl titles: ${titles}${f.season.week >= 5 && !f.season.finished ? ` · ${esc(F.playoffPicture(f).text)}` : ''}</div>
         ${rival ? `<div class="muted">⚔️ Rival: <b>${esc(rival.team)}</b> (GM ${esc(rival.gm)}) · all-time ${rival.headToHead.w}–${rival.headToHead.l}</div>` : ''}</div>
-        <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button></div>${watch}`;
+        <div class="grid2"><button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button><button class="btn block" data-action="go" data-screen="history">📜 History</button><button class="btn block" data-action="go" data-screen="playoffs">🏆 Playoffs</button><button class="btn block" data-action="go" data-screen="leaders">📈 Stats</button><button class="btn block" data-action="go" data-screen="awardhistory">🏅 Award history</button></div>${watch}`;
     },
     mount(root) { delegate(root, {
         award: (el) => sheet(awardRaceHtml(app.f, el.dataset.k), { title: F.AWARDS[el.dataset.k].label }), go: (el) => Router.go(el.dataset.screen) }); },
@@ -391,6 +393,33 @@ export function registerHqScreens(Router, app) {
         <h3>Seeds</h3>${['Aurora', 'Titan'].map((c) => `<div class="panel tight po-conf"><div class="po-head"><b>${c}</b></div>${p.seeds[c].map((t, i) => teamRow(t, i + 1)).join('')}</div>`).join('')}`;
     },
   });
+  // ---------------------------------------------------------------- League stats
+  let leaderCat = 'passYds', leaderBucket = 'reg';
+  const MIN_LABEL = (k) => ({ att: 'attempts', rush: 'carries', covTargets: 'targets in coverage', pbSnaps: 'pass-blocking snaps', fga: 'field-goal attempts' })[k] || k;
+  Router.registerScreen('leaders', {
+    title: 'League leaders',
+    render({ f }) {
+      const table = leaderBucket === 'post' ? f.season.playoffStats : f.season.leagueStats;
+      const cat = LEADER_CATEGORIES.find((c) => c.id === leaderCat) || LEADER_CATEGORIES[0];
+      const rows = leaders(table, cat.id, { n: 15 });
+      return `<div class="seg" style="margin-bottom:6px"><button class="btn small ${leaderBucket === 'reg' ? 'primary' : ''}" data-action="bucket" data-v="reg">Regular season</button><button class="btn small ${leaderBucket === 'post' ? 'primary' : ''}" data-action="bucket" data-v="post">Playoffs</button></div>
+        <select class="input" data-action="cat" style="margin-bottom:8px">${LEADER_CATEGORIES.map((c) => `<option value="${c.id}" ${c.id === cat.id ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
+        ${cat.min ? `<p class="dim" style="margin-top:0">Minimum ${cat.min[1]} ${esc(MIN_LABEL(cat.min[0]))}.</p>` : ''}
+        <div class="list">${rows.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}">${monsterSprite(r, 32)}<div class="grow"><div class="name">${i + 1}. ${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></div><div class="sub">${esc(statLine(r))}</div></div><span class="chip accent">${r[cat.key]}</span></div>`).join('') || `<p class="dim">${leaderBucket === 'post' ? 'No playoff games yet.' : 'No games yet.'}</p>`}</div>`;
+    },
+    mount(root) {
+      delegate(root, { bucket: (el) => { leaderBucket = el.dataset.v; Router.render(); } });
+      root.querySelector('[data-action="cat"]')?.addEventListener('change', (e) => { leaderCat = e.target.value; Router.render(); });
+    },
+  });
+  Router.registerScreen('awardhistory', {
+    title: 'Award history',
+    render({ f }) {
+      const seasons = [...f.history.filter((h) => h.awards?.league).map((h) => ({ year: h.year, league: h.awards.league })), ...(f.season.awardsFinal && !f.season.finished ? [{ year: f.season.year, league: f.season.awardsFinal.winners, live: true }] : [])].sort((a, b) => b.year - a.year);
+      if (!seasons.length) return '<p class="dim">Award winners are named when the regular season ends. Past seasons collect here.</p>';
+      return seasons.map((s) => `<h3>Season ${s.year}${s.live ? ' <span class="chip">this season</span>' : ''}</h3><div class="list">${Object.entries(F.AWARDS).map(([k, a]) => { const w = s.league[k]; if (!w) return ''; return `<div class="item static ${w.team === f.club ? 'mine' : ''}">${k === 'coy' ? '' : monsterSprite(w, 32)}<div class="grow"><div class="name">${esc(a.short)} · ${esc(k === 'coy' ? w.coach : w.name)}</div><div class="sub">${esc(w.team)}${w.record ? ' · ' + w.record : ''}${w.why ? ' · ' + esc(w.why) : ''}</div></div></div>`; }).join('')}</div>`).join('');
+    },
+  });
   Router.registerScreen('history', {
     title: 'Franchise History',
     render({ f }) {
@@ -427,7 +456,7 @@ export function awardsHtml(a) {
   const line = (label, x) => x ? `<div class="item static"><div class="grow"><div class="name">${esc(label)}</div><div class="sub">${esc(x.name)} (${esc(x.position)})${x.value != null ? ` · ${x.value} ${esc(x.label)}` : ''}</div></div></div>` : '';
   return `<div class="panel center"><div style="font-size:12px" class="muted">SEASON ${a.year}</div><div style="font-size:20px;font-weight:900">${a.record.w}–${a.record.l}${a.record.t ? '–' + a.record.t : ''} · ${a.place}${['st', 'nd', 'rd'][a.place - 1] || 'th'} overall</div><div class="muted">${a.champion === undefined ? '' : a.playoffs ? 'Made the playoffs' : 'Missed the playoffs'}${a.champion ? ` · Beast Bowl: ${esc(a.champion)}` : ''}</div></div>
     ${a.rivalry ? `<div class="panel tight" style="border-color:#a855f7">⚔️ Rivalry vs ${esc(a.rivalry.team)}: <b>${a.rivalry.swept ? 'SWEPT — GM ' + esc(a.rivalry.gm) + ' is not happy' : a.rivalry.games ? a.rivalry.wins + '–' + (a.rivalry.games - a.rivalry.wins) : 'not played'}</b></div>` : ''}
-    ${a.league ? `<h3>League awards</h3><div class="list">${Object.entries(F.AWARDS).map(([k, aw]) => { const w = a.league[k]; if (!w) return ''; return `<div class="item static" style="${w.team === a.club ? 'border-color:var(--accent)' : ''}"><div class="grow"><div class="name">🏅 ${esc(aw.label)}</div><div class="sub">${k === 'coy' ? `${esc(w.coach)} · ${esc(w.team)} (${w.w}–${w.l})` : `${esc(w.name)} (${esc(w.position)}, ${esc(w.team)}) · ${esc(raceLine(w))}`}</div></div></div>`; }).join('')}</div>` : ''}
+    ${a.league ? `<h3>League awards</h3><div class="list">${Object.entries(F.AWARDS).map(([k, aw]) => { const w = a.league[k]; if (!w) return ''; return `<div class="item static" style="${w.team === a.club ? 'border-color:var(--accent)' : ''}"><div class="grow"><div class="name">🏅 ${esc(aw.label)}</div><div class="sub">${k === 'coy' ? `${esc(w.coach)} · ${esc(w.team)} (${w.w}–${w.l})` : `${esc(w.name)} (${esc(w.position)}, ${esc(w.team)}) · ${esc(w.why || raceLine(w))}`}</div></div></div>`; }).join('')}</div>` : ''}
     <h3>Club awards</h3><div class="list">${a.mvp ? `<div class="item static" style="border-color:var(--accent)"><div class="grow"><div class="name">★ Team MVP</div><div class="sub">${esc(a.mvp.name)} (${esc(a.mvp.position)})</div></div></div>` : ''}${line('Rushing leader', a.rusher)}${line('Receiving leader', a.receiver)}${line('Passing leader', a.passer)}${line('Tackling leader', a.tackler)}${line('Sack leader', a.rusherD)}${line('Ball hawk', a.ballhawk)}</div>`;
 }
 
@@ -443,17 +472,11 @@ function campaignPanel(f) {
     <div class="row between" style="margin-top:8px"><span class="muted">Legend Tracks: ${Object.entries(f.campaign?.tracks || {}).map(([id, n]) => `${esc(SPECIES_BY_ID[id]?.name || id)} ${n}/3`).join(' · ') || 'none yet'}</span><button class="btn small" data-action="legend">🌟 Tracks</button></div></div>`;
 }
 
-/** One award race in full: the top five with games, the stat line that drives it, and the rule. */
+/** One award race in full: the finalists with record, the stat line that drives it, the explanation and the rule (GDD §16.4). */
 function awardRaceHtml(f, k) {
-  const a = F.AWARDS[k]; const top = F.awardRaces(f, { n: 5 })[k] || [];
-  const RULE = {
-    mvp: 'Production per game (passing yards count less per yard than rushing or receiving, quarterbacks ×1.15), multiplied by the club’s win rate. Defenders count at 85%.',
-    opoy: 'Offensive production per game compared with others at the same position, so a lineman can win it.', dpoy: 'Defensive production per game (tackles, sacks, interceptions, forced fumbles, blocks shed) compared with others at the same position.',
-    oroy: 'Offensive monsters aged 22 or younger, same scale as OPOY.', droy: 'Defensive monsters aged 22 or younger, same scale as DPOY.',
-    coy: 'Wins above what the roster’s talent predicts, plus point margin. A turnaround beats a talented club coasting.',
-  };
-  const minGames = top[0]?.minGames;
-  if (k === 'coy') return `<p class="muted">${esc(RULE.coy)}</p><div class="list">${top.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}"><div class="grow"><div class="name">${i + 1}. ${esc(r.coach)}</div><div class="sub">${esc(r.team)} · ${r.w}–${r.l} (expected ${r.expected} wins from ${r.talent} OVR) · ${r.pf}–${r.pa} points</div></div></div>`).join('') || '<p class="dim">No contenders yet.</p>'}</div>`;
-  const line = (r) => { const b = []; if (r.att) b.push(`${r.comp || 0}/${r.att}, ${r.passYds || 0} yds, ${r.passTd || 0} TD, ${r.intThrown || 0} INT`); if (r.rush) b.push(`${r.rush} car, ${r.rushYds || 0} yds`); if (r.rec) b.push(`${r.rec} rec, ${r.recYds || 0} yds`); if (r.td) b.push(`${r.td} TD`); if (r.tackles) b.push(`${r.tackles} tkl`); if (r.sacks) b.push(`${r.sacks} sacks`); if (r.int) b.push(`${r.int} INT`); if (r.ff) b.push(`${r.ff} FF`); if (r.sheds) b.push(`${r.sheds} sheds`); if (r.abilities) b.push(`${r.abilities} abilities`); return b.join(' · '); };
-  return `<p class="muted">${esc(RULE[k])}${minGames ? ` Needs ${minGames}+ games played.` : ''}</p><div class="list">${top.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}" style="align-items:flex-start">${monsterSprite(r, 36)}<div class="grow"><div class="name">${i + 1}. ${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}${r.age <= 22 ? ' · rookie' : ''}</span></div><div class="sub">${r.games} game${r.games === 1 ? '' : 's'} · ${esc(line(r))}</div><div class="sub dim">score ${r.score.toFixed(1)}</div></div></div>`).join('') || '<p class="dim">No contenders yet.</p>'}</div>`;
+  const top = F.awardRaces(f, { n: 5 })[k] || [];
+  const minGames = top[0]?.minGames; const frozen = !!f.season.awardsFinal;
+  const head = `<p class="muted">${esc(AWARD_RULES[k])}${minGames ? ` Needs ${minGames}+ games and a starter’s share of snaps.` : ''}</p>${frozen ? '<p class="dim">Regular season over: this result is final. Playoff games do not count.</p>' : ''}`;
+  if (k === 'coy') return `${head}<div class="list">${top.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}" style="align-items:flex-start"><div class="grow"><div class="name">${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)} · ${r.record}</span></div><div class="sub">${esc(r.why)}</div></div><span class="chip">${r.score}</span></div>`).join('') || '<p class="dim">No contenders yet.</p>'}</div><p class="dim">Points are game-generated evaluation points, not votes.</p>`;
+  return `${head}<div class="list">${top.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}" style="align-items:flex-start">${monsterSprite(r, 36)}<div class="grow"><div class="name">${i + 1}. ${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)} ${r.record}${r.rookie ? ' · rookie' : ''}</span></div><div class="sub">${r.games} game${r.games === 1 ? '' : 's'} · ${esc(r.why)}</div></div><span class="chip">${r.score}</span></div>`).join('') || '<p class="dim">No contenders yet.</p>'}</div><p class="dim">Points are game-generated evaluation points, not votes.</p>`;
 }
