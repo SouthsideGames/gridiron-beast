@@ -9,6 +9,7 @@ import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, sett
 export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
 export { AWARDS } from './awards.js';
 export * as Stats from './stats.js';
+export { GROUP_SLOTS } from './roster.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint } from '../data/monsters.js';
@@ -553,12 +554,15 @@ function simulateLeagueWeek(f) {
 // ------------------------------------------------------------ weekly loop
 export function dayIndex(f) { return f.season.day; }
 /** Positions with fewer healthy monsters than depth-chart slots (base + package), thinnest first. */
-export function shortPositions(f) {
+export function shortPositions(f) { return depthNeeds(f).filter((n) => n.status === 'short').map((n) => n.position); }
+/** Depth by position: short (fewer healthy than slots), thin (no backup), ok. Thinnest first. */
+export function depthNeeds(f) {
   const out = [];
-  for (const [g, slots] of Object.entries(GROUP_SLOTS)) { const healthy = f.roster.filter((m) => m.position === g && !m.injury).length; if (healthy < slots.length) out.push([g, slots.length - healthy]); }
-  return out.sort((a, b) => b[1] - a[1]).map(([g]) => g);
+  for (const [g, slots] of Object.entries(GROUP_SLOTS)) { const healthy = f.roster.filter((m) => m.position === g && !m.injury).length; out.push({ position: g, slots: slots.length, healthy, status: healthy < slots.length ? 'short' : healthy === slots.length ? 'thin' : 'ok', gap: slots.length - healthy }); }
+  const rank = { short: 0, thin: 1, ok: 2 };
+  return out.sort((a, b) => rank[a.status] - rank[b.status] || b.gap - a.gap);
 }
-export function scoutRegion(f, regionName) {
+export function scoutRegion(f, regionName, { focus = null } = {}) {
   if (f.season.day !== 0) return { ok: false, reason: 'Not Monday.' };
   const region = REGIONS[regionName]; if (!region) return { ok: false, reason: 'Unknown region.' };
   const scout = staffMember(f, 'head_scout');
@@ -581,15 +585,17 @@ export function scoutRegion(f, regionName) {
     const revealed = Math.min(6, (skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1) + (ownerPerk(f) === 'scouting' ? 1 : 0));
     prospects.push({ monster: m, revealed, natureKnown: skill >= 70, potentialKnown: skill >= 55 });
   }
-  // Short-handed somewhere? The scout goes looking for that position too, so a thin spot never stays thin for want of a prospect (playtest round 3).
-  const need = shortPositions(f).find((pos) => !prospects.some((p) => p.monster.position === pos));
+  // The scout also goes looking for the position you need: the one you asked for, else the shortest-handed, else one with no backup (GDD §17.6).
+  const needs = depthNeeds(f); const needList = focus ? [focus] : needs.filter((n) => n.status !== 'ok').map((n) => n.position);
+  const need = needList.find((pos) => !prospects.some((p) => p.monster.position === pos)) || null;
   const needPool = need ? pool.filter((sp) => sp.position === need || sp.secondary === need) : [];
   if (need && needPool.length) {
     const sp = needPool[r.int(needPool.length)];
     const m = generateMonster(r, { position: need, quality: 50 + r.int(10), species: sp.id });
     uniqueName(f, m, prospects.map((p) => p.monster.name)); dexRecord(f, m, 'seen');
-    prospects.push({ monster: m, revealed: Math.min(6, (skill >= 65 ? 4 : 2) + (ownerPerk(f) === 'scouting' ? 1 : 0)), natureKnown: skill >= 70, potentialKnown: skill >= 55, need: true });
+    prospects.push({ monster: m, revealed: Math.min(6, (skill >= 65 ? 4 : 2) + (ownerPerk(f) === 'scouting' ? 1 : 0)), natureKnown: skill >= 70, potentialKnown: skill >= 55, need: needs.find((n) => n.position === need)?.status || 'focus' });
   }
+  for (const p of prospects) p.depth = needs.find((n) => n.position === p.monster.position)?.status || 'ok';
   save();
   f.week.region = regionName; f.week.prospects = prospects; f.week.recruitAttempts = 0; f.season.day = 1;
   return { ok: true, prospects, skill, scout: scout?.name || 'Your scout', need };

@@ -349,3 +349,6 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .panel.points{border-color:#f5c542;background:rgba(245,197,66,.08)}
 
 .panel.hotseat{border-color:var(--bad);box-shadow:0 0 14px rgba(255,90,90,.25)}
+
+.panel.need-short{border-color:var(--bad)}
+.panel.need-thin{border-color:#f0883e}
