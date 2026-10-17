@@ -310,8 +310,9 @@ export function registerMatchScreens(Router, app) {
     Router.render();
     const tick = (now) => {
       if (!anim) return;
-      const idx = Math.min(sim.frames.length - 1, Math.floor((now - anim.start) / anim.msPerFrame));
-      if (idx < 0 || !sim.frames[idx]) { finishAnim(f, false); return; } // a play with no frames (nothing to draw)
+      // requestAnimationFrame timestamps can sit a hair before the performance.now() taken at start: clamp at frame 0, never finish early.
+      const idx = Math.max(0, Math.min(sim.frames.length - 1, Math.floor((now - anim.start) / anim.msPerFrame)));
+      if (!sim.frames.length) { finishAnim(f, false); return; } // a play with no frames (nothing to draw)
       const svg = document.querySelector('#field'); // re-query: stopping Auto mid-play re-renders the screen
       if (idx !== anim.i && svg) {
         anim.i = idx;
