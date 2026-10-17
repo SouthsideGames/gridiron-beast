@@ -138,6 +138,7 @@ export function registerMatchScreens(Router, app) {
         auto: () => { const G = f.game; G.auto = !G.auto; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
         autospeed: () => { const G = f.game; G.autoSpeed = (G.autoSpeed || 1) === 2 ? 1 : 2; app.save(); Router.render(); },
         keymoment: () => simToKeyMoment(f),
+        simfinal: async () => { if (!(await confirmSheet('Let the coach play the rest of the game out instantly? You will see the final score and box score; no replays.', { title: 'Sim to final', okLabel: 'Sim it' }))) return; simToFinal(f); },
         skip: () => { if (anim) finishAnim(f, true); },
         finish: () => finishGame(f),
         boxscore: () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box score' }),
@@ -256,6 +257,7 @@ export function registerMatchScreens(Router, app) {
       <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="Auto: the coach's suggested plays are called for you, every play animated, until you turn it off">${G.auto ? 'Auto ■ stop' : 'Auto ▶'}</button>
       ${G.auto ? `<button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="Auto speed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button>` : ''}
       <button class="btn small" data-action="mode">${G.mode === 'key' ? 'Key Moments ✓' : 'Full Coaching ✓'}</button>
+      <button class="btn small" data-action="simfinal" title="Skip the rest of the game">Sim to final ⏭</button>
       ${G.mode === 'key' ? '<button class="btn small good" data-action="keymoment">Sim to key moment ▸</button>' : ''}</div>`;
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">Play clock <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
     return `<div class="match-actions">${primary}${secondary}${clock}</div>
@@ -375,6 +377,18 @@ export function registerMatchScreens(Router, app) {
     G.selected = { offense: null, defense: null }; G.aiCall = null;
     app.save(); Router.render();
     if (lines.length > 1) sheet(`<div class="log">${lines.map((l) => `<div class="entry"><span class="t"></span><span>${esc(l)}</span></div>`).join('')}</div>`, { title: 'Simulated plays' });
+  }
+
+  /** Skip the rest of the game: the coach plays it out headless, then the final whistle screen. */
+  function simToFinal(f) {
+    const G = f.game; const s = G.state; if (s.finished) return;
+    const teams = teamsFor(f); const me = G.playerSide, them = R.opponent(me);
+    const controllers = { [me]: aiController(me), [them]: aiController(them) };
+    let n = 0; while (!s.finished && n++ < 600) { const ev = step(s, teams, controllers, G.tendencies, {}); if (!ev) break; }
+    stopAnim(); clearTimeout(autoTimer); autoTimer = null; G.auto = false;
+    G.lastEvent = { text: `Simulated to the final whistle. ${s[me].name} ${s.score[me]}, ${s[them].name} ${s.score[them]}.`, important: true };
+    G.selected = { offense: null, defense: null }; G.aiCall = null;
+    app.save(); Router.render();
   }
 
   function showLog(f) {
