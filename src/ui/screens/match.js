@@ -218,6 +218,8 @@ export function registerMatchScreens(Router, app) {
 
   function controlsHtml(f, teams, look) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
+    // While a play animates in Auto, keep the Auto controls on screen so it can be stopped at any moment (no Skip: Auto is already watching the game for you).
+    if (anim && G.auto) return `<div class="match-actions"><div class="secondary"><button class="btn primary big" data-action="auto" style="flex:2">Auto ■ stop</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="Auto speed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div><p class="dim center" style="margin:4px 0 0">Auto is calling the coach's plays. Stop and you take over on the next snap.</p></div>`;
     if (anim) return `<div class="match-actions"><button class="btn block" data-action="skip">Skip ▸▸</button></div>`;
     if (s.finished) return `<div class="match-actions"><div class="panel center"><h2>${s.winner === me ? 'VICTORY' : s.winner === null ? 'TIE' : 'DEFEAT'}</h2><div class="muted">${esc(s.away.name)} ${s.score.away} — ${esc(s.home.name)} ${s.score.home}${s.ot ? ' (OT)' : ''}</div></div><button class="btn primary big block" data-action="finish">Continue →</button></div>`;
     if (G.lastEvent?.needsContinue) return `<div class="match-actions"><button class="btn primary big block" data-action="continue">Continue →</button></div>`;
@@ -302,11 +304,11 @@ export function registerMatchScreens(Router, app) {
     anim = { frames: sim.frames, i: 0, ev, camera: sim.kick ? cameraFor(Math.max(0, sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / ((f.settings.speed || 1) * (G.auto ? (G.autoSpeed || 1) : 1)), follow: !!sim.kick, sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
     G.lastEvent = null;
     Router.render();
-    const svg = document.querySelector('#field');
     const tick = (now) => {
       if (!anim) return;
       const idx = Math.min(sim.frames.length - 1, Math.floor((now - anim.start) / anim.msPerFrame));
       if (idx < 0 || !sim.frames[idx]) { finishAnim(f, false); return; } // a play with no frames (nothing to draw)
+      const svg = document.querySelector('#field'); // re-query: stopping Auto mid-play re-renders the screen
       if (idx !== anim.i && svg) {
         anim.i = idx;
         const s = G.state;
