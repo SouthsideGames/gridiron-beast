@@ -5,6 +5,8 @@
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine } from './stats.js';
 import { AWARDS, computeAwards, headCoachName } from './awards.js';
+import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel } from './board.js';
+export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
 export { AWARDS } from './awards.js';
 export * as Stats from './stats.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
@@ -182,7 +184,7 @@ export function pregameTalk(f) {
   const opp = opponentName(f); if (!opp) return null;
   const gym = GYM_BY_CLUB[opp]; const rival = f.rivals[f.tier]?.team === opp;
   const h2h = f.campaign?.h2h?.[opp] || null;
-  const state = dialogueState({ playoff: inPlayoffs(f), h2h, badgeHeld: !!badgeOf(f, opp) });
+  const state = rival && onHotSeat(f) && !inPlayoffs(f) ? 'hotSeat' : dialogueState({ playoff: inPlayoffs(f), h2h, badgeHeld: !!badgeOf(f, opp) });
   const star = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
   const vars = { club: f.club, me: opp, star: star?.name || 'star', badge: gym?.badge || '' };
   const seed = hashString(`${opp}|${f.season?.year}|${f.season?.week}|${f.seed}`);
@@ -480,6 +482,24 @@ export function forfeitSunday(f) {
   advanceWeek(f);
   return { ok: true, result: f.lastGame };
 }
+/** The commissioner's three goal offers for this season (GDD §17.4). */
+export function commissionerGoals(f) {
+  ensureBoard(f);
+  const ex = f.season.expectations?.[f.club] || { expectedWinPct: 0.5 };
+  const games = f.season.schedule.filter((g) => !g.bye).length || 9;
+  const gyms = f.season.schedule.filter((g) => !g.bye && GYM_BY_CLUB[g.opponent]).length;
+  return goalOffers(f, { expectedWinPct: ex.expectedWinPct, gamesInSeason: games, gymsThisSeason: gyms });
+}
+export function chooseGoal(f, id) { const r = boardChooseGoal(f, id, commissionerGoals(f)); if (r.ok) news(f, `Commissioner's office: you committed to "${r.goal.label}" this season.`, 'info'); return r; }
+/** Where the goal stands mid-season (for HQ). */
+export function goalProgress(f) {
+  const g = f.board?.goal; if (!g) return null; const rec = record(f);
+  if (g.id === 'wins') return { text: `${rec.w} of ${g.target} wins`, pct: Math.min(1, rec.w / g.target) };
+  if (g.id === 'badges') { const n = Object.values(f.campaign?.badges || {}).filter((b) => b.year === f.season.year).length; return { text: `${n} of ${g.target} badges`, pct: Math.min(1, n / g.target) }; }
+  if (g.id === 'playoffs') { const p = playoffPicture(f); return { text: p.inPlayoffs ? `In: ${p.text}` : p.text, pct: p.inPlayoffs ? 1 : 0.4 }; }
+  if (g.id === 'title') return { text: f.season.champion === f.club ? 'Champions!' : inPlayoffs(f) ? 'Alive in the playoffs' : `${rec.w}–${rec.l}`, pct: inPlayoffs(f) ? 0.7 : 0.3 };
+  return null;
+}
 /** Spend one attribute point on a roster monster (GDD §17.3). */
 export function spendAttributePoint(f, id, attr) { const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not found.' }; return spendPoint(m, attr); }
 /** Monsters with points waiting to be spent. */
@@ -544,7 +564,7 @@ export function scoutRegion(f, regionName) {
   const scout = staffMember(f, 'head_scout');
   const skill = scout?.biomes?.[region.biome] ?? 50;
   const { r, save } = frng(f);
-  const count = skill >= 80 ? 3 : skill >= 45 ? 2 : 1;
+  const count = (skill >= 80 ? 3 : skill >= 45 ? 2 : 1) + (scoutBonusActive(f) ? 1 : 0); // the board's expanded scouting department after a goal met (GDD §17.4)
   const prospects = [];
   // Species come from the region's elements by rarity weight; rares only in their home region from their week.
   const unlocked = Object.keys(f.campaign?.unlocked || {}).map((id) => SPECIES_DEX.find((s) => s.id === id)).filter((sp) => sp && (sp.regions || [])[0] === regionName && !f.roster.some((m) => m.species === sp.id));
@@ -941,7 +961,11 @@ function endSeason(f) {
   }
   s.awards = seasonAwards(f);
   f.history[f.history.length - 1].awards = s.awards;
-  if (rec.w < rec.l) f.postseason = makePostseasonEvent(f); // a losing record makes one story event mandatory (GDD §15.7)
+  // The board's goal (GDD §17.4): settled now, before the offseason.
+  { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
+    const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club });
+    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? `BOARD: goal met — ${verdict.goal.label}. Confidence ${verdict.confidence >= 0 ? '+' : ''}${verdict.confidence} (${confidenceLabel(verdict.confidence)}). The scouting department expands next season.` : verdict.status === 'fired' ? `BOARD: goal missed — ${verdict.goal.label}. The board has let you go.` : verdict.status === 'hot_seat' ? `BOARD: goal missed — ${verdict.goal.label}. You are on the hot seat: miss again and you are out.` : `BOARD: goal missed — ${verdict.goal.label}. Confidence ${verdict.confidence}.`, verdict.met ? 'win' : 'loss'); } }
+  if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record — or the hot seat — makes one story event mandatory (GDD §15.7, §17.4)
   if (champion === f.club && legendChoices(f).length) f.legendPick = { year: s.year, resolved: false }; // Beast Bowl champions choose a Legend Track (GDD §15.8)
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
@@ -991,6 +1015,7 @@ export function seasonAwards(f) {
 function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); const choices = DIVISIONS[divisionOf(f.club)].filter((t) => t !== f.club); const team = r.pick(choices); save(); f.rivals[f.tier] = { team, gm: RIVAL_GMS[team] || 'Rival GM', headToHead: { w: 0, l: 0 } }; } }
 export function startNextSeason(f) {
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
+  if (isFired(f)) return { ok: false, reason: 'The board has let you go. This franchise is over.' };
   if (f.postseason && !f.postseason.resolved) return { ok: false, reason: 'A postseason decision is waiting.' };
   if (f.legendPick && !f.legendPick.resolved) return { ok: false, reason: 'Choose your Legend Track first.' };
   f.deadCap = f.pendingDeadCap || 0; f.pendingDeadCap = 0; // bonuses and raises agreed in the offseason land on the new season's books

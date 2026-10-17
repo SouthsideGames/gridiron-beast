@@ -41,7 +41,7 @@ export function registerHqScreens(Router, app) {
       const opp = F.opponentName(f);
       const rival = f.rivals[f.tier];
       const day = f.season.day;
-      const next = f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: 'Choose your Legend Track', action: 'legend', icon: '🌟' } : { label: 'Start next season', action: 'nextseason', icon: '🔁' }) : nextAction(f);
+      const next = F.isFired(f) && f.season.finished ? { label: 'The board has let you go', action: 'fired', icon: '🚪' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: 'Choose your Legend Track', action: 'legend', icon: '🌟' } : { label: 'Continue to the offseason', action: 'nextseason', icon: '🔁' }) : nextAction(f);
       const race = f.season.week >= 5 && !f.season.finished && !F.inPlayoffs(f) ? `<div class="muted" style="margin-top:4px">Playoff race: <b>${esc(F.playoffPicture(f).text)}</b></div>` : '';
       const gameLine = f.season.finished ? `<b>Season ${f.season.year} complete.</b> ${f.season.champion === f.club ? '🏆 Beast Bowl champions!' : f.season.champion ? esc(f.season.champion) + ' won the Beast Bowl.' : ''} <button class="btn small" data-action="awards">Season awards</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
@@ -57,6 +57,7 @@ export function registerHqScreens(Router, app) {
           ${!f.season.finished && day < 6 && !f.week.commissioner ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">⚠️ Over the cap by ${fmtMoney(-cap.remaining)}. The commissioner reviews the books on Saturday: get under it by then or he picks who goes.</p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">🏛️ The commissioner is waiting. Over the cap by ${fmtMoney(f.week.commissioner.over)}.</p>` : ''}</div>
+        ${boardPanel(f)}
         ${campaignPanel(f)}
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
         <div class="grid2">
@@ -84,6 +85,13 @@ export function registerHqScreens(Router, app) {
           addHofCard(r.card); app.reset(); toast('Welcome to the Hall of Fame.', 'good', 4000); Router.go('hof', {}, { reset: true });
         },
         resume: () => Router.go('match'),
+        goals: () => Router.go('goals'),
+        fired: async () => {
+          const r = F.retire(app.f);
+          if (r.ok) { if (!(await confirmSheet(`The board has ended your time at ${app.f.club}. You qualified for the Hall of Fame before they did, so your career (${r.card.seasons} seasons, ${r.card.record.w}–${r.card.record.l}) is written there. Leave the club?`, { title: 'Let go', okLabel: 'Leave', danger: true }))) return; addHofCard(r.card); app.reset(); Router.go('hof', {}, { reset: true }); return; }
+          if (!(await confirmSheet(`The board has ended your time at ${app.f.club}. You did not reach the Hall of Fame; this franchise ends and your Beast Dex carries on. Export the save first if you want to keep it.`, { title: 'Let go', okLabel: 'Leave the club', danger: true }))) return;
+          app.reset(); toast('A new club will call.', 'info', 3000); Router.go('menu', {}, { reset: true });
+        },
         autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(awardsHtml(app.f.season.awards || F.seasonAwards(app.f)), { title: `Season ${app.f.season.year} awards` }),
         gym: (el) => { const g = GYM_BY_CLUB[el.dataset.club]; if (!g) return; const b = F.badgeOf(app.f, g.club); const sp = SPECIES_BY_ID[g.legendary]; sheet(`<div class="row">${portraitSprite(g.coach.portrait, 56, { hue: TYPES[g.element]?.hue })}<div><b>${esc(g.coach.name)}</b><div class="muted">Head coach, ${esc(g.club)} · ${esc(g.coach.style)}</div><div class="muted">${esc(g.element)} gym · ${g.tier} tier</div></div></div><p>${b ? `<b>${esc(g.badge)}</b> earned in Season ${b.year}, week ${b.week} (${esc(b.score)}).` : `Beat ${esc(g.club)} in any game that counts to earn the <b>${esc(g.badge)}</b>. No replays: if you lose, the next chance is their next game on your schedule.`}</p><h3>Signature monster</h3><div class="row">${sprite16(sp, 48)}<div><b>${esc(sp.name)}</b><div class="muted">${esc(sp.element)} legendary · ${sp.position}</div><div class="muted">${esc(sp.ability.name)}: ${esc(sp.ability.text)}</div></div></div><p class="dim">Gym clubs grow stronger every season, and study tape after you beat them.</p>`, { title: g.badge }); },
@@ -94,6 +102,7 @@ export function registerHqScreens(Router, app) {
   function nextAction(f) {
     const d = f.season.day;
     if (f.game && !f.game.state?.finished) return { label: 'Resume game', action: 'resume', icon: '▶' };
+    if (F.needsGoal(f)) return { label: "Meet the commissioner · this season's goal", action: 'goals', icon: '🎯' };
     if (f.week.commissioner) return { label: "The commissioner's office", action: 'commissioner', icon: '🏛️' };
     if (F.isBye(f) && d >= 3 && d < 6) return { label: 'Bye week · rest until Sunday', action: 'restbye', icon: '😴' };
     if (d === 6) { if (F.isBye(f)) return { label: 'Take the bye week', action: 'bye', icon: '😴' }; const m = F.sundayMatchup(f); if (m?.forfeit) return { label: 'Forfeit the game (no legal lineup)', action: 'forfeit', icon: '🏳️', note: m.forfeitReason }; return { label: 'Play Sunday game', action: 'game', icon: '🏈' }; }
@@ -101,6 +110,21 @@ export function registerHqScreens(Router, app) {
   }
 
   // ---------------------------------------------------------------- the commissioner's office (GDD §15.6)
+  // ---------------------------------------------------------------- The commissioner's goals (GDD §17.4)
+  Router.registerScreen('goals', {
+    title: "Commissioner's office",
+    render({ f }) {
+      const offers = F.commissionerGoals(f); const b = f.board || { confidence: 0, history: [] };
+      const ex = f.season.expectations?.[f.club];
+      return `<div class="talk"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 56, { hue: 40 })}<div class="grow"><div class="talk-name">The Commissioner</div>
+        <p class="talk-line">“Season ${f.season.year}. The forecast has ${esc(f.club)} at ${ex ? (ex.expectedWinPct * 9).toFixed(1) : '?'} wins${b.history.length ? `; last year you ${b.history[b.history.length - 1].met ? 'delivered' : 'fell short'}` : ''}. Tell me what you are promising the board this year.”</p>
+        <p class="talk-line">“Hit it and the board trusts you — and funds a bigger scouting department next season. Miss it and they start counting. Miss twice and I will be meeting your replacement.”</p></div></div></div>
+        <div class="panel tight"><div class="row between"><span>Board confidence</span><b>${F.confidenceLabel(b.confidence)} (${b.confidence >= 0 ? '+' : ''}${b.confidence})</b></div><div class="dim">+1 for a goal met (+2 for the title), −1 for a miss. Hot seat at −1, out at −2.</div></div>
+        <div class="stack">${offers.map((o) => `<button class="item" data-action="goal" data-id="${o.id}"><div class="grow"><div class="name">${esc(o.label)} <span class="chip ${o.tier === 'stretch' ? 'accent' : o.tier === 'medium' ? 'warn' : ''}">${o.tier}</span></div><div class="sub">${esc(o.text)}${o.weight > 1 ? ` · worth +${o.weight}` : ''}</div></div></button>`).join('')}</div>
+        ${b.history.length ? `<h3>Past goals</h3><div class="list">${b.history.slice().reverse().map((h) => `<div class="item static"><div class="grow"><div class="name">Season ${h.year} · ${esc(h.label)}</div><div class="sub">${h.met ? '✅ met' : '❌ missed'} · confidence ${h.confidence}</div></div></div>`).join('')}</div>` : ''}`;
+    },
+    mount(root) { delegate(root, { goal: async (el) => { const o = F.commissionerGoals(app.f).find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`Commit to "${o.label}" for season ${app.f.season.year}? The board holds you to it.`, { title: 'Your word', okLabel: 'Commit' }))) return; const r = F.chooseGoal(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast('Goal set. The board is watching.', 'good'); Router.go('hq', {}, { reset: true }); } }); },
+  });
   Router.registerScreen('commissioner', {
     title: "Commissioner's Office", back: true,
     render({ f }) {
@@ -485,4 +509,12 @@ function awardRaceHtml(f, k) {
   const head = `<p class="muted">${esc(AWARD_RULES[k])}${minGames ? ` Needs ${minGames}+ games and a starter’s share of snaps.` : ''}</p>${frozen ? '<p class="dim">Regular season over: this result is final. Playoff games do not count.</p>' : ''}`;
   if (k === 'coy') return `${head}<div class="list">${top.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}" style="align-items:flex-start"><div class="grow"><div class="name">${i + 1}. ${esc(r.coach)} <span class="dim">${esc(r.team)} · ${r.record}</span></div><div class="sub">${esc(r.why)}</div></div><span class="chip">${r.score}</span></div>`).join('') || '<p class="dim">No contenders yet.</p>'}</div><p class="dim">Points are game-generated evaluation points, not votes.</p>`;
   return `${head}<div class="list">${top.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}" style="align-items:flex-start">${monsterSprite(r, 36)}<div class="grow"><div class="name">${i + 1}. ${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)} ${r.record}${r.rookie ? ' · rookie' : ''}</span></div><div class="sub">${r.games} game${r.games === 1 ? '' : 's'} · ${esc(r.why)}</div></div><span class="chip">${r.score}</span></div>`).join('') || '<p class="dim">No contenders yet.</p>'}</div><p class="dim">Points are game-generated evaluation points, not votes.</p>`;
+}
+
+/** Board panel on HQ: the season's goal, its progress and the owner's standing (GDD §17.4). */
+function boardPanel(f) {
+  const b = f.board; if (!b) return '';
+  const g = b.goal; const p = g ? F.goalProgress(f) : null; const hot = F.onHotSeat(f);
+  return `<div class="panel tight ${hot ? 'hotseat' : ''}"><div class="row between"><b>🎯 ${g ? esc(g.label) : 'No goal set'}</b><span class="chip ${hot ? 'bad' : b.confidence > 0 ? 'good' : ''}">${F.confidenceLabel(b.confidence)}</span></div>
+    ${p ? `<div class="bar" style="margin:6px 0 2px"><i style="width:${Math.round(p.pct * 100)}%"></i></div><div class="dim">${esc(p.text)}${hot ? ' · miss this and the board lets you go' : ''}</div>` : hot ? '<div class="dim" style="color:var(--bad)">On the hot seat: the next missed goal ends your time here.</div>' : ''}</div>`;
 }

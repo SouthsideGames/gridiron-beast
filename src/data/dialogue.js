@@ -91,6 +91,7 @@ export const RIVAL_LINES = Object.freeze({
   youWon: ['You got us once. I have spent every day since thinking about it.', 'This is the one that matters.'],
   playoff: ['Rivals in the playoffs. Someone’s season ends in the family.', 'No excuses after today.'],
   threeLosses: ['Three straight. My board is asking why they still call this a rivalry.', 'I would wish you luck, but I like winning.'],
+  hotSeat: ['I hear your board is counting. So am I. Enjoy the job while it lasts.', 'Lose today and I’ll send flowers to your office. The next owner can keep them.'],
 });
 
 export const REPLIES = Object.freeze([

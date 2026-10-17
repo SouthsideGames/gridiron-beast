@@ -586,3 +586,22 @@ test('attribute points: level-ups bank 2 points, spent by hand up to potential, 
   assert.equal(F.unspentPoints(f).length, 0);
   levelUp(m, rng, { autoSpend: true }); assert.equal(m.points, 0, 'auto-spent');
 });
+
+test('board goals: three scaled offers, one commitment per season, settled at season end into confidence, hot seat, firing and the scouting bonus', async () => {
+  const B = await import('../src/franchise/board.js');
+  const f = newFranchise(71);
+  assert.equal(F.needsGoal(f), true, 'week 1: the commissioner wants a goal');
+  const offers = F.commissionerGoals(f); assert.equal(offers.length, 3); assert.deepEqual(offers.map((o) => o.tier), ['safe', 'medium', 'stretch']);
+  assert.equal(F.chooseGoal(f, 'title').ok, true); assert.equal(F.needsGoal(f), false); assert.equal(F.chooseGoal(f, 'wins').ok, false, 'one per season');
+  // Pure settlement rules.
+  assert.equal(B.goalMet({ id: 'wins', target: 5 }, { wins: 5 }), true); assert.equal(B.goalMet({ id: 'playoffs' }, { playoffs: false }), false); assert.equal(B.goalMet({ id: 'badges', target: 2 }, { badgesWon: 1 }), false);
+  const g = { board: { confidence: 0, goal: { id: 'wins', target: 5, label: 'Win 5', year: 1, weight: 1 }, history: [] }, season: { year: 1 } };
+  let v = B.settleGoal(g, { wins: 3 }); assert.equal(v.met, false); assert.equal(v.status, 'hot_seat'); assert.equal(g.board.confidence, -1);
+  g.board.goal = { id: 'title', label: 'Title', year: 1, weight: 2 }; v = B.settleGoal(g, { champion: true }); assert.equal(g.board.confidence, 2, 'a met goal resets the hole and the title counts double'); assert.equal(g.board.scoutBonusYear, 2);
+  g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; B.settleGoal(g, { wins: 0 }); g.board.goal = { id: 'wins', target: 9, label: 'Win 9', year: 1, weight: 1 }; v = B.settleGoal(g, { wins: 0 });
+  assert.equal(v.status, 'fired'); assert.equal(g.board.fired, true);
+  // A full season settles the real goal and a fired owner cannot start the next season.
+  for (let guard = 0; guard < 40 && !f.season.finished; guard++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.advanceWeek(f); }
+  assert.ok(f.season.boardVerdict && typeof f.season.boardVerdict.met === 'boolean'); assert.equal(f.board.goal, null); assert.equal(f.board.history.length, 1);
+  f.board.fired = true; assert.equal(F.startNextSeason(f).ok, false);
+});
