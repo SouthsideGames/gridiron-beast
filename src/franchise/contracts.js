@@ -14,7 +14,7 @@ export const COUNTER_PCT = 0.85;
 export const STAFF_RAISE = 1.10;
 
 /** A fresh deal covering this season and the next. */
-export function newContract(year) { return { signed: year, ends: year + CONTRACT_YEARS - 1, years: CONTRACT_YEARS }; }
+export function newContract(year, years = CONTRACT_YEARS) { years = Math.max(1, Math.min(CONTRACT_YEARS, years | 0)); return { signed: year, ends: year + years - 1, years }; }
 export function contractEnds(m, year) { return !!m.contract && m.contract.ends <= year; }
 
 /** What the monster asks for at renewal: today's market rate for their ratings plus a premium for a big season or a league award. */

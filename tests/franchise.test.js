@@ -659,3 +659,11 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   while (f.roster.length < F.ROSTER_MIN) { const e = F.offseasonMarket(f)[0]; assert.equal(F.signFreeAgent(f, e.monster.id).ok, true); }
   const r3 = F.startNextSeason(f); assert.equal(r3.ok, true, r3.reason); assert.equal(f.season.year, 3); assert.equal(f.offseason, null);
 });
+
+test('contracts: a renewal may be one season or two, never more', async () => {
+  const { newContract } = await import('../src/franchise/contracts.js');
+  assert.deepEqual(newContract(3, 1), { signed: 3, ends: 3, years: 1 }); assert.deepEqual(newContract(3, 5), { signed: 3, ends: 4, years: 2 }); assert.equal(newContract(3).years, 2);
+  const f = newFranchise(71); f.season.finished = true; f.season.year = 2; const m = f.roster[0]; m.contract = { signed: 1, ends: 2, years: 2 };
+  f.offseason = { year: 2, items: [{ kind: 'monster', id: m.id, name: m.name, position: m.position, ovr: 60, current: m.salary, ask: 40000, status: null }], winningRecord: true };
+  assert.equal(F.resolveContract(f, m.id, 'sign', { years: 1 }).ok, true); assert.equal(m.contract.ends, 3); assert.equal(m.contract.years, 1); assert.equal(m.salary, 40000);
+});
