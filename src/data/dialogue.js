@@ -91,7 +91,7 @@ export const RIVAL_LINES = Object.freeze({
   youWon: ['You got us once. I have spent every day since thinking about it.', 'This is the one that matters.'],
   playoff: ['Rivals in the playoffs. Someone’s season ends in the family.', 'No excuses after today.'],
   threeLosses: ['Three straight. My board is asking why they still call this a rivalry.', 'I would wish you luck, but I like winning.'],
-  hotSeat: ['I hear your board is counting. So am I. Enjoy the job while it lasts.', 'Lose today and I’ll send flowers to your office. The next owner can keep them.'],
+  hotSeat: ['I hear the Board is counting. So am I. Enjoy the job while it lasts.', 'Lose today and I’ll send flowers to your office. The next owner can keep them.'],
 });
 
 export const REPLIES = Object.freeze([
@@ -132,7 +132,7 @@ export function pregameDialogue({ kind, club, speaker, state, vars = {}, seed = 
 /** The rival GM's weekly needle for the HQ rival card: by who is ahead in the standings and whether the game is this week. */
 export const RIVAL_WEEKLY = Object.freeze({
   ahead: ['Enjoy the view from up there. It never lasts for your lot.', 'Nice start. My scouts say your secondary is held together with tape.', 'The division runs through us. It always has.'],
-  behind: ['We are coming. Tell your board.', 'A game back is nothing. Ask anyone who has lost to us in December.', 'Your schedule gets harder. Ours gets us.'],
+  behind: ['We are coming. The Board will hear about it before you do.', 'A game back is nothing. Ask anyone who has lost to us in December.', 'Your schedule gets harder. Ours gets us.'],
   level: ['Dead even. One of us is lying to their fans.', 'Same record, different futures.', 'Tiebreakers favour the club that wants it. That is us.'],
   gameWeek: ['Rivalry week. I have cleared my calendar for your excuses.', 'Sunday. Bring the real playbook this time.', 'My monsters have been talking about this one since the schedule came out.'],
 });
