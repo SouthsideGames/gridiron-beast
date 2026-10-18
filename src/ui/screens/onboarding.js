@@ -6,7 +6,7 @@ import { STARTER_CLUBS, DIVISIONS, RIVAL_GMS, divisionOf, conferenceFor, TEAM_ME
 import { cornerstoneOffers, NATURES, TYPES, resolveSpecies } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
 import { STAFF, ROLE_LABEL, STAFF_ROLES } from '../../data/staff.js';
-import { createFranchise, hireStaff, nextStaffRole, salarySummary, staffMember, schemeAlignment, hireDefaultStaff, firstWeekWelcome, DIFFICULTY } from '../../franchise/franchise.js';
+import { createFranchise, hireStaff, nextStaffRole, salarySummary, staffMember, schemeAlignment, hireDefaultStaff, firstWeekWelcome, DIFFICULTY, commissionerWelcome } from '../../franchise/franchise.js';
 import { portraitSprite, monsterSprite, portraitSpec, SKIN_TONES, HAIR_COLORS, HAIR_STYLES, ACCESSORIES } from '../pixel-monster.js';
 import { BACKGROUNDS } from '../../data/staff.js';
 import { playCardSvg } from '../play-art.js';
@@ -84,7 +84,7 @@ export function registerOnboardingScreens(Router, app) {
             const offer = cornerstoneOffers(draft.offerSeed).find((x) => x.name === draft.offense);
             const f = createFranchise({ owner: { first: draft.first, last: draft.last, gender: draft.gender, portrait: spec(), hometown: draft.hometown, background: draft.background }, club: draft.club, rival: draft.rival, cornerstone: offer, settings: { ...app.defaultSettings, difficulty: draft.difficulty } });
             hireDefaultStaff(f); firstWeekWelcome(f);
-            app.setFranchise(f); draft = null; Router.go('hq', {}, { reset: true }); return;
+            app.setFranchise(f); draft = null; Router.go('welcome', {}, { reset: true }); return;
           }
           draft.step += 1; Router.render();
         },
@@ -96,6 +96,27 @@ export function registerOnboardingScreens(Router, app) {
     const offers = cornerstoneOffers(draft.offerSeed);
     return `<div class="stack">${offers.map((c) => `<div class="choice ${draft[side] === c.name ? 'selected' : ''}"><div class="row" data-action="pick" data-side="${side}" data-v="${esc(c.name)}" style="cursor:pointer">${monsterSprite({ id: c.name, name: c.name, species: c.species }, 48)}<div class="grow"><span class="name">${esc(c.name)}</span> <span class="chip">${c.rarity}</span><div class="muted">${c.position} · ${c.type} · ${c.quality} OVR · ${esc(c.archetype)}</div><div class="muted">Ability: ${esc(c.abilityName || '')}</div></div><span class="ovr ${draft[side] === c.name ? 'hi' : ''}">${draft[side] === c.name ? '✓' : ''}</span></div><div class="row"><button class="btn small" data-action="details" data-v="${esc(c.name)}">Details</button><button class="btn small ${draft[side] === c.name ? 'primary' : ''}" data-action="pick" data-side="${side}" data-v="${esc(c.name)}">${draft[side] === c.name ? 'Selected' : 'Select'}</button></div></div>`).join('')}</div>`;
   }
+
+  // The commissioner's welcome (GDD §19.3): one screen between the cornerstone pick and headquarters. Beats appear one at a
+  // time; the last one is the warning. Shown once per franchise (f.welcomed).
+  let beat = 0;
+  Router.registerScreen('welcome', {
+    title: 'Welcome to the league', tabs: false,
+    render({ f }) {
+      const beats = commissionerWelcome(f); const shown = beats.slice(0, beat + 1); const last = beat >= beats.length - 1;
+      return `<div class="welcome">
+        <div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 72, { hue: 40 })}<div class="grow"><div class="talk-name">The Commissioner</div><div class="dim">League office · ${esc(f.club)}</div></div></div>
+        <div class="stack" style="margin-top:12px">${shown.map((b, i) => `<div class="talk ${i === beat ? 'fresh' : ''} ${b.ominous ? 'ominous' : ''}"><p class="talk-line">${b.text}</p></div>`).join('')}</div>
+        <button class="btn primary big block" data-action="${last ? 'enter' : 'more'}" style="margin-top:12px">${last ? 'Enter headquarters →' : 'Continue'}</button>
+        ${last ? '' : '<p class="dim center" style="margin-top:6px">Tap to let him finish.</p>'}</div>`;
+    },
+    mount(root, ctx) {
+      delegate(root, {
+        more: () => { beat += 1; Router.render(); const fresh = root.querySelector('.talk.fresh'); fresh?.scrollIntoView?.({ block: 'end', behavior: 'smooth' }); },
+        enter: () => { ctx.f.welcomed = true; beat = 0; app.save(); Router.go('hq', {}, { reset: true }); },
+      });
+    },
+  });
 
   Router.registerScreen('hire', {
     title: 'Build Your Front Office', back: false, tabs: false,

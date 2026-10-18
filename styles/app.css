@@ -364,3 +364,10 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .bio .stint { display: grid; grid-template-columns: 74px 1fr auto; gap: 8px; font-size: 13px; align-items: baseline; }
 .bio .stint .when { color: var(--muted); font-variant-numeric: tabular-nums; }
 .bio .stint.current .club { font-weight: 700; }
+/* The commissioner's welcome (GDD §19.3) */
+.welcome .talk { margin: 0; }
+.welcome .talk.fresh { animation: talk-in .35s ease-out; }
+.welcome .talk.ominous { border-color: #6b1f1f; background: #1d1212; }
+.welcome .talk.ominous .talk-line { color: #f0c9c9; }
+@keyframes talk-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .welcome .talk.fresh { animation: none; } }

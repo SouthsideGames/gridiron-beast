@@ -258,6 +258,12 @@ test('monster bio: birthplace, seasons pro, and a stint per club (regional leagu
   const lb = F.monsterBio(f, left); assert.deepEqual(lb.stints.map((s) => s.club), [f.club, 'Harbor Sentinels', f.club]);
 });
 
+test('commissioner welcome: six beats, names the lottery pick and the board, ends ominous', () => {
+  const f = newFranchise(5); const beats = F.commissionerWelcome(f);
+  assert.equal(beats.length, 6); assert.ok(beats[2].text.includes(`#${f.draft.lotterySlot} pick`)); assert.ok(/expectations/.test(beats[3].text));
+  assert.ok(beats.at(-1).ominous && /answers to me/.test(beats.at(-1).text)); assert.ok(!beats.some((b) => /undefined|NaN/.test(b.text)));
+});
+
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
   F.hireDefaultStaff(f);

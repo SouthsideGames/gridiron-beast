@@ -85,6 +85,12 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="club"][data-v="Ember City Beasts"]'); no_overflow(page, 'onboarding club'); shot(page, f'{name}-02b-club'); page.click('#next')
     page.wait_for_selector('[data-action="difficulty"]'); page.click('[data-action="difficulty"][data-v="pro"]'); no_overflow(page, 'onboarding difficulty'); shot(page, f'{name}-02bb-difficulty'); page.click('#next')
     page.click('[data-action="reroll"]'); page.wait_for_timeout(50); page.click('[data-action="pick"][data-side="offense"] >> nth=0'); shot(page, f'{name}-02c-cornerstone'); page.click('#next')
+    # The commissioner's welcome (GDD §19.3): tap through the beats, then enter headquarters.
+    page.wait_for_selector('.welcome'); no_overflow(page, 'welcome'); shot(page, f'{name}-02d-welcome')
+    for _ in range(8):
+        if page.query_selector('[data-action="enter"]'): break
+        page.click('[data-action="more"]'); page.wait_for_timeout(60)
+    no_overflow(page, 'welcome end'); shot(page, f'{name}-02e-welcome-end'); page.click('[data-action="enter"]')
     page.wait_for_selector('.tabbar')
     check(page.query_selector('.tip') is not None, 'tutorial: HQ tip shows on the first week')
     # Draft day first for a new GM (GDD §19.2): pick once, pass the rest.

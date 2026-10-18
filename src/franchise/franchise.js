@@ -309,6 +309,26 @@ export const staffHired = (f) => STAFF_ROLES.every((r) => f.staff[r]);
 export const nextStaffRole = (f) => STAFF_ROLES.find((r) => !f.staff[r]) || null;
 export const staffMember = (f, role) => staffById(f.staff[role]);
 /** Welcome news for a brand-new franchise: the first week is a normal week, with a short guide. */
+/**
+ * The commissioner's welcome at creation (GDD §19.3): the situation, the one piece of good news (the lottery pick),
+ * and the board's expectations, with the last beat left hanging. Pure on the franchise, so the screen can replay it.
+ */
+export function commissionerWelcome(f) {
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const D = difficultyOf(f); const slot = f.draft?.creation ? f.draft.lotterySlot : null;
+  const ex = f.season?.expectations?.[f.club]; const forecast = ex ? Math.round(ex.expectedWinPct * 9) : null;
+  const rival = f.rivals?.[f.tier]?.team; const gm = f.rivals?.[f.tier]?.gm || f.rivals?.[f.tier]?.name;
+  const owner = `${f.owner.first} ${f.owner.last}`.trim();
+  const beats = [
+    { text: `${esc(owner)}. Sit down. I’ll be brief; the league doesn’t wait for introductions.` },
+    { text: `You’re taking over <b>${esc(f.club)}</b>. I won’t dress it up: the last staff left in the night, the roster is thin at the back, and ${D.label === 'Rookie' ? 'even in this league' : D.label === 'All-Star' ? 'in this league, the one everybody says is the hardest,' : 'in this league'} the other fifteen clubs have had years to build what you’re starting today.${rival ? ` ${esc(rival)} in particular${gm ? ` — ${esc(gm)}` : ''} — has already asked me how long I think you’ll last.` : ''}` },
+    { text: slot ? `Some good news. The lottery was kind to you: you hold the <b>#${slot} pick</b> in today’s draft. The outgoing scouts left notes on a dozen prospects. Use them. A top-five pick is the one gift this office gives a new GM, and it gives it once.` : `Some good news. The draft class is deep this year and your scouts have been watching it. Use that.` },
+    { text: `Now the part nobody enjoys. Your board has <b>expectations</b>. ${forecast != null ? `Their forecast says ${forecast} wins; they will ask you to commit to something before week one, and they will remember whether you kept it.` : 'They will ask you to commit to something before week one, and they will remember whether you kept it.'} New GM or not, miss twice in a row and they will find another one.` },
+    { text: `Everyone in this league answers to someone. The players answer to you. You answer to the board.`, ominous: true },
+    { text: `And the board… answers to me. Welcome to the league, ${esc(f.owner.first)}. Your office is down the hall.`, ominous: true },
+  ];
+  return beats;
+}
 export function firstWeekWelcome(f) {
   news(f, 'Welcome, owner. A balanced coaching staff has been hired for you — replace anyone from Staff once you know the league.', 'info');
   news(f, 'Your first week: Monday scout a region, Tuesday recruit, Wednesday train, Thursday scout the opponent, Friday set your game plan, Saturday check the lineup, Sunday play.', 'info');
