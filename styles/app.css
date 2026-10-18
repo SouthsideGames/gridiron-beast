@@ -378,3 +378,6 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .scoreboard .clockstate { font-size: 10px; letter-spacing: .02em; margin-top: 2px; font-weight: 700; white-space: nowrap; }
 .scoreboard .clockstate.running { color: #f5c542; }
 .scoreboard .clockstate.stopped { color: var(--ink-2); }
+/* Cornerstone mark: the monster the club was built around */
+.chip.cornerstone { background: linear-gradient(90deg, #5a4100, #8a6400); color: #ffe08a; border: 1px solid #f5c542; font-weight: 900; letter-spacing: .04em; font-size: 10px; }
+.cs-star { color: #f5c542; }
