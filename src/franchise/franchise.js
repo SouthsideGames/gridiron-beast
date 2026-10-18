@@ -61,7 +61,10 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     tutorial: { seen: {} },
     pool: {}, staffContracts: {}, staffRaise: {}, offseason: null,
   };
-  for (const m of roster) m.contract = newContract(1); // everyone is signed through season 2 (GDD §18.1)
+  // Contracts (GDD §18.1): about 35% of the founding roster — never a cornerstone — is on a one-year deal, so the first
+  // offseason already brings renewals, walks and the market. Chosen by a hash of the id, so no rng is consumed.
+  const expiring = roster.filter((m) => !m.cornerstone).sort((a, b) => hashString(`${a.id}|1yr`) - hashString(`${b.id}|1yr`)).slice(0, Math.round(roster.length * FOUNDING_ONE_YEAR_SHARE));
+  for (const m of roster) m.contract = newContract(1, expiring.includes(m) ? 1 : 2);
   startSeason(f, 1);
   noteNewFranchise();
   for (const m of roster) dexRecord(f, m, 'signed');
@@ -70,6 +73,8 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
 }
 /** A new GM arrives on draft day (GDD §19.2): a lottery pick 1–5 (15% for #1), the outgoing staff's scouting notes, the rest of the league slotted by their natural level. */
 export const CREATION_LOTTERY = Object.freeze([0.15, 0.20, 0.22, 0.22, 0.21]);
+/** Share of the founding roster on one-year deals (GDD §18.1): the first offseason has contracts to decide. */
+export const FOUNDING_ONE_YEAR_SHARE = 0.35;
 export function openCreationDraft(f) {
   const { r, save } = frng(f);
   const d = openDraftClass(f, r, { uniqueName: (m, extra) => uniqueName(f, m, extra) });

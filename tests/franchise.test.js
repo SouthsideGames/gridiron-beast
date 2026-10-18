@@ -10,7 +10,7 @@ import { monsterOverall } from '../src/data/monsters.js';
 import * as awaitRules from '../src/sim/rules.js';
 
 /** Hold the draft (passing every pick) so a test can start the next season. */
-function holdDraft(f) { const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } return { ok: f.draft.done }; }
+function holdDraft(f) { for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign'); const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } return { ok: f.draft.done }; }
 /** Step one in-season day with the staff's defaults, draft window included. */
 function stepDay(f) {
   const d = f.season.day;
@@ -324,6 +324,15 @@ test('victory formation: a kneel with the clock running, no defensive timeouts a
   const t = R.newGame({ home: { id: 'A', name: 'A', abbr: 'A' }, away: { id: 'B', name: 'B', abbr: 'B' }, quarterLength: 180 });
   t.phase = 'scrimmage'; t.quarter = 4; t.clock = 23; t.possession = 'home'; t.down = 1; t.toGo = 10; t.ballOn = 60; t.clockRunning = true; t.timeouts.away = 1;
   R.kneel(t); assert.equal(t.clock, 20); assert.ok(!t.finished, 'with a timeout left the defense can still stop it');
+});
+
+test('founding roster: about a third are on one-year deals (never a cornerstone), spread across positions', () => {
+  const f = newFranchise(7);
+  const oneYear = f.roster.filter((m) => m.contract.ends === 1); const share = oneYear.length / f.roster.length;
+  assert.ok(share >= 0.3 && share <= 0.4, `one-year share ${share.toFixed(2)}`);
+  assert.ok(!oneYear.some((m) => m.cornerstone));
+  assert.ok(new Set(oneYear.map((m) => m.position)).size >= 4, 'not all at one position');
+  assert.ok(f.roster.filter((m) => m.contract.ends === 2).length > oneYear.length);
 });
 
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
@@ -729,7 +738,7 @@ test('spectating the playoffs: an eliminated owner advances the bracket a round 
 test('contracts: two-year deals from signing, salaries frozen until renewal, the offseason book, counters and walks to the pool, the market and the roster floor', async () => {
   const { levelUp } = await import('../src/data/monsters.js'); const { createRng } = await import('../src/core/rng.js');
   const f = newFranchise(71);
-  assert.ok(f.roster.every((m) => m.contract && m.contract.ends === 2), 'everyone signed through season 2');
+  assert.ok(f.roster.every((m) => m.contract && (m.contract.ends === 1 || m.contract.ends === 2)), 'everyone signed for one season or two');
   assert.ok(Object.values(f.staffContracts).every((c) => c.ends === 2));
   const m = f.roster[0]; const sal = m.salary; levelUp(m, createRng(1)); assert.equal(m.salary, sal, 'level-ups do not change salary');
   assert.ok(F.renewalAsk(m).ask >= sal - 100, 'the ask follows ratings');
@@ -740,12 +749,12 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   const r = F.scoutRegion(f, region); assert.ok(r.prospects.some((p) => p.fromPool && p.monster === victim), 'the released monster is on the board in its home region');
   // Two seasons to the renewal offseason.
   const run = () => { for (let g = 0; g < 40 && !f.season.finished; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); } };
-  run(); assert.equal(f.offseason.items.length, 0, 'nothing expires after season 1');
+  run(); { const n = f.offseason.items.filter((i) => i.kind === 'monster').length; assert.ok(n >= 7 && n <= 13, `about a third of the founding roster expires after season 1 (${n})`); assert.equal(f.offseason.items.filter((i) => i.kind === 'staff').length, 0); }
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
   holdDraft(f); assert.equal(F.startNextSeason(f).ok, true);
   run();
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
-  const items = f.offseason.items; assert.ok(items.filter((i) => i.kind === 'monster').length >= 20 && items.filter((i) => i.kind === 'staff').length === 5, 'the whole original roster and staff come up after season 2');
+  const items = f.offseason.items; assert.ok(items.filter((i) => i.kind === 'monster').length >= 14 && items.filter((i) => i.kind === 'staff').length === 5, 'the two-year founders and the staff come up after season 2');
   assert.equal(F.startNextSeason(f).ok, false, 'decisions gate the new season');
   const first = items.find((i) => i.kind === 'monster'); const mon = f.roster.find((x) => x.id === first.id);
   assert.equal(F.resolveContract(f, first.id, 'sign').ok, true); assert.equal(mon.salary, first.ask); assert.equal(mon.contract.ends, 4);
@@ -781,6 +790,7 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   const rec = F.recoveryDay(f); assert.ok(rec.ok && rec.healed.includes(hurt.name)); assert.equal(hurt.fatigue, 25); assert.equal(f.season.day, 2);
   for (let g = 0; g < 40 && !f.season.finished; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
+  for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
   assert.match(F.startNextSeason(f).reason, /draft/i);
   const b = F.beginDraft(f); assert.ok(b.ok); assert.equal(F.onTheClock(f), f.club);
   const st = F.leagueStandings(f).overall; const myRank = st.indexOf(f.club); assert.equal(f.draft.index, 15 - myRank, 'worst record picks first');
