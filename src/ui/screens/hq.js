@@ -36,13 +36,14 @@ export function registerHqScreens(Router, app) {
     title: ({ f }) => f ? f.club : 'Headquarters', back: false,
     render({ f }) {
       if (!f) return '<p>No franchise.</p>';
-      if (F.nextStaffRole(f)) return `<div class="panel"><p>Your front office is not complete.</p><button class="btn primary block" data-action="go" data-screen="hire">Hire staff</button></div>`;
+      if (F.nextStaffRole(f) && !f.season.finished) return `<div class="panel"><p>Your front office is not complete.</p><button class="btn primary block" data-action="go" data-screen="hire">Hire staff</button></div>`;
       const s = F.summary(f); const cap = s.cap; const tier = tierById(f.tier);
       const fx = F.currentFixture(f); const po = F.playoffFixture(f);
       const opp = F.opponentName(f);
       const rival = f.rivals[f.tier];
       const day = f.season.day;
-      const next = F.isFired(f) && f.season.finished ? { label: 'The board has let you go', action: 'fired', icon: '🚪' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: 'Choose your Legend Track', action: 'legend', icon: '🌟' } : { label: 'Continue to the offseason', action: 'nextseason', icon: '🔁' }) : nextAction(f);
+      const offPending = f.season.finished && (!F.offseasonReady(f) || f.roster.length < F.ROSTER_MIN || F.nextStaffRole(f));
+      const next = F.isFired(f) && f.season.finished ? { label: 'The board has let you go', action: 'fired', icon: '🚪' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: 'Choose your Legend Track', action: 'legend', icon: '🌟' } : { label: offPending ? `Offseason · ${F.offseasonPending(f).length ? F.offseasonPending(f).length + ' contract decision' + (F.offseasonPending(f).length === 1 ? '' : 's') : f.roster.length < F.ROSTER_MIN ? 'sign to ' + F.ROSTER_MIN + ' monsters' : 'hire staff'}` : 'Continue to the offseason', action: 'offseason', icon: '📋' }) : nextAction(f);
       const race = f.season.week >= 5 && !f.season.finished && !F.inPlayoffs(f) ? `<div class="muted" style="margin-top:4px">Playoff race: <b>${esc(F.playoffPicture(f).text)}</b></div>` : '';
       const gameLine = f.season.finished ? `<b>Season ${f.season.year} complete.</b> ${f.season.champion === f.club ? '🏆 Beast Bowl champions!' : f.season.champion ? esc(f.season.champion) + ' won the Beast Bowl.' : ''} <button class="btn small" data-action="awards">How we finished</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
@@ -89,6 +90,7 @@ export function registerHqScreens(Router, app) {
         },
         resume: () => Router.go('match'),
         goals: () => Router.go('goals'),
+        offseason: () => Router.go('offseason'),
         recap: () => sheet(seasonRecapHtml(app.f), { title: `Season ${app.f.season.year} · regular season` }),
         watchround: () => { const r = F.advancePlayoffs(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(roundResultsHtml(app.f, r), { title: F.ROUND_NAMES[r.round] || `Round ${r.round}`, onClose: () => Router.go('hq', {}, { reset: true }) }); },
         skipplayoffs: async () => { if (!(await confirmSheet('Simulate the rest of the playoffs and go to the offseason?', { title: 'Skip the playoffs', okLabel: 'Skip' }))) return; F.skipPlayoffs(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
@@ -117,6 +119,38 @@ export function registerHqScreens(Router, app) {
   }
 
   // ---------------------------------------------------------------- the commissioner's office (GDD §15.6)
+  // ---------------------------------------------------------------- Offseason (GDD §18.1)
+  Router.registerScreen('offseason', {
+    title: ({ f }) => `Offseason · after season ${f?.season.year}`,
+    render({ f }) {
+      const items = f.offseason?.items || []; const pending = F.offseasonPending(f);
+      const cap = F.salarySummary(f); const usage = Math.min(100, Math.round(cap.total / cap.cap * 100));
+      const fmt = (n) => n.toLocaleString('en-US');
+      const monsters = items.filter((i) => i.kind === 'monster'), staff = items.filter((i) => i.kind === 'staff');
+      const row = (i) => { const m = f.roster.find((x) => x.id === i.id); return `<div class="item static ${i.status ? 'done' : ''}" style="align-items:flex-start">${m ? monsterSprite(m, 36) : ''}<div class="grow"><div class="name">${esc(i.name)} <span class="dim">${esc(i.position)} · ${i.ovr} OVR</span></div><div class="sub">${fmt(i.current)} → asks <b>${fmt(i.ask)}</b>/yr for 2 seasons${i.big ? ' · big season +10%' : ''}${i.award ? ' · league award +15%' : ''}</div>
+        ${i.status ? `<div class="sub">${i.status === 'signed' ? `✅ re-signed at ${fmt(i.final)}${i.countered === 'accepted' ? ' (took the counter)' : ''}` : i.status === 'walked' ? `🚪 walked${i.countered === 'refused' ? ' — refused the counter' : ''}` : esc(i.status)}</div>` : `<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small primary" data-action="c" data-id="${i.id}" data-v="sign">Sign ${fmt(i.ask)}</button><button class="btn small" data-action="c" data-id="${i.id}" data-v="counter">Counter ${fmt(Math.round(i.ask * 0.85 / 100) * 100)}</button><button class="btn small danger" data-action="c" data-id="${i.id}" data-v="walk">Let walk</button></div>`}</div></div>`; };
+      const srow = (i) => `<div class="item static ${i.status ? 'done' : ''}"><div class="grow"><div class="name">${esc(i.name)} <span class="dim">${esc(i.role.replace(/_/g, ' '))}</span></div><div class="sub">${fmt(i.current)} → asks <b>${fmt(i.ask)}</b>/yr for 2 seasons (+10%)</div>${i.status ? `<div class="sub">${i.status === 'signed' ? '✅ re-signed' : '🚪 left'}</div>` : `<div class="row" style="gap:6px;margin-top:6px"><button class="btn small primary" data-action="c" data-id="${i.id}" data-v="sign">Re-sign</button><button class="btn small danger" data-action="c" data-id="${i.id}" data-v="walk">Let walk</button></div>`}</div></div>`;
+      const market = F.offseasonMarket(f);
+      const canStart = F.offseasonReady(f) && f.roster.length >= F.ROSTER_MIN && !F.nextStaffRole(f);
+      return `<div class="panel"><div class="row between"><b>Roster ${f.roster.length} / ${F.ROSTER_MAX}</b><span class="chip ${f.roster.length < F.ROSTER_MIN ? 'bad' : ''}">minimum ${F.ROSTER_MIN}</span></div>
+        <div class="bar ${cap.over ? 'bad' : usage > 90 ? 'warn' : ''}" style="margin:6px 0"><i style="width:${usage}%"></i></div><div class="row between muted"><span>Cap ${fmt(cap.cap)}</span><span style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${cap.over ? 'Over by ' + fmt(-cap.remaining) : 'Room ' + fmt(cap.remaining)}</span></div>
+        <p class="dim">Every deal is two seasons from signing; salary is fixed for the deal. Asks follow a monster's ratings today — the ones you built up cost more. Counter at 85%: calm natures and a winning season say yes more often; a refusal means they walk to the free-agent pool, where any club can sign them.</p></div>
+        ${monsters.length ? `<h3>Contracts up · monsters (${monsters.filter((i) => !i.status).length} to decide)</h3><div class="list">${monsters.map(row).join('')}</div>` : '<h3>Contracts</h3><p class="dim">No monster deals expire this offseason.</p>'}
+        ${staff.length ? `<h3>Contracts up · staff</h3><div class="list">${staff.map(srow).join('')}</div>` : ''}
+        ${F.nextStaffRole(f) ? `<div class="panel tight" style="border-color:var(--bad)"><b>Front office incomplete</b> — <button class="btn small" data-action="hire">Hire staff</button></div>` : ''}
+        <h3>Free-agent market (${market.length})</h3><p class="dim">Pool monsters keep their stats and history. Signing over the cap is allowed; the commissioner reviews the books in week 1.</p>
+        <div class="list">${market.map((e) => { const m = e.monster; return `<div class="item static">${monsterSprite(m, 32)}<div class="grow"><div class="name">${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR · age ${m.age}</span>${e.fromPool ? ' <span class="chip warn">free agent</span>' : ''}</div><div class="sub">${esc(m.origin || '')} · asks ${fmt(Math.round((18000 + 280 * monsterOverall(m)) / 100) * 100)}/yr${(m.history || []).length ? ' · ' + esc(m.history.map((h) => h.club).join(', ')) : ''}</div></div><button class="btn small" data-action="sign" data-id="${m.id}" ${f.roster.length >= F.ROSTER_MAX ? 'disabled' : ''}>Sign</button></div>`; }).join('') || '<p class="dim">Nobody on the market.</p>'}</div>
+        <button class="btn primary big block ${canStart ? '' : 'disabled'}" data-action="start" ${canStart ? '' : 'disabled'} style="margin-top:12px">🔁 Start season ${f.season.year + 1}</button>${canStart ? '' : `<p class="dim center">${pending.length ? `${pending.length} contract decision${pending.length === 1 ? '' : 's'} first.` : f.roster.length < F.ROSTER_MIN ? `Sign ${F.ROSTER_MIN - f.roster.length} more to reach the minimum.` : 'Hire a full staff first.'}</p>`}`;
+    },
+    mount(root) {
+      delegate(root, {
+        c: async (el) => { const v = el.dataset.v; const item = (app.f.offseason?.items || []).find((i) => i.id === el.dataset.id); if (v === 'walk' && !(await confirmSheet(`Let ${item?.name} walk? ${item?.kind === 'staff' ? 'You will need to hire a replacement.' : 'They go to the free-agent pool; any club can sign them.'}`, { title: 'Let walk', okLabel: 'Let walk', danger: true }))) return; const r = F.resolveContract(app.f, el.dataset.id, v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (v === 'counter') toast(r.countered === 'accepted' ? 'They took the counter.' : 'They refused and walked.', r.countered === 'accepted' ? 'good' : 'bad'); Router.render(); },
+        sign: (el) => { const r = F.signFreeAgent(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.overCap ? 'Signed — over the cap.' : 'Signed.', r.overCap ? 'bad' : 'good'); Router.render(); },
+        hire: () => Router.go('hire'),
+        start: async () => { if (!(await confirmSheet(`Start season ${app.f.season.year + 1}? Your roster ages one year and the record resets.`, { title: 'New season', okLabel: 'Start' }))) return; const r = F.startNextSeason(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); },
+      });
+    },
+  });
   // ---------------------------------------------------------------- The commissioner's goals (GDD §17.4)
   Router.registerScreen('goals', {
     title: "Commissioner's office",
@@ -212,7 +246,7 @@ export function registerHqScreens(Router, app) {
       if (f.season.day !== 1) return `<div class="panel"><p>Recruiting is done for this week.</p>${f.week.recruited ? `<p class="muted">Signed: ${esc(f.roster.find((m) => m.id === f.week.recruited)?.name || '')}</p>` : ''}<button class="btn block" data-action="back">Back</button></div>`;
       if (!f.week.prospects.length) return `<div class="panel"><p>No prospects were found this week.</p><button class="btn primary block" data-action="skip">Continue to Wednesday</button></div>`;
       const cap = F.salarySummary(f);
-      return `<p class="muted">Attempts left: <b>${3 - f.week.recruitAttempts}</b> · Roster ${f.roster.length}/26 · Cap room ${fmtMoney(cap.remaining)}</p>
+      return `<p class="muted">Attempts left: <b>${3 - f.week.recruitAttempts}</b> · Roster ${f.roster.length}/${F.ROSTER_MAX} · Cap room ${fmtMoney(cap.remaining)}</p>
         <div class="stack">${f.week.prospects.map((p, i) => prospectCard(p, i)).join('')}</div>
         <button class="btn block" data-action="skip" style="margin-top:8px">Pass on all prospects</button>`;
     },
@@ -560,7 +594,7 @@ function seasonRecapHtml(f) {
   const mine = Object.entries(winners).filter(([, w]) => w && w.team === f.club);
   const announce = seed ? `<div class="panel center" style="border-color:#f5c542;background:linear-gradient(135deg,#4a3a0a,#2a2008)"><div style="font-size:12px" class="muted">PLAYOFF BOUND</div><div style="font-size:20px;font-weight:900">${esc(conf[0])} #${seed} seed</div><div class="muted">${opp ? `${F.ROUND_NAMES[1]}: ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}` : ''}</div></div>`
     : `<div class="panel center"><div style="font-size:12px" class="muted">SEASON OVER</div><div style="font-size:18px;font-weight:900">Missed the playoffs</div><div class="muted">${esc(F.playoffPicture(f).text || '')}. You can watch the bracket play out or skip to the offseason.</div></div>`;
-  return `<div class="panel center"><div style="font-size:12px" class="muted">REGULAR SEASON ${f.season.year}</div><div style="font-size:24px;font-weight:900">${rec.w}–${rec.l}${rec.t ? '–' + rec.t : ''}</div><div class="muted">${place}${['st', 'nd', 'rd'][place - 1] || 'th'} of 16 · ${rec.pf || 0} for, ${rec.pa || 0} against</div></div>
+  return `<div class="panel center"><div style="font-size:12px" class="muted">REGULAR SEASON ${f.season.year}</div><div style="font-size:24px;font-weight:900">${rec.w}–${rec.l}${rec.t ? '–' + rec.t : ''}</div><div class="muted">${place}${['st', 'nd', 'rd'][place - 1] || 'th'} of 16 · ${rec.pf || 0} points scored · ${rec.pa || 0} allowed</div></div>
     ${announce}
     <h3>Season leaders · ${esc(f.club)}</h3><div class="list">${lead('passYds', 'Passing yards')}${lead('rushYds', 'Rushing yards')}${lead('recYds', 'Receiving yards')}${lead('tackles', 'Solo tackles')}${lead('sacks', 'Sacks')}${lead('int', 'Interceptions')}</div>
     <h3>Campaign</h3><div class="panel tight">${badges.length ? `🏅 Badges this season: <b>${badges.map(esc).join(', ')}</b>` : 'No badges this season.'}${goal ? `<div style="margin-top:4px">🎯 ${esc(goal.label)}: <b>${esc(prog?.text || '')}</b> <span class="dim">(settled after the playoffs)</span></div>` : ''}</div>

@@ -232,14 +232,14 @@ export function levelUp(m, rng, { autoSpend = false } = {}) {
   }
   m.points = (m.points || 0) + POINTS_PER_LEVEL;
   if (autoSpend) autoSpendPoints(m, rng);
-  m.salary = salaryFor(m);
+  // Salary is a contract (GDD §18.1): it does not move with level-ups; the ask at renewal does.
 }
 /** Spend one banked point on an attribute (capped by potential). */
 export function spendPoint(m, attr) {
   if (!(m.points > 0)) return { ok: false, reason: 'No attribute points to spend.' };
   if (!(attr in m.attributes)) return { ok: false, reason: 'Unknown attribute.' };
   if (m.attributes[attr] >= m.potential) return { ok: false, reason: `${attr} is at this monster's potential (${m.potential}).` };
-  m.attributes[attr] = clampAttr(m.attributes[attr] + 1); m.points -= 1; m.salary = salaryFor(m);
+  m.attributes[attr] = clampAttr(m.attributes[attr] + 1); m.points -= 1;
   return { ok: true, value: m.attributes[attr], left: m.points };
 }
 /** AI clubs (and the staff, if asked) spend by position weight. */
@@ -247,7 +247,6 @@ export function autoSpendPoints(m, rng) {
   const weights = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR).filter(([k]) => m.attributes[k] < m.potential);
   let guard = 20;
   while ((m.points || 0) > 0 && weights.length && guard-- > 0) { const k = rng.weighted(weights); if (spendPoint(m, k).ok === false) break; }
-  m.salary = salaryFor(m);
 }
 
 /** Cornerstone starters offered during onboarding (GDD §8). */
@@ -292,19 +291,23 @@ export function cornerstoneByName(side, v) {
   return list.find((c) => c.name === v || c.species === v || c.species === String(v).toLowerCase()) || null;
 }
 
-/** Starting roster composition: 22 monsters. */
+/** Starting roster for the owner's club: 28 monsters — a backup at most spots, room to grow to 38 (GDD §18.2). */
 export const STARTING_ROSTER = Object.freeze([
-  ['QB', 2], ['RB', 2], ['WR', 3], ['TE', 1], ['OL', 4], ['DL', 3], ['LB', 2], ['CB', 3], ['S', 1], ['K', 1],
+  ['QB', 2], ['RB', 2], ['WR', 4], ['TE', 2], ['OL', 4], ['DL', 4], ['LB', 3], ['CB', 3], ['S', 2], ['K', 2],
+]);
+/** AI clubs carry the full 38: one backup for every depth-chart slot. */
+export const FULL_ROSTER = Object.freeze([
+  ['QB', 2], ['RB', 2], ['WR', 6], ['TE', 2], ['OL', 6], ['DL', 6], ['LB', 4], ['CB', 4], ['S', 4], ['K', 2],
 ]);
 
-export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null, signature = null, evolveStage = 0 } = {}) {
+export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null, signature = null, evolveStage = 0, composition = STARTING_ROSTER } = {}) {
   const rng = createRng(seed);
   const roster = [];
   // No species twice on a fresh roster (cornerstone species included); a second copy would be "Name II".
   const used = new Set([...CORNERSTONES.offense, ...CORNERSTONES.defense].map((c) => c.species));
   if (legendary) used.add(legendary);
   if (cornerstone?.species) used.add(cornerstone.species);
-  for (const [position, count] of STARTING_ROSTER) {
+  for (const [position, count] of composition) {
     for (let i = 0; i < count; i++) {
       const q = quality + (i === 0 ? 4 : -2) + rng.int(5) - 2;
       const sp = pickSpeciesForPosition(rng, position, { exclude: used, element });
@@ -357,8 +360,8 @@ export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cor
   return roster;
 }
 
-export const ROSTER_MAX = 26;
-export const ROSTER_MIN = 16;
+export const ROSTER_MAX = 38; // one backup for every depth-chart slot (GDD §18.2)
+export const ROSTER_MIN = 26; // below this a club cannot play
 
 /**
  * The four numbers a coach needs (GDD: every number on screen should drive a
