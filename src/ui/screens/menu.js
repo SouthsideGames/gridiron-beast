@@ -5,6 +5,9 @@ import * as Save from '../../franchise/save.js';
 import { cloudStatus } from '../../franchise/cloud-save.js';
 import { buildLabel } from '../../version.js';
 import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
+import * as F from '../../franchise/franchise.js';
+import { BACKGROUNDS } from '../../data/staff.js';
+import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { resetDex } from '../../franchise/dex-store.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
 import { resetTutorial, primerHtml } from '../tutorial.js';
@@ -110,10 +113,30 @@ export function registerMenuScreens(Router, app) {
     render() { return `<div class="panel"><p><b>Gridiron Beast v6</b> — a mobile-first 7-on-7 monster football franchise game.</p><p class="muted">Engine, playbook, coaching AI and franchise systems are shared by matches, practice and the simulated league. Every play is reproducible from its seed.</p><p class="muted">16 clubs, two conferences, a 10-week season and a three-round playoff.</p></div>`; },
   });
 
+  // ---------------------------------------------------------------- My office (GDD §18.6): the GM's own page
+  Router.registerScreen('office', {
+    title: 'My office',
+    render({ f }) {
+      const b = f.board || { confidence: 0, goal: null, history: [] }; const g = b.goal; const p = g ? F.goalProgress(f) : null;
+      const hof = F.hallOfFameProgress(f); const diff = DIFFICULTY[f.settings.difficulty] || DIFFICULTY.pro;
+      const seasons = f.history.length; const wins = f.history.reduce((a, h) => a + h.record.w, 0) + F.record(f).w, losses = f.history.reduce((a, h) => a + h.record.l, 0) + F.record(f).l;
+      const badges = Object.entries(f.campaign?.badges || {});
+      const bg = BACKGROUNDS[f.owner.background];
+      return `<div class="panel"><div class="row" style="gap:12px">${portraitSprite(f.owner.portrait, 72)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(f.owner.first)} ${esc(f.owner.last)}</div><div class="muted">General manager, ${esc(f.club)} · season ${f.season.year} · ${esc(diff.label)}</div>${bg ? `<div class="dim">${esc(bg.label)} — ${esc(bg.text)}</div>` : ''}</div></div></div>
+        <div class="panel ${F.onHotSeat(f) ? 'hotseat' : ''}"><div class="row between"><b>Board</b><span class="chip ${F.onHotSeat(f) ? 'bad' : b.confidence > 0 ? 'good' : ''}">${F.confidenceLabel(b.confidence)} (${b.confidence >= 0 ? '+' : ''}${b.confidence})</span></div>
+          ${g ? `<div style="margin-top:6px">🎯 This season: <b>${esc(g.label)}</b>${p ? ` · ${esc(p.text)}` : ''}</div><div class="bar" style="margin:6px 0 0"><i style="width:${Math.round((p?.pct || 0) * 100)}%"></i></div>` : '<div class="dim" style="margin-top:6px">No goal committed yet.</div>'}
+          ${b.history.length ? `<div class="dim" style="margin-top:6px">Past: ${b.history.map((h) => `S${h.year} ${h.met ? '✅' : '❌'} ${esc(h.label)}`).join(' · ')}</div>` : ''}</div>
+        <div class="panel"><b>Career</b><div class="kv" style="margin-top:6px"><b>Seasons</b><span>${seasons + 1}</span><b>Record</b><span>${wins}–${losses}</span><b>Beast Bowls</b><span>${f.campaign?.titles || 0}</span><b>League awards</b><span>${f.campaign?.awards || 0}</span><b>Badges</b><span>${badges.length} / 8</span><b>Career wins (HoF)</b><span>${f.campaign?.wins || 0}</span></div>
+          ${badges.length ? `<div class="row" style="flex-wrap:wrap;gap:4px;margin-top:6px">${badges.map(([club, x]) => `<span class="chip accent">${esc(GYM_BY_CLUB[club]?.badge || club)} · S${x.year}</span>`).join('')}</div>` : ''}</div>
+        <div class="panel"><b>Hall of Fame</b> <span class="dim">${esc(diff.hof)}</span><div class="hof" style="margin-top:6px">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${r.key}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>${hof.eligible ? '<p class="muted">Eligible: retire from HQ whenever you choose.</p>' : ''}</div>
+        <div class="panel"><b>Franchises</b><div class="dim">Selling this club and starting another is coming (GDD §18.7). Sold franchises will sit here as cards; facing an old club will be a big day.</div></div>`;
+    },
+  });
   Router.registerScreen('more', {
     title: 'More',
     render({ f }) {
       return `<div class="stack">
+        <button class="btn block" data-action="go" data-screen="office">🪪 My office <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
         <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;

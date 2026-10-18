@@ -15,6 +15,7 @@ import { hashString } from '../core/rng.js';
 export const AWARDS = Object.freeze({
   mvp: { label: 'Most Valuable Monster', short: 'MVP' }, opoy: { label: 'Offensive Monster of the Year', short: 'OPOY' }, dpoy: { label: 'Defensive Monster of the Year', short: 'DPOY' },
   oroy: { label: 'Offensive Rookie of the Year', short: 'OROY' }, droy: { label: 'Defensive Rookie of the Year', short: 'DROY' }, coy: { label: 'Coach of the Year', short: 'COY' },
+  smoy: { label: 'Signature Monster of the Year', short: 'SMOY' },
 });
 
 /** The rules, in the words the award sheet shows. */
@@ -25,6 +26,7 @@ export const AWARD_RULES = Object.freeze({
   coy: 'Wins above what the roster’s talent predicted before the season, improvement on last season, and point margin. Expectations are recorded in week 1, not after the fact.',
   oroy: 'First-season monsters, scored on the OPOY scale against the whole league.',
   droy: 'First-season monsters, scored on the DPOY scale against the whole league.',
+  smoy: 'The monster whose ability did the most: on every play where it fired, yards beyond (or short of) a normal play, touchdowns and takeaways, totalled per game and compared across the league. Firing often is not enough; it has to change plays.',
 });
 
 // ------------------------------------------------------------ components
@@ -107,7 +109,13 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
     const why = `${over >= 0 ? '+' : ''}${(over * g).toFixed(1)} wins vs the preseason forecast (${(expected * g).toFixed(1)} from ${ex.talent ?? '?'} OVR)${last != null ? `, ${improve >= 0 ? 'up' : 'down'} ${Math.abs(improve * g).toFixed(1)} on last season` : ''}, ${margin >= 0 ? '+' : ''}${margin.toFixed(1)} points per game`;
     return { team, coach: coachOf(team), w: rec.w, l: rec.l, pf: rec.pf || 0, pa: rec.pa || 0, talent: ex.talent ?? null, expected: Math.round(expected * g * 10) / 10, score: Math.round(score * 100) / 100, why, record: recordOf(team), name: coachOf(team), prod: over, games: g };
   }).filter(Boolean).sort(tieBreak).slice(0, n);
-  return { mvp, opoy, dpoy, oroy, droy, coy, minGames, weeks };
+  // Signature Monster of the Year: ability impact per game across the whole league (position-free), at least one firing per game.
+  // Effectiveness = impact per firing × √(firings per game, capped at 6): a clutch ability that changes a few plays a game beats one that fires every snap for a yard.
+  const sig = rows.filter((r) => (r.abilityPlays || 0) >= (r.games || 1));
+  const eff = (r) => ((r.abilityImpact || 0) / Math.max(1, r.abilityPlays || 0)) * Math.sqrt(Math.min(6, perGame(r, r.abilityPlays || 0)));
+  const zSig = (() => { const v = sig.map(eff); const m = v.reduce((a, b) => a + b, 0) / (v.length || 1); const sd = Math.sqrt(v.reduce((a, b) => a + (b - m) ** 2, 0) / (v.length || 1)); return (r) => (sd < 1e-6 ? 0 : (eff(r) - m) / sd); })();
+  const smoy = top(sig.map((r) => { const s = zSig(r); return { ...r, score: Math.round(s * 100) / 100, prod: r.abilityImpact || 0, components: { effectiveness: Math.round(zSig(r) * 100) / 100 }, why: `Ability fired ${r.abilityPlays} times, ${((r.abilityImpact || 0) / Math.max(1, r.abilityPlays)).toFixed(1)} impact per firing (${(r.abilityImpact || 0) >= 0 ? '+' : ''}${r.abilityImpact || 0} total) · ${statLine(r)}`, record: recordOf(r.team), minGames, rookie: r.yearsPro === 0 }; }));
+  return { mvp, opoy, dpoy, oroy, droy, coy, smoy, minGames, weeks };
 }
 
 /** A club's head coach by name: the gym coach, the player's hired coach, or a stable generated name. */

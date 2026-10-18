@@ -135,7 +135,7 @@ export function registerHqScreens(Router, app) {
       return `<div class="panel"><div class="row between"><b>Roster ${f.roster.length} / ${F.ROSTER_MAX}</b><span class="chip ${f.roster.length < F.ROSTER_MIN ? 'bad' : ''}">minimum ${F.ROSTER_MIN}</span></div>
         <div class="bar ${cap.over ? 'bad' : usage > 90 ? 'warn' : ''}" style="margin:6px 0"><i style="width:${usage}%"></i></div><div class="row between muted"><span>Cap ${fmt(cap.cap)}</span><span style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${cap.over ? 'Over by ' + fmt(-cap.remaining) : 'Room ' + fmt(cap.remaining)}</span></div>
         <p class="dim">Every deal is two seasons from signing; salary is fixed for the deal. Asks follow a monster's ratings today — the ones you built up cost more. Counter at 85%: calm natures and a winning season say yes more often; a refusal means they walk to the free-agent pool, where any club can sign them.</p></div>
-        ${monsters.length ? `<h3>Contracts up · monsters (${monsters.filter((i) => !i.status).length} to decide)</h3><div class="list">${monsters.map(row).join('')}</div>` : '<h3>Contracts</h3><p class="dim">No monster deals expire this offseason.</p>'}
+        ${monsters.length ? `<h3>Contracts up · monsters (${monsters.filter((i) => !i.status).length} to decide)</h3>${monsters.some((i) => !i.status) ? `<div class="row" style="gap:6px;margin-bottom:6px"><button class="btn small" data-action="signall">Sign everyone left at their ask</button><span class="dim">total ${fmt(monsters.filter((i) => !i.status).reduce((a, i) => a + i.ask, 0))}/yr</span></div>` : ''}<div class="list">${monsters.map(row).join('')}</div>` : '<h3>Contracts</h3><p class="dim">No monster deals expire this offseason.</p>'}
         ${staff.length ? `<h3>Contracts up · staff</h3><div class="list">${staff.map(srow).join('')}</div>` : ''}
         ${F.nextStaffRole(f) ? `<div class="panel tight" style="border-color:var(--bad)"><b>Front office incomplete</b> — <button class="btn small" data-action="hire">Hire staff</button></div>` : ''}
         <h3>Free-agent market (${market.length})</h3><p class="dim">Pool monsters keep their stats and history. Signing over the cap is allowed; the commissioner reviews the books in week 1.</p>
@@ -147,6 +147,7 @@ export function registerHqScreens(Router, app) {
         c: async (el) => { const v = el.dataset.v; const item = (app.f.offseason?.items || []).find((i) => i.id === el.dataset.id); if (v === 'walk' && !(await confirmSheet(`Let ${item?.name} walk? ${item?.kind === 'staff' ? 'You will need to hire a replacement.' : 'They go to the free-agent pool; any club can sign them.'}`, { title: 'Let walk', okLabel: 'Let walk', danger: true }))) return; const r = F.resolveContract(app.f, el.dataset.id, v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (v === 'counter') toast(r.countered === 'accepted' ? 'They took the counter.' : 'They refused and walked.', r.countered === 'accepted' ? 'good' : 'bad'); Router.render(); },
         sign: (el) => { const r = F.signFreeAgent(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.overCap ? 'Signed — over the cap.' : 'Signed.', r.overCap ? 'bad' : 'good'); Router.render(); },
         hire: () => Router.go('hire'),
+        signall: async () => { const left = (app.f.offseason?.items || []).filter((i) => i.kind === 'monster' && !i.status); if (!(await confirmSheet(`Re-sign all ${left.length} remaining monsters at their asks?`, { title: 'Sign everyone', okLabel: 'Sign all' }))) return; for (const i of left) F.resolveContract(app.f, i.id, 'sign'); app.save(); Router.render(); },
         start: async () => { if (!(await confirmSheet(`Start season ${app.f.season.year + 1}? Your roster ages one year and the record resets.`, { title: 'New season', okLabel: 'Start' }))) return; const r = F.startNextSeason(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); },
       });
     },
@@ -470,21 +471,24 @@ export function registerHqScreens(Router, app) {
     },
   });
   // ---------------------------------------------------------------- League stats
-  let leaderCat = 'passYds', leaderBucket = 'reg';
+  let leaderCat = 'passYds', leaderBucket = 'reg', leaderScope = 'league';
   const MIN_LABEL = (k) => ({ att: 'attempts', rush: 'carries', covTargets: 'targets in coverage', pbSnaps: 'pass-blocking snaps', fga: 'field-goal attempts' })[k] || k;
   Router.registerScreen('leaders', {
     title: 'League leaders',
     render({ f }) {
       const table = leaderBucket === 'post' ? f.season.playoffStats : f.season.leagueStats;
       const cat = LEADER_CATEGORIES.find((c) => c.id === leaderCat) || LEADER_CATEGORIES[0];
-      const rows = leaders(table, cat.id, { n: 15 });
+      const myConf = conferenceFor(f.club), myDiv = divisionOf(f.club);
+      const teams = leaderScope === 'conference' ? Object.values(DIVISIONS).flat().filter((t) => conferenceFor(t) === myConf) : leaderScope === 'division' ? DIVISIONS[myDiv] : null;
+      const rows = leaders(table, cat.id, { n: 15, teams });
       return `<div class="seg" style="margin-bottom:6px"><button class="btn small ${leaderBucket === 'reg' ? 'primary' : ''}" data-action="bucket" data-v="reg">Regular season</button><button class="btn small ${leaderBucket === 'post' ? 'primary' : ''}" data-action="bucket" data-v="post">Playoffs</button></div>
+        <div class="seg" style="margin-bottom:6px"><button class="btn small ${leaderScope === 'league' ? 'primary' : ''}" data-action="scope" data-v="league">Whole league</button><button class="btn small ${leaderScope === 'conference' ? 'primary' : ''}" data-action="scope" data-v="conference">${esc(myConf)}</button><button class="btn small ${leaderScope === 'division' ? 'primary' : ''}" data-action="scope" data-v="division">${esc(myDiv)}</button></div>
         <select class="input" data-action="cat" style="margin-bottom:8px">${LEADER_CATEGORIES.map((c) => `<option value="${c.id}" ${c.id === cat.id ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
         ${cat.min ? `<p class="dim" style="margin-top:0">Minimum ${cat.min[1]} ${esc(MIN_LABEL(cat.min[0]))}.</p>` : ''}
         <div class="list">${rows.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}">${monsterSprite(r, 32)}<div class="grow"><div class="name">${i + 1}. ${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></div><div class="sub">${esc(statLine(r))}</div></div><span class="chip accent">${r[cat.key]}</span></div>`).join('') || `<p class="dim">${leaderBucket === 'post' ? 'No playoff games yet.' : 'No games yet.'}</p>`}</div>`;
     },
     mount(root) {
-      delegate(root, { bucket: (el) => { leaderBucket = el.dataset.v; Router.render(); } });
+      delegate(root, { bucket: (el) => { leaderBucket = el.dataset.v; Router.render(); }, scope: (el) => { leaderScope = el.dataset.v; Router.render(); } });
       root.querySelector('[data-action="cat"]')?.addEventListener('change', (e) => { leaderCat = e.target.value; Router.render(); });
     },
   });

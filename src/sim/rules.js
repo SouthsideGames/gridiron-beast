@@ -288,6 +288,11 @@ export function recordPlayerStats(state, sim, off, def, { toGo = 10 } = {}) {
   // Monster-football extras from the engine's event stream.
   const keyOf = { juke: 'jukes', broken: 'broken', shed: 'sheds', ability: 'abilities' };
   for (const e of sim.events || []) { const k = keyOf[e.kind]; if (!k || !e.by) continue; bump(e.side === 'def' ? def : off, e.by, k); }
+  // Ability effectiveness (Signature Monster of the Year, GDD §18.5): what happened on the plays where an ability fired, once per monster per play.
+  { const fired = new Set(); for (const e of sim.events || []) { if (e.kind !== 'ability' || !e.by) continue; const key = `${e.side}|${e.by}`; if (fired.has(key)) continue; fired.add(key);
+      const team = e.side === 'def' ? def : off; const impact = e.side === 'def' ? (4 - gain) + (isTurnover ? 20 : 0) + (st.defensiveScore ? 15 : 0) : (gain - 4) + (offTd ? 15 : 0) - (isTurnover ? 10 : 0);
+      if (e.trait) { bump(team, e.by, 'traitPlays'); continue; } // passive traits fire constantly; the award is for abilities
+      bump(team, e.by, 'abilityPlays'); bump(team, e.by, 'abilityImpact', Math.round(impact)); } }
 }
 
 function kickerStat(state, side, key, n = 1) { const p = (state.stats[side].players.K ||= {}); p[key] = (p[key] || 0) + n; }

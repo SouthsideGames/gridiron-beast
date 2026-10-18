@@ -25,7 +25,7 @@ export const STAT_LABEL = Object.freeze({
   tackles: 'Solo', assists: 'Ast', tfl: 'TFL', sacks: 'Sacks', pressures: 'Press', ff: 'FF', fr: 'FR', pd: 'PD', int: 'INT', defTd: 'Def TD',
   covTargets: 'Tgt vs', recAllowed: 'Rec alw', ydsAllowed: 'Yds alw', tdAllowed: 'TD alw',
   fga: 'FGA', fgm: 'FGM', fgLong: 'Long', xpa: 'XPA', xpm: 'XPM', fg0a: '<30 A', fg0m: '<30 M', fg30a: '30s A', fg30m: '30s M', fg40a: '40s A', fg40m: '40s M', fg50a: '50+ A', fg50m: '50+ M',
-  jukes: 'Jukes', broken: 'Broken tkl', sheds: 'Sheds', abilities: 'Abilities',
+  jukes: 'Jukes', broken: 'Broken tkl', sheds: 'Sheds', abilities: 'Abilities', abilityPlays: 'Ability plays', abilityImpact: 'Ability impact', traitPlays: 'Trait plays',
 });
 
 export const OFFENSE_POSITIONS = new Set(['QB', 'RB', 'WR', 'TE', 'OL']);
@@ -197,10 +197,11 @@ export const LEADER_CATEGORIES = Object.freeze([
   { id: 'tacklesTotal', label: 'Tackles', key: 'tacklesTotal' }, { id: 'tfl', label: 'Tackles for loss', key: 'tfl' }, { id: 'sacks', label: 'Sacks', key: 'sacks' }, { id: 'pressures', label: 'Pressures', key: 'pressures' },
   { id: 'int', label: 'Interceptions', key: 'int' }, { id: 'pd', label: 'Passes defended', key: 'pd' }, { id: 'ff', label: 'Forced fumbles', key: 'ff' }, { id: 'ydsPerTarget', label: 'Yards allowed per target', key: 'ydsPerTarget', min: ['covTargets', 8], asc: true },
   { id: 'blockWinPct', label: 'Block win rate', key: 'blockWinPct', min: ['pbSnaps', 20] }, { id: 'kickPts', label: 'Kicking points', key: 'kickPts' }, { id: 'fgPct', label: 'Field goal %', key: 'fgPct', min: ['fga', 4] },
+  { id: 'abilityPlays', label: 'Ability plays', key: 'abilityPlays' }, { id: 'abilityImpact', label: 'Ability impact', key: 'abilityImpact' },
 ]);
-export function leaders(table, catId, { n = 10 } = {}) {
+export function leaders(table, catId, { n = 10, teams = null } = {}) {
   const cat = LEADER_CATEGORIES.find((c) => c.id === catId); if (!cat) return [];
-  return leagueRows(table).map((r) => ({ ...r, ...derive(r) })).filter((r) => r[cat.key] != null && (!cat.min || (r[cat.min[0]] || 0) >= cat.min[1]) && (cat.asc || r[cat.key] > 0))
+  return leagueRows(table).filter((r) => !teams || teams.includes(r.team)).map((r) => ({ ...r, ...derive(r) })).filter((r) => r[cat.key] != null && (!cat.min || (r[cat.min[0]] || 0) >= cat.min[1]) && (cat.asc || r[cat.key] > 0))
     .sort((a, b) => (cat.asc ? a[cat.key] - b[cat.key] : b[cat.key] - a[cat.key]) || (b.games || 0) - (a.games || 0) || a.name.localeCompare(b.name)).slice(0, n);
 }
 

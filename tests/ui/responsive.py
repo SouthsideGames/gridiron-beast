@@ -134,6 +134,8 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="go"][data-screen="leaders"]'); page.wait_for_selector('.list'); no_overflow(page, 'leaders'); shot(page, f'{name}-05c-leaders')
     page.select_option('[data-action="cat"]', 'sacks'); page.wait_for_timeout(80); no_overflow(page, 'leaders sacks'); page.click('[data-action="bucket"][data-v="post"]'); page.wait_for_timeout(80); page.click('[data-action="router-back"]'); page.wait_for_selector('[data-action="award"]')
     page.click('[data-action="go"][data-screen="awardhistory"]'); page.wait_for_timeout(80); no_overflow(page, 'award history'); page.click('[data-action="router-back"]'); page.wait_for_selector('[data-action="award"]')
+    page.click('[data-action="go"][data-screen="records"]'); page.wait_for_timeout(80); no_overflow(page, 'records'); page.click('[data-action="rtab"][data-v="team"]'); page.wait_for_timeout(50); page.click('[data-action="router-back"]'); page.wait_for_selector('[data-action="award"]')
+    page.click('[data-action="router-tab"][data-screen="more"]'); page.click('[data-action="go"][data-screen="office"]'); page.wait_for_timeout(100); no_overflow(page, 'my office'); shot(page, f'{name}-05d-office')
     page.click('[data-action="router-tab"][data-screen="hq"]')
     # Week
     settle(page, '[data-action="scout"]')
