@@ -471,4 +471,5 @@ Rookie of the Year needs rookies arriving together, so the league drafts.
 * **AI draftees persist** (`f.draftResults[year][club]`): they are swapped into their club's generated roster at their position for three seasons, so "he'll be gone by your pick" is real and AI clubs have rookie-of-the-year candidates. Their ages and years pro advance with the calendar; the class just drafted enters the coming season at `yearsPro 0`.
 * **Rookie of the Year** keeps the rule "first professional season"; a rookie signed from a regional pool in week 10 is eligible but will not have the games.
 * LATER: trading picks; a combine week; a second scout.
+* **19.2 A new GM arrives on draft day.** Creation flow: coach → club → difficulty → cornerstone → **draft day** → commissioner's goal → week 1. A lottery gives the new club pick 1–5 (**15 / 20 / 22 / 22 / 21 %**); the other clubs slot by natural level, snake after that. The outgoing staff's notes scout the top 12 prospects fully and the next 10 partially, so the first pick is a decision, not a dice roll. The market is skipped at creation (the roster is 28). Week 10 of season 1 brings a fresh class.
 

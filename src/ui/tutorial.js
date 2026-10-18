@@ -8,6 +8,7 @@ import { esc, sheet } from './dom.js';
 
 /** Screen → tip. `sheet: true` tips open as an overlay (the match screen has no room). */
 export const TIPS = Object.freeze({
+  draft: { title: 'Draft day', text: 'Every club takes three first-year monsters, worst record first. Scouted prospects show their ratings; the rest are a gamble on the public board rank. Rookies cost 70% of market for two seasons — the cheapest good players you will ever sign. Pick for a position where you have no backup, or just the best monster you can see.' },
   hq: { title: 'Welcome to your week', text: 'A season is 10 weeks. Each week runs Monday to Sunday: scout monsters, sign one, train, study the opponent, set your plays, talk to the press, then play on Sunday. The big yellow button always says what’s next. If you’d rather skip the weekday chores, “Let the staff run the week” does them for you.', more: true },
   scout: { title: 'Monday: scouting', text: 'Pick a region and your scout brings back prospects. Each region has its own elements (types) of monster. A better scout finds more prospects and reveals more of their ratings.' },
   recruit: { title: 'Tuesday: recruiting', text: 'Each prospect shows four headline ratings: Speed, Power, Hands and Smarts. The ⓘ button compares them with your current monsters at that position. Signing costs salary against your cap; if you go over, the commissioner reviews the books on Saturday, so sign with care.' },

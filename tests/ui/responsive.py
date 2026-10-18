@@ -87,7 +87,15 @@ def run_size(pw, port, w, h, name):
     page.click('[data-action="reroll"]'); page.wait_for_timeout(50); page.click('[data-action="pick"][data-side="offense"] >> nth=0'); shot(page, f'{name}-02c-cornerstone'); page.click('#next')
     page.wait_for_selector('.tabbar')
     check(page.query_selector('.tip') is not None, 'tutorial: HQ tip shows on the first week')
-    # The commissioner's goal comes first (GDD §17.4).
+    # Draft day first for a new GM (GDD §19.2): pick once, pass the rest.
+    page.click('[data-action="draft"]'); page.wait_for_selector('[data-action="pick"]'); no_overflow(page, 'draft room'); shot(page, f'{name}-03aa-draft')
+    page.click('[data-action="pick"] >> nth=0'); page.wait_for_selector('.sheet [data-action="yes"]'); page.click('.sheet [data-action="yes"]'); page.wait_for_timeout(200)
+    for _ in range(3):
+        if page.query_selector('[data-action="pass"]'):
+            page.click('[data-action="pass"]'); page.wait_for_selector('.sheet [data-action="yes"]'); page.click('.sheet [data-action="yes"]'); page.wait_for_timeout(200)
+    check(page.evaluate("() => __gb.f.draft.done"), 'creation draft completes')
+    page.click('[data-action="back"]'); page.wait_for_selector('.tabbar')
+    # The commissioner's goal comes next (GDD §17.4).
     page.click('[data-action="goals"]'); page.wait_for_selector('[data-action="goal"]'); no_overflow(page, 'goals'); shot(page, f'{name}-03a-goals')
     page.click('[data-action="goal"][data-id="wins"]'); page.wait_for_selector('.sheet'); page.click('.sheet [data-action="yes"]'); page.wait_for_selector('.tabbar')
     check(page.evaluate("() => !!__gb.f.board?.goal"), 'goal committed')

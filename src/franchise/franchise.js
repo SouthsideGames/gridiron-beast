@@ -61,8 +61,30 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   startSeason(f, 1);
   noteNewFranchise();
   for (const m of roster) dexRecord(f, m, 'signed');
+  openCreationDraft(f);
   return f;
 }
+/** A new GM arrives on draft day (GDD §19.2): a lottery pick 1–5 (15% for #1), the outgoing staff's scouting notes, the rest of the league slotted by their natural level. */
+export const CREATION_LOTTERY = Object.freeze([0.15, 0.20, 0.22, 0.22, 0.21]);
+export function openCreationDraft(f) {
+  const { r, save } = frng(f);
+  const d = openDraftClass(f, r, { uniqueName: (m, extra) => uniqueName(f, m, extra) });
+  d.year = 0; d.creation = true; // the class before season 1; week 10 of season 1 brings a new one
+  for (const m of d.class) dexRecord(f, m, 'seen');
+  // Notes: the top dozen fully scouted, the next ten glanced.
+  d.class.slice(0, 12).forEach((m) => { d.revealed[m.id] = 6; }); d.class.slice(12, 22).forEach((m) => { d.revealed[m.id] = 3; });
+  // Lottery slot, then the other clubs from weakest to strongest.
+  const roll = r.next(); let acc = 0, slot = 4; for (let i = 0; i < CREATION_LOTTERY.length; i++) { acc += CREATION_LOTTERY[i]; if (roll < acc) { slot = i; break; } }
+  const others = ALL_TEAMS.filter((t) => t !== f.club).sort((a, b) => clubQuality(f, a, 1) - clubQuality(f, b, 1));
+  const worstFirst = [...others.slice(0, slot), f.club, ...others.slice(slot)];
+  save();
+  draftStart(f, worstFirst.slice().reverse()); // draftStart expects best→worst
+  d.lotterySlot = slot + 1;
+  runDraftToMe(f);
+  news(f, `Draft day. The lottery gave ${f.club} the #${slot + 1} pick; the previous staff left scouting notes on ${12} prospects.`, 'info');
+  return d;
+}
+export const creationDraftPending = (f) => !!f.draft?.creation && !f.draft.done;
 
 // ------------------------------------------------------------ play stats (per season, the player's own calls)
 /** Tally this game's calls: offense plays when we had the ball, defense plays when they did. */
@@ -590,7 +612,7 @@ export function beginDraft(f) {
   return { ok: true, draft: f.draft };
 }
 function runDraftToMe(f) { const { r, save } = frng(f); const made = draftAdvance(f, r, { playerClub: f.club }); save(); return made; }
-export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.season.year + 1 }); if (!r.ok) return r; dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}) — rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
+export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}) — rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
 export function passDraftPick(f) { const r = draftPassPick(f, { playerClub: f.club }); if (!r.ok) return r; runDraftToMe(f); return r; }
 export const draftDone = (f) => !f.draft || f.draft.year !== f.season.year || f.draft.done;
 /** The commissioner's three goal offers for this season (GDD §17.4). */

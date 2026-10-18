@@ -17,8 +17,10 @@ export function generateDraftClass(rng, { year, uniqueName }) {
   const out = []; let n = 0;
   for (const [position, count] of CLASS_SHAPE) {
     for (let i = 0; i < count; i++) {
-      const regionName = rng.pick(Object.keys(REGIONS));
-      const pool = regionSpecies(regionName, REGIONS[regionName].types, 10).filter((s) => s.position === position || s.secondary === position);
+      // A region that has species for the position (not every region does).
+      const regions = Object.keys(REGIONS).sort(() => rng.next() - 0.5);
+      let regionName = regions[0], pool = [];
+      for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position || s.secondary === position); if (p.length) { regionName = rn; pool = p; break; } }
       const sp = pool.length ? rng.pick(pool) : null; if (!sp) continue;
       const roll = rng.next(); const quality = roll < 0.08 ? 62 + rng.int(6) : roll < 0.35 ? 55 + rng.int(6) : 47 + rng.int(8); // gems, solid, projects
       const m = generateMonster(rng, { position, quality, species: sp.id, age: 19 + rng.int(4), yearsPro: 0 });

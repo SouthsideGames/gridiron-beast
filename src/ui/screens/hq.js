@@ -113,6 +113,7 @@ export function registerHqScreens(Router, app) {
   function nextAction(f) {
     const d = f.season.day;
     if (f.game && !f.game.state?.finished) return { label: 'Resume game', action: 'resume', icon: '▶' };
+    if (F.creationDraftPending(f)) return { label: `Draft day · you hold the #${f.draft.lotterySlot} pick`, action: 'draft', icon: '🎓' };
     if (F.needsGoal(f)) return { label: "Meet the commissioner · this season's goal", action: 'goals', icon: '🎯' };
     if (F.draftWindow(f) && d === 0) return { label: `Monday · Scout the draft class`, action: 'scoutdraft', icon: '🎓' };
     if (F.draftWindow(f) && d === 1) return { label: 'Tuesday · Recovery day', action: 'recovery', icon: '🩹' };
@@ -197,16 +198,17 @@ export function registerHqScreens(Router, app) {
     title: ({ f }) => `Draft · season ${f?.season.year + 1} class`,
     render({ f }) {
       const d = f.draft; if (!d?.started) return `<div class="panel"><p>Contracts first, then the draft.</p><button class="btn primary block" data-action="begin" ${F.offseasonReady(f) ? '' : 'disabled'}>Open the draft</button></div>`;
+      const intro = d.creation && !d.done ? `<div class="talk" style="margin-bottom:8px"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 48, { hue: 40 })}<div class="grow"><div class="talk-name">The Commissioner</div><p class="talk-line">“Fast, I know. Welcome to ${esc(f.club)}. The draft is today and the lottery gave you the <b>#${d.lotterySlot}</b> pick. The staff you replaced left notes on a dozen prospects — the rest is on you. Go look at your roster first if you like; the board waits for nobody else.”</p></div></div></div>` : '';
       const clock = F.onTheClock(f); const mine = clock === f.club;
       const myPicks = d.picks.filter((p) => p.mine);
       const recent = d.picks.slice(-6).reverse();
       const avail = d.class.filter((m) => d.available.includes(m.id)).filter((m) => !draftFocus || m.position === draftFocus);
       const sorted = draftSort === 'known' ? avail.slice().sort((a, b) => (F.prospectView(f, b).level - F.prospectView(f, a).level) || (a.boardRank - b.boardRank)) : avail;
       const mySlots = d.order.map((o, i) => ({ ...o, i })).filter((o) => o.team === f.club);
-      return `<div class="panel tight"><div class="row between"><b>${d.done ? 'Draft complete' : `Round ${d.round} · pick ${d.index + 1} of ${d.order.length}`}</b><span class="chip ${mine ? 'accent' : ''}">${d.done ? '' : mine ? 'YOU ARE ON THE CLOCK' : esc(clock || '')}</span></div>
+      return `${intro}<div class="panel tight"><div class="row between"><b>${d.done ? 'Draft complete' : `Round ${d.round} · pick ${d.index + 1} of ${d.order.length}`}</b><span class="chip ${mine ? 'accent' : ''}">${d.done ? '' : mine ? 'YOU ARE ON THE CLOCK' : esc(clock || '')}</span></div>
         <div class="dim">Your picks: ${mySlots.map((o) => `R${o.round} #${o.i + 1}`).join(', ')} · worst record picks first, snake order · roster ${f.roster.length}/${F.ROSTER_MAX}</div></div>
         ${myPicks.length ? `<h3>Your draft</h3><div class="list">${myPicks.map((p) => `<div class="item static"><div class="grow"><div class="name">R${p.round} #${p.overall} · ${esc(p.name)}</div><div class="sub">${p.passed ? 'passed' : `${esc(p.position)} · ${p.ovr} OVR · rookie deal, two seasons`}</div></div></div>`).join('')}</div>` : ''}
-        ${d.done ? `<button class="btn primary big block" data-action="back">Back to the offseason</button>` : mine ? `<div class="row between" style="margin:8px 0"><div class="seg"><button class="btn small ${draftSort === 'board' ? 'primary' : ''}" data-action="sort" data-v="board">Board</button><button class="btn small ${draftSort === 'known' ? 'primary' : ''}" data-action="sort" data-v="known">Scouted first</button></div><select class="input" id="draft-filter" style="width:auto">${[['', 'All positions'], ...Object.keys(F.GROUP_SLOTS).map((g) => [g, g])].map(([v, l]) => `<option value="${v}" ${draftFocus === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div><button class="btn block" data-action="pass" style="margin-bottom:8px">Pass this pick</button><div class="list">${sorted.slice(0, 30).map((m) => prospectRow(f, m, { pickable: true })).join('')}</div>` : ''}
+        ${d.done ? `<button class="btn primary big block" data-action="back">${d.creation ? 'To headquarters' : 'Back to the offseason'}</button>` : mine ? `<div class="row between" style="margin:8px 0"><div class="seg"><button class="btn small ${draftSort === 'board' ? 'primary' : ''}" data-action="sort" data-v="board">Board</button><button class="btn small ${draftSort === 'known' ? 'primary' : ''}" data-action="sort" data-v="known">Scouted first</button></div><select class="input" id="draft-filter" style="width:auto">${[['', 'All positions'], ...Object.keys(F.GROUP_SLOTS).map((g) => [g, g])].map(([v, l]) => `<option value="${v}" ${draftFocus === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div><button class="btn block" data-action="pass" style="margin-bottom:8px">Pass this pick</button><div class="list">${sorted.slice(0, 30).map((m) => prospectRow(f, m, { pickable: true })).join('')}</div>` : ''}
         <h3>Recent picks</h3><div class="list">${recent.map((p) => `<div class="item static ${p.mine ? 'mine' : ''}"><div class="grow"><div class="name">R${p.round} #${p.overall} · ${esc(p.team)}</div><div class="sub">${esc(p.name)}${p.position ? ` · ${esc(p.position)} · ${p.ovr} OVR` : ''}</div></div></div>`).join('') || '<p class="dim">No picks yet.</p>'}</div>`;
     },
     mount(root) {
@@ -215,7 +217,7 @@ export function registerHqScreens(Router, app) {
         pick: async (el) => { const m = app.f.draft.class.find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`Draft ${m.name} (${m.position})?`, { title: 'Your pick', okLabel: 'Draft' }))) return; const r = F.myDraftPick(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${m.name} is a ${app.f.club.split(' ').pop()}.`, 'good'); Router.render(); },
         pass: async () => { if (!(await confirmSheet('Pass this pick? It cannot be taken back.', { title: 'Pass', okLabel: 'Pass', danger: true }))) return; F.passDraftPick(app.f); app.save(); Router.render(); },
         sort: (el) => { draftSort = el.dataset.v; Router.render(); },
-        back: () => Router.go('offseason'),
+        back: () => Router.go(app.f.draft?.creation ? 'hq' : 'offseason', {}, { reset: true }),
       });
       root.querySelector('#draft-filter')?.addEventListener('change', (e) => { draftFocus = e.target.value; Router.render(); });
     },
