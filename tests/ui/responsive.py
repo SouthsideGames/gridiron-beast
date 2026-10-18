@@ -95,6 +95,10 @@ def run_size(pw, port, w, h, name):
     check(page.query_selector('.tip') is not None, 'tutorial: HQ tip shows on the first week')
     # Draft day first for a new GM (GDD §19.2): pick once, pass the rest.
     page.click('[data-action="draft"]'); page.wait_for_selector('[data-action="pick"]'); no_overflow(page, 'draft room'); shot(page, f'{name}-03aa-draft')
+    # A scouted prospect opens the scout's report (GDD §19.4); the picks-so-far sheet lists what is gone.
+    if page.query_selector('.item.tappable[data-action="prospect"]'):
+        page.click('.item.tappable[data-action="prospect"] >> nth=0'); page.wait_for_selector('.sheet .attr-grid'); no_overflow(page, 'prospect report'); shot(page, f'{name}-03ab-prospect'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
+    page.click('[data-action="picks"]'); page.wait_for_selector('.sheet'); shot(page, f'{name}-03ac-picks'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="pick"] >> nth=0'); page.wait_for_selector('.sheet [data-action="yes"]'); page.click('.sheet [data-action="yes"]'); page.wait_for_timeout(200)
     for _ in range(3):
         if page.query_selector('[data-action="pass"]'):

@@ -6,7 +6,8 @@ import * as F from '../../franchise/franchise.js';
 import { REGIONS, TRAINING_FOCI, ROLE_LABEL, trainingBonus } from '../../data/staff.js';
 import { PLAYS, LESSONS, counterPlays } from '../../data/playbook.js';
 import { tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
-import { monsterOverall, NATURES, TYPES, effectiveAttributes, HEADLINE, headlineAttributes } from '../../data/monsters.js';
+import { monsterOverall, NATURES, TYPES, effectiveAttributes, HEADLINE, headlineAttributes, resolveSpecies, ABILITIES } from '../../data/monsters.js';
+import { TRAITS } from '../../data/species.js';
 import { headlineHtml } from './roster.js';
 import { ATTRIBUTES, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
@@ -166,8 +167,28 @@ export function registerHqScreens(Router, app) {
   function prospectRow(f, m, { pickable = false, taken = false } = {}) {
     const v = F.prospectView(f, m); const h = headlineAttributes(m);
     const bars = v.headline ? HEADLINE.slice(0, 4).map((x, i) => `<span class="dim" style="font-size:11px">${i < v.headline ? `${x.label.slice(0, 3)} ${h[x.key]}` : `${x.label.slice(0, 3)} ??`}</span>`).join(' · ') : '<span class="dim" style="font-size:11px">unscouted</span>';
-    return `<div class="item static ${taken ? 'done' : ''}" style="align-items:flex-start">${monsterSprite(m, 36)}<div class="grow"><div class="name">#${m.boardRank} ${esc(m.name)} <span class="dim">${esc(m.position)} · age ${m.age} · ${esc(m.origin || '')}</span>${v.level >= 6 ? ' <span class="chip good">scouted</span>' : v.level > 0 ? ' <span class="chip">glanced</span>' : ''}</div>
+    const scouted = v.level >= 6;
+    return `<div class="item ${scouted ? 'tappable' : 'static'} ${taken ? 'done' : ''}" style="align-items:flex-start" ${scouted ? `data-action="prospect" data-id="${m.id}" role="button" tabindex="0"` : ''}>${monsterSprite(m, 36)}<div class="grow"><div class="name">#${m.boardRank} ${esc(m.name)} <span class="dim">${esc(m.position)} · age ${m.age} · ${esc(m.origin || '')}</span>${scouted ? ' <span class="chip good">scouted · tap for the report</span>' : v.level > 0 ? ' <span class="chip">glanced</span>' : ''}</div>
       <div class="sub">${v.ovr != null ? `<b>${v.ovr} OVR</b>` : '<b>?? OVR</b>'}${v.potential != null ? ` · potential ${v.potential}` : ''}${v.natureKnown ? ` · ${esc(NATURES[m.nature]?.name || m.nature)}` : ''} · rookie deal ≈ ${(Math.round((18000 + 280 * (v.ovr ?? 52)) * F.ROOKIE_SCALE / 100) * 100).toLocaleString('en-US')}/yr</div><div>${bars}</div></div>${pickable ? `<button class="btn small primary" data-action="pick" data-id="${m.id}">Pick</button>` : ''}</div>`;
+  }
+  /** The scout's full report on a fully scouted prospect (GDD §19.4): bio, nature, ability, all twelve attributes, and how they compare with the owner's best at the position. */
+  function prospectSheet(f, m) {
+    const v = F.prospectView(f, m); if (v.level < 6) return;
+    const sp = resolveSpecies(m); const nature = NATURES[m.nature]; const attrs = m.attributes;
+    const ab = m.ability ? ABILITIES[m.ability] : sp.ability || null; const trait = !ab && sp.trait ? TRAITS[sp.trait] : null;
+    const mine = f.roster.filter((x) => x.position === m.position).sort((a, b) => monsterOverall(b) - monsterOverall(a));
+    const best = mine[0]; const depth = F.depthNeeds(f).find((n) => n.position === m.position);
+    const pk = f.draft?.picks?.find((p) => p.id === m.id);
+    const salary = Math.round((18000 + 280 * monsterOverall(m)) * F.ROOKIE_SCALE / 100) * 100;
+    sheet(`<div class="row" style="gap:12px">${monsterSprite(m, 64)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(m.name)}</div><div class="muted">${esc(m.position)}${sp.secondary && sp.secondary !== m.position ? ` / ${esc(sp.secondary)}` : sp.position !== m.position ? ` / ${esc(sp.position)}` : ''} · ${esc(m.type)} type · age ${m.age} · board #${m.boardRank}</div><div class="muted">Born in ${esc(m.origin || '—')} · ${esc(sp.name)}${sp.rarity ? ` (${esc(sp.rarity)})` : ''}</div></div></div>
+      ${pk ? `<p class="chip ${pk.team === f.club ? 'accent' : ''}">Drafted R${pk.round} #${pk.overall} by ${esc(pk.team)}</p>` : ''}
+      <div class="panel tight"><div class="row between"><b>${monsterOverall(m)} OVR</b><span>potential <b>${m.potential}</b></span><span class="dim">rookie deal ≈ ${salary.toLocaleString('en-US')}/yr · 2 seasons</span></div></div>
+      <div class="panel tight"><b>Nature: ${esc(nature?.name || m.nature)}</b><div class="muted">${esc(nature?.behavior || '')}${nature?.up ? ` <span class="chip good">+10% ${ATTR_LABEL[nature.up]}</span> <span class="chip bad">−10% ${ATTR_LABEL[nature.down]}</span>` : ''}</div>
+        ${ab ? `<b>${m.ability ? 'Signature ability' : 'Species ability'}: ${esc(ab.name)}</b><div class="muted">${esc(ab.text)}</div>` : trait ? `<b>Species trait: ${esc(trait.name)}</b><div class="muted">${esc(trait.text)}</div>` : ''}
+        ${sp.evolution?.length ? `<div class="dim">Evolves at level ${sp.evolution[0].level}.</div>` : ''}</div>
+      ${headlineHtml(m)}
+      <div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => `<div class="attr"><span>${ATTR_LABEL[k]}</span><div class="bar ${attrs[k] < 45 ? 'bad' : attrs[k] < 60 ? 'warn' : ''}"><i style="width:${attrs[k]}%"></i></div><b>${attrs[k]}</b></div>`).join('')}</div>
+      <div class="panel tight" style="margin-top:8px"><b>On your roster</b><div class="muted">${best ? `Your best ${esc(m.position)} is ${esc(best.name)} at ${monsterOverall(best)} OVR (${mine.length} at the position${depth && depth.status !== 'ok' ? `, ${esc(depth.status)}` : ''}). ${monsterOverall(m) >= monsterOverall(best) ? 'This prospect would start on day one.' : monsterOverall(m) >= monsterOverall(best) - 6 ? 'A real backup with room to pass the starter.' : 'A development pick behind the starter.'}` : `You have nobody at ${esc(m.position)} — this prospect would start.`}</div></div>`, { title: 'Scouting report' });
   }
   Router.registerScreen('draftclass', {
     title: 'Draft class',
@@ -187,6 +208,7 @@ export function registerHqScreens(Router, app) {
       delegate(root, {
         study: () => { const focus = root.querySelector('#draft-focus')?.value || null; const r = F.scoutDraft(app.f, { focus }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(`<p><b>${esc(r.scout)}</b> studied <b>${r.studied.map((m) => esc(m.name) + ' (' + m.position + ')').join(', ') || 'nobody new'}</b> and glanced at ${r.glanced.length} more.</p>`, { title: 'Draft scouting', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         sort: (el) => { draftSort = el.dataset.v; Router.render(); },
+        prospect: (el) => { const m = app.f.draft?.class.find((x) => x.id === el.dataset.id); if (m) prospectSheet(app.f, m); },
       });
       root.querySelector('#draft-filter')?.addEventListener('change', (e) => { draftFocus = e.target.value; Router.render(); });
       root.querySelector('#draft-focus')?.addEventListener('change', (e) => { draftFocus = e.target.value; });
@@ -194,18 +216,20 @@ export function registerHqScreens(Router, app) {
   });
   // ---------------------------------------------------------------- Draft room (GDD §19)
   Router.registerScreen('draft', {
-    title: ({ f }) => `Draft · season ${f?.season.year + 1} class`,
+    title: ({ f }) => `Draft · season ${f?.draft?.creation ? f.season.year : (f?.season.year || 0) + 1} class`,
     render({ f }) {
       const d = f.draft; if (!d?.started) return `<div class="panel"><p>Contracts first, then the draft.</p><button class="btn primary block" data-action="begin" ${F.offseasonReady(f) ? '' : 'disabled'}>Open the draft</button></div>`;
-      const intro = d.creation && !d.done ? `<div class="talk" style="margin-bottom:8px"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 48, { hue: 40 })}<div class="grow"><div class="talk-name">The Commissioner</div><p class="talk-line">“Fast, I know. Welcome to ${esc(f.club)}. The draft is today and the lottery gave you the <b>#${d.lotterySlot}</b> pick. The staff you replaced left notes on a dozen prospects — the rest is on you. Go look at your roster first if you like; the board waits for nobody else.”</p></div></div></div>` : '';
+      const intro = d.creation && !d.done ? `<div class="talk" style="margin-bottom:8px"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 48, { hue: 40 })}<div class="grow"><div class="talk-name">The Commissioner</div><p class="talk-line">“Fast, I know. Welcome to ${esc(f.club)}. The draft is today and the lottery gave you the <b>#${d.lotterySlot}</b> pick. The staff you replaced left notes on a dozen prospects — the rest is on you. Go look at your roster first if you like; the clock waits for nobody.”</p></div></div></div>` : '';
       const clock = F.onTheClock(f); const mine = clock === f.club;
       const myPicks = d.picks.filter((p) => p.mine);
       const recent = d.picks.slice(-6).reverse();
       const avail = d.class.filter((m) => d.available.includes(m.id)).filter((m) => !draftFocus || m.position === draftFocus);
       const sorted = draftSort === 'known' ? avail.slice().sort((a, b) => (F.prospectView(f, b).level - F.prospectView(f, a).level) || (a.boardRank - b.boardRank)) : avail;
       const mySlots = d.order.map((o, i) => ({ ...o, i })).filter((o) => o.team === f.club);
+      const lastPick = d.picks[d.picks.length - 1];
       return `${intro}<div class="panel tight"><div class="row between"><b>${d.done ? 'Draft complete' : `Round ${d.round} · pick ${d.index + 1} of ${d.order.length}`}</b><span class="chip ${mine ? 'accent' : ''}">${d.done ? '' : mine ? 'YOU ARE ON THE CLOCK' : esc(clock || '')}</span></div>
-        <div class="dim">Your picks: ${mySlots.map((o) => `R${o.round} #${o.i + 1}`).join(', ')} · worst record picks first, snake order · roster ${f.roster.length}/${F.ROSTER_MAX}</div></div>
+        <div class="dim">Your picks: ${mySlots.map((o) => `R${o.round} #${o.i + 1}`).join(', ')} · worst record picks first, snake order · roster ${f.roster.length}/${F.ROSTER_MAX}</div>
+        <div class="row between" style="margin-top:6px"><span class="dim">${lastPick ? `Last pick: <b>${esc(lastPick.name)}</b>${lastPick.position ? ` (${esc(lastPick.position)}, ${lastPick.ovr} OVR)` : ''} → ${esc(lastPick.team)}` : 'No picks yet.'}</span><button class="btn small" data-action="picks">📋 All picks (${d.picks.length})</button></div></div>
         ${myPicks.length ? `<h3>Your draft</h3><div class="list">${myPicks.map((p) => `<div class="item static"><div class="grow"><div class="name">R${p.round} #${p.overall} · ${esc(p.name)}</div><div class="sub">${p.passed ? 'passed' : `${esc(p.position)} · ${p.ovr} OVR · rookie deal, two seasons`}</div></div></div>`).join('')}</div>` : ''}
         ${d.done ? `<button class="btn primary big block" data-action="back">${d.creation ? 'To headquarters' : 'Back to the offseason'}</button>` : mine ? `<div class="row between" style="margin:8px 0"><div class="seg"><button class="btn small ${draftSort === 'board' ? 'primary' : ''}" data-action="sort" data-v="board">Board</button><button class="btn small ${draftSort === 'known' ? 'primary' : ''}" data-action="sort" data-v="known">Scouted first</button></div><select class="input" id="draft-filter" style="width:auto">${[['', 'All positions'], ...Object.keys(F.GROUP_SLOTS).map((g) => [g, g])].map(([v, l]) => `<option value="${v}" ${draftFocus === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div><button class="btn block" data-action="pass" style="margin-bottom:8px">Pass this pick</button><div class="list">${sorted.slice(0, 30).map((m) => prospectRow(f, m, { pickable: true })).join('')}</div>` : ''}
         <h3>Recent picks</h3><div class="list">${recent.map((p) => `<div class="item static ${p.mine ? 'mine' : ''}"><div class="grow"><div class="name">R${p.round} #${p.overall} · ${esc(p.team)}</div><div class="sub">${esc(p.name)}${p.position ? ` · ${esc(p.position)} · ${p.ovr} OVR` : ''}</div></div></div>`).join('') || '<p class="dim">No picks yet.</p>'}</div>`;
@@ -217,6 +241,9 @@ export function registerHqScreens(Router, app) {
         pass: async () => { if (!(await confirmSheet('Pass this pick? It cannot be taken back.', { title: 'Pass', okLabel: 'Pass', danger: true }))) return; F.passDraftPick(app.f); app.save(); Router.render(); },
         sort: (el) => { draftSort = el.dataset.v; Router.render(); },
         back: () => Router.go(app.f.draft?.creation ? 'hq' : 'offseason', {}, { reset: true }),
+        prospect: (el) => { const m = app.f.draft?.class.find((x) => x.id === el.dataset.id); if (m) prospectSheet(app.f, m); },
+        picks: () => { const d = app.f.draft; const rows = d.picks.slice().reverse().map((p) => `<div class="item ${p.id && F.prospectView(app.f, d.class.find((x) => x.id === p.id) || {}).level >= 6 ? 'tappable' : 'static'} ${p.mine ? 'mine' : ''}" ${p.id ? `data-action="prospect" data-id="${p.id}"` : ''}><div class="grow"><div class="name">R${p.round} #${p.overall} · ${esc(p.team)}</div><div class="sub">${esc(p.name)}${p.position ? ` · ${esc(p.position)} · ${p.ovr} OVR` : ''}</div></div></div>`).join('');
+          const { el: el2 } = sheet(`<p class="dim">${d.picks.length} of ${d.order.length} picks made · newest first.</p><div class="list">${rows || '<p class="dim">No picks yet.</p>'}</div>`, { title: 'Draft board · picks so far' }); el2.addEventListener('click', (e) => { const b = e.target.closest('[data-action="prospect"]'); if (!b) return; const m = d.class.find((x) => x.id === b.dataset.id); if (m) prospectSheet(app.f, m); }); },
       });
       root.querySelector('#draft-filter')?.addEventListener('change', (e) => { draftFocus = e.target.value; Router.render(); });
     },
