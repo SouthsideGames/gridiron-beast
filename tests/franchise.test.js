@@ -221,17 +221,41 @@ test('training: odds shown match the rule, the third straight week of one focus 
   assert.equal(f.week.trainingFocus, r.success ? 'coverage' : null);
 });
 
-test('media day: three questions, answers boost matching temperaments on Sunday', async () => {
-  const { temperamentOf } = await import('../src/data/media.js');
+test('media day: 250 nature questions (ten per nature), answers lift the monsters who share that nature, no repeats in a season', async () => {
+  const M = await import('../src/data/media.js'); const { NATURE_IDS, NATURES } = await import('../src/data/monsters.js');
+  for (const n of NATURE_IDS) assert.equal(M.questionCount(n), 10, `${n} has ten questions`);
+  for (const q of M.QUESTIONS) { assert.equal(q.a.length, 3); for (const a of q.a) assert.ok(NATURE_IDS.includes(a.t), `${a.t} is a nature`); if (!M.isSituational(q)) assert.equal(q.a[0].t, q.nature, 'the first answer speaks the question’s own nature'); }
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 55 });
   F.hireDefaultStaff(f); f.season.day = 5;
   const qs = F.mediaQuestions(f); assert.equal(qs.length, 3);
+  for (const q of qs) for (const a of q.a) { assert.ok(a.reach && typeof a.reach.total === 'number', 'every answer says how many monsters it reaches'); assert.ok(!/\{(opp|star|record|rival|club|week)\}/.test(a.text + q.q), 'placeholders are filled'); }
   const before = F.playerTeam(f);
   const t = qs[0].a[0].t;
-  F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6);
+  const r = F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6); assert.equal(r.boosts[t], F.MEDIA_BOOST);
   const after = F.playerTeam(f);
-  const m = f.roster.find((x) => temperamentOf(x.nature) === t && Object.values(after.offense).concat(Object.values(after.defense)).some((p) => p.id === x.id));
-  if (m) { const slotOf = (team) => [...Object.values(team.offense), ...Object.values(team.defense)].find((p) => p.id === m.id); assert.ok(slotOf(after).attrs.awareness >= slotOf(before).attrs.awareness); }
+  const onField = (team) => [...Object.values(team.offense), ...Object.values(team.defense)];
+  const m = f.roster.find((x) => x.nature === t && onField(after).some((p) => p.id === x.id));
+  if (m) { const slotOf = (team) => onField(team).find((p) => p.id === m.id); const up = NATURES[t].up || 'awareness'; assert.ok(slotOf(after).attrs[up] > slotOf(before).attrs[up], `${t} monster lifted on ${up}`); assert.equal(after.boosts[m.id].media.amount, F.MEDIA_BOOST); }
+  const other = f.roster.find((x) => x.nature !== t && !qs.some((q) => q.a[0].t === x.nature) && onField(after).some((p) => p.id === x.id));
+  if (other) assert.ok(!after.boosts[other.id]?.media, 'a nature nobody spoke for gets nothing');
+  // Asked questions are not asked again this season; a rival week leads with the rival question.
+  assert.deepEqual(f.season.mediaAsked, qs.map((q) => q.id));
+  f.week.mediaQs = null; f.week.media = null; f.season.day = 5; const qs2 = F.mediaQuestions(f); assert.ok(!qs2.some((q) => qs.some((p) => p.id === q.id)), 'no repeats');
+  const rivalIdx = M.QUESTIONS.findIndex((q) => q.rival); f.week.mediaQs = null; const sm = F.sundayMatchup(f); const save = f.season.schedule.find((g) => g.week === f.season.week); const wasOpp = save.opponent; save.opponent = f.rivals[f.tier].team; void sm;
+  const qs3 = F.mediaQuestions(f); if (F.sundayMatchup(f)?.rival) assert.equal(qs3[0].id, rivalIdx, 'rival question first in a rival week'); save.opponent = wasOpp;
+});
+
+test('monster bio: birthplace, seasons pro, and a stint per club (regional league before the first known club; drafted rookies carry their pick)', () => {
+  const f = newFranchise(5);
+  const vet = f.roster.find((m) => m.yearsPro >= 3); const b = F.monsterBio(f, vet);
+  assert.ok(b.birthplace && b.stints.at(-1).current && b.stints.at(-1).club === f.club && b.stints.at(-1).from === 1);
+  assert.ok(b.stints[0].regional && b.stints[0].to - b.stints[0].from + 1 === vet.yearsPro, 'seasons before the club are the regional league');
+  const d = f.draft; const pick = d.class.find((m) => d.available.includes(m.id)); assert.equal(F.myDraftPick(f, pick.id).ok, true);
+  assert.equal(pick.drafted.club, f.club); assert.ok(pick.drafted.overall >= 1 && pick.drafted.round === 1);
+  const rb = F.monsterBio(f, pick); assert.ok(rb.rookie && rb.stints.length === 1 && rb.stints[0].current);
+  // A monster that walked to the pool and is signed back shows both stints.
+  const left = f.roster.find((m) => m.yearsPro === 0 && m !== pick) || f.roster[3]; left.history = [{ club: f.club, from: 1, to: 2, reason: 'walked' }, { club: 'Harbor Sentinels', from: 3, to: null, reason: 'signed' }]; left.joined = 5; f.season.year = 5;
+  const lb = F.monsterBio(f, left); assert.deepEqual(lb.stints.map((s) => s.club), [f.club, 'Harbor Sentinels', f.club]);
 });
 
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
@@ -360,7 +384,7 @@ test('campaign: the other coach speaks before the game and remembers the result'
   assert.equal(F.replyToCoach(f, 'confident').ok, true);
   assert.equal(F.replyToCoach(f, 'respectful').ok, false, 'one reply per game');
   const team = F.playerTeam(f);
-  assert.ok(Object.values(team.boosts).some((b) => b.media?.amount >= 1), 'the reply boosts a temperament');
+  assert.ok(Object.values(team.boosts).some((b) => b.media?.amount >= 1), 'the reply boosts the physical natures');
   const m = F.sundayMatchup(f); const side = m.playerSide; const other = side === 'home' ? 'away' : 'home';
   const score = { home: 0, away: 0 }; score[other] = 14;
   F.finishSunday(f, { winner: other, score, stats: { home: { players: {} }, away: { players: {} } }, ot: false });

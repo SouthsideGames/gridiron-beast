@@ -5,7 +5,6 @@ import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import { REGIONS, TRAINING_FOCI, ROLE_LABEL, trainingBonus } from '../../data/staff.js';
 import { PLAYS, LESSONS, counterPlays } from '../../data/playbook.js';
-import { TEMPERAMENTS, temperamentOf } from '../../data/media.js';
 import { tierById, TEAM_META, DIVISIONS, conferenceFor, divisionOf } from '../../data/league.js';
 import { monsterOverall, NATURES, TYPES, effectiveAttributes, HEADLINE, headlineAttributes } from '../../data/monsters.js';
 import { headlineHtml } from './roster.js';
@@ -455,14 +454,15 @@ export function registerHqScreens(Router, app) {
       const borrowed = r.borrowed?.length ? `<p class="muted" style="color:var(--warn)">${r.borrowed.map((b) => b.legal ? `↪ ${b.slot}: ${esc(b.name)} (${esc(b.position)}${b.outOfPosition ? ', 1.75× injury risk' : ''}) fills in` : `⚠️ ${b.slot}: nobody legal — plays using it are unavailable`).join(' · ')}.</p>` : '';
       const lineup = r.ok ? `<p class="muted">✅ Lineup set: every starting position has a healthy monster.${r.tired.length ? ` <span style="color:var(--warn)">Tired: ${esc(r.tired.join(', '))}.</span>` : ''}</p>${borrowed}` : `<p style="color:var(--bad)">⚠️ No legal monster for ${r.problems.join(', ')}. Unless you fix the depth chart, Sunday is a forfeit (0–21).</p>${borrowed}`;
       if (f.week.media) {
-        const md = f.week.media; const groups = Object.entries(md.boosts).map(([t, v]) => `<span class="chip accent">${TEMPERAMENTS[t].label} +${v}</span>`).join(' ');
-        return `<div class="panel"><h3 style="margin-top:0">Press conference done</h3><p>${groups || 'No boosts.'}${md.hype ? ' <span class="chip bad">Trash talk: +2 all, risky</span>' : ''}</p><p class="dim">Monsters with matching natures get the boost on Sunday.</p>${lineup}</div><div class="grid2"><button class="btn block" data-action="roster">Depth chart</button><button class="btn primary block" data-action="done">Ready for Sunday →</button></div>`;
+        const md = f.week.media; const groups = Object.entries(md.boosts).map(([t, v]) => { const reach = F.natureReach(f, t); return `<span class="chip ${reach.total ? 'accent' : ''}">${NATURES[t].name} +${v}${reach.total ? ` · ${reach.names.slice(0, 3).map(esc).join(', ')}${reach.total > 3 ? ` +${reach.total - 3}` : ''}` : ' · nobody'}</span>`; }).join(' ');
+        return `<div class="panel"><h3 style="margin-top:0">Press conference done</h3><p>${groups || 'No boosts.'}${md.hype ? ' <span class="chip bad">Trash talk: +2 all, risky</span>' : ''}</p><p class="dim">Those monsters heard themselves in your answers: +${F.MEDIA_BOOST} to their nature’s strength on Sunday.</p>${lineup}</div><div class="grid2"><button class="btn block" data-action="roster">Depth chart</button><button class="btn primary block" data-action="done">Ready for Sunday →</button></div>`;
       }
       const qs = F.mediaQuestions(f); app.save();
-      const count = Object.fromEntries(Object.keys(TEMPERAMENTS).map((t) => [t, 0])); for (const m of f.roster) count[temperamentOf(m.nature)]++;
-      return `<p class="muted">The press wants answers. How you talk changes how your monsters feel: each answer fires up monsters of one temperament for Sunday.</p>
-        <p class="dim">Your roster: ${Object.entries(count).map(([t, n]) => `${TEMPERAMENTS[t].label} ${n}`).join(' · ')}</p>
-        ${qs.map((q, k) => `<div class="panel"><b>🎤 “${esc(q.q)}”</b><div class="stack" style="margin-top:8px">${q.a.map((a, ai) => `<button class="choice ${mediaPicks[k] === ai ? 'selected' : ''}" data-action="answer" data-q="${k}" data-a="${ai}"><span>${esc(a.text)}</span><span class="dim" style="font-size:12px">${TEMPERAMENTS[a.t].label} monsters${a.hype ? ' · trash talk' : ''}${a.star ? ' · your star' : ''}</span></button>`).join('')}</div></div>`).join('')}
+      const weights = F.natureWeights(f); const top = Object.entries(weights).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const reachText = (r) => r.total ? `${r.starters ? `${r.starters} starter${r.starters === 1 ? '' : 's'}` : ''}${r.starters && r.total > r.starters ? ' + ' : ''}${r.total > r.starters ? `${r.total - r.starters} reserve${r.total - r.starters === 1 ? '' : 's'}` : ''}` : 'nobody on the roster';
+      return `<p class="muted">The press wants answers. Every answer is spoken in the voice of one nature; the monsters who share it hear themselves and play Sunday with +${F.MEDIA_BOOST} to their nature’s strength.</p>
+        <p class="dim">Natures on your field: ${top.map(([t]) => `${NATURES[t].name} (${F.natureReach(f, t).total})`).join(' · ')}</p>
+        ${qs.map((q, k) => `<div class="panel"><b>🎤 “${esc(q.q)}”</b><div class="stack" style="margin-top:8px">${q.a.map((a, ai) => `<button class="choice ${mediaPicks[k] === ai ? 'selected' : ''} ${a.reach.total ? '' : 'faint'}" data-action="answer" data-q="${k}" data-a="${ai}"><span>${esc(a.text)}</span><span class="dim" style="font-size:12px">${NATURES[a.t].name} · ${reachText(a.reach)}${a.hype ? ' · trash talk' : ''}${a.star ? ' · your star' : ''}</span></button>`).join('')}</div></div>`).join('')}
         ${lineup}<button class="btn primary big block" data-action="submit" ${mediaPicks.filter((x) => x != null).length === qs.length ? '' : 'disabled'}>Finish press conference</button>`;
     },
     mount(root) { delegate(root, {

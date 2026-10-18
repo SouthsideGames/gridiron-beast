@@ -12,6 +12,7 @@ export { prospectView, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js
 import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel } from './board.js';
 export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
 export { AWARDS } from './awards.js';
+export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
 export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
@@ -23,7 +24,7 @@ import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
 import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
-import { QUESTIONS, TEMPERAMENTS, temperamentOf, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
+import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
@@ -229,6 +230,22 @@ export function replyToCoach(f, replyId) {
   if (!REPLIES.find((r) => r.id === replyId)) return { ok: false, reason: 'Unknown reply.' };
   f.week.pregameReply = replyId; return { ok: true };
 }
+/**
+ * A monster's bio for the card (GDD §20.2): birthplace, seasons pro, and the clubs it has played for. The current
+ * club's stint runs from `m.joined` (season 1 for the founding roster); earlier stints come from `m.history`
+ * (written when a monster leaves a club or is signed out of a pool); seasons pro before any known club are
+ * "the regional leagues" of its home region.
+ */
+export function monsterBio(f, m) {
+  const year = f.season?.year || 1; const birthplace = homeRegion(m);
+  const joined = m.joined ?? (m.rookie != null ? m.rookie + 1 : m.contract?.signed ?? 1);
+  const past = (m.history || []).filter((h) => h.club && (h.to != null || h.club !== f.club)).map((h) => ({ club: h.club, from: h.from, to: h.to, reason: h.reason }));
+  const stints = [...past, { club: f.club, from: joined, to: null, current: true }].sort((a, b) => a.from - b.from);
+  const known = stints.reduce((n, s) => n + Math.max(1, (s.to ?? year) - s.from + 1), 0);
+  const before = Math.max(0, (m.yearsPro || 0) + 1 - known); // seasons pro not covered by a known club
+  if (before > 0) stints.unshift({ club: `${birthplace} regional league`, from: stints[0].from - before, to: stints[0].from - 1, regional: true });
+  return { birthplace, yearsPro: m.yearsPro ?? 0, rookie: m.yearsPro === 0, joined, stints };
+}
 /** Hall of Fame progress against the franchise's difficulty (GDD §15.9). */
 export function hallOfFameProgress(f) {
   const c = f.campaign || { badges: {}, titles: 0, wins: 0, awards: 0 };
@@ -430,15 +447,15 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   // Per-monster boost ledger for the pregame screen: which starters carry a training or media-day boost today.
   team.boosts = {};
   if (tb) { const keys = Object.keys(tb); for (const side of ['offense', 'defense']) for (const p of Object.values(team[side])) if (p.id) (team.boosts[p.id] ||= {}).training = keys; }
-  // Saturday media day: matching temperaments get a boost to their nature's strength and to awareness.
-  // The pregame reply to the other coach adds one more point to one temperament (GDD §15.5).
+  // Saturday media day (GDD §20.1): monsters whose nature matches an answer get a boost to their nature's strength and to awareness.
+  // The pregame reply to the other coach adds one more point to the physical or the mental natures (GDD §15.5).
   const reply = REPLIES.find((r) => r.id === f.week.pregameReply)?.effect || null;
   const md = f.week.media || (reply ? { boosts: {} } : null);
   if (md) {
     const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
     for (const side of ['offense', 'defense']) for (const p of Object.values(team[side])) {
       const m = byId[p.id]; if (!m || !p.attrs) continue;
-      let amt = (md.boosts?.[temperamentOf(m.nature)] || 0) + (md.hype ? HYPE_BOOST : 0) + (md.star === m.id ? 2 : 0) + (reply && temperamentOf(m.nature) === reply.temperament ? reply.amount : 0);
+      let amt = (md.boosts?.[m.nature] || 0) + (md.hype ? HYPE_BOOST : 0) + (md.star === m.id ? 2 : 0) + (reply && natureGroup(m.nature) === reply.natureGroup ? reply.amount : 0);
       if (!amt) continue;
       const up = NATURES[m.nature]?.up || 'awareness';
       p.attrs[up] = Math.min(99, (p.attrs[up] || 0) + amt); if (up !== 'awareness') p.attrs.awareness = Math.min(99, (p.attrs.awareness || 0) + 1);
@@ -566,7 +583,7 @@ export function signFreeAgent(f, id) {
   const entry = offseasonMarket(f).find((e) => e.monster.id === id); if (!entry) return { ok: false, reason: 'Not on the market.' };
   const m = entry.monster; m.salary = salaryFor(m); m.contract = newContract(f.season.year + 1);
   if (entry.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } } else f.offseason.market = f.offseason.market.filter((x) => x !== m);
-  f.roster.push(m); dexRecord(f, m, 'signed');
+  m.joined = f.season.year + (f.offseason ? 1 : 0); f.roster.push(m); dexRecord(f, m, 'signed');
   const cap = salarySummary(f);
   news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed as a free agent${cap.over ? ' — over the cap; the commissioner will review in week 1' : ''}.`, cap.over ? 'loss' : 'roster');
   return { ok: true, overCap: cap.over };
@@ -791,7 +808,7 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
     if (rc.needed && releaseId) { const out = f.roster.find((x) => x.id === releaseId); f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); }
     m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
     if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
-    f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
+    m.joined = f.season.year; f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
     news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
     const cap = salarySummary(f);
     if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
@@ -882,28 +899,59 @@ export function setGamePlan(f, offense, defense) {
   return { ok: true };
 }
 /** Saturday: three press questions for this week (a rival question when it's the rival game). */
+/** Natures split two ways for the pregame reply: physical (speed, strength, agility, arm, tackling) and mental (the rest, and the neutral three). */
+export function natureGroup(nature) { const up = NATURES[nature]?.up; return up && ['speed', 'strength', 'agility', 'arm', 'tackling', 'durability'].includes(up) ? 'physical' : 'mental'; }
+/** Natures on the field this week, counted: starters weigh three, the rest of the roster one. Drives which questions the press asks. */
+export function natureWeights(f) {
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const starting = new Set(Object.values(chart));
+  const w = {}; for (const m of f.roster) if (!m.injury) w[m.nature] = (w[m.nature] || 0) + (starting.has(m.id) ? 3 : 1);
+  return w;
+}
+/** Monsters a nature-tagged answer reaches: {total, starters, names}. */
+export function natureReach(f, nature) {
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const starting = new Set(Object.values(chart));
+  const list = f.roster.filter((m) => m.nature === nature && !m.injury);
+  return { total: list.length, starters: list.filter((m) => starting.has(m.id)).length, names: list.map((m) => m.name) };
+}
+/**
+ * Three questions for Saturday (GDD §20.1). Situational questions (rival game, hot seat, playoff, three-game streak,
+ * injured starter) jump the queue when live; the rest are drawn by the natures on the field, so the press mostly asks
+ * about the monsters the owner actually has. No question repeats within a season.
+ */
 export function mediaQuestions(f) {
   if (!f.week.mediaQs) {
     const { r, save } = frng(f);
-    const rivalGame = !!sundayMatchup(f)?.rival;
-    const pool = QUESTIONS.map((q, i) => ({ q, i })).filter(({ q }) => !q.rival);
+    f.season.mediaAsked ||= [];
+    const asked = new Set(f.season.mediaAsked);
+    const m = sundayMatchup(f);
+    const live = { rival: !!m?.rival, hotseat: onHotSeat(f), playoff: !!f.season.playoffs && !f.season.finished, streakW: streakOf(f) >= 3, streakL: streakOf(f) <= -3, injury: injuredStarter(f) };
     const picks = [];
-    if (rivalGame) picks.push(QUESTIONS.findIndex((q) => q.rival));
-    while (picks.length < 3 && pool.length) picks.push(pool.splice(r.int(pool.length), 1)[0].i);
+    for (const [i, q] of QUESTIONS.entries()) { if (!isSituational(q) || asked.has(i)) continue; const key = Object.keys(live).find((k) => q[k]); if (key && live[key] && picks.length < 2) picks.push(i); }
+    const weights = natureWeights(f);
+    const pool = QUESTIONS.map((q, i) => ({ q, i })).filter(({ q, i }) => !isSituational(q) && !asked.has(i) && !picks.includes(i));
+    while (picks.length < MEDIA_QUESTIONS_PER_WEEK && pool.length) {
+      const weighted = pool.map(({ q, i }) => [i, 1 + (weights[q.nature] || 0) * 2]);
+      const i = r.weighted(weighted); picks.push(i); pool.splice(pool.findIndex((x) => x.i === i), 1);
+    }
+    if (picks.length < MEDIA_QUESTIONS_PER_WEEK) { f.season.mediaAsked = []; } // a very long season: the press repeats itself
+    else f.season.mediaAsked.push(...picks);
     save(); f.week.mediaQs = picks;
   }
   const m = sundayMatchup(f); const rec = record(f); const star = mediaStar(f);
-  const fill = (t) => t.replace('{opp}', m?.opponent || 'our opponent').replace('{rival}', f.rivals[f.tier]?.team || 'your rival').replace('{star}', star?.name || 'your star').replace('{record}', `${rec.w}–${rec.l}`);
-  return f.week.mediaQs.map((i) => ({ id: i, q: fill(QUESTIONS[i].q), a: QUESTIONS[i].a.map((a) => ({ ...a, text: fill(a.text) })) }));
+  const fill = (t) => t.replace(/\{opp\}/g, m?.opponent || 'our opponent').replace(/\{rival\}/g, f.rivals[f.tier]?.team || 'your rival').replace(/\{star\}/g, star?.name || 'your star').replace(/\{record\}/g, `${rec.w}–${rec.l}`).replace(/\{club\}/g, f.club).replace(/\{week\}/g, String(f.season.week));
+  return f.week.mediaQs.map((i) => ({ id: i, nature: QUESTIONS[i].nature, q: fill(QUESTIONS[i].q), a: QUESTIONS[i].a.map((a) => ({ ...a, text: fill(a.text), reach: natureReach(f, a.t) })) }));
 }
 function mediaStar(f) { return f.roster.filter((m) => !m.injury).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0] || null; }
+function streakOf(f) { let n = 0; for (const g of f.season.schedule.filter((x) => x.result && !x.bye).reverse()) { const won = !!g.result.won; if (n === 0) n = won ? 1 : -1; else if ((n > 0) === won) n += won ? 1 : -1; else break; } return n; }
+/** A monster who would start if healthy is injured. */
+function injuredStarter(f) { const hurt = f.roster.filter((m) => m.injury); if (!hurt.length) return false; return hurt.some((m) => { const healthy = f.roster.filter((x) => x.position === m.position && !x.injury).map(monsterOverall); return !healthy.length || monsterOverall(m) >= Math.max(...healthy); }); }
 /** Answers: array of answer indexes, one per question. Boosts apply on Sunday. */
 export function answerMedia(f, answers) {
   const qs = mediaQuestions(f); const boosts = {}; let hype = false; let star = null;
   qs.forEach((q, k) => { const a = q.a[answers[k]]; if (!a) return; boosts[a.t] = Math.min(MEDIA_CAP, (boosts[a.t] || 0) + MEDIA_BOOST); if (a.hype) hype = true; if (a.star) star = mediaStar(f)?.id || null; });
   f.week.media = { answers, boosts, hype, star };
   lineupCheck(f); // Saturday is done: lineup confirmed, on to Sunday
-  const groups = Object.entries(boosts).map(([t, v]) => `${TEMPERAMENTS[t].label} +${v}`).join(', ');
+  const groups = Object.entries(boosts).map(([t, v]) => { const reach = natureReach(f, t); return `${NATURES[t].name} +${v}${reach.total ? ` (${reach.total})` : ' (nobody)'}`; }).join(', ');
   news(f, `Media day: ${groups || 'no headlines'}${hype ? ' · you talked trash before the rival game' : ''}.`, 'info');
   return { ok: true, boosts, hype, star };
 }

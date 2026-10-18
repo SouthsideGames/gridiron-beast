@@ -92,7 +92,7 @@ export function advanceDraft(f, rng, { playerClub, onAiPick = null }) {
   while (d.started && !d.done && d.order[d.index].team !== playerClub) {
     const team = d.order[d.index].team; const m = aiDraftPick(f, team, rng);
     if (!m) { d.done = true; break; }
-    recordPick(f, team, m, { mine: false }); made.push({ team, m });
+    recordPick(f, team, m, { mine: false }); { const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: team }; } made.push({ team, m });
     (f.draftResults ||= {}); (f.draftResults[f.draft.year] ||= {}); (f.draftResults[f.draft.year][team] ||= []).push(m);
     onAiPick?.(team, m);
   }
@@ -106,7 +106,7 @@ export function playerPick(f, id, { playerClub, nextYear }) {
   if (f.roster.length >= ROSTER_MAX) return { ok: false, reason: `Roster full (${ROSTER_MAX}). Pass, or release someone first.` };
   const m = d.class.find((x) => x.id === id && d.available.includes(x.id)); if (!m) return { ok: false, reason: 'Already taken.' };
   m.salary = Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100; m.contract = newContract(nextYear, 2); m.contract.rookie = true;
-  f.roster.push(m); recordPick(f, playerClub, m, { mine: true });
+  m.joined = nextYear; f.roster.push(m); recordPick(f, playerClub, m, { mine: true }); const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: playerClub };
   return { ok: true, monster: m };
 }
 export function passPick(f, { playerClub }) {

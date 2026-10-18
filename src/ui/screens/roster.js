@@ -94,6 +94,7 @@ export function registerRosterScreens(Router, app) {
         <div class="bar" style="margin:8px 0 4px"><i style="width:${Math.round(m.xp / xpForLevel(m.level) * 100)}%"></i></div>
         <div class="row between muted"><span>Fatigue ${m.fatigue}%</span><span>${m.injury ? `<b style="color:var(--bad)">${esc(m.injury.severity)} ${esc(m.injury.type)} — ${m.injury.weeks} wk</b>` : 'Healthy'}</span><span>${fmtMoney(m.salary)}/yr${m.contract ? ` · through S${m.contract.ends}` : ''}</span></div>
         ${m.contract && m.contract.ends <= f.season.year ? `<p class="dim" style="margin:4px 0 0">Contract year: renewal in the offseason. Today's ask would be about ${fmtMoney(F.renewalAsk(m).ask)}/yr.</p>` : ''}</div>
+        ${bioHtml(f, m)}
         <div class="panel"><b>Nature: ${esc(nature.name)}</b><p class="muted" style="margin:2px 0">${esc(nature.behavior)}${nature.up ? ` <span class="chip good">+10% ${ATTR_LABEL[nature.up]}</span> <span class="chip bad">−10% ${ATTR_LABEL[nature.down]}</span>` : ''}</p>
           <b>Type: ${esc(m.type)}</b><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}.</p>
           ${ab ? `<b>Signature ability: ${esc(ab.name)}</b><p class="muted" style="margin:2px 0">${esc(ab.text)}</p>` : (() => { const sp = resolveSpecies(m); return sp.ability ? `<b>Species ability: ${esc(sp.ability.name)}</b><p class="muted" style="margin:2px 0">${esc(sp.ability.text)}</p>` : `<b>Species trait: ${esc(TRAITS[sp.trait]?.name)}</b><p class="muted" style="margin:2px 0">${esc(TRAITS[sp.trait]?.text)}</p>`; })()}
@@ -184,6 +185,16 @@ export function monsterStatsHtml(m, f) {
   }
   return `<h3>Statistics</h3><div class="seg">${tabs.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" data-action="stat-tab" data-v="${k}">${l}</button>`).join('')}</div>${body}
     <p class="dim" style="margin-top:6px">${m.yearsPro === 0 ? 'Rookie season' : `${m.yearsPro ?? '?'} season${m.yearsPro === 1 ? '' : 's'} pro`} · regular season and playoffs are kept apart; rates come from the totals.</p>`;
+}
+
+/** Bio card (GDD §20.2): where the monster is from, how long it has been pro, and every club on its record. */
+function bioHtml(f, m) {
+  const b = F.monsterBio(f, m);
+  const span = (s) => s.regional ? `${s.to - s.from + 1} season${s.to - s.from ? 's' : ''}` : s.to == null ? (s.from >= (f.season?.year || 1) ? `S${s.from}` : `S${s.from}–now`) : s.from === s.to ? `S${s.from}` : `S${s.from}–S${s.to}`;
+  const why = (s) => s.regional ? 'before the league' : s.current ? '' : s.reason === 'walked' ? 'left as a free agent' : s.reason === 'commissioner' ? 'cut by the commissioner' : s.reason === 'released' ? 'released' : s.reason === 'signed' ? 'signed from the pool' : s.reason || '';
+  return `<div class="panel bio"><div class="row between"><b>Bio</b><span class="dim">${b.rookie ? 'Rookie season' : `${b.yearsPro} season${b.yearsPro === 1 ? '' : 's'} pro`}</span></div>
+    <div class="muted">Born in <b>${esc(b.birthplace)}</b>${m.drafted ? ` · drafted #${m.drafted.overall} (round ${m.drafted.round}) in the S${m.drafted.year} class${m.drafted.club !== f.club ? ` by ${esc(m.drafted.club)}` : ''}` : m.rookie != null ? ` · S${m.rookie} draft class` : ''}</div>
+    <div class="stints">${b.stints.map((s) => `<div class="stint ${s.current ? 'current' : ''}"><span class="when">${span(s)}</span><span class="club">${esc(s.club)}</span><span class="dim">${esc(why(s))}</span></div>`).join('')}</div></div>`;
 }
 
 /** Scheme lock banner (GDD §17): all starters on this side fit the coordinator's scheme → the side plays with an edge on Sunday. */
