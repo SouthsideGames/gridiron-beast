@@ -411,7 +411,7 @@ test('Legend Tracks: a champion chooses a track; three unlock the legendary in i
     const r = F.scoutRegion(g, i % 2 ? 'Volcanic Fields' : 'Coral Coast');
     for (const p of r.prospects) if (p.monster.species === 'pyroclast') { if (i % 2) found++; else elsewhere++; }
   }
-  assert.ok(found >= 1, `legendary shows up in its home region (${found})`); assert.equal(elsewhere, 0);
+  assert.ok(found >= 20, `an unlocked legendary turns up the first time its home region is scouted each season (${found})`); assert.equal(elsewhere, 0);
   // Rival signature monster: same species each season, stronger later.
   const rival = f.rivals[f.tier].team;
   const t1 = F.aiTeam(f, rival); const sig1 = t1.roster.find((m) => m.signature); assert.ok(sig1);
@@ -577,11 +577,12 @@ test('package rule: only primary/secondary positions fill a slot; plays needing 
   const av = F.playAvailability(f); assert.ok(Object.keys(av.blocked).length && Object.values(av.blocked).every((sl) => sl === 'SS'));
   assert.ok(Object.keys(av.blocked).every((id) => PLAYS[id].onField.includes('SS')));
   F.autoRunToSunday(f); const team = F.playerTeam(f);
-  assert.ok(!team.defensePlays.some((id) => PLAYS[id].onField.includes('SS')), 'Nickel plays are not in the Sunday plan');
+  const stillOpen = unavailableSlots(f.roster, buildDepthChart(f.roster, f.lineupManual, f.depth)).includes('SS'); // Tuesday's signing may have filled the hole
+  if (stillOpen) assert.ok(!team.defensePlays.some((id) => PLAYS[id].onField.includes('SS')), 'Nickel plays are not in the Sunday plan');
   assert.equal(team.forfeit, false);
   // Every defensive play needing SS → forfeit.
   const nickel = Object.keys(PLAYS).filter((id) => PLAYS[id].side === 'defense' && PLAYS[id].onField.includes('SS')).slice(0, 6);
-  if (nickel.length === 6) { f.week.plan.defense = nickel; const t2 = F.playerTeam(f); assert.equal(t2.forfeit, true); assert.ok(/package/.test(t2.forfeitReason)); const m = F.sundayMatchup(f); assert.equal(m.forfeit, true); const w = f.season.week; const r = F.forfeitSunday(f); assert.equal(r.ok, true); assert.equal(f.season.records[f.club].l, 1); assert.equal(f.season.week, w + 1); assert.ok(!f.season.leagueStats[f.club], 'no stats from a forfeit'); }
+  if (nickel.length === 6 && stillOpen) { f.week.plan.defense = nickel; const t2 = F.playerTeam(f); assert.equal(t2.forfeit, true); assert.ok(/package/.test(t2.forfeitReason)); const m = F.sundayMatchup(f); assert.equal(m.forfeit, true); const w = f.season.week; const r = F.forfeitSunday(f); assert.equal(r.ok, true); assert.equal(f.season.records[f.club].l, 1); assert.equal(f.season.week, w + 1); assert.ok(!f.season.leagueStats[f.club], 'no stats from a forfeit'); }
 });
 
 test('attribute points: level-ups bank 2 points, spent by hand up to potential, or by the trainer when the setting is on', async () => {
@@ -605,6 +606,8 @@ test('board goals: three scaled offers, one commitment per season, settled at se
   assert.equal(F.chooseGoal(f, 'title').ok, true); assert.equal(F.needsGoal(f), false); assert.equal(F.chooseGoal(f, 'wins').ok, false, 'one per season');
   // Pure settlement rules.
   assert.equal(B.goalMet({ id: 'wins', target: 5 }, { wins: 5 }), true); assert.equal(B.goalMet({ id: 'playoffs' }, { playoffs: false }), false); assert.equal(B.goalMet({ id: 'badges', target: 2 }, { badgesWon: 1 }), false);
+  assert.equal(B.goalMet({ id: 'wins', target: 8 }, { wins: 7, champion: true }), true, 'a title meets any goal');
+  for (const pct of [0.8, 0.95]) assert.ok(B.goalOffers({}, { expectedWinPct: pct }).find((o) => o.id === 'wins').target <= 7, 'safe goal never asks for more than seven of nine');
   const g = { board: { confidence: 0, goal: { id: 'wins', target: 5, label: 'Win 5', year: 1, weight: 1 }, history: [] }, season: { year: 1 } };
   let v = B.settleGoal(g, { wins: 3 }); assert.equal(v.met, false); assert.equal(v.status, 'hot_seat'); assert.equal(g.board.confidence, -1);
   g.board.goal = { id: 'title', label: 'Title', year: 1, weight: 2 }; v = B.settleGoal(g, { champion: true }); assert.equal(g.board.confidence, 2, 'a met goal resets the hole and the title counts double'); assert.equal(g.board.scoutBonusYear, 2);

@@ -15,7 +15,8 @@ export function ensureBoard(f) { return (f.board ||= { confidence: 0, goal: null
 /** Three offers for this season: safe (wins), medium (playoffs or badges), stretch (the title). */
 export function goalOffers(f, { expectedWinPct = 0.5, gamesInSeason = 9, gymsThisSeason = 4 } = {}) {
   const exp = expectedWinPct * gamesInSeason;
-  const safeWins = Math.max(3, Math.min(gamesInSeason - 1, Math.round(exp) + (expectedWinPct >= 0.55 ? 1 : 0)));
+  // Never more than seven of nine: a contender's "safe" goal must stay easier than the title it is being compared with.
+  const safeWins = Math.max(3, Math.min(gamesInSeason - 2, Math.round(exp) + (expectedWinPct >= 0.55 ? 1 : 0)));
   const medium = expectedWinPct >= 0.45
     ? { id: 'playoffs', label: 'Make the playoffs', text: 'Finish in a playoff spot. Standings only — no replays.', weight: 1 }
     : { id: 'badges', label: `Win ${gymsThisSeason >= 4 ? 2 : 1} gym badge${gymsThisSeason >= 4 ? 's' : ''}`, target: gymsThisSeason >= 4 ? 2 : 1, text: 'Take badges off the gym clubs on your schedule.', weight: 1 };
@@ -38,6 +39,7 @@ export function chooseGoal(f, id, offers) {
 /** Did the committed goal happen? Pure on the season facts. */
 export function goalMet(goal, { wins, playoffs, badgesWon, champion }) {
   if (!goal) return null;
+  if (champion) return true; // a Beast Bowl meets whatever the board asked for; the champion is never fired
   if (goal.id === 'wins') return wins >= goal.target;
   if (goal.id === 'playoffs') return !!playoffs;
   if (goal.id === 'badges') return badgesWon >= goal.target;

@@ -732,6 +732,14 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
     uniqueName(f, m, prospects.map((p) => p.monster.name)); dexRecord(f, m, 'seen');
     prospects.push({ monster: m, revealed: Math.min(6, (skill >= 65 ? 4 : 2) + (ownerPerk(f) === 'scouting' ? 1 : 0)), natureKnown: skill >= 70, potentialKnown: skill >= 55, need: needs.find((n) => n.position === need)?.status || 'focus' });
   }
+  // An unlocked legendary is a reward for three titles, not a lottery ticket: it turns up the first time its home region is scouted each season.
+  for (const sp of unlocked) {
+    const seen = ((f.campaign.legendSeen ||= {})[f.season.year] ||= {});
+    if (seen[sp.id] || prospects.some((p) => p.monster.species === sp.id)) continue;
+    const m = generateMonster(r, { position: sp.position, quality: 52 + r.int(12) + 8, species: sp.id });
+    uniqueName(f, m, prospects.map((p) => p.monster.name)); dexRecord(f, m, 'seen'); seen[sp.id] = true;
+    prospects.push({ monster: m, revealed: 6, natureKnown: true, potentialKnown: true, legend: true });
+  }
   for (const m of poolMonsters(f, regionName).slice(0, 2)) prospects.push({ monster: m, revealed: 6, natureKnown: true, potentialKnown: true, fromPool: true }); // free agents in the region: fully known
   for (const p of prospects) p.depth = needs.find((n) => n.position === p.monster.position)?.status || 'ok';
   save();
