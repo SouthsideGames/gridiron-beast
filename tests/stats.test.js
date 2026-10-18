@@ -169,7 +169,8 @@ test('awards freeze when the playoffs are drawn and a full season books leaders 
   const starter = f.roster.find((m) => (monsterLine(m, 'season', 'reg').games || 0) >= 5); const yp = starter.yearsPro;
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id);
   if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
-  assert.equal(F.startNextSeason(f).ok, true);
+  { const b = F.beginDraft(f); assert.ok(b.ok, b.reason); let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } }
+  assert.equal(F.startNextSeason(f).ok, true, F.startNextSeason(f).reason);
   assert.equal(starter.yearsPro, yp + 1, 'a season of experience');
   assert.equal(starter.stats.seasons.length, 1); assert.equal(starter.stats.season.year, 2); assert.deepEqual(starter.stats.season.reg, {});
   assert.ok(monsterLine(starter, 'career', 'reg').games >= 5, 'career totals survive');

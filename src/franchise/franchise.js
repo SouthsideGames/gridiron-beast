@@ -7,6 +7,8 @@ import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine,
 import { AWARDS, computeAwards, headCoachName } from './awards.js';
 import { newContract, contractEnds, renewalAsk, acceptsCounter, staffSalary, openOffseason, offseasonPending, offseasonReady, CONTRACT_YEARS, COUNTER_PCT, STAFF_RAISE } from './contracts.js';
 export { offseasonPending, offseasonReady, renewalAsk, CONTRACT_YEARS } from './contracts.js';
+import { openDraftClass, scoutDraftClass as draftScout, startDraft as draftStart, advanceDraft as draftAdvance, playerPick as draftPlayerPick, passPick as draftPassPick, prospectView, injectDraftees, ageDraftees, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js';
+export { prospectView, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js';
 import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel } from './board.js';
 export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
 export { AWARDS } from './awards.js';
@@ -462,7 +464,8 @@ export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } 
     : { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
   const rival = f.rivals[f.tier]?.team === name ? rivalSignature(f) : null;
   const evolveStage = gym ? (year >= 4 ? 2 : year >= 2 ? 1 : 0) : (year >= 5 ? 2 : year >= 3 ? 1 : 0);
-  return generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival, evolveStage, composition: FULL_ROSTER });
+  const team = generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival, evolveStage, composition: FULL_ROSTER, afterRoster: (roster) => injectDraftees(f, name, roster, year) });
+  return team;
 }
 /** The rival GM's signature monster: the same species every season, a little stronger each year (GDD §15.8). */
 export function rivalSignature(f) {
@@ -546,6 +549,50 @@ export function signFreeAgent(f, id) {
   news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed as a free agent${cap.over ? ' — over the cap; the commissioner will review in week 1' : ''}.`, cap.over ? 'loss' : 'roster');
   return { ok: true, overCap: cap.over };
 }
+// ------------------------------------------------------------ the draft (GDD §19)
+export function ensureDraftClass(f) {
+  if (!draftWindow(f) && !f.season.finished) return null;
+  if (f.draft && f.draft.year === f.season.year) return f.draft;
+  const { r, save } = frng(f); const d = openDraftClass(f, r, { uniqueName: (m, extra) => uniqueName(f, m, extra) }); save();
+  for (const m of d.class) dexRecord(f, m, 'seen');
+  news(f, `The draft class is in: ${d.class.length} first-year monsters. Mondays from here on, your scout studies them.`, 'info');
+  return d;
+}
+/** Monday in the draft window: study prospects (focus position first). */
+export function scoutDraft(f, { focus = null } = {}) {
+  if (f.season.day !== 0) return { ok: false, reason: 'Not Monday.' };
+  if (!draftWindow(f)) return { ok: false, reason: 'The draft class is not in yet.' };
+  const d = ensureDraftClass(f); const scout = staffMember(f, 'head_scout');
+  const skill = scout?.overall ?? 50; const { r, save } = frng(f);
+  const res = draftScout(f, r, { skill, focus, bonus: scoutBonusActive(f) ? 1 : 0 }); save();
+  f.week.draftScouted = { studied: res.studied.map((m) => m.id), glanced: res.glanced.map((m) => m.id) };
+  f.season.day = 1;
+  return { ok: true, ...res, scout: scout?.name || 'Your scout' };
+}
+/** Tuesday in the draft window: recovery — fatigue off, injuries a week closer to healed. */
+export function recoveryDay(f) {
+  if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
+  if (!draftWindow(f)) return { ok: false, reason: 'Recovery days are for the final week and the playoffs.' };
+  const healed = [];
+  for (const m of f.roster) { m.fatigue = Math.max(0, (m.fatigue || 0) - 15); if (m.injury) { m.injury.weeks -= 1; if (m.injury.weeks <= 0) { m.injury = null; healed.push(m.name); } } }
+  f.week.recovered = true; f.season.day = 2;
+  if (healed.length) news(f, `Recovery day: ${healed.join(', ')} cleared to play.`, 'roster');
+  return { ok: true, healed };
+}
+/** Offseason: the draft runs after contracts. */
+export function draftReady(f) { return !!f.draft && f.draft.year === f.season.year && f.season.finished && offseasonReady(f); }
+export function beginDraft(f) {
+  if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
+  if (!offseasonReady(f)) return { ok: false, reason: 'Settle the contracts first.' };
+  ensureDraftClass(f);
+  const r = draftStart(f, leagueStandings(f).overall); if (!r.ok) return r;
+  runDraftToMe(f);
+  return { ok: true, draft: f.draft };
+}
+function runDraftToMe(f) { const { r, save } = frng(f); const made = draftAdvance(f, r, { playerClub: f.club }); save(); return made; }
+export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.season.year + 1 }); if (!r.ok) return r; dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}) — rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
+export function passDraftPick(f) { const r = draftPassPick(f, { playerClub: f.club }); if (!r.ok) return r; runDraftToMe(f); return r; }
+export const draftDone = (f) => !f.draft || f.draft.year !== f.season.year || f.draft.done;
 /** The commissioner's three goal offers for this season (GDD §17.4). */
 export function commissionerGoals(f) {
   ensureBoard(f);
@@ -573,6 +620,9 @@ export function coachNameOf(f, team) { return headCoachName(team, { seed: f.seed
 export const currentFixture = (f) => f.season.schedule.find((g) => g.week === f.season.week) || null;
 export const isBye = (f) => !!currentFixture(f)?.bye;
 export const inPlayoffs = (f) => f.season.week > 10;
+export const LAST_REGULAR_WEEK = 10;
+/** The final regular-season week and the playoffs: no region scouting or recruiting; Mondays scout the draft class, Tuesdays are recovery days (GDD §19). */
+export const draftWindow = (f) => f.season.week >= LAST_REGULAR_WEEK && !f.season.finished;
 export function opponentName(f) { const fx = currentFixture(f); if (fx && !fx.bye) return fx.opponent; const p = playoffFixture(f); return p ? (p.home === f.club ? p.away : p.home) : null; }
 export function playoffFixture(f) { const p = f.season.playoffs; if (!p) return null; return p.fixtures.find((g) => g.round === p.round && (g.home === f.club || g.away === f.club) && !g.result) || null; }
 export function playerAlive(f) { return !inPlayoffs(f) || !!playoffFixture(f); }
@@ -628,6 +678,7 @@ export function depthNeeds(f) {
 }
 export function scoutRegion(f, regionName, { focus = null } = {}) {
   if (f.season.day !== 0) return { ok: false, reason: 'Not Monday.' };
+  if (draftWindow(f)) return { ok: false, reason: 'No region scouting from the final week on — the scout is on the draft class.' };
   const region = REGIONS[regionName]; if (!region) return { ok: false, reason: 'Unknown region.' };
   const scout = staffMember(f, 'head_scout');
   const skill = scout?.biomes?.[region.biome] ?? 50;
@@ -690,6 +741,7 @@ export function releaseCandidates(f, prospect) {
 }
 export function recruit(f, prospectIndex, approachId, { releaseId = null } = {}) {
   if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
+  if (draftWindow(f)) return { ok: false, reason: 'No signings from the final week on. Tuesday is a recovery day.' };
   const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
   if (f.week.recruitAttempts >= 3) return { ok: false, reason: 'No attempts left this week.' };
   const m = p.monster;
@@ -839,6 +891,8 @@ export function autoRunToSunday(f) {
   while (f.season.day < 6 && guard++ < 10) {
     const day = f.season.day;
     if (isBye(f) && day >= 3) { f.season.day = 6; did.push('Bye week: rested'); break; }
+    if (draftWindow(f) && day === 0) { const r = scoutDraft(f); did.push(r.ok ? `Studied ${r.studied.length} draft prospects` : 'Draft class not ready'); continue; }
+    if (draftWindow(f) && day === 1) { const r = recoveryDay(f); did.push(`Recovery day${r.healed?.length ? ': ' + r.healed.join(', ') + ' healed' : ''}`); continue; }
     if (day === 0) { const scout = staffMember(f, 'head_scout'); const best = Object.entries(REGIONS).sort((a, b) => (scout?.biomes?.[b[1].biome] ?? 50) - (scout?.biomes?.[a[1].biome] ?? 50))[0][0]; const r = scoutRegion(f, best); did.push(`Scouted ${best}: ${r.prospects?.length || 0} prospects`); }
     else if (day === 1) {
       const pick = f.week.prospects.map((p, i) => ({ p, i })).filter(({ p }) => p.revealed >= 4 && !salarySummary(f, p.monster.salary).over && f.roster.length < ROSTER_MAX)
@@ -972,6 +1026,7 @@ function advanceWeek(f, { bye = false } = {}) {
   f.season.week += 1; f.season.day = 0;
   const lastPlan = f.week.plan;
   f.week = blankWeek(); f.week.plan = lastPlan; // keep the plan as the default for next week
+  if (draftWindow(f)) ensureDraftClass(f);
   if (f.season.week === 11) startPlayoffs(f);
   if (inPlayoffs(f) && f.season.playoffs?.champion) { endSeason(f); return; }
   if (inPlayoffs(f) && !playoffFixture(f)) {
@@ -984,7 +1039,7 @@ function advanceWeek(f, { bye = false } = {}) {
 export function advancePlayoffs(f) {
   if (!inPlayoffs(f) || playoffFixture(f) || f.season.finished) return { ok: false, reason: 'Nothing to advance.' };
   const p = f.season.playoffs; const round = p.round;
-  simulatePlayoffWeek(f); f.season.week += 1;
+  simulatePlayoffWeek(f); f.season.week += 1; f.season.day = 0; { const lastPlan = f.week.plan; f.week = blankWeek(); f.week.plan = lastPlan; }
   const results = p.results.filter((x) => x.round === round);
   if (p.champion) endSeason(f);
   return { ok: true, round, results, champion: p.champion || null, finished: !!f.season.finished };
@@ -1102,6 +1157,7 @@ export function startNextSeason(f) {
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
   if (isFired(f)) return { ok: false, reason: 'The board has let you go. This franchise is over.' };
   if (!offseasonReady(f)) return { ok: false, reason: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} still waiting.` };
+  if (!draftDone(f)) return { ok: false, reason: 'The draft has not been held.' };
   if (f.roster.length < ROSTER_MIN) return { ok: false, reason: `You need at least ${ROSTER_MIN} monsters to start a season (you have ${f.roster.length}). Sign free agents in the offseason market.` };
   if (nextStaffRole(f)) return { ok: false, reason: 'Hire a full staff first.' };
   if (f.postseason && !f.postseason.resolved) return { ok: false, reason: 'A postseason decision is waiting.' };
@@ -1110,8 +1166,10 @@ export function startNextSeason(f) {
   const { r, save } = frng(f);
   const events = offseason(f.roster, r);
   save();
+  ageDraftees(f, f.season.year);
+  for (const m of f.roster) if (m.rookie === f.season.year) { m.yearsPro = 0; m.age -= 1; } // just drafted: the coming season is their first (offseason() aged everyone)
   startSeason(f, f.season.year + 1);
-  f.offseason = null;
+  f.offseason = null; f.draft = null;
   news(f, `Season ${f.season.year} begins.`, 'info');
   return { ok: true, events };
 }

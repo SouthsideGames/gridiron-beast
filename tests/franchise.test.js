@@ -9,6 +9,15 @@ import { exportJson, importJson, importLegacy, legacySummary } from '../src/fran
 import { monsterOverall } from '../src/data/monsters.js';
 import * as awaitRules from '../src/sim/rules.js';
 
+/** Hold the draft (passing every pick) so a test can start the next season. */
+function holdDraft(f) { const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } return { ok: f.draft.done }; }
+/** Step one in-season day with the staff's defaults, draft window included. */
+function stepDay(f) {
+  const d = f.season.day;
+  if (F.draftWindow(f)) { if (d === 0) return F.scoutDraft(f); if (d === 1) return F.recoveryDay(f); }
+  if (d === 0) return F.scoutRegion(f, 'Coral Coast'); if (d === 1) return F.skipRecruit(f); if (d === 2) return F.setTraining(f, 'coverage'); if (d === 3) return F.scoutOpponent(f, 'defense'); if (d === 4) return F.setGamePlan(f, F.catalog(f, 'offense').slice(0, 6), F.catalog(f, 'defense').slice(0, 6)); if (d === 5) return F.lineupCheck(f);
+  return null;
+}
 function newFranchise(seed = 7) {
   const f = F.createFranchise({ owner: { first: 'Sam', last: 'Rivera', gender: 'Female', portrait: 1, hometown: 'Ember City' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed });
   for (const id of ['hc_vale', 'oc_park', 'dc_ice', 'sc_moss', 'tr_focus']) assert.equal(F.hireStaff(f, id).ok, true, id);
@@ -61,12 +70,7 @@ test('a full season plus playoffs completes with standings from real games', () 
   let games = 0;
   while (!f.season.finished && games < 20) {
     if (F.inPlayoffs(f) && !F.playoffFixture(f)) { F.skipPlayoffs(f); continue; } // eliminated: skip the bracket
-    if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast');
-    if (f.season.day === 1) F.skipRecruit(f);
-    if (f.season.day === 2) F.setTraining(f, 'coverage');
-    if (f.season.day === 3) F.scoutOpponent(f, 'defense');
-    if (f.season.day === 4) F.setGamePlan(f, F.catalog(f, 'offense').slice(0, 6), F.catalog(f, 'defense').slice(0, 6));
-    if (f.season.day === 5) F.lineupCheck(f);
+    if (f.season.day < 6) stepDay(f);
     if (f.season.day === 6) {
       if (F.isBye(f)) { F.takeBye(f); continue; }
       const g = F.simulatePlayerGame(f); assert.ok(g.finished); F.finishSunday(f, g); games++;
@@ -83,7 +87,7 @@ test('a full season plus playoffs completes with standings from real games', () 
   const ev = F.postseasonEvent(f);
   if (ev) { assert.ok(F.record(f).w < F.record(f).l, 'an event only after a losing record'); assert.equal(F.startNextSeason(f).ok, false, 'the event gates the next season'); assert.equal(F.resolvePostseason(f, ev.options[0].id).ok, true); }
   else assert.ok(F.record(f).w >= F.record(f).l, 'no event after a winning season');
-  const next = F.startNextSeason(f); assert.equal(next.ok, true); assert.equal(f.season.year, 2); assert.equal(f.season.week, 1);
+  holdDraft(f); const next = F.startNextSeason(f); assert.equal(next.ok, true, next.reason); assert.equal(f.season.year, 2); assert.equal(f.season.week, 1);
 });
 
 test('postseason events: a losing record raises one; each option has its consequence; roster fit and severance exist', () => {
@@ -99,7 +103,7 @@ test('postseason events: a losing record raises one; each option has its consequ
   else if (ev.kind === 'coordinator_offer') { assert.equal(F.resolvePostseason(f, 'bonus').ok, true); assert.ok(f.pendingDeadCap > 0); }
   else { assert.equal(F.resolvePostseason(f, 'fire').ok, true); assert.ok(f.pendingDeadCap > 0); }
   assert.equal(F.resolvePostseason(f, 'raise').ok, false, 'resolved once');
-  { const sn = F.startNextSeason(f); assert.equal(sn.ok, true, sn.reason); }
+  holdDraft(f); { const sn = F.startNextSeason(f); assert.equal(sn.ok, true, sn.reason); }
   if (f.pendingDeadCap === 0 && f.deadCap > 0) assert.ok(F.salarySummary(f).dead > 0, 'offseason bonuses land on the new season');
   // Mid-season firing leaves severance on the books.
   const oc = f.staff.offensive_coordinator; const cand = ['oc_swift', 'oc_brock', 'oc_park'].find((id) => id !== oc);
@@ -643,7 +647,7 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   const run = () => { for (let g = 0; g < 40 && !f.season.finished; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); } };
   run(); assert.equal(f.offseason.items.length, 0, 'nothing expires after season 1');
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
-  assert.equal(F.startNextSeason(f).ok, true);
+  holdDraft(f); assert.equal(F.startNextSeason(f).ok, true);
   run();
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
   const items = f.offseason.items; assert.ok(items.filter((i) => i.kind === 'monster').length >= 20 && items.filter((i) => i.kind === 'staff').length === 5, 'the whole original roster and staff come up after season 2');
@@ -657,7 +661,7 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   // Market: sign to the floor if needed, roster cap at 38.
   const market = F.offseasonMarket(f); assert.ok(market.length >= 10);
   while (f.roster.length < F.ROSTER_MIN) { const e = F.offseasonMarket(f)[0]; assert.equal(F.signFreeAgent(f, e.monster.id).ok, true); }
-  const r3 = F.startNextSeason(f); assert.equal(r3.ok, true, r3.reason); assert.equal(f.season.year, 3); assert.equal(f.offseason, null);
+  holdDraft(f); const r3 = F.startNextSeason(f); assert.equal(r3.ok, true, r3.reason); assert.equal(f.season.year, 3); assert.equal(f.offseason, null);
 });
 
 test('contracts: a renewal may be one season or two, never more', async () => {
@@ -666,4 +670,35 @@ test('contracts: a renewal may be one season or two, never more', async () => {
   const f = newFranchise(71); f.season.finished = true; f.season.year = 2; const m = f.roster[0]; m.contract = { signed: 1, ends: 2, years: 2 };
   f.offseason = { year: 2, items: [{ kind: 'monster', id: m.id, name: m.name, position: m.position, ovr: 60, current: m.salary, ask: 40000, status: null }], winningRecord: true };
   assert.equal(F.resolveContract(f, m.id, 'sign', { years: 1 }).ok, true); assert.equal(m.contract.ends, 3); assert.equal(m.contract.years, 1); assert.equal(m.salary, 40000);
+});
+
+test('the draft: class opens in the final week, Mondays scout it and Tuesdays recover, no recruiting; offseason draft runs worst-first snake with rookie deals; AI draftees persist and are rookies next season', async () => {
+  const D = await import('../src/franchise/draft.js');
+  assert.deepEqual(D.draftOrder(['A', 'B', 'C'], 2).map((o) => o.team), ['C', 'B', 'A', 'A', 'B', 'C']);
+  const f = newFranchise(21); F.chooseGoal(f, 'wins');
+  for (let g = 0; g < 20 && f.season.week < 10; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
+  assert.equal(f.season.week, 10); assert.ok(F.draftWindow(f)); assert.ok(f.draft && f.draft.class.length >= 40, 'class in');
+  assert.ok(f.draft.class.every((m) => m.yearsPro === 0 && m.age >= 19 && m.age <= 22));
+  assert.equal(F.scoutRegion(f, 'Coral Coast').ok, false, 'no region scouting in the final week');
+  const r = F.scoutDraft(f, { focus: 'QB' }); assert.ok(r.ok && r.studied.length >= 1 && r.studied.every((m) => m.position === 'QB'), 'focus studied first'); assert.equal(f.season.day, 1);
+  assert.equal(F.recruit(f, 0, 'development').ok, false, 'no signings in the final week');
+  const hurt = f.roster.find((m) => !m.injury); hurt.injury = { severity: 'Minor', weeks: 1, type: 'ankle' }; hurt.fatigue = 40;
+  const rec = F.recoveryDay(f); assert.ok(rec.ok && rec.healed.includes(hurt.name)); assert.equal(hurt.fatigue, 25); assert.equal(f.season.day, 2);
+  for (let g = 0; g < 40 && !f.season.finished; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
+  if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
+  assert.match(F.startNextSeason(f).reason, /draft/i);
+  const b = F.beginDraft(f); assert.ok(b.ok); assert.equal(F.onTheClock(f), f.club);
+  const st = F.leagueStandings(f).overall; const myRank = st.indexOf(f.club); assert.equal(f.draft.index, 15 - myRank, 'worst record picks first');
+  const before = f.roster.length; const first = f.draft.class.find((m) => f.draft.available.includes(m.id));
+  const p = F.myDraftPick(f, first.id); assert.ok(p.ok); assert.equal(f.roster.length, before + 1); assert.ok(p.monster.contract.rookie && p.monster.contract.ends === 3); assert.equal(p.monster.salary, Math.round((18000 + 280 * monsterOverall(p.monster)) * 0.7 / 100) * 100);
+  assert.equal(F.myDraftPick(f, first.id).ok, false, 'not your pick again until the AI has gone');
+  while (!f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
+  assert.ok(f.draft.done && f.draft.picks.length === 48);
+  const ai = Object.values(f.draftResults[1]).flat(); assert.ok(ai.length >= 40, 'AI clubs drafted');
+  const team = Object.keys(f.draftResults[1]).find((t) => t !== f.club); const got = f.draftResults[1][team];
+  while (f.roster.length < F.ROSTER_MIN) F.signFreeAgent(f, F.offseasonMarket(f)[0].monster.id);
+  const sn = F.startNextSeason(f); assert.ok(sn.ok, sn.reason);
+  assert.ok(got.every((m) => m.yearsPro === 0), 'drafted rookies enter their first season');
+  assert.equal(p.monster.yearsPro, 0); assert.ok(F.aiTeam(f, team).roster.some((m) => m.id === got[0].id), 'the AI draftee is on its club');
+  assert.equal(f.draft, null);
 });

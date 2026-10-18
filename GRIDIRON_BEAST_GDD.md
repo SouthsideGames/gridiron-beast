@@ -460,3 +460,15 @@ The owner's full-season report. All LOCKED unless marked.
 * **18.7 LATER — structure.** *Selling a franchise:* the owner may sell the club and start another; the sold club becomes a card in My office with its history, facing it is an event, and **board confidence resets to zero at the new club** (a legitimate escape from the hot seat). *League growth:* the target is **32 clubs, 8 divisions, 2 conferences**; schedule, playoff seeding and the gym calendar are written against `league.js` so the expansion is data, not a rewrite.
 * **Also:** the recap reads "points scored · allowed"; scouting focus guarantees one extra *prospect* at the asked position, not a signing; practice injuries are real (4% a week at normal intensity).
 
+## 19. The draft (LOCKED design, 2026-10-18, build 6)
+
+Rookie of the Year needs rookies arriving together, so the league drafts.
+
+* **The class.** In the final regular-season week a class of ~50 first-year monsters appears (ages 19–22, `yearsPro 0`, from every region; a few gems, many projects), with a public **board rank** (consensus with noise). It is written into the Beast Dex as seen.
+* **The draft window.** From the final regular-season week through the playoffs there is **no region scouting and no recruiting**. Monday is *Scout the draft class*: the head scout studies 1–3 prospects fully (by skill; +1 with the board's scouting bonus), focus position first, and glances at three more. Tuesday is a **recovery day**: −15% fatigue for everyone and every injury a week closer to healed. Owners who are out of the playoffs still get these days while they watch the bracket.
+* **Offseason order.** Postseason → awards → contracts → **draft** → free-agent market → commissioner's goal → season.
+* **The draft.** Three rounds, sixteen clubs, **snake order from the worst record** (the champion picks last in round one, first in round two). The owner picks or passes on each of their turns; AI clubs pick best available with positional taste. **Rookie deals: two seasons at 70% of market rate**, fixed — the reason to draft rather than sign veterans. Roster room (38) is required to pick.
+* **AI draftees persist** (`f.draftResults[year][club]`): they are swapped into their club's generated roster at their position for three seasons, so "he'll be gone by your pick" is real and AI clubs have rookie-of-the-year candidates. Their ages and years pro advance with the calendar; the class just drafted enters the coming season at `yearsPro 0`.
+* **Rookie of the Year** keeps the rule "first professional season"; a rookie signed from a regional pool in week 10 is eligible but will not have the games.
+* LATER: trading picks; a combine week; a second scout.
+

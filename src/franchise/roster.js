@@ -178,8 +178,9 @@ export function adaptPlaybook(seed, base, profile, { swaps = 2 } = {}) {
   const offense = swapIn(base.offense, OFFENSE_IDS, oppDef, swaps, (id, out) => !(PLAYS[id].type === 'run' && out.filter((x) => PLAYS[x].type === 'run').length <= 2));
   return { offense: [...new Set(offense)].slice(0, 6), defense: [...new Set(defense)].slice(0, 6), notes };
 }
-export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null, scouting = null, element = null, legendary = null, signature = null, evolveStage = 0, composition = undefined }) {
-  const roster = createRoster(seed, { quality, element, legendary, signature, evolveStage, composition });
+export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null, scouting = null, element = null, legendary = null, signature = null, evolveStage = 0, composition = undefined, afterRoster = null }) {
+  let roster = createRoster(seed, { quality, element, legendary, signature, evolveStage, composition });
+  if (afterRoster) roster = afterRoster(roster) || roster;
   for (const m of roster) delete m.cornerstone;
   let pb = playbookFor(seed ^ 0x9e37, coach || {});
   let notes = [];
