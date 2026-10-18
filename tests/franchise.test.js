@@ -316,6 +316,16 @@ test('traded future picks are honored when that draft comes', async () => {
   assert.equal(f.draft.order.filter((o) => o.team === f.club).length, 3);
 });
 
+test('victory formation: a kneel with the clock running, no defensive timeouts and under 30 s ends the game', async () => {
+  const R = await import('../src/sim/rules.js');
+  const s = R.newGame({ home: { id: 'A', name: 'A', abbr: 'A' }, away: { id: 'B', name: 'B', abbr: 'B' }, quarterLength: 180 });
+  s.phase = 'scrimmage'; s.quarter = 4; s.clock = 23; s.possession = 'home'; s.down = 1; s.toGo = 10; s.ballOn = 60; s.clockRunning = true; s.timeouts.away = 0; s.score = { home: 16, away: 3 };
+  R.kneel(s); assert.equal(s.clock, 0); assert.ok(s.finished, 'the game is over'); assert.ok(/runs out/.test(s.lastPlay.text));
+  const t = R.newGame({ home: { id: 'A', name: 'A', abbr: 'A' }, away: { id: 'B', name: 'B', abbr: 'B' }, quarterLength: 180 });
+  t.phase = 'scrimmage'; t.quarter = 4; t.clock = 23; t.possession = 'home'; t.down = 1; t.toGo = 10; t.ballOn = 60; t.clockRunning = true; t.timeouts.away = 1;
+  R.kneel(t); assert.equal(t.clock, 20); assert.ok(!t.finished, 'with a timeout left the defense can still stop it');
+});
+
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
   F.hireDefaultStaff(f);

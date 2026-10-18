@@ -447,6 +447,8 @@ export function kneel(state) {
   state.clockRunning = true;
   const lines = ['Quarterback kneels.'];
   if (state.down > 4) changePossession(state, 100 - state.ballOn, lines);
+  // Victory formation: the clock is running, the defense has no timeouts, and less than one slow snap is left — nothing can stop it, so it runs out now.
+  else if (!state.ot && state.clock > 0 && state.clock <= RUNOFF.milk && state.timeouts[opponent(state.possession)] <= 0) { runClock(state, state.clock); lines.push(`The clock runs out — ${state.quarter >= 4 ? 'that is the game.' : 'end of the half.'}`); }
   log(state, lines.join(' '), 'play');
   state.lastPlay = { text: lines.join(' '), result: 'kneel' };
   if (state.clock <= 0) endOfPeriod(state);
