@@ -62,10 +62,12 @@ export function draftOrder(standingsBestFirst, rounds = DRAFT_ROUNDS) {
   return order;
 }
 
-export function startDraft(f, standingsBestFirst) {
+export function startDraft(f, standingsBestFirst, { ownerOf = null } = {}) {
   const d = f.draft; if (!d) return { ok: false, reason: 'No draft class.' };
   if (d.started) return { ok: true, draft: d };
-  d.order = draftOrder(standingsBestFirst); d.index = 0; d.round = 1; d.started = true; d.available = d.class.map((m) => m.id);
+  // Each slot remembers the club whose record earned it (`original`) and the club that holds it now (`team`) — traded picks differ (GDD §19.6).
+  d.order = draftOrder(standingsBestFirst).map((o) => ({ round: o.round, original: o.team, team: ownerOf ? ownerOf({ round: o.round, original: o.team }) : o.team }));
+  d.index = 0; d.round = 1; d.started = true; d.available = d.class.map((m) => m.id);
   return { ok: true, draft: d };
 }
 export const onTheClock = (f) => f.draft?.started && !f.draft.done ? f.draft.order[f.draft.index]?.team : null;

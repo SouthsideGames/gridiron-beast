@@ -2,6 +2,7 @@
 // contracts and the coaching staff room.
 
 import { esc, delegate, toast, sheet, confirmSheet, fmtMoney } from '../dom.js';
+import { yearOf } from '../../data/calendar.js';
 import * as F from '../../franchise/franchise.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS, PACKAGE_SLOT_USE, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
 import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies, POINTS_PER_LEVEL } from '../../data/monsters.js';
@@ -92,7 +93,7 @@ export function registerRosterScreens(Router, app) {
       const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const slot = Object.entries(chart).find(([, id]) => id === m.id)?.[0];
       return `<div class="panel"><div class="row">${monsterSprite(m, 72)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(m.name)} ${m.cornerstone ? '★' : ''}</div><div class="muted">${m.position}${slot ? ' · starts at ' + slot : ' · reserve'} · ${esc(m.type)} type · age ${m.age}</div><div class="muted">Level ${m.level} · XP ${m.xp}/${xpForLevel(m.level)} · potential ${m.potential}</div></div><span class="ovr hi" style="font-size:26px">${monsterOverall(m)}</span></div>
         <div class="bar" style="margin:8px 0 4px"><i style="width:${Math.round(m.xp / xpForLevel(m.level) * 100)}%"></i></div>
-        <div class="row between muted"><span>Fatigue ${m.fatigue}%</span><span>${m.injury ? `<b style="color:var(--bad)">${esc(m.injury.severity)} ${esc(m.injury.type)} — ${m.injury.weeks} wk</b>` : 'Healthy'}</span><span>${fmtMoney(m.salary)}/yr${m.contract ? ` · through S${m.contract.ends}` : ''}</span></div>
+        <div class="row between muted"><span>Fatigue ${m.fatigue}%</span><span>${m.injury ? `<b style="color:var(--bad)">${esc(m.injury.severity)} ${esc(m.injury.type)} — ${m.injury.weeks} wk</b>` : 'Healthy'}</span><span>${fmtMoney(m.salary)}/yr${m.contract ? ` · through ${yearOf(m.contract.ends)}` : ''}</span></div>
         ${m.contract && m.contract.ends <= f.season.year ? `<p class="dim" style="margin:4px 0 0">Contract year: renewal in the offseason. Today's ask would be about ${fmtMoney(F.renewalAsk(m).ask)}/yr.</p>` : ''}</div>
         ${bioHtml(f, m)}
         <div class="panel"><b>Nature: ${esc(nature.name)}</b><p class="muted" style="margin:2px 0">${esc(nature.behavior)}${nature.up ? ` <span class="chip good">+10% ${ATTR_LABEL[nature.up]}</span> <span class="chip bad">−10% ${ATTR_LABEL[nature.down]}</span>` : ''}</p>
@@ -122,7 +123,7 @@ export function registerRosterScreens(Router, app) {
       const usage = Math.min(100, Math.round(c.total / c.cap * 100));
       return `<div class="panel"><div class="muted" style="font-size:12px">TOTAL ANNUAL SALARY · MONSTERS + STAFF</div><div style="font-size:24px;font-weight:900">${fmtMoney(c.total)}</div><div class="bar ${c.over ? 'bad' : usage > 90 ? 'warn' : ''}" style="margin:6px 0"><i style="width:${usage}%"></i></div><div class="row between muted"><span>Cap ${fmtMoney(c.cap)}</span><span>Monsters ${fmtMoney(c.monsters)} · Staff ${fmtMoney(c.staff)}</span></div><p style="color:${c.over ? 'var(--bad)' : 'var(--good)'};margin:6px 0 0"><b>${c.over ? 'Over by ' + fmtMoney(-c.remaining) + ' — games locked' : 'Room: ' + fmtMoney(c.remaining)}</b></p></div>
         <p class="muted">Released monsters go back to their home region's free-agent pool, where any club can sign them. Keep at least ${F.ROSTER_MIN} and one of every position.</p>
-        <div class="list">${f.roster.slice().sort((a, b) => b.salary - a.salary).map((m) => `<div class="item static">${monsterSprite(m, 32)}<div class="grow"><div class="name">${esc(m.name)}</div><div class="sub">${m.position} · ${monsterOverall(m)} OVR · ${fmtMoney(m.salary)}/yr${m.contract ? ` · through S${m.contract.ends}` : ''}</div></div><button class="btn small danger" data-action="release" data-id="${m.id}" data-name="${esc(m.name)}">Release</button></div>`).join('')}</div>`;
+        <div class="list">${f.roster.slice().sort((a, b) => b.salary - a.salary).map((m) => `<div class="item static">${monsterSprite(m, 32)}<div class="grow"><div class="name">${esc(m.name)}</div><div class="sub">${m.position} · ${monsterOverall(m)} OVR · ${fmtMoney(m.salary)}/yr${m.contract ? ` · through ${yearOf(m.contract.ends)}` : ''}</div></div><button class="btn small danger" data-action="release" data-id="${m.id}" data-name="${esc(m.name)}">Release</button></div>`).join('')}</div>`;
     },
     mount(root) { delegate(root, { release: async (el) => { if (!(await confirmSheet(`Release ${el.dataset.name}? This cannot be undone.`, { title: 'Release monster', okLabel: 'Release', danger: true }))) return; const r = F.releaseMonster(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${el.dataset.name} released.`); Router.render(); } }); },
   });
@@ -167,7 +168,7 @@ export function monsterStatsHtml(m, f) {
   const groupBar = (line) => { const gs = groupsWithData(line); const def = GROUP_OF_POSITION[pos]; const all = [...new Set([def, ...gs])].filter(Boolean); if (all.length <= 1) { statView.group = null; return ''; } const cur = statView.group && all.includes(statView.group) ? statView.group : def; statView.group = cur; return `<div class="seg" style="margin:6px 0">${all.map((g) => `<button class="btn small ${g === cur ? 'primary' : ''}" data-action="stat-group" data-v="${g}">${esc(GROUP_LABEL[g])}</button>`).join('')}</div>`; };
   if (tab === 'season' || tab === 'post') {
     const line = tab === 'season' ? s.season.reg : s.season.post;
-    if (!Object.keys(line).length) body = `<p class="dim">${tab === 'post' ? 'No playoff games this season.' : `No games yet in season ${s.season.year ?? f.season.year}.`}</p>`;
+    if (!Object.keys(line).length) body = `<p class="dim">${tab === 'post' ? 'No playoff games this season.' : `No games yet in ${yearOf(s.season.year ?? f.season.year)}.`}</p>`;
     else body = `${groupBar(line)}${statTable(line, pos, statView.group)}`;
   } else if (tab === 'career') {
     const years = s.seasons.map((x) => x.year);
@@ -176,9 +177,9 @@ export function monsterStatsHtml(m, f) {
     const postAll = {}; for (const x of s.seasons) addInto(postAll, x.post); addInto(postAll, s.season.post);
     const line = sel == null ? regAll : s.seasons.find((x) => x.year === sel).reg;
     const postLine = sel == null ? postAll : s.seasons.find((x) => x.year === sel).post;
-    const yearBar = years.length ? `<div class="seg" style="margin:6px 0"><button class="btn small ${sel == null ? 'primary' : ''}" data-action="stat-year" data-v="career">All</button>${years.slice().reverse().map((y) => `<button class="btn small ${sel === y ? 'primary' : ''}" data-action="stat-year" data-v="${y}">${y}</button>`).join('')}</div>` : '';
+    const yearBar = years.length ? `<div class="seg" style="margin:6px 0"><button class="btn small ${sel == null ? 'primary' : ''}" data-action="stat-year" data-v="career">All</button>${years.slice().reverse().map((y) => `<button class="btn small ${sel === y ? 'primary' : ''}" data-action="stat-year" data-v="${y}">${yearOf(y)}</button>`).join('')}</div>` : '';
     const legacy = !years.length && Object.keys(s.career.reg).length && !Object.keys(s.season.reg).length;
-    body = `${yearBar}${Object.keys(line).length ? `${groupBar(line)}<div class="dim" style="margin-top:4px">Regular season${sel == null ? ` · ${years.length + 1} season${years.length ? 's' : ''}` : ` ${sel}`}</div>${statTable(line, pos, statView.group)}` : '<p class="dim">No regular-season games yet.</p>'}${Object.keys(postLine).length ? `<div class="dim" style="margin-top:6px">Playoffs</div>${statTable(postLine, pos, statView.group)}` : ''}${legacy ? '<p class="dim">Older saves kept only games, touchdowns, catches, tackles, sacks and interceptions.</p>' : ''}`;
+    body = `${yearBar}${Object.keys(line).length ? `${groupBar(line)}<div class="dim" style="margin-top:4px">Regular season${sel == null ? ` · ${years.length + 1} season${years.length ? 's' : ''}` : ` ${yearOf(sel)}`}</div>${statTable(line, pos, statView.group)}` : '<p class="dim">No regular-season games yet.</p>'}${Object.keys(postLine).length ? `<div class="dim" style="margin-top:6px">Playoffs</div>${statTable(postLine, pos, statView.group)}` : ''}${legacy ? '<p class="dim">Older saves kept only games, touchdowns, catches, tackles, sacks and interceptions.</p>' : ''}`;
   } else {
     const log = s.log.slice().reverse();
     body = log.length ? `<div class="list">${log.map((g) => `<div class="item static"><div class="grow"><div class="name">Wk ${g.week}${g.playoff ? ' (playoffs)' : ''} ${g.home ? 'vs' : '@'} ${esc(g.opp)} <span class="${g.won ? 'good' : 'bad'}">${g.won ? 'W' : 'L'} ${g.score}</span></div><div class="sub">${esc(statLine(g.line)) || 'no stats'}</div></div></div>`).join('')}</div>` : '<p class="dim">No games this season.</p>';
@@ -190,10 +191,10 @@ export function monsterStatsHtml(m, f) {
 /** Bio card (GDD §20.2): where the monster is from, how long it has been pro, and every club on its record. */
 function bioHtml(f, m) {
   const b = F.monsterBio(f, m);
-  const span = (s) => s.regional ? `${s.to - s.from + 1} season${s.to - s.from ? 's' : ''}` : s.to == null ? (s.from >= (f.season?.year || 1) ? `S${s.from}` : `S${s.from}–now`) : s.from === s.to ? `S${s.from}` : `S${s.from}–S${s.to}`;
+  const span = (s) => s.regional ? `${s.to - s.from + 1} season${s.to - s.from ? 's' : ''}` : s.to == null ? (s.from >= (f.season?.year || 1) ? `${yearOf(s.from)}` : `${yearOf(s.from)}–now`) : s.from === s.to ? `${yearOf(s.from)}` : `${yearOf(s.from)}–${yearOf(s.to)}`;
   const why = (s) => s.regional ? 'before the league' : s.current ? '' : s.reason === 'walked' ? 'left as a free agent' : s.reason === 'commissioner' ? 'cut by the commissioner' : s.reason === 'released' ? 'released' : s.reason === 'signed' ? 'signed from the pool' : s.reason || '';
   return `<div class="panel bio"><div class="row between"><b>Bio</b><span class="dim">${b.rookie ? 'Rookie season' : `${b.yearsPro} season${b.yearsPro === 1 ? '' : 's'} pro`}</span></div>
-    <div class="muted">Born in <b>${esc(b.birthplace)}</b>${m.drafted ? ` · drafted #${m.drafted.overall} (round ${m.drafted.round}) in the S${m.drafted.year} class${m.drafted.club !== f.club ? ` by ${esc(m.drafted.club)}` : ''}` : m.rookie != null ? ` · S${m.rookie} draft class` : ''}</div>
+    <div class="muted">Born in <b>${esc(b.birthplace)}</b>${m.drafted ? ` · drafted #${m.drafted.overall} (round ${m.drafted.round}) in the ${yearOf(m.drafted.year)} class${m.drafted.club !== f.club ? ` by ${esc(m.drafted.club)}` : ''}` : m.rookie != null ? ` · ${yearOf(m.rookie)} draft class` : ''}</div>
     <div class="stints">${b.stints.map((s) => `<div class="stint ${s.current ? 'current' : ''}"><span class="when">${span(s)}</span><span class="club">${esc(s.club)}</span><span class="dim">${esc(why(s))}</span></div>`).join('')}</div></div>`;
 }
 

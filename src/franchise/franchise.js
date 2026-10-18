@@ -13,6 +13,7 @@ import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, sett
 export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
 export { AWARDS } from './awards.js';
 export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
+export { pickKey, currentClassYear, tradableYears, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, describePick, canTakePlayer } from './trades.js';
 export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
@@ -24,6 +25,8 @@ import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
 import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
+import { yearOf } from '../data/calendar.js';
+import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds } from './trades.js';
 import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
@@ -79,7 +82,7 @@ export function openCreationDraft(f) {
   const others = ALL_TEAMS.filter((t) => t !== f.club).sort((a, b) => clubQuality(f, a, 1) - clubQuality(f, b, 1));
   const worstFirst = [...others.slice(0, slot), f.club, ...others.slice(slot)];
   save();
-  draftStart(f, worstFirst.slice().reverse()); // draftStart expects best→worst
+  draftStart(f, worstFirst.slice().reverse(), { ownerOf: (o) => pickOwner(f, { year: 1, ...o }) }); // draftStart expects best→worst
   d.lotterySlot = slot + 1;
   runDraftToMe(f);
   news(f, `Draft day. The lottery gave ${f.club} the #${slot + 1} pick; the previous staff left scouting notes on ${12} prospects.`, 'info');
@@ -523,7 +526,7 @@ export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } 
     : { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
   const rival = f.rivals[f.tier]?.team === name ? rivalSignature(f) : null;
   const evolveStage = gym ? (year >= 4 ? 2 : year >= 2 ? 1 : 0) : (year >= 5 ? 2 : year >= 3 ? 1 : 0);
-  const team = generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival, evolveStage, composition: FULL_ROSTER, afterRoster: (roster) => injectDraftees(f, name, roster, year) });
+  const team = generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival, evolveStage, composition: FULL_ROSTER, afterRoster: (roster) => { const gone = new Set(f.aiTransfers?.[year]?.[name] || []); return injectDraftees(f, name, roster, year).filter((m) => !gone.has(m.id)); } });
   return team;
 }
 /** The rival GM's signature monster: the same species every season, a little stronger each year (GDD §15.8). */
@@ -644,7 +647,7 @@ export function beginDraft(f) {
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
   if (!offseasonReady(f)) return { ok: false, reason: 'Settle the contracts first.' };
   ensureDraftClass(f);
-  const r = draftStart(f, leagueStandings(f).overall); if (!r.ok) return r;
+  const r = draftStart(f, leagueStandings(f).overall, { ownerOf: (o) => pickOwner(f, { year: f.season.year + 1, ...o }) }); if (!r.ok) return r;
   runDraftToMe(f);
   return { ok: true, draft: f.draft };
 }
@@ -652,6 +655,55 @@ function runDraftToMe(f) { const { r, save } = frng(f); const made = draftAdvanc
 export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}) — rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
 export function passDraftPick(f) { const r = draftPassPick(f, { playerClub: f.club }); if (!r.ok) return r; runDraftToMe(f); return r; }
 export const draftDone = (f) => !f.draft || f.draft.year !== f.season.year || f.draft.done;
+// ------------------------------------------------------------ draft-pick trading (GDD §19.6)
+const tradeCtx = (f) => ({ teams: ALL_TEAMS.filter((t) => t !== f.club), allTeams: ALL_TEAMS, rosterOf: (team) => aiTeam(f, team).roster, difficulty: f.settings?.difficulty || 'pro' });
+/** The owner's tradable picks: this class (unused) and the next three, with how many asks each has left. */
+export function myTradablePicks(f) {
+  const out = [];
+  for (const year of tradableYears(f)) for (const p of picksOwnedBy(f, f.club, year, ALL_TEAMS)) { if (pickUsed(f, p)) continue; const d = f.draft; const i = d?.started && currentClassYear(f) === year ? d.order.findIndex((o) => o.round === p.round && (o.original || o.team) === p.original) : -1; out.push({ ...p, asksLeft: ASKS_PER_PICK - (f.pickAsks?.[pickKey(p)] || 0), overall: i >= 0 ? i + 1 : null, onClock: i >= 0 && i === d.index }); }
+  return out;
+}
+/** Picks the owner has sent away or taken in (for the office and the draft panel). */
+export function pickLedger(f) { const mine = myTradablePicks(f); const acquired = mine.filter((p) => p.original !== f.club); const gone = []; for (const year of tradableYears(f)) for (let round = 1; round <= DRAFT_ROUNDS; round++) { const p = { year, round, original: f.club }; if (pickOwner(f, p) !== f.club) gone.push({ ...p, owner: pickOwner(f, p) }); } return { acquired, gone }; }
+function tradeOpen(f) { return (f.draft?.started && !f.draft.done) || (f.season?.finished && !isFired(f)); }
+function spendAsk(f, give) { const key = pickKey(give[0]); const n = f.pickAsks?.[key] || 0; if (n >= ASKS_PER_PICK) return { ok: false, reason: `That pick has been shopped ${ASKS_PER_PICK} times already.` }; (f.pickAsks ||= {})[key] = n + 1; return { ok: true }; }
+function checkGive(f, give) {
+  if (!tradeOpen(f)) return { ok: false, reason: 'Trades are open on the clock and in the offseason.' };
+  if (!give?.length) return { ok: false, reason: 'Choose at least one pick to offer.' };
+  const mine = myTradablePicks(f);
+  for (const p of give) { const m = mine.find((x) => samePick(x, p)); if (!m) return { ok: false, reason: 'You do not hold that pick.' }; }
+  return { ok: true };
+}
+/** Shop picks for a veteran at a position. Up to three offers; each ask costs one of the lead pick's two. */
+export function tradeAskPlayer(f, { give, position }) {
+  const c = checkGive(f, give); if (!c.ok) return c;
+  if (!canTakePlayer(f)) return { ok: false, reason: `Roster full (${ROSTER_MAX}). Release someone before trading for a player.` };
+  const a = spendAsk(f, give); if (!a.ok) return a;
+  const r = askForPlayer(f, { give, position, ...tradeCtx(f) });
+  news(f, `Shopped ${give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} for a ${position}: ${r.offers.length ? `${r.offers.length} club${r.offers.length === 1 ? '' : 's'} interested` : 'no takers'}.`, 'info');
+  return { ok: true, offers: r.offers, interested: r.teams, asksLeft: ASKS_PER_PICK - (f.pickAsks[pickKey(give[0])] || 0) };
+}
+/** Shop picks for future picks: `count` picks of `round` in class `year`. Clubs counter with the nearest package they would accept. */
+export function tradeAskPicks(f, { give, year, round, count = 1 }) {
+  const c = checkGive(f, give); if (!c.ok) return c;
+  if (!tradableYears(f).includes(year)) return { ok: false, reason: `Picks can be traded up to ${TRADE_YEARS_AHEAD} classes ahead.` };
+  const a = spendAsk(f, give); if (!a.ok) return a;
+  const r = askForPicks(f, { give, year, round, count, ...tradeCtx(f) });
+  news(f, `Shopped ${give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} for ${count} × ${yearOf(year)} R${round}: ${r.offers.length ? `${r.offers.filter((o) => o.exact).length} yes, ${r.offers.filter((o) => !o.exact).length} counter${r.offers.filter((o) => !o.exact).length === 1 ? '' : 's'}` : 'no takers'}.`, 'info');
+  return { ok: true, offers: r.offers, interested: r.teams, asksLeft: ASKS_PER_PICK - (f.pickAsks[pickKey(give[0])] || 0) };
+}
+/** Take an offer. Picks change hands at once; a veteran joins on a two-year deal at his salary (over the cap means the commissioner's review, like any signing). */
+export function acceptTrade(f, offer) {
+  const c = checkGive(f, offer.give); if (!c.ok) return c;
+  if (offer.get?.player && !canTakePlayer(f)) return { ok: false, reason: `Roster full (${ROSTER_MAX}).` };
+  const year = f.season.year; const nextYear = f.draft?.creation ? year : year + 1;
+  const got = executeTrade(f, offer, { club: f.club, year, nextYear });
+  if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ' — over the cap; the commissioner will review' : ''}.`, 'roster'); }
+  else news(f, `Trade: ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} to ${offer.team} for ${got.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}.`, 'roster');
+  if (f.draft?.started && !f.draft.done) runDraftToMe(f); // if the pick on the clock went out, the new holder uses it now
+  return { ok: true, got };
+}
+
 /** The commissioner's three goal offers for this season (GDD §17.4). */
 export function commissionerGoals(f) {
   ensureBoard(f);
@@ -1268,7 +1320,7 @@ export function startNextSeason(f) {
   for (const m of f.roster) if (m.rookie === f.season.year) { m.yearsPro = 0; m.age -= 1; } // just drafted: the coming season is their first (offseason() aged everyone)
   startSeason(f, f.season.year + 1);
   f.offseason = null; f.draft = null;
-  news(f, `Season ${f.season.year} begins.`, 'info');
+  news(f, `The ${yearOf(f.season.year)} season begins.`, 'info');
   return { ok: true, events };
 }
 

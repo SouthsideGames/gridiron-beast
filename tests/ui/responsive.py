@@ -99,6 +99,11 @@ def run_size(pw, port, w, h, name):
     if page.query_selector('.item.tappable[data-action="prospect"]'):
         page.click('.item.tappable[data-action="prospect"] >> nth=0'); page.wait_for_selector('.sheet .attr-grid'); no_overflow(page, 'prospect report'); shot(page, f'{name}-03ab-prospect'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="picks"]'); page.wait_for_selector('.sheet'); shot(page, f'{name}-03ac-picks'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
+    # Shop the pick (GDD §19.6): ask for picks, see offers or no takers, close without dealing.
+    page.click('[data-action="trade"]'); page.wait_for_selector('.sheet [data-call]'); no_overflow(page, 'trade sheet'); shot(page, f'{name}-03ad-trade')
+    page.click('.sheet [data-tab="picks"]'); page.wait_for_timeout(50); page.click('.sheet [data-call]'); page.wait_for_timeout(300); no_overflow(page, 'trade offers'); shot(page, f'{name}-03ae-offers')
+    check(page.query_selector('.sheet [data-accept]') is not None or 'No takers' in page.inner_text('.sheet'), 'trade: offers or an honest no')
+    page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
     page.click('[data-action="pick"] >> nth=0'); page.wait_for_selector('.sheet [data-action="yes"]'); page.click('.sheet [data-action="yes"]'); page.wait_for_timeout(200)
     for _ in range(3):
         if page.query_selector('[data-action="pass"]'):

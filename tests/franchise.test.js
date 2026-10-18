@@ -264,6 +264,58 @@ test('commissioner welcome: six beats, names the lottery pick and the board, end
   assert.ok(beats[4].ominous && /I answer to the Board/.test(beats[4].text) && beats.at(-1).ominous && /never seen a face/.test(beats.at(-1).text)); assert.ok(!beats.some((b) => /undefined|NaN/.test(b.text)));
 });
 
+test('draft-pick trading: picks change hands and the order follows; a veteran arrives and leaves the AI club; two asks per pick; protected monsters never offered; closed mid-season', async () => {
+  const T = await import('../src/franchise/trades.js');
+  const f = newFranchise(3); // creation draft: on the clock
+  const mine = F.myTradablePicks(f);
+  assert.equal(mine.filter((p) => p.year === 1).length, 3); assert.equal(mine.length, 12, 'this class plus three ahead');
+  assert.ok(mine.find((p) => p.onClock)?.round === 1);
+  // Picks for picks: my 1R3 for next class's R2 (exact or a counter), accept the first offer.
+  const r3 = mine.find((p) => p.year === 1 && p.round === 3);
+  const r = F.tradeAskPicks(f, { give: [r3], year: 2, round: 2, count: 1 }); assert.equal(r.ok, true); assert.ok(r.offers.length >= 1, 'somebody answers a picks ask');
+  const offer = r.offers[0]; const acc = F.acceptTrade(f, offer); assert.equal(acc.ok, true);
+  assert.equal(T.pickOwner(f, r3), offer.team, 'my R3 now belongs to them');
+  for (const p of offer.get.picks) assert.equal(T.pickOwner(f, p), f.club);
+  const slot = f.draft.order.find((o) => o.round === 3 && o.original === f.club); assert.equal(slot.team, offer.team, 'the draft order follows the trade');
+  assert.ok(!F.myTradablePicks(f).some((p) => T.samePick(p, r3)));
+  // Player ask with the pick on the clock: the lead pick spends an ask; an accepted veteran joins and leaves the AI roster.
+  const lead = F.myTradablePicks(f).find((p) => p.onClock); const rosterBefore = f.roster.length;
+  let got = null;
+  for (const pos of ['S', 'LB', 'CB', 'OL', 'DL', 'WR']) { const a = F.tradeAskPlayer(f, { give: [lead], position: pos }); if (!a.ok) break; if (a.offers.length) { got = { a, pos }; break; } }
+  if (got) {
+    for (const o of got.a.offers) { const m = o.get.player; assert.ok(!m.legendary && !m.signature && !m.rookie && !m.drafted, 'protected monsters are never offered'); assert.equal(m.position, got.pos); }
+    const o = got.a.offers[0]; const before = F.aiTeam(f, o.team).roster.some((m) => m.id === o.get.player.id); assert.ok(before);
+    const acc2 = F.acceptTrade(f, o); assert.equal(acc2.ok, true);
+    assert.equal(f.roster.length, rosterBefore + 1); const m = f.roster.find((x) => x.id === o.get.player.id); assert.ok(m.contract && m.history.at(-1).reason === 'traded' && m.traded.from === o.team);
+    assert.ok(!F.aiTeam(f, o.team).roster.some((x) => x.id === o.get.player.id), 'gone from the AI club');
+    assert.ok(F.onTheClock(f) !== f.club || f.draft.index > 0, 'the pick that went out was used by its new holder');
+  }
+  // Asks are limited to two per pick.
+  const spare = F.myTradablePicks(f).find((p) => p.year === 3); F.tradeAskPicks(f, { give: [spare], year: 4, round: 3 }); F.tradeAskPicks(f, { give: [spare], year: 4, round: 3 });
+  assert.equal(F.tradeAskPicks(f, { give: [spare], year: 4, round: 3 }).ok, false, 'third ask refused');
+  // Mid-season the phone is off.
+  while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
+  assert.equal(F.tradeAskPlayer(f, { give: [F.myTradablePicks(f)[0]], position: 'S' }).ok, false);
+  // Value sanity: a pick this year is worth about a round more than the same round next year.
+  assert.ok(T.pickValue({ year: 2, round: 1 }, { yearsAhead: 1 }) < T.pickValue({ year: 1, round: 1 }) && T.pickValue({ year: 2, round: 1 }, { yearsAhead: 1 }) > T.pickValue({ year: 1, round: 3 }));
+});
+
+test('traded future picks are honored when that draft comes', async () => {
+  const T = await import('../src/franchise/trades.js');
+  const f = newFranchise(9); while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
+  // Hand my season-2 class R1 to a club directly (ownership table), then play to that draft.
+  const other = 'Bayou Stalkers' === f.club ? 'Harbor Sentinels' : 'Bayou Stalkers';
+  T.setPickOwner(f, { year: 2, round: 1, original: f.club }, other); T.setPickOwner(f, { year: 2, round: 2, original: other }, f.club);
+  let guard = 0; while (!f.season.finished && guard++ < 80) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) { const m = F.sundayMatchup(f); if (m?.forfeit) F.forfeitSunday(f); else F.finishSunday(f, F.simulatePlayerGame(f)); } else F.skipPlayoffs(f); }
+  if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id);
+  if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
+  for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
+  const b = F.beginDraft(f); assert.equal(b.ok, true);
+  const mineR1 = f.draft.order.find((o) => o.round === 1 && o.original === f.club); assert.equal(mineR1.team, other, 'my R1 is theirs');
+  const theirR2 = f.draft.order.find((o) => o.round === 2 && o.original === other); assert.equal(theirR2.team, f.club, 'their R2 is mine');
+  assert.equal(f.draft.order.filter((o) => o.team === f.club).length, 3);
+});
+
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
   F.hireDefaultStaff(f);
