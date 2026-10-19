@@ -507,3 +507,18 @@ A first season from the worst roster to the Beast Bowl "felt silent". Three chan
 * **21.6 The banked-points loophole.** An owner could leave a monster's attribute points unspent through his contract year, re-sign him at the price of his current overall, then spend the points. Two fixes: the **ask is priced as if every banked point were already spent** (one at a time to the attribute the position weighs most, capped at potential), so holding points saves nothing; and **attribute points are frozen while any contract decision is open** (the card shows them banked and locked, the trainer's spend-all is off, the notice is hidden until the book is settled).
 * **21.7 The league year turns over at the draft.** As in real football, the new year starts when the old one's business is done: once every contract decision is made, headquarters and the offseason screen read the next year ("1202 · Offseason · draft & free agency"); before that, "1201 · Offseason · contracts". Stats, history and the finished season's summary keep their own year.
 
+## 22. Prototype 2 — complete (2026-10-19, v28.3)
+
+Signed off by the owner after a full playtest: a season from the worst roster to the Beast Bowl, the offseason (renewals, counters, walks, the cap review, releases), the draft with pick trading for players and for future picks, evolution, and achievements live and replayed. Git tag `prototype-2-complete`.
+
+**What prototype 2 is.** A complete franchise loop on a phone: create a GM and club, the commissioner's welcome, a lottery pick in the creation draft; ten-week seasons (scout, recruit, train, scout the opponent, game plan, media day, Sunday) against eight gym clubs and a rival; the match engine with Key Moments / Full Coaching / Auto, a visible clock, comeback mode and scheme lock; full stats, seven league awards, a records book; playoffs on a broadcast bracket; the Board's goals, the hot seat and firing; two-year contracts, a 26–38 roster and a cap that binds on choices; a three-round draft with scouting reports and pick trading; evolution, attribute points, natures that matter on media day; Legend Tracks, the Hall of Fame, the Beast Dex; 21 achievements as cutscenes; notices; cloud saves.
+
+**Deliberately left for later** (designed, not built):
+* Selling a franchise / the career outliving the franchise (§18.7–18.8): the GM card as the persistent object, confidence resetting at a new club.
+* League growth to 32 clubs, 8 divisions, 2 conferences, and playoff scarcity (§18.7, §18.9).
+* Trading, second pass (§19.6): AI clubs calling the owner with offers; in-season trades; monsters going out in a deal.
+* The store-release decision, Capacitor vs Unity (§10a).
+* Tuning to watch in prototype 3: late-career AI growth vs. monster potential (§20.3), the 60% staff salaries (§20.5), media day without hints (§20.7), the MVP weights (§21.3).
+
+**Next:** the owner's idea to make the game feel more *monster-like* — held since build 3, and expected to bear on playoff scarcity — opens prototype 3.
+
