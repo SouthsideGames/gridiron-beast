@@ -357,6 +357,35 @@ test('best lineup: every position ordered by overall, manual picks cleared, star
   const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const best = f.roster.filter((m) => m.position === 'QB' && !m.injury).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0]; assert.equal(chart.QB, best.id);
 });
 
+test('awards: a quarterback\'s kneel-downs no longer drag his efficiency (roles weighted by volume); the playtest case ranks the QB first', async () => {
+  const A = await import('../src/franchise/awards.js');
+  // A league of 16 QBs and 16 RBs; ours throws 205 times at 11.1 yds/att and also has 13 kneels/scrambles for 30 yards.
+  const table = {}; const records = {};
+  for (let i = 0; i < 16; i++) {
+    const team = `T${i}`; records[team] = { w: 4 + (i % 4), l: 5 - (i % 4) };
+    table[team] = { qb: { id: `q${i}`, name: `QB${i}`, team, position: 'QB', games: 9, snapsOff: 220, att: 180, comp: 110, passYds: 1300 + i * 30, passTd: 10 + (i % 5), intThrown: 4, passFd: 60, rush: 2, rushYds: 6 },
+      rb: { id: `r${i}`, name: `RB${i}`, team, position: 'RB', games: 9, snapsOff: 200, rush: 100, rushYds: 420 + i * 10, rushTd: 4, rec: 15, targets: 20, recYds: 120, recTd: 1, rushFd: 20, recFd: 6 } };
+  }
+  Object.assign(table.T0.qb, { att: 205, comp: 141, passYds: 2273, passTd: 23, intThrown: 3, passFd: 95, rush: 13, rushYds: 30 }); records.T0 = { w: 7, l: 2 };
+  Object.assign(table.T1.rb, { rush: 91, rushYds: 608, rushTd: 10, rec: 32, targets: 40, recYds: 689, recTd: 12, rushFd: 30, recFd: 28 }); records.T1 = { w: 9, l: 0 };
+  const aw = A.computeAwards({ table, records, n: 5 });
+  const qb = aw.mvp.find((r) => r.name === 'QB0'); assert.ok(qb, 'QB in the MVP race'); assert.ok(qb.components.efficiency > 0.5, `QB efficiency is high (${qb.components.efficiency})`);
+  assert.equal(aw.mvp[0].name, 'QB0', 'the elite QB on a 7-2 club beats the 9-0 back');
+  assert.ok(aw.mvp.slice(0, 3).some((r) => r.name === 'RB1'), 'the back is still a finalist');
+});
+
+test('achievements: earned once, queue a filled-in cutscene, listed in the office', () => {
+  const f = newFranchise(21); while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
+  f.campaign.titles = 1;
+  const got = F.checkAchievements(f, 'season', { champion: true, wins: 7, losses: 2 });
+  assert.ok(got.includes('first_title') && got.includes('winning_season'));
+  assert.deepEqual(F.checkAchievements(f, 'season', { champion: true, wins: 7, losses: 2 }), [], 'never twice');
+  const sc = F.nextScene(f); assert.ok(sc && sc.beats.length >= 2); assert.ok(!sc.beats.some((b) => /\{\w+\}/.test(b)), 'placeholders filled');
+  const board = [sc, ...[]].find((x) => x.speaker === 'board') || (F.dismissScene(f), F.nextScene(f)); void board;
+  const list = F.achievementList(f); assert.equal(list.length, F.ACHIEVEMENT_COUNT); assert.equal(list.filter((a) => a.earned).length, 2);
+  while (F.nextScene(f)) F.dismissScene(f); assert.equal(f.scenes.length, 0);
+});
+
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
   F.hireDefaultStaff(f);

@@ -26,6 +26,7 @@ import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNe
 import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
+import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds } from './trades.js';
 import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
@@ -216,6 +217,7 @@ export function chooseLegendTrack(f, speciesId) {
   if (n >= LEGEND_RULES.tracksNeeded) { f.campaign.unlocked[speciesId] = true; unlocked = true; news(f, `LEGEND UNLOCKED: ${sp.name} can now be scouted in ${(sp.regions || [])[0]}.`, 'win'); }
   else news(f, `Legend Track ${n} of ${LEGEND_RULES.tracksNeeded} toward ${sp.name}.`, 'win');
   f.legendPick.resolved = true; f.legendPick.chosen = speciesId;
+  checkAchievements(f, 'legend', { region: (sp.regions || [])[0] });
   return { ok: true, tracks: n, unlocked, species: sp };
 }
 
@@ -281,6 +283,38 @@ export function notices(f) {
 }
 export const noticesFor = (f, screen) => notices(f).filter((n) => n.screen === screen);
 export const monsterNotices = (f, id) => notices(f).filter((n) => n.id === id);
+// ------------------------------------------------------------ achievements (GDD §21)
+/**
+ * Check the achievements for a trigger ('sunday' | 'season' | 'playoffs' | 'legend' | 'trade'; 'any' ones are
+ * checked every time). Each earned achievement is recorded once and queues a cutscene in f.scenes.
+ */
+export function checkAchievements(f, trigger, ctx = {}) {
+  f.achievements ||= {}; f.scenes ||= [];
+  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible };
+  const earned = [];
+  for (const a of ACHIEVEMENTS) {
+    if (f.achievements[a.id] || (a.trigger !== trigger && a.trigger !== 'any')) continue;
+    let ok = false; try { ok = !!a.when(f, c); } catch { ok = false; }
+    if (!ok) continue;
+    f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1 };
+    f.scenes.push({ id: a.id, ctx: sceneVars(f, c) }); earned.push(a.id);
+    news(f, `ACHIEVEMENT: ${fillScene(a.title, sceneVars(f, c))}.`, 'win');
+  }
+  return earned;
+}
+function sceneVars(f, c) {
+  const rv = f.rivals?.[f.tier]; const rec = f.season?.records?.[f.club] || { w: 0, l: 0 };
+  return { club: f.club, CLUB: String(f.club).toUpperCase(), owner: `${f.owner.first} ${f.owner.last}`.trim(), first: f.owner.first, rival: rv?.team || 'your rival', gm: rv?.gm || 'their GM', year: yearOf(f.season?.year || 1), YEAR: yearOf(f.season?.year || 1), week: f.season?.week || 1, record: `${rec.w}–${rec.l}`, wins: f.campaign?.wins || 0, badges: Object.keys(f.campaign?.badges || {}).length, titles: f.campaign?.titles || 0, awardLine: c.awardLine || '', REGION: String(c.region || 'home region').toUpperCase() };
+}
+function fillScene(text, v) { return String(text).replace(/\{(\w+)\}/g, (m, k) => (v[k] != null ? v[k] : m)); }
+/** The next cutscene to play, filled in: { id, title, speaker, beats, earned }. */
+export function nextScene(f) {
+  const q = f.scenes?.[0]; if (!q) return null; const a = ACHIEVEMENT_BY_ID[q.id]; if (!a) { f.scenes.shift(); return nextScene(f); }
+  return { id: a.id, title: fillScene(a.title, q.ctx), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, q.ctx)), earned: f.achievements?.[a.id] || null, rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null };
+}
+export function dismissScene(f) { f.scenes?.shift(); return { ok: true, left: f.scenes?.length || 0 }; }
+export function achievementList(f) { return ACHIEVEMENTS.map((a) => ({ id: a.id, speaker: a.speaker, title: f.achievements?.[a.id] ? fillScene(a.title, sceneVars(f, {})) : null, earned: f.achievements?.[a.id] || null })); }
+export const ACHIEVEMENT_COUNT = ACHIEVEMENTS.length;
 /** Hall of Fame progress against the franchise's difficulty (GDD §15.9). */
 export function hallOfFameProgress(f) {
   const c = f.campaign || { badges: {}, titles: 0, wins: 0, awards: 0 };
@@ -733,6 +767,7 @@ export function acceptTrade(f, offer) {
   if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ' — over the cap; the commissioner will review' : ''}.`, 'roster'); }
   else news(f, `Trade: ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} to ${offer.team} for ${got.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}.`, 'roster');
   if (f.draft?.started && !f.draft.done) runDraftToMe(f); // if the pick on the clock went out, the new holder uses it now
+  checkAchievements(f, 'trade');
   return { ok: true, got };
 }
 
@@ -1165,6 +1200,7 @@ export function sundayMatchup(f) {
 /** Record the player's finished game and roll the week forward. */
 export function finishSunday(f, gameState) {
   const m = sundayMatchup(f); if (!m) return;
+  const playoffRoundNow = playoffFixture(f)?.round || null;
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
   for (const x of m[oppSide].roster) dexRecord(f, x, 'seen'); // every monster you face goes in the dex
   const won = gameState.winner === side;
@@ -1205,6 +1241,8 @@ export function finishSunday(f, gameState) {
   f.game = null;
   recordPlayStats(f, gameState, side);
   f.lastGame = { ...f.week.gameResult, events, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null };
+  { const rvTeam = f.rivals?.[f.tier]?.team; const vsRival = f.season.schedule.filter((g) => g.opponent === rvTeam && g.result);
+    checkAchievements(f, 'sunday', { won, opponent: m.opponent, rival: rvTeam === m.opponent, newBadge: !!f.lastGame?.newBadge, playoffRound: playoffRoundNow, rivalSeasonWins: vsRival.filter((g) => g.result.won).length + (rvTeam === m.opponent && won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0), rivalSeasonLosses: vsRival.filter((g) => !g.result.won).length + (rvTeam === m.opponent && !won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0) }); }
   advanceWeek(f);
   return f.lastGame;
 }
@@ -1250,6 +1288,7 @@ function startPlayoffs(f) {
   f.season.playoffs = { seeds, round: 1, fixtures, results: [], champion: null };
   finalizeAwards(f);
   const qualified = Object.values(seeds).flat().includes(f.club);
+  checkAchievements(f, 'playoffs', { qualified });
   news(f, qualified ? `Playoffs! ${f.club} qualified as the ${seedLabel(seeds, f.club)}.` : `Regular season over: ${f.club} missed the playoffs.`, qualified ? 'win' : 'loss');
 }
 function seedLabel(seeds, club) { for (const [conf, s] of Object.entries(seeds)) { const i = s.indexOf(club); if (i >= 0) return `${conf} #${i + 1} seed`; } return 'a qualifier'; }
@@ -1277,7 +1316,7 @@ function simulatePlayoffWeek(f) {
 
 // ------------------------------------------------------------ season end
 function endSeason(f) {
-  const s = f.season; const st = leagueStandings(f);
+  const s = f.season; const st = leagueStandings(f); const wasHotSeat = onHotSeat(f);
   const champion = s.playoffs?.champion || null;
   const rec = record(f);
   if (champion === f.club) { f.badges[f.tier] += 1; f.qualification[f.tier] += 1; f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.titles += 1; news(f, `BEAST BOWL CHAMPIONS! ${f.club} win the ${tierById(f.tier).name} title.`, 'win'); }
@@ -1304,8 +1343,10 @@ function endSeason(f) {
   if (champion === f.club && legendChoices(f).length) f.legendPick = { year: s.year, resolved: false }; // Beast Bowl champions choose a Legend Track (GDD §15.8)
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
-  f.campaign.awards += Object.values(s.awards.league || {}).filter((w) => w && w.team === f.club).length;
+  const mine = Object.entries(s.awards.league || {}).filter(([, w]) => w && w.team === f.club);
+  f.campaign.awards += mine.length;
   s.finished = true;
+  checkAchievements(f, 'season', { wins: rec.w, losses: rec.l, champion: champion === f.club, awardsWon: mine.length, awardLine: mine.length ? mine.map(([k, w]) => `${w.name}: ${AWARDS[k]?.label || k}.`).join(' ') : '', wasHotSeat, goalMet: !!s.boardVerdict?.met });
 }
 export const TIERS_ENABLED = false;
 

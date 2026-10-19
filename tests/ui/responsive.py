@@ -234,6 +234,8 @@ def run_size(pw, port, w, h, name):
     page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.render(); }"); page.wait_for_timeout(80)
     check(page.query_selector('.edge-chip.comeback') is not None, 'comeback chip shows when trailing by 10+ in the fourth'); shot(page, f'{name}-15c-comeback')
     page.evaluate("() => { const G = __gb.f.game; G.state.quarter = G._q; Object.assign(G.state.score, G._s); G.halftimeShown = G._h; }"); page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.render(); }"); page.wait_for_timeout(50)
+    # The staged fourth quarter can trip the one-time "The clock" tutorial sheet; close it like a player would.
+    while page.query_selector('.sheet-backdrop[aria-label^="📘"]'): page.click('.sheet-backdrop[aria-label^="📘"] [data-action="sheet-close"]'); page.wait_for_timeout(60)
     # Key moments sim
     settle(page, '[data-action="mode"]')
     page.click('[data-action="mode"]'); page.wait_for_timeout(50)
@@ -265,7 +267,14 @@ def run_size(pw, port, w, h, name):
         check('Nadia Reyes' in page.inner_text('.sheet'), 'handshake: the beaten coach speaks')
         page.click('[data-action="shake"]'); page.wait_for_selector('[data-action="badge-ok"]'); no_overflow(page, 'badge sheet'); shot(page, f'{name}-17c3-badge')
         check('BADGE EARNED' in page.inner_text('.sheet'), 'badge sheet shows')
-        page.click('[data-action="badge-ok"]'); page.wait_for_selector('.tabbar')
+        page.click('[data-action="badge-ok"]')
+        # Achievement cutscenes (GDD §21): first win / first badge play before HQ; tap through every beat.
+        page.wait_for_selector('.scene, .tabbar'); n_scenes = 0
+        while page.query_selector('.scene') and n_scenes < 12:
+            if n_scenes == 0: no_overflow(page, 'achievement scene'); shot(page, f'{name}-17c4-scene')
+            b = page.query_selector('[data-action="more"]') or page.query_selector('[data-action="next"]'); b.click(); page.wait_for_timeout(80); n_scenes += 1
+        check(n_scenes >= 1, 'achievements: a cutscene played after the first win')
+        page.wait_for_selector('.tabbar')
         check(page.query_selector('.badge-banner') is not None, 'hq: fresh badge banner')
         check('Week 2' in page.inner_text('#screen'), 'hq: advanced to week 2 after the game')
         shot(page, f'{name}-17d-week2')

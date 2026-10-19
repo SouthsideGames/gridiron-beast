@@ -33,13 +33,16 @@ export const AWARD_RULES = Object.freeze({
 const perGame = (r, v) => v / Math.max(1, r.games || 1);
 const OFF = {
   volume: (r) => perGame(r, (r.passYds || 0) / 14 + (r.rushYds || 0) / 10 + (r.recYds || 0) / 10 + (r.rec || 0) * 0.4 + ((r.pbSnaps || 0) + (r.rbSnaps || 0)) / 12),
+  // Efficiency per role, weighted by how much of the monster's work each role was (GDD §20.9): a quarterback's 205 throws
+  // outweigh his 13 scrambles and kneel-downs, instead of the two being averaged 50/50 as before.
   efficiency: (r) => {
-    const d = withDerived(r); let e = 0, n = 0;
-    if (r.att >= 8) { e += (d.rating || 0) / 12 + (d.ypa || 0) * 0.6; n++; }
-    if (r.rush >= 8) { e += (d.ypc || 0) * 1.2; n++; }
-    if (r.targets >= 8) { e += (d.ypr || 0) * 0.5 + (d.catchPct || 0) / 12; n++; }
-    if (r.pbSnaps >= 10 || r.rbSnaps >= 10) { e += (d.blockWinPct || 0) / 10 - perGame(r, (r.sacksAllowed || 0) * 2 + (r.pressuresAllowed || 0) * 0.3); n++; }
-    return n ? e / n : 0;
+    const d = withDerived(r); let e = 0, w = 0;
+    const add = (value, weight) => { e += value * weight; w += weight; };
+    if (r.att >= 8) add((d.rating || 0) / 12 + (d.ypa || 0) * 0.6, r.att);
+    if (r.rush >= 8) add((d.ypc || 0) * 1.2, r.rush);
+    if (r.targets >= 8) add((d.ypr || 0) * 0.5 + (d.catchPct || 0) / 12, r.targets);
+    if (r.pbSnaps >= 10 || r.rbSnaps >= 10) add((d.blockWinPct || 0) / 10 - perGame(r, (r.sacksAllowed || 0) * 2 + (r.pressuresAllowed || 0) * 0.3), ((r.pbSnaps || 0) + (r.rbSnaps || 0)) / 3);
+    return w ? e / w : 0;
   },
   impact: (r) => perGame(r, (r.passTd || 0) * 4 + (r.rushTd || 0) * 6 + (r.recTd || 0) * 6 + ((r.passFd || 0) + (r.rushFd || 0) + (r.recFd || 0)) * 0.6 + (r.broken || 0) * 0.5 - (r.intThrown || 0) * 5 - (r.fumLost || 0) * 5 - (r.drops || 0) * 0.8),
 };
@@ -51,7 +54,7 @@ const DEF = {
 };
 const DEF_WEIGHTS = { DL: { passRush: 0.4, runDefense: 0.3, takeaways: 0.2, coverage: 0.1 }, LB: { passRush: 0.3, runDefense: 0.3, takeaways: 0.2, coverage: 0.2 }, CB: { coverage: 0.45, takeaways: 0.3, runDefense: 0.15, passRush: 0.1 }, S: { coverage: 0.4, takeaways: 0.3, runDefense: 0.2, passRush: 0.1 } };
 /** MVP responsibility: a quarterback touches every snap; a blocker or a defender shapes fewer plays. Never an automatic win. */
-export const MVP_RESPONSIBILITY = Object.freeze({ QB: 1.25, RB: 1.0, WR: 1.0, TE: 0.95, OL: 0.8, DEF: 0.85 });
+export const MVP_RESPONSIBILITY = Object.freeze({ QB: 1.35, RB: 1.0, WR: 1.0, TE: 0.95, OL: 0.8, DEF: 0.85 });
 const COMPONENT_LABEL = { volume: 'production', efficiency: 'efficiency', impact: 'impact', passRush: 'pass rush', takeaways: 'takeaways', coverage: 'coverage', runDefense: 'run defence' };
 
 /** z-score of fn within each position group of rows. */
@@ -85,7 +88,7 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const winPct = (team) => { const r = records[team]; return r && r.w + r.l ? r.w / (r.w + r.l) : 0.5; };
   const recordOf = (team) => { const r = records[team] || { w: 0, l: 0 }; return `${r.w}–${r.l}${r.t ? '–' + r.t : ''}`; };
   const avail = (r) => Math.min(1, (r.games || 0) / weeks);
-  const offScore = (r) => { const c = { volume: Z.volume(r), efficiency: Z.efficiency(r), impact: Z.impact(r) }; let s = 0.45 * c.volume + 0.3 * c.efficiency + 0.25 * c.impact; if ((r.position === 'RB' && (r.rec || 0) >= 12) || ((r.position === 'WR' || r.position === 'TE') && (r.rush || 0) >= 8)) { s += 0.2; c.versatility = 0.2; } return { s, c, prod: OFF.volume(r) }; };
+  const offScore = (r) => { const c = { volume: Z.volume(r), efficiency: Z.efficiency(r), impact: Z.impact(r) }; let s = 0.45 * c.volume + 0.3 * c.efficiency + 0.25 * c.impact; if ((r.position === 'RB' && (r.rec || 0) >= 12) || ((r.position === 'WR' || r.position === 'TE') && (r.rush || 0) >= 8)) { s += 0.1; c.versatility = 0.1; } return { s, c, prod: OFF.volume(r) }; };
   const defScore = (r) => { const w = DEF_WEIGHTS[r.position] || DEF_WEIGHTS.LB; const c = { passRush: Z.passRush(r), takeaways: Z.takeaways(r), coverage: Z.coverage(r), runDefense: Z.runDefense(r) }; const s = Object.entries(w).reduce((a, [k, wt]) => a + wt * c[k], 0); return { s, c, prod: DEF.passRush(r) + DEF.runDefense(r) + DEF.takeaways(r) }; };
   const finalist = (r, { s, c, prod }, extraWhy = '') => {
     const best = Object.entries(c).filter(([k]) => COMPONENT_LABEL[k]).sort((a, b) => b[1] - a[1])[0];
@@ -96,8 +99,8 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const opoy = top(off.map((r) => finalist(r, offScore(r))));
   const dpoy = top(def.map((r) => finalist(r, defScore(r))));
   const mvp = top([
-    ...off.map((r) => { const o = offScore(r); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 4; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...o.c, team: team }, prod: o.prod }, `, ${recordOf(r.team)} club`); }),
-    ...def.map((r) => { const d = defScore(r); const team = (winPct(r.team) - 0.5) * 4; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...d.c, team }, prod: d.prod }, `, ${recordOf(r.team)} club`); }),
+    ...off.map((r) => { const o = offScore(r); const indiv = o.s * (MVP_RESPONSIBILITY[r.position] || 1); const team = (winPct(r.team) - 0.5) * 3; const s = indiv * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...o.c, team: team }, prod: o.prod }, `, ${recordOf(r.team)} club`); }),
+    ...def.map((r) => { const d = defScore(r); const team = (winPct(r.team) - 0.5) * 3; const s = d.s * MVP_RESPONSIBILITY.DEF * 0.75 + team * 0.2 + avail(r) * 0.3; return finalist(r, { s, c: { ...d.c, team }, prod: d.prod }, `, ${recordOf(r.team)} club`); }),
   ]);
   const oroy = top(off.filter((r) => r.yearsPro === 0).map((r) => finalist(r, offScore(r), ', rookie')));
   const droy = top(def.filter((r) => r.yearsPro === 0).map((r) => finalist(r, defScore(r), ', rookie')));
