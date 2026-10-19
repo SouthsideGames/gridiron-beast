@@ -109,6 +109,15 @@ export function edgesFor(state, teams) {
   if (lockD) { edge.def += lockD; edge.why.def.push('scheme'); }
   return edge;
 }
+/**
+ * Ability memory for the engine (GDD §23.11): which once-per-drive / half / game abilities are
+ * spent, keyed by monster. A drive is named by its team and the play it started on.
+ */
+export function abilityMemory(state, { drive = null } = {}) {
+  const half = state.ot ? 'ot' : state.quarter <= 2 ? 'h1' : 'h2';
+  return { drive: drive ?? `${state.drive?.team}@${(state.playCount || 0) - (state.drive?.plays || 0)}`, half, quarter: state.quarter, used: state.abilityMemory || {} };
+}
+export function rememberAbilities(state, sim) { if (sim?.memoryUsed?.length) { state.abilityMemory ||= {}; for (const k of sim.memoryUsed) state.abilityMemory[k] = true; } }
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
   const { r, save } = rng(state);
@@ -121,8 +130,9 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const sim = simulatePlay({
     offensePlay, defensePlay,
     offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense),
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options,
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state) },
   });
+  rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
   save();
   const outcome = applyScrimmageResult(state, sim, offensePlayId, defensePlayId);
@@ -347,7 +357,8 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   const { r, save } = rng(state);
   const offense = teams[state.tryTeam], defense = teams[opponent(state.tryTeam)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
-  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed() });
+  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }) } });
+  rememberAbilities(state, sim);
   save();
   const good = sim.touchdown && !sim.stats.defensiveScore;
   if (good) state.score[state.tryTeam] += 2;

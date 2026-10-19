@@ -11,7 +11,7 @@ import { PLAYS, OFFENSE_IDS, DEFENSE_IDS } from '../data/playbook.js';
 import { ELEMENT_FX, FX_REVISION, familyOf } from './ability-fx.js';
 import { reviews, setReview } from '../franchise/review-store.js';
 import { esc } from './dom.js';
-import { CARD_CHECK, CARD_STATUS_LABEL } from '../data/card-check.js';
+import { CARD_CHECK, CARD_STATUS_LABEL, CARD_PROPOSALS } from '../data/card-check.js';
 
 function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 
@@ -41,8 +41,11 @@ export function reviewState(ns, id) {
 export const NEEDS_OWNER = new Set(['new', 'changed', 'updated']);
 export const STATE_BADGE = { new: '<span class="chip rv-new">NEW</span>', changed: '<span class="chip rv-new">CHANGED</span>', updated: '<span class="chip rv-new">UPDATED</span>', approved: '', needs_work: '<span class="chip warn">waiting on dev</span>' };
 
+/** Proposed new cards still waiting for the owner's yes or no (GDD §23.10). */
+export function proposalsPending() { const R = reviews('ability'); return Object.keys(CARD_PROPOSALS).filter((id) => !R[id]?.proposal); }
 export function reviewQueue() {
-  const abilities = REVIEWABLE_ABILITIES.filter((sp) => NEEDS_OWNER.has(reviewState('ability', sp.id))).map((sp) => sp.id);
+  const pending = new Set(proposalsPending());
+  const abilities = REVIEWABLE_ABILITIES.filter((sp) => pending.has(sp.id) || NEEDS_OWNER.has(reviewState('ability', sp.id))).map((sp) => sp.id);
   const plays = REVIEWABLE_PLAYS.filter((id) => NEEDS_OWNER.has(reviewState('play', id)));
   return { abilities, plays, total: abilities.length + plays.length };
 }
@@ -118,13 +121,14 @@ export function reviewHandlers(refresh, opened = new Set(), onError = null) {
     'rv-note': (el) => { opened.add(`${el.dataset.ns}:${el.dataset.id}`); refresh(); setTimeout(() => document.querySelector(`.review-note[data-ns="${el.dataset.ns}"][data-id="${el.dataset.id}"]`)?.focus(), 30); },
     'rv-text': (el) => { save(el.dataset.ns, el.dataset.id, { note: el.value }); mark(el); },
     'rv-gameplay': (el) => { save(el.dataset.ns, el.dataset.id, { gameplay: el.checked }); mark(el); },
+    'rv-proposal': (el) => { const { ns, id, v } = el.dataset; const cur = reviews(ns)[id]?.proposal; save(ns, id, { proposal: cur === v ? null : v }); refresh(); },
     'rv-mismatch': (el) => { const { ns, id } = el.dataset; save(ns, id, { mismatch: !reviews(ns)[id]?.mismatch }); refresh(); },
   };
 }
 
 /** Plain-text summary for copying (builds outside claude.ai have no shared database). */
 export function reviewsText() {
-  const lines = []; const tag = (r) => (r.status === 'approved' ? 'APPROVED' : r.status === 'needs_work' ? 'NEEDS WORK' : 'NOTE') + (r.gameplay ? ' + GAMEPLAY' : '') + (r.mismatch ? ' + CARD MISMATCH' : '');
+  const lines = []; const tag = (r) => (r.status === 'approved' ? 'APPROVED' : r.status === 'needs_work' ? 'NEEDS WORK' : 'NOTE') + (r.gameplay ? ' + GAMEPLAY' : '') + (r.mismatch ? ' + CARD MISMATCH' : '') + (r.proposal ? ` + NEW CARD ${r.proposal.toUpperCase()}` : '');
   for (const sp of REVIEWABLE_ABILITIES) { const r = reviews('ability')[sp.id]; if (r) lines.push(`${tag(r)}: ${sp.name} (${sp.ability.name})${r.note ? `: ${r.note.trim()}` : ''}`); }
   for (const id of REVIEWABLE_PLAYS) { const r = reviews('play')[id]; if (r) lines.push(`${tag(r)}: play ${PLAYS[id].name}${r.note ? `: ${r.note.trim()}` : ''}`); }
   return lines.join('\n');
@@ -134,5 +138,9 @@ export function reviewsText() {
 function cardHtml(id) {
   const c = CARD_CHECK[id]; const owner = !!reviews('ability')[id]?.mismatch;
   const found = c ? `<div class="card-issue ${c.status}"><b>⚠ ${CARD_STATUS_LABEL[c.status]}</b> <span class="dim">(found by the code check, on the developer's list)</span><div>In the game today: ${esc(c.does)}</div></div>` : '';
-  return `${found}<button class="btn small card-toggle ${owner ? 'on' : ''}" data-action="rv-mismatch" data-ns="ability" data-id="${id}" aria-pressed="${owner}">${owner ? '⚠ You flagged: card doesn\u2019t match the game' : c ? '⚠ Confirm: make it do what the card says' : '⚠ Card doesn\u2019t match what I see'}</button>`;
+  const prop = CARD_PROPOSALS[id]; const decision = reviews('ability')[id]?.proposal || null;
+  const proposal = prop ? `<div class="card-proposal ${decision || ''}"><b>✍ Proposed new card</b> <span class="dim">(not a legendary, so no absolutes)</span><div class="card-proposal-text">\u201c${esc(prop)}\u201d</div>
+    <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small review-btn ${decision === 'approved' ? 'approved' : ''}" data-action="rv-proposal" data-ns="ability" data-id="${id}" data-v="approved" aria-pressed="${decision === 'approved'}">✓ Use this card</button><button class="btn small review-btn ${decision === 'rejected' ? 'needswork' : ''}" data-action="rv-proposal" data-ns="ability" data-id="${id}" data-v="rejected" aria-pressed="${decision === 'rejected'}">✎ Not this, see my note</button></div>
+    <div class="dim" style="font-size:11px;margin-top:4px">${decision === 'approved' ? 'Approved: the developer builds it next, then it comes back to you as UPDATED.' : decision === 'rejected' ? 'Rejected: say what you want instead in the note below.' : 'Nothing changes until you decide.'}</div></div>` : '';
+  return `${found}${proposal}<button class="btn small card-toggle ${owner ? 'on' : ''}" data-action="rv-mismatch" data-ns="ability" data-id="${id}" aria-pressed="${owner}">${owner ? '⚠ You flagged: card doesn\u2019t match the game' : c ? '⚠ Confirm: make it do what the card says' : '⚠ Card doesn\u2019t match what I see'}</button>`;
 }

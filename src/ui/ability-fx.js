@@ -16,6 +16,13 @@ const FAMILY_OF = {
   deepThrow: 'throw', openAccuracy: 'throw', throwVelocity: 'throw', pressureSense: 'throw',
   manCoverage: 'cover', contest: 'cover', breakRadius: 'cover', zoneRange: 'cover', pickCatching: 'cover', catchContest: 'cover', noPlayActionBite: 'cover', aura: 'aura',
   attrs: 'passive', fatigue: 'passive', fumbleResist: 'passive',
+  // Built to match their cards (GDD §23.11)
+  eruption: 'contact', permafrost: 'contact', roar: 'contact', quakeStep: 'contact',
+  riptide: 'block', landslide: 'block', glacierWall: 'block',
+  cyclone: 'move', eclipse: 'move', daybreak: 'move', blink: 'move', overcharge: 'move', radiantPursuit: 'move', ambush: 'move',
+  thunderclap: 'throw', sovereign: 'throw', tailwind: 'throw',
+  undertow: 'cover', whiteout: 'cover', nightVeil: 'cover', refraction: 'cover', heatHaze: 'cover', fortress: 'cover', staticField: 'cover', wingShadow: 'cover',
+  grove: 'aura',
 };
 export const FAMILY_LABEL = { move: 'Movement', block: 'Blocking', contact: 'Contact', throw: 'Passing', cover: 'Coverage', aura: 'Aura', passive: 'Passive' };
 export function familyOf(key) { return FAMILY_OF[key] || 'contact'; }
@@ -43,7 +50,11 @@ const OUTCOME = {
   shed: { label: 'Block Shed', shake: true }, broken: { label: 'Tackle Broken', shake: true }, broken_tackle: { label: 'Tackle Broken', shake: true },
   juke: { label: 'Juked', shake: false }, fumble: { label: 'Ball Stripped', shake: true }, interception: { label: 'Picked Off', shake: true },
   incomplete: { label: 'Pass Deflected', shake: false, only: (e) => e.pbu }, sack: { label: 'Sacked', shake: true },
-  tackle: { label: 'Read & Stopped', shake: false }, catch: { label: 'Contested Catch', shake: false, only: (e) => e.contested },
+  tackle: { label: 'Read & Stopped', shake: false },
+  flattened: { label: 'Flattened', shake: true }, blink: { label: 'Blink!', shake: true }, read_frozen: { label: 'Read Frozen', shake: false },
+  sack_denied: { label: 'Sack Denied', shake: true }, pick_denied: { label: 'Pick Denied', shake: false }, no_breakup: { label: 'Too Fast', shake: false },
+  spun: { label: 'Spun Around', shake: false }, lost_track: { label: 'Lost Him', shake: false }, falls_forward: { label: '+2 Yards', shake: false },
+  stuffed: { label: 'Lost a Yard', shake: true }, dragged: { label: 'Dragged Wide', shake: false }, slipped: { label: 'Slipped the Block', shake: false }, catch: { label: 'Contested Catch', shake: false, only: (e) => e.contested },
 };
 export const OUTCOME_LABELS = Object.freeze(Object.fromEntries(Object.entries(OUTCOME).map(([k, v]) => [k, v.label])));
 
@@ -79,7 +90,7 @@ export function buildFx(sim, lookup) {
     const o = OUTCOME[e.kind]; if (!o || !e.ability || (o.only && !o.only(e))) continue;
     if (labels.some((l) => l.t === e.t && l.slot === e.by && l.label === o.label)) continue; // 'broken' and 'broken_tackle' log the same hit twice
     const owner = fx.find((f) => f.team === e.side && f.slot === e.by);
-    labels.push({ t: e.t, team: e.side, slot: e.by, victim: e.victim || null, label: o.label, shake: o.shake, look: owner?.look || DEFAULT_FX, name: owner?.name || null });
+    labels.push({ t: e.t, team: e.side, slot: e.by, victim: e.victim || null, label: o.label, shake: o.shake, look: owner?.look || DEFAULT_FX, name: owner?.name || null, from: e.fromX != null ? [e.fromX, e.fromY] : null });
     if (owner) owner.outcome = e.t;
   }
   // Major impacts shake on their own too (sacks and fumbles), ability or not.
@@ -101,7 +112,7 @@ const f2 = (n) => (+n).toFixed(2);
  * (dx, dy = movement since the previous frame) or null; `t` is the frame time.
  * `quality`: 'full' | 'low' (fewer particles) | 'min' (badges and labels only).
  */
-export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 26 } = {}) {
+export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 26, toSvg = null } = {}) {
   if (!state) return '';
   const cl = (x, pad) => Math.max(-halfWidth + pad, Math.min(halfWidth - pad, x)); // keep text inside the field
   let s = '';
@@ -135,6 +146,10 @@ export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 2
   // Outcome labels (newest first, capped).
   for (const l of labs) {
     const p = pos(l.team, l.slot); if (!p) continue;
+    // A teleport (Blink): an afterimage where he was and a streak to where he is.
+    if (l.from && toSvg) { const [fx0, fy0] = toSvg(l.from[0], l.from[1]); const kf = Math.min(1, (t - l.t) / LABEL);
+      s += `<line x1="${f2(fx0)}" y1="${f2(fy0)}" x2="${f2(p[0])}" y2="${f2(p[1])}" stroke="${l.look.a}" stroke-width="${f2(0.7 * (1 - kf) + 0.1)}" stroke-dasharray="0.6 0.5" opacity="${f2(1 - kf)}"/>`;
+      s += `<circle cx="${f2(fx0)}" cy="${f2(fy0)}" r="${f2(1.4 + kf * 1.5)}" fill="${l.look.a}" opacity="${f2(0.45 * (1 - kf))}"/>`; }
     let [cx, cy] = p; const v = l.victim ? pos(l.team === 'off' ? 'def' : 'off', l.victim) : null;
     if (v) { cx = (cx + v[0]) / 2; cy = Math.min(cy, v[1]); } // over the pair, never on top of them
     const kl = (t - l.t) / LABEL; const scale = kl < 0.15 ? 0.6 + (kl / 0.15) * 0.5 : 1.1 - (kl - 0.15) * 0.12;

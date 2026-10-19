@@ -64,10 +64,20 @@ test('dev review: reviewing items never re-announces; a changed item does', asyn
 test('card check: listed abilities are mismatches, the owner can flag more, every entry names a real signature ability', async () => {
   const { CARD_CHECK } = await import('../src/data/card-check.js');
   for (const id of Object.keys(CARD_CHECK)) assert.ok(D.REVIEWABLE_ABILITIES.some((s) => s.id === id), `${id} has a signature ability`);
-  assert.ok(D.cardMismatches().includes('wavehorn'), 'Riptide is on the list');
+  assert.ok(!D.cardMismatches().includes('wavehorn'), 'Riptide now does what it says');
+  assert.ok(D.cardMismatches().includes('reefclaw'), 'Pincer Hold waits on its new card');
   assert.ok(!D.cardMismatches().includes('voltfang'));
   await S.setReview('ability', 'voltfang', { mismatch: true }, D.abilityFingerprint(D.REVIEWABLE_ABILITIES.find((s) => s.id === 'voltfang')));
   assert.ok(D.cardMismatches().includes('voltfang'));
   assert.equal(D.cardIssue('voltfang').by, 'owner');
   assert.match(D.reviewsText(), /CARD MISMATCH: Zappard/);
+});
+
+test('card proposals: every proposal is a real non-legendary signature ability, pending ones are in the queue, a decision clears it', async () => {
+  const { CARD_PROPOSALS } = await import('../src/data/card-check.js');
+  for (const id of Object.keys(CARD_PROPOSALS)) { const sp = D.REVIEWABLE_ABILITIES.find((s) => s.id === id); assert.ok(sp, id); assert.notEqual(sp.rarity, 'legendary', `${id} is not legendary`); assert.doesNotMatch(CARD_PROPOSALS[id], /\b(never|always|every time|guaranteed|can.t)\b/i, `${id} proposal has no absolutes`); }
+  assert.ok(D.proposalsPending().includes('duskrunner') && D.reviewQueue().abilities.includes('duskrunner'));
+  await S.setReview('ability', 'duskrunner', { proposal: 'approved' }, D.abilityFingerprint(D.REVIEWABLE_ABILITIES.find((s) => s.id === 'duskrunner')));
+  assert.ok(!D.proposalsPending().includes('duskrunner'));
+  assert.match(D.reviewsText(), /NEW CARD APPROVED: Duskyre/);
 });

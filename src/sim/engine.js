@@ -8,7 +8,8 @@
 //     offense: {slot: {attrs, ability}},       // effective attributes per on-field slot
 //     defense: {slot: {attrs, ability}},
 //     ballOn (1..99), ballLat (-20..20), seed,
-//     options: { forcedTarget, maxTime, frameEvery }
+//     options: { forcedTarget, maxTime, frameEvery, edge, memory }
+//       memory: { drive, half, quarter, used: {key: true} } ability uses across plays (GDD §23.11)
 //   })
 // Output: { result, yards, endYard, endLat, frames, events, elapsed, ... }
 // result ∈ tackle | sack | incomplete | touchdown | out_of_bounds | interception
@@ -27,6 +28,7 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const sigmoid = (v) => 1 / (1 + Math.exp(-v));
 const norm = (v) => clamp(v, 1, 99) / 99;
 
+const QUICK_ROUTES = new Set(['slant', 'flat', 'screen', 'bubble', 'hitch', 'stick', 'swing', 'drag', 'shallow']);
 const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
   const rng = createRng(seed);
@@ -40,6 +42,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const abilityUsed = (a, key = null) => { if (!a?.abilityName || a.abilityLogged) return; a.abilityLogged = true; log(`${a.name}'s ${a.abilityName} kicks in`, { kind: 'ability', by: a.slot, side: a.team, trait: a.abilityKind === 'trait', key, x: +a.x.toFixed(2), y: +a.y.toFixed(2) }); };
   /** Presentation flag for outcome events: did the actor's ability fire this play (cosmetic, never changes the sim). */
   const fired = (a, ...keys) => !!a?.abilityLogged && a.abilityKind !== 'trait' && keys.some((k) => a.ability?.[k]);
+  /** An outcome a signature ability caused on its own (Blink, Whiteout, Sack denied...): always an ability outcome. */
+  const abilityOutcome = (kind, a, text, extra = {}) => log(text, { kind, by: a.slot, side: a.team, ability: true, ...extra });
+  // Ability memory across plays (GDD §23.11): once per drive / half / game, and boosts that last a drive.
+  // The caller passes what has been spent; this play's spending comes back in `memoryUsed`.
+  const memory = options.memory || null; const memoryUsed = [];
+  const scopeKey = (scope) => (scope === 'drive' ? `d:${memory?.drive ?? 'play'}` : scope === 'half' ? `h:${memory?.half ?? 'play'}` : 'g');
+  const memKey = (a, name, scope) => `${a.mid}:${name}:${scopeKey(scope)}`;
+  const available = (a, name, scope) => !memory?.used?.[memKey(a, name, scope)] && !memoryUsed.includes(memKey(a, name, scope));
+  const spend = (a, name, scope) => { memoryUsed.push(memKey(a, name, scope)); };
+  const quarter = memory?.quarter ?? 1;
 
   // ------------------------------------------------------------ actors
   const actors = [];
@@ -57,9 +69,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Situational edge for a whole side (comeback mode, scheme lock): a few points on every core rating (GDD §17).
     const edge = options.edge?.[team] || 0;
     if (edge) for (const k of EDGE_ATTRS) attrs[k] = Math.max(1, Math.min(99, (attrs[k] ?? 60) + edge));
+    const mid = input?.id || `${team}:${slot}`;
+    // Overcharge: a sack earlier in this drive keeps him charged (+Speed) until the drive ends.
+    const overcharged = !!(ability?.overcharge && memory?.used?.[`${mid}:overcharge:d:${memory.drive}`]);
+    if (overcharged) attrs.speed = Math.min(99, attrs.speed + ability.overcharge);
+    // Sovereign Arm: +Arm and +Accuracy in the fourth quarter.
+    const sovereignQ4 = !!(ability?.sovereign && quarter === 4);
+    if (sovereignQ4) { attrs.arm = Math.min(99, attrs.arm + ability.sovereign); attrs.accuracy = Math.min(99, attrs.accuracy + ability.sovereign); }
     const [x, y] = play.align[slot];
     const a = {
-      team, slot, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
+      team, slot, mid, overcharged, sovereignQ4, baseAwareness: attrs.awareness, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
       x, y, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0,
@@ -132,6 +151,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (a.stun > 0) { a.vx *= 0.93; a.vy *= 0.93; return; } // off balance: coasting, cannot steer
     const dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
     let desired = a.maxSpeed * speedScale * burst(a) * speedMods(a);
+    // Daybreak: anyone chasing from behind is held below his pace, so he cannot be run down.
+    const h = ball.holder; if (h?.daybreak && a.team !== h.team && (a.x - h.x) * (h.team === 'off' ? 1 : -1) < 0) desired = Math.min(desired, h.maxSpeed * 0.9);
     if (d < arriveRadius) desired = 0;
     const ux = d > 0 ? dx / d : 0, uy = d > 0 ? dy / d : 0;
     const dvx = ux * desired - a.vx, dvy = uy * desired - a.vy;
@@ -147,6 +168,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (e.rushSpeed && a.team === 'def' && ['rush', 'contain'].includes(a.assignment?.a) && ball.holder === qb && phase !== 'carry') { k *= 1 + e.rushSpeed; if (t > 0.6) abilityUsed(a, 'rushSpeed'); }
     if (e.closeSpeed && a.team === 'def' && ball.inAir) { k *= 1 + e.closeSpeed; abilityUsed(a, 'closeSpeed'); }
     if (e.pursuitSpeed && a.team === 'def' && ball.holder && ball.holder.team === 'off' && phase === 'carry') { k *= 1 + e.pursuitSpeed; abilityUsed(a, 'pursuitSpeed'); }
+    // Radiant Pursuit: faster only when chasing the carrier from behind.
+    if (e.radiantPursuit && ball.holder && ball.holder.team !== a.team && phase === 'carry' && (a.x - ball.holder.x) * (ball.holder.team === 'off' ? 1 : -1) < 0) { k *= 1 + e.radiantPursuit; abilityUsed(a, 'radiantPursuit'); }
     return k;
   }
   function burst(a) { if (a.ability?.burst && t < a.ability.burst.until) { if (ball.holder === a || a.assignment?.a === 'route' || a.assignment?.a === 'carry') abilityUsed(a, 'burst'); return 1 + a.ability.burst.speed; } return 1; }
@@ -173,6 +196,20 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function tryEngage(blocker, defender, soft = false) {
     if (blocker.engaged || defender.engaged || blocker.stun > 0 || defender.noEngage > 0) return false;
     if (dist(blocker, defender) > (soft ? 1.2 : 1.6)) return false;
+    // Dragon's Roar: the lineman across from him is slow to engage off the snap.
+    if (blocker.roarUntil && t < blocker.roarUntil) return false;
+    // Ambush: on a blitz each blocker gets one try at picking him up, and misses 30% more often than he would.
+    if (defender.ability?.ambush && defender.slot.startsWith('LB') && ['rush', 'contain'].includes(defender.assignment?.a)) {
+      const tried = (defender.ambushTried ||= {});
+      if (!(blocker.slot in tried)) { tried[blocker.slot] = rng.chance(defender.ability.ambush); if (tried[blocker.slot]) { abilityUsed(defender, 'ambush'); abilityOutcome('slipped', defender, `${defender.name} slips past ${blocker.name}`, { victim: blocker.slot }); } }
+      if (tried[blocker.slot]) return false;
+    }
+    // Eruption: once per drive, the first defender he blocks is flattened instead of engaged.
+    if (blocker.ability?.eruption && available(blocker, 'eruption', 'drive')) {
+      spend(blocker, 'eruption', 'drive'); defender.stun = 1.2; defender.noEngage = 1.2; defender.vx = 0; defender.vy = 0;
+      abilityUsed(blocker, 'eruption'); abilityOutcome('flattened', blocker, `${blocker.name} flattens ${defender.name}`, { victim: defender.slot });
+      return false;
+    }
     // Open-field blocks are hit-or-miss: the defender often slips past.
     if (soft && !rng.chance(0.25 + 0.5 * norm(blocker.attrs.blocking))) { blocker.noEngage = 0.3; return false; }
     blocker.engaged = defender; defender.engaged = blocker; defender.engagedAt = t; blocker.softBlock = soft; defender.wasBlocked = true;
@@ -192,10 +229,19 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const gx = goal.x - d.x, gy = goal.y - d.y, gd = Math.hypot(gx, gy) || 1;
     const push = clamp((runFit ? 0.2 : 0.75) + edge * 2.5, -0.5, 2.4); // yards/s the defender gains
     d.x += (gx / gd) * push * DT; d.y += (gy / gd) * push * DT;
+    // Riptide: run blocks drag his defender toward the nearer sideline, up to the card's yard.
+    if (runFit && be.riptide && (d.riptideDragged || 0) < be.riptide) {
+      const toward = (d.y - B.left) < (B.right - d.y) ? -1 : 1; const step = Math.min(1.1 * DT, be.riptide - (d.riptideDragged || 0));
+      d.y += toward * step; d.riptideDragged = (d.riptideDragged || 0) + step; abilityUsed(blocker, 'riptide');
+      if (d.riptideDragged >= be.riptide - 1e-6) abilityOutcome('dragged', blocker, `${blocker.name} drags ${d.name} toward the sideline`, { victim: d.slot });
+    }
+    // Landslide: he never loses a pass-block engagement.
+    const holdsForever = !runFit && be.landslide;
+    if (holdsForever && t > 0.5) abilityUsed(blocker, 'landslide');
     blocker.x = d.x + (gx / gd) * 0.9; blocker.y = d.y + (gy / gd) * 0.9;
     blocker.vx = d.vx = 0; blocker.vy = d.vy = 0;
     const shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.58) + edge * 1.6, 0.06, 2.2);
-    if (rng.chance(shedPerSec * DT)) {
+    if (!holdsForever && rng.chance(shedPerSec * DT)) {
       blocker.engaged = null; d.engaged = null; blocker.stun = be.rebound ? 0.1 : 0.45 + (d.ability?.blockerStun || 0); d.noEngage = runFit ? 0.5 : 0.85; // a beaten pass blocker cannot recover at once
       if (be.rebound) abilityUsed(blocker, 'rebound');
       d.lastBeat = { blocker: blocker.slot, t }; (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }).lost += 1;
@@ -279,6 +325,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         a.laneY = clamp(a.y + (nearest.y > a.y ? -3.5 : 3.5), B.left + 1.5, B.right - 1.5);
         nearest.stun = Math.max(nearest.stun, 0.3);
         a.vx *= 0.65; a.vy *= 0.65; // a cut costs the runner speed too
+        if (a.ability?.quakeStep) quake(a);
         if (a.ability?.elusiveFirst) abilityUsed(a, 'elusiveFirst'); log(`${a.name} jukes ${nearest.name}`, { kind: 'juke', by: a.slot, side: a.team, victim: nearest.slot, ability: fired(a, 'elusive', 'elusiveFirst') });
       }
     }
@@ -303,6 +350,18 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     switch (asg.a) {
       case 'route': {
         if (a.wp < asg.points.length) followPath(a, asg.points, 1); else { const [tx, ty] = routeEndTarget(a); steer(a, tx, ty, 0.8, 0.4); }
+        // Cyclone: on her first break, whoever is covering her is spun around and loses a step.
+        if (a.ability?.cyclone && !a.cycloneDone && a.wp >= 2) {
+          a.cycloneDone = true; const spun = coveringDefs(a);
+          for (const d of spun) d.stun = Math.max(d.stun, a.ability.cyclone);
+          if (spun.length) { abilityUsed(a, 'cyclone'); abilityOutcome('spun', a, `${a.name}'s Cyclone spins ${spun[0].name} around`, { victim: spun[0].slot }); }
+        }
+        // Eclipse Route: on a deep route his defender loses track of him for half a second.
+        if (a.ability?.eclipse && !a.eclipseDone && deepRoute(a) && a.x >= 10) {
+          a.eclipseDone = true; const lost = coveringDefs(a);
+          for (const d of lost) d.stun = Math.max(d.stun, a.ability.eclipse);
+          if (lost.length) { abilityUsed(a, 'eclipse'); abilityOutcome('lost_track', a, `${lost[0].name} loses ${a.name} in the Eclipse`, { victim: lost[0].slot }); }
+        }
         return;
       }
       case 'block': {
@@ -433,15 +492,27 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const progression = options.forcedTarget ? [options.forcedTarget] : (offensePlay.progression.length ? offensePlay.progression : receivers);
     // Judgement: lesser quarterbacks misjudge windows (both ways) more often.
     const judgeNoise = 1.3 * (1 - norm(a.attrs.awareness)) + 0.15;
-    const openness = (r) => { const o = projectedSeparation(a, r); return o < 0 ? o : o + rng.normal() * judgeNoise; };
+    const openness = (r) => {
+      const o = projectedSeparation(a, r); if (o < 0) return o;
+      // Refraction: windows near him are misjudged 20% more.
+      const prism = defs.find((d) => d.ability?.refraction && dist(d, r) < 4);
+      if (prism) abilityUsed(prism, 'refraction');
+      return o + rng.normal() * judgeNoise * (prism ? 1 + prism.ability.refraction : 1);
+    };
     const threshold = (pressured ? 2.1 : 2.9) - 0.6 * norm(a.attrs.awareness);
     // A route has to develop before it is thrown (except quick game and hot throws).
-    const QUICK = new Set(['slant', 'flat', 'screen', 'bubble', 'hitch', 'stick', 'swing', 'drag', 'shallow']);
+    const QUICK = QUICK_ROUTES;
     const ready = (r) => pressured || r.assignment.a !== 'route' || QUICK.has(r.assignment.r) || r.wp >= Math.min(2, r.assignment.points.length - 1) || (r.x > 9 && r.wp >= 1);
     const candidate = bySlot.off[progression[Math.min(readIndex, progression.length - 1)]];
-    if (candidate && ready(candidate) && openness(candidate) >= threshold) { throwTo(a, candidate, pressured); return; }
+    if (candidate && ready(candidate) && openness(candidate) >= threshold) {
+      // Whiteout: once per half, the quarterback's first read freezes and he has to move on to the second.
+      const frost = readIndex === 0 && progression.length > 1 && !options.forcedTarget ? defs.find((d) => d.ability?.whiteout && available(d, 'whiteout', 'half')) : null;
+      if (frost) { spend(frost, 'whiteout', 'half'); readIndex = 1; readClock = scanPace; abilityUsed(frost, 'whiteout'); abilityOutcome('read_frozen', frost, `${frost.name}'s Whiteout freezes ${a.name}'s first read`, { victim: a.slot }); return; }
+      a.throwRead = readIndex; throwTo(a, candidate, pressured); return;
+    }
     if (readClock <= 0) { readClock = scanPace; readIndex += 1; }
     if (readIndex >= progression.length) {
+      a.throwRead = 99; // past the progression: no first-read throw from here (Sovereign Arm)
       // Progression exhausted: best available, scramble, or wait briefly.
       const ranked = receivers.map((s) => bySlot.off[s]).filter((r) => r && r.assignment.a === 'route' && ready(r)).map((r) => ({ r, o: openness(r) })).sort((p, q) => q.o - p.o);
       const best = ranked[0];
@@ -487,12 +558,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const air = px - passer.x;
     const proj = air > 20 ? 0.95 : 0.8; // a defender sprinting with a deep route keeps closing while the ball is up
     for (const def of defs) {
-      if (def.engaged) continue;
+      if (def.engaged || def.ability?.nightVeil) continue; // Night Veil: quarterbacks never see him as covering
       const dx = def.x + def.vx * travel * proj, dy = def.y + def.vy * travel * proj;
       nearest = Math.min(nearest, Math.hypot(dx - px, dy - py));
     }
     // Deep throws need a bigger window; throws beyond arm range are not open.
-    const range = 30 + 30 * norm(passer.attrs.arm);
+    const range = (30 + 30 * norm(passer.attrs.arm)) * (passer.ability?.tailwind && air > 15 ? 1 + passer.ability.tailwind : 1); // Tailwind: deep passes travel 20% farther
     if (d > range) return -1;
     if (px > B.endLine - 1 || py < B.left + 0.5 || py > B.right - 0.5) return -1;
     // Deep balls need a real window: a defender in phase a yard behind is still covering.
@@ -519,6 +590,17 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     ball.inAir = true; ball.holder = null; ball.from = { x: passer.x, y: passer.y }; ball.to = landing; ball.landing = landing;
     ball.flightTime = Math.hypot(landing.x - passer.x, landing.y - passer.y) / (17 + 13 * norm(arm)); ball.flight = 0; ball.target = r;
     ball.airYards = landing.x;
+    // Thunderclap: the ball arrives 15% faster, and quick passes cannot be broken up by a trailing defender.
+    ball.thunder = !!passer.ability?.thunderclap; ball.quick = (r.assignment?.a === 'route' && QUICK_ROUTES.has(r.assignment.r)) || airD < 10;
+    if (ball.thunder) { ball.flightTime /= 1 + passer.ability.thunderclap.faster; abilityUsed(passer, 'thunderclap'); }
+    // Sovereign Arm: a throw on the first read cannot be intercepted; +10 Arm and Accuracy in the fourth quarter.
+    ball.sovereign = !!passer.ability?.sovereign && (passer.throwRead ?? 0) === 0;
+    if (passer.sovereignQ4) abilityUsed(passer, 'sovereign');
+    // Tailwind: deep passes land softer.
+    ball.tailwind = !!passer.ability?.tailwind && airD >= 15; if (ball.tailwind) abilityUsed(passer, 'tailwind');
+    // Undertow: deep throws into his half of the field.
+    ball.undertow = airD >= 15 ? defs.find((d) => d.ability?.undertow && (Math.abs(d.y) < 1 || Math.sign(d.y) === Math.sign(landing.y))) || null : null;
+    { const veil = defs.find((d) => d.ability?.nightVeil && (dist(d, landing) < 3 || coveringDefs(r).includes(d))); if (veil) abilityUsed(veil, 'nightVeil'); } // the QB threw where he never saw him
     phase = 'air'; stats.passer = passer.slot; stats.target = r.slot; stats.airYards = Math.round(landing.x);
     for (const def of defs) def.recognisedPass = true;
     log(`${passer.name} throws to ${r.name}${pressured ? ' under pressure' : ''}`, { kind: 'throw', target: r.slot, pressured });
@@ -532,6 +614,18 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     for (const def of defs) { def.recognised = true; }
     log(`${a.name} scrambles`, { kind: 'scramble' });
   }
+
+  /** Quake Step: a cut makes every defender within 2 yards stumble (-20% to tackle him) for 0.6 s. */
+  function quake(c) {
+    if (t - (c.lastQuake ?? -9) < 0.6) return; c.lastQuake = t; let hit = false;
+    for (const d of opponents(c.team)) if (dist(d, c) <= 2) { d.quakeUntil = t + 0.6; hit = true; }
+    if (hit) abilityUsed(c, 'quakeStep');
+  }
+  const deepRoute = (r) => r?.assignment?.a === 'route' && (r.assignment.points?.[r.assignment.points.length - 1]?.[0] ?? 0) >= 15;
+  const zoneRadius = (asg, d = null) => (asg.role === 'deep' ? 12 : asg.role === 'middle' ? 7.5 : 7) + (d?.ability?.zoneRange || 0);
+  const inZoneArea = (asg, p) => { const [zx, zy] = asg.at || [0, 0]; return asg.role === 'deep' ? Math.abs(p.y - zy) < zoneRadius(asg) && p.x > 5 : Math.hypot(p.x - zx, p.y - zy) < zoneRadius(asg); };
+  /** Defenders covering a receiver right now: his man defender, plus zone defenders on his hip. */
+  const coveringDefs = (r) => defs.filter((d) => !d.engaged && ((d.assignment?.a === 'man' && bySlot.off[manKeys[d.assignment.key]] === r) || (d.assignment?.a === 'zone' && dist(d, r) < 3)));
 
   // ------------------------------------------------------------ defense behaviour
   function pursue(d) {
@@ -553,7 +647,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     steer(d, aw * tx + (1 - aw) * (c.x + c.vx * chaseLead), aw * ty + (1 - aw) * (c.y + c.vy * chaseLead), 1.05, 0.2);
   }
   function trailPosition(d, target) {
-    const delay = 0.4 - 0.3 * norm(d.attrs.coverage + (d.ability?.manCoverage || 0)) - reactionOf(d); if (d.ability?.manCoverage) abilityUsed(d, 'manCoverage');
+    let delay = 0.4 - 0.3 * norm(d.attrs.coverage + (d.ability?.manCoverage || 0)) - reactionOf(d); if (d.ability?.manCoverage) abilityUsed(d, 'manCoverage');
+    if (d.ability?.heatHaze && deepRoute(target)) { delay -= d.ability.heatHaze; abilityUsed(d, 'heatHaze'); } // Heat Haze: deep routes lose 0.15 s of separation on him
     const h = history.get(target);
     const idx = Math.max(0, h.length - 1 - Math.round(delay / DT));
     const p = h[idx] || target;
@@ -666,6 +761,26 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // ------------------------------------------------------------ contact and dead balls
   function tryTackle(d, c) {
     if (d.stun > 0 || d.engaged || dist(d, c) > 1.25) return false;
+    const fwd = c.team === 'off' ? 1 : -1;
+    // Daybreak: nobody can bring him down from behind.
+    if (c.daybreak && (d.x - c.x) * fwd < -0.2) return false;
+    // Permafrost: a run that meets him at his gap loses a yard on contact.
+    if (d.ability?.permafrost && !c.permafrosted && (isRun || handoffDone) && !stats.receiver) {
+      c.permafrosted = true; c.x -= fwd * d.ability.permafrost; abilityUsed(d, 'permafrost'); abilityOutcome('stuffed', d, `${d.name} freezes ${c.name} in place`, { victim: c.slot });
+    }
+    // Eruption: once per drive, the first defender to hit him is flattened (a guaranteed broken tackle).
+    if (c.ability?.eruption && available(c, 'eruption', 'drive')) {
+      spend(c, 'eruption', 'drive'); d.stun = 1.2; d.noEngage = 1.2; d.vx = 0; d.vy = 0; c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1;
+      abilityUsed(c, 'eruption'); abilityOutcome('flattened', c, `${c.name} flattens ${d.name}`, { victim: d.slot });
+      return false;
+    }
+    // Blink: once per game, he teleports 5 yards past the first tackler.
+    if (c.ability?.blink && available(c, 'blink', 'game')) {
+      spend(c, 'blink', 'game'); const from = { x: c.x, y: c.y };
+      c.x = clamp(c.x + fwd * c.ability.blink, B.ownEndLine + 0.5, B.endLine - 0.5); d.stun = Math.max(d.stun, 0.5);
+      abilityUsed(c, 'blink'); abilityOutcome('blink', c, `${c.name} blinks past ${d.name}`, { victim: d.slot, fromX: +from.x.toFixed(2), fromY: +from.y.toFixed(2) });
+      return false;
+    }
     const closing = Math.hypot(d.vx - c.vx, d.vy - c.vy);
     const gang = opponents(c.team).filter((o) => o !== d && dist(o, c) < 1.8).length;
     const tackleScore = d.attrs.tackling * 0.55 + d.attrs.strength * 0.3 + closing * 1.2 + gang * 12;
@@ -675,6 +790,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const ce = c.ability || {};
     if (ce.elusive) p *= 1 - ce.elusive;
     if (ce.elusiveFirst && !c.brokeTackle) p *= 1 - ce.elusiveFirst;
+    if (ce.quakeStep && d.quakeUntil > t) { p *= 1 - ce.quakeStep; abilityUsed(c, 'quakeStep'); } // Quake Step: a defender near his cut stumbles
     if (rng.chance(p)) {
       // Fumble check on contact.
       let fumbleP = 0.012 * (1.6 - norm(c.attrs.catching)) * (gang ? 1.4 : 1) * (c.slot === 'QB' ? 1.3 : 1);
@@ -684,6 +800,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const forward = Math.min(1.2, Math.hypot(c.vx, c.vy) * 0.14);
       const dir = c.team === 'off' ? 1 : -1;
       c.x += dir * forward;
+      // Landslide: a run that went through his gap falls forward two more yards.
+      if (c.landslide && !c.landslideApplied) { c.landslideApplied = true; c.x += dir * c.landslide.ability.landslide; abilityUsed(c.landslide, 'landslide'); abilityOutcome('falls_forward', c.landslide, `${c.name} rides the Landslide two more yards`, { victim: d.slot }); }
       // Forward progress across the goal line is a score, not a tackle at the 1.
       if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
       if (c.team === 'def' && c.x <= B.ownGoal) { stats.tackler = d.slot; endPlay('touchdown', Math.min(c.x, B.ownGoal), c.y, { defensiveScore: true }); log(`${c.name} falls into the end zone. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
@@ -712,6 +830,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false;
     const p = clamp(0.62 + 0.3 * norm(d.attrs.tackling) - 0.35 * norm(qb.attrs.agility), 0.25, 0.92);
     if (rng.chance(p)) {
+      // Glacier Wall: sacks coming from his side of the line fail 30% of the time.
+      const wall = offs.find((o) => o.ability?.glacierWall);
+      if (wall && (Math.abs(wall.y) < 1 ? Math.abs(d.y) < 3 : Math.sign(d.y) === Math.sign(wall.y)) && rng.chance(wall.ability.glacierWall)) {
+        d.stun = 0.7; d.noEngage = 0.3; abilityUsed(wall, 'glacierWall'); abilityOutcome('sack_denied', wall, `${wall.name}'s Glacier Wall stops ${d.name} short`, { victim: d.slot });
+        return false;
+      }
       stats.tackler = d.slot;
       if (qb.windup && rng.chance(0.25)) { // strip sack on the wind-up
         const near = actors.filter((x) => dist(x, qb) < 2.5); const rec = near.length ? rng.pick(near) : d;
@@ -722,7 +846,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       }
       qb.windup = null;
       if (d.lastBeat && t - d.lastBeat.t < 1.5) stats.sackAllowedBy = d.lastBeat.blocker; else if (!d.wasBlocked) stats.sackUnblocked = true;
-      endPlay('sack', qb.x, qb.y); log(`${d.name} sacks ${qb.name}`, { kind: 'sack', by: d.slot, side: d.team, victim: qb.slot, ability: fired(d, 'rushSpeed', 'shedStrength', 'pursuitSpeed') }); return true;
+      if (d.ability?.overcharge) { spend(d, 'overcharge', 'drive'); abilityUsed(d, 'overcharge'); } // Overcharge: charged for the rest of this drive
+      endPlay('sack', qb.x, qb.y); log(`${d.name} sacks ${qb.name}`, { kind: 'sack', by: d.slot, side: d.team, victim: qb.slot, ability: fired(d, 'rushSpeed', 'shedStrength', 'pursuitSpeed', 'overcharge') }); return true;
     }
     d.stun = 0.7; d.noEngage = 0.3;
     if (!scrambled && rng.chance(0.6)) scramble(qb);
@@ -736,29 +861,41 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function resolveArrival() {
     const r = ball.target;
     const L = ball.landing;
-    const catchRadius = 1.4 + 0.9 * norm(r.attrs.agility);
+    const catchRadius = 1.4 + 0.9 * norm(r.attrs.agility) + (ball.tailwind ? 0.6 : 0);
     const dr = dist(r, L);
     const defendersNear = defs.filter((d) => !d.engaged).map((d) => ({ d, dd: dist(d, L) })).sort((p, q) => p.dd - q.dd);
     const nearest = defendersNear[0];
     const deep = (ball.airYards || 0) > 20;
-    const contested = nearest && nearest.dd < (deep ? 1.6 : 1.1); // at full sprint a trailing defender a step away still plays the ball
+    let contested = nearest && nearest.dd < (deep ? 1.6 : 1.1); // at full sprint a trailing defender a step away still plays the ball
+    // Thunderclap: a defender trailing the receiver (behind him on his path) cannot break up a quick pass.
+    const trailing = nearest && ((nearest.d.x - r.x) * r.vx + (nearest.d.y - r.y) * r.vy) < 0;
+    const thunderShield = ball.thunder && ball.quick && trailing && nearest.dd < (deep ? 1.6 : 1.1);
+    if (thunderShield) { contested = false; abilityOutcome('no_breakup', qb, `${qb.name}'s Thunderclap beats ${nearest.d.name} to the spot`, { victim: nearest.d.slot }); }
     // Coverage responsibility: the man defender assigned to this receiver; in zone, only a defender close enough to have had him (within 2.5 yards); otherwise nobody, the zone was open.
     { const manD = defs.find((d) => d.assignment?.a === 'man' && bySlot.off[manKeys[d.assignment.key]] === r);
       if (manD) { stats.coverBy = manD.slot; stats.coverKind = 'man'; }
       else if (nearest && nearest.dd <= 2.5 && nearest.d.assignment?.a === 'zone') { stats.coverBy = nearest.d.slot; stats.coverKind = 'zone'; }
       else { stats.coverBy = null; stats.coverKind = 'open'; } }
     let catchP = dr > catchRadius ? 0 : (0.7 + 0.29 * norm(r.attrs.catching)) * (1 - Math.max(0, dr - 0.6) / catchRadius * 0.45);
-    if (deep) catchP *= 0.78 + 0.1 * norm(r.attrs.catching); // tracking the ball over the shoulder
+    if (deep) catchP *= ball.tailwind ? 0.89 + 0.05 * norm(r.attrs.catching) : 0.78 + 0.1 * norm(r.attrs.catching); // tracking the ball over the shoulder (Tailwind: it lands softer)
+    { const manD = defs.find((d) => d.assignment?.a === 'man' && bySlot.off[manKeys[d.assignment.key]] === r);
+      if (manD?.ability?.fortress) { catchP *= 1 - manD.ability.fortress; abilityUsed(manD, 'fortress'); } } // Fortress: receivers he covers in man catch 35% less often
+    { const sf = defs.find((d) => d.ability?.staticField && d.assignment?.a === 'zone' && inZoneArea(d.assignment, L));
+      if (sf) { catchP *= 1 - sf.ability.staticField; abilityUsed(sf, 'staticField'); } } // Static Field: catches in his zone are 10% harder
     if (contested) {
       const dCover = nearest.d.attrs.coverage + (nearest.d.ability?.contest || 0) + (nearest.d.assignment?.a === 'man' ? (nearest.d.ability?.manCoverage || 0) : 0);
       const rCatch = r.attrs.catching + (r.ability?.catchContest || 0);
       catchP *= 0.7 + 0.22 * norm(rCatch) - 0.22 * norm(dCover);
+      if (nearest.d.ability?.wingShadow) { catchP *= 1 - nearest.d.ability.wingShadow; abilityUsed(nearest.d, 'wingShadow'); } // Wing Shadow: contested catches against him are 15% harder
       if (nearest.d.ability?.contest || nearest.d.ability?.manCoverage) abilityUsed(nearest.d, nearest.d.ability.contest ? 'contest' : 'manCoverage'); if (r.ability?.catchContest) abilityUsed(r, 'catchContest');
     }
-    if (nearest && nearest.dd < 1.0 && nearest.dd < dr) {
+    if (nearest && nearest.dd < 1.0 && nearest.dd < dr && !thunderShield) {
       const pickCatching = nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0);
-      const pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.5);
-      if (rng.chance(pickP)) {
+      let pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.5);
+      if (ball.undertow) { pickP *= ball.undertow.ability.undertow; abilityUsed(ball.undertow, 'undertow'); } // Undertow: 25% more likely
+      const picked = rng.chance(pickP);
+      if (picked && ball.sovereign) { abilityUsed(qb, 'sovereign'); abilityOutcome('pick_denied', qb, `${qb.name}'s Sovereign Arm: ${nearest.d.name} cannot hold it`, { victim: nearest.d.slot }); }
+      else if (picked) {
         ball.inAir = false; ball.holder = nearest.d; stats.interceptor = nearest.d.slot; nearest.d.x = L.x; nearest.d.y = L.y;
         nearest.d.laneTimer = 0; nearest.d.jukeCooldown = 0;
         if (nearest.d.ability?.pickCatching) abilityUsed(nearest.d, 'pickCatching'); log(`${nearest.d.name} intercepts the pass!`, { kind: 'interception', by: nearest.d.slot, side: 'def', ability: fired(nearest.d, 'pickCatching', 'breakRadius', 'closeSpeed', 'zoneRange', 'manCoverage', 'contest') });
@@ -769,6 +906,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (rng.chance(catchP)) {
       ball.inAir = false; ball.holder = r; r.x = L.x; r.y = L.y; r.laneTimer = 0; r.jukeCooldown = 0.4; r.caughtAt = t; phase = 'carry';
       r.vx *= 0.45; r.vy *= 0.45; // securing the ball and turning upfield costs a step
+      // Daybreak: once per game, an open-field catch with a step on everyone cannot be run down from behind.
+      if (r.ability?.daybreak && available(r, 'daybreak', 'game') && defs.every((d) => dist(d, L) >= 2.5)) { spend(r, 'daybreak', 'game'); r.daybreak = true; abilityUsed(r, 'daybreak'); }
       stats.receiver = r.slot; stats.carrier = r.slot; stats.catchX = L.x;
       for (const def of defs) def.recognised = true;
       if (r.ability?.routeAgility) abilityUsed(r, 'routeAgility'); log(`${r.name} catches it${contested ? ' in traffic' : ''}`, { kind: 'catch', by: r.slot, side: 'off', contested: !!contested, ability: fired(r, 'catchContest', 'routeAgility', 'afterCatch') });
@@ -801,11 +940,33 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (!isRun && handoffDone && runRecognisedAt === Infinity) runRecognisedAt = t;
     if (phase === 'carry' && runRecognisedAt === Infinity) runRecognisedAt = t;
 
-    if (tick === 4) for (const a of actors) if (a.ability?.aura) abilityUsed(a, 'aura');
+    if (tick === 4) for (const a of actors) { if (a.ability?.aura) abilityUsed(a, 'aura'); if (a.overcharged) abilityUsed(a, 'overcharge'); if (a.sovereignQ4 && !isRun) abilityUsed(a, 'sovereign'); }
+    // Dragon's Roar: at the snap, the lineman across from him is slow to engage.
+    if (tick === 1) for (const d of defs) if (d.ability?.roar) {
+      const across = offs.filter((o) => ['block', 'release', 'fake', 'run_block', 'pull'].includes(o.assignment?.a)).sort((p, q) => Math.abs(p.y - d.y) - Math.abs(q.y - d.y))[0];
+      if (across) { across.roarUntil = d.ability.roar; abilityUsed(d, 'roar'); }
+    }
+    // Ancient Grove: defenders within 5 yards of him get +5 Awareness, recomputed as they move.
+    for (const g of actors) if (g.ability?.grove) {
+      let lifted = false;
+      for (const b of teammates(g.team)) { if (b === g) continue; const near = dist(b, g) <= g.ability.grove.radius; b.attrs.awareness = Math.min(99, b.baseAwareness + (near ? g.ability.grove.awareness : 0)); lifted ||= near; }
+      if (lifted && tick > 2) abilityUsed(g, 'grove');
+    }
     for (const a of offs) offenseTick(a);
     for (const d of defs) defenseTick(d);
     for (const a of actors) if (!a.engaged) integrate(a);
     separate();
+    {
+      const c = ball.holder;
+      // Landslide: a run that crosses the line within 2.5 yards of him gets his two extra yards when tackled.
+      if (c && c.team === 'off' && phase === 'carry' && !stats.receiver && !c.landslideChecked && c.x >= 0) { c.landslideChecked = true; c.landslide = offs.find((o) => o !== c && o.ability?.landslide && Math.abs(o.y - c.y) <= 2.5) || null; }
+      // Quake Step: a hard cut makes every defender within 2 yards stumble for a moment.
+      if (c?.ability?.quakeStep && phase === 'carry') {
+        const sp = Math.hypot(c.vx, c.vy); const pv = c.prevV;
+        if (pv && sp > 2.5 && pv.s > 2.5) { const cos = (c.vx * pv.x + c.vy * pv.y) / (sp * pv.s); if (cos < 0.92) quake(c); }
+        if (tick % 4 === 0) c.prevV = { x: c.vx, y: c.vy, s: sp };
+      }
+    }
 
     // Ball
     if (ball.inAir) {
@@ -845,7 +1006,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     result, yards: Math.round(gain), endYard: Math.round(endYard * 10) / 10, endLat: Math.round((ballLat + endLat) * 10) / 10,
     frames, events, elapsed: +t.toFixed(2), seed, offensePlay: offensePlay.id, defensePlay: defensePlay.id, ballOn, ballLat,
     names: { off: Object.fromEntries(offs.map((a) => [a.slot, a.name])), def: Object.fromEntries(defs.map((a) => [a.slot, a.name])) },
-    stats, turnover: ['interception', 'fumble', 'touchback_return'].includes(result) || !!stats.defensiveScore,
+    stats, memoryUsed, turnover: ['interception', 'fumble', 'touchback_return'].includes(result) || !!stats.defensiveScore,
     touchdown: result === 'touchdown', safety: result === 'safety', bounds: B,
   };
 }

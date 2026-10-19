@@ -108,7 +108,7 @@ export function fieldSvg(o) {
     const cx = X(ballLat + by), cy = Y(ballOn + bx);
     s += `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : 0.7}" ry="${air ? 0.6 : 0.45}" fill="#d9924f" stroke="#fff" stroke-width="0.18"/>`;
     // Ability presentation: activation → elemental action → outcome label (ability-fx.js), drawn over the sprites.
-    if (fx) s += fxSvg(fx, ft, posOf, { quality: fxQuality, halfWidth: HW });
+    if (fx) s += fxSvg(fx, ft, posOf, { quality: fxQuality, halfWidth: HW, toSvg: (x, y) => [X(ballLat + y), Y(ballOn + x)] });
   } else if (presnap?.offensePlay || presnap?.defensePlay) {
     const dp = presnap.defensePlay; const op = presnap.offensePlay;
     if (dp) for (const slot of dp.onField) { const [x, y] = dp.align[slot]; s += marker(slot, x, y, 'def', false, false); }

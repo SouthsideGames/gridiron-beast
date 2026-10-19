@@ -474,3 +474,11 @@ html[data-reduced-motion="1"] #fieldwrap.shake { animation: none; }
 .card-toggle { margin-bottom: 6px; font-size: 12px; }
 .card-toggle.on { background: #3a2a10; border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); }
 .card-queue { border-color: var(--warn, #e0a33b); }
+.card-proposal { font-size: 12px; border-left: 3px solid #7aa7ff; padding: 6px 8px; margin-bottom: 6px; background: rgba(122,167,255,.08); border-radius: 0 6px 6px 0; }
+.card-proposal.approved { border-left-color: var(--good); } .card-proposal.rejected { border-left-color: var(--warn, #e0a33b); }
+.card-proposal-text { font-size: 13px; color: var(--ink); margin-top: 2px; }
+/* Match screen at 320 px: the event banner stays on one line, the situation row never collides (polish 2.0) */
+.rival-banner.compact { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; padding: 6px 10px; }
+.situation { gap: 8px; }
+.situation > span:first-child { flex-shrink: 0; }
+.situation > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

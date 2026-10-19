@@ -20,9 +20,10 @@ const AUDIT_VIEWBOX = FIELD_VIEWBOX.split(' ').map(Number).map((v, i) => [v / 2,
 import { monsterSprite } from '../pixel-monster.js';
 import { buildFx, familyOf, FAMILY_LABEL, elementFx } from '../ability-fx.js';
 import { syncReviews } from '../../franchise/review-store.js';
-import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, cardMismatches, cardIssue } from '../dev-review.js';
+import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, cardMismatches, cardIssue, proposalsPending } from '../dev-review.js';
+import { CARD_PROPOSALS } from '../../data/card-check.js';
 
-const STATUS_FILTERS = [['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev'], ['card', '⚠ Card mismatch']];
+const STATUS_FILTERS = [['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev'], ['card', '⚠ Card mismatch'], ['proposal', '✍ New cards']];
 
 /** What makes each effect key fire in engine.js (presentation reads the same hooks). */
 const HOOKS = {
@@ -35,6 +36,15 @@ const HOOKS = {
   deepThrow: 'Accuracy and arm on throws 15+ yards downfield.', openAccuracy: 'Accuracy throwing to an open receiver.', throwVelocity: 'Faster ball on every throw.', pressureSense: 'Keeps his numbers when throwing under pressure.',
   manCoverage: 'Tighter man coverage; logged as coverage locks on.', contest: 'Contests catches in his zone; logged on a contested ball.', breakRadius: 'Breaks on the throw from farther away; logged on the break.',
   zoneRange: 'Wider zone; passive within coverage.', pickCatching: 'Catching bonus on interception chances; logged on the pick.', catchContest: 'Catching bonus on contested balls.', noPlayActionBite: 'Does not bite on play action; logged when it would have.', aura: 'Boosts nearby teammates from the snap.',
+  eruption: 'Once per drive: the first defender he blocks, or the first who hits him with the ball, is flattened.', riptide: 'While run blocking, drags his man up to a yard toward the nearer sideline.',
+  undertow: 'Interception chance x1.25 on throws of 15+ air yards into his half.', grove: 'Every tick: teammates within 5 yards get +5 Awareness.', overcharge: 'After his sack, +8 Speed on every play of that drive.',
+  thunderclap: 'Ball 15% faster; a trailing defender cannot break up or pick a quick pass.', whiteout: 'Once per half: the QB is about to throw to his first read and has to move on.',
+  nightVeil: 'Left out of the QB\u2019s read of how open a receiver is.', refraction: 'QB judgement noise x1.2 for receivers within 4 yards of him.', daybreak: 'Once per game, on an open catch: chasers behind him are held below his pace and cannot tackle from behind.',
+  blink: 'Once per game: the first tackle attempt, he appears 5 yards downfield.', sovereign: 'First-read throws cannot be intercepted; +10 Arm and Accuracy in the fourth quarter.', roar: 'At the snap, the nearest blocker cannot engage for 0.4 s.',
+  cyclone: 'On her first break, everyone covering her is stunned for 0.35 s.', eclipse: 'Deep route past 10 yards: everyone covering him is stunned for 0.5 s.', landslide: 'Runs crossing the line within 2.5 yards of him fall forward 2 more yards; never shed in pass protection.',
+  permafrost: 'A run that meets him is pushed back a yard on contact.', heatHaze: 'Trails receivers on deep routes 0.15 s closer.', glacierWall: 'Sacks from his side of the line fail 30% of the time.',
+  quakeStep: 'On a cut, defenders within 2 yards tackle 20% worse for 0.6 s.', radiantPursuit: '+15% speed chasing a carrier from behind.', ambush: 'On a blitz, each blocker\u2019s one try to pick him up fails 30% of the time.',
+  staticField: 'Catch chance x0.9 for balls landing in his zone.', wingShadow: 'Catch chance x0.85 on balls contested by him.', fortress: 'Catch chance x0.65 for the receiver he covers in man.', tailwind: 'Deep passes: 20% more range, softer landing (bigger catch radius, easier tracking).',
   attrs: 'Flat attribute bonus (passive, no field effect).', fatigue: 'Tires slower (passive).', fumbleResist: 'Fumbles less (passive).',
 };
 const PASSIVE = new Set(['attrs', 'fatigue', 'fumbleResist', 'zoneRange', 'blockerStun']);
@@ -116,17 +126,20 @@ export function stagedSim(entry) {
 /** Run the engine with the species in its slot until its ability logs; null if it never does in the budget. */
 export function findActivation(entry, { tries = 80 } = {}) {
   const sp = entry.sp; const pos = sp.position; const rng = createRng(11);
-  const slots = entry.side === 'off' ? OFFENSE_SLOTS : DEFENSE_SLOTS; const slot = slots.find((s) => positionOf(s) === pos) || slots[0];
+  const slots = entry.side === 'off' ? OFFENSE_SLOTS : DEFENSE_SLOTS; const natural = slots.find((s) => positionOf(s) === pos) || slots[0];
+  // A ball-carrier ability on a tight end shows up more often from the backfield (his secondary position).
+  const alt = sp.secondary === 'RB' && ['move', 'contact'].includes(entry.family) ? 'RB' : null;
   const fam = entry.family;
-  const offPlays = fam === 'block' ? ['inside_zone', 'mesh', 'power_right', 'deep_post'] : fam === 'contact' ? ['inside_zone', 'power_right', 'dive', 'outside_zone', 'mesh'] : fam === 'throw' || fam === 'cover' ? ['deep_post', 'three_verticals', 'mesh', 'deep_corner', 'curl_flat'] : ['quick_slants', 'inside_zone', 'curl_flat', 'deep_corner', 'te_seam', 'stick'];
-  const defPlays = fam === 'throw' || fam === 'cover' || fam === 'move' ? ['cover_3', 'cover_1', 'man_press', 'cover_2_man'] : ['base_43', 'run_wall', 'bear_front', 'cover_1'];
+  const offPlays = entry.key === 'glacierWall' ? ['mesh', 'deep_post', 'dagger', 'smash'] : fam === 'block' ? ['inside_zone', 'mesh', 'power_right', 'deep_post'] : fam === 'contact' ? ['inside_zone', 'power_right', 'dive', 'outside_zone', 'mesh'] : fam === 'throw' || fam === 'cover' ? ['deep_post', 'three_verticals', 'mesh', 'deep_corner', 'curl_flat'] : ['quick_slants', 'inside_zone', 'curl_flat', 'deep_corner', 'te_seam', 'stick'];
+  const defPlays = entry.key === 'ambush' || entry.key === 'glacierWall' ? ['all_out', 'zone_blitz', 'fire_zone', 'double_a_mug'] : fam === 'throw' || fam === 'cover' || fam === 'move' ? ['cover_3', 'cover_1', 'man_press', 'cover_2_man'] : ['cover_2_zone', 'run_wall', 'bear_front', 'cover_1'];
   const fallback = (p) => SPECIES_DEX.find((s) => s.position === p && !s.ability) || SPECIES_DEX.find((s) => s.position === p);
   for (let i = 0; i < tries; i++) {
     const o = PLAYS[offPlays[i % offPlays.length]], d = PLAYS[defPlays[(i >> 1) % defPlays.length]]; if (!o || !d) continue;
     const offM = {}, defM = {}, offense = {}, defense = {};
+    const slot = alt && i % 2 ? alt : natural;
     const build = (team, list, map, input) => { for (const s of list) { const spec = team === entry.side && s === slot ? sp : fallback(positionOf(s)); const m = generateMonster(rng, { position: positionOf(s), quality: 76, species: spec.id }); map[s] = m; input[s] = { attrs: effectiveAttributes(m), name: m.name, species: m.species }; } };
     build('off', o.onField, offM, offense); build('def', d.onField, defM, defense);
-    const sim = simulatePlay({ offensePlay: o, defensePlay: d, offense, defense, ballOn: 35, seed: 100 + i });
+    const sim = simulatePlay({ offensePlay: o, defensePlay: d, offense, defense, ballOn: 35, seed: 100 + i, options: { memory: { drive: `audit${i}`, half: 'h2', quarter: 4, used: {} } } }); // the fourth quarter, so Sovereign Arm's boost shows
     if (sim.events.some((e) => e.kind === 'ability' && e.side === entry.side && e.by === slot)) return { sim, offM, defM, slot, play: o.name, defPlay: d.name };
   }
   return null;
@@ -143,8 +156,8 @@ export function registerAbilityAudit(Router, app) {
       const reviewable = entries.filter((e) => e.eff?.kind === 'ability');
       const stateOf = Object.fromEntries(reviewable.map((e) => [e.sp.id, reviewState('ability', e.sp.id)]));
       const count = { approved: 0, needs_work: 0, todo: 0 }; for (const v of Object.values(stateOf)) count[NEEDS_OWNER.has(v) ? 'todo' : v] += 1;
-      const cards = new Set(cardMismatches()); count.card = cards.size;
-      const statusOk = (e) => st.status === 'all' || (st.status === 'card' ? cards.has(e.sp.id) : false) || (e.eff?.kind === 'ability' && (st.status === 'todo' ? NEEDS_OWNER.has(stateOf[e.sp.id]) : stateOf[e.sp.id] === st.status));
+      const cards = new Set(cardMismatches()); count.card = cards.size; count.proposal = proposalsPending().length;
+      const statusOk = (e) => st.status === 'all' || (st.status === 'card' ? cards.has(e.sp.id) : false) || (st.status === 'proposal' ? !!CARD_PROPOSALS[e.sp.id] : false) || (e.eff?.kind === 'ability' && (st.status === 'todo' ? NEEDS_OWNER.has(stateOf[e.sp.id]) || proposalsPending().includes(e.sp.id) : stateOf[e.sp.id] === st.status));
       const list = entries.filter((e) => (st.element === 'All' || e.sp.element === st.element) && statusOk(e));
       const missing = entries.filter((e) => e.eff?.kind === 'ability' && !e.hooked);
       return `<p class="muted">Every species' signature ability or trait with the engine hook it fires on. <b>Staged</b> loops a scripted scene through the real effect layer; <b>In play</b> searches the engine for a play where it fires.</p>

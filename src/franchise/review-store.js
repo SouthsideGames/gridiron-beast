@@ -48,16 +48,17 @@ export async function syncReviews(ns = 'ability') {
  * `fp` is the item's current fingerprint: a verdict is always about the version on screen.
  * Clearing status and note removes the review. Resolves true when the cloud took it.
  */
-export function setReview(ns, id, { status, note, gameplay, mismatch } = {}, fp = null) {
+export function setReview(ns, id, { status, note, gameplay, mismatch, proposal } = {}, fp = null) {
   const all = reviews(ns); const prev = all[id] || { status: null, note: '', gameplay: false };
   const next = {
     status: status === undefined ? prev.status : status,
     note: note === undefined ? prev.note || '' : String(note).slice(0, 2000),
     gameplay: gameplay === undefined ? !!prev.gameplay : !!gameplay,
     mismatch: mismatch === undefined ? !!prev.mismatch : !!mismatch,
+    proposal: proposal === undefined ? prev.proposal || null : proposal, // 'approved' | 'rejected' | null: the owner's call on a proposed new card
     fp: fp ?? prev.fp ?? null, updatedAt: Date.now(),
   };
-  if (!next.status && !next.note.trim() && !next.gameplay && !next.mismatch) delete all[id]; else all[id] = next;
+  if (!next.status && !next.note.trim() && !next.gameplay && !next.mismatch && !next.proposal) delete all[id]; else all[id] = next;
   writeLocal(ns, all); emit();
   return cloudSaveReview(NS[ns].col, id, all[id] || null);
 }
