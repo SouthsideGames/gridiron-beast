@@ -5,19 +5,15 @@
 
 import { esc, delegate, sheet } from '../dom.js';
 import { SPECIES_DEX, RARITIES, TRAITS, ELEMENT_REGIONS, COLLECTION_MILESTONES } from '../../data/species.js';
-import { TYPES } from '../../data/monsters.js';
+import { TYPES, evolvedSpec } from '../../data/monsters.js';
+export { evolvedSpec };
 import { sprite16 } from '../sprite16.js';
-import { dexStatus, dexCounts } from '../../franchise/franchise.js';
+import { dexStatus, dexCounts, dexFormSeen } from '../../franchise/franchise.js';
+import { dexCountsGlobal } from '../../franchise/dex-store.js';
 
 const POS_NAME = { QB: 'Quarterback', RB: 'Running back', WR: 'Receiver', TE: 'Tight end', OL: 'Lineman', DL: 'Pass rusher', LB: 'Linebacker', CB: 'Cornerback', S: 'Safety', K: 'Kicker' };
 
-/** A species that evolves grows a size, looks fiercer and gains claws or spikes. */
-export function evolvedSpec(s, stage) {
-  const extra = stage === 1 ? ['claws'] : ['claws', 'spikes'];
-  return { ...s, id: `${s.id}_e${stage}`, size: stage === 1 ? (s.size === 'small' ? 'medium' : 'large') : 'large', look: stage === 1 ? (s.look === 'cute' ? 'cool' : 'fierce') : 'fierce', features: [...new Set([...s.features, ...extra])] };
-}
-
-const silhouette = (s, size) => sprite16({ ...s, id: s.id + '_sil', colors: ['#1a2420', '#22302a'], look: 'cool', features: s.features.filter((f) => f !== 'glow' && f !== 'halo') }, size);
+export const silhouette = (s, size) => sprite16({ ...s, id: s.id + '_sil', colors: ['#1a2420', '#22302a'], look: 'cool', features: s.features.filter((f) => f !== 'glow' && f !== 'halo') }, size);
 
 export function registerDexScreens(Router, app) {
   Router.registerScreen('dex', {
@@ -25,7 +21,8 @@ export function registerDexScreens(Router, app) {
     render({ f, params }) {
       const revealAll = !!params?.all;
       const status = (s) => (revealAll ? 'seen' : dexStatus(f, s.id));
-      const { seen, signed } = f ? dexCounts(f) : { seen: 0, signed: 0 };
+      const { seen, signed } = dexCounts(f);
+      const career = dexCountsGlobal();
       const total = SPECIES_DEX.length;
       const next = COLLECTION_MILESTONES.find((m) => m.at > seen);
       const groups = Object.keys(TYPES).map((el) => {
@@ -35,8 +32,8 @@ export function registerDexScreens(Router, app) {
           <div class="dex-grid">${list.map((s) => { const st = status(s); return `<button class="dex-cell ${st}" data-action="open" data-id="${s.id}" aria-label="${st === 'unknown' ? 'Unknown species' : esc(s.name)}">${st === 'unknown' ? silhouette(s, 40) : sprite16(s, 40)}<span class="dex-name">${st === 'unknown' ? '???' : esc(s.name)}</span><span class="dex-r r-${s.rarity}">${st === 'unknown' ? '' : RARITIES[s.rarity].label}</span>${st === 'signed' ? '<span class="dex-tick" title="Signed">✓</span>' : ''}</button>`; }).join('')}</div></section>`;
       }).join('');
       return `
-        <div class="panel tight"><div class="row between"><div><b>${f ? `${seen} / ${total} discovered` : `${total} species`}</b>${f ? `<div class="muted">${signed} signed · ${revealAll ? 'developer view: all revealed' : 'scout a region or play a club to discover more'}</div>` : '<div class="muted">Start a franchise to begin your collection.</div>'}</div>${f && next ? `<div class="dim" style="text-align:right;font-size:12px;max-width:45%">Next at ${next.at}: ${esc(next.reward)}</div>` : ''}</div>
-          <div class="dex-bar"><i style="width:${f ? (seen / total) * 100 : 0}%"></i></div></div>
+        <div class="panel tight"><div class="row between"><div><b>${seen} / ${total} discovered</b><div class="muted">${signed} signed · ${revealAll ? 'developer view: all revealed' : career.franchises > 1 ? `your collection across ${career.franchises} franchises` : f ? 'scout a region or play a club to discover more' : 'your collection carries into every franchise'}</div></div>${next ? `<div class="dim" style="text-align:right;font-size:12px;max-width:45%">Next at ${next.at}: ${esc(next.reward)}</div>` : ''}</div>
+          <div class="dex-bar"><i style="width:${(seen / total) * 100}%"></i></div></div>
         ${groups}
         <p class="dim center" style="margin-top:12px">Common and uncommon species are scouted in their regions. Rares appear only in one home region from week 4. Legendaries are won through Legend Tracks (coming in Prototype 2).</p>`;
     },
@@ -55,15 +52,16 @@ export function registerDexScreens(Router, app) {
 
 export function speciesSheet(s, f) {
   const ab = s.ability ? `<p><b>${esc(s.ability.name)}</b> — ${esc(s.ability.text)}</p>` : `<p><b>${esc(TRAITS[s.trait]?.name)}</b> (shared trait) — ${esc(TRAITS[s.trait]?.text)}</p>`;
-  const evo = s.evolution.length ? `<h3>Evolution</h3><div class="row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">${sprite16(s, 40)}${s.evolution.map((e, i) => `<span class="dim">→</span><span class="center" style="font-size:12px">${sprite16({ ...evolvedSpec(s, i + 1), name: e.name }, 40 + i * 8)}<br>${esc(e.name)} <span class="dim">L${e.level}</span></span>`).join('')}</div><p class="dim">Evolution arrives in Prototype 2.</p>` : '';
+  const formSeen = dexFormSeen(f, s.id);
+  const evo = s.evolution.length ? `<h3>Evolution</h3><div class="row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">${sprite16(s, 40)}${s.evolution.map((e, i) => `<span class="dim">→</span><span class="center" style="font-size:12px">${formSeen >= i + 1 ? sprite16(evolvedSpec(s, i + 1), 40 + i * 8) : silhouette(evolvedSpec(s, i + 1), 40 + i * 8)}<br>${formSeen >= i + 1 ? esc(e.name) : '???'} <span class="dim">L${e.level}</span></span>`).join('')}</div><p class="dim">${formSeen ? `You have seen this species evolve${formSeen >= s.evolution.length ? ' fully' : ''}.` : 'Evolves at the levels shown; evolved forms are revealed when you see one.'}</p>` : '';
   const owned = f ? f.roster.filter((m) => m.species === s.id) : [];
   const st = dexStatus(f, s.id);
   return `<div class="row" style="align-items:flex-start">${sprite16(s, 96)}<div class="grow"><div class="muted">${esc(s.element)} type · <span class="dex-r r-${s.rarity}">${RARITIES[s.rarity].label}</span>${s.cornerstone ? ' · cornerstone' : ''}</div>
     <div class="muted">${POS_NAME[s.position]} (${s.position})${s.secondary ? ` · also ${POS_NAME[s.secondary]} (${s.secondary})` : ''}</div>
     <div class="muted">${esc(s.size)} ${esc(s.body)} · ${esc(s.look)}</div>
-    ${f ? `<div class="muted" style="margin-top:4px">${st === 'signed' ? `Signed · ${owned.length} on your roster` : st === 'seen' ? 'Seen, never signed' : 'Not yet discovered'}</div>` : ''}</div></div>
+    <div class="muted" style="margin-top:4px">${st === 'signed' ? `Signed${f ? ` · ${owned.length} on your roster` : ''}` : st === 'seen' ? 'Seen, never signed' : 'Not yet discovered'}</div></div></div>
     <p style="font-style:italic">“${esc(s.personality)}”</p>
     <h3>${s.ability ? 'Signature ability' : 'Trait'}</h3>${ab}
-    <h3>Where to find it</h3><p class="muted">${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}${s.fromWeek ? ` · from week ${s.fromWeek}` : ''}${s.rarity === 'legendary' ? ' · Legend Tracks only' : ''}</p>
+    <h3>Where to find it</h3><p class="muted">${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}${s.fromWeek ? ` · from week ${s.fromWeek}` : ''}${s.rarity === 'legendary' ? (f?.campaign?.unlocked?.[s.id] ? ' · unlocked: scoutable there now' : ` · Legend Tracks ${f?.campaign?.tracks?.[s.id] || 0}/3`) : ''}</p>
     ${evo}`;
 }

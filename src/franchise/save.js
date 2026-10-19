@@ -28,7 +28,7 @@ export function clear() { const s = storage(); if (s) { s.removeItem(SAVE_KEY); 
 export function migrate(f) {
   if (!f || typeof f !== 'object') return null;
   if (f.schemaVersion !== SCHEMA_VERSION) return null; // future versions migrate here
-  f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {};
+  f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {}; f.week ||= {}; f.campaign ||= { badges: {}, gymWins: {}, titles: f.badges ? Object.values(f.badges).reduce((a, b) => a + b, 0) : 0, wins: 0, awards: 0 };
   migrateSpecies(f);
   return f;
 }

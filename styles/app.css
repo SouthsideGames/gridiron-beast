@@ -155,7 +155,7 @@ tr.me td { background: #2a3f16; }
 .slot.injured { border-color: var(--bad); }
 .slot.secondary { border-style: dashed; }
 .attr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px; }
-.attr { display: grid; grid-template-columns: 84px 1fr 32px; align-items: center; gap: 6px; }
+.attr { display: grid; grid-template-columns: 84px 1fr 32px auto; align-items: center; gap: 6px; }
 .attr .bar { height: 7px; }
 .attr .v { font-family: var(--mono); text-align: right; }
 
@@ -279,3 +279,160 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .dex-bar { height: 6px; background: var(--panel-2); border-radius: 3px; margin-top: 8px; overflow: hidden; }
 .dex-bar i { display: block; height: 100%; background: var(--accent); }
 @media (min-width: 520px) { .dex-grid { grid-template-columns: repeat(6, 1fr); } }
+
+/* Campaign: gym badges and the Hall of Fame checklist */
+.badge-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 8px 0; }
+.badge { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border-radius: var(--r); border: 2px solid var(--line); background: var(--panel-2); color: var(--ink-2); font: inherit; cursor: pointer; min-width: 0; }
+.badge .badge-ico { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: hsl(var(--hue) 20% 22%); color: hsl(var(--hue) 30% 45%); font-size: 13px; font-weight: 900; }
+.badge.won { border-color: hsl(var(--hue) 70% 55%); color: var(--ink); }
+.badge.won .badge-ico { background: hsl(var(--hue) 70% 52%); color: #fff; box-shadow: 0 0 0 2px hsl(var(--hue) 70% 30%); }
+.badge .badge-nm { font-size: 9px; letter-spacing: .04em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.hof { display: grid; gap: 2px; font-size: 13px; color: var(--ink-2); }
+.hof .done { color: var(--good); }
+
+/* Pregame coach dialogue */
+.talk { background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: var(--s2) var(--s3); margin: 0 0 var(--s3); }
+.talk.gym { border-color: var(--line-2); }
+.talk-line { margin: 4px 0 0; font-style: italic; }
+.talk-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.talk-reply { margin-top: 8px; font-size: 13px; }
+
+/* Tutorial tips */
+.tip { background: #1e2a3a; border: 2px solid #3b5a7a; border-radius: var(--r); padding: var(--s2) var(--s3); margin: 0 0 var(--s3); }
+.tip p { margin: 6px 0 8px; font-size: 14px; color: var(--ink); }
+.tip .row { gap: 6px; flex-wrap: wrap; }
+
+.card .card-stat { display: block; font: 500 10px ui-monospace, monospace; color: var(--ink-2); margin-top: 2px; }
+
+.ability-strip { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: 12px; color: #ffe36c; font-weight: 700; }
+.ability-strip .mine { color: #ffd84a; }
+.ability-strip .trait { color: var(--ink-2); font-weight: 600; }
+
+/* Badge earned */
+.badge-win { text-align: center; padding: 8px 0; }
+.badge-win-ring { width: 96px; height: 96px; margin: 0 auto 10px; border-radius: 50%; display: grid; place-items: center; font-size: 48px; color: #fff; background: radial-gradient(circle at 35% 30%, hsl(var(--hue) 80% 65%), hsl(var(--hue) 70% 38%)); box-shadow: 0 0 0 6px hsl(var(--hue) 60% 22%), 0 0 40px hsl(var(--hue) 80% 50% / .6); animation: badge-pop .6s cubic-bezier(.2,1.4,.4,1) both; }
+.badge-win-title { font-size: 12px; letter-spacing: .2em; color: hsl(var(--hue) 70% 70%); font-weight: 800; }
+.badge-win-name { font-size: 26px; font-weight: 900; margin: 2px 0 8px; }
+@keyframes badge-pop { from { transform: scale(.4); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+[data-reduced-motion="1"] .badge-win-ring { animation: none; }
+
+/* Stat tables (GDD §16) */
+.stat-table{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:4px}
+.stat-table table{border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat-table th{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);padding:3px 7px;text-align:right;border-bottom:1px solid var(--line)}
+.stat-table td{padding:5px 7px;text-align:right;font-weight:700}
+.stat-table th:first-child,.stat-table td:first-child{text-align:left;position:sticky;left:0;background:var(--panel)}
+.good{color:var(--good)}.bad{color:var(--bad)}
+
+/* Comeback mode / scheme lock chips (GDD §17) */
+.edge-strip{display:flex;flex-wrap:wrap;gap:6px;padding:4px 10px 0}
+.edge-chip{font-size:11px;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2)}
+.edge-chip.comeback{border-color:#f0883e;color:#ffb27a;background:rgba(240,136,62,.12);animation:edgepulse 1.4s ease-in-out infinite}
+.edge-chip.scheme{border-color:#f5c542;color:#ffe08a;background:rgba(245,197,66,.1)}
+.edge-chip.dim{color:var(--ink-3);font-weight:600;letter-spacing:0}
+@keyframes edgepulse{0%,100%{box-shadow:0 0 0 0 rgba(240,136,62,.0)}50%{box-shadow:0 0 10px 1px rgba(240,136,62,.45)}}
+/* Scheme lock panel on the roster */
+.scheme-lock{position:relative;border:1px solid #f5c542;background:linear-gradient(135deg,rgba(245,197,66,.14),rgba(245,197,66,.03));border-radius:12px;padding:10px 12px;margin:8px 0;overflow:hidden}
+.scheme-lock::after{content:'';position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 40%,rgba(255,240,180,.18) 50%,transparent 60%);animation:sheen 3.2s linear infinite;pointer-events:none}
+@keyframes sheen{from{transform:translateX(-40%)}to{transform:translateX(40%)}}
+.scheme-lock b{color:#ffe08a}
+
+/* Fresh badge banner on HQ */
+.badge-banner{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:8px;border-radius:12px;border:1px solid hsl(var(--hue) 70% 60%);background:linear-gradient(135deg,hsl(var(--hue) 50% 22% / .9),hsl(var(--hue) 40% 12% / .9));box-shadow:0 0 18px hsl(var(--hue) 70% 50% / .35)}
+.badge-banner-star{font-size:26px;color:hsl(var(--hue) 90% 70%);text-shadow:0 0 10px hsl(var(--hue) 90% 60%);animation:edgepulse 1.6s ease-in-out infinite}
+.handshake .talk-name{font-weight:900;margin-bottom:4px}
+
+.card.blocked{opacity:.4;filter:grayscale(.8);position:relative}
+.card.blocked::after{content:'unavailable';position:absolute;inset:auto 4px 4px 4px;font-size:10px;font-weight:800;color:var(--bad);text-transform:uppercase;letter-spacing:.04em}
+
+.attr .plus{min-height:28px;padding:0 10px;margin-left:6px;font-weight:900}
+.panel.points{border-color:#f5c542;background:rgba(245,197,66,.08)}
+
+.panel.hotseat{border-color:var(--bad);box-shadow:0 0 14px rgba(255,90,90,.25)}
+
+.panel.need-short{border-color:var(--bad)}
+.panel.need-thin{border-color:#f0883e}
+
+.rival-card{border-color:#7c3aed}
+.rival-card.hot{border-color:#a855f7;box-shadow:0 0 14px rgba(168,85,247,.35)}
+
+.item.done{opacity:.6}
+/* Media day: an answer whose nature nobody on the roster shares still works, it just lifts no one. */
+.choice.faint { opacity: .72; }
+/* Monster bio (GDD §20.2) */
+.bio .stints { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.bio .stint { display: grid; grid-template-columns: 74px 1fr auto; gap: 8px; font-size: 13px; align-items: baseline; }
+.bio .stint .when { color: var(--muted); font-variant-numeric: tabular-nums; }
+.bio .stint.current .club { font-weight: 700; }
+/* The commissioner's welcome (GDD §19.3) */
+.welcome .talk { margin: 0; }
+.welcome .talk.fresh { animation: talk-in .35s ease-out; }
+.welcome .talk.ominous { border-color: #6b1f1f; background: #1d1212; }
+.welcome .talk.ominous .talk-line { color: #f0c9c9; }
+@keyframes talk-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .welcome .talk.fresh { animation: none; } }
+/* Draft room: scouted prospects open their report */
+.item.tappable { cursor: pointer; border-color: #2f5a3a; }
+.item.tappable:active { transform: scale(.995); }
+/* Clock state under the score (GDD §20.4) */
+.scoreboard .clockstate { font-size: 10px; letter-spacing: .02em; margin-top: 2px; font-weight: 700; white-space: nowrap; }
+.scoreboard .clockstate.running { color: #f5c542; }
+.scoreboard .clockstate.stopped { color: var(--ink-2); }
+/* Cornerstone mark: the monster the club was built around */
+.chip.cornerstone { background: linear-gradient(90deg, #5a4100, #8a6400); color: #ffe08a; border: 1px solid #f5c542; font-weight: 900; letter-spacing: .04em; font-size: 10px; }
+.cs-star { color: #f5c542; }
+/* Notices (GDD §20.6): a dot where something wants the owner, a count on the tab */
+.tab .tab-icon { position: relative; }
+.tab-badge { position: absolute; top: -6px; right: -12px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: #e0463a; color: #fff; font-size: 10px; font-weight: 900; line-height: 16px; text-align: center; border: 2px solid var(--bg); }
+.notice-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #e0463a; margin-right: 4px; vertical-align: middle; box-shadow: 0 0 0 2px rgba(224,70,58,.25); }
+/* Scheme section and evolution row on the monster card */
+.scheme-row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 3px 6px; border-radius: 6px; }
+.scheme-row.fits .scheme-name { color: #f5c542; font-weight: 700; }
+.scheme-row.ours { background: rgba(245,197,66,.08); }
+.evo-next { filter: drop-shadow(0 0 4px rgba(255,255,255,.08)); }
+/* Notice strip on a tab that has notices (GDD §20.6) */
+.notices { background: linear-gradient(180deg, #2a1f10, #1f1a10); border: 1px solid #8a6a1a; border-radius: var(--r); padding: var(--s2) var(--s3); margin-bottom: var(--s3); }
+.notice-row { display: flex; align-items: center; gap: 8px; width: 100%; appearance: none; background: rgba(0,0,0,.18); border: 1px solid rgba(245,197,66,.18); border-radius: 8px; padding: 8px 10px; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.notice-row:active { transform: scale(.995); }
+.tab-badge { box-shadow: 0 0 0 2px rgba(224,70,58,.25); }
+.notices-head { appearance: none; background: none; border: 0; color: inherit; font: inherit; width: 100%; padding: 0; cursor: pointer; text-align: left; }
+/* Playoff bracket (GDD §20.8) */
+.bracket { background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: 10px 6px 8px; margin-bottom: var(--s3); }
+.bk-heads, .bk-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.bk-h { font-size: 10px; font-weight: 800; text-align: center; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.bk-h.final { color: #e0463a; }
+.bk-col { display: flex; flex-direction: column; justify-content: space-around; gap: 14px; min-height: 230px; }
+.bk-pair { display: flex; flex-direction: column; gap: 3px; }
+.bk-team { display: flex; align-items: center; gap: 3px; overflow: hidden; background: var(--tc, #345); color: #fff; border-radius: 4px; padding: 6px 4px; font-weight: 900; font-size: 12px; min-height: 30px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+.bk-team .bk-seed { font-size: 10px; font-weight: 700; opacity: .8; min-width: 8px; }
+.bk-team .bk-abbr { letter-spacing: .02em; }
+.bk-team.lighttc { color: #0d1a14; }
+.bk-team .bk-score { margin-left: auto; font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; background: rgba(0,0,0,.28); color: #fff; border-radius: 3px; padding: 0 3px; }
+.bk-team.out { filter: grayscale(.9) brightness(.55); color: #e8efe9 !important; }
+.bk-team.won { box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
+.bk-team.me { outline: 2px solid #f5c542; outline-offset: 1px; }
+.bk-team.tbd { background: transparent; color: var(--ink-2); border: 1px dashed var(--line-2); box-shadow: none; }
+.bk-center { justify-content: center; align-items: stretch; }
+.bk-ball { text-align: center; font-size: 26px; opacity: .85; }
+.bk-champ { display: flex; margin-top: 10px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.bk-champ-label { background: #c8342b; color: #fff; font-weight: 900; padding: 8px 12px; font-size: 13px; letter-spacing: .04em; }
+.bk-champ-name { flex: 1; padding: 8px 10px; font-weight: 800; }
+@media (max-width: 340px) { .bk-team { font-size: 11px; padding: 5px 3px; } .bk-team .bk-score { font-size: 10px; } }
+/* Achievement cutscenes (GDD §21) */
+.scene .scene-badge { display: inline-block; font-size: 11px; font-weight: 900; letter-spacing: .08em; color: #f5c542; border: 1px solid #8a6a1a; background: #2a1f10; border-radius: 999px; padding: 4px 10px; margin-bottom: 12px; }
+.scene .talk { margin: 0; }
+.scene .talk.fresh, .board-letter p.fresh { animation: talk-in .35s ease-out; }
+.scene .talk.rival { border-color: #5a2a6a; background: #1d1424; }
+.board-letter { background: #efe9dc; color: #1a1a1a; border-radius: 4px; padding: 18px 16px; font-family: 'Courier New', ui-monospace, monospace; font-size: 14px; line-height: 1.5; box-shadow: 0 6px 24px rgba(0,0,0,.45); margin-top: 6px; }
+.board-letter p { margin: 0 0 10px; }
+.board-letter p:last-child { margin-bottom: 0; text-align: right; font-weight: 700; }
+.ach.locked { opacity: .5; }
+@media (prefers-reduced-motion: reduce) { .scene .talk.fresh, .board-letter p.fresh { animation: none; } }
+.ach-card.locked { opacity: .55; }
+.ach-card.earned { border-color: #6a5a1a; }
+/* Depth chart "More details" (GDD §21.5) */
+.dc-mid { min-width: 0; overflow: hidden; }
+.dc-mid .dc-name { max-width: 100%; }
+.dc-more { display: block; width: 100%; font-size: 11px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-expiring { color: #f5c542; font-weight: 700; }
+.dc-backup { font-size: 11px; }

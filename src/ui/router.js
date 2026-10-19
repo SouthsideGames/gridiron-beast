@@ -10,9 +10,11 @@ let current = null;
 let app = null;
 let ctxProvider = () => ({});
 let tabsProvider = () => null;
+let tipProvider = null; // (ctx, screenName) => html prepended to the screen (tutorial tips)
+let afterMount = null; // (ctx, screenName) => void
 
 export function registerScreen(name, screen) { screens.set(name, screen); }
-export function init({ root, context, tabs }) { app = root; ctxProvider = context; tabsProvider = tabs; }
+export function init({ root, context, tabs, tip = null, mounted = null }) { app = root; ctxProvider = context; tabsProvider = tabs; tipProvider = tip; afterMount = mounted; }
 export function currentScreen() { return stack[stack.length - 1] || null; }
 
 export function go(name, params = {}, { replace = false, reset = false } = {}) {
@@ -20,15 +22,17 @@ export function go(name, params = {}, { replace = false, reset = false } = {}) {
   if (reset) stack = [];
   if (replace && stack.length) stack.pop();
   stack.push({ name, params });
-  render();
+  navigating = true; render();
 }
 export function back() {
   if (stack.length > 1) stack.pop();
-  render();
+  navigating = true; render();
 }
+let navigating = false; // a go/back scrolls to the top; a re-render of the same screen (spending a point, toggling a tab) keeps the scroll position
 export function render() {
   const top = currentScreen(); if (!top || !app) return;
   const screen = screens.get(top.name);
+  const keepScroll = !navigating && current === screen; const y = window.scrollY; navigating = false;
   const ctx = { ...ctxProvider(), params: top.params, go, back, render };
   if (current && current !== screen) current.unmount?.();
   current = screen;
@@ -41,10 +45,11 @@ export function render() {
       <h1 class="title">${esc(title)}</h1>
       <span class="topbar-right">${screen.topRight ? screen.topRight(ctx) : ''}</span>
     </header>
-    <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''}" id="screen">${screen.render(ctx)}</main>
-    ${tabs ? `<nav class="tabbar" aria-label="Franchise sections">${tabs.map((t) => `<button class="tab ${t.active ? 'active' : ''}" data-action="router-tab" data-screen="${t.screen}" aria-current="${t.active ? 'page' : 'false'}"><span class="tab-icon">${t.icon}</span><span>${esc(t.label)}</span></button>`).join('')}</nav>` : ''}`;
+    <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${screen.render(ctx)}</main>
+    ${tabs ? `<nav class="tabbar" aria-label="Franchise sections">${tabs.map((t) => `<button class="tab ${t.active ? 'active' : ''}" data-action="router-tab" data-screen="${t.screen}" aria-current="${t.active ? 'page' : 'false'}"><span class="tab-icon">${t.icon}${t.badge ? `<span class="tab-badge" aria-label="${t.badge} notices">${t.badge > 9 ? '9+' : t.badge}</span>` : ''}</span><span>${esc(t.label)}</span></button>`).join('')}</nav>` : ''}`;
   app.querySelector('[data-action="router-back"]')?.addEventListener('click', back);
   for (const b of app.querySelectorAll('[data-action="router-tab"]')) b.addEventListener('click', () => go(b.dataset.screen, {}, { reset: true }));
   screen.mount?.($('#screen'), ctx);
-  window.scrollTo(0, 0);
+  afterMount?.(ctx, top.name);
+  if (keepScroll) window.scrollTo(0, y); else window.scrollTo(0, 0);
 }

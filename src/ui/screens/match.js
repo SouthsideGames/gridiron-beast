@@ -6,6 +6,7 @@ import { esc, delegate, toast, sheet, fmtClock, confirmSheet } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import * as Save from '../../franchise/save.js';
 import * as R from '../../sim/rules.js';
+import { maybeSheetTip } from '../tutorial.js';
 import * as AI from '../../sim/coach-ai.js';
 import { step, aiController, newTendencies } from '../../sim/game-runner.js';
 import { rngFromState } from '../../core/rng.js';
@@ -14,7 +15,11 @@ import { TRAINING_FOCI } from '../../data/staff.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { fieldSvg, FIELD_VIEWBOX, presnapLook, cameraFor } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
-import { monsterSprite } from '../pixel-monster.js';
+import { monsterSprite, portraitSprite } from '../pixel-monster.js';
+import { GYM_BY_CLUB } from '../../data/gyms.js';
+import { beatenLines } from '../../data/dialogue.js';
+import { TYPES, SPECIES_BY_ID } from '../../data/monsters.js';
+const BADGE_LINES = ['Well played. Don’t get used to it.', 'You earned that one. Keep it polished for me.', 'I had you beaten on tape. Tape lies, apparently.', 'My monsters will remember this.', 'The league will hear about you now.', 'Fine. Take it. We’ll talk next season.', 'That was football. Respect.', 'Eight badges is a long road. You’re on it.'];
 import { fieldGoalDistance, yardLabel } from '../../core/field.js';
 import { teamOverall } from '../../franchise/roster.js';
 import { boxScoreHtml } from '../box-score.js';
@@ -33,7 +38,9 @@ export function registerMatchScreens(Router, app) {
         <h3 style="font-size:12px">Packages</h3>${[...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS].map((s) => line(s, team.offense[s] || team.defense[s], team)).join('')}</div>`;
       function line(s, m, team) { const b = team?.boosts?.[m?.id]; const badges = b ? `${b.media ? `<span class="boost media" title="Media day: +${b.media.amount} ${b.media.attr}">+</span>` : ''}${b.training ? `<span class="boost train" title="Training: ${b.training.join(', ')}">T</span>` : ''}` : ''; return `<div class="slotline"><span class="mono">${s}</span><span class="row" style="gap:4px;justify-content:flex-end;flex-wrap:nowrap">${m ? monsterSprite(m, 18) : ''}${esc(m?.name || '—')}${badges}</span></div>`; }
       const rv = f.rivals[f.tier];
-      return `<div class="pregame">${m.rival ? `<div class="rival-banner">⚔️ RIVALRY GAME<div class="muted" style="font-weight:600;font-size:12px">GM ${esc(rv?.gm || '')} · all-time ${rv?.headToHead.w || 0}–${rv?.headToHead.l || 0}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}<div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
+      const gym = GYM_BY_CLUB[m.opponent]; const held = gym && F.badgeOf(f, m.opponent);
+      return `<div class="pregame">${m.rival ? `<div class="rival-banner">⚔️ RIVALRY GAME<div class="muted" style="font-weight:600;font-size:12px">GM ${esc(rv?.gm || '')} · all-time ${rv?.headToHead.w || 0}–${rv?.headToHead.l || 0}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}${gym ? `<div class="rival-banner" style="border-color:hsl(${TYPES[gym.element]?.hue ?? 120} 70% 55%);background:linear-gradient(90deg,hsl(${TYPES[gym.element]?.hue ?? 120} 40% 18%),hsl(${TYPES[gym.element]?.hue ?? 120} 30% 10%))">${held ? `🏅 ${esc(gym.badge).toUpperCase()} HELD` : `🏅 BADGE GAME · ${esc(gym.badge).toUpperCase()}`}<div class="muted" style="font-weight:600;font-size:12px">${esc(gym.coach.name)} · ${esc(gym.element)} gym${held ? '' : ' · win to earn it, no replays'}</div></div>` : ''}<div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
+        ${talkHtml(f)}
         <div class="lineups">${col(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}${col(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>
         ${(() => { const nMedia = Object.values(mine.boosts || {}).filter((b) => b.media).length; const tr = f.week.trainingFocus; return nMedia || tr ? `<div class="panel tight" style="margin-top:8px"><b>Today's boosts</b><div class="muted" style="font-size:13px">${tr ? `<span class="boost train">T</span> Training (${esc(TRAINING_FOCI[tr]?.label || tr)}): +${f.week.training?.amount ?? ''} ${esc((TRAINING_FOCI[tr]?.attrs || []).join(', '))} for every starter` : ''}${tr && nMedia ? '<br>' : ''}${nMedia ? `<span class="boost media">+</span> Media day: ${nMedia} monster${nMedia === 1 ? '' : 's'} fired up` : ''}</div></div>` : ''; })()}
         <p class="dim" style="margin-top:8px">Coaching mode: <b>${f.settings.mode === 'key' ? 'Key Moments' : 'Full Coaching'}</b> (change in Settings).</p>
@@ -41,6 +48,7 @@ export function registerMatchScreens(Router, app) {
     },
     mount(root) {
       delegate(root, {
+        reply: (el) => { const r = F.replyToCoach(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
         toss: () => {
           const f = app.f; const m = F.sundayMatchup(f);
           const rng = rngFromState(f.rngState); const winner = rng.chance(0.5) ? 'home' : 'away'; f.rngState = rng.state;
@@ -54,8 +62,18 @@ export function registerMatchScreens(Router, app) {
     },
   });
 
+  /** Comeback mode and scheme lock, shown while they apply (GDD §17). */
+  function edgeStrip(f, s, teams, me) {
+    const bits = [];
+    const cb = R.comebackSide(s);
+    if (cb) bits.push(`<span class="edge-chip comeback ${cb === me ? 'mine' : ''}">🔥 COMEBACK · ${esc(s[cb].abbr)} +${s.comeback.edge}</span>`);
+    else if (s.comeback && s.quarter < 4 && !s.finished) bits.push(`<span class="edge-chip dim">Comeback mode: trail by ${s.comeback.margin}+ in the 4th</span>`);
+    const lock = teams[me]?.schemeLock; if (lock?.offense) bits.push('<span class="edge-chip scheme mine">✦ SCHEME LOCK · offense</span>'); if (lock?.defense) bits.push('<span class="edge-chip scheme mine">✦ SCHEME LOCK · defense</span>');
+    const them = R.opponent(me); const tl = teams[them]?.schemeLock; if (tl?.offense || tl?.defense) bits.push('<span class="edge-chip scheme">✦ Their scheme is locked</span>');
+    return bits.length ? `<div class="edge-strip">${bits.join('')}</div>` : '';
+  }
   function startGame(f, m, winner, choice) {
-    const state = R.newGame({ home: m.home, away: m.away, seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: winner, choice });
+    const state = R.newGame({ home: m.home, away: m.away, seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: winner, choice, comeback: F.comebackRule(f) });
     f.rngState = rngFromState(f.rngState).state;
     f.game = { state, playerSide: m.playerSide, tendencies: { home: newTendencies(), away: newTendencies() }, selected: { offense: null, defense: null }, mode: f.settings.mode, lastEvent: null, simmed: [], event: m.rival ? 'rival' : m.playoff ? 'playoff' : null, tag: m.tag };
     app.save();
@@ -65,11 +83,12 @@ export function registerMatchScreens(Router, app) {
   // ------------------------------------------------------------ live match
   let anim = null; // active animation {raf, frames, i, done}
   let playClockTimer = null;
+  let autoTimer = null; // Auto mode: the coach's suggestions play themselves out, one play at a time
   const KEY_RESULTS = new Set(['touchdown', 'interception', 'fumble', 'touchback_return', 'safety']);
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away} — ${f.game.state.home.abbr} ${f.game.state.score.home}` : 'Match', back: false, tabs: false,
-    topRight: () => `<button class="btn ghost small" data-action="box" aria-label="Box score">📊</button><button class="btn ghost small" data-action="log" aria-label="Play log">📋</button>`,
+    topRight: () => `<button class="btn ghost small" data-action="box" aria-label="Box score">📊</button><button class="btn ghost small" data-action="log" aria-label="Play log">📋</button><button class="btn ghost small" data-action="help" aria-label="How a match works">ⓘ</button>`,
     render({ f }) {
       const G = f.game; if (!G) return `<div class="panel"><p>No game in progress.</p><button class="btn block" data-action="hq">Headquarters</button></div>`;
       const s = G.state; const me = G.playerSide, them = R.opponent(me);
@@ -82,15 +101,17 @@ export function registerMatchScreens(Router, app) {
         ? fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event, noLines: anim.follow, sprites: spritesFor(f, anim.ev.offenseSide) })
         : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession) });
       const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
-      const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''}" id="banner">${esc(G.lastEvent.text)}</div>` : '';
+      const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}">${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}</span>`).join('')}</div>` : '';
+      const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''}" id="banner">${esc(G.lastEvent.text)}${ab}</div>` : '';
       const eventBanner = G.event === 'rival' ? `<div class="rival-banner">⚔️ RIVALRY GAME · ${esc(s[them].name)} · GM ${esc(f.rivals[f.tier]?.gm || '')}</div>` : G.event === 'playoff' ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 PLAYOFFS · ${esc(G.tag || 'Win or go home')}</div>` : '';
       return `${eventBanner}
         <div class="scoreboard" aria-live="polite">
           <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span><span class="abbr"><span style="color:${s.away.color}">${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score">${s.score.away}</span></div>
-          <div class="mid"><b>${s.finished ? 'FINAL' : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}</div>
+          <div class="mid"><b>${s.finished ? 'FINAL' : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}${clockStateHtml(s, G, myBall)}</div>
           <div class="team right"><span class="score">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
         </div>
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
+        ${edgeStrip(f, s, teams, me)}
         <div class="field-wrap" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>
         <div id="controls">${controlsHtml(f, teams, look)}</div>`;
     },
@@ -98,6 +119,7 @@ export function registerMatchScreens(Router, app) {
       const f = app.f; if (!f?.game) { delegate(root, { hq: () => Router.go('hq', {}, { reset: true }) }); return; }
       { const G = f.game, st = G.state; if (!anim && !st.finished && st.quarter >= 3 && !G.halftimeShown) { G.halftimeShown = true; app.save(); sheet(boxScoreHtml(st, teamsFor(f), { title: 'Halftime' }), { title: 'Halftime' }); } }
       startPlayClock(f, root);
+      scheduleAuto(f);
       delegate(root, {
         hq: () => Router.go('hq', {}, { reset: true }),
         log: () => showLog(f),
@@ -114,7 +136,10 @@ export function registerMatchScreens(Router, app) {
         timeout: () => { const G = f.game; if (R.timeout(G.state, G.playerSide)) { G.lastEvent = { text: `Timeout, ${G.state[G.playerSide].name}.` }; app.save(); Router.render(); } else toast('No timeouts left.'); },
         tempo: (el) => { f.game.tempo = el.value; app.save(); },
         mode: () => { const G = f.game; G.mode = G.mode === 'key' ? 'full' : 'key'; app.save(); Router.render(); },
+        auto: () => { const G = f.game; G.auto = !G.auto; app.save(); if (!G.auto) { clearTimeout(autoTimer); autoTimer = null; } Router.render(); },
+        autospeed: () => { const G = f.game; G.autoSpeed = (G.autoSpeed || 1) === 2 ? 1 : 2; app.save(); Router.render(); },
         keymoment: () => simToKeyMoment(f),
+        simfinal: async () => { if (!(await confirmSheet('Let the coach play the rest of the game out instantly? You will see the final score and box score; no replays.', { title: 'Sim to final', okLabel: 'Sim it' }))) return; simToFinal(f); },
         skip: () => { if (anim) finishAnim(f, true); },
         finish: () => finishGame(f),
         boxscore: () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box score' }),
@@ -123,9 +148,11 @@ export function registerMatchScreens(Router, app) {
       });
       root.querySelector('#fieldwrap')?.addEventListener('click', () => { if (anim) finishAnim(f, true); });
       document.querySelector('.topbar [data-action="log"]')?.addEventListener('click', () => showLog(f));
+      document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(matchHelpHtml(f), { title: 'How a match works' }));
+      { const s0 = f.game?.state; if (s0 && !s0.finished && s0.phase === 'scrimmage' && R.inTwoMinute(s0) && !document.querySelector('.sheet')) maybeSheetTip(f, 'clock', () => app.save()); }
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? 'Final' : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box score' }));
     },
-    unmount() { stopAnim(); clearInterval(playClockTimer); playClockTimer = null; },
+    unmount() { stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
 
   // ------------------------------------------------------------ helpers
@@ -164,19 +191,69 @@ export function registerMatchScreens(Router, app) {
     return { presnap: { play: mine ? PLAYS[mine] : null, offensePlay: offLook, defensePlay: mine ? PLAYS[mine] : presnapLook(teams[me].defensePlays[0]) }, aiOffense: ai.offense, myPlay: mine };
   }
 
+  // ------------------------------------------------------------ auto mode
+  /** With Auto on, after each render take the next action the coach would: suggested play, the coach's fourth-down and try calls. */
+  function scheduleAuto(f) {
+    clearTimeout(autoTimer); autoTimer = null;
+    const G = f.game; if (!G?.auto || !G.state || G.state.finished || anim) return;
+    autoTimer = setTimeout(() => {
+      autoTimer = null; const G2 = app.f?.game; if (!G2?.auto || G2.state.finished || anim) return;
+      if (document.querySelector('.sheet')) { scheduleAuto(app.f); return; } // a halftime or tutorial sheet is open: wait
+      autoStep(app.f);
+    }, (G.autoSpeed || 1) === 2 ? 300 : 700);
+  }
+  function autoStep(f) {
+    const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me); const teams = teamsFor(f);
+    if (G.lastEvent?.needsContinue) return act(f, {});
+    if (s.phase === 'kickoff' || s.phase === 'free_kick') return act(f, s.kickingTeam === me ? { kickoff: 'normal' } : {});
+    if (s.phase === 'try') {
+      if (s.tryTeam !== me) return act(f, {});
+      if (AI.tryDecision(s) === 'two') { const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t))); G.selected.offense = plays[0] || teams[me].offensePlays[0]; return act(f, { tryChoice: 'two' }); }
+      return act(f, { tryChoice: 'kick' });
+    }
+    if (s.phase !== 'scrimmage') return act(f, {});
+    const myBall = s.possession === me; const side = myBall ? 'offense' : 'defense';
+    const plan = teams[me][myBall ? 'offensePlays' : 'defensePlays'];
+    G.selected[side] = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them]) || plan[0];
+    if (myBall && s.down === 4) { const dec = AI.fourthDownDecision(s, teams[me]); return act(f, dec === 'punt' ? { fourthDown: 'punt' } : dec === 'fg' ? { fourthDown: 'fg' } : {}); }
+    if (myBall && AI.shouldKneel(s)) { R.kneel(s); return afterStep(f, { kind: 'kneel', text: s.lastPlay.text }); }
+    return act(f, {});
+  }
+
+  /** The clock line under the score (GDD §20.4): is time going to come off at the next snap, and how much. */
+  function clockStateHtml(s, G, myBall) {
+    if (s.finished || s.ot || s.phase !== 'scrimmage') return '';
+    if (!s.clockRunning) return '<div class="clockstate stopped">⏸ STOPPED · snap costs 0 s</div>';
+    const tempo = myBall ? (G.tempo || 'normal') : null; const cost = tempo ? R.RUNOFF[tempo] : null;
+    const unstoppable = s.timeouts[myBall ? R.opponent(s.possession) : s.possession] === 0 && s.clock <= R.RUNOFF.milk;
+    return `<div class="clockstate running">▶ RUNNING · ${cost != null ? `−${cost} s at snap` : 'time off at snap'}${unstoppable ? ' · can’t be stopped' : ''}</div>`;
+  }
+  /** The ⓘ sheet: every control on the match screen, in plain words. */
+  function matchHelpHtml(f) {
+    return `<h3>Downs</h3><p>Four tries to gain 10 yards. Make it and you get four more; reach the end zone for a touchdown (6, plus a 1-point kick). On fourth down you usually punt or kick a field goal (3).</p>
+      <h3>The clock</h3><p>The clock does not tick on its own: each play uses a few seconds, and if the last play ended with the clock <b>running</b> (tackled in bounds, no score), the time between plays comes off <b>when you snap</b> — ${R.RUNOFF.normal} s at normal tempo, ${R.RUNOFF.hurry} s in hurry-up, ${R.RUNOFF.milk} s milking it. The line under the score tells you which. An incompletion, a run out of bounds, a score or a timeout stops it: the next snap then costs nothing.</p>
+      <h3>Timeout · Spike · Kneel · Tempo</h3><p><b>Timeout</b> (three a half) stops the clock so your next snap costs no time — on defense it is how you get the ball back from a team running the clock out. <b>Hurry-up</b> tempo cuts the runoff to ${R.RUNOFF.hurry} s for free; <b>milk clock</b> raises it to ${R.RUNOFF.milk} s when you are protecting a lead. <b>Spike</b> stops the clock for the price of a down (appears under a minute); <b>kneel</b> burns time when you are ahead — if the other side has no timeouts and less than ${R.RUNOFF.milk} s is left, the clock runs out and the game is over.</p>
+      <h3>Calling plays</h3><p>Pick one of the six cards you set on Friday and press Snap; on defense pick a defense. ★ is the coach's suggestion; ✦ counters what you learned scouting; a greyed card needs a package you cannot field. <b>FG</b> kicks on any down when the kick is makeable.</p>
+      <h3>Key Moments · Full Coaching · Auto · Sim</h3><p><b>Key Moments</b> simulates the routine downs and stops for the big ones; <b>Full Coaching</b> lets you call every snap. <b>Auto</b> calls the coach's plays for you (1× or 2×) until you stop it. <b>Sim to key moment</b> jumps ahead; <b>Sim to final</b> ends the game at once.</p>
+      <h3>Edges</h3><p>${F.comebackRule(f) ? `<b>Comeback mode:</b> down ${F.COMEBACK.margin}+ in the fourth, either side plays with +${F.COMEBACK.edge}. ` : ''}<b>Scheme lock:</b> all starters on a side fitting the coordinator's scheme play with +${F.SCHEME_LOCK_EDGE}. Training (T) and media day (+) lifts show on the pregame lineup. Abilities fire on the strip under the field.</p>`;
+  }
   function controlsHtml(f, teams, look) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
+    // While a play animates in Auto, keep the Auto controls on screen so it can be stopped at any moment (no Skip: Auto is already watching the game for you).
+    if (anim && G.auto) return `<div class="match-actions"><div class="secondary"><button class="btn primary big" data-action="auto" style="flex:2">Auto ■ stop</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="Auto speed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div><p class="dim center" style="margin:4px 0 0">Auto is calling the coach's plays. Stop and you take over on the next snap.</p></div>`;
     if (anim) return `<div class="match-actions"><button class="btn block" data-action="skip">Skip ▸▸</button></div>`;
+    // Auto stays stoppable in every phase it plays through (continues, kickoffs, tries), not only at the snap.
+    const autoBar = G.auto && !s.finished ? `<div class="secondary" style="margin-bottom:6px"><button class="btn primary" data-action="auto" style="flex:2">Auto ■ stop</button><button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button></div>` : '';
     if (s.finished) return `<div class="match-actions"><div class="panel center"><h2>${s.winner === me ? 'VICTORY' : s.winner === null ? 'TIE' : 'DEFEAT'}</h2><div class="muted">${esc(s.away.name)} ${s.score.away} — ${esc(s.home.name)} ${s.score.home}${s.ot ? ' (OT)' : ''}</div></div><button class="btn primary big block" data-action="finish">Continue →</button></div>`;
-    if (G.lastEvent?.needsContinue) return `<div class="match-actions"><button class="btn primary big block" data-action="continue">Continue →</button></div>`;
+    if (G.lastEvent?.needsContinue) return `<div class="match-actions">${autoBar}<button class="btn primary big block" data-action="continue">Continue →</button></div>`;
     if (s.phase === 'kickoff' || s.phase === 'free_kick') {
       const weKick = s.kickingTeam === me;
-      return `<div class="match-actions">${weKick ? `<div class="primary-row ${s.phase === 'kickoff' ? 'three' : ''}" style="grid-template-columns:${s.phase === 'kickoff' ? '2fr 1fr' : '1fr'}"><button class="btn primary big" data-action="kickoff">${s.phase === 'free_kick' ? 'Free kick' : 'Kick off'}</button>${s.phase === 'kickoff' ? '<button class="btn" data-action="onside">Onside</button>' : ''}</div>` : `<button class="btn primary big block" data-action="kickoff">Receive the kick</button>`}</div>`;
+      return `<div class="match-actions">${autoBar}${weKick ? `<div class="primary-row ${s.phase === 'kickoff' ? 'three' : ''}" style="grid-template-columns:${s.phase === 'kickoff' ? '2fr 1fr' : '1fr'}"><button class="btn primary big" data-action="kickoff">${s.phase === 'free_kick' ? 'Free kick' : 'Kick off'}</button>${s.phase === 'kickoff' ? '<button class="btn" data-action="onside">Onside</button>' : ''}</div>` : `<button class="btn primary big block" data-action="kickoff">Receive the kick</button>`}</div>`;
     }
     if (s.phase === 'try') {
-      if (s.tryTeam !== me) return `<div class="match-actions"><button class="btn primary big block" data-action="continue">Opponent's try — continue</button></div>`;
+      if (s.tryTeam !== me) return `<div class="match-actions">${autoBar}<button class="btn primary big block" data-action="continue">Opponent's try — continue</button></div>`;
       const two = PLAYS; const plays = teams[me].offensePlays.filter((id) => PLAYS[id].tags.some((t) => ['short', 'goalline', 'redzone', 'quick'].includes(t)));
-      return `<div class="match-actions"><p class="muted center" style="margin:0">Touchdown! Kick (${AI.tryDecision(s) === 'two' ? 'coach suggests two' : 'coach suggests the kick'})</p>
+      return `<div class="match-actions">${autoBar}<p class="muted center" style="margin:0">Touchdown! Kick (${AI.tryDecision(s) === 'two' ? 'coach suggests two' : 'coach suggests the kick'})</p>
         <div class="primary-row" style="grid-template-columns:1fr 1fr"><button class="btn primary big" data-action="trykick">Kick PAT (+1)</button><button class="btn big" data-action="trytwo">Go for two</button></div>
         ${cards(plays, 'offense', G.selected.offense, null)}</div>`;
     }
@@ -191,15 +268,22 @@ export function registerMatchScreens(Router, app) {
       const fg = R.fieldGoalInfo(s, teams); const dec = AI.fourthDownDecision(s, teams[me]);
       primary = `<div class="primary-row three"><button class="btn ${dec === 'go' ? 'primary' : ''} big" data-action="snap" ${selected ? '' : 'disabled'}>Go for it</button><button class="btn ${dec === 'punt' ? 'primary' : ''} big" data-action="punt">Punt</button><button class="btn ${dec === 'fg' ? 'primary' : ''} big" data-action="fg">FG ${fg.distance} yd<br><small>${Math.round(fg.chance * 100)}%</small></button></div>`;
     } else primary = `<button class="btn primary big block" data-action="snap" ${selected ? '' : 'disabled'}>${myBall ? (selected ? `Snap · ${esc(PLAYS[selected].name)}` : 'Pick a play') : (selected ? `Set defense · ${esc(PLAYS[selected].name)}` : 'Pick a defense')}</button>`;
+    // Early field goal: on any down, when the kick is makeable; highlighted when a half is about to end.
+    let fgEarly = '';
+    if (myBall && s.down < 4 && s.phase === 'scrimmage') { const fg = R.fieldGoalInfo(s, teams); if (fg.chance >= 0.2) fgEarly = `<button class="btn small ${!s.ot && s.clock <= 30 && (s.quarter === 2 || s.quarter >= 4) ? 'good' : ''}" data-action="fg" title="Kick now instead of running a play">FG ${fg.distance} yd · ${Math.round(fg.chance * 100)}%</button>`; }
     const secondary = `<div class="secondary">
       <button class="btn small" data-action="timeout" ${s.timeouts[me] ? '' : 'disabled'}>Timeout (${s.timeouts[me]})</button>
       ${myBall ? `<select class="btn small" data-change="tempo" aria-label="Tempo" style="min-height:36px;margin:0;flex:1"><option value="normal" ${(G.tempo || 'normal') === 'normal' ? 'selected' : ''}>Tempo: normal</option><option value="hurry" ${G.tempo === 'hurry' ? 'selected' : ''}>Tempo: hurry-up</option><option value="milk" ${G.tempo === 'milk' ? 'selected' : ''}>Tempo: milk clock</option></select>` : ''}
+      ${fgEarly}
       ${myBall && AI.shouldKneel(s) ? '<button class="btn small" data-action="kneel">Kneel</button>' : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? '<button class="btn small" data-action="spike">Spike</button>' : ''}
+      <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="Auto: the coach's suggested plays are called for you, every play animated, until you turn it off">${G.auto ? 'Auto ■ stop' : 'Auto ▶'}</button>
+      ${G.auto ? `<button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="Auto speed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button>` : ''}
       <button class="btn small" data-action="mode">${G.mode === 'key' ? 'Key Moments ✓' : 'Full Coaching ✓'}</button>
+      <button class="btn small" data-action="simfinal" title="Skip the rest of the game">Sim to final ⏭</button>
       ${G.mode === 'key' ? '<button class="btn small good" data-action="keymoment">Sim to key moment ▸</button>' : ''}</div>`;
     const clock = f.settings.liveClock && s.phase === 'scrimmage' ? `<div class="playclock">Play clock <b id="pc">40</b><div class="bar"><i id="pcbar" style="width:100%"></i></div></div>` : '';
     return `<div class="match-actions">${primary}${secondary}${clock}</div>
-      <div class="muted" style="font-size:12px;margin:4px 0">${myBall ? 'Your offensive plays' : 'Your defensive plays'} · ★ coach's suggestion · opponent's call is hidden</div>
+      <div class="muted" style="font-size:12px;margin:4px 0">${myBall ? 'Your offensive plays' : 'Your defensive plays'} · ★ coach's suggestion · opponent's call is hidden${teams[me].blockedPlays?.length ? ` · <span style="color:var(--bad)">${teams[me].blockedPlays.length} play${teams[me].blockedPlays.length === 1 ? '' : 's'} unavailable (no legal ${teams[me].blockedSlots.join('/')})</span>` : ''}</div>
       ${cards(plan, side, selected, suggestion)}`;
   }
   function cards(ids, side, selected, suggestion) {
@@ -240,23 +324,26 @@ export function registerMatchScreens(Router, app) {
       const frames = kickFrames(ev);
       if (frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = { frames, ballOn: 0, ballLat: 0, kick: true }; startAnim(f, ev); return; }
     }
-    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false };
+    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev) };
     app.save(); Router.render();
   }
   function startAnim(f, ev) {
     const G = f.game; const sim = ev.sim;
-    anim = { frames: sim.frames, i: 0, ev, camera: sim.kick ? cameraFor(Math.max(0, sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / (f.settings.speed || 1), follow: !!sim.kick, sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
+    anim = { frames: sim.frames, i: 0, ev, camera: sim.kick ? cameraFor(Math.max(0, sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / ((f.settings.speed || 1) * (G.auto ? (G.autoSpeed || 1) : 1)), follow: !!sim.kick, sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
     G.lastEvent = null;
     Router.render();
-    const svg = document.querySelector('#field');
     const tick = (now) => {
       if (!anim) return;
-      const idx = Math.min(sim.frames.length - 1, Math.floor((now - anim.start) / anim.msPerFrame));
+      // requestAnimationFrame timestamps can sit a hair before the performance.now() taken at start: clamp at frame 0, never finish early.
+      const idx = Math.max(0, Math.min(sim.frames.length - 1, Math.floor((now - anim.start) / anim.msPerFrame)));
+      if (!sim.frames.length) { finishAnim(f, false); return; } // a play with no frames (nothing to draw)
+      const svg = document.querySelector('#field'); // re-query: stopping Auto mid-play re-renders the screen
       if (idx !== anim.i && svg) {
         anim.i = idx;
         const s = G.state;
         if (anim.follow) { const target = cameraFor(sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
-        svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: sim.frames[idx], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
+        const ft = sim.frames[idx].t; const flashes = (sim.events || []).filter((e) => e.kind === 'ability' && !e.trait && ft >= e.t && ft - e.t < 1.2).map((e) => ({ team: e.side, slot: e.by, label: abilityLabel(e), age: (ft - e.t) / 1.2 }));
+        svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: sim.frames[idx], flashes, ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
       }
       if (idx >= sim.frames.length - 1) { finishAnim(f, false); return; }
       anim.raf = requestAnimationFrame(tick);
@@ -276,9 +363,12 @@ export function registerMatchScreens(Router, app) {
     if (!anim) return;
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
     const G = f.game;
-    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false };
+    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev) };
     app.save(); Router.render();
   }
+  /** "Flaroo's Quick Feet kicks in" → "Flaroo · Quick Feet". */
+  function abilityLabel(e) { const m = /^(.*)'s (.*) kicks in$/.exec(e.text || ''); return m ? m[2] : 'ability'; }
+  function abilitiesFired(ev) { const off = ev.offenseSide || 'home'; return (ev.sim?.events || []).filter((e) => e.kind === 'ability').sort((a, b) => (a.trait ? 1 : 0) - (b.trait ? 1 : 0)).map((e) => { const m = /^(.*)'s (.*) kicks in$/.exec(e.text || ''); return { team: e.side === 'off' ? off : R.opponent(off), who: m ? m[1] : e.by, what: m ? m[2] : 'ability', trait: !!e.trait }; }); }
   function stopAnim() { if (anim) { cancelAnimationFrame(anim.raf); anim = null; } }
 
   /** Key Moments: let the AI run routine downs for the player until something matters. */
@@ -311,6 +401,18 @@ export function registerMatchScreens(Router, app) {
     if (lines.length > 1) sheet(`<div class="log">${lines.map((l) => `<div class="entry"><span class="t"></span><span>${esc(l)}</span></div>`).join('')}</div>`, { title: 'Simulated plays' });
   }
 
+  /** Skip the rest of the game: the coach plays it out headless, then the final whistle screen. */
+  function simToFinal(f) {
+    const G = f.game; const s = G.state; if (s.finished) return;
+    const teams = teamsFor(f); const me = G.playerSide, them = R.opponent(me);
+    const controllers = { [me]: aiController(me), [them]: aiController(them) };
+    let n = 0; while (!s.finished && n++ < 600) { const ev = step(s, teams, controllers, G.tendencies, {}); if (!ev) break; }
+    stopAnim(); clearTimeout(autoTimer); autoTimer = null; G.auto = false;
+    G.lastEvent = { text: `Simulated to the final whistle. ${s[me].name} ${s.score[me]}, ${s[them].name} ${s.score[them]}.`, important: true };
+    G.selected = { offense: null, defense: null }; G.aiCall = null;
+    app.save(); Router.render();
+  }
+
   function showLog(f) {
     const s = f.game?.state; if (!s) return;
     sheet(`<div class="log">${s.log.slice().reverse().map((e) => `<div class="entry ${e.important ? 'important' : ''}"><span class="t">${R.quarterText({ quarter: e.q })} ${fmtClock(e.clock)}</span><span>${esc(e.text)}${e.repro ? `<br><small class="dim mono">repro ${esc(e.repro)}</small>` : ''}</span></div>`).join('')}</div><p class="dim">A repro code replays that exact play: <span class="mono">node tests/tools/replay.js CODE</span>.</p>`, { title: 'Play-by-play' });
@@ -320,10 +422,30 @@ export function registerMatchScreens(Router, app) {
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
     const teams = teamsFor(f);
-    const box = boxScoreHtml(s, teams, { title: `Final${s.ot ? ' (OT)' : ''}` });
     const r = F.finishSunday(f, s); app.save(); Save.backup(f);
     const ev = r.events || [];
-    sheet(`${box}${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured — ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: 'Final', onClose: () => Router.go('hq', {}, { reset: true }) });
+    const badgeClub = r.newBadge; const gym = badgeClub ? GYM_BY_CLUB[badgeClub] : null;
+    const box = boxScoreHtml(s, teams, { title: gym ? `Final${s.ot ? ' (OT)' : ''} · 🏅 BADGE GAME WON` : `Final${s.ot ? ' (OT)' : ''}` });
+    const toHq = () => Router.go('hq', {}, { reset: true });
+    // Gym cleared: the beaten coach's handshake first, then the badge itself (GDD §15.4, playtest round 3).
+    const handshake = () => {
+      if (!gym) return toHq();
+      const hue = TYPES[gym.element]?.hue ?? 120; const lines = beatenLines(badgeClub);
+      const { close } = sheet(`<div class="talk handshake"><div class="row" style="gap:12px;align-items:flex-start">${portraitSprite(gym.coach.portrait, 56, { hue })}<div class="grow"><div class="talk-name">${esc(gym.coach.name)} <span class="dim">· head coach, ${esc(badgeClub)}</span></div>${lines.map((l) => `<p class="talk-line">“${esc(l)}”</p>`).join('')}</div></div>
+        <button class="btn primary big block" data-action="shake" style="margin-top:10px">🤝 Shake hands</button></div>`, { title: 'Midfield', onClose: celebrate });
+      document.querySelector('.sheet [data-action="shake"]')?.addEventListener('click', () => close());
+    };
+    const celebrate = () => {
+      if (!gym) return toHq();
+      const hue = TYPES[gym.element]?.hue ?? 120; const n = Object.keys(f.campaign.badges).length; const sp = SPECIES_BY_ID[gym.legendary];
+      const { close } = sheet(`<div class="badge-win" style="--hue:${hue}"><div class="badge-win-ring"><span>★</span></div><div class="badge-win-title">BADGE EARNED</div><div class="badge-win-name">${esc(gym.badge)}</div>
+        <p class="muted">${esc(gym.coach.name)} and the ${esc(badgeClub)} fall, ${s.score[me]}–${s.score[R.opponent(me)]}. That's badge ${n} of 8.</p>
+        <div class="row" style="justify-content:center;gap:10px">${portraitSprite(gym.coach.portrait, 44, { hue })}<p class="talk-line" style="margin:0;max-width:26ch">“${esc(BADGE_LINES[n % BADGE_LINES.length])}”</p></div>
+        ${sp ? `<p class="dim" style="margin-top:8px">${esc(sp.name)}, their legendary, can now be tracked when you win the Beast Bowl.</p>` : ''}
+        <button class="btn primary big block" data-action="badge-ok" style="margin-top:8px">Continue</button></div>`, { title: 'Gym cleared', onClose: toHq });
+      document.querySelector('.sheet [data-action="badge-ok"]')?.addEventListener('click', () => close());
+    };
+    sheet(`${box}${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured — ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: gym ? 'Final · badge game' : 'Final', onClose: handshake });
   }
 
   function startPlayClock(f, root) {
@@ -341,4 +463,13 @@ export function registerMatchScreens(Router, app) {
       } else if (left <= 0) left = 40;
     }, 250);
   }
+}
+
+/** The other coach's words before the lineups (GDD §15.5): portrait, lines, and one reply the player may give. */
+function talkHtml(f) {
+  const t = F.pregameTalk(f); if (!t) return '';
+  const hue = t.speaker.element ? (TYPES[t.speaker.element]?.hue ?? 120) : null;
+  const chosen = t.replies.find((r) => r.id === t.reply);
+  return `<div class="talk ${t.kind}"><div class="row" style="align-items:flex-start;flex-wrap:nowrap">${portraitSprite(t.speaker.portrait, 48, { hue })}<div class="grow" style="min-width:0"><div class="muted" style="font-size:11px;letter-spacing:.06em">${esc(t.speaker.name).toUpperCase()} · ${esc(t.title)}</div>${t.lines.map((l) => `<p class="talk-line">“${esc(l)}”</p>`).join('')}</div></div>
+    ${t.replies && t.replies.length && t.kind !== 'ordinary' ? (chosen ? `<div class="talk-reply"><span class="dim">You:</span> “${esc(chosen.label)}” <span class="dim">· ${esc(chosen.text)}</span></div>` : `<div class="talk-replies">${t.replies.map((r) => `<button class="btn small" data-action="reply" data-v="${r.id}" title="${esc(r.text)}">${esc(r.label)}</button>`).join('')}</div>`) : ''}</div>`;
 }

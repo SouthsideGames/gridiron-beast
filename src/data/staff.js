@@ -18,21 +18,21 @@ export const PLAYBOOKS = Object.freeze({
 });
 
 export const STAFF = Object.freeze([
-  { id: 'hc_flint', name: 'Marcus Flint', role: 'head_coach', overall: 82, style: 'Physical', strength: 'Power running and toughness', salary: 180000, identity: { offense: 'run', defense: 'pressure', aggression: 0.65, passBias: 0.42 } },
-  { id: 'hc_vale', name: 'Avery Vale', role: 'head_coach', overall: 80, style: 'Balanced', strength: 'Adaptable game plans', salary: 160000, identity: { offense: 'balanced', defense: 'balanced', aggression: 0.5, passBias: 0.55 } },
-  { id: 'hc_reyes', name: 'Jordan Reyes', role: 'head_coach', overall: 84, style: 'Speed', strength: 'Tempo and passing preparation', salary: 195000, identity: { offense: 'pass', defense: 'coverage', aggression: 0.55, passBias: 0.66 } },
-  { id: 'oc_swift', name: 'Elena Swift', role: 'offensive_coordinator', overall: 86, style: 'Air Raid', strength: 'Passing and receiver development', salary: 150000, scheme: 'pass' },
-  { id: 'oc_brock', name: 'Tobias Brock', role: 'offensive_coordinator', overall: 83, style: 'Ground Attack', strength: 'Power and outside runs', salary: 130000, scheme: 'run' },
-  { id: 'oc_park', name: 'Nia Park', role: 'offensive_coordinator', overall: 80, style: 'Balanced', strength: 'Flexible run-pass approach', salary: 125000, scheme: 'balanced' },
-  { id: 'dc_stone', name: 'Darius Stone', role: 'defensive_coordinator', overall: 84, style: 'Blitz Heavy', strength: 'Quarterback pressure', salary: 145000, scheme: 'pressure' },
-  { id: 'dc_ice', name: 'Iris Frost', role: 'defensive_coordinator', overall: 85, style: 'Zone Control', strength: 'Deep pass defense', salary: 155000, scheme: 'coverage' },
-  { id: 'dc_fox', name: 'Ronan Fox', role: 'defensive_coordinator', overall: 81, style: 'Man Coverage', strength: 'One-on-one coverage', salary: 120000, scheme: 'man' },
-  { id: 'sc_tide', name: 'Marina Tide', role: 'head_scout', overall: 88, style: 'Water Specialist', strength: 'Coastal scouting', salary: 125000, biomes: { water: 95, fire: 10, forest: 42, ice: 72 } },
-  { id: 'sc_ash', name: 'Ash Calder', role: 'head_scout', overall: 86, style: 'Fire Specialist', strength: 'Volcanic scouting', salary: 120000, biomes: { water: 12, fire: 95, forest: 45, ice: 24 } },
-  { id: 'sc_moss', name: 'Rowan Moss', role: 'head_scout', overall: 80, style: 'Generalist', strength: 'Consistent across all biomes', salary: 110000, biomes: { water: 65, fire: 65, forest: 65, ice: 65 } },
-  { id: 'tr_speed', name: 'Sera Dash', role: 'monster_trainer', overall: 84, style: 'Speed & Agility', strength: 'Best at Rushing and Coverage focus', salary: 115000, bonus: { rushing: 5, coverage: 4, passing: 2, pass_rush: 2 } },
-  { id: 'tr_power', name: 'Bram Forge', role: 'monster_trainer', overall: 83, style: 'Power & Contact', strength: 'Best at Pass Rush and Rushing focus', salary: 110000, bonus: { pass_rush: 5, rushing: 4, coverage: 2, passing: 2 } },
-  { id: 'tr_focus', name: 'Nia Focus', role: 'monster_trainer', overall: 86, style: 'Technique', strength: 'Best at Passing and Coverage focus', salary: 125000, bonus: { passing: 5, coverage: 4, rushing: 2, pass_rush: 2 } },
+  { id: 'hc_flint', name: 'Marcus Flint', role: 'head_coach', overall: 82, style: 'Physical', strength: 'Power running and toughness', salary: 108000, identity: { offense: 'run', defense: 'pressure', aggression: 0.65, passBias: 0.42 } },
+  { id: 'hc_vale', name: 'Avery Vale', role: 'head_coach', overall: 80, style: 'Balanced', strength: 'Adaptable game plans', salary: 96000, identity: { offense: 'balanced', defense: 'balanced', aggression: 0.5, passBias: 0.55 } },
+  { id: 'hc_reyes', name: 'Jordan Reyes', role: 'head_coach', overall: 84, style: 'Speed', strength: 'Tempo and passing preparation', salary: 117000, identity: { offense: 'pass', defense: 'coverage', aggression: 0.55, passBias: 0.66 } },
+  { id: 'oc_swift', name: 'Elena Swift', role: 'offensive_coordinator', overall: 86, style: 'Air Raid', strength: 'Passing and receiver development', salary: 90000, scheme: 'pass' },
+  { id: 'oc_brock', name: 'Tobias Brock', role: 'offensive_coordinator', overall: 83, style: 'Ground Attack', strength: 'Power and outside runs', salary: 78000, scheme: 'run' },
+  { id: 'oc_park', name: 'Nia Park', role: 'offensive_coordinator', overall: 80, style: 'Balanced', strength: 'Flexible run-pass approach', salary: 75000, scheme: 'balanced' },
+  { id: 'dc_stone', name: 'Darius Stone', role: 'defensive_coordinator', overall: 84, style: 'Blitz Heavy', strength: 'Quarterback pressure', salary: 87000, scheme: 'pressure' },
+  { id: 'dc_ice', name: 'Iris Frost', role: 'defensive_coordinator', overall: 85, style: 'Zone Control', strength: 'Deep pass defense', salary: 93000, scheme: 'coverage' },
+  { id: 'dc_fox', name: 'Ronan Fox', role: 'defensive_coordinator', overall: 81, style: 'Man Coverage', strength: 'One-on-one coverage', salary: 72000, scheme: 'man' },
+  { id: 'sc_tide', name: 'Marina Tide', role: 'head_scout', overall: 88, style: 'Water Specialist', strength: 'Coastal scouting', salary: 75000, biomes: { water: 95, fire: 10, forest: 42, ice: 72 } },
+  { id: 'sc_ash', name: 'Ash Calder', role: 'head_scout', overall: 86, style: 'Fire Specialist', strength: 'Volcanic scouting', salary: 72000, biomes: { water: 12, fire: 95, forest: 45, ice: 24 } },
+  { id: 'sc_moss', name: 'Rowan Moss', role: 'head_scout', overall: 80, style: 'Generalist', strength: 'Consistent across all biomes', salary: 66000, biomes: { water: 65, fire: 65, forest: 65, ice: 65 } },
+  { id: 'tr_speed', name: 'Sera Dash', role: 'monster_trainer', overall: 84, style: 'Speed & Agility', strength: 'Best at Rushing and Coverage focus', salary: 69000, bonus: { rushing: 5, coverage: 4, passing: 2, pass_rush: 2 } },
+  { id: 'tr_power', name: 'Bram Forge', role: 'monster_trainer', overall: 83, style: 'Power & Contact', strength: 'Best at Pass Rush and Rushing focus', salary: 66000, bonus: { pass_rush: 5, rushing: 4, coverage: 2, passing: 2 } },
+  { id: 'tr_focus', name: 'Nia Focus', role: 'monster_trainer', overall: 86, style: 'Technique', strength: 'Best at Passing and Coverage focus', salary: 75000, bonus: { passing: 5, coverage: 4, rushing: 2, pass_rush: 2 } },
 ]);
 export const staffById = (id) => STAFF.find((s) => s.id === id) || null;
 
@@ -71,4 +71,12 @@ export const REGIONS = Object.freeze({
   'Shadow Marsh': { biome: 'forest', types: ['Dark', 'Water', 'Psychic'] },
   'Iron Wastes': { biome: 'fire', types: ['Metal', 'Earth', 'Dragon'] },
   'Celestial Highlands': { biome: 'ice', types: ['Light', 'Psychic', 'Wind'] },
+});
+
+/** Owner backgrounds chosen at creation (GDD §15.13): flavour plus one small perk. */
+export const BACKGROUNDS = Object.freeze({
+  player: { label: 'Former player', text: 'You played the game. Training sessions succeed a little more often (+6%).', perk: 'training' },
+  scout: { label: 'Former scout', text: 'You know what to look for. Scouting reveals one more rating on every prospect.', perk: 'scouting' },
+  analyst: { label: 'Analyst', text: 'You live in the tape. Thursday reports show one extra opponent play from week 1.', perk: 'analyst' },
+  business: { label: 'Businessperson', text: 'You know money. The salary cap is 4% higher.', perk: 'cap' },
 });

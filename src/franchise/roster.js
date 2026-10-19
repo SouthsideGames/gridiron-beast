@@ -1,8 +1,8 @@
 // Depth chart and team building: turns a roster of monsters into the
 // slot → attributes lineup the engine consumes.
 
-import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, canPlay } from '../data/personnel.js';
-import { effectiveAttributes, monsterOverall, createRoster } from '../data/monsters.js';
+import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, canPlay, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../data/personnel.js';
+import { effectiveAttributes, monsterOverall, createRoster, speciesEffect } from '../data/monsters.js';
 import { OFFENSE_IDS, DEFENSE_IDS, PLAYS, counterPlays } from '../data/playbook.js';
 import { createRng } from '../core/rng.js';
 const PLAYS_IDS = new Set(Object.keys(PLAYS));
@@ -33,24 +33,29 @@ export function buildDepthChart(roster, manual = {}, depth = null) {
   const chart = {}; const used = new Set();
   const take = (slot, m) => { chart[slot] = m.id; used.add(m.id); };
   const all = [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'];
+  const BASE = new Set([...OFFENSE_BASE, ...DEFENSE_BASE, 'K']);
   for (const slot of all) {
     const id = manual?.[slot]; const m = roster.find((x) => x.id === id);
     if (m && !used.has(m.id) && available(m) && canPlay(m.position, slot)) take(slot, m);
   }
-  if (depth) {
-    for (const [group, slots] of Object.entries(GROUP_SLOTS)) {
-      const order = depthOrder(roster, depth, group).filter((m) => available(m) && !used.has(m.id));
-      for (const slot of slots) { if (chart[slot]) continue; const m = order.shift(); if (m) take(slot, m); }
+  // Base starters come first across every group (a spare lineman covers LB2 before he is a third lineman in Heavy), then the package slots.
+  for (const phase of ['base', 'package']) {
+    const slots = all.filter((sl) => (phase === 'base') === BASE.has(sl));
+    if (depth) {
+      for (const [group, gslots] of Object.entries(GROUP_SLOTS)) {
+        const order = depthOrder(roster, depth, group).filter((m) => available(m) && !used.has(m.id));
+        for (const slot of gslots) { if (!slots.includes(slot) || chart[slot]) continue; const m = order.shift(); if (m) take(slot, m); }
+      }
     }
-  }
-  for (const slot of all) {
-    if (chart[slot]) continue;
-    const need = positionOf(slot);
-    const primary = roster.filter((m) => !used.has(m.id) && available(m) && m.position === need).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
-    if (primary) { take(slot, primary); continue; }
-    const secondary = roster.filter((m) => !used.has(m.id) && available(m) && canPlay(m.position, slot)).sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0];
-    if (secondary) { take(slot, secondary); continue; }
-    chart[slot] = null;
+    for (const slot of slots) {
+      if (chart[slot]) continue;
+      const need = positionOf(slot);
+      const primary = roster.filter((m) => !used.has(m.id) && available(m) && m.position === need).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+      if (primary) { take(slot, primary); continue; }
+      const secondary = roster.filter((m) => !used.has(m.id) && available(m) && canPlay(m.position, slot)).sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0];
+      if (secondary) { take(slot, secondary); continue; }
+      chart[slot] = null;
+    }
   }
   return chart;
 }
@@ -60,26 +65,61 @@ export function lineupFromChart(roster, chart, { trainingBonus = null } = {}) {
   const slotInput = (slot) => {
     const m = byId[chart[slot]];
     if (!m) return { attrs: {}, name: slot, id: null };
-    return { attrs: effectiveAttributes(m, { slotPosition: positionOf(slot), trainingBonus }), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position };
+    return { attrs: effectiveAttributes(m, { slotPosition: positionOf(slot), trainingBonus }), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position, yearsPro: m.yearsPro ?? null };
   };
   const offense = Object.fromEntries(OFFENSE_SLOTS.map((s) => [s, slotInput(s)]));
   const defense = Object.fromEntries(DEFENSE_SLOTS.map((s) => [s, slotInput(s)]));
   const kicker = slotInput('K');
+  const kickBoost = kicker.species ? speciesEffect(kicker.species)?.effect?.attrs?.kicking : 0; // the engine applies effect attrs on scrimmage plays; kicks resolve outside it
+  if (kickBoost && kicker.attrs.kicking) kicker.attrs.kicking = Math.min(99, kicker.attrs.kicking + kickBoost);
   const returnerSlot = ['WR2', 'RB', 'WR1', 'CB2'].find((s) => byId[chart[s]]) || 'RB';
   return { offense, defense, kicker, returner: slotInput(returnerSlot) };
 }
 
-/** Missing slots the roster cannot legally fill. */
-export function lineupProblems(roster, chart) {
-  return [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'].filter((s) => !chart[s]);
+/**
+ * Who may cover an empty slot (GDD §17.2): only a monster whose primary or
+ * secondary position matches it — a healthy reserve first, else a base starter
+ * who sits out in the packages that use the slot. Never a lineman at safety.
+ */
+export function legalFiller(roster, chart, slot) {
+  const used = new Set(Object.values(chart).filter(Boolean));
+  const need = positionOf(slot);
+  const reserves = roster.filter((m) => available(m) && !used.has(m.id) && canPlay(m.position, slot));
+  const best = (list) => list.sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0] || null;
+  const sitsOut = SITS_OUT[slot] || [];
+  const doubling = sitsOut.map((b) => roster.find((m) => m.id === chart[b])).filter((m) => m && canPlay(m.position, slot));
+  return best(reserves.filter((m) => m.position === need)) || best(reserves) || best(doubling) || null;
 }
+/** Base starters off the field in the packages that use each package slot. */
+export const SITS_OUT = Object.freeze({ SS: ['LB2'], DL3: ['LB2', 'FS'], WR3: ['TE'], C: ['WR2'] });
+/** Base slots (and the kicker) nobody legal can cover: the game cannot be played — a forfeit. */
+export function lineupProblems(roster, chart) {
+  return [...OFFENSE_BASE, ...DEFENSE_BASE, 'K'].filter((s) => !chart[s] && !legalFiller(roster, chart, s));
+}
+/** Package slots with no dedicated monster: who legally fills in, or null when nobody can (plays using that package are unavailable). */
+export function borrowedSlots(roster, chart) {
+  const out = [];
+  for (const slot of [...OFFENSE_PACKAGE_SLOTS, ...DEFENSE_PACKAGE_SLOTS]) {
+    if (chart[slot]) continue;
+    const side = OFFENSE_PACKAGE_SLOTS.includes(slot) ? 'offense' : 'defense';
+    const pick = legalFiller(roster, chart, slot);
+    out.push({ slot, side, name: pick?.name || null, position: pick?.position || null, outOfPosition: pick ? pick.position !== positionOf(slot) : false, legal: !!pick });
+  }
+  return out;
+}
+/** Package slots nobody legal can cover. */
+export function unavailableSlots(roster, chart) { return borrowedSlots(roster, chart).filter((b) => !b.legal).map((b) => b.slot); }
+export const emergencyPick = legalFiller;
 
 /** A complete team object for the runner from a roster. */
 export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = null, offensePlays = null, defensePlays = null, coach = null, trainingBonus = null }) {
   const chart = buildDepthChart(roster, manual, depth);
   const lineup = lineupFromChart(roster, chart, { trainingBonus });
+  const onChart = new Set(Object.values(chart).filter(Boolean));
+  const bench = roster.filter((m) => available(m) && !onChart.has(m.id)).sort((a, b) => monsterOverall(b) - monsterOverall(a))
+    .map((m) => ({ attrs: effectiveAttributes(m), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position, yearsPro: m.yearsPro ?? null }));
   return {
-    id, name, abbr, color, roster, chart, ...lineup,
+    id, name, abbr, color, roster, chart, bench, ...lineup,
     offensePlays: offensePlays || DEFAULT_OFFENSE, defensePlays: defensePlays || DEFAULT_DEFENSE,
     coach: coach || { aggression: 0.5, passBias: null },
   };
@@ -138,8 +178,9 @@ export function adaptPlaybook(seed, base, profile, { swaps = 2 } = {}) {
   const offense = swapIn(base.offense, OFFENSE_IDS, oppDef, swaps, (id, out) => !(PLAYS[id].type === 'run' && out.filter((x) => PLAYS[x].type === 'run').length <= 2));
   return { offense: [...new Set(offense)].slice(0, 6), defense: [...new Set(defense)].slice(0, 6), notes };
 }
-export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null, scouting = null }) {
-  const roster = createRoster(seed, { quality });
+export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null, scouting = null, element = null, legendary = null, signature = null, evolveStage = 0, composition = undefined, afterRoster = null }) {
+  let roster = createRoster(seed, { quality, element, legendary, signature, evolveStage, composition });
+  if (afterRoster) roster = afterRoster(roster) || roster;
   for (const m of roster) delete m.cornerstone;
   let pb = playbookFor(seed ^ 0x9e37, coach || {});
   let notes = [];

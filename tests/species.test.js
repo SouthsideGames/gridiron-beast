@@ -82,3 +82,83 @@ test('old saves migrate: previous species names map onto the dex and keep their 
   migrateSpecies(f); // idempotent
   assert.equal(f.roster[0].name, 'Flaroo');
 });
+
+test('sprite export writes valid PNGs and an atlas for every form', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const fs = await import('node:fs'); const os = await import('node:os'); const path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gb-sprites-'));
+  execFileSync(process.execPath, ['tools/export-sprites.mjs', dir, '1']);
+  const atlas = JSON.parse(fs.readFileSync(path.join(dir, 'atlas.json'), 'utf8'));
+  assert.equal(atlas.sprites.length, 102);
+  for (const s of atlas.sprites) { const head = fs.readFileSync(path.join(dir, s.file)).subarray(0, 8); assert.equal(head.toString('hex'), '89504e470d0a1a0a', s.file); }
+  assert.ok(fs.existsSync(path.join(dir, 'sheet.png')));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('every species ability and trait maps to known engine primitives, and they fire in play', async () => {
+  const { simulatePlay } = await import('../src/sim/engine.js');
+  const { PLAYS, OFFENSE_IDS, DEFENSE_IDS } = await import('../src/data/playbook.js');
+  const { lineup } = await import('./tools/lineup.js');
+  const KNOWN = new Set(['attrs', 'deepThrow', 'burst', 'carryStrength', 'shedStrength', 'pickCatching', 'reaction', 'afterCatch', 'anchor', 'blockStrength', 'blockerStun', 'rebound', 'runStuff', 'elusive', 'elusiveFirst', 'forceFumble', 'fumbleResist', 'noFumble', 'contest', 'catchContest', 'manCoverage', 'rushSpeed', 'pursuitSpeed', 'closeSpeed', 'routeAgility', 'openAccuracy', 'throwVelocity', 'pressureSense', 'noPlayActionBite', 'breakRadius', 'zoneRange', 'aura', 'fatigue']);
+  for (const s of SPECIES_DEX) { const e = s.ability?.effect || TRAITS[s.trait]?.effect; assert.ok(e, s.id); for (const k of Object.keys(e)) assert.ok(KNOWN.has(k), `${s.id}: unknown primitive ${k}`); }
+  // Put each species in a slot for its natural position and count how often its ability logs across a batch.
+  const PASSIVE = new Set(['attrs', 'fatigue', 'forceFumble', 'pickCatching']); // passive, or only on rare events (fumbles, picks)
+  const SLOT = { QB: ['QB', 'off'], RB: ['RB', 'off'], WR: ['WR1', 'off'], TE: ['TE', 'off'], OL: ['LG', 'off'], DL: ['DL1', 'def'], LB: ['LB1', 'def'], CB: ['CB1', 'def'], S: ['FS', 'def'] };
+  const L = lineup(11, 60);
+  const quiet = [];
+  for (const sp of SPECIES_DEX) {
+    const e = sp.ability?.effect || TRAITS[sp.trait].effect;
+    if (Object.keys(e).every((k) => PASSIVE.has(k) || k === 'zoneRange') || !SLOT[sp.position]) continue;
+    const [slot, side] = SLOT[sp.position];
+    let n = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const off = { ...L.offense }, def = { ...L.defense };
+      (side === 'off' ? off : def)[slot] = { ...L[side === 'off' ? 'offense' : 'defense'][slot], species: sp.id, name: sp.name, ability: null };
+      const o = PLAYS[OFFENSE_IDS[(seed * 5) % OFFENSE_IDS.length]], d = PLAYS[DEFENSE_IDS[(seed * 7) % DEFENSE_IDS.length]];
+      const r = simulatePlay({ offensePlay: o, defensePlay: d, ballOn: 30 + (seed % 40), seed, offense: off, defense: def });
+      if (r.events.some((ev) => ev.kind === 'ability' && ev.side === side && ev.by === slot)) n++;
+    }
+    if (n === 0) quiet.push(sp.id);
+  }
+  assert.ok(quiet.length <= 3, `species whose ability never fired in 40 plays: ${quiet.join(', ')}`);
+});
+
+test('the Beast Dex outlives a franchise: discoveries merge into the player store and survive a new franchise', async () => {
+  const F = await import('../src/franchise/franchise.js');
+  const D = await import('../src/franchise/dex-store.js');
+  D.resetDex();
+  const a = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 9 });
+  const signedA = Object.keys(a.dex.signed);
+  assert.ok(signedA.length >= 20);
+  assert.equal(D.dexStatusGlobal(signedA[0]), 'signed');
+  const b = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Stonehaven Titans', cornerstoneOffense: 'Pyronix', cornerstoneDefense: 'Granigor', seed: 10 });
+  assert.equal(F.dexStatus(b, signedA[0]), 'signed', 'a species signed in the previous franchise still counts');
+  assert.equal(F.dexStatus(b, signedA[0], { franchiseOnly: true }) === 'signed', b.dex.signed[signedA[0]] != null);
+  assert.equal(D.dexCountsGlobal().franchises, 2);
+  D.mergeDex({ seen: { aurodrax: { year: 3, week: 2, club: 'x' } } });
+  assert.equal(F.dexStatus(b, 'aurodrax'), 'seen');
+  D.resetDex();
+  assert.equal(D.dexCountsGlobal().seen, 0);
+});
+
+test('evolution: commons evolve at their level, keep numerals, grow, and the dex remembers the form', async () => {
+  const { tryEvolve, formOf, generateMonster, createRoster, monsterOverall } = await import('../src/data/monsters.js');
+  const { createRng } = await import('../src/core/rng.js');
+  const F = await import('../src/franchise/franchise.js');
+  const rng = createRng(3);
+  const m = generateMonster(rng, { species: 'emberfox', position: 'RB', quality: 58 }); m.name = 'Flaroo II';
+  assert.equal(tryEvolve(m), null, 'not before level 10');
+  const before = monsterOverall(m);
+  m.level = 10; const e1 = tryEvolve(m);
+  assert.equal(e1.to, 'Blazynx'); assert.equal(m.name, 'Blazynx II'); assert.equal(m.stage, 1); assert.ok(monsterOverall(m) > before);
+  assert.equal(formOf(m).name, 'Blazynx'); assert.equal(formOf(m).size, 'medium');
+  m.level = 20; const e2 = tryEvolve(m); assert.equal(e2.to, 'Infernox'); assert.equal(m.name, 'Infernox II'); assert.equal(tryEvolve(m), null, 'no third evolution');
+  const u = generateMonster(rng, { species: 'voltfang', position: 'WR', quality: 58 }); u.level = 30; assert.equal(tryEvolve(u), null, 'uncommons do not evolve');
+  // AI rosters in later seasons field evolved commons; the dex remembers forms the player has faced.
+  const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 77 });
+  f.season.year = 4;
+  const t = F.aiTeam(f, 'Harbor Sentinels');
+  assert.ok(t.roster.some((x) => x.stage >= 1), 'season 4 gym club fields evolved monsters');
+  const evolved = t.roster.find((x) => x.stage >= 1); F.dexRecord(f, evolved, 'seen');
+  assert.ok(F.dexFormSeen(f, evolved.species) >= 1);
+});

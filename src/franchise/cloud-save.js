@@ -70,16 +70,48 @@ async function writeNow(f) {
   } catch (e) { setStatus({ error: e?.code || 'unavailable' }); return false; }
 }
 
-/** Debounced mirror (writes at most every few seconds). */
+/**
+ * Mirror with a throttle: a write happens within 4 s of the first pending change
+ * even while saves keep arriving (a match saves every play), and at once for
+ * important changes (a game finished, a week advanced).
+ */
 export function cloudSave(f, { immediate = false } = {}) {
   pending = f;
-  clearTimeout(timer);
-  const run = () => { const p = pending; pending = null; if (p) writeNow(p); };
-  if (immediate) run(); else timer = setTimeout(run, 4000);
+  const run = () => { clearTimeout(timer); timer = null; const p = pending; pending = null; if (p) writeNow(p); };
+  if (immediate) run(); else if (!timer) timer = setTimeout(run, 4000);
 }
 /** Flush a pending write right away (page hidden / unloading). */
-export function cloudFlush() { if (pending) { clearTimeout(timer); const p = pending; pending = null; writeNow(p); } }
+export function cloudFlush() { if (pending) { clearTimeout(timer); timer = null; const p = pending; pending = null; writeNow(p); } }
 export async function cloudClear() {
   const c = await connect(); if (!c) return;
   try { await c.col.doc('save_meta').delete(); } catch { /* ignore */ }
+}
+
+// ------------------------------------------------------------ the player's dex
+let dexTimer = null;
+/** Read the cloud copy of the player's Beast Dex (or null). */
+export async function cloudLoadDex() {
+  const c = await connect(); if (!c) return null;
+  try { const d = await c.col.doc('dex').get(); return d.exists ? d.data() : null; } catch { return null; }
+}
+/** Debounced mirror of the dex document. */
+export function cloudSaveDex(dex) {
+  clearTimeout(dexTimer);
+  dexTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('dex').set(JSON.parse(JSON.stringify(dex))); } catch { /* ignore */ } }, 3000);
+}
+
+// ------------------------------------------------------------ the Hall of Fame
+let hofTimer = null;
+export async function cloudLoadHof() { const c = await connect(); if (!c) return null; try { const d = await c.col.doc('hof').get(); return d.exists ? d.data().cards || null : null; } catch { return null; } }
+export function cloudSaveHof(cards) { clearTimeout(hofTimer); hofTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('hof').set({ cards: JSON.parse(JSON.stringify(cards)), updatedAt: Date.now() }); } catch { /* ignore */ } }, 3000); }
+
+// ------------------------------------------------------------ achievements (GDD §21.4)
+let achTimer = null;
+export async function cloudLoadAchievements() {
+  const c = await connect(); if (!c) return null;
+  try { const d = await c.col.doc('achievements').get(); return d.exists ? d.data() : null; } catch { return null; }
+}
+export function cloudSaveAchievements(data) {
+  clearTimeout(achTimer);
+  achTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('achievements').set(JSON.parse(JSON.stringify(data))); } catch { /* ignore */ } }, 3000);
 }

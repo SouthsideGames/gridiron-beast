@@ -1,32 +1,36 @@
 // XP, level-ups, fatigue, injuries and recovery (GDD §5.1 and §8).
 
-import { xpForLevel, levelUp, monsterOverall, salaryFor } from '../data/monsters.js';
-import { OFFENSE_SLOTS, DEFENSE_SLOTS } from '../data/personnel.js';
+import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints } from '../data/monsters.js';
+import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
+/** Injury-risk multiplier for a monster playing a secondary position. */
+export const OUT_OF_POSITION_RISK = 1.75;
 
 const norm = (v) => Math.max(1, Math.min(99, v ?? 60)) / 99;
 
 /** Apply one game's consequences to the roster. `chart` maps slots to monster ids; `playerStats` from the game state. */
-export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45 } = {}) {
+export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true } = {}) {
   const events = [];
   const byId = Object.fromEntries(roster.map((m) => [m.id, m]));
   for (const slot of [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K']) {
     const m = byId[chart[slot]]; if (!m) continue;
     const st = playerStats?.[slot] || {};
-    let xp = 10 + (won ? 4 : 0);
-    xp += Math.round((st.rushYds || 0) / 10 + (st.recYds || 0) / 10 + (st.passYds || 0) / 25);
-    xp += (st.td || 0) * 6 + (st.tackles || 0) * 2 + (st.sacks || 0) * 5 + (st.int || 0) * 6 + (st.rec || 0);
+    let xp = 24 + (won ? 10 : 0);
+    xp += Math.round((st.rushYds || 0) / 4 + (st.recYds || 0) / 4 + (st.passYds || 0) / 10);
+    xp += (st.td || 0) * 14 + (st.tackles || 0) * 5 + (st.sacks || 0) * 12 + (st.int || 0) * 14 + (st.rec || 0) * 2;
     m.xp += xp;
-    m.stats.games += 1; m.stats.yards += (st.rushYds || 0) + (st.recYds || 0); m.stats.td += st.td || 0; m.stats.tackles += st.tackles || 0; m.stats.sacks += st.sacks || 0; m.stats.int += st.int || 0; m.stats.catches += st.rec || 0;
     while (m.xp >= xpForLevel(m.level)) {
       m.xp -= xpForLevel(m.level);
       const before = monsterOverall(m);
-      levelUp(m, rng);
+      levelUp(m, rng, { autoSpend });
       events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
+      if (autoEvolve) { const evo = tryEvolve(m); if (evo) events.push(evo); } // the owner's monsters wait for the owner (GDD §20.6)
     }
     // Fatigue and injury risk.
     const dur = norm(m.attributes.durability);
-    m.fatigue = Math.min(100, m.fatigue + Math.round(16 + (1 - dur) * 10 + rng.int(6)));
-    const risk = 0.012 + (m.fatigue / 100) * 0.03 + (1 - dur) * 0.03;
+    const stamina = speciesEffect(m)?.effect?.fatigue || 1; // Iron Lungs: tires slower
+    m.fatigue = Math.min(100, m.fatigue + Math.round((16 + (1 - dur) * 10 + rng.int(6)) * stamina));
+    const outOfPosition = slot !== 'K' && positionOf(slot) !== m.position;
+    const risk = (0.012 + (m.fatigue / 100) * 0.03 + (1 - dur) * 0.03) * (outOfPosition ? OUT_OF_POSITION_RISK : 1); // a body doing unfamiliar work breaks more (GDD §17.2)
     if (slot !== 'K' && rng.chance(risk)) {
       const roll = rng.next();
       const severity = roll < 0.6 ? 'Minor' : roll < 0.9 ? 'Moderate' : 'Severe';
@@ -55,7 +59,7 @@ export function recoverWeek(roster, { bye = false } = {}) {
 export function offseason(roster, rng) {
   const events = [];
   for (const m of roster) {
-    m.age += 1; m.fatigue = 0; m.injury = null;
+    m.age += 1; m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
     if (m.age >= 30) {
       for (const k of ['speed', 'agility', 'durability']) m.attributes[k] = Math.max(20, m.attributes[k] - 1 - rng.int(2));
       events.push({ kind: 'decline', id: m.id, name: m.name });

@@ -3,7 +3,7 @@
 
 import { ATTRIBUTES, POSITION_WEIGHTS } from './personnel.js';
 import { createRng, hashString } from '../core/rng.js';
-import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS } from './species.js';
+import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS, TRAITS } from './species.js';
 
 export const TYPES = Object.freeze({
   Fire: { icon: 'flame', bias: { strength: 4, agility: 2 }, hue: 14, blurb: 'Explosive power' },
@@ -100,11 +100,42 @@ export function resolveSpecies(m) {
   return SPECIES_BY_ID[base] || BY_NAME[base.toLowerCase()] || SPECIES_BY_ID[LEGACY_SPECIES_ALIASES[base]] || SPECIES_DEX[hashString(base) % SPECIES_DEX.length];
 }
 export const speciesName = (m) => resolveSpecies(m).name;
+/** An evolved form's design: a size up, a fiercer look, claws then spikes (Prototype 2 evolution; see species.evolution). */
+export function evolvedSpec(s, stage) {
+  if (!stage) return s;
+  const extra = stage === 1 ? ['claws'] : ['claws', 'spikes'];
+  return { ...s, id: `${s.id}_e${stage}`, name: s.evolution[stage - 1]?.name || s.name, size: stage === 1 ? (s.size === 'small' ? 'medium' : 'large') : 'large', look: stage === 1 ? (s.look === 'cute' ? 'cool' : 'fierce') : 'fierce', features: [...new Set([...s.features, ...extra])] };
+}
+/** The form a monster currently shows: its species, evolved as far as its stage. */
+export function formOf(m) { const sp = resolveSpecies(m); return evolvedSpec(sp, Math.min(m?.stage || 0, sp.evolution.length)); }
+/** Numeral suffix on a display name ("Flaroo II" → " II"). */
+const SUFFIX = (name) => String(name || '').match(/ (II|III|IV|V|VI|\d+)$/)?.[0] || '';
+/** Evolve a monster one stage if its level allows. Returns the event or null. */
+export function tryEvolve(m) {
+  const sp = resolveSpecies(m); const stage = m.stage || 0; const next = sp.evolution[stage];
+  if (!next || (m.level || 1) < next.level) return null;
+  const from = m.name; const suffix = SUFFIX(m.name);
+  m.stage = stage + 1; m.name = next.name + suffix;
+  const w = POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR;
+  for (const k of ATTRIBUTES) m.attributes[k] = clampAttr(m.attributes[k] + (w[k] ? 3 : 1)); // an evolved form is a cut above: +3 to what its position uses
+  m.potential = clampAttr((m.potential || 70) + 4); // salary is a contract (GDD §18.1): the ask moves at renewal, not today
+  return { kind: 'evolve', id: m.id, name: m.name, from, to: next.name, stage: m.stage, species: sp.id };
+}
+/** The engine effect a monster carries: its signature ability (uncommon and up) or its species' shared trait (commons). */
+export function speciesEffect(m) {
+  const sp = resolveSpecies(m);
+  if (sp.ability?.effect) return { name: sp.ability.name, effect: sp.ability.effect, kind: 'ability' };
+  const t = TRAITS[sp.trait]; if (t?.effect) return { name: t.name, effect: t.effect, kind: 'trait' };
+  return null;
+}
 const RARITY_WEIGHT = (s) => RARITIES[s.rarity]?.weight ?? 0;
 /** Pick a species that plays `position` (natural, or secondary at a quarter of the weight), by rarity weight. */
-export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set() } = {}) {
+export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set(), element = null, elementChance = 0.75 } = {}) {
   const cands = pool.filter((s) => !exclude.has(s.id) && (s.position === position || s.secondary === position) && RARITY_WEIGHT(s) > 0);
-  const list = cands.length ? cands : pool.filter((s) => s.position === position || s.secondary === position);
+  let list = cands.length ? cands : pool.filter((s) => s.position === position || s.secondary === position);
+  // A club with a home element (the gym clubs) fills most spots from that element when it has a species for the position.
+  const home = element ? list.filter((s) => s.element === element) : [];
+  if (home.length && rng.chance(elementChance)) list = home;
   const w = list.map((s) => [s.id, Math.max(0.01, RARITY_WEIGHT(s)) * (s.position === position ? 1 : 0.25)]);
   return SPECIES_BY_ID[rng.weighted(w)];
 }
@@ -146,7 +177,7 @@ export function monsterOverall(m, opts) { return overall(effectiveAttributes(m, 
  * Generate a monster. `quality` ≈ target OVR; the generator produces a
  * positional profile around it with type bias and random variance.
  */
-export function generateMonster(rng, { position = null, quality = 58, type = null, nature = null, name = null, id = null, species = null, age = null }) {
+export function generateMonster(rng, { position = null, quality = 58, type = null, nature = null, name = null, id = null, species = null, age = null, yearsPro = null }) {
   // `species` may be a dex id, a species name or an old name; the dex fixes the element.
   const sp = species || name ? resolveSpecies(species || name) : (position ? pickSpeciesForPosition(rng, position) : rng.pick(SPECIES_DEX));
   species = sp.id;
@@ -177,8 +208,9 @@ export function generateMonster(rng, { position = null, quality = 58, type = nul
     fatigue: 0,
     injury: null,
     ability: null,
-    stats: { games: 0, yards: 0, td: 0, tackles: 0, sacks: 0, int: 0, catches: 0 },
+    stats: { v: 2, career: { reg: {}, post: {} }, season: { year: null, reg: {}, post: {} }, log: [], seasons: [] },
   };
+  m.yearsPro = yearsPro ?? (m.age <= 21 ? 0 : Math.max(0, m.age - 21 - (m.id.charCodeAt(m.id.length - 1) & 1))); // derived from the id, so the rng stream (and every generated roster) is unchanged // seasons already played; 0 = rookie (GDD §16.4)
   m.salary = salaryFor(m);
   return m;
 }
@@ -186,17 +218,34 @@ export function generateMonster(rng, { position = null, quality = 58, type = nul
 export function salaryFor(m) { return 18000 + 280 * monsterOverall(m); }
 
 /** XP needed to reach the next level. */
-export const xpForLevel = (level) => 80 + level * 40;
+export const xpForLevel = (level) => 30 + level * 18; // level 10 in about two seasons of starts; level 20 is a long career
 
 /** Apply a level-up: +1 to three weighted attributes (potential-capped). */
-export function levelUp(m, rng) {
+export const POINTS_PER_LEVEL = 2; // attribute points the owner spends by hand (GDD §17.3)
+export function levelUp(m, rng, { autoSpend = false } = {}) {
   m.level += 1;
   const weights = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR);
   for (let i = 0; i < 3; i++) {
     const k = rng.weighted(weights);
     if (m.attributes[k] < m.potential) m.attributes[k] = clampAttr(m.attributes[k] + 1 + (rng.chance(0.3) ? 1 : 0));
   }
-  m.salary = salaryFor(m);
+  m.points = (m.points || 0) + POINTS_PER_LEVEL;
+  if (autoSpend) autoSpendPoints(m, rng);
+  // Salary is a contract (GDD §18.1): it does not move with level-ups; the ask at renewal does.
+}
+/** Spend one banked point on an attribute (capped by potential). */
+export function spendPoint(m, attr) {
+  if (!(m.points > 0)) return { ok: false, reason: 'No attribute points to spend.' };
+  if (!(attr in m.attributes)) return { ok: false, reason: 'Unknown attribute.' };
+  if (m.attributes[attr] >= m.potential) return { ok: false, reason: `${attr} is at this monster's potential (${m.potential}).` };
+  m.attributes[attr] = clampAttr(m.attributes[attr] + 1); m.points -= 1;
+  return { ok: true, value: m.attributes[attr], left: m.points };
+}
+/** AI clubs (and the staff, if asked) spend by position weight. */
+export function autoSpendPoints(m, rng) {
+  const weights = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR).filter(([k]) => m.attributes[k] < m.potential);
+  let guard = 20;
+  while ((m.points || 0) > 0 && weights.length && guard-- > 0) { const k = rng.weighted(weights); if (spendPoint(m, k).ok === false) break; }
 }
 
 /** Cornerstone starters offered during onboarding (GDD §8). */
@@ -212,28 +261,93 @@ export const CORNERSTONES = Object.freeze({
     { name: 'Cryolynx', species: 'frostclaw', position: 'LB', type: 'Ice', nature: 'cerebral', ability: 'cold_read', quality: 70, archetype: 'Field General' },
   ],
 });
+/**
+ * Cornerstone offers for a new franchise: three monsters of three different positions and elements
+ * (uncommon or rare species, so each has a signature ability), drawn from the offer seed so every
+ * franchise sees a different trio. Legacy cornerstones (the six above) are among the pool.
+ */
+const ARCHETYPE = { QB: 'Field General', RB: 'Workhorse', WR: 'Playmaker', TE: 'Mismatch', OL: 'Anchor', DL: 'Disruptor', LB: 'Enforcer', CB: 'Shutdown', S: 'Ball Hawk', K: 'Automatic' };
+export function cornerstoneOffers(seed) {
+  const rng = createRng(hashString(`cornerstones|${seed}`));
+  const pool = SPECIES_DEX.filter((s) => (s.rarity === 'uncommon' || s.rarity === 'rare') && s.position !== 'K');
+  const offers = [];
+  const positions = new Set(), elements = new Set();
+  let guard = 0;
+  while (offers.length < 3 && guard++ < 200) {
+    const sp = rng.pick(pool);
+    if (positions.has(sp.position) || elements.has(sp.element)) continue;
+    positions.add(sp.position); elements.add(sp.element);
+    const nature = rng.pick(NATURE_IDS.filter((n) => NATURES[n].up && !['kicking'].includes(NATURES[n].up)));
+    offers.push({ name: sp.name, species: sp.id, position: sp.position, type: sp.element, nature, ability: null, quality: 68 + rng.int(3), archetype: ARCHETYPE[sp.position], abilityName: sp.ability?.name, abilityText: sp.ability?.text, rarity: sp.rarity });
+  }
+  return offers;
+}
 /** A cornerstone by its current name, its species id or the name it had in earlier versions. */
 export function cornerstoneByName(side, v) {
-  const list = CORNERSTONES[side]; if (!v) return null;
+  if (!v) return null;
+  if (typeof v === 'object' && v.species) return v; // an offer from cornerstoneOffers
+  const list = side ? CORNERSTONES[side] : [...CORNERSTONES.offense, ...CORNERSTONES.defense];
   return list.find((c) => c.name === v || c.species === v || c.species === String(v).toLowerCase()) || null;
 }
 
-/** Starting roster composition: 22 monsters. */
+/** Starting roster for the owner's club: 28 monsters — a backup at most spots, room to grow to 38 (GDD §18.2). */
 export const STARTING_ROSTER = Object.freeze([
-  ['QB', 2], ['RB', 2], ['WR', 3], ['TE', 1], ['OL', 4], ['DL', 3], ['LB', 2], ['CB', 3], ['S', 1], ['K', 1],
+  ['QB', 2], ['RB', 2], ['WR', 4], ['TE', 2], ['OL', 4], ['DL', 4], ['LB', 3], ['CB', 3], ['S', 2], ['K', 2],
+]);
+/** AI clubs carry the full 38: one backup for every depth-chart slot. */
+export const FULL_ROSTER = Object.freeze([
+  ['QB', 2], ['RB', 2], ['WR', 6], ['TE', 2], ['OL', 6], ['DL', 6], ['LB', 4], ['CB', 4], ['S', 4], ['K', 2],
 ]);
 
-export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, quality = 56 } = {}) {
+export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cornerstoneDefense, quality = 56, element = null, legendary = null, signature = null, evolveStage = 0, composition = STARTING_ROSTER } = {}) {
   const rng = createRng(seed);
   const roster = [];
   // No species twice on a fresh roster (cornerstone species included); a second copy would be "Name II".
   const used = new Set([...CORNERSTONES.offense, ...CORNERSTONES.defense].map((c) => c.species));
-  for (const [position, count] of STARTING_ROSTER) {
+  if (legendary) used.add(legendary);
+  if (cornerstone?.species) used.add(cornerstone.species);
+  for (const [position, count] of composition) {
     for (let i = 0; i < count; i++) {
       const q = quality + (i === 0 ? 4 : -2) + rng.int(5) - 2;
-      const sp = pickSpeciesForPosition(rng, position, { exclude: used }); used.add(sp.id);
+      const sp = pickSpeciesForPosition(rng, position, { exclude: used, element });
+      if (sp.element !== element) used.add(sp.id); // a gym club may field its home element more than once ("Aquip II")
       roster.push(generateMonster(rng, { position, quality: q, species: sp.id }));
     }
+  }
+  const seen = {}; const roman = ['', ' II', ' III', ' IV', ' V', ' VI'];
+  for (const m of roster) { const n = seen[m.name] = (seen[m.name] || 0) + 1; if (n > 1) m.name = `${m.name}${roman[n - 1] || ' ' + n}`; }
+  // Later seasons: AI clubs field evolved commons (the league grows with the calendar).
+  if (evolveStage > 0) for (const m of roster) { const sp = SPECIES_BY_ID[m.species]; const st = Math.min(evolveStage, sp.evolution.length); for (let i = 0; i < st; i++) { m.level = Math.max(m.level, sp.evolution[i].level); tryEvolve(m); } }
+  // A gym club's legendary takes the first spot at its natural position, a cut above the rest of the roster.
+  if (legendary && SPECIES_BY_ID[legendary]) {
+    const sp = SPECIES_BY_ID[legendary]; const target = roster.find((m) => m.position === sp.position) || roster[0];
+    const star = generateMonster(rng, { position: sp.position, quality: quality + 9, species: sp.id, id: target.id });
+    star.legendary = true; star.salary = salaryFor(star) + 6000;
+    Object.assign(target, star);
+  }
+  // The rival GM's signature monster: same species every season, stronger each year.
+  if (signature && SPECIES_BY_ID[signature.species]) {
+    const sp = SPECIES_BY_ID[signature.species]; const target = roster.find((m) => m.position === sp.position && !m.legendary) || roster[0];
+    const star = generateMonster(rng, { position: sp.position, quality: quality + signature.bonus, species: sp.id, id: target.id });
+    star.signature = true; star.level = 1 + (signature.seasons || 0) * 3; star.salary = salaryFor(star) + 3000;
+    Object.assign(target, star);
+    while (tryEvolve(target)) { /* the rival's signature evolves as the seasons pass */ }
+  }
+  // Cornerstones are a player-club thing. AI clubs (no choice given) get two stars of their own instead:
+  // the first quarterback and one defensive starter, a cut above the roster, so every club has faces.
+  // A single cornerstone chosen from the offers (any position).
+  if (cornerstone) {
+    const c = cornerstoneByName(null, cornerstone) || cornerstone;
+    const target = roster.find((m) => m.position === c.position) || roster[0];
+    const star = generateMonster(rng, { position: c.position, quality: c.quality || 69, species: c.species || c.name, nature: c.nature, id: target.id });
+    if (c.ability) star.ability = c.ability; star.archetype = c.archetype; star.cornerstone = true; star.salary = salaryFor(star) + 3000;
+    Object.assign(target, star);
+    return roster;
+  }
+  if (!cornerstoneOffense && !cornerstoneDefense) {
+    const stars = [roster.find((m) => m.position === 'QB'), roster.find((m) => m.position === rng.pick(['DL', 'LB', 'CB']) && !m.legendary)].filter(Boolean);
+    for (const m of stars) { if (m.legendary) continue; const up = generateMonster(rng, { position: m.position, quality: quality + 10, species: m.species, id: m.id, name: m.name }); Object.assign(m, up); m.star = true; }
+    return roster;
   }
   for (const [side, choice] of [['offense', cornerstoneOffense], ['defense', cornerstoneDefense]]) {
     const c = cornerstoneByName(side, choice) || CORNERSTONES[side][0];
@@ -245,8 +359,8 @@ export function createRoster(seed, { cornerstoneOffense, cornerstoneDefense, qua
   return roster;
 }
 
-export const ROSTER_MAX = 26;
-export const ROSTER_MIN = 16;
+export const ROSTER_MAX = 38; // one backup for every depth-chart slot (GDD §18.2)
+export const ROSTER_MIN = 26; // below this a club cannot play
 
 /**
  * The four numbers a coach needs (GDD: every number on screen should drive a
@@ -301,6 +415,19 @@ function fitThresholds() {
   }
   FIT_THRESHOLDS = t; return t;
 }
+export const SCHEME_LABEL = Object.freeze({ pass: 'Air Raid', run: 'Ground Attack', balanced: 'Balanced', pressure: 'Blitz Heavy', coverage: 'Zone Control', man: 'Man Coverage' });
+/** Every scheme on the monster's side, with whether it fits and how far above/below the bar it sits — so the card can say what it *prefers*. */
+export function schemePreferences(m) {
+  const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(m.position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(m.position) ? 'defense' : null;
+  if (!side) return null;
+  const out = [];
+  for (const [scheme, rule] of Object.entries(FIT_KEYS[side])) { const keys = rule[m.position]; if (!keys) continue; const bar = fitThresholds()[`${scheme}:${m.position}`]; const mean = keyMean(m, keys); out.push({ scheme, label: SCHEME_LABEL[scheme], fits: mean >= bar, margin: Math.round(mean - bar), why: rule.why, keys }); }
+  out.sort((a, b) => b.margin - a.margin);
+  return { side, schemes: out, best: out[0] || null };
+}
+/** Manual evolution for the owner's monsters (GDD §20.6): ready when the level is reached; `tryEvolve` performs it. */
+export function evolutionReady(m) { const sp = resolveSpecies(m); const next = sp.evolution[m.stage || 0]; return !!next && (m.level || 1) >= next.level; }
+export function nextEvolution(m) { const sp = resolveSpecies(m); const st = m.stage || 0; const next = sp.evolution[st]; return next ? { ...next, stage: st + 1, spec: evolvedSpec(sp, st + 1) } : null; }
 export function schemeFit(m, { offense = 'balanced', defense = 'coverage' } = {}) {
   const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(m.position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(m.position) ? 'defense' : null;
   if (!side) return null;
