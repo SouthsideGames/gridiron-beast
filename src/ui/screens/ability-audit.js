@@ -6,7 +6,7 @@
 //            fires, and that play is animated with the effects on.
 // Nothing here changes the sim; the staged scene is synthetic frames only.
 
-import { esc, delegate, sheet } from '../dom.js';
+import { esc, delegate, sheet, toast } from '../dom.js';
 import { SPECIES_DEX, TRAITS } from '../../data/species.js';
 import { generateMonster, effectiveAttributes, resolveSpecies } from '../../data/monsters.js';
 import { PLAYS } from '../../data/playbook.js';
@@ -19,6 +19,17 @@ import { fieldSvg, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
 const AUDIT_VIEWBOX = FIELD_VIEWBOX.split(' ').map(Number).map((v, i) => [v / 2, 5, v / 2, 25][i]).join(' ');
 import { monsterSprite } from '../pixel-monster.js';
 import { buildFx, familyOf, FAMILY_LABEL, elementFx } from '../ability-fx.js';
+import { reviews, setReview, syncReviews, onReviews, reviewsText } from '../../franchise/review-store.js';
+
+/** Review controls for one ability (list row and preview sheet share them). */
+function reviewHtml(id, { open = false } = {}) {
+  const r = reviews()[id] || {}; const showNote = open || r.status === 'needs_work' || (r.note || '').trim();
+  return `<div class="review" data-review="${id}">
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn small review-btn ${r.status === 'approved' ? 'approved' : ''}" data-action="rv-approve" data-id="${id}" aria-pressed="${r.status === 'approved'}">✓ Looks good</button><button class="btn small review-btn ${r.status === 'needs_work' ? 'needswork' : ''}" data-action="rv-needs" data-id="${id}" aria-pressed="${r.status === 'needs_work'}">✎ Needs work</button>${showNote ? '' : `<button class="btn small ghost" data-action="rv-note" data-id="${id}">💬 Note</button>`}</div>
+    ${showNote ? `<textarea class="review-note" data-change="rv-text" data-id="${id}" rows="2" maxlength="2000" placeholder="What should change? (look, timing, label, colour...)">${esc(r.note || '')}</textarea><div class="dim review-saved" data-saved="${id}" style="font-size:11px">${r.updatedAt ? 'Saved' : 'Saves when you tap away'}</div>` : ''}
+  </div>`;
+}
+const STATUS_FILTERS = [['all', 'All'], ['todo', 'Unreviewed'], ['approved', '✓ Good'], ['needs_work', '✎ Needs work']];
 
 /** What makes each effect key fire in engine.js (presentation reads the same hooks). */
 const HOOKS = {
@@ -129,36 +140,62 @@ export function findActivation(entry, { tries = 80 } = {}) {
 }
 
 export function registerAbilityAudit(Router, app) {
-  const st = { element: 'All', raf: null };
+  const st = { element: 'All', status: 'all', raf: null, notesOpen: new Set(), synced: false };
   const entries = SPECIES_DEX.map(auditEntry);
   const elements = ['All', ...new Set(SPECIES_DEX.map((s) => s.element))];
 
   Router.registerScreen('ability-audit', {
     title: 'Ability Audit', tabs: false,
     render() {
-      const list = entries.filter((e) => st.element === 'All' || e.sp.element === st.element);
+      const R = reviews(); const reviewable = entries.filter((e) => e.eff?.kind === 'ability');
+      const count = { approved: reviewable.filter((e) => R[e.sp.id]?.status === 'approved').length, needs_work: reviewable.filter((e) => R[e.sp.id]?.status === 'needs_work').length };
+      count.todo = reviewable.length - count.approved - count.needs_work;
+      const statusOk = (e) => st.status === 'all' || (e.eff?.kind === 'ability' && (st.status === 'todo' ? !R[e.sp.id]?.status : R[e.sp.id]?.status === st.status));
+      const list = entries.filter((e) => (st.element === 'All' || e.sp.element === st.element) && statusOk(e));
       const missing = entries.filter((e) => e.eff?.kind === 'ability' && !e.hooked);
       return `<p class="muted">Every species' signature ability or trait with the engine hook it fires on. <b>Staged</b> loops a scripted scene through the real effect layer; <b>In play</b> searches the engine for a play where it fires.</p>
         ${missing.length ? `<div class="panel tight warn">No activation hook (passive only): ${missing.map((e) => esc(e.sp.name)).join(', ')}</div>` : ''}
-        <div class="chips" style="margin:8px 0">${elements.map((el) => `<button class="chip ${el === st.element ? 'on' : ''}" data-action="el" data-v="${el}">${el === 'All' ? 'All' : elementFx(el).glyph + ' ' + el}</button>`).join('')}</div>
-        <div class="stack">${list.map((e) => {
+        <div class="panel tight review-summary"><div class="row between"><b>Your review</b><span class="dim">${reviewable.length} abilities</span></div>
+          <div class="bar review-bar" style="margin:6px 0"><i class="ok" style="width:${count.approved / reviewable.length * 100}%"></i><i class="nw" style="width:${count.needs_work / reviewable.length * 100}%"></i></div>
+          <div class="row" style="gap:10px;font-size:13px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">${count.todo} to go</span><span class="grow"></span><button class="btn small ghost" data-action="rv-copy">Copy notes</button></div>
+          <div class="dim" style="font-size:11px;margin-top:4px">${globalThis.claude?.use ? 'Saved to this app; Claude can read your verdicts and notes.' : 'Saved on this device. Use Copy notes to send them.'}</div></div>
+        <div class="chips" style="margin:8px 0 4px">${STATUS_FILTERS.map(([v, label]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${label}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
+        <div class="chips" style="margin:4px 0 8px">${elements.map((el) => `<button class="chip ${el === st.element ? 'on' : ''}" data-action="el" data-v="${el}">${el === 'All' ? 'All' : elementFx(el).glyph + ' ' + el}</button>`).join('')}</div>
+        <div class="stack">${list.length ? '' : '<p class="dim center">Nothing here with these filters.</p>'}${list.map((e) => {
           const L = elementFx(e.sp.element); const m = { species: e.sp.id, name: e.sp.name };
-          return `<div class="panel tight audit-row"><div class="row" style="gap:10px;align-items:flex-start">${monsterSprite(m, 40)}<div class="grow" style="min-width:0"><div class="row between"><b>${esc(e.sp.name)}</b><span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(e.sp.element)} · ${esc(e.sp.position)}</span></div>
+          const rv = R[e.sp.id]?.status;
+          return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'needs_work' ? 'rv-needswork' : ''}" id="row-${e.sp.id}"><div class="row" style="gap:10px;align-items:flex-start">${monsterSprite(m, 40)}<div class="grow" style="min-width:0"><div class="row between"><b>${esc(e.sp.name)}</b><span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(e.sp.element)} · ${esc(e.sp.position)}</span></div>
             <div><b style="color:${L.a}">${esc(e.eff?.name || 'None')}</b> <span class="dim">${e.eff?.kind === 'trait' ? 'trait (no field effect)' : FAMILY_LABEL[e.family]}</span></div>
             <div class="muted" style="font-size:12px">${esc(e.eff?.text || '')}</div>
             <div class="dim" style="font-size:12px">Hook: ${esc(e.key ? HOOKS[e.key] || e.key : 'none')}${e.keys.length > 1 ? ` <span class="dim">(${e.keys.join(', ')})</span>` : ''}</div>
-            ${e.eff?.kind === 'ability' ? `<div class="row" style="margin-top:6px;gap:6px"><button class="btn small" data-action="staged" data-id="${e.sp.id}">▶ Staged</button>${e.hooked ? `<button class="btn small" data-action="live" data-id="${e.sp.id}">▶ In play</button>` : '<span class="chip warn">no hook</span>'}</div>` : ''}
+            ${e.eff?.kind === 'ability' ? `<div class="row" style="margin-top:6px;gap:6px"><button class="btn small" data-action="staged" data-id="${e.sp.id}">▶ Staged</button>${e.hooked ? `<button class="btn small" data-action="live" data-id="${e.sp.id}">▶ In play</button>` : '<span class="chip warn">no hook</span>'}</div>${reviewHtml(e.sp.id, { open: st.notesOpen.has(e.sp.id) })}` : ''}
           </div></div></div>`; }).join('')}</div>`;
     },
     mount(root) {
+      if (!st.synced) { st.synced = true; syncReviews().then((ok) => { if (ok) Router.render(); }); }
       delegate(root, {
         el: (el) => { st.element = el.dataset.v; Router.render(); },
+        st: (el) => { st.status = el.dataset.v; Router.render(); },
+        ...reviewHandlers(() => Router.render()),
+        'rv-copy': async () => { const txt = reviewsText(entries); if (!txt) { toast('No reviews yet.'); return; } try { await navigator.clipboard.writeText(txt); toast('Notes copied.', 'good'); } catch { sheet(`<textarea class="review-note" rows="12" readonly>${esc(txt)}</textarea>`, { title: 'Your notes' }); } },
         staged: (el) => preview(entries.find((e) => e.sp.id === el.dataset.id), 'staged'),
         live: (el) => preview(entries.find((e) => e.sp.id === el.dataset.id), 'live'),
       });
     },
-    unmount() { stop(); },
+    unmount() { stop(); unsub?.(); unsub = null; },
   });
+  let unsub = null;
+
+  /** Approve / needs work / note handlers; `refresh` redraws whoever shows the controls. */
+  function reviewHandlers(refresh) {
+    const toggle = (id, status) => { const cur = reviews()[id]?.status; if (status === 'needs_work') st.notesOpen.add(id); setReview(id, { status: cur === status ? null : status }).then((ok) => { if (!ok && globalThis.claude?.use) toast('Saved on this device; the cloud copy did not save.', 'bad'); }); refresh(); };
+    return {
+      'rv-approve': (el) => toggle(el.dataset.id, 'approved'),
+      'rv-needs': (el) => toggle(el.dataset.id, 'needs_work'),
+      'rv-note': (el) => { st.notesOpen.add(el.dataset.id); refresh(); setTimeout(() => document.querySelector(`.review-note[data-id="${el.dataset.id}"]`)?.focus(), 30); },
+      'rv-text': (el) => { setReview(el.dataset.id, { note: el.value }); document.querySelectorAll(`[data-saved="${el.dataset.id}"]`).forEach((n) => { n.textContent = 'Saved'; }); },
+    };
+  }
 
   function stop() { if (st.raf) cancelAnimationFrame(st.raf); st.raf = null; }
 
@@ -181,7 +218,9 @@ export function registerAbilityAudit(Router, app) {
     const fx = buildFx(sim, lookup); const camTop = entry.family === 'cover' ? 56 : entry.side === 'off' ? 52 : entry.family === 'move' || entry.family === 'contact' ? 44 : 48; const cam = mode === 'staged' ? { top: camTop, bottom: camTop - 46 } : cameraFor(ballOn);
     const draw = (i) => fieldSvg({ ballOn, ballLat: sim.ballLat || 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites, camera: cam, ownLabel: 'OWN', oppLabel: 'OPP' });
     const log = sim.events.filter((e) => e.kind === 'ability' || e.ability).map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text || e.kind)}${e.ability && e.kind !== 'ability' ? ' <b>→ outcome label</b>' : ''}</span></div>`).join('');
-    sheet(`<div class="field-wrap ${mode === 'staged' ? 'audit-field' : ''}"><svg id="auditfield" viewBox="${mode === 'staged' ? AUDIT_VIEWBOX : FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${draw(0)}</svg></div><p class="dim" style="margin:6px 0 0">${esc(note)}</p><div class="log" style="margin-top:6px">${log || '<div class="entry"><span>No ability event logged.</span></div>'}</div>`, { title: `${elementFx(entry.sp.element).glyph} ${entry.eff.name}`, onClose: stop });
+    sheet(`<div class="field-wrap ${mode === 'staged' ? 'audit-field' : ''}"><svg id="auditfield" viewBox="${mode === 'staged' ? AUDIT_VIEWBOX : FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${draw(0)}</svg></div><p class="dim" style="margin:6px 0 0">${esc(note)}</p><div class="log" style="margin-top:6px">${log || '<div class="entry"><span>No ability event logged.</span></div>'}</div><div class="sheet-review" style="margin-top:10px">${reviewHtml(entry.sp.id, { open: true })}</div>`, { title: `${elementFx(entry.sp.element).glyph} ${entry.eff.name}`, onClose: stop });
+    const box = document.querySelector('.sheet .sheet-review');
+    if (box) { const redraw = () => { box.innerHTML = reviewHtml(entry.sp.id, { open: true }); Router.render(); }; delegate(box, reviewHandlers(redraw)); }
     const svg = document.querySelector('#auditfield'); const ms = 100 / (app.settings.speed || 1); let start = performance.now(); let last = -1;
     const tick = (now) => {
       const n = sim.frames.length; let idx = Math.floor((now - start) / ms);

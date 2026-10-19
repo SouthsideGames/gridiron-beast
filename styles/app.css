@@ -447,3 +447,13 @@ html[data-reduced-motion="1"] #fieldwrap.shake { animation: none; }
 .chips .chip.on { background: #3b3410; border-color: #8a7a1a; color: var(--accent); }
 .panel.warn { border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); }
 .audit-field > svg { aspect-ratio: 26.7 / 25; }
+/* Ability audit reviews (GDD §23.6) */
+.review { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line-2); }
+.review-btn.approved { background: #143a24; border-color: var(--good); color: var(--good); }
+.review-btn.needswork { background: #3a2a10; border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); }
+.review-note { width: 100%; box-sizing: border-box; margin-top: 6px; min-height: 52px; resize: vertical; font: inherit; font-size: 14px; padding: 8px; border-radius: 6px; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-2); }
+.audit-row.rv-approved { border-left: 3px solid var(--good); }
+.audit-row.rv-needswork { border-left: 3px solid var(--warn, #e0a33b); }
+.review-bar { display: flex; height: 6px; overflow: hidden; }
+.review-bar > i { display: block; height: 100%; }
+.review-bar > i.ok { background: var(--good); } .review-bar > i.nw { background: var(--warn, #e0a33b); }
