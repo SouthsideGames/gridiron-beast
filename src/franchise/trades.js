@@ -1,5 +1,5 @@
-// Draft-pick trading (GDD §19.6). Two clubs only. The owner gives picks — this
-// draft's or any of the next three classes — and asks for either a veteran at a
+// Draft-pick trading (GDD §19.6). Two clubs only. The owner gives picks, this
+// draft's or any of the next three classes, and asks for either a veteran at a
 // position or picks in a future class. Every AI club scores the ask from its
 // own needs (depth at the position, prospects it likes where the pick lands,
 // how far away the future pick is); the ones that would say yes make offers,
@@ -46,7 +46,7 @@ export function pickUsed(f, p) {
 export function tradableYears(f) { const y0 = currentClassYear(f); const out = []; for (let y = y0; y <= y0 + TRADE_YEARS_AHEAD; y++) if (y > y0 || !f.draft?.done) out.push(y); return out; }
 
 // ---------------------------------------------------------------- values
-/** A pick's worth on a 0–100 scale: the slot inside the round when known, the round's middle when not; future classes discounted. */
+/** A pick's worth on a 0-100 scale: the slot inside the round when known, the round's middle when not; future classes discounted. */
 export function pickValue(p, { slotInRound = null, yearsAhead = 0 } = {}) {
   const top = { 1: 100, 2: 52, 3: 26 }[p.round] || 20, bottom = { 1: 58, 2: 30, 3: 12 }[p.round] || 10;
   const t = slotInRound == null ? 0.5 : Math.max(0, Math.min(1, (slotInRound - 1) / (TEAMS_IN_LEAGUE - 1)));
@@ -76,7 +76,7 @@ export function positionNeeds(roster) {
   }
   return needs;
 }
-/** The slot (1–16) a pick lands in for a class whose order is known, else null. */
+/** The slot (1-16) a pick lands in for a class whose order is known, else null. */
 function slotOf(f, p) { const d = f.draft; if (!d?.started || currentClassYear(f) !== p.year) return null; const i = d.order.findIndex((o) => o.round === p.round && (o.original || o.team) === p.original); return i < 0 ? null : (i % TEAMS_IN_LEAGUE) + 1; }
 /** How much a pick is worth to one club: base value, a lift when a prospect it needs is likely still there, and its appetite for picks in general. */
 function pickValueFor(f, team, p, needs, ctx) {
@@ -95,7 +95,7 @@ function teamRng(f, team, p, kind) { return createRng(hashString(`trade|${f.seed
 // ---------------------------------------------------------------- asks
 /**
  * Ask the league for a veteran at `position` in exchange for `give` (picks the owner holds).
- * Returns { offers: [{ team, give, get: { player }, value }], asked } — up to three, best player first.
+ * Returns { offers: [{ team, give, get: { player }, value }], asked } · up to three, best player first.
  */
 export function askForPlayer(f, { give, position, teams, rosterOf, difficulty = 'pro' }) {
   const gen = GENEROSITY[difficulty] ?? 1;
@@ -129,7 +129,7 @@ export function askForPlayer(f, { give, position, teams, rosterOf, difficulty = 
 /**
  * Ask the league for `count` picks of `round` in class `year` in exchange for `give`. Clubs that will not meet the ask
  * counter with the nearest package they would accept (a later round, one pick instead of two, a class further out).
- * Returns { offers: [{ team, give, get: { picks }, exact, value }] } — exact matches first, then the richest counters.
+ * Returns { offers: [{ team, give, get: { picks }, exact, value }] } · exact matches first, then the richest counters.
  */
 export function askForPicks(f, { give, year, round, count = 1, teams, rosterOf, difficulty = 'pro', allTeams }) {
   const gen = GENEROSITY[difficulty] ?? 1;

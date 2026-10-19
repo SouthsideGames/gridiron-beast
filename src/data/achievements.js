@@ -1,6 +1,6 @@
 // Achievements (GDD §21). Each is earned once per career and arrives as a
-// cutscene — a word from the commissioner, a needle from the rival GM, or a
-// letter from the Board — rather than a banner. `when(f, ctx)` is a pure check
+// cutscene, a word from the commissioner, a needle from the rival GM, or a
+// letter from the Board, rather than a banner. `when(f, ctx)` is a pure check
 // on the franchise; `scene(f)` returns the beats. Vars: {club}, {owner},
 // {first}, {rival}, {gm}, {year}, {record}, {wins}, {badges}, {titles}.
 //
@@ -10,7 +10,7 @@
 export const ACHIEVEMENTS = Object.freeze([
   { id: 'first_win', title: 'First blood', desc: 'Win your first game with a franchise.', speaker: 'commissioner', trigger: 'sunday',
     when: (f, c) => c.won && f.campaign.wins === 1,
-    beats: ['One. I keep a tally of every GM’s first win — some take a month, some take a season. Yours is on the books. Noted.', 'Nobody remembers the first one, {first}. Try to make the next few harder to forget.'] },
+    beats: ['One. I keep a tally of every GM’s first win, some take a month, some take a season. Yours is on the books. Noted.', 'Nobody remembers the first one, {first}. Try to make the next few harder to forget.'] },
   { id: 'rival_beaten', title: 'A word from {rival}', desc: 'Beat your rival club for the first time.', speaker: 'rival', trigger: 'sunday',
     when: (f, c) => c.won && c.rival && (f.campaign.h2h?.[c.opponent]?.w || 0) === 1,
     beats: ['So you took one off us. Enjoy the night. I’ve lost to better clubs than yours and I still have the job.', 'Here’s a tip, free of charge: the second one is the one that matters. Nobody gets it.'] },
@@ -25,7 +25,7 @@ export const ACHIEVEMENTS = Object.freeze([
     beats: ['Half the gyms. The last GM who held four badges held them for six seasons before the fifth. I mention it only so you know what the other half costs.'] },
   { id: 'all_badges', title: 'All eight', desc: 'Hold all eight gym badges.', speaker: 'board', trigger: 'sunday',
     when: (f, c) => c.won && c.newBadge && Object.keys(f.campaign.badges).length === 8,
-    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'EIGHT OF EIGHT. THE GYMS ARE YOURS.', 'THE BOARD HAS SEEN THIS TWICE IN THE HISTORY OF THE LEAGUE. IT DOES NOT CONGRATULATE. IT RECORDS.', '— THE BOARD'] },
+    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'EIGHT OF EIGHT. THE GYMS ARE YOURS.', 'THE BOARD HAS SEEN THIS TWICE IN THE HISTORY OF THE LEAGUE. IT DOES NOT CONGRATULATE. IT RECORDS.', 'THE BOARD'] },
   { id: 'winning_season', title: 'A winning season', desc: 'Finish your first winning season.', speaker: 'commissioner', trigger: 'season',
     when: (f, c) => c.wins > c.losses && !(f.history || []).some((h) => h.year !== f.season.year && h.record.w > h.record.l),
     beats: ['{record}. A winning season.', 'I’ll be honest with you, {first}: when you sat in my office I gave you three years to get here. This is happening very fast.', 'The Board will have noticed. The Board notices everything. That is not always good news.'] },
@@ -40,10 +40,10 @@ export const ACHIEVEMENTS = Object.freeze([
     beats: ['Conference champions. I watched the whole thing. I’d like to say I was rooting for the other side, but I was rooting for the other side.', 'One more. You know what the Beast Bowl does to GMs who lose it? Nothing. That’s the part that eats you.'] },
   { id: 'first_title', title: 'Beast Bowl champions', desc: 'Win the Beast Bowl.', speaker: 'board', trigger: 'season',
     when: (f, c) => c.champion && f.campaign.titles === 1,
-    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'THE BOARD ACKNOWLEDGES THE {YEAR} BEAST BOWL.', 'YOU WILL BE ASKED FOR ANOTHER. EVERYONE IS.', '— THE BOARD'] },
+    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'THE BOARD ACKNOWLEDGES THE {YEAR} BEAST BOWL.', 'YOU WILL BE ASKED FOR ANOTHER. EVERYONE IS.', 'THE BOARD'] },
   { id: 'second_title', title: 'Two titles', desc: 'Win a second Beast Bowl.', speaker: 'board', trigger: 'season',
     when: (f, c) => c.champion && f.campaign.titles === 2,
-    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'TWO.', 'THE BOARD HAS OPENED A FILE. IT DOES THIS RARELY.', '— THE BOARD'] },
+    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'TWO.', 'THE BOARD HAS OPENED A FILE. IT DOES THIS RARELY.', 'THE BOARD'] },
   { id: 'first_award', title: 'A league award', desc: 'Have one of your monsters win a league award.', speaker: 'commissioner', trigger: 'season',
     when: (f, c) => c.awardsWon >= 1 && f.campaign.awards === c.awardsWon,
     beats: ['One of yours took a league award. {awardLine}', 'Every other GM in the league just looked up what you’re paying him. So did his agent. Enjoy the ceremony; the renewal comes after.'] },
@@ -55,13 +55,13 @@ export const ACHIEVEMENTS = Object.freeze([
     beats: ['A Legend Track. You understand what you’ve started: three of those on one name and a monster no club has ever held walks into your region.', 'The other GMs will try to win the next two Beast Bowls just to stop you. I would.'] },
   { id: 'legend_unlocked', title: 'A legend unlocked', desc: 'Unlock a legendary monster (three Legend Tracks on one).', speaker: 'board', trigger: 'legend',
     when: (f) => Object.keys(f.campaign.unlocked || {}).length === 1,
-    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'A LEGENDARY MONSTER IS NOW WITHIN YOUR REACH. NONE HAS BEEN SIGNED IN LIVING MEMORY.', 'THE BOARD WILL BE WATCHING THE {REGION} SCOUTING REPORTS.', '— THE BOARD'] },
+    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'A LEGENDARY MONSTER IS NOW WITHIN YOUR REACH. NONE HAS BEEN SIGNED IN LIVING MEMORY.', 'THE BOARD WILL BE WATCHING THE {REGION} SCOUTING REPORTS.', 'THE BOARD'] },
   { id: 'hof_eligible', title: 'The Hall of Fame', desc: 'Qualify for the Hall of Fame.', speaker: 'board', trigger: 'any',
     when: (f, c) => c.hofEligible,
-    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'THE BOARD HAS REVIEWED YOUR RECORD. YOU ARE ELIGIBLE FOR THE HALL OF FAME.', 'THE DOOR IS OPEN. YOU MAY WALK THROUGH IT WHENEVER YOU CHOOSE. YOU MAY ALSO KEEP WORKING; THE BOARD HAS NO OPINION ON WHICH. IT HAS NEVER WRITTEN THIS LETTER TO THE SAME NAME TWICE.', '— THE BOARD'] },
+    beats: ['TO THE GENERAL MANAGER OF {CLUB}:', 'THE BOARD HAS REVIEWED YOUR RECORD. YOU ARE ELIGIBLE FOR THE HALL OF FAME.', 'THE DOOR IS OPEN. YOU MAY WALK THROUGH IT WHENEVER YOU CHOOSE. YOU MAY ALSO KEEP WORKING; THE BOARD HAS NO OPINION ON WHICH. IT HAS NEVER WRITTEN THIS LETTER TO THE SAME NAME TWICE.', 'THE BOARD'] },
   { id: 'hot_seat_survived', title: 'Off the hot seat', desc: 'Meet the Board’s goal while on the hot seat.', speaker: 'commissioner', trigger: 'season',
     when: (f, c) => c.wasHotSeat && c.goalMet,
-    beats: ['You were one miss from a conversation nobody enjoys. You didn’t miss.', 'For what it’s worth — and in this office it isn’t worth much — I’d have kept you. The Board would not have asked.'] },
+    beats: ['You were one miss from a conversation nobody enjoys. You didn’t miss.', 'For what it’s worth, and in this office it isn’t worth much, I’d have kept you. The Board would not have asked.'] },
   { id: 'traded_up', title: 'The phone works', desc: 'Make your first trade.', speaker: 'rival', trigger: 'trade',
     when: (f) => (f.trades || []).length === 1,
     beats: ['Heard you made a trade. Cute. Half this league hasn’t figured out the phone exists.', 'Call me sometime. I’ll say no, but I’ll enjoy it.'] },

@@ -140,7 +140,7 @@ export const SPECIES_DEX = Object.freeze([
 ]);
 
 /**
- * Legend Tracks (draft name — owner to confirm). Win the Beast Bowl → choose one
+ * Legend Tracks (draft name, owner to confirm). Win the Beast Bowl → choose one
  * track toward any legendary nobody owns. Three tracks on the same legendary →
  * it appears in your recruiting pool in its home region (you still have to sign
  * it, and it costs big cap space). Three AI clubs start each league with one

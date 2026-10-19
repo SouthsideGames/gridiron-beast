@@ -87,7 +87,7 @@ export function passerRating(l) {
   return Math.round(((a + b + t + i) / 6) * 1000) / 10;
 }
 
-/** Derived values from a line. Every value is null when its denominator is zero — never a misleading 0. */
+/** Derived values from a line. Every value is null when its denominator is zero, never a misleading 0. */
 export function derive(l) {
   l = l || {};
   const g = l.games || 0;
@@ -177,7 +177,7 @@ export function recordGame(f, state, teams, { playoff = false, week = f.season.w
         const s = rolloverMonster(src, { year, team: playerClub });
         const gl = { games: 1, starts: e.start ? 1 : 0, ...e.line };
         addInto(s.season[bucket], gl); addInto(s.career[bucket], gl);
-        s.log.push({ year, week, opp: opp.name, home: side === 'home', playoff, won, score: `${state.score[side]}–${state.score[side === 'home' ? 'away' : 'home']}`, line: e.line });
+        s.log.push({ year, week, opp: opp.name, home: side === 'home', playoff, won, score: `${state.score[side]}-${state.score[side === 'home' ? 'away' : 'home']}`, line: e.line });
         if (s.log.length > 20) s.log.shift();
       }
     }
@@ -218,7 +218,7 @@ export function statLine(r) {
   if (d.att) b.push(`${d.comp || 0}/${d.att}, ${d.passYds || 0} yds, ${d.passTd || 0} TD, ${d.intThrown || 0} INT${d.rating != null ? `, ${d.rating} rtg` : ''}`);
   if (d.rush) b.push(`${d.rush} car, ${d.rushYds || 0} yds${d.rushTd ? `, ${d.rushTd} TD` : ''}`);
   if (d.rec || d.targets) b.push(`${d.rec || 0}/${d.targets || 0} rec, ${d.recYds || 0} yds${d.recTd ? `, ${d.recTd} TD` : ''}`);
-  if (d.pbSnaps && !d.att && !d.rush && !d.rec) b.push(`${d.blockWinPct ?? '—'}% blocks won, ${d.sacksAllowed || 0} sacks allowed`);
+  if (d.pbSnaps && !d.att && !d.rush && !d.rec) b.push(`${d.blockWinPct ?? '·'}% blocks won, ${d.sacksAllowed || 0} sacks allowed`);
   if (d.tacklesTotal) b.push(`${d.tacklesTotal} tkl${d.tfl ? `, ${d.tfl} TFL` : ''}`);
   if (d.sacks) b.push(`${d.sacks} sacks`); if (d.pressures) b.push(`${d.pressures} press`);
   if (d.int) b.push(`${d.int} INT`); if (d.pd) b.push(`${d.pd} PD`); if (d.ff) b.push(`${d.ff} FF`);
@@ -249,7 +249,7 @@ export function updateGameRecords(f, state, teams, { year, week, playoff }) {
       for (const c of RECORD_CATEGORIES) { const v = d[c.key]; if (better(R.game[c.id], v)) R.game[c.id] = { value: v, name: p.name, position: p.position, species: p.species, type: p.type, team: team.name, opp: opp.name, year, week, playoff: !!playoff }; }
     }
     const pts = state.score[side], margin = state.score[side] - state.score[side === 'home' ? 'away' : 'home'], yards = state.stats[side].yards || 0;
-    const t = (id, v) => { if (better(R.team[id], v)) R.team[id] = { value: v, team: team.name, opp: opp.name, year, week, playoff: !!playoff, score: `${state.score[side]}–${state.score[side === 'home' ? 'away' : 'home']}` }; };
+    const t = (id, v) => { if (better(R.team[id], v)) R.team[id] = { value: v, team: team.name, opp: opp.name, year, week, playoff: !!playoff, score: `${state.score[side]}-${state.score[side === 'home' ? 'away' : 'home']}` }; };
     t('points', pts); t('margin', margin); t('yards', yards);
   }
 }

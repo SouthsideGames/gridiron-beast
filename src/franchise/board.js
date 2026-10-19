@@ -18,7 +18,7 @@ export function goalOffers(f, { expectedWinPct = 0.5, gamesInSeason = 9, gymsThi
   // Never more than seven of nine: a contender's "safe" goal must stay easier than the title it is being compared with.
   const safeWins = Math.max(3, Math.min(gamesInSeason - 2, Math.round(exp) + (expectedWinPct >= 0.55 ? 1 : 0)));
   const medium = expectedWinPct >= 0.45
-    ? { id: 'playoffs', label: 'Make the playoffs', text: 'Finish in a playoff spot. Standings only — no replays.', weight: 1 }
+    ? { id: 'playoffs', label: 'Make the playoffs', text: 'Finish in a playoff spot. Standings only, no replays.', weight: 1 }
     : { id: 'badges', label: `Win ${gymsThisSeason >= 4 ? 2 : 1} gym badge${gymsThisSeason >= 4 ? 's' : ''}`, target: gymsThisSeason >= 4 ? 2 : 1, text: 'Take badges off the gym clubs on your schedule.', weight: 1 };
   return [
     { id: 'wins', label: `Win ${safeWins} games`, target: safeWins, text: `The forecast says ${exp.toFixed(1)}. Beat it.`, weight: 1, tier: 'safe' },

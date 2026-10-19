@@ -11,6 +11,8 @@ import { playCardSvg, legendHtml } from '../play-art.js';
 import { playDetailHtml, lessonHtml } from './hq.js';
 import { generatedTeam } from '../../franchise/roster.js';
 import { createRng } from '../../core/rng.js';
+import { buildFx } from '../ability-fx.js';
+import { resolveSpecies } from '../../data/monsters.js';
 
 export function registerPracticeScreens(Router, app) {
   const prac = { offense: 'quick_slants', defense: 'cover_3', ballOn: 30, sim: null, i: 0, raf: null, seed: 1, showArt: true };
@@ -30,7 +32,7 @@ export function registerPracticeScreens(Router, app) {
       if (!T.defensePlays.includes(prac.defense)) prac.defense = T.defensePlays[0];
       const frame = prac.sim ? prac.sim.frames[Math.min(prac.i, prac.sim.frames.length - 1)] : null;
       const presnap = !prac.sim && prac.showArt ? { play: PLAYS[prac.offense], offensePlay: PLAYS[prac.offense], defensePlay: PLAYS[prac.defense] } : !prac.sim ? { offensePlay: PLAYS[prac.offense], defensePlay: PLAYS[prac.defense] } : null;
-      const field = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame, presnap, ownLabel: 'OWN', oppLabel: 'OPP', camera: cameraFor(prac.ballOn) });
+      const field = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame, prevFrame: prac.sim ? prac.sim.frames[Math.min(prac.i, prac.sim.frames.length - 1) - 1] || null : null, fx: prac.sim ? prac.fx : null, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites: prac.sim ? prac.sprites : null, presnap, ownLabel: 'OWN', oppLabel: 'OPP', camera: cameraFor(prac.ballOn) });
       const sel = (id, list, name) => `<label class="field">${name}<select data-change="${name === 'Offense' ? 'off' : 'def'}">${list.map((p) => `<option value="${p}" ${p === id ? 'selected' : ''}>${esc(PLAYS[p].name)}</option>`).join('')}</select></label>`;
       const result = prac.sim ? `<div class="field-banner ${prac.sim.touchdown || prac.sim.turnover ? 'important' : ''}">${esc(resultText(prac.sim))}</div>` : '';
       return `<p class="muted">Run your plays against your own defense. Same engine as Sunday; ${f ? 'your current starters' : 'a practice squad'} on both sides.</p>
@@ -47,9 +49,11 @@ export function registerPracticeScreens(Router, app) {
         const T = teamsForPractice(app.f);
         const o = PLAYS[prac.offense], d = PLAYS[prac.defense];
         prac.seed = seed; prac.sim = simulatePlay({ offensePlay: o, defensePlay: d, offense: pickSlots(T.offense.offense, o.onField), defense: pickSlots(T.defense.defense, d.onField), ballOn: prac.ballOn, seed });
+        const lookup = (team, slot) => { const m = (team === 'off' ? T.offense.offense : T.defense.defense)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || null, name: m.name }; };
+        prac.fx = buildFx(prac.sim, lookup); prac.sprites = app.settings.fieldMarkers === 'simple' ? null : { off: { map: T.offense.offense, pool: [] }, def: { map: T.defense.defense, pool: [] } };
         prac.i = 0; Router.render();
         const svg = document.querySelector('#field'); const start = performance.now(); const ms = 100 / (app.settings.speed || 1);
-        const tick = (now) => { const idx = Math.min(prac.sim.frames.length - 1, Math.floor((now - start) / ms)); if (idx !== prac.i && svg) { prac.i = idx; svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[idx], camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); } if (idx < prac.sim.frames.length - 1) prac.raf = requestAnimationFrame(tick); else Router.render(); };
+        const tick = (now) => { const idx = Math.min(prac.sim.frames.length - 1, Math.floor((now - start) / ms)); if (idx !== prac.i && svg) { prac.i = idx; svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[idx], prevFrame: prac.sim.frames[idx - 1] || null, fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites: prac.sprites, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); } if (idx < prac.sim.frames.length - 1) prac.raf = requestAnimationFrame(tick); else Router.render(); };
         cancelAnimationFrame(prac.raf); prac.raf = app.settings.reducedMotion ? (prac.i = prac.sim.frames.length - 1, Router.render(), null) : requestAnimationFrame(tick);
       };
       delegate(root, {
@@ -101,7 +105,7 @@ export function resultText(sim) {
   const who = sim.stats.receiver || sim.stats.carrier;
   const name = (slot, team = 'off') => sim.names?.[team]?.[slot] || slot;
   switch (sim.result) {
-    case 'touchdown': return sim.stats.defensiveScore ? `Returned for a touchdown by ${name(sim.stats.interceptor || sim.stats.carrier, 'def')}!` : `TOUCHDOWN — ${name(who)} ${sim.stats.receiver ? 'catches it' : 'runs it in'} from ${sim.yards} yards out.`;
+    case 'touchdown': return sim.stats.defensiveScore ? `Returned for a touchdown by ${name(sim.stats.interceptor || sim.stats.carrier, 'def')}!` : `TOUCHDOWN · ${name(who)} ${sim.stats.receiver ? 'catches it' : 'runs it in'} from ${sim.yards} yards out.`;
     case 'tackle': return `${name(who)} ${sim.stats.receiver ? 'catches' : 'runs'} for ${sim.yards} yard${Math.abs(sim.yards) === 1 ? '' : 's'}, tackled by ${name(sim.stats.tackler, 'def')}.`;
     case 'out_of_bounds': return `${name(who)} gains ${sim.yards}, out of bounds.`;
     case 'incomplete': return `Incomplete to ${name(sim.stats.target)}.`;

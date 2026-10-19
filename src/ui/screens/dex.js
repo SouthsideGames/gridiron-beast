@@ -51,7 +51,7 @@ export function registerDexScreens(Router, app) {
 }
 
 export function speciesSheet(s, f) {
-  const ab = s.ability ? `<p><b>${esc(s.ability.name)}</b> — ${esc(s.ability.text)}</p>` : `<p><b>${esc(TRAITS[s.trait]?.name)}</b> (shared trait) — ${esc(TRAITS[s.trait]?.text)}</p>`;
+  const ab = s.ability ? `<p><b>${esc(s.ability.name)}</b> · ${esc(s.ability.text)}</p>` : `<p><b>${esc(TRAITS[s.trait]?.name)}</b> (shared trait) · ${esc(TRAITS[s.trait]?.text)}</p>`;
   const formSeen = dexFormSeen(f, s.id);
   const evo = s.evolution.length ? `<h3>Evolution</h3><div class="row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">${sprite16(s, 40)}${s.evolution.map((e, i) => `<span class="dim">→</span><span class="center" style="font-size:12px">${formSeen >= i + 1 ? sprite16(evolvedSpec(s, i + 1), 40 + i * 8) : silhouette(evolvedSpec(s, i + 1), 40 + i * 8)}<br>${formSeen >= i + 1 ? esc(e.name) : '???'} <span class="dim">L${e.level}</span></span>`).join('')}</div><p class="dim">${formSeen ? `You have seen this species evolve${formSeen >= s.evolution.length ? ' fully' : ''}.` : 'Evolves at the levels shown; evolved forms are revealed when you see one.'}</p>` : '';
   const owned = f ? f.roster.filter((m) => m.species === s.id) : [];

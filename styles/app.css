@@ -436,3 +436,14 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .dc-more { display: block; width: 100%; font-size: 11px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-expiring { color: #f5c542; font-weight: 700; }
 .dc-backup { font-size: 11px; }
+
+/* Polish 2.0: a short shake of the field on major impacts (sacks, fumbles, ability-driven breaks). */
+#fieldwrap.shake { animation: field-shake 0.24s ease-out; }
+@keyframes field-shake { 0% { transform: translate(0, 0); } 20% { transform: translate(-3px, 2px); } 40% { transform: translate(3px, -2px); } 60% { transform: translate(-2px, 1px); } 80% { transform: translate(1px, -1px); } 100% { transform: translate(0, 0); } }
+html[data-reduced-motion="1"] #fieldwrap.shake { animation: none; }
+/* Ability audit (developer) */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips .chip { min-height: 28px; cursor: pointer; }
+.chips .chip.on { background: #3b3410; border-color: #8a7a1a; color: var(--accent); }
+.panel.warn { border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); }
+.audit-field > svg { aspect-ratio: 26.7 / 25; }

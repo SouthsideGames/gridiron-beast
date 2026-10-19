@@ -7,6 +7,7 @@ import { monsterSprite } from './pixel-monster.js';
 import { FIELD, boundsFor } from '../core/field.js';
 import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
+import { fxSvg, movementSvg } from './ability-fx.js';
 
 const SPAN = 46; // visible yards
 const HW = FIELD.halfWidth + 0.33;
@@ -24,7 +25,7 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, flashes = [] } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full' } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
@@ -82,29 +83,32 @@ export function fieldSvg(o) {
     return shape + `<text x="${cx.toFixed(2)}" y="${(cy + 0.5).toFixed(2)}" text-anchor="middle" font-size="1.35" font-weight="800" font-family="ui-monospace, monospace" fill="#0d1f17">${slot}</text>`;
   };  // Monster art on a team-coloured base; unknown slots (kick units) draw from the team's pool.
   const poolIdx = { off: 0, def: 0 };
+  // Facing (polish 2.0): a sprite turns toward its lateral movement; still, it faces the way its team lines up.
+  const prevPos = {};
+  if (prevFrame) { for (const p of prevFrame.off) prevPos['off' + p[0]] = p; for (const p of prevFrame.def) prevPos['def' + p[0]] = p; }
+  const moved = (team, slot, x, y) => { const p = prevPos[team + slot]; return p ? [X(ballLat + y) - X(ballLat + p[2]), Y(ballOn + x) - Y(ballOn + p[1])] : [0, 0]; };
   const marker = (slot, x, y, team, engaged, holder) => {
     const set = sprites?.[team];
     const m = set ? (set.map[slot] || (set.pool.length ? set.pool[(poolIdx[team]++) % set.pool.length] : null)) : null;
     if (!m) return simpleMarker(slot, x, y, team, engaged, holder);
     const cx = X(ballLat + y), cy = Y(ballOn + x);
     const base = team === 'off' ? colors.off : colors.def;
-    const art = monsterSprite(m, 16, { flip: team === 'def' }).replace(/<svg class="sprite" width="16" height="16"/, `<svg x="${(cx - 1.7).toFixed(2)}" y="${(cy - 2.5).toFixed(2)}" width="3.4" height="3.4"`);
+    const [mx] = moved(team, slot, x, y); const flip = Math.abs(mx) > 0.12 ? mx < 0 : team === 'def';
+    const art = monsterSprite(m, 16, { flip }).replace(/<svg class="sprite" width="16" height="16"/, `<svg x="${(cx - 1.7).toFixed(2)}" y="${(cy - 2.5).toFixed(2)}" width="3.4" height="3.4"`);
     return `<ellipse cx="${cx.toFixed(2)}" cy="${(cy + 0.75).toFixed(2)}" rx="1.55" ry="0.7" fill="${base}" stroke="${holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17'}" stroke-width="${holder ? 0.4 : 0.2}"/>${art}`;
   };
 
   if (frame) {
+    const ft = frame.t ?? 0;
+    const posOf = (team, slot) => { const list = team === 'off' ? frame.off : frame.def; const a = list.find((p) => p[0] === slot); if (!a) return null; const [dx, dy] = moved(team, slot, a[1], a[2]); return [X(ballLat + a[2]), Y(ballOn + a[1]), dx, dy]; };
+    if (frame.holder) s += movementSvg(posOf(frame.holderTeam, frame.holder), { quality: fxQuality });
     for (const [slot, x, y, eng] of frame.def) s += marker(slot, x, y, 'def', eng, frame.holder === slot && frame.holderTeam === 'def');
     for (const [slot, x, y, eng] of frame.off) s += marker(slot, x, y, 'off', eng, frame.holder === slot && frame.holderTeam === 'off');
     const [bx, by, air] = frame.ball;
     const cx = X(ballLat + by), cy = Y(ballOn + bx);
     s += `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : 0.7}" ry="${air ? 0.6 : 0.45}" fill="#d9924f" stroke="#fff" stroke-width="0.18"/>`;
-    // Ability flashes: a ring and the ability's name over the monster for a moment after it fires.
-    for (const fl of flashes) {
-      const list = fl.team === 'off' ? frame.off : frame.def; const a = list.find((p) => p[0] === fl.slot); if (!a) continue;
-      const fx = X(ballLat + a[2]), fy = Y(ballOn + a[1]); const k = Math.max(0, Math.min(1, fl.age)); // 0 fresh → 1 fading
-      s += `<circle cx="${fx.toFixed(2)}" cy="${fy.toFixed(2)}" r="${(2.2 + k * 1.6).toFixed(2)}" fill="none" stroke="#ffe36c" stroke-width="${(0.5 * (1 - k) + 0.1).toFixed(2)}" opacity="${(1 - k).toFixed(2)}"/>`;
-      s += `<text x="${fx.toFixed(2)}" y="${(fy - 3.2 - k).toFixed(2)}" text-anchor="middle" font-size="2.1" font-weight="900" fill="#ffe36c" stroke="#0b1a14" stroke-width="0.35" paint-order="stroke" opacity="${(1 - k * 0.7).toFixed(2)}">⚡ ${fl.label}</text>`;
-    }
+    // Ability presentation: activation → elemental action → outcome label (ability-fx.js), drawn over the sprites.
+    if (fx) s += fxSvg(fx, ft, posOf, { quality: fxQuality, halfWidth: HW });
   } else if (presnap?.offensePlay || presnap?.defensePlay) {
     const dp = presnap.defensePlay; const op = presnap.offensePlay;
     if (dp) for (const slot of dp.onField) { const [x, y] = dp.align[slot]; s += marker(slot, x, y, 'def', false, false); }

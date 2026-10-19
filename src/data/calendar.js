@@ -7,5 +7,5 @@ export const EPOCH = 1200;
 export const yearOf = (season) => EPOCH + Number(season || 0);
 /** Season index from a league year (the inverse). */
 export const seasonOf = (year) => Number(year) - EPOCH;
-/** "the 1201 season", "the 1202 class" — a plain label with no "S" prefix. */
+/** "the 1201 season", "the 1202 class", a plain label with no "S" prefix. */
 export const yearLabel = (season) => String(yearOf(season));

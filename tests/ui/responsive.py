@@ -226,7 +226,9 @@ def run_size(pw, port, w, h, name):
         settle(page)
         if page.query_selector('.play-grid .card'): page.click('.play-grid .card >> nth=1'); page.wait_for_timeout(30)
         b = page.query_selector('[data-action="snap"]:not([disabled])')
-        if b: b.click(); page.wait_for_timeout(120)
+        if b:
+            b.click(); page.wait_for_timeout(120)
+            if i == 1: page.wait_for_timeout(500); shot(page, f'{name}-14b-anim')  # mid-animation: ability effects and movement states draw without errors
         elif page.query_selector('[data-action="punt"]'): page.click('[data-action="punt"]'); page.wait_for_timeout(120)
     settle(page)
     shot(page, f'{name}-15-after-plays')

@@ -21,7 +21,7 @@ export const AWARDS = Object.freeze({
 /** The rules, in the words the award sheet shows. */
 export const AWARD_RULES = Object.freeze({
   mvp: 'Individual production, efficiency and impact (each compared with others at the same position), then the club’s win rate and availability. Quarterbacks carry a 1.25× responsibility factor, linemen 0.8×; defenders are judged on their DPOY score at 0.85×. Turnovers count against.',
-  opoy: 'Offensive production (45%), efficiency (30%) and impact — touchdowns, first downs, minus turnovers (25%) — each as a position-adjusted score. Versatile monsters (a back who catches, a receiver who runs) get a small bonus. Team record does not count.',
+  opoy: 'Offensive production (45%), efficiency (30%) and impact, touchdowns, first downs, minus turnovers (25%), each as a position-adjusted score. Versatile monsters (a back who catches, a receiver who runs) get a small bonus. Team record does not count.',
   dpoy: 'Pass rush, takeaways, coverage and run defence, weighted by position: linemen on rush and run defence, linebackers evenly, corners and safeties on coverage and takeaways. Compared with others at the same position, so a shutdown corner with two interceptions can beat a sack leader.',
   coy: 'Wins above what the roster’s talent predicted before the season, improvement on last season, and point margin. Expectations are recorded in week 1, not after the fact.',
   oroy: 'First-season monsters, scored on the OPOY scale against the whole league.',
@@ -86,7 +86,7 @@ export function computeAwards({ table, records, expectations = {}, coachOf = (t)
   const off = rows.filter((r) => OFFENSE_POSITIONS.has(r.position)), def = rows.filter((r) => DEFENSE_POSITIONS.has(r.position));
   const Z = { volume: zWithin(off, OFF.volume), efficiency: zWithin(off, OFF.efficiency), impact: zWithin(off, OFF.impact), passRush: zWithin(def, DEF.passRush), takeaways: zWithin(def, DEF.takeaways), coverage: zWithin(def, DEF.coverage), runDefense: zWithin(def, DEF.runDefense) };
   const winPct = (team) => { const r = records[team]; return r && r.w + r.l ? r.w / (r.w + r.l) : 0.5; };
-  const recordOf = (team) => { const r = records[team] || { w: 0, l: 0 }; return `${r.w}–${r.l}${r.t ? '–' + r.t : ''}`; };
+  const recordOf = (team) => { const r = records[team] || { w: 0, l: 0 }; return `${r.w}-${r.l}${r.t ? '-' + r.t : ''}`; };
   const avail = (r) => Math.min(1, (r.games || 0) / weeks);
   const offScore = (r) => { const c = { volume: Z.volume(r), efficiency: Z.efficiency(r), impact: Z.impact(r) }; let s = 0.45 * c.volume + 0.3 * c.efficiency + 0.25 * c.impact; if ((r.position === 'RB' && (r.rec || 0) >= 12) || ((r.position === 'WR' || r.position === 'TE') && (r.rush || 0) >= 8)) { s += 0.1; c.versatility = 0.1; } return { s, c, prod: OFF.volume(r) }; };
   const defScore = (r) => { const w = DEF_WEIGHTS[r.position] || DEF_WEIGHTS.LB; const c = { passRush: Z.passRush(r), takeaways: Z.takeaways(r), coverage: Z.coverage(r), runDefense: Z.runDefense(r) }; const s = Object.entries(w).reduce((a, [k, wt]) => a + wt * c[k], 0); return { s, c, prod: DEF.passRush(r) + DEF.runDefense(r) + DEF.takeaways(r) }; };

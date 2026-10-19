@@ -109,7 +109,7 @@ export function suggestPlay(state, team, available, side, tendencies) {
   return weights.sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 }
 
-/** 'go' | 'punt' | 'fg' — fourth-down decision. */
+/** 'go' | 'punt' | 'fg', fourth-down decision. */
 export function fourthDownDecision(state, team) {
   const s = situation(state);
   const str = teamStrengths(team);

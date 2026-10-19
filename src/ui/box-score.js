@@ -51,7 +51,7 @@ function leader(state, side, key) { return rows(state, side).filter((p) => (p[ke
 export function boxScoreHtml(state, teams, { title = 'Box score' } = {}) {
   const A = state.away, H = state.home;
   const cell = (side, cat) => {
-    const p = leader(state, side, cat.key); if (!p) return `<div class="bs-cell ${side}"><span class="dim">—</span></div>`;
+    const p = leader(state, side, cat.key); if (!p) return `<div class="bs-cell ${side}"><span class="dim">·</span></div>`;
     const m = who(teams[side], p.slot);
     return `<div class="bs-cell ${side}">${monsterSprite(m, 30)}<div><div class="bs-v">${p[cat.key]}</div><div class="bs-n">${esc(m.name)} <span class="dim">${p.slot}</span></div>${cat.sub(p) ? `<div class="dim bs-s">${esc(cat.sub(p))}</div>` : ''}</div></div>`;
   };
@@ -66,7 +66,7 @@ export function boxScoreHtml(state, teams, { title = 'Box score' } = {}) {
   const pog = playersOfGame(state);
   const pogCard = (p, label) => { if (!p) return ''; const m = who(teams[p.side], p.slot); const club = state[p.side]; return `<div class="pog">${monsterSprite(m, 44)}<div><div class="dim" style="font-size:11px;letter-spacing:.08em">${label}</div><b>${esc(m.name)}</b> <span class="dim">${p.slot} · <span style="color:${club.color}">${esc(club.abbr)}</span></span><div class="muted" style="font-size:13px">${esc(line(p))}</div></div></div>`; };
   return `<div class="box-score">
-    <div class="bs-head"><span style="color:${A.color}">${esc(A.name)}</span><b class="bs-score">${state.score.away} – ${state.score.home}</b><span style="color:${H.color}">${esc(H.name)}</span></div>
+    <div class="bs-head"><span style="color:${A.color}">${esc(A.name)}</span><b class="bs-score">${state.score.away}-${state.score.home}</b><span style="color:${H.color}">${esc(H.name)}</span></div>
     <div class="center dim" style="margin-bottom:8px">${esc(title)}</div>
     ${pog.offense || pog.defense ? `<h3>Players of the game</h3><div class="pog-wrap">${pogCard(pog.offense, 'OFFENSE')}${pogCard(pog.defense, 'DEFENSE')}</div>` : ''}
     <h3>Leaders</h3><div class="bs-leaders">${leaders}</div>

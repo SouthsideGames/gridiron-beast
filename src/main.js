@@ -15,6 +15,7 @@ import { registerHqScreens } from './ui/screens/hq.js';
 import { registerRosterScreens } from './ui/screens/roster.js';
 import { registerMatchScreens } from './ui/screens/match.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
+import { registerAbilityAudit } from './ui/screens/ability-audit.js';
 import { registerDexScreens } from './ui/screens/dex.js';
 
 const app = {
@@ -53,6 +54,7 @@ export function start() {
   registerRosterScreens(Router, app);
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
+  registerAbilityAudit(Router, app);
   registerDexScreens(Router, app);
   const saved = Save.load();
   if (saved) { app.f = saved; applySettings(); mergeDex(saved.dex); F.syncAchievementsToGlobal(saved); }

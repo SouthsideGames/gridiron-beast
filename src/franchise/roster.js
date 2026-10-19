@@ -78,7 +78,7 @@ export function lineupFromChart(roster, chart, { trainingBonus = null } = {}) {
 
 /**
  * Who may cover an empty slot (GDD §17.2): only a monster whose primary or
- * secondary position matches it — a healthy reserve first, else a base starter
+ * secondary position matches it, a healthy reserve first, else a base starter
  * who sits out in the packages that use the slot. Never a lineman at safety.
  */
 export function legalFiller(roster, chart, slot) {
@@ -92,7 +92,7 @@ export function legalFiller(roster, chart, slot) {
 }
 /** Base starters off the field in the packages that use each package slot. */
 export const SITS_OUT = Object.freeze({ SS: ['LB2'], DL3: ['LB2', 'FS'], WR3: ['TE'], C: ['WR2'] });
-/** Base slots (and the kicker) nobody legal can cover: the game cannot be played — a forfeit. */
+/** Base slots (and the kicker) nobody legal can cover: the game cannot be played, a forfeit. */
 export function lineupProblems(roster, chart) {
   return [...OFFENSE_BASE, ...DEFENSE_BASE, 'K'].filter((s) => !chart[s] && !legalFiller(roster, chart, s));
 }

@@ -93,7 +93,7 @@ test('a full season plus playoffs completes with standings from real games', () 
 test('postseason events: a losing record raises one; each option has its consequence; roster fit and severance exist', () => {
   const f = newFranchise(21);
   const fit = F.rosterFit(f); assert.ok(fit.offense.total >= 5 && fit.defense.total >= 5 && fit.offense.coach);
-  // Fake a losing season end: 3–6, then run the real end-of-season path by finishing the schedule quickly.
+  // Fake a losing season end: 3-6, then run the real end-of-season path by finishing the schedule quickly.
   while (!f.season.finished) { if (F.inPlayoffs(f) && !F.playoffFixture(f)) { F.skipPlayoffs(f); continue; } F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const g = F.simulatePlayerGame(f); const side = F.sundayMatchup(f).playerSide; const other = side === 'home' ? 'away' : 'home'; const score = { home: 0, away: 0 }; score[other] = 21; F.finishSunday(f, { ...g, winner: other, score }); }
   assert.ok(F.record(f).l > F.record(f).w);
   const ev = F.postseasonEvent(f); assert.ok(ev, 'event raised'); assert.ok(ev.lines[0].length > 20);
@@ -571,7 +571,7 @@ test('commissioner: signing over the cap is allowed with a warning; Saturday nam
 
 test('Legend Tracks: a champion chooses a track; three unlock the legendary in its home region; the rival keeps a signature monster', () => {
   const f = newFranchise(31);
-  f.campaign.badges['Harbor Sentinels'] = { year: 1, week: 1, score: '1–0' };
+  f.campaign.badges['Harbor Sentinels'] = { year: 1, week: 1, score: '1-0' };
   const choices = F.legendChoices(f).map((c) => c.id);
   assert.deepEqual(choices.slice(0, 4), ['pyroclast', 'elderoot', 'tempestra', 'astralux']);
   assert.ok(choices.includes('tsunarok'), 'a held badge opens that gym legendary');
@@ -604,7 +604,7 @@ test('Hall of Fame: eligibility follows the checklist; retiring writes a career 
   const f = newFranchise(41);
   assert.equal(F.retire(f).ok, false);
   assert.equal(F.hallOfFameNotice(f), false);
-  for (const g of ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']) f.campaign.badges[g] = { year: 1, week: 1, score: '1–0' };
+  for (const g of ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']) f.campaign.badges[g] = { year: 1, week: 1, score: '1-0' };
   Object.assign(f.campaign, { titles: 2, wins: 50, awards: 3 });
   f.history.push({ year: 1, club: f.club, record: { w: 9, l: 0 }, place: 1, champion: f.club, playoffs: true });
   assert.equal(F.hallOfFameProgress(f).eligible, true);
