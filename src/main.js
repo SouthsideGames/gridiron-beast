@@ -5,6 +5,7 @@ import * as Save from './franchise/save.js';
 import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof } from './franchise/cloud-save.js';
 import { setHofMirror, mergeHof, hallOfFame } from './franchise/hall-of-fame.js';
 import { tipHtml, maybeSheetTip, initTutorial } from './ui/tutorial.js';
+import * as F from './franchise/franchise.js';
 import { setDexMirror, mergeDex, dexData } from './franchise/dex-store.js';
 import { $, toast } from './ui/dom.js';
 import { registerMenuScreens } from './ui/screens/menu.js';
@@ -36,7 +37,8 @@ function applySettings() { document.documentElement.dataset.reducedMotion = app.
 function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise) return null;
   const items = [['hq', 'HQ', '🏠'], ['roster', 'Roster', '🐾'], ['playbook', 'Plays', '📋'], ['league', 'League', '🏆'], ['more', 'More', '☰']];
-  return items.map(([screen, label, icon]) => ({ screen, label, icon, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));
+  const counts = {}; for (const n of F.notices(app.f)) counts[n.screen] = (counts[n.screen] || 0) + 1;
+  return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));
 }
 
 export function start() {

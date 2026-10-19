@@ -335,6 +335,19 @@ test('founding roster: about a third are on one-year deals (never a cornerstone)
   assert.ok(f.roster.filter((m) => m.contract.ends === 2).length > oneYear.length);
 });
 
+test('notices and manual evolution: a monster at its evolution level is a roster notice; Evolve is by hand and does not reprice the contract', async () => {
+  const M = await import('../src/data/monsters.js');
+  const f = newFranchise(7); while (f.draft && !f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
+  const m = f.roster.find((x) => M.resolveSpecies(x).evolution.length); assert.ok(m);
+  const level = M.resolveSpecies(m).evolution[0].level; m.level = level - 1;
+  assert.equal(F.evolveMonster(f, m.id).ok, false, 'not yet'); assert.ok(!F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id));
+  m.level = level; const sal = m.salary;
+  assert.ok(F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id), 'ready = notice'); assert.ok(F.noticesFor(f, 'roster').length >= 1);
+  const pref = M.schemePreferences(m); assert.ok(pref && pref.schemes.length >= 2 && pref.best, 'scheme preferences list every scheme on the side');
+  const r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1); assert.equal(m.salary, sal, 'evolution does not change the contract');
+  assert.ok(!F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id), 'notice clears');
+});
+
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
   F.hireDefaultStaff(f);

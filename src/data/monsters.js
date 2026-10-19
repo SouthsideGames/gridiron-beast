@@ -118,8 +118,7 @@ export function tryEvolve(m) {
   m.stage = stage + 1; m.name = next.name + suffix;
   const w = POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR;
   for (const k of ATTRIBUTES) m.attributes[k] = clampAttr(m.attributes[k] + (w[k] ? 3 : 1)); // an evolved form is a cut above: +3 to what its position uses
-  m.potential = clampAttr((m.potential || 70) + 4);
-  m.salary = salaryFor(m);
+  m.potential = clampAttr((m.potential || 70) + 4); // salary is a contract (GDD §18.1): the ask moves at renewal, not today
   return { kind: 'evolve', id: m.id, name: m.name, from, to: next.name, stage: m.stage, species: sp.id };
 }
 /** The engine effect a monster carries: its signature ability (uncommon and up) or its species' shared trait (commons). */
@@ -416,6 +415,19 @@ function fitThresholds() {
   }
   FIT_THRESHOLDS = t; return t;
 }
+export const SCHEME_LABEL = Object.freeze({ pass: 'Air Raid', run: 'Ground Attack', balanced: 'Balanced', pressure: 'Blitz Heavy', coverage: 'Zone Control', man: 'Man Coverage' });
+/** Every scheme on the monster's side, with whether it fits and how far above/below the bar it sits — so the card can say what it *prefers*. */
+export function schemePreferences(m) {
+  const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(m.position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(m.position) ? 'defense' : null;
+  if (!side) return null;
+  const out = [];
+  for (const [scheme, rule] of Object.entries(FIT_KEYS[side])) { const keys = rule[m.position]; if (!keys) continue; const bar = fitThresholds()[`${scheme}:${m.position}`]; const mean = keyMean(m, keys); out.push({ scheme, label: SCHEME_LABEL[scheme], fits: mean >= bar, margin: Math.round(mean - bar), why: rule.why, keys }); }
+  out.sort((a, b) => b.margin - a.margin);
+  return { side, schemes: out, best: out[0] || null };
+}
+/** Manual evolution for the owner's monsters (GDD §20.6): ready when the level is reached; `tryEvolve` performs it. */
+export function evolutionReady(m) { const sp = resolveSpecies(m); const next = sp.evolution[m.stage || 0]; return !!next && (m.level || 1) >= next.level; }
+export function nextEvolution(m) { const sp = resolveSpecies(m); const st = m.stage || 0; const next = sp.evolution[st]; return next ? { ...next, stage: st + 1, spec: evolvedSpec(sp, st + 1) } : null; }
 export function schemeFit(m, { offense = 'balanced', defense = 'coverage' } = {}) {
   const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(m.position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(m.position) ? 'defense' : null;
   if (!side) return null;

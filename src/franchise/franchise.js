@@ -18,7 +18,7 @@ export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
-import { createRoster, generateMonster, monsterOverall, schemeFit, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
+import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
 import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
@@ -254,6 +254,32 @@ export function monsterBio(f, m) {
   if (before > 0) stints.unshift({ club: `${birthplace} regional league`, from: stints[0].from - before, to: stints[0].from - 1, regional: true });
   return { birthplace, yearsPro: m.yearsPro ?? 0, rookie: m.yearsPro === 0, joined, stints };
 }
+/** Evolve one of the owner's monsters once its level allows (GDD §20.6). */
+export function evolveMonster(f, id) {
+  const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not on roster.' };
+  if (!evolutionReady(m)) { const n = nextEvolution(m); return { ok: false, reason: n ? `${m.name} evolves at level ${n.level}.` : `${m.name} is fully evolved.` }; }
+  const from = m.name; const ev = tryEvolve(m); if (!ev) return { ok: false, reason: 'Nothing happened.' };
+  dexRecord(f, m, 'signed');
+  news(f, `EVOLUTION: ${from} evolved into ${m.name}!`, 'win');
+  return { ok: true, event: ev, monster: m };
+}
+/**
+ * Notices (GDD §20.6): things that want the owner's attention, grouped by the tab they live on. Each has a screen,
+ * a kind, a short text and (for roster notices) the monster. Pure: computed from state, nothing to dismiss.
+ */
+export function notices(f) {
+  const list = [];
+  if (!f?.roster) return list;
+  for (const m of f.roster) {
+    if (evolutionReady(m)) list.push({ screen: 'roster', kind: 'evolve', id: m.id, text: `${m.name} is ready to evolve` });
+    if ((m.points || 0) > 0 && !f.settings?.autoPoints) list.push({ screen: 'roster', kind: 'points', id: m.id, text: `${m.name} has ${m.points} attribute point${m.points === 1 ? '' : 's'} to spend` });
+  }
+  if (f.season?.finished && f.offseason && offseasonPending(f).length) list.push({ screen: 'hq', kind: 'contracts', text: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} waiting` });
+  if (f.week?.commissioner) list.push({ screen: 'hq', kind: 'commissioner', text: 'The commissioner is waiting on a cap decision' });
+  return list;
+}
+export const noticesFor = (f, screen) => notices(f).filter((n) => n.screen === screen);
+export const monsterNotices = (f, id) => notices(f).filter((n) => n.id === id);
 /** Hall of Fame progress against the franchise's difficulty (GDD §15.9). */
 export function hallOfFameProgress(f) {
   const c = f.campaign || { badges: {}, titles: 0, wins: 0, awards: 0 };
@@ -1130,7 +1156,7 @@ export function finishSunday(f, gameState) {
   const won = gameState.winner === side;
   const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true };
   const { r, save } = frng(f);
-  const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints });
+  const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false });
   save();
   f.week.events = events;
   f.week.gameResult = { ...res, won, playerScore: gameState.score[side], oppScore: gameState.score[oppSide], opponent: m.opponent, tag: m.tag };

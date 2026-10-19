@@ -8,7 +8,7 @@ export const OUT_OF_POSITION_RISK = 1.75;
 const norm = (v) => Math.max(1, Math.min(99, v ?? 60)) / 99;
 
 /** Apply one game's consequences to the roster. `chart` maps slots to monster ids; `playerStats` from the game state. */
-export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false } = {}) {
+export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true } = {}) {
   const events = [];
   const byId = Object.fromEntries(roster.map((m) => [m.id, m]));
   for (const slot of [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K']) {
@@ -23,7 +23,7 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
       const before = monsterOverall(m);
       levelUp(m, rng, { autoSpend });
       events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
-      const evo = tryEvolve(m); if (evo) events.push(evo);
+      if (autoEvolve) { const evo = tryEvolve(m); if (evo) events.push(evo); } // the owner's monsters wait for the owner (GDD §20.6)
     }
     // Fatigue and injury risk.
     const dur = norm(m.attributes.durability);

@@ -381,3 +381,12 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 /* Cornerstone mark: the monster the club was built around */
 .chip.cornerstone { background: linear-gradient(90deg, #5a4100, #8a6400); color: #ffe08a; border: 1px solid #f5c542; font-weight: 900; letter-spacing: .04em; font-size: 10px; }
 .cs-star { color: #f5c542; }
+/* Notices (GDD §20.6): a dot where something wants the owner, a count on the tab */
+.tab .tab-icon { position: relative; }
+.tab-badge { position: absolute; top: -6px; right: -12px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: #e0463a; color: #fff; font-size: 10px; font-weight: 900; line-height: 16px; text-align: center; border: 2px solid var(--bg); }
+.notice-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #e0463a; margin-right: 4px; vertical-align: middle; box-shadow: 0 0 0 2px rgba(224,70,58,.25); }
+/* Scheme section and evolution row on the monster card */
+.scheme-row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 3px 6px; border-radius: 6px; }
+.scheme-row.fits .scheme-name { color: #f5c542; font-weight: 700; }
+.scheme-row.ours { background: rgba(245,197,66,.08); }
+.evo-next { filter: drop-shadow(0 0 4px rgba(255,255,255,.08)); }

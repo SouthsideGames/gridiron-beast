@@ -13,7 +13,7 @@ import { dexCountsGlobal } from '../../franchise/dex-store.js';
 
 const POS_NAME = { QB: 'Quarterback', RB: 'Running back', WR: 'Receiver', TE: 'Tight end', OL: 'Lineman', DL: 'Pass rusher', LB: 'Linebacker', CB: 'Cornerback', S: 'Safety', K: 'Kicker' };
 
-const silhouette = (s, size) => sprite16({ ...s, id: s.id + '_sil', colors: ['#1a2420', '#22302a'], look: 'cool', features: s.features.filter((f) => f !== 'glow' && f !== 'halo') }, size);
+export const silhouette = (s, size) => sprite16({ ...s, id: s.id + '_sil', colors: ['#1a2420', '#22302a'], look: 'cool', features: s.features.filter((f) => f !== 'glow' && f !== 'halo') }, size);
 
 export function registerDexScreens(Router, app) {
   Router.registerScreen('dex', {

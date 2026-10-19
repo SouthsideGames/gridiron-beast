@@ -118,6 +118,17 @@ def run_size(pw, port, w, h, name):
     no_overflow(page, 'hq'); tap_targets(page, 'hq'); shot(page, f'{name}-04-hq'); tip_ok(page)
     # Commissioner's office: stage a pending review and open the screen.
     page.evaluate("() => { const f = __gb.f; f.week.commissioner = { over: 50000, names: f.roster.slice(0, 3).map(m => m.id), enough: true, visits: 1 }; }")
+    # Notices (GDD §20.6): a monster ready to evolve puts a badge on the Roster tab and an Evolve button on its card.
+    page.evaluate("() => { const f = __gb.f; const m = f.roster.find((x) => { const sp = x.species; return true; }); const { resolveSpecies } = window.__mon || {}; }")
+    page.evaluate("() => import('/src/data/monsters.js').then((M) => { const f = __gb.f; const m = f.roster.find((x) => M.resolveSpecies(x).evolution.length); if (m) { m.level = M.resolveSpecies(m).evolution[0].level; window.__evo = m.id; } })"); page.wait_for_timeout(100)
+    page.click('[data-action="router-tab"][data-screen="roster"]'); page.wait_for_selector('.tabbar')
+    check(page.query_selector('.tab[data-screen="roster"] .tab-badge') is not None, 'notices: badge on the Roster tab when a monster can evolve')
+    evo_id = page.evaluate("() => window.__evo")
+    if evo_id:
+        page.evaluate("() => import('/src/ui/router.js').then((R) => R.go('monster', { id: window.__evo }))"); page.wait_for_selector('[data-action="evolve"]'); no_overflow(page, 'monster card evolve'); shot(page, f'{name}-07f-evolve-ready')
+        check(page.query_selector('.panel.scheme') is not None, 'monster card: scheme section')
+        page.click('[data-action="evolve"]'); page.wait_for_selector('.sheet'); shot(page, f'{name}-07g-evolved'); page.click('[data-action="sheet-close"]'); page.wait_for_selector('.sheet', state='detached')
+        check(page.evaluate("() => (__gb.f.roster.find((x) => x.id === window.__evo).stage || 0) >= 1"), 'evolution happened by hand')
     page.click('[data-action="router-tab"][data-screen="roster"]'); page.click('[data-action="router-tab"][data-screen="hq"]'); page.wait_for_selector('[data-action="commissioner"]')
     page.click('[data-action="commissioner"]'); page.wait_for_selector('[data-action="release"]'); no_overflow(page, 'commissioner'); tap_targets(page, 'commissioner'); shot(page, f'{name}-04b-commissioner')
     page.evaluate("() => { __gb.f.week.commissioner = null; __gb.save(); }")
