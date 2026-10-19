@@ -276,6 +276,7 @@ export function notices(f) {
   }
   if (f.season?.finished && f.offseason && offseasonPending(f).length) list.push({ screen: 'hq', kind: 'contracts', text: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} waiting` });
   if (f.week?.commissioner) list.push({ screen: 'hq', kind: 'commissioner', text: 'The commissioner is waiting on a cap decision' });
+  else if (salarySummary(f).over) list.push({ screen: 'hq', kind: 'cap', text: `Over the cap by ${Math.round(-salarySummary(f).remaining).toLocaleString('en-US')} cr` });
   return list;
 }
 export const noticesFor = (f, screen) => notices(f).filter((n) => n.screen === screen);
