@@ -22,15 +22,17 @@ export function go(name, params = {}, { replace = false, reset = false } = {}) {
   if (reset) stack = [];
   if (replace && stack.length) stack.pop();
   stack.push({ name, params });
-  render();
+  navigating = true; render();
 }
 export function back() {
   if (stack.length > 1) stack.pop();
-  render();
+  navigating = true; render();
 }
+let navigating = false; // a go/back scrolls to the top; a re-render of the same screen (spending a point, toggling a tab) keeps the scroll position
 export function render() {
   const top = currentScreen(); if (!top || !app) return;
   const screen = screens.get(top.name);
+  const keepScroll = !navigating && current === screen; const y = window.scrollY; navigating = false;
   const ctx = { ...ctxProvider(), params: top.params, go, back, render };
   if (current && current !== screen) current.unmount?.();
   current = screen;
@@ -49,5 +51,5 @@ export function render() {
   for (const b of app.querySelectorAll('[data-action="router-tab"]')) b.addEventListener('click', () => go(b.dataset.screen, {}, { reset: true }));
   screen.mount?.($('#screen'), ctx);
   afterMount?.(ctx, top.name);
-  window.scrollTo(0, 0);
+  if (keepScroll) window.scrollTo(0, y); else window.scrollTo(0, 0);
 }
