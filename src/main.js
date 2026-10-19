@@ -2,7 +2,8 @@
 
 import * as Router from './ui/router.js';
 import * as Save from './franchise/save.js';
-import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof } from './franchise/cloud-save.js';
+import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof, cloudLoadAchievements, cloudSaveAchievements } from './franchise/cloud-save.js';
+import { setAchievementMirror, mergeAchievements, achievementsData } from './franchise/achievement-store.js';
 import { setHofMirror, mergeHof, hallOfFame } from './franchise/hall-of-fame.js';
 import { tipHtml, maybeSheetTip, initTutorial } from './ui/tutorial.js';
 import * as F from './franchise/franchise.js';
@@ -54,9 +55,12 @@ export function start() {
   registerPracticeScreens(Router, app);
   registerDexScreens(Router, app);
   const saved = Save.load();
-  if (saved) { app.f = saved; applySettings(); mergeDex(saved.dex); }
+  if (saved) { app.f = saved; applySettings(); mergeDex(saved.dex); F.syncAchievementsToGlobal(saved); }
   // The player's dex lives outside the franchise and is mirrored to the cloud like the save.
   setDexMirror((d) => cloudSaveDex(d));
+  // Achievements belong to the player, not the save (GDD §21.4): mirrored like the dex.
+  setAchievementMirror((d) => cloudSaveAchievements(d));
+  cloudLoadAchievements().then((remote) => { if (remote) mergeAchievements(remote); if (achievementsData().updatedAt > (remote?.updatedAt || 0) && Object.keys(achievementsData().earned).length) cloudSaveAchievements(achievementsData()); });
   cloudLoadDex().then((remote) => { if (remote) mergeDex(remote); if (dexData().updatedAt > (remote?.updatedAt || 0)) cloudSaveDex(dexData()); });
   setHofMirror((cards) => cloudSaveHof(cards));
   cloudLoadHof().then((remote) => { if (remote) mergeHof(remote); if (hallOfFame().length) cloudSaveHof(hallOfFame()); });
@@ -66,7 +70,7 @@ export function start() {
     const f = remote && Save.migrate(remote);
     if (!f) { if (app.f) cloudSave(app.f, { immediate: true }); return; }
     if (!app.f || (f.savedAt || 0) > (app.f.savedAt || 0)) {
-      app.f = f; Save.save(f); applySettings(); mergeDex(f.dex);
+      app.f = f; Save.save(f); applySettings(); mergeDex(f.dex); F.syncAchievementsToGlobal(f);
       if (!Router.currentScreen() || Router.currentScreen().name === 'menu') Router.go('menu', {}, { reset: true });
       toast('Restored your franchise from your cloud save.', 'good');
     }
@@ -82,7 +86,7 @@ export const TAB_OF = {
   roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', staff: 'more',
   playbook: 'playbook', playdetail: 'playbook', practice: 'playbook', audit: 'more',
   league: 'league', schedule: 'league', standings: 'league', history: 'league',
-  more: 'more', settings: 'more', developer: 'more', about: 'more', dex: 'more', hof: 'more',
+  more: 'more', settings: 'more', developer: 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',
 };
 
 start();

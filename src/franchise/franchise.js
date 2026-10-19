@@ -27,6 +27,7 @@ import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, O
 import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
+import { recordAchievementGlobal } from './achievement-store.js';
 import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds } from './trades.js';
 import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
@@ -297,10 +298,14 @@ export function checkAchievements(f, trigger, ctx = {}) {
     let ok = false; try { ok = !!a.when(f, c); } catch { ok = false; }
     if (!ok) continue;
     f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1 };
-    f.scenes.push({ id: a.id, ctx: sceneVars(f, c) }); earned.push(a.id);
+    const vars = sceneVars(f, c); f.scenes.push({ id: a.id, ctx: vars }); earned.push(a.id); stampGlobal(f, a, vars);
     news(f, `ACHIEVEMENT: ${fillScene(a.title, sceneVars(f, c))}.`, 'win');
   }
   return earned;
+}
+/** Record an achievement for the player across all franchises, with its cutscene as it played (GDD §21.4). */
+function stampGlobal(f, a, vars) {
+  try { recordAchievementGlobal(a.id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: f.season?.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: f.seed, scene: { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } }); } catch { /* storage unavailable */ }
 }
 function sceneVars(f, c) {
   const rv = f.rivals?.[f.tier]; const rec = f.season?.records?.[f.club] || { w: 0, l: 0 };
@@ -326,8 +331,14 @@ export function backfillAchievements(f) {
     conference_title: hist.some((h) => h.champion === f.club) || (f.season?.playoffs?.results || []).some((r) => r.round === 2 && r.winner === f.club), first_title: (c.titles || 0) >= 1, second_title: (c.titles || 0) >= 2, first_award: (c.awards || 0) >= 1,
     wins_10: c.wins >= 10, wins_30: c.wins >= 30, wins_50: c.wins >= 50, legend_tracked: Object.values(c.tracks || {}).some((n) => n >= 1), legend_unlocked: Object.keys(c.unlocked || {}).length >= 1, hof_eligible: hallOfFameProgress(f).eligible, traded_up: (f.trades || []).length >= 1 };
   const got = [];
-  for (const a of ACHIEVEMENTS) if (!f.achievements[a.id] && facts[a.id]) { f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1, backfilled: true }; f.scenes.push({ id: a.id, ctx: sceneVars(f, {}) }); got.push(a.id); }
+  for (const a of ACHIEVEMENTS) if (!f.achievements[a.id] && facts[a.id]) { f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1, backfilled: true }; const vars = sceneVars(f, {}); f.scenes.push({ id: a.id, ctx: vars }); got.push(a.id); stampGlobal(f, a, vars); }
   return got;
+}
+/** Copy a franchise's achievements into the player's account store (saves that earned them before the store existed). */
+export function syncAchievementsToGlobal(f) {
+  if (!f?.achievements) return 0; let n = 0;
+  for (const [id, e] of Object.entries(f.achievements)) { const a = ACHIEVEMENT_BY_ID[id]; if (!a) continue; const vars = sceneVars(f, {}); try { if (recordAchievementGlobal(id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: e.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: f.seed, scene: { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } })) n++; } catch { /* ignore */ } }
+  return n;
 }
 export function dismissScene(f) { f.scenes?.shift(); return { ok: true, left: f.scenes?.length || 0 }; }
 export function achievementList(f) { return ACHIEVEMENTS.map((a) => ({ id: a.id, speaker: a.speaker, title: f.achievements?.[a.id] ? fillScene(a.title, sceneVars(f, {})) : null, earned: f.achievements?.[a.id] || null })); }

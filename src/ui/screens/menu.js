@@ -1,6 +1,8 @@
 // Main menu, settings, developer tools, about.
 
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
+import { achievementsData } from '../../franchise/achievement-store.js';
+import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { yearOf } from '../../data/calendar.js';
 import * as Save from '../../franchise/save.js';
 import { cloudStatus } from '../../franchise/cloud-save.js';
@@ -30,6 +32,7 @@ export function registerMenuScreens(Router, app) {
           <button class="btn ${f ? '' : 'primary big'} block" data-action="new">${f ? 'Start a New Franchise' : '🏆 New Franchise'}</button>
           ${legacy && !f ? `<button class="btn block" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
           <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
+          <button class="btn block" data-action="go" data-screen="achievements">🏅 Achievements <span class="dim mono">${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}</span></button>
           ${hallOfFame().length ? `<button class="btn block" data-action="go" data-screen="hof">🏛️ Hall of Fame <span class="dim mono">${hallOfFame().length}</span></button>` : ''}
           <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block" data-action="go" data-screen="developer">🛠️ Developer</button></div>
         </div>
@@ -96,6 +99,24 @@ export function registerMenuScreens(Router, app) {
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet('Wipe every species you have discovered, across all franchises?', { title: 'Reset Beast Dex', okLabel: 'Reset', danger: true })) { resetDex(); toast('Beast Dex reset.'); } } }); },
   });
 
+  // ---------------------------------------------------------------- Achievements (GDD §21.4): the player's, across every franchise
+  Router.registerScreen('achievements', {
+    title: 'Achievements', back: true,
+    render() {
+      const earned = achievementsData().earned; const got = ACHIEVEMENTS.filter((a) => earned[a.id]).length;
+      const who = (sp) => sp === 'board' ? '📜 A letter from the Board' : sp === 'rival' ? '📞 The rival GM' : '🏛️ The commissioner';
+      const diff = (d) => ({ rookie: 'Rookie', pro: 'Pro', allstar: 'All-Star' })[d] || d;
+      return `<div class="panel"><div class="row between"><b>${got} of ${ACHIEVEMENTS.length} earned</b><span class="dim">across every franchise</span></div><div class="bar" style="margin-top:6px"><i style="width:${Math.round(got / ACHIEVEMENTS.length * 100)}%"></i></div><p class="dim" style="margin:6px 0 0">Each one arrives in your franchise as a scene. Earned scenes can be replayed here.</p></div>
+        <div class="stack">${ACHIEVEMENTS.map((a) => { const e = earned[a.id]; return e ? `<div class="panel ach-card earned"><div class="row between"><b>🏅 ${esc(e.scene?.title || a.title.replace(/\{\w+\}/g, 'your rival'))}</b><span class="dim">${yearOf(e.year)}</span></div><div class="muted">${esc(a.desc || '')}</div><div class="dim" style="font-size:12px;margin-top:2px">${who(a.speaker)} · first earned with ${esc(e.club || '')} (${esc(diff(e.difficulty))})${e.count > 1 ? ` · ${e.count} franchises` : ''}</div>${e.scene ? `<button class="btn small" data-action="replay" data-id="${a.id}" style="margin-top:6px">▶ Replay the scene</button>` : ''}</div>`
+          : `<div class="panel ach-card locked"><div class="row between"><b>🔒 ${esc(a.title.includes('{') ? 'A word from your rival' : a.title)}</b><span class="dim">—</span></div><div class="muted">${esc(a.desc || '')}</div><div class="dim" style="font-size:12px;margin-top:2px">${who(a.speaker)}</div></div>`; }).join('')}</div>`;
+    },
+    mount(root) {
+      delegate(root, { replay: (el) => { const e = achievementsData().earned[el.dataset.id]; const sc = e?.scene; if (!sc) return;
+        const head = sc.speaker === 'board' ? '' : sc.speaker === 'rival' ? `<div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px">${portraitSprite(`gm|${sc.rivalTeam}`, 56, { hue: 280 })}<div><div class="talk-name">${esc(sc.rivalGm || 'The rival GM')}</div><div class="dim">GM, ${esc(sc.rivalTeam || '')}</div></div></div>` : `<div class="row" style="gap:12px;align-items:flex-start;margin-bottom:10px">${portraitSprite('commissioner', 56, { hue: 40 })}<div><div class="talk-name">The Commissioner</div><div class="dim">League office</div></div></div>`;
+        const body = sc.speaker === 'board' ? `<div class="board-letter">${sc.beats.map((b) => `<p>${esc(b)}</p>`).join('')}</div>` : `<div class="stack">${sc.beats.map((b) => `<div class="talk ${sc.speaker === 'rival' ? 'rival' : ''}" style="margin:0"><p class="talk-line">${esc(b)}</p></div>`).join('')}</div>`;
+        sheet(`<div class="scene">${head}${body}</div>`, { title: `🏅 ${sc.title}` }); } });
+    },
+  });
   Router.registerScreen('hof', {
     title: 'Hall of Fame',
     render() {
@@ -129,7 +150,7 @@ export function registerMenuScreens(Router, app) {
           ${b.history.length ? `<div class="dim" style="margin-top:6px">Past: ${b.history.map((h) => `${yearOf(h.year)} ${h.met ? '✅' : '❌'} ${esc(h.label)}`).join(' · ')}</div>` : ''}</div>
         <div class="panel"><b>Career</b><div class="kv" style="margin-top:6px"><b>Seasons</b><span>${seasons + 1}</span><b>Record</b><span>${wins}–${losses}</span><b>Beast Bowls</b><span>${f.campaign?.titles || 0}</span><b>League awards</b><span>${f.campaign?.awards || 0}</span><b>Badges</b><span>${badges.length} / 8</span><b>Career wins (HoF)</b><span>${f.campaign?.wins || 0}</span></div>
           ${badges.length ? `<div class="row" style="flex-wrap:wrap;gap:4px;margin-top:6px">${badges.map(([club, x]) => `<span class="chip accent">${esc(GYM_BY_CLUB[club]?.badge || club)} · ${yearOf(x.year)}</span>`).join('')}</div>` : ''}</div>
-        ${(() => { const list = F.achievementList(f); const got = list.filter((a) => a.earned); return `<div class="panel"><div class="row between"><b>Achievements</b><span class="dim">${got.length} of ${list.length}</span></div><div class="stack" style="gap:4px;margin-top:6px">${list.map((a) => a.earned ? `<div class="row between ach"><span>${a.speaker === 'board' ? '📜' : a.speaker === 'rival' ? '📞' : '🏛️'} <b>${esc(a.title)}</b></span><span class="dim">${yearOf(a.earned.year)}</span></div>` : '<div class="row between ach locked"><span>🔒 ???</span><span class="dim">—</span></div>').join('')}</div></div>`; })()}
+        ${(() => { const list = F.achievementList(f); const got = list.filter((a) => a.earned); return `<div class="panel"><div class="row between"><b>Achievements · this franchise</b><span class="dim">${got.length} of ${list.length}</span></div><div class="dim" style="margin-top:4px">${got.length ? got.map((a) => esc(a.title)).join(' · ') : 'None yet.'}</div><div class="dim" style="margin-top:4px">Every achievement, what it takes and its cutscene: Main menu → 🏅 Achievements.</div></div>`; })()}
           <div class="panel"><b>Hall of Fame</b> <span class="dim">${esc(diff.hof)}</span><div class="hof" style="margin-top:6px">${hof.rows.map((r) => `<div class="row between ${r.done ? 'done' : ''}"><span>${r.done ? '✓' : '○'} ${r.key}</span><span class="mono">${r.have} / ${r.goal}</span></div>`).join('')}</div>${hof.eligible ? '<p class="muted">Eligible: retire from HQ whenever you choose.</p>' : ''}</div>
         <div class="panel"><b>Franchises</b><div class="dim">Selling this club and starting another is coming (GDD §18.7). Sold franchises will sit here as cards; facing an old club will be a big day.</div></div>`;
     },

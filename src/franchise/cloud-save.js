@@ -104,3 +104,14 @@ export function cloudSaveDex(dex) {
 let hofTimer = null;
 export async function cloudLoadHof() { const c = await connect(); if (!c) return null; try { const d = await c.col.doc('hof').get(); return d.exists ? d.data().cards || null : null; } catch { return null; } }
 export function cloudSaveHof(cards) { clearTimeout(hofTimer); hofTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('hof').set({ cards: JSON.parse(JSON.stringify(cards)), updatedAt: Date.now() }); } catch { /* ignore */ } }, 3000); }
+
+// ------------------------------------------------------------ achievements (GDD §21.4)
+let achTimer = null;
+export async function cloudLoadAchievements() {
+  const c = await connect(); if (!c) return null;
+  try { const d = await c.col.doc('achievements').get(); return d.exists ? d.data() : null; } catch { return null; }
+}
+export function cloudSaveAchievements(data) {
+  clearTimeout(achTimer);
+  achTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('achievements').set(JSON.parse(JSON.stringify(data))); } catch { /* ignore */ } }, 3000);
+}

@@ -386,6 +386,15 @@ test('achievements: earned once, queue a filled-in cutscene, listed in the offic
   while (F.nextScene(f)) F.dismissScene(f); assert.equal(f.scenes.length, 0);
 });
 
+test('achievements are the player\'s: earning one stamps the account store once, with the scene; a second franchise adds to the count', async () => {
+  const S = await import('../src/franchise/achievement-store.js'); S.resetAchievements();
+  const f = newFranchise(21); f.campaign.titles = 1; F.checkAchievements(f, 'season', { champion: true, wins: 7, losses: 2 });
+  const e = S.achievementsData().earned.first_title; assert.ok(e && e.club === f.club && e.scene?.beats?.length >= 2 && e.count === 1);
+  const g = newFranchise(22); g.campaign.titles = 1; F.checkAchievements(g, 'season', { champion: true, wins: 7, losses: 2 });
+  assert.equal(S.achievementsData().earned.first_title.count, 2); assert.equal(S.achievementsData().earned.first_title.club, f.club, 'the first time is kept');
+  S.resetAchievements(); const h = newFranchise(23); h.achievements = { wins_10: { year: 2 } }; assert.equal(F.syncAchievementsToGlobal(h), 1); assert.ok(S.achievementsData().earned.wins_10.scene);
+});
+
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
   F.hireDefaultStaff(f);
