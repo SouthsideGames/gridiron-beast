@@ -162,3 +162,18 @@ test('evolution: commons evolve at their level, keep numerals, grow, and the dex
   const evolved = t.roster.find((x) => x.stage >= 1); F.dexRecord(f, evolved, 'seen');
   assert.ok(F.dexFormSeen(f, evolved.species) >= 1);
 });
+
+// Owner's rule (GDD §23.10): a signature ability belongs to one monster (one species line) and is never given to another.
+test('signature abilities: each name belongs to exactly one species, and legacy ability ids only ride on their own species', async () => {
+  const { SPECIES_DEX } = await import('../src/data/species.js');
+  const { ABILITIES } = await import('../src/data/monsters.js');
+  const owners = {};
+  for (const sp of SPECIES_DEX) if (sp.ability) (owners[sp.ability.name] ||= []).push(sp.id);
+  for (const [name, ids] of Object.entries(owners)) assert.equal(ids.length, 1, `${name} is on ${ids.join(', ')}`);
+  for (const [id, a] of Object.entries(ABILITIES)) {
+    assert.ok(owners[a.name], `legacy ${id} names a species ability`);
+    assert.deepEqual(a.effect, SPECIES_DEX.find((s) => s.id === owners[a.name][0]).ability.effect, `legacy ${id} matches its species`);
+  }
+  const { CORNERSTONES } = await import('../src/data/monsters.js');
+  for (const c of [...(CORNERSTONES?.offense || []), ...(CORNERSTONES?.defense || [])]) if (c.ability) assert.equal(owners[ABILITIES[c.ability].name][0], c.species, `${c.name} carries its own species' ability`);
+});
