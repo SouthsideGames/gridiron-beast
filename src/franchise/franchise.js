@@ -66,7 +66,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   // offseason already brings renewals, walks and the market. Chosen by a hash of the id, so no rng is consumed.
   const expiring = roster.filter((m) => !m.cornerstone).sort((a, b) => hashString(`${a.id}|1yr`) - hashString(`${b.id}|1yr`)).slice(0, Math.round(roster.length * FOUNDING_ONE_YEAR_SHARE));
   for (const m of roster) m.contract = newContract(1, expiring.includes(m) ? 1 : 2);
-  startSeason(f, 1);
+  startSeason(f, 1); f.achievementsBackfilled = true;
   noteNewFranchise();
   for (const m of roster) dexRecord(f, m, 'signed');
   openCreationDraft(f);
@@ -311,6 +311,23 @@ function fillScene(text, v) { return String(text).replace(/\{(\w+)\}/g, (m, k) =
 export function nextScene(f) {
   const q = f.scenes?.[0]; if (!q) return null; const a = ACHIEVEMENT_BY_ID[q.id]; if (!a) { f.scenes.shift(); return nextScene(f); }
   return { id: a.id, title: fillScene(a.title, q.ctx), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, q.ctx)), earned: f.achievements?.[a.id] || null, rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null };
+}
+/**
+ * One-time backfill for a career that predates achievements (GDD §21.1): grant what the record already shows and queue
+ * those scenes once, in career order. Milestones that need the moment itself (a first win's week, a sweep) are granted
+ * by the record alone where the record proves them.
+ */
+export function backfillAchievements(f) {
+  if (!f?.campaign || f.achievementsBackfilled) return [];
+  f.achievementsBackfilled = true; f.achievements ||= {}; f.scenes ||= [];
+  const hist = f.history || []; const c = f.campaign; const badges = Object.keys(c.badges || {}).length;
+  const facts = { first_win: c.wins >= 1, rival_beaten: Object.entries(c.h2h || {}).some(([t, h]) => t === f.rivals?.[f.tier]?.team && h.w >= 1), first_badge: badges >= 1, half_badges: badges >= 4, all_badges: badges >= 8,
+    winning_season: hist.some((h) => h.record.w > h.record.l), undefeated: hist.some((h) => h.record.w >= 9 && h.record.l === 0), first_playoffs: hist.some((h) => h.playoffs) || !!(f.season?.playoffs && Object.values(f.season.playoffs.seeds).flat().includes(f.club)),
+    conference_title: hist.some((h) => h.champion === f.club) || (f.season?.playoffs?.results || []).some((r) => r.round === 2 && r.winner === f.club), first_title: (c.titles || 0) >= 1, second_title: (c.titles || 0) >= 2, first_award: (c.awards || 0) >= 1,
+    wins_10: c.wins >= 10, wins_30: c.wins >= 30, wins_50: c.wins >= 50, legend_tracked: Object.values(c.tracks || {}).some((n) => n >= 1), legend_unlocked: Object.keys(c.unlocked || {}).length >= 1, hof_eligible: hallOfFameProgress(f).eligible, traded_up: (f.trades || []).length >= 1 };
+  const got = [];
+  for (const a of ACHIEVEMENTS) if (!f.achievements[a.id] && facts[a.id]) { f.achievements[a.id] = { year: f.season?.year || 1, week: f.season?.week || 1, backfilled: true }; f.scenes.push({ id: a.id, ctx: sceneVars(f, {}) }); got.push(a.id); }
+  return got;
 }
 export function dismissScene(f) { f.scenes?.shift(); return { ok: true, left: f.scenes?.length || 0 }; }
 export function achievementList(f) { return ACHIEVEMENTS.map((a) => ({ id: a.id, speaker: a.speaker, title: f.achievements?.[a.id] ? fillScene(a.title, sceneVars(f, {})) : null, earned: f.achievements?.[a.id] || null })); }

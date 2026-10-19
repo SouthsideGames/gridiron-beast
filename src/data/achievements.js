@@ -10,7 +10,7 @@
 export const ACHIEVEMENTS = Object.freeze([
   { id: 'first_win', title: 'First blood', speaker: 'commissioner', trigger: 'sunday',
     when: (f, c) => c.won && f.campaign.wins === 1,
-    beats: ['One. I keep a tally of every GM’s first — some take a month, some take a season. Yours came in week {week}. Noted.', 'Nobody remembers the first one, {first}. Try to make the next few harder to forget.'] },
+    beats: ['One. I keep a tally of every GM’s first win — some take a month, some take a season. Yours is on the books. Noted.', 'Nobody remembers the first one, {first}. Try to make the next few harder to forget.'] },
   { id: 'rival_beaten', title: 'A word from {rival}', speaker: 'rival', trigger: 'sunday',
     when: (f, c) => c.won && c.rival && (f.campaign.h2h?.[c.opponent]?.w || 0) === 1,
     beats: ['So you took one off us. Enjoy the night. I’ve lost to better clubs than yours and I still have the job.', 'Here’s a tip, free of charge: the second one is the one that matters. Nobody gets it.'] },
