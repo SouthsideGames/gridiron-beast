@@ -60,3 +60,14 @@ test('dev review: reviewing items never re-announces; a changed item does', asyn
   localStorage.setItem('gridiron-beast-review-announced', JSON.stringify(told));
   assert.match(D.freshAnnouncement({}) || '', /1 play/);
 });
+
+test('card check: listed abilities are mismatches, the owner can flag more, every entry names a real signature ability', async () => {
+  const { CARD_CHECK } = await import('../src/data/card-check.js');
+  for (const id of Object.keys(CARD_CHECK)) assert.ok(D.REVIEWABLE_ABILITIES.some((s) => s.id === id), `${id} has a signature ability`);
+  assert.ok(D.cardMismatches().includes('wavehorn'), 'Riptide is on the list');
+  assert.ok(!D.cardMismatches().includes('voltfang'));
+  await S.setReview('ability', 'voltfang', { mismatch: true }, D.abilityFingerprint(D.REVIEWABLE_ABILITIES.find((s) => s.id === 'voltfang')));
+  assert.ok(D.cardMismatches().includes('voltfang'));
+  assert.equal(D.cardIssue('voltfang').by, 'owner');
+  assert.match(D.reviewsText(), /CARD MISMATCH: Zappard/);
+});

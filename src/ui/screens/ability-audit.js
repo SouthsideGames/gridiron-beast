@@ -20,32 +20,9 @@ const AUDIT_VIEWBOX = FIELD_VIEWBOX.split(' ').map(Number).map((v, i) => [v / 2,
 import { monsterSprite } from '../pixel-monster.js';
 import { buildFx, familyOf, FAMILY_LABEL, elementFx } from '../ability-fx.js';
 import { syncReviews } from '../../franchise/review-store.js';
-import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText } from '../dev-review.js';
+import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, cardMismatches, cardIssue } from '../dev-review.js';
 
-/**
- * Card text that promises more than the engine does (GDD §23.8). The effect on
- * screen can only show what the engine really does, so the audit says so.
- * Building any of these is a gameplay change, decided by the owner.
- */
-export const TEXT_GAP = {
-  pyroclast: 'No once-per-drive guarantee: a strong block and tackle-breaking bonus every play.',
-  reefclaw: 'No "can\u2019t release" rule: a shed and anchor bonus.',
-  wavehorn: 'No sideline drag: a stronger run block only.',
-  tsunarok: 'No 25% rule: better at catching picks and breaking on deep balls.',
-  thornback: 'Missed tacklers are not slowed: never fumbles, plus tackle-breaking strength.',
-  joltrex: 'No after-sack boost: faster pass rush from the snap.',
-  stormcrown: 'Quick passes can still be broken up: a faster ball only.',
-  glacivern: 'No once-per-half read freeze: quicker reactions and pick bonuses.',
-  nyxshade: 'QBs do not target him more: tighter man coverage and pick bonus.',
-  prismara: 'No QB misjudgement: tighter coverage and contested catches.',
-  aurelion: 'No guaranteed touchdown: a big speed burst after the catch.',
-  coglet: 'Kicks can still miss wide: a flat kicking bonus.',
-  astralux: 'No teleport: a near-certain first juke plus speed after the catch.',
-  aurodrax: 'First-read throws can be intercepted; no fourth-quarter boost: a flat passing bonus.',
-  vyrnax: 'Does not slow the blocker: a faster rush and a shed bonus.',
-};
-
-const STATUS_FILTERS = [['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev']];
+const STATUS_FILTERS = [['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev'], ['card', '⚠ Card mismatch']];
 
 /** What makes each effect key fire in engine.js (presentation reads the same hooks). */
 const HOOKS = {
@@ -166,24 +143,24 @@ export function registerAbilityAudit(Router, app) {
       const reviewable = entries.filter((e) => e.eff?.kind === 'ability');
       const stateOf = Object.fromEntries(reviewable.map((e) => [e.sp.id, reviewState('ability', e.sp.id)]));
       const count = { approved: 0, needs_work: 0, todo: 0 }; for (const v of Object.values(stateOf)) count[NEEDS_OWNER.has(v) ? 'todo' : v] += 1;
-      const statusOk = (e) => st.status === 'all' || (e.eff?.kind === 'ability' && (st.status === 'todo' ? NEEDS_OWNER.has(stateOf[e.sp.id]) : stateOf[e.sp.id] === st.status));
+      const cards = new Set(cardMismatches()); count.card = cards.size;
+      const statusOk = (e) => st.status === 'all' || (st.status === 'card' ? cards.has(e.sp.id) : false) || (e.eff?.kind === 'ability' && (st.status === 'todo' ? NEEDS_OWNER.has(stateOf[e.sp.id]) : stateOf[e.sp.id] === st.status));
       const list = entries.filter((e) => (st.element === 'All' || e.sp.element === st.element) && statusOk(e));
       const missing = entries.filter((e) => e.eff?.kind === 'ability' && !e.hooked);
       return `<p class="muted">Every species' signature ability or trait with the engine hook it fires on. <b>Staged</b> loops a scripted scene through the real effect layer; <b>In play</b> searches the engine for a play where it fires.</p>
         ${missing.length ? `<div class="panel tight warn">No activation hook (passive only): ${missing.map((e) => esc(e.sp.name)).join(', ')}</div>` : ''}
         <div class="panel tight review-summary"><div class="row between"><b>Your review</b><span class="dim">${reviewable.length} abilities</span></div>
           <div class="bar review-bar" style="margin:6px 0"><i class="ok" style="width:${count.approved / reviewable.length * 100}%"></i><i class="nw" style="width:${count.needs_work / reviewable.length * 100}%"></i></div>
-          <div class="row" style="gap:10px;font-size:13px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">🔔 ${count.todo} to review</span><span class="grow"></span><button class="btn small ghost" data-action="rv-copy">Copy notes</button></div>
+          <div class="row" style="gap:10px;font-size:13px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">🔔 ${count.todo} to review</span><span style="color:var(--warn)">⚠ ${count.card} card mismatch${count.card === 1 ? '' : 'es'}</span><span class="grow"></span><button class="btn small ghost" data-action="rv-copy">Copy notes</button></div>
           <div class="dim" style="font-size:11px;margin-top:4px">${globalThis.claude?.use ? 'Saved to this app; Claude can read your verdicts and notes.' : 'Saved on this device. Use Copy notes to send them.'}</div></div>
         <div class="chips" style="margin:8px 0 4px">${STATUS_FILTERS.map(([v, label]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${label}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
         <div class="chips" style="margin:4px 0 8px">${elements.map((el) => `<button class="chip ${el === st.element ? 'on' : ''}" data-action="el" data-v="${el}">${el === 'All' ? 'All' : elementFx(el).glyph + ' ' + el}</button>`).join('')}</div>
         <div class="stack">${list.length ? '' : '<p class="dim center">Nothing here with these filters.</p>'}${list.map((e) => {
           const L = elementFx(e.sp.element); const m = { species: e.sp.id, name: e.sp.name };
           const rv = stateOf[e.sp.id];
-          return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'needs_work' ? 'rv-needswork' : ''}" id="row-${e.sp.id}"><div class="row" style="gap:10px;align-items:flex-start">${monsterSprite(m, 40)}<div class="grow" style="min-width:0"><div class="row between"><b>${esc(e.sp.name)}</b> ${rv ? STATE_BADGE[rv] : ''}<span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(e.sp.element)} · ${esc(e.sp.position)}</span></div>
+          return `<div class="panel tight audit-row ${rv === 'approved' ? 'rv-approved' : rv === 'needs_work' ? 'rv-needswork' : ''}" id="row-${e.sp.id}"><div class="row" style="gap:10px;align-items:flex-start">${monsterSprite(m, 40)}<div class="grow" style="min-width:0"><div class="row between"><b>${esc(e.sp.name)}</b> ${rv ? STATE_BADGE[rv] : ''}${cards.has(e.sp.id) ? `<span class="chip card-chip">⚠ ${cardIssue(e.sp.id)?.status === 'loose' ? 'ROUGH' : 'CARD'}</span>` : ''}<span class="chip" style="border-color:${L.a};color:${L.a}">${L.glyph} ${esc(e.sp.element)} · ${esc(e.sp.position)}</span></div>
             <div><b style="color:${L.a}">${esc(e.eff?.name || 'None')}</b> <span class="dim">${e.eff?.kind === 'trait' ? 'trait (no field effect)' : FAMILY_LABEL[e.family]}</span></div>
             <div class="muted" style="font-size:12px">${esc(e.eff?.text || '')}</div>
-            ${TEXT_GAP[e.sp.id] ? `<div class="text-gap">⚠ Engine does less than the card says. ${esc(TEXT_GAP[e.sp.id])}</div>` : ''}
             <div class="dim" style="font-size:12px">Hook: ${esc(e.key ? HOOKS[e.key] || e.key : 'none')}${e.keys.length > 1 ? ` <span class="dim">(${e.keys.join(', ')})</span>` : ''}</div>
             ${e.eff?.kind === 'ability' ? `<div class="row" style="margin-top:6px;gap:6px"><button class="btn small" data-action="staged" data-id="${e.sp.id}">▶ Staged</button>${e.hooked ? `<button class="btn small" data-action="live" data-id="${e.sp.id}">▶ In play</button>` : '<span class="chip warn">no hook</span>'}</div>${reviewHtml('ability', e.sp.id, { open: st.notesOpen.has('ability:' + e.sp.id) })}` : ''}
           </div></div></div>`; }).join('')}</div>`;

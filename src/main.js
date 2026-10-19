@@ -16,7 +16,7 @@ import { registerRosterScreens } from './ui/screens/roster.js';
 import { registerMatchScreens } from './ui/screens/match.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
 import { registerAbilityAudit } from './ui/screens/ability-audit.js';
-import { reviewQueue, devNoticesOn, freshAnnouncement } from './ui/dev-review.js';
+import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './ui/dev-review.js';
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
 
@@ -42,7 +42,7 @@ function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise) return null;
   const items = [['hq', 'HQ', '🏠'], ['roster', 'Roster', '🐾'], ['playbook', 'Plays', '📋'], ['league', 'League', '🏆'], ['more', 'More', '☰']];
   const counts = {}; for (const n of F.notices(app.f)) counts[n.screen] = (counts[n.screen] || 0) + 1;
-  if (devNoticesOn(app.settings)) counts.more = (counts.more || 0) + reviewQueue().total; // developer reviews (GDD §23.7)
+  if (devNoticesOn(app.settings)) counts.more = (counts.more || 0) + reviewQueue().total + cardMismatches().length; // developer reviews (GDD §23.7)
   return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));
 }
 

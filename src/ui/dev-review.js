@@ -11,6 +11,7 @@ import { PLAYS, OFFENSE_IDS, DEFENSE_IDS } from '../data/playbook.js';
 import { ELEMENT_FX, FX_REVISION, familyOf } from './ability-fx.js';
 import { reviews, setReview } from '../franchise/review-store.js';
 import { esc } from './dom.js';
+import { CARD_CHECK, CARD_STATUS_LABEL } from '../data/card-check.js';
 
 function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 
@@ -45,6 +46,22 @@ export function reviewQueue() {
   const plays = REVIEWABLE_PLAYS.filter((id) => NEEDS_OWNER.has(reviewState('play', id)));
   return { abilities, plays, total: abilities.length + plays.length };
 }
+/**
+ * Card mismatches (GDD §23.9): abilities whose card says something the engine
+ * does not do, found by the code check (CARD_CHECK) or flagged by the owner.
+ * They are the developer's to fix, and the owner is told about them.
+ */
+export function cardMismatches() {
+  const R = reviews('ability');
+  return REVIEWABLE_ABILITIES.filter((sp) => CARD_CHECK[sp.id] || R[sp.id]?.mismatch).map((sp) => sp.id);
+}
+export function cardIssue(id) {
+  const c = CARD_CHECK[id]; const owner = !!reviews('ability')[id]?.mismatch;
+  return c ? { by: 'check', status: c.status, does: c.does, owner } : owner ? { by: 'owner', status: 'missing', does: null, owner } : null;
+}
+/** Amber count of card mismatches for a button, or ''. */
+export function cardBadge(settings, n = cardMismatches().length) { return devNoticesOn(settings) && n ? `<span class="tab-badge inline-badge card-badge" title="Abilities that don't do what their card says">⚠${n}</span>` : ''; }
+
 /** "3 abilities and 2 plays" */
 export function queueText(q = reviewQueue()) {
   const part = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
@@ -61,14 +78,18 @@ export function devBadge(settings, n = reviewQueue().total) { return devNoticesO
  */
 export function freshAnnouncement(settings) {
   if (!devNoticesOn(settings)) return null;
-  const q = reviewQueue(); if (!q.total) return null;
+  const q = reviewQueue(); const cards = cardMismatches(); if (!q.total && !cards.length) return null;
   let told = []; try { told = JSON.parse(localStorage.getItem('gridiron-beast-review-announced') || '[]'); if (!Array.isArray(told)) told = []; } catch { told = []; }
   const seen = new Set(told);
   const fresh = { abilities: q.abilities.filter((id) => !seen.has(`ability:${id}:${fpOf('ability', id)}`)), plays: q.plays.filter((id) => !seen.has(`play:${id}:${fpOf('play', id)}`)) };
   fresh.total = fresh.abilities.length + fresh.plays.length;
-  const now = [...q.abilities.map((id) => `ability:${id}:${fpOf('ability', id)}`), ...q.plays.map((id) => `play:${id}:${fpOf('play', id)}`)];
+  const freshCards = cards.filter((id) => !seen.has(`card:${id}`));
+  const now = [...cards.map((id) => `card:${id}`), ...q.abilities.map((id) => `ability:${id}:${fpOf('ability', id)}`), ...q.plays.map((id) => `play:${id}:${fpOf('play', id)}`)];
   try { localStorage.setItem('gridiron-beast-review-announced', JSON.stringify([...new Set([...told, ...now])].slice(-600))); } catch { /* ignore */ }
-  return fresh.total ? `🛠️ New to review in Developer: ${queueText(fresh)}` : null;
+  const parts = [];
+  if (fresh.total) parts.push(`🛠️ New to review in Developer: ${queueText(fresh)}`);
+  if (freshCards.length) parts.push(`⚠ ${freshCards.length} ${freshCards.length === 1 ? 'ability does' : 'abilities do'} not do what the card says`);
+  return parts.length ? parts.join(' · ') : null;
 }
 
 /** Review controls (Ability Audit rows, the preview sheet, the Playbook Audit). */
@@ -78,6 +99,7 @@ export function reviewHtml(ns, id, { open = false } = {}) {
   const since = st === 'changed' ? 'Changed since you approved it. Have another look.' : st === 'updated' ? 'Updated since you asked for work. Have another look.' : '';
   return `<div class="review" data-review="${ns}:${id}">
     ${since ? `<div class="review-since">🔔 ${since}</div>` : ''}
+    ${ns === 'ability' ? cardHtml(id) : ''}
     <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn small review-btn ${st === 'approved' ? 'approved' : ''}" data-action="rv-approve" data-ns="${ns}" data-id="${id}" aria-pressed="${st === 'approved'}">✓ Looks good</button><button class="btn small review-btn ${st === 'needs_work' ? 'needswork' : ''}" data-action="rv-needs" data-ns="${ns}" data-id="${id}" aria-pressed="${st === 'needs_work'}">✎ Needs work</button>${showNote ? '' : `<button class="btn small ghost" data-action="rv-note" data-ns="${ns}" data-id="${id}">💬 Note</button>`}</div>
     ${showNote ? `<textarea class="review-note" data-change="rv-text" data-ns="${ns}" data-id="${id}" rows="2" maxlength="2000" placeholder="${ns === 'ability' ? 'What should it look like? Shape, colour, size, timing, label...' : 'What should change? Routes, timing, art, when to call it...'}">${esc(r.note || '')}</textarea>
     <label class="row review-gameplay"><input type="checkbox" data-change="rv-gameplay" data-ns="${ns}" data-id="${id}" ${r.gameplay ? 'checked' : ''}> ⚙ ${ns === 'ability' ? 'The ability should <b>do</b> something different (gameplay, not just looks)' : 'The play should <b>work</b> differently (assignments, not just art)'}</label>
@@ -96,13 +118,21 @@ export function reviewHandlers(refresh, opened = new Set(), onError = null) {
     'rv-note': (el) => { opened.add(`${el.dataset.ns}:${el.dataset.id}`); refresh(); setTimeout(() => document.querySelector(`.review-note[data-ns="${el.dataset.ns}"][data-id="${el.dataset.id}"]`)?.focus(), 30); },
     'rv-text': (el) => { save(el.dataset.ns, el.dataset.id, { note: el.value }); mark(el); },
     'rv-gameplay': (el) => { save(el.dataset.ns, el.dataset.id, { gameplay: el.checked }); mark(el); },
+    'rv-mismatch': (el) => { const { ns, id } = el.dataset; save(ns, id, { mismatch: !reviews(ns)[id]?.mismatch }); refresh(); },
   };
 }
 
 /** Plain-text summary for copying (builds outside claude.ai have no shared database). */
 export function reviewsText() {
-  const lines = []; const tag = (r) => (r.status === 'approved' ? 'APPROVED' : r.status === 'needs_work' ? 'NEEDS WORK' : 'NOTE') + (r.gameplay ? ' + GAMEPLAY' : '');
+  const lines = []; const tag = (r) => (r.status === 'approved' ? 'APPROVED' : r.status === 'needs_work' ? 'NEEDS WORK' : 'NOTE') + (r.gameplay ? ' + GAMEPLAY' : '') + (r.mismatch ? ' + CARD MISMATCH' : '');
   for (const sp of REVIEWABLE_ABILITIES) { const r = reviews('ability')[sp.id]; if (r) lines.push(`${tag(r)}: ${sp.name} (${sp.ability.name})${r.note ? `: ${r.note.trim()}` : ''}`); }
   for (const id of REVIEWABLE_PLAYS) { const r = reviews('play')[id]; if (r) lines.push(`${tag(r)}: play ${PLAYS[id].name}${r.note ? `: ${r.note.trim()}` : ''}`); }
   return lines.join('\n');
+}
+
+/** The card-check block on an ability: what the code check found, and the owner's own "doesn't do what it says" toggle. */
+function cardHtml(id) {
+  const c = CARD_CHECK[id]; const owner = !!reviews('ability')[id]?.mismatch;
+  const found = c ? `<div class="card-issue ${c.status}"><b>⚠ ${CARD_STATUS_LABEL[c.status]}</b> <span class="dim">(found by the code check, on the developer's list)</span><div>In the game today: ${esc(c.does)}</div></div>` : '';
+  return `${found}<button class="btn small card-toggle ${owner ? 'on' : ''}" data-action="rv-mismatch" data-ns="ability" data-id="${id}" aria-pressed="${owner}">${owner ? '⚠ You flagged: card doesn\u2019t match the game' : c ? '⚠ Confirm: make it do what the card says' : '⚠ Card doesn\u2019t match what I see'}</button>`;
 }

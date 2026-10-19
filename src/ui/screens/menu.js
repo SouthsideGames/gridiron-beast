@@ -17,7 +17,7 @@ import { resetTutorial, primerHtml } from '../tutorial.js';
 import { DIFFICULTY as DIFF } from '../../franchise/franchise.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { portraitSprite } from '../pixel-monster.js';
-import { reviewQueue, queueText, devBadge, devNoticesOn } from '../dev-review.js';
+import { reviewQueue, queueText, devBadge, devNoticesOn, cardBadge, cardMismatches } from '../dev-review.js';
 
 export function registerMenuScreens(Router, app) {
   Router.registerScreen('menu', {
@@ -35,7 +35,7 @@ export function registerMenuScreens(Router, app) {
           <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
           <button class="btn block" data-action="go" data-screen="achievements">🏅 Achievements <span class="dim mono">${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}</span></button>
           ${hallOfFame().length ? `<button class="btn block" data-action="go" data-screen="hof">🏛️ Hall of Fame <span class="dim mono">${hallOfFame().length}</span></button>` : ''}
-          <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}</button></div>
+          <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button></div>
         </div>
         <p class="center dim" style="margin-top:16px">Gridiron Beast · build ${esc(buildLabel())} · Southside Games</p>`;
     },
@@ -95,10 +95,11 @@ export function registerMenuScreens(Router, app) {
       const q = reviewQueue();
       return `<p class="muted">Inspection tools that work without a franchise.</p>
         ${q.total ? `<div class="panel tight dev-queue"><b>🔔 Waiting for your review</b><div class="muted" style="margin-top:2px">${esc(queueText(q))}: new, or changed since you last looked.</div></div>` : '<div class="panel tight dim">✓ Nothing waiting for review.</div>'}
+        ${cardMismatches().length ? `<div class="panel tight card-queue"><b>⚠ ${cardMismatches().length} abilities don't do what their card says</b><div class="muted" style="margin-top:2px">Found by checking every card against the game code, plus any you flag. On the developer's list; each one clears when the ability really does what it says. Ability Audit → ⚠ Card mismatch.</div></div>` : ''}
         <div class="stack">
         <button class="btn block badge-host" data-action="go" data-screen="audit">🔎 Playbook Audit${devBadge(app.settings, q.plays.length)}</button>
         <button class="btn block" data-action="go" data-screen="practice">🎯 Practice Field</button>
-        <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Ability Audit${devBadge(app.settings, q.abilities.length)}</button>
+        <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Ability Audit${devBadge(app.settings, q.abilities.length)}${cardBadge(app.settings)}</button>
         <button class="btn block" data-action="dexall">📖 Beast Dex (everything revealed)</button>
         <button class="btn block danger" data-action="dexreset">Reset my Beast Dex</button>
         <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button></div>`;
@@ -169,7 +170,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="office">🪪 My office <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
         <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
-        ${devNoticesOn(app.settings) && reviewQueue().total ? `<button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer · to review${devBadge(app.settings)}</button>` : ''}
+        ${devNoticesOn(app.settings) && (reviewQueue().total || cardMismatches().length) ? `<button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button>` : ''}
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;
     },
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }) }); },
