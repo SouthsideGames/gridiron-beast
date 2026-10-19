@@ -275,7 +275,7 @@ export function notices(f) {
   if (!f?.roster) return list;
   for (const m of f.roster) {
     if (evolutionReady(m)) list.push({ screen: 'roster', kind: 'evolve', id: m.id, text: `${m.name} is ready to evolve` });
-    if ((m.points || 0) > 0 && !f.settings?.autoPoints) list.push({ screen: 'roster', kind: 'points', id: m.id, text: `${m.name} has ${m.points} attribute point${m.points === 1 ? '' : 's'} to spend` });
+    if ((m.points || 0) > 0 && !f.settings?.autoPoints && !pointsLocked(f)) list.push({ screen: 'roster', kind: 'points', id: m.id, text: `${m.name} has ${m.points} attribute point${m.points === 1 ? '' : 's'} to spend` });
   }
   if (f.season?.finished && f.offseason && offseasonPending(f).length) list.push({ screen: 'hq', kind: 'contracts', text: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} waiting` });
   if (f.week?.commissioner) list.push({ screen: 'hq', kind: 'commissioner', text: 'The commissioner is waiting on a cap decision' });
@@ -820,12 +820,17 @@ export function goalProgress(f) {
 /** Spend one attribute point on a roster monster (GDD §17.3). */
 /** The trainer spends every banked point by position weight (GDD §17.3) — one tap instead of a card per monster. */
 export function autoSpendAllPoints(f, { only = null } = {}) {
+  if (pointsLocked(f)) return { ok: false, spent: 0, monsters: 0, reason: 'Attribute points are frozen until every contract decision is made.' };
   const { r, save } = frng(f); let spent = 0, monsters = 0;
   for (const m of f.roster) { if (only && m.id !== only) continue; const before = m.points || 0; if (!before) continue; autoSpendPointsFn(m, r); const used = before - (m.points || 0); if (used) { spent += used; monsters++; } }
   save(); if (spent) news(f, `The trainer spent ${spent} attribute point${spent === 1 ? '' : 's'} across ${monsters} monster${monsters === 1 ? '' : 's'}.`, 'info');
   return { ok: true, spent, monsters };
 }
-export function spendAttributePoint(f, id, attr) { const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not found.' }; return spendPoint(m, attr); }
+/** The league year the player reads (GDD §21.7): once the offseason's contracts are settled, the draft opens the next year. */
+export function displayYear(f) { const s = f.season; if (!s) return 1; return s.finished && f.offseason && !offseasonPending(f).length ? s.year + 1 : s.year; }
+/** Attribute points are frozen while contract decisions are open (GDD §21.6): settle the book first. */
+export function pointsLocked(f) { return !!(f.season?.finished && f.offseason && offseasonPending(f).length); }
+export function spendAttributePoint(f, id, attr) { if (pointsLocked(f)) return { ok: false, reason: 'Attribute points are frozen until every contract decision is made.' }; const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not found.' }; return spendPoint(m, attr); }
 /** Monsters with points waiting to be spent. */
 export function unspentPoints(f) { return f.roster.filter((m) => (m.points || 0) > 0); }
 /** The club's head coach by name (COY recipient). */

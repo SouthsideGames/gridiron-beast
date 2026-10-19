@@ -6,6 +6,7 @@
 // renewals happen in the offseason, before the next season can start.
 
 import { salaryFor, monsterOverall, ROSTER_MIN, ROSTER_MAX } from '../data/monsters.js';
+import { POSITION_WEIGHTS } from '../data/personnel.js';
 import { staffById } from '../data/staff.js';
 import { monsterLine } from './stats.js';
 
@@ -18,8 +19,19 @@ export function newContract(year, years = CONTRACT_YEARS) { years = Math.max(1, 
 export function contractEnds(m, year) { return !!m.contract && m.contract.ends <= year; }
 
 /** What the monster asks for at renewal: today's market rate for their ratings plus a premium for a big season or a league award. */
+/**
+ * The monster as he would be with every banked attribute point spent (GDD §21.6): points go, one at a time, to the
+ * attribute his position weighs most that is still below potential. Asks are priced on this, so holding points back
+ * through a contract year and spending them after re-signing saves nothing.
+ */
+export function withBankedPoints(m) {
+  const pts = m.points || 0; if (!pts) return m;
+  const attrs = { ...m.attributes }; const w = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR).sort((a, b) => b[1] - a[1]);
+  for (let i = 0; i < pts; i++) { const k = w.find(([a]) => attrs[a] < (m.potential || 99))?.[0]; if (!k) break; attrs[k] += 1; }
+  return { ...m, attributes: attrs, points: 0 };
+}
 export function renewalAsk(m, { award = false, year = null } = {}) {
-  const base = salaryFor(m);
+  const base = salaryFor(withBankedPoints(m));
   const L = monsterLine(m, 'season', 'reg');
   const big = (L.passYds || 0) >= 1500 || ((L.rushYds || 0) + (L.recYds || 0)) >= 900 || ((L.tackles || 0) + (L.assists || 0)) >= 50 || (L.sacks || 0) >= 8 || (L.int || 0) >= 4 || (L.fgm || 0) >= 12;
   let premium = 1;

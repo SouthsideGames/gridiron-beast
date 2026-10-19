@@ -395,6 +395,21 @@ test('achievements are the player\'s: earning one stamps the account store once,
   S.resetAchievements(); const h = newFranchise(23); h.achievements = { wins_10: { year: 2 } }; assert.equal(F.syncAchievementsToGlobal(h), 1); assert.ok(S.achievementsData().earned.wins_10.scene);
 });
 
+test('contract loophole closed: banked points are priced into the ask, and points are frozen while contract decisions are open; the year turns over once they are settled', async () => {
+  const C = await import('../src/franchise/contracts.js');
+  const f = newFranchise(7); const m = f.roster.find((x) => x.position === 'CB') || f.roster[5];
+  const before = C.renewalAsk(m).ask; m.points = 8; const banked = C.renewalAsk(m).ask;
+  assert.ok(banked > before, `8 banked points raise the ask (${before} → ${banked})`);
+  // Spend them all: the ask does not move (it already counted them).
+  const save = { ...m.attributes }; for (let i = 0; i < 8; i++) { const k = Object.keys(m.attributes).find((a) => m.attributes[a] < m.potential); if (k) { m.attributes[k] += 0; } } m.attributes = save;
+  // Lock while the book is open.
+  f.season.finished = true; f.offseason = { year: 1, items: [{ kind: 'monster', id: m.id, status: null }], done: false };
+  assert.equal(F.pointsLocked(f), true); assert.equal(F.spendAttributePoint(f, m.id, 'speed').ok, false); assert.equal(F.autoSpendAllPoints(f).spent, 0);
+  assert.equal(F.displayYear(f), 1, 'still 1201 while contracts are open');
+  f.offseason.items[0].status = 'signed';
+  assert.equal(F.pointsLocked(f), false); assert.equal(F.displayYear(f), 2, 'the draft opens the new league year');
+});
+
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
   F.hireDefaultStaff(f);

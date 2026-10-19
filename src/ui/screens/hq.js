@@ -53,7 +53,7 @@ export function registerHqScreens(Router, app) {
       const lb = f.campaign?.lastBadge; const lbGym = lb && lb.year === f.season.year && f.season.week - lb.week <= 1 ? GYM_BY_CLUB[lb.club] : null;
       const badgeBanner = lbGym ? `<div class="badge-banner" style="--hue:${TYPES[lbGym.element]?.hue ?? 120}"><span class="badge-banner-star">★</span><div><b>${esc(lbGym.badge)} earned</b> · badge ${lb.n} of 8<div class="dim">${esc(lbGym.coach.name)}'s ${esc(lb.club)} beaten in week ${lb.week}. ${lb.n === 8 ? 'All eight. The gyms are yours.' : `${8 - lb.n} to go.`}</div></div></div>` : '';
       return `${badgeBanner}
-        <div class="panel tight"><div class="row between"><div><b>${yearOf(s.year)}</b> · ${phaseLabel(f)}</div><div class="chip accent">Team OVR ${s.overall}</div></div>
+        <div class="panel tight"><div class="row between"><div><b>${yearOf(F.displayYear(f))}</b> · ${phaseLabel(f)}</div><div class="chip accent">Team OVR ${s.overall}</div></div>
           <div class="row between" style="margin-top:4px"><span>${f.season.playoffs ? playoffStatus(f) : `Record <b class="mono">${s.record}</b>${rival ? ` · <span class="dim">⚔️ rival ${esc(rival.team)}</span>` : ''}`}</span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
         ${weekStrip(f)}
         <div class="panel"><div class="muted" style="font-size:12px">THIS WEEK</div><div style="margin:4px 0 8px">${gameLine}${(() => { const g = opp && GYM_BY_CLUB[opp]; if (!g || f.season.finished) return ''; const b = F.badgeOf(f, opp); return `<div class="muted" style="margin-top:4px">${b ? `🏅 You hold the ${esc(g.badge)} (${yearOf(b.year)})` : `<b>Badge game</b> · beat ${esc(g.coach.name)}'s ${esc(opp)} for the ${esc(g.badge)}`}</div>`; })()}</div>
@@ -132,7 +132,7 @@ export function registerHqScreens(Router, app) {
   // ---------------------------------------------------------------- Offseason (GDD §18.1)
   const yrs = {}; // contract length chosen per row (1 or 2 seasons), default 2
   Router.registerScreen('offseason', {
-    title: ({ f }) => `Offseason · ${yearOf(f?.season.year)}`,
+    title: ({ f }) => `${yearOf(f ? F.displayYear(f) : 1)} · Offseason`,
     render({ f }) {
       const items = f.offseason?.items || []; const pending = F.offseasonPending(f);
       const cap = F.salarySummary(f); const usage = Math.min(100, Math.round(cap.total / cap.cap * 100));
@@ -649,7 +649,7 @@ export function registerHqScreens(Router, app) {
   }
   /** HQ header (GDD §21.1): the week in the regular season; the playoff round once the bracket is drawn; the offseason after. */
   function phaseLabel(f) {
-    if (f.season.finished) return 'Offseason';
+    if (f.season.finished) return F.displayYear(f) > f.season.year ? 'Offseason · draft & free agency' : 'Offseason · contracts';
     const p = f.season.playoffs; if (!p) return `Week ${f.season.week}`;
     return F.ROUND_NAMES?.[p.round] ? ({ 1: 'Playoffs · Conference semifinals', 2: 'Playoffs · Conference championships', 3: 'Playoffs · Beast Bowl' })[p.round] : 'Playoffs';
   }
