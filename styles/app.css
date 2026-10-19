@@ -430,3 +430,9 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 @media (prefers-reduced-motion: reduce) { .scene .talk.fresh, .board-letter p.fresh { animation: none; } }
 .ach-card.locked { opacity: .55; }
 .ach-card.earned { border-color: #6a5a1a; }
+/* Depth chart "More details" (GDD §21.5) */
+.dc-mid { min-width: 0; overflow: hidden; }
+.dc-mid .dc-name { max-width: 100%; }
+.dc-more { display: block; width: 100%; font-size: 11px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-expiring { color: #f5c542; font-weight: 700; }
+.dc-backup { font-size: 11px; }
