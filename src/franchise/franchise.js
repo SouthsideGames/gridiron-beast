@@ -1122,6 +1122,12 @@ export function assignSlot(f, slot, monsterId) {
 }
 /** Depth chart: the full order for a position group (ids). */
 export function depthList(f, group) { return depthOrder(f.roster, f.depth, group).map((m) => m.id); }
+/** Best lineup (GDD §20.8): every position ordered by overall, highest first; manual slot picks cleared. Injured monsters stay in order and are skipped on Sunday as always. */
+export function autoDepth(f) {
+  f.depth = {}; f.lineupManual = {};
+  for (const group of Object.keys(GROUP_SLOTS)) f.depth[group] = f.roster.filter((m) => m.position === group).sort((a, b) => monsterOverall(b) - monsterOverall(a)).map((m) => m.id);
+  return { ok: true };
+}
 /** Move a monster up (-1) or down (+1) its position group's depth order. Clears legacy manual picks for that group. */
 export function moveDepth(f, group, monsterId, dir) {
   f.depth ||= {};

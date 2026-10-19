@@ -348,6 +348,15 @@ test('notices and manual evolution: a monster at its evolution level is a roster
   assert.ok(!F.notices(f).some((n) => n.kind === 'evolve' && n.id === m.id), 'notice clears');
 });
 
+test('best lineup: every position ordered by overall, manual picks cleared, starters are the best healthy monsters', async () => {
+  const { buildDepthChart } = await import('../src/franchise/roster.js'); const { monsterOverall } = await import('../src/data/monsters.js');
+  const f = newFranchise(5); const qbs = f.roster.filter((m) => m.position === 'QB').sort((a, b) => monsterOverall(a) - monsterOverall(b));
+  F.moveDepth(f, 'QB', qbs[0].id, -1); f.lineupManual.QB = qbs[0].id; // the worst QB pushed to the top
+  F.autoDepth(f); assert.deepEqual(f.lineupManual, {});
+  for (const [g, ids] of Object.entries(f.depth)) { const o = ids.map((id) => monsterOverall(f.roster.find((m) => m.id === id))); assert.deepEqual(o, o.slice().sort((a, b) => b - a), `${g} ordered by OVR`); }
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const best = f.roster.filter((m) => m.position === 'QB' && !m.injury).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0]; assert.equal(chart.QB, best.id);
+});
+
 test('auto-run takes a Monday franchise to Sunday with a legal plan and lineup', () => {
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed: 66 });
   F.hireDefaultStaff(f);

@@ -396,3 +396,25 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .notice-row:active { transform: scale(.995); }
 .tab-badge { box-shadow: 0 0 0 2px rgba(224,70,58,.25); }
 .notices-head { appearance: none; background: none; border: 0; color: inherit; font: inherit; width: 100%; padding: 0; cursor: pointer; text-align: left; }
+/* Playoff bracket (GDD §20.8) */
+.bracket { background: var(--panel); border: 2px solid var(--line); border-radius: var(--r); padding: 10px 6px 8px; margin-bottom: var(--s3); }
+.bk-heads, .bk-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.bk-h { font-size: 10px; font-weight: 800; text-align: center; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.bk-h.final { color: #e0463a; }
+.bk-col { display: flex; flex-direction: column; justify-content: space-around; gap: 14px; min-height: 230px; }
+.bk-pair { display: flex; flex-direction: column; gap: 3px; }
+.bk-team { display: flex; align-items: center; gap: 3px; overflow: hidden; background: var(--tc, #345); color: #fff; border-radius: 4px; padding: 6px 4px; font-weight: 900; font-size: 12px; min-height: 30px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+.bk-team .bk-seed { font-size: 10px; font-weight: 700; opacity: .8; min-width: 8px; }
+.bk-team .bk-abbr { letter-spacing: .02em; }
+.bk-team.lighttc { color: #0d1a14; }
+.bk-team .bk-score { margin-left: auto; font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; background: rgba(0,0,0,.28); color: #fff; border-radius: 3px; padding: 0 3px; }
+.bk-team.out { filter: grayscale(.9) brightness(.55); color: #e8efe9 !important; }
+.bk-team.won { box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
+.bk-team.me { outline: 2px solid #f5c542; outline-offset: 1px; }
+.bk-team.tbd { background: transparent; color: var(--ink-2); border: 1px dashed var(--line-2); box-shadow: none; }
+.bk-center { justify-content: center; align-items: stretch; }
+.bk-ball { text-align: center; font-size: 26px; opacity: .85; }
+.bk-champ { display: flex; margin-top: 10px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.bk-champ-label { background: #c8342b; color: #fff; font-weight: 900; padding: 8px 12px; font-size: 13px; letter-spacing: .04em; }
+.bk-champ-name { flex: 1; padding: 8px 10px; font-weight: 800; }
+@media (max-width: 340px) { .bk-team { font-size: 11px; padding: 5px 3px; } .bk-team .bk-score { font-size: 10px; } }

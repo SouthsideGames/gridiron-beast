@@ -596,6 +596,34 @@ export function registerHqScreens(Router, app) {
       return ['Aurora', 'Titan'].map((conf) => `<h3>${conf} Conference</h3>${Object.keys(DIVISIONS).filter((d) => conferenceFor(d) === conf).map((d) => `<div class="panel tight"><b>${d}</b>${table(st.divisions[d])}</div>`).join('')}`).join('') + `<p class="dim">Tiebreakers: head-to-head, division record, conference record, point differential.</p>`;
     },
   });
+  /** The bracket (GDD §20.8): Aurora on the left, Titan on the right, the Beast Bowl in the middle — semifinals → championship → final. */
+  function bracketHtml(f, p) {
+    const abbr = (t) => TEAM_META[t]?.abbr || (t || '').slice(0, 3).toUpperCase();
+    const seedOf = (t) => { for (const c of ['Aurora', 'Titan']) { const i = p.seeds[c].indexOf(t); if (i >= 0) return i + 1; } return ''; };
+    const winnerOf = (g) => g?.result ? (g.result.homeScore > g.result.awayScore ? g.home : g.away) : null;
+    const scoreOf = (g, t) => !g?.result ? '' : t === g.home ? g.result.homeScore : g.result.awayScore;
+    const light = (hex) => { const h = String(hex || '').replace('#', ''); if (h.length < 6) return false; const [r, g2, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); return 0.2126 * r + 0.7152 * g2 + 0.0722 * b > 0.55; };
+    const cell = (t, g) => { if (!t) return '<div class="bk-team tbd"><span class="bk-seed"></span><span class="bk-abbr">TBD</span></div>'; const w = winnerOf(g); const col = TEAM_META[t]?.color || '#345'; return `<div class="bk-team ${t === f.club ? 'me' : ''} ${w && w !== t ? 'out' : ''} ${w === t ? 'won' : ''} ${light(col) ? 'lighttc' : ''}" style="--tc:${col}"><span class="bk-seed">${seedOf(t)}</span><span class="bk-abbr">${esc(abbr(t))}</span>${g?.result ? `<span class="bk-score">${scoreOf(g, t)}</span>` : ''}</div>`; };
+    const pair = (g, top, bottom) => `<div class="bk-pair">${cell(top, g)}${cell(bottom, g)}</div>`;
+    const conf = (c) => {
+      const seeds = p.seeds[c]; const semis = p.fixtures.filter((g) => g.round === 1 && g.conf === c);
+      const s1 = semis.find((g) => g.home === seeds[0]) || null, s2 = semis.find((g) => g.home === seeds[1]) || null;
+      const champ = p.fixtures.find((g) => g.round === 2 && g.conf === c) || null;
+      const semiCol = `<div class="bk-col">${pair(s1, seeds[0], seeds[3])}${pair(s2, seeds[1], seeds[2])}</div>`;
+      const champCol = `<div class="bk-col">${pair(champ, champ?.home || winnerOf(s1), champ?.away || winnerOf(s2))}</div>`;
+      return { semiCol, champCol };
+    };
+    const A = conf('Aurora'), T = conf('Titan');
+    const final = p.fixtures.find((g) => g.round === 3) || null;
+    const aChamp = winnerOf(p.fixtures.find((g) => g.round === 2 && g.conf === 'Aurora')), tChamp = winnerOf(p.fixtures.find((g) => g.round === 2 && g.conf === 'Titan'));
+    const champ = p.champion || winnerOf(final);
+    const head = (l, cls = '') => `<div class="bk-h ${cls}">${l}</div>`;
+    return `<div class="bracket">
+      <div class="bk-heads">${head('Semis')}${head('Aurora')}${head('Beast Bowl', 'final')}${head('Titan')}${head('Semis')}</div>
+      <div class="bk-grid">${A.semiCol}${A.champCol}<div class="bk-col bk-center"><div class="bk-ball">🏈</div><div class="bk-pair final">${cell(final ? (final.home === tChamp ? final.away : final.home) : aChamp, final)}${cell(final ? (final.home === tChamp ? final.home : final.away) : tChamp, final)}</div></div>${T.champCol}${T.semiCol}</div>
+      <div class="bk-champ"><span class="bk-champ-label">CHAMPION</span><span class="bk-champ-name">${champ ? `🏆 ${esc(champ)}${champ === f.club ? ' — that’s you!' : ''}` : ''}</span></div>
+    </div>`;
+  }
   Router.registerScreen('playoffs', {
     title: 'Playoffs',
     render({ f }) {
@@ -613,7 +641,7 @@ export function registerHqScreens(Router, app) {
       const rounds = [[1, 'Conference semifinals · Week 11'], [2, 'Conference championships · Week 12'], [3, 'Beast Bowl · Week 13']];
       const game = (g) => { const w = g.result ? (g.result.homeScore > g.result.awayScore ? g.home : g.away) : null; const side = (t, score) => `<div class="po-row ${t === f.club ? 'me' : ''} ${w && w !== t ? 'lost' : ''}">${dot(t)}<span class="grow po-name">${esc(t)}${t === f.club ? ' <span class="chip accent">YOU</span>' : ''}</span><span class="mono po-rec">${score ?? ''}</span></div>`;
         return `<div class="panel tight po-game"><div class="dim" style="font-size:12px">${esc(g.tag)}${g.result ? '' : ' · upcoming'}</div>${side(g.away, g.result?.awayScore)}${side(g.home, g.result?.homeScore)}</div>`; };
-      return `${p.champion ? `<div class="panel center" style="border-color:#f5c542"><h2 style="margin:0">🏆 ${esc(p.champion)}</h2><div class="muted">Beast Bowl champions</div></div>` : ''}${rounds.map(([r, label]) => { const gs = p.fixtures.filter((g) => g.round === r); return gs.length ? `<h3>${label}</h3>${gs.map(game).join('')}` : ''; }).join('')}
+      return `${bracketHtml(f, p)}<h3>Games</h3>${rounds.map(([r, label]) => { const gs = p.fixtures.filter((g) => g.round === r); return gs.length ? `<h3>${label}</h3>${gs.map(game).join('')}` : ''; }).join('')}
         <h3>Seeds</h3>${['Aurora', 'Titan'].map((c) => `<div class="panel tight po-conf"><div class="po-head"><b>${c}</b></div>${p.seeds[c].map((t, i) => teamRow(t, i + 1)).join('')}</div>`).join('')}`;
     },
   });
