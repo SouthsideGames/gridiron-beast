@@ -48,6 +48,14 @@ const OUTCOME = {
 export const OUTCOME_LABELS = Object.freeze(Object.fromEntries(Object.entries(OUTCOME).map(([k, v]) => [k, v.label])));
 
 export const ACTIVATION = 0.35, ACTION = 1.2, LABEL = 0.9;
+
+/**
+ * Review revisions (GDD §23.7). An ability's review fingerprint covers its data
+ * (name, text, effect, element look, family); drawing code is not data, so when
+ * the way a family or a single ability is drawn changes, bump its number here and
+ * the owner is asked to look again. `all` re-opens every ability.
+ */
+export const FX_REVISION = Object.freeze({ all: 1, family: {}, species: {} });
 export const MAX_FX = 2, MAX_LABELS = 1;
 
 /**

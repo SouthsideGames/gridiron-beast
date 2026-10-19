@@ -116,21 +116,22 @@ export function cloudSaveAchievements(data) {
   achTimer = setTimeout(async () => { const c = await connect(); if (!c) return; try { await c.col.doc('achievements').set(JSON.parse(JSON.stringify(data))); } catch { /* ignore */ } }, 3000);
 }
 
-// Ability Audit reviews (polish 2.0): one shared document per species in
-// `ability_reviews/<speciesId>` {status, note, updatedAt}, so the developer
-// (Claude) can read the owner's verdicts with the artifact database tools.
-let reviewDb = null;
-async function reviewCol() {
-  if (reviewDb) return reviewDb;
+// Developer reviews (polish 2.0): one shared document per item in
+// `ability_reviews/<speciesId>` or `play_reviews/<playId>` {status, note,
+// gameplay, fp, updatedAt}, so the developer (Claude) can read the owner's
+// verdicts with the artifact database tools.
+const reviewCols = {};
+async function reviewCol(name) {
+  if (reviewCols[name]) return reviewCols[name];
   const use = globalThis.claude?.use; if (typeof use !== 'function') return null;
-  try { const db = await use('db'); if (!db) return null; reviewDb = db.collection('ability_reviews'); return reviewDb; } catch { return null; }
+  try { const db = await use('db'); if (!db) return null; reviewCols[name] = db.collection(name); return reviewCols[name]; } catch { return null; }
 }
-export async function cloudLoadReviews() {
-  const col = await reviewCol(); if (!col) return null;
+export async function cloudLoadReviews(name) {
+  const col = await reviewCol(name); if (!col) return null;
   try { const snap = await col.get(); const out = {}; for (const d of snap.docs || []) out[d.id] = d.data(); return out; } catch { return null; }
 }
 /** Write one review; resolves true when the cloud took it. */
-export async function cloudSaveReview(id, review) {
-  const col = await reviewCol(); if (!col) return false;
-  try { if (!review) await col.doc(id).delete(); else await col.doc(id).set({ ...review }); return true; } catch { return false; }
+export async function cloudSaveReview(name, id, review) {
+  const col = await reviewCol(name); if (!col) return false;
+  try { if (!review) await col.doc(id).delete(); else await col.doc(id).set(JSON.parse(JSON.stringify(review))); return true; } catch { return false; }
 }

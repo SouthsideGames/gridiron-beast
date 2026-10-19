@@ -17,6 +17,7 @@ import { resetTutorial, primerHtml } from '../tutorial.js';
 import { DIFFICULTY as DIFF } from '../../franchise/franchise.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { portraitSprite } from '../pixel-monster.js';
+import { reviewQueue, queueText, devBadge, devNoticesOn } from '../dev-review.js';
 
 export function registerMenuScreens(Router, app) {
   Router.registerScreen('menu', {
@@ -34,7 +35,7 @@ export function registerMenuScreens(Router, app) {
           <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
           <button class="btn block" data-action="go" data-screen="achievements">🏅 Achievements <span class="dim mono">${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}</span></button>
           ${hallOfFame().length ? `<button class="btn block" data-action="go" data-screen="hof">🏛️ Hall of Fame <span class="dim mono">${hallOfFame().length}</span></button>` : ''}
-          <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block" data-action="go" data-screen="developer">🛠️ Developer</button></div>
+          <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}</button></div>
         </div>
         <p class="center dim" style="margin-top:16px">Gridiron Beast · build ${esc(buildLabel())} · Southside Games</p>`;
     },
@@ -66,6 +67,7 @@ export function registerMenuScreens(Router, app) {
           ${app.f ? `<label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="tutorial" ${s.tutorial !== false ? 'checked' : ''}> Tutorial tips (first-week walkthrough)</label><div class="row"><button class="btn small" data-action="tutreset">Show all tips again</button><button class="btn small" data-action="primer">How football works</button></div>` : ''}
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion (no play animation, no particles)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="shake" ${s.screenShake !== false ? 'checked' : ''}> Screen shake on big hits</label>
+          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devnotices" ${s.devNotices !== false ? 'checked' : ''}> Developer review notices (new or changed plays and abilities)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default, not recommended on mobile)</label>
         </div>
         ${app.f ? `<div class="panel"><h3>Save data</h3><p class="muted">${(() => { const c = cloudStatus(); return c.state === 'on' ? `☁️ Cloud save on${c.at ? ' · last synced ' + new Date(c.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}` : 'Saved on this device. (Cloud save is available when playing inside Claude.)'; })()}</p><div class="stack">${Save.loadBackup() ? '<button class="btn block" data-action="restore">Restore last week’s backup</button>' : ''}<button class="btn block" data-action="export">Export save as JSON</button><label class="btn block" style="cursor:pointer">Import save JSON<input type="file" accept="application/json,.json" data-change="import" class="sr-only"></label><button class="btn danger block" data-action="reset">Delete franchise</button></div></div>` : ''}
@@ -76,7 +78,7 @@ export function registerMenuScreens(Router, app) {
       const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
-        reduced: (el) => set('reducedMotion', el.checked), shake: (el) => set('screenShake', el.checked), markers: (el) => set('fieldMarkers', el.value), hints: (el) => set('hints', el.checked), autopoints: (el) => set('autoPoints', el.checked), tutorial: (el) => set('tutorial', el.checked), liveclock: (el) => set('liveClock', el.checked),
+        reduced: (el) => set('reducedMotion', el.checked), shake: (el) => set('screenShake', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), hints: (el) => set('hints', el.checked), autopoints: (el) => set('autoPoints', el.checked), tutorial: (el) => set('tutorial', el.checked), liveclock: (el) => set('liveClock', el.checked),
         tutreset: () => { resetTutorial(app.f); app.f.settings.tutorial = true; app.save(); toast('Tips will show again on each screen.', 'good'); Router.render(); },
         primer: () => sheet(primerHtml(), { title: 'How football works' }),
         export: () => { const blob = new Blob([Save.exportJson(app.f)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `gridiron-beast-${app.f.club.replace(/\s+/g, '-').toLowerCase()}-s${app.f.season.year}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Save exported.', 'good'); },
@@ -90,10 +92,13 @@ export function registerMenuScreens(Router, app) {
   Router.registerScreen('developer', {
     title: 'Developer Tools',
     render() {
-      return `<p class="muted">Inspection tools that work without a franchise.</p><div class="stack">
-        <button class="btn block" data-action="go" data-screen="audit">🔎 Playbook Audit</button>
+      const q = reviewQueue();
+      return `<p class="muted">Inspection tools that work without a franchise.</p>
+        ${q.total ? `<div class="panel tight dev-queue"><b>🔔 Waiting for your review</b><div class="muted" style="margin-top:2px">${esc(queueText(q))}: new, or changed since you last looked.</div></div>` : '<div class="panel tight dim">✓ Nothing waiting for review.</div>'}
+        <div class="stack">
+        <button class="btn block badge-host" data-action="go" data-screen="audit">🔎 Playbook Audit${devBadge(app.settings, q.plays.length)}</button>
         <button class="btn block" data-action="go" data-screen="practice">🎯 Practice Field</button>
-        <button class="btn block" data-action="go" data-screen="ability-audit">✨ Ability Audit</button>
+        <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Ability Audit${devBadge(app.settings, q.abilities.length)}</button>
         <button class="btn block" data-action="dexall">📖 Beast Dex (everything revealed)</button>
         <button class="btn block danger" data-action="dexreset">Reset my Beast Dex</button>
         <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button></div>`;
@@ -164,6 +169,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="office">🪪 My office <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
         <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
+        ${devNoticesOn(app.settings) && reviewQueue().total ? `<button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer · to review${devBadge(app.settings)}</button>` : ''}
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;
     },
     mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }) }); },

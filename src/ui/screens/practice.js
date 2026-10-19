@@ -12,6 +12,8 @@ import { playDetailHtml, lessonHtml } from './hq.js';
 import { generatedTeam } from '../../franchise/roster.js';
 import { createRng } from '../../core/rng.js';
 import { buildFx } from '../ability-fx.js';
+import { reviewHtml, reviewHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, devBadge } from '../dev-review.js';
+import { syncReviews } from '../../franchise/review-store.js';
 import { resolveSpecies } from '../../data/monsters.js';
 
 export function registerPracticeScreens(Router, app) {
@@ -69,36 +71,39 @@ export function registerPracticeScreens(Router, app) {
 
   // ------------------------------------------------------------ Playbook audit (developer)
   const audit = { side: 'offense', play: 'quick_slants', opponent: 'cover_3', seed: 1, sim: null };
+  const auditOpen = new Set(); let auditSynced = false;
   Router.registerScreen('audit', {
     title: 'Playbook Audit', tabs: false,
     render() {
       const mine = audit.side === 'offense' ? OFFENSE_IDS : DEFENSE_IDS, other = audit.side === 'offense' ? DEFENSE_IDS : OFFENSE_IDS;
       if (!mine.includes(audit.play)) audit.play = mine[0]; if (!other.includes(audit.opponent)) audit.opponent = other[0];
-      const sel = (name, key, list, value) => `<label class="field">${name}<select data-change="${key}">${list.map((p) => `<option value="${p}" ${p === value ? 'selected' : ''}>${esc(PLAYS[p].name)}</option>`).join('')}</select></label>`;
-      const notes = loadNotes();
-      const note = notes[audit.play] || { status: 'review', text: '' };
-      const approved = mine.filter((id) => notes[id]?.status === 'approved').length;
-      return `<p class="muted">Every play with its art, assignments and a seeded simulation. Review decisions are saved in this browser. ${approved}/${mine.length} ${audit.side} plays approved.</p>
-        <div class="row" style="margin-bottom:8px"><button class="btn small ${audit.side === 'offense' ? 'primary' : ''}" data-action="side" data-v="offense">Offense (${OFFENSE_IDS.length})</button><button class="btn small ${audit.side === 'defense' ? 'primary' : ''}" data-action="side" data-v="defense">Defense (${DEFENSE_IDS.length})</button></div>
-        <div class="grid2">${sel('Play', 'play', mine, audit.play)}${sel('Against', 'opp', other, audit.opponent)}</div>
+      const sel = (name, key, list, value, marks = () => '') => `<label class="field">${name}<select data-change="${key}">${list.map((p) => `<option value="${p}" ${p === value ? 'selected' : ''}>${marks(p)}${esc(PLAYS[p].name)}</option>`).join('')}</select></label>`;
+      const states = Object.fromEntries(mine.map((id) => [id, reviewState('play', id)]));
+      const approved = mine.filter((id) => states[id] === 'approved').length;
+      const queue = mine.filter((id) => NEEDS_OWNER.has(states[id]) && id !== audit.play);
+      const mark = (id) => (states[id] ? ({ approved: '✓ ', needs_work: '✎ ', new: '• ', changed: '🔔 ', updated: '🔔 ' })[states[id]] : '');
+      return `<p class="muted">Every play with its art, assignments and a seeded simulation. ${approved}/${mine.length} ${audit.side} plays approved · 🔔 ${mine.filter((id) => NEEDS_OWNER.has(states[id])).length} to review. In the list: ✓ good, ✎ waiting on dev, • new, 🔔 changed since your review.</p>
+        <div class="row" style="margin-bottom:8px"><button class="btn small ${audit.side === 'offense' ? 'primary' : ''}" data-action="side" data-v="offense">Offense (${OFFENSE_IDS.length})${devBadge(app.settings, OFFENSE_IDS.filter((id) => NEEDS_OWNER.has(reviewState('play', id))).length)}</button><button class="btn small ${audit.side === 'defense' ? 'primary' : ''}" data-action="side" data-v="defense">Defense (${DEFENSE_IDS.length})${devBadge(app.settings, DEFENSE_IDS.filter((id) => NEEDS_OWNER.has(reviewState('play', id))).length)}</button></div>
+        <div class="grid2">${sel('Play', 'play', mine, audit.play, mark)}${sel('Against', 'opp', other, audit.opponent)}</div>
         ${playDetailHtml(audit.play)}
         <div class="panel" style="margin-top:12px"><div class="row between"><label class="row muted" style="gap:4px">Seed <input type="number" value="${audit.seed}" data-change="seed" style="width:80px;min-height:36px;margin:0"></label><button class="btn primary" data-action="sim">▶ Simulate</button></div>
           ${audit.sim ? `<p style="margin-top:8px"><b>${esc(resultText(audit.sim))}</b></p><div class="log">${audit.sim.events.map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text)}</span></div>`).join('')}</div><button class="btn small" data-action="watch" style="margin-top:8px">Watch on the practice field</button>` : ''}</div>
-        <div class="panel"><label class="field">Review decision<select data-change="status"><option value="review" ${note.status === 'review' ? 'selected' : ''}>Needs review</option><option value="approved" ${note.status === 'approved' ? 'selected' : ''}>Approved</option><option value="rework" ${note.status === 'rework' ? 'selected' : ''}>Needs rework</option></select></label><label class="field">Notes<textarea rows="3" data-change="note" placeholder="Coverage, blocking, route or animation problems">${esc(note.text)}</textarea></label><div class="row between"><span class="muted" id="savedat">${note.savedAt ? 'Saved ' + new Date(note.savedAt).toLocaleString() : 'Not saved'}</span><div class="row"><button class="btn small" data-action="export">Export JSON</button><button class="btn small primary" data-action="save">Save review</button></div></div></div>`;
+        <div class="panel"><div class="row between"><b>Your review</b>${STATE_BADGE[reviewState('play', audit.play)] || ''}</div>${reviewHtml('play', audit.play, { open: auditOpen.has('play:' + audit.play) })}
+          <div class="row between" style="margin-top:10px"><button class="btn small ghost" data-action="rv-copy">Copy notes</button>${queue.length ? `<button class="btn small primary" data-action="nextreview">Next to review ▸ <span class="dim">${queue.length} left</span></button>` : '<span class="dim">Nothing left to review on this side.</span>'}</div></div>`;
     },
     mount(root) {
+      if (!auditSynced) { auditSynced = true; syncReviews('play').then((ok) => { if (ok) Router.render(); }); }
       delegate(root, {
         side: (el) => { audit.side = el.dataset.v; audit.sim = null; Router.render(); },
         play: (el) => { audit.play = el.value; audit.sim = null; Router.render(); }, opp: (el) => { audit.opponent = el.value; audit.sim = null; Router.render(); }, seed: (el) => { audit.seed = Number(el.value) || 1; },
         sim: () => { const o = audit.side === 'offense' ? audit.play : audit.opponent, d = audit.side === 'offense' ? audit.opponent : audit.play; const T = teamsForPractice(app.f); audit.sim = simulatePlay({ offensePlay: PLAYS[o], defensePlay: PLAYS[d], offense: pickSlots(T.offense.offense, PLAYS[o].onField), defense: pickSlots(T.defense.defense, PLAYS[d].onField), ballOn: 30, seed: audit.seed }); Router.render(); },
         watch: () => { prac.offense = audit.side === 'offense' ? audit.play : audit.opponent; prac.defense = audit.side === 'offense' ? audit.opponent : audit.play; prac.sim = null; Router.go('practice'); },
-        status: () => {}, note: () => {},
-        save: () => { const notes = loadNotes(); notes[audit.play] = { status: root.querySelector('[data-change="status"]').value, text: root.querySelector('[data-change="note"]').value, savedAt: new Date().toISOString() }; try { localStorage.setItem('gridiron-beast-audit-v6', JSON.stringify(notes)); toast('Review saved.', 'good'); } catch { toast('Could not save (storage).', 'bad'); } Router.render(); },
-        export: () => { const blob = new Blob([JSON.stringify({ version: 6, reviews: loadNotes() }, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'gridiron-beast-playbook-audit.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); },
+        ...reviewHandlers(() => Router.render(), auditOpen, () => toast('Saved on this device; the cloud copy did not save.', 'bad')),
+        nextreview: () => { const mine = audit.side === 'offense' ? OFFENSE_IDS : DEFENSE_IDS; const i = mine.indexOf(audit.play); const order = [...mine.slice(i + 1), ...mine.slice(0, i)]; const nx = order.find((id) => NEEDS_OWNER.has(reviewState('play', id))); if (nx) { audit.play = nx; audit.sim = null; Router.render(); window.scrollTo(0, 0); } },
+        'rv-copy': async () => { const txt = reviewsText(); if (!txt) { toast('No reviews yet.'); return; } try { await navigator.clipboard.writeText(txt); toast('Notes copied.', 'good'); } catch { sheet(`<textarea class="review-note" rows="12" readonly>${esc(txt)}</textarea>`, { title: 'Your notes' }); } },
       });
     },
   });
-  function loadNotes() { try { return JSON.parse(localStorage.getItem('gridiron-beast-audit-v6') || '{}'); } catch { return {}; } }
 }
 
 export function resultText(sim) {

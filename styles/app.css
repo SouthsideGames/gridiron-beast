@@ -457,3 +457,12 @@ html[data-reduced-motion="1"] #fieldwrap.shake { animation: none; }
 .review-bar { display: flex; height: 6px; overflow: hidden; }
 .review-bar > i { display: block; height: 100%; }
 .review-bar > i.ok { background: var(--good); } .review-bar > i.nw { background: var(--warn, #e0a33b); }
+/* Developer review notices (GDD §23.7) */
+.badge-host { position: relative; }
+.tab-badge.inline-badge { position: static; display: inline-block; margin-left: 6px; vertical-align: 1px; border: 0; }
+.chip.rv-new { background: #4a1a16; border-color: #e0463a; color: #ffb4ab; font-weight: 800; font-size: 10px; letter-spacing: .04em; }
+.review-since { font-size: 12px; color: #ffb4ab; margin-bottom: 6px; }
+.review-gameplay { gap: 6px; font-size: 12px; margin-top: 6px; align-items: flex-start; color: var(--ink-2); }
+.review-gameplay input { width: auto; min-height: 0; margin-top: 2px; }
+.dev-queue { border-color: #e0463a; }
+.text-gap { font-size: 12px; color: var(--warn, #e0a33b); margin-top: 2px; }
