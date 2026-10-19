@@ -390,3 +390,8 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .scheme-row.fits .scheme-name { color: #f5c542; font-weight: 700; }
 .scheme-row.ours { background: rgba(245,197,66,.08); }
 .evo-next { filter: drop-shadow(0 0 4px rgba(255,255,255,.08)); }
+/* Notice strip on a tab that has notices (GDD §20.6) */
+.notices { background: linear-gradient(180deg, #2a1f10, #1f1a10); border: 1px solid #8a6a1a; border-radius: var(--r); padding: var(--s2) var(--s3); margin-bottom: var(--s3); }
+.notice-row { display: flex; align-items: center; gap: 8px; width: 100%; appearance: none; background: rgba(0,0,0,.18); border: 1px solid rgba(245,197,66,.18); border-radius: 8px; padding: 8px 10px; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.notice-row:active { transform: scale(.995); }
+.tab-badge { box-shadow: 0 0 0 2px rgba(224,70,58,.25); }

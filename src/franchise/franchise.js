@@ -18,7 +18,7 @@ export * as Stats from './stats.js';
 export { GROUP_SLOTS } from './roster.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
-import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
+import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, autoSpendPoints as autoSpendPointsFn, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
 import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
@@ -755,6 +755,13 @@ export function goalProgress(f) {
   return null;
 }
 /** Spend one attribute point on a roster monster (GDD §17.3). */
+/** The trainer spends every banked point by position weight (GDD §17.3) — one tap instead of a card per monster. */
+export function autoSpendAllPoints(f, { only = null } = {}) {
+  const { r, save } = frng(f); let spent = 0, monsters = 0;
+  for (const m of f.roster) { if (only && m.id !== only) continue; const before = m.points || 0; if (!before) continue; autoSpendPointsFn(m, r); const used = before - (m.points || 0); if (used) { spent += used; monsters++; } }
+  save(); if (spent) news(f, `The trainer spent ${spent} attribute point${spent === 1 ? '' : 's'} across ${monsters} monster${monsters === 1 ? '' : 's'}.`, 'info');
+  return { ok: true, spent, monsters };
+}
 export function spendAttributePoint(f, id, attr) { const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not found.' }; return spendPoint(m, attr); }
 /** Monsters with points waiting to be spent. */
 export function unspentPoints(f) { return f.roster.filter((m) => (m.points || 0) > 0); }
