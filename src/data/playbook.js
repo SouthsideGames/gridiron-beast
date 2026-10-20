@@ -6,6 +6,7 @@
 
 import { OFFENSE_PACKAGES, DEFENSE_PACKAGES, offenseOnField, defenseOnField, LINEMEN, BASE_LINEMEN } from './personnel.js';
 import { routePoints, ALTERNATE_ROUTES, ZONES, GAPS } from './routes.js';
+import { reservePlays, RESERVE_LESSONS } from './playbook-reserve.js';
 
 // ---------------------------------------------------------------- formations
 const OL = { LG: [-0.6, -1.7], RG: [-0.6, 1.7] };
@@ -50,11 +51,17 @@ const CONTAIN = (gap) => ({ a: 'contain', gap });
 
 function offense(id, name, formation, assignments, opts = {}) {
   const f = OFFENSE_FORMATIONS[formation];
-  return { id, name, side: 'offense', type: opts.type || 'pass', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, primary: opts.primary || null, progression: opts.progression || [], drop: opts.drop || 'three', tags: opts.tags || [], desc: opts.desc || '' };
+  if (!f) throw new Error(`${name}: unknown formation ${formation}`);
+  const play = { id, name, side: 'offense', type: opts.type || 'pass', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, primary: opts.primary || null, progression: opts.progression || [], drop: opts.drop || 'three', tags: opts.tags || [], desc: opts.desc || '' };
+  if (opts.reserve) play.reserve = true; // only reserve plays carry the key, so live plays keep their review fingerprints
+  return play;
 }
 function defense(id, name, formation, assignments, opts = {}) {
   const f = DEFENSE_FORMATIONS[formation];
-  return { id, name, side: 'defense', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, tags: opts.tags || [], desc: opts.desc || '' };
+  if (!f) throw new Error(`${name}: unknown formation ${formation}`);
+  const play = { id, name, side: 'defense', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, tags: opts.tags || [], desc: opts.desc || '' };
+  if (opts.reserve) play.reserve = true;
+  return play;
 }
 
 // ------------------------------------------------------------- offense plays
@@ -294,9 +301,17 @@ function compile(play) {
   return Object.freeze(compiled);
 }
 
-export const PLAYS = Object.freeze(Object.fromEntries([...OFFENSE_PLAYS, ...DEFENSE_PLAYS].map((p) => [p.id, compile(p)])));
+// Reserve plays (GDD playbook expansion): fully built and reviewed in the Playbook Audit, but no coach,
+// AI club, practice field or game plan can call them until the owner releases them. They live in PLAYS
+// (so the audit, art and engine can run them) and never in OFFENSE_IDS / DEFENSE_IDS, which every
+// game system draws from.
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: true }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN });
+export const PLAYS = Object.freeze(Object.fromEntries([...OFFENSE_PLAYS, ...DEFENSE_PLAYS, ...RESERVE.offense, ...RESERVE.defense].map((p) => [p.id, compile(p)])));
 export const OFFENSE_IDS = OFFENSE_PLAYS.map((p) => p.id);
 export const DEFENSE_IDS = DEFENSE_PLAYS.map((p) => p.id);
+export const RESERVE_OFFENSE_IDS = RESERVE.offense.map((p) => p.id);
+export const RESERVE_DEFENSE_IDS = RESERVE.defense.map((p) => p.id);
+export const isReserve = (id) => !!PLAYS[id]?.reserve;
 export const getPlay = (id) => { const p = PLAYS[id]; if (!p) throw new Error(`Unknown play ${id}`); return p; };
 
 /** Eligible receivers for an offensive play (skill players running routes or carrying). */
@@ -446,6 +461,7 @@ export const LESSONS = Object.freeze({
   bracket_left: { when: 'Take away their best receiver when he lines up left.', watch: 'A corner underneath and a safety over the top on one man. Everyone else is on their own.', beats: 'Deep Post, Slot Fade and Double Move to the left.', loses: 'Flood and TE Seam to the right, and the run.' },
   goal_line_man: { when: 'Inside your 5 against passing teams. Goal Line Stand with coverage instead of a safety.', watch: 'Four defenders locked in man with three in the gaps. A rub route beats it.', beats: 'Slot Fade, PA Post and Dive.', loses: 'Mesh and Power, nobody comes free to help.' },
   fire_zone: { when: 'Pressure with three deep behind it, the aggressive yet safe blitz.', watch: 'Five rushers, three deep, three under. Open area is the flats.', beats: 'Y Cross, PA Shot and slow drops.', loses: 'Curl Flat and RB Screen.' },
+  ...RESERVE_LESSONS,
 });
 
 /**

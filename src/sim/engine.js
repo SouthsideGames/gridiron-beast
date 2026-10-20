@@ -8,17 +8,21 @@
 //     offense: {slot: {attrs, ability}},       // effective attributes per on-field slot
 //     defense: {slot: {attrs, ability}},
 //     ballOn (1..99), ballLat (-20..20), seed,
-//     options: { forcedTarget, maxTime, frameEvery, edge, memory }
+//     options: { forcedTarget, maxTime, frameEvery, edge, memory, dryRun }
 //       memory: { drive, half, quarter, used: {key: true} } ability uses across plays (GDD §23.11)
+//       dryRun: Playbook Audit only, never in a game. { noDefense } runs the offense with nobody
+//         across from it; without noDefense the defense plays while the QB holds the ball.
+//         Either way nobody throws, nobody is sacked and the result is 'dry_run'.
 //   })
 // Output: { result, yards, endYard, endLat, frames, events, elapsed, ... }
 // result ∈ tackle | sack | incomplete | touchdown | out_of_bounds | interception
-//          | fumble | safety | throwaway | touchback_return | guard
+//          | fumble | safety | throwaway | touchback_return | guard | dry_run (audit only)
 
 import { createRng } from '../core/rng.js';
 import { boundsFor, FIELD, clamp } from '../core/field.js';
 import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { ABILITIES, speciesEffect } from '../data/monsters.js';
+import { QUICK_ROUTES, SETTLE_ROUTES } from '../data/routes.js';
 
 const DT = 0.05;
 const DEFAULT_ATTRS = { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 60 };
@@ -28,13 +32,15 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const sigmoid = (v) => 1 / (1 + Math.exp(-v));
 const norm = (v) => clamp(v, 1, 99) / 99;
 
-const QUICK_ROUTES = new Set(['slant', 'flat', 'screen', 'bubble', 'hitch', 'stick', 'swing', 'drag', 'shallow']);
 const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
   const rng = createRng(seed);
   const B = boundsFor(ballOn, ballLat);
   const maxTime = options.maxTime ?? 20;
   const frameEvery = options.frameEvery ?? 2;
+  const dry = options.dryRun || null; // Playbook Audit walk-through (see header)
+  const dryMax = dry ? (dry.maxTime ?? 5) : 0;
+  let dryDoneAt = null;
   const events = [];
   const log = (text, data = {}) => events.push({ t: +t.toFixed(2), text, ...data });
   /** Signature ability fired (logged once per monster per play, for the box score). */
@@ -89,7 +95,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     actors.push(a); bySlot[team][slot] = a; return a;
   };
   for (const slot of offensePlay.onField) makeActor('off', slot, offensePlay, offense[slot]);
-  for (const slot of defensePlay.onField) makeActor('def', slot, defensePlay, defense[slot]);
+  if (!dry?.noDefense) for (const slot of defensePlay.onField) makeActor('def', slot, defensePlay, defense[slot]);
   // Auras: a monster's effect on its teammates (Elderoot's reads, Ferrhorn's line).
   for (const a of actors) {
     const aura = a.ability?.aura; if (!aura) continue;
@@ -276,7 +282,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const pts = a.assignment.points, last = pts[pts.length - 1], prev = pts[pts.length - 2] || last;
     const dx = last[0] - prev[0], dy = last[1] - prev[1], d = Math.hypot(dx, dy) || 1;
     const r = a.assignment.r;
-    if (['curl', 'hitch', 'comeback', 'stick', 'screen', 'bubble'].includes(r)) return [last[0], last[1]]; // settle
+    if (SETTLE_ROUTES.has(r)) return [last[0], last[1]]; // settle
     return [last[0] + (dx / d) * 6, clamp(last[1] + (dy / d) * 6, B.left + 1.5, B.right - 1.5)]; // keep working
   }
   function escortBlock(a) {
@@ -320,6 +326,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const path = a.assignment?.points;
     const onDesignedPath = a.team === 'off' && path && ['carry', 'keep', 'option'].includes(a.assignment.a) && a.wp < path.length && a.x * dir < 1.5;
     if (onDesignedPath) { followPath(a, path, 1); return; }
+    // Walk-through: the carrier runs his whole drawn path and stops at its end.
+    if (dry && a.team === 'off' && path && ['carry', 'keep', 'option'].includes(a.assignment.a)) { if (a.wp < path.length) followPath(a, path, 1); else steer(a, a.x, a.y, 0, 0.3); return; }
     if (a.laneTimer === undefined || a.laneTimer <= 0) { a.laneY = laneChoice(a); a.laneTimer = 0.25; }
     a.laneTimer -= DT;
     // Juke: one attempt each time a tackler closes within 2 yards (agility vs awareness).
@@ -485,6 +493,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (a.state === 'init') { steer(a, dropPt[0], dropPt[1], 1, 0.3); if (dist(a, { x: dropPt[0], y: dropPt[1] }) < 0.5 || t > DROP_TIME[offensePlay.drop] + 0.4) a.state = 'set'; }
       else steer(a, a.x, a.y, 0, 0.2);
     }
+    if (dry) return; // walk-through: the quarterback keeps the ball so every route can be watched to its end
     const dropTime = DROP_TIME[offensePlay.drop] ?? 1.1;
     const hold = asg.hold || 0;
     if (a.windup) { if (t >= a.windup.at) throwTo(a, a.windup.r, a.windup.pressured); return; }
@@ -1001,7 +1010,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Contact
     const c = ball.holder;
     if (!result && c) {
-      if (c === qb && phase !== 'carry' && !scrambled) { for (const d of defs) { if (trySack(d)) break; } }
+      if (c === qb && phase !== 'carry' && !scrambled) { if (!dry) for (const d of defs) { if (trySack(d)) break; } }
       else { for (const d of opponents(c.team)) { if (tryTackle(d, c)) break; } }
     }
     // Boundaries and scores for the carrier.
@@ -1013,6 +1022,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       else if (h.team === 'off' && h.x <= B.ownEndLine + 0.2) { endPlay('safety', h.x, h.y); log('Carrier runs out of the back of the end zone. SAFETY', { kind: 'safety' }); }
     }
     if (options.debugSlot) { const d = actors.find((a) => a.slot === options.debugSlot); if (d) log(`dbg ${d.slot} x=${d.x.toFixed(2)} y=${d.y.toFixed(2)} v=${Math.hypot(d.vx, d.vy).toFixed(2)} stun=${d.stun.toFixed(2)} eng=${d.engaged ? d.engaged.slot : '-'} st=${d.state} ne=${d.noEngage.toFixed(2)}`, { kind: 'debug' }); }
+    if (dry && !result) {
+      // Done when every route runner has reached the end of his route and any carrier the end of his path.
+      const moving = offs.some((a) => (a.assignment.a === 'route' || ['carry', 'keep', 'option'].includes(a.assignment.a)) && a.assignment.points && a.wp < a.assignment.points.length);
+      if (!moving && t >= 1.5) dryDoneAt ??= t;
+      if ((dryDoneAt != null && t - dryDoneAt >= 0.6) || t >= dryMax) { result = 'dry_run'; log('Walk-through complete', { kind: 'dry_run' }); }
+    }
     if (tick % frameEvery === 0 || result) recordFrame();
   }
   if (!result) { result = 'guard'; log('Simulation guard reached', { kind: 'guard' }); }

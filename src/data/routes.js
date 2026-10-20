@@ -40,6 +40,10 @@ export const ROUTE_LABELS = Object.freeze({
 
 /** Routes that count as "alternate / special" (green) in play art. */
 export const ALTERNATE_ROUTES = new Set(['flat', 'swing', 'screen', 'bubble', 'wheel', 'angle', 'texas']);
+/** Quick-game routes: thrown on rhythm without waiting for the break. */
+export const QUICK_ROUTES = new Set(['slant', 'flat', 'screen', 'bubble', 'hitch', 'stick', 'swing', 'drag', 'shallow']);
+/** Routes that settle at their last point instead of continuing on the same line. */
+export const SETTLE_ROUTES = new Set(['curl', 'hitch', 'comeback', 'stick', 'screen', 'bubble']);
 
 export function routePoints(name, align) {
   const fn = ROUTES[name];
