@@ -24,7 +24,7 @@ import { fieldGoalDistance, yardLabel } from '../../core/field.js';
 import { teamOverall } from '../../franchise/roster.js';
 import { boxScoreHtml } from '../box-score.js';
 import { kickFrames } from '../kick-anim.js';
-import { buildFx, shakeBetween } from '../ability-fx.js';
+import { buildFx, shakeBetween, endHold } from '../ability-fx.js';
 
 export function registerMatchScreens(Router, app) {
   // ------------------------------------------------------------ pregame
@@ -337,8 +337,16 @@ export function registerMatchScreens(Router, app) {
     const tick = (now) => {
       if (!anim) return;
       // requestAnimationFrame timestamps can sit a hair before the performance.now() taken at start: clamp at frame 0, never finish early.
-      const idx = Math.max(0, Math.min(sim.frames.length - 1, Math.floor((now - anim.start) / anim.msPerFrame)));
+      const raw = Math.max(0, Math.floor((now - anim.start) / anim.msPerFrame));
+      const idx = Math.min(sim.frames.length - 1, raw);
       if (!sim.frames.length) { finishAnim(f, false); return; } // a play with no frames (nothing to draw)
+      // End-of-play hold: keep drawing the last frame while an effect that fired at the whistle plays out.
+      if (raw > sim.frames.length - 1 && anim.fx && !anim.follow) {
+        const last = sim.frames[sim.frames.length - 1]; const extra = (raw - (sim.frames.length - 1)) * 0.1; const hold = anim.hold ??= endHold(anim.fx, last.t ?? 0);
+        const svg2 = document.querySelector('#field');
+        if (extra < hold && svg2) { const s2 = G.state; svg2.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame: last, prevFrame: last, fx: anim.fx, fxQuality: fxQualityFor(f), time: (last.t ?? 0) + extra, ownLabel: s2[anim.ev.offenseSide].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); anim.raf = requestAnimationFrame(tick); return; }
+        finishAnim(f, false); return;
+      }
       const svg = document.querySelector('#field'); // re-query: stopping Auto mid-play re-renders the screen
       if (idx !== anim.i && svg) {
         anim.i = idx;
@@ -348,7 +356,7 @@ export function registerMatchScreens(Router, app) {
         svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: sim.frames[idx], prevFrame: sim.frames[idx - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
         if (idx > 0 && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
       }
-      if (idx >= sim.frames.length - 1) { finishAnim(f, false); return; }
+      if (idx >= sim.frames.length - 1 && !(anim.fx && !anim.follow && endHold(anim.fx, sim.frames[sim.frames.length - 1].t ?? 0) > 0)) { finishAnim(f, false); return; }
       anim.raf = requestAnimationFrame(tick);
     };
     anim.raf = requestAnimationFrame(tick);
@@ -376,7 +384,7 @@ export function registerMatchScreens(Router, app) {
   /** Species lookup for the effect layer: team side + slot → { element, name }. */
   function fxLookup(f, offSide) {
     const T = teamsFor(f); const defSide = R.opponent(offSide);
-    return (team, slot) => { const m = (team === 'off' ? T[offSide].offense : T[defSide].defense)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name }; };
+    return (team, slot) => { const m = (team === 'off' ? T[offSide].offense : T[defSide].defense)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name, species: sp?.id || null }; };
   }
   function fxQualityFor(f) { return f.settings.reducedMotion ? 'min' : f.settings.fieldMarkers === 'simple' ? 'low' : 'full'; }
   let shakeTimer = null;

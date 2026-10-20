@@ -5,9 +5,15 @@
 //   action     (0 to 1.2 s):  a short elemental effect that follows the monster
 //   outcome    (0.9 s):       a label ("Block Shed") at the contact, only when
 //                             the engine logged that outcome for an ability monster.
+// Abilities with a signature look (ability-sigs.js) draw their own effect; the rest
+// fall back to the shared family shapes below. Drawing is split in two layers so
+// the monsters stay on top of ground effects (owner's note): `under` and `over`.
 // Effects are data: ELEMENT_FX picks the look, FAMILY (from the effect key)
 // picks the shape. Particles are deterministic (hash of slot and index), so a
 // frame redraws identically and nothing flickers. Nothing here touches the sim.
+
+import { SIG, statusMarks } from './ability-sigs.js';
+export { statusMarks };
 
 const FAMILY_OF = {
   burst: 'move', afterCatch: 'move', rushSpeed: 'move', closeSpeed: 'move', pursuitSpeed: 'move', routeAgility: 'move', elusive: 'move', elusiveFirst: 'move',
@@ -23,6 +29,7 @@ const FAMILY_OF = {
   thunderclap: 'throw', sovereign: 'throw', tailwind: 'throw',
   undertow: 'cover', whiteout: 'cover', nightVeil: 'cover', refraction: 'cover', heatHaze: 'cover', fortress: 'cover', staticField: 'cover', wingShadow: 'cover',
   grove: 'aura',
+  pincer: 'contact', deepRoots: 'block', bramble: 'contact', vanishing: 'move', foresight: 'throw', echoRead: 'cover', mindGame: 'move', dragonhide: 'block', longKick: 'passive',
 };
 export const FAMILY_LABEL = { move: 'Movement', block: 'Blocking', contact: 'Contact', throw: 'Passing', cover: 'Coverage', aura: 'Aura', passive: 'Passive' };
 export function familyOf(key) { return FAMILY_OF[key] || 'contact'; }
@@ -54,7 +61,8 @@ const OUTCOME = {
   flattened: { label: 'Flattened', shake: true }, blink: { label: 'Blink!', shake: true }, read_frozen: { label: 'Read Frozen', shake: false },
   sack_denied: { label: 'Sack Denied', shake: true }, pick_denied: { label: 'Pick Denied', shake: false }, no_breakup: { label: 'Too Fast', shake: false },
   spun: { label: 'Spun Around', shake: false }, lost_track: { label: 'Lost Him', shake: false }, falls_forward: { label: '+2 Yards', shake: false },
-  stuffed: { label: 'Lost a Yard', shake: true }, dragged: { label: 'Dragged Wide', shake: false }, slipped: { label: 'Slipped the Block', shake: false }, catch: { label: 'Contested Catch', shake: false, only: (e) => e.contested },
+  stuffed: { label: 'Frozen', shake: true }, dragged: { label: 'Dragged Wide', shake: false }, slipped: { label: 'Slipped the Block', shake: false },
+  pinched: { label: 'Pinned', shake: false }, vanished: { label: 'Vanished', shake: false }, thorned: { label: 'Thorned', shake: false }, bit_fake: { label: 'Bit the Fake', shake: false }, roared: { label: 'Roar!', shake: true }, catch: { label: 'Contested Catch', shake: false, only: (e) => e.contested },
 };
 export const OUTCOME_LABELS = Object.freeze(Object.fromEntries(Object.entries(OUTCOME).map(([k, v]) => [k, v.label])));
 
@@ -77,13 +85,22 @@ export const MAX_FX = 2, MAX_LABELS = 1;
 export function buildFx(sim, lookup) {
   const events = sim?.events || [];
   const fx = [];
+  const frames = sim?.frames || [];
+  const at = (team, slot, t) => { let best = null; for (const fr of frames) { if (fr.t > t + 1e-6) break; const p = (team === 'off' ? fr.off : fr.def).find((q) => q[0] === slot); if (p) best = p; } return best; };
   for (const e of events) {
     if (e.kind !== 'ability' || e.trait) continue;
     const m = lookup?.(e.side, e.by) || null;
     const family = familyOf(e.key);
     if (family === 'passive') continue;
     const nm = /^(.*)'s (.*) kicks in$/.exec(e.text || '');
-    fx.push({ team: e.side, slot: e.by, t0: e.t, family, key: e.key, element: m?.element || null, look: elementFx(m?.element), name: nm ? nm[2] : 'Ability', outcome: null });
+    const sig = m?.species ? SIG[m.species] : null; const dur = sig?.dur || ACTION;
+    const f = { team: e.side, slot: e.by, t0: e.t, dur, family, key: e.key, species: m?.species || null, sig, element: m?.element || null, look: elementFx(m?.element), name: nm ? nm[2] : 'Ability', outcome: null, victim: null, victimTeam: null, target: null };
+    // Its path during the effect (ground trails), where it started (cyclone, cracks, smoke), and teammates nearby (roots, plates).
+    f.path = frames.filter((fr) => fr.t >= e.t - 0.05 && fr.t <= e.t + dur).map((fr) => { const p = (e.side === 'off' ? fr.off : fr.def).find((q) => q[0] === e.by); return p ? [fr.t, p[1], p[2]] : null; }).filter(Boolean);
+    const start = at(e.side, e.by, e.t); f.origin = start ? [start[1], start[2]] : null;
+    if (start && (e.key === 'grove' || e.key === 'aura')) { const fr = frames.find((q) => q.t >= e.t) || frames[0]; const radius = e.key === 'grove' ? 5 : 2.6; f.mates = (e.side === 'off' ? fr.off : fr.def).filter((q) => q[0] !== e.by && Math.hypot(q[1] - start[1], q[2] - start[2]) <= radius).map((q) => q[0]); }
+    const thr = family === 'throw' ? events.find((x) => x.kind === 'throw' && x.t >= e.t - 0.2) : [...events].reverse().find((x) => x.kind === 'throw' && x.t <= e.t + 0.05); if (thr) f.target = thr.target; // the receiver: of this throw, or of the ball he is covering
+    fx.push(f);
   }
   const labels = [];
   for (const e of events) {
@@ -91,7 +108,7 @@ export function buildFx(sim, lookup) {
     if (labels.some((l) => l.t === e.t && l.slot === e.by && l.label === o.label)) continue; // 'broken' and 'broken_tackle' log the same hit twice
     const owner = fx.find((f) => f.team === e.side && f.slot === e.by);
     labels.push({ t: e.t, team: e.side, slot: e.by, victim: e.victim || null, label: o.label, shake: o.shake, look: owner?.look || DEFAULT_FX, name: owner?.name || null, from: e.fromX != null ? [e.fromX, e.fromY] : null });
-    if (owner) owner.outcome = e.t;
+    if (owner) { owner.outcome = e.t; if (e.victim && !owner.victim) { owner.victim = e.victim; owner.victimTeam = e.side === 'off' ? 'def' : 'off'; } if (e.kind === 'blink' && e.fromX != null) owner.origin = [e.fromX, e.fromY]; }
   }
   // Major impacts shake on their own too (sacks and fumbles), ability or not.
   const shakes = events.filter((e) => (e.kind === 'sack' || e.kind === 'fumble') && !labels.some((l) => l.t === e.t)).map((e) => e.t);
@@ -112,11 +129,11 @@ const f2 = (n) => (+n).toFixed(2);
  * (dx, dy = movement since the previous frame) or null; `t` is the frame time.
  * `quality`: 'full' | 'low' (fewer particles) | 'min' (badges and labels only).
  */
-export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 26, toSvg = null } = {}) {
-  if (!state) return '';
+export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 26, toSvg = null, ball = null, pball = null } = {}) {
+  if (!state) return { under: '', over: '', ball: '' };
   const cl = (x, pad) => Math.max(-halfWidth + pad, Math.min(halfWidth - pad, x)); // keep text inside the field
-  let s = '';
-  const live = state.fx.filter((f) => t >= f.t0 && t - f.t0 < ACTION);
+  let s = '', u = '', bl = '';
+  const live = state.fx.filter((f) => t >= f.t0 && t - f.t0 < (f.dur || ACTION));
   // Priority: an effect that produced an outcome, then contact/move (the ball is there), then the rest; cap for readability.
   const rank = (f) => (f.outcome != null ? 0 : f.family === 'contact' || f.family === 'move' ? 1 : f.family === 'throw' ? 2 : 3) * 10 + (t - f.t0);
   live.sort((p, q) => rank(p) - rank(q));
@@ -124,41 +141,48 @@ export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 2
   let named = false; // one ability name at a time, and none while an outcome label is up: text never piles up
   for (const f of live.slice(0, MAX_FX)) {
     const p = pos(f.team, f.slot); if (!p) continue;
-    const [cx, cy, dx, dy] = p; const age = t - f.t0; const k = age / ACTION; // 0 → 1
+    const [cx, cy, dx, dy] = p; const age = t - f.t0; const k = age / (f.dur || ACTION); // 0 → 1
     const L = f.look;
     // Activation: pulse ring and badge.
     if (age < ACTIVATION + 0.25) {
       const ka = Math.min(1, age / ACTIVATION);
-      s += `<circle cx="${f2(cx)}" cy="${f2(cy)}" r="${f2(1.6 + ka * 2.4)}" fill="none" stroke="${L.a}" stroke-width="${f2(0.6 * (1 - ka) + 0.12)}" opacity="${f2(1 - ka * 0.8)}"/>`;
+      u += `<circle cx="${f2(cx)}" cy="${f2(cy)}" r="${f2(1.6 + ka * 2.4)}" fill="none" stroke="${L.a}" stroke-width="${f2(0.6 * (1 - ka) + 0.12)}" opacity="${f2(1 - ka * 0.8)}"/>`;
     }
     if (age < 0.8 && !named && !labs.length) {
       named = true; const kb = age / 0.8;
-      s += `<g opacity="${f2(1 - kb * kb)}"><text x="${f2(cl(cx, 8))}" y="${f2(cy - 3.1 - kb * 1.2)}" text-anchor="middle" font-size="2.2" font-weight="900" fill="${L.a}" stroke="#0b1a14" stroke-width="0.4" paint-order="stroke">${L.glyph} ${esc(f.name)}</text></g>`;
+      s += `<g opacity="${f2(1 - kb * kb)}"><text x="${f2(cl(cx, 8))}" y="${f2(cy - (f.sig?.o ? 6.6 : 3.1) - kb * 1.2)}" text-anchor="middle" font-size="2.2" font-weight="900" fill="${L.a}" stroke="#0b1a14" stroke-width="0.4" paint-order="stroke">${L.glyph} ${esc(f.name)}</text></g>`;
     } else if (age < 0.8) {
       s += `<text x="${f2(cx)}" y="${f2(cy - 3)}" text-anchor="middle" font-size="2" opacity="${f2(1 - age / 0.8)}">${L.glyph}</text>`;
     }
-    if (quality !== 'min') s += particles(f, cx, cy, dx, dy, age, k, quality === 'low' ? 0.5 : 1, seed);
+    if (quality === 'min') continue;
+    if (f.sig) { // a signature look: the ability draws itself
+      const vp = f.victim ? pos(f.victimTeam, f.victim) : null; const tp = f.target ? pos('off', f.target) : null;
+      const c = { cx, cy, dx, dy, age, k, fade: k > 0.75 ? (1 - k) / 0.25 : 1, L, t, team: f.team, sid: (f.slot.charCodeAt(0) * 31 + f.slot.length) + seed * 7,
+        path: toSvg ? f.path.filter((q) => q[0] <= t + 1e-6).map((q) => toSvg(q[1], q[2])) : [], victim: vp ? [vp[0], vp[1]] : null, target: tp ? [tp[0], tp[1]] : null,
+        origin: f.origin && toSvg ? toSvg(f.origin[0], f.origin[1]) : null, ball, pball, mates: (f.mates || []).map((sl) => pos(f.team, sl)).filter(Boolean).map((q) => [q[0], q[1]]) };
+      if (f.sig.u) u += f.sig.u(c); if (f.sig.o) s += f.sig.o(c); if (f.sig.b) bl += f.sig.b(c);
+    } else u += particles(f, cx, cy, dx, dy, age, k, quality === 'low' ? 0.5 : 1, seed);
   }
   for (const c of state.contacts || []) {
     const age = t - c.t; if (age < 0 || age >= 0.3) continue; const p = pos(c.team, c.slot); if (!p) continue;
-    const kr = age / 0.3; s += `<circle cx="${f2(p[0])}" cy="${f2(p[1])}" r="${f2(1.2 + kr * 1.6)}" fill="none" stroke="#ffffff" stroke-width="${f2(0.4 * (1 - kr))}" opacity="${f2(0.8 * (1 - kr))}"/>`;
+    const kr = age / 0.3; u += `<circle cx="${f2(p[0])}" cy="${f2(p[1])}" r="${f2(1.2 + kr * 1.6)}" fill="none" stroke="#ffffff" stroke-width="${f2(0.4 * (1 - kr))}" opacity="${f2(0.8 * (1 - kr))}"/>`;
   }
   // Outcome labels (newest first, capped).
   for (const l of labs) {
     const p = pos(l.team, l.slot); if (!p) continue;
     // A teleport (Blink): an afterimage where he was and a streak to where he is.
     if (l.from && toSvg) { const [fx0, fy0] = toSvg(l.from[0], l.from[1]); const kf = Math.min(1, (t - l.t) / LABEL);
-      s += `<line x1="${f2(fx0)}" y1="${f2(fy0)}" x2="${f2(p[0])}" y2="${f2(p[1])}" stroke="${l.look.a}" stroke-width="${f2(0.7 * (1 - kf) + 0.1)}" stroke-dasharray="0.6 0.5" opacity="${f2(1 - kf)}"/>`;
-      s += `<circle cx="${f2(fx0)}" cy="${f2(fy0)}" r="${f2(1.4 + kf * 1.5)}" fill="${l.look.a}" opacity="${f2(0.45 * (1 - kf))}"/>`; }
+      u += `<line x1="${f2(fx0)}" y1="${f2(fy0)}" x2="${f2(p[0])}" y2="${f2(p[1])}" stroke="${l.look.a}" stroke-width="${f2(0.7 * (1 - kf) + 0.1)}" stroke-dasharray="0.6 0.5" opacity="${f2(1 - kf)}"/>`;
+      u += `<circle cx="${f2(fx0)}" cy="${f2(fy0)}" r="${f2(1.4 + kf * 1.5)}" fill="${l.look.a}" opacity="${f2(0.45 * (1 - kf))}"/>`; }
     let [cx, cy] = p; const v = l.victim ? pos(l.team === 'off' ? 'def' : 'off', l.victim) : null;
     if (v) { cx = (cx + v[0]) / 2; cy = Math.min(cy, v[1]); } // over the pair, never on top of them
     const kl = (t - l.t) / LABEL; const scale = kl < 0.15 ? 0.6 + (kl / 0.15) * 0.5 : 1.1 - (kl - 0.15) * 0.12;
-    s += `<g transform="translate(${f2(cl(cx, 7))} ${f2(cy - 4.6 - kl * 1.5)}) scale(${f2(scale)})" opacity="${f2(kl > 0.7 ? (1 - kl) / 0.3 : 1)}">`;
+    s += `<g transform="translate(${f2(cl(cx, 7))} ${f2(cy - 6.4 - kl * 1.5)}) scale(${f2(scale)})" opacity="${f2(kl > 0.7 ? (1 - kl) / 0.3 : 1)}">`;
     s += `<rect x="-6.2" y="-1.9" width="12.4" height="2.9" rx="0.5" fill="#0b1a14" opacity="0.82" stroke="${l.look.a}" stroke-width="0.18"/>`;
     s += `<text x="0" y="0.35" text-anchor="middle" font-size="2" font-weight="900" fill="${l.look.a}" letter-spacing="0.08">${esc(l.label.toUpperCase())}</text></g>`;
-    if (kl < 0.3) { const kr = kl / 0.3; s += `<circle cx="${f2(cx)}" cy="${f2(cy)}" r="${f2(1 + kr * 3)}" fill="none" stroke="#ffffff" stroke-width="${f2(0.5 * (1 - kr))}" opacity="${f2(1 - kr)}"/>`; }
+    if (kl < 0.3) { const kr = kl / 0.3; u += `<circle cx="${f2(cx)}" cy="${f2(cy)}" r="${f2(1 + kr * 3)}" fill="none" stroke="#ffffff" stroke-width="${f2(0.5 * (1 - kr))}" opacity="${f2(1 - kr)}"/>`; }
   }
-  return s;
+  return { under: u, over: s, ball: bl };
 }
 
 function esc(x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
@@ -260,4 +284,15 @@ export function movementSvg(carrier, { quality = 'full' } = {}) {
   let s = '';
   for (let i = 0; i < 3; i++) { const r = h(97, i, Math.round(cx * 10)); s += `<circle cx="${f2(cx - Math.sign(dx) * (0.6 + i * 0.5))}" cy="${f2(cy + 0.9 + (r - 0.5) * 0.4)}" r="${f2(0.35 + r * 0.25)}" fill="#e8dcc0" opacity="${f2(0.55 - i * 0.15)}"/>`; }
   return s;
+}
+
+/**
+ * How long to hold the final frame so effects that fire as the play ends (a label at the tackle,
+ * Fortress at an incompletion) are seen: 0 when nothing is running at the end, else up to 0.9 s.
+ */
+export function endHold(state, lastT) {
+  if (!state) return 0; let hold = 0;
+  for (const f of state.fx) if (f.t0 <= lastT + 1e-6 && f.t0 + (f.dur || ACTION) > lastT) hold = Math.max(hold, Math.min(0.9, f.t0 + Math.min(f.dur || ACTION, 1.2) - lastT));
+  for (const l of state.labels) if (l.t <= lastT + 1e-6 && l.t + LABEL > lastT) hold = Math.max(hold, Math.min(0.9, l.t + LABEL - lastT));
+  return Math.max(0, hold);
 }

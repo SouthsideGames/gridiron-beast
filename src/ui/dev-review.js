@@ -9,6 +9,7 @@
 import { SPECIES_DEX } from '../data/species.js';
 import { PLAYS, OFFENSE_IDS, DEFENSE_IDS } from '../data/playbook.js';
 import { ELEMENT_FX, FX_REVISION, familyOf } from './ability-fx.js';
+import { SIG_REV } from './ability-sigs.js';
 import { reviews, setReview } from '../franchise/review-store.js';
 import { esc } from './dom.js';
 import { CARD_CHECK, CARD_STATUS_LABEL, CARD_PROPOSALS } from '../data/card-check.js';
@@ -22,7 +23,7 @@ export const REVIEWABLE_PLAYS = [...OFFENSE_IDS, ...DEFENSE_IDS];
 
 export function abilityFingerprint(sp) {
   const keys = Object.keys(sp.ability?.effect || {}); const key = keys.find((k) => !PASSIVE.has(k)) || keys[0] || null; const fam = key ? familyOf(key) : 'passive';
-  return hash(JSON.stringify([sp.ability, sp.element, ELEMENT_FX[sp.element], fam, FX_REVISION.all, FX_REVISION.family[fam] || 0, FX_REVISION.species[sp.id] || 0]));
+  return hash(JSON.stringify([sp.ability, sp.element, ELEMENT_FX[sp.element], fam, FX_REVISION.all, FX_REVISION.family[fam] || 0, FX_REVISION.species[sp.id] || 0, ...(SIG_REV[sp.id] ? [SIG_REV[sp.id]] : [])])); // the signature look counts only where one exists, so untouched abilities keep their approval
 }
 export function playFingerprint(id) { return hash(JSON.stringify(PLAYS[id])); }
 const FP = new Map(); // the data is frozen for the life of the page: hash each item once

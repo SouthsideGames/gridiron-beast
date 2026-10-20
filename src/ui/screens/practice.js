@@ -11,7 +11,7 @@ import { playCardSvg, legendHtml } from '../play-art.js';
 import { playDetailHtml, lessonHtml } from './hq.js';
 import { generatedTeam } from '../../franchise/roster.js';
 import { createRng } from '../../core/rng.js';
-import { buildFx } from '../ability-fx.js';
+import { buildFx, endHold } from '../ability-fx.js';
 import { reviewHtml, reviewHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, devBadge } from '../dev-review.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { resolveSpecies } from '../../data/monsters.js';
@@ -51,11 +51,13 @@ export function registerPracticeScreens(Router, app) {
         const T = teamsForPractice(app.f);
         const o = PLAYS[prac.offense], d = PLAYS[prac.defense];
         prac.seed = seed; prac.sim = simulatePlay({ offensePlay: o, defensePlay: d, offense: pickSlots(T.offense.offense, o.onField), defense: pickSlots(T.defense.defense, d.onField), ballOn: prac.ballOn, seed });
-        const lookup = (team, slot) => { const m = (team === 'off' ? T.offense.offense : T.defense.defense)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || null, name: m.name }; };
+        const lookup = (team, slot) => { const m = (team === 'off' ? T.offense.offense : T.defense.defense)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || null, name: m.name, species: sp?.id || null }; };
         prac.fx = buildFx(prac.sim, lookup); prac.sprites = app.settings.fieldMarkers === 'simple' ? null : { off: { map: T.offense.offense, pool: [] }, def: { map: T.defense.defense, pool: [] } };
         prac.i = 0; Router.render();
         const svg = document.querySelector('#field'); const start = performance.now(); const ms = 100 / (app.settings.speed || 1);
-        const tick = (now) => { const idx = Math.min(prac.sim.frames.length - 1, Math.floor((now - start) / ms)); if (idx !== prac.i && svg) { prac.i = idx; svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[idx], prevFrame: prac.sim.frames[idx - 1] || null, fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites: prac.sprites, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); } if (idx < prac.sim.frames.length - 1) prac.raf = requestAnimationFrame(tick); else Router.render(); };
+        const n = prac.sim.frames.length; const hold = endHold(prac.fx, prac.sim.frames[n - 1].t ?? 0);
+        const tick = (now) => { const raw = Math.floor((now - start) / ms); if (raw > n - 1) { const extra = (raw - (n - 1)) * 0.1; if (extra < hold && svg) { svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[n - 1], prevFrame: prac.sim.frames[n - 1], fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites: prac.sprites, time: (prac.sim.frames[n - 1].t ?? 0) + extra, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); prac.raf = requestAnimationFrame(tick); return; } Router.render(); return; }
+          const idx = Math.min(n - 1, raw); if (idx !== prac.i && svg) { prac.i = idx; svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[idx], prevFrame: prac.sim.frames[idx - 1] || null, fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites: prac.sprites, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); } prac.raf = requestAnimationFrame(tick); };
         cancelAnimationFrame(prac.raf); prac.raf = app.settings.reducedMotion ? (prac.i = prac.sim.frames.length - 1, Router.render(), null) : requestAnimationFrame(tick);
       };
       delegate(root, {

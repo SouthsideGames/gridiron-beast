@@ -72,6 +72,7 @@ export function lineupFromChart(roster, chart, { trainingBonus = null } = {}) {
   const kicker = slotInput('K');
   const kickBoost = kicker.species ? speciesEffect(kicker.species)?.effect?.attrs?.kicking : 0; // the engine applies effect attrs on scrimmage plays; kicks resolve outside it
   if (kickBoost && kicker.attrs.kicking) kicker.attrs.kicking = Math.min(99, kicker.attrs.kicking + kickBoost);
+  const longKick = kicker.species ? speciesEffect(kicker.species)?.effect?.longKick : 0; if (longKick) kicker.longKick = longKick; // Precision Gears: more on field goals of 40+ yards
   const returnerSlot = ['WR2', 'RB', 'WR1', 'CB2'].find((s) => byId[chart[s]]) || 'RB';
   return { offense, defense, kicker, returner: slotInput(returnerSlot) };
 }

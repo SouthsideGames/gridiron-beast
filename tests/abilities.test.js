@@ -66,3 +66,21 @@ test('abilities: memory keys name the monster, ability and scope', () => {
   const s = sim('inside_zone', 'run_wall', { RB: 'astralux' }, {}, 3, { drive: 'D1', half: 'h1', quarter: 1, used: {} });
   for (const k of s.memoryUsed) assert.match(k, /^[^:]+:(blink|eruption|whiteout|daybreak|overcharge):(g|h:h1|d:D1)$/);
 });
+
+test('abilities (new cards): Whiteout really freezes the first read; Permafrost freezes the runner; Vanishing Cut leaves its man lost', () => {
+  const frozen = (s) => s.frames.some((fr) => fr.off.some((p) => p[4] === 'frozen'));
+  let wh = 0; for (let i = 0; i < 40 && !wh; i++) { const s = sim('mesh', 'cover_3', {}, { FS: 'glacivern' }, i, { drive: 'D', half: 'h1', quarter: 1, used: {} }); if (s.events.some((e) => e.kind === 'read_frozen')) { assert.ok(frozen(s), 'the first-read receiver shows frozen'); wh++; } }
+  assert.equal(wh, 1);
+  let pf = 0; for (let i = 0; i < 300 && !pf; i++) { const s = sim(['inside_zone', 'dive', 'power_right'][i % 3], 'run_wall', {}, { DL1: 'icehorn' }, i); if (s.events.some((e) => e.kind === 'stuffed')) { assert.ok(frozen(s)); pf++; } }
+  assert.equal(pf, 1);
+  let vc = 0; for (let i = 0; i < 400 && !vc; i++) { const s = sim(['inside_zone', 'outside_zone', 'toss_sweep'][i % 3], 'cover_3', { RB: 'duskrunner' }, {}, i); if (s.events.some((e) => e.kind === 'vanished')) { assert.ok(s.frames.some((fr) => fr.def.some((p) => p[4] === 'lost'))); vc++; } }
+  assert.equal(vc, 1);
+});
+
+test('abilities (new cards): Precision Gears adds on 40+ yard field goals only', async () => {
+  const { attemptFieldGoal } = await import('../src/sim/special-teams.js');
+  const rng = () => ({ chance: () => true });
+  const short = attemptFieldGoal(rng(), 85, { attrs: { kicking: 60 }, longKick: 6 }).chance, shortPlain = attemptFieldGoal(rng(), 85, { attrs: { kicking: 60 } }).chance;
+  const long = attemptFieldGoal(rng(), 70, { attrs: { kicking: 60 }, longKick: 6 }).chance, longPlain = attemptFieldGoal(rng(), 70, { attrs: { kicking: 60 } }).chance;
+  assert.equal(short, shortPlain); assert.ok(long > longPlain);
+});

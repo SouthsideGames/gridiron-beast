@@ -130,8 +130,8 @@ export function findActivation(entry, { tries = 80 } = {}) {
   // A ball-carrier ability on a tight end shows up more often from the backfield (his secondary position).
   const alt = sp.secondary === 'RB' && ['move', 'contact'].includes(entry.family) ? 'RB' : null;
   const fam = entry.family;
-  const offPlays = entry.key === 'glacierWall' ? ['mesh', 'deep_post', 'dagger', 'smash'] : fam === 'block' ? ['inside_zone', 'mesh', 'power_right', 'deep_post'] : fam === 'contact' ? ['inside_zone', 'power_right', 'dive', 'outside_zone', 'mesh'] : fam === 'throw' || fam === 'cover' ? ['deep_post', 'three_verticals', 'mesh', 'deep_corner', 'curl_flat'] : ['quick_slants', 'inside_zone', 'curl_flat', 'deep_corner', 'te_seam', 'stick'];
-  const defPlays = entry.key === 'ambush' || entry.key === 'glacierWall' ? ['all_out', 'zone_blitz', 'fire_zone', 'double_a_mug'] : fam === 'throw' || fam === 'cover' || fam === 'move' ? ['cover_3', 'cover_1', 'man_press', 'cover_2_man'] : ['cover_2_zone', 'run_wall', 'bear_front', 'cover_1'];
+  const offPlays = entry.key === 'glacierWall' || entry.key === 'foresight' ? ['mesh', 'deep_post', 'dagger', 'smash'] : entry.key === 'echoRead' ? ['pa_post', 'pa_boot', 'pa_shot'] : fam === 'block' ? ['inside_zone', 'mesh', 'power_right', 'deep_post'] : fam === 'contact' ? ['inside_zone', 'power_right', 'dive', 'outside_zone', 'mesh'] : fam === 'throw' || fam === 'cover' ? ['deep_post', 'three_verticals', 'mesh', 'deep_corner', 'curl_flat'] : ['quick_slants', 'inside_zone', 'curl_flat', 'deep_corner', 'te_seam', 'stick'];
+  const defPlays = entry.key === 'ambush' || entry.key === 'glacierWall' || entry.key === 'foresight' ? ['all_out', 'zone_blitz', 'fire_zone', 'double_a_mug'] : fam === 'throw' || fam === 'cover' || fam === 'move' ? ['cover_3', 'cover_1', 'man_press', 'cover_2_man'] : ['cover_2_zone', 'run_wall', 'bear_front', 'cover_1'];
   const fallback = (p) => SPECIES_DEX.find((s) => s.position === p && !s.ability) || SPECIES_DEX.find((s) => s.position === p);
   for (let i = 0; i < tries; i++) {
     const o = PLAYS[offPlays[i % offPlays.length]], d = PLAYS[defPlays[(i >> 1) % defPlays.length]]; if (!o || !d) continue;
@@ -204,17 +204,17 @@ export function registerAbilityAudit(Router, app) {
       sim = stagedSim(entry); const me = { species: entry.sp.id, name: entry.sp.name }; const other = { species: 'pebble', name: 'Pebblit' }, mate = { species: 'mudcub', name: 'Muddlet' };
       const mine = { S: me, U: mate, T: other }, theirs = { T: other, U: mate, S: me };
       sprites = entry.side === 'off' ? { off: { map: mine, pool: [] }, def: { map: theirs, pool: [] } } : { off: { map: theirs, pool: [] }, def: { map: mine, pool: [] } };
-      lookup = (team, slot) => (slot === 'S' ? { element: entry.sp.element, name: entry.sp.name } : { element: 'Earth', name: 'x' });
+      lookup = (team, slot) => (slot === 'S' ? { element: entry.sp.element, name: entry.sp.name, species: entry.sp.id } : { element: 'Earth', name: 'x', species: null });
       note = `${FAMILY_LABEL[entry.family]} scene · loops`;
     } else {
       const found = findActivation(entry);
       if (!found) { sheet(`<p class="muted">The engine did not fire ${esc(entry.eff.name)} in 80 tries. It may need a specific situation (a deep throw, a strip, an interception). Try the Practice Field with this monster on the roster.</p>`, { title: entry.eff.name }); return; }
       sim = found.sim; ballOn = 35; sprites = { off: { map: found.offM, pool: [] }, def: { map: found.defM, pool: [] } };
-      lookup = (team, slot) => { const m = (team === 'off' ? found.offM : found.defM)[slot]; return m ? { element: resolveSpecies(m).element, name: m.name } : null; };
+      lookup = (team, slot) => { const m = (team === 'off' ? found.offM : found.defM)[slot]; return m ? { element: resolveSpecies(m).element, name: m.name, species: resolveSpecies(m).id } : null; };
       note = `${found.play} vs ${found.defPlay} · ${sim.result} · loops`;
     }
     const fx = buildFx(sim, lookup); const camTop = entry.family === 'cover' ? 56 : entry.side === 'off' ? 52 : entry.family === 'move' || entry.family === 'contact' ? 44 : 48; const cam = mode === 'staged' ? { top: camTop, bottom: camTop - 46 } : cameraFor(ballOn);
-    const draw = (i) => fieldSvg({ ballOn, ballLat: sim.ballLat || 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites, camera: cam, ownLabel: 'OWN', oppLabel: 'OPP' });
+    const draw = (i, time = null) => fieldSvg({ time, ballOn, ballLat: sim.ballLat || 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites, camera: cam, ownLabel: 'OWN', oppLabel: 'OPP' });
     const log = sim.events.filter((e) => e.kind === 'ability' || e.ability).map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text || e.kind)}${e.ability && e.kind !== 'ability' ? ' <b>→ outcome label</b>' : ''}</span></div>`).join('');
     sheet(`<div class="field-wrap ${mode === 'staged' ? 'audit-field' : ''}"><svg id="auditfield" viewBox="${mode === 'staged' ? AUDIT_VIEWBOX : FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${draw(0)}</svg></div><p class="dim" style="margin:6px 0 0">${esc(note)}</p><div class="log" style="margin-top:6px">${log || '<div class="entry"><span>No ability event logged.</span></div>'}</div><div class="sheet-review" style="margin-top:10px">${reviewHtml('ability', entry.sp.id, { open: true })}</div>`, { title: `${elementFx(entry.sp.element).glyph} ${entry.eff.name}`, onClose: stop });
     const box = document.querySelector('.sheet .sheet-review');
@@ -222,9 +222,9 @@ export function registerAbilityAudit(Router, app) {
     const svg = document.querySelector('#auditfield'); const ms = 100 / (app.settings.speed || 1); let start = performance.now(); let last = -1;
     const tick = (now) => {
       const n = sim.frames.length; let idx = Math.floor((now - start) / ms);
-      if (idx >= n + 6) { start = now; idx = 0; } // hold the last frame briefly, then loop
-      idx = Math.min(n - 1, idx);
-      if (idx !== last && svg) { last = idx; svg.innerHTML = draw(idx); }
+      if (idx >= n + 10) { start = now; idx = 0; } // hold the last frame (effects that fire at the whistle play out), then loop
+      const time = idx > n - 1 ? (sim.frames[n - 1].t ?? 0) + (idx - (n - 1)) * 0.1 : null;
+      if (idx !== last && svg) { last = idx; svg.innerHTML = draw(Math.min(n - 1, idx), time); }
       st.raf = requestAnimationFrame(tick);
     };
     st.raf = requestAnimationFrame(tick);
