@@ -39,7 +39,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const maxTime = options.maxTime ?? 20;
   const frameEvery = options.frameEvery ?? 2;
   const dry = options.dryRun || null; // Playbook Audit walk-through (see header)
-  const dryMax = dry ? (dry.maxTime ?? 5) : 0;
+  const dryMax = dry ? (dry.maxTime ?? 7) : 0;
   let dryDoneAt = null;
   const events = [];
   const log = (text, data = {}) => events.push({ t: +t.toFixed(2), text, ...data });
@@ -327,7 +327,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const onDesignedPath = a.team === 'off' && path && ['carry', 'keep', 'option'].includes(a.assignment.a) && a.wp < path.length && a.x * dir < 1.5;
     if (onDesignedPath) { followPath(a, path, 1); return; }
     // Walk-through: the carrier runs his whole drawn path and stops at its end.
-    if (dry && a.team === 'off' && path && ['carry', 'keep', 'option'].includes(a.assignment.a)) { if (a.wp < path.length) followPath(a, path, 1); else steer(a, a.x, a.y, 0, 0.3); return; }
+    if (dry && a.team === 'off' && path && ['carry', 'keep', 'option'].includes(a.assignment.a)) { if (a.wp === path.length - 1 && dist(a, { x: path[a.wp][0], y: path[a.wp][1] }) < 2) a.wp = path.length; if (a.wp < path.length) followPath(a, path, 1); else steer(a, a.x, a.y, 0, 0.3); return; }
     if (a.laneTimer === undefined || a.laneTimer <= 0) { a.laneY = laneChoice(a); a.laneTimer = 0.25; }
     a.laneTimer -= DT;
     // Juke: one attempt each time a tackler closes within 2 yards (agility vs awareness).
@@ -356,7 +356,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (a.engaged) { resolveEngagement(a); return; }
     const someoneCarrying = phase === 'carry' || (phase === 'run' && handoffDone) || (ball.holder && ball.holder !== qb);
     if (a === qb && (ball.inAir || (ball.holder && ball.holder !== qb) || result)) { steer(a, a.x, a.y, 0, 0.2); return; }
-    if (ball.holder && ball.holder.team === 'off' && ball.holder !== qb && a !== qb) { escortBlock(a); return; }
+    if (ball.holder && ball.holder.team === 'off' && ball.holder !== qb && a !== qb && !dry?.noDefense) { escortBlock(a); return; } // walk-through: blockers stay on their drawn assignments
     if (ball.holder && ball.holder.team === 'def') { pursue(a); return; }
     if (ball.inAir) {
       if (ball.target === a) { steer(a, ball.landing.x, ball.landing.y, 1, 0.2); return; }
@@ -1024,7 +1024,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (options.debugSlot) { const d = actors.find((a) => a.slot === options.debugSlot); if (d) log(`dbg ${d.slot} x=${d.x.toFixed(2)} y=${d.y.toFixed(2)} v=${Math.hypot(d.vx, d.vy).toFixed(2)} stun=${d.stun.toFixed(2)} eng=${d.engaged ? d.engaged.slot : '-'} st=${d.state} ne=${d.noEngage.toFixed(2)}`, { kind: 'debug' }); }
     if (dry && !result) {
       // Done when every route runner has reached the end of his route and any carrier the end of his path.
-      const moving = offs.some((a) => (a.assignment.a === 'route' || ['carry', 'keep', 'option'].includes(a.assignment.a)) && a.assignment.points && a.wp < a.assignment.points.length);
+      const unfinished = (a) => {
+        const pts = a.assignment.points; if (!pts || a.wp >= pts.length) return false;
+        if (a.wp < pts.length - 1) return true;
+        const last = pts[pts.length - 1], prev = pts[pts.length - 2] || last; // on the last leg: done once at or past its end
+        return dist(a, { x: last[0], y: last[1] }) >= 2 && ((a.x - last[0]) * (last[0] - prev[0]) + (a.y - last[1]) * (last[1] - prev[1])) < 0;
+      };
+      const runner = (a) => ['carry', 'keep', 'option'].includes(a.assignment.a);
+      const moving = offs.some((a) => unfinished(a) && (a.assignment.a === 'route' || (ball.holder === a && runner(a)) || (!handoffDone && a.assignment.a === 'carry')));
       if (!moving && t >= 1.5) dryDoneAt ??= t;
       if ((dryDoneAt != null && t - dryDoneAt >= 0.6) || t >= dryMax) { result = 'dry_run'; log('Walk-through complete', { kind: 'dry_run' }); }
     }
