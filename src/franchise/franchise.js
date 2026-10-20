@@ -694,6 +694,18 @@ export function offseasonMarket(f) {
   const pool = Object.values(f.pool || {}).flat();
   return [...pool.map((m) => ({ monster: m, fromPool: true })), ...f.offseason.market.map((m) => ({ monster: m, fromPool: false }))];
 }
+/**
+ * What the owner knows about a free agent (polish 2.0): like a recruit, it depends on the head
+ * scout's skill in the monster's home region. Monsters who played for this club are fully known.
+ * level 1..6: headline ratings known = ceil(level * 4 / 6); OVR at 4+; potential at 5+; full card at 6.
+ */
+export function freeAgentView(f, m) {
+  const formerOwn = (m.history || []).some((h) => h.club === f.club);
+  const scout = staffMember(f, 'head_scout'); const region = REGIONS[homeRegion(m)];
+  const skill = scout ? (scout.biomes?.[region?.biome] ?? scout.overall ?? 50) : 30;
+  const level = formerOwn ? 6 : Math.min(6, (skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1) + (ownerPerk(f) === 'scouting' ? 1 : 0));
+  return { level, formerOwn, skill, scoutName: scout?.name || null, region: homeRegion(m), headlineKnown: Math.min(4, Math.ceil(level * 4 / 6)), ovr: level >= 4 ? monsterOverall(m) : null, potential: level >= 5 ? m.potential : null, natureKnown: level >= 6 || skill >= 70, full: level >= 6 };
+}
 export function signFreeAgent(f, id) {
   if (!f.offseason) return { ok: false, reason: 'The market is open in the offseason.' };
   if (f.roster.length >= ROSTER_MAX) return { ok: false, reason: `Roster full (${ROSTER_MAX}).` };
