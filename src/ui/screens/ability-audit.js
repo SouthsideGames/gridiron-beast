@@ -59,6 +59,9 @@ export function auditEntry(sp) {
   return { sp, eff, keys, key, family: key ? familyOf(key) : 'passive', hooked: active.length > 0 && eff?.kind === 'ability', side: OFF_POS.has(sp.position) ? 'off' : 'def' };
 }
 
+/** The outcome a contact ability really produces, so a staged scene never shows the wrong label (Dragon's Roar is not a shed). */
+const DEF_CONTACT_OUTCOME = { shedStrength: 'shed', runStuff: 'shed', roar: 'roared', pincer: 'pinched', permafrost: 'stuffed', forceFumble: 'fumble', reaction: null, eruption: 'flattened' };
+const OFF_CONTACT_OUTCOME = { carryStrength: 'broken', eruption: 'flattened', bramble: 'thorned', noFumble: 'broken', quakeStep: null };
 /** Scripted frames for the family: 2.4 s at 10 fps, the subject at slot S. */
 export function stagedSim(entry) {
   const { family, key, side } = entry; const N = 24; const frames = []; const events = [];
@@ -90,13 +93,13 @@ export function stagedSim(entry) {
           // Sheds the blocker at 0.8 s, then closes on the carrier and makes the tackle.
           const free = t > 0.8; const fwd = free ? Math.min(5.2, (t - 0.8) * 6) : 0; const s = sub(fwd * dir, 0.2); s[3] = free ? 0 : 1;
           mine = [s]; theirs = [[T, -3, 0.8, free ? 0 : 1], [U, -7, 0.3, 0]]; ball = [-7, 0.3, 0]; holder = U; holderTeam = 'off';
-          if (i === 8) { ability(0.8); out(0.8, 'shed', { blocker: T }); }
+          if (i === 8) { ability(0.8); const kind = DEF_CONTACT_OUTCOME[key]; if (kind) out(0.8, kind, { blocker: T, victim: T }); }
           if (i === 17) events.push({ t: 1.7, kind: 'tackle', by: S, side, victim: U, ability: key === 'reaction' || key === 'runStuff' });
         } else {
           // Carries into a tackler at 0.8 s and runs through him.
           const fwd = t * 4.5; const s = sub(fwd, 0);
           mine = [s]; theirs = [[T, +(t < 0.8 ? 3.6 + (0.8 - t) * 2 : fwd + 2.2 - (t - 0.8) * 7).toFixed(2), 0.6, 0]]; ball = [s[1], s[2], 0]; holder = S; holderTeam = 'off';
-          if (i === 8) { ability(0.8); out(0.8, 'broken', { victim: T }); }
+          if (i === 8) { ability(0.8); const kind = OFF_CONTACT_OUTCOME[key] ?? 'broken'; if (kind) out(0.8, kind, { victim: T }); }
         }
         break;
       }

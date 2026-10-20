@@ -15,7 +15,7 @@ const op = (v) => f2(Math.max(0, Math.min(1, v)));
 
 /** Revisions of the signature looks: bump one to ask the owner to review that ability again. */
 export const SIG_REV = Object.freeze({
-  firestorm: 1, cinderclaw: 1, cerebrix: 1, duskrunner: 1, elderoot: 1, enigmane: 1, frostclaw: 1, glacivern: 1, icehorn: 1, joltrex: 1, mireclaw: 1, nocturne: 1,
+  firestorm: 1, cinderclaw: 1, cerebrix: 1, duskrunner: 2, elderoot: 1, enigmane: 1, frostclaw: 1, glacivern: 1, icehorn: 1, joltrex: 1, mireclaw: 1, nocturne: 1,
   pyroclast: 1, stormcrown: 1, tempestra: 1, terrabull: 1, thornback: 1, tidefin: 1, tsunarok: 1, vyrnax: 1, wavehorn: 1, zephyr: 1, nyxshade: 1, lumen: 1,
   prism: 1, halofang: 1, aurelion: 1, ironjaw: 1, metalhorn: 1, aegistron: 1, astralux: 1, sablewing: 1, reefclaw: 1, rootram: 1, echolot: 1, scaleguard: 1,
 });
@@ -106,8 +106,9 @@ export const SIG = {
     for (let i = 0; i < 7; i++) { const pts = jag(x, y + 0.7, i * 2 * PI / 7, 4.2 * k, c.sid + i, 5); s += `<path d="${pathOf(pts)}" stroke="#1e1408" stroke-width="0.75" fill="none" stroke-linejoin="bevel" opacity="${op(c.fade)}"/><path d="${pathOf(pts)}" stroke="#e8d8b0" stroke-width="0.18" fill="none" opacity="${op(0.8 * c.fade)}"/>`; }
     return s + `<ellipse cx="${f2(x)}" cy="${f2(y + 0.7)}" rx="${f2(1.2 + 2 * k)}" ry="${f2(0.6 + k)}" fill="#c8b89a" opacity="${op(0.35 * c.fade)}"/>`; } },
   // ---- Dark
-  duskrunner: { u: (c) => { const [x, y] = c.origin || [c.cx, c.cy]; let s = ''; // Vanishing Cut: a smoke cloud where he was
-    for (let i = 0; i < 12; i++) { const a = h(c.sid, i) * 2 * PI; const d = h(c.sid, i, 2) * 2.2 * (0.6 + c.age); s += blob(x + cos(a) * d, y + sin(a) * d * 0.7 - c.age * 0.8, 1.2 + h(c.sid, i, 3) * 0.9 + c.age * 1.1, i % 3 ? '#9a8aaa' : '#cfc4dc', 0.85 * c.fade); }
+  duskrunner: { o: (c) => { const [x, y] = c.origin || [c.cx, c.cy]; let s = ''; // Vanishing Cut: a thick smoke cloud on top of everyone where he cut (owner: the defenders vanish in it)
+    const thick = c.age < 0.6 ? 1 : Math.max(0, 1 - (c.age - 0.6) / 0.6);
+    for (let i = 0; i < 16; i++) { const a = h(c.sid, i) * 2 * PI; const d = h(c.sid, i, 2) * 2.4 * (0.5 + Math.min(1, c.age * 2)); s += blob(x + cos(a) * d, y - 0.8 + sin(a) * d * 0.7 - c.age * 0.5, 1.4 + h(c.sid, i, 3) * 1 + Math.min(1, c.age) * 0.9, i % 3 ? '#8a7a9a' : '#cfc4dc', 0.95 * thick); }
     return s; } },
   mireclaw: { u: (c) => c.path.length > 1 ? `<path d="${pathOf(c.path)}" stroke="#1a0f2a" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="${op(0.5 * c.fade)}"/><path d="${pathOf(c.path)}" stroke="#9a7ad6" stroke-width="0.25" fill="none" opacity="${op(0.7 * c.fade)}"/>` : '' }, // Ambush: a shadow streak through the line (the fooled blocker gets a "!")
   nocturne: { u: (c) => `<circle cx="${f2(c.cx)}" cy="${f2(c.cy)}" r="2.3" fill="#0a0612" opacity="${op(0.55 * c.fade)}"/>${ring(c.cx, c.cy, 2.4, '#ffd84a', 0.35, 0.8 * c.fade)}${ring(c.cx, c.cy, 2.9, '#ffe9a0', 0.15, 0.5 * c.fade)}` }, // Eclipse Route: an eclipse around him; his man looks lost

@@ -177,9 +177,11 @@ export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 2
     let [cx, cy] = p; const v = l.victim ? pos(l.team === 'off' ? 'def' : 'off', l.victim) : null;
     if (v) { cx = (cx + v[0]) / 2; cy = Math.min(cy, v[1]); } // over the pair, never on top of them
     const kl = (t - l.t) / LABEL; const scale = kl < 0.15 ? 0.6 + (kl / 0.15) * 0.5 : 1.1 - (kl - 0.15) * 0.12;
-    s += `<g transform="translate(${f2(cl(cx, 7))} ${f2(cy - 6.4 - kl * 1.5)}) scale(${f2(scale)})" opacity="${f2(kl > 0.7 ? (1 - kl) / 0.3 : 1)}">`;
-    s += `<rect x="-6.2" y="-1.9" width="12.4" height="2.9" rx="0.5" fill="#0b1a14" opacity="0.82" stroke="${l.look.a}" stroke-width="0.18"/>`;
-    s += `<text x="0" y="0.35" text-anchor="middle" font-size="2" font-weight="900" fill="${l.look.a}" letter-spacing="0.08">${esc(l.label.toUpperCase())}</text></g>`;
+    // The box fits its text (about 1.45 units a capital at this size) and the text is held inside it, whatever the label.
+    const txt = l.label.toUpperCase(); const w = Math.max(8, txt.length * 1.45 + 2.2);
+    s += `<g transform="translate(${f2(cl(cx, w / 2 + 0.6))} ${f2(cy - 6.4 - kl * 1.5)}) scale(${f2(scale)})" opacity="${f2(kl > 0.7 ? (1 - kl) / 0.3 : 1)}">`;
+    s += `<rect x="${f2(-w / 2)}" y="-1.9" width="${f2(w)}" height="2.9" rx="0.5" fill="#0b1a14" opacity="0.82" stroke="${l.look.a}" stroke-width="0.18"/>`;
+    s += `<text x="0" y="0.35" text-anchor="middle" font-size="2" font-weight="900" fill="${l.look.a}" textLength="${f2(w - 1.8)}" lengthAdjust="spacingAndGlyphs">${esc(txt)}</text></g>`;
     if (kl < 0.3) { const kr = kl / 0.3; u += `<circle cx="${f2(cx)}" cy="${f2(cy)}" r="${f2(1 + kr * 3)}" fill="none" stroke="#ffffff" stroke-width="${f2(0.5 * (1 - kr))}" opacity="${f2(1 - kr)}"/>`; }
   }
   return { under: u, over: s, ball: bl };
