@@ -882,3 +882,37 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   assert.equal(p.monster.yearsPro, 0); assert.ok(F.aiTeam(f, team).roster.some((m) => m.id === got[0].id), 'the AI draftee is on its club');
   assert.equal(f.draft, null);
 });
+
+test('AI trade calls: only real upgrades at a need, priced fairly in picks, and accepting moves the player', () => {
+  let calls = 0, accepted = false;
+  for (let seed = 1; seed <= 40 && calls < 6; seed++) {
+    const f = newFranchise(seed);
+    for (let w = 2; w <= 8; w++) {
+      f.season.week = w; const c = F.maybeTradeCall(f); if (!c) continue; calls++;
+      const myBest = f.roster.filter((m) => m.position === c.position).reduce((b, m) => Math.max(b, monsterOverall(m)), 0);
+      assert.ok(c.player.ovr >= myBest + 2, `${c.player.name} is an upgrade (${c.player.ovr} vs ${myBest})`);
+      assert.ok(c.give.length >= 1 && c.give.length <= 2, 'one or two picks');
+      assert.equal(F.tradeCall(f), c, 'the call waits for an answer this week');
+      if (!accepted) {
+        const before = f.roster.length; const r = F.answerTradeCall(f, true);
+        assert.equal(r.ok, true, r.reason); assert.equal(f.roster.length, before + 1);
+        assert.ok(f.roster.some((m) => m.id === c.playerId), 'he joins the roster');
+        assert.equal(F.tradeCall(f), null); accepted = true;
+      } else { assert.equal(F.answerTradeCall(f, false).declined, true); }
+      break;
+    }
+  }
+  assert.ok(calls >= 3, `clubs call sometimes (${calls})`); assert.ok(accepted);
+});
+
+test('free agent ask: an estimate until the scout knows his overall, steady and within 10%', () => {
+  const f = newFranchise(5); f.staff.head_scout = null;
+  const other = F.aiTeam(f, ALL_TEAMS.find((t) => t !== f.club)).roster[0];
+  const fa = { ...other, history: [] };
+  const a = F.freeAgentAsk(f, fa), b = F.freeAgentAsk(f, fa);
+  assert.equal(a.estimate, true); assert.equal(a.shown, b.shown, 'the same estimate every time');
+  assert.ok(Math.abs(a.shown - a.exact) <= a.exact * 0.1 + 500, `${a.shown} near ${a.exact}`);
+  assert.equal(a.shown % 1000, 0, 'rounded to the thousand');
+  const own = { ...fa, history: [{ club: f.club }] }; const c = F.freeAgentAsk(f, own);
+  assert.equal(c.estimate, false); assert.equal(c.shown, c.exact, 'a former player of yours asks his real figure');
+});

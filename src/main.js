@@ -15,7 +15,7 @@ import { registerHqScreens } from './ui/screens/hq.js';
 import { registerRosterScreens } from './ui/screens/roster.js';
 import { registerMatchScreens } from './ui/screens/match.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
-import { registerAbilityAudit } from './ui/screens/ability-audit.js';
+import { registerAbilityAudit, openAbilityPreview, registerAbilityBalance } from './ui/screens/ability-audit.js';
 import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './ui/dev-review.js';
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
@@ -58,6 +58,9 @@ export function start() {
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
   registerAbilityAudit(Router, app);
+  registerAbilityBalance(Router);
+  // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
+  document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
   registerDexScreens(Router, app);
   const saved = Save.load();
   if (saved) { app.f = saved; applySettings(); mergeDex(saved.dex); F.syncAchievementsToGlobal(saved); }

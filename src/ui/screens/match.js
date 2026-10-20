@@ -376,6 +376,26 @@ export function registerMatchScreens(Router, app) {
     const G = f.game;
     G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev) };
     app.save(); Router.render();
+    firstAbilityTip(f, ev);
+  }
+  /**
+   * The first time a signature ability fires in one of this career's games (polish 2.0): a short tip
+   * naming it, whose it is and what it does, with "▶ See it". Once per ability; off with tutorial tips.
+   * During Auto it is a toast, so the game keeps moving.
+   */
+  function firstAbilityTip(f, ev) {
+    if (f.settings.tutorial === false || !ev.sim) return;
+    const G = f.game; const seen = (f.abilityTips ||= {}); const off = ev.offenseSide || G.state.possession; const look = fxLookup(f, off);
+    for (const e of (Array.isArray(ev.sim.events) ? ev.sim.events : [])) {
+      if (e.kind !== 'ability' || e.trait) continue;
+      const m = look(e.side, e.by); const sp = m?.species ? SPECIES_BY_ID[m.species] : null; const ab = sp?.ability;
+      if (!ab || seen[ab.name]) continue;
+      seen[ab.name] = true; app.save();
+      const side = e.side === 'off' ? off : R.opponent(off); const yours = side === G.playerSide; const club = G.state[side]?.name || '';
+      if (G.auto) { toast(`✨ ${ab.name} (${m.name}, ${yours ? 'yours' : club}): ${ab.text}`, 'good', 5000); return; }
+      sheet(`<p style="margin-top:0"><b>${esc(m.name)}</b> ${yours ? '(yours)' : `of the ${esc(club)}`} just used <b>${esc(ab.name)}</b>.</p><p class="muted">${esc(ab.text)}</p><p class="dim" style="font-size:12px">Every signature ability belongs to one monster in the league. You will see this tip once per ability.</p><button class="btn small see-it" data-see-it="${sp.id}">▶ See it again</button>`, { title: `✨ ${ab.name}` });
+      return;
+    }
   }
   /** "Flaroo's Quick Feet kicks in" → "Flaroo · Quick Feet". */
   function abilityLabel(e) { const m = /^(.*)'s (.*) kicks in$/.exec(e.text || ''); return m ? m[2] : 'ability'; }
@@ -393,6 +413,7 @@ export function registerMatchScreens(Router, app) {
     const el = document.querySelector('#fieldwrap'); if (!el) return;
     el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
     clearTimeout(shakeTimer); shakeTimer = setTimeout(() => el.classList.remove('shake'), 260);
+    try { navigator.vibrate?.(35); } catch { /* not supported (iPhone browsers): the shake is enough */ }
   }
 
   /** Key Moments: let the AI run routine downs for the player until something matters. */

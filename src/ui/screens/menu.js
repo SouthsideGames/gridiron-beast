@@ -66,7 +66,7 @@ export function registerMenuScreens(Router, app) {
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="autopoints" ${s.autoPoints ? 'checked' : ''}> Trainer spends attribute points for me (off: you spend them on the monster card)</label>
           ${app.f ? `<label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="tutorial" ${s.tutorial !== false ? 'checked' : ''}> Tutorial tips (first-week walkthrough)</label><div class="row"><button class="btn small" data-action="tutreset">Show all tips again</button><button class="btn small" data-action="primer">How football works</button></div>` : ''}
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion (no play animation, no particles)</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="shake" ${s.screenShake !== false ? 'checked' : ''}> Screen shake on big hits</label>
+          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="shake" ${s.screenShake !== false ? 'checked' : ''}> Screen shake on big hits (and a short vibration on phones that allow it)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devnotices" ${s.devNotices !== false ? 'checked' : ''}> Developer review notices (new or changed plays and abilities)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default, not recommended on mobile)</label>
         </div>
@@ -100,6 +100,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block badge-host" data-action="go" data-screen="audit">🔎 Playbook Audit${devBadge(app.settings, q.plays.length)}</button>
         <button class="btn block" data-action="go" data-screen="practice">🎯 Practice Field</button>
         <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Ability Audit${devBadge(app.settings, q.abilities.length)}${cardBadge(app.settings)}</button>
+        <button class="btn block" data-action="go" data-screen="ability-balance">⚖️ Ability Balance</button>
         <button class="btn block" data-action="dexall">📖 Beast Dex (everything revealed)</button>
         <button class="btn block danger" data-action="dexreset">Reset my Beast Dex</button>
         <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button></div>`;

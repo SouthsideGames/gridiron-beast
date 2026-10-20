@@ -7,6 +7,7 @@
 // Nothing here changes the sim; the staged scene is synthetic frames only.
 
 import { esc, delegate, sheet, toast } from '../dom.js';
+import { ABILITY_BALANCE } from '../../data/ability-balance.js';
 import { SPECIES_DEX, TRAITS } from '../../data/species.js';
 import { generateMonster, effectiveAttributes, resolveSpecies } from '../../data/monsters.js';
 import { PLAYS } from '../../data/playbook.js';
@@ -232,4 +233,69 @@ export function registerAbilityAudit(Router, app) {
     };
     st.raf = requestAnimationFrame(tick);
   }
+}
+
+/**
+ * "▶ See it" (polish 2.0): the player-facing preview of a signature ability, a looping staged
+ * scene through the real renderer, with the card. Used by the monster card, scout reports,
+ * free agents and the first-time ability tip. `settings` = the app's settings (speed, reduced motion).
+ */
+export function openAbilityPreview(settings, speciesId, { context = '' } = {}) {
+  const sp = SPECIES_DEX.find((s) => s.id === speciesId); if (!sp?.ability) return;
+  const entry = auditEntry(sp); const sim = stagedSim(entry);
+  const me = { species: sp.id, name: sp.name }, other = { species: 'pebble', name: 'Pebblit' }, mate = { species: 'mudcub', name: 'Muddlet' };
+  const mine = { S: me, U: mate, T: other }, theirs = { T: other, U: mate, S: me };
+  const sprites = entry.side === 'off' ? { off: { map: mine, pool: [] }, def: { map: theirs, pool: [] } } : { off: { map: theirs, pool: [] }, def: { map: mine, pool: [] } };
+  const fx = buildFx(sim, (team, slot) => (slot === 'S' ? { element: sp.element, name: sp.name, species: sp.id } : { element: 'Earth', name: 'x', species: null }));
+  const camTop = entry.family === 'cover' ? 56 : entry.side === 'off' ? 52 : entry.family === 'move' || entry.family === 'contact' ? 44 : 48; const cam = { top: camTop, bottom: camTop - 46 };
+  const draw = (i, time = null) => fieldSvg({ time, ballOn: 30, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: settings?.reducedMotion ? 'min' : 'full', sprites, camera: cam, noLines: true });
+  let raf = null;
+  sheet(`${context ? `<p class="muted" style="margin:0 0 8px">${context}</p>` : ''}<div class="field-wrap audit-field"><svg id="abilitypreview" viewBox="${AUDIT_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${draw(0)}</svg></div>
+    <div class="panel tight" style="margin-top:8px"><div class="row" style="gap:8px">${monsterSprite(me, 28)}<div class="grow"><b>${esc(sp.ability.name)}</b> <span class="dim">${esc(sp.name)} · ${esc(sp.rarity)}</span><div class="muted">${esc(sp.ability.text)}</div></div></div></div>`, { title: `${elementFx(sp.element).glyph} ${sp.ability.name}`, onClose: () => { if (raf) cancelAnimationFrame(raf); raf = null; } });
+  const svg = document.querySelector('#abilitypreview'); const ms = 100 / (settings?.speed || 1); let start = performance.now(); let last = -1;
+  const tick = (now) => {
+    if (!svg?.isConnected) { raf = null; return; }
+    const n = sim.frames.length; let idx = Math.floor((now - start) / ms);
+    if (idx >= n + 10) { start = now; idx = 0; }
+    const time = idx > n - 1 ? (sim.frames[n - 1].t ?? 0) + (idx - (n - 1)) * 0.1 : null;
+    if (idx !== last) { last = idx; svg.innerHTML = draw(Math.min(n - 1, idx), time); }
+    raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+}
+/** The "▶ See it" button for a monster with a signature ability, or ''. */
+export function seeItButton(m) { const sp = resolveSpecies(m); return sp?.ability ? `<button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : ''; }
+
+// ---------------------------------------------------------------- Developer → Ability Balance (GDD §23.15)
+const RARITY_ORDER = ['legendary', 'rare', 'uncommon', 'trait'];
+const NOISE = 0.15; // differences inside ±0.15 yards a snap are within the measurement's noise
+export function registerAbilityBalance(Router) {
+  let group = 'rarity';
+  Router.registerScreen('ability-balance', {
+    title: 'Ability Balance', tabs: false,
+    render() {
+      const rows = ABILITY_BALANCE.rows; const tier = (r) => (r.kind === 'trait' ? 'trait' : r.rarity);
+      const median = (xs) => { const s = xs.slice().sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : 0; };
+      const med = Object.fromEntries(RARITY_ORDER.map((t) => [t, median(rows.filter((r) => tier(r) === t).map((r) => r.value))]));
+      const flags = (r) => { const out = [];
+        if (tier(r) === 'legendary' && r.value < med.uncommon) out.push('weaker than a typical uncommon');
+        if (tier(r) !== 'legendary' && r.value > med.legendary + NOISE) out.push('stronger than a typical legendary');
+        if (r.value < -NOISE) out.push('hurts its own team');
+        if (r.firedPct < 2 && r.kind === 'signature') out.push(`rarely fires (${r.firedPct}% of snaps)`);
+        return out; };
+      const row = (r) => { const f = flags(r); const w = Math.min(100, Math.abs(r.value) / 1 * 100);
+        return `<div class="bal-row ${f.length ? 'flagged' : ''}"><div class="row between"><b>${esc(r.ability)}</b><span class="mono ${r.value > NOISE ? 'pos' : r.value < -NOISE ? 'neg' : 'dim'}">${r.value > 0 ? '+' : ''}${r.value.toFixed(2)}</span></div>
+          <div class="bal-bar"><i class="${r.value >= 0 ? 'pos' : 'neg'}" style="width:${w}%"></i></div>
+          <div class="dim" style="font-size:11px">${esc(r.name)} · ${esc(r.position)} · ${r.kind === 'trait' ? 'trait' : esc(r.rarity)} · fires on ${r.firedPct}% of snaps · yards ${r.dYards > 0 ? '+' : ''}${r.dYards} · turnovers ${r.dTurnovers > 0 ? '+' : ''}${r.dTurnovers}/100 · sacks ${r.dSacks > 0 ? '+' : ''}${r.dSacks}/100</div>
+          ${f.length ? `<div class="bal-flag">⚑ ${esc(f.join(' · '))}</div>` : ''}</div>`; };
+      const body = group === 'rarity'
+        ? RARITY_ORDER.map((t) => `<h3>${t === 'trait' ? 'Shared traits (commons)' : t[0].toUpperCase() + t.slice(1)} <span class="dim" style="font-weight:400">· median ${med[t] > 0 ? '+' : ''}${med[t].toFixed(2)}</span></h3>${rows.filter((r) => tier(r) === t).map(row).join('')}`).join('')
+        : `<h3>Everything, strongest first</h3>${rows.map(row).join('')}`;
+      const flagged = rows.filter((r) => flags(r).length);
+      return `<p class="muted">Each ability measured over ${ABILITY_BALANCE.snaps.toLocaleString('en-US')} paired snaps: the same plays and seeds with the monster's ability and without it, with drive, half and game memory like a real game. <b>Value</b> is the yards of field position it is worth to its team per snap on the field (a turnover counts as 45 yards). Inside ±${NOISE} is noise. Measured ${esc(ABILITY_BALANCE.generated)}; rerun with <span class="mono">node tools/ability-balance.mjs</span>.</p>
+        <div class="panel tight"><b>⚑ ${flagged.length} to look at</b><div class="muted" style="font-size:13px;margin-top:2px">${flagged.map((r) => `${esc(r.ability)} (${flags(r)[0]})`).join(' · ')}</div></div>
+        <div class="chips" style="margin:8px 0"><button class="chip ${group === 'rarity' ? 'on' : ''}" data-action="g" data-v="rarity">By rarity</button><button class="chip ${group === 'all' ? 'on' : ''}" data-action="g" data-v="all">Strongest first</button></div>${body}`;
+    },
+    mount(root) { delegate(root, { g: (el) => { group = el.dataset.v; Router.render(); } }); },
+  });
 }

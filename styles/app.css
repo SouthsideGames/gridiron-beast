@@ -482,3 +482,20 @@ html[data-reduced-motion="1"] #fieldwrap.shake { animation: none; }
 .situation { gap: 8px; }
 .situation > span:first-child { flex-shrink: 0; }
 .situation > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn.see-it { margin: 4px 0 2px; border-color: #7aa7ff; color: #bcd2ff; }
+/* Roster tab at 320 px (polish 2.0): one compact bar, nothing wraps or spills */
+.roster-bar { margin-bottom: 8px; gap: 6px; align-items: center; flex-wrap: nowrap; }
+.roster-bar .btn { white-space: nowrap; }
+.roster-room { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster-room.bad { border-color: var(--bad); color: var(--bad); }
+.roster-tools { gap: 6px; margin-bottom: 8px; }
+.btn.small.on { border-color: var(--accent); color: var(--accent); }
+html[data-reduced-motion="1"] .scene .talk.fresh, html[data-reduced-motion="1"] .board-letter p.fresh { animation: none; }
+.call-panel { border-color: #7aa7ff; background: linear-gradient(180deg, #16243a, var(--panel)); }
+/* Ability balance (developer) */
+.bal-row { padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 8px; margin-bottom: 6px; background: var(--panel); }
+.bal-row.flagged { border-color: var(--warn, #e0a33b); }
+.bal-bar { height: 5px; background: #203d33; border-radius: 3px; overflow: hidden; margin: 4px 0; }
+.bal-bar > i { display: block; height: 100%; } .bal-bar > i.pos { background: var(--good); } .bal-bar > i.neg { background: var(--bad); }
+.mono.pos { color: var(--good); } .mono.neg { color: var(--bad); }
+.bal-flag { font-size: 12px; color: var(--warn, #e0a33b); margin-top: 2px; }

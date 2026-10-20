@@ -13,6 +13,14 @@
 // frame redraws identically and nothing flickers. Nothing here touches the sim.
 
 import { SIG, statusMarks } from './ability-sigs.js';
+import { SPECIES_DEX } from '../data/species.js';
+
+/**
+ * Common monsters' shared traits (polish 2.0): a small icon, deliberately less than a signature
+ * ability. One at a time, only near the ball, never while a signature effect is playing.
+ */
+export const TRAIT_CUE = Object.freeze({ quick_feet: '💨', anchor: '🧱', hard_hitter: '💥', slick: '🫧', sticky: '🧲', sharp_eyes: '👀', soft_hands: '🧤', bull_rush: '🐂' });
+const TRAIT_OF = Object.fromEntries(SPECIES_DEX.filter((s) => s.trait).map((s) => [s.id, s.trait]));
 export { statusMarks };
 
 const FAMILY_OF = {
@@ -87,8 +95,10 @@ export function buildFx(sim, lookup) {
   const fx = [];
   const frames = sim?.frames || [];
   const at = (team, slot, t) => { let best = null; for (const fr of frames) { if (fr.t > t + 1e-6) break; const p = (team === 'off' ? fr.off : fr.def).find((q) => q[0] === slot); if (p) best = p; } return best; };
+  const traits = [];
   for (const e of events) {
-    if (e.kind !== 'ability' || e.trait) continue;
+    if (e.kind !== 'ability') continue;
+    if (e.trait) { const m = lookup?.(e.side, e.by); const cue = TRAIT_CUE[TRAIT_OF[m?.species]]; if (cue) traits.push({ team: e.side, slot: e.by, t0: e.t, cue }); continue; }
     const m = lookup?.(e.side, e.by) || null;
     const family = familyOf(e.key);
     if (family === 'passive') continue;
@@ -114,7 +124,7 @@ export function buildFx(sim, lookup) {
   const shakes = events.filter((e) => (e.kind === 'sack' || e.kind === 'fumble') && !labels.some((l) => l.t === e.t)).map((e) => e.t);
   // Every tackle and sack gets a short contact ring (movement state), ability or not.
   const contacts = events.filter((e) => e.kind === 'tackle' || e.kind === 'sack').map((e) => ({ t: e.t, team: e.side, slot: e.by }));
-  return { fx, labels, contacts, shakes: shakes.concat(labels.filter((l) => l.shake).map((l) => l.t)) };
+  return { fx, labels, contacts, traits, shakes: shakes.concat(labels.filter((l) => l.shake).map((l) => l.t)) };
 }
 
 /** A new frame crossed an impact: true once per impact (previous frame time → this one). */
@@ -166,6 +176,11 @@ export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 2
   for (const c of state.contacts || []) {
     const age = t - c.t; if (age < 0 || age >= 0.3) continue; const p = pos(c.team, c.slot); if (!p) continue;
     const kr = age / 0.3; u += `<circle cx="${f2(p[0])}" cy="${f2(p[1])}" r="${f2(1.2 + kr * 1.6)}" fill="none" stroke="#ffffff" stroke-width="${f2(0.4 * (1 - kr))}" opacity="${f2(0.8 * (1 - kr))}"/>`;
+  }
+  // A trait cue (commons): only when nothing signature is on screen, the one nearest the ball, within 6 yards of it.
+  if (quality !== 'min' && !live.length && !labs.length && ball && state.traits?.length) {
+    const cands = state.traits.filter((q) => t >= q.t0 && t - q.t0 < 0.6).map((q) => { const p = pos(q.team, q.slot); return p ? { q, p, d: Math.hypot(p[0] - ball[0], p[1] - ball[1]) } : null; }).filter((c) => c && c.d < 6).sort((a, b) => a.d - b.d);
+    const c = cands[0]; if (c) { const age = t - c.q.t0; s += `<text x="${f2(c.p[0])}" y="${f2(c.p[1] - 3.2 - age)}" text-anchor="middle" font-size="1.6" opacity="${f2(0.9 * (1 - age / 0.6))}">${c.q.cue}</text>`; }
   }
   // Outcome labels (newest first, capped).
   for (const l of labs) {

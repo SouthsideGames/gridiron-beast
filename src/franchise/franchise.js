@@ -28,7 +28,7 @@ import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { recordAchievementGlobal } from './achievement-store.js';
-import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds } from './trades.js';
+import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds, buildTradeCall } from './trades.js';
 import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
@@ -278,6 +278,7 @@ export function notices(f) {
     if ((m.points || 0) > 0 && !f.settings?.autoPoints && !pointsLocked(f)) list.push({ screen: 'roster', kind: 'points', id: m.id, text: `${m.name} has ${m.points} attribute point${m.points === 1 ? '' : 's'} to spend` });
   }
   if (f.season?.finished && f.offseason && offseasonPending(f).length) list.push({ screen: 'hq', kind: 'contracts', text: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} waiting` });
+  if (tradeCall(f)) list.push({ screen: 'hq', kind: 'call', text: `📞 The ${tradeCall(f).team} are on the line with an offer` });
   if (f.week?.commissioner) list.push({ screen: 'hq', kind: 'commissioner', text: 'The commissioner is waiting on a cap decision' });
   else if (salarySummary(f).over) list.push({ screen: 'hq', kind: 'cap', text: `Over the cap by ${Math.round(-salarySummary(f).remaining).toLocaleString('en-US')} cr` });
   return list;
@@ -706,6 +707,17 @@ export function freeAgentView(f, m) {
   const level = formerOwn ? 6 : Math.min(6, (skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1) + (ownerPerk(f) === 'scouting' ? 1 : 0));
   return { level, formerOwn, skill, scoutName: scout?.name || null, region: homeRegion(m), headlineKnown: Math.min(4, Math.ceil(level * 4 / 6)), ovr: level >= 4 ? monsterOverall(m) : null, potential: level >= 5 ? m.potential : null, natureKnown: level >= 6 || skill >= 70, full: level >= 6 };
 }
+/**
+ * The ask the owner sees (polish 2.0). Salary follows overall exactly, so an exact ask would give away a
+ * hidden overall: until the scout knows his overall it is shown as an estimate, a steady ±10% around the
+ * real figure rounded to the thousand. The real figure is what he signs for.
+ */
+export function freeAgentAsk(f, m) {
+  const exact = Math.round(salaryFor(m) / 100) * 100; const v = freeAgentView(f, m);
+  if (v.ovr != null) return { exact, shown: exact, estimate: false };
+  const jitter = ((hashString(`${m.id}|ask`) % 2001) / 1000 - 1) * 0.1; // -10%..+10%, the same every time
+  return { exact, shown: Math.round(exact * (1 + jitter) / 1000) * 1000, estimate: true };
+}
 export function signFreeAgent(f, id) {
   if (!f.offseason) return { ok: false, reason: 'The market is open in the offseason.' };
   if (f.roster.length >= ROSTER_MAX) return { ok: false, reason: `Roster full (${ROSTER_MAX}).` };
@@ -807,6 +819,41 @@ export function acceptTrade(f, offer) {
   if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster'); }
   else news(f, `Trade: ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} to ${offer.team} for ${got.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}.`, 'roster');
   if (f.draft?.started && !f.draft.done) runDraftToMe(f); // if the pick on the clock went out, the new holder uses it now
+  checkAchievements(f, 'trade');
+  return { ok: true, got };
+}
+
+// ---------------------------------------------------------------- AI clubs calling (GDD §19.6, second pass)
+/** The week (or offseason) a call belongs to: it lasts until this changes. */
+function callStamp(f) { return f.offseason ? `off:${f.season.year}` : `wk:${f.season.year}:${f.season.week}`; }
+/** The call waiting for an answer, or null. */
+export function tradeCall(f) { const c = f.tradeCall; return c && c.expires === callStamp(f) ? c : null; }
+/** Once a week in season (weeks 2-8) and once when the offseason opens, a club may call with an offer. */
+export function maybeTradeCall(f) {
+  const stamp = callStamp(f);
+  if (f.tradeCall && f.tradeCall.expires !== stamp) { news(f, `The ${f.tradeCall.team} offer for your ${f.tradeCall.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} expired.`, 'info'); f.tradeCall = null; }
+  if (f.tradeCall || isFired(f)) return null;
+  const inSeason = !f.offseason && !f.season.finished && !inPlayoffs(f) && f.season.week >= 2 && f.season.week <= 8;
+  if (!inSeason && !f.offseason) return null;
+  f.callsMade ||= {}; if (f.callsMade[stamp]) return null; f.callsMade[stamp] = true;
+  const c = buildTradeCall(f, { ...tradeCtx(f), myRoster: f.roster, myPicks: myTradablePicks(f), key: stamp });
+  if (!c) return null;
+  f.tradeCall = { ...c, expires: stamp };
+  news(f, `📞 The ${c.team} called: ${c.player.name} (${c.player.position}, ${c.player.ovr} OVR) for your ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}. The offer stands until ${f.offseason ? 'the new season' : 'the end of the week'}.`, 'info');
+  return f.tradeCall;
+}
+/** Answer the call: accept (picks go out, he joins on a two-year deal) or decline. */
+export function answerTradeCall(f, accept) {
+  const c = tradeCall(f); if (!c) return { ok: false, reason: 'No call is waiting.' };
+  if (!accept) { f.tradeCall = null; news(f, `Declined the ${c.team} offer for ${c.player.name}.`, 'info'); return { ok: true, declined: true }; }
+  if (!canTakePlayer(f)) return { ok: false, reason: `Roster full (${ROSTER_MAX}). Release someone first.` };
+  const mine = myTradablePicks(f); if (!c.give.every((p) => mine.some((x) => samePick(x, p)))) { f.tradeCall = null; return { ok: false, reason: 'You no longer hold those picks; the offer is off.' }; }
+  const src = aiTeam(f, c.team).roster.find((m) => m.id === c.playerId); if (!src) { f.tradeCall = null; return { ok: false, reason: `${c.player.name} is no longer with the ${c.team}.` }; }
+  const year = f.season.year; const nextYear = f.offseason || f.season.finished ? year + 1 : year; // in season he joins now, on a deal starting this year
+  const got = executeTrade(f, { team: c.team, give: c.give, get: { player: src } }, { club: f.club, year, nextYear });
+  f.tradeCall = null; dexRecord(f, got.player, 'signed');
+  const cap = salarySummary(f);
+  news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from the ${c.team} for ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster');
   checkAchievements(f, 'trade');
   return { ok: true, got };
 }
@@ -1304,6 +1351,7 @@ function advanceWeek(f, { bye = false } = {}) {
   f.season.week += 1; f.season.day = 0;
   const lastPlan = f.week.plan;
   f.week = blankWeek(); f.week.plan = lastPlan; // keep the plan as the default for next week
+  maybeTradeCall(f); // a club may call with an offer this week (GDD §19.6)
   if (draftWindow(f)) ensureDraftClass(f);
   if (f.season.week === 11) startPlayoffs(f);
   if (inPlayoffs(f) && f.season.playoffs?.champion) { endSeason(f); return; }
@@ -1380,6 +1428,7 @@ function endSeason(f) {
   f.history[f.history.length - 1].awards = s.awards;
   updateSeasonRecords(f, s.year); // the records book (GDD §17.8)
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
+  maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
     const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club });

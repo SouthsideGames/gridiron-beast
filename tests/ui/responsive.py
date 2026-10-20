@@ -244,9 +244,11 @@ def run_size(pw, port, w, h, name):
     check(page.query_selector('.edge-chip.comeback') is not None, 'comeback chip shows when trailing by 10+ in the fourth'); shot(page, f'{name}-15c-comeback')
     page.evaluate("() => { const G = __gb.f.game; G.state.quarter = G._q; Object.assign(G.state.score, G._s); G.halftimeShown = G._h; }"); page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.render(); }"); page.wait_for_timeout(50)
     # The staged fourth quarter can trip the one-time "The clock" tutorial sheet; close it like a player would.
-    while page.query_selector('.sheet-backdrop[aria-label^="📘"]'): page.click('.sheet-backdrop[aria-label^="📘"] [data-action="sheet-close"]'); page.wait_for_timeout(60)
+    for mark in ('📘', '✨'):
+        while page.query_selector(f'.sheet-backdrop[aria-label^="{mark}"]'): page.click(f'.sheet-backdrop[aria-label^="{mark}"] [data-action="sheet-close"]'); page.wait_for_timeout(60)
     # Key moments sim
-    settle(page, '[data-action="mode"]')
+    settle(page, '[data-action="mode"]'); page.wait_for_timeout(120)
+    while page.query_selector('.sheet-backdrop[aria-label^="✨"]'): page.click('.sheet-backdrop[aria-label^="✨"] [data-action="sheet-close"]'); page.wait_for_timeout(60)
     page.click('[data-action="mode"]'); page.wait_for_timeout(50)
     if page.query_selector('[data-action="keymoment"]'):
         page.click('[data-action="keymoment"]'); page.wait_for_timeout(300)
