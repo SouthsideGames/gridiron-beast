@@ -466,15 +466,30 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (!handoffDone) {
       followPath(a, a.assignment.points.slice(0, 2), 0.9);
       if (t >= 0.5) {
-        // Read the unblocked edge defender on the play side.
-        const side = Math.sign(a.assignment.points[a.assignment.points.length - 1][1]) || 1;
-        const edge = defs.filter((d) => !d.engaged && Math.sign(d.y) === side && d.x < 6).sort((p, q) => Math.abs(q.y) - Math.abs(p.y))[0];
-        const keep = !edge || (edge.x - a.x) > 3 || Math.abs(edge.y - a.y) < 2.5 && edge.x < a.x + 1;
-        const crashing = edge && dist(edge, rb) < dist(edge, a);
-        if (crashing && rb) { ball.holder = a; handoffDone = true; phase = 'carry'; stats.carrier = a.slot; a.wp = 2; log(`${a.name} keeps on the option`, { kind: 'keep' }); }
-        else if (rb) giveBall(rb);
-        else { ball.holder = a; handoffDone = true; phase = 'carry'; }
-        if (!keep && !crashing && rb) {/* gave */}
+        if (!rb) { ball.holder = a; handoffDone = true; phase = 'carry'; stats.carrier = a.slot; a.wp = 2; return; }
+        // The option read (owner's rule, 2026-10-20). In 7-on-7 a receiver can always block the corner, so the
+        // quarterback reads the extra defensive lineman when the defence has one on the field, otherwise the
+        // linebacker (the play-side one when there are two). If that defender comes at the quarterback (rush,
+        // blitz, spy, contain) the quarterback holds until he is close, then pitches or gives. If he is on the
+        // back (man on the back) or drops away, the quarterback keeps. Nobody to read: the ball goes to the back.
+        if (!a.optionRead) {
+          const playSide = Math.sign(rb.assignment.points[rb.assignment.points.length - 1][1]) || 1;
+          const lbs = defs.filter((d) => /^LB/.test(d.slot)).sort((p, q) => (Math.sign(q.y) === playSide) - (Math.sign(p.y) === playSide) || dist(p, a) - dist(q, a));
+          const key = [bySlot.def.DL3, ...lbs].find((d) => d && !d.engaged) || null;
+          const asg = key?.assignment;
+          let attacking = !key || ['rush', 'contain', 'spy'].includes(asg.a);
+          if (key && rng.chance(0.3 * (1 - norm(a.attrs.awareness)))) attacking = !attacking; // a less aware quarterback misreads now and then
+          a.optionRead = { key, give: attacking };
+          const pitchWord = Math.abs(rb.assignment.points[rb.assignment.points.length - 1][1]) > Math.abs(a.assignment.points[a.assignment.points.length - 1][1]) ? 'pitch' : 'give';
+          a.optionRead.word = pitchWord;
+          if (!attacking) { ball.holder = a; handoffDone = true; phase = 'carry'; stats.carrier = a.slot; a.wp = 2; log(`${a.name} reads ${key ? key.name : 'nobody'} and keeps`, { kind: 'keep', read: key?.slot || null }); return; }
+          log(key ? `${a.name} reads ${key.name} coming and holds to ${pitchWord}` : `${a.name} reads nobody and will ${pitchWord}`, { kind: 'option_read', read: key?.slot || null });
+        }
+        const { key } = a.optionRead;
+        // Hold the ball until the read defender commits (or the timing runs out), then get rid of it.
+        if (key && !key.engaged && dist(key, a) > 2.5 && t < 1.2) return;
+        if (a.optionRead.word === 'pitch') log(`${a.name} pitches`, { kind: 'pitch', read: key?.slot || null });
+        giveBall(rb);
       }
       return;
     }
