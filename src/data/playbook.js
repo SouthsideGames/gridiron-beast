@@ -127,7 +127,7 @@ const OFFENSE_PLAYS = [
     RG: RUNBLOCK([2, 0]), C: RUNBLOCK([2, -2.5]), LG: RUNBLOCK([2.5, -5]), TE: RUNBLOCK([2, 2]), WR1: STALK([3, -15]),
   }, { type: 'run', tags: ['run', 'outside'], desc: 'Wide zone to the left behind a stalk-blocking receiver.' }),
   offense('counter', 'Counter', 'tight_i', {
-    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-4.5, 2], [-2, -1], [1, -3.5], [8, -4], [20, -4]]),
+    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-5.9, 0.9], [-3.9, -1], [0, -3], [6, -3.8], [20, -4]]),
     RG: PULL([-2, 0], [1.5, -3.8]), TE: PULL([-2.5, 1.5], [3, -5]), C: RUNBLOCK([1.5, 0.5]), LG: RUNBLOCK([1.5, -2]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'misdirection'], desc: 'False step right, then the guard and tight end pull left.' }),
   offense('toss_sweep', 'Toss Sweep', 'i_pro', {
@@ -147,9 +147,9 @@ const OFFENSE_PLAYS = [
     LG: RUNBLOCK([2, -2]), C: RUNBLOCK([2, 0]), RG: RUNBLOCK([2, 2]), WR1: STALK([4, -16]), WR2: STALK([4, 16]),
   }, { type: 'run', tags: ['run', 'option'], desc: 'The quarterback reads the unblocked edge: give inside or keep outside.' }),
   offense('jet_sweep', 'Jet Sweep', 'gun_trips', {
-    QB: HANDOFF, WR3: CARRY([[-1.2, -12], [-2, -4], [-1, 6], [3, 13], [20, 16]]),
+    QB: HANDOFF, WR3: CARRY([[-1.6, -4.5], [-2, -1], [-1, 6], [3, 13], [20, 16]]),
     LG: RUNBLOCK([1.5, -1]), C: RUNBLOCK([1.5, 2]), RG: RUNBLOCK([2, 5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
-  }, { type: 'run', tags: ['run', 'outside', 'misdirection'], desc: 'The slot receiver takes the jet motion handoff around the right end.' }),
+  }, { type: 'run', motion: { slot: 'WR3', to: [-1.6, -4.5] }, tags: ['run', 'outside', 'misdirection'], desc: 'The slot receiver takes the jet motion handoff around the right end.' }),
 
   // ---- quick passes
   offense('quick_slants', 'Quick Slants', 'gun_pro', {

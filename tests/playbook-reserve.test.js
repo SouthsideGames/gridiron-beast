@@ -101,7 +101,8 @@ test('the review queue includes every reserve play so the owner can review them'
 test('pre-snap motion: the man moves before the snap, is running at the snap, and the art shows the zigzag', async () => {
   const { playCardSvg } = await import('../src/ui/play-art.js');
   const withMotion = Object.values(PLAYS).filter((p) => p.motion);
-  assert.ok(withMotion.length >= 4 && withMotion.every((p) => p.reserve), 'motion only on reserve plays for now');
+  assert.ok(withMotion.length >= 5, 'the jet, fly, rocket and speed sweeps use motion');
+  assert.ok(PLAYS.jet_sweep.motion && !PLAYS.jet_sweep.reserve, 'the live Jet Sweep has motion too (owner: reserve fixes apply to live plays)');
   for (const p of withMotion) {
     const r = simulatePlay({ offensePlay: p, defensePlay: PLAYS.cover_3, seed: 2 });
     const pre = r.frames.filter((f) => f.t < 0); assert.ok(pre.length >= 3, `${p.id} shows the motion before the snap`);
@@ -111,5 +112,5 @@ test('pre-snap motion: the man moves before the snap, is running at the snap, an
     assert.ok(playCardSvg(p.id).split('<polyline').length > playCardSvg('inside_zone').split('<polyline').length - 2, `${p.id} art`);
   }
   // Plays without motion have no pre-snap frames.
-  assert.ok(simulatePlay({ offensePlay: PLAYS.jet_sweep, defensePlay: PLAYS.cover_3, seed: 2 }).frames[0].t === 0);
+  assert.ok(simulatePlay({ offensePlay: PLAYS.inside_zone, defensePlay: PLAYS.cover_3, seed: 2 }).frames[0].t === 0);
 });
