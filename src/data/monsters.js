@@ -57,7 +57,7 @@ export const ABILITIES = Object.freeze({
   meteor_pass: { name: 'Meteor Pass', text: '+8 Accuracy and +6 Arm on throws 15+ yards downfield.', effect: { deepThrow: { accuracy: 8, arm: 6 } } },
   lightning_break: { name: 'Lightning Break', text: '+12% speed for the first 1.5 seconds after the snap.', effect: { burst: { speed: 0.12, until: 1.5 } } },
   stone_charge: { name: 'Stone Charge', text: '+10 Strength when breaking tackles between the tackles.', effect: { carryStrength: 10 } },
-  crushing_rush: { name: 'Crushing Rush', text: '+10 Strength when shedding a block.', effect: { shedStrength: 10 } },
+  crushing_rush: { name: 'Crushing Rush', text: '+4 Strength when shedding a block against the run.', effect: { runStuff: 4 } },
   aerial_lock: { name: 'Aerial Lock', text: '+10 Catching on interception chances.', effect: { pickCatching: 10 } },
   cold_read: { name: 'Cold Read', text: 'Reacts 0.2 s sooner to runs and short passes.', effect: { reaction: 0.2 } },
 });
