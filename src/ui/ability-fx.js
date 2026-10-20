@@ -67,7 +67,7 @@ const OUTCOME = {
   incomplete: { label: 'Pass Deflected', shake: false, only: (e) => e.pbu }, sack: { label: 'Sacked', shake: true },
   tackle: { label: 'Read & Stopped', shake: false },
   flattened: { label: 'Flattened', shake: true }, blink: { label: 'Blink!', shake: true }, read_frozen: { label: 'Read Frozen', shake: false },
-  sack_denied: { label: 'Sack Denied', shake: true }, pick_denied: { label: 'Pick Denied', shake: false }, no_breakup: { label: 'Too Fast', shake: false },
+  sack_denied: { label: 'Sack Denied', shake: true }, pick_denied: { label: 'Pick Denied', shake: false }, veiled: { label: 'Never Saw It', shake: false }, no_breakup: { label: 'Too Fast', shake: false },
   spun: { label: 'Spun Around', shake: false }, lost_track: { label: 'Lost Him', shake: false }, falls_forward: { label: '+2 Yards', shake: false },
   stuffed: { label: 'Frozen', shake: true }, dragged: { label: 'Dragged Wide', shake: false }, slipped: { label: 'Slipped the Block', shake: false },
   pinched: { label: 'Pinned', shake: false }, vanished: { label: 'Vanished', shake: false }, thorned: { label: 'Thorned', shake: false }, bit_fake: { label: 'Bit the Fake', shake: false }, roared: { label: 'Roar!', shake: true }, catch: { label: 'Contested Catch', shake: false, only: (e) => e.contested },

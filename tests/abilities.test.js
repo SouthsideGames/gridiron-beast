@@ -24,10 +24,10 @@ test('abilities: Blink fires at most once per game when the memory is carried', 
   assert.equal(blinks, 1);
 });
 
-test('abilities: Whiteout is once per half and comes back in the second half', () => {
+test('abilities: Whiteout is once per drive and comes back on the next drive', () => {
   const state = { drive: { team: 'home', plays: 0 }, playCount: 0, quarter: 1, abilityMemory: {} };
   const count = () => { let n = 0; for (let i = 0; i < 30; i++) { const s = sim('mesh', 'cover_3', {}, { FS: 'glacivern' }, i, abilityMemory(state)); rememberAbilities(state, s); n += s.events.filter((e) => e.kind === 'read_frozen').length; } return n; };
-  assert.equal(count(), 1); state.quarter = 2; assert.equal(count(), 0); state.quarter = 3; assert.equal(count(), 1);
+  assert.equal(count(), 1); state.quarter = 3; assert.equal(count(), 0, 'not again on the same drive, even in a new half'); state.playCount = 40; state.drive = { team: 'home', plays: 0 }; assert.equal(count(), 1, 'back on the next drive');
 });
 
 test('abilities: Eruption is once per drive', () => {
@@ -83,4 +83,17 @@ test('abilities (new cards): Precision Gears adds on 40+ yard field goals only',
   const short = attemptFieldGoal(rng(), 85, { attrs: { kicking: 60 }, longKick: 6 }).chance, shortPlain = attemptFieldGoal(rng(), 85, { attrs: { kicking: 60 } }).chance;
   const long = attemptFieldGoal(rng(), 70, { attrs: { kicking: 60 }, longKick: 6 }).chance, longPlain = attemptFieldGoal(rng(), 70, { attrs: { kicking: 60 } }).chance;
   assert.equal(short, shortPlain); assert.ok(long > longPlain);
+});
+
+test('abilities (balance pass): Night Veil denies catches within a yard; Ancient Grove guards never bite on play action', () => {
+  let veiled = 0;
+  for (let i = 0; i < 600 && veiled < 3; i++) {
+    const o = PLAYS[['mesh', 'quick_slants', 'curl_flat', 'smash'][i % 4]], d = PLAYS[['cover_1', 'man_press', 'cover_0'][i % 3]];
+    const s = simulatePlay({ offensePlay: o, defensePlay: d, offense: side(o, {}, i), defense: side(d, { CB1: 'nyxshade' }, 50000 + i), ballOn: 35, seed: 7 + i });
+    const v = s.events.find((e) => e.kind === 'veiled'); if (!v) continue; veiled++;
+    assert.ok(!s.events.some((e) => e.kind === 'catch' && e.t >= v.t), 'no catch after the veil denies it');
+  }
+  assert.ok(veiled >= 1, 'Night Veil fires');
+  const pa = Object.values(PLAYS).find((p) => p.tags?.includes('play_action'));
+  if (pa) { let rooted = 0; for (let i = 0; i < 60; i++) { const s = sim(pa.id, 'cover_3', {}, { LB1: 'elderoot' }, i); if (s.events.some((e) => e.kind === 'ability' && e.key === 'grove')) rooted++; } assert.ok(rooted > 0, 'the grove fires on play action'); }
 });

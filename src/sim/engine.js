@@ -521,8 +521,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const candidate = bySlot.off[progression[Math.min(readIndex, progression.length - 1)]];
     if (candidate && ready(candidate) && openness(candidate) >= threshold) {
       // Whiteout: once per half, the quarterback's first read freezes and he has to move on to the second.
-      const frost = readIndex === 0 && progression.length > 1 && !options.forcedTarget ? defs.find((d) => d.ability?.whiteout && available(d, 'whiteout', 'half')) : null;
-      if (frost) { spend(frost, 'whiteout', 'half'); readIndex = 1; readClock = scanPace; candidate.vx = 0; candidate.vy = 0; candidate.stun = Math.max(candidate.stun, 0.8); setStatus(candidate, 'frozen', 0.8); abilityUsed(frost, 'whiteout'); abilityOutcome('read_frozen', frost, `${frost.name}'s Whiteout freezes ${a.name}'s first read`, { victim: a.slot }); return; }
+      const frost = readIndex === 0 && progression.length > 1 && !options.forcedTarget ? defs.find((d) => d.ability?.whiteout && available(d, 'whiteout', 'drive')) : null;
+      if (frost) { spend(frost, 'whiteout', 'drive'); readIndex = 1; readClock = scanPace; candidate.vx = 0; candidate.vy = 0; candidate.stun = Math.max(candidate.stun, 0.8); setStatus(candidate, 'frozen', 0.8); abilityUsed(frost, 'whiteout'); abilityOutcome('read_frozen', frost, `${frost.name}'s Whiteout freezes ${a.name}'s first read`, { victim: a.slot }); return; }
       a.throwRead = readIndex; throwTo(a, candidate, pressured); return;
     }
     if (readClock <= 0) { readClock = scanPace; readIndex += 1; }
@@ -615,7 +615,6 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     ball.tailwind = !!passer.ability?.tailwind && airD >= 15; if (ball.tailwind) abilityUsed(passer, 'tailwind');
     // Undertow: deep throws into his half of the field.
     ball.undertow = airD >= 15 ? defs.find((d) => d.ability?.undertow && (Math.abs(d.y) < 1 || Math.sign(d.y) === Math.sign(landing.y))) || null : null;
-    { const veil = defs.find((d) => d.ability?.nightVeil && (dist(d, landing) < 3 || coveringDefs(r).includes(d))); if (veil) abilityUsed(veil, 'nightVeil'); } // the QB threw where he never saw him
     phase = 'air'; stats.passer = passer.slot; stats.target = r.slot; stats.airYards = Math.round(landing.x);
     for (const def of defs) def.recognisedPass = true;
     log(`${passer.name} throws to ${r.name}${pressured ? ' under pressure' : ''}`, { kind: 'throw', target: r.slot, pressured });
@@ -630,6 +629,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     log(`${a.name} scrambles`, { kind: 'scramble' });
   }
 
+  /** Ancient Grove: the grove monster within his radius of `d` (himself included), or null. Defenders he guards never bite on play action or misdirection. */
+  function groveGuards(d) { for (const g of actors) if (g.team === d.team && g.ability?.grove && dist(g, d) <= g.ability.grove.radius) return g; return null; }
   /** Quake Step: a cut makes every defender within 2 yards stumble (-20% to tackle him) for 0.6 s. */
   function quake(c) {
     if (t - (c.lastQuake ?? -9) < 0.6) return; c.lastQuake = t; let hit = false;
@@ -689,7 +690,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const runLive = (phase === 'carry' || (phase === 'run' && handoffDone)) && c && c.team === 'off';
     if (runLive && !d.recognised) {
       const expectRun = defensePlay.tags.includes('run') || defensePlay.tags.includes('goalline');
-      const delay = 0.3 + 0.5 * (1 - norm(d.attrs.awareness)) - reactionOf(d) + (isPlayAction && t < 1.6 && !d.ability?.noPlayActionBite ? 0.3 * (d.ability?.echoRead ?? 1) : 0) + (offensePlay.tags.includes('misdirection') ? 0.3 : 0) + (asg.a === 'man' ? 0.35 : 0) - (expectRun ? 0.3 : 0); // a run call keys the run
+      const rooted = groveGuards(d); if (rooted && (isPlayAction || offensePlay.tags.includes('misdirection'))) abilityUsed(rooted, 'grove');
+      const delay = 0.3 + 0.5 * (1 - norm(d.attrs.awareness)) - reactionOf(d) + (isPlayAction && t < 1.6 && !d.ability?.noPlayActionBite && !rooted ? 0.3 * (d.ability?.echoRead ?? 1) : 0) + (offensePlay.tags.includes('misdirection') && !rooted ? 0.3 : 0) + (asg.a === 'man' ? 0.35 : 0) - (expectRun ? 0.3 : 0); // a run call keys the run
       if (isPlayAction && t < 1.6 && d.ability?.noPlayActionBite && !d.recognised) abilityUsed(d, 'noPlayActionBite');
       if (t - runRecognisedAt >= delay) d.recognised = true;
     }
@@ -707,7 +709,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       pursue(d); return;
     }
     // Play-action bite: non-rushing defenders step up before they recognise the pass.
-    if (isPlayAction && !['rush', 'contain', 'man'].includes(asg.a)) {
+    if (isPlayAction && !['rush', 'contain', 'man'].includes(asg.a) && !groveGuards(d)) { // Ancient Grove: nobody near him bites
       const deepDefender = asg.a === 'zone' && asg.role === 'deep';
       const biteFor = (deepDefender ? 0.3 : 0.9) * (1.3 - norm(d.attrs.awareness)) * (d.ability?.echoRead ?? 1); // Echo Read: bites half as long
       if (d.ability?.echoRead) abilityUsed(d, 'echoRead');
@@ -899,6 +901,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (manD?.ability?.fortress) { catchP *= 1 - manD.ability.fortress; abilityUsed(manD, 'fortress'); } } // Fortress: receivers he covers in man catch 35% less often
     { const sf = defs.find((d) => d.ability?.staticField && d.assignment?.a === 'zone' && inZoneArea(d.assignment, L));
       if (sf) { catchP *= 1 - sf.ability.staticField; abilityUsed(sf, 'staticField'); } } // Static Field: catches in his zone are 10% harder
+    // Night Veil: a ball that arrives with him within a yard of it is never caught (it can still be picked).
+    const veil = defs.find((d) => d.ability?.nightVeil && !d.engaged && !(d.stun > 0) && dist(d, L) <= 1.0);
+    if (veil && catchP > 0 && !thunderShield) { catchP = 0; abilityUsed(veil, 'nightVeil'); abilityOutcome('veiled', veil, `${veil.name}'s Night Veil: ${r.name} never sees the ball`, { victim: r.slot }); }
     if (contested) {
       const dCover = nearest.d.attrs.coverage + (nearest.d.ability?.contest || 0) + (nearest.d.assignment?.a === 'man' ? (nearest.d.ability?.manCoverage || 0) : 0);
       const rCatch = r.attrs.catching + (r.ability?.catchContest || 0);
@@ -923,8 +928,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (rng.chance(catchP)) {
       ball.inAir = false; ball.holder = r; r.x = L.x; r.y = L.y; r.laneTimer = 0; r.jukeCooldown = 0.4; r.caughtAt = t; phase = 'carry';
       r.vx *= 0.45; r.vy *= 0.45; // securing the ball and turning upfield costs a step
-      // Daybreak: once per game, an open-field catch with a step on everyone cannot be run down from behind.
-      if (r.ability?.daybreak && available(r, 'daybreak', 'game') && defs.every((d) => dist(d, L) >= 2.5)) { spend(r, 'daybreak', 'game'); r.daybreak = true; abilityUsed(r, 'daybreak'); }
+      // Daybreak: after any catch, nobody can run him down from behind (defenders in front still can).
+      if (r.ability?.daybreak) { r.daybreak = true; abilityUsed(r, 'daybreak'); }
       stats.receiver = r.slot; stats.carrier = r.slot; stats.catchX = L.x;
       for (const def of defs) def.recognised = true;
       if (r.ability?.routeAgility) abilityUsed(r, 'routeAgility'); log(`${r.name} catches it${contested ? ' in traffic' : ''}`, { kind: 'catch', by: r.slot, side: 'off', contested: !!contested, ability: fired(r, 'catchContest', 'routeAgility', 'afterCatch') });
@@ -963,7 +968,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const across = offs.filter((o) => ['block', 'release', 'fake', 'run_block', 'pull'].includes(o.assignment?.a)).sort((p, q) => Math.abs(p.y - d.y) - Math.abs(q.y - d.y))[0];
       if (across) { across.roarUntil = d.ability.roar; setStatus(across, 'cower', d.ability.roar); abilityUsed(d, 'roar'); abilityOutcome('roared', d, `${d.name} roars; ${across.name} flinches`, { victim: across.slot }); }
     }
-    // Ancient Grove: defenders within 5 yards of him get +5 Awareness, recomputed as they move.
+    // Ancient Grove: defenders within 5 yards of him get +5 Awareness, recomputed as they move (and never bite: groveGuards).
     for (const g of actors) if (g.ability?.grove) {
       let lifted = false;
       for (const b of teammates(g.team)) { if (b === g) continue; const near = dist(b, g) <= g.ability.grove.radius; b.attrs.awareness = Math.min(99, b.baseAwareness + (near ? g.ability.grove.awareness : 0)); lifted ||= near; }
