@@ -18,7 +18,7 @@ export const QUESTIONS = Object.freeze([
   Q('swift', 'How do you see Sunday against {opp}?', ['We’re faster than them at every spot. We’ll make them chase.', 'swift'], ['They’re dangerous. We’ve prepared for everything.', 'focused'], ['We just want to go out and play our game.', 'balanced']),
   Q('swift', '{opp} has the slowest secondary in the league. Do you attack that?', ['Every snap. Speed is the one thing you can’t coach on a Saturday.', 'swift'], ['We’ll take what they give us. No forcing it.', 'patient'], ['We’ll test them early and adjust from there.', 'adaptive']),
   Q('swift', 'Your receivers were running past people all week in practice. Is that the plan?', ['If they can’t keep up, that’s not our problem.', 'swift'], ['Practice is practice. Sunday we take care of the ball first.', 'secure'], ['The plan is whatever the first quarter tells us.', 'cerebral']),
-  Q('swift', 'Is this the fastest team you’ve ever coached?', ['Yes. And we’re going to play like it — tempo, tempo, tempo.', 'swift'], ['Fast is nice. Tough wins in December.', 'sturdy'], ['Fast and smart. One without the other gets you beat.', 'focused']),
+  Q('swift', 'Is this the fastest team you’ve ever coached?', ['Yes. And we’re going to play like it, tempo, tempo, tempo.', 'swift'], ['Fast is nice. Tough wins in December.', 'sturdy'], ['Fast and smart. One without the other gets you beat.', 'focused']),
   Q('swift', 'Will we see more no-huddle this week?', ['Count on it. Tired defenses make mistakes.', 'swift'], ['When the moment calls for it. We won’t rush for the sake of it.', 'patient'], ['We’ll run it until they prove they can stop it, then change.', 'adaptive']),
   Q('swift', 'Your kick returner nearly broke two last week. Green light?', ['Always. If he sees grass, he goes.', 'swift'], ['Green light inside the five only. Field position wins games.', 'disciplined'], ['He’s earned the right to make that read himself.', 'instinctive']),
   Q('swift', 'Does the track-meet style hold up in bad weather?', ['Speed doesn’t care about the forecast.', 'swift'], ['We’ve got a power package for exactly that day.', 'powerful'], ['We’ll keep the ball on the ground and keep it safe.', 'secure']),
@@ -31,7 +31,7 @@ export const QUESTIONS = Object.freeze([
   Q('explosive', 'How do you start fast against {opp}?', ['First drive, we swing. Score early and let them chase.', 'explosive'], ['We start by not turning it over. Boring wins first quarters.', 'secure'], ['We script the first eight plays and trust the script.', 'disciplined']),
   Q('explosive', 'Your defense made three plays behind the line last week. Sustainable?', ['Yes. We attack the snap. That doesn’t change.', 'explosive'], ['If we keep our lanes, the plays come. Discipline first.', 'disciplined'], ['We’ll keep sending pressure until someone makes us pay.', 'ferocious']),
   Q('explosive', 'Do you worry about your monsters wearing down late?', ['We’d rather burn hot for three quarters than smoulder for four.', 'explosive'], ['That’s why we go two deep everywhere.', 'hardy'], ['Conditioning. We’ll be fresh in the fourth.', 'relentless']),
-  Q('explosive', '{star} had a 60-yard touchdown last week. How do you get more of that?', ['Give him the ball in space and get out of the way.', 'explosive', { star: true }], ['Keep feeding him — the long one comes from the short ones.', 'patient'], ['Move him around so they can’t find him.', 'elusive']),
+  Q('explosive', '{star} had a 60-yard touchdown last week. How do you get more of that?', ['Give him the ball in space and get out of the way.', 'explosive', { star: true }], ['Keep feeding him, the long one comes from the short ones.', 'patient'], ['Move him around so they can’t find him.', 'elusive']),
   Q('explosive', 'Your first drives have been your best. Why?', ['Because we come out swinging. That’s who we are.', 'explosive'], ['Because we study tape. The first drive is the scouting report.', 'cerebral'], ['Because our monsters are fresh. The job is staying that way.', 'sturdy']),
   Q('explosive', 'Is there a trick play in the bag this week?', ['There’s always one. Maybe two.', 'explosive'], ['We win with execution, not tricks.', 'precise'], ['You never know with us.', 'slippery']),
   Q('explosive', 'How much of the game plan is built around the deep ball?', ['A lot. Three shots a quarter, minimum.', 'explosive'], ['Enough to keep them honest, no more.', 'balanced'], ['It depends on what their safeties show us.', 'adaptive']),
@@ -108,7 +108,7 @@ export const QUESTIONS = Object.freeze([
   Q('surehanded', 'Your defense leads the league in interceptions. Why?', ['Defensive backs with receiver hands. When the ball’s there, they catch it.', 'surehanded'], ['Pressure. Hurried throws find us.', 'ferocious'], ['Film. We know where the ball is going.', 'cerebral']),
   Q('surehanded', 'What does the punt returner need to do this week?', ['Catch it. Every time. Field the ball and we’re happy.', 'surehanded'], ['Make one monster miss and go.', 'elusive'], ['Fair catch unless it’s obvious. Possession first.', 'secure']),
   Q('surehanded', 'What did you look for in this year’s rookies?', ['Hands. Everything else we can teach.', 'surehanded'], ['Speed. You can’t teach fast.', 'swift'], ['Character. Monsters who want to be coached.', 'hardy']),
-  Q('surehanded', 'Any superstitions before a game?', ['Every receiver catches fifty balls before warmups. Not a superstition — a rule.', 'surehanded'], ['Same breakfast, same seat on the bus. Don’t judge.', 'hardy'], ['None. Preparation is my superstition.', 'cerebral']),
+  Q('surehanded', 'Any superstitions before a game?', ['Every receiver catches fifty balls before warmups. Not a superstition, a rule.', 'surehanded'], ['Same breakfast, same seat on the bus. Don’t judge.', 'hardy'], ['None. Preparation is my superstition.', 'cerebral']),
 
   // ---------------------------------------------------------------- technical (crisp execution)
   Q('technical', 'What separates your receivers from the rest of the league?', ['Routes. Every cut is at the depth it should be, every time.', 'technical'], ['Speed. Separation is simple when you’re faster.', 'swift'], ['Hands. They catch what others drop.', 'surehanded']),
@@ -124,7 +124,7 @@ export const QUESTIONS = Object.freeze([
 
   // ---------------------------------------------------------------- cerebral (reads)
   Q('cerebral', 'How much tape did you watch on {opp} this week?', ['All of it. Twice. They have a tell on every third down and we found it.', 'cerebral'], ['Enough. At some point you have to trust your monsters.', 'calm'], ['Plenty, and we’ll still adjust at halftime.', 'adaptive']),
-  Q('cerebral', 'Your defense seems to know the play before the snap. How?', ['Study. Formation, split, stance — it’s all there if you look.', 'cerebral'], ['Instinct. Some monsters just feel it.', 'instinctive'], ['Discipline. Nobody guesses, so nobody is out of place.', 'disciplined']),
+  Q('cerebral', 'Your defense seems to know the play before the snap. How?', ['Study. Formation, split, stance, it’s all there if you look.', 'cerebral'], ['Instinct. Some monsters just feel it.', 'instinctive'], ['Discipline. Nobody guesses, so nobody is out of place.', 'disciplined']),
   Q('cerebral', 'Do you believe in analytics?', ['I believe in information. Every decision we make is a numbers decision.', 'cerebral'], ['I believe in the monsters I can see. Numbers after.', 'instinctive'], ['A bit of both. Numbers tell you what; eyes tell you why.', 'balanced']),
   Q('cerebral', 'Why does {star} always seem to be in the right place?', ['Because he studies more than anyone in this building. Including me.', 'cerebral', { star: true }], ['Because he reacts faster than the ball.', 'instinctive'], ['Because he never leaves his assignment.', 'disciplined']),
   Q('cerebral', 'Fourth and short at midfield. Go?', ['Depends on the numbers. The chart says yes more often than you’d think.', 'cerebral'], ['Go. Always. Fortune favours the bold.', 'aggressive'], ['Punt. Make them drive the field.', 'patient']),
@@ -320,7 +320,7 @@ export const QUESTIONS = Object.freeze([
   Q('focused', 'Win or go home. How do you prepare for a playoff game?', ['Same as any week. The monsters who treat it like a normal Sunday are the ones who play well.', 'focused'], ['With everything we’ve got. Nothing saved, nothing held back.', 'relentless'], ['Enjoy it. These are the games you play for.', 'calm'], { playoff: true }),
   Q('hardy', 'Three straight wins. Is this team peaking?', ['Peaking is for teams that stop. We’re just working.', 'hardy'], ['We’re getting better. Not peaking yet.', 'patient'], ['Ask me after Sunday. Streaks mean nothing until they’re over.', 'calm'], { streakW: true }),
   Q('resistant', 'Three straight losses. Is the locker room still with you?', ['Completely. This group doesn’t crack. Watch Sunday.', 'resistant'], ['Yes. We watched the tape together and fixed what we saw.', 'cerebral'], ['Yes. Losing streaks end when the work shows. The work is there.', 'relentless'], { streakL: true }),
-  Q('hardy', 'How does the lineup change with your starter out?', ['It doesn’t change much. Next monster up — that’s why we carry depth.', 'hardy'], ['We adjust the plan around who we have. Different, not worse.', 'adaptive'], ['The line protects whoever is back there a little harder.', 'protective'], { injury: true }),
+  Q('hardy', 'How does the lineup change with your starter out?', ['It doesn’t change much. Next monster up, that’s why we carry depth.', 'hardy'], ['We adjust the plan around who we have. Different, not worse.', 'adaptive'], ['The line protects whoever is back there a little harder.', 'protective'], { injury: true }),
 ]);
 
 export const MEDIA_BOOST = 3; // to the matching nature's strength (awareness for neutral natures); +1 awareness alongside
@@ -328,6 +328,6 @@ export const MEDIA_CAP = 4;   // the same nature twice in one presser does not s
 export const HYPE_BOOST = 2;  // trash talk before a rival game: the whole team... and a cost if you lose
 export const MEDIA_QUESTIONS_PER_WEEK = 3;
 
-/** Every nature at least ten questions, every answer a known nature — checked by the tests. */
+/** Every nature at least ten questions, every answer a known nature, checked by the tests. */
 export const questionCount = (nature) => QUESTIONS.filter((q) => q.nature === nature && !isSituational(q)).length;
 export const isSituational = (q) => !!(q.rival || q.hotseat || q.playoff || q.streakW || q.streakL || q.injury);

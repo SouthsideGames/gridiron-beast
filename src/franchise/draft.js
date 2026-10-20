@@ -12,7 +12,7 @@ export const DRAFT_ROUNDS = 3;
 export const ROOKIE_SCALE = 0.70;
 export const CLASS_SHAPE = Object.freeze([['QB', 4], ['RB', 5], ['WR', 8], ['TE', 4], ['OL', 7], ['DL', 7], ['LB', 5], ['CB', 6], ['S', 5], ['K', 2]]); // 53
 
-/** Build the class: ages 19–22, all first-year, a spread of quality with a few gems. Scouting reveals them. */
+/** Build the class: ages 19-22, all first-year, a spread of quality with a few gems. Scouting reveals them. */
 export function generateDraftClass(rng, { year, uniqueName }) {
   const out = []; let n = 0;
   for (const [position, count] of CLASS_SHAPE) {
@@ -41,7 +41,7 @@ export function openDraftClass(f, rng, { uniqueName }) {
   return f.draft;
 }
 
-/** Monday in the final week or the playoffs: the scout studies prospects — a few fully (focus position first), a few partially. */
+/** Monday in the final week or the playoffs: the scout studies prospects, a few fully (focus position first), a few partially. */
 export function scoutDraftClass(f, rng, { skill = 50, focus = null, bonus = 0 } = {}) {
   const d = f.draft; if (!d) return { ok: false, reason: 'No draft class yet.' };
   const full = (skill >= 80 ? 3 : skill >= 45 ? 2 : 1) + bonus, partial = 3;
@@ -65,7 +65,7 @@ export function draftOrder(standingsBestFirst, rounds = DRAFT_ROUNDS) {
 export function startDraft(f, standingsBestFirst, { ownerOf = null } = {}) {
   const d = f.draft; if (!d) return { ok: false, reason: 'No draft class.' };
   if (d.started) return { ok: true, draft: d };
-  // Each slot remembers the club whose record earned it (`original`) and the club that holds it now (`team`) — traded picks differ (GDD §19.6).
+  // Each slot remembers the club whose record earned it (`original`) and the club that holds it now (`team`), traded picks differ (GDD §19.6).
   d.order = draftOrder(standingsBestFirst).map((o) => ({ round: o.round, original: o.team, team: ownerOf ? ownerOf({ round: o.round, original: o.team }) : o.team }));
   d.index = 0; d.round = 1; d.started = true; d.available = d.class.map((m) => m.id);
   return { ok: true, draft: d };
@@ -113,7 +113,7 @@ export function playerPick(f, id, { playerClub, nextYear }) {
 }
 export function passPick(f, { playerClub }) {
   const d = f.draft; if (!d?.started || d.done || d.order[d.index].team !== playerClub) return { ok: false, reason: 'Not your pick.' };
-  d.picks.push({ round: d.order[d.index].round, overall: d.index + 1, team: playerClub, id: null, name: '— passed —', position: '', ovr: 0, mine: true, passed: true });
+  d.picks.push({ round: d.order[d.index].round, overall: d.index + 1, team: playerClub, id: null, name: '(passed)', position: '', ovr: 0, mine: true, passed: true });
   d.index += 1; d.round = d.order[d.index]?.round || d.round; if (d.index >= d.order.length) d.done = true;
   return { ok: true };
 }
@@ -132,5 +132,5 @@ export function injectDraftees(f, team, roster, year) {
   }
   return roster;
 }
-/** Age AI draftees at the turn of the year — except the class just drafted, whose first season is the one about to start. */
+/** Age AI draftees at the turn of the year, except the class just drafted, whose first season is the one about to start. */
 export function ageDraftees(f, draftedYear) { for (const [y, byTeam] of Object.entries(f.draftResults || {})) { if (Number(y) === draftedYear) continue; for (const list of Object.values(byTeam)) for (const m of list) { m.age += 1; m.yearsPro = (m.yearsPro || 0) + 1; } } }

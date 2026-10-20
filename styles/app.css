@@ -436,3 +436,66 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .dc-more { display: block; width: 100%; font-size: 11px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dc-expiring { color: #f5c542; font-weight: 700; }
 .dc-backup { font-size: 11px; }
+
+/* Polish 2.0: a short shake of the field on major impacts (sacks, fumbles, ability-driven breaks). */
+#fieldwrap.shake { animation: field-shake 0.24s ease-out; }
+@keyframes field-shake { 0% { transform: translate(0, 0); } 20% { transform: translate(-3px, 2px); } 40% { transform: translate(3px, -2px); } 60% { transform: translate(-2px, 1px); } 80% { transform: translate(1px, -1px); } 100% { transform: translate(0, 0); } }
+html[data-reduced-motion="1"] #fieldwrap.shake { animation: none; }
+/* Ability audit (developer) */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips .chip { min-height: 28px; cursor: pointer; }
+.chips .chip.on { background: #3b3410; border-color: #8a7a1a; color: var(--accent); }
+.panel.warn { border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); }
+.audit-field > svg { aspect-ratio: 26.7 / 25; }
+/* Ability audit reviews (GDD §23.6) */
+.review { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line-2); }
+.review-btn.approved { background: #143a24; border-color: var(--good); color: var(--good); }
+.review-btn.needswork { background: #3a2a10; border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); }
+.review-note { width: 100%; box-sizing: border-box; margin-top: 6px; min-height: 52px; resize: vertical; font: inherit; font-size: 14px; padding: 8px; border-radius: 6px; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-2); }
+.audit-row.rv-approved { border-left: 3px solid var(--good); }
+.audit-row.rv-needswork { border-left: 3px solid var(--warn, #e0a33b); }
+.review-bar { display: flex; height: 6px; overflow: hidden; }
+.review-bar > i { display: block; height: 100%; }
+.review-bar > i.ok { background: var(--good); } .review-bar > i.nw { background: var(--warn, #e0a33b); }
+/* Developer review notices (GDD §23.7) */
+.badge-host { position: relative; }
+.tab-badge.inline-badge { position: static; display: inline-block; margin-left: 6px; vertical-align: 1px; border: 0; }
+.chip.rv-new { background: #4a1a16; border-color: #e0463a; color: #ffb4ab; font-weight: 800; font-size: 10px; letter-spacing: .04em; }
+.review-since { font-size: 12px; color: #ffb4ab; margin-bottom: 6px; }
+.review-gameplay { gap: 6px; font-size: 12px; margin-top: 6px; align-items: flex-start; color: var(--ink-2); }
+.review-gameplay input { width: auto; min-height: 0; margin-top: 2px; }
+.dev-queue { border-color: #e0463a; }
+.text-gap { font-size: 12px; color: var(--warn, #e0a33b); margin-top: 2px; }
+/* Card check (GDD §23.9) */
+.tab-badge.card-badge { background: #b7791f; }
+.chip.card-chip { background: #3a2a10; border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); font-weight: 800; font-size: 10px; letter-spacing: .04em; margin-left: 4px; }
+.card-issue { font-size: 12px; border-left: 3px solid var(--warn, #e0a33b); padding: 4px 8px; margin-bottom: 6px; background: rgba(224,163,59,.08); border-radius: 0 6px 6px 0; }
+.card-issue.loose { border-left-color: #c9a74a; }
+.card-toggle { margin-bottom: 6px; font-size: 12px; }
+.card-toggle.on { background: #3a2a10; border-color: var(--warn, #e0a33b); color: var(--warn, #e0a33b); }
+.card-queue { border-color: var(--warn, #e0a33b); }
+.card-proposal { font-size: 12px; border-left: 3px solid #7aa7ff; padding: 6px 8px; margin-bottom: 6px; background: rgba(122,167,255,.08); border-radius: 0 6px 6px 0; }
+.card-proposal.approved { border-left-color: var(--good); } .card-proposal.rejected { border-left-color: var(--warn, #e0a33b); }
+.card-proposal-text { font-size: 13px; color: var(--ink); margin-top: 2px; }
+/* Match screen at 320 px: the event banner stays on one line, the situation row never collides (polish 2.0) */
+.rival-banner.compact { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; padding: 6px 10px; }
+.situation { gap: 8px; }
+.situation > span:first-child { flex-shrink: 0; }
+.situation > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn.see-it { margin: 4px 0 2px; border-color: #7aa7ff; color: #bcd2ff; }
+/* Roster tab at 320 px (polish 2.0): one compact bar, nothing wraps or spills */
+.roster-bar { margin-bottom: 8px; gap: 6px; align-items: center; flex-wrap: nowrap; }
+.roster-bar .btn { white-space: nowrap; }
+.roster-room { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster-room.bad { border-color: var(--bad); color: var(--bad); }
+.roster-tools { gap: 6px; margin-bottom: 8px; }
+.btn.small.on { border-color: var(--accent); color: var(--accent); }
+html[data-reduced-motion="1"] .scene .talk.fresh, html[data-reduced-motion="1"] .board-letter p.fresh { animation: none; }
+.call-panel { border-color: #7aa7ff; background: linear-gradient(180deg, #16243a, var(--panel)); }
+/* Ability balance (developer) */
+.bal-row { padding: 8px 10px; border: 1px solid var(--line-2); border-radius: 8px; margin-bottom: 6px; background: var(--panel); }
+.bal-row.flagged { border-color: var(--warn, #e0a33b); }
+.bal-bar { height: 5px; background: #203d33; border-radius: 3px; overflow: hidden; margin: 4px 0; }
+.bal-bar > i { display: block; height: 100%; } .bal-bar > i.pos { background: var(--good); } .bal-bar > i.neg { background: var(--bad); }
+.mono.pos { color: var(--good); } .mono.neg { color: var(--bad); }
+.bal-flag { font-size: 12px; color: var(--warn, #e0a33b); margin-top: 2px; }

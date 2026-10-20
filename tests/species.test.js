@@ -99,7 +99,7 @@ test('every species ability and trait maps to known engine primitives, and they 
   const { simulatePlay } = await import('../src/sim/engine.js');
   const { PLAYS, OFFENSE_IDS, DEFENSE_IDS } = await import('../src/data/playbook.js');
   const { lineup } = await import('./tools/lineup.js');
-  const KNOWN = new Set(['attrs', 'deepThrow', 'burst', 'carryStrength', 'shedStrength', 'pickCatching', 'reaction', 'afterCatch', 'anchor', 'blockStrength', 'blockerStun', 'rebound', 'runStuff', 'elusive', 'elusiveFirst', 'forceFumble', 'fumbleResist', 'noFumble', 'contest', 'catchContest', 'manCoverage', 'rushSpeed', 'pursuitSpeed', 'closeSpeed', 'routeAgility', 'openAccuracy', 'throwVelocity', 'pressureSense', 'noPlayActionBite', 'breakRadius', 'zoneRange', 'aura', 'fatigue']);
+  const KNOWN = new Set(['pincer', 'deepRoots', 'bramble', 'vanishing', 'longKick', 'foresight', 'echoRead', 'mindGame', 'dragonhide', 'eruption', 'undertow', 'grove', 'thunderclap', 'whiteout', 'cyclone', 'landslide', 'nightVeil', 'daybreak', 'fortress', 'blink', 'sovereign', 'riptide', 'overcharge', 'refraction', 'roar', 'eclipse', 'permafrost', 'heatHaze', 'glacierWall', 'quakeStep', 'radiantPursuit', 'ambush', 'staticField', 'wingShadow', 'tailwind', 'attrs', 'deepThrow', 'burst', 'carryStrength', 'shedStrength', 'pickCatching', 'reaction', 'afterCatch', 'anchor', 'blockStrength', 'blockerStun', 'rebound', 'runStuff', 'elusive', 'elusiveFirst', 'forceFumble', 'fumbleResist', 'noFumble', 'contest', 'catchContest', 'manCoverage', 'rushSpeed', 'pursuitSpeed', 'closeSpeed', 'routeAgility', 'openAccuracy', 'throwVelocity', 'pressureSense', 'noPlayActionBite', 'breakRadius', 'zoneRange', 'aura', 'fatigue']);
   for (const s of SPECIES_DEX) { const e = s.ability?.effect || TRAITS[s.trait]?.effect; assert.ok(e, s.id); for (const k of Object.keys(e)) assert.ok(KNOWN.has(k), `${s.id}: unknown primitive ${k}`); }
   // Put each species in a slot for its natural position and count how often its ability logs across a batch.
   const PASSIVE = new Set(['attrs', 'fatigue', 'forceFumble', 'pickCatching']); // passive, or only on rare events (fumbles, picks)
@@ -161,4 +161,19 @@ test('evolution: commons evolve at their level, keep numerals, grow, and the dex
   assert.ok(t.roster.some((x) => x.stage >= 1), 'season 4 gym club fields evolved monsters');
   const evolved = t.roster.find((x) => x.stage >= 1); F.dexRecord(f, evolved, 'seen');
   assert.ok(F.dexFormSeen(f, evolved.species) >= 1);
+});
+
+// Owner's rule (GDD §23.10): a signature ability belongs to one monster (one species line) and is never given to another.
+test('signature abilities: each name belongs to exactly one species, and legacy ability ids only ride on their own species', async () => {
+  const { SPECIES_DEX } = await import('../src/data/species.js');
+  const { ABILITIES } = await import('../src/data/monsters.js');
+  const owners = {};
+  for (const sp of SPECIES_DEX) if (sp.ability) (owners[sp.ability.name] ||= []).push(sp.id);
+  for (const [name, ids] of Object.entries(owners)) assert.equal(ids.length, 1, `${name} is on ${ids.join(', ')}`);
+  for (const [id, a] of Object.entries(ABILITIES)) {
+    assert.ok(owners[a.name], `legacy ${id} names a species ability`);
+    assert.deepEqual(a.effect, SPECIES_DEX.find((s) => s.id === owners[a.name][0]).ability.effect, `legacy ${id} matches its species`);
+  }
+  const { CORNERSTONES } = await import('../src/data/monsters.js');
+  for (const c of [...(CORNERSTONES?.offense || []), ...(CORNERSTONES?.defense || [])]) if (c.ability) assert.equal(owners[ABILITIES[c.ability].name][0], c.species, `${c.name} carries its own species' ability`);
 });

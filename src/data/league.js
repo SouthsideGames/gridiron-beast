@@ -34,8 +34,8 @@ export const TEAM_META = Object.freeze({
 /** The four rebuilding clubs offered to a new owner (with fictional prior records). */
 /** Clubs a new owner may take: ordinary clubs only, so every franchise meets the same eight gyms (GDD §15.3). */
 export const STARTER_CLUBS = Object.freeze([
-  { name: 'Ember City Beasts', record: '2–12' }, { name: 'Stonehaven Titans', record: '1–13' },
-  { name: 'Glacier Guardians', record: '3–11' }, { name: 'Stormport Bolts', record: '2–12' },
+  { name: 'Ember City Beasts', record: '2-12' }, { name: 'Stonehaven Titans', record: '1-13' },
+  { name: 'Glacier Guardians', record: '3-11' }, { name: 'Stormport Bolts', record: '2-12' },
 ]);
 
 export const RIVAL_GMS = Object.freeze({ 'Glacier Guardians': 'Morgan Vale', 'Northstar Wolves': 'Cameron Frost', 'Ironpeak Rams': 'Jules Stone', 'Canyon Crushers': 'Alex Calder', 'Sundown Drakes': 'Riley Ash', 'Thunder Mesa': 'Blake Storm', 'Eastport Phantoms': 'Taylor Voss', 'Harbor Sentinels': 'Jordan Shore', 'Ashford Hawks': 'Casey Finch', 'Bayou Stalkers': 'Drew Marsh', 'Sunfire Lions': 'Avery Sol', 'Palmetto Vipers': 'Quinn Reed', 'Frostpeak Howlers': 'Sam Rime', 'Stormport Bolts': 'Devon Gale', 'Stonehaven Titans': 'Harper Flint', 'Ember City Beasts': 'Rowan Blaze' });
@@ -59,7 +59,7 @@ import { GYM_CLUBS } from './gyms.js';
 const GYM_ORDER = ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']; // early → late
 const ORDINARY_ORDER = ['Ember City Beasts', 'Stonehaven Titans', 'Glacier Guardians', 'Stormport Bolts', 'Northstar Wolves', 'Sundown Drakes', 'Ashford Hawks', 'Bayou Stalkers']; // starters first
 const LATIN = [[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [3, 2, 1, 0]];
-/** The gym an ordinary club meets in gym round r (0–3) of a season: starters take the easier half in odd seasons, the harder half in even ones. */
+/** The gym an ordinary club meets in gym round r (0-3) of a season: starters take the easier half in odd seasons, the harder half in even ones. */
 function gymFor(ordinaryIndex, round, season) {
   const half = ordinaryIndex < 4 ? 0 : 1, flip = (season - 1) % 2;
   const gymBlock = (half + flip) % 2;

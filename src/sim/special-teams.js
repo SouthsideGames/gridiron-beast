@@ -23,7 +23,7 @@ export function fieldGoalRange(kicking = 60) {
 
 export function attemptFieldGoal(rng, ballOn, kicker) {
   const distance = fieldGoalDistance(ballOn);
-  const p = fieldGoalChance(distance, kicker?.attrs?.kicking);
+  const p = fieldGoalChance(distance, Math.min(99, (kicker?.attrs?.kicking ?? 60) + (distance >= 40 ? kicker?.longKick || 0 : 0)));
   const good = rng.chance(p);
   return { distance, good, chance: p, text: good ? `Field goal is GOOD from ${distance} yards.` : distance > 60 ? `Field goal from ${distance} falls short.` : `Field goal from ${distance} is no good.` };
 }

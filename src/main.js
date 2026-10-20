@@ -15,6 +15,9 @@ import { registerHqScreens } from './ui/screens/hq.js';
 import { registerRosterScreens } from './ui/screens/roster.js';
 import { registerMatchScreens } from './ui/screens/match.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
+import { registerAbilityAudit, openAbilityPreview, registerAbilityBalance } from './ui/screens/ability-audit.js';
+import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './ui/dev-review.js';
+import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
 
 const app = {
@@ -39,6 +42,7 @@ function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise) return null;
   const items = [['hq', 'HQ', '🏠'], ['roster', 'Roster', '🐾'], ['playbook', 'Plays', '📋'], ['league', 'League', '🏆'], ['more', 'More', '☰']];
   const counts = {}; for (const n of F.notices(app.f)) counts[n.screen] = (counts[n.screen] || 0) + 1;
+  if (devNoticesOn(app.settings)) counts.more = (counts.more || 0) + reviewQueue().total + cardMismatches().length; // developer reviews (GDD §23.7)
   return items.map(([screen, label, icon]) => ({ screen, label, icon, badge: counts[screen] || 0, active: screenName === screen || (ctx.tabOf?.[screenName] === screen) }));
 }
 
@@ -53,6 +57,10 @@ export function start() {
   registerRosterScreens(Router, app);
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
+  registerAbilityAudit(Router, app);
+  registerAbilityBalance(Router);
+  // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
+  document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
   registerDexScreens(Router, app);
   const saved = Save.load();
   if (saved) { app.f = saved; applySettings(); mergeDex(saved.dex); F.syncAchievementsToGlobal(saved); }
@@ -75,6 +83,9 @@ export function start() {
       toast('Restored your franchise from your cloud save.', 'good');
     }
   });
+  // Developer reviews (GDD §23.7): pull both review sets, then announce anything new once.
+  Promise.all([syncReviews('ability'), syncReviews('play')]).finally(() => setTimeout(() => { const msg = freshAnnouncement(app.settings); if (msg) toast(msg, 'good', 5000); Router.render(); }, 1200));
+  onReviews(() => { const scr = Router.currentScreen()?.name; if (scr === 'menu' || scr === 'developer' || scr === 'more') Router.render(); });
   window.addEventListener('beforeunload', () => { app.save(); cloudFlush(); });
   window.addEventListener('pagehide', () => { app.save(); cloudFlush(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { app.save(); cloudFlush(); } });

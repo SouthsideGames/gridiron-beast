@@ -107,7 +107,7 @@ test('awards: an elite quarterback on a winning club is MVP, but a dominant back
     { name: 'Ace QB', position: 'QB', team: 'Club 1', record: { w: 8, l: 1, t: 0, pf: 260, pa: 150 }, line: { att: 240, comp: 170, passYds: 2600, passTd: 26, intThrown: 3, passFd: 110, sacked: 6 } },
   ]);
   assert.equal(r.mvp[0].name, 'Ace QB'); assert.equal(r.opoy[0].name, 'Ace QB', 'the MVP is not excluded from OPOY');
-  assert.ok(/QB/.test(r.mvp[0].why) && r.mvp[0].record === '8–1');
+  assert.ok(/QB/.test(r.mvp[0].why) && r.mvp[0].record === '8-1');
   const r2 = run([
     { name: 'Workhorse', position: 'RB', team: 'Club 2', record: { w: 7, l: 2, t: 0, pf: 230, pa: 160 }, line: { rush: 200, rushYds: 1250, rushTd: 16, rushFd: 60, targets: 40, rec: 32, recYds: 300, recTd: 3 } },
   ]);

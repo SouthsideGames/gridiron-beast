@@ -28,7 +28,7 @@ import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { recordAchievementGlobal } from './achievement-store.js';
-import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds } from './trades.js';
+import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds, buildTradeCall } from './trades.js';
 import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
@@ -63,7 +63,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     tutorial: { seen: {} },
     pool: {}, staffContracts: {}, staffRaise: {}, offseason: null,
   };
-  // Contracts (GDD §18.1): about 35% of the founding roster — never a cornerstone — is on a one-year deal, so the first
+  // Contracts (GDD §18.1): about 35% of the founding roster, never a cornerstone, is on a one-year deal, so the first
   // offseason already brings renewals, walks and the market. Chosen by a hash of the id, so no rng is consumed.
   const expiring = roster.filter((m) => !m.cornerstone).sort((a, b) => hashString(`${a.id}|1yr`) - hashString(`${b.id}|1yr`)).slice(0, Math.round(roster.length * FOUNDING_ONE_YEAR_SHARE));
   for (const m of roster) m.contract = newContract(1, expiring.includes(m) ? 1 : 2);
@@ -73,7 +73,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   openCreationDraft(f);
   return f;
 }
-/** A new GM arrives on draft day (GDD §19.2): a lottery pick 1–5 (15% for #1), the outgoing staff's scouting notes, the rest of the league slotted by their natural level. */
+/** A new GM arrives on draft day (GDD §19.2): a lottery pick 1-5 (15% for #1), the outgoing staff's scouting notes, the rest of the league slotted by their natural level. */
 export const CREATION_LOTTERY = Object.freeze([0.15, 0.20, 0.22, 0.22, 0.21]);
 /** Share of the founding roster on one-year deals (GDD §18.1): the first offseason has contracts to decide. */
 export const FOUNDING_ONE_YEAR_SHARE = 0.35;
@@ -158,7 +158,7 @@ function makePostseasonEvent(f) {
   const coach = staffMember(f, coordRole);
   const other = r.pick(ALL_TEAMS.filter((t) => t !== f.club));
   save();
-  const vars = { star: star?.name || 'your star', club: f.club, rival, record: `${rec.w}–${rec.l}`, coach: coach?.name || 'Your coordinator', role: coordRole, side: coordRole === 'offensive_coordinator' ? 'offense' : 'defense', other, scheme: coach?.style || 'my scheme', fit: weakSide?.fit ?? 0, total: weakSide?.total ?? 0 };
+  const vars = { star: star?.name || 'your star', club: f.club, rival, record: `${rec.w}-${rec.l}`, coach: coach?.name || 'Your coordinator', role: coordRole, side: coordRole === 'offensive_coordinator' ? 'offense' : 'defense', other, scheme: coach?.style || 'my scheme', fit: weakSide?.fit ?? 0, total: weakSide?.total ?? 0 };
   return { kind, starId: star?.id || null, coordRole, vars, resolved: false, chosen: null };
 }
 const fillVars = (t, vars) => String(t).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
@@ -278,6 +278,7 @@ export function notices(f) {
     if ((m.points || 0) > 0 && !f.settings?.autoPoints && !pointsLocked(f)) list.push({ screen: 'roster', kind: 'points', id: m.id, text: `${m.name} has ${m.points} attribute point${m.points === 1 ? '' : 's'} to spend` });
   }
   if (f.season?.finished && f.offseason && offseasonPending(f).length) list.push({ screen: 'hq', kind: 'contracts', text: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} waiting` });
+  if (tradeCall(f)) list.push({ screen: 'hq', kind: 'call', text: `📞 The ${tradeCall(f).team} are on the line with an offer` });
   if (f.week?.commissioner) list.push({ screen: 'hq', kind: 'commissioner', text: 'The commissioner is waiting on a cap decision' });
   else if (salarySummary(f).over) list.push({ screen: 'hq', kind: 'cap', text: `Over the cap by ${Math.round(-salarySummary(f).remaining).toLocaleString('en-US')} cr` });
   return list;
@@ -309,7 +310,7 @@ function stampGlobal(f, a, vars) {
 }
 function sceneVars(f, c) {
   const rv = f.rivals?.[f.tier]; const rec = f.season?.records?.[f.club] || { w: 0, l: 0 };
-  return { club: f.club, CLUB: String(f.club).toUpperCase(), owner: `${f.owner.first} ${f.owner.last}`.trim(), first: f.owner.first, rival: rv?.team || 'your rival', gm: rv?.gm || 'their GM', year: yearOf(f.season?.year || 1), YEAR: yearOf(f.season?.year || 1), week: f.season?.week || 1, record: `${rec.w}–${rec.l}`, wins: f.campaign?.wins || 0, badges: Object.keys(f.campaign?.badges || {}).length, titles: f.campaign?.titles || 0, awardLine: c.awardLine || '', REGION: String(c.region || 'home region').toUpperCase() };
+  return { club: f.club, CLUB: String(f.club).toUpperCase(), owner: `${f.owner.first} ${f.owner.last}`.trim(), first: f.owner.first, rival: rv?.team || 'your rival', gm: rv?.gm || 'their GM', year: yearOf(f.season?.year || 1), YEAR: yearOf(f.season?.year || 1), week: f.season?.week || 1, record: `${rec.w}-${rec.l}`, wins: f.campaign?.wins || 0, badges: Object.keys(f.campaign?.badges || {}).length, titles: f.campaign?.titles || 0, awardLine: c.awardLine || '', REGION: String(c.region || 'home region').toUpperCase() };
 }
 function fillScene(text, v) { return String(text).replace(/\{(\w+)\}/g, (m, k) => (v[k] != null ? v[k] : m)); }
 /** The next cutscene to play, filled in: { id, title, speaker, beats, earned }. */
@@ -418,16 +419,16 @@ export function commissionerWelcome(f) {
   const owner = `${f.owner.first} ${f.owner.last}`.trim();
   const beats = [
     { text: `${esc(owner)}. Sit down. I’ll be brief; the league doesn’t wait for introductions.` },
-    { text: `You’re taking over <b>${esc(f.club)}</b>. I won’t dress it up: the last staff left in the night, the roster is thin at the back, and ${D.label === 'Rookie' ? 'even in this league' : D.label === 'All-Star' ? 'in this league, the one everybody says is the hardest,' : 'in this league'} the other fifteen clubs have had years to build what you’re starting today.${rival ? ` ${esc(rival)} in particular${gm ? ` — ${esc(gm)}` : ''} — has already asked me how long I think you’ll last.` : ''}` },
+    { text: `You’re taking over <b>${esc(f.club)}</b>. I won’t dress it up: the last staff left in the night, the roster is thin at the back, and ${D.label === 'Rookie' ? 'even in this league' : D.label === 'All-Star' ? 'in this league, the one everybody says is the hardest,' : 'in this league'} the other fifteen clubs have had years to build what you’re starting today.${rival ? ` ${esc(rival)} in particular${gm ? ` · ${esc(gm)}` : ''} · has already asked me how long I think you’ll last.` : ''}` },
     { text: slot ? `Some good news. The lottery was kind to you: you hold the <b>#${slot} pick</b> in today’s draft. The outgoing scouts left notes on a dozen prospects. Use them. A top-five pick is the one gift this office gives a new GM, and it gives it once.` : `Some good news. The draft class is deep this year and your scouts have been watching it. Use that.` },
-    { text: `Now the part nobody enjoys. This league has a <b>Board</b>. Not your club’s — the league’s. ${forecast != null ? `Their forecast has ${esc(f.club)} at ${forecast} wins. Before week one they will ask you to commit to something, and they will remember whether you kept it.` : 'Before week one they will ask you to commit to something, and they will remember whether you kept it.'} New GM or not, miss twice in a row and they will let you go. I won’t be consulted.` },
-    { text: `Understand how this works. You answer to me. I answer to the Board. Nobody is above the Board — not the other GMs, not the owners, not this office. If they decide you’re done, I can’t save you. Nobody can.`, ominous: true },
-    { text: `You’ll want to know who sits on it. So would I. In all my years I have never seen a face or heard a name — only the letters. Welcome to the league, ${esc(f.owner.first)}. Your office is down the hall.`, ominous: true },
+    { text: `Now the part nobody enjoys. This league has a <b>Board</b>. Not your club’s, the league’s. ${forecast != null ? `Their forecast has ${esc(f.club)} at ${forecast} wins. Before week one they will ask you to commit to something, and they will remember whether you kept it.` : 'Before week one they will ask you to commit to something, and they will remember whether you kept it.'} New GM or not, miss twice in a row and they will let you go. I won’t be consulted.` },
+    { text: `Understand how this works. You answer to me. I answer to the Board. Nobody is above the Board, not the other GMs, not the owners, not this office. If they decide you’re done, I can’t save you. Nobody can.`, ominous: true },
+    { text: `You’ll want to know who sits on it. So would I. In all my years I have never seen a face or heard a name, only the letters. Welcome to the league, ${esc(f.owner.first)}. Your office is down the hall.`, ominous: true },
   ];
   return beats;
 }
 export function firstWeekWelcome(f) {
-  news(f, 'Welcome, owner. A balanced coaching staff has been hired for you — replace anyone from Staff once you know the league.', 'info');
+  news(f, 'Welcome, owner. A balanced coaching staff has been hired for you. Replace anyone from Staff once you know the league.', 'info');
   news(f, 'Your first week: Monday scout a region, Tuesday recruit, Wednesday train, Thursday scout the opponent, Friday set your game plan, Saturday check the lineup, Sunday play.', 'info');
 }
 export const DEFAULT_STAFF = Object.freeze({ head_coach: 'hc_vale', offensive_coordinator: 'oc_park', defensive_coordinator: 'dc_ice', head_scout: 'sc_moss', monster_trainer: 'tr_focus' });
@@ -462,7 +463,7 @@ export function schemeAlignment(f) {
 /** How many starters fit each coordinator's scheme (the staff-screen line that makes "my players are run guys but my OC is a pass guy" visible). */
 export function rosterFit(f) {
   const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
-  const side = (slots, role) => { const starters = slots.map((s) => byId[chart[s]]).filter(Boolean); const fit = starters.filter((m) => fitFor(f, m)?.fits).length; const c = staffMember(f, role); return { fit, total: starters.length, scheme: c?.style || '—', coach: c?.name || null, role }; };
+  const side = (slots, role) => { const starters = slots.map((s) => byId[chart[s]]).filter(Boolean); const fit = starters.filter((m) => fitFor(f, m)?.fits).length; const c = staffMember(f, role); return { fit, total: starters.length, scheme: c?.style || '·', coach: c?.name || null, role }; };
   return { offense: side(OFFENSE_SLOTS, 'offensive_coordinator'), defense: side(DEFENSE_SLOTS, 'defensive_coordinator') };
 }
 export function coachProfile(f) {
@@ -519,7 +520,7 @@ export function releaseMonster(f, id) {
   f.roster = f.roster.filter((x) => x.id !== id);
   for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === id) delete f.lineupManual[slot];
   toPool(f, m, 'released');
-  news(f, `${m.name} released — back to ${homeRegion(m)}.`, 'roster');
+  news(f, `${m.name} released. Back to ${homeRegion(m)}.`, 'roster');
   return { ok: true };
 }
 // ------------------------------------------------------------ the free-agent pool (GDD §18.3)
@@ -593,7 +594,7 @@ export const SCHEME_LOCK_EDGE = 3;
 export function schemeLock(f) { const rf = rosterFit(f); const on = (x) => x.total > 0 && x.fit === x.total; return { offense: on(rf.offense) ? SCHEME_LOCK_EDGE : 0, defense: on(rf.defense) ? SCHEME_LOCK_EDGE : 0, fit: rf }; }
 export const DIFFICULTY = Object.freeze({
   rookie: { label: 'Rookie', quality: -4, iq: 0.6, text: 'Weaker clubs that call plays loosely.', hof: 'Hall of Fame: 8 badges, 1 title, 30 wins, 2 awards.', hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
-  pro: { label: 'Pro', quality: -1, iq: 1, text: 'The standard league. Comeback mode: a side down 10+ in the fourth quarter gets a lift — you included.', hof: 'Hall of Fame: 8 badges, 2 titles, 50 wins, 3 awards.', hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
+  pro: { label: 'Pro', quality: -1, iq: 1, text: 'The standard league. Comeback mode: a side down 10+ in the fourth quarter gets a lift, you included.', hof: 'Hall of Fame: 8 badges, 2 titles, 50 wins, 3 awards.', hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
   allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: 'Stronger clubs whose coaches read the situation sharply. Comeback mode on.', hof: 'Hall of Fame: 8 badges, 4 titles, 80 wins, 5 awards.', hofGoals: { badges: 8, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
 });
 export const difficultyOf = (f) => DIFFICULTY[f?.settings?.difficulty] || DIFFICULTY.pro;
@@ -654,7 +655,7 @@ export function playAvailability(f) {
   if (slots.length) for (const [id, p] of Object.entries(PLAYS)) { const hit = (p.onField || []).find((sl) => slots.includes(sl)); if (hit) blocked[id] = hit; }
   return { slots, blocked };
 }
-/** Forfeit (GDD §17.2): no legal lineup, or no legal plays left. Recorded as a 0–21 loss, no stats, no experience. */
+/** Forfeit (GDD §17.2): no legal lineup, or no legal plays left. Recorded as a 0-21 loss, no stats, no experience. */
 export function forfeitSunday(f) {
   const m = sundayMatchup(f); if (!m) return { ok: false, reason: 'No game today.' };
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
@@ -663,7 +664,7 @@ export function forfeitSunday(f) {
   f.week.gameResult = { ...res, won: false, playerScore: 0, oppScore: 21, opponent: m.opponent, tag: m.tag, forfeit: true };
   if (m.playoff) recordPlayoffResult(f, res); else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: 0, oppScore: 21, won: false, forfeit: true }; }
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.h2h ||= {}; const h2h = (f.campaign.h2h[m.opponent] ||= { w: 0, l: 0, last: null, streakL: 0 }); h2h.l += 1; h2h.last = 'l'; h2h.streakL += 1;
-  news(f, `FORFEIT: ${f.club} could not field a legal lineup against ${m.opponent}. Recorded as a 0–21 loss.`, 'loss');
+  news(f, `FORFEIT: ${f.club} could not field a legal lineup against ${m.opponent}. Recorded as a 0-21 loss.`, 'loss');
   f.game = null; f.lastGame = { ...f.week.gameResult, events: [], year: f.season.year, week: f.season.week, newBadge: null };
   advanceWeek(f);
   return { ok: true, result: f.lastGame };
@@ -681,18 +682,41 @@ export function resolveContract(f, id, choice, { years = CONTRACT_YEARS } = {}) 
   const m = f.roster.find((x) => x.id === id); if (!m) { item.status = 'gone'; return { ok: true, status: 'gone' }; }
   const { r, save } = frng(f);
   const sign = (salary) => { m.salary = salary; m.contract = newContract(nextYear, years); item.status = 'signed'; item.final = salary; item.years = years; news(f, `${m.name} re-signed for ${years === 1 ? 'one season' : 'two seasons'} at ${salary.toLocaleString('en-US')} cr.`, 'roster'); };
-  const walk = (why) => { f.roster = f.roster.filter((x) => x.id !== id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); item.status = 'walked'; news(f, `${m.name} ${why} — back to ${homeRegion(m)}'s pool.`, 'loss'); };
+  const walk = (why) => { f.roster = f.roster.filter((x) => x.id !== id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); item.status = 'walked'; news(f, `${m.name} ${why}. Back to ${homeRegion(m)}'s pool.`, 'loss'); };
   if (choice === 'sign') sign(item.ask);
   else if (choice === 'counter') { const counter = Math.round(item.ask * COUNTER_PCT / 100) * 100; const yes = acceptsCounter(m, { winningRecord: !!f.offseason.winningRecord, rng: r }); save(); if (yes) { sign(counter); item.countered = 'accepted'; } else { walk('turned down your counter and walks'); item.countered = 'refused'; } }
   else walk('walks as a free agent');
   return { ok: true, status: item.status, countered: item.countered || null };
 }
-/** Offseason market: free agents the owner may sign to reach the roster floor — the regional pools plus a dozen generated veterans. */
+/** Offseason market: free agents the owner may sign to reach the roster floor, the regional pools plus a dozen generated veterans. */
 export function offseasonMarket(f) {
   if (!f.offseason) return [];
   if (!f.offseason.market) { const { r, save } = frng(f); const gen = []; const positions = ['QB', 'RB', 'WR', 'WR', 'TE', 'OL', 'OL', 'DL', 'DL', 'LB', 'CB', 'S', 'K']; for (const pos of positions) { const regionName = r.pick(Object.keys(REGIONS)); const sp = r.pick(regionSpecies(regionName, REGIONS[regionName].types, 10).filter((x) => x.position === pos) || []) || null; if (!sp) continue; const m = generateMonster(r, { position: pos, quality: 50 + r.int(10), species: sp.id }); m.origin = regionName; uniqueName(f, m, gen.map((x) => x.name)); gen.push(m); } save(); f.offseason.market = gen; }
   const pool = Object.values(f.pool || {}).flat();
   return [...pool.map((m) => ({ monster: m, fromPool: true })), ...f.offseason.market.map((m) => ({ monster: m, fromPool: false }))];
+}
+/**
+ * What the owner knows about a free agent (polish 2.0): like a recruit, it depends on the head
+ * scout's skill in the monster's home region. Monsters who played for this club are fully known.
+ * level 1..6: headline ratings known = ceil(level * 4 / 6); OVR at 4+; potential at 5+; full card at 6.
+ */
+export function freeAgentView(f, m) {
+  const formerOwn = (m.history || []).some((h) => h.club === f.club);
+  const scout = staffMember(f, 'head_scout'); const region = REGIONS[homeRegion(m)];
+  const skill = scout ? (scout.biomes?.[region?.biome] ?? scout.overall ?? 50) : 30;
+  const level = formerOwn ? 6 : Math.min(6, (skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1) + (ownerPerk(f) === 'scouting' ? 1 : 0));
+  return { level, formerOwn, skill, scoutName: scout?.name || null, region: homeRegion(m), headlineKnown: Math.min(4, Math.ceil(level * 4 / 6)), ovr: level >= 4 ? monsterOverall(m) : null, potential: level >= 5 ? m.potential : null, natureKnown: level >= 6 || skill >= 70, full: level >= 6 };
+}
+/**
+ * The ask the owner sees (polish 2.0). Salary follows overall exactly, so an exact ask would give away a
+ * hidden overall: until the scout knows his overall it is shown as an estimate, a steady ±10% around the
+ * real figure rounded to the thousand. The real figure is what he signs for.
+ */
+export function freeAgentAsk(f, m) {
+  const exact = Math.round(salaryFor(m) / 100) * 100; const v = freeAgentView(f, m);
+  if (v.ovr != null) return { exact, shown: exact, estimate: false };
+  const jitter = ((hashString(`${m.id}|ask`) % 2001) / 1000 - 1) * 0.1; // -10%..+10%, the same every time
+  return { exact, shown: Math.round(exact * (1 + jitter) / 1000) * 1000, estimate: true };
 }
 export function signFreeAgent(f, id) {
   if (!f.offseason) return { ok: false, reason: 'The market is open in the offseason.' };
@@ -702,7 +726,7 @@ export function signFreeAgent(f, id) {
   if (entry.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } } else f.offseason.market = f.offseason.market.filter((x) => x !== m);
   m.joined = f.season.year + (f.offseason ? 1 : 0); f.roster.push(m); dexRecord(f, m, 'signed');
   const cap = salarySummary(f);
-  news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed as a free agent${cap.over ? ' — over the cap; the commissioner will review in week 1' : ''}.`, cap.over ? 'loss' : 'roster');
+  news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed as a free agent${cap.over ? ', over the cap; the commissioner will review in week 1' : ''}.`, cap.over ? 'loss' : 'roster');
   return { ok: true, overCap: cap.over };
 }
 // ------------------------------------------------------------ the draft (GDD §19)
@@ -725,7 +749,7 @@ export function scoutDraft(f, { focus = null } = {}) {
   f.season.day = 1;
   return { ok: true, ...res, scout: scout?.name || 'Your scout' };
 }
-/** Tuesday in the draft window: recovery — fatigue off, injuries a week closer to healed. */
+/** Tuesday in the draft window: recovery, fatigue off, injuries a week closer to healed. */
 export function recoveryDay(f) {
   if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
   if (!draftWindow(f)) return { ok: false, reason: 'Recovery days are for the final week and the playoffs.' };
@@ -746,7 +770,7 @@ export function beginDraft(f) {
   return { ok: true, draft: f.draft };
 }
 function runDraftToMe(f) { const { r, save } = frng(f); const made = draftAdvance(f, r, { playerClub: f.club }); save(); return made; }
-export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}) — rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
+export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}), rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
 export function passDraftPick(f) { const r = draftPassPick(f, { playerClub: f.club }); if (!r.ok) return r; runDraftToMe(f); return r; }
 export const draftDone = (f) => !f.draft || f.draft.year !== f.season.year || f.draft.done;
 // ------------------------------------------------------------ draft-pick trading (GDD §19.6)
@@ -792,9 +816,44 @@ export function acceptTrade(f, offer) {
   if (offer.get?.player && !canTakePlayer(f)) return { ok: false, reason: `Roster full (${ROSTER_MAX}).` };
   const year = f.season.year; const nextYear = f.draft?.creation ? year : year + 1;
   const got = executeTrade(f, offer, { club: f.club, year, nextYear });
-  if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ' — over the cap; the commissioner will review' : ''}.`, 'roster'); }
+  if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster'); }
   else news(f, `Trade: ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} to ${offer.team} for ${got.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}.`, 'roster');
   if (f.draft?.started && !f.draft.done) runDraftToMe(f); // if the pick on the clock went out, the new holder uses it now
+  checkAchievements(f, 'trade');
+  return { ok: true, got };
+}
+
+// ---------------------------------------------------------------- AI clubs calling (GDD §19.6, second pass)
+/** The week (or offseason) a call belongs to: it lasts until this changes. */
+function callStamp(f) { return f.offseason ? `off:${f.season.year}` : `wk:${f.season.year}:${f.season.week}`; }
+/** The call waiting for an answer, or null. */
+export function tradeCall(f) { const c = f.tradeCall; return c && c.expires === callStamp(f) ? c : null; }
+/** Once a week in season (weeks 2-8) and once when the offseason opens, a club may call with an offer. */
+export function maybeTradeCall(f) {
+  const stamp = callStamp(f);
+  if (f.tradeCall && f.tradeCall.expires !== stamp) { news(f, `The ${f.tradeCall.team} offer for your ${f.tradeCall.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} expired.`, 'info'); f.tradeCall = null; }
+  if (f.tradeCall || isFired(f)) return null;
+  const inSeason = !f.offseason && !f.season.finished && !inPlayoffs(f) && f.season.week >= 2 && f.season.week <= 8;
+  if (!inSeason && !f.offseason) return null;
+  f.callsMade ||= {}; if (f.callsMade[stamp]) return null; f.callsMade[stamp] = true;
+  const c = buildTradeCall(f, { ...tradeCtx(f), myRoster: f.roster, myPicks: myTradablePicks(f), key: stamp });
+  if (!c) return null;
+  f.tradeCall = { ...c, expires: stamp };
+  news(f, `📞 The ${c.team} called: ${c.player.name} (${c.player.position}, ${c.player.ovr} OVR) for your ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}. The offer stands until ${f.offseason ? 'the new season' : 'the end of the week'}.`, 'info');
+  return f.tradeCall;
+}
+/** Answer the call: accept (picks go out, he joins on a two-year deal) or decline. */
+export function answerTradeCall(f, accept) {
+  const c = tradeCall(f); if (!c) return { ok: false, reason: 'No call is waiting.' };
+  if (!accept) { f.tradeCall = null; news(f, `Declined the ${c.team} offer for ${c.player.name}.`, 'info'); return { ok: true, declined: true }; }
+  if (!canTakePlayer(f)) return { ok: false, reason: `Roster full (${ROSTER_MAX}). Release someone first.` };
+  const mine = myTradablePicks(f); if (!c.give.every((p) => mine.some((x) => samePick(x, p)))) { f.tradeCall = null; return { ok: false, reason: 'You no longer hold those picks; the offer is off.' }; }
+  const src = aiTeam(f, c.team).roster.find((m) => m.id === c.playerId); if (!src) { f.tradeCall = null; return { ok: false, reason: `${c.player.name} is no longer with the ${c.team}.` }; }
+  const year = f.season.year; const nextYear = f.offseason || f.season.finished ? year + 1 : year; // in season he joins now, on a deal starting this year
+  const got = executeTrade(f, { team: c.team, give: c.give, get: { player: src } }, { club: f.club, year, nextYear });
+  f.tradeCall = null; dexRecord(f, got.player, 'signed');
+  const cap = salarySummary(f);
+  news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from the ${c.team} for ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster');
   checkAchievements(f, 'trade');
   return { ok: true, got };
 }
@@ -814,11 +873,11 @@ export function goalProgress(f) {
   if (g.id === 'wins') return { text: `${rec.w} of ${g.target} wins`, pct: Math.min(1, rec.w / g.target) };
   if (g.id === 'badges') { const n = Object.values(f.campaign?.badges || {}).filter((b) => b.year === f.season.year).length; return { text: `${n} of ${g.target} badges`, pct: Math.min(1, n / g.target) }; }
   if (g.id === 'playoffs') { const p = playoffPicture(f); return { text: p.inPlayoffs ? `In: ${p.text}` : p.text, pct: p.inPlayoffs ? 1 : 0.4 }; }
-  if (g.id === 'title') return { text: f.season.champion === f.club ? 'Champions!' : inPlayoffs(f) ? 'Alive in the playoffs' : `${rec.w}–${rec.l}`, pct: inPlayoffs(f) ? 0.7 : 0.3 };
+  if (g.id === 'title') return { text: f.season.champion === f.club ? 'Champions!' : inPlayoffs(f) ? 'Alive in the playoffs' : `${rec.w}-${rec.l}`, pct: inPlayoffs(f) ? 0.7 : 0.3 };
   return null;
 }
 /** Spend one attribute point on a roster monster (GDD §17.3). */
-/** The trainer spends every banked point by position weight (GDD §17.3) — one tap instead of a card per monster. */
+/** The trainer spends every banked point by position weight (GDD §17.3), one tap instead of a card per monster. */
 export function autoSpendAllPoints(f, { only = null } = {}) {
   if (pointsLocked(f)) return { ok: false, spent: 0, monsters: 0, reason: 'Attribute points are frozen until every contract decision is made.' };
   const { r, save } = frng(f); let spent = 0, monsters = 0;
@@ -856,7 +915,7 @@ export function playoffPicture(f) {
   if (seed >= 0) return { inPlayoffs: true, seed: seed + 1, text: `${conf} #${seed + 1} seed${divLeader === f.club ? ' · division leader' : ' · wild card'}` };
   const lastIn = c.seeds[c.seeds.length - 1]; const a = f.season.records[f.club], b = f.season.records[lastIn];
   const back = ((b.w - a.w) + (a.l - b.l)) / 2;
-  return { inPlayoffs: false, seed: null, text: back <= 0 ? 'On the bubble — tiebreakers decide' : `${back} game${back === 1 ? '' : 's'} back of the last playoff spot` };
+  return { inPlayoffs: false, seed: null, text: back <= 0 ? 'On the bubble, tiebreakers decide' : `${back} game${back === 1 ? '' : 's'} back of the last playoff spot` };
 }
 /** Simulate every other game of the current week with the real engine. */
 /** League-wide per-monster season stats (all 16 clubs) for award races. */
@@ -879,7 +938,7 @@ function simulateLeagueWeek(f) {
   f.season.results.push(...results);
   const rival = f.rivals[f.tier]?.team;
   const rg = results.find((x) => x.home === rival || x.away === rival);
-  if (rg) { const rw = (rg.home === rival ? rg.homeScore > rg.awayScore : rg.awayScore > rg.homeScore); const other = rg.home === rival ? rg.away : rg.home; news(f, `Rival watch: ${rival} ${rw ? 'beat' : 'lost to'} ${other} ${rg.home === rival ? rg.homeScore + '–' + rg.awayScore : rg.awayScore + '–' + rg.homeScore}.`, 'info'); }
+  if (rg) { const rw = (rg.home === rival ? rg.homeScore > rg.awayScore : rg.awayScore > rg.homeScore); const other = rg.home === rival ? rg.away : rg.home; news(f, `Rival watch: ${rival} ${rw ? 'beat' : 'lost to'} ${other} ${rg.home === rival ? rg.homeScore + '-' + rg.awayScore : rg.awayScore + '-' + rg.homeScore}.`, 'info'); }
   return results;
 }
 
@@ -896,7 +955,7 @@ export function depthNeeds(f) {
 }
 export function scoutRegion(f, regionName, { focus = null } = {}) {
   if (f.season.day !== 0) return { ok: false, reason: 'Not Monday.' };
-  if (draftWindow(f)) return { ok: false, reason: 'No region scouting from the final week on — the scout is on the draft class.' };
+  if (draftWindow(f)) return { ok: false, reason: 'No region scouting from the final week on: the scout is on the draft class.' };
   const region = REGIONS[regionName]; if (!region) return { ok: false, reason: 'Unknown region.' };
   const scout = staffMember(f, 'head_scout');
   const skill = scout?.biomes?.[region.biome] ?? 50;
@@ -1117,7 +1176,7 @@ export function mediaQuestions(f) {
     save(); f.week.mediaQs = picks;
   }
   const m = sundayMatchup(f); const rec = record(f); const star = mediaStar(f);
-  const fill = (t) => t.replace(/\{opp\}/g, m?.opponent || 'our opponent').replace(/\{rival\}/g, f.rivals[f.tier]?.team || 'your rival').replace(/\{star\}/g, star?.name || 'your star').replace(/\{record\}/g, `${rec.w}–${rec.l}`).replace(/\{club\}/g, f.club).replace(/\{week\}/g, String(f.season.week));
+  const fill = (t) => t.replace(/\{opp\}/g, m?.opponent || 'our opponent').replace(/\{rival\}/g, f.rivals[f.tier]?.team || 'your rival').replace(/\{star\}/g, star?.name || 'your star').replace(/\{record\}/g, `${rec.w}-${rec.l}`).replace(/\{club\}/g, f.club).replace(/\{week\}/g, String(f.season.week));
   return f.week.mediaQs.map((i) => ({ id: i, nature: QUESTIONS[i].nature, q: fill(QUESTIONS[i].q), a: QUESTIONS[i].a.map((a) => ({ ...a, text: fill(a.text), reach: natureReach(f, a.t) })) }));
 }
 function mediaStar(f) { return f.roster.filter((m) => !m.injury).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0] || null; }
@@ -1246,13 +1305,13 @@ export function finishSunday(f, gameState) {
   { const offense = {}, defense = {}; let passes = 0, plays = 0;
     for (const c of gameState.calls || []) { if (c.side === side) { offense[c.off] = (offense[c.off] || 0) + 1; plays++; if (PLAYS[c.off]?.type === 'pass') passes++; } else defense[c.def] = (defense[c.def] || 0) + 1; }
     (f.season.scouting ||= []).push({ week: f.season.week, opponent: m.opponent, offense, defense, passes, plays }); }
-  if (m.rival) { f.rivals[f.tier].headToHead[won ? 'w' : 'l'] += 1; news(f, won ? `RIVALRY WIN over ${m.opponent} — GM ${f.rivals[f.tier].gm} will remember this.` : `${m.opponent}'s GM ${f.rivals[f.tier].gm} gets bragging rights this time.`, won ? 'win' : 'loss'); 
+  if (m.rival) { f.rivals[f.tier].headToHead[won ? 'w' : 'l'] += 1; news(f, won ? `RIVALRY WIN over ${m.opponent}. GM ${f.rivals[f.tier].gm} will remember this.` : `${m.opponent}'s GM ${f.rivals[f.tier].gm} gets bragging rights this time.`, won ? 'win' : 'loss'); 
     if (f.week.media?.hype) { if (won) news(f, 'You backed up the trash talk. The locker room loves it.', 'win'); else { f.rattled = true; news(f, 'The trash talk backfired. The team is rattled: next week\'s practice is harder.', 'loss'); } }
   }
   recordGame(f, gameState, { home: m.home, away: m.away }, { playoff: !!m.playoff });
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
-  news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}–${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
+  news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}-${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
   // Promised starters: three games on the bench and they walk (GDD §15.7).
   for (const x of f.roster.filter((p) => p.promise)) {
     if (!Object.values(m[side].chart).includes(x.id)) { x.promise.benched += 1; if (x.promise.benched >= PROMISE_BENCH_LIMIT) { f.roster = f.roster.filter((p) => p.id !== x.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === x.id) delete f.lineupManual[slot]; news(f, `${x.name} walked out: you promised a starting spot and benched them ${PROMISE_BENCH_LIMIT} times.`, 'loss'); } else news(f, `${x.name} was promised a start and sat (${x.promise.benched}/${PROMISE_BENCH_LIMIT}).`, 'loss'); }
@@ -1267,9 +1326,9 @@ export function finishSunday(f, gameState) {
   const gym = GYM_BY_CLUB[m.opponent];
   if (gym && won) {
     f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
-    if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}–${gameState.score[oppSide]}` }; f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length }; news(f, `BADGE EARNED: the ${gym.badge} — badge ${Object.keys(f.campaign.badges).length} of 8. ${gym.coach.name}'s ${m.opponent} fall to ${f.club} ${gameState.score[side]}–${gameState.score[oppSide]}.`, 'win'); }
+    if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}-${gameState.score[oppSide]}` }; f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length }; news(f, `BADGE EARNED: the ${gym.badge} · badge ${Object.keys(f.campaign.badges).length} of 8. ${gym.coach.name}'s ${m.opponent} fall to ${f.club} ${gameState.score[side]}-${gameState.score[oppSide]}.`, 'win'); }
   }
-  for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)${f.settings.autoPoints ? '' : ' — 2 attribute points to spend on the roster'}.` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
+  for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)${f.settings.autoPoints ? '' : ', 2 attribute points to spend on the roster'}.` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   recordPlayStats(f, gameState, side);
@@ -1292,6 +1351,7 @@ function advanceWeek(f, { bye = false } = {}) {
   f.season.week += 1; f.season.day = 0;
   const lastPlan = f.week.plan;
   f.week = blankWeek(); f.week.plan = lastPlan; // keep the plan as the default for next week
+  maybeTradeCall(f); // a club may call with an offer this week (GDD §19.6)
   if (draftWindow(f)) ensureDraftClass(f);
   if (f.season.week === 11) startPlayoffs(f);
   if (inPlayoffs(f) && f.season.playoffs?.champion) { endSeason(f); return; }
@@ -1368,11 +1428,12 @@ function endSeason(f) {
   f.history[f.history.length - 1].awards = s.awards;
   updateSeasonRecords(f, s.year); // the records book (GDD §17.8)
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
+  maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
     const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club });
-    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? `BOARD: goal met — ${verdict.goal.label}. Confidence ${verdict.confidence >= 0 ? '+' : ''}${verdict.confidence} (${confidenceLabel(verdict.confidence)}). The scouting department expands next season.` : verdict.status === 'fired' ? `BOARD: goal missed — ${verdict.goal.label}. The board has let you go.` : verdict.status === 'hot_seat' ? `BOARD: goal missed — ${verdict.goal.label}. You are on the hot seat: miss again and you are out.` : `BOARD: goal missed — ${verdict.goal.label}. Confidence ${verdict.confidence}.`, verdict.met ? 'win' : 'loss'); } }
-  if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record — or the hot seat — makes one story event mandatory (GDD §15.7, §17.4)
+    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? `BOARD: goal met, ${verdict.goal.label}. Confidence ${verdict.confidence >= 0 ? '+' : ''}${verdict.confidence} (${confidenceLabel(verdict.confidence)}). The scouting department expands next season.` : verdict.status === 'fired' ? `BOARD: goal missed · ${verdict.goal.label}. The board has let you go.` : verdict.status === 'hot_seat' ? `BOARD: goal missed · ${verdict.goal.label}. You are on the hot seat: miss again and you are out.` : `BOARD: goal missed · ${verdict.goal.label}. Confidence ${verdict.confidence}.`, verdict.met ? 'win' : 'loss'); } }
+  if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record, or the hot seat, makes one story event mandatory (GDD §15.7, §17.4)
   if (champion === f.club && legendChoices(f).length) f.legendPick = { year: s.year, resolved: false }; // Beast Bowl champions choose a Legend Track (GDD §15.8)
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
@@ -1398,7 +1459,7 @@ export function finalizeAwards(f) {
   if (f.season.awardsFinal) return f.season.awardsFinal;
   const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5 });
   f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])) };
-  for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w) news(f, `${AWARDS[k].short}: ${w.name}${w.team ? ` (${w.team})` : ''}${w.team === f.club ? ' — one of yours!' : ''}.`, w.team === f.club ? 'win' : 'info');
+  for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w) news(f, `${AWARDS[k].short}: ${w.name}${w.team ? ` (${w.team})` : ''}${w.team === f.club ? ', one of yours!' : ''}.`, w.team === f.club ? 'win' : 'info');
   return f.season.awardsFinal;
 }
 export function seasonAwards(f) {
@@ -1454,5 +1515,5 @@ export function simulatePlayerGame(f) {
 
 export function summary(f) {
   const rec = record(f);
-  return { club: f.club, tier: tierById(f.tier).name, year: f.season.year, week: f.season.week, day: DAYS[f.season.day], record: `${rec.w}–${rec.l}${rec.t ? '–' + rec.t : ''}`, overall: teamOverall(playerTeam(f)), cap: salarySummary(f) };
+  return { club: f.club, tier: tierById(f.tier).name, year: f.season.year, week: f.season.week, day: DAYS[f.season.day], record: `${rec.w}-${rec.l}${rec.t ? '-' + rec.t : ''}`, overall: teamOverall(playerTeam(f)), cap: salarySummary(f) };
 }

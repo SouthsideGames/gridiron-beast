@@ -21,7 +21,7 @@ const LINES = {
   background: 'Every owner comes from somewhere. Where are you from, and what did you do before this?',
   club: 'The top franchises aren’t for sale. These four clubs finished at the bottom of the league and need an owner willing to rebuild. Pick your opportunity.',
   difficulty: 'How hard do you want this league to be? Choose carefully: it is set for the life of your franchise, and the Hall of Fame judges you by it.',
-  offense: 'Last thing: three monsters have agreed to lead a rebuild. Any position, any element — pick the one you want to build around. Your first week starts Monday.',
+  offense: 'Last thing: three monsters have agreed to lead a rebuild. Any position, any element, pick the one you want to build around. Your first week starts Monday.',
 };
 
 export function registerOnboardingScreens(Router, app) {
@@ -48,7 +48,7 @@ export function registerOnboardingScreens(Router, app) {
         </div></div>`;
       }
       if (step === 'background') body = `<div class="stack" style="margin-top:8px">${Object.entries(BACKGROUNDS).map(([id, b]) => `<button class="choice ${draft.background === id ? 'selected' : ''}" data-action="background" data-v="${id}"><span class="name">${esc(b.label)}</span><div class="muted">${esc(b.text)}</div></button>`).join('')}</div>`;
-      if (step === 'club') body = `<div class="stack">${STARTER_CLUBS.map((c) => `<button class="choice ${draft.club === c.name ? 'selected' : ''}" data-action="club" data-v="${esc(c.name)}"><span class="name" style="color:${TEAM_META[c.name].color}">${esc(c.name)}</span><span class="muted">${esc(divisionOf(c.name))} Division · ${esc(conferenceFor(divisionOf(c.name)))} Conference · last season ${c.record}</span></button>`).join('')}</div>${draft.rival ? `<div class="panel tight" style="border-color:#a855f7;margin-top:8px">⚔️ Your division rival: <b>${esc(draft.rival)}</b> — new GM ${esc(RIVAL_GMS[draft.rival])}. You meet twice a season.</div>` : ''}`;
+      if (step === 'club') body = `<div class="stack">${STARTER_CLUBS.map((c) => `<button class="choice ${draft.club === c.name ? 'selected' : ''}" data-action="club" data-v="${esc(c.name)}"><span class="name" style="color:${TEAM_META[c.name].color}">${esc(c.name)}</span><span class="muted">${esc(divisionOf(c.name))} Division · ${esc(conferenceFor(divisionOf(c.name)))} Conference · last season ${c.record}</span></button>`).join('')}</div>${draft.rival ? `<div class="panel tight" style="border-color:#a855f7;margin-top:8px">⚔️ Your division rival: <b>${esc(draft.rival)}</b> · new GM ${esc(RIVAL_GMS[draft.rival])}. You meet twice a season.</div>` : ''}`;
       if (step === 'rival') { const r = draft.rival; body = `<div class="panel center" style="border-color:#a855f7"><div style="font-size:32px">⚔️</div><h2>YOUR RIVAL HAS ARRIVED</h2><div style="font-size:18px;font-weight:800;color:${TEAM_META[r].color}">${esc(r)}</div><div class="muted">New General Manager: <b>${esc(RIVAL_GMS[r])}</b></div><p class="muted" style="margin-top:8px">You meet twice a season, home and away. Rivalry results are tracked for your whole career.</p></div>`; }
       if (step === 'difficulty') body = `<div class="stack">${Object.entries(DIFFICULTY).map(([id, d]) => `<button class="choice ${draft.difficulty === id ? 'selected' : ''}" data-action="difficulty" data-v="${id}"><span class="name">${esc(d.label)}</span><div class="muted">${esc(d.text)}</div><div class="muted">${esc(d.hof)}</div></button>`).join('')}</div><p class="dim" style="margin-top:8px">Locked once the franchise starts. Game length and coaching mode can still be changed in Settings.</p>`;
       if (step === 'offense') body = cornerstoneGrid('offense') + `<div class="row between" style="margin-top:8px"><span class="dim">Not what you had in mind?</span><button class="btn small" data-action="reroll" ${draft.rerolls >= 2 ? 'disabled' : ''}>Show three others (${2 - draft.rerolls} left)</button></div><p class="dim" style="margin-top:8px">A balanced coaching staff is hired for you. You can replace anyone later from the Staff screen.</p>`;
@@ -76,7 +76,7 @@ export function registerOnboardingScreens(Router, app) {
         pick: (el) => { draft[el.dataset.side] = el.dataset.v; Router.render(); },
         difficulty: (el) => { draft.difficulty = el.dataset.v; Router.render(); },
         reroll: () => { if (draft.rerolls >= 2) return; draft.rerolls += 1; draft.offerSeed = (draft.offerSeed * 31 + 7) >>> 0; draft.offense = null; Router.render(); },
-        details: (el) => { const c = cornerstoneOffers(draft.offerSeed).find((x) => x.name === el.dataset.v); const sp = resolveSpecies(c.species); const ab = sp.ability || { name: TRAITS[sp.trait]?.name, text: TRAITS[sp.trait]?.text }; sheet(`<div class="row">${monsterSprite({ id: c.name, name: c.name, species: c.species }, 64)}<div><b>${esc(c.name)}</b><div class="muted">${c.position} · ${c.type} · ${c.rarity} · ${c.quality} OVR · ${c.archetype}</div></div></div><p style="font-style:italic">“${esc(sp.personality)}”</p><h3>Nature</h3><p>${esc(NATURES[c.nature].name)} — ${esc(NATURES[c.nature].behavior)}</p><h3>Signature ability</h3><p><b>${esc(ab.name)}</b>: ${esc(ab.text)}</p><h3>Type</h3><p>${esc(TYPES[c.type].blurb)}.</p>`, { title: c.name }); },
+        details: (el) => { const c = cornerstoneOffers(draft.offerSeed).find((x) => x.name === el.dataset.v); const sp = resolveSpecies(c.species); const ab = sp.ability || { name: TRAITS[sp.trait]?.name, text: TRAITS[sp.trait]?.text }; sheet(`<div class="row">${monsterSprite({ id: c.name, name: c.name, species: c.species }, 64)}<div><b>${esc(c.name)}</b><div class="muted">${c.position} · ${c.type} · ${c.rarity} · ${c.quality} OVR · ${c.archetype}</div></div></div><p style="font-style:italic">“${esc(sp.personality)}”</p><h3>Nature</h3><p>${esc(NATURES[c.nature].name)} · ${esc(NATURES[c.nature].behavior)}</p><h3>${sp.ability ? 'Signature ability' : 'Trait'}</h3><p><b>${esc(ab.name)}</b>: ${esc(ab.text)}</p>${sp.ability ? `<button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : ''}<h3>Type</h3><p>${esc(TYPES[c.type].blurb)}.</p>`, { title: c.name }); },
         back: () => { if (draft.step > 0) { draft.step -= 1; Router.render(); } else Router.go('menu', {}, { reset: true }); },
         next: () => {
           const e = collect(); if (e) { err(e); return; }
@@ -125,13 +125,13 @@ export function registerOnboardingScreens(Router, app) {
       if (!role) return `<div class="panel center"><h2>Staff complete</h2><p class="muted">Your front office is ready.</p><button class="btn primary big block" data-action="hq">Go to Headquarters →</button></div>`;
       const cap = salarySummary(f);
       const idx = STAFF_ROLES.indexOf(role);
-      return `<p class="muted">Hire ${idx + 1} of 5 — <b>${esc(ROLE_LABEL[role])}</b>. Cap room: <b>${fmtMoney(cap.remaining)}</b>.</p>
+      return `<p class="muted">Hire ${idx + 1} of 5 · <b>${esc(ROLE_LABEL[role])}</b>. Cap room: <b>${fmtMoney(cap.remaining)}</b>.</p>
         <div class="stack">${STAFF.filter((c) => c.role === role).map((c) => candidateCard(f, c)).join('')}</div>`;
     },
     mount(root, ctx) {
       delegate(root, {
         hire: (el) => { const r = hireStaff(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${esc(el.dataset.name)} hired.`, 'good'); Router.render(); },
-        plays: (el) => { const ids = PLAYBOOKS[el.dataset.id] || []; sheet(`<p class="muted">${ids.length} plays in this catalog.</p><div class="play-grid">${ids.map((id) => `<div class="card"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></div>`).join('')}</div>`, { title: el.dataset.name + ' — playbook' }); },
+        plays: (el) => { const ids = PLAYBOOKS[el.dataset.id] || []; sheet(`<p class="muted">${ids.length} plays in this catalog.</p><div class="play-grid">${ids.map((id) => `<div class="card"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></div>`).join('')}</div>`, { title: el.dataset.name + ', playbook' }); },
         hq: () => Router.go('hq', {}, { reset: true }),
       });
     },
@@ -141,9 +141,9 @@ export function registerOnboardingScreens(Router, app) {
     const after = salarySummary(f, c.salary);
     const hc = staffMember(f, 'head_coach');
     const extra = c.role === 'head_coach' ? `<div class="muted">Offense: ${esc(c.identity.offense)} · Defense: ${esc(c.identity.defense)} · Aggression ${Math.round(c.identity.aggression * 100)}</div>`
-      : c.role.includes('coordinator') ? `<div class="muted">${(PLAYBOOKS[c.id] || []).length} plays · scheme fit with ${hc ? esc(hc.name) : 'head coach'}: <b>${hc ? alignmentFor(hc, c) : '—'}</b></div><button class="btn small" data-action="plays" data-id="${c.id}" data-name="${esc(c.name)}">View playbook</button>`
+      : c.role.includes('coordinator') ? `<div class="muted">${(PLAYBOOKS[c.id] || []).length} plays · scheme fit with ${hc ? esc(hc.name) : 'head coach'}: <b>${hc ? alignmentFor(hc, c) : '·'}</b></div><button class="btn small" data-action="plays" data-id="${c.id}" data-name="${esc(c.name)}">View playbook</button>`
       : c.role === 'head_scout' ? `<div class="muted">Volcanic ${c.biomes.fire} · Coastal ${c.biomes.water} · Forest ${c.biomes.forest} · Frost ${c.biomes.ice}</div>`
-      : `<div class="muted">Focus strength — Passing ${c.bonus.passing} · Rushing ${c.bonus.rushing} · Coverage ${c.bonus.coverage} · Pass rush ${c.bonus.pass_rush}</div>`;
+      : `<div class="muted">Focus strength. Passing ${c.bonus.passing} · Rushing ${c.bonus.rushing} · Coverage ${c.bonus.coverage} · Pass rush ${c.bonus.pass_rush}</div>`;
     return `<div class="panel"><div class="row">${portraitSprite(c.id, 44)}<div class="grow"><b>${esc(c.name)}</b> <span class="chip">${esc(c.style)}</span><div class="muted">${esc(c.strength)} · OVR ${c.overall}</div></div></div>
       <div style="margin:8px 0">${extra}</div>
       <div class="row between"><span class="muted">${fmtMoney(c.salary)}/yr · room after: <b style="color:${after.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(after.remaining)}</b></span><button class="btn primary" data-action="hire" data-id="${c.id}" data-name="${esc(c.name)}" ${after.over ? 'disabled' : ''}>Hire</button></div></div>`;

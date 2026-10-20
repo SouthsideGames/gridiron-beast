@@ -1,5 +1,5 @@
-// Draft-pick trading (GDD §19.6). Two clubs only. The owner gives picks — this
-// draft's or any of the next three classes — and asks for either a veteran at a
+// Draft-pick trading (GDD §19.6). Two clubs only. The owner gives picks, this
+// draft's or any of the next three classes, and asks for either a veteran at a
 // position or picks in a future class. Every AI club scores the ask from its
 // own needs (depth at the position, prospects it likes where the pick lands,
 // how far away the future pick is); the ones that would say yes make offers,
@@ -46,7 +46,7 @@ export function pickUsed(f, p) {
 export function tradableYears(f) { const y0 = currentClassYear(f); const out = []; for (let y = y0; y <= y0 + TRADE_YEARS_AHEAD; y++) if (y > y0 || !f.draft?.done) out.push(y); return out; }
 
 // ---------------------------------------------------------------- values
-/** A pick's worth on a 0–100 scale: the slot inside the round when known, the round's middle when not; future classes discounted. */
+/** A pick's worth on a 0-100 scale: the slot inside the round when known, the round's middle when not; future classes discounted. */
 export function pickValue(p, { slotInRound = null, yearsAhead = 0 } = {}) {
   const top = { 1: 100, 2: 52, 3: 26 }[p.round] || 20, bottom = { 1: 58, 2: 30, 3: 12 }[p.round] || 10;
   const t = slotInRound == null ? 0.5 : Math.max(0, Math.min(1, (slotInRound - 1) / (TEAMS_IN_LEAGUE - 1)));
@@ -76,7 +76,7 @@ export function positionNeeds(roster) {
   }
   return needs;
 }
-/** The slot (1–16) a pick lands in for a class whose order is known, else null. */
+/** The slot (1-16) a pick lands in for a class whose order is known, else null. */
 function slotOf(f, p) { const d = f.draft; if (!d?.started || currentClassYear(f) !== p.year) return null; const i = d.order.findIndex((o) => o.round === p.round && (o.original || o.team) === p.original); return i < 0 ? null : (i % TEAMS_IN_LEAGUE) + 1; }
 /** How much a pick is worth to one club: base value, a lift when a prospect it needs is likely still there, and its appetite for picks in general. */
 function pickValueFor(f, team, p, needs, ctx) {
@@ -95,7 +95,7 @@ function teamRng(f, team, p, kind) { return createRng(hashString(`trade|${f.seed
 // ---------------------------------------------------------------- asks
 /**
  * Ask the league for a veteran at `position` in exchange for `give` (picks the owner holds).
- * Returns { offers: [{ team, give, get: { player }, value }], asked } — up to three, best player first.
+ * Returns { offers: [{ team, give, get: { player }, value }], asked } · up to three, best player first.
  */
 export function askForPlayer(f, { give, position, teams, rosterOf, difficulty = 'pro' }) {
   const gen = GENEROSITY[difficulty] ?? 1;
@@ -129,7 +129,7 @@ export function askForPlayer(f, { give, position, teams, rosterOf, difficulty = 
 /**
  * Ask the league for `count` picks of `round` in class `year` in exchange for `give`. Clubs that will not meet the ask
  * counter with the nearest package they would accept (a later round, one pick instead of two, a class further out).
- * Returns { offers: [{ team, give, get: { picks }, exact, value }] } — exact matches first, then the richest counters.
+ * Returns { offers: [{ team, give, get: { picks }, exact, value }] } · exact matches first, then the richest counters.
  */
 export function askForPicks(f, { give, year, round, count = 1, teams, rosterOf, difficulty = 'pro', allTeams }) {
   const gen = GENEROSITY[difficulty] ?? 1;
@@ -188,3 +188,45 @@ export function executeTrade(f, offer, { club, year, nextYear }) {
 /** Can the owner accept a player offer right now? Roster room is the only hard gate; the cap is reviewed by the commissioner like any signing. */
 export function canTakePlayer(f) { return f.roster.length < ROSTER_MAX; }
 export const describePick = (p, yearOf) => `${yearOf(p.year)} R${p.round}${p.original ? ` (${p.original.split(' ').pop()})` : ''}`;
+
+// ---------------------------------------------------------------- AI clubs calling the owner (GDD §19.6, second pass)
+/** Chance a club calls in a given week (in season, weeks 2-8) and once when the offseason opens. */
+export const CALL_CHANCE = Object.freeze({ rookie: 0.32, pro: 0.26, allstar: 0.2 });
+/** A club that calls with a player names its price: a little above what it would accept if asked. */
+export const CALL_PREMIUM = 1.1;
+/**
+ * Build a club's call, or null. Within the trade rules: the owner gives picks, the club sends a veteran.
+ * The club looks at the owner's thinnest positions, finds a surplus player it can spare who would help
+ * there, and asks for the cheapest one or two of the owner's picks that cover his value.
+ * `myPicks`: the owner's tradable picks (year, round, original, overall?). `key` makes the roll steady.
+ */
+export function buildTradeCall(f, { teams, rosterOf, difficulty = 'pro', myRoster, myPicks, key }) {
+  const r = createRng(hashString(`call|${f.seed}|${key}`));
+  if (r.next() > (CALL_CHANCE[difficulty] ?? 0.26) || !myPicks?.length) return null;
+  const gen = GENEROSITY[difficulty] ?? 1;
+  const needs = positionNeeds(myRoster);
+  const order = Object.entries(needs).filter(([, n]) => n >= 0.15).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([p]) => p);
+  const clubs = teams.slice().sort(() => r.next() - 0.5);
+  const y0 = currentClassYear(f);
+  const priced = myPicks.map((p) => ({ p, v: pickValue(p, { slotInRound: p.overall ? ((p.overall - 1) % TEAMS_IN_LEAGUE) + 1 : null, yearsAhead: Math.max(0, p.year - y0) }) })).sort((a, b) => a.v - b.v);
+  for (const position of order) {
+    const myBest = myRoster.filter((m) => m.position === position).reduce((b, m) => Math.max(b, monsterOverall(m)), 0);
+    for (const team of clubs) {
+      const roster = rosterOf(team); const slots = GROUP_SLOTS[position]?.length || 1;
+      const at = roster.filter((m) => m.position === position).sort((a, b) => monsterOverall(b) - monsterOverall(a));
+      if (at.length <= slots) continue; // they cannot spare one
+      const spare = at.slice(slots).filter((m) => !m.legendary && !m.signature && !m.cornerstone && m.yearsPro > 0 && !m.drafted && !m.rookie && monsterOverall(m) >= myBest + 2); // only a real upgrade at the position
+      const m = spare.sort((a, b) => monsterOverall(b) - monsterOverall(a))[0]; if (!m) continue;
+      const price = playerValue(m) * CALL_PREMIUM / gen;
+      // The pick (or two) closest to his worth, between 85% and 130% of it: a club never asks a first-rounder for a backup.
+      const fair = (v) => v >= price * 0.85 && v <= price * 1.3;
+      let best = null;
+      for (const x of priced) if (fair(x.v) && (!best || Math.abs(x.v - price) < Math.abs(best.v - price))) best = { v: x.v, picks: [x.p] };
+      if (!best) for (let i = 0; i < priced.length; i++) for (let j = i + 1; j < priced.length; j++) { const v = priced[i].v + priced[j].v; if (fair(v) && (!best || Math.abs(v - price) < Math.abs(best.v - price))) best = { v, picks: [priced[i].p, priced[j].p] }; }
+      const picks = best?.picks || null;
+      if (!picks) continue;
+      return { team, position, playerId: m.id, player: { name: m.name, position: m.position, ovr: monsterOverall(m), age: m.age, species: m.species, salary: m.salary }, give: picks.map((p) => ({ year: p.year, round: p.round, original: p.original })), value: Math.round(price) };
+    }
+  }
+  return null;
+}

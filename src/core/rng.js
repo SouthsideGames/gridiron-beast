@@ -19,7 +19,7 @@ function build(initialState) {
     int: (n) => Math.floor(next() * n),
     chance: (p) => next() < p,
     pick: (arr) => arr[Math.floor(next() * arr.length)],
-    /** Standard normal via Box–Muller. */
+    /** Standard normal via Box-Muller. */
     normal: () => {
       const u = Math.max(1e-9, next());
       const v = next();

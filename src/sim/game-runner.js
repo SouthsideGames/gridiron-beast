@@ -83,7 +83,7 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   if (!choices.offensePlayId && ctrl(side).kneel(state)) { done(); R.kneel(state); return { kind: 'kneel', text: state.lastPlay.text }; }
   if (!choices.offensePlayId && ctrl(side).spike(state)) { done(); R.spike(state); return { kind: 'spike', text: state.lastPlay.text }; }
 
-  // Fourth down — or an early field goal on any down (end of a half with no time to run a play).
+  // Fourth down, or an early field goal on any down (end of a half with no time to run a play).
   if (state.down === 4 || choices.fourthDown === 'fg') {
     const decision = choices.fourthDown || ctrl(side).fourthDown(state, offTeam);
     if (decision === 'punt') { done(); const from = state.ballOn; const { text, res } = R.doPunt(state, teams); return { kind: 'punt', text, res, kicking: side, from }; }

@@ -57,7 +57,7 @@ export const ABILITIES = Object.freeze({
   meteor_pass: { name: 'Meteor Pass', text: '+8 Accuracy and +6 Arm on throws 15+ yards downfield.', effect: { deepThrow: { accuracy: 8, arm: 6 } } },
   lightning_break: { name: 'Lightning Break', text: '+12% speed for the first 1.5 seconds after the snap.', effect: { burst: { speed: 0.12, until: 1.5 } } },
   stone_charge: { name: 'Stone Charge', text: '+10 Strength when breaking tackles between the tackles.', effect: { carryStrength: 10 } },
-  crushing_rush: { name: 'Crushing Rush', text: '+10 Strength when shedding a block.', effect: { shedStrength: 10 } },
+  crushing_rush: { name: 'Crushing Rush', text: '+4 Strength when shedding a block against the run.', effect: { runStuff: 4 } },
   aerial_lock: { name: 'Aerial Lock', text: '+10 Catching on interception chances.', effect: { pickCatching: 10 } },
   cold_read: { name: 'Cold Read', text: 'Reacts 0.2 s sooner to runs and short passes.', effect: { reaction: 0.2 } },
 });
@@ -290,7 +290,7 @@ export function cornerstoneByName(side, v) {
   return list.find((c) => c.name === v || c.species === v || c.species === String(v).toLowerCase()) || null;
 }
 
-/** Starting roster for the owner's club: 28 monsters — a backup at most spots, room to grow to 38 (GDD §18.2). */
+/** Starting roster for the owner's club: 28 monsters, a backup at most spots, room to grow to 38 (GDD §18.2). */
 export const STARTING_ROSTER = Object.freeze([
   ['QB', 2], ['RB', 2], ['WR', 4], ['TE', 2], ['OL', 4], ['DL', 4], ['LB', 3], ['CB', 3], ['S', 2], ['K', 2],
 ]);
@@ -416,7 +416,7 @@ function fitThresholds() {
   FIT_THRESHOLDS = t; return t;
 }
 export const SCHEME_LABEL = Object.freeze({ pass: 'Air Raid', run: 'Ground Attack', balanced: 'Balanced', pressure: 'Blitz Heavy', coverage: 'Zone Control', man: 'Man Coverage' });
-/** Every scheme on the monster's side, with whether it fits and how far above/below the bar it sits — so the card can say what it *prefers*. */
+/** Every scheme on the monster's side, with whether it fits and how far above/below the bar it sits, so the card can say what it *prefers*. */
 export function schemePreferences(m) {
   const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(m.position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(m.position) ? 'defense' : null;
   if (!side) return null;

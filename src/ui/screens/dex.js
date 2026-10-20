@@ -51,7 +51,7 @@ export function registerDexScreens(Router, app) {
 }
 
 export function speciesSheet(s, f) {
-  const ab = s.ability ? `<p><b>${esc(s.ability.name)}</b> — ${esc(s.ability.text)}</p>` : `<p><b>${esc(TRAITS[s.trait]?.name)}</b> (shared trait) — ${esc(TRAITS[s.trait]?.text)}</p>`;
+  const ab = s.ability ? `<p><b>${esc(s.ability.name)}</b> · ${esc(s.ability.text)}</p>` : `<p><b>${esc(TRAITS[s.trait]?.name)}</b> (shared trait) · ${esc(TRAITS[s.trait]?.text)}</p>`;
   const formSeen = dexFormSeen(f, s.id);
   const evo = s.evolution.length ? `<h3>Evolution</h3><div class="row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">${sprite16(s, 40)}${s.evolution.map((e, i) => `<span class="dim">→</span><span class="center" style="font-size:12px">${formSeen >= i + 1 ? sprite16(evolvedSpec(s, i + 1), 40 + i * 8) : silhouette(evolvedSpec(s, i + 1), 40 + i * 8)}<br>${formSeen >= i + 1 ? esc(e.name) : '???'} <span class="dim">L${e.level}</span></span>`).join('')}</div><p class="dim">${formSeen ? `You have seen this species evolve${formSeen >= s.evolution.length ? ' fully' : ''}.` : 'Evolves at the levels shown; evolved forms are revealed when you see one.'}</p>` : '';
   const owned = f ? f.roster.filter((m) => m.species === s.id) : [];
@@ -61,7 +61,7 @@ export function speciesSheet(s, f) {
     <div class="muted">${esc(s.size)} ${esc(s.body)} · ${esc(s.look)}</div>
     <div class="muted" style="margin-top:4px">${st === 'signed' ? `Signed${f ? ` · ${owned.length} on your roster` : ''}` : st === 'seen' ? 'Seen, never signed' : 'Not yet discovered'}</div></div></div>
     <p style="font-style:italic">“${esc(s.personality)}”</p>
-    <h3>${s.ability ? 'Signature ability' : 'Trait'}</h3>${ab}
+    <h3>${s.ability ? 'Signature ability' : 'Trait'}</h3>${ab}${s.ability && (st === 'signed' || st === 'seen') ? `<button class="btn small see-it" data-see-it="${s.id}">▶ See it</button>` : ''}
     <h3>Where to find it</h3><p class="muted">${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}${s.fromWeek ? ` · from week ${s.fromWeek}` : ''}${s.rarity === 'legendary' ? (f?.campaign?.unlocked?.[s.id] ? ' · unlocked: scoutable there now' : ` · Legend Tracks ${f?.campaign?.tracks?.[s.id] || 0}/3`) : ''}</p>
     ${evo}`;
 }

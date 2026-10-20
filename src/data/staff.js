@@ -36,7 +36,7 @@ export const STAFF = Object.freeze([
 ]);
 export const staffById = (id) => STAFF.find((s) => s.id === id) || null;
 
-/** Scheme alignment 0–100 between the head coach identity and a coordinator. */
+/** Scheme alignment 0-100 between the head coach identity and a coordinator. */
 export function alignment(hc, coordinator) {
   if (!hc || !coordinator) return 70;
   const h = coordinator.role === 'offensive_coordinator' ? hc.identity.offense : hc.identity.defense;

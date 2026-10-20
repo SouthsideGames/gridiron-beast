@@ -93,7 +93,7 @@ test('a full season plus playoffs completes with standings from real games', () 
 test('postseason events: a losing record raises one; each option has its consequence; roster fit and severance exist', () => {
   const f = newFranchise(21);
   const fit = F.rosterFit(f); assert.ok(fit.offense.total >= 5 && fit.defense.total >= 5 && fit.offense.coach);
-  // Fake a losing season end: 3–6, then run the real end-of-season path by finishing the schedule quickly.
+  // Fake a losing season end: 3-6, then run the real end-of-season path by finishing the schedule quickly.
   while (!f.season.finished) { if (F.inPlayoffs(f) && !F.playoffFixture(f)) { F.skipPlayoffs(f); continue; } F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const g = F.simulatePlayerGame(f); const side = F.sundayMatchup(f).playerSide; const other = side === 'home' ? 'away' : 'home'; const score = { home: 0, away: 0 }; score[other] = 21; F.finishSunday(f, { ...g, winner: other, score }); }
   assert.ok(F.record(f).l > F.record(f).w);
   const ev = F.postseasonEvent(f); assert.ok(ev, 'event raised'); assert.ok(ev.lines[0].length > 20);
@@ -571,7 +571,7 @@ test('commissioner: signing over the cap is allowed with a warning; Saturday nam
 
 test('Legend Tracks: a champion chooses a track; three unlock the legendary in its home region; the rival keeps a signature monster', () => {
   const f = newFranchise(31);
-  f.campaign.badges['Harbor Sentinels'] = { year: 1, week: 1, score: '1–0' };
+  f.campaign.badges['Harbor Sentinels'] = { year: 1, week: 1, score: '1-0' };
   const choices = F.legendChoices(f).map((c) => c.id);
   assert.deepEqual(choices.slice(0, 4), ['pyroclast', 'elderoot', 'tempestra', 'astralux']);
   assert.ok(choices.includes('tsunarok'), 'a held badge opens that gym legendary');
@@ -604,7 +604,7 @@ test('Hall of Fame: eligibility follows the checklist; retiring writes a career 
   const f = newFranchise(41);
   assert.equal(F.retire(f).ok, false);
   assert.equal(F.hallOfFameNotice(f), false);
-  for (const g of ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']) f.campaign.badges[g] = { year: 1, week: 1, score: '1–0' };
+  for (const g of ['Harbor Sentinels', 'Sunfire Lions', 'Thunder Mesa', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers', 'Ironpeak Rams', 'Palmetto Vipers']) f.campaign.badges[g] = { year: 1, week: 1, score: '1-0' };
   Object.assign(f.campaign, { titles: 2, wins: 50, awards: 3 });
   f.history.push({ year: 1, club: f.club, record: { w: 9, l: 0 }, place: 1, champion: f.club, playoffs: true });
   assert.equal(F.hallOfFameProgress(f).eligible, true);
@@ -881,4 +881,38 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   assert.ok(got.every((m) => m.yearsPro === 0), 'drafted rookies enter their first season');
   assert.equal(p.monster.yearsPro, 0); assert.ok(F.aiTeam(f, team).roster.some((m) => m.id === got[0].id), 'the AI draftee is on its club');
   assert.equal(f.draft, null);
+});
+
+test('AI trade calls: only real upgrades at a need, priced fairly in picks, and accepting moves the player', () => {
+  let calls = 0, accepted = false;
+  for (let seed = 1; seed <= 40 && calls < 6; seed++) {
+    const f = newFranchise(seed);
+    for (let w = 2; w <= 8; w++) {
+      f.season.week = w; const c = F.maybeTradeCall(f); if (!c) continue; calls++;
+      const myBest = f.roster.filter((m) => m.position === c.position).reduce((b, m) => Math.max(b, monsterOverall(m)), 0);
+      assert.ok(c.player.ovr >= myBest + 2, `${c.player.name} is an upgrade (${c.player.ovr} vs ${myBest})`);
+      assert.ok(c.give.length >= 1 && c.give.length <= 2, 'one or two picks');
+      assert.equal(F.tradeCall(f), c, 'the call waits for an answer this week');
+      if (!accepted) {
+        const before = f.roster.length; const r = F.answerTradeCall(f, true);
+        assert.equal(r.ok, true, r.reason); assert.equal(f.roster.length, before + 1);
+        assert.ok(f.roster.some((m) => m.id === c.playerId), 'he joins the roster');
+        assert.equal(F.tradeCall(f), null); accepted = true;
+      } else { assert.equal(F.answerTradeCall(f, false).declined, true); }
+      break;
+    }
+  }
+  assert.ok(calls >= 3, `clubs call sometimes (${calls})`); assert.ok(accepted);
+});
+
+test('free agent ask: an estimate until the scout knows his overall, steady and within 10%', () => {
+  const f = newFranchise(5); f.staff.head_scout = null;
+  const other = F.aiTeam(f, ALL_TEAMS.find((t) => t !== f.club)).roster[0];
+  const fa = { ...other, history: [] };
+  const a = F.freeAgentAsk(f, fa), b = F.freeAgentAsk(f, fa);
+  assert.equal(a.estimate, true); assert.equal(a.shown, b.shown, 'the same estimate every time');
+  assert.ok(Math.abs(a.shown - a.exact) <= a.exact * 0.1 + 500, `${a.shown} near ${a.exact}`);
+  assert.equal(a.shown % 1000, 0, 'rounded to the thousand');
+  const own = { ...fa, history: [{ club: f.club }] }; const c = F.freeAgentAsk(f, own);
+  assert.equal(c.estimate, false); assert.equal(c.shown, c.exact, 'a former player of yours asks his real figure');
 });
