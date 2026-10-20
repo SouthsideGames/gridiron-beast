@@ -97,3 +97,19 @@ test('walk-throughs are audit-only: no defenders, nobody throws, and they never 
 test('the review queue includes every reserve play so the owner can review them', () => {
   for (const id of RESERVE) assert.ok(REVIEWABLE_PLAYS.includes(id), id);
 });
+
+test('pre-snap motion: the man moves before the snap, is running at the snap, and the art shows the zigzag', async () => {
+  const { playCardSvg } = await import('../src/ui/play-art.js');
+  const withMotion = Object.values(PLAYS).filter((p) => p.motion);
+  assert.ok(withMotion.length >= 4 && withMotion.every((p) => p.reserve), 'motion only on reserve plays for now');
+  for (const p of withMotion) {
+    const r = simulatePlay({ offensePlay: p, defensePlay: PLAYS.cover_3, seed: 2 });
+    const pre = r.frames.filter((f) => f.t < 0); assert.ok(pre.length >= 3, `${p.id} shows the motion before the snap`);
+    const at = (f) => f.off.find((a) => a[0] === p.motion.slot);
+    assert.deepEqual(at(pre[0]).slice(1, 3), p.align[p.motion.slot], `${p.id} motion starts at the alignment`);
+    const snap = r.frames.find((f) => f.t === 0); assert.deepEqual(at(snap).slice(1, 3), p.motion.to, `${p.id} at the motion spot at the snap`);
+    assert.ok(playCardSvg(p.id).split('<polyline').length > playCardSvg('inside_zone').split('<polyline').length - 2, `${p.id} art`);
+  }
+  // Plays without motion have no pre-snap frames.
+  assert.ok(simulatePlay({ offensePlay: PLAYS.jet_sweep, defensePlay: PLAYS.cover_3, seed: 2 }).frames[0].t === 0);
+});

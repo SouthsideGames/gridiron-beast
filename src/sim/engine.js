@@ -96,6 +96,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   };
   for (const slot of offensePlay.onField) makeActor('off', slot, offensePlay, offense[slot]);
   if (!dry?.noDefense) for (const slot of defensePlay.onField) makeActor('def', slot, defensePlay, defense[slot]);
+  // Pre-snap motion: the motion man is snapped on the move, at his motion spot, already running (owner, 2026-10-20).
+  const motion = offensePlay.motion ? { ...offensePlay.motion, man: bySlot.off[offensePlay.motion.slot], from: offensePlay.align[offensePlay.motion.slot] } : null;
+  if (motion?.man) {
+    const m = motion.man, [fx, fy] = motion.from, [tx, ty] = motion.to, d = Math.hypot(tx - fx, ty - fy) || 1, v = m.maxSpeed * 0.85;
+    m.x = tx; m.y = ty; m.vx = ((tx - fx) / d) * v; m.vy = ((ty - fy) / d) * v; motion.duration = d / v;
+  }
   // Auras: a monster's effect on its teammates (Elderoot's reads, Ferrhorn's line).
   for (const a of actors) {
     const aura = a.ability?.aura; if (!aura) continue;
@@ -976,6 +982,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       ball: [+ball.x.toFixed(2), +ball.y.toFixed(2), ball.inAir ? 1 : 0],
       holder: ball.holder ? ball.holder.slot : null, holderTeam: ball.holder ? ball.holder.team : null, phase,
     });
+  }
+  // The motion before the snap, drawn as frames with negative time: only the motion man moves.
+  if (motion?.man) {
+    recordFrame(); const snap = frames.pop(); const steps = Math.max(1, Math.round(motion.duration / (DT * frameEvery)));
+    for (let i = 0; i < steps; i++) {
+      const k = i / steps, mx = motion.from[0] + (motion.to[0] - motion.from[0]) * k, my = motion.from[1] + (motion.to[1] - motion.from[1]) * k;
+      frames.push({ ...snap, t: +(-motion.duration * (1 - k)).toFixed(2), off: snap.off.map((p) => (p[0] === motion.slot ? [p[0], +mx.toFixed(2), +my.toFixed(2), 0, 0] : p)), motion: true });
+    }
   }
   recordFrame();
   let tick = 0;

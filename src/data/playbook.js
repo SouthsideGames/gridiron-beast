@@ -88,6 +88,7 @@ function offense(id, name, formation, assignments, opts = {}) {
   if (!f) throw new Error(`${name}: unknown formation ${formation}`);
   const play = { id, name, side: 'offense', type: opts.type || 'pass', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, primary: opts.primary || null, progression: opts.progression || [], drop: opts.drop || 'three', tags: opts.tags || [], desc: opts.desc || '' };
   if (opts.reserve) play.reserve = true; // only reserve plays carry the key, so live plays keep their review fingerprints
+  if (opts.motion) play.motion = opts.motion; // pre-snap motion: { slot, to } (only plays with motion carry the key)
   return play;
 }
 function defense(id, name, formation, assignments, opts = {}) {
@@ -419,6 +420,15 @@ export function validatePlaybook() {
         if (a.a === 'man' && !['wideL', 'wideR', 'inside', 'back'].includes(a.key)) problems.push(`${p.name}: ${slot} bad man key`);
         if (a.a === 'zone' && !ZONES[a.zone]) problems.push(`${p.name}: ${slot} bad zone`);
         if ((a.a === 'rush' || a.a === 'contain') && !GAPS[a.gap]) problems.push(`${p.name}: ${slot} bad gap`);
+      }
+    }
+    if (p.motion) {
+      const m = p.motion, from = p.align[m.slot];
+      if (!from) problems.push(`${p.name}: motion slot ${m.slot} not on the field`);
+      else {
+        if (!(m.to[0] < 0)) problems.push(`${p.name}: motion must finish behind the line`);
+        if (Math.hypot(m.to[0] - from[0], m.to[1] - from[1]) > 14) problems.push(`${p.name}: motion longer than 14 yards`);
+        const pts = p.assignments[m.slot].points; if (pts && (pts[0][0] !== m.to[0] || pts[0][1] !== m.to[1])) problems.push(`${p.name}: ${m.slot}'s path must start where the motion ends`);
       }
     }
     for (const [slot, a] of Object.entries(p.assignments)) {

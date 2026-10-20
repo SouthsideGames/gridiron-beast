@@ -107,7 +107,7 @@ export default function batch(b) {
   'When the defence covers the bunch with defensive backs.', 'Each receiver blocks the man across; the back picks a crease between the bunch blocks.', 'Cover 3 and nickel defences.', 'Edge Contain.');
 
   add(O('pistol_counter', 'Pistol Counter', 'tight_pistol', {
-    QB: HANDOFF, RB: CARRY([[-6.2, 0], [-4.5, -2], [-2, 1], [1, 3.5], [8, 4], [20, 4]]),
+    QB: HANDOFF, RB: CARRY([[-6.2, 0], [-5.6, -0.9], [-3.6, 1], [0, 3], [6, 3.8], [20, 4]]),
     LG: PULL([-2, 0], [1.5, 3.8]), C: RUNBLOCK([1.5, -0.5]), RG: RUNBLOCK([1.5, 2]), TE: RUNBLOCK([1.5, 5]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'misdirection'], desc: 'False step left, then the left guard pulls right to lead the back through the hole.' }),
   'After runs to the left have pulled the linebackers that way.', 'The back steps left, plants and follows the pulling guard.', 'Aggressive linebackers and Zone Blitz.', 'Disciplined zone defences that stay home.');
@@ -176,9 +176,9 @@ export default function batch(b) {
 
   // ---- sweeps and misdirection
   add(O('fly_sweep', 'Fly Sweep', 'ace_twins', {
-    QB: HANDOFF, WR2: CARRY([[-1.2, -11], [-2, -4], [-1.5, 4], [2, 11], [20, 14]]),
+    QB: HANDOFF, WR2: CARRY([[-1.4, -4], [-2, -1], [-1.5, 4], [2, 11], [20, 14]]),
     LG: RUNBLOCK([1.5, 1]), RG: RUNBLOCK([2, 4]), TE: RUNBLOCK([2, 6]), RB: RUNBLOCK([0, 8]), WR1: STALK([4, -17]),
-  }, { type: 'run', tags: ['run', 'outside', 'misdirection'], desc: 'The slot from the twins side races across and takes the handoff at full speed around the right end; the back leads.' }),
+  }, { type: 'run', motion: { slot: 'WR2', to: [-1.4, -4] }, tags: ['run', 'outside', 'misdirection'], desc: 'Jet motion: the slot from the twins side starts across before the snap and takes the handoff at full speed around the right end; the back leads.' }),
   'Get your fastest receiver going sideways with a head start.', 'The handoff happens at full speed; the back must reach the edge first.', 'Heavy and base packages with slow linebackers.', 'Man Press and Edge Contain.');
 
   add(O('end_around', 'End Around', 'gun_pro', {
@@ -188,21 +188,21 @@ export default function batch(b) {
   'Once a game, when the defence is flying to the ball.', 'A long-developing play: the right guard and the back must get to the left edge in time.', 'Over-pursuing defences and Zone Blitz.', 'Edge Contain and disciplined backside defenders.');
 
   add(O('rocket_toss', 'Rocket Toss', 'spread_left', {
-    QB: PITCH([[-5, 0], [-5.5, -0.5]]), WR3: CARRY([[-1.2, -10], [-4, -4], [-5.5, 2], [-3, 9], [2, 14], [20, 16]]),
+    QB: PITCH([[-5, 0], [-5.5, -0.5]]), WR3: CARRY([[-3.5, -5], [-6.5, -1], [-5.5, 3], [-3, 9], [2, 14], [20, 16]]),
     LG: RUNBLOCK([1.5, 1.5]), RG: RUNBLOCK([2, 4.5]), RB: RUNBLOCK([0, 7]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
-  }, { type: 'run', tags: ['run', 'outside', 'misdirection'], desc: 'The left slot sprints behind the quarterback and takes a pitch running right, with the back leading.' }),
+  }, { type: 'run', motion: { slot: 'WR3', to: [-3.5, -5] }, tags: ['run', 'outside', 'misdirection'], desc: 'Rocket motion: the left slot starts back behind the quarterback before the snap and takes the pitch already running right, with the back leading.' }),
   'Against defences that overplay the twins side.', 'Speed to the far side: the back must kick out the first defender.', 'Defences shaded to the twins and Cover 6.', 'Edge Contain.');
 
   add(O('speed_sweep', 'Speed Sweep', 'pro_trips', {
-    QB: HANDOFF, WR1: CARRY([[-1.2, 10], [-2, 4], [-1.5, -4], [2, -11], [20, -14]]),
+    QB: HANDOFF, WR1: CARRY([[-1.6, 4.5], [-2, 1], [-1.5, -4], [2, -11], [20, -14]]),
     LG: RUNBLOCK([2, -4]), RG: RUNBLOCK([1.5, -1]), TE: RUNBLOCK([1.5, 1.5]), RB: RUNBLOCK([0, -7]), WR2: STALK([3, 16]),
-  }, { type: 'run', tags: ['run', 'outside', 'misdirection'], desc: 'The trips slot runs across the formation and takes it to the empty left side.' }),
+  }, { type: 'run', motion: { slot: 'WR1', to: [-1.6, 4.5] }, tags: ['run', 'outside', 'misdirection'], desc: 'Jet motion: the trips slot starts across before the snap and takes the handoff at full speed to the empty left side.' }),
   'When the defence rolls everyone toward trips.', 'The back leads to the left edge; the sweep goes where the defence just left.', 'Defences that overload trips, Cover 3 and Cover 6.', 'Balanced Cover 2 Zone with a corner on each side.');
 
   add(O('empty_jet', 'Empty Jet', 'empty_2x2', {
-    QB: HANDOFF, RB: CARRY([[-1.2, 10], [-2, 4], [-1.5, -3], [2, -10], [20, -14]]),
+    QB: HANDOFF, RB: CARRY([[-1.6, 4.5], [-2, 1], [-1.5, -3], [2, -10], [20, -14]]),
     LG: RUNBLOCK([2, -3.5]), RG: RUNBLOCK([1.5, -0.5]), WR3: STALK([2, -11]), WR1: STALK([3, -17]), WR2: STALK([3, 17]),
-  }, { type: 'run', tags: ['run', 'outside', 'misdirection'], desc: 'From an empty set the back, split in the right slot, comes across for a jet handoff to the left.' }),
+  }, { type: 'run', motion: { slot: 'RB', to: [-1.6, 4.5] }, tags: ['run', 'outside', 'misdirection'], desc: 'Jet motion from an empty set: the back, split in the right slot, starts across before the snap and takes the handoff at full speed to the left.' }),
   'When an empty formation has the defence spread thin and thinking pass.', 'The left receivers block their men; the back needs one cut at the edge.', 'Max Drop and Cover 4.', 'Edge Contain and Man Press.');
 
   add(O('lead_draw', 'Lead Draw', 'gun_pro', {
