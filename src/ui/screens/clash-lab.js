@@ -4,7 +4,7 @@
 import { esc, delegate, toast } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import * as Clash from '../../clash/index.js';
-import { runFamily, syntheticMonster, ARCHETYPES } from '../../clash/batch.js';
+import { runFamily, gateBFamilies, syntheticMonster, ARCHETYPES } from '../../clash/batch.js';
 import { createArena } from '../clash/arena.js';
 
 const V = Clash.CLASH_VALUES;
@@ -109,11 +109,14 @@ export function registerClashLab(Router, app) {
       <div class="row between"><span>Healing + shields per battle</span><span class="mono">${p.heal} + ${p.shield}</span></div>
       <div class="row between"><span>Knockouts per battle${r.family.config.duration === 'C6' ? ' · stalemate exchanges' : ''}</span><span class="mono">${p.kos}${r.family.config.duration === 'C6' ? ` · ${p.stalemate}` : ''}</span></div>
       <div class="dim" style="font-size:11px">Orange: the whole 95% interval is outside 45–55%. Phase 1 engine result on synthetic monsters; targets are judged at Gate B.</div></div>`; };
-  function batchFamilies() { const T5 = Array(5).fill('Tank'), S5 = Array(5).fill('Support'); return [
+  // The Batch screen offers the Gate A families plus every Gate B plan family (same labels, same chunked seeds as
+  // tools/clash-gateb.mjs), so a number in the Gate B report can be reproduced here with the matching switches.
+  function batchFamilies() { const T5 = Array(5).fill('Tank'), S5 = Array(5).fill('Support'); const seen = new Set(); return [
     { label: 'Random mixed 3v3', a: 'random', b: 'random', size: 3, overall: 62, overallSpread: 7 }, { label: 'Random mixed 5v5', a: 'random', b: 'random', size: 5, overall: 62, overallSpread: 7 },
     { label: 'Strikers v Supports 3v3', a: 'Striker', b: 'Support', size: 3 }, { label: 'Tanks v Strikers 3v3', a: 'Tank', b: 'Striker', size: 3 }, { label: 'Disruptors v Tanks 5v5', a: 'Disruptor', b: 'Tank', size: 5 }, { label: 'Supports v Tanks 5v5', a: 'Support', b: 'Tank', size: 5 },
     { label: '5 Supports mirror', a: S5, b: S5, size: 5 }, { label: '5 Tanks mirror', a: T5, b: T5, size: 5 }, { label: '3 Tanks + 2 Supports mirror', a: ['Tank', 'Tank', 'Tank', 'Support', 'Support'], b: ['Tank', 'Tank', 'Tank', 'Support', 'Support'], size: 5 },
     { label: 'Mixed defense v 5 Strikers', a: 'mixedDefense', b: 'Striker', size: 5 }, { label: 'Mixed defense v 5 Disruptors', a: 'mixedDefense', b: 'Disruptor', size: 5 },
+    ...gateBFamilies().map(({ configs, section, label, ...f }) => ({ ...f, label: `Gate B · ${section} · ${label}`, gateB: true })).filter((f) => !seen.has(f.label) && seen.add(f.label)),
     { label: 'Current lineup A v B', a: null, b: null, size: 0 }]; }
   async function runBatch() {
     const B = st.batch; const f = batchFamilies().find((x) => x.label === B.family); if (!f || B.running) return; B.running = true; B.progress = 0; Router.render();

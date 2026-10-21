@@ -109,3 +109,4 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ss]ceneDependencyCache*
 export/
 tools/out/
+tools/out/gateb/gateb.json
