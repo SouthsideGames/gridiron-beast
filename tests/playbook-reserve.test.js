@@ -114,3 +114,22 @@ test('pre-snap motion: the man moves before the snap, is running at the snap, an
   // Plays without motion have no pre-snap frames.
   assert.ok(simulatePlay({ offensePlay: PLAYS.inside_zone, defensePlay: PLAYS.cover_3, seed: 2 }).frames[0].t === 0);
 });
+
+test('every route runner and ball carrier follows his drawn line (walk-through within 1.5 yd), live and reserve', () => {
+  const segDist = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy; let t = L ? ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L : 0; t = Math.max(0, Math.min(1, t)); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); };
+  const off = [];
+  for (const id of [...OFFENSE_IDS, ...RESERVE_OFFENSE_IDS]) {
+    const play = PLAYS[id]; const r = simulatePlay({ offensePlay: play, defensePlay: PLAYS.cover_3, seed: 1, options: { dryRun: { noDefense: true } } });
+    for (const slot of play.onField) {
+      const a = play.assignments[slot]; if (!['route', 'carry', 'keep'].includes(a.a) || (a.a !== 'route' && r.stats.carrier !== slot)) continue;
+      const pts = a.points, end = pts[pts.length - 1];
+      for (const f of r.frames.filter((x) => x.t >= 0)) {
+        const o = f.off.find((x) => x[0] === slot), p = [o[1], o[2]];
+        const d = Math.min(...pts.slice(1).map((b, i) => segDist(p, pts[i], b)));
+        if (d > 1.5) { off.push(`${id} ${slot} ${d.toFixed(1)}yd`); break; }
+        if (Math.hypot(p[0] - end[0], p[1] - end[1]) < 1) break;
+      }
+    }
+  }
+  assert.deepEqual(off, []);
+});

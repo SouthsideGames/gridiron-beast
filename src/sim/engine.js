@@ -162,7 +162,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const teammates = (team) => (team === 'off' ? offs : defs);
 
   // ------------------------------------------------------------ movement
-  function steer(a, tx, ty, speedScale = 1, arriveRadius = 0.6) {
+  function steer(a, tx, ty, speedScale = 1, arriveRadius = 0.6, cap = Infinity) {
     if (a.stun > 0) { a.vx *= 0.93; a.vy *= 0.93; return; } // off balance: coasting, cannot steer
     const dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
     let desired = a.maxSpeed * speedScale * burst(a) * speedMods(a);
@@ -170,6 +170,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Daybreak: anyone chasing from behind is held below his pace, so he cannot be run down.
     const h = ball.holder; if (h?.daybreak && a.team !== h.team && (a.x - h.x) * (h.team === 'off' ? 1 : -1) < 0) desired = Math.min(desired, h.maxSpeed * 0.9);
     if (d < arriveRadius) desired = 0;
+    if (desired > cap) desired = cap; // braking into a cut (followPath)
     const ux = d > 0 ? dx / d : 0, uy = d > 0 ? dy / d : 0;
     const dvx = ux * desired - a.vx, dvy = uy * desired - a.vy;
     const dv = Math.hypot(dvx, dvy), maxDv = a.accel * DT;
@@ -277,10 +278,23 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
 
   // ------------------------------------------------------------ offense behaviour
-  function followPath(a, points, speedScale = 1) {
+  // Running a drawn line (owner review, 2026-10-20): a player slows into a sharp cut and plants, instead of
+  // sailing past the break at full speed and looping back. The sharper the cut the slower he takes it;
+  // agility (acceleration) sets how late he can brake. A settle route stops at its last point.
+  function followPath(a, points, speedScale = 1, settleAtEnd = false) {
     if (a.wp >= points.length) return true;
     const [tx, ty] = points[a.wp];
-    steer(a, tx, ty, speedScale, 0.7);
+    const d = Math.hypot(tx - a.x, ty - a.y), brake = a.accel * 0.8;
+    let cap = Infinity;
+    const nxt = points[a.wp + 1];
+    if (nxt) {
+      const ix = tx - a.x, iy = ty - a.y, ox = nxt[0] - tx, oy = nxt[1] - ty, li = Math.hypot(ix, iy), lo = Math.hypot(ox, oy);
+      if (li > 0.05 && lo > 0.05) {
+        const turn = Math.acos(clamp((ix * ox + iy * oy) / (li * lo), -1, 1));
+        if (turn > 0.6) { const vTurn = a.maxSpeed * clamp(1 - turn / 2.6, 0.2, 1); cap = Math.sqrt(vTurn * vTurn + 2 * brake * d); }
+      }
+    } else if (settleAtEnd) cap = Math.sqrt(2 * brake * Math.max(0, d - 0.3));
+    steer(a, tx, ty, speedScale, 0.7, cap);
     if (dist(a, { x: tx, y: ty }) < 0.8) a.wp += 1;
     return a.wp >= points.length;
   }
@@ -371,7 +385,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     switch (asg.a) {
       case 'route': {
-        if (a.wp < asg.points.length) followPath(a, asg.points, 1); else { const [tx, ty] = routeEndTarget(a); steer(a, tx, ty, 0.8, 0.4); }
+        if (a.wp < asg.points.length) followPath(a, asg.points, 1, SETTLE_ROUTES.has(asg.r)); else { const [tx, ty] = routeEndTarget(a); steer(a, tx, ty, 0.8, 0.4); }
         // Cyclone: on her first break, whoever is covering her is spun around and loses a step.
         if (a.ability?.cyclone && !a.cycloneDone && a.wp >= 2) {
           a.cycloneDone = true; const spun = coveringDefs(a);
@@ -448,10 +462,23 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     to.laneTimer = 0; to.jukeCooldown = 0;
     log(`Handoff to ${to.name}`, { kind: 'handoff', to: to.slot });
   }
+  // The handoff: the quarterback steps to a meeting point just off the runner's drawn path (owner review,
+  // 2026-10-20) instead of chasing him, so the two never collide and the runner keeps his line.
+  function meshPoint(qbp, rb) {
+    const pts = rb.assignment.points; let best = null;
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, ay] = pts[i - 1], [bx, by] = pts[i], dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy || 1;
+      const k = clamp(((qbp.x - ax) * dx + (qbp.y - ay) * dy) / L, 0, 1), px = ax + k * dx, py = ay + k * dy, dd = Math.hypot(qbp.x - px, qbp.y - py);
+      if (!best || dd < best.dd) best = { x: px, y: py, dd };
+    }
+    if (!best) return { x: qbp.x, y: qbp.y };
+    const off = Math.min(0.9, best.dd); const ux = best.dd > 0.01 ? (qbp.x - best.x) / best.dd : -1, uy = best.dd > 0.01 ? (qbp.y - best.y) / best.dd : 0;
+    return { x: best.x + ux * off, y: best.y + uy * off };
+  }
   function qbHandoff(a) {
     const rb = offs.find((o) => ['carry'].includes(o.assignment.a));
     if (!handoffDone) {
-      if (rb) steer(a, rb.x, rb.y, 1, 0.3); else steer(a, a.x, a.y, 0, 0.2);
+      if (rb) { a.mesh ||= meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, rb); steer(a, a.mesh.x, a.mesh.y, 0.8, 0.3); } else steer(a, a.x, a.y, 0, 0.2);
       if (rb && dist(a, rb) < 1.5 && t > 0.2) giveBall(rb);
       else if (rb && t > 1.1) giveBall(rb);
       return;
