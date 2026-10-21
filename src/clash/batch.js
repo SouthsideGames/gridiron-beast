@@ -72,6 +72,13 @@ export function runFamily(family, onProgress = null) {
         if (e.kind === 'damage') { u.acts++; u.dmg += e.damage; } else if (e.kind === 'heal') { u.acts++; u.heal += e.amount || 0; } else if (e.kind === 'shield') { u.acts++; u.shield += e.amount || 0; }
         else if (e.kind === 'condition' && (e.result === 'applied' || e.result === 'replaced')) { u.acts++; u.conds++; } else if (e.kind === 'swap' && e.forced) { u.acts++; u.swaps++; } else if (e.kind === 'buff' || e.kind === 'debuff') { u.acts++; u.buffs = (u.buffs || 0) + 1; } } }
       if (e.kind === 'miss' && /illusion absorbs|dodges|veil/.test(e.text) && e.target && nameOf[e.target]) { const u = use(e.target); if (u) u.absorbs = (u.absorbs || 0) + 1; }
+      // Gate B.4 diagnostics (every action by the species, not only its named move): shields met, conditions, refusals, knockouts
+      if (e.actor && nameOf[e.actor]) { const u = use(e.actor);
+        if (e.kind === 'damage' && e.target && e.target[0] !== e.actor[0]) { u.hits = (u.hits || 0) + 1; u.allDmg = (u.allDmg || 0) + (e.damage || 0); if (e.absorbed > 0 || (e.targetState?.shield || 0) > 0) { u.shieldHits = (u.shieldHits || 0) + 1; u.absorbed = (u.absorbed || 0) + (e.absorbed || 0); } const mv = nameOf[e.actor].combatant.move; if (e.text.includes(mv.name) && typeof e.mult === 'number' && e.mult > (mv.mult || 1) + 1e-9) u.boosted = (u.boosted || 0) + 1; }
+        if (e.kind === 'shield_break') u.breaks = (u.breaks || 0) + 1;
+        if (e.kind === 'condition' && e.target && e.target[0] !== e.actor[0]) { if (e.result === 'applied' || e.result === 'replaced') u.condLanded = (u.condLanded || 0) + 1; else u.condFailed = (u.condFailed || 0) + 1; }
+        if (e.kind === 'swap_refused') u.refused = (u.refused || 0) + 1;
+        if (e.kind === 'ko' && e.target && e.actor !== e.target) u.kos = (u.kos || 0) + 1; }
 
       if (e.kind === 'shield' && e.actor === e.target && prevEnter === e.actor) tallies.entryShields++;
       prevEnter = e.kind === 'enter' ? e.actor : null;

@@ -77,7 +77,9 @@ export function hit(E, att, def, mult, { label = 'strike', shieldBreak = 1, canD
   const breakRate = Math.max(shieldBreak, V.archetypes[att.c.archetype].shieldBreak || 1, mv.breakAlways || 1);
   let absorbed = 0;
   if (def.shield > 0) {
-    const removed = Math.min(def.shield, d * breakRate); absorbed = Math.round(removed / breakRate); def.shield -= removed;
+    // shieldPierce (Gate B.4, patch-only): this share of the hit skips the shield and lands on HP directly.
+    const through = mv.shieldPierce ? Math.round(d * mv.shieldPierce) : 0; const dd = d - through;
+    const removed = Math.min(def.shield, dd * breakRate); absorbed = Math.round(removed / breakRate); def.shield -= removed;
     if (def.shield <= 0) { def.shield = 0; E.onShieldBroken(def, att); }
   }
   const toHp = Math.max(0, d - absorbed);

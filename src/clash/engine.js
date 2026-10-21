@@ -64,6 +64,8 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     const mv = def.c.move;
     if (mv.erupt) { const d = Math.round(def.c.atk * mv.erupt * E.ramp); att.hp = Math.max(0, att.hp - d); def.stats.dealt += d; att.stats.taken += d; E.log('damage', def, att, `${def.c.name}'s Magma Crust erupts: ${d} damage to ${att.c.name}`, { damage: d, hpAfter: att.hp }); }
     if (mv.thorns) { const d = Math.round(def.c.atk * mv.thorns * E.ramp); att.hp = Math.max(0, att.hp - d); def.stats.dealt += d; att.stats.taken += d; E.log('damage', def, att, `${def.c.name}'s thorns: ${d} damage to ${att.c.name}`, { damage: d, hpAfter: att.hp }); }
+    // breakCharge (Gate B.4, patch-only): the attacker that breaks a shield charges its own next strike.
+    if (att && att.hp > 0 && att.c.move.breakCharge && att !== def) { att.charge = Math.max(att.charge || 0, att.c.move.breakCharge); E.log('buff', att, att, `${att.c.name}'s ${att.c.move.name}: shield broken, next strike +${Math.round(att.c.move.breakCharge * 100)}%`); }
     if (mv.regrow && def.regrows > 0) { def.regrows -= 1; const amt = Math.round(def.c.maxHp * mv.shield * E.healMult); def.shield += amt; E.log('shield', def, def, `${def.c.name}'s Glacier Wall regrows (${amt})`, { amount: amt, shield: def.shield }); }
   };
   E.afterHit = (att, def, toHp, label) => {
@@ -114,7 +116,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
   // Forced swap on `side` by `src`. kind: frontTwo | backToFront | strongestBack | sweep (front to the back) | lift (own side: front one place back)
   function forcedSwap(src, side, kind, { hitMult = 0, label = 'swap', arrivalCond = null, refusedEffect = null } = {}) {
     // Experimental (Gate B.2, patch-only): when a swap move is refused it may fall back to a secondary effect on the front.
-    const refuse = (target, why) => { E.log('swap_refused', src, target, why); if (refusedEffect && target && target.hp > 0) { if (refusedEffect.cond) condition(src, target, refusedEffect.cond, `${label} (refused)`); else if (refusedEffect.hit) hit(E, src, target, refusedEffect.hit, { label: `${label} (refused)` }); } return false; };
+    const refuse = (target, why) => { E.log('swap_refused', src, target, why); if (refusedEffect && target && target.hp > 0 && (refusedEffect.chance == null || rng.chance(refusedEffect.chance))) { if (refusedEffect.cond) condition(src, target, refusedEffect.cond, `${label} (refused)`); if (refusedEffect.hit && target.hp > 0 && (!refusedEffect.cond || refusedEffect.both)) hit(E, src, target, refusedEffect.hit, { label: `${label} (refused)` }); } return false; };
     const L = alive(side); if (L.length < 2) { return refuse(null, `${label}: ${side.key === 'a' ? 'side A' : 'side B'} has nobody to swap`); }
     const f = L[0];
     if (ex - side.lastForced < V.swaps.forcedEvery) return refuse(f, `${label}: refused, ${f.c.name}'s side was forced to swap ${ex - side.lastForced} exchange(s) ago`);
@@ -130,6 +132,8 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     if (kind === 'sweep' || kind === 'strongestBack') { side.line.splice(i, 1); side.line.push(f); } else { [side.line[i], side.line[j]] = [side.line[j], side.line[i]]; }
     side.lastForced = ex; incoming.forcedInAt = ex;
     E.log('swap', src, f, `${label}: ${f.c.name} is forced to the ${kind === 'sweep' || kind === 'strongestBack' ? 'back' : 'bench'}; ${incoming.c.name} is pulled to the front`, { forced: true, out: f.c.id, in: incoming.c.id });
+    // stripOnSwap (Gate B.4, patch-only): the monster sent back loses its shield.
+    if (src.c.move.stripOnSwap && f.shield > 0) { E.log('debuff', src, f, `${label}: ${f.c.name} loses its ${Math.round(f.shield)} shield`); f.shield = 0; }
     bench(f, 'is forced back'); enter(incoming, 'is pulled to the front');
     if (hitMult > 0 && incoming.hp > 0) hit(E, src, incoming, hitMult, { label: `${label} arrival hit` });
     if (arrivalCond && incoming.hp > 0) condition(src, incoming, arrivalCond, `${label} (on arrival)`);
@@ -235,7 +239,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
           continue;
         }
         // Disruptor bench actions under the back-row test.
-        if (!isFront && x.c.archetype === 'Disruptor' && (mv.kind === 'hex' || mv.kind === 'bench') && !(mv.trigger.kind === 'once' || mv.trigger.kind === 'first')) {
+        if (!isFront && x.c.archetype === 'Disruptor' && (mv.kind === 'hex' || mv.kind === 'bench') && !(mv.trigger.kind === 'once' || mv.trigger.kind === 'first' || mv.trigger.kind === 'firstAfterEntry')) {
           const rhythm = Math.max(br.every, mv.kind === 'bench' ? (mv.trigger.n || 1) : (mv.trigger.kind === 'every' ? mv.trigger.n : 1));
           if (ex % rhythm !== 0) continue;
           if (side.benchActs >= br.maxPerSide) { E.log('bench_blocked', x, null, `${x.c.name} waits: ${br.maxPerSide === 1 ? `one ${br.count === 'landed' ? 'landed ' : ''}bench action per side this exchange` : 'bench limit reached'}`); continue; }
