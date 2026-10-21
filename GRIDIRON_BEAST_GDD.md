@@ -21,7 +21,7 @@ Decision key — **LOCKED**: approved for this build. **TUNABLE**: implemented, 
 |---|---|---|
 | **Franchise Mode** | The owner of an organization: staff, roster, scouting, the cap, the Board (§8, §15–§23) | **Current development priority.** Everything else in this document describes it unless marked otherwise |
 | **Career Mode** (working name) | One monster they create, playing a career on a team (§24) | **Documented only. Not approved for development.** No code, menus, placeholders or systems are to be built from §24 until the owner authorizes it |
-| **Beast Clash** | A collector who builds 3v3 and 5v5 monster teams for turn-based battles (§25) | **Phase 1 engine and Clash Lab built. Permanent balance configuration: values 1.1.0 (owner-approved 2026-10-21, §25.10).** Every other balance change is an inactive Lab experiment. Not yet connected to franchise data or saves |
+| **Beast Clash** | Monster battles inside Franchise Mode: Tuesday encounters, the pregame Clash and the overtime Clash (§26), on the permanent balance configuration values 1.1.0 (§25.10) | **Integrated into Franchise Mode (owner authorization 2026-10-21, §26).** Every unapproved balance change is an inactive Lab experiment |
 
 The two modes share the football world (clubs, league structure, rules, the match engine, monster data and species art conventions). Their progression and save data are separate: nothing earned in one mode changes the other.
 
@@ -184,7 +184,7 @@ Every decision uses down, distance, field position, score differential, quarter,
 | Day | Action | Effect |
 |---|---|---|
 | Mon | Scout a region | Generates real prospects; scout skill reveals attributes/nature/potential |
-| Tue | Recruit | Pick an approach; success adds the monster to the roster (cap and roster limit enforced) |
+| Tue | Monster encounter (Beast Clash, §26.1) | Battle one scouted monster 3v3 with your roster, or skip. Win: it offers to sign (cap and roster limit enforced). Lose: one recruiting pitch at the usual odds. Skip: nothing happens, nothing is lost |
 | Wed | Training focus | Temporary Sunday bonus to the related attributes (Passing, Rushing, Coverage, Pass Rush), scaled by the trainer |
 | Thu | Scout opponent | Reveals the opponent's real tendencies and best monster |
 | Fri | Game plan | 6 + 6 play cards |
@@ -843,4 +843,27 @@ The owner's Final Balance Implementation Authorization (2026-10-21) made this co
 Engine hooks used by the permanent table: `arrivalCond`, `refusedEffect`, `hitMult`, `dodgeEntry`, `echoFlat`, `cycloneArrival` (plus pre-existing Gate A mechanics). The other Gate B.4–B.5 hooks stay in the engine, inert, for Lab experiments and historical replays; a test proves the permanent table carries none of their keys.
 
 **Rollback:** the values 1.0.0 game is commit `59cfa7a` (tag `clash-v1.0.0-pre-implementation`, local). Restoring it is a revert of the implementation commit, touching only `src/clash/`, `src/data/clash-moves*.js`, Clash tests and fixtures, the Clash Lab screen and documentation; no football, franchise or save file is involved. Without a revert, `battleConfig({ ruleset: 'v1.0.0' })` plays the old game exactly.
+
+## 26. Beast Clash in Franchise Mode (IMPLEMENTED 2026-10-21, owner authorization)
+
+> The owner authorized full implementation on 2026-10-21: Tuesday Monster Encounters, the pregame Clash in place of the coin toss, the overtime Clash tiebreaker, battle speed and lineups from the real roster. Every battle uses the real engine on the permanent values 1.1.0 configuration; no balance value changed. Decisions taken while implementing are recorded here as they were made. Not in scope (later roadmap phases): advanced trading, Monster Partnerships, career timelines, full Coach Assist, stadium management, 32 teams, Career Mode, the Battle Room, new balance changes.
+
+### 26.0 Shared rules
+
+- **One adapter.** `src/franchise/clash-link.js` is the only franchise file that imports the engine (`tests/clash/boundary.test.js` enforces it); `franchise.js` imports that adapter. The football sim, the core, the save and cloud code never touch Beast Clash.
+- **Deterministic and rebuildable.** A franchise battle is a seed drawn once from the franchise generator, two lineups of real monsters and the player's recorded decisions. The save keeps that record plus a summary (winner, how, exchanges, log hash); the full battle is rebuilt from it whenever the screen, a replay or a test needs it. Reloading mid-battle resumes it.
+- **Lineups come from the roster.** Injured monsters never battle. The automatic lineup is the engine's own rule (a Tank in front when available, then the best overalls, at most two of one archetype, Supports and Disruptors at the back); the player can change it on the battle screen. Battle stats are built from the monster's real attributes, nature, fatigue, level and evolution stage, exactly as the Clash Lab does. No replacement monsters are ever generated for the player.
+- **Three ways to battle, one engine.** *Play battle*: the player answers every voluntary-swap decision (engine policy `manual`: the decision for an exchange comes from the recorded `decisions`; an unanswered one stops the screen, which asks and replays the identical battle with the answer; "keep in front" holds for four exchanges). *Auto battle*: the smart swap policy. *Skip to results*: the identical Auto battle, settled instantly; skipping never lowers the chance of winning. The AI side always uses the smart policy.
+- **Effects on the roster.** Each monster that battled earns Arena XP (Model C2, the Phase 1 formula, about 9 XP a battle; football games give 24+) through the same level-up loop as a football game (evolutions still wait for the owner), and gains a little fatigue (encounter and pregame 5, overtime 6: the Phase 1 load values).
+- **Settings** (`settings.clash`, filled with defaults for older saves): *Remember my choice* (Ask every time / Play / Auto / Skip to results) and battle speed 1×, 2× (default), 4×. Speed changes presentation only.
+- **Save compatibility.** No schema change: new fields are additive (`week.encounter`, `settings.clash`, and per-game Clash records) and every older save loads as before.
+
+### 26.1 Tuesday Monster Encounters
+
+Tuesday's recruiting pitch is replaced by an encounter with one of the monsters the scout found on Monday.
+
+- **Enter Beast Clash:** choose one prospect; the battle is up to 3v3 (smaller only when fewer healthy roster monsters or fewer prospects exist). The wild side is the chosen monster in front with the other prospects found that week as its companions. **Win:** the monster offers to sign; the player may accept (the usual roster-limit release and salary-cap rules apply, exactly as before) or let it go. **Lose:** one ordinary recruiting pitch (development / facilities / playing time) at the existing odds; a refusal ends the day. Either way the battlers earn Arena XP and 5 fatigue.
+- **Skip encounter:** no battle, no signing this week, and nothing else changes: no morale, board confidence or progression penalty. The screen says so in plain words, and the Help sheet explains the difference from *Skip to results*.
+- One encounter per Tuesday. Staff auto-run enters an encounter only for a clear upgrade (the same criterion as before) and plays it in Auto; otherwise it skips.
+- The final regular-season week and the playoffs keep Monday draft scouting and the Tuesday recovery day; no encounters then.
 

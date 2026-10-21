@@ -51,8 +51,12 @@ test('the weekly loop: scout, recruit, train, scout opponent, plan, lineup', () 
   const f = newFranchise(11);
   const s = F.scoutRegion(f, 'Volcanic Fields');
   assert.equal(s.ok, true); assert.ok(s.prospects.length >= 1); assert.equal(f.season.day, 1);
+  // Tuesday is a Beast Clash encounter (GDD §26.1): a pitch is only possible after a lost battle.
+  assert.equal(F.recruit(f, 0, 'playing_time').ok, false, 'no pitch before the battle');
   let signed = false;
-  for (let i = 0; i < 3 && f.season.day === 1; i++) { const r = F.recruit(f, 0, 'playing_time'); if (r.success) signed = true; }
+  const st = F.startEncounter(f, 0); assert.ok(st.ok, st.reason); const b = F.resolveEncounter(f); assert.ok(b.ok);
+  if (b.won) { const r = F.acceptOffer(f); assert.ok(r.ok, r.reason); signed = true; }
+  else { const r = F.recruit(f, 0, 'playing_time'); assert.ok(r.ok, r.reason); if (r.success) signed = true; }
   assert.equal(f.season.day, 2);
   if (signed) assert.equal(f.roster.length, 29);
   const t = F.setTraining(f, 'passing'); assert.equal(t.ok, true); assert.ok(t.amount >= 1); assert.equal(f.season.day, 3);

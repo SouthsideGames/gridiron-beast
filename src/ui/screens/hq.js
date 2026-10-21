@@ -23,6 +23,7 @@ import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
 import { RIVAL_WEEKLY } from '../../data/dialogue.js';
 import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, careerLeaders } from '../../franchise/stats.js';
+import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -149,7 +150,7 @@ export function registerHqScreens(Router, app) {
     if (f.week.commissioner) return { label: "The commissioner's office", action: 'commissioner', icon: '🏛️' };
     if (F.isBye(f) && d >= 3 && d < 6) return { label: 'Bye week · rest until Sunday', action: 'restbye', icon: '😴' };
     if (d === 6) { if (F.isBye(f)) return { label: 'Take the bye week', action: 'bye', icon: '😴' }; const m = F.sundayMatchup(f); if (m?.forfeit) return { label: 'Forfeit the game (no legal lineup)', action: 'forfeit', icon: '🏳️', note: m.forfeitReason }; return { label: 'Play Sunday game', action: 'game', icon: '🏈' }; }
-    return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Recruit', action: 'recruit', icon: '🤝' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
+    return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Monster encounter', action: 'recruit', icon: '⚔️' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
   }
 
   // ---------------------------------------------------------------- the commissioner's office (GDD §15.6)
@@ -440,36 +441,29 @@ export function registerHqScreens(Router, app) {
     mount(root) { delegate(root, { region: (el) => { const focus = root.querySelector('#scout-focus')?.value || null; const r = F.scoutRegion(app.f, el.dataset.v, { focus }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.scout} found ${r.prospects.length} prospect${r.prospects.length === 1 ? '' : 's'}.`, 'good'); Router.go('recruit', {}, { replace: true }); } }); },
   });
 
-  // ---------------------------------------------------------------- Tuesday
+  // ---------------------------------------------------------------- Tuesday: Monster Encounters (Beast Clash, GDD §26.1)
   Router.registerScreen('recruit', {
-    title: 'Tuesday · Recruiting',
+    title: 'Tuesday · Monster Encounter',
     render({ f }) {
-      if (f.season.day !== 1) return `<div class="panel"><p>Recruiting is done for this week.</p>${f.week.recruited ? `<p class="muted">Signed: ${esc(f.roster.find((m) => m.id === f.week.recruited)?.name || '')}</p>` : ''}<button class="btn block" data-action="back">Back</button></div>`;
-      if (!f.week.prospects.length) return `<div class="panel"><p>No prospects were found this week.</p><button class="btn primary block" data-action="skip">Continue to Wednesday</button></div>`;
-      const cap = F.salarySummary(f);
-      return `<p class="muted">Attempts left: <b>${3 - f.week.recruitAttempts}</b> · Roster ${f.roster.length}/${F.ROSTER_MAX} · Cap room ${fmtMoney(cap.remaining)}</p>
+      const e = f.week.encounter;
+      if (f.season.day !== 1) return `<div class="panel"><p>Tuesday is done for this week.</p>${f.week.recruited ? `<p class="muted">Signed: ${esc(f.roster.find((m) => m.id === f.week.recruited)?.name || '')}</p>` : e?.status === 'skipped' ? '<p class="muted">You skipped the encounter.</p>' : ''}<button class="btn block" data-action="back">Back</button></div>`;
+      if (e && e.status !== 'ready') { setTimeout(() => Router.go('clash-battle', { kind: 'encounter', i: e.prospectIndex }, { replace: true }), 0); return '<p class="muted">Opening the battle…</p>'; }
+      if (!f.week.prospects.length) return `<div class="panel"><p>No monsters were found this week.</p><button class="btn primary block" data-action="skip">Continue to Wednesday</button></div>`;
+      const cap = F.salarySummary(f); const healthy = f.roster.filter((m) => !m.injury).length;
+      return `<p class="muted">Your scout found these monsters. Pick <b>one</b> to meet in a Beast Clash: win and it will want to sign; lose and you still get one pitch. Or skip the encounter and move on. <button class="btn small ghost" data-action="clashhelp">Help</button></p>
+        <p class="dim">Roster ${f.roster.length}/${F.ROSTER_MAX} · cap room ${fmtMoney(cap.remaining)} · ${healthy} monster${healthy === 1 ? '' : 's'} fit to battle</p>
         <div class="stack">${f.week.prospects.map((p, i) => prospectCard(p, i)).join('')}</div>
-        <button class="btn block" data-action="skip" style="margin-top:8px">Pass on all prospects</button>`;
+        <button class="btn block" data-action="skip" style="margin-top:8px">Skip the encounter</button>
+        <p class="dim">Skipping means no battle and no signing this week. Nothing else is lost: no morale, no board confidence, no progress.</p>`;
     },
     mount(root) {
       delegate(root, {
         back: () => Router.back(),
-        skip: () => { F.skipRecruit(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
+        clashhelp: () => sheet(CLASH_HELP, { title: 'How Beast Clash works' }),
+        skip: () => { F.skipEncounter(app.f); app.save(); toast('Encounter skipped. On to Wednesday.'); Router.go('hq', {}, { reset: true }); },
         compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) sheet(compareHtml(app.f, p), { title: `${p.monster.name} vs your ${p.monster.position}s` }); },
-        approach: async (el) => {
-          const i = Number(el.dataset.i), v = el.dataset.v; const p = app.f.week.prospects[i]; const rc = p ? F.releaseCandidates(app.f, p) : { needed: false };
-          if (!rc.needed && rc.capWarning && !app.f.week.capWarned) { app.f.week.capWarned = true; if (!(await confirmSheet(`Signing ${p.monster.name} puts you over the salary cap. The commissioner reviews the books every Saturday; if you are still over, he names monsters and you release one for nothing. Sign anyway?`, { title: 'Over the cap', okLabel: 'Sign anyway', danger: true }))) { app.f.week.capWarned = false; return; } }
-          if (rc.needed) {
-            const { el: sh, close } = sheet(`<p>${esc(rc.reason)} Choose who leaves if <b>${esc(p.monster.name)}</b> signs (nothing happens if they turn you down).</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}"><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr${c.capOk ? '' : ' · still over the cap after this'}</div></div><span class="chip ${c.position === p.monster.position ? 'accent' : ''}">${c.position === p.monster.position ? 'same position' : 'release'}</span></button>`).join('') || '<p class="dim">Nobody can be released.</p>'}</div>`, { title: 'Make room' });
-            sh.addEventListener('click', (e) => { const id = e.target.closest('[data-rel]')?.dataset.rel; if (!id) return; close(); doApproach(i, v, id); });
-            return;
-          }
-          doApproach(i, v, null);
-        },
+        enter: (el) => { const i = Number(el.dataset.i); const pv = F.encounterPreview(app.f, i); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'encounter', i }); },
       });
-      function doApproach(i, v, releaseId) {
-        { const r = F.recruit(app.f, i, v, { releaseId }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.success) { toast(r.overCap ? `${r.monster.name} signed. You are over the cap: the commissioner reviews the books on Saturday.` : `${r.monster.name} signed!`, r.overCap ? 'bad' : 'good'); Router.go('hq', {}, { reset: true }); } else { toast(r.final ? 'They declined. No attempts left this week.' : 'Not convinced yet. Try another approach.', r.final ? 'bad' : 'info'); if (r.final) Router.go('hq', {}, { reset: true }); else Router.render(); } }
-      }
     },
   });
   /** Prospect vs the club's monsters at the same position: headline ratings, OVR, age, salary, and where they'd slot in. */
@@ -490,7 +484,7 @@ export function registerHqScreens(Router, app) {
       verdict = !mates.length ? `You have no ${m.position} · ${esc(m.name)} would start immediately.` : rank < startSlots ? `<b>Would start</b> at ${m.position} (${rank + 1}${['st', 'nd', 'rd'][rank] || 'th'} best of ${mates.length + 1}).` : rank === startSlots ? `<b>First backup</b> at ${m.position}.` : `<b>Depth</b> · ${rank} ${m.position}${rank === 1 ? ' is' : 's are'} better.`;
     }
     const cap = F.salarySummary(f, m.salary);
-    return `${table}<p style="margin-top:10px">${verdict}</p><p class="muted">${startSlots} starting ${m.position} slot${startSlots === 1 ? '' : 's'} · Salary ${fmtMoney(m.salary)}/yr · cap room after signing ${cap.over ? `<span style="color:var(--bad)">over by ${fmtMoney(-cap.remaining)}</span>` : fmtMoney(cap.remaining)} · roster ${f.roster.length + 1}/26</p>${known < 4 ? `<p class="dim">?? = not yet scouted.</p>` : ''}`;
+    return `${table}<p style="margin-top:10px">${verdict}</p><p class="muted">${startSlots} starting ${m.position} slot${startSlots === 1 ? '' : 's'} · Salary ${fmtMoney(m.salary)}/yr · cap room after signing ${cap.over ? `<span style="color:var(--bad)">over by ${fmtMoney(-cap.remaining)}</span>` : fmtMoney(cap.remaining)} · roster ${f.roster.length + 1}/${F.ROSTER_MAX}</p>${known < 4 ? `<p class="dim">?? = not yet scouted.</p>` : ''}`;
   }
   function prospectCard(p, i) {
     const m = p.monster; const attrs = effectiveAttributes(m);
@@ -499,7 +493,7 @@ export function registerHqScreens(Router, app) {
     const depth = p.depth || (p.need ? 'short' : 'ok');
     return `<div class="panel ${fit?.fits ? 'fit' : ''} ${depth === 'short' ? 'need-short' : depth === 'thin' ? 'need-thin' : ''}">${depth !== 'ok' ? `<div class="fitchip-row"><span class="chip ${depth === 'short' ? 'bad' : 'warn'}">${depth === 'short' ? `Short-handed at ${esc(m.position)}` : `No backup at ${esc(m.position)}`}</span> <span class="dim">${p.need ? 'The scout went looking for this one.' : depth === 'short' ? 'One injury from an empty slot.' : 'One injury from a hole.'}</span></div>` : ''}${fit?.fits ? `<div class="fitchip-row"><span class="chip fitchip">✦ Fits your scheme</span> <span class="dim">${esc(fit.why)}</span></div>` : ''}<div class="row" style="flex-wrap:nowrap;align-items:flex-start">${monsterSprite(m, 52)}<div class="grow" style="flex:1;min-width:0"><b>${esc(m.name)}</b> ${typeGlyph(m.type)}<div class="muted">${m.position} · age ${m.age} · ${p.potentialKnown ? 'potential ' + m.potential : 'potential unknown'} · ${fmtMoney(m.salary)}/yr</div><div class="muted">Nature: ${p.natureKnown ? esc(NATURES[m.nature].name) : '???'}</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:none"><span class="ovr">${p.revealed >= 4 ? monsterOverall(m) : '??'}</span><button class="info-btn" data-action="compare" data-i="${i}" aria-label="Compare ${esc(m.name)} with your roster">i</button></div></div>
       <div class="headline" style="margin:8px 0">${HEADLINE.map((x, i) => `<div class="hl"><span class="hl-v">${i < known ? h[x.key] : '??'}</span><span class="hl-l">${x.label}</span><div class="bar"><i style="width:${i < known ? h[x.key] : 0}%"></i></div></div>`).join('')}</div>${known < 4 ? `<div class="dim">${4 - known} rating${4 - known === 1 ? '' : 's'} hidden, a better scout reveals more</div>` : ''}
-      <div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="approach" data-i="${i}" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div></div>`;
+      <button class="btn primary block" data-action="enter" data-i="${i}">⚔️ Enter Beast Clash with ${esc(m.name)}</button></div>`;
   }
 
   // ---------------------------------------------------------------- Wednesday

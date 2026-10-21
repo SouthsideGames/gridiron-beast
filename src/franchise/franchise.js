@@ -37,6 +37,7 @@ import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlot
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
+import { CLASH_SIZE, SWAP_EVERY, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects } from './clash-link.js';
 
 export const SCHEMA_VERSION = 6;
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -397,7 +398,7 @@ export function dexCounts(f) {
   for (const id of ids) { const st = dexStatus(f, id); if (st !== 'unknown') seen++; if (st === 'signed') signed++; }
   return { seen, signed };
 }
-function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
+function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, encounter: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
 const frng = (f) => { const r = rngFromState(f.rngState); return { r, save: () => { f.rngState = r.state; } }; };
 
 export function news(f, text, kind = 'info') { f.news.unshift({ text, kind, week: f.season?.week, year: f.season?.year }); if (f.news.length > 60) f.news.pop(); }
@@ -1028,7 +1029,11 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
   if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
   if (draftWindow(f)) return { ok: false, reason: 'No signings from the final week on. Tuesday is a recovery day.' };
   const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
-  if (f.week.recruitAttempts >= 3) return { ok: false, reason: 'No attempts left this week.' };
+  // Tuesday Monster Encounters (GDD §26.1): a pitch is the consolation after a lost battle, once, for the monster you fought.
+  const enc = f.week.encounter;
+  if (!enc || enc.status !== 'pitch') return { ok: false, reason: enc?.status === 'offer' ? 'They already want to sign: accept or decline the offer.' : 'Battle the monster first: a win brings an offer, a loss one pitch.' };
+  if (enc.prospectIndex !== prospectIndex) return { ok: false, reason: 'Only the monster you battled will listen this week.' };
+  if (f.week.recruitAttempts >= 1) return { ok: false, reason: 'No attempts left this week.' };
   const m = p.monster;
   const rc = releaseCandidates(f, p);
   if (rc.needed && !releaseId) return { ok: false, reason: rc.reason, needRelease: true };
@@ -1042,20 +1047,98 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
   if (approachId === 'playing_time' && need) chance += 0.28;
   const success = r.chance(chance);
   save();
-  if (success) {
-    if (rc.needed && releaseId) { const out = f.roster.find((x) => x.id === releaseId); f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); }
-    m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
-    if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
-    m.joined = f.season.year; f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
-    news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
-    const cap = salarySummary(f);
-    if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
-    return { ok: true, success: true, monster: m, overCap: cap.over };
-  }
-  if (f.week.recruitAttempts >= 3) { f.season.day = 2; return { ok: true, success: false, final: true }; }
-  return { ok: true, success: false, final: false };
+  enc.pitch = { approach: approachId, success };
+  if (success) { enc.status = 'signed'; return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) }; }
+  enc.status = 'walked'; f.season.day = 2; return { ok: true, success: false, final: true };
 }
-export function skipRecruit(f) { if (f.season.day === 1) { f.season.day = 2; f.week.prospects = []; } }
+/** Add a prospect to the roster: the release (if one was chosen), a two-season contract, salary, dex and news. Shared by the battle offer and the pitch. */
+function signProspect(f, p, releaseId) {
+  const m = p.monster;
+  if (releaseId) { const out = f.roster.find((x) => x.id === releaseId); if (out) { f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); } }
+  m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
+  if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
+  m.joined = f.season.year; f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
+  news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
+  const cap = salarySummary(f);
+  if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
+  return { monster: m, overCap: cap.over };
+}
+/** Skip the encounter: no battle, no signing, no penalty of any kind; Wednesday begins. */
+export function skipRecruit(f) { if (f.season.day === 1) { if (f.week.encounter && !['signed', 'walked', 'declined'].includes(f.week.encounter.status)) f.week.encounter.status = 'skipped'; f.season.day = 2; f.week.prospects = []; } }
+export const skipEncounter = skipRecruit;
+
+// ------------------------------------------------------------ Tuesday Monster Encounters (Beast Clash in Franchise Mode, GDD §26.1)
+// The scouted monster is met in a Beast Clash. Enter it or skip it. Win: it offers to sign (you may still decline). Lose: one
+// ordinary recruiting pitch at the usual odds. Either way your battlers earn Arena XP and a little fatigue. Skipping costs nothing.
+/** Can the player battle today? Who is eligible, how big the battle would be, and the proposed lineup. */
+export function encounterPreview(f, prospectIndex) {
+  const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
+  const eligible = eligibleBattlers(f.roster);
+  const wild = [p, ...f.week.prospects.filter((x) => x !== p)].slice(0, CLASH_SIZE.encounter);
+  const size = Math.min(CLASH_SIZE.encounter, wild.length, eligible.length);
+  if (size < 1) return { ok: false, reason: 'Nobody healthy enough to battle this week.', eligible, size: 0 };
+  return { ok: true, eligible, size, wild: wild.slice(0, size).map((x) => x.monster), lineup: autoLineup(f.roster, size, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`)) };
+}
+/** Enter the encounter: draw the battle seed once and fix the lineup (yours in the order given; the wild side is the monster you chose plus the others the scout found). */
+export function startEncounter(f, prospectIndex, { lineup = null, mode = 'auto' } = {}) {
+  if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
+  if (draftWindow(f)) return { ok: false, reason: 'No encounters from the final week on. Tuesday is a recovery day.' };
+  if (f.week.encounter && f.week.encounter.status !== 'ready') return { ok: false, reason: 'One encounter per Tuesday.' };
+  const pv = encounterPreview(f, prospectIndex); if (!pv.ok) return pv;
+  const eligibleIds = new Set(pv.eligible.map((m) => m.id));
+  let mine = (lineup || pv.lineup.map((m) => m.id)).filter((id, i, arr) => eligibleIds.has(id) && arr.indexOf(id) === i).slice(0, pv.size);
+  if (mine.length < 1) return { ok: false, reason: 'Pick at least one healthy monster.' };
+  const size = Math.min(pv.size, mine.length);
+  const { r, save } = frng(f); const seed = r.seed(); save();
+  f.week.encounter = { prospectIndex, seed, size, mine, wild: pv.wild.slice(0, size).map((m) => m.id), mode, decisions: {}, status: 'battle', result: null };
+  return { ok: true, encounter: f.week.encounter };
+}
+/** Rebuild the encounter's battle from the save (deterministic): the result the screen shows, or replays. */
+export function encounterBattle(f, { log = 'full' } = {}) {
+  const e = f.week.encounter; if (!e || !e.seed) return null;
+  const a = e.mine.map((id) => f.roster.find((m) => m.id === id)).filter(Boolean);
+  const byId = new Map(f.week.prospects.map((p) => [p.monster.id, p.monster]));
+  const b = e.wild.map((id) => byId.get(id)).filter(Boolean);
+  if (!a.length || !b.length) return null;
+  return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, log });
+}
+/** The player's answer at a swap decision (play mode): a bench monster's id, or 'stay' (recorded for this exchange and the next three, so the question is not asked every exchange). */
+export function encounterDecide(f, ex, choice) {
+  const e = f.week.encounter; if (!e || e.status !== 'battle') return { ok: false, reason: 'No battle in progress.' };
+  if (choice === 'stay') for (let k = 0; k < SWAP_EVERY; k++) e.decisions[ex + k] = 'stay'; else e.decisions[ex] = choice;
+  return { ok: true };
+}
+/** Settle the battle: record the summary, pay out XP and fatigue, and open the offer (win) or the pitch (loss). Idempotent. */
+export function resolveEncounter(f) {
+  const e = f.week.encounter; if (!e) return { ok: false, reason: 'No encounter.' };
+  if (e.status !== 'battle') return { ok: true, encounter: e, already: true };
+  const result = encounterBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
+  if (e.mode === 'play' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
+  const { r, save } = frng(f);
+  const events = applyBattleEffects(f.roster, result, 'a', 'encounter', r, { autoSpend: !!f.settings.autoPoints });
+  save();
+  e.result = battleSummary(result); e.events = events;
+  const won = result.winner === 'a'; e.status = won ? 'offer' : 'pitch';
+  const p = f.week.prospects[e.prospectIndex];
+  for (const ev of events) news(f, `${ev.name} reached level ${ev.level} in a Beast Clash (${ev.from} → ${ev.to} OVR).`, 'win');
+  news(f, won ? `Beast Clash won: ${p.monster.name} wants to join ${f.club}.` : `Beast Clash lost to ${p.monster.name}. One pitch left to win them over.`, won ? 'win' : 'info');
+  return { ok: true, encounter: e, won, result, events };
+}
+/** After a won encounter: sign the monster (the usual roster-limit and cap rules apply) or let it go. */
+export function acceptOffer(f, { releaseId = null } = {}) {
+  const e = f.week.encounter; if (!e || e.status !== 'offer') return { ok: false, reason: 'No offer on the table.' };
+  const p = f.week.prospects[e.prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
+  const rc = releaseCandidates(f, p);
+  if (rc.needed && !releaseId) return { ok: false, reason: rc.reason, needRelease: true };
+  if (rc.needed && !rc.list.find((c) => c.id === releaseId)) return { ok: false, reason: 'That monster cannot be released.' };
+  e.status = 'signed';
+  return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) };
+}
+export function declineOffer(f) {
+  const e = f.week.encounter; if (!e || e.status !== 'offer') return { ok: false, reason: 'No offer on the table.' };
+  e.status = 'declined'; f.season.day = 2; f.week.prospects = [];
+  return { ok: true };
+}
 const scaledBonus = (b, k) => b && Object.fromEntries(Object.entries(b).map(([a, v]) => [a, Math.max(1, Math.round(v * k))]));
 /** Practice intensity: bigger boosts cost more injury risk. */
 export const INTENSITIES = Object.freeze({
@@ -1214,8 +1297,13 @@ export function autoRunToSunday(f) {
       const pick = f.week.prospects.map((p, i) => ({ p, i })).filter(({ p }) => p.revealed >= 4 && !salarySummary(f, p.monster.salary).over && f.roster.length < ROSTER_MAX)
         .map((x) => ({ ...x, gain: monsterOverall(x.p.monster) - Math.max(0, ...f.roster.filter((m) => m.position === x.p.monster.position).map((m) => monsterOverall(m))) }))
         .filter((x) => x.gain >= 2).sort((a, b) => b.gain - a.gain)[0];
-      if (pick) { const r = recruit(f, pick.i, 'development'); did.push(r.success ? `Signed ${pick.p.monster.name}` : `${pick.p.monster.name} turned us down`); if (f.season.day === 1) skipRecruit(f); }
-      else { skipRecruit(f); did.push('Passed on the prospects'); }
+      if (pick && startEncounter(f, pick.i).ok) {
+        const b = resolveEncounter(f);
+        if (b.won) { const r = acceptOffer(f); did.push(r.ok ? `Beast Clash won: signed ${pick.p.monster.name}` : `Beast Clash won, but ${pick.p.monster.name} could not be fitted on the roster`); if (!r.ok) declineOffer(f); }
+        else { const r = recruit(f, pick.i, 'development'); did.push(r.success ? `Beast Clash lost, but ${pick.p.monster.name} signed anyway` : `Beast Clash lost; ${pick.p.monster.name} turned us down`); }
+        if (f.season.day === 1) skipRecruit(f);
+      }
+      else { skipRecruit(f); did.push('Skipped the encounter'); }
     }
     else if (day === 2) { const order = ['passing', 'rushing', 'coverage', 'pass_rush']; const last = (f.trainingHistory || []).slice(-1)[0]; const focus = order[(order.indexOf(last) + 1) % order.length]; const r = setTraining(f, focus, 'normal'); did.push(`${TRAINING_FOCI[focus].label} practice ${r.success ? 'went well' : 'was sloppy'}${r.injury ? `; ${r.injury.name} hurt` : ''}`); }
     else if (day === 3) { const opp = opponentName(f); const side = opp ? (teamStrengths(aiTeam(f, opp)).passD < teamStrengths(aiTeam(f, opp)).runD ? 'defense' : 'offense') : 'offense'; scoutOpponent(f, side); did.push(opp ? `Scouted ${opp}'s ${side}` : 'Bye week'); }

@@ -63,7 +63,7 @@ test('half-cost swap: forced swaps and entry effects are untouched; with swapCos
 });
 
 test('refused-swap effects and arrival conditions fire only under their patch, and the smart policy is a closed, listed option', () => {
-  assert.deepEqual(POLICIES, ['none', 'defensive', 'type', 'balanced', 'smart']);
+  assert.deepEqual(POLICIES, ['none', 'defensive', 'type', 'balanced', 'smart', 'manual']); // 'manual' added for franchise battles (the player's own decisions; no randomness)
   const a = team(['cerebrix', 'tsunarok', tanks[2]], 700), b = team([tanks[3], supports[2], strikers[2]], 800);
   const off = simulateClash({ a, b, seed: 21, config: { duration: 'C6' } });
   const on = simulateClash({ a, b, seed: 21, config: { duration: 'C6', patches: ['cerebrix_foresight_refused_daze', 'tsunarok_undertow_hit_chill'] } });

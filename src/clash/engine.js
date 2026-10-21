@@ -162,7 +162,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     const f = front(side); const held = canLeave(f, 'self'); if (held) { E.log('swap_refused', f, null, `${side.policy} swap refused: ${held}`); return false; }
     const i = side.line.indexOf(f), j = side.line.indexOf(incoming); [side.line[i], side.line[j]] = [side.line[j], side.line[i]];
     side.lastVoluntary = ex; side.swappedThisExchange = true;
-    E.log('swap', f, incoming, `${side.policy} policy: ${f.c.name} swaps out for ${incoming.c.name}${cfg.swapCost === 'action' ? ' (uses the side\'s action)' : cfg.swapCost === 'half' ? ' (acts at half damage)' : ''}`, { forced: false, out: f.c.id, in: incoming.c.id });
+    E.log('swap', f, incoming, `${side.policy === 'manual' ? 'Your call' : `${side.policy} policy`}: ${f.c.name} swaps out for ${incoming.c.name}${cfg.swapCost === 'action' ? ' (uses the side\'s action)' : cfg.swapCost === 'half' ? ' (acts at half damage)' : ''}`, { forced: false, out: f.c.id, in: incoming.c.id });
     bench(f); enter(incoming, 'swaps in');
     incoming.halfAction = cfg.swapCost === 'half'; // set after entry: entry effects (first-entry shield, Roar, dodge-on-entry) are not actions and stay at full strength
     return true;
@@ -309,6 +309,16 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     // 1. voluntary swaps
     for (const side of [S.a, S.b]) {
       if (side.policy === 'none' || ex - side.lastVoluntary < V.swaps.voluntaryEvery) continue;
+      if (side.policy === 'manual') {
+        // The player's side (franchise integration): the decision for this exchange comes from config.decisions[side][ex], a bench
+        // monster's id or 'stay'. With no decision recorded the monster stays and the event is marked pending, so the screen can
+        // stop here, ask, and replay the battle (deterministic) with the answer filled in. Nothing random is drawn either way.
+        const f = front(side), bench = alive(side).slice(1); if (!f || !bench.length) continue;
+        const d = cfg.decisions?.[side.key]?.[ex]; const chosen = bench.find((x) => x.c.monsterId === d || x.c.id === d) || null;
+        E.log('decision', f, null, `${f.c.name} ${d === undefined ? 'may swap out' : chosen ? `swaps out for ${chosen.c.name}` : 'stays in front'} (your call)`, { options: bench.map((x) => x.c.id), monsterIds: bench.map((x) => x.c.monsterId), chosen: chosen?.c.id || null, pending: d === undefined });
+        if (chosen) voluntarySwap(side, chosen);
+        continue;
+      }
       const pick = chooseSwap(side.policy, { ex, front: front(side), bench: alive(side).slice(1), foe: front(other(side)), rng });
       if (pick) voluntarySwap(side, pick);
     }

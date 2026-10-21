@@ -17,6 +17,7 @@ import { registerMatchScreens } from './ui/screens/match.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
 import { registerAbilityAudit, openAbilityPreview, registerAbilityBalance } from './ui/screens/ability-audit.js';
 import { registerClashLab } from './ui/screens/clash-lab.js';
+import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './ui/dev-review.js';
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
@@ -59,7 +60,8 @@ export function start() {
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
   registerAbilityAudit(Router, app);
-  registerClashLab(Router, app); // Beast Clash Phase 1: developer tools only, never the franchise flow
+  registerClashLab(Router, app); // Beast Clash developer tools
+  registerClashBattle(Router, app); // Beast Clash in Franchise Mode: Tuesday encounters, the pregame Clash and the overtime Clash (GDD §26)
   registerAbilityBalance(Router);
   // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
   document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
