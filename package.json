@@ -12,7 +12,8 @@
     "clash:gateb1": "node tools/clash-gateb1.mjs",
     "clash:gateb2": "node tools/clash-gateb2.mjs",
     "clash:gateb3": "node tools/clash-gateb3.mjs",
-    "clash:gateb4": "node tools/clash-gateb4.mjs"
+    "clash:gateb4": "node tools/clash-gateb4.mjs",
+    "clash:gateb5": "node tools/clash-gateb5.mjs"
   },
   "license": "UNLICENSED"
 }

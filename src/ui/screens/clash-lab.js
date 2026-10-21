@@ -6,6 +6,7 @@ import { monsterSprite } from '../pixel-monster.js';
 import * as Clash from '../../clash/index.js';
 import { runFamily, mergeRuns, gateBFamilies, syntheticMonster, ARCHETYPES } from '../../clash/batch.js';
 import { createArena } from '../clash/arena.js';
+import { GATE_PATCHES, gateConfig } from '../../clash/balance-manifest.js';
 
 const V = Clash.CLASH_VALUES;
 const COND_GLYPH = { burn: '🔥', chill: '❄️', daze: '💫', shock: '⚡' };
@@ -48,6 +49,7 @@ export function registerClashLab(Router, app) {
       <div style="margin-top:6px;font-size:12px">5v5 structural options (experimental, all OFF by default)</div><div class="chips">${chip('o', 'none', 'None', st.config.O1 ? (st.config.O2 ? 'O3' : 'O1') : st.config.O2 ? 'O2' : 'none')}${chip('o', 'O1', 'O1 heal stacking', st.config.O1 && !st.config.O2 ? 'O1' : '')}${chip('o', 'O2', 'O2 Tank HP +6%', st.config.O2 && !st.config.O1 ? 'O2' : '')}${chip('o', 'O3', 'O3 both', st.config.O1 && st.config.O2 ? 'O3' : '')}</div>
       <div style="margin-top:6px;font-size:12px">Gate B.1 investigation: voluntary swap cost (experimental, default action)</div><div class="chips">${Object.keys(V.experiments.swapCost.options).map((k) => chip('swapCost', k, k, st.config.swapCost || V.experiments.swapCost.default)).join('')}</div>
       <div style="margin-top:6px;font-size:12px">Gate B.1 investigation: Model E sudden-death start (experimental, default 12)</div><div class="chips">${V.experiments.sdFromE.options.map((k) => chip('sdFromE', String(k), k === 99 ? 'never' : String(k), String(st.config.sdFromE || V.experiments.sdFromE.default))).join('')}</div>
+      <div style="margin-top:6px;font-size:12px">Gate configurations (balance manifest; loads duration, swap cost and patches exactly as each gate was measured; Lab only)</div><div class="chips">${chip('gatePreset', 'defaults', 'Game defaults', '')}${Object.keys(GATE_PATCHES).map((g) => chip('gatePreset', g, `${g} (${GATE_PATCHES[g].length})`, '')).join('')}</div>
       <div style="margin-top:6px;font-size:12px">Gate B.1 candidate move patches (experimental, none on by default; tap to toggle)</div><div class="chips">${Object.entries(V.movePatches).filter(([, v]) => v && typeof v === 'object').map(([k, v]) => `<button class="chip ${(st.config.patches || []).includes(k) ? 'on accent' : ''}" data-action="patch" data-v="${k}" title="${esc(v.label)}">${esc(k)}</button>`).join('')}</div>
       <div class="dim" style="font-size:11px">${(st.config.patches || []).map((k) => esc(V.movePatches[k].label)).join('; ') || 'No patches on.'}</div>
       <div style="margin-top:6px;font-size:12px">Swap policies (closed list)</div><div class="row" style="gap:6px;flex-wrap:wrap">A: ${Clash.POLICIES.map((p) => chip('polA', p, p, st.config.policies.a)).join('')}</div><div class="row" style="gap:6px;flex-wrap:wrap">B: ${Clash.POLICIES.map((p) => chip('polB', p, p, st.config.policies.b)).join('')}</div></div>`;
@@ -187,6 +189,7 @@ export function registerClashLab(Router, app) {
         view: (el) => { stop(); st.view = el.dataset.v; st.statsOpen = null; if (el.dataset.v !== 'replay') st.i = 0; Router.render(); },
         backRow: (el) => { stop(); st.config.backRow = el.dataset.v; Router.render(); }, duration: (el) => { st.config.duration = el.dataset.v; Router.render(); },
         swapCost: (el) => { stop(); st.config.swapCost = el.dataset.v; Router.render(); }, sdFromE: (el) => { stop(); st.config.sdFromE = Number(el.dataset.v); Router.render(); },
+        gatePreset: (el) => { stop(); const g = el.dataset.v; if (g === 'defaults') { st.config = { backRow: V.backRow.default, duration: V.duration.default, O1: false, O2: false, policies: st.config.policies }; } else { const c = gateConfig(g); st.config = { backRow: c.backRow, duration: c.duration, O1: c.O1, O2: c.O2, policies: st.config.policies, swapCost: c.swapCost, sdFromE: c.sdFromE, patches: [...c.patches] }; } toast(g === 'defaults' ? 'Game defaults loaded' : `${g} configuration loaded`); Router.render(); },
         patch: (el) => { stop(); const set = new Set(st.config.patches || []); if (set.has(el.dataset.v)) set.delete(el.dataset.v); else set.add(el.dataset.v); st.config.patches = [...set].sort(); Router.render(); },
         o: (el) => { const v = el.dataset.v; st.config.O1 = v === 'O1' || v === 'O3'; st.config.O2 = v === 'O2' || v === 'O3'; Router.render(); },
         polA: (el) => { stop(); st.config.policies.a = el.dataset.v; Router.render(); }, polB: (el) => { st.config.policies.b = el.dataset.v; Router.render(); },

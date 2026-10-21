@@ -27,6 +27,16 @@ export const EFFECTS = Object.freeze({
   fakeFirst: 'first strike: the target skips its answer', blink: 'hits the second opposing monster instead', selfHeal: 'heals itself on the triggered strike', dragonhide: 'heals when a hit takes a share of HP {threshold, heal}',
   roar: 'the opposing front acts last for this many exchanges', sovereign: 'cannot be dodged or reduced', suddenDeathBonus: 'bonus during sudden death', overcharge: 'attack bonus after a knockout',
   until: 'the every-trigger stops after this many actions',
+  // Gate B.2-B.4 patch-only keys, registered in Gate B.5 so a patched move can pass validation if adopted (no default move carries them)
+  arrivalCond: 'a forced swap applies this condition to the arriving monster', hitMult: 'arrival-hit multiplier for a swap move (else the back-row rule)',
+  refusedEffect: 'a refused swap falls back to {cond?, hit?, both?, chance?} on the front', dodgeEntry: "entry dodge re-arm rule: 'once' | 'notVoluntary'",
+  breakAlways: 'shield removed per point of damage on every strike', breakCharge: 'breaking a shield charges its next strike by this',
+  shieldPierce: 'share of the hit that skips the shield', stripOnSwap: 'a monster it swaps away loses its shield',
+  // Gate B.5 patch-only keys (no default move carries them)
+  forgeOnHit: 'a hit taking at least min of its HP adds a forge step {step, min}', stripOnCond: 'its condition landing removes the target\'s shield',
+  healCut: 'heals on a target holding its condition are multiplied by this', healCutFor: 'exchanges the heal cut can last', opening: 'fires once at exchange 1 from any position',
+  cycloneArrival: 'the sweep applies the condition to the monster pulled forward (to the front if refused)', sweepAbove: 'sweeps only a target above this HP share',
+  sweepHit: 'arrival hit on the monster the sweep pulls forward', hasteOnSwap: 'a successful bench swap lets its own front act first', echoFlat: 'adds this share of the last damage taken to the named strike',
 });
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -71,6 +81,8 @@ export function hit(E, att, def, mult, { label = 'strike', shieldBreak = 1, canD
   if (mv.suddenDeathBonus && E.ramp > 1) bonus *= 1 + mv.suddenDeathBonus;
   if (mv.echo && att.lastTaken) bonus *= 1 + mv.echo * Math.min(1, att.lastTaken / att.c.maxHp);
   let d = Math.round(att.c.atk * mult * E.ramp * type * spread * daze * guard * bonus);
+  // echoFlat (Gate B.5, patch-only): the named strike adds this share of the last damage the attacker took, then the echo is spent.
+  if (mv.echoFlat && label === mv.name && att.lastTaken) { d += Math.round(att.lastTaken * mv.echoFlat * guard); att.lastTaken = 0; }
   if (def.c.move.hitCap && !mv.sovereign) d = Math.min(d, Math.round(def.c.maxHp * def.c.move.hitCap));
   d = Math.max(0, d);
   // Shield absorbs first; Strikers (and Crushing Rush) remove shield twice as fast.
@@ -98,6 +110,8 @@ export function heal(E, src, target, share, label = 'heal') {
   if (E.healMult < 1) why.push(E.config.duration === 'C6' ? 'stalemate' : 'R2');
   if (target.cs.cond) { k *= V.conditions.healAfflicted; why.push(target.cs.cond.kind); }
   if (target.bruisedUntil >= E.ex) { k *= V.conditions.healBruised; why.push('bruised'); }
+  // healCut (Gate B.5, patch-only): a condition from a healCut move cuts the healing its target receives while it lasts.
+  if (target.healCutCond && E.ex <= target.healCutUntil && (target.cs.cond === target.healCutCond || target.cs.paused === target.healCutCond)) { k *= target.healCut; why.push('healing cut'); }
   if (E.config.O1 && E.perSide >= V.experiments.O1.minPerSide && src.side.healsThisExchange >= 1) { k *= V.experiments.O1.laterHeal; why.push('O1 later heal'); }
   if (src.halfAction) { k *= 0.5; why.push('just swapped in'); }
   const amt = Math.min(target.c.maxHp - target.hp, Math.round(target.c.maxHp * share * k));

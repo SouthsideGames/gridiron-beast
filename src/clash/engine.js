@@ -72,6 +72,8 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     const dm = def.c.move;
     if (toHp > 0 && dm.regrowOnHit && def.hp > 0) { const amt = Math.min(def.c.maxHp - def.hp, Math.round(def.c.maxHp * dm.regrowOnHit)); if (amt > 0) { def.hp += amt; def.stats.support += amt; E.log('heal', def, def, `${def.c.name} regrows ${amt}`, { amount: amt, hpAfter: def.hp }); } }
     if (toHp > 0 && dm.dragonhide && def.hp > 0 && toHp >= def.c.maxHp * dm.dragonhide.threshold && def.dragonhideEx !== ex) { def.dragonhideEx = ex; const amt = Math.min(def.c.maxHp - def.hp, Math.round(def.c.maxHp * dm.dragonhide.heal)); if (amt > 0) { def.hp += amt; def.stats.support += amt; E.log('heal', def, def, `${def.c.name}'s Dragonhide heals ${amt}`, { amount: amt, hpAfter: def.hp }); } }
+    // forgeOnHit (Gate B.5, patch-only): a hit that takes at least `min` of its HP adds a forge step (shared cap with the strike forge).
+    if (toHp > 0 && dm.forgeOnHit && def.hp > 0 && toHp >= def.c.maxHp * dm.forgeOnHit.min && (def.forgeCount || 0) < (dm.forge?.max ?? dm.forgeOnHit.max)) { def.forgeCount = (def.forgeCount || 0) + 1; def.forge += dm.forgeOnHit.step; E.log('buff', def, def, `${def.c.name}'s ${dm.name} tempers under the blow: attack +${Math.round(def.forge * 100)}%`); }
     if (toHp > 0 && dm.retaliate && att.hp > 0) {
       const r = dm.retaliate; const ok = !r.whenTarget || att.cs.cond?.kind === r.whenTarget; // Heat Mirage: a Dazed attacker may Burn
       if (ok && rng.chance(r.chance)) condition(def, att, r.cond, `${def.c.name}'s ${dm.name}`);
@@ -83,6 +85,13 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     E.log('condition', src, target, `${label}: ${target.c.name} ${r.words}`, { condition: kind, result: r.result, left: target.cs.cond?.left ?? 0, replaced: r.replaced ?? null });
     if (r.result === 'applied' || r.result === 'replaced') { src.stats.support += Math.round(src.c.atk * 1.5); return true; }
     return false;
+  }
+  // Gate B.5 (patch-only): extra effects when a move's own condition lands. stripOnCond removes the target's shield;
+  // healCut marks the condition so heals on the target are multiplied by the value while that condition lasts.
+  function moveCondEffects(src, target) {
+    const mv = src.c.move; const held = target.cs.cond || target.cs.paused; if (!held) return;
+    if (mv.stripOnCond && target.shield > 0) { E.log('debuff', src, target, `${mv.name}: ${target.c.name} loses its ${Math.round(target.shield)} shield`); target.shield = 0; }
+    if (mv.healCut) { target.healCutCond = held; target.healCut = mv.healCut; target.healCutUntil = ex + (mv.healCutFor || 3) - 1; E.log('debuff', src, target, `${mv.name}: ${target.c.name}'s healing is cut to ${Math.round(mv.healCut * 100)}% while the ${held.kind} lasts`); }
   }
   function knockout(def, att, label) {
     if (def.koed) return; def.koed = true; def.isFront = false; lastKO = ex; if (att && att !== def) att.stats.kos += 1;
@@ -128,6 +137,8 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     else if (kind === 'strongestBack') { const strongest = L.slice().sort((p, q) => q.c.overall - p.c.overall || p.c.id.localeCompare(q.c.id))[0]; if (strongest !== f) return refuse(f, `${label}: the strongest monster is already on the bench`); incoming = L[1]; }
     else if (kind === 'strongestFront') { // experimental: the strongest active opponent is sent back whoever it is; it pulls the next in line forward
       incoming = L[1]; }
+    else if (kind === 'mostHurt') { // Gate B.5 (patch-only): the most-hurt bench monster is dragged to the front; the front takes its place
+      incoming = L.slice(1).sort((p, q) => p.hp / p.c.maxHp - q.hp / q.c.maxHp || p.c.id.localeCompare(q.c.id))[0]; }
     const i = side.line.indexOf(f), j = side.line.indexOf(incoming);
     if (kind === 'sweep' || kind === 'strongestBack') { side.line.splice(i, 1); side.line.push(f); } else { [side.line[i], side.line[j]] = [side.line[j], side.line[i]]; }
     side.lastForced = ex; incoming.forcedInAt = ex;
@@ -193,18 +204,26 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     if (mv.splash) { const next = alive(foeSide).find((y) => y !== foe); if (next && next.hp > 0 && (fires || mv.kind === 'hex')) { const d = Math.round(dealt * mv.splash); if (d > 0) { next.hp = Math.max(0, next.hp - d); x.stats.dealt += d; next.stats.taken += d; E.log('damage', x, next, `${mv.name} splashes ${next.c.name} for ${d}`, { damage: d, hpAfter: next.hp }); if (next.hp <= 0) knockout(next, x, mv.name); } } }
     // Conditions on the strike.
     if (foe.hp > 0) {
-      if (mv.kind === 'hex' && (mv.trigger.kind === 'always' || fires)) {
+      if (mv.kind === 'hex' && (mv.trigger.kind === 'always' || fires) && mv.cycloneArrival && mv.sweepTarget && fires && !withheld('the sweep')) {
+        // cycloneArrival (Gate B.5, patch-only): sweep the front away and apply the condition to the monster pulled forward;
+        // if the sweep is refused, the condition lands on the front instead, so the effect is never spent on the bench.
+        const ok = forcedSwap(x, foeSide, 'sweep', { label: mv.name, arrivalCond: mv.cond });
+        if (!ok && foe.hp > 0) { if (rng.chance(mv.chance)) { if (condition(x, foe, mv.cond, mv.name)) moveCondEffects(x, foe); } else E.log('condition', x, foe, `${mv.name}: ${foe.c.name} shrugs off the ${mv.cond}`, { condition: mv.cond, result: 'missed' }); }
+      } else if (mv.kind === 'hex' && (mv.trigger.kind === 'always' || fires)) {
         if (rng.chance(mv.chance * (x.halfAction ? 0.5 : 1))) {
-          if (mv.wholeLine) { for (const y of alive(foeSide)) condition(x, y, mv.cond, mv.name, { duration: mv.duration || V.conditions.duration }); }
-          else condition(x, foe, mv.cond, mv.name, mv.skips ? { skips: mv.skips } : {});
+          if (mv.wholeLine) { for (const y of alive(foeSide)) if (condition(x, y, mv.cond, mv.name, { duration: mv.duration || V.conditions.duration })) moveCondEffects(x, y); }
+          else if (condition(x, foe, mv.cond, mv.name, mv.skips ? { skips: mv.skips } : {})) moveCondEffects(x, foe);
         } else E.log('condition', x, foe, `${mv.name}: ${foe.c.name} shrugs off the ${mv.cond}`, { condition: mv.cond, result: 'missed' });
         if (mv.sweepTarget && fires && foe.hp > 0 && !withheld('the sweep')) forcedSwap(x, foeSide, 'sweep', { label: mv.name });
       }
       const af = mv.afflict;
-      if (af && fires && (!af.belowHp || x.hp / x.c.maxHp < af.belowHp) && (!af.firstOnly || !x.afflictUsed)) {
-        if (rng.chance(af.chance * (x.halfAction ? 0.5 : 1))) { x.afflictUsed = true; condition(x, foe, af.cond, mv.name); } else E.log('condition', x, foe, `${mv.name}: the ${af.cond} does not take`, { condition: af.cond, result: 'missed' });
+      const below = !af?.belowHp || x.hp / x.c.maxHp < af.belowHp; // chanceAbove (Gate B.5, patch-only): the afflict chance when not below the HP line
+      if (af && fires && (below || af.chanceAbove != null) && (!af.firstOnly || !x.afflictUsed)) {
+        const ch = below ? af.chance : af.chanceAbove;
+        if (rng.chance(ch * (x.halfAction ? 0.5 : 1))) { x.afflictUsed = true; if (condition(x, foe, af.cond, mv.name)) moveCondEffects(x, foe); } else E.log('condition', x, foe, `${mv.name}: the ${af.cond} does not take`, { condition: af.cond, result: 'missed' });
       }
-      if (mv.sweepTarget && fires && mv.kind === 'surge' && !withheld('the sweep')) forcedSwap(x, foeSide, 'sweep', { label: mv.name });
+      // sweepAbove / sweepHit (Gate B.5, patch-only): sweep only a target above that HP share; the monster pulled forward takes an arrival hit.
+      if (mv.sweepTarget && fires && mv.kind === 'surge' && foe.hp > 0 && (!mv.sweepAbove || foe.hp / foe.c.maxHp > mv.sweepAbove) && !withheld('the sweep')) forcedSwap(x, foeSide, 'sweep', { label: mv.name, hitMult: mv.sweepHit || 0 });
     }
     if (fires) {
       if (mv.selfHeal) heal(E, x, x, mv.selfHeal, mv.name);
@@ -246,11 +265,16 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
           if (br.count !== 'landed') side.benchActs += 1;
           x.stats.acts += 1;
           const foe = front(foeSide); if (!foe) continue;
-          if (mv.cond === 'swap') { if (forcedSwap(x, foeSide, mv.swapKind, { hitMult: mv.hit ? (mv.hitMult || br.swapHit) : 0, label: `${mv.name} (from the bench)`, arrivalCond: mv.arrivalCond, refusedEffect: mv.refusedEffect }) && br.count === 'landed') side.benchActs += 1; continue; }
+          if (mv.cond === 'swap') { const sw = forcedSwap(x, foeSide, mv.swapKind, { hitMult: mv.hit ? (mv.hitMult || br.swapHit) : 0, label: `${mv.name} (from the bench)`, arrivalCond: mv.arrivalCond, refusedEffect: mv.refusedEffect });
+            // hasteOnSwap (Gate B.5, patch-only): a successful bench swap lets its own front act first this exchange.
+            const own = front(side); if (sw && mv.hasteOnSwap && own && own.hp > 0) { own.haste = true; E.log('buff', x, own, `${mv.name}: ${own.c.name} acts first this exchange`); }
+            if (sw && br.count === 'landed') side.benchActs += 1; continue; }
           const chanceK = perSide >= 4 ? br.chanceBig : br.chanceSmall;
           if (rng.chance(mv.chance * chanceK)) {
-            if (condition(x, foe, mv.cond, `${mv.name} (from the bench)`) && br.count === 'landed') side.benchActs += 1;
-            if (mv.frontTwo) { const next = alive(foeSide)[1]; if (next) { if (!next.cs.paused && !next.cs.cond) { next.cs.paused = null; } const r = applyCondition(next.cs, mv.cond, ex); if ((r.result === 'applied' || r.result === 'replaced') && next.cs.cond) { pauseCondition(next.cs); } E.log('condition', x, next, `${mv.name}: ${next.c.name} on the bench: ${r.words}${r.result === 'applied' || r.result === 'replaced' ? ' (paused until it enters)' : ''}`, { condition: mv.cond, result: r.result }); } }
+            const landed = condition(x, foe, mv.cond, `${mv.name} (from the bench)`);
+            if (landed) moveCondEffects(x, foe);
+            if (landed && br.count === 'landed') side.benchActs += 1;
+            if (mv.frontTwo) { const next = alive(foeSide)[1]; if (next) { if (!next.cs.paused && !next.cs.cond) { next.cs.paused = null; } const r = applyCondition(next.cs, mv.cond, ex); if ((r.result === 'applied' || r.result === 'replaced') && next.cs.cond) { pauseCondition(next.cs); } E.log('condition', x, next, `${mv.name}: ${next.c.name} on the bench: ${r.words}${r.result === 'applied' || r.result === 'replaced' ? ' (paused until it enters)' : ''}`, { condition: mv.cond, result: r.result }); if (r.result === 'applied' || r.result === 'replaced') moveCondEffects(x, next); } }
           } else E.log('bench_miss', x, foe, `${x.c.name}'s ${mv.name} from the bench: ${foe.c.name} shrugs it off`, { condition: mv.cond, result: 'missed' });
         }
       }
@@ -285,6 +309,9 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     }
     replace();
     if (ended()) break;
+    // 2b. opening effects (Gate B.5, patch-only): a move with `opening` fires once at exchange 1 from any position.
+    if (ex === 1) for (const side of [S.a, S.b]) for (const x of alive(side)) { const mv = x.c.move; if (!mv.opening || x.onceUsed) continue; x.onceUsed = true;
+      if (mv.kind === 'hex' && mv.wholeLine) { if (rng.chance(mv.chance)) { for (const y of alive(other(side))) if (condition(x, y, mv.cond, `${mv.name} (opening)`, { duration: mv.duration || V.conditions.duration })) moveCondEffects(x, y); } else E.log('condition', x, front(other(side)), `${mv.name} (opening): it does not take`, { condition: mv.cond, result: 'missed' }); } }
     // 3. back-row actions
     backRow();
     replace();
