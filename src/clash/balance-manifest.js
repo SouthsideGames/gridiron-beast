@@ -1,14 +1,17 @@
-// Beast Clash balance manifest (Gates B.2-B.5): the one authoritative record of every proposed change and of the
-// configurations each gate was measured under. Lab and tools only: nothing in the game imports this file, and nothing
-// here is live. A change becomes permanent only when the owner approves it and it is copied into clash-moves.js or
-// values.js defaults (Balance Implementation Approval). Current values are read from the data, never retyped.
+// Beast Clash balance manifest (Gates B.2-B.5, final review, values 1.1.0 implementation): the one authoritative record of every
+// proposed change, the owner's decision on it, and the configurations each gate was measured under. Lab and tools only: nothing in
+// the game imports this file. The owner approved 15 patches, two system settings and one card correction on 2026-10-21; they were
+// copied into clash-moves.js and values.js (values 1.1.0) and are the permanent game. Every other patch here is an inactive Lab
+// experiment. Historical gates replay under the frozen values 1.0.0 ruleset, so their measurements keep their meaning.
 import { CLASH_VALUES, battleConfig } from './values.js';
 import { CLASH_MOVES } from '../data/clash-moves.js';
+import { CLASH_MOVES_V1_0_0 } from '../data/clash-moves-v1.0.0.js';
 
 const P = CLASH_VALUES.movePatches;
 
 // ---- configuration adjustments shared by every proposed gate configuration (the Gate B working direction)
-export const GATE_B_CONFIG = Object.freeze({ duration: 'C6' }); // back row E, Shock, sudden death E/F, swap cadence and O1-O3 off are already the defaults
+// Every gate was measured on the values 1.0.0 game, so a gate configuration names that ruleset and both settings explicitly.
+export const GATE_B_CONFIG = Object.freeze({ ruleset: 'v1.0.0', duration: 'C6', swapCost: 'action' }); // back row E, Shock, sudden death E/F, swap cadence, O1-O3 off
 export const SWAP_CONFIG = Object.freeze({ swapCost: 'half' }); // Gate B.2 rule, carried by B.2-B.5
 
 // ---- patch sets, gate by gate (B.n = B.(n-1) with a species' patch replaced or added)
@@ -27,8 +30,25 @@ export const B5_PATCHES = Object.freeze(build(B4_PATCHES, B5_ADDED));
 export const FINAL_PATCHES = Object.freeze(['umbrikit_pounce_not_voluntary', 'wispira_veil_every4', 'duskyre_cut_every3', 'scorchulk_maul_first', 'echolot_echo_flat',
   'zephiro_tailwind_combo', 'tsunarok_undertow_hit_chill', 'ripplet_undercurrent_08', 'cerebrix_foresight_refused_daze', 'aurodrax_sovereign_surge', 'nocturne_eclipse_2', 'aeralis_downdraft_daze', 'cindruff_tumble_always']);
 
-export const GATE_PATCHES = Object.freeze({ 'Gate B': Object.freeze([]), 'B.2': B2_PATCHES, 'B.3': B3_PATCHES, 'B.4': B4_PATCHES, 'B.5': B5_PATCHES, Final: FINAL_PATCHES });
-/** The exact battle configuration a gate was measured under (plus optional policies). Frozen, validated by battleConfig. */
+// Owner-approved permanent configuration (authorization 2026-10-21): the Final preset plus Elderoot's 12% Ancient Grove and
+// Tempestra's Storm Cyclone. Implemented in values 1.1.0: gateConfig('Approved') (values 1.0.0 + these patches) plays exactly like
+// the permanent game, permanentConfig(). Noctlet's always-first change was declined; every other experiment is not approved.
+export const OWNER_ADDED = Object.freeze(['elderoot_grove_12', 'tempestra_cyclone_storm']);
+export const APPROVED_PATCHES = Object.freeze([...FINAL_PATCHES, ...OWNER_ADDED]);
+
+export const GATE_PATCHES = Object.freeze({ 'Gate B': Object.freeze([]), 'B.2': B2_PATCHES, 'B.3': B3_PATCHES, 'B.4': B4_PATCHES, 'B.5': B5_PATCHES, Final: FINAL_PATCHES, Approved: APPROVED_PATCHES });
+export const APPROVED_SETTINGS = Object.freeze({ duration: 'C6', swapCost: 'half' });
+export const DECLINED_PATCHES = Object.freeze(['noctlet_always_first']);
+export const PERMANENT_VERSION = CLASH_VALUES.version;
+/** The permanent game's configuration (values 1.1.0 defaults: no patches, no experiments), plus optional Lab switches. */
+export function permanentConfig(extra = {}) { return battleConfig({ ...extra }); }
+/** The owner's decision on a manifest item. */
+export function decisionOf(id) {
+  if (APPROVED_PATCHES.includes(id) || id === 'duration_c6' || id === 'swap_cost_half') return 'implemented';
+  return DECLINED_PATCHES.includes(id) ? 'declined' : 'not approved';
+}
+export const STATUS_TEXT = Object.freeze({ implemented: 'Implemented permanently in values 1.1.0 (owner approval 2026-10-21)', declined: 'Declined by the owner (2026-10-21); inactive Lab experiment that fails validation', 'not approved': 'Not approved; inactive Lab experiment' });
+/** The exact battle configuration a gate was measured under (values 1.0.0 ruleset, plus optional policies). Frozen, validated by battleConfig. */
 export function gateConfig(gate, extra = {}) {
   if (!GATE_PATCHES[gate]) throw new Error(`Unknown gate ${gate}`);
   return battleConfig({ ...GATE_B_CONFIG, ...(gate === 'Gate B' ? {} : SWAP_CONFIG), patches: GATE_PATCHES[gate], ...extra });
@@ -43,11 +63,10 @@ const T = {
   manifest: 'gateb5.test.js :: every manifest move patch', fires: 'gateb5.test.js :: every recommended move patch fires', golden: 'engine.test.js :: determinism (golden seeds)',
   b5hooks: 'gateb5.test.js :: Gate B.5 hooks', b5int: 'gateb5.test.js :: the B.5 candidate configuration keeps', bands: 'gateb5.test.js :: recommended patched moves stay inside',
 };
-const PENDING = 'Awaiting owner approval (Lab-only)';
-const mv = (gate, id, deps, tests, note = null) => ({ id, gate, kind: 'move', key: id, target: P[id].species, deps, tests, status: PENDING, note });
+const mv = (gate, id, deps, tests, note = null) => ({ id, gate, kind: 'move', key: id, target: P[id].species, deps, tests, status: STATUS_TEXT[decisionOf(id)], note });
 export const MANIFEST = Object.freeze([
-  { id: 'duration_c6', gate: 'Gate B', kind: 'config', key: "duration: 'C6'", target: 'all battles', mechanic: 'Defensive duration (stalemate rule)', current: "Model F: no healing reduction (duration default 'F')", proposed: 'C6: from exchange 12, no knockout for 5 exchanges halves healing and shields; for 9, quarters them', deps: [], tests: ['experiments.test.js', T.golden], status: 'Gate B working direction; permanent default change awaiting owner approval' },
-  { id: 'swap_cost_half', gate: 'B.2', kind: 'config', key: "swapCost: 'half'", target: 'all battles', mechanic: 'Voluntary swap cost', current: "'action': the swap uses the side's action", proposed: "'half': the incoming monster still acts this exchange at half strength (damage, heals, shields x0.5; condition rolls at half chance; magnitude-less effects withheld; its own swap move cannot fire)", deps: [], tests: [T.b2half, T.b3cad, T.b4cad], status: PENDING },
+  { id: 'duration_c6', gate: 'Gate B', kind: 'config', key: "duration: 'C6'", target: 'all battles', mechanic: 'Defensive duration (stalemate rule)', current: "Model F: no healing reduction (duration default 'F')", proposed: 'C6: from exchange 12, no knockout for 5 exchanges halves healing and shields; for 9, quarters them', deps: [], tests: ['experiments.test.js', T.golden], status: STATUS_TEXT.implemented },
+  { id: 'swap_cost_half', gate: 'B.2', kind: 'config', key: "swapCost: 'half'", target: 'all battles', mechanic: 'Voluntary swap cost', current: "'action': the swap uses the side's action", proposed: "'half': the incoming monster still acts this exchange at half strength (damage, heals, shields x0.5; condition rolls at half chance; magnitude-less effects withheld; its own swap move cannot fire)", deps: [], tests: [T.b2half, T.b3cad, T.b4cad], status: STATUS_TEXT.implemented },
   mv('B.2', 'zephiro_tailwind_combo', [], [T.b2exists, T.manifest, T.fires]),
   mv('B.2', 'elderoot_grove_12', [], [T.manifest, T.fires]),
   mv('B.2', 'scorchulk_maul_first', [], [T.manifest, T.fires]),
@@ -95,9 +114,9 @@ export const ENGINE_HOOKS = Object.freeze([
 
 // Patches that are not in the B.5 manifest but are recommended in the final configuration (earlier versions of a species' change).
 export const ALTERNATES = Object.freeze([
-  { id: 'cerebrix_foresight_refused_daze', gate: 'B.2', kind: 'move', key: 'cerebrix_foresight_refused_daze', target: 'cerebrix', deps: ['refusedEffect engine hook (B.2)'], tests: [T.b2refused, 'readiness.test.js'], status: PENDING, note: 'B.2 version of the Cerebrix change, without B.4\'s 0.15x hit' },
-  { id: 'nocturne_eclipse_2', gate: 'B.2', kind: 'move', key: 'nocturne_eclipse_2', target: 'nocturne', deps: [], tests: ['readiness.test.js'], status: PENDING, note: 'B.2 version of the Nocturne change: Eclipse lasts two exchanges, still on its first strike' },
-  { id: 'aeralis_downdraft_daze', gate: 'B.3', kind: 'move', key: 'aeralis_downdraft_daze', target: 'skywarden', deps: ['arrivalCond engine hook (B.2)'], tests: [T.b3exists, T.b3cad, 'readiness.test.js'], status: PENDING, note: 'B.3 version of the Aeralis change: the swapped-in monster is Dazed; still from the back only' },
+  { id: 'cerebrix_foresight_refused_daze', gate: 'B.2', kind: 'move', key: 'cerebrix_foresight_refused_daze', target: 'cerebrix', deps: ['refusedEffect engine hook (B.2)'], tests: [T.b2refused, 'readiness.test.js'], status: STATUS_TEXT.implemented, note: 'B.2 version of the Cerebrix change, without B.4\'s 0.15x hit' },
+  { id: 'nocturne_eclipse_2', gate: 'B.2', kind: 'move', key: 'nocturne_eclipse_2', target: 'nocturne', deps: [], tests: ['readiness.test.js'], status: STATUS_TEXT.implemented, note: 'B.2 version of the Nocturne change: Eclipse lasts two exchanges, still on its first strike' },
+  { id: 'aeralis_downdraft_daze', gate: 'B.3', kind: 'move', key: 'aeralis_downdraft_daze', target: 'skywarden', deps: ['arrivalCond engine hook (B.2)'], tests: [T.b3exists, T.b3cad, 'readiness.test.js'], status: STATUS_TEXT.implemented, note: 'B.3 version of the Aeralis change: the swapped-in monster is Dazed; still from the back only' },
 ]);
 
 // The review of every item under the revised philosophy. verdict: 'recommend' (justified on its own), 'keep' (optional, the review
@@ -136,27 +155,27 @@ export const REVIEW = Object.freeze({
   tideram_riptide_crash: R('not', 'viability', 'A new mechanic (sweepHit) for viability with only a borderline result', 'Every second strike hits 1.3x and, if the target survives, sweeps it to the back of its line; the monster pulled forward takes a 0.5x hit'),
   aeralis_downdraft_anywhere_tailwind: R('not', 'viability', 'A new mechanic (hasteOnSwap) plus front activation for viability; the B.3 version keeps the visible arrival Daze', 'Every second exchange, from anywhere, swaps the opponent\'s front two and Dazes the monster swapped in; from the back, its own front then strikes first'),
 });
-// Card wording fixes for current moves whose card does not match what they do (no mechanic change).
+// Card wording fixes for moves whose card did not match what they do (no mechanic change). Implemented in values 1.1.0.
 export const TEXT_CORRECTIONS = Object.freeze({
   terrabull: Object.freeze({ text: 'From the back, every second exchange shakes the opposing front two, Chilling them', reason: 'Quake Step only acts from the bench (0 times in front in 600 test battles), but the card does not say so' }),
 });
-// Proposed, NOT active: the one move that would be exempt from the "always strikes first" validation rule if the owner grants it.
-export const PROPOSED_ALWAYS_FIRST_EXCEPTIONS = Object.freeze(['nightowl']);
+// The Noctlet always-first exception was declined (2026-10-21): validation has no exception list, and noctlet_always_first fails it.
 
 /** Current and proposed values for a move entry, read from the data (so the manifest cannot drift from the code). */
 export function describeEntry(e) {
   if (e.kind === 'config') return { current: e.current, proposed: e.proposed };
-  const p = P[e.id]; const base = CLASH_MOVES[p.species];
+  const p = P[e.id]; const base = CLASH_MOVES_V1_0_0[p.species]; const now = CLASH_MOVES[p.species];
   const current = {}; for (const k of Object.keys(p.changes)) current[k] = base[k] === undefined ? null : base[k];
-  return { move: base.name, currentText: base.text, proposedText: p.label, current, proposed: { ...p.changes } };
+  return { move: base.name, currentText: base.text, proposedText: p.label, current, proposed: { ...p.changes }, permanentText: now.text, decision: decisionOf(e.id) };
 }
 /** The recommended configuration's move patches must be exactly the manifest's move and rule entries. */
 export function manifestPatchIds() { return MANIFEST.filter((e) => e.kind !== 'config').map((e) => e.id); }
 /** Every move entry the final review covers (B.5 manifest + alternates). */
 export const REVIEWED_ENTRIES = Object.freeze([...MANIFEST, ...ALTERNATES]);
-/** The final move table if the recommended configuration were made permanent: each patched move with its proposed card text, plus text corrections. */
+/** A values 1.0.0 move table with the given patches applied, each with its reviewed card text, plus text corrections.
+ * finalMoveTable(APPROVED_PATCHES) is exactly the permanent table (tested). */
 export function finalMoveTable(patchIds = FINAL_PATCHES) {
-  const out = { ...CLASH_MOVES };
+  const out = { ...CLASH_MOVES_V1_0_0 };
   for (const [sp, t] of Object.entries(TEXT_CORRECTIONS)) out[sp] = { ...out[sp], text: t.text };
   for (const id of patchIds) { const sp = P[id].species; out[sp] = { ...out[sp], ...P[id].changes, text: REVIEW[id]?.cardText ?? out[sp].text }; }
   return out;

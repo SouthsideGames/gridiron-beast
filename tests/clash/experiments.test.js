@@ -1,10 +1,16 @@
 // Beast Clash experimental switches: all off by default, each visible in the log when on, and the back-row tests A-E differ.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { simulateClash, logHash } from '../../src/clash/engine.js';
-import { CLASH_VALUES, battleConfig, activeExperiments } from '../../src/clash/values.js';
+import { simulateClash as baseSimulateClash, logHash } from '../../src/clash/engine.js';
+import { CLASH_VALUES, battleConfig as baseBattleConfig, activeExperiments } from '../../src/clash/values.js';
 import { mon, byArch, randomLineup } from './helpers.js';
 import { createRng } from '../../src/core/rng.js';
+
+// Historical gate tests: these verify the Gate A-B.5 mechanisms exactly as they were measured, on the values 1.0.0 game (ruleset
+// 'v1.0.0': the frozen move table, Model F, swaps cost the action). The permanent values 1.1.0 game is covered by implementation.test.js.
+const HIST = Object.freeze({ ruleset: 'v1.0.0' });
+const battleConfig = (o = {}) => baseBattleConfig({ ...HIST, ...o });
+const simulateClash = (o) => baseSimulateClash({ ...o, config: Object.isFrozen(o.config) && o.config?.ruleset ? o.config : { ...HIST, ...(o.config || {}) } });
 
 const V = CLASH_VALUES;
 const fiveSupports = (seed) => [mon('tidepaw', seed), mon('glimmer', seed + 1), mon('elderoot', seed + 2), mon('lumen', seed + 3), mon('sunwhistle', seed + 4)];

@@ -25,6 +25,19 @@ test('determinism: the same inputs give the same log hash, with Math.random and 
   for (const seed of Object.keys(stored)) { assert.equal(golden[seed].hash, stored[seed].hash, `golden seed ${seed}`); const k = parseReplayKey(stored[seed].key); assert.equal(logHash(simulateClash({ a: k.a, b: k.b, seed: k.seed, config: k.config })), stored[seed].hash, `replay key ${seed}`); }
 });
 
+test('historical golden seeds: the values 1.0.0 fixture (Gate A-B.5 baseline) still replays exactly under the values 1.0.0 ruleset, from its own replay keys and from the same lineups', () => {
+  const stored = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-v1.0.0.json', import.meta.url), 'utf8'));
+  assert.equal(Object.keys(stored).length, 20);
+  withoutRandomness(() => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const k = parseReplayKey(stored[seed].key); assert.equal(JSON.parse(stored[seed].key).values, '1.0.0'); assert.equal(k.config.ruleset, 'v1.0.0');
+      assert.equal(logHash(simulateClash({ a: k.a, b: k.b, seed: k.seed, config: k.config })), stored[seed].hash, `historical replay key ${seed}`);
+      const rng = createRng(seed * 101); const a = randomLineup(rng, 1 + rng.int(5)), b = randomLineup(rng, 1 + rng.int(5));
+      assert.equal(logHash(simulateClash({ a, b, seed, config: { ruleset: 'v1.0.0' } })), stored[seed].hash, `historical lineup ${seed}`);
+    }
+  });
+});
+
 test('skip equals watch: log none gives the same winner, exchanges and resolution as the full log', () => {
   const rng = createRng(77);
   for (let i = 0; i < 50; i++) { const a = randomLineup(rng, 3), b = randomLineup(rng, 3); const full = simulateClash({ a, b, seed: i }), none = simulateClash({ a, b, seed: i, log: 'none' });
@@ -63,7 +76,7 @@ test('interaction rulings: Burn bypasses a shield; a swap pauses a condition; no
   assert.ok(burnTick, 'a burn tick landed while a shield was up'); assert.equal(burnTick.hpAfter, burnTick.targetState.hp); assert.ok(burnTick.damage > 0, 'the burn hit HP, not the shield');
   // Swap pauses: a defensive policy swap with a condition logs the pause, and the return logs the resume.
   const r2 = quick([mon('stormlynx', 5), mon('hailfang', 6), mon('mudcub', 7)], [mon('ashkit', 8), mon('wyrmkit', 9), mon('rockram', 10)], 11, { policies: { b: 'defensive' } });
-  const paused = r2.log.find((e) => e.kind === 'bench' && e.paused); if (paused) assert.ok(r2.log.some((e) => e.kind === 'enter' && e.resumed === paused.paused && e.actor === paused.actor) || r2.lines.b.find((x) => x.id === paused.actor).hp === 0, 'paused condition resumed on return (or the monster never returned)');
+  const paused = r2.log.find((e) => e.kind === 'bench' && e.paused); if (paused) assert.ok(r2.log.some((e) => e.kind === 'enter' && e.resumed === paused.paused && e.actor === paused.actor) || r2.lines.b.find((x) => x.id === paused.actor).hp === 0 || !r2.log.some((e) => e.kind === 'enter' && e.actor === paused.actor && e.ex > paused.ex), 'paused condition resumed on return (or the monster never returned)');
   // No second Tank shield: a Tank swapped out and back gets "no second entry effect".
   const r3 = quick([mon('pebble', 1), mon('reefclaw', 2), mon('ashkit', 3)], [mon('tidefin', 4), mon('skywarden', 5), mon('tsunarok', 6)], 2, { backRow: 'A' });
   const shields = r3.log.filter((e) => e.kind === 'shield' && e.actor === 'a0' && e.target === 'a0'); assert.ok(shields.length <= 1, 'Stone Skin at most once');

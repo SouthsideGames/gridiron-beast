@@ -10,11 +10,15 @@
 import { effectiveAttributes, overall } from '../data/monsters.js';
 import { SPECIES_DEX } from '../data/species.js';
 import { CLASH_MOVES } from '../data/clash-moves.js';
+import { CLASH_MOVES_V1_0_0 } from '../data/clash-moves-v1.0.0.js';
 import { CLASH_VALUES, patchedMove } from './values.js';
 
 const SPECIES = Object.fromEntries(SPECIES_DEX.map((s) => [s.id, s]));
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const round2 = (x) => Math.round(x * 100) / 100;
+
+/** The move table a battle plays: the permanent table, or the frozen values 1.0.0 table for the historical ruleset. */
+export function moveTableFor(config) { return config?.ruleset === 'v1.0.0' ? CLASH_MOVES_V1_0_0 : CLASH_MOVES; }
 
 export function archetypeOf(speciesId) { return CLASH_MOVES[speciesId]?.archetype || null; }
 
@@ -24,7 +28,7 @@ export function archetypeOf(speciesId) { return CLASH_MOVES[speciesId]?.archetyp
  */
 export function buildCombatant(m, { perSide = 3, config = null, slot = 0, side = 'a' } = {}) {
   const sp = SPECIES[m.species]; if (!sp) throw new Error(`Unknown species ${m.species}`);
-  const move = patchedMove(sp.id, CLASH_MOVES[sp.id], config); if (!move) throw new Error(`No battle move for ${sp.id}`);
+  const move = patchedMove(sp.id, moveTableFor(config)[sp.id], config); if (!move) throw new Error(`No battle move for ${sp.id}`);
   const V = CLASH_VALUES; const arch = V.archetypes[move.archetype]; const S = V.stats;
   const e = effectiveAttributes(m, {});                        // nature + fatigue, once
   const ovr = overall(e, m.position);                          // from the same attributes

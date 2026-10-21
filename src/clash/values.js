@@ -8,7 +8,7 @@
 const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v === 'object') deepFreeze(v); return Object.freeze(o); };
 
 export const CLASH_VALUES = deepFreeze({
-  version: '1.0.0',
+  version: '1.1.0',
   engineVersion: 'p1.1',
 
   // ---- approved
@@ -52,7 +52,8 @@ export const CLASH_VALUES = deepFreeze({
       E: { label: 'E: one bench Disruptor attempt per side per exchange, bench chance scaled to the bench, swap hit 0.5x', maxPerSide: 1, chanceSmall: 0.6, chanceBig: 0.35, swapHit: 0.5, every: 1, count: 'attempts' },
       E2: { label: 'E2: as E, but the limit counts landed actions (the scratch prototype\'s reading: others keep trying until one lands)', maxPerSide: 1, chanceSmall: 0.6, chanceBig: 0.35, swapHit: 0.5, every: 1, count: 'landed' },
     } },
-  duration: { tag: 'provisional', default: 'F',
+  // Approved permanently in values 1.1.0 (owner, 2026-10-21): C6. Values 1.0.0 played Model F.
+  duration: { tag: 'approved', default: 'C6',
     models: {
       F: { label: 'Model F baseline: no healing reduction' },
       R2: { label: 'R2: healing and shields shrink with the sudden-death multiplier' },
@@ -64,11 +65,20 @@ export const CLASH_VALUES = deepFreeze({
     O1: { label: 'O1: in 4-5 per side, a team\'s second and later heals in one exchange are 60% strength', on: false, minPerSide: 4, laterHeal: 0.6 },
     O2: { label: 'O2: in 4-5 per side, Tanks get +6% battle HP', on: false, minPerSide: 4, tankHp: 1.06 },
     // Gate B.1 investigation switches (owner-authorised for testing only; every default is the Gate B baseline)
-    swapCost: { label: 'Voluntary swap cost', default: 'action', options: { action: 'the swap uses the side\'s action (current rule)', half: 'the incoming monster still acts, at half damage', free: 'the incoming monster acts normally' } },
+    // Approved permanently in values 1.1.0 (owner, 2026-10-21): half. Values 1.0.0 used 'action'. The other options stay Lab-only.
+    swapCost: { label: 'Voluntary swap cost', approved: true, default: 'half', options: { action: 'the swap uses the side\'s action (values 1.0.0 rule)', half: 'the incoming monster still acts, at half damage (approved rule)', free: 'the incoming monster acts normally' } },
     sdFromE: { label: 'Model E sudden-death start (1-3 per side)', default: 12, options: [12, 15, 18, 99] },
   },
-  // Gate B.1 candidate move patches: named, reversible overrides of one species' move, applied only when a battle's
-  // config lists the patch id. Nothing here is live unless the owner adopts it into clash-moves.js.
+  // Rulesets: 'current' is the permanent game (values 1.1.0: the approved move table, C6, half-cost swaps). 'v1.0.0' replays the
+  // values 1.0.0 game exactly (the frozen v1.0.0 move table, Model F, swaps cost the action) so historical gates, old replay keys
+  // and rollback comparisons keep their meaning. stats.js picks the move table; these are the defaults each ruleset fills in.
+  rulesets: { tag: 'approved', default: 'current',
+    current: { label: 'Values 1.1.0 (permanent)', duration: 'C6', swapCost: 'half' },
+    'v1.0.0': { label: 'Values 1.0.0 (historical: Gate A-B.5 baseline)', duration: 'F', swapCost: 'action' },
+  },
+  // Candidate move patches: named, reversible overrides of one species' move, applied only when a battle's config lists the patch
+  // id. The 15 marked implemented: '1.1.0' are already in clash-moves.js (listing them again under 'current' changes nothing);
+  // every other patch is an inactive Lab experiment, off unless the Lab lists it, and never part of the permanent game.
   movePatches: { tag: 'experimental',
     wispira_veil_every3: { species: 'shadewisp', label: 'Mirage Veil every third exchange (was every second)', changes: { trigger: { kind: 'every', n: 3 } } },
     wispira_veil_self: { species: 'shadewisp', label: 'Mirage Veil shields the front ally only (was the most hurt)', changes: { target: 'front' } },
@@ -87,19 +97,19 @@ export const CLASH_VALUES = deepFreeze({
     cerebrix_foresight_hit: { species: 'cerebrix', label: 'Foresight: the pulled-in monster takes a 0.5x arrival hit (was none)', changes: { hit: true } },
     aeralis_downdraft_hit: { species: 'skywarden', label: 'Downdraft: the swapped-in monster takes a 0.5x arrival hit (was none)', changes: { hit: true } },
     // round two (after the first before/after pass)
-    wispira_veil_every4: { species: 'shadewisp', label: 'Mirage Veil every fourth exchange', changes: { trigger: { kind: 'every', n: 4 } } },
-    duskyre_cut_every3: { species: 'duskrunner', label: 'Vanishing Cut every third strike (was every second), 1.4x with the dodge', changes: { trigger: { kind: 'every', n: 3 } } },
+    wispira_veil_every4: { implemented: '1.1.0', species: 'shadewisp', label: 'Mirage Veil every fourth exchange', changes: { trigger: { kind: 'every', n: 4 } } },
+    duskyre_cut_every3: { implemented: '1.1.0', species: 'duskrunner', label: 'Vanishing Cut every third strike (was every second), 1.4x with the dodge', changes: { trigger: { kind: 'every', n: 3 } } },
     florant_shade_every3: { species: 'leafhorn', label: 'Canopy Shade every third exchange (was every second)', changes: { trigger: { kind: 'every', n: 3 } } },
     zephiro_tailwind_every2_heal: { species: 'zephyr', label: 'Tailwind every second exchange, +10% for 3, and heals every ally 6%', changes: { trigger: { kind: 'every', n: 2 }, heal: 0.06 } },
     zephiro_tailwind_every2_15: { species: 'zephyr', label: 'Tailwind every second exchange, +15% for 3 (no heal)', changes: { trigger: { kind: 'every', n: 2 }, rally: { bonus: 0.15, exchanges: 3 } } },
-    zephiro_tailwind_combo: { species: 'zephyr', label: 'Tailwind every second exchange, +15% for 3, and heals every ally 6%', changes: { trigger: { kind: 'every', n: 2 }, heal: 0.06, rally: { bonus: 0.15, exchanges: 3 } } },
-    elderoot_grove_12: { species: 'elderoot', label: 'Ancient Grove heals every ally 12% (was 6%)', changes: { heal: 0.12 } },
+    zephiro_tailwind_combo: { implemented: '1.1.0', species: 'zephyr', label: 'Tailwind every second exchange, +15% for 3, and heals every ally 6%', changes: { trigger: { kind: 'every', n: 2 }, heal: 0.06, rally: { bonus: 0.15, exchanges: 3 } } },
+    elderoot_grove_12: { implemented: '1.1.0', species: 'elderoot', label: 'Ancient Grove heals every ally 12% (was 6%)', changes: { heal: 0.12 } },
     coglet_gearshot_heavy: { species: 'gearwing', label: 'Gear Shot: every second strike hits 1.3x, and its strikes never roll below full', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.3 } },
     cerebrix_foresight_hit_every1: { species: 'cerebrix', label: 'Foresight every exchange (was every second) with a 0.5x arrival hit', changes: { hit: true, trigger: { kind: 'every', n: 1 } } },
     lumini_mend_10: { species: 'glimmer', label: 'Glow Mend heals the two most hurt allies 10% each (was 7%)', changes: { heal: 0.10 } },
     zippit_charge_40: { species: 'flicker', label: 'Spark Charge: +40% on the front ally\'s next strike (was +25%)', changes: { charge: 0.40 } },
-    nocturne_eclipse_2: { species: 'nocturne', label: 'Eclipse: the whole line is Dazed for two exchanges (was one)', changes: { duration: 2 } },
-    scorchulk_maul_first: { species: 'cinderclaw', label: 'Cinder Maul may strike first again (the never-first clause removed)', changes: { neverFirst: false } },
+    nocturne_eclipse_2: { implemented: '1.1.0', species: 'nocturne', label: 'Eclipse: the whole line is Dazed for two exchanges (was one)', changes: { duration: 2 } },
+    scorchulk_maul_first: { implemented: '1.1.0', species: 'cinderclaw', label: 'Cinder Maul may strike first again (the never-first clause removed)', changes: { neverFirst: false } },
     // Gate B.2 redesign candidates
     coglet_gearshot_pierce: { species: 'gearwing', label: 'Gear Shot: steady roll, and its strikes ignore Tank guard (pierce)', changes: { pierce: true } },
     coglet_gearshot_break: { species: 'gearwing', label: 'Gear Shot: steady roll, and its strikes strip shields at double rate (armour-breaking)', changes: { breakAlways: 2 } },
@@ -109,7 +119,7 @@ export const CLASH_VALUES = deepFreeze({
     // Gate B.3 (owner-authorised experiments): Coglet 1.4x exception, Undercurrent arrival-hit values, a distinct Downdraft
     coglet_gearshot_heavy14_break: { species: 'gearwing', label: 'Gear Shot: every second strike hits 1.4x (Balanced band exception) and strips shields at double rate; strikes never roll below full', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.4, breakAlways: 2 } },
     ripplet_undercurrent_065: { species: 'tidefin', label: 'Undercurrent: arrival hit 0.65x (was 0.5x from the back-row rule)', changes: { hit: true, hitMult: 0.65 } },
-    ripplet_undercurrent_08: { species: 'tidefin', label: 'Undercurrent: arrival hit 0.8x (was 0.5x from the back-row rule)', changes: { hit: true, hitMult: 0.8 } },
+    ripplet_undercurrent_08: { implemented: '1.1.0', species: 'tidefin', label: 'Undercurrent: arrival hit 0.8x (was 0.5x from the back-row rule)', changes: { hit: true, hitMult: 0.8 } },
     // Gate B.4 (owner-authorised): identity candidates for the eleven species without a demonstrated niche
     coglet_shieldbane: { species: 'gearwing', label: 'Gear Shot: strikes never roll below full; every strike hits 1.6x against a shielded foe (normal 1.0x otherwise) and strips shields at double rate', changes: { kind: 'surge', trigger: { kind: 'always' }, mult: 1.0, vsShield: 1.6, breakAlways: 2 } },
     coglet_heavy_vsshield: { species: 'gearwing', label: 'Gear Shot: every second strike 1.3x, or 1.8x against a shielded foe; double shield-break; steady roll', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.3, vsShield: 1.8, breakAlways: 2 } },
@@ -122,13 +132,13 @@ export const CLASH_VALUES = deepFreeze({
     craggo_ram_break: { species: 'rockram', label: 'Ram Butt: every second strike 1.3x, or 1.6x against a shielded foe, and its strikes strip shields at double rate', changes: { breakAlways: 2 } },
     craggo_ram_every: { species: 'rockram', label: 'Ram Butt: every strike hits 1.6x against a shielded foe; unshielded foes take 1.0x (no 1.3x surge)', changes: { trigger: { kind: 'always' }, mult: 1.0, vsShield: 1.6 } },
     craggo_ram_chill: { species: 'rockram', label: 'Ram Butt: every second strike 1.3x (1.6x against a shielded foe) and Chills the target', changes: { afflict: { cond: 'chill', chance: 0.8 } } },
-    noctlet_always_first: { species: 'nightowl', label: 'Night Swoop: it always strikes first (was only its first strike)', changes: { trigger: { kind: 'always' }, priority: true, priorityExchanges: 30 } },
+    noctlet_always_first: { declined: '1.1.0', species: 'nightowl', label: 'Night Swoop: it always strikes first (was only its first strike)', changes: { trigger: { kind: 'always' }, priority: true, priorityExchanges: 30 } },
     noctlet_swoop_surge: { species: 'nightowl', label: 'Night Swoop: every second strike hits 1.3x; its first strike lands first', changes: { kind: 'surge', trigger: { kind: 'every', n: 2 }, mult: 1.3, priority: true, priorityExchanges: 1 } },
     ferrcub_forge_fast: { species: 'ironcub', label: 'Forge Swipe: +10% attack per triggered strike, up to three times (was +5%)', changes: { forge: { step: 0.10, max: 3 } } },
     ferrcub_forge_long: { species: 'ironcub', label: 'Forge Swipe: +6% attack per triggered strike, up to six times (was +5% up to three)', changes: { forge: { step: 0.06, max: 6 } } },
     sablewing_shadow_hex: { species: 'sablewing', label: 'Wing Shadow: every second exchange Dazes the opposing front, from the front as well as the back', changes: { kind: 'hex' } },
     sablewing_shadow_two: { species: 'sablewing', label: 'Wing Shadow: from the back, every second exchange Dazes the opposing front two (the second while it waits)', changes: { frontTwo: true } },
-    aurodrax_sovereign_surge: { species: 'aurodrax', label: 'Sovereign Arm: every second strike hits 1.3x; its strikes cannot be dodged or reduced; +20% in sudden death', changes: { kind: 'surge', trigger: { kind: 'every', n: 2 }, mult: 1.3 } },
+    aurodrax_sovereign_surge: { implemented: '1.1.0', species: 'aurodrax', label: 'Sovereign Arm: every second strike hits 1.3x; its strikes cannot be dodged or reduced; +20% in sudden death', changes: { kind: 'surge', trigger: { kind: 'every', n: 2 }, mult: 1.3 } },
     aurodrax_sovereign_sd: { species: 'aurodrax', label: 'Sovereign Arm: cannot be dodged or reduced; +40% in sudden death (was +20%)', changes: { suddenDeathBonus: 0.4 } },
     terrabull_quake_hex: { species: 'terrabull', label: 'Quake Step: every second exchange Chills the opposing front, from the front as well as the back (the next in line too from the back)', changes: { kind: 'hex' } },
     terrabull_quake_sure: { species: 'terrabull', label: 'Quake Step: Chill chance 90% (was 78.3%)', changes: { chance: 0.9 } },
@@ -151,16 +161,16 @@ export const CLASH_VALUES = deepFreeze({
     cerebrix_refused_daze_hit015: { species: 'cerebrix', label: 'Foresight: a refused pull Dazes the front and strikes it at 0.15x', changes: { refusedEffect: { cond: 'daze', hit: 0.15, both: true } } },
     ferrcub_forge_quick2: { species: 'ironcub', label: 'Forge Swipe: every second strike 1.3x and +15% attack, up to twice (was +5% up to three times)', changes: { forge: { step: 0.15, max: 2 } } },
     umbrikit_pounce_once: { species: 'shadowkit', label: 'Shadow Pounce: dodges the first strike after its first entry only (was every entry)', changes: { dodgeEntry: 'once' } },
-    umbrikit_pounce_not_voluntary: { species: 'shadowkit', label: 'Shadow Pounce: the entry dodge does not re-arm on a voluntary swap-in (steps up and forced entries keep it)', changes: { dodgeEntry: 'notVoluntary' } },
-    aeralis_downdraft_daze: { species: 'skywarden', label: 'Downdraft: the swapped-in monster is Dazed (no arrival hit), so it no longer copies Undercurrent', changes: { hit: false, arrivalCond: 'daze' } },
+    umbrikit_pounce_not_voluntary: { implemented: '1.1.0', species: 'shadowkit', label: 'Shadow Pounce: the entry dodge does not re-arm on a voluntary swap-in (steps up and forced entries keep it)', changes: { dodgeEntry: 'notVoluntary' } },
+    aeralis_downdraft_daze: { implemented: '1.1.0', species: 'skywarden', label: 'Downdraft: the swapped-in monster is Dazed (no arrival hit), so it no longer copies Undercurrent', changes: { hit: false, arrivalCond: 'daze' } },
     coglet_gearshot_break_11: { species: 'gearwing', label: 'Gear Shot: steady roll, double shield-break and 1.1x strikes', changes: { breakAlways: 2, kind: 'surge', mult: 1.1, trigger: { kind: 'always' } } },
     cerebrix_foresight_front: { species: 'cerebrix', label: 'Foresight sends the opposing front monster back whoever it is (was only when it is the strongest)', changes: { swapKind: 'strongestFront' } },
     cerebrix_foresight_front_hit: { species: 'cerebrix', label: 'Foresight sends the front back, with a 0.5x arrival hit on the replacement', changes: { swapKind: 'strongestFront', hit: true } },
-    cerebrix_foresight_refused_daze: { species: 'cerebrix', label: 'Foresight as written, but a refused pull Dazes the opposing front instead', changes: { refusedEffect: { cond: 'daze' } } },
+    cerebrix_foresight_refused_daze: { implemented: '1.1.0', species: 'cerebrix', label: 'Foresight as written, but a refused pull Dazes the opposing front instead', changes: { refusedEffect: { cond: 'daze' } } },
     cerebrix_foresight_front_refused_daze: { species: 'cerebrix', label: 'Foresight sends the front back; when refused it Dazes the front', changes: { swapKind: 'strongestFront', refusedEffect: { cond: 'daze' } } },
     tsunarok_undertow_chill: { species: 'tsunarok', label: 'Undertow: the dragged monster arrives Chilled (no arrival damage)', changes: { arrivalCond: 'chill' } },
     tsunarok_undertow_hit08: { species: 'tsunarok', label: 'Undertow: the dragged monster takes a 0.8x arrival hit', changes: { hit: true, hitMult: 0.8 } },
-    tsunarok_undertow_hit_chill: { species: 'tsunarok', label: 'Undertow: a 0.5x arrival hit and the dragged monster arrives Chilled', changes: { hit: true, arrivalCond: 'chill' } },
+    tsunarok_undertow_hit_chill: { implemented: '1.1.0', species: 'tsunarok', label: 'Undertow: a 0.5x arrival hit and the dragged monster arrives Chilled', changes: { hit: true, arrivalCond: 'chill' } },
     tsunarok_undertow_refused_hit: { species: 'tsunarok', label: 'Undertow: 0.5x arrival hit; a refused drag strikes the front at 0.5x instead', changes: { hit: true, refusedEffect: { hit: 0.5 } } },
     // Gate B.5: the eight functionally outclassed species (each patch replaces any earlier patch for its species)
     ferrcub_temper: { species: 'ironcub', label: 'Forge Swipe: every second strike 1.3x and +5% attack; a hit that takes 8% of its HP also adds +5%; up to four steps in all (was three, strikes only)', changes: { forge: { step: 0.05, max: 4 }, forgeOnHit: { step: 0.05, min: 0.08 } } },
@@ -172,7 +182,7 @@ export const CLASH_VALUES = deepFreeze({
     nocturne_eclipse_dim: { species: 'nocturne', label: 'Eclipse: its first strike Dazes the whole line for two exchanges, and Dazed monsters receive half healing for 3 exchanges', changes: { duration: 2, healCut: 0.5, healCutFor: 3 } },
     nocturne_eclipse_opening_dim: { species: 'nocturne', label: 'Eclipse: at the start of the battle Dazes the whole opposing line for two exchanges, and they receive half healing for 3 exchanges', changes: { trigger: { kind: 'once' }, opening: true, duration: 2, healCut: 0.5, healCutFor: 3 } },
     tempestra_cyclone_eye: { species: 'tempestra', label: 'Cyclone: its first strike sweeps the opposing front to the back and Dazes the monster pulled forward (the front if the sweep is refused)', changes: { cycloneArrival: true } },
-    tempestra_cyclone_storm: { species: 'tempestra', label: 'Cyclone: every third strike sweeps the opposing front back and Dazes the monster pulled forward (the front if refused)', changes: { cycloneArrival: true, trigger: { kind: 'every', n: 3 } } },
+    tempestra_cyclone_storm: { implemented: '1.1.0', species: 'tempestra', label: 'Cyclone: every third strike sweeps the opposing front back and Dazes the monster pulled forward (the front if refused)', changes: { cycloneArrival: true, trigger: { kind: 'every', n: 3 } } },
     tideram_riptide_above: { species: 'wavehorn', label: 'Riptide Charge: sweeps the target back only while it is above half HP (a weakened target is kept in front to be finished)', changes: { sweepAbove: 0.5 } },
     tideram_riptide_crash: { species: 'wavehorn', label: 'Riptide Charge: the monster pulled forward by the sweep takes a 0.5x arrival hit', changes: { sweepHit: 0.5 } },
     tideram_riptide_still: { species: 'wavehorn', label: 'Riptide Charge: no sweep (diagnostic: is the sweep a cost?)', changes: { sweepTarget: false } },
@@ -185,9 +195,9 @@ export const CLASH_VALUES = deepFreeze({
     aeralis_downdraft_anywhere: { species: 'skywarden', label: 'Downdraft: from anywhere (the front too), every second exchange swaps the opponent\'s front two; the swapped-in monster is Dazed', changes: { hit: false, arrivalCond: 'daze', anywhere: true } },
     aeralis_downdraft_anywhere_tailwind: { species: 'skywarden', label: 'Downdraft: from anywhere, swaps the front two and Dazes the swapped-in monster; from the back its own front then acts first', changes: { hit: false, arrivalCond: 'daze', anywhere: true, hasteOnSwap: true } },
     nocturne_eclipse_opening3: { species: 'nocturne', label: 'Eclipse: at the start of the battle, from wherever it stands, Dazes the whole opposing line (standard three exchanges)', changes: { trigger: { kind: 'once' }, opening: true, duration: 3 } },
-    echolot_echo_flat: { species: 'echolot', label: 'Echo Strike: every second strike 1.3x and adds half of the last damage it took (was a +3-5% bonus)', changes: { echo: 0, echoFlat: 0.5 } },
+    echolot_echo_flat: { implemented: '1.1.0', species: 'echolot', label: 'Echo Strike: every second strike 1.3x and adds half of the last damage it took (was a +3-5% bonus)', changes: { echo: 0, echoFlat: 0.5 } },
     echolot_echo_strong: { species: 'echolot', label: 'Echo Strike: the echo bonus is 1.5x the share of HP it last lost (was 0.3x)', changes: { echo: 1.5 } },
-    cindruff_tumble_always: { species: 'ashkit', label: 'Cinder Tumble: every second strike hits 1.3x and Burns (the below-half-HP condition removed)', changes: { afflict: { cond: 'burn', chance: 1 } } },
+    cindruff_tumble_always: { implemented: '1.1.0', species: 'ashkit', label: 'Cinder Tumble: every second strike hits 1.3x and Burns (the below-half-HP condition removed)', changes: { afflict: { cond: 'burn', chance: 1 } } },
     cindruff_tumble_75: { species: 'ashkit', label: 'Cinder Tumble: those strikes Burn below 75% HP (was below half)', changes: { afflict: { cond: 'burn', chance: 1, belowHp: 0.75 } } },
     cindruff_tumble_any: { species: 'ashkit', label: 'Cinder Tumble: those strikes Burn 50% of the time, always below half HP', changes: { afflict: { cond: 'burn', chance: 1, belowHp: 0.5, chanceAbove: 0.5 } } },
   },
@@ -205,17 +215,22 @@ export const TAG_LABEL = Object.freeze({ approved: 'Approved', provisional: 'Pro
 /** The configuration a battle runs under: the defaults above plus the Lab's chosen switches. Frozen. */
 export function battleConfig(overrides = {}) {
   const v = CLASH_VALUES;
+  const ruleset = overrides.ruleset || v.rulesets.default;
+  const rs = v.rulesets[ruleset]; if (!rs || typeof rs !== 'object' || !rs.label) throw new Error(`Unknown ruleset ${ruleset}`);
   const c = {
+    ruleset,
     backRow: overrides.backRow || v.backRow.default,
-    duration: overrides.duration || v.duration.default,
+    duration: overrides.duration || rs.duration,
     O1: !!overrides.O1, O2: !!overrides.O2,
     policies: Object.freeze({ a: overrides.policies?.a || 'none', b: overrides.policies?.b || 'none' }),
-    swapCost: overrides.swapCost || v.experiments.swapCost.default,
+    swapCost: overrides.swapCost || rs.swapCost,
     sdFromE: Number(overrides.sdFromE) || v.experiments.sdFromE.default,
     patches: Object.freeze([...new Set(overrides.patches || [])].sort()),
   };
   if (!v.experiments.swapCost.options[c.swapCost]) throw new Error(`Unknown swap cost ${c.swapCost}`);
   for (const id of c.patches) if (!v.movePatches[id]) throw new Error(`Unknown move patch ${id}`);
+  // A declined patch (fails move validation) can only be replayed as history, never played on the permanent ruleset.
+  for (const id of c.patches) if (v.movePatches[id].declined && c.ruleset !== 'v1.0.0') throw new Error(`Move patch ${id} was declined by the owner; it can only be replayed under the values 1.0.0 ruleset`);
   if (!v.backRow.tests[c.backRow]) throw new Error(`Unknown back-row test ${c.backRow}`);
   if (!v.duration.models[c.duration]) throw new Error(`Unknown duration model ${c.duration}`);
   return Object.freeze(c);
@@ -229,14 +244,17 @@ export function patchedMove(speciesId, move, config) {
   return Object.freeze(m);
 }
 
-/** Which switches differ from the Gate A defaults, in words, for the Lab and the log. */
+/** Which switches differ from the ruleset's defaults, in words, for the Lab and the log. Implemented patches are not experiments under
+ * the current ruleset (they are already in the table), so they are not listed there. The ruleset itself is shown by the Lab, not in
+ * this list, so a values 1.0.0 replay writes exactly the log it wrote before. */
 export function activeExperiments(config) {
-  const out = [];
+  const out = []; const rs = CLASH_VALUES.rulesets[config.ruleset || CLASH_VALUES.rulesets.default];
   if (config.backRow !== CLASH_VALUES.backRow.default) out.push(`Back row ${config.backRow}`);
-  if (config.duration !== CLASH_VALUES.duration.default) out.push(`Duration ${config.duration}`);
+  if (config.duration !== rs.duration) out.push(`Duration ${config.duration}`);
   if (config.O1 && config.O2) out.push('O3 (O1 + O2)'); else if (config.O1) out.push('O1'); else if (config.O2) out.push('O2');
-  if (config.swapCost && config.swapCost !== CLASH_VALUES.experiments.swapCost.default) out.push(`Swap cost ${config.swapCost}`);
+  if (config.swapCost && config.swapCost !== rs.swapCost) out.push(`Swap cost ${config.swapCost}`);
   if (config.sdFromE && config.sdFromE !== CLASH_VALUES.experiments.sdFromE.default) out.push(`Sudden death E from ${config.sdFromE}`);
-  if (config.patches?.length) out.push(`Patches ${config.patches.join(', ')}`);
+  const listed = (config.patches || []).filter((id) => !((config.ruleset || 'current') === 'current' && CLASH_VALUES.movePatches[id]?.implemented));
+  if (listed.length) out.push(`Patches ${listed.join(', ')}`);
   return out;
 }

@@ -3,13 +3,19 @@
 // the golden fixture in engine.test.js proves it, and the first test here checks the default configuration.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { simulateClash } from '../../src/clash/engine.js';
-import { CLASH_VALUES, battleConfig, patchedMove } from '../../src/clash/values.js';
-import { CLASH_MOVES } from '../../src/data/clash-moves.js';
+import { simulateClash as baseSimulateClash } from '../../src/clash/engine.js';
+import { CLASH_VALUES, battleConfig as baseBattleConfig, patchedMove } from '../../src/clash/values.js';
+import { CLASH_MOVES_V1_0_0 as CLASH_MOVES } from '../../src/data/clash-moves-v1.0.0.js';
 import { KINDS, TRIGGERS, EFFECTS } from '../../src/clash/handlers.js';
 import { MANIFEST, GATE_PATCHES, B4_PATCHES, B5_PATCHES, B5_ADDED, gateConfig, describeEntry, manifestPatchIds } from '../../src/clash/balance-manifest.js';
 import { mon, byArch } from './helpers.js';
 import { createRng } from '../../src/core/rng.js';
+
+// Historical gate tests: these verify the Gate A-B.5 mechanisms exactly as they were measured, on the values 1.0.0 game (ruleset
+// 'v1.0.0': the frozen move table, Model F, swaps cost the action). The permanent values 1.1.0 game is covered by implementation.test.js.
+const HIST = Object.freeze({ ruleset: 'v1.0.0' });
+const battleConfig = (o = {}) => baseBattleConfig({ ...HIST, ...o });
+const simulateClash = (o) => baseSimulateClash({ ...o, config: Object.isFrozen(o.config) && o.config?.ruleset ? o.config : { ...HIST, ...(o.config || {}) } });
 
 const V = CLASH_VALUES; const P = V.movePatches;
 const tanks = byArch('Tank'), strikers = byArch('Striker'), supports = byArch('Support'), balanced = byArch('Balanced'), disruptors = byArch('Disruptor');

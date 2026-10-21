@@ -1,28 +1,31 @@
 // Beast Clash: the 72 signature battle moves, one per species, keyed by canonical species ID.
-// Generated from the reviewed move list (names and card text are the owner-reviewed ones); the
-// numbers are the Gate A starting values. A move is data: it names a kind, a trigger and its
+// Generated from the reviewed move list (names and card text are the owner-reviewed ones). The
+// numbers are the Gate A starting values, except the 15 owner-approved balance patches and the
+// Terrabull card correction made permanent in values 1.1.0 (2026-10-21; listed in
+// src/clash/balance-manifest.js as APPROVED_PATCHES). The values 1.0.0 table is frozen in
+// clash-moves-v1.0.0.js for historical replays and rollback. A move is data: it names a kind, a trigger and its
 // numbers, and handlers.js owns the rules. The football ability.effect is never read here.
 // This file imports nothing.
 const F = (o) => { for (const v of Object.values(o)) if (v && typeof v === 'object') F(v); return Object.freeze(o); };
 export const CLASH_MOVES = F({
   emberfox: {"name":"Flare Dash","archetype":"Striker","text":"Its first strike each battle lands first at 1.3x and may Burn","kind":"heavy","trigger":{"kind":"first"},"mult":1.3,"priority":true,"afflict":{"cond":"burn","chance":0.662}},
-  ashkit: {"name":"Cinder Tumble","archetype":"Balanced","text":"Every second strike hits 1.3x; below half HP those strikes also Burn","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.3,"afflict":{"cond":"burn","chance":1,"belowHp":0.5}},
+  ashkit: {"name":"Cinder Tumble","archetype":"Balanced","text":"Every second strike hits 1.3x and Burns","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.3,"afflict":{"cond":"burn","chance":1}},
   firestorm: {"name":"Meteor Pass","archetype":"Striker","text":"Every second strike drops a meteor for 1.4x with a chance to Burn","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.4,"afflict":{"cond":"burn","chance":0.481}},
-  cinderclaw: {"name":"Cinder Maul","archetype":"Striker","text":"Every second strike hits 1.5x and Burns, but it never strikes first","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.5,"afflict":{"cond":"burn","chance":1},"neverFirst":true},
+  cinderclaw: {"name":"Cinder Maul","archetype":"Striker","text":"Every second strike hits 1.5x and Burns","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.5,"afflict":{"cond":"burn","chance":1},"neverFirst":false},
   pyrelynx: {"name":"Heat Mirage","archetype":"Disruptor","text":"Its strikes may Daze, and a Dazed target that strikes it may Burn","kind":"hex","trigger":{"kind":"always"},"cond":"daze","chance":0.82,"retaliate":{"cond":"burn","chance":0.5,"whenTarget":"daze"}},
   pyroclast: {"name":"Magma Crust","archetype":"Tank","text":"Enters with a molten shield that erupts for 1x at the attacker when it breaks","kind":"guard","trigger":{"kind":"onEntry"},"shield":0.161,"erupt":1},
   tidepaw: {"name":"Tide Pool","archetype":"Support","text":"Every second exchange heals the most hurt ally","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.161,"target":"mostHurt"},
   mudcub: {"name":"Mud Splash","archetype":"Disruptor","text":"Its strikes Chill the target (slowed, strikes last)","kind":"hex","trigger":{"kind":"always"},"cond":"chill","chance":0.832},
   reefclaw: {"name":"Shell Clamp","archetype":"Tank","text":"Shield on entry; while the shield holds, the opposing front cannot be swapped out","kind":"guard","trigger":{"kind":"onEntry"},"shield":0.181,"clamp":true},
-  tidefin: {"name":"Undercurrent","archetype":"Disruptor","text":"From the back, every second exchange swaps the opponent's front two and hits the new front (arrival hit set by the back-row rule)","kind":"bench","trigger":{"kind":"every","n":2},"cond":"swap","swapKind":"frontTwo","hit":true},
+  tidefin: {"name":"Undercurrent","archetype":"Disruptor","text":"From the back, every second exchange swaps the opponent's front two and hits the new front at 0.8x","kind":"bench","trigger":{"kind":"every","n":2},"cond":"swap","swapKind":"frontTwo","hit":true,"hitMult":0.8},
   wavehorn: {"name":"Riptide Charge","archetype":"Balanced","text":"Every second strike hits 1.3x and, if the target survives, sweeps it to the back of its line","kind":"surge","trigger":{"kind":"every","n":2},"mult":1.3,"sweepTarget":true},
-  tsunarok: {"name":"Undertow","archetype":"Disruptor","text":"Every second exchange, from anywhere, drags the opponent's back monster to the front","kind":"bench","trigger":{"kind":"every","n":2},"cond":"swap","swapKind":"backToFront","anywhere":true},
+  tsunarok: {"name":"Undertow","archetype":"Disruptor","text":"Every second exchange, from anywhere, drags the opponent's back monster to the front, striking it at half strength and Chilling it","kind":"bench","trigger":{"kind":"every","n":2},"cond":"swap","swapKind":"backToFront","anywhere":true,"hit":true,"arrivalCond":"chill"},
   thornkit: {"name":"Seed Drop","archetype":"Support","text":"Every second exchange heals the front ally 10% and the next ally 6%","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.1,"target":"front","second":0.06},
   mossclaw: {"name":"Spore Swipe","archetype":"Balanced","text":"Every second strike hits 1.3x; it regrows 4% HP each time it is hit","kind":"surge","trigger":{"kind":"every","n":2},"mult":1.3,"regrowOnHit":0.04},
   rootram: {"name":"Rooted Stand","archetype":"Tank","text":"Shield on entry; takes 12% less while in front","kind":"guard","trigger":{"kind":"onEntry"},"shield":0.19,"wallText":0.12},
   leafhorn: {"name":"Canopy Shade","archetype":"Support","text":"Every second exchange heals the most hurt ally; that ally takes less from the next hit","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.172,"target":"mostHurt","brace":0.75},
   thornback: {"name":"Bramble Shell","archetype":"Tank","text":"Shield on entry; attackers that break it take thorn damage","kind":"guard","trigger":{"kind":"onEntry"},"shield":0.173,"thorns":0.5},
-  elderoot: {"name":"Ancient Grove","archetype":"Support","text":"Every second exchange heals every ally a little","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.06,"target":"all"},
+  elderoot: {"name":"Ancient Grove","archetype":"Support","text":"Every second exchange heals every ally 12%","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.12,"target":"all"},
   flicker: {"name":"Spark Charge","archetype":"Support","text":"Every second exchange charges the front ally's next strike +25%","kind":"mend","trigger":{"kind":"every","n":2},"heal":0,"target":"front","charge":0.25},
   voltfin: {"name":"Coil Jolt","archetype":"Balanced","text":"Every second strike hits 1.3x with a small chance to Shock","kind":"surge","trigger":{"kind":"every","n":2},"mult":1.3,"afflict":{"cond":"shock","chance":0.2}},
   voltfang: {"name":"Lightning Break","archetype":"Striker","text":"Strikes first in its first two exchanges, at 1.3x","kind":"heavy","trigger":{"kind":"every","n":1,"until":2},"mult":1.3,"priority":true,"priorityExchanges":2},
@@ -37,21 +40,21 @@ export const CLASH_MOVES = F({
   glacivern: {"name":"Whiteout","archetype":"Disruptor","text":"Once per battle, freezes the opposing front with a Shock that skips two of its strikes (never two in a row)","kind":"hex","trigger":{"kind":"once"},"cond":"shock","chance":1,"skips":2},
   gustling: {"name":"Lift","archetype":"Support","text":"Every second exchange heals the most hurt ally 10% and lifts it one place back in the line","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.1,"target":"mostHurt","lift":true},
   breezefang: {"name":"Gust Hop","archetype":"Balanced","text":"Every second strike hits twice at 0.65x","kind":"surge","trigger":{"kind":"every","n":2},"mult":0.65,"hits":2},
-  skywarden: {"name":"Downdraft","archetype":"Disruptor","text":"From the back, every second exchange swaps the opponent's front two","kind":"bench","trigger":{"kind":"every","n":2},"cond":"swap","swapKind":"frontTwo","hit":false},
+  skywarden: {"name":"Downdraft","archetype":"Disruptor","text":"From the back, every second exchange swaps the opponent's front two and Dazes the monster swapped in","kind":"bench","trigger":{"kind":"every","n":2},"cond":"swap","swapKind":"frontTwo","hit":false,"arrivalCond":"daze"},
   windlynx: {"name":"Updraft","archetype":"Support","text":"Every second exchange heals the front ally and lets it strike first next exchange","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.173,"target":"front","haste":true},
-  zephyr: {"name":"Tailwind","archetype":"Support","text":"Every fourth exchange, allies strike 10% harder for three exchanges","kind":"mend","trigger":{"kind":"every","n":4},"heal":0,"target":"all","rally":{"bonus":0.1,"exchanges":3}},
-  tempestra: {"name":"Cyclone","archetype":"Disruptor","text":"Its first strike spins the opposing front, Dazing it and swapping it back","kind":"hex","trigger":{"kind":"first"},"cond":"daze","chance":1,"sweepTarget":true},
+  zephyr: {"name":"Tailwind","archetype":"Support","text":"Every second exchange heals every ally 6% and makes allies strike 15% harder for three exchanges","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.06,"target":"all","rally":{"bonus":0.15,"exchanges":3}},
+  tempestra: {"name":"Cyclone","archetype":"Disruptor","text":"Every third strike sweeps the opposing front to the back and Dazes the monster pulled forward; if the sweep is refused, it Dazes the front","kind":"hex","trigger":{"kind":"every","n":3},"cond":"daze","chance":1,"sweepTarget":true,"cycloneArrival":true},
   pebble: {"name":"Stone Skin","archetype":"Tank","text":"Shield on entry, 5% larger with each evolution","kind":"guard","trigger":{"kind":"onEntry"},"shield":0.173,"perStage":0.05},
   rockram: {"name":"Ram Butt","archetype":"Balanced","text":"Every second strike hits 1.3x, or 1.6x against a shielded foe","kind":"surge","trigger":{"kind":"every","n":2},"mult":1.3,"vsShield":1.6},
   boulderox: {"name":"Stone Charge","archetype":"Tank","text":"Shield on entry and its first strike hits 1.3x","kind":"guard","trigger":{"kind":"onEntry"},"shield":0.161,"firstStrike":1.3},
   stoneguard: {"name":"Crushing Rush","archetype":"Striker","text":"Every second strike hits 1.45x and breaks shields twice as fast","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.45,"shieldBreak":2},
-  terrabull: {"name":"Quake Step","archetype":"Disruptor","text":"Every second exchange shakes the opposing front two, Chilling them","kind":"bench","trigger":{"kind":"every","n":2},"cond":"chill","chance":0.783,"frontTwo":true},
+  terrabull: {"name":"Quake Step","archetype":"Disruptor","text":"From the back, every second exchange shakes the opposing front two, Chilling them","kind":"bench","trigger":{"kind":"every","n":2},"cond":"chill","chance":0.783,"frontTwo":true},
   titanolith: {"name":"Landslide","archetype":"Tank","text":"Enters with the largest shield in the game and cannot be swapped","kind":"guard","trigger":{"kind":"onEntry"},"shield":0.26,"immovable":true},
-  shadowkit: {"name":"Shadow Pounce","archetype":"Balanced","text":"Every second strike hits 1.3x; it dodges the first strike after it steps to the front","kind":"surge","trigger":{"kind":"every","n":2},"mult":1.3,"dodgeOnEntry":true},
+  shadowkit: {"name":"Shadow Pounce","archetype":"Balanced","text":"Every second strike hits 1.3x; it dodges the first strike after it enters the front, except when it swaps in by choice","kind":"surge","trigger":{"kind":"every","n":2},"mult":1.3,"dodgeOnEntry":true,"dodgeEntry":"notVoluntary"},
   nightowl: {"name":"Night Swoop","archetype":"Balanced","text":"Its first strike always lands first, then it fights evenly","kind":"strike","trigger":{"kind":"first"},"priority":true},
-  duskrunner: {"name":"Vanishing Cut","archetype":"Striker","text":"Every second strike hits 1.4x and it dodges the next hit","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.4,"dodgeNext":true},
+  duskrunner: {"name":"Vanishing Cut","archetype":"Striker","text":"Every third strike hits 1.4x and it dodges the next hit","kind":"heavy","trigger":{"kind":"every","n":3},"mult":1.4,"dodgeNext":true},
   mireclaw: {"name":"Ambush","archetype":"Striker","text":"Its first strike after entering the front hits 1.5x","kind":"heavy","trigger":{"kind":"firstAfterEntry"},"mult":1.5},
-  nocturne: {"name":"Eclipse","archetype":"Disruptor","text":"Its first strike Dazes the whole opposing line for one exchange","kind":"hex","trigger":{"kind":"first"},"cond":"daze","chance":1,"wholeLine":true,"duration":1},
+  nocturne: {"name":"Eclipse","archetype":"Disruptor","text":"Its first strike Dazes the whole opposing line for two exchanges","kind":"hex","trigger":{"kind":"first"},"cond":"daze","chance":1,"wholeLine":true,"duration":2},
   nyxshade: {"name":"Night Veil","archetype":"Disruptor","text":"The first strike aimed at it each battle misses; its strikes Daze","kind":"hex","trigger":{"kind":"always"},"cond":"daze","chance":0.874,"veil":true},
   glimmer: {"name":"Glow Mend","archetype":"Support","text":"Every second exchange heals the two most hurt allies 7% each","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.07,"target":"twoMostHurt"},
   sunwhistle: {"name":"Dawn Song","archetype":"Support","text":"Every second exchange heals the front ally","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.168,"target":"front"},
@@ -66,9 +69,9 @@ export const CLASH_MOVES = F({
   metalhorn: {"name":"Shield Wall","archetype":"Support","text":"Every second exchange shields the most hurt ally 12%","kind":"mend","trigger":{"kind":"every","n":2},"heal":0,"target":"mostHurt","shield":0.12},
   aegistron: {"name":"Fortress","archetype":"Tank","text":"Shield on entry and takes 12% less while in front: the strongest Tank","kind":"guard","trigger":{"kind":"onEntry"},"shield":0.25,"wallText":0.12},
   mindwing: {"name":"Mind Mend","archetype":"Support","text":"Every second exchange heals the most hurt ally and clears its Daze","kind":"mend","trigger":{"kind":"every","n":2},"heal":0.166,"target":"mostHurt","cleanse":"daze"},
-  shadewisp: {"name":"Mirage Veil","archetype":"Support","text":"Every second exchange shields an ally with an illusion that absorbs a hit","kind":"mend","trigger":{"kind":"every","n":2},"heal":0,"target":"mostHurt","illusion":true},
-  cerebrix: {"name":"Foresight","archetype":"Disruptor","text":"Every second exchange pulls the opponent's strongest monster to the back","kind":"bench","trigger":{"kind":"every","n":2},"cond":"swap","swapKind":"strongestBack","anywhere":true},
-  echolot: {"name":"Echo Strike","archetype":"Balanced","text":"Every second strike hits 1.3x and returns part of the damage it last took","kind":"surge","trigger":{"kind":"every","n":2},"mult":1.3,"echo":0.3},
+  shadewisp: {"name":"Mirage Veil","archetype":"Support","text":"Every fourth exchange shields an ally with an illusion that absorbs a hit","kind":"mend","trigger":{"kind":"every","n":4},"heal":0,"target":"mostHurt","illusion":true},
+  cerebrix: {"name":"Foresight","archetype":"Disruptor","text":"Every second exchange pulls the opponent's strongest monster to the back; when it cannot, it Dazes the front","kind":"bench","trigger":{"kind":"every","n":2},"cond":"swap","swapKind":"strongestBack","anywhere":true,"refusedEffect":{"cond":"daze"}},
+  echolot: {"name":"Echo Strike","archetype":"Balanced","text":"Every second strike hits 1.3x and adds half of the last damage it took","kind":"surge","trigger":{"kind":"every","n":2},"mult":1.3,"echo":0,"echoFlat":0.5},
   enigmane: {"name":"Mind Game","archetype":"Disruptor","text":"Its first strike makes the target skip its answer that exchange (it bites on the fake); later strikes may Daze","kind":"hex","trigger":{"kind":"always"},"cond":"daze","chance":0.874,"fakeFirst":true},
   astralux: {"name":"Blink","archetype":"Striker","text":"Once per battle teleports past the front foe to hit the second at 1.5x","kind":"heavy","trigger":{"kind":"once"},"mult":1.5,"blink":true},
   drakeling: {"name":"Dragon Pounce","archetype":"Striker","text":"Every second strike hits 1.4x, rising by 0.1x with each evolution","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.4,"perStage":0.1},
@@ -76,6 +79,6 @@ export const CLASH_MOVES = F({
   sablewing: {"name":"Wing Shadow","archetype":"Disruptor","text":"From the back, every second exchange Dazes the opposing front","kind":"bench","trigger":{"kind":"every","n":2},"cond":"daze","chance":0.833},
   scaleguard: {"name":"Dragonhide","archetype":"Balanced","text":"When a hit takes 20% of its HP, it heals 8% (once each exchange)","kind":"strike","trigger":{"kind":"always"},"dragonhide":{"threshold":0.2,"heal":0.08}},
   vyrnax: {"name":"Dragon's Roar","archetype":"Striker","text":"At battle start the opposing front strikes last for two exchanges; its strikes hit 1.4x","kind":"heavy","trigger":{"kind":"every","n":2},"mult":1.4,"roar":2},
-  aurodrax: {"name":"Sovereign Arm","archetype":"Balanced","text":"Its strikes cannot be dodged or reduced; +20% in sudden death","kind":"strike","trigger":{"kind":"always"},"sovereign":true,"suddenDeathBonus":0.2},
+  aurodrax: {"name":"Sovereign Arm","archetype":"Balanced","text":"Every second strike hits 1.3x; its strikes cannot be dodged or reduced; +20% in sudden death","kind":"surge","trigger":{"kind":"every","n":2},"sovereign":true,"suddenDeathBonus":0.2,"mult":1.3},
 });
 export const CLASH_MOVE_IDS = Object.freeze(Object.keys(CLASH_MOVES));

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Beast Clash Level 1 new-monster check (GDD §25.6). Usage:
-//   npm run clash:level1 -- --species=<id> [--patch=<movePatch id>] [--gate=defaults|Gate B|B.5|Final] [--n=24]
+//   npm run clash:level1 -- --species=<id> [--patch=<movePatch id>] [--gate=defaults|Gate B|B.5|Final|Approved] (defaults = the permanent values 1.1.0 game; gates replay the values 1.0.0 ruleset) [--n=24]
 // Fails (exit 1) only on invalid states, determinism breaks or a move that never fires; win rates are information.
 import { level1Check } from '../src/clash/level1.js';
 import { gateConfig } from '../src/clash/balance-manifest.js';

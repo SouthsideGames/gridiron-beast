@@ -4,6 +4,7 @@
 import { simulateClash, logHash } from './engine.js';
 import { CLASH_VALUES, battleConfig, patchedMove } from './values.js';
 import { syntheticMonster } from './batch.js';
+import { moveTableFor } from './stats.js';
 import { REFERENCE_TEAMS, REFERENCE_PARTNERS } from './reference-teams.js';
 import { CLASH_MOVES } from '../data/clash-moves.js';
 import { createRng } from '../core/rng.js';
@@ -37,7 +38,7 @@ export function level1Check({ species, config = {}, patch = null, n = 12, seed =
   if (!CLASH_MOVES[species]) throw new Error(`Unknown species ${species}`);
   const patches = patch ? [...(config.patches || []).filter((x) => V.movePatches[x].species !== V.movePatches[patch].species), patch] : (config.patches || []);
   const base = battleConfig({ ...config, patches });
-  const move = patchedMove(species, CLASH_MOVES[species], base);
+  const move = patchedMove(species, moveTableFor(base)[species], base);
   const rng = createRng(seed); const problems = []; const matchups = []; const flags = []; let fires = 0, battles = 0; const firesBy = { 3: 0, 5: 0 };
   for (const size of [3, 5]) {
     for (const [name, team] of Object.entries(REFERENCE_TEAMS[size])) {

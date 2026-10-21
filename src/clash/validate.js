@@ -10,10 +10,10 @@ const FIXED = new Set(['name', 'archetype', 'text', 'kind', 'trigger']);
 
 /**
  * Problems with the move table as a whole and each row. Empty when valid. `moves` defaults to the game's table; the balance
- * review passes a proposed table to check it before any change is made permanent. `alwaysFirstExceptions` lists species whose
- * move may always strike first; it is empty unless the owner approves an exception, and the rule still applies to every other move.
+ * review passes a proposed table to check it before any change is made permanent. There are no exceptions: the owner declined
+ * the proposed Noctlet always-first exception (2026-10-21), so no move may always strike first.
  */
-export function validateMoves(moves = CLASH_MOVES, { alwaysFirstExceptions = [] } = {}) {
+export function validateMoves(moves = CLASH_MOVES) {
   const out = []; const ids = Object.keys(moves); const species = new Set(SPECIES_DEX.map((s) => s.id));
   for (const id of ids) if (!species.has(id)) out.push(`${id}: not a species ID`);
   for (const s of SPECIES_DEX) if (!moves[s.id]) out.push(`${s.id}: no battle move`);
@@ -37,7 +37,7 @@ export function validateMoves(moves = CLASH_MOVES, { alwaysFirstExceptions = [] 
       if (m.cond !== 'swap' && m.chance != null && m.chance < 1) { const band = m.cond === 'shock' ? B.shockChance : B.chance; if (m.chance < band[0] || m.chance > band[1]) out.push(`${id}: ${m.cond} chance ${m.chance} outside ${band}`); }
       if (m.cond === 'shock' && m.trigger.kind === 'every' && m.trigger.n !== CLASH_VALUES.shock.every) out.push(`${id}: Shock must be attempted every ${CLASH_VALUES.shock.every} strikes`);
     }
-    if (m.priority && m.trigger.kind === 'always' && !alwaysFirstExceptions.includes(id)) out.push(`${id}: a move that always strikes first is not allowed`);
+    if (m.priority && m.trigger.kind === 'always') out.push(`${id}: a move that always strikes first is not allowed`);
     if (m.afflict && !['burn', 'chill', 'daze', 'shock'].includes(m.afflict.cond)) out.push(`${id}: unknown afflict ${m.afflict.cond}`);
   }
   for (const [a, n] of Object.entries(ARCH_COUNTS)) if (counts[a] !== n) out.push(`archetype ${a}: ${counts[a]} moves, approved ${n}`);

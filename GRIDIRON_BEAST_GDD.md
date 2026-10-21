@@ -21,7 +21,7 @@ Decision key — **LOCKED**: approved for this build. **TUNABLE**: implemented, 
 |---|---|---|
 | **Franchise Mode** | The owner of an organization: staff, roster, scouting, the cap, the Board (§8, §15–§23) | **Current development priority.** Everything else in this document describes it unless marked otherwise |
 | **Career Mode** (working name) | One monster they create, playing a career on a team (§24) | **Documented only. Not approved for development.** No code, menus, placeholders or systems are to be built from §24 until the owner authorizes it |
-| **Beast Clash** | A collector who builds 3v3 and 5v5 monster teams for turn-based battles (§25) | **Phase 1 engine and Clash Lab built; balance changes are Lab-only switches until the owner approves permanent implementation.** Not yet connected to franchise data or saves |
+| **Beast Clash** | A collector who builds 3v3 and 5v5 monster teams for turn-based battles (§25) | **Phase 1 engine and Clash Lab built. Permanent balance configuration: values 1.1.0 (owner-approved 2026-10-21, §25.10).** Every other balance change is an inactive Lab experiment. Not yet connected to franchise data or saves |
 
 The two modes share the football world (clubs, league structure, rules, the match engine, monster data and species art conventions). Their progression and save data are separate: nothing earned in one mode changes the other.
 
@@ -797,7 +797,7 @@ A mathematically balanced game is not necessarily a fun one.
 
 ### 25.5 Closure of the broad balance gates
 
-**Gate B.5 is the final scheduled broad combat-balance gate for the current Beast Clash foundation.** There is no automatic Gate B.6, and no further multi-species improvement project. The seven species Gate B.5 found functionally outclassed (Terrabull, Lumini, Elderoot, Crustank, Murklaw, Astralux, Muddlet) and the borderline ones (Tideram, Bramblet, Flurrit, Zippit) are acceptable as they are, unless a verified mechanical defect, a misleading description, an exploit or another real gameplay problem is found. The Gate B–B.5 evidence and tooling are kept for reference.
+**Gate B.5 is the final scheduled broad combat-balance gate for the current Beast Clash foundation.** (Owner addendum, 2026-10-21: the final implementation authorization nevertheless approved Elderoot's 12% Ancient Grove and Tempestra's Storm Cyclone as part of the permanent configuration, §25.10.) There is no automatic Gate B.6, and no further multi-species improvement project. The seven species Gate B.5 found functionally outclassed (Terrabull, Lumini, Elderoot, Crustank, Murklaw, Astralux, Muddlet) and the borderline ones (Tideram, Bramblet, Flurrit, Zippit) are acceptable as they are, unless a verified mechanical defect, a misleading description, an exploit or another real gameplay problem is found. The Gate B–B.5 evidence and tooling are kept for reference.
 
 ### 25.6 Testing levels
 
@@ -825,3 +825,20 @@ Each proposed change answers: does it improve the experience; does it make an ab
 ### 25.9 Owner approval
 
 **No Beast Clash balance change becomes permanent without the owner's explicit approval.** Experimental changes live as named, reversible Lab switches (`src/clash/values.js` `movePatches`, recorded in `src/clash/balance-manifest.js`); the game's defaults change only in an approved implementation step, with the golden replay fixtures and football fingerprints re-verified. Franchise integration, save-schema changes and new development phases each need their own authorization.
+
+### 25.10 Permanent balance configuration — values 1.1.0 (implemented 2026-10-21)
+
+The owner's Final Balance Implementation Authorization (2026-10-21) made this configuration the permanent Beast Clash game. It is recorded in `src/clash/balance-manifest.js` (`APPROVED_PATCHES`, `APPROVED_SETTINGS`) and generated into `BEAST_CLASH_BALANCE_MANIFEST.md`.
+
+| Status | What | Where it lives |
+|---|---|---|
+| **Permanent** (values 1.1.0) | Duration **C6** (stalemate rule) and **half-cost voluntary swaps**; 15 move changes: Scorchulk `scorchulk_maul_first`, Wispira `wispira_veil_every4`, Duskyre `duskyre_cut_every3`, Umbrikit `umbrikit_pounce_not_voluntary`, Echolot `echolot_echo_flat`, Zephiro `zephiro_tailwind_combo`, Tsunarok `tsunarok_undertow_hit_chill`, Ripplet `ripplet_undercurrent_08`, Aurodrax `aurodrax_sovereign_surge`, Cindruff `cindruff_tumble_always`, Cerebrix `cerebrix_foresight_refused_daze` (B.2 version, no 0.15x hit), Nocturne `nocturne_eclipse_2` (B.2 version, no opening trigger), Aeralis `aeralis_downdraft_daze` (B.3 version, no front activation or initiative), Elderoot `elderoot_grove_12` (heal 6% → 12%, nothing else), Tempestra `tempestra_cyclone_storm`; Terrabull card text only ("From the back, every second exchange shakes the opposing front two, Chilling them") | `src/data/clash-moves.js` (values and card text), `src/clash/values.js` defaults (`duration`, `swapCost`), `battleConfig({})` |
+| **Declined** | Noctlet `noctlet_always_first` and the always-first validation exception. Validation has no exception option; the patch fails validation and the permanent ruleset refuses it | `validateMoves()`; `battleConfig` guard |
+| **Inactive Lab experiments** | Every other patch in `movePatches`, duration R2, swap cost `free`, back-row tests A–D/E2, O1–O3, sudden-death start variants | Off unless the Clash Lab turns them on; never part of the permanent game |
+| **Historical** | Gate A–B.5 and the final review were measured on the values 1.0.0 game. The `v1.0.0` ruleset (frozen table `src/data/clash-moves-v1.0.0.js`, Model F, action-cost swaps) replays them exactly; `gateConfig(gate)` uses it, and old replay keys map to it | `tests/clash/fixtures/golden-v1.0.0.json`, `pre-1.1.0-snapshot.json` |
+| **Future** | New monsters follow §25.7 (Level 1). Further balance work, franchise integration and save changes each need their own authorization | — |
+
+Engine hooks used by the permanent table: `arrivalCond`, `refusedEffect`, `hitMult`, `dodgeEntry`, `echoFlat`, `cycloneArrival` (plus pre-existing Gate A mechanics). The other Gate B.4–B.5 hooks stay in the engine, inert, for Lab experiments and historical replays; a test proves the permanent table carries none of their keys.
+
+**Rollback:** the values 1.0.0 game is commit `59cfa7a` (tag `clash-v1.0.0-pre-implementation`, local). Restoring it is a revert of the implementation commit, touching only `src/clash/`, `src/data/clash-moves*.js`, Clash tests and fixtures, the Clash Lab screen and documentation; no football, franchise or save file is involved. Without a revert, `battleConfig({ ruleset: 'v1.0.0' })` plays the old game exactly.
+

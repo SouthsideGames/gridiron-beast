@@ -1,13 +1,15 @@
 // Beast Clash implementation readiness (final review, 2026-10-21): the recommended final configuration, the review record,
-// validation of the move table as it would stand if approved, the proposed Noctlet exception (not active), the integrity of the
-// final configuration, and the Level 1 check. Nothing here changes a default: the game still validates and plays its own table.
+// validation of reviewed tables, the integrity of the final configuration, and the Level 1 check. The review was measured on the
+// values 1.0.0 game, so these tests use the values 1.0.0 ruleset and table. The owner then approved 15 patches (values 1.1.0;
+// implementation.test.js) and declined the Noctlet always-first exception, which no longer exists anywhere.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { simulateClash } from '../../src/clash/engine.js';
 import { CLASH_VALUES, battleConfig } from '../../src/clash/values.js';
 import { CLASH_MOVES } from '../../src/data/clash-moves.js';
+import { CLASH_MOVES_V1_0_0 } from '../../src/data/clash-moves-v1.0.0.js';
 import { validateMoves } from '../../src/clash/validate.js';
-import { FINAL_PATCHES, REVIEW, REVIEWED_ENTRIES, ALTERNATES, TEXT_CORRECTIONS, PROPOSED_ALWAYS_FIRST_EXCEPTIONS, gateConfig, finalMoveTable, B5_PATCHES } from '../../src/clash/balance-manifest.js';
+import { FINAL_PATCHES, REVIEW, REVIEWED_ENTRIES, ALTERNATES, TEXT_CORRECTIONS, APPROVED_PATCHES, gateConfig, finalMoveTable, B5_PATCHES } from '../../src/clash/balance-manifest.js';
 import { level1Check, integrityProblems } from '../../src/clash/level1.js';
 import { REFERENCE_TEAMS, REFERENCE_PARTNERS } from '../../src/clash/reference-teams.js';
 import { mon, byArch } from './helpers.js';
@@ -23,11 +25,11 @@ test('final configuration: every reviewed item has a verdict, and the final set 
   const sp = FINAL_PATCHES.map((id) => P[id].species); assert.equal(new Set(sp).size, sp.length, 'no species carries two patches');
   for (const a of ALTERNATES) assert.ok(!B5_PATCHES.includes(a.id) && P[a.id], a.id);
   const c = gateConfig('Final'); assert.equal(c.duration, 'C6'); assert.equal(c.swapCost, 'half'); assert.deepEqual([...c.patches], [...FINAL_PATCHES].sort());
-  assert.deepEqual(battleConfig({}).patches, [], 'nothing is active by default');
+  assert.deepEqual(battleConfig({}).patches, [], 'no patch is listed by default (the approved ones are in the table itself)');
 });
 
-test('validation: the move table as it would stand if approved passes every rule; each reviewed patch passes with its proposed card; the game table is unchanged', () => {
-  assert.deepEqual(validateMoves(), [], 'the current game table');
+test('validation: the reviewed tables pass every rule; each reviewed patch passes with its proposed card except the declined Noctlet change', () => {
+  assert.deepEqual(validateMoves(), [], 'the permanent game table'); assert.deepEqual(validateMoves(CLASH_MOVES_V1_0_0), [], 'the values 1.0.0 table');
   assert.deepEqual(validateMoves(finalMoveTable()), [], 'the final table with proposed cards and text corrections');
   for (const id of Object.keys(REVIEW)) {
     if (!P[id]) continue; const sp = P[id].species;
@@ -35,33 +37,17 @@ test('validation: the move table as it would stand if approved passes every rule
     const probs = validateMoves(table).filter((x) => x.startsWith(`${sp}:`));
     if (id === 'noctlet_always_first') assert.deepEqual(probs, ['nightowl: a move that always strikes first is not allowed']); else assert.deepEqual(probs, [], id);
   }
-  for (const [sp, t] of Object.entries(TEXT_CORRECTIONS)) assert.notEqual(CLASH_MOVES[sp].text, t.text, `${sp} correction is proposed, not applied`);
+  for (const [sp, t] of Object.entries(TEXT_CORRECTIONS)) { assert.notEqual(CLASH_MOVES_V1_0_0[sp].text, t.text); assert.equal(CLASH_MOVES[sp].text, t.text, `${sp} correction is implemented`); }
+  assert.deepEqual(CLASH_MOVES, finalMoveTable(APPROVED_PATCHES));
 });
 
-test('Noctlet exception (proposed, not active): exempts only Night Swoop, ordering stays deterministic and valid, battles always end', () => {
+test('Noctlet exception (declined): there is no exception option, the always-first change fails validation, and the permanent ruleset refuses it', () => {
   const withNoctlet = finalMoveTable([...FINAL_PATCHES, 'noctlet_always_first']);
-  assert.deepEqual(validateMoves(withNoctlet, { alwaysFirstExceptions: PROPOSED_ALWAYS_FIRST_EXCEPTIONS }), []);
-  const other = { ...withNoctlet, rockram: { ...withNoctlet.rockram, priority: true, trigger: { kind: 'always' } } };
-  assert.ok(validateMoves(other, { alwaysFirstExceptions: PROPOSED_ALWAYS_FIRST_EXCEPTIONS }).includes('rockram: a move that always strikes first is not allowed'), 'the rule still applies to every other move');
-  const cfg = gateConfig('Final', { patches: [...FINAL_PATCHES, 'noctlet_always_first'], policies: { a: 'smart', b: 'smart' } });
-  const rng = createRng(61); let checked = 0, first = 0, overridden = 0;
-  for (let k = 0; k < 40; k++) {
-    const b = k % 3 === 0 ? [mon('nightowl', 900 + k), mon(tanks[k % tanks.length], 950 + k), mon('vyrnax', 990 + k)] : [mon(strikers[k % strikers.length], 900 + k), mon('windlynx', 950 + k), mon('vyrnax', 990 + k)];
-    const a = [mon('nightowl', 800 + k), mon(supports[k % supports.length], 850 + k), mon(tanks[(k + 2) % tanks.length], 870 + k)];
-    const seed = rng.int(1e6); const r = simulateClash({ a, b, seed, config: cfg }); const r2 = simulateClash({ a, b, seed, config: cfg });
-    assert.deepEqual(r.log.map((e) => e.text), r2.log.map((e) => e.text), 'deterministic'); assert.ok(r.exchanges <= V.battle.exchangeCap);
-    assert.deepEqual(integrityProblems(r), []);
-    const acted = {};
-    for (const e of r.log) {
-      if (e.kind === 'damage' && e.actor && !/arrival|splash|thorns|erupts|refused|burns/.test(e.text)) { const key = `${e.ex}|${e.actor}`; acted[key] = (acted[key] || 0) + 1; }
-      if (e.kind === 'initiative' && e.target && /^a/.test(e.actor + e.target)) {
-        const noct = r.lines.a.find((x) => x.species === 'nightowl').id;
-        if (e.actor === noct || e.target === noct) { checked++; if (e.actor === noct) first++; else if (/Updraft|roared down|Night Swoop/.test(e.text) || e.coin) overridden++; }
-      }
-    }
-    for (const [key, n] of Object.entries(acted)) { const mult = r.lines.a.concat(r.lines.b).find((x) => x.id === key.split('|')[1]).combatant.move.hits || 1; assert.ok(n <= mult + 1, `one action per front per exchange (${key}: ${n})`); }
-  }
-  assert.ok(checked > 50 && first + overridden === checked, `Noctlet first ${first}, overridden by haste/Roar/mirror ${overridden}, of ${checked}`);
+  assert.deepEqual(validateMoves(withNoctlet), ['nightowl: a move that always strikes first is not allowed']);
+  assert.deepEqual(validateMoves(withNoctlet, { alwaysFirstExceptions: ['nightowl'] }), ['nightowl: a move that always strikes first is not allowed'], 'a passed exception list has no effect');
+  assert.throws(() => battleConfig({ patches: ['noctlet_always_first'] }), /declined/);
+  assert.ok(gateConfig('B.4').patches.includes('noctlet_always_first'), 'the B.4 measurement can still be replayed as history (values 1.0.0 ruleset)');
+  assert.equal(gateConfig('B.4').ruleset, 'v1.0.0');
 });
 
 test('the final configuration keeps the shared forced-swap cadence, valid states, half-cost heals, the Umbrikit fix, sudden death and determinism', () => {

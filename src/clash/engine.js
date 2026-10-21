@@ -370,9 +370,13 @@ export function replayKey({ a, b, seed, config }) {
   const snap = (m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, nature: m.nature, level: m.level, stage: m.stage || 0, potential: m.potential, fatigue: m.fatigue || 0, attributes: { ...m.attributes } });
   return JSON.stringify({ engine: V.engineVersion, values: V.version, seed, config, a: a.map(snap), b: b.map(snap) });
 }
+// Values versions this build can still replay exactly, and the ruleset that reproduces each (values 1.1.0 kept 1.0.0 as a ruleset).
+const REPLAYABLE = Object.freeze({ '1.0.0': 'v1.0.0' });
 export function parseReplayKey(line) {
-  const k = JSON.parse(line); if (k.values !== V.version || k.engine !== V.engineVersion) throw new Error(`Replay key is for engine ${k.engine} / values ${k.values}; this build is ${V.engineVersion} / ${V.version}`);
-  return { a: k.a, b: k.b, seed: k.seed, config: k.config };
+  const k = JSON.parse(line);
+  if (k.engine !== V.engineVersion || (k.values !== V.version && !REPLAYABLE[k.values])) throw new Error(`Replay key is for engine ${k.engine} / values ${k.values}; this build is ${V.engineVersion} / ${V.version}`);
+  const config = k.values === V.version ? k.config : { ...k.config, ruleset: REPLAYABLE[k.values] };
+  return { a: k.a, b: k.b, seed: k.seed, config };
 }
 /** Stable hash of a battle log, for golden-seed tests. */
 export function logHash(result) {
