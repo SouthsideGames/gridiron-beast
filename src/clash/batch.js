@@ -47,7 +47,7 @@ function lineup(rng, spec, size, { overall, overallSpread = 0, durability = 0, s
  */
 export function runFamily(family, onProgress = null) {
   const { a = 'random', b = 'random', size = 3, n = 500, overall = 65, overallSpread = 0, durability = 0, seed = 1, config = {}, sidesAlternate = true, shuffle = false } = family;
-  const rng = createRng(seed); const arch = {}; const species = {}; const lengths = []; let capped = 0, aWins = 0; const by = { knockout: 0, hp: 0, coin: 0 };
+  const rng = createRng(seed); const arch = {}; const species = {}; const moveUse = {}; const lengths = []; let capped = 0, aWins = 0; const by = { knockout: 0, hp: 0, coin: 0 };
   const tallies = { benchActs: 0, benchHits: 0, benchBlocked: 0, forcedSwaps: 0, swapRefused: 0, voluntarySwaps: 0, liftSwaps: 0, arrivalDamage: 0, entryShields: 0, heal: 0, shield: 0, shockAttempts: 0, shockApplied: 0, shockReplaced: 0, shockResisted: 0, shockMissed: 0, shockSkips: 0, kos: 0, kosAfterSd: 0, stalemate: 0 };
   let sdReached = 0, sdResolvedKo = 0, sdResolvedHp = 0; const hist = {};
   for (let i = 0; i < n; i++) {
@@ -56,10 +56,19 @@ export function runFamily(family, onProgress = null) {
     const r = simulateClash({ a: swap ? B : A, b: swap ? A : B, seed: rng.seed(), config });
     const winA = swap ? r.winner === 'b' : r.winner === 'a';
     if (winA) aWins++; lengths.push(r.exchanges); if (r.capped) capped++; by[r.by]++; hist[r.exchanges] = (hist[r.exchanges] || 0) + 1;
-    const sdFrom = CLASH_VALUES.suddenDeath[r.model]?.from ?? 12; const inSd = r.exchanges >= sdFrom; if (inSd) { sdReached++; if (r.by === 'knockout') sdResolvedKo++; else sdResolvedHp++; }
+    const sdFrom = r.model === 'E' && r.config?.sdFromE ? r.config.sdFromE : (CLASH_VALUES.suddenDeath[r.model]?.from ?? 12); const inSd = r.exchanges >= sdFrom; if (inSd) { sdReached++; if (r.by === 'knockout') sdResolvedKo++; else sdResolvedHp++; }
     for (const [side, L] of [['a', r.lines.a], ['b', r.lines.b]]) for (const x of L) { const o = (arch[x.archetype] ||= [0, 0]); o[1]++; if (r.winner === side) o[0]++; const sp = (species[x.species] ||= [0, 0, x.archetype]); sp[1]++; if (r.winner === side) sp[0]++; }
+    const nameOf = {}; for (const side of ['a', 'b']) for (const x of r.lines[side]) nameOf[x.id] = x;
+    const use = (id) => { const x = nameOf[id]; if (!x) return null; return (moveUse[x.species] ||= { apps: 0, acts: 0, dmg: 0, heal: 0, shield: 0, conds: 0, swaps: 0, misses: 0 }); };
+    for (const x of [...r.lines.a, ...r.lines.b]) { const u = use(x.id); if (u) u.apps++; }
     let prevEnter = null;
     for (const e of r.log) {
+      // named-move value delivered by the actor's species (the move's name is in the event text)
+      if (e.actor && nameOf[e.actor]) { const mvName = nameOf[e.actor].combatant.move.name; if (e.text.includes(mvName)) { const u = use(e.actor);
+        if (e.kind === 'damage') { u.acts++; u.dmg += e.damage; } else if (e.kind === 'heal') { u.acts++; u.heal += e.amount || 0; } else if (e.kind === 'shield') { u.acts++; u.shield += e.amount || 0; }
+        else if (e.kind === 'condition' && (e.result === 'applied' || e.result === 'replaced')) { u.acts++; u.conds++; } else if (e.kind === 'swap' && e.forced) { u.acts++; u.swaps++; } else if (e.kind === 'buff' || e.kind === 'debuff') { u.acts++; u.buffs = (u.buffs || 0) + 1; } } }
+      if (e.kind === 'miss' && /illusion absorbs|dodges|veil/.test(e.text) && e.target && nameOf[e.target]) { const u = use(e.target); if (u) u.absorbs = (u.absorbs || 0) + 1; }
+
       if (e.kind === 'shield' && e.actor === e.target && prevEnter === e.actor) tallies.entryShields++;
       prevEnter = e.kind === 'enter' ? e.actor : null;
       if (e.kind === 'condition' && e.condition === 'shock') { tallies.shockAttempts++; if (e.result === 'applied') tallies.shockApplied++; else if (e.result === 'replaced') tallies.shockReplaced++; else if (e.result === 'missed') tallies.shockMissed++; else if (/^resisted/.test(e.result)) tallies.shockResisted++; }
@@ -84,6 +93,7 @@ export function runFamily(family, onProgress = null) {
     family: { a, b, size, n, overall, overallSpread, durability, seed, config, shuffle },
     aWin: wilson(aWins, n), aWins, n, archetypes: Object.fromEntries(ARCHETYPES.filter((k) => arch[k]).map((k) => [k, { rate: wilson(arch[k][0], arch[k][1]), wins: arch[k][0], n: arch[k][1] }])),
     species: Object.fromEntries(Object.entries(species).map(([k, [w, m, ar]]) => [k, { wins: w, n: m, archetype: ar, rate: wilson(w, m) }])),
+    moveUse,
     length: { mean: Math.round(lengths.reduce((s, x) => s + x, 0) / n * 10) / 10, median: q(0.5), p90: q(0.9), p95: q(0.95), hist },
     capPct: Math.round(capped / n * 1000) / 10, by: { knockout: by.knockout, hp: by.hp, coin: by.coin },
     suddenDeath: { reachedPct: Math.round(sdReached / n * 1000) / 10, resolvedKo: sdResolvedKo, resolvedHp: sdResolvedHp },
@@ -94,10 +104,11 @@ export function runFamily(family, onProgress = null) {
 /** Merge several runs of the same family (the Lab runs chunks; the Gate B tool runs the same chunks headless). */
 export function mergeRuns(parts) {
   const n = parts.reduce((s, p) => s + p.n, 0); const aWins = parts.reduce((s, p) => s + p.aWins, 0);
-  const arch = {}, species = {}, by = { knockout: 0, hp: 0, coin: 0 }, hist = {}, tallies = {}; let capped = 0, sdR = 0, sdK = 0, sdH = 0, sum = 0;
+  const arch = {}, species = {}, moveUse = {}, by = { knockout: 0, hp: 0, coin: 0 }, hist = {}, tallies = {}; let capped = 0, sdR = 0, sdK = 0, sdH = 0, sum = 0;
   for (const p of parts) {
     for (const [k, v] of Object.entries(p.archetypes)) { const o = (arch[k] ||= [0, 0]); o[0] += v.wins; o[1] += v.n; }
     for (const [k, v] of Object.entries(p.species)) { const o = (species[k] ||= [0, 0, v.archetype]); o[0] += v.wins; o[1] += v.n; }
+    for (const [k, v] of Object.entries(p.moveUse || {})) { const o = (moveUse[k] ||= {}); for (const [f, x] of Object.entries(v)) o[f] = (o[f] || 0) + x; }
     for (const k of Object.keys(by)) by[k] += p.by[k]; for (const [k, v] of Object.entries(p.length.hist)) hist[k] = (hist[k] || 0) + v;
     for (const [k, v] of Object.entries(p.tallies)) tallies[k] = (tallies[k] || 0) + v;
     capped += p.capPct * p.n / 100; sdR += p.suddenDeath.reachedPct * p.n / 100; sdK += p.suddenDeath.resolvedKo; sdH += p.suddenDeath.resolvedHp; sum += p.length.mean * p.n;
@@ -106,7 +117,7 @@ export function mergeRuns(parts) {
   return {
     family: { ...parts[0].family, n }, aWin: wilson(aWins, n), aWins, n,
     archetypes: Object.fromEntries(ARCHETYPES.filter((k) => arch[k]).map((k) => [k, { rate: wilson(arch[k][0], arch[k][1]), wins: arch[k][0], n: arch[k][1] }])),
-    species: Object.fromEntries(Object.entries(species).map(([k, [w, m, ar]]) => [k, { wins: w, n: m, archetype: ar, rate: wilson(w, m) }])),
+    species: Object.fromEntries(Object.entries(species).map(([k, [w, m, ar]]) => [k, { wins: w, n: m, archetype: ar, rate: wilson(w, m) }])), moveUse,
     length: { mean: Math.round(sum / n * 10) / 10, median: q(0.5), p90: q(0.9), p95: q(0.95), hist }, capPct: Math.round(capped / n * 1000) / 10, by,
     suddenDeath: { reachedPct: Math.round(sdR / n * 1000) / 10, resolvedKo: sdK, resolvedHp: sdH },
     perBattle: Object.fromEntries(Object.keys(tallies).map((k) => [k, Math.round(tallies[k] / n * 100) / 100])), tallies,

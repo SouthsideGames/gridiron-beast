@@ -46,6 +46,10 @@ export function registerClashLab(Router, app) {
       <div style="margin-top:6px;font-size:12px">Defensive duration (provisional, baseline F on)</div><div class="chips">${Object.keys(V.duration.models).map((k) => chip('duration', k, k, st.config.duration)).join('')}</div>
       <div class="dim" style="font-size:11px">${esc(V.duration.models[st.config.duration].label)}</div>
       <div style="margin-top:6px;font-size:12px">5v5 structural options (experimental, all OFF by default)</div><div class="chips">${chip('o', 'none', 'None', st.config.O1 ? (st.config.O2 ? 'O3' : 'O1') : st.config.O2 ? 'O2' : 'none')}${chip('o', 'O1', 'O1 heal stacking', st.config.O1 && !st.config.O2 ? 'O1' : '')}${chip('o', 'O2', 'O2 Tank HP +6%', st.config.O2 && !st.config.O1 ? 'O2' : '')}${chip('o', 'O3', 'O3 both', st.config.O1 && st.config.O2 ? 'O3' : '')}</div>
+      <div style="margin-top:6px;font-size:12px">Gate B.1 investigation: voluntary swap cost (experimental, default action)</div><div class="chips">${Object.keys(V.experiments.swapCost.options).map((k) => chip('swapCost', k, k, st.config.swapCost || V.experiments.swapCost.default)).join('')}</div>
+      <div style="margin-top:6px;font-size:12px">Gate B.1 investigation: Model E sudden-death start (experimental, default 12)</div><div class="chips">${V.experiments.sdFromE.options.map((k) => chip('sdFromE', String(k), k === 99 ? 'never' : String(k), String(st.config.sdFromE || V.experiments.sdFromE.default))).join('')}</div>
+      <div style="margin-top:6px;font-size:12px">Gate B.1 candidate move patches (experimental, none on by default; tap to toggle)</div><div class="chips">${Object.entries(V.movePatches).filter(([, v]) => v && typeof v === 'object').map(([k, v]) => `<button class="chip ${(st.config.patches || []).includes(k) ? 'on accent' : ''}" data-action="patch" data-v="${k}" title="${esc(v.label)}">${esc(k)}</button>`).join('')}</div>
+      <div class="dim" style="font-size:11px">${(st.config.patches || []).map((k) => esc(V.movePatches[k].label)).join('; ') || 'No patches on.'}</div>
       <div style="margin-top:6px;font-size:12px">Swap policies (closed list)</div><div class="row" style="gap:6px;flex-wrap:wrap">A: ${Clash.POLICIES.map((p) => chip('polA', p, p, st.config.policies.a)).join('')}</div><div class="row" style="gap:6px;flex-wrap:wrap">B: ${Clash.POLICIES.map((p) => chip('polB', p, p, st.config.policies.b)).join('')}</div></div>`;
 
   function lineupView() {
@@ -182,6 +186,8 @@ export function registerClashLab(Router, app) {
       delegate(root, {
         view: (el) => { stop(); st.view = el.dataset.v; st.statsOpen = null; if (el.dataset.v !== 'replay') st.i = 0; Router.render(); },
         backRow: (el) => { stop(); st.config.backRow = el.dataset.v; Router.render(); }, duration: (el) => { st.config.duration = el.dataset.v; Router.render(); },
+        swapCost: (el) => { stop(); st.config.swapCost = el.dataset.v; Router.render(); }, sdFromE: (el) => { stop(); st.config.sdFromE = Number(el.dataset.v); Router.render(); },
+        patch: (el) => { stop(); const set = new Set(st.config.patches || []); if (set.has(el.dataset.v)) set.delete(el.dataset.v); else set.add(el.dataset.v); st.config.patches = [...set].sort(); Router.render(); },
         o: (el) => { const v = el.dataset.v; st.config.O1 = v === 'O1' || v === 'O3'; st.config.O2 = v === 'O2' || v === 'O3'; Router.render(); },
         polA: (el) => { stop(); st.config.policies.a = el.dataset.v; Router.render(); }, polB: (el) => { st.config.policies.b = el.dataset.v; Router.render(); },
         pick: (el) => { st.pickFor = el.dataset.side; Router.render(); }, pickClose: () => { st.pickFor = null; Router.render(); }, pickArch: (el) => { st.moves.arch = el.dataset.v; Router.render(); },

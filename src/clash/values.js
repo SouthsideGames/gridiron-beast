@@ -63,6 +63,41 @@ export const CLASH_VALUES = deepFreeze({
   experiments: { tag: 'experimental',
     O1: { label: 'O1: in 4-5 per side, a team\'s second and later heals in one exchange are 60% strength', on: false, minPerSide: 4, laterHeal: 0.6 },
     O2: { label: 'O2: in 4-5 per side, Tanks get +6% battle HP', on: false, minPerSide: 4, tankHp: 1.06 },
+    // Gate B.1 investigation switches (owner-authorised for testing only; every default is the Gate B baseline)
+    swapCost: { label: 'Voluntary swap cost', default: 'action', options: { action: 'the swap uses the side\'s action (current rule)', half: 'the incoming monster still acts, at half damage', free: 'the incoming monster acts normally' } },
+    sdFromE: { label: 'Model E sudden-death start (1-3 per side)', default: 12, options: [12, 15, 18, 99] },
+  },
+  // Gate B.1 candidate move patches: named, reversible overrides of one species' move, applied only when a battle's
+  // config lists the patch id. Nothing here is live unless the owner adopts it into clash-moves.js.
+  movePatches: { tag: 'experimental',
+    wispira_veil_every3: { species: 'shadewisp', label: 'Mirage Veil every third exchange (was every second)', changes: { trigger: { kind: 'every', n: 3 } } },
+    wispira_veil_self: { species: 'shadewisp', label: 'Mirage Veil shields the front ally only (was the most hurt)', changes: { target: 'front' } },
+    duskyre_cut_13: { species: 'duskrunner', label: 'Vanishing Cut 1.3x (was 1.4x), keeps the dodge', changes: { mult: 1.3 } },
+    duskyre_no_dodge: { species: 'duskrunner', label: 'Vanishing Cut 1.4x without the dodge', changes: { dodgeNext: false } },
+    galyx_updraft_14: { species: 'windlynx', label: 'Updraft heals 14% (was 17.3%)', changes: { heal: 0.14 } },
+    florant_shade_14: { species: 'leafhorn', label: 'Canopy Shade heals 14% (was 17.2%), brace unchanged', changes: { heal: 0.14 } },
+    nyxshade_daze_70: { species: 'nyxshade', label: 'Night Veil Daze chance 70% (was 87.4%)', changes: { chance: 0.70 } },
+    zephiro_tailwind_every2: { species: 'zephyr', label: 'Tailwind every second exchange (was every fourth), +10% for 3', changes: { trigger: { kind: 'every', n: 2 } } },
+    zephiro_tailwind_15: { species: 'zephyr', label: 'Tailwind +15% for 3 exchanges (was +10%), every fourth', changes: { rally: { bonus: 0.15, exchanges: 3 } } },
+    zephiro_tailwind_heal: { species: 'zephyr', label: 'Tailwind also heals every ally 6% (was 0)', changes: { heal: 0.06 } },
+    elderoot_grove_09: { species: 'elderoot', label: 'Ancient Grove heals every ally 9% (was 6%)', changes: { heal: 0.09 } },
+    coglet_gearshot_11: { species: 'gearwing', label: 'Gear Shot: steady roll and strikes at 1.1x (was 1.0x)', changes: { kind: 'surge', mult: 1.1, trigger: { kind: 'always' } } },
+    tsunarok_undertow_hit: { species: 'tsunarok', label: 'Undertow: the dragged monster takes a 0.5x arrival hit (was none)', changes: { hit: true } },
+    tsunarok_undertow_every1: { species: 'tsunarok', label: 'Undertow attempts every exchange (was every second)', changes: { trigger: { kind: 'every', n: 1 } } },
+    cerebrix_foresight_hit: { species: 'cerebrix', label: 'Foresight: the pulled-in monster takes a 0.5x arrival hit (was none)', changes: { hit: true } },
+    aeralis_downdraft_hit: { species: 'skywarden', label: 'Downdraft: the swapped-in monster takes a 0.5x arrival hit (was none)', changes: { hit: true } },
+    // round two (after the first before/after pass)
+    wispira_veil_every4: { species: 'shadewisp', label: 'Mirage Veil every fourth exchange', changes: { trigger: { kind: 'every', n: 4 } } },
+    duskyre_cut_every3: { species: 'duskrunner', label: 'Vanishing Cut every third strike (was every second), 1.4x with the dodge', changes: { trigger: { kind: 'every', n: 3 } } },
+    florant_shade_every3: { species: 'leafhorn', label: 'Canopy Shade every third exchange (was every second)', changes: { trigger: { kind: 'every', n: 3 } } },
+    zephiro_tailwind_combo: { species: 'zephyr', label: 'Tailwind every second exchange, +15% for 3, and heals every ally 6%', changes: { trigger: { kind: 'every', n: 2 }, heal: 0.06, rally: { bonus: 0.15, exchanges: 3 } } },
+    elderoot_grove_12: { species: 'elderoot', label: 'Ancient Grove heals every ally 12% (was 6%)', changes: { heal: 0.12 } },
+    coglet_gearshot_heavy: { species: 'gearwing', label: 'Gear Shot: every second strike hits 1.3x, and its strikes never roll below full', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.3 } },
+    cerebrix_foresight_hit_every1: { species: 'cerebrix', label: 'Foresight every exchange (was every second) with a 0.5x arrival hit', changes: { hit: true, trigger: { kind: 'every', n: 1 } } },
+    lumini_mend_10: { species: 'glimmer', label: 'Glow Mend heals the two most hurt allies 10% each (was 7%)', changes: { heal: 0.10 } },
+    zippit_charge_40: { species: 'flicker', label: 'Spark Charge: +40% on the front ally\'s next strike (was +25%)', changes: { charge: 0.40 } },
+    nocturne_eclipse_2: { species: 'nocturne', label: 'Eclipse: the whole line is Dazed for two exchanges (was one)', changes: { duration: 2 } },
+    scorchulk_maul_first: { species: 'cinderclaw', label: 'Cinder Maul may strike first again (the never-first clause removed)', changes: { neverFirst: false } },
   },
 
   // ---- pure calculators (P1 formula; no franchise hook in Phase 1)
@@ -83,10 +118,23 @@ export function battleConfig(overrides = {}) {
     duration: overrides.duration || v.duration.default,
     O1: !!overrides.O1, O2: !!overrides.O2,
     policies: Object.freeze({ a: overrides.policies?.a || 'none', b: overrides.policies?.b || 'none' }),
+    swapCost: overrides.swapCost || v.experiments.swapCost.default,
+    sdFromE: Number(overrides.sdFromE) || v.experiments.sdFromE.default,
+    patches: Object.freeze([...new Set(overrides.patches || [])].sort()),
   };
+  if (!v.experiments.swapCost.options[c.swapCost]) throw new Error(`Unknown swap cost ${c.swapCost}`);
+  for (const id of c.patches) if (!v.movePatches[id]) throw new Error(`Unknown move patch ${id}`);
   if (!v.backRow.tests[c.backRow]) throw new Error(`Unknown back-row test ${c.backRow}`);
   if (!v.duration.models[c.duration]) throw new Error(`Unknown duration model ${c.duration}`);
   return Object.freeze(c);
+}
+
+/** A species' move under a config: the reviewed card, with any listed Gate B.1 patch applied on top (frozen). */
+export function patchedMove(speciesId, move, config) {
+  const ids = (config?.patches || []).filter((id) => CLASH_VALUES.movePatches[id]?.species === speciesId);
+  if (!ids.length) return move;
+  let m = { ...move }; for (const id of ids) m = { ...m, ...CLASH_VALUES.movePatches[id].changes };
+  return Object.freeze(m);
 }
 
 /** Which switches differ from the Gate A defaults, in words, for the Lab and the log. */
@@ -95,5 +143,8 @@ export function activeExperiments(config) {
   if (config.backRow !== CLASH_VALUES.backRow.default) out.push(`Back row ${config.backRow}`);
   if (config.duration !== CLASH_VALUES.duration.default) out.push(`Duration ${config.duration}`);
   if (config.O1 && config.O2) out.push('O3 (O1 + O2)'); else if (config.O1) out.push('O1'); else if (config.O2) out.push('O2');
+  if (config.swapCost && config.swapCost !== CLASH_VALUES.experiments.swapCost.default) out.push(`Swap cost ${config.swapCost}`);
+  if (config.sdFromE && config.sdFromE !== CLASH_VALUES.experiments.sdFromE.default) out.push(`Sudden death E from ${config.sdFromE}`);
+  if (config.patches?.length) out.push(`Patches ${config.patches.join(', ')}`);
   return out;
 }

@@ -110,3 +110,4 @@ InitTestScene*.unity*
 export/
 tools/out/
 tools/out/gateb/gateb.json
+tools/out/gateb1/*.json

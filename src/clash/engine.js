@@ -18,7 +18,7 @@ const V = CLASH_VALUES;
 const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v === 'object' && !Object.isFrozen(v)) deepFreeze(v); return Object.freeze(o); };
 
 /** Sudden-death multiplier for the model in force at exchange `ex`. */
-export function rampFor(model, ex) { const m = V.suddenDeath[model]; return Math.min(m.cap, 1 + m.step * Math.max(0, ex - (m.from - 1))); }
+export function rampFor(model, ex, from = null) { const m = V.suddenDeath[model]; const f = from ?? m.from; return Math.min(m.cap, 1 + m.step * Math.max(0, ex - (f - 1))); }
 export function rampModelFor(perSide) { return perSide >= 4 ? 'F' : 'E'; }
 
 /**
@@ -34,7 +34,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
   if (!POLICIES.includes(cfg.policies.a) || !POLICIES.includes(cfg.policies.b)) throw new Error('Unknown swap policy');
   if (!a?.length || !b?.length || a.length > V.battle.maxPerSide || b.length > V.battle.maxPerSide) throw new Error('Each side needs 1-5 monsters');
   const perSide = Math.max(a.length, b.length);
-  const model = rampModelFor(perSide); const br = V.backRow.tests[cfg.backRow]; const dur = V.duration.models[cfg.duration];
+  const model = rampModelFor(perSide); const sdFrom = model === 'E' ? cfg.sdFromE : null; const br = V.backRow.tests[cfg.backRow]; const dur = V.duration.models[cfg.duration];
   const rng = createRng(seed);
   const events = []; let ex = 0; let lastKO = 0;
   const E = { rng, ex: 0, ramp: 1, healMult: 1, config: cfg, perSide, note: null, log: null, onShieldBroken: null, afterHit: null };
@@ -133,7 +133,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     const f = front(side); const held = canLeave(f, 'self'); if (held) { E.log('swap_refused', f, null, `${side.policy} swap refused: ${held}`); return false; }
     const i = side.line.indexOf(f), j = side.line.indexOf(incoming); [side.line[i], side.line[j]] = [side.line[j], side.line[i]];
     side.lastVoluntary = ex; side.swappedThisExchange = true;
-    E.log('swap', f, incoming, `${side.policy} policy: ${f.c.name} swaps out for ${incoming.c.name} (uses the side's action)`, { forced: false, out: f.c.id, in: incoming.c.id });
+    E.log('swap', f, incoming, `${side.policy} policy: ${f.c.name} swaps out for ${incoming.c.name}${cfg.swapCost === 'action' ? ' (uses the side\'s action)' : cfg.swapCost === 'half' ? ' (acts at half damage)' : ''}`, { forced: false, out: f.c.id, in: incoming.c.id });
     bench(f); enter(incoming, 'swaps in'); return true;
   }
   function healMultiplier() {
@@ -158,7 +158,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     if (fires && mv.trigger.kind === 'firstAfterEntry') x.firstAfterEntryDue = false;
     const label = fires ? mv.name : 'strike';
     // Bench kinds that also act from the front (Undertow, Foresight) use the swap as their strike.
-    if (mv.kind === 'bench' && mv.anywhere && ex % (mv.trigger.n || 1) === 0) { if (forcedSwap(x, foeSide, mv.swapKind, { label: mv.name })) return; }
+    if (mv.kind === 'bench' && mv.anywhere && ex % (mv.trigger.n || 1) === 0) { if (forcedSwap(x, foeSide, mv.swapKind, { hitMult: mv.hit ? br.swapHit : 0, label: mv.name })) return; }
     let mult = 1, hits = 1, shieldBreak = 1;
     if (fires) {
       if (mv.kind === 'heavy' || mv.kind === 'surge') { mult = mv.mult + (mv.perStage && mv.kind === 'heavy' ? mv.perStage * x.c.stage : 0); hits = mv.hits || 1; shieldBreak = mv.shieldBreak || 1; }
@@ -169,6 +169,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
       if (mv.fakeFirst && x.strikes === 1) { foe.unansweredUntil = ex; E.log('debuff', x, foe, `${x.c.name}'s Mind Game: ${foe.c.name} bites on the fake and skips its answer`); }
     }
     if (mv.firstStrike && x.strikes === 1) mult = mv.firstStrike;
+    if (x.side.swappedThisExchange && cfg.swapCost === 'half') mult = Math.round(mult * 50) / 100;
     let dealt = 0;
     for (let h = 0; h < hits; h++) { if (foe.hp <= 0) break; dealt += hit(E, x, foe, mult, { label: hits > 1 ? `${label} hit ${h + 1}` : label, shieldBreak }); }
     if (mv.splash) { const next = alive(foeSide).find((y) => y !== foe); if (next && next.hp > 0 && (fires || mv.kind === 'hex')) { const d = Math.round(dealt * mv.splash); if (d > 0) { next.hp = Math.max(0, next.hp - d); x.stats.dealt += d; next.stats.taken += d; E.log('damage', x, next, `${mv.name} splashes ${next.c.name} for ${d}`, { damage: d, hpAfter: next.hp }); if (next.hp <= 0) knockout(next, x, mv.name); } } }
@@ -235,14 +236,14 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
   }
 
   // ---- opening
-  push({ ex: 0, kind: 'start', text: `Beast Clash: ${a.length} v ${b.length}. Sudden death Model ${model} from exchange ${V.suddenDeath[model].from}. Back row ${cfg.backRow}; duration ${cfg.duration}${activeExperiments(cfg).length ? `; experiments: ${activeExperiments(cfg).join(', ')}` : ''}.`, model, config: cfg, experiments: activeExperiments(cfg) });
+  push({ ex: 0, kind: 'start', text: `Beast Clash: ${a.length} v ${b.length}. Sudden death Model ${model} from exchange ${sdFrom ?? V.suddenDeath[model].from}. Back row ${cfg.backRow}; duration ${cfg.duration}${activeExperiments(cfg).length ? `; experiments: ${activeExperiments(cfg).join(', ')}` : ''}.`, model, config: cfg, experiments: activeExperiments(cfg) });
   for (const side of [S.a, S.b]) enter(side.line[0], 'starts in front');
 
   // ---- the exchange loop
   let winner = null, by = null;
   while (ex < V.battle.exchangeCap) {
-    ex += 1; E.ex = ex; E.ramp = rampFor(model, ex); E.healMult = healMultiplier();
-    if (E.ramp > 1 && rampFor(model, ex - 1) === 1) push({ ex, kind: 'sudden_death', text: `Sudden death begins: damage x${E.ramp.toFixed(2)}, rising each exchange`, ramp: E.ramp });
+    ex += 1; E.ex = ex; E.ramp = rampFor(model, ex, sdFrom); E.healMult = healMultiplier();
+    if (E.ramp > 1 && rampFor(model, ex - 1, sdFrom) === 1) push({ ex, kind: 'sudden_death', text: `Sudden death begins: damage x${E.ramp.toFixed(2)}, rising each exchange`, ramp: E.ramp });
     else if (E.ramp > 1) push({ ex, kind: 'sudden_death', text: `Sudden death: damage x${E.ramp.toFixed(2)}`, ramp: E.ramp });
     if (cfg.duration === 'C6' && E.healMult < 1) push({ ex, kind: 'stalemate', text: `Stalemate rule: no knockout for ${ex - lastKO} exchanges, healing and shields at ${Math.round(E.healMult * 100)}%`, healMult: E.healMult, ramp: E.ramp, quiet: ex - lastKO });
     if (cfg.duration === 'R2' && E.healMult < 1) push({ ex, kind: 'stalemate', text: `R2: healing and shields at ${Math.round(E.healMult * 100)}%`, healMult: E.healMult, ramp: E.ramp });
@@ -278,7 +279,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     for (const x of [fa, fb]) x.haste = false;
     // 5-7. the two actions with a knockout check between
     for (const x of order) {
-      if (x.hp <= 0 || x.side.swappedThisExchange) continue;
+      if (x.hp <= 0 || (x.side.swappedThisExchange && cfg.swapCost === 'action')) continue;
       if (front(x.side) !== x) continue; // swept away by the other action
       act(x, other(x.side));
       if (ended()) break;
