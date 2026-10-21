@@ -32,7 +32,7 @@ export const ROUTES = {
   // ---- playbook expansion (reserve plays first; any play may use them)
   speed_out: ([x, y]) => [[x, y], [x + 5, y], [x + 5.5, y - inwardOf(y) * 8]],
   sit: ([x, y]) => [[x, y], [x + 5, y], [x + 5.5, y + inwardOf(y) * 0.5]],
-  snag: ([x, y]) => [[x, y], [x + 4, y + inwardOf(y) * 1.5], [x + 5.5, y + inwardOf(y) * 2.5]],
+  snag: ([x, y]) => [[x, y], [x + 5, y + inwardOf(y) * 1], [x + 4.2, y + inwardOf(y) * 2.4]], // up and in, then curls back to the quarterback
   arrow: ([x, y]) => [[x, y], [x + 3, y - inwardOf(y) * 5], [x + 4, y - inwardOf(y) * 11]],
   whip: ([x, y]) => [[x, y], [x + 4, y + inwardOf(y) * 3], [x + 4.5, y - inwardOf(y) * 4]],
   pivot: ([x, y]) => [[x, y], [x + 4, y - inwardOf(y) * 2], [x + 4.5, y + inwardOf(y) * 6]],
@@ -66,7 +66,7 @@ export const ALTERNATE_ROUTES = new Set(['flat', 'swing', 'screen', 'bubble', 'w
 /** Quick-game routes: thrown on rhythm without waiting for the break. */
 export const QUICK_ROUTES = new Set(['slant', 'flat', 'screen', 'bubble', 'hitch', 'stick', 'swing', 'drag', 'shallow', 'speed_out', 'sit', 'snag', 'arrow', 'whip', 'pivot', 'tunnel', 'drift']);
 /** Routes that settle at their last point instead of continuing on the same line. */
-export const SETTLE_ROUTES = new Set(['curl', 'hitch', 'comeback', 'stick', 'screen', 'bubble', 'sit', 'snag', 'hook', 'tunnel', 'drift']);
+export const SETTLE_ROUTES = new Set(['curl', 'hitch', 'comeback', 'screen', 'bubble', 'sit', 'hook', 'tunnel', 'drift']); // stick and snag keep working after the break (owner review, 2026-10-20)
 
 export function routePoints(name, align) {
   const fn = ROUTES[name];

@@ -133,3 +133,35 @@ test('every route runner and ball carrier follows his drawn line (walk-through w
   }
   assert.deepEqual(off, []);
 });
+
+test('screens: the linemen let the rush through, get out in front and block the second level (owner review)', () => {
+  const screens = Object.values(PLAYS).filter((p) => p.side === 'offense' && p.onField.some((s) => p.assignments[s].a === 'release'));
+  assert.ok(screens.length >= 8, 'live and reserve screens');
+  for (const p of screens) {
+    let released = 0, rushersBlocked = 0;
+    for (const d of ['cover_3', 'fire_zone', 'cover_1']) for (let seed = 1; seed <= 6; seed++) {
+      const r = simulatePlay({ offensePlay: p, defensePlay: PLAYS[d], seed });
+      released += r.events.filter((e) => e.kind === 'screen_release').length;
+      const throwT = r.events.find((e) => e.kind === 'throw')?.t ?? 9;
+      // After the throw no releasing lineman is still blocking a pass rusher.
+      const rel = p.onField.filter((s) => p.assignments[s].a === 'release');
+      rushersBlocked += r.events.filter((e) => e.kind === 'shed' && rel.includes(e.blocker) && e.t > throwT && ['DL1', 'DL2', 'DL3'].includes(e.by)).length;
+    }
+    assert.ok(released > 0, `${p.id} linemen release`);
+    assert.equal(rushersBlocked, 0, `${p.id} released linemen never block a rusher after the throw`);
+  }
+});
+
+test('stick and snag keep working after the break; hard cuts are planted at the break (owner review)', () => {
+  const run = (id) => simulatePlay({ offensePlay: PLAYS[id], defensePlay: PLAYS.cover_3, seed: 1, options: { dryRun: { noDefense: true } } });
+  for (const [id, slot] of [['angle_stick', 'TE'], ['bunch_snag', 'TE'], ['snag', 'WR2']]) {
+    const p = PLAYS[id], pts = p.assignments[slot].points, end = pts[pts.length - 1];
+    const r = run(id); const last = r.frames.at(-1).off.find((x) => x[0] === slot);
+    assert.ok(Math.hypot(last[1] - end[0], last[2] - end[1]) > 1, `${id} ${slot} keeps moving past the end of his line`);
+  }
+  // A speed out is taken square: 1.5 yards down the out leg he is within half a yard of the drawn line.
+  const p = PLAYS.twins_speed_out, pts = p.assignments.WR2.points, [bx, by] = pts[1], [cx, cy] = pts[2];
+  const L = Math.hypot(cx - bx, cy - by), q = [bx + (cx - bx) / L * 1.5, by + (cy - by) / L * 1.5];
+  const tr = run('twins_speed_out').frames.map((f) => f.off.find((x) => x[0] === 'WR2'));
+  assert.ok(Math.min(...tr.map((o) => Math.hypot(o[1] - q[0], o[2] - q[1]))) < 0.5, 'the out is cut square');
+});

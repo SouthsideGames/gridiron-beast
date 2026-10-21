@@ -149,7 +149,7 @@ export default function batch(b) {
     P('WR2', ['WR2'], 'quick', ['screen', 'quick', 'short'], 'The outside receiver comes back inside behind the line; the slot blocks out and the left guard leads.')),
   'Against off coverage and aggressive pass rushers.', 'The receiver catches it moving inside, then follows the guard upfield.', 'Cover 3, Cover 4 and All-Out Pressure.', 'Man Press and Robber.');
 
-  add(O('jailbreak', 'Jailbreak Screen', 'spread_left', { QB: PASS(1.0), WR2: R('tunnel'), LG: RELEASE([0, 6]), RG: RELEASE([1, 10]), RB: BLOCK, WR1: R('go'), WR3: R('go'), },
+  add(O('jailbreak', 'Jailbreak Screen', 'spread_left', { QB: PASS(1.4), WR2: R('tunnel'), LG: RELEASE([0.5, 8]), RG: RELEASE([1.5, 12]), RB: BLOCK, WR1: R('go'), WR3: R('go'), },
     P('WR2', ['WR2', 'WR3'], 'three', ['screen', 'short', 'blitz_beater'], 'Both guards release to the right; the receiver comes inside behind them for a convoy.')),
   'When the defence brings pressure: let it in and throw behind it.', 'The quarterback waits a beat, then throws as both guards get out in front.', 'All-Out Pressure, Fire Zone and Cover 0.', 'QB Spy and Max Drop.');
 
@@ -169,9 +169,9 @@ export default function batch(b) {
     P('WR3', ['WR3'], 'quick', ['screen', 'quick', 'short'], 'The inside trips receiver steps back for the ball; the other two block and the left guard leads.')),
   'Quick perimeter yards from an empty set.', 'Two receivers and a guard block for the slot; he needs one cut.', 'Cover 4 and Max Drop.', 'Man Press and Cover 2 Zone.');
 
-  add(O('flex_slip', 'Flex Slip Screen', 'tight_flex', { QB: PASS(0.9), TE: R('tunnel'), LG: RELEASE([0, 4]), WR1: R('go'), RB: BLOCK, RG: BLOCK },
-    P('TE', ['TE'], 'three', ['screen', 'short'], 'The flexed tight end comes back inside behind the line with the left guard leading.')),
-  'When the defence treats the flexed tight end as a receiver.', 'He catches it going inside and follows the guard.', 'Cover 3 and Cover 4.', 'Robber.');
+  add(O('flex_slip', 'Flex Slip Screen', 'tight_flex', { QB: PASS(1.2), TE: R('screen'), LG: RELEASE([1, 11]), WR1: R('go'), RB: BLOCK, RG: BLOCK },
+    P('TE', ['TE'], 'three', ['screen', 'short'], 'The flexed tight end sells a block for a beat, then slips back and out toward the sideline behind the releasing left guard.')),
+  'When the defence treats the flexed tight end as a receiver.', 'He catches it drifting outside, then turns up behind the guard.', 'Cover 3 and Cover 4.', 'Robber.');
 
   // ---- short-yardage and goal line
   add(O('goal_fade', 'Goal Line Fade', 'goal_jumbo', { QB: PASS(), WR1: R('fade'), TE: R('flat'), RB: BLOCK, LG: BLOCK, RG: BLOCK },

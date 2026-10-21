@@ -117,6 +117,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     a.y = clamp(a.y, B.left + 0.6, B.right - 0.6);
   }
   const offs = actors.filter((a) => a.team === 'off');
+  const screenPlay = offensePlay.onField.some((sl) => offensePlay.assignments[sl]?.a === 'release');
   const defs = actors.filter((a) => a.team === 'def');
   const qb = bySlot.off.QB;
   const manKeys = manKeyTargets(offensePlay);
@@ -173,7 +174,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (desired > cap) desired = cap; // braking into a cut (followPath)
     const ux = d > 0 ? dx / d : 0, uy = d > 0 ? dy / d : 0;
     const dvx = ux * desired - a.vx, dvy = uy * desired - a.vy;
-    const dv = Math.hypot(dvx, dvy), maxDv = a.accel * DT;
+    const dv = Math.hypot(dvx, dvy), maxDv = a.accel * DT * (a.cutUntil > t ? 1.9 : 1); // planting out of a hard cut
     const k = dv > maxDv ? maxDv / dv : 1;
     a.vx += dvx * k; a.vy += dvy * k;
   }
@@ -285,17 +286,20 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (a.wp >= points.length) return true;
     const [tx, ty] = points[a.wp];
     const d = Math.hypot(tx - a.x, ty - a.y), brake = a.accel * 0.8;
-    let cap = Infinity;
+    let cap = Infinity, sharp = 0;
     const nxt = points[a.wp + 1];
     if (nxt) {
       const ix = tx - a.x, iy = ty - a.y, ox = nxt[0] - tx, oy = nxt[1] - ty, li = Math.hypot(ix, iy), lo = Math.hypot(ox, oy);
       if (li > 0.05 && lo > 0.05) {
         const turn = Math.acos(clamp((ix * ox + iy * oy) / (li * lo), -1, 1));
-        if (turn > 0.6) { const vTurn = a.maxSpeed * clamp(1 - turn / 2.6, 0.2, 1); cap = Math.sqrt(vTurn * vTurn + 2 * brake * d); }
+        if (turn > 0.6) { const vTurn = a.maxSpeed * clamp(1 - turn / 1.9, 0.14, 1); cap = Math.sqrt(vTurn * vTurn + 2 * brake * d); sharp = turn; }
       }
     } else if (settleAtEnd) cap = Math.sqrt(2 * brake * Math.max(0, d - 0.3));
     steer(a, tx, ty, speedScale, 0.7, cap);
-    if (dist(a, { x: tx, y: ty }) < 0.8) a.wp += 1;
+    // A hard cut is taken at the break, not rounded off before it: he plants on the spot and drives out of it.
+    const dd = dist(a, { x: tx, y: ty });
+    const past = nxt && dd < 1.2 && (a.x - tx) * (nxt[0] - tx) + (a.y - ty) * (nxt[1] - ty) > 0; // already beyond the break: take the cut now
+    if (dd < (sharp > 1.1 ? 0.45 : 0.8) || past) { a.wp += 1; if (sharp > 0.9) a.cutUntil = t + 0.3; }
     return a.wp >= points.length;
   }
   function routeEndTarget(a) {
@@ -303,6 +307,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const dx = last[0] - prev[0], dy = last[1] - prev[1], d = Math.hypot(dx, dy) || 1;
     const r = a.assignment.r;
     if (SETTLE_ROUTES.has(r)) return [last[0], last[1]]; // settle
+    if (r === 'snag') return [last[0], clamp(last[1] + (last[1] > 0 ? -4 : 4), B.left + 1.5, B.right - 1.5)]; // works across the defender's face toward the middle
     return [last[0] + (dx / d) * 6, clamp(last[1] + (dy / d) * 6, B.left + 1.5, B.right - 1.5)]; // keep working
   }
   function escortBlock(a) {
@@ -373,9 +378,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function offenseTick(a) {
     const asg = a.assignment;
     if (ball.holder === a && (phase === 'carry' || a !== qb)) { carrierMove(a); return; }
+    if (asg.a === 'release' && !a.released && t >= screenReleaseAt()) screenRelease(a); // lets go of his man on time, even mid-block
     if (a.engaged) { resolveEngagement(a); return; }
     const someoneCarrying = phase === 'carry' || (phase === 'run' && handoffDone) || (ball.holder && ball.holder !== qb);
     if (a === qb && (ball.inAir || (ball.holder && ball.holder !== qb) || result)) { steer(a, a.x, a.y, 0, 0.2); return; }
+    if (a.released) { screenBlock(a); return; } // screen linemen stay on their wall
     if (ball.holder && ball.holder.team === 'off' && ball.holder !== qb && a !== qb && !dry?.noDefense) { escortBlock(a); return; } // walk-through: blockers stay on their drawn assignments
     if (ball.holder && ball.holder.team === 'def') { pursue(a); return; }
     if (ball.inAir) {
@@ -385,7 +392,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     switch (asg.a) {
       case 'route': {
-        if (a.wp < asg.points.length) followPath(a, asg.points, 1, SETTLE_ROUTES.has(asg.r)); else { const [tx, ty] = routeEndTarget(a); steer(a, tx, ty, 0.8, 0.4); }
+        if (a.wp < asg.points.length) followPath(a, asg.points, 1, SETTLE_ROUTES.has(asg.r)); else { const [tx, ty] = routeEndTarget(a); steer(a, tx, ty, asg.r === 'snag' ? 0.45 : 0.8, 0.4); }
         // Cyclone: on her first break, whoever is covering her is spun around and loses a step.
         if (a.ability?.cyclone && !a.cycloneDone && a.wp >= 2) {
           a.cycloneDone = true; const spun = coveringDefs(a);
@@ -413,9 +420,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       case 'stalk': runBlock(a, asg.to, 7, true); return;
       case 'pull': { if (a.wp < 1) { steer(a, asg.via[0], asg.via[1], 1, 0.6); if (dist(a, { x: asg.via[0], y: asg.via[1] }) < 0.8) a.wp = 1; return; } runBlock(a, asg.to); return; }
       case 'release': {
-        const hold = (qb.assignment.hold || 1.4) * 0.55;
-        if (t < hold) { passBlock(a); return; }
-        runBlock(a, asg.to, 6); return;
+        if (!a.released) {
+          if (t < screenReleaseAt()) { // sell it: punch the man in front and stay near the line, ready to get out
+            const [sx, sy] = asg.points[0];
+            const contact = defs.filter((d) => !d.engaged && d.stun <= 0 && d.noEngage <= 0 && dist(d, a) < 1.4).sort((p, q) => dist(p, a) - dist(q, a))[0];
+            if (contact && tryEngage(a, contact)) return;
+            steer(a, sx - 1, sy, 0.6, 0.3); return;
+          }
+          screenRelease(a);
+        }
+        screenBlock(a); return;
       }
       case 'fake': { if (a.wp < 1) { steer(a, asg.points[1][0], asg.points[1][1], 1, 0.6); if (dist(a, { x: asg.points[1][0], y: asg.points[1][1] }) < 0.8) a.wp = 1; return; } passBlock(a); return; }
       case 'handoff': { if (a === qb) qbHandoff(a); return; }
@@ -425,6 +439,34 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       case 'pass': case 'play_action': case 'boot': { qbTick(a); return; }
       default: steer(a, a.x, a.y, 0, 0.2);
     }
+  }
+
+  // Screens (owner review, 2026-10-20): the linemen sell pass protection for a beat, then let their rushers
+  // go by and get out in front of the screen to block the second level (linebackers, corners, safeties),
+  // so the catch is made behind a wall. They never go back to the rushers they let through.
+  const screenReleaseAt = () => Math.max(0.35, (qb.assignment.hold || 1.4) - 0.6); // the rushers are let go just before the throw
+  function screenRelease(a) {
+    a.released = true;
+    if (a.engaged) { const d = a.engaged; d.engaged = null; a.engaged = null; d.vx = 0; d.vy = 0; a.letGo = d; }
+    log(`${a.name} releases to block downfield`, { kind: 'screen_release', by: a.slot });
+  }
+  function screenBlock(a) {
+    if (a.engaged) { resolveEngagement(a); return; }
+    const carrier = ball.holder && ball.holder.team === 'off' && ball.holder !== qb ? ball.holder : null;
+    const rec = carrier || offs.find((o) => o.slot === offensePlay.primary) || qb;
+    const [lx, ly] = a.assignment.to || a.assignment.points[1];
+    const focus = carrier ? { x: carrier.x + 2, y: carrier.y } : { x: Math.max(lx, rec.x) + 1, y: (ly + rec.y) / 2 };
+    // Second-level defenders only: anyone already past him toward the quarterback is left alone.
+    const rusher = (d) => d === a.letGo || ['rush', 'contain'].includes(d.assignment?.a);
+    const cands = defs.filter((d) => !d.engaged && d.stun <= 0 && d.noEngage <= 0 && d.x > a.x - 0.5 && (carrier ? d.x > carrier.x - 1 && (!rusher(d) || d.x > carrier.x + 1) : !rusher(d)))
+      .map((d) => ({ d, s: dist(d, focus) + 0.4 * dist(d, a) })).sort((p, q) => p.s - q.s);
+    const target = cands.find((c) => dist(c.d, focus) < 11)?.d;
+    if (target && (carrier || dist(a, { x: lx, y: ly }) < 2.5 || dist(target, a) < 3)) {
+      steer(a, target.x - 0.6, target.y, 1, 0.4);
+      tryEngage(a, target, true); return; // an open-field block: the defender can still slip it
+    }
+    if (carrier) { steer(a, carrier.x + 3, carrier.y + (a.y < carrier.y ? -1.5 : 1.5), 1, 0.4); return; }
+    steer(a, lx, ly, 1, 0.5);
   }
   function passBlock(a) {
     const zoneY = a.assignment.points?.[0]?.[1] ?? a.y;
@@ -557,6 +599,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (foresight > 1 && t > 0.3) abilityUsed(a, 'foresight');
     const readyAt = (pressured ? dropTime * (1.0 - 0.35 * norm(a.attrs.awareness) - (a.ability?.pressureSense || 0)) : dropTime + 0.2) / (pressured ? foresight : 1); // an aware passer throws hot sooner
     if (pressured && a.ability?.pressureSense) abilityUsed(a, 'pressureSense');
+    // A screen is thrown on time (owner review, 2026-10-20): once the linemen have let the rush through, the
+    // quarterback dumps it to the screen man as the rushers arrive, unless a defender is already on him.
+    if (screenPlay && !options.forcedTarget && (t >= hold || (pressured && t >= hold - 0.5))) {
+      const sc = bySlot.off[offensePlay.primary];
+      if (sc && sc.assignment.a === 'route' && projectedSeparation(a, sc) > 0.6) { a.throwRead = 0; throwTo(a, sc, pressured); return; }
+    }
     if (t < Math.max(readyAt, hold)) return; // set the feet first / let a screen develop
     // Reading: step through the progression at a pace set by awareness.
     readClock -= DT;
@@ -645,6 +693,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Wind-up: the ball leaves the hand a beat later; a rusher can still get home.
     if (!passer.windup) { passer.windup = { r, pressured, at: t + 0.14 + 0.1 * (1 - norm(passer.attrs.arm)) }; return; }
     passer.windup = null;
+    // On a screen the rushers who were let through have run themselves past the play: they need a moment to turn around.
+    if (screenPlay) for (const d of defs) if (!d.engaged && d.stun <= 0 && d.x < -1 && ['rush', 'contain'].includes(d.assignment?.a)) { d.stun = 0.45; setStatus(d, 'turned', 0.45); }
     const d = dist(passer, r);
     const velocity = 17 + 13 * norm(passer.attrs.arm);
     const travel = d / velocity + 0.1;
