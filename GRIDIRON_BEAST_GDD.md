@@ -1,6 +1,6 @@
 # Gridiron Beast — Game Design Document (Current Design + Historical Build Record)
 
-> **CURRENT DESIGN / AUTHORITY NOTICE (2026-10-21).** Active Franchise Mode is **7-on-7 football**, **16 clubs**, **one league/campaign** (no Challenger/Vanguard/Sovereign promotion or relegation). The nine-game regular season plus bye, gym-badge campaign, Beast Bowl, Legend Tracks, Board, draft, contracts and awards are active. **32 clubs are a long-term expansion goal, not current implementation.** Section **26** is the approved feature roadmap and accessibility policy. Sections **1–23** contain historical build/playtest notes and must not override newer locked design. Section **24** (Career Mode) is **documentation-only**; its old references to 11-on-11 and league tiers are superseded. Section **25** governs Beast Clash. Full pre-cleanup snapshot: `docs/archive/GRIDIRON_BEAST_GDD_pre_roadmap_2026-10-21.md`.
+> **CURRENT DESIGN / AUTHORITY NOTICE (2026-10-21).** Active Franchise Mode is **7-on-7 football**, **16 clubs**, **one league/campaign** (no Challenger/Vanguard/Sovereign promotion or relegation). The nine-game regular season plus bye, gym-badge campaign, Beast Bowl, Legend Tracks, Board, draft, contracts and awards are active. **32 clubs are a long-term expansion goal, not current implementation.** Section **26** is the approved feature roadmap and accessibility policy. Sections **1–23** contain historical build/playtest notes and must not override newer locked design. Section **24** (Career Mode) is **documentation-only**; its old references to 11-on-11 and league tiers are superseded. Section **25** governs Beast Clash. Git history retains previous revisions; maintain this file as the sole authoritative GDD.
 
 
 **Owner:** Southside Games · **Branch:** `rebuild/mobile-7v7` · **Supersedes:** `docs/GRIDIRON_BEAST_MASTER_GDD.md` v4.9 for all football, UI and roster rules. Franchise rules from v4.9 that are not restated here remain in force.
@@ -926,7 +926,7 @@ Use **one trade engine, two interfaces**:
 
 **Not part of the active franchise design:** 11-on-11 play, Challenger/Vanguard/Sovereign tiers, promotion/relegation challenges, tier-specific salary caps, and a 48-club three-tier pyramid. These are legacy concepts, **not** future prerequisites for Career Mode or the 32-club expansion. Do not reintroduce them without a new owner decision.
 
-Do not confuse **documented**, **approved for roadmap**, **authorized to implement**, and **implemented/tested**. Preserve the original GDD as an archival snapshot in `docs/archive/`; active sections should use the latest approved design. Historical playtest notes may remain for traceability only when clearly marked historical and not actionable.
+Do not confuse **documented**, **approved for roadmap**, **authorized to implement**, and **implemented/tested**. Maintain this file as the sole authoritative GDD. Use Git commit history for previous versions, not separate archived GDD copies. Active sections should use the latest approved design. Historical playtest notes may remain for traceability only when clearly marked historical and not actionable.
 
 ### 26.8 Feature acceptance and sequencing
 
