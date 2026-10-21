@@ -2,6 +2,7 @@
 // browsing and the league screens.
 
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
+import { ROUTE_LABELS } from '../../data/routes.js';
 import { yearOf } from '../../data/calendar.js';
 
 import * as F from '../../franchise/franchise.js';
@@ -787,14 +788,14 @@ export function registerHqScreens(Router, app) {
   });
 }
 
-export function playDetailHtml(id, f = null) {
+export function playDetailHtml(id, f = null, { practiceButton = true } = {}) {
   const p = PLAYS[id]; if (!p) return '<p>Unknown play.</p>';
   const usage = f ? (() => { const s = F.playStat(f, id), c = F.playStat(f, id, { career: true }); const what = p.side === 'offense' ? 'gained' : 'allowed'; return `<div class="panel tight"><b>Your results</b><div class="kv"><b>This season</b><span>${s.used ? `${s.used} call${s.used === 1 ? '' : 's'} · ${s.avg.toFixed(1)} yd ${what} · ${s.big} of 15+${s.turnovers ? ` · ${s.turnovers} turnover${s.turnovers === 1 ? '' : 's'}` : ''}` : 'not called yet'}</span><b>Career</b><span>${c.used ? `${c.used} calls · ${c.avg.toFixed(1)} yd ${what}` : '·'}</span></div></div>`; })() : '';
-  const rows = p.onField.map((slot) => { const a = p.assignments[slot]; const what = a.a === 'route' ? `Route: ${a.r}` : a.a === 'zone' ? `Zone: ${a.zone.replace(/_/g, ' ')}` : a.a === 'man' ? `Man: ${a.key === 'wideL' ? 'widest left receiver' : a.key === 'wideR' ? 'widest right receiver' : 'inside receiver'}` : a.a === 'rush' || a.a === 'contain' ? `${a.a === 'rush' ? 'Rush' : 'Contain'}: ${a.gap.replace('_', ' ')} gap` : a.a === 'block' ? (p.type === 'run' ? 'Run block' : 'Pass protection') : a.a.replace(/_/g, ' '); return `<tr><td class="mono"><b>${slot}</b>${slot === p.primary ? ' ★' : ''}</td><td>${esc(what)}</td></tr>`; }).join('');
+  const rows = p.onField.map((slot) => { const a = p.assignments[slot]; const what = a.a === 'route' ? `Route: ${ROUTE_LABELS[a.r] || a.r}` : a.a === 'zone' ? `Zone: ${a.zone.replace(/_/g, ' ')}` : a.a === 'man' ? `Man: ${a.key === 'wideL' ? 'widest left receiver' : a.key === 'wideR' ? 'widest right receiver' : 'inside receiver'}` : a.a === 'rush' || a.a === 'contain' ? `${a.a === 'rush' ? 'Rush' : 'Contain'}: ${a.gap.replace('_', ' ')} gap` : a.a === 'block' ? (p.type === 'run' ? 'Run block' : 'Pass protection') : a.a.replace(/_/g, ' '); return `<tr><td class="mono"><b>${slot}</b>${slot === p.primary ? ' ★' : ''}</td><td>${esc(what)}</td></tr>`; }).join('');
   return `<div class="play-preview">${playCardSvg(id, { width: 54, depthUp: 26, depthBack: 9 })}</div>${legendHtml(p.side)}${usage}
     <div class="panel"><div class="kv"><b>Type</b><span>${p.side === 'offense' ? (p.type === 'run' ? 'Run' : 'Pass') : 'Defense'}</span><b>Personnel</b><span>${esc(p.pkg)}${p.side === 'offense' ? ` · ${esc(p.formation.replace(/_/g, ' '))}` : ''}</span>${p.primary ? `<b>Primary read</b><span>${p.primary} (★)</span>` : ''}${p.progression?.length ? `<b>Progression</b><span>${p.progression.join(' → ')}</span>` : ''}<b>Best for</b><span>${p.tags.map((t) => t.replace(/_/g, ' ')).join(', ')}</span></div>${p.desc ? `<p style="margin-top:8px">${esc(p.desc)}</p>` : ''}</div>${lessonHtml(id)}
     <table><thead><tr><th>Player</th><th>Assignment</th></tr></thead><tbody>${rows}</tbody></table>
-    <div style="margin-top:12px"><button class="btn block" data-action="practice" data-id="${id}">Run it in practice</button></div>`;
+    ${practiceButton ? `<div style="margin-top:12px"><button class="btn block" data-action="practice" data-id="${id}">Run it in practice</button></div>` : ''}`;
 }
 
 /** News line with the rival club's name in bold. */

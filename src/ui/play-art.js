@@ -37,6 +37,16 @@ function tbar([x, y], [px, py], color) {
   return `<line x1="${(x + nx * half).toFixed(2)}" y1="${(y + ny * half).toFixed(2)}" x2="${(x - nx * half).toFixed(2)}" y2="${(y - ny * half).toFixed(2)}" stroke="${color}" stroke-width="0.8" stroke-linecap="round"/>`;
 }
 
+/** Pre-snap motion: the standard zigzag from where the player lines up to where he is at the snap. */
+function zigzag([x1, y1], [x2, y2], color) {
+  const d = Math.hypot(x2 - x1, y2 - y1); if (d < 0.5) return '';
+  const ux = (x2 - x1) / d, uy = (y2 - y1) / d, nx = -uy, ny = ux, n = Math.max(2, Math.round(d / 0.9)), amp = 0.5;
+  const pts = [[x1, y1]];
+  for (let i = 1; i < n; i++) { const s = (i / n) * d, side = i % 2 ? amp : -amp; pts.push([x1 + ux * s + nx * side, y1 + uy * s + ny * side]); }
+  pts.push([x2, y2]);
+  return polyline(pts, color, 'stroke-width="0.55"');
+}
+
 /**
  * Assignment lines (no field, no markers) in projector space. `opts.limitX`
  * compresses routes so nothing extends beyond that depth (the end line).
@@ -64,6 +74,7 @@ export function assignmentLines(play, proj, opts = {}) {
       continue;
     }
     if (a.a === 'spy') { const s = proj.p(play.align[slot]), e = proj.p([2, 0]); out += polyline([s, e], color, 'stroke-dasharray="1 1"'); out += arrowhead(e, s, color); continue; }
+    if (play.motion?.slot === slot) out += zigzag(proj.p(play.align[slot]), proj.p(play.motion.to), color); // pre-snap motion
     const pts = (a.points || [play.align[slot]]).map(([x, y]) => proj.p([scaleX(x), y]));
     if (pts.length < 2) continue;
     out += polyline(pts, color);

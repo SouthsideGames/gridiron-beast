@@ -183,3 +183,18 @@ test('kick animations: every kickoff, punt and field goal from real games yields
   }
   assert.ok(n > 40 && kinds.size === 3, `kinds ${[...kinds]}`);
 });
+
+test('option read (owner rule): read the extra lineman, else the linebacker; he attacks the QB → pitch, he takes the back → keep', async () => {
+  const { PLAYS } = await import('../src/data/playbook.js');
+  // Nobody across: nobody to read, so the ball goes to the back.
+  const veer = simulatePlay({ offensePlay: PLAYS.inverted_veer, defensePlay: PLAYS.cover_3, seed: 1, options: { dryRun: { noDefense: true } } });
+  assert.equal(veer.stats.carrier, 'RB');
+  // Heavy and pressure fronts: the extra lineman is the read; he rushes, so the quarterback mostly pitches.
+  // Nickel Cover 1: the linebacker is in man on the inside receiver, not coming, so the quarterback mostly keeps.
+  const rate = (d) => { let k = 0; for (let s = 1; s <= 60; s++) { const r = simulatePlay({ offensePlay: PLAYS.inverted_veer, defensePlay: PLAYS[d], seed: s }); if (r.stats.carrier === 'QB') k++; assert.ok(r.events.some((e) => /reads .* (and keeps|holds to|will )/.test(e.text)), d); } return k / 60; };
+  assert.ok(rate('all_out') < 0.3, 'reads the rushing DL3 and pitches');
+  assert.ok(rate('cover_1') > 0.7, 'reads a linebacker who is not coming and keeps');
+  const r = simulatePlay({ offensePlay: PLAYS.inverted_veer, defensePlay: PLAYS.all_out, seed: 3 });
+  assert.ok(r.events.some((e) => /reads .*DL3|reads/.test(e.text)));
+  assert.ok(!r.events.some((e) => /reads [^ ]*CB/.test(e.text)), 'never reads a cornerback');
+});

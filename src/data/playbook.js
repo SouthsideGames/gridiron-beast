@@ -6,6 +6,7 @@
 
 import { OFFENSE_PACKAGES, DEFENSE_PACKAGES, offenseOnField, defenseOnField, LINEMEN, BASE_LINEMEN } from './personnel.js';
 import { routePoints, ALTERNATE_ROUTES, ZONES, GAPS } from './routes.js';
+import { reservePlays } from './playbook-reserve.js';
 
 // ---------------------------------------------------------------- formations
 const OL = { LG: [-0.6, -1.7], RG: [-0.6, 1.7] };
@@ -19,6 +20,27 @@ export const OFFENSE_FORMATIONS = Object.freeze({
   tight_i: { pkg: 'tight', label: 'Tight I', align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-0.6, 3.2], WR1: [-0.6, -18] } },
   tight_gun: { pkg: 'tight', label: 'Tight Gun', align: { ...OL3, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 3.2], WR1: [-1.2, -18] } },
   tight_wing: { pkg: 'tight', label: 'Wing', align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-1.4, 4.2], WR1: [-0.6, -18] } },
+  // ---- playbook expansion: used by reserve plays only, until the owner releases them
+  pistol_pro: { pkg: 'pro', label: 'Pistol', reserve: true, align: { ...OL, QB: [-3.5, 0], RB: [-6.2, 0], TE: [-0.6, 3.4], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
+  ace_twins: { pkg: 'pro', label: 'Ace Twins Left', reserve: true, align: { ...OL, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-0.6, 3.4], WR1: [-0.6, -19], WR2: [-1.2, -11] } },
+  gun_twins_rt: { pkg: 'pro', label: 'Gun Twins Right', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, -3.4], WR1: [-1.2, 11], WR2: [-0.6, 19] } },
+  gun_wing: { pkg: 'pro', label: 'Gun Wing', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-1.4, 4.2], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
+  pro_bunch: { pkg: 'pro', label: 'Bunch Right', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 5.2], WR1: [-1.8, 3.6], WR2: [-1.8, 6.8] } },
+  pro_trips: { pkg: 'pro', label: 'Trips Right', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 3.4], WR1: [-1.2, 10], WR2: [-0.6, 18] } },
+  pro_empty: { pkg: 'pro', label: 'Empty', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-1.2, -10], TE: [-0.6, 3.4], WR1: [-0.6, -18], WR2: [-1.2, 18] } },
+  spread_trips_rt: { pkg: 'spread', label: 'Trips Right', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], WR3: [-1.2, 7], WR2: [-1.2, 13], WR1: [-0.6, 19] } },
+  spread_bunch: { pkg: 'spread', label: 'Spread Bunch', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], WR1: [-0.6, -18], WR3: [-0.6, 9], WR2: [-1.8, 10.8] } },
+  trips_bunch: { pkg: 'spread', label: 'Trips Bunch', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, -2.8], WR3: [-0.6, 9], WR1: [-1.8, 7.2], WR2: [-1.8, 10.8] } },
+  empty_2x2: { pkg: 'spread', label: 'Empty 2x2', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-1.2, 10], WR1: [-0.6, -18], WR3: [-1.2, -10], WR2: [-0.6, 18] } },
+  empty_trips: { pkg: 'spread', label: 'Empty Trips', reserve: true, align: { ...OL, QB: [-5, 0], WR1: [-0.6, -18], WR3: [-1.2, 6], RB: [-1.2, 11], WR2: [-0.6, 18] } },
+  pistol_twins: { pkg: 'spread', label: 'Pistol Twins', reserve: true, align: { ...OL, QB: [-3.5, 0], RB: [-6.2, 0], WR1: [-0.6, -18], WR3: [-1.2, -10], WR2: [-0.6, 18] } },
+  spread_left: { pkg: 'spread', label: 'Spread Left', reserve: true, align: { ...OL, QB: [-5, 0], RB: [-5.2, 2.8], WR1: [-0.6, -18], WR3: [-1.2, -10], WR2: [-1.2, 18] } },
+  tight_i_lt: { pkg: 'tight', label: 'Tight I Left', reserve: true, align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-0.6, -3.2], WR1: [-0.6, 18] } },
+  tight_pistol: { pkg: 'tight', label: 'Tight Pistol', reserve: true, align: { ...OL3, QB: [-3.5, 0], RB: [-6.2, 0], TE: [-0.6, 3.2], WR1: [-0.6, -18] } },
+  tight_twins: { pkg: 'tight', label: 'Tight Twins', reserve: true, align: { ...OL3, QB: [-5, 0], RB: [-5.2, -2.8], TE: [-0.6, 3.2], WR1: [-1.2, 11] } },
+  tight_flex: { pkg: 'tight', label: 'Tight Flex', reserve: true, align: { ...OL3, QB: [-5, 0], RB: [-5.2, 2.8], TE: [-1.2, 8], WR1: [-0.6, -18] } },
+  goal_jumbo: { pkg: 'tight', label: 'Jumbo', reserve: true, align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-0.6, 3.2], WR1: [-0.6, -7] } },
+  tight_wing_lt: { pkg: 'tight', label: 'Wing Left', reserve: true, align: { ...OL3, QB: [-1.6, 0], RB: [-6.5, 0], TE: [-1.4, -4.2], WR1: [-0.6, 18] } },
 });
 
 export const DEFENSE_FORMATIONS = Object.freeze({
@@ -26,6 +48,19 @@ export const DEFENSE_FORMATIONS = Object.freeze({
   nickel: { pkg: 'nickel', align: { DL1: [1, -1.8], DL2: [1, 1.8], LB1: [4.5, 0], CB1: [6, -17], CB2: [6, 17], FS: [12, -7], SS: [12, 7] } },
   heavy: { pkg: 'heavy', align: { DL1: [1, -2.4], DL3: [1, 0], DL2: [1, 2.4], LB1: [3.5, -3.5], LB2: [3.5, 3.5], CB1: [5, -15], CB2: [5, 15] } },
   pressure: { pkg: 'pressure', align: { DL1: [1, -2.4], DL3: [1, 0], DL2: [1, 2.4], LB1: [4, 0], CB1: [5, -16], CB2: [5, 16], FS: [10, 0] } },
+  // ---- playbook expansion: reserve plays only
+  base_press: { pkg: 'base', reserve: true, align: { DL1: [1, -1.8], DL2: [1, 1.8], LB1: [4.5, -3.5], LB2: [4.5, 3.5], CB1: [1.5, -17], CB2: [1.5, 17], FS: [13, 0] } },
+  base_wide: { pkg: 'base', reserve: true, align: { DL1: [1, -3.4], DL2: [1, 3.4], LB1: [4.5, -2], LB2: [4.5, 2], CB1: [6, -17], CB2: [6, 17], FS: [12, 0] } },
+  base_stack: { pkg: 'base', reserve: true, align: { DL1: [1, -1.8], DL2: [1, 1.8], LB1: [5, -1.8], LB2: [5, 1.8], CB1: [7, -17], CB2: [7, 17], FS: [12, 0] } },
+  base_walk: { pkg: 'base', reserve: true, align: { DL1: [1, -1.8], DL2: [1, 1.8], LB1: [4, -8], LB2: [4.5, 2.5], CB1: [6, -17], CB2: [6, 17], FS: [12, 0] } },
+  nickel_2high: { pkg: 'nickel', reserve: true, align: { DL1: [1, -1.8], DL2: [1, 1.8], LB1: [5, 0], CB1: [7, -17], CB2: [7, 17], FS: [13, -9], SS: [13, 9] } },
+  nickel_press: { pkg: 'nickel', reserve: true, align: { DL1: [1, -1.8], DL2: [1, 1.8], LB1: [4.5, 0], CB1: [1.5, -17], CB2: [1.5, 17], FS: [12, -7], SS: [12, 7] } },
+  nickel_buzz: { pkg: 'nickel', reserve: true, align: { DL1: [1, -1.8], DL2: [1, 1.8], LB1: [4.5, 0], CB1: [7, -17], CB2: [7, 17], FS: [13, 0], SS: [7, 9] } },
+  nickel_wide: { pkg: 'nickel', reserve: true, align: { DL1: [1, -3.6], DL2: [1, 3.6], LB1: [4.5, 0], CB1: [6, -17], CB2: [6, 17], FS: [12, -7], SS: [12, 7] } },
+  heavy_wide: { pkg: 'heavy', reserve: true, align: { DL1: [1, -3.4], DL3: [1, 0], DL2: [1, 3.4], LB1: [3.5, -2], LB2: [3.5, 2], CB1: [5, -15], CB2: [5, 15] } },
+  heavy_stack: { pkg: 'heavy', reserve: true, align: { DL1: [1, -2.4], DL3: [1, 0], DL2: [1, 2.4], LB1: [4.5, -1.2], LB2: [4.5, 1.2], CB1: [6, -15], CB2: [6, 15] } },
+  pressure_mug: { pkg: 'pressure', reserve: true, align: { DL1: [1, -2.4], DL3: [1, 0], DL2: [1, 2.4], LB1: [1.5, -1], CB1: [5, -16], CB2: [5, 16], FS: [11, 0] } },
+  pressure_wide: { pkg: 'pressure', reserve: true, align: { DL1: [1, -4], DL3: [1, 0], DL2: [1, 4], LB1: [4, 0], CB1: [5, -16], CB2: [5, 16], FS: [11, 0] } },
 });
 
 // ------------------------------------------------------------- play builders
@@ -50,11 +85,18 @@ const CONTAIN = (gap) => ({ a: 'contain', gap });
 
 function offense(id, name, formation, assignments, opts = {}) {
   const f = OFFENSE_FORMATIONS[formation];
-  return { id, name, side: 'offense', type: opts.type || 'pass', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, primary: opts.primary || null, progression: opts.progression || [], drop: opts.drop || 'three', tags: opts.tags || [], desc: opts.desc || '' };
+  if (!f) throw new Error(`${name}: unknown formation ${formation}`);
+  const play = { id, name, side: 'offense', type: opts.type || 'pass', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, primary: opts.primary || null, progression: opts.progression || [], drop: opts.drop || 'three', tags: opts.tags || [], desc: opts.desc || '' };
+  if (opts.reserve) play.reserve = true; // only reserve plays carry the key, so live plays keep their review fingerprints
+  if (opts.motion) play.motion = opts.motion; // pre-snap motion: { slot, to } (only plays with motion carry the key)
+  return play;
 }
 function defense(id, name, formation, assignments, opts = {}) {
   const f = DEFENSE_FORMATIONS[formation];
-  return { id, name, side: 'defense', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, tags: opts.tags || [], desc: opts.desc || '' };
+  if (!f) throw new Error(`${name}: unknown formation ${formation}`);
+  const play = { id, name, side: 'defense', formation, pkg: f.pkg, align: { ...f.align, ...(opts.align || {}) }, assignments, tags: opts.tags || [], desc: opts.desc || '' };
+  if (opts.reserve) play.reserve = true;
+  return play;
 }
 
 // ------------------------------------------------------------- offense plays
@@ -85,7 +127,7 @@ const OFFENSE_PLAYS = [
     RG: RUNBLOCK([2, 0]), C: RUNBLOCK([2, -2.5]), LG: RUNBLOCK([2.5, -5]), TE: RUNBLOCK([2, 2]), WR1: STALK([3, -15]),
   }, { type: 'run', tags: ['run', 'outside'], desc: 'Wide zone to the left behind a stalk-blocking receiver.' }),
   offense('counter', 'Counter', 'tight_i', {
-    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-4.5, 2], [-2, -1], [1, -3.5], [8, -4], [20, -4]]),
+    QB: HANDOFF, RB: CARRY([[-6.5, 0], [-5.9, 0.9], [-3.9, -1], [0, -3], [6, -3.8], [20, -4]]),
     RG: PULL([-2, 0], [1.5, -3.8]), TE: PULL([-2.5, 1.5], [3, -5]), C: RUNBLOCK([1.5, 0.5]), LG: RUNBLOCK([1.5, -2]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'misdirection'], desc: 'False step right, then the guard and tight end pull left.' }),
   offense('toss_sweep', 'Toss Sweep', 'i_pro', {
@@ -105,9 +147,9 @@ const OFFENSE_PLAYS = [
     LG: RUNBLOCK([2, -2]), C: RUNBLOCK([2, 0]), RG: RUNBLOCK([2, 2]), WR1: STALK([4, -16]), WR2: STALK([4, 16]),
   }, { type: 'run', tags: ['run', 'option'], desc: 'The quarterback reads the unblocked edge: give inside or keep outside.' }),
   offense('jet_sweep', 'Jet Sweep', 'gun_trips', {
-    QB: HANDOFF, WR3: CARRY([[-1.2, -12], [-2, -4], [-1, 6], [3, 13], [20, 16]]),
+    QB: HANDOFF, WR3: CARRY([[-1.6, -4.5], [-2, -1], [-1, 6], [3, 13], [20, 16]]),
     LG: RUNBLOCK([1.5, -1]), C: RUNBLOCK([1.5, 2]), RG: RUNBLOCK([2, 5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
-  }, { type: 'run', tags: ['run', 'outside', 'misdirection'], desc: 'The slot receiver takes the jet motion handoff around the right end.' }),
+  }, { type: 'run', motion: { slot: 'WR3', to: [-1.6, -4.5] }, tags: ['run', 'outside', 'misdirection'], desc: 'The slot receiver takes the jet motion handoff around the right end.' }),
 
   // ---- quick passes
   offense('quick_slants', 'Quick Slants', 'gun_pro', {
@@ -294,9 +336,17 @@ function compile(play) {
   return Object.freeze(compiled);
 }
 
-export const PLAYS = Object.freeze(Object.fromEntries([...OFFENSE_PLAYS, ...DEFENSE_PLAYS].map((p) => [p.id, compile(p)])));
+// Reserve plays (GDD playbook expansion): fully built and reviewed in the Playbook Audit, but no coach,
+// AI club, practice field or game plan can call them until the owner releases them. They live in PLAYS
+// (so the audit, art and engine can run them) and never in OFFENSE_IDS / DEFENSE_IDS, which every
+// game system draws from.
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: true }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN });
+export const PLAYS = Object.freeze(Object.fromEntries([...OFFENSE_PLAYS, ...DEFENSE_PLAYS, ...RESERVE.offense, ...RESERVE.defense].map((p) => [p.id, compile(p)])));
 export const OFFENSE_IDS = OFFENSE_PLAYS.map((p) => p.id);
 export const DEFENSE_IDS = DEFENSE_PLAYS.map((p) => p.id);
+export const RESERVE_OFFENSE_IDS = RESERVE.offense.map((p) => p.id);
+export const RESERVE_DEFENSE_IDS = RESERVE.defense.map((p) => p.id);
+export const isReserve = (id) => !!PLAYS[id]?.reserve;
 export const getPlay = (id) => { const p = PLAYS[id]; if (!p) throw new Error(`Unknown play ${id}`); return p; };
 
 /** Eligible receivers for an offensive play (skill players running routes or carrying). */
@@ -370,6 +420,15 @@ export function validatePlaybook() {
         if (a.a === 'man' && !['wideL', 'wideR', 'inside', 'back'].includes(a.key)) problems.push(`${p.name}: ${slot} bad man key`);
         if (a.a === 'zone' && !ZONES[a.zone]) problems.push(`${p.name}: ${slot} bad zone`);
         if ((a.a === 'rush' || a.a === 'contain') && !GAPS[a.gap]) problems.push(`${p.name}: ${slot} bad gap`);
+      }
+    }
+    if (p.motion) {
+      const m = p.motion, from = p.align[m.slot];
+      if (!from) problems.push(`${p.name}: motion slot ${m.slot} not on the field`);
+      else {
+        if (!(m.to[0] < 0)) problems.push(`${p.name}: motion must finish behind the line`);
+        if (Math.hypot(m.to[0] - from[0], m.to[1] - from[1]) > 14) problems.push(`${p.name}: motion longer than 14 yards`);
+        const pts = p.assignments[m.slot].points; if (pts && (pts[0][0] !== m.to[0] || pts[0][1] !== m.to[1])) problems.push(`${p.name}: ${m.slot}'s path must start where the motion ends`);
       }
     }
     for (const [slot, a] of Object.entries(p.assignments)) {
@@ -446,6 +505,7 @@ export const LESSONS = Object.freeze({
   bracket_left: { when: 'Take away their best receiver when he lines up left.', watch: 'A corner underneath and a safety over the top on one man. Everyone else is on their own.', beats: 'Deep Post, Slot Fade and Double Move to the left.', loses: 'Flood and TE Seam to the right, and the run.' },
   goal_line_man: { when: 'Inside your 5 against passing teams. Goal Line Stand with coverage instead of a safety.', watch: 'Four defenders locked in man with three in the gaps. A rub route beats it.', beats: 'Slot Fade, PA Post and Dive.', loses: 'Mesh and Power, nobody comes free to help.' },
   fire_zone: { when: 'Pressure with three deep behind it, the aggressive yet safe blitz.', watch: 'Five rushers, three deep, three under. Open area is the flats.', beats: 'Y Cross, PA Shot and slow drops.', loses: 'Curl Flat and RB Screen.' },
+  ...RESERVE.lessons,
 });
 
 /**

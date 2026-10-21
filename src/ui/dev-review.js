@@ -7,7 +7,7 @@
 // badges (main menu, More tab, Developer) and a one-time toast per new batch.
 
 import { SPECIES_DEX } from '../data/species.js';
-import { PLAYS, OFFENSE_IDS, DEFENSE_IDS } from '../data/playbook.js';
+import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS } from '../data/playbook.js';
 import { ELEMENT_FX, FX_REVISION, familyOf } from './ability-fx.js';
 import { SIG_REV } from './ability-sigs.js';
 import { reviews, setReview } from '../franchise/review-store.js';
@@ -19,7 +19,7 @@ function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { 
 const PASSIVE = new Set(['attrs', 'fatigue', 'fumbleResist', 'zoneRange', 'blockerStun']);
 /** Species with a signature ability: the ones reviewed in the Ability Audit. */
 export const REVIEWABLE_ABILITIES = SPECIES_DEX.filter((sp) => sp.ability);
-export const REVIEWABLE_PLAYS = [...OFFENSE_IDS, ...DEFENSE_IDS];
+export const REVIEWABLE_PLAYS = [...OFFENSE_IDS, ...DEFENSE_IDS, ...RESERVE_OFFENSE_IDS, ...RESERVE_DEFENSE_IDS];
 
 export function abilityFingerprint(sp) {
   const keys = Object.keys(sp.ability?.effect || {}); const key = keys.find((k) => !PASSIVE.has(k)) || keys[0] || null; const fam = key ? familyOf(key) : 'passive';
@@ -108,6 +108,7 @@ export function reviewHtml(ns, id, { open = false } = {}) {
     ${showNote ? `<textarea class="review-note" data-change="rv-text" data-ns="${ns}" data-id="${id}" rows="2" maxlength="2000" placeholder="${ns === 'ability' ? 'What should it look like? Shape, colour, size, timing, label...' : 'What should change? Routes, timing, art, when to call it...'}">${esc(r.note || '')}</textarea>
     <label class="row review-gameplay"><input type="checkbox" data-change="rv-gameplay" data-ns="${ns}" data-id="${id}" ${r.gameplay ? 'checked' : ''}> ⚙ ${ns === 'ability' ? 'The ability should <b>do</b> something different (gameplay, not just looks)' : 'The play should <b>work</b> differently (assignments, not just art)'}</label>
     <div class="dim review-saved" data-saved="${ns}:${id}" style="font-size:11px">${r.updatedAt ? 'Saved' : 'Saves when you tap away'}</div>` : ''}
+    ${ns === 'play' && PLAYS[id]?.reserve ? `<label class="row review-practice" style="gap:6px;margin-top:8px"><input type="checkbox" data-change="rv-practice" data-ns="${ns}" data-id="${id}" ${r.practice ? 'checked' : ''} style="width:auto;min-height:0;margin:0"> 🎯 OK to add this play to the practice field</label>` : ''}
   </div>`;
 }
 
@@ -122,14 +123,24 @@ export function reviewHandlers(refresh, opened = new Set(), onError = null) {
     'rv-note': (el) => { opened.add(`${el.dataset.ns}:${el.dataset.id}`); refresh(); setTimeout(() => document.querySelector(`.review-note[data-ns="${el.dataset.ns}"][data-id="${el.dataset.id}"]`)?.focus(), 30); },
     'rv-text': (el) => { save(el.dataset.ns, el.dataset.id, { note: el.value }); mark(el); },
     'rv-gameplay': (el) => { save(el.dataset.ns, el.dataset.id, { gameplay: el.checked }); mark(el); },
+    'rv-practice': (el) => { save(el.dataset.ns, el.dataset.id, { practice: el.checked }); },
     'rv-proposal': (el) => { const { ns, id, v } = el.dataset; const cur = reviews(ns)[id]?.proposal; save(ns, id, { proposal: cur === v ? null : v }); refresh(); },
     'rv-mismatch': (el) => { const { ns, id } = el.dataset; save(ns, id, { mismatch: !reviews(ns)[id]?.mismatch }); refresh(); },
   };
 }
 
+/**
+ * Playbook Audit "Flag this moment": marks the play Needs work and adds a line to its note saying
+ * exactly what was on screen (mode, opponent, seed, time), so the developer can replay it.
+ */
+export function flagPlayMoment(id, line) {
+  const r = reviews('play')[id] || {}; const note = [(r.note || '').trim(), line].filter(Boolean).join('\n');
+  return setReview('play', id, { status: 'needs_work', note }, fpOf('play', id));
+}
+
 /** Plain-text summary for copying (builds outside claude.ai have no shared database). */
 export function reviewsText() {
-  const lines = []; const tag = (r) => (r.status === 'approved' ? 'APPROVED' : r.status === 'needs_work' ? 'NEEDS WORK' : 'NOTE') + (r.gameplay ? ' + GAMEPLAY' : '') + (r.mismatch ? ' + CARD MISMATCH' : '') + (r.proposal ? ` + NEW CARD ${r.proposal.toUpperCase()}` : '');
+  const lines = []; const tag = (r) => (r.status === 'approved' ? 'APPROVED' : r.status === 'needs_work' ? 'NEEDS WORK' : 'NOTE') + (r.gameplay ? ' + GAMEPLAY' : '') + (r.mismatch ? ' + CARD MISMATCH' : '') + (r.proposal ? ` + NEW CARD ${r.proposal.toUpperCase()}` : '') + (r.practice ? ' + OK FOR PRACTICE' : '');
   for (const sp of REVIEWABLE_ABILITIES) { const r = reviews('ability')[sp.id]; if (r) lines.push(`${tag(r)}: ${sp.name} (${sp.ability.name})${r.note ? `: ${r.note.trim()}` : ''}`); }
   for (const id of REVIEWABLE_PLAYS) { const r = reviews('play')[id]; if (r) lines.push(`${tag(r)}: play ${PLAYS[id].name}${r.note ? `: ${r.note.trim()}` : ''}`); }
   return lines.join('\n');

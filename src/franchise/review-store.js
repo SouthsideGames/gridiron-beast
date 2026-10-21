@@ -44,11 +44,12 @@ export async function syncReviews(ns = 'ability') {
 }
 
 /**
- * Update a review. Any of status ('approved' | 'needs_work' | null), note, gameplay (bool), mismatch (bool: the card says something the game does not do).
+ * Update a review. Any of status ('approved' | 'needs_work' | null), note, gameplay (bool), mismatch (bool: the card says something the game does not do),
+ * practice (bool: a reserve play the owner clears for the practice field).
  * `fp` is the item's current fingerprint: a verdict is always about the version on screen.
  * Clearing status and note removes the review. Resolves true when the cloud took it.
  */
-export function setReview(ns, id, { status, note, gameplay, mismatch, proposal } = {}, fp = null) {
+export function setReview(ns, id, { status, note, gameplay, mismatch, proposal, practice } = {}, fp = null) {
   const all = reviews(ns); const prev = all[id] || { status: null, note: '', gameplay: false };
   const next = {
     status: status === undefined ? prev.status : status,
@@ -56,9 +57,10 @@ export function setReview(ns, id, { status, note, gameplay, mismatch, proposal }
     gameplay: gameplay === undefined ? !!prev.gameplay : !!gameplay,
     mismatch: mismatch === undefined ? !!prev.mismatch : !!mismatch,
     proposal: proposal === undefined ? prev.proposal || null : proposal, // 'approved' | 'rejected' | null: the owner's call on a proposed new card
+    practice: practice === undefined ? !!prev.practice : !!practice, // reserve plays: the owner says it may go on the practice field
     fp: fp ?? prev.fp ?? null, updatedAt: Date.now(),
   };
-  if (!next.status && !next.note.trim() && !next.gameplay && !next.mismatch && !next.proposal) delete all[id]; else all[id] = next;
+  if (!next.status && !next.note.trim() && !next.gameplay && !next.mismatch && !next.proposal && !next.practice) delete all[id]; else all[id] = next;
   writeLocal(ns, all); emit();
   return cloudSaveReview(NS[ns].col, id, all[id] || null);
 }

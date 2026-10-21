@@ -111,7 +111,7 @@ test('every species ability and trait maps to known engine primitives, and they 
     if (Object.keys(e).every((k) => PASSIVE.has(k) || k === 'zoneRange') || !SLOT[sp.position]) continue;
     const [slot, side] = SLOT[sp.position];
     let n = 0;
-    for (let seed = 1; seed <= 40; seed++) {
+    for (let seed = 1; seed <= 80; seed++) { // 80 plays: rare-event abilities sat right at the edge of a 40-play sample
       const off = { ...L.offense }, def = { ...L.defense };
       (side === 'off' ? off : def)[slot] = { ...L[side === 'off' ? 'offense' : 'defense'][slot], species: sp.id, name: sp.name, ability: null };
       const o = PLAYS[OFFENSE_IDS[(seed * 5) % OFFENSE_IDS.length]], d = PLAYS[DEFENSE_IDS[(seed * 7) % DEFENSE_IDS.length]];
@@ -120,7 +120,7 @@ test('every species ability and trait maps to known engine primitives, and they 
     }
     if (n === 0) quiet.push(sp.id);
   }
-  assert.ok(quiet.length <= 3, `species whose ability never fired in 40 plays: ${quiet.join(', ')}`);
+  assert.ok(quiet.length <= 3, `species whose ability never fired in 80 plays: ${quiet.join(', ')}`);
 });
 
 test('the Beast Dex outlives a franchise: discoveries merge into the player store and survive a new franchise', async () => {
