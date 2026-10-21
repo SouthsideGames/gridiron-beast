@@ -4,7 +4,7 @@
 import { esc, delegate, toast } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import * as Clash from '../../clash/index.js';
-import { runFamily, gateBFamilies, syntheticMonster, ARCHETYPES } from '../../clash/batch.js';
+import { runFamily, mergeRuns, gateBFamilies, syntheticMonster, ARCHETYPES } from '../../clash/batch.js';
 import { createArena } from '../clash/arena.js';
 
 const V = Clash.CLASH_VALUES;
@@ -96,7 +96,7 @@ export function registerClashLab(Router, app) {
       ${settings()}
       ${B.rows.map((r) => batchRow(r)).join('')}`;
   }
-  const batchRow = (r) => { const A = (k) => (r.archetypes[k] ? `${r.archetypes[k].rate[0]}% <span class="dim">(${r.archetypes[k].rate[1]}–${r.archetypes[k].rate[2]})</span>` : '–'); const p = r.perBattle; const flag = (k) => r.archetypes[k] && (r.archetypes[k].rate[1] > 55 || r.archetypes[k].rate[2] < 45) ? ' style="color:var(--warn)"' : '';
+  const batchRow = (r) => { const A = (k) => (r.archetypes[k] ? `${r.archetypes[k].rate[0]}% <span class="dim">(${r.archetypes[k].rate[1]}–${r.archetypes[k].rate[2]})</span>` : '–'); const p = new Proxy(r.perBattle || {}, { get: (o, k) => (k in o ? o[k] : '–') }); const flag = (k) => r.archetypes[k] && (r.archetypes[k].rate[1] > 55 || r.archetypes[k].rate[2] < 45) ? ' style="color:var(--warn)"' : '';
     return `<div class="panel" style="margin-top:8px;font-size:12px"><div class="row between"><b>${esc(r.label)}</b><span class="dim">${r.family.n} battles · back row ${esc(r.family.config.backRow || V.backRow.default)} · ${esc(r.family.config.duration || V.duration.default)}${r.family.config.O1 || r.family.config.O2 ? ` · ${r.family.config.O1 && r.family.config.O2 ? 'O3' : r.family.config.O1 ? 'O1' : 'O2'}` : ''}</span></div>
       <div class="row between"><span>Side A wins</span><span class="mono">${r.aWin[0]}% (${r.aWin[1]}–${r.aWin[2]})</span></div>
       ${ARCHETYPES.map((k) => `<div class="row between"${flag(k)}><span>${ARCH_GLYPH[k]} ${k}</span><span class="mono">${A(k)}</span></div>`).join('')}
@@ -105,7 +105,8 @@ export function registerClashLab(Router, app) {
       <div class="row between"><span>Decided by knockout / HP share / coin</span><span class="mono">${r.by.knockout} / ${r.by.hp} / ${r.by.coin}</span></div>
       <div class="row between"><span>Bench actions per battle: attempts / landed / blocked</span><span class="mono">${p.benchActs} / ${p.benchHits} / ${p.benchBlocked}</span></div>
       <div class="row between"><span>Forced swaps / refused / arrival damage</span><span class="mono">${p.forcedSwaps} / ${p.swapRefused} / ${p.arrivalDamage}</span></div>
-      <div class="row between"><span>Shock landed / actions skipped</span><span class="mono">${p.shockApplied} / ${p.shockSkips}</span></div>
+      <div class="row between"><span>Shock attempts / landed / refreshed / actions skipped</span><span class="mono">${p.shockAttempts} / ${p.shockApplied} / ${p.shockReplaced} / ${p.shockSkips}</span></div>
+      <div class="row between"><span>Reached sudden death · resolved there by KO / HP</span><span class="mono">${r.suddenDeath ? `${r.suddenDeath.reachedPct}% · ${r.suddenDeath.resolvedKo} / ${r.suddenDeath.resolvedHp}` : '–'}</span></div>
       <div class="row between"><span>Healing + shields per battle</span><span class="mono">${p.heal} + ${p.shield}</span></div>
       <div class="row between"><span>Knockouts per battle${r.family.config.duration === 'C6' ? ' · stalemate exchanges' : ''}</span><span class="mono">${p.kos}${r.family.config.duration === 'C6' ? ` · ${p.stalemate}` : ''}</span></div>
       <div class="dim" style="font-size:11px">Orange: the whole 95% interval is outside 45–55%. Phase 1 engine result on synthetic monsters; targets are judged at Gate B.</div></div>`; };
@@ -137,18 +138,13 @@ export function registerClashLab(Router, app) {
     for (let i = 0; i < n; i++) { const swap = i % 2 === 1; const A = monstersFor(st.a, 'a'), Bm = monstersFor(st.b, 'b'); const r = Clash.simulateClash({ a: swap ? Bm : A, b: swap ? A : Bm, seed: rng.seed(), config: st.config }); if ((swap ? r.winner === 'b' : r.winner === 'a')) aWins++; lengths.push(r.exchanges); if (r.capped) capped++; by[r.by]++;
       for (const [side, L] of [['a', r.lines.a], ['b', r.lines.b]]) for (const x of L) { const o = (arch[x.archetype] ||= [0, 0]); o[1]++; if (r.winner === side) o[0]++; } }
     lengths.sort((p, q) => p - q); const q = (p) => lengths[Math.min(n - 1, Math.floor(n * p))];
-    return { family: { n, config: st.config }, aWin: wilsonLocal(aWins, n), archetypes: Object.fromEntries(Object.entries(arch).map(([k, [w, t]]) => [k, { rate: wilsonLocal(w, t), n: t }])), length: { mean: Math.round(lengths.reduce((s, x) => s + x, 0) / n * 10) / 10, median: q(0.5), p90: q(0.9), p95: q(0.95) }, capPct: Math.round(capped / n * 1000) / 10, by, perBattle: { benchActs: '–', benchHits: '–', benchBlocked: '–', forcedSwaps: '–', swapRefused: '–', arrivalDamage: '–', heal: '–', shield: '–', shockApplied: '–', shockSkips: '–', kos: '–', stalemate: '–' } };
+    const hist = {}; for (const L of lengths) hist[L] = (hist[L] || 0) + 1;
+    return { family: { n, config: st.config }, aWin: wilsonLocal(aWins, n), aWins, n, species: {}, tallies: {}, suddenDeath: { reachedPct: 0, resolvedKo: 0, resolvedHp: 0 }, archetypes: Object.fromEntries(Object.entries(arch).map(([k, [w, t]]) => [k, { rate: wilsonLocal(w, t), wins: w, n: t }])), length: { mean: Math.round(lengths.reduce((s, x) => s + x, 0) / n * 10) / 10, median: q(0.5), p90: q(0.9), p95: q(0.95), hist }, capPct: Math.round(capped / n * 1000) / 10, by, perBattle: {} };
   }
   const wilsonLocal = (w, n) => { if (!n) return [0, 0, 0]; const p = w / n, z = 1.96, d = 1 + z * z / n, c = (p + z * z / (2 * n)) / d, h = (z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))) / d; return [100 * p, 100 * (c - h), 100 * (c + h)].map((v) => Math.round(v * 10) / 10); };
-  function merge(parts) { // combine chunk results into one row
-    const n = parts.reduce((s, p) => s + p.family.n, 0); const aW = parts.reduce((s, p) => s + p.aWin[0] / 100 * p.family.n, 0);
-    const arch = {}; for (const p of parts) for (const [k, v] of Object.entries(p.archetypes)) { const o = (arch[k] ||= [0, 0]); o[0] += v.rate[0] / 100 * v.n; o[1] += v.n; }
-    const by = { knockout: 0, hp: 0, coin: 0 }; for (const p of parts) for (const k of Object.keys(by)) by[k] += p.by[k];
-    const num = (k) => (typeof parts[0].perBattle[k] === 'number' ? Math.round(parts.reduce((s, p) => s + p.perBattle[k] * p.family.n, 0) / n * 100) / 100 : '–');
-    const perBattle = Object.fromEntries(Object.keys(parts[0].perBattle).map((k) => [k, num(k)]));
-    const lenMean = Math.round(parts.reduce((s, p) => s + p.length.mean * p.family.n, 0) / n * 10) / 10; const mid = parts[Math.floor(parts.length / 2)].length;
-    return { family: { ...parts[0].family, n }, aWin: wilsonLocal(Math.round(aW), n), archetypes: Object.fromEntries(Object.entries(arch).map(([k, [w, t]]) => [k, { rate: wilsonLocal(Math.round(w), t), n: t }])), length: { mean: lenMean, median: mid.median, p90: Math.max(...parts.map((p) => p.length.p90)), p95: Math.max(...parts.map((p) => p.length.p95)) }, capPct: Math.round(parts.reduce((s, p) => s + p.capPct * p.family.n, 0) / n * 10) / 10, by, perBattle };
-  }
+  // Chunks are merged by the same mergeRuns the Gate B tool uses, so the Lab's row equals the headless report's row.
+  const merge = (parts) => mergeRuns(parts);
+
 
   function loadView() {
     const L = st.load; const w = Clash.battleWarning({ fatigue: L.fatigue, battlesPlayed: L.battles, plays: L.plays, durability: L.durability, opening: L.opening });
