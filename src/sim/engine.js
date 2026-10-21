@@ -420,15 +420,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       case 'stalk': runBlock(a, asg.to, 7, true); return;
       case 'pull': { if (a.wp < 1) { steer(a, asg.via[0], asg.via[1], 1, 0.6); if (dist(a, { x: asg.via[0], y: asg.via[1] }) < 0.8) a.wp = 1; return; } runBlock(a, asg.to); return; }
       case 'release': {
-        if (!a.released) {
-          if (t < screenReleaseAt()) { // sell it: punch the man in front and stay near the line, ready to get out
-            const [sx, sy] = asg.points[0];
-            const contact = defs.filter((d) => !d.engaged && d.stun <= 0 && d.noEngage <= 0 && dist(d, a) < 1.4).sort((p, q) => dist(p, a) - dist(q, a))[0];
-            if (contact && tryEngage(a, contact)) return;
-            steer(a, sx - 1, sy, 0.6, 0.3); return;
-          }
-          screenRelease(a);
-        }
+        if (!a.released) screenRelease(a);
         screenBlock(a); return;
       }
       case 'fake': { if (a.wp < 1) { steer(a, asg.points[1][0], asg.points[1][1], 1, 0.6); if (dist(a, { x: asg.points[1][0], y: asg.points[1][1] }) < 0.8) a.wp = 1; return; } passBlock(a); return; }
@@ -444,7 +436,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // Screens (owner review, 2026-10-20): the linemen sell pass protection for a beat, then let their rushers
   // go by and get out in front of the screen to block the second level (linebackers, corners, safeties),
   // so the catch is made behind a wall. They never go back to the rushers they let through.
-  const screenReleaseAt = () => Math.max(0.35, (qb.assignment.hold || 1.4) - 0.6); // the rushers are let go just before the throw
+  const screenReleaseAt = () => 0; // owner review 2026-10-20: screen linemen leave at the snap and go straight to their blocks
   function screenRelease(a) {
     a.released = true;
     if (a.engaged) { const d = a.engaged; d.engaged = null; a.engaged = null; d.vx = 0; d.vy = 0; a.letGo = d; }
@@ -601,7 +593,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (pressured && a.ability?.pressureSense) abilityUsed(a, 'pressureSense');
     // A screen is thrown on time (owner review, 2026-10-20): once the linemen have let the rush through, the
     // quarterback dumps it to the screen man as the rushers arrive, unless a defender is already on him.
-    if (screenPlay && !options.forcedTarget && (t >= hold || (pressured && t >= hold - 0.5))) {
+    if (screenPlay && !options.forcedTarget && (t >= hold || (pressured && t >= 0.45))) { // the rush is coming free: dump it as soon as it arrives
       const sc = bySlot.off[offensePlay.primary];
       if (sc && sc.assignment.a === 'route' && projectedSeparation(a, sc) > 0.6) { a.throwRead = 0; throwTo(a, sc, pressured); return; }
     }
