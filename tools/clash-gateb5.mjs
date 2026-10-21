@@ -134,7 +134,7 @@ if (only.includes('final')) {
     run('final', 'Wispira + Florant + Galyx v random, smart both', { a: STACK, b: 'random', size: 3, n: 1500, shuffle: true }, smart, g);
     run('final', 'Random 3v3, smart both', { a: 'random', b: 'random', size: 3, n: 1500, shuffle: true }, smart, g);
     run('final', 'Random 5v5, smart both', { a: 'random', b: 'random', size: 5, n: 1000, shuffle: true }, smart, g);
-    if (g === 'B.4' || g === 'B.5') for (const s of SPECIES_DEX) { run('final', `${s.id} | solo3`, { a: [S(s.id), 'random', 'random'], b: 'random', size: 3, n: 1000, shuffle: true }, cfg, g); run('final', `${s.id} | solo5`, { a: [S(s.id), 'random', 'random', 'random', 'random'], b: 'random', size: 5, n: 600, shuffle: true }, cfg, g); }
+    if (g === 'B.4' || g === 'B.5' || g === 'Final') for (const s of SPECIES_DEX) { run('final', `${s.id} | solo3`, { a: [S(s.id), 'random', 'random'], b: 'random', size: 3, n: 1000, shuffle: true }, cfg, g); run('final', `${s.id} | solo5`, { a: [S(s.id), 'random', 'random', 'random', 'random'], b: 'random', size: 5, n: 600, shuffle: true }, cfg, g); }
   }
 }
 // ---- audit: every species in the 22 non-solo contexts of the fixed suite under a gate (solos come from 'final'); --gate, --species

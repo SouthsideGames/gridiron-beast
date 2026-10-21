@@ -8,13 +8,17 @@ import { SPECIES_DEX } from '../data/species.js';
 const ARCH_COUNTS = { Striker: 15, Disruptor: 16, Balanced: 16, Support: 15, Tank: 10 };
 const FIXED = new Set(['name', 'archetype', 'text', 'kind', 'trigger']);
 
-/** Problems with the move table as a whole and each row. Empty when valid. */
-export function validateMoves() {
-  const out = []; const ids = Object.keys(CLASH_MOVES); const species = new Set(SPECIES_DEX.map((s) => s.id));
+/**
+ * Problems with the move table as a whole and each row. Empty when valid. `moves` defaults to the game's table; the balance
+ * review passes a proposed table to check it before any change is made permanent. `alwaysFirstExceptions` lists species whose
+ * move may always strike first; it is empty unless the owner approves an exception, and the rule still applies to every other move.
+ */
+export function validateMoves(moves = CLASH_MOVES, { alwaysFirstExceptions = [] } = {}) {
+  const out = []; const ids = Object.keys(moves); const species = new Set(SPECIES_DEX.map((s) => s.id));
   for (const id of ids) if (!species.has(id)) out.push(`${id}: not a species ID`);
-  for (const s of SPECIES_DEX) if (!CLASH_MOVES[s.id]) out.push(`${s.id}: no battle move`);
+  for (const s of SPECIES_DEX) if (!moves[s.id]) out.push(`${s.id}: no battle move`);
   const names = new Set(); const counts = {};
-  for (const [id, m] of Object.entries(CLASH_MOVES)) {
+  for (const [id, m] of Object.entries(moves)) {
     if (names.has(m.name)) out.push(`${id}: duplicate move name ${m.name}`); names.add(m.name);
     counts[m.archetype] = (counts[m.archetype] || 0) + 1;
     if (!CLASH_VALUES.archetypes[m.archetype]) out.push(`${id}: unknown archetype ${m.archetype}`);
@@ -33,11 +37,11 @@ export function validateMoves() {
       if (m.cond !== 'swap' && m.chance != null && m.chance < 1) { const band = m.cond === 'shock' ? B.shockChance : B.chance; if (m.chance < band[0] || m.chance > band[1]) out.push(`${id}: ${m.cond} chance ${m.chance} outside ${band}`); }
       if (m.cond === 'shock' && m.trigger.kind === 'every' && m.trigger.n !== CLASH_VALUES.shock.every) out.push(`${id}: Shock must be attempted every ${CLASH_VALUES.shock.every} strikes`);
     }
-    if (m.priority && m.trigger.kind === 'always') out.push(`${id}: a move that always strikes first is not allowed`);
+    if (m.priority && m.trigger.kind === 'always' && !alwaysFirstExceptions.includes(id)) out.push(`${id}: a move that always strikes first is not allowed`);
     if (m.afflict && !['burn', 'chill', 'daze', 'shock'].includes(m.afflict.cond)) out.push(`${id}: unknown afflict ${m.afflict.cond}`);
   }
   for (const [a, n] of Object.entries(ARCH_COUNTS)) if (counts[a] !== n) out.push(`archetype ${a}: ${counts[a]} moves, approved ${n}`);
-  for (const [id, m] of Object.entries(CLASH_MOVES)) for (const p of cardCheck(id, m)) out.push(`${id}: card says ${p}`);
+  for (const [id, m] of Object.entries(moves)) for (const p of cardCheck(id, m)) out.push(`${id}: card says ${p}`);
   return out;
 }
 
@@ -46,7 +50,7 @@ export function cardCheck(id, m = CLASH_MOVES[id]) {
   const out = []; const nums = numbersOf(m);
   for (const [, x] of m.text.matchAll(/(\d+(?:\.\d+)?)x/g)) { const v = Number(x); if (!nums.some((n) => Math.abs(n - v) < 1e-9)) out.push(`${x}x but no param equals ${v}`); }
   for (const [, p] of m.text.matchAll(/(\d+)%/g)) { const v = Number(p) / 100; if (!nums.some((n) => Math.abs(n - v) < 1e-9)) out.push(`${p}% but no param equals ${v}`); }
-  for (const c of ['Burn', 'Chill', 'Daze', 'Shock']) { const k = c.toLowerCase(); const named = new RegExp(`\\b${c}(s|ed|ing)?\\b`).test(m.text); const has = m.cond === k || m.afflict?.cond === k || m.retaliate?.cond === k || (k === 'daze' && m.cleanse === 'daze') || (k === 'shock' && m.skips); if (named && !has) out.push(`${c} but the move has no ${k}`); }
+  for (const c of ['Burn', 'Chill', 'Daze', 'Shock']) { const k = c.toLowerCase(); const named = new RegExp(`\\b${c}(s|ed|ing)?\\b`).test(m.text); const has = m.cond === k || m.afflict?.cond === k || m.retaliate?.cond === k || m.arrivalCond === k || m.refusedEffect?.cond === k || (k === 'daze' && m.cleanse === 'daze') || (k === 'shock' && m.skips); if (named && !has) out.push(`${c} but the move has no ${k}`); }
   if (/second (strike|exchange)/.test(m.text) && m.trigger.kind === 'every' && m.trigger.n !== 2 && !m.trigger.until) out.push(`every second but n is ${m.trigger.n}`);
   if (/fourth exchange/.test(m.text) && m.trigger.n !== 4) out.push('every fourth but n is not 4');
   return out;

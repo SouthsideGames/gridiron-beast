@@ -21,7 +21,13 @@ export const B4_PATCHES = Object.freeze(build(B3_PATCHES, ['coglet_break_charge'
 export const B5_ADDED = Object.freeze(['ferrcub_temper_big', 'terrabull_quake_sap_hex', 'nocturne_eclipse_opening3_80', 'tempestra_cyclone_storm', 'tideram_riptide_crash', 'aeralis_downdraft_anywhere_tailwind', 'echolot_echo_flat', 'cindruff_tumble_always']);
 export const B5_PATCHES = Object.freeze(build(B4_PATCHES, B5_ADDED));
 
-export const GATE_PATCHES = Object.freeze({ 'Gate B': Object.freeze([]), 'B.2': B2_PATCHES, 'B.3': B3_PATCHES, 'B.4': B4_PATCHES, 'B.5': B5_PATCHES });
+// Final implementation review (2026-10-21, revised philosophy, GDD §25): the recommended configuration. Lab-only until approved.
+// It keeps the changes justified by correctness, an exploit fix, counterplay evidence or clarity, plus the optional changes the
+// review leans to keep; three species use their earlier (B.2/B.3) patch instead of the later viability-driven one.
+export const FINAL_PATCHES = Object.freeze(['umbrikit_pounce_not_voluntary', 'wispira_veil_every4', 'duskyre_cut_every3', 'scorchulk_maul_first', 'echolot_echo_flat',
+  'zephiro_tailwind_combo', 'tsunarok_undertow_hit_chill', 'ripplet_undercurrent_08', 'cerebrix_foresight_refused_daze', 'aurodrax_sovereign_surge', 'nocturne_eclipse_2', 'aeralis_downdraft_daze', 'cindruff_tumble_always']);
+
+export const GATE_PATCHES = Object.freeze({ 'Gate B': Object.freeze([]), 'B.2': B2_PATCHES, 'B.3': B3_PATCHES, 'B.4': B4_PATCHES, 'B.5': B5_PATCHES, Final: FINAL_PATCHES });
 /** The exact battle configuration a gate was measured under (plus optional policies). Frozen, validated by battleConfig. */
 export function gateConfig(gate, extra = {}) {
   if (!GATE_PATCHES[gate]) throw new Error(`Unknown gate ${gate}`);
@@ -87,6 +93,56 @@ export const ENGINE_HOOKS = Object.freeze([
   { key: 'stripOnCond, afflict.chanceAbove, swapKind mostHurt', gate: 'B.5', meaning: 'tested hooks used only by rejected variants (inert; kept for reproducibility)' },
 ]);
 
+// Patches that are not in the B.5 manifest but are recommended in the final configuration (earlier versions of a species' change).
+export const ALTERNATES = Object.freeze([
+  { id: 'cerebrix_foresight_refused_daze', gate: 'B.2', kind: 'move', key: 'cerebrix_foresight_refused_daze', target: 'cerebrix', deps: ['refusedEffect engine hook (B.2)'], tests: [T.b2refused, 'readiness.test.js'], status: PENDING, note: 'B.2 version of the Cerebrix change, without B.4\'s 0.15x hit' },
+  { id: 'nocturne_eclipse_2', gate: 'B.2', kind: 'move', key: 'nocturne_eclipse_2', target: 'nocturne', deps: [], tests: ['readiness.test.js'], status: PENDING, note: 'B.2 version of the Nocturne change: Eclipse lasts two exchanges, still on its first strike' },
+  { id: 'aeralis_downdraft_daze', gate: 'B.3', kind: 'move', key: 'aeralis_downdraft_daze', target: 'skywarden', deps: ['arrivalCond engine hook (B.2)'], tests: [T.b3exists, T.b3cad, 'readiness.test.js'], status: PENDING, note: 'B.3 version of the Aeralis change: the swapped-in monster is Dazed; still from the back only' },
+]);
+
+// The review of every item under the revised philosophy. verdict: 'recommend' (justified on its own), 'keep' (optional, the review
+// leans to keep), 'drop' (optional, the review leans not to adopt), 'not' (not recommended). basis names why it exists.
+const R = (verdict, basis, reason, cardText = null) => Object.freeze({ verdict, basis, reason, cardText });
+export const REVIEW = Object.freeze({
+  duration_c6: R('recommend', 'system', 'Ends defensive stalemates (5 Supports mirror reached the cap in 6.8% of battles under Model F); pacing'),
+  swap_cost_half: R('recommend', 'system', 'Makes voluntary swapping a real decision: the incoming monster still acts, at half strength'),
+  umbrikit_pounce_not_voluntary: R('recommend', 'exploit', 'Closes a loop where swapping Umbrikit out and back re-armed its entry dodge', 'Every second strike hits 1.3x; it dodges the first strike after it enters the front, except when it swaps in by choice'),
+  wispira_veil_every4: R('recommend', 'counterplay', 'Without it the Wispira + Florant + Galyx stack beats random teams 99% of the time and every accessible counter wins 0-15%; with it four accessible counters win 66-83%', 'Every fourth exchange shields an ally with an illusion that absorbs a hit'),
+  duskyre_cut_every3: R('recommend', 'counterplay', 'Without it Duskyre alone wins 84% of battles and 93% against Tank lines, and twice as many strikes aimed at it miss (2.2 a battle): an interaction that stops opponents acting', 'Every third strike hits 1.4x and it dodges the next hit'),
+  scorchulk_maul_first: R('recommend', 'counterplay', 'Scorchulk anchors every accessible counter to the Support stack; keeping its never-first clause cuts those counters by 8-16 points', 'Every second strike hits 1.5x and Burns'),
+  echolot_echo_flat: R('recommend', 'correctness', 'The card says it returns part of the damage it took; the code added only 3-5%. The flat echo does what the card says (alternative: keep the mechanic and reword the card)', 'Every second strike hits 1.3x and adds half of the last damage it took'),
+  zephiro_tailwind_combo: R('keep', 'viability', 'Tailwind fired every fourth exchange and was rarely felt; every second exchange with a small heal is easy to read. No new mechanic', 'Every second exchange heals every ally 6% and makes allies strike 15% harder for three exchanges'),
+  tsunarok_undertow_hit_chill: R('keep', 'viability', 'The drag now visibly does something to the arriving monster; uses the shared arrival hook', 'Every second exchange, from anywhere, drags the opponent\'s back monster to the front, striking it at half strength and Chilling it'),
+  ripplet_undercurrent_08: R('keep', 'clarity', 'Replaces a card that exposed an internal rule ("arrival hit set by the back-row rule") with a plain number; makes it distinct from Downdraft', 'From the back, every second exchange swaps the opponent\'s front two and hits the new front at 0.8x'),
+  cerebrix_foresight_refused_daze: R('keep', 'clarity', 'Foresight is often refused by the shared swap cadence and then did nothing; a Daze on refusal gives visible feedback. Recommended instead of B.4\'s version', 'Every second exchange pulls the opponent\'s strongest monster to the back; when it cannot, it Dazes the front'),
+  aurodrax_sovereign_surge: R('keep', 'viability', 'Gives Aurodrax the standard Balanced rhythm (every second strike 1.3x) that most Balanced moves have; no new mechanic', 'Every second strike hits 1.3x; its strikes cannot be dodged or reduced; +20% in sudden death'),
+  nocturne_eclipse_2: R('keep', 'correctness', 'A one-exchange Eclipse barely reaches the benched monsters its card names (0.3 Dazed strikes each); two exchanges makes the whole-line effect real (1.1). Recommended instead of B.5\'s opening Eclipse', 'Its first strike Dazes the whole opposing line for two exchanges'),
+  aeralis_downdraft_daze: R('keep', 'clarity', 'The swap now has a visible arrival effect and is distinct from Ripplet\'s; recommended instead of B.5\'s version', 'From the back, every second exchange swaps the opponent\'s front two and Dazes the monster swapped in'),
+  cindruff_tumble_always: R('keep', 'clarity', 'A simpler card: every heavy strike Burns, with no HP condition', 'Every second strike hits 1.3x and Burns'),
+  elderoot_grove_12: R('drop', 'viability', 'A buff to lift a weak species; Elderoot stayed outclassed. Harmless if you want it', 'Every second exchange heals every ally 12%'),
+  lumini_mend_10: R('drop', 'viability', 'A buff to lift a weak species; Lumini stayed outclassed. Harmless if you want it', 'Every second exchange heals the two most hurt allies 10% each'),
+  zippit_charge_40: R('drop', 'viability', 'A buff to lift a weak species; Zippit stayed at Unproven. Harmless if you want it', 'Every second exchange charges the front ally\'s next strike +40%'),
+  coglet_break_charge: R('drop', 'viability', 'A new mechanic (breakCharge) created to give Coglet a niche; the current card works as written', 'Every second strike hits 1.3x and breaks shields twice as fast; breaking a shield makes its next strike hit 50% harder; its strikes never roll below full damage'),
+  cerebrix_refused_daze_hit015: R('drop', 'viability', 'The 0.15x hit was added for viability; the B.2 refusal Daze alone gives the feedback', 'Every second exchange pulls the opponent\'s strongest monster to the back; when it cannot, it Dazes the front and strikes it at 0.15x'),
+  craggo_ram_chill: R('drop', 'viability', 'Adds a second effect to a card that works; created for a niche', 'Every second strike hits 1.3x, or 1.6x against a shielded foe, and may Chill the target'),
+  sablewing_shadow_hex: R('drop', 'viability', 'Turns a back-row Disruptor into a front-and-back one for viability; the current card is accurate', 'Every second strike from the front, or every second exchange from the back, Dazes the opposing front'),
+  scalor_hide_15_8: R('drop', 'viability', 'A threshold change for viability; the current card works', 'When a hit takes 15% of its HP, it heals 8% (once each exchange)'),
+  spriglet_seed_brace: R('drop', 'viability', 'Adds a second effect for viability', 'Every second exchange heals the front ally 10% and the next ally 6%; the front ally takes only 85% of its next hit'),
+  ferrcub_temper_big: R('drop', 'viability', 'A new mechanic (forgeOnHit) created to make Ferrcub viable; the current card works as written. The most thematic of the B.5 ideas if you want one', 'Every second strike hits 1.3x and raises its own attack 5%; a hit that takes 10% of its HP raises it 8%; up to four times in all'),
+  nocturne_eclipse_opening3_80: R('drop', 'viability', 'A new trigger (opening) created for viability; the B.2 two-exchange Eclipse fixes the reach problem with no new mechanic', 'At the start of the battle, from anywhere, it has an 80% chance to Daze the whole opposing line for three exchanges'),
+  tempestra_cyclone_storm: R('drop', 'viability', 'A new mechanic (cycloneArrival) and a faster trigger for viability; the current card works as written. Your call if you want a stronger Legendary', 'Every third strike sweeps the opposing front to the back and Dazes the monster pulled forward; if the sweep is refused, it Dazes the front'),
+  noctlet_always_first: R('not', 'viability', 'Created for viability and needs an exception to an approved validation rule; not worth weakening the rule for (exception package prepared if you want it)', 'It strikes first every exchange (a hastened opponent, or a Roar, still overrides it)'),
+  terrabull_quake_sap_hex: R('not', 'viability', 'A new mechanic (healCut) for viability, and Terrabull stayed outclassed; the real defect is its card, fixed by a text correction', 'Every second strike from the front, or every second exchange from the back, Chills the opposing front (from the back, the next in line too); a Chilled target heals at 50% for up to three exchanges'),
+  tideram_riptide_crash: R('not', 'viability', 'A new mechanic (sweepHit) for viability with only a borderline result', 'Every second strike hits 1.3x and, if the target survives, sweeps it to the back of its line; the monster pulled forward takes a 0.5x hit'),
+  aeralis_downdraft_anywhere_tailwind: R('not', 'viability', 'A new mechanic (hasteOnSwap) plus front activation for viability; the B.3 version keeps the visible arrival Daze', 'Every second exchange, from anywhere, swaps the opponent\'s front two and Dazes the monster swapped in; from the back, its own front then strikes first'),
+});
+// Card wording fixes for current moves whose card does not match what they do (no mechanic change).
+export const TEXT_CORRECTIONS = Object.freeze({
+  terrabull: Object.freeze({ text: 'From the back, every second exchange shakes the opposing front two, Chilling them', reason: 'Quake Step only acts from the bench (0 times in front in 600 test battles), but the card does not say so' }),
+});
+// Proposed, NOT active: the one move that would be exempt from the "always strikes first" validation rule if the owner grants it.
+export const PROPOSED_ALWAYS_FIRST_EXCEPTIONS = Object.freeze(['nightowl']);
+
 /** Current and proposed values for a move entry, read from the data (so the manifest cannot drift from the code). */
 export function describeEntry(e) {
   if (e.kind === 'config') return { current: e.current, proposed: e.proposed };
@@ -96,3 +152,12 @@ export function describeEntry(e) {
 }
 /** The recommended configuration's move patches must be exactly the manifest's move and rule entries. */
 export function manifestPatchIds() { return MANIFEST.filter((e) => e.kind !== 'config').map((e) => e.id); }
+/** Every move entry the final review covers (B.5 manifest + alternates). */
+export const REVIEWED_ENTRIES = Object.freeze([...MANIFEST, ...ALTERNATES]);
+/** The final move table if the recommended configuration were made permanent: each patched move with its proposed card text, plus text corrections. */
+export function finalMoveTable(patchIds = FINAL_PATCHES) {
+  const out = { ...CLASH_MOVES };
+  for (const [sp, t] of Object.entries(TEXT_CORRECTIONS)) out[sp] = { ...out[sp], text: t.text };
+  for (const id of patchIds) { const sp = P[id].species; out[sp] = { ...out[sp], ...P[id].changes, text: REVIEW[id]?.cardText ?? out[sp].text }; }
+  return out;
+}

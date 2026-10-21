@@ -2,7 +2,7 @@
 // Prints the Beast Clash balance manifest (src/clash/balance-manifest.js) as Markdown, with current and proposed values read from
 // the data. Usage: node tools/clash-manifest.mjs [--out=BEAST_CLASH_BALANCE_MANIFEST.md]. Nothing here changes a default.
 import fs from 'node:fs';
-import { MANIFEST, ENGINE_HOOKS, GATE_PATCHES, gateConfig, describeEntry } from '../src/clash/balance-manifest.js';
+import { MANIFEST, ENGINE_HOOKS, GATE_PATCHES, gateConfig, describeEntry, REVIEW, ALTERNATES, FINAL_PATCHES, TEXT_CORRECTIONS, PROPOSED_ALWAYS_FIRST_EXCEPTIONS } from '../src/clash/balance-manifest.js';
 import { SPECIES_DEX } from '../src/data/species.js';
 import { CLASH_VALUES } from '../src/clash/values.js';
 
@@ -21,6 +21,13 @@ MANIFEST.forEach((e, i) => {
   if (e.kind === 'config') lines.push(`| ${i + 1} | ${e.gate} | config | ${e.target} | ${e.mechanic} | ${d.current} | ${d.proposed} | — | ${J(e.key)} | ${e.deps.join('; ') || '—'} | ${e.tests.join('; ')} | ${e.status} |`);
   else lines.push(`| ${i + 1} | ${e.gate} | ${e.kind === 'rule' ? 'rule correction' : 'move patch'} | ${name[e.target]} (${e.target}) | ${d.move} | ${d.currentText} | ${d.proposedText}${e.note ? ` (${e.note})` : ''} | ${J(d.current)} → ${J(d.proposed)} | ${J(e.key)} | ${e.deps.join('; ') || '—'} | ${e.tests.join('; ')} | ${e.status} |`);
 });
+const VERDICT = { recommend: 'Recommended', keep: 'Optional: keep (in Final)', drop: 'Optional: drop (not in Final)', not: 'Not recommended' };
+lines.push('', '## Final implementation review (revised philosophy, GDD §25)', '', `The recommended **Final** configuration is \`gateConfig('Final')\`: duration C6, half-cost swaps and ${FINAL_PATCHES.length} patch switches. Nothing in it is live.`, '',
+  '| Item | Gate | Verdict | Basis | Reason | Proposed card text |', '|---|---|---|---|---|---|');
+for (const e of [...MANIFEST, ...ALTERNATES]) { const r = REVIEW[e.id]; lines.push(`| \`${e.id}\` | ${e.gate} | ${VERDICT[r.verdict]} | ${r.basis} | ${r.reason.replace(/\|/g, '/')} | ${r.cardText || '—'} |`); }
+lines.push('', '**Card text corrections (no mechanic change):**', '');
+for (const [sp, t] of Object.entries(TEXT_CORRECTIONS)) lines.push(`- \`${sp}\`: "${t.text}" (${t.reason})`);
+lines.push('', `**Proposed validation exception (not active):** \`alwaysFirstExceptions: ${JSON.stringify(PROPOSED_ALWAYS_FIRST_EXCEPTIONS)}\` for Noctlet's \`noctlet_always_first\`, only if the owner approves it; the review recommends not adopting that patch.`);
 lines.push('', '## Engine hooks', '', 'Each hook is inert unless a move carries its key; the Gate A golden fixture replays unchanged.', '', '| Key | Gate | Meaning |', '|---|---|---|');
 for (const h of ENGINE_HOOKS) lines.push(`| \`${h.key}\` | ${h.gate} | ${h.meaning} |`);
 lines.push('');

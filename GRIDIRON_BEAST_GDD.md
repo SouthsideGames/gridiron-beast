@@ -21,6 +21,7 @@ Decision key — **LOCKED**: approved for this build. **TUNABLE**: implemented, 
 |---|---|---|
 | **Franchise Mode** | The owner of an organization: staff, roster, scouting, the cap, the Board (§8, §15–§23) | **Current development priority.** Everything else in this document describes it unless marked otherwise |
 | **Career Mode** (working name) | One monster they create, playing a career on a team (§24) | **Documented only. Not approved for development.** No code, menus, placeholders or systems are to be built from §24 until the owner authorizes it |
+| **Beast Clash** | A collector who builds 3v3 and 5v5 monster teams for turn-based battles (§25) | **Phase 1 engine and Clash Lab built; balance changes are Lab-only switches until the owner approves permanent implementation.** Not yet connected to franchise data or saves |
 
 The two modes share the football world (clubs, league structure, rules, the match engine, monster data and species art conventions). Their progression and save data are separate: nothing earned in one mode changes the other.
 
@@ -759,3 +760,68 @@ Game grade (A–F, PROPOSED) = weighted snap grades; it feeds coach trust and XP
 5. **The weekly loop** (energy, activities, consequences).
 6. **Career progression** (entry, trust, starting role, contracts, offers, movement between tiers), dependent on the tiered league from Franchise.
 7. **Presentation and polish**, then a Career save store separate from Franchise.
+
+---
+
+## 25. Beast Clash — design philosophy and balance policy (REVISED 2026-10-21)
+
+> **Owner decision, 2026-10-21.** This section records the revised philosophy that governs Beast Clash from Gate B.5 onward. It **supersedes the earlier requirement that every species demonstrate a statistically proven competitive role**. That requirement is **retired**. The Gate B–B.5 reports remain the historical research record and are not rewritten: they were run under the old requirement and should be read that way.
+
+### 25.1 What Beast Clash is
+
+Beast Clash is a **collection-first battle experience with meaningful strategic depth**. Players build 3v3 or 5v5 teams from the monsters they collect and fight seeded, turn-based battles: front monsters exchange strikes; Supports and bench Disruptors act from the back; teams swap under fixed rules; sudden death and the stalemate rule end long battles. Beast Clash is an additional reason to collect and use monsters. It does not replace football as the heart of Gridiron Beast.
+
+### 25.2 Design principles
+
+1. **Unequal power is intentional.** Some monsters will be excellent Clash competitors, some average, some weak in most battles. Weak individual performance is **not, by itself, a balance defect**. A monster is not buffed because it sits below the median, and is not redesigned because another species does the same job better.
+2. **Every monster keeps a recognizable identity.** Players must be able to understand what their monster does. Abilities do not have to be mechanically unique: simple moves, familiar effects and overlapping roles are fine. Mechanical complexity is never added only to make a monster different.
+3. **Strategic decisions must matter at the team level.** Battles reward complementary picks, type and ability interactions, starting lineups, reading matchups, voluntary swaps, built-around combinations, discovering counters, and adjusting after losses. A stronger team should usually win, but a battle with real tactical options should not feel predetermined. These are goals for the system as a whole, not tests every species must pass.
+4. **Powerful monsters and combinations are allowed.** Legendaries may carry substantial advantages, rare monsters may be especially valuable, and ordinary monsters may turn out to be excellent. Players are rewarded for finding strong combinations. **High performance alone never justifies a nerf.** A strategy is investigated only when it creates a real problem: an effectively unavoidable exploit; an interaction that stops opponents taking meaningful actions; one strategy that consistently invalidates most reasonable alternatives (no practical counter exists); an ability that bypasses intended combat restrictions; or an unintended interaction that makes matches frustrating or nonfunctional.
+5. **Football value and Clash value are distinct.** A great quarterback may be a weak Clash monster and the reverse; some monsters are useful in both modes, others are collected for appearance, rarity, evolution or personality. Football value and Clash value are **never equalized**, and football attributes, abilities, positions and overall ratings are **never changed to correct Beast Clash balance**.
+
+### 25.3 Balance evaluation standards
+
+| Category | Standard |
+|---|---|
+| **Combat integrity** (required) | Battles resolve correctly; actions occur in valid order; conditions expire correctly; damage and healing are valid; swaps respect the approved rules; no infinite loops; seeded battles replay identically |
+| **Strategic quality** (desired, system-level) | Composition and lineup order influence outcomes; archetypes offer distinct play styles; strong teams have identifiable weaknesses; swapping creates real decisions; several broad strategies are worth exploring |
+| **Power distribution** (allowed) | Weak, average, strong and dominant monsters; powerful Legendaries; strong ordinary monsters; specialized counter teams; unfavorable archetype matchups. **No universal win-rate targets.** Win rates are diagnostic information, not pass/fail thresholds |
+| **Player experience** (priority) | Enjoyable battles, interesting discoveries, clear ability feedback, exciting combinations, understandable losses, reasonable pacing, consequential choices |
+
+A mathematically balanced game is not necessarily a fun one.
+
+### 25.4 Archetype matchups and powerful teams
+
+- **Pure-archetype matchups may be lopsided.** Gate B.5 showed practical 3v3 counterplay through mixed compositions. 5v5 is harder for Disruptor-heavy teams, partly because of the bench-action limit (back-row Test E); that rule is **not** being changed now and is revisited only if real gameplay shows a serious problem. There is no 75/25 matchup threshold. Players should learn that composition matters and that one-archetype teams can have serious weaknesses.
+- **Florant's Canopy Shade stays at 17.2%.** The 14% experiment is not implemented. The Wispira + Florant + Galyx combination has several accessible counters, which is the intended loop: a player finds a strong combination, others experiment and find answers, the game rewards learning. Powerful combinations are not weakened merely because they beat random teams.
+
+### 25.5 Closure of the broad balance gates
+
+**Gate B.5 is the final scheduled broad combat-balance gate for the current Beast Clash foundation.** There is no automatic Gate B.6, and no further multi-species improvement project. The seven species Gate B.5 found functionally outclassed (Terrabull, Lumini, Elderoot, Crustank, Murklaw, Astralux, Muddlet) and the borderline ones (Tideram, Bramblet, Flurrit, Zippit) are acceptable as they are, unless a verified mechanical defect, a misleading description, an exploit or another real gameplay problem is found. The Gate B–B.5 evidence and tooling are kept for reference.
+
+### 25.6 Testing levels
+
+| Level | Use for | Required | Full-roster simulation? |
+|---|---|---|---|
+| **1. New monster validation** (default) | Adding a species with existing mechanics | Ability functions; combat-rule compliance; determinism; 3v3 and 5v5; a small set of reference matchups; no critical exploit | No |
+| **2. Targeted interaction testing** | A new ability mechanic, status condition, swapping interaction, defensive effect, targeting rule or unusual combination | The affected mechanics and the existing species they touch | Only if the change has broad systemic effects |
+| **3. Major system validation** | Combat-engine revisions, new global rules, large changes to conditions or swapping, new team-size formats, major expansions, serious problems seen in real play | System health across the roster | May be appropriate; individual species viability is still not a pass/fail requirement |
+
+Reference teams for Levels 1–2 live in `src/clash/reference-teams.js` (offensive, defensive, support, disruption and mixed teams, in 3v3 and 5v5) and the Level 1 check runs with `npm run clash:level1 -- --species=<id>`. They are reused for every addition so results stay comparable and reproducible.
+
+### 25.7 Introducing a new monster (toward 500 species)
+
+1. **Define its identity:** name, type, rarity, evolution family, intended football role, Beast Clash ability and its player-facing description, and the combat interactions it touches. It does not need a unique Clash niche or to beat any existing species; its football and Clash value may differ widely.
+2. **Validate the ability (mandatory):** it activates under the intended conditions, produces the correct effect, respects battle rules, handles missing or invalid targets, behaves correctly when the monster is knocked out, interacts correctly with swaps, works in 3v3 and 5v5, and never creates an invalid state. Its description must match what it does (the card-text check in `validate.js` must pass).
+3. **Run the small representative suite** (Level 1 reference teams). The goal is to catch broken interactions and extreme unintended outcomes, not to hit a win rate; the monster is not compared against every species by default.
+4. **Check for severe interactions:** excessively long or capped battles, opponents prevented from acting indefinitely, bypassed combat restrictions, unintended invulnerability, invalid damage or healing, effects repeating without limits, or a combination that invalidates normal play. Being very strong is not a failure.
+5. **Approve for inclusion** when the mechanics work, the presentation is accurate and nothing critical is found. A weak monster is not held back for its win rate; a strong one is not held back for exceeding a target.
+6. **Monitor after introduction.** Track notable issues as the roster grows; do not rebalance the roster after each addition; make focused corrections only when evidence shows a real problem.
+
+### 25.8 How changes are evaluated from now on
+
+Each proposed change answers: does it improve the experience; does it make an ability work as intended; does it add an interesting decision; does it remove an exploit or a frustrating interaction; does it keep the system stable; does it add unnecessary complexity; and **was it made only to lift a weak monster's statistics?** Changes of the last kind are flagged for reconsideration, not automatically rejected: a weak monster may have gained a genuinely enjoyable ability worth keeping.
+
+### 25.9 Owner approval
+
+**No Beast Clash balance change becomes permanent without the owner's explicit approval.** Experimental changes live as named, reversible Lab switches (`src/clash/values.js` `movePatches`, recorded in `src/clash/balance-manifest.js`); the game's defaults change only in an approved implementation step, with the golden replay fixtures and football fingerprints re-verified. Franchise integration, save-schema changes and new development phases each need their own authorization.
