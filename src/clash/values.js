@@ -70,10 +70,11 @@ export const CLASH_VALUES = deepFreeze({
     sdFromE: { label: 'Model E sudden-death start (1-3 per side)', default: 12, options: [12, 15, 18, 99] },
   },
   // Rulesets: 'current' is the permanent game (values 1.1.0: the approved move table, C6, half-cost swaps). 'v1.0.0' replays the
-  // values 1.0.0 game exactly (the frozen v1.0.0 move table, Model F, swaps cost the action) so historical gates, old replay keys
+  // values 1.0.0 game exactly (the frozen v1.0.0 move table, Model F, swaps cost the action, and its reflected-damage knockout
+  // defect: Magma Crust or thorns damage that drops an attacker to 0 HP records no knockout) so historical gates, old replay keys
   // and rollback comparisons keep their meaning. stats.js picks the move table; these are the defaults each ruleset fills in.
   rulesets: { tag: 'approved', default: 'current',
-    current: { label: 'Values 1.1.0 (permanent)', duration: 'C6', swapCost: 'half' },
+    current: { label: 'Values 1.1.0 (permanent)', duration: 'C6', swapCost: 'half', reflectedKO: true }, // reflectedKO: engine correction, see engine.js
     'v1.0.0': { label: 'Values 1.0.0 (historical: Gate A-B.5 baseline)', duration: 'F', swapCost: 'action' },
   },
   // Candidate move patches: named, reversible overrides of one species' move, applied only when a battle's config lists the patch

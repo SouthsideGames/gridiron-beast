@@ -31,6 +31,11 @@ export function rampModelFor(perSide) { return perSide >= 4 ? 'F' : 'E'; }
 export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'full' }) {
   for (const [k, v] of Object.entries(config)) if (typeof v === 'function') throw new Error(`Battle options cannot be functions (${k})`);
   const cfg = battleConfig(config);
+  // Reflected-damage knockout correction (values 1.1.0 'current' ruleset; owner authorization 2026-10-21). When Magma Crust or
+  // thorns knock out the attacker, the blow that broke the shield still lands, then the attacker is knocked out (one ko event),
+  // nothing else in its action happens, and its side's next monster steps up before the opponent acts. The values 1.0.0 ruleset
+  // keeps the old behaviour (no knockout recorded) so historical battles replay exactly.
+  const FIX_REFLECT_KO = CLASH_VALUES.rulesets[cfg.ruleset]?.reflectedKO === true;
   if (!POLICIES.includes(cfg.policies.a) || !POLICIES.includes(cfg.policies.b)) throw new Error('Unknown swap policy');
   if (!a?.length || !b?.length || a.length > V.battle.maxPerSide || b.length > V.battle.maxPerSide) throw new Error('Each side needs 1-5 monsters');
   const perSide = Math.max(a.length, b.length);
@@ -64,6 +69,8 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     const mv = def.c.move;
     if (mv.erupt) { const d = Math.round(def.c.atk * mv.erupt * E.ramp); att.hp = Math.max(0, att.hp - d); def.stats.dealt += d; att.stats.taken += d; E.log('damage', def, att, `${def.c.name}'s Magma Crust erupts: ${d} damage to ${att.c.name}`, { damage: d, hpAfter: att.hp }); }
     if (mv.thorns) { const d = Math.round(def.c.atk * mv.thorns * E.ramp); att.hp = Math.max(0, att.hp - d); def.stats.dealt += d; att.stats.taken += d; E.log('damage', def, att, `${def.c.name}'s thorns: ${d} damage to ${att.c.name}`, { damage: d, hpAfter: att.hp }); }
+    // The knockout is settled at the end of the hit (E.afterHit), after the blow that broke the shield has landed.
+    if (FIX_REFLECT_KO && (mv.erupt || mv.thorns) && att.hp <= 0 && !att.koed && !att.reflectKO) att.reflectKO = { by: def, label: mv.name };
     // breakCharge (Gate B.4, patch-only): the attacker that breaks a shield charges its own next strike.
     if (att && att.hp > 0 && att.c.move.breakCharge && att !== def) { att.charge = Math.max(att.charge || 0, att.c.move.breakCharge); E.log('buff', att, att, `${att.c.name}'s ${att.c.move.name}: shield broken, next strike +${Math.round(att.c.move.breakCharge * 100)}%`); }
     if (mv.regrow && def.regrows > 0) { def.regrows -= 1; const amt = Math.round(def.c.maxHp * mv.shield * E.healMult); def.shield += amt; E.log('shield', def, def, `${def.c.name}'s Glacier Wall regrows (${amt})`, { amount: amt, shield: def.shield }); }
@@ -79,6 +86,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
       if (ok && rng.chance(r.chance)) condition(def, att, r.cond, `${def.c.name}'s ${dm.name}`);
     }
     if (def.hp <= 0) knockout(def, att, label);
+    if (FIX_REFLECT_KO && att.reflectKO) { const r = att.reflectKO; att.reflectKO = null; knockout(att, r.by, r.label); }
   };
   function condition(src, target, kind, label, opts = {}) {
     const r = applyCondition(target.cs, kind, ex, opts);
@@ -147,7 +155,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     if (src.c.move.stripOnSwap && f.shield > 0) { E.log('debuff', src, f, `${label}: ${f.c.name} loses its ${Math.round(f.shield)} shield`); f.shield = 0; }
     bench(f, 'is forced back'); enter(incoming, 'is pulled to the front');
     if (hitMult > 0 && incoming.hp > 0) hit(E, src, incoming, hitMult, { label: `${label} arrival hit` });
-    if (arrivalCond && incoming.hp > 0) condition(src, incoming, arrivalCond, `${label} (on arrival)`);
+    if (arrivalCond && incoming.hp > 0 && !(FIX_REFLECT_KO && src.hp <= 0)) condition(src, incoming, arrivalCond, `${label} (on arrival)`); // a source knocked out by the arrival hit's reflected damage does nothing more
     return true;
   }
   function voluntarySwap(side, incoming) {
@@ -200,7 +208,8 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     if (mv.firstStrike && x.strikes === 1) mult = mv.firstStrike;
     if (x.halfAction) mult = Math.round(mult * 50) / 100;
     let dealt = 0;
-    for (let h = 0; h < hits; h++) { if (foe.hp <= 0) break; dealt += hit(E, x, foe, mult, { label: hits > 1 ? `${label} hit ${h + 1}` : label, shieldBreak }); }
+    for (let h = 0; h < hits; h++) { if (foe.hp <= 0 || (FIX_REFLECT_KO && x.hp <= 0)) break; dealt += hit(E, x, foe, mult, { label: hits > 1 ? `${label} hit ${h + 1}` : label, shieldBreak }); }
+    if (FIX_REFLECT_KO && x.hp <= 0) return; // knocked out by reflected damage: the rest of its action does not happen
     if (mv.splash) { const next = alive(foeSide).find((y) => y !== foe); if (next && next.hp > 0 && (fires || mv.kind === 'hex')) { const d = Math.round(dealt * mv.splash); if (d > 0) { next.hp = Math.max(0, next.hp - d); x.stats.dealt += d; next.stats.taken += d; E.log('damage', x, next, `${mv.name} splashes ${next.c.name} for ${d}`, { damage: d, hpAfter: next.hp }); if (next.hp <= 0) knockout(next, x, mv.name); } } }
     // Conditions on the strike.
     if (foe.hp > 0) {
@@ -237,8 +246,10 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     for (const side of [S.a, S.b]) {
       const foeSide = other(side); const L = alive(side); side.benchActs = 0;
       for (const x of L) {
+        if (FIX_REFLECT_KO && x.hp <= 0) continue; // knocked out earlier in this pass (reflected damage on a bench arrival hit)
         const mv = x.c.move; const isFront = x === L[0];
         if (mv.kind === 'mend' && ex % (mv.trigger.n || V.support.every) === 0) {
+          const L0 = L; { const L = FIX_REFLECT_KO ? L0.filter((y) => y.hp > 0) : L0; // never heal or shield a monster knocked out this pass
           // Half-cost swap: heals and shields are halved in the handlers; effects with no magnitude are withheld.
           const withheld = x.halfAction ? (why) => E.log('note', x, null, `${mv.name}: ${why} withheld, ${x.c.name} just swapped in`) : null;
           if (mv.heal > 0) {
@@ -254,6 +265,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
           else if (mv.charge) { L[0].charge = mv.charge; E.log('buff', x, L[0], `${mv.name}: ${L[0].c.name}'s next strike +${Math.round(mv.charge * 100)}%`); }
           else if (mv.illusion) { const t = L.slice().sort((p, q) => p.hp / p.c.maxHp - q.hp / q.c.maxHp || p.c.id.localeCompare(q.c.id))[0]; t.illusion = true; E.log('buff', x, t, `${mv.name}: an illusion will absorb the next hit on ${t.c.name}`); }
           else if (mv.rally) { side.rallyUntil = ex + mv.rally.exchanges - 1; side.rallyBonus = mv.rally.bonus; E.log('buff', x, null, `${mv.name}: allies strike ${Math.round(mv.rally.bonus * 100)}% harder for ${mv.rally.exchanges} exchanges`); }
+          }
           x.stats.acts += 1;
           continue;
         }
@@ -332,6 +344,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
       if (front(x.side) !== x) continue; // swept away by the other action
       act(x, other(x.side));
       if (ended()) break;
+      if (FIX_REFLECT_KO && x.hp <= 0) replace(); // its replacement steps up before the opponent acts
     }
     // 8. replacements
     replace();

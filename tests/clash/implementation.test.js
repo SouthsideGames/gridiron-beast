@@ -97,17 +97,41 @@ test('the values 1.0.0 ruleset replays all 200 pre-implementation battles byte f
   }
 });
 
-test('the permanent defaults play exactly like the approved candidate did on the values 1.0.0 build', () => {
-  const recs = SNAP.records.filter((r) => r.name === 'Approved'); assert.equal(recs.length, 40);
+// The permanent game equals the approved candidate (values 1.0.0 rules + 15 patches, C6, half) except for the owner-authorised
+// reflected-damage knockout correction: a battle may differ only from the first point where Magma Crust or thorns dropped an
+// attacker to 0 HP (where the old rules recorded no knockout); up to and including that event the logs are identical.
+const REFLECT = (e) => e.kind === 'damage' && /Magma Crust erupts|thorns:/.test(e.text) && e.hpAfter === 0;
+const line = (e) => `${e.ex}|${e.kind}|${e.actor}|${e.target}|${e.text}`;
+function sameUntilReflect(perm, hist) {
+  const a = perm.log.slice(1).map(line), b = hist.log.slice(1).map(line);
+  let k = 0; while (k < a.length && k < b.length && a[k] === b[k]) k++;
+  if (k === a.length && k === b.length) return { same: true };
+  const d = hist.log.slice(1).findIndex(REFLECT);
+  return { same: false, ok: d >= 0 && k > d, k, d };
+}
+test('the permanent defaults play exactly like the approved candidate, except from a reflected-damage knockout onward (the authorised correction)', () => {
+  const recs = SNAP.records.filter((r) => r.name === 'Approved'); assert.equal(recs.length, 40); let differ = 0;
   for (const r of recs) {
     const out = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: battleConfig({ policies: r.config.policies }) });
-    assert.equal(hashOf(out.log.slice(1)), r.bodyHash, `Approved #${r.i}`); assert.equal(out.winner, r.winner); assert.equal(out.by, r.by); assert.equal(out.exchanges, r.exchanges);
     const again = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: battleConfig({ policies: r.config.policies }) }); assert.equal(logHash(again), logHash(out), 'deterministic');
-    // and the Approved gate (values 1.0.0 + 15 patches) on this build is the same battle too
+    // the Approved gate (values 1.0.0 + 15 patches) on this build is still exactly the recorded candidate battle
     const hist = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: gateConfig('Approved', r.config.policies.a !== 'none' ? { policies: r.config.policies } : {}) });
-    assert.equal(hashOf(hist.log.slice(1)), r.bodyHash);
+    assert.equal(hashOf(hist.log.slice(1)), r.bodyHash); assert.equal(hist.winner, r.winner); assert.equal(hist.exchanges, r.exchanges);
+    const cmp = sameUntilReflect(out, hist);
+    if (cmp.same) { assert.equal(hashOf(out.log.slice(1)), r.bodyHash, `Approved #${r.i}`); assert.equal(out.winner, r.winner); assert.equal(out.by, r.by); assert.equal(out.exchanges, r.exchanges); }
+    else { differ++; assert.ok(cmp.ok, `Approved #${r.i} diverges at ${cmp.k} without a prior reflected knockout (${cmp.d})`); assert.ok(out.log.some((e) => e.kind === 'ko' && / by .*'s (Magma Crust|Bramble Shell)$/.test(e.text))); }
   }
-  // the old defaults are now the values 1.0.0 ruleset, not the permanent game
+  assert.ok(differ <= 4, `${differ} of 40 recorded battles touched by the correction`);
+  const rng = createRng(4401); let checked = 0, touched = 0;
+  const pool = ['pyroclast', 'thornback', 'breezefang', 'emberfox', 'cinderclaw', 'elderoot', 'tidefin', 'tsunarok', 'leafhorn', 'duskrunner', 'rockram', 'mudcub'];
+  for (let i = 0; i < 300; i++) {
+    const n = i % 2 ? 5 : 3; const pick = () => ({ species: pool[rng.int(pool.length)], seed: rng.seed(), overall: 60 + rng.int(10) });
+    const a = Array.from({ length: n }, pick), b = Array.from({ length: n }, pick); const seed = rng.seed(); const policies = i % 4 >= 2 ? { a: 'smart', b: 'smart' } : undefined;
+    const perm = simulateClash({ a: mk(a), b: mk(b), seed, config: battleConfig(policies ? { policies } : {}) });
+    const hist = simulateClash({ a: mk(a), b: mk(b), seed, config: gateConfig('Approved', policies ? { policies } : {}) });
+    const cmp = sameUntilReflect(perm, hist); checked++; if (!cmp.same) { touched++; assert.ok(cmp.ok, `random #${i} diverges at ${cmp.k} without a prior reflected knockout`); }
+  }
+  assert.ok(touched > 5 && touched < checked, `${touched} of ${checked} Tank-heavy battles touched`);
   const old = SNAP.records.find((r) => r.name === 'defaults' && r.winner);
   assert.equal(moveTableFor(battleConfig({ ruleset: 'v1.0.0' })), CLASH_MOVES_V1_0_0); assert.equal(moveTableFor(battleConfig({})), CLASH_MOVES); assert.ok(old);
 });

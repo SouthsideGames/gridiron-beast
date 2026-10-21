@@ -21,6 +21,8 @@ Generated from `src/clash/balance-manifest.js` by `node tools/clash-manifest.mjs
 | Final | v1.0.0 | C6 | half | 13 | `gateConfig('Final')` |
 | Approved | v1.0.0 | C6 | half | 15 | `gateConfig('Approved')` |
 
+**Engine correction (values 1.1.0 ruleset only):** a Magma Crust or thorns knockout of the attacker is recorded once, right after the blow that broke the shield; the attacker does nothing more and its replacement steps up before the opponent acts. The values 1.0.0 ruleset (every gate below) keeps the historical behaviour.
+
 Every gate also uses the defaults: back row E, Shock 40-45% every second strike, sudden death E from 12 (1-3 per side) / F (4-5), forced swap every 3 exchanges, voluntary every 4, O1-O3 off.
 
 ## Changes
