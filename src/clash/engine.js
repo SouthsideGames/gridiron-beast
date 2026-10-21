@@ -96,7 +96,8 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     x.isFront = true; x.enteredAt = ex; x.firstAfterEntryDue = !!(x.c.move.trigger.kind === 'firstAfterEntry'); x.strikesSinceEntry = 0;
     const resumed = resumeCondition(x.cs);
     E.log('enter', x, null, `${x.c.name} ${how} (${x.c.archetype}, ${x.c.type})${resumed ? `; its ${resumed} resumes with ${x.cs.cond.left} left` : ''}`, { hp: x.hp, maxHp: x.c.maxHp, shield: x.shield, archetype: x.c.archetype, type: x.c.type, resumed });
-    if (x.c.move.dodgeOnEntry) x.dodge = true;
+    // dodgeEntry (Gate B.3, patch-only): 'once' = only the first entry of the battle; 'notVoluntary' = not on a voluntary swap-in.
+    if (x.c.move.dodgeOnEntry && !(x.c.move.dodgeEntry === 'once' && x.entered) && !(x.c.move.dodgeEntry === 'notVoluntary' && how === 'swaps in')) x.dodge = true;
     if (!x.entered) {
       x.entered = true;
       const mv = x.c.move;

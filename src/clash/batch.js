@@ -25,6 +25,10 @@ const pick = (rng, pool) => pool[rng.int(pool.length)];
 /** Species pool for one slot spec: 'random' | an archetype | 'mixedDefense' | 'species:<id>'. */
 function poolFor(want) {
   if (want === 'random') return SPECIES_DEX; if (want === 'mixedDefense') return [...BY_ARCH.Tank, ...BY_ARCH.Support];
+  // Gate B.3 Lab specs: 'ordinary:<archetype>' = its common and uncommon species only (accessible teams);
+  // 'pool:<id>|<id>|...' = an explicit species pool. Existing specs are unchanged.
+  if (typeof want === 'string' && want.startsWith('ordinary:')) { const a = want.slice(9); if (!BY_ARCH[a]) throw new Error(`Unknown lineup spec ${want}`); return BY_ARCH[a].filter((s) => s.rarity === 'common' || s.rarity === 'uncommon'); }
+  if (typeof want === 'string' && want.startsWith('pool:')) { const ids = want.slice(5).split('|'); const out = SPECIES_DEX.filter((s) => ids.includes(s.id)); if (out.length !== ids.length) throw new Error(`Unknown species in ${want}`); return out; }
   if (typeof want === 'string' && want.startsWith('species:')) { const sp = SPECIES_DEX.find((s) => s.id === want.slice(8)); if (!sp) throw new Error(`Unknown species ${want}`); return [sp]; }
   if (!BY_ARCH[want]) throw new Error(`Unknown lineup spec ${want}`); return BY_ARCH[want];
 }

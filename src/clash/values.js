@@ -106,6 +106,13 @@ export const CLASH_VALUES = deepFreeze({
     coglet_gearshot_pierce_break: { species: 'gearwing', label: 'Gear Shot: steady roll, pierce and double shield-break', changes: { pierce: true, breakAlways: 2 } },
     coglet_gearshot_heavy_break: { species: 'gearwing', label: 'Gear Shot: every second strike hits 1.3x and strips shields at double rate; strikes never roll below full', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.3, breakAlways: 2 } },
     coglet_gearshot_heavy_pierce: { species: 'gearwing', label: 'Gear Shot: every second strike hits 1.3x and ignores Tank guard; strikes never roll below full', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.3, pierce: true } },
+    // Gate B.3 (owner-authorised experiments): Coglet 1.4x exception, Undercurrent arrival-hit values, a distinct Downdraft
+    coglet_gearshot_heavy14_break: { species: 'gearwing', label: 'Gear Shot: every second strike hits 1.4x (Balanced band exception) and strips shields at double rate; strikes never roll below full', changes: { kind: 'heavy', trigger: { kind: 'every', n: 2 }, mult: 1.4, breakAlways: 2 } },
+    ripplet_undercurrent_065: { species: 'tidefin', label: 'Undercurrent: arrival hit 0.65x (was 0.5x from the back-row rule)', changes: { hit: true, hitMult: 0.65 } },
+    ripplet_undercurrent_08: { species: 'tidefin', label: 'Undercurrent: arrival hit 0.8x (was 0.5x from the back-row rule)', changes: { hit: true, hitMult: 0.8 } },
+    umbrikit_pounce_once: { species: 'shadowkit', label: 'Shadow Pounce: dodges the first strike after its first entry only (was every entry)', changes: { dodgeEntry: 'once' } },
+    umbrikit_pounce_not_voluntary: { species: 'shadowkit', label: 'Shadow Pounce: the entry dodge does not re-arm on a voluntary swap-in (steps up and forced entries keep it)', changes: { dodgeEntry: 'notVoluntary' } },
+    aeralis_downdraft_daze: { species: 'skywarden', label: 'Downdraft: the swapped-in monster is Dazed (no arrival hit), so it no longer copies Undercurrent', changes: { hit: false, arrivalCond: 'daze' } },
     coglet_gearshot_break_11: { species: 'gearwing', label: 'Gear Shot: steady roll, double shield-break and 1.1x strikes', changes: { breakAlways: 2, kind: 'surge', mult: 1.1, trigger: { kind: 'always' } } },
     cerebrix_foresight_front: { species: 'cerebrix', label: 'Foresight sends the opposing front monster back whoever it is (was only when it is the strongest)', changes: { swapKind: 'strongestFront' } },
     cerebrix_foresight_front_hit: { species: 'cerebrix', label: 'Foresight sends the front back, with a 0.5x arrival hit on the replacement', changes: { swapKind: 'strongestFront', hit: true } },

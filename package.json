@@ -10,7 +10,8 @@
     "clash:balance": "node tools/clash-balance.mjs",
     "clash:gateb": "node tools/clash-gateb.mjs",
     "clash:gateb1": "node tools/clash-gateb1.mjs",
-    "clash:gateb2": "node tools/clash-gateb2.mjs"
+    "clash:gateb2": "node tools/clash-gateb2.mjs",
+    "clash:gateb3": "node tools/clash-gateb3.mjs"
   },
   "license": "UNLICENSED"
 }
