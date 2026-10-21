@@ -111,22 +111,27 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     return null;
   };
   // Forced swap on `side` by `src`. kind: frontTwo | backToFront | strongestBack | sweep (front to the back) | lift (own side: front one place back)
-  function forcedSwap(src, side, kind, { hitMult = 0, label = 'swap' } = {}) {
-    const L = alive(side); if (L.length < 2) { E.log('swap_refused', src, null, `${label}: ${side.key === 'a' ? 'side A' : 'side B'} has nobody to swap`); return false; }
+  function forcedSwap(src, side, kind, { hitMult = 0, label = 'swap', arrivalCond = null, refusedEffect = null } = {}) {
+    // Experimental (Gate B.2, patch-only): when a swap move is refused it may fall back to a secondary effect on the front.
+    const refuse = (target, why) => { E.log('swap_refused', src, target, why); if (refusedEffect && target && target.hp > 0) { if (refusedEffect.cond) condition(src, target, refusedEffect.cond, `${label} (refused)`); else if (refusedEffect.hit) hit(E, src, target, refusedEffect.hit, { label: `${label} (refused)` }); } return false; };
+    const L = alive(side); if (L.length < 2) { return refuse(null, `${label}: ${side.key === 'a' ? 'side A' : 'side B'} has nobody to swap`); }
     const f = L[0];
-    if (ex - side.lastForced < V.swaps.forcedEvery) { E.log('swap_refused', src, f, `${label}: refused, ${f.c.name}'s side was forced to swap ${ex - side.lastForced} exchange(s) ago`); return false; }
-    if (f.forcedInAt === ex || f.enteredAt === ex) { E.log('swap_refused', src, f, `${label}: refused, ${f.c.name} just arrived`); return false; }
-    const held = canLeave(f, 'forced'); if (held) { E.log('swap_refused', src, f, `${label}: refused, ${held}`); return false; }
+    if (ex - side.lastForced < V.swaps.forcedEvery) return refuse(f, `${label}: refused, ${f.c.name}'s side was forced to swap ${ex - side.lastForced} exchange(s) ago`);
+    if (f.forcedInAt === ex || f.enteredAt === ex) return refuse(f, `${label}: refused, ${f.c.name} just arrived`);
+    const held = canLeave(f, 'forced'); if (held) return refuse(f, `${label}: refused, ${held}`);
     let incoming;
     if (kind === 'frontTwo') incoming = L[1];
     else if (kind === 'backToFront' || kind === 'sweep') incoming = L[L.length - 1] === f ? L[1] : L[L.length - 1];
-    else if (kind === 'strongestBack') { const strongest = L.slice().sort((p, q) => q.c.overall - p.c.overall || p.c.id.localeCompare(q.c.id))[0]; if (strongest !== f) { E.log('swap_refused', src, f, `${label}: the strongest monster is already on the bench`); return false; } incoming = L[1]; }
+    else if (kind === 'strongestBack') { const strongest = L.slice().sort((p, q) => q.c.overall - p.c.overall || p.c.id.localeCompare(q.c.id))[0]; if (strongest !== f) return refuse(f, `${label}: the strongest monster is already on the bench`); incoming = L[1]; }
+    else if (kind === 'strongestFront') { // experimental: the strongest active opponent is sent back whoever it is; it pulls the next in line forward
+      incoming = L[1]; }
     const i = side.line.indexOf(f), j = side.line.indexOf(incoming);
     if (kind === 'sweep' || kind === 'strongestBack') { side.line.splice(i, 1); side.line.push(f); } else { [side.line[i], side.line[j]] = [side.line[j], side.line[i]]; }
     side.lastForced = ex; incoming.forcedInAt = ex;
     E.log('swap', src, f, `${label}: ${f.c.name} is forced to the ${kind === 'sweep' || kind === 'strongestBack' ? 'back' : 'bench'}; ${incoming.c.name} is pulled to the front`, { forced: true, out: f.c.id, in: incoming.c.id });
     bench(f, 'is forced back'); enter(incoming, 'is pulled to the front');
     if (hitMult > 0 && incoming.hp > 0) hit(E, src, incoming, hitMult, { label: `${label} arrival hit` });
+    if (arrivalCond && incoming.hp > 0) condition(src, incoming, arrivalCond, `${label} (on arrival)`);
     return true;
   }
   function voluntarySwap(side, incoming) {
@@ -134,7 +139,9 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     const i = side.line.indexOf(f), j = side.line.indexOf(incoming); [side.line[i], side.line[j]] = [side.line[j], side.line[i]];
     side.lastVoluntary = ex; side.swappedThisExchange = true;
     E.log('swap', f, incoming, `${side.policy} policy: ${f.c.name} swaps out for ${incoming.c.name}${cfg.swapCost === 'action' ? ' (uses the side\'s action)' : cfg.swapCost === 'half' ? ' (acts at half damage)' : ''}`, { forced: false, out: f.c.id, in: incoming.c.id });
-    bench(f); enter(incoming, 'swaps in'); return true;
+    bench(f); enter(incoming, 'swaps in');
+    incoming.halfAction = cfg.swapCost === 'half'; // set after entry: entry effects (first-entry shield, Roar, dodge-on-entry) are not actions and stay at full strength
+    return true;
   }
   function healMultiplier() {
     if (cfg.duration === 'R2') return 1 / E.ramp;
@@ -146,6 +153,10 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
   function act(x, foeSide) {
     const foe = front(foeSide); if (!foe) return;
     x.acts += 1; x.stats.acts += 1;
+    // Half-cost voluntary swap (experimental): the monster that just swapped in acts at half strength this exchange,
+    // whatever the action: damage, healing and shielding x0.5, condition rolls at half chance, its own swap move
+    // cannot fire and support effects without a magnitude are withheld. Set by voluntarySwap, cleared next exchange.
+    if (x.halfAction) E.log('note', x, null, `${x.c.name} just swapped in: this action is at half strength`);
     // Shock: lose this action (never two in a row to any cause).
     if (x.cs.cond?.kind === 'shock') {
       if (x.lastSkipped) { E.log('note', x, null, `${x.c.name} is shocked but cannot lose two actions in a row; it acts`); }
@@ -158,40 +169,42 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     if (fires && mv.trigger.kind === 'firstAfterEntry') x.firstAfterEntryDue = false;
     const label = fires ? mv.name : 'strike';
     // Bench kinds that also act from the front (Undertow, Foresight) use the swap as their strike.
-    if (mv.kind === 'bench' && mv.anywhere && ex % (mv.trigger.n || 1) === 0) { if (forcedSwap(x, foeSide, mv.swapKind, { hitMult: mv.hit ? br.swapHit : 0, label: mv.name })) return; }
+    if (mv.kind === 'bench' && mv.anywhere && ex % (mv.trigger.n || 1) === 0 && !x.halfAction) { if (forcedSwap(x, foeSide, mv.swapKind, { hitMult: mv.hit ? (mv.hitMult || br.swapHit) : 0, label: mv.name, arrivalCond: mv.arrivalCond, refusedEffect: mv.refusedEffect })) return; }
     let mult = 1, hits = 1, shieldBreak = 1;
+    // Half-cost swap: strike effects without a magnitude (sweeps, cannot-answer, dodge-next, forge) are withheld.
+    const withheld = (what) => { if (!x.halfAction) return false; E.log('note', x, null, `${mv.name}: ${what} withheld, ${x.c.name} just swapped in`); return true; };
     if (fires) {
       if (mv.kind === 'heavy' || mv.kind === 'surge') { mult = mv.mult + (mv.perStage && mv.kind === 'heavy' ? mv.perStage * x.c.stage : 0); hits = mv.hits || 1; shieldBreak = mv.shieldBreak || 1; }
       if (mv.firstStrike && x.strikes === 1) mult = mv.firstStrike;
       if (mv.vsShield && foe.shield > 0) mult = mv.vsShield;
       if (mv.blink) { const second = alive(foeSide)[1]; if (second) { hit(E, x, second, mult, { label: `${mv.name} (past ${foe.c.name})` }); return; } }
-      if (mv.unanswered) { foe.unansweredUntil = ex; E.log('debuff', x, foe, `${x.c.name}'s Daybreak: ${foe.c.name} cannot answer this exchange`); }
-      if (mv.fakeFirst && x.strikes === 1) { foe.unansweredUntil = ex; E.log('debuff', x, foe, `${x.c.name}'s Mind Game: ${foe.c.name} bites on the fake and skips its answer`); }
+      if (mv.unanswered && !withheld('the cannot-answer effect')) { foe.unansweredUntil = ex; E.log('debuff', x, foe, `${x.c.name}'s Daybreak: ${foe.c.name} cannot answer this exchange`); }
+      if (mv.fakeFirst && x.strikes === 1 && !withheld('the fake')) { foe.unansweredUntil = ex; E.log('debuff', x, foe, `${x.c.name}'s Mind Game: ${foe.c.name} bites on the fake and skips its answer`); }
     }
     if (mv.firstStrike && x.strikes === 1) mult = mv.firstStrike;
-    if (x.side.swappedThisExchange && cfg.swapCost === 'half') mult = Math.round(mult * 50) / 100;
+    if (x.halfAction) mult = Math.round(mult * 50) / 100;
     let dealt = 0;
     for (let h = 0; h < hits; h++) { if (foe.hp <= 0) break; dealt += hit(E, x, foe, mult, { label: hits > 1 ? `${label} hit ${h + 1}` : label, shieldBreak }); }
     if (mv.splash) { const next = alive(foeSide).find((y) => y !== foe); if (next && next.hp > 0 && (fires || mv.kind === 'hex')) { const d = Math.round(dealt * mv.splash); if (d > 0) { next.hp = Math.max(0, next.hp - d); x.stats.dealt += d; next.stats.taken += d; E.log('damage', x, next, `${mv.name} splashes ${next.c.name} for ${d}`, { damage: d, hpAfter: next.hp }); if (next.hp <= 0) knockout(next, x, mv.name); } } }
     // Conditions on the strike.
     if (foe.hp > 0) {
       if (mv.kind === 'hex' && (mv.trigger.kind === 'always' || fires)) {
-        if (rng.chance(mv.chance)) {
+        if (rng.chance(mv.chance * (x.halfAction ? 0.5 : 1))) {
           if (mv.wholeLine) { for (const y of alive(foeSide)) condition(x, y, mv.cond, mv.name, { duration: mv.duration || V.conditions.duration }); }
           else condition(x, foe, mv.cond, mv.name, mv.skips ? { skips: mv.skips } : {});
         } else E.log('condition', x, foe, `${mv.name}: ${foe.c.name} shrugs off the ${mv.cond}`, { condition: mv.cond, result: 'missed' });
-        if (mv.sweepTarget && fires && foe.hp > 0) forcedSwap(x, foeSide, 'sweep', { label: mv.name });
+        if (mv.sweepTarget && fires && foe.hp > 0 && !withheld('the sweep')) forcedSwap(x, foeSide, 'sweep', { label: mv.name });
       }
       const af = mv.afflict;
       if (af && fires && (!af.belowHp || x.hp / x.c.maxHp < af.belowHp) && (!af.firstOnly || !x.afflictUsed)) {
-        if (rng.chance(af.chance)) { x.afflictUsed = true; condition(x, foe, af.cond, mv.name); } else E.log('condition', x, foe, `${mv.name}: the ${af.cond} does not take`, { condition: af.cond, result: 'missed' });
+        if (rng.chance(af.chance * (x.halfAction ? 0.5 : 1))) { x.afflictUsed = true; condition(x, foe, af.cond, mv.name); } else E.log('condition', x, foe, `${mv.name}: the ${af.cond} does not take`, { condition: af.cond, result: 'missed' });
       }
-      if (mv.sweepTarget && fires && mv.kind === 'surge') forcedSwap(x, foeSide, 'sweep', { label: mv.name });
+      if (mv.sweepTarget && fires && mv.kind === 'surge' && !withheld('the sweep')) forcedSwap(x, foeSide, 'sweep', { label: mv.name });
     }
     if (fires) {
       if (mv.selfHeal) heal(E, x, x, mv.selfHeal, mv.name);
-      if (mv.dodgeNext) { x.dodge = true; E.log('buff', x, x, `${x.c.name} will dodge the next hit`); }
-      if (mv.forge && (x.forgeCount || 0) < mv.forge.max) { x.forgeCount = (x.forgeCount || 0) + 1; x.forge += mv.forge.step; E.log('buff', x, x, `${x.c.name}'s Forge Swipe: attack +${Math.round(x.forge * 100)}%`); }
+      if (mv.dodgeNext && !withheld('the dodge')) { x.dodge = true; E.log('buff', x, x, `${x.c.name} will dodge the next hit`); }
+      if (mv.forge && (x.forgeCount || 0) < mv.forge.max && !withheld('the forge step')) { x.forgeCount = (x.forgeCount || 0) + 1; x.forge += mv.forge.step; E.log('buff', x, x, `${x.c.name}'s Forge Swipe: attack +${Math.round(x.forge * 100)}%`); }
     }
   }
 
@@ -202,17 +215,21 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
       for (const x of L) {
         const mv = x.c.move; const isFront = x === L[0];
         if (mv.kind === 'mend' && ex % (mv.trigger.n || V.support.every) === 0) {
+          // Half-cost swap: heals and shields are halved in the handlers; effects with no magnitude are withheld.
+          const withheld = x.halfAction ? (why) => E.log('note', x, null, `${mv.name}: ${why} withheld, ${x.c.name} just swapped in`) : null;
           if (mv.heal > 0) {
             const byHurt = L.slice().sort((p, q) => p.hp / p.c.maxHp - q.hp / q.c.maxHp || p.c.id.localeCompare(q.c.id));
             const targets = mv.target === 'front' ? [L[0]] : mv.target === 'all' ? L : mv.target === 'twoMostHurt' ? byHurt.slice(0, 2) : [byHurt[0]];
-            for (const t of targets) { heal(E, x, t, mv.heal, mv.name); if (mv.cleanse && t.cs.cond) { const c = cleanse(t.cs, ex, mv.cleanse); if (c) E.log('condition', x, t, `${mv.name} clears ${t.c.name}'s ${c}`, { condition: c, result: 'cleared' }); } if (mv.brace) { t.brace = mv.brace; } if (mv.haste) { t.haste = true; } }
+            for (const t of targets) { heal(E, x, t, mv.heal, mv.name); if (withheld) { if (mv.cleanse || mv.brace || mv.haste) withheld('cleanse, brace and haste'); continue; } if (mv.cleanse && t.cs.cond) { const c = cleanse(t.cs, ex, mv.cleanse); if (c) E.log('condition', x, t, `${mv.name} clears ${t.c.name}'s ${c}`, { condition: c, result: 'cleared' }); } if (mv.brace) { t.brace = mv.brace; } if (mv.haste) { t.haste = true; } }
             if (mv.second && L[1]) heal(E, x, L[1], mv.second, mv.name);
-            if (mv.lift && targets[0] === L[0] && L.length > 1) { const f = L[0]; const i = side.line.indexOf(f), j = side.line.indexOf(L[1]); [side.line[i], side.line[j]] = [side.line[j], side.line[i]]; E.log('swap', x, f, `${mv.name} lifts ${f.c.name} one place back; ${L[1].c.name} steps up`, { forced: false, out: f.c.id, in: L[1].c.id }); bench(f, 'is lifted back'); enter(L[1], 'steps up'); }
+            if (mv.lift && withheld) withheld('the lift');
+            else if (mv.lift && targets[0] === L[0] && L.length > 1) { const f = L[0]; const i = side.line.indexOf(f), j = side.line.indexOf(L[1]); [side.line[i], side.line[j]] = [side.line[j], side.line[i]]; E.log('swap', x, f, `${mv.name} lifts ${f.c.name} one place back; ${L[1].c.name} steps up`, { forced: false, out: f.c.id, in: L[1].c.id }); bench(f, 'is lifted back'); enter(L[1], 'steps up'); }
           }
           if (mv.shield) { const byHurt = L.slice().sort((p, q) => p.hp / p.c.maxHp - q.hp / q.c.maxHp || p.c.id.localeCompare(q.c.id)); grantShield(E, x, mv.target === 'front' ? L[0] : byHurt[0], mv.shield, mv.name); }
-          if (mv.charge) { L[0].charge = mv.charge; E.log('buff', x, L[0], `${mv.name}: ${L[0].c.name}'s next strike +${Math.round(mv.charge * 100)}%`); }
-          if (mv.illusion) { const t = L.slice().sort((p, q) => p.hp / p.c.maxHp - q.hp / q.c.maxHp || p.c.id.localeCompare(q.c.id))[0]; t.illusion = true; E.log('buff', x, t, `${mv.name}: an illusion will absorb the next hit on ${t.c.name}`); }
-          if (mv.rally) { side.rallyUntil = ex + mv.rally.exchanges - 1; side.rallyBonus = mv.rally.bonus; E.log('buff', x, null, `${mv.name}: allies strike ${Math.round(mv.rally.bonus * 100)}% harder for ${mv.rally.exchanges} exchanges`); }
+          if (withheld && (mv.charge || mv.illusion || mv.rally)) withheld(mv.charge ? 'the charge' : mv.illusion ? 'the illusion' : 'the rally');
+          else if (mv.charge) { L[0].charge = mv.charge; E.log('buff', x, L[0], `${mv.name}: ${L[0].c.name}'s next strike +${Math.round(mv.charge * 100)}%`); }
+          else if (mv.illusion) { const t = L.slice().sort((p, q) => p.hp / p.c.maxHp - q.hp / q.c.maxHp || p.c.id.localeCompare(q.c.id))[0]; t.illusion = true; E.log('buff', x, t, `${mv.name}: an illusion will absorb the next hit on ${t.c.name}`); }
+          else if (mv.rally) { side.rallyUntil = ex + mv.rally.exchanges - 1; side.rallyBonus = mv.rally.bonus; E.log('buff', x, null, `${mv.name}: allies strike ${Math.round(mv.rally.bonus * 100)}% harder for ${mv.rally.exchanges} exchanges`); }
           x.stats.acts += 1;
           continue;
         }
@@ -224,7 +241,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
           if (br.count !== 'landed') side.benchActs += 1;
           x.stats.acts += 1;
           const foe = front(foeSide); if (!foe) continue;
-          if (mv.cond === 'swap') { if (forcedSwap(x, foeSide, mv.swapKind, { hitMult: mv.hit ? br.swapHit : 0, label: `${mv.name} (from the bench)` }) && br.count === 'landed') side.benchActs += 1; continue; }
+          if (mv.cond === 'swap') { if (forcedSwap(x, foeSide, mv.swapKind, { hitMult: mv.hit ? (mv.hitMult || br.swapHit) : 0, label: `${mv.name} (from the bench)`, arrivalCond: mv.arrivalCond, refusedEffect: mv.refusedEffect }) && br.count === 'landed') side.benchActs += 1; continue; }
           const chanceK = perSide >= 4 ? br.chanceBig : br.chanceSmall;
           if (rng.chance(mv.chance * chanceK)) {
             if (condition(x, foe, mv.cond, `${mv.name} (from the bench)`) && br.count === 'landed') side.benchActs += 1;
@@ -247,7 +264,7 @@ export function simulateClash({ a, b, seed = 1, config = {}, log: logMode = 'ful
     else if (E.ramp > 1) push({ ex, kind: 'sudden_death', text: `Sudden death: damage x${E.ramp.toFixed(2)}`, ramp: E.ramp });
     if (cfg.duration === 'C6' && E.healMult < 1) push({ ex, kind: 'stalemate', text: `Stalemate rule: no knockout for ${ex - lastKO} exchanges, healing and shields at ${Math.round(E.healMult * 100)}%`, healMult: E.healMult, ramp: E.ramp, quiet: ex - lastKO });
     if (cfg.duration === 'R2' && E.healMult < 1) push({ ex, kind: 'stalemate', text: `R2: healing and shields at ${Math.round(E.healMult * 100)}%`, healMult: E.healMult, ramp: E.ramp });
-    for (const side of [S.a, S.b]) { side.healsThisExchange = 0; side.swappedThisExchange = false; }
+    for (const side of [S.a, S.b]) { side.healsThisExchange = 0; side.swappedThisExchange = false; for (const x of side.line) x.halfAction = false; }
     // 1. voluntary swaps
     for (const side of [S.a, S.b]) {
       if (side.policy === 'none' || ex - side.lastVoluntary < V.swaps.voluntaryEvery) continue;

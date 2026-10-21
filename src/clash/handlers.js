@@ -60,7 +60,7 @@ export function hit(E, att, def, mult, { label = 'strike', shieldBreak = 1, canD
   const daze = att.cs.cond?.kind === 'daze' ? V.damage.dazeMult : 1;
   const type = typeFactor(att.c.type, def.c.type);
   let guard = 1;
-  if (def.isFront && def.c.guard < 1 && !(V.archetypes[att.c.archetype].pierce) && !mv.sovereign) guard = def.c.guard;
+  if (def.isFront && def.c.guard < 1 && !(V.archetypes[att.c.archetype].pierce) && !mv.pierce && !mv.sovereign) guard = def.c.guard;
   if (def.brace && !mv.sovereign) { guard *= def.brace; def.brace = 0; }
   let bonus = 1;
   if (att.charge) { bonus *= 1 + att.charge; att.charge = 0; }
@@ -74,7 +74,7 @@ export function hit(E, att, def, mult, { label = 'strike', shieldBreak = 1, canD
   if (def.c.move.hitCap && !mv.sovereign) d = Math.min(d, Math.round(def.c.maxHp * def.c.move.hitCap));
   d = Math.max(0, d);
   // Shield absorbs first; Strikers (and Crushing Rush) remove shield twice as fast.
-  const breakRate = Math.max(shieldBreak, V.archetypes[att.c.archetype].shieldBreak || 1);
+  const breakRate = Math.max(shieldBreak, V.archetypes[att.c.archetype].shieldBreak || 1, mv.breakAlways || 1);
   let absorbed = 0;
   if (def.shield > 0) {
     const removed = Math.min(def.shield, d * breakRate); absorbed = Math.round(removed / breakRate); def.shield -= removed;
@@ -97,6 +97,7 @@ export function heal(E, src, target, share, label = 'heal') {
   if (target.cs.cond) { k *= V.conditions.healAfflicted; why.push(target.cs.cond.kind); }
   if (target.bruisedUntil >= E.ex) { k *= V.conditions.healBruised; why.push('bruised'); }
   if (E.config.O1 && E.perSide >= V.experiments.O1.minPerSide && src.side.healsThisExchange >= 1) { k *= V.experiments.O1.laterHeal; why.push('O1 later heal'); }
+  if (src.halfAction) { k *= 0.5; why.push('just swapped in'); }
   const amt = Math.min(target.c.maxHp - target.hp, Math.round(target.c.maxHp * share * k));
   src.side.healsThisExchange += 1;
   const before = target.hp; target.hp += Math.max(0, amt); src.stats.support += Math.max(0, amt);
@@ -106,8 +107,8 @@ export function heal(E, src, target, share, label = 'heal') {
 
 /** Grant a shield (entry shields and Support shields share the duration model). */
 export function grantShield(E, src, target, share, label = 'shield') {
-  const amt = Math.round(target.c.maxHp * share * E.healMult);
+  const half = src.halfAction ? 0.5 : 1; const amt = Math.round(target.c.maxHp * share * E.healMult * half);
   target.shield += amt; src.stats.support += amt;
-  E.log('shield', src, target, `${src.c.name}'s ${label}: ${target.c.name} gains a ${amt} shield${E.healMult < 1 ? ' (reduced)' : ''}`, { amount: amt, shield: target.shield });
+  E.log('shield', src, target, `${src.c.name}'s ${label}: ${target.c.name} gains a ${amt} shield${E.healMult < 1 || half < 1 ? ' (reduced)' : ''}`, { amount: amt, shield: target.shield });
   return amt;
 }

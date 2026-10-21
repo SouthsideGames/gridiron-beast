@@ -111,3 +111,4 @@ export/
 tools/out/
 tools/out/gateb/gateb.json
 tools/out/gateb1/*.json
+tools/out/gateb2/*.json
