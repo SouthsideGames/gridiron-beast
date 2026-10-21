@@ -62,7 +62,7 @@
 .cl-float.dmg { color: #ff6b6b; } .cl-float.dmg.big { font-size: 28px; color: #ff4d4d; } .cl-float.dmg.burn { color: #ffa94d; font-size: 16px; }
 .cl-float.heal { color: #4ade80; } .cl-float.shield { color: #93c5fd; font-size: 14px; } .cl-float.cond { color: #ffe55a; font-size: 14px; } .cl-float.note { color: #e5e7eb; font-size: 12px; font-weight: 600; }
 .cl-banner { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); padding: 6px 14px; border-radius: 8px; background: rgba(10,20,16,.85); border: 2px solid var(--accent); color: var(--accent); font-weight: 800; font-size: 16px; letter-spacing: .02em; pointer-events: none; z-index: 140; white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }
-.cl-banner.power { font-size: 13px; top: 6px; left: auto; right: 8px; transform: none; padding: 4px 10px; border-width: 2px; } .cl-banner.major { font-size: 20px; border-width: 3px; box-shadow: 0 0 24px rgba(250,204,21,.45); }
+.cl-banner.power { font-size: 13px; top: 6px; left: 6px; transform: none; padding: 4px 10px; border-width: 2px; max-width: 60%; } .cl-banner.major { font-size: 20px; border-width: 3px; box-shadow: 0 0 24px rgba(250,204,21,.45); }
 .cl-banner.sd { color: var(--bad); border-color: var(--bad); box-shadow: 0 0 24px rgba(248,113,113,.5); }
 .cl-banner.win { background: rgba(250,204,21,.92); color: #1a1400; font-size: 22px; }
 .cl-banner.low { top: 76%; } .cl-banner.high { top: 22%; }
@@ -91,6 +91,11 @@
 
 /* controls */
 .cl-controls { display: grid; gap: 4px; }
+/* portrait: the playback controls stay pinned at the bottom of the screen while the page scrolls */
+@media (orientation: portrait), (max-width: 599px) {
+  .cl-controls { position: sticky; bottom: 0; z-index: 20; background: var(--bg); padding: 4px 0 calc(4px + env(safe-area-inset-bottom, 0px)); margin: 0 -2px; box-shadow: 0 -8px 12px -8px rgba(0,0,0,.6); }
+}
+@media (max-height: 700px) and (orientation: portrait) { .cl-viewport { max-height: 46dvh; } .cl-hud { font-size: 11px; padding: 2px 8px 4px; } }
 .cl-btnrow { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 4px; }
 .cl-btnrow .btn { padding: 9px 4px; font-size: 13px; white-space: nowrap; min-height: 40px; }
 .cl-speedrow { align-items: center; gap: 6px; margin-top: 2px; }

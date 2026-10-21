@@ -31,9 +31,10 @@ const LANDSCAPE_TIGHT = { // landscape stages narrower than 420 px (small phones
   4: [[39, 62], [22, 36], [22, 86], [10, 60]], 5: [[40, 62], [22, 34], [22, 88], [10, 46], [10, 78]],
 };
 /** Sprite pixel sizes (multiples of 16 for crisp integer scaling), by lineup size and stage height. No reserve is drawn below 48 px. */
-function sizesFor(sizeKey, stageH) {
-  if (sizeKey === 'small') return stageH >= 400 ? { front: 112, bench: 64 } : stageH >= 320 ? { front: 96, bench: 64 } : { front: 80, bench: 48 };
-  return stageH >= 400 ? { front: 96, bench: 48 } : stageH >= 320 ? { front: 80, bench: 48 } : { front: 64, bench: 48 };
+function sizesFor(sizeKey, stageH, land) {
+  const t = land ? [300, 240] : [400, 320]; // landscape stages are wide, so a shorter box still fits the larger tiers
+  if (sizeKey === 'small') return stageH >= t[0] ? { front: 112, bench: 64 } : stageH >= t[1] ? { front: 96, bench: 64 } : { front: 80, bench: 48 };
+  return stageH >= t[0] ? { front: 96, bench: 48 } : stageH >= t[1] ? { front: 80, bench: 48 } : { front: 64, bench: 48 };
 }
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -89,14 +90,17 @@ export function createArena(root, result, opts = {}) {
     return out;
   }
   function applyState(st, { instant = false } = {}) {
-    const sizes = sizesFor(sizeKey, stage.clientHeight || 440);
+    const sizes = sizesFor(sizeKey, stage.clientHeight || 440, isLandscape()); const H = stage.clientHeight || 440;
     for (const side of ['a', 'b']) {
       const slots = slotsFor(side, st);
       for (const id of st.order[side]) {
         const s = st.S[side][id]; const el = monEl[id]; const slot = slots[id] || { x: side === 'a' ? 50 : 50, y: side === 'a' ? 100 : 0, front: false, row: 1 };
         el.classList.toggle('no-move', instant);
-        el.style.left = `${slot.x}%`; el.style.top = `${slot.y}%`; el.style.zIndex = String(Math.round(slot.y) + (slot.front ? 5 : 0));
-        el.style.setProperty('--size', `${slot.front ? sizes.front : sizes.bench}px`);
+        const size = slot.front ? sizes.front : sizes.bench;
+        // safety clamp for very short stages: the sprite's head stays inside the top edge, its tag inside the bottom edge
+        const yPx = Math.min(H - 36, Math.max(size + 4, slot.y / 100 * H)); const yPct = yPx / H * 100;
+        el.style.left = `${slot.x}%`; el.style.top = `${yPct}%`; el.style.zIndex = String(Math.round(yPct) + (slot.front ? 5 : 0));
+        el.style.setProperty('--size', `${size}px`);
         el.classList.toggle('front', !!slot.front && !s.ko); el.classList.toggle('bench', !slot.front && !s.ko);
         // a knocked-out monster has left the field: it lives on in its roster card
         if (s.ko && !el.classList.contains('gone')) { el.classList.add('gone'); el.classList.remove('front', 'bench', 'acting'); } else if (!s.ko) el.classList.remove('gone');
@@ -142,8 +146,18 @@ export function createArena(root, result, opts = {}) {
   }
   function banner(text, cls = '', ms = 1200) {
     const b = document.createElement('div'); b.className = `cl-banner ${cls}`; b.textContent = text; viewport.appendChild(b);
+    if (/\bpower\b/.test(cls)) placeCallout(b);
     const base = /\bpower\b/.test(cls) ? '' : 'translate(-50%, -50%) '; anim(b, [{ transform: `${base}scale(0.7)`, opacity: 0 }, { transform: `${base}scale(1.05)`, opacity: 1, offset: 0.2 }, { transform: `${base}scale(1)`, opacity: 1, offset: 0.8 }, { transform: `${base}scale(1)`, opacity: 0 }], ms).then(() => b.remove());
     if (dur(ms) <= 0) setTimeout(() => b.remove(), 800);
+  }
+  /** Move-name callout: pick the corner or edge spot that covers the least of any monster (sprite or tag). */
+  function placeCallout(b) {
+    const V = viewport.getBoundingClientRect(); const w = b.offsetWidth, h = b.offsetHeight, pad = 6;
+    const spots = [[pad, (V.height - h) / 2], [V.width - w - pad, (V.height - h) / 2], [(V.width - w) / 2, pad], [(V.width - w) / 2, V.height - h - pad], [pad, pad], [V.width - w - pad, pad], [pad, V.height - h - pad], [V.width - w - pad, V.height - h - pad]];
+    const boxes = []; for (const m of $$('.cl-mon:not(.gone)')) for (const sel of ['.cl-rig', '.cl-tag']) { const r = m.querySelector(sel).getBoundingClientRect(); const inset = sel === '.cl-rig' ? r.width * 0.22 : 0, mg = sel === '.cl-rig' ? 2 : 10; boxes.push([r.left - V.left + inset - mg, r.top - V.top - mg, r.right - V.left - inset + mg, r.bottom - V.top + mg, sel === '.cl-tag' ? 3 : 1]); }
+    let best = spots[0], bestCost = Infinity;
+    spots.forEach(([x, y], i) => { let cost = i * 0.5; for (const [l, t, r, bt, wgt] of boxes) cost += wgt * Math.max(0, Math.min(x + w, r) - Math.max(x, l)) * Math.max(0, Math.min(y + h, bt) - Math.max(y, t)); if (cost < bestCost) { bestCost = cost; best = [x, y]; } });
+    b.style.left = `${Math.round(best[0])}px`; b.style.top = `${Math.round(best[1])}px`; b.style.right = 'auto'; b.style.bottom = 'auto';
   }
   /** Camera: a restrained zoom towards the focus (origin clamped so the rim is never cropped) and a short shake. */
   function camera(c) {
