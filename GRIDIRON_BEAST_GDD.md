@@ -15,6 +15,15 @@ Decision key — **LOCKED**: approved for this build. **TUNABLE**: implemented, 
 
 **Platform (LOCKED):** mobile-first portrait web app (installable PWA) for iOS Safari and Android Chrome; desktop works but is not the design target. Zero runtime dependencies. All game logic is pure, deterministic JavaScript so it can later be ported to Unity/C# using the same data and golden tests.
 
+### 1a. Game modes (overview, 2026-10-21)
+
+| Mode | The player is | Status |
+|---|---|---|
+| **Franchise Mode** | The owner of an organization: staff, roster, scouting, the cap, the Board (§8, §15–§23) | **Current development priority.** Everything else in this document describes it unless marked otherwise |
+| **Career Mode** (working name) | One monster they create, playing a career on a team (§24) | **Documented only. Not approved for development.** No code, menus, placeholders or systems are to be built from §24 until the owner authorizes it |
+
+The two modes share the football world (clubs, league structure, rules, the match engine, monster data and species art conventions). Their progression and save data are separate: nothing earned in one mode changes the other.
+
 ---
 
 ## 2. Format — 7-on-7 (LOCKED)
@@ -210,7 +219,7 @@ Every decision uses down, distance, field position, score differential, quarter,
 
 ## 11. Out of scope for this build (LATER)
 
-Promotion/relegation UI, Multiplayer, Draft Mode, trades, free agency, contracts beyond a single annual salary, custom play editor, penalties beyond delay of game, wind/weather, evolution, equipment, audio.
+Promotion/relegation UI, Multiplayer, Draft Mode, trades, free agency, contracts beyond a single annual salary, custom play editor, penalties beyond delay of game, wind/weather, evolution, equipment, audio. Career Mode (§24) is documented but not approved for development.
 
 ## 9a. Personnel (revised)
 
@@ -545,3 +554,208 @@ Continual polish on prototype 2 before prototype 3. If the owner prefers the pla
 * **23.15 Polish batch (v29.7).** *Ability balance:* `tools/ability-balance.mjs` measures every ability over 2,000 paired snaps (same plays and seeds with and without the ability, with drive, half and game memory). Value is yards of field position per snap on the field, a turnover worth 45 yards. Results live in `src/data/ability-balance.js` and on Developer → ⚖️ Ability Balance, ranked by rarity with flags (a legendary weaker than a typical uncommon, a non-legendary stronger than a typical legendary, an ability that hurts its own team, a signature that rarely fires). First run: legendaries lead by median (+0.36 against rare +0.06, uncommon +0.07, traits +0.01), but five of the twelve sit at or below a typical uncommon: Night Veil measures -0.65 (hiding him from the QB's read sends more throws at the corner beside him); Landslide, Whiteout, Daybreak and Ancient Grove sit near zero; Eclipse Route (+0.90), Dragon's Roar (+0.83) and Ember Grip (+0.66) lead. Cards change only with the owner's approval. *▶ See it:* every card with a signature ability (roster card, dex, draft and free-agent reports, onboarding, trade calls) opens a looping staged preview of the ability. *First-time tips:* the first time an ability fires in a real game, a short sheet names it, says what it did and offers ▶ See it again (a toast during Auto; off when tutorial tips are off). *Trait cues:* commons' shared traits show a small icon when they fire near the ball (💨 🧱 💥 🫧 🧲 👀 🧤 🐂), only when no signature effect is on screen. *Vibration:* big hits vibrate the phone briefly (the screen-shake setting covers both). *Free-agent ask:* salary follows overall, so until the scout knows his overall the ask shows as an estimate ("asks about 340k"), a steady ±10%; he signs for the real figure. *Roster:* a compact bar (Lineup/Depth, cap room chip) and shorter tool buttons fit at 320. *Tutorial:* the lineup tip lost a stale sentence, punctuation fixes, and a new offseason tip. *AI clubs call:* in weeks 2 to 8 and once when the offseason opens, a club may call offering a real upgrade (2+ OVR over your best) at one of your three biggest needs, for the pick or two picks worth 85 to 130% of him; never a legendary, signature, cornerstone or rookie. The call waits on HQ until the week ends; Accept, No thanks, or ▶ his ability.
 * **23.16 Balance pass, approved by the owner (v29.8).** Measured with `tools/ability-balance.mjs` (2,000 paired snaps; a third argument re-measures only the listed species). **Night Veil** (-0.65 → +0.22): quarterbacks still never see him as covering, and now a ball that arrives with him within a yard of it is never caught (it can still be intercepted; not while he is engaged or stunned); new outcome label NEVER SAW IT. **Whiteout** (0.00 → +0.55): once per drive instead of once per half. **Daybreak** (+0.02 → +0.66): after any catch, nobody can catch him from behind (was once per game, on an open catch); defenders in front can still tackle him. **Ancient Grove** (+0.04 → +0.26): defenders within 5 yards of him never bite on play action or misdirection, and keep +5 Awareness. **Ember Grip** (+0.66 → +0.13, uncommon): +3 Strength when shedding a block; the extra blocker stun is gone. The five changed cards return to the Ability Audit queue for the owner's review.
 * **23.17 Second balance pass, approved by the owner (v29.9).** The three non-legendaries that out-measured legendaries were brought to their rarity: **Eclipse Route** (rare, +0.90 → +0.25): his defender loses track of him for a fifth of a second (was half). **Dragon's Roar** (rare, +0.83 → +0.17): the lineman across is slow to engage for 0.15 s (was 0.4). **Crushing Rush** (uncommon, +0.51 → +0.19): now +4 Strength when shedding a block against the run (was +10 on every shed), which also keeps it distinct from Ember Grip (+3 on any shed), so no two signature abilities share an effect. Legendaries now hold the top three places (Daybreak, Whiteout, Sovereign Arm); the strongest non-legendaries left are Cold Read (uncommon, +0.44), Tailwind (rare, +0.39) and Radiant Pursuit (rare, +0.34); all 48 abilities and 60 plays were approved before this pass, and the three changed cards return to the Ability Audit.
+
+## 24. Career Mode (DOCUMENTED ONLY, 2026-10-21; NOT APPROVED FOR DEVELOPMENT)
+
+> **Status.** This section records the owner's Career Mode design request and a proposed design around it. It does **not** authorize implementation: no gameplay code, menus, buttons, placeholders, data files or saves are to be created for Career Mode until the owner approves it explicitly. Franchise Mode remains the development priority, and no Franchise decision in §1–§23 is changed by this section.
+
+**Labels used in this section.** **CONFIRMED**: stated by the owner as a requirement. **PROPOSED**: a design suggestion awaiting the owner's approval. **OPEN**: a question the owner needs to answer. Anything not marked CONFIRMED is a proposal, however detailed.
+
+### 24.1 Confirmed requirements
+
+1. **Two separate modes.** Franchise Mode (the player is the owner) and Career Mode (the player creates one monster, joins a team and lives its career). Career Mode shares the football world, clubs, league tiers, rules and monster systems where appropriate; its progression and save data are separate from Franchise Mode.
+2. **Create your own monster** with its own identity, appearance, position, archetype and a customizable signature ability. Ability creation is built from supported effects, triggers and tradeoffs, then personalized in name and presentation; never unrestricted.
+3. **Five playable positions only:** quarterback, wide receiver, running back, linebacker, cornerback. Tight end, offensive line, defensive line, kicker and punter are never playable career positions; they remain AI teammates in the normal match.
+4. **No joystick or manual movement.** The AI moves the monster according to the play, its assignment, the situation and its attributes. The player controls decisions, action timing and ability activation.
+5. **Minimal mobile controls:** tap the field to start an offensive play; one **contextual action button** whose label changes clearly; one **ability button** on the right; at quarterback, tap a receiver directly. No permanent button per action.
+6. **Position sequences** as set out in §24.3 (QB: snap, automatic drop and pocket, tap a receiver; WR: Call for Ball, Catch, Evade; RB: automatic run, timed evade/contact; LB: Tackle / Intercept / Swat on one button, Ready before a defensive snap; CB: timed pass defense and tackles on one button).
+7. **A press is an attempt, not an outcome.** A well-timed tap never guarantees a completion, catch, tackle or interception; attributes, positioning and the situation decide the result. Specifically for cornerback (owner's prototype feedback): pressing Intercept inside the timing window must not be an easy interception; the result must account for the monster's ratings and the situation, without relying only on overall rating or arbitrary failure rolls.
+8. **Life outside games matters.** A weekly loop of meaningful, limited choices (practice, film, team chemistry, development, ability training, recovery, relationships, personal events) with visible consequences; not a checklist of mandatory tasks. Separate from the owner's Franchise week.
+9. **Career progression** from creation through entry (tryout, recruitment or draft), joining a team, earning trust and playing time, a starting role, development, honours, offers and movement between league tiers, using **Challenger, Vanguard and Sovereign** and respecting the established promotion and relegation rules. A player changing teams is distinct from a team being promoted.
+10. **Performance grades reward the position's job**, not only headline statistics.
+11. **Presentation:** the existing top-down field and play-art conventions (§6); the user team's play art before the snap, hidden during live play; the controlled monster easy to identify; restrained, clear feedback for opportunities, timing, results and ability readiness.
+
+### 24.2 Fit with the current design (read before approving)
+
+Three points where the request meets the current document and an owner decision is needed. They are repeated in §24.10.
+
+* **Field format.** The request describes "the existing 11-on-11 game". The current build is **7-on-7** (§2, LOCKED in Rebuild v6, which superseded the v4.9 11-on-11 lock). Career Mode is written here so it works in either format: the five playable positions exist in both, and the AI-only positions (TE, OL, DL, K) are AI teammates either way. Which format Career Mode ships in follows whatever Franchise Mode uses at that time (OPEN).
+* **League tiers.** The Challenger / Vanguard / Sovereign pyramid and its promotion and relegation rules are defined in v4.9 §18–§19 (one-slot exchange per adjacent tier pair per offseason, a single winner-take-all challenge, four Challenger or six Vanguard championships to qualify, relegation eligibility after two consecutive bottom-four finishes, OVR bands as initial placement only). In the current Franchise build the tiers are **hidden** (`TIERS_ENABLED = false`, §8) and §15.8 replaced them with "the title raises the floor". Career Mode as requested needs the three-tier league to exist and be simulated (48 clubs). That is a dependency on Franchise systems, not something Career Mode should build on its own (OPEN).
+* **Signature-ability rules.** §23.9–§23.10 already govern abilities: a card must do exactly what it says; a signature ability belongs to one monster and is never shared; legendary-strength absolutes belong only to legendaries; non-legendary abilities are never absolutes. The creation system in §24.4 is written to obey those rules.
+
+### 24.3 Controls and gameplay by position
+
+**Universal model (CONFIRMED in principle, details PROPOSED).**
+
+* The **coaching AI calls the plays** for the player's team (§7); the player does not pick plays in live games (PROPOSED; see OPEN Q4 on audibles and suggestions). Before each snap the user team's play art is drawn on the field with the controlled monster's own assignment emphasized; at the snap the art disappears, as in §4.
+* **Offense:** tap the field to snap. **Defense:** tap **Ready**; the AI offense snaps automatically after a short, readable delay.
+* **Contextual button** (bottom right, thumb reach, ≥ 56 px): shows one verb at a time. It is **disabled and grey** when no action is available, **lit with its verb** when an opportunity opens, and shows a **timing ring** that closes toward the ideal moment when the action is timing-based. The verb changes with a short label transition so the player always sees what a tap will do.
+* **Ability button** (right edge, above the contextual button): shows readiness (charges or cooldown), lights when its trigger condition is met, and is never required to play a snap.
+* **Inputs become engine inputs.** Every tap is recorded as `{tick, action}` and fed to the deterministic engine (§5), so the same seed and the same taps replay identically and outcomes stay testable (PROPOSED technical rule).
+* **Timing feedback, in words and shape, never colour alone (§9):** after each timed action a short tag appears under the button: *Early*, *Good*, *Perfect*, *Late*, with the outcome banner explaining the result in football terms ("Perfect timing, but the throw was behind him: broken up").
+
+**Quarterback (CONFIRMED sequence).**
+
+1. Tap the field to snap. 2. The QB drops (quick / 3 / 5-step or play-action, from the play) and handles pocket movement automatically: stepping up, sliding away from the rusher, scrambling only when the play is broken (Awareness, Agility). 3. Receivers run their assigned routes. 4. The player taps a receiver to throw. 5. The throw is resolved from timing, situation and attributes.
+
+* **Throwing away** (PROPOSED): when the QB is pressured, the contextual button becomes **Throw Away**; otherwise it reads **Scramble** only when the pocket collapses. No permanent extra buttons.
+* **Touch targets** (CONFIRMED need, PROPOSED solution): each eligible receiver carries an invisible hit circle of at least 48 px; when two circles overlap, the tap goes to the receiver nearest the finger, and a long-press on an overlap fans out the receivers' badges briefly for an exact pick. Receivers show a small position badge (WR1, TE, RB) so they can be told apart at speed.
+* **What decides the throw (PROPOSED, mapped to existing attributes §5.1):**
+  * *Accuracy* sets the error radius; *pressure* (a rusher within 2 yards, or a hit as the ball leaves) widens it, reduced by Awareness.
+  * *Arm* sets velocity and range; a deep target beyond the QB's range arrives late and short.
+  * *Awareness* lets the AI QB set his feet and lead the receiver correctly; low Awareness throws to where the receiver *is* rather than where he will be.
+  * *Separation* at the moment of release (the engine's openness measure) and the *passing lane* (defenders between QB and catch point, underneath zones) set how contested the ball is.
+  * *Timing:* releasing as the receiver breaks (the play art's break point) adds accuracy; releasing late lets coverage close; releasing early on a deep route leads the receiver into the safety's zone.
+  * The tap never guarantees a completion: a perfect read into a tight window can still be broken up or intercepted.
+
+**Wide receiver (CONFIRMED sequence).** The monster runs the route shown in the play art.
+
+* **Call for Ball:** available from the snap until the throw. It raises the AI QB's willingness to target this receiver; it does not force a throw. The response weighs openness (separation now and projected), pressure on the QB, the QB's Awareness (a smart QB ignores a call into coverage), **chemistry** with the QB and **coach trust** (§24.5). Repeated calls while covered lower trust slightly (PROPOSED).
+* **Catch:** the button becomes **Catch** as the ball enters catch range; the timing ring closes on arrival. Catch result = timing quality × Catching × pass quality (velocity, placement) × contest (nearest defender's Coverage and position, Agility for catch radius). A perfect tap on a bad ball can still be dropped or broken up; a late tap on a perfect ball is a juggle or drop.
+* **Evade:** after possession the monster runs automatically (ball-carrier logic §5); the button becomes **Evade** when a tackler closes. Timing plus Agility decides a juke; Strength decides a stiff-arm if the play's context is contact (PROPOSED: the label reads **Stiff-arm** instead of Evade when the closing tackler is head-on).
+
+**Running back (CONFIRMED model).** The monster takes the handoff, follows blocks, chooses lanes and advances automatically (§5 ball-carrier behaviour). The player times one contextual action and the ability.
+
+* **Contextual action** (PROPOSED): **Juke** when a tackler approaches from the side, **Truck** when one is head-on, **Dive** near the goal line or the line to gain. One button; the label tells the player which.
+* **Pre-snap running approach** (PROPOSED for review): before the snap, a small toggle under the play art offers **Follow blocks** (default: patience, stays in the designed lane), **Look for cutback** (Awareness-weighted chance of a backside lane, more negative plays), **Attack contact** (falls forward, fewer jukes, more broken tackles for strong backs). Chosen once per snap; no live steering.
+* **What decides the run (PROPOSED):** Awareness = vision (lane choice and look-ahead); Agility = acceleration, cuts, juke success; Speed = breakaway and pursuit escape; Strength = broken tackles and falling forward; Catching = ball security (fumble resistance on contact, §3: fumbles only on a tackle); blocking quality and defensive pursuit angles from the engine.
+
+**Linebacker (CONFIRMED model).** Movement follows the assigned zone, man, blitz or run fit.
+
+* Tap **Ready**; the offense snaps.
+* Contextual button: **Tackle** when a ball carrier is in reach; **Intercept** when a reachable pass offers a pick chance; **Swat** when the ball is reachable but a catch is not realistic (behind him, high, or contested). One button; it shows the best available verb.
+* **Discipline is part of good play (PROPOSED):** the AI keeps the linebacker in his fit. The player's timing chooses *when* to commit; committing early to a run fake (play action) costs position; holding the fit until the ball shows earns the "assignment" credit in grading (§24.7). There is no control that abandons the assignment to chase the ball.
+
+**Cornerback (CONFIRMED model, owner's prototype feedback included).** Movement follows the coverage and becomes pursuit after the catch or a run.
+
+* Contextual button: **Intercept**, **Break up** or **Tackle**, chosen from the situation, with a timing ring as the ball arrives.
+* **Outcome model (PROPOSED).** A tap is an *attempt*. Resolution happens in two layers, so ratings shape the chance and timing shapes the execution:
+  1. **Opportunity**, set by the coverage before the tap: distance to the catch point at arrival (Coverage, Speed, recovery after a break from Agility), whether he can see the ball (facing the QB vs trailing; Awareness for ball tracking), and how good the throw is (QB Accuracy, placement away from the defender).
+  2. **Execution**, set by the tap: timing quality (Early / Good / Perfect / Late) multiplies the chance of the action he attempted. An Intercept needs a high opportunity and Catching; a Break up needs less; going for the pick when only a breakup was available risks a **miss** and yards after catch.
+  * Results include interception, breakup, contested catch allowed, or a clean catch allowed. A badly timed attempt (early jump) can leave the receiver open.
+  * **Risk choice (PROPOSED):** the button offers Intercept only when the opportunity is real; otherwise it offers Break up. A player who wants the pick when it is offered accepts the risk.
+  * **No arbitrary rolls:** the probability shown to developers is a product of named factors that a replay can explain; the banner names the deciding factor ("Late break: he caught it in front of you").
+
+### 24.4 Monster and ability creation
+
+**Identity and appearance (CONFIRMED scope, PROPOSED detail).** Built on the existing species sprite spec (§15.1: body, size, look, features, pattern, colours) so a created monster draws with the same 16×16 builder and the same top-down conventions:
+
+* **Name** (unique within the save; profanity filter; never one of the 72 species names or the 48 signature-ability names).
+* **Element**, one of the twelve (§5.1), biasing starting attributes as generation already does (Electric +Speed, Earth +Strength, Psychic +Awareness …).
+* **Body plan, size, look, features, pattern and two colours**, from the same option lists the species use.
+* **Nature**, one of the 25 (+10% / −10%, §5.1). PROPOSED: the player picks it, because it is the clearest strength/weakness lever. OPEN: pick vs roll.
+* **Whether a created monster is a new species or a member of an existing one** is OPEN; PROPOSED: a *new, one-off form* that uses the species art system but is not one of the 72, so it never collides with the dex.
+
+**Position and archetype (PROPOSED, from the locked v4.9 archetypes).**
+
+| Position | Archetypes |
+|---|---|
+| QB | Pocket Passer, Scrambler, Dual Threat, Gunslinger |
+| RB | Power, Speed, Receiving, Balanced |
+| WR | Speedster, Possession, Physical, Route Technician |
+| LB | Field General, Coverage, Blitz, Run Enforcer |
+| CB | Man, Zone, Ball Hawk, Press |
+
+**Starting attributes, strengths, weaknesses and growth (PROPOSED).**
+
+* The archetype sets a starting template on the existing 12 attributes (§5.1), totalling a rookie-level overall (about 55–62 at the chosen position). The element and nature then shift it.
+* **Point allocation:** a small pool (PROPOSED 12 points) the player may move between the position's key attributes, with a cap per attribute and a matching **weakness**: raising one key attribute above the template requires lowering another, so every build has a visible tradeoff.
+* **Potential** is fixed at creation (PROPOSED: the same for every created monster, so no creation is strictly better), and growth follows the existing levelling and attribute-point rules (§15.12, §17.3) plus Career Mode's weekly development (§24.5).
+
+**Signature ability (CONFIRMED: built from supported parts; PROPOSED system).** A created ability is assembled from the engine's existing effect primitives (§15.12: every ability is an `effect` object of primitives) and must obey §23.9–§23.10:
+
+1. **Choose an effect** from a curated list for the position, each a real engine primitive with a fixed magnitude band at non-legendary strength. Examples: QB *release speed* (+x% ball velocity on first-read throws), WR *route snap* (sharper breaks on one route family), RB *contact balance* (fewer tackles completed by the first tackler), LB *read the mesh* (shorter play-action bite), CB *recovery burst* (+x% speed for 1 s after being beaten).
+2. **Choose a trigger** from the supported list: once per drive / half / game (the engine's play-to-play memory, §23.11), on a situation (third down, red zone, fourth quarter, after a big play), or **on activation** with the ability button and a charge count.
+3. **Choose a tradeoff**, required: a stronger magnitude costs a narrower trigger or fewer charges; a broad trigger costs magnitude. A points budget makes every combination land in the same measured value band.
+4. **Personalize:** name (unique, never an existing signature name), a short card line written from the chosen parts (so the card always matches the engine, §23.9), and a look from the signature-look families (§23.12) tinted by element.
+* **Balance gate (PROPOSED):** the allowed combinations are measured offline with `tools/ability-balance.mjs` (paired snaps, §23.15) and published as fixed bands, so a created ability always measures near a typical rare signature ability, never a legendary. No absolutes ("never", "always") are offered.
+* **Activation model** (OPEN): whether the right-hand button activates the ability itself (charges per game) or only fires abilities whose trigger is "on activation". PROPOSED: both kinds exist; the button lights only when the equipped ability is activatable and its trigger is met.
+
+### 24.5 Weekly preparation and life outside games
+
+**Goal (CONFIRMED):** the week is part of the fun, with visible consequences, limited choices and no mandatory checklist. **Proposed loop:**
+
+* **Activity budget:** each week offers **4 energy** (PROPOSED). Game day is free. Activities cost 1 or 2. Unspent energy carries into recovery, so resting is a real choice, not a forfeit.
+* **Activities (PROPOSED list):**
+
+| Activity | Cost | Consequence |
+|---|---|---|
+| Position drill (30–60 s skill challenge using the live controls) | 1 | XP toward the drilled attributes, scaled by the drill grade; teaches timing without game stakes |
+| Film study (opponent) | 1 | Pre-snap hint on one opponent tendency this week (e.g. the coverage they play on third down); small Awareness edge on matching plays |
+| Team practice | 1 | Chemistry with the unit (QB–WR timing, LB–DL fits); coach trust |
+| Strength / speed work | 1 | Attribute XP on Speed, Strength or Agility; adds fatigue (§15.14) |
+| Signature ability training | 2 | Ability progression (an extra charge, or a step up within its band) |
+| Recovery | 1 | Fatigue down, injury recovery a week sooner, avoids burnout |
+| Meet a coach or teammate | 1 | Relationship and story beats; can unlock a role change or a favour |
+| Personal event (when offered) | 0–1 | One choice with a consequence: media, rivalry, a mentor, an offer from another club |
+
+* **Consequences are visible:** the pregame screen lists what the week bought ("Film: they blitz on 3rd and long", "Chemistry +1 with the QB"), and post-game grades refer back to it.
+* **Variety, not repetition (PROPOSED):** repeating the same activity three weeks running yields less (the existing training repetition penalty, §12), and personal events only appear when the career state makes them relevant.
+* **Separate from Franchise:** no scouting, recruiting, game plans, cap or staff decisions. The coaching AI does all of that for the club.
+
+### 24.6 Career progression
+
+**Path (CONFIRMED stages, PROPOSED detail):**
+
+1. **Creation** (§24.4).
+2. **Entry:** the created monster enters the league through the **draft** (§19; a first-year class member with a public board rank) or, if undrafted, an **open tryout** with a Challenger club (PROPOSED: a short drill-based tryout week). OPEN: draft, tryout or both.
+3. **Joining a team:** depth-chart position as a backup or rotation player; **coach trust** (0–100, PROPOSED) earned through grades, practice and relationships decides snaps.
+4. **Earning the starting role:** a starter's job opens through trust, injury or form; the coach announces it in a short scene.
+5. **Development:** levels and attribute points as in Franchise (§17.3), weekly development (§24.5), ability progression, and **evolution** where the created form has one (OPEN: do created monsters evolve).
+6. **Honours:** league awards (§16.4, §18.5), championships, Beast Bowl, records (§17.8), rivalries with specific opposing monsters, career milestones as cutscenes in the §21.1 style.
+7. **Offers and movement:** at contract end (two-year maximum, §18.1) other clubs may offer, including clubs in a higher tier. **Moving to a club in another tier is a personal move**; it never changes any club's tier. **A club's promotion or relegation** follows the v4.9 §18–§19 rules (one-slot exchange, the challenge match, qualification counts, bottom-four streak) and carries the player's monster with the club.
+8. **Retirement:** age and decline end the career; a **Career card** (PROPOSED) records clubs, tiers, seasons, stats, awards and titles, separate from the Franchise Hall of Fame (OPEN: a Career Hall of Fame).
+
+### 24.7 Performance evaluation
+
+**Principle (CONFIRMED):** grades reward the position's job. **Proposed per-snap grades** (built on the engine's existing responsibility accounting, §16.1, which already attributes pressures, sacks, coverage targets and assists to specific monsters):
+
+| Position | Graded on |
+|---|---|
+| QB | Read quality (throw to the most open target available at release), timing, avoiding sacks and turnovers, situational throws (third down, red zone), not only yards |
+| WR | Route timing to the break point, separation created, Call for Ball judgement, catch timing, yards after catch, drops |
+| RB | Lane choice vs the best available lane, yards after contact, ball security, approach choice fit |
+| LB | Fit discipline (in the gap or zone the play assigned), reaction to play action, tackles and missed tackles, coverage results |
+| CB | Targets prevented (QB looked and went elsewhere), separation allowed, breakups and interceptions, timing quality, tackles after the catch |
+
+Game grade (A–F, PROPOSED) = weighted snap grades; it feeds coach trust and XP. The post-game screen shows the three best and the three worst snaps with a one-line reason each.
+
+### 24.8 Attribute-driven outcomes and balancing principles (PROPOSED)
+
+1. **Skill and ratings both matter.** Ratings set the size of the opportunity; timing sets how much of it is realized. A perfect tap with low ratings beats a late tap with low ratings, and a high-rated monster still needs good timing to reach its ceiling.
+2. **Use the existing attributes.** Every outcome maps to the 12 attributes in §5.1 (vision = Awareness, acceleration = Agility, ball security = Catching, ball tracking = Awareness + Catching, reaction = Awareness + Coverage). No new attributes unless the owner approves them.
+3. **No guaranteed outcomes and no hidden dice.** Every probability is a product of named factors; the result banner names the deciding one.
+4. **One engine.** Career snaps run on the same deterministic engine as Franchise games, with the player's taps as recorded inputs. AI teammates and opponents behave exactly as in Franchise. Career Mode never gets a separate, easier physics.
+5. **Difficulty** (PROPOSED: Rookie / Pro / All-Star, locked at creation, as §15.2) widens or narrows the timing windows and adjusts AI quality; it never changes the attribute formulas.
+6. **Validated by measurement.** Before approval of any build, simulated "perfect", "average" and "poor" timing players are run against each position to show that ratings and timing each move results, and that no position is trivially easy (the cornerback feedback).
+
+### 24.9 Presentation
+
+* The existing top-down vertical field (§3) and play-art colours (§6). The user team's play art before the snap, the controlled monster's assignment emphasized (thicker line), all art hidden at the snap.
+* The controlled monster: a gold ring at its feet and a small marker above it, always on top of the draw order; the camera follows it rather than the ball when it is not the ball carrier (PROPOSED).
+* Feedback: the timing ring on the contextual button, a short timing tag, the outcome banner; ability readiness as a filled pip ring. Reduced-motion and screen-shake settings apply (§23.2).
+
+### 24.10 Open questions for the owner
+
+1. **Format:** does Career Mode use the current 7-on-7 game (§2) or a future 11-on-11 game, or simply whichever format Franchise uses at the time?
+2. **Tiers:** Career Mode needs the 48-club, three-tier league running. Should it wait for Franchise to re-enable tiers (§8, `TIERS_ENABLED`), or does the owner want the tiered league to return for both modes?
+3. **Created monster identity:** a one-off new form (proposed) or a member of an existing species? Does it evolve? Is nature picked or rolled?
+4. **Play calling:** may the player suggest or audible plays (e.g. a QB audible from the six-card plan), or does the coaching AI always call them?
+5. **Ability activation:** activatable abilities with charges, triggered abilities, or both (proposed)? How many charges per game?
+6. **Entry:** draft, open tryout, or both?
+7. **Energy budget:** 4 per week (proposed), and which activities make the first version?
+8. **Career length and end:** retirement by age only, or also by choice? A Career Hall of Fame?
+9. **Relationships:** how deep should coach and teammate relationships go (a trust number and a few scenes, proposed, or a fuller social system)?
+10. **Cross-mode links:** confirmed separate saves; may a retired Career monster ever appear in Franchise Mode (e.g. as a free agent or a coach), or are the modes fully isolated?
+
+### 24.11 Possible implementation sequence (NOT APPROVED FOR DEVELOPMENT)
+
+> Recorded only so the scope is visible. **Nothing below may begin without the owner's explicit approval.** Order assumes Franchise Mode work is finished or paused by the owner's decision.
+
+1. **Input model in the engine:** recorded `{tick, action}` inputs, a controlled-monster flag, deterministic replays; regression proof that Franchise games are unchanged.
+2. **One position as a vertical slice** (PROPOSED: cornerback, because it carries the most specific feedback), with the two-layer outcome model and timing feedback; measured with simulated players.
+3. **The other four positions**, one at a time, each with its contextual verbs and grading.
+4. **Monster creation** (appearance, position, archetype, attributes) and the **ability builder** with measured bands.
+5. **The weekly loop** (energy, activities, consequences).
+6. **Career progression** (entry, trust, starting role, contracts, offers, movement between tiers), dependent on the tiered league from Franchise.
+7. **Presentation and polish**, then a Career save store separate from Franchise.
