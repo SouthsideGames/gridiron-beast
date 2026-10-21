@@ -7,7 +7,8 @@ import fs from 'node:fs';
 import { simulateClash, logHash } from '../../src/clash/engine.js';
 import { createRng } from '../../src/core/rng.js';
 import { randomLineup, withoutRandomness } from './helpers.js';
-import { stateAt, cuesFor, nextExchangeIndex, totalDuration, DURATION, SPEEDS } from '../../src/ui/clash/choreographer.js';
+import { stateAt, cuesFor, nextExchangeIndex, totalDuration, DURATION, SPEEDS, DELIVERY } from '../../src/ui/clash/choreographer.js';
+import { THEMES, themeFor, decorSvg } from '../../src/ui/clash/arena-art.js';
 
 const goldenBattles = () => { const out = []; for (let seed = 1; seed <= 20; seed++) { const rng = createRng(seed * 101); const a = randomLineup(rng, 1 + rng.int(5)), b = randomLineup(rng, 1 + rng.int(5)); out.push({ seed, a, b, r: simulateClash({ a, b, seed }) }); } return out; };
 const TIERS = new Set(['tick', 'routine', 'power', 'major']);
@@ -107,8 +108,54 @@ test('purity: the choreographer uses no randomness or clock and does not mutate 
   const { r } = goldenBattles()[0]; const before = JSON.stringify(r);
   withoutRandomness(() => { cuesFor(r); for (let i = 0; i < r.log.length; i++) stateAt(r, i); });
   assert.equal(JSON.stringify(r), before);
-  for (const f of ['choreographer.js', 'arena.js', 'arena-art.js']) {
+  for (const f of ['choreographer.js', 'arena.js', 'arena-art.js', 'fx.js']) {
     const src = fs.readFileSync(new URL(`../../src/ui/clash/${f}`, import.meta.url), 'utf8');
     assert.ok(!/Math\.random|simulateClash|from ['"]\.\.\/\.\.\/clash/.test(src), `${f} must not roll dice or call the engine`);
   }
+});
+
+test('phase 3 cues: every damage cue names the attacker\'s element and a delivery; named moves follow the element table, basic strikes are melee, splash and retaliation are marked', () => {
+  const deliveries = new Set(['melee', 'projectile', 'arc', 'lob', 'beam', 'wave', 'splash', 'retaliate']); const seen = new Set();
+  for (const { r } of goldenBattles()) for (const c of cuesFor(r)) {
+    if (c.kind !== 'damage') continue;
+    assert.ok(c.element, 'element'); assert.ok(deliveries.has(c.delivery), `delivery ${c.delivery}`); seen.add(c.delivery);
+    const e = c.event; const mv = r.lines[e.actor[0]].find((x) => x.id === e.actor)?.combatant.move;
+    if (/splashes/.test(e.text)) assert.equal(c.delivery, 'splash'); else if (/erupts|thorns/.test(e.text)) assert.equal(c.delivery, 'retaliate');
+    else if (mv && e.text.includes(mv.name)) { assert.equal(c.named, true); assert.equal(c.delivery, DELIVERY[c.element] || 'melee'); }
+    else { assert.equal(c.named, false); assert.equal(c.delivery, 'melee'); }
+  }
+  assert.ok(seen.has('melee') && seen.has('projectile'), 'golden battles exercise melee and ranged deliveries');
+  assert.deepEqual(Object.keys(DELIVERY).sort(), ['Dark', 'Dragon', 'Earth', 'Electric', 'Fire', 'Ice', 'Light', 'Metal', 'Nature', 'Psychic', 'Water', 'Wind']);
+});
+
+test('knockout timing: a monster whose HP reaches 0 stays on the field until its ko event, then leaves; the next monster is front from that event on', () => {
+  for (const { r } of goldenBattles()) {
+    r.log.forEach((e, k) => {
+      if (e.kind !== 'ko' || !e.target) return;
+      const before = stateAt(r, k - 1), after = stateAt(r, k); const side = e.target[0];
+      assert.equal(before.S[side][e.target].ko, false, 'still standing before the ko event'); assert.equal(after.S[side][e.target].ko, true);
+      assert.notEqual(after.front[side], e.target);
+    });
+    const fin = stateAt(r, r.log.length - 1); for (const side of ['a', 'b']) for (const x of r.lines[side]) assert.equal(fin.S[side][x.id].ko, x.hp <= 0);
+  }
+});
+
+test('arena themes and props are deterministic from the record and never from a clock or dice', () => {
+  for (const { r } of goldenBattles()) {
+    const t1 = themeFor(r), t2 = themeFor(r); assert.equal(t1.key, t2.key); assert.ok(THEMES[t1.key]);
+    const d1 = decorSvg(t1, r.seed, false), d2 = decorSvg(t1, r.seed, false); assert.equal(d1, d2);
+    assert.ok((d1.match(/<use /g) || []).length <= 12, 'at most a dozen props');
+  }
+  assert.ok(Object.keys(THEMES).length >= 2, 'at least two arena themes');
+  const keys = new Set(goldenBattles().map(({ r }) => themeFor(r).key)); assert.ok(keys.size >= 2, 'golden battles use more than one theme');
+});
+
+test('effects layer covers all twelve elements and every condition', () => {
+  const src = fs.readFileSync(new URL('../../src/ui/clash/fx.js', import.meta.url), 'utf8');
+  for (const el of Object.keys(DELIVERY)) assert.ok(src.includes(`case '${el}':`), `burst for ${el}`);
+  for (const c of ['burn', 'chill', 'daze', 'shock']) assert.ok(src.includes(`'${c}'`), `condition effect ${c}`);
+  assert.ok(!/simulateClash|from ['"]\.\.\/\.\.\/clash/.test(src), 'fx.js never touches the engine');
+  const arena = fs.readFileSync(new URL('../../src/ui/clash/arena.js', import.meta.url), 'utf8');
+  assert.ok(!/ability-fx|football/.test(arena), 'arena does not import football effects');
+  assert.ok(/import \{ ELEMENT_FX \} from '\.\.\/ability-fx\.js'/.test(src), 'fx.js reads only the shared palette');
 });

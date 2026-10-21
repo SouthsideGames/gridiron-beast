@@ -17,7 +17,7 @@ export function registerClashLab(Router, app) {
   const st = {
     view: 'lineup', seed: 1, overall: 65, a: ['emberfox', 'tidepaw', 'stormlynx'], b: ['pebble', 'ironjaw', 'glimmer'],
     config: { backRow: V.backRow.default, duration: V.duration.default, O1: false, O2: false, policies: { a: 'none', b: 'none' } },
-    result: null, i: 0, speed: 1, arena: null, pickFor: null,
+    result: null, i: 0, speed: 1, fxQuality: 'full', arena: null, pickFor: null,
     batch: { family: 'Random mixed 3v3', n: 300, running: false, progress: 0, rows: [] },
     load: { fatigue: 20, battles: 2, plays: true, durability: 0.6, opening: false, profile: 'starter3' },
     moves: { filter: 'All', arch: 'All' },
@@ -29,7 +29,7 @@ export function registerClashLab(Router, app) {
   };
   // The arena (src/ui/clash/arena.js) plays the record; the Lab only mounts it and keeps the cursor across re-renders.
   const stop = () => { if (st.arena) { st.i = st.arena.cursor; st.arena.destroy(); st.arena = null; } };
-  const mountArena = (host) => { if (!st.result || !host) return; st.arena = createArena(host, st.result, { speed: st.speed, reducedMotion: app.settings?.reducedMotion, onCursor: (i) => { st.i = i; } }); if (st.i) st.arena.setCursor(st.i); };
+  const mountArena = (host) => { if (!st.result || !host) return; st.arena = createArena(host, st.result, { speed: st.speed, quality: st.fxQuality, reducedMotion: app.settings?.reducedMotion, onCursor: (i) => { st.i = i; }, onQuality: (q) => { st.fxQuality = q; } }); if (st.i) st.arena.setCursor(st.i); };
   // ---------- views
   const header = () => {
     const tabs = [['lineup', 'Lineup'], ['replay', 'Replay'], ['batch', 'Batch'], ['load', 'Load'], ['moves', 'Moves']];

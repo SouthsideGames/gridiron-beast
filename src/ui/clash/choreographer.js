@@ -12,6 +12,9 @@ export const SPEEDS = Object.freeze([1, 2, 4]);
 /** Durations at 1x, in ms. Speed divides them; Skip plays none. */
 export const DURATION = Object.freeze({ tick: 260, routine: 560, power: 950, major: 1500 });
 
+/** How a named move of each element reaches its target (Phase 3). Basic strikes are always melee. */
+export const DELIVERY = Object.freeze({ Fire: 'projectile', Water: 'projectile', Nature: 'projectile', Electric: 'arc', Earth: 'lob', Ice: 'projectile', Wind: 'projectile', Dark: 'projectile', Light: 'beam', Metal: 'melee', Psychic: 'wave', Dragon: 'melee' });
+
 const ROUTINE_KINDS = new Set(['damage', 'heal', 'shield', 'shield_break', 'miss', 'swap_refused', 'condition', 'enter', 'bench', 'buff', 'debuff']);
 const TICK_KINDS = new Set(['tick', 'bench_miss', 'bench_blocked', 'note', 'initiative', 'start', 'stalemate']);
 
@@ -23,7 +26,8 @@ export function stateAt(result, i) {
   const last = Math.min(i, result.log.length - 1);
   for (let k = 0; k <= last; k++) {
     const e = result.log[k]; if (e.order) order = e.order; if (e.ramp) ramp = e.ramp; if (e.healMult != null) healMult = e.healMult;
-    const put = (id, s) => { if (!id || !s) return; const t = S[id[0]][id]; Object.assign(t, { hp: s.hp, shield: s.shield, cond: s.cond, paused: s.paused }); if (s.hp <= 0) t.ko = true; };
+    const put = (id, s) => { if (!id || !s) return; const t = S[id[0]][id]; Object.assign(t, { hp: s.hp, shield: s.shield, cond: s.cond, paused: s.paused }); };
+    // A monster leaves the field on its 'ko' event, not on the hit that emptied its HP: the knockout cue plays in between.
     put(e.actor, e.actorState); put(e.target, e.targetState);
     if (e.kind === 'ko' && e.target) S[e.target[0]][e.target].ko = true;
   }
@@ -43,9 +47,11 @@ const standingAfter = (result, k, side) => { const st = stateAt(result, k); retu
 /** One cue per log event. */
 export function cuesFor(result) {
   const log = result.log; const out = [];
+  const byId = {}; for (const side of ['a', 'b']) for (const x of result.lines[side]) byId[x.id] = x;
+  const elementOf = (id) => (id && byId[id] ? byId[id].type : null);
   for (let k = 0; k < log.length; k++) {
     const e = log[k];
-    let tier = 'routine', move = null, camera = null, number = null, label = null;
+    let tier = 'routine', move = null, camera = null, number = null, label = null, delivery = null, named = false;
     const sideOf = (id) => (id ? id[0] : null);
     switch (e.kind) {
       case 'damage': {
@@ -54,6 +60,8 @@ export function cuesFor(result) {
         tier = triggered ? 'power' : 'routine';
         if (isMajorMove(e, result)) tier = 'major';
         move = splash || ret ? 'burst' : triggered ? 'lunge-heavy' : 'lunge';
+        const mv = e.actor && byId[e.actor]?.combatant?.move; named = !!(mv && e.text.includes(mv.name));
+        delivery = ret ? 'retaliate' : splash ? 'splash' : named ? (DELIVERY[elementOf(e.actor)] || 'melee') : 'melee';
         number = { kind: 'damage', value: e.damage, absorbed: e.absorbed || 0 };
         camera = tier === 'routine' ? { focus: [e.actor, e.target], zoom: 1 } : tier === 'power' ? { focus: [e.actor, e.target], zoom: 1.08, shake: 4 } : { focus: [e.actor, e.target], zoom: 1.14, shake: 7, dim: true };
         // Flag the strike that ends the battle: the strongest presentation.
@@ -92,7 +100,7 @@ export function cuesFor(result) {
       case 'swap_refused': tier = 'routine'; move = 'refused'; label = 'held'; break;
       default: tier = TICK_KINDS.has(e.kind) ? 'tick' : ROUTINE_KINDS.has(e.kind) ? 'routine' : 'tick';
     }
-    out.push({ i: k, ex: e.ex, kind: e.kind, tier, duration: DURATION[tier], move, number, label, camera, actor: e.actor, target: e.target, text: e.text, event: e });
+    out.push({ i: k, ex: e.ex, kind: e.kind, tier, duration: DURATION[tier], move, number, label, camera, actor: e.actor, target: e.target, text: e.text, event: e, element: elementOf(e.actor) || elementOf(e.target), delivery, named });
   }
   return out;
 }
