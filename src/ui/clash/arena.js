@@ -41,7 +41,11 @@ export function createArena(root, result, opts = {}) {
   const isLandscape = () => window.matchMedia('(orientation: landscape) and (min-width: 600px)').matches;
   const all = [...result.lines.a, ...result.lines.b];
   const byId = Object.fromEntries(all.map((x) => [x.id, x]));
-  const lastSlot = {};
+  // Where a knocked-out monster lies: the slot it held just before its KO event, read from the record, so Watch,
+  // Step, Skip and scrubbing all leave it in the same place.
+  const koIndex = {}; result.log.forEach((e, k) => { if (e.kind === 'ko' && e.target && koIndex[e.target] == null) koIndex[e.target] = k; });
+  const koSlotCache = { p: {}, l: {} };
+  const koSlotFor = (id) => { const c = koSlotCache[isLandscape() ? 'l' : 'p']; if (!(id in c)) c[id] = koIndex[id] == null ? null : slotsFor(id[0], stateAt(result, koIndex[id] - 1))[id] || null; return c[id]; };
 
   root.innerHTML = `<div class="cl-arena ${sizeKey}">
     <div class="cl-hud"><span class="cl-ex">Exchange <b>0</b> / ${result.exchanges}</span><span class="cl-sd"></span><span class="cl-exp">${result.experiments.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}</span><div class="cl-exbar"><i></i></div></div>
@@ -78,7 +82,7 @@ export function createArena(root, result, opts = {}) {
     for (const side of ['a', 'b']) {
       const slots = slotsFor(side, st);
       for (const id of st.order[side]) {
-        const s = st.S[side][id]; const el = monEl[id]; const slot = slots[id] || lastSlot[id] || { x: 50, y: 50, front: false, row: 1 }; lastSlot[id] = slot;
+        const s = st.S[side][id]; const el = monEl[id]; const slot = slots[id] || (s.ko && koSlotFor(id)) || { x: 50, y: 50, front: false, row: 1 };
         el.classList.toggle('no-move', instant);
         el.style.left = `${slot.x}%`; el.style.top = `${slot.y}%`; el.style.zIndex = String(Math.round(slot.y));
         const size = slot.front ? sizes.front : slot.row === 2 ? sizes.bench - 16 : sizes.bench;
