@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
-    "serve": "python3 -m http.server 8080"
+    "serve": "python3 -m http.server 8080",
+    "clash:balance": "node tools/clash-balance.mjs"
   },
   "license": "UNLICENSED"
 }
