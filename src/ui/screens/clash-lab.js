@@ -5,6 +5,7 @@ import { esc, delegate, toast } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import * as Clash from '../../clash/index.js';
 import { runFamily, syntheticMonster, ARCHETYPES } from '../../clash/batch.js';
+import { createArena } from '../clash/arena.js';
 
 const V = Clash.CLASH_VALUES;
 const COND_GLYPH = { burn: '🔥', chill: '❄️', daze: '💫', shock: '⚡' };
@@ -16,35 +17,28 @@ export function registerClashLab(Router, app) {
   const st = {
     view: 'lineup', seed: 1, overall: 65, a: ['emberfox', 'tidepaw', 'stormlynx'], b: ['pebble', 'ironjaw', 'glimmer'],
     config: { backRow: V.backRow.default, duration: V.duration.default, O1: false, O2: false, policies: { a: 'none', b: 'none' } },
-    result: null, i: 0, playing: false, speed: 1, timer: null, pickFor: null,
+    result: null, i: 0, speed: 1, arena: null, pickFor: null,
     batch: { family: 'Random mixed 3v3', n: 300, running: false, progress: 0, rows: [] },
     load: { fatigue: 20, battles: 2, plays: true, durability: 0.6, opening: false, profile: 'starter3' },
     moves: { filter: 'All', arch: 'All' },
   };
   const monstersFor = (ids, side) => ids.map((id, i) => syntheticMonster(id, { seed: st.seed * 97 + (side === 'a' ? 0 : 50) + i, overall: st.overall }));
   const run = () => {
-    try { st.result = Clash.simulateClash({ a: monstersFor(st.a, 'a'), b: monstersFor(st.b, 'b'), seed: st.seed, config: st.config }); st.i = 0; st.playing = false; stop(); st.view = 'replay'; }
+    try { st.result = Clash.simulateClash({ a: monstersFor(st.a, 'a'), b: monstersFor(st.b, 'b'), seed: st.seed, config: st.config }); st.i = 0; stop(); st.view = 'replay'; }
     catch (e) { toast(e.message, 'error'); }
   };
-  const stop = () => { if (st.timer) { clearInterval(st.timer); st.timer = null; } st.playing = false; };
-  const stateAt = (i) => { // state after event i, from the log alone
-    const r = st.result; const S = { a: {}, b: {} }; let order = { a: r.lines.a.map((x) => x.id), b: r.lines.b.map((x) => x.id) }; let ramp = 1, healMult = 1;
-    for (const L of ['a', 'b']) for (const x of r.lines[L]) S[L][x.id] = { hp: x.maxHp, maxHp: x.maxHp, shield: 0, cond: null, paused: null, name: x.name, archetype: x.archetype, type: x.type, c: x.combatant, ko: false };
-    for (let k = 0; k <= i && k < r.log.length; k++) { const e = r.log[k]; if (e.order) order = e.order; if (e.ramp) ramp = e.ramp; if (e.healMult != null) healMult = e.healMult;
-      const put = (id, s) => { if (!id || !s) return; const side = id[0]; Object.assign(S[side][id], s); if (s.hp <= 0) S[side][id].ko = true; };
-      put(e.actor, e.actorState); put(e.target, e.targetState); if (e.kind === 'ko' && e.target) S[e.target[0]][e.target].ko = true; }
-    return { S, order, ramp, healMult };
-  };
-  const exOf = (i) => st.result.log[Math.min(i, st.result.log.length - 1)].ex;
-  const nextExchangeIndex = (i) => { const ex = exOf(i); let k = i; while (k < st.result.log.length - 1 && st.result.log[k].ex === ex) k++; return k; };
-
+  // The arena (src/ui/clash/arena.js) plays the record; the Lab only mounts it and keeps the cursor across re-renders.
+  const stop = () => { if (st.arena) { st.i = st.arena.cursor; st.arena.destroy(); st.arena = null; } };
+  const mountArena = (host) => { if (!st.result || !host) return; st.arena = createArena(host, st.result, { speed: st.speed, reducedMotion: app.settings?.reducedMotion, onCursor: (i) => { st.i = i; } }); if (st.i) st.arena.setCursor(st.i); };
   // ---------- views
   const header = () => {
     const tabs = [['lineup', 'Lineup'], ['replay', 'Replay'], ['batch', 'Batch'], ['load', 'Load'], ['moves', 'Moves']];
     const exp = Clash.activeExperiments(st.config);
-    return `<div class="chips" style="margin:0 0 8px">${tabs.map(([v, l]) => `<button class="chip ${st.view === v ? 'on accent' : ''}" data-action="view" data-v="${v}">${l}</button>`).join('')}</div>
-      <div class="panel tight ${exp.length ? 'warn' : ''}" style="margin-bottom:8px;font-size:12px"><b>Settings in force:</b> back row ${esc(st.config.backRow)} · duration ${esc(st.config.duration)} · Shock ${Math.round(V.shock.chance[0] * 100)}–${Math.round(V.shock.chance[1] * 100)}% every ${V.shock.every}nd strike · cap ${V.battle.exchangeCap} · values ${V.version}${exp.length ? `<br><b>Experiments ON:</b> ${esc(exp.join(', '))}` : '<br>No experiments on (Gate A defaults).'}</div>`;
+    const inForce = settingsInForce(exp);
+    // In the replay view the arena owns the screen: the settings line moves into the collapsed "Stats and settings" panel.
+    return `<div class="chips" style="margin:0 0 8px">${tabs.map(([v, l]) => `<button class="chip ${st.view === v ? 'on accent' : ''}" data-action="view" data-v="${v}">${l}</button>`).join('')}</div>${st.view === 'replay' && st.result ? '' : inForce}`;
   };
+  const settingsInForce = (exp) => `<div class="panel tight ${exp.length ? 'warn' : ''}" style="margin-bottom:8px;font-size:12px"><b>Settings in force:</b> back row ${esc(st.config.backRow)} · duration ${esc(st.config.duration)} · Shock ${Math.round(V.shock.chance[0] * 100)}–${Math.round(V.shock.chance[1] * 100)}% every ${V.shock.every}nd strike · cap ${V.battle.exchangeCap} · values ${V.version}${exp.length ? `<br><b>Experiments ON:</b> ${esc(exp.join(', '))}` : '<br>No experiments on (Gate A defaults).'}</div>`;
   const chip = (key, v, label, cur) => `<button class="chip ${cur === v ? 'on accent' : ''}" data-action="${key}" data-v="${v}">${esc(label)}</button>`;
   const settings = () => `<div class="panel" style="margin-top:8px"><b>Experimental switches</b><div class="dim" style="font-size:11px">Provisional and experimental values are not final rules; Gate B decides. The log says when one changes a number.</div>
       <div style="margin-top:6px;font-size:12px">Back row (provisional, Test E is the Gate A baseline)</div><div class="chips">${Object.keys(V.backRow.tests).map((k) => chip('backRow', k, k, st.config.backRow)).join('')}</div>
@@ -85,25 +79,11 @@ export function registerClashLab(Router, app) {
 
   function replayView() {
     const r = st.result; if (!r) return `<p class="muted">No battle yet. Set a lineup and press Run.</p>${lineupView()}`;
-    const i = Math.min(st.i, r.log.length - 1); const e = r.log[i]; const { S, order, ramp } = stateAt(i);
-    const line = (key) => order[key].map((id) => { const x = S[key][id]; const front = id === order[key].find((q) => !S[key][q].ko); const hpPct = Math.max(0, x.hp / x.maxHp * 100); const sh = Math.min(100, x.shield / x.maxHp * 100);
-      return `<div class="item static" style="min-height:0;padding:4px 8px;opacity:${x.ko ? 0.45 : 1};border-color:${front ? 'var(--accent)' : 'var(--line)'}">${monsterSprite(x.c ? { species: x.c.species, name: x.name, stage: x.c.stage } : null, 28)}<div class="grow" style="font-size:12px"><div class="row between"><span><b>${esc(x.name)}</b> <span class="dim">${ARCH_GLYPH[x.archetype]} ${esc(x.type)}</span>${front ? ' <span class="chip accent" style="font-size:10px">front</span>' : ''}${x.cond ? ` <span class="chip warn" style="font-size:10px">${COND_GLYPH[x.cond]} ${esc(x.cond)}</span>` : x.paused ? ` <span class="chip" style="font-size:10px">${COND_GLYPH[x.paused]} paused</span>` : ''}${x.ko ? ' <span class="chip bad" style="font-size:10px">KO</span>' : ''}</span><span class="mono">${x.hp}/${x.maxHp}${x.shield ? ` +${x.shield}🛡` : ''}</span></div>
-        <div class="bar ${hpPct < 30 ? 'bad' : hpPct < 60 ? 'warn' : ''}" style="position:relative"><i style="width:${hpPct}%"></i>${x.shield ? `<i style="position:absolute;left:0;top:0;width:${sh}%;background:#93c5fd;opacity:.6"></i>` : ''}</div></div></div>`; }).join('');
-    const fa = order.a.find((q) => !S.a[q].ko), fb = order.b.find((q) => !S.b[q].ko);
-    const edge = fa && fb ? Clash.typeEdge(S.a[fa].type, S.b[fb].type) : 'even';
-    const kindClass = { damage: 'bad', heal: 'good', shield: 'info', ko: 'bad', skip: 'warn', condition: 'warn', swap: 'info', cap: 'accent', end: 'accent', sudden_death: 'warn', stalemate: 'warn' }[e.kind] || '';
-    return `<div class="panel tight"><div class="row between" style="font-size:12px"><span>Exchange <b>${e.ex}</b> of ${r.exchanges}${ramp > 1 ? ` · <span style="color:var(--warn)">sudden death ×${ramp.toFixed(2)}</span>` : ''}</span><span class="dim">event ${i + 1}/${r.log.length}</span></div>
-        <div class="bar warn" style="margin:4px 0"><i style="width:${Math.min(100, e.ex / V.battle.exchangeCap * 100)}%"></i></div></div>
-      <div class="panel" style="margin-top:6px"><div class="row between"><b>Side A</b>${fa && fb ? `<span class="chip ${edge === 'strong' ? 'good' : edge === 'weak' ? 'bad' : ''}" style="font-size:10px">type: ${edge === 'strong' ? 'A has the edge' : edge === 'weak' ? 'B has the edge' : 'even'}</span>` : ''}</div><div class="list" style="gap:4px;margin-top:4px">${line('a')}</div></div>
-      <div class="panel" style="margin-top:6px"><b>Side B</b><div class="list" style="gap:4px;margin-top:4px">${line('b')}</div></div>
-      <div class="panel" style="margin-top:6px;min-height:64px"><div class="chip ${kindClass}" style="font-size:10px">${esc(e.kind.replace('_', ' '))}</div><div style="margin-top:4px">${esc(e.text)}</div></div>
-      <div class="grid2" style="margin-top:8px"><button class="btn primary big" data-action="watch">${st.playing ? '⏸ Pause' : i >= r.log.length - 1 ? '↻ Replay' : '▶ Watch'}</button><button class="btn big" data-action="step">⏭ Step</button></div>
-      <div class="grid2" style="margin-top:6px"><button class="btn" data-action="stepEx">Next exchange</button><button class="btn" data-action="skip">Skip to end</button></div>
-      <div class="row" style="gap:6px;margin-top:6px;align-items:center"><span class="muted" style="font-size:12px">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${st.speed === s ? 'primary' : ''}" data-action="speed" data-v="${s}">${s}×</button>`).join('')}<input type="range" min="0" max="${r.log.length - 1}" value="${i}" data-change="scrub" style="flex:1"></div>
-      ${i >= r.log.length - 1 ? `<div class="panel tight" style="margin-top:8px"><b>${esc(r.log[r.log.length - 1].text)}</b><div class="dim" style="font-size:12px">Decided by ${r.by === 'knockout' ? 'knockout' : r.by === 'hp' ? `HP share (${pct(r.hpShare.a)} v ${pct(r.hpShare.b)})` : 'a seeded coin flip after an exact HP tie'}. ${r.capped ? 'Reached the exchange cap.' : ''}</div></div>` : ''}
-      <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn small" data-action="copyKey">Copy replay key</button><button class="btn small" data-action="copyLog">Copy log</button><button class="btn small" data-action="xp">XP for this battle</button><button class="btn small ghost" data-action="view" data-v="lineup">Back to lineup</button></div>
-      ${st.xpOpen ? xpPanel() : ''}
-      <details style="margin-top:8px"><summary class="muted">Full log (${r.log.length} events)</summary><div style="font-size:11px;max-height:300px;overflow:auto">${r.log.map((ev, k) => `<div style="${k === i ? 'color:var(--accent)' : ''}"><span class="dim">${ev.ex}</span> ${esc(ev.text)}</div>`).join('')}</div></details>`;
+    return `<div id="cl-arena-host"></div>
+      <details class="panel tight" style="margin-top:8px"><summary class="muted">Result and replay key</summary><div style="font-size:12px;margin-top:4px"><b>${esc(r.log[r.log.length - 1].text)}</b> Decided by ${r.by === 'knockout' ? 'knockout' : r.by === 'hp' ? `HP share (${pct(r.hpShare.a)} v ${pct(r.hpShare.b)})` : 'a seeded coin flip after an exact HP tie'}.${r.capped ? ' Reached the exchange cap.' : ''}</div>
+        <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="copyKey">Copy replay key</button><button class="btn small" data-action="copyLog">Copy log</button><button class="btn small" data-action="xp">XP for this battle</button><button class="btn small ghost" data-action="view" data-v="lineup">Back to lineup</button></div>${st.xpOpen ? xpPanel() : ''}</details>
+      <details class="panel tight" style="margin-top:6px"><summary class="muted">Full log (${r.log.length} events)</summary><div style="font-size:11px;max-height:300px;overflow:auto;margin-top:4px">${r.log.map((ev) => `<div><span class="dim">${ev.ex}</span> ${esc(ev.text)}</div>`).join('')}</div></details>
+      <details class="panel tight" style="margin-top:6px"><summary class="muted">Stats and settings</summary><div style="margin-top:6px">${settingsInForce(Clash.activeExperiments(st.config))}</div>${r.lines.a.concat(r.lines.b).map((x) => `<div class="row between" style="font-size:12px"><span>${esc(x.name)} <span class="dim">${esc(x.archetype)} · ${esc(x.type)}</span></span><span class="mono">HP ${x.maxHp} · ATK ${x.combatant.atk} · SPD ${x.combatant.spd}</span></div>`).join('')}${settings()}</details>`;
   }
   function xpPanel() { const r = st.result; const xa = Clash.battleXp(r, 'a'), xb = Clash.battleXp(r, 'b'); const row = (L, X) => L.map((x) => `<div class="row between" style="font-size:12px"><span>${esc(x.name)}</span><span class="mono">${X[x.id]} XP</span></div>`).join('');
     return `<div class="panel" style="margin-top:8px"><b>Arena XP, Model C2 (P1 formula; nothing is awarded)</b><div class="dim" style="font-size:11px">9 × (0.4 + 0.6 × share) × win 1.15 / loss 0.85 × overall gap. Session battle k earns ×${V.xp.diminishing.join(', ×')}; last game's starters earn one-third.</div><div style="margin-top:4px"><b>Side A</b>${row(r.lines.a, xa)}<b>Side B</b>${row(r.lines.b, xb)}</div></div>`; }
@@ -201,10 +181,10 @@ export function registerClashLab(Router, app) {
     render() { const body = { lineup: lineupView, replay: replayView, batch: batchView, load: loadView, moves: movesView }[st.view](); return header() + body + (st.statsOpen ? statsSheet(st.statsOpen.side, st.statsOpen.i) : ''); },
     mount(root) {
       delegate(root, {
-        view: (el) => { stop(); st.view = el.dataset.v; st.statsOpen = null; Router.render(); },
-        backRow: (el) => { st.config.backRow = el.dataset.v; Router.render(); }, duration: (el) => { st.config.duration = el.dataset.v; Router.render(); },
+        view: (el) => { stop(); st.view = el.dataset.v; st.statsOpen = null; if (el.dataset.v !== 'replay') st.i = 0; Router.render(); },
+        backRow: (el) => { stop(); st.config.backRow = el.dataset.v; Router.render(); }, duration: (el) => { st.config.duration = el.dataset.v; Router.render(); },
         o: (el) => { const v = el.dataset.v; st.config.O1 = v === 'O1' || v === 'O3'; st.config.O2 = v === 'O2' || v === 'O3'; Router.render(); },
-        polA: (el) => { st.config.policies.a = el.dataset.v; Router.render(); }, polB: (el) => { st.config.policies.b = el.dataset.v; Router.render(); },
+        polA: (el) => { stop(); st.config.policies.a = el.dataset.v; Router.render(); }, polB: (el) => { st.config.policies.b = el.dataset.v; Router.render(); },
         pick: (el) => { st.pickFor = el.dataset.side; Router.render(); }, pickClose: () => { st.pickFor = null; Router.render(); }, pickArch: (el) => { st.moves.arch = el.dataset.v; Router.render(); },
         pickOne: (el) => { if (st[st.pickFor].length < 5) st[st.pickFor].push(el.dataset.id); st.pickFor = null; Router.render(); },
         remove: (el) => { st[el.dataset.side].splice(Number(el.dataset.i), 1); Router.render(); }, clear: (el) => { st[el.dataset.side] = []; Router.render(); },
@@ -212,11 +192,6 @@ export function registerClashLab(Router, app) {
         swapSides: () => { [st.a, st.b] = [st.b, st.a]; Router.render(); },
         run: () => { if (!st.a.length || !st.b.length) { toast('Each side needs at least one monster', 'error'); return; } run(); Router.render(); },
         stats: (el) => { st.statsOpen = { side: el.dataset.side, i: Number(el.dataset.i) }; Router.render(); }, statsClose: () => { st.statsOpen = null; Router.render(); },
-        watch: () => { const r = st.result; if (!r) return; if (st.playing) { stop(); Router.render(); return; } if (st.i >= r.log.length - 1) st.i = 0; st.playing = true; const tick = () => { if (st.i >= r.log.length - 1) { stop(); Router.render(); return; } st.i += 1; Router.render(); }; st.timer = setInterval(tick, 700 / st.speed); Router.render(); },
-        step: () => { stop(); if (st.result && st.i < st.result.log.length - 1) st.i += 1; Router.render(); },
-        stepEx: () => { stop(); if (st.result) st.i = nextExchangeIndex(st.i) + (st.i < st.result.log.length - 1 ? 1 : 0); if (st.result && st.i > st.result.log.length - 1) st.i = st.result.log.length - 1; Router.render(); },
-        skip: () => { stop(); if (st.result) st.i = st.result.log.length - 1; Router.render(); },
-        speed: (el) => { st.speed = Number(el.dataset.v); if (st.playing) { stop(); st.playing = true; st.timer = setInterval(() => { if (st.i >= st.result.log.length - 1) { stop(); Router.render(); return; } st.i += 1; Router.render(); }, 700 / st.speed); } Router.render(); },
         copyKey: async () => { try { await navigator.clipboard.writeText(st.result.replayKey); toast('Replay key copied'); } catch { toast('Copy failed; the key is in the log panel', 'error'); } },
         copyLog: async () => { try { await navigator.clipboard.writeText(st.result.log.map((e) => `${e.ex}\t${e.kind}\t${e.text}`).join('\n')); toast('Log copied'); } catch { toast('Copy failed', 'error'); } },
         paste: async () => { let line = ''; try { line = await navigator.clipboard.readText(); } catch { line = prompt('Paste the replay key') || ''; } if (!line) return; try { const k = Clash.parseReplayKey(line.trim()); st.result = Clash.simulateClash({ a: k.a, b: k.b, seed: k.seed, config: k.config }); st.config = { ...k.config, policies: { ...k.config.policies } }; st.a = k.a.map((m) => m.species); st.b = k.b.map((m) => m.species); st.seed = k.seed; st.i = 0; st.view = 'replay'; toast('Battle rebuilt from the key'); } catch (e) { toast(e.message, 'error'); } Router.render(); },
@@ -227,9 +202,10 @@ export function registerClashLab(Router, app) {
         if (k === 'overall') st.overall = Math.max(40, Math.min(90, Number(v) || 65)); if (k === 'seed') st.seed = Number(v) || 1; if (k === 'family') st.batch.family = v; if (k === 'batchN') st.batch.n = Number(v) || 300;
         if (k === 'lf') st.load.fatigue = Number(v) || 0; if (k === 'lb') st.load.battles = Number(v) || 0; if (k === 'lplays') st.load.plays = ev.target.checked; if (k === 'lopen') st.load.opening = ev.target.checked; if (k === 'ldur') st.load.durability = Number(v) || 0.6; if (k === 'lprofile') st.load.profile = v;
         if (k !== 'scrub') Router.render(); });
-      root.addEventListener('input', (ev) => { if (ev.target.dataset.change === 'scrub') { stop(); st.i = Number(ev.target.value) || 0; Router.render(); } });
+      root.classList.toggle('cl-wide', st.view === 'replay');
+      if (st.view === 'replay') mountArena(root.querySelector('#cl-arena-host'));
     },
-    unmount() { stop(); },
+    unmount() { stop(); st.i = 0; },
   });
 }
 // A tiny seeded generator for Lab-only choices (Auto lineup), separate from the engine's.
