@@ -5,7 +5,7 @@ All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no
 ## 0. Current status (2026-10-22, branch `franchise-acceptance-coach-assist`)
 
 - `npm test`: **284 tests, all passing** (about 6–7 minutes on the cloud workspace).
-- `tools/franchise-soak.mjs`: 28 franchises × up to 5 seasons, **0 invariant violations** after the fixes in GDD §28.2.
+- `tools/franchise-soak.mjs`: 34 franchises, 121 seasons, **0 invariant violations** after the fixes in GDD §28.2.
 - `tools/ui-walkthrough.py`: new franchise → Season 2 with **no page errors, no horizontal overflow and no dead ends** at 320×568, 360×640, 390×844 and 412×915, in Guided, Standard and Expert.
 - **Not done: testing on real phones.** All browser checks above run in emulated headless Chromium. See §3.
 
