@@ -1580,6 +1580,7 @@ function endSeason(f) {
   }
   s.awards = seasonAwards(f);
   f.history[f.history.length - 1].awards = s.awards;
+  if (champion === f.club) f.history[f.history.length - 1].championship = championshipRecord(f, s); // the ceremony and its summary (GDD §35)
   updateSeasonRecords(f, s.year); // the records book (GDD §17.8)
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
@@ -1598,6 +1599,31 @@ function endSeason(f) {
   checkAchievements(f, 'season', { wins: rec.w, losses: rec.l, champion: champion === f.club, awardsWon: mine.length, awardLine: mine.length ? mine.map(([k, w]) => `${w.name}: ${AWARDS[k]?.label || k}.`).join(' ') : '', wasHotSeat, goalMet: !!s.boardVerdict?.met });
 }
 export const TIERS_ENABLED = false;
+
+/**
+ * What the Beast Bowl ceremony needs, written once when the title is won (GDD §35.2): the final, the records, the awards
+ * the club's monsters won, the starters and the active roster as small snapshots (name, species, type, position, slot,
+ * ability name). No animation data: the ceremony is rebuilt from this, so it can be replayed from the history forever.
+ */
+export function championshipRecord(f, s = f.season) {
+  const p = s.playoffs || {}; const fin = (p.results || []).find((x) => x.round === 3) || null;
+  const mine = fin ? (fin.home === f.club ? 'home' : 'away') : null;
+  const games = (p.results || []).filter((x) => x.home === f.club || x.away === f.club);
+  const rec = s.records?.[f.club] || { w: 0, l: 0, t: 0 };
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
+  const snap = (m, slot = null, side = null) => { return { id: m.id, name: m.name, species: m.species, stage: m.stage || 0, type: m.type, position: m.position, slot, side, ability: speciesEffect(m)?.name || null, abilityKind: speciesEffect(m)?.kind || null, ovr: monsterOverall(m) }; };
+  const starters = [...OFFENSE_BASE.map((sl) => [sl, 'offense']), ...DEFENSE_BASE.map((sl) => [sl, 'defense'])].map(([sl, side]) => (byId[chart[sl]] ? snap(byId[chart[sl]], sl, side) : null)).filter(Boolean);
+  const seen = new Set(); const startersU = starters.filter((x) => (seen.has(x.id) ? false : seen.add(x.id)));
+  const captain = (f.roster.find((m) => m.cornerstone && seen.has(m.id)) || startersU.slice().sort((a, b) => b.ovr - a.ovr)[0] || null);
+  const awards = Object.entries(s.awards?.league || {}).filter(([, w]) => w && w.team === f.club).map(([k, w]) => ({ key: k, label: AWARDS[k]?.label || k, name: w.name }));
+  return {
+    year: s.year, tier: f.tier, club: f.club, color: TEAM_META[f.club]?.color || '#f5c542',
+    final: fin ? { opponent: mine === 'home' ? fin.away : fin.home, us: mine === 'home' ? fin.homeScore : fin.awayScore, them: mine === 'home' ? fin.awayScore : fin.homeScore, ot: !!fin.ot, venue: venueFor(fin.home, 'bowl', f.stadiums || null).name, venueEnv: venueFor(fin.home, 'bowl', f.stadiums || null).env, home: fin.home } : null,
+    record: { w: rec.w, l: rec.l, t: rec.t || 0 }, playoffs: { w: games.filter((x) => x.winner === f.club).length, l: games.filter((x) => x.winner && x.winner !== f.club).length },
+    awards, captain: captain ? captain.id : null, starters: startersU,
+    roster: f.roster.filter((m) => !m.injury && !seen.has(m.id)).map((m) => snap(m)),
+  };
+}
 
 /**
  * Award races (GDD §16.4): computed from the regular-season league table by

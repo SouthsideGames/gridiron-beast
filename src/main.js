@@ -15,6 +15,7 @@ import { registerOnboardingScreens } from './ui/screens/onboarding.js';
 import { registerHqScreens } from './ui/screens/hq.js';
 import { registerRosterScreens } from './ui/screens/roster.js';
 import { registerMatchScreens } from './ui/screens/match.js';
+import { registerCeremony } from './ui/screens/ceremony.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
 import { registerAbilityAudit, openAbilityPreview, registerAbilityBalance } from './ui/screens/ability-audit.js';
 import { registerClashLab } from './ui/screens/clash-lab.js';
@@ -67,6 +68,7 @@ export function start() {
   // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
   document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
   registerDexScreens(Router, app);
+  registerCeremony(Router, app); // the Beast Bowl ceremony (GDD §35)
   const saved = Save.load();
   if (saved) { app.f = saved; applySettings(); mergeDex(saved.dex); F.syncAchievementsToGlobal(saved); }
   // The player's dex lives outside the franchise and is mirrored to the cloud like the save.

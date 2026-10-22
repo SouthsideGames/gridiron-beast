@@ -689,3 +689,65 @@ html[data-reduced-motion="1"] .field-wrap .weather { animation: none; }
 @keyframes replay-wipe { from { transform: translateX(-100%); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
 @keyframes rec-blink { 50% { opacity: .2; } }
 html[data-reduced-motion="1"] .field-wrap.replaying::before, html[data-reduced-motion="1"] .replay-badge .rec { animation: none; }
+
+/* Beast Bowl ceremony (GDD §35): CSS-only scenes on a handful of elements; reduced motion opens on the summary. */
+.ceremony { position: relative; margin: 0 calc(-1 * var(--s3, 12px)); }
+.cer-stage { position: relative; height: min(68vh, 540px); min-height: 400px; overflow: hidden; background: #070b10; border-bottom: 3px solid var(--team); }
+.cer-stands { position: absolute; inset: 0 0 58% 0; background: radial-gradient(circle at 10% 30%, var(--team) 0 1.5px, transparent 2px) 0 0 / 14px 11px, radial-gradient(circle at 60% 70%, #ffe08a 0 1.2px, transparent 1.8px) 0 0 / 17px 13px, linear-gradient(180deg, #0b0f1a, #1a2030); opacity: .9; }
+.cer-turf { position: absolute; inset: 42% 0 0 0; background: repeating-linear-gradient(180deg, var(--turf-a) 0 34px, var(--turf-b) 34px 68px); }
+.cer-turf::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 22px; background: var(--end); opacity: .9; }
+.cer-lights { position: absolute; inset: 0; pointer-events: none; background: conic-gradient(from 200deg at 15% -10%, transparent 0 10deg, rgba(255,255,220,.13) 10deg 24deg, transparent 24deg), conic-gradient(from 135deg at 85% -10%, transparent 0 12deg, rgba(255,255,220,.13) 12deg 26deg, transparent 26deg); animation: cer-sweep 5s ease-in-out infinite alternate; }
+@keyframes cer-sweep { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
+.cer-board { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3; background: #050608; border: 2px solid #333a48; border-radius: 6px; padding: 4px 12px; text-align: center; font-family: ui-monospace, monospace; white-space: nowrap; max-width: 94%; overflow: hidden; text-overflow: ellipsis; }
+.cer-board-label { color: #f87171; font-size: 10px; font-weight: 900; letter-spacing: .2em; } .cer-board-score { color: #f3f4f6; font-size: 13px; } .cer-board-score b { color: #ffe08a; font-size: 18px; }
+.cer-banner { position: absolute; top: 74px; left: 0; right: 0; z-index: 3; text-align: center; color: #fff; text-shadow: 0 3px 0 #000, 0 0 24px var(--team); transform: scale(.4); opacity: 0; transition: transform .6s cubic-bezier(.2,.9,.3,1.3), opacity .4s, top .6s; }
+.cer-banner span { display: block; font-size: 14px; letter-spacing: .4em; color: #ffe08a; } .cer-banner b { display: block; font-size: clamp(30px, 10vw, 48px); font-weight: 900; letter-spacing: .06em; }
+.sc-final .cer-banner, .sc-enter .cer-banner, .sc-show .cer-banner { transform: scale(1); opacity: 1; }
+.sc-enter .cer-banner, .sc-show .cer-banner { top: 56px; transform: scale(.62); }
+.cer-bench { position: absolute; left: 4%; right: 4%; top: 46%; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; z-index: 2; }
+.cer-starters { position: absolute; left: 2%; right: 2%; bottom: 4%; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px 2px; z-index: 4; justify-items: center; }
+.cer-mon { position: relative; opacity: 0; transform: translateY(40px); transition: opacity .5s var(--d), transform .6s cubic-bezier(.2,.9,.3,1.2) var(--d); display: flex; flex-direction: column; align-items: center; }
+.cer-mon.starter { filter: drop-shadow(0 0 0 transparent); }
+.cer-mon.starter::before { content: ''; position: absolute; bottom: 12px; width: 34px; height: 9px; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,224,138,.6), transparent 70%); }
+.sc-enter .cer-mon, .sc-show .cer-mon, .sc-trophy .cer-mon, .sc-summary .cer-mon { opacity: 1; transform: none; }
+.sc-trophy .cer-mon.bench, .sc-summary .cer-mon.bench { opacity: .55; }
+.cer-tag { font: 800 9px ui-monospace, monospace; color: #e5e7eb; background: #0008; padding: 0 3px; border-radius: 3px; margin-top: -2px; }
+.cer-ab { position: absolute; bottom: 100%; white-space: nowrap; font-size: 10px; font-weight: 900; color: var(--a); text-shadow: 0 1px 0 #000, 0 0 6px var(--b); opacity: 0; transform: translateY(6px); pointer-events: none; z-index: 6; }
+.cer-mon.go > svg { animation: cer-hop .9s cubic-bezier(.2,.9,.3,1.3); filter: drop-shadow(0 0 6px var(--a)); }
+.cer-mon.go .cer-ab { animation: cer-label 1.2s ease-out both; }
+@keyframes cer-hop { 0% { transform: none; } 35% { transform: translateY(-14px) scale(1.25); } 100% { transform: none; } }
+@keyframes cer-label { 0% { opacity: 0; transform: translateY(6px); } 20%, 75% { opacity: 1; transform: translateY(-6px); } 100% { opacity: 0; transform: translateY(-14px); } }
+.cer-burst { position: absolute; left: 50%; top: 40%; width: 0; height: 0; pointer-events: none; z-index: 5; }
+.cer-burst i { position: absolute; font-style: normal; font-size: 13px; opacity: 0; transform: translate(-50%, -50%); text-shadow: 0 0 6px var(--a); }
+.cer-mon.go .cer-burst i { animation: cer-ray 1.1s ease-out both; animation-delay: calc(var(--k) * 30ms); }
+.cer-mon.go .cer-burst.trail i, .cer-mon.go .cer-burst.flare i, .cer-mon.go .cer-burst.rays i { animation-name: cer-rise; }
+.cer-mon.go .cer-burst.shards i, .cer-mon.go .cer-burst.leaves i { animation-name: cer-fall; }
+.cer-mon.go .cer-burst.streaks i, .cer-mon.go .cer-burst.pulse i, .cer-mon.go .cer-burst.ripple i { animation-name: cer-spin; }
+.cer-mon.go .cer-burst::after { content: ''; position: absolute; left: -26px; top: -26px; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--a); box-shadow: 0 0 14px var(--b); animation: cer-ring .8s ease-out both; }
+@keyframes cer-ray { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(calc(var(--k) * 60deg)) translateY(0); } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--k) * 60deg)) translateY(-34px); } }
+@keyframes cer-rise { 0% { opacity: 1; transform: translate(calc(-50% + (var(--k) - 2.5) * 7px), 0); } 100% { opacity: 0; transform: translate(calc(-50% + (var(--k) - 2.5) * 11px), -52px) scale(1.3); } }
+@keyframes cer-fall { 0% { opacity: 0; transform: translate(calc(-50% + (var(--k) - 2.5) * 10px), -46px) rotate(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + (var(--k) - 2.5) * 13px), 6px) rotate(180deg); } }
+@keyframes cer-spin { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(calc(var(--k) * 60deg)) translateX(6px); } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--k) * 60deg + 220deg)) translateX(30px); } }
+@keyframes cer-ring { from { transform: scale(.2); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+.cer-trophy { position: absolute; left: 0; right: 0; top: 26%; z-index: 5; display: flex; flex-direction: column; align-items: center; opacity: 0; transform: translateY(60%); transition: opacity .5s, transform 1.1s cubic-bezier(.2,.9,.3,1.1); pointer-events: none; }
+.cer-trophy-svg { width: 92px; height: 115px; filter: drop-shadow(0 0 18px rgba(255,224,138,.65)); }
+.sc-trophy .cer-trophy, .sc-summary .cer-trophy { opacity: 1; transform: none; }
+.sc-trophy .cer-trophy-svg { animation: cer-raise 2.4s ease-in-out .9s both; }
+@keyframes cer-raise { 0% { transform: none; } 45%, 100% { transform: translateY(-16px) rotate(-4deg) scale(1.08); } }
+.cer-captain { display: flex; flex-direction: column; align-items: center; margin-top: -6px; }
+.cer-cap-name { font-size: 12px; font-weight: 800; color: #fff; text-shadow: 0 1px 0 #000; }
+.cer-club { font-size: 18px; font-weight: 900; letter-spacing: .04em; text-shadow: 0 2px 0 #000; }
+.sc-trophy .cer-starters, .sc-summary .cer-starters { opacity: .8; }
+.cer-confetti { position: absolute; inset: 0; pointer-events: none; z-index: 6; overflow: hidden; }
+.cer-confetti i { position: absolute; top: -12px; left: var(--x); width: 7px; height: 11px; background: var(--c); opacity: 0; transform: rotate(var(--r)); }
+.sc-final .cer-confetti i { animation: cer-confetti 2.6s linear var(--t) 1 both; }
+.sc-trophy .cer-confetti i { animation: cer-confetti 3s linear var(--t) infinite; }
+@keyframes cer-confetti { 0% { opacity: 1; transform: translateY(0) rotate(var(--r)); } 100% { opacity: .9; transform: translateY(560px) rotate(calc(var(--r) + 540deg)); } }
+.cer-scene-label { position: absolute; bottom: 2px; right: 8px; font-size: 10px; color: #9ca3af; z-index: 7; }
+.cer-controls { position: absolute; top: 8px; right: 8px; z-index: 8; }
+.sc-summary .cer-controls { display: none; }
+.cer-summary { display: none; padding: 12px var(--s3, 12px); }
+.sc-summary .cer-summary { display: block; animation: banner-in .4s ease-out both; }
+.cer-sum-title { color: #ffe08a; font-weight: 900; letter-spacing: .08em; } .cer-sum-club { font-size: 24px; font-weight: 900; }
+.cer-sum-score { font-size: 20px; margin-top: 6px; } .cer-kv { margin-top: 8px; }
+html[data-reduced-motion="1"] .ceremony *, .ceremony.reduced * { animation: none !important; transition: none !important; }

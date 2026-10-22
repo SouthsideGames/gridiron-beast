@@ -608,7 +608,10 @@ export function registerMatchScreens(Router, app) {
     const ev = r.events || [];
     const badgeClub = r.newBadge; const gym = badgeClub ? GYM_BY_CLUB[badgeClub] : null;
     const otTag = s.tiebreak ? ` (OT · ${s.tiebreak.size}v${s.tiebreak.size} Clash)` : s.ot ? ' (OT)' : ''; const box = boxScoreHtml(s, teams, { title: gym ? `Final${otTag} · 🏅 BADGE GAME WON` : `Final${otTag}` });
-    const toHq = () => Router.go('hq', {}, { reset: true });
+    // Beast Bowl won: the ceremony follows the final whistle (GDD §35). The result, the title and the season's end are already
+    // saved above (finishSunday), so skipping the ceremony can never skip anything that counts.
+    const title = won && f.season.champion === f.club && (f.history || []).some((h) => h.year === f.season.year && h.championship);
+    const toHq = () => (title ? Router.go('ceremony', { year: f.season.year, fromGame: true }, { reset: true }) : Router.go('hq', {}, { reset: true }));
     // Gym cleared: the beaten coach's handshake first, then the badge itself (GDD §15.4, playtest round 3).
     const handshake = () => {
       if (!gym) return toHq();
