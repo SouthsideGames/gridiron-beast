@@ -1176,8 +1176,9 @@ export function acceptOffer(f, { releaseId = null } = {}) {
   e.status = 'signed';
   return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) };
 }
+/** Let the monster go: after a win (turn down its offer) or after a loss (skip the one pitch). Nothing else changes. */
 export function declineOffer(f) {
-  const e = f.week.encounter; if (!e || e.status !== 'offer') return { ok: false, reason: 'No offer on the table.' };
+  const e = f.week.encounter; if (!e || (e.status !== 'offer' && e.status !== 'pitch')) return { ok: false, reason: 'No offer on the table.' };
   e.status = 'declined'; f.season.day = 2; f.week.prospects = [];
   return { ok: true };
 }

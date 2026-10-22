@@ -885,7 +885,7 @@ Engine hooks used by the permanent table: `arrivalCond`, `refusedEffect`, `hitMu
 
 Tuesday's recruiting pitch is replaced by an encounter with one of the monsters the scout found on Monday. **Encounters are 3v3** (owner, 2026-10-22: briefly changed to 1v1 on 2026-10-21, then restored to 3v3).
 
-- **Enter Beast Clash:** choose one prospect; the battle is up to 3v3 (smaller only when fewer healthy roster monsters or fewer prospects exist). The wild side is the chosen monster in front with the other prospects found that week as its companions. **Win:** the monster offers to sign; the player may accept (the usual roster-limit release and salary-cap rules apply, exactly as before) or let it go. **Lose:** one ordinary recruiting pitch (development / facilities / playing time) at the existing odds; a refusal ends the day. Either way the battlers earn Arena XP and 5 fatigue. **Difficulty (acceptance review, 2026-10-22, 21,012 seeded battles over 24 franchises and three seasons, `tools/tuesday-study.mjs`):** the automatic lineup wins 90% in season 1, 94% in season 2 and 97% in season 3; the three strongest monsters 96%; an average trio 61% (56% → 70% over three seasons); the three weakest 34%. Prospects average 58 OVR every season while rosters grow, so the encounter gets easier as a club improves, and the lineup choice matters (weak 34% vs strong 96%). No change was made: the owner approved the companion rule and the reward values, and the review found no defect. A possible future adjustment, which needs owner approval, is in §28.3.
+- **Enter Beast Clash:** choose one prospect; the battle is up to 3v3 (smaller only when fewer than three roster monsters are healthy). The wild side is the chosen monster in front with **two wild companions** (revised 2026-10-22, §29.1; before, the week's other prospects were its companions). Companions cannot be signed; the wild group as a whole is matched to the club's strength, and the prospect keeps every rating it was scouted with. **Win:** the monster offers to sign; the player may accept (the usual roster-limit release and salary-cap rules apply, exactly as before) or let it go. **Lose:** one ordinary recruiting pitch (development / facilities / playing time) at the existing odds; a refusal ends the day. Either way the battlers earn Arena XP and 5 fatigue. With the automatic lineup the player wins about four encounters in five in every season (§29.1).
 - **Skip encounter:** no battle, no signing this week, and nothing else changes: no morale, board confidence or progression penalty. The screen says so in plain words, and the Help sheet explains the difference from *Skip to results*.
 - One encounter per Tuesday. Staff auto-run enters an encounter only for a clear upgrade (the same criterion as before) and plays it in Auto; otherwise it skips.
 - The final regular-season week and the playoffs keep Monday draft scouting and the Tuesday recovery day; no encounters then.
@@ -943,12 +943,12 @@ Integrate the combat system into the current franchise campaign:
 
 ### 27.3 Phase 2 — Coach Assist: optional contextual tutorials (APPROVED ROADMAP FEATURE)
 
-> **Status (2026-10-22): Coach Assist 1.0 implemented** on branch `franchise-acceptance-coach-assist` (owner authorization 2026-10-22). It replaces the first-week tutorial of §15.13. What the build does:
+> **Status (2026-10-22): Coach Assist 1.0 implemented** (owner authorization 2026-10-22; PR #33, integrated with the §29 balancing in build v35.0). It replaces the first-week tutorial of §15.13. What the build does:
 > - **Modes** (Settings, the welcome screen, or any ? Help sheet; switchable at any time): **Guided** (first-use tip on each screen with a numbered walk-through, Guided suggestions at hard choices: which Tuesday prospect, which draft prospect, re-sign or let go), **Standard** (default: a short first-use tip per screen), **Expert** (no automatic tips of any kind, including moment tips and first-ability tips).
 > - **Switches:** *Contextual hints* (counter-play outlines on Friday, roster notes such as a thin position, injuries, tight cap room, unspent points) and *routine consequence explanations* (cap room after a signing, a rookie deal's cost, what a trade gives up). Both default on and apply in every mode.
 > - **Always shown, whatever the setting:** confirmations for choices that cannot be undone (draft pick, forfeit, release, trade, retire, delete), the over-the-cap warning, the below-26-monsters warning and the no-legal-lineup warning.
 > - **? Help** in the top bar of every complex screen (HQ, each weekday screen, the Clash screen, pregame, roster and monster card, playbook, league, offseason and contracts, draft, staff), in every mode: that screen's topics first, the mode switch, then all topics by area, the football primer and *What the stats mean*. The match screen's ⓘ sheet links to it.
-> - **Topics:** getting started (owner role, staff, weekly schedule, after the game); scouting and signing (scouting, ratings and potential, the Tuesday encounter, *Skip the encounter* vs *Skip to results*); Beast Clash (how it works, elements and abilities, swap decisions, pregame, overtime); football (first game, Key Moments vs Full Coaching, the clock, plays, training, opponent scouting, game plan, media day, game day); roster (roster, injuries and fatigue, levels and evolution); contracts and the cap; the draft; trading picks (the existing system only); the league.
+> - **Topics:** getting started (owner role, staff, weekly schedule, after the game); scouting and signing (scouting, ratings and potential, the Tuesday encounter, wild companions — why 3v3, only the chosen prospect can join, companions follow the club and cannot be signed, a stronger lineup wins more often — and *Skip the encounter* vs *Skip to results*); Beast Clash (how it works, elements and abilities, swap decisions, pregame, overtime); football (first game, Key Moments vs Full Coaching, the clock, plays, training, opponent scouting, game plan, media day, game day); roster (roster, injuries and fatigue, levels and evolution); contracts and the cap; the draft; trading picks (the existing system only); the Board (how the forecast is made, what the safe goal means, rebuilding vs contender goals, how confidence moves, the narrow-miss final warning, the three-strike rule; ? Help on the goal screen and My office, a Guided goal suggestion and a consequence line when committing); the league.
 > - **First-use rules:** one tip at a time per screen, the screen's own topic first; *Got it* dismisses it for good (every mode, across save/load); *Turn tips off* switches to Expert; *Show all tips again* (Settings) brings them back. Moment tips (the clock late in a half, the first swap decision, the first overtime Clash) show once.
 > - **Saved with the franchise** (`settings.assist = { mode, hints, consequences }`; dismissed tips in `tutorial.seen`). Older saves: tips previously turned off → Expert, the old *Coaching hints* switch → contextual hints, tips dismissed under older names stay dismissed; otherwise Standard.
 > - Coach Assist reads the game and never writes to it: it makes no decision, changes no number, and does not touch achievements or the Hall of Fame (a test plays the same weeks in Guided and Expert and compares the whole save).
@@ -1018,8 +1018,77 @@ For each new roadmap feature: first record exact behavior and unresolved decisio
 3. **Play-mode decision dead end.** Closing the swap-decision sheet left the battle paused with no way to reopen it. *Skip to results* now reopens the decision.
 4. **Draft toast** read "X is a Beasts."; now "X joins the <club>."
 5. **Friday dead end after a coordinator change.** Last week's plan could hold plays no longer in the playbook; the Friday screen counted them, *Save game plan* was refused, and the staff's auto-run left the week stuck on Friday. Friday now starts from the valid plays topped up from the coordinators' default.
+6. **Full roster after a lost Tuesday battle** (found in the combined build, v35.0). The one pitch needs a release choice when the roster is full, but the screen only showed an error and offered no way on. It now asks who would leave if the pitch works, and the pitch panel also offers *Let them go*.
 
-### 28.3 Findings left for the owner (no change made)
-- **Tuesday difficulty** rises with the roster (§26.1). If the owner wants Tuesday to stay near 80% for the automatic lineup, the least invasive option is opponent selection only: give the chosen prospect's two companions a quality that follows the club's own top-three OVR (they are not signable), leaving the prospect, the rewards and every combat value untouched.
-- **Board pressure on a hands-off owner:** in the soak, 7 of 12 staff-run franchises (with the trainer spending points) were dismissed within five seasons, some after winning records, because the safe goal follows the forecast. Players who manage the roster themselves are not affected by this measurement. Board rules are approved values and were not changed.
+### 28.3 Findings left for the owner (resolved in §29, 2026-10-22)
+- **Tuesday difficulty** rises with the roster (§26.1). If the owner wants Tuesday to stay near 80% for the automatic lineup, the least invasive option was opponent selection only (implemented in §29.1): give the chosen prospect's two companions a quality that follows the club's own top-three OVR (they are not signable), leaving the prospect, the rewards and every combat value untouched.
+- **Board pressure on a hands-off owner:** in the soak, 7 of 12 staff-run franchises (with the trainer spending points) were dismissed within five seasons, some after winning records, because the safe goal follows the forecast. Players who manage the roster themselves are not affected by this measurement. Board rules were not changed in this milestone; the owner then authorized the revision in §29.
+
+## 29. Tuesday difficulty and Board fairness (IMPLEMENTED 2026-10-22, owner authorization; branch `tuesday-board-balance`)
+
+### 29.1 Tuesday wild companions
+**Why encounters got too easy.** The wild side was the chosen prospect plus the other prospects scouted that week. Prospects are generated at a fixed quality (about 58 OVR in every season), while the club's automatic lineup averages about 72 in season 1 and climbs as monsters level, are drafted and are signed. The gap grew every season: the automatic lineup won 94% in season 1 and 98–100% from season 3 (tools/tuesday-study.mjs, original rule).
+
+**Rule.** One encounter per Tuesday, 3v3. The chosen prospect leads, exactly as scouted. Two **wild companions** fight beside it:
+- *Strength:* the wild group (prospect + companions) averages the club's **battle strength** minus `COMPANION_RULE.gap` = 9 OVR. Battle strength is the average overall of the club's automatic 3v3 lineup, healthy monsters only. Companions make up for a weak or strong prospect (a ±2 spread), but never fight above the club's battle strength and never below 50. Scaling follows the roster, so it follows franchise progression.
+- *Fairness:* the chosen lineup never changes the companions; fielding weaker monsters cannot make the battle easier.
+- *Identity:* companions are species from the scouted region, named "Wild <species>", marked *cannot sign*, never added to the roster, the pool or the Beast Dex.
+- *Determinism:* companions come from their own seed (franchise seed, season, week, prospect), so the preview equals the battle and the franchise generator is not touched. Battles keep their lineup snapshots, so replays and older saves rebuild exactly; a Tuesday saved before the change simply meets companions under the new rule.
+- Beast Clash values 1.1.0, recruitment rewards (win → offer, loss → one pitch), Play / Auto / Skip to Results and Skip Encounter are unchanged.
+
+**Results** (validation run: 6 hands-off franchises × 5 seasons on every difficulty, every prospect each week, 2,888 battles under the revised rule; both rules on the same weeks and battle seeds; the gap was tuned on a separate set of franchises):
+
+| Lineup | Original rule | Revised rule |
+|---|---|---|
+| Automatic | 96% | **83%** |
+| Strongest three | 99% | 90% |
+| Average three | 66% | 28% |
+| Weakest three | 19% | 4% |
+
+By season (automatic lineup, revised): season 1 83%, 2 81%, 3 86%, 4 82%, 5 84% (original rule: 89%, 94%, 96%, 99%, 100%). By difficulty: Rookie 92%, Pro 82%, All-Star 77% (two franchises each, so this split is noisy; the companions do not depend on difficulty). The lineup choice matters more than before: the three weakest monsters rarely win, which is the intended cost of fielding them.
+
+### 29.2 Board expectations and dismissal
+**Why owners with winning records were fired.**
+1. *The forecast was absolute.* Each club's forecast was 0.5 + 0.025 × (team overall − 60). Real leagues run at 63–69 average overall (higher on All-Star), so the forecast overstated nearly every club: on average by about 1 win, and by 2.4 wins on All-Star.
+2. *The safe goal added a win on top* for any club forecast at .550 or better. Owners committed to "safe" goals met them only 37% of the time.
+3. *Dismissal ignored the margin.* Two net misses ended a franchise, whether the club went 1-8 or 6-3.
+4. *The badge goal could be impossible.* It counted every gym on the schedule, including gyms whose badge the owner already held (a badge is won once).
+
+On identical seasons, the original rules dismissed 25 of 36 hands-off owners within five seasons: Rookie 4/12, Pro 9/12, All-Star 12/12. Nine of them had a winning record in their last season.
+
+**Rules (BOARD_RULES in `src/franchise/board.js`).**
+- *Forecast:* 0.5 + 0.035 × (team overall − this season's league average overall), kept between .15 and .85. The slope is calibrated on simulated seasons (0.0365 measured). The awards' Coach of the Year expectations are unchanged.
+- *Goals:* the safe goal is the rounded forecast (at least 2, at most 7 of 9). The medium goal is the playoffs for a club forecast at .450 or better. Below that it is **one** badge from a gym on the schedule whose badge the owner does not hold yet; with none left, the playoffs. The title is unchanged (+2).
+- *Confidence:* a met goal gives +weight and lifts any deficit to 0 first; a miss is −1; the hot seat is −1 and dismissal −2, as before. Two changes:
+  - A **narrow miss** on the hot seat is a **final warning**: the owner stays at −1. A narrow miss is within one win of a wins goal, or a season at or above the forecast for any goal.
+  - **Three missed seasons in a row end a franchise however narrow the misses** (sustained underperformance).
+- A Beast Bowl title still meets any goal.
+- *Transparency:* the goal screen states the forecast "against this league" and the rules. Each verdict names the wins, the forecast and the reason. The goal history marks narrow misses.
+- *Older saves:* the miss streak is rebuilt from the Board history; old history entries simply lack the new fields.
+
+**Results.**
+- *Replay* (tools/board-replay.mjs) on the same 180 simulated seasons (36 hands-off franchises × 5, safe goal every year):
+
+  | | Original | Revised |
+  |---|---|---|
+  | Dismissed within five seasons | 25/36 (69%) | 7/36 (19%) |
+  | Rookie / Pro / All-Star | 4/12 · 9/12 · 12/12 | 2/12 · 1/12 · 4/12 |
+  | Safe goals met | 37% | 67% |
+  | Average Board confidence | −0.04 | +0.97 |
+  | Dismissed after a winning season | 9 | 1 (5-4, 5-4, 5-4 against forecasts of 6.0–6.3) |
+  | Owners with two or more seasons at least two wins under forecast who were dismissed | 8/8 | 3/3 |
+
+  Every revised dismissal was three missed seasons in a row. All seven had sustained records under their forecasts (for example 3-6, 3-6, 3-6 against 4.0).
+- *Live* (the real Board deciding, same seeds as the first twelve franchises of the replay): 1 of 12 owners dismissed (All-Star: 4-5, 2-7, 3-6, 2-7). The original rules dismissed 8 of those 12 on the same seasons.
+- *Goal choice still matters:* an owner who commits to the title every season is dismissed almost always under either rule; the playoffs/badge goal sits between the two.
+
+**Unintended effects checked.** The Board only touches goals, confidence, the scouting bonus and the hot-seat story event, so the football, recruitment and draft are unaffected. More met goals mean more seasons with the scouting department's extra prospect. The forecast change does not alter awards or club strength.
+
+## 30. Integrated Franchise Mode foundation (build v35.0, 2026-10-22)
+
+Build **v35.0-franchise-foundation** combines Coach Assist 1.0 and the acceptance fixes (§27.3, §28; PR #33) with the Tuesday companions and the revised Board (§29; PR #34). Coach Assist explains both balancing changes in every mode (§27.3).
+
+- **Franchise acceptance milestone (§27.2 Phase 1): complete in automated and emulated testing.** Six bugs were fixed (§28.2; the sixth found while integrating). Multi-season runs of the combined build: 12 franchises × 5 seasons (59 seasons played, all three difficulties) with 0 invariant violations, 0 dead ends and 0 save round-trip failures; 1 owner dismissed (Rookie: 8-1, 5-4, 5-4, 4-5, three straight seasons under a contender's forecast); Tuesday encounters the staff entered: 21 of 25 won. The emulated phone walkthrough passes in all three Coach Assist modes: new franchise → Season 2 at 390×844 (Guided), 360×640 (Expert) and 320×568 (Standard) with no page errors, no horizontal overflow and no dead ends; ? Help on every complex screen; no automatic tip in Expert.
+- **Still required: real-device playtesting.** No testing on real phones has been done by the developer. Use the checklist in GRIDIRON_BEAST_TEST_PLAN.md §3, which covers the Tuesday companions and the Board.
+- **Next roadmap step** (§27.8) waits for that playtest feedback. Monster history and partnerships (§27.4) have not been started.
 

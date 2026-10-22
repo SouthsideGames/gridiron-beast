@@ -88,3 +88,19 @@ test('Friday starts from a valid plan when last week\'s plan holds plays no long
   F.autoRunToSunday(f); assert.equal(f.season.day, 6, 'the auto-run sets a legal plan and reaches Sunday');
   assert.ok(f.week.plan.offense.every((id) => cat.includes(id)));
 });
+
+test('a lost Tuesday battle with a full roster: the one pitch can name who leaves, or the owner can let the monster go (combined-build walkthrough dead end)', async () => {
+  const { ROSTER_MAX } = await import('../src/data/monsters.js');
+  let checked = 0;
+  for (let seed = 400; seed < 460 && checked < 1; seed++) {
+    const f = ready(seed); F.scoutRegion(f, 'Coral Coast');
+    let k = 0; while (f.roster.length < ROSTER_MAX) { const c = JSON.parse(JSON.stringify(f.roster[k++ % 20])); c.id = `fill_${k}`; c.name = `Filler ${k}`; c.cornerstone = false; f.roster.push(c); }
+    F.startEncounter(f, 0); F.resolveEncounter(f); if (f.week.encounter.status !== 'pitch') continue; checked++;
+    const g = JSON.parse(JSON.stringify(f));
+    const no = F.recruit(f, 0, 'development'); assert.equal(no.ok, false); assert.equal(no.needRelease, true);
+    const rel = F.releaseCandidates(f, f.week.prospects[0]).list[0].id; const r = F.recruit(f, 0, 'development', { releaseId: rel });
+    assert.equal(r.ok, true, r.reason); assert.ok(f.roster.length <= ROSTER_MAX); assert.equal(f.season.day, 2);
+    assert.equal(F.declineOffer(g).ok, true, 'or let the monster go'); assert.equal(g.season.day, 2); assert.equal(g.roster.length, ROSTER_MAX);
+  }
+  assert.ok(checked, 'found a lost encounter');
+});
