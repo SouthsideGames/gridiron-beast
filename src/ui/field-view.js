@@ -8,6 +8,7 @@ import { FIELD, boundsFor } from '../core/field.js';
 import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { fxSvg, movementSvg, statusMarks } from './ability-fx.js';
+import { turfSvg } from './stadium-art.js';
 
 const SPAN = 46; // visible yards
 const HW = FIELD.halfWidth + 0.33;
@@ -25,19 +26,17 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
   let s = '';
-  // Grass and end zones.
-  s += `<rect x="${-HW}" y="0" width="${HW * 2}" height="${SPAN}" fill="#236b49"/>`;
-  for (let yard = Math.floor(cam.bottom / 10) * 10; yard < cam.top; yard += 10) {
-    if (yard < 0 || yard >= 100) continue;
-    s += `<rect x="${-HW}" y="${Y(yard + 10)}" width="${HW * 2}" height="10" fill="${(yard / 10) % 2 ? '#28734d' : '#216444'}"/>`;
-  }
-  if (cam.bottom < 0) s += `<rect x="${-HW}" y="${Y(0)}" width="${HW * 2}" height="${Y(-10) - Y(0)}" fill="#1a4b3b"/><text x="0" y="${Y(-5) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${ownLabel}</text>`;
-  if (cam.top > 100) s += `<rect x="${-HW}" y="${Y(110)}" width="${HW * 2}" height="${Y(100) - Y(110)}" fill="#1a4b3b"/><text x="0" y="${Y(105) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${oppLabel}</text>`;
+  // Turf and end zones: the stadium's environment (GDD §33.1); without a venue, the classic grass exactly as before.
+  const T = turfSvg(venue, cam, HW, SPAN, Y);
+  s += T.turf;
+  if (cam.bottom < 0) s += `${T.endZone(Y(0), Y(-10) - Y(0))}<text x="0" y="${Y(-5) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${ownLabel}</text>`;
+  if (cam.top > 100) s += `${T.endZone(Y(110), Y(100) - Y(110))}<text x="0" y="${Y(105) + 1.4}" text-anchor="middle" font-size="4" font-weight="900" fill="#dfeee6" opacity="0.8">${oppLabel}</text>`;
+  s += T.over; // tint and sideline decor, under the lines and the players
   // Event field art: rivalry games get a painted midfield crest and purple end-zone stripes; playoffs get gold.
   if (event) {
     const accent = event === 'rival' ? '#a855f7' : '#f5c542';

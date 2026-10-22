@@ -650,3 +650,28 @@ button.type-chip { cursor: pointer; min-height: 36px; }
 svg .tm-icon { cursor: pointer; } svg .tm-icon:focus { outline: none; } svg .tm-icon:focus-visible .tm-dot { stroke: #fff; stroke-width: 0.35; }
 .tm-legend { display: flex; gap: 10px; align-items: center; justify-content: center; font-size: 11px; color: var(--ink-3); margin: 2px 0 0; }
 .tm-legend b.up { color: #4ade80; } .tm-legend b.down { color: #f5a524; }
+
+/* Stadium environments (GDD §33) */
+.env-swatch { display: inline-block; width: 30px; height: 40px; border-radius: 4px; border: 1px solid #0006; flex: none; }
+.venue-card { border-width: 2px; }
+.venue-card .venue-name { font-weight: 900; font-size: 16px; }
+.venue-card .venue-weather { font-size: 13px; white-space: nowrap; color: var(--ink-2); }
+.venue-card .venue-env { margin-top: 6px; font-size: 13px; } .venue-card .venue-bonus { margin-top: 4px; font-size: 13px; }
+.venue-card.env-frozen { border-color: #8ac6ff; } .venue-card.env-volcanic { border-color: #ff6a2a; } .venue-card.env-forest { border-color: #3f9a3a; }
+.venue-card.env-storm { border-color: #ffd000; } .venue-card.env-desert { border-color: #c79a5c; } .venue-card.env-dome { border-color: #9aa3b8; }
+.item .env-swatch { width: 22px; height: 30px; margin-right: 8px; }
+/* Weather: a CSS layer over the field, under the banner; never redrawn with the play; off with reduced motion (match.js). */
+/* The field border takes the stadium's colour. */
+.field-wrap.env-frozen { border-color: #d9eef5; background: #3d6e7e; } .field-wrap.env-volcanic { border-color: #5a2a1a; background: #2c3a2e; } .field-wrap.env-forest { border-color: #2f6b3f; background: #1f6a3c; }
+.field-wrap.env-storm { border-color: #46506b; background: #25544a; } .field-wrap.env-desert { border-color: #c79a5c; background: #8a6436; } .field-wrap.env-dome { border-color: #9aa3b8; background: #2b5a5c; }
+.field-wrap .weather { position: absolute; inset: 0; pointer-events: none; z-index: 1; border-radius: inherit; }
+.weather-rain { background-image: repeating-linear-gradient(105deg, rgba(190,215,255,0.0) 0 9px, rgba(190,215,255,0.22) 9px 10px); background-size: 120px 120px; animation: wx-fall 0.6s linear infinite; }
+.weather-storm { background-image: repeating-linear-gradient(110deg, rgba(190,215,255,0.0) 0 7px, rgba(190,215,255,0.26) 7px 8px); background-size: 110px 110px; animation: wx-fall 0.45s linear infinite, wx-flash 9s steps(1) infinite; background-color: rgba(10,16,40,0.10); }
+.weather-snow { background-image: radial-gradient(circle, rgba(255,255,255,0.85) 0 1.2px, transparent 1.6px), radial-gradient(circle, rgba(255,255,255,0.6) 0 1px, transparent 1.4px); background-size: 46px 46px, 31px 31px; background-position: 0 0, 15px 20px; animation: wx-snow 6s linear infinite; }
+.weather-wind { background-image: repeating-linear-gradient(176deg, transparent 0 38px, rgba(255,255,255,0.10) 38px 39px, transparent 39px 80px); background-size: 400px 160px; animation: wx-wind 2.4s linear infinite; }
+.weather-overcast { background: rgba(30,40,55,0.12); }
+@keyframes wx-fall { from { background-position: 0 0; } to { background-position: -24px 120px; } }
+@keyframes wx-snow { from { background-position: 0 0, 15px 20px; } to { background-position: 30px 460px, 0 330px; } }
+@keyframes wx-wind { from { background-position: 0 0; } to { background-position: 400px 20px; } }
+@keyframes wx-flash { 0%, 96% { box-shadow: inset 0 0 0 999px rgba(255,255,255,0); } 97% { box-shadow: inset 0 0 0 999px rgba(255,255,255,0.10); } 98% { box-shadow: inset 0 0 0 999px rgba(255,255,255,0); } 99% { box-shadow: inset 0 0 0 999px rgba(255,255,255,0.07); } }
+html[data-reduced-motion="1"] .field-wrap .weather { animation: none; }

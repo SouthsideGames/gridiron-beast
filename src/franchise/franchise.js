@@ -2,6 +2,7 @@
 // simulation, progression and economy. One plain state object; every
 // mutation goes through a function here so the UI stays thin.
 
+import { venueFor } from '../data/stadiums.js';
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords, archiveSeasonTables } from './stats.js';
 import { AWARDS, computeAwards, headCoachName } from './awards.js';
@@ -911,6 +912,14 @@ export function playoffFixture(f) { const p = f.season.playoffs; if (!p) return 
 export function playerAlive(f) { return !inPlayoffs(f) || !!playoffFixture(f); }
 
 export function record(f) { return f.season.records[f.club]; }
+/** The venue of this week's game at `home` (GDD §33): the club's stadium (or an owner's future override) and the weather. */
+export function gameVenue(f, home) { return venueFor(home, `${f.seed}|${f.season.year}|${f.season.week}`, f.stadiums || null); }
+/** This week's game venue for the player, or null on a bye or when there is no game. */
+export function sundayVenue(f) {
+  const po = playoffFixture(f); if (po) return { ...gameVenue(f, po.home), home: po.home, away: po.away };
+  const fx = currentFixture(f); if (!fx || fx.bye) return null;
+  const home = fx.home ? f.club : fx.opponent; return { ...gameVenue(f, home), home, away: fx.home ? fx.opponent : f.club };
+}
 export function leagueStandings(f) { return standings(f.season.records); }
 
 /** Where the club stands in the playoff race (conference seed or games back). */
@@ -934,7 +943,7 @@ function simulateLeagueWeek(f) {
       if (g.home === f.club || g.away === f.club) continue;
       const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
       const toss = leaguePregame(f, r, home, away);
-      const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
+      const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
       leagueTiebreak(f, r, home, away, game);
       recordGame(f, game, { home, away }, { playoff: false });
       const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
@@ -1540,7 +1549,7 @@ function simulatePlayoffWeek(f) {
   for (const g of p.fixtures.filter((x) => x.round === p.round && !x.result)) {
     const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
     const toss = leaguePregame(f, r, home, away);
-    const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
+    const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
     leagueTiebreak(f, r, home, away, game, { playoff: true });
     recordGame(f, game, { home, away }, { playoff: true });
     const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
@@ -1655,7 +1664,7 @@ export function simulatePlayerGame(f) {
   const m = sundayMatchup(f); if (!m) return null;
   const toss = pregamePossession(f); // the pregame Clash decides possession (headless: Auto, and the AI's choice when it wins)
   const { r, save } = frng(f);
-  const game = playGame({ home: m.home, away: m.away, seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
+  const game = playGame({ home: m.home, away: m.away, venue: gameVenue(f, m.home.name), seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
   save();
   settleTiebreak(f, game); // still tied after the overtime quarter: the overtime Clash decides (headless: Auto)
   return game;

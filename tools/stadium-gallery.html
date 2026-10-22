@@ -1,0 +1,20 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../styles/app.css"><title>Stadium gallery</title>
+<style>body{background:#0b1a14;color:#eee;font-family:system-ui;padding:8px} .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:10px} h3{margin:4px 0}</style></head>
+<body><p>Dev aid (GDD §33): every environment with a pre-snap play, its weather layer and the venue card.</p><div class="g" id="g"></div>
+<script type="module">
+import { fieldSvg, FIELD_VIEWBOX } from '../src/ui/field-view.js';
+import { ENVIRONMENTS, venueFor, STADIUMS } from '../src/data/stadiums.js';
+import { weatherClass } from '../src/ui/stadium-art.js';
+import { venueHtml } from '../src/ui/stadium-preview.js';
+import { PLAYS } from '../src/data/playbook.js';
+const q = new URLSearchParams(location.search); const ballOn = Number(q.get('ballOn') || 30);
+const out = [];
+for (const env of Object.keys(ENVIRONMENTS)) {
+  const club = Object.keys(STADIUMS).find((c) => STADIUMS[c].env === env);
+  const weather = q.get('weather') || (env === 'dome' ? 'indoor' : Object.keys(ENVIRONMENTS[env].weather).sort((a, b) => ENVIRONMENTS[env].weather[b] - ENVIRONMENTS[env].weather[a])[0]);
+  const venue = { ...venueFor(club, 1), weather };
+  const svg = fieldSvg({ venue, ballOn, presnap: { play: PLAYS.pa_boot, offensePlay: PLAYS.pa_boot, defensePlay: PLAYS.cover_3 }, colors: { off: '#60baff', def: '#ff9385' } });
+  out.push(`<div><h3>${ENVIRONMENTS[env].name} · ${weather}</h3><div class="field-wrap env-${env}"><svg viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${svg}</svg>${weatherClass(venue) ? `<div class="weather ${weatherClass(venue)}"></div>` : ''}</div>${venueHtml(venue)}</div>`);
+}
+document.getElementById('g').innerHTML = out.join('');
+</script></body></html>

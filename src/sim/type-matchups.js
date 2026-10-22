@@ -13,7 +13,7 @@ import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { positionOf } from '../data/personnel.js';
 
 /** Football strengths (initial values from the owner's brief, 2026-10-22). Separate from the Clash's 1.05 / 0.952. */
-export const FOOTBALL_TYPE_VALUES = Object.freeze({ version: 'f1.0', strong: 0.04, weak: -0.04, dragonNeutral: 0.02 });
+export const FOOTBALL_TYPE_VALUES = Object.freeze({ version: 'f1.1', strong: 0.04, weak: -0.04, dragonNeutral: 0.02, envMatch: 0.02, positiveCap: 0.06 });
 let active = FOOTBALL_TYPE_VALUES;
 /** Run `fn` with other strengths (balance tools only; the game never calls this). `{ strong: 0, weak: 0, dragonNeutral: 0 }` turns types off. */
 export function withTypeValues(values, fn) {
@@ -39,6 +39,17 @@ export function typeMod(a, b) {
 }
 /** Multiplier for a's contest score against b (1.04, 0.96, 1.02 or 1). Missing types are neutral. */
 export const typeScale = (a, b) => 1 + typeMod(a, b);
+
+/** Stadium environment (GDD §33.2): +2% for a monster whose type matches the field's, whichever team he plays for. */
+export function envMod(type, envType) { return type && envType && type === envType ? active.envMatch : 0; }
+/**
+ * Everything situational on a's side of one contest against b: the type edge plus the field, with the positive total
+ * capped (+6%). Negative edges are never softened by the cap, and nothing here is stored anywhere.
+ */
+export function contestMod(a, b, envType = null) {
+  const total = typeMod(a, b) + envMod(a, envType);
+  return total > active.positiveCap ? active.positiveCap : total;
+}
 
 /** One line explaining why the relationship applies. */
 export function edgeReason(a, b) {

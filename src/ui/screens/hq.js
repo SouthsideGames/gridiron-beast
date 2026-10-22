@@ -1,6 +1,7 @@
 // Franchise Headquarters and the weekly action screens, plus playbook
 // browsing and the league screens.
 
+import { venueHtml } from '../stadium-preview.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
 import { ROUTE_LABELS } from '../../data/routes.js';
 import { yearOf } from '../../data/calendar.js';
@@ -532,8 +533,9 @@ export function registerHqScreens(Router, app) {
     render({ f }) {
       const opp = F.opponentName(f);
       if (!opp) return `<div class="panel"><p>No opponent this week (bye).</p><button class="btn primary block" data-action="skip">Continue</button></div>`;
-      if (f.week.scoutReport) return `<div class="panel">${reportHtml(f.week.scoutReport, opp)}</div><button class="btn block" data-action="back">Back</button>`;
-      return `<p class="muted">Scout <b>${esc(opp)}</b>'s offense or defense. You get one report.</p><div class="grid2"><button class="btn big" data-action="side" data-v="offense">Their offense</button><button class="btn big" data-action="side" data-v="defense">Their defense</button></div>`;
+      const venue = venueHtml(F.sundayVenue(f));
+      if (f.week.scoutReport) return `${venue}<div class="panel">${reportHtml(f.week.scoutReport, opp)}</div><button class="btn block" data-action="back">Back</button>`;
+      return `${venue}<p class="muted">Scout <b>${esc(opp)}</b>'s offense or defense. You get one report.</p><div class="grid2"><button class="btn big" data-action="side" data-v="offense">Their offense</button><button class="btn big" data-action="side" data-v="defense">Their defense</button></div>`;
     },
     mount(root) { delegate(root, { back: () => Router.back(), skip: () => { F.scoutOpponent(app.f, 'offense'); app.save(); Router.go('hq', {}, { reset: true }); }, side: (el) => { const r = F.scoutOpponent(app.f, el.dataset.v); app.save(); sheet(reportHtml(r.report, F.opponentName(app.f) || ''), { title: 'Scouting report', onClose: () => Router.go('hq', {}, { reset: true }) }); } }); },
   });

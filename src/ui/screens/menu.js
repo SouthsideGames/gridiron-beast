@@ -2,6 +2,7 @@
 
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import { openTypeChart } from '../type-chart.js';
+import { stadiumListHtml } from '../stadium-preview.js';
 import { achievementsData } from '../../franchise/achievement-store.js';
 import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { yearOf } from '../../data/calendar.js';
@@ -181,10 +182,11 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
         <button class="btn block" data-action="statguide">📊 What the stats mean</button>
         <button class="btn block" data-action="typechart">🔺 Type Chart <span class="dim">strengths and weaknesses</span></button>
+        <button class="btn block" data-action="stadiums">🏟 Stadiums <span class="dim">every club's field</span></button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
         ${devNoticesOn(app.settings) && (reviewQueue().total || cardMismatches().length) ? `<button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button>` : ''}
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;
     },
-    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }), statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire') }); },
+    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }), statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire'), stadiums: () => sheet(stadiumListHtml(app.f), { title: 'Stadiums' }) }); },
   });
 }

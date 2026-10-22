@@ -2,6 +2,7 @@
 // teams phases and overtime (GDD §3). Pure functions on a plain state object
 // so the UI, Key Moments and headless league games share one rulebook.
 
+import { venueFor } from '../data/stadiums.js';
 import { positionOf, canPlay } from '../data/personnel.js';
 import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
@@ -12,7 +13,7 @@ import * as ST from './special-teams.js';
 export const RUNOFF = { normal: 18, hurry: 8, milk: 30 };
 export const DEFAULT_QUARTER = 180;
 
-export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null, otPeriods = null }) {
+export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null, otPeriods = null, venue = null }) {
   const rng = createRng(seed);
   const winner = coinWinner || (rng.chance(0.5) ? 'home' : 'away');
   const loser = winner === 'home' ? 'away' : 'home';
@@ -22,6 +23,9 @@ export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER,
   const secondReceiver = pick === 'receive' ? loser : winner;
   const state = {
     version: 1, seed, rngState: rng.state,
+    // The stadium and the day's weather (GDD §33): the home club's field unless the caller names one. Weather comes from a
+    // hash, never from the game's dice, so adding venues changed no game's outcome by itself.
+    venue: venue || venueFor(home?.name, seed),
     home: teamInfo(home), away: teamInfo(away),
     score: { home: 0, away: 0 },
     quarter: 1, quarterLength, clock: quarterLength,
@@ -133,7 +137,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const sim = simulatePlay({
     offensePlay, defensePlay,
     offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense),
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state) },
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null },
   });
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
@@ -360,7 +364,7 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   const { r, save } = rng(state);
   const offense = teams[state.tryTeam], defense = teams[opponent(state.tryTeam)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
-  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }) } });
+  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null } });
   rememberAbilities(state, sim);
   save();
   const good = sim.touchdown && !sim.stats.defensiveScore;

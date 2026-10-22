@@ -5,6 +5,7 @@
 //   types   the shipped game: football type edges and the lean (ratings + types)
 // Then a rating × type grid on single plays, a one-on-one receiver check, and a Dragon check.
 //   node tools/type-balance.mjs [--games=200] [--plays=600] [--seed=1]
+//   node tools/type-balance.mjs --only=env --games=300   (stadium field bonus, GDD §33.2: same games with the bonus off and on)
 //   node tools/type-balance.mjs --only=dragon --games=400 --dragon=0.02,0.01,0   (the Dragon wildcard at several strengths, same games)
 import { playGame } from '../src/sim/game-runner.js';
 import { generatedTeam } from '../src/franchise/roster.js';
@@ -15,6 +16,8 @@ import { simulatePlay } from '../src/sim/engine.js';
 import { PLAYS, OFFENSE_IDS, DEFENSE_IDS } from '../src/data/playbook.js';
 import { CHART_TYPES } from '../src/data/type-chart.js';
 import { createRng } from '../src/core/rng.js';
+import { ALL_TEAMS } from '../src/data/league.js';
+import { stadiumFor } from '../src/data/stadiums.js';
 import { lineup } from '../tests/tools/lineup.js';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
@@ -43,6 +46,7 @@ function report(A) {
 
 const ONLY = args.only || null;
 if (ONLY === 'dragon') { dragonStudy(); process.exit(0); }
+if (ONLY === 'env') { envStudy(); process.exit(0); }
 
 // ---- A. league games, three ways
 const variants = { before: newAgg(), lean: newAgg(), types: newAgg() };
@@ -138,4 +142,30 @@ function dragonStudy() {
   }
   console.log('E. The same clubs with every monster Dragon, against the same opponents and seeds, at several wildcard strengths');
   console.table(out);
+}
+
+// ---- F. Stadium field bonus (GDD §33.2): identical games at real clubs' stadiums with the bonus off and on, and a home club
+// stacked with the field's type (the most a field can do for one side) against the same club with its natural types.
+function envStudy() {
+  const variants = { fieldOff: newAgg(), fieldOn: newAgg() }; const home = { fieldOff: 0, fieldOn: 0 }; const rd = createRng(SEED + 5);
+  const stack = { natural: [0, 0], stacked: [0, 0], stackedNoBonus: [0, 0] };
+  for (let g = 0; g < GAMES; g++) {
+    const themed = ALL_TEAMS.filter((c) => stadiumFor(c).type); const hn = themed[rd.int(themed.length)], an = ALL_TEAMS.filter((c) => c !== hn)[rd.int(15)];
+    const qa = 52 + rd.int(14), qb = 52 + rd.int(14), sa = rd.int(1e9), sb = rd.int(1e9), gs = rd.int(1e9);
+    const mk = (stackType = null) => ({ home: generatedTeam(sa, { id: 'h', name: hn, abbr: 'HOM', color: '#f00', quality: qa, afterRoster: stackType ? (r) => { for (const m of r) m.type = stackType; return r; } : null }), away: generatedTeam(sb, { id: 'a', name: an, abbr: 'AWY', color: '#00f', quality: qb }) });
+    for (const v of Object.keys(variants)) {
+      const T = mk(); const evs = []; const run = () => playGame({ home: T.home, away: T.away, seed: gs, onStep: (ev) => evs.push(ev) });
+      const st = v === 'fieldOff' ? withTypeValues({ envMatch: 0 }, run) : run();
+      addGame(variants[v], st, evs, { home: teamOverall(T.home), away: teamOverall(T.away) }); if (st.winner === 'home') home[v]++;
+    }
+    const type = stadiumFor(hn).type;
+    for (const [k, stk, off] of [['natural', null, false], ['stacked', type, false], ['stackedNoBonus', type, true]]) {
+      const T = mk(stk); const run = () => playGame({ home: T.home, away: T.away, seed: gs }); const st = off ? withTypeValues({ envMatch: 0 }, run) : run();
+      if (st.winner === 'home') stack[k][0]++; else if (st.winner === 'away') stack[k][1]++;
+    }
+  }
+  console.log('F. Stadium field bonus on identical games at themed stadiums');
+  console.table(Object.fromEntries(Object.entries(variants).map(([k, A]) => [k, { ...report(A), homeWins: `${pct(home[k], A.games)}%` }])));
+  console.log('Home club with every monster of the field\'s type, against the same opponents (win % of decisive games):');
+  console.table(Object.fromEntries(Object.entries(stack).map(([k, [w, l]]) => [k, `${w}-${l} (${pct(w, w + l)}%)`])));
 }
