@@ -10,7 +10,8 @@ import { ROSTER_MAX, ROSTER_MIN, monsterOverall } from '../src/data/monsters.js'
 import { ATTRIBUTES } from '../src/data/personnel.js';
 import { ALL_TEAMS, STARTER_CLUBS } from '../src/data/league.js';
 
-const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
+const argv = typeof process !== 'undefined' ? process.argv.slice(2) : []; // the browser walkthroughs import newFranchise too
+const args = Object.fromEntries(argv.map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
 const N = Number(args.n || 12), SEASONS = Number(args.seasons || 4), SEED0 = Number(args.seed || 1), quiet = !!args.quiet;
 const DIFFS = Object.keys(F.DIFFICULTY);
 
@@ -93,7 +94,7 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
   return { f, problems, log };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (typeof process !== 'undefined' && import.meta.url === `file://${process.argv[1]}`) {
   const t0 = Date.now(); let bad = 0; const agg = { franchises: 0, seasons: 0, fired: 0, titles: 0, encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0, problems: 0 };
   for (let i = 0; i < N; i++) {
     const seed = SEED0 + i; const difficulty = DIFFS[i % DIFFS.length];

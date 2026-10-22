@@ -183,3 +183,8 @@ html[data-reduced-motion="1"] .cl-mon[data-cond] .cl-body, html[data-reduced-mot
 .cl-result-mon.ko { opacity: .4; filter: grayscale(1); }
 @keyframes cl-result-in { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
 html[data-reduced-motion="1"] .cl-result-head { animation: none; }
+
+.cl-mode { display: grid; grid-template-columns: 1fr; text-align: left; height: auto; padding: 10px 14px; gap: 2px; }
+.cl-mode-label { font-size: 17px; font-weight: 800; }
+.cl-mode-help { font-weight: 400; font-size: 12px; opacity: .85; line-height: 1.25; }
+.cl-pick-btns .btn.small { min-width: 30px; padding: 0 4px; }
