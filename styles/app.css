@@ -675,3 +675,17 @@ svg .tm-icon { cursor: pointer; } svg .tm-icon:focus { outline: none; } svg .tm-
 @keyframes wx-wind { from { background-position: 0 0; } to { background-position: 400px 20px; } }
 @keyframes wx-flash { 0%, 96% { box-shadow: inset 0 0 0 999px rgba(255,255,255,0); } 97% { box-shadow: inset 0 0 0 999px rgba(255,255,255,0.10); } 98% { box-shadow: inset 0 0 0 999px rgba(255,255,255,0); } 99% { box-shadow: inset 0 0 0 999px rgba(255,255,255,0.07); } }
 html[data-reduced-motion="1"] .field-wrap .weather { animation: none; }
+
+/* Instant replay (GDD §34) */
+.field-wrap.replaying { border-color: #f5c542; }
+.field-wrap.replaying::before { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: linear-gradient(100deg, transparent 0 35%, rgba(245,197,66,.55) 45% 55%, transparent 65%); animation: replay-wipe .45s ease-out both; }
+.field-wrap.replaying > svg { transition: transform .35s ease-out, transform-origin .25s linear; }
+.field-wrap.replaying::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; box-shadow: inset 0 0 0 2px rgba(245,197,66,.45), inset 0 0 40px rgba(0,0,0,.45); }
+.replay-badge { position: absolute; top: 6px; left: 6px; z-index: 4; display: flex; gap: 6px; align-items: center; padding: 4px 9px; border-radius: 6px; background: rgba(10,12,16,.82); border: 1px solid #f5c542; color: #f5c542; font-size: 11px; font-weight: 900; letter-spacing: .08em; }
+.replay-badge b { color: #fff; letter-spacing: .04em; }
+.replay-badge .rec { color: #ef4444; animation: rec-blink 1s steps(1) infinite; }
+.replay-slow { position: absolute; top: 34px; left: 6px; z-index: 4; padding: 2px 7px; border-radius: 4px; background: rgba(10,12,16,.75); color: #93c5fd; font-size: 10px; font-weight: 900; letter-spacing: .12em; opacity: 0; transition: opacity .15s; }
+.field-wrap.slowmo .replay-slow { opacity: 1; }
+@keyframes replay-wipe { from { transform: translateX(-100%); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+@keyframes rec-blink { 50% { opacity: .2; } }
+html[data-reduced-motion="1"] .field-wrap.replaying::before, html[data-reduced-motion="1"] .replay-badge .rec { animation: none; }
