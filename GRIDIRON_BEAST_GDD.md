@@ -1018,6 +1018,7 @@ For each new roadmap feature: first record exact behavior and unresolved decisio
 3. **Play-mode decision dead end.** Closing the swap-decision sheet left the battle paused with no way to reopen it. *Skip to results* now reopens the decision.
 4. **Draft toast** read "X is a Beasts."; now "X joins the <club>."
 5. **Friday dead end after a coordinator change.** Last week's plan could hold plays no longer in the playbook; the Friday screen counted them, *Save game plan* was refused, and the staff's auto-run left the week stuck on Friday. Friday now starts from the valid plays topped up from the coordinators' default.
+6. **Full roster after a lost Tuesday battle** (found in the combined build, v35.0). The one pitch needs a release choice when the roster is full, but the screen only showed an error and offered no way on. It now asks who would leave if the pitch works, and the pitch panel also offers *Let them go*.
 
 ### 28.3 Findings left for the owner (resolved in §29, 2026-10-22)
 - **Tuesday difficulty** rises with the roster (§26.1). If the owner wants Tuesday to stay near 80% for the automatic lineup, the least invasive option was opponent selection only (implemented in §29.1): give the chosen prospect's two companions a quality that follows the club's own top-three OVR (they are not signable), leaving the prospect, the rewards and every combat value untouched.
@@ -1087,7 +1088,7 @@ On identical seasons, the original rules dismissed 25 of 36 hands-off owners wit
 
 Build **v35.0-franchise-foundation** combines Coach Assist 1.0 and the acceptance fixes (§27.3, §28; PR #33) with the Tuesday companions and the revised Board (§29; PR #34). Coach Assist explains both balancing changes in every mode (§27.3).
 
-- **Franchise acceptance milestone (§27.2 Phase 1): complete in automated and emulated testing.** Five bugs were fixed (§28.2). Multi-season runs of the combined build: SOAK_SUMMARY. The emulated phone walkthrough passes in all three Coach Assist modes: WALK_SUMMARY.
+- **Franchise acceptance milestone (§27.2 Phase 1): complete in automated and emulated testing.** Six bugs were fixed (§28.2; the sixth found while integrating). Multi-season runs of the combined build: SOAK_SUMMARY. The emulated phone walkthrough passes in all three Coach Assist modes: WALK_SUMMARY.
 - **Still required: real-device playtesting.** No testing on real phones has been done by the developer. Use the checklist in GRIDIRON_BEAST_TEST_PLAN.md §3, which covers the Tuesday companions and the Board.
 - **Next roadmap step** (§27.8) waits for that playtest feedback. Monster history and partnerships (§27.4) have not been started.
 
