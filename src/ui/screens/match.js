@@ -270,6 +270,7 @@ export function registerMatchScreens(Router, app) {
     autoTimer = setTimeout(() => {
       autoTimer = null; const G2 = app.f?.game; if (!G2?.auto || G2.state.finished || anim) return;
       if (document.querySelector('.sheet')) { scheduleAuto(app.f); return; } // a halftime or tutorial sheet is open: wait
+      if (replayTimer) { scheduleAuto(app.f); return; } // an instant replay is about to start: Auto waits for it
       autoStep(app.f);
     }, (G.autoSpeed || 1) === 2 ? 300 : 700);
   }
