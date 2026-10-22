@@ -65,6 +65,13 @@ export function suggestContract(f, item) {
   return { choice: 'either', text: `Your call: ${m.name} is a backup ${m.position}. Re-signing keeps depth; letting go frees ${fmt(item.ask)} cr.` };
 }
 
+/** Guided: which Board goal to commit to, and why (the owner still chooses). */
+export function suggestGoal(f, offers) {
+  if (!suggestionsOn(f) || !offers?.length) return null; const safe = offers.find((o) => o.tier === 'safe'); if (!safe) return null;
+  const hot = (f.board?.confidence ?? 0) <= -1;
+  return { id: safe.id, text: hot ? `Suggested: "${safe.label}". You are on the hot seat, and the safe goal is the one owners meet most often (about two seasons in three).` : `Suggested: "${safe.label}", the forecast for a club like yours. The stretch goal is worth double, but very few clubs win the Beast Bowl.` };
+}
+
 /** A routine consequence line, or '' when the player turned them off. */
 export function consequence(f, kind, data = {}) {
   if (!consequencesOn(f)) return '';
@@ -75,6 +82,7 @@ export function consequence(f, kind, data = {}) {
     case 'release': return 'Released monsters go back to the free-agent pool, where any club can sign them. Nothing comes back for them.';
     case 'walk': return 'Letting a contract walk frees its salary now; the monster goes to the free-agent pool.';
     case 'skip-encounter': return 'Skipping costs nothing: no battle, no signing, no penalty.';
+    case 'goal': return data.hot ? 'You are on the hot seat: a clear miss this season ends the franchise; a narrow miss (within one win, or at least the forecast) is a final warning.' : 'Met: confidence +1 (+2 for the title). Missed: −1. Three missed seasons in a row end the franchise.';
     case 'trade': return 'Picks you trade away are gone for good. A player who arrives brings his salary at once.';
     default: return '';
   }

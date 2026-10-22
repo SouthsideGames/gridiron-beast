@@ -12,7 +12,7 @@ const fresh = (seed = 7) => { const f = F.createFranchise({ owner: { first: 'A',
 const fixture = (name) => Save.importJson(fs.readFileSync(new URL(`./fixtures/save-v31-${name}.json`, import.meta.url), 'utf8'));
 // Every screen the UI registers (read from the source, so a renamed screen fails this test instead of losing its help).
 const SCREENS = new Set(fs.readdirSync(new URL('../src/ui/screens/', import.meta.url)).flatMap((file) => [...fs.readFileSync(new URL(`../src/ui/screens/${file}`, import.meta.url), 'utf8').matchAll(/registerScreen\('([a-z0-9-]+)'/g)].map((m) => m[1])));
-const COMPLEX = ['welcome', 'hire', 'hq', 'scout', 'recruit', 'clash-battle', 'training', 'scoutopp', 'gameplan', 'lineup', 'pregame', 'match', 'roster', 'monster', 'offseason', 'contracts', 'draft', 'draftclass', 'playbook', 'league', 'staff'];
+const COMPLEX = ['goals', 'welcome', 'hire', 'hq', 'scout', 'recruit', 'clash-battle', 'training', 'scoutopp', 'gameplan', 'lineup', 'pregame', 'match', 'roster', 'monster', 'offseason', 'contracts', 'draft', 'draftclass', 'playbook', 'league', 'staff'];
 
 test('defaults: a new franchise is Standard with hints and consequence notes on', () => {
   assert.deepEqual(A.assistSettings(fresh()), { mode: 'standard', hints: true, consequences: true });
@@ -54,7 +54,8 @@ test('first-use tips: Standard shows the brief, Guided adds the steps, Expert sh
 
 test('a dismissed tip stays dismissed across visits, mode changes and save/load; a screen with two topics shows them one at a time', () => {
   const f = fresh(); assert.equal(A.autoTip(f, 'recruit').key, 'recruit');
-  A.dismissTip(f, 'recruit'); assert.equal(A.autoTip(f, 'recruit').key, 'skips', 'the next topic on the same screen, one at a time');
+  A.dismissTip(f, 'recruit'); assert.equal(A.autoTip(f, 'recruit').key, 'companions', 'the next topic on the same screen, one at a time');
+  A.dismissTip(f, 'companions'); assert.equal(A.autoTip(f, 'recruit').key, 'skips');
   A.dismissTip(f, 'skips'); assert.equal(A.autoTip(f, 'recruit'), null);
   A.setAssist(f, { mode: 'guided' }); assert.equal(A.autoTip(f, 'recruit'), null, 'switching mode does not bring it back');
   const g = Save.importJson(Save.exportJson(f)); assert.equal(A.autoTip(g, 'recruit'), null);
@@ -67,7 +68,7 @@ test('help: every complex screen has topics in every mode, every topic points at
   for (const sc of COMPLEX) { assert.ok(SCREENS.has(sc), `${sc} is a real screen`); assert.ok(A.helpTopics(sc).length >= 1, `${sc} has help`); }
   for (const [k, t] of Object.entries(A.TOPICS)) { assert.ok(t.title && t.brief && t.area, k); for (const sc of t.screens) assert.ok(SCREENS.has(sc), `${k} → ${sc}`); }
   const areas = new Set(Object.values(A.TOPICS).map((t) => t.area));
-  for (const a of ['Getting started', 'Scouting and signing', 'Beast Clash', 'Football', 'Roster', 'Contracts and money', 'Draft', 'Trading']) assert.ok(areas.has(a), a);
+  for (const a of ['Getting started', 'Scouting and signing', 'Beast Clash', 'Football', 'Roster', 'Contracts and money', 'Draft', 'Trading', 'The Board']) assert.ok(areas.has(a), a);
   for (const k of ['owner', 'staff', 'week', 'scout', 'attributes', 'recruit', 'skips', 'clash', 'elements', 'decisions', 'pregame', 'overtime', 'plays', 'gameplan', 'modes', 'roster', 'health', 'evolution', 'contracts', 'draft', 'trading']) assert.ok(A.TOPICS[k], k);
   assert.match(A.TOPICS.skips.brief, /Skip the encounter/); assert.match(A.TOPICS.skips.brief, /Skip to results/);
 });
@@ -96,4 +97,21 @@ test('Coach Assist never touches the game: a week plays out identically in Guide
   const g = run('guided'), e = run('expert');
   const strip = (f) => { const c = JSON.parse(JSON.stringify(f)); delete c.settings; delete c.createdAt; return c; };
   assert.deepEqual(strip(g), strip(e));
+});
+
+test('Coach Assist explains the balanced Tuesday and the revised Board (help on the goal screen, Guided goal suggestion)', () => {
+  const t = (k) => `${A.TOPICS[k].brief} ${(A.TOPICS[k].steps || []).join(' ')}`;
+  assert.match(t('recruit'), /3v3/); assert.match(t('recruit'), /Only that prospect can join/); assert.match(t('recruit'), /cannot be signed/); assert.match(t('recruit'), /stronger lineup wins more often/);
+  assert.match(t('companions'), /Why 3v3/); assert.match(t('companions'), /never signable/); assert.match(t('companions'), /follows your club/);
+  assert.match(t('skips'), /Skip the encounter/); assert.match(t('skips'), /Skip to results/);
+  assert.match(t('board'), /league.s average/); assert.match(t('board'), /safe goal is that forecast, rounded/); assert.match(t('board'), /rebuilding club/);
+  assert.match(t('confidence'), /\+1 \(\+2 for the title\)/); assert.match(t('confidence'), /final warning/); assert.match(t('confidence'), /Three missed seasons in a row/);
+  assert.deepEqual(A.helpTopics('goals'), ['board', 'confidence']); assert.ok(A.helpTopics('recruit').includes('companions'));
+  assert.equal(A.helpTopics('clash-battle')[0], 'clash', 'the pregame and overtime Clash open on the general Clash topic, not the Tuesday one');
+  const f = fresh(5); const offers = F.commissionerGoals(f);
+  assert.equal(Adv.suggestGoal(f, offers), null, 'Standard: no suggestion');
+  A.setAssist(f, { mode: 'guided' }); assert.match(Adv.suggestGoal(f, offers).text, /Suggested/);
+  f.board = { ...(f.board || {}), confidence: -1 }; assert.match(Adv.suggestGoal(f, offers).text, /hot seat/);
+  assert.match(Adv.consequence(f, 'goal', { hot: true }), /final warning/); A.setAssist(f, { consequences: false }); assert.equal(Adv.consequence(f, 'goal', {}), '');
+  A.setAssist(f, { mode: 'expert' }); assert.equal(A.autoTip(f, 'goals'), null); assert.ok(A.helpTopics('goals').length, 'help still there in Expert');
 });

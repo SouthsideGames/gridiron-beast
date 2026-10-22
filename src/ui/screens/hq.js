@@ -25,7 +25,7 @@ import { RIVAL_WEEKLY } from '../../data/dialogue.js';
 import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, careerLeaders } from '../../franchise/stats.js';
 import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
-import { suggestProspect, suggestDraftPick, suggestContract, consequence } from '../../franchise/assist-advice.js';
+import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -367,10 +367,11 @@ export function registerHqScreens(Router, app) {
         <p class="talk-line">“${yearOf(f.season.year)}. The forecast has ${esc(f.club)} at ${fc.wins.toFixed(1)} wins against this league${b.history.length ? `; last year you ${b.history[b.history.length - 1].met ? 'delivered' : 'fell short'}` : ''}. Tell me what you are promising the board this year.”</p>
         <p class="talk-line">“Hit it and the board trusts you, and funds a bigger scouting department next season. Miss it and they start counting. Miss twice and I will be meeting your replacement, unless you only just missed: that buys one final warning. Three misses in a row and nobody can save you.”</p></div></div></div>
         <div class="panel tight"><div class="row between"><span>Board confidence</span><b>${F.confidenceLabel(b.confidence)} (${b.confidence >= 0 ? '+' : ''}${b.confidence})</b></div><div class="dim">+1 for a goal met (+2 for the title), −1 for a miss. Hot seat at −1, out at −2; a narrow miss on the hot seat (within one win of the goal, or at least the forecast) is a final warning instead. Three missed seasons in a row: out.</div></div>
+        ${noteHtml(suggestGoal(f, offers)?.text, 'suggest')}
         <div class="stack">${offers.map((o) => `<button class="item" data-action="goal" data-id="${o.id}"><div class="grow"><div class="name">${esc(o.label)} <span class="chip ${o.tier === 'stretch' ? 'accent' : o.tier === 'medium' ? 'warn' : ''}">${o.tier}</span></div><div class="sub">${esc(o.text)}${o.weight > 1 ? ` · worth +${o.weight}` : ''}</div></div></button>`).join('')}</div>
         ${b.history.length ? `<h3>Past goals</h3><div class="list">${b.history.slice().reverse().map((h) => `<div class="item static"><div class="grow"><div class="name">${yearOf(h.year)} · ${esc(h.label)}</div><div class="sub">${h.met ? '✅ met' : h.miss === 'narrow' ? '❌ missed narrowly' : '❌ missed'}${h.wins != null ? ` · ${h.wins} wins${h.forecast != null ? ` (forecast ${h.forecast})` : ''}` : ''} · confidence ${h.confidence}</div></div></div>`).join('')}</div>` : ''}`;
     },
-    mount(root) { delegate(root, { goal: async (el) => { const o = F.commissionerGoals(app.f).find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`Commit to "${o.label}" for season ${app.f.season.year}? The board holds you to it.`, { title: 'Your word', okLabel: 'Commit' }))) return; const r = F.chooseGoal(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast('Goal set. The board is watching.', 'good'); Router.go('hq', {}, { reset: true }); } }); },
+    mount(root) { delegate(root, { goal: async (el) => { const o = F.commissionerGoals(app.f).find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`Commit to "${o.label}" for season ${app.f.season.year}? The board holds you to it.${(() => { const c = consequence(app.f, 'goal', { hot: (app.f.board?.confidence ?? 0) <= -1 }); return c ? ' ' + c : ''; })()}`, { title: 'Your word', okLabel: 'Commit' }))) return; const r = F.chooseGoal(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast('Goal set. The board is watching.', 'good'); Router.go('hq', {}, { reset: true }); } }); },
   });
   Router.registerScreen('commissioner', {
     title: "Commissioner's Office", back: true,
@@ -454,7 +455,7 @@ export function registerHqScreens(Router, app) {
       if (e && e.status !== 'ready') { setTimeout(() => Router.go('clash-battle', { kind: 'encounter', i: e.prospectIndex }, { replace: true }), 0); return '<p class="muted">Opening the battle…</p>'; }
       if (!f.week.prospects.length) return `<div class="panel"><p>No monsters were found this week.</p><button class="btn primary block" data-action="skip">Continue to Wednesday</button></div>`;
       const cap = F.salarySummary(f); const healthy = f.roster.filter((m) => !m.injury).length;
-      return `<p class="muted">Your scout found these monsters. Pick <b>one</b> to meet in a Beast Clash: win and it will want to sign; lose and you still get one pitch. Or skip the encounter and move on. <button class="btn small ghost" data-action="clashhelp">Help</button></p>
+      return `<p class="muted">Your scout found these monsters. Pick <b>one</b> to meet in a 3v3 Beast Clash: it fights beside two wild companions matched to your club, which cannot be signed. Win and the monster you chose will want to sign; lose and you still get one pitch. Or skip the encounter and move on. <button class="btn small ghost" data-action="clashhelp">Help</button></p>
         <p class="dim">Roster ${f.roster.length}/${F.ROSTER_MAX} · cap room ${fmtMoney(cap.remaining)} · ${healthy} monster${healthy === 1 ? '' : 's'} fit to battle</p>
         ${noteHtml(suggestProspect(f)?.text, 'suggest')}
         <div class="stack">${f.week.prospects.map((p, i) => prospectCard(p, i)).join('')}</div>
