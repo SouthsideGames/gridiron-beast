@@ -3,6 +3,7 @@
 // mutation goes through a function here so the UI stays thin.
 
 import { venueFor } from '../data/stadiums.js';
+import { syncLegendaryPlays, legendaryAvailable, legendaryStatus, equipLegendaryForAI, legendOf, LEGENDARY_IDS } from './legendary.js';
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords, archiveSeasonTables } from './stats.js';
 import { AWARDS, computeAwards, headCoachName } from './awards.js';
@@ -550,8 +551,10 @@ export function canPlayGames(f) { return !f.week?.commissioner; }
 export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   const meta = TEAM_META[f.club];
   const plan = f.week.plan;
-  const offense = plan.offense.length ? plan.offense : defaultPlan(f, 'offense');
-  const defense = plan.defense.length ? plan.defense : defaultPlan(f, 'defense');
+  // A Legendary Play whose monster is gone or hurt never stays in a usable slot (GDD §36.2): the coordinator's pick fills in.
+  const usable = (side, list) => { const ok = list.filter((id) => !legendOf(id) || legendaryStatus(f, id).available); return ok.length === list.length ? list : [...ok, ...defaultPlan(f, side).filter((id) => !ok.includes(id))].slice(0, PLAN_SIZE); };
+  const offense = usable('offense', plan.offense.length ? plan.offense : defaultPlan(f, 'offense'));
+  const defense = usable('defense', plan.defense.length ? plan.defense : defaultPlan(f, 'defense'));
   const align = schemeAlignment(f);
   // Package rule (GDD §17.2): a play whose package needs a slot nobody legal can fill is unavailable this week.
   const avail = playAvailability(f);
@@ -624,7 +627,7 @@ export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } 
   const rival = f.rivals[f.tier]?.team === name ? rivalSignature(f) : null;
   const evolveStage = gym ? (year >= 4 ? 2 : year >= 2 ? 1 : 0) : (year >= 5 ? 2 : year >= 3 ? 1 : 0);
   const team = generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival, evolveStage, composition: FULL_ROSTER, afterRoster: (roster) => { const gone = new Set(f.aiTransfers?.[year]?.[name] || []); return injectDraftees(f, name, roster, year).filter((m) => !gone.has(m.id)); } });
-  return team;
+  return equipLegendaryForAI(team); // AI clubs holding a Legendary call its play too (GDD §36.6)
 }
 /** The rival GM's signature monster: the same species every season, a little stronger each year (GDD §15.8). */
 export function rivalSignature(f) {
@@ -912,6 +915,25 @@ export function playoffFixture(f) { const p = f.season.playoffs; if (!p) return 
 export function playerAlive(f) { return !inPlayoffs(f) || !!playoffFixture(f); }
 
 export function record(f) { return f.season.records[f.club]; }
+/** Legendary Plays (GDD §36): discover new ones and clear unavailable ones from the plan, refilled with the coordinator's picks. */
+export function syncLegendary(f) {
+  return syncLegendaryPlays(f, { news: (t, k) => news(f, t, k), refill: (side, kept) => [...kept, ...defaultPlan(f, side).filter((id) => !kept.includes(id))].slice(0, PLAN_SIZE) });
+}
+export { legendaryStatus, legendaryAvailable, LEGENDARY_IDS };
+/**
+ * Developer test aid (Developer Tools only, never offered in play): put one of the pilot Legendaries on the roster so the
+ * Legendary Play flow can be tested without winning titles first. The franchise is marked `devAssisted` for good.
+ */
+export function devGrantLegendary(f, speciesId) {
+  if (f.roster.length >= ROSTER_MAX) return { ok: false, reason: `Roster full (${ROSTER_MAX}). Release someone first.` };
+  if (f.roster.some((m) => m.species === speciesId)) return { ok: false, reason: 'Already on your roster.' };
+  const { r, save } = frng(f); const sp = SPECIES_DEX.find((x) => x.id === speciesId); if (!sp) return { ok: false, reason: 'Unknown species.' };
+  const m = generateMonster(r, { position: sp.position, quality: 64, species: speciesId }); save();
+  m.salary = salaryFor(m); m.contract = newContract(f.season.year, 2); m.devGranted = true; (m.history ||= []).push({ club: f.club, from: f.season.year, to: null, reason: 'developer' });
+  f.roster.push(m); f.devAssisted = true; const res = syncLegendary(f);
+  news(f, `Developer test: ${m.name} joins the roster.`, 'info');
+  return { ok: true, monster: m, discovered: res.discovered };
+}
 /** The venue of this week's game at `home` (GDD §33): the club's stadium (or an owner's future override) and the weather. */
 export function gameVenue(f, home) { return venueFor(home, `${f.seed}|${f.season.year}|${f.season.week}`, f.stadiums || null); }
 /** This week's game venue for the player, or null on a bye or when there is no game. */
@@ -1269,13 +1291,13 @@ export function scoutOpponent(f, side) {
  * a stale play blocked "Save game plan" and the staff's auto-run alike.
  */
 export function startingPlan(f, side) {
-  const cat = catalog(f, side); const base = (f.week?.plan?.[side]?.length ? f.week.plan[side] : f.lastPlan?.[side]) || [];
+  const cat = [...catalog(f, side), ...legendaryAvailable(f, side)]; const base = (f.week?.plan?.[side]?.length ? f.week.plan[side] : f.lastPlan?.[side]) || [];
   const plan = [...new Set(base)].filter((id) => cat.includes(id));
   for (const id of [...defaultPlan(f, side), ...cat]) { if (plan.length >= PLAN_SIZE) break; if (!plan.includes(id)) plan.push(id); }
   return plan.slice(0, PLAN_SIZE);
 }
 export function setGamePlan(f, offense, defense) {
-  const catO = catalog(f, 'offense'), catD = catalog(f, 'defense');
+  const catO = [...catalog(f, 'offense'), ...legendaryAvailable(f, 'offense')], catD = [...catalog(f, 'defense'), ...legendaryAvailable(f, 'defense')]; // Legendary Plays use the same six slots (GDD §36.3)
   const o = [...new Set(offense)].filter((id) => catO.includes(id)), d = [...new Set(defense)].filter((id) => catD.includes(id));
   if (o.length !== PLAN_SIZE || d.length !== PLAN_SIZE) return { ok: false, reason: `Pick exactly ${PLAN_SIZE} offensive and ${PLAN_SIZE} defensive plays.` };
   f.week.plan = { offense: o, defense: d }; f.lastPlan = { offense: [...o], defense: [...d] };
@@ -1347,6 +1369,7 @@ export function answerMedia(f, answers) {
  * gets safe answers. Stops on Sunday. Returns a summary of what was done.
  */
 export function autoRunToSunday(f) {
+  syncLegendary(f); // Legendary Plays: discovery and plan cleanup (GDD §36)
   if (f.week?.commissioner) return { ok: false, reason: 'The commissioner is waiting for your decision.', did: [] };
   const did = [];
   let guard = 0;
@@ -1442,6 +1465,7 @@ export function sundayMatchup(f) {
 
 /** Record the player's finished game and roll the week forward. */
 export function finishSunday(f, gameState) {
+  syncLegendary(f); // Legendary Plays: discovery and plan cleanup (GDD §36)
   const m = sundayMatchup(f); if (!m) return;
   const playoffRoundNow = playoffFixture(f)?.round || null;
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
@@ -1665,6 +1689,7 @@ export function seasonAwards(f) {
 }
 function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); const choices = DIVISIONS[divisionOf(f.club)].filter((t) => t !== f.club); const team = r.pick(choices); save(); f.rivals[f.tier] = { team, gm: RIVAL_GMS[team] || 'Rival GM', headToHead: { w: 0, l: 0 } }; } }
 export function startNextSeason(f) {
+  syncLegendary(f); // Legendary Plays: discovery and plan cleanup (GDD §36)
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
   if (isFired(f)) return { ok: false, reason: 'The board has let you go. This franchise is over.' };
   if (!offseasonReady(f)) return { ok: false, reason: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} still waiting.` };

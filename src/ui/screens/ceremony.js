@@ -9,6 +9,7 @@ import { monsterSprite } from '../pixel-monster.js';
 import { elementFx } from '../ability-fx.js';
 import { ENVIRONMENTS, stadiumFor } from '../../data/stadiums.js';
 import { yearOf } from '../../data/calendar.js';
+import { championshipRecord } from '../../franchise/franchise.js';
 
 export const CEREMONY_TIMELINE = Object.freeze({ enter: 2600, show: 5600, perStarter: 520, trophyAfter: 900, summaryAfter: 3600 });
 
@@ -35,7 +36,7 @@ const TROPHY = `<svg class="cer-trophy-svg" viewBox="0 0 64 80" aria-hidden="tru
 function summaryHtml(f, c, fromGame) {
   const fin = c.final;
   return `<div class="cer-summary" role="dialog" aria-label="Championship summary">
-    <div class="cer-sum-title">🏆 BEAST BOWL CHAMPIONS</div>
+    <div class="cer-sum-title">🏆 BEAST BOWL CHAMPIONS${c.preview ? ' · PREVIEW' : ''}</div>
     <div class="cer-sum-club" style="color:${c.color}">${esc(c.club)}</div>
     <div class="dim">Season ${esc(yearOf(c.year))}</div>
     ${fin ? `<div class="cer-sum-score"><b>${fin.us}</b> <span class="dim">–</span> <b>${fin.them}</b> <span class="dim">vs ${esc(fin.opponent)}${fin.ot ? ' · OT' : ''}</span></div><div class="dim" style="font-size:12px">${esc(fin.venue || '')}</div>` : ''}
@@ -52,7 +53,7 @@ export function registerCeremony(Router, app) {
   Router.registerScreen('ceremony', {
     title: 'Beast Bowl', tabs: false, back: false, help: false,
     render({ f, params }) {
-      const c = championshipFor(f, params?.year); if (!c) return '<div class="panel"><p>No championship to celebrate yet.</p><button class="btn block" data-action="cer-done">Back</button></div>';
+      const c = params?.preview ? championshipRecord(f) : championshipFor(f, params?.year); if (!c) return '<div class="panel"><p>No championship to celebrate yet.</p><button class="btn block" data-action="cer-done">Back</button></div>';
       const env = ENVIRONMENTS[stadiumFor(c.final?.home || c.club, f.stadiums).env] || ENVIRONMENTS.grass; const P = env.palette;
       const starters = c.starters.map((m, i) => { const fx = elementFx(m.type); return `<div class="cer-mon starter" data-i="${i}" style="--d:${(i * 70)}ms;--a:${fx.a};--b:${fx.b}"><div class="cer-burst ${esc(fx.style)}" aria-hidden="true">${Array.from({ length: 6 }, (_, k) => `<i style="--k:${k}">${fx.glyph}</i>`).join('')}</div>${monsterSprite(m, 40)}<span class="cer-tag">${esc(m.slot || m.position)}</span><span class="cer-ab">${esc(m.ability || m.name)}</span></div>`; }).join('');
       const roster = c.roster.slice(0, 30).map((m, i) => `<div class="cer-mon bench" style="--d:${600 + i * 40}ms">${monsterSprite(m, 24)}</div>`).join('');
@@ -75,7 +76,7 @@ export function registerCeremony(Router, app) {
       </div>`;
     },
     mount(root, ctx) {
-      const f = app.f; const c = championshipFor(f, ctx.params?.year); clear();
+      const f = app.f; const c = ctx.params?.preview ? championshipRecord(f) : championshipFor(f, ctx.params?.year); clear();
       const done = () => { clear(); if (ctx.params?.fromGame) Router.go('hq', {}, { reset: true }); else Router.back(); };
       delegate(root, {
         'cer-skip': () => { clear(); const el = root.querySelector('#ceremony'); if (el) el.className = 'ceremony sc-summary'; },

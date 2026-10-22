@@ -136,7 +136,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   (state.calls ||= []).push(call);
   const sim = simulatePlay({
     offensePlay, defensePlay,
-    offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense),
+    offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay),
     ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null },
   });
   rememberAbilities(state, sim);
@@ -151,7 +151,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
  * bench monster first, then a lineup monster who sits out in this package.
  * Nobody is ever on the field twice; nobody plays as an empty shell.
  */
-export function pickSlots(lineup, slots, team = null) {
+export function pickSlots(lineup, slots, team = null, play = null) {
   const out = {}; const onField = new Set();
   for (const s of slots) { const p = lineup[s]; if (p?.id && !onField.has(p.id)) { out[s] = p; onField.add(p.id); } }
   for (const s of slots) {
@@ -161,6 +161,14 @@ export function pickSlots(lineup, slots, team = null) {
     const resting = Object.entries(lineup).filter(([k]) => !slots.includes(k)).map(([, p]) => p).filter((p) => p?.id && !onField.has(p.id));
     const pick = bench.find((p) => p.position === need) || bench.find((p) => canPlay(p.position, s)) || resting.find((p) => canPlay(p.position, s)) || null; // primary or secondary position only (GDD §17.2)
     if (pick) { out[s] = { ...pick, borrowed: true }; onField.add(pick.id); } else out[s] = { attrs: {}, name: s, id: null };
+  }
+  // Legendary Plays (GDD §36.2): the Legendary the play is built around takes its slot for this snap, swapping with
+  // whoever had it (or coming off the bench). Without him the play runs with whoever is there (the plan never allows that).
+  const L = play?.legendary;
+  if (L && out[L.slot]?.species !== L.species) {
+    const on = Object.entries(out).find(([, p]) => p?.species === L.species);
+    if (on) { const prev = out[L.slot]; out[L.slot] = on[1]; out[on[0]] = prev; }
+    else { const pool = [...Object.values(lineup || {}), ...(team?.bench || [])]; const c = pool.find((p) => p?.species === L.species && p.id); if (c) out[L.slot] = c; }
   }
   return out;
 }
@@ -364,7 +372,7 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   const { r, save } = rng(state);
   const offense = teams[state.tryTeam], defense = teams[opponent(state.tryTeam)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
-  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense), defense: pickSlots(defense.defense, defensePlay.onField, defense), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null } });
+  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null } });
   rememberAbilities(state, sim);
   save();
   const good = sim.touchdown && !sim.stats.defensiveScore;

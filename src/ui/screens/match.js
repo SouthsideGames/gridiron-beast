@@ -215,8 +215,8 @@ export function registerMatchScreens(Router, app) {
     if (!p || anim || f.settings.typeIcons === false || s.phase !== 'scrimmage' || s.finished) return null;
     const me = G.playerSide; const offSide = s.possession, defSide = R.opponent(offSide);
     presnapMe = offSide === me ? 'off' : 'def';
-    const offense = R.pickSlots(teams[offSide].offense, p.offensePlay.onField, teams[offSide]);
-    const defense = R.pickSlots(teams[defSide].defense, p.defensePlay.onField, teams[defSide]);
+    const offense = R.pickSlots(teams[offSide].offense, p.offensePlay.onField, teams[offSide], p.offensePlay);
+    const defense = R.pickSlots(teams[defSide].defense, p.defensePlay.onField, teams[defSide], p.defensePlay);
     presnapEdges = matchupEdges({ offensePlay: p.offensePlay, defensePlay: p.defensePlay }, offense, defense).filter((x) => x[presnapMe].mod);
     const icons = { off: {}, def: {} };
     for (const x of presnapEdges) icons[presnapMe][x[presnapMe].slot] = x[presnapMe].mod > 0 ? 'up' : 'down';
@@ -361,7 +361,7 @@ export function registerMatchScreens(Router, app) {
       ${cards(plan, side, selected, suggestion)}`;
   }
   function cards(ids, side, selected, suggestion) {
-    return `<div class="play-grid">${ids.slice(0, 6).map((id) => `<button class="card ${selected === id ? 'selected' : ''} ${suggestion === id ? 'suggested' : ''}" data-action="pick" data-side="${side}" data-id="${id}" aria-pressed="${selected === id}" aria-label="${esc(PLAYS[id].name)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
+    return `<div class="play-grid">${ids.slice(0, 6).map((id) => `<button class="card ${selected === id ? 'selected' : ''} ${suggestion === id ? 'suggested' : ''} ${PLAYS[id].legendary ? 'legendary' : ''}" data-action="pick" data-side="${side}" data-id="${id}" aria-pressed="${selected === id}" aria-label="${esc(PLAYS[id].name)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
   }
 
   /** Run one step with the human's choices applied, then animate if there is a play. */

@@ -89,6 +89,7 @@ export function weighOffense(state, team, available, tendencies = null, opp = nu
     if (tags.includes('misdirection')) w *= s.down <= 2 ? 1.2 : 0.6;
     w *= 0.7 + 0.6 * coach.aggression * (tags.includes('deep') ? 1 : 0.5);
     w *= offenseLean(p, team, opp);
+    if (tags.includes('legendary')) w *= 1.25; // a club calls its Legendary's play a little more often (GDD §36.6)
     // Avoid repeating the same play call too often.
     const recent = tendencies?.recentOffense || [];
     const repeats = recent.slice(-4).filter((x) => x === id).length;
@@ -118,6 +119,7 @@ export function weighDefense(state, team, available, oppTendencies = null, opp =
     if (tags.includes('desperation')) w *= s.late && s.diff < -7 && s.secondsLeft < 90 ? 3 : 0.1;
     if (tags.includes('anti_scramble')) w *= 1.1;
     w *= defenseLean(p, team, opp);
+    if (tags.includes('legendary')) w *= 1.25;
     const recent = oppTendencies?.recentDefense || [];
     const repeats = recent.slice(-4).filter((x) => x === id).length;
     w *= Math.pow(0.5, repeats);
