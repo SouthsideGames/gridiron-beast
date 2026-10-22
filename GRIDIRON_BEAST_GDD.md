@@ -1088,7 +1088,7 @@ On identical seasons, the original rules dismissed 25 of 36 hands-off owners wit
 
 Build **v35.0-franchise-foundation** combines Coach Assist 1.0 and the acceptance fixes (§27.3, §28; PR #33) with the Tuesday companions and the revised Board (§29; PR #34). Coach Assist explains both balancing changes in every mode (§27.3).
 
-- **Franchise acceptance milestone (§27.2 Phase 1): complete in automated and emulated testing.** Six bugs were fixed (§28.2; the sixth found while integrating). Multi-season runs of the combined build: SOAK_SUMMARY. The emulated phone walkthrough passes in all three Coach Assist modes: WALK_SUMMARY.
+- **Franchise acceptance milestone (§27.2 Phase 1): complete in automated and emulated testing.** Six bugs were fixed (§28.2; the sixth found while integrating). Multi-season runs of the combined build: 12 franchises × 5 seasons (59 seasons played, all three difficulties) with 0 invariant violations, 0 dead ends and 0 save round-trip failures; 1 owner dismissed (Rookie: 8-1, 5-4, 5-4, 4-5, three straight seasons under a contender's forecast); Tuesday encounters the staff entered: 21 of 25 won. The emulated phone walkthrough passes in all three Coach Assist modes: new franchise → Season 2 at 390×844 (Guided), 360×640 (Expert) and 320×568 (Standard) with no page errors, no horizontal overflow and no dead ends; ? Help on every complex screen; no automatic tip in Expert.
 - **Still required: real-device playtesting.** No testing on real phones has been done by the developer. Use the checklist in GRIDIRON_BEAST_TEST_PLAN.md §3, which covers the Tuesday companions and the Board.
 - **Next roadmap step** (§27.8) waits for that playtest feedback. Monster history and partnerships (§27.4) have not been started.
 

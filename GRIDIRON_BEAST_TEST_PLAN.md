@@ -4,9 +4,9 @@ All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no
 
 ## 0. Current status (2026-10-22, build v35.0-franchise-foundation: Coach Assist 1.0 + Tuesday companions + revised Board)
 
-- `npm test`: **NPM_SUMMARY**.
-- `tools/franchise-soak.mjs` on the combined build: SOAK_SUMMARY.
-- `tools/ui-walkthrough.py` on the combined build: WALK_SUMMARY.
+- `npm test`: **300 tests, all passing**.
+- `tools/franchise-soak.mjs` on the combined build: 12 franchises × 5 seasons (59 seasons played, all three difficulties) with 0 invariant violations, 0 dead ends and 0 save round-trip failures; 1 owner dismissed (Rookie: 8-1, 5-4, 5-4, 4-5, three straight seasons under a contender's forecast); Tuesday encounters the staff entered: 21 of 25 won.
+- `tools/ui-walkthrough.py` on the combined build: new franchise → Season 2 at 390×844 (Guided), 360×640 (Expert) and 320×568 (Standard) with no page errors, no horizontal overflow and no dead ends; ? Help on every complex screen; no automatic tip in Expert.
 - Balancing measurements (GDD §29): the automatic lineup wins 81–86% of Tuesday encounters in every season (before: 89–100%). On identical seasons, 7 of 36 hands-off owners are dismissed within five seasons (before: 25 of 36), and every one had sustained records below forecast.
 - **Not done: testing on real phones.** All browser checks above run in emulated headless Chromium. See §3.
 
