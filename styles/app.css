@@ -509,3 +509,77 @@ html[data-reduced-motion="1"] .scene .talk.fresh, html[data-reduced-motion="1"] 
 .bal-bar > i { display: block; height: 100%; } .bal-bar > i.pos { background: var(--good); } .bal-bar > i.neg { background: var(--bad); }
 .mono.pos { color: var(--good); } .mono.neg { color: var(--bad); }
 .bal-flag { font-size: 12px; color: var(--warn, #e0a33b); margin-top: 2px; }
+
+/* ---- football event presentation (2026-10-22): tiered callouts, score pulse, touchdown flash */
+.field-banner .callout { font-size: 18px; font-weight: 900; letter-spacing: .06em; line-height: 1.05; margin-bottom: 3px; color: var(--accent); text-shadow: 0 1px 0 #000; }
+.field-banner .callout.small { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--ink-2); margin-right: 4px; }
+.field-banner.tier-td { border-color: var(--accent); background: linear-gradient(180deg, rgba(250,204,21,.22), rgba(11,26,20,.92) 60%); box-shadow: 0 0 22px rgba(250,204,21,.35); }
+.field-banner.tier-td .callout { font-size: 24px; }
+.field-banner.tier-td.theirs { border-color: var(--bad); background: linear-gradient(180deg, rgba(248,113,113,.22), rgba(11,26,20,.92) 60%); box-shadow: 0 0 22px rgba(248,113,113,.3); }
+.field-banner.tier-td.theirs .callout, .field-banner.tier-turnover.theirs .callout, .field-banner.tier-sack.theirs .callout, .field-banner.tier-loss.theirs .callout { color: #ffb4b4; }
+.field-banner.tier-score.theirs .callout { color: #ffb4b4; }
+.field-banner.tier-turnover { border-color: #f59e0b; } .field-banner.tier-turnover .callout { color: #fbbf24; font-size: 20px; }
+.field-banner.tier-turnover.mine { border-color: var(--good); } .field-banner.tier-turnover.mine .callout { color: var(--good); }
+.field-banner.tier-sack.mine .callout { color: var(--good); } .field-banner.tier-sack.theirs .callout { color: #ffb4b4; }
+.field-banner.tier-first { border-color: var(--good); } .field-banner.tier-first .callout { color: var(--good); }
+.field-banner.tier-first.theirs { border-color: var(--line-2); } .field-banner.tier-first.theirs .callout { color: var(--ink-2); }
+.field-banner.tier-big .callout { color: var(--good); } .field-banner.tier-big.theirs .callout { color: var(--ink-2); }
+.field-banner.tier-loss .callout { color: #ffb4b4; } .field-banner.tier-loss.mine .callout { color: var(--good); }
+.field-banner.tier-score .callout { color: var(--accent); }
+.field-banner.fresh .callout { animation: callout-pop .5s cubic-bezier(.2,.9,.3,1.3) both; }
+.field-banner.tier-td.fresh { animation: banner-in .4s ease-out both; }
+@keyframes callout-pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes banner-in { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.field-wrap.td-flash::after { content: ''; position: absolute; inset: 0; pointer-events: none; animation: td-flash .9s ease-out both; background: radial-gradient(circle at 50% 40%, rgba(250,204,21,.55), rgba(250,204,21,0) 60%); }
+.field-wrap.td-flash.theirs::after { background: radial-gradient(circle at 50% 40%, rgba(248,113,113,.45), rgba(248,113,113,0) 60%); }
+.field-wrap.to-flash::after { content: ''; position: absolute; inset: 0; pointer-events: none; animation: td-flash .7s ease-out both; background: radial-gradient(circle at 50% 50%, rgba(251,191,36,.4), rgba(251,191,36,0) 60%); }
+@keyframes td-flash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+.scoreboard .score.bump { animation: score-bump .7s cubic-bezier(.2,.9,.3,1.4) both; color: var(--accent); }
+@keyframes score-bump { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
+html[data-reduced-motion="1"] .field-banner .callout, html[data-reduced-motion="1"] .field-banner.tier-td.fresh, html[data-reduced-motion="1"] .field-wrap.td-flash::after, html[data-reduced-motion="1"] .field-wrap.to-flash::after, html[data-reduced-motion="1"] .scoreboard .score.bump { animation: none; }
+
+/* ---- visual polish pass (2026-10-22): one cohesive feel across screens */
+/* screens slide in on navigation (the router adds .enter on a go/back); re-renders of the same screen do not move */
+.screen.enter { animation: screen-in .22s ease-out both; }
+@keyframes screen-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* press feedback on every tappable surface, not only .btn */
+.btn, .item:not(.static), .card, .choice, .chip, .tab { transition: transform .08s ease, box-shadow .08s ease, border-color .12s ease, background-color .12s ease; }
+.item:not(.static):active, .card:active, .choice:active { transform: scale(.985); }
+.chip:active, .tab:active { transform: scale(.94); }
+.btn.primary:active { filter: brightness(.95); }
+.card.selected { animation: card-select .18s ease-out; }
+@keyframes card-select { from { transform: scale(.96); } to { transform: scale(1); } }
+/* chips that act as filters */
+.chips { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.chip.on { background: var(--panel-2); border-color: var(--line-2); color: var(--ink); }
+.chip.on.accent { background: #3b3410; border-color: var(--accent); color: var(--accent); }
+.chip.good { background: #163b2a; border-color: #2f8f5a; color: var(--good); } .chip.bad { background: #3b1a1a; border-color: #a33; color: #ffb4b4; } .chip.warn { background: #3b2a12; border-color: #a0611a; color: var(--warn); }
+.seg.wrap { flex-wrap: wrap; gap: 4px; margin: 4px 0 6px; }
+.seg .btn.small { padding: 4px 9px; }
+/* progress bars animate between values */
+.bar > i { transition: width .45s cubic-bezier(.2,.8,.3,1); }
+/* empty states read as deliberate, not broken */
+p.empty, .empty { padding: var(--s3); text-align: center; border: 1px dashed var(--line-2); border-radius: var(--r); color: var(--ink-3); margin: var(--s2) 0; }
+/* section headers with a thin rule, consistent across screens */
+h3 { display: flex; align-items: center; gap: 8px; }
+h3::after { content: ''; flex: 1; height: 1px; background: var(--line); opacity: .8; }
+.sheet-body h3::after, .panel h3::after { opacity: .5; }
+/* leaders list */
+.list.leaders .item { padding: 6px 10px; min-height: 50px; }
+.list.leaders .rank { width: 22px; text-align: center; font-family: var(--mono); font-weight: 800; color: var(--ink-3); }
+.list.leaders .rank.top { color: var(--accent); }
+.list.leaders .item.leader { border-color: var(--accent); background: linear-gradient(90deg, rgba(250,204,21,.08), transparent 50%); }
+.list .item.mine { border-left: 4px solid var(--accent); }
+/* statistics caption and tables */
+.stat-caption { margin: 4px 0 2px; font-size: 12px; }
+.stat-table tbody td { color: var(--ink); }
+.stat-table tbody td:first-child { color: var(--ink-2); font-weight: 600; }
+/* the roster card details: fatigue and injury at a glance */
+.health-strip { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); }
+.health-strip .bar { flex: 1; height: 6px; }
+.health-strip .injured { color: var(--bad); font-weight: 700; }
+/* sheets slide up */
+.sheet { animation: sheet-up .22s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+html[data-reduced-motion="1"] .screen.enter, html[data-reduced-motion="1"] .sheet, html[data-reduced-motion="1"] .card.selected { animation: none; }
+html[data-reduced-motion="1"] .bar > i, html[data-reduced-motion="1"] .btn, html[data-reduced-motion="1"] .item, html[data-reduced-motion="1"] .card, html[data-reduced-motion="1"] .choice { transition: none; }

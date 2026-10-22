@@ -69,7 +69,7 @@ test('help: every complex screen has topics in every mode, every topic points at
   for (const [k, t] of Object.entries(A.TOPICS)) { assert.ok(t.title && t.brief && t.area, k); for (const sc of t.screens) assert.ok(SCREENS.has(sc), `${k} → ${sc}`); }
   const areas = new Set(Object.values(A.TOPICS).map((t) => t.area));
   for (const a of ['Getting started', 'Scouting and signing', 'Beast Clash', 'Football', 'Roster', 'Contracts and money', 'Draft', 'Trading', 'The Board']) assert.ok(areas.has(a), a);
-  for (const k of ['owner', 'staff', 'week', 'scout', 'attributes', 'recruit', 'skips', 'clash', 'elements', 'decisions', 'pregame', 'overtime', 'plays', 'gameplan', 'modes', 'roster', 'health', 'evolution', 'contracts', 'draft', 'trading']) assert.ok(A.TOPICS[k], k);
+  for (const k of ['owner', 'staff', 'week', 'scout', 'attributes', 'recruit', 'skips', 'clash', 'elements', 'order', 'pregame', 'overtime', 'plays', 'gameplan', 'modes', 'roster', 'health', 'evolution', 'contracts', 'draft', 'trading']) assert.ok(A.TOPICS[k], k);
   assert.match(A.TOPICS.skips.brief, /Skip the encounter/); assert.match(A.TOPICS.skips.brief, /Skip to results/);
 });
 

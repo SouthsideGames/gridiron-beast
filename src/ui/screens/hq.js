@@ -22,7 +22,7 @@ import { playCardSvg, legendHtml } from '../play-art.js';
 import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
 import { RIVAL_WEEKLY } from '../../data/dialogue.js';
-import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, careerLeaders } from '../../franchise/stats.js';
+import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, careerLeaders, leagueSeasons, seasonTables, combinedTable, ARCHIVE_SEASONS } from '../../franchise/stats.js';
 import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
@@ -733,24 +733,33 @@ export function registerHqScreens(Router, app) {
     },
   });
   // ---------------------------------------------------------------- League stats
-  let leaderCat = 'passYds', leaderBucket = 'reg', leaderScope = 'league';
+  let leaderCat = 'passYds', leaderBucket = 'reg', leaderScope = 'league', leaderYear = null;
   const MIN_LABEL = (k) => ({ att: 'attempts', rush: 'carries', covTargets: 'targets in coverage', pbSnaps: 'pass-blocking snaps', fga: 'field-goal attempts' })[k] || k;
+  // League leaders (revised 2026-10-22): Season (this season or an archived one) × Game type (regular season, playoffs, both) × scope.
   Router.registerScreen('leaders', {
     title: 'League leaders',
     render({ f }) {
-      const table = leaderBucket === 'post' ? f.season.playoffStats : f.season.leagueStats;
+      const seasons = leagueSeasons(f); const year = seasons.includes(leaderYear) ? leaderYear : f.season.year;
+      const T = seasonTables(f, year); const table = leaderBucket === 'post' ? T.post : leaderBucket === 'all' ? combinedTable(T.reg, T.post) : T.reg;
       const cat = LEADER_CATEGORIES.find((c) => c.id === leaderCat) || LEADER_CATEGORIES[0];
       const myConf = conferenceFor(f.club), myDiv = divisionOf(f.club);
       const teams = leaderScope === 'conference' ? Object.values(DIVISIONS).flat().filter((t) => conferenceFor(t) === myConf) : leaderScope === 'division' ? DIVISIONS[myDiv] : null;
       const rows = leaders(table, cat.id, { n: 15, teams });
-      return `<div class="seg" style="margin-bottom:6px"><button class="btn small ${leaderBucket === 'reg' ? 'primary' : ''}" data-action="bucket" data-v="reg">Regular season</button><button class="btn small ${leaderBucket === 'post' ? 'primary' : ''}" data-action="bucket" data-v="post">Playoffs</button></div>
-        <div class="seg" style="margin-bottom:6px"><button class="btn small ${leaderScope === 'league' ? 'primary' : ''}" data-action="scope" data-v="league">Whole league</button><button class="btn small ${leaderScope === 'conference' ? 'primary' : ''}" data-action="scope" data-v="conference">${esc(myConf)}</button><button class="btn small ${leaderScope === 'division' ? 'primary' : ''}" data-action="scope" data-v="division">${esc(myDiv)}</button></div>
-        <select class="input" data-action="cat" style="margin-bottom:8px">${LEADER_CATEGORIES.map((c) => `<option value="${c.id}" ${c.id === cat.id ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
+      const seg = (items, key, cur) => `<div class="seg wrap" role="tablist">${items.map(([v, l]) => `<button class="btn small ${String(cur) === String(v) ? 'primary' : ''}" role="tab" aria-selected="${String(cur) === String(v)}" data-action="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
+      const playoffsOn = T.current ? !!f.season.playoffs : Object.keys(T.post).length > 0;
+      const empty = leaderBucket === 'post' && !playoffsOn ? (T.current ? 'The playoffs have not started this season. Regular-season leaders are under "Regular season".' : `No playoff statistics were kept for ${yearOf(year)}.`)
+        : !Object.keys(table).length ? (T.current ? 'No games played yet this season.' : `${yearOf(year)}'s tables are no longer in the save (the last ${ARCHIVE_SEASONS} seasons are kept); its records and awards remain.`)
+        : cat.min ? `Nobody has reached the minimum of ${cat.min[1]} ${MIN_LABEL(cat.min[0])} yet.` : 'No one has a mark in this category yet.';
+      const fmt = (v) => typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString('en-US') : v.toFixed(1)) : v;
+      return `${seg([...seasons.map((y) => [y, y === f.season.year ? 'This season' : yearOf(y)])], 'year', year)}
+        ${seg([['reg', 'Regular season'], ['post', 'Playoffs'], ['all', 'Both']], 'bucket', leaderBucket)}
+        ${seg([['league', 'League'], ['conference', esc(myConf)], ['division', esc(myDiv)]], 'scope', leaderScope)}
+        <select class="input" data-action="cat" style="margin:6px 0 8px" aria-label="Category">${LEADER_CATEGORIES.map((c) => `<option value="${c.id}" ${c.id === cat.id ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
         ${cat.min ? `<p class="dim" style="margin-top:0">Minimum ${cat.min[1]} ${esc(MIN_LABEL(cat.min[0]))}.</p>` : ''}
-        <div class="list">${rows.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}">${monsterSprite(r, 32)}<div class="grow"><div class="name">${i + 1}. ${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></div><div class="sub">${esc(statLine(r))}</div></div><span class="chip accent">${r[cat.key]}</span></div>`).join('') || `<p class="dim">${leaderBucket === 'post' ? 'No playoff games yet.' : 'No games yet.'}</p>`}</div>`;
+        <div class="list leaders">${rows.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''} ${i === 0 ? 'leader' : ''}"><span class="rank ${i < 3 ? 'top' : ''}">${i + 1}</span>${monsterSprite(r, 32)}<div class="grow"><div class="name">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></div><div class="sub">${esc(statLine(r))}</div></div><span class="chip ${i === 0 ? 'accent' : ''} mono">${fmt(r[cat.key])}</span></div>`).join('') || `<p class="dim empty">${esc(empty)}</p>`}</div>`;
     },
     mount(root) {
-      delegate(root, { bucket: (el) => { leaderBucket = el.dataset.v; Router.render(); }, scope: (el) => { leaderScope = el.dataset.v; Router.render(); } });
+      delegate(root, { bucket: (el) => { leaderBucket = el.dataset.v; Router.render(); }, scope: (el) => { leaderScope = el.dataset.v; Router.render(); }, year: (el) => { leaderYear = Number(el.dataset.v); Router.render(); } });
       root.querySelector('[data-action="cat"]')?.addEventListener('change', (e) => { leaderCat = e.target.value; Router.render(); });
     },
   });

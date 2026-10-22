@@ -85,6 +85,32 @@ export function registerMatchScreens(Router, app) {
   let playClockTimer = null;
   let autoTimer = null; // Auto mode: the coach's suggestions play themselves out, one play at a time
   const KEY_RESULTS = new Set(['touchdown', 'interception', 'fumble', 'touchback_return', 'safety']);
+  /**
+   * What just happened, in one word and one tier, so the field can show it with the right weight (2026-10-22 presentation
+   * pass): a touchdown is bigger than a first down, a turnover is unmistakable, a sack lands, a routine gain just reports its yards.
+   */
+  function callout(ev, me) {
+    if (!ev) return null; const r = ev.sim?.result || ev.outcome?.result || null; const yards = ev.outcome?.yards ?? ev.sim?.yards; const off = ev.offenseSide;
+    const mineOff = off === me; const scoredFor = ev.scored?.team || (ev.scored ? off : null);
+    if (r === 'touchdown' || (ev.kind === 'kickoff' && ev.scored)) return { tier: 'td', text: 'TOUCHDOWN!', mine: scoredFor ? scoredFor === me : mineOff };
+    if (r === 'safety') return { tier: 'score', text: 'SAFETY', mine: !mineOff };
+    if (r === 'interception' || r === 'touchback_return') return { tier: 'turnover', text: 'INTERCEPTED!', mine: !mineOff };
+    if (r === 'fumble') return { tier: 'turnover', text: 'FUMBLE!', mine: !mineOff };
+    if (ev.kind === 'field_goal') return ev.scored ? { tier: 'score', text: 'FIELD GOAL', mine: ev.kicking === me } : { tier: 'loss', text: 'NO GOOD', mine: ev.kicking !== me };
+    if (ev.kind === 'try') return /good|GOOD|converts|two-point conversion is good/i.test(ev.text) ? { tier: 'score', text: /two/i.test(ev.text) ? 'TWO POINTS' : 'EXTRA POINT', mine: mineOff } : /no good|fails|stopped|missed/i.test(ev.text) ? { tier: 'loss', text: 'NO GOOD', mine: !mineOff } : null;
+    if (r === 'sack') return { tier: 'sack', text: 'SACK', mine: !mineOff };
+    if (r === 'incomplete' || r === 'throwaway') return { tier: 'routine', text: 'INCOMPLETE', mine: !mineOff };
+    if (ev.kind === 'punt') return { tier: 'routine', text: 'PUNT', mine: null };
+    if (ev.kind === 'kickoff') return { tier: 'routine', text: /touchback/i.test(ev.text) ? 'TOUCHBACK' : 'KICKOFF', mine: null };
+    if (typeof yards === 'number' && ev.kind === 'play') {
+      const toGo = ev.toGo ?? 10; const first = yards >= toGo;
+      if (first) return { tier: 'first', text: yards >= 20 ? `BIG PLAY · +${yards}` : 'FIRST DOWN', mine: mineOff };
+      if (yards >= 15) return { tier: 'big', text: `+${yards} YDS`, mine: mineOff };
+      if (yards < 0) return { tier: 'loss', text: `${yards} YDS`, mine: !mineOff };
+      return { tier: 'routine', text: yards === 0 ? 'NO GAIN' : `+${yards} YDS`, mine: mineOff };
+    }
+    return null;
+  }
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : 'Match', back: false, tabs: false, help: false, // the ⓘ button is this screen's help (it links to Coach Assist)
@@ -102,17 +128,20 @@ export function registerMatchScreens(Router, app) {
         : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession) });
       const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
       const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}">${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}</span>`).join('')}</div>` : '';
-      const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''}" id="banner">${esc(G.lastEvent.text)}${ab}</div>` : '';
+      const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
+      const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''} ${co ? `tier-${co.tier} ${co.mine === true ? 'mine' : co.mine === false ? 'theirs' : ''}` : ''} ${fresh ? 'fresh' : ''}" id="banner">${co && co.tier !== 'routine' ? `<div class="callout">${esc(co.text)}</div>` : co ? `<span class="callout small">${esc(co.text)}</span> ` : ''}${esc(G.lastEvent.text)}${ab}</div>` : '';
+      const tdFlash = fresh && co?.tier === 'td' ? ` td-flash ${co.mine ? 'mine' : 'theirs'}` : fresh && co?.tier === 'turnover' ? ' to-flash' : '';
+      const bump = (side) => (G.scoreSeen?.[side] != null && G.scoreSeen[side] !== s.score[side]) ? 'bump' : ''; const bumpA = bump('away'), bumpH = bump('home'); G.scoreSeen = { ...s.score };
       const eventBanner = G.event === 'rival' ? `<div class="rival-banner compact">⚔️ RIVALRY GAME · ${esc(s[them].name)} · GM ${esc(f.rivals[f.tier]?.gm || '')}</div>` : G.event === 'playoff' ? `<div class="rival-banner compact" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 PLAYOFFS · ${esc(G.tag || 'Win or go home')}</div>` : '';
       return `${eventBanner}
         <div class="scoreboard" aria-live="polite">
-          <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span><span class="abbr"><span style="color:${s.away.color}">${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score">${s.score.away}</span></div>
+          <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span><span class="abbr"><span style="color:${s.away.color}">${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score ${bumpA}">${s.score.away}</span></div>
           <div class="mid"><b>${s.finished ? 'FINAL' : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}${clockStateHtml(s, G, myBall)}</div>
-          <div class="team right"><span class="score">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
+          <div class="team right"><span class="score ${bumpH}">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
         </div>
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
         ${edgeStrip(f, s, teams, me)}
-        <div class="field-wrap" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>
+        <div class="field-wrap${tdFlash}" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>
         <div id="controls">${controlsHtml(f, teams, look)}</div>`;
     },
     mount(root, ctx) {
@@ -327,7 +356,7 @@ export function registerMatchScreens(Router, app) {
       const frames = kickFrames(ev);
       if (frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = { frames, ballOn: 0, ballLat: 0, kick: true }; startAnim(f, ev); return; }
     }
-    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev) };
+    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), callout: callout(ev, G.playerSide), fresh: true };
     app.save(); Router.render();
   }
   function startAnim(f, ev) {
@@ -376,7 +405,7 @@ export function registerMatchScreens(Router, app) {
     if (!anim) return;
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
     const G = f.game;
-    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev) };
+    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), callout: callout(ev, G.playerSide), fresh: true };
     app.save(); Router.render();
     firstAbilityTip(f, ev);
   }
