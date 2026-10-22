@@ -1342,9 +1342,9 @@ So the bonus is a flavour, not a home-field edge. **No values changed.** Watch i
 - game-winning and late go-ahead field goals;
 - fourth-down conversions needing 3+ yards, or any in the fourth quarter;
 - clutch plays: in the last two minutes of the fourth quarter or overtime, within one score, a 15+ yard gain or a sack;
-- ability plays: a signature ability decides a 12+ yard play, a sack, or a play like a denied pick, a veil, a blink or a flattening.
+- ability plays: a signature ability decides a 20+ yard play, a denied interception, a blink past the tackler or a flattening.
 
-Routine plays, including long gains in the middle of a game, are never replayed.
+Routine plays, including long gains in the middle of a game, are never replayed. Measured over 12 AI games (52 plays each), about 7.6 plays per game qualify, counting both teams: touchdowns 3.6, ability plays 2.3, clutch plays 0.8, interceptions 0.5, fourth-down conversions 0.3, other turnovers 0.2. In Key Moments only the animated downs can replay, so the owner sees fewer. A first cut (any ability on a 12+ yard play) gave 4.9 ability replays a game and was tightened.
 
 **34.3 Presentation.** The play finishes, its result and callout show, and the game saves. Then, 0.35 s later:
 1. a gold wipe;

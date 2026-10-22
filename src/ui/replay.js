@@ -34,7 +34,8 @@ export function replayReason(ev, state, me) {
   const clutch = state && (state.quarter >= 4 || state.ot) && state.clock <= 120 && Math.abs(state.score.home - state.score.away) <= 8;
   if (clutch && (gained >= 15 || r === 'sack')) return { kind: 'clutch', label: r === 'sack' ? 'CLUTCH SACK' : 'CLUTCH PLAY', priority: 2 };
   const ab = abilityOutcomes(sim);
-  if (ab.length && (gained >= 12 || r === 'sack' || ab.some((e) => ['pick_denied', 'veiled', 'blink', 'flattened', 'spun'].includes(e.kind)))) return { kind: 'ability', label: 'ABILITY PLAY', priority: 1 };
+  // Only abilities that decide a big play: a 20+ yard gain, or a denied interception, a blink past the tackler, a flattening.
+  if (ab.length && (gained >= 20 || ab.some((e) => ['pick_denied', 'blink', 'flattened'].includes(e.kind)))) return { kind: 'ability', label: 'ABILITY PLAY', priority: 1 };
   return null;
 }
 

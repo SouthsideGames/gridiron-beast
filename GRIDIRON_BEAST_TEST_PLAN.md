@@ -4,7 +4,7 @@ All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no
 
 ## 0. Current status (2026-10-22, branch `stadiums-replays-legendary`: stadiums, instant replays, the Beast Bowl ceremony, Legendary Plays, GDD §33–37)
 
-- `npm test`: NPM_PLACEHOLDER
+- `npm test`: **330 tests, all passing** (315 on `main` + 6 stadiums + 3 replays + 6 Legendary Plays; about 5 minutes).
 - `tools/feature-ui-check.py` (headless Chromium at 390×844, 360×640 and 320×568), all clean, no page errors, no horizontal overflow:
   - the venue card is on the pregame screen;
   - More → Stadiums lists 16 clubs;
@@ -14,7 +14,7 @@ All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no
   - the ceremony passes through all five scenes, Skip jumps to the summary, Continue returns to HQ, and Franchise History reopens it.
 - Balance: `type-balance --only=env` (300 paired games) and `legendary-balance --n=240`. Results are in GDD §33.2 and §36.2.
 - Visual checks (headless screenshots, not a real device): all seven stadiums with weather and venue cards, a replay in progress, the discovery card, the game plan, the Legendary sheet, every ceremony scene.
-- WALK_PLACEHOLDER
+- `tools/ui-walkthrough.py` (390×844, Standard): new franchise → Season 2, week 2 in 310 steps with no page errors, no overflow and no dead end. The new discovery card and venue cards did not interrupt the flow.
 - **Not done: testing on real phones.** See §3, items 4c–4f.
 
 ## 0. Current status (2026-10-22, branch `type-matchups`: type effectiveness in football and the Type Chart, GDD §32)
