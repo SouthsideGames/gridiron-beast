@@ -90,6 +90,8 @@ def step(page, n):
     if sn == 'match':
         for sel in ['[data-action="toss"]', '[data-action="simfinal"]', '[data-action="otclash"]', '[data-action="finish"]', '[data-action="continue"]', '[data-action="hq"]']:
             if click(page, sel): return f'match:{sel}'
+    if sn == 'draft' and (state(page) or {}).get('roster', 0) >= 38 and visible(page, '[data-action="pass"]'):
+        return 'draft:pass' if click(page, '[data-action="pass"]') else None
     if sn in ('draft', 'draftclass') and visible(page, '[data-action="pick"]') and not visible(page, '[data-action="start"]'):
         if click(page, '[data-action="pick"]'): return 'draft:pick'
     manual = (state(page) or {}).get('week', 1) % 2 == 1  # odd weeks by hand (every weekday screen), even weeks by the staff
