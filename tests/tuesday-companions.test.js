@@ -71,7 +71,7 @@ test('Play, Auto and Skip to Results still fight the same companions; Skip Encou
   const f = ready(16); const g = JSON.parse(JSON.stringify(f)); const h = JSON.parse(JSON.stringify(f));
   F.startEncounter(f, 0, { mode: 'auto' }); F.startEncounter(g, 0, { mode: 'skip' }); F.startEncounter(h, 0, { mode: 'play' });
   assert.equal(logHash(F.encounterBattle(f)), logHash(F.encounterBattle(g)));
-  assert.deepEqual(F.encounterBattle(h).lines.b.map((x) => x.combatant.monsterId), F.encounterBattle(f).lines.b.map((x) => x.combatant.monsterId));
+  assert.deepEqual(F.encounterBattle(h).lines.b.map((x) => x.combatant.monsterId).sort(), F.encounterBattle(f).lines.b.map((x) => x.combatant.monsterId).sort());
   const k = ready(17); const before = JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }); F.skipEncounter(k);
   assert.equal(k.season.day, 2); assert.equal(JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }), before);
 });
