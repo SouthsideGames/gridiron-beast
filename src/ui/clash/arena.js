@@ -9,7 +9,6 @@ import { monsterSprite } from '../pixel-monster.js';
 import { stateAt, cuesFor, nextExchangeIndex, DURATION } from './choreographer.js';
 import { themeFor, decorSvg, padSvg, SHADOW_SVG, shieldRingSvg, COND_ICON, COND_COLOR } from './arena-art.js';
 import { createFx } from './fx.js';
-import { typeFactor } from '../../clash/types.js';
 
 // Slot maps: percent of the arena box, [x, y] of the feet. [front, bench1, bench2, ...] in lineup order; a bench
 // slot nearer the front is "next up". Landscape: side B mirrors x. Portrait: side B has its own map (sprites hang
@@ -44,6 +43,7 @@ const spriteImg = (svg) => `<img class="cl-sprite" alt="" draggable="false" src=
 /**
  * Mount the arena into `root` for `result`. Options: { speed, reducedMotion, quality: () => 'full'|'low', onCursor(i), onEnd(), onQuality(q),
  *   names: { a, b } (team names for the strips, the matchup line and the victory banner; default 'Side A' / 'Side B'),
+ *   edge: (attackerType, defenderType) => 'strong' | 'weak' | 'even' (the matchup line's type edge; the arena itself never imports the engine),
  *   simple: true (franchise battles: Watch / Speed / Skip only, no step, scrubber or FX toggle) }.
  * Returns the player API; call destroy() on unmount.
  */
@@ -138,10 +138,10 @@ export function createArena(root, result, opts = {}) {
   function matchup(st) {
     const el = $('.cl-matchup'); if (!el) return;
     const fa = st.front?.a, fb = st.front?.b; if (!fa || !fb || st.S.a[fa]?.ko || st.S.b[fb]?.ko) { el.innerHTML = ''; return; }
-    const A = byId[fa], B = byId[fb]; const ab = typeFactor(A.type, B.type), ba = typeFactor(B.type, A.type);
-    const edge = (f) => f > 1 ? '<b class="edge strong" title="type advantage">▲</b>' : f < 1 ? '<b class="edge weak" title="type disadvantage">▼</b>' : '<span class="edge even">=</span>';
+    const A = byId[fa], B = byId[fb]; const ab = opts.edge ? opts.edge(A.type, B.type) : 'even', ba = opts.edge ? opts.edge(B.type, A.type) : 'even';
+    const edge = (e) => e === 'strong' ? '<b class="edge strong" title="type advantage">▲</b>' : e === 'weak' ? '<b class="edge weak" title="type disadvantage">▼</b>' : '<span class="edge even">=</span>';
     el.innerHTML = `<span class="mu-side a"><span class="mu-name">${esc(A.name)}</span> <span class="mu-type">${esc(A.type)}</span> ${edge(ab)}</span><span class="mu-vs">vs</span><span class="mu-side b">${edge(ba)} <span class="mu-type">${esc(B.type)}</span> <span class="mu-name">${esc(B.name)}</span></span>`;
-    el.className = `cl-matchup ${ab > 1 ? 'a-up' : ba > 1 ? 'b-up' : ''}`;
+    el.className = `cl-matchup ${ab === 'strong' ? 'a-up' : ba === 'strong' ? 'b-up' : ''}`;
   }
 
   // ---- geometry (stage pixels)

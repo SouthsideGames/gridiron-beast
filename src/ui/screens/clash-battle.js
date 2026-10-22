@@ -12,7 +12,7 @@ import { createArena } from '../clash/arena.js';
 import { stateAt } from '../clash/choreographer.js';
 import { monsterOverall } from '../../data/monsters.js';
 import { archetypeOf } from '../../clash/stats.js';
-import { typeFactor } from '../../clash/types.js';
+import { typeFactor, typeEdge } from '../../clash/types.js';
 import { startSundayGame } from './match.js';
 
 const ARCH_GLYPH = { Tank: '🛡', Striker: '⚔️', Support: '💚', Disruptor: '🌀', Balanced: '⚖️' };
@@ -164,7 +164,7 @@ export function registerClashBattle(Router, app) {
     const legacyPend = policiesOf(e).a === 'manual' ? pendingDecision(st.result) : null; // a 'play' battle from before 2026-10-22 left mid-decision: it finishes on its own as Auto
     if (legacyPend) { e.policies = { a: 'smart', b: 'smart' }; e.mode = 'watch'; app.save(); st.result = B().battle(f); }
     const end = st.result.log.length - 1;
-    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), simple: true, onCursor: (i) => { st.cursor = i; }, onEnd: () => finish(f) });
+    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; }, onEnd: () => finish(f) });
     if (st.cursor) st.arena.setCursor(Math.min(st.cursor, end));
     if (st.cursor >= end) { finish(f); return; }
     setTimeout(() => st.arena?.play(), 300);
@@ -230,7 +230,7 @@ export function registerClashBattle(Router, app) {
       });
       root.classList.toggle('cl-wide', !!(e && (e.status === 'battle' || st.replaying)));
       if (e && e.status === 'battle' && e.mode !== 'skip') mountBattle(root, f, e);
-      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), simple: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(() => st.arena?.play(), 300); } }
+      else if (e && st.replaying) { st.result = b.battle(f); const host = root.querySelector('#fb-arena'); if (host && st.result) { st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; } }); setTimeout(() => st.arena?.play(), 300); } }
     },
     unmount() { stop(); st.replaying = false; },
   });

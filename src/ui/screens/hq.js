@@ -250,7 +250,7 @@ export function registerHqScreens(Router, app) {
       ${v.full ? `<div class="attr-grid">${ATTRIBUTES.map((k) => `<div class="attr"><span>${ATTR_LABEL[k]}</span><div class="bar ${m.attributes[k] < 45 ? 'bad' : m.attributes[k] < 60 ? 'warn' : ''}"><i style="width:${m.attributes[k]}%"></i></div><b>${m.attributes[k]}</b></div>`).join('')}</div>` : `<p class="dim">${4 - v.headlineKnown ? `${4 - v.headlineKnown} headline rating${4 - v.headlineKnown === 1 ? '' : 's'} and the` : 'The'} full attribute sheet need a complete scout report.</p>`}
       <div class="panel tight" style="margin-top:8px"><b>Career</b><div class="muted">${clubs ? `Clubs: ${clubs}` : 'No pro club yet: a regional-league monster.'}</div></div>
       <div class="panel tight"><b>On your roster</b><div class="muted">${verdict}</div></div>
-      <button class="btn primary block" data-action="fasign" ${f.roster.length >= F.ROSTER_MAX ? 'disabled' : ''} style="margin-top:8px">${askV.estimate ? `Sign (about ${fmt(askV.shown)}/yr)` : `Sign for ${fmt(ask)}/yr`}</button>`, { title: 'Free agent' });
+      <button class="btn primary block" data-action="fasign" ${f.roster.length >= F.ROSTER_MAX ? 'disabled' : ''} style="margin-top:8px">${askV.estimate ? `Sign (about ${fmt(askV.shown)}/yr)` : `Sign for ${fmt(ask)}/yr`}</button>${f.roster.length >= F.ROSTER_MAX ? `<p class="dim center" style="margin-top:4px">Roster full (${F.ROSTER_MAX}): release a monster from the Roster screen first.</p>` : ''}`, { title: 'Free agent' });
     document.querySelector('.sheet [data-action="fasign"]')?.addEventListener('click', () => { const r = F.signFreeAgent(app.f, id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); close(); toast(r.overCap ? 'Signed, over the cap.' : 'Signed.', r.overCap ? 'bad' : 'good'); onSigned?.(); });
   }
   Router.registerScreen('draftclass', {
@@ -595,7 +595,7 @@ export function registerHqScreens(Router, app) {
       const qs = F.mediaQuestions(f); app.save();
       return `<p class="muted">The press wants answers. Every answer is spoken in the voice of one nature; the monsters who share it hear themselves and play Sunday with +${F.MEDIA_BOOST} to their nature’s strength. Know your monsters: nobody here will tell you who is listening.</p>
         ${qs.map((q, k) => `<div class="panel"><b>🎤 “${esc(q.q)}”</b><div class="stack" style="margin-top:8px">${q.a.map((a, ai) => `<button class="choice ${mediaPicks[k] === ai ? 'selected' : ''}" data-action="answer" data-q="${k}" data-a="${ai}"><span>${esc(a.text)}</span><span class="dim" style="font-size:12px">${NATURES[a.t].name}${a.hype ? ' · trash talk' : ''}${a.star ? ' · your star' : ''}</span></button>`).join('')}</div></div>`).join('')}
-        ${lineup}<button class="btn primary big block" data-action="submit" ${mediaPicks.filter((x) => x != null).length === qs.length ? '' : 'disabled'}>Finish press conference</button>`;
+        ${lineup}<button class="btn primary big block" data-action="submit" ${mediaPicks.filter((x) => x != null).length === qs.length ? '' : 'disabled'}>Finish press conference</button>${mediaPicks.filter((x) => x != null).length === qs.length ? '' : `<p class="dim center" style="margin-top:4px">Answer all ${qs.length} questions to finish.</p>`}`;
     },
     mount(root) { delegate(root, {
       roster: () => Router.go('roster'), done: () => Router.go('hq', {}, { reset: true }),
