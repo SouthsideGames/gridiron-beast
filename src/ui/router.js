@@ -33,7 +33,7 @@ let navigating = false; // a go/back scrolls to the top; a re-render of the same
 export function render() {
   const top = currentScreen(); if (!top || !app) return;
   const screen = screens.get(top.name);
-  const keepScroll = !navigating && current === screen; const y = window.scrollY; navigating = false;
+  const keepScroll = !navigating && current === screen; const y = window.scrollY; const entering = navigating; navigating = false; // a go/back slides the new screen in; a re-render of the same screen stays put
   const ctx = { ...ctxProvider(), params: top.params, go, back, render };
   if (current && current !== screen) current.unmount?.();
   current = screen;
@@ -46,7 +46,7 @@ export function render() {
       <h1 class="title">${esc(title)}</h1>
       <span class="topbar-right">${screen.topRight ? screen.topRight(ctx) : ''}${helpProvider && screen.help !== false ? helpProvider(ctx, top.name) : ''}</span>
     </header>
-    <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${screen.render(ctx)}</main>
+    <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''} ${entering ? 'enter' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${screen.render(ctx)}</main>
     ${tabs ? `<nav class="tabbar" aria-label="Franchise sections">${tabs.map((t) => `<button class="tab ${t.active ? 'active' : ''}" data-action="router-tab" data-screen="${t.screen}" aria-current="${t.active ? 'page' : 'false'}"><span class="tab-icon">${t.icon}${t.badge ? `<span class="tab-badge" aria-label="${t.badge} notices">${t.badge > 9 ? '9+' : t.badge}</span>` : ''}</span><span>${esc(t.label)}</span></button>`).join('')}</nav>` : ''}`;
   app.querySelector('[data-action="router-back"]')?.addEventListener('click', back);
   for (const b of app.querySelectorAll('[data-action="router-tab"]')) b.addEventListener('click', () => go(b.dataset.screen, {}, { reset: true }));

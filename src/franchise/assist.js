@@ -57,9 +57,9 @@ export const TOPICS = Object.freeze({
   companions: { area: 'Scouting and signing', title: 'Wild companions', brief: 'Why 3v3: a monster in the wild runs with a pack, so you meet three. The prospect you chose leads; the other two are wild companions. They are never signable, never join the roster, and their strength follows your club: the three together sit a little below your best three. Your strongest lineup wins about four times in five; your weakest rarely wins.', screens: ['recruit', 'clash-battle'] },
   skips: { area: 'Scouting and signing', title: 'Skip Encounter or Skip to Results?', brief: '"Skip the encounter" means no battle this Tuesday: no signing, and nothing else lost. "Skip to results" still fights the battle, it just shows the result at once: the same battle, the same winner, the same experience.', screens: ['recruit', 'clash-battle'] },
   // --- Beast Clash
-  clash: { area: 'Beast Clash', title: 'How Beast Clash works', brief: 'Each side lines up three monsters. The front two trade strikes, Supports and bench Disruptors act from the back, and a side may swap its front monster every few exchanges. The last side standing wins, or the side with more health left after 30 exchanges.', steps: ['Your strongest healthy monsters are picked for you; change them if you like.', 'Play lets you make the swap calls; Auto watches the same battle; Skip to results shows it at once.', 'Everyone who battled earns experience and gets a little tired.'], screens: ['clash-battle'] },
-  elements: { area: 'Beast Clash', title: 'Elements and abilities', brief: 'Every monster has an element (fire, water and so on). Some elements hit others harder, and every monster has one move and an ability that can turn a battle. A swap can put a better match-up in front.', screens: ['clash-battle'] },
-  decisions: { area: 'Beast Clash', title: 'Your call: swap or stay', brief: 'In Play mode the battle stops when you may swap. Swap in a fresh or better-matched monster (it acts at half strength that exchange), or keep the one in front and be asked again in a few exchanges.', screens: [] },
+  clash: { area: 'Beast Clash', title: 'How Beast Clash works', brief: 'Each side lines up its monsters in an order of entry. The two front monsters trade strikes, Supports and bench Disruptors act from the back. When a monster is knocked out, the next in line steps up with the battle as it stands. The last side standing wins, or the side with more health left after 30 exchanges.', steps: ['Pick your monsters and the order they enter; your strongest healthy ones are suggested.', 'Watch the battle at the speed you like, or skip straight to the result: it is the same battle either way.', 'Everyone who battled earns experience and gets a little tired.'], screens: ['clash-battle'] },
+  elements: { area: 'Beast Clash', title: 'Elements and type edges', brief: 'Every monster has an element (fire, water and so on). Some elements hit others harder: ▲ next to a monster means it hits the one in front of it harder, ▼ means softer. Every monster also has one move and an ability that can turn a battle.', screens: ['clash-battle'] },
+  order: { area: 'Beast Clash', title: 'Order of entry', brief: 'Your lineup order is the order your monsters enter. The first fights until it is knocked out, then the next steps up; health and conditions carry on through the whole battle. A good order puts a type edge in front and keeps your toughest monster for last.', screens: ['clash-battle'] },
   pregame: { area: 'Beast Clash', title: 'The pregame Clash', brief: 'Before kickoff a 3v3 Beast Clash replaces the coin toss. The winner chooses: receive the opening kickoff, or defer and get the ball to start the second half.', screens: ['pregame'] },
   overtime: { area: 'Beast Clash', title: 'Overtime', brief: 'A tie after the overtime quarter is settled by a Beast Clash: 3v3 in the season, 5v5 in the playoffs. The football score stands; the Clash decides who gets the win.', screens: [] },
   // --- football
@@ -109,7 +109,7 @@ export function autoTip(f, screen) {
   const key = firstUseKey(f, screen); if (!key) return null; const t = TOPICS[key];
   return { key, title: t.title, text: t.brief, steps: a.mode === 'guided' ? (t.steps || []) : [], sheet: !!t.sheet, primer: !!t.primer, guided: a.mode === 'guided' };
 }
-/** A tip tied to a moment rather than a screen (the clock late in a half, the first swap decision, the first overtime Clash). */
+/** A tip tied to a moment rather than a screen (the clock late in a half, the first overtime Clash). */
 export function momentTip(f, key) {
   if (!f || !TOPICS[key] || assistSettings(f).mode === 'expert' || f.tutorial?.seen?.[key]) return null; const t = TOPICS[key]; const g = assistSettings(f).mode === 'guided';
   return { key, title: t.title, text: t.brief, steps: g ? (t.steps || []) : [], sheet: true, primer: !!t.primer, guided: g };
@@ -117,7 +117,7 @@ export function momentTip(f, key) {
 /** Saves from before Coach Assist remembered tips under older names: carry them over so nothing already dismissed comes back. */
 export function migrateTips(f) {
   const seen = f?.tutorial?.seen; if (!seen) return;
-  for (const [from, to] of [['hq', 'week'], ['playbook', 'plays'], ['offseason', 'contracts'], ['pregame', 'gameday']]) if (seen[from] && !seen[to]) seen[to] = true;
+  for (const [from, to] of [['hq', 'week'], ['playbook', 'plays'], ['offseason', 'contracts'], ['pregame', 'gameday'], ['decisions', 'order']]) if (seen[from] && !seen[to]) seen[to] = true;
 }
 export function dismissTip(f, key) { f.tutorial ||= { seen: {} }; f.tutorial.seen ||= {}; f.tutorial.seen[key] = true; }
 export function resetTips(f) { if (f) f.tutorial = { seen: {} }; }

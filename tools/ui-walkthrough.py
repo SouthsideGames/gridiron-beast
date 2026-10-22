@@ -41,11 +41,7 @@ def step(page, n):
     # An open sheet first: its primary button, a confirm, or close it.
     if visible(page, '.sheet'):
         if visible(page, '.sheet [data-rel]'): return 'sheet:release' if click(page, '.sheet [data-rel]') else 'sheet:release-failed'  # roster full: choose who leaves
-        if visible(page, '.sheet [data-pick]'):  # a Play-mode swap decision: alternate swapping and staying
-            picks = page.eval_on_selector_all('.sheet [data-pick]', 'els => els.map(e => e.dataset.pick)')
-            choice = picks[0] if n % 2 else 'stay'
-            if n % 5 == 0: click(page, '.sheet [data-action="sheet-close"]'); return 'decision:closed'  # a player who closes the sheet must not get stuck
-            if click(page, f'.sheet [data-pick="{choice}"]'): return f'decision:{choice}'
+        if visible(page, '.sheet [data-pick]'): problems.append(f'step {n}: a swap-decision sheet appeared (battles must run without decisions)')
         for sel in ['.sheet [data-action="badge-ok"]', '.sheet [data-action="shake"]', '.sheet [data-action="reply"]', '.sheet [data-action="yes"]', '.sheet .btn.primary', '.sheet [data-action="sheet-close"]']:
             if click(page, sel): return f'sheet:{sel}'
         page.keyboard.press('Escape'); page.wait_for_timeout(100)
@@ -76,13 +72,16 @@ def step(page, n):
             if visible(page, sel) and not visible(page, '.choice.selected'): click(page, sel); break
         return 'onboarding:next' if click(page, '[data-action="next"]') else 'onboarding:retry'  # a slow machine: try again (the stuck check still catches a real dead end)
     if sn == 'clash-battle':
-        if visible(page, '[data-action="mode"]'):
-            mode = ['skip', 'auto', 'play'][len(encounter_modes) % 3]; encounter_modes.append(mode)
-            click(page, f'[data-action="mode"][data-v="{mode}"]'); return f'clash:{mode}' if click(page, '[data-action="enter"]') else None
-        if visible(page, '[data-action="toresults"]'):
-            if encounter_modes and encounter_modes[-1] == 'auto' and clash_wait[0] < 30: clash_wait[0] += 1; page.wait_for_timeout(700); return 'clash:watching'
+        if visible(page, '[data-action="enter"][data-v="watch"]'):  # the one selection phase: reorder, then watch (fastest) or skip
+            mode = ['skip', 'watch'][len(encounter_modes) % 2]; encounter_modes.append(mode)
+            if visible(page, '[data-action="movedown"][data-i="0"]'): click(page, '[data-action="movedown"][data-i="0"]')
+            if len(encounter_modes) % 3 == 0 and visible(page, '[data-action="remove"]'): click(page, '[data-action="remove"]'); click(page, '[data-action="add"]')
+            click(page, '[data-action="speed"][data-v="4"]')
+            return f'clash:{mode}' if click(page, f'[data-action="enter"][data-v="{mode}"]') else None
+        if visible(page, '[data-cl="watch"]') and not visible(page, '[data-action="accept"], [data-action="decline"], [data-action="pitch"], [data-action="choose"], [data-action="kickoff"], [data-action="final"], [data-action="done"]'):
+            if encounter_modes and encounter_modes[-1] == 'watch' and clash_wait[0] < 40: clash_wait[0] += 1; page.wait_for_timeout(700); return 'clash:watching'
             clash_wait[0] = 0
-            if click(page, '[data-action="toresults"]'): return 'clash:toresults'
+            if click(page, '[data-cl="skip"]'): return 'clash:skip-arena'
         clash_wait[0] = 0
         signs = len([m for m in encounter_modes])
         for sel in (['[data-action="accept"]', '[data-action="decline"]'] if signs % 2 else ['[data-action="decline"]', '[data-action="accept"]']) + ['[data-action="pitch"]', '[data-action="choose"][data-v="receive"]', '[data-action="kickoff"]', '[data-action="final"]', '[data-action="done"]']:

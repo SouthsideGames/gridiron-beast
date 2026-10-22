@@ -21,7 +21,7 @@ function lineups(roster) {
 }
 // Variants measured on the same weeks: 'old' (the other scouted prospects as companions, before 2026-10-22), 'new' (the shipped
 // COMPANION_RULE), and 'gap=N' tuning candidates. Every variant uses the same battle seeds.
-const VARIANTS = RULE === 'both' ? ['old', 'new', ...(args.gaps ? String(args.gaps).split(',').map((g) => `gap=${g}`) : [])] : [RULE === 'old' ? 'old' : GAP != null ? `gap=${GAP}` : 'new'];
+const VARIANTS = RULE === 'both' ? ['old', 'new', ...(args.gaps ? String(args.gaps).split(',').map((g) => `gap=${g}`) : [])] : RULE === 'old' ? ['old'] : args.gaps ? String(args.gaps).split(',').map((g) => `gap=${g}`) : [GAP != null ? `gap=${GAP}` : 'new'];
 function wildFor(f, ps, i, variant) {
   if (variant === 'old') return [ps[i], ...ps.filter((x, j) => j !== i)].slice(0, CLASH_SIZE.encounter).map((p) => p.monster);
   const rule = variant.startsWith('gap=') ? { gap: Number(variant.slice(4)) } : undefined;

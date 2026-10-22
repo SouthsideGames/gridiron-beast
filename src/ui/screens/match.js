@@ -46,6 +46,8 @@ export function registerMatchScreens(Router, app) {
       const rv = f.rivals[f.tier];
       const gym = GYM_BY_CLUB[m.opponent]; const held = gym && F.badgeOf(f, m.opponent);
       return `<div class="pregame">${m.rival ? `<div class="rival-banner">⚔️ RIVALRY GAME<div class="muted" style="font-weight:600;font-size:12px">GM ${esc(rv?.gm || '')} · all-time ${rv?.headToHead.w || 0}-${rv?.headToHead.l || 0}</div></div>` : m.playoff ? `<div class="rival-banner" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 ${esc(m.tag)}</div>` : ''}${gym ? `<div class="rival-banner" style="border-color:hsl(${TYPES[gym.element]?.hue ?? 120} 70% 55%);background:linear-gradient(90deg,hsl(${TYPES[gym.element]?.hue ?? 120} 40% 18%),hsl(${TYPES[gym.element]?.hue ?? 120} 30% 10%))">${held ? `🏅 ${esc(gym.badge).toUpperCase()} HELD` : `🏅 BADGE GAME · ${esc(gym.badge).toUpperCase()}`}<div class="muted" style="font-weight:600;font-size:12px">${esc(gym.coach.name)} · ${esc(gym.element)} gym${held ? '' : ' · win to earn it, no replays'}</div></div>` : ''}<div class="center" style="margin-bottom:8px"><div class="muted">${esc(m.tag)}</div><div style="font-size:18px;font-weight:900">${esc(m.away.name)} <span class="dim">@</span> ${esc(m.home.name)}</div></div>
+        ${(() => { const rec = (t) => { const r = f.season.records[t]; return r ? `${r.w}-${r.l}` : ''; }; const side = (team, label) => `<div class="mu-club"><div class="mu-abbr" style="color:${team.color}">${esc(team.abbr)}</div><div class="mu-name">${esc(team.name)}</div><div class="dim mono">${esc(rec(team.name))} · OVR ${teamOverall(team)}</div><div class="chip">${label}</div></div>`;
+          return `<div class="matchup-head ${m.playoff ? 'playoff' : ''}">${side(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}<div class="mu-vs"><div class="mu-vs-word">VS</div><div class="dim" style="font-size:11px">${esc(m.tag || '')}</div></div>${side(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>`; })()}
         ${talkHtml(f)}
         <div class="lineups">${col(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}${col(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>
         ${(() => { const nMedia = Object.values(mine.boosts || {}).filter((b) => b.media).length; const tr = f.week.trainingFocus; return nMedia || tr ? `<div class="panel tight" style="margin-top:8px"><b>Today's boosts</b><div class="muted" style="font-size:13px">${tr ? `<span class="boost train">T</span> Training (${esc(TRAINING_FOCI[tr]?.label || tr)}): +${f.week.training?.amount ?? ''} ${esc((TRAINING_FOCI[tr]?.attrs || []).join(', '))} for every starter` : ''}${tr && nMedia ? '<br>' : ''}${nMedia ? `<span class="boost media">+</span> Media day: ${nMedia} monster${nMedia === 1 ? '' : 's'} fired up` : ''}</div></div>` : ''; })()}
@@ -85,6 +87,32 @@ export function registerMatchScreens(Router, app) {
   let playClockTimer = null;
   let autoTimer = null; // Auto mode: the coach's suggestions play themselves out, one play at a time
   const KEY_RESULTS = new Set(['touchdown', 'interception', 'fumble', 'touchback_return', 'safety']);
+  /**
+   * What just happened, in one word and one tier, so the field can show it with the right weight (2026-10-22 presentation
+   * pass): a touchdown is bigger than a first down, a turnover is unmistakable, a sack lands, a routine gain just reports its yards.
+   */
+  function callout(ev, me) {
+    if (!ev) return null; const r = ev.sim?.result || ev.outcome?.result || null; const yards = ev.outcome?.yards ?? ev.sim?.yards; const off = ev.offenseSide;
+    const mineOff = off === me; const scoredFor = ev.scored?.team || (ev.scored ? off : null);
+    if (r === 'touchdown' || (ev.kind === 'kickoff' && ev.scored)) return { tier: 'td', text: 'TOUCHDOWN!', mine: scoredFor ? scoredFor === me : mineOff };
+    if (r === 'safety') return { tier: 'score', text: 'SAFETY', mine: !mineOff };
+    if (r === 'interception' || r === 'touchback_return') return { tier: 'turnover', text: 'INTERCEPTED!', mine: !mineOff };
+    if (r === 'fumble') return { tier: 'turnover', text: 'FUMBLE!', mine: !mineOff };
+    if (ev.kind === 'field_goal') return ev.scored ? { tier: 'score', text: 'FIELD GOAL', mine: ev.kicking === me } : { tier: 'loss', text: 'NO GOOD', mine: ev.kicking !== me };
+    if (ev.kind === 'try') return /good|GOOD|converts|two-point conversion is good/i.test(ev.text) ? { tier: 'score', text: /two/i.test(ev.text) ? 'TWO POINTS' : 'EXTRA POINT', mine: mineOff } : /no good|fails|stopped|missed/i.test(ev.text) ? { tier: 'loss', text: 'NO GOOD', mine: !mineOff } : null;
+    if (r === 'sack') return { tier: 'sack', text: 'SACK', mine: !mineOff };
+    if (r === 'incomplete' || r === 'throwaway') return { tier: 'routine', text: 'INCOMPLETE', mine: !mineOff };
+    if (ev.kind === 'punt') return { tier: 'routine', text: 'PUNT', mine: null };
+    if (ev.kind === 'kickoff') return { tier: 'routine', text: /touchback/i.test(ev.text) ? 'TOUCHBACK' : 'KICKOFF', mine: null };
+    if (typeof yards === 'number' && ev.kind === 'play') {
+      const toGo = ev.toGo ?? 10; const first = yards >= toGo;
+      if (first) return { tier: 'first', text: yards >= 20 ? `BIG PLAY · +${yards}` : 'FIRST DOWN', mine: mineOff };
+      if (yards >= 15) return { tier: 'big', text: `+${yards} YDS`, mine: mineOff };
+      if (yards < 0) return { tier: 'loss', text: `${yards} YDS`, mine: !mineOff };
+      return { tier: 'routine', text: yards === 0 ? 'NO GAIN' : `+${yards} YDS`, mine: mineOff };
+    }
+    return null;
+  }
 
   Router.registerScreen('match', {
     title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : 'Match', back: false, tabs: false, help: false, // the ⓘ button is this screen's help (it links to Coach Assist)
@@ -102,17 +130,20 @@ export function registerMatchScreens(Router, app) {
         : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession) });
       const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
       const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}">${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}</span>`).join('')}</div>` : '';
-      const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''}" id="banner">${esc(G.lastEvent.text)}${ab}</div>` : '';
+      const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
+      const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''} ${co ? `tier-${co.tier} ${co.mine === true ? 'mine' : co.mine === false ? 'theirs' : ''}` : ''} ${fresh ? 'fresh' : ''}" id="banner">${co && co.tier !== 'routine' ? `<div class="callout">${esc(co.text)}</div>` : co ? `<span class="callout small">${esc(co.text)}</span> ` : ''}${esc(G.lastEvent.text)}${ab}</div>` : '';
+      const tdFlash = fresh && co?.tier === 'td' ? ` td-flash ${co.mine ? 'mine' : 'theirs'}` : fresh && co?.tier === 'turnover' ? ' to-flash' : '';
+      const bump = (side) => (G.scoreSeen?.[side] != null && G.scoreSeen[side] !== s.score[side]) ? 'bump' : ''; const bumpA = bump('away'), bumpH = bump('home'); G.scoreSeen = { ...s.score };
       const eventBanner = G.event === 'rival' ? `<div class="rival-banner compact">⚔️ RIVALRY GAME · ${esc(s[them].name)} · GM ${esc(f.rivals[f.tier]?.gm || '')}</div>` : G.event === 'playoff' ? `<div class="rival-banner compact" style="border-color:#f5c542;background:linear-gradient(90deg,#4a3a0a,#2a2008)">🏆 PLAYOFFS · ${esc(G.tag || 'Win or go home')}</div>` : '';
       return `${eventBanner}
         <div class="scoreboard" aria-live="polite">
-          <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span><span class="abbr"><span style="color:${s.away.color}">${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score">${s.score.away}</span></div>
+          <div class="team"><span class="pos" style="visibility:${s.possession === 'away' && !s.finished ? 'visible' : 'hidden'}"></span><span class="abbr"><span style="color:${s.away.color}">${esc(s.away.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.away)}${'○'.repeat(3 - s.timeouts.away)}</span></span><span class="score ${bumpA}">${s.score.away}</span></div>
           <div class="mid"><b>${s.finished ? 'FINAL' : R.quarterText(s)} ${s.ot ? '' : fmtClock(s.clock)}</b>${esc(sit)}${clockStateHtml(s, G, myBall)}</div>
-          <div class="team right"><span class="score">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
+          <div class="team right"><span class="score ${bumpH}">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
         </div>
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
         ${edgeStrip(f, s, teams, me)}
-        <div class="field-wrap" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>
+        <div class="field-wrap${tdFlash}" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>
         <div id="controls">${controlsHtml(f, teams, look)}</div>`;
     },
     mount(root, ctx) {
@@ -327,7 +358,7 @@ export function registerMatchScreens(Router, app) {
       const frames = kickFrames(ev);
       if (frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = { frames, ballOn: 0, ballLat: 0, kick: true }; startAnim(f, ev); return; }
     }
-    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev) };
+    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), callout: callout(ev, G.playerSide), fresh: true };
     app.save(); Router.render();
   }
   function startAnim(f, ev) {
@@ -346,17 +377,25 @@ export function registerMatchScreens(Router, app) {
       if (raw > sim.frames.length - 1 && anim.fx && !anim.follow) {
         const last = sim.frames[sim.frames.length - 1]; const extra = (raw - (sim.frames.length - 1)) * 0.1; const hold = anim.hold ??= endHold(anim.fx, last.t ?? 0);
         const svg2 = document.querySelector('#field');
-        if (extra < hold && svg2) { const s2 = G.state; svg2.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame: last, prevFrame: last, fx: anim.fx, fxQuality: fxQualityFor(f), time: (last.t ?? 0) + extra, ownLabel: s2[anim.ev.offenseSide].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); anim.raf = requestAnimationFrame(tick); return; }
+        if (extra < hold && svg2 && now - (anim.holdDrawn || 0) >= 33) { anim.holdDrawn = now; const s2 = G.state; svg2.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame: last, prevFrame: last, fx: anim.fx, fxQuality: fxQualityFor(f), time: (last.t ?? 0) + extra, ownLabel: s2[anim.ev.offenseSide].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); anim.raf = requestAnimationFrame(tick); return; }
+        if (extra < hold) { anim.raf = requestAnimationFrame(tick); return; }
         finishAnim(f, false); return;
       }
       const svg = document.querySelector('#field'); // re-query: stopping Auto mid-play re-renders the screen
-      if (idx !== anim.i && svg) {
-        anim.i = idx;
-        const s = G.state;
+      // Smoother movement (2026-10-22): the sim records 10 frames a second; between two frames a half-step is drawn at the
+      // midpoint (20 fps) unless the last draw was slow on this device, in which case the plain frames are kept. Reduced
+      // motion never animates a play at all (afterStep), so nothing changes there.
+      const exact = Math.max(0, (now - anim.start) / anim.msPerFrame); const half = !anim.slow && raw < sim.frames.length - 1 && exact - raw >= 0.5;
+      const key = idx * 2 + (half ? 1 : 0);
+      if (key !== anim.key && svg) {
+        anim.key = key; anim.i = idx;
+        const s = G.state; const t0 = performance.now();
         if (anim.follow) { const target = cameraFor(sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const prevT = sim.frames[Math.max(0, idx - 1)].t ?? 0, ft = sim.frames[idx].t ?? 0;
-        svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: sim.frames[idx], prevFrame: sim.frames[idx - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
-        if (idx > 0 && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
+        const drawFrame = half ? midFrame(sim.frames[idx], sim.frames[idx + 1]) : sim.frames[idx];
+        svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
+        if (idx > 0 && !half && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
+        if (performance.now() - t0 > 18) anim.slow = true; // this device cannot afford half-steps: back off for the rest of the play
       }
       if (idx >= sim.frames.length - 1 && !(anim.fx && !anim.follow && endHold(anim.fx, sim.frames[sim.frames.length - 1].t ?? 0) > 0)) { finishAnim(f, false); return; }
       anim.raf = requestAnimationFrame(tick);
@@ -371,12 +410,20 @@ export function registerMatchScreens(Router, app) {
     const off = pack(T[offSide]), def = pack(T[defSide]);
     return { off: { map: T[offSide].offense, pool: off.pool }, def: { map: T[defSide].defense, pool: def.pool } };
   }
+  /** The midpoint between two sim frames: positions and the ball lerped, everything else (engagement, status, holder) from the first. Frames across a phase change are not blended. */
+  function midFrame(a, b) {
+    if (!a || !b || a.phase !== b.phase || !a.ball || !b.ball || a.motion !== b.motion) return a;
+    const lerp = (p, q) => q && q[0] === p[0] ? [p[0], (p[1] + q[1]) / 2, (p[2] + q[2]) / 2, p[3], p[4]] : p;
+    const byId = (list) => Object.fromEntries(list.map((p) => [p[0], p]));
+    const bo = byId(b.off), bd = byId(b.def);
+    return { ...a, t: ((a.t ?? 0) + (b.t ?? 0)) / 2, off: a.off.map((p) => lerp(p, bo[p[0]])), def: a.def.map((p) => lerp(p, bd[p[0]])), ball: [(a.ball[0] + b.ball[0]) / 2, (a.ball[1] + b.ball[1]) / 2, a.ball[2]], mid: true };
+  }
   function animColors(s, ev) { const o = ev.offenseSide || 'home'; return { off: s[o].color, def: s[R.opponent(o)].color }; }
   function finishAnim(f, skipped) {
     if (!anim) return;
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
     const G = f.game;
-    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev) };
+    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), callout: callout(ev, G.playerSide), fresh: true };
     app.save(); Router.render();
     firstAbilityTip(f, ev);
   }
@@ -492,7 +539,18 @@ export function registerMatchScreens(Router, app) {
         <button class="btn primary big block" data-action="badge-ok" style="margin-top:8px">Continue</button></div>`, { title: 'Gym cleared', onClose: toHq });
       document.querySelector('.sheet [data-action="badge-ok"]')?.addEventListener('click', () => close());
     };
-    sheet(`${box}${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured · ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: gym ? 'Final · badge game' : 'Final', onClose: handshake });
+    // The final whistle (2026-10-22 presentation pass): a result hero weighted to the occasion, the box score, then what the
+    // game did to the roster: XP for every starter, level-ups with the rating change, injuries.
+    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && /final|bowl/i.test(tag); const playoff = G.event === 'playoff';
+    const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? 'BEAST BOWL CHAMPIONS' : playoff ? 'PLAYOFF WIN' : diff >= 17 ? 'DOMINANT WIN' : diff <= 3 ? 'NARROW WIN' : 'VICTORY') : (champ ? 'BEAST BOWL LOST' : playoff ? 'SEASON OVER' : diff >= -3 ? 'NARROW LOSS' : 'DEFEAT');
+    const hero = `<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${s[me].color}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${s[them].color}">${esc(s[them].abbr)}</span></div><div class="dim">${esc(tag || `Week ${f.season.week}`)}${otTag}${G.event === 'rival' ? ' · ⚔️ rivalry' : ''}</div></div>`;
+    const xpRows = ev.filter((e) => e.kind === 'xp').sort((a, b) => b.amount - a.amount);
+    const lvl = ev.filter((e) => e.kind === 'levelup' || e.kind === 'evolve'); const inj = ev.filter((e) => e.kind === 'injury');
+    const after = `${lvl.length ? `<h3>Level-ups</h3><div class="list">${lvl.map((e) => e.kind === 'evolve' ? `<div class="item static good"><div class="grow"><div class="name">✨ EVOLUTION · ${esc(e.from)} → ${esc(e.to)}</div></div></div>` : `<div class="item static"><div class="grow"><div class="name">⬆️ ${esc(e.name)} · level ${e.level}</div><div class="sub">${e.from} → <b style="color:var(--good)">${e.to}</b> OVR${f.settings.autoPoints ? '' : ' · 2 points to spend on the Roster'}</div></div></div>`).join('')}</div>` : ''}
+      ${inj.length ? `<h3>Injuries</h3><div class="list">${inj.map((e) => `<div class="item static" style="border-color:var(--bad)"><div class="grow"><div class="name" style="color:var(--bad)">🩹 ${esc(e.name)}</div><div class="sub">${esc(e.severity)} · out ${e.weeks} week${e.weeks === 1 ? '' : 's'}</div></div></div>`).join('')}</div>` : ''}
+      ${xpRows.length ? `<h3>Experience</h3><div class="xp-grid">${xpRows.slice(0, 12).map((x) => `<div class="xp-row"><span class="xp-name">${esc(x.name)} <span class="dim">${esc(x.position)}</span></span><span class="xp-amt">+${x.amount}</span><div class="bar"><i style="width:${Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div><span class="dim mono xp-lv">Lv ${x.level}</span></div>`).join('')}${xpRows.length > 12 ? `<p class="dim">and ${xpRows.length - 12} more starters.</p>` : ''}</div>` : ''}
+      ${!lvl.length && !inj.length ? '<p class="dim">No injuries. Fatigue builds with every game and recovers through the week.</p>' : ''}`;
+    sheet(`${hero}${box}${after}`, { title: gym ? 'Final · badge game' : champ ? 'Beast Bowl' : playoff ? 'Final · playoffs' : 'Final', onClose: handshake });
   }
 
   function startPlayClock(f, root) {

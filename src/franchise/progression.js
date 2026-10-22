@@ -17,7 +17,7 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
     let xp = 24 + (won ? 10 : 0);
     xp += Math.round((st.rushYds || 0) / 4 + (st.recYds || 0) / 4 + (st.passYds || 0) / 10);
     xp += (st.td || 0) * 14 + (st.tackles || 0) * 5 + (st.sacks || 0) * 12 + (st.int || 0) * 14 + (st.rec || 0) * 2;
-    m.xp += xp;
+    m.xp += xp; const startLevel = m.level;
     while (m.xp >= xpForLevel(m.level)) {
       m.xp -= xpForLevel(m.level);
       const before = monsterOverall(m);
@@ -25,6 +25,8 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
       events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
       if (autoEvolve) { const evo = tryEvolve(m); if (evo) events.push(evo); } // the owner's monsters wait for the owner (GDD §20.6)
     }
+    // What the final-whistle screen shows for every starter (2026-10-22 feedback pass): XP gained and progress toward the next level.
+    events.push({ kind: 'xp', id: m.id, name: m.name, position: m.position, amount: xp, level: m.level, levelsGained: m.level - startLevel, xp: m.xp, next: xpForLevel(m.level) });
     // Fatigue and injury risk.
     const dur = norm(m.attributes.durability);
     const stamina = speciesEffect(m)?.effect?.fatigue || 1; // Iron Lungs: tires slower

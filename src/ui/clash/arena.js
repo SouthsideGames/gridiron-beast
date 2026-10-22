@@ -41,7 +41,10 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const spriteImg = (svg) => `<img class="cl-sprite" alt="" draggable="false" src="data:image/svg+xml;utf8,${encodeURIComponent(svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))}">`;
 
 /**
- * Mount the arena into `root` for `result`. Options: { speed, reducedMotion, quality: () => 'full'|'low', onCursor(i), onEnd(), onQuality(q) }.
+ * Mount the arena into `root` for `result`. Options: { speed, reducedMotion, quality: () => 'full'|'low', onCursor(i), onEnd(), onQuality(q),
+ *   names: { a, b } (team names for the strips, the matchup line and the victory banner; default 'Side A' / 'Side B'),
+ *   edge: (attackerType, defenderType) => 'strong' | 'weak' | 'even' (the matchup line's type edge; the arena itself never imports the engine),
+ *   simple: true (franchise battles: Watch / Speed / Skip only, no step, scrubber or FX toggle) }.
  * Returns the player API; call destroy() on unmount.
  */
 export function createArena(root, result, opts = {}) {
@@ -55,8 +58,10 @@ export function createArena(root, result, opts = {}) {
   const all = [...result.lines.a, ...result.lines.b];
   const byId = Object.fromEntries(all.map((x) => [x.id, x]));
 
-  root.innerHTML = `<div class="cl-arena ${sizeKey} theme-${theme.key}">
-    <div class="cl-hud"><span class="cl-ex">Exchange <b>0</b> / ${result.exchanges}</span><span class="cl-sd"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}</span><div class="cl-exbar"><i></i></div></div>
+  const names = { a: opts.names?.a || 'Side A', b: opts.names?.b || 'Side B' }; const simple = !!opts.simple;
+  root.innerHTML = `<div class="cl-arena ${sizeKey} theme-${theme.key} ${simple ? 'simple' : ''}">
+    <div class="cl-hud"><span class="cl-ex">Exchange <b>0</b> / ${result.exchanges}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}</span><div class="cl-exbar"><i></i></div></div>
+    <div class="cl-matchup" aria-live="polite"></div>
     <div class="cl-viewport"><div class="cl-stage" style="background-color:${theme.base};background-image:${theme.tile}">
       <div class="cl-half cl-half-a" style="background:${theme.halfA}"></div><div class="cl-half cl-half-b" style="background:${theme.halfB}"></div><div class="cl-mid" style="background:${theme.line}"></div>
       ${decorSvg(theme, result.seed || 1, isLandscape())}
@@ -64,10 +69,12 @@ export function createArena(root, result, opts = {}) {
       <canvas class="cl-fx"></canvas>
       <div class="cl-layer"></div>
     </div><div class="cl-dim"></div></div>
-    <div class="cl-strips ${perSide >= 4 ? 'compact' : ''}">${['a', 'b'].map((s) => `<div class="cl-strip cl-strip-${s}">${result.lines[s].map((x) => `<div class="cl-card" data-card="${x.id}" title="${esc(x.name)}">${spriteImg(monsterSprite(mon(x), 16, { flip: s === 'b' }))}<div class="cl-card-body"><div class="cl-card-name">${esc(x.name)}</div><div class="bar"><i></i></div><div class="cl-card-sub"><span class="cl-card-hp"></span><span class="cl-card-sh"></span><span class="cl-card-cond"></span></div></div><span class="cl-card-ko">KO</span></div>`).join('')}</div>`).join('')}</div>
+    <div class="cl-strips ${perSide >= 4 ? 'compact' : ''}">${['a', 'b'].map((s) => `<div class="cl-strip-wrap"><div class="cl-strip-label ${s === 'a' ? 'mine' : ''}">${esc(names[s])}</div><div class="cl-strip cl-strip-${s}">${result.lines[s].map((x) => `<div class="cl-card" data-card="${x.id}" title="${esc(x.name)}">${spriteImg(monsterSprite(mon(x), 16, { flip: s === 'b' }))}<div class="cl-card-body"><div class="cl-card-name">${esc(x.name)}</div><div class="bar"><i></i></div><div class="cl-card-sub"><span class="cl-card-hp"></span><span class="cl-card-sh"></span><span class="cl-card-cond"></span></div></div><span class="cl-card-ko">KO</span></div>`).join('')}</div></div>`).join('')}</div>
     <div class="cl-controls">
-      <div class="cl-btnrow"><button class="btn primary" data-cl="watch">▶ Watch</button><button class="btn" data-cl="step">⏭ Step</button><button class="btn" data-cl="nextex">Next ex.</button><button class="btn" data-cl="skip">Skip</button></div>
-      <div class="row cl-speedrow"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s}×</button>`).join('')}<input type="range" min="0" max="${n - 1}" value="0" data-cl="scrub" aria-label="Replay position"><button class="btn small ghost" data-cl="fxq" title="Effects quality">FX ${quality === 'low' ? 'low' : 'full'}</button></div>
+      ${simple
+        ? `<div class="cl-btnrow simple"><button class="btn primary" data-cl="watch">▶ Watch</button><span class="cl-speedrow row"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s === 1 ? 'Normal' : s === 2 ? 'Fast' : 'Fastest'}</button>`).join('')}</span><button class="btn" data-cl="skip">Skip ▸▸</button></div>`
+        : `<div class="cl-btnrow"><button class="btn primary" data-cl="watch">▶ Watch</button><button class="btn" data-cl="step">⏭ Step</button><button class="btn" data-cl="nextex">Next ex.</button><button class="btn" data-cl="skip">Skip</button></div>
+      <div class="row cl-speedrow"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s}×</button>`).join('')}<input type="range" min="0" max="${n - 1}" value="0" data-cl="scrub" aria-label="Replay position"><button class="btn small ghost" data-cl="fxq" title="Effects quality">FX ${quality === 'low' ? 'low' : 'full'}</button></div>`}
       <div class="cl-caption"></div>
     </div></div>`;
   const $ = (sel) => root.querySelector(sel); const $$ = (sel) => Array.from(root.querySelectorAll(sel));
@@ -120,9 +127,21 @@ export function createArena(root, result, opts = {}) {
       }
     }
     $('.cl-ex b').textContent = String(st.ex); $('.cl-exbar i').style.width = `${Math.min(100, st.ex / 30 * 100)}%`;
+    { const up = (side) => st.order[side].filter((id) => !st.S[side][id].ko).length; $('.cl-standing').textContent = `${up('a')} v ${up('b')} standing`; }
+    matchup(st);
     $('.cl-sd').textContent = st.ramp > 1 ? `⚡ Sudden death ×${st.ramp.toFixed(2)}` : ''; viewport.classList.toggle('sudden', st.ramp > 1);
     { const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(st.i); } // the host may have been emptied (destroy) mid-cue
     caption.textContent = result.log[st.i]?.text || '';
+  }
+
+  /** The matchup line: the two front monsters and who has the type edge (▲ strong, ▼ weak, = even), in words the strips echo. */
+  function matchup(st) {
+    const el = $('.cl-matchup'); if (!el) return;
+    const fa = st.front?.a, fb = st.front?.b; if (!fa || !fb || st.S.a[fa]?.ko || st.S.b[fb]?.ko) { el.innerHTML = ''; return; }
+    const A = byId[fa], B = byId[fb]; const ab = opts.edge ? opts.edge(A.type, B.type) : 'even', ba = opts.edge ? opts.edge(B.type, A.type) : 'even';
+    const edge = (e) => e === 'strong' ? '<b class="edge strong" title="type advantage">▲</b>' : e === 'weak' ? '<b class="edge weak" title="type disadvantage">▼</b>' : '<span class="edge even">=</span>';
+    el.innerHTML = `<span class="mu-side a"><span class="mu-name">${esc(A.name)}</span> <span class="mu-type">${esc(A.type)}</span> ${edge(ab)}</span><span class="mu-vs">vs</span><span class="mu-side b">${edge(ba)} <span class="mu-type">${esc(B.type)}</span> <span class="mu-name">${esc(B.name)}</span></span>`;
+    el.className = `cl-matchup ${ab === 'strong' ? 'a-up' : ba === 'strong' ? 'b-up' : ''}`;
   }
 
   // ---- geometry (stage pixels)
@@ -275,7 +294,7 @@ export function createArena(root, result, opts = {}) {
       case 'sudden-death': { banner('Sudden death!', 'sd', D); applyState(st); fx.ring([stage.clientWidth / 2, stage.clientHeight / 2], '#f87171', 8, Math.max(stage.clientWidth, stage.clientHeight) * 0.6, 700); await wait(dur(D * 0.8)); break; }
       case 'cap': case 'coin': { banner(cue.label, 'major', D); applyState(st); await wait(dur(D * 0.8)); break; }
       case 'victory': {
-        applyState(st); const side = e.winner; banner(`Side ${side.toUpperCase()} wins!`, `major win ${isLandscape() ? '' : side === 'b' ? 'low' : 'high'}`, D * 1.4);
+        applyState(st); const side = e.winner; banner(simple ? (side === 'a' ? `${names.a} win!` : `${names.b} win`) : `Side ${side.toUpperCase()} wins!`, `major win ${side === 'a' ? 'mine' : 'theirs'} ${isLandscape() ? '' : side === 'b' ? 'low' : 'high'}`, D * 1.4);
         const standing = st.order[side].filter((id) => !st.S[side][id].ko);
         for (const id of standing) fx.victory(feet(id), { seed: cue.i + id.charCodeAt(1) });
         const hop = (id) => anim(rig(id), [{ transform: 'translateY(0)' }, { transform: 'translateY(-16px)' }, { transform: 'translateY(0)' }, { transform: 'translateY(-12px)' }, { transform: 'translateY(0)' }], D, 'ease-in-out');
@@ -312,7 +331,7 @@ export function createArena(root, result, opts = {}) {
     if (k === 'speed') { speed = Number(b.dataset.v) || 1; for (const s of $$('[data-cl="speed"]')) s.classList.toggle('primary', Number(s.dataset.v) === speed); }
     if (k === 'fxq') { quality = quality === 'low' ? 'full' : 'low'; b.textContent = `FX ${quality}`; fx.resize(); opts.onQuality?.(quality); }
   });
-  $('[data-cl="scrub"]').addEventListener('input', (ev) => { const to = Number(ev.target.value) || 0; pause(); setCursor(to); }); // read before pause() re-syncs the slider
+  $('[data-cl="scrub"]')?.addEventListener('input', (ev) => { const to = Number(ev.target.value) || 0; pause(); setCursor(to); }); // read before pause() re-syncs the slider
   const onResize = () => { fx.resize(); $('.cl-decor')?.replaceWith(decorNode()); applyState(stateAt(result, cursor), { instant: true }); };
   const decorNode = () => { const t = document.createElement('template'); t.innerHTML = decorSvg(theme, result.seed || 1, isLandscape()); return t.content.firstChild; };
   window.addEventListener('resize', onResize);
