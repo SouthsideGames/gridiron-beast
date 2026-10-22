@@ -1087,7 +1087,7 @@ export const skipEncounter = skipRecruit;
  * scouted with. Companions are drawn from their own seed (franchise seed, season, week, prospect), so the preview and the battle
  * always match and the franchise generator is untouched.
  */
-export const COMPANION_RULE = Object.freeze({ gap: 8, spread: 2, floor: 50, ceiling: 95 });
+export const COMPANION_RULE = Object.freeze({ gap: 9, spread: 2, floor: 50, ceiling: 95 });
 export function clubBattleStrength(f) {
   const line = autoLineup(f.roster, CLASH_SIZE.encounter, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`));
   return line.length ? line.reduce((a, m) => a + monsterOverall(m), 0) / line.length : 0;
