@@ -375,17 +375,25 @@ export function registerMatchScreens(Router, app) {
       if (raw > sim.frames.length - 1 && anim.fx && !anim.follow) {
         const last = sim.frames[sim.frames.length - 1]; const extra = (raw - (sim.frames.length - 1)) * 0.1; const hold = anim.hold ??= endHold(anim.fx, last.t ?? 0);
         const svg2 = document.querySelector('#field');
-        if (extra < hold && svg2) { const s2 = G.state; svg2.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame: last, prevFrame: last, fx: anim.fx, fxQuality: fxQualityFor(f), time: (last.t ?? 0) + extra, ownLabel: s2[anim.ev.offenseSide].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); anim.raf = requestAnimationFrame(tick); return; }
+        if (extra < hold && svg2 && now - (anim.holdDrawn || 0) >= 33) { anim.holdDrawn = now; const s2 = G.state; svg2.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame: last, prevFrame: last, fx: anim.fx, fxQuality: fxQualityFor(f), time: (last.t ?? 0) + extra, ownLabel: s2[anim.ev.offenseSide].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites }); anim.raf = requestAnimationFrame(tick); return; }
+        if (extra < hold) { anim.raf = requestAnimationFrame(tick); return; }
         finishAnim(f, false); return;
       }
       const svg = document.querySelector('#field'); // re-query: stopping Auto mid-play re-renders the screen
-      if (idx !== anim.i && svg) {
-        anim.i = idx;
-        const s = G.state;
+      // Smoother movement (2026-10-22): the sim records 10 frames a second; between two frames a half-step is drawn at the
+      // midpoint (20 fps) unless the last draw was slow on this device, in which case the plain frames are kept. Reduced
+      // motion never animates a play at all (afterStep), so nothing changes there.
+      const exact = Math.max(0, (now - anim.start) / anim.msPerFrame); const half = !anim.slow && raw < sim.frames.length - 1 && exact - raw >= 0.5;
+      const key = idx * 2 + (half ? 1 : 0);
+      if (key !== anim.key && svg) {
+        anim.key = key; anim.i = idx;
+        const s = G.state; const t0 = performance.now();
         if (anim.follow) { const target = cameraFor(sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const prevT = sim.frames[Math.max(0, idx - 1)].t ?? 0, ft = sim.frames[idx].t ?? 0;
-        svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: sim.frames[idx], prevFrame: sim.frames[idx - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
-        if (idx > 0 && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
+        const drawFrame = half ? midFrame(sim.frames[idx], sim.frames[idx + 1]) : sim.frames[idx];
+        svg.innerHTML = fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
+        if (idx > 0 && !half && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
+        if (performance.now() - t0 > 18) anim.slow = true; // this device cannot afford half-steps: back off for the rest of the play
       }
       if (idx >= sim.frames.length - 1 && !(anim.fx && !anim.follow && endHold(anim.fx, sim.frames[sim.frames.length - 1].t ?? 0) > 0)) { finishAnim(f, false); return; }
       anim.raf = requestAnimationFrame(tick);
@@ -399,6 +407,14 @@ export function registerMatchScreens(Router, app) {
     const pack = (team) => { const map = { ...team.offense, ...team.defense }; const pool = Object.values(map).filter((m) => m?.id); return { map, pool: team.kicker?.id ? [team.kicker, ...pool] : pool }; };
     const off = pack(T[offSide]), def = pack(T[defSide]);
     return { off: { map: T[offSide].offense, pool: off.pool }, def: { map: T[defSide].defense, pool: def.pool } };
+  }
+  /** The midpoint between two sim frames: positions and the ball lerped, everything else (engagement, status, holder) from the first. Frames across a phase change are not blended. */
+  function midFrame(a, b) {
+    if (!a || !b || a.phase !== b.phase || !a.ball || !b.ball || a.motion !== b.motion) return a;
+    const lerp = (p, q) => q && q[0] === p[0] ? [p[0], (p[1] + q[1]) / 2, (p[2] + q[2]) / 2, p[3], p[4]] : p;
+    const byId = (list) => Object.fromEntries(list.map((p) => [p[0], p]));
+    const bo = byId(b.off), bd = byId(b.def);
+    return { ...a, t: ((a.t ?? 0) + (b.t ?? 0)) / 2, off: a.off.map((p) => lerp(p, bo[p[0]])), def: a.def.map((p) => lerp(p, bd[p[0]])), ball: [(a.ball[0] + b.ball[0]) / 2, (a.ball[1] + b.ball[1]) / 2, a.ball[2]], mid: true };
   }
   function animColors(s, ev) { const o = ev.offenseSide || 'home'; return { off: s[o].color, def: s[R.opponent(o)].color }; }
   function finishAnim(f, skipped) {
@@ -521,7 +537,18 @@ export function registerMatchScreens(Router, app) {
         <button class="btn primary big block" data-action="badge-ok" style="margin-top:8px">Continue</button></div>`, { title: 'Gym cleared', onClose: toHq });
       document.querySelector('.sheet [data-action="badge-ok"]')?.addEventListener('click', () => close());
     };
-    sheet(`${box}${ev.length ? `<h3>After the game</h3><ul style="padding-left:18px">${ev.map((e) => `<li class="${e.kind === 'injury' ? 'injury' : 'levelup'}">${esc(e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)` : e.kind === 'injury' ? `${e.name} injured · ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}` : e.name)}</li>`).join('')}</ul>` : '<p class="muted">No injuries. Fatigue accumulated; it recovers through the week.</p>'}`, { title: gym ? 'Final · badge game' : 'Final', onClose: handshake });
+    // The final whistle (2026-10-22 presentation pass): a result hero weighted to the occasion, the box score, then what the
+    // game did to the roster: XP for every starter, level-ups with the rating change, injuries.
+    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && /final|bowl/i.test(tag); const playoff = G.event === 'playoff';
+    const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? 'BEAST BOWL CHAMPIONS' : playoff ? 'PLAYOFF WIN' : diff >= 17 ? 'DOMINANT WIN' : diff <= 3 ? 'NARROW WIN' : 'VICTORY') : (champ ? 'BEAST BOWL LOST' : playoff ? 'SEASON OVER' : diff >= -3 ? 'NARROW LOSS' : 'DEFEAT');
+    const hero = `<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${s[me].color}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${s[them].color}">${esc(s[them].abbr)}</span></div><div class="dim">${esc(tag || `Week ${f.season.week}`)}${otTag}${G.event === 'rival' ? ' · ⚔️ rivalry' : ''}</div></div>`;
+    const xpRows = ev.filter((e) => e.kind === 'xp').sort((a, b) => b.amount - a.amount);
+    const lvl = ev.filter((e) => e.kind === 'levelup' || e.kind === 'evolve'); const inj = ev.filter((e) => e.kind === 'injury');
+    const after = `${lvl.length ? `<h3>Level-ups</h3><div class="list">${lvl.map((e) => e.kind === 'evolve' ? `<div class="item static good"><div class="grow"><div class="name">✨ EVOLUTION · ${esc(e.from)} → ${esc(e.to)}</div></div></div>` : `<div class="item static"><div class="grow"><div class="name">⬆️ ${esc(e.name)} · level ${e.level}</div><div class="sub">${e.from} → <b style="color:var(--good)">${e.to}</b> OVR${f.settings.autoPoints ? '' : ' · 2 points to spend on the Roster'}</div></div></div>`).join('')}</div>` : ''}
+      ${inj.length ? `<h3>Injuries</h3><div class="list">${inj.map((e) => `<div class="item static" style="border-color:var(--bad)"><div class="grow"><div class="name" style="color:var(--bad)">🩹 ${esc(e.name)}</div><div class="sub">${esc(e.severity)} · out ${e.weeks} week${e.weeks === 1 ? '' : 's'}</div></div></div>`).join('')}</div>` : ''}
+      ${xpRows.length ? `<h3>Experience</h3><div class="xp-grid">${xpRows.slice(0, 12).map((x) => `<div class="xp-row"><span class="xp-name">${esc(x.name)} <span class="dim">${esc(x.position)}</span></span><span class="xp-amt">+${x.amount}</span><div class="bar"><i style="width:${Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div><span class="dim mono xp-lv">Lv ${x.level}</span></div>`).join('')}${xpRows.length > 12 ? `<p class="dim">and ${xpRows.length - 12} more starters.</p>` : ''}</div>` : ''}
+      ${!lvl.length && !inj.length ? '<p class="dim">No injuries. Fatigue builds with every game and recovers through the week.</p>' : ''}`;
+    sheet(`${hero}${box}${after}`, { title: gym ? 'Final · badge game' : champ ? 'Beast Bowl' : playoff ? 'Final · playoffs' : 'Final', onClose: handshake });
   }
 
   function startPlayClock(f, root) {

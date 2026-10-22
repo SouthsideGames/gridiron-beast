@@ -1471,7 +1471,7 @@ export function finishSunday(f, gameState) {
     f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
     if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}-${gameState.score[oppSide]}` }; f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length }; news(f, `BADGE EARNED: the ${gym.badge} · badge ${Object.keys(f.campaign.badges).length} of 8. ${gym.coach.name}'s ${m.opponent} fall to ${f.club} ${gameState.score[side]}-${gameState.score[oppSide]}.`, 'win'); }
   }
-  for (const e of events) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)${f.settings.autoPoints ? '' : ', 2 attribute points to spend on the roster'}.` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
+  for (const e of events.filter((x) => x.kind !== 'xp')) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)${f.settings.autoPoints ? '' : ', 2 attribute points to spend on the roster'}.` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   recordPlayStats(f, gameState, side);
