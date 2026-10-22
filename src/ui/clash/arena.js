@@ -90,6 +90,7 @@ export function createArena(root, result, opts = {}) {
     return out;
   }
   function applyState(st, { instant = false } = {}) {
+    if (!root.isConnected || !root.querySelector('.cl-stage')) return; // destroyed (or unmounted) while a cue was in flight
     const sizes = sizesFor(sizeKey, stage.clientHeight || 440, isLandscape()); const H = stage.clientHeight || 440;
     for (const side of ['a', 'b']) {
       const slots = slotsFor(side, st);
@@ -196,6 +197,7 @@ export function createArena(root, result, opts = {}) {
 
   // ---- one cue
   async function playCue(cue) {
+    if (!root.querySelector('.cl-stage')) return;
     const e = cue.event; const D = cue.duration; const st = stateAt(result, cue.i);
     camera(cue.camera); setActing(e.actor && ['damage', 'heal', 'shield', 'miss', 'skip', 'buff', 'debuff'].includes(e.kind) ? e.actor : null, true);
     const name = cue.named ? byId[e.actor]?.combatant.move.name : null;
