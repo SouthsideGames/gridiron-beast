@@ -6,7 +6,8 @@ import { esc, delegate, toast, sheet, fmtClock, confirmSheet } from '../dom.js';
 import * as F from '../../franchise/franchise.js';
 import * as Save from '../../franchise/save.js';
 import * as R from '../../sim/rules.js';
-import { maybeSheetTip } from '../tutorial.js';
+import { momentSheet } from '../tutorial.js';
+import { isExpert } from '../../franchise/assist.js';
 import * as AI from '../../sim/coach-ai.js';
 import { step, aiController, newTendencies } from '../../sim/game-runner.js';
 import { rngFromState } from '../../core/rng.js';
@@ -86,7 +87,7 @@ export function registerMatchScreens(Router, app) {
   const KEY_RESULTS = new Set(['touchdown', 'interception', 'fumble', 'touchback_return', 'safety']);
 
   Router.registerScreen('match', {
-    title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : 'Match', back: false, tabs: false,
+    title: ({ f }) => f?.game ? `${f.game.state.away.abbr} ${f.game.state.score.away}-${f.game.state.score.home} ${f.game.state.home.abbr}` : 'Match', back: false, tabs: false, help: false, // the ⓘ button is this screen's help (it links to Coach Assist)
     topRight: () => `<button class="btn ghost small" data-action="box" aria-label="Box score">📊</button><button class="btn ghost small" data-action="log" aria-label="Play log">📋</button><button class="btn ghost small" data-action="help" aria-label="How a match works">ⓘ</button>`,
     render({ f }) {
       const G = f.game; if (!G) return `<div class="panel"><p>No game in progress.</p><button class="btn block" data-action="hq">Headquarters</button></div>`;
@@ -148,8 +149,9 @@ export function registerMatchScreens(Router, app) {
       });
       root.querySelector('#fieldwrap')?.addEventListener('click', () => { if (anim) finishAnim(f, true); });
       document.querySelector('.topbar [data-action="log"]')?.addEventListener('click', () => showLog(f));
-      document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(matchHelpHtml(f), { title: 'How a match works' }));
-      { const s0 = f.game?.state; if (s0 && !s0.finished && s0.phase === 'scrimmage' && R.inTwoMinute(s0) && !document.querySelector('.sheet')) maybeSheetTip(f, 'clock', () => app.save()); }
+      document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(`${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match" style="margin-top:8px">? More help (Coach Assist)</button>`, { title: 'How a match works' }));
+      { const s1 = f.game?.state; if (s1?.finished && s1.needsTiebreak && !s1.winner && !document.querySelector('.sheet')) momentSheet(f, 'overtime', () => app.save()); } // Coach Assist: what the overtime Clash is, once
+      { const s0 = f.game?.state; if (s0 && !s0.finished && s0.phase === 'scrimmage' && R.inTwoMinute(s0) && !document.querySelector('.sheet')) momentSheet(f, 'clock', () => app.save()); }
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? 'Final' : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box score' }));
     },
     unmount() { stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
@@ -384,7 +386,7 @@ export function registerMatchScreens(Router, app) {
    * During Auto it is a toast, so the game keeps moving.
    */
   function firstAbilityTip(f, ev) {
-    if (f.settings.tutorial === false || !ev.sim) return;
+    if (isExpert(f) || !ev.sim) return; // Coach Assist: Expert has no automatic tips
     const G = f.game; const seen = (f.abilityTips ||= {}); const off = ev.offenseSide || G.state.possession; const look = fxLookup(f, off);
     for (const e of (Array.isArray(ev.sim.events) ? ev.sim.events : [])) {
       if (e.kind !== 'ability' || e.trait) continue;

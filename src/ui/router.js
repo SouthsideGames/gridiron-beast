@@ -12,9 +12,10 @@ let ctxProvider = () => ({});
 let tabsProvider = () => null;
 let tipProvider = null; // (ctx, screenName) => html prepended to the screen (tutorial tips)
 let afterMount = null; // (ctx, screenName) => void
+let helpProvider = null; // (ctx, screenName) => html for the top bar's "? Help" button (Coach Assist, every mode)
 
 export function registerScreen(name, screen) { screens.set(name, screen); }
-export function init({ root, context, tabs, tip = null, mounted = null }) { app = root; ctxProvider = context; tabsProvider = tabs; tipProvider = tip; afterMount = mounted; }
+export function init({ root, context, tabs, tip = null, mounted = null, help = null }) { app = root; ctxProvider = context; tabsProvider = tabs; tipProvider = tip; afterMount = mounted; helpProvider = help; }
 export function currentScreen() { return stack[stack.length - 1] || null; }
 
 export function go(name, params = {}, { replace = false, reset = false } = {}) {
@@ -43,7 +44,7 @@ export function render() {
     <header class="topbar" role="banner">
       ${showBack ? `<button class="btn ghost back" data-action="router-back" aria-label="Back">‹</button>` : '<span class="back-spacer"></span>'}
       <h1 class="title">${esc(title)}</h1>
-      <span class="topbar-right">${screen.topRight ? screen.topRight(ctx) : ''}</span>
+      <span class="topbar-right">${screen.topRight ? screen.topRight(ctx) : ''}${helpProvider && screen.help !== false ? helpProvider(ctx, top.name) : ''}</span>
     </header>
     <main class="screen screen-${esc(top.name)} ${tabs ? 'with-tabs' : ''}" id="screen">${tipProvider ? tipProvider(ctx, top.name) : ''}${screen.render(ctx)}</main>
     ${tabs ? `<nav class="tabbar" aria-label="Franchise sections">${tabs.map((t) => `<button class="tab ${t.active ? 'active' : ''}" data-action="router-tab" data-screen="${t.screen}" aria-current="${t.active ? 'page' : 'false'}"><span class="tab-icon">${t.icon}${t.badge ? `<span class="tab-badge" aria-label="${t.badge} notices">${t.badge > 9 ? '9+' : t.badge}</span>` : ''}</span><span>${esc(t.label)}</span></button>`).join('')}</nav>` : ''}`;

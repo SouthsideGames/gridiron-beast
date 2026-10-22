@@ -9,7 +9,7 @@ import { monsterOverall } from '../src/data/monsters.js';
 import { newFranchise } from './franchise-soak.mjs';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
-const N = Number(args.n || 24), SEASONS = Number(args.seasons || 2), REPS = Number(args.reps || 4), SEED0 = Number(args.seed || 500), RULE = args.rule || 'new', GAP = args.gap != null ? Number(args.gap) : null;
+const N = Number(args.n || 24), SEASONS = Number(args.seasons || 2), REPS = Number(args.reps || 4);
 import { REGIONS as REGION_MAP } from '../src/data/staff.js';
 const REGIONS = Object.keys(REGION_MAP);
 const avg = (xs) => xs.reduce((s, x) => s + x, 0) / (xs.length || 1);
@@ -19,31 +19,23 @@ function lineups(roster) {
   const pool = eligibleBattlers(roster).slice().sort((a, b) => monsterOverall(a) - monsterOverall(b)); const n = CLASH_SIZE.encounter; const mid = Math.max(0, Math.floor(pool.length / 2) - 1);
   return { weak: pool.slice(0, n), average: pool.slice(mid, mid + n), strong: pool.slice(-n), auto: autoLineup(roster, n, 1) };
 }
-// Variants measured on the same weeks: 'old' (the other scouted prospects as companions, before 2026-10-22), 'new' (the shipped
-// COMPANION_RULE), and 'gap=N' tuning candidates. Every variant uses the same battle seeds.
-const VARIANTS = RULE === 'both' ? ['old', 'new', ...(args.gaps ? String(args.gaps).split(',').map((g) => `gap=${g}`) : [])] : [RULE === 'old' ? 'old' : GAP != null ? `gap=${GAP}` : 'new'];
-function wildFor(f, ps, i, variant) {
-  if (variant === 'old') return [ps[i], ...ps.filter((x, j) => j !== i)].slice(0, CLASH_SIZE.encounter).map((p) => p.monster);
-  const rule = variant.startsWith('gap=') ? { gap: Number(variant.slice(4)) } : undefined;
-  return [ps[i].monster, ...F.encounterCompanions(f, i, CLASH_SIZE.encounter - 1, rule)];
-}
 function measure(f, season) {
   const ps = f.week.prospects || []; const L = lineups(f.roster);
-  for (let i = 0; i < ps.length; i++) for (const variant of VARIANTS) {
-    const wild = wildFor(f, ps, i, variant); if (wild.length < CLASH_SIZE.encounter) continue;
+  for (let i = 0; i < ps.length; i++) {
+    const wild = [ps[i], ...ps.filter((x, j) => j !== i)].slice(0, CLASH_SIZE.encounter).map((p) => p.monster);
     const wildOvr = avg(wild.map(monsterOverall)); const lead = monsterOverall(ps[i].monster);
     for (const [tier, mine] of Object.entries(L)) {
       if (mine.length < CLASH_SIZE.encounter) continue; const mineOvr = avg(mine.map(monsterOverall));
       for (let k = 0; k < REPS; k++) {
         const seed = (f.seed * 7919 + season * 104729 + f.season.week * 1299709 + i * 31 + k * 7) >>> 0;
         const res = runBattle({ a: mine.map(snapMonster), b: wild.slice(0, mine.length).map(snapMonster), seed, mode: 'auto', log: 'none' });
-        rows.push({ variant, difficulty: f.settings.difficulty, season, week: f.season.week, tier, gap: Math.round(mineOvr - wildOvr), lead, wildOvr, mineOvr, win: res.winner === 'a' });
+        rows.push({ season, week: f.season.week, tier, gap: Math.round(mineOvr - wildOvr), lead, wildOvr, mineOvr, win: res.winner === 'a' });
       }
     }
   }
 }
 for (let s0 = 0; s0 < N; s0++) {
-  const f = newFranchise(SEED0 + s0, { difficulty: Object.keys(F.DIFFICULTY)[s0 % 3] });
+  const f = newFranchise(500 + s0, { difficulty: ['rookie', 'pro', 'allstar', 'legend'][s0 % 4] });
   for (let season = 1; season <= SEASONS; season++) {
     let guard = 0;
     while (!f.season.finished && guard++ < 60) {
@@ -65,13 +57,8 @@ for (let s0 = 0; s0 < N; s0++) {
   }
 }
 const pct = (xs) => xs.length ? `${Math.round(xs.filter((r) => r.win).length / xs.length * 100)}% (${xs.length})` : '-';
-if (args.out) (await import('node:fs')).writeFileSync(args.out, JSON.stringify(rows));
-const report = {};
-for (const v of VARIANTS) {
-  const R = rows.filter((r) => r.variant === v); const out = { battles: R.length, byTier: {}, bySeason: {}, byDifficulty: {}, ovr: {} };
-  for (const t of ['auto', 'strong', 'average', 'weak']) { const xs = R.filter((r) => r.tier === t); out.byTier[t] = pct(xs); out.ovr[t] = `mine ${avg(xs.map((r) => r.mineOvr)).toFixed(1)} vs wild ${avg(xs.map((r) => r.wildOvr)).toFixed(1)}`; }
-  for (let s = 1; s <= SEASONS; s++) out.bySeason[`S${s}`] = ['auto', 'strong', 'average', 'weak'].map((t) => `${t} ${pct(R.filter((r) => r.season === s && r.tier === t)).split(' ')[0]}`).join(' · ');
-  for (const d of Object.keys(F.DIFFICULTY)) out.byDifficulty[d] = ['auto', 'strong', 'average', 'weak'].map((t) => `${t} ${pct(R.filter((r) => r.difficulty === d && r.tier === t)).split(' ')[0]}`).join(' · ');
-  report[v] = out;
-}
-console.log(JSON.stringify(report, null, 1));
+const out = { battles: rows.length, byTier: {}, bySeasonTier: {}, byGap: {}, byLead: {}, ovr: {} };
+for (const t of ['weak', 'average', 'strong', 'auto']) { const xs = rows.filter((r) => r.tier === t); out.byTier[t] = pct(xs); out.ovr[t] = `mine ${avg(xs.map((r) => r.mineOvr)).toFixed(1)} vs wild ${avg(xs.map((r) => r.wildOvr)).toFixed(1)}`; for (let s = 1; s <= SEASONS; s++) out.bySeasonTier[`S${s} ${t}`] = pct(xs.filter((r) => r.season === s)); }
+for (const [lo, hi] of [[-99, -10], [-10, -5], [-5, 0], [0, 5], [5, 10], [10, 99]]) out.byGap[`${lo}..${hi}`] = pct(rows.filter((r) => r.gap >= lo && r.gap < hi));
+for (const [lo, hi] of [[0, 55], [55, 60], [60, 65], [65, 70], [70, 99]]) out.byLead[`prospect ${lo}-${hi}`] = pct(rows.filter((r) => r.tier === 'auto' && r.lead >= lo && r.lead < hi));
+console.log(JSON.stringify(out, null, 1));
