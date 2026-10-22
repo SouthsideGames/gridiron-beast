@@ -14,11 +14,11 @@ import { startSundayGame } from './match.js';
 
 const ARCH_GLYPH = { Tank: '🛡', Striker: '⚔️', Support: '💚', Disruptor: '🌀', Balanced: '⚖️' };
 export const MODE_TEXT = Object.freeze({
-  play: { label: 'Play battle', help: 'You decide when your monsters swap (a one-on-one has no swaps, so it plays like Auto). Watch every exchange.' },
+  play: { label: 'Play battle', help: 'You decide when your monsters swap. Watch every exchange.' },
   auto: { label: 'Auto battle', help: 'Your monsters fight on their own. Watch every exchange.' },
   skip: { label: 'Skip to results', help: 'The same battle is played instantly and you see the result. Skipping never lowers your chance of winning.' },
 });
-export const HELP_HTML = `<p><b>Beast Clash</b> is a monster battle. Tuesday encounters are one on one: your chosen monster against the wild one. Before kickoff and in overtime each side lines up three monsters (five in playoff overtime); the front two trade strikes, Supports and bench Disruptors act from the back, and a side may swap its front monster out every few exchanges. The last side standing wins (or the side with more health left after 30 exchanges).</p>
+export const HELP_HTML = `<p><b>Beast Clash</b> is a monster battle. Each side lines up up to three monsters; the front two trade strikes, Supports and bench Disruptors act from the back, and a side may swap its front monster out every few exchanges. The last side standing wins (or the side with more health left after 30 exchanges).</p>
 <p><b>Play battle</b> lets you make the swap decisions. <b>Auto battle</b> plays them for you. <b>Skip to results</b> plays the very same battle as Auto, instantly: it is never a worse chance of winning, just less to watch.</p>
 <p><b>Skipping a Tuesday encounter</b> is different: no battle happens, so there is no chance to sign that monster this week. Nothing else is lost.</p>
 <p>Monsters that battle earn a little experience and get slightly tired. Injured monsters sit out.</p>`;
@@ -121,12 +121,12 @@ export function registerClashBattle(Router, app) {
     const mine = st.lineup.map((id) => f.roster.find((m) => m.id === id));
     const s = settings(); const mode = st.mode || (s.mode !== 'ask' ? s.mode : null);
     const card = (m, i, side) => `<div class="item static" style="min-height:0;padding:6px 8px;gap:8px">${monsterSprite(m, 34)}<div class="grow" style="font-size:12px;min-width:0"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>${esc(m.name)}</b> <span class="dim">${monsterOverall(m)} OVR</span></div><div class="dim" style="white-space:nowrap">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · ${i === 0 ? 'front' : `bench ${i}`}${m.fatigue >= 30 ? ` · tired ${m.fatigue}%` : ''}</div></div>${side === 'a' && i > 0 ? `<button class="btn small ghost" data-action="moveup" data-i="${i}" title="Move up">↑</button>` : ''}</div>`;
-    return `<p class="muted">${b.introText ? b.introText(f) : `You met <b>${esc(pv.wild[0].name)}</b> in the wild. Choose one of your monsters to face it one on one. Win and they will want to join you; lose and you still get one pitch.`} <button class="btn small ghost" data-action="help">Help</button></p>
+    return `<p class="muted">${b.introText ? b.introText(f) : `You met <b>${esc(pv.wild[0].name)}</b> in the wild${pv.wild.length > 1 ? ` with ${pv.wild.length - 1} companion${pv.wild.length > 2 ? 's' : ''}` : ''}. Win the ${pv.size}v${pv.size} and they will want to join you; lose and you still get one pitch.`} <button class="btn small ghost" data-action="help">Help</button></p>
       <div class="stack" style="gap:8px">
-        <div class="panel"><div class="row between"><b>${pv.size === 1 ? 'Your monster' : 'Your team'}</b><span class="dim">${pv.size === 1 ? '1v1' : `${mine.length} of ${pv.size}`}</span></div><div class="list" style="margin-top:6px">${mine.map((m, i) => card(m, i, 'a')).join('')}</div>
-          <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="edit">${st.editing ? 'Done' : pv.size === 1 ? 'Choose a different monster' : 'Change lineup'}</button><button class="btn small ghost" data-action="autol">${pv.size === 1 ? 'Suggest one' : 'Auto lineup'}</button></div>
-          ${st.editing ? `<div class="list" style="margin-top:6px;max-height:260px;overflow:auto">${pv.eligible.map((m) => `<button class="item ${st.lineup.includes(m.id) ? 'on' : ''}" style="min-height:0;padding:6px 8px" data-action="toggle" data-id="${m.id}">${monsterSprite(m, 28)}<div class="grow" style="font-size:12px"><b>${esc(m.name)}</b> <span class="dim">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · ${monsterOverall(m)} OVR${m.fatigue >= 30 ? ` · tired ${m.fatigue}%` : ''}</span></div>${st.lineup.includes(m.id) ? `<span class="chip accent">${st.lineup.indexOf(m.id) + 1}</span>` : ''}</button>`).join('')}</div><p class="dim">${pv.size === 1 ? 'Tap the monster you want to send in.' : `Tap to add or remove; the order you tap is the lineup order. Up to ${pv.size}.`}</p>` : ''}</div>
-        <div class="panel"><b>${pv.size === 1 ? 'The wild monster' : 'Their team'}</b><div class="list" style="margin-top:6px">${pv.wild.map((m, i) => card(m, i, 'b')).join('')}</div></div>
+        <div class="panel"><div class="row between"><b>Your team</b><span class="dim">${mine.length} of ${pv.size}</span></div><div class="list" style="margin-top:6px">${mine.map((m, i) => card(m, i, 'a')).join('')}</div>
+          <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="edit">${st.editing ? 'Done' : 'Change lineup'}</button><button class="btn small ghost" data-action="autol">Auto lineup</button></div>
+          ${st.editing ? `<div class="list" style="margin-top:6px;max-height:260px;overflow:auto">${pv.eligible.map((m) => `<button class="item ${st.lineup.includes(m.id) ? 'on' : ''}" style="min-height:0;padding:6px 8px" data-action="toggle" data-id="${m.id}">${monsterSprite(m, 28)}<div class="grow" style="font-size:12px"><b>${esc(m.name)}</b> <span class="dim">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · ${monsterOverall(m)} OVR${m.fatigue >= 30 ? ` · tired ${m.fatigue}%` : ''}</span></div>${st.lineup.includes(m.id) ? `<span class="chip accent">${st.lineup.indexOf(m.id) + 1}</span>` : ''}</button>`).join('')}</div><p class="dim">Tap to add or remove; the order you tap is the lineup order. Up to ${pv.size}.</p>` : ''}</div>
+        <div class="panel"><b>Their team</b><div class="list" style="margin-top:6px">${pv.wild.map((m, i) => card(m, i, 'b')).join('')}</div></div>
       </div>
       <div class="panel" style="margin-top:8px"><b>How do you want to battle?</b>
         <div class="stack" style="margin-top:6px">${CLASH_MODES.map((k) => `<button class="btn ${mode === k ? 'primary' : ''} block" data-action="mode" data-v="${k}" style="display:block;text-align:left;height:auto;padding:8px 12px"><div><b>${mode === k ? '● ' : '○ '}${MODE_TEXT[k].label}</b></div><div style="font-weight:400;font-size:12px;opacity:.8">${MODE_TEXT[k].help}</div></button>`).join('')}</div>
@@ -166,12 +166,17 @@ export function registerClashBattle(Router, app) {
     const r = B().resolve(f); if (!r.ok) { if (r.pending) { Router.render(); return; } toast(r.reason, 'bad'); return; }
     app.save(); stop(); st.cursor = 0; Router.render();
   }
+  /** Each battler's XP: amount gained, a bar toward the next level, and any level-up. */
+  function xpRows(e) {
+    const rows = (e.events || []).filter((x) => x.kind === 'xp'); const lv = (e.events || []).filter((x) => x.kind === 'levelup');
+    if (!rows.length) return `<div class="dim" style="margin-top:4px">Your battlers earned experience${lv.length ? ` · <b>${esc(lv.map((x) => `${x.name} → level ${x.level}`).join(', '))}</b>` : ''}.</div>`;
+    return `<div style="margin-top:8px;text-align:left">${rows.map((x) => `<div class="row between" style="font-size:13px;gap:8px;margin-top:4px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${esc(x.name)}</b> <span class="mono" style="color:var(--good)">+${x.amount} XP</span>${x.levelsGained ? ` <span class="chip good">Level ${x.level}!</span>` : ''}</span><span class="dim mono" style="white-space:nowrap">Lv ${x.level} · ${x.xp}/${x.next}</span></div><div class="bar" style="margin:2px 0 0"><i style="width:${Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div>`).join('')}</div>`;
+  }
   function resultHtml(f, e) {
     const r = e.result; const won = r?.winner === B().mySide; const mine = f.roster.filter((m) => e.mine.includes(m.id));
-    const lv = (e.events || []).filter((x) => x.kind === 'levelup');
     return `<div class="panel ${won ? 'good' : ''}" style="text-align:center"><div style="font-size:22px;font-weight:800">${won ? (st.kind === 'pregame' ? 'YOU WON THE CLASH' : st.kind === 'overtime' ? 'YOU WIN THE GAME' : 'VICTORY') : (st.kind === 'pregame' ? 'THEY WON THE CLASH' : st.kind === 'overtime' ? 'THEY WIN THE GAME' : 'DEFEAT')}</div><div class="muted">${r.by === 'knockout' ? 'By knockout' : r.by === 'hp' ? 'On health left after 30 exchanges' : 'On a coin flip after an exact tie'} · ${r.exchanges} exchange${r.exchanges === 1 ? '' : 's'}</div>
       <div class="row" style="justify-content:center;gap:6px;margin-top:6px">${mine.map((m) => monsterSprite(m, 30)).join('')}</div>
-      <div class="dim" style="margin-top:4px">${e.size === 1 ? "Your monster earned" : "Your battlers earned"} a little experience${lv.length ? ` · <b>${esc(lv.map((x) => `${x.name} → level ${x.level}`).join(', '))}</b>` : ''}.</div>
+      ${xpRows(e)}
       <div class="row" style="justify-content:center;gap:6px;margin-top:6px"><button class="btn small ghost" data-action="replay">Watch the replay</button></div></div>
       ${B().resultHtml(f, e)}`;
   }
@@ -197,7 +202,7 @@ export function registerClashBattle(Router, app) {
         mode: (el) => { st.mode = el.dataset.v; if (root.querySelector('[data-change="remember"]')?.checked) saveSettings({ mode: st.mode }); Router.render(); },
         edit: () => { st.editing = !st.editing; Router.render(); },
         autol: () => { st.lineup = null; st.editing = false; Router.render(); },
-        toggle: (el) => { const id = el.dataset.id; const pv = b.preview(f, st.i); if (pv.size === 1) { st.lineup = [id]; st.editing = false; Router.render(); return; } if (st.lineup.includes(id)) st.lineup = st.lineup.filter((x) => x !== id); else if (st.lineup.length < pv.size) st.lineup.push(id); else toast(`Up to ${pv.size} monsters`, 'info'); Router.render(); },
+        toggle: (el) => { const id = el.dataset.id; const pv = b.preview(f, st.i); if (st.lineup.includes(id)) st.lineup = st.lineup.filter((x) => x !== id); else if (st.lineup.length < pv.size) st.lineup.push(id); else toast(`Up to ${pv.size} monsters`, 'info'); Router.render(); },
         moveup: (el) => { const i = Number(el.dataset.i); if (i > 0) { [st.lineup[i - 1], st.lineup[i]] = [st.lineup[i], st.lineup[i - 1]]; Router.render(); } },
         enter: () => { const mode = st.mode || (settings().mode !== 'ask' ? settings().mode : null); if (!mode) return; const r = b.start(f, st.i, { lineup: st.lineup, mode }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); st.cursor = 0; st.editing = false; Router.render(); },
         skipenc: () => b.skip?.(f, Router),
