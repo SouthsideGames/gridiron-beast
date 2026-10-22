@@ -341,7 +341,7 @@ export function registerHqScreens(Router, app) {
     mount(root) {
       delegate(root, {
         begin: () => { const r = F.beginDraft(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
-        pick: async (el) => { const m = app.f.draft.class.find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`Draft ${m.name} (${m.position})?`, { title: 'Your pick', okLabel: 'Draft' }))) return; const r = F.myDraftPick(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${m.name} is a ${app.f.club.split(' ').pop()}.`, 'good'); Router.render(); },
+        pick: async (el) => { const m = app.f.draft.class.find((x) => x.id === el.dataset.id); if (!(await confirmSheet(`Draft ${m.name} (${m.position})?`, { title: 'Your pick', okLabel: 'Draft' }))) return; const r = F.myDraftPick(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.monster.name} joins the ${app.f.club}.`, 'good'); Router.render(); },
         pass: async () => { if (!(await confirmSheet('Forfeit this pick? Nobody is drafted and nothing comes back. Shop it first if you can.', { title: 'Forfeit pick', okLabel: 'Forfeit', danger: true }))) return; F.passDraftPick(app.f); app.save(); Router.render(); },
         trade: () => { const lead = F.myTradablePicks(app.f).find((p) => p.onClock) || null; tradeSheet(app.f, { lead, onDone: () => Router.render() }); },
         sort: (el) => { draftSort = el.dataset.v; Router.render(); },

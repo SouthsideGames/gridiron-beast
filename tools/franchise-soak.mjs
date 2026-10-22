@@ -12,7 +12,7 @@ import { ALL_TEAMS, STARTER_CLUBS } from '../src/data/league.js';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
 const N = Number(args.n || 12), SEASONS = Number(args.seasons || 4), SEED0 = Number(args.seed || 1), quiet = !!args.quiet;
-const DIFFS = ['rookie', 'pro', 'allstar', 'legend'].filter((d) => F.DIFFICULTY[d]);
+const DIFFS = Object.keys(F.DIFFICULTY);
 
 export function newFranchise(seed, { difficulty = 'pro', club = null } = {}) {
   const clubs = STARTER_CLUBS.map((c) => c.name);
@@ -20,7 +20,7 @@ export function newFranchise(seed, { difficulty = 'pro', club = null } = {}) {
   F.hireDefaultStaff(f);
   // creation draft: take the best visible prospect with each pick
   let g = 0; while (f.draft && !f.draft.done && g++ < 40) { if (F.onTheClock(f) === f.club) { const best = bestProspect(f); if (best) F.myDraftPick(f, best.id); else F.passDraftPick(f); } else break; }
-  f.settings.tutorial = false; f.welcomed = true;
+  f.settings.tutorial = false; f.welcomed = true; f.settings.autoPoints = true; // the trainer spends attribute points, as a player would
   return f;
 }
 function bestProspect(f) { const d = f.draft; const cls = (d?.class || []).filter((m) => (d.available || []).includes(m.id)); return cls.sort((a, b) => monsterOverall(b) - monsterOverall(a))[0] || null; }

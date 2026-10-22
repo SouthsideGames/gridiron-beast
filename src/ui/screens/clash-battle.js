@@ -41,7 +41,10 @@ function bindings(app, Router) {
       resolve: (f) => F.resolveEncounter(f),
       occasion: 'encounter', mySide: 'a',
       resultHtml(f, e) {
-        const p = f.week.prospects[e.prospectIndex]; const m = p?.monster; if (!m) return '';
+        const p = f.week.prospects[e.prospectIndex];
+        // Signing or letting the monster go clears the week's prospects; the result screen then names it from the battle snapshot and always offers the way on.
+        const m = p?.monster || f.roster.find((x) => x.id === e.wild?.[0]) || e.b?.[0] || null;
+        if (!m) return '<div class="panel"><button class="btn primary block" data-action="done">Continue to Wednesday</button></div>';
         const won = e.result?.winner === 'a';
         if (e.status === 'offer') { const cap = F.salarySummary(f, m.salary); return `<div class="panel"><p><b>${esc(m.name)}</b> is impressed and wants to join ${esc(f.club)}.</p><p class="muted">${esc(m.position)} · ${monsterOverall(m)} OVR · ${fmtMoney(m.salary)}/yr · roster ${f.roster.length + 1}/${F.ROSTER_MAX}${cap.over ? ` · <span style="color:var(--bad)">over the cap by ${fmtMoney(-cap.remaining)}</span>` : ` · cap room after ${fmtMoney(cap.remaining)}`}</p><div class="row"><button class="btn primary grow" data-action="accept">Sign ${esc(m.name)}</button><button class="btn" data-action="decline">Let them go</button></div></div>`; }
         if (e.status === 'pitch') return `<div class="panel"><p>${esc(m.name)} won the battle, but will still hear <b>one</b> pitch. Pick your approach.</p><div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="pitch" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div><p class="dim">The usual odds apply: development suits young monsters, facilities impress strong ones, playing time matters when you are short at their position.</p></div>`;
@@ -207,7 +210,7 @@ export function registerClashBattle(Router, app) {
         enter: () => { const mode = st.mode || (settings().mode !== 'ask' ? settings().mode : null); if (!mode) return; const r = b.start(f, st.i, { lineup: st.lineup, mode }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); st.cursor = 0; st.editing = false; Router.render(); },
         skipenc: () => b.skip?.(f, Router),
         speed: (el) => { saveSettings({ speed: Number(el.dataset.v) }); st.arena?.setSpeed(Number(el.dataset.v)); Router.render(); },
-        toresults: () => { if (e?.mode === 'play' && pendingDecision(st.result || b.battle(f))) { toast('Finish the open swap decision first (or choose Keep in front).', 'info'); return; } stop(); if (st.replaying) { st.replaying = false; Router.render(); return; } finish(f); },
+        toresults: () => { const pend = e?.mode === 'play' && !st.replaying ? pendingDecision(st.result || b.battle(f)) : null; if (pend) { stop(); st.cursor = pend.index; st.asked = false; askDecision(f, pend); return; } /* a closed decision sheet reopens: never a dead end */ stop(); if (st.replaying) { st.replaying = false; Router.render(); return; } finish(f); },
         replay: () => { st.replaying = true; st.cursor = 0; Router.render(); },
         endreplay: () => { stop(); st.replaying = false; st.cursor = 0; Router.render(); },
         ...b.actions(root, rerender),
