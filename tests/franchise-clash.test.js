@@ -148,3 +148,31 @@ test('pregame: the player cannot start a second Clash or change the AI choice; i
   const st = F.startPregameClash(f, { lineup: [pv.lineup[0].id], mode: 'play' }); assert.ok(st.ok); assert.equal(f.week.pregame.size, 1, 'a one-monster lineup makes a 1v1');
   assert.ok(F.pregameBattle(f).lines.a.length === 1);
 });
+
+// ---------------------------------------------------------------- Play / Auto / Skip to results (GDD §26.0)
+test('modes: Auto and Skip are the identical battle; Play differs only by the recorded decisions and shares the prefix up to the first open decision; nothing random enters', () => {
+  let compared = 0;
+  for (let seed = 300; seed < 312; seed++) {
+    const f = newFranchise(seed); toTuesday(f); if (F.encounterPreview(f, 0).size < 2) continue;
+    assert.ok(F.startEncounter(f, 0, { mode: 'auto' }).ok); const e = f.week.encounter;
+    const auto = F.encounterBattle(f); e.mode = 'skip'; const skip = F.encounterBattle(f); assert.equal(logHash(auto), logHash(skip), 'skip = auto');
+    e.mode = 'play'; const play = F.encounterBattle(f); const pend = Link.pendingDecision(play);
+    const strip = (r) => r.log.filter((x) => x.kind !== 'decision').map((x) => x.text);
+    if (pend) { const k = play.log.slice(0, pend.index).filter((x) => x.kind !== 'decision').length; assert.deepEqual(strip(play).slice(0, k), strip(auto).slice(0, k), 'same battle until the player is asked'); compared++; }
+    // a 'play' battle where the player always stays equals an auto battle in which the smart policy never swapped
+    e.decisions = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [i + 1, 'stay'])); const stay = F.encounterBattle(f);
+    if (!auto.log.some((x) => x.kind === 'swap' && x.forced === false && x.actor[0] === 'a')) assert.deepEqual(strip(stay), strip(auto), 'no swaps either way: identical');
+    e.mode = 'auto'; e.decisions = {};
+  }
+  assert.ok(compared > 3, `compared ${compared}`);
+});
+
+// ---------------------------------------------------------------- Remember my choice and battle speed (GDD §26.0)
+test('settings: older saves get Ask + 2x by default; the stored choice and speed are read back; speed never touches the battle', () => {
+  const f = newFranchise(320);
+  assert.deepEqual(Link.clashSettings(f.settings), { mode: 'ask', speed: 2 });
+  assert.deepEqual(Link.clashSettings(undefined), { mode: 'ask', speed: 2 });
+  f.settings.clash = { mode: 'skip', speed: 4 }; assert.deepEqual(Link.clashSettings(f.settings), { mode: 'skip', speed: 4 });
+  assert.deepEqual([...Link.CLASH_SPEEDS], [1, 2, 4]); assert.deepEqual([...Link.CLASH_MODES], ['play', 'auto', 'skip']);
+  toTuesday(f); assert.ok(F.startEncounter(f, 0, { mode: 'auto' }).ok); const h1 = logHash(F.encounterBattle(f)); f.settings.clash.speed = 1; assert.equal(logHash(F.encounterBattle(f)), h1);
+});
