@@ -23,7 +23,7 @@ import { boundsFor, FIELD, clamp } from '../core/field.js';
 import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { ABILITIES, speciesEffect } from '../data/monsters.js';
 import { QUICK_ROUTES, SETTLE_ROUTES } from '../data/routes.js';
-import { typeMod } from './type-matchups.js';
+import { contestMod } from './type-matchups.js';
 
 const DT = 0.05;
 const DEFAULT_ATTRS = { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 60 };
@@ -64,9 +64,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // Type effectiveness (GDD §32): each side of a contest scales its own score by its edge against the opponent it is
   // actually meeting in that contest, read at the moment of contact. `edgeNote` records the pair for the play log and tests.
   const typeContests = []; const typeSeen = new Set();
+  // The stadium (GDD §33.2) adds its bonus for a monster of the field's type to the same contests, capped with the type edge.
+  const envType = options.envType || null;
+  const modOf = (a, b) => contestMod(a.type, b.type, envType);
   const scaleVs = (a, b, contest) => {
-    const m = typeMod(a.type, b.type);
-    if (m || typeMod(b.type, a.type)) { const k = `${contest}|${a.team}${a.slot}|${b.slot}`; if (!typeSeen.has(k)) { typeSeen.add(k); typeContests.push({ contest, t: +t.toFixed(2), a: a.slot, team: a.team, b: b.slot, mod: m, opp: typeMod(b.type, a.type) }); } }
+    const m = modOf(a, b), o = modOf(b, a);
+    if (m || o) { const k = `${contest}|${a.team}${a.slot}|${b.slot}`; if (!typeSeen.has(k)) { typeSeen.add(k); const e = { contest, t: +t.toFixed(2), a: a.slot, team: a.team, b: b.slot, mod: m, opp: o }; if (envType && (a.type === envType || b.type === envType)) e.env = envType; typeContests.push(e); } }
     return 1 + m;
   };
   const statusOf = (a) => (a.status && a.status.until > t ? a.status.code : a.stun > 0.15 ? 'stun' : a.slowUntil > t ? 'slow' : a.overcharged ? 'charged' : 0);
@@ -238,7 +241,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       return false;
     }
     // Open-field blocks are hit-or-miss: the defender often slips past.
-    if (soft && !rng.chance(0.25 + 0.5 * norm(blocker.attrs.blocking * (scaleVs(blocker, defender, 'block') - typeMod(defender.type, blocker.type))))) { blocker.noEngage = 0.3; return false; }
+    if (soft && !rng.chance(0.25 + 0.5 * norm(blocker.attrs.blocking * (scaleVs(blocker, defender, 'block') - modOf(defender, blocker))))) { blocker.noEngage = 0.3; return false; }
     blocker.engaged = defender; defender.engaged = blocker; defender.engagedAt = t; blocker.softBlock = soft; defender.wasBlocked = true;
     const bk = (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }); if (isRun) bk.run = 1; else bk.pass = 1;
     return true;

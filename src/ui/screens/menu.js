@@ -2,6 +2,7 @@
 
 import { esc, delegate, toast, confirmSheet, sheet } from '../dom.js';
 import { openTypeChart } from '../type-chart.js';
+import { stadiumListHtml } from '../stadium-preview.js';
 import { achievementsData } from '../../franchise/achievement-store.js';
 import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { yearOf } from '../../data/calendar.js';
@@ -69,6 +70,7 @@ export function registerMenuScreens(Router, app) {
           <label class="field">Beast Clash speed<select data-change="clashspeed"><option value="1" ${c.speed === 1 ? 'selected' : ''}>Normal</option><option value="2" ${c.speed === 2 ? 'selected' : ''}>Fast (default)</option><option value="4" ${c.speed === 4 ? 'selected' : ''}>Fastest</option></select></label>
           <p class="dim">Tuesday encounters, the pregame Clash and overtime use these. You always set your lineup first; the battle then runs on its own to the end. Skipping to results never changes who wins; speed only changes how fast it plays.</p>`; })()}
           <label class="field">Players on the field<select data-change="markers"><option value="sprites" ${s.fieldMarkers !== 'simple' ? 'selected' : ''}>Monster art</option><option value="simple" ${s.fieldMarkers === 'simple' ? 'selected' : ''}>Simple circles and squares</option></select></label>
+          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="replays" ${s.replays !== false ? 'checked' : ''}> Instant replays of big plays (touchdowns, turnovers, clutch plays; always skippable)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="typeicons" ${s.typeIcons !== false ? 'checked' : ''}> Type matchup icons before the snap (▲ advantage, ▼ disadvantage; tap one for details)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="autopoints" ${s.autoPoints ? 'checked' : ''}> Trainer spends attribute points for me (off: you spend them on the monster card)</label>
           ${app.f ? assistSettingsHtml(app.f) : ''}
@@ -86,7 +88,7 @@ export function registerMenuScreens(Router, app) {
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
         clashmode: (el) => set('clash', { ...clashSettings(app.settings), mode: el.value }), clashspeed: (el) => set('clash', { ...clashSettings(app.settings), speed: Number(el.value) }),
-        reduced: (el) => set('reducedMotion', el.checked), shake: (el) => set('screenShake', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`Coach Assist: ${ASSIST_MODE_TEXT[el.dataset.v].label}.`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked),
+        reduced: (el) => set('reducedMotion', el.checked), shake: (el) => set('screenShake', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`Coach Assist: ${ASSIST_MODE_TEXT[el.dataset.v].label}.`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked),
         tutreset: () => { resetTutorial(app.f); if (assistSettings(app.f).mode === 'expert') setAssist(app.f, { mode: 'standard' }); app.save(); toast('Tips will show again on each screen.', 'good'); Router.render(); },
         primer: () => sheet(primerHtml(), { title: 'How football works' }),
         export: () => { const blob = new Blob([Save.exportJson(app.f)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `gridiron-beast-${app.f.club.replace(/\s+/g, '-').toLowerCase()}-s${app.f.season.year}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Save exported.', 'good'); },
@@ -110,11 +112,16 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Ability Audit${devBadge(app.settings, q.abilities.length)}${cardBadge(app.settings)}</button>
         <button class="btn block" data-action="go" data-screen="ability-balance">⚖️ Ability Balance</button>
         <button class="btn block" data-action="go" data-screen="clash-lab">🐾 Clash Lab (Beast Clash Phase 1)</button>
+        ${app.f ? `<h3>Feature testing (this franchise)</h3><p class="dim" style="margin-top:0">For trying the new features without waiting seasons. Using these marks the franchise as developer-assisted.</p>
+        <div class="row" style="gap:6px;flex-wrap:wrap">${['aurodrax', 'tempestra', 'titanolith', 'nyxshade', 'glacivern', 'elderoot'].map((sp) => `<button class="btn small" data-action="dev-legend" data-sp="${sp}">+ ${sp[0].toUpperCase() + sp.slice(1)}</button>`).join('')}</div>
+        <button class="btn block" data-action="dev-ceremony" style="margin-top:6px">🏆 Preview the Beast Bowl ceremony (nothing is saved)</button>` : ''}
         <button class="btn block" data-action="dexall">📖 Beast Dex (everything revealed)</button>
         <button class="btn block danger" data-action="dexreset">Reset my Beast Dex</button>
         <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button></div>`;
     },
-    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet('Wipe every species you have discovered, across all franchises?', { title: 'Reset Beast Dex', okLabel: 'Reset', danger: true })) { resetDex(); toast('Beast Dex reset.'); } } }); },
+    mount(root) { delegate(root, {
+        'dev-legend': async (el) => { if (!(await confirmSheet('Add this Legendary to your roster for testing? The franchise is marked as developer-assisted.', { title: 'Developer test', okLabel: 'Add' }))) return; const r = F.devGrantLegendary(app.f, el.dataset.sp); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.monster.name} joined. Legendary Play discovered.`, 'good'); },
+        'dev-ceremony': () => Router.go('ceremony', { preview: true }), go: (el) => Router.go(el.dataset.screen), dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet('Wipe every species you have discovered, across all franchises?', { title: 'Reset Beast Dex', okLabel: 'Reset', danger: true })) { resetDex(); toast('Beast Dex reset.'); } } }); },
   });
 
   // ---------------------------------------------------------------- Achievements (GDD §21.4): the player's, across every franchise
@@ -181,10 +188,11 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
         <button class="btn block" data-action="statguide">📊 What the stats mean</button>
         <button class="btn block" data-action="typechart">🔺 Type Chart <span class="dim">strengths and weaknesses</span></button>
+        <button class="btn block" data-action="stadiums">🏟 Stadiums <span class="dim">every club's field</span></button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
         ${devNoticesOn(app.settings) && (reviewQueue().total || cardMismatches().length) ? `<button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button>` : ''}
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;
     },
-    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }), statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire') }); },
+    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }), statguide: () => openStatGuide('QB'), typechart: () => openTypeChart(app.f?.roster?.[0]?.type || 'Fire'), stadiums: () => sheet(stadiumListHtml(app.f), { title: 'Stadiums' }) }); },
   });
 }

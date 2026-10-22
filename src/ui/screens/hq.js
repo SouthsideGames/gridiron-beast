@@ -1,6 +1,9 @@
 // Franchise Headquarters and the weekly action screens, plus playbook
 // browsing and the league screens.
 
+import { venueHtml } from '../stadium-preview.js';
+import { legendaryCardHtml, openLegendarySheet, announceLegendary } from '../legendary-ui.js';
+import { LEGENDARY_IDS, unannouncedLegendary } from '../../franchise/legendary.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
 import { ROUTE_LABELS } from '../../data/routes.js';
 import { yearOf } from '../../data/calendar.js';
@@ -104,6 +107,8 @@ export function registerHqScreens(Router, app) {
     mount(root) {
       if (app.f && !app.f.achievementsBackfilled && F.backfillAchievements(app.f).length) app.save();
       if (app.f && !app.f.game && F.nextScene(app.f)) { setTimeout(() => Router.go('scene', {}, { reset: true }), 0); return; } // an achievement cutscene plays before anything else (GDD §21)
+      // Legendary Plays (GDD §36.8): a Legendary just joined? Show the discovery card once; the plan is never changed for the owner.
+      if (app.f && !app.f.game) { const r = F.syncLegendary(app.f); const ids = unannouncedLegendary(app.f); if (ids.length && !document.querySelector('.sheet')) announceLegendary(app.f, ids, { onPlan: () => Router.go(app.f.season.day === 4 ? 'gameplan' : 'playbook'), save: () => app.save() }); else if (r.discovered.length || r.removed.length) app.save(); }
       if (F.hallOfFameNotice(app.f)) { app.save(); sheet(`<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">LEAGUE COMMISSIONER</div>Eight badges. The titles. The wins. The awards. I've been doing this a long time and I don't say this often: you're eligible for the Hall of Fame. Retire whenever you like. Or keep going. The league isn't done with you either way.</div></div>`, { title: 'Hall of Fame' }); }
       const f0 = app.f;
       if (f0?.season.playoffs && !f0.season.recapShown && !f0.game) { f0.season.recapShown = true; app.save(); sheet(seasonRecapHtml(f0), { title: `${yearOf(f0.season.year)} · regular season over` }); }
@@ -532,8 +537,9 @@ export function registerHqScreens(Router, app) {
     render({ f }) {
       const opp = F.opponentName(f);
       if (!opp) return `<div class="panel"><p>No opponent this week (bye).</p><button class="btn primary block" data-action="skip">Continue</button></div>`;
-      if (f.week.scoutReport) return `<div class="panel">${reportHtml(f.week.scoutReport, opp)}</div><button class="btn block" data-action="back">Back</button>`;
-      return `<p class="muted">Scout <b>${esc(opp)}</b>'s offense or defense. You get one report.</p><div class="grid2"><button class="btn big" data-action="side" data-v="offense">Their offense</button><button class="btn big" data-action="side" data-v="defense">Their defense</button></div>`;
+      const venue = venueHtml(F.sundayVenue(f));
+      if (f.week.scoutReport) return `${venue}<div class="panel">${reportHtml(f.week.scoutReport, opp)}</div><button class="btn block" data-action="back">Back</button>`;
+      return `${venue}<p class="muted">Scout <b>${esc(opp)}</b>'s offense or defense. You get one report.</p><div class="grid2"><button class="btn big" data-action="side" data-v="offense">Their offense</button><button class="btn big" data-action="side" data-v="defense">Their defense</button></div>`;
     },
     mount(root) { delegate(root, { back: () => Router.back(), skip: () => { F.scoutOpponent(app.f, 'offense'); app.save(); Router.go('hq', {}, { reset: true }); }, side: (el) => { const r = F.scoutOpponent(app.f, el.dataset.v); app.save(); sheet(reportHtml(r.report, F.opponentName(app.f) || ''), { title: 'Scouting report', onClose: () => Router.go('hq', {}, { reset: true }) }); } }); },
   });
@@ -564,7 +570,7 @@ export function registerHqScreens(Router, app) {
       const hintNote = hintsOn && hintSide ? `<div class="panel tight hint-note"><b>💡 Coach's hints</b> · ${hints.length ? `outlined ${hintSide} plays counter what ${esc(F.opponentName(f) || 'they')} showed in scouting. A hint is a lean, not a guarantee.` : `nothing in your ${hintSide} playbook clearly counters their scouted calls.`} <span class="dim">(Settings → Coaching hints)</span></div>` : hintsOn ? '<p class="dim">Scout the opponent on Thursday to get coach\'s hints here.</p>' : '';
       const avail = F.playAvailability(f);
       const availNote = avail.slots.length ? `<div class="panel tight" style="border-color:var(--bad)"><b>⚠️ No legal monster for ${avail.slots.join(', ')}</b>. Plays using ${avail.slots.map((sl) => ({ SS: 'Nickel', DL3: 'Heavy / Pressure', WR3: 'Spread', C: 'Tight' })[sl] || sl).join(' / ')} are greyed out and will not be called. Only a monster whose primary or secondary position fits can fill a slot.</div>` : '';
-      const side = (s) => `<h3>${s === 'offense' ? 'Offense' : 'Defense'} · <span id="count-${s}">${sel[s].size}</span>/${F.PLAN_SIZE} equipped</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''} ${hintMap[id] ? 'hint' : ''} ${avail.blocked[id] ? 'blocked' : ''}" title="${avail.blocked[id] ? esc('Needs ' + avail.blocked[id] + ': nobody legal to fill it') : hintMap[id] ? esc('Counters ' + hintMap[id].beats.join(', ')) : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}</div>`;
+      const side = (s) => `<h3>${s === 'offense' ? 'Offense' : 'Defense'} · <span id="count-${s}">${sel[s].size}</span>/${F.PLAN_SIZE} equipped</h3><div class="play-grid" data-side="${s}">${F.catalog(f, s).map((id) => `<button class="card ${sel[s].has(id) ? 'selected' : ''} ${hintMap[id] ? 'hint' : ''} ${avail.blocked[id] ? 'blocked' : ''}" title="${avail.blocked[id] ? esc('Needs ' + avail.blocked[id] + ': nobody legal to fill it') : hintMap[id] ? esc('Counters ' + hintMap[id].beats.join(', ')) : ''}" data-action="toggle" data-side="${s}" data-id="${id}" aria-pressed="${sel[s].has(id)}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span></button>`).join('')}${LEGENDARY_IDS.filter((id) => PLAYS[id].side === s).map((id) => legendaryCardHtml(f, id, { selected: sel[s].has(id), side: s })).join('')}</div>`;
       return `<p class="muted">Equip ${F.PLAN_SIZE} offensive and ${F.PLAN_SIZE} defensive plays for Sunday. Your coordinators' picks are pre-selected; tap a card to swap, or use Details for the full diagram.</p>${availNote}${hintNote}
         ${side('offense')}${legendHtml('offense')}${side('defense')}${legendHtml('defense')}
         <div class="row between" style="margin-top:12px"><button class="btn" data-action="details">Play details</button><button class="btn primary" data-action="save">Save game plan</button></div>`;
@@ -575,6 +581,7 @@ export function registerHqScreens(Router, app) {
         back: () => Router.back(),
         toggle: (el) => { const s = el.dataset.side, id = el.dataset.id; if (sel[s].has(id)) sel[s].delete(id); else if (sel[s].size >= F.PLAN_SIZE) { toast(`Only ${F.PLAN_SIZE} ${s} plays. Remove one first.`); return; } else sel[s].add(id); el.classList.toggle('selected', sel[s].has(id)); el.setAttribute('aria-pressed', sel[s].has(id)); root.querySelector(`#count-${s}`).textContent = sel[s].size; },
         details: () => Router.go('playbook'),
+        'lp-info': (el) => openLegendarySheet(app.f, el.dataset.id),
         save: () => { const r = F.setGamePlan(app.f, [...sel.offense], [...sel.defense]); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast('Game plan saved.', 'good'); Router.go('hq', {}, { reset: true }); },
       });
     },
@@ -611,9 +618,11 @@ export function registerHqScreens(Router, app) {
       const oc = F.staffMember(f, 'offensive_coordinator'), dc = F.staffMember(f, 'defensive_coordinator');
       const grid = (s) => `<div class="play-grid">${F.catalog(f, s).map((id) => { const st = F.playStat(f, id); return `<button class="card ${f.week.plan[s].includes(id) ? 'selected' : ''}" data-action="open" data-id="${id}"><div>${playCardSvg(id)}</div><span class="card-label">${esc(PLAYS[id].name)}</span><span class="card-stat">${st.used ? `${st.used}× · ${st.avg.toFixed(1)} yd` : 'not used yet'}</span></button>`; }).join('')}</div>`;
       return `<div class="row between"><h3 style="margin:0">Offense · ${esc(oc?.style || '')}</h3>${f.season.day === 4 ? '<button class="btn small" data-action="plan">Set game plan</button>' : '<span class="dim">Game plan is set on Fridays</span>'}</div>${grid('offense')}${legendHtml('offense')}
-        <h3>Defense · ${esc(dc?.style || '')}</h3>${grid('defense')}${legendHtml('defense')}<p class="dim">Highlighted cards are in this week's game plan. Under each card: times called this season and average yards (gained on offense, allowed on defense).</p>`;
+        <h3>Defense · ${esc(dc?.style || '')}</h3>${grid('defense')}${legendHtml('defense')}
+        <h3>★ Legendary Plays</h3><p class="dim" style="margin-top:0">Each Legendary monster unlocks one play built around him. It takes one of your six slots and only while he is on your roster and healthy. Tap one for details.</p><div class="play-grid">${LEGENDARY_IDS.map((id) => legendaryCardHtml(f, id, { mode: 'view' })).join('')}</div>
+        <p class="dim">Highlighted cards are in this week's game plan. Under each card: times called this season and average yards (gained on offense, allowed on defense).</p>`;
     },
-    mount(root) { delegate(root, { open: (el) => Router.go('playdetail', { id: el.dataset.id }), plan: () => Router.go('gameplan') }); },
+    mount(root) { delegate(root, { open: (el) => Router.go('playdetail', { id: el.dataset.id }), plan: () => Router.go('gameplan'), 'lp-info': (el) => openLegendarySheet(app.f, el.dataset.id) }); },
   });
   Router.registerScreen('playdetail', {
     title: ({ params }) => PLAYS[params.id]?.name || 'Play',
@@ -795,9 +804,9 @@ export function registerHqScreens(Router, app) {
     title: 'Franchise History',
     render({ f }) {
       return `<div class="panel"><div class="kv"><b>Owner</b><span>${esc(f.owner.first)} ${esc(f.owner.last)}${f.owner.hometown ? ' · ' + esc(f.owner.hometown) : ''}</span><b>Titles</b><span>Challenger ${f.badges.challenger} · Vanguard ${f.badges.vanguard} · Sovereign ${f.badges.sovereign}</span></div></div>
-        ${f.history.length ? `<div class="list">${f.history.slice().reverse().map((h) => `<div class="item static"><div class="grow"><div class="name">${yearOf(h.year)} · ${esc(h.club)}</div><div class="sub">${h.record.w}-${h.record.l}${h.place ? ` · ${h.place}${['st', 'nd', 'rd'][h.place - 1] || 'th'} overall` : ''}${h.playoffs ? ' · playoffs' : ''}${h.champion === h.club ? ' · 🏆 CHAMPIONS' : h.champion ? ` · champion: ${esc(h.champion)}` : ''}${h.legacy ? ' · imported' : ''}</div>${h.awards ? `<div class="sub">${h.awards.mvp ? `MVP ${esc(h.awards.mvp.name)}` : ''}${h.awards.rivalry ? ` · ⚔️ ${h.awards.rivalry.swept ? 'swept' : h.awards.rivalry.wins + '-' + (h.awards.rivalry.games - h.awards.rivalry.wins) + ' vs'} ${esc(h.awards.rivalry.team)}` : ''}</div>` : ''}</div>${h.awards ? `<button class="btn small" data-action="awards" data-year="${h.year}">Awards</button>` : ''}</div>`).join('')}</div>` : '<p class="muted">No completed seasons yet.</p>'}`;
+        ${f.history.length ? `<div class="list">${f.history.slice().reverse().map((h) => `<div class="item static"><div class="grow"><div class="name">${yearOf(h.year)} · ${esc(h.club)}</div><div class="sub">${h.record.w}-${h.record.l}${h.place ? ` · ${h.place}${['st', 'nd', 'rd'][h.place - 1] || 'th'} overall` : ''}${h.playoffs ? ' · playoffs' : ''}${h.champion === h.club ? ' · 🏆 CHAMPIONS' : h.champion ? ` · champion: ${esc(h.champion)}` : ''}${h.legacy ? ' · imported' : ''}</div>${h.awards ? `<div class="sub">${h.awards.mvp ? `MVP ${esc(h.awards.mvp.name)}` : ''}${h.awards.rivalry ? ` · ⚔️ ${h.awards.rivalry.swept ? 'swept' : h.awards.rivalry.wins + '-' + (h.awards.rivalry.games - h.awards.rivalry.wins) + ' vs'} ${esc(h.awards.rivalry.team)}` : ''}</div>` : ''}</div><div class="row" style="gap:4px;flex-wrap:wrap;justify-content:flex-end">${h.championship ? `<button class="btn small good" data-action="ceremony" data-year="${h.year}" title="The Beast Bowl ceremony and summary">🏆 Ceremony</button>` : ''}${h.awards ? `<button class="btn small" data-action="awards" data-year="${h.year}">Awards</button>` : ''}</div></div>`).join('')}</div>` : '<p class="muted">No completed seasons yet.</p>'}`;
     },
-    mount(root) { delegate(root, { awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h?.awards) sheet(awardsHtml(h.awards), { title: `${yearOf(h.year)} awards` }); } }); },
+    mount(root) { delegate(root, { ceremony: (el) => Router.go('ceremony', { year: Number(el.dataset.year) }), awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h?.awards) sheet(awardsHtml(h.awards), { title: `${yearOf(h.year)} awards` }); } }); },
   });
 }
 
