@@ -8,7 +8,7 @@ import { createRng } from '../core/rng.js';
 import { monsterOverall, xpForLevel, levelUp } from '../data/monsters.js';
 
 /** Battle sizes by occasion (GDD §26). */
-export const CLASH_SIZE = Object.freeze({ encounter: 1, pregame: 3, overtime: 3, overtimePlayoff: 5 }); // Tuesday encounters are strictly 1v1 (owner decision 2026-10-21)
+export const CLASH_SIZE = Object.freeze({ encounter: 3, pregame: 3, overtime: 3, overtimePlayoff: 5 });
 /** Fatigue a battle costs each monster that took part (CLASH_VALUES.load, provisional values from Phase 1). */
 export const CLASH_FATIGUE = Object.freeze({ encounter: CLASH_VALUES.load.battle, pregame: CLASH_VALUES.load.opening, overtime: CLASH_VALUES.load.overtime });
 /** How a battle is shown; 'skip' and 'auto' play the identical battle (the smart swap policy), 'play' asks the player at every swap decision. */
@@ -57,19 +57,22 @@ export function pendingDecision(result) {
 /**
  * Apply a battle's effects to the roster monsters that fought on `side`: Arena XP (Model C2, the Phase 1 formula) through the
  * same level-up loop as a football game, and the occasion's fatigue. Evolutions wait for the owner, as after a game.
- * Returns level-up events in the football event shape.
+ * Returns level-up events in the football event shape, plus one { kind: 'xp' } event per battler (XP gained, progress to the next level).
  */
 export function applyBattleEffects(roster, result, side, occasion, rng, { autoSpend = false } = {}) {
   const events = []; const xp = battleXp(result, side); const fatigue = CLASH_FATIGUE[occasion] || 0;
   for (const x of result.lines[side]) {
     const m = roster.find((mm) => mm.id === x.combatant.monsterId); if (!m) continue;
-    m.xp = (m.xp || 0) + Math.round(xp[x.id] || 0);
+    const gained = Math.round(xp[x.id] || 0); const startLevel = m.level;
+    m.xp = (m.xp || 0) + gained;
     while (m.xp >= xpForLevel(m.level)) {
       m.xp -= xpForLevel(m.level);
       const before = monsterOverall(m); levelUp(m, rng, { autoSpend });
       events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
     }
     m.fatigue = Math.min(100, (m.fatigue || 0) + fatigue);
+    // What the result screen shows for each battler: XP gained and progress toward the next level.
+    events.push({ kind: 'xp', id: m.id, name: m.name, amount: gained, level: m.level, levelsGained: m.level - startLevel, xp: m.xp, next: xpForLevel(m.level) });
   }
   return events;
 }

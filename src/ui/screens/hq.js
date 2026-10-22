@@ -450,7 +450,7 @@ export function registerHqScreens(Router, app) {
       if (e && e.status !== 'ready') { setTimeout(() => Router.go('clash-battle', { kind: 'encounter', i: e.prospectIndex }, { replace: true }), 0); return '<p class="muted">Opening the battle…</p>'; }
       if (!f.week.prospects.length) return `<div class="panel"><p>No monsters were found this week.</p><button class="btn primary block" data-action="skip">Continue to Wednesday</button></div>`;
       const cap = F.salarySummary(f); const healthy = f.roster.filter((m) => !m.injury).length;
-      return `<p class="muted">Your scout found these monsters. Pick <b>one</b> and send <b>one</b> of your own monsters to face it in a one-on-one Beast Clash: win and it will want to sign; lose and you still get one pitch. Or skip the encounter and move on. <button class="btn small ghost" data-action="clashhelp">Help</button></p>
+      return `<p class="muted">Your scout found these monsters. Pick <b>one</b> to meet in a Beast Clash: win and it will want to sign; lose and you still get one pitch. Or skip the encounter and move on. <button class="btn small ghost" data-action="clashhelp">Help</button></p>
         <p class="dim">Roster ${f.roster.length}/${F.ROSTER_MAX} · cap room ${fmtMoney(cap.remaining)} · ${healthy} monster${healthy === 1 ? '' : 's'} fit to battle</p>
         <div class="stack">${f.week.prospects.map((p, i) => prospectCard(p, i)).join('')}</div>
         <button class="btn block" data-action="skip" style="margin-top:8px">Skip the encounter</button>

@@ -7,18 +7,14 @@ import { logHash } from '../src/clash/engine.js';
 import { monsterOverall, ROSTER_MAX } from '../src/data/monsters.js';
 
 const newFranchise = (seed = 7) => { const f = F.createFranchise({ owner: { first: 'Kai', last: 'Reyes', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed }); F.hireDefaultStaff(f); while (f.draft && !f.draft.done && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); return f; };
-function toSunday(f) { F.autoRunToSunday(f); assert.equal(f.season.day, 6); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); } }
 const toTuesday = (f, region = 'Coral Coast') => { const r = F.scoutRegion(f, region); assert.ok(r.ok && r.prospects.length >= 1); return r; };
 
-test('encounter preview: strictly 1v1, the chosen prospect alone against one suggested healthy roster monster; injured monsters never battle', () => {
+test('encounter preview: 3v3 from healthy roster monsters, the chosen prospect in the wild front, injured monsters never battle', () => {
   const f = newFranchise(21); toTuesday(f);
   f.roster[0].injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
-  assert.equal(Link.CLASH_SIZE.encounter, 1);
-  for (let i = 0; i < f.week.prospects.length; i++) {
-    const pv = F.encounterPreview(f, i); assert.ok(pv.ok);
-    assert.equal(pv.size, 1); assert.equal(pv.lineup.length, 1); assert.ok(!pv.lineup[0].injury);
-    assert.deepEqual(pv.wild, [f.week.prospects[i].monster], 'only the chosen prospect, no companions');
-  }
+  const pv = F.encounterPreview(f, 0); assert.ok(pv.ok);
+  assert.equal(pv.size, Math.min(3, f.week.prospects.length)); assert.equal(pv.lineup.length, pv.size); assert.ok(pv.lineup.every((m) => !m.injury));
+  assert.equal(pv.wild[0], f.week.prospects[0].monster);
   assert.deepEqual(Link.eligibleBattlers(f.roster).map((m) => m.id).includes(f.roster[0].id), false);
   // nobody healthy: no battle
   const g = newFranchise(22); toTuesday(g); for (const m of g.roster) m.injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
@@ -28,19 +24,11 @@ test('encounter preview: strictly 1v1, the chosen prospect alone against one sug
 test('enter: the battle is seeded from the franchise generator, deterministic, rebuilt from the save, and identical in auto and skip modes', () => {
   const f = newFranchise(23); toTuesday(f);
   const before = f.rngState;
-  const choice = Link.eligibleBattlers(f.roster)[5];
-  assert.equal(F.startEncounter(f, 0, { lineup: Link.eligibleBattlers(f.roster).slice(0, 2).map((m) => m.id) }).ok, false, 'two of mine is refused: one on one only');
-  assert.equal(F.startEncounter(f, 0, { monster: 'm_nobody' }).ok, false, 'an unknown monster is refused');
-  const hurt = f.roster.find((m) => m !== choice); hurt.injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
-  assert.equal(F.startEncounter(f, 0, { monster: hurt.id }).ok, false, 'an injured monster is refused'); hurt.injury = null;
-  assert.equal(f.rngState, before, 'refusals draw nothing');
-  const st = F.startEncounter(f, 0, { monster: choice.id }); assert.ok(st.ok); assert.notEqual(f.rngState, before, 'one seed drawn');
-  const e = f.week.encounter; assert.equal(e.status, 'battle'); assert.ok(e.seed > 0); assert.equal(e.size, 1); assert.deepEqual(e.mine, [choice.id]); assert.deepEqual(e.wild, [f.week.prospects[0].monster.id]);
+  const st = F.startEncounter(f, 0); assert.ok(st.ok); assert.notEqual(f.rngState, before, 'one seed drawn');
+  const e = f.week.encounter; assert.equal(e.status, 'battle'); assert.ok(e.seed > 0); assert.equal(e.mine.length, e.size); assert.equal(e.wild.length, e.size);
   const r1 = F.encounterBattle(f), r2 = F.encounterBattle(f); assert.equal(logHash(r1), logHash(r2));
   const copy = JSON.parse(JSON.stringify(f)); assert.equal(logHash(F.encounterBattle(copy)), logHash(r1), 'rebuilt from a saved copy');
-  assert.equal(r1.lines.a.length, 1); assert.equal(r1.lines.b.length, 1, 'only those two monsters take part');
-  assert.equal(r1.lines.a[0].combatant.monsterId, choice.id); assert.equal(r1.lines.b[0].combatant.monsterId, f.week.prospects[0].monster.id);
-  assert.ok(!r1.log.some((x) => x.kind === 'swap' || x.kind === 'decision' || x.kind === 'bench_miss'), 'a 1v1 has no swaps or bench actions');
+  assert.deepEqual(r1.lines.a.map((x) => x.combatant.monsterId).sort(), [...e.mine].sort()); assert.deepEqual(r1.lines.b.map((x) => x.combatant.monsterId).sort(), [...e.wild].sort());
   assert.equal(r1.log[1].order.a[0], 'a0'); assert.equal(r1.lines.b.find((x) => x.id === 'b0').combatant.monsterId, e.wild[0], 'the chosen monster starts in the wild front');
   assert.ok(r1.config.policies.a === 'smart' && r1.config.policies.b === 'smart');
   assert.equal(F.startEncounter(f, 0).ok, false, 'one encounter per Tuesday');
@@ -51,12 +39,11 @@ test('win: an offer that respects the roster limit and the cap rules; decline co
   let wins = 0, losses = 0, pitchedSign = 0;
   for (let seed = 30; seed < 60; seed++) {
     const f = newFranchise(seed); toTuesday(f); const n = f.roster.length; const p = f.week.prospects[0];
-    const el = Link.eligibleBattlers(f.roster); const fat0 = Object.fromEntries(f.roster.map((m) => [m.id, [m.fatigue, m.xp]])); assert.ok(F.startEncounter(f, 0, { monster: el[seed % el.length].id }).ok); const b = F.resolveEncounter(f); assert.ok(b.ok); // a spread of the player's choices, strong and weak
+    assert.ok(F.startEncounter(f, 0).ok); const b = F.resolveEncounter(f); assert.ok(b.ok);
     assert.equal(F.resolveEncounter(f).already, true, 'idempotent');
-    assert.deepEqual(f.roster.filter((m) => fat0[m.id] && (m.fatigue !== fat0[m.id][0] || m.xp !== fat0[m.id][1])).map((m) => m.id), [el[seed % el.length].id], 'only the one battler earns XP and fatigue');
     assert.equal(logHash(F.encounterBattle(f)), f.week.encounter.result.hash, 'replays rebuild identically after XP and fatigue were applied (snapshots)');
-    const battlers = f.week.encounter.mine.map((id) => f.roster.find((m) => m.id === id)); assert.equal(battlers.length, 1);
-    assert.ok(battlers.every((m) => m.fatigue >= Link.CLASH_FATIGUE.encounter), 'the battler tires a little');
+    const battlers = f.week.encounter.mine.map((id) => f.roster.find((m) => m.id === id));
+    assert.ok(battlers.every((m) => m.fatigue >= Link.CLASH_FATIGUE.encounter), 'battlers tire a little');
     if (b.won) {
       wins++; assert.equal(f.week.encounter.status, 'offer'); assert.equal(F.recruit(f, 0, 'development').ok, false, 'no pitch needed after a win');
       if (seed % 2) { const r = F.acceptOffer(f); assert.ok(r.ok); assert.equal(f.roster.length, n + 1); assert.ok(f.roster.includes(p.monster)); assert.equal(p.monster.contract.years, 2); assert.equal(f.week.recruited, p.monster.id); }
@@ -87,26 +74,24 @@ test('skip: no battle, no reward, no penalty; the week moves on and nothing else
   assert.equal(JSON.stringify({ roster: f.roster, rng: f.rngState, board: f.board, campaign: f.campaign, news: f.news.length }), snap);
 });
 
-test('play mode: a 1v1 encounter never stops for a decision and settles straight away; in the 3v3 pregame Clash the engine stops at the first open swap decision, answers resume from the same prefix, and a stay holds four exchanges', () => {
-  { const f = newFranchise(80); toTuesday(f); assert.ok(F.startEncounter(f, 0, { mode: 'play' }).ok); assert.equal(Link.pendingDecision(F.encounterBattle(f)), null); const b = F.resolveEncounter(f); assert.ok(b.ok, b.reason); assert.ok(['offer', 'pitch'].includes(f.week.encounter.status)); }
+test('play mode: the engine stops at the first open swap decision; answers are recorded and the battle resumes from the same prefix; a stay holds four exchanges', () => {
   let found = false;
-  for (let seed = 80; seed < 120 && !found; seed++) {
-    const f = newFranchise(seed); toSunday(f);
-    assert.ok(F.startPregameClash(f, { mode: 'play' }).ok);
-    let r = F.pregameBattle(f); const pend = Link.pendingDecision(r); if (!pend) continue; found = true;
-    assert.equal(F.resolvePregameClash(f).ok, false, 'cannot settle with a decision open');
+  for (let seed = 80; seed < 110 && !found; seed++) {
+    const f = newFranchise(seed); toTuesday(f); const pv = F.encounterPreview(f, 0); if (pv.size < 2) continue;
+    assert.ok(F.startEncounter(f, 0, { mode: 'play' }).ok);
+    let r = F.encounterBattle(f); const pend = Link.pendingDecision(r); if (!pend) continue; found = true;
+    assert.equal(F.resolveEncounter(f).ok, false, 'cannot settle with a decision open');
     const prefix = r.log.slice(0, pend.index).map((e) => e.text);
-    assert.ok(F.pregameDecide(f, pend.ex, pend.monsterIds[0]).ok);
-    r = F.pregameBattle(f); assert.deepEqual(r.log.slice(0, pend.index).map((e) => e.text), prefix, 'same battle up to the decision');
+    assert.ok(F.encounterDecide(f, pend.ex, pend.monsterIds[0]).ok);
+    r = F.encounterBattle(f); assert.deepEqual(r.log.slice(0, pend.index).map((e) => e.text), prefix, 'same battle up to the decision');
     assert.ok(r.log.some((e) => e.kind === 'swap' && e.forced === false && e.ex === pend.ex && /Your call/.test(e.text)));
-    const next = Link.pendingDecision(r); if (next) { F.pregameDecide(f, next.ex, 'stay'); const r3 = F.pregameBattle(f); const after = Link.pendingDecision(r3); if (after) assert.ok(after.ex >= next.ex + Link.SWAP_EVERY, 'stay holds four exchanges'); }
-    let guard = 0; while (Link.pendingDecision(F.pregameBattle(f)) && guard++ < 40) F.pregameDecide(f, Link.pendingDecision(F.pregameBattle(f)).ex, 'stay');
-    const b = F.resolvePregameClash(f); assert.ok(b.ok, b.reason);
-    assert.equal(logHash(F.pregameBattle(f)), f.week.pregame.result.hash, 'the saved summary matches the rebuilt battle');
+    const next = Link.pendingDecision(r); if (next) { F.encounterDecide(f, next.ex, 'stay'); const r3 = F.encounterBattle(f); const after = Link.pendingDecision(r3); if (after) assert.ok(after.ex >= next.ex + Link.SWAP_EVERY, 'stay holds four exchanges'); }
+    let guard = 0; while (Link.pendingDecision(F.encounterBattle(f)) && guard++ < 40) F.encounterDecide(f, Link.pendingDecision(F.encounterBattle(f)).ex, 'stay');
+    const b = F.resolveEncounter(f); assert.ok(b.ok, b.reason); assert.ok(['offer', 'pitch'].includes(f.week.encounter.status));
+    const again = F.encounterBattle(f); assert.equal(logHash(again), f.week.encounter.result.hash, 'the saved summary matches the rebuilt battle');
   }
   assert.ok(found, 'a battle with a swap decision was found');
 });
-
 
 test('staff auto-run handles Tuesday through an encounter and the week still reaches Sunday; the final week keeps the recovery day', () => {
   const f = newFranchise(120);
@@ -124,6 +109,7 @@ test('XP and level-ups from a battle use the football progression (xpForLevel, l
 });
 
 // ---------------------------------------------------------------- the pregame Clash (GDD §26.2)
+const toSunday = (f) => { F.autoRunToSunday(f); assert.equal(f.season.day, 6); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); } };
 
 test('pregame: a 3v3 between the two Sunday rosters, seeded once, rebuilt from a saved copy with the same AI monsters; the winner chooses possession', () => {
   let mine = 0, theirs = 0;
@@ -165,22 +151,17 @@ test('pregame: the player cannot start a second Clash or change the AI choice; i
 });
 
 // ---------------------------------------------------------------- Play / Auto / Skip to results (GDD §26.0)
-test('modes: Auto and Skip are the identical battle (1v1 encounters and 3v3 pregame); a 1v1 Play battle is the same battle too; in 3v3 Play shares the prefix up to the first open decision; nothing random enters', () => {
-  for (let seed = 300; seed < 306; seed++) {
-    const f = newFranchise(seed); toTuesday(f); assert.ok(F.startEncounter(f, 0, { mode: 'auto' }).ok); const e = f.week.encounter;
-    const auto = F.encounterBattle(f); e.mode = 'skip'; const skip = F.encounterBattle(f); e.mode = 'play'; const play = F.encounterBattle(f);
-    assert.equal(logHash(auto), logHash(skip), 'skip = auto'); assert.deepEqual(play.log.map((x) => x.text), auto.log.map((x) => x.text), '1v1: play = auto (no swap decisions exist)');
-  }
+test('modes: Auto and Skip are the identical battle; Play differs only by the recorded decisions and shares the prefix up to the first open decision; nothing random enters', () => {
   let compared = 0;
   for (let seed = 300; seed < 312; seed++) {
-    const f = newFranchise(seed); toSunday(f);
-    assert.ok(F.startPregameClash(f, { mode: 'auto' }).ok); const e = f.week.pregame;
-    const auto = F.pregameBattle(f); e.mode = 'skip'; const skip = F.pregameBattle(f); assert.equal(logHash(auto), logHash(skip), 'skip = auto');
-    e.mode = 'play'; const play = F.pregameBattle(f); const pend = Link.pendingDecision(play);
+    const f = newFranchise(seed); toTuesday(f); if (F.encounterPreview(f, 0).size < 2) continue;
+    assert.ok(F.startEncounter(f, 0, { mode: 'auto' }).ok); const e = f.week.encounter;
+    const auto = F.encounterBattle(f); e.mode = 'skip'; const skip = F.encounterBattle(f); assert.equal(logHash(auto), logHash(skip), 'skip = auto');
+    e.mode = 'play'; const play = F.encounterBattle(f); const pend = Link.pendingDecision(play);
     const strip = (r) => r.log.filter((x) => x.kind !== 'decision').map((x) => x.text);
     if (pend) { const k = play.log.slice(0, pend.index).filter((x) => x.kind !== 'decision').length; assert.deepEqual(strip(play).slice(0, k), strip(auto).slice(0, k), 'same battle until the player is asked'); compared++; }
     // a 'play' battle where the player always stays equals an auto battle in which the smart policy never swapped
-    e.decisions = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [i + 1, 'stay'])); const stay = F.pregameBattle(f);
+    e.decisions = Object.fromEntries(Array.from({ length: 30 }, (_, i) => [i + 1, 'stay'])); const stay = F.encounterBattle(f);
     if (!auto.log.some((x) => x.kind === 'swap' && x.forced === false && x.actor[0] === 'a')) assert.deepEqual(strip(stay), strip(auto), 'no swaps either way: identical');
     e.mode = 'auto'; e.decisions = {};
   }
@@ -242,4 +223,19 @@ test('tied league games are settled by a headless Clash; a search over real game
   assert.ok(played > 60, `played ${played}`);
   // a real tie, if one happened in this season, was settled; otherwise force a search with a fast game to be sure the headless path runs end to end
   if (!settled) { const r = { seed: 1 }; const m = F.sundayMatchup(newFranchise(431)); let found = false; for (let seed = 1; seed < 400 && !found; seed++) { const s = playGame({ home: m.home, away: m.away, seed, quarterLength: 60, otPeriods: 1 }); if (s.needsTiebreak) found = true; } assert.ok(found || true); }
+});
+
+test('XP is shown: every battler gets an xp record (amount, level, progress) that matches what was added to the monster; Tuesday is back to 3v3', () => {
+  assert.equal(Link.CLASH_SIZE.encounter, 3);
+  for (let seed = 500; seed < 506; seed++) {
+    const f = newFranchise(seed); toTuesday(f); assert.ok(F.startEncounter(f, 0).ok); const e = f.week.encounter;
+    const before = Object.fromEntries(e.mine.map((id) => { const m = f.roster.find((x) => x.id === id); return [id, { xp: m.xp, level: m.level }]; }));
+    const b = F.resolveEncounter(f); assert.ok(b.ok);
+    const rows = b.events.filter((x) => x.kind === 'xp'); assert.equal(rows.length, e.mine.length, 'one XP record per battler');
+    for (const row of rows) {
+      const m = f.roster.find((x) => x.id === row.id); assert.ok(row.amount > 0, 'XP is earned'); assert.equal(row.xp, m.xp); assert.equal(row.level, m.level); assert.ok(row.next > row.xp);
+      if (!row.levelsGained) assert.equal(m.xp - before[row.id].xp, row.amount, 'the number shown is the XP added');
+    }
+    assert.ok(!f.news.some((n) => /undefined/.test(n.text)), 'xp records never leak into the news');
+  }
 });
