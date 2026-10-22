@@ -1,4 +1,7 @@
-# Gridiron Beast — Game Design Document (Rebuild v6)
+# Gridiron Beast — Game Design Document (Current Design + Historical Build Record)
+
+> **CURRENT DESIGN / AUTHORITY NOTICE (2026-10-21).** Active Franchise Mode is **7-on-7 football**, **16 clubs**, **one league/campaign** (no Challenger/Vanguard/Sovereign promotion or relegation). The nine-game regular season plus bye, gym-badge campaign, Beast Bowl, Legend Tracks, Board, draft, contracts and awards are active. **32 clubs are a long-term expansion goal, not current implementation.** Section **27** is the approved feature roadmap and accessibility policy; Section **26** records the implemented Beast Clash integration (Tuesday encounters, pregame and overtime Clash). Sections **1–23** contain historical build/playtest notes and must not override newer locked design. Section **24** (Career Mode) is **documentation-only**; its old references to 11-on-11 and league tiers are superseded. Section **25** governs Beast Clash. Git history retains previous revisions; maintain this file as the sole authoritative GDD.
+
 
 **Owner:** Southside Games · **Branch:** `rebuild/mobile-7v7` · **Supersedes:** `docs/GRIDIRON_BEAST_MASTER_GDD.md` v4.9 for all football, UI and roster rules. Franchise rules from v4.9 that are not restated here remain in force.
 
@@ -191,11 +194,11 @@ Every decision uses down, distance, field position, score differential, quarter,
 | Sat | Lineup check | Auto-fills injuries; warns about fatigue |
 | Sun | Game | All other league games are simulated with the same engine |
 
-**League:** 16 teams, 2 conferences, 4 divisions, 10-week regular season (9 games + bye) using the existing deterministic schedule generator. Standings come from simulated games. Ties broken by head-to-head, then point differential. **Postseason:** 8 teams, Weeks 11–13, Beast Bowl. Beast Bowl champion earns a championship badge. Promotion and relegation (v4.9 §18–19) are **hidden in this release** (`TIERS_ENABLED = false`): the data model keeps a single tier so the three-tier pyramid can return later, and the player-facing goal is one great season — rival storyline, playoff race, end-of-season awards.
+**League (CURRENT):** 16 clubs, 2 conferences, 4 divisions, one campaign; 10-week regular season (9 games plus bye), 8-team postseason and Beast Bowl. Gym badges and Legend Tracks drive campaign progression. **No active promotion or relegation; no tiers.** See §15 and §26.
 
 **Progression:** XP for participation and contributions (yards, TDs, tackles, sacks, interceptions). Each level adds attribute points to the position's key attributes. Trainer bonuses are never permanent.
 
-**Economy (TUNABLE):** annual caps Challenger 1.8M, Vanguard 2.6M, Sovereign 3.6M credits. Monster salary = 18,000 + 280 × OVR. Staff salaries unchanged. Over the cap ⇒ games locked until you release a monster.
+**Economy (CURRENT):** one franchise salary cap and offseason contract/renewal/free-agent system, as specified in §15–§22 and implemented in `src/franchise/`. The former tier-specific cap amounts and old automatic game lock are obsolete; the commissioner's cap-review rules in §15.6 supersede them.
 
 **Saves:** key `gridiron-beast-v6`, `schemaVersion: 6`, export/import JSON. A v5 (11v11) save is never modified; on first launch the player may import owner, club, staff, rival, season, record and history from it. Its 40 placeholder monsters are re-mapped into 7v7 positions, keeping the cornerstones.
 
@@ -234,13 +237,13 @@ Read from what the football engine actually uses (`src/sim`), plus each position
 
 ## 10. Implementation notes (what the build does today)
 
-* Everything in §2–§9 is implemented unless marked LATER, with these simplifications: the promotion challenge game is replaced by automatic promotion once the badge goal is met; relegation uses the two-season bottom-four rule; AI clubs are regenerated each season from a deterministic seed with tier-based quality drift (no persistent AI rosters yet); the opponent's two-point try defense is chosen by the AI rather than the player.
+* **HISTORICAL IMPLEMENTATION NOTE (superseded):** this paragraph formerly described promotion/relegation and regenerated AI rosters. Those are not the active campaign rules. Current franchise behavior is specified in §15–§22 and §26 (Beast Clash integration); the roadmap is §27.
 * The player's scouting report reads the opponent's real coach profile, strengths and favourite plays. Training bonuses are real attribute adds on Sunday only.
 * Engine tunables (speed curve, blocking engagement, shed rates, throw error, catch/interception formulas, tackle resolution, pursuit effort) are constants at the top of the relevant functions in `src/sim/engine.js`; balance bands are enforced by `tests/engine.test.js`.
 
 ## 11. Out of scope for this build (LATER)
 
-Promotion/relegation UI, Multiplayer, Draft Mode, trades, free agency, contracts beyond a single annual salary, custom play editor, penalties beyond delay of game, wind/weather, evolution, equipment, audio. Career Mode (§24) is documented but not approved for development.
+**CURRENT SCOPE:** Multiplayer, standalone Battle Room/Draft Clash, Career Mode, custom play editor, expanded penalties, wind/weather, equipment and audio remain outside the approved Franchise completion scope. Drafting, trades (first pass), free agency, contracts and evolution are already implemented in Prototype 2; do not list them as unbuilt. Trading second pass and other planned improvements are tracked in §26.
 
 ## 9a. Personnel (revised)
 
@@ -257,7 +260,7 @@ Seven base starters per side are what the owner manages. **Offense:** QB, RB, WR
 
 ## 11. Release 6.1 adjustments (focus pass)
 
-* **Many seasons, one league.** The franchise continues indefinitely: at season end the owner starts the next season with the same club, roster (aged, progressed, re-signed), rival and history; recruiting classes, injuries, XP and awards make each season different. What is hidden is only promotion/relegation between tiers; HQ shows the rival and the playoff race from week 5; the season ends with an awards sheet (MVP, leaders, rivalry record) that is also stored in franchise history.
+* **Many seasons, one league.** The franchise continues indefinitely: at season end the owner starts the next season with the same club, roster (aged, progressed, re-signed), rival and history; recruiting classes, injuries, XP and awards make each season different. The obsolete promotion/relegation system is not part of this campaign; HQ shows the rival and the playoff race from week 5; the season ends with an awards sheet (MVP, leaders, rivalry record) that is also stored in franchise history.
 * **Four headline attributes.** Speed, Power, Hands, Smarts are derived per position from the twelve underlying attributes (`headlineAttributes`), which remain in the engine and are visible under a disclosure. Scouting reveals headline values progressively.
 * **Three-step onboarding.** Name and portrait → club (rival revealed inline) → one offensive cornerstone. A balanced default staff is hired automatically and the owner lands in HQ on Monday of week 1 with a short guide to the weekly routine (scout → recruit → train → scout opponent → game plan → lineup → play). The front office opens via Staff → Replace.
 * **Defaults.** Key Moments is the default coaching mode; game length defaults to 3-minute quarters (~25 plays; league AI games use the same length so scoring lines up), with 5- and 7-minute presets that quote play counts and real time; the live play clock stays opt-in.
@@ -351,7 +354,7 @@ Two or three lines on the pregame screen, before the lineups, from the opposing 
 ### 15.8 Getting stronger each season
 
 * Gym clubs scale per 15.3; the rival GM's signature monster evolves between seasons as you keep meeting them.
-* **The title raises the floor:** each Beast Bowl the player wins adds +1 quality to every club for all later seasons, so a champion never cruises through the next year. This replaces the old Challenger / Vanguard / Sovereign tiers (already disabled).
+* **The title raises the floor:** each Beast Bowl the player wins adds +1 quality to every club for all later seasons, so a champion never cruises through the next year. This is the current single-league difficulty progression; the former tier pyramid is retired.
 * **Legend Tracks:** win the Beast Bowl → choose one track toward any legendary no club owns (or a gym legendary whose badge you hold). Three tracks on the same legendary put it in your recruiting pool in its home region — guaranteed to appear the first time you scout that region each season (a three-title reward, not a lottery ticket); you still have to sign it and fit it under the cap.
 * Rematch scouting: the Thursday report on a club you have faced before shows one extra play.
 
@@ -592,7 +595,7 @@ Continual polish on prototype 2 before prototype 3. If the owner prefers the pla
 6. **Position sequences** as set out in §24.3 (QB: snap, automatic drop and pocket, tap a receiver; WR: Call for Ball, Catch, Evade; RB: automatic run, timed evade/contact; LB: Tackle / Intercept / Swat on one button, Ready before a defensive snap; CB: timed pass defense and tackles on one button).
 7. **A press is an attempt, not an outcome.** A well-timed tap never guarantees a completion, catch, tackle or interception; attributes, positioning and the situation decide the result. Specifically for cornerback (owner's prototype feedback): pressing Intercept inside the timing window must not be an easy interception; the result must account for the monster's ratings and the situation, without relying only on overall rating or arbitrary failure rolls.
 8. **Life outside games matters.** A weekly loop of meaningful, limited choices (practice, film, team chemistry, development, ability training, recovery, relationships, personal events) with visible consequences; not a checklist of mandatory tasks. Separate from the owner's Franchise week.
-9. **Career progression** from creation through entry (tryout, recruitment or draft), joining a team, earning trust and playing time, a starting role, development, honours, offers and movement between league tiers, using **Challenger, Vanguard and Sovereign** and respecting the established promotion and relegation rules. A player changing teams is distinct from a team being promoted.
+9. **Career progression** from creation through recruitment/draft, joining a team, earning playing time, development, honours, and possible transfers **within the current single-league 16-club campaign**. The three-tier promotion/relegation system is retired and is not a Career Mode prerequisite.
 10. **Performance grades reward the position's job**, not only headline statistics.
 11. **Presentation:** the existing top-down field and play-art conventions (§6); the user team's play art before the snap, hidden during live play; the controlled monster easy to identify; restrained, clear feedback for opportunities, timing, results and ability readiness.
 
@@ -600,8 +603,8 @@ Continual polish on prototype 2 before prototype 3. If the owner prefers the pla
 
 Three points where the request meets the current document and an owner decision is needed. They are repeated in §24.10.
 
-* **Field format.** The request describes "the existing 11-on-11 game". The current build is **7-on-7** (§2, LOCKED in Rebuild v6, which superseded the v4.9 11-on-11 lock). Career Mode is written here so it works in either format: the five playable positions exist in both, and the AI-only positions (TE, OL, DL, K) are AI teammates either way. Which format Career Mode ships in follows whatever Franchise Mode uses at that time (OPEN).
-* **League tiers.** The Challenger / Vanguard / Sovereign pyramid and its promotion and relegation rules are defined in v4.9 §18–§19 (one-slot exchange per adjacent tier pair per offseason, a single winner-take-all challenge, four Challenger or six Vanguard championships to qualify, relegation eligibility after two consecutive bottom-four finishes, OVR bands as initial placement only). In the current Franchise build the tiers are **hidden** (`TIERS_ENABLED = false`, §8) and §15.8 replaced them with "the title raises the floor". Career Mode as requested needs the three-tier league to exist and be simulated (48 clubs). That is a dependency on Franchise systems, not something Career Mode should build on its own (OPEN).
+* **Field format (CURRENT):** Franchise Mode is **7-on-7**. Career Mode must use the same 7-on-7 field and active positions if approved for implementation. The former 11-on-11 discussion is obsolete.
+* **League structure (CURRENT):** one 16-club league; no Challenger/Vanguard/Sovereign pyramid, promotion, relegation, or tier-transfer mechanics. Career Mode is documentation-only and must not reactivate these rules.
 * **Signature-ability rules.** §23.9–§23.10 already govern abilities: a card must do exactly what it says; a signature ability belongs to one monster and is never shared; legendary-strength absolutes belong only to legendaries; non-legendary abilities are never absolutes. The creation system in §24.4 is written to obey those rules.
 
 ### 24.3 Controls and gameplay by position
@@ -719,12 +722,12 @@ Three points where the request meets the current document and an owner decision 
 **Path (CONFIRMED stages, PROPOSED detail):**
 
 1. **Creation** (§24.4).
-2. **Entry:** the created monster enters the league through the **draft** (§19; a first-year class member with a public board rank) or, if undrafted, an **open tryout** with a Challenger club (PROPOSED: a short drill-based tryout week). OPEN: draft, tryout or both.
+2. **Entry:** the created monster enters the league through the **draft** (§19; a first-year class member with a public board rank) or, if undrafted, an **open tryout** with a club in the current league (PROPOSED: a short drill-based tryout week). OPEN: draft, tryout or both.
 3. **Joining a team:** depth-chart position as a backup or rotation player; **coach trust** (0–100, PROPOSED) earned through grades, practice and relationships decides snaps.
 4. **Earning the starting role:** a starter's job opens through trust, injury or form; the coach announces it in a short scene.
 5. **Development:** levels and attribute points as in Franchise (§17.3), weekly development (§24.5), ability progression, and **evolution** where the created form has one (OPEN: do created monsters evolve).
 6. **Honours:** league awards (§16.4, §18.5), championships, Beast Bowl, records (§17.8), rivalries with specific opposing monsters, career milestones as cutscenes in the §21.1 style.
-7. **Offers and movement:** at contract end (two-year maximum, §18.1) other clubs may offer, including clubs in a higher tier. **Moving to a club in another tier is a personal move**; it never changes any club's tier. **A club's promotion or relegation** follows the v4.9 §18–§19 rules (one-slot exchange, the challenge match, qualification counts, bottom-four streak) and carries the player's monster with the club.
+7. **Offers and movement:** at contract end, other clubs in the **same active league** may offer. A player changing clubs does not change league structure. Career Mode transfer behavior remains proposed and requires approval.
 8. **Retirement:** age and decline end the career; a **Career card** (PROPOSED) records clubs, tiers, seasons, stats, awards and titles, separate from the Franchise Hall of Fame (OPEN: a Career Hall of Fame).
 
 ### 24.7 Performance evaluation
@@ -758,8 +761,8 @@ Game grade (A–F, PROPOSED) = weighted snap grades; it feeds coach trust and XP
 
 ### 24.10 Open questions for the owner
 
-1. **Format:** does Career Mode use the current 7-on-7 game (§2) or a future 11-on-11 game, or simply whichever format Franchise uses at the time?
-2. **Tiers:** Career Mode needs the 48-club, three-tier league running. Should it wait for Franchise to re-enable tiers (§8, `TIERS_ENABLED`), or does the owner want the tiered league to return for both modes?
+1. **Format (RESOLVED):** Career Mode, if built, uses the active **7-on-7** format unless the owner separately authorizes a format change.
+2. **League structure (RESOLVED):** Career Mode, if built, uses the active **single 16-club league**. No tier system or promotion/relegation prerequisite.
 3. **Created monster identity:** a one-off new form (proposed) or a member of an existing species? Does it evolve? Is nature picked or rolled?
 4. **Play calling:** may the player suggest or audible plays (e.g. a QB audible from the six-card plan), or does the coaching AI always call them?
 5. **Ability activation:** activatable abilities with charges, triggered abilities, or both (proposed)? How many charges per game?
@@ -904,4 +907,92 @@ Football plays **one** overtime period (`otPeriods: 1` in every franchise game, 
 - **The record keeps the football score.** `winner` is set on the finished state and the result carries `clash` (size, winner, how it ended, exchanges); `homeScore` / `awayScore` are the football points as played and never change. Standings count a win and a loss (never a tie), points for and against are the football score, head-to-head and division/conference records follow the Clash winner, the player's schedule, campaign wins, badges, rivalry memory, news and monster game logs all use the same winner, and playoff brackets name the winner from the result.
 - **League games** are settled headless the same way (automatic lineups, smart policies, one seed); a club with no healthy monster would lose a seeded coin instead (not reachable with full AI rosters).
 - **Headless player games** (tests, "sim to end") settle the tiebreak in Auto.
+
+## 27. Franchise Mode — accessible-depth roadmap (OWNER APPROVED, 2026-10-21; DOCUMENTATION ONLY)
+
+**Status:** The feature direction and priority order below are owner-approved for the roadmap. This section does **not** authorize implementation, alter Beast Clash's existing approval gates, or authorize new game modes. Finish the Beast Clash engine, integrate it into Franchise Mode, and validate the existing franchise before building new roadmap features. UI polish is secondary to feature correctness.
+
+### 27.1 Product audience and design rule
+
+Gridiron Beast must be enjoyable for players roughly **10 years old through adulthood (50+)**. A younger player should be able to collect monsters, coach football, win trophies, and enjoy the campaign without mastering salary-cap strategy. A football-management enthusiast should have meaningful optional decisions. **Depth is welcome; mandatory complexity is not.**
+
+Rules for every new feature:
+- Preserve the existing weekly franchise rhythm; do not add mandatory extra days or repetitive maintenance chores.
+- Teach mechanics contextually at first use; avoid front-loading long tutorials.
+- Let players disable automatic hints, but keep on-demand help available.
+- Make optional advanced controls affect the same underlying rules as simple controls; no separate easier trade engine.
+- Explain material consequences in plain language. Irreversible actions (e.g., releasing a Legendary, forfeiting a draft pick, deleting a save) retain confirmation even in Expert guidance mode.
+- Avoid punitive relationship meters, obscure penalties, or mechanics that trap a player in one roster configuration.
+- Do not tie tutorial preferences to difficulty, competitive balance, Hall of Fame eligibility, or achievements.
+
+### 27.2 Phase 1 — Complete existing Beast Clash and franchise integration (REQUIRED FIRST)
+
+> **Status (2026-10-22): implemented and merged to `main`** (Beast Clash values 1.1.0 and the knockout fix, §25.10; franchise integration, §26). The open decisions listed below were settled by the owner during implementation and are recorded in §26: Tuesday encounters are strictly 1v1, a win guarantees a signing offer and a loss gives one standard pitch (§26.1); draft-window weeks keep scouting and the recovery day; overtime eligibility, fatigue, AI behaviour and playoff ties are specified in §26.0 and §26.3. Remaining for Phase 1 acceptance: owner mobile playtests over full seasons, and a decision on Tuesday difficulty (§26.1 balance note).
+
+Finish the already-approved Beast Clash balance/engine work and its full regression and replay requirements before integration. Preserve historical Values 1.0.0 behavior and the approved Values 1.1.0 rules; do not bypass failing tests.
+
+Integrate the combat system into the current franchise campaign:
+1. **Monday scouting** remains part of the weekly schedule.
+2. **Tuesday encounter:** use Beast Clash as the monster encounter/recruitment activity. Winning should provide a better recruitment outcome, while losing still yields a meaningful outcome. **Exact capture/reward rates, failure consequences, and late-season draft-window behavior are OPEN design decisions**; do not silently override the existing final-week/playoff draft-scouting and recovery schedule (§19).
+3. **Pregame possession:** a **3v3 Beast Clash** replaces the football coin toss. The winner chooses **kick, receive, or defer**; this does not award football points.
+4. **Battle speed:** default **2×**, with **1× / 2× / 4×** player options.
+5. **Football overtime:** play one normal football overtime quarter; if still tied, resolve the winner through Beast Clash. **Regular-season tiebreaker: 3v3; playoff tiebreaker: 5v5.** Exact roster eligibility, fatigue, injuries, AI behavior, and postseason tie handling must be specified before implementation.
+6. Clash must not corrupt franchise saves, football statistics, standings, awards, injuries, or historical replays.
+
+**Acceptance:** New and loaded franchises can complete multiple full seasons, including bye weeks, scouting, encounters, football games, playoffs, contracts, draft, progression, records, and Hall of Fame flow, with deterministic results and no dead ends. Run automated checks and actual mobile-oriented playtests. No separate Battle Room, Draft Clash, Custom Clash, or Career Mode development during this phase.
+
+### 27.3 Phase 2 — Coach Assist: optional contextual tutorials (APPROVED ROADMAP FEATURE)
+
+Introduce a unified guidance system rather than a separate intrusive tutorial for every feature. Guidance setting may change at any time within a save:
+- **Guided:** step-by-step first-use instruction, plain-language explanation, and decision support; recommended for newcomers.
+- **Standard:** concise first-use help and important contextual tips; recommended default for most players.
+- **Expert:** no automatic walkthroughs; always retain a visible **? Help** entry on complicated screens.
+- Separate optional toggles for **contextual hints** and **routine consequence explanations**, where practical.
+- Always display essential irreversible-action confirmations and critical safety/data-loss warnings, regardless of setting.
+
+Apply contextual teaching to drafting, scouting, Beast Clash type advantages and move effects, contracts/cap, trading, staff schemes, game plans, monster evolution, and postseason rules. Reveal help at the moment of decision, never as a forced encyclopedia. A younger player must understand what a choice does without needing to learn real NFL front-office terminology. Advanced users should be able to dismiss or disable the guidance permanently and re-enable it later.
+
+**Acceptance:** A first-time player can complete onboarding, a trade, a draft pick, and a Clash battle using Guided; an experienced player can complete the same without automatic interruptions in Expert. Help remains available in both.
+
+### 27.4 Phase 3 — Monster identity and attachment (APPROVED ROADMAP FEATURES)
+
+**A. Career history and accomplishments (HIGH PRIORITY; primarily reuse existing data).** Add a readable monster career timeline/profile showing draft or recruitment origin, team changes, evolution, first touchdown/major firsts where reliable event data exists, championships, awards, career records, and notable rivalry performances. Existing statistics, awards, evolution and Hall of Fame records are the source of truth; do not fabricate missing historical events for older saves. Offer a simple highlights view and an optional detailed statistics view. This is not a second progression economy.
+
+**B. Monster Partnerships (HIGH PRIORITY; lightweight automatic chemistry).** Teammates who repeatedly play together may develop a visible partnership (examples: QB–WR, QB–RB, compatible defensive pair). It develops passively through actual shared participation, not chores. Any benefit is **small, capped, transparent**, and must not outweigh a significant player-rating advantage or punish experimentation. No happiness upkeep, jealousy, mandatory friendship tasks, or complicated morale spreadsheet. Exact qualifying pairs, thresholds, bonus formula, reset/transfer behavior, and save migration are tunable specifications to approve before code.
+
+**Acceptance:** A younger player can understand badges and partnership labels without studying formulas; a veteran can inspect the mechanics. Bonuses cannot snowball across many seasons.
+
+### 27.5 Phase 4 — Accessible team-building depth (APPROVED ROADMAP FEATURES)
+
+**A. Trading, second pass.** Keep existing draft-pick-for-veteran/future-pick trading intact while adding optional broader deals. Target features: owner-initiated monster-for-monster or monster-plus-pick offers, incoming AI trade offers, and potentially in-season trading after rules are defined. Keep protected monsters and deterministic offer logic unless explicitly redesigned. Avoid three-team trades, salary-retention accounting, complex clauses, or opaque trade-value formulas.
+
+Use **one trade engine, two interfaces**:
+- **Simple:** ask what the owner needs (e.g., better receiver, stronger defense, young prospect); staff suggests valid offers and clearly shows *you give / you receive / roster impact / salary impact*.
+- **Advanced:** manually select eligible monsters and picks, inspect values and cap effects, and negotiate/counter.
+- Both views follow the same eligibility, roster, cap, AI valuation, and save rules. Advanced is optional; Simple is not a different difficulty.
+- Contextual Coach Assist explanations can be disabled; irreversible confirmations remain.
+
+**B. Smarter AI franchises.** Improve opponent long-term roster management behind the scenes: positional needs, aging and retirement replacement, depth, scheme fit, injuries, cap constraints, draft development, and meaningful rival identity. The player should experience better opponents without additional weekly tasks. Evaluate across multiple seasons, not only single-game strength. Do not assume existing AI is broken; benchmark before changes.
+
+**C. Free agency:** keep the existing offseason market approachable. Improve clarity and AI decisions before adding complexity; no advanced contract clauses required for franchise completion.
+
+### 27.6 Phase 5 — Long-term possibilities (NOT APPROVED FOR IMPLEMENTATION)
+
+- **GM career mobility:** selling/leaving a club, job offers, carrying a GM career to another club, preserving personal accomplishments after firing or retirement. Worth revisiting after core franchise validation; no new mandatory management layer now.
+- **Stadium management:** optional hybrid owner feature, deferred; no stadium economy or construction requirements now.
+- **Mentorship:** possible small training interaction between veterans and rookies; fold into existing training if pursued, not a new weekly chore.
+- **Weather and expanded penalties:** future football realism only if playtests justify the learning and balance costs.
+- **League expansion to 32 clubs:** **owner-confirmed long-term intention, not cancelled**. The current active league remains **16 clubs, four divisions, two conferences, one competition/campaign**. A future design phase may expand to **32 clubs** and revisit divisional alignment, schedules, playoff scarcity, AI rosters, statistics, franchise migrations, gym-club distribution, and performance. **No target release or implementation authorization exists.** Do not confuse expansion with the abandoned three-tier promotion/relegation pyramid.
+- **Separate modes:** a possible Battle Room (Draft Clash first; Custom Clash later) and Career Mode are future proposals only. Franchise Mode remains the development priority.
+
+### 27.7 Explicit exclusions and documentation policy
+
+**Not part of the active franchise design:** 11-on-11 play, Challenger/Vanguard/Sovereign tiers, promotion/relegation challenges, tier-specific salary caps, and a 48-club three-tier pyramid. These are legacy concepts, **not** future prerequisites for Career Mode or the 32-club expansion. Do not reintroduce them without a new owner decision.
+
+Do not confuse **documented**, **approved for roadmap**, **authorized to implement**, and **implemented/tested**. Maintain this file as the sole authoritative GDD. Use Git commit history for previous versions, not separate archived GDD copies. Active sections should use the latest approved design. Historical playtest notes may remain for traceability only when clearly marked historical and not actionable.
+
+### 27.8 Feature acceptance and sequencing
+
+For each new roadmap feature: first record exact behavior and unresolved decisions, then owner approval for implementation, then isolated development, tests, save compatibility, mobile playtest, and regression checks. Do not launch phases concurrently. **Priority:** Beast Clash and existing franchise stability → Coach Assist → monster history and partnerships → trading and AI → optional long-term features. Polish is not a substitute for functional completion.
+
 
