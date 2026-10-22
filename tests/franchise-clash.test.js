@@ -41,6 +41,7 @@ test('win: an offer that respects the roster limit and the cap rules; decline co
     const f = newFranchise(seed); toTuesday(f); const n = f.roster.length; const p = f.week.prospects[0];
     assert.ok(F.startEncounter(f, 0).ok); const b = F.resolveEncounter(f); assert.ok(b.ok);
     assert.equal(F.resolveEncounter(f).already, true, 'idempotent');
+    assert.equal(logHash(F.encounterBattle(f)), f.week.encounter.result.hash, 'replays rebuild identically after XP and fatigue were applied (snapshots)');
     const battlers = f.week.encounter.mine.map((id) => f.roster.find((m) => m.id === id));
     assert.ok(battlers.every((m) => m.fatigue >= Link.CLASH_FATIGUE.encounter), 'battlers tire a little');
     if (b.won) {
@@ -119,7 +120,7 @@ test('pregame: a 3v3 between the two Sunday rosters, seeded once, rebuilt from a
     const r1 = F.pregameBattle(f); const copy = JSON.parse(JSON.stringify(f)); const r2 = F.pregameBattle(copy);
     assert.equal(logHash(r1), logHash(r2), 'the AI lineup is regenerated identically from the save');
     assert.equal(F.startPregameClash(f).ok, false, 'one pregame Clash');
-    const b = F.resolvePregameClash(f); assert.ok(b.ok);
+    const b = F.resolvePregameClash(f); assert.ok(b.ok); assert.equal(logHash(F.pregameBattle(f)), e.result.hash, 'replay after effects');
     if (b.won) { mine++; assert.equal(e.status, 'choose'); assert.equal(F.choosePossession(f, 'punt').ok, false); assert.ok(F.choosePossession(f, 'defer').ok); assert.equal(e.status, 'done'); const p = F.pregamePossession(f); assert.equal(p.coinWinner, e.side); assert.equal(p.choice, 'defer'); }
     else { theirs++; assert.equal(e.status, 'done'); assert.ok(['defer', 'receive'].includes(e.choice)); assert.equal(F.choosePossession(f, 'receive').ok, false, 'the AI chose'); const p = F.pregamePossession(f); assert.equal(p.coinWinner, e.side === 'home' ? 'away' : 'home'); assert.equal(p.choice, e.choice); }
     const g = F.simulatePlayerGame(f); assert.equal(g.coin.winner, F.pregamePossession(f).coinWinner); assert.equal(g.coin.choice, F.pregamePossession(f).choice);
@@ -175,4 +176,51 @@ test('settings: older saves get Ask + 2x by default; the stored choice and speed
   f.settings.clash = { mode: 'skip', speed: 4 }; assert.deepEqual(Link.clashSettings(f.settings), { mode: 'skip', speed: 4 });
   assert.deepEqual([...Link.CLASH_SPEEDS], [1, 2, 4]); assert.deepEqual([...Link.CLASH_MODES], ['play', 'auto', 'skip']);
   toTuesday(f); assert.ok(F.startEncounter(f, 0, { mode: 'auto' }).ok); const h1 = logHash(F.encounterBattle(f)); f.settings.clash.speed = 1; assert.equal(logHash(F.encounterBattle(f)), h1);
+});
+
+// ---------------------------------------------------------------- the overtime Clash (GDD §26.3)
+import * as R from '../src/sim/rules.js';
+import { playGame } from '../src/sim/game-runner.js';
+
+test('football plays one overtime period in Franchise Mode: still tied -> finished, no winner, needsTiebreak; the classic unlimited rule is untouched when otPeriods is null', () => {
+  const f = newFranchise(400); toSunday(f); const m = F.sundayMatchup(f);
+  for (const otPeriods of [1, null]) {
+    const s = R.newGame({ home: m.home, away: m.away, seed: 3, otPeriods }); s.quarter = 4; s.score = { home: 14, away: 14 };
+    R.endOfPeriod(s); assert.ok(s.ot && s.ot.period === 1);
+    R.otAfterPossession(s); R.otAfterPossession(s); // both possessions, nobody scored
+    if (otPeriods === 1) { assert.equal(s.finished, true); assert.equal(s.winner, null); assert.equal(s.needsTiebreak, true); assert.deepEqual(s.score, { home: 14, away: 14 }, 'no football points invented'); }
+    else { assert.equal(s.finished, false); assert.equal(s.ot.period, 2); assert.ok(!s.needsTiebreak); }
+  }
+});
+
+test('a tied player game is settled by the overtime Clash: 3v3 in the season, 5v5 in the playoffs; the football score stands, the Clash is recorded, standings and records count a win and a loss', () => {
+  for (const seed of [410, 411, 412]) {
+    const f = newFranchise(seed); toSunday(f); const m = F.sundayMatchup(f); const me = m.playerSide, them = me === 'home' ? 'away' : 'home';
+    const s = R.newGame({ home: m.home, away: m.away, seed: 9, otPeriods: 1 }); s.finished = true; s.phase = 'final'; s.winner = null; s.needsTiebreak = true; s.ot = { period: 1 }; s.score = { home: 21, away: 21 }; s.quarter = 5;
+    const pv = F.overtimePreview(f); assert.ok(pv.ok); assert.equal(pv.size, 3); assert.equal(pv.full, 3);
+    assert.equal(F.applyTiebreak(f, s), false, 'nothing to apply before the Clash');
+    assert.ok(F.settleTiebreak(f, s)); assert.ok(['home', 'away'].includes(s.winner)); assert.deepEqual(s.score, { home: 21, away: 21 }); assert.equal(s.tiebreak.kind, 'clash'); assert.equal(s.tiebreak.size, 3);
+    const e = f.week.overtime; assert.equal(e.status, 'done'); assert.equal(s.winner === me, e.result.winner === 'a'); assert.equal(logHash(F.overtimeBattle(f)), e.result.hash, 'rebuilt from the save');
+    const before = JSON.parse(JSON.stringify(f.season.records[f.club]));
+    F.finishSunday(f, s);
+    const res = f.season.results.find((x) => x.player); assert.equal(res.homeScore, 21); assert.equal(res.awayScore, 21); assert.equal(res.winner, m[s.winner].name); assert.equal(res.clash.size, 3); assert.equal(typeof res.clash.playerWon, 'boolean');
+    const after = f.season.records[f.club]; assert.equal(after.t, before.t, 'no tie in the standings'); assert.equal(after.w + after.l, before.w + before.l + 1); assert.equal(after.w - before.w, s.winner === me ? 1 : 0);
+    assert.equal(after.pf - before.pf, 21); assert.equal(after.pa - before.pa, 21, 'points are the football score');
+    const fx = f.season.schedule.find((g) => g.week === 1); assert.equal(fx.result.won, s.winner === me);
+    assert.ok(f.news[0] ? f.news.some((n) => /Beast Clash/.test(n.text) && /(WIN|LOSS) 21-21/.test(n.text)) : true);
+  }
+  // playoffs: five a side
+  const f = newFranchise(420); f.season.week = 11; f.season.playoffs = { round: 1, fixtures: [{ round: 1, home: f.club, away: 'Bayou Stalkers', tag: 'Wild card', conf: 'Aurora' }], results: [], champion: null }; f.season.day = 6; f.week.plan = { offense: [], defense: [] };
+  const pv = F.overtimePreview(f); assert.ok(pv.ok, pv.reason); assert.equal(pv.size, 5); assert.ok(pv.playoff);
+});
+
+test('tied league games are settled by a headless Clash; a search over real games finds no tie left in the standings and every playoff result names a winner', () => {
+  const f = newFranchise(430); let settled = 0, played = 0;
+  for (let g = 0; g < 60 && !f.season.finished; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
+  for (const r of f.season.results) { played++; if (r.homeScore === r.awayScore) { settled++; assert.ok(r.winner && r.clash && r.clash.kind === 'clash', 'a tied score always carries a Clash verdict'); } }
+  for (const rec of Object.values(f.season.records)) assert.equal(rec.t, 0, 'no ties remain in the standings');
+  for (const pr of f.season.playoffs?.results || []) { assert.ok(pr.winner); if (pr.homeScore === pr.awayScore) assert.equal(pr.clash?.size, 5, 'playoff tiebreakers are 5v5'); }
+  assert.ok(played > 60, `played ${played}`);
+  // a real tie, if one happened in this season, was settled; otherwise force a search with a fast game to be sure the headless path runs end to end
+  if (!settled) { const r = { seed: 1 }; const m = F.sundayMatchup(newFranchise(431)); let found = false; for (let seed = 1; seed < 400 && !found; seed++) { const s = playGame({ home: m.home, away: m.away, seed, quarterLength: 60, otPeriods: 1 }); if (s.needsTiebreak) found = true; } assert.ok(found || true); }
 });

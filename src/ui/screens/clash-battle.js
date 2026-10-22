@@ -10,7 +10,7 @@ import { createArena } from '../clash/arena.js';
 import { stateAt } from '../clash/choreographer.js';
 import { monsterOverall } from '../../data/monsters.js';
 import { archetypeOf } from '../../clash/stats.js';
-import * as Match from './match.js';
+import { startSundayGame } from './match.js';
 
 const ARCH_GLYPH = { Tank: '🛡', Striker: '⚔️', Support: '💚', Disruptor: '🌀', Balanced: '⚖️' };
 export const MODE_TEXT = Object.freeze({
@@ -78,7 +78,27 @@ function bindings(app, Router) {
       actions() {
         return {
           choose: (el) => { const r = F.choosePossession(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
-          kickoff: () => { if (!Match.startSundayGame) { toast('The match screen is not ready.', 'bad'); return; } Match.startSundayGame(app.f); },
+          kickoff: () => { startSundayGame(app.f); },
+        };
+      },
+    },
+    overtime: {
+      title: 'Overtime · Beast Clash',
+      record: (f) => f.week.overtime,
+      preview: (f) => F.overtimePreview(f),
+      start: (f, i, opts) => F.startOvertimeClash(f, opts),
+      battle: (f) => F.overtimeBattle(f),
+      decide: (f, ex, choice) => F.overtimeDecide(f, ex, choice),
+      resolve: (f) => F.resolveOvertimeClash(f),
+      occasion: 'overtime', mySide: 'a',
+      introText: (f) => { const pv = F.overtimePreview(f); const s = f.game?.state; return `Still tied${s ? ` at ${s.score.home}-${s.score.away}` : ''} after overtime against <b>${esc(pv.opponent || 'the opponent')}</b>. A <b>${pv.size}v${pv.size}</b> Beast Clash decides the game${pv.playoff ? ' (playoffs: five a side)' : ''}. The football score stays as it is.`; },
+      resultHtml(f, e) {
+        const s = f.game?.state; const won = e.result?.winner === 'a';
+        return `<div class="panel"><p>${won ? `<b>You win the game</b> ${s ? `${s.score.home}-${s.score.away}` : ''} on the overtime Beast Clash.` : `<b>${esc(e.opponent)}</b> win the game ${s ? `${s.score.home}-${s.score.away}` : ''} on the overtime Beast Clash.`}</p><p class="dim">The record shows the football score and notes the Clash tiebreaker.</p><button class="btn primary big block" data-action="final">Continue to the final →</button></div>`;
+      },
+      actions() {
+        return {
+          final: () => { const f = app.f; if (!f.game?.state) { Router.go('hq', {}, { reset: true }); return; } F.applyTiebreak(f, f.game.state); app.save(); Router.go('match', {}, { reset: true }); },
         };
       },
     },
@@ -149,7 +169,7 @@ export function registerClashBattle(Router, app) {
   function resultHtml(f, e) {
     const r = e.result; const won = r?.winner === B().mySide; const mine = f.roster.filter((m) => e.mine.includes(m.id));
     const lv = (e.events || []).filter((x) => x.kind === 'levelup');
-    return `<div class="panel ${won ? 'good' : ''}" style="text-align:center"><div style="font-size:22px;font-weight:800">${won ? (st.kind === 'pregame' ? 'YOU WON THE CLASH' : 'VICTORY') : (st.kind === 'pregame' ? 'THEY WON THE CLASH' : 'DEFEAT')}</div><div class="muted">${r.by === 'knockout' ? 'By knockout' : r.by === 'hp' ? 'On health left after 30 exchanges' : 'On a coin flip after an exact tie'} · ${r.exchanges} exchange${r.exchanges === 1 ? '' : 's'}</div>
+    return `<div class="panel ${won ? 'good' : ''}" style="text-align:center"><div style="font-size:22px;font-weight:800">${won ? (st.kind === 'pregame' ? 'YOU WON THE CLASH' : st.kind === 'overtime' ? 'YOU WIN THE GAME' : 'VICTORY') : (st.kind === 'pregame' ? 'THEY WON THE CLASH' : st.kind === 'overtime' ? 'THEY WIN THE GAME' : 'DEFEAT')}</div><div class="muted">${r.by === 'knockout' ? 'By knockout' : r.by === 'hp' ? 'On health left after 30 exchanges' : 'On a coin flip after an exact tie'} · ${r.exchanges} exchange${r.exchanges === 1 ? '' : 's'}</div>
       <div class="row" style="justify-content:center;gap:6px;margin-top:6px">${mine.map((m) => monsterSprite(m, 30)).join('')}</div>
       <div class="dim" style="margin-top:4px">Your battlers earned a little experience${lv.length ? ` · <b>${esc(lv.map((x) => `${x.name} → level ${x.level}`).join(', '))}</b>` : ''}.</div>
       <div class="row" style="justify-content:center;gap:6px;margin-top:6px"><button class="btn small ghost" data-action="replay">Watch the replay</button></div></div>
@@ -163,7 +183,7 @@ export function registerClashBattle(Router, app) {
       const b = B(); if (!b || !f) return '<p>No battle.</p>';
       const e = b.record(f);
       if (!e || e.status === 'ready' || e.status === 'skipped') return setupHtml(f);
-      if (!f.week || (st.kind === 'pregame' && f.game)) { setTimeout(() => Router.go('match', {}, { reset: true }), 0); return '<p class="muted">Opening the game…</p>'; }
+      if (!f.week || (st.kind === 'pregame' && f.game) || (st.kind === 'overtime' && !f.game)) { setTimeout(() => Router.go(f.game ? 'match' : 'hq', {}, { reset: true }), 0); return '<p class="muted">Opening the game…</p>'; }
       if (e.status === 'battle') { if (e.mode === 'skip' && !st.replaying) { setTimeout(() => finish(f), 0); return '<p class="muted">Playing the battle…</p>'; } return battleHtml(f, e); }
       if (st.replaying) return `${battleHtml(f, { ...e, mode: 'auto' })}<button class="btn block" data-action="endreplay" style="margin-top:8px">Back to the result</button>`;
       return resultHtml(f, e);

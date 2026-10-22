@@ -21,6 +21,9 @@ export const CLASH_DEFAULT_SETTINGS = Object.freeze({ mode: 'ask', speed: 2 });
 /** Settings with defaults filled in (older saves have no clash block). */
 export function clashSettings(settings) { return { ...CLASH_DEFAULT_SETTINGS, ...(settings?.clash || {}) }; }
 
+/** The fields a battle reads from a monster (the engine's own replay-key snapshot). A record keeps these, so a battle rebuilds identically after the monsters have tired, levelled or left. */
+export function snapMonster(m) { return { id: m.id, name: m.name, species: m.species, position: m.position, type: m.type, nature: m.nature, level: m.level, stage: m.stage || 0, potential: m.potential, fatigue: m.fatigue || 0, attributes: { ...m.attributes } }; }
+
 /** Monsters that may battle: on the roster and not injured. Kickers are monsters too. */
 export function eligibleBattlers(roster) { return roster.filter((m) => !m.injury); }
 

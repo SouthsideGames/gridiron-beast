@@ -81,7 +81,7 @@ Every defender may blitz. The defense lines up in its package's base alignment p
 | Timeouts | 3 per half per team |
 | Clock | Runs during plays. Stops on incomplete, score, change of possession, timeout, end of quarter; on out of bounds only in the last 2:00 of each half. Between plays a running clock loses 25 s (Hurry-up 12 s, Milk 38 s) |
 | End of quarter | A play snapped with time on the clock always finishes. A touchdown's try is always attempted |
-| Overtime | College format: each team gets one possession from the opponent 25; repeat until untied; from the 3rd OT period possessions are two-point tries only |
+| Overtime | One overtime period, college format: each team gets one possession from the opponent 25. Still tied after that: an **overtime Beast Clash** decides the game (3v3 in the season, 5v5 in the playoffs; §26.3). The football score stands; no points are invented. (The engine's classic repeat-until-untied rule remains available when `otPeriods` is unset.) |
 | Penalties | Delay of game only (real-time play clock, optional). Others LATER |
 
 **Field orientation (LOCKED):** the match field is vertical and the team with the ball always attacks **up** the screen. Yard labels show `OWN 30` / `OPP 30`. This keeps play art, cards and the live field in one orientation.
@@ -875,4 +875,13 @@ The coin toss is gone. Before every game, three monsters from each roster battle
 - **League games** (all AI-vs-AI, regular season and playoffs) are opened the same way, headless: automatic lineups, smart policies, one seed, the AI choice rule. Each result records `pregameClash` (winner side, choice, how it ended, exchanges).
 - **Headless player games** (tests, "sim to end" before kickoff) settle a pending Clash in Auto; a Play battle left mid-decision falls back to Auto and an unmade choice defaults to receive.
 - A forfeit (no legal lineup) is unchanged: no Clash, the 0-21 loss as before.
+
+### 26.3 The overtime Clash (tiebreaker)
+
+Football plays **one** overtime period (`otPeriods: 1` in every franchise game, player and league). If the score is still tied, the football engine finishes the game with no winner and flags `needsTiebreak`; Franchise Mode then settles it with a Beast Clash: **3v3** in the regular season, **5v5** in the playoffs.
+
+- **Player games:** the match screen shows *Still tied* and leads to the battle screen (lineup, Play / Auto / Skip to results). The winner of the Clash wins the game; the final panel and the box score say so ("OT · won by 3v3 Beast Clash").
+- **The record keeps the football score.** `winner` is set on the finished state and the result carries `clash` (size, winner, how it ended, exchanges); `homeScore` / `awayScore` are the football points as played and never change. Standings count a win and a loss (never a tie), points for and against are the football score, head-to-head and division/conference records follow the Clash winner, the player's schedule, campaign wins, badges, rivalry memory, news and monster game logs all use the same winner, and playoff brackets name the winner from the result.
+- **League games** are settled headless the same way (automatic lineups, smart policies, one seed); a club with no healthy monster would lose a seeded coin instead (not reachable with full AI rosters).
+- **Headless player games** (tests, "sim to end") settle the tiebreak in Auto.
 

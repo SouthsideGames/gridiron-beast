@@ -160,7 +160,7 @@ export function recordGame(f, state, teams, { playoff = false, week = f.season.w
   updateGameRecords(f, state, teams, { year, week, playoff });
   for (const side of ['home', 'away']) {
     const team = teams[side]; const opp = teams[side === 'home' ? 'away' : 'home'];
-    const won = state.score[side] > state.score[side === 'home' ? 'away' : 'home'];
+    const won = state.winner ? state.winner === side : state.score[side] > state.score[side === 'home' ? 'away' : 'home'];
     const byId = {};
     for (const [slot, line] of Object.entries(state.stats[side].players || {})) {
       const p = team.offense?.[slot] || team.defense?.[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue;
