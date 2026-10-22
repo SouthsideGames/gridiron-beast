@@ -40,6 +40,7 @@ def step(page, n):
     sn = screen_name(page)
     # An open sheet first: its primary button, a confirm, or close it.
     if visible(page, '.sheet'):
+        if visible(page, '.sheet [data-rel]'): return 'sheet:release' if click(page, '.sheet [data-rel]') else 'sheet:release-failed'  # roster full: choose who leaves
         if visible(page, '.sheet [data-pick]'):  # a Play-mode swap decision: alternate swapping and staying
             picks = page.eval_on_selector_all('.sheet [data-pick]', 'els => els.map(e => e.dataset.pick)')
             choice = picks[0] if n % 2 else 'stay'
@@ -55,7 +56,6 @@ def step(page, n):
         return 'menu:new' if click(page, '[data-action="new"]') else None
     if sn == 'welcome' and ASSIST and visible(page, f'[data-action="assist-mode"][data-v="{ASSIST}"]:not(.on)'):
         click(page, f'[data-action="assist-mode"][data-v="{ASSIST}"]'); return f'welcome:assist-{ASSIST}'
-    if visible(page, '.sheet [data-rel]'): return 'sheet:release' if click(page, '.sheet [data-rel]') else None
     if sn == 'hq' and not tour_done[0] and visited.get('hq', 0) >= 6:
         tour_done[0] = True
         for tab, inner in [('roster', '[data-action="monster"]'), ('league', None), ('playbook', None), ('hq', None)]:

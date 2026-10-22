@@ -1,44 +1,51 @@
 # Gridiron Beast — Test Plan
 
-All automated tests run with `npm test` (`node --test tests/`), no dependencies. UI responsiveness runs with `python3 tests/ui/responsive.py` (requires Playwright; dev-only). Every failing gameplay case is reproducible from its seed.
+All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
-## 0. Current status
+## 0. Current status (2026-10-22, branch `franchise-acceptance-coach-assist`)
 
-`npm test`: **40 tests, all passing** (≈45 s). `tests/ui/responsive.py`: **all checks pass** at 320×568, 375×667, 390×844 and 412×915, including a complete game played to the final whistle at 390×844.
+- `npm test`: **284 tests, all passing** (about 6–7 minutes on the cloud workspace).
+- `tools/franchise-soak.mjs`: 28 franchises × up to 5 seasons, **0 invariant violations** after the fixes in GDD §28.2.
+- `tools/ui-walkthrough.py`: new franchise → Season 2 with **no page errors, no horizontal overflow and no dead ends** at 360×640, 390×844 and 412×915, in Guided, Standard and Expert.
+- **Not done: testing on real phones.** All browser checks above run in emulated headless Chromium. See §3.
 
-## 1. Automated suites
+## 1. Automated suites (`npm test`)
 
-| Suite | File | What it proves |
+| Area | Files | What it proves |
 |---|---|---|
-| RNG & determinism | `rng.test.js` | Same seed ⇒ same sequence; same play inputs ⇒ identical frames and result |
-| Personnel | `playbook.test.js` | Every play fields exactly 7; package slots exist; no duplicate slots; offense has 3 OL; every assignment has a valid type |
-| Route assignments | `playbook.test.js` | Exactly one primary on every pass play; routes start at the player's alignment; art role (primary/secondary/alternate/block/deep/middle/flat/rush/man) resolvable for every assignment; block assignments end in T-bars, routes in arrowheads |
-| Field geometry | `field.test.js` | Route/zone points clamped inside end line and sidelines at every ball spot 1–99; yard-line labels; spot math |
-| Engine: dead balls | `engine.test.js` | 5,000 seeds × random plays: every play ends in an allowed dead-ball result, never by the safety guard; ball spot = reported yards |
-| Engine: boundaries | `engine.test.js` | No player outside sideline+1 yd or end line at any frame; carrier crossing sideline ⇒ out of bounds at that spot |
-| Engine: blocking | `engine.test.js` | Linemen engage rushers on pass plays (engagement events); sack rate falls as Blocking rises |
-| Engine: execution | `engine.test.js` | Receivers reach their route's final landmark region when not targeted; man defenders stay within N yards of targets; zone defenders occupy their zones; QB Draw carrier is QB; Screen target is RB |
-| Engine: attributes | `attributes.test.js` | Speed ↑ ⇒ yards/play ↑; Accuracy ↑ ⇒ completion ↑; Tackling ↑ ⇒ yards allowed ↓; Awareness ↑ ⇒ RB yards ↑; Catching ↑ ⇒ INT ↓ (paired seeds, statistically bounded) |
-| Engine: balance bands | `balance.test.js` | Over 3,000 plays: run avg 3–7 yd, completion 50–75%, sack 3–12% of dropbacks, INT 1–5% of attempts, TD share > 0 |
-| Rules: downs & scoring | `rules.test.js` | First downs, goal-to-go, turnover on downs, TD/PAT/2-pt, FG, safety, touchbacks, interception touchbacks |
-| Rules: clock | `rules.test.js` | Runoff on running clock, stops on incompletion/score/turnover/timeout, OOB only last 2:00, play snapped at 0:01 completes, quarter/half transitions, halftime kickoff to the right team, OT |
-| Special teams | `special-teams.test.js` | Kickoff/punt distances in range, touchbacks, FG make% declines with distance, miss spot, onside |
-| Coaching AI | `coach-ai.test.js` | 4th & long in own territory ⇒ punt; in range ⇒ FG; 4th & 1 at opp 40 ⇒ go; trailing by 4 late ⇒ go; 2-pt chart; kneel when leading at the end; hurry-up when trailing late |
-| Full games | `game.test.js` | 200 headless games complete, scores legal (no 1-point totals impossible), every game has a winner after OT, no stalled phase |
-| Franchise | `franchise.test.js` | Schedule matches golden vectors; season + playoffs complete; injuries respect durability; XP/levels; cap lock; legacy v5 save import preserves owner/team/staff/record |
-| UI smoke (DOM) | `ui/responsive.py` | At 320×568, 375×667, 390×844, 412×915: no horizontal overflow, match Snap visible above the fold, play grid is 3 columns × 2 rows, all buttons ≥ 44 px, no console errors through onboarding, every tab, the weekly loop, a game to the final whistle, practice, audit, settings and standings |
+| Football engine and rules | `engine.test.js`, `rules.test.js`, `playbook.test.js`, `playbook-reserve.test.js`, `abilities.test.js`, `species.test.js` | Plays end in legal dead balls, boundaries hold, downs/scoring/clock/overtime rules (including the single overtime period used in Franchise Mode), playbook personnel and routes, species abilities |
+| Stats and attributes | `stats.test.js`, `stat-guide.test.js` | Box scores and season stats; what each attribute does per position; points only spent where they help |
+| Franchise | `franchise.test.js` | Schedule golden vectors, the weekly loop, recruiting, training, media, injuries and XP, cap and contracts, the draft and trades, postseason and Legend Tracks, board goals, seasons 1→3, legacy import |
+| Franchise acceptance | `franchise-acceptance.test.js` | Regressions from the soak (duplicate names on signing, repair of older saves), a two-season soak with every invariant, mid-battle save/load, encounter fatigue, Skip Encounter costs nothing |
+| Beast Clash in Franchise Mode | `franchise-clash.test.js` | 3v3 encounters, offer/pitch rules, Play/Auto/Skip identity, swap decisions, staff auto-run, XP display, pregame possession, overtime 3v3/5v5, no ties left in the standings |
+| Save compatibility | `franchise-save-compat.test.js`, `save.test.js` | Saves from before the Clash load, continue through Tuesday/Sunday and into the next season; schema and key unchanged |
+| Coach Assist | `coach-assist.test.js` | Defaults, mode switching, preferences in the save, old saves, first-use tips that stay dismissed, Expert with no automatic tips on any screen, help on every complex screen, warnings, Guided-only suggestions, consequence switch, and the same weeks played in Guided and Expert produce identical saves |
+| Beast Clash engine | `tests/clash/*.test.js` | Values 1.1.0 and the historical 1.0.0 ruleset, calculators, conditions, the knockout fix, presentation, the Gate B suites, the boundary rule (only `clash-link.js` imports the engine) |
+| Developer review | `dev-review.test.js` | Change notices for plays and abilities |
 
-## 2. Manual checklist (device QA)
+## 2. Tools
 
-1. New franchise → onboarding → five hires → HQ in under 2 minutes.
-2. Complete a week; recruit a monster; it appears on the roster and the cap updates.
-3. Sunday: coin toss, kickoff, drive, punt, FG, TD + PAT + kickoff, interception, timeout, end of half, halftime kickoff, final; record updates.
-4. Key Moments returns control on 3rd down and inside the 20.
-5. Play art: colours and endpoints match the legend; nothing drawn past the end line at the opponent 3.
-6. Practice and Playbook Audit run the same engine as matches.
-7. Reload mid-game and mid-week; state resumes.
-8. iPhone SE (320 pt) and a 6.7" Android: everything reachable one-handed.
+| Tool | Command | Purpose |
+|---|---|---|
+| Multi-season soak | `node tools/franchise-soak.mjs --n=12 --seasons=5 --seed=1` | Hands-off franchises through full seasons and offseasons; invariants after every game; exits 1 on any violation or dead end |
+| Tuesday difficulty study | `node tools/tuesday-study.mjs --n=24 --seasons=3 --reps=3` | Win rates of weak / average / strong / automatic lineups against real scouted prospects, by season and OVR gap (GDD §26.1) |
+| Phone walkthrough | `python3 tools/ui-walkthrough.py --assist=guided --width=390 --height=844 --shots=DIR` | The real app in headless Chromium from a new franchise into Season 2, clicking what a player would; checks page errors, overflow, dead ends, ? Help on complex screens, and that Expert shows no tips |
+| Clash balance | `npm run clash:balance`, `clash:gateb*`, `clash:manifest` | Beast Clash balance reports (values are locked; read-only) |
+| Play replay | `node tests/tools/replay.js CODE` | Re-run a scrimmage play from its repro code |
 
-## 3. Reproducing a bug
+## 3. Manual checklist (real devices; still required)
 
-Every scrimmage play in the in-game Play Log shows a repro code `offense|defense|ballOn|seed`. `node tests/tools/replay.js CODE` re-runs it with generated attributes and prints the event trace; add `--save export.json` (a Settings export) to replay with the franchise's actual starters.
+Run on at least one small iPhone (SE size) and one large Android, in the browser and as an installed app.
+
+1. New franchise → choose a Coach Assist level on the welcome screen → HQ in under 2 minutes.
+2. Guided: a full first week, including a Tuesday encounter in Play mode (make one swap, close the sheet once and reopen it with *Skip to results*), a draft pick and a trade call; every tip is readable and dismisses.
+3. Expert: the same week with no tip appearing; ? Help still opens on each screen.
+4. Sunday: pregame Clash, possession choice, a full game in Key Moments and one in Full Coaching; force a tie if possible and play the overtime Clash.
+5. Reload mid-week, mid-Clash (Play mode, at a decision) and mid-game: the state resumes exactly.
+6. Finish a season: playoffs, awards, offseason contracts, the draft, free agency, Season 2 week 1.
+7. One-handed reach, text size, battle speed 1×/2×/4×, reduced motion, screen rotation, backgrounding the app during a battle.
+8. Import a save exported from an older build.
+
+## 4. Reproducing a bug
+
+Every scrimmage play in the in-game Play Log shows a repro code `offense|defense|ballOn|seed`; `node tests/tools/replay.js CODE` re-runs it (add `--save export.json` for the franchise's starters). Franchise problems reproduce from the soak's seed and difficulty (`node tools/franchise-soak.mjs --n=1 --seed=N`); Clash battles rebuild from the seed and lineup snapshots stored in the save.
