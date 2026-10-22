@@ -8,7 +8,7 @@ import { createRng } from '../core/rng.js';
 import { monsterOverall, xpForLevel, levelUp } from '../data/monsters.js';
 
 /** Battle sizes by occasion (GDD §26). */
-export const CLASH_SIZE = Object.freeze({ encounter: 3, pregame: 3, overtime: 3, overtimePlayoff: 5 });
+export const CLASH_SIZE = Object.freeze({ encounter: 1, pregame: 3, overtime: 3, overtimePlayoff: 5 }); // Tuesday encounters are strictly 1v1 (owner decision 2026-10-21)
 /** Fatigue a battle costs each monster that took part (CLASH_VALUES.load, provisional values from Phase 1). */
 export const CLASH_FATIGUE = Object.freeze({ encounter: CLASH_VALUES.load.battle, pregame: CLASH_VALUES.load.opening, overtime: CLASH_VALUES.load.overtime });
 /** How a battle is shown; 'skip' and 'auto' play the identical battle (the smart swap policy), 'play' asks the player at every swap decision. */

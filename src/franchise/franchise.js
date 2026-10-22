@@ -1070,29 +1070,27 @@ export function skipRecruit(f) { if (f.season.day === 1) { if (f.week.encounter 
 export const skipEncounter = skipRecruit;
 
 // ------------------------------------------------------------ Tuesday Monster Encounters (Beast Clash in Franchise Mode, GDD §26.1)
-// The scouted monster is met in a Beast Clash. Enter it or skip it. Win: it offers to sign (you may still decline). Lose: one
+// The scouted monster is met in a strictly 1v1 Beast Clash: the prospect you pick against the one roster monster you pick. Enter it or skip it. Win: it offers to sign (you may still decline). Lose: one
 // ordinary recruiting pitch at the usual odds. Either way your battlers earn Arena XP and a little fatigue. Skipping costs nothing.
-/** Can the player battle today? Who is eligible, how big the battle would be, and the proposed lineup. */
+/** Can the player battle today? The eligible roster monsters, the prospect (the only wild monster) and the suggested champion. Always 1v1. */
 export function encounterPreview(f, prospectIndex) {
   const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
   const eligible = eligibleBattlers(f.roster);
-  const wild = [p, ...f.week.prospects.filter((x) => x !== p)].slice(0, CLASH_SIZE.encounter);
-  const size = Math.min(CLASH_SIZE.encounter, wild.length, eligible.length);
-  if (size < 1) return { ok: false, reason: 'Nobody healthy enough to battle this week.', eligible, size: 0 };
-  return { ok: true, eligible, size, wild: wild.slice(0, size).map((x) => x.monster), lineup: autoLineup(f.roster, size, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`)) };
+  if (!eligible.length) return { ok: false, reason: 'Nobody healthy enough to battle this week.', eligible, size: 0 };
+  return { ok: true, eligible, size: CLASH_SIZE.encounter, wild: [p.monster], lineup: autoLineup(f.roster, CLASH_SIZE.encounter, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`)) };
 }
-/** Enter the encounter: draw the battle seed once and fix the lineup (yours in the order given; the wild side is the monster you chose plus the others the scout found). */
-export function startEncounter(f, prospectIndex, { lineup = null, mode = 'auto' } = {}) {
+/** Enter the encounter: draw the battle seed once and fix the two monsters: the prospect, and one healthy roster monster (`monster` id; `lineup` [id] is accepted too; default the suggested one). */
+export function startEncounter(f, prospectIndex, { monster = null, lineup = null, mode = 'auto' } = {}) {
   if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
   if (draftWindow(f)) return { ok: false, reason: 'No encounters from the final week on. Tuesday is a recovery day.' };
   if (f.week.encounter && f.week.encounter.status !== 'ready') return { ok: false, reason: 'One encounter per Tuesday.' };
   const pv = encounterPreview(f, prospectIndex); if (!pv.ok) return pv;
-  const eligibleIds = new Set(pv.eligible.map((m) => m.id));
-  let mine = (lineup || pv.lineup.map((m) => m.id)).filter((id, i, arr) => eligibleIds.has(id) && arr.indexOf(id) === i).slice(0, pv.size);
-  if (mine.length < 1) return { ok: false, reason: 'Pick at least one healthy monster.' };
-  const size = Math.min(pv.size, mine.length);
+  const pickIds = monster ? [monster] : (lineup || pv.lineup.map((m) => m.id));
+  if (pickIds.length !== 1) return { ok: false, reason: 'Tuesday encounters are one on one: pick exactly one of your monsters.' };
+  if (!pv.eligible.some((m) => m.id === pickIds[0])) return { ok: false, reason: 'Pick one healthy monster from your roster.' };
+  const mine = [pickIds[0]]; const size = 1;
   const { r, save } = frng(f); const seed = r.seed(); save();
-  const wild = pv.wild.slice(0, size);
+  const wild = pv.wild;
   f.week.encounter = { prospectIndex, seed, size, mine, wild: wild.map((m) => m.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: wild.map(snapMonster), mode, decisions: {}, status: 'battle', result: null };
   return { ok: true, encounter: f.week.encounter };
 }
