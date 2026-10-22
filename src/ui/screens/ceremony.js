@@ -9,6 +9,7 @@ import { monsterSprite } from '../pixel-monster.js';
 import { elementFx } from '../ability-fx.js';
 import { ENVIRONMENTS, stadiumFor } from '../../data/stadiums.js';
 import { yearOf } from '../../data/calendar.js';
+import { TEAM_META } from '../../data/league.js';
 import { championshipRecord } from '../../franchise/franchise.js';
 
 export const CEREMONY_TIMELINE = Object.freeze({ enter: 2600, show: 5600, perStarter: 520, trophyAfter: 900, summaryAfter: 3600 });
@@ -63,13 +64,14 @@ export function registerCeremony(Router, app) {
       return `<div class="ceremony ${reduced ? 'sc-summary reduced' : 'sc-final'}" id="ceremony" style="--team:${c.color};--turf-a:${P.b};--turf-b:${P.c};--end:${P.end}">
         <div class="cer-stage">
           <div class="cer-stands" aria-hidden="true"></div><div class="cer-turf" aria-hidden="true"></div><div class="cer-lights" aria-hidden="true"></div>
-          <div class="cer-board"><div class="cer-board-label">FINAL${fin?.ot ? ' · OT' : ''}</div><div class="cer-board-score"><span style="color:${c.color}">${esc(c.club)}</span> <b>${fin ? fin.us : ''}</b> – <b>${fin ? fin.them : ''}</b> <span>${esc(fin?.opponent || '')}</span></div></div>
+          <div class="cer-board"><div class="cer-board-label">FINAL${fin?.ot ? ' · OT' : ''}</div><div class="cer-board-score"><span style="color:${c.color}">${esc(TEAM_META[c.club]?.abbr || c.club)}</span> <b>${fin ? fin.us : ''}</b> – <b>${fin ? fin.them : ''}</b> <span>${esc(TEAM_META[fin?.opponent]?.abbr || fin?.opponent || '')}</span></div></div>
           <div class="cer-banner"><span>BEAST BOWL</span><b>CHAMPIONS</b></div>
           <div class="cer-bench">${roster}</div>
           <div class="cer-starters">${starters}</div>
           <div class="cer-trophy">${TROPHY}${cap ? `<div class="cer-captain">${monsterSprite(cap, 48)}<div class="cer-cap-name">${esc(cap.name)} lifts the trophy</div></div>` : ''}<div class="cer-club" style="color:${c.color}">${esc(c.club)}</div></div>
           <div class="cer-confetti" aria-hidden="true">${confetti}</div>
-          <div class="cer-scene-label" aria-live="polite"></div>
+          <div class="cer-caption" aria-live="polite"></div>
+          <div class="cer-scene-label"></div>
         </div>
         <div class="cer-controls"><button class="btn small" data-action="cer-skip">Skip ▸▸</button></div>
         ${summaryHtml(f, c, !!params?.fromGame)}
@@ -88,7 +90,13 @@ export function registerCeremony(Router, app) {
       const scene = (name, text) => { el.classList.remove('sc-final', 'sc-enter', 'sc-show', 'sc-trophy'); el.classList.add(name); if (label) label.textContent = text; };
       timers.push(setTimeout(() => scene('sc-enter', 'The champions take the field'), T.enter));
       timers.push(setTimeout(() => scene('sc-show', 'Starters, show them what you have'), T.show));
-      c.starters.forEach((m, i) => timers.push(setTimeout(() => { const s = el.querySelector(`.cer-mon.starter[data-i="${i}"]`); s?.classList.add('go'); timers.push(setTimeout(() => s?.classList.remove('go'), 1300)); }, T.starter(i))));
+      const cap = el.querySelector('.cer-caption');
+      c.starters.forEach((m, i) => timers.push(setTimeout(() => {
+        const s = el.querySelector(`.cer-mon.starter[data-i="${i}"]`); s?.classList.add('go'); timers.push(setTimeout(() => s?.classList.remove('go'), 1300));
+        // one caption at a time, centred: whose ability, in its element's colours (the burst itself stays on the monster)
+        if (cap) { cap.innerHTML = `<b>${esc(m.name)}</b> <span class="dim">${esc(m.slot || m.position)}</span> · <span class="cer-cap-ab" style="color:${s?.style.getPropertyValue('--a') || '#ffe08a'}">${esc(m.ability || 'Champion')}</span>`; cap.classList.remove('pop'); void cap.offsetWidth; cap.classList.add('pop'); }
+      }, T.starter(i))));
+      timers.push(setTimeout(() => { if (cap) cap.innerHTML = ''; }, T.trophy));
       timers.push(setTimeout(() => scene('sc-trophy', 'The Beast Bowl trophy'), T.trophy));
       timers.push(setTimeout(() => { el.classList.remove('sc-trophy'); el.classList.add('sc-summary'); }, T.summary));
     },

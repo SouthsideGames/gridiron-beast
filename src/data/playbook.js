@@ -352,7 +352,7 @@ const LEGENDARY_OFFENSE = [
     QB: BOOT([[-5, 0], [-6, 1.5], [-6.5, 5], [-5, 9]]), RB: FAKE, WR1: R('over'), TE: R('corner'), WR2: R('comeback'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR1', progression: ['WR1', 'TE', 'WR2'], drop: 'pa', tags: ['pass', 'deep', 'play_action', 'boot', 'legendary'], ...LEGEND('aurodrax', 'QB'), desc: 'Run fake, then Aurodrax rolls right while the left receiver crosses the whole field deep. Sovereign Arm: the first read cannot be intercepted.' }),
   offense('lp_eye_of_the_storm', 'Eye of the Storm', 'gun_trips', {
-    QB: { a: 'pass' }, WR1: R('post_corner'), WR3: R('whip'), WR2: R('dig'), RB: BLOCK, LG: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR1: R('sluggo'), WR3: R('whip'), WR2: R('dig'), RB: BLOCK, LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR1', progression: ['WR1', 'WR3', 'WR2'], drop: 'five', tags: ['pass', 'deep', 'long', 'legendary'], ...LEGEND('tempestra', 'WR1'), desc: 'Tempestra sells a slant from the trips side, her Cyclone spins the man on her hip, and she turns it up the field. A deep shot: big when it hits, five-step drop when it does not.' }),
   offense('lp_fault_line', 'Fault Line', 'tight_i', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-5.9, 0.9], [-4, -0.4], [0, -1.7], [6, -2.2], [20, -2.6]]),
