@@ -1214,6 +1214,17 @@ export function scoutOpponent(f, side) {
   f.week.scoutReport = report; f.season.day = 4;
   return { ok: true, report };
 }
+/**
+ * The plan Friday starts from: this week's plan, else last week's, keeping only plays still in the playbook (a new coordinator
+ * brings a different catalog), topped up from the coordinators' default to exactly PLAN_SIZE. Found by the acceptance walkthrough:
+ * a stale play blocked "Save game plan" and the staff's auto-run alike.
+ */
+export function startingPlan(f, side) {
+  const cat = catalog(f, side); const base = (f.week?.plan?.[side]?.length ? f.week.plan[side] : f.lastPlan?.[side]) || [];
+  const plan = [...new Set(base)].filter((id) => cat.includes(id));
+  for (const id of [...defaultPlan(f, side), ...cat]) { if (plan.length >= PLAN_SIZE) break; if (!plan.includes(id)) plan.push(id); }
+  return plan.slice(0, PLAN_SIZE);
+}
 export function setGamePlan(f, offense, defense) {
   const catO = catalog(f, 'offense'), catD = catalog(f, 'defense');
   const o = [...new Set(offense)].filter((id) => catO.includes(id)), d = [...new Set(defense)].filter((id) => catD.includes(id));
@@ -1310,7 +1321,7 @@ export function autoRunToSunday(f) {
     }
     else if (day === 2) { const order = ['passing', 'rushing', 'coverage', 'pass_rush']; const last = (f.trainingHistory || []).slice(-1)[0]; const focus = order[(order.indexOf(last) + 1) % order.length]; const r = setTraining(f, focus, 'normal'); did.push(`${TRAINING_FOCI[focus].label} practice ${r.success ? 'went well' : 'was sloppy'}${r.injury ? `; ${r.injury.name} hurt` : ''}`); }
     else if (day === 3) { const opp = opponentName(f); const side = opp ? (teamStrengths(aiTeam(f, opp)).passD < teamStrengths(aiTeam(f, opp)).runD ? 'defense' : 'offense') : 'offense'; scoutOpponent(f, side); did.push(opp ? `Scouted ${opp}'s ${side}` : 'Bye week'); }
-    else if (day === 4) { const o = f.week.plan.offense.length ? f.week.plan.offense : (f.lastPlan?.offense || defaultPlan(f, 'offense')); const d = f.week.plan.defense.length ? f.week.plan.defense : (f.lastPlan?.defense || defaultPlan(f, 'defense')); setGamePlan(f, o, d); did.push('Coordinators set the game plan'); }
+    else if (day === 4) { setGamePlan(f, startingPlan(f, 'offense'), startingPlan(f, 'defense')); did.push('Coordinators set the game plan'); }
     else if (day === 5) { const qs = mediaQuestions(f); answerMedia(f, qs.map((q) => Math.max(0, q.a.findIndex((a) => a.t === 'steady' || a.t === 'calm')))); did.push('Press conference: safe answers'); }
   }
   news(f, `Staff ran the week: ${did.join(' · ')}.`, 'info');

@@ -546,7 +546,7 @@ export function registerHqScreens(Router, app) {
     title: 'Friday · Game Plan',
     render({ f }) {
       if (f.season.day !== 4) return `<div class="panel"><p>The game plan is set on <b>Friday</b>. This week's plan: ${f.week.plan.offense.length ? f.week.plan.offense.map((id) => esc(PLAYS[id].name)).join(', ') : 'coach’s default'} · ${f.week.plan.defense.length ? f.week.plan.defense.map((id) => esc(PLAYS[id].name)).join(', ') : 'coach’s default'}.</p><button class="btn block" data-action="back">Back</button></div>`;
-      const sel = { offense: new Set(f.week.plan.offense.length ? f.week.plan.offense : (f.lastPlan?.offense || F.defaultPlan(f, 'offense'))), defense: new Set(f.week.plan.defense.length ? f.week.plan.defense : (f.lastPlan?.defense || F.defaultPlan(f, 'defense'))) };
+      const sel = { offense: new Set(F.startingPlan(f, 'offense')), defense: new Set(F.startingPlan(f, 'defense')) };
       const rep = f.week.scoutReport; const hintsOn = f.settings.hints !== false;
       const hintSide = rep?.side === 'defense' ? 'offense' : rep?.side === 'offense' ? 'defense' : null;
       const hints = hintsOn && hintSide ? counterPlays(F.catalog(f, hintSide), rep.plays || []) : [];
@@ -560,7 +560,7 @@ export function registerHqScreens(Router, app) {
         <div class="row between" style="margin-top:12px"><button class="btn" data-action="details">Play details</button><button class="btn primary" data-action="save">Save game plan</button></div>`;
     },
     mount(root) {
-      const f0 = app.f; const sel = { offense: new Set(f0.week.plan.offense.length ? f0.week.plan.offense : (f0.lastPlan?.offense || F.defaultPlan(f0, 'offense'))), defense: new Set(f0.week.plan.defense.length ? f0.week.plan.defense : (f0.lastPlan?.defense || F.defaultPlan(f0, 'defense'))) };
+      const f0 = app.f; const sel = { offense: new Set(F.startingPlan(f0, 'offense')), defense: new Set(F.startingPlan(f0, 'defense')) };
       delegate(root, {
         back: () => Router.back(),
         toggle: (el) => { const s = el.dataset.side, id = el.dataset.id; if (sel[s].has(id)) sel[s].delete(id); else if (sel[s].size >= F.PLAN_SIZE) { toast(`Only ${F.PLAN_SIZE} ${s} plays. Remove one first.`); return; } else sel[s].add(id); el.classList.toggle('selected', sel[s].has(id)); el.setAttribute('aria-pressed', sel[s].has(id)); root.querySelector(`#count-${s}`).textContent = sel[s].size; },
