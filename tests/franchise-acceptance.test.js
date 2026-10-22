@@ -35,3 +35,10 @@ test('invariants catch a duplicate name and a tie in the standings', () => {
   const f = fresh(3); f.roster[1].name = f.roster[0].name; f.season.records[f.club].t = 1;
   const p = invariants(f, 't'); assert.ok(p.some((x) => /duplicate name/.test(x))); assert.ok(p.some((x) => /ties/.test(x)));
 });
+
+test('loading a save with two roster monsters of one name gives the later one a numeral', async () => {
+  const { exportJson, importJson } = await import('../src/franchise/save.js');
+  const f = fresh(9); f.roster[1].name = f.roster[0].name; f.roster[2].name = `${f.roster[0].name} II`;
+  const back = importJson(exportJson(f)); const names = back.roster.map((m) => m.name);
+  assert.equal(new Set(names).size, names.length, names.join(', ')); assert.equal(back.roster[0].name, f.roster[0].name); assert.equal(back.roster[2].name, `${f.roster[0].name} II`);
+});

@@ -30,7 +30,20 @@ export function migrate(f) {
   if (f.schemaVersion !== SCHEMA_VERSION) return null; // future versions migrate here
   f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {}; f.week ||= {}; f.campaign ||= { badges: {}, gymWins: {}, titles: f.badges ? Object.values(f.badges).reduce((a, b) => a + b, 0) : 0, wins: 0, awards: 0 };
   migrateSpecies(f);
+  dedupeRosterNames(f);
   return f;
+}
+/** Saves from before the duplicate-name fix (2026-10-22) may hold two roster monsters with one name: the later one gets a numeral. Stats and history are keyed by id, so nothing else changes. */
+export function dedupeRosterNames(f) {
+  const all = new Set((f.roster || []).map((m) => m.name)); const kept = new Set();
+  for (const m of f.roster || []) {
+    if (!kept.has(m.name)) { kept.add(m.name); continue; }
+    const base = String(m.name).replace(/ (II|III|IV|V|VI|\d+)$/, '');
+    const free = (c) => !all.has(c) && !kept.has(c);
+    let cand = ['II', 'III', 'IV', 'V', 'VI'].map((n) => `${base} ${n}`).find(free);
+    for (let k = 7; !cand; k++) if (free(`${base} ${k}`)) cand = `${base} ${k}`;
+    m.name = cand; kept.add(cand); all.add(cand);
+  }
 }
 /** Saves from before the species dex stored old display names: map every monster onto a dex species and rename it (numerals kept). */
 export function migrateSpecies(f) {
