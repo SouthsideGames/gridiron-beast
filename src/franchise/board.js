@@ -2,7 +2,7 @@
 // scaled to the club's forecast; the owner commits to one. Hitting it raises board confidence and funds an expanded scouting
 // department for a season; missing it lowers confidence. At −1 the owner is on the hot seat; at −2 the board lets them go.
 // Revised 2026-10-22 (owner authorization): the forecast compares the club with the league instead of a fixed number, the safe
-// goal sits just under the forecast, a narrow miss on the hot seat is a final warning rather than a dismissal, and three
+// goal is the rounded forecast, a narrow miss on the hot seat is a final warning rather than a dismissal, and three
 // missed seasons in a row end the franchise however narrow the misses. Nothing else in the game can end a franchise.
 
 export const CONFIDENCE_MAX = 2;
@@ -30,7 +30,7 @@ export function boardForecast({ talent, leagueTalent, games = 9 }, R = BOARD_RUL
 /** Three offers for this season: safe (wins), medium (playoffs or badges), stretch (the title). */
 export function goalOffers(f, { expectedWinPct = 0.5, gamesInSeason = 9, gymsThisSeason = 4 } = {}, R = BOARD_RULES) {
   const exp = expectedWinPct * gamesInSeason;
-  // Just under the forecast, never more than seven of nine (a contender's safe goal stays easier than the title).
+  // The rounded forecast (minus `safeBelow`), at least `minSafe`, never more than seven of nine (a contender's safe goal stays easier than the title).
   const safeWins = Math.max(R.minSafe, Math.min(gamesInSeason - 2, Math.round(exp) - R.safeBelow));
   // A rebuilding club's medium goal is one badge from a gym on its schedule that it does not hold yet (a badge is won once, so
   // gyms already beaten do not count); with none left to win, the playoffs.
