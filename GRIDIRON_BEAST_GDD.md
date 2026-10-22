@@ -927,7 +927,7 @@ Rules for every new feature:
 
 ### 27.2 Phase 1 — Complete existing Beast Clash and franchise integration (REQUIRED FIRST)
 
-> **Status (2026-10-22): implemented and merged to `main`** (Beast Clash values 1.1.0 and the knockout fix, §25.10; franchise integration, §26). The open decisions listed below were settled by the owner during implementation and are recorded in §26: Tuesday encounters are strictly 1v1, a win guarantees a signing offer and a loss gives one standard pitch (§26.1); draft-window weeks keep scouting and the recovery day; overtime eligibility, fatigue, AI behaviour and playoff ties are specified in §26.0 and §26.3. Remaining for Phase 1 acceptance: owner mobile playtests over full seasons, and a decision on Tuesday difficulty (§26.1 balance note).
+> **Status (2026-10-22): implemented and merged to `main`** (Beast Clash values 1.1.0 and the knockout fix, §25.10; franchise integration, §26). The open decisions listed below were settled by the owner during implementation and are recorded in §26: Tuesday encounters are 3v3 (briefly 1v1, restored 2026-10-22), a win guarantees a signing offer and a loss gives one standard pitch (§26.1); draft-window weeks keep scouting and the recovery day; overtime eligibility, fatigue, AI behaviour and playoff ties are specified in §26.0 and §26.3. Remaining for Phase 1 acceptance: owner mobile playtests over full seasons, and a review of Tuesday difficulty (about 80% wins with the automatic lineup, §26.1).
 
 Finish the already-approved Beast Clash balance/engine work and its full regression and replay requirements before integration. Preserve historical Values 1.0.0 behavior and the approved Values 1.1.0 rules; do not bypass failing tests.
 
