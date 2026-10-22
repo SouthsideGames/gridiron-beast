@@ -4,6 +4,7 @@
 
 import { SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
 import { hashString } from '../core/rng.js';
+import { migrateTips } from './assist.js';
 import { resolveSpecies, SPECIES_BY_ID } from '../data/monsters.js';
 
 export const SAVE_KEY = 'gridiron-beast-v6';
@@ -31,6 +32,7 @@ export function migrate(f) {
   f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {}; f.week ||= {}; f.campaign ||= { badges: {}, gymWins: {}, titles: f.badges ? Object.values(f.badges).reduce((a, b) => a + b, 0) : 0, wins: 0, awards: 0 };
   migrateSpecies(f);
   dedupeRosterNames(f);
+  migrateTips(f); // Coach Assist (GDD §27.3): older tip names carry over
   return f;
 }
 /** Saves from before the duplicate-name fix (2026-10-22) may hold two roster monsters with one name: the later one gets a numeral. Stats and history are keyed by id, so nothing else changes. */
