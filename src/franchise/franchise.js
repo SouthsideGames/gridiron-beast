@@ -9,7 +9,7 @@ import { newContract, contractEnds, renewalAsk, acceptsCounter, staffSalary, ope
 export { offseasonPending, offseasonReady, renewalAsk, CONTRACT_YEARS } from './contracts.js';
 import { openDraftClass, scoutDraftClass as draftScout, startDraft as draftStart, advanceDraft as draftAdvance, playerPick as draftPlayerPick, passPick as draftPassPick, prospectView, injectDraftees, ageDraftees, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js';
 export { prospectView, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js';
-import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel } from './board.js';
+import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel, boardForecast } from './board.js';
 export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
 export { AWARDS } from './awards.js';
 export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
@@ -415,7 +415,7 @@ export const staffMember = (f, role) => staffById(f.staff[role]);
 export function commissionerWelcome(f) {
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const D = difficultyOf(f); const slot = f.draft?.creation ? f.draft.lotterySlot : null;
-  const ex = f.season?.expectations?.[f.club]; const forecast = ex ? Math.round(ex.expectedWinPct * 9) : null;
+  const forecast = f.season?.expectations?.[f.club] ? Math.round(boardForecastFor(f).wins) : null; // the Board's forecast (GDD §29)
   const rival = f.rivals?.[f.tier]?.team; const gm = f.rivals?.[f.tier]?.gm || f.rivals?.[f.tier]?.name;
   const owner = `${f.owner.first} ${f.owner.last}`.trim();
   const beats = [
@@ -860,12 +860,17 @@ export function answerTradeCall(f, accept) {
 }
 
 /** The commissioner's three goal offers for this season (GDD §17.4). */
+/** The Board's forecast for the player's club this season (GDD §29): its preseason talent against the league's average. */
+export function boardForecastFor(f, games = 9) {
+  const ex = f.season?.expectations || {}; const talents = ALL_TEAMS.map((t) => ex[t]?.talent).filter(Number.isFinite);
+  if (!talents.length || !Number.isFinite(ex[f.club]?.talent)) return { winPct: 0.5, wins: games / 2 };
+  return boardForecast({ talent: ex[f.club].talent, leagueTalent: talents.reduce((a, b) => a + b, 0) / talents.length, games });
+}
 export function commissionerGoals(f) {
   ensureBoard(f);
-  const ex = f.season.expectations?.[f.club] || { expectedWinPct: 0.5 };
   const games = f.season.schedule.filter((g) => !g.bye).length || 9;
-  const gyms = f.season.schedule.filter((g) => !g.bye && GYM_BY_CLUB[g.opponent]).length;
-  return goalOffers(f, { expectedWinPct: ex.expectedWinPct, gamesInSeason: games, gymsThisSeason: gyms });
+  const gyms = new Set(f.season.schedule.filter((g) => !g.bye && GYM_BY_CLUB[g.opponent] && !badgeOf(f, g.opponent)).map((g) => g.opponent)).size; // badges still to win
+  return goalOffers(f, { expectedWinPct: boardForecastFor(f, games).winPct, gamesInSeason: games, gymsThisSeason: gyms });
 }
 export function chooseGoal(f, id) { const r = boardChooseGoal(f, id, commissionerGoals(f)); if (r.ok) news(f, `Commissioner's office: you committed to "${r.goal.label}" this season.`, 'info'); return r; }
 /** Where the goal stands mid-season (for HQ). */
@@ -1559,8 +1564,8 @@ function endSeason(f) {
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
-    const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club });
-    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? `BOARD: goal met, ${verdict.goal.label}. Confidence ${verdict.confidence >= 0 ? '+' : ''}${verdict.confidence} (${confidenceLabel(verdict.confidence)}). The scouting department expands next season.` : verdict.status === 'fired' ? `BOARD: goal missed · ${verdict.goal.label}. The board has let you go.` : verdict.status === 'hot_seat' ? `BOARD: goal missed · ${verdict.goal.label}. You are on the hot seat: miss again and you are out.` : `BOARD: goal missed · ${verdict.goal.label}. Confidence ${verdict.confidence}.`, verdict.met ? 'win' : 'loss'); } }
+    const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club, forecastWins: boardForecastFor(f, s.schedule.filter((g) => !g.bye).length || 9).wins });
+    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? `BOARD: goal met, ${verdict.goal.label}. Confidence ${verdict.confidence >= 0 ? '+' : ''}${verdict.confidence} (${confidenceLabel(verdict.confidence)}). The scouting department expands next season.` : verdict.status === 'fired' ? `BOARD: goal missed · ${verdict.goal.label} (${rec.w} wins, forecast ${verdict.goal.forecastWins ?? '?'}). ${verdict.reason ? verdict.reason[0].toUpperCase() + verdict.reason.slice(1) + '.' : ''} The board has let you go.` : verdict.status === 'warning' ? `BOARD: goal missed narrowly · ${verdict.goal.label} (${rec.w} wins, forecast ${verdict.goal.forecastWins ?? '?'}). Final warning: you stay on the hot seat. A clear miss, or a third missed season in a row, and you are out.` : verdict.status === 'hot_seat' ? `BOARD: goal missed · ${verdict.goal.label}. You are on the hot seat: miss again and you are out.` : `BOARD: goal missed · ${verdict.goal.label}. Confidence ${verdict.confidence}.`, verdict.met ? 'win' : 'loss'); } }
   if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record, or the hot seat, makes one story event mandatory (GDD §15.7, §17.4)
   if (champion === f.club && legendChoices(f).length) f.legendPick = { year: s.year, resolved: false }; // Beast Bowl champions choose a Legend Track (GDD §15.8)
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
