@@ -11,15 +11,27 @@ import { monsterOverall, xpForLevel, levelUp } from '../data/monsters.js';
 export const CLASH_SIZE = Object.freeze({ encounter: 3, pregame: 3, overtime: 3, overtimePlayoff: 5 });
 /** Fatigue a battle costs each monster that took part (CLASH_VALUES.load, provisional values from Phase 1). */
 export const CLASH_FATIGUE = Object.freeze({ encounter: CLASH_VALUES.load.battle, pregame: CLASH_VALUES.load.opening, overtime: CLASH_VALUES.load.overtime });
-/** How a battle is shown; 'skip' and 'auto' play the identical battle (the smart swap policy), 'play' asks the player at every swap decision. */
-export const CLASH_MODES = Object.freeze(['play', 'auto', 'skip']);
+/**
+ * How a battle is shown (revised 2026-10-22, owner brief "one selection, one continuous battle"): 'watch' animates it, 'skip'
+ * shows the result at once. Both are the identical battle. Older saves and settings may still say 'play' or 'auto'; normalizeMode
+ * maps them to 'watch'.
+ */
+export const CLASH_MODES = Object.freeze(['watch', 'skip']);
+export const LEGACY_MODES = Object.freeze({ play: 'watch', auto: 'watch' });
+export function normalizeMode(mode) { return CLASH_MODES.includes(mode) ? mode : LEGACY_MODES[mode] || null; }
 export const CLASH_SPEEDS = Object.freeze([1, 2, 4]);
-/** Exchanges between voluntary swaps (the engine's rule); a 'stay' answer holds for this many exchanges. */
+/**
+ * Swap policies of a franchise battle: neither side swaps voluntarily. The lineup order the player (or the automatic lineup)
+ * chose is the order of entry: the front monster fights until it is knocked out, then the next steps up, HP and conditions
+ * carrying over, until one side has nobody left. Battles recorded before this rule keep the policies they were played with.
+ */
+export const FRANCHISE_POLICIES = Object.freeze({ a: 'none', b: 'none' });
+/** Exchanges between voluntary swaps (the engine's rule); only legacy 'play' records still carry decisions. */
 export const SWAP_EVERY = CLASH_VALUES.swaps.voluntaryEvery;
 export const CLASH_DEFAULT_SETTINGS = Object.freeze({ mode: 'ask', speed: 2 });
 
-/** Settings with defaults filled in (older saves have no clash block). */
-export function clashSettings(settings) { return { ...CLASH_DEFAULT_SETTINGS, ...(settings?.clash || {}) }; }
+/** Settings with defaults filled in (older saves have no clash block; 'play' and 'auto' become 'watch'). */
+export function clashSettings(settings) { const c = { ...CLASH_DEFAULT_SETTINGS, ...(settings?.clash || {}) }; if (c.mode !== 'ask') c.mode = normalizeMode(c.mode) || 'ask'; if (!CLASH_SPEEDS.includes(c.speed)) c.speed = CLASH_DEFAULT_SETTINGS.speed; return c; }
 
 /** The fields a battle reads from a monster (the engine's own replay-key snapshot). A record keeps these, so a battle rebuilds identically after the monsters have tired, levelled or left. */
 export function snapMonster(m) { return { id: m.id, name: m.name, species: m.species, position: m.position, type: m.type, nature: m.nature, level: m.level, stage: m.stage || 0, potential: m.potential, fatigue: m.fatigue || 0, attributes: { ...m.attributes } }; }
@@ -37,9 +49,14 @@ export function autoLineup(roster, n, seed = 1) {
   return chooseLineup(pool, Math.min(n, pool.length), createRng(seed)).map((x) => x.monster);
 }
 
-/** Run one franchise battle. `mode` 'play' gives side a the manual policy; otherwise both sides use the smart policy. */
-export function runBattle({ a, b, seed, mode = 'auto', decisions = null, log = 'full' }) {
-  const config = battleConfig({ policies: { a: mode === 'play' ? 'manual' : 'smart', b: 'smart' }, decisions: decisions ? { a: decisions } : undefined });
+/** The policies a stored record was played with: its own, or (records from before 2026-10-22) manual for a 'play' battle with decisions and smart for everything else. */
+export function policiesOf(record) {
+  if (record?.policies) return record.policies;
+  return record?.mode === 'play' ? { a: 'manual', b: 'smart' } : { a: 'smart', b: 'smart' };
+}
+/** Run one franchise battle: fixed order on both sides (FRANCHISE_POLICIES) unless `policies` says otherwise (legacy records). */
+export function runBattle({ a, b, seed, mode = 'watch', decisions = null, policies = FRANCHISE_POLICIES, log = 'full' }) {
+  const config = battleConfig({ policies: { a: policies.a, b: policies.b }, decisions: decisions && policies.a === 'manual' ? { a: decisions } : undefined });
   return simulateClash({ a, b, seed, config, log });
 }
 

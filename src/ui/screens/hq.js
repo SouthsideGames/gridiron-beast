@@ -22,7 +22,7 @@ import { playCardSvg, legendHtml } from '../play-art.js';
 import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
 import { RIVAL_WEEKLY } from '../../data/dialogue.js';
-import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, careerLeaders } from '../../franchise/stats.js';
+import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, careerLeaders, leagueSeasons, seasonTables, combinedTable, ARCHIVE_SEASONS } from '../../franchise/stats.js';
 import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
@@ -77,9 +77,13 @@ export function registerHqScreens(Router, app) {
       const gameLine = f.season.finished ? `<b>${yearOf(f.season.year)} season complete.</b> ${f.season.champion === f.club ? '🏆 Beast Bowl champions!' : f.season.champion ? esc(f.season.champion) + ' won the Beast Bowl.' : ''} <button class="btn small" data-action="awards">How we finished</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
         : fx?.bye ? '<b>Bye week</b>: rest and recover.' : fx ? `<b>Week ${fx.week}</b> · ${fx.home ? 'vs' : '@'} ${esc(opp)} · ${esc(fx.category)}${rival?.team === opp ? ' · ⚔️ RIVAL' : ''}` : '';
+      // Last game (2026-10-22 feedback pass): the result and what it did to the roster, shown through the following week.
+      const lg = f.lastGame; const lgFresh = lg && lg.year === f.season.year && (lg.week === f.season.week - 1 || (lg.week === f.season.week && f.season.day === 0)) && !f.season.finished;
+      const lgEvents = lgFresh ? (lg.events || []) : []; const lgLvl = lgEvents.filter((e) => e.kind === 'levelup' || e.kind === 'evolve'), lgInj = lgEvents.filter((e) => e.kind === 'injury');
+      const lastGame = lgFresh ? `<div class="panel tight last-game ${lg.won ? 'won' : 'lost'}"><div class="row between"><span><b>${lg.forfeit ? 'FORFEIT' : lg.won ? 'WIN' : 'LOSS'}</b> ${lg.playerScore}–${lg.oppScore} vs ${esc(lg.opponent)}</span><span class="dim">week ${lg.week}</span></div>${lgLvl.length || lgInj.length ? `<div class="dim" style="margin-top:2px">${lgLvl.map((e) => e.kind === 'evolve' ? `✨ ${esc(e.from)} → ${esc(e.to)}` : `⬆️ ${esc(e.name)} Lv ${e.level}`).join(' · ')}${lgLvl.length && lgInj.length ? ' · ' : ''}${lgInj.map((e) => `<span style="color:var(--bad)">🩹 ${esc(e.name)} ${e.weeks}w</span>`).join(' · ')}</div>` : ''}</div>` : '';
       const lb = f.campaign?.lastBadge; const lbGym = lb && lb.year === f.season.year && f.season.week - lb.week <= 1 ? GYM_BY_CLUB[lb.club] : null;
       const badgeBanner = lbGym ? `<div class="badge-banner" style="--hue:${TYPES[lbGym.element]?.hue ?? 120}"><span class="badge-banner-star">★</span><div><b>${esc(lbGym.badge)} earned</b> · badge ${lb.n} of 8<div class="dim">${esc(lbGym.coach.name)}'s ${esc(lb.club)} beaten in week ${lb.week}. ${lb.n === 8 ? 'All eight. The gyms are yours.' : `${8 - lb.n} to go.`}</div></div></div>` : '';
-      return `${badgeBanner}${callPanelHtml(f)}
+      return `${badgeBanner}${callPanelHtml(f)}${lastGame}
         <div class="panel tight"><div class="row between"><div><b>${yearOf(F.displayYear(f))}</b> · ${phaseLabel(f)}</div><div class="chip accent">Team OVR ${s.overall}</div></div>
           <div class="row between" style="margin-top:4px"><span>${f.season.playoffs ? playoffStatus(f) : `Record <b class="mono">${s.record}</b>${rival ? ` · <span class="dim">⚔️ rival ${esc(rival.team)}</span>` : ''}`}</span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
         ${weekStrip(f)}
@@ -246,7 +250,7 @@ export function registerHqScreens(Router, app) {
       ${v.full ? `<div class="attr-grid">${ATTRIBUTES.map((k) => `<div class="attr"><span>${ATTR_LABEL[k]}</span><div class="bar ${m.attributes[k] < 45 ? 'bad' : m.attributes[k] < 60 ? 'warn' : ''}"><i style="width:${m.attributes[k]}%"></i></div><b>${m.attributes[k]}</b></div>`).join('')}</div>` : `<p class="dim">${4 - v.headlineKnown ? `${4 - v.headlineKnown} headline rating${4 - v.headlineKnown === 1 ? '' : 's'} and the` : 'The'} full attribute sheet need a complete scout report.</p>`}
       <div class="panel tight" style="margin-top:8px"><b>Career</b><div class="muted">${clubs ? `Clubs: ${clubs}` : 'No pro club yet: a regional-league monster.'}</div></div>
       <div class="panel tight"><b>On your roster</b><div class="muted">${verdict}</div></div>
-      <button class="btn primary block" data-action="fasign" ${f.roster.length >= F.ROSTER_MAX ? 'disabled' : ''} style="margin-top:8px">${askV.estimate ? `Sign (about ${fmt(askV.shown)}/yr)` : `Sign for ${fmt(ask)}/yr`}</button>`, { title: 'Free agent' });
+      <button class="btn primary block" data-action="fasign" ${f.roster.length >= F.ROSTER_MAX ? 'disabled' : ''} style="margin-top:8px">${askV.estimate ? `Sign (about ${fmt(askV.shown)}/yr)` : `Sign for ${fmt(ask)}/yr`}</button>${f.roster.length >= F.ROSTER_MAX ? `<p class="dim center" style="margin-top:4px">Roster full (${F.ROSTER_MAX}): release a monster from the Roster screen first.</p>` : ''}`, { title: 'Free agent' });
     document.querySelector('.sheet [data-action="fasign"]')?.addEventListener('click', () => { const r = F.signFreeAgent(app.f, id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); close(); toast(r.overCap ? 'Signed, over the cap.' : 'Signed.', r.overCap ? 'bad' : 'good'); onSigned?.(); });
   }
   Router.registerScreen('draftclass', {
@@ -591,7 +595,7 @@ export function registerHqScreens(Router, app) {
       const qs = F.mediaQuestions(f); app.save();
       return `<p class="muted">The press wants answers. Every answer is spoken in the voice of one nature; the monsters who share it hear themselves and play Sunday with +${F.MEDIA_BOOST} to their nature’s strength. Know your monsters: nobody here will tell you who is listening.</p>
         ${qs.map((q, k) => `<div class="panel"><b>🎤 “${esc(q.q)}”</b><div class="stack" style="margin-top:8px">${q.a.map((a, ai) => `<button class="choice ${mediaPicks[k] === ai ? 'selected' : ''}" data-action="answer" data-q="${k}" data-a="${ai}"><span>${esc(a.text)}</span><span class="dim" style="font-size:12px">${NATURES[a.t].name}${a.hype ? ' · trash talk' : ''}${a.star ? ' · your star' : ''}</span></button>`).join('')}</div></div>`).join('')}
-        ${lineup}<button class="btn primary big block" data-action="submit" ${mediaPicks.filter((x) => x != null).length === qs.length ? '' : 'disabled'}>Finish press conference</button>`;
+        ${lineup}<button class="btn primary big block" data-action="submit" ${mediaPicks.filter((x) => x != null).length === qs.length ? '' : 'disabled'}>Finish press conference</button>${mediaPicks.filter((x) => x != null).length === qs.length ? '' : `<p class="dim center" style="margin-top:4px">Answer all ${qs.length} questions to finish.</p>`}`;
     },
     mount(root) { delegate(root, {
       roster: () => Router.go('roster'), done: () => Router.go('hq', {}, { reset: true }),
@@ -733,24 +737,33 @@ export function registerHqScreens(Router, app) {
     },
   });
   // ---------------------------------------------------------------- League stats
-  let leaderCat = 'passYds', leaderBucket = 'reg', leaderScope = 'league';
+  let leaderCat = 'passYds', leaderBucket = 'reg', leaderScope = 'league', leaderYear = null;
   const MIN_LABEL = (k) => ({ att: 'attempts', rush: 'carries', covTargets: 'targets in coverage', pbSnaps: 'pass-blocking snaps', fga: 'field-goal attempts' })[k] || k;
+  // League leaders (revised 2026-10-22): Season (this season or an archived one) × Game type (regular season, playoffs, both) × scope.
   Router.registerScreen('leaders', {
     title: 'League leaders',
     render({ f }) {
-      const table = leaderBucket === 'post' ? f.season.playoffStats : f.season.leagueStats;
+      const seasons = leagueSeasons(f); const year = seasons.includes(leaderYear) ? leaderYear : f.season.year;
+      const T = seasonTables(f, year); const table = leaderBucket === 'post' ? T.post : leaderBucket === 'all' ? combinedTable(T.reg, T.post) : T.reg;
       const cat = LEADER_CATEGORIES.find((c) => c.id === leaderCat) || LEADER_CATEGORIES[0];
       const myConf = conferenceFor(f.club), myDiv = divisionOf(f.club);
       const teams = leaderScope === 'conference' ? Object.values(DIVISIONS).flat().filter((t) => conferenceFor(t) === myConf) : leaderScope === 'division' ? DIVISIONS[myDiv] : null;
       const rows = leaders(table, cat.id, { n: 15, teams });
-      return `<div class="seg" style="margin-bottom:6px"><button class="btn small ${leaderBucket === 'reg' ? 'primary' : ''}" data-action="bucket" data-v="reg">Regular season</button><button class="btn small ${leaderBucket === 'post' ? 'primary' : ''}" data-action="bucket" data-v="post">Playoffs</button></div>
-        <div class="seg" style="margin-bottom:6px"><button class="btn small ${leaderScope === 'league' ? 'primary' : ''}" data-action="scope" data-v="league">Whole league</button><button class="btn small ${leaderScope === 'conference' ? 'primary' : ''}" data-action="scope" data-v="conference">${esc(myConf)}</button><button class="btn small ${leaderScope === 'division' ? 'primary' : ''}" data-action="scope" data-v="division">${esc(myDiv)}</button></div>
-        <select class="input" data-action="cat" style="margin-bottom:8px">${LEADER_CATEGORIES.map((c) => `<option value="${c.id}" ${c.id === cat.id ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
+      const seg = (items, key, cur) => `<div class="seg wrap" role="tablist">${items.map(([v, l]) => `<button class="btn small ${String(cur) === String(v) ? 'primary' : ''}" role="tab" aria-selected="${String(cur) === String(v)}" data-action="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
+      const playoffsOn = T.current ? !!f.season.playoffs : Object.keys(T.post).length > 0;
+      const empty = leaderBucket === 'post' && !playoffsOn ? (T.current ? 'The playoffs have not started this season. Regular-season leaders are under "Regular season".' : `No playoff statistics were kept for ${yearOf(year)}.`)
+        : !Object.keys(table).length ? (T.current ? 'No games played yet this season.' : `${yearOf(year)}'s tables are no longer in the save (the last ${ARCHIVE_SEASONS} seasons are kept); its records and awards remain.`)
+        : cat.min ? `Nobody has reached the minimum of ${cat.min[1]} ${MIN_LABEL(cat.min[0])} yet.` : 'No one has a mark in this category yet.';
+      const fmt = (v) => typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString('en-US') : v.toFixed(1)) : v;
+      return `${seg([...seasons.map((y) => [y, y === f.season.year ? 'This season' : yearOf(y)])], 'year', year)}
+        ${seg([['reg', 'Regular season'], ['post', 'Playoffs'], ['all', 'Both']], 'bucket', leaderBucket)}
+        ${seg([['league', 'League'], ['conference', esc(myConf)], ['division', esc(myDiv)]], 'scope', leaderScope)}
+        <select class="input" data-action="cat" style="margin:6px 0 8px" aria-label="Category">${LEADER_CATEGORIES.map((c) => `<option value="${c.id}" ${c.id === cat.id ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
         ${cat.min ? `<p class="dim" style="margin-top:0">Minimum ${cat.min[1]} ${esc(MIN_LABEL(cat.min[0]))}.</p>` : ''}
-        <div class="list">${rows.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''}">${monsterSprite(r, 32)}<div class="grow"><div class="name">${i + 1}. ${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></div><div class="sub">${esc(statLine(r))}</div></div><span class="chip accent">${r[cat.key]}</span></div>`).join('') || `<p class="dim">${leaderBucket === 'post' ? 'No playoff games yet.' : 'No games yet.'}</p>`}</div>`;
+        <div class="list leaders">${rows.map((r, i) => `<div class="item static ${r.team === f.club ? 'mine' : ''} ${i === 0 ? 'leader' : ''}"><span class="rank ${i < 3 ? 'top' : ''}">${i + 1}</span>${monsterSprite(r, 32)}<div class="grow"><div class="name">${esc(r.name)} <span class="dim">${esc(r.position)} · ${esc(r.team)}</span></div><div class="sub">${esc(statLine(r))}</div></div><span class="chip ${i === 0 ? 'accent' : ''} mono">${fmt(r[cat.key])}</span></div>`).join('') || `<p class="dim empty">${esc(empty)}</p>`}</div>`;
     },
     mount(root) {
-      delegate(root, { bucket: (el) => { leaderBucket = el.dataset.v; Router.render(); }, scope: (el) => { leaderScope = el.dataset.v; Router.render(); } });
+      delegate(root, { bucket: (el) => { leaderBucket = el.dataset.v; Router.render(); }, scope: (el) => { leaderScope = el.dataset.v; Router.render(); }, year: (el) => { leaderYear = Number(el.dataset.v); Router.render(); } });
       root.querySelector('[data-action="cat"]')?.addEventListener('change', (e) => { leaderCat = e.target.value; Router.render(); });
     },
   });

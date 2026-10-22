@@ -134,12 +134,48 @@ export function rolloverMonster(m, { year, team }) {
   return s;
 }
 
-/** Totals for a monster: 'season' | 'career' | a past year, and 'reg' | 'post'. */
+/**
+ * Totals for a monster. `scope`: 'season' (the current one) | 'career' | a year (the current year or an archived one).
+ * `bucket`: 'reg' | 'post' | 'all' (regular season and playoffs added together; the season × game-type filters of the
+ * statistics screens, 2026-10-22).
+ */
 export function monsterLine(m, scope = 'season', bucket = 'reg') {
   const s = ensureStats(m);
-  if (scope === 'career') return s.career[bucket] || {};
-  if (scope === 'season') return s.season[bucket] || {};
-  const past = s.seasons.find((x) => x.year === scope); return past ? past[bucket] || {} : {};
+  const book = scope === 'career' ? s.career : scope === 'season' || scope === s.season.year ? s.season : s.seasons.find((x) => x.year === scope);
+  if (!book) return {};
+  if (bucket === 'all') return addInto(addInto({}, book.reg), book.post);
+  return book[bucket] || {};
+}
+/** The seasons a monster has stats for, newest first: the current season (even with no games yet) and every archived one. */
+export function monsterSeasons(m, currentYear = null) {
+  const s = ensureStats(m, currentYear);
+  const years = s.seasons.map((x) => x.year); const cur = s.season.year ?? currentYear;
+  return [...(cur != null ? [cur] : []), ...years.filter((y) => y !== cur)].sort((a, b) => b - a);
+}
+/** A league table with regular season and playoffs added together (rows keyed by player id, as the tables are). */
+export function combinedTable(reg, post) {
+  const out = {};
+  for (const table of [reg, post]) for (const [team, T] of Object.entries(table || {})) { const O = (out[team] ||= {}); for (const [id, row] of Object.entries(T)) { const { id: _i, name, type, species, position, age, yearsPro, team: tm, ...nums } = row; const r = (O[id] ||= { id: row.id, name, type, species, position, age, yearsPro, team: tm }); addInto(r, nums); /* identity once, numbers added once: copying the row here counted the regular season twice */ } }
+  return out;
+}
+/** The league tables of a season: the current one, or an archived one from the history (ARCHIVE_SEASONS kept). */
+export function seasonTables(f, year) {
+  if (year == null || year === f.season?.year) return { reg: f.season?.leagueStats || {}, post: f.season?.playoffStats || {}, year: f.season?.year, current: true };
+  const h = (f.history || []).find((x) => x.year === year);
+  return { reg: h?.leagueStats || {}, post: h?.playoffStats || {}, year, current: false, archived: !!(h?.leagueStats) };
+}
+/** Seasons with league tables: the current one plus archived ones, newest first. */
+export function leagueSeasons(f) {
+  const years = (f.history || []).filter((h) => h.leagueStats).map((h) => h.year);
+  return [...new Set([f.season?.year, ...years].filter((y) => y != null))].sort((a, b) => b - a);
+}
+/** How many past seasons keep their full league tables in the save (older entries keep records, awards and leaders snapshots). */
+export const ARCHIVE_SEASONS = 8;
+export function archiveSeasonTables(f) {
+  const h = f.history?.[f.history.length - 1]; if (!h || h.year !== f.season?.year) return;
+  h.leagueStats = f.season.leagueStats || {}; h.playoffStats = f.season.playoffStats || {};
+  const withTables = f.history.filter((x) => x.leagueStats).sort((a, b) => b.year - a.year);
+  for (const old of withTables.slice(ARCHIVE_SEASONS)) { delete old.leagueStats; delete old.playoffStats; }
 }
 
 // ------------------------------------------------------------ recording a game
