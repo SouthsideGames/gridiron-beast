@@ -78,3 +78,13 @@ test('Skip Encounter changes nothing but the day: board, morale-like fields, ros
   const before = snap(f); F.skipEncounter(f);
   assert.equal(f.season.day, 2); assert.equal(snap(f), before);
 });
+
+test('Friday starts from a valid plan when last week\'s plan holds plays no longer in the playbook (new coordinator); the staff auto-run still reaches Sunday', async () => {
+  const { PLAYS } = await import('../src/data/playbook.js');
+  const f = ready(370); const cat = F.catalog(f, 'offense'); const stale = Object.keys(PLAYS).filter((id) => !cat.includes(id) && PLAYS[id].side === 'offense').slice(0, 2);
+  const outsider = stale.length ? stale : ['retired_play_a', 'retired_play_b'];
+  f.week.plan = { offense: [...outsider, ...F.defaultPlan(f, 'offense').slice(0, 4)], defense: F.defaultPlan(f, 'defense') }; f.lastPlan = JSON.parse(JSON.stringify(f.week.plan));
+  const o = F.startingPlan(f, 'offense'); assert.equal(o.length, 6); assert.ok(o.every((id) => cat.includes(id)));
+  F.autoRunToSunday(f); assert.equal(f.season.day, 6, 'the auto-run sets a legal plan and reaches Sunday');
+  assert.ok(f.week.plan.offense.every((id) => cat.includes(id)));
+});
