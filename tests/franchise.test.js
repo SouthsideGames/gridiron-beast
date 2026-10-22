@@ -770,9 +770,10 @@ test('attribute points: level-ups bank 2 points, spent by hand up to potential, 
   const { createRng } = await import('../src/core/rng.js');
   const f = newFranchise(71); const m = f.roster[0]; const rng = createRng(3);
   levelUp(m, rng); assert.equal(m.points, POINTS_PER_LEVEL);
-  const k = Object.keys(m.attributes).find((a) => m.attributes[a] < m.potential); const before = m.attributes[k];
+  const { attributeHelps } = await import('../src/data/stat-guide.js');
+  const k = Object.keys(m.attributes).find((a) => m.attributes[a] < m.potential && attributeHelps(m.position, a)); const before = m.attributes[k];
   assert.equal(F.spendAttributePoint(f, m.id, k).ok, true); assert.equal(m.attributes[k], before + 1); assert.equal(m.points, 1);
-  m.attributes.kicking = m.potential; assert.equal(spendPoint(m, 'kicking').ok, false, 'capped at potential');
+  m.attributes[k] = m.potential; assert.equal(spendPoint(m, k).ok, false, 'capped at potential');
   autoSpendPoints(m, rng); assert.equal(m.points, 0);
   assert.equal(F.unspentPoints(f).length, 0);
   levelUp(m, rng, { autoSpend: true }); assert.equal(m.points, 0, 'auto-spent');

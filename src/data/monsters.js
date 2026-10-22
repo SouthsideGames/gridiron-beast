@@ -3,6 +3,7 @@
 
 import { ATTRIBUTES, POSITION_WEIGHTS } from './personnel.js';
 import { createRng, hashString } from '../core/rng.js';
+import { attributeHelps, ATTR_NAME, POSITION_NAME } from './stat-guide.js';
 import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS, TRAITS } from './species.js';
 
 export const TYPES = Object.freeze({
@@ -237,6 +238,8 @@ export function levelUp(m, rng, { autoSpend = false } = {}) {
 export function spendPoint(m, attr) {
   if (!(m.points > 0)) return { ok: false, reason: 'No attribute points to spend.' };
   if (!(attr in m.attributes)) return { ok: false, reason: 'Unknown attribute.' };
+  // Points only go where they help the monster's position (GDD §8.2, stat-guide.js): no kicking for a quarterback.
+  if (!attributeHelps(m.position, attr)) return { ok: false, reason: `${ATTR_NAME[attr]} does not help a ${(POSITION_NAME[m.position] || m.position).toLowerCase()}.`, notUseful: true };
   if (m.attributes[attr] >= m.potential) return { ok: false, reason: `${attr} is at this monster's potential (${m.potential}).` };
   m.attributes[attr] = clampAttr(m.attributes[attr] + 1); m.points -= 1;
   return { ok: true, value: m.attributes[attr], left: m.points };

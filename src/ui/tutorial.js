@@ -56,6 +56,7 @@ export function primerHtml() {
   <h3>Fourth down</h3><p>Too far to go? Punt: kick it away so the other team starts far from your end zone. Close enough? Kick the field goal. Feeling brave? Go for it.</p>
   <h3>Positions (7 a side)</h3><p><b>Offense:</b> QB throws or hands off; RB runs; WR catch; TE blocks and catches; OL block. <b>Defense:</b> DL rush the passer and stop runs; LB do a bit of everything; CB cover receivers; S the last line.</p>
   <h3>Turnovers</h3><p>Interception (defense catches a pass) or fumble (ball knocked loose and recovered): the other team gets the ball right there.</p>
+  <h3>Attributes</h3><p>Every monster has twelve attributes (speed, catching, arm and so on), but each position only uses some of them: accuracy matters to a quarterback and does nothing for a receiver. <b>More → What the stats mean</b> lists what each one does at every position, and attribute points can only be spent where they help.</p>
   <h3>What you do</h3><p>You don’t steer anyone. You build the team, pick the six plays for each side on Friday, and on Sunday you call one of those plays each snap. Monsters do the rest, using their ratings, natures and abilities.</p>`;
 }
 

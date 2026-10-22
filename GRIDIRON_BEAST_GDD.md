@@ -199,6 +199,26 @@ Every decision uses down, distance, field position, score differential, quarter,
 
 **Saves:** key `gridiron-beast-v6`, `schemaVersion: 6`, export/import JSON. A v5 (11v11) save is never modified; on first launch the player may import owner, club, staff, rival, season, record and history from it. Its 40 placeholder monsters are re-mapped into 7v7 positions, keeping the cornerstones.
 
+### 8.2 What the twelve attributes do, by position (2026-10-21)
+
+Read from what the football engine actually uses (`src/sim`), plus each position's overall-rating weights (which also set the Beast Clash rating). The table lives in `src/data/stat-guide.js` and is shown in the game under **More → What the stats mean** and from every monster card (tap an attribute name). **Attribute points can only be spent on an attribute that helps the monster's position**; the trainer and level-up growth already only raise those. Points spent before this rule are kept.
+
+| Attribute | Helps | Does nothing for |
+|---|---|---|
+| Speed | Everyone but K: top speed, separation, pursuit, return distance | K |
+| Agility | Everyone but K: cuts, jukes, catch radius, escaping the rush, getting around blocks | K |
+| Strength | Everyone but K: holding blocks (40%), shedding blocks, breaking tackles, tackling | K |
+| Awareness | QB reads and decisions; ball carriers' vision; defenders' reactions, angles and play-action discipline; OL and K overall rating | (helps everyone) |
+| Catching | QB, RB, WR, TE (catches and ball security: fewer fumbles); LB, CB, S (interceptions) | OL, DL, K |
+| Arm | QB: ball speed, range, release | everyone else |
+| Accuracy | QB: where the ball lands | everyone else |
+| Blocking | OL, TE, RB (60% of a block); WR (stalk blocks) | QB, defenders, K |
+| Tackling | DL, LB, CB, S: sure tackles and sacks | offense, K |
+| Coverage | LB, CB, S: reacting to cuts, contesting catches | offense, DL, K |
+| Durability | Everyone but K: slower fatigue, fewer injuries | K (kickers are never injured and fatigue does not touch kicking) |
+| Kicking | K: field goals, punts, kickoffs | everyone else |
+
+
 ---
 
 ## 9. Mobile UX (LOCKED)
@@ -451,7 +471,7 @@ Owner's playtest round 3 found career stats at zero for a 320-yard quarterback: 
 The owner's full-season report. All LOCKED unless marked.
 
 * **17.2 Package rule and forfeits.** A depth-chart slot may be filled only by a monster whose primary or secondary position matches it (`SECONDARY_ELIGIBILITY`): a healthy reserve first, else a base starter who sits out in the packages that use the slot (SS ← LB2, DL3 ← LB2/FS, WR3 ← TE, C ← WR2). Base starters are filled across every group before package slots. A package slot nobody legal can fill makes every play using that package unavailable (greyed in the game plan and the match, never called by Auto or the AI). A game is a **forfeit** (0–21 loss, no stats, no XP, in the standings) only when the base seven or the kicker cannot be fielded legally, or every play in a side's plan needs a package that cannot be fielded. Out-of-position monsters carry **1.75×** injury risk in games and practice, stated on the assign screen.
-* **17.3 Attribute points.** Level-ups keep the automatic +1s and bank **2 points** (`POINTS_PER_LEVEL`) the owner spends on the monster card, any attribute, capped by potential. A setting lets the trainer spend them. AI monsters regenerate each season (no points to spend).
+* **17.3 Attribute points.** Level-ups keep the automatic +1s and bank **2 points** (`POINTS_PER_LEVEL`) the owner spends on the monster card, capped by potential, **only on an attribute that helps the monster's position** (§8.2; revised 2026-10-21, it was any attribute). A setting lets the trainer spend them. AI monsters regenerate each season (no points to spend).
 * **17.4 The board.** Before each season (and at creation) the commissioner offers three goals scaled to the preseason forecast — safe (win N, never more than 7 of 9 so a contender's safe goal stays easier than the title), medium (playoffs, or badges when the forecast is poor), stretch (the Beast Bowl, worth +2). Winning the Beast Bowl meets whatever goal was set: the champion is never fired. One commitment per season, settled at season end into **board confidence**: +1 per goal met (+2 title), −1 per miss; a met goal also lifts any deficit to 0 and funds one extra prospect every Monday next season. At −1 the owner is on the **hot seat** (rival GM needles, the postseason story event fires even on a winning record); at −2 the board **fires** the owner: the franchise ends (a Hall of Fame card only if already eligible). Nothing else in the game can end a franchise. Currency chosen so goals do not pile onto the cap (already four features) or the dex.
 * **17.5 Season flow.** When the playoffs are drawn: a **season recap** (record, standing, club leaders, badges, the goal, the league awards, and the playoff announcement with seed and first opponent, or "missed"). Awards news lands at that moment. An eliminated or non-qualified owner **watches the bracket** round by round (results sheet per round) or skips to the offseason. When the season ends: **how we finished** (elimination round or title, playoff record, board verdict, Hall of Fame progress, the awards book). The HQ button reads *Continue to the offseason*.
 * **17.6 Scouting for depth.** Monday shows every position as short / no backup / ok, lets the owner ask the scout for a position, and the scout otherwise targets the thinnest; prospects are outlined red (short-handed) or orange (no backup) with the reason.

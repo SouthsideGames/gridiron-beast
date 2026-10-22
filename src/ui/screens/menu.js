@@ -15,6 +15,7 @@ import { resetDex } from '../../franchise/dex-store.js';
 import { clashSettings } from '../../franchise/clash-link.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
 import { resetTutorial, primerHtml } from '../tutorial.js';
+import { openStatGuide } from '../stat-guide.js';
 import { DIFFICULTY as DIFF } from '../../franchise/franchise.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { portraitSprite } from '../pixel-monster.js';
@@ -176,10 +177,11 @@ export function registerMenuScreens(Router, app) {
       return `<div class="stack">
         <button class="btn block" data-action="go" data-screen="office">🪪 My office <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
         <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
+        <button class="btn block" data-action="statguide">📊 What the stats mean</button>
         <button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button>
         ${devNoticesOn(app.settings) && (reviewQueue().total || cardMismatches().length) ? `<button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button>` : ''}
         <button class="btn block" data-action="menu">🏠 Main Menu</button></div>`;
     },
-    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }) }); },
+    mount(root) { delegate(root, { go: (el) => Router.go(el.dataset.screen), menu: () => Router.go('menu', {}, { reset: true }), statguide: () => openStatGuide('QB') }); },
   });
 }
