@@ -74,7 +74,7 @@ def step(page, n):
             page.fill('#first', 'Test'); page.fill('#last', 'Owner')
         for sel in ['[data-action="club"]', '[data-action="pick"]']:
             if visible(page, sel) and not visible(page, '.choice.selected'): click(page, sel); break
-        return 'onboarding:next' if click(page, '[data-action="next"]') else None
+        return 'onboarding:next' if click(page, '[data-action="next"]') else 'onboarding:retry'  # a slow machine: try again (the stuck check still catches a real dead end)
     if sn == 'clash-battle':
         if visible(page, '[data-action="mode"]'):
             mode = ['skip', 'auto', 'play'][len(encounter_modes) % 3]; encounter_modes.append(mode)
