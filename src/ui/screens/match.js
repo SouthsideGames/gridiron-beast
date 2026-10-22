@@ -1,4 +1,4 @@
-// Sunday: pregame lineups and coin toss, then the live match screen.
+// Sunday: pregame lineups and the pregame Beast Clash for possession (GDD §26.2), then the live match screen.
 // The screen only collects the human's choices; rules.js and game-runner.js
 // do everything else, exactly as they do for the simulated league.
 
@@ -26,12 +26,16 @@ import { boxScoreHtml } from '../box-score.js';
 import { kickFrames } from '../kick-anim.js';
 import { buildFx, shakeBetween, endHold } from '../ability-fx.js';
 
+/** Start Sunday's game from the settled pregame Clash (set by registerMatchScreens; the battle screen calls it). */
+export let startSundayGame = null;
+
 export function registerMatchScreens(Router, app) {
   // ------------------------------------------------------------ pregame
   Router.registerScreen('pregame', {
     title: 'Match Day', tabs: false,
     render({ f }) {
       const m = F.sundayMatchup(f); if (!m) return '<p>No game today.</p>';
+      if (f.week.pregame && f.week.pregame.status !== 'ready' && !f.game) { setTimeout(() => Router.go('clash-battle', { kind: 'pregame' }, { replace: true }), 0); return '<p class="muted">Opening the pregame Clash…</p>'; }
       const mine = m[m.playerSide], theirs = m[m.playerSide === 'home' ? 'away' : 'home'];
       const col = (team, label) => `<div class="panel tight"><div class="row"><b style="color:${team.color}">${esc(team.name)}</b><span class="chip">${label}</span></div><div class="muted" style="font-size:12px">OVR ${teamOverall(team)} · ${esc(team.offensePlays.length)} / ${esc(team.defensePlays.length)} plays</div>
         <h3 style="font-size:12px">Offense</h3>${OFFENSE_BASE.map((s) => line(s, team.offense[s], team)).join('')}
@@ -45,20 +49,13 @@ export function registerMatchScreens(Router, app) {
         <div class="lineups">${col(mine, m.playerSide === 'home' ? 'HOME' : 'AWAY')}${col(theirs, m.playerSide === 'home' ? 'AWAY' : 'HOME')}</div>
         ${(() => { const nMedia = Object.values(mine.boosts || {}).filter((b) => b.media).length; const tr = f.week.trainingFocus; return nMedia || tr ? `<div class="panel tight" style="margin-top:8px"><b>Today's boosts</b><div class="muted" style="font-size:13px">${tr ? `<span class="boost train">T</span> Training (${esc(TRAINING_FOCI[tr]?.label || tr)}): +${f.week.training?.amount ?? ''} ${esc((TRAINING_FOCI[tr]?.attrs || []).join(', '))} for every starter` : ''}${tr && nMedia ? '<br>' : ''}${nMedia ? `<span class="boost media">+</span> Media day: ${nMedia} monster${nMedia === 1 ? '' : 's'} fired up` : ''}</div></div>` : ''; })()}
         <p class="dim" style="margin-top:8px">Coaching mode: <b>${f.settings.mode === 'key' ? 'Key Moments' : 'Full Coaching'}</b> (change in Settings).</p>
-        <button class="btn primary big block" data-action="toss">Coin toss →</button></div>`;
+        <p class="dim">Possession is decided by a <b>3v3 Beast Clash</b> between the two rosters: the winner chooses to receive, defer or kick.</p>
+        <button class="btn primary big block" data-action="toss">⚔️ Beast Clash for possession →</button></div>`;
     },
     mount(root) {
       delegate(root, {
         reply: (el) => { const r = F.replyToCoach(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
-        toss: () => {
-          const f = app.f; const m = F.sundayMatchup(f);
-          const rng = rngFromState(f.rngState); const winner = rng.chance(0.5) ? 'home' : 'away'; f.rngState = rng.state;
-          const me = m.playerSide; const iWon = winner === me;
-          const body = iWon ? `<p>You won the toss!</p><div class="stack"><button class="btn primary" data-choice="receive">Receive the opening kickoff</button><button class="btn" data-choice="defer">Defer to the second half</button><button class="btn" data-choice="kick">Kick off</button></div>`
-            : `<p>${esc(m[winner].name)} won the toss and chose to <b>${rng.chance(0.65) ? 'defer' : 'receive'}</b>.</p><button class="btn primary block" data-choice="auto">Start the game</button>`;
-          const { el, close } = sheet(body, { title: 'Coin toss' });
-          el.addEventListener('click', (e) => { const c = e.target.closest('[data-choice]')?.dataset.choice; if (!c) return; close(); startGame(f, m, winner, c === 'auto' ? (body.includes('defer</b>') ? 'defer' : 'receive') : c); });
-        },
+        toss: () => { const pv = F.pregamePreview(app.f); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'pregame' }); },
       });
     },
   });
@@ -73,13 +70,14 @@ export function registerMatchScreens(Router, app) {
     const them = R.opponent(me); const tl = teams[them]?.schemeLock; if (tl?.offense || tl?.defense) bits.push('<span class="edge-chip scheme">✦ Their scheme is locked</span>');
     return bits.length ? `<div class="edge-strip">${bits.join('')}</div>` : '';
   }
-  function startGame(f, m, winner, choice) {
-    const state = R.newGame({ home: m.home, away: m.away, seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: winner, choice, comeback: F.comebackRule(f) });
+  startSundayGame = (f) => {
+    const m = F.sundayMatchup(f); const toss = F.pregamePossession(f);
+    const state = R.newGame({ home: m.home, away: m.away, seed: rngFromState(f.rngState).seed(), quarterLength: f.settings.quarterLength, coinWinner: toss.coinWinner, choice: toss.choice, comeback: F.comebackRule(f) });
     f.rngState = rngFromState(f.rngState).state;
     f.game = { state, playerSide: m.playerSide, tendencies: { home: newTendencies(), away: newTendencies() }, selected: { offense: null, defense: null }, mode: f.settings.mode, lastEvent: null, simmed: [], event: m.rival ? 'rival' : m.playoff ? 'playoff' : null, tag: m.tag };
     app.save();
     Router.go('match', {}, { reset: true });
-  }
+  };
 
   // ------------------------------------------------------------ live match
   let anim = null; // active animation {raf, frames, i, done}

@@ -37,7 +37,7 @@ import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlot
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
-import { CLASH_SIZE, SWAP_EVERY, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects } from './clash-link.js';
+import { CLASH_SIZE, SWAP_EVERY, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES } from './clash-link.js';
 
 export const SCHEMA_VERSION = 6;
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -398,7 +398,7 @@ export function dexCounts(f) {
   for (const id of ids) { const st = dexStatus(f, id); if (st !== 'unknown') seen++; if (st === 'signed') signed++; }
   return { seen, signed };
 }
-function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, encounter: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
+function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, encounter: null, pregame: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
 const frng = (f) => { const r = rngFromState(f.rngState); return { r, save: () => { f.rngState = r.state; } }; };
 
 export function news(f, text, kind = 'info') { f.news.unshift({ text, kind, week: f.season?.week, year: f.season?.year }); if (f.news.length > 60) f.news.pop(); }
@@ -928,9 +928,10 @@ function simulateLeagueWeek(f) {
     for (const g of fixtures.games) {
       if (g.home === f.club || g.away === f.club) continue;
       const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
-      const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f) });
+      const toss = leaguePregame(f, r, home, away);
+      const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice });
       recordGame(f, game, { home, away }, { playoff: false });
-      const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
+      const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
       applyResult(f.season.records, res); results.push(res);
     }
   }
@@ -1384,7 +1385,7 @@ export function finishSunday(f, gameState) {
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
   for (const x of m[oppSide].roster) dexRecord(f, x, 'seen'); // every monster you face goes in the dex
   const won = gameState.winner === side;
-  const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true };
+  const pg = f.week.pregame; const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true, pregameClash: pg?.result ? { winner: gameState.coin?.winner || null, choice: gameState.coin?.choice || null, by: pg.result.by, exchanges: pg.result.exchanges, playerWon: pg.result.winner === 'a' } : null };
   const { r, save } = frng(f);
   const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false });
   save();
@@ -1484,9 +1485,10 @@ function simulatePlayoffWeek(f) {
   const { r, save } = frng(f);
   for (const g of p.fixtures.filter((x) => x.round === p.round && !x.result)) {
     const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
-    const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f) });
+    const toss = leaguePregame(f, r, home, away);
+    const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice });
     recordGame(f, game, { home, away }, { playoff: true });
-    const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
+    const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
     g.result = res; p.results.push({ round: p.round, conf: g.conf, winner: res.homeScore > res.awayScore ? g.home : g.away, ...res });
   }
   save();
@@ -1595,10 +1597,91 @@ export function startNextSeason(f) {
 /** Headless: simulate the player's game too (for Key Moments "sim to end" and tests). */
 export function simulatePlayerGame(f) {
   const m = sundayMatchup(f); if (!m) return null;
+  const toss = pregamePossession(f); // the pregame Clash decides possession (headless: Auto, and the AI's choice when it wins)
   const { r, save } = frng(f);
-  const game = playGame({ home: m.home, away: m.away, seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f) });
+  const game = playGame({ home: m.home, away: m.away, seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice });
   save();
   return game;
+}
+
+// ------------------------------------------------------------ the pregame Clash (Beast Clash in Franchise Mode, GDD §26.2)
+// The coin toss is a 3v3 Beast Clash between the two Sunday rosters. The winner chooses: receive, defer or kick. When the AI wins
+// it chooses for itself (defer two times in three, as the coin-toss AI did). Every league game is decided the same way, headless.
+/** Who can battle today and the proposed lineups (yours and theirs). Reasons when no battle can happen. */
+export function pregamePreview(f) {
+  const m = sundayMatchup(f); if (!m) return { ok: false, reason: 'No game today.' };
+  if (m.forfeit) return { ok: false, reason: m.forfeitReason || 'No legal lineup.' };
+  const theirs = m[m.playerSide === 'home' ? 'away' : 'home'];
+  const eligible = eligibleBattlers(f.roster);
+  const wild = autoLineup(theirs.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${theirs.name}`));
+  const size = Math.min(CLASH_SIZE.pregame, eligible.length, wild.length);
+  if (size < 1) return { ok: false, reason: 'Nobody healthy enough to battle.', eligible, size: 0, opponent: m.opponent };
+  return { ok: true, eligible, size, wild: wild.slice(0, size), lineup: autoLineup(f.roster, size, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}`)), opponent: m.opponent, matchup: m };
+}
+export function startPregameClash(f, { lineup = null, mode = 'auto' } = {}) {
+  if (f.season.day !== 6) return { ok: false, reason: 'Not Sunday.' };
+  if (f.game) return { ok: false, reason: 'The game has already started.' };
+  if (f.week.pregame && f.week.pregame.status !== 'ready') return { ok: false, reason: 'The pregame Clash is already under way.' };
+  const pv = pregamePreview(f); if (!pv.ok) return pv;
+  const eligibleIds = new Set(pv.eligible.map((x) => x.id));
+  const mine = (lineup || pv.lineup.map((x) => x.id)).filter((id, i, arr) => eligibleIds.has(id) && arr.indexOf(id) === i).slice(0, pv.size);
+  if (!mine.length) return { ok: false, reason: 'Pick at least one healthy monster.' };
+  const size = Math.min(pv.size, mine.length);
+  const { r, save } = frng(f); const seed = r.seed(); save();
+  f.week.pregame = { opponent: pv.opponent, side: pv.matchup.playerSide, seed, size, mine, theirs: pv.wild.slice(0, size).map((x) => x.id), mode, decisions: {}, status: 'battle', result: null, choice: null };
+  return { ok: true, pregame: f.week.pregame };
+}
+export function pregameBattle(f, { log = 'full' } = {}) {
+  const e = f.week.pregame; if (!e || !e.seed) return null;
+  const m = sundayMatchup(f); if (!m) return null; const theirs = m[m.playerSide === 'home' ? 'away' : 'home'];
+  const a = e.mine.map((id) => f.roster.find((x) => x.id === id)).filter(Boolean);
+  const b = e.theirs.map((id) => theirs.roster.find((x) => x.id === id)).filter(Boolean);
+  if (!a.length || !b.length) return null;
+  return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, log });
+}
+export function pregameDecide(f, ex, choice) {
+  const e = f.week.pregame; if (!e || e.status !== 'battle') return { ok: false, reason: 'No battle in progress.' };
+  if (choice === 'stay') for (let k = 0; k < SWAP_EVERY; k++) e.decisions[ex + k] = 'stay'; else e.decisions[ex] = choice;
+  return { ok: true };
+}
+/** Settle the pregame Clash: XP and fatigue for your battlers; the AI's possession choice is drawn now if it won. */
+export function resolvePregameClash(f) {
+  const e = f.week.pregame; if (!e) return { ok: false, reason: 'No pregame Clash.' };
+  if (e.status !== 'battle') return { ok: true, pregame: e, already: true, won: e.result?.winner === 'a' };
+  const result = pregameBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
+  if (e.mode === 'play' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
+  const { r, save } = frng(f);
+  const events = applyBattleEffects(f.roster, result, 'a', 'pregame', r, { autoSpend: !!f.settings.autoPoints });
+  const won = result.winner === 'a';
+  if (!won) e.choice = aiPossessionChoice(r);
+  save();
+  e.result = battleSummary(result); e.events = events; e.status = won ? 'choose' : 'done';
+  for (const ev of events) news(f, `${ev.name} reached level ${ev.level} in the pregame Clash (${ev.from} → ${ev.to} OVR).`, 'win');
+  return { ok: true, pregame: e, won, result, events };
+}
+/** The winner's possession choice (only the player chooses here; the AI chose when the battle was settled). */
+export function choosePossession(f, choice) {
+  const e = f.week.pregame; if (!e || e.status !== 'choose') return { ok: false, reason: 'It is not your choice to make.' };
+  if (!POSSESSION_CHOICES.includes(choice)) return { ok: false, reason: 'Choose receive, defer or kick.' };
+  e.choice = choice; e.status = 'done'; return { ok: true };
+}
+/** The opening possession for the football engine: { coinWinner: 'home'|'away', choice }. Settles a pending Clash headless (Auto) when needed. */
+export function pregamePossession(f) {
+  const m = sundayMatchup(f); if (!m) return { coinWinner: null, choice: null };
+  if (!f.week.pregame || f.week.pregame.status === 'ready') { const st = startPregameClash(f); if (!st.ok) return { coinWinner: null, choice: null, reason: st.reason }; }
+  const e = f.week.pregame;
+  if (e.status === 'battle') { if (e.mode === 'play') e.mode = 'auto'; resolvePregameClash(f); }
+  if (e.status === 'choose') { e.choice = 'receive'; e.status = 'done'; }
+  const won = e.result?.winner === 'a'; const me = e.side; const them = me === 'home' ? 'away' : 'home';
+  return { coinWinner: won ? me : them, choice: e.choice || 'receive', clash: e.result };
+}
+/** Headless pregame Clash for a league game between two AI clubs: both lineups automatic, smart policies, one seed. */
+export function leaguePregame(f, r, home, away) {
+  const a = autoLineup(home.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${home.name}`));
+  const b = autoLineup(away.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${away.name}`));
+  if (!a.length || !b.length) return { coinWinner: null, choice: null, clash: null };
+  const result = runBattle({ a, b, seed: r.seed(), mode: 'auto', log: 'none' });
+  return { coinWinner: result.winner === 'a' ? 'home' : 'away', choice: aiPossessionChoice(r), clash: battleSummary(result) };
 }
 
 export function summary(f) {

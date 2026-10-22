@@ -70,3 +70,9 @@ export function applyBattleEffects(roster, result, side, occasion, rng, { autoSp
   }
   return events;
 }
+
+/** The AI's possession choice when it wins the pregame Clash: defer two times in three (the coin-toss AI's rule), else receive. One seeded draw. */
+export function aiPossessionChoice(rng) { return rng.chance(0.65) ? 'defer' : 'receive'; }
+/** Side a / b of a franchise battle mapped back to home / away. */
+export const POSSESSION_CHOICES = Object.freeze(['receive', 'defer', 'kick']);
+

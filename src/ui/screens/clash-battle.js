@@ -10,6 +10,7 @@ import { createArena } from '../clash/arena.js';
 import { stateAt } from '../clash/choreographer.js';
 import { monsterOverall } from '../../data/monsters.js';
 import { archetypeOf } from '../../clash/stats.js';
+import * as Match from './match.js';
 
 const ARCH_GLYPH = { Tank: '🛡', Striker: '⚔️', Support: '💚', Disruptor: '🌀', Balanced: '⚖️' };
 export const MODE_TEXT = Object.freeze({
@@ -55,6 +56,29 @@ function bindings(app, Router) {
           decline: () => { const r = F.declineOffer(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); rerender(); },
           pitch: (el) => { const f = app.f; const e = f.week.encounter; const r = F.recruit(f, e.prospectIndex, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(r.success ? `${r.monster.name} signed!` : 'They turned you down.', r.success ? 'good' : 'info'); rerender(); },
           done: () => Router.go('hq', {}, { reset: true }),
+        };
+      },
+    },
+    pregame: {
+      title: 'Sunday · Beast Clash for possession',
+      record: (f) => f.week.pregame,
+      preview: (f) => F.pregamePreview(f),
+      start: (f, i, opts) => F.startPregameClash(f, opts),
+      battle: (f) => F.pregameBattle(f),
+      decide: (f, ex, choice) => F.pregameDecide(f, ex, choice),
+      resolve: (f) => F.resolvePregameClash(f),
+      occasion: 'pregame', mySide: 'a',
+      introText: (f) => { const pv = F.pregamePreview(f); return `Before kickoff against <b>${esc(pv.opponent || 'the opponent')}</b>, three of your monsters battle three of theirs. The winner chooses who gets the ball first.`; },
+      resultHtml(f, e) {
+        const opp = e.opponent || 'The opponent';
+        if (e.status === 'choose') return `<div class="panel"><p><b>You choose the opening possession.</b></p><div class="stack"><button class="btn primary" data-action="choose" data-v="receive">Receive the opening kickoff</button><button class="btn" data-action="choose" data-v="defer">Defer to the second half</button><button class="btn" data-action="choose" data-v="kick">Kick off</button></div><p class="dim">Receive: you start with the ball. Defer: they start, you get it after halftime. Kick: they start and you kick off again after halftime.</p></div>`;
+        const theirs = e.result?.winner !== 'a';
+        return `<div class="panel"><p>${theirs ? `<b>${esc(opp)}</b> won the Clash and chose to <b>${esc(e.choice === 'defer' ? 'defer to the second half' : 'receive the opening kickoff')}</b>.` : `You chose to <b>${esc(e.choice === 'receive' ? 'receive the opening kickoff' : e.choice === 'defer' ? 'defer to the second half' : 'kick off')}</b>.`}</p><button class="btn primary big block" data-action="kickoff">🏈 Kick off</button></div>`;
+      },
+      actions() {
+        return {
+          choose: (el) => { const r = F.choosePossession(app.f, el.dataset.v); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
+          kickoff: () => { if (!Match.startSundayGame) { toast('The match screen is not ready.', 'bad'); return; } Match.startSundayGame(app.f); },
         };
       },
     },
@@ -125,7 +149,7 @@ export function registerClashBattle(Router, app) {
   function resultHtml(f, e) {
     const r = e.result; const won = r?.winner === B().mySide; const mine = f.roster.filter((m) => e.mine.includes(m.id));
     const lv = (e.events || []).filter((x) => x.kind === 'levelup');
-    return `<div class="panel ${won ? 'good' : ''}" style="text-align:center"><div style="font-size:22px;font-weight:800">${won ? 'VICTORY' : 'DEFEAT'}</div><div class="muted">${r.by === 'knockout' ? 'By knockout' : r.by === 'hp' ? 'On health left after 30 exchanges' : 'On a coin flip after an exact tie'} · ${r.exchanges} exchange${r.exchanges === 1 ? '' : 's'}</div>
+    return `<div class="panel ${won ? 'good' : ''}" style="text-align:center"><div style="font-size:22px;font-weight:800">${won ? (st.kind === 'pregame' ? 'YOU WON THE CLASH' : 'VICTORY') : (st.kind === 'pregame' ? 'THEY WON THE CLASH' : 'DEFEAT')}</div><div class="muted">${r.by === 'knockout' ? 'By knockout' : r.by === 'hp' ? 'On health left after 30 exchanges' : 'On a coin flip after an exact tie'} · ${r.exchanges} exchange${r.exchanges === 1 ? '' : 's'}</div>
       <div class="row" style="justify-content:center;gap:6px;margin-top:6px">${mine.map((m) => monsterSprite(m, 30)).join('')}</div>
       <div class="dim" style="margin-top:4px">Your battlers earned a little experience${lv.length ? ` · <b>${esc(lv.map((x) => `${x.name} → level ${x.level}`).join(', '))}</b>` : ''}.</div>
       <div class="row" style="justify-content:center;gap:6px;margin-top:6px"><button class="btn small ghost" data-action="replay">Watch the replay</button></div></div>
@@ -139,6 +163,7 @@ export function registerClashBattle(Router, app) {
       const b = B(); if (!b || !f) return '<p>No battle.</p>';
       const e = b.record(f);
       if (!e || e.status === 'ready' || e.status === 'skipped') return setupHtml(f);
+      if (!f.week || (st.kind === 'pregame' && f.game)) { setTimeout(() => Router.go('match', {}, { reset: true }), 0); return '<p class="muted">Opening the game…</p>'; }
       if (e.status === 'battle') { if (e.mode === 'skip' && !st.replaying) { setTimeout(() => finish(f), 0); return '<p class="muted">Playing the battle…</p>'; } return battleHtml(f, e); }
       if (st.replaying) return `${battleHtml(f, { ...e, mode: 'auto' })}<button class="btn block" data-action="endreplay" style="margin-top:8px">Back to the result</button>`;
       return resultHtml(f, e);

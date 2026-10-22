@@ -867,3 +867,12 @@ Tuesday's recruiting pitch is replaced by an encounter with one of the monsters 
 - One encounter per Tuesday. Staff auto-run enters an encounter only for a clear upgrade (the same criterion as before) and plays it in Auto; otherwise it skips.
 - The final regular-season week and the playoffs keep Monday draft scouting and the Tuesday recovery day; no encounters then.
 
+### 26.2 The pregame Clash (possession)
+
+The coin toss is gone. Before every game, three monsters from each roster battle; the winner chooses the opening possession.
+
+- **Player games:** the Match Day screen leads to the battle screen (lineup, then Play / Auto / Skip to results). If the player wins the Clash they choose **receive**, **defer** or **kick** (the same three choices the toss offered). If the AI wins, it chooses for itself: defer two times in three, otherwise receive (the coin-toss AI's rule, one seeded draw). The football engine then starts with that `coinWinner` and `choice`, exactly as it did after a toss. The AI side's lineup is the engine's automatic lineup from its real roster.
+- **League games** (all AI-vs-AI, regular season and playoffs) are opened the same way, headless: automatic lineups, smart policies, one seed, the AI choice rule. Each result records `pregameClash` (winner side, choice, how it ended, exchanges).
+- **Headless player games** (tests, "sim to end" before kickoff) settle a pending Clash in Auto; a Play battle left mid-decision falls back to Auto and an unmade choice defaults to receive.
+- A forfeit (no legal lineup) is unchanged: no Clash, the 0-21 loss as before.
+

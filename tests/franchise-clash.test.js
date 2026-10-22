@@ -106,3 +106,45 @@ test('XP and level-ups from a battle use the football progression (xpForLevel, l
   const lvl = m.level, stage = m.stage || 0; const b = F.resolveEncounter(f); assert.ok(b.ok);
   assert.ok(m.level > lvl, 'levelled up'); assert.equal(m.stage || 0, stage, 'no evolution from a battle'); assert.ok(b.events.some((ev) => ev.kind === 'levelup' && ev.id === m.id));
 });
+
+// ---------------------------------------------------------------- the pregame Clash (GDD §26.2)
+const toSunday = (f) => { F.autoRunToSunday(f); assert.equal(f.season.day, 6); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); } };
+
+test('pregame: a 3v3 between the two Sunday rosters, seeded once, rebuilt from a saved copy with the same AI monsters; the winner chooses possession', () => {
+  let mine = 0, theirs = 0;
+  for (let seed = 200; seed < 216; seed++) {
+    const f = newFranchise(seed); toSunday(f);
+    const pv = F.pregamePreview(f); assert.ok(pv.ok, pv.reason); assert.equal(pv.size, 3); assert.equal(pv.wild.length, 3); assert.ok(pv.wild.every((m) => !m.injury));
+    const st = F.startPregameClash(f); assert.ok(st.ok, st.reason); const e = f.week.pregame; assert.equal(e.status, 'battle'); assert.equal(e.side, pv.matchup.playerSide);
+    const r1 = F.pregameBattle(f); const copy = JSON.parse(JSON.stringify(f)); const r2 = F.pregameBattle(copy);
+    assert.equal(logHash(r1), logHash(r2), 'the AI lineup is regenerated identically from the save');
+    assert.equal(F.startPregameClash(f).ok, false, 'one pregame Clash');
+    const b = F.resolvePregameClash(f); assert.ok(b.ok);
+    if (b.won) { mine++; assert.equal(e.status, 'choose'); assert.equal(F.choosePossession(f, 'punt').ok, false); assert.ok(F.choosePossession(f, 'defer').ok); assert.equal(e.status, 'done'); const p = F.pregamePossession(f); assert.equal(p.coinWinner, e.side); assert.equal(p.choice, 'defer'); }
+    else { theirs++; assert.equal(e.status, 'done'); assert.ok(['defer', 'receive'].includes(e.choice)); assert.equal(F.choosePossession(f, 'receive').ok, false, 'the AI chose'); const p = F.pregamePossession(f); assert.equal(p.coinWinner, e.side === 'home' ? 'away' : 'home'); assert.equal(p.choice, e.choice); }
+    const g = F.simulatePlayerGame(f); assert.equal(g.coin.winner, F.pregamePossession(f).coinWinner); assert.equal(g.coin.choice, F.pregamePossession(f).choice);
+    const last = F.finishSunday(f, g); assert.ok(last); const res = f.season.results.find((x) => x.player); assert.ok(res.pregameClash && typeof res.pregameClash.exchanges === 'number' && typeof res.pregameClash.playerWon === 'boolean');
+  }
+  assert.ok(mine > 1 && theirs > 1, `mine ${mine} theirs ${theirs}`);
+});
+
+test('pregame: a headless Sunday (tests, sim to end) settles the Clash in Auto and never asks; every league game is opened by a Clash too', () => {
+  const f = newFranchise(230); toSunday(f);
+  assert.equal(f.week.pregame, null);
+  const g = F.simulatePlayerGame(f); assert.ok(g.finished); assert.equal(f.week.pregame.status, 'done'); assert.ok(f.week.pregame.result);
+  F.finishSunday(f, g);
+  const others = f.season.results.filter((x) => !x.player); assert.ok(others.length >= 6);
+  for (const r of others) { assert.ok(r.pregameClash, 'league game opened by a Clash'); assert.ok(['home', 'away'].includes(r.pregameClash.winner)); assert.ok(['defer', 'receive'].includes(r.pregameClash.choice)); }
+  // deterministic: the same franchise seed gives the same league week
+  const f2 = newFranchise(230); toSunday(f2); const g2 = F.simulatePlayerGame(f2); F.finishSunday(f2, g2);
+  assert.deepEqual(f2.season.results.map((x) => [x.home, x.away, x.homeScore, x.awayScore, x.pregameClash?.winner]), f.season.results.map((x) => [x.home, x.away, x.homeScore, x.awayScore, x.pregameClash?.winner]));
+});
+
+test('pregame: the player cannot start a second Clash or change the AI choice; injured monsters sit out; the forfeit path is untouched', () => {
+  const f = newFranchise(240); toSunday(f);
+  const hurt = f.roster.filter((m) => m.position === 'OL').slice(0, 2); for (const m of hurt) m.injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
+  const pv = F.pregamePreview(f); assert.ok(pv.ok); assert.ok(pv.lineup.every((m) => !hurt.includes(m)));
+  assert.equal(F.startPregameClash(f, { lineup: hurt.map((m) => m.id) }).ok, false, 'an all-injured lineup is refused');
+  const st = F.startPregameClash(f, { lineup: [pv.lineup[0].id], mode: 'play' }); assert.ok(st.ok); assert.equal(f.week.pregame.size, 1, 'a one-monster lineup makes a 1v1');
+  assert.ok(F.pregameBattle(f).lines.a.length === 1);
+});
