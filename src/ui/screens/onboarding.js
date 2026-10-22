@@ -1,6 +1,7 @@
 // Commissioner's office: owner creation, club choice, rival reveal,
 // cornerstone monsters, then the five staff hires.
 
+import { ASSIST_MODES, ASSIST_MODE_TEXT, assistSettings, setAssist } from '../../franchise/assist.js';
 import { esc, delegate, toast, sheet } from '../dom.js';
 import { STARTER_CLUBS, DIVISIONS, RIVAL_GMS, divisionOf, conferenceFor, TEAM_META } from '../../data/league.js';
 import { cornerstoneOffers, NATURES, TYPES, resolveSpecies } from '../../data/monsters.js';
@@ -104,7 +105,8 @@ export function registerOnboardingScreens(Router, app) {
     title: 'Welcome to the league', tabs: false,
     render({ f }) {
       const beats = commissionerWelcome(f); const shown = beats.slice(0, beat + 1); const last = beat >= beats.length - 1;
-      return `<div class="welcome">
+      const am = assistSettings(f).mode;
+      return `<div class="panel tight" style="margin-bottom:8px"><div class="row between" style="flex-wrap:wrap;gap:6px"><b>How much help would you like?</b><span class="chips" role="radiogroup" aria-label="Coach Assist">${ASSIST_MODES.map((m) => `<button class="chip ${am === m ? 'on accent' : ''}" role="radio" aria-checked="${am === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}</button>`).join('')}</span></div><div class="dim" style="margin-top:4px">${esc(ASSIST_MODE_TEXT[am].text)} Change it any time in Settings or from ? Help.</div></div><div class="welcome">
         <div class="row" style="gap:12px;align-items:flex-start">${portraitSprite('commissioner', 72, { hue: 40 })}<div class="grow"><div class="talk-name">The Commissioner</div><div class="dim">League office · ${esc(f.club)}</div></div></div>
         <div class="stack" style="margin-top:12px">${shown.map((b, i) => `<div class="talk ${i === beat ? 'fresh' : ''} ${b.ominous ? 'ominous' : ''}"><p class="talk-line">${b.text}</p></div>`).join('')}</div>
         <button class="btn primary big block" data-action="${last ? 'enter' : 'more'}" style="margin-top:12px">${last ? 'Enter headquarters →' : 'Continue'}</button>
@@ -114,6 +116,7 @@ export function registerOnboardingScreens(Router, app) {
       delegate(root, {
         more: () => { beat += 1; Router.render(); const fresh = root.querySelector('.talk.fresh'); fresh?.scrollIntoView?.({ block: 'end', behavior: 'smooth' }); },
         enter: () => { ctx.f.welcomed = true; beat = 0; app.save(); Router.go('hq', {}, { reset: true }); },
+        'assist-mode': (el) => { setAssist(ctx.f, { mode: el.dataset.v }); app.save(); Router.render(); },
       });
     },
   });
