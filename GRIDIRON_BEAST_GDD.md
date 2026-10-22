@@ -475,7 +475,7 @@ The owner's full-season report. All LOCKED unless marked.
 
 * **17.2 Package rule and forfeits.** A depth-chart slot may be filled only by a monster whose primary or secondary position matches it (`SECONDARY_ELIGIBILITY`): a healthy reserve first, else a base starter who sits out in the packages that use the slot (SS ← LB2, DL3 ← LB2/FS, WR3 ← TE, C ← WR2). Base starters are filled across every group before package slots. A package slot nobody legal can fill makes every play using that package unavailable (greyed in the game plan and the match, never called by Auto or the AI). A game is a **forfeit** (0–21 loss, no stats, no XP, in the standings) only when the base seven or the kicker cannot be fielded legally, or every play in a side's plan needs a package that cannot be fielded. Out-of-position monsters carry **1.75×** injury risk in games and practice, stated on the assign screen.
 * **17.3 Attribute points.** Level-ups keep the automatic +1s and bank **2 points** (`POINTS_PER_LEVEL`) the owner spends on the monster card, capped by potential, **only on an attribute that helps the monster's position** (§8.2; revised 2026-10-21, it was any attribute). A setting lets the trainer spend them. AI monsters regenerate each season (no points to spend).
-* **17.4 The board.** Before each season (and at creation) the commissioner offers three goals scaled to the preseason forecast — safe (win N, never more than 7 of 9 so a contender's safe goal stays easier than the title), medium (playoffs, or badges when the forecast is poor), stretch (the Beast Bowl, worth +2). Winning the Beast Bowl meets whatever goal was set: the champion is never fired. One commitment per season, settled at season end into **board confidence**: +1 per goal met (+2 title), −1 per miss; a met goal also lifts any deficit to 0 and funds one extra prospect every Monday next season. At −1 the owner is on the **hot seat** (rival GM needles, the postseason story event fires even on a winning record); at −2 the board **fires** the owner: the franchise ends (a Hall of Fame card only if already eligible). Nothing else in the game can end a franchise. Currency chosen so goals do not pile onto the cap (already four features) or the dex.
+* **17.4 The board.** *(Forecast, goals and dismissal rules revised 2026-10-22: see §29.2, which governs where it differs from this paragraph.)* Before each season (and at creation) the commissioner offers three goals scaled to the preseason forecast — safe (win N, never more than 7 of 9 so a contender's safe goal stays easier than the title), medium (playoffs, or badges when the forecast is poor), stretch (the Beast Bowl, worth +2). Winning the Beast Bowl meets whatever goal was set: the champion is never fired. One commitment per season, settled at season end into **board confidence**: +1 per goal met (+2 title), −1 per miss; a met goal also lifts any deficit to 0 and funds one extra prospect every Monday next season. At −1 the owner is on the **hot seat** (rival GM needles, the postseason story event fires even on a winning record); at −2 the board **fires** the owner: the franchise ends (a Hall of Fame card only if already eligible). Nothing else in the game can end a franchise. Currency chosen so goals do not pile onto the cap (already four features) or the dex.
 * **17.5 Season flow.** When the playoffs are drawn: a **season recap** (record, standing, club leaders, badges, the goal, the league awards, and the playoff announcement with seed and first opponent, or "missed"). Awards news lands at that moment. An eliminated or non-qualified owner **watches the bracket** round by round (results sheet per round) or skips to the offseason. When the season ends: **how we finished** (elimination round or title, playoff record, board verdict, Hall of Fame progress, the awards book). The HQ button reads *Continue to the offseason*.
 * **17.6 Scouting for depth.** Monday shows every position as short / no backup / ok, lets the owner ask the scout for a position, and the scout otherwise targets the thinnest; prospects are outlined red (short-handed) or orange (no backup) with the reason.
 * **17.7 Rival presence.** An HQ rival card every week: standings gap, head-to-head (all-time and this season), next meeting, and a weekly line from the rival GM keyed to who is ahead and to rivalry week.
@@ -885,7 +885,7 @@ Engine hooks used by the permanent table: `arrivalCond`, `refusedEffect`, `hitMu
 
 Tuesday's recruiting pitch is replaced by an encounter with one of the monsters the scout found on Monday. **Encounters are 3v3** (owner, 2026-10-22: briefly changed to 1v1 on 2026-10-21, then restored to 3v3).
 
-- **Enter Beast Clash:** choose one prospect; the battle is up to 3v3 (smaller only when fewer healthy roster monsters or fewer prospects exist). The wild side is the chosen monster in front with the other prospects found that week as its companions. **Win:** the monster offers to sign; the player may accept (the usual roster-limit release and salary-cap rules apply, exactly as before) or let it go. **Lose:** one ordinary recruiting pitch (development / facilities / playing time) at the existing odds; a refusal ends the day. Either way the battlers earn Arena XP and 5 fatigue. With the automatic lineup the player wins about 80% of encounters (121 of 150 seeded tests).
+- **Enter Beast Clash:** choose one prospect; the battle is up to 3v3 (smaller only when fewer than three roster monsters are healthy). The wild side is the chosen monster in front with **two wild companions** (revised 2026-10-22, §29.1; before, the week's other prospects were its companions). Companions cannot be signed; the wild group as a whole is matched to the club's strength, and the prospect keeps every rating it was scouted with. **Win:** the monster offers to sign; the player may accept (the usual roster-limit release and salary-cap rules apply, exactly as before) or let it go. **Lose:** one ordinary recruiting pitch (development / facilities / playing time) at the existing odds; a refusal ends the day. Either way the battlers earn Arena XP and 5 fatigue. With the automatic lineup the player wins about four encounters in five in every season (§29.1).
 - **Skip encounter:** no battle, no signing this week, and nothing else changes: no morale, board confidence or progression penalty. The screen says so in plain words, and the Help sheet explains the difference from *Skip to results*.
 - One encounter per Tuesday. Staff auto-run enters an encounter only for a clear upgrade (the same criterion as before) and plays it in Auto; otherwise it skips.
 - The final regular-season week and the playoffs keep Monday draft scouting and the Tuesday recovery day; no encounters then.
@@ -995,4 +995,63 @@ Do not confuse **documented**, **approved for roadmap**, **authorized to impleme
 
 For each new roadmap feature: first record exact behavior and unresolved decisions, then owner approval for implementation, then isolated development, tests, save compatibility, mobile playtest, and regression checks. Do not launch phases concurrently. **Priority:** Beast Clash and existing franchise stability → Coach Assist → monster history and partnerships → trading and AI → optional long-term features. Polish is not a substitute for functional completion.
 
+## 29. Tuesday difficulty and Board fairness (IMPLEMENTED 2026-10-22, owner authorization; branch `tuesday-board-balance`)
+
+### 29.1 Tuesday wild companions
+**Why encounters got too easy.** The wild side was the chosen prospect plus the other prospects scouted that week. Prospects are generated at a fixed quality (about 58 OVR in every season), while the club's automatic lineup averages about 72 in season 1 and climbs as monsters level, are drafted and are signed. The gap grew every season: the automatic lineup won 94% in season 1 and 98–100% from season 3 (tools/tuesday-study.mjs, original rule).
+
+**Rule.** One encounter per Tuesday, 3v3. The chosen prospect leads, exactly as scouted. Two **wild companions** fight beside it:
+- *Strength:* the wild group (prospect + companions) averages the club's **battle strength** minus `COMPANION_RULE.gap` = 9 OVR. Battle strength is the average overall of the club's automatic 3v3 lineup, healthy monsters only. Companions make up for a weak or strong prospect (a ±2 spread), but never fight above the club's battle strength and never below 50. Scaling follows the roster, so it follows franchise progression.
+- *Fairness:* the chosen lineup never changes the companions; fielding weaker monsters cannot make the battle easier.
+- *Identity:* companions are species from the scouted region, named "Wild <species>", marked *cannot sign*, never added to the roster, the pool or the Beast Dex.
+- *Determinism:* companions come from their own seed (franchise seed, season, week, prospect), so the preview equals the battle and the franchise generator is not touched. Battles keep their lineup snapshots, so replays and older saves rebuild exactly; a Tuesday saved before the change simply meets companions under the new rule.
+- Beast Clash values 1.1.0, recruitment rewards (win → offer, loss → one pitch), Play / Auto / Skip to Results and Skip Encounter are unchanged.
+
+**Results** (validation run: 6 hands-off franchises × 5 seasons on every difficulty, every prospect each week, 2,888 battles under the revised rule; both rules on the same weeks and battle seeds; the gap was tuned on a separate set of franchises):
+
+| Lineup | Original rule | Revised rule |
+|---|---|---|
+| Automatic | 96% | **83%** |
+| Strongest three | 99% | 90% |
+| Average three | 66% | 28% |
+| Weakest three | 19% | 4% |
+
+By season (automatic lineup, revised): season 1 83%, 2 81%, 3 86%, 4 82%, 5 84% (original rule: 89%, 94%, 96%, 99%, 100%). By difficulty: Rookie 92%, Pro 82%, All-Star 77% (two franchises each, so this split is noisy; the companions do not depend on difficulty). The lineup choice matters more than before: the three weakest monsters rarely win, which is the intended cost of fielding them.
+
+### 29.2 Board expectations and dismissal
+**Why owners with winning records were fired.**
+1. *The forecast was absolute.* Each club's forecast was 0.5 + 0.025 × (team overall − 60). Real leagues run at 63–69 average overall (higher on All-Star), so the forecast overstated nearly every club: on average by about 1 win, and by 2.4 wins on All-Star.
+2. *The safe goal added a win on top* for any club forecast at .550 or better. Owners committed to "safe" goals met them only 37% of the time.
+3. *Dismissal ignored the margin.* Two net misses ended a franchise, whether the club went 1-8 or 6-3.
+4. *The badge goal could be impossible.* It counted every gym on the schedule, including gyms whose badge the owner already held (a badge is won once).
+
+On identical seasons, the original rules dismissed 25 of 36 hands-off owners within five seasons: Rookie 4/12, Pro 9/12, All-Star 12/12. Nine of them had a winning record in their last season.
+
+**Rules (BOARD_RULES in `src/franchise/board.js`).**
+- *Forecast:* 0.5 + 0.035 × (team overall − this season's league average overall), kept between .15 and .85. The slope is calibrated on simulated seasons (0.0365 measured). The awards' Coach of the Year expectations are unchanged.
+- *Goals:* the safe goal is the rounded forecast (at least 2, at most 7 of 9). The medium goal is the playoffs for a club forecast at .450 or better. Below that it is **one** badge from a gym on the schedule whose badge the owner does not hold yet; with none left, the playoffs. The title is unchanged (+2).
+- *Confidence:* a met goal gives +weight and lifts any deficit to 0 first; a miss is −1; the hot seat is −1 and dismissal −2, as before. Two changes:
+  - A **narrow miss** on the hot seat is a **final warning**: the owner stays at −1. A narrow miss is within one win of a wins goal, or a season at or above the forecast for any goal.
+  - **Three missed seasons in a row end a franchise however narrow the misses** (sustained underperformance).
+- A Beast Bowl title still meets any goal.
+- *Transparency:* the goal screen states the forecast "against this league" and the rules. Each verdict names the wins, the forecast and the reason. The goal history marks narrow misses.
+- *Older saves:* the miss streak is rebuilt from the Board history; old history entries simply lack the new fields.
+
+**Results.**
+- *Replay* (tools/board-replay.mjs) on the same 180 simulated seasons (36 hands-off franchises × 5, safe goal every year):
+
+  | | Original | Revised |
+  |---|---|---|
+  | Dismissed within five seasons | 25/36 (69%) | 7/36 (19%) |
+  | Rookie / Pro / All-Star | 4/12 · 9/12 · 12/12 | 2/12 · 1/12 · 4/12 |
+  | Safe goals met | 37% | 67% |
+  | Average Board confidence | −0.04 | +0.97 |
+  | Dismissed after a winning season | 9 | 1 (5-4, 5-4, 5-4 against forecasts of 6.0–6.3) |
+  | Owners with two or more seasons at least two wins under forecast who were dismissed | 8/8 | 3/3 |
+
+  Every revised dismissal was three missed seasons in a row. All seven had sustained records under their forecasts (for example 3-6, 3-6, 3-6 against 4.0).
+- *Live* (the real Board deciding, same seeds as the first twelve franchises of the replay): 1 of 12 owners dismissed (All-Star: 4-5, 2-7, 3-6, 2-7). The original rules dismissed 8 of those 12 on the same seasons.
+- *Goal choice still matters:* an owner who commits to the title every season is dismissed almost always under either rule; the playoffs/badge goal sits between the two.
+
+**Unintended effects checked.** The Board only touches goals, confidence, the scouting bonus and the hot-seat story event, so the football, recruitment and draft are unaffected. More met goals mean more seasons with the scouting department's extra prospect. The forecast change does not alter awards or club strength.
 
