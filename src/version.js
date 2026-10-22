@@ -1,3 +1,3 @@
 // Build label shown in Settings and on the main menu, so a playtest report can say which build it saw.
-export const BUILD = Object.freeze({ version: 'v33.1-stat-guide', date: '2026-10-21', branch: 'beast-clash-p1' });
+export const BUILD = Object.freeze({ version: 'v34.0-coach-assist', date: '2026-10-22', branch: 'franchise-acceptance-coach-assist' });
 export const buildLabel = () => `${BUILD.version} · ${BUILD.date}`;

@@ -725,7 +725,7 @@ export function signFreeAgent(f, id) {
   const entry = offseasonMarket(f).find((e) => e.monster.id === id); if (!entry) return { ok: false, reason: 'Not on the market.' };
   const m = entry.monster; m.salary = salaryFor(m); m.contract = newContract(f.season.year + 1);
   if (entry.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } } else f.offseason.market = f.offseason.market.filter((x) => x !== m);
-  m.joined = f.season.year + (f.offseason ? 1 : 0); f.roster.push(m); dexRecord(f, m, 'signed');
+  uniqueName(f, m); m.joined = f.season.year + (f.offseason ? 1 : 0); f.roster.push(m); dexRecord(f, m, 'signed');
   const cap = salarySummary(f);
   news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed as a free agent${cap.over ? ', over the cap; the commissioner will review in week 1' : ''}.`, cap.over ? 'loss' : 'roster');
   return { ok: true, overCap: cap.over };
@@ -771,7 +771,7 @@ export function beginDraft(f) {
   return { ok: true, draft: f.draft };
 }
 function runDraftToMe(f) { const { r, save } = frng(f); const made = draftAdvance(f, r, { playerClub: f.club }); save(); return made; }
-export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}), rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
+export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; uniqueName(f, r.monster); dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}), rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
 export function passDraftPick(f) { const r = draftPassPick(f, { playerClub: f.club }); if (!r.ok) return r; runDraftToMe(f); return r; }
 export const draftDone = (f) => !f.draft || f.draft.year !== f.season.year || f.draft.done;
 // ------------------------------------------------------------ draft-pick trading (GDD §19.6)
@@ -816,7 +816,7 @@ export function acceptTrade(f, offer) {
   const c = checkGive(f, offer.give); if (!c.ok) return c;
   if (offer.get?.player && !canTakePlayer(f)) return { ok: false, reason: `Roster full (${ROSTER_MAX}).` };
   const year = f.season.year; const nextYear = f.draft?.creation ? year : year + 1;
-  const got = executeTrade(f, offer, { club: f.club, year, nextYear });
+  const got = executeTrade(f, offer, { club: f.club, year, nextYear }); if (got.player) uniqueName(f, got.player);
   if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster'); }
   else news(f, `Trade: ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} to ${offer.team} for ${got.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}.`, 'roster');
   if (f.draft?.started && !f.draft.done) runDraftToMe(f); // if the pick on the clock went out, the new holder uses it now
@@ -852,7 +852,7 @@ export function answerTradeCall(f, accept) {
   const src = aiTeam(f, c.team).roster.find((m) => m.id === c.playerId); if (!src) { f.tradeCall = null; return { ok: false, reason: `${c.player.name} is no longer with the ${c.team}.` }; }
   const year = f.season.year; const nextYear = f.offseason || f.season.finished ? year + 1 : year; // in season he joins now, on a deal starting this year
   const got = executeTrade(f, { team: c.team, give: c.give, get: { player: src } }, { club: f.club, year, nextYear });
-  f.tradeCall = null; dexRecord(f, got.player, 'signed');
+  f.tradeCall = null; uniqueName(f, got.player); dexRecord(f, got.player, 'signed');
   const cap = salarySummary(f);
   news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from the ${c.team} for ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster');
   checkAchievements(f, 'trade');
@@ -1016,12 +1016,12 @@ export const RECRUIT_APPROACHES = Object.freeze([
 ]);
 /** No two monsters on one club share a display name (the species name gets a numeral). */
 export function uniqueName(f, m, extra = []) {
-  const taken = new Set([...f.roster.map((x) => x.name), ...extra]);
+  const taken = new Set([...f.roster.filter((x) => x !== m && x.id !== m.id).map((x) => x.name), ...extra]);
   if (!taken.has(m.name)) return m;
   const roman = ['II', 'III', 'IV', 'V', 'VI'];
   const base = speciesName(m);
   for (const n of roman) { const cand = `${base} ${n}`; if (!taken.has(cand)) { m.name = cand; return m; } }
-  m.name = `${base} ${f.roster.length + 1}`; return m;
+  for (let k = 7; ; k++) { const cand = `${base} ${k}`; if (!taken.has(cand)) { m.name = cand; return m; } }
 }
 /** Who could be released to make room/cap for a prospect (never the only one at a position, never a cornerstone). */
 export function releaseCandidates(f, prospect) {
@@ -1064,7 +1064,7 @@ function signProspect(f, p, releaseId) {
   if (releaseId) { const out = f.roster.find((x) => x.id === releaseId); if (out) { f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); } }
   m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
   if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
-  m.joined = f.season.year; f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
+  uniqueName(f, m); m.joined = f.season.year; f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
   news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
   const cap = salarySummary(f);
   if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
@@ -1253,6 +1253,17 @@ export function scoutOpponent(f, side) {
   f.week.scoutReport = report; f.season.day = 4;
   return { ok: true, report };
 }
+/**
+ * The plan Friday starts from: this week's plan, else last week's, keeping only plays still in the playbook (a new coordinator
+ * brings a different catalog), topped up from the coordinators' default to exactly PLAN_SIZE. Found by the acceptance walkthrough:
+ * a stale play blocked "Save game plan" and the staff's auto-run alike.
+ */
+export function startingPlan(f, side) {
+  const cat = catalog(f, side); const base = (f.week?.plan?.[side]?.length ? f.week.plan[side] : f.lastPlan?.[side]) || [];
+  const plan = [...new Set(base)].filter((id) => cat.includes(id));
+  for (const id of [...defaultPlan(f, side), ...cat]) { if (plan.length >= PLAN_SIZE) break; if (!plan.includes(id)) plan.push(id); }
+  return plan.slice(0, PLAN_SIZE);
+}
 export function setGamePlan(f, offense, defense) {
   const catO = catalog(f, 'offense'), catD = catalog(f, 'defense');
   const o = [...new Set(offense)].filter((id) => catO.includes(id)), d = [...new Set(defense)].filter((id) => catD.includes(id));
@@ -1349,7 +1360,7 @@ export function autoRunToSunday(f) {
     }
     else if (day === 2) { const order = ['passing', 'rushing', 'coverage', 'pass_rush']; const last = (f.trainingHistory || []).slice(-1)[0]; const focus = order[(order.indexOf(last) + 1) % order.length]; const r = setTraining(f, focus, 'normal'); did.push(`${TRAINING_FOCI[focus].label} practice ${r.success ? 'went well' : 'was sloppy'}${r.injury ? `; ${r.injury.name} hurt` : ''}`); }
     else if (day === 3) { const opp = opponentName(f); const side = opp ? (teamStrengths(aiTeam(f, opp)).passD < teamStrengths(aiTeam(f, opp)).runD ? 'defense' : 'offense') : 'offense'; scoutOpponent(f, side); did.push(opp ? `Scouted ${opp}'s ${side}` : 'Bye week'); }
-    else if (day === 4) { const o = f.week.plan.offense.length ? f.week.plan.offense : (f.lastPlan?.offense || defaultPlan(f, 'offense')); const d = f.week.plan.defense.length ? f.week.plan.defense : (f.lastPlan?.defense || defaultPlan(f, 'defense')); setGamePlan(f, o, d); did.push('Coordinators set the game plan'); }
+    else if (day === 4) { setGamePlan(f, startingPlan(f, 'offense'), startingPlan(f, 'defense')); did.push('Coordinators set the game plan'); }
     else if (day === 5) { const qs = mediaQuestions(f); answerMedia(f, qs.map((q) => Math.max(0, q.a.findIndex((a) => a.t === 'steady' || a.t === 'calm')))); did.push('Press conference: safe answers'); }
   }
   news(f, `Staff ran the week: ${did.join(' · ')}.`, 'info');

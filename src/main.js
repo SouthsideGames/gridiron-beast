@@ -5,7 +5,8 @@ import * as Save from './franchise/save.js';
 import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof, cloudLoadAchievements, cloudSaveAchievements } from './franchise/cloud-save.js';
 import { setAchievementMirror, mergeAchievements, achievementsData } from './franchise/achievement-store.js';
 import { setHofMirror, mergeHof, hallOfFame } from './franchise/hall-of-fame.js';
-import { tipHtml, maybeSheetTip, initTutorial } from './ui/tutorial.js';
+import { tipHtml, maybeSheetTip, initTutorial, helpButtonHtml } from './ui/tutorial.js';
+import { openStatGuide } from './ui/stat-guide.js';
 import * as F from './franchise/franchise.js';
 import { setDexMirror, mergeDex, dexData } from './franchise/dex-store.js';
 import { $, toast } from './ui/dom.js';
@@ -51,8 +52,8 @@ function tabs(ctx, screenName) {
 export function start() {
   globalThis.__gb = app; // test hook: the UI check reaches the franchise state through it
   Router.init({ root: $('#app'), context: () => ({ app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }), tabs,
-    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { if (ctx.f) maybeSheetTip(ctx.f, name, () => app.save()); } });
-  initTutorial({ app, Router });
+    tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { if (ctx.f) maybeSheetTip(ctx.f, name, () => app.save()); }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
+  initTutorial({ app, Router, openStats: () => openStatGuide() });
   registerMenuScreens(Router, app);
   registerOnboardingScreens(Router, app);
   registerHqScreens(Router, app);
