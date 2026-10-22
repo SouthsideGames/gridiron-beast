@@ -6,8 +6,8 @@
 import { CLASH_VALUES } from './values.js';
 import { typeFactor } from './types.js';
 
-export const POLICIES = Object.freeze(['none', 'defensive', 'type', 'balanced', 'smart']);
-export const POLICY_LABEL = Object.freeze({ none: 'Never swaps', defensive: 'Swaps out below 30% HP', type: 'Swaps for a type edge', balanced: 'Weighs HP, type and condition', smart: 'Gate B.2 test opponent: swaps only when the incoming monster is expected to gain more than the swap costs' });
+export const POLICIES = Object.freeze(['none', 'defensive', 'type', 'balanced', 'smart', 'manual']);
+export const POLICY_LABEL = Object.freeze({ none: 'Never swaps', defensive: 'Swaps out below 30% HP', type: 'Swaps for a type edge', balanced: 'Weighs HP, type and condition', smart: 'Gate B.2 test opponent: swaps only when the incoming monster is expected to gain more than the swap costs', manual: 'The player decides each voluntary swap (franchise battles); the engine records the decision points' });
 
 /** Returns the bench monster to bring in, or null. `front`, `bench` and `foe` are live engine records. */
 export function chooseSwap(policy, { front, bench, foe, rng }) {

@@ -51,8 +51,12 @@ test('the weekly loop: scout, recruit, train, scout opponent, plan, lineup', () 
   const f = newFranchise(11);
   const s = F.scoutRegion(f, 'Volcanic Fields');
   assert.equal(s.ok, true); assert.ok(s.prospects.length >= 1); assert.equal(f.season.day, 1);
+  // Tuesday is a Beast Clash encounter (GDD §26.1): a pitch is only possible after a lost battle.
+  assert.equal(F.recruit(f, 0, 'playing_time').ok, false, 'no pitch before the battle');
   let signed = false;
-  for (let i = 0; i < 3 && f.season.day === 1; i++) { const r = F.recruit(f, 0, 'playing_time'); if (r.success) signed = true; }
+  const st = F.startEncounter(f, 0); assert.ok(st.ok, st.reason); const b = F.resolveEncounter(f); assert.ok(b.ok);
+  if (b.won) { const r = F.acceptOffer(f); assert.ok(r.ok, r.reason); signed = true; }
+  else { const r = F.recruit(f, 0, 'playing_time'); assert.ok(r.ok, r.reason); if (r.success) signed = true; }
   assert.equal(f.season.day, 2);
   if (signed) assert.equal(f.roster.length, 29);
   const t = F.setTraining(f, 'passing'); assert.equal(t.ok, true); assert.ok(t.amount >= 1); assert.equal(f.season.day, 3);
@@ -766,9 +770,10 @@ test('attribute points: level-ups bank 2 points, spent by hand up to potential, 
   const { createRng } = await import('../src/core/rng.js');
   const f = newFranchise(71); const m = f.roster[0]; const rng = createRng(3);
   levelUp(m, rng); assert.equal(m.points, POINTS_PER_LEVEL);
-  const k = Object.keys(m.attributes).find((a) => m.attributes[a] < m.potential); const before = m.attributes[k];
+  const { attributeHelps } = await import('../src/data/stat-guide.js');
+  const k = Object.keys(m.attributes).find((a) => m.attributes[a] < m.potential && attributeHelps(m.position, a)); const before = m.attributes[k];
   assert.equal(F.spendAttributePoint(f, m.id, k).ok, true); assert.equal(m.attributes[k], before + 1); assert.equal(m.points, 1);
-  m.attributes.kicking = m.potential; assert.equal(spendPoint(m, 'kicking').ok, false, 'capped at potential');
+  m.attributes[k] = m.potential; assert.equal(spendPoint(m, k).ok, false, 'capped at potential');
   autoSpendPoints(m, rng); assert.equal(m.points, 0);
   assert.equal(F.unspentPoints(f).length, 0);
   levelUp(m, rng, { autoSpend: true }); assert.equal(m.points, 0, 'auto-spent');

@@ -90,6 +90,7 @@ export function createArena(root, result, opts = {}) {
     return out;
   }
   function applyState(st, { instant = false } = {}) {
+    if (!root.isConnected || !root.querySelector('.cl-stage')) return; // destroyed (or unmounted) while a cue was in flight
     const sizes = sizesFor(sizeKey, stage.clientHeight || 440, isLandscape()); const H = stage.clientHeight || 440;
     for (const side of ['a', 'b']) {
       const slots = slotsFor(side, st);
@@ -120,7 +121,7 @@ export function createArena(root, result, opts = {}) {
     }
     $('.cl-ex b').textContent = String(st.ex); $('.cl-exbar i').style.width = `${Math.min(100, st.ex / 30 * 100)}%`;
     $('.cl-sd').textContent = st.ramp > 1 ? `⚡ Sudden death ×${st.ramp.toFixed(2)}` : ''; viewport.classList.toggle('sudden', st.ramp > 1);
-    $('[data-cl="scrub"]').value = String(st.i);
+    { const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(st.i); } // the host may have been emptied (destroy) mid-cue
     caption.textContent = result.log[st.i]?.text || '';
   }
 
@@ -196,6 +197,7 @@ export function createArena(root, result, opts = {}) {
 
   // ---- one cue
   async function playCue(cue) {
+    if (!root.querySelector('.cl-stage')) return;
     const e = cue.event; const D = cue.duration; const st = stateAt(result, cue.i);
     camera(cue.camera); setActing(e.actor && ['damage', 'heal', 'shield', 'miss', 'skip', 'buff', 'debuff'].includes(e.kind) ? e.actor : null, true);
     const name = cue.named ? byId[e.actor]?.combatant.move.name : null;
@@ -294,7 +296,7 @@ export function createArena(root, result, opts = {}) {
   function setCursor(i, { animate = false } = {}) { cancelAll(); cursor = Math.max(0, Math.min(n - 1, i)); applyState(stateAt(result, cursor), { instant: !animate }); opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); setButtons(); }
   async function runTo(target) {
     if (playing) return; playing = true; const my = ++token; setButtons();
-    while (playing && my === token && cursor < target) { cursor += 1; await playCue(cues[cursor]); opts.onCursor?.(cursor); $('[data-cl="scrub"]').value = String(cursor); }
+    while (playing && my === token && cursor < target) { cursor += 1; await playCue(cues[cursor]); if (my !== token) return; opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); }
     if (my === token) { playing = false; setButtons(); if (cursor >= n - 1) opts.onEnd?.(); }
   }
   function pause() { playing = false; token++; cancelAll(); applyState(stateAt(result, cursor), { instant: true }); setButtons(); }

@@ -23,6 +23,7 @@ import { teamOverall, buildDepthChart } from '../../franchise/roster.js';
 import { AWARD_RULES } from '../../franchise/awards.js';
 import { RIVAL_WEEKLY } from '../../data/dialogue.js';
 import { LEADER_CATEGORIES, leaders, statLine, RECORD_CATEGORIES, TEAM_RECORDS, ensureRecords, careerLeaders } from '../../franchise/stats.js';
+import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -140,7 +141,7 @@ export function registerHqScreens(Router, app) {
   });
   function nextAction(f) {
     const d = f.season.day;
-    if (f.game && !f.game.state?.finished) return { label: 'Resume game', action: 'resume', icon: '▶' };
+    if (f.game) return { label: f.game.state?.finished ? (f.game.state.needsTiebreak && !f.game.state.winner ? 'Overtime Beast Clash decides the game' : 'Finish the game') : 'Resume game', action: 'resume', icon: f.game.state?.finished && f.game.state.needsTiebreak && !f.game.state.winner ? '⚔️' : '▶' };
     if (F.creationDraftPending(f)) return { label: `Draft day · you hold the #${f.draft.lotterySlot} pick`, action: 'draft', icon: '🎓' };
     if (F.needsGoal(f)) return { label: "Meet the commissioner · this season's goal", action: 'goals', icon: '🎯' };
     if (F.draftWindow(f) && d === 0) return { label: `Monday · Scout the draft class`, action: 'scoutdraft', icon: '🎓' };
@@ -149,7 +150,7 @@ export function registerHqScreens(Router, app) {
     if (f.week.commissioner) return { label: "The commissioner's office", action: 'commissioner', icon: '🏛️' };
     if (F.isBye(f) && d >= 3 && d < 6) return { label: 'Bye week · rest until Sunday', action: 'restbye', icon: '😴' };
     if (d === 6) { if (F.isBye(f)) return { label: 'Take the bye week', action: 'bye', icon: '😴' }; const m = F.sundayMatchup(f); if (m?.forfeit) return { label: 'Forfeit the game (no legal lineup)', action: 'forfeit', icon: '🏳️', note: m.forfeitReason }; return { label: 'Play Sunday game', action: 'game', icon: '🏈' }; }
-    return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Recruit', action: 'recruit', icon: '🤝' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
+    return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Monster encounter', action: 'recruit', icon: '⚔️' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
   }
 
   // ---------------------------------------------------------------- the commissioner's office (GDD §15.6)
@@ -440,36 +441,29 @@ export function registerHqScreens(Router, app) {
     mount(root) { delegate(root, { region: (el) => { const focus = root.querySelector('#scout-focus')?.value || null; const r = F.scoutRegion(app.f, el.dataset.v, { focus }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.scout} found ${r.prospects.length} prospect${r.prospects.length === 1 ? '' : 's'}.`, 'good'); Router.go('recruit', {}, { replace: true }); } }); },
   });
 
-  // ---------------------------------------------------------------- Tuesday
+  // ---------------------------------------------------------------- Tuesday: Monster Encounters (Beast Clash, GDD §26.1)
   Router.registerScreen('recruit', {
-    title: 'Tuesday · Recruiting',
+    title: 'Tuesday · Monster Encounter',
     render({ f }) {
-      if (f.season.day !== 1) return `<div class="panel"><p>Recruiting is done for this week.</p>${f.week.recruited ? `<p class="muted">Signed: ${esc(f.roster.find((m) => m.id === f.week.recruited)?.name || '')}</p>` : ''}<button class="btn block" data-action="back">Back</button></div>`;
-      if (!f.week.prospects.length) return `<div class="panel"><p>No prospects were found this week.</p><button class="btn primary block" data-action="skip">Continue to Wednesday</button></div>`;
-      const cap = F.salarySummary(f);
-      return `<p class="muted">Attempts left: <b>${3 - f.week.recruitAttempts}</b> · Roster ${f.roster.length}/${F.ROSTER_MAX} · Cap room ${fmtMoney(cap.remaining)}</p>
+      const e = f.week.encounter;
+      if (f.season.day !== 1) return `<div class="panel"><p>Tuesday is done for this week.</p>${f.week.recruited ? `<p class="muted">Signed: ${esc(f.roster.find((m) => m.id === f.week.recruited)?.name || '')}</p>` : e?.status === 'skipped' ? '<p class="muted">You skipped the encounter.</p>' : ''}<button class="btn block" data-action="back">Back</button></div>`;
+      if (e && e.status !== 'ready') { setTimeout(() => Router.go('clash-battle', { kind: 'encounter', i: e.prospectIndex }, { replace: true }), 0); return '<p class="muted">Opening the battle…</p>'; }
+      if (!f.week.prospects.length) return `<div class="panel"><p>No monsters were found this week.</p><button class="btn primary block" data-action="skip">Continue to Wednesday</button></div>`;
+      const cap = F.salarySummary(f); const healthy = f.roster.filter((m) => !m.injury).length;
+      return `<p class="muted">Your scout found these monsters. Pick <b>one</b> and send <b>one</b> of your own monsters to face it in a one-on-one Beast Clash: win and it will want to sign; lose and you still get one pitch. Or skip the encounter and move on. <button class="btn small ghost" data-action="clashhelp">Help</button></p>
+        <p class="dim">Roster ${f.roster.length}/${F.ROSTER_MAX} · cap room ${fmtMoney(cap.remaining)} · ${healthy} monster${healthy === 1 ? '' : 's'} fit to battle</p>
         <div class="stack">${f.week.prospects.map((p, i) => prospectCard(p, i)).join('')}</div>
-        <button class="btn block" data-action="skip" style="margin-top:8px">Pass on all prospects</button>`;
+        <button class="btn block" data-action="skip" style="margin-top:8px">Skip the encounter</button>
+        <p class="dim">Skipping means no battle and no signing this week. Nothing else is lost: no morale, no board confidence, no progress.</p>`;
     },
     mount(root) {
       delegate(root, {
         back: () => Router.back(),
-        skip: () => { F.skipRecruit(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
+        clashhelp: () => sheet(CLASH_HELP, { title: 'How Beast Clash works' }),
+        skip: () => { F.skipEncounter(app.f); app.save(); toast('Encounter skipped. On to Wednesday.'); Router.go('hq', {}, { reset: true }); },
         compare: (el) => { const p = app.f.week.prospects[Number(el.dataset.i)]; if (p) sheet(compareHtml(app.f, p), { title: `${p.monster.name} vs your ${p.monster.position}s` }); },
-        approach: async (el) => {
-          const i = Number(el.dataset.i), v = el.dataset.v; const p = app.f.week.prospects[i]; const rc = p ? F.releaseCandidates(app.f, p) : { needed: false };
-          if (!rc.needed && rc.capWarning && !app.f.week.capWarned) { app.f.week.capWarned = true; if (!(await confirmSheet(`Signing ${p.monster.name} puts you over the salary cap. The commissioner reviews the books every Saturday; if you are still over, he names monsters and you release one for nothing. Sign anyway?`, { title: 'Over the cap', okLabel: 'Sign anyway', danger: true }))) { app.f.week.capWarned = false; return; } }
-          if (rc.needed) {
-            const { el: sh, close } = sheet(`<p>${esc(rc.reason)} Choose who leaves if <b>${esc(p.monster.name)}</b> signs (nothing happens if they turn you down).</p><div class="list">${rc.list.map((c) => `<button class="item" data-rel="${c.id}"><div class="grow"><div class="name">${esc(c.name)}</div><div class="sub">${c.position} · ${c.ovr} OVR · ${fmtMoney(c.salary)}/yr${c.capOk ? '' : ' · still over the cap after this'}</div></div><span class="chip ${c.position === p.monster.position ? 'accent' : ''}">${c.position === p.monster.position ? 'same position' : 'release'}</span></button>`).join('') || '<p class="dim">Nobody can be released.</p>'}</div>`, { title: 'Make room' });
-            sh.addEventListener('click', (e) => { const id = e.target.closest('[data-rel]')?.dataset.rel; if (!id) return; close(); doApproach(i, v, id); });
-            return;
-          }
-          doApproach(i, v, null);
-        },
+        enter: (el) => { const i = Number(el.dataset.i); const pv = F.encounterPreview(app.f, i); if (!pv.ok) { toast(pv.reason, 'bad'); return; } Router.go('clash-battle', { kind: 'encounter', i }); },
       });
-      function doApproach(i, v, releaseId) {
-        { const r = F.recruit(app.f, i, v, { releaseId }); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (r.success) { toast(r.overCap ? `${r.monster.name} signed. You are over the cap: the commissioner reviews the books on Saturday.` : `${r.monster.name} signed!`, r.overCap ? 'bad' : 'good'); Router.go('hq', {}, { reset: true }); } else { toast(r.final ? 'They declined. No attempts left this week.' : 'Not convinced yet. Try another approach.', r.final ? 'bad' : 'info'); if (r.final) Router.go('hq', {}, { reset: true }); else Router.render(); } }
-      }
     },
   });
   /** Prospect vs the club's monsters at the same position: headline ratings, OVR, age, salary, and where they'd slot in. */
@@ -490,7 +484,7 @@ export function registerHqScreens(Router, app) {
       verdict = !mates.length ? `You have no ${m.position} · ${esc(m.name)} would start immediately.` : rank < startSlots ? `<b>Would start</b> at ${m.position} (${rank + 1}${['st', 'nd', 'rd'][rank] || 'th'} best of ${mates.length + 1}).` : rank === startSlots ? `<b>First backup</b> at ${m.position}.` : `<b>Depth</b> · ${rank} ${m.position}${rank === 1 ? ' is' : 's are'} better.`;
     }
     const cap = F.salarySummary(f, m.salary);
-    return `${table}<p style="margin-top:10px">${verdict}</p><p class="muted">${startSlots} starting ${m.position} slot${startSlots === 1 ? '' : 's'} · Salary ${fmtMoney(m.salary)}/yr · cap room after signing ${cap.over ? `<span style="color:var(--bad)">over by ${fmtMoney(-cap.remaining)}</span>` : fmtMoney(cap.remaining)} · roster ${f.roster.length + 1}/26</p>${known < 4 ? `<p class="dim">?? = not yet scouted.</p>` : ''}`;
+    return `${table}<p style="margin-top:10px">${verdict}</p><p class="muted">${startSlots} starting ${m.position} slot${startSlots === 1 ? '' : 's'} · Salary ${fmtMoney(m.salary)}/yr · cap room after signing ${cap.over ? `<span style="color:var(--bad)">over by ${fmtMoney(-cap.remaining)}</span>` : fmtMoney(cap.remaining)} · roster ${f.roster.length + 1}/${F.ROSTER_MAX}</p>${known < 4 ? `<p class="dim">?? = not yet scouted.</p>` : ''}`;
   }
   function prospectCard(p, i) {
     const m = p.monster; const attrs = effectiveAttributes(m);
@@ -499,7 +493,7 @@ export function registerHqScreens(Router, app) {
     const depth = p.depth || (p.need ? 'short' : 'ok');
     return `<div class="panel ${fit?.fits ? 'fit' : ''} ${depth === 'short' ? 'need-short' : depth === 'thin' ? 'need-thin' : ''}">${depth !== 'ok' ? `<div class="fitchip-row"><span class="chip ${depth === 'short' ? 'bad' : 'warn'}">${depth === 'short' ? `Short-handed at ${esc(m.position)}` : `No backup at ${esc(m.position)}`}</span> <span class="dim">${p.need ? 'The scout went looking for this one.' : depth === 'short' ? 'One injury from an empty slot.' : 'One injury from a hole.'}</span></div>` : ''}${fit?.fits ? `<div class="fitchip-row"><span class="chip fitchip">✦ Fits your scheme</span> <span class="dim">${esc(fit.why)}</span></div>` : ''}<div class="row" style="flex-wrap:nowrap;align-items:flex-start">${monsterSprite(m, 52)}<div class="grow" style="flex:1;min-width:0"><b>${esc(m.name)}</b> ${typeGlyph(m.type)}<div class="muted">${m.position} · age ${m.age} · ${p.potentialKnown ? 'potential ' + m.potential : 'potential unknown'} · ${fmtMoney(m.salary)}/yr</div><div class="muted">Nature: ${p.natureKnown ? esc(NATURES[m.nature].name) : '???'}</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:none"><span class="ovr">${p.revealed >= 4 ? monsterOverall(m) : '??'}</span><button class="info-btn" data-action="compare" data-i="${i}" aria-label="Compare ${esc(m.name)} with your roster">i</button></div></div>
       <div class="headline" style="margin:8px 0">${HEADLINE.map((x, i) => `<div class="hl"><span class="hl-v">${i < known ? h[x.key] : '??'}</span><span class="hl-l">${x.label}</span><div class="bar"><i style="width:${i < known ? h[x.key] : 0}%"></i></div></div>`).join('')}</div>${known < 4 ? `<div class="dim">${4 - known} rating${4 - known === 1 ? '' : 's'} hidden, a better scout reveals more</div>` : ''}
-      <div class="grid3">${F.RECRUIT_APPROACHES.map((a) => `<button class="btn small" data-action="approach" data-i="${i}" data-v="${a.id}" title="${esc(a.text)}">${esc(a.label)}</button>`).join('')}</div></div>`;
+      <button class="btn primary block" data-action="enter" data-i="${i}">⚔️ Enter Beast Clash with ${esc(m.name)}</button></div>`;
   }
 
   // ---------------------------------------------------------------- Wednesday
@@ -672,7 +666,7 @@ export function registerHqScreens(Router, app) {
   function bracketHtml(f, p) {
     const abbr = (t) => TEAM_META[t]?.abbr || (t || '').slice(0, 3).toUpperCase();
     const seedOf = (t) => { for (const c of ['Aurora', 'Titan']) { const i = p.seeds[c].indexOf(t); if (i >= 0) return i + 1; } return ''; };
-    const winnerOf = (g) => g?.result ? (g.result.homeScore > g.result.awayScore ? g.home : g.away) : null;
+    const winnerOf = (g) => g?.result ? (g.result.winner || (g.result.homeScore > g.result.awayScore ? g.home : g.away)) : null;
     const scoreOf = (g, t) => !g?.result ? '' : t === g.home ? g.result.homeScore : g.result.awayScore;
     const light = (hex) => { const h = String(hex || '').replace('#', ''); if (h.length < 6) return false; const [r, g2, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); return 0.2126 * r + 0.7152 * g2 + 0.0722 * b > 0.55; };
     const cell = (t, g) => { if (!t) return '<div class="bk-team tbd"><span class="bk-seed"></span><span class="bk-abbr">TBD</span></div>'; const w = winnerOf(g); const col = TEAM_META[t]?.color || '#345'; return `<div class="bk-team ${t === f.club ? 'me' : ''} ${w && w !== t ? 'out' : ''} ${w === t ? 'won' : ''} ${light(col) ? 'lighttc' : ''}" style="--tc:${col}"><span class="bk-seed">${seedOf(t)}</span><span class="bk-abbr">${esc(abbr(t))}</span>${g?.result ? `<span class="bk-score">${scoreOf(g, t)}</span>` : ''}</div>`; };
@@ -726,7 +720,7 @@ export function registerHqScreens(Router, app) {
         return `<div class="panel tight"><b>Playoff picture</b> · Week ${wk}<div class="muted">Eight clubs make it: two division winners and two wild cards per conference. ${wk < 5 ? 'Early days, standings will move.' : F.playoffPicture(f).text}</div></div>${conf('Aurora')}${conf('Titan')}<p class="dim">Div = division leader · WC = wild card · GB = games back of the last spot.</p>`;
       }
       const rounds = [[1, 'Conference semifinals · Week 11'], [2, 'Conference championships · Week 12'], [3, 'Beast Bowl · Week 13']];
-      const game = (g) => { const w = g.result ? (g.result.homeScore > g.result.awayScore ? g.home : g.away) : null; const side = (t, score) => `<div class="po-row ${t === f.club ? 'me' : ''} ${w && w !== t ? 'lost' : ''}">${dot(t)}<span class="grow po-name">${esc(t)}${t === f.club ? ' <span class="chip accent">YOU</span>' : ''}</span><span class="mono po-rec">${score ?? ''}</span></div>`;
+      const game = (g) => { const w = g.result ? (g.result.winner || (g.result.homeScore > g.result.awayScore ? g.home : g.away)) : null; const side = (t, score) => `<div class="po-row ${t === f.club ? 'me' : ''} ${w && w !== t ? 'lost' : ''}">${dot(t)}<span class="grow po-name">${esc(t)}${t === f.club ? ' <span class="chip accent">YOU</span>' : ''}</span><span class="mono po-rec">${score ?? ''}</span></div>`;
         return `<div class="panel tight po-game"><div class="dim" style="font-size:12px">${esc(g.tag)}${g.result ? '' : ' · upcoming'}</div>${side(g.away, g.result?.awayScore)}${side(g.home, g.result?.homeScore)}</div>`; };
       return `${bracketHtml(f, p)}<h3>Games</h3>${rounds.map(([r, label]) => { const gs = p.fixtures.filter((g) => g.round === r); return gs.length ? `<h3>${label}</h3>${gs.map(game).join('')}` : ''; }).join('')}
         <h3>Seeds</h3>${['Aurora', 'Titan'].map((c) => `<div class="panel tight po-conf"><div class="po-head"><b>${c}</b></div>${p.seeds[c].map((t, i) => teamRow(t, i + 1)).join('')}</div>`).join('')}`;
@@ -868,7 +862,7 @@ function seasonRecapHtml(f) {
 }
 /** One playoff round's results, for the owner watching from the stands. */
 function roundResultsHtml(f, r) {
-  return `<div class="list">${r.results.map((g) => `<div class="item static"><div class="grow"><div class="name">${esc(g.away)} ${g.awayScore} @ ${esc(g.home)} ${g.homeScore}${g.ot ? ' (OT)' : ''}</div><div class="sub">${esc(g.winner)} advance${g.winner === f.club ? '' : ''}</div></div></div>`).join('')}</div>
+  return `<div class="list">${r.results.map((g) => `<div class="item static"><div class="grow"><div class="name">${esc(g.away)} ${g.awayScore} @ ${esc(g.home)} ${g.homeScore}${g.clash ? ` (OT · ${g.clash.size}v${g.clash.size} Clash)` : g.ot ? ' (OT)' : ''}</div><div class="sub">${esc(g.winner)} advance${g.winner === f.club ? '' : ''}</div></div></div>`).join('')}</div>
     ${r.champion ? `<div class="panel center" style="margin-top:8px"><div style="font-size:12px" class="muted">BEAST BOWL CHAMPIONS</div><div style="font-size:20px;font-weight:900">${esc(r.champion)}</div></div>` : `<p class="dim">Next: ${F.ROUND_NAMES[f.season.playoffs?.round] || ''}.</p>`}`;
 }
 /** Season done: how it ended, the board's verdict, campaign progress and the awards book (GDD §17.5). */

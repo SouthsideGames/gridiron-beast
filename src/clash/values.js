@@ -224,6 +224,8 @@ export function battleConfig(overrides = {}) {
     duration: overrides.duration || rs.duration,
     O1: !!overrides.O1, O2: !!overrides.O2,
     policies: Object.freeze({ a: overrides.policies?.a || 'none', b: overrides.policies?.b || 'none' }),
+    // Recorded player decisions for a 'manual' side: { a: { [exchange]: monsterId | 'stay' } }. Part of the config, so the replay key carries them.
+    decisions: deepFreeze({ a: { ...(overrides.decisions?.a || {}) }, b: { ...(overrides.decisions?.b || {}) } }),
     swapCost: overrides.swapCost || rs.swapCost,
     sdFromE: Number(overrides.sdFromE) || v.experiments.sdFromE.default,
     patches: Object.freeze([...new Set(overrides.patches || [])].sort()),

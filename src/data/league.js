@@ -106,13 +106,15 @@ export function teamSchedule(season, team) {
 
 // ------------------------------------------------------------ standings
 export function blankRecord() { return { w: 0, l: 0, t: 0, pf: 0, pa: 0, divW: 0, divL: 0, confW: 0, confL: 0, h2h: {} }; }
-export function applyResult(records, { home, away, homeScore, awayScore }) {
+/** Standings update. `winner` (a club name) settles a game whose football score is tied: the overtime Beast Clash decided it (GDD §26.3). Points for and against are always the football score. */
+export function applyResult(records, { home, away, homeScore, awayScore, winner = null }) {
   const h = records[home], a = records[away];
   const sameDiv = divisionOf(home) === divisionOf(away), sameConf = conferenceFor(divisionOf(home)) === conferenceFor(divisionOf(away));
   h.pf += homeScore; h.pa += awayScore; a.pf += awayScore; a.pa += homeScore;
   const win = (x, y) => { x.w++; y.l++; if (sameDiv) { x.divW++; y.divL++; } if (sameConf) { x.confW++; y.confL++; } };
-  if (homeScore > awayScore) { win(h, a); h.h2h[away] = (h.h2h[away] || 0) + 1; }
-  else if (awayScore > homeScore) { win(a, h); a.h2h[home] = (a.h2h[home] || 0) + 1; }
+  const w = homeScore > awayScore ? home : awayScore > homeScore ? away : winner;
+  if (w === home) { win(h, a); h.h2h[away] = (h.h2h[away] || 0) + 1; }
+  else if (w === away) { win(a, h); a.h2h[home] = (a.h2h[home] || 0) + 1; }
   else { h.t++; a.t++; }
 }
 const pct = (r) => (r.w + r.l + r.t) ? (r.w + r.t * 0.5) / (r.w + r.l + r.t) : 0;

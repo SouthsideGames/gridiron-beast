@@ -12,7 +12,7 @@ import * as ST from './special-teams.js';
 export const RUNOFF = { normal: 18, hurry: 8, milk: 30 };
 export const DEFAULT_QUARTER = 180;
 
-export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null }) {
+export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null, otPeriods = null }) {
   const rng = createRng(seed);
   const winner = coinWinner || (rng.chance(0.5) ? 'home' : 'away');
   const loser = winner === 'home' ? 'away' : 'home';
@@ -27,6 +27,9 @@ export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER,
     quarter: 1, quarterLength, clock: quarterLength,
     possession: firstReceiver, secondHalfReceiver: secondReceiver,
     coin: { winner, choice: pick },
+    // otPeriods: how many overtime periods football plays before a tie is handed back to the caller (null = until untied, the
+    // classic rule). Franchise Mode plays one, then settles the game outside the football engine (the caller sets `winner`).
+    otPeriods,
     ballOn: FIELD.touchbackKickoff, ballLat: 0, down: 1, toGo: 10,
     phase: 'kickoff', kickingTeam: firstReceiver === 'home' ? 'away' : 'home',
     timeouts: { home: 3, away: 3 },
@@ -517,6 +520,7 @@ export function otAfterPossession(state) {
     return;
   }
   if (state.score.home !== state.score.away) { finish(state); return; }
+  if (state.otPeriods && ot.period >= state.otPeriods) { finish(state); state.needsTiebreak = true; log(state, 'Still tied after overtime. The game goes to a tiebreaker.', 'period', { important: true }); return; }
   ot.period += 1; ot.possessionsLeft = 2; ot.first = opponent(ot.first);
   log(state, `Still tied, overtime period ${ot.period}.${ot.period >= 3 ? ' Two-point attempts only.' : ''}`, 'period');
   state.quarter = 4 + ot.period;

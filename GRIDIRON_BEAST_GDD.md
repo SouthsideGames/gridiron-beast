@@ -1,6 +1,6 @@
 # Gridiron Beast — Game Design Document (Current Design + Historical Build Record)
 
-> **CURRENT DESIGN / AUTHORITY NOTICE (2026-10-21).** Active Franchise Mode is **7-on-7 football**, **16 clubs**, **one league/campaign** (no Challenger/Vanguard/Sovereign promotion or relegation). The nine-game regular season plus bye, gym-badge campaign, Beast Bowl, Legend Tracks, Board, draft, contracts and awards are active. **32 clubs are a long-term expansion goal, not current implementation.** Section **26** is the approved feature roadmap and accessibility policy. Sections **1–23** contain historical build/playtest notes and must not override newer locked design. Section **24** (Career Mode) is **documentation-only**; its old references to 11-on-11 and league tiers are superseded. Section **25** governs Beast Clash. Git history retains previous revisions; maintain this file as the sole authoritative GDD.
+> **CURRENT DESIGN / AUTHORITY NOTICE (2026-10-21).** Active Franchise Mode is **7-on-7 football**, **16 clubs**, **one league/campaign** (no Challenger/Vanguard/Sovereign promotion or relegation). The nine-game regular season plus bye, gym-badge campaign, Beast Bowl, Legend Tracks, Board, draft, contracts and awards are active. **32 clubs are a long-term expansion goal, not current implementation.** Section **27** is the approved feature roadmap and accessibility policy; Section **26** records the implemented Beast Clash integration (Tuesday encounters, pregame and overtime Clash). Sections **1–23** contain historical build/playtest notes and must not override newer locked design. Section **24** (Career Mode) is **documentation-only**; its old references to 11-on-11 and league tiers are superseded. Section **25** governs Beast Clash. Git history retains previous revisions; maintain this file as the sole authoritative GDD.
 
 
 **Owner:** Southside Games · **Branch:** `rebuild/mobile-7v7` · **Supersedes:** `docs/GRIDIRON_BEAST_MASTER_GDD.md` v4.9 for all football, UI and roster rules. Franchise rules from v4.9 that are not restated here remain in force.
@@ -24,7 +24,7 @@ Decision key — **LOCKED**: approved for this build. **TUNABLE**: implemented, 
 |---|---|---|
 | **Franchise Mode** | The owner of an organization: staff, roster, scouting, the cap, the Board (§8, §15–§23) | **Current development priority.** Everything else in this document describes it unless marked otherwise |
 | **Career Mode** (working name) | One monster they create, playing a career on a team (§24) | **Documented only. Not approved for development.** No code, menus, placeholders or systems are to be built from §24 until the owner authorizes it |
-| **Beast Clash** | A collector who builds 3v3 and 5v5 monster teams for turn-based battles (§25) | **Phase 1 engine and Clash Lab built. Permanent balance configuration: values 1.1.0 (owner-approved 2026-10-21, §25.10).** Every other balance change is an inactive Lab experiment. Not yet connected to franchise data or saves |
+| **Beast Clash** | Monster battles inside Franchise Mode: 1v1 Tuesday encounters, the 3v3 pregame Clash and the 3v3 / 5v5 overtime Clash (§26), on the permanent balance configuration values 1.1.0 (§25.10) | **Integrated into Franchise Mode (owner authorization 2026-10-21, §26).** Every unapproved balance change is an inactive Lab experiment |
 
 The two modes share the football world (clubs, league structure, rules, the match engine, monster data and species art conventions). Their progression and save data are separate: nothing earned in one mode changes the other.
 
@@ -84,7 +84,7 @@ Every defender may blitz. The defense lines up in its package's base alignment p
 | Timeouts | 3 per half per team |
 | Clock | Runs during plays. Stops on incomplete, score, change of possession, timeout, end of quarter; on out of bounds only in the last 2:00 of each half. Between plays a running clock loses 25 s (Hurry-up 12 s, Milk 38 s) |
 | End of quarter | A play snapped with time on the clock always finishes. A touchdown's try is always attempted |
-| Overtime | College format: each team gets one possession from the opponent 25; repeat until untied; from the 3rd OT period possessions are two-point tries only |
+| Overtime | One overtime period, college format: each team gets one possession from the opponent 25. Still tied after that: an **overtime Beast Clash** decides the game (3v3 in the season, 5v5 in the playoffs; §26.3). The football score stands; no points are invented. (The engine's classic repeat-until-untied rule remains available when `otPeriods` is unset.) |
 | Penalties | Delay of game only (real-time play clock, optional). Others LATER |
 
 **Field orientation (LOCKED):** the match field is vertical and the team with the ball always attacks **up** the screen. Yard labels show `OWN 30` / `OPP 30`. This keeps play art, cards and the live field in one orientation.
@@ -187,7 +187,7 @@ Every decision uses down, distance, field position, score differential, quarter,
 | Day | Action | Effect |
 |---|---|---|
 | Mon | Scout a region | Generates real prospects; scout skill reveals attributes/nature/potential |
-| Tue | Recruit | Pick an approach; success adds the monster to the roster (cap and roster limit enforced) |
+| Tue | Monster encounter (Beast Clash, §26.1) | Battle one scouted monster **1v1** with one monster you pick from your roster, or skip. Win: it offers to sign (cap and roster limit enforced). Lose: one recruiting pitch at the usual odds. Skip: nothing happens, nothing is lost |
 | Wed | Training focus | Temporary Sunday bonus to the related attributes (Passing, Rushing, Coverage, Pass Rush), scaled by the trainer |
 | Thu | Scout opponent | Reveals the opponent's real tendencies and best monster |
 | Fri | Game plan | 6 + 6 play cards |
@@ -201,6 +201,26 @@ Every decision uses down, distance, field position, score differential, quarter,
 **Economy (CURRENT):** one franchise salary cap and offseason contract/renewal/free-agent system, as specified in §15–§22 and implemented in `src/franchise/`. The former tier-specific cap amounts and old automatic game lock are obsolete; the commissioner's cap-review rules in §15.6 supersede them.
 
 **Saves:** key `gridiron-beast-v6`, `schemaVersion: 6`, export/import JSON. A v5 (11v11) save is never modified; on first launch the player may import owner, club, staff, rival, season, record and history from it. Its 40 placeholder monsters are re-mapped into 7v7 positions, keeping the cornerstones.
+
+### 8.2 What the twelve attributes do, by position (2026-10-21)
+
+Read from what the football engine actually uses (`src/sim`), plus each position's overall-rating weights (which also set the Beast Clash rating). The table lives in `src/data/stat-guide.js` and is shown in the game under **More → What the stats mean** and from every monster card (tap an attribute name). **Attribute points can only be spent on an attribute that helps the monster's position**; the trainer and level-up growth already only raise those. Points spent before this rule are kept.
+
+| Attribute | Helps | Does nothing for |
+|---|---|---|
+| Speed | Everyone but K: top speed, separation, pursuit, return distance | K |
+| Agility | Everyone but K: cuts, jukes, catch radius, escaping the rush, getting around blocks | K |
+| Strength | Everyone but K: holding blocks (40%), shedding blocks, breaking tackles, tackling | K |
+| Awareness | QB reads and decisions; ball carriers' vision; defenders' reactions, angles and play-action discipline; OL and K overall rating | (helps everyone) |
+| Catching | QB, RB, WR, TE (catches and ball security: fewer fumbles); LB, CB, S (interceptions) | OL, DL, K |
+| Arm | QB: ball speed, range, release | everyone else |
+| Accuracy | QB: where the ball lands | everyone else |
+| Blocking | OL, TE, RB (60% of a block); WR (stalk blocks) | QB, defenders, K |
+| Tackling | DL, LB, CB, S: sure tackles and sacks | offense, K |
+| Coverage | LB, CB, S: reacting to cuts, contesting catches | offense, DL, K |
+| Durability | Everyone but K: slower fatigue, fewer injuries | K (kickers are never injured and fatigue does not touch kicking) |
+| Kicking | K: field goals, punts, kickoffs | everyone else |
+
 
 ---
 
@@ -217,7 +237,7 @@ Every decision uses down, distance, field position, score differential, quarter,
 
 ## 10. Implementation notes (what the build does today)
 
-* **HISTORICAL IMPLEMENTATION NOTE (superseded):** this paragraph formerly described promotion/relegation and regenerated AI rosters. Those are not the active campaign rules. Current franchise behavior is specified in §15–§22; see §26.
+* **HISTORICAL IMPLEMENTATION NOTE (superseded):** this paragraph formerly described promotion/relegation and regenerated AI rosters. Those are not the active campaign rules. Current franchise behavior is specified in §15–§22 and §26 (Beast Clash integration); the roadmap is §27.
 * The player's scouting report reads the opponent's real coach profile, strengths and favourite plays. Training bonuses are real attribute adds on Sunday only.
 * Engine tunables (speed curve, blocking engagement, shed rates, throw error, catch/interception formulas, tackle resolution, pursuit effort) are constants at the top of the relevant functions in `src/sim/engine.js`; balance bands are enforced by `tests/engine.test.js`.
 
@@ -454,7 +474,7 @@ Owner's playtest round 3 found career stats at zero for a 320-yard quarterback: 
 The owner's full-season report. All LOCKED unless marked.
 
 * **17.2 Package rule and forfeits.** A depth-chart slot may be filled only by a monster whose primary or secondary position matches it (`SECONDARY_ELIGIBILITY`): a healthy reserve first, else a base starter who sits out in the packages that use the slot (SS ← LB2, DL3 ← LB2/FS, WR3 ← TE, C ← WR2). Base starters are filled across every group before package slots. A package slot nobody legal can fill makes every play using that package unavailable (greyed in the game plan and the match, never called by Auto or the AI). A game is a **forfeit** (0–21 loss, no stats, no XP, in the standings) only when the base seven or the kicker cannot be fielded legally, or every play in a side's plan needs a package that cannot be fielded. Out-of-position monsters carry **1.75×** injury risk in games and practice, stated on the assign screen.
-* **17.3 Attribute points.** Level-ups keep the automatic +1s and bank **2 points** (`POINTS_PER_LEVEL`) the owner spends on the monster card, any attribute, capped by potential. A setting lets the trainer spend them. AI monsters regenerate each season (no points to spend).
+* **17.3 Attribute points.** Level-ups keep the automatic +1s and bank **2 points** (`POINTS_PER_LEVEL`) the owner spends on the monster card, capped by potential, **only on an attribute that helps the monster's position** (§8.2; revised 2026-10-21, it was any attribute). A setting lets the trainer spend them. AI monsters regenerate each season (no points to spend).
 * **17.4 The board.** Before each season (and at creation) the commissioner offers three goals scaled to the preseason forecast — safe (win N, never more than 7 of 9 so a contender's safe goal stays easier than the title), medium (playoffs, or badges when the forecast is poor), stretch (the Beast Bowl, worth +2). Winning the Beast Bowl meets whatever goal was set: the champion is never fired. One commitment per season, settled at season end into **board confidence**: +1 per goal met (+2 title), −1 per miss; a met goal also lifts any deficit to 0 and funds one extra prospect every Monday next season. At −1 the owner is on the **hot seat** (rival GM needles, the postseason story event fires even on a winning record); at −2 the board **fires** the owner: the franchise ends (a Hall of Fame card only if already eligible). Nothing else in the game can end a franchise. Currency chosen so goals do not pile onto the cap (already four features) or the dex.
 * **17.5 Season flow.** When the playoffs are drawn: a **season recap** (record, standing, club leaders, badges, the goal, the league awards, and the playoff announcement with seed and first opponent, or "missed"). Awards news lands at that moment. An eliminated or non-qualified owner **watches the bracket** round by round (results sheet per round) or skips to the offseason. When the season ends: **how we finished** (elimination round or title, playoff record, board verdict, Hall of Fame progress, the awards book). The HQ button reads *Continue to the offseason*.
 * **17.6 Scouting for depth.** Monday shows every position as short / no backup / ok, lets the owner ask the scout for a position, and the scout otherwise targets the thinnest; prospects are outlined red (short-handed) or orange (no backup) with the reason.
@@ -847,11 +867,54 @@ Engine hooks used by the permanent table: `arrivalCond`, `refusedEffect`, `hitMu
 
 **Rollback:** the values 1.0.0 game is commit `59cfa7a` (tag `clash-v1.0.0-pre-implementation`, local). Restoring it is a revert of the implementation commit, touching only `src/clash/`, `src/data/clash-moves*.js`, Clash tests and fixtures, the Clash Lab screen and documentation; no football, franchise or save file is involved. Without a revert, `battleConfig({ ruleset: 'v1.0.0' })` plays the old game exactly.
 
-## 26. Franchise Mode — accessible-depth roadmap (OWNER APPROVED, 2026-10-21; DOCUMENTATION ONLY)
+## 26. Beast Clash in Franchise Mode (IMPLEMENTED 2026-10-21, owner authorization)
+
+> The owner authorized full implementation on 2026-10-21: Tuesday Monster Encounters, the pregame Clash in place of the coin toss, the overtime Clash tiebreaker, battle speed and lineups from the real roster. Every battle uses the real engine on the permanent values 1.1.0 configuration; no balance value changed. Decisions taken while implementing are recorded here as they were made. Not in scope (later roadmap phases): advanced trading, Monster Partnerships, career timelines, full Coach Assist, stadium management, 32 teams, Career Mode, the Battle Room, new balance changes.
+
+### 26.0 Shared rules
+
+- **One adapter.** `src/franchise/clash-link.js` is the only franchise file that imports the engine (`tests/clash/boundary.test.js` enforces it); `franchise.js` imports that adapter. The football sim, the core, the save and cloud code never touch Beast Clash.
+- **Deterministic and rebuildable.** A franchise battle is a seed drawn once from the franchise generator, two lineups of real monsters and the player's recorded decisions. The save keeps that record plus a summary (winner, how, exchanges, log hash); the full battle is rebuilt from it whenever the screen, a replay or a test needs it. Reloading mid-battle resumes it.
+- **Lineups come from the roster.** Tuesday encounters are 1v1 (one roster monster against the prospect, §26.1); the pregame Clash is 3v3 and the overtime Clash 3v3 / 5v5. Injured monsters never battle. The automatic lineup is the engine's own rule (a Tank in front when available, then the best overalls, at most two of one archetype, Supports and Disruptors at the back); the player can change it on the battle screen. Battle stats are built from the monster's real attributes, nature, fatigue, level and evolution stage, exactly as the Clash Lab does. No replacement monsters are ever generated for the player.
+- **Three ways to battle, one engine.** *Play battle*: the player answers every voluntary-swap decision (engine policy `manual`: the decision for an exchange comes from the recorded `decisions`; an unanswered one stops the screen, which asks and replays the identical battle with the answer; "keep in front" holds for four exchanges). *Auto battle*: the smart swap policy. *Skip to results*: the identical Auto battle, settled instantly; skipping never lowers the chance of winning. The AI side always uses the smart policy.
+- **Effects on the roster.** Each monster that battled earns Arena XP (Model C2, the Phase 1 formula, about 9 XP a battle; football games give 24+) through the same level-up loop as a football game (evolutions still wait for the owner), and gains a little fatigue (encounter and pregame 5, overtime 6: the Phase 1 load values).
+- **Settings** (`settings.clash`, filled with defaults for older saves): *Remember my choice* (Ask every time / Play / Auto / Skip to results) and battle speed 1×, 2× (default), 4×. Speed changes presentation only.
+- **Save compatibility.** No schema change: new fields are additive (`week.encounter`, `settings.clash`, and per-game Clash records) and every older save loads as before.
+
+### 26.1 Tuesday Monster Encounters
+
+Tuesday's recruiting pitch is replaced by an encounter with one of the monsters the scout found on Monday. **Encounters are strictly 1v1** (owner decision 2026-10-21, replacing the first build's up-to-3v3: it took too long).
+
+- **Enter Beast Clash:** the player chooses **one prospect** and **one healthy monster from their roster**; only those two monsters take part (no companions, no bench, so no swaps and no bench actions). The battle screen suggests the roster monster (the engine's automatic pick: the best overall, a Tank when one ties) and the player can choose any other healthy monster instead. Asking for two monsters, an injured one or one not on the roster is refused before any seed is drawn. **Win:** the monster offers to sign; the player may accept (the usual roster-limit release and salary-cap rules apply, exactly as before) or let it go. **Lose:** one ordinary recruiting pitch (development / facilities / playing time) at the existing odds; a refusal ends the day. Either way the one battler earns Arena XP (Model C2) and 5 fatigue; nobody else on the roster is affected.
+- **Play / Auto / Skip to results** are all offered as for any battle. In a 1v1 there are no swap decisions, so Play shows the same battle as Auto; Skip to results is that battle settled instantly.
+- **Balance note (for the owner):** sending your strongest monster wins nearly every encounter against a freshly scouted prospect (150 of 150 seeded tests with the suggested pick; about 60% with a random roster monster), so a won offer is the usual outcome. Rewards are unchanged as instructed; a harder Tuesday would need a separate decision.
+- **Skip encounter:** no battle, no signing this week, and nothing else changes: no morale, board confidence or progression penalty. The screen says so in plain words, and the Help sheet explains the difference from *Skip to results*.
+- One encounter per Tuesday. Staff auto-run enters an encounter only for a clear upgrade (the same criterion as before) and plays it in Auto; otherwise it skips.
+- The final regular-season week and the playoffs keep Monday draft scouting and the Tuesday recovery day; no encounters then.
+
+### 26.2 The pregame Clash (possession)
+
+The coin toss is gone. Before every game, three monsters from each roster battle; the winner chooses the opening possession.
+
+- **Player games:** the Match Day screen leads to the battle screen (lineup, then Play / Auto / Skip to results). If the player wins the Clash they choose **receive**, **defer** or **kick** (the same three choices the toss offered). If the AI wins, it chooses for itself: defer two times in three, otherwise receive (the coin-toss AI's rule, one seeded draw). The football engine then starts with that `coinWinner` and `choice`, exactly as it did after a toss. The AI side's lineup is the engine's automatic lineup from its real roster.
+- **League games** (all AI-vs-AI, regular season and playoffs) are opened the same way, headless: automatic lineups, smart policies, one seed, the AI choice rule. Each result records `pregameClash` (winner side, choice, how it ended, exchanges).
+- **Headless player games** (tests, "sim to end" before kickoff) settle a pending Clash in Auto; a Play battle left mid-decision falls back to Auto and an unmade choice defaults to receive.
+- A forfeit (no legal lineup) is unchanged: no Clash, the 0-21 loss as before.
+
+### 26.3 The overtime Clash (tiebreaker)
+
+Football plays **one** overtime period (`otPeriods: 1` in every franchise game, player and league). If the score is still tied, the football engine finishes the game with no winner and flags `needsTiebreak`; Franchise Mode then settles it with a Beast Clash: **3v3** in the regular season, **5v5** in the playoffs.
+
+- **Player games:** the match screen shows *Still tied* and leads to the battle screen (lineup, Play / Auto / Skip to results). The winner of the Clash wins the game; the final panel and the box score say so ("OT · won by 3v3 Beast Clash").
+- **The record keeps the football score.** `winner` is set on the finished state and the result carries `clash` (size, winner, how it ended, exchanges); `homeScore` / `awayScore` are the football points as played and never change. Standings count a win and a loss (never a tie), points for and against are the football score, head-to-head and division/conference records follow the Clash winner, the player's schedule, campaign wins, badges, rivalry memory, news and monster game logs all use the same winner, and playoff brackets name the winner from the result.
+- **League games** are settled headless the same way (automatic lineups, smart policies, one seed); a club with no healthy monster would lose a seeded coin instead (not reachable with full AI rosters).
+- **Headless player games** (tests, "sim to end") settle the tiebreak in Auto.
+
+## 27. Franchise Mode — accessible-depth roadmap (OWNER APPROVED, 2026-10-21; DOCUMENTATION ONLY)
 
 **Status:** The feature direction and priority order below are owner-approved for the roadmap. This section does **not** authorize implementation, alter Beast Clash's existing approval gates, or authorize new game modes. Finish the Beast Clash engine, integrate it into Franchise Mode, and validate the existing franchise before building new roadmap features. UI polish is secondary to feature correctness.
 
-### 26.1 Product audience and design rule
+### 27.1 Product audience and design rule
 
 Gridiron Beast must be enjoyable for players roughly **10 years old through adulthood (50+)**. A younger player should be able to collect monsters, coach football, win trophies, and enjoy the campaign without mastering salary-cap strategy. A football-management enthusiast should have meaningful optional decisions. **Depth is welcome; mandatory complexity is not.**
 
@@ -864,7 +927,9 @@ Rules for every new feature:
 - Avoid punitive relationship meters, obscure penalties, or mechanics that trap a player in one roster configuration.
 - Do not tie tutorial preferences to difficulty, competitive balance, Hall of Fame eligibility, or achievements.
 
-### 26.2 Phase 1 — Complete existing Beast Clash and franchise integration (REQUIRED FIRST)
+### 27.2 Phase 1 — Complete existing Beast Clash and franchise integration (REQUIRED FIRST)
+
+> **Status (2026-10-22): implemented and merged to `main`** (Beast Clash values 1.1.0 and the knockout fix, §25.10; franchise integration, §26). The open decisions listed below were settled by the owner during implementation and are recorded in §26: Tuesday encounters are strictly 1v1, a win guarantees a signing offer and a loss gives one standard pitch (§26.1); draft-window weeks keep scouting and the recovery day; overtime eligibility, fatigue, AI behaviour and playoff ties are specified in §26.0 and §26.3. Remaining for Phase 1 acceptance: owner mobile playtests over full seasons, and a decision on Tuesday difficulty (§26.1 balance note).
 
 Finish the already-approved Beast Clash balance/engine work and its full regression and replay requirements before integration. Preserve historical Values 1.0.0 behavior and the approved Values 1.1.0 rules; do not bypass failing tests.
 
@@ -878,7 +943,7 @@ Integrate the combat system into the current franchise campaign:
 
 **Acceptance:** New and loaded franchises can complete multiple full seasons, including bye weeks, scouting, encounters, football games, playoffs, contracts, draft, progression, records, and Hall of Fame flow, with deterministic results and no dead ends. Run automated checks and actual mobile-oriented playtests. No separate Battle Room, Draft Clash, Custom Clash, or Career Mode development during this phase.
 
-### 26.3 Phase 2 — Coach Assist: optional contextual tutorials (APPROVED ROADMAP FEATURE)
+### 27.3 Phase 2 — Coach Assist: optional contextual tutorials (APPROVED ROADMAP FEATURE)
 
 Introduce a unified guidance system rather than a separate intrusive tutorial for every feature. Guidance setting may change at any time within a save:
 - **Guided:** step-by-step first-use instruction, plain-language explanation, and decision support; recommended for newcomers.
@@ -891,7 +956,7 @@ Apply contextual teaching to drafting, scouting, Beast Clash type advantages and
 
 **Acceptance:** A first-time player can complete onboarding, a trade, a draft pick, and a Clash battle using Guided; an experienced player can complete the same without automatic interruptions in Expert. Help remains available in both.
 
-### 26.4 Phase 3 — Monster identity and attachment (APPROVED ROADMAP FEATURES)
+### 27.4 Phase 3 — Monster identity and attachment (APPROVED ROADMAP FEATURES)
 
 **A. Career history and accomplishments (HIGH PRIORITY; primarily reuse existing data).** Add a readable monster career timeline/profile showing draft or recruitment origin, team changes, evolution, first touchdown/major firsts where reliable event data exists, championships, awards, career records, and notable rivalry performances. Existing statistics, awards, evolution and Hall of Fame records are the source of truth; do not fabricate missing historical events for older saves. Offer a simple highlights view and an optional detailed statistics view. This is not a second progression economy.
 
@@ -899,7 +964,7 @@ Apply contextual teaching to drafting, scouting, Beast Clash type advantages and
 
 **Acceptance:** A younger player can understand badges and partnership labels without studying formulas; a veteran can inspect the mechanics. Bonuses cannot snowball across many seasons.
 
-### 26.5 Phase 4 — Accessible team-building depth (APPROVED ROADMAP FEATURES)
+### 27.5 Phase 4 — Accessible team-building depth (APPROVED ROADMAP FEATURES)
 
 **A. Trading, second pass.** Keep existing draft-pick-for-veteran/future-pick trading intact while adding optional broader deals. Target features: owner-initiated monster-for-monster or monster-plus-pick offers, incoming AI trade offers, and potentially in-season trading after rules are defined. Keep protected monsters and deterministic offer logic unless explicitly redesigned. Avoid three-team trades, salary-retention accounting, complex clauses, or opaque trade-value formulas.
 
@@ -913,7 +978,7 @@ Use **one trade engine, two interfaces**:
 
 **C. Free agency:** keep the existing offseason market approachable. Improve clarity and AI decisions before adding complexity; no advanced contract clauses required for franchise completion.
 
-### 26.6 Phase 5 — Long-term possibilities (NOT APPROVED FOR IMPLEMENTATION)
+### 27.6 Phase 5 — Long-term possibilities (NOT APPROVED FOR IMPLEMENTATION)
 
 - **GM career mobility:** selling/leaving a club, job offers, carrying a GM career to another club, preserving personal accomplishments after firing or retirement. Worth revisiting after core franchise validation; no new mandatory management layer now.
 - **Stadium management:** optional hybrid owner feature, deferred; no stadium economy or construction requirements now.
@@ -922,13 +987,14 @@ Use **one trade engine, two interfaces**:
 - **League expansion to 32 clubs:** **owner-confirmed long-term intention, not cancelled**. The current active league remains **16 clubs, four divisions, two conferences, one competition/campaign**. A future design phase may expand to **32 clubs** and revisit divisional alignment, schedules, playoff scarcity, AI rosters, statistics, franchise migrations, gym-club distribution, and performance. **No target release or implementation authorization exists.** Do not confuse expansion with the abandoned three-tier promotion/relegation pyramid.
 - **Separate modes:** a possible Battle Room (Draft Clash first; Custom Clash later) and Career Mode are future proposals only. Franchise Mode remains the development priority.
 
-### 26.7 Explicit exclusions and documentation policy
+### 27.7 Explicit exclusions and documentation policy
 
 **Not part of the active franchise design:** 11-on-11 play, Challenger/Vanguard/Sovereign tiers, promotion/relegation challenges, tier-specific salary caps, and a 48-club three-tier pyramid. These are legacy concepts, **not** future prerequisites for Career Mode or the 32-club expansion. Do not reintroduce them without a new owner decision.
 
 Do not confuse **documented**, **approved for roadmap**, **authorized to implement**, and **implemented/tested**. Maintain this file as the sole authoritative GDD. Use Git commit history for previous versions, not separate archived GDD copies. Active sections should use the latest approved design. Historical playtest notes may remain for traceability only when clearly marked historical and not actionable.
 
-### 26.8 Feature acceptance and sequencing
+### 27.8 Feature acceptance and sequencing
 
 For each new roadmap feature: first record exact behavior and unresolved decisions, then owner approval for implementation, then isolated development, tests, save compatibility, mobile playtest, and regression checks. Do not launch phases concurrently. **Priority:** Beast Clash and existing franchise stability → Coach Assist → monster history and partnerships → trading and AI → optional long-term features. Polish is not a substitute for functional completion.
+
 

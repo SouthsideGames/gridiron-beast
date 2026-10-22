@@ -37,6 +37,7 @@ import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlot
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
+import { CLASH_SIZE, SWAP_EVERY, snapMonster, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES } from './clash-link.js';
 
 export const SCHEMA_VERSION = 6;
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -397,7 +398,7 @@ export function dexCounts(f) {
   for (const id of ids) { const st = dexStatus(f, id); if (st !== 'unknown') seen++; if (st === 'signed') signed++; }
   return { seen, signed };
 }
-function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
+function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, encounter: null, pregame: null, overtime: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
 const frng = (f) => { const r = rngFromState(f.rngState); return { r, save: () => { f.rngState = r.state; } }; };
 
 export function news(f, text, kind = 'info') { f.news.unshift({ text, kind, week: f.season?.week, year: f.season?.year }); if (f.news.length > 60) f.news.pop(); }
@@ -927,9 +928,11 @@ function simulateLeagueWeek(f) {
     for (const g of fixtures.games) {
       if (g.home === f.club || g.away === f.club) continue;
       const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
-      const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f) });
+      const toss = leaguePregame(f, r, home, away);
+      const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
+      leagueTiebreak(f, r, home, away, game);
       recordGame(f, game, { home, away }, { playoff: false });
-      const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
+      const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
       applyResult(f.season.records, res); results.push(res);
     }
   }
@@ -938,7 +941,7 @@ function simulateLeagueWeek(f) {
   f.season.results.push(...results);
   const rival = f.rivals[f.tier]?.team;
   const rg = results.find((x) => x.home === rival || x.away === rival);
-  if (rg) { const rw = (rg.home === rival ? rg.homeScore > rg.awayScore : rg.awayScore > rg.homeScore); const other = rg.home === rival ? rg.away : rg.home; news(f, `Rival watch: ${rival} ${rw ? 'beat' : 'lost to'} ${other} ${rg.home === rival ? rg.homeScore + '-' + rg.awayScore : rg.awayScore + '-' + rg.homeScore}.`, 'info'); }
+  if (rg) { const rw = rg.winner ? rg.winner === rival : (rg.home === rival ? rg.homeScore > rg.awayScore : rg.awayScore > rg.homeScore); const other = rg.home === rival ? rg.away : rg.home; news(f, `Rival watch: ${rival} ${rw ? 'beat' : 'lost to'} ${other} ${rg.home === rival ? rg.homeScore + '-' + rg.awayScore : rg.awayScore + '-' + rg.homeScore}${rg.clash ? ` (OT · ${rg.clash.size}v${rg.clash.size} Beast Clash)` : rg.ot ? ' (OT)' : ''}.`, 'info'); }
   return results;
 }
 
@@ -1028,7 +1031,11 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
   if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
   if (draftWindow(f)) return { ok: false, reason: 'No signings from the final week on. Tuesday is a recovery day.' };
   const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
-  if (f.week.recruitAttempts >= 3) return { ok: false, reason: 'No attempts left this week.' };
+  // Tuesday Monster Encounters (GDD §26.1): a pitch is the consolation after a lost battle, once, for the monster you fought.
+  const enc = f.week.encounter;
+  if (!enc || enc.status !== 'pitch') return { ok: false, reason: enc?.status === 'offer' ? 'They already want to sign: accept or decline the offer.' : 'Battle the monster first: a win brings an offer, a loss one pitch.' };
+  if (enc.prospectIndex !== prospectIndex) return { ok: false, reason: 'Only the monster you battled will listen this week.' };
+  if (f.week.recruitAttempts >= 1) return { ok: false, reason: 'No attempts left this week.' };
   const m = p.monster;
   const rc = releaseCandidates(f, p);
   if (rc.needed && !releaseId) return { ok: false, reason: rc.reason, needRelease: true };
@@ -1042,20 +1049,97 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
   if (approachId === 'playing_time' && need) chance += 0.28;
   const success = r.chance(chance);
   save();
-  if (success) {
-    if (rc.needed && releaseId) { const out = f.roster.find((x) => x.id === releaseId); f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); }
-    m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
-    if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
-    m.joined = f.season.year; f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
-    news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
-    const cap = salarySummary(f);
-    if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
-    return { ok: true, success: true, monster: m, overCap: cap.over };
-  }
-  if (f.week.recruitAttempts >= 3) { f.season.day = 2; return { ok: true, success: false, final: true }; }
-  return { ok: true, success: false, final: false };
+  enc.pitch = { approach: approachId, success };
+  if (success) { enc.status = 'signed'; return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) }; }
+  enc.status = 'walked'; f.season.day = 2; return { ok: true, success: false, final: true };
 }
-export function skipRecruit(f) { if (f.season.day === 1) { f.season.day = 2; f.week.prospects = []; } }
+/** Add a prospect to the roster: the release (if one was chosen), a two-season contract, salary, dex and news. Shared by the battle offer and the pitch. */
+function signProspect(f, p, releaseId) {
+  const m = p.monster;
+  if (releaseId) { const out = f.roster.find((x) => x.id === releaseId); if (out) { f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); } }
+  m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
+  if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
+  m.joined = f.season.year; f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
+  news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
+  const cap = salarySummary(f);
+  if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
+  return { monster: m, overCap: cap.over };
+}
+/** Skip the encounter: no battle, no signing, no penalty of any kind; Wednesday begins. */
+export function skipRecruit(f) { if (f.season.day === 1) { if (f.week.encounter && !['signed', 'walked', 'declined'].includes(f.week.encounter.status)) f.week.encounter.status = 'skipped'; f.season.day = 2; f.week.prospects = []; } }
+export const skipEncounter = skipRecruit;
+
+// ------------------------------------------------------------ Tuesday Monster Encounters (Beast Clash in Franchise Mode, GDD §26.1)
+// The scouted monster is met in a strictly 1v1 Beast Clash: the prospect you pick against the one roster monster you pick. Enter it or skip it. Win: it offers to sign (you may still decline). Lose: one
+// ordinary recruiting pitch at the usual odds. Either way your battlers earn Arena XP and a little fatigue. Skipping costs nothing.
+/** Can the player battle today? The eligible roster monsters, the prospect (the only wild monster) and the suggested champion. Always 1v1. */
+export function encounterPreview(f, prospectIndex) {
+  const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
+  const eligible = eligibleBattlers(f.roster);
+  if (!eligible.length) return { ok: false, reason: 'Nobody healthy enough to battle this week.', eligible, size: 0 };
+  return { ok: true, eligible, size: CLASH_SIZE.encounter, wild: [p.monster], lineup: autoLineup(f.roster, CLASH_SIZE.encounter, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`)) };
+}
+/** Enter the encounter: draw the battle seed once and fix the two monsters: the prospect, and one healthy roster monster (`monster` id; `lineup` [id] is accepted too; default the suggested one). */
+export function startEncounter(f, prospectIndex, { monster = null, lineup = null, mode = 'auto' } = {}) {
+  if (f.season.day !== 1) return { ok: false, reason: 'Not Tuesday.' };
+  if (draftWindow(f)) return { ok: false, reason: 'No encounters from the final week on. Tuesday is a recovery day.' };
+  if (f.week.encounter && f.week.encounter.status !== 'ready') return { ok: false, reason: 'One encounter per Tuesday.' };
+  const pv = encounterPreview(f, prospectIndex); if (!pv.ok) return pv;
+  const pickIds = monster ? [monster] : (lineup || pv.lineup.map((m) => m.id));
+  if (pickIds.length !== 1) return { ok: false, reason: 'Tuesday encounters are one on one: pick exactly one of your monsters.' };
+  if (!pv.eligible.some((m) => m.id === pickIds[0])) return { ok: false, reason: 'Pick one healthy monster from your roster.' };
+  const mine = [pickIds[0]]; const size = 1;
+  const { r, save } = frng(f); const seed = r.seed(); save();
+  const wild = pv.wild;
+  f.week.encounter = { prospectIndex, seed, size, mine, wild: wild.map((m) => m.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: wild.map(snapMonster), mode, decisions: {}, status: 'battle', result: null };
+  return { ok: true, encounter: f.week.encounter };
+}
+/** Rebuild the encounter's battle from the save (deterministic): the result the screen shows, or replays. */
+export function encounterBattle(f, { log = 'full' } = {}) {
+  const e = f.week.encounter; if (!e || !e.seed) return null;
+  const a = e.a || e.mine.map((id) => f.roster.find((m) => m.id === id)).filter(Boolean);
+  const byId = new Map(f.week.prospects.map((p) => [p.monster.id, p.monster]));
+  const b = e.b || e.wild.map((id) => byId.get(id)).filter(Boolean);
+  if (!a.length || !b.length) return null;
+  return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, log });
+}
+/** The player's answer at a swap decision (play mode): a bench monster's id, or 'stay' (recorded for this exchange and the next three, so the question is not asked every exchange). */
+export function encounterDecide(f, ex, choice) {
+  const e = f.week.encounter; if (!e || e.status !== 'battle') return { ok: false, reason: 'No battle in progress.' };
+  if (choice === 'stay') for (let k = 0; k < SWAP_EVERY; k++) e.decisions[ex + k] = 'stay'; else e.decisions[ex] = choice;
+  return { ok: true };
+}
+/** Settle the battle: record the summary, pay out XP and fatigue, and open the offer (win) or the pitch (loss). Idempotent. */
+export function resolveEncounter(f) {
+  const e = f.week.encounter; if (!e) return { ok: false, reason: 'No encounter.' };
+  if (e.status !== 'battle') return { ok: true, encounter: e, already: true };
+  const result = encounterBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
+  if (e.mode === 'play' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
+  const { r, save } = frng(f);
+  const events = applyBattleEffects(f.roster, result, 'a', 'encounter', r, { autoSpend: !!f.settings.autoPoints });
+  save();
+  e.result = battleSummary(result); e.events = events;
+  const won = result.winner === 'a'; e.status = won ? 'offer' : 'pitch';
+  const p = f.week.prospects[e.prospectIndex];
+  for (const ev of events) news(f, `${ev.name} reached level ${ev.level} in a Beast Clash (${ev.from} → ${ev.to} OVR).`, 'win');
+  news(f, won ? `Beast Clash won: ${p.monster.name} wants to join ${f.club}.` : `Beast Clash lost to ${p.monster.name}. One pitch left to win them over.`, won ? 'win' : 'info');
+  return { ok: true, encounter: e, won, result, events };
+}
+/** After a won encounter: sign the monster (the usual roster-limit and cap rules apply) or let it go. */
+export function acceptOffer(f, { releaseId = null } = {}) {
+  const e = f.week.encounter; if (!e || e.status !== 'offer') return { ok: false, reason: 'No offer on the table.' };
+  const p = f.week.prospects[e.prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
+  const rc = releaseCandidates(f, p);
+  if (rc.needed && !releaseId) return { ok: false, reason: rc.reason, needRelease: true };
+  if (rc.needed && !rc.list.find((c) => c.id === releaseId)) return { ok: false, reason: 'That monster cannot be released.' };
+  e.status = 'signed';
+  return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) };
+}
+export function declineOffer(f) {
+  const e = f.week.encounter; if (!e || e.status !== 'offer') return { ok: false, reason: 'No offer on the table.' };
+  e.status = 'declined'; f.season.day = 2; f.week.prospects = [];
+  return { ok: true };
+}
 const scaledBonus = (b, k) => b && Object.fromEntries(Object.entries(b).map(([a, v]) => [a, Math.max(1, Math.round(v * k))]));
 /** Practice intensity: bigger boosts cost more injury risk. */
 export const INTENSITIES = Object.freeze({
@@ -1214,8 +1298,13 @@ export function autoRunToSunday(f) {
       const pick = f.week.prospects.map((p, i) => ({ p, i })).filter(({ p }) => p.revealed >= 4 && !salarySummary(f, p.monster.salary).over && f.roster.length < ROSTER_MAX)
         .map((x) => ({ ...x, gain: monsterOverall(x.p.monster) - Math.max(0, ...f.roster.filter((m) => m.position === x.p.monster.position).map((m) => monsterOverall(m))) }))
         .filter((x) => x.gain >= 2).sort((a, b) => b.gain - a.gain)[0];
-      if (pick) { const r = recruit(f, pick.i, 'development'); did.push(r.success ? `Signed ${pick.p.monster.name}` : `${pick.p.monster.name} turned us down`); if (f.season.day === 1) skipRecruit(f); }
-      else { skipRecruit(f); did.push('Passed on the prospects'); }
+      if (pick && startEncounter(f, pick.i).ok) {
+        const b = resolveEncounter(f);
+        if (b.won) { const r = acceptOffer(f); did.push(r.ok ? `Beast Clash won: signed ${pick.p.monster.name}` : `Beast Clash won, but ${pick.p.monster.name} could not be fitted on the roster`); if (!r.ok) declineOffer(f); }
+        else { const r = recruit(f, pick.i, 'development'); did.push(r.success ? `Beast Clash lost, but ${pick.p.monster.name} signed anyway` : `Beast Clash lost; ${pick.p.monster.name} turned us down`); }
+        if (f.season.day === 1) skipRecruit(f);
+      }
+      else { skipRecruit(f); did.push('Skipped the encounter'); }
     }
     else if (day === 2) { const order = ['passing', 'rushing', 'coverage', 'pass_rush']; const last = (f.trainingHistory || []).slice(-1)[0]; const focus = order[(order.indexOf(last) + 1) % order.length]; const r = setTraining(f, focus, 'normal'); did.push(`${TRAINING_FOCI[focus].label} practice ${r.success ? 'went well' : 'was sloppy'}${r.injury ? `; ${r.injury.name} hurt` : ''}`); }
     else if (day === 3) { const opp = opponentName(f); const side = opp ? (teamStrengths(aiTeam(f, opp)).passD < teamStrengths(aiTeam(f, opp)).runD ? 'defense' : 'offense') : 'offense'; scoutOpponent(f, side); did.push(opp ? `Scouted ${opp}'s ${side}` : 'Bye week'); }
@@ -1296,7 +1385,8 @@ export function finishSunday(f, gameState) {
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
   for (const x of m[oppSide].roster) dexRecord(f, x, 'seen'); // every monster you face goes in the dex
   const won = gameState.winner === side;
-  const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true };
+  settleTiebreak(f, gameState); // a tied game that reached the screen's end without the Clash (should not happen) is settled headless
+  const pg = f.week.pregame; const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true, winner: gameState.winner ? m[gameState.winner].name : null, clash: gameState.tiebreak || null, pregameClash: pg?.result ? { winner: gameState.coin?.winner || null, choice: gameState.coin?.choice || null, by: pg.result.by, exchanges: pg.result.exchanges, playerWon: pg.result.winner === 'a' } : null };
   const { r, save } = frng(f);
   const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false });
   save();
@@ -1311,7 +1401,7 @@ export function finishSunday(f, gameState) {
   recordGame(f, gameState, { home: m.home, away: m.away }, { playoff: !!m.playoff });
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
-  news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}-${gameState.score[oppSide]} vs ${m.opponent}${gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
+  news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}-${gameState.score[oppSide]} vs ${m.opponent}${gameState.tiebreak ? ` (OT · ${gameState.tiebreak.size}v${gameState.tiebreak.size} Beast Clash)` : gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
   // Promised starters: three games on the bench and they walk (GDD §15.7).
   for (const x of f.roster.filter((p) => p.promise)) {
     if (!Object.values(m[side].chart).includes(x.id)) { x.promise.benched += 1; if (x.promise.benched >= PROMISE_BENCH_LIMIT) { f.roster = f.roster.filter((p) => p.id !== x.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === x.id) delete f.lineupManual[slot]; news(f, `${x.name} walked out: you promised a starting spot and benched them ${PROMISE_BENCH_LIMIT} times.`, 'loss'); } else news(f, `${x.name} was promised a start and sat (${x.promise.benched}/${PROMISE_BENCH_LIMIT}).`, 'loss'); }
@@ -1388,18 +1478,20 @@ function seedLabel(seeds, club) { for (const [conf, s] of Object.entries(seeds))
 function recordPlayoffResult(f, res) {
   const p = f.season.playoffs;
   const g = p.fixtures.find((x) => x.round === p.round && x.home === res.home && x.away === res.away);
-  const winner = res.homeScore > res.awayScore ? res.home : res.away;
-  g.result = res; p.results.push({ round: p.round, conf: g.conf, winner, home: res.home, away: res.away, homeScore: res.homeScore, awayScore: res.awayScore });
+  const winner = res.winner || (res.homeScore > res.awayScore ? res.home : res.away);
+  g.result = res; p.results.push({ round: p.round, conf: g.conf, winner, home: res.home, away: res.away, homeScore: res.homeScore, awayScore: res.awayScore, ot: res.ot, clash: res.clash || null });
 }
 function simulatePlayoffWeek(f) {
   const p = f.season.playoffs; if (!p || p.champion) return;
   const { r, save } = frng(f);
   for (const g of p.fixtures.filter((x) => x.round === p.round && !x.result)) {
     const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
-    const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f) });
+    const toss = leaguePregame(f, r, home, away);
+    const game = playGame({ home, away, seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
+    leagueTiebreak(f, r, home, away, game, { playoff: true });
     recordGame(f, game, { home, away }, { playoff: true });
-    const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot };
-    g.result = res; p.results.push({ round: p.round, conf: g.conf, winner: res.homeScore > res.awayScore ? g.home : g.away, ...res });
+    const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
+    g.result = res; p.results.push({ round: p.round, conf: g.conf, ...res, winner: res.winner || (res.homeScore > res.awayScore ? g.home : g.away) });
   }
   save();
   if (p.round === 3) { p.champion = p.results.find((x) => x.round === 3).winner; f.season.champion = p.champion; return; }
@@ -1507,10 +1599,167 @@ export function startNextSeason(f) {
 /** Headless: simulate the player's game too (for Key Moments "sim to end" and tests). */
 export function simulatePlayerGame(f) {
   const m = sundayMatchup(f); if (!m) return null;
+  const toss = pregamePossession(f); // the pregame Clash decides possession (headless: Auto, and the AI's choice when it wins)
   const { r, save } = frng(f);
-  const game = playGame({ home: m.home, away: m.away, seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f) });
+  const game = playGame({ home: m.home, away: m.away, seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
   save();
+  settleTiebreak(f, game); // still tied after the overtime quarter: the overtime Clash decides (headless: Auto)
   return game;
+}
+
+// ------------------------------------------------------------ the overtime Clash (Beast Clash in Franchise Mode, GDD §26.3)
+// Football plays one overtime period. If the score is still tied, a Beast Clash decides the game: 3v3 in the regular season, 5v5
+// in the playoffs. The football score stands as played; the Clash is recorded separately and names the winner.
+export const OT_PERIODS = 1;
+export function overtimePreview(f) {
+  const m = sundayMatchup(f); if (!m) return { ok: false, reason: 'No game today.' };
+  const theirs = m[m.playerSide === 'home' ? 'away' : 'home'];
+  const n = m.playoff ? CLASH_SIZE.overtimePlayoff : CLASH_SIZE.overtime;
+  const eligible = eligibleBattlers(f.roster);
+  const wild = autoLineup(theirs.roster, n, hashString(`${f.seed}|ot|${f.season.year}|${f.season.week}|${theirs.name}`));
+  const size = Math.min(n, eligible.length, wild.length);
+  if (size < 1) return { ok: false, reason: 'Nobody healthy enough to battle.', eligible, size: 0, opponent: m.opponent };
+  return { ok: true, eligible, size, full: n, wild: wild.slice(0, size), lineup: autoLineup(f.roster, size, hashString(`${f.seed}|ot|${f.season.year}|${f.season.week}`)), opponent: m.opponent, matchup: m, playoff: !!m.playoff };
+}
+export function startOvertimeClash(f, { lineup = null, mode = 'auto' } = {}) {
+  if (f.week.overtime && f.week.overtime.status !== 'ready') return { ok: false, reason: 'The overtime Clash is already under way.' };
+  const pv = overtimePreview(f); if (!pv.ok) return pv;
+  const eligibleIds = new Set(pv.eligible.map((x) => x.id));
+  const mine = (lineup || pv.lineup.map((x) => x.id)).filter((id, i, arr) => eligibleIds.has(id) && arr.indexOf(id) === i).slice(0, pv.size);
+  if (!mine.length) return { ok: false, reason: 'Pick at least one healthy monster.' };
+  const size = Math.min(pv.size, mine.length);
+  const { r, save } = frng(f); const seed = r.seed(); save();
+  const theirs = pv.wild.slice(0, size);
+  f.week.overtime = { opponent: pv.opponent, side: pv.matchup.playerSide, playoff: pv.playoff, seed, size, mine, theirs: theirs.map((x) => x.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: theirs.map(snapMonster), mode, decisions: {}, status: 'battle', result: null };
+  return { ok: true, overtime: f.week.overtime };
+}
+export function overtimeBattle(f, { log = 'full' } = {}) {
+  const e = f.week.overtime; if (!e || !e.seed) return null;
+  const a = e.a, b = e.b; if (!a || !b) return null;
+  if (!a.length || !b.length) return null;
+  return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, log });
+}
+export function overtimeDecide(f, ex, choice) {
+  const e = f.week.overtime; if (!e || e.status !== 'battle') return { ok: false, reason: 'No battle in progress.' };
+  if (choice === 'stay') for (let k = 0; k < SWAP_EVERY; k++) e.decisions[ex + k] = 'stay'; else e.decisions[ex] = choice;
+  return { ok: true };
+}
+export function resolveOvertimeClash(f) {
+  const e = f.week.overtime; if (!e) return { ok: false, reason: 'No overtime Clash.' };
+  if (e.status !== 'battle') return { ok: true, overtime: e, already: true, won: e.result?.winner === 'a' };
+  const result = overtimeBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
+  if (e.mode === 'play' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
+  const { r, save } = frng(f);
+  const events = applyBattleEffects(f.roster, result, 'a', 'overtime', r, { autoSpend: !!f.settings.autoPoints });
+  save();
+  e.result = battleSummary(result); e.events = events; e.status = 'done';
+  for (const ev of events) news(f, `${ev.name} reached level ${ev.level} in the overtime Clash (${ev.from} → ${ev.to} OVR).`, 'win');
+  return { ok: true, overtime: e, won: result.winner === 'a', result, events };
+}
+/** The Clash's verdict written onto the finished football state: `winner` is set, the score is untouched, `tiebreak` records the Clash. */
+export function applyTiebreak(f, state) {
+  const e = f.week.overtime; if (!state?.needsTiebreak || state.winner || !e || e.status !== 'done') return false;
+  const won = e.result.winner === 'a'; const me = e.side; state.winner = won ? me : (me === 'home' ? 'away' : 'home');
+  state.tiebreak = { kind: 'clash', size: e.size, winner: state.winner, by: e.result.by, exchanges: e.result.exchanges, playerWon: won };
+  return true;
+}
+/** Headless: settle a tied game with an Auto overtime Clash (a Play battle left mid-decision falls back to Auto). */
+export function settleTiebreak(f, state) {
+  if (!state?.needsTiebreak || state.winner) return false;
+  if (!f.week.overtime || f.week.overtime.status === 'ready') { const st = startOvertimeClash(f); if (!st.ok) { state.winner = null; return false; } }
+  const e = f.week.overtime; if (e.status === 'battle') { if (e.mode === 'play') e.mode = 'auto'; resolveOvertimeClash(f); }
+  return applyTiebreak(f, state);
+}
+/** Headless overtime Clash for a tied league game between two AI clubs: 3v3 in the season, 5v5 in the playoffs. */
+export function leagueTiebreak(f, r, home, away, state, { playoff = false } = {}) {
+  if (!state.needsTiebreak || state.winner) return null;
+  const n = playoff ? CLASH_SIZE.overtimePlayoff : CLASH_SIZE.overtime;
+  const a = autoLineup(home.roster, n, hashString(`${f.seed}|ot|${f.season.year}|${f.season.week}|${home.name}`));
+  const b = autoLineup(away.roster, n, hashString(`${f.seed}|ot|${f.season.year}|${f.season.week}|${away.name}`));
+  if (!a.length || !b.length) { state.winner = r.chance(0.5) ? 'home' : 'away'; return { kind: 'coin' }; }
+  const result = runBattle({ a, b, seed: r.seed(), mode: 'auto', log: 'none' });
+  state.winner = result.winner === 'a' ? 'home' : 'away';
+  state.tiebreak = { kind: 'clash', size: Math.min(a.length, b.length), winner: state.winner, by: result.by, exchanges: result.exchanges };
+  return state.tiebreak;
+}
+
+// ------------------------------------------------------------ the pregame Clash (Beast Clash in Franchise Mode, GDD §26.2)
+// The coin toss is a 3v3 Beast Clash between the two Sunday rosters. The winner chooses: receive, defer or kick. When the AI wins
+// it chooses for itself (defer two times in three, as the coin-toss AI did). Every league game is decided the same way, headless.
+/** Who can battle today and the proposed lineups (yours and theirs). Reasons when no battle can happen. */
+export function pregamePreview(f) {
+  const m = sundayMatchup(f); if (!m) return { ok: false, reason: 'No game today.' };
+  if (m.forfeit) return { ok: false, reason: m.forfeitReason || 'No legal lineup.' };
+  const theirs = m[m.playerSide === 'home' ? 'away' : 'home'];
+  const eligible = eligibleBattlers(f.roster);
+  const wild = autoLineup(theirs.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${theirs.name}`));
+  const size = Math.min(CLASH_SIZE.pregame, eligible.length, wild.length);
+  if (size < 1) return { ok: false, reason: 'Nobody healthy enough to battle.', eligible, size: 0, opponent: m.opponent };
+  return { ok: true, eligible, size, wild: wild.slice(0, size), lineup: autoLineup(f.roster, size, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}`)), opponent: m.opponent, matchup: m };
+}
+export function startPregameClash(f, { lineup = null, mode = 'auto' } = {}) {
+  if (f.season.day !== 6) return { ok: false, reason: 'Not Sunday.' };
+  if (f.game) return { ok: false, reason: 'The game has already started.' };
+  if (f.week.pregame && f.week.pregame.status !== 'ready') return { ok: false, reason: 'The pregame Clash is already under way.' };
+  const pv = pregamePreview(f); if (!pv.ok) return pv;
+  const eligibleIds = new Set(pv.eligible.map((x) => x.id));
+  const mine = (lineup || pv.lineup.map((x) => x.id)).filter((id, i, arr) => eligibleIds.has(id) && arr.indexOf(id) === i).slice(0, pv.size);
+  if (!mine.length) return { ok: false, reason: 'Pick at least one healthy monster.' };
+  const size = Math.min(pv.size, mine.length);
+  const { r, save } = frng(f); const seed = r.seed(); save();
+  const theirs = pv.wild.slice(0, size);
+  f.week.pregame = { opponent: pv.opponent, side: pv.matchup.playerSide, seed, size, mine, theirs: theirs.map((x) => x.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: theirs.map(snapMonster), mode, decisions: {}, status: 'battle', result: null, choice: null };
+  return { ok: true, pregame: f.week.pregame };
+}
+export function pregameBattle(f, { log = 'full' } = {}) {
+  const e = f.week.pregame; if (!e || !e.seed) return null;
+  const a = e.a, b = e.b; if (!a || !b) return null;
+  if (!a.length || !b.length) return null;
+  return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, log });
+}
+export function pregameDecide(f, ex, choice) {
+  const e = f.week.pregame; if (!e || e.status !== 'battle') return { ok: false, reason: 'No battle in progress.' };
+  if (choice === 'stay') for (let k = 0; k < SWAP_EVERY; k++) e.decisions[ex + k] = 'stay'; else e.decisions[ex] = choice;
+  return { ok: true };
+}
+/** Settle the pregame Clash: XP and fatigue for your battlers; the AI's possession choice is drawn now if it won. */
+export function resolvePregameClash(f) {
+  const e = f.week.pregame; if (!e) return { ok: false, reason: 'No pregame Clash.' };
+  if (e.status !== 'battle') return { ok: true, pregame: e, already: true, won: e.result?.winner === 'a' };
+  const result = pregameBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
+  if (e.mode === 'play' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
+  const { r, save } = frng(f);
+  const events = applyBattleEffects(f.roster, result, 'a', 'pregame', r, { autoSpend: !!f.settings.autoPoints });
+  const won = result.winner === 'a';
+  if (!won) e.choice = aiPossessionChoice(r);
+  save();
+  e.result = battleSummary(result); e.events = events; e.status = won ? 'choose' : 'done';
+  for (const ev of events) news(f, `${ev.name} reached level ${ev.level} in the pregame Clash (${ev.from} → ${ev.to} OVR).`, 'win');
+  return { ok: true, pregame: e, won, result, events };
+}
+/** The winner's possession choice (only the player chooses here; the AI chose when the battle was settled). */
+export function choosePossession(f, choice) {
+  const e = f.week.pregame; if (!e || e.status !== 'choose') return { ok: false, reason: 'It is not your choice to make.' };
+  if (!POSSESSION_CHOICES.includes(choice)) return { ok: false, reason: 'Choose receive, defer or kick.' };
+  e.choice = choice; e.status = 'done'; return { ok: true };
+}
+/** The opening possession for the football engine: { coinWinner: 'home'|'away', choice }. Settles a pending Clash headless (Auto) when needed. */
+export function pregamePossession(f) {
+  const m = sundayMatchup(f); if (!m) return { coinWinner: null, choice: null };
+  if (!f.week.pregame || f.week.pregame.status === 'ready') { const st = startPregameClash(f); if (!st.ok) return { coinWinner: null, choice: null, reason: st.reason }; }
+  const e = f.week.pregame;
+  if (e.status === 'battle') { if (e.mode === 'play') e.mode = 'auto'; resolvePregameClash(f); }
+  if (e.status === 'choose') { e.choice = 'receive'; e.status = 'done'; }
+  const won = e.result?.winner === 'a'; const me = e.side; const them = me === 'home' ? 'away' : 'home';
+  return { coinWinner: won ? me : them, choice: e.choice || 'receive', clash: e.result };
+}
+/** Headless pregame Clash for a league game between two AI clubs: both lineups automatic, smart policies, one seed. */
+export function leaguePregame(f, r, home, away) {
+  const a = autoLineup(home.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${home.name}`));
+  const b = autoLineup(away.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${away.name}`));
+  if (!a.length || !b.length) return { coinWinner: null, choice: null, clash: null };
+  const result = runBattle({ a, b, seed: r.seed(), mode: 'auto', log: 'none' });
+  return { coinWinner: result.winner === 'a' ? 'home' : 'away', choice: aiPossessionChoice(r), clash: battleSummary(result) };
 }
 
 export function summary(f) {
