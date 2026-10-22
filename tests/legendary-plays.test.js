@@ -86,7 +86,7 @@ test('AI: a club holding a Legendary equips its play in one of its six and calls
     if (!lp) continue; found++;
     const key = PLAYS[lp].side === 'offense' ? 'offensePlays' : 'defensePlays'; assert.ok(t[key].includes(lp), `${club} equips ${lp}`); assert.equal(t[key].length, 6);
   }
-  assert.ok(found >= 2, `${found} gym clubs with a pilot Legendary`);
+  assert.equal(found, 4, `${found} gym clubs with a pilot Legendary`);
   const t = F.aiTeam(f, 'Palmetto Vipers'); const opp = F.aiTeam(f, 'Ashford Hawks');
   if (t.offensePlays.includes('lp_dragons_gambit')) {
     let calls = 0; playGame({ home: t, away: opp, seed: 9, onStep: (ev) => { if (ev?.offensePlayId === 'lp_dragons_gambit') calls++; } });

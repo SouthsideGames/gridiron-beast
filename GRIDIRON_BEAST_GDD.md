@@ -1267,3 +1267,223 @@ Both values live in `FOOTBALL_TYPE_VALUES`.
 - `src/sim` still never imports `src/clash` (the boundary test).
 - Tests: `tests/type-matchups.test.js` (9 tests).
 - Tools: `tools/type-balance.mjs` for balance, and `tools/type-ui-check.py` for the indicators, the panel and the chart at 390, 360 and 320 px in headless Chromium (emulated, not a real device).
+
+## 33. Stadium environments (IMPLEMENTED 2026-10-22, owner brief; branch `stadiums-replays-legendary`)
+
+**33.0 Audit.** Before this work the game had no stadium data: every field was the same grass. The football type system (§32) was already merged, so the field bonus is built into the same contest modifier rather than a second system. Of the eight gym clubs, four have an element the brief's environments cover (Ice, Electric, Earth, Metal), and each of those plays in its element's stadium. The other four (Water, Light, Dark, Dragon) keep classic grass, because the brief named no environment of their type. No club's name, colours, roster or schedule changed.
+
+**33.1 Environments and clubs.**
+
+| Environment | Type favoured | Look | Clubs (stadium) |
+|---|---|---|---|
+| Traditional Grass | none | the classic field, unchanged | Northstar Wolves (Northstar Park), Stonehaven Titans (Stonehaven Field), Eastport Phantoms (Gaslight Park), Harbor Sentinels (Sentinel Pier Field), Ashford Hawks (Ashford Commons), Sunfire Lions (Sunfire Coliseum) |
+| Frozen Stadium | Ice | frost-glazed teal turf, ice-crack texture, snowbanks on the sidelines, snow drift in the end zones | Frostpeak Howlers (Howling Glacier Bowl), Glacier Guardians (Guardian Icefield) |
+| Volcanic Stadium | Fire | dark scorched turf, glowing cracks, vents on the sidelines, a lava seam in the end zones | Ember City Beasts (The Ember Pit) |
+| Forest Stadium | Nature | deep grass with leaf litter, tree crowns on the sidelines | Bayou Stalkers (Cypress Hollow), Palmetto Vipers (Palmetto Grove) |
+| Storm Stadium | Electric | slate turf under a dark tint, rain streak texture, lightning rods, a bolt in the end zones | Stormport Bolts (The Bolt Yard), Thunder Mesa (Thunderhead Stadium) |
+| Desert Stadium | Earth | packed-sand field with ripples, red rock on the sidelines | Canyon Crushers (Crusher Canyon), Sundown Drakes (Sundown Mesa Field) |
+| Metallic Dome | Metal | synthetic turf with panel seams, light strips; **indoor** | Ironpeak Rams (Ironpeak Foundry Dome) |
+
+Every turf keeps the white yard lines, hashes, numbers and end zones at the same field size (white on the darkest and lightest turfs measures at least 5:1). Decor is drawn under the players and the play art. Textures are SVG patterns: one shape per layer per frame, whatever the camera does. The renderer reads the venue; with no venue the field is byte-for-byte the old grass (tested). A dev page, `tools/stadium-gallery.html`, shows all seven.
+
+**33.2 Field bonus.**
+- A monster whose type matches the field's gets **+2%** on his side of the same direct contests type effectiveness uses (§32.2): blocks and sheds, open-field blocks, tackles and broken tackles, sack attempts, separation and contested catches.
+- Both teams are eligible equally. There is no home-team bonus.
+- Grass and unknown fields give nothing.
+- The type edge and the field add together, with the positive total **capped at +6%** (`contestMod`; e.g. Fire vs Nature on the Volcanic field = 4 + 2 = 6). The cap never softens a negative edge.
+- Nothing is stored on a monster. Ratings and overall never change.
+- Each play's `typeContests` marks field-assisted contests with `env`.
+
+Values live in `FOOTBALL_TYPE_VALUES` (`envMatch` 0.02, `positiveCap` 0.06; version f1.1).
+
+*Balance* (`node tools/type-balance.mjs --only=env --games=300`). The same 300 games were played at real themed stadiums with the bonus off and on:
+
+| | bonus off | bonus on |
+|---|---|---|
+| Points per team | 12.65 | 13.18 |
+| Completion % | 60.6 | 60.4 |
+| INT % | 1.9 | 1.9 |
+| Sack % | 1.7 | 1.7 |
+| Yards per carry | 6.35 | 6.42 |
+| Tackle success % | 79.2 | 78.8 |
+| Home wins | 49.0% | 47.7% |
+| Higher-rated club wins | 79.8% | 74.9% |
+
+The second test made a home club **all of the field's type** (the most a field can do for one side), on the same games:
+- that stacked club won 48.3% of decisive games;
+- with its natural types it won 47.7%;
+- stacked again but with the bonus off, it won 49.0%.
+
+So the bonus is a flavour, not a home-field edge. **No values changed.** Watch item: the higher-rated club's win rate moved by about 5 points, about 1.9 standard errors on 243 games. It is the same direction as the type study (§32.6). If playtests show too many upsets, lower `envMatch` to 0.01.
+
+**33.3 Weather.**
+- Each outdoor game draws weather from its environment's weights: Clear, Overcast, Rain, Snow, Wind, Thunderstorm. The dome is always Indoors.
+- The draw is a hash of franchise, season, week and home club, never the game's dice, so the preview and the game always agree. Adding venues changed no game's outcome by itself.
+- **Weather is visual only.** It is a CSS layer over the field (rain, snow, wind streaks, a thunderstorm tint with a rare soft flash), so it never redraws with the play. Reduced motion stills it, and indoor games never get it. No weather gameplay effect is enabled: passing, kicking and running would need their own study first.
+
+**33.4 Where you see it.**
+- The **venue card** appears on the pregame screen and on Thursday's scouting report. It shows the stadium name, the home club, the environment and its blurb, the expected weather, the bonus with the type that benefits, how many starters on each side benefit, and a note that weather is atmosphere only.
+- **More → Stadiums** lists all 16 clubs' fields, the owner's own first.
+- The live field takes the environment's turf and border colour.
+
+*Stadium management later:* `stadiumFor(club, overrides)` reads an optional `f.stadiums` map ({club: {name, env}}), which nothing writes yet. A future stadium feature changes a club's field there, without touching this data.
+
+## 34. Instant replays (IMPLEMENTED 2026-10-22; branch `stadiums-replays-legendary`)
+
+**34.1 Recording.**
+- The engine already records every play at 10 frames a second: every player's position, engagement and status mark, the ball and its holder, and the phase. It also records the play's events with timestamps: catches, tackles, sacks, takeaways, ability activations and outcomes.
+- A replay draws **those frames**, with the same ability effects built from the same events. It never reruns the simulation, the rules or the game runner, so it cannot show a different catch, tackle or score.
+- The buffer is **the one most recent eligible play**, kept in memory only (about 10–30 KB) and never saved.
+
+**34.2 Triggers** (`src/ui/replay.js`, pure and tested):
+- touchdowns, including defensive ones;
+- interceptions, fumbles lost and other turnovers;
+- safeties;
+- game-winning and late go-ahead field goals;
+- fourth-down conversions needing 3+ yards, or any in the fourth quarter;
+- clutch plays: in the last two minutes of the fourth quarter or overtime, within one score, a 15+ yard gain or a sack;
+- ability plays: a signature ability decides a 12+ yard play, a sack, or a play like a denied pick, a veil, a blink or a flattening.
+
+Routine plays, including long gains in the middle of a game, are never replayed.
+
+**34.3 Presentation.** The play finishes, its result and callout show, and the game saves. Then, 0.35 s later:
+1. a gold wipe;
+2. the **INSTANT REPLAY · TOUCHDOWN** badge (the reason);
+3. the last 7.5 s at most, starting about 2.6 s before the decisive moment (the catch, pick, fumble, ability outcome or kick);
+4. **slow motion at 40%** from 0.6 s before to 0.5 s after it, flagged SLOW-MO;
+5. a 1.35× camera zoom that tracks the ball.
+
+Kick replays follow the ball as the live kick did. When the replay ends, the screen returns exactly as it was. The touchdown flash and score pulse are not played a second time.
+
+**34.4 Controls.**
+- **Skip replay** (or tap the field) ends it at once.
+- **Settings → Instant replays** is on by default.
+- **📼 Replay** watches the last big play again: it is in the play controls between snaps and on the kickoff and try screens right after a touchdown. Auto mode waits for the replay and shows Skip replay too.
+
+**34.5 Safety** (tested). With a replay running or skipped, the score, clock, quarter, play count, possession, down, ball spot, log and box score are unchanged (UI check, every run). The pure planner reads frames only, and the test plays a whole AI game to confirm it. The replay code calls nothing that steps the game or saves.
+
+**34.6 Limits.**
+- Plays that are never animated are never replayed: Key Moments' simulated downs, *Sim to final*, and every play with **reduced motion** on, where plays do not animate at all.
+- After a reload the buffer is empty.
+- Only field goals that win or take the lead late are replayed among kicks.
+
+## 35. Beast Bowl championship ceremony (IMPLEMENTED 2026-10-22; branch `stadiums-replays-legendary`)
+
+**35.1 Trigger.** Only when the owner's club wins the Beast Bowl (the playoff final), after the final-whistle sheet (and a gym handshake if the final was a badge game). Other playoff wins keep their normal postgame.
+
+`finishSunday` has already saved the result, the title, the season's end, awards, the Legend Track offer and the Board's verdict. Skipping the ceremony therefore skips nothing that counts.
+
+**35.2 Record.** `championshipRecord` is written into that season's `f.history` entry when the title is won (about 6 KB, no animation data). It holds:
+- the final: opponent, score, OT, venue;
+- the season record and the playoff record;
+- the league awards the club's monsters won, empty if none (nothing is invented);
+- the captain: the cornerstone if he started, else the best-rated starter;
+- small snapshots of the **14 starters** (7 offense + 7 defense; the game is 7-on-7) and the rest of the healthy roster: name, species, type, position, slot, ability name.
+
+**35.3 Scenes** (CSS animation on a few dozen elements, about 17 s):
+1. **Final whistle.** The final score on a scoreboard, the BEAST BOWL CHAMPIONS banner, confetti, sweeping lights. The turf is the venue's colours.
+2. **Team enters.** The bench files in behind; the starters step forward in two rows with their slot tags, using the real monsters' sprites.
+3. **Ability showcase.** One starter every 0.52 s, never more than three effects at once. Each hops, and a burst in his element's colours and glyph rises, falls or spins with the element's style. A centred caption names him and his ability (or trait). It is visual only: no engine, no stats.
+4. **Trophy.** The trophy rises, the captain lifts it, team-coloured and gold confetti falls, and the club name shows.
+5. **Summary.** Club, season, final score and venue, season record, playoff record, Beast Bowl result, captain, league awards. Then **Replay ceremony** and **Continue**.
+
+**Skip ▸▸** jumps to the summary at any moment. Reduced motion opens on the summary.
+
+**35.4 Revisit.** Franchise History shows **🏆 Ceremony** on every title season. It replays the full ceremony and summary from the record. Developer Tools has a *preview* that builds the record on the fly and saves nothing.
+
+## 36. Legendary Plays pilot (IMPLEMENTED 2026-10-22; branch `stadiums-replays-legendary`)
+
+**36.0 Scope.** The game defines **12 Legendaries**, one per type, not 60. The pilot gives six of them a play, three offense and three defense. Each was chosen because its position, slot and existing signature ability give the play a real tactical identity. All six are existing species, and none was created for this.
+
+| Legendary (type, position) | Play | Side | Why this monster |
+|---|---|---|---|
+| Aurodrax (Dragon, QB) | **Dragon's Gambit** | O | A rollout deep shot fits a Dragon wildcard. Sovereign Arm makes first-read throws un-interceptable, which pays off the aggressive deep read. |
+| Tempestra (Wind, WR) | **Eye of the Storm** | O | Cyclone spins the defender on her hip at her first break, so a slant-and-go is built around that moment. |
+| Titanolith (Earth, OL) | **Fault Line** | O | Landslide makes runs behind him fall forward. A counter that cuts behind his slot uses it; it is the only lineman Legendary. |
+| Nyxshade (Dark, CB) | **Phantom Coverage** | D | Night Veil hides him from the quarterback, so a disguised rotation where he vanishes into the middle is the brief's Phantom Coverage. |
+| Glacivern (Ice, S) | **Avalanche** | D | Whiteout freezes the first read; a disguised safety blitz arrives while the quarterback holds the ball. |
+| Elderoot (Nature, LB) | **Rootbound** | D | Ancient Grove stops bites on fakes within 5 yards, so a run-stopping front packed inside his radius uses it. |
+
+Not in the pilot: Pyroclast (TE), Tsunarok (S), Voltarch (QB; a second QB play), Aegistron (CB) and Astralux (RB). The six chosen cover six positions and six types.
+
+**36.1 The plays.** Each is built from the playbook's existing assignments (routes, blocks, pulls, boots, man and zone keys, rushes and disguised alignments). Each carries a lesson saying when to call it, what to watch, what it beats and what beats it.
+
+| Play | What it does | Strong against (measured) | Weak against (measured) |
+|---|---|---|---|
+| Dragon's Gambit | Run fake, QB boots right; the left receiver runs a deep **over** across the whole field, TE corner high, WR2 comeback | Bear Front 17.4, Cover 0 12.7, QB Spy 12.7 yd/play | DB Blitz −0.5, Corner Blitz 3.9, Cover 2 Zone 4.6 |
+| Eye of the Storm | Trips left: Tempestra **sluggo** (slant-and-go), whip and dig underneath; five-step drop | All-Out Pressure 44.4, Run Wall 16.5, Max Drop 15.0 | Bear Front −6.9, Goal Line Stand −4.9, Goal Line Man −3.9 |
+| Fault Line | Tight I: false step right, back cuts through the left B gap behind Titanolith at LG; RG pulls to kick out | Bear Front 23.4, All-Out Pressure 15.3, Cover 3 13.1 | Goal Line Stand 0.9, Safety Blitz 1.2, Run Wall 2.9 |
+| Phantom Coverage | Nyxshade shows press at CB1, drops to the robber spot; FS rotates down to his man, SS to the deep middle | Bubble Screen 1.5, Quick Slants 2.1, Levels 2.2 yd allowed | PA Post 14.0, Three Verticals 11.3, PA Boot 10.7 |
+| Avalanche | Glacivern shows robber at FS, blitzes the A gap; corners bail to deep halves, SS takes the right flat | Deep Post −4.9, PA Boot 0.4, Power Left 1.3 | Stretch Left 21.4, Levels 16.3, PA Shot 16.1 |
+| Rootbound | Base: Elderoot at short middle, FS in the hook, LB2 man inside, corners man; everyone within his grove | Toss Sweep −0.5, QB Draw 0.0, Inside Zone 0.7 | Jet Sweep 28.1, Stretch Left 28.0, PA Boot 17.5 |
+
+**36.2 Balance** (`node tools/legendary-balance.mjs --n=240`). Every play was run against every play on the other side, on the same snaps, with quality-62 lineups. It was compared with the same play with an ordinary monster of the same position in the slot, and with the standard plays of its kind.
+
+| Play | yd/play (allowed for D) | success % | sack % | turnover % | Same play, ordinary monster | Standard plays of its kind |
+|---|---|---|---|---|---|---|
+| Dragon's Gambit | 8.73 | 48 | 3.9 | 2.5 | 8.89 · TO 3.1 | 8.47 · TO 0.8 |
+| Eye of the Storm | 9.32 | 45 | 7.1 | 3.2 | 10.94 | 8.73 · sacks 3.6 |
+| Fault Line | 8.10 | 75 | 0.3 | 0.5 | 6.68 | 6.47 · 59% |
+| Phantom Coverage | 5.94 | 52 | 0.7 | 2.6 | 5.91 | 6.61 · 46% |
+| Avalanche | 6.27 | 40 | 5.6 | 2.0 | 7.60 · sacks 0.8 | 5.80 · sacks 6.2 |
+| Rootbound | 7.51 | 37 | 0.7 | 1.6 | 7.32 | 6.65 · 47% |
+
+*Reading.* None is a dominant call, and each has clear counters. The deep shots (Gambit, Storm) are higher-variance than standard passes: more yards on a hit, more sacks and turnovers. Fault Line is the strongest, a short-yardage run with a high success rate, but a full box or a gap blitz stops it. The defenses each trade one area for another: Phantom gives up play action, Avalanche the middle and the outside run, Rootbound the outside.
+
+The Legendary's own ability matters most for Fault Line (Landslide: +1.4 yd), Avalanche (Whiteout: the blitz arrives) and Gambit's turnovers. Eye of the Storm's "ordinary monster" row used a different WR with better ratings. On a paired check with identical ratings, Cyclone added about 1 yd/play.
+
+*Changes made during balancing:*
+- Eye of the Storm's route moved from out-and-up (12.2 yd/play, too strong) to the sluggo.
+- Avalanche's safety moved from 11 to 7.2 yards deep (1.8% sacks to 5.6%).
+
+**No ratings or abilities were changed.**
+
+**36.3 Unlocking and eligibility** (`src/franchise/legendary.js`).
+- A play is **discovered** the first time its Legendary is on the club's roster, however he arrived (Legend Track and scouting, the draft, a trade, free agency). It stays discovered forever.
+- HQ shows **LEGENDARY PLAY DISCOVERED!** once, with *Open the game plan* or *Later*, and the news feed records it.
+- The play is **available** only while that monster is on the roster, healthy, and able to play the play's slot.
+- It uses **one of the normal six slots**. The coordinator's default plan never adds it, so the owner decides.
+- If the monster leaves or is hurt, the play is taken out of this week's plan and the remembered plan, and the coordinator's pick fills the slot (with a news line). `playerTeam` also never hands an unavailable one to the game. When he returns it can be equipped again.
+- When it is called, the Legendary **takes the play's slot for that snap**, swapping with whoever had it or coming off the bench (`pickSlots`). He always takes part.
+
+**36.4 AI.**
+- A club whose roster holds a pilot Legendary equips its play in place of the plan play most like it (same run or pass kind, most shared tags), unless he is hurt.
+- Its coaches call it through the normal situational weights, with a ×1.25 lean.
+- Gym clubs hold four of the six (Palmetto Vipers, Canyon Crushers, Eastport Phantoms, Frostpeak Howlers). Tested: equipped and called in a full game.
+
+**36.5 Interface.**
+- Gold Legendary cards in the game plan (selectable when available) and in the Playbook.
+- Unavailable or locked cards show a lock and the reason when tapped. Undiscovered plays show "??? Legendary Play" with the Legendary needed.
+- The detail sheet has the requirement, art, description, when and watch, strengths and weaknesses, and status.
+- During a game the play card has the gold style.
+
+**36.6 Adding the rest.** A new Legendary Play is a playbook entry with `legendary: { species, slot }` (in `LEGENDARY_OFFENSE` or `LEGENDARY_DEFENSE`) plus a `LESSONS` entry. Discovery, plan rules, placement, AI equipping, the cards and the tests read that data. The other six existing Legendaries, or new ones if the dex grows toward the brief's 60, need no new code.
+
+*Testing aid:* Developer Tools → *Feature testing* can add any pilot Legendary to the roster (the franchise is marked `devAssisted`) and preview the ceremony.
+
+## 37. Integration notes for §33–36
+
+- **Preserved:**
+  - 7-on-7 with 16 clubs and the six-play plans;
+  - every attribute, OVR and ability;
+  - Beast Clash (untouched);
+  - staff, scouting, fatigue and injuries, playoffs;
+  - the save key and schema.
+- **Promotion and relegation are switched off in this build** (`TIERS_ENABLED = false`) and were not touched. Career Mode was not started.
+- **New save fields, all optional:**
+  - `f.legendaryPlays`;
+  - `f.history[].championship`;
+  - `f.game.state.venue`;
+  - `f.settings.replays`;
+  - `f.devAssisted` and `m.devGranted` (developer aid only);
+  - `f.stadiums` (read, not written).
+
+  Older saves load. A game saved before venues plays on with no field bonus.
+- **Performance.**
+  - Field textures are patterns, and themed fields add about 3 KB per drawn frame.
+  - Weather is pure CSS.
+  - Replays redraw at the play's own frame rate, and the zoom is a CSS transform.
+  - The ceremony is CSS animation, with at most three ability bursts at once.
+- **Tests:**
+  - `tests/stadiums.test.js` (6), `tests/replay.test.js` (3), `tests/legendary-plays.test.js` (6);
+  - `tools/feature-ui-check.py` (headless Chromium at 390, 360 and 320 px).

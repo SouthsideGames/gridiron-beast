@@ -2,6 +2,21 @@
 
 All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
+## 0. Current status (2026-10-22, branch `stadiums-replays-legendary`: stadiums, instant replays, the Beast Bowl ceremony, Legendary Plays, GDD §33–37)
+
+- `npm test`: NPM_PLACEHOLDER
+- `tools/feature-ui-check.py` (headless Chromium at 390×844, 360×640 and 320×568), all clean, no page errors, no horizontal overflow:
+  - the venue card is on the pregame screen;
+  - More → Stadiums lists 16 clubs;
+  - the field takes the stadium's look;
+  - an automatic touchdown replay starts under Auto, zooms, and changes nothing in the game (score, clock, plays, log, box score compared). Skip ends it, 📼 Replay plays it again, and with the setting off there was no replay in 24 plays;
+  - Legendary Plays: the discovery card shows once, the game plan has 6 gold cards (1 available, 5 locked) and the playbook its section, the lock sheet explains, and equipping works;
+  - the ceremony passes through all five scenes, Skip jumps to the summary, Continue returns to HQ, and Franchise History reopens it.
+- Balance: `type-balance --only=env` (300 paired games) and `legendary-balance --n=240`. Results are in GDD §33.2 and §36.2.
+- Visual checks (headless screenshots, not a real device): all seven stadiums with weather and venue cards, a replay in progress, the discovery card, the game plan, the Legendary sheet, every ceremony scene.
+- WALK_PLACEHOLDER
+- **Not done: testing on real phones.** See §3, items 4c–4f.
+
 ## 0. Current status (2026-10-22, branch `type-matchups`: type effectiveness in football and the Type Chart, GDD §32)
 
 - `npm test`: **315 tests, all passing** (306 on `main` after PR #36 plus 9 in `tests/type-matchups.test.js`).
@@ -37,6 +52,9 @@ The previous status (build v36.0, PR #36) follows.
 | Board | `board-balance.test.js` | Forecast against the league average; safe goal = rounded forecast; one achievable badge for rebuilding clubs; one miss is never a dismissal; narrow miss on the hot seat = final warning; clear miss = out; three straight misses = out even with winning records; older saves rebuild the miss streak |
 | Type effectiveness | `type-matchups.test.js` | One chart for the Clash and football (the Clash's 144 pairs unchanged); football strengths ±4% and Dragon +2%; neutral or missing types change nothing; every recorded edge is the pair actually in the contest (blocks, sheds, tackles, sacks, separation, contested catches); a catch contested by a defender other than the pre-snap man assignment uses that defender; tackles use the tackler only; inputs never change; edges move outcomes the right way and ratings outweigh them; expected pre-snap matchups from the player's call and the visible alignment only; the AI's lean is capped and rating-first; the field draws icons only for edges |
 | Statistics filters | `stats-filters.test.js` | The current season is a selectable book that updates per game; past seasons and the career; playoffs in their own bucket; "both" adds without double counting; league tables archived at season end and selectable; combined tables merge by player; archive pruning keeps records and awards; older saves load |
+| Stadiums | `stadiums.test.js` | Every club has one permanent stadium; gym clubs in their element where it exists; deterministic weather, never indoors under the dome; +2% field bonus for either team, none on grass, capped at +6% with a type edge, never softening a negative edge; a neutral field changes nothing; both sides get it; games carry the venue; the preview matches the game; older games without a venue still play; grass draws exactly as before |
+| Instant replays | `replay.test.js` | Triggers (touchdowns, takeaways, safeties, game-winning kicks, real fourth-down conversions, clutch plays, ability plays) and no routine plays; the window and slow motion; a whole game's replays leave the state and the plays byte-for-byte unchanged; the replay code calls nothing that steps or saves |
+| Legendary Plays | `legendary-plays.test.js` | Six valid plays on six real Legendaries who can play the slot; discovery once, never auto-equipped; six slots, never seven; out when hurt or gone (refilled), back when healthy or re-acquired, discovery permanent; the Legendary takes the slot for the snap; four gym clubs equip and call theirs; saves keep it all |
 | Coach Assist | `coach-assist.test.js` | Defaults, mode switching, preferences in the save, old saves, first-use tips that stay dismissed, Expert with no automatic tips on any screen, help on every complex screen (the goal screen included), warnings, Guided-only suggestions (Tuesday, draft, contracts, Board goal), consequence switch, the Tuesday and Board explanations, and the same weeks played in Guided and Expert produce identical saves |
 | Beast Clash engine | `tests/clash/*.test.js` | Values 1.1.0 and the historical 1.0.0 ruleset, calculators, conditions, the knockout fix, presentation, the Gate B suites, the boundary rule (only `clash-link.js` imports the engine) |
 | Developer review | `dev-review.test.js` | Change notices for plays and abilities |
@@ -53,6 +71,9 @@ The previous status (build v36.0, PR #36) follows.
 | Clash balance | `npm run clash:balance`, `clash:gateb*`, `clash:manifest` | Beast Clash balance reports (values are locked; read-only) |
 | Type balance | `node tools/type-balance.mjs --games=300 --plays=1500` and `--only=dragon --games=400 --dragon=0.02,0.01,0` | Football type effectiveness on identical games: league stats before/after, rating × type, Dragon (GDD §32.6) |
 | Type UI check | `python3 tools/type-ui-check.py --width=390 --height=844 --shots=DIR` | Matchup icons, the panel and the Type Chart in the real app (headless Chromium) |
+| Feature UI check | `python3 tools/feature-ui-check.py --width=390 --height=844 --shots=DIR` | Stadiums, replays, Legendary Plays and the ceremony in the real app (headless Chromium) |
+| Legendary balance | `node tools/legendary-balance.mjs --n=240 [--only=lp_...]` | Each Legendary Play against every opposing play, with and without its Legendary, next to the standard plays (GDD §36.2) |
+| Stadium gallery | open `tools/stadium-gallery.html` from a local server (`?ballOn=92&weather=rain`) | All seven environments side by side |
 | Play replay | `node tests/tools/replay.js CODE` | Re-run a scrimmage play from its repro code |
 
 ## 3. Manual checklist (real devices; still required)
@@ -67,6 +88,10 @@ Run on at least one small iPhone (SE size) and one large Android, in the browser
 4. Sunday: the matchup header, the pregame Clash (one selection, then the battle runs to the end), possession choice, a full game in Key Moments and one in Full Coaching: watch for the callouts (touchdown, turnover, sack, first down), the score pulse and the final-whistle hero; force a tie if possible and play the overtime Clash.
 4a. Statistics: on a monster card switch This season / past season / Career × Regular / Playoffs / Both; on League leaders pick a past season and Playoffs; confirm every empty combination shows a message, never a blank.
 4b. Type matchups: before a snap, find a ▲ or ▼ beside one of your monsters; tap it (the panel opens, nothing snaps), read it, close it with ✕, *Got it* and a tap outside; open the Type Chart from the panel, a monster card and More; tap every type; switch Settings → Type matchup icons off and on. Check the icons never hide a monster or the ball in tight formations (the line, bunch sets) and are easy to hit with a thumb.
+4c. Stadiums: the venue card before a game at home and away (the Frozen, Volcanic, Storm, Desert and Dome fields if the schedule allows); the field's look on the phone in daylight; yard lines, routes, the ball and the type icons stay readable on every field; rain and snow do not hide anything; Settings → reduced motion stops the weather.
+4d. Replays: play a full game in Full Coaching and wait for a touchdown or a pick; the replay is clear at phone size, the slow motion lands on the catch, Skip works at once, 📼 Replay works on the try screen, the score never changes twice; turn replays off and on.
+4e. Legendary Plays: Developer Tools → Feature testing → add Tempestra (or win your way to a Legendary); the discovery card, then Friday's game plan: equip Eye of the Storm in one slot, call it on Sunday and watch her line up at WR1; injure/release her and confirm the play leaves the plan; try a defensive one (Nyxshade, Glacivern or Elderoot).
+4f. Ceremony: win a Beast Bowl (or Developer Tools → preview); watch it through once, skip it once, open it again from Franchise History; check it reads well on a small phone.
 5. Reload mid-week, mid-Clash (Play mode, at a decision) and mid-game: the state resumes exactly.
 6. Finish a season: playoffs, awards, offseason contracts, the draft, free agency, Season 2 week 1.
 7. One-handed reach, text size, battle speed 1×/2×/4×, reduced motion, screen rotation, backgrounding the app during a battle.
