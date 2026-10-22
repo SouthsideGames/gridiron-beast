@@ -8,6 +8,7 @@
 // league is. Answers are deterministic for a given ask, so re-asking does not
 // help, and every pick can be shopped twice.
 
+import { noteJoin, backfillCareer } from './career.js';
 import { monsterOverall, salaryFor, ROSTER_MAX } from '../data/monsters.js';
 import { createRng, hashString } from '../core/rng.js';
 import { GROUP_SLOTS } from './roster.js';
@@ -177,6 +178,7 @@ export function executeTrade(f, offer, { club, year, nextYear }) {
     m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year };
     (m.history ||= []).push({ club: offer.team, from: Math.max(1, year - Math.min(m.yearsPro || 0, 3)), to: year, reason: 'traded' });
     delete m.signature; delete m.legendary;
+    backfillCareer(f, m); noteJoin(f, m, 'trade', { from: offer.team }); // Career Timeline (GDD §38)
     f.roster.push(m);
     (((f.aiTransfers ||= {})[year] ||= {})[offer.team] ||= []).push(src.id);
     got.player = m;

@@ -3,6 +3,7 @@
 // and records. The legacy key is never modified.
 
 import { SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
+import { backfillCareer } from './career.js';
 import { hashString } from '../core/rng.js';
 import { migrateTips } from './assist.js';
 import { resolveSpecies, SPECIES_BY_ID } from '../data/monsters.js';
@@ -33,6 +34,7 @@ export function migrate(f) {
   migrateSpecies(f);
   dedupeRosterNames(f);
   migrateTips(f); // Coach Assist (GDD §27.3): older tip names carry over
+  for (const m of f.roster || []) backfillCareer(f, m); // Career Timeline (GDD §38): older saves rebuilt once from what they prove
   return f;
 }
 /** Saves from before the duplicate-name fix (2026-10-22) may hold two roster monsters with one name: the later one gets a numeral. Stats and history are keyed by id, so nothing else changes. */

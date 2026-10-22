@@ -3,6 +3,7 @@
 // mutation goes through a function here so the UI stays thin.
 
 import { venueFor } from '../data/stadiums.js';
+import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary } from './career.js';
 import { syncLegendaryPlays, legendaryAvailable, legendaryStatus, equipLegendaryForAI, legendOf, LEGENDARY_IDS } from './legendary.js';
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords, archiveSeasonTables } from './stats.js';
@@ -73,6 +74,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   startSeason(f, 1); f.achievementsBackfilled = true;
   noteNewFranchise();
   for (const m of roster) dexRecord(f, m, 'signed');
+  for (const m of roster) { noteJoin(f, m, 'founding', m.cornerstone ? { cornerstone: 1 } : {}); markCareerFresh(m); } // Career Timeline (GDD §38)
   openCreationDraft(f);
   return f;
 }
@@ -265,6 +267,7 @@ export function evolveMonster(f, id) {
   const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not on roster.' };
   if (!evolutionReady(m)) { const n = nextEvolution(m); return { ok: false, reason: n ? `${m.name} evolves at level ${n.level}.` : `${m.name} is fully evolved.` }; }
   const from = m.name; const ev = tryEvolve(m); if (!ev) return { ok: false, reason: 'Nothing happened.' };
+  noteEvolution(m, { year: f.season.year, week: f.season.week, club: f.club, from, to: m.name }); // Career Timeline
   dexRecord(f, m, 'signed');
   news(f, `EVOLUTION: ${from} evolved into ${m.name}!`, 'win');
   return { ok: true, event: ev, monster: m };
@@ -367,12 +370,13 @@ export function retire(f) {
   const p = hallOfFameProgress(f); if (!p.eligible) return { ok: false, reason: 'Not yet eligible for the Hall of Fame.' };
   const seasons = f.history.map((h) => ({ year: h.year, w: h.record.w, l: h.record.l, place: h.place, champion: h.champion === h.club, playoffs: h.playoffs }));
   const wins = seasons.reduce((a, h) => a + h.w, 0), losses = seasons.reduce((a, h) => a + h.l, 0);
-  const best = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a)).slice(0, 5).map((m) => ({ name: m.name, species: m.species, position: m.position, ovr: monsterOverall(m), level: m.level }));
+  const best = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a)).slice(0, 5).map((m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, ovr: monsterOverall(m), level: m.level }));
   const card = {
     id: `hof_${f.seed}_${Date.now().toString(36)}`, owner: `${f.owner.first} ${f.owner.last}`, portrait: f.owner.portrait, club: f.club, difficulty: f.settings?.difficulty || 'pro',
     seasons: seasons.length, record: { w: wins, l: losses }, titles: f.campaign.titles || 0, badges: Object.keys(f.campaign.badges || {}).map((club) => GYM_BY_CLUB[club]?.badge || club), awards: f.campaign.awards || 0,
-    bestMonsters: best, dexSeen: dexCounts(f).seen, retiredAt: Date.now(), seasonsList: seasons, rival: f.rivals[f.tier]?.team || null, rivalRecord: f.rivals[f.tier]?.headToHead || null,
+    bestMonsters: best.map(({ id, ...rest }) => rest), dexSeen: dexCounts(f).seen, retiredAt: Date.now(), seasonsList: seasons, rival: f.rivals[f.tier]?.team || null, rivalRecord: f.rivals[f.tier]?.headToHead || null,
   };
+  noteHallOfFame(f.roster, best.map((b) => b.id), { year: f.season.year, club: f.club, owner: card.owner }); // Career Timeline: the Hall of Fame card
   return { ok: true, card };
 }
 
@@ -729,7 +733,7 @@ export function signFreeAgent(f, id) {
   const entry = offseasonMarket(f).find((e) => e.monster.id === id); if (!entry) return { ok: false, reason: 'Not on the market.' };
   const m = entry.monster; m.salary = salaryFor(m); m.contract = newContract(f.season.year + 1);
   if (entry.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } } else f.offseason.market = f.offseason.market.filter((x) => x !== m);
-  uniqueName(f, m); m.joined = f.season.year + (f.offseason ? 1 : 0); f.roster.push(m); dexRecord(f, m, 'signed');
+  uniqueName(f, m); m.joined = f.season.year + (f.offseason ? 1 : 0); backfillCareer(f, m); noteJoin(f, m, 'free_agent', entry.fromPool ? { region: homeRegion(m) } : {}); f.roster.push(m); dexRecord(f, m, 'signed');
   const cap = salarySummary(f);
   news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed as a free agent${cap.over ? ', over the cap; the commissioner will review in week 1' : ''}.`, cap.over ? 'loss' : 'roster');
   return { ok: true, overCap: cap.over };
@@ -920,6 +924,9 @@ export function syncLegendary(f) {
   return syncLegendaryPlays(f, { news: (t, k) => news(f, t, k), refill: (side, kept) => [...kept, ...defaultPlan(f, side).filter((id) => !kept.includes(id))].slice(0, PLAN_SIZE) });
 }
 export { legendaryStatus, legendaryAvailable, LEGENDARY_IDS };
+/** A roster or pool monster's Career Timeline, newest first (GDD §38). Older saves are rebuilt once from what they prove. */
+export function monsterTimeline(f, m) { backfillCareer(f, m); return careerTimeline(m, { club: f.club }); }
+export { careerSummary };
 /**
  * Developer test aid (Developer Tools only, never offered in play): put one of the pilot Legendaries on the roster so the
  * Legendary Play flow can be tested without winning titles first. The franchise is marked `devAssisted` for good.
@@ -930,7 +937,7 @@ export function devGrantLegendary(f, speciesId) {
   const { r, save } = frng(f); const sp = SPECIES_DEX.find((x) => x.id === speciesId); if (!sp) return { ok: false, reason: 'Unknown species.' };
   const m = generateMonster(r, { position: sp.position, quality: 64, species: speciesId }); save();
   m.salary = salaryFor(m); m.contract = newContract(f.season.year, 2); m.devGranted = true; (m.history ||= []).push({ club: f.club, from: f.season.year, to: null, reason: 'developer' });
-  f.roster.push(m); f.devAssisted = true; const res = syncLegendary(f);
+  noteJoin(f, m, 'developer'); markCareerFresh(m); f.roster.push(m); f.devAssisted = true; const res = syncLegendary(f);
   news(f, `Developer test: ${m.name} joins the roster.`, 'info');
   return { ok: true, monster: m, discovered: res.discovered };
 }
@@ -1095,7 +1102,7 @@ function signProspect(f, p, releaseId) {
   if (releaseId) { const out = f.roster.find((x) => x.id === releaseId); if (out) { f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); } }
   m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
   if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
-  uniqueName(f, m); m.joined = f.season.year; f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
+  uniqueName(f, m); m.joined = f.season.year; backfillCareer(f, m); noteJoin(f, m, 'encounter', f.week.region ? { region: f.week.region } : {}); f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
   news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
   const cap = salarySummary(f);
   if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
@@ -1508,6 +1515,9 @@ export function finishSunday(f, gameState) {
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   recordPlayStats(f, gameState, side);
+  // Career Timeline (GDD §38): read-only, after the game's stats are in the books.
+  careerAfterGame(f.roster, { year: f.season.year, week: f.season.week, club: f.club, playoffRound: playoffRoundNow, rival: !!m.rival, won, opponent: m.opponent, records: f.records });
+  for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: f.club, from: e.from, to: e.to }); }
   f.lastGame = { ...f.week.gameResult, events, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null };
   { const rvTeam = f.rivals?.[f.tier]?.team; const vsRival = f.season.schedule.filter((g) => g.opponent === rvTeam && g.result);
     checkAchievements(f, 'sunday', { won, opponent: m.opponent, rival: rvTeam === m.opponent, newBadge: !!f.lastGame?.newBadge, playoffRound: playoffRoundNow, rivalSeasonWins: vsRival.filter((g) => g.result.won).length + (rvTeam === m.opponent && won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0), rivalSeasonLosses: vsRival.filter((g) => !g.result.won).length + (rvTeam === m.opponent && !won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0) }); }
@@ -1606,6 +1616,7 @@ function endSeason(f) {
   f.history[f.history.length - 1].awards = s.awards;
   if (champion === f.club) f.history[f.history.length - 1].championship = championshipRecord(f, s); // the ceremony and its summary (GDD §35)
   updateSeasonRecords(f, s.year); // the records book (GDD §17.8)
+  careerSeasonEnd(f.roster, { year: s.year, club: f.club, awards: s.awards, records: f.records, champion }); // Career Timeline (GDD §38)
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)

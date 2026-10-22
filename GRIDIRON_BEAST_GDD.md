@@ -1487,3 +1487,100 @@ The Legendary's own ability matters most for Fault Line (Landslide: +1.4 yd), Av
 - **Tests:**
   - `tests/stadiums.test.js` (6), `tests/replay.test.js` (3), `tests/legendary-plays.test.js` (6);
   - `tools/feature-ui-check.py` (headless Chromium at 390, 360 and 320 px).
+
+## 38. Monster Career Timeline (IMPLEMENTED 2026-10-22, Monster Identity and Attachment, Phase 1; branch `monster-career-timeline`)
+
+**38.0 What it is.** Every monster card has a **Career Timeline**: the moments of that monster's football life, newest first, kept in the franchise save and attached to the monster's permanent id. It follows him through trades, releases and returns.
+
+The timeline only reads the game. It never changes a stat, rating, XP, contract, award, Board verdict or result. This is tested: the same three-season franchise played with the timeline writers switched off is byte-for-byte identical, timeline data aside.
+
+**38.1 Events and where they come from.** The timeline stores only what no other record keeps, as small keyed entries in `m.career.ev`. Club moves and draft details are read from what the game already records (`m.history`, `m.drafted`, `m.joined`).
+
+| Group | Events | Source | Weight |
+|---|---|---|---|
+| Beginnings | Founding roster (cornerstones marked), Drafted (round and pick), Recruited after a Tuesday Beast Clash (region), Free-agent signing (pool region), Traded in (from which club), Returned to a former club, Developer addition (test aid) | logged when he joins | career |
+| Team history | Released, Left as a free agent, Cut by the commissioner, Signed with another club from a pool | `m.history` (existing) | career |
+| Development | Evolution (from → to); reaching level **10 / 20 / 30**; a season of **+7 OVR or more** | logged when it happens | notable |
+| Firsts | First professional game (rookies only); first game for a new club; first touchdown; first touchdown pass (QBs); first interception; first sack. "First career …" only when his recorded career starts in his rookie season, otherwise "First … with the [club]" | after each game, from his game log | notable |
+| Career milestones | passing yards 5,000/10,000/20,000; TD passes 25/50/100; rushing or receiving yards 1,500/3,000/6,000; touchdowns 10/25/50; sacks 10/20/40; interceptions 5/10/20; tackles 100/200/400 | crossed in a game | notable |
+| Season marks (regular season) | 1,500 passing yards; 15 TD passes; 800 rushing; 600 receiving; 10 touchdowns; 4 sacks; 3 interceptions; 40 tackles | season end | notable |
+| Big games | **Playoff performance** or **Beast Bowl star**; **Rivalry hero** (a win over the rival). Both need a big line: 3+ TD passes or 250+ passing yards, 2+ touchdowns, 100+ rushing or receiving yards, 2+ sacks, or an interception in the playoffs | after each game | notable |
+| Postseason | First playoff game; Played in the Beast Bowl (lost); **Beast Bowl champion**. Counted in order: "His first title", "×2"; the earliest final appearance reads "First Beast Bowl appearance" | after each game; title-run members who played earlier rounds at season end | notable / **major** |
+| Honours | **League awards** (MVP, OPOY, DPOY, OROY, DROY, Signature Monster; repeats counted ×2…), **League records** for one game or one season (from season 2 on), **Hall of Fame** (named on the owner's Hall of Fame card at retirement) | season end; the game's records book; retirement | **major** |
+
+Thresholds were measured for 7-on-7 and nine-game seasons from simulated seasons:
+
+| Stat | Season median | Season 90th percentile |
+|---|---|---|
+| Passing yards | 1,271 | 1,770 |
+| Rushing yards | 234 | 933 |
+| Receiving yards | 276 | 618 |
+| Touchdowns | 3 | 9 |
+| Sacks | 1 | 3 |
+| Interceptions | 1 | 2 |
+| Tackles | 12 | 38 |
+
+Participation is required. Every game event reads the monster's own game log for that week: no entry, no event. The bench never gets a debut, a first or a title.
+
+The records book keeps names, not ids. A record is credited only when the name, club, season, week (for game records) and the value all match the monster's own line, so a namesake can never inherit it. Records start counting from season 2, because in the first season every number is a "record".
+
+Not tracked, because the game has no such systems:
+- position changes (positions are fixed);
+- monster retirement (only owners retire);
+- a monster's history while on an AI club (AI rosters are rebuilt each season, so a monster traded away leaves the save).
+
+**38.2 Engine of the timeline** (`src/franchise/career.js`).
+- `noteJoin` is called by the founding roster, the draft, the Tuesday signing, free agency, trades and the developer aid.
+- `careerAfterGame` runs in `finishSunday` after the stats are recorded.
+- `noteEvolution` runs when the owner evolves a monster, or when an evolution is reported by a game.
+- `careerSeasonEnd` runs in `endSeason` after awards and records are settled.
+- `noteHallOfFame` runs at retirement.
+- Every entry has a unique key (`first:td`, `mile:tdTotal:10`, `award:mvp:3`, `champ:3`…), so nothing is written twice, whether by weeks advancing, loading twice or a backfill.
+
+**38.3 Saves.**
+- **Persistence.** Events live in `m.career` on each monster: about 4 entries per monster after four seasons, about 19 KB per roster, **1.6% of the save**. The save key and schema are unchanged.
+- **Older saves.** They are rebuilt **once** per monster (`backfillCareer`, flag `bf`) from what they prove:
+  - from the archived season books: firsts and career milestones by season, season marks, playoff appearances, a rookie's debut;
+  - from the franchise history: awards and titles (with playoff participation);
+  - from the monster's stage: evolutions, shown under **"Before the timeline"** because the season is unknown;
+  - cornerstones as founding members.
+
+  Nothing whose season or club cannot be shown is invented. A veteran's unknown arrival gets no entry, though the Bio still shows his stints. A rebuilt "first" has a season but no week. Loading again adds nothing.
+
+**38.4 The interface** (`src/ui/career-timeline.js`). A **Career Timeline** section sits on the monster card right under the Bio, before nature and ratings, and replaces nothing.
+- **Header.** "Career Timeline", an **All / Highlights** filter, and a summary: *13 moments · 1 major · 2 seasons*.
+- **Seasons.** Newest first. Each season has a separator (*SEASON 1202 · 5 moments*, with ★ when it holds a major moment) that sticks while scrolling. Entries his record can't date go under *Before the timeline*.
+- **Order within a season.** Season-end honours on top, then weeks newest first, arrivals at the bottom.
+- **Entries.** An icon, a title, a meta line (*Week 6* or the playoff round, *Conference finals* or *Beast Bowl*, plus the club in its colour) and one sentence.
+- **Weight.**
+  - Major: a gold card, glowing icon, a ★ and a single light sweep when first shown.
+  - Notable: a blue node and accented card.
+  - Career moves: compact and quiet.
+- **Fold.** The first 6 entries show; **Show the whole career (N more)** unfolds in place, and *Show less* folds it back. The filter and the fold redraw only this section and keep it where your thumb left it. There is no new screen and no popup.
+- **Empty state.** *"[Name]'s story starts here."* with what will appear, worded for the All and Highlights filters.
+
+**38.5 Polish pass** (from a phone player's view):
+- the visual hierarchy, the season separators and the club colours;
+- the reveal (cards fade up in a short stagger) and the major entries' one-time shine and star pop, all switched off by reduced motion;
+- touch feedback on the filter and fold (≥ 32 px chips, 44 px fold button);
+- the empty states;
+- the scroll-anchored redraw (the first version jumped to the top of the card when filtering; fixed);
+- counted honours (first title, ×2 MVP, first Beast Bowl appearance);
+- plain-English descriptions that say when a "first" or milestone only counts games with the club;
+- level marks cut from every 5 to 10/20/30, and growth raised from +5 to +7, because the first draft gave a third of the roster a growth entry every season (*keep it meaningful*).
+
+**38.6 Verified.**
+- `tests/career-timeline.test.js` (10 tests).
+- `tools/career-study.mjs`: 6 franchises × 4 seasons (24 seasons, 228 monsters), 976 stored events, 59% of monsters with at least one highlight, 76 major moments, 0 duplicates or out-of-season events, and every timeline identical after save and load.
+- The soak's invariants now also check timelines.
+- `tools/career-ui-check.py` in headless Chromium: the section is under the Bio, the fold and the filter work without a full redraw and without moving the section, the empty state shows, touch targets are adequate, and there is no overflow and no page errors.
+
+**38.7 Later: Career Presentation phase** (recommendations, not built):
+- a career summary header (seasons, clubs, career line, honours count) and a shareable "career card";
+- timelines for pool and draft monsters in their scouting sheets (the data already follows them);
+- tapping an event to open that game's box score or that season's awards;
+- news items that link to the timeline;
+- a team-wide "franchise moments" view built from the same events;
+- retired-monster legends once monster retirement exists;
+- Monster Partnerships (explicitly out of scope here);
+- a Coach Assist tip for the timeline on the monster card.
