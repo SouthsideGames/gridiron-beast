@@ -6,6 +6,7 @@ import { PLAYS } from '../data/playbook.js';
 import { fieldGoalRange } from './special-teams.js';
 import { fieldGoalDistance, clamp } from '../core/field.js';
 import { opponent, inTwoMinute } from './rules.js';
+import { matchupScore, USUAL_OPPONENT } from './type-matchups.js';
 
 const norm = (v) => clamp(v ?? 60, 1, 99) / 99;
 
@@ -34,7 +35,37 @@ export function situation(state, side = state.possession) {
 }
 
 /** Weight each available offensive play for the situation; returns [[id, weight]]. */
-export function weighOffense(state, team, available, tendencies = null) {
+/**
+ * Matchups (GDD §32.5): with the opponent's lineup known, lean a little toward plays that go at the offense's best
+ * matchup. Ratings lead and type edges add the same ±4% the engine applies; the lean is capped at −15% / +20% of a
+ * play's weight, so the situation, the coach's style and the repeat penalty still decide the call.
+ */
+const LEAN = { k: 1.2, min: 0.85, max: 1.2 };
+let leanOn = true;
+const lean = (score) => (leanOn ? clamp(1 + LEAN.k * score, LEAN.min, LEAN.max) : 1);
+/** Balance tools only: run `fn` with the matchup lean switched off (the play calling before GDD §32). */
+export function withoutMatchupLean(fn) { const prev = leanOn; leanOn = false; try { return fn(); } finally { leanOn = prev; } }
+function offenseLean(p, team, opp) {
+  if (!opp?.defense) return 1;
+  const slot = p.type === 'pass' ? p.primary : p.onField.find((s) => ['carry', 'keep', 'option'].includes(p.assignments[s]?.a));
+  const m = team.offense?.[slot]; const d = opp.defense?.[USUAL_OPPONENT[slot]];
+  return m && d ? lean(matchupScore(m, d, p.type === 'pass' ? 'pass' : 'run')) : 1;
+}
+function defenseLean(p, team, opp) {
+  if (!opp?.offense) return 1;
+  const man = p.onField.filter((s) => p.assignments[s]?.a === 'man');
+  if (!man.length) { // zone or pressure: the mirror of how the coverage would fare in man
+    const pairs = ['WR1', 'WR2', 'TE'].map((s) => [opp.offense?.[s], team.defense?.[USUAL_OPPONENT[s]]]).filter(([o, d]) => o && d);
+    if (!pairs.length) return 1; const sc = pairs.reduce((t, [o, d]) => t + matchupScore(o, d, 'pass'), 0) / pairs.length; // + when their receivers win
+    return lean(sc * 0.5);
+  }
+  const rev = Object.fromEntries(Object.entries(USUAL_OPPONENT).map(([o, d]) => [d, o]));
+  const pairs = man.map((s) => [opp.offense?.[rev[s]], team.defense?.[s]]).filter(([o, d]) => o && d);
+  if (!pairs.length) return 1; const sc = pairs.reduce((t, [o, d]) => t + matchupScore(o, d, 'pass'), 0) / pairs.length;
+  return lean(-sc * 0.5 * (1 + man.length / 4)); // man coverage when his defenders win their matchups
+}
+
+export function weighOffense(state, team, available, tendencies = null, opp = null) {
   const s = situation(state), str = teamStrengths(team);
   const coach = team.coach || { aggression: 0.5, passBias: null };
   const passBias = coach.passBias ?? str.passBias;
@@ -57,6 +88,7 @@ export function weighOffense(state, team, available, tendencies = null) {
     if (tags.includes('play_action')) w *= s.down <= 2 && !s.short ? 1.3 : 0.6;
     if (tags.includes('misdirection')) w *= s.down <= 2 ? 1.2 : 0.6;
     w *= 0.7 + 0.6 * coach.aggression * (tags.includes('deep') ? 1 : 0.5);
+    w *= offenseLean(p, team, opp);
     // Avoid repeating the same play call too often.
     const recent = tendencies?.recentOffense || [];
     const repeats = recent.slice(-4).filter((x) => x === id).length;
@@ -66,7 +98,7 @@ export function weighOffense(state, team, available, tendencies = null) {
   return out;
 }
 
-export function weighDefense(state, team, available, oppTendencies = null) {
+export function weighDefense(state, team, available, oppTendencies = null, opp = null) {
   const s = situation(state, opponent(state.possession));
   const coach = team.coach || { aggression: 0.5 };
   const offS = situation(state);
@@ -85,6 +117,7 @@ export function weighDefense(state, team, available, oppTendencies = null) {
     if (tags.includes('prevent')) w *= s.diff > 0 && s.late && s.secondsLeft < 120 && offS.ballOn < 60 ? 6 : 0.15;
     if (tags.includes('desperation')) w *= s.late && s.diff < -7 && s.secondsLeft < 90 ? 3 : 0.1;
     if (tags.includes('anti_scramble')) w *= 1.1;
+    w *= defenseLean(p, team, opp);
     const recent = oppTendencies?.recentDefense || [];
     const repeats = recent.slice(-4).filter((x) => x === id).length;
     w *= Math.pow(0.5, repeats);
@@ -95,17 +128,17 @@ export function weighDefense(state, team, available, oppTendencies = null) {
 
 /** Coach IQ sharpens (iq > 1) or flattens (iq < 1) the play-call weights: a smart coach picks the right call more often. */
 const sharpen = (weights, team) => { const k = team.coach?.iq ?? 1; return k === 1 ? weights : weights.map(([id, w]) => [id, Math.pow(w, k)]); };
-export function chooseOffensePlay(rng, state, team, available, tendencies) {
-  const weights = sharpen(weighOffense(state, team, available, tendencies), team);
+export function chooseOffensePlay(rng, state, team, available, tendencies, opp = null) {
+  const weights = sharpen(weighOffense(state, team, available, tendencies, opp), team);
   return weights.length ? rng.weighted(weights) : null;
 }
-export function chooseDefensePlay(rng, state, team, available, oppTendencies) {
-  const weights = sharpen(weighDefense(state, team, available, oppTendencies), team);
+export function chooseDefensePlay(rng, state, team, available, oppTendencies, opp = null) {
+  const weights = sharpen(weighDefense(state, team, available, oppTendencies, opp), team);
   return weights.length ? rng.weighted(weights) : null;
 }
 /** The single best suggestion (no randomness) for the Coach's Suggestion UI. */
-export function suggestPlay(state, team, available, side, tendencies) {
-  const weights = side === 'offense' ? weighOffense(state, team, available, tendencies) : weighDefense(state, team, available, tendencies);
+export function suggestPlay(state, team, available, side, tendencies, opp = null) {
+  const weights = side === 'offense' ? weighOffense(state, team, available, tendencies, opp) : weighDefense(state, team, available, tendencies, opp);
   return weights.sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 }
 

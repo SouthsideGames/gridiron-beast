@@ -25,7 +25,7 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '' } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
@@ -125,6 +125,15 @@ export function fieldSvg(o) {
     const dp = presnap.defensePlay; const op = presnap.offensePlay;
     if (dp) for (const slot of dp.onField) { const [x, y] = dp.align[slot]; s += marker(slot, x, y, 'def', false, false); }
     if (op) for (const slot of op.onField) { const [x, y] = op.align[slot]; s += marker(slot, x, y, 'off', false, slot === 'QB'); }
+    // Expected type matchups (GDD §32.4): a small badge just above the sprite's inside shoulder, never over the monster or the
+    // ball, and off the line of a straight route (routes leave from the feet). Each badge is a button: tapping opens the matchup panel.
+    if (typeIcons) for (const [team, play] of [['def', dp], ['off', op]]) for (const [slot, dir] of Object.entries(typeIcons[team] || {})) {
+      const at = play?.align?.[slot]; if (!at || !dir) continue;
+      const cx = X(ballLat + at[1]) + (at[1] > 0 ? -1.3 : 1.3), cy = Y(ballOn + at[0]) - 3.35; // over the inside shoulder, clear of the head and a straight stem
+      const up = dir === 'up'; const col = up ? '#22c55e' : '#f5a524';
+      const arrow = up ? `M${cx - 0.48} ${cy + 0.22} L${cx} ${cy - 0.42} L${cx + 0.48} ${cy + 0.22}` : `M${cx - 0.48} ${cy - 0.22} L${cx} ${cy + 0.42} L${cx + 0.48} ${cy - 0.22}`;
+      s += `<g class="tm-icon" data-tm="${team}:${slot}" role="button" tabindex="0" aria-label="${up ? 'Type advantage' : 'Type disadvantage'} for ${slot}"><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.1" fill="transparent"/><circle class="tm-dot" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="0.85" fill="${col}" stroke="#0b1a14" stroke-width="0.2"/><path d="${arrow}" fill="none" stroke="#0b1a14" stroke-width="0.28" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+    }
   }
   return s;
 }

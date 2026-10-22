@@ -16,6 +16,8 @@ import { ensureStats, POSITION_COLUMNS, STAT_GROUPS, GROUP_LABEL, groupsWithData
 import { attributeHelps, statMeaning, POSITION_NAME } from '../../data/stat-guide.js';
 import { openStatGuide, openStatMeaning } from '../stat-guide.js';
 import { playCardSvg } from '../play-art.js';
+import { openTypeChart } from '../type-chart.js';
+import { typeProfile } from '../../data/type-chart.js';
 
 const ATTR_LABEL = { speed: 'Speed', agility: 'Agility', strength: 'Strength', awareness: 'Awareness', catching: 'Catching', arm: 'Arm', accuracy: 'Accuracy', blocking: 'Blocking', tackling: 'Tackling', coverage: 'Coverage', durability: 'Durability', kicking: 'Kicking' };
 
@@ -120,7 +122,7 @@ export function registerRosterScreens(Router, app) {
         <div class="row" style="gap:6px;margin-top:8px"><button class="btn small ghost" data-action="release">Release ${esc(m.name)}</button><span class="dim" style="font-size:12px">frees ${fmtMoney(m.salary)}/yr · back to the ${esc(F.homeRegion(m))} pool</span></div></div>
         ${bioHtml(f, m)}
         <div class="panel"><b>Nature: ${esc(nature.name)}</b><p class="muted" style="margin:2px 0">${esc(nature.behavior)}${nature.up ? ` <span class="chip good">+10% ${ATTR_LABEL[nature.up]}</span> <span class="chip bad">−10% ${ATTR_LABEL[nature.down]}</span>` : ''}</p>
-          <b>Type: ${esc(m.type)}</b><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}.</p>
+          <div class="row between" style="gap:6px"><b>Type: ${esc(m.type)}</b><button class="btn small" data-action="typechart" data-type="${esc(m.type)}">🔺 Type Chart</button></div><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}. ${(() => { const p = typeProfile(m.type); return `Strong against ${p.strong.join(' and ')}; weak against ${p.weak.join(' and ')}.`; })()}</p>
           ${ab ? `<b>Signature ability: ${esc(ab.name)}</b><p class="muted" style="margin:2px 0">${esc(ab.text)}</p><button class="btn small see-it" data-see-it="${resolveSpecies(m).id}">▶ See it</button>` : (() => { const sp = resolveSpecies(m); return sp.ability ? `<b>Signature ability: ${esc(sp.ability.name)}</b><p class="muted" style="margin:2px 0">${esc(sp.ability.text)}</p><button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : `<b>Species trait: ${esc(TRAITS[sp.trait]?.name)}</b><p class="muted" style="margin:2px 0">${esc(TRAITS[sp.trait]?.text)}</p>`; })()}
           ${evolutionHtml(m)}
           <button class="btn small" data-action="species" style="margin-top:6px">📖 ${esc(resolveSpecies(m).name)} in the Beast Dex</button></div>
@@ -133,6 +135,7 @@ export function registerRosterScreens(Router, app) {
     },
     mount(root, ctx) {
       delegate(root, {
+        typechart: (el) => openTypeChart(el.dataset.type),
         species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); },
         autospendone: () => { F.autoSpendAllPoints(app.f, { only: ctx.params.id }); app.save(); Router.render(); },
         release: async () => { const m = app.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; if (!(await confirmSheet(`Release ${m.name}? They go back to the ${F.homeRegion(m)} free-agent pool, where any club can sign them. This cannot be undone.`, { title: 'Release monster', okLabel: 'Release', danger: true }))) return; const r = F.releaseMonster(app.f, m.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${m.name} released.`, 'info'); Router.go('roster', {}, { reset: true }); },

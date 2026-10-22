@@ -1,12 +1,10 @@
 // Beast Clash: the approved 12-type chart (each type beats two and loses to two) and the
-// condition each element's Disruptor applies. Imports only values.
+// condition each element's Disruptor applies. Imports only values and the shared chart in src/data/type-chart.js.
 import { CLASH_VALUES } from './values.js';
+import { BEATS } from '../data/type-chart.js';
 
-export const BEATS = Object.freeze({
-  Water: ['Fire', 'Earth'], Fire: ['Nature', 'Ice'], Earth: ['Electric', 'Fire'], Electric: ['Water', 'Metal'],
-  Ice: ['Dragon', 'Nature'], Light: ['Dark', 'Psychic'], Dark: ['Psychic', 'Electric'], Nature: ['Water', 'Light'],
-  Metal: ['Ice', 'Light'], Wind: ['Dark', 'Earth'], Dragon: ['Metal', 'Wind'], Psychic: ['Dragon', 'Wind'],
-});
+// The chart itself lives in src/data/type-chart.js so football reads the same table (GDD §32); the Clash strengths stay here.
+export { BEATS };
 export const TYPES = Object.freeze(Object.keys(BEATS));
 
 /** 1.05 when the attacker's type beats the defender's, 0.952 when it loses to it, else 1. */

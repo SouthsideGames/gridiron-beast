@@ -26,6 +26,8 @@ import { teamOverall } from '../../franchise/roster.js';
 import { boxScoreHtml } from '../box-score.js';
 import { kickFrames } from '../kick-anim.js';
 import { buildFx, shakeBetween, endHold } from '../ability-fx.js';
+import { matchupEdges } from '../../sim/type-matchups.js';
+import { openMatchupPanel } from '../type-chart.js';
 
 /** Start Sunday's game from the settled pregame Clash (set by registerMatchScreens; the battle screen calls it). */
 export let startSundayGame = null;
@@ -99,7 +101,7 @@ export function registerMatchScreens(Router, app) {
       const offColor = s[offenseTeamSide].color, defColor = s[R.opponent(offenseTeamSide)].color;
       const fieldInner = anim
         ? fieldSvg({ ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event, noLines: anim.follow, sprites: spritesFor(f, anim.ev.offenseSide) })
-        : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession) });
+        : fieldSvg({ ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, typeIcons: typeIconsFor(f, teams, look), ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession) });
       const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
       const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}">${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}</span>`).join('')}</div>` : '';
       const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''}" id="banner">${esc(G.lastEvent.text)}${ab}</div>` : '';
@@ -112,7 +114,7 @@ export function registerMatchScreens(Router, app) {
         </div>
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
         ${edgeStrip(f, s, teams, me)}
-        <div class="field-wrap" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>
+        <div class="field-wrap" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${banner}</div>${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span></div>' : ''}
         <div id="controls">${controlsHtml(f, teams, look)}</div>`;
     },
     mount(root, ctx) {
@@ -147,7 +149,12 @@ export function registerMatchScreens(Router, app) {
         kneel: () => { R.kneel(f.game.state); afterStep(f, { kind: 'kneel', text: f.game.state.lastPlay.text }); },
         spike: () => { R.spike(f.game.state); afterStep(f, { kind: 'spike', text: f.game.state.lastPlay.text }); },
       });
-      root.querySelector('#fieldwrap')?.addEventListener('click', () => { if (anim) finishAnim(f, true); });
+      root.querySelector('#fieldwrap')?.addEventListener('click', (e) => {
+        // A type icon opens its matchup panel and nothing else: no skip, no selection, no snap.
+        const icon = e.target.closest?.('.tm-icon'); if (icon) { e.stopPropagation(); e.preventDefault(); openTypeIcon(icon); return; }
+        if (anim) finishAnim(f, true);
+      });
+      root.querySelector('#fieldwrap')?.addEventListener('keydown', (e) => { const icon = e.target.closest?.('.tm-icon'); if (icon && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); openTypeIcon(icon); } });
       document.querySelector('.topbar [data-action="log"]')?.addEventListener('click', () => showLog(f));
       document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(`${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match" style="margin-top:8px">? More help (Coach Assist)</button>`, { title: 'How a match works' }));
       { const s1 = f.game?.state; if (s1?.finished && s1.needsTiebreak && !s1.winner && !document.querySelector('.sheet')) momentSheet(f, 'overtime', () => app.save()); } // Coach Assist: what the overtime Clash is, once
@@ -156,6 +163,27 @@ export function registerMatchScreens(Router, app) {
     },
     unmount() { stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
+
+  // ------------------------------------------------------------ type matchups (GDD §32.3–32.4)
+  // Before the snap: the expected matchups from the player's own call and the other side's visible alignment (never
+  // the AI's actual call). Icons are drawn for the player's monsters only. The engine never reads these: during the
+  // play every contest uses the opponent really in it.
+  let presnapEdges = []; let presnapMe = 'off';
+  function typeIconsFor(f, teams, look) {
+    presnapEdges = []; const G = f.game; const s = G.state; const p = look?.presnap;
+    if (!p || anim || f.settings.typeIcons === false || s.phase !== 'scrimmage' || s.finished) return null;
+    const me = G.playerSide; const offSide = s.possession, defSide = R.opponent(offSide);
+    presnapMe = offSide === me ? 'off' : 'def';
+    const offense = R.pickSlots(teams[offSide].offense, p.offensePlay.onField, teams[offSide]);
+    const defense = R.pickSlots(teams[defSide].defense, p.defensePlay.onField, teams[defSide]);
+    presnapEdges = matchupEdges({ offensePlay: p.offensePlay, defensePlay: p.defensePlay }, offense, defense).filter((x) => x[presnapMe].mod);
+    const icons = { off: {}, def: {} };
+    for (const x of presnapEdges) icons[presnapMe][x[presnapMe].slot] = x[presnapMe].mod > 0 ? 'up' : 'down';
+    return icons;
+  }
+  function openTypeIcon(icon) {
+    const [team, slot] = (icon.dataset.tm || '').split(':'); const x = presnapEdges.find((m) => m[team]?.slot === slot); if (x) openMatchupPanel(x, team);
+  }
 
   // ------------------------------------------------------------ helpers
   /** Ball spot from the player's point of view. */
@@ -174,8 +202,8 @@ export function registerMatchScreens(Router, app) {
     const rng = rngFromState(s.rngState ^ 0x5bd1e995);
     const team = teams[side];
     const call = s.possession === side
-      ? { key, side, offense: AI.chooseOffensePlay(rng, s, team, team.offensePlays, G.tendencies[side]) }
-      : { key, side, defense: AI.chooseDefensePlay(rng, s, team, team.defensePlays, G.tendencies[s.possession]) };
+      ? { key, side, offense: AI.chooseOffensePlay(rng, s, team, team.offensePlays, G.tendencies[side], teams[R.opponent(side)]) }
+      : { key, side, defense: AI.chooseDefensePlay(rng, s, team, team.defensePlays, G.tendencies[s.possession], teams[R.opponent(side)]) };
     G.aiCall = call;
     return call;
   }
@@ -216,7 +244,7 @@ export function registerMatchScreens(Router, app) {
     if (s.phase !== 'scrimmage') return act(f, {});
     const myBall = s.possession === me; const side = myBall ? 'offense' : 'defense';
     const plan = teams[me][myBall ? 'offensePlays' : 'defensePlays'];
-    G.selected[side] = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them]) || plan[0];
+    G.selected[side] = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them], teams[them]) || plan[0];
     if (myBall && s.down === 4) { const dec = AI.fourthDownDecision(s, teams[me]); return act(f, dec === 'punt' ? { fourthDown: 'punt' } : dec === 'fg' ? { fourthDown: 'fg' } : {}); }
     if (myBall && AI.shouldKneel(s)) { R.kneel(s); return afterStep(f, { kind: 'kneel', text: s.lastPlay.text }); }
     return act(f, {});
@@ -237,7 +265,8 @@ export function registerMatchScreens(Router, app) {
       <h3>Timeout · Spike · Kneel · Tempo</h3><p><b>Timeout</b> (three a half) stops the clock so your next snap costs no time, on defense it is how you get the ball back from a team running the clock out. <b>Hurry-up</b> tempo cuts the runoff to ${R.RUNOFF.hurry} s for free; <b>milk clock</b> raises it to ${R.RUNOFF.milk} s when you are protecting a lead. <b>Spike</b> stops the clock for the price of a down (appears under a minute); <b>kneel</b> burns time when you are ahead, if the other side has no timeouts and less than ${R.RUNOFF.milk} s is left, the clock runs out and the game is over.</p>
       <h3>Calling plays</h3><p>Pick one of the six cards you set on Friday and press Snap; on defense pick a defense. ★ is the coach's suggestion; ✦ counters what you learned scouting; a greyed card needs a package you cannot field. <b>FG</b> kicks on any down when the kick is makeable.</p>
       <h3>Key Moments · Full Coaching · Auto · Sim</h3><p><b>Key Moments</b> simulates the routine downs and stops for the big ones; <b>Full Coaching</b> lets you call every snap. <b>Auto</b> calls the coach's plays for you (1× or 2×) until you stop it. <b>Sim to key moment</b> jumps ahead; <b>Sim to final</b> ends the game at once.</p>
-      <h3>Edges</h3><p>${F.comebackRule(f) ? `<b>Comeback mode:</b> down ${F.COMEBACK.margin}+ in the fourth, either side plays with +${F.COMEBACK.edge}. ` : ''}<b>Scheme lock:</b> all starters on a side fitting the coordinator's scheme play with +${F.SCHEME_LOCK_EDGE}. Training (T) and media day (+) lifts show on the pregame lineup. Abilities fire on the strip under the field.</p>`;
+      <h3>Edges</h3><p>${F.comebackRule(f) ? `<b>Comeback mode:</b> down ${F.COMEBACK.margin}+ in the fourth, either side plays with +${F.COMEBACK.edge}. ` : ''}<b>Scheme lock:</b> all starters on a side fitting the coordinator's scheme play with +${F.SCHEME_LOCK_EDGE}. Training (T) and media day (+) lifts show on the pregame lineup. Abilities fire on the strip under the field.</p>
+      <h3>Type matchups</h3><p>Before the snap, a green <b>▲</b> or amber <b>▼</b> beside one of your monsters means a type advantage or disadvantage against the monster he is expected to face. Tap it to see the matchup. In the play, the edge (+4% or −4% on his side of a block, tackle, sack, separation or contested catch; Dragon +2% against neutral types) counts only against the monster he really meets. It never changes ratings. The Type Chart is under More and on every monster card.</p>`;
   }
   function controlsHtml(f, teams, look) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
@@ -264,7 +293,7 @@ export function registerMatchScreens(Router, app) {
     const myBall = s.possession === me;
     const side = myBall ? 'offense' : 'defense';
     const plan = teams[me][side === 'offense' ? 'offensePlays' : 'defensePlays'];
-    const suggestion = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them]);
+    const suggestion = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them], teams[them]);
     const selected = look.myPlay;
     let primary;
     if (myBall && s.down === 4) {
