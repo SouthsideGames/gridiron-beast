@@ -47,6 +47,8 @@ test('league tables: past seasons are archived at season end, selectable with th
   const T2 = seasonTables(f, 2); assert.equal(T2.current, true); assert.deepEqual(T2.reg, f.season.leagueStats); assert.deepEqual(leaders(T2.post, 'passYds'), [], 'a new season has no playoff leaders yet (the screen says so)');
   const both = combinedTable(T1.reg, T1.post); const qb = Object.values(both).flatMap((T) => Object.values(T)).find((r) => (T1.post[r.team]?.[r.id]?.games || 0) > 0);
   assert.ok(qb, 'a playoff player'); assert.equal(qb.games, (T1.reg[qb.team][qb.id].games || 0) + T1.post[qb.team][qb.id].games); assert.equal(qb.passYds || 0, (T1.reg[qb.team][qb.id].passYds || 0) + (T1.post[qb.team][qb.id].passYds || 0));
+  // Every number, for every player with playoff games, is regular season + playoffs exactly (not only the first one found).
+  for (const [team, T] of Object.entries(T1.post)) for (const [id, p] of Object.entries(T)) { const reg = T1.reg[team]?.[id] || {}; const b = both[team][id]; for (const k of ['games', 'passYds', 'rushYds', 'recYds', 'tackles', 'sacks']) assert.equal(b[k] || 0, (reg[k] || 0) + (p[k] || 0), `${p.name} ${k}`); }
   const regCount = Object.values(T1.reg).flatMap((T) => Object.values(T)).length; assert.ok(Object.values(both).flatMap((T) => Object.values(T)).length >= regCount, 'nobody is dropped or duplicated');
 });
 

@@ -1124,3 +1124,146 @@ The football animation redraws only when the frame (or half-frame) changes and t
 ### 31.5 Not changed
 7-on-7, 16 clubs, positions, playbooks, staff, weekly schedule, scouting, progression, abilities, fatigue and injuries, playoffs, the season, Beast Clash combat values, save files and monster data. (The brief's references to 11-on-11 and promotion/relegation describe the legacy prototype; the active design is 7-on-7 with one league, §27.7.)
 
+
+## 32. Type effectiveness in football and the Type Chart (IMPLEMENTED 2026-10-22, owner brief; branch `type-matchups`)
+
+**32.0 Owner decisions (2026-10-22).** The brief listed two five- and six-type rings that disagree with the approved Beast Clash chart (values 1.1.0) in most pairs. The owner chose to **keep the game's chart** for both football and the Clash, so the Clash is unchanged. Dragon in football uses the chart's own edges **plus +2% against the types the chart lists as neutral**.
+
+**32.1 The chart.** There is one table, `BEATS` in `src/data/type-chart.js`. The Beast Clash (`src/clash/types.js`, which re-exports it), football (`src/sim/type-matchups.js`) and the Type Chart screen all read it, so the screen cannot disagree with the game. Every type is strong against two types and weak against two. The other seven matchups, and a type against itself, are neutral.
+
+| Type | Strong against | Weak against |
+|---|---|---|
+| Fire | Nature, Ice | Water, Earth |
+| Water | Fire, Earth | Electric, Nature |
+| Nature | Water, Light | Fire, Ice |
+| Electric | Water, Metal | Earth, Dark |
+| Earth | Electric, Fire | Water, Wind |
+| Ice | Dragon, Nature | Fire, Metal |
+| Wind | Dark, Earth | Dragon, Psychic |
+| Psychic | Dragon, Wind | Light, Dark |
+| Dark | Psychic, Electric | Light, Wind |
+| Light | Dark, Psychic | Nature, Metal |
+| Metal | Ice, Light | Electric, Dragon |
+| Dragon | Metal, Wind | Ice, Psychic |
+
+*Type Chart screen.* It opens as a sheet, so a live match is never left. There are three ways in:
+- the **🔺 Type Chart** button on every monster card, which opens on that monster's type and also lists its strengths and weaknesses in a line;
+- **More → Type Chart**;
+- the **Type Chart** button in the on-field matchup panel.
+
+The sheet shows a grid of the twelve types in their colours and glyphs; tap one to select it. Below the grid is the selected type's profile: **▲ Strong against** in green, **▼ Weak against** in amber, then the neutral types. Dragon also gets a note on the wildcard. After that come a short "In football / In Beast Clash" explanation and an "All matchups" table. All of it fits 320 px wide.
+
+**32.2 Football calculations.** Each strength is its own number, separate from the Clash's ×1.05 / ×0.952 (`FOOTBALL_TYPE_VALUES` = `f1.0`):
+
+| Edge | Football | Beast Clash |
+|---|---|---|
+| Strong | +4% to that monster's side of the contest | damage ×1.05 |
+| Weak | −4% | damage ×0.952 |
+| Neutral | 0 | ×1 |
+| Dragon vs a type the chart lists as neutral | +2% for the Dragon; nothing for its opponent; never Dragon vs Dragon | ×1 |
+
+A modifier applies only to a contest between two opposing monsters who are actually meeting. Each side scales its own score by its own edge against that opponent, inside the engine's existing formulas:
+
+| Contest (engine) | Who | What is scaled |
+|---|---|---|
+| Block engagement, push and shed (`resolveEngagement`) | the blocker and the defender he is engaged with: OL vs DL, TE or RB vs any defender he blocks, pass pro vs rushers, run blocks, escorts | blocker score (blocking, strength, abilities) and defender score (strength, agility, tackling, abilities) |
+| Open-field block (`tryEngage`, soft) | the blocker and the defender he reaches | the blocker's chance to make the block |
+| Tackle (`tryTackle`) | the tackler making the attempt and the carrier | the rating part of the tackle score and of the carry score. Closing speed and the gang bonus are untouched, so helpers never add their own type. |
+| Sack attempt (`trySack`) | the rusher who reaches the QB, and the QB | rusher tackling, QB agility |
+| Route separation (`resolveArrival`) | the receiver and the defender **nearest the ball when it arrives** | the distance from which that defender can still contest the catch: shrunk by the receiver's edge, grown by the defender's |
+| Contested catch (`resolveArrival`) | the same pair | receiver catching, defender coverage |
+
+Not affected:
+- unopposed throws, accuracy and arm;
+- kicks, punts and returns as kicks;
+- movement and speed;
+- the QB's reads;
+- interceptions, which are the defender against the ball;
+- abilities;
+- every rating and overall.
+
+Nothing is written to a monster. The input lineups are checked to be unchanged after a play.
+
+*Why separation is read at the catch point.* The first version scaled the coverage reaction timer. Measured on 2,000 forced throws, that timer moves in 0.05 s ticks and is not monotonic in Coverage (lower Coverage sometimes covered better), so a type edge there pushed completions the wrong way. The edge now acts where separation is decided: whether the defender at the ball is close enough to contest. This is a design choice. No values changed.
+
+**32.3 Dynamic opponents.** There is no stored matchup. Each contest reads the pair at the moment of contact:
+- the block uses whoever the blocker is engaged with now;
+- the tackle uses whoever is trying it;
+- the catch uses the defender actually nearest the ball, which may be a safety or a zone defender rather than the man who lined up on the receiver.
+
+A new opponent means a new pair. Every edge that applied on a play is in the result's `typeContests`: the contest, the time, both slots, and both modifiers. The tests check each entry against the monsters' real types over 400 plays, every contest type is reached, and some contested catches are made by a defender other than the pre-snap man assignment. User and AI teams run through the same engine.
+
+**32.4 On-field indicators.** Before the snap, the match screen asks `expectedMatchups` for each of the player's monsters. That function uses only what the player can see: **the player's own call** (or the base look when no play is picked yet) and **the other side's alignment**. It never reads the AI's call. It pairs:
+- receivers with their man defender, or the nearest defender who can cover;
+- blockers with the nearest front defender;
+- the ball carrier with the nearest unblocked linebacker or safety.
+
+Each monster appears at most once. Icons:
+- A **green ▲** or **amber ▼** dot sits just above the inside shoulder, clear of the head, the ball and a straight stem.
+- Nothing is drawn for a neutral matchup.
+- Icons are drawn only for the player's own monsters, which keeps the field readable. The opponent's side is shown in the panel.
+
+Tapping an icon opens a sheet with:
+- the two monsters, their types and positions;
+- **Type advantage / Type disadvantage / Dragon wildcard edge**;
+- each affected contest with its modifier (e.g. *Route separation +4%, Contested catch +4%*);
+- the reason (*Fire is strong against Nature.*);
+- the opponent's side;
+- the note that these are situational modifiers, not permanent stat increases, and that the edge only counts if the two actually meet.
+
+The panel closes with ✕, *Got it* or a tap outside. The tap never skips, selects a play or snaps; the UI check compares the game state before and after. Icons stay up for the whole pre-snap. After the snap there are no icons and no popups. **Settings → Type matchup icons** turns them off (default on; an older save without the setting shows them).
+
+**32.5 AI.** League and opponent coaches call plays through the same numbers:
+- `matchupScore` is the rating gap first, plus each side's type modifier from the same `typeMod` the engine uses.
+- On offense, the AI leans toward the play whose primary target or carrier wins his usual matchup (WR1 against CB1, the TE or RB against LB1, and so on).
+- On defense, it leans toward man coverage when its defenders win their matchups, and toward zone when they lose them.
+- The lean is capped at −15% / +20% of a play's weight. Down and distance, field position, the score and clock, the coach's style, Coach IQ and the repeat penalty still decide the call.
+- Neither coach reads the other's call. The player's Coach's Suggestion uses the same lean.
+
+**32.6 Balance (measured with `tools/type-balance.mjs`; no values changed).** The tables below compare three versions on the same AI-vs-AI games, with identical clubs and seeds (300 games each):
+- *before*: the game before this section, with types off and no lean;
+- *lean*: types off, the rating lean on;
+- *types*: the shipped game.
+
+| | before | lean | types |
+|---|---|---|---|
+| Points per team per game | 13.99 | 13.84 | 13.60 |
+| Completion % | 60.3 | 60.1 | 60.0 |
+| Interception % | 1.8 | 2.1 | 2.0 |
+| Sack % of dropbacks | 1.4 | 1.6 | 1.5 |
+| Yards per carry | 6.58 | 6.52 | 6.73 |
+| Tackle success % | 78.3 | 78.5 | 78.6 |
+| Higher-rated club wins | 79% | 79% | 75.4% |
+| Average margin | 9.2 | 9.5 | 9.4 |
+
+*Rating against type* (single plays, every monster on a side the same type, the extreme case):
+- With equal ratings, a whole unit with the edge on every pair runs for 6.7 yd against 5.6 neutral and 5.1 unfavoured.
+- **+6 rating points with every pair against them** runs for 6.7 against the lower-rated unit's 6.7 with every pair for it, so the two are about even.
+- **+12 rating points** wins clearly: 8.9 against 6.7 on runs, 16.2 against 9.5 per pass.
+- Passing shifts less: completion moves about ±0.8 points.
+
+In real rosters types are mixed, so edges mostly cancel. The league table above shows no shift outside noise in completions, interceptions, sacks, rushing, tackling or scoring. Upsets rise slightly: the higher-rated club wins 75% instead of 79% (252 decisive games; inside about 1.5 standard errors).
+
+*Dragon* (paired study, 400 games per row; the same clubs with every monster Dragon against the same opponents and seeds):
+
+| Wildcard | All Dragon wins | Same clubs, natural types | Lift |
+|---|---|---|---|
+| +2% (shipped) | 53.5% | 50.7% | +2.8 pts |
+| +1% | 50.2% | 50.2% | 0 |
+| 0 | 48.8% | 50.5% | −1.7 pts |
+
+Even a club of seven Dragons gains under 3 points of win rate, inside noise. Against a random opponent, Dragon's average net edge per contest is +1.2%; every other type's is about 0. Dragons are about 10% of league starters. **Decision: keep the owner's +2%.** If playtests show Dragon players dominating their pairings, +1% is the measured neutral point.
+
+*Watch items for the owner:*
+- the small rise in upsets;
+- a whole unit favoured on every pair, compared with one unfavoured on every pair, is worth about 4 rating points on runs.
+
+Both values live in `FOOTBALL_TYPE_VALUES`.
+
+**32.7 Compatibility.**
+- No save change: same key and schema. The only new setting, `typeIcons`, is additive and optional.
+- No roster or type data changed.
+- The Beast Clash chart and strengths are byte-for-byte the same in behaviour (a test compares all 144 pairs with the 1.1.0 table), and the Clash engine files are untouched apart from `types.js` importing the shared table.
+- `src/sim` still never imports `src/clash` (the boundary test).
+- Tests: `tests/type-matchups.test.js` (9 tests).
+- Tools: `tools/type-balance.mjs` for balance, and `tools/type-ui-check.py` for the indicators, the panel and the chart at 390, 360 and 320 px in headless Chromium (emulated, not a real device).

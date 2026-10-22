@@ -155,7 +155,7 @@ export function monsterSeasons(m, currentYear = null) {
 /** A league table with regular season and playoffs added together (rows keyed by player id, as the tables are). */
 export function combinedTable(reg, post) {
   const out = {};
-  for (const table of [reg, post]) for (const [team, T] of Object.entries(table || {})) { const O = (out[team] ||= {}); for (const [id, row] of Object.entries(T)) { const r = (O[id] ||= { ...row, games: 0, starts: 0 }); const { id: _i, name, type, species, position, age, yearsPro, team: tm, ...nums } = row; addInto(r, nums); } }
+  for (const table of [reg, post]) for (const [team, T] of Object.entries(table || {})) { const O = (out[team] ||= {}); for (const [id, row] of Object.entries(T)) { const { id: _i, name, type, species, position, age, yearsPro, team: tm, ...nums } = row; const r = (O[id] ||= { id: row.id, name, type, species, position, age, yearsPro, team: tm }); addInto(r, nums); /* identity once, numbers added once: copying the row here counted the regular season twice */ } }
   return out;
 }
 /** The league tables of a season: the current one, or an archived one from the history (ARCHIVE_SEASONS kept). */
