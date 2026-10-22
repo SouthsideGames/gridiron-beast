@@ -12,6 +12,7 @@ import * as F from '../../franchise/franchise.js';
 import { BACKGROUNDS } from '../../data/staff.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { resetDex } from '../../franchise/dex-store.js';
+import { clashSettings } from '../../franchise/clash-link.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
 import { resetTutorial, primerHtml } from '../tutorial.js';
 import { DIFFICULTY as DIFF } from '../../franchise/franchise.js';
@@ -61,6 +62,9 @@ export function registerMenuScreens(Router, app) {
           <label class="field">Coaching mode<select data-change="mode"><option value="key" ${s.mode === 'key' ? 'selected' : ''}>Key Moments, you coach the big downs (recommended)</option><option value="full" ${s.mode === 'full' ? 'selected' : ''}>Full Coaching, call every play</option></select></label>
           <p class="dim">Times assume Key Moments; Full Coaching roughly doubles them.</p>
           <label class="field">Animation speed<select data-change="speed"><option value="0.7" ${s.speed === 0.7 ? 'selected' : ''}>Slow</option><option value="1" ${s.speed === 1 ? 'selected' : ''}>Normal</option><option value="1.6" ${s.speed === 1.6 ? 'selected' : ''}>Fast</option></select></label>
+          ${(() => { const c = clashSettings(s); return `<label class="field">Beast Clash battles<select data-change="clashmode"><option value="ask" ${c.mode === 'ask' ? 'selected' : ''}>Ask every time</option><option value="play" ${c.mode === 'play' ? 'selected' : ''}>Play battle (I make the swap decisions)</option><option value="auto" ${c.mode === 'auto' ? 'selected' : ''}>Auto battle (watch my monsters fight)</option><option value="skip" ${c.mode === 'skip' ? 'selected' : ''}>Skip to results (same battle, instantly)</option></select></label>
+          <label class="field">Beast Clash speed<select data-change="clashspeed"><option value="1" ${c.speed === 1 ? 'selected' : ''}>1×</option><option value="2" ${c.speed === 2 ? 'selected' : ''}>2× (default)</option><option value="4" ${c.speed === 4 ? 'selected' : ''}>4×</option></select></label>
+          <p class="dim">Tuesday encounters, the pregame Clash and overtime use these. Skipping to results never changes who wins; speed only changes how fast the battle plays.</p>`; })()}
           <label class="field">Players on the field<select data-change="markers"><option value="sprites" ${s.fieldMarkers !== 'simple' ? 'selected' : ''}>Monster art</option><option value="simple" ${s.fieldMarkers === 'simple' ? 'selected' : ''}>Simple circles and squares</option></select></label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="hints" ${s.hints !== false ? 'checked' : ''}> Coaching hints (recommended plays after scouting)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="autopoints" ${s.autoPoints ? 'checked' : ''}> Trainer spends attribute points for me (off: you spend them on the monster card)</label>
@@ -78,6 +82,7 @@ export function registerMenuScreens(Router, app) {
       const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
+        clashmode: (el) => set('clash', { ...clashSettings(app.settings), mode: el.value }), clashspeed: (el) => set('clash', { ...clashSettings(app.settings), speed: Number(el.value) }),
         reduced: (el) => set('reducedMotion', el.checked), shake: (el) => set('screenShake', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), hints: (el) => set('hints', el.checked), autopoints: (el) => set('autoPoints', el.checked), tutorial: (el) => set('tutorial', el.checked), liveclock: (el) => set('liveClock', el.checked),
         tutreset: () => { resetTutorial(app.f); app.f.settings.tutorial = true; app.save(); toast('Tips will show again on each screen.', 'good'); Router.render(); },
         primer: () => sheet(primerHtml(), { title: 'How football works' }),
