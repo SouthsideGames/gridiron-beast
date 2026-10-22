@@ -9,7 +9,7 @@ import { newContract, contractEnds, renewalAsk, acceptsCounter, staffSalary, ope
 export { offseasonPending, offseasonReady, renewalAsk, CONTRACT_YEARS } from './contracts.js';
 import { openDraftClass, scoutDraftClass as draftScout, startDraft as draftStart, advanceDraft as draftAdvance, playerPick as draftPlayerPick, passPick as draftPassPick, prospectView, injectDraftees, ageDraftees, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js';
 export { prospectView, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js';
-import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel } from './board.js';
+import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel, boardForecast } from './board.js';
 export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
 export { AWARDS } from './awards.js';
 export { MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST } from '../data/media.js';
@@ -415,7 +415,7 @@ export const staffMember = (f, role) => staffById(f.staff[role]);
 export function commissionerWelcome(f) {
   const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const D = difficultyOf(f); const slot = f.draft?.creation ? f.draft.lotterySlot : null;
-  const ex = f.season?.expectations?.[f.club]; const forecast = ex ? Math.round(ex.expectedWinPct * 9) : null;
+  const forecast = f.season?.expectations?.[f.club] ? Math.round(boardForecastFor(f).wins) : null; // the Board's forecast (GDD §29)
   const rival = f.rivals?.[f.tier]?.team; const gm = f.rivals?.[f.tier]?.gm || f.rivals?.[f.tier]?.name;
   const owner = `${f.owner.first} ${f.owner.last}`.trim();
   const beats = [
@@ -860,12 +860,17 @@ export function answerTradeCall(f, accept) {
 }
 
 /** The commissioner's three goal offers for this season (GDD §17.4). */
+/** The Board's forecast for the player's club this season (GDD §29): its preseason talent against the league's average. */
+export function boardForecastFor(f, games = 9) {
+  const ex = f.season?.expectations || {}; const talents = ALL_TEAMS.map((t) => ex[t]?.talent).filter(Number.isFinite);
+  if (!talents.length || !Number.isFinite(ex[f.club]?.talent)) return { winPct: 0.5, wins: games / 2 };
+  return boardForecast({ talent: ex[f.club].talent, leagueTalent: talents.reduce((a, b) => a + b, 0) / talents.length, games });
+}
 export function commissionerGoals(f) {
   ensureBoard(f);
-  const ex = f.season.expectations?.[f.club] || { expectedWinPct: 0.5 };
   const games = f.season.schedule.filter((g) => !g.bye).length || 9;
-  const gyms = f.season.schedule.filter((g) => !g.bye && GYM_BY_CLUB[g.opponent]).length;
-  return goalOffers(f, { expectedWinPct: ex.expectedWinPct, gamesInSeason: games, gymsThisSeason: gyms });
+  const gyms = new Set(f.season.schedule.filter((g) => !g.bye && GYM_BY_CLUB[g.opponent] && !badgeOf(f, g.opponent)).map((g) => g.opponent)).size; // badges still to win
+  return goalOffers(f, { expectedWinPct: boardForecastFor(f, games).winPct, gamesInSeason: games, gymsThisSeason: gyms });
 }
 export function chooseGoal(f, id) { const r = boardChooseGoal(f, id, commissionerGoals(f)); if (r.ok) news(f, `Commissioner's office: you committed to "${r.goal.label}" this season.`, 'info'); return r; }
 /** Where the goal stands mid-season (for HQ). */
@@ -1073,13 +1078,47 @@ export const skipEncounter = skipRecruit;
 // The scouted monster is met in a Beast Clash. Enter it or skip it. Win: it offers to sign (you may still decline). Lose: one
 // ordinary recruiting pitch at the usual odds. Either way your battlers earn Arena XP and a little fatigue. Skipping costs nothing.
 /** Can the player battle today? Who is eligible, how big the battle would be, and the proposed lineup. */
+/**
+ * Tuesday companions (GDD §26.1, owner authorization 2026-10-22): the chosen prospect fights beside two wild companions that
+ * cannot be signed. Their strength follows the club, not the scout: the wild group as a whole (the prospect and its companions)
+ * averages the club's battle strength (the average overall of its automatic 3v3 lineup, healthy monsters only) minus `gap`, so
+ * the companions make up for a weak or strong prospect, with a small spread, and never fight above the club's battle strength. The chosen lineup never
+ * changes them, so fielding weaker monsters cannot make the battle easier; the scouted prospect keeps every rating it was
+ * scouted with. Companions are drawn from their own seed (franchise seed, season, week, prospect), so the preview and the battle
+ * always match and the franchise generator is untouched.
+ */
+export const COMPANION_RULE = Object.freeze({ gap: 9, spread: 2, floor: 50, ceiling: 95 });
+export function clubBattleStrength(f) {
+  const line = autoLineup(f.roster, CLASH_SIZE.encounter, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`));
+  return line.length ? line.reduce((a, m) => a + monsterOverall(m), 0) / line.length : 0;
+}
+export function encounterCompanions(f, prospectIndex, n = CLASH_SIZE.encounter - 1, rule = COMPANION_RULE) {
+  const p = f.week.prospects[prospectIndex]; if (!p || n <= 0) return [];
+  const r = createRng(hashString(`${f.seed}|companions|${f.season.year}|${f.season.week}|${prospectIndex}`));
+  const regionName = f.week.region && REGIONS[f.week.region] ? f.week.region : Object.keys(REGIONS)[0];
+  const pool = regionSpecies(regionName, REGIONS[regionName].types, f.season.week).filter((sp) => sp.rarity !== 'legendary');
+  const S = clubBattleStrength(f); const R = { ...COMPANION_RULE, ...rule }; const out = [];
+  for (let i = 0; i < n; i++) {
+    const sp = pool[r.int(pool.length)] || pool[0];
+    // The wild group as a whole (prospect + companions) is matched to the club: S − gap on average. Companions make up for a weak
+    // or strong prospect, but never fight above the club's own battle strength.
+    const base = (CLASH_SIZE.encounter * (S - R.gap) - monsterOverall(p.monster)) / (CLASH_SIZE.encounter - 1);
+    const target = Math.max(R.floor, Math.min(R.ceiling, Math.round(S), Math.round(base + (r.next() * 2 - 1) * R.spread)));
+    // generateMonster's quality is only roughly the overall a position and species end up with: re-roll the same monster
+    // (same seed) with a corrected quality until its overall is within a point of the target.
+    const seed = r.seed(); let q = target, m = null;
+    for (let k = 0; k < 4; k++) { m = generateMonster(createRng(seed), { position: sp.position, quality: q, species: sp.id, id: `wild_${f.season.year}_${f.season.week}_${prospectIndex}_${i}` }); const d = target - monsterOverall(m); if (Math.abs(d) <= 1) break; q += d; }
+    m.companion = true; m.name = `Wild ${speciesName(m)}`; out.push(m);
+  }
+  return out;
+}
 export function encounterPreview(f, prospectIndex) {
   const p = f.week.prospects[prospectIndex]; if (!p) return { ok: false, reason: 'No such prospect.' };
   const eligible = eligibleBattlers(f.roster);
-  const wild = [p, ...f.week.prospects.filter((x) => x !== p)].slice(0, CLASH_SIZE.encounter);
-  const size = Math.min(CLASH_SIZE.encounter, wild.length, eligible.length);
+  const size = Math.min(CLASH_SIZE.encounter, eligible.length);
   if (size < 1) return { ok: false, reason: 'Nobody healthy enough to battle this week.', eligible, size: 0 };
-  return { ok: true, eligible, size, wild: wild.slice(0, size).map((x) => x.monster), lineup: autoLineup(f.roster, size, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`)) };
+  const wild = [p.monster, ...encounterCompanions(f, prospectIndex, size - 1)];
+  return { ok: true, eligible, size, wild, lineup: autoLineup(f.roster, size, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`)) };
 }
 /** Enter the encounter: draw the battle seed once and fix the lineup (yours in the order given; the wild side is the monster you chose plus the others the scout found). */
 export function startEncounter(f, prospectIndex, { lineup = null, mode = 'auto' } = {}) {
@@ -1536,8 +1575,8 @@ function endSeason(f) {
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
-    const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club });
-    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? `BOARD: goal met, ${verdict.goal.label}. Confidence ${verdict.confidence >= 0 ? '+' : ''}${verdict.confidence} (${confidenceLabel(verdict.confidence)}). The scouting department expands next season.` : verdict.status === 'fired' ? `BOARD: goal missed · ${verdict.goal.label}. The board has let you go.` : verdict.status === 'hot_seat' ? `BOARD: goal missed · ${verdict.goal.label}. You are on the hot seat: miss again and you are out.` : `BOARD: goal missed · ${verdict.goal.label}. Confidence ${verdict.confidence}.`, verdict.met ? 'win' : 'loss'); } }
+    const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club, forecastWins: boardForecastFor(f, s.schedule.filter((g) => !g.bye).length || 9).wins });
+    if (verdict) { s.boardVerdict = verdict; news(f, verdict.met ? `BOARD: goal met, ${verdict.goal.label}. Confidence ${verdict.confidence >= 0 ? '+' : ''}${verdict.confidence} (${confidenceLabel(verdict.confidence)}). The scouting department expands next season.` : verdict.status === 'fired' ? `BOARD: goal missed · ${verdict.goal.label} (${rec.w} wins, forecast ${verdict.goal.forecastWins ?? '?'}). ${verdict.reason ? verdict.reason[0].toUpperCase() + verdict.reason.slice(1) + '.' : ''} The board has let you go.` : verdict.status === 'warning' ? `BOARD: goal missed narrowly · ${verdict.goal.label} (${rec.w} wins, forecast ${verdict.goal.forecastWins ?? '?'}). Final warning: you stay on the hot seat. A clear miss, or a third missed season in a row, and you are out.` : verdict.status === 'hot_seat' ? `BOARD: goal missed · ${verdict.goal.label}. You are on the hot seat: miss again and you are out.` : `BOARD: goal missed · ${verdict.goal.label}. Confidence ${verdict.confidence}.`, verdict.met ? 'win' : 'loss'); } }
   if (rec.w < rec.l || onHotSeat(f)) f.postseason = makePostseasonEvent(f); // a losing record, or the hot seat, makes one story event mandatory (GDD §15.7, §17.4)
   if (champion === f.club && legendChoices(f).length) f.legendPick = { year: s.year, resolved: false }; // Beast Bowl champions choose a Legend Track (GDD §15.8)
   // Campaign: league awards won by this club's monsters count toward the Hall of Fame.
