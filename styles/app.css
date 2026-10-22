@@ -25,7 +25,7 @@ small, .muted { color: var(--ink-2); font-size: 13px; }
 a { color: var(--info); }
 
 /* Top bar and screen */
-.topbar { position: sticky; top: 0; z-index: 20; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; height: calc(48px + var(--sat)); padding-top: var(--sat); background: var(--bg-2); border-bottom: 2px solid var(--line); }
+.topbar { position: sticky; top: 0; z-index: 20; display: grid; grid-template-columns: minmax(64px, auto) 1fr minmax(64px, auto); align-items: center; height: calc(48px + var(--sat)); padding-top: var(--sat); background: var(--bg-2); border-bottom: 2px solid var(--line); }
 .topbar .title { font-size: 16px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .topbar .back { font-size: 26px; line-height: 1; }
 .topbar-right { display: flex; justify-content: flex-end; }
@@ -301,6 +301,16 @@ table.compare td.best { color: #6ee7a0; font-weight: 800; }
 .tip { background: #1e2a3a; border: 2px solid #3b5a7a; border-radius: var(--r); padding: var(--s2) var(--s3); margin: 0 0 var(--s3); }
 .tip p { margin: 6px 0 8px; font-size: 14px; color: var(--ink); }
 .tip .row { gap: 6px; flex-wrap: wrap; }
+/* Coach Assist (GDD §27.3) */
+.help-btn { min-height: 36px; padding: 0 8px; font-size: 13px; font-weight: 800; white-space: nowrap; color: var(--accent, #facc15); }
+.assist-steps { margin: 4px 0 8px; padding-left: 20px; font-size: 14px; }
+.assist-steps li { margin: 2px 0; }
+.assist-topic { border: 1px solid var(--line); border-radius: var(--r); padding: 6px 10px; margin: 6px 0; }
+.assist-topic summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.assist-topic p { margin: 6px 0; font-size: 14px; }
+.assist-note { font-size: 13px; margin: 6px 0; padding: 6px 10px; border-left: 3px solid #3b5a7a; background: #1a2533; border-radius: 6px; }
+.assist-note.suggest { border-left-color: var(--good, #22c55e); }
+.assist-note.critical { border-left-color: var(--bad, #ef4444); background: #2a1a1a; }
 
 .card .card-stat { display: block; font: 500 10px ui-monospace, monospace; color: var(--ink-2); margin-top: 2px; }
 

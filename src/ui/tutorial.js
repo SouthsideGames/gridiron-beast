@@ -1,51 +1,81 @@
-// First-week tutorial (GDD §15.13): a short tip on each screen the first time
-// the player reaches it in a new franchise, written for someone who may never
-// have watched American football, plus a "How football works" primer. Tips
-// are dismissed one at a time and remembered in f.tutorial.seen; Settings can
-// turn them off or bring them back.
-
+// Coach Assist UI (GDD §27.3; replaces the first-week tutorial of §15.13). What to show is decided in src/franchise/assist.js;
+// this file draws it: the first-use tip panel at the top of a screen, sheet tips for the match screen and for moments, the
+// "? Help" sheet every complex screen carries in every mode, and the football primer.
 import { esc, sheet } from './dom.js';
+import { rosterWarnings } from '../franchise/assist-advice.js';
+import { TOPICS, AREAS, TOPIC_KEYS, ASSIST_MODES, ASSIST_MODE_TEXT, assistSettings, setAssist, autoTip, momentTip, dismissTip, resetTips, tipProgress, helpTopics } from '../franchise/assist.js';
 
-/** Screen → tip. `sheet: true` tips open as an overlay (the match screen has no room). */
-export const TIPS = Object.freeze({
-  draft: { title: 'Draft day', text: 'Every club takes three first-year monsters, worst record first. Scouted prospects show their ratings; the rest are a gamble on the public board rank. Rookies cost 70% of market for two seasons, the cheapest good players you will ever sign. Pick for a position where you have no backup, or just the best monster you can see.' },
-  hq: { title: 'Welcome to your week', text: 'A season is 10 weeks. Each week runs Monday to Sunday: scout monsters, battle one to sign it, train, study the opponent, set your plays, talk to the press, then play on Sunday. The big yellow button always says what’s next. If you’d rather skip the weekday chores, “Let the staff run the week” does them for you.', more: true },
-  scout: { title: 'Monday: scouting', text: 'Pick a region and your scout brings back prospects. Each region has its own elements (types) of monster. A better scout finds more prospects and reveals more of their ratings.' },
-  recruit: { title: 'Tuesday: monster encounter', text: 'Your scout found monsters in the wild. Pick one and meet it in a Beast Clash, a 3v3 monster battle with your own roster. Win and it will want to sign; lose and you still get one pitch. Or skip the encounter: no battle, no signing, nothing else lost. The ⓘ button compares a prospect with your monsters at that position. Signing costs salary against your cap.' },
-  training: { title: 'Wednesday: training', text: 'Choose one thing to work on this week. Harder sessions give more but risk injuries, and the same focus three weeks running stops working.' },
-  scoutopp: { title: 'Thursday: scout the opponent', text: 'Pick a side of their team to study. You learn the exact six plays they will call on Sunday, which is how you choose the plays that beat them.' },
-  gameplan: { title: 'Friday: game plan', text: 'Choose six plays for your offense and six for your defense. Those are the only plays you can call on Sunday. Plays marked ✦ counter what you learned on Thursday. A mix of runs and passes is safest.' },
-  lineup: { title: 'Saturday: media day', text: 'The press asks three questions. Every answer is spoken in the voice of one nature (Swift, Cerebral, Ferocious…); the monsters who share that nature hear themselves and play Sunday with a lift. Knowing your monsters’ natures is the whole trick. Your lineup is checked here too: injured or tired starters get swapped automatically.' },
-  pregame: { title: 'Sunday: game day', text: 'The other coach has a word before the lineups. On the field, the top team of each panel is who starts. Boost badges show who got a training (T) or media (+) lift today.' },
-  match: { sheet: true, title: 'Your first game', text: 'Football in one breath: the offense has four tries (“downs”) to move the ball 10 yards. Make it and you get four more; reach the far end zone and that’s a touchdown (6 points, plus a 1-point kick). Fail on fourth down and the other team takes over, which is why you usually punt it away or kick a field goal (3 points) on fourth.\n\nYou coach, you don’t steer: pick one of your six play cards, press Snap, and watch the monsters run it. On defense you pick a play too. In Key Moments mode the game simulates itself and stops for the big downs; switch to Full Coaching in Settings to call every play.' },
-  clock: { sheet: true, title: 'The clock', text: 'The clock does not tick on its own. Every play uses a few seconds, and if the last play ended with the clock RUNNING (tackled in bounds, no score), the time between plays comes off when you snap: 18 seconds at normal tempo, 8 in hurry-up, 30 milking it. The line under the score says which.\n\nTo keep time: a Timeout stops the clock so the next snap costs nothing (you have three a half, and on defense they are how you get the ball back); hurry-up tempo is free; a Spike stops it for the price of a down. To burn time when you are ahead: milk the clock, or Kneel. If the other side has no timeouts and under 30 seconds is left, a kneel ends the game.' },
-  postgame: { title: 'After the game', text: 'The box score shows who did what. Your monsters earn experience and get tired; practice adds a little more, Saturday’s lineup check takes most of it off, and a bye clears it. Win and the standings climb; lose and the season moves on, no replays.' },
-  roster: { title: 'Your roster', text: 'Seven starters a side plus package players for special situations. Tap a monster for ratings, nature and ability. Starters are set for you, and you can override any slot.' },
-  playbook: { title: 'Plays', text: 'Every play has a lesson: what it’s for and what beats it. You don’t need to know them all; your six on Friday are what matter.' },
-  offseason: { title: 'The offseason', text: 'Business first: every expiring contract needs a decision (re-sign, counter or let walk), then the draft, then free agency. Tap a free agent for your scout’s report; a better scout in his home region shows more of his ratings. You can trade draft picks here too. The new season starts when the roster and staff are full.' },
-  league: { title: 'The league', text: 'Sixteen clubs, two conferences. Eight make the playoffs: four per conference, then three rounds to the Beast Bowl. Eight clubs are gyms: beat each one for a badge on the road to the Hall of Fame.' },
-});
+// Older imports keep working.
+export { resetTips as resetTutorial };
+export const TIPS = TOPICS;
+export function tutorialOn(f) { return !!f && assistSettings(f).mode !== 'expert'; }
+export function markSeen(f, key) { dismissTip(f, key); }
 
-const ORDER = ['hq', 'scout', 'recruit', 'training', 'scoutopp', 'gameplan', 'lineup', 'pregame', 'match', 'clock', 'postgame'];
+const para = (t) => esc(t).replace(/\n\n/g, '</p><p>');
+const stepsHtml = (steps) => steps?.length ? `<ol class="assist-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>` : '';
 
-export function tutorialOn(f) { return !!f && f.settings?.tutorial !== false; }
-export function tipFor(f, screen) {
-  if (!tutorialOn(f)) return null;
-  f.tutorial ||= { seen: {} }; f.tutorial.seen ||= {};
-  // The HQ tip once; after the first game HQ shows the "after the game" tip instead.
-  if (screen === 'hq' && f.tutorial.seen.hq && (f.season?.week > 1 || f.week?.gameResult)) screen = 'postgame';
-  const t = TIPS[screen]; if (!t) return null;
-  return f.tutorial.seen[screen] ? null : { key: screen, ...t };
-}
-export function markSeen(f, key) { f.tutorial ||= { seen: {} }; f.tutorial.seen ||= {}; f.tutorial.seen[key] = true; }
-export function resetTutorial(f) { if (f) f.tutorial = { seen: {} }; }
-export function tutorialProgress(f) { const seen = f?.tutorial?.seen || {}; return { done: ORDER.filter((k) => seen[k]).length, total: ORDER.length }; }
-
-/** Inline tip panel html, or '' when nothing to show. */
+/** The inline first-use tip for `screen`, or '' (Expert, already dismissed, or a sheet-style tip). */
 export function tipHtml(f, screen) {
-  const t = tipFor(f, screen); if (!t || t.sheet) return '';
-  const p = tutorialProgress(f);
-  return `<div class="tip" role="note"><div class="row between"><b>📘 ${esc(t.title)}</b><span class="dim" style="font-size:11px">tutorial ${p.done + 1}/${p.total}</span></div><p>${esc(t.text).replace(/\n\n/g, '</p><p>')}</p><div class="row"><button class="btn small primary" data-action="tut-ok" data-k="${t.key}">Got it</button>${t.more ? '<button class="btn small" data-action="tut-primer">How football works</button>' : ''}<button class="btn small ghost" data-action="tut-off">Turn tips off</button></div></div>`;
+  const t = autoTip(f, screen); if (!t || t.sheet) return '';
+  const p = tipProgress(f);
+  return `<div class="tip" role="note" data-tip="${t.key}"><div class="row between"><b>${t.guided ? '🧭' : '📘'} ${esc(t.title)}</b><span class="dim" style="font-size:11px">${t.guided ? 'Guided' : `tip ${Math.min(p.done + 1, p.total)}/${p.total}`}</span></div><p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap"><button class="btn small primary" data-action="tut-ok" data-k="${t.key}">Got it</button>${t.primer ? '<button class="btn small" data-action="tut-primer">How football works</button>' : ''}<button class="btn small ghost" data-action="tut-expert">Turn tips off</button></div></div>`;
+}
+
+/** Sheet-style tips (the match screen, moments such as the clock): open once, then remembered. */
+export function maybeSheetTip(f, screen, save) {
+  const t = autoTip(f, screen); if (!t || !t.sheet) return false;
+  openTipSheet(f, t, save); return true;
+}
+/** A moment tip by topic key (clock, decisions, overtime): once, never in Expert. Returns true when shown. */
+export function momentSheet(f, key, save) {
+  const t = momentTip(f, key); if (!t) return false; openTipSheet(f, t, save); return true;
+}
+function openTipSheet(f, t, save) {
+  dismissTip(f, t.key); save?.();
+  sheet(`<p>${para(t.text)}</p>${stepsHtml(t.steps)}<div class="row" style="flex-wrap:wrap">${t.primer ? '<button class="btn small" data-action="tut-primer">How football works</button>' : ''}<button class="btn small ghost" data-action="tut-expert">Turn tips off</button></div>`, { title: `${t.guided ? '🧭' : '📘'} ${t.title}` });
+}
+
+/** Roster and cap warnings as short notes: critical ones always, the rest when contextual hints are on. `max` keeps HQ short. */
+export function warningsHtml(f, { max = 3, only = null } = {}) {
+  const ws = rosterWarnings(f).filter((w) => !only || only.includes(w.key)).slice(0, max);
+  return ws.map((w) => `<div class="assist-note ${w.level === 'critical' ? 'critical' : ''}" role="${w.level === 'critical' ? 'alert' : 'note'}">${w.level === 'critical' ? '⚠️' : '💡'} ${esc(w.text)}</div>`).join('');
+}
+/** A Guided suggestion or a consequence line, ready to drop into a screen ('' when off). */
+export function noteHtml(text, kind = '') { return text ? `<p class="assist-note ${kind}">${kind === 'suggest' ? '🧭 ' : ''}${esc(text)}</p>` : ''; }
+
+/** Does this screen carry the "? Help" button? (Every mode: help is on demand, never automatic.) */
+export function hasHelp(screen) { return helpTopics(screen).length > 0; }
+export function helpButtonHtml(screen) { return hasHelp(screen) ? `<button class="btn ghost help-btn" data-action="assist-help" data-screen="${esc(screen)}" aria-label="Help for this screen">? Help</button>` : ''; }
+
+function topicHtml(k, open = false) {
+  const t = TOPICS[k];
+  return `<details class="assist-topic" ${open ? 'open' : ''}><summary><b>${esc(t.title)}</b></summary><p>${para(t.brief)}</p>${stepsHtml(t.steps)}${t.primer ? '<button class="btn small" data-action="tut-primer">How football works</button>' : ''}</details>`;
+}
+/** The help sheet: this screen's topics first, the Coach Assist mode switch, then everything else by area. */
+export function helpHtml(f, screen) {
+  const here = helpTopics(screen); const a = f ? assistSettings(f) : null;
+  const rest = TOPIC_KEYS.filter((k) => !here.includes(k));
+  return `${here.length ? `<h3 style="margin-top:0">On this screen</h3>${here.map((k, i) => topicHtml(k, i === 0)).join('')}` : ''}
+    ${a ? `<h3>Coach Assist</h3><div class="chips" role="radiogroup" aria-label="Coach Assist mode">${ASSIST_MODES.map((m) => `<button class="chip ${a.mode === m ? 'on accent' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}</button>`).join('')}</div><p class="dim" style="margin:4px 0 0">${esc(ASSIST_MODE_TEXT[a.mode].text)} Change it any time here or in Settings.</p>` : ''}
+    <h3>All topics</h3>${AREAS.map((area) => { const ks = rest.filter((k) => TOPICS[k].area === area); return ks.length ? `<div class="dim" style="margin:8px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em">${esc(area)}</div>${ks.map((k) => topicHtml(k)).join('')}` : ''; }).join('')}
+    <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-action="tut-primer">How football works</button><button class="btn small" data-action="assist-stats">What the stats mean</button></div>`;
+}
+export function openHelp(app, screen, onChange) {
+  const { el, close } = sheet(helpHtml(app.f, screen), { title: 'Help' });
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-action="assist-mode"]'); if (!b || !app.f) return;
+    setAssist(app.f, { mode: b.dataset.v }); app.save(); close(); onChange?.(); openHelp(app, screen, onChange);
+  });
+}
+
+/** Coach Assist settings block (Settings screen). */
+export function assistSettingsHtml(f) {
+  const a = assistSettings(f);
+  return `<div class="field"><span>Coach Assist</span><div class="seg" role="radiogroup" aria-label="Coach Assist mode" style="display:flex;gap:6px;flex-wrap:wrap">${ASSIST_MODES.map((m) => `<button class="btn small ${a.mode === m ? 'primary' : ''}" role="radio" aria-checked="${a.mode === m}" data-action="assist-mode" data-v="${m}">${ASSIST_MODE_TEXT[m].label}${m === 'standard' ? ' (default)' : ''}</button>`).join('')}</div><div class="dim" style="margin-top:4px">${esc(ASSIST_MODE_TEXT[a.mode].text)}</div></div>
+    <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="assist-hints" ${a.hints ? 'checked' : ''}> Contextual hints (counter plays, upgrades, roster warnings)</label>
+    <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="assist-consequences" ${a.consequences ? 'checked' : ''}> Explain what routine choices will do (cap room after a signing, and so on)</label>
+    <p class="dim">Confirmations for choices you cannot undo, and warnings about the cap or an illegal lineup, always show.</p>
+    <div class="row" style="flex-wrap:wrap"><button class="btn small" data-action="tutreset">Show all tips again</button><button class="btn small" data-action="primer">How football works</button></div>`;
 }
 
 /** The football primer, as a sheet. */
@@ -60,19 +90,16 @@ export function primerHtml() {
   <h3>What you do</h3><p>You don’t steer anyone. You build the team, pick the six plays for each side on Friday, and on Sunday you call one of those plays each snap. Monsters do the rest, using their ratings, natures and abilities.</p>`;
 }
 
-/** Hook the tip buttons once, for every screen (the router prepends the tip html). */
-export function initTutorial({ app, Router }) {
+/** Hook the tip and help buttons once, for every screen. */
+export function initTutorial({ app, Router, openStats }) {
   document.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-action^="tut-"]'); if (!b || !app.f) return;
+    const b = e.target.closest('[data-action^="tut-"], [data-action="assist-help"], [data-action="assist-stats"]'); if (!b) return;
     const a = b.dataset.action;
-    if (a === 'tut-ok') { markSeen(app.f, b.dataset.k); app.save(); Router.render(); }
-    else if (a === 'tut-off') { app.f.settings.tutorial = false; app.save(); Router.render(); }
-    else if (a === 'tut-primer') sheet(primerHtml(), { title: 'How football works' });
+    if (a === 'tut-primer') { sheet(primerHtml(), { title: 'How football works' }); return; }
+    if (a === 'assist-stats') { openStats?.(); return; }
+    if (a === 'assist-help') { openHelp(app, b.dataset.screen, () => Router.render()); return; }
+    if (!app.f) return;
+    if (a === 'tut-ok') { dismissTip(app.f, b.dataset.k); app.save(); Router.render(); }
+    else if (a === 'tut-expert' || a === 'tut-off') { setAssist(app.f, { mode: 'expert' }); app.save(); b.closest('.sheet-backdrop')?.remove(); Router.render(); }
   });
-}
-/** Sheet-style tips (the match screen): open once, then mark seen. */
-export function maybeSheetTip(f, screen, save) {
-  const t = tipFor(f, screen); if (!t || !t.sheet) return;
-  markSeen(f, screen); save?.();
-  sheet(`<p>${esc(t.text).replace(/\n\n/g, '</p><p>')}</p><button class="btn small" data-action="tut-primer">How football works</button>`, { title: `📘 ${t.title}` });
 }
