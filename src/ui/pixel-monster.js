@@ -5,7 +5,7 @@
 
 import { createRng, hashString } from '../core/rng.js';
 import { TYPES, formOf } from '../data/monsters.js';
-import { sprite16 } from './sprite16.js';
+import { sprite16, spriteGrid, palette } from './sprite16.js';
 
 function hsl(h, s, l) { return `hsl(${h} ${s}% ${l}%)`; }
 
@@ -73,4 +73,14 @@ export function portraitSprite(seed, size = 44, { hue = null } = {}) {
   if (acc === 'eyepatch') { px(4.7, 2.7, 1.6, 1.5, '#111'); px(1, 2.3, 6, 0.3, '#111'); }
   px(0, 6, 8, 2, shirt); px(3, 6, 2, 1, skin);
   return `<svg class="sprite" width="${size}" height="${size}" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+
+/**
+ * The same pixels monsterSprite draws, for a canvas (the career card, GDD §40.4): the 16×16 grid of colour codes and the
+ * palette with this individual's tint. Same species spec, same tint rule, so the card matches the game exactly.
+ */
+export function spritePixels(m) {
+  const sp = formOf(m);
+  const t = createRng(hashString(`ind|${m?.id || m?.name || sp.id}`)).int(7) - 3;
+  return { grid: spriteGrid(sp), pal: palette(sp.colors || ['#888888', '#cccccc'], t) };
 }

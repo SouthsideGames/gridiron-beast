@@ -42,10 +42,23 @@ export function toast(text, kind = 'info', ms = 2600) {
 }
 
 /** Modal sheet. Returns a close function. */
+/**
+ * While any sheet is open the screen behind it does not scroll (GDD §41.5): a drag or wheel on the dimmed backdrop used to
+ * move the page. A body observer keeps the lock in step with the sheets actually present, however they are closed.
+ */
+let sheetWatch = null;
+function watchSheets() {
+  if (sheetWatch || typeof MutationObserver === 'undefined') return;
+  const sync = () => document.documentElement.classList.toggle('sheet-open', !!document.querySelector('.sheet-backdrop'));
+  sheetWatch = new MutationObserver(sync); sheetWatch.observe(document.body, { childList: true }); sync();
+}
 export function sheet(contentHtml, { title = '', onClose = null } = {}) {
+  watchSheets();
   const el = html(`<div class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="${esc(title || 'Dialog')}"><div class="sheet"><div class="sheet-head"><strong>${esc(title)}</strong><button class="btn ghost" data-action="sheet-close" aria-label="Close">✕</button></div><div class="sheet-body">${contentHtml}</div></div></div>`);
   const close = () => { el.remove(); onClose?.(); };
   el.addEventListener('click', (e) => { if (e.target === el || e.target.closest('[data-action="sheet-close"]')) close(); });
+  const holdPage = (e) => { if (!e.target.closest?.('.sheet-body')) e.preventDefault(); };
+  el.addEventListener('wheel', holdPage, { passive: false }); el.addEventListener('touchmove', holdPage, { passive: false });
   document.body.appendChild(el);
   return { el, close };
 }

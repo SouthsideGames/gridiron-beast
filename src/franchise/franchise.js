@@ -36,6 +36,7 @@ import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUE
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
+import { careerSnapshot } from './career-profile.js';
 import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, recordNews } from './league-news.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS } from './roster.js';
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
@@ -270,7 +271,7 @@ export function evolveMonster(f, id) {
   const from = m.name; const ev = tryEvolve(m); if (!ev) return { ok: false, reason: 'Nothing happened.' };
   noteEvolution(m, { year: f.season.year, week: f.season.week, club: f.club, from, to: m.name }); // Career Timeline
   dexRecord(f, m, 'signed');
-  news(f, `EVOLUTION: ${from} evolved into ${m.name}!`, 'win');
+  news(f, `EVOLUTION: ${from} evolved into ${m.name}!`, 'win', { mid: m.id, mname: m.name });
   return { ok: true, event: ev, monster: m };
 }
 /**
@@ -378,6 +379,8 @@ export function retire(f) {
     bestMonsters: best.map(({ id, ...rest }) => rest), dexSeen: dexCounts(f).seen, retiredAt: Date.now(), seasonsList: seasons, rival: f.rivals[f.tier]?.team || null, rivalRecord: f.rivals[f.tier]?.headToHead || null,
   };
   noteHallOfFame(f.roster, best.map((b) => b.id), { year: f.season.year, club: f.club, owner: card.owner }); // Career Timeline: the Hall of Fame card
+  // Career Presentation (GDD §40.5): the card outlives the franchise, so it keeps each best monster's career as it stood (about 1 KB each).
+  card.careers = best.map((b) => { const m = f.roster.find((x) => x.id === b.id); try { return m ? careerSnapshot(f, m) : null; } catch { return null; } });
   return { ok: true, card };
 }
 
@@ -408,7 +411,8 @@ export function dexCounts(f) {
 function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, encounter: null, pregame: null, overtime: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
 const frng = (f) => { const r = rngFromState(f.rngState); return { r, save: () => { f.rngState = r.state; } }; };
 
-export function news(f, text, kind = 'info') { f.news.unshift({ text, kind, week: f.season?.week, year: f.season?.year }); if (f.news.length > 60) f.news.pop(); }
+/** A club note. `who` = { mid, mname } when the note names one monster (the club log links it to his career, GDD §40.5). */
+export function news(f, text, kind = 'info', who = null) { const n = { text, kind, week: f.season?.week, year: f.season?.year }; if (who?.mid) { n.mid = who.mid; n.mname = who.mname; } f.news.unshift(n); if (f.news.length > 60) f.news.pop(); }
 
 // ------------------------------------------------------------ staff
 export const staffHired = (f) => STAFF_ROLES.every((r) => f.staff[r]);
@@ -736,7 +740,7 @@ export function signFreeAgent(f, id) {
   if (entry.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } } else f.offseason.market = f.offseason.market.filter((x) => x !== m);
   uniqueName(f, m); m.joined = f.season.year + (f.offseason ? 1 : 0); backfillCareer(f, m); noteJoin(f, m, 'free_agent', entry.fromPool ? { region: homeRegion(m) } : {}); f.roster.push(m); dexRecord(f, m, 'signed');
   const cap = salarySummary(f);
-  news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed as a free agent${cap.over ? ', over the cap; the commissioner will review in week 1' : ''}.`, cap.over ? 'loss' : 'roster');
+  news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed as a free agent${cap.over ? ', over the cap; the commissioner will review in week 1' : ''}.`, cap.over ? 'loss' : 'roster', { mid: m.id, mname: m.name });
   return { ok: true, overCap: cap.over };
 }
 // ------------------------------------------------------------ the draft (GDD §19)
@@ -780,7 +784,7 @@ export function beginDraft(f) {
   return { ok: true, draft: f.draft };
 }
 function runDraftToMe(f) { const { r, save } = frng(f); const made = draftAdvance(f, r, { playerClub: f.club }); save(); return made; }
-export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; uniqueName(f, r.monster); dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}), rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster'); runDraftToMe(f); return r; }
+export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; uniqueName(f, r.monster); dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}), rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster', { mid: r.monster.id, mname: r.monster.name }); runDraftToMe(f); return r; }
 export function passDraftPick(f) { const r = draftPassPick(f, { playerClub: f.club }); if (!r.ok) return r; runDraftToMe(f); return r; }
 export const draftDone = (f) => !f.draft || f.draft.year !== f.season.year || f.draft.done;
 // ------------------------------------------------------------ draft-pick trading (GDD §19.6)
@@ -826,7 +830,7 @@ export function acceptTrade(f, offer) {
   if (offer.get?.player && !canTakePlayer(f)) return { ok: false, reason: `Roster full (${ROSTER_MAX}).` };
   const year = f.season.year; const nextYear = f.draft?.creation ? year : year + 1;
   const got = executeTrade(f, offer, { club: f.club, year, nextYear }); if (got.player) uniqueName(f, got.player);
-  if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster'); }
+  if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster', { mid: got.player.id, mname: got.player.name }); }
   else news(f, `Trade: ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} to ${offer.team} for ${got.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}.`, 'roster');
   if (f.draft?.started && !f.draft.done) runDraftToMe(f); // if the pick on the clock went out, the new holder uses it now
   checkAchievements(f, 'trade');
@@ -863,7 +867,7 @@ export function answerTradeCall(f, accept) {
   const got = executeTrade(f, { team: c.team, give: c.give, get: { player: src } }, { club: f.club, year, nextYear });
   f.tradeCall = null; uniqueName(f, got.player); dexRecord(f, got.player, 'signed');
   const cap = salarySummary(f);
-  news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from the ${c.team} for ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster');
+  news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from the ${c.team} for ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster', { mid: got.player.id, mname: got.player.name });
   checkAchievements(f, 'trade');
   return { ok: true, got };
 }
@@ -1102,7 +1106,7 @@ function signProspect(f, p, releaseId) {
   m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
   if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
   uniqueName(f, m); m.joined = f.season.year; backfillCareer(f, m); noteJoin(f, m, 'encounter', f.week.region ? { region: f.week.region } : {}); f.roster.push(m); dexRecord(f, m, 'signed'); f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
-  news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster');
+  news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed from ${f.week.region}.`, 'roster', { mid: m.id, mname: m.name });
   const cap = salarySummary(f);
   if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
   return { monster: m, overCap: cap.over };
@@ -1510,7 +1514,7 @@ export function finishSunday(f, gameState) {
     if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}-${gameState.score[oppSide]}` }; f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length }; news(f, `BADGE EARNED: the ${gym.badge} · badge ${Object.keys(f.campaign.badges).length} of 8. ${gym.coach.name}'s ${m.opponent} fall to ${f.club} ${gameState.score[side]}-${gameState.score[oppSide]}.`, 'win'); }
   }
   // Level-ups are shown after the game and on the Career Timeline; the club log keeps evolutions and injuries.
-  for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)${f.settings.autoPoints ? '' : ', 2 attribute points to spend on the roster'}.` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
+  for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)${f.settings.autoPoints ? '' : ', 2 attribute points to spend on the roster'}.` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind, e.id ? { mid: e.id, mname: e.kind === 'evolve' ? e.to : e.name } : null);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   recordPlayStats(f, gameState, side);
