@@ -6,6 +6,7 @@ import { esc, toast, confirmSheet, sheet } from './dom.js';
 import { yearOf } from '../data/calendar.js';
 import { cloudStatus } from '../franchise/cloud-save.js';
 import { exportFranchise, exportFileName, validateImport } from '../franchise/store.js';
+import { offerFile } from './file-offer.js';
 import * as Save from '../franchise/save.js';
 
 const KIND = { roll0: 'Previous save', roll1: 'Save before that', weekly: 'Weekly backup (after Sunday)', 'pre-restore': 'Kept before a restore (undo)', 'pre-cloud': 'Before the cloud copy replaced it', replaced: 'Franchise you replaced', deleted: 'Franchise that left your game (deleted, retired or let go)', 'legacy-original': 'Original save from v39.1 (before this update)', 'legacy-newer': 'Save written by an older copy of the game', quarantine: 'Damaged save (kept for diagnosis)', cloud: 'Your cloud save' };
@@ -71,19 +72,26 @@ export async function fillStorageMeter(root, app) {
 }
 
 // ------------------------------------------------------------ export
-/** Offer the export file. The browser decides whether and where it is saved, so this never says the download finished. */
-export function offerExport(f) {
+/**
+ * Offer the export file. Inside claude.ai it goes through the platform (the player confirms; the message says whether it was
+ * saved); in a browser, the browser decides whether and where it is kept, so the message never says the download finished.
+ */
+export async function offerExport(f) {
   const text = exportFranchise(f);
   const check = validateImport(text); // the file is verified before it is offered
   // It is offered even when the check finds a problem: this may be the player's only copy of their current progress (a save
   // that keeps failing). The file name and the message say it did not pass its check.
   const name = check.ok ? exportFileName(f) : exportFileName(f).replace(/\.gbfranchise$/, '-unverified.gbfranchise');
-  const blob = new Blob([text], { type: 'application/json' }); const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-  if (check.ok) toast(`Export file prepared (${kb(text.length)}, verified). Check that your browser saved it.`, 'good', 4500);
-  else toast(`Export file prepared (${kb(text.length)}) but it did not pass its own check (${check.problems[0]}). Keep it: it holds your current progress. Check that your browser saved it.`, 'bad', 7000);
-  return true;
+  const r = await offerFile({ name, text });
+  const what = check.ok ? `${kb(text.length)}, verified` : `${kb(text.length)}, did not pass its own check: ${check.problems[0]}`;
+  if (r.how === 'browser') {
+    if (check.ok) toast(`Export file prepared (${what}). Check that your browser saved it.`, 'good', 4500);
+    else toast(`Export file prepared (${what}). Keep it: it holds your current progress. Check that your browser saved it.`, 'bad', 7000);
+  } else if (r.ok) toast(`Export saved (${what}) as ${r.name}.`, check.ok ? 'good' : 'bad', 5000);
+  else if (r.code === 'declined') toast('Export cancelled. No file was saved. Your progress is still saved on this device.', 'info', 5000);
+  else if (r.code === 'rate_limited') toast('A save prompt is already open. Finish or close it, then try again.', 'info', 5000);
+  else toast(`Files cannot be saved from this view (${r.code}). No file was saved. Your progress is still saved on this device.`, 'bad', 7000);
+  return r;
 }
 
 // ------------------------------------------------------------ restore results
