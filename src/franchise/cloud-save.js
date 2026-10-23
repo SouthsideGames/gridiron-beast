@@ -12,7 +12,8 @@ const CHUNK = 180_000; // characters per chunk document
 let ctx = null; // { col } once connected
 let connecting = null;
 let timer = null;
-let pending = null;
+let pending = null; // the state waiting for the in-flight write
+let queued = null; // the state waiting for the throttle
 let status = { state: 'off', at: null, error: null };
 const listeners = new Set();
 
@@ -57,17 +58,32 @@ export async function cloudLoad() {
   } catch (e) { setStatus({ error: e?.code || 'unavailable' }); return null; }
 }
 
+let inflight = null; // one write at a time: a later write starts only after the earlier one has finished (GDD §43.6)
+let lastWritten = 0; // savedAt of the newest copy this session wrote
+export const cloudUsage = { chunks: 0, chars: 0, documents: 0, writes: 0, lastWriteMs: null };
 async function writeNow(f) {
   const c = await connect(); if (!c) return false;
+  // Serialise once, and take the stamp from the same moment, so the meta always vouches for exactly these chunks.
+  const json = JSON.stringify(f); const savedAt = f.savedAt; const schemaVersion = f.schemaVersion;
+  if (savedAt != null && savedAt < lastWritten) return true; // an older state never replaces a newer one in the cloud
+  const t0 = Date.now();
   try {
-    const json = JSON.stringify(f);
     const chunks = Math.max(1, Math.ceil(json.length / CHUNK));
     // Chunks first, meta last: a reader only trusts chunks the meta vouches for.
     for (let i = 0; i < chunks; i++) await c.col.doc(`save_c${i}`).set({ s: json.slice(i * CHUNK, (i + 1) * CHUNK) });
-    await c.col.doc('save_meta').set({ chunks, savedAt: f.savedAt, schemaVersion: f.schemaVersion });
-    setStatus({ state: 'on', at: f.savedAt, error: null });
+    await c.col.doc('save_meta').set({ chunks, savedAt, schemaVersion, uid: f.uid ?? null, storage: 7 });
+    lastWritten = Math.max(lastWritten, savedAt || 0);
+    Object.assign(cloudUsage, { chunks, chars: json.length, documents: chunks + 1, writes: cloudUsage.writes + 1, lastWriteMs: Date.now() - t0 });
+    setStatus({ state: 'on', at: savedAt, error: null });
     return true;
   } catch (e) { setStatus({ error: e?.code || 'unavailable' }); return false; }
+}
+/** Queue a write behind any write in flight; only the newest pending state is written next. */
+function enqueue(f) {
+  pending = f;
+  if (inflight) return inflight;
+  inflight = (async () => { while (pending) { const p = pending; pending = null; await writeNow(p); } inflight = null; })();
+  return inflight;
 }
 
 /**
@@ -76,13 +92,19 @@ async function writeNow(f) {
  * important changes (a game finished, a week advanced).
  */
 export function cloudSave(f, { immediate = false } = {}) {
-  pending = f;
-  const run = () => { clearTimeout(timer); timer = null; const p = pending; pending = null; if (p) writeNow(p); };
+  queued = f;
+  const run = () => { clearTimeout(timer); timer = null; const p = queued; queued = null; if (p) enqueue(p); };
   if (immediate) run(); else if (!timer) timer = setTimeout(run, 4000);
 }
 /** Flush a pending write right away (page hidden / unloading). */
-export function cloudFlush() { if (pending) { clearTimeout(timer); timer = null; const p = pending; pending = null; writeNow(p); } }
+export function cloudFlush() { if (queued) { clearTimeout(timer); timer = null; const p = queued; queued = null; return enqueue(p); } return inflight; }
+/** Forget the session's newest-write guard (after the player deletes or replaces the franchise on purpose). */
+export function cloudResetGuard() { lastWritten = 0; }
 export async function cloudClear() {
+  // Drop anything still waiting, so a throttled write cannot bring the deleted franchise back.
+  clearTimeout(timer); timer = null; queued = null; pending = null;
+  if (inflight) { try { await inflight; } catch { /* ignore */ } }
+  lastWritten = 0;
   const c = await connect(); if (!c) return;
   try { await c.col.doc('save_meta').delete(); } catch { /* ignore */ }
 }

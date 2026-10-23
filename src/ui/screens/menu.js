@@ -7,7 +7,7 @@ import { achievementsData } from '../../franchise/achievement-store.js';
 import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { yearOf } from '../../data/calendar.js';
 import * as Save from '../../franchise/save.js';
-import { cloudStatus } from '../../franchise/cloud-save.js';
+import { savePanelHtml, fillStorageMeter, offerExport, importFile, openBackups } from '../storage-ui.js';
 import { buildLabel } from '../../version.js';
 import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
 import * as F from '../../franchise/franchise.js';
@@ -81,11 +81,12 @@ export function registerMenuScreens(Router, app) {
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devnotices" ${s.devNotices !== false ? 'checked' : ''}> Developer review notices (new or changed plays and abilities)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default, not recommended on mobile)</label>
         </div>
-        ${app.f ? `<div class="panel"><h3>Save data</h3><p class="muted">${(() => { const c = cloudStatus(); return c.state === 'on' ? `☁️ Cloud save on${c.at ? ' · last synced ' + new Date(c.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}` : 'Saved on this device. (Cloud save is available when playing inside Claude.)'; })()}</p><div class="stack">${Save.loadBackup() ? '<button class="btn block" data-action="restore">Restore last week’s backup</button>' : ''}<button class="btn block" data-action="export">Export save as JSON</button><label class="btn block" style="cursor:pointer">Import save JSON<input type="file" accept="application/json,.json" data-change="import" class="sr-only"></label><button class="btn danger block" data-action="reset">Delete franchise</button></div></div>` : ''}
-        <p class="dim">The previous version's save (if any) is never modified by this build.</p>
+        ${savePanelHtml(app)}
+        <p class="dim">Saves from earlier versions are never modified or deleted by this build.</p>
         <p class="center dim">Build ${esc(buildLabel())}. If this does not match the latest build, close the app fully and reopen it.</p>`;
     },
     mount(root, ctx) {
+      fillStorageMeter(root, app);
       const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
@@ -93,10 +94,12 @@ export function registerMenuScreens(Router, app) {
         reduced: (el) => set('reducedMotion', el.checked), shake: (el) => set('screenShake', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`Coach Assist: ${ASSIST_MODE_TEXT[el.dataset.v].label}.`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked),
         tutreset: () => { resetTutorial(app.f); if (assistSettings(app.f).mode === 'expert') setAssist(app.f, { mode: 'standard' }); app.save(); toast('Tips will show again on each screen.', 'good'); Router.render(); },
         primer: () => sheet(primerHtml(), { title: 'How football works' }),
-        export: () => { const blob = new Blob([Save.exportJson(app.f)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `gridiron-beast-${app.f.club.replace(/\s+/g, '-').toLowerCase()}-s${app.f.season.year}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast('Save exported.', 'good'); },
-        import: async (el) => { const file = el.files?.[0]; if (!file) return; try { const f = Save.importJson(await file.text()); app.setFranchise(f); toast('Save imported.', 'good'); Router.go('hq', {}, { reset: true }); } catch (e) { toast('Import failed: ' + e.message, 'bad'); } el.value = ''; },
-        restore: async () => { const b = Save.loadBackup(); if (!b) return; if (await confirmSheet(`Roll back to ${yearOf(b.season.year)}, Week ${b.season.week} (saved after last Sunday)? Anything since then is lost.`, { title: 'Restore backup', okLabel: 'Restore' })) { app.setFranchise(b); toast('Backup restored.', 'good'); Router.go('hq', {}, { reset: true }); } },
-        reset: async () => { if (await confirmSheet('Delete this franchise permanently? Export first if you want a backup.', { title: 'Delete franchise', okLabel: 'Delete', danger: true })) { app.reset(); toast('Franchise deleted.'); Router.go('menu', {}, { reset: true }); } },
+        export: () => { if (app.f) offerExport(app.f); },
+        import: async (el) => { const file = el.files?.[0]; if (!file) return; try { if (await importFile(app, file)) Router.go('hq', {}, { reset: true }); } catch (e) { toast('Import failed: ' + e.message, 'bad'); } el.value = ''; },
+        backups: () => openBackups(app, { onRestored: () => Router.go('hq', {}, { reset: true }) }),
+        'restore-legacy': async () => { const b = Save.loadBackup(); if (!b) return; if (await confirmSheet(`Roll back to ${yearOf(b.season.year)}, Week ${b.season.week} (saved after last Sunday)? Anything since then is lost.`, { title: 'Restore backup', okLabel: 'Restore' })) { await app.setFranchise(b, { reason: 'restore' }); toast('Backup restored.', 'good'); Router.go('hq', {}, { reset: true }); } },
+        persist: async () => { let ok = false; try { ok = await navigator.storage.persist(); } catch { ok = false; } toast(ok ? 'The browser will keep this data.' : 'The browser declined for now. Your saves still work; export regularly.', ok ? 'good' : 'info', 4000); fillStorageMeter(root, app); },
+        reset: async () => { if (await confirmSheet(app.storage.store ? 'Delete this franchise? It leaves your game, but a copy stays on this device under Restore a backup (the three most recently deleted franchises are kept). Export first if you want a file.' : 'Delete this franchise permanently? Export first if you want a backup.', { title: 'Delete franchise', okLabel: 'Delete', danger: true })) { if (!(await app.reset()).ok) return; toast('Franchise deleted.'); Router.go('menu', {}, { reset: true }); } },
       });
     },
   });

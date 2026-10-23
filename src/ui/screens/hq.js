@@ -129,7 +129,7 @@ export function registerHqScreens(Router, app) {
         retire: async () => {
           const r = F.retire(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; }
           if (!(await confirmSheet(`Retire ${r.card.owner}? Your career (${r.card.seasons} seasons, ${r.card.record.w}-${r.card.record.l}, ${r.card.titles} title${r.card.titles === 1 ? '' : 's'}) is written to the Hall of Fame, this franchise ends, and your Beast Dex carries on. Export the save first if you want to keep playing it elsewhere.`, { title: 'Hall of Fame', okLabel: 'Retire', danger: true }))) return;
-          addHofCard(r.card); app.reset(); toast('Welcome to the Hall of Fame.', 'good', 4000); Router.go('hof', {}, { reset: true });
+          if (!(await app.reset()).ok) return; addHofCard(r.card); toast('Welcome to the Hall of Fame.', 'good', 4000); Router.go('hof', {}, { reset: true });
         },
         resume: () => Router.go('match'),
         goals: () => Router.go('goals'),
@@ -143,9 +143,9 @@ export function registerHqScreens(Router, app) {
         skipplayoffs: async () => { if (!(await confirmSheet('Simulate the rest of the playoffs and go to the offseason?', { title: 'Skip the playoffs', okLabel: 'Skip' }))) return; F.skipPlayoffs(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
         fired: async () => {
           const r = F.retire(app.f);
-          if (r.ok) { if (!(await confirmSheet(`The board has ended your time at ${app.f.club}. You qualified for the Hall of Fame before they did, so your career (${r.card.seasons} seasons, ${r.card.record.w}-${r.card.record.l}) is written there. Leave the club?`, { title: 'Let go', okLabel: 'Leave', danger: true }))) return; addHofCard(r.card); app.reset(); Router.go('hof', {}, { reset: true }); return; }
+          if (r.ok) { if (!(await confirmSheet(`The board has ended your time at ${app.f.club}. You qualified for the Hall of Fame before they did, so your career (${r.card.seasons} seasons, ${r.card.record.w}-${r.card.record.l}) is written there. Leave the club?`, { title: 'Let go', okLabel: 'Leave', danger: true }))) return; if (!(await app.reset()).ok) return; addHofCard(r.card); Router.go('hof', {}, { reset: true }); return; }
           if (!(await confirmSheet(`The board has ended your time at ${app.f.club}. You did not reach the Hall of Fame; this franchise ends and your Beast Dex carries on. Export the save first if you want to keep it.`, { title: 'Let go', okLabel: 'Leave the club', danger: true }))) return;
-          app.reset(); toast('A new club will call.', 'info', 3000); Router.go('menu', {}, { reset: true });
+          if (!(await app.reset()).ok) return; toast('A new club will call.', 'info', 3000); Router.go('menu', {}, { reset: true });
         },
         autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(app.f.season.finished ? seasonFinalHtml(app.f) : seasonRecapHtml(app.f), { title: `${yearOf(app.f.season.year)} season` }),
