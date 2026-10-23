@@ -157,6 +157,54 @@ with sync_playwright() as pw:
     check(rr['status'] == 'saved', f'restore did not save: {rr}'); check(rr['quarantine'], 'the damaged save was not kept')
     b.close()
 
+    # --- restore safety (PR #43 corrections): with a simulated cloud mirror, a failed restore changes nothing (active franchise,
+    # stored save, cloud) and ordinary saving continues; a successful restore is committed, then adopted, then mirrored.
+    FAKE_CLOUD = """(() => { const docs = new Map(); window.__cloudMetas = [];
+      const col = { doc: (id) => ({ get: async () => ({ exists: docs.has(id), data: () => JSON.parse(docs.get(id)) }),
+        set: async (v) => { docs.set(id, JSON.stringify(v)); if (id === 'save_meta') window.__cloudMetas.push(v); }, delete: async () => { docs.delete(id); } }), get: async () => ({ docs: [] }) };
+      window.claude = { use: async (n) => (n === 'db' ? { collection: () => col } : n === 'user' ? { id: async () => 'viewer-1' } : null) }; })()"""
+    b2 = pw.chromium.launch(); ctx2 = b2.new_context(viewport={'width': 360, 'height': 780}, device_scale_factor=2, is_mobile=True, has_touch=True)
+    ctx2.add_init_script(FAKE_CLOUD); page = ctx2.new_page(); page.on('pageerror', lambda e: errors.append(str(e)))
+    page.goto(URL + 'manifest.webmanifest'); page.evaluate("(t) => { localStorage.clear(); localStorage.setItem('gridiron-beast-v6', t); }", LEGACY)
+    page.goto(URL); booted(page); page.wait_for_timeout(500)
+    page.evaluate("""async () => { const app = window.__gb; for (const n of ['A', 'B', 'C']) { app.f.owner.first = n; await app.save({ immediate: true }); } await new Promise((r) => setTimeout(r, 300)); }""")
+    page.click('[data-action="go"][data-screen="settings"]'); page.wait_for_selector('#save-data')
+    rs = {}
+    # 1. quota while committing the restored franchise
+    rs['quota'] = page.evaluate("""async () => { const app = window.__gb; const be = app.storage.store.backend; const real = be.run; const before = app.f; const metas = window.__cloudMetas.length;
+      be.run = (s, mode, fn) => (mode === 'readwrite' && s.includes('saves') ? Promise.reject(Object.assign(new Error('The quota has been exceeded.'), { name: 'QuotaExceededError' })) : real.call(be, s, mode, fn));
+      const r = await app.restoreBackup('1:roll1'); be.run = real; await new Promise((x) => setTimeout(x, 300));
+      const stored = await app.storage.store.loadManifest(await app.storage.store.readManifest());
+      return { ok: r.ok, code: r.error && r.error.code, stage: r.stage, sameObject: app.f === before, active: app.f.owner.first, stored: stored.owner.first, cloudWrites: window.__cloudMetas.length - metas }; }""")
+    # 2. the safety copy fails (quota on the backups store)
+    rs['copy'] = page.evaluate("""async () => { const app = window.__gb; const be = app.storage.store.backend; const real = be.run; const before = app.f; const metas = window.__cloudMetas.length;
+      be.run = (s, mode, fn) => (mode === 'readwrite' && s.length === 1 && s[0] === 'backups' ? Promise.reject(Object.assign(new Error('The quota has been exceeded.'), { name: 'QuotaExceededError' })) : real.call(be, s, mode, fn));
+      const r = await app.restoreBackup('1:roll1'); be.run = real; await new Promise((x) => setTimeout(x, 300));
+      app.f.owner.first = 'KeptPlaying'; const s = await app.save({ immediate: true }); await new Promise((x) => setTimeout(x, 300));
+      const stored = await app.storage.store.loadManifest(await app.storage.store.readManifest());
+      return { ok: r.ok, stage: r.stage, sameObject: app.f === before, saveAfter: s.ok, stored: stored.owner.first, cloudLast: window.__cloudMetas.length > metas ? 'mirrored ordinary save' : 'none' }; }""")
+    # 3. the UI path of a failed restore (toast wording) and of a successful one
+    page.evaluate("""() => { const be = window.__gb.storage.store.backend; be.__real = be.run; be.run = (s, mode, fn) => (mode === 'readwrite' && s.includes('saves') ? Promise.reject(Object.assign(new Error('The quota has been exceeded.'), { name: 'QuotaExceededError' })) : be.__real.call(be, s, mode, fn)); }""")
+    page.click('[data-action="backups"]'); page.wait_for_function("() => document.querySelector('.backup-row [data-action=pick]')", timeout=30000)
+    page.locator('.backup-row', has_text='Previous save').locator('[data-action="pick"]').click(); page.click('.sheet [data-action="yes"]'); page.wait_for_timeout(1200)
+    rs['uiFailToast'] = page.evaluate("() => document.querySelector('#toast')?.textContent || ''")
+    rs['uiButtonBack'] = page.evaluate("() => [...document.querySelectorAll('.backup-row [data-action=pick]')].every((b) => !b.disabled && b.textContent === 'Restore')")
+    overflow(page, 'backups sheet after a failed restore at 360px'); shot(page, 'restore-failed', 360)
+    page.evaluate("() => { const be = window.__gb.storage.store.backend; be.run = be.__real; }")
+    metas0 = page.evaluate('() => window.__cloudMetas.length')
+    page.locator('.backup-row', has_text='Previous save').locator('[data-action="pick"]').click(); page.click('.sheet [data-action="yes"]')
+    page.wait_for_function("() => (document.querySelector('#toast')?.textContent || '').includes('restored and saved')", timeout=30000); page.wait_for_timeout(600)
+    rs['success'] = page.evaluate("""async (m0) => { const app = window.__gb; const stored = await app.storage.store.loadManifest(await app.storage.store.readManifest()); const metas = window.__cloudMetas.slice(m0);
+      return { active: app.f.owner.first, stored: stored.owner.first, storedAt: stored.savedAt, cloudAfter: metas.length, cloudSavedAt: metas.length ? metas[metas.length - 1].savedAt : null, status: app.storage.store.status().state }; }""", metas0)
+    rs['afterSuccessSave'] = page.evaluate("""async () => { const app = window.__gb; app.f.owner.first = 'AfterRestore'; const r = await app.save({ immediate: true }); const stored = await app.storage.store.loadManifest(await app.storage.store.readManifest()); return { ok: r.ok, stored: stored.owner.first }; }""")
+    report['restoreSafety'] = rs
+    q = rs['quota']; check(q['ok'] is False and q['code'] == 'quota' and q['sameObject'] and q['active'] == 'C' and q['stored'] == 'C' and q['cloudWrites'] == 0, f'failed restore (quota) changed state: {q}')
+    c = rs['copy']; check(c['ok'] is False and c['stage'] == 'copy' and c['sameObject'] and c['saveAfter'] and c['stored'] == 'KeptPlaying', f'failed safety copy broke saving: {c}')
+    check('Nothing was changed' in rs['uiFailToast'] or 'unchanged' in rs['uiFailToast'], f'failed-restore toast: "{rs["uiFailToast"]}"'); check(rs['uiButtonBack'], 'restore buttons stayed disabled after a failure')
+    sc = rs['success']; check(sc['active'] == sc['stored'] and sc['status'] == 'saved' and sc['cloudAfter'] >= 1 and sc['cloudSavedAt'] == sc['storedAt'], f'successful restore not committed-then-mirrored: {sc}')
+    check(rs['afterSuccessSave']['ok'] and rs['afterSuccessSave']['stored'] == 'AfterRestore', f'ordinary saving after a restore failed: {rs["afterSuccessSave"]}')
+    b2.close()
+
     # --- timings, normal and CPU-throttled
     timings(pw, 'desktop')
     timings(pw, 'cpu4x', throttle=4)

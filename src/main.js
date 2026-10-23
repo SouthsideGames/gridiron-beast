@@ -3,6 +3,7 @@
 import * as Router from './ui/router.js';
 import * as Save from './franchise/save.js';
 import { createStore, idbBackend, classify, saveMeta } from './franchise/store.js';
+import { restoreThenAdopt, replaceThenAdopt, legacyReplaceThenAdopt, shouldMirror } from './franchise/activation.js';
 import { registerRecoveryScreen, showSaveFailure, saveStatusText } from './ui/storage-ui.js';
 import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof, cloudLoadAchievements, cloudSaveAchievements } from './franchise/cloud-save.js';
 import { setAchievementMirror, mergeAchievements, achievementsData } from './franchise/achievement-store.js';
@@ -49,27 +50,39 @@ const app = {
     if (this.storage.store) p = this.storage.store.save(f, { immediate: immediate || important });
     else if (this.storage.mode === 'legacy') { const ok = Save.save(f); p = Promise.resolve(ok ? { ok: true, savedAt: f.savedAt } : { ok: false, error: { code: 'legacy', message: 'Saving to this device failed (browser storage is full or blocked).' } }); }
     else p = Promise.resolve({ ok: false, error: { code: 'starting', message: 'Storage is still starting.' } });
-    cloudSave(f, { immediate: important });
-    return p.then((r) => { saveOutcome(r); return r; });
+    // The cloud mirror follows the local attempt, never runs ahead of it, and never carries a stale tab's state (shouldMirror).
+    return p.then((r) => { saveOutcome(r); if (shouldMirror(r) && this.f === f) cloudSave(f, { immediate: important }); return r; });
   },
-  /** Make `f` the live franchise. A different franchise it replaces is kept as a backup first (never silently lost). */
-  setFranchise(f, { reason = 'new' } = {}) {
+  /**
+   * Start playing a new franchise `f` (onboarding). The game needs it at once to show the next screen, so it becomes active
+   * in memory immediately; in storage the replaced franchise is copied first and `f` is committed after it (store.replace),
+   * and the cloud receives `f` only after that commit. If either step fails, the failure sheet says so and the replaced
+   * franchise is still the stored one.
+   */
+  setFranchise(f) {
     const old = this.f; const st = this.storage.store;
     this.f = f; this.lastSig = null; applySettings();
-    if (st && old && old !== f) {
-      // The copy is taken from the old franchise as it is now (synchronously), then the new one is saved behind it.
-      const kept = st.keepCopy(old, reason === 'restore' ? 'pre-restore' : 'replaced'); st.retire(old);
-      return kept.then(() => this.save({ immediate: true }), (e) => { toast(`The franchise you replaced could not be kept as a backup (${classify(e).message}). It is still in the rolling backups for now; export it from Restore a backup if you need it.`, 'bad', 7000); return this.save({ immediate: true }); });
-    }
+    if (st && old && old !== f) return st.replace(f, old, { copyKind: 'replaced' }).then((r) => { saveOutcome(r); if (r.ok && this.f === f) cloudSave(f, { immediate: true }); return r; });
     return this.save({ immediate: true });
   },
-  /** Restore a backup by id: the store keeps the current franchise as a backup, then commits the restored one. */
+  /**
+   * Restore a backup by id. The current franchise stays active until the restored one is committed locally; only then is it
+   * adopted and mirrored to the cloud. On failure nothing changes: { ok: false, error }.
+   */
   async restoreBackup(id) {
-    if (id === 'cloud' && this.cloudCandidate) { const f = this.cloudCandidate; this.cloudCandidate = null; if (this.f && this.storage.store) await this.storage.store.keepCopy(this.f, 'pre-restore'); adopt(f); const r = await this.save({ immediate: true }); return { franchise: f, ...r }; }
-    const r = await this.storage.store.restore(id, this.f);
-    this.f = r.franchise; this.lastSig = null; applySettings(); mergeDex(this.f.dex); F.syncAchievementsToGlobal(this.f);
-    cloudSave(this.f, { immediate: true });
-    return r;
+    if (id === 'cloud') { const f = this.cloudCandidate; if (!f) return { ok: false, error: { code: 'invalid', message: 'The cloud copy is no longer available.' } }; const r = await this.replaceFranchise(f, { copyKind: 'pre-restore', mirror: false }); if (r.ok) this.cloudCandidate = null; return r; }
+    if (!this.storage.store) return { ok: false, error: { code: 'legacy', message: 'Backups need the game database, which this browser did not open.' } };
+    return restoreThenAdopt({ store: this.storage.store, current: this.f, id, adopt, mirror: (f) => cloudSave(f, { immediate: true }) });
+  },
+  /**
+   * Replace the active franchise with `f` (an import, the v39.1 weekly backup, the cloud copy), committing it first. The
+   * replaced franchise is kept as a `copyKind` backup. On failure the current franchise stays active and nothing is mirrored.
+   */
+  async replaceFranchise(f, { copyKind = 'replaced', mirror = true } = {}) {
+    const mirrorFn = mirror ? (g) => cloudSave(g, { immediate: true }) : () => {};
+    if (this.storage.store) return replaceThenAdopt({ store: this.storage.store, current: this.f, franchise: f, copyKind, adopt, mirror: mirrorFn });
+    if (this.storage.mode === 'legacy') return legacyReplaceThenAdopt({ write: (g) => Save.save(g), franchise: f, adopt, mirror: mirrorFn });
+    return { ok: false, error: { code: 'starting', message: 'Storage is still starting.' } };
   },
   /** The weekly safety copy taken after each Sunday (v39.1 kept it in localStorage). */
   backup(f = this.f) { if (!f) return; if (this.storage.store) this.storage.store.keepCopy(f, 'weekly').catch(() => {}); else Save.backup(f); },
@@ -183,15 +196,14 @@ async function reconcileCloud() {
     if (local && !st) { // fallback storage has no backups: the player chooses, the device's copy is never replaced silently
       if (!(await confirmSheet(`Your cloud save (${f.club}, saved ${new Date(f.savedAt).toLocaleString()}) is newer than the franchise on this device. Load the cloud save? This device's copy will be replaced; export it first from Settings if you want to keep it.`, { title: 'Newer cloud save', okLabel: 'Load cloud save' }))) return;
     }
-    if (st && local) { try { await st.keepCopy(local, 'pre-cloud'); } catch { toast('The cloud copy is newer, but a backup of this device\'s copy could not be made, so it was not loaded.', 'bad', 5000); return; } }
-    if (app.f !== local || (local && local.savedAt !== localAt)) return; // the player kept playing meanwhile: this device is newer now
-    if (st && local) st.retire(local);
-    if (st && !f.uid && app.f?.uid && app.f.createdAt === f.createdAt) f.uid = app.f.uid;
-    adopt(f);
-    const r = await app.save({ immediate: true });
+    if (st && !f.uid && local?.uid && local.createdAt === f.createdAt) f.uid = local.uid;
+    // Committed locally first (with the device's copy kept as 'pre-cloud'), adopted only after that commit succeeded.
+    const r = await app.replaceFranchise(f, { copyKind: 'pre-cloud', mirror: false });
+    if (!r.ok) { toast(`Your cloud save is newer, but it could not be stored on this device (${r.error?.message || 'unknown error'}). This device's franchise is unchanged.`, 'bad', 6000); return; }
+    if (local && local.savedAt !== localAt && st) st.keepCopy(local, 'pre-cloud').catch(() => {}); // played on meanwhile: that too is kept
     const scr = Router.currentScreen()?.name;
     if (!scr || scr === 'menu') Router.go('menu', {}, { reset: true });
-    toast(r.ok ? 'Restored your franchise from your cloud save.' : 'Loaded your cloud save, but saving it on this device failed.', r.ok ? 'good' : 'bad', 4000);
+    toast('Restored your franchise from your cloud save (this device\'s copy is kept under Restore a backup).', 'good', 4500);
   } else if ((f.savedAt || 0) < (app.f.savedAt || 0)) cloudSave(app.f, { immediate: true }); // this device is newer: the cloud catches up
 }
 

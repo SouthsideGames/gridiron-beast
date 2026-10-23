@@ -2535,7 +2535,7 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
 ### 43.6 Backups and recovery [IMPLEMENTED]
 - **Rolling backups.**
   - `roll0` and `roll1` are the two latest previous versions, taken only when content changed, in the same transaction as the save.
-  - A version whose parts fail their checksums is never rotated in over a good one.
+  - Every generation is verified before it moves: the outgoing live save before it becomes `roll0`, and `roll0` before it replaces `roll1`. A damaged generation is dropped rather than promoted, so a valid backup is never overwritten by a damaged or unverified one, whether the damage is in a shared or an unshared part.
   - They share unchanged parts with the live save, which costs about 0.3 MB extra at season 20.
 - **Independent copies,** each self-contained so that damage to shared parts cannot reach them:
   - `weekly`, after each Sunday, as before;
@@ -2552,6 +2552,12 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
   - never overwrites anything automatically: a newer cloud copy is *offered* in the list rather than loaded.
   - Import is available from the same screen.
 - **Settings → Save data → Restore a backup** opens the same verified list at any time. A restore keeps the current franchise first and is stamped as the newest state, so no older cloud or legacy copy can override it.
+- **Commit first, then adopt** (`store.replace`, `src/franchise/activation.js`). A restore, an import, the v39.1 weekly backup and the cloud copy are all activated in the same order, with the save queue held:
+  1. The backup is read and verified; a corrupt backup changes nothing.
+  2. A safety copy of the current franchise is committed. If that fails, nothing else happens.
+  3. The new franchise is committed as the live save, with verification, rotation and the other-tab guard. If that fails, nothing has changed.
+  4. Only then is the current franchise retired (its late saves are ignored), the new one adopted in memory, and the cloud mirrored.
+- **On any failure** the current franchise stays active, saving normally and mirrored as before, with no reload needed. The player is told which step failed. A new franchise from onboarding is the one exception: it is active in memory at once so the next screen can show it, but storage still copies the old franchise first and commits the new one after it, and the cloud receives it only after that commit.
 
 ### 43.7 Export and import [IMPLEMENTED: validation and restore; the import screen is Phase 2]
 - **`.gbfranchise`:** plain JSON, so `.json` readers work (decision Q's gzip variant is left for Phase 2: an uncompressed file is easier to verify and recover by hand). The envelope holds:
@@ -2572,7 +2578,8 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
 - **Format unchanged,** so older builds can still read it. The meta gains `uid` and `storage: 7`.
 - **Writes are serialised.** The JSON and its `savedAt` are taken in the same instant, and within a session an older state is never written over a newer one.
 - **Delete** drops pending writes, so a deleted franchise cannot come back.
-- **At start,** the cloud copy replaces the local save only when it is newer, and the local franchise is first kept as `pre-cloud`. If that backup cannot be made, the cloud copy is not loaded. When the local save failed its checks, the cloud copy is only offered on the recovery screen. When the local copy is newer, the cloud copy is brought up to date. If the player kept playing while the backup was being made, the cloud copy is not loaded (this device is newer now). In fallback storage, which has no backups, a newer cloud copy is loaded only if the player says yes.
+- **Ordinary saves** reach the cloud only after the local attempt has finished, never ahead of it. They are never sent for a state this tab must not write: a replaced franchise, or one another tab saved since. When the device itself fails (full, blocked, aborted), the progress is still mirrored, as in v39.1, because the cloud then holds the only copy of it.
+- **At start,** the cloud copy replaces the local save only when it is newer, and the local franchise is first kept as `pre-cloud`. The cloud copy is committed locally before the game adopts it. If that backup cannot be made, the cloud copy is not loaded. When the local save failed its checks, the cloud copy is only offered on the recovery screen. When the local copy is newer, the cloud copy is brought up to date. If the player kept playing while the backup was being made, the cloud copy is not loaded (this device is newer now). In fallback storage, which has no backups, a newer cloud copy is loaded only if the player says yes.
 - **Offline and reconnect.** Failures set the cloud status shown in Settings; the next write after reconnecting succeeds. Tested with a simulated database: serialisation, ordering, offline, torn writes, delete.
 - **Measured usage.** The cloud copy is the raw franchise JSON: about 0.6 MB and 5 documents at season 1, 2.2 MB and 14 at season 10, 2.9 MB and 18 at season 20, plus the dex, Hall of Fame and achievements documents.
 - **Quotas.** The only limit documented to this project is the 256 KiB per document (already respected by chunking). No total per-viewer quota is documented here, and none is assumed.
@@ -2654,6 +2661,7 @@ Part of each save runs on the main thread: the synchronous snapshot, packing the
   - career, timeline, history and draft preservation;
   - uid assignment without the RNG.
 - **`tests/cloud-save.test.js`** (5 tests): serialised cloud writes, newest-wins, offline and reconnect, torn writes, delete.
+- **`tests/storage-restore-safety.test.js`** (14 tests): the review corrections, see 43.13.
 - **`tools/storage-check.py`:** the real IndexedDB in headless Chromium at 320, 360, 390 and 412 px. It checks:
   - migration identity and the untouched localStorage save;
   - reload from IndexedDB;
@@ -2665,7 +2673,33 @@ Part of each save runs on the main thread: the synchronous snapshot, packing the
   - the timings above, normal and 4× CPU.
 - **Not done: real iPhone or Android devices.**
 
-### 43.13 What remains for Phases 2–4 [NOT IMPLEMENTED]
+### 43.13 Safety corrections after review (PR #43, 2026-10-23) [IMPLEMENTED]
+Three defects found in code review (Codex), each reproduced by a failing test before it was fixed:
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| Restored franchise adopted before it was saved (P1) | `restoreBackup` replaced `app.f` and uploaded the restored state to the cloud before checking that the local commit succeeded. A failed restore said "Nothing was changed" while the game was playing the unsaved backup, and the cloud had it. | The restore commits first; adoption and the cloud mirror follow only a successful commit (`restoreThenAdopt`). Imports, the v39.1 weekly backup and the cloud copy use the same order (`replaceThenAdopt`). |
+| Current save retired before its backup (P1) | `store.restore` marked the current franchise as replaced before the safety copy was written. When the copy failed, every later save of the still-active franchise was silently ignored until a reload. | Retirement happens only after both the safety copy and the new live save are committed. The queue is held during a restore or deletion, so nothing interleaves, and queued saves of the replaced franchise are dropped only on success. |
+| Damaged `roll0` promoted over a valid `roll1` (P2) | Rotation verified the outgoing live save but copied `roll0` into `roll1` unchecked. | `roll0` is verified before promotion; when it fails, `roll1` is kept. |
+
+**Found by the further audit and fixed:**
+- Ordinary saves no longer mirror to the cloud ahead of the local attempt, nor from a stale tab.
+- Deletion holds the queue, so a save queued meanwhile cannot bring the franchise back.
+- In fallback storage, a replacement is written before it is adopted.
+
+**Tests:**
+- `tests/storage-restore-safety.test.js` (14). These cover:
+  - restores failing at the safety copy, at the commit (abort, quota), on a corrupt backup and on another tab;
+  - activation order and the cloud;
+  - imports;
+  - fallback storage;
+  - the mirror policy;
+  - playing on after failed restores;
+  - corruption in each backup generation, shared and unshared;
+  - deletion racing a save.
+- `tools/storage-check.py` now also restores in the browser with a simulated cloud. Run against the commit before the corrections, it reported the same two failures as the review: after a failed restore the active franchise was the unsaved backup and the cloud had been written; after a failed safety copy, saving stopped.
+
+### 43.14 What remains for Phases 2–4 [NOT IMPLEMENTED]
 - **Phase 2:**
   - slots 2 and 3, and the slot manager;
   - the full import screen (slot choice, `uid` conflicts);

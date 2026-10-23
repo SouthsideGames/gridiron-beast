@@ -196,14 +196,14 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       backend.hit?.('parts-written');
       // Rolling backups hold the two latest previous versions that pass their integrity check: a damaged version is never
       // rotated in over a good one.
+      // Every generation is verified before it moves: the outgoing live save before it becomes roll0, and roll0 before it
+      // replaces roll1. A damaged roll0 is dropped rather than promoted, so a valid roll1 is never overwritten by it.
+      const verified = async (m) => { if (!m?.parts) return false; for (const n of PARTS) if (!partOk(await t.get('parts', m.parts[n]?.sum), m.parts[n]?.sum)) return false; return true; };
       const changed = cur && PARTS.some((n) => cur.parts?.[n]?.sum !== manifest.parts[n].sum);
-      if (rotate && changed) {
-        let good = true; for (const n of PARTS) if (!partOk(await t.get('parts', cur.parts?.[n]?.sum), cur.parts?.[n]?.sum)) good = false;
-        if (good) {
-          const r0 = await t.get('backups', `${manifest.slot}:roll0`);
-          if (r0) await t.put('backups', `${manifest.slot}:roll1`, { ...r0, kind: 'roll1' });
-          await t.put('backups', `${manifest.slot}:roll0`, { ...cur, kind: 'roll0' });
-        }
+      if (rotate && changed && await verified(cur)) {
+        const r0 = await t.get('backups', `${manifest.slot}:roll0`);
+        if (r0 && await verified(r0)) await t.put('backups', `${manifest.slot}:roll1`, { ...r0, kind: 'roll1' });
+        await t.put('backups', `${manifest.slot}:roll0`, { ...cur, kind: 'roll0' });
       }
       await t.put('saves', KEY(manifest.slot), manifest);
       const slot = (await t.get('slots', manifest.slot)) || { slot: manifest.slot };
@@ -258,13 +258,27 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     stamp(f);
     return new Promise((resolve) => {
       pendingF = f; pendingWaiters.push(resolve); if (status.state !== 'saving') emit({ state: 'pending' });
-      const go = () => { timer = null; if (!writing) writing = drain(); };
+      const go = () => { timer = null; if (!writing && !locked) writing = drain(); };
       if (immediate || debounce === 0) { clearTimeout(timer); timer = null; go(); } else if (!timer) timer = setTimeout(go, debounce);
     });
   }
   /** Run any pending save at once and wait for the queue to be empty. */
-  async function flush() { if (timer) { clearTimeout(timer); timer = null; if (!writing && pendingF) writing = drain(); } if (writing) await writing; }
-  const busy = () => !!(pendingF || writing || timer);
+  async function flush() { if (timer) { clearTimeout(timer); timer = null; if (!writing && !locked && pendingF) writing = drain(); } if (writing) await writing; }
+  /**
+   * Run `fn` with the save queue held: everything queued before is committed first, saves requested meanwhile wait, and they
+   * run afterwards (unless `fn` replaced their franchise). Restores and replacements use it, so an ordinary save can never
+   * interleave with them.
+   */
+  let locked = false;
+  async function exclusive(fn) {
+    while (locked) await new Promise((r) => setTimeout(r, 10));
+    await flush(); locked = true;
+    try { return await fn(); }
+    finally { locked = false; if (pendingF && !writing && !timer) writing = drain(); }
+  }
+  /** Drop a queued save of a franchise that has just been replaced: its callers learn it was not written. */
+  function dropQueued(f) { if (pendingF && pendingF === f) { const ws = pendingWaiters; pendingF = null; pendingWaiters = []; for (const w of ws) w({ ok: false, error: { code: 'stale', message: 'That franchise was replaced.' } }); } }
+  const busy = () => !!(pendingF || writing || timer || locked);
 
   // ---- the unload journal: when the page is hidden with a save still queued, the parts that differ from the last committed
   // save (normally only the core: the archive changes once a season) go to localStorage synchronously. The next start adopts
@@ -326,29 +340,50 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     return out.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
   }
   async function readBackup(id) { const b = await backend.run(['backups'], 'readonly', (t) => t.get('backups', id)); if (!b) throw new Error('That backup no longer exists.'); return Save.migrate(await loadBackupRecord(b)); }
-  /** Restore a backup: the live save is kept first (as 'pre-restore'), then the backup becomes the live save. */
+  /**
+   * Make `f` the live franchise in place of `current`, in this order, with the save queue held:
+   *   1. a safety copy of `current` (kind `copyKind`) is committed; if it fails, nothing else happens;
+   *   2. `f` is committed as the live save (verified, rotated, the other-tab guard applied); if it fails, nothing changed;
+   *   3. only then is `current` retired (its late saves are ignored) and the result returned for the caller to adopt.
+   * Never throws for a storage failure: returns { ok: false, error } with the current franchise still live and saveable.
+   */
+  async function replace(f, current, { copyKind = 'replaced' } = {}) {
+    return exclusive(async () => {
+      try {
+        if (current) await keepCopy(current, copyKind);
+        else { const m = await readManifest().catch(() => null); if (m) { try { await keepCopy(await loadManifest(m), copyKind); } catch { await quarantine(m); } } }
+      } catch (e) { return { ok: false, stage: 'copy', error: classify(e) }; }
+      if (current?.uid && !f.uid && current.createdAt === f.createdAt) f.uid = current.uid;
+      if (!f.uid) f.uid = newUid();
+      f.lifecycle = { ...f.lifecycle, ...lifecycleOf(f) };
+      const before = f.savedAt; stamp(f); // the new live state is the newest: an older cloud or legacy copy must not win over it
+      let r;
+      try { r = await writeNow(f); } catch (e) { f.savedAt = before; return { ok: false, stage: 'commit', error: classify(e) }; }
+      retire(current); dropQueued(current);
+      return { ...r, franchise: f };
+    });
+  }
+  /** Restore a backup: it is read and verified first (a corrupt backup changes nothing), then committed through replace(). */
   async function restore(id, current = null) {
-    const f = await readBackup(id); if (!f) throw new Error('That backup could not be read.');
-    await flush(); // the current state is committed first
-    retire(current); // from here on, nothing queued for the replaced franchise can land on top of the restored one
-    if (current) await keepCopy(current, 'pre-restore');
-    else { const m = await readManifest().catch(() => null); if (m) { try { await keepCopy(await loadManifest(m), 'pre-restore'); } catch { await quarantine(m); } } }
-    if (current?.uid && !f.uid) f.uid = current.uid;
-    const r = await save(f, { immediate: true }); // through the queue; stamped newest, so no older cloud or legacy copy wins over it
-    return { franchise: f, ...r };
+    let f;
+    try { f = await readBackup(id); } catch (e) { return { ok: false, stage: 'read', error: classify(e) }; }
+    if (!f) return { ok: false, stage: 'read', error: { code: 'invalid', message: 'That backup is not a readable franchise.' } };
+    return replace(f, current, { copyKind: 'pre-restore' });
   }
   /** A live save that fails its checks is kept as it is (its parts stay referenced) for diagnosis; it is never deleted. */
   async function quarantine(m) { await backend.run(['backups'], 'readwrite', async (t) => { await t.put('backups', `${SLOT}:quarantine`, { ...m, kind: 'quarantine', takenAt: now(), embedded: null }); }); }
   /** Delete the live franchise, keeping it recoverable as the 'deleted' backup. */
   async function remove(current) {
-    await flush();
-    const cur = await readManifest().catch(() => null);
-    if (cur && base && cur.writer !== writer && !(cur.writer === base.writer && cur.seq === base.seq)) throw Object.assign(new Error('This franchise was saved more recently in another tab or window of the game. Reload the game before deleting it.'), { code: 'newer-elsewhere' });
-    if (current) await keepCopy(current, 'deleted');
-    retire(current);
-    await backend.run(['saves', 'slots', 'parts', 'backups'], 'readwrite', async (t) => { await t.del('saves', KEY()); const s = (await t.get('slots', SLOT)) || { slot: SLOT }; await t.put('slots', SLOT, { ...s, state: 'empty', uid: null, savedAt: null }); for (const r of ROLLING) await t.del('backups', `${SLOT}:${r}`); await collect(t); });
-    cache = {}; base = null; clearJournal(); emit({ state: 'idle', savedAt: null, bytes: null });
+    return exclusive(async () => {
+      const cur = await readManifest().catch(() => null);
+      if (cur && base && cur.writer !== writer && !(cur.writer === base.writer && cur.seq === base.seq)) throw Object.assign(new Error('This franchise was saved more recently in another tab or window of the game. Reload the game before deleting it.'), { code: 'newer-elsewhere' });
+      if (current) await keepCopy(current, 'deleted');
+      await backend.run(['saves', 'slots', 'parts', 'backups'], 'readwrite', async (t) => { await t.del('saves', KEY()); const s = (await t.get('slots', SLOT)) || { slot: SLOT }; await t.put('slots', SLOT, { ...s, state: 'empty', uid: null, savedAt: null }); for (const r of ROLLING) await t.del('backups', `${SLOT}:${r}`); await collect(t); });
+      retire(current); dropQueued(current); // only now, after the copy and the deletion committed
+      cache = {}; base = null; clearJournal(); emit({ state: 'idle', savedAt: null, bytes: null });
+    });
   }
+
 
   // ---- migration of the localStorage save (v39.1 and earlier)
   /**
@@ -462,7 +497,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     return { ...r, legacyLocalStorage: legacyLs, estimate: est ? { usage: est.usage ?? null, quota: est.quota ?? null } : null, persisted };
   }
 
-  return { backend, open, save, flush, busy, retire, journal, readJournal, clearJournal, listBackups, readBackup, restore, keepCopy, remove, usage, migrateLegacy, onStatus: (fn) => { listeners.add(fn); fn(status); return () => listeners.delete(fn); }, status: () => status, readManifest, loadManifest };
+  return { backend, open, save, flush, busy, retire, replace, journal, readJournal, clearJournal, listBackups, readBackup, restore, keepCopy, remove, usage, migrateLegacy, onStatus: (fn) => { listeners.add(fn); fn(status); return () => listeners.delete(fn); }, status: () => status, readManifest, loadManifest };
 }
 
 /** A save error as the UI words it. */

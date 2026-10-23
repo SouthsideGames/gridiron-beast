@@ -8,7 +8,7 @@ import { cloudStatus } from '../franchise/cloud-save.js';
 import { exportFranchise, exportFileName, validateImport } from '../franchise/store.js';
 import * as Save from '../franchise/save.js';
 
-const KIND = { roll0: 'Previous save', roll1: 'Save before that', weekly: 'Weekly backup (after Sunday)', 'pre-restore': 'Before your last restore', 'pre-cloud': 'Before the cloud copy replaced it', 'pre-legacy': 'Before an older copy of the game took over', replaced: 'Franchise you replaced', deleted: 'Franchise that left your game (deleted, retired or let go)', 'legacy-original': 'Original save from v39.1 (before this update)', 'legacy-newer': 'Save written by an older copy of the game', quarantine: 'Damaged save (kept for diagnosis)', cloud: 'Your cloud save' };
+const KIND = { roll0: 'Previous save', roll1: 'Save before that', weekly: 'Weekly backup (after Sunday)', 'pre-restore': 'Kept before a restore (undo)', 'pre-cloud': 'Before the cloud copy replaced it', 'pre-legacy': 'Before an older copy of the game took over', replaced: 'Franchise you replaced', deleted: 'Franchise that left your game (deleted, retired or let go)', 'legacy-original': 'Original save from v39.1 (before this update)', 'legacy-newer': 'Save written by an older copy of the game', quarantine: 'Damaged save (kept for diagnosis)', cloud: 'Your cloud save' };
 export const kb = (n) => (n == null ? '—' : n >= 1048576 ? `${(n / 1048576).toFixed(n >= 10485760 ? 0 : 1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 const when = (t) => (t ? new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'unknown time');
 const timeOnly = (t) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -75,6 +75,22 @@ export function offerExport(f) {
   return true;
 }
 
+// ------------------------------------------------------------ restore results
+/** Why a restore did not happen, worded for the player. Nothing has changed in any of these cases. */
+export function restoreFailText(r) {
+  const m = String(r?.error?.message || 'unknown error').replace(/\.$/, '');
+  if (r?.stage === 'read') return `That backup could not be read (${m}). Nothing was changed.`;
+  if (r?.stage === 'copy') return `Your current franchise could not be backed up first (${m}), so nothing was restored. Nothing was changed.`;
+  return `The restored franchise could not be saved (${m}). Your current franchise is unchanged and still saving.`;
+}
+async function runRestore(app, id, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Restoring…'; }
+  let r; try { r = await app.restoreBackup(id); } catch (e) { r = { ok: false, error: { message: e.message } }; }
+  if (!r.ok && btn) { btn.disabled = false; btn.textContent = 'Restore'; }
+  if (!r.ok) toast(`Restore failed. ${restoreFailText(r)}`, 'bad', 6500);
+  return r;
+}
+
 // ------------------------------------------------------------ backups sheet
 function backupRowHtml(b, i) {
   return `<div class="backup-row ${b.ok ? '' : 'bad'}"><div class="grow"><b>${esc(KIND[b.kind] || b.kind)}</b><div class="muted">${where(b.meta)}</div><div class="dim">Saved ${esc(when(b.savedAt))}${b.ok ? '' : ` · ⚠ fails its integrity check`}</div></div>${b.ok && b.kind !== 'quarantine' ? `<button class="btn" data-action="pick" data-i="${i}">Restore</button>` : ''}</div>`;
@@ -91,8 +107,8 @@ export async function openBackups(app, { onRestored, intro = '' } = {}) {
     const cur = app.f; const lost = cur?.savedAt && b.savedAt && cur.savedAt > b.savedAt;
     const ok = await confirmSheet(`Restore "${KIND[b.kind] || b.kind}" (${where(b.meta).replace(/&amp;/g, '&')}, saved ${when(b.savedAt)})?${lost ? ` Progress made after ${when(b.savedAt)} will no longer be in your franchise (the current franchise is kept as a backup).` : ''}`, { title: 'Restore backup', okLabel: 'Restore' });
     if (!ok) return;
-    try { const r = await app.restoreBackup(b.id); if (!r.ok) throw new Error(r.error?.message || 'The restored franchise could not be saved.'); close(); toast('Backup restored and saved.', 'good'); onRestored?.(); }
-    catch (err) { toast(`Restore failed: ${err.message}. Nothing was changed.`, 'bad', 5000); }
+    const r = await runRestore(app, b.id, body.querySelector(`[data-action="pick"][data-i="${list.indexOf(b)}"]`));
+    if (r.ok) { close(); toast('Backup restored and saved.', 'good'); onRestored?.(); }
   });
 }
 
@@ -102,8 +118,8 @@ export async function importFile(app, file) {
   if (!v.ok) { toast(`Import refused: ${v.problems[0]}`, 'bad', 5000); return false; }
   const ok = await confirmSheet(`Import ${where(v.meta).replace(/&amp;/g, '&')}?${app.f ? ' Your current franchise is kept as a backup on this device.' : ''}${v.warnings.length ? ` Note: ${v.warnings[0]}` : ''}`, { title: 'Import franchise', okLabel: 'Import' });
   if (!ok) return false;
-  const r = await app.setFranchise(v.franchise, { reason: 'import' });
-  if (r && r.ok === false) { toast(`Imported, but saving failed: ${r.error?.message}`, 'bad', 5000); return true; }
+  const r = await app.replaceFranchise(v.franchise, { copyKind: 'replaced' });
+  if (!r.ok) { toast(`Import failed: ${r.error?.message || 'the franchise could not be saved'}. Nothing was changed.`, 'bad', 6000); return false; }
   toast('Franchise imported and saved.', 'good'); return true;
 }
 
@@ -142,7 +158,7 @@ export function registerRecoveryScreen(Router, app) {
         if (leave) { if (await confirmSheet('Go on without a franchise? The damaged save and all backups stay on this device; you can restore one later from Settings.', { title: 'Continue', okLabel: 'Continue' })) { app.recovery = null; Router.go('menu', {}, { reset: true }); } return; }
         if (!pick) return; const b = app.recovery.backups[Number(pick.dataset.i)];
         if (!(await confirmSheet(`Restore "${KIND[b.kind] || b.kind}" (${where(b.meta).replace(/&amp;/g, '&')}, saved ${when(b.savedAt)})? Anything after that time is not in this backup.`, { title: 'Restore backup', okLabel: 'Restore' }))) return;
-        try { const r = await app.restoreBackup(b.id); if (!r.ok) throw new Error(r.error?.message || 'could not be saved'); app.recovery = null; toast('Backup restored and saved.', 'good'); Router.go('menu', {}, { reset: true }); } catch (err) { toast(`Restore failed: ${err.message}. Nothing was changed.`, 'bad', 5000); }
+        const r = await runRestore(app, b.id, pick); if (r.ok) { app.recovery = null; toast('Backup restored and saved.', 'good'); Router.go('menu', {}, { reset: true }); }
       });
       root.addEventListener('change', async (e) => { const inp = e.target.closest('[data-change="import"]'); if (!inp?.files?.[0]) return; try { if (await importFile(app, inp.files[0])) { app.recovery = null; Router.go('menu', {}, { reset: true }); } } catch (err) { toast(`Import failed: ${err.message}`, 'bad'); } inp.value = ''; });
     },
