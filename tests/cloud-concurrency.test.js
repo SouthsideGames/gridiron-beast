@@ -13,14 +13,23 @@ const col = { get: async () => ({ docs: [...docs.keys()].map((id) => ({ id, data
   async get() { await null; return { exists: docs.has(id), data: () => JSON.parse(docs.get(id)) }; },
   async set(v) { const body = JSON.stringify(v); const g = gates.find((x) => !x.used && x.pred(id, body)); if (g) { g.used = true; g.reached.resolve(); await g.open.promise; } docs.set(id, body); },
   async delete() { await null; docs.delete(id); },
-  // As documented: set-if-not-busy, renewable by the same holder, expiring on its own (ttl clamped to at least 1 s).
-  async acquire({ holder, ttlMs = 30000 }) { await null; const l = leases.get(id); const t = Date.now(); if (l && l.holder !== holder && l.until > t) return { acquired: false, expiresAt: new Date(l.until).toISOString() }; leases.set(id, { holder, until: t + Math.max(1000, ttlMs) }); return { acquired: true, holder }; },
+  // As documented: set-if-not-busy, renewable by the same holder, expiring on its own (ttl clamped to at least 1 s); `data` is
+  // merged into the document body only when the lease is granted. The grant is decided when the request arrives (after a gate).
+  async acquire({ holder, ttlMs = 30000, data }) {
+    await null;
+    if (data) { const body = JSON.stringify(data); const g = gates.find((x) => !x.used && x.pred(id, body)); if (g) { g.used = true; g.reached.resolve(); await g.open.promise; } }
+    const l = leases.get(id); const t = Date.now(); if (l && l.holder !== holder && l.until > t) return { acquired: false, expiresAt: new Date(l.until).toISOString() };
+    leases.set(id, { holder, until: t + Math.max(1000, ttlMs) });
+    if (data) docs.set(id, JSON.stringify({ ...(docs.has(id) ? JSON.parse(docs.get(id)) : {}), ...data }));
+    return { acquired: true, holder };
+  },
 }) };
 globalThis.claude = { use: async (n) => (n === 'db' ? { collection: () => col } : { id: async () => 'viewer-1' }) };
 const tab1 = await import('../src/franchise/cloud-save.js?tab=1');
 const tab2 = await import('../src/franchise/cloud-save.js?tab=2');
 const fr = (savedAt, tag, n = 400_000) => ({ schemaVersion: 6, uid: 'u1', savedAt, tag, pad: 'x'.repeat(n) });
 const done = async (...m) => { for (let i = 0; i < 600; i++) { let busy = false; for (const x of m) if (x.cloudFlush()) busy = true; if (!busy) return; await new Promise((r) => setTimeout(r, 10)); } };
+const LEASE = 'save_meta'; // the upload lease is held on the meta document
 const reset = () => { docs.clear(); leases.clear(); gates.length = 0; };
 
 test('cloud concurrency: an older upload that started first and finishes last never replaces a newer one', async () => {
@@ -59,10 +68,35 @@ test('cloud concurrency: an upload whose lease expired never publishes or cleans
   reset();
   const pub1 = gate((id, body) => id === 'save_meta' && body.includes('"savedAt":40000')); // tab 1 is about to publish
   tab1.cloudSave(fr(40_000, 'T1'), { immediate: true }); await pub1.reached;
-  leases.delete('save_lock'); // tab 1 stalled past its lease; it is free again
+  leases.delete(LEASE); // tab 1 stalled past its lease; it is free again
   const pub2 = gate((id, body) => id === 'save_meta' && body.includes('"savedAt":41000')); // tab 2 has written its chunks
   tab2.cloudSave(fr(41_000, 'T2'), { immediate: true }); await pub2.reached;
   pub1.release(); await new Promise((r) => setTimeout(r, 200)); // tab 1 resumes: it must notice it lost the lease
   pub2.release(); await done(tab1, tab2);
   const got = await tab2.cloudLoad(); assert.ok(got, 'the cloud copy is readable (no chunks of the new holder were deleted)'); assert.equal(got.tag, 'T2');
+});
+
+// Codex review of da63189.
+test('cloud concurrency: an upload stalled past its lease while publishing never overwrites the newer copy published meanwhile (r4362010448)', async () => {
+  reset();
+  // tab 1 has renewed its lease and sent its publish, but the request stalls past the lease ...
+  const pub1 = gate((id, body) => id === 'save_meta' && body.includes('"savedAt":50000'));
+  tab1.cloudSave(fr(50_000, 'T1-older'), { immediate: true }); await pub1.reached;
+  leases.delete(LEASE); // ... so the lease lapses and tab 2 uploads newer progress, start to finish
+  tab2.cloudSave(fr(51_000, 'T2-newer'), { immediate: true }); await done(tab2);
+  assert.equal((await tab2.cloudLoad()).tag, 'T2-newer');
+  pub1.release(); await done(tab1, tab2); // only now does tab 1's stalled publish arrive
+  const got = await tab2.cloudLoad(); assert.ok(got, 'the cloud copy is readable'); assert.equal(got.tag, 'T2-newer', 'the newer copy survives');
+});
+test('cloud concurrency: deleting the franchise cancels an upload waiting to retry after the lease was busy (r4362010441)', async () => {
+  reset();
+  // tab 1 loses the lease to another device after its first chunk, so its upload stops and is scheduled to retry
+  const c0 = gate((id, body) => /_c0$/.test(id) && body.includes('doomed'));
+  tab1.cloudSave(fr(60_000, 'doomed'), { immediate: true }); await c0.reached;
+  leases.set(LEASE, { holder: 'other-device', until: Date.now() + 60_000 }); c0.release(); await done(tab1);
+  assert.ok(!docs.has('save_meta'), 'nothing was published');
+  await tab1.cloudClear(); // the player deletes the franchise
+  leases.delete(LEASE); // the other device finishes; the lease is free again
+  await new Promise((r) => setTimeout(r, 5600)); await done(tab1); // past the retry delay
+  assert.ok(!docs.has('save_meta'), 'the deleted franchise was not uploaded again');
 });

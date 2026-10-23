@@ -163,3 +163,19 @@ test('committed snapshot: another tab committing while the snapshot is read make
   g.open.resolve();
   assert.equal(await p, null, 'the stale snapshot is not returned');
 });
+
+// ------------------------------------------------------------ Codex review of da63189 (r4362010457)
+test('journal: a journal that cannot be read because of a passing storage error is kept and recovered at a later start', async () => {
+  const { backend, ls, store, f } = await setup();
+  f.owner.first = 'Committed'; assert.ok((await store.save(f, { immediate: true })).ok); await store.flush();
+  const slow = tab(backend, ls, { debounce: 60_000 }); const g = (await slow.open()).franchise;
+  g.owner.first = 'Unsaved-progress'; slow.save(g); assert.ok(slow.journal(g), 'the journal is written on unload');
+  const run = backend.run.bind(backend); let failOnce = true;
+  backend.run = async (s, mode, fn) => { if (failOnce && mode === 'readonly' && s.length === 1 && s[0] === 'parts') { failOnce = false; throw Object.assign(new Error('Transient read error'), { name: 'UnknownError' }); } return run(s, mode, fn); };
+  const r1 = await tab(backend, ls).open(); // the journal's base part cannot be read this time
+  assert.equal(r1.franchise.owner.first, 'Committed');
+  assert.equal(journalKeys(ls).length, 1, 'the journal is kept, not deleted');
+  backend.run = run;
+  const r2 = await tab(backend, ls).open(); // storage is healthy again
+  assert.equal(r2.source, 'journal'); assert.equal(r2.franchise.owner.first, 'Unsaved-progress');
+});

@@ -7,11 +7,13 @@
 // Layout: data/users/<viewer-id>/save_meta            {chunks, savedAt, schemaVersion, uid, storage, gen}
 //         data/users/<viewer-id>/save_<gen>_c<n>      {s: "<json slice>"}   one generation per upload (v39.2)
 //         data/users/<viewer-id>/save_c<n>            {s: "<json slice>"}   the v39.1 layout (meta without gen), still read
-//         data/users/<viewer-id>/save_lock            the upload lease
+//         (the upload lease is held on save_meta itself, so the meta is published only while the lease is held)
 // Chunked so long careers stay under the 256 KiB per-document limit. The store has no transactions (last writer wins); its
-// single-writer primitive is a cooperative lease, `doc.acquire` (GDD §43.8). Every v39.2 upload holds the lease while it
-// checks the stored stamp, writes its own generation of chunks, publishes the meta and removes older generations, so two tabs
-// or devices can never interleave chunks or publish an older copy over a newer one.
+// single-writer primitive is a cooperative lease, `doc.acquire` (GDD §43.8). Every v39.2 upload holds the lease on
+// save_meta while it checks the stored stamp, writes its own generation of chunks and removes older generations, and it
+// publishes the meta through the lease grant itself (`acquire` with `data`), which the store applies only if the lease is
+// still this upload's. So two tabs or devices can never interleave chunks or publish an older copy over a newer one, even
+// when a request stalls past the lease.
 
 const CHUNK = 180_000; // characters per chunk document
 let ctx = null; // { col } once connected
@@ -20,6 +22,8 @@ let timer = null;
 let pending = null; // the state waiting for the in-flight write
 let queued = null; // the state waiting for the throttle
 let status = { state: 'off', at: null, error: null };
+let epoch = 0; // bumped when the franchise is deleted: uploads authorised before that are void
+let retryTimer = null;
 const listeners = new Set();
 
 function setStatus(s) { status = { ...status, ...s }; for (const fn of listeners) { try { fn(status); } catch { /* ignore */ } } }
@@ -52,6 +56,7 @@ export async function cloudLoad() {
     const meta = await c.col.doc('save_meta').get();
     if (!meta.exists) return null;
     const m = meta.data();
+    if (!m || !(m.chunks > 0)) return null; // no published copy (a lease alone leaves no meta fields)
     const parts = [];
     for (let i = 0; i < m.chunks; i++) {
       const d = await c.col.doc(chunkId(m.gen, i)).get(); // this generation's chunks (v39.1 copies: the plain keys)
@@ -72,10 +77,10 @@ export const cloudUsage = { chunks: 0, chars: 0, documents: 0, writes: 0, lastWr
  * Either way, later changes to the live object can never reach the cloud through this write.
  */
 function freezePayload(x) {
-  if (x && typeof x.json === 'function') return { json: x.json(), savedAt: x.savedAt ?? null, schemaVersion: x.schemaVersion ?? null, uid: x.uid ?? null };
-  return { json: JSON.stringify(x), savedAt: x?.savedAt ?? null, schemaVersion: x?.schemaVersion ?? null, uid: x?.uid ?? null };
+  if (x && typeof x.json === 'function') return { json: x.json(), savedAt: x.savedAt ?? null, schemaVersion: x.schemaVersion ?? null, uid: x.uid ?? null, epoch };
+  return { json: JSON.stringify(x), savedAt: x?.savedAt ?? null, schemaVersion: x?.schemaVersion ?? null, uid: x?.uid ?? null, epoch };
 }
-const LEASE_DOC = 'save_lock';
+const LEASE_DOC = 'save_meta'; // the lease lives on the meta, so publishing can be made conditional on holding it
 const LEASE_MS = 30_000; // renewed before each chunk; released (shortened to the 1 s minimum) when done
 const holder = `t${Math.random().toString(36).slice(2, 10)}`; // this tab
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -103,6 +108,7 @@ async function collectChunks(c, keep, prev) {
 async function writeNow(p) {
   const c = await connect(); if (!c) return false;
   const { json, savedAt, schemaVersion, uid } = p;
+  if (p.epoch !== epoch) return true; // authorised before the franchise was deleted
   if (savedAt != null && savedAt < lastWritten) return true; // an older state never replaces a newer one this session wrote
   const t0 = Date.now();
   if (!(await takeLease(c).catch(() => false))) { setStatus({ error: 'busy' }); retryLater(p); return false; }
@@ -117,7 +123,11 @@ async function writeNow(p) {
     if (!(await renewLease(c))) throw Object.assign(new Error('The upload lease was lost.'), { code: 'busy' }); // still the only uploader?
     const again = await c.col.doc('save_meta').get(); // a last check right before publishing (covers a writer without the lease)
     if (again.exists && savedAt != null && (again.data()?.savedAt || 0) > savedAt) { await collectChunks(c, again.data()?.gen, null); return true; }
-    await c.col.doc('save_meta').set({ chunks, savedAt, schemaVersion, uid, storage: 7, gen });
+    // Publish through the lease grant: the store merges the meta only if the lease is still ours when the request arrives, so
+    // an upload that stalled past its lease can never overwrite a newer copy published meanwhile (Codex r4362010448).
+    const metaRef = c.col.doc('save_meta'); const body = { chunks, savedAt, schemaVersion, uid, storage: 7, gen };
+    if (typeof metaRef.acquire === 'function') { if (!(await metaRef.acquire({ holder, ttlMs: LEASE_MS, data: body }))?.acquired) throw Object.assign(new Error('The upload lease was lost.'), { code: 'busy' }); }
+    else await metaRef.set(body); // an older runtime without leases
     lastWritten = Math.max(lastWritten, savedAt || 0);
     await collectChunks(c, gen, prev);
     Object.assign(cloudUsage, { chunks, chars: json.length, documents: chunks + 1, writes: cloudUsage.writes + 1, lastWriteMs: Date.now() - t0 });
@@ -127,7 +137,10 @@ async function writeNow(p) {
   finally { await releaseLease(c); }
 }
 /** Try an upload again later, unless a newer state has been queued meanwhile. */
-function retryLater(p) { setTimeout(() => { if (!queued && !pending) enqueue(p); }, 5000); }
+function retryLater(p) {
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(() => { retryTimer = null; if (p.epoch === epoch && !queued && !pending) enqueue(p); }, 5000); // void once the franchise is deleted (Codex r4362010441)
+}
 /** Queue a write behind any write in flight; only the newest pending state is written next. */
 function enqueue(f) {
   pending = f;
@@ -153,6 +166,7 @@ export function cloudFlush() { if (queued) { clearTimeout(timer); timer = null; 
 export function cloudResetGuard() { lastWritten = 0; }
 export async function cloudClear() {
   // Drop anything still waiting, so a throttled write cannot bring the deleted franchise back.
+  epoch++; clearTimeout(retryTimer); retryTimer = null; // and an upload waiting to retry after a busy lease
   clearTimeout(timer); timer = null; queued = null; pending = null;
   if (inflight) { try { await inflight; } catch { /* ignore */ } }
   lastWritten = 0;

@@ -162,7 +162,7 @@ with sync_playwright() as pw:
     FAKE_CLOUD = """(() => { const docs = new Map(); window.__cloudMetas = []; window.__cloudDocs = docs;
       const col = { doc: (id) => ({ get: async () => ({ exists: docs.has(id), data: () => JSON.parse(docs.get(id)) }),
         set: async (v) => { docs.set(id, JSON.stringify(v)); if (id === 'save_meta') window.__cloudMetas.push(v); }, delete: async () => { docs.delete(id); },
-        acquire: async ({ holder, ttlMs = 30000 }) => { const l = leases.get(id); const t = Date.now(); if (l && l.holder !== holder && l.until > t) return { acquired: false }; leases.set(id, { holder, until: t + Math.max(1000, ttlMs) }); return { acquired: true, holder }; } }),
+        acquire: async ({ holder, ttlMs = 30000, data }) => { const l = leases.get(id); const t = Date.now(); if (l && l.holder !== holder && l.until > t) return { acquired: false }; leases.set(id, { holder, until: t + Math.max(1000, ttlMs) }); if (data) { const v = { ...(docs.has(id) ? JSON.parse(docs.get(id)) : {}), ...data }; docs.set(id, JSON.stringify(v)); if (id === 'save_meta') window.__cloudMetas.push(v); } return { acquired: true, holder }; } }),
         get: async () => ({ docs: [...docs.keys()].map((id) => ({ id, data: () => JSON.parse(docs.get(id)) })) }) }; const leases = new Map();
       window.claude = { use: async (n) => (n === 'db' ? { collection: () => col } : n === 'user' ? { id: async () => 'viewer-1' } : null) }; })()"""
     b2 = pw.chromium.launch(); ctx2 = b2.new_context(viewport={'width': 360, 'height': 780}, device_scale_factor=2, is_mobile=True, has_touch=True)

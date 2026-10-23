@@ -543,7 +543,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     // Unload journals (one per tab). One is adopted only if it belongs to the live franchise, is newer than the live save, and
     // was built on the live save itself, or on an earlier save by the same tab that committed after the journal was written.
     // Every other journal is stale (another tab saved since) and is cleared.
-    let adopted = null;
+    let adopted = null; let retained = null;
     const cands = readJournals();
     const builtOnLive = (j) => j?.on && m && (j.on.writer === m.writer && j.on.seq === m.seq || (j.on.writer === m.writer && j.on.seq < m.seq));
     const best = cands.filter((x) => x.j && m && x.j.uid === m.uid && (x.j.savedAt || 0) > (m.savedAt || 0) && builtOnLive(x.j)).sort((x, y) => (y.j.savedAt || 0) - (x.j.savedAt || 0))[0];
@@ -556,9 +556,9 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
           else if (r.error?.code === 'newer-elsewhere') { notes.push('journal superseded by another tab'); m = await readManifest().catch(() => null); } // the live save moved on: load it
           else { adopted = f; notes.push(`journal adopted, not yet stored: ${r.error?.message}`); } // kept in localStorage for the next start too
         }
-      } catch (e) { notes.push(`journal ignored: ${e.message}`); }
+      } catch (e) { retained = best.key; notes.push(`journal kept for the next start: ${e.message}`); } // a passing read error must not discard it (Codex r4362010457)
     }
-    if (!adopted) for (const x of cands) clearJournal(x.key);
+    if (!adopted) for (const x of cands) if (x.key !== retained) clearJournal(x.key); // stale journals go; a kept one is dropped once a newer save makes it stale
     if (adopted) return { mode: 'ready', franchise: adopted, source: 'journal', notes };
     if (!m) {
       base = EMPTY; lastManifest = null; // this tab saw no live save

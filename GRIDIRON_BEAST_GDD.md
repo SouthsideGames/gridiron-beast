@@ -2515,7 +2515,7 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
   - it was built on the live save, or on an earlier save by the same tab that committed after the journal was written (the page was hidden mid-save);
   - the committed parts it builds on pass their checksums.
   - If several qualify, the newest wins.
-  - Every other journal is stale and is cleared. If another tab has saved even while the journal is being adopted, the live save is loaded instead.
+  - Every other journal is stale and is cleared. A journal that matches but cannot be read this time (a passing storage error) is kept and tried again at the next start; once a newer save exists it is stale and is cleared. If another tab has saved even while the journal is being adopted, the live save is loaded instead.
 - **Failures handled:**
   - IndexedDB missing or refused (private modes, policies): fallback mode on the v39.1 localStorage path, labelled in Settings.
   - An upgrade blocked by another tab: a clear message, and fallback mode.
@@ -2589,14 +2589,14 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
 ### 43.8 Cloud mirror [IMPLEMENTED: coexistence; policy recommended]
 - **Layout.** The meta gains `uid`, `storage: 7` and `gen`. Each v39.2 upload writes its own generation of chunks (`save_<gen>_c<n>`), so two uploads can never mix. The meta is published last and points at its generation; older generations, and chunks from an upload interrupted before it published, are removed afterwards (an artifact's database holds at most 25,000 documents in all).
 - **Older builds.** A meta without `gen` (written by v39.1) is still read through the old keys (`save_c<n>`). A v39.1 client reading a v39.2 copy finds no matching chunks and ignores it, as it already does with any torn copy.
-- **One uploader at a time, across tabs and devices.** The store has no transactions; its documented single-writer primitive is a cooperative lease (`doc.acquire`, set-if-not-busy, expiring on its own). Every v39.2 upload holds the lease on `save_lock` while it:
+- **One uploader at a time, across tabs and devices.** The store has no transactions; its documented single-writer primitive is a cooperative lease (`doc.acquire`, set-if-not-busy, expiring on its own). Every v39.2 upload holds the lease on `save_meta` itself while it:
   - checks the stored stamp;
   - writes its chunks, renewing the lease before each;
   - checks the stamp once more;
-  - publishes the meta;
+  - publishes the meta **through the lease grant** (`acquire` with `data`). The store merges the meta only if the lease is still this upload's when the request arrives, so an upload whose request stalled past the lease can never overwrite a newer copy published meanwhile;
   - cleans up.
   - The lease is also renewed, and ownership confirmed, right before publishing and before every clean-up deletion. An upload that has lost the lease stops at once: it publishes nothing and deletes nothing.
-  - It then shortens the lease to the 1-second minimum. An upload that cannot get the lease waits briefly, then tries again 5 seconds later unless a newer state is queued.
+  - It then shortens the lease to the 1-second minimum. An upload that cannot get the lease waits briefly, then tries again 5 seconds later unless a newer state is queued. Deleting the franchise cancels that retry, and any upload authorised before the deletion is void.
   - A v39.1 client does not take the lease. Its uploads can still race, which is the remaining cloud risk (43.14 notes it).
 - **Writes are serialised.** The JSON and its `savedAt` are taken in the same instant, and within a session an older state is never written over a newer one.
 - **Delete** drops pending writes, so a deleted franchise cannot come back.
@@ -2744,6 +2744,14 @@ Three defects found in code review (Codex), each reproduced by a failing test be
 - **H.** No failed operation reports success.
 
 **In the browser.** `tools/storage-check.py` now also deletes in one tab and saves from another, and lets a throttled cloud upload fire after the franchise has changed. Against `089e4a4` it reported both defects: the upload carried the unsaved change, and the stale tab reported success and wrote a manifest after the deletion.
+
+**Codex review of `da63189` (completed 2026-10-23), three findings, each reproduced by a failing test first:**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| (P1) An upload stalled past its lease while publishing could overwrite the newer copy published meanwhile (in the test the cloud copy became unreadable: the newer upload had already removed the stalled one's chunks) | The lease was renewed before the meta read and write, but the write itself was unconditional | The lease is held on `save_meta` and the meta is published through the lease grant, which the store applies only to the current holder |
+| (P1) Deleting the franchise did not cancel an upload waiting to retry after a busy lease, so it could bring the deleted franchise back | The retry timer kept its payload outside the throttle and queue that deletion clears | Deletion cancels the retry, and uploads authorised before a deletion are void |
+| (P2) A journal that failed to load because of a passing read error was deleted, losing the unsaved progress it protected | Every journal not adopted was cleared | A matching journal that could not be read is kept for the next start |
 
 **Codex review of `af5255d` (completed 2026-10-23), two findings, each reproduced by a failing test first:**
 
