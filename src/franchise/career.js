@@ -124,7 +124,7 @@ export function careerAfterGame(roster, ctx) {
     }
     // single-game league records set in this very game (the records book keeps names, so match name, club, season, week and value)
     for (const [cat, r] of Object.entries(ctx.records?.game || {})) {
-      if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.week === week && r.team === club && r.name === m.name && (line[cat] ?? line[cat === 'tacklesTotal' ? 'tacklesTotal' : cat]) === r.value) added += addEvent(m, { k: `rec:game:${cat}:${year}:${week}`, t: 'record', y: year, w: week, c: club, x: { scope: 'game', cat, value: r.value } });
+      if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.week === week && r.team === club && (r.id ? r.id === m.id : r.name === m.name) && (line[cat] ?? line[cat === 'tacklesTotal' ? 'tacklesTotal' : cat]) === r.value) added += addEvent(m, { k: `rec:game:${cat}:${year}:${week}`, t: 'record', y: year, w: week, c: club, x: { scope: 'game', cat, value: r.value } });
     }
   }
   return added;
@@ -147,7 +147,7 @@ export function careerSeasonEnd(roster, ctx) {
     const b = book(m); const s = m.stats; const bookY = s?.season?.year === year ? s.season : (s?.seasons || []).find((x) => x.year === year);
     const reg = withDerived(bookY?.reg || {}), post = bookY?.post || {};
     for (const [key, w] of Object.entries(ctx.awards?.league || {})) if (w && w.id === m.id && w.team === club && key !== 'coy') added += addEvent(m, { k: `award:${key}:${year}`, t: 'award', y: year, c: club, x: { key } });
-    for (const [cat, r] of Object.entries(ctx.records?.season || {})) if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.team === club && r.name === m.name && (reg[cat] || 0) === r.value) added += addEvent(m, { k: `rec:season:${cat}:${year}`, t: 'record', y: year, c: club, x: { scope: 'season', cat, value: r.value } });
+    for (const [cat, r] of Object.entries(ctx.records?.season || {})) if (year >= RECORDS_FROM_SEASON && r && r.year === year && r.team === club && (r.id ? r.id === m.id : r.name === m.name) && (reg[cat] || 0) === r.value) added += addEvent(m, { k: `rec:season:${cat}:${year}`, t: 'record', y: year, c: club, x: { scope: 'season', cat, value: r.value } });
     for (const S of SEASON_MARKS) if ((reg[S.key] || 0) >= S.at) added += addEvent(m, { k: `season:${S.key}:${year}`, t: 'season', y: year, c: club, x: { key: S.key, value: reg[S.key], at: S.at } });
     if (ctx.champion === club && (post.games || 0) > 0) added += addEvent(m, { k: `champ:${year}`, t: 'champion', y: year, c: club, x: { run: 1 } });
     if (b.o0?.y === year) { const gain = monsterOverall(m) - b.o0.ovr; if (gain >= GROWTH_MARK) added += addEvent(m, { k: `grow:${year}`, t: 'growth', y: year, c: club, x: { from: b.o0.ovr, to: b.o0.ovr + gain } }); }

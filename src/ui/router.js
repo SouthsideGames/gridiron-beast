@@ -21,12 +21,15 @@ export function currentScreen() { return stack[stack.length - 1] || null; }
 export function go(name, params = {}, { replace = false, reset = false } = {}) {
   if (!screens.has(name)) throw new Error(`No screen ${name}`);
   if (reset) stack = [];
+  else if (stack.length && !replace) stack[stack.length - 1].scroll = window.scrollY; // remembered for the way back
   if (replace && stack.length) stack.pop();
   stack.push({ name, params });
   navigating = true; render();
 }
+let restoreTo = null;
 export function back() {
   if (stack.length > 1) stack.pop();
+  restoreTo = stack[stack.length - 1]?.scroll ?? null; // back to where the thumb left the previous screen (GDD §40.5)
   navigating = true; render();
 }
 let navigating = false; // a go/back scrolls to the top; a re-render of the same screen (spending a point, toggling a tab) keeps the scroll position
@@ -52,5 +55,6 @@ export function render() {
   for (const b of app.querySelectorAll('[data-action="router-tab"]')) b.addEventListener('click', () => go(b.dataset.screen, {}, { reset: true }));
   screen.mount?.($('#screen'), ctx);
   afterMount?.(ctx, top.name);
-  if (keepScroll) window.scrollTo(0, y); else window.scrollTo(0, 0);
+  if (keepScroll) window.scrollTo(0, y); else if (restoreTo != null) window.scrollTo(0, restoreTo); else window.scrollTo(0, 0);
+  restoreTo = null;
 }

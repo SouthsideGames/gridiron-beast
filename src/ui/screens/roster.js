@@ -17,7 +17,8 @@ import { attributeHelps, statMeaning, POSITION_NAME } from '../../data/stat-guid
 import { openStatGuide, openStatMeaning } from '../stat-guide.js';
 import { playCardSvg } from '../play-art.js';
 import { openTypeChart } from '../type-chart.js';
-import { timelineHtml, timelineActions } from '../career-timeline.js';
+import { careerSectionHtml, careerActions, fullProfile } from '../career-ui.js';
+import { honoursCount } from '../../franchise/career-profile.js';
 import { typeProfile } from '../../data/type-chart.js';
 
 const ATTR_LABEL = { speed: 'Speed', agility: 'Agility', strength: 'Strength', awareness: 'Awareness', catching: 'Catching', arm: 'Arm', accuracy: 'Accuracy', blocking: 'Blocking', tackling: 'Tackling', coverage: 'Coverage', durability: 'Durability', kicking: 'Kicking' };
@@ -95,7 +96,7 @@ export function registerRosterScreens(Router, app) {
   function monsterRow(m, chart = {}) {
     const slot = Object.entries(chart).find(([, id]) => id === m.id)?.[0];
     const fit = F.fitFor(app.f, m)?.fits;
-    return `<button class="item ${fit ? 'fit' : ''}" data-action="monster" data-id="${m.id}">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${typeGlyph(m.type)} ${F.monsterNotices(app.f, m.id).length ? '<span class="notice-dot" title="Needs your attention"></span>' : ''}${m.cornerstone ? '<span class="chip cornerstone" title="Your cornerstone: the monster you built this club around">★ CORNERSTONE</span>' : ''}${fit ? ' <span class="chip fitchip">Fits scheme</span>' : ''}${(m.points || 0) > 0 ? ` <span class="chip warn">✨ ${m.points} pts</span>` : ''}${evolutionReady(m) ? ' <span class="chip good">⬆ ready to evolve</span>' : ''}</div><div class="sub">${m.position}${slot ? ' · ' + slot : ''} · L${m.level} · ${m.injury ? `<span style="color:var(--bad)">${m.injury.severity} injury, ${m.injury.weeks} wk</span>` : m.fatigue >= 60 ? '<span style="color:var(--warn)">fatigued</span>' : 'healthy'}</div></div><span class="mini-hl mono">${(() => { const h = headlineAttributes(m); return `${h.speed}·${h.power}·${h.hands}·${h.smarts}`; })()}</span><span class="ovr ${monsterOverall(m) >= 65 ? 'hi' : ''}">${monsterOverall(m)}</span></button>`;
+    return `<button class="item ${fit ? 'fit' : ''}" data-action="monster" data-id="${m.id}">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${typeGlyph(m.type)} ${F.monsterNotices(app.f, m.id).length ? '<span class="notice-dot" title="Needs your attention"></span>' : ''}${m.cornerstone ? '<span class="chip cornerstone" title="Your cornerstone: the monster you built this club around">★ CORNERSTONE</span>' : ''}${fit ? ' <span class="chip fitchip">Fits scheme</span>' : ''}${(m.points || 0) > 0 ? ` <span class="chip warn">✨ ${m.points} pts</span>` : ''}${evolutionReady(m) ? ' <span class="chip good">⬆ ready to evolve</span>' : ''}${(() => { const n = honoursCount(m); return n ? ` <span class="chip honours" title="${n} honour${n === 1 ? '' : 's'} in his trophy case">🏆${n > 1 ? ` ${n}` : ''}</span>` : ''; })()}</div><div class="sub">${m.position}${slot ? ' · ' + slot : ''} · L${m.level} · ${m.injury ? `<span style="color:var(--bad)">${m.injury.severity} injury, ${m.injury.weeks} wk</span>` : m.fatigue >= 60 ? '<span style="color:var(--warn)">fatigued</span>' : 'healthy'}</div></div><span class="mini-hl mono">${(() => { const h = headlineAttributes(m); return `${h.speed}·${h.power}·${h.hands}·${h.smarts}`; })()}</span><span class="ovr ${monsterOverall(m) >= 65 ? 'hi' : ''}">${monsterOverall(m)}</span></button>`;
   }
 
   Router.registerScreen('assign', {
@@ -120,9 +121,9 @@ export function registerRosterScreens(Router, app) {
         <div class="bar" style="margin:8px 0 4px"><i style="width:${Math.round(m.xp / xpForLevel(m.level) * 100)}%"></i></div>
         <div class="row between muted"><span>Fatigue ${m.fatigue}%</span><span>${m.injury ? `<b style="color:var(--bad)">${esc(m.injury.severity)} ${esc(m.injury.type)} · ${m.injury.weeks} wk</b>` : 'Healthy'}</span><span>${fmtMoney(m.salary)}/yr${m.contract ? ` · through ${yearOf(m.contract.ends)}` : ''}</span></div>
         ${m.contract && m.contract.ends <= f.season.year ? `<p class="dim" style="margin:4px 0 0">Contract year: renewal in the offseason. Today's ask would be about ${fmtMoney(F.renewalAsk(m).ask)}/yr.</p>` : ''}
-        <div class="row" style="gap:6px;margin-top:8px"><button class="btn small ghost" data-action="release">Release ${esc(m.name)}</button><span class="dim" style="font-size:12px">frees ${fmtMoney(m.salary)}/yr · back to the ${esc(F.homeRegion(m))} pool</span></div></div>
+        <div class="row" style="gap:6px;margin-top:8px"><button class="btn small" data-action="career-jump">🏆 Career</button><button class="btn small ghost" data-action="release">Release ${esc(m.name)}</button><span class="dim" style="font-size:12px">frees ${fmtMoney(m.salary)}/yr · back to the ${esc(F.homeRegion(m))} pool</span></div></div>
         ${bioHtml(f, m)}
-        ${timelineHtml(f, m)}
+        ${(() => { F.monsterTimeline(f, m); return careerSectionHtml(f, fullProfile(f, m, 'roster'), { domId: 'timeline' }); })()}
         <div class="panel"><b>Nature: ${esc(nature.name)}</b><p class="muted" style="margin:2px 0">${esc(nature.behavior)}${nature.up ? ` <span class="chip good">+10% ${ATTR_LABEL[nature.up]}</span> <span class="chip bad">−10% ${ATTR_LABEL[nature.down]}</span>` : ''}</p>
           <div class="row between" style="gap:6px"><b>Type: ${esc(m.type)}</b><button class="btn small" data-action="typechart" data-type="${esc(m.type)}">🔺 Type Chart</button></div><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}. ${(() => { const p = typeProfile(m.type); return `Strong against ${p.strong.join(' and ')}; weak against ${p.weak.join(' and ')}.`; })()}</p>
           ${ab ? `<b>Signature ability: ${esc(ab.name)}</b><p class="muted" style="margin:2px 0">${esc(ab.text)}</p><button class="btn small see-it" data-see-it="${resolveSpecies(m).id}">▶ See it</button>` : (() => { const sp = resolveSpecies(m); return sp.ability ? `<b>Signature ability: ${esc(sp.ability.name)}</b><p class="muted" style="margin:2px 0">${esc(sp.ability.text)}</p><button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : `<b>Species trait: ${esc(TRAITS[sp.trait]?.name)}</b><p class="muted" style="margin:2px 0">${esc(TRAITS[sp.trait]?.text)}</p>`; })()}
@@ -137,7 +138,8 @@ export function registerRosterScreens(Router, app) {
     },
     mount(root, ctx) {
       delegate(root, {
-        ...timelineActions(app.f, () => app.f.roster.find((x) => x.id === ctx.params.id)),
+        ...careerActions({ f: () => app.f, profile: () => fullProfile(app.f, app.f.roster.find((x) => x.id === ctx.params.id), 'roster'), monster: () => app.f.roster.find((x) => x.id === ctx.params.id), domId: 'timeline', go: (s, prm) => Router.go(s, prm) }),
+        'career-jump': () => root.querySelector('#timeline')?.scrollIntoView({ block: 'start', behavior: app.f?.settings?.reducedMotion ? 'auto' : 'smooth' }),
         typechart: (el) => openTypeChart(el.dataset.type),
         species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); },
         autospendone: () => { F.autoSpendAllPoints(app.f, { only: ctx.params.id }); app.save(); Router.render(); },

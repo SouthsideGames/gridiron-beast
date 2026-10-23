@@ -23,6 +23,7 @@ import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './ui/dev-review.js';
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
+import { installCareerLinks } from './ui/career-ui.js';
 
 const app = {
   f: null, // the franchise state (null before creation)
@@ -67,6 +68,8 @@ export function start() {
   registerAbilityBalance(Router);
   // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
   document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
+  // Career links anywhere (awards, news, the draft, free agency, the Hall of Fame): one listener opens a monster's career by id (GDD §40.5).
+  installCareerLinks(() => app.f, (screen, params) => Router.go(screen, params));
   registerDexScreens(Router, app);
   registerCeremony(Router, app); // the Beast Bowl ceremony (GDD §35)
   const saved = Save.load();

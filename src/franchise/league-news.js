@@ -136,8 +136,8 @@ export function raceNews({ year, week, races, meta }) {
     const top = races[k]?.[0]; if (!top) continue;
     const who = k === 'coy' ? top.coach || top.name : top.name; const key = k === 'coy' ? top.team : top.id;
     now[k] = { key, name: who, team: top.team };
-    leaders.push({ award: k, short: AWARDS[k]?.short || k, name: who, team: top.team, second: races[k]?.[1] ? (k === 'coy' ? races[k][1].coach || races[k][1].name : races[k][1].name) : null });
-    if (prev[k] && prev[k].key !== key && ['mvp', 'opoy', 'dpoy'].includes(k)) out.push({ id: `${year}|${week}|lead|${k}`, year, week, kind: 'race_lead', tier: 'notable', icon: '🔀', text: `${AWARDS[k].short} race: ${who} (${top.team}) takes the lead from ${prev[k].name}.` });
+    leaders.push({ award: k, short: AWARDS[k]?.short || k, name: who, team: top.team, mid: k === 'coy' ? null : top.id || null, second: races[k]?.[1] ? (k === 'coy' ? races[k][1].coach || races[k][1].name : races[k][1].name) : null, secondId: k === 'coy' ? null : races[k]?.[1]?.id || null });
+    if (prev[k] && prev[k].key !== key && ['mvp', 'opoy', 'dpoy'].includes(k)) out.push({ id: `${year}|${week}|lead|${k}`, year, week, kind: 'race_lead', tier: 'notable', icon: '🔀', mid: top.id || null, mname: who, text: `${AWARDS[k].short} race: ${who} (${top.team}) takes the lead from ${prev[k].name}.` });
   }
   (meta.leaders ||= {})[year] = now; for (const y of Object.keys(meta.leaders)) if (Number(y) < year - 1) delete meta.leaders[y];
   if (leaders.length) out.unshift({ id: `${year}|${week}|race`, year, week, kind: 'race', tier: 'info', icon: '🏅', text: 'Award races', leaders });
@@ -145,7 +145,7 @@ export function raceNews({ year, week, races, meta }) {
 }
 /** Award winners (regular-season awards, frozen when the playoffs are drawn). `winners` = { key: finalist | null }. */
 export function awardNews({ year, week, winners }) {
-  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => ({ id: `${year}|award|${k}`, year, week, kind: 'award', tier: 'major', icon: '🏆', text: `${AWARDS[k]?.label || k}: ${k === 'coy' ? (w.coach || w.name) : w.name} (${w.team}${w.position ? `, ${w.position}` : ''})${w.record ? `, ${w.record} club` : ''}.` }));
+  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => ({ id: `${year}|award|${k}`, year, week, kind: 'award', tier: 'major', icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, text: `${AWARDS[k]?.label || k}: ${k === 'coy' ? (w.coach || w.name) : w.name} (${w.team}${w.position ? `, ${w.position}` : ''})${w.record ? `, ${w.record} club` : ''}.` }));
 }
 
 /**
@@ -156,10 +156,10 @@ export function recordNews({ year, week, records, seasonsInBook, scope = 'game' 
   if (!records || seasonsInBook < NEWS_RULES.recordsAfterSeasons) return [];
   const out = []; const fmt = (v) => (Number.isInteger(v) ? v : Number(v).toFixed(1));
   if (scope === 'game') {
-    for (const c of RECORD_CATEGORIES) { const r = records.game?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${year}|${week}|rec|g|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', text: `League record: ${r.name} (${r.team}) sets the single-game mark for ${c.label.toLowerCase()} with ${fmt(r.value)} against ${r.opp}. The old mark: ${fmt(r.prev.value)} by ${r.prev.name}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
+    for (const c of RECORD_CATEGORIES) { const r = records.game?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${year}|${week}|rec|g|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, text: `League record: ${r.name} (${r.team}) sets the single-game mark for ${c.label.toLowerCase()} with ${fmt(r.value)} against ${r.opp}. The old mark: ${fmt(r.prev.value)} by ${r.prev.name}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
     for (const c of TEAM_RECORDS) { const r = records.team?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${year}|${week}|rec|t|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', text: `League record: ${r.team} set the mark for ${c.label.toLowerCase()} (${fmt(r.value)}) in a ${r.score} game against ${r.opp}. The old mark: ${fmt(r.prev.value)} by ${r.prev.team}.` }); }
   } else {
-    for (const c of RECORD_CATEGORIES) { const r = records.season?.[c.id]; if (!r || r.year !== year || !r.prev) continue; out.push({ id: `${year}|rec|s|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', text: `Season record: ${r.name} (${r.team}) finishes with ${fmt(r.value)} ${c.label.toLowerCase()}, the most in league history. The old mark: ${fmt(r.prev.value)} by ${r.prev.name}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
+    for (const c of RECORD_CATEGORIES) { const r = records.season?.[c.id]; if (!r || r.year !== year || !r.prev) continue; out.push({ id: `${year}|rec|s|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, text: `Season record: ${r.name} (${r.team}) finishes with ${fmt(r.value)} ${c.label.toLowerCase()}, the most in league history. The old mark: ${fmt(r.prev.value)} by ${r.prev.name}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
   }
   return out;
 }

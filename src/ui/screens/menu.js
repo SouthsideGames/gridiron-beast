@@ -16,6 +16,7 @@ import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { resetDex } from '../../franchise/dex-store.js';
 import { clashSettings } from '../../franchise/clash-link.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
+import { openSnapshotSheet } from '../career-ui.js';
 import { resetTutorial, primerHtml, assistSettingsHtml } from '../tutorial.js';
 import { setAssist, assistSettings, ASSIST_MODE_TEXT } from '../../franchise/assist.js';
 import { openStatGuide } from '../stat-guide.js';
@@ -144,12 +145,13 @@ export function registerMenuScreens(Router, app) {
   });
   Router.registerScreen('hof', {
     title: 'Hall of Fame',
+    mount(root) { root.addEventListener('click', (e) => { const b = e.target.closest('[data-hof]'); if (!b) return; const card = hallOfFame().find((c) => c.id === b.dataset.hof); const snap = card?.careers?.[Number(b.dataset.i)]; if (snap) openSnapshotSheet(snap, { settings: app.settings || {} }); }); },
     render() {
       const cards = hallOfFame();
       if (!cards.length) return '<div class="panel"><p>No careers enshrined yet. Hit every mark on the Campaign checklist and retire.</p></div>';
       return `<div class="stack">${cards.map((c) => `<div class="panel hof-card"><div class="row">${portraitSprite(`${c.portrait}|${c.owner.split(' ')[0]}`, 48)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(c.owner)}</div><div class="muted">${esc(c.club)} · ${esc(DIFF[c.difficulty]?.label || c.difficulty)} · ${c.seasons} season${c.seasons === 1 ? '' : 's'}</div></div><span class="chip accent">🏛️</span></div>
         <div class="kv" style="margin-top:8px"><b>Record</b><span class="mono">${c.record.w}-${c.record.l}</span><b>Beast Bowls</b><span>${c.titles}</span><b>Badges</b><span>${c.badges.length} / 8</span><b>League awards</b><span>${c.awards}</span><b>Species discovered</b><span>${c.dexSeen} / 72</span>${c.rival ? `<b>Rival</b><span>${esc(c.rival)} ${c.rivalRecord ? `(${c.rivalRecord.w}-${c.rivalRecord.l})` : ''}</span>` : ''}</div>
-        ${c.bestMonsters?.length ? `<div class="muted" style="margin-top:8px;font-size:12px">BEST MONSTERS</div><div class="row" style="flex-wrap:wrap;gap:8px">${c.bestMonsters.map((m) => `<span class="row" style="gap:4px">${monsterSprite({ id: m.name, name: m.name, species: m.species }, 28)}<span style="font-size:13px">${esc(m.name)} <span class="dim">${m.position} ${m.ovr}</span></span></span>`).join('')}</div>` : ''}
+        ${c.bestMonsters?.length ? `<div class="muted" style="margin-top:8px;font-size:12px">BEST MONSTERS</div><div class="row" style="flex-wrap:wrap;gap:8px">${c.bestMonsters.map((m, i) => c.careers?.[i] ? `<button class="hof-mon" data-hof="${esc(c.id)}" data-i="${i}" aria-label="${esc(`${m.name}: open his career`)}">${monsterSprite({ id: c.careers[i].id || m.name, name: m.name, species: m.species, stage: c.careers[i].stage || 0 }, 28)}<span style="font-size:13px">${esc(m.name)} <span class="dim">${m.position} ${m.ovr}</span>${c.careers[i].honours?.titles || c.careers[i].honours?.awards ? ' 🏆' : ''}</span><span class="tl-go">›</span></button>` : `<span class="row" style="gap:4px">${monsterSprite({ id: m.name, name: m.name, species: m.species }, 28)}<span style="font-size:13px">${esc(m.name)} <span class="dim">${m.position} ${m.ovr}</span></span></span>`).join('')}</div>${c.careers ? '<div class="dim" style="font-size:12px;margin-top:4px">Tap a monster for his career as it stood at retirement.</div>' : '<div class="dim" style="font-size:12px;margin-top:4px">Careers were not kept on cards written before this version.</div>'}` : ''}
         <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Season by season</summary>${(c.seasonsList || []).map((h) => `<div class="row between sub"><span>${yearOf(h.year)}</span><span class="mono">${h.w}-${h.l}${h.champion ? ' 🏆' : h.playoffs ? ' · playoffs' : ''}</span></div>`).join('')}</details>
         <div class="dim" style="margin-top:6px;font-size:12px">Retired ${new Date(c.retiredAt).toLocaleDateString()}</div></div>`).join('')}</div>`;
     },

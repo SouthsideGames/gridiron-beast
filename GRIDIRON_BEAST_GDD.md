@@ -1575,7 +1575,7 @@ Not tracked, because the game has no such systems:
 - The soak's invariants now also check timelines.
 - `tools/career-ui-check.py` in headless Chromium: the section is under the Bio, the fold and the filter work without a full redraw and without moving the section, the empty state shows, touch targets are adequate, and there is no overflow and no page errors.
 
-**38.7 Later: Career Presentation phase** (recommendations, not built):
+**38.7 Later: Career Presentation phase** (Phase 2 is built: §40; the remaining ideas are in §40.9):
 - a career summary header (seasons, clubs, career line, honours count) and a shareable "career card";
 - timelines for pool and draft monsters in their scouting sheets (the data already follows them);
 - tapping an event to open that game's box score or that season's awards;
@@ -1644,5 +1644,180 @@ Three items from the owner's playtest of v38.0.
   - the full sheet opens;
   - removing every Clash monster leaves the lineup empty with Enter disabled, adding one gives one, and Auto lineup refills;
   - no page errors, no horizontal overflow.
+
+  This is an emulated browser, not a real device.
+
+
+## 40. Monster Career Presentation, Phase 2 (IMPLEMENTED 2026-10-22, Monster Identity and Attachment; branch `career-presentation`, v39.0)
+
+Phase 1 (§38) records a career; Phase 2 presents it. This is a presentation and accessibility layer, not a gameplay system:
+- nothing here changes football, the Beast Clash, progression, contracts, the Board or balance;
+- nothing grants XP, attributes, currency or rewards;
+- nothing new is simulated.
+
+**One source of truth.** `src/franchise/career-profile.js` derives every career view from records the game already keeps:
+- `m.stats`: season books, career totals and the current season's game log;
+- `m.career`: the Phase 1 timeline, its events and keys unchanged;
+- `m.history` and `m.drafted`: club moves;
+- `f.history`: awards, schedules and championship records;
+- the records book;
+- the league tables, for other clubs' players.
+
+Nothing is stored twice. `src/ui/career-ui.js` renders it in one place, used by the monster card and by every career sheet.
+
+**40.1 Career summary header.** It sits at the top of the Career Timeline section and shows:
+- the sprite, name, species form, type and position;
+- the current or most recent club, in its colour;
+- seasons (or "Rookie season"), level and overall;
+- honour chips (titles, awards, records, Hall of Fame);
+- four position-relevant statistics, from the game's own keys:
+
+| Position | Statistics |
+|---|---|
+| QB | pass yards, pass TD, INT thrown, completion % |
+| RB | rush yards, rush TD, yards per carry, receiving yards |
+| WR | catches, receiving yards, receiving TD, yards per catch |
+| TE | catches, receiving yards, receiving TD, blocks won % |
+| OL | starts, blocks won %, sacks allowed, pass blocks |
+| DL | tackles, sacks, tackles for loss, pressures |
+| LB | tackles, sacks, interceptions, tackles for loss |
+| CB | interceptions, passes defended, tackles, completion % allowed |
+| S | tackles, interceptions, passes defended, forced fumbles |
+| K | field goals, FG %, longest FG, points |
+
+**Behaviour:**
+- **Career and This season** switch the four statistics.
+- A rate without enough volume shows a dash, never a misleading 100%.
+- The clubs represented appear in order, with their seasons.
+- A note appears when career totals cannot include seasons played before this franchise kept the monster's stats.
+- Rookies and monsters without games say so in plain words; a veteran free agent with no games on record is not called a rookie.
+
+**40.2 Trophy case.** The case shows tiles for Hall of Fame, Beast Bowl Champion, MVP, OPOY, DPOY, SMOY, OROY, DROY and league records, most prestigious first. Each tile has:
+- the honour's icon and name;
+- the seasons it was won;
+- a ×N count for repeats;
+- gold for titles and the major awards, silver for the rest, marble for the Hall of Fame.
+
+**How it works:**
+- Tapping a tile lists every season it was won; each entry opens its detail (the final, the award sheet, the record).
+- Honours come from the timeline's events plus the franchise's award history, matched by id and deduplicated by key.
+- The tiles reveal in a short stagger (off with reduced motion).
+- The empty state says what will be kept there.
+- Purely historical recognition: it grants nothing.
+
+**40.3 Interactive timeline.** Phase 1's structure is unchanged: seasons, the All/Highlights filter and the fold. What is new:
+- **Links.** An event with a verified record behind it is a button with a › mark:
+
+| Event | What it opens |
+|---|---|
+| Beast Bowl title | The final (opponent, score, venue), the season and playoff records, his part (starter at a slot, on the title roster, or played in the final), his playoff line, and the ceremony again |
+| League award | The award, season, club and record, the award sheet's reason, and his season line |
+| League record | The value and the game, whether it still stands or who broke it since (and with what), and whose mark he broke |
+| Evolution | Both stages' sprites, from the species' own chain, and the season, or "before the timeline began" |
+| Game moment (debut, firsts, playoff and rivalry performances, milestones, Beast Bowl appearances) | The game: from the current season's game log (his line), or from that season's schedule (the club's result, labelled as such) |
+
+- **No link without a record.** An event with nothing behind it (season marks, level marks, growth, club moves, game moments from seasons whose result is gone) stays a plain card.
+- **Navigation.** Details open in a sheet over the card. Closing returns to the same place, filter and fold (the section never re-renders the screen).
+
+**40.4 Shareable career cards.** Real PNG files, drawn on a canvas from the game's own 16×16 sprites (`spritePixels`, the same grid and tint as on screen). There is no network, account or image service.
+
+**Layouts:**
+- **Portrait**, 1080×1350: the monster large, then name, identity, club band, seasons, honour pills and three statistics.
+- **Square**, 1080×1080: the monster on the left and the identity on the right, with the statistics underneath.
+
+**Both layouts carry:**
+- the Gridiron Beast wordmark;
+- the club's colour;
+- the type's glow behind the sprite;
+- a tier ribbon.
+
+**Tiers** (presentation only): Rookie, Established, Veteran, Decorated, Champion, Dynasty (2+ titles: a double frame and stars) and Hall of Famer (laurels).
+
+**Text and statistics:**
+- Every text is fitted to its box.
+- Long names wrap to two lines in the square layout.
+- A card before a first game shows level, overall and seasons instead of empty statistics.
+
+**Sharing:**
+- **Share** uses the system share sheet where the device offers file sharing.
+- **Save image** downloads `name-career-layout.png`.
+- A toast confirms either.
+- Object URLs are released when the layout changes or the sheet closes, and the canvas is emptied after encoding.
+- Drawing a card never touches the franchise.
+
+**40.5 Career links across the game.** A career opens by stable id from anywhere. One listener (`data-career`) opens a sheet over the current screen, so closing it returns to the same screen and scroll position. Two monsters with the same name never open each other's career.
+
+| Where | What opens |
+|---|---|
+| Roster | A 🏆 chip on rows of decorated monsters; **🏆 Career** on the monster card jumps to the section. Back from a monster card restores the roster's scroll position (the router now remembers each screen's position on the way back). |
+| Free agency | The free-agent sheet shows a career block (summary and honours) and **Full career ›**. A pool monster's history carries over from his clubs. |
+| Draft | The prospect sheet says plainly that a prospect has no professional career yet; drafted players (yours and other clubs') link to their careers from the draft room. No professional accomplishments are shown for a prospect. |
+| League awards | Award history, the season's award sheets, the award races, league leaders and club leaders link the winners. |
+| News | League News award, record and race-lead lines link the monster they name; the award races link both leaders. Club notes that name a monster (evolutions, injuries, signings, trades, draft picks) link him. |
+| Records book | Holders link when the record carries an id (records set from v39.0 on). |
+| Hall of Fame | A retirement now writes a compact career snapshot (about 1–2.5 KB) for each best monster on the card. The card's monsters open their summary, trophy case and highlights as they stood. Cards written before v39.0 say careers were not kept. |
+
+**Scouting is respected.** A free agent's overall follows his scout report, and a prospect's follows the draft report: hidden ratings stay hidden in career views. Statistics and honours are public records.
+
+**Other clubs' players.** The league keeps their season lines, not a career. Their sheet is a "league profile": the seasons on record from the archived tables (8 seasons) and their league awards. It has no timeline, and it does not invent history.
+
+**40.6 Historical data limitations** (nothing is fabricated):
+- Only the current season's game lines are kept. A game from an earlier season shows the club's result from the schedule, labelled.
+- A championship's full final is kept only for titles won since the ceremony record (§35). Otherwise the detail shows what the timeline event recorded.
+- Career totals count seasons with this franchise's records. Earlier pro seasons are acknowledged, not estimated.
+- Records set before v39.0 carry a name but no id. They show, but do not link, and the Phase 1 record events keep matching by name for them. Records with an id now match by id, so a namesake never gets another monster's record.
+- AI clubs' rosters are generated each season. Another club's player is known for the seasons his line is in the tables.
+
+**40.7 Save compatibility.**
+- The save key and schema 6 are unchanged.
+- No new franchise field was needed for the presentation itself; it is derived.
+- **Small additive fields:**
+  - `id` on new records-book entries;
+  - `mid`/`mname` on new League News and club-note items that name a monster;
+  - `careers` on new Hall of Fame cards (stored outside the franchise).
+- **Phase 1 is untouched:** event keys and the timeline are unchanged, with no duplicates and no backfill changes.
+- Older saves load and show everything their records prove.
+
+**40.8 Polish pass** (from a phone player's view):
+- the summary's hierarchy and club colours;
+- a gentle sprite bob;
+- gold, silver and marble trophy treatments with a staggered reveal;
+- › marks and 44 px touch targets on linked events;
+- detail sheets with a hero line and plain facts;
+- the species line dropped when the name already is the species;
+- unique seasons on trophy tiles;
+- "Rookie season" only for a current rookie;
+- the card's footer saying "Awaiting his first game" instead of repeating level and overall;
+- scroll memory on Back;
+- the roster honours chip;
+- id-based record matching;
+- scouting-aware career views.
+
+Every animation stops with reduced motion, from Settings or the system setting.
+
+**40.9 Later** (recommendations, not built):
+- tapping a season header for that season's full line;
+- a career comparison of two monsters;
+- persistent AI rosters, which would allow league-wide careers and AI career cards;
+- the franchise Moments Museum;
+- retirement and legends;
+- Monster Partnerships (not started: it needs the owner's authorisation);
+- video or animated cards.
+
+**40.10 Verified.**
+- `tests/career-presentation.test.js` (10 tests): summary totals and position focus, rookies, older saves and several clubs, trophy counts and history agreement, links only where a record exists, record details (standing, broken, namesakes by id), career links by id (pool, league, prospect, drafted), scouting visibility, the real franchise (titles and awards match the history, every link opens, reading changes nothing, the save round-trip), card content and tiers, and the Hall of Fame snapshot.
+- `tools/career-presentation-study.mjs`, 4 franchises × 4 seasons: 150 monsters, 34 honours and 202 linked events, every one opening its record; 0.14 ms per profile; the largest Hall of Fame snapshot is 2.5 KB; 0 problems.
+- **Franchise progression is unchanged.** The `--fingerprint` run on `main` and on this branch (4 franchises × 3 seasons) produced identical records, champions, award winners and roster levels.
+- `npm test`: 357 passing. `tools/franchise-soak.mjs`, 8 × 4 (29 seasons): 0 problems.
+- `tools/career-presentation-check.py` in headless Chromium at 320, 360, 390 and 412 px:
+  - the summary, trophies and timeline on the card;
+  - details that open and close without moving the card or losing the filter;
+  - trophy shelves;
+  - both card layouts in the sheet and a saved PNG file;
+  - exported PNGs for rookie, real, veteran, dynasty (long name) and Hall of Fame careers, checked for size and clipped text;
+  - links from League News, award history, league leaders, the records book, the free-agent sheet, the draft room and the Hall of Fame;
+  - namesakes;
+  - Back restoring the roster's scroll position;
+  - no page errors and no horizontal overflow.
 
   This is an emulated browser, not a real device.
