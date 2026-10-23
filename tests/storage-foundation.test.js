@@ -11,7 +11,7 @@ import { createStore, memoryBackend, exportFranchise, validateImport, JOURNAL_KE
 
 const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise;
 const legacyText = () => JSON.stringify({ ...Save.migrate(fixture()), savedAt: 1_790_000_000_000 }); // a v39.1 save exactly as localStorage holds it (v39.1 always stamped savedAt)
-const mkLs = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m }; };
+const mkLs = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, m }; };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 let clock = 1_800_000_000_000; const now = () => ++clock;
 async function migrated({ quota } = {}) {
@@ -69,11 +69,12 @@ test('migration: interrupted at every step, the next start finishes it with the 
     const { uid, lifecycle, ...rest } = second.franchise; assert.ok(same(rest, JSON.parse(text)), `${point}: no progress lost`);
   }
 });
-test('migration: progress written later by an older copy of the game is adopted, never ignored, and the IndexedDB copy is kept', async () => {
+test('migration: a save written later by an older copy of the game is never ignored and never replaces the live save: both are kept', async () => {
   const { ls, f, backend, store } = await migrated();
   const old = JSON.parse(ls.getItem(Save.SAVE_KEY)); old.savedAt = clock + 10_000; old.owner.first = 'Later'; ls.setItem(Save.SAVE_KEY, JSON.stringify(old)); clock += 20_000;
-  const r = await reopen(backend, ls); assert.equal(r.source, 'legacy-newer'); assert.equal(r.franchise.owner.first, 'Later');
-  const kept = (await store.listBackups()).find((b) => b.kind === 'pre-legacy'); assert.ok(kept?.ok); assert.equal((await store.readBackup(kept.id)).owner.first, f.owner.first);
+  const r = await reopen(backend, ls); assert.equal(r.source, 'indexeddb'); assert.equal(r.franchise.owner.first, f.owner.first);
+  const kept = (await store.listBackups()).find((b) => b.kind === 'legacy-newer'); assert.ok(kept?.ok); assert.equal((await store.readBackup(kept.id)).owner.first, 'Later');
+  assert.equal(ls.getItem(Save.SAVE_KEY), JSON.stringify(old), 'the localStorage save is left exactly as the older build wrote it');
 });
 test('migration: saves past season 20 are preserved unchanged (no season limit is enforced)', async () => {
   const ls = mkLs(); const g = Save.migrate(fixture());
@@ -91,12 +92,14 @@ test('saves: every request resolves after its commit; the last state wins; saves
   const res = await Promise.all(ps); assert.ok(res.every((r) => r.ok)); assert.equal(max, 1, 'one write transaction at a time');
   assert.equal((await reopen(backend, ls)).franchise.owner.first, 'Owner24');
 });
-test('saves: a stale manifest from the same writer is refused, so an older save can never replace a newer one', async () => {
-  const { store, f, backend } = await migrated();
-  await store.save(f); const m = await store.readManifest();
-  await assert.rejects(backend.run(['saves'], 'readwrite', async (t) => { const cur = await t.get('saves', 'slot1'); if (cur.writer === m.writer && cur.seq > m.seq - 1) throw Object.assign(new Error('stale'), { code: 'stale' }); }), /stale/);
-  const before = await store.readManifest(); f.owner.first = 'Newer'; await store.save(f);
-  assert.ok((await store.readManifest()).seq > before.seq);
+test('saves: a store whose view is older than the live save is refused, even under the same writer id', async () => {
+  const { backend, ls } = await migrated();
+  const one = createStore({ backend, localStorage: ls, now, debounce: 0, writer: 'same' }); const a = (await one.open()).franchise;
+  const two = createStore({ backend, localStorage: ls, now, debounce: 0, writer: 'same' }); const b = (await two.open()).franchise;
+  a.owner.first = 'Newer'; assert.ok((await one.save(a)).ok);
+  b.owner.first = 'Older-view'; const r = await two.save(b); // its base is the manifest before 'Newer'
+  assert.equal(r.ok, false); assert.equal(r.error.code, 'newer-elsewhere');
+  assert.equal((await reopen(backend, ls)).franchise.owner.first, 'Newer');
 });
 test('saves: another tab that saved the franchise more recently is never overwritten by this tab\'s older state, whatever the clocks say', async () => {
   const { backend, ls } = await migrated();
@@ -127,9 +130,11 @@ test('saves: only changed parts are written (the archive is not re-written every
   const parts0 = backend.puts.parts; f.news.push({ text: 'core only' }); await store.save(f);
   assert.equal(backend.puts.parts - parts0, 1, 'just the core part');
   f.history[0].note = 'archive change'; await store.save(f); assert.equal(backend.puts.parts - parts0, 2, 'then only the history part');
-  const r0 = JSON.stringify(backend.data.backups.get('1:roll0')); await store.save(f); // nothing changed but the time
+  const r0 = JSON.stringify(backend.data.backups.get('1:roll0')); const m0 = await store.readManifest(); const commits = backend.commits;
+  const same = await store.save(f); // nothing changed but the time
+  assert.equal(same.ok, true); assert.equal(same.unchanged, true);
   assert.equal(backend.puts.parts - parts0, 2, 'an unchanged save writes no part'); assert.equal(JSON.stringify(backend.data.backups.get('1:roll0')), r0, 'and rotates no backup');
-  assert.equal((await store.readManifest()).savedAt, f.savedAt, 'its time is still recorded');
+  assert.equal(backend.commits, commits, 'and commits nothing at all'); assert.equal((await store.readManifest()).seq, m0.seq);
 });
 test('saves: a failure inside the transaction leaves the previous save whole; the error is reported and retry works', async () => {
   const { store, f, backend, ls } = await migrated();
@@ -192,10 +197,11 @@ test('journal: a save still queued when the page goes away is recovered at the n
   const ls = mkLs(); ls.setItem(Save.SAVE_KEY, legacyText()); const backend = memoryBackend();
   const store = createStore({ backend, localStorage: ls, now, debounce: 10_000 }); const { franchise: f } = await store.open();
   f.owner.first = 'Unsaved'; store.save(f); assert.ok(store.journal(f)); // the page is hidden before the debounce fires
-  const j = JSON.parse(ls.getItem(JOURNAL_KEY)); assert.ok(!JSON.parse(j.body).parts.history, 'only changed parts are journaled');
-  const r = await reopen(backend, ls); assert.equal(r.source, 'journal'); assert.equal(r.franchise.owner.first, 'Unsaved'); assert.equal(ls.getItem(JOURNAL_KEY), null);
-  const body = JSON.stringify({ v: 2, uid: 'someone-else', savedAt: clock + 99_999, order: [], base: {}, parts: {} }); ls.setItem(JOURNAL_KEY, JSON.stringify({ sum: checksum(body), body }));
-  assert.equal((await reopen(backend, ls)).source, 'indexeddb'); assert.equal(ls.getItem(JOURNAL_KEY), null);
+  const jkeys = () => [...ls.m.keys()].filter((k) => k.startsWith(JOURNAL_KEY));
+  assert.equal(jkeys().length, 1); const j = JSON.parse(ls.getItem(jkeys()[0])); assert.ok(!JSON.parse(j.body).parts.history, 'only changed parts are journaled');
+  const r = await reopen(backend, ls); assert.equal(r.source, 'journal'); assert.equal(r.franchise.owner.first, 'Unsaved'); assert.equal(jkeys().length, 0);
+  const body = JSON.stringify({ v: 2, uid: 'someone-else', savedAt: clock + 99_999, order: [], base: {}, parts: {} }); ls.setItem(`${JOURNAL_KEY}:other`, JSON.stringify({ sum: checksum(body), body }));
+  assert.equal((await reopen(backend, ls)).source, 'indexeddb'); assert.equal(jkeys().length, 0);
 });
 
 // ------------------------------------------------------------ export and import

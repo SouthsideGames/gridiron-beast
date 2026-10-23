@@ -4,7 +4,7 @@ import * as Router from './ui/router.js';
 import * as Save from './franchise/save.js';
 import { createStore, idbBackend, classify, saveMeta } from './franchise/store.js';
 import { restoreThenAdopt, replaceThenAdopt, legacyReplaceThenAdopt, shouldMirror } from './franchise/activation.js';
-import { registerRecoveryScreen, showSaveFailure, saveStatusText } from './ui/storage-ui.js';
+import { registerRecoveryScreen, showSaveFailure, saveStatusText, showStaleTab } from './ui/storage-ui.js';
 import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudStatus, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof, cloudLoadAchievements, cloudSaveAchievements } from './franchise/cloud-save.js';
 import { setAchievementMirror, mergeAchievements, achievementsData } from './franchise/achievement-store.js';
 import { setHofMirror, mergeHof, hallOfFame } from './franchise/hall-of-fame.js';
@@ -54,17 +54,11 @@ const app = {
     return p.then((r) => { saveOutcome(r); if (shouldMirror(r) && r.snapshot) cloudSave(r.snapshot, { immediate: important }); return r; });
   },
   /**
-   * Start playing a new franchise `f` (onboarding). The game needs it at once to show the next screen, so it becomes active
-   * in memory immediately; in storage the replaced franchise is copied first and `f` is committed after it (store.replace),
-   * and the cloud receives `f` only after that commit. If either step fails, the failure sheet says so and the replaced
-   * franchise is still the stored one.
+   * Start playing a new franchise `f` (onboarding, the prototype import). The same commit-first path as every other
+   * activation (replaceFranchise): the replaced franchise is copied, `f` is committed, and only then does `f` become active and
+   * go to the cloud. On failure the current franchise stays active and the caller shows the reason.
    */
-  setFranchise(f) {
-    const old = this.f; const st = this.storage.store;
-    this.f = f; this.lastSig = null; applySettings();
-    if (st && old && old !== f) return st.replace(f, old, { copyKind: 'replaced' }).then((r) => { saveOutcome(r); if (r.ok && r.snapshot) cloudSave(r.snapshot, { immediate: true }); return r; });
-    return this.save({ immediate: true });
-  },
+  setFranchise(f) { return this.replaceFranchise(f, { copyKind: 'replaced' }); },
   /**
    * Restore a backup by id. The current franchise stays active until the restored one is committed locally; only then is it
    * adopted and mirrored to the cloud. On failure nothing changes: { ok: false, error }.
@@ -153,7 +147,20 @@ export function start() {
   const leaving = () => { if (!app.f) return; app.save({ immediate: true }); if (app.storage.store) app.storage.store.journal(app.f); cloudFlush(); };
   window.addEventListener('beforeunload', leaving);
   window.addEventListener('pagehide', leaving);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') leaving(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') leaving(); else checkOtherTabs(); });
+  window.addEventListener('focus', checkOtherTabs);
+}
+
+/**
+ * When this tab comes back to the front, check whether another tab or window changed the franchise meanwhile. If so, this tab
+ * cannot save over it (the store would refuse), so the player is told at once, before playing on: reload to continue from
+ * the newest save, or export what this tab holds first.
+ */
+let staleShown = false;
+async function checkOtherTabs() {
+  const st = app.storage.store; if (!st || !app.f || staleShown) return;
+  if (!(await st.isStale())) return;
+  staleShown = true; showStaleTab(app, () => { staleShown = false; });
 }
 
 function adopt(f) { app.f = f; app.lastSig = null; applySettings(); mergeDex(f.dex); F.syncAchievementsToGlobal(f); }
@@ -175,7 +182,7 @@ async function boot() {
   if (res.mode === 'recovery') { app.recovery = res; Router.go('recovery', {}, { reset: true }); }
   else { if (res.franchise) adopt(res.franchise); Router.go('menu', {}, { reset: true }); }
   if (res.source === 'migrated') toast('Your franchise moved to the new save storage. Your previous save is kept untouched.', 'good', 4500);
-  else if (res.source === 'legacy-newer') toast('Loaded newer progress saved by an older copy of the game. The other version is kept as a backup.', 'info', 5000);
+  else if (res.notes?.includes('legacy-newer kept')) toast('An older copy of the game saved progress on this device after the update. Your franchise was kept; the other save is under Settings → Save data → Restore a backup.', 'info', 6500);
   else if (app.storage.mode === 'legacy' && app.storage.error) toast('Saving in fallback mode on this browser (see Settings → Save data).', 'info', 4500);
   reconcileCloud();
 }

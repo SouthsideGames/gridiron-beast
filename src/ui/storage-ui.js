@@ -8,7 +8,7 @@ import { cloudStatus } from '../franchise/cloud-save.js';
 import { exportFranchise, exportFileName, validateImport } from '../franchise/store.js';
 import * as Save from '../franchise/save.js';
 
-const KIND = { roll0: 'Previous save', roll1: 'Save before that', weekly: 'Weekly backup (after Sunday)', 'pre-restore': 'Kept before a restore (undo)', 'pre-cloud': 'Before the cloud copy replaced it', 'pre-legacy': 'Before an older copy of the game took over', replaced: 'Franchise you replaced', deleted: 'Franchise that left your game (deleted, retired or let go)', 'legacy-original': 'Original save from v39.1 (before this update)', 'legacy-newer': 'Save written by an older copy of the game', quarantine: 'Damaged save (kept for diagnosis)', cloud: 'Your cloud save' };
+const KIND = { roll0: 'Previous save', roll1: 'Save before that', weekly: 'Weekly backup (after Sunday)', 'pre-restore': 'Kept before a restore (undo)', 'pre-cloud': 'Before the cloud copy replaced it', replaced: 'Franchise you replaced', deleted: 'Franchise that left your game (deleted, retired or let go)', 'legacy-original': 'Original save from v39.1 (before this update)', 'legacy-newer': 'Save written by an older copy of the game', quarantine: 'Damaged save (kept for diagnosis)', cloud: 'Your cloud save' };
 export const kb = (n) => (n == null ? '—' : n >= 1048576 ? `${(n / 1048576).toFixed(n >= 10485760 ? 0 : 1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 const when = (t) => (t ? new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'unknown time');
 const timeOnly = (t) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -67,11 +67,14 @@ export async function fillStorageMeter(root, app) {
 export function offerExport(f) {
   const text = exportFranchise(f);
   const check = validateImport(text); // the file is verified before it is offered
-  if (!check.ok) { toast(`Export failed its own check: ${check.problems[0]}`, 'bad', 5000); return false; }
+  // It is offered even when the check finds a problem: this may be the player's only copy of their current progress (a save
+  // that keeps failing). The file name and the message say it did not pass its check.
+  const name = check.ok ? exportFileName(f) : exportFileName(f).replace(/\.gbfranchise$/, '-unverified.gbfranchise');
   const blob = new Blob([text], { type: 'application/json' }); const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = exportFileName(f); document.body.appendChild(a); a.click(); a.remove();
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
-  toast(`Export file prepared (${kb(text.length)}, verified). Check that your browser saved it.`, 'good', 4500);
+  if (check.ok) toast(`Export file prepared (${kb(text.length)}, verified). Check that your browser saved it.`, 'good', 4500);
+  else toast(`Export file prepared (${kb(text.length)}) but it did not pass its own check (${check.problems[0]}). Keep it: it holds your current progress. Check that your browser saved it.`, 'bad', 7000);
   return true;
 }
 
@@ -136,6 +139,19 @@ export function showSaveFailure(app, error) {
     if (a === 'retry') { const btn = e.target.closest('button'); btn.disabled = true; btn.textContent = 'Saving…'; const r = await app.save({ immediate: true }); if (r?.ok) { failSheet?.close(); toast('Saved.', 'good'); } else { btn.disabled = false; btn.textContent = 'Retry save'; toast(`Still failing: ${r?.error?.message || 'unknown error'}`, 'bad'); } }
     if (a === 'exp' && app.f) offerExport(app.f);
     if (a === 'later') failSheet?.close();
+  });
+}
+
+// ------------------------------------------------------------ another tab changed the franchise
+/** Shown when this tab returns to the front and another tab or window has changed (or deleted) the franchise meanwhile. */
+export function showStaleTab(app, onClose) {
+  const { el, close } = sheet(`<p><b>This franchise was changed in another tab or window of the game.</b></p>
+    <p class="muted">This tab can no longer save without overwriting that progress, so it won't. Reload to continue from the newest save. If you played on in this tab and want to keep it, export it first.</p>
+    <div class="stack"><button class="btn primary block" data-action="reload">Reload the game</button><button class="btn block" data-action="exp">Export this tab's franchise</button></div>`, { title: 'Changed in another tab', onClose });
+  el.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-action]')?.dataset.action;
+    if (a === 'reload') { close(); location.reload(); }
+    if (a === 'exp' && app.f) offerExport(app.f);
   });
 }
 

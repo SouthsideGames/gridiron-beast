@@ -2497,20 +2497,25 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
 - **Debounce.** Ordinary saves wait 1.2 s; a finished game, a new day, a week change or a roster change saves at once, as the cloud did before.
 - **The snapshot** is serialised synchronously before any asynchronous work, so a save never mixes two moments of the game.
 - **The transaction** puts the new parts, rotates backups, puts the manifest, updates the slot and removes unreferenced parts in one IndexedDB transaction: all or nothing.
-- **No stale overwrite.**
-  - A manifest with a lower sequence number from the same writer is refused, so an earlier save can never land over a later one.
-  - **Another tab or window.** Each tab remembers which manifest it loaded or last wrote. If the live save is anything else (another tab of the game saved since), the tab's save, its deletion and its unload journal are all refused, whatever the clocks say. The tab then says "saved more recently in another tab or window; reload to continue from the newest save".
-  - Saves still queued for a franchise that was replaced (restore, delete, new or imported franchise) are dropped.
-- **`savedAt` lives in the manifest**, not in a part. A save in which nothing else changed writes no part and rotates no backup.
+- **No stale overwrite: one rule for every tab.** Each tab remembers what it last saw in the save slot: the manifest it loaded or last wrote, or an empty slot (it saw none, or deleted the franchise itself). If the slot holds anything else, another tab or window changed it, and this tab's save, deletion and unload journal are all refused, whatever the clocks say. That covers:
+  - a different manifest being live;
+  - none being live (deleted elsewhere);
+  - one having appeared where this tab saw an empty slot (a franchise created in another tab).
+  - The same rule also refuses an older save from this tab's own writer id.
+  - When a tab returns to the front, it checks at once and, if the franchise changed elsewhere, says so before the player plays on: **Reload the game** or **Export this tab's franchise**.
+  - Saves still queued for a franchise that was replaced (restore, delete, new or imported franchise) are dropped, and the status returns to "Saved".
+- **A save that changed nothing writes nothing.** `savedAt` lives in the manifest, not in a part. When nothing but the time changed since the save a tab committed or loaded, nothing is written: no part, no manifest, no backup rotation. An idle tab's leave-save therefore never becomes the newest writer, and never locks out the tab being played.
 - **Honest status.** "✓ Saved on this device" (with the time) appears only after the commit. "Saving…" shows while a write is pending, and "⚠ Last save failed" shows on error.
   - On failure, the game state stays in memory, a sheet says the latest progress is not saved yet, and it offers **Retry save**, **Export franchise** and **Keep playing**.
   - A full device or browser store is named as such.
   - Recovery after an error is announced ("Saved.").
-- **Leaving the page.** The pending save starts at once. If it changed anything, the parts that differ from the last commit (normally only the core) are also written synchronously to a localStorage journal (`gridiron-beast-v7-journal`). At the next start the journal is used only if all of these hold, and otherwise it is discarded:
+- **Leaving the page.** The pending save starts at once. If it changed anything, the parts that differ from the last commit (normally only the core) are also written synchronously to a localStorage journal. Each tab has its own key (`gridiron-beast-v7-journal:<writer>`), so one tab closing can never overwrite another's. At the next start, a journal is used only if all of these hold:
   - it has the same `uid`;
-  - it is newer;
-  - it was built on the manifest that is still live;
+  - it is newer than the live save;
+  - it was built on the live save, or on an earlier save by the same tab that committed after the journal was written (the page was hidden mid-save);
   - the committed parts it builds on pass their checksums.
+  - If several qualify, the newest wins.
+  - Every other journal is stale and is cleared. If another tab has saved even while the journal is being adopted, the live save is loaded instead.
 - **Failures handled:**
   - IndexedDB missing or refused (private modes, policies): fallback mode on the v39.1 localStorage path, labelled in Settings.
   - An upgrade blocked by another tab: a clear message, and fallback mode.
@@ -2529,7 +2534,12 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
 **Guarantees:**
 - **Idempotent.** An interrupted attempt restarts from the untouched localStorage save with the same `uid` (no duplicate franchise, attempts counted). Until a migration completes, the game plays the localStorage save in fallback mode, so no progress is lost.
 - **The localStorage save is never modified or deleted** by this build. It stays at least two releases; any later removal will be announced in the game and will need the owner's approval, never done silently. The v39.1 weekly copy is carried over as the weekly backup.
-- **An older copy of the game writing later.** If a cached v39.1 tab or app writes the localStorage save after migration (its checksum changes) and that save is newer, it is adopted, never ignored, and the IndexedDB version is kept as a `pre-legacy` backup.
+- **An older copy of the game writing later.** A cached v39.1 tab or app may write the localStorage save after migration (its checksum changes). Its timestamp cannot tell genuinely newer progress from an old tab's stale state, so neither replaces the other:
+  - The live IndexedDB franchise stays.
+  - The other save is kept as a `legacy-newer` backup (the exact text, checksummed, the three most recent by content), restorable by the player's choice.
+  - The game says so once.
+  - If keeping that copy fails, nothing changes and it is tried again at the next start. The localStorage save itself is never touched.
+  - (Before the final audit the newer-stamped legacy save was adopted, which could replace weeks of progress with an old tab's state.)
 - **No season limit is enforced:** saves past season 20 migrate unchanged (tested with 42 seasons).
 
 ### 43.6 Backups and recovery [IMPLEMENTED]
@@ -2539,8 +2549,9 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
   - They share unchanged parts with the live save, which costs about 0.3 MB extra at season 20.
 - **Independent copies,** each self-contained so that damage to shared parts cannot reach them:
   - `weekly`, after each Sunday, as before;
-  - `pre-restore`, `pre-cloud` and `pre-legacy`;
-  - `replaced`, when a new or imported franchise replaces the current one;
+  - `pre-restore` and `pre-cloud`;
+  - `legacy-newer`, a localStorage save written by an older cached build after migration;
+  - `replaced`, when a new or imported franchise replaces the current one. A new franchise from onboarding now takes the same commit-first path as every other activation: if the safety copy or the commit fails, the current franchise stays active and the onboarding screen says why;
   - `deleted`: Delete franchise keeps the franchise recoverable. This anticipates decision N.
   - The weekly copy is one record; every other kind keeps its **three most recent** copies, so a second replacement never erases the first.
   - A deletion that cannot complete deletes nothing, locally or in the cloud. Retiring and being let go use the same path, and the franchise leaves only after its copy is kept.
@@ -2567,6 +2578,7 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
   - a summary;
   - the complete franchise.
 - **Verified before it is offered.** The file is checked before the browser is asked to save it. The message is "Export file prepared (2.8 MB, verified). Check that your browser saved it": the game never claims a download finished.
+- **Never refused.** If the franchise fails that check (for example, two monsters sharing an id), it is still offered. The file is named `…-unverified.gbfranchise` and the message says it did not pass its check, because it may be the player's only copy of their current progress.
 - **`validateImport`** works on a copy before anything is written. It:
   - checks the envelope and the checksum, refusing edited or truncated files;
   - runs the franchise migration;
@@ -2629,6 +2641,8 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
 
 Part of each save runs on the main thread: the synchronous snapshot, packing the changed parts and unpacking them again to verify them (43.2). Compression runs in the browser's stream. v39.1 serialised and wrote 2.9 MB synchronously on every save; the debounce means a match no longer saves on every play.
 
+**Measured again at the final audit** on a slower machine, the commit before the audit and the final commit back to back: they are equivalent. On the desktop the final commit is faster (typical save 159 ms vs 260 ms); on the 4× CPU it is close (typical save 0.84 s vs 0.66 s, archive save 1.3 s vs 1.2 s, migration 3.7 s for both, load 0.9 s for both). Timings depend on the machine, so these are comparisons, not phone figures.
+
 **Risk:** on a throttled CPU a save that re-packs the core takes about 0.6 s and one that re-packs the archive about 1 s, and part of that time is on the main thread. Moving packing to a Worker is the follow-up if real phones show stutter at saves; it was not done in Phase 1, because verifying correctness came first.
 
 ### 43.10 Storage meter [IMPLEMENTED]
@@ -2662,7 +2676,7 @@ Part of each save runs on the main thread: the synchronous snapshot, packing the
   - career, timeline, history and draft preservation;
   - uid assignment without the RNG.
 - **`tests/cloud-save.test.js`** (7 tests): serialised cloud writes, newest-wins, offline and reconnect, torn writes, delete, the payload fixed when authorised, never over newer cloud progress.
-- **`tests/storage-restore-safety.test.js`** (14 tests) and **`tests/storage-interleavings.test.js`** (10 tests): the review corrections and the invariants A–H, see 43.13.
+- **`tests/storage-restore-safety.test.js`** (14 tests), **`tests/storage-interleavings.test.js`** (10 tests) and **`tests/storage-final-audit.test.js`** (10 tests): the review corrections, the invariants A–H and the final audit, see 43.13.
 - **`tools/storage-check.py`:** the real IndexedDB in headless Chromium at 320, 360, 390 and 412 px. It checks:
   - migration identity and the untouched localStorage save;
   - reload from IndexedDB;
@@ -2720,6 +2734,26 @@ Three defects found in code review (Codex), each reproduced by a failing test be
 - **H.** No failed operation reports success.
 
 **In the browser.** `tools/storage-check.py` now also deletes in one tab and saves from another, and lets a throttled cloud upload fire after the franchise has changed. Against `089e4a4` it reported both defects: the upload carried the unsaved change, and the stale tab reported success and wrote a manifest after the deletion.
+
+**Final audit (2026-10-23, `f7ba186`).** Codex's review of `f7ba186` did not complete; it showed "running" for over an hour. An independent audit of the whole save system found eight more problems, all reproduced first by `tests/storage-final-audit.test.js` (10 tests, 9 failing on `f7ba186`):
+
+| Problem | Correction |
+|---|---|
+| An idle second tab's leave-save made it the newest writer, locking the played tab out of saving | A save that changed nothing writes nothing. A tab returning to the front checks at once and warns (Reload or Export) |
+| A journal written while a save was mid-commit was discarded once that save committed | A journal built on an earlier save by the same tab is accepted |
+| One journal key for all tabs: a stale tab closing could erase the live tab's journal | One key per tab. The newest qualifying journal wins, the rest are cleared |
+| Onboarding switched to the new franchise before its safety copy and commit, so a failure could lose the old franchise | One commit-first path for every activation, onboarding included |
+| A cached v39.1 tab's save, stamped later, replaced newer IndexedDB progress, and could erase it if the backup failed | Keep both, adopt neither (43.5) |
+| A tab that opened on an empty slot could overwrite a franchise created in another tab | The empty slot is part of what a tab remembers: one cross-tab rule (43.4) |
+| A cloud copy taken on an empty device skipped its post-commit check | The check applies with or without a current franchise |
+| The status could stay at "Saving…" after a restore dropped a late save | The status settles when the queue empties |
+| (minor) Emergency export was refused when the franchise failed its own check | Never refused (43.7) |
+
+**Simplified along the way:**
+- One `matchesBase` rule replaces three separate cross-tab checks and the same-writer sequence check.
+- One activation path (`replaceFranchise`) replaces the separate onboarding path.
+- The legacy re-adoption path (re-migration, `pre-legacy` copies) is gone.
+- Two tests that asserted less than their names claimed now exercise the real code: the same-writer stale save, and saves queued during an exclusive operation.
 
 ### 43.14 What remains for Phases 2–4 [NOT IMPLEMENTED]
 - **Phase 2:**

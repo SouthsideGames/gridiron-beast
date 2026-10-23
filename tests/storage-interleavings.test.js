@@ -18,7 +18,7 @@ import { replaceThenAdopt, shouldMirror } from '../src/franchise/activation.js';
 
 const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise;
 const legacyText = () => JSON.stringify({ ...Save.migrate(fixture()), savedAt: 1_790_000_000_000 });
-const mkLs = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m }; };
+const mkLs = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, m }; };
 let clock = 1_800_000_000_000; const now = () => ++clock;
 const deferred = () => { let resolve; const promise = new Promise((r) => { resolve = r; }); return { promise, resolve }; };
 async function setup({ debounce = 0 } = {}) {
@@ -111,11 +111,12 @@ test('D: ordinary saves requested during an exclusive operation wait for it and 
   const { backend, store, f, ls } = await setup();
   const ins = instrument(backend); const hold = ins.gate((s) => isCopy(s));
   const incoming = JSON.parse(JSON.stringify(f)); incoming.owner.first = 'Incoming';
-  const rep = store.replace(incoming, null, { copyKind: 'replaced' }); await hold.reached;
+  const rep = store.replace(incoming, f, { copyKind: 'replaced' }); await hold.reached; // as the app calls it: replacing the active franchise
   incoming.owner.first = 'Incoming'; // the game keeps saving the new franchise only after adopting it; here an unrelated save of it waits
   const waiting = store.save(f); // a save of the old object, requested while the replacement holds the queue
   hold.release(); const [r, w] = await Promise.all([rep, waiting]);
-  assert.ok(r.ok); assert.equal(typeof w.ok, 'boolean', 'the waiting save was resolved, not stranded');
+  assert.ok(r.ok); assert.equal(w.ok, false, 'the save of the replaced object was answered, not stranded'); assert.equal(w.error.code, 'stale');
+  assert.equal(store.busy(), false, 'nothing is left queued'); assert.equal(store.status().state, 'saved');
   assert.equal(ins.maxConcurrent(), 1);
   void ls;
 });

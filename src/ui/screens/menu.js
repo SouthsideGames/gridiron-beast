@@ -50,7 +50,7 @@ export function registerMenuScreens(Router, app) {
       delegate(root, {
         continue: () => Router.go('hq', {}, { reset: true }),
         new: async () => { if (app.f && !(await confirmSheet('Starting a new franchise replaces your current save. Export it first from Settings if you want to keep it.', { title: 'New franchise', okLabel: 'Start new', danger: true }))) return; Router.go('onboarding', { fresh: true }); },
-        'import-legacy': async () => { try { const f = Save.importLegacy(Save.readLegacy()); app.setFranchise(f); toast('Imported your previous franchise. Your old save is untouched.', 'good'); if (Object.keys(f.staff).length < 5) hireDefaultStaff(f); app.save(); Router.go('hq', {}, { reset: true }); } catch (e) { toast(e.message, 'bad'); } },
+        'import-legacy': async () => { try { const f = Save.importLegacy(Save.readLegacy()); const r = await app.setFranchise(f); if (!r.ok) { toast(`Import failed: ${r.error?.message}. Nothing was changed.`, 'bad', 6000); return; } toast('Imported your previous franchise. Your old save is untouched.', 'good'); if (Object.keys(f.staff).length < 5) hireDefaultStaff(f); app.save(); Router.go('hq', {}, { reset: true }); } catch (e) { toast(e.message, 'bad'); } },
         soon: (el) => toast(`${el.dataset.what} is planned for a later release.`),
         go: (el) => Router.go(el.dataset.screen),
       });

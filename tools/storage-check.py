@@ -226,6 +226,51 @@ with sync_playwright() as pw:
     check(not xt['afterReload']['hasFranchise'] and xt['afterReload']['deletedCopy'] >= 1, f'deleted franchise came back or its copy is gone: {xt["afterReload"]}')
     pageB.set_viewport_size({'width': 320, 'height': 700}); overflow(pageB, 'menu after cross-tab deletion at 320px')
     b2.close()
+    # --- final audit (third round): an idle tab never locks out the played tab; a changed-elsewhere tab is told on return;
+    # onboarding commits before switching; emergency export always downloads
+    b3 = pw.chromium.launch(); ctx3 = b3.new_context(viewport={'width': 360, 'height': 780}, device_scale_factor=2, is_mobile=True, has_touch=True, accept_downloads=True)
+    pa = ctx3.new_page(); pa.on('pageerror', lambda e: errors.append('A: ' + str(e)))
+    pa.goto(URL + 'manifest.webmanifest'); pa.evaluate("(t) => { localStorage.clear(); localStorage.setItem('gridiron-beast-v6', t); }", LEGACY)
+    pa.goto(URL); booted(pa)
+    pb = ctx3.new_page(); pb.on('pageerror', lambda e: errors.append('B: ' + str(e))); pb.goto(URL); booted(pb)
+    fa = {}
+    fa['idleB'] = pb.evaluate("async () => { const r = await window.__gb.save({ immediate: true }); return { ok: r.ok, unchanged: !!r.unchanged }; }")  # B hidden, nothing changed
+    fa['activeA'] = pa.evaluate("async () => { const app = window.__gb; app.f.owner.first = 'PlayedInA'; const r = await app.save({ immediate: true }); return { ok: r.ok, code: r.error && r.error.code }; }")
+    fa['bWasStale'] = pb.evaluate("async () => { window.__gb.f.owner.first = 'StaleB'; const r = await window.__gb.save({ immediate: true }); return { ok: r.ok, code: r.error && r.error.code }; }")  # B is behind A now: refused
+    pb.evaluate("() => document.querySelectorAll('.sheet-backdrop').forEach((e) => e.remove())")
+    pb.reload(); booted(pb)
+    fa['bChanges'] = pb.evaluate("async () => { window.__gb.f.owner.first = 'ChangedInB'; const r = await window.__gb.save({ immediate: true }); return r.ok; }")  # B, now current, really changes it
+    pa.evaluate("() => window.dispatchEvent(new Event('focus'))"); pa.wait_for_timeout(600)
+    fa['staleSheet'] = pa.evaluate("() => { const s = document.querySelector('.sheet'); return s ? s.innerText.slice(0, 160) : null; }")
+    pa.set_viewport_size({'width': 320, 'height': 700}); overflow(pa, 'stale-tab sheet at 320px'); shot(pa, 'stale-tab', 320)
+    with pa.expect_download() as dl:
+        pa.click('.sheet [data-action="exp"]')
+    fa['staleExport'] = dl.value.suggested_filename
+    pa.close(); pb.reload(); booted(pb)
+    # onboarding / new franchise: the safety copy fails, so nothing switches
+    fa['newFranchiseFail'] = pb.evaluate("""async () => { const app = window.__gb; const be = app.storage.store.backend; const real = be.run; const before = app.f;
+      be.run = (s, mode, fn) => (mode === 'readwrite' && s.length === 1 && s[0] === 'backups' ? Promise.reject(Object.assign(new Error('The quota has been exceeded.'), { name: 'QuotaExceededError' })) : real.call(be, s, mode, fn));
+      const fresh = JSON.parse(JSON.stringify(app.f)); delete fresh.uid; fresh.owner.first = 'BrandNew'; fresh.createdAt = new Date().toISOString();
+      const r = await app.setFranchise(fresh); be.run = real;
+      const stored = await app.storage.store.loadManifest(await app.storage.store.readManifest());
+      const s2 = await app.save({ immediate: true });
+      return { ok: r.ok, stage: r.stage, sameObject: app.f === before, active: app.f.owner.first, stored: stored.owner.first, saveAfter: s2.ok }; }""")
+    # emergency export of a franchise that fails its own check (two monsters sharing an id) still downloads
+    pb.evaluate("() => { const f = window.__gb.f; f.__savedId = f.roster[1].id; f.roster[1].id = f.roster[0].id; }")
+    pb.click('[data-action="go"][data-screen="settings"]'); pb.wait_for_selector('#save-data')
+    with pb.expect_download() as dl2:
+        pb.click('[data-action="export"]')
+    fa['unverifiedExport'] = {'file': dl2.value.suggested_filename, 'toast': pb.evaluate("() => document.querySelector('#toast')?.textContent || ''")}
+    pb.evaluate("() => { const f = window.__gb.f; f.roster[1].id = f.__savedId; delete f.__savedId; }")
+    report['finalAudit'] = fa
+    check(fa['idleB']['ok'] and fa['idleB']['unchanged'], f'idle tab wrote a save: {fa["idleB"]}')
+    check(fa['activeA']['ok'], f'the played tab was locked out by an idle tab: {fa["activeA"]}')
+    check(fa['bWasStale']['ok'] is False and fa['bWasStale']['code'] == 'newer-elsewhere' and fa['bChanges'], f'tab B (behind A) was not refused, or could not save after reloading: {fa}')
+    check(fa['staleSheet'] and 'another tab' in fa['staleSheet'], f'no warning when returning to a tab changed elsewhere: {fa["staleSheet"]}')
+    check(fa['staleExport'].endswith('.gbfranchise'), f'stale-tab export: {fa["staleExport"]}')
+    nf = fa['newFranchiseFail']; check(nf['ok'] is False and nf['stage'] == 'copy' and nf['sameObject'] and nf['stored'] == nf['active'] and nf['saveAfter'], f'new franchise switched despite a failed copy: {nf}')
+    ue = fa['unverifiedExport']; check(ue['file'].endswith('-unverified.gbfranchise') and 'did not pass' in ue['toast'], f'emergency export refused or unlabelled: {ue}')
+    b3.close()
 
     # --- timings, normal and CPU-throttled
     timings(pw, 'desktop')

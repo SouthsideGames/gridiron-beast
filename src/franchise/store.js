@@ -144,7 +144,14 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   const emit = (s) => { status = { ...status, ...s }; for (const fn of listeners) { try { fn(status); } catch { /* ignore */ } } };
   let seq = 0; let cache = {}; // part name → { raw, entry } of the last committed save
   const crossTab = () => Object.assign(new Error('This franchise was changed or deleted in another tab or window of the game. Reload the game to continue from what is stored now.'), { code: 'newer-elsewhere' });
-  let base = null; // { writer, seq } of the manifest this tab loaded or last committed: anything else found there was written by another tab
+  // What this tab last saw in the save slot: the manifest it loaded or last committed ({ writer, seq }), or EMPTY (it saw no
+  // live save, or deleted it itself). Anything else found there was written by another tab or window (GDD §43.13).
+  const EMPTY = Object.freeze({ empty: true });
+  const journalKey = `${JOURNAL_KEY}:${writer}`;
+  let lastManifest = null; // the manifest `base` refers to, for recognising a save that changed nothing
+  const sameOrder = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((k, i) => k === b[i]);
+  let base = null; // null only before open() or in recovery before a choice: then nothing is guarded (nothing is known)
+  const matchesBase = (cur) => (base === EMPTY ? !cur : !!cur && cur.writer === base.writer && cur.seq === base.seq);
   let pendingF = null; let pendingWaiters = []; let timer = null; let writing = null;
 
   // ---- reading
@@ -165,7 +172,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     return b.embedded ? loadEmbedded(b) : loadManifest(b);
   }
   /** A committed manifest's cache, so the next save only re-packs parts that changed. */
-  function primeCache(f, m) { const p = partsOf(f); cache = {}; for (const n of PARTS) { const raw = JSON.stringify(p[n]); if (checksum(raw) === m.parts[n].raw) cache[n] = { raw: m.parts[n].raw, entry: m.parts[n] }; } seq = Math.max(seq, m.writer === writer ? m.seq : 0); base = { writer: m.writer, seq: m.seq }; }
+  function primeCache(f, m) { const p = partsOf(f); cache = {}; for (const n of PARTS) { const raw = JSON.stringify(p[n]); if (checksum(raw) === m.parts[n].raw) cache[n] = { raw: m.parts[n].raw, entry: m.parts[n] }; } seq = Math.max(seq, m.writer === writer ? m.seq : 0); base = { writer: m.writer, seq: m.seq }; lastManifest = m; }
 
   // ---- writing
   /**
@@ -190,10 +197,9 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   async function commit(manifest, newParts, { rotate = true, slotState = 'active', migration = undefined } = {}) {
     return backend.run(['saves', 'backups', 'parts', 'slots'], 'readwrite', async (t) => {
       const cur = await t.get('saves', KEY(manifest.slot));
-      if (cur && cur.writer === manifest.writer && cur.seq > manifest.seq) throw Object.assign(new Error('A newer save is already stored.'), { code: 'stale' });
-      // Another tab or window changed this franchise since this tab loaded or last wrote it: a different manifest is live, or
-      // none is (the franchise was deleted there). This tab's older state must not replace it or bring it back.
-      if (rotate && base && (!cur || (cur.writer !== manifest.writer && !(cur.writer === base.writer && cur.seq === base.seq)))) throw crossTab();
+      // Another tab or window changed the slot since this tab loaded or last wrote it: a different manifest is live, none is
+      // (deleted there), or one appeared where this tab saw none. This tab's older state must not replace it or bring it back.
+      if (rotate && base && !matchesBase(cur)) throw crossTab();
       for (const part of newParts) if (!(await t.get('parts', part.sum))) await t.put('parts', part.sum, part);
       // Every part the manifest references must be present and intact in this same transaction (a part reused from the cache
       // may have been removed by another tab's clean-up): a manifest is never committed pointing at missing data.
@@ -230,6 +236,12 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   }
   async function writeFrozen(fz, opts) {
     let { entries, newParts } = await encodeFrozen(fz);
+    // Nothing but the time changed since the save this tab committed or loaded: nothing is written. An idle tab's leave-save
+    // therefore never becomes the newest writer and never locks out the tab being played.
+    if (!newParts.length && !opts && lastManifest && base && base !== EMPTY && lastManifest.writer === base.writer && lastManifest.seq === base.seq && PARTS.every((n) => lastManifest.parts[n].sum === entries[n].sum) && sameOrder(lastManifest.order, fz.order)) {
+      emit({ state: pendingF ? 'pending' : 'saved', error: null });
+      return { ok: true, unchanged: true, savedAt: lastManifest.savedAt, bytes: PARTS.reduce((a, n) => a + entries[n].bytes, 0), manifest: lastManifest, snapshot: null };
+    }
     let m = manifestFor(fz, entries); if (opts?.extra) Object.assign(m, opts.extra);
     try { await commit(m, newParts, opts); }
     catch (e) {
@@ -238,7 +250,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       m = manifestFor(fz, entries); if (opts?.extra) Object.assign(m, opts.extra);
       await commit(m, newParts, opts);
     }
-    base = { writer: m.writer, seq: m.seq };
+    base = { writer: m.writer, seq: m.seq }; lastManifest = m;
     cache = {}; for (const n of PARTS) cache[n] = { raw: entries[n].raw, entry: entries[n] };
     const bytes = PARTS.reduce((a, n) => a + entries[n].bytes, 0);
     if ((pendingF?.savedAt ?? -1) <= fz.savedAt) clearJournal(); // nothing newer is waiting
@@ -269,8 +281,10 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   }
   async function drain() {
     while (pendingF && !reserved) { const f = pendingF; const waiters = pendingWaiters; pendingF = null; pendingWaiters = []; await writeQueued(f, waiters); }
-    writing = null;
+    writing = null; settle();
   }
+  /** When nothing is queued or being written, the status must not say "Saving…" (a dropped request leaves nothing to wait for). */
+  function settle() { if (!busy() && (status.state === 'pending' || status.state === 'saving')) emit({ state: status.lastOkAt ? 'saved' : 'idle' }); }
   /**
    * Ask for a save of the franchise `f` (the live object). The save is stamped now (savedAt, as v39.1 did); the write happens
    * after a short debounce (at once with `immediate`). Resolves once that state, or a newer one, is committed, or has failed:
@@ -317,7 +331,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
         while (writing) await writing;
         if (before) await writeQueued(before.f, before.waiters);
         return await fn();
-      } finally { reserved--; if (!reserved && pendingF && !writing) writing = drain(); }
+      } finally { reserved--; if (!reserved && pendingF && !writing) writing = drain(); else settle(); }
     });
     exclusiveTail = run.then(() => {}, () => {});
     return run;
@@ -336,14 +350,20 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       for (const n of PARTS) { const rs = checksum(fz.raws[n]); if (cache[n] && cache[n].raw === rs) bases[n] = cache[n].entry.sum; else parts[n] = fz.raws[n]; }
       if (!Object.keys(parts).length) return false; // nothing but the time changed: the committed save already holds it
       const body = JSON.stringify({ v: 2, uid: fz.uid, savedAt: fz.savedAt, order: fz.order, base: bases, on: base, parts });
-      ls.setItem(JOURNAL_KEY, JSON.stringify({ sum: checksum(body), body }));
+      ls.setItem(journalKey, JSON.stringify({ sum: checksum(body), body }));
       return true;
     } catch { return false; /* full or blocked: the queued IndexedDB write may still finish */ }
   }
-  function readJournal() {
-    if (!ls) return null;
-    try { const w = JSON.parse(ls.getItem(JOURNAL_KEY) || 'null'); if (!w || checksum(w.body) !== w.sum) return null; const j = JSON.parse(w.body); return j?.v === 2 ? j : null; } catch { return null; }
+  /** Every tab's journal (each tab writes its own key, so one tab closing can never overwrite another's). */
+  function readJournals() {
+    if (!ls) return [];
+    const keys = []; try { for (let i = 0; i < (ls.length ?? 0); i++) { const k = ls.key(i); if (k && k.startsWith(JOURNAL_KEY)) keys.push(k); } } catch { return []; }
+    if (!keys.length && ls.getItem?.(JOURNAL_KEY)) keys.push(JOURNAL_KEY);
+    const out = [];
+    for (const key of keys) { try { const w = JSON.parse(ls.getItem(key) || 'null'); if (!w || checksum(w.body) !== w.sum) { out.push({ key, bad: true }); continue; } const j = JSON.parse(w.body); out.push(j?.v === 2 ? { key, j } : { key, bad: true }); } catch { out.push({ key, bad: true }); } }
+    return out;
   }
+  const readJournal = () => readJournals().find((x) => x.key === journalKey)?.j || null;
   async function assembleJournal(j) {
     const vals = {};
     for (const n of PARTS) {
@@ -353,7 +373,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     }
     return assemble(j.order, vals.core, vals.history, vals.draft, j.savedAt);
   }
-  function clearJournal() { try { ls?.removeItem(JOURNAL_KEY); } catch { /* ignore */ } }
+  function clearJournal(key = journalKey) { try { ls?.removeItem(key); } catch { /* ignore */ } }
 
   // ---- backups
   async function embeddedCopy(f, kind, extra = {}) {
@@ -412,8 +432,10 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     // ...and again once the commit has landed (the caller adopts in the same microtask chain, before any input can run). If
     // the player played on during the commit, their state is committed back as the live save; the replacement stays in the
     // rolling backups.
-    if (guard && !guard() && current) {
-      try { await writeNow(current); } catch (e) { return { ok: false, stage: 'superseded', error: { code: 'superseded', message: `The game moved on during the replacement, but putting the newer progress back failed (${classify(e).message}). Keep playing: the next save stores it.` } }; }
+    if (guard && !guard()) {
+      // With a current franchise, its state is put back as the live save. With none (an empty device), the game's own next
+      // save of whatever it now holds replaces the briefly committed copy, which stays in the rolling backups.
+      if (current) { try { await writeNow(current); } catch (e) { return { ok: false, stage: 'superseded', error: { code: 'superseded', message: `The game moved on during the replacement, but putting the newer progress back failed (${classify(e).message}). Keep playing: the next save stores it.` } }; } }
       return superseded;
     }
     retire(current); dropQueued(current);
@@ -436,11 +458,11 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     return exclusive(async () => {
       if (current && retired.has(current)) throw Object.assign(new Error('That franchise was already replaced; nothing was deleted.'), { code: 'stale' });
       const cur = await readManifest().catch(() => null);
-      if (cur && base && cur.writer !== writer && !(cur.writer === base.writer && cur.seq === base.seq)) throw Object.assign(new Error('This franchise was saved more recently in another tab or window of the game. Reload the game before deleting it.'), { code: 'newer-elsewhere' });
+      if (base && !matchesBase(cur)) throw crossTab();
       if (current) await keepCopy(current, 'deleted');
       await backend.run(['saves', 'slots', 'parts', 'backups'], 'readwrite', async (t) => { await t.del('saves', KEY()); const s = (await t.get('slots', SLOT)) || { slot: SLOT }; await t.put('slots', SLOT, { ...s, state: 'empty', uid: null, savedAt: null }); for (const r of ROLLING) await t.del('backups', `${SLOT}:${r}`); await collect(t); });
       retire(current); dropQueued(current); // only now, after the copy and the deletion committed
-      cache = {}; base = null; clearJournal(); emit({ state: 'idle', savedAt: null, bytes: null });
+      cache = {}; base = EMPTY; lastManifest = null; clearJournal(); emit({ state: 'idle', savedAt: null, bytes: null });
     });
   }
 
@@ -450,17 +472,18 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
    * Copy → migrate on the copy → write → read back and compare → switch. Each step is recorded in the slot record, so an
    * interrupted migration restarts from the legacy copy (which is never modified) with the same uid: no duplicate franchise.
    */
-  async function migrateLegacy({ legacyText, from = 'v6' }) {
+  async function migrateLegacy({ legacyText }) {
+    const from = 'v6';
     const legacySum = checksum(legacyText);
     const slot0 = await backend.run(['slots'], 'readonly', (t) => t.get('slots', SLOT));
     const uid = slot0?.migration?.legacySum === legacySum && slot0?.migration?.uid ? slot0.migration.uid : newUid();
     // 1. the protected copy, and the record of the attempt
-    const kind = from === 'v6' ? 'legacy-original' : 'legacy-newer';
+    const kind = 'legacy-original';
     const original = { kind, slot: SLOT, from, takenAt: now(), sum: legacySum, enc: 'none', data: legacyText, bytes: legacyText.length };
     const gz = await gzip(legacyText); if (gz) { original.enc = 'gzip'; original.data = gz; original.bytes = gz.byteLength; }
     const migration = { step: 'copied', legacySum, uid, startedAt: slot0?.migration?.legacySum === legacySum ? slot0.migration.startedAt : now(), attempts: (slot0?.migration?.legacySum === legacySum ? slot0.migration.attempts || 0 : 0) + 1 };
     await backend.run(['backups', 'slots'], 'readwrite', async (t) => {
-      const have = await t.get('backups', `${SLOT}:${kind}`); if (!have || have.sum !== legacySum) { if (!have || kind === 'legacy-newer') await t.put('backups', `${SLOT}:${kind}`, original); }
+      if (!(await t.get('backups', `${SLOT}:${kind}`))) await t.put('backups', `${SLOT}:${kind}`, original); // the first original is never replaced
       const s = (await t.get('slots', SLOT)) || { slot: SLOT };
       await t.put('slots', SLOT, { ...s, slot: SLOT, state: 'migrating', migration });
       backend.hit?.('migrate-copied');
@@ -506,30 +529,38 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       try { const f = await migrateLegacy({ legacyText }); notes.push('migrated'); return { mode: 'ready', franchise: f, source: 'migrated', notes }; }
       catch (e) { notes.push(`migration failed: ${e.message}`); const f = Save.migrate(JSON.parse(legacyText)); return f ? { mode: 'legacy', franchise: f, source: 'legacy', notes, error: classify(e) } : { mode: 'recovery', franchise: null, notes, backups: await listBackups().catch(() => []) }; }
     }
-    // An old copy of the game wrote the legacy save after migration: that is newer progress, never ignored.
-    const m = slot?.state === 'active' ? await readManifest().catch(() => null) : null;
+    let m = slot?.state === 'active' ? await readManifest().catch(() => null) : null;
+    // An old cached copy of the game (v39.1) wrote the localStorage save after migration. Its timestamp cannot tell newer
+    // progress from an old tab's stale state, so neither replaces the other: the live save stays, and the other save is kept
+    // as a backup the player can restore by choice. If keeping it fails, nothing changes and it is tried at the next start
+    // (the localStorage save itself is never touched).
     if (legacyText && slot?.legacySum && legacySum !== slot.legacySum) {
-      let lf = null; try { lf = Save.migrate(JSON.parse(legacyText)); } catch { lf = null; }
-      if (lf && (lf.savedAt || 0) > (m?.savedAt || 0)) {
-        notes.push('newer legacy save adopted');
-        if (m) { try { await keepCopy(await loadManifest(m), 'pre-legacy'); } catch { /* the live save is unreadable: recovery below still has backups */ } }
-        await backend.run(['slots'], 'readwrite', async (t) => { const s = await t.get('slots', SLOT); await t.put('slots', SLOT, { ...s, state: 'migrating', migration: { step: 'readopt', legacySum, uid: m?.uid || s?.uid || null } }); });
-        try { const f = await migrateLegacy({ legacyText, from: 'v6-newer' }); return { mode: 'ready', franchise: f, source: 'legacy-newer', notes }; }
-        catch (e) { notes.push(`re-adoption failed: ${e.message}`); return { mode: 'legacy', franchise: lf, source: 'legacy', notes, error: classify(e) }; }
-      }
+      try { await keepLegacyCopy(legacyText, legacySum); notes.push('legacy-newer kept'); } catch (e) { notes.push(`legacy copy not kept yet: ${e.message}`); }
     }
-    // The unload journal is newer than the last committed save: adopt it.
-    const j = readJournal();
-    // Adopted only if the live save is still exactly the one the journal was built on: a stale tab's journal never replaces
-    // what another tab saved since.
-    const onLive = (x) => x && m && x.writer === m.writer && x.seq === m.seq;
-    if (j && m && j.uid === m.uid && (j.savedAt || 0) > (m.savedAt || 0) && onLive(j.on)) {
+    // Unload journals (one per tab). One is adopted only if it belongs to the live franchise, is newer than the live save, and
+    // was built on the live save itself, or on an earlier save by the same tab that committed after the journal was written.
+    // Every other journal is stale (another tab saved since) and is cleared.
+    let adopted = null;
+    const cands = readJournals();
+    const builtOnLive = (j) => j?.on && m && (j.on.writer === m.writer && j.on.seq === m.seq || (j.on.writer === m.writer && j.on.seq < m.seq));
+    const best = cands.filter((x) => x.j && m && x.j.uid === m.uid && (x.j.savedAt || 0) > (m.savedAt || 0) && builtOnLive(x.j)).sort((x, y) => (y.j.savedAt || 0) - (x.j.savedAt || 0))[0];
+    if (best) {
       try {
-        const f = Save.migrate(await assembleJournal(j));
-        if (f) { notes.push('journal adopted'); primeCache(f, m); const r = await writeNow(f).catch((e) => ({ ok: false, error: classify(e) })); if (r.ok) clearJournal(); return { mode: 'ready', franchise: f, source: 'journal', notes }; }
+        const f = Save.migrate(await assembleJournal(best.j));
+        if (f) {
+          primeCache(f, m); const r = await writeNow(f).catch((e) => ({ ok: false, error: classify(e) }));
+          if (r.ok) { for (const x of cands) clearJournal(x.key); adopted = f; notes.push('journal adopted'); }
+          else if (r.error?.code === 'newer-elsewhere') { notes.push('journal superseded by another tab'); m = await readManifest().catch(() => null); } // the live save moved on: load it
+          else { adopted = f; notes.push(`journal adopted, not yet stored: ${r.error?.message}`); } // kept in localStorage for the next start too
+        }
       } catch (e) { notes.push(`journal ignored: ${e.message}`); }
-    } else if (j) clearJournal();
-    if (!m) return { mode: slot?.state === 'empty' || !slot ? 'empty' : 'recovery', franchise: null, notes, backups: slot && slot.state !== 'empty' ? await listBackups().catch(() => []) : [] };
+    }
+    if (!adopted) for (const x of cands) clearJournal(x.key);
+    if (adopted) return { mode: 'ready', franchise: adopted, source: 'journal', notes };
+    if (!m) {
+      base = EMPTY; lastManifest = null; // this tab saw no live save
+      return { mode: slot?.state === 'empty' || !slot ? 'empty' : 'recovery', franchise: null, notes, backups: slot && slot.state !== 'empty' ? await listBackups().catch(() => []) : [] };
+    }
     try {
       const raw = await loadManifest(m); const f = Save.migrate(raw);
       if (!f) throw Object.assign(new Error('The save could not be migrated.'), { code: 'migrate' });
@@ -537,9 +568,24 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       return { mode: 'ready', franchise: f, source: 'indexeddb', notes, manifest: m };
     } catch (e) {
       notes.push(`load failed: ${e.message}`);
+      base = { writer: m.writer, seq: m.seq }; lastManifest = null; // a restore from recovery may replace exactly this save
       try { await quarantine(m); } catch { /* the manifest stays where it is; nothing is deleted either way */ }
       return { mode: 'recovery', franchise: null, notes, error: classify(e), backups: await listBackups().catch(() => []) };
     }
+  }
+
+  /** Keep a localStorage save written by an older cached build (exact text, checksummed), the three most recent by content. */
+  async function keepLegacyCopy(text, sum) {
+    const rec = { kind: 'legacy-newer', slot: SLOT, from: 'v6-newer', takenAt: now(), sum, enc: 'none', data: text, bytes: text.length };
+    try { const lf = Save.migrate(JSON.parse(text)); if (lf) { rec.savedAt = lf.savedAt ?? null; rec.meta = saveMeta(lf); } } catch { /* kept as text even if unreadable */ }
+    const gz = await gzip(text); if (gz) { rec.enc = 'gzip'; rec.data = gz; rec.bytes = gz.byteLength; }
+    await backend.run(['backups', 'slots'], 'readwrite', async (t) => {
+      await t.put('backups', `${SLOT}:legacy-newer:${sum}`, rec);
+      const mine = (await t.keys('backups')).filter((k) => typeof k === 'string' && k.startsWith(`${SLOT}:legacy-newer:`));
+      const recs = []; for (const k of mine) recs.push([k, (await t.get('backups', k))?.takenAt || 0]);
+      for (const [k] of recs.sort((x, y) => y[1] - x[1]).slice(KEEP_PER_KIND)) await t.del('backups', k);
+      const sl = (await t.get('slots', SLOT)) || { slot: SLOT }; await t.put('slots', SLOT, { ...sl, legacySum: sum }); // seen: not kept again
+    });
   }
 
   // ---- storage numbers for the meter
@@ -557,7 +603,10 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     return { ...r, legacyLocalStorage: legacyLs, estimate: est ? { usage: est.usage ?? null, quota: est.quota ?? null } : null, persisted };
   }
 
-  return { backend, open, save, flush, busy, retire, replace, journal, readJournal, clearJournal, listBackups, readBackup, restore, keepCopy, remove, usage, migrateLegacy, onStatus: (fn) => { listeners.add(fn); fn(status); return () => listeners.delete(fn); }, status: () => status, readManifest, loadManifest };
+  /** Whether another tab or window has changed the slot since this tab loaded or last wrote it (checked when it returns to the front). */
+  async function isStale() { if (!base) return false; try { return !matchesBase(await readManifest()); } catch { return false; } }
+
+  return { backend, open, save, flush, busy, retire, replace, isStale, journal, readJournal, clearJournal, listBackups, readBackup, restore, keepCopy, remove, usage, migrateLegacy, onStatus: (fn) => { listeners.add(fn); fn(status); return () => listeners.delete(fn); }, status: () => status, readManifest, loadManifest };
 }
 
 /** A save error as the UI words it. */
