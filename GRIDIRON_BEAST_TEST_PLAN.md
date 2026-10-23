@@ -4,7 +4,7 @@ All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no
 
 ## 0. Current status (2026-10-23, branch `storage-foundation`: the storage foundation, Phase 1 of GDD §42, documented in §43)
 
-- `npm test`: **438 tests, all passing**, including the new `tests/storage-foundation.test.js` (23), `tests/storage-restore-safety.test.js` (14), `tests/storage-interleavings.test.js` (10) and `tests/storage-final-audit.test.js` (12), the PR #43 review corrections, invariants A–H and the final audit, plus `tests/cloud-save.test.js` (7) and `tests/cloud-concurrency.test.js` (4).
+- `npm test`: **440 tests, all passing**, including the new `tests/storage-foundation.test.js` (23), `tests/storage-restore-safety.test.js` (14), `tests/storage-interleavings.test.js` (10) and `tests/storage-final-audit.test.js` (13), the PR #43 review corrections, invariants A–H and the final audit, plus `tests/cloud-save.test.js` (7) and `tests/cloud-concurrency.test.js` (5).
 - **Parity with `main`:** two complete 20-season franchises (seeds 1 and 2, rookie) are identical to `main` at seasons 1, 5, 10, 15 and 20 (full franchise JSON without `uid`, `lifecycle`, `createdAt`, `savedAt`; same RNG state).
 - `tools/storage-benchmark.mjs`: at season 20 the save is 2.9 MB as JSON, 1.41 MB packed (lossless) and 336 KB stored. Everything in IndexedDB comes to 1.36 MB (GDD §43.9).
 - `tools/storage-check.py` (headless Chromium with the real IndexedDB, at 320, 360, 390 and 412 px, normal and 4× CPU throttling): migration, reload, the Settings panel and meter, backups, a verified export, a quota failure and retry, a reopened connection, recovery from a damaged part, restores that fail (quota on the commit, quota on the safety copy) or succeed, with a simulated cloud mirror, a delayed cloud upload after the franchise changed, a deletion in one tab followed by a save from another, an idle second tab (no lock-out), the warning on returning to a tab changed elsewhere, a new franchise whose safety copy fails (nothing switches), and an emergency export of a franchise that fails its own check. **Passed.** Emulated browser, not a real device.
@@ -136,16 +136,18 @@ Run on at least one small iPhone (SE size) and one large Android, in the browser
 6. Finish a season: playoffs, awards, offseason contracts, the draft, free agency, Season 2 week 1.
 7. One-handed reach, text size, battle speed 1×/2×/4×, reduced motion, screen rotation, backgrounding the app during a battle.
 8. Import a save exported from an older build.
-9. Storage (v39.2, GDD §43). On an iPhone (Safari, and the installed app if used) and an Android phone (Chrome), each with a franchise saved by v39.1, ideally a long one. Note the phone model, browser version and the result of each step:
-   1. **Existing franchise.** Open v39.2. The franchise loads, the "moved to the new save storage" message shows once, and Settings → Save data shows "✓ Saved on this device" with sizes. Compare the club, season, record, roster and a monster's career with what v39.1 showed.
-   2. **Saving.** Play a full game, then open Settings → Save data. The status says saved, with a time after the game.
-   3. **Close and reopen.** Play a few actions, then close the app at once from the app switcher. Reopen: the actions are there. Repeat after turning the phone off and on.
-   4. **Export.** Settings → Export franchise. The file is in Files or Downloads. Import it in another browser: the same franchise appears.
-   5. **Restore.** Settings → Restore a backup → the Previous save. Then restore "Kept before a restore (undo)" to return. Check that nothing else is lost.
-   6. **Failed save.** Fill the phone almost completely (large videos), then play. The game must show "Save failed" with Retry save and Export franchise, keep playing normally, and save after space is freed and Retry is tapped. Also try a restore while full: it must say it failed and change nothing.
-   7. **Freezing, lag, reloads.** During a full game and a season transition, watch for stutter at saves, frozen screens or the page reloading by itself. Time the first start after updating (migration) and a season transition.
-   8. **Two tabs (browser).** Open the game in two tabs and switch back and forth without playing in the second: the first keeps saving. Play a little in the second, then return to the first: it warns "Changed in another tab" (Reload or Export). After reloading, nothing is lost.
-   9. **Other checks.** Private window: the game runs and says it is in fallback storage. "Ask the browser to keep this data": note the answer.
+9. Storage (v39.2, GDD §43): real iPhone (Safari) and Android (Chrome) testing, done on a **separate private test link** so the owner's main franchise is never touched. Each artifact link has its own browser storage and its own cloud save. The step-by-step guide for a non-technical tester is the doc "Gridiron Beast v39.2 phone test guide". In outline:
+   1. **Optional safety copy:** on the normal link, Export save as JSON. It only reads; nothing else is tapped there.
+   2. **Stage 1:** a private test link on the current build (v39.1). Import the exported copy into it, or play a practice franchise for two or three weeks.
+   3. **Stage 2:** the same test link updated to v39.2. Check, in order:
+      - A. Migration: the one-time message; club, record and monsters unchanged; seconds to the menu.
+      - B. Saving: "✓ Saved on this device" after a game.
+      - C. Closing the browser at once and reopening, then again after restarting the phone.
+      - D. Export of a `.gbfranchise` file (or "no file" if the browser blocks downloads).
+      - E. Restore "Previous save", then undo with "Kept before a restore (undo)".
+      - F. Lag, freezes and unexpected reloads during a full game.
+      - G. Optional two-tab check.
+   4. **Never on a real phone:** filling the storage on purpose, or running any check on the main link. Full storage, damaged saves, tab conflicts, cloud races and closing mid-save are covered by the simulated tests (`tools/storage-check.py` and the unit suites).
 ## 3a. Future features (design only, not implemented)
 
 The storage foundation (IndexedDB, backups, recovery) is implemented in v39.2 (GDD §43). The franchise lifecycle (20-season limit, three save slots, read-only retirement archives, export before deletion, the full import screen) and persistent AI rosters remain approved designs in GDD §42 (Phases 2–4). Their automated and real-phone test strategy is GDD §42.10. Nothing here can be run yet: the tests are written with each phase.

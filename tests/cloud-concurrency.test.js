@@ -55,3 +55,14 @@ test('cloud concurrency: a copy written by v39.1 (no generation, plain chunk key
   tab1.cloudSave(fr(30_001, 'v39.2'), { immediate: true }); await done(tab1);
   assert.equal((await tab1.cloudLoad()).tag, 'v39.2');
 });
+test('cloud concurrency: an upload whose lease expired never publishes or cleans up over the new lease holder (r4361544378)', async () => {
+  reset();
+  const pub1 = gate((id, body) => id === 'save_meta' && body.includes('"savedAt":40000')); // tab 1 is about to publish
+  tab1.cloudSave(fr(40_000, 'T1'), { immediate: true }); await pub1.reached;
+  leases.delete('save_lock'); // tab 1 stalled past its lease; it is free again
+  const pub2 = gate((id, body) => id === 'save_meta' && body.includes('"savedAt":41000')); // tab 2 has written its chunks
+  tab2.cloudSave(fr(41_000, 'T2'), { immediate: true }); await pub2.reached;
+  pub1.release(); await new Promise((r) => setTimeout(r, 200)); // tab 1 resumes: it must notice it lost the lease
+  pub2.release(); await done(tab1, tab2);
+  const got = await tab2.cloudLoad(); assert.ok(got, 'the cloud copy is readable (no chunks of the new holder were deleted)'); assert.equal(got.tag, 'T2');
+});

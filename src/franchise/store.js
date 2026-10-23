@@ -611,7 +611,14 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
    * and checked part by part. Null when there is none, when another tab has changed the slot since, or when it fails its checks.
    */
   async function committedSnapshot() {
-    try { const m = await readManifest(); if (!m || !base || !matchesBase(m)) return null; return snapshotOf(freeze(await loadManifest(m))); } catch { return null; }
+    try {
+      const m = await readManifest(); if (!m || !base || !matchesBase(m)) return null;
+      const snap = snapshotOf(freeze(await loadManifest(m)));
+      // Another tab may have committed while the parts were read (the old parts stay readable through the rolling backups):
+      // the snapshot is returned only if the same manifest is still live and still the one this tab knows.
+      const now = await readManifest(); if (!now || now.writer !== m.writer || now.seq !== m.seq || !matchesBase(now)) return null;
+      return snap;
+    } catch { return null; }
   }
   /** Whether another tab or window has changed the slot since this tab loaded or last wrote it (checked when it returns to the front). */
   async function isStale() { if (!base) return false; try { return !matchesBase(await readManifest()); } catch { return false; } }

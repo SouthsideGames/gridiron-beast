@@ -2595,6 +2595,7 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
   - checks the stamp once more;
   - publishes the meta;
   - cleans up.
+  - The lease is also renewed, and ownership confirmed, right before publishing and before every clean-up deletion. An upload that has lost the lease stops at once: it publishes nothing and deletes nothing.
   - It then shortens the lease to the 1-second minimum. An upload that cannot get the lease waits briefly, then tries again 5 seconds later unless a newer state is queued.
   - A v39.1 client does not take the lease. Its uploads can still race, which is the remaining cloud risk (43.14 notes it).
 - **Writes are serialised.** The JSON and its `savedAt` are taken in the same instant, and within a session an older state is never written over a newer one.
@@ -2685,7 +2686,7 @@ Part of each save runs on the main thread: the synchronous snapshot, packing the
   - career, timeline, history and draft preservation;
   - uid assignment without the RNG.
 - **`tests/cloud-save.test.js`** (7 tests): serialised cloud writes, newest-wins, offline and reconnect, torn writes, delete, the payload fixed when authorised, never over newer cloud progress.
-- **`tests/storage-restore-safety.test.js`** (14 tests), **`tests/storage-interleavings.test.js`** (10 tests) and **`tests/storage-final-audit.test.js`** (12 tests), **`tests/cloud-concurrency.test.js`** (4 tests): the review corrections, the invariants A–H and the final audit, see 43.13.
+- **`tests/storage-restore-safety.test.js`** (14 tests), **`tests/storage-interleavings.test.js`** (10 tests) and **`tests/storage-final-audit.test.js`** (13 tests), **`tests/cloud-concurrency.test.js`** (5 tests): the review corrections, the invariants A–H and the final audit, see 43.13.
 - **`tools/storage-check.py`:** the real IndexedDB in headless Chromium at 320, 360, 390 and 412 px. It checks:
   - migration identity and the untouched localStorage save;
   - reload from IndexedDB;
@@ -2743,6 +2744,13 @@ Three defects found in code review (Codex), each reproduced by a failing test be
 - **H.** No failed operation reports success.
 
 **In the browser.** `tools/storage-check.py` now also deletes in one tab and saves from another, and lets a throttled cloud upload fire after the franchise has changed. Against `089e4a4` it reported both defects: the upload carried the unsaved change, and the stale tab reported success and wrote a manifest after the deletion.
+
+**Codex review of `af5255d` (completed 2026-10-23), two findings, each reproduced by a failing test first:**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| (P1) Cloud clean-up running past the lease could delete a new lease holder's chunks | No lease renewal or ownership check after the last chunk: not before publishing, not during clean-up | The lease is renewed and confirmed before publishing and before every deletion. An upload that lost it stops |
+| (P2) The startup snapshot could be read while another tab committed, and then mirror stale state | `base` was checked only before the asynchronous read of the parts | The live manifest is read again after the snapshot is built. It must still be the same one this tab knows, or nothing is mirrored |
 
 **Codex review of `7e73413` (completed 2026-10-23), three findings, each reproduced by a failing test first:**
 

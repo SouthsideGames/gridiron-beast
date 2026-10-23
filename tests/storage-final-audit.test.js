@@ -153,3 +153,13 @@ test('committed snapshot: the save already on the device can be mirrored without
   assert.equal(await store.committedSnapshot(), null, 'a stale tab has nothing to mirror');
   void f;
 });
+test('committed snapshot: another tab committing while the snapshot is read makes it stale, so nothing is mirrored (r4361544388)', async () => {
+  const { backend, ls, store } = await setup();
+  const other = tab(backend, ls); const o = (await other.open()).franchise;
+  const run = backend.run.bind(backend); const g = { reached: deferred(), open: deferred() }; let armed = true;
+  backend.run = async (s, mode, fn) => { if (armed && mode === 'readonly' && s.length === 1 && s[0] === 'parts') { armed = false; g.reached.resolve(); await g.open.promise; } return run(s, mode, fn); };
+  const p = store.committedSnapshot(); await g.reached.promise; // the snapshot's parts are being read
+  o.owner.first = 'NewerInOtherTab'; assert.ok((await other.save(o)).ok); // another tab commits meanwhile
+  g.open.resolve();
+  assert.equal(await p, null, 'the stale snapshot is not returned');
+});

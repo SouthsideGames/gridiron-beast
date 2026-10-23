@@ -89,12 +89,16 @@ async function takeLease(c) {
 }
 async function renewLease(c) { const ref = c.col.doc(LEASE_DOC); if (typeof ref.acquire !== 'function') return true; return !!(await ref.acquire({ holder, ttlMs: LEASE_MS }))?.acquired; }
 async function releaseLease(c) { try { const ref = c.col.doc(LEASE_DOC); if (typeof ref.acquire === 'function') await ref.acquire({ holder, ttlMs: 1000 }); } catch { /* it expires on its own */ } }
-/** Remove chunk documents of generations other than `keep` (an earlier upload, or one interrupted before it published). */
+/**
+ * Remove chunk documents of generations other than `keep` (an earlier upload, or one interrupted before it published). The
+ * lease is renewed before every deletion and the clean-up stops the moment it is lost: once another tab holds the lease, its
+ * own new chunks would be in the listing.
+ */
 async function collectChunks(c, keep, prev) {
   const doomed = new Set();
   if (prev?.gen && prev.gen !== keep) for (let i = 0; i < (prev.chunks || 0); i++) doomed.add(chunkId(prev.gen, i));
   try { if (typeof c.col.get === 'function') { const snap = await c.col.get(); for (const d of snap?.docs || []) { const m = /^save_([a-z0-9]+)_c\d+$/.exec(d.id); if (m && m[1] !== keep) doomed.add(d.id); } } } catch { /* listing is best effort */ }
-  for (const id of doomed) { try { await c.col.doc(id).delete(); } catch { /* left for the next upload */ } }
+  for (const id of doomed) { if (!(await renewLease(c).catch(() => false))) return; try { await c.col.doc(id).delete(); } catch { /* left for the next upload */ } }
 }
 async function writeNow(p) {
   const c = await connect(); if (!c) return false;
@@ -110,6 +114,7 @@ async function writeNow(p) {
     const chunks = Math.max(1, Math.ceil(json.length / CHUNK));
     // This upload's own generation of chunks first, the meta last: a reader only trusts chunks the meta vouches for.
     for (let i = 0; i < chunks; i++) { if (i && !(await renewLease(c))) throw Object.assign(new Error('The upload lease was lost.'), { code: 'busy' }); await c.col.doc(chunkId(gen, i)).set({ s: json.slice(i * CHUNK, (i + 1) * CHUNK) }); }
+    if (!(await renewLease(c))) throw Object.assign(new Error('The upload lease was lost.'), { code: 'busy' }); // still the only uploader?
     const again = await c.col.doc('save_meta').get(); // a last check right before publishing (covers a writer without the lease)
     if (again.exists && savedAt != null && (again.data()?.savedAt || 0) > savedAt) { await collectChunks(c, again.data()?.gen, null); return true; }
     await c.col.doc('save_meta').set({ chunks, savedAt, schemaVersion, uid, storage: 7, gen });
