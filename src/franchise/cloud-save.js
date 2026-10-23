@@ -61,17 +61,28 @@ export async function cloudLoad() {
 let inflight = null; // one write at a time: a later write starts only after the earlier one has finished (GDD §43.6)
 let lastWritten = 0; // savedAt of the newest copy this session wrote
 export const cloudUsage = { chunks: 0, chars: 0, documents: 0, writes: 0, lastWriteMs: null };
-async function writeNow(f) {
+/**
+ * The payload of one authorised write, fixed at the moment it was authorised: the JSON text, its stamp and its identity. A
+ * store save result passes its committed snapshot (`snapshot.json()`); a plain franchise object is serialised on the spot.
+ * Either way, later changes to the live object can never reach the cloud through this write.
+ */
+function freezePayload(x) {
+  if (x && typeof x.json === 'function') return { json: x.json(), savedAt: x.savedAt ?? null, schemaVersion: x.schemaVersion ?? null, uid: x.uid ?? null };
+  return { json: JSON.stringify(x), savedAt: x?.savedAt ?? null, schemaVersion: x?.schemaVersion ?? null, uid: x?.uid ?? null };
+}
+async function writeNow(p) {
   const c = await connect(); if (!c) return false;
-  // Serialise once, and take the stamp from the same moment, so the meta always vouches for exactly these chunks.
-  const json = JSON.stringify(f); const savedAt = f.savedAt; const schemaVersion = f.schemaVersion;
-  if (savedAt != null && savedAt < lastWritten) return true; // an older state never replaces a newer one in the cloud
+  const { json, savedAt, schemaVersion, uid } = p;
+  if (savedAt != null && savedAt < lastWritten) return true; // an older state never replaces a newer one this session wrote
   const t0 = Date.now();
   try {
+    // Nor one that another tab or device has already put there: the stored stamp is checked right before writing.
+    const meta = await c.col.doc('save_meta').get();
+    if (meta.exists && savedAt != null && (meta.data()?.savedAt || 0) > savedAt) { setStatus({ state: 'on', error: null, skipped: (status.skipped || 0) + 1 }); return true; }
     const chunks = Math.max(1, Math.ceil(json.length / CHUNK));
     // Chunks first, meta last: a reader only trusts chunks the meta vouches for.
     for (let i = 0; i < chunks; i++) await c.col.doc(`save_c${i}`).set({ s: json.slice(i * CHUNK, (i + 1) * CHUNK) });
-    await c.col.doc('save_meta').set({ chunks, savedAt, schemaVersion, uid: f.uid ?? null, storage: 7 });
+    await c.col.doc('save_meta').set({ chunks, savedAt, schemaVersion, uid, storage: 7 });
     lastWritten = Math.max(lastWritten, savedAt || 0);
     Object.assign(cloudUsage, { chunks, chars: json.length, documents: chunks + 1, writes: cloudUsage.writes + 1, lastWriteMs: Date.now() - t0 });
     setStatus({ state: 'on', at: savedAt, error: null });
@@ -91,8 +102,9 @@ function enqueue(f) {
  * even while saves keep arriving (a match saves every play), and at once for
  * important changes (a game finished, a week advanced).
  */
-export function cloudSave(f, { immediate = false } = {}) {
-  queued = f;
+export function cloudSave(x, { immediate = false } = {}) {
+  if (!x) return;
+  queued = freezePayload(x); // fixed now: the payload is the state authorised by this call
   const run = () => { clearTimeout(timer); timer = null; const p = queued; queued = null; if (p) enqueue(p); };
   if (immediate) run(); else if (!timer) timer = setTimeout(run, 4000);
 }

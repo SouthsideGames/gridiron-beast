@@ -146,11 +146,9 @@ test('fallback storage: a replacement is written first and adopted only if the w
   const good = legacyReplaceThenAdopt({ write: () => true, franchise: next, adopt: (g) => { app.f = g; ev.push('adopt'); }, mirror: () => ev.push('mirror') });
   assert.ok(good.ok); assert.equal(app.f, next); assert.deepEqual(ev, ['adopt', 'mirror']);
 });
-test('cloud mirror policy: never ahead of the local attempt, never a stale tab or a replaced franchise; device failures still mirrored', async () => {
+test('cloud mirror policy: only a committed save authorises the cloud (invariant A); a stale tab\'s save authorises nothing', async () => {
   assert.equal(shouldMirror({ ok: true }), true);
-  for (const code of ['stale', 'newer-elsewhere', 'none', 'starting']) assert.equal(shouldMirror({ ok: false, error: { code } }), false, code);
-  for (const code of ['quota', 'abort', 'legacy', 'checksum']) assert.equal(shouldMirror({ ok: false, error: { code } }), true, code);
-  // a stale tab's save is refused locally, so its state is not mirrored either
+  for (const code of ['stale', 'newer-elsewhere', 'none', 'starting', 'quota', 'abort', 'legacy', 'checksum']) assert.equal(shouldMirror({ ok: false, error: { code } }), false, code);
   const { backend, store, f, ls } = await setup();
   const other = createStore({ backend, localStorage: ls, now, debounce: 0 }); const g = (await other.open()).franchise; g.owner.first = 'Other'; await other.save(g);
   f.owner.first = 'Stale'; const r = await store.save(f); assert.equal(shouldMirror(r), false);

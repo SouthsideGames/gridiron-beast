@@ -2578,7 +2578,8 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
 - **Format unchanged,** so older builds can still read it. The meta gains `uid` and `storage: 7`.
 - **Writes are serialised.** The JSON and its `savedAt` are taken in the same instant, and within a session an older state is never written over a newer one.
 - **Delete** drops pending writes, so a deleted franchise cannot come back.
-- **Ordinary saves** reach the cloud only after the local attempt has finished, never ahead of it. They are never sent for a state this tab must not write: a replaced franchise, or one another tab saved since. When the device itself fails (full, blocked, aborted), the progress is still mirrored, as in v39.1, because the cloud then holds the only copy of it.
+- **Only a committed save reaches the cloud.** The upload is that save's committed snapshot, fixed when the write is authorised, never the live object. A failed local save authorises no upload, whatever the reason. This replaces v39.1's "the cloud still keeps it" behaviour after a device failure; the failure sheet's Export is the way to keep that progress.
+- **Before each write,** the cloud's stored stamp is read, and an older upload never replaces newer progress that another tab or device has already put there.
 - **At start,** the cloud copy replaces the local save only when it is newer, and the local franchise is first kept as `pre-cloud`. The cloud copy is committed locally before the game adopts it. If that backup cannot be made, the cloud copy is not loaded. When the local save failed its checks, the cloud copy is only offered on the recovery screen. When the local copy is newer, the cloud copy is brought up to date. If the player kept playing while the backup was being made, the cloud copy is not loaded (this device is newer now). In fallback storage, which has no backups, a newer cloud copy is loaded only if the player says yes.
 - **Offline and reconnect.** Failures set the cloud status shown in Settings; the next write after reconnecting succeeds. Tested with a simulated database: serialisation, ordering, offline, torn writes, delete.
 - **Measured usage.** The cloud copy is the raw franchise JSON: about 0.6 MB and 5 documents at season 1, 2.2 MB and 14 at season 10, 2.9 MB and 18 at season 20, plus the dex, Hall of Fame and achievements documents.
@@ -2660,8 +2661,8 @@ Part of each save runs on the main thread: the synchronous snapshot, packing the
   - the journal; export integrity;
   - career, timeline, history and draft preservation;
   - uid assignment without the RNG.
-- **`tests/cloud-save.test.js`** (5 tests): serialised cloud writes, newest-wins, offline and reconnect, torn writes, delete.
-- **`tests/storage-restore-safety.test.js`** (14 tests): the review corrections, see 43.13.
+- **`tests/cloud-save.test.js`** (7 tests): serialised cloud writes, newest-wins, offline and reconnect, torn writes, delete, the payload fixed when authorised, never over newer cloud progress.
+- **`tests/storage-restore-safety.test.js`** (14 tests) and **`tests/storage-interleavings.test.js`** (10 tests): the review corrections and the invariants A–H, see 43.13.
 - **`tools/storage-check.py`:** the real IndexedDB in headless Chromium at 320, 360, 390 and 412 px. It checks:
   - migration identity and the untouched localStorage save;
   - reload from IndexedDB;
@@ -2698,6 +2699,27 @@ Three defects found in code review (Codex), each reproduced by a failing test be
   - corruption in each backup generation, shared and unshared;
   - deletion racing a save.
 - `tools/storage-check.py` now also restores in the browser with a simulated cloud. Run against the commit before the corrections, it reported the same two failures as the review: after a failed restore the active franchise was the unsaved backup and the cloud had been written; after a failed safety copy, saving stopped.
+
+**Second review (2026-10-23), four P1 findings on `089e4a4`, each reproduced by a failing test first:**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| A stale tab could recreate a franchise deleted in another tab | The other-tab check needed a live manifest. After a deletion there was none, so the stale tab's save passed. It also reused cached parts that the deletion had removed, and committed a manifest pointing at missing data that reported success. | A missing manifest, when this tab had loaded one, is a cross-tab change: the save is refused with "changed or deleted in another tab". Every commit also checks, inside its transaction, that each referenced part is present and intact. A missing cached part is written again once, never referenced. |
+| A delayed cloud upload could carry changes never saved locally | The cloud throttle kept the live franchise object and serialised it when the timer fired. | `cloudSave` fixes the payload when it is called. App saves pass the committed snapshot from the store, so the upload is exactly what was committed. Only a committed save authorises an upload, and each write first checks that the cloud does not already hold newer progress. |
+| A cloud replacement could overwrite progress made during it | The check for local play ran before the asynchronous safety copy and commit, and the cloud copy was adopted afterwards whatever had happened in between. | A `guard` ("the player has not played on") is rechecked inside the store's exclusive operation, right before the commit and right after it. If it fails before, nothing is committed; if it fails after, the local state is committed back as the live save. The cloud copy is then not adopted. A failed safety copy stops the replacement. |
+| Two exclusive operations could run at once | The lock was set only after awaiting the queue, so a second operation could pass the same check meanwhile. A restore also read its backup before joining the queue. | Exclusive operations join a promise chain synchronously, when they are called, and run in call order. Each rechecks whether its franchise was already replaced; if so it is answered "stale" and changes nothing. Saves requested before the call are written first. Saves requested after it wait and then run, or are answered "stale". The reservation is released in `finally`. |
+
+**Invariants**, each tested with deterministic barriers (a gate holds a chosen IndexedDB transaction until released), not timing sleeps. Tests are in `tests/storage-interleavings.test.js` (10), `tests/cloud-save.test.js` (+2) and `tests/storage-restore-safety.test.js`:
+- **A.** An unsuccessful local save never authorises a cloud upload.
+- **B.** A failed restore or replacement never changes the active franchise.
+- **C.** A stale tab never recreates deleted or superseded state.
+- **D.** Two exclusive storage operations never overlap.
+- **E.** A successful storage operation never references missing or corrupted parts.
+- **F.** Newer local progress is never silently replaced by older cloud progress.
+- **G.** A failed backup never disables ordinary saving.
+- **H.** No failed operation reports success.
+
+**In the browser.** `tools/storage-check.py` now also deletes in one tab and saves from another, and lets a throttled cloud upload fire after the franchise has changed. Against `089e4a4` it reported both defects: the upload carried the unsaved change, and the stale tab reported success and wrote a manifest after the deletion.
 
 ### 43.14 What remains for Phases 2–4 [NOT IMPLEMENTED]
 - **Phase 2:**

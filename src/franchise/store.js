@@ -143,6 +143,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   let status = { state: 'idle', savedAt: null, error: null, bytes: null, lastOkAt: null };
   const emit = (s) => { status = { ...status, ...s }; for (const fn of listeners) { try { fn(status); } catch { /* ignore */ } } };
   let seq = 0; let cache = {}; // part name → { raw, entry } of the last committed save
+  const crossTab = () => Object.assign(new Error('This franchise was changed or deleted in another tab or window of the game. Reload the game to continue from what is stored now.'), { code: 'newer-elsewhere' });
   let base = null; // { writer, seq } of the manifest this tab loaded or last committed: anything else found there was written by another tab
   let pendingF = null; let pendingWaiters = []; let timer = null; let writing = null;
 
@@ -173,7 +174,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
    */
   function freeze(f) {
     const p = partsOf(f); const raws = {}; for (const n of PARTS) raws[n] = JSON.stringify(p[n]);
-    return { raws, savedAt: f.savedAt, uid: f.uid, order: Object.keys(f), meta: saveMeta(f), lifecycle: f.lifecycle ? { ...f.lifecycle } : lifecycleOf(f) };
+    return { raws, savedAt: f.savedAt, uid: f.uid, schemaVersion: f.schemaVersion, order: Object.keys(f), meta: saveMeta(f), lifecycle: f.lifecycle ? { ...f.lifecycle } : lifecycleOf(f) };
   }
   async function encodeFrozen(fz, useCache = true) {
     const entries = {}; const newParts = [];
@@ -190,9 +191,14 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     return backend.run(['saves', 'backups', 'parts', 'slots'], 'readwrite', async (t) => {
       const cur = await t.get('saves', KEY(manifest.slot));
       if (cur && cur.writer === manifest.writer && cur.seq > manifest.seq) throw Object.assign(new Error('A newer save is already stored.'), { code: 'stale' });
-      // Another tab or window of the game saved since this tab loaded or last saved: this tab's older state must not replace it.
-      if (cur && base && cur.writer !== manifest.writer && !(cur.writer === base.writer && cur.seq === base.seq) && rotate) throw Object.assign(new Error('This franchise was saved more recently in another tab or window of the game. Reload the game to continue from the newest save.'), { code: 'newer-elsewhere' });
+      // Another tab or window changed this franchise since this tab loaded or last wrote it: a different manifest is live, or
+      // none is (the franchise was deleted there). This tab's older state must not replace it or bring it back.
+      if (rotate && base && (!cur || (cur.writer !== manifest.writer && !(cur.writer === base.writer && cur.seq === base.seq)))) throw crossTab();
       for (const part of newParts) if (!(await t.get('parts', part.sum))) await t.put('parts', part.sum, part);
+      // Every part the manifest references must be present and intact in this same transaction (a part reused from the cache
+      // may have been removed by another tab's clean-up): a manifest is never committed pointing at missing data.
+      const fresh = new Set(newParts.map((x) => x.sum));
+      for (const n of PARTS) { const sum = manifest.parts[n].sum; if (!fresh.has(sum) && !partOk(await t.get('parts', sum), sum)) throw Object.assign(new Error('A stored part this save relies on is missing.'), { code: 'missing-part' }); }
       backend.hit?.('parts-written');
       // Rolling backups hold the two latest previous versions that pass their integrity check: a damaged version is never
       // rotated in over a good one.
@@ -223,26 +229,46 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     return { slot, uid: fz.uid, storage: STORAGE_VERSION, fmt: PACK_FORMAT, savedAt: fz.savedAt, seq: ++seq, writer, order: fz.order, parts: entries, meta: fz.meta, lifecycle: fz.lifecycle };
   }
   async function writeFrozen(fz, opts) {
-    const { entries, newParts } = await encodeFrozen(fz);
-    const m = manifestFor(fz, entries); if (opts?.extra) Object.assign(m, opts.extra);
-    await commit(m, newParts, opts);
+    let { entries, newParts } = await encodeFrozen(fz);
+    let m = manifestFor(fz, entries); if (opts?.extra) Object.assign(m, opts.extra);
+    try { await commit(m, newParts, opts); }
+    catch (e) {
+      if (e?.code !== 'missing-part') throw e;
+      cache = {}; ({ entries, newParts } = await encodeFrozen(fz, false)); // write every part afresh, once
+      m = manifestFor(fz, entries); if (opts?.extra) Object.assign(m, opts.extra);
+      await commit(m, newParts, opts);
+    }
     base = { writer: m.writer, seq: m.seq };
     cache = {}; for (const n of PARTS) cache[n] = { raw: entries[n].raw, entry: entries[n] };
     const bytes = PARTS.reduce((a, n) => a + entries[n].bytes, 0);
     if ((pendingF?.savedAt ?? -1) <= fz.savedAt) clearJournal(); // nothing newer is waiting
     emit({ state: pendingF ? 'pending' : 'saved', savedAt: fz.savedAt, lastOkAt: fz.savedAt, error: null, bytes });
-    return { ok: true, savedAt: fz.savedAt, bytes, manifest: m };
+    return { ok: true, savedAt: fz.savedAt, bytes, manifest: m, snapshot: snapshotOf(fz) };
+  }
+  /**
+   * The committed state as JSON, for the cloud mirror: built from the very strings that were committed, so it can never carry
+   * a later change to the live object. Key order may differ from the franchise's (the reader does not depend on it).
+   */
+  function snapshotOf(fz) {
+    return { savedAt: fz.savedAt, uid: fz.uid, schemaVersion: fz.schemaVersion, json() {
+      let out = fz.raws.core.slice(0, -1); const add = (k, v) => { out += `${out.length > 1 ? ',' : ''}${JSON.stringify(k)}:${v}`; };
+      if (fz.order.includes('history')) add('history', fz.raws.history);
+      if (fz.order.includes('draftResults')) add('draftResults', fz.raws.draft);
+      if (fz.order.includes('savedAt') && fz.savedAt != null) add('savedAt', JSON.stringify(fz.savedAt));
+      return `${out}}`;
+    } };
   }
   const stamp = (f) => { f.savedAt = Math.max(now(), (f.savedAt || 0) + 1, (status.lastOkAt || 0) + 1); };
   async function writeNow(f) { if (!f.uid) f.uid = newUid(); if (!f.lifecycle) f.lifecycle = lifecycleOf(f); return writeFrozen(freeze(f)); }
+  /** Write one queued request and answer its callers. A request for a franchise replaced meanwhile is answered 'stale'. */
+  async function writeQueued(f, waiters) {
+    let res;
+    if (retired.has(f)) res = { ok: false, error: { code: 'stale', message: 'That franchise was replaced.' } };
+    else { emit({ state: 'saving' }); try { res = await writeNow(f); } catch (e) { res = { ok: false, error: classify(e) }; emit({ state: 'error', error: res.error }); } }
+    for (const w of waiters) w(res);
+  }
   async function drain() {
-    while (pendingF) {
-      const f = pendingF; const waiters = pendingWaiters; pendingF = null; pendingWaiters = [];
-      emit({ state: 'saving' });
-      let res;
-      try { res = await writeNow(f); } catch (e) { res = { ok: false, error: classify(e) }; emit({ state: 'error', error: res.error }); }
-      for (const w of waiters) w(res);
-    }
+    while (pendingF && !reserved) { const f = pendingF; const waiters = pendingWaiters; pendingF = null; pendingWaiters = []; await writeQueued(f, waiters); }
     writing = null;
   }
   /**
@@ -258,27 +284,47 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     stamp(f);
     return new Promise((resolve) => {
       pendingF = f; pendingWaiters.push(resolve); if (status.state !== 'saving') emit({ state: 'pending' });
-      const go = () => { timer = null; if (!writing && !locked) writing = drain(); };
+      const go = () => { timer = null; if (!writing && !reserved) writing = drain(); };
+      if (reserved) return; // an exclusive operation holds the queue: this request runs right after it (or is answered 'stale')
       if (immediate || debounce === 0) { clearTimeout(timer); timer = null; go(); } else if (!timer) timer = setTimeout(go, debounce);
     });
   }
   /** Run any pending save at once and wait for the queue to be empty. */
-  async function flush() { if (timer) { clearTimeout(timer); timer = null; if (!writing && !locked && pendingF) writing = drain(); } if (writing) await writing; }
+  async function flush() { if (timer) { clearTimeout(timer); timer = null; if (!writing && !reserved && pendingF) writing = drain(); } if (writing) await writing; if (reserved) await exclusiveTail; }
   /**
    * Run `fn` with the save queue held: everything queued before is committed first, saves requested meanwhile wait, and they
    * run afterwards (unless `fn` replaced their franchise). Restores and replacements use it, so an ordinary save can never
    * interleave with them.
    */
-  let locked = false;
-  async function exclusive(fn) {
-    while (locked) await new Promise((r) => setTimeout(r, 10));
-    await flush(); locked = true;
-    try { return await fn(); }
-    finally { locked = false; if (pendingF && !writing && !timer) writing = drain(); }
+  let reserved = 0; let exclusiveTail = Promise.resolve();
+  /**
+   * Run `fn` as an exclusive storage operation (restore, replacement, deletion). The reservation is taken synchronously, when
+   * the operation is requested, before any await:
+   *   - a save already being written finishes; a save requested before this call (still waiting for its debounce) is
+   *     written first, in order;
+   *   - saves requested after this call wait until the operation has finished, then run (or are answered 'stale' if their
+   *     franchise was replaced);
+   *   - competing exclusive operations queue in call order (not rejected), and each rechecks its own preconditions when
+   *     its turn comes;
+   *   - the reservation is released in `finally`, after success or failure, and the queue is restarted, so nothing is stranded.
+   */
+  function exclusive(fn) {
+    reserved++;
+    clearTimeout(timer); timer = null;
+    const before = pendingF ? { f: pendingF, waiters: pendingWaiters } : null; pendingF = null; pendingWaiters = [];
+    const run = exclusiveTail.then(async () => {
+      try {
+        while (writing) await writing;
+        if (before) await writeQueued(before.f, before.waiters);
+        return await fn();
+      } finally { reserved--; if (!reserved && pendingF && !writing) writing = drain(); }
+    });
+    exclusiveTail = run.then(() => {}, () => {});
+    return run;
   }
   /** Drop a queued save of a franchise that has just been replaced: its callers learn it was not written. */
   function dropQueued(f) { if (pendingF && pendingF === f) { const ws = pendingWaiters; pendingF = null; pendingWaiters = []; for (const w of ws) w({ ok: false, error: { code: 'stale', message: 'That franchise was replaced.' } }); } }
-  const busy = () => !!(pendingF || writing || timer || locked);
+  const busy = () => !!(pendingF || writing || timer || reserved);
 
   // ---- the unload journal: when the page is hidden with a save still queued, the parts that differ from the last committed
   // save (normally only the core: the archive changes once a season) go to localStorage synchronously. The next start adopts
@@ -347,34 +393,48 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
    *   3. only then is `current` retired (its late saves are ignored) and the result returned for the caller to adopt.
    * Never throws for a storage failure: returns { ok: false, error } with the current franchise still live and saveable.
    */
-  async function replace(f, current, { copyKind = 'replaced' } = {}) {
-    return exclusive(async () => {
-      try {
-        if (current) await keepCopy(current, copyKind);
-        else { const m = await readManifest().catch(() => null); if (m) { try { await keepCopy(await loadManifest(m), copyKind); } catch { await quarantine(m); } } }
-      } catch (e) { return { ok: false, stage: 'copy', error: classify(e) }; }
-      if (current?.uid && !f.uid && current.createdAt === f.createdAt) f.uid = current.uid;
-      if (!f.uid) f.uid = newUid();
-      f.lifecycle = { ...f.lifecycle, ...lifecycleOf(f) };
-      const before = f.savedAt; stamp(f); // the new live state is the newest: an older cloud or legacy copy must not win over it
-      let r;
-      try { r = await writeNow(f); } catch (e) { f.savedAt = before; return { ok: false, stage: 'commit', error: classify(e) }; }
-      retire(current); dropQueued(current);
-      return { ...r, franchise: f };
-    });
+  function replace(f, current, opts = {}) { return exclusive(() => replaceLocked(f, current, opts)); }
+  async function replaceLocked(f, current, { copyKind = 'replaced', guard = null } = {}) {
+    if (current && retired.has(current)) return { ok: false, stage: 'stale', error: { code: 'stale', message: 'That franchise was already replaced; nothing was changed.' } };
+    try {
+      if (current) await keepCopy(current, copyKind);
+      else { const m = await readManifest().catch(() => null); if (m) { try { await keepCopy(await loadManifest(m), copyKind); } catch { await quarantine(m); } } }
+    } catch (e) { return { ok: false, stage: 'copy', error: classify(e) }; }
+    const superseded = { ok: false, stage: 'superseded', error: { code: 'superseded', message: 'The game moved on while this was being prepared, so the newer progress was kept and nothing was replaced.' } };
+    // `guard` (e.g. "the player has not played on") is checked here, after every wait and right before the commit...
+    if (guard && !guard()) return superseded;
+    if (current?.uid && !f.uid && current.createdAt === f.createdAt) f.uid = current.uid;
+    if (!f.uid) f.uid = newUid();
+    f.lifecycle = { ...f.lifecycle, ...lifecycleOf(f) };
+    const before = f.savedAt; stamp(f); // the new live state is the newest: an older cloud or legacy copy must not win over it
+    let r;
+    try { r = await writeNow(f); } catch (e) { f.savedAt = before; return { ok: false, stage: 'commit', error: classify(e) }; }
+    // ...and again once the commit has landed (the caller adopts in the same microtask chain, before any input can run). If
+    // the player played on during the commit, their state is committed back as the live save; the replacement stays in the
+    // rolling backups.
+    if (guard && !guard() && current) {
+      try { await writeNow(current); } catch (e) { return { ok: false, stage: 'superseded', error: { code: 'superseded', message: `The game moved on during the replacement, but putting the newer progress back failed (${classify(e).message}). Keep playing: the next save stores it.` } }; }
+      return superseded;
+    }
+    retire(current); dropQueued(current);
+    return { ...r, franchise: f };
   }
+
   /** Restore a backup: it is read and verified first (a corrupt backup changes nothing), then committed through replace(). */
-  async function restore(id, current = null) {
-    let f;
-    try { f = await readBackup(id); } catch (e) { return { ok: false, stage: 'read', error: classify(e) }; }
-    if (!f) return { ok: false, stage: 'read', error: { code: 'invalid', message: 'That backup is not a readable franchise.' } };
-    return replace(f, current, { copyKind: 'pre-restore' });
+  function restore(id, current = null) {
+    return exclusive(async () => { // the queue is joined at once, so restores run in the order they were asked for
+      let f;
+      try { f = await readBackup(id); } catch (e) { return { ok: false, stage: 'read', error: classify(e) }; }
+      if (!f) return { ok: false, stage: 'read', error: { code: 'invalid', message: 'That backup is not a readable franchise.' } };
+      return replaceLocked(f, current, { copyKind: 'pre-restore' });
+    });
   }
   /** A live save that fails its checks is kept as it is (its parts stay referenced) for diagnosis; it is never deleted. */
   async function quarantine(m) { await backend.run(['backups'], 'readwrite', async (t) => { await t.put('backups', `${SLOT}:quarantine`, { ...m, kind: 'quarantine', takenAt: now(), embedded: null }); }); }
   /** Delete the live franchise, keeping it recoverable as the 'deleted' backup. */
   async function remove(current) {
     return exclusive(async () => {
+      if (current && retired.has(current)) throw Object.assign(new Error('That franchise was already replaced; nothing was deleted.'), { code: 'stale' });
       const cur = await readManifest().catch(() => null);
       if (cur && base && cur.writer !== writer && !(cur.writer === base.writer && cur.seq === base.seq)) throw Object.assign(new Error('This franchise was saved more recently in another tab or window of the game. Reload the game before deleting it.'), { code: 'newer-elsewhere' });
       if (current) await keepCopy(current, 'deleted');

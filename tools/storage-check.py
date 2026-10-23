@@ -159,7 +159,7 @@ with sync_playwright() as pw:
 
     # --- restore safety (PR #43 corrections): with a simulated cloud mirror, a failed restore changes nothing (active franchise,
     # stored save, cloud) and ordinary saving continues; a successful restore is committed, then adopted, then mirrored.
-    FAKE_CLOUD = """(() => { const docs = new Map(); window.__cloudMetas = [];
+    FAKE_CLOUD = """(() => { const docs = new Map(); window.__cloudMetas = []; window.__cloudDocs = docs;
       const col = { doc: (id) => ({ get: async () => ({ exists: docs.has(id), data: () => JSON.parse(docs.get(id)) }),
         set: async (v) => { docs.set(id, JSON.stringify(v)); if (id === 'save_meta') window.__cloudMetas.push(v); }, delete: async () => { docs.delete(id); } }), get: async () => ({ docs: [] }) };
       window.claude = { use: async (n) => (n === 'db' ? { collection: () => col } : n === 'user' ? { id: async () => 'viewer-1' } : null) }; })()"""
@@ -203,6 +203,28 @@ with sync_playwright() as pw:
     check('Nothing was changed' in rs['uiFailToast'] or 'unchanged' in rs['uiFailToast'], f'failed-restore toast: "{rs["uiFailToast"]}"'); check(rs['uiButtonBack'], 'restore buttons stayed disabled after a failure')
     sc = rs['success']; check(sc['active'] == sc['stored'] and sc['status'] == 'saved' and sc['cloudAfter'] >= 1 and sc['cloudSavedAt'] == sc['storedAt'], f'successful restore not committed-then-mirrored: {sc}')
     check(rs['afterSuccessSave']['ok'] and rs['afterSuccessSave']['stored'] == 'AfterRestore', f'ordinary saving after a restore failed: {rs["afterSuccessSave"]}')
+    # --- delayed cloud upload (second review): the throttled upload carries the committed state, not later changes
+    dc = page.evaluate("""async () => { const app = window.__gb; app.f.owner.first = 'CommittedForCloud'; app.lastSig = app.lastSig; const r = await app.save(); // ordinary, throttled cloud
+      const metas0 = window.__cloudMetas.length; app.f.owner.first = 'ChangedAfter-NotSaved'; await new Promise((x) => setTimeout(x, 4600));
+      const m = window.__cloudMetas.slice(metas0); if (!m.length) return { ok: r.ok, uploads: 0 };
+      let txt = ''; for (let i = 0; i < m[m.length - 1].chunks; i++) txt += JSON.parse(window.__cloudDocs.get('save_c' + i)).s;
+      const up = JSON.parse(txt); return { ok: r.ok, uploads: m.length, owner: up.owner.first, savedAt: up.savedAt, committedAt: r.savedAt }; }""")
+    report['delayedCloud'] = dc
+    check(dc.get('uploads', 0) >= 1 and dc.get('owner') == 'CommittedForCloud' and dc.get('savedAt') == dc.get('committedAt'), f'delayed cloud upload carried uncommitted state: {dc}')
+    page.evaluate("() => { window.__gb.f.owner.first = 'CommittedForCloud'; return window.__gb.save({ immediate: true }); }")
+    # --- cross-tab deletion (second review): tab A deletes, stale tab B cannot recreate the franchise
+    pageB = ctx2.new_page(); pageB.on('pageerror', lambda e: errors.append('tab B: ' + str(e))); pageB.goto(URL); booted(pageB)
+    page.goto(URL); booted(page)
+    xt = {}
+    xt['delete'] = page.evaluate("async () => { const r = await window.__gb.reset(); return r; }")
+    xt['staleSave'] = pageB.evaluate("""async () => { const app = window.__gb; app.f.owner.first = 'GhostFromTabB'; const r = await app.save({ immediate: true }); await new Promise((x) => setTimeout(x, 300));
+      const m = await app.storage.store.readManifest(); return { ok: r.ok, code: r.error && r.error.code, msg: r.error && r.error.message, manifest: !!m, sheet: !!document.querySelector('.sheet') && document.querySelector('.sheet').innerText.includes('another tab') }; }""")
+    pageB.reload(); booted(pageB)
+    xt['afterReload'] = pageB.evaluate("async () => ({ hasFranchise: !!window.__gb.f, deletedCopy: (await window.__gb.storage.store.listBackups()).filter((b) => b.kind === 'deleted' && b.ok).length })")
+    report['crossTab'] = xt
+    st_ = xt['staleSave']; check(xt['delete'].get('ok') and st_['ok'] is False and st_['code'] == 'newer-elsewhere' and not st_['manifest'] and st_['sheet'], f'stale tab after deletion: {xt}')
+    check(not xt['afterReload']['hasFranchise'] and xt['afterReload']['deletedCopy'] >= 1, f'deleted franchise came back or its copy is gone: {xt["afterReload"]}')
+    pageB.set_viewport_size({'width': 320, 'height': 700}); overflow(pageB, 'menu after cross-tab deletion at 320px')
     b2.close()
 
     # --- timings, normal and CPU-throttled

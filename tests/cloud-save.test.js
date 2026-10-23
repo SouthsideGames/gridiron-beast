@@ -44,3 +44,18 @@ test('cloud: deleting the franchise drops a throttled write so it cannot come ba
   await C.cloudClear(); await new Promise((r) => setTimeout(r, 30));
   assert.equal(await C.cloudLoad(), null); assert.ok(!docs.has('save_meta'));
 });
+
+// Second review of PR #43 (r4359520495): the payload is fixed when the write is authorised.
+test('cloud: a throttled upload carries the state authorised at the time, never changes made to the object afterwards', async () => {
+  const f = big(1000, 5000, 'A'); C.cloudSave(f); // authorised for A, throttled
+  f.tag = 'B-unauthorised'; f.savedAt = 5001; // the game changed the object; its local save then failed
+  await C.cloudFlush(); await settle();
+  const got = await C.cloudLoad(); assert.equal(got.tag, 'A'); assert.equal(got.savedAt, 5000);
+});
+test('cloud: an older queued upload never overwrites newer progress another tab or device already put in the cloud', async () => {
+  C.cloudSave(big(1000, 6000, 'queued-older'));
+  // another tab writes newer progress to the cloud before this tab's timer fires
+  docs.set('save_c0', JSON.stringify({ s: JSON.stringify(big(1000, 7000, 'other-tab')) })); docs.set('save_meta', JSON.stringify({ chunks: 1, savedAt: 7000, schemaVersion: 6, uid: 'u1', storage: 7 }));
+  await C.cloudFlush(); await settle();
+  assert.equal((await C.cloudLoad()).tag, 'other-tab');
+});
