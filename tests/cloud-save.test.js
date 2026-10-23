@@ -35,7 +35,10 @@ test('cloud: offline writes fail visibly and the next write after reconnecting s
   assert.equal((await C.cloudLoad()).tag, 'back'); assert.equal(C.cloudStatus().error, null);
 });
 test('cloud: a torn write (chunks without matching meta) is ignored rather than loaded', async () => {
-  docs.set('save_c0', JSON.stringify({ s: '{"savedAt":5,"tag":"torn"' }));
+  // a meta published for a generation whose chunks never all arrived (or the v39.1 layout with a partial chunk)
+  docs.set('save_meta', JSON.stringify({ chunks: 2, savedAt: 5, schemaVersion: 6, gen: 'missinggen' })); docs.set('save_missinggen_c0', JSON.stringify({ s: '{"savedAt":5,' }));
+  assert.equal(await C.cloudLoad(), null);
+  docs.set('save_meta', JSON.stringify({ chunks: 1, savedAt: 5, schemaVersion: 6 })); docs.set('save_c0', JSON.stringify({ s: '{"savedAt":5,"tag":"torn"' }));
   assert.equal(await C.cloudLoad(), null);
   C.cloudSave(big(1000, 3000, 'fixed'), { immediate: true }); await settle(); assert.equal((await C.cloudLoad()).tag, 'fixed');
 });

@@ -161,12 +161,17 @@ with sync_playwright() as pw:
     # stored save, cloud) and ordinary saving continues; a successful restore is committed, then adopted, then mirrored.
     FAKE_CLOUD = """(() => { const docs = new Map(); window.__cloudMetas = []; window.__cloudDocs = docs;
       const col = { doc: (id) => ({ get: async () => ({ exists: docs.has(id), data: () => JSON.parse(docs.get(id)) }),
-        set: async (v) => { docs.set(id, JSON.stringify(v)); if (id === 'save_meta') window.__cloudMetas.push(v); }, delete: async () => { docs.delete(id); } }), get: async () => ({ docs: [] }) };
+        set: async (v) => { docs.set(id, JSON.stringify(v)); if (id === 'save_meta') window.__cloudMetas.push(v); }, delete: async () => { docs.delete(id); },
+        acquire: async ({ holder, ttlMs = 30000 }) => { const l = leases.get(id); const t = Date.now(); if (l && l.holder !== holder && l.until > t) return { acquired: false }; leases.set(id, { holder, until: t + Math.max(1000, ttlMs) }); return { acquired: true, holder }; } }),
+        get: async () => ({ docs: [...docs.keys()].map((id) => ({ id, data: () => JSON.parse(docs.get(id)) })) }) }; const leases = new Map();
       window.claude = { use: async (n) => (n === 'db' ? { collection: () => col } : n === 'user' ? { id: async () => 'viewer-1' } : null) }; })()"""
     b2 = pw.chromium.launch(); ctx2 = b2.new_context(viewport={'width': 360, 'height': 780}, device_scale_factor=2, is_mobile=True, has_touch=True)
     ctx2.add_init_script(FAKE_CLOUD); page = ctx2.new_page(); page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(URL + 'manifest.webmanifest'); page.evaluate("(t) => { localStorage.clear(); localStorage.setItem('gridiron-beast-v6', t); }", LEGACY)
-    page.goto(URL); booted(page); page.wait_for_timeout(500)
+    page.goto(URL); booted(page); page.wait_for_timeout(1500)
+    report['initialCloud'] = page.evaluate("""async () => { const st = window.__gb.storage.store; const m = await st.readManifest(); const metas = window.__cloudMetas;
+      return { uploads: metas.length, savedAt: metas.length ? metas[metas.length - 1].savedAt : null, storedAt: m && m.savedAt, gen: metas.length ? !!metas[metas.length - 1].gen : false }; }""")
+    ic = report['initialCloud']; check(ic['uploads'] >= 1 and ic['savedAt'] == ic['storedAt'] and ic['gen'], f'an empty cloud did not receive the committed save at start: {ic}')
     page.evaluate("""async () => { const app = window.__gb; for (const n of ['A', 'B', 'C']) { app.f.owner.first = n; await app.save({ immediate: true }); } await new Promise((r) => setTimeout(r, 300)); }""")
     page.click('[data-action="go"][data-screen="settings"]'); page.wait_for_selector('#save-data')
     rs = {}
@@ -207,7 +212,7 @@ with sync_playwright() as pw:
     dc = page.evaluate("""async () => { const app = window.__gb; app.f.owner.first = 'CommittedForCloud'; app.lastSig = app.lastSig; const r = await app.save(); // ordinary, throttled cloud
       const metas0 = window.__cloudMetas.length; app.f.owner.first = 'ChangedAfter-NotSaved'; await new Promise((x) => setTimeout(x, 4600));
       const m = window.__cloudMetas.slice(metas0); if (!m.length) return { ok: r.ok, uploads: 0 };
-      let txt = ''; for (let i = 0; i < m[m.length - 1].chunks; i++) txt += JSON.parse(window.__cloudDocs.get('save_c' + i)).s;
+      const last = m[m.length - 1]; let txt = ''; for (let i = 0; i < last.chunks; i++) txt += JSON.parse(window.__cloudDocs.get(last.gen ? 'save_' + last.gen + '_c' + i : 'save_c' + i)).s;
       const up = JSON.parse(txt); return { ok: r.ok, uploads: m.length, owner: up.owner.first, savedAt: up.savedAt, committedAt: r.savedAt }; }""")
     report['delayedCloud'] = dc
     check(dc.get('uploads', 0) >= 1 and dc.get('owner') == 'CommittedForCloud' and dc.get('savedAt') == dc.get('committedAt'), f'delayed cloud upload carried uncommitted state: {dc}')

@@ -460,7 +460,10 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       const cur = await readManifest().catch(() => null);
       if (base && !matchesBase(cur)) throw crossTab();
       if (current) await keepCopy(current, 'deleted');
-      await backend.run(['saves', 'slots', 'parts', 'backups'], 'readwrite', async (t) => { await t.del('saves', KEY()); const s = (await t.get('slots', SLOT)) || { slot: SLOT }; await t.put('slots', SLOT, { ...s, state: 'empty', uid: null, savedAt: null }); for (const r of ROLLING) await t.del('backups', `${SLOT}:${r}`); await collect(t); });
+      await backend.run(['saves', 'slots', 'parts', 'backups'], 'readwrite', async (t) => {
+        // Checked again inside the transaction that deletes: another tab may have saved while the deletion copy was written.
+        if (base && !matchesBase(await t.get('saves', KEY()))) throw crossTab();
+        await t.del('saves', KEY()); const s = (await t.get('slots', SLOT)) || { slot: SLOT }; await t.put('slots', SLOT, { ...s, state: 'empty', uid: null, savedAt: null }); for (const r of ROLLING) await t.del('backups', `${SLOT}:${r}`); await collect(t); });
       retire(current); dropQueued(current); // only now, after the copy and the deletion committed
       cache = {}; base = EMPTY; lastManifest = null; clearJournal(); emit({ state: 'idle', savedAt: null, bytes: null });
     });
@@ -603,10 +606,17 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     return { ...r, legacyLocalStorage: legacyLs, estimate: est ? { usage: est.usage ?? null, quota: est.quota ?? null } : null, persisted };
   }
 
+  /**
+   * A verified snapshot of the save this tab committed or loaded, for the cloud mirror, without writing anything: read back
+   * and checked part by part. Null when there is none, when another tab has changed the slot since, or when it fails its checks.
+   */
+  async function committedSnapshot() {
+    try { const m = await readManifest(); if (!m || !base || !matchesBase(m)) return null; return snapshotOf(freeze(await loadManifest(m))); } catch { return null; }
+  }
   /** Whether another tab or window has changed the slot since this tab loaded or last wrote it (checked when it returns to the front). */
   async function isStale() { if (!base) return false; try { return !matchesBase(await readManifest()); } catch { return false; } }
 
-  return { backend, open, save, flush, busy, retire, replace, isStale, journal, readJournal, clearJournal, listBackups, readBackup, restore, keepCopy, remove, usage, migrateLegacy, onStatus: (fn) => { listeners.add(fn); fn(status); return () => listeners.delete(fn); }, status: () => status, readManifest, loadManifest };
+  return { backend, open, save, flush, busy, retire, replace, isStale, committedSnapshot, journal, readJournal, clearJournal, listBackups, readBackup, restore, keepCopy, remove, usage, migrateLegacy, onStatus: (fn) => { listeners.add(fn); fn(status); return () => listeners.delete(fn); }, status: () => status, readManifest, loadManifest };
 }
 
 /** A save error as the UI words it. */

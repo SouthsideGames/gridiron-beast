@@ -2587,7 +2587,16 @@ The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alo
 - **Settings import** uses it and keeps the replaced franchise as a backup. The full import UI (slot choice, conflicts by `uid`) is Phase 2.
 
 ### 43.8 Cloud mirror [IMPLEMENTED: coexistence; policy recommended]
-- **Format unchanged,** so older builds can still read it. The meta gains `uid` and `storage: 7`.
+- **Layout.** The meta gains `uid`, `storage: 7` and `gen`. Each v39.2 upload writes its own generation of chunks (`save_<gen>_c<n>`), so two uploads can never mix. The meta is published last and points at its generation; older generations, and chunks from an upload interrupted before it published, are removed afterwards (an artifact's database holds at most 25,000 documents in all).
+- **Older builds.** A meta without `gen` (written by v39.1) is still read through the old keys (`save_c<n>`). A v39.1 client reading a v39.2 copy finds no matching chunks and ignores it, as it already does with any torn copy.
+- **One uploader at a time, across tabs and devices.** The store has no transactions; its documented single-writer primitive is a cooperative lease (`doc.acquire`, set-if-not-busy, expiring on its own). Every v39.2 upload holds the lease on `save_lock` while it:
+  - checks the stored stamp;
+  - writes its chunks, renewing the lease before each;
+  - checks the stamp once more;
+  - publishes the meta;
+  - cleans up.
+  - It then shortens the lease to the 1-second minimum. An upload that cannot get the lease waits briefly, then tries again 5 seconds later unless a newer state is queued.
+  - A v39.1 client does not take the lease. Its uploads can still race, which is the remaining cloud risk (43.14 notes it).
 - **Writes are serialised.** The JSON and its `savedAt` are taken in the same instant, and within a session an older state is never written over a newer one.
 - **Delete** drops pending writes, so a deleted franchise cannot come back.
 - **Only a committed save reaches the cloud.** The upload is that save's committed snapshot, fixed when the write is authorised, never the live object. A failed local save authorises no upload, whatever the reason. This replaces v39.1's "the cloud still keeps it" behaviour after a device failure; the failure sheet's Export is the way to keep that progress.
@@ -2676,7 +2685,7 @@ Part of each save runs on the main thread: the synchronous snapshot, packing the
   - career, timeline, history and draft preservation;
   - uid assignment without the RNG.
 - **`tests/cloud-save.test.js`** (7 tests): serialised cloud writes, newest-wins, offline and reconnect, torn writes, delete, the payload fixed when authorised, never over newer cloud progress.
-- **`tests/storage-restore-safety.test.js`** (14 tests), **`tests/storage-interleavings.test.js`** (10 tests) and **`tests/storage-final-audit.test.js`** (10 tests): the review corrections, the invariants A–H and the final audit, see 43.13.
+- **`tests/storage-restore-safety.test.js`** (14 tests), **`tests/storage-interleavings.test.js`** (10 tests) and **`tests/storage-final-audit.test.js`** (12 tests), **`tests/cloud-concurrency.test.js`** (4 tests): the review corrections, the invariants A–H and the final audit, see 43.13.
 - **`tools/storage-check.py`:** the real IndexedDB in headless Chromium at 320, 360, 390 and 412 px. It checks:
   - migration identity and the untouched localStorage save;
   - reload from IndexedDB;
@@ -2735,6 +2744,14 @@ Three defects found in code review (Codex), each reproduced by a failing test be
 
 **In the browser.** `tools/storage-check.py` now also deletes in one tab and saves from another, and lets a throttled cloud upload fire after the franchise has changed. Against `089e4a4` it reported both defects: the upload carried the unsaved change, and the stale tab reported success and wrote a manifest after the deletion.
 
+**Codex review of `7e73413` (completed 2026-10-23), three findings, each reproduced by a failing test first:**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| (P1) A deletion could remove a save another tab made while the deletion copy was being written | The cross-tab check ran before the copy; the deleting transaction deleted unconditionally | The check is repeated inside the transaction that deletes |
+| (P1) The cloud newest-write check was not atomic: concurrent uploads could publish an older copy last, or mix chunks | Read-then-write on a last-writer-wins store, with chunk keys shared by every upload | The upload lease plus generation-specific chunks (43.8). Tests: `tests/cloud-concurrency.test.js` (4) |
+| (P2) An empty or older cloud copy got no upload at start | Startup relied on a save to produce the upload, and a save that changes nothing writes nothing | Startup uploads a verified snapshot of the committed save (`committedSnapshot`), writing nothing locally |
+
 **Final audit (2026-10-23, `f7ba186`).** Codex's review of `f7ba186` did not complete; it showed "running" for over an hour. An independent audit of the whole save system found eight more problems, all reproduced first by `tests/storage-final-audit.test.js` (10 tests, 9 failing on `f7ba186`):
 
 | Problem | Correction |
@@ -2754,6 +2771,15 @@ Three defects found in code review (Codex), each reproduced by a failing test be
 - One activation path (`replaceFranchise`) replaces the separate onboarding path.
 - The legacy re-adoption path (re-migration, `pre-legacy` copies) is gone.
 - Two tests that asserted less than their names claimed now exercise the real code: the same-writer stale save, and saves queued during an exclusive operation.
+
+**Known cosmetic issue, not fixed in Phase 1:** the save status shows a time without a date ("✓ Saved on this device 10:13 AM"), so a save from an earlier day reads like today's. Display only.
+
+**Remaining risks after Phase 1:**
+- **Real devices.** Real-device testing has not been done.
+- **Save speed.** Saves take about 0.7–1.3 s on a 4× throttled CPU, partly on the main thread.
+- **Stale tabs.** A tab behind another must be reloaded; it warns.
+- **Cloud and v39.1 clients.** Concurrent cloud uploads from a v39.1 client (which ignores the lease) can still race with v39.2 uploads. Local saves are unaffected, and an older cloud copy never replaces newer local progress.
+- **Cloud after a failed save.** A failed device save no longer goes to the cloud (invariant A); Export keeps it.
 
 ### 43.14 What remains for Phases 2–4 [NOT IMPLEMENTED]
 - **Phase 2:**

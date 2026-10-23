@@ -187,11 +187,21 @@ async function boot() {
   reconcileCloud();
 }
 
+/**
+ * Send the cloud what is already committed on this device: a verified snapshot read back from storage, so nothing is written
+ * locally and only committed state is uploaded (invariant A). In fallback storage the v39.1 path saves and mirrors as before.
+ */
+async function mirrorCommitted() {
+  const st = app.storage.store;
+  if (!st) { if (app.storage.mode === 'legacy' && app.f) await app.save({ immediate: true }); return; }
+  const snap = await st.committedSnapshot(); if (snap) cloudSave(snap, { immediate: true });
+}
+
 /** The cloud copy wins only when it is newer; the local franchise is kept as a backup first, so it is never lost. */
 async function reconcileCloud() {
   const remote = await cloudLoad();
   const f = remote && Save.migrate(remote);
-  if (!f) { if (app.f && cloudStatus().state === 'on') await app.save({ immediate: true }); return; } // an empty cloud catches up from a committed save (app.save mirrors it); without a cloud nothing is written
+  if (!f) { if (app.f && cloudStatus().state === 'on') await mirrorCommitted(); return; } // an empty cloud receives the committed save
   if (app.recovery) { // never chosen for the player: the cloud copy is offered on the recovery screen
     app.cloudCandidate = f;
     app.recovery.backups = [{ id: 'cloud', kind: 'cloud', savedAt: f.savedAt, meta: saveMeta(f), ok: true }, ...(app.recovery.backups || [])];
@@ -209,12 +219,12 @@ async function reconcileCloud() {
     // the player has played on (or switched franchise) by then, this device's newer progress stays and the cloud copy is not used.
     const guard = () => app.f === local && (!local || local.savedAt === localAt);
     const r = await app.replaceFranchise(f, { copyKind: 'pre-cloud', mirror: false, guard });
-    if (!r.ok && r.error?.code === 'superseded') { toast('You kept playing on this device, so its newer progress was kept instead of the cloud copy.', 'info', 4500); if (app.f) await app.save({ immediate: true }); return; }
+    if (!r.ok && r.error?.code === 'superseded') { toast('You kept playing on this device, so its newer progress was kept instead of the cloud copy.', 'info', 4500); if (app.f) { await app.save({ immediate: true }); await mirrorCommitted(); } return; }
     if (!r.ok) { toast(`Your cloud save is newer, but it could not be stored on this device (${r.error?.message || 'unknown error'}). This device's franchise is unchanged.`, 'bad', 6000); return; }
     const scr = Router.currentScreen()?.name;
     if (!scr || scr === 'menu') Router.go('menu', {}, { reset: true });
     toast('Restored your franchise from your cloud save (this device\'s copy is kept under Restore a backup).', 'good', 4500);
-  } else if ((f.savedAt || 0) < (app.f.savedAt || 0)) await app.save({ immediate: true }); // this device is newer: the cloud catches up from a committed save (app.save mirrors it)
+  } else if ((f.savedAt || 0) < (app.f.savedAt || 0)) await mirrorCommitted(); // this device is newer: the cloud catches up
 }
 
 function onStoreStatus() {

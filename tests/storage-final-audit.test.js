@@ -126,3 +126,30 @@ test('status: after a restore drops a late save of the replaced franchise, the s
   assert.ok(r.ok); assert.equal(s.error.code, 'stale');
   assert.equal(store.busy(), false); assert.equal(store.status().state, 'saved');
 });
+
+// ------------------------------------------------------------ Codex review of 7e73413
+test('delete: another tab saving while the deletion backup is being written is never deleted (r4360695487)', async () => {
+  const { backend, ls } = await setup();
+  const A = tab(backend, ls); const a = (await A.open()).franchise;
+  const B = tab(backend, ls); const b = (await B.open()).franchise;
+  const run = backend.run.bind(backend); const g = { reached: deferred(), open: deferred() }; let armed = true;
+  backend.run = async (s, mode, fn) => { if (armed && mode === 'readwrite' && s.length === 1 && s[0] === 'backups') { armed = false; g.reached.resolve(); await g.open.promise; } return run(s, mode, fn); };
+  const del = A.remove(a).then(() => ({ ok: true }), (e) => ({ ok: false, error: e })); await g.reached.promise; // A's deletion copy is being written
+  // B is not stale yet (A has not deleted anything), so B's save is legitimate newer progress
+  b.owner.first = 'SavedInB-DuringDelete'; const sb = await B.save(b); assert.equal(sb.ok, true);
+  g.open.resolve(); const r = await del;
+  assert.equal(r.ok, false, 'the deletion is refused'); assert.equal(r.error.code, 'newer-elsewhere');
+  const live = await tab(backend, ls).open(); assert.equal(live.mode, 'ready'); assert.equal(live.franchise.owner.first, 'SavedInB-DuringDelete', 'B\'s progress survives');
+});
+test('committed snapshot: the save already on the device can be mirrored without writing anything (r4360695502)', async () => {
+  const { backend, ls, store, f } = await setup();
+  const snap = await store.committedSnapshot(); assert.ok(snap, 'a snapshot of the committed save');
+  const stored = (await tab(backend, ls).open()).franchise;
+  const a = JSON.parse(snap.json()); const keys = (o) => Object.keys(o).sort();
+  assert.deepEqual(keys(a), keys(stored)); for (const k of keys(a)) assert.equal(JSON.stringify(a[k]), JSON.stringify(stored[k]), k);
+  assert.equal(snap.savedAt, stored.savedAt);
+  const commits = backend.commits; await store.committedSnapshot(); assert.equal(backend.commits, commits, 'nothing is written');
+  const other = tab(backend, ls); const o = (await other.open()).franchise; o.owner.first = 'Elsewhere'; await other.save(o);
+  assert.equal(await store.committedSnapshot(), null, 'a stale tab has nothing to mirror');
+  void f;
+});

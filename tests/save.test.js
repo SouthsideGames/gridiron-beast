@@ -24,7 +24,8 @@ test('cloud save round-trips a large franchise in chunks and rejects torn writes
   assert.ok(store.get('data/users/viewer1/save_meta').chunks >= 3);
   const back = await C.cloudLoad();
   assert.equal(back.blob.length, 500_000);
-  store.delete('data/users/viewer1/save_c1');
+  const meta = store.get('data/users/viewer1/save_meta'); // v39.2 uploads use generation-specific chunk keys (GDD §43.8)
+  store.delete(`data/users/viewer1/${meta.gen ? `save_${meta.gen}_c1` : 'save_c1'}`);
   assert.equal(await C.cloudLoad(), null, 'a missing chunk invalidates the cloud copy');
   delete globalThis.claude;
 });
