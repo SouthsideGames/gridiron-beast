@@ -1584,3 +1584,65 @@ Not tracked, because the game has no such systems:
 - retired-monster legends once monster retirement exists;
 - Monster Partnerships (explicitly out of scope here);
 - a Coach Assist tip for the timeline on the monster card.
+
+## 39. League News, the defensive suggestion, the Clash lineup (IMPLEMENTED 2026-10-22, playtest feedback; branch `league-news-fixes`, v38.1)
+
+Three items from the owner's playtest of v38.0.
+
+**39.1 League News.** The HQ News list was the owner's inbox: level-ups, trainer notes and recovery days, plus one line about the rival's score. It is now **League News**, the league's week:
+- **Scoreboard.** Every game of every week, eight tiles. Each tile shows away over home with the winner bold. Your game is outlined gold, the rival's red, and overtime and Beast Clash finishes are tagged.
+- **Headlines.** Six a week at most, most important first, one per club:
+  - league records broken, with the mark they beat;
+  - change of award-race leader (MVP, OPOY, DPOY);
+  - upsets (a win-rate gap of .300 or more, both clubs 4+ games in);
+  - perfect starts at 4, 6 and 8 wins, the first loss of a 4-0 or better club, and an unbeaten regular season;
+  - win and losing streaks at 4, 6 and 8;
+  - overtime and Beast Clash finishes;
+  - shutouts;
+  - blowouts (21+, about the league's 95th percentile).
+- **Award races.** From week 3: the leader and second place for every award (the HQ card shows MVP, OPOY and DPOY).
+- **Award winners.** When the playoffs are drawn.
+- **Playoffs.** The playoff field, each round's scoreboard and who advanced, and the champion.
+- **Season records.** At the end of the season.
+
+**Rules:**
+- League records count only once a full season is in the book, because week-1 "records" are not news. The records book now keeps the previous holder (`prev`) when a record falls, once per week.
+- A league-wide bye week writes nothing.
+
+**Where it lives:**
+- On HQ, the latest week is shown: up to four headlines, the scoreboard and the top three races. **All league news** opens every week kept.
+- The owner's own notices (signings, trades, injuries, evolutions, the commissioner, your own result) are in **Club notes**, folded under the panel.
+- Level-ups are no longer written to either feed. They are shown after the game and on the Career Timeline (§38). Old level-up and "Rival watch" lines are removed from saves on load.
+
+**Read-only.** League News is written after every game of the week is in the books (`writeLeagueNews` in `advanceWeek` and `advancePlayoffs`). It draws no random numbers and changes nothing the simulation reads.
+
+**Save:**
+- `f.leagueNews` (items) and `f.leagueNewsMeta` (last award leaders) are additive fields; the schema is still 6.
+- The feed holds this season and the last. Last season keeps its headlines but drops its scoreboards, and only the newest award-race snapshot is kept per season.
+- An older save is backfilled once with the current season's scoreboards and results headlines, rebuilt from its results (no races or records, because those need the week they happened).
+
+**39.2 The defensive Coach's Suggestion.**
+- **Cause:** on defense the coach's repeat penalty (a call made recently is weighted down) read the *offense's* list of defensive calls, never the defending club's own. The suggestion is the highest-weighted play, so it stayed on one play down after down, and AI defenses never felt the penalty either.
+- **Fix:** `weighDefense`, `chooseDefensePlay` and `suggestPlay` take the defending club's own history. One recent repeat halves a call's weight, two quarter it, as for offense, so the suggestion now rotates. The AI's defensive calls vary a little more for the same reason.
+
+**39.3 The Beast Clash lineup.**
+- **Cause:** removing the last monster from a Clash lineup refilled it with the automatic lineup, and a lineup edited for one battle carried into the next.
+- **Fix:** the automatic lineup is only the starting proposal, or what **Auto lineup** asks for. Removals stick, down to an empty lineup, and the Enter buttons wait for at least one monster. A short lineup says the battle shrinks to match (3 picked of 5: a 3v3). A different battle starts from its own proposal.
+
+**39.4 Verified.**
+- `tests/league-news.test.js` (7 tests): the defensive rotation, headlines and caps, streak marks, playoffs and races, the records book's previous holder, the feed's trimming, and the backfill.
+- `tools/league-news-study.mjs`, 3 franchises × 3 seasons:
+  - every current-season week has an 8-game scoreboard with at most one game marked as yours;
+  - about 2.9 headlines a week, never over the cap;
+  - no duplicate ids and no broken text;
+  - every record line names the old mark;
+  - the save round-trip keeps the feed;
+  - no level-up lines;
+  - the feed is about 3.7% of the save (38 KB).
+- `tools/news-ui-check.py` in headless Chromium at 390 and 320 px:
+  - the panel, scoreboard, races and folded club notes render;
+  - the full sheet opens;
+  - removing every Clash monster leaves the lineup empty with Enter disabled, adding one gives one, and Auto lineup refills;
+  - no page errors, no horizontal overflow.
+
+  This is an emulated browser, not a real device.

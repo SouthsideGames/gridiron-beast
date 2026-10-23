@@ -53,13 +53,15 @@ export function invariants(f, where) {
   return p;
 }
 
-export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants } = {}) {
+// `stopWeek` (UI checks): stop in the first season once that week begins, mid-season.
+export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null } = {}) {
   const f = newFranchise(seed, { difficulty });
   const problems = [...check(f, 'created')]; const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
   for (let s = 1; s <= seasons && !log.fired; s++) {
     if (F.needsGoal(f)) { const g = F.commissionerGoals(f); F.chooseGoal(f, g[0]?.id); }
     let guard = 0;
     while (!f.season.finished && guard++ < 60) {
+      if (stopWeek && f.season.week >= stopWeek) return { f, problems, log };
       if (F.inPlayoffs(f) && !F.playoffFixture(f)) { F.skipPlayoffs(f); continue; }
       if (f.week.commissioner) { const c = f.week.commissioner; const id = c.names?.[0]; const r = id ? F.commissionerRelease(f, id) : { ok: false }; if (!r.ok) { problems.push(`season ${s}: commissioner dead end (${r.reason})`); break; } continue; }
       const day0 = f.season.day;

@@ -132,7 +132,9 @@ export function registerClashBattle(Router, app) {
   function setupHtml(f) {
     const b = B(); const pv = b.preview(f, st.i);
     if (!pv.ok) return `<div class="panel"><p>${esc(pv.reason)}</p><button class="btn block" data-action="back">Back</button></div>`;
-    st.lineup = (st.lineup || pv.lineup.map((m) => m.id)).filter((id) => pv.eligible.some((m) => m.id === id)).slice(0, pv.size); if (!st.lineup.length) st.lineup = pv.lineup.map((m) => m.id);
+    // The automatic lineup is only the starting proposal (or what Auto lineup asks for): once the player edits it, removals stick,
+    // even down to an empty lineup (the Enter buttons wait for at least one monster).
+    st.lineup = (st.lineup || pv.lineup.map((m) => m.id)).filter((id) => pv.eligible.some((m) => m.id === id)).slice(0, pv.size);
     const mine = st.lineup.map((id) => f.roster.find((m) => m.id === id)); const theirs = pv.wild.slice(0, pv.size);
     const s = settings(); const preferred = s.mode !== 'ask' ? s.mode : 'watch';
     const edge = (m, foe) => { if (!foe) return ''; const x = typeFactor(m.type, foe.type), y = typeFactor(foe.type, m.type); return x > 1 ? '<b class="edge strong" title="hits their front monster harder">▲</b>' : y > 1 ? '<b class="edge weak" title="their front monster hits this one harder">▼</b>' : ''; };
@@ -142,7 +144,7 @@ export function registerClashBattle(Router, app) {
     const picker = st.lineup.length < pv.size || st.editing ? `<div class="list" style="margin-top:6px;max-height:280px;overflow:auto">${rest.map((m) => `<button class="item" style="min-height:0;padding:6px 8px" data-action="add" data-id="${m.id}" ${st.lineup.length >= pv.size ? 'disabled' : ''}>${monsterSprite(m, 28)}<div class="grow" style="font-size:12px;min-width:0"><b>${esc(m.name)}</b> <span class="dim">${ARCH_GLYPH[archetypeOf(m.species)] || ''} ${esc(archetypeOf(m.species) || '')} · ${esc(m.type)} · ${monsterOverall(m)} OVR${m.fatigue >= 30 ? ` · tired ${m.fatigue}%` : ''}</span> ${edge(m, theirs[0])}</div><span class="chip">${st.lineup.length >= pv.size ? 'full' : 'add'}</span></button>`).join('') || '<p class="dim">Everyone healthy is in the lineup.</p>'}</div>` : '';
     return `<p class="muted">${b.introText ? b.introText(f) : `You met <b>${esc(pv.wild[0].name)}</b> in the wild${pv.wild.length > 1 ? ` with ${pv.wild.length - 1} wild companion${pv.wild.length > 2 ? 's' : ''} (matched to your club, cannot be signed)` : ''}. Win the ${pv.size}v${pv.size} and ${esc(pv.wild[0].name)} will want to join you; lose and you still get one pitch.`} <button class="btn small ghost" data-action="help">Help</button></p>
       <div class="panel cl-setup"><div class="row between"><b>Your lineup</b><span class="dim">${mine.length} of ${pv.size} · in order of entry</span></div>
-        <div class="list" style="margin-top:6px">${mine.map((m, i) => card(m, i, 'a', mine.length)).join('')}${mine.length < pv.size ? `<p class="dim" style="margin:4px 0">Add ${pv.size - mine.length} more.</p>` : ''}</div>
+        <div class="list" style="margin-top:6px">${mine.map((m, i) => card(m, i, 'a', mine.length)).join('')}${!mine.length ? `<p class="dim" style="margin:4px 0">No monsters picked. Add up to ${pv.size} below, or tap Auto lineup.</p>` : mine.length < pv.size ? `<p class="dim" style="margin:4px 0">${pv.size - mine.length} slot${pv.size - mine.length === 1 ? '' : 's'} open: add more, or enter with ${mine.length} (the battle shrinks to ${mine.length}v${mine.length}).</p>` : ''}</div>
         <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn small" data-action="edit">${st.editing ? 'Done' : 'Change a monster'}</button><button class="btn small ghost" data-action="autol">Auto lineup</button></div>${picker}
         <p class="dim" style="margin:6px 0 0">The first monster fights until it is knocked out, then the next steps up. ▲ hits their front monster harder, ▼ softer.</p></div>
       <div class="panel cl-setup theirs"><div class="row between"><b>${esc(b.theirName?.(f) || 'Their team')}</b><span class="dim">${theirs.length} · in order of entry</span></div><div class="list" style="margin-top:6px">${theirs.map((m, i) => card(m, i, 'b', theirs.length)).join('')}</div></div>
@@ -199,6 +201,8 @@ export function registerClashBattle(Router, app) {
   Router.registerScreen('clash-battle', {
     title: ({ params }) => BINDINGS[params.kind || st.kind]?.title || 'Beast Clash', tabs: false,
     render({ f, params }) {
+      // A different battle (kind or prospect) starts from its own proposed lineup, not the last battle's edits.
+      const key = `${params.kind || st.kind}|${params.i ?? st.i}|${f?.season?.year}|${f?.season?.week}`; if (key !== st.key) { st.key = key; st.lineup = null; st.editing = false; }
       if (params.kind) st.kind = params.kind; if (params.i != null) st.i = Number(params.i);
       const b = B(); if (!b || !f) return '<p>No battle.</p>';
       const e = b.record(f);

@@ -273,6 +273,15 @@ export const RECORD_CATEGORIES = Object.freeze([
 export const TEAM_RECORDS = Object.freeze([{ id: 'points', label: 'Points in a game' }, { id: 'margin', label: 'Margin of victory' }, { id: 'yards', label: 'Total yards in a game' }]);
 export function ensureRecords(f) { return (f.records ||= { game: {}, season: {}, team: {} }); }
 function better(cur, value) { return value > 0 && (!cur || value > cur.value); }
+/**
+ * The record that stood before (League News names it, GDD §39). Broken twice in one week (or season), it keeps the mark that
+ * stood before the week, never a chain of older ones.
+ */
+function prevOf(cur, year, week = null) {
+  if (!cur) return null;
+  if (cur.year === year && (week == null || cur.week === week)) return cur.prev || null;
+  const { prev, ...rest } = cur; return { value: rest.value, name: rest.name || null, team: rest.team || null, year: rest.year ?? null };
+}
 /** After a game: single-game player and team records. */
 export function updateGameRecords(f, state, teams, { year, week, playoff }) {
   const R = ensureRecords(f);
@@ -282,17 +291,17 @@ export function updateGameRecords(f, state, teams, { year, week, playoff }) {
     for (const [slot, line] of Object.entries(state.stats[side].players || {})) { const p = team.offense?.[slot] || team.defense?.[slot] || (slot === 'K' ? team.kicker : null); if (!p?.id) continue; addInto((byId[p.id] ||= { p, line: {} }).line, line); }
     for (const { p, line } of Object.values(byId)) {
       const d = withDerived(line);
-      for (const c of RECORD_CATEGORIES) { const v = d[c.key]; if (better(R.game[c.id], v)) R.game[c.id] = { value: v, name: p.name, position: p.position, species: p.species, type: p.type, team: team.name, opp: opp.name, year, week, playoff: !!playoff }; }
+      for (const c of RECORD_CATEGORIES) { const v = d[c.key]; if (better(R.game[c.id], v)) R.game[c.id] = { value: v, name: p.name, position: p.position, species: p.species, type: p.type, team: team.name, opp: opp.name, year, week, playoff: !!playoff, prev: prevOf(R.game[c.id], year, week) }; }
     }
     const pts = state.score[side], margin = state.score[side] - state.score[side === 'home' ? 'away' : 'home'], yards = state.stats[side].yards || 0;
-    const t = (id, v) => { if (better(R.team[id], v)) R.team[id] = { value: v, team: team.name, opp: opp.name, year, week, playoff: !!playoff, score: `${state.score[side]}-${state.score[side === 'home' ? 'away' : 'home']}` }; };
+    const t = (id, v) => { if (better(R.team[id], v)) R.team[id] = { value: v, team: team.name, opp: opp.name, year, week, playoff: !!playoff, prev: prevOf(R.team[id], year, week), score: `${state.score[side]}-${state.score[side === 'home' ? 'away' : 'home']}` }; };
     t('points', pts); t('margin', margin); t('yards', yards);
   }
 }
 /** At season end: single-season records from the regular-season table. */
 export function updateSeasonRecords(f, year = f.season.year) {
   const R = ensureRecords(f);
-  for (const c of RECORD_CATEGORIES) { const top = leagueRows(f.season.leagueStats).map((r) => ({ ...r, ...derive(r) })).filter((r) => (r[c.key] || 0) > 0).sort((a, b) => b[c.key] - a[c.key])[0]; if (top && better(R.season[c.id], top[c.key])) R.season[c.id] = { value: top[c.key], name: top.name, position: top.position, species: top.species, type: top.type, team: top.team, year }; }
+  for (const c of RECORD_CATEGORIES) { const top = leagueRows(f.season.leagueStats).map((r) => ({ ...r, ...derive(r) })).filter((r) => (r[c.key] || 0) > 0).sort((a, b) => b[c.key] - a[c.key])[0]; if (top && better(R.season[c.id], top[c.key])) R.season[c.id] = { value: top[c.key], name: top.name, position: top.position, species: top.species, type: top.type, team: top.team, year, prev: prevOf(R.season[c.id], year) }; }
   return R;
 }
 /** Career leaders among the owner's monsters (regular season), live. */

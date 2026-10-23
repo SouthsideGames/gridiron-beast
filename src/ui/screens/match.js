@@ -244,7 +244,7 @@ export function registerMatchScreens(Router, app) {
     const team = teams[side];
     const call = s.possession === side
       ? { key, side, offense: AI.chooseOffensePlay(rng, s, team, team.offensePlays, G.tendencies[side], teams[R.opponent(side)]) }
-      : { key, side, defense: AI.chooseDefensePlay(rng, s, team, team.defensePlays, G.tendencies[s.possession], teams[R.opponent(side)]) };
+      : { key, side, defense: AI.chooseDefensePlay(rng, s, team, team.defensePlays, G.tendencies[s.possession], teams[R.opponent(side)], G.tendencies[side]) };
     G.aiCall = call;
     return call;
   }
@@ -286,7 +286,7 @@ export function registerMatchScreens(Router, app) {
     if (s.phase !== 'scrimmage') return act(f, {});
     const myBall = s.possession === me; const side = myBall ? 'offense' : 'defense';
     const plan = teams[me][myBall ? 'offensePlays' : 'defensePlays'];
-    G.selected[side] = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them], teams[them]) || plan[0];
+    G.selected[side] = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them], teams[them], G.tendencies[me]) || plan[0];
     if (myBall && s.down === 4) { const dec = AI.fourthDownDecision(s, teams[me]); return act(f, dec === 'punt' ? { fourthDown: 'punt' } : dec === 'fg' ? { fourthDown: 'fg' } : {}); }
     if (myBall && AI.shouldKneel(s)) { R.kneel(s); return afterStep(f, { kind: 'kneel', text: s.lastPlay.text }); }
     return act(f, {});
@@ -337,7 +337,7 @@ export function registerMatchScreens(Router, app) {
     const myBall = s.possession === me;
     const side = myBall ? 'offense' : 'defense';
     const plan = teams[me][side === 'offense' ? 'offensePlays' : 'defensePlays'];
-    const suggestion = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them], teams[them]);
+    const suggestion = AI.suggestPlay(s, teams[me], plan, side, G.tendencies[myBall ? me : them], teams[them], G.tendencies[me]);
     const selected = look.myPlay;
     let primary;
     if (myBall && s.down === 4) {
