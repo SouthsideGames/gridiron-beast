@@ -76,7 +76,7 @@ const safeId = (s) => String(s || 'none').replace(/[^A-Za-z0-9_\-.~:@+]/g, '_').
 const ls = () => { try { return globalThis.localStorage || null; } catch { return null; } };
 let memDeletions = []; // this tab's records, kept so a deletion is never lost when browser storage is blocked
 /** Merge record lists by id (a record written by any tab stays written). */
-function mergeDeletions(...lists) { const by = new Map(); for (const l of lists) for (const d of l || []) { if (!d?.id) continue; const o = by.get(d.id); by.set(d.id, o ? { ...o, written: o.written || d.written } : { ...d }); } return [...by.values()].sort((x, y) => (x.at || 0) - (y.at || 0)); }
+function mergeDeletions(...lists) { const by = new Map(); for (const l of lists) for (const d of l || []) { if (!d?.id) continue; const o = by.get(d.id); by.set(d.id, o ? { ...o, written: o.written || d.written, cutoff: Math.max(o.cutoff || 0, d.cutoff || 0) } : { ...d }); } return [...by.values()].sort((x, y) => (x.at || 0) - (y.at || 0)); }
 function storedDeletions() { try { const v = JSON.parse(ls()?.getItem(DELETIONS_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } }
 /** This browser's deletions: localStorage is shared by every tab, so it is always read; this tab's memory fills in when blocked. */
 function localDeletions() { return mergeDeletions(storedDeletions(), memDeletions); }
@@ -149,7 +149,11 @@ export async function cloudLoad(device = null) {
       groups = await listSnaps(c); marks = await listMarks(c);
       const commits = groups.filter((g) => g.commit && !voided(g, marks) && (!dev || sameFranchise(g, dev))).sort((a, b) => (isNewer(a, b) ? -1 : 1));
       let torn = false;
-      for (const g of commits) { const r = await readGen(c, g); if (r.ok) return r.f; torn = true; }
+      for (const g of commits) {
+        const r = await readGen(c, g);
+        if (r.ok) { if (voided(g, await listMarks(c))) break; return r.f; } // a deletion landed while it was read: invalid
+        torn = true;
+      }
       if (!torn) break; // nothing was cleaned up under us: listing again cannot help
       await new Promise((r) => setTimeout(r, 120 * (pass + 1))); // a newer generation was published and this one removed meanwhile
     }
@@ -157,7 +161,7 @@ export async function cloudLoad(device = null) {
     // franchise that was deleted (old-build timestamps are not trusted, so any marker for it voids it).
     if (groups.some((g) => g.commit && (!dev || sameFranchise(g, dev)))) return null;
     const f = await readLegacy(c);
-    if (!f || marks.some((m) => sameFranchise(m, f))) return null;
+    if (!f || marks.some((m) => sameFranchise(m, f)) || (await listMarks(c)).some((m) => sameFranchise(m, f))) return null;
     if (dev && !sameFranchise(f, dev) && (str(f.uid) || str(f.createdAt))) return null; // one with no identity at all is offered
     return f;
   } catch (e) { setStatus({ error: e?.code || 'unavailable' }); return null; }
@@ -217,7 +221,7 @@ async function writeNow(p) {
     for (let i = 0; i < n; i++) await c.chunks.doc(`${gen}_c${i}`).set({ gen, i, n, uid: p.uid, createdAt: p.createdAt, savedAt: p.savedAt, s: text.slice(i * CHUNK, (i + 1) * CHUNK) });
     await c.snaps.doc(gen).set({ ...head, schemaVersion: p.schemaVersion, len: text.length, sum: fnv(text), storage: STORAGE, at: Date.now() });
     lastWritten = { id: { uid: p.uid, createdAt: p.createdAt }, savedAt: sameFranchise(lastWritten.id, p) ? Math.max(lastWritten.savedAt, p.savedAt || 0) : (p.savedAt || 0) };
-    setNoAdopt(false); // a franchise is active on this device again
+    if (p.epoch === epoch) setNoAdopt(false); // a franchise is active on this device again (not an upload from before a deletion)
     try { await cleanUp(c); } catch { /* best effort: the next upload cleans up */ }
     Object.assign(cloudUsage, { chunks: n, chars: text.length, documents: n + 2, writes: cloudUsage.writes + 1, lastWriteMs: Date.now() - t0 });
     setStatus({ state: 'on', at: p.savedAt, error: null });
@@ -228,6 +232,7 @@ async function writeNow(p) {
       try { await cleanUp(c, { quota: true }); } catch { /* ignore */ }
       return writeNow({ ...p, quotaRetry: true });
     }
+    if (e?.code === 'quota_exceeded' && gen) { try { await dropGen(c, { gen, commit: null, intent: true, n: Math.max(1, Math.ceil(ascii(p.json).length / CHUNK)) }); } catch { /* ignore */ } } // never leave it behind
     setStatus({ error: e?.code || 'unavailable' }); return false;
   }
 }
@@ -270,17 +275,21 @@ async function flushDeletions(c) {
  * progress made afterwards on another device. The deletion is recorded on this device first and retried until written.
  */
 export async function cloudClear(f = null) {
+  // Recorded on the device first, before waiting for anything, so closing the page now cannot lose the deletion.
   epoch++; clearTimeout(timer); timer = null; queued = null; pending = null; // nothing authorised before this is uploaded
-  if (inflight) { try { await inflight; } catch { /* ignore */ } }
   lastWritten = { id: null, savedAt: 0 }; setNoAdopt(true);
   const id = { uid: str(f?.uid), createdAt: str(f?.createdAt) };
+  const t = Date.now(); let rec = null;
+  if (id.uid || id.createdAt) {
+    rec = { id: `d~${safeId(id.uid || id.createdAt)}~${t.toString(36)}-${rand()}`, ...id, cutoff: Math.max(t, typeof f?.savedAt === 'number' ? f.savedAt : 0), at: t, written: false };
+    saveLocalDeletions([...localDeletions(), rec]);
+  }
+  if (inflight) { try { await inflight; } catch { /* ignore */ } }
   const c = await connect();
-  if (!id.uid && !id.createdAt) { if (c) { try { await c.col.doc('save_meta').delete(); } catch { /* ignore */ } } return; } // nothing identifies it
-  let cutoff = Math.max(Date.now(), typeof f?.savedAt === 'number' ? f.savedAt : 0);
-  if (c) { try { for (const g of await listSnaps(c)) if (sameFranchise(g, id)) cutoff = Math.max(cutoff, at(g)); } catch { /* offline: this device's view */ } }
-  const rec = { id: `d~${safeId(id.uid || id.createdAt)}~${Date.now().toString(36)}-${rand()}`, ...id, cutoff, at: Date.now(), written: false };
-  saveLocalDeletions([...localDeletions(), rec]);
+  if (!rec) { if (c) { try { await c.col.doc('save_meta').delete(); } catch { /* ignore */ } } return; } // nothing identifies it
   if (!c) return;
+  // the newest copy of it the cloud holds right now is covered too (a copy saved by a device whose clock runs ahead)
+  try { let cut = rec.cutoff; for (const g of await listSnaps(c)) if (sameFranchise(g, id)) cut = Math.max(cut, at(g)); if (cut > rec.cutoff) saveLocalDeletions(localDeletions().map((d) => (d.id === rec.id && !d.written ? { ...d, cutoff: cut } : d))); } catch { /* offline: this device's view */ }
   try { await flushDeletions(c); } catch (e) { setStatus({ error: e?.code || 'unavailable' }); return; } // retried at the next start
   try { const old = await readLegacy(c); if (!old || sameFranchise(old, id)) await c.col.doc('save_meta').delete(); } catch { /* ignore */ } // a cached v39.0/v39.1 tab cannot adopt it
 }
