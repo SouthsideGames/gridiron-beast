@@ -4,6 +4,7 @@
 // draft three rounds in snake order from the worst record up. Rookies sign
 // two-year deals at 70% of market rate. AI picks persist on their clubs.
 
+import { noteJoin, markCareerFresh } from './career.js';
 import { generateMonster, regionSpecies, salaryFor, monsterOverall, ROSTER_MAX } from '../data/monsters.js';
 import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
@@ -109,6 +110,7 @@ export function playerPick(f, id, { playerClub, nextYear }) {
   const m = d.class.find((x) => x.id === id && d.available.includes(x.id)); if (!m) return { ok: false, reason: 'Already taken.' };
   m.salary = Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100; m.contract = newContract(nextYear, 2); m.contract.rookie = true;
   m.joined = nextYear; f.roster.push(m); recordPick(f, playerClub, m, { mine: true }); const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: playerClub };
+  noteJoin({ club: playerClub, season: { year: nextYear } }, m, 'draft', { round: pk.round, overall: pk.overall }); markCareerFresh(m); // Career Timeline (GDD §38)
   return { ok: true, monster: m };
 }
 export function passPick(f, { playerClub }) {

@@ -2,6 +2,14 @@
 
 All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
+## 0. Current status (2026-10-22, branch `monster-career-timeline`: the Monster Career Timeline, GDD §38)
+
+- `npm test`: **340 tests, all passing** (330 on `main` plus 10 in `tests/career-timeline.test.js`).
+- `tools/career-study.mjs --n=6 --seasons=4`: 24 seasons, 228 monsters, 976 timeline events (4.3 per monster, 59% with a highlight, 76 major), 1.6% of the save, 0 problems; timelines identical after save and load.
+- `tools/franchise-soak.mjs`: its invariants now check timelines too (no duplicate events, no event outside a real season). `--n=6 --seasons=3 --seed=31`: 18 seasons, 0 problems.
+- `tools/career-ui-check.py` (headless Chromium, 390×844, 360×640, 320×568): clean at all three. The section sits under the Bio; the fold unfolds 6 → 13; Highlights hides career moves; filtering neither redraws the screen nor moves the section; the empty state shows; no overflow and no page errors. Visual check of the screenshots (headless, not a real device).
+- **Not done: testing on real phones.** See §3, item 4g.
+
 ## 0. Current status (2026-10-22, branch `stadiums-replays-legendary`: stadiums, instant replays, the Beast Bowl ceremony, Legendary Plays, GDD §33–37)
 
 - `npm test`: **330 tests, all passing** (315 on `main` + 6 stadiums + 3 replays + 6 Legendary Plays; about 5 minutes).
@@ -55,6 +63,7 @@ The previous status (build v36.0, PR #36) follows.
 | Stadiums | `stadiums.test.js` | Every club has one permanent stadium; gym clubs in their element where it exists; deterministic weather, never indoors under the dome; +2% field bonus for either team, none on grass, capped at +6% with a type edge, never softening a negative edge; a neutral field changes nothing; both sides get it; games carry the venue; the preview matches the game; older games without a venue still play; grass draws exactly as before |
 | Instant replays | `replay.test.js` | Triggers (touchdowns, takeaways, safeties, game-winning kicks, real fourth-down conversions, clutch plays, ability plays) and no routine plays; the window and slow motion; a whole game's replays leave the state and the plays byte-for-byte unchanged; the replay code calls nothing that steps or saves |
 | Legendary Plays | `legendary-plays.test.js` | Six valid plays on six real Legendaries who can play the slot; discovery once, never auto-equipped; six slots, never seven; out when hurt or gone (refilled), back when healthy or re-acquired, discovery permanent; the Legendary takes the slot for the snap; four gym clubs equip and call theirs; saves keep it all |
+| Career Timeline | `career-timeline.test.js` | Founding roster and cornerstones, draft round and pick; Tuesday recruitment, a trade, a release and a return (same id); evolutions live and rebuilt (season unknown), level marks only at 10/20/30; firsts only for what he did, milestones when crossed, playoff, rivalry and Beast Bowl events only for monsters who played, title runs, awards (not the coach's), season marks; records credited by id, never to a namesake, none in the first season; the Hall of Fame card; three-season accumulation with no duplicates, saved and loaded twice; the same franchise with the writers off is identical; older saves rebuilt once, nothing invented; the screen (seasons newest first, majors, the fold, Highlights, the empty state) |
 | Coach Assist | `coach-assist.test.js` | Defaults, mode switching, preferences in the save, old saves, first-use tips that stay dismissed, Expert with no automatic tips on any screen, help on every complex screen (the goal screen included), warnings, Guided-only suggestions (Tuesday, draft, contracts, Board goal), consequence switch, the Tuesday and Board explanations, and the same weeks played in Guided and Expert produce identical saves |
 | Beast Clash engine | `tests/clash/*.test.js` | Values 1.1.0 and the historical 1.0.0 ruleset, calculators, conditions, the knockout fix, presentation, the Gate B suites, the boundary rule (only `clash-link.js` imports the engine) |
 | Developer review | `dev-review.test.js` | Change notices for plays and abilities |
@@ -74,6 +83,8 @@ The previous status (build v36.0, PR #36) follows.
 | Feature UI check | `python3 tools/feature-ui-check.py --width=390 --height=844 --shots=DIR` | Stadiums, replays, Legendary Plays and the ceremony in the real app (headless Chromium) |
 | Legendary balance | `node tools/legendary-balance.mjs --n=240 [--only=lp_...]` | Each Legendary Play against every opposing play, with and without its Legendary, next to the standard plays (GDD §36.2) |
 | Stadium gallery | open `tools/stadium-gallery.html` from a local server (`?ballOn=92&weather=rain`) | All seven environments side by side |
+| Career study | `node tools/career-study.mjs --n=6 --seasons=4` | Timelines across hands-off seasons: events per monster, highlights, save weight, duplicates (GDD §38.6) |
+| Career UI check | `python3 tools/career-ui-check.py --width=390 --height=844 --shots=DIR` | The timeline on the monster card in the real app |
 | Play replay | `node tests/tools/replay.js CODE` | Re-run a scrimmage play from its repro code |
 
 ## 3. Manual checklist (real devices; still required)
@@ -92,6 +103,7 @@ Run on at least one small iPhone (SE size) and one large Android, in the browser
 4d. Replays: play a full game in Full Coaching and wait for a touchdown or a pick; the replay is clear at phone size, the slow motion lands on the catch, Skip works at once, 📼 Replay works on the try screen, the score never changes twice; turn replays off and on.
 4e. Legendary Plays: Developer Tools → Feature testing → add Tempestra (or win your way to a Legendary); the discovery card, then Friday's game plan: equip Eye of the Storm in one slot, call it on Sunday and watch her line up at WR1; injure/release her and confirm the play leaves the plan; try a defensive one (Nyxshade, Glacivern or Elderoot).
 4f. Ceremony: win a Beast Bowl (or Developer Tools → preview); watch it through once, skip it once, open it again from Franchise History; check it reads well on a small phone.
+4g. Career Timeline: open a monster you have had for a season or more; read the timeline top to bottom with one thumb; switch to Highlights and back; unfold the whole career and fold it again; check a drafted rookie (round and pick), a Tuesday recruit, a traded-in monster and one you released and re-signed; after a title, an award or an evolution, confirm the new entry appears where expected; check a small phone (SE size) and reduced motion.
 5. Reload mid-week, mid-Clash (Play mode, at a decision) and mid-game: the state resumes exactly.
 6. Finish a season: playoffs, awards, offseason contracts, the draft, free agency, Season 2 week 1.
 7. One-handed reach, text size, battle speed 1×/2×/4×, reduced motion, screen rotation, backgrounding the app during a battle.

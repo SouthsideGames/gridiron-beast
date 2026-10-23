@@ -41,6 +41,7 @@ export function invariants(f, where) {
     if (m.injury && !(m.injury.weeks >= 0)) say(`${m.name} injury weeks ${m.injury.weeks}`);
     if (!(m.salary > 0)) say(`${m.name} salary ${m.salary}`);
     if ((m.points || 0) < 0) say(`${m.name} points ${m.points}`);
+    { const ks = (m.career?.ev || []).map((e) => e.k); if (new Set(ks).size !== ks.length) say(`${m.name} duplicate career events`); for (const e of m.career?.ev || []) if (e.y != null && (e.y < 1 || e.y > (f.season?.year || 1) + 1)) say(`${m.name} career event ${e.k} in season ${e.y}`); }
   }
   for (const [slot, mid] of Object.entries(f.lineupManual || {})) if (mid && !ids.has(mid)) say(`lineup slot ${slot} points at a monster not on the roster`);
   const cap = F.salarySummary(f); for (const k of ['cap', 'total', 'remaining']) if (!Number.isFinite(cap[k])) say(`cap ${k} ${cap[k]}`);
