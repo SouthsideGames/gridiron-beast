@@ -126,6 +126,10 @@ Run on at least one small iPhone (SE size) and one large Android, in the browser
 7. One-handed reach, text size, battle speed 1×/2×/4×, reduced motion, screen rotation, backgrounding the app during a battle.
 8. Import a save exported from an older build.
 
+## 3a. Future features (design only, not implemented)
+
+The franchise lifecycle (20-season limit, three save slots, read-only retirement archives, export before deletion), the storage foundation (IndexedDB, backups, recovery) and persistent AI rosters are approved designs in GDD §42. Their automated and real-phone test strategy is GDD §42.10. Nothing here can be run yet: the tests are written with each phase.
+
 ## 4. Reproducing a bug
 
 Every scrimmage play in the in-game Play Log shows a repro code `offense|defense|ballOn|seed`; `node tests/tools/replay.js CODE` re-runs it (add `--save export.json` for the franchise's starters). Franchise problems reproduce from the soak's seed and difficulty (`node tools/franchise-soak.mjs --n=1 --seed=N`); Clash battles rebuild from the seed and lineup snapshots stored in the save.
