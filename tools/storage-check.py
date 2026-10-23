@@ -159,12 +159,15 @@ with sync_playwright() as pw:
 
     # --- restore safety (PR #43 corrections): with a simulated cloud mirror, a failed restore changes nothing (active franchise,
     # stored save, cloud) and ordinary saving continues; a successful restore is committed, then adopted, then mirrored.
-    FAKE_CLOUD = """(() => { const docs = new Map(); window.__cloudMetas = []; window.__cloudDocs = docs;
-      const col = { doc: (id) => ({ get: async () => ({ exists: docs.has(id), data: () => JSON.parse(docs.get(id)) }),
-        set: async (v) => { docs.set(id, JSON.stringify(v)); if (id === 'save_meta') window.__cloudMetas.push(v); }, delete: async () => { docs.delete(id); },
-        acquire: async ({ holder, ttlMs = 30000, data }) => { const l = leases.get(id); const t = Date.now(); if (l && l.holder !== holder && l.until > t) return { acquired: false }; leases.set(id, { holder, until: t + Math.max(1000, ttlMs) }); if (data) { const v = { ...(docs.has(id) ? JSON.parse(docs.get(id)) : {}), ...data }; docs.set(id, JSON.stringify(v)); if (id === 'save_meta') window.__cloudMetas.push(v); } return { acquired: true, holder }; } }),
-        get: async () => ({ docs: [...docs.keys()].map((id) => ({ id, data: () => JSON.parse(docs.get(id)) })) }) }; const leases = new Map();
-      window.claude = { use: async (n) => (n === 'db' ? { collection: () => col } : n === 'user' ? { id: async () => 'viewer-1' } : null) }; })()"""
+    FAKE_CLOUD = """(() => { const docs = new Map(); window.__cloudMetas = []; window.__cloudDocs = docs; // full path -> JSON
+      const isCommit = (p) => /\\/cloud\\/snaps\\/[^/~]+$/.test(p);
+      const doc = (p) => ({ id: p.split('/').pop(), get: async () => ({ exists: docs.has(p), data: () => JSON.parse(docs.get(p)) }),
+        set: async (v) => { docs.set(p, JSON.stringify(v)); if (isCommit(p)) window.__cloudMetas.push(v); }, delete: async () => { docs.delete(p); } });
+      const coll = (c, filters = [], lim = 0) => ({ doc: (id) => doc(c + '/' + id), where: (f, op, v) => coll(c, [...filters, [f, op, v]], lim), limit: (n) => coll(c, filters, n),
+        get: async () => { let ks = [...docs.keys()].filter((k) => k.startsWith(c + '/') && !k.slice(c.length + 1).includes('/')).sort();
+          ks = ks.filter((k) => filters.every(([f, op, v]) => { const x = JSON.parse(docs.get(k))[f]; return op === 'not-in' ? !v.includes(x) : op === '==' ? x === v : true; }));
+          if (lim) ks = ks.slice(0, lim); return { docs: ks.map((k) => ({ id: k.slice(c.length + 1), data: () => JSON.parse(docs.get(k)) })) }; } });
+      window.claude = { use: async (n) => (n === 'db' ? { collection: (c) => coll(c), doc } : n === 'user' ? { id: async () => 'viewer-1' } : null) }; })()"""
     b2 = pw.chromium.launch(); ctx2 = b2.new_context(viewport={'width': 360, 'height': 780}, device_scale_factor=2, is_mobile=True, has_touch=True)
     ctx2.add_init_script(FAKE_CLOUD); page = ctx2.new_page(); page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(URL + 'manifest.webmanifest'); page.evaluate("(t) => { localStorage.clear(); localStorage.setItem('gridiron-beast-v6', t); }", LEGACY)
@@ -212,7 +215,7 @@ with sync_playwright() as pw:
     dc = page.evaluate("""async () => { const app = window.__gb; app.f.owner.first = 'CommittedForCloud'; app.lastSig = app.lastSig; const r = await app.save(); // ordinary, throttled cloud
       const metas0 = window.__cloudMetas.length; app.f.owner.first = 'ChangedAfter-NotSaved'; await new Promise((x) => setTimeout(x, 4600));
       const m = window.__cloudMetas.slice(metas0); if (!m.length) return { ok: r.ok, uploads: 0 };
-      const last = m[m.length - 1]; let txt = ''; for (let i = 0; i < last.chunks; i++) txt += JSON.parse(window.__cloudDocs.get(last.gen ? 'save_' + last.gen + '_c' + i : 'save_c' + i)).s;
+      const last = m[m.length - 1]; let txt = ''; for (let i = 0; i < last.n; i++) txt += JSON.parse(window.__cloudDocs.get('data/users/viewer-1/cloud/chunks/' + last.gen + '_c' + i)).s;
       const up = JSON.parse(txt); return { ok: r.ok, uploads: m.length, owner: up.owner.first, savedAt: up.savedAt, committedAt: r.savedAt }; }""")
     report['delayedCloud'] = dc
     check(dc.get('uploads', 0) >= 1 and dc.get('owner') == 'CommittedForCloud' and dc.get('savedAt') == dc.get('committedAt'), f'delayed cloud upload carried uncommitted state: {dc}')
@@ -221,7 +224,14 @@ with sync_playwright() as pw:
     pageB = ctx2.new_page(); pageB.on('pageerror', lambda e: errors.append('tab B: ' + str(e))); pageB.goto(URL); booted(pageB)
     page.goto(URL); booted(page)
     xt = {}
+    page.wait_for_function("() => [...window.__cloudDocs.keys()].some((k) => k.includes('/cloud/snaps/') && !k.endsWith('~w'))", timeout=20000)  # its start-up upload landed
     xt['delete'] = page.evaluate("async () => { const r = await window.__gb.reset(); return r; }")
+    # the cloud side of the deletion (snapshot design): this page uploaded its franchise at start; deleting writes a marker
+    # and removes that franchise's snapshots, and the empty device does not adopt anything from the cloud
+    xt['cloudDelete'] = page.evaluate("""async () => { const ks = [...window.__cloudDocs.keys()]; const C = await import('./src/franchise/cloud-save.js');
+      return { markers: ks.filter((k) => k.includes('/cloud/deleted/')).length, commits: ks.filter((k) => /\\/cloud\\/snaps\\/[^/~]+$/.test(k)).length,
+        chunks: ks.filter((k) => k.includes('/cloud/chunks/')).length, adopted: !!(await C.cloudLoad(null)) }; }""")
+    cd_ = xt['cloudDelete']; check(cd_['markers'] == 1 and cd_['commits'] == 0 and cd_['chunks'] == 0 and not cd_['adopted'], f'cloud side of deleting the franchise: {cd_}')
     xt['staleSave'] = pageB.evaluate("""async () => { const app = window.__gb; app.f.owner.first = 'GhostFromTabB'; const r = await app.save({ immediate: true }); await new Promise((x) => setTimeout(x, 300));
       const m = await app.storage.store.readManifest(); return { ok: r.ok, code: r.error && r.error.code, msg: r.error && r.error.message, manifest: !!m, sheet: !!document.querySelector('.sheet') && document.querySelector('.sheet').innerText.includes('another tab') }; }""")
     pageB.reload(); booted(pageB)

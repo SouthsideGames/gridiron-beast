@@ -25,13 +25,21 @@ export function saveStatusText(app) {
   return '<span class="dim">Not saved yet.</span>';
 }
 
+/** The cloud save's last problem in plain words (the franchise on this device is never affected). */
+export function cloudErrorText(code) {
+  if (code === 'deleted') return 'this franchise was deleted from your cloud save (here or on another device), so it is not backed up there; your progress on this device is safe';
+  if (code === 'unidentified') return 'this franchise is too old to identify, so it is not backed up to the cloud; export it from here to keep a copy; your progress on this device is safe';
+  if (code === 'quota_exceeded') return 'your cloud save is full, so the latest progress is not backed up there; your progress on this device is safe';
+  return `last sync failed (${code})`;
+}
+
 // ------------------------------------------------------------ the Settings panel
 export function savePanelHtml(app) {
   if (!app.f && !app.storage.store) return '';
   const c = cloudStatus();
   return `<div class="panel save-data" id="save-data"><h3>Save data</h3>
     <div class="save-status" id="save-status">${saveStatusText(app)}</div>
-    <p class="muted">${c.state === 'on' ? `☁️ Cloud save on${c.at ? ` · last synced ${timeOnly(c.at)}` : ''}${c.error ? ` · <span class="bad-text">last sync failed (${esc(c.error)})</span>` : ''}` : 'Cloud save is available when playing inside Claude.'}</p>
+    <p class="muted">${c.state === 'on' ? `☁️ Cloud save on${c.at ? ` · last synced ${timeOnly(c.at)}` : ''}${c.error ? ` · <span class="bad-text">${esc(cloudErrorText(c.error))}</span>` : ''}` : 'Cloud save is available when playing inside Claude.'}</p>
     <div class="storage-meter" id="storage-meter"><span class="dim">Measuring storage…</span></div>
     <div class="stack">
       ${app.storage.store ? '<button class="btn block" data-action="backups">Restore a backup</button>' : (Save.loadBackup() ? '<button class="btn block" data-action="restore-legacy">Restore last week’s backup</button>' : '')}

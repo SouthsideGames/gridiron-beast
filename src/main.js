@@ -51,7 +51,7 @@ const app = {
     else if (this.storage.mode === 'legacy') { const ok = Save.save(f); const json = ok ? JSON.stringify(f) : null; p = Promise.resolve(ok ? { ok: true, savedAt: f.savedAt, snapshot: { savedAt: f.savedAt, uid: f.uid ?? null, schemaVersion: f.schemaVersion, json: () => json } } : { ok: false, error: { code: 'legacy', message: 'Saving to this device failed (browser storage is full or blocked).' } }); }
     else p = Promise.resolve({ ok: false, error: { code: 'starting', message: 'Storage is still starting.' } });
     // Invariant A: the cloud receives only what was committed locally: the committed snapshot, never the live object.
-    return p.then((r) => { saveOutcome(r); if (shouldMirror(r) && r.snapshot) cloudSave(r.snapshot, { immediate: important }); return r; });
+    return p.then((r) => { saveOutcome(r); if (shouldMirror(r) && r.snapshot) cloudSave(r.snapshot, { immediate: important, createdAt: f.createdAt }); return r; });
   },
   /**
    * Start playing a new franchise `f` (onboarding, the prototype import). The same commit-first path as every other
@@ -66,14 +66,14 @@ const app = {
   async restoreBackup(id) {
     if (id === 'cloud') { const f = this.cloudCandidate; if (!f) return { ok: false, error: { code: 'invalid', message: 'The cloud copy is no longer available.' } }; const r = await this.replaceFranchise(f, { copyKind: 'pre-restore', mirror: false }); if (r.ok) this.cloudCandidate = null; return r; }
     if (!this.storage.store) return { ok: false, error: { code: 'legacy', message: 'Backups need the game database, which this browser did not open.' } };
-    return restoreThenAdopt({ store: this.storage.store, current: this.f, id, adopt, mirror: (snap) => cloudSave(snap, { immediate: true }) });
+    return restoreThenAdopt({ store: this.storage.store, current: this.f, id, adopt, mirror: (snap) => cloudSave(snap, { immediate: true, createdAt: this.f?.createdAt }) });
   },
   /**
    * Replace the active franchise with `f` (an import, the v39.1 weekly backup, the cloud copy), committing it first. The
    * replaced franchise is kept as a `copyKind` backup. On failure the current franchise stays active and nothing is mirrored.
    */
   async replaceFranchise(f, { copyKind = 'replaced', mirror = true, guard = null } = {}) {
-    const mirrorFn = mirror ? (snap) => cloudSave(snap, { immediate: true }) : () => {};
+    const mirrorFn = mirror ? (snap) => cloudSave(snap, { immediate: true, createdAt: this.f?.createdAt }) : () => {}; // runs after adopt: this.f is the new franchise
     if (this.storage.store) return replaceThenAdopt({ store: this.storage.store, current: this.f, franchise: f, copyKind, guard, adopt, mirror: mirrorFn });
     if (this.storage.mode === 'legacy') return legacyReplaceThenAdopt({ write: (g) => Save.save(g), franchise: f, adopt, mirror: mirrorFn });
     return { ok: false, error: { code: 'starting', message: 'Storage is still starting.' } };
@@ -86,7 +86,7 @@ const app = {
     if (this.storage.store) { try { await this.storage.store.remove(f); } catch (e) { const err = classify(e); toast(`The franchise was not deleted: ${err.message}`, 'bad', 6000); return { ok: false, error: err }; } }
     else Save.clear();
     this.f = null; this.lastSig = null;
-    await cloudClear();
+    await cloudClear(f); // every cloud copy of this franchise saved up to now becomes invalid (GDD §43.8)
     return { ok: true };
   },
 };
@@ -194,12 +194,12 @@ async function boot() {
 async function mirrorCommitted() {
   const st = app.storage.store;
   if (!st) { if (app.storage.mode === 'legacy' && app.f) await app.save({ immediate: true }); return; }
-  const snap = await st.committedSnapshot(); if (snap) cloudSave(snap, { immediate: true });
+  const snap = await st.committedSnapshot(); if (snap) cloudSave(snap, { immediate: true, createdAt: app.f?.createdAt });
 }
 
 /** The cloud copy wins only when it is newer; the local franchise is kept as a backup first, so it is never lost. */
 async function reconcileCloud() {
-  const remote = await cloudLoad();
+  const remote = await cloudLoad(app.f ? { uid: app.f.uid, createdAt: app.f.createdAt } : null); // only this device's franchise
   const f = remote && Save.migrate(remote);
   if (!f) { if (app.f && cloudStatus().state === 'on') await mirrorCommitted(); return; } // an empty cloud receives the committed save
   if (app.recovery) { // never chosen for the player: the cloud copy is offered on the recovery screen
