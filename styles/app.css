@@ -84,6 +84,34 @@ input, select, textarea { font: inherit; width: 100%; min-height: var(--tap); pa
 .news { font-size: 13px; color: var(--ink-2); }
 .news li { margin-bottom: 4px; }
 .news .win { color: var(--good); } .news .loss { color: var(--bad); } .news .injury { color: var(--warn); } .news .levelup { color: var(--info); }
+/* League News (GDD §39) */
+.league-news h3 { font-size: 16px; }
+.ln-heads { list-style: none; padding: 0; margin: 8px 0 4px; display: grid; gap: 6px; }
+.ln-head { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.35; color: var(--ink-2); }
+.ln-head.major { color: var(--ink); font-weight: 700; }
+.ln-head.major .ln-icon { filter: drop-shadow(0 0 4px rgba(250, 204, 21, .5)); }
+.ln-icon { flex: 0 0 18px; text-align: center; }
+.ln-sub { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3, var(--ink-2)); margin: 10px 0 4px; }
+.ln-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.ln-game { background: var(--panel-2); border: 2px solid var(--line); border-radius: 8px; padding: 4px 6px; font-size: 12px; min-width: 0; }
+.ln-game.mine { border-color: var(--accent); }
+.ln-game.rival { border-color: var(--bad); }
+.ln-team { display: flex; align-items: center; gap: 5px; color: var(--ink-2); }
+.ln-team.won { color: var(--ink); font-weight: 800; }
+.ln-dot { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 8px; }
+.ln-abbr { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ln-score { min-width: 2ch; text-align: right; }
+.ln-tag { font-size: 9px; font-weight: 800; letter-spacing: .06em; color: var(--ink-2); margin-top: 2px; }
+.ln-game.mine .ln-tag { color: var(--accent); } .ln-game.rival .ln-tag { color: var(--bad); }
+.ln-race { display: grid; gap: 3px; font-size: 12px; }
+.ln-race-row { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.ln-race-row .grow { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ln-award { flex: 0 0 42px; color: var(--accent); font-size: 11px; }
+.ln-second { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; }
+.ln-week + .ln-week { margin-top: 14px; padding-top: 10px; border-top: 2px solid var(--line); }
+.ln-week-head { font-weight: 900; margin-bottom: 4px; }
+.clublog { margin-top: 10px; border-top: 2px solid var(--line); padding-top: 8px; }
+.clublog summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--ink-2); min-height: 28px; display: flex; align-items: center; gap: 6px; }
 hr { border: 0; border-top: 2px solid var(--line); margin: var(--s3) 0; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); }

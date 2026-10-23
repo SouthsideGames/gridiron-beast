@@ -36,6 +36,7 @@ import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUE
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
+import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, recordNews } from './league-news.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS } from './roster.js';
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
@@ -61,7 +62,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
     season: null, week: blankWeek(), game: null,
     rivals: { challenger: { team: rivalTeam, gm: RIVAL_GMS[rivalTeam] || 'Rival GM', headToHead: { w: 0, l: 0 } } },
     badges: { challenger: 0, vanguard: 0, sovereign: 0 }, qualification: { challenger: 0, vanguard: 0, sovereign: 0 }, bottomFourStreak: 0,
-    history: [], news: [], dex: { seen: {}, signed: {} },
+    history: [], news: [], leagueNews: [], leagueNewsMeta: { v: 1, leaders: {} }, dex: { seen: {}, signed: {} },
     campaign: { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 },
     settings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, difficulty: 'pro', ...settings },
     tutorial: { seen: {} },
@@ -982,9 +983,7 @@ function simulateLeagueWeek(f) {
   poolActivity(f, r);
   save();
   f.season.results.push(...results);
-  const rival = f.rivals[f.tier]?.team;
-  const rg = results.find((x) => x.home === rival || x.away === rival);
-  if (rg) { const rw = rg.winner ? rg.winner === rival : (rg.home === rival ? rg.homeScore > rg.awayScore : rg.awayScore > rg.homeScore); const other = rg.home === rival ? rg.away : rg.home; news(f, `Rival watch: ${rival} ${rw ? 'beat' : 'lost to'} ${other} ${rg.home === rival ? rg.homeScore + '-' + rg.awayScore : rg.awayScore + '-' + rg.homeScore}${rg.clash ? ` (OT · ${rg.clash.size}v${rg.clash.size} Beast Clash)` : rg.ot ? ' (OT)' : ''}.`, 'info'); }
+  // The rival's result is on the League News scoreboard (GDD §39), highlighted; no club-log line.
   return results;
 }
 
@@ -1200,7 +1199,6 @@ export function resolveEncounter(f) {
   e.result = battleSummary(result); e.events = events;
   const won = result.winner === 'a'; e.status = won ? 'offer' : 'pitch';
   const p = f.week.prospects[e.prospectIndex];
-  for (const ev of events.filter((x) => x.kind === 'levelup')) news(f, `${ev.name} reached level ${ev.level} in a Beast Clash (${ev.from} → ${ev.to} OVR).`, 'win');
   news(f, won ? `Beast Clash won: ${p.monster.name} wants to join ${f.club}.` : `Beast Clash lost to ${p.monster.name}. One pitch left to win them over.`, won ? 'win' : 'info');
   return { ok: true, encounter: e, won, result, events };
 }
@@ -1511,7 +1509,8 @@ export function finishSunday(f, gameState) {
     f.campaign.gymWins[m.opponent] = (f.campaign.gymWins[m.opponent] || 0) + 1;
     if (!f.campaign.badges[m.opponent]) { f.campaign.badges[m.opponent] = { year: f.season.year, week: f.season.week, score: `${gameState.score[side]}-${gameState.score[oppSide]}` }; f.campaign.lastBadge = { club: m.opponent, year: f.season.year, week: f.season.week, n: Object.keys(f.campaign.badges).length }; news(f, `BADGE EARNED: the ${gym.badge} · badge ${Object.keys(f.campaign.badges).length} of 8. ${gym.coach.name}'s ${m.opponent} fall to ${f.club} ${gameState.score[side]}-${gameState.score[oppSide]}.`, 'win'); }
   }
-  for (const e of events.filter((x) => x.kind !== 'xp')) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)${f.settings.autoPoints ? '' : ', 2 attribute points to spend on the roster'}.` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
+  // Level-ups are shown after the game and on the Career Timeline; the club log keeps evolutions and injuries.
+  for (const e of events.filter((x) => x.kind !== 'xp' && x.kind !== 'levelup')) news(f, e.kind === 'levelup' ? `${e.name} reached level ${e.level} (${e.from} → ${e.to} OVR)${f.settings.autoPoints ? '' : ', 2 attribute points to spend on the roster'}.` : e.kind === 'evolve' ? `EVOLUTION! ${e.from} evolved into ${e.to}.` : e.kind === 'injury' ? `${e.name} injured: ${e.severity}, out ${e.weeks} week${e.weeks === 1 ? '' : 's'}.` : e.name, e.kind === 'evolve' ? 'win' : e.kind);
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) dexRecord(f, x, 'signed'); }
   f.game = null;
   recordPlayStats(f, gameState, side);
@@ -1530,9 +1529,26 @@ export function takeBye(f) {
   advanceWeek(f, { bye: true });
   return { ok: true };
 }
+/**
+ * League News for the week just played (GDD §39): scoreboard, headlines, records, award races, or a playoff round. Read-only:
+ * written after every game of the week is in the books, never drawing a random number.
+ */
+function writeLeagueNews(f, round = null) {
+  const year = f.season.year, week = f.season.week; const club = f.club; const rival = f.rivals?.[f.tier]?.team || null;
+  ensureLeagueNews(f);
+  const items = round
+    ? playoffNews({ year, week, round, results: f.season.playoffs?.results || [], club, rival })
+    : f.season.results.some((g) => g.week === week) // a league-wide bye week has no news
+      ? [...resultsNews({ year, week, results: f.season.results, club, rival }), ...raceNews({ year, week, races: awardRaces(f, { n: 2 }), meta: f.leagueNewsMeta })]
+      : [];
+  items.push(...recordNews({ year, week, records: f.records, seasonsInBook: (f.history || []).length, scope: 'game' }));
+  addLeagueNews(f, items);
+}
 function advanceWeek(f, { bye = false } = {}) {
+  const round = inPlayoffs(f) ? f.season.playoffs?.round : null;
   if (!inPlayoffs(f)) simulateLeagueWeek(f);
   else simulatePlayoffWeek(f);
+  writeLeagueNews(f, round);
   if (bye) recoverWeek(f.roster, { bye: true }); // a normal week recovers on Saturday, so the week shows the fatigue from Sunday
   f.season.week += 1; f.season.day = 0;
   const lastPlan = f.week.plan;
@@ -1551,7 +1567,7 @@ function advanceWeek(f, { bye = false } = {}) {
 export function advancePlayoffs(f) {
   if (!inPlayoffs(f) || playoffFixture(f) || f.season.finished) return { ok: false, reason: 'Nothing to advance.' };
   const p = f.season.playoffs; const round = p.round;
-  simulatePlayoffWeek(f); f.season.week += 1; f.season.day = 0; { const lastPlan = f.week.plan; f.week = blankWeek(); f.week.plan = lastPlan; }
+  simulatePlayoffWeek(f); writeLeagueNews(f, round); f.season.week += 1; f.season.day = 0; { const lastPlan = f.week.plan; f.week = blankWeek(); f.week.plan = lastPlan; }
   const results = p.results.filter((x) => x.round === round);
   if (p.champion) endSeason(f);
   return { ok: true, round, results, champion: p.champion || null, finished: !!f.season.finished };
@@ -1565,6 +1581,7 @@ function startPlayoffs(f) {
   const seeds = { Aurora: st.conferences.Aurora.seeds, Titan: st.conferences.Titan.seeds };
   const fixtures = playoffRound(1, [], seeds).map((g) => ({ ...g, round: 1, week: 11, result: null }));
   f.season.playoffs = { seeds, round: 1, fixtures, results: [], champion: null };
+  addLeagueNews(f, playoffFieldNews({ year: f.season.year, week: 10, seeds, records: f.season.records }));
   finalizeAwards(f);
   const qualified = Object.values(seeds).flat().includes(f.club);
   checkAchievements(f, 'playoffs', { qualified });
@@ -1601,7 +1618,7 @@ function endSeason(f) {
   const champion = s.playoffs?.champion || null;
   const rec = record(f);
   if (champion === f.club) { f.badges[f.tier] += 1; f.qualification[f.tier] += 1; f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.titles += 1; news(f, `BEAST BOWL CHAMPIONS! ${f.club} win the ${tierById(f.tier).name} title.`, 'win'); }
-  else if (champion) news(f, `${champion} win the Beast Bowl.`, 'info');
+  if (champion) addLeagueNews(f, championNews({ year: s.year, week: 13, final: (s.playoffs?.results || []).find((x) => x.round === 3) }));
   const place = st.overall.indexOf(f.club) + 1;
   f.bottomFourStreak = place > 12 ? f.bottomFourStreak + 1 : 0;
   f.history.push({ year: s.year, club: f.club, tier: f.tier, record: { w: rec.w, l: rec.l, t: rec.t }, place, champion, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), schedule: s.schedule.map((g) => ({ ...g })), rival: { ...f.rivals[f.tier] } });
@@ -1616,6 +1633,7 @@ function endSeason(f) {
   f.history[f.history.length - 1].awards = s.awards;
   if (champion === f.club) f.history[f.history.length - 1].championship = championshipRecord(f, s); // the ceremony and its summary (GDD §35)
   updateSeasonRecords(f, s.year); // the records book (GDD §17.8)
+  addLeagueNews(f, recordNews({ year: s.year, week: 13, records: f.records, seasonsInBook: (f.history || []).length, scope: 'season' }));
   careerSeasonEnd(f.roster, { year: s.year, club: f.club, awards: s.awards, records: f.records, champion }); // Career Timeline (GDD §38)
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
@@ -1675,7 +1693,8 @@ export function finalizeAwards(f) {
   if (f.season.awardsFinal) return f.season.awardsFinal;
   const races = computeAwards({ table: f.season.leagueStats, records: f.season.records, expectations: f.season.expectations || {}, coachOf: (t) => coachNameOf(f, t), n: 5 });
   f.season.awardsFinal = { year: f.season.year, races, winners: Object.fromEntries(Object.entries(AWARDS).map(([k]) => [k, races[k]?.[0] || null])) };
-  for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w) news(f, `${AWARDS[k].short}: ${w.name}${w.team ? ` (${w.team})` : ''}${w.team === f.club ? ', one of yours!' : ''}.`, w.team === f.club ? 'win' : 'info');
+  addLeagueNews(f, awardNews({ year: f.season.year, week: 10, winners: f.season.awardsFinal.winners }));
+  for (const [k, w] of Object.entries(f.season.awardsFinal.winners)) if (w && w.team === f.club) news(f, `${AWARDS[k].short}: ${k === 'coy' ? 'your staff' : w.name}, one of yours!`, 'win');
   return f.season.awardsFinal;
 }
 export function seasonAwards(f) {
@@ -1778,7 +1797,6 @@ export function resolveOvertimeClash(f) {
   const events = applyBattleEffects(f.roster, result, 'a', 'overtime', r, { autoSpend: !!f.settings.autoPoints });
   save();
   e.result = battleSummary(result); e.events = events; e.status = 'done';
-  for (const ev of events.filter((x) => x.kind === 'levelup')) news(f, `${ev.name} reached level ${ev.level} in the overtime Clash (${ev.from} → ${ev.to} OVR).`, 'win');
   return { ok: true, overtime: e, won: result.winner === 'a', result, events };
 }
 /** The Clash's verdict written onto the finished football state: `winner` is set, the score is untouched, `tiebreak` records the Clash. */
@@ -1859,7 +1877,6 @@ export function resolvePregameClash(f) {
   if (!won) e.choice = aiPossessionChoice(r);
   save();
   e.result = battleSummary(result); e.events = events; e.status = won ? 'choose' : 'done';
-  for (const ev of events.filter((x) => x.kind === 'levelup')) news(f, `${ev.name} reached level ${ev.level} in the pregame Clash (${ev.from} → ${ev.to} OVR).`, 'win');
   return { ok: true, pregame: e, won, result, events };
 }
 /** The winner's possession choice (only the player chooses here; the AI chose when the battle was settled). */

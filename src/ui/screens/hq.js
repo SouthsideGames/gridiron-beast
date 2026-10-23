@@ -2,6 +2,7 @@
 // browsing and the league screens.
 
 import { venueHtml } from '../stadium-preview.js';
+import { leagueNewsPanel, leagueNewsSheetHtml } from '../league-news-ui.js';
 import { legendaryCardHtml, openLegendarySheet, announceLegendary } from '../legendary-ui.js';
 import { LEGENDARY_IDS, unannouncedLegendary } from '../../franchise/legendary.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
@@ -102,7 +103,7 @@ export function registerHqScreens(Router, app) {
         <div class="grid2">
           <button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button>
           <button class="btn block" data-action="go" data-screen="staff">👥 Coaching staff</button><button class="btn block" data-action="go" data-screen="practice">🎯 Practice</button></div>
-        <h3>News</h3><ul class="news" style="padding-left:18px;margin:0">${f.news.slice(0, 8).map((n) => `<li class="${esc(n.kind)}">${newsText(f, n.text)}</li>`).join('') || '<li class="dim">Nothing yet.</li>'}</ul>`;
+        ${leagueNewsPanel(f, { clubLog: f.news })}`;
     },
     mount(root) {
       if (app.f && !app.f.achievementsBackfilled && F.backfillAchievements(app.f).length) app.save();
@@ -134,6 +135,7 @@ export function registerHqScreens(Router, app) {
         scoutdraft: () => Router.go('draftclass'),
         recovery: () => { const r = F.recoveryDay(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(`<p>Everyone rests: fatigue −15%.${r.healed.length ? ` <b>${esc(r.healed.join(', '))}</b> cleared to play.` : ' Injured monsters are a week closer to returning.'}</p><p class="dim">The final week and the playoffs have no recruiting: Mondays go to the draft class, Tuesdays to recovery.</p>`, { title: 'Recovery day', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         draft: () => Router.go('draft'), releasemon: () => Router.go('contracts'),
+        leaguenews: () => sheet(leagueNewsSheetHtml(app.f), { title: 'League News' }),
         recap: () => sheet(seasonRecapHtml(app.f), { title: `${yearOf(app.f.season.year)} · regular season` }),
         watchround: () => { const r = F.advancePlayoffs(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(roundResultsHtml(app.f, r), { title: F.ROUND_NAMES[r.round] || `Round ${r.round}`, onClose: () => Router.go('hq', {}, { reset: true }) }); },
         skipplayoffs: async () => { if (!(await confirmSheet('Simulate the rest of the playoffs and go to the offseason?', { title: 'Skip the playoffs', okLabel: 'Skip' }))) return; F.skipPlayoffs(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
@@ -820,11 +822,6 @@ export function playDetailHtml(id, f = null, { practiceButton = true } = {}) {
     ${practiceButton ? `<div style="margin-top:12px"><button class="btn block" data-action="practice" data-id="${id}">Run it in practice</button></div>` : ''}`;
 }
 
-/** News line with the rival club's name in bold. */
-function newsText(f, text) {
-  const rival = f.rivals?.[f.tier]?.team; const safe = esc(text);
-  return rival ? safe.split(esc(rival)).join(`<b class="rival-name">${esc(rival)}</b>`) : safe;
-}
 export function lessonHtml(id) {
   const L = LESSONS[id]; if (!L) return '';
   return `<div class="panel lesson"><h3 style="margin-top:0">📖 Lesson</h3><div class="kv"><b>When</b><span>${esc(L.when)}</span><b>Watch</b><span>${esc(L.watch)}</span><b>Beats</b><span>${esc(L.beats)}</span><b>Loses to</b><span>${esc(L.loses)}</span></div></div>`;
