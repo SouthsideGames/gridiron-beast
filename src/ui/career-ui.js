@@ -24,7 +24,7 @@ export function summaryHtml(p, { reduced = false } = {}) {
   const scope = statScope[p.id] === 'season' && p.stats.seasonFocus ? 'season' : 'career';
   const stats = scope === 'season' ? p.stats.seasonFocus : p.stats.focus;
   const club = p.club; const col = clubColor(club);
-  const seasonsTxt = p.kind === 'prospect' ? 'Draft prospect' : p.kind === 'league' ? `${p.seasons} season${p.seasons === 1 ? '' : 's'} on record` : p.where === 'roster' && p.seasons <= 1 ? 'Rookie season' : !p.seasons ? 'No pro seasons yet' : `${p.seasons} season${p.seasons === 1 ? '' : 's'}`;
+  const seasonsTxt = p.legacy ? 'Seasons not recorded' : p.kind === 'prospect' ? 'Draft prospect' : p.kind === 'league' ? `${p.seasons} season${p.seasons === 1 ? '' : 's'} on record` : p.where === 'roster' && p.seasons <= 1 ? 'Rookie season' : !p.seasons ? 'No pro seasons yet' : `${p.seasons} season${p.seasons === 1 ? '' : 's'}`;
   const sameName = String(p.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '') === p.speciesName;
   const honours = [
     p.honours.hof ? `<span class="cs-hon legend">🏛 Hall of Fame</span>` : '',
@@ -33,9 +33,10 @@ export function summaryHtml(p, { reduced = false } = {}) {
     p.honours.records ? `<span class="cs-hon">📜 ${p.honours.records} record${p.honours.records === 1 ? '' : 's'}</span>` : '',
   ].filter(Boolean).join('');
   const statGrid = p.kind === 'prospect' ? '' : stats?.length && (p.stats.games || 0) > 0
-    ? `<div class="cs-stats-head"><span class="cs-label">${scope === 'season' ? `${yearOf(p.stats.seasonYear)} season` : 'Career'}${p.stats.games ? ` · ${scope === 'season' ? p.stats.season.games || 0 : p.stats.games} games` : ''}</span>${p.stats.seasonFocus ? `<span class="cs-scope" role="group" aria-label="Totals"><button class="chip ${scope === 'career' ? 'on' : ''}" data-action="cs-scope" data-v="career" aria-pressed="${scope === 'career'}">Career</button><button class="chip ${scope === 'season' ? 'on' : ''}" data-action="cs-scope" data-v="season" aria-pressed="${scope === 'season'}">This season</button></span>` : ''}</div>
-       <div class="cs-stats">${stats.map((s) => `<div class="cs-stat"><b class="mono">${esc(s.text)}</b><span>${esc(s.label)}</span></div>`).join('')}</div>`
-    : `<div class="cs-nogames">${p.kind === 'snapshot' ? 'No games on record.' : (p.yearsPro || 0) > 0 || p.seasons > 1 ? 'No games on record in this franchise: his earlier seasons were played before it kept his stats.' : 'No professional games yet: his numbers start with his first snap.'}</div>`;
+    ? `<div class="cs-stats-head"><span class="cs-label">${scope === 'season' ? `${yearOf(p.stats.seasonYear)} season` : 'Career'} · regular season · ${scope === 'season' ? p.stats.seasonGames ?? p.stats.season.games ?? 0 : p.stats.games} game${(scope === 'season' ? p.stats.seasonGames ?? p.stats.season.games : p.stats.games) === 1 ? '' : 's'}</span>${p.stats.seasonFocus ? `<span class="cs-scope" role="group" aria-label="Totals"><button class="chip ${scope === 'career' ? 'on' : ''}" data-action="cs-scope" data-v="career" aria-pressed="${scope === 'career'}">Career</button><button class="chip ${scope === 'season' ? 'on' : ''}" data-action="cs-scope" data-v="season" aria-pressed="${scope === 'season'}">This season</button></span>` : ''}</div>
+       <div class="cs-stats">${stats.map((s) => `<div class="cs-stat"><b class="mono">${esc(s.text)}</b><span>${esc(s.label)}</span></div>`).join('')}</div>
+       ${(() => { const po = scope === 'season' ? p.stats.seasonPostLine : p.stats.post; return po ? `<div class="cs-post"><b>Playoffs${scope === 'season' ? ` ${yearOf(p.stats.seasonYear)}` : ', career'}</b> · ${po.games} game${po.games === 1 ? '' : 's'}${po.text ? ` · ${esc(po.text)}` : ''}</div>` : ''; })()}`
+    : `<div class="cs-nogames">${p.legacy ? 'His statistics were not kept on cards written before v39.0.' : p.kind === 'snapshot' ? 'No games on record.' : (p.yearsPro || 0) > 0 || p.seasons > 1 ? 'No games on record in this franchise: his earlier seasons were played before it kept his stats.' : 'No professional games yet: his numbers start with his first snap.'}</div>`;
   const clubs = p.clubs?.length ? `<div class="cs-clubs" aria-label="Clubs">${p.clubs.map((c) => `<span class="cs-club" style="--club:${clubColor(c.club)}"><i></i>${esc(c.club)}${span(c) ? ` <span class="dim">${span(c)}</span>` : ''}</span>`).join('<span class="cs-arrow" aria-hidden="true">›</span>')}</div>` : '';
   return `<div class="cs-head tier-${esc(p.tier)}" style="--club:${col}">
     <div class="cs-id">
@@ -66,10 +67,10 @@ export function trophyCaseHtml(p, { reduced = false, interactive = true } = {}) 
 /** Summary + trophies + the card button + the timeline, as one section (the monster card and every sheet). */
 export function careerSectionHtml(f, p, { animate = true, domId = null, interactive = true, cardButton = true } = {}) {
   const reduced = !!f?.settings?.reducedMotion || !animate;
-  const head = `${summaryHtml(p, { reduced })}${trophyCaseHtml(p, { reduced, interactive: interactive && p.kind !== 'snapshot' })}${cardButton && (p.kind === 'full' || p.kind === 'snapshot') ? `<button class="btn block cc-btn" data-action="cc-open">📸 Career card</button>` : ''}`;
+  const head = `${summaryHtml(p, { reduced })}${trophyCaseHtml(p, { reduced, interactive: interactive && p.kind !== 'snapshot' })}${cardButton && !p.legacy && (p.kind === 'full' || p.kind === 'snapshot') ? `<button class="btn block cc-btn" data-action="cc-open">📸 Career card</button>` : ''}`;
   if (p.kind === 'prospect') return `<section class="panel timeline career-only" data-mid="${esc(p.id)}"${domId ? ` id="${esc(domId)}"` : ''}>${head}</section>`;
   if (p.kind === 'league') return `<section class="panel timeline career-only" data-mid="${esc(p.id)}"${domId ? ` id="${esc(domId)}"` : ''}>${head}${seasonLinesHtml(p)}</section>`;
-  return timelineSectionHtml(p.timeline, { name: p.name, id: p.id, domId, head, animate, reduced: !!f?.settings?.reducedMotion, interactive: interactive && p.kind !== 'snapshot' });
+  return timelineSectionHtml(p.timeline, { name: p.name, id: p.id, domId, head, animate, reduced: !!f?.settings?.reducedMotion, interactive: interactive && p.kind !== 'snapshot', emptyText: p.emptyText || null, seasonLinks: p.kind === 'full' ? new Set((p.books || []).map((b) => b.year)) : null });
 }
 function seasonLinesHtml(p) {
   if (!p.books?.length) return '';
@@ -98,11 +99,14 @@ export function detailHtml(f, m, d, p) {
     case 'game': return `<div class="dt-hero"><span class="dt-icon">🏈</span><div><div class="dt-title">${d.week > 10 ? esc(F.ROUND_NAMES[d.week - 10] || 'Playoffs') : `Week ${d.week}`} · ${yearOf(d.year)}</div><div class="dt-sub">${d.home ? 'vs' : 'at'} the ${esc(d.opp)}${d.club ? ` · ${club(d.club)}` : ''}</div></div></div>
       <div class="dt-big mono ${d.won ? 'good' : 'bad'}">${d.won ? 'W' : 'L'} ${esc(d.score)}</div>
       ${d.lineText ? `<div class="kv"><b>His game</b><span>${esc(d.lineText)}</span></div>` : ''}${missing}`;
+    case 'season': return `<div class="dt-hero"><span class="dt-icon">📅</span><div><div class="dt-title">Season ${yearOf(d.year)}</div><div class="dt-sub">${club(d.club)}</div></div></div>
+      <div class="kv"><b>Regular season</b><span>${d.reg.games} game${d.reg.games === 1 ? '' : 's'}${d.reg.text ? ` · ${esc(d.reg.text)}` : ''}</span>${d.post ? `<b>Playoffs</b><span>${d.post.games} game${d.post.games === 1 ? '' : 's'}${d.post.text ? ` · ${esc(d.post.text)}` : ''}</span>` : ''}</div>
+      ${d.games ? `<div class="tc-head" style="margin-top:10px"><b>Game by game</b><span class="dim">${d.games.length}</span></div><div class="dt-games">${d.games.map((g) => `<div class="dt-game ${g.playoff ? 'po' : ''}"><span class="dt-gw">${g.week > 10 ? esc((F.ROUND_NAMES[g.week - 10] || 'Playoffs').replace(' round', '')) : `Wk ${g.week}`}</span><span class="dt-go">${g.home ? 'vs' : 'at'} ${esc(TEAM_META[g.opp]?.abbr || g.opp)}</span><b class="mono ${g.won ? 'good' : 'bad'}">${g.won ? 'W' : 'L'} ${esc(g.score)}</b><span class="dt-gl">${esc(g.text || 'played, no box-score numbers')}</span></div>`).join('')}</div>` : ''}${missing}`;
     case 'hof': return `<div class="dt-hero legend"><span class="dt-icon">🏛</span><div><div class="dt-title">Hall of Fame</div><div class="dt-sub">${d.year != null ? yearOf(d.year) : ''} · ${club(d.club)}</div></div></div><p>Named on ${esc(d.owner || 'the owner')}'s Hall of Fame card when the career was written.</p>`;
     default: return '';
   }
 }
-const DT_TITLE = { title: 'Beast Bowl', award: 'League award', record: 'League record', evolve: 'Evolution', game: 'The game', hof: 'Hall of Fame' };
+const DT_TITLE = { season: 'The season', title: 'Beast Bowl', award: 'League award', record: 'League record', evolve: 'Evolution', game: 'The game', hof: 'Hall of Fame' };
 
 /** A trophy shelf's sheet: every season it was won, each opening its detail. */
 function trophySheetHtml(f, m, p, kind) {
@@ -128,7 +132,7 @@ export function careerActions(ctx) {
   const render = () => careerSectionHtml(ctx.f(), ctx.profile(), { animate: false, domId: ctx.domId || null });
   const openDetail = (ref) => { const m = ctx.monster(); const f = ctx.f(); const d = m ? eventDetail(f, m, ref) : null; const { el } = sheet(detailHtml(f, m, d, ctx.profile()), { title: DT_TITLE[ref.kind] || 'Details' }); bindDetail(el, ctx); };
   return {
-    ...timelineActions({ render, open: (k) => { const e = ctx.profile().timeline.find((x) => x.k === k); if (e?.ref) openDetail(e.ref); } }),
+    ...timelineActions({ render, open: (k) => { const e = ctx.profile().timeline.find((x) => x.k === k); if (e?.ref) openDetail(e.ref); }, openSeason: (y) => openDetail({ kind: 'season', year: y }) }),
     'cs-scope': (el) => { const s = el.closest('section.timeline'); statScope[ctx.profile().id] = el.dataset.v; if (s) redrawKeepingPlace(s, render()); },
     'tc-open': (el) => { const p = ctx.profile(); const kind = el.dataset.kind; const { el: sh } = sheet(trophySheetHtml(ctx.f(), ctx.monster(), p, kind), { title: 'Trophy case' });
       sh.addEventListener('click', (ev) => { const b = ev.target.closest('[data-action="tc-entry"]'); if (!b) return; const t = p.trophies.find((x) => x.kind === b.dataset.kind); const e = t?.entries[Number(b.dataset.i)]; const ref = e && refForTrophy(b.dataset.kind, e); if (ref) openDetail(ref); }); },
@@ -179,8 +183,8 @@ export function openCareerSheet(f, id, { go = null } = {}) {
   return { el, close, profile: p };
 }
 /** A Hall of Fame card's monster: the career as it stood at retirement (read-only). */
-export function openSnapshotSheet(snap, { settings = {} } = {}) {
-  const p = snapshotProfile(snap); if (!p) return null;
+export function openSnapshotSheet(snap, { settings = {}, profile = null } = {}) {
+  const p = profile || snapshotProfile(snap); if (!p) return null;
   const fake = { settings };
   const ctx = { f: () => fake, profile: () => p, monster: () => null };
   const { el } = sheet(`<div class="career-sheet">${careerSectionHtml(fake, p, { animate: !settings.reducedMotion, interactive: false })}</div>`, { title: `${p.name} · Hall of Fame` });

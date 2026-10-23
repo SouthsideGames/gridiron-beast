@@ -4,6 +4,7 @@
 import { venueHtml } from '../stadium-preview.js';
 import { leagueNewsPanel, leagueNewsSheetHtml } from '../league-news-ui.js';
 import { careerLink, careerBlockHtml } from '../career-ui.js';
+import { resolveRecordHolder } from '../../franchise/career-profile.js';
 import { legendaryCardHtml, openLegendarySheet, announceLegendary } from '../legendary-ui.js';
 import { LEGENDARY_IDS, unannouncedLegendary } from '../../franchise/legendary.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
@@ -787,9 +788,9 @@ export function registerHqScreens(Router, app) {
       const R = ensureRecords(f); const tab = recordsTab;
       const tabs = [['game', 'Single game'], ['season', 'Season'], ['career', 'Your careers'], ['team', 'Team']];
       let body = '';
-      const row = (label, r, sub) => `<div class="item static ${r?.team === f.club ? 'mine' : ''}">${r?.species ? monsterSprite(r, 30) : ''}<div class="grow"><div class="name">${esc(label)}</div><div class="sub">${r ? `<b>${r.name && r.id ? careerLink(r.id, r.name) : esc(r.name || r.team)}</b>${r.position ? ` (${esc(r.position)})` : ''} · ${esc(sub(r))}` : 'no record yet'}</div></div><span class="chip accent">${r ? r.value : '·'}</span></div>`;
-      if (tab === 'game') body = RECORD_CATEGORIES.map((c) => row(c.label, R.game[c.id], (r) => `${r.team} vs ${r.opp} · ${yearOf(r.year)} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`)).join('');
-      else if (tab === 'season') body = RECORD_CATEGORIES.map((c) => row(c.label, R.season[c.id], (r) => `${r.team} · ${yearOf(r.year)}`)).join('') + '<p class="dim">Season records are written when a season ends.</p>';
+      const row = (label, r, sub, cat = null) => `<div class="item static ${r?.team === f.club ? 'mine' : ''}">${r?.species ? monsterSprite(r, 30) : ''}<div class="grow"><div class="name">${esc(label)}</div><div class="sub">${r ? `<b>${(() => { const id = r.name ? (r.id || resolveRecordHolder(f, r, { scope: recordsTab === 'season' ? 'season' : 'game', cat }).id) : null; return id ? careerLink(id, r.name) : esc(r.name || r.team); })()}</b>${r.position ? ` (${esc(r.position)})` : ''} · ${esc(sub(r))}` : 'no record yet'}</div></div><span class="chip accent">${r ? r.value : '·'}</span></div>`;
+      if (tab === 'game') body = RECORD_CATEGORIES.map((c) => row(c.label, R.game[c.id], (r) => `${r.team} vs ${r.opp} · ${yearOf(r.year)} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`, c.id)).join('');
+      else if (tab === 'season') body = RECORD_CATEGORIES.map((c) => row(c.label, R.season[c.id], (r) => `${r.team} · ${yearOf(r.year)}`, c.id)).join('') + '<p class="dim">Season records are written when a season ends.</p>';
       else if (tab === 'career') { const L = careerLeaders(f.roster); body = RECORD_CATEGORIES.map((c) => row(c.label, L[c.id]?.[0], () => 'regular season, current roster')).join('') + '<p class="dim">League-wide careers need persistent AI rosters (later); these are your monsters.</p>'; }
       else body = TEAM_RECORDS.map((c) => row(c.label, R.team[c.id], (r) => `${r.score} vs ${r.opp} · ${yearOf(r.year)} wk ${r.week}${r.playoff ? ' (playoffs)' : ''}`)).join('');
       return `<div class="seg" style="margin-bottom:8px">${tabs.map(([k, l]) => `<button class="btn small ${tab === k ? 'primary' : ''}" data-action="rtab" data-v="${k}">${l}</button>`).join('')}</div><div class="list">${body}</div>`;

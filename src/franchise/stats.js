@@ -8,6 +8,7 @@
 // sum of the games, not the average of game percentages.
 
 import { OFFENSE_BASE, DEFENSE_BASE } from '../data/personnel.js';
+import { TEAM_META } from '../data/league.js';
 
 export const STATS_VERSION = 2;
 
@@ -124,11 +125,37 @@ export function ensureStats(m, year = null) {
   if (year != null && s.season.year == null) s.season.year = year;
   return s;
 }
-/** Close the monster's season book: archive totals under its year and start a fresh one. */
+// ------------------------------------------------------------ archived game lines (GDD §41.1)
+/**
+ * The box-score keys a past season keeps for each game (snap counts, ability bookkeeping, first downs and other detail stay in
+ * the season totals only). Short aliases keep a game to about 50 bytes. A packed game is
+ * [week, opponent abbreviation, flags (1 home, 2 won, 4 playoff), score, line].
+ */
+export const GAME_KEYS = Object.freeze({ att: 'a', comp: 'c', passYds: 'py', passTd: 'pt', intThrown: 'pi', sacked: 'sk', rush: 'r', rushYds: 'ry', rushTd: 'rt', targets: 'tg', rec: 'rc', recYds: 'cy', recTd: 'ct', fumLost: 'fl', tackles: 'tk', assists: 'as', tfl: 'tf', sacks: 'sa', pressures: 'pr', int: 'in', pd: 'pd', ff: 'ff', fr: 'fr', defTd: 'dt', covTargets: 'cv', recAllowed: 'ra', ydsAllowed: 'ya', tdAllowed: 'ta', pbSnaps: 'pb', rbSnaps: 'rb', blocksLost: 'bl', sacksAllowed: 'sx', fga: 'ga', fgm: 'gm', fgLong: 'gl', xpa: 'xa', xpm: 'xm', abilityPlays: 'ap' });
+const ALIAS_KEY = Object.fromEntries(Object.entries(GAME_KEYS).map(([k, a]) => [a, k]));
+const ABBR_TEAM = Object.fromEntries(Object.entries(TEAM_META).map(([t, m]) => [m.abbr, t]));
+export function packGame(g) {
+  const line = {}; for (const [k, a] of Object.entries(GAME_KEYS)) { const v = g.line?.[k]; if (typeof v === 'number' && v) line[a] = v; }
+  return [g.week, TEAM_META[g.opp]?.abbr || g.opp || '', (g.home ? 1 : 0) | (g.won ? 2 : 0) | (g.playoff ? 4 : 0), g.score || '', line];
+}
+export function unpackGame(p, year = null, team = null) {
+  const [week, opp, flags, score, packed] = p; const line = {}; for (const [a, v] of Object.entries(packed || {})) line[ALIAS_KEY[a] || a] = v;
+  return { year, week, opp: ABBR_TEAM[opp] || opp, home: !!(flags & 1), won: !!(flags & 2), playoff: !!(flags & 4), score, line, team, archived: true };
+}
+/** A monster's game lines for a season, newest last: the current log, or the archived season's packed games (null when not kept). */
+export function seasonGames(m, year) {
+  const s = m?.stats; if (!s) return null;
+  if (s.season?.year === year && s.log?.length && s.log.every((g) => g.year === year)) return s.log.map((g) => ({ ...g }));
+  const b = (s.seasons || []).find((x) => x.year === year);
+  return b?.g ? b.g.map((p) => unpackGame(p, year, b.team || null)) : null;
+}
+
+/** Close the monster's season book: archive totals under its year (and, from v39.1, its games compactly) and start a fresh one. */
 export function rolloverMonster(m, { year, team }) {
   const s = ensureStats(m, year);
   if (s.season.year != null && s.season.year !== year) {
-    if (Object.keys(s.season.reg).length || Object.keys(s.season.post).length) s.seasons.push({ year: s.season.year, team, reg: s.season.reg, post: s.season.post });
+    const games = (s.log || []).filter((g) => g.year === s.season.year);
+    if (Object.keys(s.season.reg).length || Object.keys(s.season.post).length) s.seasons.push({ year: s.season.year, team, reg: s.season.reg, post: s.season.post, ...(games.length ? { g: games.map(packGame) } : {}) });
     s.season = { year, reg: {}, post: {} }; s.log = [];
   } else if (s.season.year == null) s.season.year = year;
   return s;

@@ -9,9 +9,10 @@
 // the monster or the franchise.
 
 import { careerTimeline, careerEvents, fullRecord } from './career.js';
-import { withDerived, addInto, RECORD_CATEGORIES, statLine } from './stats.js';
+import { withDerived, addInto, RECORD_CATEGORIES, statLine, seasonGames } from './stats.js';
 import { AWARDS } from './awards.js';
 import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
+import { yearOf } from '../data/calendar.js';
 
 export const PROFILE_VERSION = 1;
 
@@ -29,6 +30,7 @@ export const FOCUS = Object.freeze({
   K: [['fgm', 'Field goals'], ['fgPct', 'FG %'], ['fgLong', 'Longest FG'], ['kickPts', 'Points']],
 });
 const RATE_KEYS = new Set(['compPct', 'ypc', 'ypr', 'blockWinPct', 'compPctAllowed', 'fgPct']);
+const PCT_KEYS = new Set(['compPct', 'blockWinPct', 'compPctAllowed', 'fgPct']); // shown with a % sign
 /** A rate needs this much volume before it means anything (else it shows a dash). */
 const RATE_MIN = { compPct: ['att', 10], ypc: ['rush', 8], ypr: ['rec', 5], blockWinPct: ['pbSnaps', 20], compPctAllowed: ['covTargets', 8], fgPct: ['fga', 3] };
 
@@ -81,7 +83,7 @@ export function statValue(line, key) {
   const d = withDerived(line || {}); const v = d[key];
   const min = RATE_MIN[key]; if (min && (d[min[0]] || 0) < min[1]) return { key, value: null, text: '—' };
   if (v == null) return { key, value: null, text: '—' };
-  return { key, value: v, text: RATE_KEYS.has(key) ? (key.endsWith('Pct') ? `${v}%` : String(v)) : Number(v).toLocaleString('en-US') };
+  return { key, value: v, text: RATE_KEYS.has(key) ? (PCT_KEYS.has(key) ? `${v}%` : String(v)) : Number(v).toLocaleString('en-US') };
 }
 /** The position's focus statistics for a line. `n` = how many. */
 export function focusStats(position, line, n = 4) { return (FOCUS[position] || FOCUS.WR).slice(0, n).map(([key, label]) => ({ label, ...statValue(line, key) })); }
@@ -113,8 +115,9 @@ export const TIER_LABEL = Object.freeze({ hof: 'Hall of Famer', dynasty: 'Dynast
 
 /** The record behind a game event, if the save still has it: the current season's game log, else the season's schedule. */
 export function gameRecord(f, m, year, week, club = null) {
-  const log = (m.stats?.log || []).find((g) => g.year === year && g.week === week);
-  if (log) return { source: 'log', year, week, opp: log.opp, home: log.home, playoff: !!log.playoff, won: log.won, score: log.score, line: log.line || {} };
+  // His own line: the current season's log, or (from v39.1) the archived season's packed games.
+  const log = (seasonGames(m, year) || []).find((g) => g.week === week && (!club || !g.team || g.team === club));
+  if (log) return { source: log.archived ? 'archive' : 'log', year, week, opp: log.opp, home: log.home, playoff: !!log.playoff || week > 10, won: log.won, score: log.score, line: log.line || {}, club: log.team || club };
   const fromSchedule = (sched, c) => { const g = (sched || []).find((x) => x.week === week && x.result); return g ? { source: 'schedule', year, week, opp: g.opponent, home: g.home, playoff: false, won: g.result.won, score: `${g.result.playerScore}-${g.result.oppScore}`, club: c } : null; };
   if (year === f.season?.year && (!club || club === f.club)) { const r = fromSchedule(f.season.schedule, f.club); if (r) return r; }
   const h = (f.history || []).find((x) => x.year === year && (!club || x.club === club));
@@ -132,6 +135,7 @@ export function eventRef(f, m, e) {
     case 'record': return { kind: 'record', scope: x.scope, cat: x.cat, value: x.value, year: e.y, week: e.w ?? null, club: e.c };
     case 'evolve': return x.stage ? { kind: 'evolve', stage: x.stage, from: x.from || null, to: x.to || null, year: e.y, week: e.w ?? null, before: !!x.before } : null;
     case 'hof': return { kind: 'hof', year: e.y, club: e.c, owner: x.owner || null };
+    case 'season': case 'growth': return e.y != null && seasonBooks(m).some((b) => b.year === e.y) ? { kind: 'season', year: e.y, club: e.c } : null;
     default:
       if (GAME_EVENTS.has(e.t) && e.y != null && e.w != null) { const g = gameRecord(f, m, e.y, e.w, e.c); return g ? { kind: 'game', year: e.y, week: e.w, club: e.c } : null; }
       return null;
@@ -175,10 +179,13 @@ function identity(m) {
 
 export function fullProfile(f, m, where = 'roster', team = null) {
   const id0 = identity(m); const books = seasonBooks(m);
-  const career = m.stats?.career ? sumLines(m.stats.career.reg, m.stats.career.post) : sumLines(...books.map((b) => sumLines(b.reg, b.post)));
-  const careerReg = m.stats?.career?.reg || sumLines(...books.map((b) => b.reg));
+  // Career and season totals follow the game's own definition (the statistics screens, awards and records book): regular
+  // season, with the playoffs kept apart. Rates are derived from the summed totals, never averaged across seasons.
+  const careerReg = m.stats?.career ? sumLines(m.stats.career.reg) : sumLines(...books.map((b) => b.reg));
+  const careerPost = m.stats?.career ? sumLines(m.stats.career.post) : sumLines(...books.map((b) => b.post));
+  const career = careerReg;
   const cur = m.stats?.season?.year === f.season?.year ? m.stats.season : null;
-  const season = cur ? sumLines(cur.reg, cur.post) : {};
+  const season = cur ? sumLines(cur.reg) : {}; const seasonPost = cur ? sumLines(cur.post) : {};
   const club = where === 'roster' ? f.club : where === 'drafted' ? team || m.drafted?.club || null : (m.history || []).slice(-1)[0]?.club || null;
   const clubs = clubsOf(f, m, where); if (where === 'drafted' && club && !clubs.some((c) => c.club === club)) clubs.push({ club, from: null, to: null, how: 'drafted' });
   const seasons = Math.max(books.length, (m.yearsPro || 0) + (where === 'roster' ? 1 : 0));
@@ -190,7 +197,9 @@ export function fullProfile(f, m, where = 'roster', team = null) {
   const timeline = careerTimeline(m, { club: where === 'roster' ? f.club : null }).map((e) => ({ ...e, ref: eventRef(f, m, e) }));
   return {
     v: PROFILE_VERSION, kind: 'full', where, ...id0, club, clubs, seasons, onRecord, complete,
-    stats: { career, careerReg, season, seasonYear: cur ? cur.year : null, games: career.games || 0, focus: focusStats(m.position, career), seasonFocus: cur && (season.games || 0) > 0 ? focusStats(m.position, season) : null },
+    stats: { career, careerReg, careerPost, season, seasonPost, seasonYear: cur ? cur.year : null, games: career.games || 0, seasonGames: season.games || 0, postGames: careerPost.games || 0, seasonPostGames: seasonPost.games || 0,
+      focus: focusStats(m.position, career), seasonFocus: cur && (season.games || 0) > 0 ? focusStats(m.position, season) : null,
+      post: (careerPost.games || 0) > 0 ? { games: careerPost.games, text: statLine(careerPost) } : null, seasonPostLine: (seasonPost.games || 0) > 0 ? { games: seasonPost.games, text: statLine(seasonPost) } : null },
     books: books.map((b) => ({ year: b.year, team: b.team || null, games: (b.reg?.games || 0) + (b.post?.games || 0) })),
     honours: { titles, awards, records, hof }, trophies, timeline,
     tier: careerTier({ titles, awards, hof, seasons, records }),
@@ -212,7 +221,7 @@ function prospectProfile(f, m) {
 /** Another club's player: only what the league tables and the award history prove, for the seasons kept. */
 function leagueProfile(f, id, rows) {
   const r0 = rows[0].row; const sp = SPECIES_BY_ID[r0.species];
-  const career = sumLines(...rows.map((r) => sumLines(r.reg, r.post)));
+  const career = sumLines(...rows.map((r) => r.reg)); const careerPost = sumLines(...rows.map((r) => r.post));
   const trophies = trophyCase(f, { id }, []);
   // The current season's frozen award winners, before the season is archived.
   for (const [k, w] of Object.entries(f.season?.awardsFinal?.winners || {})) if (w && w.id === id && TROPHY_META[k] && k !== 'coy') { let s = trophies.find((t) => t.kind === k); if (!s) { s = { kind: k, ...TROPHY_META[k], entries: [], count: 0 }; trophies.push(s); } if (!s.entries.some((e) => e.year === f.season.year)) { s.entries.push({ key: `award:${k}:${f.season.year}`, year: f.season.year, club: w.team }); s.count = s.entries.length; } }
@@ -222,7 +231,7 @@ function leagueProfile(f, id, rows) {
   return {
     v: PROFILE_VERSION, kind: 'league', where: 'league', id, name: r0.name, species: r0.species, stage: 0, speciesName: sp?.name || r0.species, type: r0.type || sp?.element || null, position: r0.position, age: r0.age ?? null, level: null, ovr: null, yearsPro: r0.yearsPro ?? null,
     club: rows[0].team, clubs, seasons: rows.length, onRecord: rows.length, complete: false,
-    stats: { career, careerReg: sumLines(...rows.map((r) => r.reg)), season: rows[0].year === f.season?.year ? sumLines(rows[0].reg, rows[0].post) : {}, seasonYear: rows[0].year === f.season?.year ? rows[0].year : null, games: career.games || 0, focus: focusStats(r0.position, career), seasonFocus: null },
+    stats: { career, careerReg: career, careerPost, season: rows[0].year === f.season?.year ? sumLines(rows[0].reg) : {}, seasonYear: rows[0].year === f.season?.year ? rows[0].year : null, games: career.games || 0, seasonGames: 0, postGames: careerPost.games || 0, focus: focusStats(r0.position, career), seasonFocus: null, post: (careerPost.games || 0) > 0 ? { games: careerPost.games, text: statLine(careerPost) } : null },
     books: rows.map((r) => ({ year: r.year, team: r.team, games: (r.reg.games || 0) + (r.post.games || 0), line: statLine(sumLines(r.reg, r.post)) })).sort((a, b) => a.year - b.year),
     honours: { titles: 0, awards, records: 0, hof: false }, trophies, timeline: [], tier: careerTier({ awards, seasons: rows.length }),
     notes: [`Another club's player: the league keeps his season lines (${rows.length} season${rows.length === 1 ? '' : 's'} on record), not a full career.`],
@@ -254,13 +263,19 @@ export function eventDetail(f, m, ref) {
     }
     case 'record': {
       const R = f.records || {}; const cur = ref.scope === 'game' ? R.game?.[ref.cat] : R.season?.[ref.cat];
-      const standing = cur && cur.year === ref.year && (ref.scope !== 'game' || cur.week === ref.week) && cur.value === ref.value && (cur.id ? cur.id === m.id : cur.name === m.name);
+      const holder = cur ? resolveRecordHolder(f, cur, { scope: ref.scope, cat: ref.cat }).id : null;
+      const standing = cur && cur.year === ref.year && (ref.scope !== 'game' || cur.week === ref.week) && cur.value === ref.value && (holder ? holder === m.id : !cur.id && cur.name === m.name && cur.team === ref.club);
       const g = ref.scope === 'game' && ref.week != null ? gameRecord(f, m, ref.year, ref.week, ref.club) : null;
       return { kind: 'record', scope: ref.scope, cat: ref.cat, stat: STAT_NAME[ref.cat] || ref.cat, value: ref.value, year: ref.year, week: ref.week, club: ref.club, opp: standing ? cur.opp || null : g?.opp || null,
         standing: !!standing, brokenBy: !standing && cur ? { name: cur.name, team: cur.team, value: cur.value, year: cur.year } : null, prev: standing && cur.prev ? cur.prev : null, game: g };
     }
     case 'evolve': return { kind: 'evolve', stage: ref.stage, from: ref.from, to: ref.to, year: ref.year, week: ref.week, before: ref.before, fromStage: ref.stage - 1, species: m.species };
-    case 'game': { const g = gameRecord(f, m, ref.year, ref.week, ref.club); return g ? { kind: 'game', ...g, club: g.club || ref.club, lineText: g.line && Object.keys(g.line).length ? statLine(g.line) : null, missing: g.source === 'log' ? null : 'Only the current season\'s game lines are kept: this is the club\'s result.' } : null; }
+    case 'game': { const g = gameRecord(f, m, ref.year, ref.week, ref.club); return g ? { kind: 'game', ...g, club: g.club || ref.club, lineText: g.line && Object.keys(g.line).length ? statLine(g.line) : null, missing: g.source === 'log' || g.source === 'archive' ? null : 'His own line from this game was not kept (seasons before v39.1 keep the club\'s result only).' } : null; }
+    case 'season': {
+      const b = book(ref.year); if (!b) return null; const games = seasonGames(m, ref.year);
+      return { kind: 'season', year: ref.year, club: b.team || ref.club, reg: { games: b.reg?.games || 0, text: statLine(b.reg || {}) }, post: (b.post?.games || 0) > 0 ? { games: b.post.games, text: statLine(b.post) } : null,
+        games: games ? games.map((g) => ({ week: g.week, opp: g.opp, home: g.home, won: g.won, score: g.score, playoff: !!g.playoff || g.week > 10, text: statLine(g.line || {}) })) : null, missing: games ? null : 'Game-by-game lines are kept from v39.1 on: this season keeps its totals.' };
+    }
     case 'hof': return { kind: 'hof', year: ref.year, club: ref.club, owner: ref.owner };
     default: return null;
   }
@@ -288,3 +303,61 @@ export function snapshotProfile(s) {
 }
 /** Honours on a monster's timeline (titles, awards, records, Hall of Fame), cheap enough for every roster row. */
 export function honoursCount(m) { let n = 0; for (const e of careerEvents(m)) if (e.t === 'champion' || e.t === 'award' || e.t === 'record' || e.t === 'hof') n++; return n; }
+
+// ------------------------------------------------------------ older records without an id (GDD §41.2)
+const recordKey = (cat) => RECORD_CATEGORIES.find((c) => c.id === cat)?.key || cat;
+const valueIn = (line, cat) => { const v = withDerived(line || {})[recordKey(cat)]; return typeof v === 'number' ? v : 0; };
+/**
+ * Who holds a records-book entry. An entry with an id is that monster. An older entry (name, club, season, week, value) is
+ * linked only when the evidence leaves exactly one candidate:
+ *   - monsters the save keeps whose season book for that year is with that club, and whose numbers fit: the very game's line
+ *     equals the value (when the game is archived), else the season total can contain it; for a season record, the regular-
+ *     season total equals it;
+ *   - league-table rows of that season and club with that name and numbers that fit the same way.
+ * Two candidates (namesakes on one club in one season) or none: unlinked. Returns { id, how, candidates }.
+ */
+export function resolveRecordHolder(f, r, { scope = 'game', cat } = {}) {
+  if (!r) return { id: null, how: null, candidates: 0 };
+  if (r.id) return { id: r.id, how: 'id', candidates: 1 };
+  if (!r.name || r.year == null || !r.team) return { id: null, how: null, candidates: 0 };
+  const ids = new Set();
+  const known = [...(f.roster || []).map((m) => [m, 'roster']), ...Object.values(f.pool || {}).flat().map((m) => [m, 'pool']), ...(f.offseason?.market || []).map((m) => [m, 'market'])];
+  for (const [m, where] of known) {
+    if (m.name !== r.name) continue;
+    const s = m.stats; const cur = s?.season?.year === r.year ? s.season : null; const bk = cur || (s?.seasons || []).find((b) => b.year === r.year);
+    if (!bk) continue;
+    const team = bk.team || (cur && where === 'roster' ? f.club : null); if (team !== r.team) continue;
+    if (scope === 'season') { if (valueIn(bk.reg, cat) === r.value) ids.add(m.id); continue; }
+    const games = seasonGames(m, r.year);
+    if (games) { if (games.some((g) => g.week === r.week && valueIn(g.line, cat) === r.value)) ids.add(m.id); continue; }
+    if (valueIn(r.playoff ? bk.post : bk.reg, cat) >= r.value) ids.add(m.id);
+  }
+  const tables = r.year === f.season?.year ? [f.season.leagueStats, f.season.playoffStats] : (() => { const h = (f.history || []).find((x) => x.year === r.year); return [h?.leagueStats, h?.playoffStats]; })();
+  const [reg, post] = tables;
+  for (const row of Object.values((scope === 'game' && r.playoff ? post : reg)?.[r.team] || {})) {
+    if (row.name !== r.name) continue;
+    if (scope === 'season' ? valueIn(row, cat) === r.value : valueIn(row, cat) >= r.value) ids.add(row.id);
+  }
+  return ids.size === 1 ? { id: [...ids][0], how: 'evidence', candidates: 1 } : { id: null, how: null, candidates: ids.size };
+}
+
+// ------------------------------------------------------------ Hall of Fame cards written before careers were kept (GDD §41.3)
+/**
+ * A partial career for a monster on an older Hall of Fame card (no `careers` snapshot). The franchise save is cleared at
+ * retirement, so the card is the only record: his name, species, position, rating and level at retirement, and the card
+ * itself (his Hall of Fame recognition). The club's titles in that era are shown as the club's, never as his.
+ */
+export function legacyHofProfile(card, i) {
+  const b = card?.bestMonsters?.[i]; if (!b) return null;
+  const sp = SPECIES_BY_ID[b.species]; const base = String(b.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '');
+  const stage = sp ? (sp.evolution || []).findIndex((e) => e.name === base) + 1 : 0;
+  const years = (card.seasonsList || []).map((s) => s.year).filter((y) => y != null);
+  const last = years.length ? Math.max(...years) : null; const titles = (card.seasonsList || []).filter((s) => s.champion).map((s) => s.year);
+  const notes = ['Partial history: this Hall of Fame card was written before careers were kept (v39.0). It records his name, position, rating and level at retirement; his games, honours and earlier clubs were not saved.'];
+  notes.push(`${card.club} under ${card.owner}: ${card.seasons} season${card.seasons === 1 ? '' : 's'}, ${card.record?.w ?? 0}-${card.record?.l ?? 0}${titles.length ? `. The club won the Beast Bowl in ${titles.map((y) => yearOf(y)).join(', ')}; the card does not record which games he played` : ''}.`);
+  return { v: PROFILE_VERSION, kind: 'snapshot', legacy: true, where: 'hof', id: `${card.id}:${i}`, name: b.name, species: b.species, stage: Math.max(0, stage), speciesName: stage > 0 ? base : sp?.name || b.species, type: sp?.element || null, position: b.position, level: b.level ?? null, ovr: b.ovr ?? null, yearsPro: null,
+    club: card.club, clubs: [{ club: card.club, from: null, to: null }], seasons: null, onRecord: 0, complete: false,
+    stats: { career: {}, season: {}, games: 0, focus: [], seasonFocus: null }, books: [], honours: { titles: 0, awards: 0, records: 0, hof: true }, tier: 'hof',
+    trophies: [{ kind: 'hof', ...TROPHY_META.hof, count: 1, entries: [{ key: 'hof:card', year: last, club: card.club, owner: card.owner }] }],
+    timeline: [], emptyText: 'No timeline was kept on Hall of Fame cards written before v39.0.', notes };
+}

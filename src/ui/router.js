@@ -34,7 +34,8 @@ export function back() {
 }
 let navigating = false; // a go/back scrolls to the top; a re-render of the same screen (spending a point, toggling a tab) keeps the scroll position
 export function render() {
-  const top = currentScreen(); if (!top || !app) return;
+  const top = currentScreen(); if (!top || !app) { restoreTo = null; return; }
+  const restore = restoreTo; restoreTo = null; // consumed by this render only: never carried into a later, unrelated one
   const screen = screens.get(top.name);
   const keepScroll = !navigating && current === screen; const y = window.scrollY; const entering = navigating; navigating = false; // a go/back slides the new screen in; a re-render of the same screen stays put
   const ctx = { ...ctxProvider(), params: top.params, go, back, render };
@@ -55,6 +56,5 @@ export function render() {
   for (const b of app.querySelectorAll('[data-action="router-tab"]')) b.addEventListener('click', () => go(b.dataset.screen, {}, { reset: true }));
   screen.mount?.($('#screen'), ctx);
   afterMount?.(ctx, top.name);
-  if (keepScroll) window.scrollTo(0, y); else if (restoreTo != null) window.scrollTo(0, restoreTo); else window.scrollTo(0, 0);
-  restoreTo = null;
+  if (keepScroll) window.scrollTo(0, y); else if (restore != null) window.scrollTo(0, restore); else window.scrollTo(0, 0);
 }

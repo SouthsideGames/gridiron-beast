@@ -1821,3 +1821,276 @@ Every animation stops with reduced motion, from Settings or the system setting.
   - no page errors and no horizontal overflow.
 
   This is an emulated browser, not a real device.
+
+## 41. Career history completion and Career Presentation corrections (IMPLEMENTED 2026-10-23; branch `career-presentation`, PR #42, v39.1)
+
+**41.1 Archived game lines.**
+- **What is kept.** When a season closes (`rolloverMonster`), each monster's game log is packed into that season's book as `b.g`.
+- **Format.** One entry per game: `[week, opponent abbreviation, flags (1 home · 2 won · 4 playoff), score, line]`.
+  - The line keeps only the box-score keys (`GAME_KEYS`: passing, rushing, receiving, defence, coverage, blocking, kicking, ability plays), under 2-letter aliases.
+  - Snap counts, first downs, ability bookkeeping and other detail stay in the season totals only.
+  - No play-by-play is kept.
+- **Identity.** The permanent id is the monster's own. The season is the book's year and the team is the book's team. The playoff round comes from the week (11–13).
+- **Consistency.** The games of an archived season add up exactly to its book, for every kept key and in both buckets (tested on every archived season in the studies). Career totals and records are unchanged: they still come from the season books.
+- **What it opens.**
+  - Career Timeline game moments from past seasons (debuts, firsts, playoff and Beast Bowl performances, rivalry games, milestones) open his own line.
+  - Season marks, growth entries and season headers open a season sheet: regular-season totals, playoffs apart, and game by game.
+- **Older saves.** Seasons closed before v39.1 keep totals only. Their game moments show the club's result, worded as such. Nothing is reconstructed.
+- **Cost.** About 50 bytes per game. Measured on hands-off franchises (two seeds, identical within 1%):
+
+| Seasons | Save | Archived game lines | Share of save |
+|---|---|---|---|
+| 5 | 1.45–1.49 MB | 40 KB | 2.7% |
+| 10 | 2.2 MB | 86 KB | 3.9% |
+| 20 | 2.9 MB | 170 KB | 5.9% |
+
+**41.2 Older records linked by evidence.** Records set from v39.0 carry the holder's id. Older entries (name, club, season, week, value) link only when the evidence leaves exactly one candidate (`resolveRecordHolder`).
+- **Candidates are:**
+  - monsters the save keeps whose book for that season is with that club and whose numbers fit (the archived game's line equals the value, else the season total can hold it; for a season record, the regular-season total equals it);
+  - league-table rows of that season and club with that name and fitting numbers.
+- **The result.** Two candidates (namesakes on one club in one season) or none: unlinked. An accomplishment is never assigned by name alone.
+- **Where it applies.** The records book, and record details ("still the league record" checks the resolved holder).
+
+**41.3 Hall of Fame cards written before careers were kept.**
+- **The source.** The franchise save is cleared at retirement, so the card is the only record left.
+- **What the monster opens.** Each monster on an older card opens a clearly labelled partial history (`legacyHofProfile`):
+  - his name and species form (read from the species chain), position, rating and level at retirement;
+  - the card itself as his one honour.
+- **The club's context.** The club's seasons, record and Beast Bowl years under that owner are shown as the club's. The card does not record which games he played, and it says so.
+- **Not invented:** no awards, titles, statistics or earlier clubs.
+- **Existing cards and honours are unchanged.**
+
+**41.4 Career vs This Season (verified and corrected).**
+- **The definition.** The game's statistics screens, award models and records book count a career as regular-season games, with the playoffs kept apart.
+- **What was wrong.** The v39.0 summary added playoff games into both views.
+- **The fix.** Both views now show regular-season totals. The games figure always matches the scope (33 career games, 6 this season). A separate line gives playoff games and numbers, for the career or for this season. The career card's numbers carry the same caption ("Career · regular season · N games").
+- **Rates.** Every rate is derived from summed totals, never averaged across seasons: a test checks 165/230 = 71.7% rather than the 60.6% average. Below a volume floor a rate shows a dash.
+- **Bug found and fixed:** completion % allowed (corners) was shown without its % sign.
+- **Scenarios tested:**
+  1. a rookie mid-season;
+  2. a veteran with three completed seasons;
+  3. a traded-in monster;
+  4. a free agent;
+  5. incomplete records;
+  6. no games;
+  7. percentage positions (QB, CB, K);
+  8. postseason appearances;
+  9. every monster of a real three-season franchise against its books.
+
+**41.5 Navigation and scroll restoration (verified and corrected).** Ten scenarios run in headless Chromium at 320, 360, 390 and 412 px (`tools/navigation-check.py`):
+
+| # | Scenario |
+|---|---|
+| 1 | Roster → card → Back |
+| 2 | Card → timeline detail → Close |
+| 3 | League News → career → card → Back |
+| 4 | Awards → career → card → Back |
+| 5 | Free agency → career → close |
+| 6 | Draft room → career → close |
+| 7 | More → menu screen → Back |
+| 8 | Tabs after scrolling |
+| 9 | Modal sheets |
+| 10 | Navigation after a weekly action |
+
+**Fixed in the shared layers:**
+- **Router.** A pending scroll restore is now consumed by the very next render only, so a render that ended early can never carry an old position into an unrelated screen. Tabs and reset flows start at the top. Back restores the previous screen once.
+- **Sheets.** While any sheet is open, the page behind it is locked: a drag or wheel on the dimmed backdrop used to scroll the screen underneath. Scrolling inside a sheet never chains into the page. A body observer keeps the lock in step with the sheets actually present, however they close.
+- **Sticky headers.** The timeline's season headers stuck at the very top of the window, under the 48 px top bar; they now stop below it (inside sheets, at the sheet's top). Jump targets (🏆 Career, Show the whole career) land below the top bar, and the last block of a screen clears the tab bar.
+
+**Intentional behaviour kept:** a re-render of the same screen keeps its position, a new screen opens at the top, and the roster's Lineup/Depth view is kept.
+
+**41.6 Save Image: what the page can and cannot know.**
+- **What the page can confirm:**
+  - the PNG was drawn;
+  - the share sheet completed (`navigator.share` resolves);
+  - the clipboard accepted the image (`clipboard.write` resolves).
+- **What it cannot confirm:** that a download arrived. A browser may ask first, save silently, or (in a sandboxed preview such as an embedded artifact, which reports "File downloads aren't available") refuse without telling the page.
+- **The v39.0 problem.** The game said "Saved" either way.
+
+**Now:**
+- **Download image** says "Download requested: name.png. Check your downloads."
+- When the game runs embedded, it says the preview may block downloads and how to save the card instead: press and hold (or right-click) the card, or open the game in its own tab.
+- **Copy image** (where the clipboard API exists) reports a copy only when the clipboard accepted it.
+- **Share…** uses the system share sheet where the device can share files.
+- A status line under the preview repeats the outcome for screen readers.
+- "Saved" is never claimed.
+
+**Verified** (`tools/card-export-check.py`):
+- **A normal page.** Both layouts arrive as real PNG files (1080×1350 and 1080×1080), the wording is "Download requested", and the copied clipboard holds `image/png`.
+- **A sandboxed iframe without allow-downloads.** No file arrives, the wording says so, and Copy says it is blocked.
+
+**41.7 Polish.**
+- **Season headers** on the timeline open the season sheet.
+- **Season sheets** list every game with opponent, result and his line, playoff games outlined.
+- **Inline career links** in News and the award races have a 32 px tap target without moving the text, plus an active state and a keyboard focus ring; the older News check flagged them at 16 px.
+- **The career card** labels its three numbers.
+- **The export status** is announced to screen readers.
+
+**41.8 Remaining limitations.**
+- Seasons closed before v39.1 keep totals, not game lines.
+- Hall of Fame cards written before v39.0 keep only what the card recorded.
+- Records set before v39.0 link only when the evidence is unique.
+- Another club's players are known from the league tables until persistent AI rosters exist (§42).
+- **The save keeps growing:** about 2.9 MB at 20 seasons. Archived game lines are only 6% of it. Where the rest goes, measured at season 20 (seed 1):
+
+| Part of the save | Size | Growth |
+|---|---|---|
+| Archived league tables | 1.08 MB | Capped at 8 seasons |
+| `draftResults` | 599 KB | Every AI draftee ever drafted, about +30 KB per season; the game only reads the last three classes |
+| Award sheets in the history | 449 KB | Finalists with full stat lines, about +22 KB per season |
+| Roster | 388 KB | Stats 330 KB, career events 38 KB |
+| Current season | 214 KB | |
+
+- **Not changed here.** Pruning `draftResults` older than three classes, and slimming award finalists to the fields the award sheets show, are save-hygiene changes outside this brief. They are listed for approval (§42.10, decision K).
+- **The limit.** Browser storage commonly allows 5–10 MB, so storage needs a plan before persistent AI rosters (§42, decision H).
+
+**41.9 Verified.**
+- `npm test`: 368 passing, including `tests/career-history.test.js` (11 tests):
+  - archived games: packing, unpacking, and books that add up across a real franchise;
+  - old moments opening archived lines, and season sheets;
+  - record matching by evidence (unique, contradicted, ambiguous namesakes, league tables);
+  - partial Hall of Fame careers;
+  - Career vs This Season (synthetic scenarios and the real franchise);
+  - the router's scroll memory (stubbed DOM);
+  - timeline filters and folds;
+  - export wording;
+  - saves, including one stripped of game lines and record ids.
+- `tools/history-growth.mjs`: two franchises, 20 seasons each, measured at 5, 10 and 20. Every archived season adds up to its book, career games equal the books, every linked event opens, no accomplishment repeats: 0 problems.
+- **Franchise progression and game outcomes are unchanged.** The fingerprint (records, champions, award winners, roster levels) on `main` and on this branch, 4 franchises × 4 seasons, is identical.
+- **Browser checks** in headless Chromium, clean:
+  - `tools/career-presentation-check.py`, `tools/navigation-check.py` and `tools/card-export-check.py` at 320–412 px;
+  - the League News and Career Timeline checks.
+
+  This is an emulated browser, not a real device.
+
+## 42. Persistent AI rosters — DESIGN ONLY (proposed 2026-10-23; NOT IMPLEMENTED; awaiting the owner's approval)
+
+> Nothing in this section exists in the game. It is the proposal requested for League-Wide Career Continuity. No code will be written until the owner approves it and settles the decisions in §42.10.
+
+**42.0 Today.**
+- **How AI rosters are built.** `aiTeam(f, club, year)` rebuilds each opposing roster from a hash of club, season and franchise seed, every time it is needed. It produces the same 38 monsters all season and a new set each season.
+- **What persists already:**
+  - AI draftees (`f.draftResults`, injected for three seasons);
+  - monsters the owner traded for (removed through `f.aiTransfers`);
+  - pool monsters signed by AI clubs, which leave the save with a history line.
+- **What this means.**
+  - Other clubs' players exist only as league-table rows, and their ids change every season.
+  - A former player-controlled monster signed by an AI club vanishes from the game.
+  - Club strength follows `clubQuality` (tier, difficulty, gym growth, the owner's titles).
+
+**42.1 Proposed architecture: a league registry.**
+- **One new franchise field** `f.league = { v, monsters: { [id]: monster }, clubs: { [club]: { roster: [ids], strategy, cap } }, persistentFrom }`, plus a pure module `src/franchise/league-registry.js`.
+- **The owner's roster stays `f.roster`**, so every owner-facing screen and system keeps working unchanged. The registry holds the AI clubs' monsters and the regional pools' free agents.
+- **AI teams.** `aiTeam` becomes "build the team from the registry roster" (`buildTeam`, already used today) instead of `generatedTeam(hash)`. It keeps the coach, playbook and Legendary rules exactly as they are, and is cached per club per week.
+- **Determinism.** Every AI decision draws from the franchise generator (`frng(f)`) in a fixed club order, the way league games do now. One seed gives one league.
+- **Reuse, not new rules:**
+  - progression (`afterGame`, `offseason`, `tryEvolve`);
+  - contracts (`newContract`, `salaryFor`, renewal asks);
+  - the draft (`draftPlayerPick`, which AI clubs already use);
+  - free agency (`toPool`, `poolActivity`);
+  - trades (`trades.js`);
+  - stats (`recordGame` already records every player by id);
+  - careers (`career.js`, `career-profile.js`).
+
+**42.2 League-wide identity model.**
+- Every monster keeps its permanent id from creation (generation, draft or recruitment) to the end. It has `m.club` (null for a free agent) and the same `m.history` entries the owner's monsters have (club, from, to, reason).
+- **Season books.** An AI monster's season books are written by the same `recordGame` path; it already builds league-table rows by id.
+- **A move** between the owner and an AI club, or between AI clubs, moves the object itself. Stats, career events and archived lines go with it.
+- **The first season of persistence** starts from the monsters the owner has already seen this season (same ids): no surprises at migration.
+
+**42.3 AI roster-management rules** (the owner's franchise rules, applied to AI clubs).
+- **Positional needs.** Targets are the depth chart (`GROUP_SLOTS`) with one backup per slot, the same rule as the owner's 38-man roster. A need is a position below target or a starter below the club's quality line.
+- **Roster limits:** 26 to 38, as for the owner. Moves that would break them are refused, and the season-start check fills the gaps.
+- **Contracts and the salary cap.** AI monsters get contracts from the same functions. At each offseason, expiring deals are re-signed when the monster is a starter or good value, otherwise he walks to his region's pool. Clubs over the cap release the lowest value per salary. *(The cap itself is the owner's; see decision D.)*
+- **Draft picks.** AI selections join their rosters (instead of `draftResults` injection), and traded picks are honoured as today.
+- **Free agency.** AI clubs sign from the pools for needs: the existing 15% weekly chance in season, and a needs-first pass in the offseason. Former owner monsters stay in the pools and can be signed. *(Order against the owner: decision F.)*
+- **Development.** AI monsters gain experience and levels by the owner's rules and evolve automatically when ready, as the AI does for its signature monsters. *(Exact per-game or season-level: decision B.)*
+- **Injuries and fatigue.** Applied from the simulated games through the same progression path, with recovery weeks.
+- **Rebuilding.** A club's strategy (contend / balanced / rebuild) follows its record and roster age. Rebuilding clubs keep young players and value picks; contenders re-sign veterans.
+- **Competitive balance.** `clubQuality` remains the target. After each offseason a club far from its target (more than ±4 overall) is nudged back: generated regional free agents for weak clubs, slower development for runaway clubs. This preserves difficulty, gym growth and the "league lifts when you win" rule. *(Decision C.)*
+
+**42.4 Season transition** (once, at the end of the season, in a fixed order):
+1. awards and records (as now);
+2. the AI clubs' season-end career events;
+3. aging and decline (`offseason`) for every registered monster;
+4. contracts expire: re-sign or release to the pool;
+5. the draft (already league-wide);
+6. AI free agency;
+7. roster validation (limits, positions, cap);
+8. the balance nudge;
+9. stat books roll over;
+10. the next season starts.
+
+The owner's own offseason flow is unchanged and runs alongside. Old monsters who stop being re-signed drift into the pools, where the cap of 12 per region already lets the oldest go. That is an exit without a retirement system *(decision A)*.
+
+**42.5 Career integration.**
+- **Monster Career Timeline.** The writers run for AI clubs too:
+  - season-end events (awards, titles, records, season marks, club moves, evolutions) for every AI monster;
+  - per-game moments (firsts, milestones, playoff stars) for every AI monster that played (cheap: they read the game log the owner's games already produce).
+- **Career Presentation.** `careerProfile` already returns a full profile for any monster in the save; AI stars get summaries, trophy cases, timelines and career cards.
+- **League News.** Award, record and race lines link full careers. New lines become possible, such as "former Ember City star signs with Thunder Mesa" and "Voltarch wins his third MVP".
+- **Awards and records.** Ids become permanent, so repeat winners and record holders are tracked across seasons; the history keeps ids already.
+- **Hall of Fame.** The owner's card is unchanged. A league Hall of Fame is a later idea, not part of this design.
+- **Trading.** Offers come from real rosters with real careers. Acquired monsters move objects, which replaces `aiTransfers`.
+- **Rivalries.** The rival club keeps its stars across seasons, alongside the existing signature monster.
+- **Future Monster Partnerships.** Shared seasons on one club become computable for any two monsters (not started; needs authorisation).
+
+**42.6 Save migration.**
+- **On first load,** with `f.league` missing, build the registry from this season's `aiTeam` rosters (deterministic, same ids), merge `draftResults` and the pools, and drop `aiTransfers` (already applied).
+- **Mark the boundary** with `persistentFrom = current season`. Earlier seasons stay table-only ("league profile"), with no backfilled AI careers.
+- **Mid-season migration** keeps the season's league tables valid because the ids match.
+- **The schema** goes 6 → 7, with a tested migration and a backup copy taken first *(decision I)*.
+
+**42.7 Performance and storage estimates** (measured today: 570 AI monsters on 15 clubs, about 520 bytes each without stats; all 15 rosters build in about 31 ms).
+
+| Item | Size |
+|---|---|
+| Registry core | ≈ 300 KB at migration |
+| AI season books (≈ 400 AI monsters play, ≈ 250 B per season book) | ≈ +100 KB per season |
+| AI career events (season-end only) | ≈ +20 KB per season |
+| AI archived game lines, if kept like the owner's (≈ 50 B × 20 players × 12 games × 15 clubs) | ≈ +180 KB per season (not recommended: decision G) |
+
+- **Steady state with turnover.** Departed monsters leave with the pool's cap. Undecorated monsters who have left the league for two seasons are pruned, and decorated ones keep a compact snapshot (the §40 format, about 2.5 KB). Estimated +120–150 KB per season on top of today's growth.
+- **Today's growth:** 1.5 MB at 5 seasons, 2.2 MB at 10, 2.9 MB at 20, mostly league tables, `draftResults` and award sheets (§41.8). Decision K alone would save about 1 MB at 20 seasons. Persistent rosters would put a 20-season save near 5–6 MB without it, at or beyond the localStorage budget of many browsers.
+- **Required before Phase 2:** a storage plan (decision H). Moving the save to IndexedDB (large quota, asynchronous) or compressing the stored JSON (roughly 5–8× on this data), plus a size meter in Settings and a warning threshold.
+- **CPU.** Season transition for about 700 monsters (aging, contracts, draft, free agency): well under 0.5 s, done once. Weekly cost: AI teams cached per week, progression for the two clubs in each simulated game (about 0.1 ms each). Mobile cost is lower than today's regeneration.
+
+**42.8 Implementation phases** (each one gated by a fingerprint-style study and the owner's review):
+1. **Registry and identity.** Migration; AI teams built from the registry; aging, development and evolution; balance nudge; no transactions yet beyond re-signing everyone. Save-size meter.
+2. **AI roster management.** Contracts, cap, releases, draft into rosters, free agency, strategy. Storage plan in place.
+3. **Career continuity.** Season books, career events and profiles for AI monsters; League News lines; trophies across seasons; career cards for AI stars.
+4. **Trades and polish.** Owner trades from real rosters; rival stars; optional AI–AI trades (decision E).
+
+**42.9 Testing strategy.**
+- **Determinism:** golden seeds; the same seed gives the same league after 10 seasons.
+- **Weekly invariants in the soak:**
+  - roster limits and positions for all 16 clubs;
+  - no monster on two clubs;
+  - unique ids;
+  - every contract and cap state valid.
+- **Long soaks:** 20 and 40 seasons on every difficulty.
+- **Balance studies** against today:
+  - club overall distribution against `clubQuality`;
+  - parity (titles spread);
+  - the owner's win rates by difficulty;
+  - the Board's forecast calibration.
+- **Save-size budgets per season and the migration tests:** v39.x saves at season 1, mid-season and the offseason, plus a backup and restore.
+- **Career integrity:** trophies match the award history; no repeated events.
+- **Performance:** timing under a throttled CPU profile.
+- **Real-device checks:** season transitions on low-end phones.
+
+**42.10 Decisions requiring the owner's approval.**
+
+| | Decision | Recommendation |
+|---|---|---|
+| A | Exit for old monsters: attrition through the pools (no new system), or a simple retirement rule (a new system) | Attrition first |
+| B | AI development: exact per-game rules (fair, slightly more CPU), or a season-level approximation | Exact |
+| C | Balance: keep `clubQuality` as a target with nudges (keeps difficulty and gym growth), or purely organic clubs | Targets |
+| D | AI contracts and the cap: the owner's rules, or a simplified club budget | The owner's rules |
+| E | AI–AI trades: later phase, or never | Later, optional |
+| F | Free-agency order between the owner and AI clubs in the offseason | The owner first, as today, with AI needs filled after |
+| G | Game lines for AI monsters: season totals only, or full archived lines | Totals only |
+| H | Storage: IndexedDB, compression, or both, with a size meter and warning | IndexedDB + meter |
+| I | Schema 6 → 7 with a backup-first migration | Yes |
+| J | Seasons before migration stay table-only (no reconstructed AI careers) | Yes |
+| K | Save hygiene now, independent of AI rosters: prune `draftResults` older than three classes (unused by the game, about 30 KB per season) and keep award finalists to the fields the sheets show (about 22 KB per season) | Yes, as a small separate PR |

@@ -922,3 +922,26 @@ html[data-reduced-motion="1"] .cs-sprite svg, html[data-reduced-motion="1"] .tc-
 .career-block .cs-head { margin: 6px 0 8px; }
 .hof-mon { appearance: none; font: inherit; color: inherit; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line-2); background: #12271f; cursor: pointer; }
 .hof-mon .tl-go { font-size: 18px; }
+.dt-games { display: grid; gap: 4px; }
+.dt-game { display: grid; grid-template-columns: 44px 1fr auto; gap: 2px 8px; align-items: baseline; padding: 6px 8px; border-radius: 8px; background: #10231b; border: 1px solid var(--line); font-size: 13px; }
+.dt-game.po { border-color: #8a6a10; }
+.dt-gw { font-weight: 800; color: var(--ink-2); font-size: 12px; } .dt-go { min-width: 0; }
+.dt-gl { grid-column: 1 / -1; font-size: 12px; color: var(--ink-3); }
+.cs-post { margin-top: 6px; font-size: 12px; color: var(--ink-2); line-height: 1.35; } .cs-post b { color: #ffe08a; }
+/* Sticky season headers sit below the sticky top bar on screens (inside sheets, the sheet body scrolls: top 0) — GDD §41.5 */
+.screen .tl-season { top: calc(48px + var(--sat)); }
+.sheet .tl-season { top: -1px; }
+/* Anything scrolled into view lands below the top bar, never under it */
+.screen .timeline, .screen [id] { scroll-margin-top: calc(56px + var(--sat)); }
+.screen.with-tabs .timeline { scroll-margin-bottom: calc(72px + var(--sab)); }
+.sheet-body { overscroll-behavior: contain; } /* scrolling a sheet to its end never scrolls the screen behind it (GDD §41.5) */
+html.sheet-open, html.sheet-open body { overflow: hidden; }
+.cc-status { font-size: 13px; margin: 8px 0 0; min-height: 1.3em; } .cc-status[data-kind="good"] { color: var(--good); } .cc-status[data-kind="ready"] { color: var(--ink-2); }
+button.tl-season.link { appearance: none; font: inherit; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line-2); cursor: pointer; min-height: 32px; color: var(--ink-2); }
+button.tl-season.link:active { background: #1b3a2f; }
+button.tl-season.link .dim { color: var(--accent); }
+/* Inline career links: a 32 px tap target without moving the text around them (GDD §41.8) */
+.career-link { padding: 8px 2px; margin: -8px -2px; border-radius: 6px; }
+.career-link:active { background: rgba(250,204,21,.12); }
+.career-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+.ln-second { padding-bottom: 4px; } .ln-race-row .grow { padding-bottom: 4px; }

@@ -27,7 +27,7 @@ function itemHtml(e, i, animate, interactive) {
  * domId (the section's element id, 'timeline' on the monster card), head (HTML above the filter: the summary and trophies),
  * animate, reduced, interactive }.
  */
-export function timelineSectionHtml(all, { name = 'This monster', id = '', domId = null, head = '', animate = true, reduced = false, interactive = true, emptyText = null } = {}) {
+export function timelineSectionHtml(all, { name = 'This monster', id = '', domId = null, head = '', animate = true, reduced = false, interactive = true, emptyText = null, seasonLinks = null } = {}) {
   const list = view.filter === 'highlights' ? all.filter((e) => e.tier !== 'career') : all;
   const open = !!view.open[id]; const shown = open ? list : list.slice(0, TIMELINE_FOLD);
   const anim = animate && !reduced;
@@ -37,7 +37,8 @@ export function timelineSectionHtml(all, { name = 'This monster', id = '', domId
     if (!started || e.y !== lastY) {
       if (started) html += '</ol>'; started = true;
       const n = list.filter((x) => x.y === e.y).length; const hasMajor = list.some((x) => x.y === e.y && x.tier === 'major');
-      html += `<div class="tl-season ${hasMajor ? 'has-major' : ''}"><span>${e.y == null ? 'Before the timeline' : `Season ${esc(yearOf(e.y))}`}</span><span class="dim">${n} moment${n === 1 ? '' : 's'}</span></div><ol class="tl-list">`;
+      const sl = interactive && e.y != null && seasonLinks?.has(e.y);
+      html += sl ? `<button class="tl-season link ${hasMajor ? 'has-major' : ''}" data-action="tl-season" data-y="${e.y}" aria-label="${esc(`Season ${yearOf(e.y)}: open the season`)}"><span>Season ${esc(yearOf(e.y))}</span><span class="dim">${n} moment${n === 1 ? '' : 's'} ›</span></button><ol class="tl-list">` : `<div class="tl-season ${hasMajor ? 'has-major' : ''}"><span>${e.y == null ? 'Before the timeline' : `Season ${esc(yearOf(e.y))}`}</span><span class="dim">${n} moment${n === 1 ? '' : 's'}</span></div><ol class="tl-list">`;
       lastY = e.y;
     }
     html += itemHtml(e, i++, anim, interactive);
@@ -72,11 +73,12 @@ export function redrawKeepingPlace(el, nextHtml, { keepTop = true } = {}) {
  * Handlers for a timeline: the filter and the fold redraw only the section (`render(section)` returns its new HTML), and
  * `open(k, section)` opens an event's details. Works on the monster card and inside career sheets alike.
  */
-export function timelineActions({ render, open }) {
+export function timelineActions({ render, open, openSeason = null }) {
   const sectionOf = (el) => el.closest('section.timeline');
   return {
     'tl-filter': (el) => { const s = sectionOf(el); if (!s) return; view.filter = el.dataset.v; redrawKeepingPlace(s, render(s)); },
     'tl-more': (el) => { const s = sectionOf(el); if (!s) return; view.open[el.dataset.id] = !view.open[el.dataset.id]; const wasOpen = view.open[el.dataset.id]; const n = redrawKeepingPlace(s, render(s)); if (!wasOpen) n?.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
     'tl-open': (el) => { const s = sectionOf(el); open?.(el.dataset.k, s); },
+    'tl-season': (el) => openSeason?.(Number(el.dataset.y)),
   };
 }

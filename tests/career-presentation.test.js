@@ -13,7 +13,7 @@ import { careerAfterGame } from '../src/franchise/career.js';
 let real = null;
 const franchise = () => (real ||= runFranchise(1, { difficulty: 'rookie', seasons: 3 }).f); // seed 1 wins a Beast Bowl in its third season
 
-const mon = (over = {}) => ({ id: 'm1', name: 'Testro', species: 'flaroo', stage: 0, type: 'Fire', position: 'QB', age: 24, level: 9, yearsPro: 0, attributes: { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 40 }, history: [], career: { v: 1, ev: [], bf: 1 }, ...over });
+const mon = (over = {}) => ({ id: 'm1', name: 'Testro', species: 'emberfox', stage: 0, type: 'Fire', position: 'QB', age: 24, level: 9, yearsPro: 0, attributes: { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 40 }, history: [], career: { v: 1, ev: [], bf: 1 }, ...over });
 const book = (year, team, reg, post = {}) => ({ year, team, reg, post });
 const fr = (over = {}) => ({ club: 'Ember City Beasts', season: { year: 3, week: 4, finished: false, schedule: [] }, roster: [], history: [], records: { game: {}, season: {}, team: {} }, pool: {}, ...over });
 
@@ -21,7 +21,8 @@ test('summary: career totals add the season books, the focus is the position\'s,
   const m = mon({ yearsPro: 2, stats: { v: 2, career: { reg: { games: 18, att: 300, comp: 190, passYds: 2400, passTd: 20, intThrown: 7 }, post: { games: 1, att: 20, comp: 12, passYds: 150, passTd: 2 } }, season: { year: 3, reg: { games: 2, att: 40, comp: 25, passYds: 300, passTd: 3, intThrown: 1 }, post: {} }, seasons: [book(1, 'Ember City Beasts', { games: 9, att: 130, comp: 80, passYds: 1000, passTd: 8, intThrown: 3 }), book(2, 'Ember City Beasts', { games: 7, att: 130, comp: 85, passYds: 1100, passTd: 9, intThrown: 3 }, { games: 1, att: 20, comp: 12, passYds: 150, passTd: 2 })], log: [] } });
   const f = fr({ roster: [m] }); const p = P.fullProfile(f, m, 'roster');
   assert.deepEqual(p.stats.focus.map((s) => s.label), ['Pass yards', 'Pass TD', 'INT thrown', 'Comp %']);
-  assert.equal(p.stats.focus[0].text, '2,550'); assert.equal(p.stats.focus[1].value, 22); assert.equal(p.stats.focus[3].text, '63.1%');
+  // regular season, the game's career definition (GDD §41.4); the playoff game is on its own line
+  assert.equal(p.stats.focus[0].text, '2,400'); assert.equal(p.stats.focus[1].value, 20); assert.equal(p.stats.focus[3].text, '63.3%'); assert.equal(p.stats.post.games, 1);
   assert.equal(p.stats.seasonFocus[0].text, '300', 'this season stands apart from the career');
   assert.equal(p.seasons, 3); assert.equal(p.onRecord, 3); assert.equal(p.club, 'Ember City Beasts');
   const dl = P.focusStats('DL', { tackles: 10, assists: 4, sacks: 3, tfl: 2, pressures: 9 });
@@ -77,7 +78,7 @@ test('interactive timeline: game links only where a record exists; details read 
   assert.equal(by('season:passYds:2').ref, null);
   assert.equal(by('evo:1').ref.kind, 'evolve');
   const g = P.eventDetail(f, m, by('first:td').ref); assert.equal(g.source, 'log'); assert.equal(g.score, '24-10'); assert.match(g.lineText, /280 yds/); assert.equal(g.missing, null);
-  const old = P.eventDetail(f, m, by('debut').ref); assert.equal(old.source, 'schedule'); assert.equal(old.won, false); assert.match(old.missing, /current season/);
+  const old = P.eventDetail(f, m, by('debut').ref); assert.equal(old.source, 'schedule'); assert.equal(old.won, false); assert.match(old.missing, /was not kept/);
   const evo = P.eventDetail(f, m, by('evo:1').ref); assert.deepEqual([evo.fromStage, evo.stage, evo.before], [0, 1, true]);
   assert.equal(new Set(items.map((e) => e.k)).size, items.length, 'no duplicate events');
 });

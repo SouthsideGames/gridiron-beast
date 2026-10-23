@@ -54,7 +54,8 @@ export function invariants(f, where) {
 }
 
 // `stopWeek` (UI checks): stop in the first season once that week begins, mid-season.
-export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null } = {}) {
+// `onSeason(f, s)` (studies): called after each season's offseason is settled, before the next season starts.
+export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null } = {}) {
   const f = newFranchise(seed, { difficulty });
   const problems = [...check(f, 'created')]; const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
   for (let s = 1; s <= seasons && !log.fired; s++) {
@@ -92,6 +93,7 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
     for (const role of ['head_coach', 'off_coord', 'def_coord', 'head_scout', 'monster_trainer']) if (!f.staff?.[role]) F.hireDefaultStaff(f);
     // save round-trip at the season boundary
     const back = Save.importJson(Save.exportJson(f)); if (!back) problems.push(`season ${s}: save round-trip failed`); else if (JSON.stringify(back.roster) !== JSON.stringify(f.roster)) problems.push(`season ${s}: save round-trip changed the roster`);
+    onSeason?.(f, s);
     if (s < seasons) { const n = F.startNextSeason(f); if (!n.ok) { problems.push(`season ${s}: next season blocked (${n.reason})`); break; } problems.push(...check(f, `season ${s + 1} start`)); }
   }
   return { f, problems, log };

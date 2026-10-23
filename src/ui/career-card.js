@@ -42,6 +42,8 @@ export function cardStats(p) {
 /** "Lumen · Light · QB", without repeating the species when the name already is it (numerals aside). */
 const idLine = (p) => [String(p.name || '').replace(/ (II|III|IV|V|VI|\d+)$/, '') === p.speciesName ? null : p.speciesName, p.type, p.position].filter(Boolean).join(' · ');
 const footLine = (p) => ((p.stats?.games || 0) > 0 ? `${p.level != null ? `Lv ${p.level}` : ''}${p.ovr != null ? ` · ${p.ovr} OVR` : ''}`.replace(/^ · /, '') : 'Awaiting his first game');
+/** What the three numbers are: career regular-season totals (the game's definition), or where he stands before a first game. */
+const statsCaption = (p) => ((p.stats?.games || 0) > 0 ? `CAREER · REGULAR SEASON · ${p.stats.games} GAME${p.stats.games === 1 ? '' : 'S'}` : 'BEFORE HIS FIRST GAME');
 const seasonsLine = (p) => { const c = p.clubs || []; const from = c.find((x) => x.from != null)?.from; const last = c[c.length - 1]; const to = last?.to; return `${from != null ? `${yearOf(from)}${to == null ? '–now' : to !== from ? `–${yearOf(to)}` : ''} · ` : ''}${p.seasons <= 1 ? 'Rookie season' : `${p.seasons} seasons`}`; };
 
 // ------------------------------------------------------------ drawing helpers
@@ -113,6 +115,7 @@ export function drawCareerCard(canvas, p, format = 'portrait') {
     text(p.club || 'Free agent', x + 32, 446, max - 48, 34, 20, { weight: 800 });
     text(seasonsLine(p), x, 516, max, 28, 18, { weight: 700, color: 'rgba(255,255,255,.75)' });
     pills(ctx, honourPills(p), x, 548, max, 2, st, texts);
+    text(statsCaption(p), 70, 706, W - 140, 22, 16, { weight: 800, color: 'rgba(255,255,255,.55)', spacing: 3 });
     statsRow(ctx, cardStats(p), 70, 720, W - 140, 200, st, texts);
     text(footLine(p), W - 70, H - 64, 440, 30, 20, { weight: 800, color: 'rgba(255,255,255,.75)', align: 'right' });
   } else {
@@ -125,7 +128,8 @@ export function drawCareerCard(canvas, p, format = 'portrait') {
     text(p.club || 'Free agent', W / 2, 860, W - 240, 38, 22, { weight: 800, align: 'center' });
     text(seasonsLine(p), W / 2, 926, nameMax, 30, 20, { weight: 700, color: 'rgba(255,255,255,.75)', align: 'center' });
     const pl = honourPills(p); pills(ctx, pl, 90, 952, W - 180, 2, st, texts, true);
-    statsRow(ctx, cardStats(p), 90, pl.length ? (pl.length > 3 ? 1086 : 1040) : 980, W - 180, 170, st, texts);
+    const sy = pl.length ? (pl.length > 3 ? 1094 : 1050) : 992; text(statsCaption(p), W / 2, sy - 12, W - 180, 22, 16, { weight: 800, color: 'rgba(255,255,255,.55)', align: 'center', spacing: 3 });
+    statsRow(ctx, cardStats(p), 90, sy, W - 180, 160, st, texts);
     text(footLine(p), W - 70, H - 64, 440, 30, 20, { weight: 800, color: 'rgba(255,255,255,.75)', align: 'right' });
   }
   return { w: W, h: H, format, tier: p.tier, texts, clipped: texts.filter((t) => !t.fits) };
@@ -166,31 +170,58 @@ export function careerCardBlob(p, format = 'portrait') {
 }
 export const cardFileName = (p, format) => `${String(p.name || 'monster').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-career-${format}.png`;
 
-/** The card sheet: a preview of the real PNG, the two layouts, Share (where the device offers it) and Save image. */
+/**
+ * Where this page can hand a file over (GDD §41.6). What the page can know: the PNG was drawn (always confirmed), the share
+ * sheet completed (navigator.share resolves), the clipboard accepted the image (clipboard.write resolves). What it cannot
+ * know: whether a download actually landed. A browser may ask first, save silently, or (in a sandboxed preview such as an
+ * embedded artifact) refuse without telling the page. So a download is only ever "requested".
+ */
+export function exportSupport() {
+  let embedded = false; try { embedded = window.self !== window.top; } catch { embedded = true; }
+  let share = false; try { share = !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File([new Blob(['x'], { type: 'image/png' })], 'x.png', { type: 'image/png' })] })); } catch { share = false; }
+  const copy = typeof ClipboardItem !== 'undefined' && !!navigator.clipboard?.write;
+  const download = 'download' in document.createElement('a');
+  return { embedded, share, copy, download };
+}
+export const EXPORT_TEXT = Object.freeze({
+  requested: (name) => `Download requested: ${name}. Check your downloads.`,
+  requestedEmbedded: 'Download requested, but this preview may block downloads. If nothing arrives, press and hold (or right-click) the card to save it, or open the game in its own tab.',
+  noDownload: 'This browser cannot download files from here: press and hold (or right-click) the card to save it.',
+  shared: 'Career card shared.', shareFailed: 'Sharing did not go through: try Download, or press and hold the card.',
+  copied: 'Card copied as an image: paste it anywhere.', copyFailed: 'Copying images is blocked here: try Download, or press and hold the card.',
+});
+
+/** The card sheet: a preview of the real PNG, the two layouts, then Share (where offered), Download and Copy image. */
 export function openCareerCard(p, { reduced = false } = {}) {
-  let format = 'portrait'; let url = null; let blob = null; let busy = false;
+  let format = 'portrait'; let url = null; let blob = null; let busy = false; const sup = exportSupport();
   const { el } = sheet(`<div class="cc"><div class="seg cc-formats" role="group" aria-label="Layout">${Object.entries(CARD_FORMATS).map(([k, v]) => `<button class="btn small ${k === format ? 'primary' : ''}" data-cc-format="${k}" aria-pressed="${k === format}">${v.label}</button>`).join('')}</div>
-    <div class="cc-preview ${reduced ? '' : 'anim'}"><div class="cc-loading dim">Drawing the card…</div></div>
-    <div class="cc-actions"><button class="btn primary block" data-cc="share" disabled>Share</button><button class="btn block" data-cc="save" disabled>Save image</button></div>
-    <p class="dim cc-note">A PNG made on this device from the game's own art. Viewing or saving it changes nothing in your franchise.</p></div>`, { title: `${p.name} · career card`, onClose: () => { if (url) URL.revokeObjectURL(url); url = null; blob = null; } });
-  const shareBtn = el.querySelector('[data-cc="share"]'); const saveBtn = el.querySelector('[data-cc="save"]'); const box = el.querySelector('.cc-preview');
-  const canShareFiles = () => { try { return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File([new Blob(['x'], { type: 'image/png' })], 'x.png', { type: 'image/png' })] })); } catch { return false; } };
-  if (!canShareFiles()) shareBtn.remove();
+    <div class="cc-preview ${reduced ? '' : 'anim'}" aria-live="polite"><div class="cc-loading dim">Drawing the card…</div></div>
+    <div class="cc-actions">${sup.share ? '<button class="btn primary block" data-cc="share" disabled>Share…</button>' : ''}<button class="btn block ${sup.share ? '' : 'primary'}" data-cc="save" disabled>Download image</button>${sup.copy ? '<button class="btn block ghost" data-cc="copy" disabled>Copy image</button>' : ''}</div>
+    <p class="cc-status dim" role="status" aria-live="polite"></p>
+    <p class="dim cc-note">${sup.embedded ? 'This game is running inside a preview, which may not allow downloads. ' : ''}You can always press and hold (or right-click) the card to save it. The PNG is drawn on this device from the game's own art; nothing in your franchise changes.</p></div>`, { title: `${p.name} · career card`, onClose: () => { if (url) URL.revokeObjectURL(url); url = null; blob = null; } });
+  const btns = () => [...el.querySelectorAll('[data-cc]')]; const box = el.querySelector('.cc-preview'); const status = el.querySelector('.cc-status');
+  const say = (text, kind = 'info') => { status.textContent = text; status.dataset.kind = kind; toast(text, kind, 4500); };
   const draw = async () => {
-    busy = true; shareBtn.disabled = saveBtn.disabled = true;
+    busy = true; btns().forEach((b) => { b.disabled = true; });
     try {
       const r = await careerCardBlob(p, format); if (url) URL.revokeObjectURL(url); blob = r.blob; url = URL.createObjectURL(blob);
       box.innerHTML = `<img class="cc-img ${format}" src="${url}" alt="${esc(`${p.name}'s ${CARD_FORMATS[format].label.toLowerCase()} career card`)}" width="${CARD_FORMATS[format].w}" height="${CARD_FORMATS[format].h}">`;
       box.dataset.clipped = String(r.report.clipped.length); box.dataset.format = format; box.dataset.bytes = String(blob.size);
-    } catch (e) { box.innerHTML = `<p class="bad">${esc(e.message || 'The card could not be drawn.')}</p>`; }
-    busy = false; shareBtn.disabled = saveBtn.disabled = !blob;
+      status.textContent = `${CARD_FORMATS[format].label} card ready · ${CARD_FORMATS[format].w}×${CARD_FORMATS[format].h} PNG`; status.dataset.kind = 'ready';
+    } catch (e) { box.innerHTML = `<p class="bad">${esc(e.message || 'The card could not be drawn.')}</p>`; blob = null; }
+    busy = false; btns().forEach((b) => { b.disabled = !blob; });
   };
   el.addEventListener('click', async (e) => {
     const fb = e.target.closest('[data-cc-format]'); if (fb && !busy) { format = fb.dataset.ccFormat; el.querySelectorAll('[data-cc-format]').forEach((b) => { const on = b.dataset.ccFormat === format; b.classList.toggle('primary', on); b.setAttribute('aria-pressed', on); }); draw(); return; }
-    const act = e.target.closest('[data-cc]')?.dataset.cc; if (!act || !blob) return;
+    const act = e.target.closest('[data-cc]')?.dataset.cc; if (!act || !blob || busy) return;
     const name = cardFileName(p, format);
-    if (act === 'share') { try { await navigator.share({ files: [new File([blob], name, { type: 'image/png' })], title: `${p.name} · Gridiron Beast` }); toast('Career card shared.', 'good'); } catch (err) { if (err?.name !== 'AbortError') toast('Sharing is not available here: use Save image.', 'info'); } return; }
-    if (act === 'save') { const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast(`Saved ${name}`, 'good'); }
+    if (act === 'share') { try { await navigator.share({ files: [new File([blob], name, { type: 'image/png' })], title: `${p.name} · Gridiron Beast` }); say(EXPORT_TEXT.shared, 'good'); } catch (err) { if (err?.name !== 'AbortError') say(EXPORT_TEXT.shareFailed, 'info'); } return; }
+    if (act === 'copy') { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); say(EXPORT_TEXT.copied, 'good'); } catch { say(EXPORT_TEXT.copyFailed, 'info'); } return; }
+    if (act === 'save') {
+      if (!sup.download) { say(EXPORT_TEXT.noDownload, 'info'); return; }
+      const a = document.createElement('a'); a.href = url; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+      say(sup.embedded ? EXPORT_TEXT.requestedEmbedded : EXPORT_TEXT.requested(name), 'info');
+    }
   });
   draw();
   return el;
