@@ -4,6 +4,7 @@
 
 import { SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
 import { backfillCareer } from './career.js';
+import { backfillLeagueNews } from './league-news.js';
 import { hashString } from '../core/rng.js';
 import { migrateTips } from './assist.js';
 import { resolveSpecies, SPECIES_BY_ID } from '../data/monsters.js';
@@ -35,6 +36,10 @@ export function migrate(f) {
   dedupeRosterNames(f);
   migrateTips(f); // Coach Assist (GDD §27.3): older tip names carry over
   for (const m of f.roster || []) backfillCareer(f, m); // Career Timeline (GDD §38): older saves rebuilt once from what they prove
+  // League News (GDD §39): the current season's scoreboards rebuilt once from its results; level-ups and rival scores leave the
+  // club log (they live after the game, on the Career Timeline and on the League News scoreboard now).
+  if (!Array.isArray(f.leagueNews)) backfillLeagueNews(f);
+  f.news = f.news.filter((n) => !/ reached level \d+/.test(n?.text || '') && !/^Rival watch: /.test(n?.text || ''));
   return f;
 }
 /** Saves from before the duplicate-name fix (2026-10-22) may hold two roster monsters with one name: the later one gets a numeral. Stats and history are keyed by id, so nothing else changes. */

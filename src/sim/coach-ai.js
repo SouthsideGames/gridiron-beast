@@ -99,7 +99,12 @@ export function weighOffense(state, team, available, tendencies = null, opp = nu
   return out;
 }
 
-export function weighDefense(state, team, available, oppTendencies = null, opp = null) {
+/**
+ * `oppTendencies` is the offense's history (its pass rate); `own` is the defending club's own history, whose recent
+ * defensive calls the repeat penalty reads. (Before v38.1 the penalty read the offense's defensive calls, so a defense never
+ * saw its own repeats and the Coach's Suggestion stayed on one play.)
+ */
+export function weighDefense(state, team, available, oppTendencies = null, opp = null, own = null) {
   const s = situation(state, opponent(state.possession));
   const coach = team.coach || { aggression: 0.5 };
   const offS = situation(state);
@@ -120,7 +125,7 @@ export function weighDefense(state, team, available, oppTendencies = null, opp =
     if (tags.includes('anti_scramble')) w *= 1.1;
     w *= defenseLean(p, team, opp);
     if (tags.includes('legendary')) w *= 1.25;
-    const recent = oppTendencies?.recentDefense || [];
+    const recent = own?.recentDefense || [];
     const repeats = recent.slice(-4).filter((x) => x === id).length;
     w *= Math.pow(0.5, repeats);
     out.push([id, Math.max(0.01, w)]);
@@ -134,13 +139,13 @@ export function chooseOffensePlay(rng, state, team, available, tendencies, opp =
   const weights = sharpen(weighOffense(state, team, available, tendencies, opp), team);
   return weights.length ? rng.weighted(weights) : null;
 }
-export function chooseDefensePlay(rng, state, team, available, oppTendencies, opp = null) {
-  const weights = sharpen(weighDefense(state, team, available, oppTendencies, opp), team);
+export function chooseDefensePlay(rng, state, team, available, oppTendencies, opp = null, own = null) {
+  const weights = sharpen(weighDefense(state, team, available, oppTendencies, opp, own), team);
   return weights.length ? rng.weighted(weights) : null;
 }
-/** The single best suggestion (no randomness) for the Coach's Suggestion UI. */
-export function suggestPlay(state, team, available, side, tendencies, opp = null) {
-  const weights = side === 'offense' ? weighOffense(state, team, available, tendencies, opp) : weighDefense(state, team, available, tendencies, opp);
+/** The single best suggestion (no randomness) for the Coach's Suggestion UI. On defense, `own` is the player's own history. */
+export function suggestPlay(state, team, available, side, tendencies, opp = null, own = null) {
+  const weights = side === 'offense' ? weighOffense(state, team, available, tendencies, opp) : weighDefense(state, team, available, tendencies, opp, own);
   return weights.sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 }
 

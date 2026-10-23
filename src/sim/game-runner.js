@@ -13,7 +13,7 @@ export function aiController(side) {
   return {
     side,
     offensePlay(state, team, available, tendencies, rng, opp) { return AI.chooseOffensePlay(rng, state, team, available, tendencies, opp); },
-    defensePlay(state, team, available, oppTendencies, rng, opp) { return AI.chooseDefensePlay(rng, state, team, available, oppTendencies, opp); },
+    defensePlay(state, team, available, oppTendencies, rng, opp, own) { return AI.chooseDefensePlay(rng, state, team, available, oppTendencies, opp, own); },
     fourthDown(state, team) { return AI.fourthDownDecision(state, team); },
     tryChoice(state) { return AI.tryDecision(state); },
     kickoff(state) { return AI.kickoffDecision(state); },
@@ -58,7 +58,7 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
       const offAvail = goalLinePlays(teams[tryTeam].offensePlays);
       const defAvail = teams[R.opponent(tryTeam)].defensePlays;
       const offId = choices.offensePlayId || ctrl(tryTeam).offensePlay(state, teams[tryTeam], offAvail, tendencies[tryTeam], rng, teams[R.opponent(tryTeam)]);
-      const defId = choices.defensePlayId || ctrl(R.opponent(tryTeam)).defensePlay(state, teams[R.opponent(tryTeam)], defAvail, tendencies[tryTeam], rng, teams[tryTeam]);
+      const defId = choices.defensePlayId || ctrl(R.opponent(tryTeam)).defensePlay(state, teams[R.opponent(tryTeam)], defAvail, tendencies[tryTeam], rng, teams[tryTeam], tendencies[R.opponent(tryTeam)]);
       done();
       const res = R.attemptTwoPoint(state, teams, offId, defId);
       return { kind: 'try', text: res.text, sim: res.sim, offensePlayId: offId, defensePlayId: defId };
@@ -92,7 +92,7 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
 
   // Scrimmage play.
   const offId = choices.offensePlayId || ctrl(side).offensePlay(state, offTeam, offTeam.offensePlays, tendencies[side], rng, defTeam);
-  const defId = choices.defensePlayId || ctrl(defSide).defensePlay(state, defTeam, defTeam.defensePlays, tendencies[side], rng, offTeam);
+  const defId = choices.defensePlayId || ctrl(defSide).defensePlay(state, defTeam, defTeam.defensePlays, tendencies[side], rng, offTeam, tendencies[defSide]);
   done();
   noteOffense(tendencies[side], offId, PLAYS[offId]?.type === 'pass');
   noteDefense(tendencies[defSide], defId);
