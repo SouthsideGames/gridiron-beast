@@ -11,7 +11,7 @@ const legacyText = () => JSON.stringify({ ...Save.migrate(fixture()), savedAt: 1
 const mkLs = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, m }; };
 let clock = 1_800_000_000_000; const now = () => (clock += 1000);
 const tab = (backend, ls, slot, o = {}) => createStore({ backend, localStorage: ls, now, debounce: 0, slot, ...o });
-const fresh = (club) => { const f = Save.migrate(fixture()); f.club = club; f.createdAt = `2026-07-0${club.length % 9 + 1}T00:00:00.000Z`; delete f.uid; return f; };
+const fresh = (club) => { const f = Save.migrate(fixture()); f.club = club; f.createdAt = new Date(Date.UTC(2026, 6, 1) + ([...club].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 86_400_000, 7))).toISOString(); delete f.uid; return f; }; // distinct clubs, distinct creation stamps: a franchise without a uid is identified by stamp and seed (GDD §47.4)
 
 test('slots: the legacy v39.0 save migrates into slot 1 only; slots 2 and 3 open empty and never read it', async () => {
   const ls = mkLs(); ls.setItem(Save.SAVE_KEY, legacyText()); const backend = memoryBackend();

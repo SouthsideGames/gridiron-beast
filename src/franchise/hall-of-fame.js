@@ -32,3 +32,9 @@ export function linkHofCards({ uid, seed }) {
   for (const c of cards) if (!c.uid && (c.seed === seed || String(c.id || '').startsWith(`hof_${seed}_`))) { c.uid = uid; if (c.seed == null) c.seed = seed; n++; }
   if (n) persist(); return n;
 }
+/** The same franchise known by two uids (see relinkAchievements): its cards move from `from` to `to`. Returns how many moved. */
+export function relinkHofCards({ from, to }) {
+  if (!from || !to || from === to) return 0; load(); let n = 0;
+  for (const c of cards) if (c.uid === from) { c.uid = to; n++; }
+  if (n) persist(); return n;
+}

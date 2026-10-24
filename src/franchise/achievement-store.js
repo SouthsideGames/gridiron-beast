@@ -12,7 +12,7 @@ const blank = () => ({ earned: {}, links: {}, updatedAt: 0 });
 // `links` maps an old seed (how pre-v40 entries name a franchise) to the franchise's permanent uid, once linked. Every copy
 // merged in later (the cloud's, another device's, a franchise's own list) is read through it, so a seed and its uid never
 // count as two franchises (GDD §47.4).
-const canon = (d, x) => (x != null && d.links?.[String(x)]) || x;
+const canon = (d, x) => { for (let i = 0; i < 4 && x != null && d.links?.[String(x)] && d.links[String(x)] !== x; i++) x = d.links[String(x)]; return x; }; // a seed, or a uid replaced by the cloud's (relinkAchievements)
 const canonList = (d, fr) => [...new Set((fr || []).map((x) => canon(d, x)))];
 function load() {
   if (data) return data;
@@ -55,13 +55,25 @@ export function resetAchievements() { data = blank(); persist(); }
  */
 export function linkAchievements({ uid, seed }) {
   if (!uid || seed == null) return 0; const d = load(); let n = 0; let linked = false;
-  const had = (d.links ||= {})[String(seed)]; if (had && had !== uid) return 0; // a seed already linked is never re-linked to another franchise
+  const had = (d.links ||= {})[String(seed)]; if (had && canon(d, had) !== uid) return 0; // a seed already linked is never re-linked to another franchise
   if (!had) { d.links[String(seed)] = uid; linked = true; }
   for (const e of Object.values(d.earned)) {
     const fr = e.franchises || []; if (!fr.includes(seed) && e.franchise !== seed) continue;
     e.franchises = canonList(d, fr); if (e.franchise === seed) e.franchise = uid; if (e.franchises.length) e.count = e.franchises.length; n++;
   }
   if (n || linked) persist(); return n;
+}
+/**
+ * The same franchise known by two uids (a device migrated its own v39 copy, then adopted the cloud copy another device had
+ * already uploaded, matched by creation stamp): every record under `from` moves to `to`, and later merges translate `from`
+ * too. Returns how many entries changed.
+ */
+export function relinkAchievements({ from, to }) {
+  if (!from || !to || from === to) return 0; const d = load(); d.links ||= {}; let n = 0;
+  for (const [k, v] of Object.entries(d.links)) if (v === from) d.links[k] = to;
+  d.links[String(from)] = to;
+  for (const e of Object.values(d.earned)) { const fr = canonList(d, e.franchises); const who = canon(d, e.franchise); if (JSON.stringify(fr) !== JSON.stringify(e.franchises || []) || who !== e.franchise) { e.franchises = fr; e.franchise = who; if (fr.length) e.count = fr.length; n++; } }
+  persist(); return n;
 }
 /** The achievements one franchise earned, by its permanent uid. */
 export function achievementsFor(uid) { const d = load(); return Object.entries(d.earned).filter(([, e]) => (e.franchises || []).includes(uid)).map(([id]) => id); }

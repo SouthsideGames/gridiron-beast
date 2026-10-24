@@ -5,8 +5,8 @@ import * as Save from './franchise/save.js';
 import { idbBackend, classify, saveMeta } from './franchise/store.js';
 import { createSlotManager } from './franchise/slots.js';
 import { isArchived, retirementDue, retirementChecklist, finalizeArchive } from './franchise/lifecycle.js';
-import { addHofCard, linkHofCards } from './franchise/hall-of-fame.js';
-import { linkAchievements } from './franchise/achievement-store.js';
+import { addHofCard, linkHofCards, relinkHofCards } from './franchise/hall-of-fame.js';
+import { linkAchievements, relinkAchievements } from './franchise/achievement-store.js';
 import { restoreThenAdopt, replaceThenAdopt, legacyReplaceThenAdopt, shouldMirror } from './franchise/activation.js';
 import { registerRecoveryScreen, showSaveFailure, saveStatusText, showStaleTab } from './ui/storage-ui.js';
 import { cloudLoad, cloudSave, cloudFlush, cloudClear, cloudStatus, cloudLoadDex, cloudSaveDex, cloudLoadHof, cloudSaveHof, cloudLoadAchievements, cloudSaveAchievements } from './franchise/cloud-save.js';
@@ -342,6 +342,9 @@ async function reconcileCloudInner({ playedAt = null } = {}) {
     // the player has played on (or switched franchise) by then, this device's newer progress stays and the cloud copy is not used.
     const guard = () => app.f === local && (!local || local.savedAt === localAt);
     const r = await app.replaceFranchise(f, { copyKind: 'pre-cloud', mirror: false, guard });
+    // The cloud copy of this same franchise (same creation stamp and seed) under another uid: this device migrated its own v39
+    // copy before learning the uid another device gave it. The cloud's uid is kept, and this device's records follow it.
+    if (r.ok && local?.uid && f.uid && local.uid !== f.uid && local.createdAt === f.createdAt && local.seed === f.seed) { relinkAchievements({ from: local.uid, to: f.uid }); relinkHofCards({ from: local.uid, to: f.uid }); }
     if (r.ok && heldLeagueSave !== app.f) heldLeagueSave = null; // the migrated copy was replaced (kept as 'pre-cloud'): its held save is dropped; a v39-layout cloud copy just adopted keeps its own, saved below
     if (!r.ok && r.error?.code === 'superseded') { toast('You kept playing on this device, so its newer progress was kept instead of the cloud copy.', 'info', 4500); if (app.f) { await app.save({ immediate: true }); await mirrorCommitted(); } return; }
     if (!r.ok) { toast(`Your cloud save is newer, but it could not be stored on this device (${r.error?.message || 'unknown error'}). This device's franchise is unchanged.`, 'bad', 6000); return; }

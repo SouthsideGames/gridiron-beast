@@ -60,3 +60,18 @@ test('a seed and its uid never count as two franchises, whichever order the clou
   A.recordAchievementGlobal('first_win', { club: 'Other', franchise: 'uid-other', scene: {} }); assert.equal(A.achievementsData().earned.first_win.count, 2);
   assert.equal(A.linkAchievements({ uid: 'uid-impostor', seed: 1369459701 }), 0, 'a linked seed is never re-linked');
 });
+
+test('a device that adopts the cloud copy of its own franchise under another uid moves its records to that uid (GDD §47.4)', () => {
+  // the owner's state on 2026-10-24: one device ran v42.0 (random uid, achievements duplicated in the cloud); another device
+  // migrates its own v39 copy with the derived uid, then adopts the cloud copy (same creation stamp) and its uid
+  const seed = 1369459701; const cloud = () => ({ earned: { first_win: { franchise: seed, franchises: [seed, 'uid-cloud'], count: 2, at: 100, scene: {} } }, updatedAt: 5 });
+  A.resetAchievements(); A.mergeAchievements(cloud()); A.linkAchievements({ uid: 'uid-derived', seed });
+  assert.equal(A.achievementsData().earned.first_win.count, 2, 'before the cloud copy is adopted the two uids look like two franchises');
+  A.linkAchievements({ uid: 'uid-cloud', seed }); // adopt() runs this for the adopted copy: refused, the seed is linked already
+  A.relinkAchievements({ from: 'uid-derived', to: 'uid-cloud' });
+  let e = A.achievementsData().earned.first_win; assert.deepEqual(e.franchises, ['uid-cloud']); assert.equal(e.count, 1); assert.equal(e.franchise, 'uid-cloud');
+  A.mergeAchievements(cloud()); e = A.achievementsData().earned.first_win; assert.deepEqual(e.franchises, ['uid-cloud'], 'the duplicated cloud copy merged again stays repaired');
+  const out = JSON.parse(JSON.stringify(A.achievementsData())); A.resetAchievements(); A.mergeAchievements(cloud()); A.mergeAchievements(out); A.linkAchievements({ uid: 'uid-cloud', seed });
+  e = A.achievementsData().earned.first_win; assert.deepEqual(e.franchises, ['uid-cloud'], 'the first device, merging the repaired copy, agrees'); assert.equal(e.count, 1);
+  H.resetHof(); H.addHofCard({ id: 'hof_x', uid: 'uid-derived', club: 'X', retiredAt: 1 }); assert.equal(H.relinkHofCards({ from: 'uid-derived', to: 'uid-cloud' }), 1); assert.deepEqual(H.hofCardsFor('uid-cloud').map((c) => c.id), ['hof_x']);
+});
