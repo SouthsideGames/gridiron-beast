@@ -22,7 +22,7 @@ const recordText = (r) => (r ? `${r.w}-${r.l}${r.t ? `-${r.t}` : ''}` : '—');
 /** One slot card. `s` is a summary from the slot manager; `active` marks the slot being played. */
 export function slotCardHtml(s, { active = false, undo = null } = {}) {
   const [label, chip] = STATUS[s.state] || STATUS.empty; const m = s.meta || {}; const lc = s.lifecycle || {}; const head = lc.legacyHeadline;
-  const title = `<div class="row between"><b>Slot ${s.slot}</b><span class="chip ${chip}">${esc(label)}${active && s.state !== 'empty' ? ' · playing' : ''}</span></div>`;
+  const title = `<div class="row between"><b>Slot ${s.slot}</b><span class="chip ${chip}">${esc(label)}${active && s.state === 'active' ? ' · playing' : active && (s.state === 'retired' || s.state === 'fired') ? ' · open' : ''}</span></div>`;
   if (s.state === 'empty') {
     return `<div class="panel slot-card" data-slot="${s.slot}">${title}
       <p class="muted">Empty slot.${undo ? ` <b>${esc(undo.club || 'A franchise')}</b> was deleted from this slot a moment ago.` : ''}</p>

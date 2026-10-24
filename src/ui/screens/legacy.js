@@ -6,13 +6,16 @@
 import { esc, delegate, toast, sheet } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
 import { portraitSprite, monsterSprite } from '../pixel-monster.js';
-import { monsterOverall } from '../../data/monsters.js';
+import { monsterOverall, SPECIES_BY_ID } from '../../data/monsters.js';
 import { careerLink, openSnapshotSheet } from '../career-ui.js';
 import { leagueNewsSheetHtml } from '../league-news-ui.js';
 import { offerExport } from '../storage-ui.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
 import { AWARDS } from '../../franchise/awards.js';
 import { isArchived, SEASON_CAP } from '../../franchise/lifecycle.js';
+import { achievementsFor } from '../../franchise/achievement-store.js';
+import { ACHIEVEMENTS } from '../../data/achievements.js';
+import { STAFF, STAFF_ROLES } from '../../data/staff.js';
 
 const TAB_KEY = 'gridiron-beast-v7-legacy-tab';
 const TABS = [['legacy', 'Legacy'], ['seasons', 'Seasons'], ['league', 'League'], ['roster', 'Roster'], ['careers', 'Careers']];
@@ -47,7 +50,23 @@ function legacyTab(f) {
     </div>
     ${lg.bestMonsters?.length ? `<div class="panel"><b>Best monsters</b><div class="row" style="flex-wrap:wrap;gap:8px;margin-top:8px">${lg.bestMonsters.map((m, i) => `<button class="btn small" data-action="best" data-i="${i}">${esc(m.name)} · ${esc(m.position)} ${m.ovr}</button>`).join('')}</div></div>` : ''}
     ${lg.badges?.length ? `<div class="panel tight"><b>Badges</b><div class="muted">${lg.badges.map((b) => `${esc(b.badge)}${b.year != null ? ` (${yearOf(b.year)})` : ''}`).join(' · ')}</div></div>` : ''}
+    ${recordsPanelHtml(f)}
     <div class="panel"><b>Season by season</b><div class="list" style="margin-top:6px">${lg.seasons.slice().reverse().map((h) => `<div class="row between sub"><span>${yearOf(h.year)}${h.champion ? ' 🏆' : h.playoffs ? ' · playoffs' : ''}</span><span class="mono">${h.w}-${h.l}${h.t ? `-${h.t}` : ''}${h.place != null ? ` · ${h.place}${['st', 'nd', 'rd'][h.place - 1] || 'th'}` : ''}</span></div>`).join('')}</div></div>`;
+}
+const ROLE_LABEL = { head_coach: 'Head coach', offensive_coordinator: 'Offensive coordinator', defensive_coordinator: 'Defensive coordinator', head_scout: 'Head scout', monster_trainer: 'Monster trainer' };
+/** Milestones, legendaries, the final staff and the draft history: from the save and the player's records, nothing invented. */
+function recordsPanelHtml(f) {
+  const earned = f.uid ? achievementsFor(f.uid) : []; const own = Object.keys(f.achievements || {}); const ids = [...new Set([...earned, ...own])];
+  const names = ids.map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.desc || id);
+  const legendaries = (f.roster || []).filter((m) => SPECIES_BY_ID[m.species]?.rarity === 'legendary').map((m) => m.name);
+  const unlocked = Object.keys(f.campaign?.unlocked || {}).map((id) => SPECIES_BY_ID[id]?.name || id);
+  const staff = STAFF_ROLES.map((r) => { const id = f.staff?.[r]; const c = id ? STAFF.find((x) => x.id === id) : null; return `<div class="row between sub"><span>${esc(ROLE_LABEL[r] || r)}</span><span>${c ? esc(c.name) : na}</span></div>`; }).join('');
+  const drafts = Object.keys(f.draftResults || {}).map(Number).filter((y) => (f.draftResults[y]?.[f.club] || []).length).sort((a, b) => b - a);
+  return `<div class="panel"><b>Milestones</b><div class="muted" style="margin-top:4px">${ids.length ? `${ids.length} achievement${ids.length === 1 ? '' : 's'} earned with this franchise` : 'No achievements were earned with this franchise.'}</div>${names.length ? `<details style="margin-top:4px"><summary class="muted" style="cursor:pointer">Show them</summary><div class="list" style="margin-top:4px">${names.map((n) => `<div class="sub">• ${esc(n)}</div>`).join('')}</div></details>` : ''}
+    <div class="kv" style="margin-top:8px"><b>Legendary monsters</b><span>${legendaries.length ? esc(legendaries.join(', ')) : 'none on the final roster'}${unlocked.length ? ` · unlocked: ${esc(unlocked.join(', '))}` : ''}</span></div>
+    <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Final staff</summary><div class="list" style="margin-top:4px">${staff}</div><div class="dim" style="font-size:12px;margin-top:4px">Earlier staff changes are not recorded by the game.</div></details>
+    ${drafts.length ? `<details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Draft history (${drafts.length} draft${drafts.length === 1 ? '' : 's'} kept)</summary>${drafts.map((y) => `<div class="sub" style="margin-top:4px"><b>${yearOf(y)}</b>: ${(f.draftResults[y][f.club] || []).map((m) => `${careerLink(m.id, esc(m.name))} (${esc(m.position || '')})`).join(', ')}</div>`).join('')}</details>` : '<div class="dim" style="font-size:12px;margin-top:8px">No draft classes are kept in this save.</div>'}
+  </div>`;
 }
 function seasonsTab(f) {
   const hist = (f.history || []).slice().reverse();

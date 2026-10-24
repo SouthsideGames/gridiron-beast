@@ -159,13 +159,12 @@ const app = {
     const f = this.f; if (!f) return { ok: false, error: { code: 'none', message: 'No franchise.' } };
     const why = reason || retirementDue(f); if (!why) return { ok: false, error: { code: 'not-due', message: 'Retirement is not due: the season must be complete first.' } };
     const check = retirementChecklist(f); if (!check.ready) return { ok: false, error: { code: 'unsettled', message: `Finish the season first: ${check.missing.join('; ')}.` } };
+    const before = structuredClone(f); // the archive must be stored before anything else happens; if it cannot, nothing changes
     let card = null; try { const r = F.retire(f); if (r.ok) card = r.card; } catch { card = null; }
     const r = finalizeArchive(f, { reason: why, hofCard: card });
-    if (!r.ok) return { ok: false, error: { code: 'unsettled', message: r.reason } };
+    if (!r.ok) { Object.assign(f, before); return { ok: false, error: { code: 'unsettled', message: r.reason } }; }
     const saved = await this.save({ immediate: true, archive: true });
-    if (!saved.ok) { // the archive must be stored before anything else happens: undo the in-memory change and tell the player
-      return { ok: false, error: saved.error || { code: 'save', message: 'The archive could not be saved.' }, saveFailed: true };
-    }
+    if (!saved.ok) { for (const k of Object.keys(f)) if (!(k in before)) delete f[k]; Object.assign(f, before); this.lastSig = null; return { ok: false, error: saved.error || { code: 'save', message: 'The archive could not be saved.' }, saveFailed: true }; }
     if (card) addHofCard(card);
     this.lastSig = null;
     return { ok: true, status: r.status, legacy: r.legacy, card };
