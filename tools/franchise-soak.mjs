@@ -80,6 +80,7 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
       if (day0 === f.season.day && guard > 50) { problems.push(`season ${s}: no progress`); break; }
     }
     if (!f.season.finished) { problems.push(`season ${s}: did not finish (week ${f.season.week}, day ${f.season.day})`); break; }
+    problems.push(...check(f, `season ${s} end`)); // the season may have ended inside a skipped playoff round, after the last weekly check
     const rec = F.record(f); log.seasons.push({ year: f.season.year, w: rec.w, l: rec.l, champion: f.season.champion, club: f.club, roster: f.roster.length });
     if (F.isFired(f)) { log.fired = true; break; }
     // offseason

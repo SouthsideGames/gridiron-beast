@@ -1963,9 +1963,9 @@ Every animation stops with reduced motion, from Settings or the system setting.
 
   This is an emulated browser, not a real device.
 
-## 42. Franchise lifecycle, save slots and persistent AI rosters — APPROVED DESIGN (updated 2026-10-24; Phase 1 implemented in §43, Phase 2 in §44, Phase 3 in §45)
+## 42. Franchise lifecycle, save slots and persistent AI rosters — APPROVED DESIGN (updated 2026-10-24; Phase 1 implemented in §43, Phase 2 in §44, Phase 3 in §45, Phase 4 in §46)
 
-> **Status.** This section is the approved design. Phase 1 (storage foundation) is implemented in §43, Phase 2 (franchise lifecycle, three slots, the Legacy) in §44 and Phase 3 (persistent AI rosters) in §45; Phase 4 is not implemented. It merges the persistent AI roster proposal (first written 2026-10-23) with the franchise rules the owner locked on 2026-10-23. No code may be written for a phase until the owner authorises it (§42.11).
+> **Status.** This section is the approved design. Phase 1 (storage foundation) is implemented in §43, Phase 2 (franchise lifecycle, three slots, the Legacy) in §44, Phase 3 (persistent AI rosters) in §45 and Phase 4 (career integration and polish) in §46. It merges the persistent AI roster proposal (first written 2026-10-23) with the franchise rules the owner locked on 2026-10-23. No code may be written for a phase until the owner authorises it (§42.11).
 >
 > Three kinds of statement are marked throughout:
 > - **[IMPLEMENTED]**: how the game works today.
@@ -2381,7 +2381,7 @@ If the owner was eliminated and is spectating, the remaining playoff rounds are 
   - a season transition takes under 0.5 s on a throttled CPU.
 - **Save size:** about +1.1 MB per active slot at season 20, before duplicate removal.
 
-**Phase 4 — Career integration and polish** — *not started; needs the owner's go-ahead.*
+**Phase 4 — Career integration and polish** — *IMPLEMENTED in v42.0, see §46 (the owner's decisions of 2026-10-24: News thresholds, AI–AI trades, forward-only compaction, retirement as a permanent exit, the League Hub, the Board reset for simulation only).*
 - **Work:**
   - league-wide career histories (AI timelines, trophy cases, career cards);
   - awards, records and News integration (repeat winners across seasons, transfer news);
@@ -2859,7 +2859,7 @@ The owner approved replacing the lock-based mirror rather than patching it again
 - **Cloud and v39.1 clients.** Concurrent cloud uploads from a v39.1 client (which ignores the lease) can still race with v39.2 uploads. Local saves are unaffected, and an older cloud copy never replaces newer local progress.
 - **Cloud after a failed save.** A failed device save no longer goes to the cloud (invariant A); Export keeps it.
 
-### 43.14 What remains for Phases 2–4 [Phase 2 IMPLEMENTED in §44; Phase 3 in §45; Phase 4 NOT IMPLEMENTED]
+### 43.14 What remains for Phases 2–4 [Phase 2 IMPLEMENTED in §44; Phase 3 in §45; Phase 4 in §46]
 - **Phase 2:** implemented in v40.0 (§44): slots 2 and 3 and the slot manager, the import flow, the lifecycle states, retirement and the archive, the 20-season limit, Hall of Fame and achievements keyed by `uid` (kept in localStorage with their mirrors rather than moved into the `global` store, which stays reserved), and the cloud policy (decision O, approved).
 - **Accepted residual risks of the cloud mirror (43.8):**
   - a device whose clock runs ahead of the deleting device's by more than the time an upload is in flight could keep that one in-flight copy valid;
@@ -2868,7 +2868,7 @@ The owner approved replacing the lock-based mirror rather than patching it again
   - leftover chunks are swept only when 30 or fewer snapshots are listed;
   - the total-size cap of the store is not documented; a full cloud is reported and never affects the device's save;
   - the simulated store answers each listing atomically; the design does not depend on consistent listings for safety (a listing that misses documents removes less), but a reader shown an incomplete listing could choose an older complete copy.
-- **Phase 3:** persistent AI rosters and schema 8, implemented in §45. **Phase 4:** career integration (§42.11), not started.
+- **Phase 3:** persistent AI rosters and schema 8, implemented in §45. **Phase 4:** career integration (§42.11), implemented in §46.
 - **Phase 1 lays the ground for these:** `uid` on every franchise, the slot pointer, verified backups, a storage version on every record, and room in the measured budget.
 
 ## 44. Franchise lifecycle — Phase 2 of §42 (IMPLEMENTED 2026-10-23; branch `franchise-lifecycle`, v40.0)
@@ -2995,6 +2995,45 @@ At season end (`endSeason`): career season-end events for every AI monster (`car
 - Tools: `tools/league-soak.mjs` (weekly league invariants, per-season metrics, sizes), `tools/balance-compare.mjs` (the registry against today's generator on the same seeds), the Phase 2 soaks and `tools/storage-check.py` (migration on first start builds the registry; Phase 1 and 2 flows unchanged; passed at 320–412 px).
 
 ### 45.10 Not in Phase 3
-**Verification not completed at the merge (2026-10-24):** a full 20-season All-Star soak (the All-Star run ended after 6 seasons with the hands-off owner dismissed; Pro and Rookie completed 20) and a 20-season balance comparison (8 seeds × 8 seasons per difficulty were compared; the 20-season evidence is the single-seed soaks). Both stay open for the release verification (test plan §0).
+**Verification not completed at the merge (2026-10-24; closed in §46.8):** a full 20-season All-Star soak (the All-Star run ended after 6 seasons with the hands-off owner dismissed; Pro and Rookie completed 20) and a 20-season balance comparison (8 seeds × 8 seasons per difficulty were compared; the 20-season evidence is the single-seed soaks). Both stay open for the release verification (test plan §0).
 
 League-wide career presentation for AI monsters (timelines, trophy cases, career cards beyond the profile that already opens), News lines for signings, trades and releases, duplicate-data removal between the tables and the books, AI–AI trades (Phase 4); real-device checks (the owner decides at release time).
+
+## 46. Career integration and polish — Phase 4 of §42 (IMPLEMENTED 2026-10-24; branch `league-careers`, v42.0)
+
+Phase 4 makes the persistent league of §45 meaningful and visible: every monster in the universe has a career the player can open from wherever his name appears, League News tells the league's own stories without noise, AI clubs trade with each other sparingly and fairly, the one duplicate the books make safe to remove is removed forward-only with its reconstruction proved, and the two verification gaps left at the Phase 3 merge are closed. Football, the cap, contracts, free agency and the nudge are untouched; every save and archive opens as it is.
+
+### 46.1 League-wide careers [IMPLEMENTED]
+- **Per-game writers for every persistent club.** `careerAfterGame` runs for both rosters of every simulated game and for the owner's opponent, with the game's line handed over by `recordGame` (`onLine`) because AI monsters keep no logs (decision G): debuts, firsts, career milestones, playoff stars and title runs, big games against the owner's club for his rival, single-game records, level marks. AI evolutions are noted where they happen. Season-end events (awards, records, season marks, titles) already ran (§45). Measured: about 40 KB raw of events a season across the 15 clubs.
+- **Profiles, timelines, trophy cases and career cards** need no new renderer: `careerProfile` already opens a full profile for a registry monster (§45); the Career Timeline, the trophy case and the career card read the same books and events. **Team history** is the monster's own `history` (every club, how he came and went).
+- **Legend stubs keep more:** a decorated leaver's stub now carries his season books, his last clubs and his major, milestone, evolution and debut events, so his profile keeps its seasons after he is gone and the award sheets' numbers keep their one copy (§46.6).
+- **"Achievements" for monsters** are the Timeline's milestones and the trophy case; no second system. The owner's achievements stay the owner's.
+
+### 46.2 Every name opens a career [IMPLEMENTED]
+`careerLink` now wraps every rendered monster name: the box score (leaders and players of the game), league leaders, the records book (holders resolved by id), award sheets, races and the awards history, the club awards and the HQ award line, the scouting report's star, the league's recent picks and the draft digest, trade calls, the offseason market, the pools, League News and its digests, the Legacy's tabs, and the new League Hub. The Records book's "Your careers" tab became **Careers** over the whole universe (`universeCareerLeaders`, with the owner's roster as a filter).
+
+### 46.3 The League Hub [IMPLEMENTED; decision 5]
+`src/ui/screens/league-hub.js`, from the main menu and from HQ and the standings: **Clubs** (the 16 clubs by division with record, overall, size and their protected monsters; a club opens its roster with position, overall, age, level, tenure, deal and injuries), **Leaders** (career totals across every monster the universe holds, retired legends included; "Your monsters" as a filter), **Moves** (the league's transactions, by week, from the News writers), **Races** (the award races, frozen awards after week 10) and **Rivals** (the rival GM, the all-time head-to-head, his signature monster's continuity block; every gym legendary with its club). Existing list, chip, sheet and segmented-control styles only; passes at 320–412 px (`tools/league-hub-check.py`); the hub renders in 149 ms and a career sheet opens in 249 ms at 4× CPU throttling.
+
+### 46.4 League News: the league's own moves [IMPLEMENTED; decision 1]
+- **Kinds:** `signing`, `release`, `trade`, `draft`, `retire`, `milestone`, `moves` (the offseason digest). Queued by the league operations themselves (`leagueEvent`, stamped with the week they belong to; the offseason's moves belong to week 0, "Preseason", of the coming season) and written by the News step after the fact, with no random draws.
+- **Meaningful only** (`meaningfulMove`): a starter or a 65+ monster, a former monster of the owner's, the owner's rival or division, a first-round pick, a retirement, a career milestone (the second mark and up: 25 touchdowns, 3,000 rushing yards…, read from the books, never from the Timeline). **Two lines a week** in season (`TRANSACTIONS_PER_WEEK`), ranked by the monster's value and the owner's connection; **one offseason digest of eight lines** and **one draft digest** (the owner's picks, the top five, scouted prospects taken by others) as the new season opens; one line per monster per window (a walk followed by a claim reads as the claim, "late of …"). The feed's caps (6 headlines a week, 200 items, two seasons) stand.
+- **Careers in the lines:** award winners' repeats are counted ("his third"); a record holder who beats his own mark is told so (the records book's previous mark keeps the holder's id).
+
+### 46.5 AI–AI trades [IMPLEMENTED; decision 2, E]
+`src/franchise/league-trades.js`. Two windows: the offseason, **before** free agency (a need filled by a deal) and weeks 2–8 (one attempt a week with a 25% chance). A club shops when a position's need reaches 0.25 (`positionNeeds`); the incoming monster must beat its weakest starter by 2; a deal is need-for-need (the other club's need, both within the 0.85–1.15 value band) or player-for-picks (the next two classes, `pickValue` with the future discount); both clubs must end under the cap and inside 26–38; never a protected monster, a cornerstone or a rookie on his first deal (`tradable`); at most three deals an offseason and one per club per window; every decision from the franchise generator in a fixed order (one seed, one league). Measured: 2–3 deals a season. The owner's own trades and the clubs' calls are unchanged; the rival's club trades ordinary monsters only.
+
+### 46.6 Historical compaction [IMPLEMENTED; decision 3, forward-only]
+**What was measured.** At season 20 the award winner rows in the season history copy their season line (about 600 bytes each, 140 rows); the archived league tables (eight seasons) copy, for registry monsters, what their season books hold — but AI books keep the box-score keys only (decision G), so a table row cannot be rebuilt from a book byte for byte, and the leaders snapshots are already seven fields a row. **What is removed:** at each season end, a winner row drops only the keys his book for that year holds (`history-compact.js`; the owner's monsters since v39, every persistent monster since Phase 3; the stat line is kept as text; a decorated leaver's stub keeps his books). Every number keeps exactly one copy and `expandWinner` rebuilds the original row. **Proof:** `tools/compaction-check.mjs` expands every slimmed winner of every season against the archived table row it was copied from, key by key (0 mismatches over the soaks), and `tests/league-careers.test.js` does the same on a played franchise and checks that saves without a registry are never touched. **Saving:** about 115 bytes a winner, 16 KB raw at season 20 — honest but small; the tables stay as they are, bounded by the eight-season window, and nothing already in a save is rewritten.
+
+### 46.7 Rivalry continuity and retirement [IMPLEMENTED; decision 4]
+Protection is exactly §45.2; Phase 4 shows it: badges on rosters and the hub, the signature's head-to-head block, the Legacy's Careers tab listing the whole universe with the protected marked. **Retirement** is the word for one thing only: a monster leaving the active league for good (a decorated veteran whose departure writes his legend stub). A walk, a release, a waiver claim or a pool entry is never called a retirement; an undecorated leaver is pruned silently.
+
+### 46.8 Verification [IMPLEMENTED; decision 6, simulation only]
+`tools/league-soak.mjs --boardReset=1` and `tools/balance-compare.mjs --boardReset=1` reinstate a dismissed owner after each season so a hands-off career reaches 20 seasons on All-Star; the game's Board and firing rules are untouched. [VERIFY]
+
+### 46.9 Tests [IMPLEMENTED]
+`tests/league-careers.test.js` (6): per-game careers for AI monsters with no duplicates and full profiles; the News rules (thresholds, two a week, digests of eight, one line per monster, repeat winners, own records); AI–AI trades (frequency, fairness, cap, limits, protection, determinism); the compaction proof on a played franchise and the untouched v40 save; the hub's data; retirement as a permanent exit. Updated: the timeline-parity test strips legend stubs' event copies; the records News test reads the new wording; the awards test expands the slimmed winner. `tools/compaction-check.mjs`, `tools/league-hub-check.py` (passed at 320–412 px). [TESTS]
+
+### 46.10 Not in Phase 4
+Career cards and timelines as separate full screens for AI monsters (the sheet is the card); AI–AI trades in the playoffs; compaction of the archived tables (not lossless for AI rows under decision G); real-device checks (the owner decides at release time).

@@ -160,7 +160,8 @@ export function captureLeague(f, { clubs, teamOf, year, week, existing = [], tab
 }
 
 /** Everything that must hold for a registry, as problem strings (empty when sound). */
-export function verifyLeague(f, { clubs = null, rosterMin = 26, rosterMax = 38 } = {}) {
+/** Structure only: an offseason save can hold a club between contracts and free agency with fewer than 26 (validateClubs checks the playing limits before a season starts). */
+export function verifyLeague(f, { clubs = null, rosterMin = 1, rosterMax = 38 } = {}) {
   const p = []; if (!hasLeague(f)) return ['no league registry'];
   const L = f.league; const seen = new Map();
   const names = clubs || Object.keys(L.clubs);
