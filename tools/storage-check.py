@@ -69,8 +69,8 @@ with sync_playwright() as pw:
     page.goto(URL); booted(page)
     m = page.evaluate("""async (legacy) => {
       const app = window.__gb; const f = app.f; const { uid, lifecycle, league, leagueOffseason, schemaVersion, ...rest } = f; const orig = JSON.parse(legacy);
-      // Phase 3 (GDD §42.6): the capture adds the league registry (schema 8) and re-reads the preseason expectations from it; nothing else changes.
-      rest.season = { ...rest.season, expectations: null }; orig.season = { ...orig.season, expectations: null }; delete orig.schemaVersion; delete orig.uid; delete orig.lifecycle; delete orig.leagueOffseason;
+      // Phase 3 (GDD §42.6): the capture adds the league registry (schema 8); nothing else changes.
+      delete orig.schemaVersion; delete orig.uid; delete orig.lifecycle; delete orig.leagueOffseason;
       delete rest.savedAt; delete orig.savedAt; // the capture is saved at once
       const same = JSON.stringify(rest) === JSON.stringify(orig);
       const differing = same ? [] : [...new Set([...Object.keys(rest), ...Object.keys(orig)])].filter((k) => JSON.stringify(rest[k]) !== JSON.stringify(orig[k]));

@@ -18,11 +18,17 @@ export const AI_POOL_SHARE = 3;           // AI castoffs a regional pool holds a
 /** A monster's home region: where it was scouted, else its element's first region (as franchise.js homeRegion). */
 export const homeRegionOf = (m) => m.origin || (ELEMENT_REGIONS[m.type] || [])[0] || Object.keys(REGIONS)[0];
 
-/** Has this monster honours worth remembering after he leaves the league: an award, a title run, a record, a Hall of Fame line? */
+/**
+ * Has this monster honours worth remembering after he leaves the league: a league award, a record, a title run? Read from the
+ * save's own records (award history, the records book, the champions and his season books), never from the Career Timeline,
+ * which is a read-only presentation of the same facts (GDD §38) and must not change what the game does.
+ */
 export function isDecorated(f, m) {
-  if ((m.career?.ev || []).some((e) => ['award', 'champion', 'record', 'hof'].includes(e.t))) return true;
   const R = f.records || {}; for (const book of [R.game, R.season]) for (const r of Object.values(book || {})) if (r && r.id === m.id) return true;
   for (const h of f.history || []) for (const w of Object.values(h.awards?.league || {})) if (w && w.id === m.id) return true;
+  for (const w of Object.values(f.season?.awardsFinal?.winners || {})) if (w && w.id === m.id) return true;
+  const books = [...(m.stats?.seasons || []), ...(m.stats?.season?.year != null ? [{ ...m.stats.season, team: null }] : [])];
+  for (const h of f.history || []) if (h.champion) for (const b of books) if (b.year === h.year && (b.post?.games || 0) > 0 && (b.team ? b.team === h.champion : true) && (m.history || []).some((x) => x.club === h.champion && x.from <= h.year && (x.to == null || x.to >= h.year))) return true;
   return false;
 }
 

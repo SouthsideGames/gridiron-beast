@@ -726,11 +726,14 @@ export function ensureLeague(f, { qualityDelta = 0 } = {}) {
   }
   f.schemaVersion = SCHEMA_VERSION;
   notePreseason(f, (c) => leagueTeam(f, c, year));
-  if (f.season.expectations) for (const c of clubs) { const ex = f.season.expectations[c]; if (ex) { ex.talent = teamOverall(leagueTeam(f, c, year)); ex.expectedWinPct = Math.max(0.1, Math.min(0.9, 0.5 + (ex.talent - 60) * 0.025)); } } // the Board and Coach of the Year judge the league that will actually play
   return { ok: true, created: true, rekeyed: result.rekeyed, problems: [] };
 }
 /** The fixed staff cost every AI club carries against the cap: the default staff's salaries (owner's decision, 2026-10-23). */
 export const STAFF_ALLOWANCE = Object.values(DEFAULT_STAFF).reduce((s, id) => s + (staffById(id)?.salary || 0), 0);
+/** How long the league's part of the last season transition took (tools and the test plan read it; never saved). */
+let lastTransitionMs = null; export const leagueTransitionMs = () => lastTransitionMs;
+/** The team overall today's generator would give a club for a season: the figure the season end stored for the coming season, else generated now. */
+function todayOverall(f, club, year) { const st = clubRecord(f, club)?.strategy; if (st && st.todayYear === year && st.today != null) return st.today; return teamOverall(legacyAiTeam(f, club, year)); }
 /** Persistent AI monsters keep season and career totals (decision G); the generated rosters of older saves keep nothing. */
 const leagueBooks = (f, team) => team !== f.club && hasLeague(f) && !!clubRecord(f, team);
 /** One simulated game's consequences for a persistent AI roster: XP, level-ups (points spent by the club), evolution when ready, fatigue, injuries. */
@@ -765,7 +768,9 @@ export function startSeason(f, year) {
   if (hasLeague(f)) { for (const club of leagueClubs(f)) for (const m of clubRoster(f, club)) { m.fatigue = 0; rolloverMonster(m, { year, team: club }); } notePreseason(f, (c) => aiTeam(f, c, year)); } // every persistent monster opens a new season book; the club's strength now is what its growth is measured from
   // Preseason expectations for Coach of the Year: recorded now, never reconstructed from the final table (GDD §16.4).
   for (const team of ALL_TEAMS) {
-    const talent = team === f.club ? teamOverall(playerTeam(f)) : teamOverall(aiTeam(f, team, year));
+    // An AI club's preseason talent is what today's generator would field (GDD §45.6): a persistent club opens below that and
+    // grows to it as it plays, so the Board's forecast and Coach of the Year keep today's calibration.
+    const talent = team === f.club ? teamOverall(playerTeam(f)) : todayOverall(f, team, year);
     const lr = lastRecords?.[team]; const lastWinPct = lr && lr.w + lr.l ? lr.w / (lr.w + lr.l) : null;
     f.season.expectations[team] = { talent, expectedWinPct: Math.max(0.1, Math.min(0.9, 0.5 + (talent - 60) * 0.025)), lastWinPct };
   }
@@ -1762,7 +1767,8 @@ function endSeason(f) {
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   noteGrowth(f, (c) => aiTeam(f, c, s.year));
-  const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, teamOverall(legacyAiTeam(f, c, s.year + 1)));
+  if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, s.year + 1)); st.todayYear = s.year + 1; } // today's generated strength for the coming season, computed once and reused by the transition and the Board's forecast
+  const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, todayOverall(f, c, s.year + 1));
   if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
@@ -1865,13 +1871,13 @@ export function startNextSeason(f) {
     const t0 = globalThis.performance?.now?.() ?? Date.now();
     const year = f.season.year, next = year + 1, cap = tierById(f.tier).cap;
     const targetOf = (club) => clubQuality(f, club, next); // arrivals are generated at the club's quality for the coming season
-    const overallTarget = (club) => preseasonTarget(f, club, teamOverall(legacyAiTeam(f, club, next))); // today's generated team for the season, less the growth the club will gain by playing it (league-season.js calibration)
+    const overallTarget = (club) => preseasonTarget(f, club, todayOverall(f, club, next)); // today's generated team for the season, less the growth the club will gain by playing it (league-season.js calibration)
     leagueAgeing(f, r, { year }); leagueTrim(f, { year: next, cap }); // salaries refreshed with the ratings: back under the cap before anyone shops
     const fa = leagueFreeAgency(f, r, { year: next, cap, targetOf });
     const nudge = leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next) });
     const overCap = leagueTrim(f, { year: next, cap }); leagueInjuryCover(f, r, { year: next, cap, targetOf });
     const problems = validateClubs(f, { cap }); const structural = verifyLeague(f);
-    f.leagueOffseason = { ...(f.leagueOffseason?.closed === year ? f.leagueOffseason : {}), opened: next, freeAgency: fa, nudge, overCap, problems, ms: Math.round(((globalThis.performance?.now?.() ?? Date.now()) - t0) * 10) / 10 };
+    f.leagueOffseason = { ...(f.leagueOffseason?.closed === year ? f.leagueOffseason : {}), opened: next, freeAgency: fa, nudge, overCap, problems }; lastTransitionMs = Math.round(((globalThis.performance?.now?.() ?? Date.now()) - t0) * 10) / 10; // the timing stays out of the save
     if (structural.length) throw Object.assign(new Error(`The league registry is damaged: ${structural[0]}`), { code: 'league', problems: structural }); // never the owner's fault, never silent; a club over the cap at the roster floor is reported, not fatal
   }
   save();

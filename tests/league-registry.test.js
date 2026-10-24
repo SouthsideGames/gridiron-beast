@@ -90,11 +90,11 @@ test('migration: a v40-style save mid-season gets a registry built from the very
   const opp = F.opponentName(f); const oppBefore = before[opp];
   // a clash: the owner's roster holds an id that an AI club is about to bring in
   const victim = before[clubs[3]].roster[5]; f.roster[0].id = victim.id; f.season.leagueStats[clubs[3]] ||= {}; f.season.leagueStats[clubs[3]][victim.id] = { id: victim.id, name: victim.name, team: clubs[3], games: 2, tackles: 7 };
-  const untouched = JSON.stringify({ roster: f.roster, pool: f.pool, history: f.history, season: { ...f.season, leagueStats: null, expectations: null }, draftResults: f.draftResults }); // the tables take re-keyed rows; the expectations are re-read from the live league
+  const untouched = JSON.stringify({ roster: f.roster, pool: f.pool, history: f.history, season: { ...f.season, leagueStats: null }, draftResults: f.draftResults }); // the tables take re-keyed rows
   const r = F.ensureLeague(f);
   assert.ok(r.ok && r.created, r.problems.join('; ')); assert.equal(f.schemaVersion, 8);
   assert.deepEqual(f.league.persistentFrom, { year, week: f.season.week });
-  assert.equal(JSON.stringify({ roster: f.roster, pool: f.pool, history: f.history, season: { ...f.season, leagueStats: null, expectations: null }, draftResults: f.draftResults }), untouched, 'the owner\'s side is untouched');
+  assert.equal(JSON.stringify({ roster: f.roster, pool: f.pool, history: f.history, season: { ...f.season, leagueStats: null }, draftResults: f.draftResults }), untouched, 'the owner\'s side is untouched');
   for (const c of clubs) {
     const now = F.aiTeam(f, c, year);
     assert.equal(teamOverall(now), teamOverall(before[c]), `${c}: the same strength`);
@@ -146,7 +146,7 @@ test('the pools: an AI castoff nobody would want leaves the league at once; a de
   const f = newFranchise(16); const year = 1; const club = clubsOf(f)[0];
   const dud = R.clubRoster(f, club).filter((m) => !R.isProtected(m)).sort((a, b) => a.potential - b.potential)[0]; dud.age = 31; for (const k of Object.keys(dud.attributes)) dud.attributes[k] = Math.min(dud.attributes[k], 40);
   const r1 = releaseFromClub(f, club, dud.id, { year }); assert.equal(r1.where, 'gone'); assert.ok(!Object.values(f.pool).flat().includes(dud));
-  const star = R.clubRoster(f, club).filter((m) => !R.isProtected(m)).sort((a, b) => b.potential - a.potential)[0]; star.career = { v: 1, ev: [{ k: 'award:mvp:1', t: 'award', y: 1 }] }; star.age = 31; for (const k of Object.keys(star.attributes)) star.attributes[k] = Math.min(star.attributes[k], 40);
+  const star = R.clubRoster(f, club).filter((m) => !R.isProtected(m)).sort((a, b) => b.potential - a.potential)[0]; f.history.push({ year: 0, club: f.club, awards: { league: { mvp: { id: star.id, team: club, name: star.name } } } }); star.age = 31; for (const k of Object.keys(star.attributes)) star.attributes[k] = Math.min(star.attributes[k], 40); // decorated by the save's own award history, never by the Career Timeline
   const r2 = releaseFromClub(f, club, star.id, { year }); assert.equal(r2.where, 'legend'); assert.equal(f.league.legends[star.id].name, star.name); assert.equal(F.findInLeague(f, star.id).where, 'legend');
   const best = R.clubRoster(f, club).filter((m) => !R.isProtected(m)).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0]; assert.ok(monsterOverall(best) > POOL_WORTH.market);
   const r3 = releaseFromClub(f, club, best.id, { year }); assert.equal(r3.where, 'waivers', 'better than the owner\'s market grade: the league claims him'); assert.ok(f.league.waivers.includes(best)); assert.ok(!Object.values(f.pool).flat().includes(best));
