@@ -1,3 +1,5 @@
 // Build label shown in Settings and on the main menu, so a playtest report can say which build it saw.
-export const BUILD = Object.freeze({ version: 'v39.2-storage-foundation', date: '2026-10-23', branch: 'storage-foundation' });
+// `test` is false in the repository and in every released build; a private TEST publish flips it to enable developer-only
+// shortcuts (GDD §42.10). The released game never shows them.
+export const BUILD = Object.freeze({ version: 'v40.0-franchise-lifecycle', date: '2026-10-23', branch: 'franchise-lifecycle', test: false });
 export const buildLabel = () => `${BUILD.version} · ${BUILD.date}`;

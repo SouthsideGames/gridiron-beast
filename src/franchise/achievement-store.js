@@ -41,3 +41,14 @@ export function mergeAchievements(other) {
   if (changed) persist();
 }
 export function resetAchievements() { data = blank(); persist(); }
+/**
+ * Older entries name franchises by seed; link the one that belongs to `uid` (GDD §42.3). A seed is replaced by the uid only
+ * in entries that list that seed; nothing else changes, and counts stay the same. Returns how many entries were linked.
+ */
+export function linkAchievements({ uid, seed }) {
+  if (!uid || seed == null) return 0; const d = load(); let n = 0;
+  for (const e of Object.values(d.earned)) { const fr = e.franchises || []; if (fr.includes(seed) && !fr.includes(uid)) { e.franchises = fr.map((x) => (x === seed ? uid : x)); if (e.franchise === seed) e.franchise = uid; n++; } }
+  if (n) persist(); return n;
+}
+/** The achievements one franchise earned, by its permanent uid. */
+export function achievementsFor(uid) { const d = load(); return Object.entries(d.earned).filter(([, e]) => (e.franchises || []).includes(uid)).map(([id]) => id); }

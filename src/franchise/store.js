@@ -31,6 +31,7 @@ export const JOURNAL_KEY = 'gridiron-beast-v7-journal';
 const KEY = (slot = SLOT) => `slot${slot}`;
 const PARTS = Object.freeze(['core', 'history', 'draft']);
 const ROLLING = Object.freeze(['roll0', 'roll1']); // the two latest previous versions
+const ARCHIVED = new Set(['retired', 'fired']); // lifecycle states that make a save read-only (GDD §42.4)
 
 // ------------------------------------------------------------ backends
 /** IndexedDB backend. `run(stores, mode, fn)` runs fn({ get, put, del, keys }) inside one transaction; resolves on commit. */
@@ -101,9 +102,21 @@ const clone = (v) => (v == null ? v : v instanceof Uint8Array ? v.slice() : type
 const partsOf = (f) => { const { history, draftResults, savedAt, ...core } = f; return { core, history: history ?? null, draft: draftResults ?? null }; };
 export { newUid };
 /** Summary shown in recovery lists and the storage meter, read without unpacking. */
-export function saveMeta(f) { const s = f.season || {}; return { club: f.club || null, owner: f.owner ? `${f.owner.first || ''} ${f.owner.last || ''}`.trim() : null, year: s.year ?? null, week: s.week ?? null, day: s.day ?? null, finished: !!s.finished, roster: f.roster?.length ?? 0, franchiseSchema: f.schemaVersion ?? null }; }
+export function saveMeta(f) {
+  const s = f.season || {}; const rec = s.records?.[f.club] || null;
+  return { club: f.club || null, owner: f.owner ? `${f.owner.first || ''} ${f.owner.last || ''}`.trim() : null, year: s.year ?? null, week: s.week ?? null, day: s.day ?? null, finished: !!s.finished, roster: f.roster?.length ?? 0, franchiseSchema: f.schemaVersion ?? null,
+    // for the slot cards (GDD §42.5): the record, the competitive tier and titles, read without unpacking the save
+    record: rec ? { w: rec.w ?? 0, l: rec.l ?? 0, t: rec.t ?? 0 } : null, tier: f.tier ?? null, titles: f.campaign?.titles ?? null, seasons: (f.history || []).length, portrait: f.owner?.portrait ?? null, difficulty: f.settings?.difficulty ?? null };
+}
 /** The future lifecycle field (GDD §42.4), recorded from the save's state; Phase 1 never acts on it. */
-export function lifecycleOf(f) { return { status: f.board?.fired ? 'fired' : 'active', seasonsCompleted: (f.history || []).length }; }
+/** The lifecycle as the manifest and slot card carry it: the status and dates, with the Legacy summary reduced to its headline. */
+export function manifestLifecycle(lc) { if (!lc) return lc; const { legacy, ...rest } = lc; return legacy ? { ...rest, legacyHeadline: legacyHeadline(legacy) } : rest; }
+export function legacyHeadline(legacy) { if (!legacy) return null; const r = legacy.record || {}; return { seasons: legacy.seasonsCompleted ?? null, record: `${r.w ?? 0}-${r.l ?? 0}${r.t ? `-${r.t}` : ''}`, titles: legacy.titles ?? 0, playoffs: legacy.playoffAppearances ?? null, reason: legacy.reason || null }; }
+export function lifecycleOf(f) {
+  // An archive keeps its recorded status (set by lifecycle.js when the season was settled); otherwise the board decides.
+  const recorded = f.lifecycle?.status; const status = recorded && ARCHIVED.has(recorded) && f.lifecycle?.legacy ? recorded : (f.board?.fired ? 'fired' : 'active');
+  return { status, seasonsCompleted: (f.history || []).length };
+}
 
 /** Encode one part: pack (lossless), then gzip where available. Returns { part, entry } with checksums of both forms. */
 export async function encodePart(value, raw = null) {
@@ -138,7 +151,9 @@ function assemble(order, core, history, draft, savedAt) {
  * Create a store over a backend. Options: { backend, localStorage, now, writer, debounce }.
  * Status events: { state: 'idle'|'pending'|'saving'|'saved'|'error', savedAt, error, bytes }.
  */
-export function createStore({ backend, localStorage: ls = (() => { try { return globalThis.localStorage || null; } catch { return null; } })(), now = () => Date.now(), writer = newUid().slice(0, 8), debounce = 350 } = {}) {
+export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { try { return globalThis.localStorage || null; } catch { return null; } })(), now = () => Date.now(), writer = newUid().slice(0, 8), debounce = 350 } = {}) {
+  if (!Number.isInteger(slot) || slot < 1) throw new TypeError(`Invalid save slot ${slot}.`);
+  const slotKey = KEY(slot); // this instance's slot (GDD §42.5): every record it reads or writes carries it
   const listeners = new Set();
   let status = { state: 'idle', savedAt: null, error: null, bytes: null, lastOkAt: null };
   const emit = (s) => { status = { ...status, ...s }; for (const fn of listeners) { try { fn(status); } catch { /* ignore */ } } };
@@ -147,7 +162,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   // What this tab last saw in the save slot: the manifest it loaded or last committed ({ writer, seq }), or EMPTY (it saw no
   // live save, or deleted it itself). Anything else found there was written by another tab or window (GDD §43.13).
   const EMPTY = Object.freeze({ empty: true });
-  const journalKey = `${JOURNAL_KEY}:${writer}`;
+  const journalKey = `${JOURNAL_KEY}:${writer}${slot === 1 ? '' : `:s${slot}`}`; // slot 1 keeps the Phase 1 key
   let lastManifest = null; // the manifest `base` refers to, for recognising a save that changed nothing
   const sameOrder = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((k, i) => k === b[i]);
   let base = null; // null only before open() or in recovery before a choice: then nothing is guarded (nothing is known)
@@ -155,7 +170,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   let pendingF = null; let pendingWaiters = []; let timer = null; let writing = null;
 
   // ---- reading
-  async function readManifest(key = KEY()) { return backend.run(['saves'], 'readonly', (t) => t.get('saves', key)); }
+  async function readManifest(key = slotKey) { return backend.run(['saves'], 'readonly', (t) => t.get('saves', key)); }
   async function loadManifest(m) {
     const got = await backend.run(['parts'], 'readonly', async (t) => { const o = {}; for (const n of PARTS) o[n] = await t.get('parts', m.parts[n].sum); return o; });
     const vals = {}; for (const n of PARTS) vals[n] = await decodePart(got[n], m.parts[n].sum);
@@ -181,7 +196,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
    */
   function freeze(f) {
     const p = partsOf(f); const raws = {}; for (const n of PARTS) raws[n] = JSON.stringify(p[n]);
-    return { raws, savedAt: f.savedAt, uid: f.uid, schemaVersion: f.schemaVersion, order: Object.keys(f), meta: saveMeta(f), lifecycle: f.lifecycle ? { ...f.lifecycle } : lifecycleOf(f) };
+    return { raws, savedAt: f.savedAt, uid: f.uid, schemaVersion: f.schemaVersion, order: Object.keys(f), meta: saveMeta(f), lifecycle: f.lifecycle ? manifestLifecycle(f.lifecycle) : lifecycleOf(f) };
   }
   async function encodeFrozen(fz, useCache = true) {
     const entries = {}; const newParts = [];
@@ -200,6 +215,10 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       // Another tab or window changed the slot since this tab loaded or last wrote it: a different manifest is live, none is
       // (deleted there), or one appeared where this tab saw none. This tab's older state must not replace it or bring it back.
       if (rotate && base && !matchesBase(cur)) throw crossTab();
+      // A committed archive (retired or fired, GDD §42.4) is read-only: once the slot holds one, no different content of
+      // that franchise is ever written over it, whatever path tried. Only an explicit restore or replace (rotate: false
+      // paths) may put another franchise state in the slot.
+      if (rotate && cur?.lifecycle?.legacyHeadline && ARCHIVED.has(cur.lifecycle.status) && cur.uid === manifest.uid && PARTS.some((n) => cur.parts?.[n]?.sum !== manifest.parts[n].sum)) throw Object.assign(new Error('This franchise is a read-only archive: nothing in it can be changed.'), { code: 'read-only' });
       for (const part of newParts) if (!(await t.get('parts', part.sum))) await t.put('parts', part.sum, part);
       // Every part the manifest references must be present and intact in this same transaction (a part reused from the cache
       // may have been removed by another tab's clean-up): a manifest is never committed pointing at missing data.
@@ -231,7 +250,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     for (const k of await t.keys('backups')) { const b = await t.get('backups', k); if (b && !b.embedded) for (const n of PARTS) if (b.parts?.[n]) live.add(b.parts[n].sum); }
     for (const k of await t.keys('parts')) if (!live.has(k)) await t.del('parts', k);
   }
-  function manifestFor(fz, entries, { slot = SLOT } = {}) {
+  function manifestFor(fz, entries) {
     return { slot, uid: fz.uid, storage: STORAGE_VERSION, fmt: PACK_FORMAT, savedAt: fz.savedAt, seq: ++seq, writer, order: fz.order, parts: entries, meta: fz.meta, lifecycle: fz.lifecycle };
   }
   async function writeFrozen(fz, opts) {
@@ -294,7 +313,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     if (!f) return Promise.resolve({ ok: false, error: { code: 'none', message: 'No franchise.' } });
     if (retired.has(f)) return Promise.resolve({ ok: false, error: { code: 'stale', message: 'That franchise was replaced.' } });
     if (!f.uid) f.uid = newUid();
-    f.lifecycle = { ...f.lifecycle, ...lifecycleOf(f) }; // recorded for Phase 2 (GDD §42.4); nothing acts on it yet
+    f.lifecycle = { ...f.lifecycle, ...lifecycleOf(f) }; // the lifecycle record (GDD §42.4)
     stamp(f);
     return new Promise((resolve) => {
       pendingF = f; pendingWaiters.push(resolve); if (status.state !== 'saving') emit({ state: 'pending' });
@@ -349,7 +368,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       const fz = freeze(f); const parts = {}; const bases = {};
       for (const n of PARTS) { const rs = checksum(fz.raws[n]); if (cache[n] && cache[n].raw === rs) bases[n] = cache[n].entry.sum; else parts[n] = fz.raws[n]; }
       if (!Object.keys(parts).length) return false; // nothing but the time changed: the committed save already holds it
-      const body = JSON.stringify({ v: 2, uid: fz.uid, savedAt: fz.savedAt, order: fz.order, base: bases, on: base, parts });
+      const body = JSON.stringify({ v: 2, slot, uid: fz.uid, savedAt: fz.savedAt, order: fz.order, base: bases, on: base, parts });
       ls.setItem(journalKey, JSON.stringify({ sum: checksum(body), body }));
       return true;
     } catch { return false; /* full or blocked: the queued IndexedDB write may still finish */ }
@@ -360,7 +379,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     const keys = []; try { for (let i = 0; i < (ls.length ?? 0); i++) { const k = ls.key(i); if (k && k.startsWith(JOURNAL_KEY)) keys.push(k); } } catch { return []; }
     if (!keys.length && ls.getItem?.(JOURNAL_KEY)) keys.push(JOURNAL_KEY);
     const out = [];
-    for (const key of keys) { try { const w = JSON.parse(ls.getItem(key) || 'null'); if (!w || checksum(w.body) !== w.sum) { out.push({ key, bad: true }); continue; } const j = JSON.parse(w.body); out.push(j?.v === 2 ? { key, j } : { key, bad: true }); } catch { out.push({ key, bad: true }); } }
+    for (const key of keys) { try { const w = JSON.parse(ls.getItem(key) || 'null'); if (!w || checksum(w.body) !== w.sum) { out.push({ key, bad: true }); continue; } const j = JSON.parse(w.body); if (j?.v === 2 && (j.slot ?? 1) !== slot) continue; /* another slot's journal: not ours to adopt or clear */ out.push(j?.v === 2 ? { key, j } : { key, bad: true }); } catch { out.push({ key, bad: true }); } }
     return out;
   }
   const readJournal = () => readJournals().find((x) => x.key === journalKey)?.j || null;
@@ -378,7 +397,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   // ---- backups
   async function embeddedCopy(f, kind, extra = {}) {
     const fz = freeze(f); const embedded = {}; for (const n of PARTS) embedded[n] = (await encodePart(JSON.parse(fz.raws[n]), fz.raws[n])).part;
-    return { kind, slot: SLOT, uid: fz.uid ?? null, storage: STORAGE_VERSION, fmt: PACK_FORMAT, savedAt: fz.savedAt ?? now(), takenAt: now(), order: fz.order, meta: fz.meta, embedded, ...extra };
+    return { kind, slot, uid: fz.uid ?? null, storage: STORAGE_VERSION, fmt: PACK_FORMAT, savedAt: fz.savedAt ?? now(), takenAt: now(), order: fz.order, meta: fz.meta, embedded, ...extra };
   }
   /** Keep an independent copy (weekly, before a restore, before a cloud copy replaces this one, before deletion…). */
   const SINGLE = new Set(['weekly']); const KEEP_PER_KIND = 3; let copies = 0;
@@ -390,9 +409,9 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   async function keepCopy(f, kind, extra) {
     const b = await embeddedCopy(f, kind, extra);
     await backend.run(['backups'], 'readwrite', async (t) => {
-      if (SINGLE.has(kind)) { await t.put('backups', `${SLOT}:${kind}`, b); return; }
-      await t.put('backups', `${SLOT}:${kind}:${b.takenAt}.${++copies}`, b);
-      const mine = (await t.keys('backups')).filter((k) => typeof k === 'string' && k.startsWith(`${SLOT}:${kind}:`)).sort((x, y) => parseFloat(y.split(':')[2]) - parseFloat(x.split(':')[2]));
+      if (SINGLE.has(kind)) { await t.put('backups', `${slot}:${kind}`, b); return; }
+      await t.put('backups', `${slot}:${kind}:${b.takenAt}.${++copies}`, b);
+      const mine = (await t.keys('backups')).filter((k) => typeof k === 'string' && k.startsWith(`${slot}:${kind}:`)).sort((x, y) => parseFloat(y.split(':')[2]) - parseFloat(x.split(':')[2]));
       for (const k of mine.slice(KEEP_PER_KIND)) await t.del('backups', k);
     });
     return b;
@@ -400,12 +419,13 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   const retired = new WeakSet(); // franchise objects replaced by a restore, a deletion or a new franchise: later saves of them are ignored
   function retire(f) { if (f && typeof f === 'object') retired.add(f); }
   async function listBackups() {
-    const all = await backend.run(['backups'], 'readonly', async (t) => { const o = []; for (const k of await t.keys('backups')) o.push([k, await t.get('backups', k)]); return o; });
+    const mine = (k) => typeof k === 'string' && k.startsWith(`${slot}:`); // only this slot's backups (GDD §42.5)
+    const all = await backend.run(['backups'], 'readonly', async (t) => { const o = []; for (const k of await t.keys('backups')) if (mine(k)) o.push([k, await t.get('backups', k)]); return o; });
     const out = [];
     for (const [id, b] of all) { if (!b) continue; let ok = true, why = null, f = null; try { f = await loadBackupRecord(b); } catch (e) { ok = false; why = e.message; } out.push({ id, kind: b.kind, savedAt: b.savedAt ?? f?.savedAt ?? null, takenAt: b.takenAt || null, meta: b.meta || (f ? saveMeta(f) : null), ok, why, bytes: b.embedded ? PARTS.reduce((a, n) => a + (b.embedded[n]?.bytes || 0), 0) : b.bytes ?? null }); }
     return out.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
   }
-  async function readBackup(id) { const b = await backend.run(['backups'], 'readonly', (t) => t.get('backups', id)); if (!b) throw new Error('That backup no longer exists.'); return Save.migrate(await loadBackupRecord(b)); }
+  async function readBackup(id) { if (typeof id !== 'string' || !id.startsWith(`${slot}:`)) throw new Error('That backup belongs to another franchise slot.'); const b = await backend.run(['backups'], 'readonly', (t) => t.get('backups', id)); if (!b) throw new Error('That backup no longer exists.'); return Save.migrate(await loadBackupRecord(b)); }
   /**
    * Make `f` the live franchise in place of `current`, in this order, with the save queue held:
    *   1. a safety copy of `current` (kind `copyKind`) is committed; if it fails, nothing else happens;
@@ -452,7 +472,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     });
   }
   /** A live save that fails its checks is kept as it is (its parts stay referenced) for diagnosis; it is never deleted. */
-  async function quarantine(m) { await backend.run(['backups'], 'readwrite', async (t) => { await t.put('backups', `${SLOT}:quarantine`, { ...m, kind: 'quarantine', takenAt: now(), embedded: null }); }); }
+  async function quarantine(m) { await backend.run(['backups'], 'readwrite', async (t) => { await t.put('backups', `${slot}:quarantine`, { ...m, kind: 'quarantine', takenAt: now(), embedded: null }); }); }
   /** Delete the live franchise, keeping it recoverable as the 'deleted' backup. */
   async function remove(current) {
     return exclusive(async () => {
@@ -462,8 +482,8 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
       if (current) await keepCopy(current, 'deleted');
       await backend.run(['saves', 'slots', 'parts', 'backups'], 'readwrite', async (t) => {
         // Checked again inside the transaction that deletes: another tab may have saved while the deletion copy was written.
-        if (base && !matchesBase(await t.get('saves', KEY()))) throw crossTab();
-        await t.del('saves', KEY()); const s = (await t.get('slots', SLOT)) || { slot: SLOT }; await t.put('slots', SLOT, { ...s, state: 'empty', uid: null, savedAt: null }); for (const r of ROLLING) await t.del('backups', `${SLOT}:${r}`); await collect(t); });
+        if (base && !matchesBase(await t.get('saves', slotKey))) throw crossTab();
+        await t.del('saves', slotKey); const s = (await t.get('slots', slot)) || { slot }; await t.put('slots', slot, { ...s, state: 'empty', uid: null, savedAt: null }); for (const r of ROLLING) await t.del('backups', `${slot}:${r}`); await collect(t); });
       retire(current); dropQueued(current); // only now, after the copy and the deletion committed
       cache = {}; base = EMPTY; lastManifest = null; clearJournal(); emit({ state: 'idle', savedAt: null, bytes: null });
     });
@@ -478,17 +498,17 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
   async function migrateLegacy({ legacyText }) {
     const from = 'v6';
     const legacySum = checksum(legacyText);
-    const slot0 = await backend.run(['slots'], 'readonly', (t) => t.get('slots', SLOT));
+    const slot0 = await backend.run(['slots'], 'readonly', (t) => t.get('slots', slot));
     const uid = slot0?.migration?.legacySum === legacySum && slot0?.migration?.uid ? slot0.migration.uid : newUid();
     // 1. the protected copy, and the record of the attempt
     const kind = 'legacy-original';
-    const original = { kind, slot: SLOT, from, takenAt: now(), sum: legacySum, enc: 'none', data: legacyText, bytes: legacyText.length };
+    const original = { kind, slot, from, takenAt: now(), sum: legacySum, enc: 'none', data: legacyText, bytes: legacyText.length };
     const gz = await gzip(legacyText); if (gz) { original.enc = 'gzip'; original.data = gz; original.bytes = gz.byteLength; }
     const migration = { step: 'copied', legacySum, uid, startedAt: slot0?.migration?.legacySum === legacySum ? slot0.migration.startedAt : now(), attempts: (slot0?.migration?.legacySum === legacySum ? slot0.migration.attempts || 0 : 0) + 1 };
     await backend.run(['backups', 'slots'], 'readwrite', async (t) => {
-      if (!(await t.get('backups', `${SLOT}:${kind}`))) await t.put('backups', `${SLOT}:${kind}`, original); // the first original is never replaced
-      const s = (await t.get('slots', SLOT)) || { slot: SLOT };
-      await t.put('slots', SLOT, { ...s, slot: SLOT, state: 'migrating', migration });
+      if (!(await t.get('backups', `${slot}:${kind}`))) await t.put('backups', `${slot}:${kind}`, original); // the first original is never replaced
+      const s = (await t.get('slots', slot)) || { slot };
+      await t.put('slots', slot, { ...s, slot, state: 'migrating', migration });
       backend.hit?.('migrate-copied');
     });
     // 2. migrate a separate copy
@@ -506,12 +526,12 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     if (JSON.stringify(back) !== JSON.stringify(f)) throw Object.assign(new Error('The migrated save did not read back identically.'), { code: 'verify' });
     // 5. switch: the slot is live, the legacy save is recorded as migrated (and left in place)
     backend.hit?.('migrate-switch');
-    await backend.run(['slots'], 'readwrite', async (t) => { const s = (await t.get('slots', SLOT)) || {}; await t.put('slots', SLOT, { ...s, slot: SLOT, state: 'active', uid, savedAt: f.savedAt, legacySum, migration: { ...migration, step: 'done', at: now() } }); });
+    await backend.run(['slots'], 'readwrite', async (t) => { const s = (await t.get('slots', slot)) || {}; await t.put('slots', slot, { ...s, slot, state: 'active', uid, savedAt: f.savedAt, legacySum, migration: { ...migration, step: 'done', at: now() } }); });
     primeCache(f, m);
     // The v39.1 weekly backup (localStorage) is carried over as the weekly copy, so "restore last week" keeps working.
     try {
       const wk = ls?.getItem(Save.BACKUP_KEY);
-      const have = await backend.run(['backups'], 'readonly', (t) => t.get('backups', `${SLOT}:weekly`));
+      const have = await backend.run(['backups'], 'readonly', (t) => t.get('backups', `${slot}:weekly`));
       if (wk && !have) { const b = Save.migrate(JSON.parse(wk)); if (b) { if (b.createdAt === f.createdAt) b.uid = uid; await keepCopy(b, 'weekly', { from: 'v6-weekly' }); } }
     } catch { /* the weekly copy stays in localStorage untouched */ }
     return f;
@@ -523,21 +543,22 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
    */
   async function open() {
     const notes = [];
-    const slot = await backend.run(['slots'], 'readonly', (t) => t.get('slots', SLOT));
-    const legacyText = (() => { try { return ls?.getItem(Save.SAVE_KEY) || null; } catch { return null; } })();
+    const slotRec = await backend.run(['slots'], 'readonly', (t) => t.get('slots', slot));
+    // The v39.0/v39.1 localStorage save belongs to slot 1 (GDD §42.9); the other slots never look at it.
+    const legacyText = slot === 1 ? (() => { try { return ls?.getItem(Save.SAVE_KEY) || null; } catch { return null; } })() : null;
     const legacySum = legacyText ? checksum(legacyText) : null;
-    const done = slot?.state === 'active' || slot?.state === 'empty';
+    const done = slotRec?.state === 'active' || slotRec?.state === 'empty';
     // First launch of v39.2 (or an interrupted migration): migrate the legacy save.
     if (!done && legacyText) {
       try { const f = await migrateLegacy({ legacyText }); notes.push('migrated'); return { mode: 'ready', franchise: f, source: 'migrated', notes }; }
       catch (e) { notes.push(`migration failed: ${e.message}`); const f = Save.migrate(JSON.parse(legacyText)); return f ? { mode: 'legacy', franchise: f, source: 'legacy', notes, error: classify(e) } : { mode: 'recovery', franchise: null, notes, backups: await listBackups().catch(() => []) }; }
     }
-    let m = slot?.state === 'active' ? await readManifest().catch(() => null) : null;
+    let m = slotRec?.state === 'active' ? await readManifest().catch(() => null) : null;
     // An old cached copy of the game (v39.1) wrote the localStorage save after migration. Its timestamp cannot tell newer
     // progress from an old tab's stale state, so neither replaces the other: the live save stays, and the other save is kept
     // as a backup the player can restore by choice. If keeping it fails, nothing changes and it is tried at the next start
     // (the localStorage save itself is never touched).
-    if (legacyText && slot?.legacySum && legacySum !== slot.legacySum) {
+    if (legacyText && slotRec?.legacySum && legacySum !== slotRec.legacySum) {
       try { await keepLegacyCopy(legacyText, legacySum); notes.push('legacy-newer kept'); } catch (e) { notes.push(`legacy copy not kept yet: ${e.message}`); }
     }
     // Unload journals (one per tab). One is adopted only if it belongs to the live franchise, is newer than the live save, and
@@ -562,7 +583,7 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
     if (adopted) return { mode: 'ready', franchise: adopted, source: 'journal', notes };
     if (!m) {
       base = EMPTY; lastManifest = null; // this tab saw no live save
-      return { mode: slot?.state === 'empty' || !slot ? 'empty' : 'recovery', franchise: null, notes, backups: slot && slot.state !== 'empty' ? await listBackups().catch(() => []) : [] };
+      return { mode: slotRec?.state === 'empty' || !slotRec ? 'empty' : 'recovery', franchise: null, notes, backups: slotRec && slotRec.state !== 'empty' ? await listBackups().catch(() => []) : [] };
     }
     try {
       const raw = await loadManifest(m); const f = Save.migrate(raw);
@@ -579,25 +600,27 @@ export function createStore({ backend, localStorage: ls = (() => { try { return 
 
   /** Keep a localStorage save written by an older cached build (exact text, checksummed), the three most recent by content. */
   async function keepLegacyCopy(text, sum) {
-    const rec = { kind: 'legacy-newer', slot: SLOT, from: 'v6-newer', takenAt: now(), sum, enc: 'none', data: text, bytes: text.length };
+    const rec = { kind: 'legacy-newer', slot, from: 'v6-newer', takenAt: now(), sum, enc: 'none', data: text, bytes: text.length };
     try { const lf = Save.migrate(JSON.parse(text)); if (lf) { rec.savedAt = lf.savedAt ?? null; rec.meta = saveMeta(lf); } } catch { /* kept as text even if unreadable */ }
     const gz = await gzip(text); if (gz) { rec.enc = 'gzip'; rec.data = gz; rec.bytes = gz.byteLength; }
     await backend.run(['backups', 'slots'], 'readwrite', async (t) => {
-      await t.put('backups', `${SLOT}:legacy-newer:${sum}`, rec);
-      const mine = (await t.keys('backups')).filter((k) => typeof k === 'string' && k.startsWith(`${SLOT}:legacy-newer:`));
+      await t.put('backups', `${slot}:legacy-newer:${sum}`, rec);
+      const mine = (await t.keys('backups')).filter((k) => typeof k === 'string' && k.startsWith(`${slot}:legacy-newer:`));
       const recs = []; for (const k of mine) recs.push([k, (await t.get('backups', k))?.takenAt || 0]);
       for (const [k] of recs.sort((x, y) => y[1] - x[1]).slice(KEEP_PER_KIND)) await t.del('backups', k);
-      const sl = (await t.get('slots', SLOT)) || { slot: SLOT }; await t.put('slots', SLOT, { ...sl, legacySum: sum }); // seen: not kept again
+      const sl = (await t.get('slots', slot)) || { slot }; await t.put('slots', slot, { ...sl, legacySum: sum }); // seen: not kept again
     });
   }
 
   // ---- storage numbers for the meter
   async function usage() {
     const r = await backend.run(['saves', 'backups', 'parts'], 'readonly', async (t) => {
-      const m = await t.get('saves', KEY()); const own = new Set(m ? PARTS.map((n) => m.parts[n].sum) : []);
-      let save = 0, shared = 0, backups = 0, legacy = 0; const counted = new Set();
-      for (const k of await t.keys('parts')) { const p = await t.get('parts', k); if (own.has(k)) save += p.bytes; else { backups += p.bytes; } counted.add(k); }
-      for (const k of await t.keys('backups')) { const b = await t.get('backups', k); if (b?.embedded) for (const n of PARTS) backups += b.embedded[n]?.bytes || 0; if (b?.kind === 'legacy-original') legacy += b.bytes || (b.data?.length ?? 0); }
+      const m = await t.get('saves', slotKey); const own = new Set(m ? PARTS.map((n) => m.parts[n].sum) : []);
+      // parts referenced by this slot's rolling backups and by nothing live elsewhere count as this slot's backups
+      const others = new Set(); for (const k of await t.keys('saves')) { if (k === slotKey) continue; const o = await t.get('saves', k); for (const n of PARTS) if (o?.parts?.[n]) others.add(o.parts[n].sum); }
+      const mineRolling = new Set(); let save = 0, shared = 0, backups = 0, legacy = 0;
+      for (const k of await t.keys('backups')) { if (typeof k !== 'string' || !k.startsWith(`${slot}:`)) continue; const b = await t.get('backups', k); if (b?.embedded) for (const n of PARTS) backups += b.embedded[n]?.bytes || 0; else for (const n of PARTS) if (b?.parts?.[n]) mineRolling.add(b.parts[n].sum); if (b?.kind === 'legacy-original') legacy += b.bytes || (b.data?.length ?? 0); }
+      for (const k of await t.keys('parts')) { const p = await t.get('parts', k); if (own.has(k)) { save += p.bytes; if (others.has(k)) shared += p.bytes; } else if (mineRolling.has(k) && !others.has(k)) backups += p.bytes; }
       return { save, backups, legacy, shared, payload: m ? PARTS.reduce((a, n) => a + m.parts[n].packedBytes, 0) : 0, raw: m ? PARTS.reduce((a, n) => a + m.parts[n].rawBytes, 0) : 0, savedAt: m?.savedAt || null };
     });
     let est = null; try { if (globalThis.navigator?.storage?.estimate) est = await navigator.storage.estimate(); } catch { est = null; }

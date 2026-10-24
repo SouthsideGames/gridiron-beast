@@ -945,3 +945,11 @@ button.tl-season.link .dim { color: var(--accent); }
 .career-link:active { background: rgba(250,204,21,.12); }
 .career-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
 .ln-second { padding-bottom: 4px; } .ln-race-row .grow { padding-bottom: 4px; }
+
+/* Franchises (the three save slots, GDD §42.5) and the Franchise Legacy shell (§42.7), Phase 2 */
+.slot-card { border-color: var(--line-2); }
+.slot-card .chip { text-transform: none; }
+.segmented { display: flex; gap: 6px; flex-wrap: wrap; }
+.segmented .btn { flex: 1 1 auto; min-width: 0; }
+.legacy-head { border-color: #8a7a1a; }
+@media (max-width: 340px) { .slot-card .grid2 { grid-template-columns: 1fr; } }

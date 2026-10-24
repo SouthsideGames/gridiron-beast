@@ -16,6 +16,8 @@ import { GYM_BY_CLUB } from '../../data/gyms.js';
 import { resetDex } from '../../franchise/dex-store.js';
 import { clashSettings } from '../../franchise/clash-link.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
+import { isArchived, SEASON_CAP } from '../../franchise/lifecycle.js';
+import { shortcutsEnabled, fastForwardSeason, fastForwardSeasons } from '../../franchise/dev-shortcut.js';
 import { openSnapshotSheet } from '../career-ui.js';
 import { legacyHofProfile } from '../../franchise/career-profile.js';
 import { resetTutorial, primerHtml, assistSettingsHtml } from '../tutorial.js';
@@ -35,9 +37,10 @@ export function registerMenuScreens(Router, app) {
       return `
         <div class="hero"><div class="logo">GRIDIRON BEAST</div><div class="muted">Monster football franchise · 7-on-7</div></div>
         ${f ? `<div class="panel"><div class="row"><span>${portraitSprite(f.owner.portrait + '|' + f.owner.first, 44)}</span><div class="grow"><div><b>${esc(f.owner.first)} ${esc(f.owner.last)}</b> · ${esc(s.club)}</div><div class="muted">Beast League · ${yearOf(s.year)} · Week ${s.week} · ${s.record}</div></div></div>
-          <div class="stack" style="margin-top:12px"><button class="btn primary big block" data-action="continue">▶ Continue Franchise</button></div></div>` : ''}
+          <div class="stack" style="margin-top:12px"><button class="btn primary big block" data-action="continue">${isArchived(f) ? '🏛️ View Franchise Legacy' : '▶ Continue Franchise'}</button></div></div>` : ''}
         <div class="stack">
           <button class="btn ${f ? '' : 'primary big'} block" data-action="new">${f ? 'Start a New Franchise' : '🏆 New Franchise'}</button>
+          <button class="btn block" data-action="go" data-screen="franchises">🗂️ Franchises <span class="dim mono">3 slots</span></button>
           ${legacy && !f ? `<button class="btn block" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
           <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
           <button class="btn block" data-action="go" data-screen="achievements">🏅 Achievements <span class="dim mono">${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}</span></button>
@@ -48,8 +51,13 @@ export function registerMenuScreens(Router, app) {
     },
     mount(root, ctx) {
       delegate(root, {
-        continue: () => Router.go('hq', {}, { reset: true }),
-        new: async () => { if (app.f && !(await confirmSheet('Starting a new franchise replaces your current save. Export it first from Settings if you want to keep it.', { title: 'New franchise', okLabel: 'Start new', danger: true }))) return; Router.go('onboarding', { fresh: true }); },
+        continue: () => Router.go(isArchived(app.f) ? 'legacy' : 'hq', {}, { reset: true }),
+        // A new franchise goes into an empty slot (GDD §42.5): the Franchises screen chooses it. With no slot manager (fallback
+        // storage) the single-save behaviour of v39.1 remains, with its warning.
+        new: async () => {
+          if (app.slots && app.storage.store) { const { empty } = await app.slots.slotFor(); if (!app.f && empty.includes(app.slot)) { Router.go('onboarding', { fresh: true }); return; } if (empty.length === 1 && !app.f) { await app.createIn(empty[0]); return; } Router.go('franchises'); if (!empty.length) toast('All three slots are full. Delete or export a franchise to free one.', 'info', 5000); return; }
+          if (app.f && !(await confirmSheet('Starting a new franchise replaces your current save. Export it first from Settings if you want to keep it.', { title: 'New franchise', okLabel: 'Start new', danger: true }))) return; Router.go('onboarding', { fresh: true });
+        },
         'import-legacy': async () => { try { const f = Save.importLegacy(Save.readLegacy()); const r = await app.setFranchise(f); if (!r.ok) { toast(`Import failed: ${r.error?.message}. Nothing was changed.`, 'bad', 6000); return; } toast('Imported your previous franchise. Your old save is untouched.', 'good'); if (Object.keys(f.staff).length < 5) hireDefaultStaff(f); app.save(); Router.go('hq', {}, { reset: true }); } catch (e) { toast(e.message, 'bad'); } },
         soon: (el) => toast(`${el.dataset.what} is planned for a later release.`),
         go: (el) => Router.go(el.dataset.screen),
@@ -122,9 +130,11 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="dev-ceremony" style="margin-top:6px">🏆 Preview the Beast Bowl ceremony (nothing is saved)</button>` : ''}
         <button class="btn block" data-action="dexall">📖 Beast Dex (everything revealed)</button>
         <button class="btn block danger" data-action="dexreset">Reset my Beast Dex</button>
-        <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button></div>`;
+        <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button>
+        ${shortcutsEnabled() ? `<div class="panel tight" style="border-color:var(--warn)"><b>⏩ Test build shortcut</b><div class="muted">Plays whole seasons headlessly in the current franchise so a Season-${SEASON_CAP} retirement can be reached quickly. Only in this private test build.</div><div class="grid2" style="margin-top:6px"><button class="btn block" data-action="ff" data-n="1" ${app.f ? '' : 'disabled'}>Finish this season</button><button class="btn block" data-action="ff" data-n="5" ${app.f ? '' : 'disabled'}>Play 5 seasons</button></div></div>` : ''}</div>`;
     },
     mount(root) { delegate(root, {
+        ff: async (el) => { if (!app.f || !shortcutsEnabled()) return; const n = Number(el.dataset.n) || 1; el.disabled = true; el.textContent = 'Playing…'; await new Promise((r) => setTimeout(r, 30)); const r = n === 1 ? fastForwardSeason(app.f) : fastForwardSeasons(app.f, n - 1); const saved = await app.save({ immediate: true }); toast(r.ok ? `${r.played ?? 1} season${(r.played ?? 1) === 1 ? '' : 's'} played${r.stoppedBecause === 'cap' ? `: Season ${SEASON_CAP} complete, retirement is due` : r.stoppedBecause === 'fired' ? ': the board let you go' : ''}${saved.ok ? '' : ' (not saved!)'}` : `Stopped: ${r.reason}`, r.ok ? 'good' : 'bad', 6000); Router.render(); },
         'dev-legend': async (el) => { if (!(await confirmSheet('Add this Legendary to your roster for testing? The franchise is marked as developer-assisted.', { title: 'Developer test', okLabel: 'Add' }))) return; const r = F.devGrantLegendary(app.f, el.dataset.sp); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.monster.name} joined. Legendary Play discovered.`, 'good'); },
         'dev-ceremony': () => Router.go('ceremony', { preview: true }), go: (el) => Router.go(el.dataset.screen), dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet('Wipe every species you have discovered, across all franchises?', { title: 'Reset Beast Dex', okLabel: 'Reset', danger: true })) { resetDex(); toast('Beast Dex reset.'); } } }); },
   });

@@ -8,6 +8,7 @@ import { resolveRecordHolder } from '../../franchise/career-profile.js';
 import { legendaryCardHtml, openLegendarySheet, announceLegendary } from '../legendary-ui.js';
 import { LEGENDARY_IDS, unannouncedLegendary } from '../../franchise/legendary.js';
 import { esc, delegate, toast, sheet, fmtMoney, confirmSheet } from '../dom.js';
+import { retirementDue, retirementChecklist, requestRetirement, cancelRetirement, SEASON_CAP, seasonsCompleted, isArchived } from '../../franchise/lifecycle.js';
 import { ROUTE_LABELS } from '../../data/routes.js';
 import { yearOf } from '../../data/calendar.js';
 
@@ -21,7 +22,6 @@ import { headlineHtml } from './roster.js';
 import { ATTRIBUTES, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../../data/personnel.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
 import { GYMS, GYM_BY_CLUB } from '../../data/gyms.js';
-import { addHofCard } from '../../franchise/hall-of-fame.js';
 import { SPECIES_BY_ID } from '../../data/monsters.js';
 import { sprite16 } from '../sprite16.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
@@ -71,6 +71,7 @@ export function registerHqScreens(Router, app) {
     title: ({ f }) => f ? f.club : 'Headquarters', back: false,
     render({ f }) {
       if (!f) return '<p>No franchise.</p>';
+      if (isArchived(f)) { setTimeout(() => Router.go('legacy', {}, { reset: true }), 0); return '<div class="panel"><p>This franchise is a read-only Franchise Legacy.</p></div>'; } // GDD §42.7: the archive shell, never HQ
       if (F.nextStaffRole(f) && !f.season.finished) return `<div class="panel"><p>Your front office is not complete.</p><button class="btn primary block" data-action="go" data-screen="hire">Hire staff</button></div>`;
       const s = F.summary(f); const cap = s.cap; const tier = tierById(f.tier);
       const fx = F.currentFixture(f); const po = F.playoffFixture(f);
@@ -78,7 +79,8 @@ export function registerHqScreens(Router, app) {
       const rival = f.rivals[f.tier];
       const day = f.season.day;
       const offPending = f.season.finished && (!F.offseasonReady(f) || !F.draftDone(f) || f.roster.length < F.ROSTER_MIN || F.nextStaffRole(f));
-      const next = F.isFired(f) && f.season.finished ? { label: 'The board has let you go', action: 'fired', icon: '🚪' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: 'Choose your Legend Track', action: 'legend', icon: '🌟' } : { label: offPending ? `Offseason · ${F.offseasonPending(f).length ? F.offseasonPending(f).length + ' contract decision' + (F.offseasonPending(f).length === 1 ? '' : 's') : !F.draftDone(f) ? 'the draft' : f.roster.length < F.ROSTER_MIN ? 'sign to ' + F.ROSTER_MIN + ' monsters' : 'hire staff'}` : 'Continue to the offseason', action: 'offseason', icon: '📋' }) : nextAction(f);
+      const due = retirementDue(f);
+      const next = due === 'fired' ? { label: 'The board has let you go', action: 'fired', icon: '🚪' } : due === 'season-cap' ? { label: `Season ${SEASON_CAP} complete · retire to the Franchise Legacy`, action: 'retire-now', icon: '🏛️' } : due === 'voluntary' ? { label: 'Retirement · complete it now', action: 'retire-now', icon: '🏛️' } : f.season.finished ? (F.postseasonEvent(f) ? { label: `Postseason · ${F.postseasonEvent(f).title}`, action: 'postseason', icon: '📞' } : f.legendPick && !f.legendPick.resolved ? { label: 'Choose your Legend Track', action: 'legend', icon: '🌟' } : { label: offPending ? `Offseason · ${F.offseasonPending(f).length ? F.offseasonPending(f).length + ' contract decision' + (F.offseasonPending(f).length === 1 ? '' : 's') : !F.draftDone(f) ? 'the draft' : f.roster.length < F.ROSTER_MIN ? 'sign to ' + F.ROSTER_MIN + ' monsters' : 'hire staff'}` : 'Continue to the offseason', action: 'offseason', icon: '📋' }) : nextAction(f);
       const race = f.season.week >= 5 && !f.season.finished && !F.inPlayoffs(f) ? `<div class="muted" style="margin-top:4px">Playoff race: <b>${esc(F.playoffPicture(f).text)}</b></div>` : '';
       const gameLine = f.season.finished ? `<b>${yearOf(f.season.year)} season complete.</b> ${f.season.champion === f.club ? '🏆 Beast Bowl champions!' : f.season.champion ? esc(f.season.champion) + ' won the Beast Bowl.' : ''} <button class="btn small" data-action="awards">How we finished</button>`
         : po ? `<b>${esc(po.tag)}</b> · ${po.home === f.club ? 'vs' : '@'} ${esc(opp)}`
@@ -126,11 +128,17 @@ export function registerHqScreens(Router, app) {
         restbye: () => { F.skipToByeIfIdle(app.f); app.save(); Router.render(); },
         postseason: () => Router.go('postseason'),
         legend: () => Router.go('legend'),
+        // Retirement (GDD §42.4, decision R): available once the Hall of Fame checklist is met; it takes effect after the season.
         retire: async () => {
-          const r = F.retire(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; }
-          if (!(await confirmSheet(`Retire ${r.card.owner}? Your career (${r.card.seasons} seasons, ${r.card.record.w}-${r.card.record.l}, ${r.card.titles} title${r.card.titles === 1 ? '' : 's'}) is written to the Hall of Fame, this franchise ends, and your Beast Dex carries on. Export the save first if you want to keep playing it elsewhere.`, { title: 'Hall of Fame', okLabel: 'Retire', danger: true }))) return;
-          if (!(await app.reset()).ok) return; addHofCard(r.card); toast('Welcome to the Hall of Fame.', 'good', 4000); Router.go('hof', {}, { reset: true });
+          const f = app.f; const eligible = F.hallOfFameProgress(f).eligible; if (!eligible) { toast('Not yet eligible for the Hall of Fame.', 'bad'); return; }
+          if (f.lifecycle?.pendingRetirement) { if (await confirmSheet('Retirement is set for the end of this season. Cancel it and keep going?', { title: 'Retirement planned', okLabel: 'Keep playing' })) { cancelRetirement(f); app.save(); Router.render(); } return; }
+          if (!f.season.finished) {
+            if (!(await confirmSheet(`Retire at the end of this season? ${f.club} then becomes a permanent, read-only Franchise Legacy: its history, roster, awards and careers are kept and can be explored, it keeps its slot, and your career card goes to the Hall of Fame. You will no longer be able to play games or advance weeks in it. You can cancel until the season ends.`, { title: 'Retire after this season', okLabel: 'Retire after the season' }))) return;
+            requestRetirement(f); app.save(); toast('Retirement is set for the end of the season.', 'info', 4000); Router.render(); return;
+          }
+          await retireNow(app, Router, 'voluntary');
         },
+        'retire-now': async () => { const due = retirementDue(app.f); if (!due) { toast('Retirement is not due yet.', 'bad'); return; } await retireNow(app, Router, due); },
         resume: () => Router.go('match'),
         goals: () => Router.go('goals'),
         offseason: () => Router.go('offseason'),
@@ -141,12 +149,7 @@ export function registerHqScreens(Router, app) {
         recap: () => sheet(seasonRecapHtml(app.f), { title: `${yearOf(app.f.season.year)} · regular season` }),
         watchround: () => { const r = F.advancePlayoffs(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(roundResultsHtml(app.f, r), { title: F.ROUND_NAMES[r.round] || `Round ${r.round}`, onClose: () => Router.go('hq', {}, { reset: true }) }); },
         skipplayoffs: async () => { if (!(await confirmSheet('Simulate the rest of the playoffs and go to the offseason?', { title: 'Skip the playoffs', okLabel: 'Skip' }))) return; F.skipPlayoffs(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
-        fired: async () => {
-          const r = F.retire(app.f);
-          if (r.ok) { if (!(await confirmSheet(`The board has ended your time at ${app.f.club}. You qualified for the Hall of Fame before they did, so your career (${r.card.seasons} seasons, ${r.card.record.w}-${r.card.record.l}) is written there. Leave the club?`, { title: 'Let go', okLabel: 'Leave', danger: true }))) return; if (!(await app.reset()).ok) return; addHofCard(r.card); Router.go('hof', {}, { reset: true }); return; }
-          if (!(await confirmSheet(`The board has ended your time at ${app.f.club}. You did not reach the Hall of Fame; this franchise ends and your Beast Dex carries on. Export the save first if you want to keep it.`, { title: 'Let go', okLabel: 'Leave the club', danger: true }))) return;
-          if (!(await app.reset()).ok) return; toast('A new club will call.', 'info', 3000); Router.go('menu', {}, { reset: true });
-        },
+        fired: async () => { await retireNow(app, Router, 'fired'); },
         autorun: async () => { if (!(await confirmSheet('Your staff will scout, recruit (only a clear upgrade), train, scout the opponent, keep the game plan and handle the press. You can still open the depth chart before kickoff.', { title: 'Run the week', okLabel: 'Run it' }))) return; const r = F.autoRunToSunday(app.f); app.save(); sheet(`<ul style="padding-left:18px">${r.did.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>`, { title: 'Week handled', onClose: () => Router.go('hq', {}, { reset: true }) }); },
         awards: () => sheet(app.f.season.finished ? seasonFinalHtml(app.f) : seasonRecapHtml(app.f), { title: `${yearOf(app.f.season.year)} season` }),
         gym: (el) => { const g = GYM_BY_CLUB[el.dataset.club]; if (!g) return; const b = F.badgeOf(app.f, g.club); const sp = SPECIES_BY_ID[g.legendary]; sheet(`<div class="row">${portraitSprite(g.coach.portrait, 56, { hue: TYPES[g.element]?.hue })}<div><b>${esc(g.coach.name)}</b><div class="muted">Head coach, ${esc(g.club)} · ${esc(g.coach.style)}</div><div class="muted">${esc(g.element)} gym · ${g.tier} tier</div></div></div><p>${b ? `<b>${esc(g.badge)}</b> earned in ${yearOf(b.year)}, week ${b.week} (${esc(b.score)}).` : `Beat ${esc(g.club)} in any game that counts to earn the <b>${esc(g.badge)}</b>. No replays: if you lose, the next chance is their next game on your schedule.`}</p><h3>Signature monster</h3><div class="row">${sprite16(sp, 48)}<div><b>${esc(sp.name)}</b><div class="muted">${esc(sp.element)} legendary · ${sp.position}</div><div class="muted">${esc(sp.ability.name)}: ${esc(sp.ability.text)}</div></div></div><p class="dim">Gym clubs grow stronger every season, and study tape after you beat them.</p>`, { title: g.badge }); },
@@ -921,4 +924,22 @@ function rivalCard(f) {
   return `<div class="panel tight rival-card ${thisWeek ? 'hot' : ''}"><div class="row" style="gap:10px;align-items:flex-start">${portraitSprite(`gm|${rv.team}`, 40, { hue: 280 })}<div class="grow"><div class="row between"><b>⚔️ ${esc(rv.team)}</b><span class="chip ${gb < 0 ? 'good' : gb > 0 ? 'bad' : ''}">${gb === 0 ? 'level' : gb < 0 ? `you lead by ${Math.abs(gb)}` : `${gb} back`}</span></div>
     <div class="dim">GM ${esc(rv.gm)} · they are ${theirs.w}-${theirs.l}, you are ${mine.w}-${mine.l} · all-time ${rv.headToHead.w}-${rv.headToHead.l}${seasonH2h}${next ? ` · ${thisWeek ? '<b>GAME THIS SUNDAY</b>' : `next meeting week ${next.week}`}` : ' · no more meetings this season'}</div>
     <p class="talk-line" style="margin:4px 0 0">“${esc(line)}”</p></div></div></div>`;
+}
+
+/**
+ * Complete a retirement that is due (GDD §42.4): the season is settled, the owner confirms, the archive is written once, the
+ * Hall of Fame card when the checklist is met, then the Franchise Legacy opens. Nothing is deleted.
+ */
+export async function retireNow(app, Router, reason) {
+  const f = app.f; const check = retirementChecklist(f);
+  if (!check.ready) { toast(`Finish the season first: ${check.missing[0]}.`, 'bad', 5000); return false; }
+  const eligible = F.hallOfFameProgress(f).eligible; const n = seasonsCompleted(f);
+  const why = reason === 'fired' ? `The board has ended your time at ${f.club}.` : reason === 'season-cap' ? `${f.club} has completed its ${SEASON_CAP} seasons: the career is complete.` : `Retire ${f.owner.first} ${f.owner.last} now?`;
+  const hofLine = eligible ? ' Your career card is written to the Hall of Fame.' : (reason === 'fired' ? ' You did not reach the Hall of Fame.' : '');
+  const text = `${why} The franchise becomes a permanent, read-only Franchise Legacy after ${n} season${n === 1 ? '' : 's'}: its history, awards, records, roster and careers are kept and can be explored, and it keeps its slot until you delete it.${hofLine} Your Beast Dex and achievements carry on.`;
+  if (!(await confirmSheet(text, { title: reason === 'fired' ? 'Let go' : 'Retire the franchise', okLabel: reason === 'fired' ? 'Accept and archive' : 'Retire' }))) return false;
+  const r = await app.archive({ reason });
+  if (!r.ok) { toast(r.saveFailed ? `The archive could not be saved (${r.error?.message || 'unknown error'}). Nothing changed: retry when storage is available.` : (r.error?.message || 'Retirement could not be completed.'), 'bad', 7000); return false; }
+  toast(r.card ? 'Welcome to the Hall of Fame. Your Franchise Legacy is ready.' : 'Your Franchise Legacy is ready.', 'good', 4500);
+  Router.go('legacy', {}, { reset: true }); return true;
 }

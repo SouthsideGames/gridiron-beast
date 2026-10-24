@@ -20,3 +20,15 @@ export function addHofCard(card) { load(); if (!cards.some((c) => c.id === card.
 /** Merge cards from another copy (the cloud); ids decide. */
 export function mergeHof(other) { if (!Array.isArray(other)) return; load(); let changed = false; for (const c of other) if (c?.id && !cards.some((x) => x.id === c.id)) { cards.push(c); changed = true; } if (changed) persist(); }
 export function resetHof() { cards = []; persist(); }
+/** The cards of one franchise, by its permanent uid (GDD §42.3). Older cards name only a seed: see `linkHofCards`. */
+export function hofCardsFor(uid) { return uid ? hallOfFame().filter((c) => c.uid === uid) : []; }
+/**
+ * Link older cards (written before franchises had a uid) to the franchise that wrote them: a card whose id carries that
+ * franchise's seed and has no uid gets its uid. Records from different franchises never mix: a card already linked, or one
+ * naming another seed, is left alone. Returns how many cards were linked.
+ */
+export function linkHofCards({ uid, seed }) {
+  if (!uid || seed == null) return 0; load(); let n = 0;
+  for (const c of cards) if (!c.uid && (c.seed === seed || String(c.id || '').startsWith(`hof_${seed}_`))) { c.uid = uid; if (c.seed == null) c.seed = seed; n++; }
+  if (n) persist(); return n;
+}

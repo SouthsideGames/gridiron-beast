@@ -287,6 +287,74 @@ with sync_playwright() as pw:
     ue = fa['unverifiedExport']; check(ue['file'].endswith('-unverified.gbfranchise') and 'did not pass' in ue['toast'], f'emergency export refused or unlabelled: {ue}')
     b3.close()
 
+    # --- Phase 2 (GDD §42.5, §42.7): three slots, switching, the delete flow with its typed confirmation and undo, import into an
+    # empty slot, the archive and the read-only Legacy shell, at every width; a v39.0 device arrives as slot 1 of three.
+    NEW_FRANCHISE = """async (seed) => { const F = await import('./src/franchise/franchise.js'); const M = await import('./src/data/monsters.js');
+      const f = F.createFranchise({ owner: { first: 'Slot', last: 'Two', gender: 'Female', portrait: 1, hometown: '' }, club: 'Glacier Guardians', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed, settings: { difficulty: 'rookie' } });
+      F.hireDefaultStaff(f); let g = 0; while (f.draft && !f.draft.done && g++ < 40) { if (F.onTheClock(f) === f.club) { const d = f.draft; const best = (d.class || []).filter((m) => (d.available || []).includes(m.id)).sort((a, b) => M.monsterOverall(b) - M.monsterOverall(a))[0]; if (best) F.myDraftPick(f, best.id); else F.passDraftPick(f); } else break; }
+      f.settings.tutorial = false; f.welcomed = true; return f; }"""
+    p2 = {}
+    def to_franchises(pg):  # the Franchises screen is reached from the main menu; a reload boots there (and re-reads every slot)
+        pg.goto(URL); booted(pg); pg.click('[data-action="go"][data-screen="franchises"]'); pg.wait_for_selector('.slot-card[data-slot="3"]')
+    for w in [320, 360, 390, 412]:
+        b4 = pw.chromium.launch(); ctx4 = b4.new_context(viewport={'width': w, 'height': 780}, device_scale_factor=2, is_mobile=True, has_touch=True, accept_downloads=True)
+        pg = ctx4.new_page(); pg.on('pageerror', lambda e: errors.append(f'P2 {w}: ' + str(e)))
+        pg.goto(URL + 'manifest.webmanifest'); pg.evaluate("(t) => { localStorage.clear(); localStorage.setItem('gridiron-beast-v6', t); }", LEGACY)
+        pg.goto(URL); booted(pg)
+        p2[f'slots{w}'] = pg.evaluate("async () => (await window.__gb.slotSummaries()).map((s) => s.state)")
+        check(p2[f'slots{w}'] == ['active', 'empty', 'empty'], f'{w}px: a v39.0 device did not arrive as slot 1 of three: {p2[f"slots{w}"]}')
+        pg.click('[data-action="go"][data-screen="franchises"]'); pg.wait_for_selector('.slot-card[data-slot="3"]')
+        overflow(pg, f'Franchises screen at {w}px'); shot(pg, 'franchises', w)
+        check(pg.locator('.slot-card').count() == 3, f'{w}px: {pg.locator(".slot-card").count()} slot cards')
+        if w == 360:
+            # a second franchise in slot 2, created through the app's own path; the first is untouched
+            club1 = pg.evaluate("() => window.__gb.f.club")
+            r = pg.evaluate("async () => { const app = window.__gb; const r0 = await app.createIn(2); if (!r0.ok) return r0; const f = await (" + NEW_FRANCHISE + ")(7); const r = await app.setFranchise(f); return { ok: r.ok, slot: app.slot, club: app.f?.club, uid: app.f?.uid }; }")
+            p2['create2'] = r; check(r.get('ok') and r.get('slot') == 2 and r.get('club') == 'Glacier Guardians', f'creating in slot 2: {r}')
+            summ = pg.evaluate("async () => (await window.__gb.slotSummaries()).map((s) => [s.state, s.meta && s.meta.club])")
+            check(summ[0] == ['active', club1] and summ[1] == ['active', 'Glacier Guardians'] and summ[2][0] == 'empty', f'slots after creating in 2: {summ}')
+            # switch back and forth: each slot's franchise is its own
+            sw = pg.evaluate("async () => { const app = window.__gb; const a = await app.switchSlot(1); const c1 = app.f && app.f.club; const b = await app.switchSlot(2); return { c1, c2: app.f && app.f.club, ok: a.ok && b.ok }; }")
+            check(sw['ok'] and sw['c1'] == club1 and sw['c2'] == 'Glacier Guardians', f'switching slots: {sw}')
+            # the delete flow: a plain tap never deletes; the button stays disabled until the club name is typed; undo brings it back
+            to_franchises(pg); pg.wait_for_selector('.slot-card[data-slot="2"] [data-action="delete"]')
+            pg.click('.slot-card[data-slot="2"] [data-action="delete"]'); pg.wait_for_selector('#del-confirm')
+            p2['deleteDisabled'] = pg.evaluate("() => document.querySelector('.sheet [data-action=delete]').disabled")
+            pg.fill('#del-confirm', 'wrong name'); p2['deleteWrong'] = pg.evaluate("() => document.querySelector('.sheet [data-action=delete]').disabled")
+            pg.fill('#del-confirm', 'Glacier Guardians'); p2['deleteTyped'] = pg.evaluate("() => document.querySelector('.sheet [data-action=delete]').disabled")
+            overflow(pg, 'delete sheet'); shot(pg, 'delete-sheet', w)
+            pg.click('.sheet [data-action="delete"]'); pg.wait_for_function("() => !document.querySelector('#del-confirm')", timeout=20000); pg.wait_for_timeout(500)
+            summ2 = pg.evaluate("async () => (await window.__gb.slotSummaries()).map((s) => s.state)")
+            check(p2['deleteDisabled'] and p2['deleteWrong'] and not p2['deleteTyped'] and summ2 == ['active', 'empty', 'empty'], f'delete flow: {p2["deleteDisabled"]}/{p2["deleteWrong"]}/{p2["deleteTyped"]} -> {summ2}')
+            pg.wait_for_selector('[data-action="undo"]', timeout=10000); pg.click('[data-action="undo"]'); pg.wait_for_timeout(800)
+            summ3 = pg.evaluate("async () => (await window.__gb.slotSummaries()).map((s) => [s.state, s.meta && s.meta.club])")
+            check(summ3[1] == ['active', 'Glacier Guardians'], f'undo delete: {summ3}')
+            # export then import the slot-2 franchise into slot 3 through the file input (a copy: same uid is in slot 2)
+            to_franchises(pg); pg.wait_for_selector('.slot-card[data-slot="3"] [data-change="import"]')
+            text = pg.evaluate("async () => { const S = await import('./src/franchise/store.js'); return S.exportFranchise(window.__gb.f); }")
+            pg.set_input_files('.slot-card[data-slot="3"] [data-change="import"]', {'name': 'copy.gbfranchise', 'mimeType': 'application/json', 'buffer': text.encode()})
+            pg.wait_for_selector('.sheet [data-action="copy"]', timeout=10000); overflow(pg, 'import sheet'); shot(pg, 'import-sheet', w)
+            pg.click('.sheet [data-action="copy"]'); pg.wait_for_selector('.sheet [data-action="into"]'); pg.click('.sheet [data-action="into"]'); pg.wait_for_timeout(800)
+            summ4 = pg.evaluate("async () => { const l = await window.__gb.slotSummaries(); return l.map((s) => [s.state, s.meta && s.meta.club, s.uid]); }")
+            check(summ4[2][0] == 'active' and summ4[2][1] == 'Glacier Guardians' and summ4[2][2] != summ4[1][2], f'import as a copy into slot 3: {summ4}')
+            # the archive (slot 1 is a settled season from the fixture): retire, then the Legacy shell is read-only
+            arch = pg.evaluate("async () => { const app = window.__gb; await app.switchSlot(1); const L = await import('./src/franchise/lifecycle.js'); const F = await import('./src/franchise/franchise.js'); while (app.f.scenes && app.f.scenes.length) F.dismissScene(app.f); const check = L.retirementChecklist(app.f); if (!check.ready) return { ready: false, missing: check.missing }; const r = await app.archive({ reason: 'voluntary' }); let blocked = null; try { F.takeBye(app.f); } catch (e) { blocked = e.code; } const s2 = await app.save({ immediate: true }); return { ready: true, ok: r.ok, status: app.f.lifecycle.status, blocked, saveRefused: s2.ok === false && s2.error && s2.error.code, legacySeasons: app.f.lifecycle.legacy && app.f.lifecycle.legacy.seasons.length }; }")
+            p2['archive'] = arch
+            check(arch.get('ready') and arch.get('ok') and arch.get('status') == 'retired' and arch.get('blocked') == 'read-only' and arch.get('saveRefused') == 'read-only', f'archive: {arch}')
+            pg.goto(URL); booted(pg)  # a fresh start lands on the menu; Continue opens the Legacy, not HQ
+            p2['menuContinue'] = pg.evaluate("() => document.querySelector('[data-action=continue]')?.textContent || ''")
+            check('Legacy' in p2['menuContinue'], f'menu Continue for an archive: {p2["menuContinue"]}')
+            pg.click('[data-action="continue"]'); pg.wait_for_selector('.legacy-head', timeout=20000)
+            for t in ['legacy', 'seasons', 'league', 'roster', 'careers']:
+                pg.click(f'[data-action="tab"][data-tab="{t}"]'); pg.wait_for_timeout(150); overflow(pg, f'Legacy shell tab {t} at {w}px')
+            shot(pg, 'legacy', w)
+            p2['archivedSlots'] = pg.evaluate("async () => (await window.__gb.slotSummaries()).map((s) => s.state)")
+            check(p2['archivedSlots'] == ['retired', 'active', 'active'], f'slots after archiving: {p2["archivedSlots"]}')
+            # HQ redirects an archive to the Legacy shell
+            to_franchises(pg); pg.wait_for_selector('.slot-card[data-slot="1"] [data-action="legacy"]'); shot(pg, 'franchises-archived', w)
+        b4.close()
+    report['phase2'] = p2
+
     # --- timings, normal and CPU-throttled
     timings(pw, 'desktop')
     timings(pw, 'cpu4x', throttle=4)

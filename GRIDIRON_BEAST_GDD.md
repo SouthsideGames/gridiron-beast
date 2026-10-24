@@ -1963,9 +1963,9 @@ Every animation stops with reduced motion, from Settings or the system setting.
 
   This is an emulated browser, not a real device.
 
-## 42. Franchise lifecycle, save slots and persistent AI rosters — APPROVED DESIGN, NOT IMPLEMENTED (updated 2026-10-23)
+## 42. Franchise lifecycle, save slots and persistent AI rosters — APPROVED DESIGN (updated 2026-10-23; Phase 1 implemented in §43, Phase 2 in §44)
 
-> **Status.** Nothing in this section exists in the game yet. It merges the persistent AI roster proposal (first written 2026-10-23) with the franchise rules the owner locked on 2026-10-23. No code may be written until the owner authorises a phase (§42.11).
+> **Status.** This section is the approved design. Phase 1 (storage foundation) is implemented in §43 and Phase 2 (franchise lifecycle, three slots, the Legacy) in §44; Phases 3 and 4 are not implemented. It merges the persistent AI roster proposal (first written 2026-10-23) with the franchise rules the owner locked on 2026-10-23. No code may be written for a phase until the owner authorises it (§42.11).
 >
 > Three kinds of statement are marked throughout:
 > - **[IMPLEMENTED]**: how the game works today.
@@ -2339,7 +2339,7 @@ If the owner was eliminated and is spectating, the remaining playoff rounds are 
   - all existing tests pass and the progression fingerprint is unchanged.
 - **Save size:** about −45% (2.9 → 1.6 MB at season 20).
 
-**Phase 2 — Franchise lifecycle**
+**Phase 2 — Franchise lifecycle** — *IMPLEMENTED in v40.0, see §44.*
 - **Work:**
   - the three-slot manager;
   - create, continue, export, import and delete (the export-first, typed-confirmation flow);
@@ -2430,9 +2430,9 @@ If the owner was eliminated and is spectating, the remaining playoff rounds are 
 | L | A Hall of Fame card at Season-20 retirement only when the checklist is met (today's rule), or for every completed 20-season career | Keep today's rule; the Legacy summary is for every career |
 | M | Existing franchises beyond Season 20 | Grandfather: finish the current season, then mandatory retirement, with nothing deleted |
 | N | **Undo delete** for one launch (the slot's backup kept until the next start) | Yes |
-| O | The cloud mirror for three slots: mirror all slots (if per-viewer quotas allow about 8 MB), or the active slot plus compressed archives | **Pending.** Phase 1 found no documented total quota; recommendation: the active slot only, archives as compressed exports once a quota is confirmed (§43.8) |
+| O | The cloud mirror for three slots | **Approved (2026-10-23):** every slot is protected, active, retired and fired alike; an archive is uploaded once as a single verified copy and never again (it is read-only), so it costs one copy; the Phase 1 protections (write-once snapshots, deletion markers, never evicting a franchise's newest copy) stay (§44.6) |
 | P | Compress retired archives by default (smaller; slower to open the first time) | Yes |
-| Q | The export file name and format: `.gbfranchise` (gzip JSON) with a plain `.json` option | Yes |
+| Q | The export file format | **Revised (2026-10-23):** plain JSON everywhere (`.gbfranchise`, named `.gbfranchise.json` inside claude.ai, where the platform allows only some file types and gzip would be refused); compression stays internal, for stored parts and archives (§43.2, §44.4) |
 | R | Voluntary retirement before Season 20 stays available once the checklist is met | Yes |
 
 ## 43. Storage foundation — Phase 1 of §42 (IMPLEMENTED 2026-10-23; branch `storage-foundation`, v39.2)
@@ -2844,14 +2844,8 @@ The owner approved replacing the lock-based mirror rather than patching it again
 - **Cloud and v39.1 clients.** Concurrent cloud uploads from a v39.1 client (which ignores the lease) can still race with v39.2 uploads. Local saves are unaffected, and an older cloud copy never replaces newer local progress.
 - **Cloud after a failed save.** A failed device save no longer goes to the cloud (invariant A); Export keeps it.
 
-### 43.14 What remains for Phases 2–4 [NOT IMPLEMENTED]
-- **Phase 2:**
-  - slots 2 and 3, and the slot manager;
-  - the full import screen (slot choice, `uid` conflicts);
-  - lifecycle states, retirement and the archive;
-  - the 20-season limit;
-  - Hall of Fame and achievements keyed by `uid` (moving into the `global` store);
-  - the cloud policy (decision O).
+### 43.14 What remains for Phases 2–4 [Phase 2 IMPLEMENTED in §44; Phases 3–4 NOT IMPLEMENTED]
+- **Phase 2:** implemented in v40.0 (§44): slots 2 and 3 and the slot manager, the import flow, the lifecycle states, retirement and the archive, the 20-season limit, Hall of Fame and achievements keyed by `uid` (kept in localStorage with their mirrors rather than moved into the `global` store, which stays reserved), and the cloud policy (decision O, approved).
 - **Accepted residual risks of the cloud mirror (43.8):**
   - a device whose clock runs ahead of the deleting device's by more than the time an upload is in flight could keep that one in-flight copy valid;
   - a franchise restored on a device whose clock runs behind the deleting device's is not backed up until its clock passes the cut-off (the status says "deleted");
@@ -2861,3 +2855,60 @@ The owner approved replacing the lock-based mirror rather than patching it again
   - the simulated store answers each listing atomically; the design does not depend on consistent listings for safety (a listing that misses documents removes less), but a reader shown an incomplete listing could choose an older complete copy.
 - **Phases 3 and 4:** persistent AI rosters and schema 8, then career integration (§42.11).
 - **Phase 1 lays the ground for these:** `uid` on every franchise, the slot pointer, verified backups, a storage version on every record, and room in the measured budget.
+
+## 44. Franchise lifecycle — Phase 2 of §42 (IMPLEMENTED 2026-10-23; branch `franchise-lifecycle`, v40.0)
+
+Phase 2 builds the three-slot save manager, the 20-season career, retirement and firing into a read-only **Franchise Legacy**, Hall of Fame and achievement records keyed by the permanent franchise `uid`, export and import for slots, and migration from v39.0 and from Phase 1. It uses Phase 1's storage (§43) and introduces no second storage system. Nothing in Phases 3–4 (persistent AI rosters, schema 8) is touched.
+
+### 44.1 The three slots [IMPLEMENTED]
+- **One store per slot** over the one database (`createStore({ slot })`, §43.3). Every record carries its slot (`slot<n>` saves, `<n>:kind` backups); the backup list, the unload journal, the storage figures and the legacy migration are scoped to the slot. The v39.0/v39.1 localStorage save belongs to slot 1 only (§42.9).
+- **The slot manager** (`src/franchise/slots.js`) reads every card from storage, never from memory: state (`empty`, `active`, `retired`, `fired`, `migrating`, `damaged`), the save's summary (club, owner, season, week, record, competitive tier, titles), the Legacy headline for an archive, the last save time, the stored size and the backup count. The slot being played is a small localStorage pointer (`gridiron-beast-v7-active-slot`; absent means slot 1, where the Phase 1 and legacy saves live).
+- **The Franchises screen** (main menu → Franchises; also where "Start a New Franchise" leads when a slot must be chosen): three cards with the actions of §42.5. Playing another slot saves and leaves the current one in place, opens the other slot's store, and reconciles it with the cloud. A card's record and competitive tier (league/division; the promotion-relegation data model stays switched off, `TIERS_ENABLED`) come from the manifest's summary, so older manifests show what they have.
+- **Rule 2 of §42.1:** a new franchise or an import needs an empty slot; with none, the owner is told to delete or export one first. There is no overwrite button.
+
+### 44.2 The 20-season career and retirement [IMPLEMENTED]
+- **`src/franchise/lifecycle.js`:** `SEASON_CAP = 20`. `startNextSeason` refuses a 21st season with the retirement reason (`cap: true`), after the board's own refusal when fired. Retirement is **due** only after a complete season: `fired` (the board), `season-cap` (20 complete seasons; a franchise already beyond the cap finishes its current season first, decision M), or `voluntary` (the owner asked; available once the Hall of Fame checklist is met, decision R; it takes effect at season end and can be cancelled until then).
+- **The checklist** (§42.4) is verified before anything is written: season finished, a Beast Bowl champion, awards written, the season in the history with its tables archived, the records book and League News written, no game in progress, no scene waiting. If it fails, nothing changes and the player is told what is missing.
+- **The steps:** the Hall of Fame card is built when the checklist is met (decision L); the **Legacy summary** is built from the save's own records (owner and club, seasons and record, titles and playoff appearances, badges, league awards, records held, the five best monsters with career snapshots, the rival head-to-head, the Board's goal history, a season-by-season table); working-only state is dropped (draft, offseason market, recorded-game keys, the week's working content, scenes); the lifecycle record is written (`status`, `seasonsCompleted`, `finalSeason`, `retiredAt`/`firedAt`, `legacy`); the archive is committed **once** and mirrored once. **Deviation from §42.4 step 3:** the final season's monster books are not rolled over into the archived seasons (the stats readers assume one current book); the game lines stay in the final season's books as they do in any offseason. Nothing is lost by it.
+- **Read-only, two layers.** Every mutating export of `franchise.js` (`MUTATORS`, 80 functions: seasons and days, the week, match and Clash, roster and depth, staff, offseason, draft and trades, board and story, achievements, dex, news, retirement) is wrapped by one guard that returns the read-only error for an archive; a test calls each against an archive. Independently, the store refuses to commit any different content over a committed archive of the same franchise (`code: 'read-only'`), and `app.save` refuses too, so a missed path could not persist a change. An archive is defined as a franchise carrying its Legacy record: Phase 1's `status: 'fired'` without one is a franchise the board fired whose season is then settled and archived.
+- **Firing** no longer deletes the franchise: when the board lets the owner go and the season is settled, the same steps run with reason `fired`, and the slot becomes a dismissed archive ("Dismissed after N seasons"). The Hall of Fame card is written when eligible, as before.
+- **HQ** shows the due retirement as the next step (Season 20 complete, a planned retirement, or the board's dismissal) and the Retire button once eligible; an archive never opens HQ: it opens the Legacy shell.
+
+### 44.3 The Franchise Legacy shell [IMPLEMENTED]
+`src/ui/screens/legacy.js`, read-only, five tabs: **Legacy** (the summary, the Hall of Fame card when written, the best monsters' snapshots, badges, the season table), **Seasons** (every season with its awards sheet and, for a title, the ceremony; final standings and schedule), **League** (the records book, standings, League News of the final season, the schedule), **Roster** (the final roster with career links), **Careers** (every monster's timeline, trophy case and card through the existing read-only career sheets). Export works from the shell. The only state it keeps is the last tab, outside the archive record. Fields the save does not record (Beast Bowl appearances beyond titles) are shown as not recorded, never invented.
+
+### 44.4 Export, import and deletion for slots [IMPLEMENTED]
+- **Export** is Phase 1's verified plain-JSON `.gbfranchise` (decision Q as revised: plain JSON everywhere; inside claude.ai through the platform's file-saving permission, named `.gbfranchise.json`, §43.7). An archive exports like any franchise.
+- **Import** (Franchises screen, an empty slot's "Import a file", or Settings): validated on a copy (§43.7), then a preview (club, owner, season, status, size, `uid`), then the choice of an empty slot. A file whose `uid` already occupies a slot is offered **Replace slot N** (which runs the delete flow first) or **Import as a copy** (a new `uid`). With no empty slot the owner must free one first. Nothing is replaced silently, and a failed import changes nothing.
+- **Deleting** (§42.5): the sheet names the franchise, its seasons and stored size, offers **Export first** and shows its result line, then needs the club's name or DELETE typed before **Delete forever** is enabled. The slot record is cleared in one transaction; the deleted copy stays among the slot's backups (Phase 1's `deleted` kind); **Undo delete** is offered on the Franchises screen for the launch that deleted (decision N: a new launch withdraws the offer; the backup itself remains, restorable from the empty slot's "Restore a backup"). Deleting also voids the franchise's cloud copies (§43.8 markers). A failed deletion changes nothing and says so.
+
+### 44.5 Identity: Hall of Fame, achievements, dex [IMPLEMENTED]
+- A new franchise gets its `uid` at creation (`createFranchise`), so every record it writes carries it from the first week.
+- Hall of Fame cards carry `uid` (and the seed) and their id is `hof_<uid>_…`; achievements record the franchise as `uid`. Records are read per franchise by `uid` (`hofCardsFor`, `achievementsFor`): two franchises with the same club name never share history, and a new franchise never inherits another's.
+- **Older records** (written by seed before franchises had a `uid`) are linked to their own franchise when it is loaded (`linkHofCards`, `linkAchievements`: a record naming that seed and no `uid` gets the `uid`; anything already linked or naming another seed is untouched; counts do not change). Nothing is invented and nothing is moved.
+- The dex stays player-wide (it never named a franchise). The Hall of Fame, achievements and dex stay in localStorage with their cloud mirrors, as in Phase 1.
+
+### 44.6 Cloud mirror for three slots (decision O) [IMPLEMENTED]
+- Phase 1's snapshot design (§43.8) already keeps copies per franchise, so every slot's franchise is protected as before. The reader for a slot considers only that slot's franchise; an **empty slot** on a new or wiped device is offered the cloud's franchises on the Franchises screen (a small display summary rides on each commit), and never silently loads a franchise another slot of the device already holds.
+- **Archives are uploaded once.** The archive commit carries `archive: true`; one archived commit above a snapshot retires it, so a retired or fired franchise costs one verified cloud copy. No further uploads happen (the franchise is read-only), and the newest copy of a franchise is never evicted under quota pressure. Deletion markers and the other Phase 1 protections are unchanged.
+
+### 44.7 Migration [IMPLEMENTED]
+- **From v39.0 (today's players):** Phase 1's copy-verify-switch migration runs for slot 1 only; slots 2 and 3 open empty; the localStorage save stays untouched. An interrupted migration resumes at the next start (the slot record says `migrating`; the Franchises screen shows it).
+- **From Phase 1 (v39.2 test builds):** the save is already slot 1; nothing is rewritten. The pointer defaults to slot 1.
+- Hall of Fame, achievements and dex are not moved; records are linked by `uid` when their franchise loads (44.5).
+
+### 44.8 Developer shortcut for test builds [IMPLEMENTED]
+`BUILD.test` is `false` in the repository and in every release. A private test publish flips it, which enables one Developer-screen tool: play the current season to its end (or five seasons) headlessly through the game's own functions, so a Season-20 retirement can be reached on a phone in minutes (`src/franchise/dev-shortcut.js`). The released game never shows it; a test asserts the flag is off.
+
+### 44.9 Tests [IMPLEMENTED]
+- `tests/slots-store.test.js` (5): three independent slots, slot-scoped backups, journals and usage, legacy migration in slot 1 only.
+- `tests/lifecycle.test.js` (7): the cap, when retirement is due (never mid-season; grandfathering), the checklist, the archive and its Legacy, every mutator refused, firing, the store refusing changes to an archive.
+- `tests/uid-isolation.test.js` (2): same club name, separate records; older records linked to their own franchise only.
+- `tests/slot-manager.test.js` (7): a v39.0 device into slot 1 of three, an interrupted migration resumed, a Phase 1 device unchanged, capacity and `uid` lookup, archive summaries, undo delete for one launch, the pointer.
+- `tests/slots-cloud.test.js` (5): per-slot cloud copies, archive once, archives never evicted, empty-slot offers excluding held franchises, deletion.
+- `tests/phase2-build.test.js`: the test flag is off in the repository.
+- `tools/lifecycle-soak.mjs`: a real 20-season career ending in a valid archive (run for seeds 1 and 2; results in the test plan).
+- `tools/storage-check.py`: the Franchises screen, creating in slot 2, switching, the delete flow (disabled until typed, undo), import as a copy into slot 3, archiving slot 1 and the Legacy shell's five tabs, at 320, 360, 390 and 412 px.
+
+### 44.10 Not in Phase 2
+Persistent AI rosters and schema 8 (Phase 3); league-wide AI careers and duplicate-data removal (Phase 4); compressed archive records beyond Phase 1's per-part compression (decision P is met by the stored form; a dedicated archive compaction is left for when sizes require it); real-device checks (decided by the owner at release time).
