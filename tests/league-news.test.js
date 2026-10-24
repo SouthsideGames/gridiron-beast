@@ -82,7 +82,7 @@ test('records book: a broken record keeps the mark it beat (once per week), and 
   updateGameRecords(f, st(160), teams, { year: 2, week: 3 }); // broken twice in one week: the old mark is still the one from before the week
   assert.deepEqual({ v: f.records.game.passYds.value, prev: f.records.game.passYds.prev.value }, { v: 160, prev: 100 });
   const news = recordNews({ year: 2, week: 3, records: f.records, seasonsInBook: 1 });
-  assert.ok(news.some((x) => /single-game mark for passing yards with 160 against B\. The old mark: 100 by Quill \(1201\)/.test(x.text)));
+  assert.ok(news.some((x) => /single-game mark for passing yards with 160 against B\. He breaks his own mark: 100 \(1201\)/.test(x.text)), 'the same monster broke his own record (GDD §46): ' + news.map((x) => x.text).join(' | '));
   assert.equal(recordNews({ year: 2, week: 3, records: f.records, seasonsInBook: 0 }).length, 0);
 });
 

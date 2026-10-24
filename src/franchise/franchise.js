@@ -6,7 +6,7 @@ import { venueFor } from '../data/stadiums.js';
 import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary, CAREER_MILESTONES } from './career.js';
 import { syncLegendaryPlays, legendaryAvailable, legendaryStatus, equipLegendaryForAI, legendOf, LEGENDARY_IDS } from './legendary.js';
 import { createRng, rngFromState, hashString } from '../core/rng.js';
-import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords, archiveSeasonTables } from './stats.js';
+import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords, archiveSeasonTables, withDerived, addInto } from './stats.js';
 import { AWARDS, computeAwards, headCoachName } from './awards.js';
 import { newContract, contractEnds, renewalAsk, acceptsCounter, staffSalary, openOffseason, offseasonPending, offseasonReady, CONTRACT_YEARS, COUNTER_PCT, STAFF_RAISE } from './contracts.js';
 export { offseasonPending, offseasonReady, renewalAsk, CONTRACT_YEARS } from './contracts.js';
@@ -750,17 +750,16 @@ function aiAfterGame(f, team, game, side, r) {
 function leagueCover(f) { if (!hasLeague(f)) return; const { r, save } = frng(f); const n = leagueInjuryCover(f, r, { year: f.season.year, cap: tierById(f.tier).cap, targetOf: (c) => clubQuality(f, c) }); if (n) save(); }
 /** Career marks League News reports for the league's monsters (the Timeline keeps every one). */
 const MILESTONE_NEWS = new Set(['passYds', 'rushYds', 'recYds', 'tdTotal', 'sacks', 'int', 'tacklesTotal', 'games']);
-/** Which of a category's marks this is (0 the first, 2 the highest): League News skips the first, the Timeline keeps all. */
-const milestoneTier = (key, at) => (CAREER_MILESTONES.find((M) => M.key === key)?.at || []).indexOf(at);
 const MILESTONE_LABEL = Object.freeze({ passYds: 'passing yards', rushYds: 'rushing yards', recYds: 'receiving yards', tdTotal: 'touchdowns', sacks: 'sacks', int: 'interceptions', tacklesTotal: 'tackles', games: 'games' });
 /** The Career Timeline's per-game writers for persistent clubs (GDD §46): debuts, firsts, milestones, playoff stars, records, evolutions. */
 function leagueCareerAfterGame(f, teams, _game, lines, { playoff = false, round = null, vsOwner = false } = {}) {
   for (const t of teams) {
     if (!leagueBooks(f, t.name)) continue;
     const rival = vsOwner && f.rivals?.[f.tier]?.team === t.name; // the rival's monsters remember big games against you, as yours do against them
-    const before = new Map(t.roster.map((m) => [m.id, m.career?.ev?.length || 0]));
     careerAfterGame(t.roster, { year: f.season.year, week: f.season.week, club: t.name, playoffRound: playoff ? round : null, rival, records: f.records }, { lineOf: (m) => lines.get(m.id) });
-    for (const m of t.roster) for (const e of (m.career?.ev || []).slice(before.get(m.id) || 0)) if (e.t === 'milestone' && MILESTONE_NEWS.has(e.x?.key) && milestoneTier(e.x.key, e.x.at) >= 1) leagueEvent(f, { kind: 'milestone', tier: milestoneTier(e.x.key, e.x.at), club: t.name, milestone: `${Number(e.x.at).toLocaleString('en-US')} career ${MILESTONE_LABEL[e.x.key] || e.x.key}`, ...moveIdentity(f, m) });
+    // career marks crossed in this game, read from the books themselves (never from the Timeline, which must not change what the game does)
+    for (const m of t.roster) { const g = lines.get(m.id); if (!g) continue; const total = withDerived(addInto(addInto({}, m.stats?.career?.reg), m.stats?.career?.post)); const line = withDerived(g.line || {});
+      for (const M of CAREER_MILESTONES) { if (!MILESTONE_NEWS.has(M.key)) continue; const after = total[M.key] || 0, before = after - (line[M.key] || 0); for (const [i, at] of M.at.entries()) if (i >= 1 && before < at && after >= at) leagueEvent(f, { kind: 'milestone', tier: i, club: t.name, milestone: `${Number(at).toLocaleString('en-US')} career ${MILESTONE_LABEL[M.key] || M.key}`, ...moveIdentity(f, m) }); } }
   }
 }
 /** Weekly rest and healing for the 15 persistent rosters, as the owner's roster gets on Saturday. */
