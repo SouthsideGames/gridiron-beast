@@ -287,7 +287,7 @@ test('draft-pick trading: picks change hands and the order follows; a veteran ar
   let got = null;
   for (const pos of ['S', 'LB', 'CB', 'OL', 'DL', 'WR']) { const a = F.tradeAskPlayer(f, { give: [lead], position: pos }); if (!a.ok) break; if (a.offers.length) { got = { a, pos }; break; } }
   if (got) {
-    for (const o of got.a.offers) { const m = o.get.player; assert.ok(!m.legendary && !m.signature && !m.rookie && !m.drafted, 'protected monsters are never offered'); assert.equal(m.position, got.pos); }
+    for (const o of got.a.offers) { const m = o.get.player; assert.ok(!m.legendary && !m.signature && T.tradable(f, m), 'protected monsters and rookies on their first deal are never offered'); assert.equal(m.position, got.pos); }
     const o = got.a.offers[0]; const before = F.aiTeam(f, o.team).roster.some((m) => m.id === o.get.player.id); assert.ok(before);
     const acc2 = F.acceptTrade(f, o); assert.equal(acc2.ok, true);
     assert.equal(f.roster.length, rosterBefore + 1); const m = f.roster.find((x) => x.id === o.get.player.id); assert.ok(m.contract && m.history.at(-1).reason === 'traded' && m.traded.from === o.team);
@@ -596,7 +596,8 @@ test('Legend Tracks: a champion chooses a track; three unlock the legendary in i
   const rival = f.rivals[f.tier].team;
   const t1 = F.aiTeam(f, rival); const sig1 = t1.roster.find((m) => m.signature); assert.ok(sig1);
   f.season.year = 3; const t3 = F.aiTeam(f, rival); const sig3 = t3.roster.find((m) => m.signature);
-  assert.equal(sig1.species, sig3.species); assert.ok(sig3.level > sig1.level, 'the signature monster grows with the seasons');
+  assert.equal(sig1.id, sig3.id, 'persistent rosters (GDD §42.6): the signature monster is one individual for the life of the franchise'); assert.ok(F.isProtected(sig3));
+  { const l1 = F.legacyAiTeam(f, rival, 1).roster.find((m) => m.signature), l3 = F.legacyAiTeam(f, rival, 3).roster.find((m) => m.signature); assert.equal(l1.species, l3.species); assert.ok(l3.level > l1.level, 'the generated signature grew with the seasons (v40 saves)'); }
   // Rematch scouting: a second meeting reveals one play from the other side.
   f.season.year = 1; f.campaign.h2h = { [F.opponentName(f)]: { w: 1, l: 0, last: 'w', streakL: 0 } };
   while (f.season.day < 3) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else F.setTraining(f, 'coverage'); }
@@ -879,8 +880,10 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   assert.equal(F.myDraftPick(f, first.id).ok, false, 'not your pick again until the AI has gone');
   while (!f.draft.done) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
   assert.ok(f.draft.done && f.draft.picks.length === 48);
-  const ai = Object.values(f.draftResults[1]).flat(); assert.ok(ai.length >= 40, 'AI clubs drafted');
-  const team = Object.keys(f.draftResults[1]).find((t) => t !== f.club); const got = f.draftResults[1][team];
+  // Persistent rosters (GDD §42.6): AI picks join their clubs' registry rosters on rookie deals; `draftResults` is history only.
+  const aiPicks = f.draft.picks.filter((pk) => pk.team !== f.club && pk.id); assert.ok(aiPicks.length >= 40, 'AI clubs drafted');
+  const team = aiPicks[0].team; const got = aiPicks.filter((pk) => pk.team === team).map((pk) => F.findInLeague(f, pk.id)?.m).filter(Boolean);
+  assert.ok(got.length && got.every((m) => m.contract?.rookie && m.drafted?.club === team), 'the club holds its draftees on rookie deals');
   while (f.roster.length < F.ROSTER_MIN) F.signFreeAgent(f, F.offseasonMarket(f)[0].monster.id);
   const sn = F.startNextSeason(f); assert.ok(sn.ok, sn.reason);
   assert.ok(got.every((m) => m.yearsPro === 0), 'drafted rookies enter their first season');

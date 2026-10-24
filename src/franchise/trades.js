@@ -14,6 +14,7 @@ import { createRng, hashString } from '../core/rng.js';
 import { GROUP_SLOTS } from './roster.js';
 import { newContract } from './contracts.js';
 import { DRAFT_ROUNDS } from './draft.js';
+import { hasLeague, isProtected, removeFromClub } from './league-registry.js';
 
 export const TRADE_YEARS_AHEAD = 3;
 export const ASKS_PER_PICK = 2;
@@ -60,6 +61,13 @@ export function playerValue(m) {
   const youth = m.age <= 24 ? 1.12 : m.age >= 30 ? 0.85 : 1;
   const upside = Math.max(0, (m.potential || ovr) - ovr) * 0.6;
   return base * youth + upside;
+}
+
+/** Whom an AI club will even discuss: never a protected monster or a cornerstone, never a draftee still on his rookie deal (his first two seasons). */
+export function tradable(f, m) {
+  if (isProtected(m) || m.cornerstone || !(m.yearsPro > 0)) return false;
+  if (m.contract?.rookie && m.contract.ends >= (f.season?.year || 1)) return false;
+  return !(m.drafted && (m.yearsPro || 0) < 2) && !(m.rookie && !m.drafted);
 }
 
 // ---------------------------------------------------------------- what an AI club wants
@@ -112,7 +120,7 @@ export function askForPlayer(f, { give, position, teams, rosterOf, difficulty = 
     const offered = give.reduce((s, p) => s + pickValueFor(f, team, p, needs, { available }), 0);
     const mood = 0.9 + r.next() * 0.2; // a little club-to-club temperament
     const budget = offered * gen * mood * (1 - needs[position] * 0.5); // a club short at the position parts with less
-    const candidates = at.filter((m) => !m.legendary && !m.signature && !m.cornerstone && m.yearsPro > 0 && !m.drafted && !m.rookie);
+    const candidates = at.filter((m) => tradable(f, m));
     const keepStarters = new Set(at.slice(0, slots).map((m) => m.id));
     let best = null;
     const floor = offered * 0.6; // a club does not answer a first-round ask with a reserve: the return has to be worth the pick
@@ -174,13 +182,21 @@ export function executeTrade(f, offer, { club, year, nextYear }) {
   }
   const got = { player: null, picks: [] };
   if (offer.get.player) {
-    const src = offer.get.player; const m = JSON.parse(JSON.stringify(src));
-    m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year };
-    (m.history ||= []).push({ club: offer.team, from: Math.max(1, year - Math.min(m.yearsPro || 0, 3)), to: year, reason: 'traded' });
-    delete m.signature; delete m.legendary;
+    const src = offer.get.player; let m;
+    if (hasLeague(f) && f.league.monsters[src.id] === src) {
+      // Persistent rosters (GDD §42.6): the very monster moves, career intact; the registry refuses a protected one.
+      if (isProtected(src)) throw Object.assign(new Error(`${src.name} is bound to ${offer.team}.`), { code: 'protected' });
+      m = removeFromClub(f, offer.team, src.id, { year, reason: 'traded' });
+      m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year };
+    } else {
+      m = JSON.parse(JSON.stringify(src));
+      m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year };
+      (m.history ||= []).push({ club: offer.team, from: Math.max(1, year - Math.min(m.yearsPro || 0, 3)), to: year, reason: 'traded' });
+      delete m.signature; delete m.legendary;
+      (((f.aiTransfers ||= {})[year] ||= {})[offer.team] ||= []).push(src.id); // the generated roster of v40 and before drops him
+    }
     backfillCareer(f, m); noteJoin(f, m, 'trade', { from: offer.team }); // Career Timeline (GDD §38)
     f.roster.push(m);
-    (((f.aiTransfers ||= {})[year] ||= {})[offer.team] ||= []).push(src.id);
     got.player = m;
   }
   if (offer.get.picks) for (const p of offer.get.picks) { setPickOwner(f, p, club); const d = f.draft; if (d?.started && currentClassYear(f) === p.year) for (let i = d.index; i < d.order.length; i++) { const o = d.order[i]; if (o.round === p.round && (o.original || o.team) === p.original) { o.original = p.original; o.team = club; } } got.picks.push(p); }
@@ -217,7 +233,7 @@ export function buildTradeCall(f, { teams, rosterOf, difficulty = 'pro', myRoste
       const roster = rosterOf(team); const slots = GROUP_SLOTS[position]?.length || 1;
       const at = roster.filter((m) => m.position === position).sort((a, b) => monsterOverall(b) - monsterOverall(a));
       if (at.length <= slots) continue; // they cannot spare one
-      const spare = at.slice(slots).filter((m) => !m.legendary && !m.signature && !m.cornerstone && m.yearsPro > 0 && !m.drafted && !m.rookie && monsterOverall(m) >= myBest + 2); // only a real upgrade at the position
+      const spare = at.slice(slots).filter((m) => tradable(f, m) && monsterOverall(m) >= myBest + 2); // only a real upgrade at the position
       const m = spare.sort((a, b) => monsterOverall(b) - monsterOverall(a))[0]; if (!m) continue;
       const price = playerValue(m) * CALL_PREMIUM / gen;
       // The pick (or two) closest to his worth, between 85% and 130% of it: a club never asks a first-rounder for a backup.

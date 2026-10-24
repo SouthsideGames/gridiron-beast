@@ -90,13 +90,14 @@ function recordPick(f, team, m, { mine = false }) {
 }
 
 /** Run AI picks until it is the owner's turn or the draft ends. Returns the picks made. */
-export function advanceDraft(f, rng, { playerClub, onAiPick = null }) {
+/** `persist`: keep AI picks in `draftResults` for the generated rosters (v40 and before); with the league registry the club takes the rookie through `onAiPick` and the historical classes stay as they are (Phase 3, decision 6). */
+export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = true }) {
   const d = f.draft; const made = [];
   while (d.started && !d.done && d.order[d.index].team !== playerClub) {
     const team = d.order[d.index].team; const m = aiDraftPick(f, team, rng);
     if (!m) { d.done = true; break; }
     recordPick(f, team, m, { mine: false }); { const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: team }; } made.push({ team, m });
-    (f.draftResults ||= {}); (f.draftResults[f.draft.year] ||= {}); (f.draftResults[f.draft.year][team] ||= []).push(m);
+    if (persist) { (f.draftResults ||= {}); (f.draftResults[f.draft.year] ||= {}); (f.draftResults[f.draft.year][team] ||= []).push(m); }
     onAiPick?.(team, m);
   }
   return made;

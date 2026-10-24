@@ -133,6 +133,8 @@ export function ensureStats(m, year = null) {
  */
 export const GAME_KEYS = Object.freeze({ att: 'a', comp: 'c', passYds: 'py', passTd: 'pt', intThrown: 'pi', sacked: 'sk', rush: 'r', rushYds: 'ry', rushTd: 'rt', targets: 'tg', rec: 'rc', recYds: 'cy', recTd: 'ct', fumLost: 'fl', tackles: 'tk', assists: 'as', tfl: 'tf', sacks: 'sa', pressures: 'pr', int: 'in', pd: 'pd', ff: 'ff', fr: 'fr', defTd: 'dt', covTargets: 'cv', recAllowed: 'ra', ydsAllowed: 'ya', tdAllowed: 'ta', pbSnaps: 'pb', rbSnaps: 'rb', blocksLost: 'bl', sacksAllowed: 'sx', fga: 'ga', fgm: 'gm', fgLong: 'gl', xpa: 'xa', xpm: 'xm', abilityPlays: 'ap' });
 const ALIAS_KEY = Object.fromEntries(Object.entries(GAME_KEYS).map(([k, a]) => [a, k]));
+/** The box-score part of a line: the keys an archived game keeps (GAME_KEYS), which every rate on the statistics screens derives from. */
+export function boxLine(line) { const out = {}; for (const k of Object.keys(GAME_KEYS)) { const v = line?.[k]; if (typeof v === 'number' && v) out[k] = v; } return out; }
 const ABBR_TEAM = Object.fromEntries(Object.entries(TEAM_META).map(([t, m]) => [m.abbr, t]));
 export function packGame(g) {
   const line = {}; for (const [k, a] of Object.entries(GAME_KEYS)) { const v = g.line?.[k]; if (typeof v === 'number' && v) line[a] = v; }
@@ -213,7 +215,11 @@ const BASE_STARTERS = new Set([...OFFENSE_BASE, ...DEFENSE_BASE, 'K']);
  * playoff), and the player's monsters' logs, season and career totals.
  * Idempotent per game; returns false if that game was already recorded.
  */
-export function recordGame(f, state, teams, { playoff = false, week = f.season.week, year = f.season.year, playerClub = f.club } = {}) {
+/**
+ * `booksFor(teamName)`: which clubs' monsters keep season and career books (the owner's always; with the league registry every
+ * AI club too, GDD §42.6). Game logs are kept for the owner's monsters only (decision G: AI season totals, no AI game lines).
+ */
+export function recordGame(f, state, teams, { playoff = false, week = f.season.week, year = f.season.year, playerClub = f.club, booksFor = null } = {}) {
   const key = `${year}|${week}|${teams.home.name}|${teams.away.name}|${playoff ? 'p' : 'r'}`;
   const done = (f.season.recorded ||= []);
   if (done.includes(key)) return false;
@@ -236,12 +242,12 @@ export function recordGame(f, state, teams, { playoff = false, week = f.season.w
       const src = team.roster?.find?.((m) => m.id === id);
       const row = (T[id] ||= { id, name: e.p.name, type: e.p.type, species: e.p.species, position: e.p.position, age: e.p.age, yearsPro: src?.yearsPro ?? e.p.yearsPro ?? null, team: team.name, games: 0, starts: 0 });
       row.games += 1; if (e.start) row.starts += 1; addInto(row, e.line);
-      if (team.name === playerClub && src) {
-        const s = rolloverMonster(src, { year, team: playerClub });
-        const gl = { games: 1, starts: e.start ? 1 : 0, ...e.line };
+      const mine = team.name === playerClub;
+      if (src && (mine || booksFor?.(team.name))) {
+        const s = rolloverMonster(src, { year, team: team.name });
+        const gl = { games: 1, starts: e.start ? 1 : 0, ...(mine ? e.line : boxLine(e.line)) }; // AI books keep the box-score keys (decision G); the tables keep every key this season
         addInto(s.season[bucket], gl); addInto(s.career[bucket], gl);
-        s.log.push({ year, week, opp: opp.name, home: side === 'home', playoff, won, score: `${state.score[side]}-${state.score[side === 'home' ? 'away' : 'home']}`, line: e.line });
-        if (s.log.length > 20) s.log.shift();
+        if (mine) { s.log.push({ year, week, opp: opp.name, home: side === 'home', playoff, won, score: `${state.score[side]}-${state.score[side === 'home' ? 'away' : 'home']}`, line: e.line }); if (s.log.length > 20) s.log.shift(); }
       }
     }
   }

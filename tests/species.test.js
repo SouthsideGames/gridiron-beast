@@ -157,7 +157,7 @@ test('evolution: commons evolve at their level, keep numerals, grow, and the dex
   // AI rosters in later seasons field evolved commons; the dex remembers forms the player has faced.
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 77 });
   f.season.year = 4;
-  const t = F.aiTeam(f, 'Harbor Sentinels');
+  const t = F.legacyAiTeam(f, 'Harbor Sentinels'); // the generated rosters of v40 saves; persistent rosters evolve by level as they play (GDD §42.6)
   assert.ok(t.roster.some((x) => x.stage >= 1), 'season 4 gym club fields evolved monsters');
   const evolved = t.roster.find((x) => x.stage >= 1); F.dexRecord(f, evolved, 'seen');
   assert.ok(F.dexFormSeen(f, evolved.species) >= 1);
