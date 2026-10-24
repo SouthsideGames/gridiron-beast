@@ -706,8 +706,9 @@ export function ensureLeague(f, { qualityDelta = 0 } = {}) {
   try {
     before = Object.fromEntries(clubs.map((c) => [c, legacyAiTeam(f, c, year, { qualityDelta })]));
     const onRosters = new Set(Object.values(before).flatMap((t) => t.roster.map((m) => m.id)));
-    // Every id already in the save keeps its place; an injected draftee is the same monster the roster brings, not a clash.
-    const existing = [...f.roster, ...Object.values(f.pool || {}).flat(), ...(f.offseason?.market || []), ...(f.draft?.class || []), ...Object.values(f.draftResults || {}).flatMap((byTeam) => Object.values(byTeam || {}).flat()).filter((m) => !onRosters.has(m.id))];
+    // Every id already in the save keeps its place. A draftee the roster brings in is the same monster the class and
+    // `draftResults` list, not a clash; the owner's monsters, pools and market can never be the same individual as an AI one.
+    const existing = [...f.roster, ...Object.values(f.pool || {}).flat(), ...(f.offseason?.market || []), ...[...(f.draft?.class || []), ...Object.values(f.draftResults || {}).flatMap((byTeam) => Object.values(byTeam || {}).flat())].filter((m) => !onRosters.has(m.id))];
     // Captured monsters are copies: an injected draftee stays in `draftResults` as the historical record it is (decision 6).
     result = captureLeague(f, { clubs, teamOf: (c) => ({ roster: before[c].roster.map((m) => structuredClone(m)) }), year, week, existing, tableRows, staffAllowance: STAFF_ALLOWANCE });
     // A re-keyed monster: the current season's table rows and club-log lines that named him follow (nothing else outside the
@@ -1762,7 +1763,7 @@ function endSeason(f) {
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   noteGrowth(f, (c) => aiTeam(f, c, s.year));
   const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, teamOverall(legacyAiTeam(f, c, s.year + 1)));
-  f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
+  if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;

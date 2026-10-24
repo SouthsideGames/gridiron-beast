@@ -68,14 +68,19 @@ with sync_playwright() as pw:
     b, ctx, page = fresh(pw)
     page.goto(URL); booted(page)
     m = page.evaluate("""async (legacy) => {
-      const app = window.__gb; const f = app.f; const { uid, lifecycle, ...rest } = f; const orig = JSON.parse(legacy);
+      const app = window.__gb; const f = app.f; const { uid, lifecycle, league, leagueOffseason, schemaVersion, ...rest } = f; const orig = JSON.parse(legacy);
+      // Phase 3 (GDD §42.6): the capture adds the league registry (schema 8) and re-reads the preseason expectations from it; nothing else changes.
+      rest.season = { ...rest.season, expectations: null }; orig.season = { ...orig.season, expectations: null }; delete orig.schemaVersion; delete orig.uid; delete orig.lifecycle; delete orig.leagueOffseason;
+      delete rest.savedAt; delete orig.savedAt; // the capture is saved at once
       const same = JSON.stringify(rest) === JSON.stringify(orig);
+      const differing = same ? [] : [...new Set([...Object.keys(rest), ...Object.keys(orig)])].filter((k) => JSON.stringify(rest[k]) !== JSON.stringify(orig[k]));
+      const R = await import('./src/franchise/league-registry.js'); const leagueOk = R.hasLeague(f) && R.verifyLeague(f).length === 0 && schemaVersion === 8;
       const dbs = indexedDB.databases ? (await indexedDB.databases()).map((d) => d.name) : null;
-      return { mode: app.storage.mode, source: app.bootInfo.source, same, uid, lifecycle, legacyKept: localStorage.getItem('gridiron-beast-v6') === legacy, dbs, ms: app.bootInfo.ms };
+      return { mode: app.storage.mode, source: app.bootInfo.source, same, differing, leagueOk, uid, lifecycle, legacyKept: localStorage.getItem('gridiron-beast-v6') === legacy, dbs, ms: app.bootInfo.ms };
     }""", LEGACY)
     report['migration'] = m
     check(m['mode'] == 'indexeddb', f'storage mode {m["mode"]}'); check(m['source'] == 'migrated', f'first start source {m["source"]}')
-    check(m['same'], 'migrated franchise differs from the v39.1 save'); check(m['legacyKept'], 'the v39.1 localStorage save was modified')
+    check(m['same'], f'migrated franchise differs from the v39.1 save: {m.get("differing")}'); check(m['leagueOk'], 'the league registry was not built on first start'); check(m['legacyKept'], 'the v39.1 localStorage save was modified')
     check(not m['dbs'] or 'gridiron-beast' in m['dbs'], f'IndexedDB database missing ({m["dbs"]})')
     strip = "() => { const { savedAt, ...r } = window.__gb.f; return JSON.stringify(r); }"
     page.wait_for_timeout(500); before = page.evaluate(strip)
@@ -303,7 +308,7 @@ with sync_playwright() as pw:
         pg.goto(URL); booted(pg)
         p2[f'slots{w}'] = pg.evaluate("async () => (await window.__gb.slotSummaries()).map((s) => s.state)")
         check(p2[f'slots{w}'] == ['active', 'empty', 'empty'], f'{w}px: a v39.0 device did not arrive as slot 1 of three: {p2[f"slots{w}"]}')
-        pg.click('[data-action="go"][data-screen="franchises"]'); pg.wait_for_selector('.slot-card[data-slot="3"]')
+        pg.click('[data-action="go"][data-screen="franchises"]'); pg.wait_for_selector('.slot-card[data-slot="3"]'); pg.wait_for_function("() => document.querySelectorAll('.slot-card').length === 3", timeout=10000)
         overflow(pg, f'Franchises screen at {w}px'); shot(pg, 'franchises', w)
         check(pg.locator('.slot-card').count() == 3, f'{w}px: {pg.locator(".slot-card").count()} slot cards')
         if w == 360:

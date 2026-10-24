@@ -111,11 +111,12 @@ const app = {
     if (this.storage.store) { await this.storage.store.flush?.(); unsubscribeStore?.(); unsubscribeStore = null; }
     this.f = null; this.lastSig = null; this.recovery = null; this.cloudCandidate = null; staleShown = false;
     const store = this.slots.store(slot); const res = await store.open();
+    if (res.mode !== 'legacy' && res.franchise) await keepPreLeagueCopy(res.franchise, store);
     this.slot = slot; this.slots.setActiveSlot(slot);
     this.storage = { mode: res.mode === 'legacy' ? 'legacy' : 'indexeddb', store: res.mode === 'legacy' ? null : store, error: res.error || null };
     if (store && res.mode !== 'legacy') unsubscribeStore = store.onStatus(onStoreStatus);
     if (res.mode === 'recovery') { this.recovery = res; Router.go('recovery', {}, { reset: true }); return { ok: true, mode: 'recovery' }; }
-    if (res.franchise) { await keepPreLeagueCopy(res.franchise, store); adopt(res.franchise); }
+    if (res.franchise) adopt(res.franchise);
     reconcileCloud();
     return { ok: true, mode: res.mode, franchise: res.franchise || null };
   },
@@ -262,7 +263,7 @@ async function keepPreLeagueCopy(f, store) {
 }
 function migrateLeague(f) {
   if (!f || F.hasLeague(f) || isArchived(f)) return;
-  const r = F.ensureLeague(f);
+  let r; try { r = F.ensureLeague(f); } catch (e) { r = { ok: false, problems: [e?.message || String(e)] }; } // never in the way of opening the franchise
   (app.bootInfo?.notes || []).push(r.ok ? `league registry built (${r.rekeyed.length} re-keyed)` : `league registry not built: ${r.problems[0]}`);
   if (r.ok) queueMicrotask(() => { if (app.f === f) app.save({ immediate: true }); });
 }
@@ -276,6 +277,7 @@ async function boot() {
     app.slots = createSlotManager({ backend: await idbBackend(), debounce: 1200 }); app.slots.newLaunch();
     app.slot = app.slots.activeSlot(); const store = app.slots.store(app.slot);
     res = await store.open();
+    if (res.mode !== 'legacy' && res.franchise) await keepPreLeagueCopy(res.franchise, store); // before the storage is announced as ready: nothing reads the franchise yet
     if (res.mode === 'legacy') app.storage = { mode: 'legacy', store: null, error: res.error }; // migration failed: v39.1 path, the save untouched
     else { app.storage = { mode: 'indexeddb', store, error: null }; unsubscribeStore = store.onStatus(onStoreStatus); }
   } catch (e) {
@@ -284,7 +286,7 @@ async function boot() {
   }
   app.bootInfo = { ms: Math.round(performance.now() - t0), source: res.source || res.mode, notes: res.notes || [] };
   if (res.mode === 'recovery') { app.recovery = res; Router.go('recovery', {}, { reset: true }); }
-  else { if (res.franchise) { await keepPreLeagueCopy(res.franchise, app.storage.store); adopt(res.franchise); } Router.go('menu', {}, { reset: true }); }
+  else { if (res.franchise) adopt(res.franchise); Router.go('menu', {}, { reset: true }); }
   app.slotCount = (await app.slotSummaries().catch(() => [])).filter((s) => s.state !== 'empty').length;
   if (res.source === 'migrated') toast('Your franchise moved to the new save storage. Your previous save is kept untouched.', 'good', 4500);
   else if (res.notes?.includes('legacy-newer kept')) toast('An older copy of the game saved progress on this device after the update. Your franchise was kept; the other save is under Settings → Save data → Restore a backup.', 'info', 6500);
