@@ -39,8 +39,8 @@ import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } 
 import { careerSnapshot } from './career-profile.js';
 import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, recordNews } from './league-news.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, playbookFor, adaptPlaybook } from './roster.js';
-import { joinAsDraftee, takeFromPool } from './league.js';
-import { leagueSeasonEnd, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs } from './league-season.js';
+import { joinAsDraftee, takeFromPool, takeFromWaivers } from './league.js';
+import { leagueSeasonEnd, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, CREATION_LIFT } from './league-season.js';
 export { validateClubs } from './league-season.js';
 import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRoom, captureLeague, verifyLeague, addToClub, removeFromClub, isProtected, findInLeague } from './league-registry.js';
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
@@ -86,7 +86,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   noteNewFranchise();
   for (const m of roster) dexRecord(f, m, 'signed');
   for (const m of roster) { noteJoin(f, m, 'founding', m.cornerstone ? { cornerstone: 1 } : {}); markCareerFresh(m); } // Career Timeline (GDD §38)
-  if (persistentLeague) ensureLeague(f); // a new universe starts persistent (GDD §42.6): the creation draft's picks join real rosters
+  if (persistentLeague) ensureLeague(f, { qualityDelta: -CREATION_LIFT }); // a new universe starts persistent (GDD §42.6): rosters open a little under today's year-1 quality because they will grow by playing (league-season.js calibration)
   openCreationDraft(f);
   return f;
 }
@@ -562,6 +562,7 @@ export function toPool(f, m, reason = 'released') {
 export function poolMonsters(f, region) { return (f.pool?.[region] || []); }
 /** Once a week an AI club may sign from the pool (15% per monster). */
 export function poolActivity(f, r) {
+  if (hasLeague(f)) for (const m of (f.league.waivers || []).slice()) { if (!r.chance(0.15)) continue; const club = clubInNeed(f, m, r); if (!club) continue; takeFromWaivers(f, m.id); m.salary = salaryFor(m); addToClub(f, club, m, { year: f.season.year, via: 'signed', contract: newContract(f.season.year, 2) }); }
   for (const [region, list] of Object.entries(f.pool || {})) {
     for (const m of list.slice()) {
       if (!r.chance(0.15)) continue;
@@ -668,10 +669,10 @@ export function aiTeam(f, name, year = f.season?.year || 1, { scouting = null } 
   return hasLeague(f) && clubRecord(f, name) ? leagueTeam(f, name, year, { scouting }) : legacyAiTeam(f, name, year, { scouting });
 }
 /** Today's generator (v40 and before): the same 38 monsters all season, a new set each season. Kept for migration and parity. */
-export function legacyAiTeam(f, name, year = f.season?.year || 1, { scouting = null } = {}) {
+export function legacyAiTeam(f, name, year = f.season?.year || 1, { scouting = null, qualityDelta = 0 } = {}) {
   const meta = TEAM_META[name];
   const h = hashString(`${name}|${year}|${f.seed}`);
-  const quality = clubQuality(f, name, year);
+  const quality = clubQuality(f, name, year) + qualityDelta;
   const gym = GYM_BY_CLUB[name];
   const coach = aiCoach(f, name, year);
   const rival = f.rivals[f.tier]?.team === name ? rivalSignature(f) : null;
@@ -694,7 +695,7 @@ function leagueTeam(f, name, year, { scouting = null } = {}) {
  * first time it is opened by this build, built from the very rosters it was facing (`persistentFrom`), verified on the copy
  * before anything is kept. Returns { ok, created, rekeyed, problems }. Archives are never migrated (they are read-only).
  */
-export function ensureLeague(f) {
+export function ensureLeague(f, { qualityDelta = 0 } = {}) {
   if (hasLeague(f)) return { ok: true, created: false, rekeyed: [], problems: [] };
   if (!f?.season || isArchived(f)) return { ok: false, created: false, rekeyed: [], problems: ['not an active franchise'] };
   const year = f.season.year, week = f.season.week;
@@ -703,7 +704,7 @@ export function ensureLeague(f) {
   const snapshot = JSON.stringify(f);
   let result, before;
   try {
-    before = Object.fromEntries(clubs.map((c) => [c, legacyAiTeam(f, c, year)]));
+    before = Object.fromEntries(clubs.map((c) => [c, legacyAiTeam(f, c, year, { qualityDelta })]));
     const onRosters = new Set(Object.values(before).flatMap((t) => t.roster.map((m) => m.id)));
     // Every id already in the save keeps its place; an injected draftee is the same monster the roster brings, not a clash.
     const existing = [...f.roster, ...Object.values(f.pool || {}).flat(), ...(f.offseason?.market || []), ...(f.draft?.class || []), ...Object.values(f.draftResults || {}).flatMap((byTeam) => Object.values(byTeam || {}).flat()).filter((m) => !onRosters.has(m.id))];
@@ -723,6 +724,8 @@ export function ensureLeague(f) {
     return { ok: false, created: false, rekeyed: [], problems: e.problems || [e.message] };
   }
   f.schemaVersion = SCHEMA_VERSION;
+  notePreseason(f, (c) => leagueTeam(f, c, year));
+  if (f.season.expectations) for (const c of clubs) { const ex = f.season.expectations[c]; if (ex) { ex.talent = teamOverall(leagueTeam(f, c, year)); ex.expectedWinPct = Math.max(0.1, Math.min(0.9, 0.5 + (ex.talent - 60) * 0.025)); } } // the Board and Coach of the Year judge the league that will actually play
   return { ok: true, created: true, rekeyed: result.rekeyed, problems: [] };
 }
 /** The fixed staff cost every AI club carries against the cap: the default staff's salaries (owner's decision, 2026-10-23). */
@@ -756,7 +759,7 @@ export function startSeason(f, year) {
   f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club), leagueStats: {}, playoffStats: {}, recorded: [], expectations: {} };
   f.week = blankWeek();
   for (const m of f.roster) { m.fatigue = 0; if (m.yearsPro == null) m.yearsPro = Math.max(0, (m.age || 22) - 22); rolloverMonster(m, { year, team: f.club }); }
-  if (hasLeague(f)) for (const club of leagueClubs(f)) for (const m of clubRoster(f, club)) { m.fatigue = 0; rolloverMonster(m, { year, team: club }); } // every persistent monster opens a new season book
+  if (hasLeague(f)) { for (const club of leagueClubs(f)) for (const m of clubRoster(f, club)) { m.fatigue = 0; rolloverMonster(m, { year, team: club }); } notePreseason(f, (c) => aiTeam(f, c, year)); } // every persistent monster opens a new season book; the club's strength now is what its growth is measured from
   // Preseason expectations for Coach of the Year: recorded now, never reconstructed from the final table (GDD §16.4).
   for (const team of ALL_TEAMS) {
     const talent = team === f.club ? teamOverall(playerTeam(f)) : teamOverall(aiTeam(f, team, year));
@@ -1754,7 +1757,9 @@ function endSeason(f) {
   leagueSeasonEnd(f, { year: s.year, awards: s.awards, records: f.records, champion }); // the 15 persistent rosters' season-end events (GDD §42.6)
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
-  f.leagueOffseason = { year: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
+  noteGrowth(f, (c) => aiTeam(f, c, s.year));
+  const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, teamOverall(legacyAiTeam(f, c, s.year + 1)));
+  f.leagueOffseason = { year: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
@@ -1855,7 +1860,7 @@ export function startNextSeason(f) {
   if (hasLeague(f)) { // the league's offseason after the owner's (GDD §42.6 steps 3, 6-8; decisions C, D, F)
     const year = f.season.year, next = year + 1, cap = tierById(f.tier).cap;
     const targetOf = (club) => clubQuality(f, club, next); // arrivals are generated at the club's quality for the coming season
-    const overallTarget = (club) => teamOverall(legacyAiTeam(f, club, next)); // the band is measured against the team today's generator would field: today's difficulty, exactly
+    const overallTarget = (club) => preseasonTarget(f, club, teamOverall(legacyAiTeam(f, club, next))); // today's generated team for the season, less the growth the club will gain by playing it (league-season.js calibration)
     leagueAgeing(f, r, { year });
     const fa = leagueFreeAgency(f, r, { year: next, cap, targetOf });
     const nudge = leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next) });

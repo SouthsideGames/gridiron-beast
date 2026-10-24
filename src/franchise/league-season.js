@@ -14,13 +14,24 @@ import { playerValue } from './trades.js';
 import { careerSeasonEnd } from './career.js';
 import { buildDepthChart, lineupProblems, GROUP_SLOTS, teamOverall } from './roster.js';
 import { hasLeague, leagueClubs, clubRoster, clubRecord, isProtected, isAgeless, addToClub, clubPayroll, clubCapRoom, claimMonster } from './league-registry.js';
-import { releaseFromClub, takeFromPool, weakestSpare, homeRegionOf } from './league.js';
+import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegionOf } from './league.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
 export const NUDGE_SIGNINGS = 3;       // arrivals a weak club gets in one offseason
 export const SIGNATURE_GROWTH = 2;     // the rival's signature monster: attribute points per offseason (GDD §15.8, kept), within potential
 export const RESIGN_AGE_LIMIT = 32;    // a reserve of this age or more is not re-signed (decision A: attrition through the pools)
+export const RUNAWAY_VETERAN_AGE = 27; // a club above its band lets expiring veterans of this age or more go (attrition, not rating edits)
 export const MIN_QUALITY = 45;
+/**
+ * Calibration (decision C, measured 2026-10-23 against today's generator): persistent monsters gain levels as they play, so a
+ * club that starts a season at today's strength ends it about 4–5 points above it in its first season and 1–2 later, while
+ * today's rosters never move within a season. Each club's own in-season growth is measured (`strategy.pre` → `grew`) and
+ * LIFT_SHARE of it is taken off the club's preseason target, so over a season the club is as strong as today's would be.
+ * A new universe's rosters start CREATION_LIFT below today's year-1 quality for the same reason.
+ */
+export const LIFT_SHARE = 0.75;
+export const DEFAULT_GROW = 3;
+export const CREATION_LIFT = 3;
 
 const FULL = Object.fromEntries(FULL_ROSTER);
 const BASE = [...OFFENSE_BASE, ...DEFENSE_BASE, 'K'];
@@ -44,17 +55,20 @@ export function leagueSeasonEnd(f, { year, awards, records, champion }) {
  * region's pool. Then the cap: a club over it releases its lowest value per salary among the unprotected reserves until under,
  * never below the roster minimum. Protected monsters have permanent deals and cost nothing against the cap.
  */
-export function leagueContracts(f, { year, cap }) {
+export function leagueContracts(f, { year, cap, excessOf = null }) {
   if (!hasLeague(f)) return null;
-  const out = { resigned: 0, walked: 0, released: 0, overCap: [] };
+  const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [] };
   for (const club of order(f)) {
     const roster = clubRoster(f, club); const starters = starterIds(roster);
     const med = median(roster.map(monsterOverall));
+    const runaway = (excessOf?.(club) || 0) > BAND; if (runaway) out.runaway.push(club); let letGo = 0;
     for (const m of roster) {
       if (isProtected(m) || !contractEnds(m, year)) continue;
       const ovr = monsterOverall(m); const starter = starters.has(m.id);
       const value = ovr >= med || ((m.age || 30) <= 25 && (m.potential || 0) >= ovr + 5);
-      const keep = (starter || value) && !((m.age || 0) >= RESIGN_AGE_LIMIT && !starter);
+      let keep = (starter || value) && !((m.age || 0) >= RESIGN_AGE_LIMIT && !starter);
+      // a club far above today's strength lets its expiring veterans walk (they are claimed within the league): attrition, decision A
+      if (keep && runaway && (m.age || 0) >= RUNAWAY_VETERAN_AGE && clubRoster(f, club).length - letGo > ROSTER_MIN + 2) { keep = false; letGo++; }
       if (keep) { m.salary = renewalAsk(m).ask; m.contract = newContract(year + 1, 2); out.resigned++; }
       else { releaseFromClub(f, club, m.id, { year, reason: 'walked' }); out.walked++; }
     }
@@ -115,13 +129,15 @@ export function clubNeeds(f, club) {
  */
 export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
   if (!hasLeague(f)) return null;
-  const out = { fromPools: 0, generated: 0 };
+  const out = { fromPools: 0, fromWaivers: 0, generated: 0 };
   for (const club of order(f)) {
     let guard = 0;
     while (clubRoster(f, club).length < ROSTER_MAX && guard++ < 40) {
       const needs = clubNeeds(f, club); if (!needs.length) break;
       const [pos, , urgent] = needs[0]; const room = clubCapRoom(f, club, cap);
-      // the pools first: the best monster at the position the club can afford
+      // the league's waivers, then the pools: the best monster at the position the club can afford
+      const waived = (f.league.waivers || []).filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+      if (waived) { takeFromWaivers(f, waived.id); waived.salary = salaryFor(waived); addToClub(f, club, waived, { year, via: 'signed', contract: newContract(year, 2) }); out.fromWaivers = (out.fromWaivers || 0) + 1; continue; }
       const pooled = Object.values(f.pool || {}).flat().filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
       if (pooled) { takeFromPool(f, pooled.id); pooled.salary = salaryFor(pooled); addToClub(f, club, pooled, { year, via: 'signed', contract: newContract(year, 2) }); out.fromPools++; continue; }
       const starterSlot = clubRoster(f, club).filter((m) => m.position === pos).length < (GROUP_SLOTS[pos]?.length || 1);
@@ -193,6 +209,13 @@ function weakestStartingGroup(f, club) {
   }
   return worst?.pos || null;
 }
+
+/** At a season's start: remember each club's strength, so its in-season growth can be measured at the end (calibration above). */
+export function notePreseason(f, teamOf) { if (!hasLeague(f)) return; for (const club of order(f)) { const c = clubRecord(f, club); c.strategy.pre = teamOverall(teamOf(club)); } }
+/** At a season's end: how much each club grew by playing. */
+export function noteGrowth(f, teamOf) { if (!hasLeague(f)) return; for (const club of order(f)) { const c = clubRecord(f, club); if (c.strategy.pre != null) c.strategy.grew = teamOverall(teamOf(club)) - c.strategy.pre; } }
+/** The preseason strength a club should open the coming season at: today's generated team for that season, less a share of what the club will gain by playing it. */
+export function preseasonTarget(f, club, todayOverall) { const g = clubRecord(f, club)?.strategy?.grew; return todayOverall - LIFT_SHARE * (g == null ? DEFAULT_GROW : Math.max(0, g)); }
 
 /** Every club must be able to play: 26–38 monsters, a legal lineup, under the cap, protected monsters in place. Problem strings. */
 export function validateClubs(f, { cap, clubs = null } = {}) {

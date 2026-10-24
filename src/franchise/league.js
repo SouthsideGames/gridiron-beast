@@ -11,7 +11,8 @@ import { addToClub, removeFromClub, clubRoster, isProtected, legendStub, hasLeag
 import { GROUP_SLOTS } from './roster.js';
 
 export const POOL_CAP = 12;            // monsters a regional pool holds (GDD §18.3), the oldest leaving first
-export const POOL_WORTH = Object.freeze({ ovr: 52, age: 24 }); // an AI club's castoff enters a pool only if someone might want him
+export const POOL_WORTH = Object.freeze({ ovr: 52, age: 24, market: 60 }); // an AI club's castoff enters a pool only if someone might want him, and only at the owner's market grade (≤ 60): better ones go through the league's waivers
+export const WAIVER_CAP = 40;
 
 /** A monster's home region: where it was scouted, else its element's first region (as franchise.js homeRegion). */
 export const homeRegionOf = (m) => m.origin || (ELEMENT_REGIONS[m.type] || [])[0] || Object.keys(REGIONS)[0];
@@ -41,13 +42,22 @@ export function leaveLeague(f, m, { year, club = null }) {
  */
 export function enterPool(f, m, { year, club = null, from = 'ai' }) {
   f.pool ||= {}; const region = homeRegionOf(m); m.origin = region; m.contract = null;
-  const worth = from !== 'ai' || monsterOverall(m) >= POOL_WORTH.ovr || (m.age || 99) <= POOL_WORTH.age;
+  const ovr = monsterOverall(m);
+  if (from === 'ai' && ovr > POOL_WORTH.market && hasLeague(f)) return enterWaivers(f, m, { year, club }); // too good for the owner's market as it is today: the league claims him
+  const worth = from !== 'ai' || ovr >= POOL_WORTH.ovr || (m.age || 99) <= POOL_WORTH.age;
   if (!worth) return leaveLeague(f, m, { year, club });
   const list = (f.pool[region] ||= []); list.push(m);
   while (list.length > POOL_CAP) { const old = list.shift(); leaveLeague(f, old, { year, club: old.history?.[old.history.length - 1]?.club || null }); }
   return 'pool';
 }
 
+/** The league's waivers: AI castoffs other AI clubs claim (weekly and in the offseason, needs first). The oldest spill out of the league. */
+export function enterWaivers(f, m, { year, club = null }) {
+  const w = (f.league.waivers ||= []); m.contract = null; w.push(m);
+  while (w.length > WAIVER_CAP) { const old = w.shift(); leaveLeague(f, old, { year, club: old.history?.[old.history.length - 1]?.club || null }); }
+  return 'waivers';
+}
+export function takeFromWaivers(f, id) { const w = f.league?.waivers || []; const i = w.findIndex((m) => m.id === id); return i >= 0 ? w.splice(i, 1)[0] : null; }
 /** Take a monster out of whichever pool holds him. Returns the monster or null. */
 export function takeFromPool(f, id) {
   for (const list of Object.values(f.pool || {})) { const i = list.findIndex((m) => m.id === id); if (i >= 0) return list.splice(i, 1)[0]; }

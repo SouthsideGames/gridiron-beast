@@ -7,6 +7,7 @@
 //     ids: 'a1b2c3 d4e5f6 …'          every id ever issued in this universe (without the m_ prefix), so no id is ever reused
 //     clubs: { [club]: { roster: [ids], protected: [ids], strategy: { slow, boost } } },
 //     monsters: { [id]: monster },     the live AI monsters, one object each, never on two clubs
+//     waivers: [monsters],             AI castoffs good enough that a club will claim them before the owner's market sees them
 //     legends: { [id]: stub },         decorated monsters who left the league (§42.6 exits)
 //     staffAllowance,                  the fixed staff cost an AI club carries against the cap (owner's decision, 2026-10-23)
 //   }
@@ -73,6 +74,7 @@ export const leagueClubs = (f) => (hasLeague(f) ? Object.keys(f.league.clubs) : 
 export function findInLeague(f, id) {
   if (!hasLeague(f) || id == null) return null;
   const m = f.league.monsters[id]; if (m) { const club = Object.keys(f.league.clubs).find((c) => f.league.clubs[c].roster.includes(id)) || null; return { m, where: 'league', club }; }
+  const w = (f.league.waivers || []).find((x) => x.id === id); if (w) return { m: w, where: 'waivers', club: null };
   const s = f.league.legends[id]; return s ? { m: s, where: 'legend', club: s.lastClub || null } : null;
 }
 /** The club a registry monster plays for, or null. */
@@ -121,11 +123,11 @@ export function clubCapRoom(f, club, cap) { return cap - (f.league.staffAllowanc
  * seasons stay in the tables). Contracts are staggered so renewals spread over two offseasons. Returns re-keyed ids.
  */
 export function captureLeague(f, { clubs, teamOf, year, week, existing = [], tableRows = null, staffAllowance = 0 }) {
-  f.league = { v: LEAGUE_VERSION, persistentFrom: { year, week }, ids: '', clubs: {}, monsters: {}, legends: {}, staffAllowance };
+  f.league = { v: LEAGUE_VERSION, persistentFrom: { year, week }, ids: '', clubs: {}, monsters: {}, waivers: [], legends: {}, staffAllowance };
   noteExistingIds(f, existing);
   const rekeyed = [];
   for (const club of clubs) {
-    f.league.clubs[club] = { roster: [], protected: [], strategy: { slow: 0, boost: 0 } };
+    f.league.clubs[club] = { roster: [], protected: [], strategy: { slow: 0, boost: 0, pre: null, grew: null } };
     const roster = teamOf(club).roster;
     roster.forEach((m, i) => {
       const r = claimMonster(f, m, `${club}|${year}|${i}`); if (r) rekeyed.push({ ...r, club });
@@ -161,6 +163,7 @@ export function verifyLeague(f, { clubs = null, rosterMin = 26, rosterMax = 38 }
     for (const id of c.protected) if (!c.roster.includes(id)) p.push(`${club}: protected ${id} is not on the roster`);
   }
   for (const id of Object.keys(L.monsters)) if (!seen.has(id)) p.push(`${id} is in the registry but on no club`);
+  for (const w of L.waivers || []) { if (seen.has(w.id)) p.push(`${w.id} is on waivers and on ${seen.get(w.id)}`); if (!idIssued(f, w.id)) p.push(`waived ${w.id} was never issued`); }
   return p;
 }
 

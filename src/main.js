@@ -115,7 +115,7 @@ const app = {
     this.storage = { mode: res.mode === 'legacy' ? 'legacy' : 'indexeddb', store: res.mode === 'legacy' ? null : store, error: res.error || null };
     if (store && res.mode !== 'legacy') unsubscribeStore = store.onStatus(onStoreStatus);
     if (res.mode === 'recovery') { this.recovery = res; Router.go('recovery', {}, { reset: true }); return { ok: true, mode: 'recovery' }; }
-    if (res.franchise) adopt(res.franchise);
+    if (res.franchise) { await keepPreLeagueCopy(res.franchise, store); adopt(res.franchise); }
     reconcileCloud();
     return { ok: true, mode: res.mode, franchise: res.franchise || null };
   },
@@ -248,7 +248,25 @@ async function checkOtherTabs() {
 }
 
 let unsubscribeStore = null;
-function adopt(f) { app.f = f; app.lastSig = null; applySettings(); mergeDex(f.dex); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
+/**
+ * Persistent AI rosters (GDD §42.6, schema 8): an active franchise from v40 or before gets its league registry the first time
+ * this build adopts it (adopt, below), built from the very rosters it was facing; the capture is verified on the copy and
+ * rolled back on any problem, in which case the game plays on with the generated rosters and says so in the boot notes.
+ * Before the slot's live save is migrated at start, the save as it was is kept as a named backup ('pre-league', restorable
+ * from the slot's backups); restores, imports and cloud copies already keep the previous franchise by their own rules.
+ * Archives are never touched.
+ */
+async function keepPreLeagueCopy(f, store) {
+  if (!f || F.hasLeague(f) || isArchived(f) || !store) return;
+  try { await store.keepCopy(structuredClone(f), 'pre-league'); } catch (e) { app.bootInfo?.notes?.push(`pre-league copy not kept: ${e.message}`); }
+}
+function migrateLeague(f) {
+  if (!f || F.hasLeague(f) || isArchived(f)) return;
+  const r = F.ensureLeague(f);
+  (app.bootInfo?.notes || []).push(r.ok ? `league registry built (${r.rekeyed.length} re-keyed)` : `league registry not built: ${r.problems[0]}`);
+  if (r.ok) queueMicrotask(() => { if (app.f === f) app.save({ immediate: true }); });
+}
+function adopt(f) { migrateLeague(f); app.f = f; app.lastSig = null; applySettings(); mergeDex(f.dex); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
 
 /** Open storage, migrate the v39.1 save on first run, then load (or stop at recovery). Then reconcile with the cloud copy. */
 async function boot() {
@@ -266,7 +284,7 @@ async function boot() {
   }
   app.bootInfo = { ms: Math.round(performance.now() - t0), source: res.source || res.mode, notes: res.notes || [] };
   if (res.mode === 'recovery') { app.recovery = res; Router.go('recovery', {}, { reset: true }); }
-  else { if (res.franchise) adopt(res.franchise); Router.go('menu', {}, { reset: true }); }
+  else { if (res.franchise) { await keepPreLeagueCopy(res.franchise, app.storage.store); adopt(res.franchise); } Router.go('menu', {}, { reset: true }); }
   app.slotCount = (await app.slotSummaries().catch(() => [])).filter((s) => s.state !== 'empty').length;
   if (res.source === 'migrated') toast('Your franchise moved to the new save storage. Your previous save is kept untouched.', 'good', 4500);
   else if (res.notes?.includes('legacy-newer kept')) toast('An older copy of the game saved progress on this device after the update. Your franchise was kept; the other save is under Settings → Save data → Restore a backup.', 'info', 6500);

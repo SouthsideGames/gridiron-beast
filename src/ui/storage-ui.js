@@ -9,7 +9,7 @@ import { exportFranchise, exportFileName, validateImport } from '../franchise/st
 import { offerFile } from './file-offer.js';
 import * as Save from '../franchise/save.js';
 
-const KIND = { roll0: 'Previous save', roll1: 'Save before that', weekly: 'Weekly backup (after Sunday)', 'pre-restore': 'Kept before a restore (undo)', 'pre-cloud': 'Before the cloud copy replaced it', replaced: 'Franchise you replaced', deleted: 'Franchise that left your game (deleted, retired or let go)', 'legacy-original': 'Original save from v39.1 (before this update)', 'legacy-newer': 'Save written by an older copy of the game', quarantine: 'Damaged save (kept for diagnosis)', cloud: 'Your cloud save' };
+const KIND = { roll0: 'Previous save', roll1: 'Save before that', weekly: 'Weekly backup (after Sunday)', 'pre-restore': 'Kept before a restore (undo)', 'pre-cloud': 'Before the cloud copy replaced it', replaced: 'Franchise you replaced', deleted: 'Franchise that left your game (deleted, retired or let go)', 'legacy-original': 'Original save from v39.1 (before this update)', 'pre-league': 'Save before persistent AI rosters (v40, before this update)', 'legacy-newer': 'Save written by an older copy of the game', quarantine: 'Damaged save (kept for diagnosis)', cloud: 'Your cloud save' };
 export const kb = (n) => (n == null ? '—' : n >= 1048576 ? `${(n / 1048576).toFixed(n >= 10485760 ? 0 : 1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 const when = (t) => (t ? new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'unknown time');
 const timeOnly = (t) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
