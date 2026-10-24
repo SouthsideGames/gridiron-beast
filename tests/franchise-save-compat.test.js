@@ -12,7 +12,7 @@ const load = (name) => Save.importJson(fs.readFileSync(new URL(`./fixtures/save-
 const week = (f) => { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); };
 
 test('schema: the save key and schema version are unchanged; older saves carry no Clash fields and get defaults when read', () => {
-  assert.equal(F.SCHEMA_VERSION, 6); assert.equal(Save.SAVE_KEY, 'gridiron-beast-v6');
+  assert.equal(F.LEGACY_SCHEMA_VERSION, 6); assert.equal(F.SCHEMA_VERSION, 8); assert.equal(Save.SAVE_KEY, 'gridiron-beast-v6'); // schema 8: the league registry (Phase 3); 6 is still read
   for (const name of ['tuesday', 'sunday', 'season2']) {
     const f = load(name); assert.equal(f.schemaVersion, 6);
     assert.ok(!('encounter' in f.week) && !('pregame' in f.week) && !('overtime' in f.week), 'the old save has no Clash state');

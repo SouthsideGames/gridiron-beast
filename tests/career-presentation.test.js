@@ -11,7 +11,7 @@ import { updateGameRecords, ensureRecords } from '../src/franchise/stats.js';
 import { careerAfterGame } from '../src/franchise/career.js';
 
 let real = null;
-const franchise = () => (real ||= runFranchise(1, { difficulty: 'rookie', seasons: 3 }).f); // seed 1 wins a Beast Bowl in its third season
+const franchise = () => (real ||= runFranchise(4, { difficulty: 'rookie', seasons: 3 }).f); // seed 4 wins a Beast Bowl in its third season (with persistent AI rosters, Phase 3; seed 1 did before)
 
 const mon = (over = {}) => ({ id: 'm1', name: 'Testro', species: 'emberfox', stage: 0, type: 'Fire', position: 'QB', age: 24, level: 9, yearsPro: 0, attributes: { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 40 }, history: [], career: { v: 1, ev: [], bf: 1 }, ...over });
 const book = (year, team, reg, post = {}) => ({ year, team, reg, post });
@@ -106,7 +106,11 @@ test('career links: monsters found by stable id anywhere; another club\'s player
   assert.equal(P.findMonster(f, x.id).m, x); assert.equal(P.careerProfile({ ...f, roster: [x, twin] }, twin.id).id, twin.id);
   const pool = Object.values(f.pool || {}).flat()[0]; if (pool) assert.equal(P.findMonster(f, pool.id).where, 'pool');
   const row = Object.values(f.season.leagueStats).flatMap((T) => Object.values(T)).find((r) => r.team !== f.club && r.games > 3);
-  const lp = P.careerProfile(f, row.id); assert.equal(lp.kind, 'league'); assert.equal(lp.timeline.length, 0); assert.equal(lp.stats.games >= row.games, true); assert.match(lp.notes[0], /season lines/);
+  // Persistent AI rosters (GDD §42.6): another club's player is a real monster in the league registry, with a full profile and his own books.
+  const lp = P.careerProfile(f, row.id); assert.equal(lp.kind, 'full'); assert.equal(lp.where, 'league'); assert.equal(lp.club, row.team); assert.equal(lp.stats.games >= row.games, true);
+  // A player the registry no longer holds (table rows only) still opens a table-only profile.
+  const gone = { ...f, league: { ...f.league, monsters: { ...f.league.monsters }, clubs: JSON.parse(JSON.stringify(f.league.clubs)) } }; delete gone.league.monsters[row.id]; for (const c of Object.values(gone.league.clubs)) c.roster = c.roster.filter((id) => id !== row.id);
+  const tp = P.careerProfile(gone, row.id); assert.equal(tp.kind, 'league'); assert.equal(tp.timeline.length, 0); assert.equal(tp.stats.games >= row.games, true); assert.match(tp.notes[0], /season lines/);
   assert.equal(P.careerProfile(f, 'no-such-id'), null);
   const cls = f.draft?.class?.find((m) => !f.draft.picks.some((p) => p.id === m.id));
   if (cls) { const pp = P.careerProfile(f, cls.id); assert.equal(pp.kind, 'prospect'); assert.equal(pp.trophies.length, 0); assert.equal(pp.stats.games, 0); }
@@ -135,7 +139,7 @@ test('the real franchise: summaries, trophies and links agree with its history; 
     for (const e of p.timeline.filter((x) => x.ref)) { linked++; const d = P.eventDetail(f, m, e.ref); if (d) opened++; }
   }
   assert.ok(linked > 0); assert.equal(opened, linked, 'every linked event opens a detail');
-  assert.ok(titleYears.length >= 1, 'seed 1 wins a title (the fixture this test relies on)');
+  assert.ok(titleYears.length >= 1, 'seed 4 wins a title (the fixture this test relies on)');
   assert.equal(JSON.stringify(f), before, 'profiles and details only read');
   const back = Save.importJson(Save.exportJson(f)); assert.ok(back);
   for (const m of f.roster.slice(0, 5)) assert.deepEqual(P.fullProfile(back, back.roster.find((x) => x.id === m.id), 'roster').trophies, P.fullProfile(f, m, 'roster').trophies);

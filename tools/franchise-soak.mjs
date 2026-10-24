@@ -15,9 +15,9 @@ const args = Object.fromEntries(argv.map((a) => { const [k, v] = a.replace(/^--/
 const N = Number(args.n || 12), SEASONS = Number(args.seasons || 4), SEED0 = Number(args.seed || 1), quiet = !!args.quiet;
 const DIFFS = Object.keys(F.DIFFICULTY);
 
-export function newFranchise(seed, { difficulty = 'pro', club = null } = {}) {
+export function newFranchise(seed, { difficulty = 'pro', club = null, legacy = false } = {}) {
   const clubs = STARTER_CLUBS.map((c) => c.name);
-  const f = F.createFranchise({ owner: { first: 'Soak', last: `#${seed}`, gender: 'Female', portrait: seed % 4, hometown: '' }, club: club || clubs[seed % clubs.length], cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed, settings: { difficulty } });
+  const f = F.createFranchise({ owner: { first: 'Soak', last: `#${seed}`, gender: 'Female', portrait: seed % 4, hometown: '' }, club: club || clubs[seed % clubs.length], cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed, settings: { difficulty }, persistentLeague: !legacy });
   F.hireDefaultStaff(f);
   // creation draft: take the best visible prospect with each pick
   let g = 0; while (f.draft && !f.draft.done && g++ < 40) { if (F.onTheClock(f) === f.club) { const best = bestProspect(f); if (best) F.myDraftPick(f, best.id); else F.passDraftPick(f); } else break; }
@@ -55,8 +55,8 @@ export function invariants(f, where) {
 
 // `stopWeek` (UI checks): stop in the first season once that week begins, mid-season.
 // `onSeason(f, s)` (studies): called after each season's offseason is settled, before the next season starts.
-export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null } = {}) {
-  const f = newFranchise(seed, { difficulty });
+export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false } = {}) {
+  const f = newFranchise(seed, { difficulty, legacy });
   const problems = [...check(f, 'created')]; const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
   for (let s = 1; s <= seasons && !log.fired; s++) {
     if (F.needsGoal(f)) { const g = F.commissionerGoals(f); F.chooseGoal(f, g[0]?.id); }

@@ -10,6 +10,7 @@
 
 import { careerTimeline, careerEvents, fullRecord } from './career.js';
 import { withDerived, addInto, RECORD_CATEGORIES, statLine, seasonGames } from './stats.js';
+import { findInLeague } from './league-registry.js';
 import { AWARDS } from './awards.js';
 import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
 import { yearOf } from '../data/calendar.js';
@@ -48,6 +49,8 @@ export const TROPHY_META = Object.freeze({
   record: { icon: '📜', label: 'League record', tier: 'silver' },
 });
 
+/** A departed, decorated AI monster's legend stub (GDD §42.6 exits) read as a monster: career totals, honours, his last club. */
+function fromStub(stub) { return { id: stub.id, name: stub.name, species: stub.species, position: stub.position, type: stub.type, stage: stub.stage || 0, age: stub.age, level: 1, attributes: {}, potential: null, stats: { v: 2, career: { reg: stub.career || {}, post: {} }, season: { year: null, reg: {}, post: {} }, log: [], seasons: [] }, career: { v: 1, ev: stub.ev || [] }, history: stub.lastClub ? [{ club: stub.lastClub, from: null, to: stub.left ?? null, reason: 'left' }] : [], legend: true }; }
 /** Every place a monster can be found in this franchise, by stable id (never by name). */
 export function findMonster(f, id) {
   if (!f || id == null) return null;
@@ -56,6 +59,7 @@ export function findMonster(f, id) {
   for (const list of Object.values(f.pool || {})) for (const m of list || []) { const h = hit(m, 'pool'); if (h) return h; }
   for (const m of f.offseason?.market || []) { const h = hit(m, 'market'); if (h) return h; }
   for (const m of f.draft?.class || []) { if (m.id !== id) continue; const pk = (f.draft.picks || []).find((p) => p.id === id && !p.passed); return pk ? { m, where: 'drafted', team: pk.team } : { m, where: 'draft' }; }
+  { const hit = findInLeague(f, id); if (hit) return hit.where === 'league' ? { m: hit.m, where: 'league', team: hit.club } : hit.where === 'waivers' ? { m: hit.m, where: 'waivers' } : { m: fromStub(hit.m), where: 'legend', team: hit.club, stub: true }; } // persistent AI rosters (GDD §42.6)
   for (const lists of Object.values(f.draftResults || {})) for (const [team, list] of Object.entries(lists || {})) for (const m of list || []) { if (m.id === id) return { m, where: 'drafted', team }; }
   return null;
 }
