@@ -34,21 +34,35 @@ export function registerMenuScreens(Router, app) {
     render({ f }) {
       const legacy = Save.legacySummary(Save.readLegacy());
       const s = f ? summary(f) : null;
+      const archived = f && isArchived(f); const hof = hallOfFame().length;
+      const tile = (screen, icon, label, count) => `<button class="menu-tile" data-action="go" data-screen="${screen}"><span class="mt-icon">${icon}</span><span class="mt-label">${label}</span>${count != null ? `<span class="mt-count mono">${count}</span>` : ''}</button>`;
+      // One franchise card: the franchise you are in and how to get back to it; switching or starting another lives behind one
+      // quiet link (the Franchises screen holds the three slots and their New / Import actions). The League Hub is inside the
+      // franchise (HQ), not here.
+      const card = f ? `<div class="panel menu-franchise">
+          <div class="row" style="gap:12px">${portraitSprite(f.owner.portrait + '|' + f.owner.first, 52)}<div class="grow" style="min-width:0">
+            <div class="mf-club">${esc(s.club)}</div>
+            <div class="muted">GM ${esc(f.owner.first)} ${esc(f.owner.last)}</div>
+            <div class="mf-meta"><span class="chip">${yearOf(s.year)}</span>${archived ? '<span class="chip">Legacy</span>' : `<span class="chip">Week ${s.week}</span><span class="chip accent">${s.record}</span>`}</div></div></div>
+          <button class="btn primary big block" style="margin-top:14px" data-action="continue">${archived ? '🏛️ View Franchise Legacy' : '▶ Continue'}</button>
+          <button class="mf-switch" data-action="go" data-screen="franchises"><span>🗂️ Switch or start a franchise</span><span class="dim">›</span></button>
+        </div>` : `<div class="panel menu-franchise">
+          <div class="mf-club" style="text-align:center">Build a monster dynasty</div>
+          <p class="muted center" style="margin:6px 0 14px">Draft monsters, call the plays, win the Beast Bowl.</p>
+          <button class="btn primary big block" data-action="new">🏆 New Franchise</button>
+          <button class="mf-switch" data-action="go" data-screen="franchises"><span>🗂️ Saved franchises</span><span class="dim">›</span></button>
+        </div>`;
       return `
         <div class="hero"><div class="logo">GRIDIRON BEAST</div><div class="muted">Monster football franchise · 7-on-7</div></div>
-        ${f ? `<div class="panel"><div class="row"><span>${portraitSprite(f.owner.portrait + '|' + f.owner.first, 44)}</span><div class="grow"><div><b>${esc(f.owner.first)} ${esc(f.owner.last)}</b> · ${esc(s.club)}</div><div class="muted">Beast League · ${yearOf(s.year)} · Week ${s.week} · ${s.record}</div></div></div>
-          <div class="stack" style="margin-top:12px"><button class="btn primary big block" data-action="continue">${isArchived(f) ? '🏛️ View Franchise Legacy' : '▶ Continue Franchise'}</button></div></div>` : ''}
-        <div class="stack">
-          <button class="btn ${f ? '' : 'primary big'} block" data-action="new">${f ? 'Start a New Franchise' : '🏆 New Franchise'}</button>
-          <button class="btn block" data-action="go" data-screen="franchises">🗂️ Franchises <span class="dim mono">3 slots</span></button>
-          ${f && !isArchived(f) ? `<button class="btn block" data-action="go" data-screen="league">🏟️ League Hub <span class="dim mono">16 clubs</span></button>` : ''}
-          ${legacy && !f ? `<button class="btn block" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
-          <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
-          <button class="btn block" data-action="go" data-screen="achievements">🏅 Achievements <span class="dim mono">${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}</span></button>
-          ${hallOfFame().length ? `<button class="btn block" data-action="go" data-screen="hof">🏛️ Hall of Fame <span class="dim mono">${hallOfFame().length}</span></button>` : ''}
-          <div class="grid2"><button class="btn block" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block badge-host" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button></div>
+        ${card}
+        ${legacy && !f ? `<button class="btn block" style="margin-bottom:12px" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
+        <div class="menu-tiles ${hof ? 'three' : ''}">
+          ${tile('dex', '📖', 'Beast Dex', `${dexCounts(f).seen}/72`)}
+          ${tile('achievements', '🏅', 'Achievements', `${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}`)}
+          ${hof ? tile('hof', '🏛️', 'Hall of Fame', hof) : ''}
         </div>
-        <p class="center dim" style="margin-top:16px">Gridiron Beast · build ${esc(buildLabel())} · Southside Games</p>`;
+        <div class="grid2" style="margin-top:12px"><button class="btn block menu-util" data-action="go" data-screen="settings">⚙️ Settings</button><button class="btn block badge-host menu-util" data-action="go" data-screen="developer">🛠️ Developer${devBadge(app.settings)}${cardBadge(app.settings)}</button></div>
+        <p class="center dim" style="margin-top:16px;font-size:12px">Gridiron Beast · build ${esc(buildLabel())} · Southside Games</p>`;
     },
     mount(root, ctx) {
       delegate(root, {
