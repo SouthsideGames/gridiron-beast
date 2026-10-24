@@ -105,7 +105,7 @@ export function registerHqScreens(Router, app) {
         ${boardPanel(f)}
         ${campaignPanel(f)}
         ${f.week.gameResult && !f.week.gameResult.bye && day === 0 ? '' : ''}
-        <div class="grid2">
+        <div class="grid2" style="margin-bottom:var(--s3)">
           <button class="btn block" data-action="go" data-screen="schedule">🗓️ Schedule</button><button class="btn block" data-action="go" data-screen="standings">📊 Standings</button>
           <button class="btn block" data-action="go" data-screen="league">🏟️ League Hub</button><button class="btn block" data-action="go" data-screen="records">📜 Records</button>
           <button class="btn block" data-action="go" data-screen="staff">👥 Coaching staff</button><button class="btn block" data-action="go" data-screen="practice">🎯 Practice</button></div>
