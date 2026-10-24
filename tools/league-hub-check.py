@@ -51,7 +51,8 @@ def open_career_from(page, where, selector):
 with sync_playwright() as pw:
     for w in [320, 360, 390, 412]:
         b, pg = fresh(pw, w); p = {}
-        pg.click('[data-action="go"][data-screen="league"]'); pg.wait_for_selector('[data-action="tab"][data-tab="rivals"]')
+        pg.click('[data-action="continue"]'); pg.wait_for_timeout(500)  # the League Hub lives inside the franchise (v42.0.2: the League tab, not the main menu)
+        pg.evaluate("() => import('./src/ui/router.js').then((R) => R.go('league'))"); pg.wait_for_selector('[data-action="tab"][data-tab="rivals"]')
         for t in ['clubs', 'leaders', 'moves', 'races', 'rivals']:
             pg.click(f'[data-action="tab"][data-tab="{t}"]'); pg.wait_for_timeout(200); overflow(pg, f'League Hub {t} at {w}px'); shot(pg, f'hub-{t}', w)
             p[f'{t}Links'] = pg.locator('main [data-career]').count()
