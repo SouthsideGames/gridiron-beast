@@ -22,6 +22,8 @@ export const seasonsCompleted = (f) => (f?.history || []).length;
  * fired is not an archive yet (Phase 1 already recorded `status: 'fired'` for it): its season is settled, then it is archived.
  */
 export const isArchived = (f) => !!f?.lifecycle?.legacy && ARCHIVE_STATUSES.includes(f.lifecycle.status);
+/** The same test on a stored manifest, whose lifecycle carries the Legacy headline instead of the record. */
+export const isArchivedManifest = (m) => !!m?.lifecycle?.legacyHeadline && ARCHIVE_STATUSES.includes(m.lifecycle.status);
 /** The status shown: the archive's, else fired/active from the board. */
 export const lifecycleStatus = (f) => (isArchived(f) ? f.lifecycle.status : (f?.board?.fired ? 'fired' : 'active'));
 export const isRetired = (f) => isArchived(f) && f.lifecycle.status === 'retired';

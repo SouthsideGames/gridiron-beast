@@ -138,16 +138,17 @@ async function readLegacy(c) {
  * game never switches a device to another franchise. With no franchise on the device, the newest valid copy of any franchise
  * is returned, unless this device has just deleted its franchise.
  */
-export async function cloudLoad(device = null) {
+export async function cloudLoad(device = null, { exclude = [] } = {}) {
   const c = await connect(); if (!c) return null;
   try {
     await flushDeletions(c);
     const dev = device && (str(device.uid) || str(device.createdAt)) ? device : null;
     if (!dev && noAdopt()) return null;
+    const excluded = (g) => !dev && exclude.some((x) => sameFranchise(x, g)); // a franchise already in another slot of this device
     let marks = [], groups = [];
     for (let pass = 0; pass < 3; pass++) {
       groups = await listSnaps(c); marks = await listMarks(c);
-      const commits = groups.filter((g) => g.commit && !voided(g, marks) && (!dev || sameFranchise(g, dev))).sort((a, b) => (isNewer(a, b) ? -1 : 1));
+      const commits = groups.filter((g) => g.commit && !voided(g, marks) && (!dev || sameFranchise(g, dev)) && !excluded(g)).sort((a, b) => (isNewer(a, b) ? -1 : 1));
       let torn = false;
       for (const g of commits) {
         const r = await readGen(c, g);
@@ -163,8 +164,26 @@ export async function cloudLoad(device = null) {
     const f = await readLegacy(c);
     if (!f || marks.some((m) => sameFranchise(m, f)) || (await listMarks(c)).some((m) => sameFranchise(m, f))) return null;
     if (dev && !sameFranchise(f, dev) && (str(f.uid) || str(f.createdAt))) return null; // one with no identity at all is offered
+    if (excluded(f)) return null;
     return f;
   } catch (e) { setStatus({ error: e?.code || 'unavailable' }); return null; }
+}
+
+/**
+ * The franchises the cloud holds for this viewer, newest valid commit each: [{ uid, createdAt, savedAt, archive, meta }],
+ * for the Franchises screen to offer into empty slots. Deleted franchises are left out. Chunks are verified when one is
+ * actually loaded (`cloudLoad`), not here.
+ */
+export async function cloudFranchises() {
+  const c = await connect(); if (!c) return [];
+  try {
+    const groups = await listSnaps(c); const marks = await listMarks(c); const out = [];
+    for (const g of groups.filter((x) => x.commit && !voided(x, marks)).sort((a, b) => (isNewer(a, b) ? -1 : 1))) {
+      if (out.some((o) => sameFranchise(o, g))) continue;
+      out.push({ uid: g.uid ?? null, createdAt: g.createdAt ?? null, savedAt: g.savedAt ?? null, archive: !!g.commit.archive, meta: g.commit.meta || null });
+    }
+    return out;
+  } catch (e) { setStatus({ error: e?.code || 'unavailable' }); return []; }
 }
 
 // ------------------------------------------------------------ writing
@@ -178,7 +197,13 @@ export const cloudUsage = { chunks: 0, chars: 0, documents: 0, writes: 0, lastWr
  */
 function freezePayload(x, o = {}) {
   const json = x && typeof x.json === 'function' ? x.json() : JSON.stringify(x);
-  return { json, savedAt: x?.savedAt ?? null, schemaVersion: x?.schemaVersion ?? null, uid: str(x?.uid), createdAt: str(o.createdAt) || str(x?.createdAt), epoch };
+  return { json, savedAt: x?.savedAt ?? null, schemaVersion: x?.schemaVersion ?? null, uid: str(x?.uid), createdAt: str(o.createdAt) || str(x?.createdAt), epoch, archive: !!o.archive, meta: o.meta || metaOf(x) || null };
+}
+/** A few display fields for the slot manager's cloud list (never more than this; the full state is in the chunks). */
+function metaOf(x) {
+  const f = x && typeof x.json === 'function' ? null : x; if (!f || typeof f !== 'object') return null;
+  const s = f.season || {}; const rec = s.records?.[f.club];
+  return { club: f.club ?? null, owner: f.owner ? `${f.owner.first || ''} ${f.owner.last || ''}`.trim() : null, year: s.year ?? null, week: s.week ?? null, seasons: (f.history || []).length, record: rec ? { w: rec.w ?? 0, l: rec.l ?? 0 } : null, status: f.lifecycle?.legacy ? f.lifecycle.status : 'active' };
 }
 /** Remove a generation: its commit first (readers stop choosing it), then its chunks, then its intent (keeps it findable). */
 async function dropGen(c, g) {
@@ -196,7 +221,10 @@ async function cleanUp(c, { quota = false } = {}) {
   const groups = await listSnaps(c); const marks = await listMarks(c); // snaps first, then markers
   const commits = groups.filter((g) => g.commit);
   const newerCommits = (g) => commits.filter((h) => h.gen !== g.gen && sameFranchise(h, g) && isNewer(h, g)).length;
-  for (const g of groups) if (voided(g, marks) || newerCommits(g) >= (quota ? 1 : 2)) await dropGen(c, g);
+  // A retired or fired franchise is uploaded once, as its archive, and never again (it is read-only): one archived commit
+  // above a snapshot is enough to retire that snapshot, so an archive costs one verified copy (decision O).
+  const underArchive = (g) => commits.some((h) => h.gen !== g.gen && h.commit?.archive && sameFranchise(h, g) && isNewer(h, g));
+  for (const g of groups) if (voided(g, marks) || newerCommits(g) >= (quota || underArchive(g) ? 1 : 2)) await dropGen(c, g);
   if (swept) return; swept = true; // leftover chunks (their writer stopped after its intent was removed): once per session
   try {
     const gens = groups.map((g) => g.gen); if (gens.length > 30) return;
@@ -219,7 +247,7 @@ async function writeNow(p) {
     const head = { gen, uid: p.uid, createdAt: p.createdAt, savedAt: p.savedAt, n };
     await c.snaps.doc(`${gen}~w`).set({ ...head, at: Date.now() });
     for (let i = 0; i < n; i++) await c.chunks.doc(`${gen}_c${i}`).set({ gen, i, n, uid: p.uid, createdAt: p.createdAt, savedAt: p.savedAt, s: text.slice(i * CHUNK, (i + 1) * CHUNK) });
-    await c.snaps.doc(gen).set({ ...head, schemaVersion: p.schemaVersion, len: text.length, sum: fnv(text), storage: STORAGE, at: Date.now() });
+    await c.snaps.doc(gen).set({ ...head, schemaVersion: p.schemaVersion, len: text.length, sum: fnv(text), storage: STORAGE, at: Date.now(), ...(p.archive ? { archive: true } : {}), ...(p.meta ? { meta: p.meta } : {}) });
     lastWritten = { id: { uid: p.uid, createdAt: p.createdAt }, savedAt: sameFranchise(lastWritten.id, p) ? Math.max(lastWritten.savedAt, p.savedAt || 0) : (p.savedAt || 0) };
     if (p.epoch === epoch) setNoAdopt(false); // a franchise is active on this device again (not an upload from before a deletion)
     try { await cleanUp(c); } catch { /* best effort: the next upload cleans up */ }
@@ -249,9 +277,9 @@ function enqueue(f) {
  * saves every play), and at once for important changes (a game finished, a week advanced). `createdAt` identifies the
  * franchise together with the snapshot's uid.
  */
-export function cloudSave(x, { immediate = false, createdAt = null } = {}) {
+export function cloudSave(x, { immediate = false, createdAt = null, archive = false, meta = null } = {}) {
   if (!x) return;
-  queued = freezePayload(x, { createdAt }); // fixed now: the payload is the state authorised by this call
+  queued = freezePayload(x, { createdAt, archive, meta }); // fixed now: the payload is the state authorised by this call
   const run = () => { clearTimeout(timer); timer = null; const p = queued; queued = null; if (p) enqueue(p); };
   if (immediate) run(); else if (!timer) timer = setTimeout(run, 4000);
 }

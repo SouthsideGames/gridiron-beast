@@ -102,7 +102,12 @@ const clone = (v) => (v == null ? v : v instanceof Uint8Array ? v.slice() : type
 const partsOf = (f) => { const { history, draftResults, savedAt, ...core } = f; return { core, history: history ?? null, draft: draftResults ?? null }; };
 export { newUid };
 /** Summary shown in recovery lists and the storage meter, read without unpacking. */
-export function saveMeta(f) { const s = f.season || {}; return { club: f.club || null, owner: f.owner ? `${f.owner.first || ''} ${f.owner.last || ''}`.trim() : null, year: s.year ?? null, week: s.week ?? null, day: s.day ?? null, finished: !!s.finished, roster: f.roster?.length ?? 0, franchiseSchema: f.schemaVersion ?? null }; }
+export function saveMeta(f) {
+  const s = f.season || {}; const rec = s.records?.[f.club] || null;
+  return { club: f.club || null, owner: f.owner ? `${f.owner.first || ''} ${f.owner.last || ''}`.trim() : null, year: s.year ?? null, week: s.week ?? null, day: s.day ?? null, finished: !!s.finished, roster: f.roster?.length ?? 0, franchiseSchema: f.schemaVersion ?? null,
+    // for the slot cards (GDD §42.5): the record, the competitive tier and titles, read without unpacking the save
+    record: rec ? { w: rec.w ?? 0, l: rec.l ?? 0, t: rec.t ?? 0 } : null, tier: f.tier ?? null, titles: f.campaign?.titles ?? null, seasons: (f.history || []).length, portrait: f.owner?.portrait ?? null, difficulty: f.settings?.difficulty ?? null };
+}
 /** The future lifecycle field (GDD §42.4), recorded from the save's state; Phase 1 never acts on it. */
 /** The lifecycle as the manifest and slot card carry it: the status and dates, with the Legacy summary reduced to its headline. */
 export function manifestLifecycle(lc) { if (!lc) return lc; const { legacy, ...rest } = lc; return legacy ? { ...rest, legacyHeadline: legacyHeadline(legacy) } : rest; }
