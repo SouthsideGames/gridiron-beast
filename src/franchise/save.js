@@ -2,7 +2,8 @@
 // a one-way import of the v5 (11v11) prototype's owner, club, staff, rival
 // and records. The legacy key is never modified.
 
-import { SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
+import { SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
+import { verifyLeague, hasLeague } from './league-registry.js';
 import { backfillCareer } from './career.js';
 import { backfillLeagueNews } from './league-news.js';
 import { hashString } from '../core/rng.js';
@@ -30,7 +31,11 @@ export function loadBackup() { const s = storage(); if (!s) return null; try { c
 export function clear() { const s = storage(); if (s) { s.removeItem(SAVE_KEY); s.removeItem(BACKUP_KEY); } }
 export function migrate(f) {
   if (!f || typeof f !== 'object') return null;
-  if (f.schemaVersion !== SCHEMA_VERSION) return null; // future versions migrate here
+  // Schema 6 (every save before Phase 3) and schema 8 (with the league registry, GDD §42.6) are both read; a 6 becomes an 8 the
+  // first time the game opens it (franchise.ensureLeague, verified on the copy), never here, so backups and cloud copies are shown as they are.
+  if (f.schemaVersion !== LEGACY_SCHEMA_VERSION && f.schemaVersion !== SCHEMA_VERSION) return null;
+  if (f.schemaVersion === SCHEMA_VERSION && !hasLeague(f)) return null; // an 8 without its registry is not a save this game wrote
+  if (hasLeague(f)) { const p = verifyLeague(f); if (p.length) throw Object.assign(new Error(`The league registry is damaged: ${p[0]}`), { code: 'league', problems: p }); }
   f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {}; f.week ||= {}; f.campaign ||= { badges: {}, gymWins: {}, titles: f.badges ? Object.values(f.badges).reduce((a, b) => a + b, 0) : 0, wins: 0, awards: 0 };
   migrateSpecies(f);
   dedupeRosterNames(f);
@@ -67,12 +72,12 @@ export function migrateSpecies(f) {
   for (const p of f.week?.prospects || []) fix(p.monster);
   if (!f.dex) { f.dex = { seen: {}, signed: {} }; for (const m of f.roster || []) dexRecord(f, m, 'signed'); }
 }
-export function exportJson(f) { return JSON.stringify({ app: 'gridiron-beast', schemaVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString(), franchise: f }, null, 0); }
+export function exportJson(f) { return JSON.stringify({ app: 'gridiron-beast', schemaVersion: f?.schemaVersion ?? SCHEMA_VERSION, exportedAt: new Date().toISOString(), franchise: f }, null, 0); }
 export function importJson(text) {
   const obj = JSON.parse(text);
   const f = obj?.franchise || obj;
   const ok = migrate(f);
-  if (!ok) throw new Error('Not a Gridiron Beast v6 save.');
+  if (!ok) throw new Error('Not a Gridiron Beast save this version can read.');
   return ok;
 }
 

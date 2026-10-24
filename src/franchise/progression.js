@@ -2,13 +2,15 @@
 
 import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints } from '../data/monsters.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
+import { isAgeless } from './league-registry.js';
 /** Injury-risk multiplier for a monster playing a secondary position. */
 export const OUT_OF_POSITION_RISK = 1.75;
 
 const norm = (v) => Math.max(1, Math.min(99, v ?? 60)) / 99;
 
 /** Apply one game's consequences to the roster. `chart` maps slots to monster ids; `playerStats` from the game state. */
-export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true } = {}) {
+/** `xpScale`: the balance nudge for a runaway AI club (GDD §42.6 decision C) slows its development; it never edits a rating. */
+export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1 } = {}) {
   const events = [];
   const byId = Object.fromEntries(roster.map((m) => [m.id, m]));
   for (const slot of [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K']) {
@@ -17,6 +19,7 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
     let xp = 24 + (won ? 10 : 0);
     xp += Math.round((st.rushYds || 0) / 4 + (st.recYds || 0) / 4 + (st.passYds || 0) / 10);
     xp += (st.td || 0) * 14 + (st.tackles || 0) * 5 + (st.sacks || 0) * 12 + (st.int || 0) * 14 + (st.rec || 0) * 2;
+    if (xpScale !== 1) xp = Math.round(xp * xpScale);
     m.xp += xp; const startLevel = m.level;
     while (m.xp >= xpForLevel(m.level)) {
       m.xp -= xpForLevel(m.level);
@@ -57,11 +60,17 @@ export function recoverWeek(roster, { bye = false } = {}) {
   return events;
 }
 
-/** Offseason: ageing, mild decline/growth, salary refresh. */
+/**
+ * Offseason: ageing, mild decline/growth, salary refresh. Legendary monsters and the rival's signature monster do not age
+ * and never decline (owner's rules, 2026-10-23); they still gain a season of experience, rest and heal like everyone.
+ */
 export function offseason(roster, rng) {
   const events = [];
   for (const m of roster) {
-    m.age += 1; m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
+    const ageless = isAgeless(m);
+    if (!ageless) m.age += 1;
+    m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
+    if (ageless) { m.salary = salaryFor(m); continue; }
     if (m.age >= 30) {
       for (const k of ['speed', 'agility', 'durability']) m.attributes[k] = Math.max(20, m.attributes[k] - 1 - rng.int(2));
       events.push({ kind: 'decline', id: m.id, name: m.name });
