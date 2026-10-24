@@ -39,8 +39,8 @@ import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } 
 import { careerSnapshot } from './career-profile.js';
 import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, recordNews } from './league-news.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, playbookFor, adaptPlaybook } from './roster.js';
-import { joinAsDraftee, takeFromPool, takeFromWaivers } from './league.js';
-import { leagueSeasonEnd, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, CREATION_LIFT } from './league-season.js';
+import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague } from './league.js';
+import { leagueSeasonEnd, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, leagueInjuryCover, leagueTrim, CREATION_LIFT } from './league-season.js';
 export { validateClubs } from './league-season.js';
 import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRoom, captureLeague, verifyLeague, addToClub, removeFromClub, isProtected, findInLeague } from './league-registry.js';
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
@@ -557,7 +557,7 @@ export function toPool(f, m, reason = 'released') {
   (m.history ||= []).push({ club: f.club, from: m.contract?.signed || f.season?.year || 1, to: f.season?.year || 1, reason });
   m.contract = null; m.origin = region;
   (f.pool[region] ||= []).push(m);
-  if (f.pool[region].length > 12) f.pool[region].shift();
+  if (f.pool[region].length > 12) { const old = f.pool[region].shift(); if (hasLeague(f)) leaveLeague(f, old, { year: f.season?.year || 1 }); } // the oldest leaves the league (a decorated one keeps a legend stub, GDD §42.6)
 }
 export function poolMonsters(f, region) { return (f.pool?.[region] || []); }
 /** Once a week an AI club may sign from the pool (15% per monster). */
@@ -738,6 +738,8 @@ function aiAfterGame(f, team, game, side, r) {
   const won = game.winner === side;
   return afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale: slowScale(clubRecord(f, team.name)?.strategy?.slow || 0) });
 }
+/** In-season cover for a persistent club that injuries left without a legal lineup (league-season.js). */
+function leagueCover(f) { if (!hasLeague(f)) return; const { r, save } = frng(f); const n = leagueInjuryCover(f, r, { year: f.season.year, cap: tierById(f.tier).cap, targetOf: (c) => clubQuality(f, c) }); if (n) save(); }
 /** Weekly rest and healing for the 15 persistent rosters, as the owner's roster gets on Saturday. */
 function leagueRecoverWeek(f, { bye = false } = {}) { if (!hasLeague(f)) return; for (const club of leagueClubs(f)) recoverWeek(clubRoster(f, club), { bye }); }
 /** The balance nudge's brake (GDD §42.6 decision C): a club above its band develops at a share of the XP for one season, by how far above it sits. */
@@ -1668,6 +1670,7 @@ function advanceWeek(f, { bye = false } = {}) {
   writeLeagueNews(f, round);
   if (bye) recoverWeek(f.roster, { bye: true }); // a normal week recovers on Saturday, so the week shows the fatigue from Sunday
   leagueRecoverWeek(f, { bye }); // the 15 persistent rosters rest and heal once a week (GDD §42.6)
+  leagueCover(f); // a club left without a legal lineup by injuries signs cover before next week
   f.season.week += 1; f.season.day = 0;
   const lastPlan = f.week.plan;
   f.week = blankWeek(); f.week.plan = lastPlan; // keep the plan as the default for next week
@@ -1759,7 +1762,7 @@ function endSeason(f) {
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   noteGrowth(f, (c) => aiTeam(f, c, s.year));
   const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, teamOverall(legacyAiTeam(f, c, s.year + 1)));
-  f.leagueOffseason = { year: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
+  f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
@@ -1858,15 +1861,17 @@ export function startNextSeason(f) {
   if (!hasLeague(f)) ageDraftees(f, f.season.year); // the generated rosters' draftees (v40 saves); persistent rosters age below
   for (const m of f.roster) if (m.rookie === f.season.year) { m.yearsPro = 0; m.age -= 1; } // just drafted: the coming season is their first (offseason() aged everyone)
   if (hasLeague(f)) { // the league's offseason after the owner's (GDD §42.6 steps 3, 6-8; decisions C, D, F)
+    const t0 = globalThis.performance?.now?.() ?? Date.now();
     const year = f.season.year, next = year + 1, cap = tierById(f.tier).cap;
     const targetOf = (club) => clubQuality(f, club, next); // arrivals are generated at the club's quality for the coming season
     const overallTarget = (club) => preseasonTarget(f, club, teamOverall(legacyAiTeam(f, club, next))); // today's generated team for the season, less the growth the club will gain by playing it (league-season.js calibration)
-    leagueAgeing(f, r, { year });
+    leagueAgeing(f, r, { year }); leagueTrim(f, { year: next, cap }); // salaries refreshed with the ratings: back under the cap before anyone shops
     const fa = leagueFreeAgency(f, r, { year: next, cap, targetOf });
     const nudge = leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next) });
-    const problems = validateClubs(f, { cap });
-    f.leagueOffseason = { ...(f.leagueOffseason?.year === year ? f.leagueOffseason : { year }), freeAgency: fa, nudge, problems };
-    if (problems.length) throw Object.assign(new Error(`The league could not open the season: ${problems[0]}`), { code: 'league', problems });
+    const overCap = leagueTrim(f, { year: next, cap }); leagueInjuryCover(f, r, { year: next, cap, targetOf });
+    const problems = validateClubs(f, { cap }); const structural = verifyLeague(f);
+    f.leagueOffseason = { ...(f.leagueOffseason?.closed === year ? f.leagueOffseason : {}), opened: next, freeAgency: fa, nudge, overCap, problems, ms: Math.round(((globalThis.performance?.now?.() ?? Date.now()) - t0) * 10) / 10 };
+    if (structural.length) throw Object.assign(new Error(`The league registry is damaged: ${structural[0]}`), { code: 'league', problems: structural }); // never the owner's fault, never silent; a club over the cap at the roster floor is reported, not fatal
   }
   save();
   startSeason(f, f.season.year + 1);

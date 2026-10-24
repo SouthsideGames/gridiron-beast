@@ -77,6 +77,12 @@ export function leagueContracts(f, { year, cap, excessOf = null }) {
   }
   return out;
 }
+/** Every club trimmed to the cap (after the ageing pass refreshed salaries, and after the nudge). Returns the clubs still over it at the roster floor. */
+export function leagueTrim(f, { year, cap }) {
+  if (!hasLeague(f)) return []; const over = [];
+  for (const club of order(f)) { trimToCap(f, club, { year, cap, starters: starterIds(clubRoster(f, club)) }); if (clubCapRoom(f, club, cap) < 0) over.push(club); }
+  return over;
+}
 /** Release the cheapest-to-lose unprotected reserves until the club fits under the cap (or sits at the roster minimum). */
 function trimToCap(f, club, { year, cap, starters }) {
   let n = 0;
@@ -208,6 +214,36 @@ function weakestStartingGroup(f, club) {
     if (!worst || gap > worst.gap) worst = { pos, gap };
   }
   return worst?.pos || null;
+}
+
+/**
+ * In-season cover (weekly): a club that cannot field a legal lineup after injuries signs cover at the position from the waivers
+ * or the pools, else a replacement-level regional veteran, making room by releasing its weakest unprotected spare when full.
+ * The owner faces the same rule through the forfeit (GDD §17.2); an AI club simply signs, as a real club would.
+ */
+export function leagueInjuryCover(f, r, { year, cap, targetOf }) {
+  if (!hasLeague(f)) return 0; let signed = 0;
+  for (const club of order(f)) {
+    let guard = 0;
+    while (guard++ < 6) {
+      const roster = clubRoster(f, club); const problems = lineupProblems(roster, buildDepthChart(roster)); if (!problems.length) break;
+      const pos = positionOf(problems[0]);
+      if (roster.length >= ROSTER_MAX) { const spare = weakestSpare(f, club, { position: null, exclude: new Set(roster.filter((m) => m.position === pos).map((m) => m.id)) }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
+      // cap room for at least a replacement-level deal: spares go first (never a starter at another short position, never the protected)
+      const minDeal = 18000 + 280 * MIN_QUALITY + 2000; let trims = 0;
+      while (clubCapRoom(f, club, cap) < minDeal && clubRoster(f, club).length > ROSTER_MIN && trims++ < 6) { const spare = weakestSpare(f, club, { position: null, exclude: new Set(clubRoster(f, club).filter((m) => m.position === pos).map((m) => m.id)) }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
+      const room = clubCapRoom(f, club, cap);
+      const fit = (m) => m.position === pos && !m.injury && salaryFor(m) <= room;
+      const waived = (f.league.waivers || []).filter(fit).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+      const pooled = waived ? null : Object.values(f.pool || {}).flat().filter(fit).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+      let m = waived || pooled;
+      if (m) { if (waived) takeFromWaivers(f, m.id); else takeFromPool(f, m.id); m.salary = salaryFor(m); }
+      else m = generateArrival(f, r, { club, position: pos, quality: targetOf(club) - 8, room, floor: true });
+      if (!m) break;
+      addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 1) }); signed++;
+    }
+  }
+  return signed;
 }
 
 /** At a season's start: remember each club's strength, so its in-season growth can be measured at the end (calibration above). */

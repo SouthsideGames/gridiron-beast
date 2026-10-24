@@ -13,6 +13,7 @@ import { GROUP_SLOTS } from './roster.js';
 export const POOL_CAP = 12;            // monsters a regional pool holds (GDD §18.3), the oldest leaving first
 export const POOL_WORTH = Object.freeze({ ovr: 52, age: 24, market: 60 }); // an AI club's castoff enters a pool only if someone might want him, and only at the owner's market grade (≤ 60): better ones go through the league's waivers
 export const WAIVER_CAP = 40;
+export const AI_POOL_SHARE = 3;           // AI castoffs a regional pool holds at most, so the owner's market stays about the size it is today
 
 /** A monster's home region: where it was scouted, else its element's first region (as franchise.js homeRegion). */
 export const homeRegionOf = (m) => m.origin || (ELEMENT_REGIONS[m.type] || [])[0] || Object.keys(REGIONS)[0];
@@ -46,7 +47,9 @@ export function enterPool(f, m, { year, club = null, from = 'ai' }) {
   if (from === 'ai' && ovr > POOL_WORTH.market && hasLeague(f)) return enterWaivers(f, m, { year, club }); // too good for the owner's market as it is today: the league claims him
   const worth = from !== 'ai' || ovr >= POOL_WORTH.ovr || (m.age || 99) <= POOL_WORTH.age;
   if (!worth) return leaveLeague(f, m, { year, club });
-  const list = (f.pool[region] ||= []); list.push(m);
+  const list = (f.pool[region] ||= []);
+  if (from === 'ai') { const fromAi = list.filter((x) => x.poolVia === 'ai'); while (fromAi.length >= AI_POOL_SHARE) { const old = fromAi.shift(); list.splice(list.indexOf(old), 1); leaveLeague(f, old, { year, club: old.history?.[old.history.length - 1]?.club || null }); } m.poolVia = 'ai'; }
+  list.push(m);
   while (list.length > POOL_CAP) { const old = list.shift(); leaveLeague(f, old, { year, club: old.history?.[old.history.length - 1]?.club || null }); }
   return 'pool';
 }

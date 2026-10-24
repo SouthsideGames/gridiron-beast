@@ -595,9 +595,10 @@ test('Legend Tracks: a champion chooses a track; three unlock the legendary in i
   // Rival signature monster: same species each season, stronger later.
   const rival = f.rivals[f.tier].team;
   const t1 = F.aiTeam(f, rival); const sig1 = t1.roster.find((m) => m.signature); assert.ok(sig1);
+  const l1 = F.legacyAiTeam(f, rival, 1).roster.find((m) => m.signature);
   f.season.year = 3; const t3 = F.aiTeam(f, rival); const sig3 = t3.roster.find((m) => m.signature);
   assert.equal(sig1.id, sig3.id, 'persistent rosters (GDD §42.6): the signature monster is one individual for the life of the franchise'); assert.ok(F.isProtected(sig3));
-  { const l1 = F.legacyAiTeam(f, rival, 1).roster.find((m) => m.signature), l3 = F.legacyAiTeam(f, rival, 3).roster.find((m) => m.signature); assert.equal(l1.species, l3.species); assert.ok(l3.level > l1.level, 'the generated signature grew with the seasons (v40 saves)'); }
+  { const l3 = F.legacyAiTeam(f, rival, 3).roster.find((m) => m.signature); assert.equal(l1.species, l3.species); assert.ok(l3.level > l1.level, 'the generated signature grew with the seasons (v40 saves)'); }
   // Rematch scouting: a second meeting reveals one play from the other side.
   f.season.year = 1; f.campaign.h2h = { [F.opponentName(f)]: { w: 1, l: 0, last: 'w', streakL: 0 } };
   while (f.season.day < 3) { if (f.season.day === 0) F.scoutRegion(f, 'Coral Coast'); else if (f.season.day === 1) F.skipRecruit(f); else F.setTraining(f, 'coverage'); }

@@ -115,6 +115,7 @@ export function buildLegacy(f, { now = Date.now(), reason = 'retired' } = {}) {
 /** Working-only state an archive does not need (step 5). Nothing historical is touched. */
 export function compactForArchive(f) {
   delete f.draft; delete f.offseason; delete f.game; delete f.lastGame; delete f.pickAsks;
+  if (f.league) { delete f.league.waivers; delete f.leagueOffseason; } // the league's working lists go; its rosters, books and legends are part of the archive (GDD §42.6)
   if (f.season) { f.season.recorded = []; }
   f.scenes = [];
   // the week keeps its shape (readers expect a plan and lists) but no working content

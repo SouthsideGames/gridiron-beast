@@ -92,7 +92,7 @@ export function addToClub(f, club, m, { year, via = 'signed', contract = null, s
   if (!c.roster.includes(m.id)) c.roster.push(m.id);
   if (isProtected(m)) { if (!c.protected.includes(m.id)) c.protected.push(m.id); m.contract = { ...PERMANENT_CONTRACT }; }
   else m.contract = contract || newContract(year, 2);
-  m.salary = salary ?? m.salary ?? salaryFor(m);
+  m.salary = salary ?? m.salary ?? salaryFor(m); delete m.poolVia;
   (m.history ||= []); const last = m.history[m.history.length - 1];
   if (!(last && last.club === club && last.to == null)) m.history.push({ club, from: year, to: null, reason: via });
   return m;
