@@ -95,7 +95,7 @@ test('suggestions appear only in Guided and never change anything; consequence l
 test('Coach Assist never touches the game: a week plays out identically in Guided and Expert (results, generator, achievements)', () => {
   const run = (mode) => { const f = fresh(41); A.setAssist(f, { mode }); F.chooseGoal(f, 'wins'); for (let w = 0; w < 3; w++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); } return f; };
   const g = run('guided'), e = run('expert');
-  const strip = (f) => { const c = JSON.parse(JSON.stringify(f)); delete c.settings; delete c.createdAt; return c; };
+  const strip = (f) => { const c = JSON.parse(JSON.stringify(f)); delete c.settings; delete c.createdAt; delete c.uid; /* random per franchise, like createdAt */ return c; };
   assert.deepEqual(strip(g), strip(e));
 });
 

@@ -42,6 +42,8 @@ import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlot
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
+import { guarded, mayStartSeason, isArchived } from './lifecycle.js';
+import { newUid } from '../core/uid.js';
 import { CLASH_SIZE, SWAP_EVERY, FRANCHISE_POLICIES, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES } from './clash-link.js';
 
 export const SCHEMA_VERSION = 6;
@@ -57,7 +59,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   const rivalTeam = rivalChoices.includes(rival) ? rival : rng.pick(rivalChoices);
   const roster = createRoster(rng.seed(), { cornerstone, cornerstoneOffense, cornerstoneDefense, quality: 56 });
   const f = {
-    schemaVersion: SCHEMA_VERSION, createdAt: new Date().toISOString(), seed, rngState: rng.state,
+    schemaVersion: SCHEMA_VERSION, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
     owner: { ...owner }, club, tier: 'challenger', staff: {},
     roster, lineupManual: {}, depth: {},
     season: null, week: blankWeek(), game: null,
@@ -313,8 +315,10 @@ export function checkAchievements(f, trigger, ctx = {}) {
   return earned;
 }
 /** Record an achievement for the player across all franchises, with its cutscene as it played (GDD §21.4). */
+/** The permanent identity a global record names: the franchise `uid` (GDD §42.3); older saves without one keep their seed. */
+export const franchiseKey = (f) => f?.uid || f?.seed;
 function stampGlobal(f, a, vars) {
-  try { recordAchievementGlobal(a.id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: f.season?.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: f.seed, scene: { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } }); } catch { /* storage unavailable */ }
+  try { recordAchievementGlobal(a.id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: f.season?.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: franchiseKey(f), scene: { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } }); } catch { /* storage unavailable */ }
 }
 function sceneVars(f, c) {
   const rv = f.rivals?.[f.tier]; const rec = f.season?.records?.[f.club] || { w: 0, l: 0 };
@@ -346,7 +350,7 @@ export function backfillAchievements(f) {
 /** Copy a franchise's achievements into the player's account store (saves that earned them before the store existed). */
 export function syncAchievementsToGlobal(f) {
   if (!f?.achievements) return 0; let n = 0;
-  for (const [id, e] of Object.entries(f.achievements)) { const a = ACHIEVEMENT_BY_ID[id]; if (!a) continue; const vars = sceneVars(f, {}); try { if (recordAchievementGlobal(id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: e.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: f.seed, scene: { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } })) n++; } catch { /* ignore */ } }
+  for (const [id, e] of Object.entries(f.achievements)) { const a = ACHIEVEMENT_BY_ID[id]; if (!a) continue; const vars = sceneVars(f, {}); try { if (recordAchievementGlobal(id, { club: f.club, owner: `${f.owner.first} ${f.owner.last}`.trim(), year: e.year || 1, difficulty: f.settings?.difficulty || 'pro', franchise: franchiseKey(f), scene: { title: fillScene(a.title, vars), speaker: a.speaker, beats: a.beats.map((b) => fillScene(b, vars)), rivalTeam: f.rivals?.[f.tier]?.team || null, rivalGm: f.rivals?.[f.tier]?.gm || null } })) n++; } catch { /* ignore */ } }
   return n;
 }
 export function dismissScene(f) { f.scenes?.shift(); return { ok: true, left: f.scenes?.length || 0 }; }
@@ -374,7 +378,7 @@ export function retire(f) {
   const wins = seasons.reduce((a, h) => a + h.w, 0), losses = seasons.reduce((a, h) => a + h.l, 0);
   const best = f.roster.slice().sort((a, b) => monsterOverall(b) - monsterOverall(a)).slice(0, 5).map((m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, ovr: monsterOverall(m), level: m.level }));
   const card = {
-    id: `hof_${f.seed}_${Date.now().toString(36)}`, owner: `${f.owner.first} ${f.owner.last}`, portrait: f.owner.portrait, club: f.club, difficulty: f.settings?.difficulty || 'pro',
+    id: `hof_${franchiseKey(f)}_${Date.now().toString(36)}`, uid: f.uid || null, seed: f.seed ?? null, owner: `${f.owner.first} ${f.owner.last}`, portrait: f.owner.portrait, club: f.club, difficulty: f.settings?.difficulty || 'pro',
     seasons: seasons.length, record: { w: wins, l: losses }, titles: f.campaign.titles || 0, badges: Object.keys(f.campaign.badges || {}).map((club) => GYM_BY_CLUB[club]?.badge || club), awards: f.campaign.awards || 0,
     bestMonsters: best.map(({ id, ...rest }) => rest), dexSeen: dexCounts(f).seen, retiredAt: Date.now(), seasonsList: seasons, rival: f.rivals[f.tier]?.team || null, rivalRecord: f.rivals[f.tier]?.headToHead || null,
   };
@@ -1726,6 +1730,7 @@ export function startNextSeason(f) {
   syncLegendary(f); // Legendary Plays: discovery and plan cleanup (GDD §36)
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
   if (isFired(f)) return { ok: false, reason: 'The board has let you go. This franchise is over.' };
+  { const cap = mayStartSeason(f); if (!cap.ok) return { ok: false, reason: cap.reason, cap: !!cap.cap }; } // the 20-season career (GDD §42.1)
   if (!offseasonReady(f)) return { ok: false, reason: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} still waiting.` };
   if (!draftDone(f)) return { ok: false, reason: 'The draft has not been held.' };
   if (f.roster.length < ROSTER_MIN) return { ok: false, reason: `You need at least ${ROSTER_MIN} monsters to start a season (you have ${f.roster.length}). Sign free agents in the offseason market.` };
@@ -1912,3 +1917,37 @@ export function summary(f) {
   const rec = record(f);
   return { club: f.club, tier: tierById(f.tier).name, year: f.season.year, week: f.season.week, day: DAYS[f.season.day], record: `${rec.w}-${rec.l}${rec.t ? '-' + rec.t : ''}`, overall: teamOverall(playerTeam(f)), cap: salarySummary(f) };
 }
+
+// ------------------------------------------------------------ the read-only archive guard (GDD §42.4 step 7)
+// Every function that changes a franchise refuses a retired or fired one with the read-only error, so no path can advance,
+// sign, trade, draft or otherwise alter an archive. Function declarations are live bindings: wrapping them here changes what
+// every importer calls. Queries (standings, profiles, previews, catalog, summaries) stay unguarded: the archive shell reads them.
+export const MUTATORS = Object.freeze([
+  // season and days
+  'openCreationDraft', 'startSeason', 'startNextSeason', 'finishSunday', 'takeBye', 'forfeitSunday', 'advancePlayoffs', 'skipPlayoffs', 'simulatePlayerGame', 'finalizeAwards', 'autoRunToSunday', 'skipToByeIfIdle', 'recoveryDay', 'lineupCheck',
+  // the week
+  'scoutRegion', 'recruit', 'skipRecruit', 'startEncounter', 'encounterBattle', 'encounterDecide', 'resolveEncounter', 'acceptOffer', 'declineOffer', 'setTraining', 'scoutOpponent', 'setGamePlan', 'answerMedia', 'mediaQuestions',
+  // match and Clash
+  'recordPlayStats', 'startPregameClash', 'pregameBattle', 'pregameDecide', 'resolvePregameClash', 'choosePossession', 'startOvertimeClash', 'overtimeBattle', 'overtimeDecide', 'resolveOvertimeClash', 'applyTiebreak', 'settleTiebreak',
+  // roster and depth
+  'assignSlot', 'autoDepth', 'moveDepth', 'releaseMonster', 'toPool', 'evolveMonster', 'spendAttributePoint', 'autoSpendAllPoints', 'devGrantLegendary', 'syncLegendary',
+  // staff
+  'hireStaff', 'replaceStaff', 'hireDefaultStaff',
+  // offseason, draft and trades
+  'resolveContract', 'signFreeAgent', 'offseasonMarket', 'ensureDraftClass', 'scoutDraft', 'beginDraft', 'myDraftPick', 'passDraftPick', 'tradeAskPlayer', 'tradeAskPicks', 'acceptTrade', 'maybeTradeCall', 'answerTradeCall',
+  // board and story
+  'chooseGoal', 'commissionerReview', 'commissionerRelease', 'resolvePostseason', 'chooseLegendTrack', 'replyToCoach',
+  // achievements, dex, news, retirement
+  'checkAchievements', 'backfillAchievements', 'nextScene', 'dismissScene', 'hallOfFameNotice', 'dexRecord', 'news', 'retire',
+]);
+export const isReadOnly = isArchived;
+/* eslint-disable no-func-assign */
+openCreationDraft = guarded(openCreationDraft); startSeason = guarded(startSeason); startNextSeason = guarded(startNextSeason); finishSunday = guarded(finishSunday); takeBye = guarded(takeBye); forfeitSunday = guarded(forfeitSunday); advancePlayoffs = guarded(advancePlayoffs); skipPlayoffs = guarded(skipPlayoffs); simulatePlayerGame = guarded(simulatePlayerGame); finalizeAwards = guarded(finalizeAwards); autoRunToSunday = guarded(autoRunToSunday); skipToByeIfIdle = guarded(skipToByeIfIdle); recoveryDay = guarded(recoveryDay); lineupCheck = guarded(lineupCheck);
+scoutRegion = guarded(scoutRegion); recruit = guarded(recruit); skipRecruit = guarded(skipRecruit); startEncounter = guarded(startEncounter); encounterBattle = guarded(encounterBattle); encounterDecide = guarded(encounterDecide); resolveEncounter = guarded(resolveEncounter); acceptOffer = guarded(acceptOffer); declineOffer = guarded(declineOffer); setTraining = guarded(setTraining); scoutOpponent = guarded(scoutOpponent); setGamePlan = guarded(setGamePlan); answerMedia = guarded(answerMedia); mediaQuestions = guarded(mediaQuestions);
+recordPlayStats = guarded(recordPlayStats); startPregameClash = guarded(startPregameClash); pregameBattle = guarded(pregameBattle); pregameDecide = guarded(pregameDecide); resolvePregameClash = guarded(resolvePregameClash); choosePossession = guarded(choosePossession); startOvertimeClash = guarded(startOvertimeClash); overtimeBattle = guarded(overtimeBattle); overtimeDecide = guarded(overtimeDecide); resolveOvertimeClash = guarded(resolveOvertimeClash); applyTiebreak = guarded(applyTiebreak); settleTiebreak = guarded(settleTiebreak);
+assignSlot = guarded(assignSlot); autoDepth = guarded(autoDepth); moveDepth = guarded(moveDepth); releaseMonster = guarded(releaseMonster); toPool = guarded(toPool); evolveMonster = guarded(evolveMonster); spendAttributePoint = guarded(spendAttributePoint); autoSpendAllPoints = guarded(autoSpendAllPoints); devGrantLegendary = guarded(devGrantLegendary); syncLegendary = guarded(syncLegendary);
+hireStaff = guarded(hireStaff); replaceStaff = guarded(replaceStaff); hireDefaultStaff = guarded(hireDefaultStaff);
+resolveContract = guarded(resolveContract); signFreeAgent = guarded(signFreeAgent); offseasonMarket = guarded(offseasonMarket); ensureDraftClass = guarded(ensureDraftClass); scoutDraft = guarded(scoutDraft); beginDraft = guarded(beginDraft); myDraftPick = guarded(myDraftPick); passDraftPick = guarded(passDraftPick); tradeAskPlayer = guarded(tradeAskPlayer); tradeAskPicks = guarded(tradeAskPicks); acceptTrade = guarded(acceptTrade); maybeTradeCall = guarded(maybeTradeCall); answerTradeCall = guarded(answerTradeCall);
+chooseGoal = guarded(chooseGoal); commissionerReview = guarded(commissionerReview); commissionerRelease = guarded(commissionerRelease); resolvePostseason = guarded(resolvePostseason); chooseLegendTrack = guarded(chooseLegendTrack); replyToCoach = guarded(replyToCoach);
+checkAchievements = guarded(checkAchievements); backfillAchievements = guarded(backfillAchievements); nextScene = guarded(nextScene); dismissScene = guarded(dismissScene); hallOfFameNotice = guarded(hallOfFameNotice); dexRecord = guarded(dexRecord); news = guarded(news); retire = guarded(retire);
+/* eslint-enable no-func-assign */
