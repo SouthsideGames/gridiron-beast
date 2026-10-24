@@ -20,7 +20,7 @@
 
 import { pack, unpack, checksum, gzip, gunzip, PACK_FORMAT } from './pack.js';
 import * as Save from './save.js';
-import { newUid } from '../core/uid.js';
+import { newUid, legacyUid } from '../core/uid.js';
 
 export const STORAGE_VERSION = 7;
 export const DB_NAME = 'gridiron-beast';
@@ -290,7 +290,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     } };
   }
   const stamp = (f) => { f.savedAt = Math.max(now(), (f.savedAt || 0) + 1, (status.lastOkAt || 0) + 1); };
-  async function writeNow(f) { if (!f.uid) f.uid = newUid(); if (!f.lifecycle) f.lifecycle = lifecycleOf(f); return writeFrozen(freeze(f)); }
+  async function writeNow(f) { if (!f.uid) f.uid = legacyUid(f); if (!f.lifecycle) f.lifecycle = lifecycleOf(f); return writeFrozen(freeze(f)); }
   /** Write one queued request and answer its callers. A request for a franchise replaced meanwhile is answered 'stale'. */
   async function writeQueued(f, waiters) {
     let res;
@@ -312,7 +312,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
   function save(f, { immediate = false } = {}) {
     if (!f) return Promise.resolve({ ok: false, error: { code: 'none', message: 'No franchise.' } });
     if (retired.has(f)) return Promise.resolve({ ok: false, error: { code: 'stale', message: 'That franchise was replaced.' } });
-    if (!f.uid) f.uid = newUid();
+    if (!f.uid) f.uid = legacyUid(f); // only a franchise from before ids (v39.1 and earlier) has none: the same id on every device
     f.lifecycle = { ...f.lifecycle, ...lifecycleOf(f) }; // the lifecycle record (GDD §42.4)
     stamp(f);
     return new Promise((resolve) => {
@@ -444,7 +444,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     // `guard` (e.g. "the player has not played on") is checked here, after every wait and right before the commit...
     if (guard && !guard()) return superseded;
     if (current?.uid && !f.uid && current.createdAt === f.createdAt) f.uid = current.uid;
-    if (!f.uid) f.uid = newUid();
+    if (!f.uid) f.uid = legacyUid(f);
     f.lifecycle = { ...f.lifecycle, ...lifecycleOf(f) };
     const before = f.savedAt; stamp(f); // the new live state is the newest: an older cloud or legacy copy must not win over it
     let r;
@@ -499,7 +499,10 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     const from = 'v6';
     const legacySum = checksum(legacyText);
     const slot0 = await backend.run(['slots'], 'readonly', (t) => t.get('slots', slot));
-    const uid = slot0?.migration?.legacySum === legacySum && slot0?.migration?.uid ? slot0.migration.uid : newUid();
+    // An interrupted migration resumes with the uid it started with; otherwise the id comes from the franchise itself
+    // (creation stamp and seed), so another device migrating its own copy of this franchise gives it the same id (GDD §47.4).
+    const ident = (() => { try { const p = JSON.parse(legacyText); return { createdAt: p?.createdAt, seed: p?.seed }; } catch { return {}; } })();
+    const uid = slot0?.migration?.legacySum === legacySum && slot0?.migration?.uid ? slot0.migration.uid : legacyUid(ident);
     // 1. the protected copy, and the record of the attempt
     const kind = 'legacy-original';
     const original = { kind, slot, from, takenAt: now(), sum: legacySum, enc: 'none', data: legacyText, bytes: legacyText.length };
@@ -688,5 +691,6 @@ export function validateImport(text) {
   const ids = (f.roster || []).map((m) => m.id); if (new Set(ids).size !== ids.length) problems.push('Two roster monsters share an id.');
   if ((f.roster || []).some((m) => !m.id || !m.species)) problems.push('A roster monster has no id or species.');
   if (isEnvelope && obj.uid && f.uid && obj.uid !== f.uid) problems.push('The franchise id does not match its envelope.');
+  if (!f.uid) f.uid = legacyUid(f); // a v39.1-or-earlier file: the id that franchise gets everywhere, so a copy already here is recognised (GDD §47.4)
   return { ok: problems.length === 0, franchise: problems.length ? null : f, meta: saveMeta(f), problems, warnings, format: isEnvelope ? 'gbfranchise' : 'json', uid: f.uid || null };
 }

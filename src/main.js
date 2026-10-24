@@ -267,18 +267,24 @@ function migrateLeague(f) {
   if (!f || F.hasLeague(f) || isArchived(f)) return;
   let r; try { r = F.ensureLeague(f); } catch (e) { r = { ok: false, problems: [e?.message || String(e)] }; } // never in the way of opening the franchise
   (app.bootInfo?.notes || []).push(r.ok ? `league registry built (${r.rekeyed.length} re-keyed)` : `league registry not built: ${r.problems[0]}`);
-  if (r.ok) queueMicrotask(() => { if (app.f === f) app.save({ immediate: true }); });
+  if (r.ok && !holdLeagueSave) queueMicrotask(() => { if (app.f === f) app.save({ immediate: true }); });
+  else if (r.ok) heldLeagueSave = f; // a migration boot: saved once the cloud has been compared (reconcileCloud), GDD §47.4
 }
+// On the boot that migrates a v39 save, the league registry's first save waits until reconcileCloud has compared the cloud copy:
+// saving first would stamp a stale copy as the newest and upload it over progress another device already sent for this franchise.
+let holdLeagueSave = false; let heldLeagueSave = null;
+async function flushHeldLeagueSave() { const f = heldLeagueSave; heldLeagueSave = null; holdLeagueSave = false; if (f && app.f === f) await app.save({ immediate: true }); }
 function adopt(f) { migrateLeague(f); app.f = f; app.lastSig = null; applySettings(); mergeDex(f.dex); F.syncAchievementsToGlobal(f); if (f.uid && f.seed != null) { linkHofCards({ uid: f.uid, seed: f.seed }); linkAchievements({ uid: f.uid, seed: f.seed }); } }
 
 /** Open storage, migrate the v39.1 save on first run, then load (or stop at recovery). Then reconcile with the cloud copy. */
 async function boot() {
   const t0 = performance.now();
-  let res = null;
+  let res = null; let playedAt = null;
   try {
     app.slots = createSlotManager({ backend: await idbBackend(), debounce: 1200 }); app.slots.newLaunch();
     app.slot = app.slots.activeSlot(); const store = app.slots.store(app.slot);
     res = await store.open();
+    if (res.source === 'migrated') { playedAt = res.franchise?.savedAt ?? null; holdLeagueSave = true; } // read before anything below writes the franchise
     if (res.mode !== 'legacy' && res.franchise) await keepPreLeagueCopy(res.franchise, store); // before the storage is announced as ready: nothing reads the franchise yet
     if (res.mode === 'legacy') app.storage = { mode: 'legacy', store: null, error: res.error }; // migration failed: v39.1 path, the save untouched
     else { app.storage = { mode: 'indexeddb', store, error: null }; unsubscribeStore = store.onStatus(onStoreStatus); }
@@ -287,13 +293,16 @@ async function boot() {
     res = { mode: 'legacy', franchise: Save.load(), notes: [`indexeddb unavailable: ${e.message}`] };
   }
   app.bootInfo = { ms: Math.round(performance.now() - t0), source: res.source || res.mode, notes: res.notes || [] };
+  // A save migrated on this boot is compared with the cloud by the time it was last really saved (in v39), not by the stamp
+  // the migration's own writes give it: otherwise a stale copy on a second device would look newer than the progress another
+  // device already uploaded under the same franchise id (GDD §47.4).
   if (res.mode === 'recovery') { app.recovery = res; Router.go('recovery', {}, { reset: true }); }
   else { if (res.franchise) adopt(res.franchise); Router.go('menu', {}, { reset: true }); }
   app.slotCount = (await app.slotSummaries().catch(() => [])).filter((s) => s.state !== 'empty').length;
   if (res.source === 'migrated') toast('Your franchise moved to the new save storage. Your previous save is kept untouched.', 'good', 4500);
   else if (res.notes?.includes('legacy-newer kept')) toast('An older copy of the game saved progress on this device after the update. Your franchise was kept; the other save is under Settings → Save data → Restore a backup.', 'info', 6500);
   else if (app.storage.mode === 'legacy' && app.storage.error) toast('Saving in fallback mode on this browser (see Settings → Save data).', 'info', 4500);
-  reconcileCloud();
+  reconcileCloud({ playedAt });
 }
 
 /**
@@ -307,18 +316,22 @@ async function mirrorCommitted() {
 }
 
 /** The cloud copy wins only when it is newer; the local franchise is kept as a backup first, so it is never lost. */
-async function reconcileCloud() {
+async function reconcileCloud(opts = {}) {
+  try { await reconcileCloudInner(opts); } finally { await flushHeldLeagueSave(); } // whatever happened, the local franchise's league is saved unless the cloud copy replaced it
+}
+async function reconcileCloudInner({ playedAt = null } = {}) {
   const others = app.f ? [] : (await app.slotSummaries().catch(() => [])).filter((s) => s.slot !== app.slot && s.uid).map((s) => ({ uid: s.uid }));
   const remote = await cloudLoad(app.f ? { uid: app.f.uid, createdAt: app.f.createdAt } : null, { exclude: others }); // this slot's franchise; an empty slot never takes one another slot holds
   const f = remote && Save.migrate(remote);
-  if (!f) { if (app.f && cloudStatus().state === 'on') await mirrorCommitted(); return; } // an empty cloud receives the committed save
+  if (!f) { await flushHeldLeagueSave(); if (app.f && cloudStatus().state === 'on') await mirrorCommitted(); return; } // an empty cloud receives the committed save
   if (app.recovery) { // never chosen for the player: the cloud copy is offered on the recovery screen
     app.cloudCandidate = f;
     app.recovery.backups = [{ id: 'cloud', kind: 'cloud', savedAt: f.savedAt, meta: saveMeta(f), ok: true }, ...(app.recovery.backups || [])];
     if (Router.currentScreen()?.name === 'recovery') Router.render();
     return;
   }
-  if (!app.f || (f.savedAt || 0) > (app.f.savedAt || 0)) {
+  const mineAt = playedAt ?? app.f?.savedAt ?? 0;
+  if (!app.f || (f.savedAt || 0) > mineAt) {
     const st = app.storage.store; const local = app.f; const localAt = local?.savedAt;
     if (local && !st) { // fallback storage has no backups: the player chooses, the device's copy is never replaced silently
       if (!(await confirmSheet(`Your cloud save (${f.club}, saved ${new Date(f.savedAt).toLocaleString()}) is newer than the franchise on this device. Load the cloud save? This device's copy will be replaced; export it first from Settings if you want to keep it.`, { title: 'Newer cloud save', okLabel: 'Load cloud save' }))) return;
@@ -329,12 +342,13 @@ async function reconcileCloud() {
     // the player has played on (or switched franchise) by then, this device's newer progress stays and the cloud copy is not used.
     const guard = () => app.f === local && (!local || local.savedAt === localAt);
     const r = await app.replaceFranchise(f, { copyKind: 'pre-cloud', mirror: false, guard });
+    if (r.ok && heldLeagueSave !== app.f) heldLeagueSave = null; // the migrated copy was replaced (kept as 'pre-cloud'): its held save is dropped; a v39-layout cloud copy just adopted keeps its own, saved below
     if (!r.ok && r.error?.code === 'superseded') { toast('You kept playing on this device, so its newer progress was kept instead of the cloud copy.', 'info', 4500); if (app.f) { await app.save({ immediate: true }); await mirrorCommitted(); } return; }
     if (!r.ok) { toast(`Your cloud save is newer, but it could not be stored on this device (${r.error?.message || 'unknown error'}). This device's franchise is unchanged.`, 'bad', 6000); return; }
     const scr = Router.currentScreen()?.name;
     if (!scr || scr === 'menu') Router.go('menu', {}, { reset: true });
     toast('Restored your franchise from your cloud save (this device\'s copy is kept under Restore a backup).', 'good', 4500);
-  } else if ((f.savedAt || 0) < (app.f.savedAt || 0)) await mirrorCommitted(); // this device is newer: the cloud catches up
+  } else if ((f.savedAt || 0) < mineAt) { await flushHeldLeagueSave(); await mirrorCommitted(); } // this device is newer: the cloud catches up
 }
 
 function onStoreStatus() {

@@ -12,7 +12,7 @@ const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-se
 const legacyText = () => JSON.stringify({ ...Save.migrate(fixture()), savedAt: 1_790_000_000_000 });
 let clock = 1_800_000_000_000; const now = () => (clock += 1000);
 const mgr = (backend, ls) => createSlotManager({ backend, localStorage: ls, now, debounce: 0 });
-const fresh = (club) => { const f = Save.migrate(fixture()); f.club = club; f.createdAt = `2026-09-0${club.length % 9 + 1}T00:00:00.000Z`; delete f.uid; return f; };
+const fresh = (club) => { const f = Save.migrate(fixture()); f.club = club; f.createdAt = new Date(Date.UTC(2026, 8, 1) + ([...club].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 86_400_000, 7))).toISOString(); delete f.uid; return f; }; // distinct clubs, distinct creation stamps: a franchise without a uid is identified by stamp and seed (GDD §47.4)
 
 test('migration: a v39.0 device (localStorage save, no database) comes up as slot 1 active, slots 2 and 3 empty; the old save is untouched', async () => {
   const ls = memoryLocalStorage(); ls.setItem(Save.SAVE_KEY, legacyText()); const backend = memoryBackend(); const m = mgr(backend, ls);
