@@ -2322,7 +2322,7 @@ If the owner was eliminated and is spectating, the remaining playoff rounds are 
 
 ### 42.11 Four-phase implementation plan [APPROVED outline; each phase needs the owner's go-ahead]
 
-**Phase 1 — Storage foundation**
+**Phase 1 — Storage foundation** — *IMPLEMENTED in v39.2, see §43 (draft results kept whole and packed losslessly instead of limited to three classes; the save is 1.41 MB packed, 0.34 MB stored, at season 20).*
 - **Work:**
   - storage cleanup (compact league tables, `draftResults` limited to three classes, slim award finalists);
   - IndexedDB stores with the localStorage pointer;
@@ -2407,30 +2407,457 @@ If the owner was eliminated and is spectating, the remaining playoff rounds are 
 - **Scope:** Phases 1 and 2 are valuable on their own, even if persistent rosters were postponed.
 
 ### 42.13 Decisions requiring the owner's approval
-**Carried over from the first proposal** (A–G, J and K stay open; H and I are resolved by the locked rules):
+**Carried over from the first proposal** (A–G and J approved by the owner on 2026-10-23; H, I and K are done in Phase 1):
 
 | | Decision | Status |
 |---|---|---|
-| A | Monster exits: attrition through the pools first | Open |
-| B | Exact per-game development for AI monsters | Open |
-| C | `clubQuality` targets with nudges | Open |
-| D | The owner's contract and cap rules for AI clubs | Open |
-| E | AI–AI trades later, optional | Open |
-| F | The owner first in offseason free agency | Open |
-| G | AI season totals only, no archived AI game lines | Open |
-| J | Seasons before migration stay table-only | Open |
-| K | Storage cleanup | Now in Phase 1; confirm the reductions |
-| H | IndexedDB | Approved direction (Phase 1) |
-| I | Schema versioning | Approved direction (7 in Phase 1–2, 8 in Phase 3) |
+| A | Monster exits: attrition through the pools first | **Approved** (2026-10-23) |
+| B | Exact per-game development for AI monsters | **Approved** (2026-10-23) |
+| C | `clubQuality` targets with nudges | **Approved** (2026-10-23) |
+| D | The owner's contract and cap rules for AI clubs | **Approved** (2026-10-23) |
+| E | AI–AI trades later, optional | **Approved** (2026-10-23) |
+| F | The owner first in offseason free agency | **Approved** (2026-10-23) |
+| G | AI season totals only, no archived AI game lines | **Approved** (2026-10-23) |
+| J | Seasons before migration stay table-only | **Approved** (2026-10-23) |
+| K | Storage cleanup | Done in Phase 1, losslessly (§43.2) |
+| H | IndexedDB | Implemented in Phase 1 (§43.3) |
+| I | Schema versioning | Storage version 7 in Phase 1 (§43.3: the franchise stays schema 6-compatible); 8 in Phase 3 |
 
-**New with the lifecycle rules:**
+**New with the lifecycle rules** (L, M, N, P, Q and R approved on 2026-10-23 as recommended; O pending):
 
 | | Decision | Recommendation |
 |---|---|---|
 | L | A Hall of Fame card at Season-20 retirement only when the checklist is met (today's rule), or for every completed 20-season career | Keep today's rule; the Legacy summary is for every career |
 | M | Existing franchises beyond Season 20 | Grandfather: finish the current season, then mandatory retirement, with nothing deleted |
 | N | **Undo delete** for one launch (the slot's backup kept until the next start) | Yes |
-| O | The cloud mirror for three slots: mirror all slots (if per-viewer quotas allow about 8 MB), or the active slot plus compressed archives | Confirm quotas in Phase 1, then decide |
+| O | The cloud mirror for three slots: mirror all slots (if per-viewer quotas allow about 8 MB), or the active slot plus compressed archives | **Pending.** Phase 1 found no documented total quota; recommendation: the active slot only, archives as compressed exports once a quota is confirmed (§43.8) |
 | P | Compress retired archives by default (smaller; slower to open the first time) | Yes |
 | Q | The export file name and format: `.gbfranchise` (gzip JSON) with a plain `.json` option | Yes |
 | R | Voluntary retirement before Season 20 stays available once the checklist is met | Yes |
+
+## 43. Storage foundation — Phase 1 of §42 (IMPLEMENTED 2026-10-23; branch `storage-foundation`, v39.2)
+
+Phase 1 of the plan in §42.11, and nothing beyond it. **Not in this phase:** the three-slot manager, retirement and archives, the 20-season limit, persistent AI rosters, the full import screen and the cloud policy for several slots (decision O). Those are Phases 2–4 and stay designs in §42.
+
+### 43.1 Audit (what the game did before this build) [IMPLEMENTED: findings]
+- **The save.** One JSON copy in localStorage (`gridiron-beast-v6`), written synchronously by `app.save()` on about 90 call sites (every play of a match, every action). A weekly copy (`gridiron-beast-v6-backup`) after each Sunday. Load at start was synchronous.
+- **Size.** A 20-season franchise is about 2.9 MB of JSON (league tables 1.08 MB, draft results 0.60 MB, award sheets 0.45 MB, roster 0.39 MB). The save and its weekly copy together are about 5.8 MB, more than the roughly 5 MB that browsers give localStorage per site, so from about season 15 the weekly copy could fail to be written (silently, depending on the browser) and the save itself was getting close to the limit.
+- **Failure reporting.** A failed write showed one toast per session ("your cloud save is still kept"); nothing offered a retry or an export.
+- **Cloud mirror** (`cloud-save.js`, only inside Claude). The artifact's per-viewer database: `save_meta` plus `save_c<n>` chunks of 180,000 characters (the per-document limit is 256 KiB), written chunks first and meta last, at most every 4 s or at once after a game or a new day. Writes were not serialised: two could interleave, and the meta read `f.savedAt` after the chunks had been written, so a save landing in between left a copy that the reader then rejected. At start, a newer cloud copy replaced the local save without keeping it. A throttled write could also bring back a franchise the player had just deleted.
+- **Global data outside the franchise.** The Hall of Fame, achievements and the Beast Dex have their own localStorage keys and cloud documents. They stay there in Phase 1 (they are small and per player, not per franchise; the `global` store is reserved for them when slots arrive in Phase 2).
+- **Synchronous assumptions found.** Start (`Save.load()` before the first screen); `app.reset()` (clear then go to the menu); the weekly backup; the Settings restore and import; `beforeunload`/`pagehide` saves (which could rely on a synchronous write). Every one is handled below.
+
+### 43.2 Lossless compaction [IMPLEMENTED]
+`src/franchise/pack.js`. The franchise is packed only on its way to storage; in memory it is unchanged, so no game code can be affected.
+- **Field names** that repeat (stat keys in thousands of table rows) and **string values** that repeat (clubs, positions, species, names) become short dictionary codes.
+- **Object shapes:** an object whose exact field list repeats (a league-table row, an award finalist, a drafted monster) is stored as a row of values plus one shared field list.
+- **Escaping:** a real key or string starting with `~` is stored as `~~…`, so codes can never collide with data.
+- **Exact round trip, key order included,** tested on real 20-season saves and fuzzed; every value, including every older draft class and every award sheet, is kept. Then gzip (`CompressionStream`).
+- **Verified before it is stored.** Each part is unpacked again and compared with its JSON before it is written. If it ever differed, the plain JSON would be stored instead, so a packer bug could cost space but never data.
+- **Draft results.** Readers audited: `draft.js` writes the class and `injectDraftees` uses the last three classes; `ageDraftees` ages every class; `career-profile` `findMonster` looks monsters up in every class. All read the unchanged in-memory form. The three most recent classes are kept in full detail, and so are the older ones: they are only stored more compactly. Nothing is stubbed or deleted (§42.11 had proposed limiting the file to three classes; the owner's rule that history is never sacrificed takes priority).
+
+**Results at season 20 (seed 1; seed 2 within 1%):**
+
+| | v39.1 JSON | Packed (logical payload) | Packed + gzip (stored) |
+|---|---|---|---|
+| Whole franchise | 2,903 KB | **1,413 KB** (−51%) | **336 KB** (−88%) |
+| League tables | 1,077 KB | 630 KB | 143 KB |
+| Draft results | 599 KB | 198 KB | 43 KB |
+| Award sheets | 449 KB | 190 KB | 40 KB |
+| Careers and stats on the roster | 369 KB | 236 KB | 53 KB |
+
+The §42.11 target (1.6 MB ±25% at season 20) is met by the logical payload alone, with nothing removed.
+
+### 43.3 IndexedDB as the primary store [IMPLEMENTED]
+`src/franchise/store.js`.
+- **Database `gridiron-beast`, version 1.**
+  - `slots`: the pointer for slot 1 (uid, state `migrating|active|empty`, the migration record).
+  - `saves`: the live manifest of slot 1.
+  - `backups`: rolling, weekly and safety copies, and the protected original.
+  - `parts`: content-addressed save parts. This store is an addition to the §42.8 list: it lets backups share unchanged parts and lets a save write only what changed.
+  - `global`: reserved (see 43.1).
+- **A save is three parts:** the core, `history` and `draftResults`. Each is packed and compressed on its own, so the archive is re-packed only when it changes (once a season), not on every play.
+- **Each manifest carries:**
+  - the franchise `uid`;
+  - storage version 7 and the pack format;
+  - `savedAt`;
+  - a sequence number and the writer;
+  - the checksum of every part, in its stored form and as raw JSON;
+  - the lifecycle;
+  - the slot;
+  - a summary for menus (club, season, week).
+- **Checksums:** FNV-1a 32-bit plus length, for corruption detection only (not security). They are verified on every load, on every backup listed or restored, before a version is rotated into a backup, during migration (read back and compared) and on export and import.
+- **Slot 1 only.** The existing franchise becomes slot 1; slots 2 and 3 are not created or shown.
+- **Schema and the storage version.** The franchise keeps `schemaVersion: 6`. Version 7 belongs to the storage layer (manifest, envelope, export), and the franchise only gains two fields that older builds ignore: `uid` (a platform UUID, never the game RNG) and `lifecycle` (`{status: active|fired, seasonsCompleted}`, recorded for Phase 2 and acted on by nothing).
+  - *Tradeoff:* a cached older build (v39.1) that sees a franchise with a new schema number rejects it and would offer a new franchise, possibly overwriting the cloud copy. Keeping the franchise schema compatible avoids that.
+  - The cost is that the franchise JSON alone does not say it came from v7 storage; the manifest and the export envelope do.
+
+### 43.4 Saving [IMPLEMENTED]
+- **The queue.** One write at a time. A newer request replaces a pending one, and every caller's promise resolves when its state, or a newer one, is committed.
+- **Debounce.** Ordinary saves wait 1.2 s; a finished game, a new day, a week change or a roster change saves at once, as the cloud did before.
+- **The snapshot** is serialised synchronously before any asynchronous work, so a save never mixes two moments of the game.
+- **The transaction** puts the new parts, rotates backups, puts the manifest, updates the slot and removes unreferenced parts in one IndexedDB transaction: all or nothing.
+- **No stale overwrite: one rule for every tab.** Each tab remembers what it last saw in the save slot: the manifest it loaded or last wrote, or an empty slot (it saw none, or deleted the franchise itself). If the slot holds anything else, another tab or window changed it, and this tab's save, deletion and unload journal are all refused, whatever the clocks say. That covers:
+  - a different manifest being live;
+  - none being live (deleted elsewhere);
+  - one having appeared where this tab saw an empty slot (a franchise created in another tab).
+  - The same rule also refuses an older save from this tab's own writer id.
+  - When a tab returns to the front, it checks at once and, if the franchise changed elsewhere, says so before the player plays on: **Reload the game** or **Export this tab's franchise**.
+  - Saves still queued for a franchise that was replaced (restore, delete, new or imported franchise) are dropped, and the status returns to "Saved".
+- **A save that changed nothing writes nothing.** `savedAt` lives in the manifest, not in a part. When nothing but the time changed since the save a tab committed or loaded, nothing is written: no part, no manifest, no backup rotation. An idle tab's leave-save therefore never becomes the newest writer, and never locks out the tab being played.
+- **Honest status.** "✓ Saved on this device" (with the time) appears only after the commit. "Saving…" shows while a write is pending, and "⚠ Last save failed" shows on error.
+  - On failure, the game state stays in memory, a sheet says the latest progress is not saved yet, and it offers **Retry save**, **Export franchise** and **Keep playing**.
+  - A full device or browser store is named as such.
+  - Recovery after an error is announced ("Saved.").
+- **Leaving the page.** The pending save starts at once. If it changed anything, the parts that differ from the last commit (normally only the core) are also written synchronously to a localStorage journal. Each tab has its own key (`gridiron-beast-v7-journal:<writer>`), so one tab closing can never overwrite another's. At the next start, a journal is used only if all of these hold:
+  - it has the same `uid`;
+  - it is newer than the live save;
+  - it was built on the live save, or on an earlier save by the same tab that committed after the journal was written (the page was hidden mid-save);
+  - the committed parts it builds on pass their checksums.
+  - If several qualify, the newest wins.
+  - Every other journal is stale and is cleared. A journal that matches but cannot be read this time (a passing storage error) is kept and tried again at the next start; once a newer save exists it is stale and is cleared. If another tab has saved even while the journal is being adopted, the live save is loaded instead.
+- **Failures handled:**
+  - IndexedDB missing or refused (private modes, policies): fallback mode on the v39.1 localStorage path, labelled in Settings.
+  - An upgrade blocked by another tab: a clear message, and fallback mode.
+  - The browser closing the connection (site data cleared, version change): it is reopened once, transparently.
+  - Quota (the save fails and the previous one is intact), an aborted transaction, a serialisation error, a checksum failure (recovery, 43.6) and interruption at any point (the journal, and idempotent migration).
+
+### 43.5 Migration of the v39.1 save [IMPLEMENTED]
+**Steps:**
+1. Detect the localStorage save and validate it with the existing migration (`Save.migrate`).
+2. Store a protected copy in IndexedDB (`legacy-original`, the exact text with its checksum) and record step `copied`.
+3. Migrate a *separate* copy and give it its `uid` and `lifecycle`.
+4. Write it with slot state `migrating`, step `written`.
+5. Read it back and compare it byte for byte.
+6. Switch the slot to `active`, step `done`.
+
+**Guarantees:**
+- **Idempotent.** An interrupted attempt restarts from the untouched localStorage save with the same `uid` (no duplicate franchise, attempts counted). Until a migration completes, the game plays the localStorage save in fallback mode, so no progress is lost.
+- **The localStorage save is never modified or deleted** by this build. It stays at least two releases; any later removal will be announced in the game and will need the owner's approval, never done silently. The v39.1 weekly copy is carried over as the weekly backup.
+- **An older copy of the game writing later.** A cached v39.1 tab or app may write the localStorage save after migration (its checksum changes). Its timestamp cannot tell genuinely newer progress from an old tab's stale state, so neither replaces the other:
+  - The live IndexedDB franchise stays.
+  - The other save is kept as a `legacy-newer` backup (the exact text, checksummed, the three most recent by content), restorable by the player's choice.
+  - The game says so once.
+  - If keeping that copy fails, nothing changes and it is tried again at the next start. The localStorage save itself is never touched.
+  - (Before the final audit the newer-stamped legacy save was adopted, which could replace weeks of progress with an old tab's state.)
+- **No season limit is enforced:** saves past season 20 migrate unchanged (tested with 42 seasons).
+
+### 43.6 Backups and recovery [IMPLEMENTED]
+- **Rolling backups.**
+  - `roll0` and `roll1` are the two latest previous versions, taken only when content changed, in the same transaction as the save.
+  - Every generation is verified before it moves: the outgoing live save before it becomes `roll0`, and `roll0` before it replaces `roll1`. A damaged generation is dropped rather than promoted, so a valid backup is never overwritten by a damaged or unverified one, whether the damage is in a shared or an unshared part.
+  - They share unchanged parts with the live save, which costs about 0.3 MB extra at season 20.
+- **Independent copies,** each self-contained so that damage to shared parts cannot reach them:
+  - `weekly`, after each Sunday, as before;
+  - `pre-restore` and `pre-cloud`;
+  - `legacy-newer`, a localStorage save written by an older cached build after migration;
+  - `replaced`, when a new or imported franchise replaces the current one. A new franchise from onboarding now takes the same commit-first path as every other activation: if the safety copy or the commit fails, the current franchise stays active and the onboarding screen says why;
+  - `deleted`: Delete franchise keeps the franchise recoverable. This anticipates decision N.
+  - The weekly copy is one record; every other kind keeps its **three most recent** copies, so a second replacement never erases the first.
+  - A deletion that cannot complete deletes nothing, locally or in the cloud. Retiring and being let go use the same path, and the franchise leaves only after its copy is kept.
+- **Recovery screen.** When the live save fails its checks, the game stops at **Save recovery** instead of loading it. The screen:
+  - lists every backup with its kind, club, season, week and time, each verified;
+  - warns that progress after the backup is not in it;
+  - restores only the one the player picks (after a confirmation);
+  - keeps the damaged save (`quarantine`) either way;
+  - never overwrites anything automatically: a newer cloud copy is *offered* in the list rather than loaded.
+  - Import is available from the same screen.
+- **Settings → Save data → Restore a backup** opens the same verified list at any time. A restore keeps the current franchise first and is stamped as the newest state, so no older cloud or legacy copy can override it.
+- **Commit first, then adopt** (`store.replace`, `src/franchise/activation.js`). A restore, an import, the v39.1 weekly backup and the cloud copy are all activated in the same order, with the save queue held:
+  1. The backup is read and verified; a corrupt backup changes nothing.
+  2. A safety copy of the current franchise is committed. If that fails, nothing else happens.
+  3. The new franchise is committed as the live save, with verification, rotation and the other-tab guard. If that fails, nothing has changed.
+  4. Only then is the current franchise retired (its late saves are ignored), the new one adopted in memory, and the cloud mirrored.
+- **On any failure** the current franchise stays active, saving normally and mirrored as before, with no reload needed. The player is told which step failed. A new franchise from onboarding is the one exception: it is active in memory at once so the next screen can show it, but storage still copies the old franchise first and commits the new one after it, and the cloud receives it only after that commit.
+
+### 43.7 Export and import [IMPLEMENTED: validation and restore; the import screen is Phase 2]
+- **`.gbfranchise`:** plain JSON, so `.json` readers work (decision Q's gzip variant is left for Phase 2: an uncompressed file is easier to verify and recover by hand). The envelope holds:
+  - `app`, `format: gridiron-beast-franchise`, `version: 1` and `storage: 7`;
+  - `schemaVersion`, `uid` and `exportedAt`;
+  - the checksum of the franchise text;
+  - a summary;
+  - the complete franchise.
+- **Verified before it is offered.** The file is checked before the browser is asked to save it. The message is "Export file prepared (2.8 MB, verified). Check that your browser saved it": the game never claims a download finished.
+- **Inside claude.ai (found on a real iPhone in Stage 2, 2026-10-23).** A page there cannot start a download itself: the platform blocked the file ("File downloads aren't available for this artifact") while the game said "Export file prepared". The export now goes through the platform's `downloads` capability (`src/ui/file-offer.js`), which the artifact must declare: the player confirms, and the Claude iPhone app opens the share sheet. That capability accepts `.json` but not `.gbfranchise`, so there the file is named `….gbfranchise.json` (the import reads files by content and accepts both). The message reports what really happened: saved (with the file name), cancelled, or not possible in this view, always adding that the progress is still saved on the device. Outside claude.ai the browser download and its message are unchanged. The v39.0 export ("Export save as JSON") has the same limitation on the live link until this build is released with the capability declared. Tests: `tests/file-offer.test.js` (5). Not changed: the career card image share (`career-card.js`, same limitation, outside the save system).
+- **Never refused.** If the franchise fails that check (for example, two monsters sharing an id), it is still offered. The file is named `…-unverified.gbfranchise` and the message says it did not pass its check, because it may be the player's only copy of their current progress.
+- **`validateImport`** works on a copy before anything is written. It:
+  - checks the envelope and the checksum, refusing edited or truncated files;
+  - runs the franchise migration;
+  - checks required fields, roster ids and the envelope `uid`.
+  - Older `.json` exports from Settings are accepted, with a note that they carry no checksum.
+- **Settings import** uses it and keeps the replaced franchise as a backup. The full import UI (slot choice, conflicts by `uid`) is Phase 2.
+
+### 43.8 Cloud mirror [IMPLEMENTED: snapshot design, 2026-10-23; policy recommended]
+The device's own save is the primary copy. Inside claude.ai the franchise is also mirrored to the artifact's private per-viewer database, so a new device, or a device whose browser storage was cleared, can recover it. The store keeps JSON documents (at most 256 KiB each, at most 25,000 per artifact database, plus a total-size cap whose value is not documented); writes are last-writer-wins, there are no transactions, and its only lock expires, so a lock cannot stop a request that arrives late. The mirror therefore never depends on a lock for correctness (redesign approved by the owner after the Codex review of `cd1a849`, 43.13).
+- **Snapshots, written once.** Each upload writes its own snapshot under a unique generation id (`gen` = `savedAt` in base 36 plus 8 random characters), all inside `data/users/<id>/cloud/`:
+  - `snaps/<gen>~w`, the intent (franchise identity, `savedAt`, chunk count), written first;
+  - `chunks/<gen>_c<i>`, each chunk, next;
+  - `snaps/<gen>`, the commit (identity, `savedAt`, chunk count, length, FNV-1a checksum, `storage: 8`), written last, only after every chunk was acknowledged.
+  - No upload ever changes another upload's documents, so a delayed, reordered or retried request can only add documents, never overwrite newer progress.
+  - The JSON is written with every non-ASCII character escaped (`\uXXXX`, the same JSON value), in 120,000-character chunks: at most about 240 KB once the store escapes quotes and backslashes, under the 256 KiB limit.
+- **Identity.** Two copies belong to the same franchise when their `uid`s are equal or their `createdAt`s are equal (both non-empty). The game passes `createdAt` with each upload. A franchise with neither is not uploaded (status "too old to identify"; Export keeps a copy).
+- **Reading (recovery).** The reader lists the commits (small documents) and deletion markers, then takes the newest commit whose chunks are all present and match the length, checksum and `savedAt`. A damaged or missing chunk makes it try the next older commit. If every commit was missing chunks, it lists again, up to three passes, because a newer snapshot may have been published and the old one cleaned up while it was reading. A network error returns nothing (and the status says so); it never falls back to an older copy. The markers are read again once a snapshot is assembled, so a deletion that lands meanwhile is respected.
+  - With a franchise on the device, only copies of that franchise are considered: the game never switches a device to another franchise.
+  - With none, the newest valid copy of any franchise is returned, unless this device has just deleted its franchise (then nothing is adopted; the flag clears with the next upload from this device).
+- **Clean-up** runs after each successful upload, from one listing of commits, then markers. A snapshot is removed only:
+  - (a) when its franchise was deleted (a marker voids it); or
+  - (b) when two newer **committed** snapshots of the same franchise exist.
+  - Both facts stay true once seen, so a delayed or repeated removal stays correct. The two newest commits of each franchise are never removed by anyone and are always complete: a snapshot whose chunks were removed while it was still being written always has newer commits above it. A commit is removed first, then its chunks, then its intent (so leftovers stay findable).
+  - Once per session, a sweep (`where('gen','not-in', …)`, `limit(10)`) removes leftover chunks whose writer stopped after its intent was removed, under the same two rules. It is skipped when more than 30 snapshots are listed.
+- **Deletion.** Deleting a franchise records the deletion on this device first, before waiting for anything (retried at every start until it reaches the cloud), then writes a marker `deleted/<id>` with the franchise's identity and a **cut-off** fixed at that moment: the newest of this device's `savedAt`, the newest copy of it visible in the cloud, and the time of deletion. Every snapshot of that franchise saved at or before the cut-off is invalid for every reader, whatever order requests arrive in, and is removed by clean-up. Then the v39.0/v39.1 `save_meta` is removed if it holds this franchise (so a cached old tab cannot adopt it).
+  - An upload already in flight, queued or throttled in any tab, or a stale tab still holding the franchise, can therefore never bring it back.
+  - A marker that only reaches the cloud later keeps its original cut-off, so it never invalidates progress made afterwards on another device.
+  - A franchise the player restores from a device backup is saved with a new `savedAt` and is backed up again from that save.
+  - Markers are never removed (one small document per deletion). New franchises have a new `uid` and `createdAt`, so earlier markers never affect them.
+  - Old-build timestamps are not trusted: any marker voids the v39.0/v39.1 copy of that franchise.
+- **Older builds.** v39.0/v39.1 read and write only `save_meta` and `save_c<n>`, and delete only `save_meta`: they cannot touch any snapshot. On first run of v39.2 the old copy is read (also the unreleased layout with `gen`), but only when that franchise has no v39.2 commit yet. After that it is ignored and left in place. A v39.1 copy with no `createdAt` is offered to the device (the game compares dates and keeps its own copy as a backup).
+- **Writes are serialised** within a tab (one at a time; only the newest pending state is written next). The JSON and its `savedAt` are fixed when the write is authorised. An older state of the franchise this tab last wrote is never uploaded, and an upload is skipped when the cloud already holds a commit of that franchise at least as new.
+- **Full cloud.** On `quota_exceeded` the upload removes its own failed, uncommitted snapshot (after the retry too), runs clean-up with every franchise kept to its newest commit (that commit is still never removed), and retries once. If it still fails, the status says the cloud save is full (the device's save is unaffected) and nothing more is removed.
+- **Only a committed save reaches the cloud.** The upload is that save's committed snapshot, fixed when the write is authorised, never the live object. A failed local save authorises no upload, whatever the reason. This replaces v39.1's "the cloud still keeps it" behaviour after a device failure; the failure sheet's Export is the way to keep that progress.
+- **At start,** the cloud copy of the device's own franchise replaces the local save only when it is newer, and the local franchise is first kept as `pre-cloud`. The cloud copy is committed locally before the game adopts it. If that backup cannot be made, the cloud copy is not loaded. When the local save failed its checks, the cloud copy is only offered on the recovery screen. When the local copy is newer, the cloud copy is brought up to date. If the player kept playing while the backup was being made, the cloud copy is not loaded (this device is newer now). In fallback storage, which has no backups, a newer cloud copy is loaded only if the player says yes.
+- **Offline and reconnect.** Failures set the cloud status shown in Settings, in plain words; the next write after reconnecting succeeds.
+- **Tests** (simulated store with delays, reordering, interruption and failures: `tests/cloud-save.test.js`, `tests/cloud-concurrency.test.js`, `tests/cloud-regressions.test.js`, `tests/cloud-review-fixes.test.js`, helper `tests/helpers/cloud-sim.js`; and the browser check, 43.12).
+- **Measured usage.** A snapshot is the raw franchise JSON: about 0.6 MB at season 1, 2.2 MB at season 10, 2.9 MB at season 20 (about 25 chunks of 120,000 characters, plus 2 small documents). Normally two snapshots per franchise are kept (about 6 MB at season 20), plus the deletion markers, the legacy copy until it is deleted, and the dex, Hall of Fame and achievements documents. The document count stays far below 25,000.
+- **Quotas.** Documented for runtime 0.2.77: 256 KiB per document, 25,000 documents per artifact database, and a total-size cap whose value is not stated (handled as "Full cloud" above). Other franchises' copies are kept (two each) until they are deleted or the cloud is full.
+- **Recommendation for decision O (pending):** mirror only the **active** slot in the cloud. Retired archives would be cloud-mirrored only as compressed exports (about 0.35 MB each) once a total quota is confirmed. Do not mirror three full slots.
+
+### 43.9 Benchmarks [IMPLEMENTED: tool and results]
+- **Tool:** `tools/storage-benchmark.mjs`, on the two 20-season runs (seeds 1 and 2, rookie).
+- **What it simulates:** each run is migrated, then gets a week of saves, a weekly copy and a season transition (archive re-packed).
+- **Columns:**
+  - *IDB save*: the live save's parts.
+  - *Rolling*: the extra space of `roll0` and `roll1`.
+  - *Weekly*: an independent copy.
+  - *Original*: the protected v39.1 text, gzip.
+  - *Game total*: everything in IndexedDB plus the v39.1 localStorage save left in place.
+- **Main (v39.1):** the save plus the weekly copy in localStorage, when the copy still fitted.
+
+| Season | v39.1 save | Packed | IDB save | Rolling | Weekly | Original | IDB total | Game total | v39.1 storage (save + weekly) | Cloud docs |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 605 KB | 270 KB | 78 KB | 73 KB | 78 KB | 82 KB | 310 KB | 915 KB | 1,210 KB | 5 |
+| 5 | 1,492 KB | 748 KB | 191 KB | 177 KB | 191 KB | 217 KB | 776 KB | 2,268 KB | 2,984 KB | 10 |
+| 10 | 2,219 KB | 1,114 KB | 275 KB | 251 KB | 275 KB | 317 KB | 1,118 KB | 3,336 KB | 4,438 KB | 14 |
+| 15 | 2,561 KB | 1,267 KB | 305 KB | 271 KB | 305 KB | 357 KB | 1,237 KB | 3,798 KB | 5,122 KB (at the ~5 MB limit: the weekly copy can fail) | 16 |
+| 20 | 2,903 KB | 1,413 KB | 336 KB | 294 KB | 336 KB | 395 KB | 1,361 KB | 4,264 KB | 5,806 KB (over the ~5 MB limit: the weekly copy fails) | 18 |
+
+**Projections at season 20** (Phase 2–4 layouts, not built):
+- *Without AI:* the space for the slots plus the one-time migration copies (the v39.1 localStorage save and its protected original, 3.3 MB, which a new player never has).
+- *AI estimate:* the §42 persistent AI rosters estimated separately (15 clubs × today's roster size × today's average monster record, at the measured compression); AI careers would add to it.
+- These are estimates, not a promise that storage stays under any figure.
+
+| Layout | Without AI | AI estimate | Total |
+|---|---|---|---|
+| 1 active | 4.2 MB | 0.8 MB | 5.0 MB |
+| 2 active | 5.1 MB | 1.6 MB | 6.7 MB |
+| 3 active | 6.1 MB | 2.4 MB | 8.4 MB |
+| 1 active + 2 retired | 4.8 MB | 2.4 MB | 7.2 MB |
+| 3 retired | 4.2 MB | 2.4 MB | 6.6 MB |
+
+**Timings** (headless Chromium on the development machine, season-20 save, `tools/storage-check.py`; *4× CPU* is Chrome's CPU throttling, an approximation of a mid-range phone, not a real device):
+
+| | Desktop | 4× CPU |
+|---|---|---|
+| Migration (first start, to the menu) | 0.70 s | 2.8 s |
+| Typical save (core changed) | 107 ms | 599 ms |
+| Large save (archive re-packed, as at a season transition) | 195 ms | 965 ms |
+| Load (reload to the menu) | 195 ms | 599 ms |
+
+Part of each save runs on the main thread: the synchronous snapshot, packing the changed parts and unpacking them again to verify them (43.2). Compression runs in the browser's stream. v39.1 serialised and wrote 2.9 MB synchronously on every save; the debounce means a match no longer saves on every play.
+
+**Measured again at the final audit** on a slower machine, the commit before the audit and the final commit back to back: they are equivalent. On the desktop the final commit is faster (typical save 159 ms vs 260 ms); on the 4× CPU it is close (typical save 0.84 s vs 0.66 s, archive save 1.3 s vs 1.2 s, migration 3.7 s for both, load 0.9 s for both). Timings depend on the machine, so these are comparisons, not phone figures.
+
+**Risk:** on a throttled CPU a save that re-packs the core takes about 0.6 s and one that re-packs the archive about 1 s, and part of that time is on the main thread. Moving packing to a Worker is the follow-up if real phones show stutter at saves; it was not done in Phase 1, because verifying correctness came first.
+
+### 43.10 Storage meter [IMPLEMENTED]
+**Settings → Save data shows:**
+- the save status;
+- the cloud status;
+- this franchise's stored size;
+- the backups' extra space;
+- the protected original;
+- the v39.1 save left in place;
+- the browser's estimate (`navigator.storage.estimate()`), with the caveat that it covers the whole site and may be rounded or padded;
+- a warning when the browser offers under 100 MB or is over 80% used.
+
+**Ask the browser to keep this data** calls `navigator.storage.persist()`. It is shown only while the data is not yet persistent, and the game says plainly that the browser may decline.
+
+### 43.11 Parity [IMPLEMENTED: verified]
+- **Two complete 20-season franchises,** seeds 1 and 2 (rookie), were run on unchanged `main` and on this branch. The full franchise JSON was compared at seasons 1, 5, 10, 15 and 20, excluding only `uid`, `lifecycle`, `createdAt` and `savedAt`.
+- **Result: identical at every mark,** with the same RNG state. That covers outcomes, standings, champions, awards, progression, roster levels, the draft, gyms, the Board and season transitions.
+- **No Board mechanic was touched.** The full suite passes (§43.12).
+
+### 43.12 Tests [IMPLEMENTED]
+- **`tests/storage-foundation.test.js`** (23 tests), through the in-memory backend, which has the same all-or-nothing transactions and injectable failures. It covers:
+  - exact packing round trips, escapes and corruption;
+  - migration, and interruption at each step;
+  - an older build writing later, and saves past season 20;
+  - ordering and no interleaving; stale-save refusal; another tab's newer save never overwritten, journaled over or deleted; changed-parts-only writes;
+  - transaction failure and retry; quota;
+  - rotation that never takes in a damaged version;
+  - corruption recovery; restore and delete copies (three per kind); the weekly copy and its carry-over;
+  - the journal; export integrity;
+  - career, timeline, history and draft preservation;
+  - uid assignment without the RNG.
+- **Cloud mirror** (43.8), on a simulated store with delays, reordering, interruption and failures (`tests/helpers/cloud-sim.js`):
+  - `tests/cloud-save.test.js` (14 tests): serialised writes, newest wins, offline and reconnect, the payload fixed when authorised, recovery past damaged, missing or interrupted snapshots, network errors never falling back to an older copy, no switching franchises, identity, v39.0/v39.1 copies on first run, old cached tabs, document size with worst-case text, a 20-season franchise and 40 uploads, a full cloud;
+  - `tests/cloud-concurrency.test.js` (11 tests): simultaneous uploads, random delays (the copy read never goes backwards or disappears), delayed clean-up, interrupted uploads, deletion against in-flight, queued, throttled and stale uploads, a deferred deletion, clock skew, restore after deletion, identity aliases, the v39.1 copy of a deleted franchise, concurrent clean-up;
+  - `tests/cloud-regressions.test.js` (3 tests), `tests/cloud-review-fixes.test.js` (7 tests) and `tests/cloud-codex-21c0829.test.js` (3 tests): the problems found in `cd1a849`, by the reviews and by Codex in `21c0829` (43.13).
+- **`tests/storage-restore-safety.test.js`** (14 tests), **`tests/storage-interleavings.test.js`** (10 tests) and **`tests/storage-final-audit.test.js`** (14 tests): the review corrections, the invariants A–H and the final audit, see 43.13.
+- **`tools/storage-check.py`:** the real IndexedDB in headless Chromium at 320, 360, 390 and 412 px. It checks:
+  - migration identity and the untouched localStorage save;
+  - reload from IndexedDB;
+  - the Settings panel, meter and backups sheet;
+  - a verified export download;
+  - a refused write (quota): the failure sheet, an honest retry, recovery;
+  - a closed connection reopened;
+  - a damaged part stopping at recovery, then a restore;
+  - the timings above, normal and 4× CPU;
+  - with a simulated cloud: the start-up upload, restores, a delayed upload carrying only committed state, and deleting the franchise from the game (one marker, its snapshots removed, nothing adopted afterwards).
+- **Not done: real iPhone or Android devices.**
+
+### 43.13 Safety corrections after review (PR #43, 2026-10-23) [IMPLEMENTED]
+Three defects found in code review (Codex), each reproduced by a failing test before it was fixed:
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| Restored franchise adopted before it was saved (P1) | `restoreBackup` replaced `app.f` and uploaded the restored state to the cloud before checking that the local commit succeeded. A failed restore said "Nothing was changed" while the game was playing the unsaved backup, and the cloud had it. | The restore commits first; adoption and the cloud mirror follow only a successful commit (`restoreThenAdopt`). Imports, the v39.1 weekly backup and the cloud copy use the same order (`replaceThenAdopt`). |
+| Current save retired before its backup (P1) | `store.restore` marked the current franchise as replaced before the safety copy was written. When the copy failed, every later save of the still-active franchise was silently ignored until a reload. | Retirement happens only after both the safety copy and the new live save are committed. The queue is held during a restore or deletion, so nothing interleaves, and queued saves of the replaced franchise are dropped only on success. |
+| Damaged `roll0` promoted over a valid `roll1` (P2) | Rotation verified the outgoing live save but copied `roll0` into `roll1` unchecked. | `roll0` is verified before promotion; when it fails, `roll1` is kept. |
+
+**Found by the further audit and fixed:**
+- Ordinary saves no longer mirror to the cloud ahead of the local attempt, nor from a stale tab.
+- Deletion holds the queue, so a save queued meanwhile cannot bring the franchise back.
+- In fallback storage, a replacement is written before it is adopted.
+
+**Tests:**
+- `tests/storage-restore-safety.test.js` (14). These cover:
+  - restores failing at the safety copy, at the commit (abort, quota), on a corrupt backup and on another tab;
+  - activation order and the cloud;
+  - imports;
+  - fallback storage;
+  - the mirror policy;
+  - playing on after failed restores;
+  - corruption in each backup generation, shared and unshared;
+  - deletion racing a save.
+- `tools/storage-check.py` now also restores in the browser with a simulated cloud. Run against the commit before the corrections, it reported the same two failures as the review: after a failed restore the active franchise was the unsaved backup and the cloud had been written; after a failed safety copy, saving stopped.
+
+**Second review (2026-10-23), four P1 findings on `089e4a4`, each reproduced by a failing test first:**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| A stale tab could recreate a franchise deleted in another tab | The other-tab check needed a live manifest. After a deletion there was none, so the stale tab's save passed. It also reused cached parts that the deletion had removed, and committed a manifest pointing at missing data that reported success. | A missing manifest, when this tab had loaded one, is a cross-tab change: the save is refused with "changed or deleted in another tab". Every commit also checks, inside its transaction, that each referenced part is present and intact. A missing cached part is written again once, never referenced. |
+| A delayed cloud upload could carry changes never saved locally | The cloud throttle kept the live franchise object and serialised it when the timer fired. | `cloudSave` fixes the payload when it is called. App saves pass the committed snapshot from the store, so the upload is exactly what was committed. Only a committed save authorises an upload, and each write first checks that the cloud does not already hold newer progress. |
+| A cloud replacement could overwrite progress made during it | The check for local play ran before the asynchronous safety copy and commit, and the cloud copy was adopted afterwards whatever had happened in between. | A `guard` ("the player has not played on") is rechecked inside the store's exclusive operation, right before the commit and right after it. If it fails before, nothing is committed; if it fails after, the local state is committed back as the live save. The cloud copy is then not adopted. A failed safety copy stops the replacement. |
+| Two exclusive operations could run at once | The lock was set only after awaiting the queue, so a second operation could pass the same check meanwhile. A restore also read its backup before joining the queue. | Exclusive operations join a promise chain synchronously, when they are called, and run in call order. Each rechecks whether its franchise was already replaced; if so it is answered "stale" and changes nothing. Saves requested before the call are written first. Saves requested after it wait and then run, or are answered "stale". The reservation is released in `finally`. |
+
+**Invariants**, each tested with deterministic barriers (a gate holds a chosen IndexedDB transaction until released), not timing sleeps. Tests are in `tests/storage-interleavings.test.js` (10), `tests/cloud-save.test.js` (+2) and `tests/storage-restore-safety.test.js`:
+- **A.** An unsuccessful local save never authorises a cloud upload.
+- **B.** A failed restore or replacement never changes the active franchise.
+- **C.** A stale tab never recreates deleted or superseded state.
+- **D.** Two exclusive storage operations never overlap.
+- **E.** A successful storage operation never references missing or corrupted parts.
+- **F.** Newer local progress is never silently replaced by older cloud progress.
+- **G.** A failed backup never disables ordinary saving.
+- **H.** No failed operation reports success.
+
+**In the browser.** `tools/storage-check.py` now also deletes in one tab and saves from another, and lets a throttled cloud upload fire after the franchise has changed. Against `089e4a4` it reported both defects: the upload carried the unsaved change, and the stale tab reported success and wrote a manifest after the deletion.
+
+**Codex review of `21c0829` (the snapshot redesign, completed 2026-10-23), three findings, each reproduced by a failing test first (`tests/cloud-codex-21c0829.test.js`):**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| (P1) Closing the page while a deletion waited for a stalled upload lost the deletion | The deletion was recorded on the device only after waiting | Recorded (with the "just deleted" flag) before waiting for anything; the cut-off can still rise to cover a newer copy the cloud holds |
+| (P1) A deletion landing while a reader assembled a snapshot was missed | Markers were read only before the chunks | Markers are read again after a snapshot is assembled; a voided one is not returned |
+| (P2) When the retry after a full cloud also failed, its partial snapshot stayed | Only the first attempt was removed | Every failed attempt removes its own uncommitted snapshot |
+| (found while fixing) An upload from before a deletion, finishing after it, cleared the "just deleted" flag | The flag was now set before waiting | Only an upload authorised after the deletion clears it |
+
+**Codex review of `cd1a849` (completed 2026-10-23) and the cloud redesign.** Two findings, plus a third problem of the same kind found while checking them. Each was reproduced by a failing test (`tests/cloud-regressions.test.js`, written against behaviour only, so the same file failed on `cd1a849` and passes now):
+
+| Problem | Root cause | Correction |
+|---|---|---|
+| (P1) Deleting the franchise in one tab was undone by another tab's or device's upload already in flight | The deletion was local to the tab (`epoch`) and only removed the pointer | Deletion markers with a cut-off fixed at deletion time (43.8) |
+| (P2) A reader that lost its generation to clean-up while reading reported an empty cloud | One pointer read, no retry | The reader tries the next complete commit and lists again |
+| (found) A delayed publish of an older copy, arriving after the newer upload had released the lock, replaced it (the cloud copy could become unreadable) | An expiring lock cannot fence a late request | No lock: append-only snapshots, nothing is ever overwritten |
+
+The owner approved replacing the lock-based mirror rather than patching it again. The design was reviewed by a separate agent before and after implementation:
+- **First review** (3 critical, 3 major): deletion by timestamp broken by clock skew; one franchise under two identities; clean-up trusting a commit whose chunks had been removed; a failed deletion forgotten; the reader switching franchises; quota freezing the mirror. Addressed by matching on `uid` or `createdAt`, a local deletion record with retry, clean-up limited to rules (a) and (b), and a reader restricted to the device's franchise.
+- **Second review** (2 critical, 2 major, in a "revive" mechanism added for restored franchises): a late deletion wiping a revived franchise; a revived franchise left unreadable. Addressed by removing the mechanism: the cut-off is fixed at deletion time, so later progress is never invalidated. Also: quota eviction limited to keeping each franchise's newest commit, and identity fields must be non-empty.
+- **Review of the code** (`tests/cloud-review-fixes.test.js`, each reproduced first):
+
+| Finding | Correction |
+|---|---|
+| A franchise with neither `uid` nor `createdAt` could never be cleaned up or deleted | Not uploaded; the status says so |
+| A full cloud hit mid-upload could not free room for its own retry | The failed, uncommitted attempt is removed before the retry |
+| Two tabs of one browser could overwrite each other's not-yet-written deletion record, and the "just deleted" flag | localStorage is always read and records are merged by id; memory is used only when storage is blocked |
+| A v39.1 copy without `createdAt` was never offered on first run | Offered to the device; the game compares dates |
+| The leftover sweep had no test | Tested |
+
+**Codex review of `da63189` (completed 2026-10-23), three findings, each reproduced by a failing test first:**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| (P1) An upload stalled past its lease while publishing could overwrite the newer copy published meanwhile (in the test the cloud copy became unreadable: the newer upload had already removed the stalled one's chunks) | The lease was renewed before the meta read and write, but the write itself was unconditional | The lease is held on `save_meta` and the meta is published through the lease grant, which the store applies only to the current holder |
+| (P1) Deleting the franchise did not cancel an upload waiting to retry after a busy lease, so it could bring the deleted franchise back | The retry timer kept its payload outside the throttle and queue that deletion clears | Deletion cancels the retry, and uploads authorised before a deletion are void |
+| (P2) A journal that failed to load because of a passing read error was deleted, losing the unsaved progress it protected | Every journal not adopted was cleared | A matching journal that could not be read is kept for the next start |
+
+**Codex review of `af5255d` (completed 2026-10-23), two findings, each reproduced by a failing test first:**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| (P1) Cloud clean-up running past the lease could delete a new lease holder's chunks | No lease renewal or ownership check after the last chunk: not before publishing, not during clean-up | The lease is renewed and confirmed before publishing and before every deletion. An upload that lost it stops |
+| (P2) The startup snapshot could be read while another tab committed, and then mirror stale state | `base` was checked only before the asynchronous read of the parts | The live manifest is read again after the snapshot is built. It must still be the same one this tab knows, or nothing is mirrored |
+
+**Codex review of `7e73413` (completed 2026-10-23), three findings, each reproduced by a failing test first:**
+
+| Finding | Root cause | Correction |
+|---|---|---|
+| (P1) A deletion could remove a save another tab made while the deletion copy was being written | The cross-tab check ran before the copy; the deleting transaction deleted unconditionally | The check is repeated inside the transaction that deletes |
+| (P1) The cloud newest-write check was not atomic: concurrent uploads could publish an older copy last, or mix chunks | Read-then-write on a last-writer-wins store, with chunk keys shared by every upload | The upload lease plus generation-specific chunks (43.8). Tests: `tests/cloud-concurrency.test.js` (4) |
+| (P2) An empty or older cloud copy got no upload at start | Startup relied on a save to produce the upload, and a save that changes nothing writes nothing | Startup uploads a verified snapshot of the committed save (`committedSnapshot`), writing nothing locally |
+
+**Final audit (2026-10-23, `f7ba186`).** Codex's review of `f7ba186` did not complete; it showed "running" for over an hour. An independent audit of the whole save system found eight more problems, all reproduced first by `tests/storage-final-audit.test.js` (10 tests, 9 failing on `f7ba186`):
+
+| Problem | Correction |
+|---|---|
+| An idle second tab's leave-save made it the newest writer, locking the played tab out of saving | A save that changed nothing writes nothing. A tab returning to the front checks at once and warns (Reload or Export) |
+| A journal written while a save was mid-commit was discarded once that save committed | A journal built on an earlier save by the same tab is accepted |
+| One journal key for all tabs: a stale tab closing could erase the live tab's journal | One key per tab. The newest qualifying journal wins, the rest are cleared |
+| Onboarding switched to the new franchise before its safety copy and commit, so a failure could lose the old franchise | One commit-first path for every activation, onboarding included |
+| A cached v39.1 tab's save, stamped later, replaced newer IndexedDB progress, and could erase it if the backup failed | Keep both, adopt neither (43.5) |
+| A tab that opened on an empty slot could overwrite a franchise created in another tab | The empty slot is part of what a tab remembers: one cross-tab rule (43.4) |
+| A cloud copy taken on an empty device skipped its post-commit check | The check applies with or without a current franchise |
+| The status could stay at "Saving…" after a restore dropped a late save | The status settles when the queue empties |
+| (minor) Emergency export was refused when the franchise failed its own check | Never refused (43.7) |
+
+**Simplified along the way:**
+- One `matchesBase` rule replaces three separate cross-tab checks and the same-writer sequence check.
+- One activation path (`replaceFranchise`) replaces the separate onboarding path.
+- The legacy re-adoption path (re-migration, `pre-legacy` copies) is gone.
+- Two tests that asserted less than their names claimed now exercise the real code: the same-writer stale save, and saves queued during an exclusive operation.
+
+**Known cosmetic issue, not fixed in Phase 1:** the save status shows a time without a date ("✓ Saved on this device 10:13 AM"), so a save from an earlier day reads like today's. Display only.
+
+**Remaining risks after Phase 1:**
+- **Real devices.** Real-device testing has not been done.
+- **Save speed.** Saves take about 0.7–1.3 s on a 4× throttled CPU, partly on the main thread.
+- **Stale tabs.** A tab behind another must be reloaded; it warns.
+- **Cloud and v39.1 clients.** Concurrent cloud uploads from a v39.1 client (which ignores the lease) can still race with v39.2 uploads. Local saves are unaffected, and an older cloud copy never replaces newer local progress.
+- **Cloud after a failed save.** A failed device save no longer goes to the cloud (invariant A); Export keeps it.
+
+### 43.14 What remains for Phases 2–4 [NOT IMPLEMENTED]
+- **Phase 2:**
+  - slots 2 and 3, and the slot manager;
+  - the full import screen (slot choice, `uid` conflicts);
+  - lifecycle states, retirement and the archive;
+  - the 20-season limit;
+  - Hall of Fame and achievements keyed by `uid` (moving into the `global` store);
+  - the cloud policy (decision O).
+- **Accepted residual risks of the cloud mirror (43.8):**
+  - a device whose clock runs ahead of the deleting device's by more than the time an upload is in flight could keep that one in-flight copy valid;
+  - a franchise restored on a device whose clock runs behind the deleting device's is not backed up until its clock passes the cut-off (the status says "deleted");
+  - progress made on a device still running v39.0/v39.1 after the franchise's first v39.2 snapshot is not picked up by other devices until that device updates;
+  - leftover chunks are swept only when 30 or fewer snapshots are listed;
+  - the total-size cap of the store is not documented; a full cloud is reported and never affects the device's save;
+  - the simulated store answers each listing atomically; the design does not depend on consistent listings for safety (a listing that misses documents removes less), but a reader shown an incomplete listing could choose an older complete copy.
+- **Phases 3 and 4:** persistent AI rosters and schema 8, then career integration (§42.11).
+- **Phase 1 lays the ground for these:** `uid` on every franchise, the slot pointer, verified backups, a storage version on every record, and room in the measured budget.

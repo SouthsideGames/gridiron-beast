@@ -2,6 +2,14 @@
 
 All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
+## 0. Current status (2026-10-23, branch `storage-foundation`: the storage foundation, Phase 1 of GDD §42, documented in §43)
+
+- `npm test`: **467 tests, all passing**, including the new `tests/storage-foundation.test.js` (23), `tests/storage-restore-safety.test.js` (14), `tests/storage-interleavings.test.js` (10) and `tests/storage-final-audit.test.js` (14), the PR #43 review corrections, invariants A–H and the final audit, plus the cloud snapshot suites `tests/cloud-save.test.js` (14), `tests/cloud-concurrency.test.js` (11), `tests/cloud-regressions.test.js` (3), `tests/cloud-review-fixes.test.js` (7) and `tests/cloud-codex-21c0829.test.js` (3).
+- **Parity with `main`:** two complete 20-season franchises (seeds 1 and 2, rookie) are identical to `main` at seasons 1, 5, 10, 15 and 20 (full franchise JSON without `uid`, `lifecycle`, `createdAt`, `savedAt`; same RNG state).
+- `tools/storage-benchmark.mjs`: at season 20 the save is 2.9 MB as JSON, 1.41 MB packed (lossless) and 336 KB stored. Everything in IndexedDB comes to 1.36 MB (GDD §43.9).
+- `tools/storage-check.py` (headless Chromium with the real IndexedDB, at 320, 360, 390 and 412 px, normal and 4× CPU throttling): migration, reload, the Settings panel and meter, backups, a verified export, a quota failure and retry, a reopened connection, recovery from a damaged part, restores that fail (quota on the commit, quota on the safety copy) or succeed, with a simulated cloud mirror, a delayed cloud upload after the franchise changed, a deletion in one tab followed by a save from another, an idle second tab (no lock-out), the warning on returning to a tab changed elsewhere, a new franchise whose safety copy fails (nothing switches), an emergency export of a franchise that fails its own check, and deleting the franchise with the simulated cloud (marker written, snapshots removed, nothing adopted). **Passed.** Emulated browser, not a real device.
+- **Not done: real iPhone and Android devices.** See §3, item 9.
+
 ## 0. Current status (2026-10-22, branch `monster-career-timeline`: the Monster Career Timeline, GDD §38)
 
 - `npm test`: **340 tests, all passing** (330 on `main` plus 10 in `tests/career-timeline.test.js`).
@@ -59,6 +67,7 @@ The previous status (build v36.0, PR #36) follows.
 | Franchise acceptance | `franchise-acceptance.test.js` | Regressions from the soak (duplicate names on signing, repair of older saves), a two-season soak with every invariant, mid-battle save/load, encounter fatigue, Skip Encounter costs nothing |
 | Beast Clash flow (one selection, one battle) | `franchise-clash.test.js` | Fixed-order policies on both sides; the chosen order is the order of entry; the next monster steps up on a knockout; no decision event or pending decision ever; HP persists; a knockout win means the other side has nobody left; 3v3 and 5v5 (playoff overtime); Watch = Skip; legacy play/auto records and settings; the pregame Clash continues into football with the chosen possession and is never fought twice |
 | Beast Clash in Franchise Mode | `franchise-clash.test.js` | 3v3 encounters, offer/pitch rules, Play/Auto/Skip identity, swap decisions, staff auto-run, XP display, pregame possession, overtime 3v3/5v5, no ties left in the standings |
+| Storage foundation | `storage-foundation.test.js`, `storage-restore-safety.test.js`, `storage-interleavings.test.js`, `storage-final-audit.test.js`, `cloud-save.test.js`, `cloud-concurrency.test.js`, `cloud-regressions.test.js`, `cloud-review-fixes.test.js`, `cloud-codex-21c0829.test.js` | Lossless packing (exact round trips, escapes, corruption refused); migration of the v39.1 save (identical read-back, original untouched, interrupted at every step without duplicates or lost progress, newer progress from an older build adopted, saves past season 20 kept); one write at a time, last state wins, stale saves refused, only changed parts written; transaction failure and quota leave the previous save whole; two verified rolling backups; recovery from corruption by the player's choice; pre-restore, deleted and weekly copies; the unload journal; `.gbfranchise` export and `validateImport`; careers and history byte for byte; serialised cloud writes, offline and reconnect, delete; restores and imports committed before they are adopted or mirrored, a failed safety copy or commit leaving the current franchise live and saving, a damaged `roll0` never promoted; invariants A–H under controlled interleavings (a stale tab after a deletion, exclusive operations requested together, a cloud replacement while playing on, cloud payloads fixed when authorised) ; per-tab journals, idle tabs that write nothing, empty-slot tabs, an older build's save kept beside the live one; a deletion racing another tab's save; the cloud snapshot design: write-once snapshots, newest complete copy read, clean-up that never removes the two newest commits, deletion markers with a fixed cut-off, delays, reordering, interruption, a full cloud, the v39.0/v39.1 copy read on first run and never trusted after; the committed save mirrored to an empty cloud (GDD §43.8, §43.13) |
 | Save compatibility | `franchise-save-compat.test.js`, `save.test.js` | Saves from before the Clash load, continue through Tuesday/Sunday and into the next season; schema and key unchanged |
 | Tuesday companions | `tuesday-companions.test.js` | The prospect leads unchanged; two unsignable companions at the club's strength; deterministic and independent of the lineup chosen; grow with the club; never join the roster; stored battles and older saves rebuild; Play/Auto/Skip identity; Skip Encounter costs nothing |
 | Board | `board-balance.test.js` | Forecast against the league average; safe goal = rounded forecast; one achievable badge for rebuilding clubs; one miss is never a dismissal; narrow miss on the hot seat = final warning; clear miss = out; three straight misses = out even with winning records; older saves rebuild the miss streak |
@@ -99,6 +108,8 @@ The previous status (build v36.0, PR #36) follows.
 | Career Presentation check | `python3 tools/career-presentation-check.py --width=390 --height=844 --shots=DIR --out=DIR` | The monster card's career section, details, trophy shelves, both career-card layouts and exported PNG files, career links from every screen, namesakes, Back scroll memory (headless Chromium) |
 | League News study | `node tools/league-news-study.mjs --n=3 --seasons=3 [--show=1]` | Every week's scoreboard and headlines across hands-off seasons, caps, ids, record wording, save weight (GDD §39.4) |
 | News and lineup UI check | `python3 tools/news-ui-check.py --width=390 --height=844 --shots=DIR` | League News on HQ and its sheet, the folded club notes, and a Clash lineup emptied by hand (no refill) |
+| Storage check | `python3 tools/storage-check.py --save=EXPORT.json [--shots=DIR] [--json=OUT]` | The real IndexedDB in headless Chromium: migration of a v39.1 save, reload, Settings → Save data at 320/360/390/412 px, the backups sheet, a verified `.gbfranchise` download, the save-failure sheet and retry, a reopened connection, recovery from a damaged part, timings normal and at 4× CPU (GDD §43.12) |
+| Storage benchmark | `node tools/storage-benchmark.mjs --run --seed=1` or `--dir=DIR --prefix=NAME` | Payload, packed and stored sizes by component at seasons 1/5/10/15/20, IndexedDB records and backups, cloud documents, slot projections with AI rosters estimated separately (GDD §43.9) |
 | Play replay | `node tests/tools/replay.js CODE` | Re-run a scrimmage play from its repro code |
 
 ## 3. Manual checklist (real devices; still required)
@@ -125,10 +136,21 @@ Run on at least one small iPhone (SE size) and one large Android, in the browser
 6. Finish a season: playoffs, awards, offseason contracts, the draft, free agency, Season 2 week 1.
 7. One-handed reach, text size, battle speed 1×/2×/4×, reduced motion, screen rotation, backgrounding the app during a battle.
 8. Import a save exported from an older build.
-
+9. Storage (v39.2, GDD §43): real iPhone (Safari) and Android (Chrome) testing, done on a **separate private test link** so the owner's main franchise is never touched. Each artifact link has its own browser storage and its own cloud save. The step-by-step guide for a non-technical tester is the doc "Gridiron Beast v39.2 phone test guide". In outline:
+   1. **Optional safety copy:** on the normal link, Export save as JSON. It only reads; nothing else is tapped there.
+   2. **Stage 1:** a private test link on the current build (v39.1). Import the exported copy into it, or play a practice franchise for two or three weeks.
+   3. **Stage 2:** the same test link updated to v39.2. Check, in order:
+      - A. Migration: the one-time message; club, record and monsters unchanged; seconds to the menu.
+      - B. Saving: "✓ Saved on this device" after a game.
+      - C. Closing the browser at once and reopening, then again after restarting the phone.
+      - D. Export of a `.gbfranchise` file (or "no file" if the browser blocks downloads).
+      - E. Restore "Previous save", then undo with "Kept before a restore (undo)".
+      - F. Lag, freezes and unexpected reloads during a full game.
+      - G. Optional two-tab check.
+   4. **Never on a real phone:** filling the storage on purpose, or running any check on the main link. Full storage, damaged saves, tab conflicts, cloud races and closing mid-save are covered by the simulated tests (`tools/storage-check.py` and the unit suites).
 ## 3a. Future features (design only, not implemented)
 
-The franchise lifecycle (20-season limit, three save slots, read-only retirement archives, export before deletion), the storage foundation (IndexedDB, backups, recovery) and persistent AI rosters are approved designs in GDD §42. Their automated and real-phone test strategy is GDD §42.10. Nothing here can be run yet: the tests are written with each phase.
+The storage foundation (IndexedDB, backups, recovery) is implemented in v39.2 (GDD §43). The franchise lifecycle (20-season limit, three save slots, read-only retirement archives, export before deletion, the full import screen) and persistent AI rosters remain approved designs in GDD §42 (Phases 2–4). Their automated and real-phone test strategy is GDD §42.10. Nothing here can be run yet: the tests are written with each phase.
 
 ## 4. Reproducing a bug
 

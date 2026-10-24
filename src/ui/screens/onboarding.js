@@ -26,6 +26,7 @@ const LINES = {
 };
 
 export function registerOnboardingScreens(Router, app) {
+  let creating = false; // a new franchise is being saved (GDD §43.6)
   let draft = null;
   const fresh = () => ({ step: 0, first: '', last: '', gender: 'Female', portrait: 0, skin: 1, hair: 1, style: 'short', accessory: 'none', hue: 210, background: 'player', hometown: '', club: null, rival: null, difficulty: 'pro', offense: null, defense: null, offerSeed: (Math.random() * 1e9) >>> 0, rerolls: 0 });
   const spec = () => portraitSpec({ skin: draft.skin, hair: draft.hair, style: draft.style, accessory: draft.accessory, hue: draft.hue });
@@ -79,13 +80,16 @@ export function registerOnboardingScreens(Router, app) {
         reroll: () => { if (draft.rerolls >= 2) return; draft.rerolls += 1; draft.offerSeed = (draft.offerSeed * 31 + 7) >>> 0; draft.offense = null; Router.render(); },
         details: (el) => { const c = cornerstoneOffers(draft.offerSeed).find((x) => x.name === el.dataset.v); const sp = resolveSpecies(c.species); const ab = sp.ability || { name: TRAITS[sp.trait]?.name, text: TRAITS[sp.trait]?.text }; sheet(`<div class="row">${monsterSprite({ id: c.name, name: c.name, species: c.species }, 64)}<div><b>${esc(c.name)}</b><div class="muted">${c.position} · ${c.type} · ${c.rarity} · ${c.quality} OVR · ${c.archetype}</div></div></div><p style="font-style:italic">“${esc(sp.personality)}”</p><h3>Nature</h3><p>${esc(NATURES[c.nature].name)} · ${esc(NATURES[c.nature].behavior)}</p><h3>${sp.ability ? 'Signature ability' : 'Trait'}</h3><p><b>${esc(ab.name)}</b>: ${esc(ab.text)}</p>${sp.ability ? `<button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : ''}<h3>Type</h3><p>${esc(TYPES[c.type].blurb)}.</p>`, { title: c.name }); },
         back: () => { if (draft.step > 0) { draft.step -= 1; Router.render(); } else Router.go('menu', {}, { reset: true }); },
-        next: () => {
+        next: async () => {
           const e = collect(); if (e) { err(e); return; }
           if (STEPS[draft.step] === 'offense') {
             const offer = cornerstoneOffers(draft.offerSeed).find((x) => x.name === draft.offense);
             const f = createFranchise({ owner: { first: draft.first, last: draft.last, gender: draft.gender, portrait: spec(), hometown: draft.hometown, background: draft.background }, club: draft.club, rival: draft.rival, cornerstone: offer, settings: { ...app.defaultSettings, difficulty: draft.difficulty } });
             hireDefaultStaff(f); firstWeekWelcome(f);
-            app.setFranchise(f); draft = null; Router.go('welcome', {}, { reset: true }); return;
+            if (creating) return; creating = true; // one franchise per tap, however impatient the thumb
+            const r = await app.setFranchise(f).finally(() => { creating = false; }); // committed before it becomes the active franchise
+            if (!r.ok) { err(`Your new franchise could not be saved (${r.error?.message || 'unknown error'}). ${app.f ? 'Your current franchise is unchanged. ' : ''}Free some space and try again.`); return; }
+            draft = null; Router.go('welcome', {}, { reset: true }); return;
           }
           draft.step += 1; Router.render();
         },
