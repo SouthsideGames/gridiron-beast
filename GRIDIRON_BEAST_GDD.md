@@ -2995,4 +2995,6 @@ At season end (`endSeason`): career season-end events for every AI monster (`car
 - Tools: `tools/league-soak.mjs` (weekly league invariants, per-season metrics, sizes), `tools/balance-compare.mjs` (the registry against today's generator on the same seeds), the Phase 2 soaks and `tools/storage-check.py` (migration on first start builds the registry; Phase 1 and 2 flows unchanged; passed at 320–412 px).
 
 ### 45.10 Not in Phase 3
+**Verification not completed at the merge (2026-10-24):** a full 20-season All-Star soak (the All-Star run ended after 6 seasons with the hands-off owner dismissed; Pro and Rookie completed 20) and a 20-season balance comparison (8 seeds × 8 seasons per difficulty were compared; the 20-season evidence is the single-seed soaks). Both stay open for the release verification (test plan §0).
+
 League-wide career presentation for AI monsters (timelines, trophy cases, career cards beyond the profile that already opens), News lines for signings, trades and releases, duplicate-data removal between the tables and the books, AI–AI trades (Phase 4); real-device checks (the owner decides at release time).
