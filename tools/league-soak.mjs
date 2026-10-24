@@ -24,7 +24,7 @@ export function leagueInvariants(f, where) {
   const p = invariants(f, where);
   if (!F.hasLeague(f)) return [...p, `${where}: no league registry`];
   for (const x of verifyLeague(f)) p.push(`${where}: ${x}`);
-  for (const x of validateClubs(f, { cap: tierById(f.tier).cap })) p.push(`${where}: ${x}`);
+  if (!f.season?.finished) for (const x of validateClubs(f, { cap: tierById(f.tier).cap })) p.push(`${where}: ${x}`); // between a season's end and the next start, clubs are mid-offseason (walks before free agency): the playing limits are checked when the season opens
   const ids = new Set(f.roster.map((m) => m.id));
   for (const club of leagueClubs(f)) for (const m of clubRoster(f, club)) { if (ids.has(m.id)) p.push(`${where}: ${m.id} is on ${club} and the owner's roster`); ids.add(m.id); }
   for (const m of Object.values(f.pool || {}).flat()) { if (ids.has(m.id)) p.push(`${where}: pooled ${m.id} is also on a roster`); ids.add(m.id); }

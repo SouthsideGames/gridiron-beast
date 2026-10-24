@@ -1903,7 +1903,7 @@ export function startNextSeason(f) {
     leagueAgeing(f, r, { year }); leagueTrim(f, { year: next, cap }); // salaries refreshed with the ratings: back under the cap before anyone shops
     const trades = aiTrades(f, r, { year: next, cap, window: 'offseason' }); // AI–AI trades before the market opens: a need filled by a deal, uncommon and at fair value (GDD §46)
     const fa = leagueFreeAgency(f, r, { year: next, cap, targetOf });
-    const nudge = leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next) });
+    const nudge = leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next), rival: f.rivals?.[f.tier]?.team || null });
     const overCap = leagueTrim(f, { year: next, cap }); leagueInjuryCover(f, r, { year: next, cap, targetOf });
     const problems = validateClubs(f, { cap }); const structural = verifyLeague(f);
     f.leagueOffseason = { ...(f.leagueOffseason?.closed === year ? f.leagueOffseason : {}), opened: next, freeAgency: fa, trades: trades.length, nudge, overCap, problems }; lastTransitionMs = Math.round(((globalThis.performance?.now?.() ?? Date.now()) - t0) * 10) / 10; // the timing stays out of the save

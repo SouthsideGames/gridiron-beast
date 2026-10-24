@@ -17,6 +17,7 @@ import { hasLeague, leagueClubs, clubRoster, clubRecord, isProtected, isAgeless,
 import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegionOf } from './league.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
+export const RIVAL_BAND = 2;           // the rival's club is held closer: his signature monster's growth is capped by his potential (decision V), so without this the club drifted 3–4 under today's rival from season 6 (measured 2026-10-24)
 export const NUDGE_SIGNINGS = 3;       // arrivals a weak club gets in one offseason
 export const SIGNATURE_GROWTH = 2;     // the rival's signature monster: attribute points per offseason (GDD §15.8, kept), within potential
 export const RESIGN_AGE_LIMIT = 32;    // a reserve of this age or more is not re-signed (decision A: attrition through the pools)
@@ -180,14 +181,14 @@ export function clubUniqueName(f, club, m) {
  * regional free agents at the target at its weakest starting positions (making room among its unprotected spares); a club more
  * than BAND above it develops at SLOW_XP for the coming season. No rating of an existing monster is ever edited.
  */
-export function leagueNudge(f, r, { year, cap, targetOf, teamOf }) {
+export function leagueNudge(f, r, { year, cap, targetOf, teamOf, rival = null }) {
   if (!hasLeague(f)) return null;
   const out = { boosted: [], slowed: [], unchanged: 0 };
   for (const club of order(f)) {
-    const c = clubRecord(f, club); const target = targetOf(club); let ovr = teamOverall(teamOf(club));
-    c.strategy.slow = Math.max(0, ovr - (target + BAND)); if (c.strategy.slow) out.slowed.push(club); // how far above the band: the brake's strength
+    const c = clubRecord(f, club); const target = targetOf(club); let ovr = teamOverall(teamOf(club)); const band = club === rival ? RIVAL_BAND : BAND;
+    c.strategy.slow = Math.max(0, ovr - (target + band)); if (c.strategy.slow) out.slowed.push(club); // how far above the band: the brake's strength
     let signed = 0;
-    while (ovr < target - BAND && signed < NUDGE_SIGNINGS) {
+    while (ovr < target - band && signed < NUDGE_SIGNINGS) {
       const pos = weakestStartingGroup(f, club); if (!pos) break;
       if (clubRoster(f, club).length >= ROSTER_MAX) { const spare = weakestSpare(f, club, { position: pos }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
       const m = generateArrival(f, r, { club, position: pos, quality: target + 2, room: clubCapRoom(f, club, cap), floor: false });
