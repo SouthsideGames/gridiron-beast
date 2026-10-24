@@ -69,6 +69,21 @@ test('migration: interrupted at every step, the next start finishes it with the 
     const { uid, lifecycle, ...rest } = second.franchise; assert.ok(same(rest, JSON.parse(text)), `${point}: no progress lost`);
   }
 });
+test('migration: two devices each holding the same v39 franchise give it the same id; different franchises never share one (GDD §47.4)', async () => {
+  const { legacyUid } = await import('../src/core/uid.js');
+  const a = await migrated(); const b = await migrated(); // two devices, separate databases, the same legacy franchise
+  assert.ok(a.f.uid && a.f.uid === b.f.uid, `same franchise, same id: ${a.f.uid} / ${b.f.uid}`);
+  assert.match(a.f.uid, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  // a device whose copy is a week older (different text, same franchise) agrees too
+  const ls = mkLs(); const older = { ...JSON.parse(legacyText()), savedAt: 1_789_000_000_000 }; ls.setItem(Save.SAVE_KEY, JSON.stringify(older));
+  const c = await createStore({ backend: memoryBackend(), localStorage: ls, now, debounce: 0 }).open(); assert.equal(c.franchise.uid, a.f.uid);
+  const f0 = JSON.parse(legacyText());
+  assert.notEqual(legacyUid({ createdAt: f0.createdAt, seed: f0.seed + 1 }), a.f.uid, 'another seed, another franchise');
+  assert.notEqual(legacyUid({ createdAt: '2020-01-01T00:00:00.000Z', seed: f0.seed }), a.f.uid, 'another creation stamp, another franchise');
+  assert.notEqual(legacyUid({}), legacyUid({}), 'without its inputs the id is random');
+  // an exported v39 file (no id) is recognised as the franchise already on this device
+  const v = validateImport(JSON.stringify(Save.migrate(fixture()))); assert.ok(v.ok); assert.equal(v.uid, legacyUid({ createdAt: fixture().createdAt, seed: fixture().seed }));
+});
 test('migration: a save written later by an older copy of the game is never ignored and never replaces the live save: both are kept', async () => {
   const { ls, f, backend, store } = await migrated();
   const old = JSON.parse(ls.getItem(Save.SAVE_KEY)); old.savedAt = clock + 10_000; old.owner.first = 'Later'; ls.setItem(Save.SAVE_KEY, JSON.stringify(old)); clock += 20_000;

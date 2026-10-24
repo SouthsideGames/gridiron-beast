@@ -1963,7 +1963,7 @@ Every animation stops with reduced motion, from Settings or the system setting.
 
   This is an emulated browser, not a real device.
 
-## 42. Franchise lifecycle, save slots and persistent AI rosters — APPROVED DESIGN (updated 2026-10-24; Phase 1 implemented in §43, Phase 2 in §44, Phase 3 in §45, Phase 4 in §46)
+## 42. Franchise lifecycle, save slots and persistent AI rosters — APPROVED DESIGN (updated 2026-10-24; Phase 1 implemented in §43, Phase 2 in §44, Phase 3 in §45, Phase 4 in §46; all four phases released in v42.0.1, §47)
 
 > **Status.** This section is the approved design. Phase 1 (storage foundation) is implemented in §43, Phase 2 (franchise lifecycle, three slots, the Legacy) in §44, Phase 3 (persistent AI rosters) in §45 and Phase 4 (career integration and polish) in §46. It merges the persistent AI roster proposal (first written 2026-10-23) with the franchise rules the owner locked on 2026-10-23. No code may be written for a phase until the owner authorises it (§42.11).
 >
@@ -2999,7 +2999,7 @@ At season end (`endSeason`): career season-end events for every AI monster (`car
 
 League-wide career presentation for AI monsters (timelines, trophy cases, career cards beyond the profile that already opens), News lines for signings, trades and releases, duplicate-data removal between the tables and the books, AI–AI trades (Phase 4); real-device checks (the owner decides at release time).
 
-## 46. Career integration and polish — Phase 4 of §42 (IMPLEMENTED 2026-10-24; branch `league-careers`, v42.0)
+## 46. Career integration and polish — Phase 4 of §42 (IMPLEMENTED 2026-10-24; branch `league-careers`, v42.0; MERGED to main 2026-10-24 as PR #47, released as v42.0.1, §47)
 
 Phase 4 makes the persistent league of §45 meaningful and visible: every monster in the universe has a career the player can open from wherever his name appears, League News tells the league's own stories without noise, AI clubs trade with each other sparingly and fairly, the one duplicate the books make safe to remove is removed forward-only with its reconstruction proved, and the two verification gaps left at the Phase 3 merge are closed. Football, the cap, contracts, free agency and the nudge are untouched; every save and archive opens as it is.
 
@@ -3051,3 +3051,70 @@ Protection is exactly §45.2; Phase 4 shows it: badges on rosters and the hub, t
 
 ### 46.10 Not in Phase 4
 Career cards and timelines as separate full screens for AI monsters (the sheet is the card); AI–AI trades in the playoffs; compaction of the archived tables (not lossless for AI rows under decision G); real-device checks (the owner decides at release time).
+
+## 47. Release v42.0 / v42.0.1 — Phases 1–4 on the main game (RELEASED 2026-10-24)
+
+The first release of §42 to the main game. The main game ran v39.0 until this release; v39.1–v41.0 existed only on branches and the private test link. No gameplay or balance change was made for the release; the §46.8 deviations stand as documented.
+
+### 47.1 Merge
+- **PR #47** (`league-careers` → `main`, Phase 4) merged by the owner on 2026-10-24 at 18:07 UTC as a fast-forward: merge commit `49778b229a52ce0d653bae0317213ba2c39c3def`, the exact commit the release checks ran on. **PR #48** added the release harness (`tools/release-check.py`, no game file); `main` = `9a1b64f`.
+- **PR #49** (`fix-achievement-link`): the v42.0.1 save fixes of §47.4 and this record. Built on `9a1b64f`; the game files differ from v42.0 only in `src/core/uid.js`, `src/franchise/achievement-store.js`, `src/franchise/hall-of-fame.js`, `src/franchise/store.js`, `src/main.js`, `src/version.js` and `index.html`.
+
+### 47.2 Deployment
+- **Main game link (unchanged URL):** https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq. v42.0 was published at 14:24 local (artifact version 91), v42.0.1 at 14:53 (version 92) and again with the relink fix of §47.4 (version 93). 132 files (the page plus 131 tracked files: `manifest.webmanifest`, `src/**`, `styles/**`); capabilities `db`, `user` and `downloads` (new: the backup export inside the Claude app); runtime contract 0.2.77 unchanged.
+- **Read back after publishing:** the served `src/version.js` carries the release label, the file list is complete, the served files match the commit byte for byte, and the stored capabilities are as declared.
+- **The private test link** (v39.2, https://claude.ai/artifact/YaeuhvNLm5HS8ZG2YKg6Tj) was not touched.
+
+### 47.3 Save migration path (v39.0 → v42.0.1)
+1. **First start on a device holding a v39.0 save.** The localStorage save (`gridiron-beast-v6`) is copied, migrated on the copy, written to IndexedDB slot 1, read back and compared, then switched on (§43). The legacy key and its weekly backup stay in localStorage untouched, and a `legacy-original` backup is kept.
+2. **The league registry** (schema 6 → 8, §45) is built on a verified copy and rolled back on failure. A `pre-league` backup of the v39.0 franchise is kept before anything else reads it.
+3. **The cloud.** v42 reads the v39.0 layout (`save_meta` + `save_c<n>`) on first run and never writes it. New copies go to `cloud/snaps` and `cloud/chunks`. Only an explicit delete removes cloud documents.
+4. **Identity (v42.0.1).** A franchise from before ids gets a uid derived from its creation stamp and seed (`legacyUid`), the same on every device. Franchises created in v40+ keep their random uid. An imported v39 file gets the same uid, so a copy already on the device is recognised and the existing "Replace / Import as a copy" choice applies.
+5. **Ordering (v42.0.1).** On the boot that migrates, the cloud is compared by the legacy save's own time, not by the stamp the migration's writes give it. The registry's first save waits for that comparison. A newer cloud copy of the franchise is adopted, and the device's copy is kept as `pre-cloud`.
+6. **Retry safety.** An interrupted migration resumes with the same uid. A reopened device does not migrate again (release check: two reopenings, identical fingerprint, no duplicated career events).
+7. **Not migrated.** Retirement archives are kept as they are (§44). Nothing is deleted, overwritten or reset during the update.
+
+**History.** AI monsters' careers start when the persistent league is built at the first v42 start; their earlier seasons are not reconstructed, and nothing is fabricated. Seasons before the update keep what v39.0 recorded: tables, awards and the owner's monsters' careers (§45, §46).
+
+### 47.4 Defects found at release and fixed in v42.0.1
+A read-only dry run of the migration on a **copy of the owner's real v39.0 cloud save** (Ember City Beasts, Beast League, season 2 week 8, 11 achievements) found two defects the synthetic release check could not show:
+1. **Achievements counted one franchise twice.** Linking the old seed to the new uid was undone by the next cloud merge, so every achievement read "earned by 2 franchises".
+   - The seed → uid link is now kept in the achievements data (`links`) and applied to every merged copy.
+   - An entry already duplicated is repaired by the next link.
+2. **Two devices holding the same v39 save became two franchises.** Worse, a device's stale copy, stamped "newest" by its own migration, could replace newer progress in the cloud. A backup was kept, but the progress silently went backwards.
+   - Fixed by items 4 and 5 of §47.3.
+   - The owner opened v42.0 on one device before v42.0.1 was published: that device gave the franchise a random uid (`e2e70dc8…`) and uploaded it. A device migrating its own copy later adopts that cloud copy (matched by creation stamp, as before), and its achievements and Hall of Fame cards follow the adopted uid (`relinkAchievements`, `relinkHofCards`). Replayed on a copy of the live cloud state: one uid, every achievement at one franchise, the v39 documents and the v42.0 snapshot untouched, the device's own copy kept as `pre-cloud`.
+
+### 47.5 Verification
+- **`npm test`:** 531 tests pass (528 at the merge, plus three for §47.4). The slot tests' helper gave three different franchises the same creation stamp and seed, which the new identity rule treats as one franchise; it now gives distinct clubs distinct stamps.
+- **`tools/release-check.py` against the live v39.0 files (byte-identical to commit `ec106e9`), seeds 7 and 11, passed on v42.0 and again on v42.0.1:**
+  - v39.0 plays a season, an offseason and four weeks.
+  - v42 migrates with every original field unchanged and the `pre-league` backup restoring exactly; the legacy localStorage and cloud documents are untouched; two reopenings show no re-migration.
+  - The rest of season 2, the offseason and draft, an owner trade, the season transition and six weeks of season 3 each read back exactly after the browser is closed and reopened.
+  - Export → validate → import on a fresh device gives exact equality, and it plays on.
+  - A second device receives the franchise through the cloud.
+  - Screens at 320/360/390/412 px have no overflow and no page errors.
+- **Real-save dry runs (copies, nothing written back):**
+  - Migration: no differing fields, backups `legacy-original`, `pre-league` and `roll0`, boot 3.9–4.3 s, 332 KB payload stored.
+  - Reopen; play a week and read back exactly; export (0.81 MB) and import.
+  - A fresh device with only the v39.0 cloud documents.
+  - Two devices, and the live state of §47.4.
+- **Browser regression on v42.0.1, all passed with no page errors:** `ui-walkthrough` at 320×640 and 412×915 (new franchise → Season 1 → offseason → draft → Season 2), `navigation-check` (10 scenarios), `feature-ui-check`, `career-ui-check`, `news-ui-check`, `storage-check` and `league-hub-check`.
+- **Storage:** IndexedDB, about 223 KB for the real save; a 20-season franchise stays within the §42.11 target (§46.9).
+
+### 47.6 Limitations
+- **The claude.ai runtime cannot be driven from the development environment.** Every check above ran in headless Chromium with the claude.ai database simulated. The storage layer is the one phone-tested on the test link at v39.2, unchanged apart from §47.4. The owner's first open on each device is the final live check.
+- **A cached v39.0 tab left open after the update** can still save to the legacy localStorage key. v42 keeps such a save as a backup and never lets it replace the live franchise (§43).
+- **Real iPhone and Android devices** were not run for this release (the owner's decision, §42.10).
+
+### 47.7 What is implemented and what is not
+- **Implemented and released:** Phases 1–4 of §42.
+  - The storage foundation and backup export/import.
+  - Three slots, the franchise lifecycle and the Legacy.
+  - Persistent AI rosters with permanent gym legendaries and rival signatures.
+  - League careers, the League Hub, League News moves and digests, AI–AI trades and forward-only compaction.
+  - Every system before §42.
+- **Not implemented:**
+  - Anything after Phase 4 ("Phase 5" was not started).
+  - The items listed in §46.10.
+  - The balance narrowing left open in §46.8.

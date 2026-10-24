@@ -2,6 +2,23 @@
 
 All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
+## 0. Current status (2026-10-24, release v42.0.1 on the main game: Phases 1–4 of GDD §42, documented in §47)
+
+- **Merged:** PR #47 (Phase 4, fast-forward `49778b2`); PR #48 (release harness); PR #49 (v42.0.1 save fixes, GDD §47.4).
+- `npm test`: **531 tests, all passing** (three new: the seed/uid achievement link in every merge order, the two-device legacy uid, the relink to an adopted cloud uid).
+- `tools/release-check.py --v39=DIR` against the live v39.0 files, seeds 7 and 11: **passed** on v42.0 and on v42.0.1.
+  - v39.0 → v42 migration with every original field unchanged.
+  - The `pre-league` backup restores exactly; legacy storage and cloud documents are untouched.
+  - Retry-safe reopenings.
+  - Close-and-reopen exact read-back after games, the draft, an owner trade, the season transition and season 3.
+  - Export/import round trip on a fresh device.
+  - Second-device cloud.
+  - 320–412 px screens.
+- **Real-save dry runs** (read-only copies of the owner's v39.0 cloud save and of the live cloud after a v42.0 open): migration, reopen, play and read back, export/import, a fresh device, two devices, the live state. They found the two defects fixed in v42.0.1 (GDD §47.4); passed after the fix.
+- **Browser regression on v42.0.1:** `ui-walkthrough` 320×640 and 412×915, `navigation-check`, `feature-ui-check`, `career-ui-check`, `news-ui-check`, `storage-check`, `league-hub-check`. **All passed, no page errors.** Emulated browser, not a real device.
+- **Balance:** unchanged; the §46.8 deviations stand.
+- **Not done:** real iPhone and Android devices; the claude.ai runtime itself (the owner's first open on each device is the live check; §3, item 13).
+
 ## 0. Current status (2026-10-24, branch `league-careers`: career integration and polish, Phase 4 of GDD §42, documented in §46)
 
 - `npm test`: **528 tests, all passing**, including `tests/league-careers.test.js` (6): per-game careers for every persistent monster (debuts, firsts, milestones, playoff stars, evolutions; no duplicate events; full profiles and timelines); League News moves (meaningful only, two a week, one offseason digest of eight, one draft digest, one line per monster, repeat award winners, a holder breaking his own record); AI–AI trades (2–3 a season, fair value, cap and roster limits, never a protected monster, deterministic by seed); forward-only compaction proved lossless on a played franchise and never applied to a v40 save; the League Hub's data; retirement as a permanent exit only.
@@ -187,6 +204,15 @@ Run on at least one small iPhone (SE size) and one large Android, in the browser
 10. Franchise lifecycle (v40.0, GDD §44): on a **private test link** (never the owner's game): the Franchises screen at 320–412 px; create three franchises; switch between them; delete one with the export offer and typed confirmation, then undo; import a `.gbfranchise.json` into an empty slot and see the duplicate-id choice; retire a franchise after a season (the Developer-screen shortcut of the test build plays seasons headlessly: the released build never shows it) and browse the Legacy's five tabs; a Season-20 retirement via the shortcut; killing the app during a season switch and reopening; the cloud offer of a franchise into an empty slot on a second device. Decided by the owner at release time.
 11. Persistent AI rosters (v41.0, GDD §45): on a **private test link** (never the owner's game, decision W): open an existing v40 franchise and confirm the next opponent's roster is the one it was before (same names), that Settings → Save data lists the `pre-league` backup, and that the build line reads v41.0; play two weeks and see an opponent's injured starter missing on Sunday; after a season, see AI clubs' rosters changed by their own contracts, draft and signings while the rival's signature monster and every gym legendary stayed put; the offseason market about its usual size; trade for a monster and see him gone from the other club's roster; a Season-20 retirement via the shortcut and the Legacy opening a rival monster's career. Decided by the owner at release time.
 12. Career integration (v42.0, GDD §46): on a **private test link** (never the owner's game): open the League Hub from the main menu and from HQ; tap through Clubs → a club → a monster → his career (timeline, trophies, card); Leaders with the whole league and your monsters; Moves and the offseason digest after a season; Races; Rivals with the signature monster and the gym legendaries; open a career from a box score, the leaders, the records book, an award sheet and a League News line; after a season see one AI–AI trade in Moves and the traded monster on his new club; confirm a retirement line reads "retires" only for a departed veteran; all at 320–412 px. Decided by the owner at release time.
+
+13. **v42.0.1 first open on each device (GDD §47):**
+    - The menu's build line reads v42.0.1.
+    - Continue opens the same club, record and roster.
+    - Settings → Save data lists `legacy-original` and `pre-league`, plus `pre-cloud` on a device that took the cloud copy.
+    - Achievements each read one franchise.
+    - An export downloads.
+    - Play a day, close the app, reopen: the day is there.
+    - On a second device, the same franchise at the newest progress.
 
 ## 3a. Future features (design only, not implemented)
 

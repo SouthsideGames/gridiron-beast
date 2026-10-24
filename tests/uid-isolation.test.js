@@ -42,3 +42,36 @@ test('older records written by seed are linked to their own franchise only', () 
   assert.equal(H.linkHofCards({ uid: 'uid-777', seed: 777 }), 0, 'linking is idempotent');
   assert.equal(H.linkHofCards({ uid: 'uid-999', seed: 777 }), 0, 'an already linked card is never re-linked to another franchise');
 });
+
+test('a seed and its uid never count as two franchises, whichever order the cloud copy and the link arrive in (GDD §47.4)', () => {
+  // the owner's real v39.0 save: entries naming the franchise by seed, mirrored to the cloud; v42 links the seed to the uid
+  const v39cloud = () => ({ earned: { first_win: { club: 'Ember City Beasts', franchise: 1369459701, franchises: [1369459701], count: 1, at: 100, scene: {} }, wins_10: { club: 'Ember City Beasts', franchise: 1369459701, franchises: [1369459701], count: 1, at: 200, scene: {} } }, updatedAt: 1 });
+  const check = (label) => { for (const id of ['first_win', 'wins_10']) { const e = A.achievementsData().earned[id]; assert.deepEqual(e.franchises, ['uid-real'], `${label}: ${id} lists the franchise once`); assert.equal(e.count, 1, `${label}: ${id} count`); assert.equal(e.franchise, 'uid-real'); } };
+  // link first, then the cloud copy (a fresh device: the order that duplicated the entry before this fix)
+  A.resetAchievements(); A.mergeAchievements(v39cloud()); A.linkAchievements({ uid: 'uid-real', seed: 1369459701 }); A.mergeAchievements(v39cloud()); check('link then cloud');
+  // the cloud copy after the link on another device that never saw the link
+  A.resetAchievements(); A.linkAchievements({ uid: 'uid-real', seed: 1369459701 }); A.mergeAchievements(v39cloud()); check('cloud after link, no local entries');
+  // a copy already duplicated by v42.0 before this fix is repaired by the next link
+  A.resetAchievements(); const dup = v39cloud(); for (const e of Object.values(dup.earned)) { e.franchises = [1369459701, 'uid-real']; e.count = 2; }
+  A.mergeAchievements(dup); A.linkAchievements({ uid: 'uid-real', seed: 1369459701 }); check('repaired');
+  // the link travels with the data: another device merging this copy translates the seed too
+  const carried = JSON.parse(JSON.stringify(A.achievementsData())); A.resetAchievements(); A.mergeAchievements(v39cloud()); A.mergeAchievements(carried); check('link carried by the cloud copy');
+  // a second franchise earning it later still counts
+  A.recordAchievementGlobal('first_win', { club: 'Other', franchise: 'uid-other', scene: {} }); assert.equal(A.achievementsData().earned.first_win.count, 2);
+  assert.equal(A.linkAchievements({ uid: 'uid-impostor', seed: 1369459701 }), 0, 'a linked seed is never re-linked');
+});
+
+test('a device that adopts the cloud copy of its own franchise under another uid moves its records to that uid (GDD §47.4)', () => {
+  // the owner's state on 2026-10-24: one device ran v42.0 (random uid, achievements duplicated in the cloud); another device
+  // migrates its own v39 copy with the derived uid, then adopts the cloud copy (same creation stamp) and its uid
+  const seed = 1369459701; const cloud = () => ({ earned: { first_win: { franchise: seed, franchises: [seed, 'uid-cloud'], count: 2, at: 100, scene: {} } }, updatedAt: 5 });
+  A.resetAchievements(); A.mergeAchievements(cloud()); A.linkAchievements({ uid: 'uid-derived', seed });
+  assert.equal(A.achievementsData().earned.first_win.count, 2, 'before the cloud copy is adopted the two uids look like two franchises');
+  A.linkAchievements({ uid: 'uid-cloud', seed }); // adopt() runs this for the adopted copy: refused, the seed is linked already
+  A.relinkAchievements({ from: 'uid-derived', to: 'uid-cloud' });
+  let e = A.achievementsData().earned.first_win; assert.deepEqual(e.franchises, ['uid-cloud']); assert.equal(e.count, 1); assert.equal(e.franchise, 'uid-cloud');
+  A.mergeAchievements(cloud()); e = A.achievementsData().earned.first_win; assert.deepEqual(e.franchises, ['uid-cloud'], 'the duplicated cloud copy merged again stays repaired');
+  const out = JSON.parse(JSON.stringify(A.achievementsData())); A.resetAchievements(); A.mergeAchievements(cloud()); A.mergeAchievements(out); A.linkAchievements({ uid: 'uid-cloud', seed });
+  e = A.achievementsData().earned.first_win; assert.deepEqual(e.franchises, ['uid-cloud'], 'the first device, merging the repaired copy, agrees'); assert.equal(e.count, 1);
+  H.resetHof(); H.addHofCard({ id: 'hof_x', uid: 'uid-derived', club: 'X', retiredAt: 1 }); assert.equal(H.relinkHofCards({ from: 'uid-derived', to: 'uid-cloud' }), 1); assert.deepEqual(H.hofCardsFor('uid-cloud').map((c) => c.id), ['hof_x']);
+});
