@@ -14,6 +14,7 @@ import { setAchievementMirror, mergeAchievements, achievementsData } from './fra
 import { setHofMirror, mergeHof, hallOfFame } from './franchise/hall-of-fame.js';
 import { registerFranchisesScreens } from './ui/screens/franchises.js';
 import { registerLegacyScreens } from './ui/screens/legacy.js';
+import { registerLeagueHubScreens } from './ui/screens/league-hub.js';
 import { tipHtml, maybeSheetTip, initTutorial, helpButtonHtml } from './ui/tutorial.js';
 import { openStatGuide } from './ui/stat-guide.js';
 import * as F from './franchise/franchise.js';
@@ -214,6 +215,7 @@ export function start() {
   registerCeremony(Router, app); // the Beast Bowl ceremony (GDD §35)
   registerRecoveryScreen(Router, app);
   registerFranchisesScreens(Router, app); // the three-slot manager (GDD §42.5)
+  registerLeagueHubScreens(Router, app); // the League Hub (GDD §46)
   registerLegacyScreens(Router, app); // the read-only archive shell (GDD §42.7)
   // The player's dex lives outside the franchise and is mirrored to the cloud like the save.
   setDexMirror((d) => cloudSaveDex(d));

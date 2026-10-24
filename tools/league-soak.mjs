@@ -17,14 +17,14 @@ import { ALL_TEAMS, tierById } from '../src/data/league.js';
 import { pack, gzip } from '../src/franchise/pack.js';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v = '1'] = a.replace(/^--/, '').split('='); return [k, v]; }));
-const seed = Number(args.seed || 1), seasons = Number(args.seasons || 20), difficulty = args.difficulty || 'pro', quiet = !!args.quiet;
+const seed = Number(args.seed || 1), seasons = Number(args.seasons || 20), difficulty = args.difficulty || 'pro', quiet = !!args.quiet, boardReset = args.boardReset === '1' || args.boardReset === 'true';
 
 /** The Phase 3 invariants on top of the franchise ones: the league registry and every club's legal state. */
 export function leagueInvariants(f, where) {
   const p = invariants(f, where);
   if (!F.hasLeague(f)) return [...p, `${where}: no league registry`];
   for (const x of verifyLeague(f)) p.push(`${where}: ${x}`);
-  for (const x of validateClubs(f, { cap: tierById(f.tier).cap })) p.push(`${where}: ${x}`);
+  if (!f.season?.finished) for (const x of validateClubs(f, { cap: tierById(f.tier).cap })) p.push(`${where}: ${x}`); // between a season's end and the next start, clubs are mid-offseason (walks before free agency): the playing limits are checked when the season opens
   const ids = new Set(f.roster.map((m) => m.id));
   for (const club of leagueClubs(f)) for (const m of clubRoster(f, club)) { if (ids.has(m.id)) p.push(`${where}: ${m.id} is on ${club} and the owner's roster`); ids.add(m.id); }
   for (const m of Object.values(f.pool || {}).flat()) { if (ids.has(m.id)) p.push(`${where}: pooled ${m.id} is also on a roster`); ids.add(m.id); }
@@ -33,9 +33,16 @@ export function leagueInvariants(f, where) {
 
 const sizes = async (x) => { const raw = JSON.stringify(x); const p = JSON.stringify(pack(x)); const g = await gzip(p); return { raw: raw.length, packed: p.length, stored: g ? g.byteLength : null }; };
 
-export async function study({ seed, seasons, difficulty, onSeason = null }) {
+/**
+ * Simulation only (owner's decision, 2026-10-24): with `boardReset`, a dismissed owner is reinstated after every season so a
+ * 20-season league can be measured on All-Star, where the hands-off owner is otherwise let go early. The game's Board and
+ * firing rules are untouched; this wraps the soak's weekly check and never ships.
+ */
+export const withBoardReset = (check) => (f, where) => { if (f.board?.fired) f.board = { confidence: 0, goal: null, history: [], scoutBonusYear: null, fired: false, misses: 0 }; return check(f, where); };
+
+export async function study({ seed, seasons, difficulty, onSeason = null, boardReset = false }) {
   const rows = []; const prot0 = {};
-  const { f, problems, log } = runFranchise(seed, { seasons, difficulty, check: leagueInvariants, onSeason: (f) => {
+  const { f, problems, log } = runFranchise(seed, { seasons, difficulty, check: boardReset ? withBoardReset(leagueInvariants) : leagueInvariants, onSeason: (f) => {
     const year = f.season.year; const clubs = ALL_TEAMS.filter((t) => t !== f.club);
     const live = clubs.map((c) => teamOverall(F.aiTeam(f, c, year))); const today = clubs.map((c) => teamOverall(F.legacyAiTeam(f, c, year)));
     const mean = (a) => Math.round(a.reduce((s, v) => s + v, 0) / a.length * 10) / 10;
@@ -55,8 +62,8 @@ export async function study({ seed, seasons, difficulty, onSeason = null }) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const t0 = Date.now();
-  const res = await study({ seed, seasons, difficulty, onSeason: quiet ? null : (f, row) => console.log(JSON.stringify(row)) });
-  const { f, ...out } = res; out.seconds = Math.round((Date.now() - t0) / 1000);
+  const res = await study({ seed, seasons, difficulty, boardReset, onSeason: quiet ? null : (f, row) => console.log(JSON.stringify(row)) });
+  const { f, ...out } = res; out.seconds = Math.round((Date.now() - t0) / 1000); out.boardReset = boardReset;
   console.log(JSON.stringify({ ...out, rows: undefined, problems: out.problems.slice(0, 10) }, null, 1));
   if (args.json) writeFileSync(args.json, JSON.stringify(out, null, 1));
   process.exit(out.problems.length ? 1 : 0);

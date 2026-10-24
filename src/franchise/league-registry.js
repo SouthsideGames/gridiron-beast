@@ -84,7 +84,7 @@ export function clubOf(f, id) { if (!hasLeague(f)) return null; for (const [club
  * Put a monster on a club. `year` and `via` write the history line and the contract (a rookie deal, a free-agent deal or the
  * permanent one for protected monsters). The monster must not be on another club: callers remove it first.
  */
-export function addToClub(f, club, m, { year, via = 'signed', contract = null, salary = null } = {}) {
+export function addToClub(f, club, m, { year, via = 'signed', contract = null, salary = null, source = null } = {}) {
   const c = clubRecord(f, club); if (!c) throw new Error(`No such league club: ${club}`);
   if (f.league.monsters[m.id] && f.league.monsters[m.id] !== m) throw new Error(`Monster id ${m.id} is already held by another object in the league.`);
   for (const [other, oc] of Object.entries(f.league.clubs)) if (other !== club && oc.roster.includes(m.id)) throw new Error(`${m.name} is on ${other} already.`);
@@ -94,17 +94,34 @@ export function addToClub(f, club, m, { year, via = 'signed', contract = null, s
   else m.contract = contract || newContract(year, 2);
   m.salary = salary ?? m.salary ?? salaryFor(m); delete m.poolVia;
   (m.history ||= []); const last = m.history[m.history.length - 1];
+  const from = last && last.to != null ? last.club : null;
   if (!(last && last.club === club && last.to == null)) m.history.push({ club, from: year, to: null, reason: via });
+  if (via === 'signed') leagueEvent(f, { kind: 'signing', club, from, via: source || 'pool', generated: source === 'generated', region: m.origin || null, ...moveIdentity(f, m) });
   return m;
 }
+/** What League News needs to judge and tell a move (GDD §46): who, how good, how old, and the owner's connection to him. */
+export function moveIdentity(f, m) { return { mid: m.id, mname: m.name, position: m.position, ovr: monsterOverall(m), age: m.age ?? null, formerMine: (m.history || []).some((h) => h.club === f.club) }; }
+/** Queue a league move for League News; stamped with the week it belongs to (the offseason's moves belong to week 0 of the coming season). */
+export function leagueEvent(f, e) {
+  if (!hasLeague(f) || !f.season) return;
+  const off = !!f.season.finished || !!f.season.playoffs?.champion; const year = off ? f.season.year + 1 : f.season.year; const week = off ? 0 : f.season.week; // once the Beast Bowl is decided the season's moves are the offseason's
+  (f.league.events ||= []).push({ year, week, ...e });
+}
+/** Take the queued moves of one week out of the queue. */
+export function takeEvents(f, year, week) {
+  const q = f.league?.events || []; const out = q.filter((e) => e.year === year && e.week === week);
+  if (out.length) f.league.events = q.filter((e) => !(e.year === year && e.week === week));
+  return out;
+}
 /** Take a monster off a club (it stays known to the universe: the caller sends it to the pools, the owner, or the legends). */
-export function removeFromClub(f, club, id, { year, reason = 'released' } = {}) {
+export function removeFromClub(f, club, id, { year, reason = 'released', why = null, quiet = false } = {}) {
   const c = clubRecord(f, club); if (!c) return null;
   const m = f.league.monsters[id]; if (!m || !c.roster.includes(id)) return null;
   if (isProtected(m)) throw Object.assign(new Error(`${m.name} is bound to ${club} for the life of this franchise.`), { code: 'protected' });
   c.roster = c.roster.filter((x) => x !== id); delete f.league.monsters[id];
   const last = (m.history ||= [])[m.history.length - 1]; if (last && last.club === club && last.to == null) { last.to = year; last.reason = reason; } else m.history.push({ club, from: year, to: year, reason });
   m.contract = null;
+  if (!quiet && (reason === 'walked' || reason === 'released')) leagueEvent(f, { kind: 'release', club, reason, why, ...moveIdentity(f, m) });
   return m;
 }
 
@@ -143,7 +160,8 @@ export function captureLeague(f, { clubs, teamOf, year, week, existing = [], tab
 }
 
 /** Everything that must hold for a registry, as problem strings (empty when sound). */
-export function verifyLeague(f, { clubs = null, rosterMin = 26, rosterMax = 38 } = {}) {
+/** Structure only: an offseason save can hold a club between contracts and free agency with fewer than 26 (validateClubs checks the playing limits before a season starts). */
+export function verifyLeague(f, { clubs = null, rosterMin = 1, rosterMax = 38 } = {}) {
   const p = []; if (!hasLeague(f)) return ['no league registry'];
   const L = f.league; const seen = new Map();
   const names = clubs || Object.keys(L.clubs);
@@ -170,5 +188,6 @@ export function verifyLeague(f, { clubs = null, rosterMin = 26, rosterMax = 38 }
 /** The compact record a decorated monster leaves behind when he leaves the league (§42.6 exits). */
 export function legendStub(m, { year, club, honours = [] }) {
   const s = m.stats || {}; const career = addInto(addInto({}, s.career?.reg), s.career?.post);
-  return { id: m.id, name: m.name, species: m.species, position: m.position, type: m.type, stage: m.stage || 0, ovr: monsterOverall(m), age: m.age, left: year, lastClub: club, honours, career, ev: (m.career?.ev || []).filter((e) => ['award', 'champion', 'record', 'hof'].includes(e.t)) };
+  const seasons = [...(s.seasons || []).map((b) => ({ year: b.year, team: b.team, reg: b.reg, post: b.post })), ...(s.season?.year != null && (Object.keys(s.season.reg || {}).length || Object.keys(s.season.post || {}).length) ? [{ year: s.season.year, team: club, reg: s.season.reg, post: s.season.post }] : [])]; // his season books stay with him (GDD §46): the award sheets' numbers have their one copy here
+  return { id: m.id, name: m.name, species: m.species, position: m.position, type: m.type, stage: m.stage || 0, ovr: monsterOverall(m), age: m.age, left: year, lastClub: club, honours, career, seasons, history: (m.history || []).slice(-6), ev: (m.career?.ev || []).filter((e) => ['award', 'champion', 'record', 'hof', 'milestone', 'evolve', 'debut'].includes(e.t)) };
 }

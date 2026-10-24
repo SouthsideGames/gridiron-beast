@@ -89,7 +89,8 @@ export function fullRecord(m, year) {
  * won, opponent, records (f.records) }. Uses the monster's game log entry for this week: no entry, no participation,
  * no event.
  */
-export function careerAfterGame(roster, ctx) {
+/** `lineOf(m)`: the game just played, for monsters who keep no logs (AI clubs, GDD §46); by default the last log entry. */
+export function careerAfterGame(roster, ctx, { lineOf = null } = {}) {
   if (!enabled) return 0;
   const { year, week, club } = ctx; let added = 0;
   for (const m of roster) {
@@ -99,7 +100,7 @@ export function careerAfterGame(roster, ctx) {
     for (const L of LEVEL_MARKS) if ((m.level || 1) >= L && b.lv < L) added += addEvent(m, { k: `lvl:${L}`, t: 'level', y: year, w: week, c: club, x: { level: L } });
     b.lv = Math.max(b.lv, m.level || 1);
     if (b.o0 == null || b.o0.y !== year) b.o0 = { y: year, ovr: monsterOverall(m) };
-    const log = m.stats?.log?.[m.stats.log.length - 1];
+    const log = lineOf ? lineOf(m) : m.stats?.log?.[m.stats.log.length - 1];
     if (!log || log.year !== year || log.week !== week) continue;
     const line = withDerived(log.line || {}); if (!Object.values(log.line || {}).some((v) => v > 0)) continue;
     const total = careerTotals(m); const full = fullRecord(m, year);

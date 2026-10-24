@@ -13,6 +13,7 @@ import { offerExport } from '../storage-ui.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
 import { AWARDS } from '../../franchise/awards.js';
 import { isArchived, SEASON_CAP } from '../../franchise/lifecycle.js';
+import { hasLeague, leagueClubs, clubRoster } from '../../franchise/league-registry.js';
 import { achievementsFor } from '../../franchise/achievement-store.js';
 import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { STAFF, STAFF_ROLES } from '../../data/staff.js';
@@ -89,9 +90,14 @@ function rosterTab(f) {
 }
 function careersTab(f) {
   const lg = f.lifecycle.legacy; const list = (f.roster || []).slice().sort((a, b) => monsterOverall(b) - monsterOverall(a));
+  // The whole universe (GDD §46): the 15 persistent clubs' final rosters and the legends who left, each a career.
+  const league = hasLeague(f) ? leagueClubs(f).slice().sort().map((club) => ({ club, roster: clubRoster(f, club).slice().sort((a, b) => monsterOverall(b) - monsterOverall(a)) })) : [];
+  const legends = Object.values(f.league?.legends || {}).sort((a, b) => (b.left || 0) - (a.left || 0));
+  const row = (m, extra = '') => `<div class="item static"><span>${monsterSprite(m, 30)}</span><div class="grow"><div class="name">${careerLink(m.id, esc(m.name))}${m.legendary ? ' <span class="chip accent">★ Legend</span>' : m.signature ? ' <span class="chip" style="border-color:#a855f7">⚔️ Signature</span>' : ''}</div><div class="muted">${esc(m.position)}${extra}</div></div></div>`;
+  const universe = league.length ? `<details style="margin-top:10px"><summary class="muted" style="cursor:pointer">The league's monsters (${league.reduce((n, c) => n + c.roster.length, 0)} on 15 clubs, ${legends.length} retired legend${legends.length === 1 ? '' : 's'})</summary>${legends.length ? `<h3>Retired legends</h3><div class="list">${legends.map((m) => row(m, ` · last with ${esc(m.lastClub || '—')}${m.left ? ` · retired ${yearOf(m.left)}` : ''}`)).join('')}</div>` : ''}${league.map((c) => `<h3>${esc(c.club)}</h3><div class="list">${c.roster.map((m) => row(m, ` · OVR ${monsterOverall(m)}`)).join('')}</div>`).join('')}</details>` : '';
   return `<p class="muted">Every monster the franchise kept, with its timeline, trophy case and career card (read-only).</p>
     ${lg.bestMonsters?.length ? `<div class="panel tight"><b>Career snapshots at retirement</b><div class="row" style="flex-wrap:wrap;gap:8px;margin-top:6px">${lg.bestMonsters.map((m, i) => `<button class="btn small" data-action="best" data-i="${i}">${esc(m.name)}</button>`).join('')}</div></div>` : ''}
-    <div class="list">${list.map((m) => `<div class="item static"><div class="grow"><div class="name">${careerLink(m.id, esc(m.name))}</div><div class="muted">${esc(m.position)} · OVR ${monsterOverall(m)}</div></div></div>`).join('')}</div>`;
+    <div class="list">${list.map((m) => `<div class="item static"><div class="grow"><div class="name">${careerLink(m.id, esc(m.name))}</div><div class="muted">${esc(m.position)} · OVR ${monsterOverall(m)}</div></div></div>`).join('')}</div>${universe}`;
 }
 
 export function registerLegacyScreens(Router, app) {

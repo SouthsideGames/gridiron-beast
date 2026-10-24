@@ -1,5 +1,6 @@
 // Player statistics and season awards (GDD §16).
 import { test } from 'node:test';
+import { expandWinner } from '../src/franchise/history-compact.js';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import { recordGame, ensureStats, withDerived, passerRating, derive, leaders, monsterLine, rolloverMonster, addInto } from '../src/franchise/stats.js';
@@ -160,7 +161,7 @@ test('awards freeze when the playoffs are drawn and a full season books leaders 
   assert.equal(f.season.awardsFinal.year, 1);
   const w = f.season.awardsFinal.winners; assert.ok(w.mvp && w.opoy && w.dpoy && w.coy, 'all major awards have winners');
   assert.ok(w.mvp.why && w.mvp.record, 'winner explains itself');
-  assert.deepEqual(f.season.awards.league.mvp, w.mvp, 'end-of-season awards use the frozen result');
+  { const slim = f.season.awards.league.mvp; assert.equal(slim.id, w.mvp.id); assert.equal(slim.score, w.mvp.score); assert.equal(slim.why, w.mvp.why); const back = expandWinner(slim, 1, (id) => f.roster.find((m) => m.id === id) || f.league?.monsters?.[id] || null); for (const [k, v] of Object.entries(w.mvp)) if (typeof v === 'number') assert.equal(back[k], v, `${k} restored from the book (forward-only compaction, GDD §46)`); } // end-of-season awards use the frozen result, slimmed to what the books hold
   assert.ok(Object.keys(f.season.playoffStats).length >= 2, 'playoff table filled');
   const regGames = Math.max(...F.Stats.leagueRows(f.season.leagueStats).map((r) => r.games)); assert.ok(regGames <= 9, 'regular-season games never include playoffs');
   assert.ok(f.history[0].awards.leaders.passYds?.length, 'history keeps the season leaders');

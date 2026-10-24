@@ -139,7 +139,7 @@ test('multi-season: timelines accumulate without duplicates, stay inside real se
 });
 
 test('the timeline never changes the game: the same franchise with the writers switched off plays out identically', () => {
-  const strip = (f) => JSON.stringify(f, (k, v) => (k === 'career' || k === 'createdAt' || k === 'uid' ? undefined : v)); // uid: random per franchise, like createdAt
+  const strip = (f) => JSON.stringify(f, (k, v) => (k === 'career' || k === 'createdAt' || k === 'uid' || k === 'ev' ? undefined : v)); // uid: random per franchise, like createdAt; ev: a legend stub's copy of the timeline (GDD §46)
   const a = runFranchise(9, { difficulty: 'pro', seasons: 2 }).f;
   setCareerEnabled(false); let b; try { b = runFranchise(9, { difficulty: 'pro', seasons: 2 }).f; } finally { setCareerEnabled(true); }
   assert.ok(b.roster.every((m) => !m.career), 'nothing written with the writers off');

@@ -144,8 +144,10 @@ export function raceNews({ year, week, races, meta }) {
   return out;
 }
 /** Award winners (regular-season awards, frozen when the playoffs are drawn). `winners` = { key: finalist | null }. */
-export function awardNews({ year, week, winners }) {
-  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => ({ id: `${year}|award|${k}`, year, week, kind: 'award', tier: 'major', icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, text: `${AWARDS[k]?.label || k}: ${k === 'coy' ? (w.coach || w.name) : w.name} (${w.team}${w.position ? `, ${w.position}` : ''})${w.record ? `, ${w.record} club` : ''}.` }));
+/** `priorOf(id, key)`: how many times this monster won this award before (persistent careers, GDD §46): repeat winners are recognised. */
+export function awardNews({ year, week, winners, priorOf = null }) {
+  const nth = ['', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
+  return Object.entries(winners || {}).filter(([, w]) => w).map(([k, w]) => { const prior = k !== 'coy' && w.id && priorOf ? priorOf(w.id, k) : 0; return { id: `${year}|award|${k}`, year, week, kind: 'award', tier: 'major', icon: '🏆', mid: k === 'coy' ? null : w.id || null, mname: k === 'coy' ? null : w.name, text: `${AWARDS[k]?.label || k}: ${k === 'coy' ? (w.coach || w.name) : w.name} (${w.team}${w.position ? `, ${w.position}` : ''})${w.record ? `, ${w.record} club` : ''}${prior ? `, his ${nth[prior] || `${prior + 1}th`}` : ''}.` }; });
 }
 
 /**
@@ -156,10 +158,10 @@ export function recordNews({ year, week, records, seasonsInBook, scope = 'game' 
   if (!records || seasonsInBook < NEWS_RULES.recordsAfterSeasons) return [];
   const out = []; const fmt = (v) => (Number.isInteger(v) ? v : Number(v).toFixed(1));
   if (scope === 'game') {
-    for (const c of RECORD_CATEGORIES) { const r = records.game?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${year}|${week}|rec|g|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, text: `League record: ${r.name} (${r.team}) sets the single-game mark for ${c.label.toLowerCase()} with ${fmt(r.value)} against ${r.opp}. The old mark: ${fmt(r.prev.value)} by ${r.prev.name}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
+    for (const c of RECORD_CATEGORIES) { const r = records.game?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${year}|${week}|rec|g|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, text: `League record: ${r.name} (${r.team}) sets the single-game mark for ${c.label.toLowerCase()} with ${fmt(r.value)} against ${r.opp}. ${r.prev.id && r.prev.id === r.id ? 'He breaks his own mark' : 'The old mark'}: ${fmt(r.prev.value)}${r.prev.id && r.prev.id === r.id ? '' : ` by ${r.prev.name}`}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
     for (const c of TEAM_RECORDS) { const r = records.team?.[c.id]; if (!r || r.year !== year || r.week !== week || !r.prev) continue; out.push({ id: `${year}|${week}|rec|t|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', text: `League record: ${r.team} set the mark for ${c.label.toLowerCase()} (${fmt(r.value)}) in a ${r.score} game against ${r.opp}. The old mark: ${fmt(r.prev.value)} by ${r.prev.team}.` }); }
   } else {
-    for (const c of RECORD_CATEGORIES) { const r = records.season?.[c.id]; if (!r || r.year !== year || !r.prev) continue; out.push({ id: `${year}|rec|s|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, text: `Season record: ${r.name} (${r.team}) finishes with ${fmt(r.value)} ${c.label.toLowerCase()}, the most in league history. The old mark: ${fmt(r.prev.value)} by ${r.prev.name}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
+    for (const c of RECORD_CATEGORIES) { const r = records.season?.[c.id]; if (!r || r.year !== year || !r.prev) continue; out.push({ id: `${year}|rec|s|${c.id}`, year, week, kind: 'record', tier: 'major', icon: '📜', mid: r.id || null, mname: r.name, text: `Season record: ${r.name} (${r.team}) finishes with ${fmt(r.value)} ${c.label.toLowerCase()}, the most in league history. ${r.prev.id && r.prev.id === r.id ? 'He breaks his own mark' : 'The old mark'}: ${fmt(r.prev.value)}${r.prev.id && r.prev.id === r.id ? '' : ` by ${r.prev.name}`}${r.prev.year != null ? ` (${yearOf(r.prev.year)})` : ''}.` }); }
   }
   return out;
 }
@@ -186,4 +188,72 @@ export function backfillLeagueNews(f) {
   if (p?.results?.length) for (const round of [1, 2, 3]) items.push(...playoffNews({ year, week: 10 + round, round, results: p.results, club, rival }));
   if (p?.champion) { const fin = p.results.find((x) => x.round === 3); items.push(...championNews({ year, week: 13, final: fin })); }
   return addLeagueNews(f, items);
+}
+
+// ------------------------------------------------------------ the league's own moves (GDD §46, Phase 4)
+// The persistent clubs sign, release, draft, trade and lose monsters every week. League News reports the moves that matter
+// and nothing else: a starter or a 65+ monster, a former monster of the owner's, the owner's rival or division, a first-round
+// pick, a decorated veteran leaving the game. At most TRANSACTIONS_PER_WEEK lines a week in season; the offseason's moves
+// come as one digest of OFFSEASON_DIGEST lines; a draft comes as one digest. Written after the fact, no random draws.
+export const TRANSACTION_KINDS = new Set(['signing', 'release', 'trade', 'draft', 'retire', 'milestone', 'moves']);
+export const MOVE_RULES = Object.freeze({ ovr: 65, perWeek: 2, digest: 8, draftTop: 5 });
+export const TRANSACTIONS_PER_WEEK = MOVE_RULES.perWeek;
+export const OFFSEASON_DIGEST = MOVE_RULES.digest;
+
+/** Is this move worth a line? `e` carries what the writer knew when it happened. */
+export function meaningfulMove(e, { club, rival, division = [] }) {
+  if (e.kind === 'retire' || e.kind === 'milestone') return true;
+  if ((e.ovr || 0) >= MOVE_RULES.ovr || e.starter) return true;
+  if (e.formerMine) return true;
+  const clubs = [e.club, e.from, e.to].filter(Boolean);
+  if (clubs.some((c) => c === rival || division.includes(c) || c === club)) return true;
+  if (e.kind === 'draft' && e.round === 1) return true;
+  return false;
+}
+/** Bigger monsters and closer connections first. */
+export function moveWeight(e, { rival, division = [] }) {
+  const clubs = [e.club, e.from, e.to].filter(Boolean);
+  return (e.ovr || 0) + (e.kind === 'retire' ? 30 : e.kind === 'trade' ? 12 : e.kind === 'milestone' ? (e.tier >= 2 ? 12 : 2) : 0) + (e.formerMine ? 10 : 0) + (clubs.some((c) => c === rival) ? 10 : clubs.some((c) => division.includes(c)) ? 5 : 0) + (e.starter ? 6 : 0);
+}
+const ageOf = (e) => (e.age ? `, ${e.age}` : '');
+/** One line of text for a move; the monster's name is linked by the UI through mid/mname. */
+export function moveText(e) {
+  const who = `${e.mname} (${e.position}${e.ovr ? `, ${e.ovr} OVR` : ''}${ageOf(e)})`;
+  switch (e.kind) {
+    case 'signing': return e.via === 'waivers' ? `${e.club} claim ${who} off waivers${e.from ? `, late of ${e.from}` : ''}.` : e.generated ? `${e.club} sign ${who}, a veteran out of ${e.region || 'the regions'}.` : `${e.club} sign free agent ${who}${e.from ? `, formerly of ${e.from}` : ''}.`;
+    case 'release': return e.reason === 'walked' ? `${who} leaves ${e.club} as a free agent; his deal was not renewed.` : `${e.club} release ${who}${e.why === 'cap' ? ' to get under the cap' : e.why === 'room' ? ' to make room' : ''}.`;
+    case 'trade': return e.toOwner ? `${e.from} trade ${who} to ${e.to} for ${e.consideration || 'picks'}.` : `Trade: ${who} goes from ${e.from} to ${e.to}${e.consideration ? ` for ${e.consideration}` : ''}.`;
+    case 'draft': return `${e.club} draft ${who} at #${e.overall} (round ${e.round}).`;
+    case 'retire': return `${e.mname} retires at ${e.age || 'the end of a long career'}${e.honours ? `: ${e.honours}` : ''}. ${e.club ? `He played his last season with ${e.club}.` : ''}`.trim();
+    case 'milestone': return `${e.mname} (${e.club}) reaches ${e.milestone}.`;
+    default: return `${e.mname}: ${e.kind}.`;
+  }
+}
+/**
+ * In-season moves for one week: the meaningful ones, the best TRANSACTIONS_PER_WEEK as separate lines. `events` are this
+ * week's queued moves; returns News items.
+ */
+export function movesNews({ year, week, events, club, rival, division }) {
+  const ctx = { club, rival, division };
+  const keep = latestPerMonster(events).filter((e) => meaningfulMove(e, ctx)).sort((a, b) => moveWeight(b, ctx) - moveWeight(a, ctx)).slice(0, TRANSACTIONS_PER_WEEK);
+  return keep.map((e, i) => ({ id: `${year}|${week}|move|${e.kind}|${e.mid || i}`, year, week, kind: e.kind, tier: e.kind === 'retire' ? 'notable' : 'info', icon: ICON[e.kind] || '📰', mid: e.mid || null, mname: e.mname || null, text: moveText(e) }));
+}
+/** One line per monster per window: a walk followed by a claim reads as the claim ("late of …"); a retirement always stands. */
+export function latestPerMonster(events) { const last = new Map(); for (const e of events || []) { const cur = last.get(e.mid || Symbol()); if (!cur || cur.kind !== 'retire') last.set(e.mid || Symbol(), e); } return [...last.values()]; }
+const ICON = Object.freeze({ signing: '✍️', release: '🚪', trade: '🔁', draft: '🎓', retire: '🎖️', milestone: '🏁', moves: '🗞️' });
+/** The offseason's moves as one digest item (OFFSEASON_DIGEST lines), written as the new season opens (week 0, "Preseason"). */
+export function offseasonDigest({ year, events, club, rival, division }) {
+  const ctx = { club, rival, division };
+  const keep = latestPerMonster(events).filter((e) => meaningfulMove(e, ctx)).sort((a, b) => moveWeight(b, ctx) - moveWeight(a, ctx)).slice(0, OFFSEASON_DIGEST);
+  if (!keep.length) return [];
+  const total = (events || []).length;
+  return [{ id: `${year}|0|moves`, year, week: 0, kind: 'moves', tier: 'notable', icon: ICON.moves, text: `Offseason moves: ${total} transaction${total === 1 ? '' : 's'} across the league; the ones that matter:`, lines: keep.map((e) => ({ mid: e.mid || null, mname: e.mname || null, text: moveText(e) })) }];
+}
+/** The draft as one digest: the owner's picks, the top MOVE_RULES.draftTop, and AI picks of prospects the owner had scouted. */
+export function draftDigest({ year, picks, club, scouted = new Set() }) {
+  const made = (picks || []).filter((p) => p.id && !p.passed); if (!made.length) return [];
+  const mine = made.filter((p) => p.team === club); const top = made.slice(0, MOVE_RULES.draftTop); const known = made.filter((p) => p.team !== club && scouted.has(p.id) && !top.includes(p));
+  const line = (p) => ({ mid: p.id, mname: p.name, text: `#${p.overall} ${p.team}: ${p.name} (${p.position}, ${p.ovr} OVR)${p.team === club ? ' — yours' : ''}` });
+  const lines = [...new Set([...mine, ...top, ...known])].sort((a, b) => a.overall - b.overall).slice(0, OFFSEASON_DIGEST + 2).map(line);
+  return [{ id: `${year}|0|draft`, year, week: 0, kind: 'draft', tier: 'notable', icon: ICON.draft, text: `The draft: ${made.length} picks. ${mine.length ? `You took ${mine.map((p) => p.name).join(', ')}.` : 'You made no pick.'}`, lines }];
 }
