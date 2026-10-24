@@ -90,7 +90,7 @@ function trimToCap(f, club, { year, cap, starters }) {
     const spare = clubRoster(f, club).filter((m) => !isProtected(m) && !starters.has(m.id)).sort((a, b) => playerValue(a) / (a.salary || 1) - playerValue(b) / (b.salary || 1))[0]
       || clubRoster(f, club).filter((m) => !isProtected(m)).sort((a, b) => playerValue(a) / (a.salary || 1) - playerValue(b) / (b.salary || 1))[0];
     if (!spare) break;
-    releaseFromClub(f, club, spare.id, { year, reason: 'released' }); n++;
+    releaseFromClub(f, club, spare.id, { year, reason: 'released', why: 'cap' }); n++;
   }
   return n;
 }
@@ -143,14 +143,14 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
       const [pos, , urgent] = needs[0]; const room = clubCapRoom(f, club, cap);
       // the league's waivers, then the pools: the best monster at the position the club can afford
       const waived = (f.league.waivers || []).filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
-      if (waived) { takeFromWaivers(f, waived.id); waived.salary = salaryFor(waived); addToClub(f, club, waived, { year, via: 'signed', contract: newContract(year, 2) }); out.fromWaivers = (out.fromWaivers || 0) + 1; continue; }
+      if (waived) { takeFromWaivers(f, waived.id); waived.salary = salaryFor(waived); addToClub(f, club, waived, { year, via: 'signed', contract: newContract(year, 2), source: 'waivers' }); out.fromWaivers = (out.fromWaivers || 0) + 1; continue; }
       const pooled = Object.values(f.pool || {}).flat().filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
-      if (pooled) { takeFromPool(f, pooled.id); pooled.salary = salaryFor(pooled); addToClub(f, club, pooled, { year, via: 'signed', contract: newContract(year, 2) }); out.fromPools++; continue; }
+      if (pooled) { takeFromPool(f, pooled.id); pooled.salary = salaryFor(pooled); addToClub(f, club, pooled, { year, via: 'signed', contract: newContract(year, 2), source: 'pool' }); out.fromPools++; continue; }
       const starterSlot = clubRoster(f, club).filter((m) => m.position === pos).length < (GROUP_SLOTS[pos]?.length || 1);
       const quality = targetOf(club) + (starterSlot ? 1 : -4) + r.int(5) - 2;
       const m = generateArrival(f, r, { club, position: pos, quality, room, floor: urgent });
       if (!m) break; // nothing affordable and nothing urgent: the club plays short of 38
-      addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 2) }); out.generated++;
+      addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 2), source: 'generated' }); out.generated++;
     }
   }
   return out;
@@ -194,8 +194,8 @@ export function leagueNudge(f, r, { year, cap, targetOf, teamOf }) {
       if (!m) { // make cap room: the lowest value per salary among the spares goes
         const spare = weakestSpare(f, club, { position: null }); if (!spare || spare.position === pos) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' });
         const again = generateArrival(f, r, { club, position: pos, quality: target + 2, room: clubCapRoom(f, club, cap), floor: false }); if (!again) break;
-        addToClub(f, club, again, { year, via: 'signed', contract: newContract(year, 2) });
-      } else addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 2) });
+        addToClub(f, club, again, { year, via: 'signed', contract: newContract(year, 2), source: 'generated' });
+      } else addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 2), source: 'generated' });
       signed++; ovr = teamOverall(teamOf(club));
     }
     c.strategy.boost = signed; if (signed) out.boosted.push(club); else if (!c.strategy.slow) out.unchanged++;
@@ -240,7 +240,7 @@ export function leagueInjuryCover(f, r, { year, cap, targetOf }) {
       if (m) { if (waived) takeFromWaivers(f, m.id); else takeFromPool(f, m.id); m.salary = salaryFor(m); }
       else m = generateArrival(f, r, { club, position: pos, quality: targetOf(club) - 8, room, floor: true });
       if (!m) break;
-      addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 1) }); signed++;
+      addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 1), source: waived ? 'waivers' : pooled ? 'pool' : 'generated' }); signed++;
     }
   }
   return signed;

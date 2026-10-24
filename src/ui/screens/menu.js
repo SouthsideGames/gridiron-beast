@@ -41,6 +41,7 @@ export function registerMenuScreens(Router, app) {
         <div class="stack">
           <button class="btn ${f ? '' : 'primary big'} block" data-action="new">${f ? 'Start a New Franchise' : '🏆 New Franchise'}</button>
           <button class="btn block" data-action="go" data-screen="franchises">🗂️ Franchises <span class="dim mono">3 slots</span></button>
+          ${f && !isArchived(f) ? `<button class="btn block" data-action="go" data-screen="league">🏟️ League Hub <span class="dim mono">16 clubs</span></button>` : ''}
           ${legacy && !f ? `<button class="btn block" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
           <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
           <button class="btn block" data-action="go" data-screen="achievements">🏅 Achievements <span class="dim mono">${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}</span></button>

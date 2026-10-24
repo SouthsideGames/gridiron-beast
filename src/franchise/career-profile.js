@@ -50,7 +50,7 @@ export const TROPHY_META = Object.freeze({
 });
 
 /** A departed, decorated AI monster's legend stub (GDD §42.6 exits) read as a monster: career totals, honours, his last club. */
-function fromStub(stub) { return { id: stub.id, name: stub.name, species: stub.species, position: stub.position, type: stub.type, stage: stub.stage || 0, age: stub.age, level: 1, attributes: {}, potential: null, stats: { v: 2, career: { reg: stub.career || {}, post: {} }, season: { year: null, reg: {}, post: {} }, log: [], seasons: [] }, career: { v: 1, ev: stub.ev || [] }, history: stub.lastClub ? [{ club: stub.lastClub, from: null, to: stub.left ?? null, reason: 'left' }] : [], legend: true }; }
+function fromStub(stub) { return { id: stub.id, name: stub.name, species: stub.species, position: stub.position, type: stub.type, stage: stub.stage || 0, age: stub.age, level: 1, attributes: {}, potential: null, stats: { v: 2, career: { reg: stub.career || {}, post: {} }, season: { year: null, reg: {}, post: {} }, log: [], seasons: stub.seasons || [] }, career: { v: 1, ev: stub.ev || [] }, history: stub.history?.length ? stub.history : stub.lastClub ? [{ club: stub.lastClub, from: null, to: stub.left ?? null, reason: 'left' }] : [], legend: true, retired: stub.left ?? null }; }
 /** Every place a monster can be found in this franchise, by stable id (never by name). */
 export function findMonster(f, id) {
   if (!f || id == null) return null;

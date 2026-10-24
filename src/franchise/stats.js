@@ -219,7 +219,9 @@ const BASE_STARTERS = new Set([...OFFENSE_BASE, ...DEFENSE_BASE, 'K']);
  * `booksFor(teamName)`: which clubs' monsters keep season and career books (the owner's always; with the league registry every
  * AI club too, GDD §42.6). Game logs are kept for the owner's monsters only (decision G: AI season totals, no AI game lines).
  */
-export function recordGame(f, state, teams, { playoff = false, week = f.season.week, year = f.season.year, playerClub = f.club, booksFor = null } = {}) {
+/** `onLine(teamName, monster, game)`: called for every monster whose book took this game (AI monsters keep no logs, so the
+ * Career Timeline's per-game writers receive the line this way, GDD §46). */
+export function recordGame(f, state, teams, { playoff = false, week = f.season.week, year = f.season.year, playerClub = f.club, booksFor = null, onLine = null } = {}) {
   const key = `${year}|${week}|${teams.home.name}|${teams.away.name}|${playoff ? 'p' : 'r'}`;
   const done = (f.season.recorded ||= []);
   if (done.includes(key)) return false;
@@ -247,7 +249,9 @@ export function recordGame(f, state, teams, { playoff = false, week = f.season.w
         const s = rolloverMonster(src, { year, team: team.name });
         const gl = { games: 1, starts: e.start ? 1 : 0, ...(mine ? e.line : boxLine(e.line)) }; // AI books keep the box-score keys (decision G); the tables keep every key this season
         addInto(s.season[bucket], gl); addInto(s.career[bucket], gl);
-        if (mine) { s.log.push({ year, week, opp: opp.name, home: side === 'home', playoff, won, score: `${state.score[side]}-${state.score[side === 'home' ? 'away' : 'home']}`, line: e.line }); if (s.log.length > 20) s.log.shift(); }
+        const game = { year, week, opp: opp.name, home: side === 'home', playoff, won, score: `${state.score[side]}-${state.score[side === 'home' ? 'away' : 'home']}`, line: e.line };
+        if (mine) { s.log.push(game); if (s.log.length > 20) s.log.shift(); }
+        onLine?.(team.name, src, game);
       }
     }
   }
@@ -313,7 +317,7 @@ function better(cur, value) { return value > 0 && (!cur || value > cur.value); }
 function prevOf(cur, year, week = null) {
   if (!cur) return null;
   if (cur.year === year && (week == null || cur.week === week)) return cur.prev || null;
-  const { prev, ...rest } = cur; return { value: rest.value, name: rest.name || null, team: rest.team || null, year: rest.year ?? null };
+  const { prev, ...rest } = cur; return { value: rest.value, name: rest.name || null, team: rest.team || null, year: rest.year ?? null, ...(rest.id ? { id: rest.id } : {}) }; // the id: a persistent monster can break his own mark (GDD §46)
 }
 /** After a game: single-game player and team records. */
 export function updateGameRecords(f, state, teams, { year, week, playoff }) {

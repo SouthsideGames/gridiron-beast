@@ -7,7 +7,7 @@ import { ELEMENT_REGIONS } from '../data/species.js';
 import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
 import { ROOKIE_SCALE } from './draft.js';
-import { addToClub, removeFromClub, clubRoster, isProtected, legendStub, hasLeague } from './league-registry.js';
+import { addToClub, removeFromClub, clubRoster, isProtected, legendStub, hasLeague, leagueEvent, moveIdentity } from './league-registry.js';
 import { GROUP_SLOTS } from './roster.js';
 
 export const POOL_CAP = 12;            // monsters a regional pool holds (GDD §18.3), the oldest leaving first
@@ -38,8 +38,25 @@ export function isDecorated(f, m) {
  */
 export function leaveLeague(f, m, { year, club = null }) {
   if (!hasLeague(f)) return 'gone';
-  if (isDecorated(f, m)) { f.league.legends[m.id] = legendStub(m, { year, club: club || m.history?.[m.history.length - 1]?.club || null }); return 'legend'; }
+  if (isDecorated(f, m)) {
+    const last = club || m.history?.[m.history.length - 1]?.club || null;
+    f.league.legends[m.id] = legendStub(m, { year, club: last });
+    // A retirement (owner's rule, 2026-10-24): he leaves the active league for good and cannot return. Reported with his honours.
+    leagueEvent(f, { kind: 'retire', club: last, honours: honoursLine(f, m), ...moveIdentity(f, m) });
+    return 'legend';
+  }
   return 'gone';
+}
+/** "two-time MVP, a Beast Bowl champion, a league record" — from the save's own records. */
+export function honoursLine(f, m) {
+  const ev = m.career?.ev || []; const parts = [];
+  const awards = {}; for (const e of ev) if (e.t === 'award') awards[e.x?.key] = (awards[e.x?.key] || 0) + 1;
+  for (const h of f.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && !ev.some((e) => e.t === 'award' && e.y === h.year && e.x?.key === k)) awards[k] = (awards[k] || 0) + 1;
+  const label = { mvp: 'MVP', opoy: 'Offensive Monster of the Year', dpoy: 'Defensive Monster of the Year', smoy: 'Signature Monster of the Year', oroy: 'Offensive Rookie of the Year', droy: 'Defensive Rookie of the Year' };
+  for (const [k, n] of Object.entries(awards)) if (label[k]) parts.push(`${n > 1 ? `${['', 'two', 'three', 'four', 'five'][n] || n}-time ` : ''}${label[k]}`);
+  const titles = ev.filter((e) => e.t === 'champion').length; if (titles) parts.push(titles === 1 ? 'a Beast Bowl champion' : `${titles}-time Beast Bowl champion`);
+  const recs = ev.filter((e) => e.t === 'record').length; if (recs) parts.push(recs === 1 ? 'a league record' : `${recs} league records`);
+  return parts.join(', ');
 }
 
 /**
@@ -77,10 +94,10 @@ export function takeFromPool(f, id) {
  * An AI club releases a monster: off the roster and into the pools (or out of the league). Never a protected monster: the
  * registry refuses, and so does this. Returns { ok, where } or { ok: false, reason }.
  */
-export function releaseFromClub(f, club, id, { year, reason = 'released', silent = false } = {}) {
+export function releaseFromClub(f, club, id, { year, reason = 'released', silent = false, why = null } = {}) {
   const m = f.league?.monsters?.[id]; if (!m) return { ok: false, reason: 'Not on a league roster.' };
   if (isProtected(m)) return { ok: false, reason: `${m.name} is bound to ${club}.`, code: 'protected' };
-  removeFromClub(f, club, id, { year, reason });
+  removeFromClub(f, club, id, { year, reason, why, quiet: silent });
   const where = silent ? leaveLeague(f, m, { year, club }) : enterPool(f, m, { year, club, from: 'ai' });
   return { ok: true, where, monster: m };
 }
@@ -108,7 +125,7 @@ export function joinAsDraftee(f, club, m, { year, silent = false } = {}) {
   let released = null;
   if (clubRoster(f, club).length >= ROSTER_MAX) {
     const out = weakestSpare(f, club, { position: m.position }); if (!out) return { ok: false, reason: `${club} cannot make room.` };
-    released = releaseFromClub(f, club, out.id, { year, reason: 'released', silent });
+    released = releaseFromClub(f, club, out.id, { year, reason: 'released', silent, why: 'room' });
   }
   const salary = Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100;
   const contract = newContract(year, 2); contract.rookie = true;
