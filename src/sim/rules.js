@@ -4,7 +4,7 @@
 
 import { venueFor } from '../data/stadiums.js';
 import { positionOf, canPlay } from '../data/personnel.js';
-import { boostSlots, qualifyingEvent } from './partnership-play.js';
+import { boostSlots, qualifyingEvent, slotOf } from './partnership-play.js';
 import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
 import { simulatePlay } from './engine.js';
@@ -167,8 +167,11 @@ export function creditPartnerships(state, slots, sim, pre) {
   const off = state.possession, def = opponent(off);
   for (const [s, side] of [[off, 'offense'], [def, 'defense']]) {
     const pair = state.partners[s]?.[side]; if (!pair) continue;
+    const own = side === 'offense' ? slots.offense : slots.defense;
+    if (!slotOf(own, pair.a) || !slotOf(own, pair.b)) continue; // not on the field together this snap
+    const t = ((state.partnerCredits ||= { home: {}, away: {} })[s][side] ||= { n: 0, capped: 0, garbage: 0, kinds: {}, together: 0 });
+    t.together = (t.together || 0) + 1;
     const kind = qualifyingEvent(side, pair, slots, sim, pre); if (!kind) continue;
-    const t = ((state.partnerCredits ||= { home: {}, away: {} })[s][side] ||= { n: 0, capped: 0, garbage: 0, kinds: {} });
     if (pre.quarter === 4 && pre.score[s] - pre.score[opponent(s)] > 21) { t.garbage += 1; continue; }
     if (pair.cap && t.n >= pair.cap) { t.capped += 1; continue; }
     t.n += 1; t.kinds[kind] = (t.kinds[kind] || 0) + 1;
