@@ -105,7 +105,7 @@ export function registerMenuScreens(Router, app) {
         </div>
         ${savePanelHtml(app)}
         <p class="dim">Saves from earlier versions are never modified or deleted by this build.</p>
-        <p class="center dim">Build ${esc(buildLabel())}. If this does not match the latest build, close the app fully and reopen it.</p>`;
+        <p class="center dim">Build ${esc(buildLabel())} · files ${globalThis.__gbFiles === 'mapped' ? 'up to date' : globalThis.__gbFiles === 'refreshed' ? 'refreshed' : 'checking'}. If this does not match the latest build, close the app fully and reopen it.</p>`;
     },
     mount(root, ctx) {
       fillStorageMeter(root, app);

@@ -1,5 +1,5 @@
 // Build label shown in Settings and on the main menu, so a playtest report can say which build it saw.
 // `test` is false in the repository and in every released build; a private TEST publish flips it to enable developer-only
 // shortcuts (GDD §42.10). The released game never shows them.
-export const BUILD = Object.freeze({ version: 'v42.4.0-evolution', date: '2026-10-25', branch: 'evolution-overhaul', test: false });
+export const BUILD = Object.freeze({ version: 'v42.4.1-evolution', date: '2026-10-25', branch: 'release-cache-fix', test: false });
 export const buildLabel = () => `${BUILD.version} · ${BUILD.date}`;

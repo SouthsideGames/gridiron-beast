@@ -195,6 +195,7 @@ function tabs(ctx, screenName) {
 }
 
 export function start() {
+  if (globalThis.__gbRefreshing) return; // src/fresh.js is refreshing an older release's cached files: nothing is read or saved first
   globalThis.__gb = app; // test hook: the UI check reaches the franchise state through it
   Router.init({ root: $('#app'), context: () => ({ app, f: app.f, inFranchise: !!app.f, tabOf: TAB_OF }), tabs,
     tip: (ctx, name) => (ctx.f ? tipHtml(ctx.f, name) : ''), mounted: (ctx, name) => { if (ctx.f) maybeSheetTip(ctx.f, name, () => app.save()); }, help: (ctx, name) => (ctx.f ? helpButtonHtml(name) : '') });
