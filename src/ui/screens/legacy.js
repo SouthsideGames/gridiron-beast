@@ -7,7 +7,7 @@ import { esc, delegate, toast, sheet } from '../dom.js';
 import { yearOf } from '../../data/calendar.js';
 import { portraitSprite, monsterSprite } from '../pixel-monster.js';
 import { monsterOverall, SPECIES_BY_ID } from '../../data/monsters.js';
-import { careerLink, openSnapshotSheet } from '../career-ui.js';
+import { careerLink } from '../career-ui.js';
 import { leagueNewsSheetHtml } from '../league-news-ui.js';
 import { offerExport } from '../storage-ui.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
@@ -121,7 +121,7 @@ export function registerLegacyScreens(Router, app) {
         news: () => sheet(leagueNewsSheetHtml(app.f), { title: 'League News' }),
         awards: (el) => { const h = app.f.history.find((x) => x.year === Number(el.dataset.year)); if (h) sheet(awardsSheetHtml(h), { title: `${yearOf(h.year)} awards` }); },
         ceremony: (el) => Router.go('ceremony', { year: Number(el.dataset.year) }),
-        best: (el) => { const m = app.f.lifecycle.legacy.bestMonsters[Number(el.dataset.i)]; if (m?.career) openSnapshotSheet(m.career, { settings: app.settings }); else toast('No career snapshot was kept for this monster.', 'info'); },
+        best: (el) => { const m = app.f.lifecycle.legacy.bestMonsters[Number(el.dataset.i)]; if (m?.career) Router.go('career', { best: Number(el.dataset.i) }); else toast('No career snapshot was kept for this monster.', 'info'); },
       });
     },
   });

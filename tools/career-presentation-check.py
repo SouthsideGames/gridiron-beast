@@ -145,13 +145,16 @@ with sync_playwright() as pw:
         el = page.query_selector(selector)
         if not el: problems.append(f'no career link on {where}'); return
         mid = el.get_attribute('data-career'); el.scroll_into_view_if_needed(); el.click(); page.wait_for_timeout(300)
-        got = page.evaluate("() => { const s = [...document.querySelectorAll('.sheet')].pop(); const t = s?.querySelector('[data-mid]'); return t ? { mid: t.dataset.mid, title: s.querySelector('.sheet-head strong')?.textContent } : null }")
+        # a career link opens the full-screen career profile (GDD §48); Back returns to where it was tapped
+        got = page.evaluate("() => { const t = document.querySelector('.career-page[data-mid]'); return t ? { mid: t.dataset.mid, title: document.querySelector('.topbar .title')?.textContent } : null }")
         if not got or got['mid'] != mid: problems.append(f'{where}: the link opened {got} instead of {mid}')
         else: notes.append(f"{where}: {got['title']}")
+        page.evaluate("async () => (await import('/src/ui/router.js')).back()"); page.wait_for_timeout(250)
         return got
     go('hq', '{}', ); page.wait_for_timeout(500); close_sheets(page)
     page.click('.league-news [data-action=leaguenews]'); page.wait_for_timeout(300)
     link_check('League News', '.sheet .ln-week [data-career]'); shot(page, 'cp-7-news-link'); close_sheets(page)
+    if page.evaluate("() => document.documentElement.classList.contains('sheet-open') && !document.querySelector('.sheet')"): problems.append('a career link from a sheet left the page scroll-locked')
     go('awardhistory'); page.wait_for_timeout(300); link_check('award history', '#screen [data-career]'); shot(page, 'cp-8-award-link'); overflow(page, 'a league-profile sheet'); close_sheets(page)
     go('leaders'); page.wait_for_timeout(300); link_check('league leaders', '#screen [data-career]'); close_sheets(page)
     go('records'); page.wait_for_timeout(300)
@@ -180,8 +183,9 @@ with sync_playwright() as pw:
     for mid in ids[:2]:
         page.evaluate(f"() => {{ const b = document.createElement('button'); b.id = 'probe'; b.dataset.career = '{mid}'; b.textContent = 'x'; document.body.appendChild(b); }}")
         page.evaluate("() => document.getElementById('probe').click()"); page.wait_for_timeout(200)
-        got = page.evaluate("() => [...document.querySelectorAll('.sheet [data-mid]')].pop()?.dataset.mid")
+        got = page.evaluate("() => document.querySelector('.career-page[data-mid]')?.dataset.mid")
         if got != mid: problems.append(f'same-name link for {mid} opened {got}')
+        page.evaluate("async () => (await import('/src/ui/router.js')).back()"); page.wait_for_timeout(200)
         close_sheets(page); page.evaluate("() => document.getElementById('probe')?.remove()")
     notes.append(f'identical names ({ids[2]}): each link opened its own monster')
     # Hall of Fame: a card written with career snapshots
@@ -193,11 +197,12 @@ with sync_playwright() as pw:
     if not hb: problems.append('Hall of Fame monsters are not tappable')
     else:
         hb.click(); page.wait_for_timeout(400)
-        hs = page.evaluate("() => { const s = document.querySelector('.sheet'); return s ? { head: !!s.querySelector('.cs-head'), links: s.querySelectorAll('[data-action=tl-open]').length, items: s.querySelectorAll('.tl-item').length } : null }")
-        notes.append(f'Hall of Fame sheet: {hs}')
-        if not hs or not hs['head']: problems.append('Hall of Fame career sheet missing')
+        page.evaluate("() => document.querySelector('.cp-tab[data-v=timeline]')?.click()"); page.wait_for_timeout(300)
+        hs = page.evaluate("() => { const s = document.querySelector('.career-page'); return s ? { head: !!s.querySelector('.cp-head'), links: s.querySelectorAll('[data-action=tl-open]').length, items: s.querySelectorAll('.tl-item').length } : null }")
+        notes.append(f'Hall of Fame career page: {hs}')
+        if not hs or not hs['head']: problems.append('Hall of Fame career page missing')
         elif hs['links']: problems.append('Hall of Fame snapshot shows links it cannot follow')
-        shot(page, 'cp-10-hof'); close_sheets(page)
+        shot(page, 'cp-10-hof'); page.evaluate("async () => (await import('/src/ui/router.js')).back()"); page.wait_for_timeout(250)
     page.evaluate("async () => (await import('/src/franchise/hall-of-fame.js')).resetHof()")
     # back navigation keeps the roster where it was
     go('roster', '{}'); page.wait_for_timeout(300); close_sheets(page)

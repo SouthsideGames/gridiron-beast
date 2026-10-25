@@ -2,6 +2,29 @@
 
 All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
+## 0. Current status (2026-10-24, branch `career-profiles`: full-screen Monster Career Profiles, GDD §48, v42.1.0)
+
+- **`npm test`: 540 tests, all passing.** That includes `tests/career-page.test.js` (9 tests):
+  - every kind of monster (status, designation, rating rules);
+  - former owner monsters;
+  - chronological order without duplicates;
+  - season rows adding up to the career totals;
+  - dashes for unavailable values;
+  - retired legends' regular-season/playoff split;
+  - team moves as recorded;
+  - older saves unchanged by viewing;
+  - Hall of Fame and archived-franchise pages;
+  - the franchise unchanged after every page in every section.
+- **Renders:** 4 seasons: 669 monsters, 10,035 renders. 20 seasons: 765 monsters, 44 legends, the longest career 19 seasons, 11,475 renders. There were 0 problems, and the franchise was unchanged.
+- **Fingerprint:** `tools/career-presentation-study.mjs --fingerprint` is identical on `main` and on the branch (no gameplay change).
+- **`tools/career-profile-check.py --save=EXPORT.json`** (new; headless Chromium at 320/360/390/412 px, 12-season franchise): **passed.**
+  - **Monsters:** own, former owner, AI, rival signature, gym legendary, retired legend, table-only and Hall of Fame, each in all five sections, with no overflow, overlap or clipping.
+  - **Back:** from a club roster, the Leaders tab, Records, the monster card (with the section kept across a detour) and a link inside a sheet.
+  - **The franchise** was unchanged.
+- **Updated for the full-screen page and passed:** `career-presentation-check.py`, `navigation-check.py` (scenarios 3–6 now open the page and check Back), `league-hub-check.py` and `release-check.py` (seed 7).
+- **Unchanged and passed:** `ui-walkthrough` at 320 and 412 px, `feature-ui-check`, `career-ui-check`, `news-ui-check` and `storage-check`.
+- **Not done:** real devices (§3, item 14).
+
 ## 0. Current status (2026-10-24, release v42.0.1 on the main game: Phases 1–4 of GDD §42, documented in §47)
 
 - **Merged:** PR #47 (Phase 4, fast-forward `49778b2`); PR #48 (release harness); PR #49 (v42.0.1 save fixes, GDD §47.4).
@@ -157,6 +180,7 @@ The previous status (build v36.0, PR #36) follows.
 | League News study | `node tools/league-news-study.mjs --n=3 --seasons=3 [--show=1]` | Every week's scoreboard and headlines across hands-off seasons, caps, ids, record wording, save weight (GDD §39.4) |
 | News and lineup UI check | `python3 tools/news-ui-check.py --width=390 --height=844 --shots=DIR` | League News on HQ and its sheet, the folded club notes, and a Clash lineup emptied by hand (no refill) |
 | Storage check | `python3 tools/storage-check.py --save=EXPORT.json [--shots=DIR] [--json=OUT]` | The real IndexedDB in headless Chromium: migration of a v39.1 save, reload, Settings → Save data at 320/360/390/412 px, the backups sheet, a verified `.gbfranchise` download, the save-failure sheet and retry, a reopened connection, recovery from a damaged part, timings normal and at 4× CPU (GDD §43.12) |
+| Career profile check | `python3 tools/career-profile-check.py --save=EXPORT.json [--shots=DIR] [--json=OUT]` | The full-screen career page for every kind of monster in all five sections at 320–412 px, Back from the League Hub, Records, the monster card and a sheet, and the franchise unchanged by viewing (GDD §48) |
 | Compaction proof | `node tools/compaction-check.mjs --seed=2 --seasons=6` | Every slimmed award winner row expands to the archived table row it came from, key by key; bytes saved (GDD §46.6) |
 | League Hub check | `python3 tools/league-hub-check.py --save=EXPORT.json [--shots=DIR] [--json=OUT]` | The hub's tabs and a club roster at phone widths, career links everywhere, careers opened from the hub, leaders, records, awards and News, the digests, timings at 4× CPU (GDD §46.3) |
 | League soak | `node tools/league-soak.mjs --seed=2 --seasons=20 --difficulty=pro [--boardReset=1] [--json=OUT]` | A hands-off career over the persistent league with the Phase 3 invariants after every week (16 legal rosters, the cap, ids, protected monsters), per-season metrics against today's generator, and the save's size at the end (GDD §45.6, §45.8) |
@@ -213,6 +237,14 @@ Run on at least one small iPhone (SE size) and one large Android, in the browser
     - An export downloads.
     - Play a day, close the app, reopen: the day is there.
     - On a second device, the same franchise at the newest progress.
+
+14. **Full-screen career profiles (v42.1.0, GDD §48), on a private test link or after release.**
+    - Tap names in the League Hub (a club roster, Leaders, Rivals), Records, League News and the free-agent market; each opens the monster's page.
+    - Go through Overview, Timeline (newest/oldest), Stats (regular season/playoffs/both, tap a season), Awards and Teams.
+    - Press Back each time: you should return to the same screen, tab and scroll position.
+    - Open your own monster's card → "Full career profile".
+    - Open a Hall of Fame card's monster.
+    - Repeat at 320–412 px.
 
 ## 3a. Future features (design only, not implemented)
 

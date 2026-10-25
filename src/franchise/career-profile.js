@@ -49,8 +49,15 @@ export const TROPHY_META = Object.freeze({
   record: { icon: '📜', label: 'League record', tier: 'silver' },
 });
 
+/** A legend's career split into regular season and playoffs: from his season books when he has them (the stub's `career` is
+ * one combined total), else the combined total as the regular season (stubs written without season books). */
+function stubCareer(stub) {
+  const books = stub.seasons || []; if (!books.length) return { reg: stub.career || {}, post: {} };
+  const reg = {}, post = {}; for (const b of books) { addInto(reg, b.reg || {}); addInto(post, b.post || {}); }
+  return { reg, post };
+}
 /** A departed, decorated AI monster's legend stub (GDD §42.6 exits) read as a monster: career totals, honours, his last club. */
-function fromStub(stub) { return { id: stub.id, name: stub.name, species: stub.species, position: stub.position, type: stub.type, stage: stub.stage || 0, age: stub.age, level: 1, attributes: {}, potential: null, stats: { v: 2, career: { reg: stub.career || {}, post: {} }, season: { year: null, reg: {}, post: {} }, log: [], seasons: stub.seasons || [] }, career: { v: 1, ev: stub.ev || [] }, history: stub.history?.length ? stub.history : stub.lastClub ? [{ club: stub.lastClub, from: null, to: stub.left ?? null, reason: 'left' }] : [], legend: true, retired: stub.left ?? null }; }
+function fromStub(stub) { return { id: stub.id, name: stub.name, species: stub.species, position: stub.position, type: stub.type, stage: stub.stage || 0, age: stub.age, level: null, attributes: null, potential: null, stats: { v: 2, career: stubCareer(stub), season: { year: null, reg: {}, post: {} }, log: [], seasons: stub.seasons || [] }, career: { v: 1, ev: stub.ev || [] }, history: stub.history?.length ? stub.history : stub.lastClub ? [{ club: stub.lastClub, from: null, to: stub.left ?? null, reason: 'left' }] : [], legend: true, retired: stub.left ?? null }; }
 /** Every place a monster can be found in this franchise, by stable id (never by name). */
 export function findMonster(f, id) {
   if (!f || id == null) return null;
@@ -178,7 +185,7 @@ export function careerProfile(f, id) {
 function identity(m) {
   const sp = SPECIES_BY_ID[m.species]; const stage = m.stage || 0;
   const formName = stage > 0 ? sp?.evolution?.[stage - 1]?.name || sp?.name : sp?.name;
-  return { id: m.id, name: m.name, species: m.species, stage, speciesName: formName || m.species, type: m.type || sp?.element || null, position: m.position, age: m.age ?? null, level: m.level ?? null, ovr: m.attributes ? monsterOverall(m) : (m.ovr ?? null), yearsPro: m.yearsPro ?? 0, origin: m.origin || null, cornerstone: !!m.cornerstone };
+  return { id: m.id, name: m.name, species: m.species, stage, speciesName: formName || m.species, type: m.type || sp?.element || null, position: m.position, age: m.age ?? null, level: m.legend ? null : m.level ?? null, ovr: m.legend ? null : m.attributes ? monsterOverall(m) : (m.ovr ?? null), yearsPro: m.yearsPro ?? 0, origin: m.origin || null, cornerstone: !!m.cornerstone }; // a retired legend keeps no ratings: never a made-up current overall
 }
 
 export function fullProfile(f, m, where = 'roster', team = null) {

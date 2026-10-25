@@ -3050,7 +3050,7 @@ Protection is exactly §45.2; Phase 4 shows it: badges on rosters and the hub, t
 - **Storage at season 20** (the packed logical payload, decision Z): 2.09 MB (Pro) to 2.16 MB (All-Star) with the league's careers, 493–512 KB stored; the §42.11 target (2.7 MB ±25%) still holds with Phase 4's events in the save.
 
 ### 46.10 Not in Phase 4
-Career cards and timelines as separate full screens for AI monsters (the sheet is the card); AI–AI trades in the playoffs; compaction of the archived tables (not lossless for AI rows under decision G); real-device checks (the owner decides at release time).
+Career cards and timelines as separate full screens for AI monsters (the sheet is the card; built in v42.1.0, §48); AI–AI trades in the playoffs; compaction of the archived tables (not lossless for AI rows under decision G); real-device checks (the owner decides at release time).
 
 ## 47. Release v42.0 / v42.0.1 — Phases 1–4 on the main game (RELEASED 2026-10-24)
 
@@ -3118,3 +3118,132 @@ A read-only dry run of the migration on a **copy of the owner's real v39.0 cloud
   - Anything after Phase 4 ("Phase 5" was not started).
   - The items listed in §46.10.
   - The balance narrowing left open in §46.8.
+
+## 48. Full-screen Monster Career Profiles — MONSTER CAREER TIMELINES — FEATURE COMPLETE (IMPLEMENTED 2026-10-24; branch `career-profiles`, v42.1.0)
+
+The last presentation item of the career feature (§46.10): every monster with a record has a full-screen career page, like a player page in a sports game. It is a presentation and navigation layer over the career system of §38, §40, §41, §45 and §46. No second career-tracking system was created, no career data was added to the save, and opening a page writes nothing.
+
+### 48.1 Where it reads from
+`src/franchise/career-page.js` builds the page from `careerProfile` (`career-profile.js`), the one profile every career view already uses:
+- the timeline (`career.js`);
+- the season books and career totals (`stats.js`);
+- the trophy case and the club history;
+- the league tables for players the save keeps no career for;
+- Hall of Fame snapshots.
+
+The page is drawn by `src/ui/screens/career.js` (route `career`). Building a page calls no backfill and no stats initialisation, so the franchise is byte-for-byte unchanged after viewing (tested in Node and in the browser).
+
+### 48.2 Who has a page
+Every monster the game holds a record of:
+- **The owner's roster** (status Active, "Your club").
+- **Former owner monsters**, now in a pool, on waivers or with another club. Their seasons with the owner stay in their team history.
+- **AI clubs' players** (Active, "With the …").
+- **The rival's signature monster** (⚔️ Rival signature) and the **gym legendaries** (★ Gym legendary). The owner's own legendary species show ★ Legendary.
+- **Retired AI legends** (Retired, "Left the league after season N"). They show no current rating or level, because they have none.
+- **Players known only from the league tables** ("Not on a current roster").
+- **Draft prospects.**
+- **Hall of Fame cards:** the snapshot, or the labelled partial profile of a card written before v39.0.
+- **An archived franchise's final roster** ("Final roster") and its best monsters' snapshots.
+
+A historical monster never shows an old rating as current.
+
+### 48.3 The page
+- **Header:** sprite, name, species and type, position, current or last club, OVR (active monsters only), status, designation, Hall of Fame mark, career tier and level.
+- **Five sections:**
+  1. **Overview:** seasons, games, teams, titles, awards and records; the career span; regular-season highlights for the position, with a separate playoffs line; honours with seasons; the clubs; notable moments; the record's own notes; the shareable career card.
+  2. **Timeline:** the §38/§40 timeline in full, newest or oldest first, with the All/Highlights filter. Linked entries open their records, and a season header opens the season.
+  3. **Stats:** one row per season (team, the position's columns, a stat-group switch for monsters with several roles) and a career total row. Regular season, playoffs or both. Tapping a season opens its games where the save keeps them. A number the save does not hold, or a rate with too little volume, shows "—", never 0.
+  4. **Awards:** the trophy case (shelves open their seasons), honours by season, Hall of Fame recognition, and the milestones (debut, firsts, career milestones, big seasons, playoff and rivalry moments, evolutions).
+  5. **Teams:** each club with its span, the seasons and games on record, the recorded moves (draft, signing, trade, release, return) and the honours won there.
+- **Spans:** a club's span covers everything the record proves for that club. Club entries reset their start date at each contract renewal, so the span also takes in seasons with lines and the moves.
+- **Mobile:** designed for 320–412 px. The section bar is sticky, the stats table scrolls sideways with the season column pinned, and long names wrap. Below 360 px the header and section bar tighten so all five sections stay in view.
+
+### 48.4 Entry points and Back
+- **One listener covers every career link.** Any element with `data-career` now opens the page through the router instead of the sheet. That covers:
+  - the League Hub (club rosters, Leaders, Moves, Races, Rivals);
+  - Records, Leaders, award history, box scores and League News;
+  - the free-agent market and the draft room;
+  - the Legacy's final roster and award winners;
+  - every career block.
+- **New buttons:** the monster card has a "📖 Full career profile ›" button; the Hall of Fame opens the page for each card monster; the Legacy's best monsters open their snapshot page.
+- **Back:** returns to the same screen, tab and scroll position. Verified from:
+  - a League Hub club roster (same club, same scroll);
+  - the League Hub Leaders tab (tab kept);
+  - Records and award history;
+  - League News on HQ;
+  - the free-agent market and the draft room;
+  - the monster card.
+- **Section memory:** the section and filters chosen on a page live on that page's history entry, so they survive a detour and Back.
+- **Links inside sheets:** a career link inside a sheet closes the sheet through its own close button, then opens the page. Back returns to the screen beneath. The scroll lock is released.
+
+### 48.5 Defects found and fixed (career scope, no gameplay change)
+- **Retired legends showed "Lv 1 · 1 OVR".** The rating was read from a stub with empty attributes. They now show no rating.
+- **Retired legends' playoff games were counted as regular season.** This affected the profile, the career sheet and the League Hub career leaders, because a stub keeps one combined career line. The regular season and the playoffs are now rebuilt from the stub's season books.
+- **A monster's current season had no club.** The current season's book names no team, so the page uses the club he plays for now.
+
+### 48.6 Historical-data limitations (nothing is fabricated)
+- **Seasons closed before v39.1** keep totals, not game lines (§41.1).
+- **Hall of Fame cards written before v39.0** keep only the monster's name, position, rating and level (§41.3).
+- **Records set before v39.0** link only when the evidence is unique (§41.2).
+- **Earlier AI careers:**
+  - An AI monster's league career starts when the persistent league was built (§45). Earlier seasons are not reconstructed.
+  - AI veterans created with professional years carry the note that earlier seasons were played before the franchise kept their stats.
+- **Players from before persistent rosters** are known only by the league tables' season lines (status "Not on a current roster"). They have no timeline.
+- **Older legend stubs:** a stub written without season books shows its combined career line as the regular season.
+- **Older saves** show the timeline they hold. Viewing never backfills.
+
+### 48.7 Verification
+- **`tests/career-page.test.js` (9 tests):**
+  - every kind of monster, with the status, designation and rating rules;
+  - a former owner monster's history with the owner's club;
+  - chronological order both ways, with no duplicated events;
+  - season rows adding up to the career totals on every bucket and stat checked;
+  - dashes for unavailable values;
+  - retired legends' regular-season and playoff split (profile, page and leaders);
+  - team moves exactly as recorded;
+  - an older save unchanged by viewing;
+  - Hall of Fame, older-card and archived-franchise pages;
+  - every page in every section leaving the franchise unchanged.
+- **`npm test`:** 540 passing.
+- **Renders:** every monster in a 4-season franchise in every section and filter (669 monsters, 10,035 renders, 0.18 ms each), and in a 20-season franchise (765 monsters, 44 retired legends, the longest career 19 seasons; 11,475 renders, 0.34 ms each). There were 0 problems, and the franchise was unchanged.
+- **Gameplay unchanged:** `tools/career-presentation-study.mjs --fingerprint` gives identical seasons, champions, awards and rosters on `main` and on this branch.
+- **`tools/career-profile-check.py`:** headless Chromium at 320, 360, 390 and 412 px over a played 12-season franchise.
+  - **Monsters:** own, former owner, AI, rival signature, gym legendary, retired legend, table-only and Hall of Fame. Each was checked in all five sections, with no overflow, overlapping controls or clipped text.
+  - **Back:** from a club roster, the Leaders tab, Records and the monster card, with the section kept across a detour; plus a link from inside a sheet.
+  - **The franchise** was unchanged after all of it. **Passed.** The 19-season career was also checked at 320 px.
+- **Updated for the page and passed:** `career-presentation-check.py`, `navigation-check.py`, `league-hub-check.py` and `release-check.py` (v39.0 → v42.1, seed 7). Also passed: `ui-walkthrough` at 320 and 412 px, `feature-ui-check`, `career-ui-check`, `news-ui-check` and `storage-check`.
+
+This is an emulated browser, not a real device.
+
+### 48.8 Career feature audit (§27.4 A, §38, §40, §41, §46 and the owner's brief of 2026-10-24)
+
+| Requirement | Status |
+|---|---|
+| Draft or recruitment origin | Complete |
+| Team changes | Complete; older saves show what they recorded (§48.6) |
+| Evolution | Complete; evolutions before the timeline began are labelled as such |
+| First touchdown and other reliable firsts | Complete |
+| Championships, awards, career records | Complete |
+| Notable rivalry performances | Complete |
+| Highlights view and detailed statistics | Complete (All/Highlights filter; Stats section) |
+| No fabricated history for older saves | Complete; tested (§48.7) |
+| Career summary header and trophy case (§40.1–40.2) | Complete |
+| Interactive timeline with linked records (§40.3) | Complete |
+| Shareable career cards (§40.4) | Complete |
+| Career links by stable id from anywhere (§40.5, §46.2) | Complete; now open the full page |
+| League-wide careers, legends and retirement (§46.1, §46.7) | Complete |
+| Full-screen profiles for every monster (§46.10, owner's brief) | Complete |
+| Five sections: Overview, Timeline, Statistics, Awards & Trophy Case, Team History | Complete |
+| Entry points: roster cards, timelines, League Hub, leaders, Records, Hall of Fame, Legacy | Complete |
+| Back to the same screen, tab and scroll position | Complete, with one documented limitation: a link inside a sheet returns to the screen beneath it, not to the sheet |
+| Mobile 320–412 px | Complete (emulated); real devices not run |
+| Viewing never changes the franchise | Complete; tested |
+| Save compatibility and the v42.0.1 fixes | Complete; no save field added, release check passed |
+
+**Not in scope, and not started:** Monster Partnerships (§27.4 B); a career comparison of two monsters; the Moments Museum (§40.9). Each needs the owner's approval.
+
+**Known issues:**
+- Real iPhone and Android devices were not run.
+- A Hall of Fame snapshot shows "Retired" rather than "Hall of Famer" when the card's monster carried no Hall of Fame event at retirement. Cards written by the retirement flow carry it.
+
+**Every approved requirement of the Monster Career Timeline feature is satisfied: MONSTER CAREER TIMELINES — FEATURE COMPLETE.**

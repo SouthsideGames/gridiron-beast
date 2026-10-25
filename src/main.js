@@ -15,6 +15,7 @@ import { setHofMirror, mergeHof, hallOfFame } from './franchise/hall-of-fame.js'
 import { registerFranchisesScreens } from './ui/screens/franchises.js';
 import { registerLegacyScreens } from './ui/screens/legacy.js';
 import { registerLeagueHubScreens } from './ui/screens/league-hub.js';
+import { registerCareerScreens } from './ui/screens/career.js';
 import { tipHtml, maybeSheetTip, initTutorial, helpButtonHtml } from './ui/tutorial.js';
 import { openStatGuide } from './ui/stat-guide.js';
 import * as F from './franchise/franchise.js';
@@ -210,12 +211,13 @@ export function start() {
   // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
   document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
   // Career links anywhere (awards, news, the draft, free agency, the Hall of Fame): one listener opens a monster's career by id (GDD §40.5).
-  installCareerLinks(() => app.f, (screen, params) => Router.go(screen, params));
+  installCareerLinks(() => app.f, (screen, params) => Router.go(screen, params), { current: () => Router.currentScreen() });
   registerDexScreens(Router, app);
   registerCeremony(Router, app); // the Beast Bowl ceremony (GDD §35)
   registerRecoveryScreen(Router, app);
   registerFranchisesScreens(Router, app); // the three-slot manager (GDD §42.5)
   registerLeagueHubScreens(Router, app); // the League Hub (GDD §46)
+  registerCareerScreens(Router, app); // full-screen career profiles (GDD §48)
   registerLegacyScreens(Router, app); // the read-only archive shell (GDD §42.7)
   // The player's dex lives outside the franchise and is mirrored to the cloud like the save.
   setDexMirror((d) => cloudSaveDex(d));

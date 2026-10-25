@@ -89,45 +89,41 @@ with sync_playwright() as pw:
     page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)"); settle(200)
     tail = page.evaluate("() => { const tab = document.querySelector('.tabbar'); const main = document.querySelector('#screen'); const last = main.lastElementChild?.getBoundingClientRect(); return tab && last ? { lastBottom: Math.round(last.bottom), tabTop: Math.round(tab.getBoundingClientRect().top) } : null }")
     if tail: ok(tail['lastBottom'] <= tail['tabTop'] + 1, f'the last block is hidden under the tab bar {tail}')
-    # 3 League News → career → Open card → Back
+    # 3-6: a career link opens the full-screen career profile (GDD §48); Back returns to the same screen and scroll
+    def career_and_back(sel, where, label):
+        pre = page.evaluate("() => document.documentElement.classList.contains('sheet-open')")
+        if pre: notes.append(f'{label}: the lock was already set before the link (left by close_all removing a sheet directly)')
+        y0 = open_career_from(sel); opened = screen()
+        ok(opened == 'career', f'{label}: the career link opened {opened}, not the career profile')
+        back(); settle()
+        ok(screen() == where and abs(y() - y0) <= 4, f'{label}: Back went to {screen()} at {y()} (was {where} at {y0})')
+        lock = page.evaluate("() => ({ locked: document.documentElement.classList.contains('sheet-open'), sheets: [...document.querySelectorAll('.sheet-head strong')].map((x) => x.textContent) })")
+        ok(not lock['locked'] or lock['sheets'], f'{label}: the page is left scroll-locked with no sheet open {lock}')
+        if lock['sheets']: notes.append(f'{label}: back on {where}, the screen opened its own sheet {lock["sheets"]}')
+        notes.append(f'{label}: {where}→career→back {y0}→{y()}')
+    # 3 League News on HQ
     go('hq', '{}', '{ reset: true }'); settle(); close_all()
-    page.evaluate("() => document.querySelector('.league-news')?.scrollIntoView({ block: 'center' })"); settle(150); y3 = y()
-    sel = '.league-news [data-career]'
-    if page.query_selector(sel):
-        y3 = open_career_from(sel); has_card = page.query_selector('.sheet [data-action=cs-card]')
-        if has_card:
-            page.click('.sheet [data-action=cs-card]'); settle(); ok(screen() == 'monster', f'3: Open card went to {screen()}')
-            back(); settle(); ok(screen() == 'hq' and abs(y() - y3) <= 4, f'3: back to HQ at {y()} (was {y3}) on {screen()}')
-        else:
-            close_all(); ok(abs(y() - y3) <= 2, f'3: closing the career moved HQ {y3} -> {y()}')
-        notes.append(f'3 League News→career→back: HQ at {y()} (was {y3}); via card: {bool(has_card)}')
-    else: notes.append('3: no career link on the HQ card this week (the full sheet links are covered by the presentation check)')
-    # 4 Awards → career → Open card → Back
+    if page.query_selector('.league-news [data-career]'): career_and_back('.league-news [data-career]', 'hq', '3 League News')
+    else: notes.append('3: no career link on the HQ card this week (covered by the presentation check)')
+    # 4 Award history
     go('awardhistory'); settle(); close_all()
-    links = page.evaluate("() => [...document.querySelectorAll('#screen [data-career]')].map((b) => b.dataset.career)")
-    mine = page.evaluate("() => { const ids = new Set(__gb.f.roster.map((m) => m.id)); const b = [...document.querySelectorAll('#screen [data-career]')].reverse().find((x) => ids.has(x.dataset.career)); if (!b) return null; b.id = 'probe-award'; return b.dataset.career; }")
-    if mine:
-        y4 = open_career_from('#probe-award'); page.click('.sheet [data-action=cs-card]'); settle()
-        back(); settle(); ok(screen() == 'awardhistory' and abs(y() - y4) <= 4, f'4: back to awards at {y()} (was {y4})')
-        notes.append(f'4 awards→career→card→back: {y4}→{y()}')
-    else: notes.append('4: no award winner on the roster; closing a league profile checked instead')
-    if links and not mine:
-        y4 = open_career_from('#screen [data-career]'); close_all(); ok(abs(y() - y4) <= 2, f'4: closing moved awards {y4} -> {y()}')
-    # 5 Free agency → career → close
+    if page.query_selector('#screen [data-career]'): career_and_back('#screen [data-career]', 'awardhistory', '4 awards')
+    # 5 Free agency: the career link sits in the free agent's sheet; the sheet closes and Back returns to the market
     go('offseason', '{}', '{ reset: true }'); settle(); close_all()
     if page.query_selector('#screen [data-action=fa]'):
         page.evaluate("() => { const l = document.querySelectorAll('#screen [data-action=fa]'); l[Math.min(3, l.length - 1)].scrollIntoView({ block: 'center' }); }"); settle(150); y5 = y()
         page.evaluate("() => { const l = document.querySelectorAll('#screen [data-action=fa]'); l[Math.min(3, l.length - 1)].click(); }"); settle(300)
-        if page.query_selector('.sheet .career-block [data-career]'): page.evaluate("() => document.querySelector('.sheet .career-block [data-career]').click()"); settle(300)
-        n = page.evaluate("() => document.querySelectorAll('.sheet').length"); ok(n >= 1, '5: no sheet opened')
-        for _ in range(n): page.evaluate("() => [...document.querySelectorAll('.sheet [data-action=sheet-close]')].pop()?.click()"); settle(150)
-        ok(abs(y() - y5) <= 2 and screen() == 'offseason', f'5: free agency moved {y5} -> {y()}')
-        notes.append(f'5 free agency→career→close ({n} sheets): {y5}→{y()}')
-    # 6 Draft room → career → close
+        if page.query_selector('.sheet .career-block [data-career]'):
+            page.evaluate("() => document.querySelector('.sheet .career-block [data-career]').click()"); settle(300)
+            ok(screen() == 'career' and page.evaluate("() => document.querySelectorAll('.sheet').length") == 0, f'5: the free agent\'s career link opened {screen()} and left sheets open')
+            back(); settle()
+        else:
+            for _ in range(3): page.evaluate("() => [...document.querySelectorAll('.sheet [data-action=sheet-close]')].pop()?.click()"); settle(150)
+        ok(abs(y() - y5) <= 4 and screen() == 'offseason', f'5: free agency moved {y5} -> {y()} on {screen()}')
+        notes.append(f'5 free agency→career→back: {y5}→{y()}')
+    # 6 Draft room
     go('draft'); settle(); close_all()
-    if page.query_selector('#screen [data-career]'):
-        y6 = open_career_from('#screen [data-career]'); close_all(); ok(abs(y() - y6) <= 2 and screen() == 'draft', f'6: draft room moved {y6} -> {y()}')
-        notes.append(f'6 draft→career→close: {y6}→{y()}')
+    if page.query_selector('#screen [data-career]'): career_and_back('#screen [data-career]', 'draft', '6 draft')
     # 7 More → menu screen → Back
     go('more', '{}', '{ reset: true }'); settle(); close_all(); y7 = scroll_to(300)
     if click_js('#screen [data-action=go][data-screen=achievements]') or click_js('#screen [data-screen=hof]') or click_js('#screen [data-action=go]'):

@@ -192,14 +192,24 @@ export function openSnapshotSheet(snap, { settings = {}, profile = null } = {}) 
   return { el, profile: p };
 }
 
-/** One document listener: any element with data-career="<monster id>" opens that career (and stops the click there). */
+/**
+ * One document listener: any element with data-career="<monster id>" opens that monster's full-screen career profile (GDD §48)
+ * through the router, so Back returns to the screen, tab and scroll position it was opened from. A sheet the link sat in is
+ * closed first (through its own close button, so its close handling runs). Without a router it falls back to the sheet.
+ */
 let installed = false;
-export function installCareerLinks(getF, go) {
+export function installCareerLinks(getF, go, { current = null } = {}) {
   if (installed) return; installed = true;
   document.addEventListener('click', (e) => {
     const b = e.target.closest?.('[data-career]'); if (!b) return;
     const f = getF(); if (!f) return; e.preventDefault(); e.stopPropagation();
-    openCareerSheet(f, b.dataset.career, { go });
+    const id = b.dataset.career;
+    if (!go) { openCareerSheet(f, id); return; }
+    const cur = current?.(); if (cur?.name === 'career' && String(cur.params?.id) === String(id)) return; // already on his page
+    for (const x of document.querySelectorAll('.sheet [data-action="sheet-close"]')) x.click();
+    for (const x of document.querySelectorAll('.sheet-backdrop')) x.remove();
+    document.documentElement.classList.remove('sheet-open'); // the scroll lock goes with the sheets
+    go('career', { id });
   }, true);
 }
 /** A name as a career link (an id is required: names are never matched). */

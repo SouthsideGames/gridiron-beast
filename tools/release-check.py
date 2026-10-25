@@ -147,7 +147,7 @@ with sync_playwright() as pw:
       const st = app.storage.store; const backups = await st.listBackups(); const usage = await st.usage();
       return { build: (await import('./src/version.js')).BUILD.version, mode: app.storage.mode, source: app.bootInfo.source, notes: app.bootInfo.notes, schemaVersion, league: !!league, verify: R.verifyLeague(f), uid: !!uid, lifecycle, differing, seasonDiffering: tables, backups: backups.map((b) => b.kind), usage, legacyKept: localStorage.getItem('gridiron-beast-v6'), legacyBackupKept: localStorage.getItem('gridiron-beast-v6-backup') }; }""", before)
     report['migration'] = {k: v for k, v in mig.items() if k not in ('legacyKept', 'legacyBackupKept')}; report['migration']['bootSeconds'] = round(time.time() - t0, 1)
-    check(mig['build'].startswith('v42.0'), f"this build ran: {mig['build']}")
+    check(mig['build'].startswith('v42.'), f"this build ran: {mig['build']}")
     check(mig['mode'] == 'indexeddb' and mig['source'] == 'migrated', f"first start migrated into IndexedDB: {mig['mode']} / {mig['source']}")
     check(mig['schemaVersion'] == 8 and mig['league'] and not mig['verify'], f"the league registry was built: schema {mig['schemaVersion']}, {mig['verify'][:2]}")
     check(any('league registry built' in n for n in mig['notes']), f"boot notes record the registry: {mig['notes']}")
@@ -240,8 +240,8 @@ with sync_playwright() as pw:
                     for t in ['clubs', 'leaders', 'moves', 'races', 'rivals']: pg.click(f'[data-action="tab"][data-tab="{t}"]'); pg.wait_for_timeout(200); overflow(pg, f'League Hub {t} at {w}px')
                     shot(pg, 'hub-rivals', w)
                     pg.click('[data-action="tab"][data-tab="clubs"]'); pg.locator('[data-action="club"]').nth(2).click(); pg.wait_for_selector('main [data-career]', timeout=15000); overflow(pg, f'club at {w}px')
-                    pg.locator('main [data-career]').nth(3).click(); pg.wait_for_selector('.sheet', timeout=15000); overflow(pg, f'career sheet at {w}px'); shot(pg, 'career', w)
-                    pg.click('.sheet [data-action="sheet-close"]'); pg.wait_for_timeout(200)
+                    pg.locator('main [data-career]').nth(3).click(); pg.wait_for_selector('.career-page .cp-head', timeout=15000); overflow(pg, f'career profile at {w}px'); shot(pg, 'career', w)  # the full-screen career (GDD §48)
+                    pg.click('[data-action="router-back"]'); pg.wait_for_timeout(250)
             check(seen.get('leaders', 0) >= 5 and seen.get('records', 0) >= 5, f'{w}px: names link to careers on leaders and records: {seen}')
             sd = pg.evaluate("() => { const t = document.body.innerText; return /v42\\.0/.test(t) || !!document.querySelector('#save-data'); }")
         except Exception as e:
