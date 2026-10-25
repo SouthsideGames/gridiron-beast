@@ -153,13 +153,3 @@ test('one credit per pair per play, garbage time excluded for the side ahead by 
   const d2 = state({ home: 28, away: 0 }); creditPartnerships(d2, slots, stop, { down: 1, toGo: 10, quarter: 4, score: d2.score });
   assert.equal(d2.partnerCredits.away.defense.n, 1, 'a trailing defense still earns');
 });
-
-test('snaps together are counted (read only) so the post-game summary can say why a pair earned nothing', () => {
-  const state = { possession: 'home', partners: { home: { offense: { type: 'QB-WR', a: 'qb', b: 'wr', level: 0, cap: 8 }, defense: null }, away: { offense: null, defense: null } }, partnerCredits: { home: {}, away: {} }, score: { home: 0, away: 0 } };
-  const fail = sim('incomplete', 0, { passer: 'QB', target: 'WR1' });
-  creditPartnerships(state, slots, fail, { down: 1, toGo: 10, quarter: 1, score: state.score });
-  assert.deepEqual([state.partnerCredits.home.offense.together, state.partnerCredits.home.offense.n], [1, 0], 'on the field together, no credit');
-  const noWR = { offense: { ...OFF, WR1: M('other', 'WR') }, defense: DEF };
-  creditPartnerships(state, noWR, sim('complete', 12, { passer: 'QB', receiver: 'WR1' }), { down: 1, toGo: 10, quarter: 1, score: state.score });
-  assert.equal(state.partnerCredits.home.offense.together, 1, 'a snap without both captains is not counted');
-});

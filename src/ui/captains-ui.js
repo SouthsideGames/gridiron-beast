@@ -47,12 +47,11 @@ export function captainWarning(f, id) {
 /** A subtle note when a captain drops out of the starting lineup. */
 export function benchNote(f, id) { const c = CP.captaincyOf(f, f.club, id); return c ? `${nameOf(f, id)} is a captain: the partnership only works when both captains play.` : ''; }
 /** The post-game partnership rows (the owner's club only). */
-export function postGameHtml(f, rows, note = null) {
-  if (!rows?.length) return note ? `<div class="cap-post"><div class="muted" style="font-size:12px;margin-bottom:4px">CAPTAIN PARTNERSHIPS</div><p class="dim" style="margin:0">${esc(note)}</p></div>` : '';
+export function postGameHtml(f, rows) {
+  if (!rows?.length) return '';
   return `<div class="cap-post"><div class="muted" style="font-size:12px;margin-bottom:4px">CAPTAIN PARTNERSHIPS</div>${rows.map((x) => { const prog = CP.progressOf(x.type, x.n);
-    return `<div class="cap-post-row ${x.levelUp ? 'up' : ''}"><div class="row between"><b>${esc(nameOf(f, x.a))} & ${esc(nameOf(f, x.b))}</b><span class="dim">${x.earned} play${x.earned === 1 ? '' : 's'} together</span></div>${chemMeterHtml(prog)}${!x.together ? `<div class="cap-off" style="font-size:13px">They never played a snap together this game${captainOut(f, x)}, so no chemistry.</div>` : !x.earned ? '<div class="dim" style="font-size:12px">On the field together, but no play this game counted for both of them.</div>' : ''}${x.levelUp ? `<div class="cap-up">🤝 New level: <b>${prog.name}</b>! +${prog.bonus}% from the next game.</div>` : ''}${x.garbage ? `<div class="dim" style="font-size:12px">${x.garbage} play${x.garbage === 1 ? '' : 's'} in garbage time did not count.</div>` : ''}${x.capped ? `<div class="dim" style="font-size:12px">Game limit reached: ${x.capped} more did not count.</div>` : ''}</div>`; }).join('')}</div>`;
+    return `<div class="cap-post-row ${x.levelUp ? 'up' : ''}"><div class="row between"><b>${esc(nameOf(f, x.a))} & ${esc(nameOf(f, x.b))}</b><span class="dim">${x.earned} play${x.earned === 1 ? '' : 's'} together</span></div>${chemMeterHtml(prog)}${x.levelUp ? `<div class="cap-up">🤝 New level: <b>${prog.name}</b>! +${prog.bonus}% from the next game.</div>` : ''}${x.garbage ? `<div class="dim" style="font-size:12px">${x.garbage} play${x.garbage === 1 ? '' : 's'} in garbage time did not count.</div>` : ''}${x.capped ? `<div class="dim" style="font-size:12px">Game limit reached: ${x.capped} more did not count.</div>` : ''}</div>`; }).join('')}</div>`;
 }
-function captainOut(f, x) { const out = [x.a, x.b].map((id) => monsterOf(f, id)).filter((m) => m && (m.injury || !f.roster.some((r) => r.id === m.id))); return out.length ? ` (${out.map((m) => `${m.name} ${f.roster.some((r) => r.id === m.id) ? 'is injured' : 'is no longer on the team'}`).join(', ')})` : ''; }
 /** The Career Profile's Partnerships card: current captaincy, every partner with chemistry, best first. */
 export function careerPartnershipsHtml(f, id) {
   if (!CP.isActive(f)) return '';

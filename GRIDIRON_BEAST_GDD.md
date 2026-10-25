@@ -3391,9 +3391,3 @@ Thresholds are lifetime joint successful plays for the exact pair, per type. Eli
 - **Deployment:** https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq (URL unchanged), artifact version 97 (`1792937454-ed70`), 138 files: the 14 changed or new game files published and verified byte for byte against `main`; capabilities db, downloads, user and runtime contract 0.2.77 carried forward. The private test link was not touched. The owner's real cloud save was not opened.
 - **Limitations:** the claude.ai runtime and real iPhones cannot be driven from the development environment; layouts were checked in an emulated browser at 320, 360, 375, 390, 393, 412 and 430 px.
 
-### 49.10 v42.2.1 polish (owner's iPhone test, 2026-10-25)
-- **Captain badge spacing:** clear space between a name's scheme-fit star and the "C" badge (depth chart, lists, career card).
-- **Evolution is a big deal:** when a monster can evolve, the Evolve button pulses and glows with sparkles and the next form shimmers (still under reduced motion: a steady glow).
-- **Post-game partnership section always explains itself:** a pair that never shared a snap says so and why (a captain injured or gone); a pair on the field together that earned nothing says so; a game that kicked off before captains were named says chemistry starts next game. The engine counts snaps a pair was on the field together (read only; results unchanged).
-- Cache-busting `?v=42.2.1`. `npm test` 577/577.
-

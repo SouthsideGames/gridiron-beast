@@ -1763,7 +1763,6 @@ export function finishSunday(f, gameState) {
   }
   { const lines = new Map(); recordGame(f, gameState, { home: m.home, away: m.away }, { playoff: !!m.playoff, booksFor: (t) => leagueBooks(f, t), onLine: (t, x, g) => lines.set(x.id, g) }); leagueCareerAfterGame(f, [m[oppSide]], gameState, lines, { playoff: !!m.playoff, round: playoffRoundNow, vsOwner: true }); }
   const captainRows = afterCaptainGame(f, gameState, { home: m.home.name, away: m.away.name, week: f.season.week, playoff: !!m.playoff, round: playoffRoundNow }); // chemistry earned in this game, committed once
-  const captainNote = !gameState.partners && CP.captainsOf(f, f.club) ? 'This game kicked off before your captains were named, so it earned no chemistry. It starts with your next game.' : null;
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}-${gameState.score[oppSide]} vs ${m.opponent}${gameState.tiebreak ? ` (OT · ${gameState.tiebreak.size}v${gameState.tiebreak.size} Beast Clash)` : gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
@@ -1791,7 +1790,7 @@ export function finishSunday(f, gameState) {
   // Career Timeline (GDD §38): read-only, after the game's stats are in the books.
   careerAfterGame(f.roster, { year: f.season.year, week: f.season.week, club: f.club, playoffRound: playoffRoundNow, rival: !!m.rival, won, opponent: m.opponent, records: f.records });
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: f.club, from: e.from, to: e.to }); }
-  f.lastGame = { ...f.week.gameResult, events, partnerships: captainRows.filter((x) => x.club === f.club), captainNote, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null };
+  f.lastGame = { ...f.week.gameResult, events, partnerships: captainRows.filter((x) => x.club === f.club), year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null };
   { const rvTeam = f.rivals?.[f.tier]?.team; const vsRival = f.season.schedule.filter((g) => g.opponent === rvTeam && g.result);
     checkAchievements(f, 'sunday', { won, opponent: m.opponent, rival: rvTeam === m.opponent, newBadge: !!f.lastGame?.newBadge, playoffRound: playoffRoundNow, rivalSeasonWins: vsRival.filter((g) => g.result.won).length + (rvTeam === m.opponent && won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0), rivalSeasonLosses: vsRival.filter((g) => !g.result.won).length + (rvTeam === m.opponent && !won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0) }); }
   advanceWeek(f);

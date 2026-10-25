@@ -1086,14 +1086,3 @@ button.linkish { padding: 3px 0 !important; margin: -3px 0 !important; }
 .cap-hist:first-of-type { border-top: 0; }
 .cap-hist .grow { min-width: 0; }
 @media (max-width: 360px) { .cap-slot { min-height: 88px; padding: 6px; } .chem-pips i { width: 11px; } }
-/* v42.2.1: a monster ready to evolve is a big deal — the button pulses and glows, the next form shimmers */
-.evolve-btn { position: relative; animation: evo-pulse 1.6s ease-in-out infinite; box-shadow: 0 0 0 0 rgba(250, 204, 21, .7); }
-.evolve-btn .evo-spark { display: inline-block; animation: evo-spark 1.6s ease-in-out infinite; }
-.evo-next.evo-ready { animation: evo-shimmer 1.6s ease-in-out infinite; border-radius: 8px; }
-@keyframes evo-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(250, 204, 21, .65); } 50% { transform: scale(1.03); box-shadow: 0 0 18px 6px rgba(250, 204, 21, .45); } }
-@keyframes evo-spark { 0%, 100% { transform: scale(1) rotate(0); opacity: .8; } 50% { transform: scale(1.35) rotate(15deg); opacity: 1; } }
-@keyframes evo-shimmer { 0%, 100% { filter: drop-shadow(0 0 0 rgba(250, 204, 21, 0)); } 50% { filter: drop-shadow(0 0 8px rgba(250, 204, 21, .9)); } }
-@media (prefers-reduced-motion: reduce) { .evolve-btn, .evolve-btn .evo-spark, .evo-next.evo-ready { animation: none; } .evolve-btn { box-shadow: 0 0 12px 3px rgba(250, 204, 21, .5); } }
-html[data-reduced-motion="1"] .evolve-btn, html[data-reduced-motion="1"] .evolve-btn .evo-spark, html[data-reduced-motion="1"] .evo-next.evo-ready { animation: none; }
-/* captain badge: clear space after the name and the scheme-fit star */
-.dc-mid .cap-badge, .name .cap-badge, .cap-hist .cap-badge { margin-left: 8px; }
