@@ -21,7 +21,7 @@ export function gameModules(root = ROOT) {
 export async function releaseNumber(root = ROOT) { const { BUILD } = await import(path.join(root, 'src/version.js')); return BUILD.version.replace(/^v/, '').split('-')[0]; }
 export function stampedIndex(html, v, modules) {
   const map = JSON.stringify({ imports: Object.fromEntries(modules.map((m) => [`./${m}`, `./${m}?v=${v}`])) });
-  let out = html.replace(/styles\/app\.css\?v=[\w.]+/, `styles/app.css?v=${v}`).replace(/src\/main\.js\?v=[\w.]+/, `src/main.js?v=${v}`);
+  let out = html.replace(/styles\/app\.css\?v=[\w.]+/, `styles/app.css?v=${v}`).replace(/(<script type="module" src="src\/main\.js)\?v=[\w.]+/, `$1?v=${v}`); /* the script tag, not the import-map entry */
   out = out.replace(/<script type="importmap" id="gb-modules">[\s\S]*?<\/script>\n?/, '').replace(/<script type="module" src="src\/fresh\.js[^"]*"><\/script>\n?/, '');
   return out.replace(/(<script type="module" src="src\/main\.js)/, `<script type="importmap" id="gb-modules">${map}</script>\n<script type="module" src="src/fresh.js?v=${v}"></script>\n$1`);
 }
