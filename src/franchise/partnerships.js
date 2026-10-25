@@ -172,7 +172,7 @@ export function commitGame(f, state, { year, gameId, clubs }) {
     const rec = touchPair(P, pair, year, clubs[s]); const before = rec.n || 0;
     rec.n = before + (t.n || 0); if (t.n) rec.last = Math.max(rec.last ?? year, year);
     const from = levelOf(pair.type, before), to = levelOf(pair.type, rec.n);
-    rows.push({ club: clubs[s], side, type: pair.type, a: pair.a, b: pair.b, earned: t.n || 0, capped: t.capped || 0, garbage: t.garbage || 0, kinds: { ...(t.kinds || {}) }, before, n: rec.n, from, to, levelUp: to > from, playedAt: pair.level });
+    rows.push({ club: clubs[s], side, type: pair.type, a: pair.a, b: pair.b, together: t.together || 0, earned: t.n || 0, capped: t.capped || 0, garbage: t.garbage || 0, kinds: { ...(t.kinds || {}) }, before, n: rec.n, from, to, levelUp: to > from, playedAt: pair.level });
   }
   return rows;
 }
