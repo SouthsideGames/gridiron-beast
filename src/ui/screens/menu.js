@@ -18,8 +18,6 @@ import { clashSettings } from '../../franchise/clash-link.js';
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
 import { isArchived, SEASON_CAP } from '../../franchise/lifecycle.js';
 import { shortcutsEnabled, fastForwardSeason, fastForwardSeasons } from '../../franchise/dev-shortcut.js';
-import { openSnapshotSheet } from '../career-ui.js';
-import { legacyHofProfile } from '../../franchise/career-profile.js';
 import { resetTutorial, primerHtml, assistSettingsHtml } from '../tutorial.js';
 import { setAssist, assistSettings, ASSIST_MODE_TEXT } from '../../franchise/assist.js';
 import { openStatGuide } from '../stat-guide.js';
@@ -174,7 +172,7 @@ export function registerMenuScreens(Router, app) {
   });
   Router.registerScreen('hof', {
     title: 'Hall of Fame',
-    mount(root) { root.addEventListener('click', (e) => { const b = e.target.closest('[data-hof]'); if (!b) return; const card = hallOfFame().find((c) => c.id === b.dataset.hof); const i = Number(b.dataset.i); const snap = card?.careers?.[i]; if (snap) openSnapshotSheet(snap, { settings: app.settings || {} }); else if (card) openSnapshotSheet(null, { settings: app.settings || {}, profile: legacyHofProfile(card, i) }); }); },
+    mount(root) { root.addEventListener('click', (e) => { const b = e.target.closest('[data-hof]'); if (!b) return; const card = hallOfFame().find((c) => c.id === b.dataset.hof); if (!card) return; Router.go('career', { hof: card.id, i: Number(b.dataset.i) || 0 }); }); }, // the full-screen career (GDD §48): the card's snapshot, or the partial profile of an older card
     render() {
       const cards = hallOfFame();
       if (!cards.length) return '<div class="panel"><p>No careers enshrined yet. Hit every mark on the Campaign checklist and retire.</p></div>';

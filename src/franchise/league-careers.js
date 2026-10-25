@@ -22,7 +22,11 @@ export function allMonsters(f, { legends = true } = {}) {
 }
 
 /** Regular-season career totals of a monster or a legend stub (a stub keeps one combined career line). */
-export function careerTotals(m) { return m.stats ? withDerived(monsterLine(m, 'career', 'reg')) : withDerived(m.career && !m.career.ev ? m.career : {}); }
+export function careerTotals(m) {
+  if (m.stats) return withDerived(monsterLine(m, 'career', 'reg'));
+  if (m.seasons?.length) { const reg = {}; for (const b of m.seasons) addInto(reg, b.reg || {}); return withDerived(reg); } // a stub's season books keep the regular season apart (GDD §48.6)
+  return withDerived(m.career && !m.career.ev ? m.career : {});
+}
 
 /** Career leaders across the universe (regular season), top n per record category; `mine` keeps only the owner's roster. */
 export function universeCareerLeaders(f, { n = 5, mine = false } = {}) {

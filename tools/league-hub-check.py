@@ -43,9 +43,11 @@ def fresh(pw, w, throttle=None):
     return b, page
 def open_career_from(page, where, selector):
     page.wait_for_selector(selector, timeout=15000); el = page.locator(selector).first; name = el.inner_text().strip()
-    el.click(); page.wait_for_selector('.sheet .cs-stats-head, .sheet .career-block, .sheet .cs-hon, .sheet [data-action="cc-open"]', timeout=15000)
-    body = page.inner_text('.sheet'); check(name.split('\n')[0] in body, f'{where}: the career sheet names {name!r}'); overflow(page, f'career sheet from {where}')
-    page.click('.sheet [data-action="sheet-close"]'); page.wait_for_function("() => !document.querySelector('.sheet')", timeout=5000)
+    before = page.evaluate("() => import('./src/ui/router.js').then((R) => R.currentScreen()?.name)")
+    el.click(); page.wait_for_selector('.career-page .cp-head', timeout=15000)  # the full-screen career profile (GDD §48)
+    body = page.inner_text('.career-page'); check(name.split('\n')[0] in body, f'{where}: the career profile names {name!r}'); overflow(page, f'career profile from {where}')
+    page.click('[data-action="router-back"]'); page.wait_for_timeout(300)
+    back = page.evaluate("() => import('./src/ui/router.js').then((R) => R.currentScreen()?.name)"); check(back == before, f'{where}: Back returns to {before} (got {back})')
     return name
 
 with sync_playwright() as pw:
