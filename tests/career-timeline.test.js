@@ -129,7 +129,9 @@ test('multi-season: timelines accumulate without duplicates, stay inside real se
   let total = 0;
   for (const m of f.roster) {
     const ks = keys(m); assert.equal(new Set(ks).size, ks.length, `${m.name}: no duplicate events`); total += ks.length;
-    for (const e of careerEvents(m)) if (e.y != null) assert.ok(e.y >= 1 && e.y <= f.season.year, `${m.name} ${e.k} year ${e.y}`);
+    // In the offseason after the draft, a draftee's join is dated to the season he joins (the next one).
+    const latest = f.season.year + (f.season.finished && f.offseason ? 1 : 0);
+    for (const e of careerEvents(m)) if (e.y != null) assert.ok(e.y >= 1 && e.y <= latest, `${m.name} ${e.k} year ${e.y}`);
   }
   assert.ok(total > f.roster.length * 2, `${total} events across the roster`);
   assert.ok(f.roster.some((m) => of(m, 'first').length), 'firsts happen'); assert.ok(f.roster.some((m) => of(m, 'debut').length));

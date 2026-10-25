@@ -15,6 +15,7 @@ import { buildFx, endHold } from '../ability-fx.js';
 import { reviewHtml, reviewHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, devBadge, flagPlayMoment } from '../dev-review.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { resolveSpecies } from '../../data/monsters.js';
+import { qbReadPanelHtml } from '../qb-read-ui.js';
 
 export function registerPracticeScreens(Router, app) {
   const prac = { offense: 'quick_slants', defense: 'cover_3', ballOn: 30, sim: null, i: 0, raf: null, seed: 1, showArt: true };
@@ -34,7 +35,7 @@ export function registerPracticeScreens(Router, app) {
       if (!T.defensePlays.includes(prac.defense)) prac.defense = T.defensePlays[0];
       const frame = prac.sim ? prac.sim.frames[Math.min(prac.i, prac.sim.frames.length - 1)] : null;
       const presnap = !prac.sim && prac.showArt ? { play: PLAYS[prac.offense], offensePlay: PLAYS[prac.offense], defensePlay: PLAYS[prac.defense] } : !prac.sim ? { offensePlay: PLAYS[prac.offense], defensePlay: PLAYS[prac.defense] } : null;
-      const field = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame, prevFrame: prac.sim ? prac.sim.frames[Math.min(prac.i, prac.sim.frames.length - 1) - 1] || null : null, fx: prac.sim ? prac.fx : null, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites: prac.sim ? prac.sprites : null, presnap, ownLabel: 'OWN', oppLabel: 'OPP', camera: cameraFor(prac.ballOn) });
+      const field = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame, prevFrame: prac.sim ? prac.sim.frames[Math.min(prac.i, prac.sim.frames.length - 1) - 1] || null : null, fx: prac.sim ? prac.fx : null, fxQuality: app.settings.reducedMotion ? 'min' : 'full', qbRead: !!(app.f?.settings?.qbReads ?? app.settings?.qbReads), sprites: prac.sim ? prac.sprites : null, presnap, ownLabel: 'OWN', oppLabel: 'OPP', camera: cameraFor(prac.ballOn) });
       const sel = (id, list, name) => `<label class="field">${name}<select data-change="${name === 'Offense' ? 'off' : 'def'}">${list.map((p) => `<option value="${p}" ${p === id ? 'selected' : ''}>${esc(PLAYS[p].name)}</option>`).join('')}</select></label>`;
       const result = prac.sim ? `<div class="field-banner ${prac.sim.touchdown || prac.sim.turnover ? 'important' : ''}">${esc(resultText(prac.sim))}</div>` : '';
       return `<p class="muted">Run your plays against your own defense. Same engine as Sunday; ${f ? 'your current starters' : 'a practice squad'} on both sides.</p>
@@ -44,6 +45,7 @@ export function registerPracticeScreens(Router, app) {
         <div class="grid2" style="margin-top:8px"><button class="btn primary big" data-action="run">▶ Run play</button><button class="btn big" data-action="again" ${prac.sim ? '' : 'disabled'}>↻ Same seed</button></div>
         <div class="grid2" style="margin-top:8px"><button class="btn" data-action="detail" data-id="${prac.offense}">Offense details</button><button class="btn" data-action="detail" data-id="${prac.defense}">Defense details</button></div>
         ${lessonHtml(prac.lessonSide === 'defense' ? prac.defense : prac.offense)}<div class="row" style="justify-content:center"><button class="btn small ${prac.lessonSide !== 'defense' ? 'primary' : ''}" data-action="lesson" data-v="offense">Offense lesson</button><button class="btn small ${prac.lessonSide === 'defense' ? 'primary' : ''}" data-action="lesson" data-v="defense">Defense lesson</button></div>
+        ${prac.sim?.qb ? qbReadPanelHtml(prac.sim, (slot, side) => `${prac.sim.names?.[side === 'def' ? 'def' : 'off']?.[slot] || slot} (${slot})`) : ''}
         ${prac.sim ? `<h3>Events</h3><div class="log">${prac.sim.events.map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text)}</span></div>`).join('')}</div><p class="dim">Seed ${prac.sim.seed} · ${prac.sim.frames.length} frames · ${prac.sim.elapsed}s</p>` : ''}`;
     },
     mount(root, ctx) {
@@ -56,8 +58,8 @@ export function registerPracticeScreens(Router, app) {
         prac.i = 0; Router.render();
         const svg = document.querySelector('#field'); const start = performance.now(); const ms = 100 / (app.settings.speed || 1);
         const n = prac.sim.frames.length; const hold = endHold(prac.fx, prac.sim.frames[n - 1].t ?? 0);
-        const tick = (now) => { const raw = Math.floor((now - start) / ms); if (raw > n - 1) { const extra = (raw - (n - 1)) * 0.1; if (extra < hold && svg) { svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[n - 1], prevFrame: prac.sim.frames[n - 1], fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites: prac.sprites, time: (prac.sim.frames[n - 1].t ?? 0) + extra, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); prac.raf = requestAnimationFrame(tick); return; } Router.render(); return; }
-          const idx = Math.min(n - 1, raw); if (idx !== prac.i && svg) { prac.i = idx; svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[idx], prevFrame: prac.sim.frames[idx - 1] || null, fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites: prac.sprites, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); } prac.raf = requestAnimationFrame(tick); };
+        const tick = (now) => { const raw = Math.floor((now - start) / ms); if (raw > n - 1) { const extra = (raw - (n - 1)) * 0.1; if (extra < hold && svg) { svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[n - 1], prevFrame: prac.sim.frames[n - 1], fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', qbRead: !!(app.f?.settings?.qbReads ?? app.settings?.qbReads), sprites: prac.sprites, time: (prac.sim.frames[n - 1].t ?? 0) + extra, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); prac.raf = requestAnimationFrame(tick); return; } Router.render(); return; }
+          const idx = Math.min(n - 1, raw); if (idx !== prac.i && svg) { prac.i = idx; svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[idx], prevFrame: prac.sim.frames[idx - 1] || null, fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', qbRead: !!(app.f?.settings?.qbReads ?? app.settings?.qbReads), sprites: prac.sprites, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); } prac.raf = requestAnimationFrame(tick); };
         cancelAnimationFrame(prac.raf); prac.raf = app.settings.reducedMotion ? (prac.i = prac.sim.frames.length - 1, Router.render(), null) : requestAnimationFrame(tick);
       };
       delegate(root, {

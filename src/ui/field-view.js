@@ -26,7 +26,7 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
@@ -119,6 +119,9 @@ export function fieldSvg(o) {
     s += layers.ball; // fire or wind on a ball in the air, just under the ball
     s += `<ellipse cx="${(cx + (air ? 0 : 0.9)).toFixed(2)}" cy="${(cy - (air ? 1.4 : 0.7)).toFixed(2)}" rx="${air ? 0.95 : 0.7}" ry="${air ? 0.6 : 0.45}" fill="#d9924f" stroke="#fff" stroke-width="0.18"/>`;
     // Ability presentation over the sprites: icons, badges, outcome labels; then status marks on top of everything.
+    // QB read indicator (GDD §53, opt-in): a thin dashed ring on the receiver the quarterback is reading. Draws only; the frame's
+    // `read` is what the engine recorded.
+    if (qbRead && frame.read) { const p = posOf('off', frame.read); if (p) s += `<circle class="qb-read-ring" cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="2.3" fill="none" stroke="#ffe26c" stroke-width="0.28" stroke-dasharray="0.9 0.6" opacity="0.85"/><circle cx="${p[0].toFixed(2)}" cy="${(p[1] - 2.9).toFixed(2)}" r="0.45" fill="#ffe26c" opacity="0.9"/>`; }
     s += layers.over + statusOver;
   } else if (presnap?.offensePlay || presnap?.defensePlay) {
     const dp = presnap.defensePlay; const op = presnap.offensePlay;

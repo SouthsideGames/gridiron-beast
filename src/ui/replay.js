@@ -61,8 +61,11 @@ export function decisiveTime(sim, reason) {
 export function replayPlan(sim, reason) {
   const frames = sim.frames; const n = frames.length; const tOf = (i) => frames[i].t ?? i * FRAME_DT;
   const tD = decisiveTime(sim, reason); const tEnd = tOf(n - 1);
-  const stop = Math.min(tEnd, Math.max(tD + REPLAY.tail, tEnd - 0.05)); // show the whistle unless the play ran on
-  const startT = Math.max(0, Math.min(tD - REPLAY.lead, stop - REPLAY.maxSpan));
+  let stop = Math.min(tEnd, Math.max(tD + REPLAY.tail, tEnd - 0.05)); // show the whistle unless the play ran on
+  // A long play (a catch and a long run): shorten the lead-in first (down to 0.6 s before the moment), then trim the end, so the
+  // window never exceeds maxSpan and always keeps the decisive moment and its slow motion.
+  const startT = Math.max(0, Math.max(tD - REPLAY.lead, Math.min(tD - 0.6, stop - REPLAY.maxSpan)));
+  stop = Math.min(stop, startT + REPLAY.maxSpan);
   let i0 = 0; while (i0 < n - 1 && tOf(i0) < startT) i0++;
   let i1 = n - 1; while (i1 > i0 && tOf(i1) > stop + 1e-6) i1--;
   const steps = []; let total = 0;

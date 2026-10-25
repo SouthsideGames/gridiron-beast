@@ -11,7 +11,7 @@ import { updateGameRecords, ensureRecords } from '../src/franchise/stats.js';
 import { careerAfterGame } from '../src/franchise/career.js';
 
 let real = null;
-const franchise = () => (real ||= runFranchise(4, { difficulty: 'rookie', seasons: 3 }).f); // seed 4 wins a Beast Bowl in its third season (with persistent AI rosters, Phase 3; seed 1 did before)
+const franchise = () => (real ||= runFranchise(3, { difficulty: 'rookie', seasons: 3 }).f); // seed 3 wins a Beast Bowl in its first season (with the QB read progression, v42.5; seed 4 did before, seed 1 before that)
 
 const mon = (over = {}) => ({ id: 'm1', name: 'Testro', species: 'emberfox', stage: 0, type: 'Fire', position: 'QB', age: 24, level: 9, yearsPro: 0, attributes: { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 40 }, history: [], career: { v: 1, ev: [], bf: 1 }, ...over });
 const book = (year, team, reg, post = {}) => ({ year, team, reg, post });
@@ -139,7 +139,7 @@ test('the real franchise: summaries, trophies and links agree with its history; 
     for (const e of p.timeline.filter((x) => x.ref)) { linked++; const d = P.eventDetail(f, m, e.ref); if (d) opened++; }
   }
   assert.ok(linked > 0); assert.equal(opened, linked, 'every linked event opens a detail');
-  assert.ok(titleYears.length >= 1, 'seed 4 wins a title (the fixture this test relies on)');
+  assert.ok(titleYears.length >= 1, 'seed 3 wins a title (the fixture this test relies on)');
   assert.equal(JSON.stringify(f), before, 'profiles and details only read');
   const back = Save.importJson(Save.exportJson(f)); assert.ok(back);
   for (const m of f.roster.slice(0, 5)) assert.deepEqual(P.fullProfile(back, back.roster.find((x) => x.id === m.id), 'roster').trophies, P.fullProfile(f, m, 'roster').trophies);

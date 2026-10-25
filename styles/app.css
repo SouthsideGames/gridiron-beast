@@ -1253,3 +1253,38 @@ html.evo-open, html.evo-open body { overflow: hidden; }
 .mon-nav-btn.next { justify-content: flex-end; }
 .mon-nav-btn:active { background: var(--panel-2); }
 .mon-nav-pos { font-size: 13px; font-weight: 700; color: var(--ink-2); white-space: nowrap; text-align: center; }
+
+/* QB reads (GDD §53): the replay's read list */
+.qb-reads { margin: 6px 0 0; padding: 8px 10px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); font-size: 13px; }
+.qb-reads b { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+.qb-reads ol { margin: 4px 0 0; padding-left: 18px; }
+.qb-reads li { margin: 1px 0; }
+.qb-reads li.later { opacity: .35; }
+.qb-reads .qr-decision { font-weight: 700; }
+.qb-reads .qr-missed { color: var(--warn); }
+.qb-reads .qr-pressure { color: var(--bad); }
+.qb-reads .qr-result { color: var(--good); font-weight: 700; }
+
+/* AI Testing Lab (GDD §53.8) */
+.lab-setup .field { margin: 0; }
+.lab-status { margin: 6px 0; text-align: center; color: var(--ink-2); font-weight: 600; }
+.lab-status.go { color: var(--accent); }
+.lab-clock { position: absolute; top: 6px; right: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.55); font-family: var(--mono); font-size: 13px; }
+#labwrap { position: relative; }
+.lab-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin-top: 6px; }
+.lab-actions .btn { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 56px; padding: 4px 6px; line-height: 1.15; }
+.lab-actions .btn span { font-size: 11px; font-weight: 500; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.lab-compare h3 { margin: 12px 0 4px; }
+.lab-vs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lab-vs > div { display: flex; flex-direction: column; gap: 2px; background: var(--panel-2); border-radius: 8px; padding: 8px; min-width: 0; }
+.lab-vs .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.lab-vs b { overflow-wrap: anywhere; }
+.lab-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lab-table th, .lab-table td { text-align: left; padding: 4px 3px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.lab-table th { font-weight: 600; overflow-wrap: anywhere; }
+.lab-bar { display: inline-block; width: 70px; height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; vertical-align: middle; }
+.lab-bar i { display: block; height: 100%; background: var(--good); }
+.lab-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0; }
+.lab-stats > div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; display: flex; flex-direction: column; }
+.lab-stats b { font-size: 20px; } .lab-stats span { font-size: 11px; color: var(--ink-2); }
+.lab-findings { padding-left: 18px; } .lab-findings li { margin-bottom: 6px; } .lab-findings span { display: block; font-size: 12px; }
