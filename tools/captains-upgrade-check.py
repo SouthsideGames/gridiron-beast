@@ -39,7 +39,7 @@ with sync_playwright() as pw:
     ROOT['dir'] = NEW; ctx, p = open_ctx(); p.goto(URL); p.wait_for_function(BOOT, timeout=90000); p.wait_for_timeout(1500)
     info = p.evaluate("""async () => { const f = window.__gb.f; const { savedAt, ...x } = f; return { build: (await import('./src/version.js')).BUILD.version, json: JSON.stringify(x), partnerships: f.partnerships === undefined ? null : true, notes: window.__gb.bootInfo?.notes || [], mode: window.__gb.storage.mode }; }""")
     report['new'] = {k: v for k, v in info.items() if k != 'json'}
-    check(info['build'].startswith('v42.2.0'), f'the new build runs: {info["build"]}')
+    check(info['build'].startswith('v42.2.'), f'the new build runs: {info["build"]}')
     check(info['json'] == before, 'the franchise opens byte-identical from the device storage the old build wrote')
     check(info['partnerships'] is None, 'opening the franchise creates no partnership data')
     p.evaluate("""async () => { const F = await import('./src/franchise/franchise.js'); const g = window.__gb.f; F.backfillAchievements(g); let n = 0; while (F.nextScene(g) && n++ < 40) F.dismissScene(g); g.achievementsBackfilled = true; if (g.season) { g.season.recapShown = true; g.season.awardsShown = true; } }""")

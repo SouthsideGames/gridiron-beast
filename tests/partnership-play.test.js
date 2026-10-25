@@ -153,3 +153,23 @@ test('one credit per pair per play, garbage time excluded for the side ahead by 
   const d2 = state({ home: 28, away: 0 }); creditPartnerships(d2, slots, stop, { down: 1, toGo: 10, quarter: 4, score: d2.score });
   assert.equal(d2.partnerCredits.away.defense.n, 1, 'a trailing defense still earns');
 });
+
+test('snaps together are counted (read only) so the post-game summary can say why a pair earned nothing', () => {
+  const state = { possession: 'home', partners: { home: { offense: { type: 'QB-WR', a: 'qb', b: 'wr', level: 0, cap: 8 }, defense: null }, away: { offense: null, defense: null } }, partnerCredits: { home: {}, away: {} }, score: { home: 0, away: 0 } };
+  const fail = sim('incomplete', 0, { passer: 'QB', target: 'WR1' });
+  creditPartnerships(state, slots, fail, { down: 1, toGo: 10, quarter: 1, score: state.score });
+  assert.deepEqual([state.partnerCredits.home.offense.together, state.partnerCredits.home.offense.n], [1, 0], 'on the field together, no credit');
+  const noWR = { offense: { ...OFF, WR1: M('other', 'WR') }, defense: DEF };
+  creditPartnerships(state, noWR, sim('complete', 12, { passer: 'QB', receiver: 'WR1' }), { down: 1, toGo: 10, quarter: 1, score: state.score });
+  assert.equal(state.partnerCredits.home.offense.together, 1, 'a snap without both captains is not counted');
+});
+
+test('a game begun before v42.2.1 (no snap count) is committed with together = null, so the summary does not claim they never played together', async () => {
+  const CP = await import('../src/franchise/partnerships.js'); const U = await import('../src/ui/captains-ui.js');
+  const f = { season: { year: 1 }, roster: [], partnerships: { v: 1, pairs: {}, captains: {}, credited: {} } };
+  const state = { partners: { home: { offense: { type: 'QB-WR', a: 'qb', b: 'wr', level: 0, cap: 8 }, defense: null }, away: null }, partnerCredits: { home: { offense: { n: 2, capped: 0, garbage: 0, kinds: { completion: 2 } } }, away: {} } };
+  const rows = CP.commitGame(f, state, { year: 1, gameId: '1|w1|A|B', clubs: { home: 'A', away: 'B' } });
+  assert.equal(rows[0].together, null); assert.equal(rows[0].earned, 2);
+  assert.ok(!/never played a snap together/.test(U.postGameHtml(f, rows)));
+  assert.match(U.postGameHtml(f, [{ ...rows[0], together: 0, earned: 0 }]), /never played a snap together/);
+});

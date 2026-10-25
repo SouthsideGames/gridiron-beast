@@ -645,7 +645,7 @@ export function registerMatchScreens(Router, app) {
       ${inj.length ? `<h3>Injuries</h3><div class="list">${inj.map((e) => `<div class="item static" style="border-color:var(--bad)"><div class="grow"><div class="name" style="color:var(--bad)">🩹 ${esc(e.name)}</div><div class="sub">${esc(e.severity)} · out ${e.weeks} week${e.weeks === 1 ? '' : 's'}</div></div></div>`).join('')}</div>` : ''}
       ${xpRows.length ? `<h3>Experience</h3><div class="xp-grid">${xpRows.slice(0, 12).map((x) => `<div class="xp-row"><span class="xp-name">${esc(x.name)} <span class="dim">${esc(x.position)}</span></span><span class="xp-amt">+${x.amount}</span><div class="bar"><i style="width:${Math.min(100, Math.round(x.xp / x.next * 100))}%"></i></div><span class="dim mono xp-lv">Lv ${x.level}</span></div>`).join('')}${xpRows.length > 12 ? `<p class="dim">and ${xpRows.length - 12} more starters.</p>` : ''}</div>` : ''}
       ${!lvl.length && !inj.length ? '<p class="dim">No injuries. Fatigue builds with every game and recovers through the week.</p>' : ''}`;
-    sheet(`${hero}${box}${postGameHtml(f, r.partnerships)}${after}`, { title: gym ? 'Final · badge game' : champ ? 'Beast Bowl' : playoff ? 'Final · playoffs' : 'Final', onClose: handshake });
+    sheet(`${hero}${box}${postGameHtml(f, r.partnerships, r.captainNote)}${after}`, { title: gym ? 'Final · badge game' : champ ? 'Beast Bowl' : playoff ? 'Final · playoffs' : 'Final', onClose: handshake });
   }
 
   function startPlayClock(f, root) {
