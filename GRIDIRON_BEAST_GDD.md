@@ -968,7 +968,7 @@ Apply contextual teaching to drafting, scouting, Beast Clash type advantages and
 
 **A. Career history and accomplishments (HIGH PRIORITY; primarily reuse existing data).** Add a readable monster career timeline/profile showing draft or recruitment origin, team changes, evolution, first touchdown/major firsts where reliable event data exists, championships, awards, career records, and notable rivalry performances. Existing statistics, awards, evolution and Hall of Fame records are the source of truth; do not fabricate missing historical events for older saves. Offer a simple highlights view and an optional detailed statistics view. This is not a second progression economy.
 
-**B. Monster Partnerships (HIGH PRIORITY; lightweight automatic chemistry).** Teammates who repeatedly play together may develop a visible partnership (examples: QB–WR, QB–RB, compatible defensive pair). It develops passively through actual shared participation, not chores. Any benefit is **small, capped, transparent**, and must not outweigh a significant player-rating advantage or punish experimentation. No happiness upkeep, jealousy, mandatory friendship tasks, or complicated morale spreadsheet. Exact qualifying pairs, thresholds, bonus formula, reset/transfer behavior, and save migration are tunable specifications to approve before code.
+**B. Monster Partnerships — SUPERSEDED (2026-10-24) by the Captain Partnership System, §49 (implemented on branch `captain-partnerships`, v42.2.0).** The original automatic concept follows for the record. **(HIGH PRIORITY; lightweight automatic chemistry).** Teammates who repeatedly play together may develop a visible partnership (examples: QB–WR, QB–RB, compatible defensive pair). It develops passively through actual shared participation, not chores. Any benefit is **small, capped, transparent**, and must not outweigh a significant player-rating advantage or punish experimentation. No happiness upkeep, jealousy, mandatory friendship tasks, or complicated morale spreadsheet. Exact qualifying pairs, thresholds, bonus formula, reset/transfer behavior, and save migration are tunable specifications to approve before code.
 
 **Acceptance:** A younger player can understand badges and partnership labels without studying formulas; a veteran can inspect the mechanics. Bonuses cannot snowball across many seasons.
 
@@ -3269,3 +3269,115 @@ This is an emulated browser, not a real device.
 - **Limitations:**
   - The claude.ai runtime itself cannot be driven from the development environment, and real devices were not run. The owner's first open is the live check.
   - A device whose local save is newer than the cloud keeps its own progress, under the v42.0.1 rules (§47.3), unchanged here.
+
+## 49. Captain Partnerships (IMPLEMENTED 2026-10-25, owner authorization; branch `captain-partnerships`, PR #55, v42.2.0; design, the DL–DL and DL–CB changes and the AI selection APPROVED FOR RELEASE by the owner 2026-10-25)
+
+Replaces the automatic Monster Partnerships concept of §27.4 B. Approved design (owner, 2026-10-24) after the feasibility and balance audit, with three owner decisions taken during implementation (2026-10-25, §49.3). Every club names **four captains** each season — two on offense, two on defense — forming **one offensive and one defensive partnership**. Captains who make successful football plays together build **chemistry**, which gives the pair a small bonus (at most **+4%**) on its own key ratings when both are on the field. Football only: Beast Clash, encounters, practice and exhibitions never earn or use chemistry. No morale, jealousy, chores or permanent OVR changes.
+
+### 49.1 Pairings and what earns chemistry
+
+Exactly eight pairings, by **primary position**, the type fixed when the captains are named:
+
+| Side | Pairing | A play earns one credit when… |
+|---|---|---|
+| Offense | QB + RB | the play succeeds and is a handoff from the captain QB to the captain RB (who carries it), or a completion from one to the other |
+| Offense | QB + WR | a successful completion from the captain QB to the captain WR |
+| Offense | QB + TE | a successful completion from the captain QB to the captain TE |
+| Offense | RB + OL | a successful handoff run by the captain RB with the captain lineman's run block engaged and not lost |
+| Offense | OL + OL | a successful play on which both captain linemen engaged, neither lost his block, and neither allowed the pressure or the sack |
+| Defense | DL + DL | the offense's play failed and: one made the tackle and the other the recorded assist (tackle or sack); or one's recorded pressure and the other's tackle or sack; or one's recorded shed of his blocker and the other's tackle or sack (§49.3) |
+| Defense | DL + LB | the offense's play failed and: tackle + assist; pressure + tackle or sack; DL pressure + LB interception; forced fumble + recovery; or the DL's recorded shed and the LB's tackle |
+| Defense | DL + CB | the offense's play failed and: tackle + assist; or the DL's recorded pressure with the CB's interception, pass breakup, or coverage on the incompletion |
+
+**Success** (offense) is the game's success-rate rule: 40% of the distance on 1st down, 60% on 2nd, the first down on 3rd/4th; a touchdown always; turnovers, sacks, incompletions and throwaways never. **Not supported** (audit): LB–LB, CB–S, LB–S — the engine names one coverage defender per play, and no help-defender tracking was added. Both shedding blockers never counts by itself. Everything is read from what the engine already records (`sim.stats`, `sim.events`) with the slot → monster mapping the play used; nothing in the engine changed.
+
+Rules for every credit: at most **one credit per pair per play**; both captains must be **in that play's on-field slots**; **garbage time** — 4th quarter, the crediting side leading by more than 21 before the snap — earns nothing (offense and defense; the play counts for everything else); a **per-game ceiling** of 25% of the pair's Elite target, rounded half up, never below 3 (§49.3); **league games only** (regular season and playoffs, owner and AI–AI alike). Two-point tries, kicks and returns neither earn nor use chemistry.
+
+### 49.2 Levels, thresholds and the bonus
+
+| Level | Name | Bonus |
+|---|---|---|
+| 0 | New | 0% |
+| 1 | Developing | +1% |
+| 2 | Established | +2% |
+| 3 | Strong | +3% |
+| 4 | Elite | +4% |
+
+Thresholds are lifetime joint successful plays for the exact pair, per type. Elite = what a strong (75th-percentile) pair of the type earns in one nine-game regular season; Developing / Established / Strong = 20 / 45 / 70% of that.
+
+| Pairing | +1% | +2% | +3% | +4% | Per-game cap |
+|---|---|---|---|---|---|
+| QB–RB | 15 | 34 | 53 | 75 | 19 |
+| QB–WR | 6 | 14 | 21 | 30 | 8 |
+| QB–TE | 7 | 16 | 25 | 36 | 9 |
+| RB–OL | 6 | 14 | 22 | 32 | 8 |
+| OL–OL | 4 | 9 | 14 | 20 | 5 |
+| DL–DL | 1 | 3 | 4 | 6 | 3 |
+| DL–LB | 2 | 4 | 6 | 9 | 3 |
+| DL–CB | 1 | 3 | 4 | 6 | 3 |
+
+**Counts are stored, never levels** (`src/franchise/partnerships.js`, `THRESHOLDS`), so the table can be retuned without touching saves. After Elite the count keeps rising (career history) but the bonus stays +4%.
+
+**Bonus** (`src/sim/partnership-play.js`, `boostSlots`): in `runScrimmagePlay`, after `pickSlots` and before `simulatePlay`, each side's active pair — only when **both** captains are on the field for that snap — plays with `clampAttr(attr × (1 + level/100))` on its listed attributes; everyone else, and every other attribute, is untouched; level 0 returns the same objects (the game as before). Speed is never boosted.
+
+| Pairing | Captain 1 | Captain 2 |
+|---|---|---|
+| QB–RB | QB: accuracy, awareness | RB: agility, awareness, catching |
+| QB–WR / QB–TE | QB: accuracy, awareness | catching, awareness |
+| RB–OL | RB: agility, awareness | OL: blocking, awareness |
+| OL–OL | blocking, awareness | blocking, awareness |
+| DL–DL | strength, agility | strength, agility |
+| DL–LB | DL: strength, agility | LB: tackling, awareness |
+| DL–CB | DL: strength, agility | CB: coverage, awareness |
+
+**The level is fixed at kickoff** (`newGame` snapshots `state.partners`); credits are tallied in the game state and committed after the final whistle, so a new level starts with the next game.
+
+### 49.3 Owner decisions taken during implementation (2026-10-25)
+
+1. **DL–DL (stop condition).** On the strict rule (joint tackles, sacks and pressures only) DL–DL pairs earned a median of 0 credits a season (75th percentile 1, maximum 3; 128 club-seasons). The owner chose to count **one lineman's recorded shed with the other lineman's tackle or sack** (the rule approved for DL–LB): median 5, 75th percentile 6, 90th 9, maximum 11 → thresholds 1/3/4/6. Both shedding still never counts by itself.
+2. **DL–CB.** Median 1 credit a season, 75th percentile 2, 90th 4, maximum 7. Kept at the approved 1/3/4/6 and labelled **"Slow to build"** on the selection screen. A single play can move it a whole level (the steps are one or two plays); a strong pair takes about three seasons to reach Elite.
+3. **Per-game cap.** Measured on game-level data: 25% rounded lost 0.1–6% of credits for most types but cut DL–LB (cap 2) in 12% of games. Now **25%, minimum 3**. Credits lost to the cap: QB–RB 0.1%, QB–WR 1.3%, QB–TE 4.3%, RB–OL 5.4%, OL–OL 6.4%, DL–LB 3.6%, DL–CB 1.0%, DL–DL 0.7%.
+
+### 49.4 Captains through the season
+
+- **Offseason selection.** Once the season is over, HQ offers "Captains for next season" (never blocks anything). The pick is checked when made and again at `startNextSeason`, which names every club's captains for the new season. A pick that is no longer valid (a captain gone) falls back to the suggestion for that side, explained in the club log.
+- **Automatic selection.** One deterministic function (`suggestCaptains`) chooses for every AI club, for the owner when he does not choose, and marks "Suggested" on the screen. No random numbers. For each side: pairs of an approved type among base starters, else starters including package slots, else anyone; score = 10 × existing chemistry level + type priority (QB–RB 3, QB–WR 3, QB–TE 2, RB–OL 1, OL–OL 1, DL–DL 2, DL–LB 2, DL–CB 1) + both OVRs / 20 (+1 when both are base starters); ties to the lower pair key. A monster holds one captaincy.
+- **No valid pair** on a side: no partnership for that side this season, with the reason; never an invalid pair; the season always advances.
+- **Locked** from week 1 through the playoffs: there is no in-season way to change captains.
+- **Trades and releases are unrestricted.** Captains can be released (with the warning "This monster is a team captain…"), and AI clubs trade captains with their normal logic (`aiTrades` unchanged). The pair stays the season's official pair and is inactive while separated; League News notes the deactivation. If the captain returns to his club the same season, the partnership is eligible again automatically. A club receiving captains cannot activate them until its next offseason.
+  - **Limitation found in Phase 0:** the owner cannot trade monsters away in this build (trades give draft picks; §19.6, §27.5 A plans owner monster trades later). The warning therefore appears on every release path (roster card, contracts, the commissioner). Owner trades that bring in an AI club's captain deactivate that club's pair.
+- **Injuries and benching.** The captain stays designated; no bonus and no credit on any play he is not on the field for. The lineup strip says why ("is injured", "is not in the lineup", "is no longer on the team"); moving a captain out of the starting lineup shows a gentle note. Nobody is forced into the lineup.
+- **Position changes.** The game has no position-change system; the pairing type is fixed at selection in any case. Evolution keeps the id, so chemistry is kept.
+- **Existing franchises — one-time initial selection.** A franchise with no captains for the current season (an existing save, or a new franchise's first season) is offered a one-time pick on HQ, explained as an exception. Skipped, the suggested captains are named before the next game (`ensureCaptains`), and the club log says so. All 16 clubs are named at the same moment. The exception cannot reopen: once a season has captains it is used. Archived franchises are read-only.
+- **Permanent history.** Chemistry belongs to the sorted pair of monster ids — not a club, slot, name or season — and survives separation, trades, free agency, evolution and retirement. A pair named again resumes its count (reunions included).
+
+### 49.5 Save data (one optional key; save code unchanged)
+
+`f.partnerships = { v: 1, startedYear, initial?: { year, mode }, pick?: { year, offense: [id, id], defense: [id, id] }, pairs: { "<idA>|<idB>": { a, b, type, n, first, last, seasons: [{ y, club, type }] } }, captains: { "<year>": { "<club>": { offense: { type, a, b } | null, defense, mode, reason } } }, credited: { "<year>": { "<gameId>": 1 } } }`.
+
+- Outside the verified league registry; no schema bump; `save.js`, `cloud-save.js` and `store.js` are unchanged.
+- **Lazy:** loading never creates it; it appears at the first activation (initial pick, offseason pick, the first game or season under this build). No chemistry is fabricated: there is no play-by-play history to read, so every pair starts at 0.
+- **Duplicate protection:** each game commits once under a stable id (`year|w<week>|home|away`, playoffs `year|p<round>|home|away`), in the same in-memory step that records the game's result, before the save is written; a game id already in the ledger adds nothing (reload, replay, re-simulation). The ledger keeps this season and the last.
+- **Older builds:** v42.1.0 loads a save carrying the key, plays a week, saves, and the key comes back byte-identical; this build then continues from it (`tools/partnerships-oldbuild-check.mjs`). Local storage, the device store and the cloud mirror round-trip it (tests).
+
+### 49.6 Interface
+
+- **Captain screen** (`captains`): two slots per side with portraits, the choosing sheet (eligible partners only, with the chemistry each pair already has), "Use suggested captains", the pairing label, the chemistry meter (four pips, the level name, a bar and "N more to …"), "Slow to build" on DL–CB, and the lock explained. Read-only once the season's captains are named.
+- **HQ:** the one-time pick card, or next season's pick in the offseason.
+- **Lineup:** a "C" badge on captains (lineup slots, depth chart, the commissioner's list) and a partnership strip per side: portraits, pairing, level, progress, current bonus, active or why not; tapping it opens the captain screen.
+- **Post-game:** a short Captain Partnerships section (plays together, level and progress, a new level, plays lost to garbage time or the cap).
+- **League News:** captains named (the owner's club), Established and Elite for the owner's pairs, Elite for AI pairs, captains traded or released. No routine updates.
+- **Career Profile:** a Partnerships card on Overview (current captaincy, every partner with level, plays together and seasons as captains, "Not active" for former ones) and two timeline events: named captain (each season, in the full timeline) and Established/Elite chemistry.
+
+### 49.7 Results (multi-season league simulations, real feature on)
+
+- **Credits per season** (shipped detection, garbage time excluded, 8 seeds × 16 clubs, median / 75th percentile): QB–RB 56/75, QB–WR 23/33, QB–TE 26/41, RB–OL 23/36, OL–OL 17/25, DL–DL 5/6, DL–LB 5/7, DL–CB 1/2.
+- **Seasons to Elite** (6 franchises × 5 seasons, all 16 clubs, 243 captain pairs; seasons counted from the pair's first captaincy): QB–RB 94% reached Elite (35% in one season, 86% within two); QB–WR 76% (36% in one); DL–DL 88% (39% in one); DL–LB 80% (12% in one, 68% within two). Pairs that never reached Elite were mostly captains for a single season. DL–CB was chosen once (not Elite after five seasons); the automatic selection never chose QB–TE, RB–OL or OL–OL in these runs (owner picks can).
+- **Balance** (720 games: every club against every other at a season's start, with its real captains and chemistry, then the same games with every level at 0): the side with more chemistry won 65.4% with it, 58.7% without (average gap 3.6 levels) — about **+1 win percentage point per level of difference**, +0.12 points of margin per level. Against team strength: higher-OVR side's win rate for OVR gaps 2–4 62.6% → 61.3%, 4–8 75.7% → 75.2%, 8+ 80.5% → 85.7% (with chemistry). Chemistry is worth roughly one to two points of team OVR and does not overturn a meaningful rating gap. (Single games change result about a third of the time between the two runs because any change reshuffles later events; that is variance, not size.)
+
+### 49.8 Known limitations
+
+- The owner cannot trade monsters away in this build (§49.4), so the trade warning applies to releases.
+- AI clubs favour QB–RB, QB–WR, DL–DL and DL–LB (they earn fastest). **Owner decision (2026-10-25): approved as is** — AI clubs choose the strongest partnerships; no artificial variety. All eight pairings stay eligible and functional for every club (tested).
+- DL–CB and, to a lesser degree, DL–DL and DL–LB move in single plays; luck matters more for them.
+- Real phones were not tested; layouts were checked in an emulated browser at 320, 360, 390 and 412 px (`tools/captains-ui-check.py`).

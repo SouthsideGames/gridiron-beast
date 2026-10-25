@@ -3,7 +3,8 @@
 // mutation goes through a function here so the UI stays thin.
 
 import { venueFor } from '../data/stadiums.js';
-import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary, CAREER_MILESTONES } from './career.js';
+import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary, CAREER_MILESTONES, addEvent } from './career.js';
+import * as CP from './partnerships.js';
 import { syncLegendaryPlays, legendaryAvailable, legendaryStatus, equipLegendaryForAI, legendOf, LEGENDARY_IDS } from './legendary.js';
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords, archiveSeasonTables, withDerived, addInto } from './stats.js';
@@ -160,6 +161,7 @@ export function commissionerRelease(f, id) {
   toPool(f, m, 'commissioner');
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 }; f.campaign.commissionerReleases = (f.campaign.commissionerReleases || 0) + 1;
   news(f, `${m.name} released by order of the commissioner.`, 'loss');
+  noteCaptainLeft(f, f.club, m, 'released');
   const again = commissionerReview(f);
   return { ok: true, released: m, done: !again };
 }
@@ -548,6 +550,7 @@ export function releaseMonster(f, id) {
   for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === id) delete f.lineupManual[slot];
   toPool(f, m, 'released');
   news(f, `${m.name} released. Back to ${homeRegion(m)}.`, 'roster');
+  noteCaptainLeft(f, f.club, m, 'released');
   return { ok: true };
 }
 // ------------------------------------------------------------ the free-agent pool (GDD §18.3)
@@ -975,6 +978,7 @@ export function acceptTrade(f, offer) {
   if (got.player) { dexRecord(f, got.player, 'signed'); const cap = salarySummary(f); news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from ${offer.team} for ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster', { mid: got.player.id, mname: got.player.name }); }
   else news(f, `Trade: ${offer.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} to ${offer.team} for ${got.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}.`, 'roster');
   if (f.draft?.started && !f.draft.done) runDraftToMe(f); // if the pick on the clock went out, the new holder uses it now
+  if (got.player) noteCaptainLeft(f, offer.team, got.player, 'traded'); // an AI captain traded to the owner leaves his club's partnership inactive
   checkAchievements(f, 'trade');
   return { ok: true, got };
 }
@@ -1010,6 +1014,7 @@ export function answerTradeCall(f, accept) {
   f.tradeCall = null; uniqueName(f, got.player); dexRecord(f, got.player, 'signed'); leagueEvent(f, { kind: 'trade', from: c.team, to: f.club, toOwner: true, consideration: c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + '), ...moveIdentity(f, got.player) });
   const cap = salarySummary(f);
   news(f, `Trade: ${got.player.name} (${got.player.position}, ${monsterOverall(got.player)} OVR) arrives from the ${c.team} for ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}${cap.over ? ', over the cap; the commissioner will review' : ''}.`, 'roster', { mid: got.player.id, mname: got.player.name });
+  noteCaptainLeft(f, c.team, got.player, 'traded');
   checkAchievements(f, 'trade');
   return { ok: true, got };
 }
@@ -1108,23 +1113,139 @@ export function playoffPicture(f) {
   const back = ((b.w - a.w) + (a.l - b.l)) / 2;
   return { inPlayoffs: false, seed: null, text: back <= 0 ? 'On the bubble, tiebreakers decide' : `${back} game${back === 1 ? '' : 's'} back of the last playoff spot` };
 }
+// ------------------------------------------------------------ Captain Partnerships (GDD §27.4B)
+// Four captains per club (two offense, two defense), named once a season and locked through the playoffs; chemistry by pair of
+// monster ids, earned on the field (src/sim/partnership-play.js) and committed here after each game. Every club runs the same
+// code: the owner's game, AI–AI games and the playoffs all attach the kickoff level the same way and commit the same way.
+const captainName = (f, id) => findMonsterAnywhere(f, id)?.name || 'a former captain';
+function findMonsterAnywhere(f, id) { return f.roster.find((x) => x.id === id) || (hasLeague(f) ? f.league.monsters[id] || f.league.legends?.[id] || (f.league.waivers || []).find((x) => x.id === id) : null) || Object.values(f.pool || {}).flat().find((x) => x?.id === id) || null; }
+/** Attach the club's active pairs (level fixed now) to a team about to play. Inactive feature: the team is untouched. */
+function withCaptains(f, team, club) { if (team && CP.isActive(f)) { const p = CP.kickoffPartnership(f, club); if (p) team.partnership = p; } return team; }
+/** Captain candidates for a club: the team as it would play now (base starters, package slots, bench). */
+export function captainCandidates(f, club = f.club, year = f.season?.year) { return CP.candidatesFromTeam(club === f.club ? playerTeam(f) : aiTeam(f, club, year)); }
+/** The suggested captains for a club now (the AI's choice, the owner's automatic pick and the "Suggested" badge). */
+export function suggestedCaptains(f, club = f.club) { return CP.suggestCaptains(captainCandidates(f, club), { count: (a, b) => CP.chemistryCount(f, a, b) }); }
+/** Resolve one club's season choice: the owner's valid pick side by side, the suggestion for anything missing or invalid. */
+function resolveCaptains(f, club, year, ownerChoice) {
+  const cands = captainCandidates(f, club, year); const count = (a, b) => CP.chemistryCount(f, a, b);
+  const auto = CP.suggestCaptains(cands, { count });
+  if (club !== f.club || !ownerChoice) return { choice: auto, reason: auto.reason, notes: [] };
+  const notes = []; const choice = { offense: null, defense: null };
+  const off = ownerChoice.offense ? CP.checkPick(cands, 'offense', ownerChoice.offense) : null; if (off?.ok) choice.offense = off.pair; else if (off) notes.push(`Offense: ${off.reason}`);
+  const def = ownerChoice.defense ? CP.checkPick(cands, 'defense', ownerChoice.defense, { other: choice.offense ? [choice.offense.a, choice.offense.b] : [] }) : null; if (def?.ok) choice.defense = def.pair; else if (def) notes.push(`Defense: ${def.reason}`);
+  const fill = CP.suggestCaptains(cands, { count, exclude: [choice.offense?.a, choice.offense?.b, choice.defense?.a, choice.defense?.b].filter(Boolean) });
+  if (!choice.offense) choice.offense = fill.offense; if (!choice.defense) choice.defense = fill.defense;
+  return { choice, reason: fill.reason, notes, auto: { offense: !off?.ok, defense: !def?.ok } };
+}
+/** Name captains for every club missing them this season. `ownerChoice` = { offense: [id, id], defense: [id, id] } or null. */
+function nameAllCaptains(f, year, { ownerChoice = null, mode = 'auto' } = {}) {
+  let owner = null;
+  for (const club of ALL_TEAMS) {
+    if (CP.captainsOf(f, club, year)) continue;
+    const r = resolveCaptains(f, club, year, club === f.club ? ownerChoice : null);
+    const entry = CP.nameCaptains(f, club, year, r.choice, { mode: club === f.club ? mode : 'auto', reason: r.reason });
+    if (club === f.club) owner = { entry, notes: r.notes, auto: r.auto || { offense: true, defense: true } };
+    for (const side of ['offense', 'defense']) { const p = entry[side]; if (!p) continue; for (const id of [p.a, p.b]) { const m = findMonsterAnywhere(f, id); if (m) addEvent(m, { k: `cap:${year}:${club}`, t: 'captain', y: year, c: club, x: { side, partner: id === p.a ? p.b : p.a, pname: captainName(f, id === p.a ? p.b : p.a), type: p.type } }); } }
+  }
+  CP.pruneLedger(f, year);
+  return owner;
+}
+const pairText = (f, p) => `${captainName(f, p.a)} & ${captainName(f, p.b)} (${CP.PAIR_TYPES[p.type].label})`;
+function announceCaptains(f, year, owner, how) {
+  if (!owner) return;
+  const e = owner.entry; const parts = ['offense', 'defense'].map((side) => (e[side] ? `${pairText(f, e[side])} on ${side}` : `no ${side} partnership (${e.reason?.[side] || 'no valid pair'})`));
+  news(f, `Captains for ${yearOf(year)}${how ? ` (${how})` : ''}: ${parts.join('; ')}.${owner.notes?.length ? ` ${owner.notes.join(' ')} The suggested pair was used instead.` : ''}`, 'roster');
+  addLeagueNews(f, [{ id: `${year}|${f.season?.week ?? 0}|captains|${f.club}`, year, week: f.season?.finished ? 0 : (f.season?.week ?? 0), kind: 'captains', tier: 'info', icon: '©', text: `${f.club} name their captains: ${['offense', 'defense'].filter((s) => e[s]).map((s) => pairText(f, e[s])).join(' and ') || 'none this season'}.` }]);
+}
+/** A new season: every club names captains (the owner's offseason pick if still valid, else the suggestion). Never replaces. */
+export function seasonCaptains(f, year = f.season.year) {
+  if (isArchived(f)) return null;
+  const pick = f.partnerships?.pick?.year === year ? f.partnerships.pick : null;
+  if (f.partnerships?.pick) delete f.partnerships.pick;
+  const owner = nameAllCaptains(f, year, { ownerChoice: pick, mode: pick ? 'offseason' : 'auto' });
+  announceCaptains(f, year, owner, pick ? null : 'chosen automatically: no captains were picked in the offseason');
+  return owner?.entry || CP.captainsOf(f, f.club, year);
+}
+/** Before games are played: a season in progress without captains gets them (the initial selection, skipped, falls back here). */
+export function ensureCaptains(f) {
+  if (!f?.season || f.season.finished || isArchived(f)) return null;
+  const year = f.season.year;
+  if (ALL_TEAMS.every((c) => CP.captainsOf(f, c, year))) return CP.captainsOf(f, f.club, year);
+  const first = !CP.captainsOf(f, f.club, year);
+  const owner = nameAllCaptains(f, year, { mode: first ? 'initial-auto' : 'auto' });
+  if (first) { f.partnerships.initial ||= { year, mode: 'auto' }; announceCaptains(f, year, owner, 'chosen automatically before the game: the suggested captains'); }
+  return CP.captainsOf(f, f.club, year);
+}
+/** The one-time initial selection for a franchise that has none this season (an existing save, or a new franchise's first season). */
+export function initialCaptainsDue(f) { return !!f?.season && !f.season.finished && !isArchived(f) && !CP.captainsOf(f, f.club, f.season.year); }
+export function chooseInitialCaptains(f, choice = null) {
+  if (!initialCaptainsDue(f)) return { ok: false, reason: 'Captains for this season are already named. They change in the offseason.' };
+  const year = f.season.year;
+  if (choice) { const cands = captainCandidates(f); const off = CP.checkPick(cands, 'offense', choice.offense); if (!off.ok) return { ok: false, reason: `Offense: ${off.reason}` }; const def = CP.checkPick(cands, 'defense', choice.defense, { other: [off.pair.a, off.pair.b] }); if (!def.ok) return { ok: false, reason: `Defense: ${def.reason}` }; }
+  const owner = nameAllCaptains(f, year, { ownerChoice: choice, mode: 'initial' });
+  f.partnerships.initial = { year, mode: choice ? 'chosen' : 'suggested' };
+  announceCaptains(f, year, owner, choice ? null : 'the suggested captains');
+  return { ok: true, entry: owner?.entry || CP.captainsOf(f, f.club, year) };
+}
+/** The offseason pick for next season: checked now, checked again when the season starts. */
+export function offseasonCaptainsOpen(f) { return !!f?.season?.finished && !isArchived(f); }
+export function pickCaptains(f, choice) {
+  if (!offseasonCaptainsOpen(f)) return { ok: false, reason: 'Captains are chosen in the offseason, before the next season begins.' };
+  const cands = captainCandidates(f); const off = CP.checkPick(cands, 'offense', choice?.offense); if (!off.ok) return { ok: false, reason: `Offense: ${off.reason}` };
+  const def = CP.checkPick(cands, 'defense', choice?.defense, { other: [off.pair.a, off.pair.b] }); if (!def.ok) return { ok: false, reason: `Defense: ${def.reason}` };
+  (f.partnerships ||= { v: 1, startedYear: f.season.year + 1, pairs: {}, captains: {}, credited: {} }).pick = { year: f.season.year + 1, offense: [off.pair.a, off.pair.b], defense: [def.pair.a, def.pair.b] };
+  return { ok: true, pick: f.partnerships.pick, offense: off.pair, defense: def.pair };
+}
+/** Commit one finished game's chemistry (once per game id) and write the milestones. Returns the committed rows. */
+function afterCaptainGame(f, game, { home, away, week, playoff = false, round = null }) {
+  if (!game?.partners || !CP.isActive(f)) return [];
+  const year = f.season.year;
+  const rows = CP.commitGame(f, game, { year, gameId: CP.gameIdOf({ year, week, playoff, round, home, away }), clubs: { home, away } });
+  for (const x of rows.filter((r) => r.levelUp)) {
+    const name = CP.LEVEL_NAMES[x.to]; const mine = x.club === f.club;
+    for (const id of [x.a, x.b]) { const m = findMonsterAnywhere(f, id); if (m && (x.to === 2 || x.to === 4)) addEvent(m, { k: `chem:${CP.pairKey(x.a, x.b)}:${x.to}`, t: 'chemistry', y: year, w: week, c: x.club, x: { level: x.to, partner: id === x.a ? x.b : x.a, pname: captainName(f, id === x.a ? x.b : x.a), type: x.type } }); }
+    if (mine) news(f, `Chemistry: ${captainName(f, x.a)} & ${captainName(f, x.b)} reached ${name} (+${x.to}% when both are on the field).`, 'win');
+    if ((mine && (x.to === 2 || x.to === 4)) || (!mine && x.to === 4)) addLeagueNews(f, [{ id: `${year}|${week}|chem|${CP.pairKey(x.a, x.b)}|${x.to}`, year, week, kind: 'chemistry', tier: x.to === 4 ? 'notable' : 'info', icon: '🤝', text: `${captainName(f, x.a)} and ${captainName(f, x.b)} of the ${x.club} reach ${name} chemistry.`, mid: x.a, mname: captainName(f, x.a) }]);
+  }
+  return rows;
+}
+/** A captain left a club in season (released, traded, walked out): the partnership is inactive until he returns or next season. */
+function noteCaptainLeft(f, club, m, how) {
+  if (!CP.isActive(f) || !m || f.season?.finished) return;
+  const c = CP.captaincyOf(f, club, m.id); if (!c) return;
+  const year = f.season.year; const week = f.season.week;
+  if (club === f.club) news(f, `${m.name} was a captain: the ${CP.PAIR_TYPES[c.pair.type].label} partnership is inactive until he returns or new captains are chosen next offseason.`, 'loss');
+  addLeagueNews(f, [{ id: `${year}|${week}|capleft|${club}|${m.id}`, year, week, kind: 'captains', tier: 'info', icon: '©', text: `The ${club} ${how === 'traded' ? 'traded' : 'parted with'} captain ${m.name}: their ${CP.PAIR_TYPES[c.pair.type].label} partnership is inactive for now.`, mid: m.id, mname: m.name }]);
+}
+/** AI–AI deals (and AI clubs dealing a monster to the owner) that move a captain. */
+function noteCaptainTrades(f, deals) { for (const d of deals || []) { if (d.toA) noteCaptainLeft(f, d.B, findMonsterAnywhere(f, d.toA), 'traded'); if (d.toB) noteCaptainLeft(f, d.A, findMonsterAnywhere(f, d.toB), 'traded'); } }
+/** One side's partnership as the owner sees it this week (active, or why not). */
+export function captainStatus(f, side, club = f.club) {
+  const team = club === f.club ? playerTeam(f) : aiTeam(f, club);
+  const lineupIds = Object.values(team[side] || {}).filter((p) => p?.id && !p.borrowed).map((p) => p.id);
+  const roster = club === f.club ? f.roster : clubRoster(f, club);
+  return CP.sideStatus(f, club, side, { rosterIds: roster.map((m) => m.id), lineupIds, injured: roster.filter((m) => m.injury).map((m) => m.id) });
+}
+
 /** Simulate every other game of the current week with the real engine. */
 /** League-wide per-monster season stats (all 16 clubs) for award races. */
 function simulateLeagueWeek(f) {
   const { r, save } = frng(f);
-  if (hasLeague(f)) aiTrades(f, r, { year: f.season.year, cap: tierById(f.tier).cap, window: 'season' }); // weeks 2–8: an occasional deal between AI clubs (GDD §46)
+  ensureCaptains(f); // Captain Partnerships (GDD §27.4B): a season without captains yet gets them before its next games
+  if (hasLeague(f)) { const deals = aiTrades(f, r, { year: f.season.year, cap: tierById(f.tier).cap, window: 'season' }); noteCaptainTrades(f, deals); } // weeks 2–8: an occasional deal between AI clubs (GDD §46); a traded captain leaves his partnership inactive
   const fixtures = leagueSeasonFixtures(f.season.year).find((w) => w.week === f.season.week);
   const results = [];
   if (fixtures && !fixtures.bye) {
     for (const g of fixtures.games) {
       if (g.home === f.club || g.away === f.club) continue;
-      const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
+      const home = withCaptains(f, aiTeam(f, g.home), g.home), away = withCaptains(f, aiTeam(f, g.away), g.away);
       const toss = leaguePregame(f, r, home, away);
       const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
       leagueTiebreak(f, r, home, away, game);
       aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r); // persistent rosters develop as they play (GDD §42.6, decision B)
       const lines = new Map(); recordGame(f, game, { home, away }, { playoff: false, booksFor: (t) => leagueBooks(f, t), onLine: (t, m, g) => lines.set(m.id, g) });
       leagueCareerAfterGame(f, [home, away], game, lines, { playoff: false });
+      afterCaptainGame(f, game, { home: g.home, away: g.away, week: f.season.week });
       const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
       applyResult(f.season.records, res); results.push(res);
     }
@@ -1614,6 +1735,7 @@ export function sundayMatchup(f) {
   const mine = playerTeam(f, { trainingBonus: f.week.trainingFocus ? scaledBonus(trainingBonus(staffMember(f, 'monster_trainer'), f.week.trainingFocus), f.week.trainingFactor ?? 1) : null });
   const theirs = aiTeam(f, oppName, undefined, { scouting: playerProfile(f, { opponent: oppName }) });
   const rival = f.rivals[f.tier]?.team === oppName;
+  withCaptains(f, mine, f.club); withCaptains(f, theirs, oppName); // Captain Partnerships (GDD §27.4B): the level is read here and fixed at kickoff
   return { home: home === f.club ? mine : theirs, away: away === f.club ? mine : theirs, playerSide: home === f.club ? 'home' : 'away', opponent: oppName, tag, rival, playoff: !!po, forfeit: !!mine.forfeit, forfeitReason: mine.forfeitReason || null };
 }
 
@@ -1640,12 +1762,13 @@ export function finishSunday(f, gameState) {
     if (f.week.media?.hype) { if (won) news(f, 'You backed up the trash talk. The locker room loves it.', 'win'); else { f.rattled = true; news(f, 'The trash talk backfired. The team is rattled: next week\'s practice is harder.', 'loss'); } }
   }
   { const lines = new Map(); recordGame(f, gameState, { home: m.home, away: m.away }, { playoff: !!m.playoff, booksFor: (t) => leagueBooks(f, t), onLine: (t, x, g) => lines.set(x.id, g) }); leagueCareerAfterGame(f, [m[oppSide]], gameState, lines, { playoff: !!m.playoff, round: playoffRoundNow, vsOwner: true }); }
+  const captainRows = afterCaptainGame(f, gameState, { home: m.home.name, away: m.away.name, week: f.season.week, playoff: !!m.playoff, round: playoffRoundNow }); // chemistry earned in this game, committed once
   if (m.playoff) { recordPlayoffResult(f, res); }
   else { applyResult(f.season.records, res); f.season.results.push(res); const fx = currentFixture(f); fx.result = { playerScore: gameState.score[side], oppScore: gameState.score[oppSide], won }; }
   news(f, `${won ? 'WIN' : 'LOSS'} ${gameState.score[side]}-${gameState.score[oppSide]} vs ${m.opponent}${gameState.tiebreak ? ` (OT · ${gameState.tiebreak.size}v${gameState.tiebreak.size} Beast Clash)` : gameState.ot ? ' (OT)' : ''}.`, won ? 'win' : 'loss');
   // Promised starters: three games on the bench and they walk (GDD §15.7).
   for (const x of f.roster.filter((p) => p.promise)) {
-    if (!Object.values(m[side].chart).includes(x.id)) { x.promise.benched += 1; if (x.promise.benched >= PROMISE_BENCH_LIMIT) { f.roster = f.roster.filter((p) => p.id !== x.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === x.id) delete f.lineupManual[slot]; news(f, `${x.name} walked out: you promised a starting spot and benched them ${PROMISE_BENCH_LIMIT} times.`, 'loss'); } else news(f, `${x.name} was promised a start and sat (${x.promise.benched}/${PROMISE_BENCH_LIMIT}).`, 'loss'); }
+    if (!Object.values(m[side].chart).includes(x.id)) { x.promise.benched += 1; if (x.promise.benched >= PROMISE_BENCH_LIMIT) { f.roster = f.roster.filter((p) => p.id !== x.id); noteCaptainLeft(f, f.club, x, 'walked'); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === x.id) delete f.lineupManual[slot]; news(f, `${x.name} walked out: you promised a starting spot and benched them ${PROMISE_BENCH_LIMIT} times.`, 'loss'); } else news(f, `${x.name} was promised a start and sat (${x.promise.benched}/${PROMISE_BENCH_LIMIT}).`, 'loss'); }
   }
   // Campaign: career wins, head-to-head memory (drives the pregame dialogue) and gym badges (first win over a gym club, in any counting game; no replays).
   f.campaign ||= { badges: {}, gymWins: {}, titles: 0, wins: 0, awards: 0 };
@@ -1667,7 +1790,7 @@ export function finishSunday(f, gameState) {
   // Career Timeline (GDD §38): read-only, after the game's stats are in the books.
   careerAfterGame(f.roster, { year: f.season.year, week: f.season.week, club: f.club, playoffRound: playoffRoundNow, rival: !!m.rival, won, opponent: m.opponent, records: f.records });
   for (const e of events) if (e.kind === 'evolve') { const x = f.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: f.club, from: e.from, to: e.to }); }
-  f.lastGame = { ...f.week.gameResult, events, year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null };
+  f.lastGame = { ...f.week.gameResult, events, partnerships: captainRows.filter((x) => x.club === f.club), year: f.season.year, week: f.season.week, newBadge: f.campaign.badges[m.opponent]?.year === f.season.year && f.campaign.badges[m.opponent]?.week === f.season.week && won ? m.opponent : null };
   { const rvTeam = f.rivals?.[f.tier]?.team; const vsRival = f.season.schedule.filter((g) => g.opponent === rvTeam && g.result);
     checkAchievements(f, 'sunday', { won, opponent: m.opponent, rival: rvTeam === m.opponent, newBadge: !!f.lastGame?.newBadge, playoffRound: playoffRoundNow, rivalSeasonWins: vsRival.filter((g) => g.result.won).length + (rvTeam === m.opponent && won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0), rivalSeasonLosses: vsRival.filter((g) => !g.result.won).length + (rvTeam === m.opponent && !won && !f.season.schedule.find((g) => g.week === f.season.week)?.result ? 1 : 0) }); }
   advanceWeek(f);
@@ -1749,15 +1872,17 @@ function recordPlayoffResult(f, res) {
 }
 function simulatePlayoffWeek(f) {
   const p = f.season.playoffs; if (!p || p.champion) return;
+  ensureCaptains(f);
   const { r, save } = frng(f);
   for (const g of p.fixtures.filter((x) => x.round === p.round && !x.result)) {
-    const home = aiTeam(f, g.home), away = aiTeam(f, g.away);
+    const home = withCaptains(f, aiTeam(f, g.home), g.home), away = withCaptains(f, aiTeam(f, g.away), g.away);
     const toss = leaguePregame(f, r, home, away);
     const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
     leagueTiebreak(f, r, home, away, game, { playoff: true });
     aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r);
     const lines = new Map(); recordGame(f, game, { home, away }, { playoff: true, booksFor: (t) => leagueBooks(f, t), onLine: (t, m, g) => lines.set(m.id, g) });
     leagueCareerAfterGame(f, [home, away], game, lines, { playoff: true, round: p.round });
+    afterCaptainGame(f, game, { home: g.home, away: g.away, week: f.season.week, playoff: true, round: p.round });
     const res = { week: f.season.week, home: g.home, away: g.away, homeScore: game.score.home, awayScore: game.score.away, ot: !!game.ot, winner: game.winner ? (game.winner === 'home' ? g.home : g.away) : null, clash: game.tiebreak || null, pregameClash: toss.clash ? { winner: toss.coinWinner, choice: toss.choice, by: toss.clash.by, exchanges: toss.clash.exchanges } : null };
     g.result = res; p.results.push({ round: p.round, conf: g.conf, ...res, winner: res.winner || (res.homeScore > res.awayScore ? g.home : g.away) });
   }
@@ -1913,11 +2038,13 @@ export function startNextSeason(f) {
   startSeason(f, f.season.year + 1);
   f.offseason = null; f.draft = null;
   news(f, `The ${yearOf(f.season.year)} season begins.`, 'info');
+  seasonCaptains(f, f.season.year); // every club names its captains for the new season (the owner's offseason pick, else the suggestion)
   return { ok: true, events };
 }
 
 /** Headless: simulate the player's game too (for Key Moments "sim to end" and tests). */
 export function simulatePlayerGame(f) {
+  ensureCaptains(f);
   const m = sundayMatchup(f); if (!m) return null;
   const toss = pregamePossession(f); // the pregame Clash decides possession (headless: Auto, and the AI's choice when it wins)
   const { r, save } = frng(f);
@@ -2108,6 +2235,8 @@ export const MUTATORS = Object.freeze([
   'checkAchievements', 'backfillAchievements', 'nextScene', 'dismissScene', 'hallOfFameNotice', 'dexRecord', 'news', 'retire',
   // the league registry (Phase 3)
   'ensureLeague',
+  // Captain Partnerships (GDD §27.4B)
+  'chooseInitialCaptains', 'pickCaptains', 'ensureCaptains', 'seasonCaptains',
 ]);
 export const isReadOnly = isArchived;
 /* eslint-disable no-func-assign */
@@ -2116,6 +2245,7 @@ scoutRegion = guarded(scoutRegion); recruit = guarded(recruit); skipRecruit = gu
 recordPlayStats = guarded(recordPlayStats); startPregameClash = guarded(startPregameClash); pregameBattle = guarded(pregameBattle); pregameDecide = guarded(pregameDecide); resolvePregameClash = guarded(resolvePregameClash); choosePossession = guarded(choosePossession); startOvertimeClash = guarded(startOvertimeClash); overtimeBattle = guarded(overtimeBattle); overtimeDecide = guarded(overtimeDecide); resolveOvertimeClash = guarded(resolveOvertimeClash); applyTiebreak = guarded(applyTiebreak); settleTiebreak = guarded(settleTiebreak);
 assignSlot = guarded(assignSlot); autoDepth = guarded(autoDepth); moveDepth = guarded(moveDepth); releaseMonster = guarded(releaseMonster); toPool = guarded(toPool); evolveMonster = guarded(evolveMonster); spendAttributePoint = guarded(spendAttributePoint); autoSpendAllPoints = guarded(autoSpendAllPoints); devGrantLegendary = guarded(devGrantLegendary); syncLegendary = guarded(syncLegendary);
 hireStaff = guarded(hireStaff); replaceStaff = guarded(replaceStaff); hireDefaultStaff = guarded(hireDefaultStaff);
+chooseInitialCaptains = guarded(chooseInitialCaptains); pickCaptains = guarded(pickCaptains); ensureCaptains = guarded(ensureCaptains); seasonCaptains = guarded(seasonCaptains);
 resolveContract = guarded(resolveContract); signFreeAgent = guarded(signFreeAgent); offseasonMarket = guarded(offseasonMarket); ensureDraftClass = guarded(ensureDraftClass); scoutDraft = guarded(scoutDraft); beginDraft = guarded(beginDraft); myDraftPick = guarded(myDraftPick); passDraftPick = guarded(passDraftPick); tradeAskPlayer = guarded(tradeAskPlayer); tradeAskPicks = guarded(tradeAskPicks); acceptTrade = guarded(acceptTrade); maybeTradeCall = guarded(maybeTradeCall); answerTradeCall = guarded(answerTradeCall);
 chooseGoal = guarded(chooseGoal); commissionerReview = guarded(commissionerReview); commissionerRelease = guarded(commissionerRelease); resolvePostseason = guarded(resolvePostseason); chooseLegendTrack = guarded(chooseLegendTrack); replyToCoach = guarded(replyToCoach);
 checkAchievements = guarded(checkAchievements); backfillAchievements = guarded(backfillAchievements); nextScene = guarded(nextScene); dismissScene = guarded(dismissScene); hallOfFameNotice = guarded(hallOfFameNotice); dexRecord = guarded(dexRecord); news = guarded(news); retire = guarded(retire);

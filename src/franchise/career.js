@@ -13,7 +13,9 @@ import { withDerived } from './stats.js';
 import { monsterOverall, SPECIES_BY_ID } from '../data/monsters.js';
 
 export const CAREER_VERSION = 1;
-export const TIER = Object.freeze({ award: 'major', champion: 'major', record: 'major', hof: 'major', evolve: 'notable', first: 'notable', milestone: 'notable', season: 'notable', playoff: 'notable', bowl: 'notable', level: 'notable', growth: 'notable', star: 'notable', rival: 'notable', debut: 'notable', join: 'career', drafted: 'career', left: 'career', signed: 'career' });
+const PAIR_LABEL = { 'QB-RB': 'QB + RB', 'QB-WR': 'QB + WR', 'QB-TE': 'QB + TE', 'RB-OL': 'RB + OL', 'OL-OL': 'OL + OL', 'DL-DL': 'DL + DL', 'DL-LB': 'DL + LB', 'DL-CB': 'DL + CB' };
+const CHEM_LABEL = ['New', 'Developing', 'Established', 'Strong', 'Elite'];
+export const TIER = Object.freeze({ award: 'major', champion: 'major', record: 'major', hof: 'major', evolve: 'notable', first: 'notable', milestone: 'notable', season: 'notable', playoff: 'notable', bowl: 'notable', level: 'notable', growth: 'notable', star: 'notable', rival: 'notable', debut: 'notable', join: 'career', drafted: 'career', left: 'career', signed: 'career', captain: 'career', chemistry: 'notable' });
 
 /** Thresholds for a 7-on-7, nine-game season (measured: GDD §38.2). */
 export const FIRSTS = Object.freeze([
@@ -224,6 +226,9 @@ export function describeEvent(e, m) {
     case 'award': return { icon: '🏅', title: AWARD[x.key]?.[0] || x.key, desc: AWARD[x.key]?.[1] || 'A league award.' };
     case 'record': return { icon: '📜', title: x.scope === 'game' ? 'League record: one game' : 'League record: one season', desc: `${fmt(x.value)} ${STAT_LABEL[x.cat] || x.cat}${x.scope === 'game' ? ' in one game' : ' in one season'}: the most since league records began.` };
     case 'hof': return { icon: '🏛', title: 'Hall of Fame', desc: `Named on ${x.owner || 'the owner'}'s Hall of Fame card.` };
+    // Captain Partnerships (GDD §27.4B)
+    case 'captain': return { icon: '©', title: `Named ${x.side === 'defense' ? 'defensive' : 'offensive'} captain`, desc: `Paired with ${x.pname || 'a teammate'} (${PAIR_LABEL[x.type] || 'captain pair'}) for the ${c}'s season.` };
+    case 'chemistry': return { icon: '🤝', title: `${CHEM_LABEL[x.level] || 'New'} chemistry with ${x.pname || 'his partner'}`, desc: `Their captain partnership reached ${CHEM_LABEL[x.level] || 'a new level'}: +${x.level}% when both are on the field.` };
     default: return { icon: '•', title: e.t, desc: '' };
   }
 }
@@ -241,7 +246,7 @@ export function careerTimeline(m, { club = null } = {}) {
     else if (h.reason === 'signed' && h.club !== club) ev.push({ k: `signed:${i}`, t: 'signed', y: h.from ?? null, c: h.club });
   });
   const wk = (e) => (e.w != null ? e.w : ['join', 'drafted', 'signed'].includes(e.t) ? -1 : 99);
-  const order = { join: 0, drafted: 0, signed: 0, debut: 1, first: 2, level: 3, evolve: 3, milestone: 4, playoff: 4, rival: 4, star: 5, bowl: 5, season: 6, growth: 6, record: 7, award: 8, champion: 9, left: 10, hof: 11 };
+  const order = { join: 0, drafted: 0, signed: 0, captain: 0.5, debut: 1, first: 2, level: 3, evolve: 3, chemistry: 3.5, milestone: 4, playoff: 4, rival: 4, star: 5, bowl: 5, season: 6, growth: 6, record: 7, award: 8, champion: 9, left: 10, hof: 11 };
   // Count repeat honours oldest first, so the first title, the second MVP and the first Beast Bowl appearance read as such.
   const seen = {}; const nth = {};
   for (const e of ev.slice().sort((a, b) => (a.y ?? -1) - (b.y ?? -1) || (a.w ?? 0) - (b.w ?? 0))) {

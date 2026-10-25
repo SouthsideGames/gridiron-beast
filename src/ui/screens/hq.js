@@ -33,6 +33,7 @@ import { universeCareerLeaders } from '../../franchise/league-careers.js';
 import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
+import { captainWarning, captainBadge } from '../captains-ui.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -68,6 +69,12 @@ export function registerHqScreens(Router, app) {
   });
   const need = () => app.f;
 
+  /** Captain Partnerships (GDD §27.4B): the one-time initial pick, or next season's pick in the offseason. Never blocks anything. */
+  function captainCard(f) {
+    if (F.initialCaptainsDue(f)) return `<div class="panel cap-card"><b>© Pick your team captains</b><p class="dim" style="margin:4px 0 8px">New: two captains for offense and two for defense build chemistry by making plays together. A one-time pick for this season; skip it and the suggested captains are used.</p><button class="btn primary block" data-action="go" data-screen="captains">Choose captains</button></div>`;
+    if (F.offseasonCaptainsOpen(f)) { const pick = f.partnerships?.pick?.year === f.season.year + 1; return `<div class="panel cap-card"><b>© Captains for ${yearOf(f.season.year + 1)}</b><p class="dim" style="margin:4px 0 8px">${pick ? 'Saved. You can change them until the season starts.' : 'Choose next season\'s captains, or the suggested ones are used.'}</p><button class="btn block" data-action="go" data-screen="captains">${pick ? 'Review captains' : 'Choose captains'}</button></div>`; }
+    return '';
+  }
   Router.registerScreen('hq', {
     title: ({ f }) => f ? f.club : 'Headquarters', back: false,
     render({ f }) {
@@ -101,6 +108,7 @@ export function registerHqScreens(Router, app) {
           ${!f.season.finished && day < 6 && !f.week.commissioner && !(F.inPlayoffs(f) && !F.playoffFixture(f)) && !F.needsGoal(f) ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">⚠️ Over the cap by ${fmtMoney(-cap.remaining)}. The commissioner reviews the books on Saturday: get under it by then or he picks who goes. <button class="btn small" data-action="releasemon">Release a monster</button></p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">🏛️ The commissioner is waiting. Over the cap by ${fmtMoney(f.week.commissioner.over)}.</p>` : ''}${warningsHtml(f, { max: 2, only: ['min', 'depth', 'hurt', 'tight', 'points'] })}</div>
+        ${captainCard(f)}
         ${rivalCard(f)}
         ${boardPanel(f)}
         ${campaignPanel(f)}
@@ -400,14 +408,14 @@ export function registerHqScreens(Router, app) {
       const line = c.visits === 1 ? `You're over budget. I'm guessing you didn't read the league rules. ${fmtMoney(c.over)} over, to be exact.` : `Still over by ${fmtMoney(c.over)}. We're not done.`;
       const rule = c.enough ? `I've picked ${c.names.length}. Any one of them gets you under. Choose who goes. Nothing comes back for it.` : `None of your monsters alone covers it, so I've picked your ${c.names.length} most expensive. Keep choosing until you're under.`;
       return `<div class="commissioner">${portraitSprite('commissioner', 56, { hue: 210 })}<div class="speech"><div class="muted" style="font-size:11px;margin-bottom:4px">LEAGUE COMMISSIONER</div>${esc(line)}<p style="margin:8px 0 0">${esc(rule)}</p></div></div>
-        <div class="list" style="margin-top:12px">${c.names.map((id) => byId[id]).filter(Boolean).map((m) => `<div class="item static">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${m.cornerstone ? '★' : ''}${m.legendary ? ' <span class="chip accent">legendary</span>' : ''}</div><div class="sub">${m.position} · ${monsterOverall(m)} OVR · ${fmtMoney(m.salary)}/yr${(m.salary || 0) >= c.over ? ' · gets you under' : ''}</div></div><button class="btn small danger" data-action="release" data-id="${m.id}" data-name="${esc(m.name)}">Release</button></div>`).join('')}</div>
+        <div class="list" style="margin-top:12px">${c.names.map((id) => byId[id]).filter(Boolean).map((m) => `<div class="item static">${monsterSprite(m, 36)}<div class="grow"><div class="name">${esc(m.name)} ${m.cornerstone ? '★' : ''}${m.legendary ? ' <span class="chip accent">legendary</span>' : ''}${captainBadge(f, m.id)}</div><div class="sub">${m.position} · ${monsterOverall(m)} OVR · ${fmtMoney(m.salary)}/yr${(m.salary || 0) >= c.over ? ' · gets you under' : ''}</div></div><button class="btn small danger" data-action="release" data-id="${m.id}" data-name="${esc(m.name)}">Release</button></div>`).join('')}</div>
         <p class="dim" style="margin-top:8px">Rule: the commissioner names the cheapest monsters that would each bring you under the cap (${F.difficultyOf(f).commissionerPicks} on ${esc(F.difficultyOf(f).label)}). Cornerstones and legendaries are not protected.</p>`;
     },
     mount(root) {
       delegate(root, {
         back: () => Router.go('hq', {}, { reset: true }),
         release: async (el) => {
-          if (!(await confirmSheet(`Release ${el.dataset.name}? Nothing comes back for them.`, { title: 'The commissioner is waiting', okLabel: 'Release', danger: true }))) return;
+          if (!(await confirmSheet(`Release ${el.dataset.name}? Nothing comes back for them.${captainWarning(app.f, el.dataset.id)}`, { title: 'The commissioner is waiting', okLabel: 'Release', danger: true }))) return;
           const r = F.commissionerRelease(app.f, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; }
           app.save();
           if (r.done) { toast(`${r.released.name} released. You're under the cap.`, 'info'); Router.go('hq', {}, { reset: true }); } else { toast(`${r.released.name} released. Still over.`, 'bad'); Router.render(); }

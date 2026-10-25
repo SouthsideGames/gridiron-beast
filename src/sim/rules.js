@@ -4,6 +4,7 @@
 
 import { venueFor } from '../data/stadiums.js';
 import { positionOf, canPlay } from '../data/personnel.js';
+import { boostSlots, qualifyingEvent } from './partnership-play.js';
 import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
 import { simulatePlay } from './engine.js';
@@ -44,6 +45,9 @@ export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER,
     lastPlay: null,
     comeback, // { margin, edge } or null: in the fourth quarter the side trailing by `margin`+ gets `edge` on every core rating (GDD §17)
   };
+  // Captain Partnerships (GDD §27.4B): each side's active pairs and their chemistry level, fixed here at kickoff for the whole
+  // game. A game whose teams carry none gets no field at all, so its state is exactly what it always was.
+  const partners = kickoffPartners(home, away); if (partners) { state.partners = partners; state.partnerCredits = { home: {}, away: {} }; }
   log(state, `${state[winner].name} wins the toss and elects to ${pick === 'defer' ? 'defer' : pick}.`, 'info');
   return state;
 }
@@ -134,16 +138,41 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
   const call = { side: state.possession, off: offensePlayId, def: defensePlayId };
   (state.calls ||= []).push(call);
+  const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
+  const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
   const sim = simulatePlay({
     offensePlay, defensePlay,
-    offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay),
+    // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
+    offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
     ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null },
   });
+  if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
   save();
   const outcome = applyScrimmageResult(state, sim, offensePlayId, defensePlayId);
   return { sim, outcome };
+}
+/** The kickoff snapshot of each side's active partnerships ({ offense, defense } of { type, a, b, level, cap }), or null. */
+function kickoffPartners(home, away) {
+  const snap = (t) => { const p = t?.partnership; if (!p || (!p.offense && !p.defense)) return null; return JSON.parse(JSON.stringify({ offense: p.offense || null, defense: p.defense || null })); };
+  const h = snap(home), a = snap(away); return h || a ? { home: h, away: a } : null;
+}
+/**
+ * One snap's chemistry credits for both sides' active pairs (GDD §27.4B). One credit per pair per play; none in the fourth
+ * quarter for a side leading by more than 21 before the snap (garbage time); none past the pair's per-game cap. The tally lives in
+ * `state.partnerCredits`, so a reloaded game in progress keeps it and a replay (an animation) never adds to it.
+ */
+export function creditPartnerships(state, slots, sim, pre) {
+  const off = state.possession, def = opponent(off);
+  for (const [s, side] of [[off, 'offense'], [def, 'defense']]) {
+    const pair = state.partners[s]?.[side]; if (!pair) continue;
+    const kind = qualifyingEvent(side, pair, slots, sim, pre); if (!kind) continue;
+    const t = ((state.partnerCredits ||= { home: {}, away: {} })[s][side] ||= { n: 0, capped: 0, garbage: 0, kinds: {} });
+    if (pre.quarter === 4 && pre.score[s] - pre.score[opponent(s)] > 21) { t.garbage += 1; continue; }
+    if (pair.cap && t.n >= pair.cap) { t.capped += 1; continue; }
+    t.n += 1; t.kinds[kind] = (t.kinds[kind] || 0) + 1;
+  }
 }
 /**
  * The seven on the field for this play. A slot with no monster (a package slot

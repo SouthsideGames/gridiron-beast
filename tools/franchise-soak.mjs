@@ -9,6 +9,7 @@ import * as Save from '../src/franchise/save.js';
 import { ROSTER_MAX, ROSTER_MIN, monsterOverall } from '../src/data/monsters.js';
 import { ATTRIBUTES } from '../src/data/personnel.js';
 import { ALL_TEAMS, STARTER_CLUBS } from '../src/data/league.js';
+import { partnershipProblems } from '../src/franchise/partnerships.js';
 
 const argv = typeof process !== 'undefined' ? process.argv.slice(2) : []; // the browser walkthroughs import newFranchise too
 const args = Object.fromEntries(argv.map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
@@ -44,6 +45,7 @@ export function invariants(f, where) {
     { const ks = (m.career?.ev || []).map((e) => e.k); if (new Set(ks).size !== ks.length) say(`${m.name} duplicate career events`); for (const e of m.career?.ev || []) if (e.y != null && (e.y < 1 || e.y > (f.season?.year || 1) + 1)) say(`${m.name} career event ${e.k} in season ${e.y}`); }
   }
   for (const [slot, mid] of Object.entries(f.lineupManual || {})) if (mid && !ids.has(mid)) say(`lineup slot ${slot} points at a monster not on the roster`);
+  for (const x of partnershipProblems(f)) say(x); // Captain Partnerships (GDD §27.4B)
   const cap = F.salarySummary(f); for (const k of ['cap', 'total', 'remaining']) if (!Number.isFinite(cap[k])) say(`cap ${k} ${cap[k]}`);
   const recs = f.season.records; let w = 0, l = 0, t = 0;
   for (const team of ALL_TEAMS) { const r = recs[team]; if (!r) { say(`no record for ${team}`); continue; } w += r.w; l += r.l; t += r.t; if (r.pf < 0 || r.pa < 0) say(`${team} negative points`); }
