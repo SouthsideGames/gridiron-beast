@@ -3119,7 +3119,7 @@ A read-only dry run of the migration on a **copy of the owner's real v39.0 cloud
   - The items listed in §46.10.
   - The balance narrowing left open in §46.8.
 
-## 48. Full-screen Monster Career Profiles — MONSTER CAREER TIMELINES — FEATURE COMPLETE (IMPLEMENTED 2026-10-24; branch `career-profiles`, v42.1.0)
+## 48. Full-screen Monster Career Profiles — MONSTER CAREER TIMELINES — FEATURE COMPLETE — RELEASED v42.1.0 (IMPLEMENTED and RELEASED 2026-10-24; PR #53)
 
 The last presentation item of the career feature (§46.10): every monster with a record has a full-screen career page, like a player page in a sports game. It is a presentation and navigation layer over the career system of §38, §40, §41, §45 and §46. No second career-tracking system was created, no career data was added to the save, and opening a page writes nothing.
 
@@ -3247,3 +3247,25 @@ This is an emulated browser, not a real device.
 - A Hall of Fame snapshot shows "Retired" rather than "Hall of Famer" when the card's monster carried no Hall of Fame event at retirement. Cards written by the retirement flow carry it.
 
 **Every approved requirement of the Monster Career Timeline feature is satisfied: MONSTER CAREER TIMELINES — FEATURE COMPLETE.**
+
+### 48.9 Release v42.1.0 (2026-10-24)
+- **Merge:** PR #53 (`career-profiles` → `main`, one commit `d51026e`), merged on the owner's approval as merge commit `606bd62d807360d55a75f859e8169c30b4f70ef5`. `main`'s game files are identical to the tested PR head.
+- **Pre-merge checks:**
+  - The PR was based on the latest `main` (`df45acf`, v42.0.3).
+  - It changed no save-layer file (store, cloud sync, slots, ids, achievements, Hall of Fame store, save migration, registry, lifecycle, packing).
+  - **No migration:** v42.1.0 adds no save field and no schema change.
+- **Dry run on read-only copies of the owner's live cloud data** (two v42 snapshots of franchise `e2e70dc8…`, the v39.0 documents, the repaired achievements). A fresh device loaded the same franchise under v42.0.3 and v42.1.0:
+  - Ember City Beasts, 1202 week 8, 4–2, 34 monsters;
+  - byte-identical franchise data (same size and hash);
+  - no migration notes and no cloud writes;
+  - achievements at one franchise.
+  - Under v42.1.0, career pages for 12 of the owner's monsters (3 gym legendaries among them) opened in all five sections, the franchise was unchanged, and League Hub Leaders → career → Back kept the tab.
+- **Deployment:**
+  - **Link:** https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq (URL unchanged), artifact version 96 (`1792891572-ac8d`).
+  - **Files:** 134 (index.html and 133 game files). The 11 changed files were published and match `main` byte for byte; the unchanged files are those verified at v42.0.1/v42.0.3.
+  - **Capabilities and runtime:** db, downloads and user carried forward; runtime contract 0.2.77 unchanged.
+  - **Build label:** `src/version.js` serves `v42.1.0-career-profiles`.
+- **Live data:** after publishing, the owner's database is unchanged: the same documents and versions (achievements 30, Dex 77, both v42 snapshots, the v39.0 documents). The private test link was not touched.
+- **Limitations:**
+  - The claude.ai runtime itself cannot be driven from the development environment, and real devices were not run. The owner's first open is the live check.
+  - A device whose local save is newer than the cloud keeps its own progress, under the v42.0.1 rules (§47.3), unchanged here.

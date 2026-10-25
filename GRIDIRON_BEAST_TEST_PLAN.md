@@ -2,7 +2,11 @@
 
 All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
-## 0. Current status (2026-10-24, branch `career-profiles`: full-screen Monster Career Profiles, GDD §48, v42.1.0)
+## 0. Current status (2026-10-24, release v42.1.0 on the main game: full-screen Monster Career Profiles, GDD §48; PR #53 merged as `606bd62`)
+
+- **Released:** artifact version 96. The 11 changed files match `main`, and the owner's live database is unchanged.
+- **Pre-release dry run on copies of the owner's live cloud data:** v42.0.3 and v42.1.0 load the same franchise (byte-identical), with no migration and no cloud writes. Career pages for 12 of the owner's monsters changed nothing.
+- **Not run:** real devices and the claude.ai runtime itself.
 
 - **`npm test`: 540 tests, all passing.** That includes `tests/career-page.test.js` (9 tests):
   - every kind of monster (status, designation, rating rules);
