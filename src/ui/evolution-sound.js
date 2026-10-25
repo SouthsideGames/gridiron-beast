@@ -23,6 +23,7 @@ const CUES = {
 };
 /** Play a cue if sound is on. Never throws. */
 export function playCue(name, on) {
-  if (!on) return false; const a = ctx(); if (!a || a.state !== 'running') return false;
+  if (!on) return false; const a = ctx(); if (!a) return false;
+  if (a.state !== 'running') { try { a.resume(); } catch { /* not allowed yet */ } return false; } // never forced: blocked audio stays silent
   try { CUES[name]?.(a); return true; } catch { return false; }
 }

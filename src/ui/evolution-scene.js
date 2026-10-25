@@ -74,6 +74,7 @@ export function openEvolutionScene({ report: r, beforeMon, afterMon, settings = 
   const sysReduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const reduced = !!settings.reducedMotion || sysReduced; const shake = !reduced && settings.screenShake !== false;
   let sound = !!settings.evoSound; const T = reduced ? TIMING.reduced : TIMING.full; const th = themeFor(r.type);
+  if (sound) unlockSound(); // the scene opens inside the Evolve tap: start audio now, or iPhone Safari blocks the later cues
   const size = stageSpriteSize(); const small = Math.max(64, Math.floor(size * 0.36 / 16) * 16), big = Math.max(96, Math.floor(size * 0.5 / 16) * 16);
   const el = document.createElement('div');
   el.className = `evo-scene${reduced ? ' reduced' : ''}`; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', `Evolution: ${r.fromName} into ${r.toName}`);
