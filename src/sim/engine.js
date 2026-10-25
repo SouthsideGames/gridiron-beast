@@ -8,7 +8,10 @@
 //     offense: {slot: {attrs, ability}},       // effective attributes per on-field slot
 //     defense: {slot: {attrs, ability}},
 //     ballOn (1..99), ballLat (-20..20), seed,
-//     options: { forcedTarget, maxTime, frameEvery, edge, memory, dryRun }
+//     options: { forcedTarget, maxTime, frameEvery, edge, memory, dryRun, qb, fork }
+//       qb: AI Testing Lab only. { mode: 'hold' } the AI never acts (it records what it would have done, sim.qb.aiWould);
+//           { mode: 'human', at, action: 'throw'|'scramble'|'throwaway', target } the human's decision at time `at`,
+//           applied through the normal mechanics. fork: { at, seed } re-seeds the physics at time `at` (outcome rollouts).
 //       memory: { drive, half, quarter, used: {key: true} } ability uses across plays (GDD §23.11)
 //       dryRun: Playbook Audit only, never in a game. { noDefense } runs the offense with nobody
 //         across from it; without noDefense the defense plays while the QB holds the ball.
@@ -24,6 +27,7 @@ import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { ABILITIES, speciesEffect } from '../data/monsters.js';
 import { QUICK_ROUTES, SETTLE_ROUTES } from '../data/routes.js';
 import { contestMod } from './type-matchups.js';
+import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION } from './qb-read.js';
 
 const DT = 0.05;
 const DEFAULT_ATTRS = { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 60 };
@@ -35,7 +39,10 @@ const norm = (v) => clamp(v, 1, 99) / 99;
 
 const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
-  const rng = createRng(seed);
+  let rng = createRng(seed); // `let`: options.fork re-seeds the physics after a decision point (AI Testing Lab rollouts)
+  // The quarterback's perception has its own stream, so how he reads the field never shifts the physics of the play, and the AI
+  // Testing Lab can replay an identical play with a different decision (GDD §53).
+  const qrng = createRng(((Number(seed) >>> 0) ^ 0x5bd1e995) >>> 0 || 7);
   const B = boundsFor(ballOn, ballLat);
   const maxTime = options.maxTime ?? 20;
   const frameEvery = options.frameEvery ?? 2;
@@ -160,6 +167,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   let pressureAt = Infinity;
   let readIndex = 0;
   let readClock = 0;
+  // QB read progression state (GDD §53): the order of reads, the current look, what he has seen, and the recorded read log.
+  const qr = { order: null, i: 0, cur: null, lookEnd: 0, seen: {}, log: [], cycles: 0, locks: 0, decision: null, aiWould: null, pocketAt: null, sensedAt: null, lastEmergency: -9, humanDone: false, startY: null };
   let scrambled = false;
   let qbFakeUntil = 0;
   const stats = { passer: null, target: null, receiver: null, carrier: null, tackler: null, airYards: 0, yac: 0, brokenTackles: 0, pressure: false, interceptor: null, forcedBy: null,
@@ -580,6 +589,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (asg.a === 'play_action' || asg.a === 'boot') {
       const fakeDone = a.wp >= 2;
       if (!fakeDone) { followPath(a, asg.points.slice(0, 2), 1); qbFakeUntil = t; return; }
+      qr.fakeAt ??= +t.toFixed(2); // the play-action fake is complete: the read progression starts from here
       if (asg.a === 'boot' && a.wp < asg.points.length) followPath(a, asg.points, 0.85);
       else steer(a, a.x, a.y, 0, 0.2); // set up to throw
     } else {
@@ -605,11 +615,17 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (pressured && a.ability?.pressureSense) abilityUsed(a, 'pressureSense');
     // A screen is thrown on time (owner review, 2026-10-20): once the linemen have let the rush through, the
     // quarterback dumps it to the screen man as the rushers arrive, unless a defender is already on him.
-    if (screenPlay && !options.forcedTarget && (t >= hold || (pressured && t >= 0.45))) { // the rush is coming free: dump it as soon as it arrives
+    if (screenPlay && !options.forcedTarget && !options.qb && (t >= hold || (pressured && t >= 0.45))) { // (in the AI Testing Lab the screen goes through the read progression, so a hold really holds) // the rush is coming free: dump it as soon as it arrives
       const sc = bySlot.off[offensePlay.primary];
       if (sc && sc.assignment.a === 'route' && projectedSeparation(a, sc) > 0.6) { a.throwRead = 0; throwTo(a, sc, pressured); return; }
     }
-    if (t < Math.max(readyAt, hold)) return; // set the feet first / let a screen develop
+    const setAt = Math.max(readyAt, hold);
+    if (options.forcedTarget) { if (t < setAt) return; legacyForcedRead(a, pressured, foresight, dropTime); return; } // a chosen target (tools, future player control): the old single-read path
+    if (t < setAt - awarenessProfile(a.attrs.awareness).look) return; // eyes up: the first look is taken as he finishes the drop (no throw before his feet are set)
+    qbDecide(a, { pressured, foresight, dropTime, rushers, setAt });
+  }
+  /** The pre-v42.5 read loop, kept only for options.forcedTarget (a caller that names the receiver). */
+  function legacyForcedRead(a, pressured, foresight, dropTime) {
     // Reading: step through the progression at a pace set by awareness.
     readClock -= DT;
     const scanPace = (0.42 - 0.26 * norm(a.attrs.awareness)) / (pressured ? foresight : 1);
@@ -692,6 +708,190 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (px > B.endLine - 1 || py < B.left + 0.5 || py > B.right - 0.5) return -1;
     // Deep balls need a real window: a defender in phase a yard behind is still covering.
     return nearest - (air > 20 ? 1.8 : air > 15 ? 1.0 : 0) - Math.max(0, air - 25) * 0.05;
+  }
+  // ------------------------------------------------------------ QB read progression (GDD §53)
+  const WINDOW_LAG = 0.2; // seconds a defender needs to react to the release and get to full speed toward the ball
+  /** A route has to develop before it is thrown (except quick game and hot throws). */
+  const routeReady = (r, hot) => hot || r.assignment.a !== 'route' || QUICK_ROUTES.has(r.assignment.r) || r.wp >= Math.min(2, r.assignment.points.length - 1) || (r.x > 9 && r.wp >= 1);
+  const routeRunners = () => receivers.map((sl) => bySlot.off[sl]).filter((r) => r && r.assignment?.a === 'route');
+  /**
+   * The arrival window for a ball thrown to `r` now: the catch point (the receiver led along his route for the wind-up and flight),
+   * and how close each defender can get to it by the time the ball lands: he keeps playing his assignment through the wind-up, then
+   * reacts and runs at full speed. m1 / m2 = the nearest / second-nearest defender's margin in yards; lane = the nearest one is
+   * undercutting the throw (between the passer and the catch point). The quarterback never sees a Night Veil defender.
+   */
+  function arrivalWindow(passer, r) {
+    const v = 17 + 13 * norm(passer.attrs.arm); const windup = 0.14 + 0.1 * (1 - norm(passer.attrs.arm));
+    let P = predictReceiver(r, windup + dist(passer, r) / v);
+    for (let k = 0; k < 2; k++) P = predictReceiver(r, windup + Math.hypot(P.x - passer.x, P.y - passer.y) / v);
+    const d = Math.hypot(P.x - passer.x, P.y - passer.y); const flight = d / v; const air = P.x - passer.x;
+    const range = (30 + 30 * norm(passer.attrs.arm)) * (passer.ability?.tailwind && air > 15 ? 1 + passer.ability.tailwind : 1);
+    const reachable = d <= range && P.x <= B.endLine - 1 && P.y >= B.left + 0.5 && P.y <= B.right - 0.5;
+    const ms = [];
+    for (const def of defs) {
+      if (def.engaged || def.ability?.nightVeil) continue;
+      const sx = def.x + def.vx * windup, sy = def.y + def.vy * windup;
+      const close = def.maxSpeed * Math.max(0, flight - WINDOW_LAG - Math.max(0, def.stun || 0));
+      const along = d > 0 ? ((sx - passer.x) * (P.x - passer.x) + (sy - passer.y) * (P.y - passer.y)) / (d * d) : 0;
+      const off = d > 0 ? Math.abs((sx - passer.x) * (P.y - passer.y) - (sy - passer.y) * (P.x - passer.x)) / d : 99;
+      ms.push({ def, m: Math.max(0, Math.hypot(sx - P.x, sy - P.y) - close), under: along > 0.4 && along < 0.92 && off < 2.2 });
+    }
+    ms.sort((p, q) => p.m - q.m);
+    return { P, air, dist: d, flight, reachable, m1: ms[0]?.m ?? 99, m2: ms[1]?.m ?? 99, near: ms[0]?.def || null, lane: !!ms[0]?.under && (ms[0]?.m ?? 99) < 2.5 };
+  }
+  const oddsFor = (passer, r, w, m1, m2, pressured) => throwOdds({ m1, m2, air: w.air, dist: w.dist, accuracy: passer.attrs.accuracy, catching: r.attrs.catching, agility: r.attrs.agility, cover: w.near?.attrs.coverage ?? 60, pickHands: w.near?.attrs.catching ?? 50, pressured, moving: Math.hypot(passer.vx, passer.vy) > 1, flight: w.flight, rspeed: r.maxSpeed });
+  /** One look at a receiver: the true window, and what this quarterback perceives of it (one judgement per look). */
+  function qbLook(a, r, sensed, extraNoise = 1) {
+    const P = awarenessProfile(a.attrs.awareness); const w = arrivalWindow(a, r); const ready = routeReady(r, sensed);
+    const prism = defs.find((d) => d.ability?.refraction && dist(d, r) < 4); if (prism) abilityUsed(prism, 'refraction'); // Refraction: windows near him are misjudged 20% more
+    const noise = P.noise * extraNoise * (prism ? 1 + prism.ability.refraction : 1);
+    const fix = qr.order && r.slot === qr.order[0] ? P.fixation : 0; // a lesser passer overrates his first read
+    const pm1 = Math.max(0, w.m1 + qrng.normal() * noise + fix);
+    const pm2 = qrng.chance(P.missSecond) ? 99 : Math.max(0, w.m2 + qrng.normal() * noise + fix);
+    const physPressure = (defs.filter((d) => d.stun <= 0 && !d.engaged).reduce((m, d) => Math.min(m, dist(d, a)), 99)) < 3.2;
+    const seen = oddsFor(a, r, w, pm1, pm2, physPressure); const truth = oddsFor(a, r, w, w.m1, w.m2, physPressure);
+    return { r, slot: r.slot, w, ready, pm1, pm2, seen, truth, at: t };
+  }
+  const QR_WORD = { open: 'open', double: 'double coverage', lane: 'throwing lane blocked', covered: 'covered', tight: 'window too tight', not_ready: 'route not developed', out_of_range: 'out of range', noticed: 'spotted open' };
+  function qrLog(kind, data) {
+    const e = { t: +t.toFixed(2), kind, ...data }; qr.log.push(e);
+    const nm = (sl, team = 'off') => (team === 'off' ? bySlot.off[sl] : bySlot.def[sl])?.name || sl;
+    const text = kind === 'read' ? `${qb?.name || 'QB'} reads ${nm(e.slot)}: ${QR_WORD[e.reason] || e.reason}` : kind === 'pressure' ? `${nm(e.by, 'def')} is closing on ${qb?.name || 'the QB'}`
+      : kind === 'decision' ? `${qb?.name || 'QB'} decides: ${e.action === 'throw' ? `throw to ${nm(e.slot)}` : e.action === 'scramble' ? 'scramble' : 'throw it away'}` : '';
+    events.push({ t: e.t, text, ...e, kind: `qb_${kind}` }); return e;
+  }
+  function buildOrder() {
+    const base = (offensePlay.progression.length ? offensePlay.progression : receivers).filter((sl) => bySlot.off[sl]?.assignment?.a === 'route');
+    const rest = routeRunners().map((r) => r.slot).filter((sl) => !base.includes(sl));
+    return [...base, ...rest];
+  }
+  function startLook(a, i, why = 'progression', quick = false) {
+    const P = awarenessProfile(a.attrs.awareness); const foresightK = a.ability?.foresight && defensePlay.tags.includes('blitz') && qr.sensedAt != null ? a.ability.foresight : 1;
+    const hurry = qr.sensedAt != null ? 0.7 : 1; // pressure shortens each look (and lowers the bar: acceptBar)
+    qr.i = i; qr.cur = { slot: qr.order[i], why }; qr.lookEnd = t + P.look * (quick ? 0.55 : 1) * hurry / foresightK;
+  }
+  /** The running lane he sees: the best of five directions, 5 yards out (gain estimate in yards, margin in seconds). */
+  function runningLane(a) {
+    const P = awarenessProfile(a.attrs.awareness); let best = null;
+    for (const ang of [0, 0.6, -0.6, 1.1, -1.1]) {
+      const px = a.x + Math.cos(ang) * 5, py = a.y + Math.sin(ang) * 5; if (py < B.left + 1 || py > B.right - 1) continue;
+      const tq = 5 / a.maxSpeed + 0.25; let mt = 9;
+      for (const d of defs) { if (d.engaged || d.stun > 0) continue; const mx = d.x + d.vx * 0.35, my = d.y + d.vy * 0.35; mt = Math.min(mt, 0.2 + Math.max(0, Math.hypot(mx - px, my - py) - 1.0) / d.maxSpeed - tq); } // a defender carries his momentum before he can turn
+      const seenM = mt + qrng.normal() * P.laneNoise;
+      const gain = Math.cos(ang) * clamp(1 + seenM * 7, -3, 12);
+      if (!best || gain > best.gain) best = { ang, margin: +mt.toFixed(2), seen: +seenM.toFixed(2), gain: +gain.toFixed(1) };
+    }
+    if (best) best.exp = +expectedRun(a, best.seen).toFixed(1);
+    return best;
+  }
+  const mobility = (a) => (norm(a.attrs.speed) + norm(a.attrs.agility)) / 2;
+  /** Expected scramble yards from the lane margin he sees (seconds) and his mobility; fitted on forced scrambles in this engine. */
+  function expectedRun(a, margin) { return -1.5 + 10 * margin + 5 * (mobility(a) - 0.6); }
+  /** Intentional grounding: outside the tackle box any throw-away that reaches the line is legal; inside it, only toward an eligible receiver's area. Never in a defender's grasp. */
+  function throwAwayLegal(a) {
+    if (defs.some((d) => !d.engaged && d.stun <= 0 && dist(d, a) < 0.7)) return false;
+    if (Math.abs(a.y - (qr.startY ?? 0)) > 3.4) return true;
+    return routeRunners().some((r) => !r.engaged && dist(a, r) < 22);
+  }
+  function freshBest(maxAge = 0.9) { let best = null; for (const s of Object.values(qr.seen)) if (t - s.at <= maxAge && s.ready && s.w.reachable && (!best || s.seen.quality > best.seen.quality)) best = s; return best; }
+  /** True odds of every developed, reachable receiver right now (for the decision record: forced throws and missed opportunities). */
+  function trueBoard(a) { const out = {}; for (const r of routeRunners()) { const w = arrivalWindow(a, r); if (!w.reachable || !routeReady(r, false)) continue; out[r.slot] = +oddsFor(a, r, w, w.m1, w.m2, false).quality.toFixed(3); } return out; }
+  /** Every receiver's measured window now (training data): separation, second defender, lane, developed, reachable, quality. */
+  function windowsNow(a) { const out = {}; for (const r of routeRunners()) { const w = arrivalWindow(a, r); out[r.slot] = { m1: +Math.min(99, w.m1).toFixed(2), m2: +Math.min(99, w.m2).toFixed(2), lane: w.lane, ready: routeReady(r, false), reachable: w.reachable, air: +w.air.toFixed(1), q: +oddsFor(a, r, w, w.m1, w.m2, false).quality.toFixed(3) }; } return out; }
+  /** Act on a decision (or, in the AI Testing Lab's hold mode, only record what the AI would have done). */
+  function commit(a, act) {
+    const board = trueBoard(a); const vals = Object.entries(board); let bestTrue = vals.reduce((m, [, v]) => Math.max(m, v), -9);
+    const trueQ = act.action === 'throw' ? (board[act.slot] ?? +(act.look?.truth.quality ?? 0).toFixed(3)) : null;
+    if (trueQ != null) bestTrue = Math.max(bestTrue, trueQ); if (bestTrue < -1) bestTrue = 0; // nothing developed: the best available is nothing
+    const missedSlot = act.action === 'throw' ? vals.filter(([k, v]) => k !== act.slot && v >= Math.max(0.5, (trueQ ?? 0) + 0.2)).sort((x, y) => y[1] - x[1])[0]?.[0] || null
+      : vals.filter(([, v]) => v >= 0.5).sort((x, y) => y[1] - x[1])[0]?.[0] || null;
+    const rec = { action: act.action, slot: act.slot || null, reason: act.reason, read: act.read ?? null, m1: act.look ? +act.look.w.m1.toFixed(2) : null, odds: act.look ? { comp: +act.look.truth.pComp.toFixed(3), int: +act.look.truth.pInt.toFixed(3), air: +act.look.w.air.toFixed(1), dist: +act.look.w.dist.toFixed(1) } : null, m2: act.look ? +Math.min(99, act.look.w.m2).toFixed(2) : null, q: act.look ? +act.look.seen.quality.toFixed(3) : null, trueQ, bestTrueQ: +bestTrue.toFixed(3), board,
+      forced: act.action === 'throw' && trueQ != null && trueQ < 0.25, missed: missedSlot, sensed: qr.sensedAt != null, pressured: !!act.pressured, cycles: qr.cycles, lane: act.lane || null, legal: act.legal ?? null, threat: act.threat || null, by: act.by || 'ai' };
+    const ctl = options.qb;
+    if (rec.by === 'ai' && ctl && (ctl.mode === 'hold' || (ctl.mode === 'human' && t < ctl.at))) { if (!qr.aiWould) qr.aiWould = { t: +t.toFixed(2), ...rec }; return false; }
+    qr.decision = { t: +t.toFixed(2), ...rec, windows: windowsNow(a) }; qrLog('decision', { ...rec, board: undefined });
+    if (act.action === 'throw') { a.throwRead = act.read ?? 99; throwTo(a, act.r, act.pressured); }
+    else if (act.action === 'scramble') scramble(a);
+    else if (act.action === 'throwaway') throwAway(a);
+    return true;
+  }
+  /** False while the AI Testing Lab holds the play for the human (the AI only records what it would do). */
+  const aiMayAct = () => !(options.qb && (options.qb.mode === 'hold' || (options.qb.mode === 'human' && t < options.qb.at)));
+  function qbDecide(a, { pressured, foresight, rushers, setAt = 0 }) {
+    const P = awarenessProfile(a.attrs.awareness);
+    if (!qr.order) { qr.order = buildOrder(); qr.pocketAt = t; qr.startY = qr.startY ?? a.y; if (!qr.order.length) { if (throwAwayLegal(a)) commit(a, { action: 'throwaway', reason: 'no_receivers', legal: true }); return; } startLook(a, 0); }
+    const since = t - qr.pocketAt;
+    // The AI Testing Lab's human decision, applied through the normal mechanics.
+    const ctl = options.qb;
+    if (ctl && ctl.mode === 'human' && !qr.humanDone && t >= ctl.at) {
+      qr.humanDone = true; const r = ctl.action === 'throw' ? bySlot.off[ctl.target] : null;
+      if (ctl.action === 'throw' && r) { const look = qbLook(a, r, false, 0.0001); commit(a, { action: 'throw', r, slot: r.slot, reason: 'human', look, read: qr.order.indexOf(r.slot), pressured, by: 'human' }); return; }
+      if (ctl.action === 'scramble' && !scrambled) { commit(a, { action: 'scramble', reason: 'human', lane: runningLane(a), by: 'human' }); return; }
+      if (ctl.action === 'throwaway') { commit(a, { action: 'throwaway', reason: 'human', legal: throwAwayLegal(a), by: 'human' }); return; }
+    }
+    // Pressure recognition: an aware passer feels the unblocked rusher sooner.
+    // A threat is a free defender closing on him (not a linebacker dropping into coverage); time to hit from his closing speed.
+    let threat = null;
+    for (const { d, dd } of rushers) { if (!(d.x < -0.3 || ['rush', 'contain'].includes(d.assignment?.a))) continue; const closing = dd > 0 ? (d.vx * (a.x - d.x) + d.vy * (a.y - d.y)) / dd : 0; if (closing < 1.5 && dd > 1.6) continue; const tth = Math.max(0, dd - 0.9) / Math.max(closing, 1.5); if (!threat || tth < threat.tth) threat = { d, dd, tth }; }
+    const senseR = P.sense + (a.ability?.pressureSense ? 1.5 : 0);
+    const sensed = !!threat && threat.dd < senseR;
+    if (sensed && qr.sensedAt == null) { qr.sensedAt = t; const ln = runningLane(a); qrLog('pressure', { by: threat.d.slot, dd: +threat.dd.toFixed(2), lane: ln ? { gain: ln.gain, margin: ln.margin } : null }); }
+    const timeToHit = threat ? threat.tth : 9;
+    // The rusher is about to arrive: get rid of it, escape, or take the hit.
+    if (sensed && timeToHit < 0.3 && threat.dd < 3.4 && t - qr.lastEmergency >= 0.2) {
+      qr.lastEmergency = t; if (!qrng.chance(P.react)) return; // frozen: he does not react this time (a lesser passer holds it and takes the hit)
+      let best = freshBest(); const bar = acceptBar({ index: 1, cycles: qr.cycles, sincePocket: since, pressure: true }) - 0.08;
+      // No fresh look: a hot glance across his receivers (hot routes count as ready); an aware passer picks better.
+      if (!best || best.seen.quality < bar) for (const o of routeRunners()) { const lk = qbLook(a, o, true, 1.3); if (lk.w.reachable && (!best || lk.seen.quality > best.seen.quality)) best = lk; }
+      const lane = scrambled ? null : runningLane(a); const run = lane ? lane.exp : -9;
+      // An open lane beats a weak hot throw; a strong window is still thrown.
+      if (run >= 3.2 && (!best || best.seen.quality < bar + 0.15)) { if (commit(a, { action: 'scramble', reason: 'escape', lane })) return; } // the rusher is on him: only a clearly open lane
+      if (best && best.seen.quality >= bar && aiMayAct()) qrLog('read', { n: qr.log.filter((e) => e.kind === 'read').length + 1, slot: best.slot, why: 'hot', reason: 'open', q: +best.seen.quality.toFixed(3), trueQ: +best.truth.quality.toFixed(3), bar: +bar.toFixed(3) });
+      if (best && best.seen.quality >= bar) { if (commit(a, { action: 'throw', r: best.r, slot: best.slot, reason: 'hot', look: best, read: qr.order.indexOf(best.slot), pressured })) return; }
+      if (throwAwayLegal(a) && qrng.chance(0.25 + 0.6 * norm(a.attrs.awareness))) { if (commit(a, { action: 'throwaway', reason: 'pressure', legal: true, threat: { by: threat.d.slot, dd: +threat.dd.toFixed(2), tth: +threat.tth.toFixed(2), a: threat.d.assignment?.a } })) return; }
+    }
+    if (t < qr.lookEnd || t < setAt) return; // still on this read (or still setting his feet)
+    // The look ends: judge the read.
+    const r = bySlot.off[qr.cur.slot];
+    if (r) {
+      const look = qbLook(a, r, sensed); qr.seen[r.slot] = look;
+      const bar = acceptBar({ index: qr.i, cycles: qr.cycles, sincePocket: since, pressure: sensed });
+      const ok = look.ready && look.w.reachable && look.seen.quality >= bar;
+      const reason = ok ? 'open' : rejectReason({ ready: look.ready, reachable: look.w.reachable, m1: look.pm1, m2: look.pm2, lane: look.w.lane, quality: look.seen.quality, bar });
+      qrLog('read', { n: qr.log.filter((e) => e.kind === 'read').length + 1, slot: r.slot, why: qr.cur.why, reason, q: +look.seen.quality.toFixed(3), trueQ: +look.truth.quality.toFixed(3), bar: +bar.toFixed(3) });
+      if (ok) {
+        // Whiteout: once per half, the quarterback's first read freezes and he has to move on to the second.
+        const frost = qr.i === 0 && qr.order.length > 1 ? defs.find((d) => d.ability?.whiteout && available(d, 'whiteout', 'drive')) : null;
+        if (frost && !(options.qb && options.qb.mode !== 'ai')) { spend(frost, 'whiteout', 'drive'); r.vx = 0; r.vy = 0; r.stun = Math.max(r.stun, 0.8); setStatus(r, 'frozen', 0.8); abilityUsed(frost, 'whiteout'); abilityOutcome('read_frozen', frost, `${frost.name}'s Whiteout freezes ${a.name}'s first read`, { victim: a.slot }); startLook(a, 1); return; }
+        if (commit(a, { action: 'throw', r, slot: r.slot, reason: qr.i === 0 && qr.cur.why === 'progression' ? 'first_read' : qr.cur.why === 'noticed' ? 'noticed' : qr.cur.why === 'revisit' ? 'revisit' : 'progression', look, read: qr.i, pressured })) return;
+      }
+      // Locked on: a lesser passer keeps staring at his first read.
+      if (qr.i === 0 && qr.locks < 2 && look.ready && qrng.chance(P.lock)) { qr.locks++; qr.cur = { slot: r.slot, why: 'fixed' }; qr.lookEnd = t + P.look; return; }
+    }
+    // Late in the down: the best he has, a throw-away or a scramble, rather than reading forever.
+    if (since > 2.6 + 0.4 * norm(a.attrs.awareness)) {
+      const best = freshBest(1.2);
+      if (best && best.seen.quality >= 0.22) { if (commit(a, { action: 'throw', r: best.r, slot: best.slot, reason: 'late_best', look: best, read: qr.order.indexOf(best.slot), pressured })) return; }
+      const lane = scrambled ? null : runningLane(a);
+      if (lane && lane.exp >= 0.5) { if (commit(a, { action: 'scramble', reason: 'nothing_open', lane })) return; }
+      if (throwAwayLegal(a)) { if (commit(a, { action: 'throwaway', reason: 'nothing_open', legal: true })) return; }
+    }
+    // A full pass through the reads with nothing: a mobile passer takes an open lane (never just because the first read is covered).
+    if (qr.cycles >= 1 && !scrambled && since > 1.5) {
+      const lane = runningLane(a);
+      if (lane && lane.exp >= 0.9 && (freshBest()?.seen.quality ?? 0) < 0.5) { if (commit(a, { action: 'scramble', reason: 'lane', lane })) return; }
+    }
+    // Peripheral vision: an aware passer notices a clearly open receiver who is not his current read.
+    if (qrng.chance(P.periph)) {
+      let pick = null; for (const o of routeRunners()) { if (o.slot === qr.cur?.slot) continue; const lk = qbLook(a, o, sensed, 1.4); if (lk.ready && lk.w.reachable && (!pick || lk.seen.quality > pick.seen.quality)) pick = lk; }
+      const bar = acceptBar({ index: 1, cycles: qr.cycles, sincePocket: since, pressure: sensed });
+      if (pick && pick.seen.quality >= bar + 0.12) { qrLog('read', { n: qr.log.filter((e) => e.kind === 'read').length + 1, slot: pick.slot, why: 'periph', reason: 'noticed', q: +pick.seen.quality.toFixed(3), trueQ: +pick.truth.quality.toFixed(3), bar: +bar.toFixed(3) }); qr.order.indexOf(pick.slot) >= 0 && startLook(a, qr.order.indexOf(pick.slot), 'noticed', true); return; }
+    }
+    // Next read; after the last, start again from the best he has seen (revisiting an earlier read).
+    if (qr.i + 1 < qr.order.length && qr.cur?.why !== 'revisit') { startLook(a, qr.i + 1, 'progression', bySlot.off[qr.order[qr.i + 1]] && !routeReady(bySlot.off[qr.order[qr.i + 1]], sensed)); return; }
+    qr.cycles++;
+    const best = freshBest(1.5); const back = best ? qr.order.indexOf(best.slot) : 0;
+    startLook(a, back >= 0 ? back : 0, 'revisit');
   }
   function throwTo(passer, r, pressured) {
     // Wind-up: the ball leaves the hand a beat later; a rusher can still get home.
@@ -1010,6 +1210,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (manD) { stats.coverBy = manD.slot; stats.coverKind = 'man'; }
       else if (nearest && nearest.dd <= 2.5 && nearest.d.assignment?.a === 'zone') { stats.coverBy = nearest.d.slot; stats.coverKind = 'zone'; }
       else { stats.coverBy = null; stats.coverKind = 'open'; } }
+    stats.arriveSep = nearest ? +nearest.dd.toFixed(2) : null; // read-only: the real separation when the ball arrives (QB study, AI Testing Lab)
     let catchP = dr > catchRadius ? 0 : (0.7 + 0.29 * norm(r.attrs.catching)) * (1 - Math.max(0, dr - 0.6) / catchRadius * 0.45);
     if (deep) catchP *= ball.tailwind ? 0.89 + 0.05 * norm(r.attrs.catching) : 0.78 + 0.1 * norm(r.attrs.catching); // tracking the ball over the shoulder (Tailwind: it lands softer)
     { const manD = defs.find((d) => d.assignment?.a === 'man' && bySlot.off[manKeys[d.assignment.key]] === r);
@@ -1066,6 +1267,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       def: defs.map((a) => [a.slot, +a.x.toFixed(2), +a.y.toFixed(2), a.engaged ? 1 : 0, statusOf(a)]),
       ball: [+ball.x.toFixed(2), +ball.y.toFixed(2), ball.inAir ? 1 : 0],
       holder: ball.holder ? ball.holder.slot : null, holderTeam: ball.holder ? ball.holder.team : null, phase,
+      ...(phase === 'dropback' && ball.holder === qb && !scrambled && (qb.windup || (qr.cur && !qr.decision)) ? { read: qb.windup ? qb.windup.r.slot : qr.cur.slot } : {}), // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
     });
   }
   // The motion before the snap, drawn as frames with negative time: only the motion man moves.
@@ -1077,9 +1279,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
   }
   recordFrame();
-  let tick = 0;
+  let tick = 0; let forked = false;
   while (!result && t < maxTime) {
     tick += 1; t = tick * DT;
+    // AI Testing Lab rollouts: the play is identical up to the decision point, then the physics draws from a fresh stream.
+    if (options.fork && !forked && t >= options.fork.at) { rng = createRng(options.fork.seed); forked = true; }
     for (const a of actors) { const h = history.get(a); h.push({ x: a.x, y: a.y }); if (h.length > 40) h.shift(); }
     if (isRun && runRecognisedAt === Infinity) runRecognisedAt = 0;
     if (!isRun && handoffDone && runRecognisedAt === Infinity) runRecognisedAt = t;
@@ -1166,6 +1370,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     names: { off: Object.fromEntries(offs.map((a) => [a.slot, a.name])), def: Object.fromEntries(defs.map((a) => [a.slot, a.name])) },
     stats, memoryUsed, typeContests, turnover: ['interception', 'fumble', 'touchback_return'].includes(result) || !!stats.defensiveScore,
     touchdown: result === 'touchdown', safety: result === 'safety', bounds: B,
+    qb: qr.order ? { v: QB_MODEL_VERSION, order: qr.order, reads: qr.log, decision: qr.decision, aiWould: qr.aiWould, sensedAt: qr.sensedAt, fakeAt: qr.fakeAt ?? null } : null, // the recorded read log (replays, AI Testing Lab)
   };
 }
 
