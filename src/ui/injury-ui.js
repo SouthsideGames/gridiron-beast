@@ -17,8 +17,13 @@ function entry(r) {
 }
 /** The section, or '' when the save has no injury record yet (it starts with the first game under v42.3). */
 export function careerInjuryHtml(f, id, { firstSeason = null } = {}) {
-  const s = injurySummary(f, id, { firstSeason }); if (!s) return '';
-  const m = findMonster(f, id)?.m; const dur = m?.attributes?.durability;
+  const s = injurySummary(f, id, { firstSeason }); const m = findMonster(f, id)?.m; const dur = m?.attributes?.durability;
+  if (!s) { // a save from before v42.3.0 that has not played a game on this version yet: tracking starts with the next game (nothing is written by viewing)
+    if (!m || !f?.season) return '';
+    return `<div class="cp-sec inj-sec"><div class="cp-sec-h"><b>Injury History</b><span class="chip inj-ind early">Tracking starts next game</span></div>
+    <div class="cp-facts inj-facts"><div><b class="mono">—</b><span>Career injuries</span></div><div><b class="mono">—</b><span>Games missed</span></div><div><b class="mono">${Number.isFinite(dur) ? Math.round(dur) : '—'}</b><span>Durability</span></div></div>
+    <p class="dim inj-note">Injury history tracking starts with your next game (${esc(yearOf(f.season.year))}, week ${f.season.week}). Earlier seasons are not on record.</p></div>`;
+  }
   const facts = [['Career injuries', String(s.incidents)], ['Games missed', String(s.missed)], ['Durability', Number.isFinite(dur) ? String(Math.round(dur)) : '—']];
   const ind = `<span class="chip inj-ind ${s.indicator}" title="${esc(s.indicator === 'early' ? `Classified after ${MIN_OPPORTUNITY} scheduled games on a roster since tracking began.` : `Since tracking began: ${s.missed} of ${s.opp} scheduled games missed, ${s.incidents} injur${s.incidents === 1 ? 'y' : 'ies'}. A record of the past, not a forecast.`)}">${esc(s.label)}</span>`;
   const note = s.note ? `<p class="dim inj-note">Injury history tracking began in ${esc(yearOf(s.note.y))}${s.note.w > 1 ? `, week ${s.note.w}` : ''}. Earlier seasons are not on record.</p>` : '';

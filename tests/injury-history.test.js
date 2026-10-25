@@ -111,7 +111,7 @@ test('save and reload keep the record; an existing save gets none until a game i
   const f = played(); const back = Save.importJson(Save.exportJson(f)); assert.deepEqual(back.injuryHistory, f.injuryHistory);
   const fx = JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise;
   const old = Save.migrate(fx); assert.equal(old.injuryHistory, undefined, 'loading creates nothing');
-  const html = careerPageHtml({ f: old, settings: {} }, { id: old.roster[0].id }); assert.ok(!/Injury History/.test(html), 'no section before tracking exists');
+  const html = careerPageHtml({ f: old, settings: {} }, { id: old.roster[0].id }); assert.match(html, /Injury History/); assert.match(html, /tracking starts with your next game/); assert.ok(!/Injury log/.test(html), 'before tracking: the section explains when it starts, with no log'); assert.equal(old.injuryHistory, undefined, 'viewing creates nothing');
 });
 
 test('the profile section: numbers at a glance, the indicator, the log; the timeline has the injury milestones', () => {
