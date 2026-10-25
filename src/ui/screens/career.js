@@ -14,6 +14,7 @@ import { careerProfile, snapshotProfile, legacyHofProfile, findMonster, TIER_LAB
 import { hallOfFame } from '../../franchise/hall-of-fame.js';
 import { careerActions, withVisibility, trophyCaseHtml } from '../career-ui.js';
 import { timelineSectionHtml, timelineActions, timelineView } from '../career-timeline.js';
+import { careerPartnershipsHtml } from '../captains-ui.js';
 
 const clubColor = (c) => TEAM_META[c]?.color || '#9fb8ad';
 const abbr = (c) => TEAM_META[c]?.abbr || (c ? c.split(' ').map((w) => w[0]).join('').slice(0, 3).toUpperCase() : '—');
@@ -59,7 +60,7 @@ function headerHtml(pg, reduced) {
 const tabsHtml = (cur) => `<div class="cp-tabs" role="tablist">${PAGE_TABS.map(([k, l]) => `<button class="cp-tab ${cur === k ? 'on' : ''}" role="tab" aria-selected="${cur === k}" data-action="cp-tab" data-v="${k}">${l}</button>`).join('')}</div>`;
 
 // ---------------------------------------------------------------- Overview
-function overviewHtml(pg, readOnly) {
+function overviewHtml(pg, readOnly, f = null) {
   const p = pg.p; const fx = pg.facts;
   const seasonsTxt = p.kind === 'prospect' ? 'Prospect' : fx.seasons == null ? '—' : fmt(fx.seasons);
   const facts = [['Seasons', seasonsTxt], ['Games', p.kind === 'prospect' || (p.kind === 'snapshot' && !fx.games) ? '—' : fmt(fx.games)], ['Teams', fx.teams ? fmt(fx.teams) : '—'], ['Titles', fmt(fx.titles)], ['Awards', fmt(fx.awards)], ['Records', fmt(fx.records)]];
@@ -73,7 +74,7 @@ function overviewHtml(pg, readOnly) {
   return `<div class="panel cp-body">
     <div class="cp-facts">${facts.map(([l, v]) => `<div><b class="mono">${esc(v)}</b><span>${l}</span></div>`).join('')}</div>
     ${spanTxt ? `<div class="cp-span dim">${p.kind === 'league' ? 'On record' : 'Career'} ${esc(spanTxt)}${!p.complete && fx.onRecord && fx.seasons && fx.onRecord < fx.seasons ? ` · ${plural(fx.onRecord, 'season')} on record` : ''}</div>` : ''}
-    ${highlights}${honours}${clubs}${moments}
+    ${highlights}${honours}${clubs}${!readOnly && f && p.id ? careerPartnershipsHtml(f, p.id) : ''}${moments}
     ${(p.notes || []).map((n) => `<p class="cs-note">${esc(n)}</p>`).join('')}
     ${!p.legacy && (p.kind === 'full' || p.kind === 'snapshot') ? '<button class="btn block cc-btn" data-action="cc-open" style="margin-top:10px">📸 Career card</button>' : ''}
   </div>`;
@@ -142,7 +143,7 @@ export function careerPageHtml(app, params) {
   if (!r) return '<div class="panel"><p>No career on record for this monster.</p></div>';
   const pg = careerPage(r.f, r.p.id, { profile: r.p }); const reduced = !!(app.settings?.reducedMotion || r.f?.settings?.reducedMotion);
   const tab = PAGE_TABS.some(([k]) => k === params.tab) ? params.tab : 'overview';
-  const body = tab === 'overview' ? overviewHtml(pg, r.readOnly) : tab === 'timeline' ? pageTimelineHtml(pg, params, reduced) : tab === 'stats' ? statsHtml(pg, params) : tab === 'awards' ? awardsHtml(pg, reduced) : teamsHtml(pg);
+  const body = tab === 'overview' ? overviewHtml(pg, r.readOnly, r.f) : tab === 'timeline' ? pageTimelineHtml(pg, params, reduced) : tab === 'stats' ? statsHtml(pg, params) : tab === 'awards' ? awardsHtml(pg, reduced) : teamsHtml(pg);
   return `<div class="career-page" data-mid="${esc(r.p.id)}">${headerHtml(pg, reduced)}${tabsHtml(tab)}<div class="cp-pane">${body}</div></div>`;
 }
 

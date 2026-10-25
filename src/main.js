@@ -16,6 +16,7 @@ import { registerFranchisesScreens } from './ui/screens/franchises.js';
 import { registerLegacyScreens } from './ui/screens/legacy.js';
 import { registerLeagueHubScreens } from './ui/screens/league-hub.js';
 import { registerCareerScreens } from './ui/screens/career.js';
+import { registerCaptainScreens } from './ui/screens/captains.js';
 import { tipHtml, maybeSheetTip, initTutorial, helpButtonHtml } from './ui/tutorial.js';
 import { openStatGuide } from './ui/stat-guide.js';
 import * as F from './franchise/franchise.js';
@@ -202,6 +203,7 @@ export function start() {
   registerOnboardingScreens(Router, app);
   registerHqScreens(Router, app);
   registerRosterScreens(Router, app);
+  registerCaptainScreens(Router, app); // Captain Partnerships (GDD §27.4B)
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
   registerAbilityAudit(Router, app);
