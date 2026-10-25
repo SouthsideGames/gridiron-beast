@@ -3270,7 +3270,7 @@ This is an emulated browser, not a real device.
   - The claude.ai runtime itself cannot be driven from the development environment, and real devices were not run. The owner's first open is the live check.
   - A device whose local save is newer than the cloud keeps its own progress, under the v42.0.1 rules (§47.3), unchanged here.
 
-## 49. Captain Partnerships (IMPLEMENTED 2026-10-25, owner authorization; branch `captain-partnerships`, PR #55, v42.2.0; design, the DL–DL and DL–CB changes and the AI selection APPROVED FOR RELEASE by the owner 2026-10-25)
+## 49. Captain Partnerships — RELEASED v42.2.0 (IMPLEMENTED 2026-10-25; PR #55 merged as `06edb9b`; design, the DL–DL and DL–CB changes and the AI selection approved by the owner)
 
 Replaces the automatic Monster Partnerships concept of §27.4 B. Approved design (owner, 2026-10-24) after the feasibility and balance audit, with three owner decisions taken during implementation (2026-10-25, §49.3). Every club names **four captains** each season — two on offense, two on defense — forming **one offensive and one defensive partnership**. Captains who make successful football plays together build **chemistry**, which gives the pair a small bonus (at most **+4%**) on its own key ratings when both are on the field. Football only: Beast Clash, encounters, practice and exhibitions never earn or use chemistry. No morale, jealousy, chores or permanent OVR changes.
 
@@ -3381,3 +3381,13 @@ Thresholds are lifetime joint successful plays for the exact pair, per type. Eli
 - AI clubs favour QB–RB, QB–WR, DL–DL and DL–LB (they earn fastest). **Owner decision (2026-10-25): approved as is** — AI clubs choose the strongest partnerships; no artificial variety. All eight pairings stay eligible and functional for every club (tested).
 - DL–CB and, to a lesser degree, DL–DL and DL–LB move in single plays; luck matters more for them.
 - Real phones were not tested; layouts were checked in an emulated browser at 320, 360, 390 and 412 px (`tools/captains-ui-check.py`).
+
+### 49.9 Release v42.2.0 (2026-10-25)
+- **Merges (owner's approval):** PR #54 (v42.1.0 release record) as `07b649b`, then PR #55 (`captain-partnerships`, updated on that `main`; the GDD conflict resolved by keeping §48.9 before §49) as `06edb9b`. `main`'s files are identical to the tested PR head `753d6d8`. PR #56: the cache-busting `?v=42.2.0` in `index.html`.
+- **Tests:** `npm test` 576/576 on the updated branch (540 existing + 36 new); post-merge the partnership suites (36) and the captains UI check pass on `main`.
+- **Simulations:** 4 franchises × 5 seasons (franchise soak, 0 problems); league soaks of 12 and 5 seasons (0 problems; the second owner was dismissed by the Board, normal play); the §49.7 study (6 × 5 seasons, 0 problems).
+- **Existing saves (disposable copies only):** a v42.1.0 franchise made by v42.1.0 itself, mid-Season 3, loads byte-identical in v42.2.0 (ids, levels, attributes, evolution, career statistics, achievements, clubs, rosters, schedules, standings, history); no partnership data appears on load; captains are chosen at once mid-season with no chemistry fabricated; a game saved and reloaded mid-way ends with the same tally and a repeated commit adds nothing; the season plays out with playoff chemistry (`tools/partnerships-release-check.mjs`, two seeds). The same in a real browser profile: v42.1.0 writes the device storage, v42.2.0 opens it unchanged, captains are chosen on screen, a week is played, a reload returns everything (`tools/captains-upgrade-check.py`). The older-build round trip passes.
+- **Save layer:** `save.js`, `cloud-save.js`, `store.js`, `slots.js`, the registry, lifecycle, achievements, Hall of Fame and Dex stores are unchanged since v42.1.0; the cloud's same-franchise, newer-copy and backup protections are untouched.
+- **Deployment:** https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq (URL unchanged), artifact version 97 (`1792937454-ed70`), 138 files: the 14 changed or new game files published and verified byte for byte against `main`; capabilities db, downloads, user and runtime contract 0.2.77 carried forward. The private test link was not touched. The owner's real cloud save was not opened.
+- **Limitations:** the claude.ai runtime and real iPhones cannot be driven from the development environment; layouts were checked in an emulated browser at 320, 360, 375, 390, 393, 412 and 430 px.
+

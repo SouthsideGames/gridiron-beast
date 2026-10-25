@@ -2,7 +2,13 @@
 
 All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
-## 0. Current status (2026-10-24, release v42.1.0 on the main game: full-screen Monster Career Profiles, GDD §48; PR #53 merged as `606bd62`)
+## 0. Current status (2026-10-25, release v42.2.0 on the main game: Captain Partnerships, GDD §49; PR #55 merged as `06edb9b`)
+
+- **`npm test`: 576 tests, all passing** (36 for Captain Partnerships: `partnerships`, `partnership-play`, `partnership-franchise`).
+- **Release checks:** v42.1.0 saves load unchanged (`partnerships-release-check.mjs`, `captains-upgrade-check.py`, `partnerships-oldbuild-check.mjs`); the captains UI check at 320–430 px; soaks with 0 problems.
+- **Not run:** real devices and the claude.ai runtime itself.
+
+### Previous status
 
 - **Released:** artifact version 96. The 11 changed files match `main`, and the owner's live database is unchanged.
 - **Pre-release dry run on copies of the owner's live cloud data:** v42.0.3 and v42.1.0 load the same franchise (byte-identical), with no migration and no cloud writes. Career pages for 12 of the owner's monsters changed nothing.
