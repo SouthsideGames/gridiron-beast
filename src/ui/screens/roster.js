@@ -118,13 +118,22 @@ export function registerRosterScreens(Router, app) {
     mount(root, ctx) { delegate(root, { assign: (el) => { const before = starters(app.f); const r = F.assignSlot(app.f, ctx.params.slot, el.dataset.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); if (!benchToast(app.f, before)) toast('Lineup updated.', 'good'); Router.back(); }, auto: () => { F.assignSlot(app.f, ctx.params.slot, null); app.save(); Router.back(); }, monster: (el) => Router.go('monster', { id: el.dataset.id }) }); },
   });
 
+  /** Browse order for Previous / Next on a monster page (v42.4.1): the depth chart's order, offense then defense then the kicker,
+   * each monster once at its own position, so Next walks the roster the way the Depth view lists it. */
+  const browseOrder = (f) => { const seen = new Set(); const out = [];
+    for (const g of [...OFFENSE_GROUPS, ...DEFENSE_GROUPS, 'K']) for (const m of depthOrder(f.roster, f.depth, g)) if (m.position === g && !seen.has(m.id)) { seen.add(m.id); out.push(m); }
+    for (const m of f.roster) if (!seen.has(m.id)) out.push(m);
+    return out; };
+  const browseNav = (f, id) => { const list = browseOrder(f); const i = list.findIndex((m) => m.id === id); if (i < 0 || list.length < 2) return '';
+    const prev = list[(i - 1 + list.length) % list.length], next = list[(i + 1) % list.length];
+    return `<nav class="mon-nav" aria-label="Browse the roster"><button class="mon-nav-btn" data-action="mon-go" data-id="${prev.id}" aria-label="Previous: ${esc(prev.name)}"><span aria-hidden="true">‹</span><span class="nm">${esc(prev.name)}</span></button><span class="mon-nav-pos">${i + 1} / ${list.length}<span class="dim"> · ${esc(list[i].position)}</span></span><button class="mon-nav-btn next" data-action="mon-go" data-id="${next.id}" aria-label="Next: ${esc(next.name)}"><span class="nm">${esc(next.name)}</span><span aria-hidden="true">›</span></button></nav>`; };
   Router.registerScreen('monster', {
     title: ({ f, params }) => f.roster.find((m) => m.id === params.id)?.name || 'Monster',
     render({ f, params }) {
       const m = f.roster.find((x) => x.id === params.id); if (!m) return '<p>Not found.</p>';
       const base = m.attributes, eff = effectiveAttributes(m); const nature = NATURES[m.nature]; const ab = m.ability ? ABILITIES[m.ability] : null;
       const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const slot = Object.entries(chart).find(([, id]) => id === m.id)?.[0];
-      return `<div class="panel"><div class="row">${monsterSprite(m, 72)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(m.name)}${m.cornerstone ? ' <span class="chip cornerstone">★ CORNERSTONE</span>' : ''}</div><div class="muted">${m.position}${slot ? ' · starts at ' + slot : ' · reserve'} · ${esc(m.type)} type · age ${m.age}</div><div class="muted">Level ${m.level} · XP ${m.xp}/${xpForLevel(m.level)} · potential ${m.potential}</div></div><span class="ovr hi" style="font-size:26px">${monsterOverall(m)}</span></div>
+      return `${browseNav(f, m.id)}<div class="panel"><div class="row">${monsterSprite(m, 72)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(m.name)}${m.cornerstone ? ' <span class="chip cornerstone">★ CORNERSTONE</span>' : ''}</div><div class="muted">${m.position}${slot ? ' · starts at ' + slot : ' · reserve'} · ${esc(m.type)} type · age ${m.age}</div><div class="muted">Level ${m.level} · XP ${m.xp}/${xpForLevel(m.level)} · potential ${m.potential}</div></div><span class="ovr hi" style="font-size:26px">${monsterOverall(m)}</span></div>
         <div class="bar" style="margin:8px 0 4px"><i style="width:${Math.round(m.xp / xpForLevel(m.level) * 100)}%"></i></div>
         <div class="row between muted"><span>Fatigue ${m.fatigue}%</span><span>${m.injury ? `<b style="color:var(--bad)">${esc(m.injury.severity)} ${esc(m.injury.type)} · ${m.injury.weeks} wk</b>` : 'Healthy'}</span><span>${fmtMoney(m.salary)}/yr${m.contract ? ` · through ${yearOf(m.contract.ends)}` : ''}</span></div>
         ${m.contract && m.contract.ends <= f.season.year ? `<p class="dim" style="margin:4px 0 0">Contract year: renewal in the offseason. Today's ask would be about ${fmtMoney(F.renewalAsk(m).ask)}/yr.</p>` : ''}
@@ -147,6 +156,7 @@ export function registerRosterScreens(Router, app) {
     mount(root, ctx) {
       delegate(root, {
         ...careerActions({ f: () => app.f, profile: () => fullProfile(app.f, app.f.roster.find((x) => x.id === ctx.params.id), 'roster'), monster: () => app.f.roster.find((x) => x.id === ctx.params.id), domId: 'timeline', go: (s, prm) => Router.go(s, prm) }),
+        'mon-go': (el) => Router.go('monster', { id: el.dataset.id }, { replace: true }), // replace: Back still returns to where you came from
         'career-jump': () => root.querySelector('#timeline')?.scrollIntoView({ block: 'start', behavior: app.f?.settings?.reducedMotion ? 'auto' : 'smooth' }),
         typechart: (el) => openTypeChart(el.dataset.type),
         species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); },
