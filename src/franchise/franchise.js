@@ -5,6 +5,7 @@
 import { venueFor } from '../data/stadiums.js';
 import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary, CAREER_MILESTONES, addEvent } from './career.js';
 import * as CP from './partnerships.js';
+import * as IH from './injury-history.js';
 import { syncLegendaryPlays, legendaryAvailable, legendaryStatus, equipLegendaryForAI, legendOf, LEGENDARY_IDS } from './legendary.js';
 import { createRng, rngFromState, hashString } from '../core/rng.js';
 import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine, updateSeasonRecords, archiveSeasonTables, withDerived, addInto } from './stats.js';
@@ -813,6 +814,7 @@ export function playAvailability(f) {
 export function forfeitSunday(f) {
   const m = sundayMatchup(f); if (!m) return { ok: false, reason: 'No game today.' };
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
+  injuriesBeforeGame(f, [[f.club, f.roster, m.opponent, {}], [m.opponent, m[oppSide].roster, f.club, {}]], { home: m.home.name, away: m.away.name, week: f.season.week, playoff: !!m.playoff, round: playoffFixture(f)?.round || null }); // a forfeited game is still a scheduled game missed by the injured
   const score = { [side]: 0, [oppSide]: 21 };
   const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: score.home, awayScore: score.away, ot: false, player: true, forfeit: true };
   f.week.gameResult = { ...res, won: false, playerScore: 0, oppScore: 21, opponent: m.opponent, tag: m.tag, forfeit: true };
@@ -1113,6 +1115,33 @@ export function playoffPicture(f) {
   const back = ((b.w - a.w) + (a.l - b.l)) / 2;
   return { inPlayoffs: false, seed: null, text: back <= 0 ? 'On the bubble, tiebreakers decide' : `${back} game${back === 1 ? '' : 's'} back of the last playoff spot` };
 }
+// ------------------------------------------------------------ Monster Career Injury History (GDD §50)
+// A record of injuries, never a mechanic: read at fixed points of every league game for both clubs (src/franchise/injury-history.js).
+const injuryClubTracked = (f, club) => club === f.club || hasLeague(f); // generated (v40) AI rosters change every season: no careers to record
+function injuryContext(f, { home, away, week, playoff = false, round = null }) { return CP.gameIdOf({ year: f.season.year, week, playoff, round, home, away }); }
+function injuriesBeforeGame(f, teams, g) {
+  const gameId = injuryContext(f, g);
+  for (const [club, roster, vs, chart] of teams) { if (!injuryClubTracked(f, club)) continue;
+    const lineup = new Set(Object.entries(chart || {}).filter(([slot, id]) => id && slot !== 'K').map(([, id]) => id)); // injuries are rolled for these (progression.js)
+    for (const { m, rec } of IH.beforeGame(f, roster, { gameId, club, vs, playoff: g.playoff, round: g.round, owner: club === f.club, lineup })) noteInjuryReturn(f, m, rec, club); }
+}
+function injuriesAfterGame(f, teams, g) {
+  const gameId = injuryContext(f, g);
+  for (const [club, roster, vs] of teams) { if (!injuryClubTracked(f, club)) continue;
+    for (const { m, rec } of IH.afterGame(f, roster, { gameId, club, vs, playoff: g.playoff, round: g.round })) if (rec.src !== 'before' && IH.recordsOf(f, m.id).filter((r) => r.src !== 'before').length === 1) addEvent(m, { k: 'inj:first', t: 'injury', y: rec.y, w: rec.w, c: club, x: { type: rec.type, sev: rec.sev, vs: rec.vs || null } }); }
+}
+/** Career Timeline: back after missing 3+ games (shorter absences are routine and stay in the injury log only). */
+function noteInjuryReturn(f, m, rec, club) { if (rec && rec.missed >= 3 && !rec.back?.off) addEvent(m, { k: `injback:${rec.k}`, t: 'injury-return', y: rec.back.y, w: rec.back.w, c: club, x: { missed: rec.missed, type: rec.type } }); }
+/** Season end: the first full regular season a monster played every game (so missed none to injury), once per career. */
+function injurySeasonEnd(f) {
+  if (!IH.isTracking(f)) return; const H = f.injuryHistory; const s = f.season;
+  if (H.since.y > s.year || (H.since.y === s.year && H.since.w > 1)) { IH.pruneLedger(f, s.year, (id) => !!findMonsterAnywhere(f, id)); return; } // tracking did not cover the whole season
+  const games = (s.schedule || []).filter((g) => !g.bye).length || 9;
+  const rosters = [[f.club, f.roster], ...(hasLeague(f) ? leagueClubs(f).map((c) => [c, clubRoster(f, c)]) : [])];
+  for (const [club, roster] of rosters) for (const m of roster) if ((m.stats?.season?.year === s.year ? m.stats.season.reg?.games || 0 : 0) >= games) addEvent(m, { k: 'inj:fullseason', t: 'injury-free', y: s.year, c: club, x: { games } });
+  IH.pruneLedger(f, s.year, (id) => !!findMonsterAnywhere(f, id));
+}
+
 // ------------------------------------------------------------ Captain Partnerships (GDD §27.4B)
 // Four captains per club (two offense, two defense), named once a season and locked through the playoffs; chemistry by pair of
 // monster ids, earned on the field (src/sim/partnership-play.js) and committed here after each game. Every club runs the same
@@ -1239,10 +1268,13 @@ function simulateLeagueWeek(f) {
     for (const g of fixtures.games) {
       if (g.home === f.club || g.away === f.club) continue;
       const home = withCaptains(f, aiTeam(f, g.home), g.home), away = withCaptains(f, aiTeam(f, g.away), g.away);
+      const ig = { home: g.home, away: g.away, week: f.season.week }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
+      injuriesBeforeGame(f, it, ig); // Injury History (GDD §50): who misses this game
       const toss = leaguePregame(f, r, home, away);
       const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
       leagueTiebreak(f, r, home, away, game);
       aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r); // persistent rosters develop as they play (GDD §42.6, decision B)
+      injuriesAfterGame(f, it, ig);
       const lines = new Map(); recordGame(f, game, { home, away }, { playoff: false, booksFor: (t) => leagueBooks(f, t), onLine: (t, m, g) => lines.set(m.id, g) });
       leagueCareerAfterGame(f, [home, away], game, lines, { playoff: false });
       afterCaptainGame(f, game, { home: g.home, away: g.away, week: f.season.week });
@@ -1745,6 +1777,8 @@ export function finishSunday(f, gameState) {
   const m = sundayMatchup(f); if (!m) return;
   const playoffRoundNow = playoffFixture(f)?.round || null;
   const side = m.playerSide, oppSide = side === 'home' ? 'away' : 'home';
+  const ig = { home: m.home.name, away: m.away.name, week: f.season.week, playoff: !!m.playoff, round: playoffRoundNow }; const it = [[f.club, f.roster, m.opponent, m[side].chart], [m.opponent, m[oppSide].roster, f.club, m[oppSide].chart]];
+  injuriesBeforeGame(f, it, ig); // Injury History (GDD §50): read before this game's injuries are rolled
   for (const x of m[oppSide].roster) dexRecord(f, x, 'seen'); // every monster you face goes in the dex
   const won = gameState.winner === side;
   settleTiebreak(f, gameState); // a tied game that reached the screen's end without the Clash (should not happen) is settled headless
@@ -1753,6 +1787,7 @@ export function finishSunday(f, gameState) {
   const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false });
   aiAfterGame(f, m[oppSide], gameState, oppSide, r); // the persistent opponent develops from this game too (GDD §42.6)
   save();
+  injuriesAfterGame(f, it, ig);
   f.week.events = events;
   f.week.gameResult = { ...res, won, playerScore: gameState.score[side], oppScore: gameState.score[oppSide], opponent: m.opponent, tag: m.tag };
   { const offense = {}, defense = {}; let passes = 0, plays = 0;
@@ -1877,10 +1912,13 @@ function simulatePlayoffWeek(f) {
   const { r, save } = frng(f);
   for (const g of p.fixtures.filter((x) => x.round === p.round && !x.result)) {
     const home = withCaptains(f, aiTeam(f, g.home), g.home), away = withCaptains(f, aiTeam(f, g.away), g.away);
+    const ig = { home: g.home, away: g.away, week: f.season.week, playoff: true, round: p.round }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
+    injuriesBeforeGame(f, it, ig);
     const toss = leaguePregame(f, r, home, away);
     const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
     leagueTiebreak(f, r, home, away, game, { playoff: true });
     aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r);
+    injuriesAfterGame(f, it, ig);
     const lines = new Map(); recordGame(f, game, { home, away }, { playoff: true, booksFor: (t) => leagueBooks(f, t), onLine: (t, m, g) => lines.set(m.id, g) });
     leagueCareerAfterGame(f, [home, away], game, lines, { playoff: true, round: p.round });
     afterCaptainGame(f, game, { home: g.home, away: g.away, week: f.season.week, playoff: true, round: p.round });
@@ -1895,6 +1933,7 @@ function simulatePlayoffWeek(f) {
 
 // ------------------------------------------------------------ season end
 function endSeason(f) {
+  injurySeasonEnd(f); // Injury History (GDD §50): the season's full-season marks, before anything rolls over
   const s = f.season; const st = leagueStandings(f); const wasHotSeat = onHotSeat(f);
   const champion = s.playoffs?.champion || null;
   const rec = record(f);
