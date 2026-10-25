@@ -160,6 +160,7 @@ export function gameIdOf({ year, week, playoff = false, round = null, home, away
  * each pair's lifetime count, once. A game id already in the ledger adds nothing (reload, replay, re-simulation); a game without
  * a kickoff snapshot adds nothing. Returns one row per pair that played, or [] when nothing was committed.
  */
+/** (`together` is null for a game begun before v42.2.1, which counted no snaps.) */
 export function commitGame(f, state, { year, gameId, clubs }) {
   if (!state?.partners || !isActive(f) || !gameId) return [];
   const P = f.partnerships; const led = (P.credited[year] ||= {});
@@ -172,7 +173,7 @@ export function commitGame(f, state, { year, gameId, clubs }) {
     const rec = touchPair(P, pair, year, clubs[s]); const before = rec.n || 0;
     rec.n = before + (t.n || 0); if (t.n) rec.last = Math.max(rec.last ?? year, year);
     const from = levelOf(pair.type, before), to = levelOf(pair.type, rec.n);
-    rows.push({ club: clubs[s], side, type: pair.type, a: pair.a, b: pair.b, together: t.together || 0, earned: t.n || 0, capped: t.capped || 0, garbage: t.garbage || 0, kinds: { ...(t.kinds || {}) }, before, n: rec.n, from, to, levelUp: to > from, playedAt: pair.level });
+    rows.push({ club: clubs[s], side, type: pair.type, a: pair.a, b: pair.b, together: Number.isInteger(t.together) ? t.together : null, earned: t.n || 0, capped: t.capped || 0, garbage: t.garbage || 0, kinds: { ...(t.kinds || {}) }, before, n: rec.n, from, to, levelUp: to > from, playedAt: pair.level });
   }
   return rows;
 }
