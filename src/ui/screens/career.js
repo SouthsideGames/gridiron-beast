@@ -15,6 +15,7 @@ import { hallOfFame } from '../../franchise/hall-of-fame.js';
 import { careerActions, withVisibility, trophyCaseHtml } from '../career-ui.js';
 import { timelineSectionHtml, timelineActions, timelineView } from '../career-timeline.js';
 import { careerPartnershipsHtml } from '../captains-ui.js';
+import { careerInjuryHtml } from '../injury-ui.js';
 
 const clubColor = (c) => TEAM_META[c]?.color || '#9fb8ad';
 const abbr = (c) => TEAM_META[c]?.abbr || (c ? c.split(' ').map((w) => w[0]).join('').slice(0, 3).toUpperCase() : '—');
@@ -74,7 +75,7 @@ function overviewHtml(pg, readOnly, f = null) {
   return `<div class="panel cp-body">
     <div class="cp-facts">${facts.map(([l, v]) => `<div><b class="mono">${esc(v)}</b><span>${l}</span></div>`).join('')}</div>
     ${spanTxt ? `<div class="cp-span dim">${p.kind === 'league' ? 'On record' : 'Career'} ${esc(spanTxt)}${!p.complete && fx.onRecord && fx.seasons && fx.onRecord < fx.seasons ? ` · ${plural(fx.onRecord, 'season')} on record` : ''}</div>` : ''}
-    ${highlights}${honours}${clubs}${!readOnly && f && p.id ? careerPartnershipsHtml(f, p.id) : ''}${moments}
+    ${highlights}${honours}${clubs}${!readOnly && f && p.id ? careerPartnershipsHtml(f, p.id) : ''}${!readOnly && f && p.id ? careerInjuryHtml(f, p.id, { firstSeason: pg.span?.from ?? null }) : ''}${moments}
     ${(p.notes || []).map((n) => `<p class="cs-note">${esc(n)}</p>`).join('')}
     ${!p.legacy && (p.kind === 'full' || p.kind === 'snapshot') ? '<button class="btn block cc-btn" data-action="cc-open" style="margin-top:10px">📸 Career card</button>' : ''}
   </div>`;

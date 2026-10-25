@@ -1097,3 +1097,22 @@ button.linkish { padding: 3px 0 !important; margin: -3px 0 !important; }
 html[data-reduced-motion="1"] .evolve-btn, html[data-reduced-motion="1"] .evolve-btn .evo-spark, html[data-reduced-motion="1"] .evo-next.evo-ready { animation: none; }
 /* captain badge: clear space after the name and the scheme-fit star */
 .dc-mid .cap-badge, .name .cap-badge, .cap-hist .cap-badge { margin-left: 8px; }
+/* Injury History (GDD §50) on the Career Profile */
+.inj-sec .cp-sec-h { align-items: center; gap: 8px; flex-wrap: wrap; }
+.inj-facts { grid-template-columns: repeat(3, 1fr); }
+.inj-ind.low { color: var(--good); border-color: #2f8f5a; }
+.inj-ind.moderate { color: var(--warn); border-color: #a0611a; }
+.inj-ind.high { color: var(--bad); border-color: #a33; }
+.inj-ind.early { color: var(--ink-2); }
+.inj-note { font-size: 12px; margin: 6px 0 0; }
+.inj-none { margin: 8px 0 0; color: var(--good); }
+.inj-log { margin-top: 8px; }
+.inj-log summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; gap: 6px; }
+.inj-list { list-style: none; padding: 0; margin: 0; }
+.inj-row { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 8px 0; border-top: 1px solid var(--line); }
+.inj-row.open { border-left: 3px solid var(--bad); padding-left: 8px; }
+.inj-when { font-size: 12px; color: var(--ink-3); }
+.inj-what { display: flex; flex-direction: column; min-width: 0; }
+.inj-what .dim { font-size: 12px; overflow-wrap: anywhere; }
+.inj-out { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
+.inj-now { color: var(--bad); font-weight: 700; }

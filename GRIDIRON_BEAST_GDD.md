@@ -1005,6 +1005,8 @@ Do not confuse **documented**, **approved for roadmap**, **authorized to impleme
 
 For each new roadmap feature: first record exact behavior and unresolved decisions, then owner approval for implementation, then isolated development, tests, save compatibility, mobile playtest, and regression checks. Do not launch phases concurrently. **Priority:** Beast Clash and existing franchise stability → Coach Assist → monster history and partnerships → trading and AI → optional long-term features. Polish is not a substitute for functional completion.
 
+**Temporary priority change (owner, 2026-10-25).** The approved roadmap is paused, not changed: no item is removed or abandoned. Order: (1) finish the v42.2.1 release — done; (2) pause the roadmap; (3) Monster Career Injury History (§50); (4) the owner's review and approval; (5) the Evolution Experience Overhaul; (6) the owner's review and approval; (7) resume the previously approved roadmap where it paused. No unrelated feature starts in between.
+
 ## 28. Franchise acceptance testing (2026-10-22, branch `franchise-acceptance-coach-assist`)
 
 ### 28.1 What was tested
@@ -3398,3 +3400,38 @@ Thresholds are lifetime joint successful plays for the exact pair, per type. Eli
 - **Read-only snap counter:** `creditPartnerships` (rules.js) counts the snaps each active pair was on the field together (`partnerCredits[side][offense|defense].together`) and `commitGame` passes it to the post-game rows. It is read after the play from the slots the play used; the engine never reads it and no random number is drawn. Proof (`tools/snap-counter-check.mjs`): 36 games at chemistry levels none and 0-4 under the v42.2.0 code and this build are identical in score, play log, team and player statistics, random state and chemistry tally, apart from the new count. It lives in the game state and in the post-game rows (`f.lastGame.partnerships`); no new save field, no schema change.
 - **Tests and checks:** `npm test` all passing (two new tests); captains UI check at 320-430 px; navigation check; the v42.1.0 save release check and the device upgrade check pass.
 - **Owner decision:** after v42.2.1 is approved and released, the existing development roadmap pauses.
+
+## 50. Monster Career Injury History (IMPLEMENTED 2026-10-25, owner brief; branch `injury-history`, v42.3.0; NOT MERGED, NOT RELEASED)
+
+A career record, not an injury mechanic: who gets hurt, for how long and how anyone recovers are exactly as before (injury rolls after each game for the game-day lineup, the owner's practice roll, the weekly recovery, the clear at the season rollover; durability and fatigue untouched).
+
+### 50.1 What is recorded, and when
+- **Where it is read:** at fixed points of every league game, for both clubs — the owner's game (live or simulated), every AI–AI game and every playoff game — before kickoff and after the final whistle (`src/franchise/injury-history.js`, hooks in `finishSunday`, `simulateLeagueWeek`, `simulatePlayoffWeek`, `forfeitSunday`). Generated (v40) AI rosters are not recorded (they change every season); every persistent club is.
+- **An injury** is opened when it is first seen: after a game, "in the game against X"; before a game, "in practice" for the owner's club ("away from a game" for an AI club, which has no other source); in the opening week of tracking, "already injured when tracking began" (shown, not counted as a career injury). The injury object is stamped with its incident key, so it is never opened twice and a later injury is never merged into an earlier one, even across reloads. A monster cannot be hurt again while injured (he neither plays nor practises), so injuries never overlap.
+- **Games missed:** every scheduled game (regular season, playoffs, a forfeit) his club plays while he is injured and on its roster: one per game id, never twice (reloads, re-simulation). Byes and weeks without a game are not games missed. Playoff games are kept apart (`mp`).
+- **Recovery:** an open injury whose monster is healthy again before a game is closed with that week (his return); one cleared by the season rollover without missing a game of the new season reads "recovered in the offseason".
+- **Opportunity** (for the indicator): games in the game-day lineup (the players injury rolls are made for; the kicker aside) + games missed to injury.
+
+### 50.2 Data model (one optional key; save code unchanged)
+`f.injuryHistory = { v: 1, since: { y, w }, opp: { id: appearances }, open: { id: { k, y, w, po?, type, sev, est, src, club, vs?, g: [gameIds] } }, log: { id: [ { y, w, po?, type?, sev?, est?, src? ('game' omitted), vs?, missed, mp?, back: { y, w } | { y, off: 1 } } ] }, done: { year: { "gameId|club": 1 } }, seq }`.
+- By stable monster id, outside the monster objects: trades, release, evolution and retirement cannot lose it (a retired legend keeps his).
+- **Lazy:** loading never creates it; it begins with the first game played under this build (`since`). No past injury is fabricated; a monster whose career began earlier shows "Injury history tracking began in <season>". Current injuries and recovery state are untouched (only stamped).
+- **Size:** about 60–65 KB after five seasons of the 16-club league (≈ 78 records a season). The pre-game ledger keeps the current season; records of monsters who have left the save entirely (not legends) are dropped at season end.
+
+### 50.3 Injury History indicator (a record of the past, not a forecast)
+Classified once a monster has 9 games of opportunity: **High** when games missed per game ≥ 10% or injuries per nine games ≥ 1.0; **Moderate** when ≥ 5% or ≥ 0.6; else **Low**. Before 9 games: "Not enough history yet" (owner decision pending: §50.6). Calibrated on 4 franchises × 5 seasons (1,275 monsters with 9+ games): 84% Low, 12% Moderate, 4% High; 29% had no injury. Three injuries over a long career read Low; three in one season read High.
+
+### 50.4 Interface
+On the Career Profile's Overview: **Injury History** with the indicator chip, three numbers (career injuries, games missed, the existing Durability attribute), the tracking note when it applies, and a folded injury log (opened when he is injured now), newest first: season · week (· playoffs), the game's own words (severity and body part), where it happened and the expected time out, games missed (and how many in the playoffs), and the return ("back Week 6", "recovered in the offseason", or "Out now"). No injury since tracking: "No injuries recorded since tracking began." Hall of Fame snapshots and archived pages show no section.
+
+### 50.5 Career Timeline
+Three entries, kept few: **First career injury**; **Returned after missing N games** (3 or more; shorter absences stay in the log only); **Played every game of a season** (the first full regular season with every game played, once per career, from the season books; only for a season tracking covered from week 1).
+
+### 50.6 Owner decisions (approved 2026-10-25)
+- The thresholds in §50.3: **approved** as proposed.
+- The fourth state "Not enough history yet" before 9 games of opportunity: **approved**.
+- **Participation-based denominator, verified** (`tools/injury-verify.mjs`, seeds 41 and 77, 3 seasons of the 16-club league): opportunity counts only games in the game-day lineup (exactly the players `progression.afterGame` rolls injuries for, kicker aside) plus games missed to injury. A bench monster gains none, so he reads "Not enough history yet", never "Low" for lack of exposure (seed 41: 217 bench monsters, all "Not enough history yet"); backups and starters are rated by the same per-game rates (seed 41: starters 216 Low / 46 Moderate / 18 High; backups 20 Low / 4 High / 38 not enough history). Appearances agree with the box scores (box-score games ≤ appearances ≤ club games; the ~3% extra are lineup players with an empty stat line, who were still exposed to the injury roll). Tracking that begins mid-career (season 3, week 5) counts only the tracked games, dates nothing earlier and shows the note for every veteran. The summary recomputes by hand for every monster.
+
+### 50.7 Testing
+`tests/injury-history.test.js`: opened once, games missed once per game, return week, byes, a second injury never merged, the offseason, injuries before tracking, practice vs away, playoff misses kept apart, the indicator (not by raw totals), a played league (owner and AI, AI–AI, playoffs), tracking never changes the game, trades/release/evolution/legends, save and reload, an existing save (nothing created on load), the profile section and the timeline. `tools/injury-study.mjs`: multi-season accuracy (no duplicates; games played + regular-season games missed ≤ the season's games for every monster on one club all season). `tools/injury-ui-check.py`: the section at 320–430 px. `tools/injury-release-check.mjs`: a real v42.2.1 save opened by this build (nothing fabricated, tracking from the first week played). `tools/injury-oldbuild-check.mjs`: v42.2.1 plays and saves a save carrying the record and keeps it byte-identical.
+
