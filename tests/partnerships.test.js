@@ -94,3 +94,13 @@ test('game identity: distinct for every game of a week and for playoff rounds', 
   const c = P.gameIdOf({ year: 1203, week: 12, playoff: true, round: 2, home: 'A', away: 'B' });
   assert.notEqual(a, b); assert.notEqual(a, c); assert.match(c, /\|p2\|/);
 });
+
+test('all eight pairings stay eligible: each one can be picked by the owner and chosen by the selection when it is the only pair', () => {
+  const pos = { 'QB-RB': ['QB', 'RB'], 'QB-WR': ['QB', 'WR'], 'QB-TE': ['QB', 'TE'], 'RB-OL': ['RB', 'OL'], 'OL-OL': ['OL', 'OL'], 'DL-DL': ['DL', 'DL'], 'DL-LB': ['DL', 'LB'], 'DL-CB': ['DL', 'CB'] };
+  for (const [type, [x, y]] of Object.entries(pos)) {
+    const side = PAIR_TYPES[type].side; const cands = [C('x1', x, 60), C('y1', y, 60)];
+    const r = P.checkPick(cands, side, ['x1', 'y1']); assert.ok(r.ok, `${type}: ${r.reason}`); assert.equal(r.pair.type, type);
+    assert.equal(P.suggestCaptains(cands)[side].type, type, `${type}: chosen when it is the club's only pair`);
+  }
+});
+
