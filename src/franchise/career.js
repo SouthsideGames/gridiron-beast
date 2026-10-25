@@ -133,8 +133,8 @@ export function careerAfterGame(roster, ctx, { lineOf = null } = {}) {
   return added;
 }
 /** Evolution, when it happens (the owner evolves his monsters on the card; AI and auto-evolution report events). */
-export function noteEvolution(m, { year, week = null, club, from, to }) {
-  return addEvent(m, { k: `evo:${m.stage}`, t: 'evolve', y: year, w: week, c: club, x: { from, to, stage: m.stage } });
+export function noteEvolution(m, { year, week = null, club, from, to, level = null, ovr = null }) {
+  return addEvent(m, { k: `evo:${m.stage}`, t: 'evolve', y: year, w: week, c: club, x: { from, to, stage: m.stage, ...(level ? { lvl: level } : {}), ...(ovr ? { ovr } : {}) } });
 }
 
 // ------------------------------------------------------------ season end
@@ -217,7 +217,7 @@ export function describeEvent(e, m) {
     case 'season': return { icon: '⭐', title: (SEASON_MARKS.find((s) => s.key === x.key)?.label || 'Big season').replace(/^./, (a) => a.toUpperCase()), desc: `${fmt(x.value)} ${STAT_LABEL[x.key] || x.key} in the regular season.` };
     case 'level': return { icon: '⬆️', title: `Reached level ${x.level}`, desc: x.level >= 30 ? 'Among the most experienced monsters in the league.' : x.level >= 20 ? 'A seasoned veteran now.' : 'Ten levels of hard-won experience.' };
     case 'growth': return { icon: '💪', title: `+${x.to - x.from} overall`, desc: `From ${x.from} to ${x.to} OVR in one season.` };
-    case 'evolve': return { icon: '✨', title: x.before ? 'Evolved' : `Evolved into ${x.to || 'a new form'}`, desc: x.before ? `${x.from ? `${x.from} → ` : ''}${x.to || 'its next form'}, before the timeline began.` : `${x.from || 'He'} evolved into ${x.to || 'its next form'}.` };
+    case 'evolve': return { icon: '✨', title: x.before ? 'Evolved' : `Evolved into ${x.to || 'a new form'}`, desc: x.before ? `${x.from ? `${x.from} → ` : ''}${x.to || 'its next form'}, before the timeline began.` : `${x.from || 'He'} evolved into ${x.to || 'its next form'}${x.lvl ? ` at level ${x.lvl}` : ''}${x.ovr && x.ovr[1] > x.ovr[0] ? ` (overall ${x.ovr[0]} → ${x.ovr[1]})` : ''}.` };
     case 'playoff': return { icon: '🎟', title: 'First playoff game', desc: x.opp ? `Played in the postseason against the ${x.opp}.` : 'Played in the postseason.' };
     case 'star': return { icon: '🔥', title: x.round === 3 ? 'Beast Bowl star' : 'Playoff performance', desc: `${x.line} against the ${x.opp}${x.won ? ', in a win' : ''}.` };
     case 'rival': return { icon: '⚔️', title: 'Rivalry hero', desc: `${x.line} in a win over the rival ${x.opp}.` };

@@ -144,7 +144,7 @@ export function eventRef(f, m, e) {
     case 'champion': return { kind: 'title', year: e.y, club: e.c };
     case 'award': return x.key ? { kind: 'award', key: x.key, year: e.y, club: e.c } : null;
     case 'record': return { kind: 'record', scope: x.scope, cat: x.cat, value: x.value, year: e.y, week: e.w ?? null, club: e.c };
-    case 'evolve': return x.stage ? { kind: 'evolve', stage: x.stage, from: x.from || null, to: x.to || null, year: e.y, week: e.w ?? null, before: !!x.before } : null;
+    case 'evolve': return x.stage ? { kind: 'evolve', stage: x.stage, from: x.from || null, to: x.to || null, year: e.y, week: e.w ?? null, before: !!x.before, lvl: x.lvl ?? null, ovr: x.ovr || null } : null;
     case 'hof': return { kind: 'hof', year: e.y, club: e.c, owner: x.owner || null };
     case 'season': case 'growth': return e.y != null && seasonBooks(m).some((b) => b.year === e.y) ? { kind: 'season', year: e.y, club: e.c } : null;
     default:
@@ -280,7 +280,7 @@ export function eventDetail(f, m, ref) {
       return { kind: 'record', scope: ref.scope, cat: ref.cat, stat: STAT_NAME[ref.cat] || ref.cat, value: ref.value, year: ref.year, week: ref.week, club: ref.club, opp: standing ? cur.opp || null : g?.opp || null,
         standing: !!standing, brokenBy: !standing && cur ? { name: cur.name, team: cur.team, value: cur.value, year: cur.year } : null, prev: standing && cur.prev ? cur.prev : null, game: g };
     }
-    case 'evolve': return { kind: 'evolve', stage: ref.stage, from: ref.from, to: ref.to, year: ref.year, week: ref.week, before: ref.before, fromStage: ref.stage - 1, species: m.species };
+    case 'evolve': return { kind: 'evolve', stage: ref.stage, from: ref.from, to: ref.to, year: ref.year, week: ref.week, before: ref.before, fromStage: ref.stage - 1, species: m.species, lvl: ref.lvl ?? null, ovr: ref.ovr || null };
     case 'game': { const g = gameRecord(f, m, ref.year, ref.week, ref.club); return g ? { kind: 'game', ...g, club: g.club || ref.club, lineText: g.line && Object.keys(g.line).length ? statLine(g.line) : null, missing: g.source === 'log' || g.source === 'archive' ? null : 'His own line from this game was not kept (seasons before v39.1 keep the club\'s result only).' } : null; }
     case 'season': {
       const b = book(ref.year); if (!b) return null; const games = seasonGames(m, ref.year);

@@ -1005,7 +1005,7 @@ Do not confuse **documented**, **approved for roadmap**, **authorized to impleme
 
 For each new roadmap feature: first record exact behavior and unresolved decisions, then owner approval for implementation, then isolated development, tests, save compatibility, mobile playtest, and regression checks. Do not launch phases concurrently. **Priority:** Beast Clash and existing franchise stability → Coach Assist → monster history and partnerships → trading and AI → optional long-term features. Polish is not a substitute for functional completion.
 
-**Temporary priority change (owner, 2026-10-25).** The approved roadmap is paused, not changed: no item is removed or abandoned. Order: (1) finish the v42.2.1 release — done; (2) pause the roadmap; (3) Monster Career Injury History (§50); (4) the owner's review and approval; (5) the Evolution Experience Overhaul; (6) the owner's review and approval; (7) resume the previously approved roadmap where it paused. No unrelated feature starts in between.
+**Temporary priority change (owner, 2026-10-25).** The approved roadmap is paused, not changed: no item is removed or abandoned. Order: (1) finish the v42.2.1 release — done; (2) pause the roadmap; (3) Monster Career Injury History (§50) — done; (4) the owner's review and approval — approved and merged (PR #58), not released; (5) the Evolution Experience Overhaul (§51) — implemented, in review; (6) the owner's review and approval; (7) resume the previously approved roadmap where it paused. No unrelated feature starts in between.
 
 ## 28. Franchise acceptance testing (2026-10-22, branch `franchise-acceptance-coach-assist`)
 
@@ -3401,7 +3401,7 @@ Thresholds are lifetime joint successful plays for the exact pair, per type. Eli
 - **Tests and checks:** `npm test` all passing (two new tests); captains UI check at 320-430 px; navigation check; the v42.1.0 save release check and the device upgrade check pass.
 - **Owner decision:** after v42.2.1 is approved and released, the existing development roadmap pauses.
 
-## 50. Monster Career Injury History (IMPLEMENTED 2026-10-25, owner brief; branch `injury-history`, v42.3.0; NOT MERGED, NOT RELEASED)
+## 50. Monster Career Injury History (IMPLEMENTED 2026-10-25, owner brief; v42.3.0; APPROVED and MERGED (PR #58), NOT RELEASED)
 
 A career record, not an injury mechanic: who gets hurt, for how long and how anyone recovers are exactly as before (injury rolls after each game for the game-day lineup, the owner's practice roll, the weekly recovery, the clear at the season rollover; durability and fatigue untouched).
 
@@ -3434,4 +3434,41 @@ Three entries, kept few: **First career injury**; **Returned after missing N gam
 
 ### 50.7 Testing
 `tests/injury-history.test.js`: opened once, games missed once per game, return week, byes, a second injury never merged, the offseason, injuries before tracking, practice vs away, playoff misses kept apart, the indicator (not by raw totals), a played league (owner and AI, AI–AI, playoffs), tracking never changes the game, trades/release/evolution/legends, save and reload, an existing save (nothing created on load), the profile section and the timeline. `tools/injury-study.mjs`: multi-season accuracy (no duplicates; games played + regular-season games missed ≤ the season's games for every monster on one club all season). `tools/injury-ui-check.py`: the section at 320–430 px. `tools/injury-release-check.mjs`: a real v42.2.1 save opened by this build (nothing fabricated, tracking from the first week played). `tools/injury-oldbuild-check.mjs`: v42.2.1 plays and saves a save carrying the record and keeps it byte-identical.
+
+## 51. Evolution Experience Overhaul (IMPLEMENTED 2026-10-25, owner brief; branch `evolution-overhaul`, v42.4.0; NOT MERGED, NOT RELEASED)
+
+A presentation overhaul. Evolution rules are exactly as before: ready at the species' level (`evolutionReady`), performed by `tryEvolve` (+3 to what the position uses, +1 elsewhere, capped at 99; potential +4; the same id, level, experience, ability, contract and salary until renewal), manual for the owner's monsters from the monster page.
+
+### 51.1 Order of operations (integrity)
+Tapping **Evolve** snapshots the monster, calls `F.evolveMonster` once (which evolves, writes the Career Timeline entry, the dex and the news) and saves; only then does the scene open, built from a report of the two snapshots (`src/franchise/evolution-report.js`). The animation never decides anything: Skip, Replay, Continue, the back button, closing the app or a reload mid-animation cannot cancel or repeat the evolution. A second tap is refused by the existing rule (not ready again until the next form's level); the button is disabled while the scene opens.
+
+### 51.2 The sequence (`src/ui/evolution-scene.js`, full screen over the game)
+- **A Evolution begins** (0 s): darkened scene tinted by the monster's type, "EVOLUTION" and the name, the monster centred at stage size, a soft pulse and float, sparks gathering.
+- **B Energy buildup** (1.8 s): the glow climbs, three energy rings pulse outward, the body brightens, sparks spiral faster, a controlled 2 px shake (off with Screen shake off).
+- **C Transformation** (4.3 s): the body becomes a bright silhouette, which morphs between the old shape and the evolved form's own silhouette three times (0.45–0.55 s apart: never more than about two swaps a second), then one soft flash (0.9 s, not repeated).
+- **D Reveal** (7 s): the evolved form, large and in colour, with a pop, rotating type-coloured rays, a burst of its type and the banner "FLAROO EVOLVED INTO BLAZYNX!" with type, position and form ("First evolution"). Tap or "See results" moves on.
+- **E Results** (10.4 s): previous form → new form (sprites, names, base form / first evolution / final form), Overall and Potential before → after, **Attribute improvements** (Before / After / +n with growing bars) for the changed attributes the position uses, "+1 to N other attributes", **Show all 12 attributes** (unchanged ones read "no change"), a new ability only if one differs (none under today's rules), "Next evolution at level N" or "Final form reached", "Salary unchanged until contract renewal", and the Career Timeline milestone. **Replay** and **Continue**.
+- **Skip** (top right) goes straight to the results at any time; Escape does too (and Continue on the results).
+
+### 51.3 Sprites and effects
+- Sprites are the game's own 16×16 SVG art, drawn with `crispEdges` at a whole multiple of 16 (208 px at 320 wide, 256 px at 390, 272 px at 430; at most 66% of the width and 38% of the height): sharp, whole, centred, never clipped. The evolved form is the real evolved design (`formOf`), with the individual's own tint.
+- One canvas particle engine (`src/ui/evolution-fx.js`) with a theme per type: Fire embers, Water bubbles, Electric lightning arcs, Nature leaves, Ice crystals, Dark shadow wisps, Light rays, Metal sparks, Earth dust and stones, Wind swirls, Psychic floating rings, Dragon aura. Particles are pixel squares, kept around the monster, never over the results. Phases follow the stages (gather, build, burst, celebrate, off).
+
+### 51.4 Reduced motion
+With the game's Reduce motion setting or the system preference: no particles, rings, shake, flash, swaps or spinning rays; the scene fades in, the old form cross-fades into the new one with a soft glow (1 s), then the reveal and the results (about 5.6 s; Skip still works).
+
+### 51.5 Sound (owner decision to confirm)
+The game had no audio system and no mute setting. Three short cues (buildup, transformation, reveal) are synthesized with the Web Audio API (no files, no library), **off by default**, switched on from the scene's 🔇/🔊 button or Settings → "Evolution sounds" (`settings.evoSound`). The audio context starts only after a tap; unsupported browsers stay silent; the scene never waits for a sound.
+
+### 51.6 Career Timeline
+The existing entry (`evo:<stage>`: previous form, new form, season, week) now also keeps the level and overall before → after, shown in its detail sheet and description ("Flaroo evolved into Blazynx at level 10 (overall 56 → 59)"). Older entries without them still render; pre-evolution records and career statistics continue unchanged.
+
+### 51.7 Save compatibility
+No schema change. New optional data: `x.lvl` / `x.ovr` on new evolution entries and `settings.evoSound`. A v42.3.0 save opens byte-identical and its old evolution entries render; v42.3.0 opens a save made here, plays a week and keeps both fields byte-identical (`tools/evolution-compat-check.mjs`).
+
+### 51.8 Performance
+CSS for the sprites, glow, rings, rays and flash; one canvas (device pixel ratio capped at 2, ≤110 particles, halved automatically if frames run slow) that stops when the scene closes. Headless Chromium at 390 px: ~56 fps; with the CPU throttled 4× (a lower-powered phone) ~50 fps average, 95th-percentile frame 33 ms, no downgrade needed. Nothing runs during football; nothing is added to the save path.
+
+### 51.9 Testing
+`tests/evolution-overhaul.test.js` (8): eligibility; the evolution exactly as `tryEvolve` makes it; the real forms and sprites; only real changes in the report (capped attributes and potential); the Career Timeline; captain chemistry, injury history and the rest of the franchise untouched; no duplicate rewards, save and reload, determinism; sprite sizes, timings, labels and the twelve themes. `tools/evolution-ui-check.py`: the real Evolve button at 320–430 px, every stage checked for full screen, overflow, whole sprites, touch-sized visible buttons and overlapping text; Skip, Replay, Continue, reload mid-animation, reduced motion, the sound toggle, frame times with the CPU throttled 4×; screenshots. `tools/evolution-saves.mjs`: the disposable save (test fixture: one evolvable monster of each type raised to its evolution level).
 
