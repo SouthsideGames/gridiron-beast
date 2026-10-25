@@ -21,6 +21,8 @@ import { careerSectionHtml, careerActions, fullProfile } from '../career-ui.js';
 import { honoursCount } from '../../franchise/career-profile.js';
 import { typeProfile } from '../../data/type-chart.js';
 import { captainBadge, partnershipStripHtml, captainWarning, benchNote } from '../captains-ui.js';
+import { evolutionSnapshot, evolutionReport } from '../../franchise/evolution-report.js';
+import { openEvolutionScene } from '../evolution-scene.js';
 
 const ATTR_LABEL = { speed: 'Speed', agility: 'Agility', strength: 'Strength', awareness: 'Awareness', catching: 'Catching', arm: 'Arm', accuracy: 'Accuracy', blocking: 'Blocking', tackling: 'Tackling', coverage: 'Coverage', durability: 'Durability', kicking: 'Kicking' };
 
@@ -150,7 +152,15 @@ export function registerRosterScreens(Router, app) {
         species: () => { const m = ctx.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const sp = resolveSpecies(m); sheet(speciesSheet(sp, ctx.f), { title: sp.name }); },
         autospendone: () => { F.autoSpendAllPoints(app.f, { only: ctx.params.id }); app.save(); Router.render(); },
         release: async () => { const m = app.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; if (!(await confirmSheet(`Release ${m.name}? They go back to the ${F.homeRegion(m)} free-agent pool, where any club can sign them. This cannot be undone.${captainWarning(app.f, m.id)}`, { title: 'Release monster', okLabel: 'Release', danger: true }))) return; const r = F.releaseMonster(app.f, m.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${m.name} released.`, 'info'); Router.go('roster', {}, { reset: true }); },
-        evolve: async () => { const m = app.f.roster.find((x) => x.id === ctx.params.id); if (!m) return; const before = m.name; const beforeSprite = monsterSprite(m, 56); const r = F.evolveMonster(app.f, m.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); sheet(`<div class="center"><div class="row" style="justify-content:center;gap:16px;align-items:center">${beforeSprite}<span style="font-size:24px">→</span>${monsterSprite(m, 72)}</div><h3 style="margin:10px 0 2px">${esc(before)} evolved into ${esc(m.name)}!</h3><p class="muted">+3 to what a ${esc(m.position)} uses, potential +4. Salary unchanged until renewal.</p></div>`, { title: '✨ Evolution', onClose: () => Router.render() }); },
+        evolve: async (el) => { // GDD §51: commit the evolution once and save, then present it full-screen (the scene only shows the report)
+          const m = app.f.roster.find((x) => x.id === ctx.params.id); if (!m || document.querySelector('.evo-scene')) return; if (el) el.disabled = true;
+          const before = evolutionSnapshot(m); const beforeMon = { ...m, stage: before.stage };
+          const r = F.evolveMonster(app.f, m.id); if (!r.ok) { if (el) el.disabled = false; toast(r.reason, 'bad'); return; }
+          app.save();
+          const report = evolutionReport(before, evolutionSnapshot(m), { year: app.f.season.year, week: app.f.season.week, club: app.f.club });
+          const s = app.f.settings || {};
+          openEvolutionScene({ report, beforeMon, afterMon: m, settings: { reducedMotion: s.reducedMotion || app.settings?.reducedMotion, screenShake: s.screenShake, evoSound: s.evoSound }, onSound: (on) => { app.f.settings.evoSound = on; app.save(); }, onClose: () => Router.render() });
+        },
         statinfo: (el) => { const m = app.f.roster.find((x) => x.id === ctx.params.id); if (m) openStatMeaning(m.position, el.dataset.attr, m.name); },
         statguide: () => { const m = app.f.roster.find((x) => x.id === ctx.params.id); openStatGuide(m?.position || 'QB'); },
         spend: (el) => { const r = F.spendAttributePoint(app.f, ctx.params.id, el.dataset.attr); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },

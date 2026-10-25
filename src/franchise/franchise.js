@@ -284,8 +284,8 @@ export function monsterBio(f, m) {
 export function evolveMonster(f, id) {
   const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not on roster.' };
   if (!evolutionReady(m)) { const n = nextEvolution(m); return { ok: false, reason: n ? `${m.name} evolves at level ${n.level}.` : `${m.name} is fully evolved.` }; }
-  const from = m.name; const ev = tryEvolve(m); if (!ev) return { ok: false, reason: 'Nothing happened.' };
-  noteEvolution(m, { year: f.season.year, week: f.season.week, club: f.club, from, to: m.name }); // Career Timeline
+  const from = m.name; const ovr0 = monsterOverall(m); const ev = tryEvolve(m); if (!ev) return { ok: false, reason: 'Nothing happened.' };
+  noteEvolution(m, { year: f.season.year, week: f.season.week, club: f.club, from, to: m.name, level: m.level, ovr: [ovr0, monsterOverall(m)] }); // Career Timeline (level and overall: GDD §51.6)
   dexRecord(f, m, 'signed');
   news(f, `EVOLUTION: ${from} evolved into ${m.name}!`, 'win', { mid: m.id, mname: m.name });
   return { ok: true, event: ev, monster: m };
