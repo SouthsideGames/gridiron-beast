@@ -34,6 +34,7 @@ import { registerClashLab } from './ui/screens/clash-lab.js';
 import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { registerAiLab } from './ui/screens/ai-lab.js';
 import { registerAttrLab } from './ui/screens/attr-lab.js';
+import { registerEvoPreview } from './ui/screens/evo-preview.js';
 import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './ui/dev-review.js';
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
@@ -213,6 +214,7 @@ export function start() {
   registerClashLab(Router, app); // Beast Clash developer tools
   registerAiLab(Router, app); // AI Testing Lab (GDD §53.8): Developer Tools only
   registerAttrLab(Router, app); // Attribute Testing Lab (GDD §8.2 audit): Developer Tools only
+  registerEvoPreview(Router, app); // Preview Evolution: the real evolution scene on throwaway data, Developer Tools only
   registerClashBattle(Router, app); // Beast Clash in Franchise Mode: Tuesday encounters, the pregame Clash and the overtime Clash (GDD §26)
   registerAbilityBalance(Router);
   // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
