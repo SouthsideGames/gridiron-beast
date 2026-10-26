@@ -1316,3 +1316,18 @@ html.evo-open, html.evo-open body { overflow: hidden; }
 .lab-stats > div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; display: flex; flex-direction: column; }
 .lab-stats b { font-size: 20px; } .lab-stats span { font-size: 11px; color: var(--ink-2); }
 .lab-findings { padding-left: 18px; } .lab-findings li { margin-bottom: 6px; } .lab-findings span { display: block; font-size: 12px; }
+/* Roster fit (v42.11): free agents and draft prospects who would help this roster. Blue offense, red defense; solid = would
+   start, dashed = would be the only backup. Independent of the gold scheme-fit glow (.fit). */
+.item.pfit { border-left-width: 4px; }
+.item.pfit-offense, .panel.pfit-offense { border-color: #5aa9ff; }
+.item.pfit-defense, .panel.pfit-defense { border-color: #ff7a6b; }
+.item.pfit-special, .panel.pfit-special { border-color: #c9d1c9; }
+.item.pfit-depth, .panel.pfit-depth { border-style: dashed; }
+.pfit-line { font-size: 12px; font-weight: 700; margin-top: 2px; }
+.pfit-line.pfit-offense { color: #8cc4ff; }
+.pfit-line.pfit-defense { color: #ff9f94; }
+.needs-banner { margin: 8px 0; }
+.need-chip { display: inline-block; padding: 3px 8px; border-radius: 999px; border: 1.5px solid; font-size: 12px; font-weight: 700; }
+.need-chip.pfit-offense { border-color: #5aa9ff; color: #8cc4ff; }
+.need-chip.pfit-defense { border-color: #ff7a6b; color: #ff9f94; }
+.need-chip.pfit-special { border-color: #c9d1c9; color: #dfe6df; }

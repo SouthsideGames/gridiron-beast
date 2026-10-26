@@ -164,6 +164,9 @@ export function trophyCase(f, m, events = careerEvents(m)) {
   }
   // Awards on the franchise's history that name this monster's id (the same awards; the key dedupes them).
   for (const h of f?.history || []) for (const [k, w] of Object.entries(h.awards?.league || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `award:${k}:${h.year}`, year: h.year, club: w.team });
+  // The current season's awards, frozen when the regular season ends and announced in League News, count from that moment: the
+  // Career Timeline entry and the season archive only arrive when the season closes after the playoffs (same key, so no double).
+  const af = f?.season?.awardsFinal; if (af) for (const [k, w] of Object.entries(af.winners || {})) if (w && w.id === m.id && TROPHY_META[k] && k !== 'coy') put(k, { key: `award:${k}:${af.year ?? f.season.year}`, year: af.year ?? f.season.year, club: w.team });
   const out = TROPHY_ORDER.filter((k) => shelves[k]).map((k) => { const s = shelves[k]; s.entries.sort((a, b) => (a.year ?? 0) - (b.year ?? 0)); s.count = s.entries.length; return s; });
   return out;
 }

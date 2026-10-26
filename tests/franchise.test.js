@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { monsterOverall as monsterOverallOf } from '../src/data/monsters.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as F from '../src/franchise/franchise.js';
@@ -914,14 +915,10 @@ test('AI trade calls: only real upgrades at a need, priced fairly in picks, and 
   assert.ok(calls >= 3, `clubs call sometimes (${calls})`); assert.ok(accepted);
 });
 
-test('free agent ask: an estimate until the scout knows his overall, steady and within 10%', () => {
+test('free agents: the whole card is public (v42.11), whatever the scout, and the ask is the real figure', () => {
   const f = newFranchise(5); f.staff.head_scout = null;
   const other = F.aiTeam(f, ALL_TEAMS.find((t) => t !== f.club)).roster[0];
   const fa = { ...other, history: [] };
-  const a = F.freeAgentAsk(f, fa), b = F.freeAgentAsk(f, fa);
-  assert.equal(a.estimate, true); assert.equal(a.shown, b.shown, 'the same estimate every time');
-  assert.ok(Math.abs(a.shown - a.exact) <= a.exact * 0.1 + 500, `${a.shown} near ${a.exact}`);
-  assert.equal(a.shown % 1000, 0, 'rounded to the thousand');
-  const own = { ...fa, history: [{ club: f.club }] }; const c = F.freeAgentAsk(f, own);
-  assert.equal(c.estimate, false); assert.equal(c.shown, c.exact, 'a former player of yours asks his real figure');
+  const v = F.freeAgentView(f, fa); assert.equal(v.level, 6); assert.equal(v.full, true); assert.equal(v.ovr, monsterOverallOf(fa)); assert.equal(v.potential, fa.potential); assert.equal(v.headlineKnown, 4); assert.equal(v.natureKnown, true);
+  const a = F.freeAgentAsk(f, fa); assert.equal(a.estimate, false); assert.equal(a.shown, a.exact);
 });
