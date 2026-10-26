@@ -2,8 +2,9 @@
 // ('gb-ai-lab'), separate from the franchise saves, the cloud save and the Beast Dex. Nothing here is uploaded anywhere; the
 // owner exports a JSON file when he wants the data elsewhere. If IndexedDB is unavailable the records live in memory for the
 // session (and the Lab says so).
-const DB = 'gb-ai-lab', STORE = 'decisions', VERSION = 1;
+const DB = 'gb-ai-lab', STORE = 'decisions', META = 'meta', VERSION = 2; // v2 (v42.6) adds 'meta': the defensive rotation per offensive play
 let memory = null; // fallback when IndexedDB cannot be opened
+let memoryMeta = {};
 let dbp = null;
 function open() {
   if (dbp) return dbp;
@@ -11,7 +12,7 @@ function open() {
     try {
       const idb = globalThis.indexedDB; if (!idb) { resolve(null); return; }
       const req = idb.open(DB, VERSION);
-      req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' }); };
+      req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' }); if (!db.objectStoreNames.contains(META)) db.createObjectStore(META, { keyPath: 'key' }); }; // upgrading keeps every stored decision
       req.onsuccess = () => resolve(req.result); req.onerror = () => resolve(null); req.onblocked = () => resolve(null);
     } catch { resolve(null); }
   });
@@ -36,4 +37,13 @@ export async function labUsage(records) {
   return { bytes, quota, usage };
 }
 /** Test hook: forget the open database handle (so a test can swap in a fake indexedDB). */
-export function _resetLabStore() { dbp = null; memory = null; }
+export function _resetLabStore() { dbp = null; memory = null; memoryMeta = {}; }
+/** Small Lab settings kept with the decisions (the defensive rotation). Never part of a franchise. */
+export async function labMetaGet(key) {
+  const db = await open(); if (!db) return memoryMeta[key] ?? null;
+  return new Promise((resolve) => { try { const r = db.transaction(META, 'readonly').objectStore(META).get(key); r.onsuccess = () => resolve(r.result?.value ?? null); r.onerror = () => resolve(null); } catch { resolve(memoryMeta[key] ?? null); } });
+}
+export async function labMetaPut(key, value) {
+  memoryMeta[key] = value; const db = await open(); if (!db) return;
+  await new Promise((resolve) => { try { const t = db.transaction(META, 'readwrite'); t.objectStore(META).put({ key, value }); t.oncomplete = resolve; t.onerror = resolve; t.onabort = resolve; } catch { resolve(); } });
+}

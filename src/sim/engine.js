@@ -10,7 +10,7 @@
 //     ballOn (1..99), ballLat (-20..20), seed,
 //     options: { forcedTarget, maxTime, frameEvery, edge, memory, dryRun, qb, fork }
 //       qb: AI Testing Lab only. { mode: 'hold' } the AI never acts (it records what it would have done, sim.qb.aiWould);
-//           { mode: 'human', at, action: 'throw'|'scramble'|'throwaway', target } the human's decision at time `at`,
+//           { mode: 'human', at, action: 'throw'|'scramble', target } the human's decision at time `at`,
 //           applied through the normal mechanics. fork: { at, seed } re-seeds the physics at time `at` (outcome rollouts).
 //       memory: { drive, half, quarter, used: {key: true} } ability uses across plays (GDD §23.11)
 //       dryRun: Playbook Audit only, never in a game. { noDefense } runs the offense with nobody
@@ -19,7 +19,7 @@
 //   })
 // Output: { result, yards, endYard, endLat, frames, events, elapsed, ... }
 // result ∈ tackle | sack | incomplete | touchdown | out_of_bounds | interception
-//          | fumble | safety | throwaway | touchback_return | guard | dry_run (audit only)
+//          | fumble | safety | throwaway (older saves only: no longer produced, v42.6) | touchback_return | guard | dry_run (audit only)
 
 import { createRng } from '../core/rng.js';
 import { boundsFor, FIELD, clamp } from '../core/field.js';
@@ -621,6 +621,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     const setAt = Math.max(readyAt, hold);
     if (options.forcedTarget) { if (t < setAt) return; legacyForcedRead(a, pressured, foresight, dropTime); return; } // a chosen target (tools, future player control): the old single-read path
+    if (options.qb?.mode === 'human' && !qr.humanDone && t >= options.qb.at) { qbDecide(a, { pressured, foresight, dropTime, rushers, setAt }); return; } // AI Testing Lab: the human's tap acts at once (production AI timing below is unchanged)
     if (t < setAt - awarenessProfile(a.attrs.awareness).look) return; // eyes up: the first look is taken as he finishes the drop (no throw before his feet are set)
     qbDecide(a, { pressured, foresight, dropTime, rushers, setAt });
   }
@@ -659,14 +660,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const judge = best ? best.o + (rng.normal() * (1 - norm(a.attrs.awareness)) * 0.8) : -1;
       if (best && judge >= (pressured ? 1.0 : 1.8)) { throwTo(a, best.r, pressured); return; }
       if (pressured) {
-        // Get rid of it if someone is reasonably open; otherwise scramble, throw it away, or eat the sack.
+        // Get rid of it if someone is reasonably open; otherwise scramble or eat the sack (no intentional throw-aways, v42.6).
         if (best && best.o >= 1.2 && rng.chance(0.5 + 0.35 * norm(a.attrs.awareness))) { throwTo(a, best.r, true); return; }
         if (!scrambled && norm(a.attrs.agility) > 0.45 && rng.chance(0.3)) { scramble(a); return; }
-        if (rng.chance(0.12)) { throwAway(a); return; }
       }
       if (t > dropTime + 2.6) {
         if (best && best.o >= 0.8 && rng.chance(0.6)) { throwTo(a, best.r, pressured); return; }
-        throwAway(a); return;
       }
       readIndex = Math.max(0, progression.length - 1); readClock = scanPace * 0.6; // keep cycling through the late reads
     }
@@ -787,12 +786,6 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const mobility = (a) => (norm(a.attrs.speed) + norm(a.attrs.agility)) / 2;
   /** Expected scramble yards from the lane margin he sees (seconds) and his mobility; fitted on forced scrambles in this engine. */
   function expectedRun(a, margin) { return -1.5 + 10 * margin + 5 * (mobility(a) - 0.6); }
-  /** Intentional grounding: outside the tackle box any throw-away that reaches the line is legal; inside it, only toward an eligible receiver's area. Never in a defender's grasp. */
-  function throwAwayLegal(a) {
-    if (defs.some((d) => !d.engaged && d.stun <= 0 && dist(d, a) < 0.7)) return false;
-    if (Math.abs(a.y - (qr.startY ?? 0)) > 3.4) return true;
-    return routeRunners().some((r) => !r.engaged && dist(a, r) < 22);
-  }
   function freshBest(maxAge = 0.9) { let best = null; for (const s of Object.values(qr.seen)) if (t - s.at <= maxAge && s.ready && s.w.reachable && (!best || s.seen.quality > best.seen.quality)) best = s; return best; }
   /** True odds of every developed, reachable receiver right now (for the decision record: forced throws and missed opportunities). */
   function trueBoard(a) { const out = {}; for (const r of routeRunners()) { const w = arrivalWindow(a, r); if (!w.reachable || !routeReady(r, false)) continue; out[r.slot] = +oddsFor(a, r, w, w.m1, w.m2, false).quality.toFixed(3); } return out; }
@@ -812,14 +805,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     qr.decision = { t: +t.toFixed(2), ...rec, windows: windowsNow(a) }; qrLog('decision', { ...rec, board: undefined });
     if (act.action === 'throw') { a.throwRead = act.read ?? 99; throwTo(a, act.r, act.pressured); }
     else if (act.action === 'scramble') scramble(a);
-    else if (act.action === 'throwaway') throwAway(a);
     return true;
   }
   /** False while the AI Testing Lab holds the play for the human (the AI only records what it would do). */
   const aiMayAct = () => !(options.qb && (options.qb.mode === 'hold' || (options.qb.mode === 'human' && t < options.qb.at)));
   function qbDecide(a, { pressured, foresight, rushers, setAt = 0 }) {
     const P = awarenessProfile(a.attrs.awareness);
-    if (!qr.order) { qr.order = buildOrder(); qr.pocketAt = t; qr.startY = qr.startY ?? a.y; if (!qr.order.length) { if (throwAwayLegal(a)) commit(a, { action: 'throwaway', reason: 'no_receivers', legal: true }); return; } startLook(a, 0); }
+    if (!qr.order) { qr.order = buildOrder(); qr.pocketAt = t; qr.startY = qr.startY ?? a.y; if (!qr.order.length) return; startLook(a, 0); }
+    if (!qr.order.length) return; // no eligible receiver: he holds it (a scramble or a sack ends the play)
     const since = t - qr.pocketAt;
     // The AI Testing Lab's human decision, applied through the normal mechanics.
     const ctl = options.qb;
@@ -827,7 +820,6 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       qr.humanDone = true; const r = ctl.action === 'throw' ? bySlot.off[ctl.target] : null;
       if (ctl.action === 'throw' && r) { const look = qbLook(a, r, false, 0.0001); commit(a, { action: 'throw', r, slot: r.slot, reason: 'human', look, read: qr.order.indexOf(r.slot), pressured, by: 'human' }); return; }
       if (ctl.action === 'scramble' && !scrambled) { commit(a, { action: 'scramble', reason: 'human', lane: runningLane(a), by: 'human' }); return; }
-      if (ctl.action === 'throwaway') { commit(a, { action: 'throwaway', reason: 'human', legal: throwAwayLegal(a), by: 'human' }); return; }
     }
     // Pressure recognition: an aware passer feels the unblocked rusher sooner.
     // A threat is a free defender closing on him (not a linebacker dropping into coverage); time to hit from his closing speed.
@@ -848,7 +840,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (run >= 3.2 && (!best || best.seen.quality < bar + 0.15)) { if (commit(a, { action: 'scramble', reason: 'escape', lane })) return; } // the rusher is on him: only a clearly open lane
       if (best && best.seen.quality >= bar && aiMayAct()) qrLog('read', { n: qr.log.filter((e) => e.kind === 'read').length + 1, slot: best.slot, why: 'hot', reason: 'open', q: +best.seen.quality.toFixed(3), trueQ: +best.truth.quality.toFixed(3), bar: +bar.toFixed(3) });
       if (best && best.seen.quality >= bar) { if (commit(a, { action: 'throw', r: best.r, slot: best.slot, reason: 'hot', look: best, read: qr.order.indexOf(best.slot), pressured })) return; }
-      if (throwAwayLegal(a) && qrng.chance(0.25 + 0.6 * norm(a.attrs.awareness))) { if (commit(a, { action: 'throwaway', reason: 'pressure', legal: true, threat: { by: threat.d.slot, dd: +threat.dd.toFixed(2), tth: +threat.tth.toFixed(2), a: threat.d.assignment?.a } })) return; }
+      // No intentional throw-away (v42.6): with nothing to throw and no lane he holds the ball, and the rusher may get home.
     }
     if (t < qr.lookEnd || t < setAt) return; // still on this read (or still setting his feet)
     // The look ends: judge the read.
@@ -868,13 +860,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       // Locked on: a lesser passer keeps staring at his first read.
       if (qr.i === 0 && qr.locks < 2 && look.ready && qrng.chance(P.lock)) { qr.locks++; qr.cur = { slot: r.slot, why: 'fixed' }; qr.lookEnd = t + P.look; return; }
     }
-    // Late in the down: the best he has, a throw-away or a scramble, rather than reading forever.
+    // Late in the down: the best he has or a scramble, rather than reading forever (never a throw-away: v42.6).
     if (since > 2.6 + 0.4 * norm(a.attrs.awareness)) {
       const best = freshBest(1.2);
       if (best && best.seen.quality >= 0.22) { if (commit(a, { action: 'throw', r: best.r, slot: best.slot, reason: 'late_best', look: best, read: qr.order.indexOf(best.slot), pressured })) return; }
       const lane = scrambled ? null : runningLane(a);
       if (lane && lane.exp >= 0.5) { if (commit(a, { action: 'scramble', reason: 'nothing_open', lane })) return; }
-      if (throwAwayLegal(a)) { if (commit(a, { action: 'throwaway', reason: 'nothing_open', legal: true })) return; }
     }
     // A full pass through the reads with nothing: a mobile passer takes an open lane (never just because the first read is covered).
     if (qr.cycles >= 1 && !scrambled && since > 1.5) {
@@ -929,10 +920,6 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     phase = 'air'; stats.passer = passer.slot; stats.target = r.slot; stats.airYards = Math.round(landing.x);
     for (const def of defs) def.recognisedPass = true;
     log(`${passer.name} throws to ${r.name}${pressured ? ' under pressure' : ''}`, { kind: 'throw', target: r.slot, pressured });
-  }
-  function throwAway(passer) {
-    result = 'throwaway'; stats.passer = passer.slot; ball.holder = null; ball.inAir = false;
-    log(`${passer.name} throws it away`, { kind: 'throwaway' });
   }
   function scramble(a) {
     scrambled = true; phase = 'carry'; ball.holder = a; stats.carrier = a.slot; a.laneTimer = 0; a.jukeCooldown = 0;

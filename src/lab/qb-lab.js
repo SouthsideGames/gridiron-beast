@@ -48,7 +48,7 @@ const run = (sit, options = {}) => simulatePlay({ ...playInput(sit), options: { 
 export const runAI = (sit) => run(sit);
 /** The play held for the human: the AI never acts (sim.qb.aiWould records what it would have done and when). */
 export const runHold = (sit) => run(sit, { qb: { mode: 'hold' }, maxTime: 8 });
-/** The human's decision at `at` seconds: { action: 'throw'|'scramble'|'throwaway', target }. */
+/** The human's decision at `at` seconds: { action: 'throw'|'scramble', target } (a throw-away is no longer a choice, v42.6). */
 export const runHuman = (sit, decision) => run(sit, { qb: { mode: 'human', at: decision.at, action: decision.action, target: decision.target || null } });
 /** The eligible receivers on this play (route runners), in read order, for the action buttons. */
 export function receiverButtons(sit) {
@@ -82,6 +82,32 @@ export function rollouts(sit, decision = null, n = ROLLOUTS) {
   return { n, yards: +avg('yards').toFixed(2), complete: +avg('complete').toFixed(3), int: +avg('int').toFixed(3), sack: +avg('sack').toFixed(3), td: +avg('td').toFixed(3) };
 }
 
+// Defensive rotation (v42.6): for each offensive play, every live defense in a shuffled order, none repeated until all have been
+// tested once, then a new shuffle. Pure data kept by the screen in the Lab's own storage: { queue: [untested, in order; queue[0]
+// is the current defense], done: [tested this cycle], cycle, counts: { defenseId: times tested } }. Nothing here reveals queue[1].
+export const LAB_DEFENSES = DEFENSE_IDS.slice();
+function shuffled(ids, rng) { const a = ids.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng.next() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/** A valid rotation entry for the current playbook, with a current defense (a new shuffled cycle when the last one is complete). */
+export function rotationEnsure(entry, rng, ids = LAB_DEFENSES) {
+  const known = new Set(ids);
+  const e = { queue: (entry?.queue || []).filter((d) => known.has(d)), done: (entry?.done || []).filter((d) => known.has(d)), cycle: entry?.cycle || 1, counts: { ...(entry?.counts || {}) } };
+  e.queue = [...new Set(e.queue)].filter((d) => !e.done.includes(d));
+  const missing = ids.filter((d) => !e.queue.includes(d) && !e.done.includes(d)); if (missing.length) e.queue.push(...shuffled(missing, rng)); // plays added to the playbook join this cycle
+  if (!e.queue.length) { // every defense tested: a new cycle that does not open with the defense just faced
+    const last = e.done[e.done.length - 1]; e.queue = shuffled(ids, rng); e.done = []; if (entry) e.cycle += 1;
+    if (e.queue.length > 1 && e.queue[0] === last) [e.queue[0], e.queue[1]] = [e.queue[1], e.queue[0]];
+  }
+  return e;
+}
+export const rotationCurrent = (e) => e.queue[0];
+/** The situation against `def` is complete (a decision, or the play ended first): counted, and the rotation moves on. */
+export function rotationComplete(e, def) {
+  e.counts[def] = (e.counts[def] || 0) + 1;
+  const i = e.queue.indexOf(def); if (i >= 0) { e.queue.splice(i, 1); if (!e.done.includes(def)) e.done.push(def); }
+  return e;
+}
+export const rotationProgress = (e, ids = LAB_DEFENSES) => ({ tested: e.done.length, total: ids.length, cycle: e.cycle });
+
 const round = (v, k = 2) => (v == null ? null : +Number(v).toFixed(k));
 /** The field at the decision point from the recorded frames (positions and velocity), plus who covers whom. */
 function fieldAt(sim, at) {
@@ -95,7 +121,7 @@ const ratingsOf = (m, keys) => Object.fromEntries(keys.map((k) => [k, round(m?.a
  * play, `holdSim` the held play the human watched, outcomes = { human: rollouts, ai: rollouts }.
  */
 export function decisionRecord({ sit, mode, human, humanSim, aiSim, holdSim, outcomes, ms = null }) {
-  const inp = playInput(sit); const o = inp.offensePlay, d = inp.defensePlay; const H = humanSim.qb?.decision || null; const A = aiSim.qb?.decision || null;
+  const inp = playInput(sit); const o = inp.offensePlay, d = inp.defensePlay; const H = humanSim.qb?.decision || null; const A = aiSim.qb?.decision || null; // human.action 'hold': he never released it (sacked, or the play ended first)
   const recvKeys = ['speed', 'agility', 'catching', 'awareness'], defKeys = ['speed', 'agility', 'coverage', 'awareness', 'catching', 'tackling', 'strength'];
   return {
     schema: LAB_SCHEMA, v: LAB_SCHEMA_VERSION, id: `${sit.seed}-${sit.offense}-${sit.defense}-${Math.round(human.at * 100)}-${human.action}-${human.target || ''}`, at: new Date().toISOString(),
@@ -111,7 +137,7 @@ export function decisionRecord({ sit, mode, human, humanSim, aiSim, holdSim, out
     pressure: { sensedAt: holdSim.qb?.sensedAt ?? null, underPressure: !!H?.pressured },
     runningLane: H?.lane || null,
     decisionTime: round(human.at),
-    human: { action: human.action, target: human.target || null, trueQ: H?.trueQ ?? null, bestTrueQ: H?.bestTrueQ ?? null, legal: H?.legal ?? null, responseMs: ms },
+    human: { action: human.action, target: human.target || null, targetId: human.target ? inp.offense[human.target]?.id || null : null, targetName: human.target ? inp.offense[human.target]?.name || null : null, trueQ: H?.trueQ ?? null, bestTrueQ: H?.bestTrueQ ?? null, legal: H?.legal ?? null, responseMs: ms },
     ai: { action: A?.action || null, target: A?.slot || null, at: A?.t ?? null, reason: A?.reason || null, trueQ: A?.trueQ ?? null, bestTrueQ: A?.bestTrueQ ?? null, forced: !!A?.forced, missed: A?.missed || null, reads: (aiSim.qb?.reads || []).filter((e) => e.kind === 'read').map((e) => ({ t: e.t, slot: e.slot, reason: e.reason })) },
     aiWouldAtHold: holdSim.qb?.aiWould ? { at: holdSim.qb.aiWould.t, action: holdSim.qb.aiWould.action, target: holdSim.qb.aiWould.slot } : null,
     result: { human: outcomeOf(humanSim), ai: outcomeOf(aiSim) },
