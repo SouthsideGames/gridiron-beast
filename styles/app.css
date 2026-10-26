@@ -1282,6 +1282,11 @@ html.evo-open, html.evo-open body { overflow: hidden; }
 .lab-reveal > div:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .lab-reveal .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
 .lab-reveal-art svg { display: block; width: 100%; height: auto; border-radius: 4px; }
+.attr-watch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.attr-watch .field-wrap { margin-bottom: 4px; }
+.attr-watch svg { display: block; width: 100%; height: auto; }
+.attr-results .lab-table td, .attr-results .lab-table th { font-size: 12.5px; }
+@media (max-width: 360px) { .attr-watch { grid-template-columns: 1fr; } }
 .lab-compare h3 { margin: 12px 0 4px; }
 .lab-vs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .lab-vs > div { display: flex; flex-direction: column; gap: 2px; background: var(--panel-2); border-radius: 8px; padding: 8px; min-width: 0; }
