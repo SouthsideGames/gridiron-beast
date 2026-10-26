@@ -47,6 +47,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const maxTime = options.maxTime ?? 20;
   const frameEvery = options.frameEvery ?? 2;
   const dry = options.dryRun || null; // Playbook Audit walk-through (see header)
+  const TRACE = !!options.trace; // Developer trace (Attribute Testing Lab overlay): records each defender's decision and aim per frame; never changes a play
   const dryMax = dry ? (dry.maxTime ?? 7) : 0;
   let dryDoneAt = null;
   const events = [];
@@ -185,6 +186,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
 
   // ------------------------------------------------------------ movement
   function steer(a, tx, ty, speedScale = 1, arriveRadius = 0.6, cap = Infinity) {
+    if (TRACE) { a.aim = [tx, ty]; } // developer trace only (options.trace): where he is trying to go
     if (a.stun > 0) { a.vx *= 0.93; a.vy *= 0.93; return; } // off balance: coasting, cannot steer
     const dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
     let desired = a.maxSpeed * speedScale * burst(a) * speedMods(a);
@@ -1036,11 +1038,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   function defenseTick(d) {
     const asg = d.assignment;
-    if (d.engaged) return; // movement handled by the blocker's engagement
+    const mark = TRACE ? (m, x) => { d.why = m; d.why2 = x ?? null; } : () => {}; // developer trace: the branch he acted on
+    if (d.engaged) { mark('engaged'); return; } // movement handled by the blocker's engagement
     const c = ball.holder;
     if (c && c.team === 'def') { // we have the ball: escort or carry
-      if (c === d) { carrierMove(d); return; }
-      escortBlock(d); return;
+      if (c === d) { mark('carry'); carrierMove(d); return; }
+      mark('escort'); escortBlock(d); return;
     }
     if (ball.inAir) {
       const toBall = dist(d, ball.landing);
@@ -1049,8 +1052,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const breakRadius = baseBreak + (d.ability?.breakRadius || 0);
       // The man defender on the target, beaten by a break and thrown behind: he plants to come back, the same burst as a recognised route break, once (v42.8).
       if (asg.a === 'man' && bySlot.off[manKeys[asg.key]] === ball.target && (d.vx * (ball.landing.x - d.x) + d.vy * (ball.landing.y - d.y)) < 0 && Math.hypot(d.vx, d.vy) > 3 && !(d.breakPlant > t - 1.0)) { d.breakPlant = t; d.cutUntil = t + 0.35; }
-      if (toBall < breakRadius) { if (toBall >= baseBreak) abilityUsed(d, 'breakRadius'); steer(d, ball.landing.x, ball.landing.y, 1, 0.2); return; }
-      if (!['rush', 'contain'].includes(asg.a) || d.x < ball.landing.x) { steer(d, ball.landing.x, ball.landing.y, 0.95, 0.2); return; }
+      if (toBall < breakRadius) { mark('ball', 'break'); if (toBall >= baseBreak) abilityUsed(d, 'breakRadius'); steer(d, ball.landing.x, ball.landing.y, 1, 0.2); return; }
+      if (!['rush', 'contain'].includes(asg.a) || d.x < ball.landing.x) { mark('ball', 'rally'); steer(d, ball.landing.x, ball.landing.y, 0.95, 0.2); return; }
     }
     // Run recognition.
     const runLive = (phase === 'carry' || (phase === 'run' && handoffDone)) && c && c.team === 'off';
@@ -1070,39 +1073,39 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         // Second-level defenders flow to the ball: a linebacker fills the gap the back chooses, not just his own.
         const flow = deep ? 2.5 : 5;
         const shade = clamp(c.y + c.vy * 0.3 - d.y, -flow, flow) * (0.55 + 0.45 * norm(d.attrs.awareness));
-        steer(d, fitX, d.y + shade, 1, 0.3); return;
+        mark('run-fit'); steer(d, fitX, d.y + shade, 1, 0.3); return;
       }
-      pursue(d); return;
+      mark('pursue', 'run'); pursue(d); return;
     }
     // Play-action bite: non-rushing defenders step up before they recognise the pass.
     if (isPlayAction && !['rush', 'contain', 'man'].includes(asg.a) && !groveGuards(d)) { // Ancient Grove: nobody near him bites
       const deepDefender = asg.a === 'zone' && asg.role === 'deep';
       const biteFor = (deepDefender ? 0.3 : 0.9) * (1.3 - norm(d.attrs.awareness)) * (d.ability?.echoRead ?? 1); // Echo Read: bites half as long
       if (d.ability?.echoRead) abilityUsed(d, 'echoRead');
-      if (t < biteFor) { steer(d, d.x - 2, d.y, deepDefender ? 0.3 : 0.6, 0.3); return; }
+      if (t < biteFor) { mark('pa-bite'); steer(d, d.x - 2, d.y, deepDefender ? 0.3 : 0.6, 0.3); return; }
     }
     switch (asg.a) {
       case 'rush': {
         const gap = asg.points[1];
         if (d.state === 'init') d.state = 'gap';
-        if (d.state === 'gap') { steer(d, gap[0], gap[1], 1, 0.4); if (dist(d, { x: gap[0], y: gap[1] }) < 1 || t > 0.8) d.state = 'free'; return; }
-        if (qb && ball.holder === qb) { pursue(d); return; }
-        if (c) { pursue(d); return; }
-        steer(d, qb.x, qb.y, 1, 0.3); return;
+        if (d.state === 'gap') { mark('rush', 'gap'); steer(d, gap[0], gap[1], 1, 0.4); if (dist(d, { x: gap[0], y: gap[1] }) < 1 || t > 0.8) d.state = 'free'; return; }
+        if (qb && ball.holder === qb) { mark('rush', 'qb'); pursue(d); return; }
+        if (c) { mark('pursue', 'carrier'); pursue(d); return; }
+        mark('rush', 'qb'); steer(d, qb.x, qb.y, 1, 0.3); return;
       }
       case 'contain': {
         const pt = asg.points[1];
         const carrier = c || qb;
         const outside = carrier && Math.abs(carrier.y) > Math.abs(pt[1]) - 2 && Math.sign(carrier.y) === Math.sign(pt[1]);
         const crossed = carrier && carrier.x > 0.5;
-        if (outside || crossed || (scrambled)) { pursue(d); return; }
-        steer(d, pt[0], pt[1], 0.9, 0.4); return;
+        if (outside || crossed || (scrambled)) { mark('contain', 'pursue'); pursue(d); return; }
+        mark('contain', 'edge'); steer(d, pt[0], pt[1], 0.9, 0.4); return;
       }
       case 'man': {
         const target = bySlot.off[manKeys[asg.key]];
-        if (!target) { steer(d, 6, d.y * 0.6, 0.8, 0.3); return; } // nobody to cover (three-receiver set): sit in the short middle
+        if (!target) { mark('man', 'none'); steer(d, 6, d.y * 0.6, 0.8, 0.3); return; } // nobody to cover (three-receiver set): sit in the short middle
         // A back who stays in to block frees his man: "green dog", add to the rush.
-        if (asg.key === 'back' && target.assignment?.a === 'block' && t > 0.5) { if (qb && ball.holder === qb) { pursue(d); return; } }
+        if (asg.key === 'back' && target.assignment?.a === 'block' && t > 0.5) { if (qb && ball.holder === qb) { mark('man', 'green-dog'); pursue(d); return; } }
         const p = trailPosition(d, target); const ov = observedVelocity(d, target);
         // Run with the receiver (v42.8, attribute audit fix 2): everything he reacts to is what he can see, the receiver's
         // position and velocity a reaction delay ago (Coverage shortens the delay). He anticipates along that observed line,
@@ -1121,13 +1124,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         const onTop = p.x + ux * lead + (slowing ? 0.2 : 0.8); // gearing down with him: give up the cushion, not the leverage
         const ty = p.y + uy * lead + inside;
         if (!turnedBack && !settled) {
-          if (onTop >= d.x) { steer(d, onTop, ty, slowing ? Math.max(0.3, ovs / Math.max(1, d.peakSeen)) : 1, 0.3); return; }
-          if (slowing) { steer(d, d.x, ty, 0.3, 0.3); return; } // past him as he gathers: stop and turn with him
+          if (onTop >= d.x) { mark('man', slowing ? `${target.slot}: gearing down` : `${target.slot}: on top`); steer(d, onTop, ty, slowing ? Math.max(0.3, ovs / Math.max(1, d.peakSeen)) : 1, 0.3); return; }
+          if (slowing) { mark('man', `${target.slot}: turn with him`); steer(d, d.x, ty, 0.3, 0.3); return; } // past him as he gathers: stop and turn with him
           // Receiver still in front of him (the release, or running at him): shuffle, backpedal only as he closes.
-          const closing = d.x - p.x < 3.5; steer(d, closing ? d.x - 0.6 : d.x, ty, closing ? 0.55 : 0.35, 0.3); return;
+          const closing = d.x - p.x < 3.5; mark('man', `${target.slot}: ${closing ? 'backpedal' : 'shuffle'}`); steer(d, closing ? d.x - 0.6 : d.x, ty, closing ? 0.55 : 0.35, 0.3); return;
         }
         // He broke back or sat down: drive downhill to where he is seen, inside shoulder (Speed closes, Agility turns him).
-        steer(d, p.x + ux * lead, p.y + uy * lead + inside * 0.5, 1, 0.3); return;
+        mark('man', `${target.slot}: drive on the break`); steer(d, p.x + ux * lead, p.y + uy * lead + inside * 0.5, 1, 0.3); return;
       }
       case 'zone': {
         const [zx, zy] = asg.at;
@@ -1135,7 +1138,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         const inZone = (r) => asg.role === 'deep' ? (Math.abs(r.y - zy) < radius && r.x > 5) : dist(r, { x: zx, y: zy }) < radius;
         const threats = receivers.map((s) => bySlot.off[s]).filter((r) => r && inZone(r) && r.x > -1);
         if (threats.length && dist(d, { x: zx, y: zy }) < radius + 1) {
-          const r = threats.sort((p, q) => (q.x - p.x))[0];
+          const r = threats.sort((p, q) => (q.x - p.x))[0]; mark('zone', `${r.slot} (${threats.length} in zone)`);
           const p = trailPosition(d, r);
           const antic = 0.15 + 0.25 * norm(d.attrs.coverage);
           if (asg.role === 'deep') {
@@ -1146,11 +1149,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
           } else steer(d, p.x + r.vx * antic * 0.6 + 0.3, p.y + r.vy * antic * 0.6, 0.95, 0.3); // underneath zones squeeze the receiver harder
           return;
         }
-        steer(d, zx, zy, 0.95, 0.5); return;
+        mark('zone', 'spot'); steer(d, zx, zy, 0.95, 0.5); return;
       }
       case 'spy': {
-        if (c === qb && qb.x > 0) { pursue(d); return; }
-        steer(d, 3, qb.y, 0.9, 0.5); return;
+        if (c === qb && qb.x > 0) { mark('spy', 'pursue'); pursue(d); return; }
+        mark('spy', 'mirror'); steer(d, 3, qb.y, 0.9, 0.5); return;
       }
       default: steer(d, d.x, d.y, 0, 0.2);
     }
@@ -1338,7 +1341,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       def: defs.map((a) => [a.slot, +a.x.toFixed(2), +a.y.toFixed(2), a.engaged ? 1 : 0, statusOf(a)]),
       ball: [+ball.x.toFixed(2), +ball.y.toFixed(2), ball.inAir ? 1 : 0],
       holder: ball.holder ? ball.holder.slot : null, holderTeam: ball.holder ? ball.holder.team : null, phase,
-      ...(phase === 'dropback' && ball.holder === qb && !scrambled && (qb.windup || (qr.cur && !qr.decision)) ? { read: qb.windup ? qb.windup.r.slot : qr.cur.slot } : {}), // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
+      ...(phase === 'dropback' && ball.holder === qb && !scrambled && (qb.windup || (qr.cur && !qr.decision)) ? { read: qb.windup ? qb.windup.r.slot : qr.cur.slot } : {}),
+      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
     });
   }
   // The motion before the snap, drawn as frames with negative time: only the motion man moves.
