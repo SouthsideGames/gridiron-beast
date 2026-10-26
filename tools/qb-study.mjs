@@ -21,7 +21,7 @@ function tally(m, sim, offId) {
   const ev = sim.events; const thr = ev.find((e) => e.kind === 'throw');
   if (sim.result === 'sack') m.sacks++; if (sim.result === 'throwaway') m.throwaways++; if (ev.some((e) => e.kind === 'scramble')) m.scrambles++;
   if (!thr) return; m.att++; const prim = PLAYS[offId].primary; if (thr.target === prim) m.primary++;
-  const caught = sim.stats.receiver != null && sim.result !== 'interception'; if (caught) { m.comp++; m.yds += sim.yards; } if (sim.result === 'interception') m.int++;
+  const caught = sim.stats.receiver != null && sim.result !== 'interception'; if (caught) { m.comp++; m.yds += sim.yards; } if (sim.stats.interceptor) m.int++; // as the box score counts it (end-zone picks end as touchbacks, pick-sixes as touchdowns)
   m.tSum += thr.t; (m.byPlay[offId] ||= {}); m.byPlay[offId][thr.target] = (m.byPlay[offId][thr.target] || 0) + 1;
   const d = ev.find((e) => e.kind === 'qb_decision'); if (d) { m.logged++; if (d.forced) m.forced++; if (d.missed) m.missed++; m.qSum += d.trueQ ?? 0; m.bestSum += d.bestTrueQ ?? 0; }
 }

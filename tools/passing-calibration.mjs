@@ -34,7 +34,7 @@ function study(variant) {
         if (sim.result === 'sack') { m.dropbacks++; m.sacks++; return; }
         if (!sim.stats.target) return; m.dropbacks++; m.attempts++;
         const qa = acc[sim.names?.off?.QB === home.offense.QB?.name ? 'h' : 'a']; const band = qa >= 70 ? 'acc70+' : qa >= 60 ? 'acc60-69' : 'acc<60'; const b = (m.byAcc[band] ||= { att: 0, comp: 0 }); b.att++;
-        if (sim.stats.receiver) { m.comp++; b.comp++; m.yds += sim.yards; } if (sim.result === 'interception') m.int++;
+        if (sim.stats.receiver) { m.comp++; b.comp++; m.yds += sim.yards; } if (sim.stats.interceptor) m.int++; // as the box score counts it: a pick in the end zone ends as a touchback, a pick-six as a touchdown
         if ((sim.stats.airYards || 0) >= 20) { m.deepAtt++; if (sim.stats.receiver) m.deepComp++; }
       } else if (sim.stats.carrier) { m.runs++; m.runYds += sim.yards; }
     } });
