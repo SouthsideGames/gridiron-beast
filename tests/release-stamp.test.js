@@ -15,3 +15,11 @@ test('index.html is stamped for this release: every game module mapped to its ve
   assert.ok(html.indexOf(`src/fresh.js?v=${v}`) > html.indexOf('id="gb-modules"') && html.indexOf(`src/fresh.js?v=${v}`) < html.indexOf('<script type="module" src="src/main.js'), 'the freshness check runs between the map and main.js');
   assert.match(html, new RegExp(`src/main\\.js\\?v=${v.replace(/\./g, '\\.')}"`)); assert.match(html, new RegExp(`styles/app\\.css\\?v=${v.replace(/\./g, '\\.')}"`));
 });
+
+test('the main.js script tag itself carries the release number, also when re-stamping an already stamped page (v42.5.0 fix)', async () => {
+  const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8'); const v = await releaseNumber();
+  assert.match(html, new RegExp(`<script type="module" src="src/main\\.js\\?v=${v.replace(/\./g, '\\.')}"></script>`), 'the tag the browser loads, not the import-map entry');
+  const older = stampedIndex(html, '0.0.1', gameModules()); assert.match(older, /<script type="module" src="src\/main\.js\?v=0\.0\.1"><\/script>/);
+  const again = stampedIndex(older, v, gameModules()); assert.equal(again, html, 'stamping an older stamped page gives this release exactly');
+  assert.ok(!/main\.js\?v=0\.0\.1/.test(again), 'no stale main.js URL left behind');
+});
