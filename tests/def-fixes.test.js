@@ -67,6 +67,18 @@ test('fix 2: early in the flight defenders steer where the throw looks headed, n
   assert.ok(closerToAim / checked > 0.8, `early aims are not the exact landing spot (${closerToAim}/${checked})`);
 });
 
+test('comebacks and digs: separation after the throw shrinks as Coverage rises, and a dig break is chased, not watched', () => {
+  const gap = (off, value) => { const xs = [];
+    for (let i = 0; i < 120; i++) { const s = play({ off, def: 'cover_1', defSubjects: ['CB1', 'CB2', 'FS', 'LB1', 'LB2'], attr: 'coverage', value, seed: 3000 + i, options: forced('WR1', 1.9) });
+      const th = thrown(s); const arr = th && s.events.find((e) => ['catch', 'incomplete', 'interception'].includes(e.kind) && e.t > th.t); if (!arr) continue;
+      const f = s.frames.find((x) => x.t >= arr.t - 1e-6); const r = f.off.find((p) => p[0] === 'WR1'), d = f.def.find((p) => p[0] === 'CB1'); xs.push(Math.hypot(d[1] - r[1], d[2] - r[2])); }
+    return xs.reduce((a, b) => a + b, 0) / xs.length; };
+  const c = [50, 75, 95].map((v) => gap('curl_flat', v)), d = [50, 75, 95].map((v) => gap('smash', v));
+  assert.ok(c[0] > c[1] && c[1] > c[2], `comeback: ${c.map((x) => x.toFixed(2)).join(' > ')}`);
+  assert.ok(d[0] > d[2], `dig: ${d.map((x) => x.toFixed(2)).join(', ')}`);
+  assert.ok(d[0] < 3.0, `a Coverage-50 corner chases the dig across (${d[0].toFixed(2)} yd at arrival; 3.5 before he anticipated the cross)`);
+});
+
 test('fixes are deterministic: the same seed plays the same play', () => {
   for (const [off, def, tgt, at] of [['mesh', 'cover_1', 'WR2', 1.6], ['deep_post', 'cover_3', 'WR1', 2.2], ['curl_flat', 'cover_1', 'RB', 1.3]]) {
     const a = play({ off, def, seed: 42, options: forced(tgt, at) }), b = play({ off, def, seed: 42, options: forced(tgt, at) });

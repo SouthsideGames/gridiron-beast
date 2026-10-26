@@ -158,9 +158,11 @@ test('balance bands over 3,000 mixed plays', () => {
   assert.ok(runAvg >= 2.5 && runAvg <= 7, `run avg ${runAvg.toFixed(2)}`);
   assert.ok(completion >= 0.5 && completion <= 0.78, `completion ${completion.toFixed(2)}`);
   assert.ok(sackRate >= 0.03 && sackRate <= 0.13, `sack rate ${sackRate.toFixed(3)}`);
-  // Floor 0.7% since v42.10: defenders no longer know the landing spot at release, so fewer off-target balls are picked
-  // (this batch: 1.5% → 0.9% across three seed ranges; full games 1.4% → 1.3%). Proposed with the fix, for the owner's review.
-  assert.ok(intRate >= 0.007 && intRate <= 0.05, `int rate ${intRate.toFixed(3)}`);
+  // Floor 0.8% since v42.10 (defenders no longer know the landing spot at release, so fewer off-target balls are picked).
+  // Chosen from 12 independent 3,000-play seed ranges: the v42.10 engine ranged 0.85–1.52% (mean 1.16%; v42.9 1.00–1.90%), while
+  // an engine with the pick chance halved ranged 0.34–0.78% and one with picks disabled 0%, so 0.8% passes every healthy range
+  // and fails every halved one (this range: 1.00% vs 0.56%).
+  assert.ok(intRate >= 0.008 && intRate <= 0.05, `int rate ${intRate.toFixed(3)}`);
   assert.ok(tdShare > 0.005 && tdShare < 0.12, `td share ${tdShare.toFixed(3)}`);
 });
 

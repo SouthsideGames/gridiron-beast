@@ -1148,7 +1148,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         const lateral = ovs > 2.5 && Math.abs(ov.vy) > 1.5 * Math.abs(ov.vx);
         if (lateral && !turnedBack && onTop < d.x) {
           if (!d.lateralRead) { d.lateralRead = true; if (!(d.breakPlant > t - 1.0)) { d.breakPlant = t; d.cutUntil = t + 0.35; } }
-          mark('man', `${target.slot}: mirror across`); steer(d, Math.max(p.x + ux * lead + 1.0, 1.0), p.y + uy * lead, 1, 0.3); return;
+          // He has read the direction, so he anticipates along it by Coverage even while the receiver is still gathering out of
+          // his cut (the general lead shrinks to almost nothing then, which left him standing on a dig's break).
+          const leadL = Math.min(3.5, ovs * (0.12 + 0.3 * norm(d.attrs.coverage)));
+          mark('man', `${target.slot}: mirror across`); steer(d, Math.max(p.x + ux * leadL + 1.0, 1.0), p.y + uy * leadL, 1, 0.3); return;
         }
         if (!turnedBack && !settled) {
           if (onTop >= d.x) { mark('man', slowing ? `${target.slot}: gearing down` : `${target.slot}: on top`); steer(d, onTop, ty, slowing ? Math.max(0.3, ovs / Math.max(1, d.peakSeen)) : 1, 0.3); return; }
