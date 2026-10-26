@@ -59,7 +59,7 @@ test('abilities: Landslide never loses a pass block, Night Veil draws throws', (
     const s = simulatePlay({ offensePlay: o, defensePlay: d, offense: side(o, {}, i), defense: side(d, def, 50000 + i), ballOn: 35, seed: 7 + i });
     if (!s.events.some((e) => e.kind === 'throw')) continue; th++; if (s.stats.coverBy === 'CB1' && s.stats.coverKind === 'man') n++; } return n / th; };
   const veil = at({ CB1: 'nyxshade' }), base = at({});
-  assert.ok(veil > base + 0.05, `quarterbacks throw into Night Veil coverage more often (${base.toFixed(3)} -> ${veil.toFixed(3)})`);
+  assert.ok(veil > base + 0.025, `quarterbacks throw into Night Veil coverage more often (${base.toFixed(3)} -> ${veil.toFixed(3)})`); // +3 points over 900 plays since v42.8 (the corner no longer overruns breaks, so he is on the ball more often either way); +5 before
 });
 
 test('abilities: memory keys name the monster, ability and scope', () => {

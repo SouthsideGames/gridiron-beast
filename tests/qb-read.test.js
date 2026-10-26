@@ -42,7 +42,7 @@ test('4. checkdown open: the quarterback recognises the back when the others are
 });
 test('5. everyone covered: he weighs scrambling and the rush rather than just throwing the first read (no throw-aways, v42.6)', () => {
   const s = sweep(75).filter((x) => x.dec && x.dec.bestTrueQ < 0.3);
-  assert.ok(s.length >= 20, `${s.length} cases`); assert.ok(share(s, (x) => x.dec.reason !== 'first_read') >= 0.6, 'not a first-read throw');
+  assert.ok(s.length >= 8, `${s.length} cases`); assert.ok(share(s, (x) => x.dec.reason !== 'first_read') >= 0.6, 'not a first-read throw'); // fewer all-covered downs since the lead fix (v42.8): windows are judged on balls that now land on the receiver
   const all = [...sweep(50), ...sweep(75), ...sweep(95)]; assert.ok(all.some((x) => x.dec?.action === 'scramble') && all.some((x) => x.r.result === 'sack'), 'scrambles and sacks both occur');
   assert.ok(all.every((x) => x.dec?.action !== 'throwaway' && x.r.result !== 'throwaway'), 'the quarterback never throws the ball away');
 });
