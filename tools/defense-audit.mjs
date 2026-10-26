@@ -9,11 +9,11 @@
 //   rush       pass-rush anatomy in full games (unblocked vs beaten blocks, hold time at the sack, blitzers)
 //   pursuit    pursuit speed and convergence (defenders around the tackle), breakaway races by Speed
 //   abilities  defensive abilities and types on / off in matched full games, and which defensive abilities fire
-//   node tools/defense-audit.mjs [--n=200] [--games=24] [--only=coverage,rush] [--json=FILE]
+//   node tools/defense-audit.mjs [--n=200] [--games=24] [--only=coverage,rush] [--json=FILE] [--root=DIR]
 import fs from 'node:fs';
 import path from 'node:path';
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
-const ROOT = path.resolve(path.join(path.dirname(new URL(import.meta.url).pathname), '..'));
+const ROOT = path.resolve(args.root || path.join(path.dirname(new URL(import.meta.url).pathname), '..')); // --root=DIR measures another tree (before/after)
 const T = await import(path.join(ROOT, 'src/lab/attr-trials.js'));
 const { PLAYS } = await import(path.join(ROOT, 'src/data/playbook.js'));
 const { playGame } = await import(path.join(ROOT, 'src/sim/game-runner.js'));
