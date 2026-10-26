@@ -62,7 +62,7 @@ export function registerAttrLab(Router, app) {
     const n = Math.max(...runs.map((r) => r.sim.frames.length));
     S.watch = { seed, runs, n }; S.i = 0; Router.render();
     const start = performance.now(); const ms = 100 / (app.settings?.speed || 1) / 2; // the frames are 0.05 s apart
-    const tick = (now) => { if (!S.watch) return; const i = Math.min(n - 1, Math.floor((now - start) / ms)); if (i !== S.i) { S.i = i; drawWatch(); } if (i < n - 1) S.raf = requestAnimationFrame(tick); };
+    const tick = (now) => { if (!S.watch) return; const i = Math.max(0, Math.min(n - 1, Math.floor((now - start) / ms))); /* rAF can stamp a frame just before start */ if (i !== S.i) { S.i = i; drawWatch(); } if (i < n - 1) S.raf = requestAnimationFrame(tick); };
     S.raf = requestAnimationFrame(tick);
   }
   // ---- Defensive scenario: traced plays, pause / step / slow motion, and the developer overlay
