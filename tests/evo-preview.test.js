@@ -41,7 +41,7 @@ test('no side effects: building every preview with a franchise loaded changes no
 });
 test('the screen opens the gameplay evolution scene and never imports save, franchise or settings writers', () => {
   const src = fs.readFileSync(new URL('../src/ui/screens/evo-preview.js', import.meta.url), 'utf8');
-  assert.match(src, /import \{ openEvolutionScene[^}]*\} from '\.\.\/evolution-scene\.js'/); assert.match(src, /openEvolutionScene\(\{ report: p\.report, beforeMon: p\.beforeMon, afterMon: p\.afterMon/);
+  assert.match(src, /import \{ openEvolutionScene[^}]*\} from '\.\.\/evolution-scene\.js'/); assert.match(src, /openEvolutionScene\(\{ report: p2\.report, beforeMon: p2\.beforeMon, afterMon: p2\.afterMon/);
   const imports = (txt) => txt.split('\n').filter((l) => l.startsWith('import ')).join('\n');
   assert.ok(!/franchise\/(franchise|save|store|slots|cloud-save|dex-store|achievement-store|career)\.js/.test(imports(src)) && !/app\.save\(|settings\.evoSound\s*=/.test(src), 'no save path, no saved-setting write');
   const lab = fs.readFileSync(new URL('../src/lab/evo-preview.js', import.meta.url), 'utf8'); assert.ok(!/franchise\/(franchise|save|store|slots|dex-store|achievement-store|career)\.js/.test(imports(lab)), 'the builder imports only the dex, monsters, the report and the rng');

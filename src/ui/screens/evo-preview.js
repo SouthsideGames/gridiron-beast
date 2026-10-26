@@ -1,7 +1,8 @@
 // Evolution Preview (Developer Tools → Preview Evolution). Pick any species that evolves and one of its real transitions, then
 // open the game's own evolution scene (openEvolutionScene, the same call the roster's Evolve button makes) on a temporary monster
 // built by src/lab/evo-preview.js. Start, Replay and Return; previews can be repeated without leaving. Strictly visual: nothing
-// is saved, no franchise is read or written, and the scene's sound button only changes this preview, never a saved setting.
+// is saved or written (the loaded franchise's display settings and current week are only read, so the scene looks as it does in a
+// game), and the scene's sound button only changes this preview, never a saved setting.
 import { esc, delegate } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { openEvolutionScene, stageLabel } from '../evolution-scene.js';
@@ -17,8 +18,10 @@ export function registerEvoPreview(Router, app) {
     const t = current(); if (!t || document.querySelector('.evo-scene')) return;
     const p = buildPreview(t.species, t.fromStage); if (!p) return;
     V.last = { species: t.species, fromStage: t.fromStage }; V.count++;
-    const s = app.settings || {}; if (V.sound == null) V.sound = !!s.evoSound;
-    openEvolutionScene({ report: p.report, beforeMon: p.beforeMon, afterMon: p.afterMon, settings: { reducedMotion: s.reducedMotion, screenShake: s.screenShake, evoSound: V.sound }, onSound: (on) => { V.sound = on; }, onClose: () => Router.render() });
+    // The same settings the roster's Evolve button passes (the franchise's, Reduced Motion from either), read only.
+    const fs = app.f?.settings || app.settings || {}; if (V.sound == null) V.sound = !!fs.evoSound;
+    const p2 = app.f?.season ? buildPreview(t.species, t.fromStage, { when: { year: app.f.season.year, week: app.f.season.week } }) : p;
+    openEvolutionScene({ report: p2.report, beforeMon: p2.beforeMon, afterMon: p2.afterMon, settings: { reducedMotion: fs.reducedMotion || app.settings?.reducedMotion, screenShake: fs.screenShake, evoSound: V.sound }, onSound: (on) => { V.sound = on; }, onClose: () => Router.render() });
   }
   Router.registerScreen('evo-preview', {
     title: 'Preview Evolution', tabs: false,

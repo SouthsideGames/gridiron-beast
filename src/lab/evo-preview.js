@@ -30,9 +30,10 @@ export function isValidTransition(speciesId, fromStage) { return previewTransiti
 
 /**
  * Build one preview: { transition, beforeMon, afterMon, report } for the scene, or null for an invalid transition.
- * `seed` fixes the temporary monster's ratings (the same seed gives the same preview).
+ * `seed` fixes the temporary monster's ratings (the same seed gives the same preview). `when` = { year, week } for the scene's
+ * summary line (the preview passes the loaded franchise's current week, read only, so the line reads as it does in a game).
  */
-export function buildPreview(speciesId, fromStage = 0, { seed = 1 } = {}) {
+export function buildPreview(speciesId, fromStage = 0, { seed = 1, when = {} } = {}) {
   const t = previewTransitions().find((x) => x.species === speciesId && x.fromStage === fromStage); if (!t) return null;
   const m = generateMonster(createRng(hashString(`evo-preview|${speciesId}|${fromStage}|${seed}`)), { species: speciesId, quality: 62, id: `preview_${speciesId}_${fromStage}` });
   m.stage = fromStage; m.name = t.fromName; m.level = t.level; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
@@ -41,6 +42,6 @@ export function buildPreview(speciesId, fromStage = 0, { seed = 1 } = {}) {
   const afterMon = structuredClone(m);
   const ev = tryEvolve(afterMon); // the real evolution rule, on a copy that nothing keeps
   if (!ev) return null;
-  const report = evolutionReport(before, evolutionSnapshot(afterMon), {}); // no year/week/club: nothing was recorded anywhere
+  const report = evolutionReport(before, evolutionSnapshot(afterMon), { year: when.year ?? null, week: when.week ?? null, club: null }); // `when` only labels the summary line as gameplay does; nothing is recorded anywhere
   return { transition: t, beforeMon, afterMon, report };
 }
