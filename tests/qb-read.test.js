@@ -40,11 +40,11 @@ test('4. checkdown open: the quarterback recognises the back when the others are
   const s = sweep(75).filter((x) => x.dec?.action === 'throw' && x.dec.board?.RB >= 0.6 && Object.entries(x.dec.board).every(([k, v]) => k === 'RB' || v < 0.4));
   assert.ok(s.length >= 8, `${s.length} cases`); assert.ok(share(s, (x) => x.dec.slot === 'RB') >= 0.55, `${share(s, (x) => x.dec.slot === 'RB').toFixed(2)}`);
 });
-test('5. everyone covered: he weighs scrambling, throwing away and the rush rather than just throwing the first read', () => {
+test('5. everyone covered: he weighs scrambling and the rush rather than just throwing the first read (no throw-aways, v42.6)', () => {
   const s = sweep(75).filter((x) => x.dec && x.dec.bestTrueQ < 0.3);
   assert.ok(s.length >= 20, `${s.length} cases`); assert.ok(share(s, (x) => x.dec.reason !== 'first_read') >= 0.6, 'not a first-read throw');
-  const all = [...sweep(50), ...sweep(75), ...sweep(95)]; assert.ok(all.some((x) => x.dec?.action === 'scramble') && all.some((x) => x.dec?.action === 'throwaway') && all.some((x) => x.r.result === 'sack'), 'scrambles, throw-aways and sacks all occur');
-  for (const x of all) if (x.dec?.action === 'throwaway' && x.dec.by === 'ai') assert.equal(x.dec.legal, true, 'the AI never grounds the ball');
+  const all = [...sweep(50), ...sweep(75), ...sweep(95)]; assert.ok(all.some((x) => x.dec?.action === 'scramble') && all.some((x) => x.r.result === 'sack'), 'scrambles and sacks both occur');
+  assert.ok(all.every((x) => x.dec?.action !== 'throwaway' && x.r.result !== 'throwaway'), 'the quarterback never throws the ball away');
 });
 test('6. blitz: less time to decide', () => {
   const t = (ds) => mean(sweep(75).filter((x) => ds.includes(x.d) && x.dec).map((x) => x.dec.t));
@@ -121,3 +121,14 @@ test('model: odds and bar behave sensibly', () => {
   assert.ok(o(4).pComp > o(1).pComp && o(1).pInt > o(4).pInt && o(1, 1).quality < o(1).quality);
   assert.ok(acceptBar({ index: 0 }) < acceptBar({ index: 1 }) && acceptBar({ index: 1, pressure: true }) < acceptBar({ index: 1 }) && acceptBar({ index: 1, cycles: 2 }) < acceptBar({ index: 1 }));
 });
+
+test('no intentional throw-away anywhere: full games, the forced-read path and the Lab\'s human decisions (v42.6)', async () => {
+  const { playGame } = await import('../src/sim/game-runner.js'); const { generatedTeam } = await import('../src/franchise/roster.js');
+  let dropbacks = 0, sacks = 0;
+  for (let g = 1; g <= 6; g++) playGame({ home: generatedTeam(300 + g, { id: 'h', name: 'H' }), away: generatedTeam(400 + g, { id: 'a', name: 'A' }), seed: 50 + g, onStep: (ev) => { const s = ev?.sim; if (ev?.kind !== 'play' || !s?.qb) return; dropbacks++; if (s.result === 'sack') sacks++; assert.notEqual(s.result, 'throwaway'); assert.ok(!s.events.some((e) => e.kind === 'throwaway')); } });
+  assert.ok(dropbacks > 150 && sacks > 0, `${dropbacks} dropbacks, ${sacks} sacks: sacks still happen naturally`);
+  const Lab = await import('../src/lab/qb-lab.js'); const sit = Lab.makeSituation({ seed: 4242, offense: 'four_verts' in (await import('../src/data/playbook.js')).PLAYS ? 'four_verts' : null });
+  const sim = Lab.runHuman(sit, { at: 1.2, action: 'throwaway' }); // an old record's action is not an option any more: the QB just holds it
+  assert.notEqual(sim.result, 'throwaway'); assert.ok(sim.qb.decision?.by !== 'human' || sim.qb.decision.action !== 'throwaway');
+});
+
