@@ -139,6 +139,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="practice">🎯 Practice Field</button>
         <button class="btn block" data-action="go" data-screen="ai-lab">🧠 AI Testing Lab (QB decisions)</button>
         <button class="btn block" data-action="go" data-screen="attr-lab">📊 Attribute Testing Lab</button>
+        <button class="btn block" data-action="go" data-screen="evo-preview">✨ Preview Evolution</button>
         <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Ability Audit${devBadge(app.settings, q.abilities.length)}${cardBadge(app.settings)}</button>
         <button class="btn block" data-action="go" data-screen="ability-balance">⚖️ Ability Balance</button>
         <button class="btn block" data-action="go" data-screen="clash-lab">🐾 Clash Lab (Beast Clash Phase 1)</button>
