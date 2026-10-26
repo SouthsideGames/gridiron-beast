@@ -17,6 +17,7 @@ import { fieldSvg, FIELD_VIEWBOX, presnapLook, cameraFor } from '../field-view.j
 import { playCardSvg } from '../play-art.js';
 import { monsterSprite, portraitSprite } from '../pixel-monster.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
+import { isBeastBowlTag } from '../../data/league.js';
 import { beatenLines } from '../../data/dialogue.js';
 import { TYPES, SPECIES_BY_ID, resolveSpecies } from '../../data/monsters.js';
 const BADGE_LINES = ['Well played. Don’t get used to it.', 'You earned that one. Keep it polished for me.', 'I had you beaten on tape. Tape lies, apparently.', 'My monsters will remember this.', 'The league will hear about you now.', 'Fine. Take it. We’ll talk next season.', 'That was football. Respect.', 'Eight badges is a long road. You’re on it.'];
@@ -637,7 +638,7 @@ export function registerMatchScreens(Router, app) {
     };
     // The final whistle (2026-10-22 presentation pass): a result hero weighted to the occasion, the box score, then what the
     // game did to the roster: XP for every starter, level-ups with the rating change, injuries.
-    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && /final|bowl/i.test(tag); const playoff = G.event === 'playoff';
+    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && isBeastBowlTag(tag); // only the Beast Bowl itself ("Titan Semifinal" matched /final/ before v42.11) const playoff = G.event === 'playoff';
     const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? 'BEAST BOWL CHAMPIONS' : playoff ? 'PLAYOFF WIN' : diff >= 17 ? 'DOMINANT WIN' : diff <= 3 ? 'NARROW WIN' : 'VICTORY') : (champ ? 'BEAST BOWL LOST' : playoff ? 'SEASON OVER' : diff >= -3 ? 'NARROW LOSS' : 'DEFEAT');
     const hero = `<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${s[me].color}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${s[them].color}">${esc(s[them].abbr)}</span></div><div class="dim">${esc(tag || `Week ${f.season.week}`)}${otTag}${G.event === 'rival' ? ' · ⚔️ rivalry' : ''}</div></div>`;
     const xpRows = ev.filter((e) => e.kind === 'xp').sort((a, b) => b.amount - a.amount);

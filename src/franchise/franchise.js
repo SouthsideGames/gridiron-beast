@@ -40,7 +40,7 @@ import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT 
 import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
 import { careerSnapshot } from './career-profile.js';
 import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, recordNews, movesNews, offseasonDigest, draftDigest } from './league-news.js';
-import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, playbookFor, adaptPlaybook } from './roster.js';
+import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
 import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague } from './league.js';
 import { aiTrades } from './league-trades.js';
 import { slimSeasonAwards } from './history-compact.js';
@@ -860,7 +860,9 @@ export function freeAgentView(f, m) {
   const formerOwn = (m.history || []).some((h) => h.club === f.club);
   const scout = staffMember(f, 'head_scout'); const region = REGIONS[homeRegion(m)];
   const skill = scout ? (scout.biomes?.[region?.biome] ?? scout.overall ?? 50) : 30;
-  const level = formerOwn ? 6 : Math.min(6, (skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1) + (ownerPerk(f) === 'scouting' ? 1 : 0));
+  // v42.11 (owner decision): free agents are veterans with public pro records, so the whole card is known; scouting is for
+  // the draft class and regional recruits. `skill` and `scoutName` are still reported for the sheet.
+  const level = 6;
   return { level, formerOwn, skill, scoutName: scout?.name || null, region: homeRegion(m), headlineKnown: Math.min(4, Math.ceil(level * 4 / 6)), ovr: level >= 4 ? monsterOverall(m) : null, potential: level >= 5 ? m.potential : null, natureKnown: level >= 6 || skill >= 70, full: level >= 6 };
 }
 /**
@@ -1300,6 +1302,23 @@ export function depthNeeds(f) {
   const rank = { short: 0, thin: 1, ok: 2 };
   return out.sort((a, b) => rank[a.status] - rank[b.status] || b.gap - a.gap);
 }
+/**
+ * How a monster would fit THIS roster's depth at his position (v42.11): `kind` 'need' (an empty starting spot), 'starter' (better than
+ * your weakest healthy starter), 'depth' (you have exactly the starters and no backup), or null (the position is covered);
+ * `side` 'offense' | 'defense' | 'special'. Pass `ovr: null` when his overall is not known (a prospect not fully scouted): then
+ * only the position's need counts. Free agency and the draft colour cards by this.
+ */
+export function positionFit(f, m, { ovr = monsterOverall(m) } = {}) {
+  const pos = m.position; const n = GROUP_SLOTS[pos]?.length || 1;
+  const side = OFFENSE_GROUPS.includes(pos) ? 'offense' : DEFENSE_GROUPS.includes(pos) ? 'defense' : 'special';
+  const mine = f.roster.filter((x) => x.position === pos && x.id !== m.id && !x.injury).map(monsterOverall).sort((a, b) => b - a);
+  if (mine.length < n) return { side, kind: 'need', position: pos, text: mine.length ? `Fills an open starting spot at ${pos} (${mine.length} of ${n} filled)` : `You have nobody at ${pos}: he would start` };
+  if (ovr != null && ovr > mine[n - 1]) return { side, kind: 'starter', position: pos, text: `Would start at ${pos}: better than your weakest starter (${mine[n - 1]} OVR)` };
+  if (mine.length === n) return { side, kind: 'depth', position: pos, text: `Depth at ${pos}: you have no healthy backup` };
+  return { side, kind: null, position: pos, text: `${pos} is covered: ${mine.length} healthy, starters ${mine.slice(0, n).join(' / ')} OVR` };
+}
+/** The positions the owner should look for, worst first: open starting spots, then positions with no backup. */
+export function ownerNeeds(f) { return depthNeeds(f).filter((n) => n.status !== 'ok').map((n) => ({ ...n, side: OFFENSE_GROUPS.includes(n.position) ? 'offense' : DEFENSE_GROUPS.includes(n.position) ? 'defense' : 'special' })); }
 export function scoutRegion(f, regionName, { focus = null } = {}) {
   if (f.season.day !== 0) return { ok: false, reason: 'Not Monday.' };
   if (draftWindow(f)) return { ok: false, reason: 'No region scouting from the final week on: the scout is on the draft class.' };

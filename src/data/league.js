@@ -141,6 +141,8 @@ export function standings(records) {
   return { divisions, conferences, overall: [...ALL_TEAMS].sort(cmp) };
 }
 
+/** Is this playoff game the Beast Bowl (the title game)? Conference semifinals and championships are not. */
+export const isBeastBowlTag = (tag) => tag === 'Beast Bowl';
 /** Playoff bracket: 8 teams. Week 11 semis (1v4, 2v3 per conference), week 12 conference finals, week 13 Beast Bowl. */
 export function playoffRound(round, results, seedsByConf) {
   if (round === 1) return Object.entries(seedsByConf).flatMap(([conf, seeds]) => [{ conf, home: seeds[0], away: seeds[3], tag: `${conf} Semifinal` }, { conf, home: seeds[1], away: seeds[2], tag: `${conf} Semifinal` }]);
