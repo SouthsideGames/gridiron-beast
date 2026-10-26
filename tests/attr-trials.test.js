@@ -26,10 +26,15 @@ test('Blocking, Tackling, Catching and Accuracy move their outcomes the right wa
   const c = T.runTrial(byId('catching_wr_open'), 60, [50, 95]); assert.ok(c.levels[95].complete > c.levels[50].complete + 0.05, 'catching completes more');
   const a = T.runTrial(byId('accuracy_short'), 60, [50, 95]); assert.ok(a.levels[95].complete > a.levels[50].complete, 'accuracy completes more');
 });
-test('audit baseline (v42.7): the deep-lead problem and the inverted comeback coverage are measurable; this test is expected to flip when they are fixed', () => {
-  const d = T.runTrial(byId('speed_wr_lead'), 60, [50, 95]); assert.ok(d.levels[95].overrun > d.levels[50].overrun + 0.8, `fast receivers overrun the deep ball: ${JSON.stringify(d.levels)}`);
-  const c = T.runTrial(byId('coverage_cb_cut'), 40, [50, 95]); assert.ok(c.levels[95].sepAfterBreak > c.levels[50].sepAfterBreak, `better coverage, more separation after the break: ${JSON.stringify(c.levels)}`);
+test('attribute fixes (v42.8): a fast receiver is no longer punished on the deep ball, and the better corner is better on a comeback', () => {
+  const d = T.runTrial(byId('speed_wr_lead'), 60, [50, 95]); assert.ok(d.levels[95].caught >= d.levels[50].caught, `open deep catches rise with Speed: ${JSON.stringify(d.levels)}`); assert.ok(d.levels[95].overrun <= d.levels[50].overrun + 0.3, 'a fast receiver no longer runs past the ball more than a slow one');
+  const c = T.runTrial(byId('coverage_cb_cut'), 60, [50, 95]); assert.ok(c.levels[95].sepAfterBreak < c.levels[50].sepAfterBreak + 1.0 && c.levels[95].arriveSep <= c.levels[50].arriveSep + 0.3, `coverage is not inverted on a comeback: ${JSON.stringify(c.levels)}`);
+  const g = T.runTrial(byId('coverage_cb_man'), 60, [50, 95]); assert.ok(g.levels[95].arriveSep < g.levels[50].arriveSep, 'a better corner is tighter on a go route');
+  const a = T.runTrial(byId('awareness_rb_power'), 150, [50, 95]); assert.ok(a.levels[95].yards > a.levels[50].yards + 0.3 && a.levels[95].cutback > a.levels[50].cutback, `vision: an aware back reads the hole and gains on power: ${JSON.stringify(a.levels)}`);
+  const y = T.runTrial(byId('awareness_rb_yac'), 150, [50, 95]); assert.ok(y.levels[95].yac > y.levels[50].yac + 0.3, `open-field vision: ${JSON.stringify(y.levels)}`);
+  const iz = T.runTrial(byId('awareness_rb'), 100, [50, 95]); assert.ok(iz.levels[95].cutback < 0.3 && Math.abs(iz.levels[95].yards - iz.levels[50].yards) < 1.5, 'inside zone is still run as called; vision is not a cheat code');
 });
+
 test('durability and kicking studies report measured numbers that move the right way', () => {
   const d = T.durabilityStudy(200, [50, 95]); assert.ok(d.levels[95].fatigueGain < d.levels[50].fatigueGain);
   const k = T.kickingStudy(50, [50, 95]); assert.ok(k.levels[95].fg45 > k.levels[50].fg45 && k.levels[95].puntAvg > k.levels[50].puntAvg && k.levels[95].range > k.levels[50].range);

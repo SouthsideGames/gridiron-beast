@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { simulatePlay } from '../src/sim/engine.js';
-import { PLAYS } from '../src/data/playbook.js';
+import { manKeyTargets, PLAYS } from '../src/data/playbook.js';
 import { SPECIES_DEX } from '../src/data/species.js';
 import { createRng } from '../src/core/rng.js';
 import { generateMonster, effectiveAttributes } from '../src/data/monsters.js';
@@ -54,12 +54,17 @@ test('abilities: Landslide never loses a pass block, Night Veil draws throws', (
     const s = sim('mesh', 'all_out', { LG: 'titanolith' }, {}, i); const end = s.events.find((e) => ['catch', 'scramble', 'interception'].includes(e.kind))?.t ?? Infinity;
     assert.ok(!s.events.some((e) => e.kind === 'shed' && e.blocker === 'LG' && e.t < end), 'LG never shed in pass protection');
   }
-  const at = (def) => { let n = 0, th = 0; for (let i = 0; i < 900; i++) {
+  // Night Veil (v42.8 test): both halves of the card, measured directly over 1,800 plays. Quarterbacks do not see him as
+  // covering, so his man is targeted more; a ball that arrives with him within a yard is never caught, so completions against
+  // him fall. (The earlier version read the +5-point targeting lift off 900 plays, where the sampling error is about ±2 points.)
+  const at = (def) => { let th = 0, tgt = 0, comp = 0; for (let i = 0; i < 1800; i++) {
     const o = PLAYS[['mesh', 'quick_slants', 'curl_flat', 'deep_post', 'smash', 'flood', 'dagger'][i % 7]], d = PLAYS[['cover_1', 'man_press', 'cover_2_man', 'cover_0'][(i >> 1) % 4]];
     const s = simulatePlay({ offensePlay: o, defensePlay: d, offense: side(o, {}, i), defense: side(d, def, 50000 + i), ballOn: 35, seed: 7 + i });
-    if (!s.events.some((e) => e.kind === 'throw')) continue; th++; if (s.stats.coverBy === 'CB1' && s.stats.coverKind === 'man') n++; } return n / th; };
+    if (!s.events.some((e) => e.kind === 'throw')) continue; th++; const mine = manKeyTargets(o)[d.assignments.CB1?.key]; if (mine && s.stats.target === mine) { tgt++; if (s.stats.receiver === mine) comp++; } }
+    return { targeted: tgt / th, completion: comp / Math.max(1, tgt) }; };
   const veil = at({ CB1: 'nyxshade' }), base = at({});
-  assert.ok(veil > base + 0.05, `quarterbacks throw into Night Veil coverage more often (${base.toFixed(3)} -> ${veil.toFixed(3)})`);
+  assert.ok(veil.targeted > base.targeted + 0.025, `quarterbacks throw at his man more often (${base.targeted.toFixed(3)} -> ${veil.targeted.toFixed(3)})`);
+  assert.ok(veil.completion < base.completion - 0.08, `and complete less against him (${base.completion.toFixed(3)} -> ${veil.completion.toFixed(3)})`);
 });
 
 test('abilities: memory keys name the monster, ability and scope', () => {

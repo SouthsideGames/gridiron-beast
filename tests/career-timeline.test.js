@@ -29,7 +29,7 @@ test('beginnings: the founding roster (cornerstones marked), the draft with roun
 });
 
 test('recruitment, free agency, a trade, a release and a return: each move is recorded once, and history follows the monster', () => {
-  const f = newFranchise(52);
+  const f = newFranchise(53); // seed 53: the staff signs an encounter prospect in week 5 (seed 52 stopped recruiting early after the v42.8 attribute fixes shifted the season)
   // a Tuesday encounter signing, as the staff does it during the week
   let g = 0; while (!f.week.recruited && g++ < 30) { if (F.inPlayoffs(f)) break; F.autoRunToSunday(f); if (f.week.recruited) break; if (F.isBye(f)) { F.takeBye(f); continue; } const mm = F.sundayMatchup(f); if (!mm || mm.forfeit) break; F.finishSunday(f, F.simulatePlayerGame(f)); }
   const rec = f.roster.find((m) => m.id === f.week.recruited) || f.roster.find((m) => of(m, 'join')[0]?.x?.via === 'encounter');
@@ -141,7 +141,7 @@ test('multi-season: timelines accumulate without duplicates, stay inside real se
 });
 
 test('the timeline never changes the game: the same franchise with the writers switched off plays out identically', () => {
-  const strip = (f) => JSON.stringify(f, (k, v) => (k === 'career' || k === 'createdAt' || k === 'uid' || k === 'ev' ? undefined : v)); // uid: random per franchise, like createdAt; ev: a legend stub's copy of the timeline (GDD §46)
+  const strip = (f) => JSON.stringify(f, (k, v) => (k === 'career' || k === 'createdAt' || k === 'uid' || k === 'ev' || k === 'honours' ? undefined : v)); // uid: random per franchise, like createdAt; ev: a legend stub's copy of the timeline (GDD §46); honours: a retirement notice's wording is read from the timeline, so it is empty with the writers off (text only, nothing played differs)
   const a = runFranchise(9, { difficulty: 'pro', seasons: 2 }).f;
   setCareerEnabled(false); let b; try { b = runFranchise(9, { difficulty: 'pro', seasons: 2 }).f; } finally { setCareerEnabled(true); }
   assert.ok(b.roster.every((m) => !m.career), 'nothing written with the writers off');

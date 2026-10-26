@@ -37,7 +37,7 @@ test('every kind of monster gets a page with the right status, designation and r
 });
 
 test('a former owner monster keeps his history with the owner\'s club and shows where he is now', () => {
-  const { f } = runFranchise(6, { seasons: 3, difficulty: 'pro' });
+  const { f } = runFranchise(7, { seasons: 3, difficulty: 'pro' }); // seed 7: the lowest-level non-cornerstone has played for the owner (seed 6 until the v42.8 attribute fixes)
   const m = f.roster.filter((x) => !x.cornerstone && (x.stats?.seasons?.length || 0) >= 1).sort((a, b) => a.level - b.level)[0];
   const r = F.releaseMonster(f, m.id); assert.notEqual(r?.ok, false);
   const pg = careerPage(f, m.id); assert.equal(pg.status.label, 'Free agent');
