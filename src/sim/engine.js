@@ -956,7 +956,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (passer.ability?.throwVelocity) { arm = Math.min(99, arm * (1 + passer.ability.throwVelocity)); abilityUsed(passer, 'throwVelocity'); lead = leadFor(arm); }
     const airD = lead.x - passer.x;
     const deepK = airD > 20 ? 1 + (airD - 20) * 0.03 : 1; // the deep ball is the hardest throw in football
-    const err = (1.2 + d * 0.07) * deepK * (1.3 - norm(acc)) * (pressured ? 1.5 : 1) * (Math.hypot(passer.vx, passer.vy) > 1 ? 1.2 : 1);
+    // Landing error, recalibrated with the corrected lead (v42.8): the old under-led ball hid about a third of the miss, so the
+    // base error is ×1.45 to keep representative ability-enabled games near 65% completion. Accuracy's share of it is unchanged.
+    const err = 1.45 * (1.2 + d * 0.07) * deepK * (1.3 - norm(acc)) * (pressured ? 1.5 : 1) * (Math.hypot(passer.vx, passer.vy) > 1 ? 1.2 : 1);
     const landing = { x: lead.x + rng.normal() * err * 0.7, y: lead.y + rng.normal() * err };
     landing.x = clamp(landing.x, B.ownEndLine + 0.5, B.endLine - 0.3);
     landing.y = clamp(landing.y, B.left - 1.5, B.right + 1.5);

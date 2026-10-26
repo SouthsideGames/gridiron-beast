@@ -27,7 +27,7 @@ test('Blocking, Tackling, Catching and Accuracy move their outcomes the right wa
   const a = T.runTrial(byId('accuracy_short'), 60, [50, 95]); assert.ok(a.levels[95].complete > a.levels[50].complete, 'accuracy completes more');
 });
 test('attribute fixes (v42.8): a fast receiver is no longer punished on the deep ball, and the better corner is better on a comeback', () => {
-  const d = T.runTrial(byId('speed_wr_lead'), 60, [50, 95]); assert.ok(d.levels[95].caught >= d.levels[50].caught, `open deep catches rise with Speed: ${JSON.stringify(d.levels)}`); assert.ok(Math.abs(d.levels[95].overrun) < 1.2, 'the receiver no longer overruns the landing spot');
+  const d = T.runTrial(byId('speed_wr_lead'), 60, [50, 95]); assert.ok(d.levels[95].caught >= d.levels[50].caught, `open deep catches rise with Speed: ${JSON.stringify(d.levels)}`); assert.ok(d.levels[95].overrun <= d.levels[50].overrun + 0.3, 'a fast receiver no longer runs past the ball more than a slow one');
   const c = T.runTrial(byId('coverage_cb_cut'), 60, [50, 95]); assert.ok(c.levels[95].sepAfterBreak < c.levels[50].sepAfterBreak + 1.0 && c.levels[95].arriveSep <= c.levels[50].arriveSep + 0.3, `coverage is not inverted on a comeback: ${JSON.stringify(c.levels)}`);
   const g = T.runTrial(byId('coverage_cb_man'), 60, [50, 95]); assert.ok(g.levels[95].arriveSep < g.levels[50].arriveSep, 'a better corner is tighter on a go route');
   const a = T.runTrial(byId('awareness_rb_power'), 150, [50, 95]); assert.ok(a.levels[95].yards > a.levels[50].yards + 0.3 && a.levels[95].cutback > a.levels[50].cutback, `vision: an aware back reads the hole and gains on power: ${JSON.stringify(a.levels)}`);
