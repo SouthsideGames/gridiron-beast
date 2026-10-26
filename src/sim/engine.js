@@ -966,6 +966,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     landing.y = clamp(landing.y, B.left - 1.5, B.right + 1.5);
     ball.inAir = true; ball.holder = null; ball.from = { x: passer.x, y: passer.y }; ball.to = landing; ball.landing = landing;
     ball.flightTime = Math.hypot(landing.x - passer.x, landing.y - passer.y) / (17 + 13 * norm(arm)); ball.flight = 0; ball.target = r;
+    ball.aim = { x: lead.x, y: lead.y }; ball.thrownAt = t; // where the throw is meant to go (the receiver's path), for the defenders' read (v42.10)
     ball.airYards = landing.x;
     // Thunderclap: the ball arrives 15% faster, and quick passes cannot be broken up by a trailing defender.
     ball.thunder = !!passer.ability?.thunderclap; ball.quick = (r.assignment?.a === 'route' && QUICK_ROUTES.has(r.assignment.r)) || airD < 10;
@@ -1036,6 +1037,22 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (i1 <= i0 || !h[i1] || !h[i0]) return { vx: 0, vy: 0 };
     return { vx: (h[i1].x - h[i0].x) / ((i1 - i0) * DT), vy: (h[i1].y - h[i0].y) / ((i1 - i0) * DT) };
   }
+  // Reading the throw (v42.10, defensive audit fix 2). A defender no longer knows where the ball will come down the moment it
+  // leaves the hand. He first has to see the release: Awareness (reading the quarterback) and Coverage (playing the ball) shorten
+  // that, and a man defender whose man is not the target, with his eyes on his man, sees it a beat later. Then he reads the
+  // flight: early on the ball looks headed where it was meant to go (the receiver's path); as it travels its real landing spot
+  // becomes clear, sooner for an aware, ball-skilled defender. A ball thrown off target therefore fools defenders as it fools the
+  // receiver, and a perfect throw is read correctly once it is seen. Deterministic: no dice are drawn.
+  function ballReaction(d) {
+    const asg = d.assignment; const eyesOnMan = asg.a === 'man' && bySlot.off[manKeys[asg.key]] !== ball.target;
+    return Math.max(0.05, 0.32 - 0.12 * norm(d.attrs.awareness) - 0.12 * norm(d.attrs.coverage) + (eyesOnMan ? 0.08 : 0) - reactionOf(d));
+  }
+  function perceivedLanding(d) {
+    const A = ball.aim || ball.landing, L = ball.landing;
+    const span = 0.85 - 0.3 * norm(d.attrs.awareness) - 0.2 * norm(d.attrs.coverage); // share of the flight before the spot is clear
+    const w = clamp((ball.flight / Math.max(0.05, ball.flightTime)) / Math.max(0.2, span), 0, 1);
+    return { x: A.x + (L.x - A.x) * w, y: A.y + (L.y - A.y) * w };
+  }
   function defenseTick(d) {
     const asg = d.assignment;
     const mark = TRACE ? (m, x) => { d.why = m; d.why2 = x ?? null; } : () => {}; // developer trace: the branch he acted on
@@ -1045,15 +1062,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (c === d) { mark('carry'); carrierMove(d); return; }
       mark('escort'); escortBlock(d); return;
     }
-    if (ball.inAir) {
-      const toBall = dist(d, ball.landing);
+    if (ball.inAir && t - ball.thrownAt >= ballReaction(d)) { // until he has seen the release he keeps playing his assignment (below)
+      const L = perceivedLanding(d); const toBall = dist(d, L);
       // Everybody drives to the ball once it is thrown; the closest defenders sprint, the rest rally.
       const baseBreak = asg.a === 'man' ? 9 : asg.role === 'deep' ? 12 : 11; // zone defenders read the quarterback and break on the throw
       const breakRadius = baseBreak + (d.ability?.breakRadius || 0);
       // The man defender on the target, beaten by a break and thrown behind: he plants to come back, the same burst as a recognised route break, once (v42.8).
-      if (asg.a === 'man' && bySlot.off[manKeys[asg.key]] === ball.target && (d.vx * (ball.landing.x - d.x) + d.vy * (ball.landing.y - d.y)) < 0 && Math.hypot(d.vx, d.vy) > 3 && !(d.breakPlant > t - 1.0)) { d.breakPlant = t; d.cutUntil = t + 0.35; }
-      if (toBall < breakRadius) { mark('ball', 'break'); if (toBall >= baseBreak) abilityUsed(d, 'breakRadius'); steer(d, ball.landing.x, ball.landing.y, 1, 0.2); return; }
-      if (!['rush', 'contain'].includes(asg.a) || d.x < ball.landing.x) { mark('ball', 'rally'); steer(d, ball.landing.x, ball.landing.y, 0.95, 0.2); return; }
+      if (asg.a === 'man' && bySlot.off[manKeys[asg.key]] === ball.target && (d.vx * (L.x - d.x) + d.vy * (L.y - d.y)) < 0 && Math.hypot(d.vx, d.vy) > 3 && !(d.breakPlant > t - 1.0)) { d.breakPlant = t; d.cutUntil = t + 0.35; }
+      if (toBall < breakRadius) { mark('ball', 'break'); if (toBall >= baseBreak) abilityUsed(d, 'breakRadius'); steer(d, L.x, L.y, 1, 0.2); return; }
+      if (!['rush', 'contain'].includes(asg.a) || d.x < L.x) { mark('ball', 'rally'); steer(d, L.x, L.y, 0.95, 0.2); return; }
     }
     // Run recognition.
     const runLive = (phase === 'carry' || (phase === 'run' && handoffDone)) && c && c.team === 'off';
@@ -1123,6 +1140,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         // Keep leverage on top of a receiver who is still working upfield; never give up the cushion by running at him.
         const onTop = p.x + ux * lead + (slowing ? 0.2 : 0.8); // gearing down with him: give up the cushion, not the leverage
         const ty = p.y + uy * lead + inside;
+        // Lateral routes (v42.10, defensive audit fix 1): a receiver running across the field in front of him (a drag, a back to
+        // the flat, a swing) used to be "shuffled" at a third of his speed and never closed on. Once he SEES the receiver moving
+        // across (the same delayed, observed velocity; Coverage shortens the delay and sets how far he anticipates), he plants
+        // and mirrors him at full speed from a yard over the top, never stepping into the backfield. Speed and Agility decide
+        // whether he keeps up; he gets no information the receiver's movement has not already shown.
+        const lateral = ovs > 2.5 && Math.abs(ov.vy) > 1.5 * Math.abs(ov.vx);
+        if (lateral && !turnedBack && onTop < d.x) {
+          if (!d.lateralRead) { d.lateralRead = true; if (!(d.breakPlant > t - 1.0)) { d.breakPlant = t; d.cutUntil = t + 0.35; } }
+          mark('man', `${target.slot}: mirror across`); steer(d, Math.max(p.x + ux * lead + 1.0, 1.0), p.y + uy * lead, 1, 0.3); return;
+        }
         if (!turnedBack && !settled) {
           if (onTop >= d.x) { mark('man', slowing ? `${target.slot}: gearing down` : `${target.slot}: on top`); steer(d, onTop, ty, slowing ? Math.max(0.3, ovs / Math.max(1, d.peakSeen)) : 1, 0.3); return; }
           if (slowing) { mark('man', `${target.slot}: turn with him`); steer(d, d.x, ty, 0.3, 0.3); return; } // past him as he gathers: stop and turn with him
