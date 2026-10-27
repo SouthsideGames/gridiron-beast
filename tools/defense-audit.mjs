@@ -77,19 +77,22 @@ if (want('throw')) {
   }
 }
 // ---- two receivers in one zone: across concepts vs every zone call, how often an underneath zone defender has 2+ receivers in
-// his area, which one he takes (the code takes the deepest), and whether the shallower one is then thrown to and caught
+// his area, which one he takes (before v42.12 always the deepest; since, a threat read), and whether the receiver he left is then
+// thrown to and caught
 if (want('zones')) {
   const zoneDefs = ['cover_3', 'cover_2_zone', 'tampa_2', 'cover_3_sky', 'cover_6']; const offs = ['flood', 'smash', 'curl_flat', 'mesh', 'stick', 'y_cross', 'dagger'].filter((k) => PLAYS[k]);
   const r = { plays: 0, playsWithOverload: 0, framesOverloaded: 0, tookDeepest: 0, shallowTargeted: 0, shallowCompleted: 0, shallowSep: [], deepSep: [] };
   for (const def of zoneDefs) for (const off of offs) for (let i = 0; i < Math.ceil(N / 10); i++) {
     const sim = T.play({ off, def, seed: 6000 + i, options: { trace: true } }); r.plays++; const shallow = new Set(); let over = false;
     for (const f of sim.frames) { if (!f.dbg || f.t > (sim.events.find((e) => e.kind === 'throw')?.t ?? 9)) continue;
-      for (const w of f.dbg) { const asg = PLAYS[def].assignments[w[0]]; if (w[1] !== 'zone' || !asg || asg.role === 'deep') continue; const m = /^(\S+) \((\d+) in zone\)/.exec(w[2] || ''); if (!m || +m[2] < 2) continue;
-        over = true; r.framesOverloaded++; r.tookDeepest++; const [zx, zy] = asg.at; const radius = asg.role === 'middle' ? 7.5 : 7;
-        for (const o of f.off) if (o[0] !== m[1] && Math.hypot(o[1] - zx, o[2] - zy) < radius && o[1] > -1 && !/^(LT|LG|C|RG|RT|QB)$/.test(o[0])) shallow.add(o[0]); } }
+      for (const w of f.dbg) { const asg = PLAYS[def].assignments[w[0]]; if (w[1] !== 'zone' || !asg || asg.role === 'deep') continue; const m = /^(\S+)(?: · .*?)? \((\d+) in zone\)/.exec(w[2] || ''); if (!m || +m[2] < 2) continue;
+        over = true; r.framesOverloaded++; const [zx, zy] = asg.at; const radius = asg.role === 'middle' ? 7.5 : 7;
+        const inside = f.off.filter((o) => Math.hypot(o[1] - zx, o[2] - zy) < radius && o[1] > -1 && !/^(LT|LG|C|RG|RT|QB)$/.test(o[0])); const deepest = [...inside].sort((a, b) => b[1] - a[1])[0];
+        if (!deepest || deepest[0] === m[1]) r.tookDeepest++;
+        for (const o of inside) if (o[0] !== m[1]) shallow.add(o[0]); } }
     if (over) { r.playsWithOverload++; if (shallow.has(sim.stats.target)) { r.shallowTargeted++; if (sim.stats.receiver) r.shallowCompleted++; r.shallowSep.push(sim.stats.arriveSep); } else if (sim.stats.target) r.deepSep.push(sim.stats.arriveSep); }
   }
-  out.zones = { plays: r.plays, playsWithAnUnderneathOverload: r.playsWithOverload, overloadFrames: r.framesOverloaded, ruleTakesDeepestPct: 100, shallowReceiverTargeted: r.shallowTargeted, shallowCompletionPct: +(100 * r.shallowCompleted / Math.max(1, r.shallowTargeted)).toFixed(1), shallowSepAtArrival: mean(r.shallowSep), otherTargetsSepAtArrival: mean(r.deepSep) };
+  out.zones = { plays: r.plays, playsWithAnUnderneathOverload: r.playsWithOverload, overloadFrames: r.framesOverloaded, takesDeepestPct: +(100 * r.tookDeepest / Math.max(1, r.framesOverloaded)).toFixed(1), shallowReceiverTargeted: r.shallowTargeted, shallowCompletionPct: +(100 * r.shallowCompleted / Math.max(1, r.shallowTargeted)).toFixed(1), shallowSepAtArrival: mean(r.shallowSep), otherTargetsSepAtArrival: mean(r.deepSep) };
 }
 // ---- recognition by Awareness: run (time from handoff to recognised), pass (first decision on a dropback), play-action bite
 if (want('recognition')) {
