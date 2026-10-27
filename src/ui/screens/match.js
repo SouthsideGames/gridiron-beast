@@ -30,7 +30,7 @@ import { matchupEdges } from '../../sim/type-matchups.js';
 import { weatherClass } from '../stadium-art.js';
 import { venueHtml } from '../stadium-preview.js';
 import { replayReason, replayPlan, replayPosition, REPLAY } from '../replay.js';
-import { qbReadPanelHtml } from '../qb-read-ui.js';
+import { qbReadPanelHtml, qbReadsShown } from '../qb-read-ui.js';
 import { openMatchupPanel } from '../type-chart.js';
 import { postGameHtml } from '../captains-ui.js';
 
@@ -152,7 +152,7 @@ export function registerMatchScreens(Router, app) {
         </div>
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
         ${edgeStrip(f, s, teams, me)}
-        <div class="field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> INSTANT REPLAY <b>${esc(anim.replay.reason.label)}</b></div><div class="replay-slow" aria-hidden="true">SLOW-MO</div>` : banner}</div>${anim?.replay && anim.ev?.sim?.qb ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span></div>' : ''}
+        <div class="field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}" id="fieldwrap" aria-label="Football field"><svg id="field" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img">${fieldInner}</svg>${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> INSTANT REPLAY <b>${esc(anim.replay.reason.label)}</b></div><div class="replay-slow" aria-hidden="true">SLOW-MO</div>` : banner}</div>${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span></div>' : ''}
         <div id="controls">${controlsHtml(f, teams, look)}</div>`;
     },
     mount(root, ctx) {
@@ -439,7 +439,7 @@ export function registerMatchScreens(Router, app) {
         if (anim.follow) { const target = cameraFor(sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const prevT = sim.frames[Math.max(0, idx - 1)].t ?? 0, ft = sim.frames[idx].t ?? 0;
         const drawFrame = half ? midFrame(sim.frames[idx], sim.frames[idx + 1]) : sim.frames[idx];
-        svg.innerHTML = fieldSvg({ venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), qbRead: !!f.settings.qbReads, ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
+        svg.innerHTML = fieldSvg({ venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), qbRead: qbReadsShown(f.settings, { live: true }), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
         if (idx > 0 && !half && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
         if (performance.now() - t0 > 18) anim.slow = true; // this device cannot afford half-steps: back off for the rest of the play
       }
@@ -504,7 +504,7 @@ export function registerMatchScreens(Router, app) {
         const frame = pos.k >= 0.5 && b !== a ? midFrame(a, b) : a;
         if (anim.follow) { const target = cameraFor(a.ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const s2 = G.state;
-        svg.innerHTML = fieldSvg({ venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), qbRead: true, ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
+        svg.innerHTML = fieldSvg({ venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), qbRead: qbReadsShown(f.settings), ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
         // Camera: a slight zoom that tracks the ball (CSS transform on the svg; the wrap clips it).
         if (zoomOn) { const bx = (anim.ballLat + frame.ball[1] - VB[0]) / VB[2], by = (anim.camera.top - (anim.ballOn + frame.ball[0])) / VB[3]; svg.style.transformOrigin = `${(Math.max(0.15, Math.min(0.85, bx)) * 100).toFixed(1)}% ${(Math.max(0.15, Math.min(0.85, by)) * 100).toFixed(1)}%`; svg.style.transform = `scale(${REPLAY.zoom})`; }
         wrap?.classList.toggle('slowmo', !!pos.slow);
@@ -607,6 +607,8 @@ export function registerMatchScreens(Router, app) {
   }
 
   function finishGame(f) {
+    if (!f.game?.state?.finished || finishGame.busy) return; // a second tap (the button stays under the result sheet) must not run the final whistle twice
+    finishGame.busy = true; setTimeout(() => { finishGame.busy = false; }, 0);
     const G = f.game; const s = G.state; const me = G.playerSide;
     const won = s.winner === me;
     const teams = teamsFor(f);
@@ -638,7 +640,7 @@ export function registerMatchScreens(Router, app) {
     };
     // The final whistle (2026-10-22 presentation pass): a result hero weighted to the occasion, the box score, then what the
     // game did to the roster: XP for every starter, level-ups with the rating change, injuries.
-    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && isBeastBowlTag(tag); // only the Beast Bowl itself ("Titan Semifinal" matched /final/ before v42.11) const playoff = G.event === 'playoff';
+    const them = R.opponent(me); const tag = G.tag || ''; const champ = G.event === 'playoff' && isBeastBowlTag(tag); /* only the Beast Bowl itself ("Titan Semifinal" matched /final/ before v42.11) */ const playoff = G.event === 'playoff';
     const diff = s.score[me] - s.score[them]; const feel = won ? (champ ? 'BEAST BOWL CHAMPIONS' : playoff ? 'PLAYOFF WIN' : diff >= 17 ? 'DOMINANT WIN' : diff <= 3 ? 'NARROW WIN' : 'VICTORY') : (champ ? 'BEAST BOWL LOST' : playoff ? 'SEASON OVER' : diff >= -3 ? 'NARROW LOSS' : 'DEFEAT');
     const hero = `<div class="final-hero ${won ? 'won' : 'lost'} ${champ ? 'champ' : playoff ? 'playoff' : ''}"><div class="final-feel">${feel}</div><div class="final-score"><span style="color:${s[me].color}">${esc(s[me].abbr)}</span> ${s.score[me]} <span class="dim">–</span> ${s.score[them]} <span style="color:${s[them].color}">${esc(s[them].abbr)}</span></div><div class="dim">${esc(tag || `Week ${f.season.week}`)}${otTag}${G.event === 'rival' ? ' · ⚔️ rivalry' : ''}</div></div>`;
     const xpRows = ev.filter((e) => e.kind === 'xp').sort((a, b) => b.amount - a.amount);

@@ -8,7 +8,7 @@ import { ACHIEVEMENTS } from '../../data/achievements.js';
 import { yearOf } from '../../data/calendar.js';
 import * as Save from '../../franchise/save.js';
 import { savePanelHtml, fillStorageMeter, offerExport, importFile, openBackups } from '../storage-ui.js';
-import { buildLabel } from '../../version.js';
+import { buildLabel, devDisplaysAllowed } from '../../version.js';
 import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
 import * as F from '../../franchise/franchise.js';
 import { BACKGROUNDS } from '../../data/staff.js';
@@ -100,7 +100,6 @@ export function registerMenuScreens(Router, app) {
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion (no play animation, no particles)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="shake" ${s.screenShake !== false ? 'checked' : ''}> Screen shake on big hits (and a short vibration on phones that allow it)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="evosound" ${s.evoSound ? 'checked' : ''}> Evolution sounds (off by default; the game has no other sound)</label>
-          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="qbreads" ${s.qbReads ? 'checked' : ''}> Show QB Read Indicators (a ring on the receiver the quarterback is reading; replays list his reads)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devnotices" ${s.devNotices !== false ? 'checked' : ''}> Developer review notices (new or changed plays and abilities)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="liveclock" ${s.liveClock ? 'checked' : ''}> Live 40-second play clock (off by default, not recommended on mobile)</label>
         </div>
@@ -146,6 +145,9 @@ export function registerMenuScreens(Router, app) {
         ${app.f ? `<h3>Feature testing (this franchise)</h3><p class="dim" style="margin-top:0">For trying the new features without waiting seasons. Using these marks the franchise as developer-assisted.</p>
         <div class="row" style="gap:6px;flex-wrap:wrap">${['aurodrax', 'tempestra', 'titanolith', 'nyxshade', 'glacivern', 'elderoot'].map((sp) => `<button class="btn small" data-action="dev-legend" data-sp="${sp}">+ ${sp[0].toUpperCase() + sp.slice(1)}</button>`).join('')}</div>
         <button class="btn block" data-action="dev-ceremony" style="margin-top:6px">🏆 Preview the Beast Bowl ceremony (nothing is saved)</button>` : ''}
+        ${devDisplaysAllowed() ? `<h3>Development displays</h3><p class="dim" style="margin-top:0">Shown only while the game is in development; the released game never shows them.</p>
+        <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devqbreads" ${app.settings?.devQbReads !== false ? 'checked' : ''}> QB reads in games (the read list and ring in replays, and on the Practice Field)</label>
+        <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="qbreads" ${app.settings?.qbReads ? 'checked' : ''}> Live QB read ring during plays</label>` : ''}
         <button class="btn block" data-action="dexall">📖 Beast Dex (everything revealed)</button>
         <button class="btn block danger" data-action="dexreset">Reset my Beast Dex</button>
         <button class="btn block" data-action="go" data-screen="about">ℹ️ About this build</button>
@@ -154,6 +156,8 @@ export function registerMenuScreens(Router, app) {
     mount(root) { delegate(root, {
         ff: async (el) => { if (!app.f || !shortcutsEnabled()) return; const n = Number(el.dataset.n) || 1; el.disabled = true; el.textContent = 'Playing…'; await new Promise((r) => setTimeout(r, 30)); const r = n === 1 ? fastForwardSeason(app.f) : fastForwardSeasons(app.f, n - 1); const saved = await app.save({ immediate: true }); toast(r.ok ? `${r.played ?? 1} season${(r.played ?? 1) === 1 ? '' : 's'} played${r.stoppedBecause === 'cap' ? `: Season ${SEASON_CAP} complete, retirement is due` : r.stoppedBecause === 'fired' ? ': the board let you go' : ''}${saved.ok ? '' : ' (not saved!)'}` : `Stopped: ${r.reason}`, r.ok ? 'good' : 'bad', 6000); Router.render(); },
         'dev-legend': async (el) => { if (!(await confirmSheet('Add this Legendary to your roster for testing? The franchise is marked as developer-assisted.', { title: 'Developer test', okLabel: 'Add' }))) return; const r = F.devGrantLegendary(app.f, el.dataset.sp); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); toast(`${r.monster.name} joined. Legendary Play discovered.`, 'good'); },
+        devqbreads: (el) => { if (app.f) { app.f.settings.devQbReads = el.checked; app.save(); } else app.defaultSettings.devQbReads = el.checked; },
+        qbreads: (el) => { if (app.f) { app.f.settings.qbReads = el.checked; app.save(); } else app.defaultSettings.qbReads = el.checked; },
         'dev-ceremony': () => Router.go('ceremony', { preview: true }), go: (el) => Router.go(el.dataset.screen), dexall: () => Router.go('dex', { all: true }), dexreset: async () => { if (await confirmSheet('Wipe every species you have discovered, across all franchises?', { title: 'Reset Beast Dex', okLabel: 'Reset', danger: true })) { resetDex(); toast('Beast Dex reset.'); } } }); },
   });
 

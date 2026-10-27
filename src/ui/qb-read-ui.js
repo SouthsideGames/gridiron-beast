@@ -3,6 +3,18 @@
 // open receiver measured at that moment). Nothing is reconstructed after the fact; what was not recorded is not shown.
 import { esc } from './dom.js';
 import { REASON_TEXT } from '../sim/qb-read.js';
+import { devDisplaysAllowed } from '../version.js';
+
+/**
+ * QB reads in the game itself (replay read list and ring, practice field, the live read ring) are a DEVELOPMENT display
+ * (v42.11.1, owner decision): shown while the game is in development and the Developer Tools switch is on (default on), never
+ * in the released game (BUILD.release). The AI Testing Lab is a developer tool and always shows them. `live` is the separate
+ * live-play read ring, off unless switched on.
+ */
+export function qbReadsShown(settings, { live = false } = {}) {
+  if (!devDisplaysAllowed()) return false;
+  return live ? !!settings?.qbReads : settings?.devQbReads !== false;
+}
 
 const ACTION_TEXT = { throw: 'Throw', scramble: 'Scramble', throwaway: 'Throw-away' };
 const WHY_TEXT = { first_read: 'first read', progression: 'progression', noticed: 'spotted open', revisit: 'came back to him', hot: 'hot throw under pressure', late_best: 'best option late in the down', human: 'your call', escape: 'escaping pressure', lane: 'open running lane', nothing_open: 'nothing open', pressure: 'pressure arriving', no_receivers: 'no receivers' };
