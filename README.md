@@ -3,7 +3,7 @@
 Pixel-style monster football franchise game by Southside Games — **7-on-7, mobile-first, no dependencies**. Built for iOS and Android phones and tablets first; a PC release is possible later.
 
 - **Play:** open `index.html` from any static host (GitHub Pages works as-is) on a phone or desktop. Installable as a PWA.
-- **Test:** `npm test` (Node ≥ 18, zero dependencies) runs 40 tests — play data, engine determinism and balance bands, rules, special teams, coaching AI, 200 headless games, a full franchise season, saves.
+- **Test:** `npm test` (Node ≥ 18, zero dependencies) runs the full suite (671 tests). `npm run test:fast` runs the 371 quick tests; `npm run test:sim` the 300 long-running simulation tests. When to run what, and how merges and releases are verified: [`docs/TESTING_POLICY.md`](docs/TESTING_POLICY.md).
 - **UI check:** `python3 tests/ui/responsive.py [--shots DIR]` drives onboarding, a week and a complete game at four phone sizes with Playwright (dev-only).
 - **Reproduce a play:** every play in the in-game log carries a repro code; `node tests/tools/replay.js "offense|defense|ballOn|seed"` prints its event trace.
 
