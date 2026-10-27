@@ -20,11 +20,20 @@ test('Speed: a 95 receiver reaches 20 yards sooner and peaks faster than a 50 (m
   const r = T.runTrial(byId('speed_wr_go'), 10, [50, 95]); assert.ok(r.levels[95].t20 < r.levels[50].t20 - 0.3); assert.ok(r.levels[95].peak > r.levels[50].peak + 1.5);
   const rb = T.runTrial(byId('speed_rb'), 60, [50, 95]); assert.ok(rb.levels[95].yards > rb.levels[50].yards + 1.5, JSON.stringify(rb.levels));
 });
-test('Blocking, Tackling, Catching and Accuracy move their outcomes the right way (60 plays, same seeds)', () => {
+test('Blocking, Tackling and Catching move their outcomes the right way (60 plays, same seeds)', () => {
   const b = T.runTrial(byId('blocking_pass'), 60, [50, 95]); assert.ok(b.levels[95].pressureAt > b.levels[50].pressureAt + 0.15, 'blocking delays pressure');
   const k = T.runTrial(byId('tackling_cb_open'), 60, [50, 95]); assert.ok(k.levels[95].brokenAllowed < k.levels[50].brokenAllowed, 'tackling breaks fewer');
   const c = T.runTrial(byId('catching_wr_open'), 60, [50, 95]); assert.ok(c.levels[95].complete > c.levels[50].complete + 0.05, 'catching completes more');
-  const a = T.runTrial(byId('accuracy_short'), 60, [50, 95]); assert.ok(a.levels[95].complete > a.levels[50].complete, 'accuracy completes more');
+});
+test('Accuracy: across seven forced throws a 95 quarterback completes at least 5 points more than a 50 and reaches his receiver more often (v42.12, owner-approved)', (t) => {
+  // Replaces the single forced curl vs Cover 4 (a defender who drives to the aim point meets an accurate ball there, so that one
+  // scenario measured his arrival more than Accuracy). Each route's numbers are kept as diagnostics so a curl regression stays visible.
+  const a = T.accuracyRoutesStudy(120, [50, 95]); const pct = (x) => (100 * x).toFixed(1);
+  for (const [label, r] of Object.entries(a.routes)) t.diagnostic(`${label}: complete ${pct(r[50].complete)}% -> ${pct(r[95].complete)}%, int ${pct(r[50].int)}% -> ${pct(r[95].int)}%, ball reached ${pct(r[50].reached)}% -> ${pct(r[95].reached)}%`);
+  t.diagnostic(`all seven: complete ${pct(a.levels[50].complete)}% -> ${pct(a.levels[95].complete)}%`);
+  assert.equal(Object.keys(a.routes).length, 7);
+  assert.ok(a.levels[95].complete - a.levels[50].complete >= 0.05, `accuracy completes at least 5 points more: ${pct(a.levels[50].complete)}% -> ${pct(a.levels[95].complete)}%`);
+  assert.ok(a.levels[95].reached > a.levels[50].reached, 'accurate balls reach the receiver more often');
 });
 test('attribute fixes (v42.8): a fast receiver is no longer punished on the deep ball, and the better corner is better on a comeback', () => {
   const d = T.runTrial(byId('speed_wr_lead'), 60, [50, 95]); assert.ok(d.levels[95].caught >= d.levels[50].caught, `open deep catches rise with Speed: ${JSON.stringify(d.levels)}`); assert.ok(d.levels[95].overrun <= d.levels[50].overrun + 0.3, 'a fast receiver no longer runs past the ball more than a slow one');

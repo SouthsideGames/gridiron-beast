@@ -117,6 +117,32 @@ export const TRIALS = [
 ];
 
 // ---- durability and kicking are not plays: measured on their own functions
+/** Accuracy across seven forced throws (v42.12, replaces the single forced curl vs Cover 4 as the Accuracy check): the QB alone gets the
+ * rating (arm fixed 65), the ball is forced to one receiver at a set time. One curl against a defender who drives to the aim point
+ * measures how that defender arrives more than Accuracy, so the check pools routes and coverages; each route's numbers stay in
+ * `routes` as diagnostics, so a regression on any one of them (the curls included) remains visible. */
+export const ACCURACY_ROUTES = Object.freeze([
+  ['curl vs Cover 4', 'curl_flat', 'cover_4', 'WR2', 1.8], ['curl vs Cover 3', 'curl_flat', 'cover_3', 'WR2', 1.8], ['curl vs Cover 1', 'curl_flat', 'cover_1', 'WR2', 1.8],
+  ['slant vs Cover 3', 'quick_slants', 'cover_3', 'WR1', 0.9], ['out vs Cover 3', 'flood', 'cover_3', 'TE', 1.7], ['dig vs Cover 4', 'smash', 'cover_4', 'WR1', 1.9], ['drag vs Cover 2', 'mesh', 'cover_2_zone', 'WR2', 1.6],
+]);
+export function accuracyRoutesStudy(n = N, levelList = [50, 95]) {
+  const levels = {}; const routes = {};
+  for (const v of levelList) {
+    let att = 0, comp = 0, int = 0, reached = 0;
+    for (const [label, off, def, target, at] of ACCURACY_ROUTES) {
+      let c = 0, i2 = 0, rch = 0;
+      for (let i = 0; i < n; i++) {
+        const sim = play({ off, def, offSubjects: ['QB'], attr: 'accuracy', value: v, seed: 1000 + i, options: forced(target, at) });
+        const inc = sim.events.find((e) => e.kind === 'incomplete');
+        if (sim.stats.receiver) c++; if (sim.stats.interceptor) i2++; if (sim.stats.receiver || sim.stats.interceptor || inc?.dropped || inc?.pbu) rch++; // the ball got to him (caught, dropped, broken up or picked)
+      }
+      (routes[label] ||= {})[v] = { complete: c / n, int: i2 / n, reached: rch / n };
+      att += n; comp += c; int += i2; reached += rch;
+    }
+    levels[v] = { complete: comp / att, int: int / att, reached: reached / att };
+  }
+  return { n, levels, routes };
+}
 export function durabilityStudy(n = N, levelList = LEVELS) {
   const out = {};
   for (const v of levelList) {

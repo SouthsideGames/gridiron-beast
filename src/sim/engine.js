@@ -1083,10 +1083,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function seenFacing(aw) {
     const i = facingHist.length - 1 - Math.round((0.15 - 0.08 * aw) / DT); const e = facingHist[i]; if (!e) return null;
     let k = i; while (k > 0 && facingHist[k - 1] && Math.abs(wrapA(facingHist[k - 1].ang - e.ang)) < 0.12) k--;
-    return { ang: e.ang, windup: e.windup, held: (i - k) * DT };
+    return { ang: e.ang, windup: e.windup, held: (i - k) * DT, qx: e.qx, qy: e.qy, back: facingHist.length - 1 - i };
   }
-  /** How squarely the quarterback faces a spot: 1 straight at it, 0 beyond about 13 degrees. Two receivers on one line share it. */
-  const facingCue = (f, o) => (f ? clamp(1 - Math.abs(wrapA(Math.atan2(o.y - qb.y, o.x - qb.x) - f.ang)) / 0.22, 0, 1) : 0);
+  /** How squarely the quarterback faced a receiver: 1 straight at him, 0 beyond about 13 degrees; two receivers on one line share it.
+   * Everything is taken from the SAME moment, the one the defender is seeing: the facing, where the quarterback stood, and where
+   * the receiver was then (his position trail), never the quarterback's position now against a facing from an instant ago. */
+  const facingCue = (f, r) => { if (!f) return 0; const h = history.get(r); const p = h[h.length - 1 - f.back] || r; return clamp(1 - Math.abs(wrapA(Math.atan2(p.y - f.qy, p.x - f.qx) - f.ang)) / 0.22, 0, 1); };
   /**
    * Which receiver a zone defender plays. Candidates are the receivers he SEES inside his zone, or about to enter it. Each is
    * weighed by: where he is relative to the zone and its depth (a deep defender plays the deepest threat and does not come up for
@@ -1121,7 +1123,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // The quarterback is read only from what shows: where he faces (seenFacing) and his throwing motion, after the defender's
     // perception delay, and only as a direction (receivers on the same line share the cue). His read and his choice stay hidden.
     const seen = ball.holder === qb ? seenFacing(aw) : null; const windupSeen = !!seen?.windup;
-    for (const c of cands) c.cue = facingCue(seen, c.obs);
+    for (const c of cands) c.cue = facingCue(seen, c.r);
     const windupOther = windupSeen && cands.some((c) => c.cue > 0.6 && c.slot !== d.zoneTgt && c.cue > (cands.find((x) => x.slot === d.zoneTgt)?.cue ?? 0));
     const due = !(d.zoneNextEval > t) || windupOther || !cands.some((c) => c.slot === d.zoneTgt);
     const bucket = Math.floor(t / 0.5);
@@ -1350,7 +1352,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         }
         // Nobody to play: hold the landmark, shading toward where the quarterback is looking (an aware defender reads his eyes).
         d.zoneTgt = null; d.zoneTgtLeaving = false; if (TRACE) d.zoneInfo = null;
-        const sf = ball.holder === qb ? seenFacing(norm(d.attrs.awareness)) : null; const eyeY = sf ? qb.y + Math.tan(clamp(sf.ang, -1.3, 1.3)) * Math.max(1, zx - qb.x) : null;
+        const sf = ball.holder === qb ? seenFacing(norm(d.attrs.awareness)) : null; const eyeY = sf ? sf.qy + Math.tan(clamp(sf.ang, -1.3, 1.3)) * Math.max(1, zx - sf.qx) : null;
         const shade = sf ? clamp((eyeY - zy) * 0.25, role === 'deep' ? -1.5 : -2, role === 'deep' ? 1.5 : 2) * norm(d.attrs.awareness) : 0;
         mark('zone', shade ? 'spot · reading the QB' : 'spot'); steer(d, zx, zy + shade, 0.95, 0.5); return;
       }
@@ -1566,7 +1568,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     { // The quarterback's facing (v42.12): the direction his head (or, in his throwing motion, his shoulders) points. This is what a
       // defender can see; which receiver he is reading, or has decided to throw to, is never exposed to the defense.
       const fr = ball.holder === qb && phase === 'dropback' && !scrambled ? (qb.windup ? qb.windup.r : qr.cur ? bySlot.off[qr.cur.slot] : null) : null;
-      facingHist.push(fr ? { ang: Math.atan2(fr.y - qb.y, fr.x - qb.x), windup: !!qb.windup } : null); if (facingHist.length > 40) facingHist.shift();
+      facingHist.push(fr ? { ang: Math.atan2(fr.y - qb.y, fr.x - qb.x), windup: !!qb.windup, qx: qb.x, qy: qb.y } : null); if (facingHist.length > 40) facingHist.shift();
     }
     if (isRun && runRecognisedAt === Infinity) runRecognisedAt = 0;
     if (!isRun && handoffDone && runRecognisedAt === Infinity) runRecognisedAt = t;

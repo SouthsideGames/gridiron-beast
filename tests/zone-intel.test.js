@@ -136,3 +136,14 @@ test('look-offs: an aware deep defender lets the quarterback\'s eyes decide fewe
   assert.ok(hi < lo * 0.8, `deep reads decided by the QB's eyes: 95 ${(100 * hi).toFixed(1)}% vs 50 ${(100 * lo).toFixed(1)}%`);
   assert.ok(hi > 0.01, 'an aware defender still uses a held stare');
 });
+
+test('the quarterback\'s facing is matched against positions from the same moment: where he stood and where the receiver was then', () => {
+  const src = fs.readFileSync(new URL('../src/sim/engine.js', import.meta.url), 'utf8');
+  const cue = src.slice(src.indexOf('const facingCue'), src.indexOf('\n', src.indexOf('const facingCue')));
+  assert.ok(/f\.qx/.test(cue) && /f\.qy/.test(cue) && /f\.back/.test(cue), 'facingCue uses the seen moment\'s QB position and the receiver trail at that moment');
+  assert.ok(!/qb\.x|qb\.y/.test(cue), 'facingCue never mixes the QB\'s current position with an older facing');
+  assert.match(src, /facingHist\.push\(fr \? \{ ang: [^}]*qx: qb\.x, qy: qb\.y \}/, 'each facing entry records where the QB stood');
+  // facing and positions are recorded in the same tick, so offsets from the end line up
+  const tick = src.indexOf('for (const a of actors) { const h = history.get(a); h.push');
+  assert.ok(tick > 0 && src.indexOf('facingHist.push', tick) - tick < 700, 'facing is recorded right beside the position trail');
+});
