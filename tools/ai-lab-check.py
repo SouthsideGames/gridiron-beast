@@ -3,7 +3,7 @@
   Main Menu -> Developer -> AI Testing Lab by taps; the chosen play's own offensive art before the snap (the exact Franchise Mode
   renderer output) and none after it; no defensive art, name or coverage before the play is over, revealed afterwards; tapping a
   receiving monster on the field throws to that monster, tapping the quarterback scrambles, tapping a defender does nothing; holding
-  the ball lets the rush get home (recorded as 'hold'); Live and Paused modes; the rotation: no defense repeated within a cycle,
+  the ball lets the rush get home (a fixed, reproducible situation; recorded as 'hold', ends in a sack); Live and Paused modes; the rotation: no defense repeated within a cycle,
   progress kept per offensive play across play switches and a reload; records, comparison, export/clear/import; no Throw-away
   anywhere; no franchise created or changed; no horizontal overflow, the Snap button on screen with the field; no page errors.
   python3 tools/ai-lab-check.py [--shots=DIR]"""
@@ -97,13 +97,16 @@ with sync_playwright() as pw:
         fz = p.evaluate("() => ({ i: window.__gbLab.i, at: window.__gbLab.pauseAt })"); check(fz['i'] > 3, f'paused: the play ran before freezing {fz}'); shot(p, 'lab-4-frozen')
         tgt = p.evaluate("async () => { const Lab = await import('./src/lab/qb-lab.js'); const b = Lab.receiverButtons(window.__gbLab.sit); return b[b.length - 1].slot; }")
         tap_slot(p, tgt); wait_phase(p, ['after']); st = p.evaluate(LAB); check(st['rec']['action'] == 'throw' and st['rec']['target'] == tgt and (st['hs']['target'] == tgt or st['hs']['rushed']), f'paused: tap on {tgt} throws there {st["rec"]}')
-        # Holding the ball: the rush gets home (a few tries: a play can also end another way)
+        # Holding the ball: the rush gets home. One fixed, reproducible situation (the Lab's random generator is seeded from the
+        # clock, so the check pins this play): quick slants against the all-out blitz, situation seed 3. The check loads it and
+        # replays it with the Lab's own "Same situation" button; the held play must end in a real sack.
         p.locator('[data-action="lab-mode"][data-v="live"]').tap(); held = []
-        for k in range(4):
-            p.locator('[data-action="lab-next"]').first.tap(); wait_phase(p, ['ready']); p.locator('[data-action="lab-snap"]').tap(); wait_phase(p, ['after'], 30000)
-            st = p.evaluate(LAB); held.append((st['rec']['action'], st['hs']['result']))
-            if st['hs']['result'] == 'sack': break
-        check(all(x[0] == 'hold' for x in held) and any(x[1] == 'sack' for x in held), f'holding the ball: recorded as hold, sacked {held}')
+        p.evaluate("async () => { const Lab = await import('./src/lab/qb-lab.js'); window.__gbLab.sit = Lab.makeSituation({ offense: 'quick_slants', defense: 'all_out', ballOn: 35, seed: 3 }); }")
+        p.locator('[data-action="lab-again"]').tap(); wait_phase(p, ['ready'])
+        st = p.evaluate(LAB); check(st['off'] == 'quick_slants' and st['def'] == 'all_out', f'holding the ball: the fixed situation is loaded ({st["off"]} vs {st["def"]})')
+        p.locator('[data-action="lab-snap"]').tap(); wait_phase(p, ['after'], 30000)
+        st = p.evaluate(LAB); held.append((st['rec']['action'], st['hs']['result']))
+        check(held == [('hold', 'sack')], f'holding the ball: recorded as hold, sacked {held}')
         check(all(x[1] != 'throwaway' for x in held), 'never a throw-away')
         n1 = p.evaluate(COUNT); check(n1 >= 5, f'{n1} decisions stored'); prog = progress(p)
         # reload: records and the rotation persist
