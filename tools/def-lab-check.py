@@ -75,6 +75,19 @@ with sync_playwright() as pw:
         p.select_option('[data-change=def-preset]', 'rush_hold'); p.wait_for_timeout(150); p.select_option('[data-change=attr-n]', '25'); p.locator('[data-action="attr-run"]').tap(); p.wait_for_selector('.attr-results', timeout=60000)
         rows = p.evaluate(TABLE); by = {r[0].lower(): r for r in rows}; check('sacks' in by and 'time to pressure' in by, f'rush scenario measures sacks and pressure {[r[0] for r in rows]}')
         shot(p, 'def-3-rush')
+        # zone reads (v42.12): levels vs Tampa 2 with the real QB; mid-play the zone defenders show the receivers in their zone
+        # (yellow dots), the one each is playing (green), and the decision list says why and how many are in his zone
+        p.select_option('[data-change=def-preset]', 'zone_levels'); p.wait_for_timeout(150); p.select_option('[data-change=attr-n]', '25'); p.locator('[data-action="attr-run"]').tap(); p.wait_for_selector('.attr-results', timeout=60000)
+        p.locator('[data-action="attr-watch"]').first.tap(); p.wait_for_timeout(300); p.locator('[data-action="def-pause"]').tap(); p.wait_for_timeout(100)
+        if p.locator('[data-change=def-focus]').count(): p.select_option('[data-change=def-focus]', ''); p.wait_for_timeout(100)
+        ZR = """() => { const s = document.querySelector('#attrfield0'); return { tgt: s.querySelectorAll(".def-overlay line[stroke='#6ee7a0']").length, seen: s.querySelectorAll(".def-overlay line[stroke='#ffd166']").length, why: [...document.querySelectorAll('#defdecisions li')].filter((li) => /in zone/.test(li.textContent)).length }; }"""
+        best = {'tgt': 0, 'seen': 0, 'why': 0}
+        for _ in range(40):
+            p.locator('[data-action="def-step"][data-d="1"]').tap(); p.wait_for_timeout(40); z = p.evaluate(ZR)
+            for k in best: best[k] = max(best[k], z[k])
+        check(best['tgt'] >= 2 and best['why'] >= 2, f'zone overlay shows whom each zone defender plays and why {best}')
+        lay = p.evaluate(LAYOUT); check(lay['over'] <= 1 and not lay['bad'], f'zone watch fits {lay}')
+        shot(p, 'def-4-zone')
         # the ordinary attribute trial never draws the overlay
         p.locator('[data-action="lab-mode"][data-v="attr"]').tap(); p.wait_for_timeout(200); p.select_option('[data-change=attr-attr]', 'coverage'); p.wait_for_timeout(150); p.select_option('[data-change=attr-n]', '25')
         p.locator('[data-action="attr-run"]').tap(); p.wait_for_selector('.attr-results', timeout=60000); p.locator('[data-action="attr-watch"]').first.tap(); p.wait_for_timeout(800)

@@ -11,7 +11,7 @@ import { updateGameRecords, ensureRecords } from '../src/franchise/stats.js';
 import { careerAfterGame } from '../src/franchise/career.js';
 
 let real = null;
-const franchise = () => (real ||= runFranchise(10, { difficulty: 'rookie', seasons: 3 }).f); // seed 10 wins Beast Bowls in seasons 1 and 3 (attribute fixes, v42.8; seed 1 with v42.6, seed 3 with v42.5)
+const franchise = () => (real ||= runFranchise(10, { difficulty: 'rookie', seasons: 3 }).f); // seed 10 wins Beast Bowls in seasons 1 and 3 (attribute fixes, v42.8, and again with zone intelligence, v42.12; seed 1 with v42.6, seed 3 with v42.5)
 
 const mon = (over = {}) => ({ id: 'm1', name: 'Testro', species: 'emberfox', stage: 0, type: 'Fire', position: 'QB', age: 24, level: 9, yearsPro: 0, attributes: { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 40 }, history: [], career: { v: 1, ev: [], bf: 1 }, ...over });
 const book = (year, team, reg, post = {}) => ({ year, team, reg, post });

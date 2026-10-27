@@ -156,7 +156,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (Math.abs(target.y) < 6) d.x = Math.max(d.x, 4.5); // inside receivers get an off-man cushion from a linebacker/safety depth
   }
   // Trail buffer for man coverage reaction delay.
-  const history = new Map(actors.map((a) => [a, []]));
+  const history = new Map(actors.map((a) => [a, []])); const facingHist = [];
 
   // ------------------------------------------------------------ ball
   const ball = { x: qb.x, y: qb.y, holder: qb, inAir: false, from: null, to: null, flight: 0, flightTime: 0, target: null, landing: null, airYards: 0 };
@@ -1053,6 +1053,139 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const w = clamp((ball.flight / Math.max(0.05, ball.flightTime)) / Math.max(0.2, span), 0, 1);
     return { x: A.x + (L.x - A.x) * w, y: A.y + (L.y - A.y) * w };
   }
+  // ---- Zone reading (v42.12, zone intelligence) ----
+  /** A zone defender's perception delay: Coverage (tracking receivers is technique, as in man coverage) and Awareness (reading).
+   * 0.21 s at 50/65, 0.15 s at 65/65, 0.06 s at 95/65 (0.25 / 0.20 / 0.11 s through trailPosition before v42.12, which also gave him
+   * the receiver's TRUE velocity; that was most of what a high-Coverage zone defender had over a low one, so the delay now carries
+   * more of the Coverage difference: v42.12 audit fix 8). The man coverage ability and Heat Haze keep the effect they had through
+   * trailPosition, which zone defenders used before v42.12; the activation is recorded only when he actually plays the receiver
+   * (mark), as before, not for every receiver he glances at. */
+  function zoneDelay(d, r, mark = false) {
+    let delay = 0.45 - 0.33 * norm(d.attrs.coverage + (d.ability?.manCoverage || 0)) - 0.12 * norm(d.attrs.awareness) - reactionOf(d); if (mark && d.ability?.manCoverage) abilityUsed(d, 'manCoverage');
+    if (d.ability?.heatHaze && deepRoute(r)) { delay -= d.ability.heatHaze; if (mark) abilityUsed(d, 'heatHaze'); }
+    return Math.max(0, delay);
+  }
+  /** What a zone defender sees of a receiver: his position and velocity a perception delay ago (never this tick's truth). */
+  function zoneObserve(d, r) {
+    const h = history.get(r); const delay = zoneDelay(d, r);
+    // He judges direction from the last stretch of what he has seen: a short, fresh window when he reads routes well (Coverage
+    // technique and Awareness), a longer one, slower to show a break, when he does not (0.05 s at 95/95, about 0.2 s at 50/50).
+    const win = Math.max(1, Math.round((0.05 + 0.3 * (1 - 0.5 * norm(d.attrs.coverage) - 0.5 * norm(d.attrs.awareness))) / DT));
+    const i1 = Math.max(0, h.length - 1 - Math.round(delay / DT)), i0 = Math.max(0, i1 - win); const p1 = h[i1] || r, p0 = h[i0] || p1;
+    const dt = (i1 - i0) * DT; const pf = h[Math.max(0, i1 - 1)] || p1; // and the latest step he has seen: a receiver throttling down shows at once
+    return { x: p1.x, y: p1.y, vx: dt > 0 ? (p1.x - p0.x) / dt : 0, vy: dt > 0 ? (p1.y - p0.y) / dt : 0, vxLast: i1 > 0 ? (p1.x - pf.x) / DT : 0 };
+  }
+  const hash01 = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 10007) / 10007; };
+  const deepHelp = defs.some((x) => x.assignment?.a === 'zone' && x.assignment.role === 'deep');
+  const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+  /** What a defender sees of the quarterback's facing: its direction a perception delay ago (0.11 s at Awareness 50, 0.07 s at 95),
+   * whether it is a throwing motion, and how long it has held that direction (a stare, or a glance). */
+  function seenFacing(aw) {
+    const i = facingHist.length - 1 - Math.round((0.15 - 0.08 * aw) / DT); const e = facingHist[i]; if (!e) return null;
+    let k = i; while (k > 0 && facingHist[k - 1] && Math.abs(wrapA(facingHist[k - 1].ang - e.ang)) < 0.12) k--;
+    return { ang: e.ang, windup: e.windup, held: (i - k) * DT, qx: e.qx, qy: e.qy, back: facingHist.length - 1 - i };
+  }
+  /** How squarely the quarterback faced a receiver: 1 straight at him, 0 beyond about 13 degrees; two receivers on one line share it.
+   * Everything is taken from the SAME moment, the one the defender is seeing: the facing, where the quarterback stood, and where
+   * the receiver was then (his position trail), never the quarterback's position now against a facing from an instant ago. */
+  const facingCue = (f, r) => { if (!f) return 0; const h = history.get(r); const p = h[h.length - 1 - f.back] || r; return clamp(1 - Math.abs(wrapA(Math.atan2(p.y - f.qy, p.x - f.qx) - f.ang)) / 0.22, 0, 1); };
+  /**
+   * Which receiver a zone defender plays. Candidates are the receivers he SEES inside his zone, or about to enter it. Each is
+   * weighed by: where he is relative to the zone and its depth (a deep defender plays the deepest threat and does not come up for
+   * an underneath receiver while a deep one is there; an underneath defender plays his depth band and hands a receiver who runs
+   * past it to the deep help), whether he is entering, settling or leaving, how close he is, how open he is (the danger of the
+   * window), whether a teammate already has him (aware defenders see it), the quarterback's eyes and throwing motion (read with
+   * Awareness), and the defender's current man (he does not switch for a marginal gain). Low Awareness judges these less
+   * accurately (a steady misjudgement, not dice) and re-reads less often, so he recognises combinations late and sometimes plays
+   * the wrong man; high Awareness reads quickly and well but still only from what is visible. Two near-equal threats inside an
+   * underneath zone are an overload: he plays between them, leaning to the bigger one, and can still be beaten by either.
+   */
+  function zoneRead(d, asg, radius) {
+    const aw = norm(d.attrs.awareness); const [zx, zy] = asg.at; const role = asg.role; const center = { x: zx, y: zy };
+    const inside = (o) => (role === 'deep' ? Math.abs(o.y - zy) < radius && o.x > 5 : dist(o, center) < radius);
+    const edgeGap = (o) => (role === 'deep' ? Math.abs(o.y - zy) - radius : dist(o, center) - radius);
+    // Pass key: he anticipates receivers coming into his zone only once the play shows pass (the quarterback dropping back with
+    // the ball, no handoff). On a run, or play-action until the fake is over, he plays only who is already in his zone.
+    const passKey = ball.inAir || (ball.holder === qb && !handoffDone && phase === 'dropback' && !(isPlayAction && t < 1.0));
+    const cands = [];
+    for (const s of receivers) {
+      const r = bySlot.off[s]; if (!r || r.x <= -1 && !(r.assignment?.a === 'route')) continue; if (r.engaged) continue; // a back or tight end blocking is not a receiver
+      const o = zoneObserve(d, r); if (o.x <= -1) continue;
+      const toC = { x: zx - o.x, y: zy - o.y }; const tl = Math.hypot(toC.x, toC.y) || 1; const vin = (o.vx * toC.x + o.vy * toC.y) / tl; // speed toward the zone centre
+      const isIn = inside(o); const entering = passKey && !isIn && edgeGap(o) < 1.5 + 4 * aw && vin > 1.5; if (!isIn && !entering) continue; // an aware defender sees a receiver coming from further out, once the quarterback shows pass
+      const leaving = isIn && vin < -2 && edgeGap(o) > -2.5;
+      cands.push({ r, slot: s, obs: o, isIn, entering, leaving });
+    }
+    const inZone = cands.filter((c) => c.isIn).map((c) => c.slot);
+    if (!cands.length) { d.zoneTgt = null; return { pick: null, inZone }; }
+    // He re-reads on his cadence; the quarterback's throwing motion to another receiver in his area, once he reads it, or losing
+    // his receiver forces a read.
+    // The quarterback is read only from what shows: where he faces (seenFacing) and his throwing motion, after the defender's
+    // perception delay, and only as a direction (receivers on the same line share the cue). His read and his choice stay hidden.
+    const seen = ball.holder === qb ? seenFacing(aw) : null; const windupSeen = !!seen?.windup;
+    for (const c of cands) c.cue = facingCue(seen, c.r);
+    const windupOther = windupSeen && cands.some((c) => c.cue > 0.6 && c.slot !== d.zoneTgt && c.cue > (cands.find((x) => x.slot === d.zoneTgt)?.cue ?? 0));
+    const due = !(d.zoneNextEval > t) || windupOther || !cands.some((c) => c.slot === d.zoneTgt);
+    const bucket = Math.floor(t / 0.5);
+    const deepThreat = role === 'deep' && cands.some((c) => c.obs.x >= zx - 8 || c.obs.vx > 3);
+    // Shared or his alone: a receiver another deep defender's zone also covers has help; one only he covers does not. Knowing the
+    // call well enough to take the receiver nobody else can (a Cover 3 corner carries the outside go, the middle safety the seams)
+    // is Awareness, never extra speed or coverage.
+    if (role === 'deep') {
+      const mates = defs.filter((x) => x !== d && !x.engaged && x.assignment?.a === 'zone' && x.assignment.role === 'deep');
+      const inArea = (x, o) => Math.abs(o.y - x.assignment.at[1]) < 12 + (x.ability?.zoneRange || 0) && o.x > 5;
+      for (const c of cands) c.alone = !mates.some((x) => inArea(x, c.obs));
+    }
+    const someAlone = role === 'deep' && cands.some((c) => c.alone && (c.obs.x >= zx - 8 || c.obs.vx > 3));
+    for (const c of cands) {
+      const o = c.obs; let sc = c.isIn ? 1 : 0.55; const why = [];
+      if (c.entering) why.push('entering'); if (c.leaving) { sc -= 0.35; why.push('leaving'); }
+      if (role === 'deep') {
+        const depth = clamp((o.x - (zx - 8)) / 10, 0, 1.2) + (o.vx > 3 ? 0.4 : 0); sc += 1.2 * depth;
+        if (deepThreat && o.x < zx - 8 && o.vx <= 3) { sc -= 1.5; why.push('underneath, not his'); }
+        if (someAlone && c.alone) { sc += 0.15 + 0.55 * aw; why.push('his alone'); }
+        // Already carried: another deep defender, closer to him, is playing this receiver. Doubling him leaves this defender's own
+        // deep area empty (the post or seam behind him), so he weighs it heavily against it, the more so the more aware he is.
+        if (defs.some((x) => x !== d && !x.engaged && x.assignment?.a === 'zone' && x.assignment.role === 'deep' && x.zoneTgt === c.slot && dist(x, o) < dist(d, o))) { sc -= 0.4 + 0.8 * aw; c.carried = true; why.push('carried by a teammate'); }
+      } else {
+        sc += 0.6 * (1 - Math.min(1, Math.abs(o.x - (zx + 2)) / 8));
+        if (deepHelp && o.x > zx + 5 + 3 * (1 - aw) && Math.min(o.vx, o.vxLast) > 2) { sc -= 0.6 + 0.5 * aw; why.push('past him, deep help'); } // an aware defender passes a clear-out (still running upfield) to the deep help sooner instead of carrying the decoy; a curl or hitch that has settled is still his
+      }
+      sc -= 0.04 * Math.hypot(o.x - d.x, o.y - d.y);
+      let other = 99, mate = false; const mine = Math.hypot(o.x - d.x, o.y - d.y);
+      // "a teammate has him" only when that teammate is playing him AND is closer to him than I am (so two defenders never both
+      // defer to each other and swap back and forth), and not when the receiver is visibly leaving that teammate's zone
+      for (const x of defs) { if (x === d || x.engaged) continue; const dd = Math.hypot(x.x - o.x, x.y - o.y); if (dd < other) other = dd; if (dd < 3 && dd < mine && ((x.zoneTgt === c.slot && !x.zoneTgtLeaving) || (x.assignment?.a === 'man' && bySlot.off[manKeys[x.assignment.key]] === c.r))) mate = true; }
+      sc += 0.5 * clamp((other - 1.5) / 6, 0, 1);
+      if (mate) { sc -= 0.3 + 0.5 * aw; why.push('teammate has him'); }
+      // His eyes: an unaware defender bites on every look; an aware one trusts only a look the quarterback holds (half a second
+      // for full weight), so a glance on the way through his progression does not move him, and a deep defender weighs eyes
+      // less against the depth he is there to protect. The throwing motion is real information, read better with Awareness.
+      if (c.cue > 0 && !windupSeen) { const trust = clamp(1 - aw + aw * seen.held / 0.5, 0, 1); const w = (role === 'deep' ? 0.4 * (1 - 0.5 * aw) : 0.4) * trust * c.cue; if (w > 0.02) { sc += w; why.push('QB eyes'); } }
+      if (windupSeen && c.cue > 0) { sc += (0.3 + 0.5 * aw) * c.cue; why.push('QB winding up'); }
+      if (d.zoneTgt === c.slot) sc += 0.12 + 0.18 * aw; // discipline: no switch for a marginal gain
+      sc += (hash01(`${d.slot}|${c.slot}|${bucket}`) - 0.5) * 1.4 * Math.pow(1 - aw, 1.2); // misjudgement, larger for a low-Awareness defender
+      c.score = sc; c.why = why;
+    }
+    cands.sort((a, b) => b.score - a.score);
+    // A deep defender whose only candidates are receivers a deep teammate already carries holds his landmark and reads the
+    // quarterback instead, unless the throwing motion goes there.
+    if (role === 'deep' && cands.every((c) => c.carried && !(windupSeen && c.cue > 0.5))) { d.zoneTgt = null; return { pick: null, inZone }; }
+    let pick = cands[0];
+    if (!due) pick = cands.find((c) => c.slot === d.zoneTgt) || pick; // between reads he keeps playing his man
+    else d.zoneNextEval = t + 0.1 + 0.5 * (1 - aw); // the next read: about every 0.35 s at Awareness 50, 0.12 s at 95
+    const switched = !!d.zoneTgt && pick.slot !== d.zoneTgt; d.zoneTgt = pick.slot; d.zoneTgtLeaving = !!pick.leaving;
+    const ins = cands.filter((c) => c.isIn); const overload = ins.length >= 2;
+    const second = cands.find((c) => c !== pick && c.isIn);
+    // Two deep threats in a deep zone (four verticals, a seam and a post): an aware deep defender stays between them until the
+    // throwing motion shows which (more often the more aware he is); an unaware one commits to one and can be beaten by the other.
+    const deepT = (c) => c.obs.x >= zx - 8 || c.obs.vx > 3; const deep2 = role === 'deep' && !windupSeen ? cands.find((c) => c !== pick && c.isIn && deepT(c)) : null;
+    const split = role !== 'deep' ? overload && pick.isIn && second && pick.score - second.score < 0.2 : !!(deep2 && pick.isIn && deepT(pick) && pick.score - deep2.score < 0.1 + 0.4 * aw);
+    const sec = role === 'deep' ? deep2 : second;
+    const why = split ? (role === 'deep' ? 'two deep, splitting' : 'overload, splitting') : role === 'deep' && !pick.why.length ? 'deepest threat' : pick.why.length ? pick.why[pick.why.length - 1] : overload ? 'bigger threat' : 'in his zone';
+    const verticalNear = role === 'deep' && cands.some((c) => Math.min(c.obs.vx, c.obs.vxLast) > 2.5);
+    return { pick, second: sec, split, verticalNear, splitWeight: split ? clamp(0.5 + (pick.score - sec.score) * 1.5, 0.5, 0.8) : 1, inZone, overload, switched, why };
+  }
   function defenseTick(d) {
     const asg = d.assignment;
     const mark = TRACE ? (m, x) => { d.why = m; d.why2 = x ?? null; } : () => {}; // developer trace: the branch he acted on
@@ -1163,23 +1296,65 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         mark('man', `${target.slot}: drive on the break`); steer(d, p.x + ux * lead, p.y + uy * lead + inside * 0.5, 1, 0.3); return;
       }
       case 'zone': {
-        const [zx, zy] = asg.at;
-        const radius = (asg.role === 'deep' ? 12 : asg.role === 'middle' ? 7.5 : 7) + (d.ability?.zoneRange || 0);
-        const inZone = (r) => asg.role === 'deep' ? (Math.abs(r.y - zy) < radius && r.x > 5) : dist(r, { x: zx, y: zy }) < radius;
-        const threats = receivers.map((s) => bySlot.off[s]).filter((r) => r && inZone(r) && r.x > -1);
-        if (threats.length && dist(d, { x: zx, y: zy }) < radius + 1) {
-          const r = threats.sort((p, q) => (q.x - p.x))[0]; mark('zone', `${r.slot} (${threats.length} in zone)`);
-          const p = trailPosition(d, r);
-          const antic = 0.15 + 0.25 * norm(d.attrs.coverage);
-          if (asg.role === 'deep') {
-            // Stay on top and keep inside leverage toward the zone centre; never abandon the zone.
-            const inward = Math.sign(zy - r.y) || (zy >= 0 ? 1 : -1);
-            const ty = clamp(p.y + r.vy * antic + inward * 1.2, zy - 10, zy + 10);
-            steer(d, Math.max(p.x + r.vx * antic + 2.0, zx - 3), ty, 0.98, 0.3);
-          } else steer(d, p.x + r.vx * antic * 0.6 + 0.3, p.y + r.vy * antic * 0.6, 0.95, 0.3); // underneath zones squeeze the receiver harder
-          return;
+        // Zone coverage (v42.12, zone intelligence): the defender reads the receivers around his zone from what he can SEE
+        // (their position and movement a perception delay ago, shorter with Awareness and Coverage) and decides, at a pace set
+        // by Awareness, which one to play: see zoneRead. Coverage sets how well he then plays him (anticipation, and how far he
+        // gets into the throwing window underneath); Speed and Agility set whether he gets there.
+        const [zx, zy] = asg.at; const role = asg.role;
+        const radius = (role === 'deep' ? 12 : role === 'middle' ? 7.5 : 7) + (d.ability?.zoneRange || 0);
+        // Before the play shows pass (a run, or a play-action fake still selling) there is no pass to read: he drops into his zone
+        // and carries the deepest receiver in it, as before v42.12, but on the movement he SEES (observed velocity, never the
+        // true one). Run recognition and run fits take over from here exactly as before.
+        if (!(ball.inAir || (ball.holder === qb && !handoffDone && phase === 'dropback' && !(isPlayAction && t < 1.0)))) {
+          const inArea = (r) => (role === 'deep' ? Math.abs(r.y - zy) < radius && r.x > 5 : dist(r, { x: zx, y: zy }) < radius);
+          const threats = receivers.map((s) => bySlot.off[s]).filter((r) => r && inArea(r) && r.x > -1);
+          d.zoneTgt = null; if (TRACE) d.zoneInfo = null;
+          if (threats.length && dist(d, { x: zx, y: zy }) < radius + 1) {
+            const r = threats.sort((p, q) => q.x - p.x)[0]; const p = trailPosition(d, r); const ov = observedVelocity(d, r); const antic = 0.15 + 0.25 * norm(d.attrs.coverage);
+            mark('zone', `${r.slot} · no pass shown, deepest (${threats.length} in zone)`);
+            if (role === 'deep') { const inward = Math.sign(zy - r.y) || (zy >= 0 ? 1 : -1); const ty = clamp(p.y + ov.vy * antic + inward * 1.2, zy - 10, zy + 10); steer(d, Math.max(p.x + ov.vx * antic + 2.0, zx - 3), ty, 0.98, 0.3); }
+            else steer(d, p.x + ov.vx * antic * 0.6 + 0.3, p.y + ov.vy * antic * 0.6, 0.95, 0.3);
+            return;
+          }
+          mark('zone', 'spot'); steer(d, zx, zy, 0.95, 0.5); return;
         }
-        mark('zone', 'spot'); steer(d, zx, zy, 0.95, 0.5); return;
+        const center = { x: zx, y: zy };
+        if (dist(d, center) < radius + 1) {
+          const read = zoneRead(d, asg, radius);
+          if (read.pick) {
+            const r = read.pick; zoneDelay(d, r.r, true); /* records Sticky / Heat Haze as active, as trailPosition did */ const p = r.obs; const antic = 0.12 + 0.2 * norm(d.attrs.coverage) + 0.1 * norm(d.attrs.awareness); // how far ahead he plays him: technique (Coverage) and reading the break (Awareness); about as before at equal ratings
+            if (TRACE) d.zoneInfo = { in: read.inZone, tgt: r.slot, why: read.why, overload: read.overload, switched: read.switched, split: read.split ? read.second.slot : null };
+            mark('zone', `${r.slot} · ${read.why} (${read.inZone.length} in zone)`);
+            if (role === 'deep') {
+              // Stay on top and keep inside leverage toward the zone centre; never abandon the zone.
+              const inward = Math.sign(zy - p.y) || (zy >= 0 ? 1 : -1);
+              const ty = clamp(p.y + p.vy * antic + inward * 1.2, zy - 10, zy + 10);
+              // Depth: stay 2 yards on top of where he sees the receiver, leading him by 0.25 s of his seen speed (by the latest step
+              // when he is throttling down, so a comeback or curl stops the bail as soon as it shows), and never come up more than a
+              // yard from his landmark before the ball is thrown: he keeps his depth (3 yards before v42.12, when the lead used the
+              // receiver's TRUE velocity and kept him deeper anyway).
+              // His landmark: within a yard of it while anything in his area is running vertically; once nothing is (an out, a curl,
+              // a comeback settling in front of him), he may come down to 4 yards under it to play the ball in front of him.
+              const floor = read.verticalNear ? zx - 1 : zx - 4;
+              if (read.split) { // between the two deep threats, on top of the deeper
+                const q = read.second.obs, w = read.splitWeight; const tyS = clamp((p.y + p.vy * antic) * w + (q.y + q.vy * antic) * (1 - w), zy - 10, zy + 10);
+                steer(d, Math.max(Math.max(p.x + Math.min(p.vx, p.vxLast) * 0.25, q.x + Math.min(q.vx, q.vxLast) * 0.25) + 2.0, floor), tyS, 0.98, 0.3);
+              } else steer(d, Math.max(p.x + Math.min(p.vx, p.vxLast) * 0.25 + 2.0, floor), ty, 0.98, 0.3);
+            } else {
+              const win = (o) => ({ x: o.x + Math.min(o.vx, o.vxLast) * antic * 0.6 + 0.3, y: o.y + o.vy * antic * 0.6 }); // underneath zones squeeze the receiver (as before), on his seen movement; a receiver sitting down or coming back shows on the latest step
+              let tgt = win(p);
+              if (read.split) { const q = win(read.second.obs); const w = read.splitWeight; tgt = { x: tgt.x * w + q.x * (1 - w), y: tgt.y * w + q.y * (1 - w) }; } // overloaded: play between the two, leaning to the bigger threat
+              const off = dist(tgt, center), cap = radius + 2; if (off > cap) tgt = { x: zx + (tgt.x - zx) * cap / off, y: zy + (tgt.y - zy) * cap / off }; // never chase out of his zone
+              steer(d, tgt.x, tgt.y, 0.95, 0.3);
+            }
+            return;
+          }
+        }
+        // Nobody to play: hold the landmark, shading toward where the quarterback is looking (an aware defender reads his eyes).
+        d.zoneTgt = null; d.zoneTgtLeaving = false; if (TRACE) d.zoneInfo = null;
+        const sf = ball.holder === qb ? seenFacing(norm(d.attrs.awareness)) : null; const eyeY = sf ? sf.qy + Math.tan(clamp(sf.ang, -1.3, 1.3)) * Math.max(1, zx - sf.qx) : null;
+        const shade = sf ? clamp((eyeY - zy) * 0.25, role === 'deep' ? -1.5 : -2, role === 'deep' ? 1.5 : 2) * norm(d.attrs.awareness) : 0;
+        mark('zone', shade ? 'spot · reading the QB' : 'spot'); steer(d, zx, zy + shade, 0.95, 0.5); return;
       }
       case 'spy': {
         if (c === qb && qb.x > 0) { mark('spy', 'pursue'); pursue(d); return; }
@@ -1372,7 +1547,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       ball: [+ball.x.toFixed(2), +ball.y.toFixed(2), ball.inAir ? 1 : 0],
       holder: ball.holder ? ball.holder.slot : null, holderTeam: ball.holder ? ball.holder.team : null, phase,
       ...(phase === 'dropback' && ball.holder === qb && !scrambled && (qb.windup || (qr.cur && !qr.decision)) ? { read: qb.windup ? qb.windup.r.slot : qr.cur.slot } : {}),
-      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
+      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0, d.why === 'zone' && d.zoneInfo || null]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
     });
   }
   // The motion before the snap, drawn as frames with negative time: only the motion man moves.
@@ -1390,6 +1565,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // AI Testing Lab rollouts: the play is identical up to the decision point, then the physics draws from a fresh stream.
     if (options.fork && !forked && t >= options.fork.at) { rng = createRng(options.fork.seed); forked = true; }
     for (const a of actors) { const h = history.get(a); h.push({ x: a.x, y: a.y }); if (h.length > 40) h.shift(); }
+    { // The quarterback's facing (v42.12): the direction his head (or, in his throwing motion, his shoulders) points. This is what a
+      // defender can see; which receiver he is reading, or has decided to throw to, is never exposed to the defense.
+      const fr = ball.holder === qb && phase === 'dropback' && !scrambled ? (qb.windup ? qb.windup.r : qr.cur ? bySlot.off[qr.cur.slot] : null) : null;
+      facingHist.push(fr ? { ang: Math.atan2(fr.y - qb.y, fr.x - qb.x), windup: !!qb.windup, qx: qb.x, qy: qb.y } : null); if (facingHist.length > 40) facingHist.shift();
+    }
     if (isRun && runRecognisedAt === Infinity) runRecognisedAt = 0;
     if (!isRun && handoffDone && runRecognisedAt === Infinity) runRecognisedAt = t;
     if (phase === 'carry' && runRecognisedAt === Infinity) runRecognisedAt = t;
