@@ -3,12 +3,15 @@
 // the pass rushers, or everyone), a low and a high rating, and how the quarterback behaves (the real AI, holding the ball to test
 // the rush, or throwing to one receiver at a set time to test coverage on that route). Both ratings run on the real engine with
 // the same seeds; every monster is a plain 65 with no ability or type (as in the attribute trials). Plays run with the engine's
-// developer trace (`options.trace`), which records each defender's decision and the point he is steering to; it exists only in
+// developer trace (`options.trace`), which records each defender's decision and the point he is steering to (and, chasing a ball
+// carrier, his pursuit: effort multiplier, gap, angle; v42.13); the tested monster can also be the ball carrier; it exists only in
 // these lab runs and changes nothing in the play (tests/def-scenario.test.js). Pure: no franchise, no save, nothing stored.
 import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS, LEGENDARY_IDS, manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { play } from './attr-trials.js';
 
 export const DEF_ATTRS = ['coverage', 'awareness', 'speed', 'agility', 'strength', 'tackling', 'catching'];
+/** Pursuit (v42.13): the tested monster can be the offense's ball carrier instead of defenders: subject 'carrier:<slot>'. */
+export const carrierOf = (subject) => (typeof subject === 'string' && subject.startsWith('carrier:') ? subject.slice(8) : null);
 export const GROUPS = { coverage: 'Coverage defenders (CB, S, LB)', rush: 'Pass rushers (DL and blitzers)', all: 'All defenders' };
 const uniq = (xs) => [...new Set(xs)].filter((k) => PLAYS[k]);
 export const offensePlays = () => uniq([...OFFENSE_IDS, ...(RESERVE_OFFENSE_IDS || []), ...(LEGENDARY_IDS || []).filter((k) => PLAYS[k]?.side === 'offense')]).filter((k) => PLAYS[k].side === 'offense');
@@ -28,6 +31,10 @@ export const PRESETS = [
   { id: 'zone_levels', label: 'Zone: levels vs Tampa 2 (two in one zone, real QB)', off: 'levels', def: 'tampa_2', subject: 'coverage', attr: 'awareness', qb: 'ai' },
   { id: 'zone_spacing', label: 'Zone: spacing vs Cover 3 (underneath overload, real QB)', off: 'spacing', def: 'cover_3', subject: 'coverage', attr: 'awareness', qb: 'ai' },
   { id: 'zone_smash', label: 'Zone: smash vs Cover 2 (high-low, real QB)', off: 'smash', def: 'cover_2_zone', subject: 'coverage', attr: 'awareness', qb: 'ai' },
+  { id: 'pursuit_bubble', label: 'Pursuit: bubble screen, ball carrier Speed (WR3)', off: 'bubble_screen', def: 'cover_3', subject: 'carrier:WR3', attr: 'speed', qb: 'ai' },
+  { id: 'pursuit_deep', label: 'Pursuit: deep go caught in stride, carrier Speed (WR1)', off: 'three_verticals', def: 'cover_3', subject: 'carrier:WR1', attr: 'speed', qb: 'throw', target: 'WR1', at: 2.4 },
+  { id: 'pursuit_run', label: 'Pursuit: outside zone, running back Speed', off: 'outside_zone', def: 'cover_3', subject: 'carrier:RB', attr: 'speed', qb: 'ai' },
+  { id: 'pursuit_defs', label: 'Pursuit: bubble screen, defenders\' Speed (all)', off: 'bubble_screen', def: 'cover_3', subject: 'all', attr: 'speed', qb: 'ai' },
   { id: 'rush_hold', label: 'Pass rush: QB holds 4 s vs Cover 3', off: 'deep_post', def: 'cover_3', subject: 'rush', attr: 'strength', qb: 'hold' },
   { id: 'blitz', label: 'Blitz: DB blitz, real QB', off: 'curl_flat', def: 'db_blitz', subject: 'rush', attr: 'speed', qb: 'ai' },
   { id: 'run_inside', label: 'Run: inside zone vs Cover 3 (recognition)', off: 'inside_zone', def: 'cover_3', subject: 'coverage', attr: 'awareness', qb: 'ai' },
@@ -37,7 +44,7 @@ export const PRESETS = [
 
 /** The defenders who get the rating: one slot, or a group of the call's defenders. */
 export function subjectsOf(def, subject) {
-  const p = PLAYS[def]; if (!p) return [];
+  const p = PLAYS[def]; if (!p) return []; if (carrierOf(subject)) return [];
   if (p.onField.includes(subject)) return [subject];
   const asg = p.assignments;
   if (subject === 'rush') return p.onField.filter((s) => ['rush', 'contain'].includes(asg[s]?.a));
@@ -49,7 +56,8 @@ const qbOptions = (sc) => sc.qb === 'hold' ? { qb: { mode: 'hold' }, maxTime: 4 
 
 /** One play of the scenario at one rating (the same seed gives the same play). `trace` adds the developer decision trace. */
 export function runScenario(sc, value, seed, { trace = false } = {}) {
-  return play({ off: sc.off, def: sc.def, defSubjects: subjectsOf(sc.def, sc.subject), attr: sc.attr, value, seed, options: { ...qbOptions(sc), ...(trace ? { trace: true } : {}) } });
+  const car = carrierOf(sc.subject);
+  return play({ off: sc.off, def: sc.def, offSubjects: car ? [car] : [], defSubjects: subjectsOf(sc.def, sc.subject), attr: sc.attr, value, seed, options: { ...qbOptions(sc), ...(trace ? { trace: true } : {}) } });
 }
 /** The scenario's measurements from one play (null where they do not apply). */
 export function measureScenario(sim) {
@@ -60,10 +68,12 @@ export function measureScenario(sim) {
     completeAllowed: thrown ? !!sim.stats.receiver : null, arriveSep: thrown ? sim.stats.arriveSep ?? null : null, int: thrown ? !!sim.stats.interceptor : null,
     sack: sim.result === 'sack', pressureAt: pr ? pr.t : null,
     runYards: run ? sim.yards : null, brokenAllowed: sim.events.filter((e) => e.kind === 'broken_tackle').length,
+    yac: thrown && sim.stats.receiver ? sim.stats.yac ?? null : null, touchdown: !!sim.touchdown,
   };
 }
 export const SCENARIO_METRIC = Object.freeze({
   yardsAllowed: ['Yards allowed', 'yd'], explosive: ['Explosive plays (20+ pass, 10+ run)', '%'], completeAllowed: ['Completion allowed (when thrown)', '%'], arriveSep: ['Separation when the ball arrives', 'yd'],
+  yac: ['Yards after the catch', 'yd'], touchdown: ['Touchdowns', '%'],
   int: ['Interceptions (when thrown)', '%'], sack: ['Sacks', '%'], pressureAt: ['Time to pressure', 's'], runYards: ['Yards per carry (runs)', 'yd'], brokenAllowed: ['Broken tackles allowed per play', ''],
 });
 /** Aggregate measurement rows: rates for yes/no measures, means for numbers, null when nothing applied. */

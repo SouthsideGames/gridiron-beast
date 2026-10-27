@@ -433,7 +433,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // end line, a lane six yards over was a six-degree lean and the lane he chose was never actually taken.
     const goalX = clamp(a.x + dir * 8, B.ownEndLine + 0.5, B.endLine - 0.5);
     // Carrying the ball costs a little top speed; pursuers run with full effort.
-    steer(a, goalX, a.laneY, 0.94, 0.3);
+    steer(a, goalX, a.laneY, CARRY_PACE, 0.3);
   }
 
   function offenseTick(a) {
@@ -1003,11 +1003,26 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const coveringDefs = (r) => defs.filter((d) => !d.engaged && ((d.assignment?.a === 'man' && bySlot.off[manKeys[d.assignment.key]] === r) || (d.assignment?.a === 'zone' && dist(d, r) < 3)));
 
   // ------------------------------------------------------------ defense behaviour
+  /**
+   * Pursuit effort (v42.13). A pursuer runs at 1.05 × his top speed, and a ball carrier at 0.94 × his (carrying the ball costs a
+   * little speed): the engine's original balance, on which completion, yards after the catch and scoring are calibrated, and it
+   * still holds wherever a pursuer meets the carrier from the side or in front, or chases one who is no faster than he is. What
+   * changed: chasing a FASTER carrier from behind (the pursuer more than a yard behind him, upfield), the extra effort fades as
+   * the carrier's top speed exceeds his own and is gone at half a yard per second (about 12 Speed points), so in a straight race
+   * the faster monster's Speed decides and he pulls away. The quarterback in his pocket is chased exactly as before.
+   */
+  const PURSUIT_EFFORT = 1.05, CARRY_PACE = 0.94, EFFORT_FADE = 0.5;
+  function pursuitEffort(d, c) {
+    if (c === qb && phase !== 'carry') return PURSUIT_EFFORT; // the pass rush: unchanged
+    const behind = (d.x - c.x) * (c.team === 'off' ? 1 : -1) < -1;
+    if (!behind) return PURSUIT_EFFORT;
+    return 1 + (PURSUIT_EFFORT - 1) * clamp(1 - (c.maxSpeed - d.maxSpeed) / EFFORT_FADE, 0, 1);
+  }
   function pursue(d) {
     const c = ball.holder;
     if (!c) return;
     // True intercept point for the carrier's current velocity; awareness blends it with plain chasing.
-    const vp = d.maxSpeed * 1.05;
+    const effort = pursuitEffort(d, c); const vp = d.maxSpeed * effort;
     const rx = c.x - d.x, ry = c.y - d.y;
     const a2 = c.vx * c.vx + c.vy * c.vy - vp * vp, b2 = 2 * (rx * c.vx + ry * c.vy), c2 = rx * rx + ry * ry;
     let tInt = null;
@@ -1019,7 +1034,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     else { tx = c.x + dir * 12; ty = c.y; } // cannot catch him: cut toward his path ahead
     const aw = 0.45 + 0.55 * norm(d.attrs.awareness);
     const chaseLead = clamp(dist(d, c) / vp, 0, 1) ;
-    steer(d, aw * tx + (1 - aw) * (c.x + c.vx * chaseLead), aw * ty + (1 - aw) * (c.y + c.vy * chaseLead), 1.05, 0.2);
+    const ax = aw * tx + (1 - aw) * (c.x + c.vx * chaseLead), ay = aw * ty + (1 - aw) * (c.y + c.vy * chaseLead);
+    if (TRACE) { // developer trace only (Defensive scenario Lab): what this pursuit is made of
+      const toC = Math.atan2(c.y - d.y, c.x - d.x), toAim = Math.atan2(ay - d.y, ax - d.x);
+      d.pursuitInfo = { car: c.slot, carSpeed: c.attrs.speed, defSpeed: d.attrs.speed, effort: +effort.toFixed(3), carry: CARRY_PACE, gap: +dist(d, c).toFixed(2),
+        angle: Math.round(Math.abs(Math.atan2(Math.sin(toAim - toC), Math.cos(toAim - toC))) * 180 / Math.PI), intercept: tInt !== null && tInt < 8, lead: +aw.toFixed(2), agility: c.attrs.agility,
+        behind: (d.x - c.x) * dir < -1 }; d.pursuitAt = t;
+    }
+    steer(d, ax, ay, effort, 0.2);
   }
   function trailPosition(d, target) {
     let delay = 0.4 - 0.3 * norm(d.attrs.coverage + (d.ability?.manCoverage || 0)) - reactionOf(d); if (d.ability?.manCoverage) abilityUsed(d, 'manCoverage');
@@ -1547,7 +1569,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       ball: [+ball.x.toFixed(2), +ball.y.toFixed(2), ball.inAir ? 1 : 0],
       holder: ball.holder ? ball.holder.slot : null, holderTeam: ball.holder ? ball.holder.team : null, phase,
       ...(phase === 'dropback' && ball.holder === qb && !scrambled && (qb.windup || (qr.cur && !qr.decision)) ? { read: qb.windup ? qb.windup.r.slot : qr.cur.slot } : {}),
-      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0, d.why === 'zone' && d.zoneInfo || null]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
+      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0, d.why === 'zone' && d.zoneInfo || null, d.pursuitAt === t && d.pursuitInfo || null]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
     });
   }
   // The motion before the snap, drawn as frames with negative time: only the motion man moves.
