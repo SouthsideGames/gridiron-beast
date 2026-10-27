@@ -912,6 +912,39 @@ Football plays **one** overtime period (`otPeriods: 1` in every franchise game, 
 
 **Status:** The feature direction and priority order below are owner-approved for the roadmap. This section does **not** authorize implementation, alter Beast Clash's existing approval gates, or authorize new game modes. Finish the Beast Clash engine, integrate it into Franchise Mode, and validate the existing franchise before building new roadmap features. UI polish is secondary to feature correctness.
 
+### 27.0 Current roadmap register (2026-10-26; documentation reconciliation)
+
+This register is the **current planning index** for Franchise Mode. The detailed specifications in §§25–27 and the implementation history in §§28–53 remain intact. Historical phase headings, old branch labels, old release snapshots and superseded next-step notes are not instructions to redo shipped work. Status here describes the repository documentation and must be checked against the live deployment before claiming a release. No new feature or implementation approval is granted by this register.
+
+**Status vocabulary:** RELEASED = merged and explicitly documented as published to the main game; IMPLEMENTED = code or feature documented as built, with publication/verification not established; APPROVED = owner-approved roadmap scope not yet confirmed implemented; PROPOSED = candidate requiring owner decision; DEFERRED = intentionally outside current completion scope. Independently record validation gaps; passing automated tests is not real-device acceptance.
+
+| Workstream | Current status | Evidence / authoritative detail | Outstanding action |
+|---|---|---|---|
+| Core 7v7 football, 16-club franchise, nine-game season, gym campaign, Beast Bowl | RELEASED (foundation) | §§1–23, 26, 30, 47 | Validate complete real-device season and edge cases |
+| Beast Clash: Tuesday recruitment, pregame possession, overtime tiebreak | RELEASED (documented integration) | §§25–26, 28–31 | Real-device full-season acceptance; no new balance approval implied |
+| Coach Assist: Guided, Standard, Expert | RELEASED (documented foundation) | §§27.3, 30 | Real-device usability acceptance |
+| Type chart and football matchup effects | IMPLEMENTED (documented) | §32 | Confirm deployed version and real-device behavior |
+| Stadium environments, replays, Beast Bowl ceremony, legendary plays pilot | IMPLEMENTED (documented) | §§33–37 | Confirm deployment and real-device presentation |
+| Monster career timeline, full-screen profiles, accomplishments | RELEASED (documented) | §§38, 40–41, 48 | Confirm old-save and real-device navigation |
+| Captain Partnerships (replaces original generic partnership proposal) | RELEASED | §49 | Long-term balance and clarity checks |
+| Monster career injury history | IMPLEMENTED; release status requires reconciliation | §§50, 52 (earlier §50 says not released; later release history may supersede it) | Verify main-link deployment; update this row with evidence |
+| Evolution presentation overhaul | RELEASED | §§51–52 | Verify real-device animation, audio and reduced motion |
+| Three save slots, 20-season lifecycle, retirement and Hall of Fame | RELEASED | §§42–44, 47 | Full-lifecycle, recovery and migration validation |
+| Persistent AI rosters, league-wide careers, AI–AI trades | RELEASED | §§45–47 | Multi-season balance and integrity validation |
+| QB intelligence, AI testing lab, defensive AI corrections | IMPLEMENTED; release status requires reconciliation | §53 historical implementation entries; recent main commits | Verify latest merged release and deployment; do not rely on §53's original NOT MERGED heading |
+| Broader owner trading: monster-for-monster, monster-plus-pick, incoming offers, Simple/Advanced | APPROVED | §27.5A | Define exact scope, implement and test; in-season trading remains conditional on rules |
+| Smarter AI long-term management | APPROVED | §27.5B; existing AI improvements in §§45–46 | Benchmark existing AI first; implement only demonstrated gaps |
+| Free-agency clarity and AI decisions | APPROVED | §27.5C; later owner-feedback work in §53 | Verify which improvements shipped; close remaining acceptance criteria |
+| GM mobility, stadium management, mentorship, weather/expanded penalties, 32 clubs, separate Battle Room/Career Mode | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
+
+**Next approved work:** Finish release-status reconciliation and existing acceptance evidence, then resume the uncompleted §27.5 trading/AI/free-agency roadmap in the owner's approved sequence. The 2026-10-25 pause and §53's branch-specific status were historical snapshots; they must not be used as a perpetual hold after later merges. Do not silently promote proposed monster-depth additions into approved work.
+
+**Completion gate:** Franchise Mode cannot be marked feature-complete solely because individual features are coded. Require: (1) all approved completion-scope features implemented or explicitly re-scoped by owner; (2) multi-season football and monster progression, Clash, recruitment, trading, offseason and retirement tested together; (3) save migration, backup/restore and deterministic simulation verified; (4) real iOS/Android device walkthroughs and owner acceptance; (5) no critical gameplay, data-loss or progression blockers. The football/monster 50–50 depth assessment is a separate design review, not an approval to add features.
+
+**Maintenance rule:** Every future feature PR updates this register in the same PR with status, evidence (PR/commit and GDD section), remaining validation and next action. Only mark RELEASED after main-link publication is confirmed. If a historical section conflicts with this register, treat its *status and sequencing* as historical; preserve its technical rules unless an explicit later owner decision supersedes them.
+
+---
+
 ### 27.1 Product audience and design rule
 
 Gridiron Beast must be enjoyable for players roughly **10 years old through adulthood (50+)**. A younger player should be able to collect monsters, coach football, win trophies, and enjoy the campaign without mastering salary-cap strategy. A football-management enthusiast should have meaningful optional decisions. **Depth is welcome; mandatory complexity is not.**
