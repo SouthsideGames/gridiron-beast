@@ -11,7 +11,7 @@ export function decisionText(entry, { short = false } = {}) {
   if (!entry || !entry[1]) return '';
   const head = SHORT[entry[1]] || entry[1]; const tail = entry[2] ? ` · ${entry[2]}` : '';
   const z = entry[6]; const zone = z ? `${z.overload ? ' · OVERLOAD' : ''}${z.switched ? ' · switched' : ''}` : '';
-  const pu = entry[7]; const chase = !pu ? '' : short ? ` ×${pu.effort.toFixed(2)}` : ` · ×${pu.effort.toFixed(2)} vs ×${pu.carry} · ${pu.gap.toFixed(1)} yd · ${pu.angle}°${pu.behind ? ' behind' : ''} · Spd ${pu.defSpeed} vs ${pu.carSpeed}`;
+  const pu = entry[7]; const chase = !pu ? '' : short ? ` ×${pu.effort.toFixed(2)}` : ` · ×${pu.effort.toFixed(2)} vs ×${pu.carry} · ${pu.gap.toFixed(1)} yd · ${pu.angle}°${pu.behind > 0 ? ` · chase ${Math.round(pu.behind * 100)}%` : ''} · Spd ${pu.defSpeed} vs ${pu.carSpeed}`;
   if (short && pu) return `${head}${chase}`; // on the field: just the effort (the decision list has the rest)
   return `${head}${tail}${zone}${chase}${entry[5] ? ' · run read' : ''}`;
 }

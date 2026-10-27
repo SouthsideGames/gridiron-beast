@@ -38,6 +38,24 @@ const sigmoid = (v) => 1 / (1 + Math.exp(-v));
 const norm = (v) => clamp(v, 1, 99) / 99;
 
 const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
+// ---- Pursuit effort (v42.13, GDD §53.5i): pure helpers, exported for tests and the Lab ----
+export const PURSUIT_EFFORT = 1.05, CARRY_PACE = 0.94, EFFORT_FADE = 0.5;
+/** How much a pursuer at (rx, ry) from the carrier, who moves at (vx, vy), is chasing him from behind along his run: 0 when he
+ * is beside him (120° or less off his heading), meets him head-on, or the carrier is barely moving (under 2.5 yd/s); 1 when he
+ * trails him (150° or more) and the carrier is running (5 yd/s or more); graded in between. */
+export function chaseWeight(rx, ry, vx, vy) {
+  const sp = Math.hypot(vx, vy); const running = Math.min(1, Math.max(0, (sp - 2.5) / 2.5)); if (running <= 0) return 0;
+  const r = Math.hypot(rx, ry); if (r < 0.01) return 0;
+  const cos = (rx * vx + ry * vy) / (r * sp); // -1: directly behind him along his run
+  return running * Math.min(1, Math.max(0, (-cos - 0.5) / (0.866 - 0.5)));
+}
+/** Pursuit effort: 1.05 × top speed, less (down to 1.0) only in a straight chase from behind of a carrier with the higher top
+ * speed, gone at EFFORT_FADE yd/s of difference. An equal or slower carrier, the side and head-on: full effort. */
+export function effortFor(chase, carrierMax, pursuerMax) {
+  const fade = Math.min(1, Math.max(0, (carrierMax - pursuerMax) / EFFORT_FADE));
+  return PURSUIT_EFFORT - (PURSUIT_EFFORT - 1) * fade * chase;
+}
+
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
   let rng = createRng(seed); // `let`: options.fork re-seeds the physics after a decision point (AI Testing Lab rollouts)
   // The quarterback's perception has its own stream, so how he reads the field never shifts the physics of the play, and the AI
@@ -1007,22 +1025,29 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
    * Pursuit effort (v42.13). A pursuer runs at 1.05 × his top speed, and a ball carrier at 0.94 × his (carrying the ball costs a
    * little speed): the engine's original balance, on which completion, yards after the catch and scoring are calibrated, and it
    * still holds wherever a pursuer meets the carrier from the side or in front, or chases one who is no faster than he is. What
-   * changed: chasing a FASTER carrier from behind (the pursuer more than a yard behind him, upfield), the extra effort fades as
-   * the carrier's top speed exceeds his own and is gone at half a yard per second (about 12 Speed points), so in a straight race
-   * the faster monster's Speed decides and he pulls away. The quarterback in his pocket is chased exactly as before.
+   * changed: in a straight-line race (the pursuer trailing the carrier along the carrier's own direction of travel, the carrier
+   * running), the extra effort fades as the carrier's top speed exceeds his own and is gone at half a yard per second (about 12
+   * Speed points), so the faster monster's Speed decides and he pulls away. "Trailing" is judged from the carrier's actual
+   * movement, not field position, so it holds on lateral runs, reversals, scrambles and returns the other way. Both judgements are
+   * graded, not switched, so effort changes smoothly when the carrier cuts or a pursuer swings from behind to his side:
+   *   behind = 0 at 120° or less off the carrier's heading, 1 at 150° or more (directly behind is 180°);
+   *   running = 0 below 2.5 yd/s (a carrier barely moving has no heading to race along), 1 from 5 yd/s.
+   * The quarterback in his pocket is chased exactly as before.
    */
-  const PURSUIT_EFFORT = 1.05, CARRY_PACE = 0.94, EFFORT_FADE = 0.5;
+  const chaseFromBehind = (d, c) => chaseWeight(d.x - c.x, d.y - c.y, c.vx, c.vy);
   function pursuitEffort(d, c) {
     if (c === qb && phase !== 'carry') return PURSUIT_EFFORT; // the pass rush: unchanged
-    const behind = (d.x - c.x) * (c.team === 'off' ? 1 : -1) < -1;
-    if (!behind) return PURSUIT_EFFORT;
-    return 1 + (PURSUIT_EFFORT - 1) * clamp(1 - (c.maxSpeed - d.maxSpeed) / EFFORT_FADE, 0, 1);
+    return effortFor(chaseFromBehind(d, c), c.maxSpeed, d.maxSpeed);
   }
   function pursue(d) {
     const c = ball.holder;
     if (!c) return;
     // True intercept point for the carrier's current velocity; awareness blends it with plain chasing.
-    const effort = pursuitEffort(d, c); const vp = d.maxSpeed * effort;
+    // Effort eases toward its target by at most 0.01 a tick (the whole 0.05 swing takes a quarter second), so a cut by the carrier
+    // or a pursuer swinging from his side to behind him never changes a defender's pace abruptly.
+    let effort = pursuitEffort(d, c);
+    if (d.effortT != null && t - d.effortT < DT * 1.5) effort = d.effort + clamp(effort - d.effort, -0.01, 0.01);
+    d.effort = effort; d.effortT = t; const vp = d.maxSpeed * effort;
     const rx = c.x - d.x, ry = c.y - d.y;
     const a2 = c.vx * c.vx + c.vy * c.vy - vp * vp, b2 = 2 * (rx * c.vx + ry * c.vy), c2 = rx * rx + ry * ry;
     let tInt = null;
@@ -1039,7 +1064,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const toC = Math.atan2(c.y - d.y, c.x - d.x), toAim = Math.atan2(ay - d.y, ax - d.x);
       d.pursuitInfo = { car: c.slot, carSpeed: c.attrs.speed, defSpeed: d.attrs.speed, effort: +effort.toFixed(3), carry: CARRY_PACE, gap: +dist(d, c).toFixed(2),
         angle: Math.round(Math.abs(Math.atan2(Math.sin(toAim - toC), Math.cos(toAim - toC))) * 180 / Math.PI), intercept: tInt !== null && tInt < 8, lead: +aw.toFixed(2), agility: c.attrs.agility,
-        behind: (d.x - c.x) * dir < -1 }; d.pursuitAt = t;
+        behind: +chaseFromBehind(d, c).toFixed(2) }; d.pursuitAt = t;
     }
     steer(d, ax, ay, effort, 0.2);
   }
