@@ -66,10 +66,10 @@ export function registerAttrLab(Router, app) {
     S.raf = requestAnimationFrame(tick);
   }
   // ---- Defensive scenario: traced plays, pause / step / slow motion, and the developer overlay
-  const scenarioLabel = () => `${PLAYS[S.sc.off]?.name} vs ${PLAYS[S.sc.def]?.name} · ${S.sc.qb === 'throw' ? `ball to ${S.sc.target} at ${S.sc.at} s` : S.sc.qb === 'hold' ? 'QB holds 4 s' : 'real AI quarterback'} · ${ATTR_NAME[S.sc.attr]} on ${D.subjectsOf(S.sc.def, S.sc.subject).join(', ')}`;
+  const scenarioLabel = () => `${PLAYS[S.sc.off]?.name} vs ${PLAYS[S.sc.def]?.name} · ${S.sc.qb === 'throw' ? `ball to ${S.sc.target} at ${S.sc.at} s` : S.sc.qb === 'hold' ? 'QB holds 4 s' : 'real AI quarterback'} · ${ATTR_NAME[S.sc.attr]} on ${D.carrierOf(S.sc.subject) ? `the ball carrier ${D.carrierOf(S.sc.subject)}` : D.subjectsOf(S.sc.def, S.sc.subject).join(', ')}`;
   function watchDef(seed) {
     if (!S.result?.def) return; stop();
-    const runs = [S.low, S.high].map((v) => ({ v, sim: D.runScenario(S.sc, v, seed, { trace: true }), subjects: { off: [], def: D.subjectsOf(S.sc.def, S.sc.subject) } }));
+    const runs = [S.low, S.high].map((v) => ({ v, sim: D.runScenario(S.sc, v, seed, { trace: true }), subjects: { off: D.carrierOf(S.sc.subject) ? [D.carrierOf(S.sc.subject)] : [], def: D.subjectsOf(S.sc.def, S.sc.subject) } }));
     const n = Math.max(...runs.map((r) => r.sim.frames.length));
     S.watch = { seed, runs, n, def: true, asg: D.assignmentsOf(S.sc) }; S.i = 0; S.paused = false; Router.render(); playLoop();
   }
@@ -130,7 +130,7 @@ export function registerAttrLab(Router, app) {
         </div>
         <div class="row def-toggles" style="gap:10px;flex-wrap:wrap;margin-top:6px">${[['assign', 'Assignments'], ['aim', 'Intended path'], ['path', 'Actual path'], ['labels', 'Decisions']].map(([k, l]) => `<label class="check"><input type="checkbox" data-change="def-show" data-k="${k}" ${S.show[k] ? 'checked' : ''}> ${l}</label>`).join('')}
           <label class="field" style="margin:0">Defender<select data-change="def-focus"><option value="">All</option>${slots.map((x) => `<option ${S.focus === x ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div>
-        <p class="dim" style="margin:4px 0 0">Developer view: orange line = his man, dashed circle = his zone, yellow dots = receivers he sees in his zone, green line = the one he is playing (dashed = splitting an overload), pink ring = he just switched, cyan dashes = where he is steering, white trail = where he went. Shown only here, never in a game.</p>
+        <p class="dim" style="margin:4px 0 0">Developer view: orange line = his man, dashed circle = his zone, yellow dots = receivers he sees in his zone, green line = the one he is playing (dashed = splitting an overload), pink ring = he just switched, red line = the ball carrier he is chasing (label: his pursuit effort × vs the carrier's × carrying pace, gap, angle off a straight chase), cyan dashes = where he is steering, white trail = where he went. Shown only here, never in a game.</p>
         <div class="def-decision-grid" id="defdecisions">${decisionsHtml()}</div>`;
     }
     return `<div class="attr-watch">${w.runs.map((r, k) => `<div><div class="lab-line"><b>${esc(ATTR_NAME[S.attr])} ${r.v}</b><span class="dim">seed ${w.seed} · ${esc(resultText(r.sim))}</span></div><div class="field-wrap" style="position:relative"><svg id="attrfield${k}" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(ATTR_NAME[S.attr])} ${r.v}"></svg><div class="lab-clock" id="attrclock${k}">0.0 s</div></div></div>`).join('')}</div>
@@ -139,19 +139,19 @@ export function registerAttrLab(Router, app) {
   }
   function defSetupHtml() {
     const sc = S.sc; const offs = D.offensePlays(), defs = D.defensePlays(); const kinds = ['Man', 'Zone', 'Blitz', 'Run front'];
-    const subjOpts = [...Object.entries(D.GROUPS).map(([k, l]) => [k, l]), ...PLAYS[sc.def].onField.map((x) => [x, `${x} only (${D.assignmentsOf(sc)[x]?.label})`])];
+    const subjOpts = [...Object.entries(D.GROUPS).map(([k, l]) => [k, l]), ...PLAYS[sc.def].onField.map((x) => [x, `${x} only (${D.assignmentsOf(sc)[x]?.label})`]), ...[...new Set(['RB', ...D.receiversOf(sc.off)])].filter((x) => PLAYS[sc.off].onField.includes(x)).map((x) => [`carrier:${x}`, `Ball carrier ${x} (offense)`])];
     const recv = D.receiversOf(sc.off);
     return `<div class="lab-setup">
       <label class="field">Scenario<select data-change="def-preset"><option value="">Custom</option>${D.PRESETS.map((p) => `<option value="${p.id}" ${sc.id === p.id ? 'selected' : ''}>${esc(p.label)}</option>`).join('')}</select></label>
       <label class="field">Offensive play<select data-change="def-off">${offs.map((k) => `<option value="${k}" ${sc.off === k ? 'selected' : ''}>${esc(PLAYS[k].name)} · ${esc(PLAYS[k].type || '')}</option>`).join('')}</select></label>
       <label class="field">Defensive call<select data-change="def-def">${kinds.map((g) => `<optgroup label="${g}">${defs.filter((k) => D.defenseKind(k) === g).map((k) => `<option value="${k}" ${sc.def === k ? 'selected' : ''}>${esc(PLAYS[k].name)}</option>`).join('')}</optgroup>`).join('')}</select></label>
       <div class="row" style="gap:6px;align-items:flex-end;flex-wrap:wrap">
-        <label class="field" style="flex:1;min-width:130px">Defenders tested<select data-change="def-subject">${subjOpts.map(([k, l]) => `<option value="${k}" ${sc.subject === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+        <label class="field" style="flex:1;min-width:130px">Tested<select data-change="def-subject">${subjOpts.map(([k, l]) => `<option value="${k}" ${sc.subject === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
         <label class="field" style="flex:1;min-width:110px">Attribute<select data-change="def-attr">${D.DEF_ATTRS.map((a) => `<option value="${a}" ${sc.attr === a ? 'selected' : ''}>${esc(ATTR_NAME[a])}</option>`).join('')}</select></label></div>
       <div class="row" style="gap:6px;align-items:flex-end;flex-wrap:wrap">
         <label class="field" style="flex:1;min-width:130px">Quarterback<select data-change="def-qb"><option value="ai" ${sc.qb === 'ai' ? 'selected' : ''}>Real AI (reads, run plays run)</option><option value="hold" ${sc.qb === 'hold' ? 'selected' : ''}>Holds the ball 4 s (rush test)</option><option value="throw" ${sc.qb === 'throw' ? 'selected' : ''}>Throws to one receiver</option></select></label>
         ${sc.qb === 'throw' ? `<label class="field" style="flex:1;min-width:70px">Receiver<select data-change="def-target">${recv.map((x) => `<option ${sc.target === x ? 'selected' : ''}>${x}</option>`).join('')}</select></label><label class="field" style="flex:1;min-width:60px">At (s)<input type="number" min="0.5" max="4" step="0.1" value="${sc.at}" data-change="def-at" inputmode="decimal"></label>` : ''}</div>
-      <p class="dim" style="margin:0">${esc(scenarioLabel())}. Everyone is a plain 65 with no ability or type; only the tested defenders' ${esc(ATTR_NAME[sc.attr])} changes.</p>
+      <p class="dim" style="margin:0">${esc(scenarioLabel())}. Everyone is a plain 65 with no ability or type; only the tested ${D.carrierOf(sc.subject) ? 'ball carrier' : 'defenders'}' ${esc(ATTR_NAME[sc.attr])} changes.</p>
       <div class="row" style="gap:6px;align-items:flex-end"><label class="field" style="flex:1">Low<input type="number" min="1" max="99" value="${S.low}" data-change="attr-low" inputmode="numeric"></label><label class="field" style="flex:1">High<input type="number" min="1" max="99" value="${S.high}" data-change="attr-high" inputmode="numeric"></label><label class="field" style="flex:1">Plays<select data-change="attr-n">${COUNTS.map((c) => `<option value="${c}" ${S.n === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label></div>
       <button class="btn primary big block" data-action="attr-run" ${S.busy ? 'disabled' : ''}>${S.busy ? `Running… <span id="attrprog">${Math.round(S.progress * 100)}%</span>` : '▶ Run the scenario'}</button>
     </div>`;

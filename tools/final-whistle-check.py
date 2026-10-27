@@ -36,7 +36,7 @@ with sync_playwright() as pw:
         for _ in range(80):
             if p.locator('[data-action="finish"]').count(): break
             hit = False
-            for sel in ['.sheet [data-action="yes"]', '[data-action="simfinal"]', '[data-action="kickoff"]', '[data-action="otclash"]', '[data-action="continue"]']:
+            for sel in ['.sheet [data-action="yes"]', '[data-action="simfinal"]', '[data-action="kickoff"]', '[data-action="otclash"]', '[data-action="enter"][data-v="skip"]', '[data-action="final"]', '[data-action="continue"]']:
                 loc = p.locator(sel)
                 if loc.count() and loc.first.is_visible():
                     try: loc.first.tap(timeout=2000); hit = True; break

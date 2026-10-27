@@ -19,7 +19,7 @@ import { memoryLocalStorage } from './helpers/cloud-sim.js';
 globalThis.localStorage = memoryLocalStorage();
 const H = await import('../src/franchise/hall-of-fame.js');
 
-const played = (() => { let f = null; return () => (f ||= runFranchise(6, { seasons: 7, difficulty: 'pro', check: withBoardReset(() => []) }).f); })(); // seed 6: seven seasons with a retired legend (v42.10 defensive fixes; seed 5 until then, seed 4 before v42.5)
+const played = (() => { let f = null; return () => (f ||= runFranchise(5, { seasons: 7, difficulty: 'pro', check: withBoardReset(() => []) }).f); })(); // seed 5: seven seasons with a retired legend (again with the v42.13 pursuit rule; seed 6 with v42.10–v42.12, seed 5 before, seed 4 before v42.5)
 const KEYS = ['games', 'passYds', 'passTd', 'rushYds', 'rec', 'recYds', 'tacklesTotal', 'sacks', 'int', 'fgm'];
 const allIds = (f) => { const ids = new Set([...f.roster.map((m) => m.id), ...Object.keys(f.league.monsters), ...Object.keys(f.league.legends || {}), ...(f.league.waivers || []).map((m) => m.id), ...Object.values(f.pool || {}).flat().map((m) => m.id)]); for (const h of f.history) for (const T of Object.values(h.leagueStats || {})) for (const id of Object.keys(T)) ids.add(id); return [...ids]; };
 

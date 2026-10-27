@@ -88,6 +88,21 @@ with sync_playwright() as pw:
         check(best['tgt'] >= 2 and best['why'] >= 2, f'zone overlay shows whom each zone defender plays and why {best}')
         lay = p.evaluate(LAYOUT); check(lay['over'] <= 1 and not lay['bad'], f'zone watch fits {lay}')
         shot(p, 'def-4-zone')
+        # pursuit (v42.13): the ball carrier's Speed is the tested attribute; the pursuers' labels show their effort, gap and angle and
+        # a red line to the carrier
+        p.select_option('[data-change=def-preset]', 'pursuit_bubble'); p.wait_for_timeout(150); p.select_option('[data-change=attr-n]', '25'); p.locator('[data-action="attr-run"]').tap(); p.wait_for_selector('.attr-results', timeout=60000)
+        rows = p.evaluate(TABLE); by = {r[0].lower(): r for r in rows}; check('touchdowns' in by and 'yards allowed' in by, f'pursuit scenario measures yards and touchdowns {[r[0] for r in rows]}')
+        check('ball carrier wr3' in p.locator('.lab-setup').inner_text().lower(), 'the setup names the ball carrier as the tested monster')
+        p.locator('[data-action="attr-watch"]').first.tap(); p.wait_for_timeout(300); p.locator('[data-action="def-pause"]').tap(); p.wait_for_timeout(100)
+        if p.locator('[data-change=def-focus]').count(): p.select_option('[data-change=def-focus]', ''); p.wait_for_timeout(100)
+        PU = """() => { const s = document.querySelector('#attrfield0'); return { red: s.querySelectorAll(".def-overlay line[stroke='#ff6b6b']").length, lab: [...document.querySelectorAll('#defdecisions li')].filter((t) => /×1\\.0\\d vs ×0\\.94 · \\d/.test(t.textContent)).length }; }"""
+        bestp = {'red': 0, 'lab': 0}
+        for _ in range(50):
+            p.locator('[data-action="def-step"][data-d="1"]').tap(); p.wait_for_timeout(30); z = p.evaluate(PU)
+            for k in bestp: bestp[k] = max(bestp[k], z[k])
+        check(bestp['red'] >= 1 and bestp['lab'] >= 1, f'pursuers show the carrier line and their effort / gap / angle {bestp}')
+        lay = p.evaluate(LAYOUT); check(lay['over'] <= 1 and not lay['bad'], f'pursuit watch fits {lay}')
+        shot(p, 'def-5-pursuit')
         # the ordinary attribute trial never draws the overlay
         p.locator('[data-action="lab-mode"][data-v="attr"]').tap(); p.wait_for_timeout(200); p.select_option('[data-change=attr-attr]', 'coverage'); p.wait_for_timeout(150); p.select_option('[data-change=attr-n]', '25')
         p.locator('[data-action="attr-run"]').tap(); p.wait_for_selector('.attr-results', timeout=60000); p.locator('[data-action="attr-watch"]').first.tap(); p.wait_for_timeout(800)
