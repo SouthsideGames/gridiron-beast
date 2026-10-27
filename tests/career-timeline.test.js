@@ -29,7 +29,7 @@ test('beginnings: the founding roster (cornerstones marked), the draft with roun
 });
 
 test('recruitment, free agency, a trade, a release and a return: each move is recorded once, and history follows the monster', () => {
-  const f = newFranchise(53); // seed 53: the staff signs an encounter prospect in week 5 (seed 52 stopped recruiting early after the v42.8 attribute fixes shifted the season)
+  const f = newFranchise(57); // seed 57: the staff signs an encounter prospect in week 4 (seed 53 from v42.8 to v42.12; the v42.13 pursuit rule shifted its season; seed 52 before v42.8)
   // a Tuesday encounter signing, as the staff does it during the week
   let g = 0; while (!f.week.recruited && g++ < 30) { if (F.inPlayoffs(f)) break; F.autoRunToSunday(f); if (f.week.recruited) break; if (F.isBye(f)) { F.takeBye(f); continue; } const mm = F.sundayMatchup(f); if (!mm || mm.forfeit) break; F.finishSunday(f, F.simulatePlayerGame(f)); }
   const rec = f.roster.find((m) => m.id === f.week.recruited) || f.roster.find((m) => of(m, 'join')[0]?.x?.via === 'encounter');
