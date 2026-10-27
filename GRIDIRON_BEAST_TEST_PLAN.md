@@ -1,6 +1,6 @@
 # Gridiron Beast — Test Plan
 
-All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
+All automated tests run with `npm test` (`node --test "tests/**/*.test.js"`), no dependencies. **When to run what** (targeted tests, the fast/simulation tiers, the single full run before approval, merge and publish verification): see [`docs/TESTING_POLICY.md`](docs/TESTING_POLICY.md). The browser tools need Python Playwright and Chromium (dev only). Every gameplay case is reproducible from its seed.
 
 ## 0. Current status (2026-10-25, release v42.2.0 on the main game: Captain Partnerships, GDD §49; PR #55 merged as `06edb9b`)
 

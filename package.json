@@ -6,6 +6,10 @@
   "type": "module",
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
+    "test:fast": "node tools/test-tier.mjs fast",
+    "test:sim": "node tools/test-tier.mjs sim",
+    "test:perf": "node tools/test-tier.mjs perf",
+    "test:tiers": "node tools/test-tier.mjs list",
     "serve": "python3 -m http.server 8080",
     "clash:balance": "node tools/clash-balance.mjs",
     "clash:gateb": "node tools/clash-gateb.mjs",
