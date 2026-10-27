@@ -1,7 +1,8 @@
 // Zone coverage intelligence (v42.12, GDD §53.5h): zone defenders weigh the receivers in and entering their zone instead of always
 // taking the deepest; deep defenders keep their depth; overloads force real choices (a split or a pick, not perfect coverage);
 // Awareness changes how quickly and how well they read; zone anticipation uses the delayed, observed receiver movement; and the
-// developer trace changes nothing in the play.
+// developer trace changes nothing in the play. Defenders read the quarterback only from what shows (his facing and throwing
+// motion), and an aware deep defender is harder to look off.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -108,4 +109,30 @@ test('zone plays replay identically from the same seed, and the developer trace 
       assert.equal(a.yards, c.yards); assert.equal(a.result, c.result);
     }
   }
+});
+
+test('zone defenders read only what the quarterback shows: no access to his read, his decision or the landing spot before the throw', () => {
+  const src = fs.readFileSync(new URL('../src/sim/engine.js', import.meta.url), 'utf8');
+  const zone = src.slice(src.indexOf('function zoneRead'), src.indexOf('function defenseTick'));
+  const zcase = src.slice(src.indexOf("case 'zone': {", src.indexOf('function defenseTick')), src.indexOf("case 'spy': {", src.indexOf('function defenseTick')));
+  for (const [name, body] of [['zoneRead', zone], ['zone case', zcase]]) {
+    assert.ok(!/qr\.cur|qr\.order|qb\.windup|qb\.decision|ball\.landing|ball\.target/.test(body), `${name} reads hidden QB or ball state`);
+  }
+  assert.match(zone, /seenFacing\(aw\)/, 'the quarterback is read through his seen facing');
+  assert.match(src, /facingHist\.push\(fr \? \{ ang: Math\.atan2/, 'only the facing direction is recorded for the defense');
+});
+
+test('look-offs: an aware deep defender lets the quarterback\'s eyes decide fewer of his reads than an unaware one', () => {
+  const share = (value) => {
+    let eyes = 0, reads = 0;
+    for (const [off, def] of [['four_verticals', 'cover_3'], ['deep_post', 'cover_3'], ['dagger', 'cover_4'], ['smash', 'cover_2_zone']]) {
+      for (let s = 0; s < 25; s++) {
+        for (const r of zoneReads(run(off, def, 7300 + s, { attr: 'awareness', value }), def)) { if (r.role !== 'deep') continue; reads++; if (r.z.why === 'QB eyes') eyes++; }
+      }
+    }
+    return eyes / reads;
+  };
+  const lo = share(50), hi = share(95);
+  assert.ok(hi < lo * 0.8, `deep reads decided by the QB's eyes: 95 ${(100 * hi).toFixed(1)}% vs 50 ${(100 * lo).toFixed(1)}%`);
+  assert.ok(hi > 0.01, 'an aware defender still uses a held stare');
 });
