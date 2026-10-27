@@ -79,7 +79,7 @@ When fixing a specific bug, first add (or tighten) a regression test that fails 
    - if they match, the full suite already ran on this code. **Do not run it again.**
 3. **Smoke set for the release:**
    - `node --test tests/release-stamp.test.js` plus the feature's own test file(s);
-   - `tools/deploy-check.py` on the release folder with two existing franchise saves (§6).
+   - `tools/deploy-check.py --release PUB --version <new version> --save … --save …` on the publish folder (§6).
 4. **Expand testing** if any of these happen:
    - a merge conflict, or `main` moved after approval (the trees differ): run the targeted sets for every file that differs; run the full suite if the difference touches `src/`;
    - a dependency or tooling change (Node, Playwright, `package.json`): run the full suite;
@@ -91,19 +91,34 @@ Publish with the existing release process to the **existing main game link**. Ne
 
 1. **Build:**
    - `git archive <merge> | tar -x -C REL`;
-   - `python3 tools/release-files.py REL` lists the files the game needs (index.html, statics, and the import closure of every module script index.html loads);
-   - copy exactly those into a publish folder.
-   - Files left out of a publish stay on the server, so earlier tool-only files such as `src/clash/level1.js` remain as they were.
+   - `python3 tools/release-files.py REL > files.txt` works out the files the game needs. It prints a list only when every cross-check passes, and otherwise prints nothing and exits 1:
+     - **Discovery:** index.html's module scripts, stylesheets and manifest, and their full import closure.
+     - **The import map** in index.html (the list `src/fresh.js` re-fetches) must name exactly the imported modules.
+     - **Things an import scan cannot see:** a computed `import()`, or a `fetch()`, `new URL()`, worker, audio, image or quoted local asset path in game code, a web-manifest icon or a CSS `url()`. Each must resolve to a file in the list. A computed `import()` stops the release until the files it can load are recorded as `extra`.
+     - **The previous published manifest** (`release/manifest.json`, see `release/README.md`): a file published last time and missing now is a **removal**. It stops the release until it is investigated (the report lists every remaining reference to it), then passed explicitly with `--allow-removal PATH --reason "..."`.
+     - **Deliberate `extra` files** (published although nothing imports them, each with a reason) are carried forward. One that no longer exists stops the release.
+     - Additions are listed, and files whose content changed since the last release are counted.
+   - `python3 tools/release-files-check.py REL release/manifest.json` is the tool's own self-check: 19 ways a file can go missing, each of which must be caught. Run it whenever `tools/release-files.py` changes.
+   - Copy exactly the listed files into a publish folder. Never put `tools/` or any test helper in it.
 2. **Before publishing:**
    - every file in the publish folder must be byte-identical to `git show <merge>:<file>`;
-   - `src/version.js` must carry the new version with `test: false`;
-   - run the deploy check: copy the publish folder with `tools/` added, then `python3 tools/deploy-check.py DIR SAVE` for each of two existing franchise saves. It checks the build label, that an existing save loads after a reload, Main Menu → Developer Tools → AI Testing Lab navigation, a setting surviving a reload, and a live franchise play.
+   - run the deploy check on the publish folder itself:
+     `python3 tools/deploy-check.py --release PUB --version vX.Y.Z-name --save SAVE1.json --save SAVE2.json --files files.txt`
+   - **What the deploy check verifies:**
+     - the release folder holds no test helpers and exactly the listed files;
+     - `BUILD.version` equals `--version`, the index.html `?v=` stamp matches, the Main Menu build label shows it, and `test: false`;
+     - each existing franchise save loads after a reload, in its own browser profile;
+     - Main Menu → Developer Tools → AI Testing Lab opens by taps;
+     - a setting survives a reload;
+     - a live franchise game draws the QB read ring and the replay shows the read list.
+   - **How the test helper stays out of the release:** the disposable franchise for the live game comes from the repository's `tools/franchise-soak.mjs`. It is served only under the reserved prefix `/__deploy-check/`, never copied into the release folder, and the check confirms its game imports came from the release.
 3. **Publish:**
    - read the live files the publish replaces;
    - confirm they are still the previous release (hashes match its release folder);
    - publish with the files map.
 4. **After publishing:**
    - the live file list has the expected count;
+   - regenerate `release/manifest.json` (`tools/release-files.py REL --write-manifest release/manifest.json --version … --commit … --artifact-version …`) and commit it to `main`, so the next release is checked against what is now live;
    - read back the changed files and a sample of unchanged ones, and compare them byte for byte with the publish folder;
    - `src/version.js` shows the new version;
    - the live `index.html` contains the built page unchanged inside the host's standard wrapper.
