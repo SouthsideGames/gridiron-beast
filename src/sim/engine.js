@@ -161,7 +161,6 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const manKeys = manKeyTargets(offensePlay);
   const receivers = eligibleReceivers(offensePlay);
   const isRun = offensePlay.type === 'run';
-  const isPlayAction = ['play_action', 'boot'].includes(qb.assignment.a);
 
   // Pre-snap: man defenders align across from their receiver (inside leverage); nobody lines up offside.
   for (const d of defs) {
@@ -181,7 +180,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   let t = 0;
   let result = null;
   let phase = isRun ? 'run' : 'dropback'; // dropback | run | air | carry | dead
-  let runRecognisedAt = Infinity;
+  let handoffAt = Infinity; // when the ball changed hands (giveBall); a defender sees it only after his delay and the mesh
+  const snapPos = new Map(actors.map((a) => [a, { x: a.x, y: a.y }])); // where everyone lined up (refreshed at the snap)
   let handoffDone = false;
   let pressureAt = Infinity;
   let readIndex = 0;
@@ -312,7 +312,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   function defenderGoal(d) {
     const carrier = ball.holder;
-    if (carrier && carrier.team === 'off' && (phase === 'carry' || phase === 'run') && (d.recognised || isRun)) return { x: carrier.x, y: carrier.y };
+    if (carrier && carrier.team === 'off' && d.recognised) return { x: carrier.x, y: carrier.y }; // only a run HE has read (v42.14; was `|| isRun`)
     if (carrier && carrier.team === 'def') return { x: carrier.x, y: carrier.y };
     const a = d.assignment;
     if ((a.a === 'rush' || a.a === 'contain') && qb) return d.state === 'gap' ? { x: a.points[1][0], y: a.points[1][1] } : { x: qb.x, y: qb.y };
@@ -582,7 +582,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
 
   // ------------------------------------------------------------ quarterback
   function giveBall(to) {
-    ball.holder = to; handoffDone = true; phase = 'carry'; stats.carrier = to.slot;
+    ball.holder = to; handoffDone = true; phase = 'carry'; stats.carrier = to.slot; handoffAt = t;
     to.laneTimer = 0; to.jukeCooldown = 0;
     log(`Handoff to ${to.name}`, { kind: 'handoff', to: to.slot });
   }
@@ -1123,6 +1123,89 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     return { x: p1.x, y: p1.y, vx: dt > 0 ? (p1.x - p0.x) / dt : 0, vy: dt > 0 ? (p1.y - p0.y) / dt : 0, vxLast: i1 > 0 ? (p1.x - pf.x) / DT : 0 };
   }
   const hash01 = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 10007) / 10007; };
+  // ---- The run read (v42.14, Phase A: run-defense intelligence) ----
+  // Every defender keeps a belief, from -1 (pass) to +1 (run), built ONLY from what he can see: the linemen firing forward or
+  // setting back, the quarterback dropping or staying at the mesh, a back meeting the quarterback, the ball seen in a back's
+  // hands, a back leaving the mesh without it, the quarterback running forward. He sees positions a perception delay ago
+  // (shorter with Awareness and the reaction abilities), re-reads at an interval set by Awareness and moves his belief toward
+  // what the cues say at a rate set by Awareness. The offense's play call, its type, a play-action designation, a misdirection tag
+  // and any player's assignment are never read here (tests/run-read.test.js). Per-defender offsets come from a hash of the seed
+  // and his slot, so nothing is drawn from the random stream: the same seed replays the same play, with or without the trace.
+  // He commits to the run at READ.run (a man defender or a deep defender at READ.runStrict) and lets go of it READ.release lower,
+  // so a play-action fake can pull him up and the quarterback's drop can send him back.
+  const READ = Object.freeze({ run: 0.45, runStrict: 0.6, pass: -0.35, release: 0.1, conceal: 0.08 });
+  const OL_SLOTS = new Set(['LT', 'LG', 'C', 'RG', 'RT']);
+  let lineGroup = null, backGroup = null;
+  /** The blockers he reads: the offensive line and an inline tight end, by where they lined up (visible before the snap). */
+  const lineOf = () => (lineGroup ||= offs.filter((a) => { const s = snapPos.get(a); return a !== qb && s && (OL_SLOTS.has(a.slot) || (a.slot.startsWith('TE') && s.x > -1.6 && Math.abs(s.y) < 5.5)); }));
+  /** The backs: anyone but the quarterback who lined up in the backfield. */
+  const backsOf = () => (backGroup ||= offs.filter((a) => { const s = snapPos.get(a); return a !== qb && s && s.x < -2.5; }));
+  /** Where he SAW a player `delay` seconds ago (from the movement history; at the snap, where the player lined up). */
+  function seenOf(a, delay) { const h = history.get(a); const i = h.length - 1 - Math.round(delay / DT); return i >= 0 ? h[i] : (snapPos.get(a) || a); }
+  function seenVel(a, delay) { const h = history.get(a); const i1 = h.length - 1 - Math.round(delay / DT); if (i1 < 1) return { vx: 0, vy: 0 }; const i0 = Math.max(0, i1 - 2); const dt = (i1 - i0) * DT; return { vx: (h[i1].x - h[i0].x) / dt, vy: (h[i1].y - h[i0].y) / dt }; }
+  /** His perception delay: Awareness and the reaction abilities shorten it; a fixed per-defender offset (hash of seed and slot). */
+  const readDelay = (d) => Math.max(0.02, 0.22 - 0.14 * norm(d.attrs.awareness) - reactionOf(d) + (hash01(`${seed}|${d.slot}|delay`) - 0.5) * 0.08);
+  const readEvery = (d) => 0.30 - 0.18 * norm(d.attrs.awareness);
+  const strictRead = (d) => d.assignment.a === 'man' || (d.assignment.a === 'zone' && d.assignment.role === 'deep');
+  /** What the defensive call has him expect at the snap (never what the offense called): deep defenders start toward pass. */
+  function readPrior(d) { return d.assignment.a === 'zone' && d.assignment.role === 'deep' ? -0.25 : 0; }
+  /** The cues he sees now, and the evidence they add up to (-1 pass .. +1 run). */
+  function readCues(d, R) {
+    const delay = readDelay(d), aw = norm(d.attrs.awareness);
+    const sq = snapPos.get(qb), q = seenOf(qb, delay), qv = seenVel(qb, delay);
+    // The line: firing forward (run blocking) or setting back (pass protection), and the way it flows.
+    const L = lineOf(); let fwd = 0, lat = 0; for (const a of L) { const s = snapPos.get(a), p = seenOf(a, delay); fwd += clamp((p.x - s.x) / 0.3, -1, 1); lat += p.y - s.y; }
+    const line = L.length ? fwd / L.length : 0, lineFlow = L.length ? lat / L.length : 0;
+    const wLine = t < 0.6 ? 0.45 : Math.max(0.2, 0.45 - (t - 0.6) * 0.5);
+    // The quarterback: a drop past a yard says pass; staying at the mesh leans run; running forward says run.
+    const drop = sq.x - q.x; const qbCue = clamp((0.5 - drop) / 1.0, -1, 0.4); const wQb = 0.35 + 0.25 * Math.min(1, t / 0.6);
+    const qbRun = (q.x > sq.x + 0.6 && qv.vx > 1.5) || (phase === 'carry' && ball.holder === qb && qv.vx > 1.0);
+    // The backs: the mesh, the ball seen in a back's hands (the mesh hides it a moment longer), a back leaving without it.
+    const handSeen = handoffAt <= t - delay - READ.conceal;
+    let mesh = false, release = false, backFlow = 0, nearest = Infinity;
+    for (const b of backsOf()) {
+      const p = seenOf(b, delay), v = seenVel(b, delay), s = snapPos.get(b), dq = Math.hypot(p.x - q.x, p.y - q.y);
+      if (dq < nearest) { nearest = dq; backFlow = p.y - s.y; }
+      if (dq < 1.5 && Math.hypot(v.vx, v.vy) > 1 && v.vx > -0.5) { mesh = true; R.sawMesh = true; }
+      if (!handSeen && (p.x > 0.5 || (R.sawMesh && dq > 2.2) || (t > 0.5 && Math.abs(p.y - q.y) > 4 && v.vx > -0.5))) release = true;
+    }
+    // A fake he is protected from (Ancient Grove, the no-bite effect) does not move him once the quarterback is dropping; Echo Read
+    // halves it. On a real run the quarterback stays at the mesh, so the protection costs nothing there.
+    const rooted = groveGuards(d); const guarded = !!(rooted || d.ability?.noPlayActionBite);
+    const dropping = qbCue < 0;
+    let wMesh = mesh && !handSeen ? 0.6 : 0;
+    if (wMesh && dropping) {
+      if (guarded) { wMesh = 0; if (rooted) abilityUsed(rooted, 'grove'); if (d.ability?.noPlayActionBite) abilityUsed(d, 'noPlayActionBite'); }
+      else if (d.ability?.echoRead) { wMesh *= d.ability.echoRead; abilityUsed(d, 'echoRead'); }
+    }
+    let num = wLine * line + wQb * qbCue + wMesh - (release ? 0.5 : 0) + (qbRun ? 2 : 0) + (handSeen ? 3 : 0);
+    const den = wLine + wQb + wMesh + (release ? 0.5 : 0) + (qbRun ? 2 : 0) + (handSeen ? 3 : 0);
+    // Misdirection: the line flowing one way while the back goes the other is harder to read (unless he is guarded from fakes).
+    const conflict = !guarded && Math.abs(lineFlow) > 0.25 && Math.abs(backFlow) > 0.4 && Math.sign(lineFlow) !== Math.sign(backFlow);
+    return { E: clamp(num / den, -1, 1), line: +line.toFixed(2), qb: +qbCue.toFixed(2), mesh, release, handSeen, qbRun, lineFlow, backFlow, conflict, delay: +delay.toFixed(2), aw };
+  }
+  /** A catch or a scramble: visible the moment it happens, and (as before v42.14) every defender turns to the ball carrier at once
+   * (catch and scramble also mark recognised directly). Only designed runs are read through the cues. */
+  function visibleCarry() {
+    const h = ball.holder;
+    return phase === 'carry' && !!h && h.team === 'off' && (h.caughtAt != null || (h === qb && scrambled));
+  }
+  /** One tick of his read: re-read on his own clock, move the belief, commit to or let go of the run. */
+  function updateRead(d) {
+    const R = (d.read ||= { b: readPrior(d), next: hash01(`${seed}|${d.slot}|phase`) * readEvery(d), committed: false, sawMesh: false, cues: null });
+    if (visibleCarry()) { R.b = 1; R.committed = true; d.recognised = true; return R; }
+    if (t + 1e-9 >= R.next) {
+      const c = readCues(d, R); const every = readEvery(d); R.next = t + every; R.cues = c;
+      const kappa = (3 + 3 * norm(d.attrs.awareness)) * (c.conflict ? 0.6 : 1);
+      R.b = clamp(R.b + Math.min(1, kappa * every) * (c.E - R.b), -1, 1);
+    }
+    const th = strictRead(d) ? READ.runStrict : READ.run;
+    R.committed = R.committed ? R.b >= th - READ.release : R.b >= th;
+    d.recognised = R.committed;
+    return R;
+  }
+  /** The play has shown pass to HIM: the ball is in the air, or the quarterback still has it and his read says pass. */
+  const passShown = (d) => ball.inAir || (ball.holder === qb && phase !== 'carry' && (d.read ? d.read.b : readPrior(d)) <= READ.pass);
   const deepHelp = defs.some((x) => x.assignment?.a === 'zone' && x.assignment.role === 'deep');
   const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
   /** What a defender sees of the quarterback's facing: its direction a perception delay ago (0.11 s at Awareness 50, 0.07 s at 95),
@@ -1151,9 +1234,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const aw = norm(d.attrs.awareness); const [zx, zy] = asg.at; const role = asg.role; const center = { x: zx, y: zy };
     const inside = (o) => (role === 'deep' ? Math.abs(o.y - zy) < radius && o.x > 5 : dist(o, center) < radius);
     const edgeGap = (o) => (role === 'deep' ? Math.abs(o.y - zy) - radius : dist(o, center) - radius);
-    // Pass key: he anticipates receivers coming into his zone only once the play shows pass (the quarterback dropping back with
-    // the ball, no handoff). On a run, or play-action until the fake is over, he plays only who is already in his zone.
-    const passKey = ball.inAir || (ball.holder === qb && !handoffDone && phase === 'dropback' && !(isPlayAction && t < 1.0));
+    // Pass key: he anticipates receivers coming into his zone only once the play shows pass TO HIM (his run read, v42.14: the line
+    // setting back and the quarterback dropping with the ball). On a run, or while a play-action fake still has him, he plays
+    // only who is already in his zone.
+    const passKey = passShown(d);
     const cands = [];
     for (const s of receivers) {
       const r = bySlot.off[s]; if (!r || r.x <= -1 && !(r.assignment?.a === 'route')) continue; if (r.engaged) continue; // a back or tight end blocking is not a receiver
@@ -1252,34 +1336,36 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (toBall < breakRadius) { mark('ball', 'break'); if (toBall >= baseBreak) abilityUsed(d, 'breakRadius'); steer(d, L.x, L.y, 1, 0.2); return; }
       if (!['rush', 'contain'].includes(asg.a) || d.x < L.x) { mark('ball', 'rally'); steer(d, L.x, L.y, 0.95, 0.2); return; }
     }
-    // Run recognition.
-    const runLive = (phase === 'carry' || (phase === 'run' && handoffDone)) && c && c.team === 'off';
-    if (runLive && !d.recognised) {
-      const expectRun = defensePlay.tags.includes('run') || defensePlay.tags.includes('goalline');
-      const rooted = groveGuards(d); if (rooted && (isPlayAction || offensePlay.tags.includes('misdirection'))) abilityUsed(rooted, 'grove');
-      const delay = 0.3 + 0.5 * (1 - norm(d.attrs.awareness)) - reactionOf(d) + (isPlayAction && t < 1.6 && !d.ability?.noPlayActionBite && !rooted ? 0.3 * (d.ability?.echoRead ?? 1) : 0) + (offensePlay.tags.includes('misdirection') && !rooted ? 0.3 : 0) + (asg.a === 'man' ? 0.35 : 0) - (expectRun ? 0.3 : 0); // a run call keys the run
-      if (isPlayAction && t < 1.6 && d.ability?.noPlayActionBite && !d.recognised) abilityUsed(d, 'noPlayActionBite');
-      if (t - runRecognisedAt >= delay) d.recognised = true;
-    }
+    // The run (v42.14, Phase A): the ball is in a carrier's hands (a handoff, a keep, a scramble: what the ball is doing, never
+    // what was called) and HIS read has committed to it (updateRead). Fits use where he SEES the carrier, a perception delay ago.
+    const runLive = phase === 'carry' && c && c.team === 'off';
+    const R = d.read;
     if (runLive && d.recognised) {
       // Run fit: until the carrier crosses the line, second-level defenders fill their lane rather than chasing the ball.
       const isFront = ['rush', 'contain'].includes(asg.a);
-      if (!isFront && c.x < 1.5) {
-        const deep = asg.a === 'zone' && asg.role === 'deep';
-        const fitX = deep ? 6.5 : (defensePlay.tags.includes('run') || defensePlay.tags.includes('goalline')) ? 0.5 : 1.5; // run calls meet the back at the line
-        // Second-level defenders flow to the ball: a linebacker fills the gap the back chooses, not just his own.
+      const delay = readDelay(d); const sc = seenOf(c, delay), sv = seenVel(c, delay);
+      if (!isFront && sc.x < 1.5) {
+        const deep = asg.a === 'zone' && asg.role === 'deep'; const aw = norm(d.attrs.awareness);
+        const fitX = deep ? 6.5 : (defensePlay.tags.includes('run') || defensePlay.tags.includes('goalline')) ? 0.5 : 1.5; // run calls meet the back at the line (his own call)
+        // Second-level defenders flow to the ball: a linebacker fills the gap the back is SEEN choosing, not just his own.
         const flow = deep ? 2.5 : 5;
-        const shade = clamp(c.y + c.vy * 0.3 - d.y, -flow, flow) * (0.55 + 0.45 * norm(d.attrs.awareness));
+        let ty = sc.y + sv.vy * 0.3;
+        // Misdirection: for a moment after the handoff, a defender fooled by the flow of the line leans the wrong way (less so
+        // when he is aware); the conflicting cues also slowed his read (readCues).
+        if (R?.cues?.conflict && t - handoffAt < 0.6) ty += Math.sign(R.cues.lineFlow) * flow * 0.5 * (1 - aw);
+        const shade = clamp(ty - d.y, -flow, flow) * (0.55 + 0.45 * aw);
         mark('run-fit'); steer(d, fitX, d.y + shade, 1, 0.3); return;
       }
       mark('pursue', 'run'); pursue(d); return;
     }
-    // Play-action bite: non-rushing defenders step up before they recognise the pass.
-    if (isPlayAction && !['rush', 'contain', 'man'].includes(asg.a) && !groveGuards(d)) { // Ancient Grove: nobody near him bites
+    // Reading before the handoff (v42.14): a defender whose read leans run stops dropping and holds where he lined up (half a
+    // yard forward at most); the quarterback's drop turns his read back toward pass and he drops into his assignment again, late.
+    // This is the play-action bite, drawn from what he sees (the line firing out, the mesh) instead of the play's designation, and
+    // it happens on real runs too. A deep defender holds only on a strong read.
+    // Defensive backs keep their drop until they see a carrier (coverage discipline: they need stronger evidence).
+    if (!runLive && ball.holder === qb && phase !== 'carry' && !['rush', 'contain', 'man'].includes(asg.a) && !/^(CB|FS|SS)/.test(d.slot) && R) {
       const deepDefender = asg.a === 'zone' && asg.role === 'deep';
-      const biteFor = (deepDefender ? 0.3 : 0.9) * (1.3 - norm(d.attrs.awareness)) * (d.ability?.echoRead ?? 1); // Echo Read: bites half as long
-      if (d.ability?.echoRead) abilityUsed(d, 'echoRead');
-      if (t < biteFor) { mark('pa-bite'); steer(d, d.x - 2, d.y, deepDefender ? 0.3 : 0.6, 0.3); return; }
+      if (R.b > (deepDefender ? 0.45 : 0.15)) { const sp = snapPos.get(d); mark('read', 'hold'); steer(d, clamp(d.x, sp.x - 0.5, sp.x), d.y, 0.6, 0.3); return; }
     }
     switch (asg.a) {
       case 'rush': {
@@ -1302,7 +1388,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         const target = bySlot.off[manKeys[asg.key]];
         if (!target) { mark('man', 'none'); steer(d, 6, d.y * 0.6, 0.8, 0.3); return; } // nobody to cover (three-receiver set): sit in the short middle
         // A back who stays in to block frees his man: "green dog", add to the rush.
-        if (asg.key === 'back' && target.assignment?.a === 'block' && t > 0.5) { if (qb && ball.holder === qb) { mark('man', 'green-dog'); pursue(d); return; } }
+        if (asg.key === 'back' && t > 0.6 && qb && ball.holder === qb) { // he SEES the back stay in (behind the line, by the quarterback, not running a route); v42.14: was the back's assignment
+          const dl = readDelay(d), sb = seenOf(target, dl), vb = seenVel(target, dl);
+          if (sb.x < -0.5 && Math.hypot(vb.vx, vb.vy) < 2.5 && Math.abs(sb.y - qb.y) < 3) { mark('man', 'green-dog'); pursue(d); return; }
+        }
         const p = trailPosition(d, target); const ov = observedVelocity(d, target);
         // Run with the receiver (v42.8, attribute audit fix 2): everything he reacts to is what he can see, the receiver's
         // position and velocity a reaction delay ago (Coverage shortens the delay). He anticipates along that observed line,
@@ -1352,7 +1441,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         // Before the play shows pass (a run, or a play-action fake still selling) there is no pass to read: he drops into his zone
         // and carries the deepest receiver in it, as before v42.12, but on the movement he SEES (observed velocity, never the
         // true one). Run recognition and run fits take over from here exactly as before.
-        if (!(ball.inAir || (ball.holder === qb && !handoffDone && phase === 'dropback' && !(isPlayAction && t < 1.0)))) {
+        if (!passShown(d)) {
           const inArea = (r) => (role === 'deep' ? Math.abs(r.y - zy) < radius && r.x > 5 : dist(r, { x: zx, y: zy }) < radius);
           const threats = receivers.map((s) => bySlot.off[s]).filter((r) => r && inArea(r) && r.x > -1);
           d.zoneTgt = null; if (TRACE) d.zoneInfo = null;
@@ -1418,7 +1507,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Daybreak: nobody can bring him down from behind.
     if (c.daybreak && (d.x - c.x) * fwd < -0.2) return false;
     // Permafrost: a run that meets him at his gap loses a yard on contact.
-    if (d.ability?.permafrost && !c.permafrosted && (isRun || handoffDone) && !stats.receiver) {
+    if (d.ability?.permafrost && !c.permafrosted && handoffDone && !stats.receiver) { // v42.14: a handed-off (or kept) ball, not the play type
       c.permafrosted = true; c.x -= fwd * d.ability.permafrost; c.vx = 0; c.vy = 0; c.stun = Math.max(c.stun, 0.35); setStatus(c, 'frozen', 0.5); abilityUsed(d, 'permafrost'); abilityOutcome('stuffed', d, `${d.name} freezes ${c.name} in place`, { victim: c.slot });
     }
     // Eruption: once per drive, the first defender to hit him is flattened (a guaranteed broken tackle).
@@ -1594,7 +1683,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       ball: [+ball.x.toFixed(2), +ball.y.toFixed(2), ball.inAir ? 1 : 0],
       holder: ball.holder ? ball.holder.slot : null, holderTeam: ball.holder ? ball.holder.team : null, phase,
       ...(phase === 'dropback' && ball.holder === qb && !scrambled && (qb.windup || (qr.cur && !qr.decision)) ? { read: qb.windup ? qb.windup.r.slot : qr.cur.slot } : {}),
-      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0, d.why === 'zone' && d.zoneInfo || null, d.pursuitAt === t && d.pursuitInfo || null]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
+      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0, d.why === 'zone' && d.zoneInfo || null, d.pursuitAt === t && d.pursuitInfo || null, d.read ? { b: +d.read.b.toFixed(2), line: d.read.cues?.line ?? null, qb: d.read.cues?.qb ?? null, mesh: d.read.cues?.mesh ? 1 : 0, ball: d.read.cues?.handSeen ? 1 : 0, release: d.read.cues?.release ? 1 : 0, conflict: d.read.cues?.conflict ? 1 : 0, delay: d.read.cues?.delay ?? null, state: d.read.committed ? 'run' : passShown(d) ? 'pass' : 'reading' } : null]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
     });
   }
   // The motion before the snap, drawn as frames with negative time: only the motion man moves.
@@ -1617,9 +1706,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const fr = ball.holder === qb && phase === 'dropback' && !scrambled ? (qb.windup ? qb.windup.r : qr.cur ? bySlot.off[qr.cur.slot] : null) : null;
       facingHist.push(fr ? { ang: Math.atan2(fr.y - qb.y, fr.x - qb.x), windup: !!qb.windup, qx: qb.x, qy: qb.y } : null); if (facingHist.length > 40) facingHist.shift();
     }
-    if (isRun && runRecognisedAt === Infinity) runRecognisedAt = 0;
-    if (!isRun && handoffDone && runRecognisedAt === Infinity) runRecognisedAt = t;
-    if (phase === 'carry' && runRecognisedAt === Infinity) runRecognisedAt = t;
+    if (tick === 1) for (const a of actors) snapPos.set(a, { x: a.x, y: a.y });
 
     if (tick === 4) for (const a of actors) { if (a.ability?.aura) abilityUsed(a, 'aura'); if (a.overcharged) abilityUsed(a, 'overcharge'); if (a.sovereignQ4 && !isRun) abilityUsed(a, 'sovereign'); }
     // Dragon's Roar: at the snap, the lineman across from him is slow to engage.
@@ -1634,6 +1721,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (lifted && tick > 2) abilityUsed(g, 'grove');
     }
     for (const a of offs) offenseTick(a);
+    for (const d of defs) updateRead(d);
     for (const d of defs) defenseTick(d);
     for (const a of actors) if (!a.engaged) integrate(a);
     separate();

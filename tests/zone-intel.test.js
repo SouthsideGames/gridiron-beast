@@ -93,9 +93,32 @@ test('zone anticipation reads observed, delayed movement, not the receiver\'s tr
 });
 
 test('zone defenders do not anticipate routes on runs or before a play-action fake resolves (the pass key)', () => {
+  // Behaviour (v42.14: the pass key is the defender's own run read, not the offense's true phase). A zone defender anticipating
+  // receivers is visible in the trace as a zone read (zoneInfo); before the play shows pass to him he only drops and carries.
+  const zoneDefs = (def) => PLAYS[def].onField.filter((s) => PLAYS[def].assignments[s]?.a === 'zone');
+  const anticipating = (sim, def, until) => sim.frames.filter((f) => f.dbg && f.t <= until && f.holder === 'QB').some((f) => f.dbg.some((e) => zoneDefs(def).includes(e[0]) && e[1] === 'zone' && e[6]));
+  let runs = 0;
+  for (const off of ['inside_zone', 'power_right', 'dive', 'counter', 'outside_zone']) for (const def of ['cover_3', 'cover_2_zone', 'tampa_2']) for (const seed of [21, 22, 23]) {
+    const sim = play({ off, def, seed, options: { trace: true } }); const h = sim.events.find((e) => e.kind === 'handoff'); runs++;
+    assert.ok(!anticipating(sim, def, h ? h.t : 9), `${off} vs ${def} seed ${seed}: a zone defender read routes before the handoff`);
+  }
+  assert.ok(runs >= 45, `runs sampled: ${runs}`);
+  // Play-action: while the fake still has them (the first 0.45 s, the line firing out and the mesh), underneath zone defenders do
+  // not anticipate; once the quarterback's drop shows, they do (the key resolves).
+  let resolved = 0, pa = 0;
+  for (const off of ['pa_post', 'pa_boot', 'pa_shot']) for (const def of ['cover_3', 'tampa_2', 'cover_2_zone']) for (const seed of [31, 32, 33, 34]) {
+    const sim = play({ off, def, seed, options: { trace: true } }); pa++;
+    const under = zoneDefs(def).filter((s) => PLAYS[def].assignments[s].role !== 'deep');
+    const early = sim.frames.filter((f) => f.dbg && f.t <= 0.45).some((f) => f.dbg.some((e) => under.includes(e[0]) && e[1] === 'zone' && e[6]));
+    assert.ok(!early, `${off} vs ${def} seed ${seed}: an underneath zone defender anticipated routes during the fake`);
+    if (sim.frames.some((f) => f.dbg && f.dbg.some((e) => zoneDefs(def).includes(e[0]) && e[1] === 'zone' && e[6]))) resolved++;
+  }
+  assert.ok(resolved / pa > 0.8, `the pass key resolves after the fake on most play-action plays (${resolved}/${pa})`);
+  // And the key is his own read: no true phase, play type or play-action designation in it.
   const src = fs.readFileSync(new URL('../src/sim/engine.js', import.meta.url), 'utf8');
   const zone = src.slice(src.indexOf('function zoneRead'), src.indexOf('function defenseTick'));
-  assert.match(zone, /passKey\s*=\s*ball\.inAir \|\| \(ball\.holder === qb && !handoffDone && phase === 'dropback' && !\(isPlayAction && t < 1\.0\)\)/);
+  assert.match(zone, /const passKey = passShown\(d\)/);
+  assert.ok(!/phase === 'dropback'|isPlayAction|isRun|offensePlay\.type/.test(zone), 'the zone read uses no hidden play information');
   assert.match(zone, /passKey && !isIn && edgeGap/);
 });
 
