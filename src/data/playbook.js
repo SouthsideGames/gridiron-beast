@@ -298,8 +298,8 @@ const DEFENSE_PLAYS = [
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), FS: RUSH('A_L'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'),
   }, { align: { FS: [7, -2] }, tags: ['blitz', 'man', 'risky', 'short'], desc: 'The free safety comes from depth; man across with no deep help.' }),
   defense('bear_front', 'Bear Front', 'heavy', {
-    DL1: RUSH('A_L'), DL3: RUSH('A_R'), DL2: RUSH('B_R'), LB1: ZONE('short_L'), LB2: ZONE('short_R'), CB1: MAN('wideL'), CB2: MAN('wideR'),
-  }, { align: { DL1: [1, -1.6], DL3: [1, 0.9], DL2: [1, 2.6], LB1: [3.5, -3], LB2: [3.5, 3] }, tags: ['run', 'balanced'], desc: 'Three down linemen over the centre and guards; corners alone in man.' }),
+    DL1: RUSH('B_L'), DL3: RUSH('A_M'), DL2: RUSH('B_R'), LB1: ZONE('short_L'), LB2: ZONE('short_R'), CB1: MAN('wideL'), CB2: MAN('wideR'),
+  }, { align: { DL1: [1, -2.6], DL3: [1, 0], DL2: [1, 2.6], LB1: [3.5, -3], LB2: [3.5, 3] }, tags: ['run', 'balanced'], desc: 'A nose over the centre and a lineman in each B gap; corners alone in man.' }),
   defense('double_a_mug', 'Double A Mug', 'pressure', {
     DL1: RUSH('edge_L'), DL2: RUSH('edge_R'), DL3: RUSH('A_L'), LB1: RUSH('A_R'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: MAN('inside'),
   }, { align: { DL3: [1, -0.9], LB1: [1.2, 0.9], FS: [7, 0] }, tags: ['blitz', 'man', 'risky', 'interior'], desc: 'Two rushers mugged up in the A gaps, ends wide. Overloads the middle.' }),
