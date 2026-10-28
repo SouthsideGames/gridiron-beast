@@ -1203,9 +1203,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if ((dq < 1.5 && Math.hypot(v.vx, v.vy) > 1 && v.vx > -0.5) || (dq < 2.5 && closing > 0.8)) { mesh = true; if (dq < 1.5) R.sawMesh = true; }
       if (!handSeen && (p.x > 0.5 || (R.sawMesh && dq > 2.2) || (t > 0.5 && Math.abs(p.y - q.y) > 4 && v.vx > -0.5))) release = true;
     }
-    // A fake he is protected from (Ancient Grove, the no-bite effect): he reads the mesh like anyone, but the mesh alone never
-    // commits him (updateRead: before the ball is seen, the other cues must reach the threshold without it), so a fake never pulls
-    // him up, and the misdirection lean never moves him. Echo Read: the mesh moves him half as much and he sees the back leave without the ball
+    // A fake he is protected from (Ancient Grove, the no-bite effect): he reads the mesh like anyone, but the moment the fake shows
+    // (updateRead) the mesh stops holding him, so a play-action fake never keeps him; and the misdirection lean never moves him. Echo Read: the mesh moves him half as much and he sees the back leave without the ball
     // twice as clearly (he bites half as long).
     const rooted = groveGuards(d); const guarded = !!(rooted || d.ability?.noPlayActionBite);
     let wMesh = mesh && !handSeen ? 0.6 : 0, wRelease = release ? 0.5 : 0;
@@ -1223,7 +1222,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const conflict = !guarded && Math.abs(lineFlow) > 0.25 && Math.abs(backFlow) > 0.4 && Math.sign(lineFlow) !== Math.sign(backFlow);
     // Without the mesh: what the line, the quarterback and the rest say (a guarded defender commits only on this).
     const E0 = den - wMesh > 0 ? clamp((num - wMesh) / (den - wMesh), -1, 1) : 0;
-    return { E: clamp(num / den, -1, 1), E0, guarded, rooted, line: +line.toFixed(2), qb: +qbCue.toFixed(2), mesh, manKey, release, handSeen, qbRun, lineFlow, backFlow, conflict, delay: +delay.toFixed(2), aw };
+    return { E: clamp(num / den, -1, 1), E0, guarded, rooted, drop, line: +line.toFixed(2), qb: +qbCue.toFixed(2), mesh, manKey, release, handSeen, qbRun, lineFlow, backFlow, conflict, delay: +delay.toFixed(2), aw };
   }
   /** A catch or a scramble: visible the moment it happens, and (as before v42.14) every defender turns to the ball carrier at once
    * (catch and scramble also mark recognised directly). Only designed runs are read through the cues. */
@@ -1237,15 +1236,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (visibleCarry()) { R.b = 1; R.committed = true; d.recognised = true; return R; }
     if (t + 1e-9 >= R.next) {
       const c = readCues(d, R); const every = readEvery(d); R.cues = c;
-      while (R.next <= t + 1e-9) R.next += every; // on his own clock: the schedule carries the remainder, so the average interval is exactly `every` (no 0.05 s tick steps)
+      R.next = t + every;
       const kappa = (3 + 3 * norm(d.attrs.awareness)) * (c.conflict ? 0.6 : 1);
       R.b = clamp(R.b + Math.min(1, kappa * every) * (c.E - R.b), -1, 1);
     }
     const th = strictRead(d) ? READ.runStrict : READ.run;
     R.committed = R.committed ? R.b >= th - READ.release : R.b >= th;
-    // Ancient Grove / no-bite: never committed by the mesh alone (a fake): before the ball is seen, the rest of the evidence must
-    // carry him there by itself.
-    const c = R.cues; if (R.committed && c?.guarded && !c.handSeen && !c.qbRun && c.E0 < th) {
+    // Ancient Grove / no-bite: once the fake shows (the quarterback seen dropping with the ball, or the back leaving without it),
+    // the mesh no longer holds him: unless the rest of the evidence carries him by itself, he lets go at once.
+    const c = R.cues; if (R.committed && c?.guarded && !c.handSeen && !c.qbRun && (c.drop > 0.8 || c.release) && c.E0 < th) {
       R.committed = false; if (c.rooted) abilityUsed(c.rooted, 'grove'); if (d.ability?.noPlayActionBite) abilityUsed(d, 'noPlayActionBite');
     }
     d.recognised = R.committed;
