@@ -1020,11 +1020,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   const deepRoute = (r) => r?.assignment?.a === 'route' && (r.assignment.points?.[r.assignment.points.length - 1]?.[0] ?? 0) >= 15; // the receiver's own route (offensive abilities only: Eclipse Route)
   /** A route a defender can SEE is going deep (Phase B fix 7, Heat Haze): the receiver, as he was a fifth of a second ago, one
-   * and a half yards or more downfield on a vertical release (running upfield at 4 yards a second or more). Never his route assignment: a comeback
-   * counts on its stem and stops counting the moment it turns back. */
+   * three yards or more downfield on a vertical release, past any slant's stem (running upfield at 4 yards a second or more, within 45 degrees of
+   * straight upfield: a fade, seam or post stem counts, a slant across does not). Never his route assignment: a comeback
+   * counts on its stem and stops counting the moment it turns back. A slant's two-yard stem looks the same for an instant (worth a
+   * few hundredths of a yard), so the ability is announced only once the route is plainly deep (eight yards). */
   function seenDeep(r) {
     const h = history.get(r); if (!h || h.length < 6) return false; const i1 = h.length - 1 - 4, i0 = i1 - 2; const a = h[i1], b = h[i0];
-    return !!a && !!b && a.x >= 1.5 && (a.x - b.x) / (2 * DT) > 4;
+    const vx = (a?.x - b?.x) / (2 * DT), vy = (a?.y - b?.y) / (2 * DT);
+    return !!a && !!b && a.x >= 1.5 && vx > 4 && Math.abs(vy) < vx ? a.x : 0; // upfield, within 45 degrees of straight (a slant breaking across is not); his seen depth
   }
   const STEP = 1.5; // "within a step" (Sticky)
   const zoneRadius = (asg, d = null) => (asg.role === 'deep' ? 12 : asg.role === 'middle' ? 7.5 : 7) + (d?.ability?.zoneRange || 0);
@@ -1086,7 +1089,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function coverDelay(d, target, mark = false) {
     const sticky = d.ability?.manCoverage && dist(d, target) <= STEP ? d.ability.manCoverage : 0; if (mark && sticky) abilityUsed(d, 'manCoverage');
     let delay = 0.4 - 0.3 * norm(d.attrs.coverage + sticky) - 0.2 * (norm(d.attrs.awareness) - norm(65)) - reactionOf(d); // the v42.14 delay at Awareness 65
-    if (d.ability?.heatHaze && seenDeep(target)) { delay -= d.ability.heatHaze; if (mark) abilityUsed(d, 'heatHaze'); } // Heat Haze: deep routes lose 0.15 s of separation on him
+    const deepSeen = d.ability?.heatHaze ? seenDeep(target) : 0;
+    if (deepSeen) { delay -= d.ability.heatHaze; if (mark && deepSeen >= 8) abilityUsed(d, 'heatHaze'); } // Heat Haze: deep routes lose 0.15 s of separation on him
     return delay;
   }
   /** The receiver's trail `delay` seconds ago, interpolated between ticks (Phase B fix 6), so a rating difference smaller than a tick
@@ -1131,7 +1135,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function zoneDelay(d, r, mark = false) {
     const sticky = d.ability?.manCoverage && dist(d, r) <= STEP ? d.ability.manCoverage : 0; // Sticky: within a step (Phase B fix 7)
     let delay = 0.45 - 0.33 * norm(d.attrs.coverage + sticky) - 0.12 * norm(d.attrs.awareness) - reactionOf(d); if (mark && sticky) abilityUsed(d, 'manCoverage');
-    if (d.ability?.heatHaze && seenDeep(r)) { delay -= d.ability.heatHaze; if (mark) abilityUsed(d, 'heatHaze'); }
+    const deepSeen = d.ability?.heatHaze ? seenDeep(r) : 0;
+    if (deepSeen) { delay -= d.ability.heatHaze; if (mark && deepSeen >= 8) abilityUsed(d, 'heatHaze'); }
     return Math.max(0, delay);
   }
   /** What a zone defender sees of a receiver: his position and velocity a perception delay ago (never this tick's truth). */
