@@ -1204,8 +1204,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (!handSeen && (p.x > 0.5 || (R.sawMesh && dq > 2.2) || (t > 0.5 && Math.abs(p.y - q.y) > 4 && v.vx > -0.5))) release = true;
     }
     // A fake he is protected from (Ancient Grove, the no-bite effect): he reads the mesh like anyone, but the moment the fake shows
-    // (updateRead) the mesh stops holding him, so a play-action fake never keeps him; and the misdirection lean never moves him. Echo Read: the mesh moves him half as much and he sees the back leave without the ball
-    // twice as clearly (he bites half as long).
+    // (updateRead) the mesh stops holding him, so a play-action fake never keeps him; and the misdirection lean never moves him. Echo Read: the mesh counts half as much in his read and the back leaving without the
+    // ball counts twice: he commits to a run fake far less often (13% vs 66% of fakes, same seeds); how far he comes up on the fake
+    // and how fast he lets go once he sees the back leave are unchanged.
     const rooted = groveGuards(d); const guarded = !!(rooted || d.ability?.noPlayActionBite);
     let wMesh = mesh && !handSeen ? 0.6 : 0, wRelease = release ? 0.5 : 0;
     if ((wMesh || wRelease) && !guarded && d.ability?.echoRead) {
