@@ -3810,8 +3810,22 @@ Owner's Phase C audit (2026-10-28, audit-only) and approval of fixes F1–F6. In
   - Toss Sweep loses about 0.7 yards to arm tackles and missed blocks in space.
   - Negative runs rise slightly, because an attacking defender now sometimes meets a back who has the ball earlier.
   - Goal Line Man and Edge Contain give up more to Power and Counter. Both lessons say so; Goal Line Man's free linebacker is now blocked by the puller on about half of those plays.
-- **Test amended (flagged for the owner).** `run-read.test.js`, "Goal Line Man: the free linebacker makes plays…": his share of solo tackles on Counter and Power fell from about 0.5 to 0.24, against a bar of 0.25. The assertion now counts tackles and assists (0.34). The threshold is unchanged, and the alignment and run-support test is unchanged and passes.
-- **Recorded for Phase C2:** running-back vision (Awareness still near inert, with more negative runs at 95 on Inside Zone); the Outside Zone redesign; Stretch Left (7.7 in games, the edge left open by some fronts); Counter against Bear Front; and the run lessons that do not hold (22 of 37). Reserve plays Pin Pull and End Around never reach their mesh (now quarterback keeps), and Pistol Zone Read and Midline Read miss it on 17–32%: their paths need correcting before release. The Toss pitch still has no ball flight.
+- **Test amended (owner-approved, 2026-10-28).** `run-read.test.js`, "Goal Line Man: the free linebacker makes plays…": his share of solo tackles on Counter and Power fell from about 0.5 to 0.24, against a bar of 0.25. The assertion now counts tackles and assists (0.34), with the threshold unchanged. A new behaviour test guards him without a quota: he recognises the observable run on more than 80% of plays (measured 0.92–0.96 over three seed sets), and on the plays no blocker engages him he is in on the stop more than 45% of the time (measured 0.61–0.84). The alignment and run-support test is unchanged and passes.
+- **Recorded for Phase C2:** running-back vision (Awareness still near inert, with more negative runs at 95 on Inside Zone); the Outside Zone redesign; Stretch Left (7.7 in games, the edge left open by some fronts); Counter against Bear Front; and the run lessons that do not hold (22 of 37). The Toss pitch still has no ball flight.
+- **Reserve-play accessibility audit (owner request, 2026-10-28).** Pin and Pull, End Around, Pistol Zone Read and Midline Read cannot be reached by any franchise, AI club, saved plan or practice:
+  - They are reserve plays, not in `OFFENSE_IDS`, and none is legendary.
+  - None of the six coordinator playbooks (`PLAYBOOKS`) contains a reserve play, and no version ever has.
+  - Generated AI playbooks draw from fixed live lists (`playbookFor`), and scouting swaps draw from `OFFENSE_IDS` (`adaptPlaybook`). None of 5,000 generated clubs carries one.
+  - A franchise plan is filtered to the coordinators' catalogs plus available Legendary Plays (`setGamePlan`, `startingPlan`), so no save the game writes can hold one.
+  - The Practice Field lists only the catalog (`teamsForPractice`).
+  - The owner's "OK to add this play to the practice field" review flag is stored but read by nothing.
+
+  The only routes in are the development tools (Developer → Playbook Audit, and the Defensive scenario lab in the Attribute Testing Lab), which never touch a franchise. There the Audit marks them "built and reviewable here, but no coach, AI club or practice field can call it yet".
+
+  Corrections are deferred to the reserve-play release. Measured on this engine (26 calls × 10 seeds):
+  - Pin and Pull misses the mesh on 100% of plays: its back runs straight away from the quarterback, like v42.15's Stretch Left. Adding the same hip point (`[-4.6, -1.4]`) gives 0% misses and handoffs within 1.48 yards.
+  - Pistol Zone Read misses on 39%, Midline Read on 24%: the quarterback never steps toward the back's track. A one-point mesh step (`[-3.6, 0.6]` and `[-3.4, 0.5]`) gives 0% misses.
+  - End Around misses on 99%. The receiver needs about two seconds to loop back to the quarterback, so it needs a small timing rule for reverses, not a path point; even a quarterback who waits for a carrier still coming leaves 59% missed.
 - Tests: `tests/run-game.test.js` (13): every live handoff in reach, Stretch Left's mesh, the missed mesh keeps, the read option's keeps and gives, receivers' blocks and their limits, the hand-over to the escort, the off-field check, Trap's kick-out and climb, slipping a block in space, pullers ahead of the back and blocking, the back not held back, and Bulwark's reach, single count and measurable but uncertain effect.
 
 ### 53.6 Testing
