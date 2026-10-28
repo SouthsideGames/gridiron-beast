@@ -97,16 +97,21 @@ test('fix 4: Bracket Left is coordinated: the corner underneath and inside, the 
 
 test('fix 4: Bracket Left takes away its receiver without making him uncoverable, and pays for it elsewhere', () => {
   const forcedLine = (off, def, tgt, at, base, n = 100) => { const c = [], y = []; for (let i = 0; i < n; i++) { const s = play(off, def, base + i, forced(tgt, at)); c.push(s.stats.receiver ? 1 : 0); y.push(s.yards); } return { comp: mean(c), yds: mean(y) }; };
-  // The bracketed receiver, on the routes a bracket is meant for: harder to complete than against Cover 1, never impossible.
+  // The bracketed receiver, on the routes a bracket is meant for: harder to complete and worth fewer yards than against Cover 1,
+  // never impossible. The catch itself is still contested by the nearest defender alone (catch resolution unchanged), so most of
+  // the bracket shows in the yards: the second defender is there after the catch. 300 throws a route (at 600 a route, on fresh
+  // seeds: completion 42.4 vs 46.7%, yards per attempt 9.6 vs 11.1; v42.14.0 46.9 vs 47.0% and 10.5 vs 10.9).
   const routes = [['deep_post', 2.3], ['three_verticals', 2.4], ['deep_corner', 2.3], ['levels', 1.9], ['curl_flat', 1.8], ['mesh', 2.0]];
-  let bSum = 0, cSum = 0;
-  for (const [off, at] of routes) { const b = forcedLine(off, 'bracket_left', 'WR1', at, 87000), c = forcedLine(off, 'cover_1', 'WR1', at, 87000); bSum += b.comp; cSum += c.comp; assert.ok(b.comp >= 0.15, `${off}: the bracketed receiver can still be hit (${b.comp.toFixed(2)})`); }
-  assert.ok(bSum / routes.length < cSum / routes.length - 0.05, `bracketed receiver completes less than in Cover 1 (${(bSum / routes.length).toFixed(2)} vs ${(cSum / routes.length).toFixed(2)})`);
+  let bC = 0, cC = 0, bY = 0, cY = 0;
+  for (const [off, at] of routes) { const b = forcedLine(off, 'bracket_left', 'WR1', at, 87000, 300), c = forcedLine(off, 'cover_1', 'WR1', at, 87000, 300); bC += b.comp; cC += c.comp; bY += b.yds; cY += c.yds; assert.ok(b.comp >= 0.15, `${off}: the bracketed receiver can still be hit (${b.comp.toFixed(2)})`); }
+  const k = routes.length;
+  assert.ok(bC / k < cC / k, `bracketed receiver completes less often than in Cover 1 (${(bC / k).toFixed(3)} vs ${(cC / k).toFixed(3)})`);
+  assert.ok(bY / k < cY / k - 1.0, `and gains clearly less (${(bY / k).toFixed(2)} vs ${(cY / k).toFixed(2)} yards per attempt)`);
   // The quarterback sees it: he looks elsewhere on vertical concepts.
   const share = (def) => { let to = 0, th = 0; for (const off of ['three_verticals', 'deep_corner', 'double_move']) for (let i = 0; i < 60; i++) { const s = play(off, def, 87500 + i); if (s.events.some((e) => e.kind === 'throw')) { th++; if (s.stats.target === 'WR1') to++; } } return to / th; };
   assert.ok(share('bracket_left') < share('cover_1') * 0.7, 'the quarterback throws to the bracketed receiver less');
   // The cost: two defenders on one receiver leave the others more room than Cover 1 does (the right side, the back out of the backfield).
-  const elsewhere = (def) => mean([['three_verticals', 'WR2', 2.4], ['smash', 'WR3', 2.0], ['wheel', 'RB', 2.3]].map(([off, tgt, at]) => forcedLine(off, def, tgt, at, 87800).yds));
+  const elsewhere = (def) => mean([['three_verticals', 'WR2', 2.4], ['smash', 'WR3', 2.0], ['wheel', 'RB', 2.3]].map(([off, tgt, at]) => forcedLine(off, def, tgt, at, 87800, 200).yds));
   assert.ok(elsewhere('bracket_left') > elsewhere('cover_1') + 1, `the other receivers gain more against Bracket Left (${elsewhere('bracket_left').toFixed(2)} vs ${elsewhere('cover_1').toFixed(2)})`);
 });
 
@@ -182,4 +187,44 @@ test('future route information: changing a receiver\'s route after a point chang
     checked++;
   }
   assert.ok(checked >= 100);
+});
+
+// ---- Catch-point braking (owner-approved judged braking, after the three-way review of PR #79) ----
+/** One forced deep throw, seen from one defender: did he get within a yard of the landing spot before the ball, did he then run
+ * 0.75+ yards past it, how far is he when it comes down, and the outcome. */
+function catchPoint(off, def, slot, tgt, at, seed, extra) {
+  const s = play(off, def, seed, forced(tgt, at), extra); const th = s.events.find((e) => e.kind === 'throw'); if (!th) return null;
+  const arr = s.events.find((e) => ['catch', 'incomplete', 'interception'].includes(e.kind) && e.t > th.t); if (!arr) return null;
+  const fA = s.frames.find((x) => x.t >= arr.t - 1e-6) || s.frames.at(-1); const L = { x: fA.ball[0], y: fA.ball[1] };
+  let minD = 99, reached = false;
+  for (const f of s.frames) { if (f.t < th.t || f.t > arr.t + 1e-6) continue; const d = posOf(f, 'def', slot); const dd = Math.hypot(d[1] - L.x, d[2] - L.y); minD = Math.min(minD, dd); if (dd <= 1) reached = true; }
+  const d = posOf(fA, 'def', slot); const dArr = Math.hypot(d[1] - L.x, d[2] - L.y);
+  return { reached, overran: reached && dArr > minD + 0.75, dArr, comp: !!s.stats.receiver };
+}
+const goVsCover3 = (set, n = 200, base = 99000) => Array.from({ length: n }, (_, i) => catchPoint('three_verticals', 'cover_3', 'CB1', 'WR1', 2.4, base + i, (o, d) => set(d.CB1.attrs))).filter(Boolean);
+const rate = (rows, k) => rows.filter((r) => r[k]).length / rows.length;
+
+test('braking: a defender who gets to the catch point first mostly stays there, and a faster one is not worse for it', () => {
+  const slow = goVsCover3((a) => { a.speed = 50; }), fast = goVsCover3((a) => { a.speed = 95; });
+  const overFast = rate(fast.filter((r) => r.reached), 'overran');
+  assert.ok(overFast < 0.2, `a fast deep third rarely runs through the spot (${overFast.toFixed(3)}; 0.74 without braking)`);
+  assert.ok(rate(fast, 'comp') <= rate(slow, 'comp') + 0.03, `Speed does not hand the receiver catches (95: ${rate(fast, 'comp').toFixed(2)}, 50: ${rate(slow, 'comp').toFixed(2)}; 0.44 vs 0.34 without braking)`);
+  assert.ok(mean(fast.map((r) => r.dArr)) < mean(slow.map((r) => r.dArr)) - 0.5, 'and he is closer to the ball when it comes down');
+});
+
+test('braking is judged, not perfect: defenders still overshoot and miss, more often with poorer ball skills and more speed', () => {
+  const fast = goVsCover3((a) => { a.speed = 95; });
+  const reached = fast.filter((r) => r.reached);
+  assert.ok(rate(reached, 'overran') > 0, `a fast defender still runs past the spot sometimes (${rate(reached, 'overran').toFixed(3)})`);
+  assert.ok(rate(fast, 'comp') > 0.15, 'the go is still completed against him');
+  const onSpot = fast.filter((r) => r.dArr < 0.3).length / fast.length;
+  assert.ok(onSpot < 0.4, `he is not on the exact spot most of the time (${onSpot.toFixed(2)})`);
+  assert.ok(fast.some((r) => !r.reached), 'and he sometimes does not get there at all');
+  // Ball skills judge the stop: a 50/50 defender misjudges it more than a 95/95 one (same Speed and acceleration).
+  const poor = goVsCover3((a) => { a.speed = 95; a.awareness = 50; a.coverage = 50; }, 300), good = goVsCover3((a) => { a.speed = 95; a.awareness = 95; a.coverage = 95; }, 300);
+  const over = (rows) => rate(rows.filter((r) => r.reached), 'overran');
+  assert.ok(over(poor) > over(good), `poorer ball skills overshoot more (${over(poor).toFixed(3)} vs ${over(good).toFixed(3)})`);
+  // Deterministic: the same seed is the same play.
+  const a = play('three_verticals', 'cover_3', 99500, forced('WR1', 2.4)), b = play('three_verticals', 'cover_3', 99500, forced('WR1', 2.4));
+  assert.equal(JSON.stringify(a.frames), JSON.stringify(b.frames));
 });

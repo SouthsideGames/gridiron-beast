@@ -1446,9 +1446,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const breakRadius = baseBreak + (deepZoneOf(d) ? d.ability?.breakRadius || 0 : 0); // Canopy Read: deep zone only (Phase B fix 7)
       // The man defender on the target, beaten by a break and thrown behind: he plants to come back, the same burst as a recognised route break, once (v42.8).
       if (asg.a === 'man' && bySlot.off[manKeys[asg.key]] === ball.target && (d.vx * (L.x - d.x) + d.vy * (L.y - d.y)) < 0 && Math.hypot(d.vx, d.vy) > 3 && !(d.breakPlant > t - 1.0)) { d.breakPlant = t; d.cutUntil = t + 0.35; }
-      // Braking into the catch point (Phase B): he runs flat out but no faster than he can stop at the spot he reads (his own
-      // acceleration), so a fast defender who gets there early stays there to play the ball instead of running through it.
-      const brake = Math.sqrt(2 * d.accel * Math.max(0, toBall - 0.3)) + 0.5;
+      // Braking into the catch point (Phase B, judged braking approved by the owner after the three-way review). He runs flat out but
+      // tries to arrive no faster than he can stop at the spot he reads, and he JUDGES that stopping distance: he brakes as if he
+      // could stop `judge` times as hard as his acceleration (Agility) really allows. Judging it is ball skill (Awareness and
+      // Coverage); each throw he misjudges it differently (a hash of the seed, his slot and the throw: deterministic, no random draw,
+      // no quota). Above 1 he brakes late and overshoots (more so the faster he is coming); below 1 he brakes early and arrives short
+      // or late. Range: about 0.98-1.06 for a 95/95 defender, 0.83-1.51 at 65/65, 0.75-1.75 at 50/50. Without any braking, a
+      // defender who got there early ran through the spot on 35-77% of deep throws, and a faster one more often than a slower one.
+      const skill = 0.5 * norm(d.attrs.awareness) + 0.5 * norm(d.attrs.coverage);
+      const judge = Math.max(0.6, 1 + (1 - skill) * (2 * hash01(`${seed}|${d.slot}|stop|${Math.round(ball.thrownAt * 100)}`) - 0.5));
+      const brake = Math.sqrt(2 * d.accel * judge * Math.max(0, toBall - 0.3)) + 0.5;
       if (toBall < breakRadius) { mark('ball', 'break'); if (toBall >= baseBreak) abilityUsed(d, 'breakRadius'); steer(d, L.x, L.y, 1, 0.2, brake); return; }
       if (!['rush', 'contain'].includes(asg.a) || d.x < L.x) { mark('ball', 'rally'); steer(d, L.x, L.y, 0.95, 0.2, brake); return; }
     }
