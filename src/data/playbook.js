@@ -69,6 +69,7 @@ const BLOCK = { a: 'block' }; // OL pass protection / default run block toward p
 const RUNBLOCK = (to) => ({ a: 'run_block', to }); // lead or down block toward a landmark
 const STALK = (to) => ({ a: 'stalk', to }); // WR/TE blocks the nearest defender in his area
 const PULL = (via, to) => ({ a: 'pull', via, to });
+const CLIMB = (to) => ({ a: 'run_block', to, climb: true }); // Phase C1 (F4): works past the linemen on the line to block at the second level
 const RELEASE = (to) => ({ a: 'release', to }); // lineman releases for a screen
 const CARRY = (path) => ({ a: 'carry', path });
 const HANDOFF = { a: 'handoff' };
@@ -109,80 +110,85 @@ const OFFENSE_PLAYS = [
   // ---- runs
   offense('inside_zone', 'Inside Zone', 'gun_pro', {
     QB: HANDOFF, RB: CARRY([[-5.2, 2.8], [-2, 0.5], [2, -1], [8, -1.5], [20, -2]]),
-    LG: RUNBLOCK([2, -2]), C: RUNBLOCK([2, -0.5]), RG: RUNBLOCK([2, 1.5]), WR1: STALK([4, -16]), WR2: STALK([4, 16]),
+    LG: RUNBLOCK([2, -2]), RG: RUNBLOCK([2, 1.5]), TE: CLIMB([3, 0.5]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end climbs to the linebacker (the centre this was written for is not in the Pro set)
   }, { type: 'run', tags: ['run', 'inside', 'short'], desc: 'Zone blocking; the back reads the first lineman and cuts.' }),
   offense('power_right', 'Power Right', 'tight_i', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-3, 1.5], [1, 3], [6, 3.5], [20, 4]]),
-    LG: PULL([-2, 0.5], [1.5, 3.5]), C: RUNBLOCK([1.5, -0.5]), RG: RUNBLOCK([1.5, 2]), TE: RUNBLOCK([1.5, 4.5]), WR1: STALK([4, -16]),
+    LG: PULL([-1.2, 0.6], [1.2, 3.4]), C: RUNBLOCK([1.5, -0.5]), // Phase C1 (F5): a tight pull, just behind the centre, so the guard reaches the hole before the back (v42.15 pulled 2 yards deep and arrived behind him)
+    RG: RUNBLOCK([1.5, 2]), TE: RUNBLOCK([1.5, 4.5]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], desc: 'Guard pulls to lead through the right B-gap.' }),
   offense('power_left', 'Power Left', 'tight_i', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-3, -1.5], [1, -3], [6, -3.5], [20, -4]]),
-    RG: PULL([-2, -0.5], [1.5, -3.5]), C: RUNBLOCK([1.5, 0.5]), LG: RUNBLOCK([1.5, -2]), TE: RUNBLOCK([2, 3]), WR1: STALK([4, -16]),
+    RG: PULL([-1.2, -0.6], [1.2, -3.4]), C: RUNBLOCK([1.5, 0.5]), // Phase C1 (F5): a tight pull, so the guard leads the back through the hole
+    LG: RUNBLOCK([1.5, -2]), TE: RUNBLOCK([2, 3]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], desc: 'Guard pulls left; tight end seals the back side.' }),
   offense('dive', 'HB Dive', 'i_pro', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-2, 0.6], [2, 0.8], [20, 1]]),
-    LG: RUNBLOCK([1.5, -1.6]), C: RUNBLOCK([1.5, 0]), RG: RUNBLOCK([1.5, 1.6]), WR1: STALK([4, -16]), WR2: STALK([4, 16]),
+    LG: RUNBLOCK([1.5, -1.6]), RG: RUNBLOCK([1.5, 1.6]), TE: CLIMB([3, 1]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end leads up to the linebacker
   }, { type: 'run', tags: ['run', 'inside', 'short', 'goalline'], desc: 'Straight ahead behind the center. Short yardage.' }),
   offense('outside_zone', 'Outside Zone', 'gun_pro_lt', {
     QB: HANDOFF, RB: CARRY([[-5.2, -2.8], [-3, 2], [0, 6], [5, 9], [22, 11]]),
-    LG: RUNBLOCK([2, 0]), C: RUNBLOCK([2, 2.5]), RG: RUNBLOCK([2.5, 5]), WR2: STALK([3, 14]), WR1: STALK([4, -14]),
+    LG: RUNBLOCK([2, 0]), TE: RUNBLOCK([1.5, 4.5]), RG: RUNBLOCK([2.5, 5]), WR2: STALK([3, 14]), WR1: STALK([4, -14]), // Phase C1 (F3): the tight end, the end man of the line, reaches the play-side edge (the reach was written for a centre the Pro set does not have)
   }, { type: 'run', tags: ['run', 'outside'], desc: 'Everyone reaches right; the back bends it outside or cuts back.' }),
   offense('stretch_left', 'Stretch Left', 'tight_gun', {
-    QB: HANDOFF, RB: CARRY([[-5.2, -2.8], [-3, -5], [0, -8], [5, -10], [22, -12]]),
+    QB: HANDOFF, RB: CARRY([[-5.2, -2.8], [-4.6, -1.4], [-3, -5], [0, -8], [5, -10], [22, -12]]), // Phase C1 (F1): the back takes the mesh at the quarterback's hip, then bends outside (v42.15 ran straight away from the mesh)
     RG: RUNBLOCK([2, 0]), C: RUNBLOCK([2, -2.5]), LG: RUNBLOCK([2.5, -5]), TE: RUNBLOCK([2, 2]), WR1: STALK([3, -15]),
   }, { type: 'run', tags: ['run', 'outside'], desc: 'Wide zone to the left behind a stalk-blocking receiver.' }),
   offense('counter', 'Counter', 'tight_i', {
     QB: HANDOFF, RB: CARRY([[-6.5, 0], [-5.9, 0.9], [-3.9, -1], [0, -3], [6, -3.8], [20, -4]]),
-    RG: PULL([-2, 0], [1.5, -3.8]), TE: PULL([-2.5, 1.5], [3, -5]), C: RUNBLOCK([1.5, 0.5]), LG: RUNBLOCK([1.5, -2]), WR1: STALK([4, -16]),
+    RG: PULL([-1.2, 0], [1.2, -3.6]), TE: PULL([-1.6, 1.2], [2.5, -5]), // Phase C1 (F5): tight pulls, so guard and tight end lead the back instead of trailing him
+    C: RUNBLOCK([1.5, 0.5]), LG: RUNBLOCK([1.5, -2]), WR1: STALK([4, -16]),
   }, { type: 'run', tags: ['run', 'inside', 'misdirection'], desc: 'False step right, then the guard and tight end pull left.' }),
   offense('toss_sweep', 'Toss Sweep', 'i_pro', {
     QB: { a: 'pitch', path: [[-1.6, 0], [-3, 1.5]] }, RB: CARRY([[-6.5, 0], [-5.5, 6], [-2, 11], [4, 14], [22, 15]]),
-    RG: PULL([-2, 3], [2, 9]), C: RUNBLOCK([1.5, 1.5]), LG: RUNBLOCK([1.5, -1.5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
+    RG: PULL([-2, 3], [2, 9]), TE: RUNBLOCK([1.5, 1.5]), LG: RUNBLOCK([1.5, -1.5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]), // Phase C1 (F3): the tight end blocks down where the absent centre was drawn
   }, { type: 'run', tags: ['run', 'outside'], desc: 'Pitch to the back; the guard leads around the right edge.' }),
   offense('trap', 'Trap', 'gun_pro', {
     QB: HANDOFF, RB: CARRY([[-5.2, 2.8], [-2, 1], [2, -1.5], [20, -2]]),
-    RG: PULL([-1.5, 0], [1, -2.2]), C: RUNBLOCK([1.5, 1]), LG: RUNBLOCK([3, -3]), WR1: STALK([4, -16]), WR2: STALK([4, 16]),
+    RG: PULL([-1.5, 0], [1, -2.2]), TE: RUNBLOCK([1.5, 1.5]), LG: CLIMB([2.5, -0.5]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3, F4): the left guard releases the tackle and climbs, the tight end blocks down, the right guard traps
   }, { type: 'run', tags: ['run', 'inside', 'misdirection'], desc: 'Let the tackle through, then trap him with the pulling guard.' }),
   offense('qb_draw', 'QB Draw', 'gun_pro', {
     QB: KEEP([[-5, 0], [-6, 0], [-2, 0.5], [3, 0], [20, 0]]), RB: RUNBLOCK([0, 3.5]),
-    LG: RUNBLOCK([-1.5, -2]), C: RUNBLOCK([-1, 0.5]), RG: RUNBLOCK([-1.5, 2.5]), WR1: R('go'), WR2: R('go'),
+    LG: RUNBLOCK([-1.5, -2]), TE: CLIMB([2.5, 1]), RG: RUNBLOCK([-1.5, 2.5]), WR1: R('go'), WR2: R('go'), // Phase C1 (F3): the tight end climbs to the linebacker (the centre this was written for is not in the Pro set)
   }, { type: 'run', tags: ['run', 'inside', 'long', 'draw'], desc: 'Fake the drop, then the quarterback keeps up the middle; the back blocks.' }),
-  offense('read_option', 'Read Option', 'gun_pro_lt', {
-    QB: { a: 'option', path: [[-5, 0], [-4, 2], [0, 5], [6, 9], [20, 11]] }, RB: CARRY([[-5.2, -2.8], [-3, 0], [1, -2], [8, -3], [20, -3]]),
-    LG: RUNBLOCK([2, -2]), C: RUNBLOCK([2, 0]), RG: RUNBLOCK([2, 2]), WR1: STALK([4, -16]), WR2: STALK([4, 16]),
+  offense('read_option', 'Read Option', 'gun_pro', {
+    // Phase C1 (F1): the back crosses the quarterback's face, so the give is a real exchange at the mesh (v42.15's paths never
+    // came within 2.8 yards: every give moved the ball 3-6 yards to a back who was never in reach).
+    QB: { a: 'option', path: [[-5, 0], [-4, 2], [0, 5], [6, 9], [20, 11]] }, RB: CARRY([[-5.2, 2.8], [-4.2, 0.7], [-3, -0.8], [1, -2], [8, -3], [20, -3]]),
+    LG: RUNBLOCK([2, -2]), RG: RUNBLOCK([2, 2]), TE: RUNBLOCK([1.4, 3.4]), WR1: STALK([4, -16]), WR2: STALK([4, 16]), // Phase C1 (F3): the tight end seals the keep side (the inside block was written for a centre the Pro set does not have)
   }, { type: 'run', tags: ['run', 'option'], desc: 'The quarterback reads the unblocked edge: give inside or keep outside.' }),
   offense('jet_sweep', 'Jet Sweep', 'gun_trips', {
     QB: HANDOFF, WR3: CARRY([[-1.6, -4.5], [-2, -1], [-1, 6], [3, 13], [20, 16]]),
-    LG: RUNBLOCK([1.5, -1]), C: RUNBLOCK([1.5, 2]), RG: RUNBLOCK([2, 5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]),
+    LG: RUNBLOCK([1.5, -1]), RB: RUNBLOCK([2, 8]), RG: RUNBLOCK([2, 5]), WR2: STALK([3, 17]), WR1: STALK([4, -16]), // Phase C1 (F3): the back leads to the edge (the centre this was written for is not in the Spread set)
   }, { type: 'run', motion: { slot: 'WR3', to: [-1.6, -4.5] }, tags: ['run', 'outside', 'misdirection'], desc: 'The slot receiver takes the jet motion handoff around the right end.' }),
 
   // ---- quick passes
   offense('quick_slants', 'Quick Slants', 'gun_pro', {
-    QB: { a: 'pass' }, WR1: R('slant'), WR2: R('slant'), RB: R('flat'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR1: R('slant'), WR2: R('slant'), RB: R('flat'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR1', progression: ['WR1', 'WR2', 'RB'], drop: 'quick', tags: ['pass', 'quick', 'short', 'two_minute'], desc: 'Two slants with the back to the flat.' }),
   offense('stick', 'Stick', 'tight_gun', {
     QB: { a: 'pass' }, TE: R('stick'), RB: R('swing'), WR1: R('hitch'), LG: BLOCK, C: BLOCK, RG: BLOCK,
   }, { primary: 'TE', progression: ['TE', 'RB', 'WR1'], drop: 'quick', tags: ['pass', 'quick', 'short'], desc: 'Tight end sits in the hole; swing and hitch stretch the flat.' }),
   offense('curl_flat', 'Curl Flat', 'gun_pro', {
-    QB: { a: 'pass' }, WR2: R('curl'), RB: R('flat'), WR1: R('comeback'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR2: R('curl'), RB: R('flat'), WR1: R('comeback'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR2', progression: ['WR2', 'RB', 'WR1'], drop: 'three', tags: ['pass', 'short', 'zone_beater'], desc: 'High-low on the flat defender.' }),
   offense('bubble_screen', 'Bubble Screen', 'gun_trips', {
-    QB: { a: 'pass' }, WR3: R('bubble'), WR1: STALK([2, -19]), WR2: R('go'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR3: R('bubble'), WR1: STALK([2, -19]), WR2: R('go'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR3', progression: ['WR3', 'WR2'], drop: 'quick', tags: ['pass', 'screen', 'quick', 'short'], desc: 'Catch and run behind the outside receiver\'s block.' }),
   offense('rb_screen', 'RB Screen', 'gun_pro', {
     QB: { a: 'pass', hold: 1.6 }, RB: R('screen'), WR1: R('go'), WR2: R('go'),
-    LG: RELEASE([2, 6]), C: RELEASE([1, 9]), RG: BLOCK,
+    LG: RELEASE([2, 6]), RG: BLOCK,
   }, { primary: 'RB', progression: ['RB'], drop: 'five', tags: ['pass', 'screen', 'long', 'blitz_beater'], desc: 'Let the rush in, then dump it to the back behind two releasing linemen.' }),
 
   // ---- intermediate
   offense('smash', 'Smash', 'gun_spread', {
-    QB: { a: 'pass' }, WR2: R('hitch'), WR3: R('corner'), WR1: R('dig'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR2: R('hitch'), WR3: R('corner'), WR1: R('dig'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR3', progression: ['WR3', 'WR2', 'WR1'], drop: 'five', tags: ['pass', 'medium', 'zone_beater'], desc: 'Corner over hitch stresses the deep-half safety.' }),
   offense('mesh', 'Mesh', 'gun_trips', {
-    QB: { a: 'pass' }, WR3: R('shallow'), WR2: R('drag'), WR1: R('corner'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR3: R('shallow'), WR2: R('drag'), WR1: R('corner'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR3', progression: ['WR3', 'WR2', 'WR1'], drop: 'five', tags: ['pass', 'medium', 'man_beater'], desc: 'Two crossers rub underneath; the corner route clears the top.' }),
   offense('levels', 'Levels', 'gun_spread', {
-    QB: { a: 'pass' }, WR1: R('dig'), WR3: R('slant'), WR2: R('post'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR1: R('dig'), WR3: R('slant'), WR2: R('post'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR1', progression: ['WR1', 'WR3', 'WR2'], drop: 'five', tags: ['pass', 'medium', 'zone_beater'], desc: 'In-breaking routes at three depths.' }),
   offense('y_cross', 'Y Cross', 'tight_gun', {
     QB: { a: 'pass' }, TE: R('drag'), WR1: R('post'), RB: R('angle'), LG: BLOCK, C: BLOCK, RG: BLOCK,
@@ -194,27 +200,27 @@ const OFFENSE_PLAYS = [
     QB: { a: 'pass' }, TE: R('seam'), WR1: R('curl'), RB: R('swing'), LG: BLOCK, C: BLOCK, RG: BLOCK,
   }, { primary: 'TE', progression: ['TE', 'WR1', 'RB'], drop: 'five', tags: ['pass', 'medium', 'deep'], desc: 'The tight end splits the safeties up the seam.' }),
   offense('dagger', 'Dagger', 'gun_spread', {
-    QB: { a: 'pass' }, WR3: R('seam'), WR1: R('dig'), WR2: R('drag'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR3: R('seam'), WR1: R('dig'), WR2: R('drag'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR1', progression: ['WR1', 'WR3', 'WR2'], drop: 'five', tags: ['pass', 'medium', 'zone_beater'], desc: 'Seam clears the hook zone for the deep dig.' }),
 
   // ---- deep
   offense('three_verticals', 'Three Verticals', 'gun_spread', {
-    QB: { a: 'pass' }, WR1: R('go'), WR3: R('seam'), WR2: R('fade'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR1: R('go'), WR3: R('seam'), WR2: R('fade'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR3', progression: ['WR3', 'WR1', 'WR2'], drop: 'five', tags: ['pass', 'deep', 'long'], desc: 'Stretch the deep coverage with three vertical stems.' }),
   offense('deep_post', 'Deep Post', 'gun_pro', {
-    QB: { a: 'pass' }, WR1: R('post'), WR2: R('comeback'), RB: R('flat'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR1: R('post'), WR2: R('comeback'), RB: R('flat'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR1', progression: ['WR1', 'WR2', 'RB'], drop: 'five', tags: ['pass', 'deep', 'long'], desc: 'Shot play: post over the top with a comeback safety valve.' }),
   offense('deep_corner', 'Deep Corner', 'gun_pro', {
-    QB: { a: 'pass' }, WR2: R('corner'), WR1: R('skinny_post'), RB: R('swing'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR2: R('corner'), WR1: R('skinny_post'), RB: R('swing'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR2', progression: ['WR2', 'WR1', 'RB'], drop: 'five', tags: ['pass', 'deep', 'long', 'redzone'], desc: 'Corner route to the pylon with a skinny post behind it.' }),
   offense('slot_fade', 'Slot Fade', 'gun_spread', {
-    QB: { a: 'pass' }, WR3: R('fade'), WR2: R('out'), WR1: R('drag'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, WR3: R('fade'), WR2: R('out'), WR1: R('drag'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR3', progression: ['WR3', 'WR2', 'WR1'], drop: 'five', tags: ['pass', 'deep', 'redzone', 'man_beater'], desc: 'Slot receiver fades to the sideline against man coverage.' }),
   offense('wheel', 'Wheel', 'gun_pro_lt', {
-    QB: { a: 'pass' }, RB: R('wheel'), WR1: R('slant'), WR2: R('post'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass' }, RB: R('wheel'), WR1: R('slant'), WR2: R('post'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'RB', progression: ['RB', 'WR1', 'WR2'], drop: 'five', tags: ['pass', 'deep', 'man_beater'], desc: 'The back wheels up the sideline behind the slant.' }),
   offense('double_move', 'Double Move', 'gun_pro', {
-    QB: { a: 'pass', hold: 1.2 }, WR1: R('double_move'), WR2: R('curl'), RB: R('flat'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass', hold: 1.2 }, WR1: R('double_move'), WR2: R('curl'), RB: R('flat'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR1', progression: ['WR1', 'WR2', 'RB'], drop: 'five', tags: ['pass', 'deep', 'long'], desc: 'Hitch-and-go. Needs time to develop.' }),
 
   // ---- play action
@@ -228,7 +234,7 @@ const OFFENSE_PLAYS = [
     QB: PA([[-1.6, 0], [-4, 0], [-7, 0]]), RB: FAKE, WR1: R('go'), TE: R('seam'), LG: BLOCK, C: BLOCK, RG: BLOCK,
   }, { primary: 'TE', progression: ['TE', 'WR1'], drop: 'pa', tags: ['pass', 'deep', 'play_action', 'long'], desc: 'Max protection, two vertical routes.' }),
   offense('hail_mary', 'Hail Mary', 'gun_spread', {
-    QB: { a: 'pass', hold: 2.2 }, WR1: R('go'), WR2: R('go'), WR3: R('post'), LG: BLOCK, C: BLOCK, RG: BLOCK,
+    QB: { a: 'pass', hold: 2.2 }, WR1: R('go'), WR2: R('go'), WR3: R('post'), LG: BLOCK, RG: BLOCK,
   }, { primary: 'WR3', progression: ['WR3', 'WR1', 'WR2'], drop: 'five', tags: ['pass', 'deep', 'desperation'], desc: 'Everyone to the end zone.' }),
 ];
 
@@ -315,8 +321,16 @@ const DEFENSE_PLAYS = [
 ];
 
 // ------------------------------------------------------------- compilation
+// Phase C1 (F3): an assignment written for a slot the play's package does not put on the field was dropped without a word (eight
+// live runs lost a blocker that way). Every play is checked as it is compiled, and validatePlaybook reports each one.
+export function offFieldAssignments(play) {
+  const onField = play.side === 'offense' ? offenseOnField(play.pkg) : defenseOnField(play.pkg);
+  return Object.keys(play.assignments).filter((slot) => !onField.includes(slot)).map((slot) => `${play.name}: assignment for ${slot}, who is not on the field in the ${play.pkg} package`);
+}
+const COMPILE_PROBLEMS = [];
 function compile(play) {
   const onField = play.side === 'offense' ? offenseOnField(play.pkg) : defenseOnField(play.pkg);
+  COMPILE_PROBLEMS.push(...offFieldAssignments(play));
   const compiled = { ...play, onField, assignments: {} };
   for (const slot of onField) {
     const a = play.assignments[slot] || (['TE', 'RB', 'C'].includes(slot) ? BLOCK : null);
@@ -435,7 +449,7 @@ export function artEnd(play, slot) {
 
 /** Validate every play once; returns an array of problems (empty when valid). */
 export function validatePlaybook() {
-  const problems = [];
+  const problems = [...COMPILE_PROBLEMS];
   for (const p of Object.values(PLAYS)) {
     if (p.onField.length !== 7) problems.push(`${p.name}: ${p.onField.length} on field`);
     if (p.side === 'offense') {
