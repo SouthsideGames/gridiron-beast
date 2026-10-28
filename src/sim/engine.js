@@ -1236,7 +1236,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const R = (d.read ||= { b: readPrior(d), next: hash01(`${seed}|${d.slot}|phase`) * readEvery(d), committed: false, sawMesh: false, cues: null });
     if (visibleCarry()) { R.b = 1; R.committed = true; d.recognised = true; return R; }
     if (t + 1e-9 >= R.next) {
-      const c = readCues(d, R); const every = readEvery(d); R.next = t + every; R.cues = c;
+      const c = readCues(d, R); const every = readEvery(d); R.cues = c;
+      while (R.next <= t + 1e-9) R.next += every; // on his own clock: the schedule carries the remainder, so the average interval is exactly `every` (no 0.05 s tick steps)
       const kappa = (3 + 3 * norm(d.attrs.awareness)) * (c.conflict ? 0.6 : 1);
       R.b = clamp(R.b + Math.min(1, kappa * every) * (c.E - R.b), -1, 1);
     }
@@ -1286,7 +1287,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const passKey = passShown(d);
     const cands = [];
     for (const s of receivers) {
-      const r = bySlot.off[s]; if (!r || r.x <= -1 && !(r.assignment?.a === 'route')) continue; if (r.engaged) continue; // a back or tight end blocking is not a receiver
+      const r = bySlot.off[s]; if (!r) continue; if (r.engaged) continue; // a back or tight end blocking is not a receiver
+      // A back still behind the line is a receiver once he is SEEN releasing: moving quickly, away from the quarterback (v42.14:
+      // was his route assignment, which the defense cannot see).
+      if (r.x <= -1) { const rv = observedVelocity(d, r); if (!(Math.hypot(rv.vx, rv.vy) > 2.5 && Math.hypot(r.x - qb.x, r.y - qb.y) > 2)) continue; }
       const o = zoneObserve(d, r); if (o.x <= -1) continue;
       const toC = { x: zx - o.x, y: zy - o.y }; const tl = Math.hypot(toC.x, toC.y) || 1; const vin = (o.vx * toC.x + o.vy * toC.y) / tl; // speed toward the zone centre
       const isIn = inside(o); const entering = passKey && !isIn && edgeGap(o) < 1.5 + 4 * aw && vin > 1.5; if (!isIn && !entering) continue; // an aware defender sees a receiver coming from further out, once the quarterback shows pass
