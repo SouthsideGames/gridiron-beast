@@ -54,6 +54,10 @@ test('fix 2: deep coverage depends on Speed and Coverage, graded, never guarante
   const run = (attr, v) => { const sep = [], comp = []; for (let i = 0; i < 150; i++) { const s = T.play({ off: 'three_verticals', def: 'cover_3', defSubjects: ['CB1'], attr, value: v, seed: 84000 + i, options: forced('WR1', 2.4) }); if (s.stats.arriveSep != null) sep.push(s.stats.arriveSep); comp.push(s.stats.receiver ? 1 : 0); } return { sep: mean(sep), comp: mean(comp) }; };
   const s50 = run('speed', 50), s65 = run('speed', 65), s95 = run('speed', 95);
   assert.ok(s50.sep > s65.sep && s65.sep > s95.sep, `Speed closes on the ball: ${s50.sep.toFixed(2)} > ${s65.sep.toFixed(2)} > ${s95.sep.toFixed(2)} yd`);
+  // A fast deep defender who gets to the catch point first stays on it (v42.14: he ran through it, 2.1 yards away when the ball came
+  // down, and Speed 50 to 95 was worth only half a yard).
+  assert.ok(s95.sep < 1.2, `a fast deep defender is at the ball (${s95.sep.toFixed(2)} yd)`);
+  assert.ok(s50.sep - s95.sep > 0.8, `Speed is worth real ground at the catch (${(s50.sep - s95.sep).toFixed(2)} yd)`);
   assert.ok(s95.comp > 0.15, `a fast deep defender can still be beaten (${s95.comp.toFixed(2)})`);
   const c50 = run('coverage', 50), c95 = run('coverage', 95);
   assert.ok(c95.sep < c50.sep, `Coverage too (${c50.sep.toFixed(2)} vs ${c95.sep.toFixed(2)})`);
