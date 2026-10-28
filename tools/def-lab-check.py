@@ -103,6 +103,19 @@ with sync_playwright() as pw:
         check(bestp['red'] >= 1 and bestp['lab'] >= 1, f'pursuers show the carrier line and their effort / gap / angle {bestp}')
         lay = p.evaluate(LAYOUT); check(lay['over'] <= 1 and not lay['bad'], f'pursuit watch fits {lay}')
         shot(p, 'def-5-pursuit')
+        # run read (v42.14): the linebacker's read shows in the decision list ("Read +0.42 | Line … | State: …") for both ratings,
+        # the field labels carry the short read, and the run-front linemen are labelled with their gaps
+        p.select_option('[data-change=def-preset]', 'read_bear'); p.wait_for_timeout(150); p.select_option('[data-change=attr-n]', '25'); p.locator('[data-action="attr-run"]').tap(); p.wait_for_selector('.attr-results', timeout=60000)
+        p.locator('[data-action="attr-watch"]').first.tap(); p.wait_for_timeout(300); p.locator('[data-action="def-pause"]').tap(); p.wait_for_timeout(100)
+        if p.locator('[data-change=def-focus]').count(): p.select_option('[data-change=def-focus]', ''); p.wait_for_timeout(100)
+        RR = """() => { const li = [...document.querySelectorAll('#defdecisions .def-read')].map((e) => e.textContent); const gaps = [...document.querySelectorAll('#defdecisions li')].filter((e) => /rush · (B L|A M|B R) gap/.test(e.textContent)).length; const lab = [...document.querySelectorAll('#attrfield0 .def-overlay text')].filter((t) => /R[+−]\\d\\.\\d\\d/.test(t.textContent)).length; return { reads: li.filter((t) => /^Read [+−]\\d\\.\\d\\d \\| Line .* \\| State: (Reading|Committed \\(run\\)|Pass shown)$/.test(t)).length, committed: li.filter((t) => /Committed/.test(t)).length, gaps, lab }; }"""
+        bestr = {'reads': 0, 'committed': 0, 'gaps': 0, 'lab': 0}
+        for _ in range(30):
+            p.locator('[data-action="def-step"][data-d="1"]').tap(); p.wait_for_timeout(30); z = p.evaluate(RR)
+            for k in bestr: bestr[k] = max(bestr[k], z[k])
+        check(bestr['reads'] >= 8 and bestr['committed'] >= 1 and bestr['gaps'] >= 3 and bestr['lab'] >= 1, f'run read shows belief, cues and state for both ratings, gaps in the labels {bestr}')
+        lay = p.evaluate(LAYOUT); check(lay['over'] <= 1 and not lay['bad'], f'run read watch fits {lay}')
+        shot(p, 'def-6-run-read')
         # the ordinary attribute trial never draws the overlay
         p.locator('[data-action="lab-mode"][data-v="attr"]').tap(); p.wait_for_timeout(200); p.select_option('[data-change=attr-attr]', 'coverage'); p.wait_for_timeout(150); p.select_option('[data-change=attr-n]', '25')
         p.locator('[data-action="attr-run"]').tap(); p.wait_for_selector('.attr-results', timeout=60000); p.locator('[data-action="attr-watch"]').first.tap(); p.wait_for_timeout(800)

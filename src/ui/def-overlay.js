@@ -6,13 +6,30 @@
 // the match screen or field view imports this module or reads the trace (tests/def-scenario.test.js checks both).
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const SHORT = { engaged: 'blocked', carry: 'carrying', escort: 'escort', ball: 'ball in air', 'run-fit': 'run fit', pursue: 'pursue', 'pa-bite': 'bites on fake', rush: 'rush', contain: 'contain', man: 'man', zone: 'zone', spy: 'spy' };
-/** Plain words for one trace entry: [slot, why, why2, aimX, aimY, recognised, zoneInfo, pursuitInfo]. */
+const sgn = (v) => (v == null ? '—' : `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}`);
+const STATE = { run: 'Committed (run)', pass: 'Pass shown', reading: 'Reading' };
+/**
+ * His run read (Phase A, v42.14) in plain words, from trace entry[8]: the belief (-1 pass .. +1 run), the cues he saw (the line,
+ * the quarterback, the mesh, the ball seen with a back, a back releasing, a man defender's own man blocking, conflicting
+ * misdirection cues), his perception delay and his state. Example: "Read +0.42 | Line +0.60 | QB −0.10 | Mesh +0.50 | State: Reading".
+ */
+export function readText(entry, { short = false } = {}) {
+  const r = entry && entry[8]; if (!r) return '';
+  if (short) return `R${sgn(r.b)}${r.state === 'run' ? ' ✓' : r.state === 'pass' ? ' P' : ''}`;
+  const parts = [`Read ${sgn(r.b)}`, `Line ${sgn(r.line)}`, `QB ${sgn(r.qb)}`, `Mesh ${r.mesh ? '+0.60' : '0'}`];
+  if (r.ball) parts.push('Ball seen'); if (r.release) parts.push('Back released'); if (r.manKey) parts.push('His man blocks'); if (r.conflict) parts.push('Misdirection');
+  if (r.delay != null) parts.push(`Delay ${r.delay.toFixed(2)} s`);
+  parts.push(`State: ${STATE[r.state] || r.state}`);
+  return parts.join(' | ');
+}
+/** Plain words for one trace entry: [slot, why, why2, aimX, aimY, recognised, zoneInfo, pursuitInfo, read]. */
 export function decisionText(entry, { short = false } = {}) {
   if (!entry || !entry[1]) return '';
   const head = SHORT[entry[1]] || entry[1]; const tail = entry[2] ? ` · ${entry[2]}` : '';
   const z = entry[6]; const zone = z ? `${z.overload ? ' · OVERLOAD' : ''}${z.switched ? ' · switched' : ''}` : '';
   const pu = entry[7]; const chase = !pu ? '' : short ? ` ×${pu.effort.toFixed(2)}` : ` · ×${pu.effort.toFixed(2)} vs ×${pu.carry} · ${pu.gap.toFixed(1)} yd · ${pu.angle}°${pu.behind > 0 ? ` · chase ${Math.round(pu.behind * 100)}%` : ''} · Spd ${pu.defSpeed} vs ${pu.carSpeed}`;
   if (short && pu) return `${head}${chase}`; // on the field: just the effort (the decision list has the rest)
+  if (short) return `${head}${entry[8] ? ` ${readText(entry, { short: true })}` : ''}`;
   return `${head}${tail}${zone}${chase}${entry[5] ? ' · run read' : ''}`;
 }
 /**
