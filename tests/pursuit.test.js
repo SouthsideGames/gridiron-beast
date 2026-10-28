@@ -98,12 +98,13 @@ test('equal-Speed and slower carriers are chased at full effort in play; the pas
 test('scrambles and interception returns use the same rule, and abilities still stack on top', () => {
   // a scramble: QB rated 95, rushers 65; pursuers trailing the running QB have reduced effort, those in front do not
   let scr = 0, scrReduced = 0;
-  for (let i = 0; i < 80 && scr < 3; i++) {
+  // (the first 12 QB runs: since v42.14 the first three are short runs stopped in front of the line, with nobody trailing him)
+  for (let i = 0; i < 80 && scr < 12; i++) {
     const sim = play({ off: 'qb_draw', def: 'cover_3', seed: 44000 + i, options: { trace: true }, extra: (o, d) => { o.QB.attrs.speed = 95; for (const s of Object.keys(d)) d[s].attrs.speed = 65; } });
     if (sim.stats.carrier !== 'QB') continue; scr++;
     for (const f of sim.frames) for (const e of f.dbg) if (e[7]?.car === 'QB' && e[7].effort < PURSUIT_EFFORT) { scrReduced++; assert.ok(e[7].behind > 0 || e[7].effort > 1.0, 'reduced only while chasing from behind (or easing back up)'); }
   }
-  assert.ok(scr >= 3 && scrReduced > 0, `QB runs ${scr}, reduced-effort samples ${scrReduced}`);
+  assert.ok(scr >= 12 && scrReduced > 0, `QB runs ${scr}, reduced-effort samples ${scrReduced}`);
   // interception returns: the returner's Speed decides the race back the other way
   const ret = (speed) => { let n = 0, y = 0; for (let i = 0; i < 400 && n < 12; i++) { const sim = play({ off: 'quick_slants', def: 'cover_1', seed: 45000 + i, options: { qb: { mode: 'human', at: 0.7, action: 'throw', target: 'WR1' } }, extra: (o, d) => { for (const s of Object.keys(d)) d[s].attrs.speed = speed; for (const s of Object.keys(o)) o[s].attrs.speed = 60; d.CB1.attrs.catching = 99; } }); if (!sim.stats.interceptor) continue; n++; y += Math.abs(sim.endYard - (sim.ballOn + (sim.stats.airYards || 0))); } return { n, avg: y / Math.max(1, n) }; };
   const fastRet = ret(95), slowRet = ret(60);

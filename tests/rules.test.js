@@ -195,7 +195,9 @@ test('QA regressions: forward progress across the goal line scores; OT punt ends
   for (let s = 1; s <= 600; s++) {
     const r = simulatePlay({ offensePlay: PLAYS.trap, defensePlay: PLAYS.tampa_2, ballOn: 93, seed: s, offense: L.offense, defense: L.defense });
     const last = r.frames[r.frames.length - 1];
-    if (last.ball[0] >= r.bounds.goal - 0.001) { crossed++; assert.equal(r.result, 'touchdown', `seed ${s}: ball at ${last.ball[0]} past goal ${r.bounds.goal} must be a touchdown, got ${r.result}`); }
+    // Frames store the ball to 0.01 yd: a tackle 0.004 yd short of the goal shows as 7.00, so only a frame clearly past the
+    // rounding (>= goal + 0.005) proves the ball crossed (Phase A: seed 94 now ends 0.004 yd short, a legitimate tackle).
+    if (last.ball[0] >= r.bounds.goal + 0.005) { crossed++; assert.equal(r.result, 'touchdown', `seed ${s}: ball at ${last.ball[0]} past goal ${r.bounds.goal} must be a touchdown, got ${r.result}`); }
     for (const [slot, x] of [...r.frames[0].off, ...r.frames[0].def]) assert.ok(x <= r.bounds.endLine, `${slot} starts inside the end line`);
   }
   assert.ok(crossed > 0);

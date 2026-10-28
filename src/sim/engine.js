@@ -1203,26 +1203,27 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if ((dq < 1.5 && Math.hypot(v.vx, v.vy) > 1 && v.vx > -0.5) || (dq < 2.5 && closing > 0.8)) { mesh = true; if (dq < 1.5) R.sawMesh = true; }
       if (!handSeen && (p.x > 0.5 || (R.sawMesh && dq > 2.2) || (t > 0.5 && Math.abs(p.y - q.y) > 4 && v.vx > -0.5))) release = true;
     }
-    // A fake he is protected from (Ancient Grove, the no-bite effect) does not move him once the quarterback is dropping; Echo Read
-    // halves it. On a real run the quarterback stays at the mesh, so the protection costs nothing there.
+    // A fake he is protected from (Ancient Grove, the no-bite effect): he reads the mesh like anyone, but the mesh alone never
+    // commits him (updateRead: before the ball is seen, the other cues must reach the threshold without it), so a fake never pulls
+    // him up, and the misdirection lean never moves him. Echo Read: the mesh moves him half as much and he sees the back leave without the ball
+    // twice as clearly (he bites half as long).
     const rooted = groveGuards(d); const guarded = !!(rooted || d.ability?.noPlayActionBite);
-    const dropping = qbCue < 0;
-    let wMesh = mesh && !handSeen ? 0.6 : 0;
-    if (wMesh && dropping) {
-      if (guarded) { wMesh = 0; if (rooted) abilityUsed(rooted, 'grove'); if (d.ability?.noPlayActionBite) abilityUsed(d, 'noPlayActionBite'); }
-      else if (d.ability?.echoRead) { wMesh *= d.ability.echoRead; abilityUsed(d, 'echoRead'); }
-    }
+    let wMesh = mesh && !handSeen ? 0.6 : 0, wRelease = release ? 0.5 : 0;
+    if ((wMesh || wRelease) && !guarded && d.ability?.echoRead) { wMesh *= d.ability.echoRead; wRelease /= d.ability.echoRead; abilityUsed(d, 'echoRead'); }
     // A man defender reads his own man: a tight end or back who fires out into a block (engaged and driving forward) is a run
     // key; one who sets back to protect is not (blocking engagement is visible, nothing about the play call is read).
     let manKey = false;
     if (d.assignment.a === 'man') { const m = bySlot.off[manKeys[d.assignment.key]]; if (m && m.engaged) { const ms = snapPos.get(m), mp = seenOf(m, delay); manKey = !!ms && mp.x > ms.x + 0.4; } }
-    // A run front's expectation stays in the evidence as a standing term, so early, weak cues do not wash it out.
-    const prior = readPrior(d), W0 = prior > 0 ? 1 : 0;
-    let num = W0 * prior + wLine * line + wQb * qbCue + wMesh + (manKey ? 1 : 0) - (release ? 0.5 : 0) + (qbRun ? 2 : 0) + (handSeen ? 3 : 0);
-    const den = W0 + wLine + wQb + wMesh + (manKey ? 1 : 0) + (release ? 0.5 : 0) + (qbRun ? 2 : 0) + (handSeen ? 3 : 0);
+    // A run front's expectation stays in the evidence as a standing term, so early, weak cues do not wash it out; it fades as the
+    // play shows itself (gone at 0.8 s), so a pass is still read as a pass.
+    const prior = readPrior(d), W0 = prior > 0 ? Math.max(0, 1 - t / 0.8) : 0;
+    let num = W0 * prior + wLine * line + wQb * qbCue + wMesh + (manKey ? 1 : 0) - wRelease + (qbRun ? 2 : 0) + (handSeen ? 3 : 0);
+    const den = W0 + wLine + wQb + wMesh + (manKey ? 1 : 0) + wRelease + (qbRun ? 2 : 0) + (handSeen ? 3 : 0);
     // Misdirection: the line flowing one way while the back goes the other is harder to read (unless he is guarded from fakes).
     const conflict = !guarded && Math.abs(lineFlow) > 0.25 && Math.abs(backFlow) > 0.4 && Math.sign(lineFlow) !== Math.sign(backFlow);
-    return { E: clamp(num / den, -1, 1), line: +line.toFixed(2), qb: +qbCue.toFixed(2), mesh, manKey, release, handSeen, qbRun, lineFlow, backFlow, conflict, delay: +delay.toFixed(2), aw };
+    // Without the mesh: what the line, the quarterback and the rest say (a guarded defender commits only on this).
+    const E0 = den - wMesh > 0 ? clamp((num - wMesh) / (den - wMesh), -1, 1) : 0;
+    return { E: clamp(num / den, -1, 1), E0, guarded, rooted, line: +line.toFixed(2), qb: +qbCue.toFixed(2), mesh, manKey, release, handSeen, qbRun, lineFlow, backFlow, conflict, delay: +delay.toFixed(2), aw };
   }
   /** A catch or a scramble: visible the moment it happens, and (as before v42.14) every defender turns to the ball carrier at once
    * (catch and scramble also mark recognised directly). Only designed runs are read through the cues. */
@@ -1241,6 +1242,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     const th = strictRead(d) ? READ.runStrict : READ.run;
     R.committed = R.committed ? R.b >= th - READ.release : R.b >= th;
+    // Ancient Grove / no-bite: never committed by the mesh alone (a fake): before the ball is seen, the rest of the evidence must
+    // carry him there by itself.
+    const c = R.cues; if (R.committed && c?.guarded && !c.handSeen && !c.qbRun && c.E0 < th) {
+      R.committed = false; if (c.rooted) abilityUsed(c.rooted, 'grove'); if (d.ability?.noPlayActionBite) abilityUsed(d, 'noPlayActionBite');
+    }
     d.recognised = R.committed;
     return R;
   }
@@ -1498,7 +1504,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
             const r = threats.sort((p, q) => q.x - p.x)[0]; const p = trailPosition(d, r); const ov = observedVelocity(d, r); const antic = 0.15 + 0.25 * norm(d.attrs.coverage);
             mark('zone', `${r.slot} · no pass shown, deepest (${threats.length} in zone)`);
             if (role === 'deep') { const inward = Math.sign(zy - r.y) || (zy >= 0 ? 1 : -1); const ty = clamp(p.y + ov.vy * antic + inward * 1.2, zy - 10, zy + 10); steer(d, Math.max(p.x + ov.vx * antic + 2.0, zx - 3), ty, 0.98, 0.3); }
-            else gsteer(p.x + ov.vx * antic * 0.6 + 0.3, p.y + ov.vy * antic * 0.6, 0.95, 0.3);
+            // Reading, he does not come up to a receiver near the line: he keeps his depth, a step and a half closer when he leans run.
+            else { const hold = snapPos.get(d).x - 1.5 * lean; gsteer(Math.max(hold, p.x + ov.vx * antic * 0.6 + 0.3), p.y + ov.vy * antic * 0.6, 0.95, 0.3); }
             return;
           }
           mark('zone', lean > 0.05 ? `spot · reading run ${Math.round(lean * 100)}%` : 'spot'); gsteer(zx, zy, 0.95, 0.5); return;
@@ -1732,7 +1739,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       ball: [+ball.x.toFixed(2), +ball.y.toFixed(2), ball.inAir ? 1 : 0],
       holder: ball.holder ? ball.holder.slot : null, holderTeam: ball.holder ? ball.holder.team : null, phase,
       ...(phase === 'dropback' && ball.holder === qb && !scrambled && (qb.windup || (qr.cur && !qr.decision)) ? { read: qb.windup ? qb.windup.r.slot : qr.cur.slot } : {}),
-      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0, d.why === 'zone' && d.zoneInfo || null, d.pursuitAt === t && d.pursuitInfo || null, d.read ? { b: +d.read.b.toFixed(2), line: d.read.cues?.line ?? null, qb: d.read.cues?.qb ?? null, mesh: d.read.cues?.mesh ? 1 : 0, ball: d.read.cues?.handSeen ? 1 : 0, release: d.read.cues?.release ? 1 : 0, conflict: d.read.cues?.conflict ? 1 : 0, delay: d.read.cues?.delay ?? null, state: d.read.committed ? 'run' : passShown(d) ? 'pass' : 'reading' } : null]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
+      ...(TRACE ? { dbg: defs.map((d) => [d.slot, d.why || null, d.why2 || null, d.aim ? +d.aim[0].toFixed(2) : null, d.aim ? +d.aim[1].toFixed(2) : null, d.recognised ? 1 : 0, d.why === 'zone' && d.zoneInfo || null, d.pursuitAt === t && d.pursuitInfo || null, d.read ? { b: +d.read.b.toFixed(2), line: d.read.cues?.line ?? null, qb: d.read.cues?.qb ?? null, mesh: d.read.cues?.mesh ? 1 : 0, ball: d.read.cues?.handSeen ? 1 : 0, release: d.read.cues?.release ? 1 : 0, manKey: d.read.cues?.manKey ? 1 : 0, conflict: d.read.cues?.conflict ? 1 : 0, delay: d.read.cues?.delay ?? null, state: d.read.committed ? 'run' : passShown(d) ? 'pass' : 'reading' } : null]) } : {}), // developer trace: decision, detail, aim, run recognised // the QB's current read, then his target through the wind-up (live indicator, GDD §53)
     });
   }
   // The motion before the snap, drawn as frames with negative time: only the motion man moves.
