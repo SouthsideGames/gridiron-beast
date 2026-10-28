@@ -1236,7 +1236,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (visibleCarry()) { R.b = 1; R.committed = true; d.recognised = true; return R; }
     if (t + 1e-9 >= R.next) {
       const c = readCues(d, R); const every = readEvery(d); R.cues = c;
-      R.next = t + every;
+      while (R.next <= t + 1e-9) R.next += every; // on his own clock: the schedule carries the remainder, so the average interval is exactly `every` (no 0.05 s tick steps)
       const kappa = (3 + 3 * norm(d.attrs.awareness)) * (c.conflict ? 0.6 : 1);
       R.b = clamp(R.b + Math.min(1, kappa * every) * (c.E - R.b), -1, 1);
     }
