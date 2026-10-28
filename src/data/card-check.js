@@ -17,8 +17,14 @@ export const CARD_CHECK = Object.freeze({
 /**
  * Proposed new cards (GDD §23.10): uncommon and rare signature abilities may not be absolutes
  * ("never", "always", "every time"); those belong to legendaries. Shown in the Ability Audit for
- * approval; built once approved, then removed from here. Empty: all nine were approved and built.
+ * approval; built once approved, then removed from here. All nine of v29.5 were approved and built.
+ * v42.14 (Phase A): defenders no longer know a play-action designation, so Echo Read works on what
+ * he sees: the mesh moves him half as much and the back leaving without the ball counts twice. He
+ * bites on about a quarter as many fakes as other linebackers (17% vs 69%), not "half as long" each
+ * time (0.19 s either way). Proposed wording, awaiting the owner.
  */
-export const CARD_PROPOSALS = Object.freeze({});
+export const CARD_PROPOSALS = Object.freeze({
+  echolot: 'Reads play-action a beat early: a fake moves him half as much, and he spots the back leaving without the ball twice as fast.',
+});
 
 export const CARD_STATUS_LABEL = { missing: "Doesn't do what the card says", loose: 'Only roughly what the card says' };

@@ -1208,7 +1208,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // twice as clearly (he bites half as long).
     const rooted = groveGuards(d); const guarded = !!(rooted || d.ability?.noPlayActionBite);
     let wMesh = mesh && !handSeen ? 0.6 : 0, wRelease = release ? 0.5 : 0;
-    if ((wMesh || wRelease) && !guarded && d.ability?.echoRead) { wMesh *= d.ability.echoRead; wRelease /= d.ability.echoRead; abilityUsed(d, 'echoRead'); }
+    if ((wMesh || wRelease) && !guarded && d.ability?.echoRead) {
+      wMesh *= d.ability.echoRead; wRelease /= d.ability.echoRead;
+      if (R.sawMesh && release) abilityUsed(d, 'echoRead'); // logged when he reads a fake (the back leaving the mesh without the ball), not on every mesh
+    }
     // A man defender reads his own man: a tight end or back who fires out into a block (engaged and driving forward) is a run
     // key; one who sets back to protect is not (blocking engagement is visible, nothing about the play call is read).
     let manKey = false;
