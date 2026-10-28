@@ -8,7 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { simulatePlay } from '../src/sim/engine.js';
-import { PLAYS, OFFENSE_IDS } from '../src/data/playbook.js';
+import { PLAYS, OFFENSE_IDS, manKeyTargets } from '../src/data/playbook.js';
 import { play, side } from '../src/lab/attr-trials.js';
 
 const SRC = fs.readFileSync(new URL('../src/sim/engine.js', import.meta.url), 'utf8');
@@ -199,4 +199,60 @@ test('Permafrost and Crushing Rush still work against the run, and only on a bal
   assert.equal(fire('icehorn', 'DL2', ['quick_slants', 'curl_flat', 'four_verticals', 'pa_post']), 0, 'Permafrost never fires on a pass play');
   assert.ok(fire('stoneguard', 'DL2', RUNS) > 0.1, 'Crushing Rush fires on runs');
   assert.match(SRC, /d\.ability\?\.permafrost && !c\.permafrosted && handoffDone && !stats\.receiver/, 'Permafrost: contact with a handed-off ball, not the play type');
+});
+
+// ---- Goal Line Man's free linebacker (owner-approved correction, PR #78). Against one-back sets with an attached tight end
+// (Power Right/Left, Counter, Stretch Left, the play-action passes) the man keys leave LB2 nobody to cover. On a run front or
+// goal-line call he is a run-support linebacker: he keeps his 2.5-yard alignment and stands between it and his run fit by his
+// read, instead of drifting six yards into the short middle; defenders who have a man keep the 4.5-yard cushion.
+const oneBackRuns = ['counter', 'power_left', 'power_right'];
+const lb = (f, slot) => f.def.find((p) => p[0] === slot);
+test('Goal Line Man: the free linebacker keeps his alignment and supports the run before the handoff; assigned men keep their cushion', () => {
+  let n = 0; const atHandoff = [];
+  for (const off of oneBackRuns) for (let s = 0; s < 30; s++) {
+    const sim = play({ off, def: 'goal_line_man', attr: 'speed', value: 65, seed: 19000 + s, options: { trace: true } }); n++;
+    const f0 = sim.frames.find((f) => f.dbg) || sim.frames[0];
+    assert.ok(Math.abs(lb(f0, 'LB2')[1] - 2.5) < 0.6, `${off} ${s}: the free linebacker lines up at his 2.5-yard alignment (${lb(f0, 'LB2')[1]})`);
+    assert.ok(lb(f0, 'LB1')[1] >= 4.5 - 1e-6, `${off} ${s}: the linebacker covering the back keeps the 4.5-yard cushion (${lb(f0, 'LB1')[1]})`);
+    const h = sim.events.find((e) => e.kind === 'handoff');
+    for (const f of sim.frames) if (f.dbg && f.t < h.t) {
+      assert.ok(lb(f, 'LB2')[1] <= 3.1, `${off} ${s} t=${f.t}: he does not drop into the short middle before the handoff (${lb(f, 'LB2')[1]})`);
+      const e = f.dbg.find((x) => x[0] === 'LB2'); if (e[1] === 'man') assert.match(e[2], /^none · run support/);
+    }
+    atHandoff.push(lb(sim.frames.find((f) => f.t >= h.t - 1e-6), 'LB2')[1]);
+  }
+  assert.ok(mean(atHandoff) < 2.5, `he is in the box when the ball is handed off: ${mean(atHandoff).toFixed(2)} yd deep on average`);
+  // He commits only once he sees the run, like everyone else (no earlier than the handoff plus the mesh).
+  for (let s = 0; s < 20; s++) { const sim = play({ off: 'counter', def: 'goal_line_man', attr: 'speed', value: 65, seed: 19500 + s, options: { trace: true } }); const h = sim.events.find((e) => e.kind === 'handoff');
+    const c = sim.frames.find((f) => f.dbg?.find((x) => x[0] === 'LB2')?.[5]); if (c) assert.ok(c.t >= h.t + 0.08 - 1e-9, `seed ${19500 + s}: committed at ${c.t}, handoff ${h.t}`); }
+});
+
+test('Goal Line Man: the free linebacker makes plays on one-back runs, which still break sometimes; only Goal Line Man changes', () => {
+  const ys = [], tacklers = {};
+  for (const off of oneBackRuns) for (let s = 0; s < 60; s++) { const sim = play({ off, def: 'goal_line_man', attr: 'speed', value: 65, seed: 19800 + s }); ys.push(sim.yards); const k = sim.stats.tackler || '-'; tacklers[k] = (tacklers[k] || 0) + 1; }
+  assert.ok((tacklers.LB2 || 0) / ys.length > 0.25, `the free linebacker is in on the stops: ${JSON.stringify(tacklers)}`);
+  assert.ok(Math.max(...ys) >= 15 && ys.some((y) => y >= 10), `long runs still happen (max ${Math.max(...ys)})`);
+  // The rule needs a run front or goal-line call AND a man defender with nobody to cover. Only a man key on 'back' can be empty
+  // ('inside', 'wideL' and 'wideR' always resolve, manKeyTargets), so across the whole book (base, reserve and legendary calls)
+  // that is Goal Line Man alone; the same-seed comparison in the PR shows every other call's plays identical.
+  const callsWithFreeMen = Object.keys(PLAYS).filter((k) => PLAYS[k].side === 'defense' && (PLAYS[k].tags.includes('run') || PLAYS[k].tags.includes('goalline'))
+    && PLAYS[k].onField.some((sl) => PLAYS[k].assignments[sl]?.a === 'man' && PLAYS[k].assignments[sl].key === 'back'));
+  assert.deepEqual(callsWithFreeMen, ['goal_line_man']);
+  for (const off of OFFENSE_IDS) for (const key of ['inside', 'wideL', 'wideR']) assert.ok(manKeyTargets(PLAYS[off])[key], `${off}: '${key}' always has a man`);
+});
+
+test('Goal Line Man: on a pass he covers again, it still stops screens and the quick game, and play-action still hurts it', () => {
+  // Dropbacks from one-back sets: once the play shows pass he sits in the short middle as before.
+  let shown = 0;
+  for (const off of ['stick', 'y_cross', 'flood', 'te_seam']) for (let s = 0; s < 15; s++) {
+    const sim = play({ off, def: 'goal_line_man', attr: 'speed', value: 65, seed: 20000 + s, options: { trace: true } }); const th = sim.events.find((e) => e.kind === 'throw'); if (!th) continue;
+    const f = sim.frames.filter((x) => x.dbg && x.t <= th.t).at(-1); const e = f.dbg.find((x) => x[0] === 'LB2');
+    if (e[8]?.state === 'pass') { shown++; assert.equal(e[2], 'none', `${off} ${s}: with pass shown he covers the short middle (${e[2]})`); }
+  }
+  assert.ok(shown >= 20, `pass shown before the throw on ${shown} dropbacks`);
+  const ypp = (def, offs) => mean(offs.flatMap((off) => Array.from({ length: 40 }, (_, s) => play({ off, def, attr: 'speed', value: 65, seed: 20500 + s }).yards)));
+  const screens = ['bubble_screen', 'rb_screen'], quick = ['quick_slants', 'stick', 'curl_flat'], pa = ['pa_post', 'pa_boot', 'pa_shot'];
+  assert.ok(ypp('goal_line_man', screens) < ypp('goal_line', screens), 'it stops screens better than Goal Line Stand');
+  assert.ok(ypp('goal_line_man', quick) < ypp('goal_line', quick), 'and the quick game');
+  assert.ok(ypp('goal_line_man', pa) > ypp('goal_line', pa), 'play-action hurts it more than Goal Line Stand');
 });

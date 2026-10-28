@@ -1445,6 +1445,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       }
       case 'man': {
         const target = bySlot.off[manKeys[asg.key]];
+        // Nobody to cover on a run front or goal-line call (v42.14, Goal Line Man against one-back sets): he is a run-support
+        // linebacker. Before the handoff he stands between his own alignment and his run fit in proportion to his read (the graded
+        // positioning of a reading linebacker), and he keeps doing so after a handoff he has not yet seen; once he recognises the
+        // run, the run fit above takes over. When the play shows him pass, he sits in the short middle as before. He reads only what
+        // he sees.
+        if (!target && RUN_CALL && R && !ball.inAir && ball.holder?.team === 'off' && !(ball.holder === qb && passShown(d))) {
+          const sp = snapPos.get(d), lean = readLean(d), f = readFit(d);
+          mark('man', `none · run support ${Math.round(lean * 100)}%`); steer(d, sp.x + (f.x - sp.x) * lean, sp.y + (f.y - sp.y) * lean, 0.9, 0.3); return;
+        }
         if (!target) { mark('man', 'none'); steer(d, 6, d.y * 0.6, 0.8, 0.3); return; } // nobody to cover (three-receiver set): sit in the short middle
         // A back who stays in to block frees his man: "green dog", add to the rush.
         if (asg.key === 'back' && t > 0.6 && qb && ball.holder === qb) { // he SEES the back stay in (behind the line, by the quarterback, not running a route); v42.14: was the back's assignment
