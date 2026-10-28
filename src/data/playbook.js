@@ -78,8 +78,11 @@ const PA = (path) => ({ a: 'play_action', path });
 const BOOT = (path) => ({ a: 'boot', path });
 
 const RUSH = (gap) => ({ a: 'rush', gap });
-const MAN = (key) => ({ a: 'man', key });
+const MAN = (key, tech) => (tech ? { a: 'man', key, tech } : { a: 'man', key }); // tech 'under': inside-underneath trail technique, for a call that puts deep help over him (Phase B)
 const ZONE = (zone) => ({ a: 'zone', zone });
+// Bracket (Phase B): a deep defender over the top and outside of one receiver, paired with the man defender underneath and inside
+// on the same receiver; when that receiver is no vertical threat the bracket defender plays his deep zone for everyone else.
+const BRACKET = (key, zone) => ({ a: 'zone', zone, bracket: key });
 const SPY = { a: 'spy' };
 const CONTAIN = (gap) => ({ a: 'contain', gap });
 
@@ -232,7 +235,7 @@ const OFFENSE_PLAYS = [
 // ------------------------------------------------------------- defense plays
 const DEFENSE_PLAYS = [
   defense('cover_2_man', 'Cover 2 Man', 'nickel', {
-    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'),
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside', 'under'), CB1: MAN('wideL', 'under'), CB2: MAN('wideR', 'under'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'),
   }, { tags: ['pass', 'man', 'balanced'], desc: 'Two deep halves; everyone underneath locked in man.' }),
   defense('cover_3', 'Cover 3', 'nickel', {
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: ZONE('hook_M'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M'), SS: ZONE('flat_R'),
@@ -304,7 +307,7 @@ const DEFENSE_PLAYS = [
     DL1: RUSH('edge_L'), DL2: RUSH('edge_R'), DL3: RUSH('A_L'), LB1: RUSH('A_R'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: MAN('inside'),
   }, { align: { DL3: [1, -0.9], LB1: [1.2, 0.9], FS: [7, 0] }, tags: ['blitz', 'man', 'risky', 'interior'], desc: 'Two rushers mugged up in the A gaps, ends wide. Overloads the middle.' }),
   defense('bracket_left', 'Bracket Left', 'nickel', {
-    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: MAN('wideL'), SS: ZONE('deep_quarter_LL'), CB2: MAN('wideR'), FS: ZONE('deep_half_R'),
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: MAN('wideL', 'under'), SS: BRACKET('wideL', 'deep_quarter_LL'), CB2: MAN('wideR'), FS: ZONE('deep_half_R'),
   }, { align: { SS: [11, -14] }, tags: ['pass', 'man', 'bracket'], desc: 'The left receiver gets a corner underneath and a safety over the top.' }),
   defense('goal_line_man', 'Goal Line Man', 'heavy', {
     DL1: RUSH('A_L'), DL3: RUSH('A_R'), DL2: RUSH('B_R'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'),
@@ -342,7 +345,7 @@ function compile(play) {
 // AI club, practice field or game plan can call them until the owner releases them. They live in PLAYS
 // (so the audit, art and engine can run them) and never in OFFENSE_IDS / DEFENSE_IDS, which every
 // game system draws from.
-const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: true }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN });
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: true }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
 // Legendary Plays (GDD §36): built on the same assignments as every play, each tied to one Legendary monster who must be on
 // the field in its slot. Like reserve plays they live in PLAYS (engine, art, audit) and never in OFFENSE_IDS / DEFENSE_IDS:
 // a club can call one only when it holds that Legendary and has put the play in one of its six slots.

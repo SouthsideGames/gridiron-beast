@@ -51,7 +51,7 @@ const BRACKET_PLAYS = [
   ['pa_post', 2.6, 'play-action post'], ['pa_shot', 2.7, 'play-action go'], ['flood', 2.3, 'go (clear-out)'], ['y_cross', 2.2, 'post (crossing set)'],
   ['levels', 1.9, 'dig (intermediate)'], ['smash', 1.9, 'dig (intermediate)'], ['curl_flat', 1.8, 'comeback'], ['mesh', 2.0, 'corner'],
   ['quick_slants', 1.0, 'slant (short)'], ['slot_fade', 1.6, 'drag (shallow cross)'],
-].filter(([p]) => PLAYS[p]);
+].filter(([p]) => PLAYS[p] && (!args.bplays || String(args.bplays).split(',').includes(p)));
 const BRACKET_COMPARE = ['bracket_left', 'cover_1', 'man_press', 'cover_3', 'cover_6', 'cover_2_zone', 'cover_4'].filter((d) => PLAYS[d]);
 
 if (want('bracket')) {
