@@ -10,7 +10,7 @@ import { playGame } from '../src/sim/game-runner.js';
 import { generatedTeam } from '../src/franchise/roster.js';
 import { side } from '../src/lab/attr-trials.js';
 import * as D from '../src/lab/def-scenario.js';
-import { defOverlaySvg, decisionText } from '../src/ui/def-overlay.js';
+import { defOverlaySvg, decisionText, readText } from '../src/ui/def-overlay.js';
 
 const strip = (sim) => JSON.stringify({ ...sim, frames: sim.frames.map(({ dbg, ...f }) => f) });
 
@@ -78,4 +78,18 @@ test('the overlay draws assignments, intended and actual paths and decisions fro
   assert.equal((focus.match(/<text/g) || []).length, 1, 'one defender in focus');
   assert.equal(decisionText(['CB1', 'man', 'WR1: on top', 0, 0, 0]), 'man · WR1: on top');
   assert.equal(decisionText(['LB1', 'run-fit', null, 0, 0, 1]), 'run fit · run read');
+});
+
+test('run read in the Lab (v42.14): read presets, the read line in plain words, gap responsibility in the labels', () => {
+  for (const id of ['read_lb', 'read_wall', 'read_bear', 'read_counter']) assert.ok(D.PRESETS.some((p) => p.id === id), id);
+  const sc = D.PRESETS.find((p) => p.id === 'read_lb'); assert.deepEqual(D.subjectsOf(sc.def, sc.subject), ['LB1']);
+  const lo = D.runScenario(sc, 50, 1001, { trace: true }), hi = D.runScenario(sc, 95, 1001, { trace: true });
+  const lb = (sim) => sim.frames.map((f) => f.dbg?.find((e) => e[0] === 'LB1')).filter((e) => e?.[8]);
+  assert.ok(lb(lo).length && lb(hi).length, 'the read is traced for the subject at both ratings');
+  assert.ok(lb(hi)[0][8].delay < lb(lo)[0][8].delay, 'the aware linebacker sees the play sooner (shorter perception delay)');
+  const text = readText(lb(lo).at(-1)); assert.match(text, /^Read [+−]\d\.\d\d \| Line [+−—]/); assert.match(text, /\| State: (Reading|Committed \(run\)|Pass shown)$/);
+  assert.equal(readText(['LB1', 'zone', null, 0, 0, 0, null, null, { b: 0.42, line: 0.6, qb: -0.1, mesh: 1, ball: 0, release: 0, manKey: 0, conflict: 0, delay: 0.12, state: 'reading' }]),
+    'Read +0.42 | Line +0.60 | QB −0.10 | Mesh +0.60 | Delay 0.12 s | State: Reading');
+  assert.equal(readText(['LB1', 'zone', null, 0, 0, 0]), '', 'nothing without a read');
+  assert.equal(D.assignmentsOf(D.PRESETS.find((p) => p.id === 'read_bear')).DL3.label, 'rush · A M gap');
 });

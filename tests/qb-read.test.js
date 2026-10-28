@@ -16,9 +16,9 @@ const PASS = OFFENSE_IDS.filter((id) => PLAYS[id].type === 'pass' && !PLAYS[id].
 const ZONE = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('zone')), BLITZ = DEFENSE_IDS.filter((id) => PLAYS[id].tags.includes('blitz'));
 const sweeps = {};
 function sweep(aw, seeds = 2) {
-  if (sweeps[aw]) return sweeps[aw]; const L = lineup(11, 62); L.offense.QB.attrs = { ...L.offense.QB.attrs, awareness: aw }; const out = [];
+  const key = `${aw}:${seeds}`; if (sweeps[key]) return sweeps[key]; const L = lineup(11, 62); L.offense.QB.attrs = { ...L.offense.QB.attrs, awareness: aw }; const out = [];
   for (const o of PASS) for (const d of DEFENSE_IDS) for (let s = 1; s <= seeds; s++) { const r = simulatePlay({ offensePlay: PLAYS[o], defensePlay: PLAYS[d], ballOn: 35, seed: s * 977 + d.length * 13 + o.length, offense: L.offense, defense: L.defense }); out.push({ o, d, r, dec: r.qb?.decision || null, reads: (r.qb?.reads || []).filter((e) => e.kind === 'read') }); }
-  return (sweeps[aw] = out);
+  return (sweeps[key] = out);
 }
 const share = (xs, f) => xs.filter(f).length / Math.max(1, xs.length);
 const mean = (xs) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length);
@@ -41,7 +41,9 @@ test('4. checkdown open: the quarterback recognises the back when the others are
   assert.ok(s.length >= 8, `${s.length} cases`); assert.ok(share(s, (x) => x.dec.slot === 'RB') >= 0.55, `${share(s, (x) => x.dec.slot === 'RB').toFixed(2)}`);
 });
 test('5. everyone covered: he weighs scrambling and the rush rather than just throwing the first read (no throw-aways, v42.6)', () => {
-  const s = sweep(75).filter((x) => x.dec && x.dec.bestTrueQ < 0.3);
+  // All-covered downs are rare (about 0.5% of dropbacks since v42.14, 1.0% in v42.13: coverage no longer knows a pass from the snap,
+  // so receivers come open more often), so this test draws six seeds per pairing instead of two to keep its eight cases.
+  const s = sweep(75, 6).filter((x) => x.dec && x.dec.bestTrueQ < 0.3);
   assert.ok(s.length >= 8, `${s.length} cases`); assert.ok(share(s, (x) => x.dec.reason !== 'first_read') >= 0.6, 'not a first-read throw'); // fewer all-covered downs since the lead fix (v42.8): windows are judged on balls that now land on the receiver
   const all = [...sweep(50), ...sweep(75), ...sweep(95)]; assert.ok(all.some((x) => x.dec?.action === 'scramble') && all.some((x) => x.r.result === 'sack'), 'scrambles and sacks both occur');
   assert.ok(all.every((x) => x.dec?.action !== 'throwaway' && x.r.result !== 'throwaway'), 'the quarterback never throws the ball away');

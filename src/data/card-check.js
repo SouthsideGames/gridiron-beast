@@ -17,7 +17,8 @@ export const CARD_CHECK = Object.freeze({
 /**
  * Proposed new cards (GDD §23.10): uncommon and rare signature abilities may not be absolutes
  * ("never", "always", "every time"); those belong to legendaries. Shown in the Ability Audit for
- * approval; built once approved, then removed from here. Empty: all nine were approved and built.
+ * approval; built once approved, then removed from here. Empty: all nine of v29.5 were approved and
+ * built, and the v42.14 Echo Read wording was approved by the owner (2026-10-28) and built.
  */
 export const CARD_PROPOSALS = Object.freeze({});
 

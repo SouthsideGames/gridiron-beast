@@ -32,10 +32,11 @@ test('abilities: Whiteout is once per drive and comes back on the next drive', (
 
 test('abilities: Eruption is once per drive', () => {
   const state = { drive: { team: 'home', plays: 0 }, playCount: 0, quarter: 1, abilityMemory: {} };
-  let n = 0; for (let i = 0; i < 20; i++) { const s = sim('inside_zone', 'run_wall', { TE: 'pyroclast' }, {}, i, abilityMemory(state)); rememberAbilities(state, s); state.playCount += 1; state.drive.plays += 1; n += s.events.filter((e) => e.kind === 'flattened').length; }
+  // Power Right: the tight end blocks on every play (since v42.14 Run Wall's linebackers rarely run into the inside-zone tight end)
+  let n = 0; for (let i = 0; i < 20; i++) { const s = sim('power_right', 'run_wall', { TE: 'pyroclast' }, {}, i, abilityMemory(state)); rememberAbilities(state, s); state.playCount += 1; state.drive.plays += 1; n += s.events.filter((e) => e.kind === 'flattened').length; }
   assert.equal(n, 1);
   state.drive = { team: 'away', plays: 0 }; // a new drive
-  let m = 0; for (let i = 0; i < 20; i++) { const s = sim('inside_zone', 'run_wall', { TE: 'pyroclast' }, {}, i, abilityMemory(state)); rememberAbilities(state, s); state.playCount += 1; state.drive.plays += 1; m += s.events.filter((e) => e.kind === 'flattened').length; }
+  let m = 0; for (let i = 0; i < 20; i++) { const s = sim('power_right', 'run_wall', { TE: 'pyroclast' }, {}, i, abilityMemory(state)); rememberAbilities(state, s); state.playCount += 1; state.drive.plays += 1; m += s.events.filter((e) => e.kind === 'flattened').length; }
   assert.equal(m, 1);
 });
 

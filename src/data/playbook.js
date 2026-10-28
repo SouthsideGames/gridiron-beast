@@ -298,8 +298,8 @@ const DEFENSE_PLAYS = [
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), FS: RUSH('A_L'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'),
   }, { align: { FS: [7, -2] }, tags: ['blitz', 'man', 'risky', 'short'], desc: 'The free safety comes from depth; man across with no deep help.' }),
   defense('bear_front', 'Bear Front', 'heavy', {
-    DL1: RUSH('A_L'), DL3: RUSH('A_R'), DL2: RUSH('B_R'), LB1: ZONE('short_L'), LB2: ZONE('short_R'), CB1: MAN('wideL'), CB2: MAN('wideR'),
-  }, { align: { DL1: [1, -1.6], DL3: [1, 0.9], DL2: [1, 2.6], LB1: [3.5, -3], LB2: [3.5, 3] }, tags: ['run', 'balanced'], desc: 'Three down linemen over the centre and guards; corners alone in man.' }),
+    DL1: RUSH('B_L'), DL3: RUSH('A_M'), DL2: RUSH('B_R'), LB1: ZONE('short_L'), LB2: ZONE('short_R'), CB1: MAN('wideL'), CB2: MAN('wideR'),
+  }, { align: { DL1: [1, -2.6], DL3: [1, 0], DL2: [1, 2.6], LB1: [3.5, -3], LB2: [3.5, 3] }, tags: ['run', 'balanced'], desc: 'A nose over the centre and a lineman in each B gap; corners alone in man.' }),
   defense('double_a_mug', 'Double A Mug', 'pressure', {
     DL1: RUSH('edge_L'), DL2: RUSH('edge_R'), DL3: RUSH('A_L'), LB1: RUSH('A_R'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: MAN('inside'),
   }, { align: { DL3: [1, -0.9], LB1: [1.2, 0.9], FS: [7, 0] }, tags: ['blitz', 'man', 'risky', 'interior'], desc: 'Two rushers mugged up in the A gaps, ends wide. Overloads the middle.' }),
@@ -531,7 +531,7 @@ export const LESSONS = Object.freeze({
   cover_6: { when: 'When the offence loves one side: quarters there, Cover 2 the other way.', watch: 'Two deep defenders on the left, a half on the right. Attack the weak-side flat.', beats: 'Three Verticals and Dagger to the quarters side.', loses: 'Flood and Stick to the Cover 2 side.' },
   corner_blitz: { when: 'Surprise pressure from the boundary on an obvious passing down.', watch: 'The safety has to rotate over the vacated corner in time.', beats: 'PA Shot and Y Cross, slow throws from the left hash.', loses: 'Bubble Screen and Jet Sweep to the blitz side.' },
   safety_blitz: { when: 'When the quarterback holds the ball too long: pressure from a direction he never sees.', watch: 'No deep safety. If the back picks it up, every receiver is one-on-one.', beats: 'Mesh and Y Cross, long-developing crossers.', loses: 'Slot Fade, Deep Post and RB Screen.' },
-  bear_front: { when: 'Against inside runs when you still need your corners honest.', watch: 'Three linemen over the centre and guards clog every interior gap.', beats: 'Inside Zone, Dive and Trap.', loses: 'Toss Sweep, Outside Zone and Slot Fade on the lone corners.' },
+  bear_front: { when: 'Against inside runs when you still need your corners honest.', watch: 'A nose over the centre and a lineman in each B gap clog the interior; the corners are alone.', beats: 'Inside Zone, Dive and Trap.', loses: 'Toss Sweep, Outside Zone and Slot Fade on the lone corners.' },
   // Legendary Plays (GDD §36): beats and loses name real plays, so the coach's counter hints work for them too.
   lp_dragons_gambit: { when: 'Early downs against a defence that crashes on the run fake.', watch: 'Aurodrax rolls right; the left receiver crosses the whole field deep, the tight end runs the corner over him.', beats: 'Bear Front, QB Spy and Cover 0, defences that crash on the fake or leave the deep field empty.', loses: 'DB Blitz, Corner Blitz and Cover 2 Zone: pressure off the edge before the crosser arrives, or two deep safeties over it.' },
   lp_eye_of_the_storm: { when: 'Against man coverage on the trips side.', watch: 'Tempestra’s slant fake: the defender on her hip spins, and she turns it up the field.', beats: 'All-Out Pressure, Run Wall and Max Drop, when nobody stays deep over her.', loses: 'Bear Front, Goal Line Stand and Goal Line Man (no room to go deep), and pressure: the five-step drop gets sacked more than any standard pass.' },

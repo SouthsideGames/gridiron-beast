@@ -132,9 +132,12 @@ test('attributes change outcomes: speed, accuracy, tackling, awareness', () => {
   const slowRb = yards(withAttr('offense', 'RB', 'speed', 30), 'outside_zone', 'cover_3');
   const fastRb = yards(withAttr('offense', 'RB', 'speed', 95), 'outside_zone', 'cover_3');
   assert.ok(fastRb > slowRb, `speed matters (${fastRb.toFixed(1)} vs ${slowRb.toFixed(1)})`);
-  const dumbRb = yards(withAttr('offense', 'RB', 'awareness', 20), 'inside_zone', 'cover_3');
-  const smartRb = yards(withAttr('offense', 'RB', 'awareness', 95), 'inside_zone', 'cover_3');
-  assert.ok(smartRb > dumbRb, `awareness matters (${smartRb.toFixed(1)} vs ${dumbRb.toFixed(1)})`);
+  // Ball-carrier Awareness over three run concepts (v42.14; was Inside Zone alone). Since Phase A the Cover 3 linebacker fits the back's
+  // flow, and on Inside Zone a sharp back's cutback now finds him there: over four 300-seed ranges Awareness 95 vs 20 on that one
+  // cell averages +0.03 yd (v42.13.0: +0.26), while Power Right and Dive stay clearly positive. The same strict comparison, summed.
+  const vision = (aw) => ['inside_zone', 'power_right', 'dive'].reduce((sum, play) => sum + yards(withAttr('offense', 'RB', 'awareness', aw), play, 'cover_3'), 0) / 3;
+  const dumbRb = vision(20), smartRb = vision(95);
+  assert.ok(smartRb > dumbRb, `awareness matters (${smartRb.toFixed(2)} vs ${dumbRb.toFixed(2)} yd over Inside Zone, Power Right and Dive)`);
   const comp = (lu) => { let c = 0, n = 0; for (let s = 1; s <= 300; s++) { const r = simulatePlay({ offensePlay: PLAYS.curl_flat, defensePlay: PLAYS.cover_3, ballOn: 30, seed: s, offense: lu.offense, defense: lu.defense }); if (r.stats.passer && r.result !== 'sack') { n++; if (r.stats.receiver) c++; } } return c / n; };
   const wild = comp(withAttr('offense', 'QB', 'accuracy', 20)), sharp = comp(withAttr('offense', 'QB', 'accuracy', 95));
   assert.ok(sharp > wild, `accuracy matters (${sharp.toFixed(2)} vs ${wild.toFixed(2)})`);

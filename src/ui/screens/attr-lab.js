@@ -10,7 +10,7 @@ import { ATTR_NAME, ATTR_ORDER, POSITION_NAME } from '../../data/stat-guide.js';
 import * as T from '../../lab/attr-trials.js';
 import * as D from '../../lab/def-scenario.js';
 import { PLAYS } from '../../data/playbook.js';
-import { defOverlaySvg, decisionText } from '../def-overlay.js';
+import { defOverlaySvg, decisionText, readText } from '../def-overlay.js';
 
 const COUNTS = [25, 50, 100, 300];
 export function registerAttrLab(Router, app) {
@@ -84,7 +84,7 @@ export function registerAttrLab(Router, app) {
   function decisionsHtml() {
     const w = S.watch; if (!w?.def) return '';
     return w.runs.map((r) => { const f = r.sim.frames[Math.min(S.i, r.sim.frames.length - 1)]; const why = Object.fromEntries((f.dbg || []).map((e) => [e[0], e]));
-      return `<div><b>${esc(ATTR_NAME[S.sc.attr])} ${r.v}</b><ul class="def-decisions">${f.def.filter((d) => !S.focus || d[0] === S.focus).map((d) => `<li><span class="mono">${esc(d[0])}</span> <span class="dim">${esc(w.asg[d[0]]?.label || '')}</span> → ${esc(decisionText(why[d[0]]) || '—')}</li>`).join('')}</ul></div>`; }).join('');
+      return `<div><b>${esc(ATTR_NAME[S.sc.attr])} ${r.v}</b><ul class="def-decisions">${f.def.filter((d) => !S.focus || d[0] === S.focus).map((d) => `<li><span class="mono">${esc(d[0])}</span> <span class="dim">${esc(w.asg[d[0]]?.label || '')}</span> → ${esc(decisionText(why[d[0]]) || '—')}${why[d[0]]?.[8] ? `<br><span class="mono dim def-read">${esc(readText(why[d[0]]))}</span>` : ''}</li>`).join('')}</ul></div>`; }).join('');
   }
   function drawWatch() {
     const w = S.watch; if (!w) return;

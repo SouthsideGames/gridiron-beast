@@ -40,6 +40,11 @@ export const PRESETS = [
   { id: 'run_inside', label: 'Run: inside zone vs Cover 3 (recognition)', off: 'inside_zone', def: 'cover_3', subject: 'coverage', attr: 'awareness', qb: 'ai' },
   { id: 'run_outside', label: 'Run: outside zone vs Cover 3 (pursuit)', off: 'outside_zone', def: 'cover_3', subject: 'all', attr: 'speed', qb: 'ai' },
   { id: 'pa', label: 'Play-action post vs Cover 3 (the bite)', off: 'pa_post', def: 'cover_3', subject: 'coverage', attr: 'awareness', qb: 'ai' },
+  // Run read (Phase A, v42.14): watch the read build (belief, cues, delay, state) for the low and high rating on the same seed.
+  { id: 'read_lb', label: 'Run read: inside zone vs Cover 3, linebacker Awareness (LB1)', off: 'inside_zone', def: 'cover_3', subject: 'LB1', attr: 'awareness', qb: 'ai' },
+  { id: 'read_wall', label: 'Run read: power right vs Run Wall, front Awareness (all)', off: 'power_right', def: 'run_wall', subject: 'all', attr: 'awareness', qb: 'ai' },
+  { id: 'read_bear', label: 'Run read: power left vs Bear Front (the B gap), all Awareness', off: 'power_left', def: 'bear_front', subject: 'all', attr: 'awareness', qb: 'ai' },
+  { id: 'read_counter', label: 'Run read: counter vs Bear Front (misdirection), all Awareness', off: 'counter', def: 'bear_front', subject: 'all', attr: 'awareness', qb: 'ai' },
 ].filter((p) => PLAYS[p.off] && PLAYS[p.def]);
 
 /** The defenders who get the rating: one slot, or a group of the call's defenders. */
@@ -89,7 +94,7 @@ export function assignmentsOf(sc) {
     const a = p.assignments[s] || {};
     if (a.a === 'man') out[s] = { kind: 'man', man: keys[a.key] || null, label: `man ${keys[a.key] || '(nobody)'}` };
     else if (a.a === 'zone') out[s] = { kind: 'zone', at: a.at, role: a.role, label: `${a.role} zone` };
-    else out[s] = { kind: a.a || 'none', label: a.a === 'rush' ? 'rush' : a.a || '—' };
+    else out[s] = { kind: a.a || 'none', label: a.a === 'rush' ? `rush${a.gap ? ` · ${String(a.gap).replace('_', ' ')} gap` : ''}` : a.a || '—' };
   }
   return out;
 }
