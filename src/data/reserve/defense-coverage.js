@@ -3,7 +3,7 @@
 //           heavy DL1 DL2 DL3 LB1 LB2 CB1 CB2 · pressure DL1 DL2 DL3 LB1 CB1 CB2 FS
 
 export default function batch(b) {
-  const { defense: D, RUSH, MAN, ZONE, SPY } = b;
+  const { defense: D, RUSH, MAN, ZONE, SPY, BRACKET } = b;
   const TWO = { DL1: RUSH('B_L'), DL2: RUSH('B_R') }; // standard two-man rush
   const THREE = { DL1: RUSH('B_L'), DL3: RUSH('A_M'), DL2: RUSH('B_R') };
   const plays = []; const lessons = {};
@@ -68,7 +68,7 @@ export default function batch(b) {
     T(['pass', 'zone', 'man'], 'Split field: the left corner locks on his receiver with a safety over the top; Cover 2 to the right.', { SS: [12, 8] })),
   'When the left receiver is their best player.', 'Lock-man corner with help left; the right side plays Cover 2.', 'Deep Post and Slot Fade to the left.', 'Flood and Stick to the right.');
 
-  add(D('double_bracket', 'Double Bracket', 'nickel', { ...TWO, CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_quarter_LL'), SS: ZONE('deep_quarter_RR'), LB1: MAN('inside') },
+  add(D('double_bracket', 'Double Bracket', 'nickel', { ...TWO, CB1: MAN('wideL', 'under'), CB2: MAN('wideR', 'under'), FS: BRACKET('wideL', 'deep_quarter_LL'), SS: BRACKET('wideR', 'deep_quarter_RR'), LB1: MAN('inside') },
     T(['pass', 'man', 'bracket'], 'Both outside receivers get a corner underneath and a safety over the top; the linebacker takes the slot.', { FS: [12, -14], SS: [12, 14] })),
   'Against offences with two dangerous outside receivers.', 'The middle of the field is wide open: the slot and the back are the outlets.', 'Deep Post, Deep Corner and Double Move.', 'TE Seam, Mesh and inside runs.');
 

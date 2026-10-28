@@ -78,8 +78,11 @@ const PA = (path) => ({ a: 'play_action', path });
 const BOOT = (path) => ({ a: 'boot', path });
 
 const RUSH = (gap) => ({ a: 'rush', gap });
-const MAN = (key) => ({ a: 'man', key });
+const MAN = (key, tech) => (tech ? { a: 'man', key, tech } : { a: 'man', key }); // tech 'under': inside-underneath trail technique, for a call that puts deep help over him (Phase B)
 const ZONE = (zone) => ({ a: 'zone', zone });
+// Bracket (Phase B): a deep defender over the top and outside of one receiver, paired with the man defender underneath and inside
+// on the same receiver; when that receiver is no vertical threat the bracket defender plays his deep zone for everyone else.
+const BRACKET = (key, zone) => ({ a: 'zone', zone, bracket: key });
 const SPY = { a: 'spy' };
 const CONTAIN = (gap) => ({ a: 'contain', gap });
 
@@ -232,7 +235,7 @@ const OFFENSE_PLAYS = [
 // ------------------------------------------------------------- defense plays
 const DEFENSE_PLAYS = [
   defense('cover_2_man', 'Cover 2 Man', 'nickel', {
-    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'),
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside', 'under'), CB1: MAN('wideL', 'under'), CB2: MAN('wideR', 'under'), FS: ZONE('deep_half_L'), SS: ZONE('deep_half_R'),
   }, { tags: ['pass', 'man', 'balanced'], desc: 'Two deep halves; everyone underneath locked in man.' }),
   defense('cover_3', 'Cover 3', 'nickel', {
     DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: ZONE('hook_M'), CB1: ZONE('deep_third_L'), CB2: ZONE('deep_third_R'), FS: ZONE('deep_third_M'), SS: ZONE('flat_R'),
@@ -304,7 +307,7 @@ const DEFENSE_PLAYS = [
     DL1: RUSH('edge_L'), DL2: RUSH('edge_R'), DL3: RUSH('A_L'), LB1: RUSH('A_R'), CB1: MAN('wideL'), CB2: MAN('wideR'), FS: MAN('inside'),
   }, { align: { DL3: [1, -0.9], LB1: [1.2, 0.9], FS: [7, 0] }, tags: ['blitz', 'man', 'risky', 'interior'], desc: 'Two rushers mugged up in the A gaps, ends wide. Overloads the middle.' }),
   defense('bracket_left', 'Bracket Left', 'nickel', {
-    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: MAN('wideL'), SS: ZONE('deep_quarter_LL'), CB2: MAN('wideR'), FS: ZONE('deep_half_R'),
+    DL1: RUSH('B_L'), DL2: RUSH('B_R'), LB1: MAN('inside'), CB1: MAN('wideL', 'under'), SS: BRACKET('wideL', 'deep_quarter_LL'), CB2: MAN('wideR'), FS: ZONE('deep_half_R'),
   }, { align: { SS: [11, -14] }, tags: ['pass', 'man', 'bracket'], desc: 'The left receiver gets a corner underneath and a safety over the top.' }),
   defense('goal_line_man', 'Goal Line Man', 'heavy', {
     DL1: RUSH('A_L'), DL3: RUSH('A_R'), DL2: RUSH('B_R'), LB1: MAN('inside'), LB2: MAN('back'), CB1: MAN('wideL'), CB2: MAN('wideR'),
@@ -342,7 +345,7 @@ function compile(play) {
 // AI club, practice field or game plan can call them until the owner releases them. They live in PLAYS
 // (so the audit, art and engine can run them) and never in OFFENSE_IDS / DEFENSE_IDS, which every
 // game system draws from.
-const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: true }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN });
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: true }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
 // Legendary Plays (GDD §36): built on the same assignments as every play, each tied to one Legendary monster who must be on
 // the field in its slot. Like reserve plays they live in PLAYS (engine, art, audit) and never in OFFENSE_IDS / DEFENSE_IDS:
 // a club can call one only when it holds that Legendary and has put the play in one of its six slots.
@@ -510,10 +513,10 @@ export const LESSONS = Object.freeze({
   pa_boot: { when: 'Run fake one way, QB rolls the other with two options.', watch: 'Read the flat defender: throw the deep crosser or the flat.', beats: 'Run Wall and over-pursuing fronts.', loses: 'Edge Contain, the end stays home on the QB.' },
   pa_shot: { when: 'Your deepest play-action throw. 1st down after a big run.', watch: 'Seven steps and a fake, the line must hold up. Only against run-heavy looks.', beats: 'Heavy fronts and Run Wall.', loses: 'Any blitz.' },
   hail_mary: { when: 'End of a half or game, from beyond field-goal range.', watch: 'Everyone goes deep; your tallest, best-handed receiver jumps for it.', beats: 'Luck, mostly.', loses: 'Prevent, that is what it is for.' },
-  cover_2_man: { when: 'Your base call against a balanced passing offence.', watch: 'Corners press underneath, two safeties over the top. The seam is the soft spot.', beats: 'Short and intermediate passes, Mesh-type rubs.', loses: 'TE Seam and Smash.' },
-  cover_3: { when: 'Safe three-deep zone; good on 2nd-and-long and vs deep shots.', watch: 'Four underneath zones leave the flats and curls soft.', beats: 'Deep Post, Three Verticals.', loses: 'Curl Flat, Flood and Levels.' },
-  cover_4: { when: 'Protect against the deep ball and still fit the run with the safeties.', watch: 'Four deep means short throws are open, tackle well.', beats: 'Dagger, Deep Corner and Three Verticals.', loses: 'Bubble Screen, Stick and the run.' },
-  cover_1: { when: 'Man across with one safety deep, your aggressive base call.', watch: 'The free safety must help on the deepest route; everyone else is on their own.', beats: 'Flood and Y Cross.', loses: 'Mesh, Slot Fade and Wheel.' },
+  cover_2_man: { when: 'Your base call against a balanced passing offence.', watch: 'Corners and the linebacker trail underneath their men, two safeties over the top. Verticals that split the safeties are the soft spot.', beats: 'Short and intermediate passes: Dagger, Smash, Y Cross and TE Seam.', loses: 'Three Verticals and Wheel.' },
+  cover_3: { when: 'Safe three-deep zone; good on 2nd-and-long and vs deep shots.', watch: 'Four underneath zones leave the flats and the short middle soft.', beats: 'Deep Corner, Deep Post and Double Move.', loses: 'Y Cross, Quick Slants and Flood.' },
+  cover_4: { when: 'Protect against the deep ball and still fit the run with the safeties.', watch: 'Four deep means short throws are open, tackle well.', beats: 'Play-action shots (PA Post, PA Shot), Flood and Levels.', loses: 'Mesh, Y Cross, Quick Slants and the run.' },
+  cover_1: { when: 'Man across with one safety deep, your aggressive base call.', watch: 'The free safety must help on the deepest route; everyone else is on their own.', beats: 'The short game: Curl Flat, Stick, Levels and Quick Slants.', loses: 'Play-action shots, Slot Fade and Wheel.' },
   cover_0: { when: 'All-out man blitz. 3rd-and-long when you must get the QB.', watch: 'No safety. One missed tackle is a touchdown.', beats: 'Slow-developing deep passes.', loses: 'Quick Slants, RB Screen and Deep Post.' },
   tampa_2: { when: 'Cover 2 with the middle linebacker running deep, hides the seam.', watch: 'The middle linebacker must be fast and smart.', beats: 'TE Seam and Levels against a normal Cover 2.', loses: 'Stick and Smash on the outside.' },
   qb_spy: { when: 'Against a running QB or when you fear the draw.', watch: 'One linebacker mirrors the QB and nothing else.', beats: 'QB Draw, Read Option and PA Boot.', loses: 'Deep passes, one fewer defender in coverage.' },
@@ -528,7 +531,7 @@ export const LESSONS = Object.freeze({
   man_press: { when: 'Your corners are physical and the offence loves screens and quick throws.', watch: 'Press at the line disrupts timing, but a beaten press is a touchdown.', beats: 'Bubble Screen, Jet Sweep and Quick Slants.', loses: 'Double Move, Slot Fade and Mesh.' },
   robber: { when: 'Against an offence that keeps hitting the middle.', watch: 'A safety drops into the short middle looking to jump a route.', beats: 'Quick Slants, Levels and TE Seam.', loses: 'Deep Corner and outside throws.' },
   cover_2_zone: { when: 'A sound base call against balanced offences; great against the quick game outside.', watch: 'Corners sit in the flats, safeties split the deep field. The hole is the deep sideline between them.', beats: 'Curl Flat, Bubble Screen and Quick Slants.', loses: 'Smash and Deep Corner, the hole shot.' },
-  cover_6: { when: 'When the offence loves one side: quarters there, Cover 2 the other way.', watch: 'Two deep defenders on the left, a half on the right. Attack the weak-side flat.', beats: 'Three Verticals and Dagger to the quarters side.', loses: 'Flood and Stick to the Cover 2 side.' },
+  cover_6: { when: 'When the offence loves one side: quarters there, Cover 2 the other way.', watch: 'Two deep defenders on the left, a half on the right. Attack the weak-side flat.', beats: 'Deep Corner, Mesh and Slot Fade.', loses: 'Three Verticals, TE Seam and Hail Mary: verticals split the Cover 2 side.' },
   corner_blitz: { when: 'Surprise pressure from the boundary on an obvious passing down.', watch: 'The safety has to rotate over the vacated corner in time.', beats: 'PA Shot and Y Cross, slow throws from the left hash.', loses: 'Bubble Screen and Jet Sweep to the blitz side.' },
   safety_blitz: { when: 'When the quarterback holds the ball too long: pressure from a direction he never sees.', watch: 'No deep safety. If the back picks it up, every receiver is one-on-one.', beats: 'Mesh and Y Cross, long-developing crossers.', loses: 'Slot Fade, Deep Post and RB Screen.' },
   bear_front: { when: 'Against inside runs when you still need your corners honest.', watch: 'A nose over the centre and a lineman in each B gap clog the interior; the corners are alone.', beats: 'Inside Zone, Dive and Trap.', loses: 'Toss Sweep, Outside Zone and Slot Fade on the lone corners.' },
@@ -540,7 +543,7 @@ export const LESSONS = Object.freeze({
   lp_avalanche: { when: 'Obvious passing downs.', watch: 'Glacivern shows robber, then comes through the A gap; Whiteout freezes the first read.', beats: 'Deep Post, PA Boot and Power Left: slow plays the blitz reaches first.', loses: 'PA Shot, Levels and outside runs (Stretch Left): the blitz empties the middle and the left flat.' },
   lp_rootbound: { when: 'Against a run-first offence that lives on fakes.', watch: 'The whole front stays inside Elderoot’s grove: nobody bites on play action or misdirection.', beats: 'Toss Sweep, QB Draw, Inside Zone and play action that needs a bite.', loses: 'Outside runs (Stretch Left, Jet Sweep) and the PA Boot rollout: everyone is packed inside the grove.' },
   double_a_mug: { when: 'Third-and-medium when the offence keeps the back in to block.', watch: 'Two rushers show in the A gaps before the snap; the centre has to choose one.', beats: 'QB Draw, Stick and Levels, the middle collapses.', loses: 'Toss Sweep, Outside Zone and Bubble Screen, nobody is outside.' },
-  bracket_left: { when: 'Take away their best receiver when he lines up left.', watch: 'A corner underneath and a safety over the top on one man. Everyone else is on their own.', beats: 'Deep Post, Slot Fade and Double Move to the left.', loses: 'Flood and TE Seam to the right, and the run.' },
+  bracket_left: { when: 'Take away their best receiver when he lines up left.', watch: 'A corner underneath and inside, a safety over the top, on the left receiver. When he runs short, the safety lets him go and plays deep. Everyone else is on their own.', beats: 'The left receiver deep and over the middle: TE Seam, Levels, Three Verticals and Deep Post.', loses: 'The back on a Wheel, RB Screen, Deep Corner to the right, and the run.' },
   goal_line_man: { when: 'Inside your 5 against passing teams. Goal Line Stand with coverage instead of a safety.', watch: 'Four defenders locked in man with three in the gaps. A rub route beats it.', beats: 'Slot Fade, PA Post and Dive.', loses: 'Mesh and Power, nobody comes free to help.' },
   fire_zone: { when: 'Pressure with three deep behind it, the aggressive yet safe blitz.', watch: 'Five rushers, three deep, three under. Open area is the flats.', beats: 'Y Cross, PA Shot and slow drops.', loses: 'Curl Flat and RB Screen.' },
   ...RESERVE.lessons,

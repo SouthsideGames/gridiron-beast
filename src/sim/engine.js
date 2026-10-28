@@ -149,7 +149,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (aura.blocking && b.assignment?.a === 'block' && Math.abs(b.y - a.y) <= 2.2) b.attrs.blocking = Math.min(99, b.attrs.blocking + aura.blocking);
     }
   }
-  const reactionOf = (d) => (d.ability?.reaction || 0) + (d.reactionBonus || 0);
+  // Canopy Read (breakRadius) carries its reaction for one thing only, breaking on the throw from a deep zone (Phase B fix 7, as its
+  // card says); every other reaction ability (Sharp Eyes, Cold Read) counts everywhere, as before.
+  const reactionOf = (d) => (d.ability?.breakRadius ? 0 : (d.ability?.reaction || 0)) + (d.reactionBonus || 0);
+  const deepZoneOf = (d) => d.assignment?.a === 'zone' && d.assignment.role === 'deep';
   for (const a of actors) { // nobody lines up beyond the end line or the sideline
     a.x = clamp(a.x, B.ownEndLine + 0.5, Math.min(B.endLine - 0.5, a.team === 'def' ? B.goal + 8 : B.endLine - 0.5));
     a.y = clamp(a.y, B.left + 0.6, B.right - 0.6);
@@ -1015,7 +1018,18 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     for (const d of opponents(c.team)) if (dist(d, c) <= 2) { d.quakeUntil = t + 0.6; setStatus(d, 'stumble', 0.6); hit = true; }
     if (hit) abilityUsed(c, 'quakeStep');
   }
-  const deepRoute = (r) => r?.assignment?.a === 'route' && (r.assignment.points?.[r.assignment.points.length - 1]?.[0] ?? 0) >= 15;
+  const deepRoute = (r) => r?.assignment?.a === 'route' && (r.assignment.points?.[r.assignment.points.length - 1]?.[0] ?? 0) >= 15; // the receiver's own route (offensive abilities only: Eclipse Route)
+  /** A route a defender can SEE is going deep (Phase B fix 7, Heat Haze): the receiver, as he was a fifth of a second ago, one
+   * three yards or more downfield on a vertical release, past any slant's stem (running upfield at 4 yards a second or more, within 45 degrees of
+   * straight upfield: a fade, seam or post stem counts, a slant across does not). Never his route assignment: a comeback
+   * counts on its stem and stops counting the moment it turns back. A slant's two-yard stem looks the same for an instant (worth a
+   * few hundredths of a yard), so the ability is announced only once the route is plainly deep (eight yards). */
+  function seenDeep(r) {
+    const h = history.get(r); if (!h || h.length < 6) return false; const i1 = h.length - 1 - 4, i0 = i1 - 2; const a = h[i1], b = h[i0];
+    const vx = (a?.x - b?.x) / (2 * DT), vy = (a?.y - b?.y) / (2 * DT);
+    return !!a && !!b && a.x >= 1.5 && vx > 4 && Math.abs(vy) < vx ? a.x : 0; // upfield, within 45 degrees of straight (a slant breaking across is not); his seen depth
+  }
+  const STEP = 1.5; // "within a step" (Sticky)
   const zoneRadius = (asg, d = null) => (asg.role === 'deep' ? 12 : asg.role === 'middle' ? 7.5 : 7) + (d?.ability?.zoneRange || 0);
   const inZoneArea = (asg, p) => { const [zx, zy] = asg.at || [0, 0]; return asg.role === 'deep' ? Math.abs(p.y - zy) < zoneRadius(asg) && p.x > 5 : Math.hypot(p.x - zx, p.y - zy) < zoneRadius(asg); };
   /** Defenders covering a receiver right now: his man defender, plus zone defenders on his hip. */
@@ -1069,21 +1083,30 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     steer(d, ax, ay, effort, 0.2);
   }
-  function trailPosition(d, target) {
-    let delay = 0.4 - 0.3 * norm(d.attrs.coverage + (d.ability?.manCoverage || 0)) - reactionOf(d); if (d.ability?.manCoverage) abilityUsed(d, 'manCoverage');
-    if (d.ability?.heatHaze && deepRoute(target)) { delay -= d.ability.heatHaze; abilityUsed(d, 'heatHaze'); } // Heat Haze: deep routes lose 0.15 s of separation on him
-    const h = history.get(target);
-    const idx = Math.max(0, h.length - 1 - Math.round(delay / DT));
-    const p = h[idx] || target;
-    return p;
+  /** Perception delay on a receiver he covers (Phase B fix 6): Coverage (technique) and now Awareness (reading him) shorten it. At
+   * Awareness 65 it is the v42.14 delay at every Coverage (0.20 s at 65); 0.28 s at 50/50, 0.05 s at 95/95. Sticky (+4 Coverage) counts only when the receiver is within a step of him
+   * (fix 7, as its card says); Heat Haze only on a route he SEES go deep (fix 7: it used to read the route's assignment). */
+  function coverDelay(d, target, mark = false) {
+    const sticky = d.ability?.manCoverage && dist(d, target) <= STEP ? d.ability.manCoverage : 0; if (mark && sticky) abilityUsed(d, 'manCoverage');
+    let delay = 0.4 - 0.3 * norm(d.attrs.coverage + sticky) - 0.2 * (norm(d.attrs.awareness) - norm(65)) - reactionOf(d); // the v42.14 delay at Awareness 65
+    const deepSeen = d.ability?.heatHaze ? seenDeep(target) : 0;
+    if (deepSeen) { delay -= d.ability.heatHaze; if (mark && deepSeen >= 8) abilityUsed(d, 'heatHaze'); } // Heat Haze: deep routes lose 0.15 s of separation on him
+    return delay;
   }
+  /** The receiver's trail `delay` seconds ago, interpolated between ticks (Phase B fix 6), so a rating difference smaller than a tick
+   * still shows (rounding to whole ticks hid most of it, and made small rating changes jump). */
+  function seenAt(target, delay) {
+    const h = history.get(target); const k = Math.max(0, delay / DT); const i0 = Math.floor(k), f = k - i0;
+    const a = h[Math.max(0, h.length - 1 - i0)] || target, b = h[Math.max(0, h.length - 2 - i0)] || a;
+    return f > 0 ? { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f } : a;
+  }
+  function trailPosition(d, target) { return seenAt(target, coverDelay(d, target, true)); }
   /** The receiver's velocity as the defender sees it (v42.8, attribute audit fix 2): from the same delayed trail, over the
    * last 0.15 s before that moment. Observable movement only, never his route or his true velocity this tick. */
   function observedVelocity(d, target) {
-    let delay = 0.4 - 0.3 * norm(d.attrs.coverage + (d.ability?.manCoverage || 0)) - reactionOf(d); if (d.ability?.heatHaze && deepRoute(target)) delay -= d.ability.heatHaze;
-    const h = history.get(target); const i1 = Math.max(0, h.length - 1 - Math.round(delay / DT)), i0 = Math.max(0, i1 - 2);
-    if (i1 <= i0 || !h[i1] || !h[i0]) return { vx: 0, vy: 0 };
-    return { vx: (h[i1].x - h[i0].x) / ((i1 - i0) * DT), vy: (h[i1].y - h[i0].y) / ((i1 - i0) * DT) };
+    const delay = coverDelay(d, target); const h = history.get(target); if (h.length < 3) return { vx: 0, vy: 0 };
+    const p1 = seenAt(target, delay), p0 = seenAt(target, delay + 2 * DT);
+    return { vx: (p1.x - p0.x) / (2 * DT), vy: (p1.y - p0.y) / (2 * DT) };
   }
   // Reading the throw (v42.10, defensive audit fix 2). A defender no longer knows where the ball will come down the moment it
   // leaves the hand. He first has to see the release: Awareness (reading the quarterback) and Coverage (playing the ball) shorten
@@ -1093,7 +1116,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // receiver, and a perfect throw is read correctly once it is seen. Deterministic: no dice are drawn.
   function ballReaction(d) {
     const asg = d.assignment; const eyesOnMan = asg.a === 'man' && bySlot.off[manKeys[asg.key]] !== ball.target;
-    return Math.max(0.05, 0.32 - 0.12 * norm(d.attrs.awareness) - 0.12 * norm(d.attrs.coverage) + (eyesOnMan ? 0.08 : 0) - reactionOf(d));
+    const canopy = d.ability?.breakRadius && deepZoneOf(d) ? d.ability.reaction || 0 : 0;
+    return Math.max(0.05, 0.32 - 0.12 * norm(d.attrs.awareness) - 0.12 * norm(d.attrs.coverage) + (eyesOnMan ? 0.08 : 0) - reactionOf(d) - canopy);
   }
   function perceivedLanding(d) {
     const A = ball.aim || ball.landing, L = ball.landing;
@@ -1109,8 +1133,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
    * trailPosition, which zone defenders used before v42.12; the activation is recorded only when he actually plays the receiver
    * (mark), as before, not for every receiver he glances at. */
   function zoneDelay(d, r, mark = false) {
-    let delay = 0.45 - 0.33 * norm(d.attrs.coverage + (d.ability?.manCoverage || 0)) - 0.12 * norm(d.attrs.awareness) - reactionOf(d); if (mark && d.ability?.manCoverage) abilityUsed(d, 'manCoverage');
-    if (d.ability?.heatHaze && deepRoute(r)) { delay -= d.ability.heatHaze; if (mark) abilityUsed(d, 'heatHaze'); }
+    const sticky = d.ability?.manCoverage && dist(d, r) <= STEP ? d.ability.manCoverage : 0; // Sticky: within a step (Phase B fix 7)
+    let delay = 0.45 - 0.33 * norm(d.attrs.coverage + sticky) - 0.12 * norm(d.attrs.awareness) - reactionOf(d); if (mark && sticky) abilityUsed(d, 'manCoverage');
+    const deepSeen = d.ability?.heatHaze ? seenDeep(r) : 0;
+    if (deepSeen) { delay -= d.ability.heatHaze; if (mark && deepSeen >= 8) abilityUsed(d, 'heatHaze'); }
     return Math.max(0, delay);
   }
   /** What a zone defender sees of a receiver: his position and velocity a perception delay ago (never this tick's truth). */
@@ -1188,7 +1214,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // stepping back to meet a back coming at him (a handoff, or a fake) is not a drop: while a back is converging on him the depth
     // says nothing, and on play-action the drop speaks once the back has left the mesh.
     const drop = sq.x - q.x; let qbCue = clamp((0.5 - drop) / 1.0, -1, 0.4); const wQb = 0.35 + 0.25 * Math.min(1, t / 0.6);
-    const converging = backsOf().some((b) => { const p = seenOf(b, delay), v = seenVel(b, delay), dq = Math.hypot(p.x - q.x, p.y - q.y); return dq < 2.5 && ((q.x - p.x) * v.vx + (q.y - p.y) * v.vy) / (dq || 1) > 0.8; });
+    // An established dropback (Phase B fix 1): once he SEES the quarterback more than three yards behind where he took the snap, a
+    // back beside him is a protector, not a mesh. Handoffs and play-action fakes meet the quarterback before that (from under centre
+    // at about 2.4 yards, from the gun at the snap depth), so they read exactly as before; a back stepping up to block next to a set
+    // quarterback no longer looks like a handoff.
+    const dropped = drop > 3.0;
+    const converging = !dropped && backsOf().some((b) => { const p = seenOf(b, delay), v = seenVel(b, delay), dq = Math.hypot(p.x - q.x, p.y - q.y); return dq < 2.5 && ((q.x - p.x) * v.vx + (q.y - p.y) * v.vy) / (dq || 1) > 0.8; });
     if (converging) qbCue = Math.max(qbCue, 0);
     const qbRun = (q.x > sq.x + 0.6 && qv.vx > 1.5) || (phase === 'carry' && ball.holder === qb && qv.vx > 1.0);
     // The backs: the mesh, the ball seen in a back's hands (the mesh hides it a moment longer), a back leaving without it.
@@ -1200,7 +1231,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const p = seenOf(b, delay), v = seenVel(b, delay), s = snapPos.get(b), dq = Math.hypot(p.x - q.x, p.y - q.y);
       if (dq < nearest) { nearest = dq; backFlow = p.y - s.y; }
       const closing = ((q.x - p.x) * v.vx + (q.y - p.y) * v.vy) / (dq || 1); // how fast he comes at the quarterback
-      if ((dq < 1.5 && Math.hypot(v.vx, v.vy) > 1 && v.vx > -0.5) || (dq < 2.5 && closing > 0.8)) { mesh = true; if (dq < 1.5) R.sawMesh = true; }
+      if (!dropped && ((dq < 1.5 && Math.hypot(v.vx, v.vy) > 1 && v.vx > -0.5) || (dq < 2.5 && closing > 0.8))) { mesh = true; if (dq < 1.5) R.sawMesh = true; }
       if (!handSeen && (p.x > 0.5 || (R.sawMesh && dq > 2.2) || (t > 0.5 && Math.abs(p.y - q.y) > 4 && v.vx > -0.5))) release = true;
     }
     // A fake he is protected from (Ancient Grove, the no-bite effect): he reads the mesh like anyone, but the moment the fake shows
@@ -1280,7 +1311,30 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
    * the wrong man; high Awareness reads quickly and well but still only from what is visible. Two near-equal threats inside an
    * underneath zone are an overload: he plays between them, leaning to the bigger one, and can still be beaten by either.
    */
-  function zoneRead(d, asg, radius) {
+  /**
+   * Deep cushion (Phase B fix 2). How deep a deep defender plays over a receiver he SEES (zoneObserve: a perception delay ago):
+   * two yards over him, plus the ground the receiver covers while the defender turns and runs (his seen upfield speed over a lead
+   * time that is shorter for a better technician, Coverage), plus, for a defender who knows he is the slower man (Awareness reads
+   * the receiver's seen speed against his own), up to two yards more. Graded throughout; Speed and acceleration still decide whether
+   * he can actually keep it, so a faster receiver or a double move can still beat him.
+   */
+  function cushionDepth(d, o) {
+    const v = Math.max(0, Math.min(o.vx, o.vxLast)); const cov = norm(d.attrs.coverage), aw = norm(d.attrs.awareness);
+    const lead = 0.3 + 0.2 * (1 - cov); const faster = aw * clamp((Math.hypot(o.vx, o.vy) - d.maxSpeed) * 0.6, 0, 2);
+    return o.x + v * lead + 2.0 + faster;
+  }
+  /** A deep defender never steps toward a receiver he sees running upfield at him: he holds at least his current depth until the
+   * receiver settles or breaks (Phase B fix 2; before, he steered to his landmark and came up toward the vertical, then had to turn
+   * and run from a standstill). */
+  const holdDepth = (d, o) => (Math.min(o.vx, o.vxLast) > 2.5 && o.x < d.x ? d.x : -Infinity);
+  /** Steer a deep defender to his cushion (Phase B fix 2). Once he is on top (at or past the depth he wants), he runs at the pace he
+   * SEES the receiver running, a touch faster, instead of sprinting away from him: a fast defender used to overrun the cushion and be
+   * running away from the ball when it came down in front of him. Until then he runs flat out; Speed decides whether he gets there. */
+  function deepSteer(d, tx, ty, o) {
+    const onTop = d.x >= tx - 0.5; const pace = onTop ? clamp((Math.hypot(o.vx, o.vy) + 0.8) / d.maxSpeed, 0.45, 0.98) : 0.98;
+    steer(d, tx, ty, pace, 0.3);
+  }
+  function zoneRead(d, asg, radius, skip = null) {
     const aw = norm(d.attrs.awareness); const [zx, zy] = asg.at; const role = asg.role; const center = { x: zx, y: zy };
     const inside = (o) => (role === 'deep' ? Math.abs(o.y - zy) < radius && o.x > 5 : dist(o, center) < radius);
     const edgeGap = (o) => (role === 'deep' ? Math.abs(o.y - zy) - radius : dist(o, center) - radius);
@@ -1290,13 +1344,17 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const passKey = passShown(d);
     const cands = [];
     for (const s of receivers) {
+      if (s === skip) continue; // a bracket defender whose receiver the man defender underneath has taken (Phase B)
       const r = bySlot.off[s]; if (!r) continue; if (r.engaged) continue; // a back or tight end blocking is not a receiver
       // A back still behind the line is a receiver once he is SEEN releasing: moving quickly, away from the quarterback (v42.14:
       // was his route assignment, which the defense cannot see).
       if (r.x <= -1) { const rv = observedVelocity(d, r); if (!(Math.hypot(rv.vx, rv.vy) > 2.5 && Math.hypot(r.x - qb.x, r.y - qb.y) > 2)) continue; }
       const o = zoneObserve(d, r); if (o.x <= -1) continue;
       const toC = { x: zx - o.x, y: zy - o.y }; const tl = Math.hypot(toC.x, toC.y) || 1; const vin = (o.vx * toC.x + o.vy * toC.y) / tl; // speed toward the zone centre
-      const isIn = inside(o); const entering = passKey && !isIn && edgeGap(o) < 1.5 + 4 * aw && vin > 1.5; if (!isIn && !entering) continue; // an aware defender sees a receiver coming from further out, once the quarterback shows pass
+      // A middle-of-field deep defender (landmark within two yards of the middle) reads a vertical stem working inside from farther
+      // out (Phase B fix 3): the post and the seam are his.
+      const mof = role === 'deep' && Math.abs(zy) <= 2 && (o.x >= 8 || o.vx > 3) && Math.sign(o.vy) === -Math.sign(o.y) && Math.abs(o.vy) > 1.5 ? 1.5 + aw : 0; // he SEES him working inside
+      const isIn = inside(o); const entering = passKey && !isIn && edgeGap(o) < 1.5 + 4 * aw + mof && vin > 1.5; if (!isIn && !entering) continue; // an aware defender sees a receiver coming from further out, once the quarterback shows pass
       const leaving = isIn && vin < -2 && edgeGap(o) > -2.5;
       cands.push({ r, slot: s, obs: o, isIn, entering, leaving });
     }
@@ -1338,8 +1396,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       sc -= 0.04 * Math.hypot(o.x - d.x, o.y - d.y);
       let other = 99, mate = false; const mine = Math.hypot(o.x - d.x, o.y - d.y);
       // "a teammate has him" only when that teammate is playing him AND is closer to him than I am (so two defenders never both
-      // defer to each other and swap back and forth), and not when the receiver is visibly leaving that teammate's zone
-      for (const x of defs) { if (x === d || x.engaged) continue; const dd = Math.hypot(x.x - o.x, x.y - o.y); if (dd < other) other = dd; if (dd < 3 && dd < mine && ((x.zoneTgt === c.slot && !x.zoneTgtLeaving) || (x.assignment?.a === 'man' && bySlot.off[manKeys[x.assignment.key]] === c.r))) mate = true; }
+      // defer to each other and swap back and forth), and not when the receiver is visibly leaving that teammate's zone. A man
+      // defender on him does not count (Phase B fix 3): a zone defender on a call with man coverage is the help (the free safety over
+      // Cover 1, the halves over Cover 2 Man, the robber), so a receiver in man is exactly the one he is there to help on.
+      for (const x of defs) { if (x === d || x.engaged) continue; const dd = Math.hypot(x.x - o.x, x.y - o.y); if (dd < other) other = dd; if (dd < 3 && dd < mine && x.zoneTgt === c.slot && !x.zoneTgtLeaving) mate = true; }
       sc += 0.5 * clamp((other - 1.5) / 6, 0, 1);
       if (mate) { sc -= 0.3 + 0.5 * aw; why.push('teammate has him'); }
       // His eyes: an unaware defender bites on every look; an aware one trusts only a look the quarterback holds (half a second
@@ -1383,11 +1443,21 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const L = perceivedLanding(d); const toBall = dist(d, L);
       // Everybody drives to the ball once it is thrown; the closest defenders sprint, the rest rally.
       const baseBreak = asg.a === 'man' ? 9 : asg.role === 'deep' ? 12 : 11; // zone defenders read the quarterback and break on the throw
-      const breakRadius = baseBreak + (d.ability?.breakRadius || 0);
+      const breakRadius = baseBreak + (deepZoneOf(d) ? d.ability?.breakRadius || 0 : 0); // Canopy Read: deep zone only (Phase B fix 7)
       // The man defender on the target, beaten by a break and thrown behind: he plants to come back, the same burst as a recognised route break, once (v42.8).
       if (asg.a === 'man' && bySlot.off[manKeys[asg.key]] === ball.target && (d.vx * (L.x - d.x) + d.vy * (L.y - d.y)) < 0 && Math.hypot(d.vx, d.vy) > 3 && !(d.breakPlant > t - 1.0)) { d.breakPlant = t; d.cutUntil = t + 0.35; }
-      if (toBall < breakRadius) { mark('ball', 'break'); if (toBall >= baseBreak) abilityUsed(d, 'breakRadius'); steer(d, L.x, L.y, 1, 0.2); return; }
-      if (!['rush', 'contain'].includes(asg.a) || d.x < L.x) { mark('ball', 'rally'); steer(d, L.x, L.y, 0.95, 0.2); return; }
+      // Braking into the catch point (Phase B, judged braking approved by the owner after the three-way review). He runs flat out but
+      // tries to arrive no faster than he can stop at the spot he reads, and he JUDGES that stopping distance: he brakes as if he
+      // could stop `judge` times as hard as his acceleration (Agility) really allows. Judging it is ball skill (Awareness and
+      // Coverage); each throw he misjudges it differently (a hash of the seed, his slot and the throw: deterministic, no random draw,
+      // no quota). Above 1 he brakes late and overshoots (more so the faster he is coming); below 1 he brakes early and arrives short
+      // or late. Range: about 0.98-1.06 for a 95/95 defender, 0.83-1.51 at 65/65, 0.75-1.75 at 50/50. Without any braking, a
+      // defender who got there early ran through the spot on 35-77% of deep throws, and a faster one more often than a slower one.
+      const skill = 0.5 * norm(d.attrs.awareness) + 0.5 * norm(d.attrs.coverage);
+      const judge = Math.max(0.6, 1 + (1 - skill) * (2 * hash01(`${seed}|${d.slot}|stop|${Math.round(ball.thrownAt * 100)}`) - 0.5));
+      const brake = Math.sqrt(2 * d.accel * judge * Math.max(0, toBall - 0.3)) + 0.5;
+      if (toBall < breakRadius) { mark('ball', 'break'); if (toBall >= baseBreak) abilityUsed(d, 'breakRadius'); steer(d, L.x, L.y, 1, 0.2, brake); return; }
+      if (!['rush', 'contain'].includes(asg.a) || d.x < L.x) { mark('ball', 'rally'); steer(d, L.x, L.y, 0.95, 0.2, brake); return; }
     }
     // The run (v42.14, Phase A): the ball is in a carrier's hands (a handoff, a keep, a scramble: what the ball is doing, never
     // what was called) and HIS read has committed to it (updateRead). Fits use where he SEES the carrier, a perception delay ago.
@@ -1468,14 +1538,19 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         const turnedBack = !!d.sawRelease && ov.vx < -1.0; // coming back toward the line (comeback, curl, dig working back)
         const ovs = Math.hypot(ov.vx, ov.vy); d.peakSeen = Math.max(d.peakSeen || 0, ovs);
         const settled = !!d.sawRelease && ovs < 1.5; // sitting down (curl, hitch)
-        const slowing = !!d.sawRelease && !settled && ovs < (0.55 + 0.35 * norm(d.attrs.coverage)) * d.peakSeen; // gathering himself for a break: a good cover man notices a slight gear-down, a poor one only a hard brake
+        const seenSlowing = !!d.sawRelease && !settled && ovs < (0.55 + 0.35 * norm(d.attrs.coverage)) * d.peakSeen; // gathering himself for a break: a good cover man notices a slight gear-down, a poor one only a hard brake
+        const slowing = seenSlowing;
         const antic = turnedBack || settled || slowing ? 0.05 : 0.12 + 0.3 * norm(d.attrs.coverage);
         // Recognising the break he plants too, the same 1.9× burst the receiver got for his planned cut (Agility sets both); once per break.
         if ((turnedBack || settled || slowing) && !(d.breakPlant > t - 1.0)) { d.breakPlant = t; d.cutUntil = t + 0.35; }
         const lead = Math.min(3.5, Math.hypot(ov.vx, ov.vy) * antic); const ux = ov.vx / (Math.hypot(ov.vx, ov.vy) || 1), uy = ov.vy / (Math.hypot(ov.vx, ov.vy) || 1);
-        const inside = target.y > 0 ? -0.6 : 0.6;
+        // Underneath technique (Phase B): when the call puts deep help over him (Bracket Left's safety, Cover 2 Man's halves), he
+        // plays inside and underneath, trailing at the receiver's hip to take the slant, dig, curl and crosser, and leaves the ball
+        // over the top to the help. Otherwise he keeps leverage on top of the receiver, as before.
+        const under = asg.tech === 'under';
+        const inside = (target.y > 0 ? -1 : 1) * (under ? 1.0 : 0.6);
         // Keep leverage on top of a receiver who is still working upfield; never give up the cushion by running at him.
-        const onTop = p.x + ux * lead + (slowing ? 0.2 : 0.8); // gearing down with him: give up the cushion, not the leverage
+        const onTop = p.x + ux * lead + (under ? 0 : slowing ? 0.2 : 0.8); // gearing down with him: give up the cushion, not the leverage
         const ty = p.y + uy * lead + inside;
         // Lateral routes (v42.10, defensive audit fix 1): a receiver running across the field in front of him (a drag, a back to
         // the flat, a swing) used to be "shuffled" at a third of his speed and never closed on. Once he SEES the receiver moving
@@ -1491,7 +1566,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
           mark('man', `${target.slot}: mirror across`); steer(d, Math.max(p.x + ux * leadL + 1.0, 1.0), p.y + uy * leadL, 1, 0.3); return;
         }
         if (!turnedBack && !settled) {
-          if (onTop >= d.x) { mark('man', slowing ? `${target.slot}: gearing down` : `${target.slot}: on top`); steer(d, onTop, ty, slowing ? Math.max(0.3, ovs / Math.max(1, d.peakSeen)) : 1, 0.3); return; }
+          if (onTop >= d.x) { mark('man', slowing ? `${target.slot}: gearing down` : under ? `${target.slot}: under, inside` : `${target.slot}: on top`); steer(d, onTop, ty, slowing ? Math.max(0.3, ovs / Math.max(1, d.peakSeen)) : 1, 0.3); return; }
           if (slowing) { mark('man', `${target.slot}: turn with him`); steer(d, d.x, ty, 0.3, 0.3); return; } // past him as he gathers: stop and turn with him
           // Receiver still in front of him (the release, or running at him): shuffle, backpedal only as he closes.
           const closing = d.x - p.x < 3.5; mark('man', `${target.slot}: ${closing ? 'backpedal' : 'shuffle'}`); steer(d, closing ? d.x - 0.6 : d.x, ty, closing ? 0.55 : 0.35, 0.3); return;
@@ -1527,8 +1602,30 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
           mark('zone', lean > 0.05 ? `spot · reading run ${Math.round(lean * 100)}%` : 'spot'); gsteer(zx, zy, 0.95, 0.5); return;
         }
         const center = { x: zx, y: zy };
+        // Bracket (Phase B fix 4): the deep defender over the top and outside of one receiver, the man defender underneath and inside.
+        // While the receiver he SEES is a vertical threat (running upfield, or past eight yards), he stays over the top with a cushion,
+        // a half step outside him (the fade and the corner are his), and once he sees the receiver working inside (a post) a step
+        // inside him, over the top, squeezing it while the man defender trails underneath. Once the receiver shows he is no vertical threat (a drag, a slant settling, a flat), the man defender has him
+        // alone and this defender plays his deep zone for everyone else. Everything is read from movement; never the route.
+        let skip = null;
+        if (asg.bracket) {
+          const r = bySlot.off[manKeys[asg.bracket]];
+          if (r && !r.engaged && r.x > -1) {
+            const o = zoneObserve(d, r); const vUp = Math.min(o.vx, o.vxLast);
+            if (vUp > 2.5 || o.x >= 8) {
+              zoneDelay(d, r, true); const cov = norm(d.attrs.coverage); const antic = 0.12 + 0.2 * cov;
+              const inward = Math.sign(o.vy) === -Math.sign(o.y) && Math.abs(o.vy) > 1.5;
+              const out = (Math.sign(o.y) || -1) * (inward ? -0.8 : 0.5); // a post: over the top and a step inside it; otherwise over the top, a half step outside
+              const ty = clamp(o.y + o.vy * antic + out, B.left + 1, B.right - 1);
+              const tx = Math.max(cushionDepth(d, o), holdDepth(d, o), vUp > 2.5 ? zx - 1 : o.x + 1.5);
+              d.zoneTgt = r.slot; if (TRACE) d.zoneInfo = { in: [r.slot], tgt: r.slot, why: 'bracket over', overload: false, switched: false, split: null };
+              mark('zone', `${r.slot} · bracket over${inward ? ', squeezing inside' : ''}`); deepSteer(d, tx, ty, o); return;
+            }
+            skip = r.slot; // no vertical threat: the man defender underneath has him
+          }
+        }
         if (dist(d, center) < radius + 1) {
-          const read = zoneRead(d, asg, radius);
+          const read = zoneRead(d, asg, radius, skip);
           if (read.pick) {
             const r = read.pick; zoneDelay(d, r.r, true); /* records Sticky / Heat Haze as active, as trailPosition did */ const p = r.obs; const antic = 0.12 + 0.2 * norm(d.attrs.coverage) + 0.1 * norm(d.attrs.awareness); // how far ahead he plays him: technique (Coverage) and reading the break (Awareness); about as before at equal ratings
             if (TRACE) d.zoneInfo = { in: read.inZone, tgt: r.slot, why: read.why, overload: read.overload, switched: read.switched, split: read.split ? read.second.slot : null };
@@ -1546,8 +1643,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
               const floor = read.verticalNear ? zx - 1 : zx - 4;
               if (read.split) { // between the two deep threats, on top of the deeper
                 const q = read.second.obs, w = read.splitWeight; const tyS = clamp((p.y + p.vy * antic) * w + (q.y + q.vy * antic) * (1 - w), zy - 10, zy + 10);
-                steer(d, Math.max(Math.max(p.x + Math.min(p.vx, p.vxLast) * 0.25, q.x + Math.min(q.vx, q.vxLast) * 0.25) + 2.0, floor), tyS, 0.98, 0.3);
-              } else steer(d, Math.max(p.x + Math.min(p.vx, p.vxLast) * 0.25 + 2.0, floor), ty, 0.98, 0.3);
+                deepSteer(d, Math.max(cushionDepth(d, p), cushionDepth(d, q), floor, holdDepth(d, p), holdDepth(d, q)), tyS, Math.hypot(p.vx, p.vy) > Math.hypot(q.vx, q.vy) ? p : q);
+              } else deepSteer(d, Math.max(cushionDepth(d, p), floor, holdDepth(d, p)), ty, p);
             } else {
               const win = (o) => ({ x: o.x + Math.min(o.vx, o.vxLast) * antic * 0.6 + 0.3, y: o.y + o.vy * antic * 0.6 }); // underneath zones squeeze the receiver (as before), on his seen movement; a receiver sitting down or coming back shows on the latest step
               let tgt = win(p);
@@ -1562,6 +1659,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         d.zoneTgt = null; d.zoneTgtLeaving = false; if (TRACE) d.zoneInfo = null;
         const sf = ball.holder === qb ? seenFacing(norm(d.attrs.awareness)) : null; const eyeY = sf ? sf.qy + Math.tan(clamp(sf.ang, -1.3, 1.3)) * Math.max(1, zx - sf.qx) : null;
         const shade = sf ? clamp((eyeY - zy) * 0.25, role === 'deep' ? -1.5 : -2, role === 'deep' ? 1.5 : 2) * norm(d.attrs.awareness) : 0;
+        // A deep defender with nobody in his zone still keeps everything in front of him (Phase B fix 3): he stays over the deepest
+        // receiver he sees running upfield near his area (within twelve yards of its edge), never stepping up toward him, so a
+        // vertical stem that later breaks into his zone (a post, a seam) does not run past him. He never drifts more than ten
+        // yards past his landmark.
+        if (role === 'deep') {
+          let tx = zx; for (const sl of receivers) { const r = bySlot.off[sl]; if (!r || r.engaged || r.x <= 0) continue; const o = zoneObserve(d, r);
+            if (Math.min(o.vx, o.vxLast) > 2.5 && Math.abs(o.y - zy) < radius + 12) tx = Math.max(tx, cushionDepth(d, o), holdDepth(d, o)); }
+          tx = Math.min(tx, zx + 10);
+          mark('zone', tx > zx + 0.5 ? 'spot · keeping it in front' : shade ? 'spot · reading the QB' : 'spot'); steer(d, tx, zy + shade, 0.95, 0.5); return;
+        }
         mark('zone', shade ? 'spot · reading the QB' : 'spot'); steer(d, zx, zy + shade, 0.95, 0.5); return;
       }
       case 'spy': {
@@ -1706,11 +1813,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const veil = defs.find((d) => d.ability?.nightVeil && !d.engaged && !(d.stun > 0) && dist(d, L) <= 1.0);
     if (veil && catchP > 0 && !thunderShield) { catchP = 0; abilityUsed(veil, 'nightVeil'); abilityOutcome('veiled', veil, `${veil.name}'s Night Veil: ${r.name} never sees the ball`, { victim: r.slot }); }
     if (contested) {
-      const dCover = nearest.d.attrs.coverage + (nearest.d.ability?.contest || 0) + (nearest.d.assignment?.a === 'man' ? (nearest.d.ability?.manCoverage || 0) : 0);
+      const dCover = nearest.d.attrs.coverage + (nearest.d.ability?.contest || 0) + (nearest.d.assignment?.a === 'man' && dist(nearest.d, r) <= STEP ? (nearest.d.ability?.manCoverage || 0) : 0); // Sticky: within a step (Phase B fix 7)
       const rCatch = r.attrs.catching + (r.ability?.catchContest || 0);
       catchP *= 0.7 + 0.22 * norm(rCatch * scaleVs(r, nearest.d, 'catch')) - 0.22 * norm(dCover * scaleVs(nearest.d, r, 'breakup')); // the defender actually at the ball, not the one who lined up on him
       if (nearest.d.ability?.wingShadow) { catchP *= 1 - nearest.d.ability.wingShadow; abilityUsed(nearest.d, 'wingShadow'); } // Wing Shadow: contested catches against him are 15% harder
-      if (nearest.d.ability?.contest || nearest.d.ability?.manCoverage) abilityUsed(nearest.d, nearest.d.ability.contest ? 'contest' : 'manCoverage'); if (r.ability?.catchContest) abilityUsed(r, 'catchContest');
+      if (nearest.d.ability?.contest || (nearest.d.ability?.manCoverage && nearest.d.assignment?.a === 'man' && dist(nearest.d, r) <= STEP)) abilityUsed(nearest.d, nearest.d.ability.contest ? 'contest' : 'manCoverage'); if (r.ability?.catchContest) abilityUsed(r, 'catchContest');
     }
     // A defender on the ball plays it (v42.8): within a yard, and not clearly beaten to it by the receiver (before the lead fix,
     // under-led balls fell to trailing defenders; with the ball on the receiver this keeps interceptions real without inventing them).
