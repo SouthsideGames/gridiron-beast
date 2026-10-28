@@ -1019,11 +1019,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (hit) abilityUsed(c, 'quakeStep');
   }
   const deepRoute = (r) => r?.assignment?.a === 'route' && (r.assignment.points?.[r.assignment.points.length - 1]?.[0] ?? 0) >= 15; // the receiver's own route (offensive abilities only: Eclipse Route)
-  /** A route a defender can SEE is deep (Phase B fix 7, Heat Haze): the receiver, as he was a fifth of a second ago, ten or more yards
-   * downfield and still running upfield. Never his route assignment. */
+  /** A route a defender can SEE is going deep (Phase B fix 7, Heat Haze): the receiver, as he was a fifth of a second ago, one
+   * and a half yards or more downfield on a vertical release (running upfield at 4 yards a second or more). Never his route assignment: a comeback
+   * counts on its stem and stops counting the moment it turns back. */
   function seenDeep(r) {
     const h = history.get(r); if (!h || h.length < 6) return false; const i1 = h.length - 1 - 4, i0 = i1 - 2; const a = h[i1], b = h[i0];
-    return !!a && !!b && a.x >= 10 && (a.x - b.x) / (2 * DT) > 2;
+    return !!a && !!b && a.x >= 1.5 && (a.x - b.x) / (2 * DT) > 4;
   }
   const STEP = 1.5; // "within a step" (Sticky)
   const zoneRadius = (asg, d = null) => (asg.role === 'deep' ? 12 : asg.role === 'middle' ? 7.5 : 7) + (d?.ability?.zoneRange || 0);
