@@ -15,7 +15,7 @@ import { monsterOverall, salaryFor, ROSTER_MAX, ROSTER_MIN } from '../data/monst
 import { createRng, hashString } from '../core/rng.js';
 import { GROUP_SLOTS } from './roster.js';
 import { tradable, pickKey, samePick, pickWorth, picksOwnedBy, pickUsed, tradableYears } from './trades.js';
-import { marketValue, rosterWorth, rosterAfter, rosterProblems, roleIn, slotsOf, countsAt, isUnavailable, DEAL_RULES } from './trade-value.js';
+import { marketValue, rosterWorth, rosterAfter, rosterProblems, roleIn, slotsOf, countsAt, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
 import { isProtected } from './league-registry.js';
 
 export const DESK_RULES = Object.freeze({
@@ -27,7 +27,6 @@ export const DESK_RULES = Object.freeze({
   replacementGap: 6,                                // a starter is for sale only if the next man is within this many overall (GDD §19.6)
   counterTries: 12,                                 // how many of your assets a club will look through for a counter
 });
-const ovr = monsterOverall;
 const ordered = (list) => list.slice().sort((a, b) => (isUnavailable(a) - isUnavailable(b)) || (ovr(b) - ovr(a)) || (a.id < b.id ? -1 : 1));
 
 // ---------------------------------------------------------------- windows and limits
@@ -71,7 +70,8 @@ const money = (n) => Math.round(Math.abs(n)).toLocaleString('en-US');
  * (picks the owner holds), roster(team), room(team), difficulty, year, count: true to spend a proposal }.
  * Returns { ok (the proposal is well formed), legal, accept, reasons: [{code, text, blocking}], detail, counter }.
  */
-export function evaluateProposal(f, prop, env) {
+export function evaluateProposal(f, prop, env) { return scoped(() => evaluateProposalNow(f, prop, env)); }
+function evaluateProposalNow(f, prop, env) {
   const { team } = prop; const year = env.year; const mine = env.ownerRoster, theirs = env.roster(team);
   const give = (prop.giveMonsters || []).map((id) => mine.find((m) => m.id === id)), get = (prop.getMonsters || []).map((id) => theirs.find((m) => m.id === id));
   const givePicks = prop.givePicks || [], getPicks = prop.getPicks || []; const reasons = []; const block = (code, text) => reasons.push({ code, text, blocking: true });
@@ -171,7 +171,8 @@ export function deskAssets(f, team, env) {
  * off by your own roster's measure; nothing is offered to meet a quota. `chance` is the roll that a club calls at all this
  * week. Returns { team, kind, proposal, mine: {...}, theirs: {...}, gain } where proposal is the shape evaluateProposal takes.
  */
-export function buildIncomingOffer(f, env, { key, chance }) {
+export function buildIncomingOffer(f, env, opts) { return scoped(() => buildIncomingOfferNow(f, env, opts)); }
+function buildIncomingOfferNow(f, env, { key, chance }) {
   const r = createRng(hashString(`call2|${f.seed}|${key}`));
   if (r.next() > chance) return null;
   const mine = env.ownerRoster; const year = env.year; const myPicks = env.ownerPicks.slice().sort((a, b) => pickWorth(f, a) - pickWorth(f, b));

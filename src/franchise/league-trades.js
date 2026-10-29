@@ -7,7 +7,7 @@ import { monsterOverall, ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { ALL_TEAMS } from '../data/league.js';
 import { GROUP_SLOTS } from './roster.js';
 import { pickValue, picksOwnedBy, pickUsed, setPickOwner, tradable, currentClassYear } from './trades.js';
-import { marketValue, rosterNet, rosterAfter, rosterProblems, isUnavailable, DEAL_RULES } from './trade-value.js';
+import { marketValue, rosterNet, rosterAfter, rosterProblems, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
 import { hasLeague, leagueClubs, clubRoster, clubCapRoom, addToClub, removeFromClub, leagueEvent, moveIdentity, isProtected } from './league-registry.js';
 
 export const AI_TRADE_RULES = Object.freeze({
@@ -22,7 +22,6 @@ export const AI_TRADE_RULES = Object.freeze({
 
 const order = (f) => leagueClubs(f).slice().sort();
 const slotsOf = (pos) => GROUP_SLOTS[pos]?.length || 1;
-const ovr = monsterOverall;
 const inBand = (got, gave) => gave > 0 && got / gave >= AI_TRADE_RULES.band[0] && got / gave <= AI_TRADE_RULES.band[1];
 const starters = (roster, pos) => roster.filter((m) => m.position === pos).sort((a, b) => (isUnavailable(a) - isUnavailable(b)) || (ovr(b) - ovr(a)) || (a.id < b.id ? -1 : 1));
 /** The rating the incoming monster has to beat: the club's weakest available starter at the position (0 when a starting slot is empty). */
@@ -105,7 +104,8 @@ function execute(f, { A, B, m, ys, picks, year, na, nb, fl, sm, got, paid }) {
  * The window's deals: in the offseason up to `offseasonMax`; in season one attempt with `weekChance`. Clubs shop in a
  * generator-shuffled order, one deal per club per window. Returns the deals made.
  */
-export function aiTrades(f, r, { year, cap, window }) {
+export function aiTrades(f, r, opts) { return scoped(() => aiTradesNow(f, r, opts)); }
+function aiTradesNow(f, r, { year, cap, window }) {
   if (!hasLeague(f)) return [];
   const deals = []; const done = new Set();
   if (window === 'season') { const w = f.season?.week || 0; if (w < AI_TRADE_RULES.weeks[0] || w > AI_TRADE_RULES.weeks[1] || !r.chance(AI_TRADE_RULES.weekChance)) return deals; }

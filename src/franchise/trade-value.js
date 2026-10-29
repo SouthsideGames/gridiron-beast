@@ -43,7 +43,12 @@ export const DEAL_RULES = Object.freeze({
 });
 
 export const slotsOf = (pos) => GROUP_SLOTS[pos]?.length || 1;
-const ovr = (m) => monsterOverall(m);
+// A monster's overall is worked out from his attributes every time it is asked, and a deal search asks thousands of times about the
+// same few hundred monsters. Inside `scoped` (read-only work: nothing changes a rating) each is worked out once.
+let ovrCache = null, fairCache = null;
+export const scoped = (fn) => { if (ovrCache) return fn(); ovrCache = new Map(); fairCache = new Map(); try { return fn(); } finally { ovrCache = null; fairCache = null; } };
+const fairSalary = (m) => { if (!fairCache) return salaryFor(m); let v = fairCache.get(m); if (v === undefined) { v = salaryFor(m); fairCache.set(m, v); } return v; };
+export const ovr = (m) => { if (!ovrCache) return monsterOverall(m); let v = ovrCache.get(m); if (v === undefined) { v = monsterOverall(m); ovrCache.set(m, v); } return v; };
 /** Out for three weeks or more: valued, and ranked, as a reserve until he is back. */
 export const isUnavailable = (m) => !!m?.injury && (m.injury.weeks || 0) >= DEAL_RULES.longInjuryWeeks;
 const rankKey = (m) => (isUnavailable(m) ? -1 : ovr(m));
@@ -59,7 +64,7 @@ export function ageFactor(age) {
 export function contractFactor(m, year = 1) {
   const left = m.contract?.ends != null ? Math.max(0, m.contract.ends - year + 1) : 2;
   const term = left <= 0 ? 0.7 : left === 1 ? 0.9 : 1;
-  const fair = salaryFor(m), paid = m.salary || fair;
+  const fair = fairSalary(m), paid = m.salary || fair;
   const surplus = Math.max(-0.2, Math.min(0.2, (fair - paid) / fair));
   return term * (1 + surplus * 0.5);
 }
