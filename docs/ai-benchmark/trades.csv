@@ -1,0 +1,637 @@
+stage,seed,year,week,kind,A,B,toAPos,toAOvr,toAAge,toAStarter,toBPos,toBOvr,picks,valueToA,valueToB,ratio
+B,1,2,0,picks,"Harbor Sentinels","Bayou Stalkers",CB,58,28,true,,,"3R3:Harbor Sentinels 3R2:Harbor Sentinels",36,37.2,0.968
+B,1,2,0,picks,"Sundown Drakes","Ironpeak Rams",K,60,25,true,,,"3R1:Sundown Drakes",49.8,49,1.0170000000000001
+B,1,3,0,picks,"Bayou Stalkers","Eastport Phantoms",WR,54,26,false,,,"4R2:Bayou Stalkers",25.2,25.4,0.991
+B,1,4,0,picks,"Ember City Beasts","Northstar Wolves",WR,62,23,true,,,"5R3:Ember City Beasts 5R1:Ember City Beasts",60,60.8,0.988
+B,1,4,0,picks,"Thunder Mesa","Harbor Sentinels",LB,61,26,true,,,"5R1:Thunder Mesa",51,49,1.041
+B,1,5,0,picks,"Ashford Hawks","Stormport Bolts",CB,56,30,true,,,"6R2:Ashford Hawks",24.4,25.4,0.961
+B,1,5,0,picks,"Glacier Guardians","Ironpeak Rams",WR,63,23,true,,,"6R3:Glacier Guardians 6R1:Glacier Guardians",66,60.8,1.085
+B,1,5,0,picks,"Northstar Wolves","Harbor Sentinels",RB,57,25,true,,,"6R3:Northstar Wolves 6R2:Northstar Wolves",34.8,37.2,0.935
+B,1,6,0,swap,"Eastport Phantoms","Sundown Drakes",TE,57,25,true,DL,56,"",37.2,36.6,1.016
+B,1,6,0,picks,"Ashford Hawks","Sunfire Lions",LB,63,25,true,,,"7R3:Ashford Hawks 7R1:Ashford Hawks",58.2,60.8,0.958
+B,1,6,0,picks,"Thunder Mesa","Bayou Stalkers",DL,63,28,true,,,"7R1:Thunder Mesa",56.4,49,1.151
+B,1,7,0,picks,"Ember City Beasts","Bayou Stalkers",K,67,25,true,,,"8R2:Ember City Beasts 8R1:Ember City Beasts",72.6,74.4,0.976
+B,1,7,0,picks,"Ashford Hawks","Frostpeak Howlers",K,57,27,false,,,"8R3:Ashford Hawks 8R2:Ashford Hawks",39.6,37.2,1.065
+B,1,7,0,picks,"Stormport Bolts","Harbor Sentinels",DL,57,24,false,,,"8R3:Stormport Bolts 8R2:Stormport Bolts",37.1,37.2,0.998
+B,1,8,0,picks,"Ashford Hawks","Sunfire Lions",TE,58,26,true,,,"9R3:Ashford Hawks 9R2:Ashford Hawks",39.6,37.2,1.065
+B,1,8,0,picks,"Bayou Stalkers","Glacier Guardians",TE,57,24,false,,,"9R3:Bayou Stalkers 9R2:Bayou Stalkers",36.5,37.2,0.982
+B,1,8,0,picks,"Canyon Crushers","Thunder Mesa",WR,66,32,true,,,"9R3:Canyon Crushers 9R1:Canyon Crushers",59.5,60.8,0.98
+B,1,9,0,picks,"Ashford Hawks","Palmetto Vipers",TE,68,25,true,,,"10R2:Ashford Hawks 10R1:Ashford Hawks",75.6,74.4,1.016
+B,1,9,0,picks,"Bayou Stalkers","Sunfire Lions",OL,57,22,true,,,"10R3:Bayou Stalkers 10R2:Bayou Stalkers",35.9,37.2,0.966
+B,1,9,0,picks,"Northstar Wolves","Ember City Beasts",K,63,29,true,,,"10R1:Northstar Wolves",55.2,49,1.127
+B,1,10,0,picks,"Ashford Hawks","Ember City Beasts",K,65,31,true,,,"11R1:Ashford Hawks",53.6,49,1.093
+B,1,10,0,swap,"Northstar Wolves","Ironpeak Rams",LB,56,26,false,CB,57,"",31.8,31.8,1
+B,1,10,0,picks,"Sundown Drakes","Palmetto Vipers",OL,69,29,true,,,"11R2:Sundown Drakes 11R1:Sundown Drakes",80.4,74.4,1.081
+B,2,2,0,picks,"Sunfire Lions","Palmetto Vipers",RB,66,25,true,,,"3R2:Sunfire Lions 3R1:Sunfire Lions",72,74.4,0.968
+B,2,2,0,picks,"Bayou Stalkers","Eastport Phantoms",LB,60,22,true,,,"3R1:Bayou Stalkers",53,49,1.083
+B,2,2,0,picks,"Ashford Hawks","Canyon Crushers",OL,56,21,true,,,"3R3:Ashford Hawks 3R2:Ashford Hawks",34.8,37.2,0.9359999999999999
+B,2,3,0,picks,"Stonehaven Titans","Canyon Crushers",S,54,23,true,,,"4R2:Stonehaven Titans",25.4,25.4,1
+B,2,3,0,picks,"Bayou Stalkers","Harbor Sentinels",OL,58,29,true,,,"4R1:Bayou Stalkers",42.6,49,0.87
+B,2,3,0,picks,"Ashford Hawks","Eastport Phantoms",CB,59,24,true,,,"4R1:Ashford Hawks",48.3,49,0.987
+B,2,4,0,picks,"Ember City Beasts","Ironpeak Rams",LB,65,31,true,,,"5R1:Ember City Beasts",56.6,49,1.155
+B,2,4,0,picks,"Sundown Drakes","Canyon Crushers",S,64,31,true,,,"5R1:Sundown Drakes",55.4,49,1.131
+B,2,4,0,picks,"Ashford Hawks","Sunfire Lions",CB,64,28,true,,,"5R3:Ashford Hawks 5R1:Ashford Hawks",63.6,60.8,1.047
+B,2,5,0,picks,"Ashford Hawks","Ironpeak Rams",QB,60,23,true,,,"6R1:Ashford Hawks",54.2,49,1.107
+B,2,5,0,picks,"Bayou Stalkers","Frostpeak Howlers",S,64,21,true,,,"6R2:Bayou Stalkers 6R1:Bayou Stalkers",76.1,74.4,1.022
+B,2,5,0,picks,"Stonehaven Titans","Canyon Crushers",K,63,29,true,,,"6R1:Stonehaven Titans",56.4,49,1.151
+B,2,6,0,picks,"Stormport Bolts","Ember City Beasts",K,68,32,true,,,"7R3:Stormport Bolts 7R1:Stormport Bolts",67.3,60.8,1.107
+B,2,6,0,picks,"Sundown Drakes","Stonehaven Titans",S,58,22,true,,,"7R1:Sundown Drakes",45.4,49,0.9279999999999999
+B,2,6,0,picks,"Northstar Wolves","Eastport Phantoms",OL,61,22,true,,,"7R3:Northstar Wolves 7R1:Northstar Wolves",58.3,60.8,0.96
+B,2,7,0,picks,"Stormport Bolts","Thunder Mesa",TE,64,26,true,,,"8R3:Stormport Bolts 8R1:Stormport Bolts",61.8,60.8,1.0170000000000001
+B,2,7,0,picks,"Ember City Beasts","Eastport Phantoms",RB,65,28,true,,,"8R3:Ember City Beasts 8R1:Ember City Beasts",68.4,60.8,1.126
+B,2,7,0,picks,"Northstar Wolves","Stonehaven Titans",S,63,31,false,,,"8R1:Northstar Wolves",47.6,49,0.972
+B,2,8,0,picks,"Bayou Stalkers","Stonehaven Titans",QB,71,30,true,,,"9R2:Bayou Stalkers 9R1:Bayou Stalkers",75.6,74.4,1.016
+B,2,8,0,picks,"Ember City Beasts","Harbor Sentinels",OL,64,25,true,,,"9R3:Ember City Beasts 9R1:Ember City Beasts",63,60.8,1.037
+B,2,8,0,picks,"Thunder Mesa","Ironpeak Rams",LB,72,30,true,,,"9R2:Thunder Mesa 9R1:Thunder Mesa",79.1,74.4,1.064
+B,2,9,0,picks,"Ashford Hawks","Northstar Wolves",K,62,29,true,,,"10R3:Ashford Hawks 10R1:Ashford Hawks",58.2,60.8,0.958
+B,2,9,0,picks,"Stormport Bolts","Sundown Drakes",CB,63,28,false,,,"10R1:Stormport Bolts",57.6,49,1.176
+B,2,9,0,picks,"Stonehaven Titans","Ember City Beasts",TE,62,22,true,,,"10R3:Stonehaven Titans 10R1:Stonehaven Titans",64.2,60.8,1.057
+B,2,10,0,picks,"Stormport Bolts","Eastport Phantoms",S,60,21,true,,,"11R1:Stormport Bolts",57.2,49,1.169
+B,2,10,0,picks,"Stonehaven Titans","Thunder Mesa",WR,64,25,true,,,"11R3:Stonehaven Titans 11R1:Stonehaven Titans",66,60.8,1.0859999999999999
+B,2,10,0,picks,"Sundown Drakes","Northstar Wolves",TE,69,26,true,,,"11R2:Sundown Drakes 11R1:Sundown Drakes",87,74.4,1.169
+B,3,2,0,picks,"Bayou Stalkers","Ironpeak Rams",RB,63,22,true,,,"3R3:Bayou Stalkers 3R1:Bayou Stalkers",63.6,60.8,1.046
+B,3,2,0,picks,"Stonehaven Titans","Canyon Crushers",CB,56,22,true,,,"3R3:Stonehaven Titans 3R2:Stonehaven Titans",36,37.2,0.968
+B,3,2,0,picks,"Northstar Wolves","Harbor Sentinels",CB,55,23,true,,,"3R2:Northstar Wolves",28.3,25.4,1.114
+B,3,3,0,picks,"Sundown Drakes","Bayou Stalkers",K,58,28,true,,,"4R3:Sundown Drakes 4R2:Sundown Drakes",38.4,37.2,1.032
+B,3,3,0,picks,"Northstar Wolves","Harbor Sentinels",DL,54,23,true,,,"4R2:Northstar Wolves",25.4,25.4,1
+B,3,4,0,picks,"Sundown Drakes","Ironpeak Rams",K,66,23,true,,,"5R2:Sundown Drakes 5R1:Sundown Drakes",80.1,74.4,1.0759999999999998
+B,3,4,0,picks,"Northstar Wolves","Ashford Hawks",QB,68,26,true,,,"5R2:Northstar Wolves 5R1:Northstar Wolves",81,74.4,1.089
+B,3,5,0,picks,"Ashford Hawks","Frostpeak Howlers",LB,57,24,true,,,"6R3:Ashford Hawks 6R2:Ashford Hawks",35.9,37.2,0.966
+B,3,5,0,picks,"Ember City Beasts","Harbor Sentinels",CB,59,31,false,,,"6R1:Ember City Beasts",43.5,49,0.889
+B,3,5,0,picks,"Bayou Stalkers","Glacier Guardians",LB,60,25,true,,,"6R1:Bayou Stalkers",46.8,49,0.955
+B,3,6,0,picks,"Stonehaven Titans","Harbor Sentinels",OL,61,25,true,,,"7R1:Stonehaven Titans",50.4,49,1.0290000000000001
+B,3,6,0,picks,"Northstar Wolves","Sundown Drakes",TE,61,27,true,,,"7R1:Northstar Wolves",47.4,49,0.968
+B,3,6,0,picks,"Ashford Hawks","Palmetto Vipers",LB,58,23,false,,,"7R1:Ashford Hawks",43,49,0.879
+B,3,7,0,picks,"Ashford Hawks","Bayou Stalkers",CB,57,24,false,,,"8R3:Ashford Hawks 8R2:Ashford Hawks",40.1,37.2,1.079
+B,3,7,0,picks,"Stonehaven Titans","Palmetto Vipers",TE,58,25,true,,,"8R1:Stonehaven Titans",43.8,49,0.894
+B,3,7,0,picks,"Northstar Wolves","Canyon Crushers",QB,63,23,true,,,"8R3:Northstar Wolves 8R1:Northstar Wolves",70.2,60.8,1.155
+B,3,8,0,picks,"Stonehaven Titans","Glacier Guardians",WR,64,28,false,,,"9R3:Stonehaven Titans 9R1:Stonehaven Titans",62.4,60.8,1.0270000000000001
+B,3,8,0,picks,"Ashford Hawks","Harbor Sentinels",S,64,23,true,,,"9R3:Ashford Hawks 9R1:Ashford Hawks",67.7,60.8,1.113
+B,3,8,0,picks,"Sundown Drakes","Bayou Stalkers",OL,64,25,true,,,"9R3:Sundown Drakes 9R1:Sundown Drakes",64.2,60.8,1.057
+B,3,9,0,picks,"Ashford Hawks","Ember City Beasts",DL,56,25,false,,,"10R3:Ashford Hawks 10R2:Ashford Hawks",32.4,37.2,0.871
+B,3,9,0,picks,"Bayou Stalkers","Thunder Mesa",QB,56,27,true,,,"10R3:Bayou Stalkers 10R2:Bayou Stalkers",33.6,37.2,0.903
+B,3,9,0,picks,"Sundown Drakes","Eastport Phantoms",CB,60,23,true,,,"10R1:Sundown Drakes",50.6,49,1.034
+B,3,10,0,picks,"Northstar Wolves","Eastport Phantoms",K,69,30,true,,,"11R3:Northstar Wolves 11R1:Northstar Wolves",67.8,60.8,1.1159999999999999
+B,3,10,0,picks,"Sundown Drakes","Ashford Hawks",TE,53,22,false,,,"11R2:Sundown Drakes",23.1,25.4,0.909
+B,3,10,0,picks,"Bayou Stalkers","Canyon Crushers",QB,71,31,true,,,"11R2:Bayou Stalkers 11R1:Bayou Stalkers",78.6,74.4,1.056
+B,4,2,0,picks,"Bayou Stalkers","Ironpeak Rams",K,63,24,true,,,"3R2:Bayou Stalkers 3R1:Bayou Stalkers",75.6,74.4,1.015
+B,4,4,0,picks,"Bayou Stalkers","Canyon Crushers",LB,64,25,true,,,"5R3:Bayou Stalkers 5R1:Bayou Stalkers",63.6,60.8,1.047
+B,4,4,0,picks,"Glacier Guardians","Ashford Hawks",CB,53,24,false,,,"5R2:Glacier Guardians",22.5,25.4,0.8859999999999999
+B,4,4,0,picks,"Harbor Sentinels","Eastport Phantoms",WR,64,29,true,,,"5R3:Harbor Sentinels 5R1:Harbor Sentinels",66.6,60.8,1.0959999999999999
+B,4,5,0,picks,"Stormport Bolts","Palmetto Vipers",S,64,21,true,,,"6R3:Stormport Bolts 6R1:Stormport Bolts",68.3,60.8,1.123
+B,4,5,0,picks,"Bayou Stalkers","Frostpeak Howlers",RB,58,27,true,,,"6R1:Bayou Stalkers",42.6,49,0.87
+B,4,5,0,picks,"Glacier Guardians","Stonehaven Titans",TE,57,27,true,,,"6R3:Glacier Guardians 6R2:Glacier Guardians",33.6,37.2,0.903
+B,4,6,0,picks,"Sundown Drakes","Northstar Wolves",LB,61,24,true,,,"7R1:Sundown Drakes",56.5,49,1.1540000000000001
+B,4,6,0,picks,"Sunfire Lions","Ashford Hawks",OL,65,30,true,,,"7R1:Sunfire Lions",57.2,49,1.167
+B,4,6,0,swap,"Ironpeak Rams","Frostpeak Howlers",CB,57,23,true,,,"",38.9,,
+B,4,7,0,picks,"Sunfire Lions","Ashford Hawks",TE,73,33,true,,,"8R2:Sunfire Lions 8R1:Sunfire Lions",82.1,74.4,1.104
+B,4,7,0,picks,"Glacier Guardians","Sundown Drakes",K,61,25,true,,,"8R1:Glacier Guardians",52.8,49,1.078
+B,4,7,0,picks,"Stonehaven Titans","Frostpeak Howlers",OL,62,22,false,,,"8R3:Stonehaven Titans 8R1:Stonehaven Titans",63,60.8,1.038
+B,4,8,0,picks,"Stonehaven Titans","Glacier Guardians",RB,57,26,true,,,"9R3:Stonehaven Titans 9R2:Stonehaven Titans",39,37.2,1.048
+B,4,8,0,picks,"Sunfire Lions","Eastport Phantoms",S,61,21,true,,,"9R1:Sunfire Lions",54.7,49,1.1179999999999999
+B,4,8,0,picks,"Ashford Hawks","Thunder Mesa",OL,57,25,false,,,"9R3:Ashford Hawks 9R2:Ashford Hawks",36,37.2,0.968
+B,4,9,0,swap,"Thunder Mesa","Ashford Hawks",DL,63,21,true,QB,67,"",66.6,72,0.924
+B,4,9,0,picks,"Glacier Guardians","Sunfire Lions",DL,54,23,false,,,"10R2:Glacier Guardians",23,25.4,0.905
+B,4,9,0,picks,"Bayou Stalkers","Frostpeak Howlers",K,55,26,false,,,"10R2:Bayou Stalkers",27,25.4,1.062
+B,4,10,0,picks,"Stormport Bolts","Frostpeak Howlers",CB,65,23,true,,,"11R2:Stormport Bolts 11R1:Stormport Bolts",78.4,74.4,1.053
+B,4,10,0,picks,"Sundown Drakes","Stonehaven Titans",OL,63,31,true,,,"11R1:Sundown Drakes",50,49,1.021
+B,4,10,0,picks,"Glacier Guardians","Eastport Phantoms",CB,61,26,false,,,"11R1:Glacier Guardians",52.2,49,1.0659999999999998
+B,5,2,0,picks,"Glacier Guardians","Harbor Sentinels",S,60,29,true,,,"3R1:Glacier Guardians",45,49,0.919
+B,5,2,0,picks,"Sundown Drakes","Thunder Mesa",TE,62,25,true,,,"3R3:Sundown Drakes 3R1:Sundown Drakes",58.2,60.8,0.958
+B,5,2,0,picks,"Sunfire Lions","Ember City Beasts",LB,58,23,true,,,"3R1:Sunfire Lions",46.6,49,0.9520000000000001
+B,5,3,0,picks,"Glacier Guardians","Eastport Phantoms",WR,57,23,true,,,"4R3:Glacier Guardians 4R2:Glacier Guardians",36.5,37.2,0.982
+B,5,4,0,picks,"Glacier Guardians","Frostpeak Howlers",S,57,23,false,,,"5R3:Glacier Guardians 5R2:Glacier Guardians",41.9,37.2,1.127
+B,5,4,0,picks,"Bayou Stalkers","Sundown Drakes",OL,58,24,false,,,"5R3:Bayou Stalkers 5R2:Bayou Stalkers",40.6,37.2,1.092
+B,5,4,0,picks,"Sunfire Lions","Eastport Phantoms",S,60,23,true,,,"5R1:Sunfire Lions",51.8,49,1.058
+B,5,5,0,picks,"Glacier Guardians","Thunder Mesa",S,60,24,false,,,"6R1:Glacier Guardians",55.4,49,1.1320000000000001
+B,5,7,0,picks,"Bayou Stalkers","Ashford Hawks",LB,62,22,true,,,"8R3:Bayou Stalkers 8R1:Bayou Stalkers",60,60.8,0.988
+B,5,8,0,picks,"Sunfire Lions","Thunder Mesa",K,64,24,true,,,"9R2:Sunfire Lions 9R1:Sunfire Lions",71.9,74.4,0.966
+B,5,8,0,picks,"Bayou Stalkers","Canyon Crushers",TE,59,23,true,,,"9R1:Bayou Stalkers",47.7,49,0.975
+B,5,8,0,picks,"Glacier Guardians","Ember City Beasts",LB,63,26,true,,,"9R1:Glacier Guardians",56.4,49,1.151
+B,5,9,0,picks,"Sundown Drakes","Northstar Wolves",QB,58,21,true,,,"10R1:Sundown Drakes",45.4,49,0.9279999999999999
+B,5,9,0,picks,"Glacier Guardians","Sunfire Lions",CB,60,24,false,,,"10R1:Glacier Guardians",50.6,49,1.034
+B,5,9,0,picks,"Bayou Stalkers","Palmetto Vipers",OL,61,34,false,,,"10R3:Bayou Stalkers 10R2:Bayou Stalkers",41.1,37.2,1.104
+B,5,10,0,picks,"Ember City Beasts","Sunfire Lions",K,69,25,true,,,"11R2:Ember City Beasts 11R1:Ember City Beasts",85.2,74.4,1.145
+B,5,10,0,picks,"Bayou Stalkers","Palmetto Vipers",OL,59,27,false,,,"11R1:Bayou Stalkers",43.8,49,0.894
+B,5,10,0,picks,"Glacier Guardians","Ashford Hawks",OL,57,24,true,,,"11R3:Glacier Guardians 11R2:Glacier Guardians",40.7,37.2,1.095
+B,6,3,0,picks,"Sunfire Lions","Thunder Mesa",K,61,30,true,,,"4R1:Sunfire Lions",43.5,49,0.888
+B,6,4,0,picks,"Bayou Stalkers","Northstar Wolves",CB,60,25,true,,,"5R1:Bayou Stalkers",43.2,49,0.882
+B,6,5,0,swap,"Stormport Bolts","Stonehaven Titans",LB,56,25,true,QB,55,"",28.8,30.1,0.956
+B,6,5,0,picks,"Sundown Drakes","Ironpeak Rams",WR,59,28,true,,,"6R3:Sundown Drakes 6R2:Sundown Drakes",39.6,37.2,1.065
+B,6,6,0,picks,"Canyon Crushers","Bayou Stalkers",S,63,26,true,,,"7R1:Canyon Crushers",55.2,49,1.127
+B,6,6,0,swap,"Ember City Beasts","Ironpeak Rams",LB,64,25,true,QB,62,"",59.4,65.4,0.9079999999999999
+B,6,6,0,picks,"Ashford Hawks","Thunder Mesa",LB,57,27,false,,,"7R3:Ashford Hawks 7R2:Ashford Hawks",39.6,37.2,1.065
+B,6,7,0,picks,"Bayou Stalkers","Frostpeak Howlers",TE,61,30,true,,,"8R1:Bayou Stalkers",50.7,49,1.035
+B,6,7,0,picks,"Ashford Hawks","Stormport Bolts",OL,56,26,false,,,"8R2:Ashford Hawks",28.8,25.4,1.133
+B,6,7,0,picks,"Sundown Drakes","Thunder Mesa",QB,61,28,true,,,"8R1:Sundown Drakes",54,49,1.102
+B,6,8,0,picks,"Bayou Stalkers","Eastport Phantoms",QB,61,21,true,,,"9R1:Bayou Stalkers",57.1,49,1.167
+B,6,8,0,picks,"Northstar Wolves","Frostpeak Howlers",TE,70,35,true,,,"9R2:Northstar Wolves 9R1:Northstar Wolves",75,74.4,1.008
+B,6,9,0,picks,"Northstar Wolves","Ironpeak Rams",LB,67,29,true,,,"10R3:Northstar Wolves 10R1:Northstar Wolves",71.4,60.8,1.175
+B,6,9,0,swap,"Ashford Hawks","Bayou Stalkers",QB,56,27,true,OL,57,"",28.2,30.6,0.922
+B,6,9,0,picks,"Canyon Crushers","Stonehaven Titans",WR,67,25,true,,,"10R2:Canyon Crushers 10R1:Canyon Crushers",74.4,74.4,1
+B,6,10,0,picks,"Harbor Sentinels","Frostpeak Howlers",DL,67,28,true,,,"11R2:Harbor Sentinels 11R1:Harbor Sentinels",72.6,74.4,0.976
+B,6,10,0,picks,"Eastport Phantoms","Sunfire Lions",K,65,27,true,,,"11R3:Eastport Phantoms 11R1:Eastport Phantoms",69.6,60.8,1.145
+B,6,10,0,picks,"Bayou Stalkers","Stormport Bolts",TE,66,27,false,,,"11R2:Bayou Stalkers 11R1:Bayou Stalkers",72.6,74.4,0.976
+B,7,2,0,picks,"Ember City Beasts","Thunder Mesa",K,61,28,true,,,"3R1:Ember City Beasts",52.8,49,1.078
+B,7,3,0,picks,"Ashford Hawks","Bayou Stalkers",S,57,23,true,,,"4R3:Ashford Hawks 4R2:Ashford Hawks",40.7,37.2,1.095
+B,7,4,0,picks,"Sundown Drakes","Eastport Phantoms",CB,63,22,true,,,"5R3:Sundown Drakes 5R1:Sundown Drakes",71.4,60.8,1.1740000000000002
+B,7,5,0,picks,"Stonehaven Titans","Harbor Sentinels",TE,60,22,true,,,"6R1:Stonehaven Titans",53.6,49,1.095
+B,7,5,0,picks,"Bayou Stalkers","Glacier Guardians",QB,63,25,true,,,"6R3:Bayou Stalkers 6R1:Bayou Stalkers",63,60.8,1.037
+B,7,5,0,picks,"Northstar Wolves","Palmetto Vipers",QB,58,24,true,,,"6R1:Northstar Wolves",46,49,0.94
+B,7,6,0,swap,"Harbor Sentinels","Glacier Guardians",LB,53,24,false,TE,53,"",24.3,24,1.013
+B,7,6,0,picks,"Bayou Stalkers","Ember City Beasts",OL,61,28,true,,,"7R1:Bayou Stalkers",50.4,49,1.0290000000000001
+B,7,7,0,picks,"Palmetto Vipers","Canyon Crushers",CB,71,31,true,,,"8R2:Palmetto Vipers 8R1:Palmetto Vipers",78,74.4,1.048
+B,7,7,0,picks,"Ember City Beasts","Ashford Hawks",K,59,28,false,,,"8R1:Ember City Beasts",45.6,49,0.9309999999999999
+B,7,7,0,picks,"Stonehaven Titans","Sundown Drakes",K,59,27,true,,,"8R1:Stonehaven Titans",48,49,0.98
+B,7,7,2,swap,"Glacier Guardians","Ember City Beasts",TE,60,25,true,DL,61,"",43.8,47.4,0.924
+B,7,8,0,picks,"Glacier Guardians","Frostpeak Howlers",LB,63,35,true,,,"9R1:Glacier Guardians",46.4,49,0.948
+B,7,8,0,picks,"Ember City Beasts","Eastport Phantoms",RB,67,25,true,,,"9R2:Ember City Beasts 9R1:Ember City Beasts",79.2,74.4,1.065
+B,7,8,0,picks,"Sunfire Lions","Ashford Hawks",K,71,32,true,,,"9R2:Sunfire Lions 9R1:Sunfire Lions",76.2,74.4,1.024
+B,7,9,0,picks,"Sunfire Lions","Canyon Crushers",OL,71,30,true,,,"10R2:Sunfire Lions 10R1:Sunfire Lions",76.2,74.4,1.024
+B,7,9,0,picks,"Glacier Guardians","Ironpeak Rams",OL,68,31,false,,,"10R3:Glacier Guardians 10R1:Glacier Guardians",66.7,60.8,1.097
+B,7,9,0,picks,"Ember City Beasts","Bayou Stalkers",DL,60,26,false,,,"10R1:Ember City Beasts",48.6,49,0.992
+B,7,10,0,picks,"Frostpeak Howlers","Thunder Mesa",LB,69,36,true,,,"11R3:Frostpeak Howlers 11R1:Frostpeak Howlers",68.4,60.8,1.126
+B,7,10,0,picks,"Ember City Beasts","Northstar Wolves",S,59,24,true,,,"11R1:Ember City Beasts",50.7,49,1.036
+B,7,10,0,picks,"Sunfire Lions","Glacier Guardians",OL,68,32,true,,,"11R3:Sunfire Lions 11R1:Sunfire Lions",66.7,60.8,1.097
+B,8,2,0,picks,"Northstar Wolves","Harbor Sentinels",K,61,23,true,,,"3R3:Northstar Wolves 3R1:Northstar Wolves",58.3,60.8,0.96
+B,8,4,0,picks,"Ashford Hawks","Palmetto Vipers",S,59,26,true,,,"5R3:Ashford Hawks 5R2:Ashford Hawks",41.4,37.2,1.113
+B,8,4,0,picks,"Ironpeak Rams","Frostpeak Howlers",LB,63,28,true,,,"5R3:Ironpeak Rams 5R1:Ironpeak Rams",58.2,60.8,0.958
+B,8,5,0,picks,"Glacier Guardians","Thunder Mesa",QB,62,21,true,,,"6R3:Glacier Guardians 6R1:Glacier Guardians",64.8,60.8,1.067
+B,8,6,0,picks,"Glacier Guardians","Harbor Sentinels",OL,54,22,false,,,"7R2:Glacier Guardians",27.8,25.4,1.094
+B,8,6,0,picks,"Northstar Wolves","Palmetto Vipers",CB,60,25,true,,,"7R1:Northstar Wolves",51.6,49,1.053
+B,8,7,0,picks,"Ashford Hawks","Ironpeak Rams",OL,55,25,false,,,"8R2:Ashford Hawks",27.6,25.4,1.0859999999999999
+B,8,7,0,picks,"Northstar Wolves","Canyon Crushers",QB,58,21,true,,,"8R1:Northstar Wolves",44.8,49,0.915
+B,8,8,0,picks,"Eastport Phantoms","Harbor Sentinels",K,69,25,true,,,"9R2:Eastport Phantoms 9R1:Eastport Phantoms",79.8,74.4,1.073
+B,8,8,0,picks,"Northstar Wolves","Ironpeak Rams",RB,63,25,true,,,"9R3:Northstar Wolves 9R1:Northstar Wolves",60,60.8,0.987
+B,8,9,0,picks,"Stormport Bolts","Bayou Stalkers",WR,61,24,true,,,"10R1:Stormport Bolts",55.3,49,1.13
+B,8,9,0,picks,"Ashford Hawks","Eastport Phantoms",LB,64,28,false,,,"10R3:Ashford Hawks 10R1:Ashford Hawks",59.4,60.8,0.978
+B,8,10,0,picks,"Stormport Bolts","Ashford Hawks",WR,69,28,true,,,"11R2:Stormport Bolts 11R1:Stormport Bolts",81,74.4,1.089
+B,9,2,0,picks,"Canyon Crushers","Palmetto Vipers",RB,65,21,true,,,"3R2:Canyon Crushers 3R1:Canyon Crushers",74.2,74.4,0.997
+B,9,2,0,picks,"Stormport Bolts","Eastport Phantoms",K,60,21,true,,,"3R1:Stormport Bolts",47,49,0.96
+B,9,3,0,picks,"Frostpeak Howlers","Bayou Stalkers",LB,61,23,true,,,"4R3:Frostpeak Howlers 4R1:Frostpeak Howlers",58.3,60.8,0.96
+B,9,4,0,picks,"Ashford Hawks","Thunder Mesa",OL,54,25,false,,,"5R2:Ashford Hawks",25.2,25.4,0.991
+B,9,5,0,picks,"Sundown Drakes","Northstar Wolves",RB,58,27,true,,,"6R1:Sundown Drakes",42.6,49,0.87
+B,9,6,0,picks,"Sundown Drakes","Ashford Hawks",RB,67,29,true,,,"7R2:Sundown Drakes 7R1:Sundown Drakes",72,74.4,0.968
+B,9,7,0,picks,"Ember City Beasts","Eastport Phantoms",RB,50,24,false,,,"8R3:Ember City Beasts",11.5,11.8,0.978
+B,9,7,0,picks,"Stormport Bolts","Sunfire Lions",WR,60,22,false,,,"8R1:Stormport Bolts",56.6,49,1.156
+B,9,7,0,picks,"Northstar Wolves","Ironpeak Rams",WR,60,23,true,,,"8R1:Northstar Wolves",50,49,1.022
+B,9,8,0,picks,"Northstar Wolves","Ironpeak Rams",OL,65,24,true,,,"9R2:Northstar Wolves 9R1:Northstar Wolves",74.2,74.4,0.997
+B,9,8,0,picks,"Ashford Hawks","Sundown Drakes",LB,64,27,false,,,"9R3:Ashford Hawks 9R1:Ashford Hawks",58.8,60.8,0.968
+B,9,8,0,picks,"Stormport Bolts","Eastport Phantoms",QB,60,25,true,,,"9R1:Stormport Bolts",49.2,49,1.004
+B,9,9,0,picks,"Stormport Bolts","Northstar Wolves",TE,69,30,true,,,"10R3:Stormport Bolts 10R1:Stormport Bolts",68.4,60.8,1.126
+B,9,9,0,picks,"Ashford Hawks","Eastport Phantoms",S,59,24,false,,,"10R1:Ashford Hawks",45.9,49,0.938
+B,9,9,0,picks,"Ember City Beasts","Sundown Drakes",CB,59,22,false,,,"10R1:Ember City Beasts",50.7,49,1.036
+B,9,10,0,picks,"Ashford Hawks","Palmetto Vipers",CB,59,24,true,,,"11R1:Ashford Hawks",48.3,49,0.987
+B,9,10,0,picks,"Stormport Bolts","Ember City Beasts",K,69,32,true,,,"11R3:Stormport Bolts 11R1:Stormport Bolts",67.8,60.8,1.1159999999999999
+B,10,2,0,picks,"Sundown Drakes","Thunder Mesa",LB,56,28,true,,,"3R3:Sundown Drakes 3R2:Sundown Drakes",33,37.2,0.887
+B,10,2,0,picks,"Stonehaven Titans","Canyon Crushers",K,56,24,true,,,"3R3:Stonehaven Titans 3R2:Stonehaven Titans",32.4,37.2,0.872
+B,10,3,0,picks,"Stonehaven Titans","Palmetto Vipers",S,61,25,false,,,"4R1:Stonehaven Titans",56.4,49,1.151
+B,10,3,0,picks,"Bayou Stalkers","Thunder Mesa",WR,59,30,false,,,"4R3:Bayou Stalkers 4R2:Bayou Stalkers",37.5,37.2,1.0090000000000001
+B,10,3,0,picks,"Ember City Beasts","Stormport Bolts",CB,58,28,true,,,"4R3:Ember City Beasts 4R2:Ember City Beasts",36,37.2,0.968
+B,10,4,0,picks,"Stonehaven Titans","Harbor Sentinels",OL,57,23,true,,,"5R3:Stonehaven Titans 5R2:Stonehaven Titans",39.5,37.2,1.063
+B,10,4,0,picks,"Northstar Wolves","Ashford Hawks",S,58,23,true,,,"5R1:Northstar Wolves",43,49,0.879
+B,10,5,0,picks,"Sundown Drakes","Eastport Phantoms",DL,59,23,false,,,"6R1:Sundown Drakes",47.1,49,0.9620000000000001
+B,10,5,0,picks,"Stonehaven Titans","Canyon Crushers",K,66,29,true,,,"6R2:Stonehaven Titans 6R1:Stonehaven Titans",76.2,74.4,1.024
+B,10,5,0,picks,"Bayou Stalkers","Ember City Beasts",TE,58,24,false,,,"6R3:Bayou Stalkers 6R2:Bayou Stalkers",38.8,37.2,1.044
+B,10,6,0,picks,"Bayou Stalkers","Canyon Crushers",WR,68,28,true,,,"7R2:Bayou Stalkers 7R1:Bayou Stalkers",79.2,74.4,1.065
+B,10,6,0,picks,"Frostpeak Howlers","Eastport Phantoms",K,66,24,true,,,"7R2:Frostpeak Howlers 7R1:Frostpeak Howlers",78.9,74.4,1.06
+B,10,6,0,picks,"Stonehaven Titans","Northstar Wolves",K,65,30,true,,,"7R1:Stonehaven Titans",56.6,49,1.155
+B,10,7,0,picks,"Bayou Stalkers","Sundown Drakes",DL,59,25,false,,,"8R1:Bayou Stalkers",42.6,49,0.87
+B,10,8,0,picks,"Northstar Wolves","Bayou Stalkers",K,71,30,true,,,"9R2:Northstar Wolves 9R1:Northstar Wolves",75,74.4,1.008
+B,10,8,0,picks,"Sunfire Lions","Palmetto Vipers",OL,59,24,true,,,"9R1:Sunfire Lions",48.9,49,0.9990000000000001
+B,10,8,0,picks,"Frostpeak Howlers","Canyon Crushers",DL,68,30,true,,,"9R3:Frostpeak Howlers 9R1:Frostpeak Howlers",67.3,60.8,1.107
+B,10,9,0,picks,"Ember City Beasts","Northstar Wolves",DL,57,24,true,,,"10R3:Ember City Beasts 10R2:Ember City Beasts",36.5,37.2,0.982
+B,10,9,0,picks,"Frostpeak Howlers","Stormport Bolts",TE,60,22,false,,,"10R1:Frostpeak Howlers",53,49,1.083
+B,10,9,0,picks,"Stonehaven Titans","Ashford Hawks",TE,59,25,true,,,"10R1:Stonehaven Titans",42.6,49,0.87
+B,10,10,0,picks,"Bayou Stalkers","Harbor Sentinels",OL,68,27,true,,,"11R2:Bayou Stalkers 11R1:Bayou Stalkers",76.2,74.4,1.024
+B,10,10,0,picks,"Sundown Drakes","Sunfire Lions",LB,69,30,true,,,"11R3:Sundown Drakes 11R1:Sundown Drakes",70.8,60.8,1.166
+B,11,3,0,picks,"Glacier Guardians","Ironpeak Rams",OL,54,25,true,,,"4R2:Glacier Guardians",22.2,25.4,0.873
+B,11,4,0,picks,"Ember City Beasts","Palmetto Vipers",OL,64,24,true,,,"5R2:Ember City Beasts 5R1:Ember City Beasts",75.5,74.4,1.014
+B,11,4,0,picks,"Sunfire Lions","Sundown Drakes",K,65,29,true,,,"5R3:Sunfire Lions 5R1:Sunfire Lions",64.8,60.8,1.0659999999999998
+B,11,4,0,picks,"Ashford Hawks","Ironpeak Rams",RB,62,23,true,,,"5R3:Ashford Hawks 5R1:Ashford Hawks",65.4,60.8,1.077
+B,11,5,0,picks,"Sundown Drakes","Palmetto Vipers",RB,63,24,true,,,"6R3:Sundown Drakes 6R1:Sundown Drakes",69,60.8,1.135
+B,11,5,0,picks,"Northstar Wolves","Eastport Phantoms",TE,58,27,true,,,"6R3:Northstar Wolves 6R2:Northstar Wolves",41.4,37.2,1.113
+B,11,6,0,picks,"Stonehaven Titans","Bayou Stalkers",CB,64,32,true,,,"7R1:Stonehaven Titans",51.8,49,1.057
+B,11,7,0,picks,"Stonehaven Titans","Canyon Crushers",QB,72,31,true,,,"8R2:Stonehaven Titans 8R1:Stonehaven Titans",80.3,74.4,1.08
+B,11,7,0,picks,"Sunfire Lions","Eastport Phantoms",WR,67,24,true,,,"8R2:Sunfire Lions 8R1:Sunfire Lions",83.6,74.4,1.123
+B,11,7,0,picks,"Ember City Beasts","Frostpeak Howlers",K,55,26,false,,,"8R2:Ember City Beasts",27,25.4,1.062
+B,11,8,0,picks,"Glacier Guardians","Frostpeak Howlers",DL,62,27,false,,,"9R1:Glacier Guardians",56.4,49,1.151
+B,11,8,0,picks,"Harbor Sentinels","Eastport Phantoms",CB,66,33,true,,,"9R3:Harbor Sentinels 9R1:Harbor Sentinels",58.3,60.8,0.96
+B,11,8,0,picks,"Sunfire Lions","Palmetto Vipers",S,64,21,true,,,"9R3:Sunfire Lions 9R1:Sunfire Lions",71.3,60.8,1.173
+B,11,9,0,swap,"Bayou Stalkers","Ashford Hawks",QB,57,23,true,TE,56,"",35.3,31.2,1.1320000000000001
+B,11,9,0,picks,"Northstar Wolves","Thunder Mesa",LB,61,26,true,,,"10R1:Northstar Wolves",54,49,1.102
+B,11,9,0,picks,"Stonehaven Titans","Eastport Phantoms",TE,70,31,true,,,"10R2:Stonehaven Titans 10R1:Stonehaven Titans",74.4,74.4,1
+B,11,10,0,picks,"Sundown Drakes","Glacier Guardians",S,56,22,false,,,"11R3:Sundown Drakes 11R2:Sundown Drakes",35.4,37.2,0.9520000000000001
+B,11,10,0,picks,"Stonehaven Titans","Northstar Wolves",OL,59,22,false,,,"11R1:Stonehaven Titans",43.5,49,0.889
+B,11,10,0,picks,"Bayou Stalkers","Frostpeak Howlers",QB,63,24,true,,,"11R3:Bayou Stalkers 11R1:Bayou Stalkers",64.2,60.8,1.056
+B,12,2,0,picks,"Stonehaven Titans","Canyon Crushers",WR,54,24,false,,,"3R2:Stonehaven Titans",27.2,25.4,1.071
+B,12,3,0,picks,"Eastport Phantoms","Ironpeak Rams",OL,60,26,true,,,"4R1:Eastport Phantoms",45.6,49,0.9309999999999999
+B,12,4,0,swap,"Ironpeak Rams","Glacier Guardians",QB,59,25,true,WR,60,"",42.6,46.2,0.922
+B,12,4,0,picks,"Northstar Wolves","Sundown Drakes",OL,60,29,true,,,"5R1:Northstar Wolves",45,49,0.919
+B,12,5,0,picks,"Stormport Bolts","Ironpeak Rams",WR,58,26,true,,,"6R3:Stormport Bolts 6R2:Stormport Bolts",37.8,37.2,1.016
+B,12,5,0,picks,"Ashford Hawks","Eastport Phantoms",TE,60,23,true,,,"6R1:Ashford Hawks",54.2,49,1.107
+B,12,6,0,picks,"Sundown Drakes","Stonehaven Titans",WR,65,25,true,,,"7R3:Sundown Drakes 7R1:Sundown Drakes",69.6,60.8,1.145
+B,12,7,0,picks,"Ashford Hawks","Harbor Sentinels",K,62,26,true,,,"8R1:Ashford Hawks",52.8,49,1.078
+B,12,7,0,picks,"Sundown Drakes","Ironpeak Rams",TE,59,26,true,,,"8R1:Sundown Drakes",44.4,49,0.9059999999999999
+B,12,7,0,picks,"Stonehaven Titans","Palmetto Vipers",TE,58,23,true,,,"8R3:Stonehaven Titans 8R2:Stonehaven Titans",40.6,37.2,1.092
+B,12,8,0,picks,"Bayou Stalkers","Canyon Crushers",DL,63,31,true,,,"9R1:Bayou Stalkers",48.2,49,0.9840000000000001
+B,12,8,0,picks,"Ashford Hawks","Eastport Phantoms",OL,66,21,true,,,"9R2:Ashford Hawks 9R1:Ashford Hawks",78.3,74.4,1.052
+B,12,8,0,picks,"Glacier Guardians","Palmetto Vipers",TE,72,30,true,,,"9R2:Glacier Guardians 9R1:Glacier Guardians",80.9,74.4,1.088
+B,12,9,0,picks,"Ashford Hawks","Ironpeak Rams",DL,57,27,false,,,"10R3:Ashford Hawks 10R2:Ashford Hawks",38.4,37.2,1.032
+B,12,9,0,picks,"Stormport Bolts","Canyon Crushers",OL,67,33,true,,,"10R3:Stormport Bolts 10R1:Stormport Bolts",60.7,60.8,0.9990000000000001
+B,12,9,0,swap,"Northstar Wolves","Glacier Guardians",TE,58,25,false,DL,62,"",38.4,42.8,0.8959999999999999
+B,12,10,0,picks,"Glacier Guardians","Canyon Crushers",DL,57,23,true,,,"11R3:Glacier Guardians 11R2:Glacier Guardians",41.9,37.2,1.127
+B,12,10,0,picks,"Ashford Hawks","Bayou Stalkers",K,66,32,true,,,"11R3:Ashford Hawks 11R1:Ashford Hawks",63.7,60.8,1.0490000000000002
+B,13,2,0,picks,"Ashford Hawks","Palmetto Vipers",S,59,22,true,,,"3R1:Ashford Hawks",48.3,49,0.987
+B,13,3,0,picks,"Ember City Beasts","Bayou Stalkers",TE,55,26,true,,,"4R2:Ember City Beasts",26.4,25.4,1.0390000000000001
+B,13,3,0,picks,"Ashford Hawks","Sunfire Lions",QB,62,30,true,,,"4R1:Ashford Hawks",49.4,49,1.0090000000000001
+B,13,3,0,picks,"Northstar Wolves","Ironpeak Rams",DL,55,28,true,,,"4R3:Northstar Wolves 4R2:Northstar Wolves",33,37.2,0.887
+B,13,4,0,picks,"Ember City Beasts","Ironpeak Rams",TE,60,21,true,,,"5R1:Ember City Beasts",51.2,49,1.046
+B,13,4,0,picks,"Northstar Wolves","Palmetto Vipers",LB,62,23,true,,,"5R3:Northstar Wolves 5R1:Northstar Wolves",58.2,60.8,0.9590000000000001
+B,13,4,0,picks,"Bayou Stalkers","Stormport Bolts",K,67,29,true,,,"5R2:Bayou Stalkers 5R1:Bayou Stalkers",72.6,74.4,0.976
+B,13,5,0,picks,"Bayou Stalkers","Thunder Mesa",TE,59,22,true,,,"6R1:Bayou Stalkers",48.3,49,0.987
+B,13,5,0,picks,"Ashford Hawks","Sunfire Lions",QB,73,31,true,,,"6R2:Ashford Hawks 6R1:Ashford Hawks",85.7,74.4,1.1520000000000001
+B,13,5,0,picks,"Sundown Drakes","Glacier Guardians",OL,53,22,false,,,"6R2:Sundown Drakes",24.9,25.4,0.98
+B,13,6,0,picks,"Ashford Hawks","Sunfire Lions",CB,67,28,true,,,"7R2:Ashford Hawks 7R1:Ashford Hawks",77.4,74.4,1.04
+B,13,6,0,picks,"Ember City Beasts","Thunder Mesa",WR,60,26,true,,,"7R3:Ember City Beasts 7R2:Ember City Beasts",42,37.2,1.129
+B,13,6,0,picks,"Glacier Guardians","Palmetto Vipers",LB,59,24,true,,,"7R1:Glacier Guardians",48.3,49,0.987
+B,13,7,0,picks,"Ashford Hawks","Harbor Sentinels",RB,64,27,true,,,"8R3:Ashford Hawks 8R1:Ashford Hawks",64.8,60.8,1.0659999999999998
+B,13,7,0,picks,"Stormport Bolts","Canyon Crushers",RB,59,24,true,,,"8R1:Stormport Bolts",50.1,49,1.024
+B,13,7,0,picks,"Ember City Beasts","Palmetto Vipers",CB,61,26,false,,,"8R1:Ember City Beasts",49.2,49,1.004
+B,13,8,0,picks,"Bayou Stalkers","Frostpeak Howlers",LB,66,27,true,,,"9R3:Bayou Stalkers 9R1:Bayou Stalkers",68.4,60.8,1.126
+B,13,8,0,picks,"Stormport Bolts","Canyon Crushers",RB,70,30,true,,,"9R2:Stormport Bolts 9R1:Stormport Bolts",72,74.4,0.968
+B,13,8,0,picks,"Ashford Hawks","Sundown Drakes",TE,63,24,false,,,"9R3:Ashford Hawks 9R1:Ashford Hawks",66.6,60.8,1.095
+B,13,9,0,picks,"Ashford Hawks","Thunder Mesa",S,62,25,true,,,"10R1:Ashford Hawks",57,49,1.1640000000000001
+B,13,9,0,picks,"Bayou Stalkers","Sundown Drakes",RB,65,25,true,,,"10R2:Bayou Stalkers 10R1:Bayou Stalkers",75,74.4,1.008
+B,13,9,0,picks,"Northstar Wolves","Palmetto Vipers",WR,69,30,true,,,"10R3:Northstar Wolves 10R1:Northstar Wolves",67.8,60.8,1.1159999999999999
+B,13,10,0,picks,"Ashford Hawks","Northstar Wolves",QB,60,22,true,,,"11R1:Ashford Hawks",54.2,49,1.107
+B,14,2,0,picks,"Northstar Wolves","Bayou Stalkers",WR,55,26,true,,,"3R2:Northstar Wolves",25.8,25.4,1.015
+B,14,3,0,picks,"Northstar Wolves","Eastport Phantoms",DL,55,28,false,,,"4R2:Northstar Wolves",22.2,25.4,0.873
+B,14,3,0,picks,"Stonehaven Titans","Ironpeak Rams",CB,61,30,false,,,"4R1:Stonehaven Titans",45.3,49,0.924
+B,14,4,0,picks,"Stormport Bolts","Ironpeak Rams",K,61,23,true,,,"5R3:Stormport Bolts 5R1:Stormport Bolts",61.3,60.8,1.01
+B,14,4,0,picks,"Ashford Hawks","Bayou Stalkers",K,52,26,true,,,"5R3:Ashford Hawks",13.8,11.8,1.171
+B,14,5,0,picks,"Stormport Bolts","Frostpeak Howlers",LB,56,24,true,,,"6R3:Stormport Bolts 6R2:Stormport Bolts",34.2,37.2,0.92
+B,14,5,0,picks,"Ashford Hawks","Bayou Stalkers",K,64,29,true,,,"6R3:Ashford Hawks 6R1:Ashford Hawks",60,60.8,0.987
+B,14,6,0,picks,"Stonehaven Titans","Eastport Phantoms",S,66,25,true,,,"7R3:Stonehaven Titans 7R1:Stonehaven Titans",67.2,60.8,1.1059999999999999
+B,14,7,0,picks,"Ember City Beasts","Eastport Phantoms",WR,61,23,true,,,"8R3:Ember City Beasts 8R1:Ember City Beasts",60.1,60.8,0.99
+B,14,7,0,picks,"Stonehaven Titans","Frostpeak Howlers",RB,63,26,true,,,"8R3:Stonehaven Titans 8R1:Stonehaven Titans",60.6,60.8,0.997
+B,14,7,0,picks,"Stormport Bolts","Harbor Sentinels",CB,56,24,false,,,"8R3:Stormport Bolts 8R2:Stormport Bolts",33,37.2,0.888
+B,14,8,0,picks,"Canyon Crushers","Frostpeak Howlers",WR,67,34,true,,,"9R3:Canyon Crushers 9R1:Canyon Crushers",62.5,60.8,1.028
+B,14,9,0,picks,"Stormport Bolts","Canyon Crushers",TE,69,31,true,,,"10R3:Stormport Bolts 10R1:Stormport Bolts",67.8,60.8,1.1159999999999999
+B,14,9,0,picks,"Ashford Hawks","Bayou Stalkers",DL,61,25,false,,,"10R1:Ashford Hawks",53.4,49,1.09
+B,14,9,0,picks,"Ember City Beasts","Thunder Mesa",OL,59,27,true,,,"10R3:Ember City Beasts 10R2:Ember City Beasts",41.4,37.2,1.113
+B,14,10,0,picks,"Ashford Hawks","Ironpeak Rams",K,66,30,true,,,"11R2:Ashford Hawks 11R1:Ashford Hawks",71.5,74.4,0.961
+B,14,10,0,picks,"Stormport Bolts","Frostpeak Howlers",QB,72,33,true,,,"11R2:Stormport Bolts 11R1:Stormport Bolts",82.7,74.4,1.112
+B,14,10,0,picks,"Stonehaven Titans","Thunder Mesa",DL,68,30,true,,,"11R2:Stonehaven Titans 11R1:Stonehaven Titans",76.3,74.4,1.025
+B,15,2,0,picks,"Glacier Guardians","Ironpeak Rams",S,54,21,true,,,"3R2:Glacier Guardians",27.2,25.4,1.071
+B,15,3,0,picks,"Frostpeak Howlers","Ironpeak Rams",QB,60,22,true,,,"4R1:Frostpeak Howlers",56.6,49,1.156
+B,15,4,0,picks,"Harbor Sentinels","Eastport Phantoms",S,61,26,true,,,"5R1:Harbor Sentinels",46.2,49,0.943
+B,15,5,0,picks,"Stonehaven Titans","Canyon Crushers",CB,55,24,true,,,"6R3:Stonehaven Titans 6R2:Stonehaven Titans",33.1,37.2,0.89
+B,15,5,0,picks,"Ember City Beasts","Ashford Hawks",CB,59,31,true,,,"6R3:Ember City Beasts 6R2:Ember City Beasts",33.3,37.2,0.8959999999999999
+B,15,6,0,picks,"Ashford Hawks","Stonehaven Titans",LB,57,23,true,,,"7R3:Ashford Hawks 7R2:Ashford Hawks",35.9,37.2,0.966
+B,15,6,0,picks,"Ember City Beasts","Northstar Wolves",RB,61,25,true,,,"7R1:Ember City Beasts",48.6,49,0.992
+B,15,6,0,picks,"Glacier Guardians","Canyon Crushers",K,66,32,true,,,"7R3:Glacier Guardians 7R1:Glacier Guardians",58.9,60.8,0.97
+B,15,7,0,picks,"Glacier Guardians","Frostpeak Howlers",TE,57,25,true,,,"8R3:Glacier Guardians 8R2:Glacier Guardians",39,37.2,1.048
+B,15,7,0,picks,"Ashford Hawks","Ember City Beasts",QB,58,26,true,,,"8R3:Ashford Hawks 8R2:Ashford Hawks",38.4,37.2,1.032
+B,15,8,0,picks,"Stonehaven Titans","Northstar Wolves",S,66,35,true,,,"9R3:Stonehaven Titans 9R1:Stonehaven Titans",57.7,60.8,0.95
+B,15,8,0,picks,"Glacier Guardians","Palmetto Vipers",DL,59,25,true,,,"9R1:Glacier Guardians",42.6,49,0.87
+B,15,8,0,picks,"Ashford Hawks","Canyon Crushers",TE,68,27,true,,,"9R2:Ashford Hawks 9R1:Ashford Hawks",78,74.4,1.048
+B,15,9,0,picks,"Bayou Stalkers","Thunder Mesa",RB,68,22,true,,,"10R2:Bayou Stalkers 10R1:Bayou Stalkers",84.7,74.4,1.138
+B,15,9,0,picks,"Ashford Hawks","Sunfire Lions",S,59,24,false,,,"10R1:Ashford Hawks",47.7,49,0.975
+B,15,10,0,picks,"Harbor Sentinels","Thunder Mesa",LB,69,31,true,,,"11R3:Harbor Sentinels 11R1:Harbor Sentinels",67.8,60.8,1.1159999999999999
+B,15,10,0,picks,"Ashford Hawks","Sundown Drakes",QB,61,24,false,,,"11R3:Ashford Hawks 11R1:Ashford Hawks",57.7,60.8,0.95
+B,15,10,0,picks,"Glacier Guardians","Eastport Phantoms",RB,65,23,false,,,"11R2:Glacier Guardians 11R1:Glacier Guardians",79.6,74.4,1.069
+B,16,2,0,picks,"Sunfire Lions","Ironpeak Rams",RB,66,29,true,,,"3R3:Sunfire Lions 3R1:Sunfire Lions",67.8,60.8,1.1159999999999999
+B,16,2,0,picks,"Palmetto Vipers","Frostpeak Howlers",CB,61,28,true,,,"3R1:Palmetto Vipers",54.6,49,1.115
+B,16,3,0,picks,"Stonehaven Titans","Ironpeak Rams",LB,63,25,true,,,"4R3:Stonehaven Titans 4R1:Stonehaven Titans",66,60.8,1.0859999999999999
+B,16,4,0,picks,"Sundown Drakes","Frostpeak Howlers",K,65,30,true,,,"5R1:Sundown Drakes",57.2,49,1.167
+B,16,4,0,picks,"Stonehaven Titans","Ironpeak Rams",OL,58,23,true,,,"5R3:Stonehaven Titans 5R2:Stonehaven Titans",42.4,37.2,1.141
+B,16,4,0,picks,"Bayou Stalkers","Northstar Wolves",S,60,26,true,,,"5R1:Bayou Stalkers",49.2,49,1.004
+B,16,5,0,picks,"Bayou Stalkers","Harbor Sentinels",OL,60,25,true,,,"6R1:Bayou Stalkers",47.4,49,0.968
+B,16,5,0,picks,"Sundown Drakes","Canyon Crushers",WR,63,27,true,,,"6R3:Sundown Drakes 6R1:Sundown Drakes",61.2,60.8,1.0070000000000001
+B,16,5,0,picks,"Stonehaven Titans","Frostpeak Howlers",K,63,28,true,,,"6R3:Stonehaven Titans 6R1:Stonehaven Titans",60,60.8,0.987
+B,16,6,0,picks,"Stormport Bolts","Thunder Mesa",S,61,25,true,,,"7R1:Stormport Bolts",53.4,49,1.09
+B,16,6,0,picks,"Sundown Drakes","Ironpeak Rams",LB,61,24,true,,,"7R3:Sundown Drakes 7R1:Sundown Drakes",57.7,60.8,0.95
+B,16,6,0,picks,"Bayou Stalkers","Sunfire Lions",CB,64,24,true,,,"7R2:Bayou Stalkers 7R1:Bayou Stalkers",75.5,74.4,1.014
+B,16,7,0,picks,"Ashford Hawks","Harbor Sentinels",WR,57,25,false,,,"8R3:Ashford Hawks 8R2:Ashford Hawks",36,37.2,0.968
+B,16,7,0,picks,"Bayou Stalkers","Eastport Phantoms",QB,59,24,true,,,"8R1:Bayou Stalkers",45.9,49,0.938
+B,16,7,0,picks,"Stonehaven Titans","Palmetto Vipers",LB,55,23,false,,,"8R2:Stonehaven Titans",29.5,25.4,1.161
+B,16,8,0,swap,"Sundown Drakes","Bayou Stalkers",S,61,31,true,OL,56,"",39.3,36.6,1.072
+B,16,8,0,picks,"Stormport Bolts","Sunfire Lions",LB,64,22,true,,,"9R3:Stormport Bolts 9R1:Stormport Bolts",70.1,60.8,1.153
+B,16,8,0,picks,"Stonehaven Titans","Ashford Hawks",K,66,30,true,,,"9R3:Stonehaven Titans 9R1:Stonehaven Titans",57.7,60.8,0.95
+B,16,9,0,picks,"Ashford Hawks","Northstar Wolves",CB,63,23,false,,,"10R3:Ashford Hawks 10R1:Ashford Hawks",67.2,60.8,1.105
+B,16,9,0,picks,"Stonehaven Titans","Palmetto Vipers",TE,61,21,true,,,"10R3:Stonehaven Titans 10R1:Stonehaven Titans",60.1,60.8,0.99
+B,16,9,0,picks,"Bayou Stalkers","Frostpeak Howlers",S,67,24,true,,,"10R2:Bayou Stalkers 10R1:Bayou Stalkers",86.6,74.4,1.1640000000000001
+B,16,10,0,picks,"Ashford Hawks","Stormport Bolts",S,66,27,true,,,"11R3:Ashford Hawks 11R1:Ashford Hawks",67.2,60.8,1.1059999999999999
+B,16,10,0,picks,"Bayou Stalkers","Ironpeak Rams",LB,65,33,false,,,"11R1:Bayou Stalkers",57.2,49,1.167
+B,16,10,0,picks,"Stonehaven Titans","Glacier Guardians",DL,67,27,true,,,"11R2:Stonehaven Titans 11R1:Stonehaven Titans",78.6,74.4,1.056
+B,17,2,0,picks,"Bayou Stalkers","Glacier Guardians",QB,68,21,true,,,"3R2:Bayou Stalkers 3R1:Bayou Stalkers",87.1,74.4,1.17
+B,17,2,0,picks,"Ember City Beasts","Ironpeak Rams",K,66,22,true,,,"3R2:Ember City Beasts 3R1:Ember City Beasts",80.1,74.4,1.0759999999999998
+B,17,2,0,picks,"Stormport Bolts","Thunder Mesa",LB,57,29,true,,,"3R3:Stormport Bolts 3R2:Stormport Bolts",39,37.2,1.048
+B,17,3,0,picks,"Stormport Bolts","Ashford Hawks",S,56,29,true,,,"4R3:Stormport Bolts 4R2:Stormport Bolts",36,37.2,0.968
+B,17,4,0,picks,"Glacier Guardians","Ashford Hawks",OL,59,25,true,,,"5R3:Glacier Guardians 5R2:Glacier Guardians",39,37.2,1.048
+B,17,4,0,picks,"Stormport Bolts","Eastport Phantoms",DL,57,24,true,,,"5R3:Stormport Bolts 5R2:Stormport Bolts",40.1,37.2,1.079
+B,17,5,0,picks,"Stormport Bolts","Harbor Sentinels",CB,64,28,true,,,"6R3:Stormport Bolts 6R1:Stormport Bolts",69.6,60.8,1.145
+B,17,5,0,picks,"Glacier Guardians","Thunder Mesa",DL,57,26,true,,,"6R3:Glacier Guardians 6R2:Glacier Guardians",33,37.2,0.887
+B,17,5,0,picks,"Sundown Drakes","Palmetto Vipers",RB,62,24,true,,,"6R3:Sundown Drakes 6R1:Sundown Drakes",60.6,60.8,0.998
+B,17,6,0,picks,"Glacier Guardians","Ashford Hawks",K,62,32,true,,,"7R1:Glacier Guardians",48.2,49,0.985
+B,17,6,0,swap,"Ironpeak Rams","Sunfire Lions",K,64,27,true,QB,63,"",60,58.2,1.031
+B,17,6,0,picks,"Stormport Bolts","Northstar Wolves",OL,51,22,true,,,"7R3:Stormport Bolts",13.3,11.8,1.131
+B,17,7,0,picks,"Northstar Wolves","Frostpeak Howlers",S,56,25,true,,,"8R3:Northstar Wolves 8R2:Northstar Wolves",34.8,37.2,0.935
+B,17,7,0,picks,"Stormport Bolts","Ember City Beasts",K,63,30,true,,,"8R1:Stormport Bolts",48.8,49,0.997
+B,17,7,0,picks,"Glacier Guardians","Palmetto Vipers",LB,64,26,false,,,"8R3:Glacier Guardians 8R1:Glacier Guardians",58.8,60.8,0.968
+B,17,8,0,picks,"Stormport Bolts","Thunder Mesa",TE,57,26,true,,,"9R3:Stormport Bolts 9R2:Stormport Bolts",37.8,37.2,1.016
+B,17,8,0,picks,"Sunfire Lions","Ironpeak Rams",S,70,30,true,,,"9R3:Sunfire Lions 9R1:Sunfire Lions",71.4,60.8,1.175
+B,17,8,0,picks,"Glacier Guardians","Harbor Sentinels",RB,64,25,true,,,"9R3:Glacier Guardians 9R1:Glacier Guardians",61.8,60.8,1.0170000000000001
+B,17,9,0,picks,"Bayou Stalkers","Ashford Hawks",DL,62,32,false,,,"10R1:Bayou Stalkers",42.8,49,0.875
+B,17,9,0,picks,"Stormport Bolts","Sunfire Lions",QB,63,24,true,,,"10R3:Stormport Bolts 10R1:Stormport Bolts",61.8,60.8,1.016
+B,17,9,0,picks,"Northstar Wolves","Ember City Beasts",K,68,31,true,,,"10R3:Northstar Wolves 10R1:Northstar Wolves",65.5,60.8,1.077
+B,17,10,0,picks,"Glacier Guardians","Ironpeak Rams",CB,58,27,true,,,"11R3:Glacier Guardians 11R2:Glacier Guardians",38.4,37.2,1.032
+B,17,10,0,picks,"Bayou Stalkers","Canyon Crushers",RB,66,33,true,,,"11R3:Bayou Stalkers 11R1:Bayou Stalkers",59.5,60.8,0.98
+B,17,10,0,swap,"Ember City Beasts","Sundown Drakes",LB,55,26,true,OL,55,"",29.4,30.1,0.976
+B,18,3,0,picks,"Ember City Beasts","Bayou Stalkers",TE,52,24,true,,,"4R3:Ember City Beasts",12.4,11.8,1.053
+B,18,4,0,picks,"Northstar Wolves","Ember City Beasts",RB,61,27,true,,,"5R1:Northstar Wolves",49.2,49,1.004
+B,18,5,0,picks,"Stonehaven Titans","Stormport Bolts",WR,51,22,false,,,"6R3:Stonehaven Titans",11.5,11.8,0.978
+B,18,6,0,picks,"Ember City Beasts","Palmetto Vipers",TE,61,26,true,,,"7R1:Ember City Beasts",49.2,49,1.004
+B,18,6,0,picks,"Stonehaven Titans","Sundown Drakes",QB,65,26,true,,,"7R2:Stonehaven Titans 7R1:Stonehaven Titans",73.2,74.4,0.9840000000000001
+B,18,7,0,picks,"Bayou Stalkers","Ironpeak Rams",RB,59,24,true,,,"8R1:Bayou Stalkers",50.1,49,1.024
+B,18,7,0,picks,"Ember City Beasts","Northstar Wolves",OL,60,30,true,,,"8R3:Ember City Beasts 8R2:Ember City Beasts",37.5,37.2,1.008
+B,18,8,0,picks,"Stonehaven Titans","Eastport Phantoms",S,52,25,true,,,"9R3:Stonehaven Titans",12,11.8,1.0190000000000001
+B,18,8,0,picks,"Ember City Beasts","Sunfire Lions",K,62,22,true,,,"9R3:Ember City Beasts 9R1:Ember City Beasts",66,60.8,1.087
+B,18,8,0,picks,"Stormport Bolts","Palmetto Vipers",LB,57,25,true,,,"9R3:Stormport Bolts 9R2:Stormport Bolts",39.6,37.2,1.065
+B,18,9,0,picks,"Stonehaven Titans","Ironpeak Rams",TE,60,25,true,,,"10R1:Stonehaven Titans",51.6,49,1.053
+B,18,9,0,picks,"Northstar Wolves","Canyon Crushers",S,67,34,true,,,"10R3:Northstar Wolves 10R1:Northstar Wolves",61.3,60.8,1.0090000000000001
+B,18,9,0,swap,"Sunfire Lions","Sundown Drakes",CB,64,27,true,RB,63,"",62.4,60.6,1.03
+B,18,10,0,picks,"Northstar Wolves","Canyon Crushers",S,62,25,false,,,"11R1:Northstar Wolves",56.4,49,1.151
+B,18,10,0,picks,"Ember City Beasts","Eastport Phantoms",S,55,24,false,,,"11R2:Ember City Beasts",27.7,25.4,1.09
+B,18,10,0,picks,"Stonehaven Titans","Bayou Stalkers",K,67,33,true,,,"11R3:Stonehaven Titans 11R1:Stonehaven Titans",61.3,60.8,1.0090000000000001
+B,19,4,0,picks,"Sundown Drakes","Canyon Crushers",K,61,23,true,,,"5R1:Sundown Drakes",57.1,49,1.167
+B,19,4,0,picks,"Stonehaven Titans","Ashford Hawks",WR,59,24,true,,,"5R1:Stonehaven Titans",48.9,49,0.9990000000000001
+B,19,4,0,picks,"Northstar Wolves","Harbor Sentinels",CB,62,23,true,,,"5R3:Northstar Wolves 5R1:Northstar Wolves",67.2,60.8,1.107
+B,19,5,0,picks,"Ember City Beasts","Ironpeak Rams",TE,57,24,true,,,"6R3:Ember City Beasts 6R2:Ember City Beasts",42.5,37.2,1.143
+B,19,5,0,picks,"Ashford Hawks","Frostpeak Howlers",TE,49,27,true,,,"6R3:Ashford Hawks",13.8,11.8,1.171
+B,19,5,0,picks,"Stonehaven Titans","Harbor Sentinels",RB,62,28,true,,,"6R3:Stonehaven Titans 6R1:Stonehaven Titans",60,60.8,0.987
+B,19,5,3,swap,"Northstar Wolves","Bayou Stalkers",TE,59,25,true,RB,59,"",42.6,39,1.092
+B,19,6,0,picks,"Stonehaven Titans","Ashford Hawks",RB,62,24,true,,,"7R3:Stonehaven Titans 7R1:Stonehaven Titans",63.6,60.8,1.048
+B,19,6,0,picks,"Ember City Beasts","Thunder Mesa",RB,63,25,true,,,"7R1:Ember City Beasts",55.2,49,1.127
+B,19,6,0,picks,"Northstar Wolves","Palmetto Vipers",OL,59,25,true,,,"7R1:Northstar Wolves",45.6,49,0.9309999999999999
+B,19,7,0,picks,"Bayou Stalkers","Harbor Sentinels",CB,66,21,true,,,"8R2:Bayou Stalkers 8R1:Bayou Stalkers",79.5,74.4,1.068
+B,19,7,0,picks,"Sundown Drakes","Palmetto Vipers",S,61,24,true,,,"8R3:Sundown Drakes 8R1:Sundown Drakes",57.7,60.8,0.95
+B,19,7,0,picks,"Ember City Beasts","Eastport Phantoms",QB,55,26,true,,,"8R2:Ember City Beasts",28.8,25.4,1.133
+B,19,8,0,picks,"Bayou Stalkers","Harbor Sentinels",DL,58,21,true,,,"9R3:Bayou Stalkers 9R2:Bayou Stalkers",42.4,37.2,1.141
+B,19,8,0,picks,"Stonehaven Titans","Ironpeak Rams",OL,56,21,true,,,"9R3:Stonehaven Titans 9R2:Stonehaven Titans",36.6,37.2,0.985
+B,19,8,0,picks,"Thunder Mesa","Palmetto Vipers",S,66,29,true,,,"9R3:Thunder Mesa 9R1:Thunder Mesa",67.8,60.8,1.1159999999999999
+B,19,9,0,picks,"Stonehaven Titans","Ashford Hawks",TE,63,23,true,,,"10R3:Stonehaven Titans 10R1:Stonehaven Titans",64.8,60.8,1.0659999999999998
+B,19,9,0,picks,"Sundown Drakes","Ironpeak Rams",DL,58,24,true,,,"10R1:Sundown Drakes",46,49,0.94
+B,19,9,0,picks,"Ember City Beasts","Glacier Guardians",LB,61,22,true,,,"10R1:Ember City Beasts",55.3,49,1.13
+B,19,10,0,picks,"Stonehaven Titans","Sunfire Lions",RB,62,27,true,,,"11R3:Stonehaven Titans 11R1:Stonehaven Titans",60.6,60.8,0.997
+B,19,10,0,picks,"Bayou Stalkers","Canyon Crushers",TE,63,26,true,,,"11R3:Bayou Stalkers 11R1:Bayou Stalkers",58.8,60.8,0.968
+B,19,10,0,picks,"Northstar Wolves","Palmetto Vipers",QB,58,24,true,,,"11R3:Northstar Wolves 11R2:Northstar Wolves",42.4,37.2,1.141
+B,20,2,0,picks,"Ashford Hawks","Palmetto Vipers",K,63,23,true,,,"3R3:Ashford Hawks 3R1:Ashford Hawks",70.2,60.8,1.155
+B,20,2,0,picks,"Stormport Bolts","Thunder Mesa",TE,56,22,true,,,"3R3:Stormport Bolts 3R2:Stormport Bolts",36,37.2,0.968
+B,20,3,0,picks,"Stormport Bolts","Eastport Phantoms",TE,62,27,true,,,"4R1:Stormport Bolts",53.4,49,1.09
+B,20,4,0,picks,"Stonehaven Titans","Ashford Hawks",K,61,26,true,,,"5R1:Stonehaven Titans",48,49,0.98
+B,20,4,0,picks,"Northstar Wolves","Canyon Crushers",QB,61,22,true,,,"5R1:Northstar Wolves",54.1,49,1.105
+B,20,5,0,picks,"Sundown Drakes","Eastport Phantoms",TE,65,27,true,,,"6R3:Sundown Drakes 6R1:Sundown Drakes",69,60.8,1.136
+B,20,6,0,picks,"Northstar Wolves","Thunder Mesa",OL,65,22,false,,,"7R2:Northstar Wolves 7R1:Northstar Wolves",74.8,74.4,1.005
+B,20,6,0,picks,"Canyon Crushers","Eastport Phantoms",K,69,26,true,,,"7R2:Canyon Crushers 7R1:Canyon Crushers",81,74.4,1.089
+B,20,6,0,picks,"Sundown Drakes","Palmetto Vipers",S,60,25,true,,,"7R1:Sundown Drakes",45,49,0.919
+B,20,7,0,picks,"Ashford Hawks","Glacier Guardians",DL,65,28,true,,,"8R3:Ashford Hawks 8R1:Ashford Hawks",63,60.8,1.037
+B,20,7,0,picks,"Stonehaven Titans","Harbor Sentinels",TE,61,26,true,,,"8R1:Stonehaven Titans",51,49,1.041
+B,20,7,0,picks,"Sundown Drakes","Northstar Wolves",QB,57,25,true,,,"8R3:Sundown Drakes 8R2:Sundown Drakes",33,37.2,0.887
+B,20,8,0,picks,"Bayou Stalkers","Sunfire Lions",S,63,24,true,,,"9R3:Bayou Stalkers 9R1:Bayou Stalkers",64.8,60.8,1.0659999999999998
+B,20,8,0,picks,"Ashford Hawks","Glacier Guardians",K,60,25,false,,,"9R1:Ashford Hawks",48,49,0.98
+B,20,9,0,picks,"Bayou Stalkers","Sunfire Lions",S,63,25,false,,,"10R1:Bayou Stalkers",57.6,49,1.176
+B,20,9,0,picks,"Ashford Hawks","Canyon Crushers",TE,61,25,true,,,"10R1:Ashford Hawks",49.2,49,1.004
+B,20,10,0,picks,"Sundown Drakes","Eastport Phantoms",QB,63,25,true,,,"11R3:Sundown Drakes 11R1:Sundown Drakes",62.4,60.8,1.0270000000000001
+B,20,10,0,picks,"Bayou Stalkers","Canyon Crushers",K,67,32,true,,,"11R3:Bayou Stalkers 11R1:Bayou Stalkers",60.7,60.8,0.9990000000000001
+B,20,10,0,picks,"Ashford Hawks","Northstar Wolves",K,67,30,true,,,"11R3:Ashford Hawks 11R1:Ashford Hawks",65.5,60.8,1.078
+C,101,2,0,picks,"Bayou Stalkers","Ironpeak Rams",S,62,23,true,,,"3R3:Bayou Stalkers 3R1:Bayou Stalkers",63,60.8,1.038
+C,101,2,0,picks,"Ashford Hawks","Palmetto Vipers",TE,64,21,true,,,"3R2:Ashford Hawks 3R1:Ashford Hawks",74.3,74.4,0.998
+C,101,3,0,picks,"Ashford Hawks","Palmetto Vipers",LB,58,23,false,,,"4R1:Ashford Hawks",47.2,49,0.9640000000000001
+C,101,3,0,picks,"Glacier Guardians","Canyon Crushers",TE,62,28,true,,,"4R1:Glacier Guardians",56.4,49,1.151
+C,101,5,0,picks,"Glacier Guardians","Canyon Crushers",K,56,27,true,,,"6R3:Glacier Guardians 6R2:Glacier Guardians",37.2,37.2,1
+C,101,5,0,picks,"Sundown Drakes","Palmetto Vipers",TE,59,27,true,,,"6R1:Sundown Drakes",43.8,49,0.894
+C,101,5,0,picks,"Northstar Wolves","Ironpeak Rams",OL,64,21,true,,,"6R2:Northstar Wolves 6R1:Northstar Wolves",76.1,74.4,1.022
+C,101,6,0,picks,"Sundown Drakes","Ironpeak Rams",TE,58,24,true,,,"7R1:Sundown Drakes",45.4,49,0.9279999999999999
+C,101,6,0,picks,"Stormport Bolts","Eastport Phantoms",CB,58,25,true,,,"7R3:Stormport Bolts 7R2:Stormport Bolts",37.2,37.2,1
+C,101,6,0,picks,"Glacier Guardians","Ashford Hawks",DL,55,22,false,,,"7R3:Glacier Guardians 7R2:Glacier Guardians",34.9,37.2,0.9390000000000001
+C,101,7,0,picks,"Northstar Wolves","Sunfire Lions",K,60,30,true,,,"8R3:Northstar Wolves 8R2:Northstar Wolves",42.3,37.2,1.137
+C,101,7,0,picks,"Glacier Guardians","Ironpeak Rams",S,59,23,false,,,"8R1:Glacier Guardians",48.3,49,0.987
+C,101,7,0,picks,"Ember City Beasts","Thunder Mesa",K,65,26,true,,,"8R3:Ember City Beasts 8R1:Ember City Beasts",67.2,60.8,1.1059999999999999
+C,101,8,0,picks,"Northstar Wolves","Stormport Bolts",S,62,32,true,,,"9R1:Northstar Wolves",42.8,49,0.875
+C,101,8,0,picks,"Harbor Sentinels","Canyon Crushers",LB,66,26,true,,,"9R2:Harbor Sentinels 9R1:Harbor Sentinels",73.8,74.4,0.992
+C,101,8,0,picks,"Ember City Beasts","Ashford Hawks",S,54,23,false,,,"9R2:Ember City Beasts",24.8,25.4,0.976
+C,101,9,0,picks,"Ember City Beasts","Ashford Hawks",RB,62,23,true,,,"10R3:Ember City Beasts 10R1:Ember City Beasts",62.4,60.8,1.028
+C,101,9,0,picks,"Eastport Phantoms","Thunder Mesa",DL,61,24,false,,,"10R3:Eastport Phantoms 10R1:Eastport Phantoms",57.7,60.8,0.95
+C,101,9,0,picks,"Glacier Guardians","Sunfire Lions",TE,63,23,true,,,"10R3:Glacier Guardians 10R1:Glacier Guardians",67.8,60.8,1.115
+C,101,10,0,picks,"Ember City Beasts","Sundown Drakes",WR,57,28,false,,,"11R3:Ember City Beasts 11R2:Ember City Beasts",32.4,37.2,0.871
+C,101,10,0,picks,"Glacier Guardians","Eastport Phantoms",K,69,30,true,,,"11R3:Glacier Guardians 11R1:Glacier Guardians",68.4,60.8,1.126
+C,101,10,0,picks,"Northstar Wolves","Ashford Hawks",K,67,33,true,,,"11R3:Northstar Wolves 11R1:Northstar Wolves",63.1,60.8,1.038
+C,101,11,0,picks,"Glacier Guardians","Northstar Wolves",DL,65,29,true,,,"12R3:Glacier Guardians 12R1:Glacier Guardians",67.2,60.8,1.1059999999999999
+C,101,11,0,picks,"Bayou Stalkers","Harbor Sentinels",CB,55,26,false,,,"12R2:Bayou Stalkers",28.8,25.4,1.133
+C,101,11,0,picks,"Ember City Beasts","Sunfire Lions",QB,64,22,true,,,"12R2:Ember City Beasts 12R1:Ember City Beasts",74.9,74.4,1.006
+C,101,12,0,picks,"Northstar Wolves","Sunfire Lions",QB,64,24,true,,,"13R2:Northstar Wolves 13R1:Northstar Wolves",76.1,74.4,1.022
+C,101,12,0,picks,"Bayou Stalkers","Harbor Sentinels",QB,65,31,true,,,"13R3:Bayou Stalkers 13R1:Bayou Stalkers",59.6,60.8,0.98
+C,101,12,0,picks,"Glacier Guardians","Thunder Mesa",K,74,33,true,,,"13R2:Glacier Guardians 13R1:Glacier Guardians",87.5,74.4,1.176
+C,101,13,0,picks,"Canyon Crushers","Eastport Phantoms",WR,58,29,false,,,"14R3:Canyon Crushers 14R2:Canyon Crushers",41.4,37.2,1.113
+C,101,13,0,picks,"Ember City Beasts","Palmetto Vipers",LB,66,35,true,,,"14R3:Ember City Beasts 14R1:Ember City Beasts",57.7,60.8,0.95
+C,101,13,0,picks,"Glacier Guardians","Ashford Hawks",S,59,25,false,,,"14R1:Glacier Guardians",43.8,49,0.894
+C,101,14,0,picks,"Ashford Hawks","Thunder Mesa",S,57,23,true,,,"15R3:Ashford Hawks 15R2:Ashford Hawks",41.9,37.2,1.127
+C,101,14,0,picks,"Bayou Stalkers","Canyon Crushers",S,57,22,false,,,"15R1:Bayou Stalkers",43.7,49,0.893
+C,101,14,0,picks,"Ember City Beasts","Sunfire Lions",TE,58,21,true,,,"15R1:Ember City Beasts",43,49,0.879
+C,101,15,0,picks,"Stormport Bolts","Ashford Hawks",K,66,25,true,,,"16R2:Stormport Bolts 16R1:Stormport Bolts",78,74.4,1.048
+C,101,15,0,picks,"Bayou Stalkers","Harbor Sentinels",WR,63,24,true,,,"16R3:Bayou Stalkers 16R1:Bayou Stalkers",64.8,60.8,1.0659999999999998
+C,101,15,0,picks,"Ember City Beasts","Canyon Crushers",K,69,33,true,,,"16R3:Ember City Beasts 16R1:Ember City Beasts",69,60.8,1.136
+C,101,16,0,picks,"Glacier Guardians","Eastport Phantoms",DL,59,24,false,,,"17R1:Glacier Guardians",49.5,49,1.011
+C,101,16,0,picks,"Bayou Stalkers","Ashford Hawks",QB,55,25,true,,,"17R2:Bayou Stalkers",28.8,25.4,1.133
+C,101,16,0,picks,"Ember City Beasts","Sunfire Lions",TE,72,31,true,,,"17R2:Ember City Beasts 17R1:Ember City Beasts",80.3,74.4,1.08
+C,101,17,0,picks,"Ember City Beasts","Ironpeak Rams",DL,61,26,false,,,"18R1:Ember City Beasts",51,49,1.041
+C,101,17,0,picks,"Glacier Guardians","Harbor Sentinels",K,62,22,false,,,"18R3:Glacier Guardians 18R1:Glacier Guardians",61.2,60.8,1.008
+C,101,17,0,picks,"Bayou Stalkers","Canyon Crushers",QB,59,25,true,,,"18R1:Bayou Stalkers",45,49,0.919
+C,101,18,0,picks,"Ashford Hawks","Harbor Sentinels",OL,64,25,false,,,"19R3:Ashford Hawks 19R1:Ashford Hawks",63,60.8,1.037
+C,101,18,0,picks,"Bayou Stalkers","Stormport Bolts",QB,66,24,true,,,"19R2:Bayou Stalkers 19R1:Bayou Stalkers",80.7,74.4,1.084
+C,101,18,0,picks,"Ember City Beasts","Ironpeak Rams",RB,60,25,true,,,"19R1:Ember City Beasts",49.2,49,1.004
+C,101,19,0,picks,"Bayou Stalkers","Thunder Mesa",OL,54,23,false,,,"20R2:Bayou Stalkers",26,25.4,1.023
+C,101,19,0,picks,"Harbor Sentinels","Palmetto Vipers",OL,70,46,true,,,"20R3:Harbor Sentinels 20R1:Harbor Sentinels",71.4,60.8,1.175
+C,101,19,0,picks,"Glacier Guardians","Eastport Phantoms",CB,59,26,false,,,"20R1:Glacier Guardians",46.8,49,0.955
+C,101,20,0,picks,"Glacier Guardians","Sundown Drakes",OL,62,26,true,,,"21R3:Glacier Guardians 21R1:Glacier Guardians",60.6,60.8,0.997
+C,101,20,0,picks,"Northstar Wolves","Palmetto Vipers",K,70,40,true,,,"21R3:Northstar Wolves 21R1:Northstar Wolves",71.4,60.8,1.175
+C,101,20,0,swap,"Bayou Stalkers","Ashford Hawks",RB,68,30,false,CB,72,"",67.3,78.5,0.856
+C,102,2,0,picks,"Stormport Bolts","Canyon Crushers",RB,62,21,true,,,"3R3:Stormport Bolts 3R1:Stormport Bolts",57.6,60.8,0.9490000000000001
+C,102,2,0,picks,"Ember City Beasts","Eastport Phantoms",LB,60,22,true,,,"3R1:Ember City Beasts",53.6,49,1.095
+C,102,2,0,picks,"Harbor Sentinels","Stonehaven Titans",RB,63,26,true,,,"3R3:Harbor Sentinels 3R1:Harbor Sentinels",58.8,60.8,0.968
+C,102,3,0,picks,"Sundown Drakes","Ironpeak Rams",TE,65,29,true,,,"4R2:Sundown Drakes 4R1:Sundown Drakes",73.2,74.4,0.9840000000000001
+C,102,3,0,picks,"Harbor Sentinels","Palmetto Vipers",LB,62,26,true,,,"4R3:Harbor Sentinels 4R1:Harbor Sentinels",58.2,60.8,0.958
+C,102,3,0,picks,"Stormport Bolts","Stonehaven Titans",DL,60,26,true,,,"4R1:Stormport Bolts",46.2,49,0.943
+C,102,4,0,picks,"Ashford Hawks","Palmetto Vipers",K,62,23,true,,,"5R3:Ashford Hawks 5R1:Ashford Hawks",64.8,60.8,1.067
+C,102,4,0,picks,"Sundown Drakes","Northstar Wolves",CB,63,30,true,,,"5R1:Sundown Drakes",48.8,49,0.997
+C,102,4,0,picks,"Ember City Beasts","Bayou Stalkers",OL,58,24,false,,,"5R3:Ember City Beasts 5R2:Ember City Beasts",41.2,37.2,1.1079999999999999
+C,102,5,0,picks,"Ember City Beasts","Ashford Hawks",QB,59,22,true,,,"6R1:Ember City Beasts",54.3,49,1.109
+C,102,5,0,picks,"Sundown Drakes","Northstar Wolves",WR,58,24,true,,,"6R1:Sundown Drakes",44.2,49,0.903
+C,102,6,0,picks,"Sundown Drakes","Thunder Mesa",OL,60,27,true,,,"7R1:Sundown Drakes",44.4,49,0.9059999999999999
+C,102,6,0,picks,"Bayou Stalkers","Frostpeak Howlers",WR,60,30,false,,,"7R3:Bayou Stalkers 7R2:Bayou Stalkers",41.1,37.2,1.105
+C,102,6,0,picks,"Ashford Hawks","Canyon Crushers",TE,61,27,true,,,"7R1:Ashford Hawks",49.8,49,1.0170000000000001
+C,102,7,0,picks,"Stormport Bolts","Ashford Hawks",TE,57,23,false,,,"8R3:Stormport Bolts 8R2:Stormport Bolts",34.7,37.2,0.934
+C,102,7,0,picks,"Stonehaven Titans","Sundown Drakes",TE,56,22,true,,,"8R3:Stonehaven Titans 8R2:Stonehaven Titans",37.8,37.2,1.0170000000000001
+C,102,8,0,picks,"Ember City Beasts","Bayou Stalkers",LB,63,25,true,,,"9R1:Ember City Beasts",55.2,49,1.127
+C,102,8,0,picks,"Stonehaven Titans","Sundown Drakes",QB,68,26,true,,,"9R2:Stonehaven Titans 9R1:Stonehaven Titans",80.4,74.4,1.081
+C,102,9,0,swap,"Bayou Stalkers","Stormport Bolts",QB,63,28,false,K,61,"",60.6,56.5,1.072
+C,102,9,0,picks,"Stonehaven Titans","Eastport Phantoms",CB,58,23,false,,,"10R1:Stonehaven Titans",43.6,49,0.8909999999999999
+C,102,9,0,picks,"Ashford Hawks","Canyon Crushers",DL,54,21,false,,,"10R2:Ashford Hawks",27.2,25.4,1.071
+C,102,10,0,picks,"Stormport Bolts","Palmetto Vipers",OL,60,26,true,,,"11R1:Stormport Bolts",45,49,0.919
+C,102,10,0,picks,"Ember City Beasts","Eastport Phantoms",K,61,25,true,,,"11R1:Ember City Beasts",55.8,49,1.139
+C,102,11,0,picks,"Stormport Bolts","Palmetto Vipers",K,71,32,true,,,"12R2:Stormport Bolts 12R1:Stormport Bolts",75,74.4,1.008
+C,102,11,0,picks,"Ashford Hawks","Thunder Mesa",K,63,21,false,,,"12R3:Ashford Hawks 12R1:Ashford Hawks",61.8,60.8,1.016
+C,102,11,0,picks,"Canyon Crushers","Sundown Drakes",WR,61,23,true,,,"12R3:Canyon Crushers 12R1:Canyon Crushers",57.7,60.8,0.95
+C,102,12,0,picks,"Ember City Beasts","Ironpeak Rams",QB,58,24,true,,,"13R3:Ember City Beasts 13R2:Ember City Beasts",41.2,37.2,1.1079999999999999
+C,102,12,0,picks,"Bayou Stalkers","Palmetto Vipers",TE,74,33,true,,,"13R2:Bayou Stalkers 13R1:Bayou Stalkers",85.7,74.4,1.1520000000000001
+C,102,12,0,picks,"Stormport Bolts","Frostpeak Howlers",WR,66,34,true,,,"13R3:Stormport Bolts 13R1:Stormport Bolts",57.7,60.8,0.95
+C,102,13,0,picks,"Stonehaven Titans","Bayou Stalkers",LB,70,31,true,,,"14R2:Stonehaven Titans 14R1:Stonehaven Titans",72,74.4,0.968
+C,102,13,0,picks,"Ashford Hawks","Eastport Phantoms",TE,73,32,true,,,"14R2:Ashford Hawks 14R1:Ashford Hawks",82.7,74.4,1.112
+C,102,13,0,picks,"Ember City Beasts","Frostpeak Howlers",QB,68,34,true,,,"14R3:Ember City Beasts 14R1:Ember City Beasts",64.9,60.8,1.067
+C,102,14,0,swap,"Ashford Hawks","Ember City Beasts",S,69,35,true,WR,65,"",68.4,63,1.0859999999999999
+C,102,14,0,picks,"Stormport Bolts","Sunfire Lions",K,56,23,false,,,"15R3:Stormport Bolts 15R2:Stormport Bolts",36,37.2,0.968
+C,102,15,0,picks,"Ashford Hawks","Frostpeak Howlers",QB,53,22,false,,,"16R2:Ashford Hawks",23.1,25.4,0.909
+C,102,15,0,picks,"Ember City Beasts","Northstar Wolves",LB,63,25,false,,,"16R3:Ember City Beasts 16R1:Ember City Beasts",59.4,60.8,0.978
+C,102,15,4,swap,"Ashford Hawks","Eastport Phantoms",RB,58,22,true,K,57,"",42.4,40.8,1.04
+C,102,16,0,picks,"Ember City Beasts","Thunder Mesa",QB,59,26,true,,,"17R3:Ember City Beasts 17R2:Ember City Beasts",40.8,37.2,1.097
+C,102,16,0,picks,"Ashford Hawks","Eastport Phantoms",LB,56,24,false,,,"17R3:Ashford Hawks 17R2:Ashford Hawks",36.6,37.2,0.985
+C,102,16,0,picks,"Palmetto Vipers","Sunfire Lions",OL,69,32,true,,,"17R2:Palmetto Vipers 17R1:Palmetto Vipers",77.4,74.4,1.041
+C,102,17,0,picks,"Ashford Hawks","Harbor Sentinels",TE,69,27,false,,,"18R2:Ashford Hawks 18R1:Ashford Hawks",85.8,74.4,1.153
+C,102,17,0,picks,"Ember City Beasts","Stonehaven Titans",QB,65,21,true,,,"18R2:Ember City Beasts 18R1:Ember City Beasts",74.2,74.4,0.997
+C,102,17,0,picks,"Stormport Bolts","Sundown Drakes",WR,55,26,false,,,"18R2:Stormport Bolts",25.8,25.4,1.015
+C,102,18,0,picks,"Ashford Hawks","Palmetto Vipers",CB,64,24,false,,,"19R2:Ashford Hawks 19R1:Ashford Hawks",73.1,74.4,0.982
+C,102,18,0,picks,"Ember City Beasts","Stonehaven Titans",CB,66,43,false,,,"19R3:Ember City Beasts 19R1:Ember City Beasts",58.9,60.8,0.97
+C,102,19,0,picks,"Ember City Beasts","Sunfire Lions",WR,69,43,true,,,"20R3:Ember City Beasts 20R1:Ember City Beasts",70.2,60.8,1.156
+C,102,19,0,picks,"Eastport Phantoms","Ashford Hawks",K,71,36,true,,,"20R2:Eastport Phantoms 20R1:Eastport Phantoms",75,74.4,1.008
+C,102,19,0,picks,"Stormport Bolts","Bayou Stalkers",RB,58,26,true,,,"20R3:Stormport Bolts 20R2:Stormport Bolts",37.8,37.2,1.016
+C,102,20,0,picks,"Stormport Bolts","Frostpeak Howlers",QB,62,26,true,,,"21R1:Stormport Bolts",57,49,1.1640000000000001
+C,103,2,0,picks,"Bayou Stalkers","Ember City Beasts",S,57,25,true,,,"3R3:Bayou Stalkers 3R2:Bayou Stalkers",38.4,37.2,1.032
+C,103,2,0,picks,"Ashford Hawks","Palmetto Vipers",TE,63,27,true,,,"3R3:Ashford Hawks 3R1:Ashford Hawks",60.6,60.8,0.997
+C,103,3,0,picks,"Ashford Hawks","Bayou Stalkers",S,55,29,true,,,"4R2:Ashford Hawks",25.2,25.4,0.991
+C,103,4,0,picks,"Ashford Hawks","Harbor Sentinels",OL,57,26,false,,,"5R3:Ashford Hawks 5R2:Ashford Hawks",33.6,37.2,0.903
+C,103,4,0,picks,"Northstar Wolves","Eastport Phantoms",DL,58,24,true,,,"5R1:Northstar Wolves",44.8,49,0.915
+C,103,5,0,picks,"Ashford Hawks","Eastport Phantoms",K,57,24,true,,,"6R3:Ashford Hawks 6R2:Ashford Hawks",42.5,37.2,1.143
+C,103,5,0,picks,"Bayou Stalkers","Sundown Drakes",LB,60,30,true,,,"6R3:Bayou Stalkers 6R2:Bayou Stalkers",38.1,37.2,1.024
+C,103,5,0,picks,"Ember City Beasts","Sunfire Lions",K,68,25,true,,,"6R2:Ember City Beasts 6R1:Ember City Beasts",81,74.4,1.089
+C,103,5,2,swap,"Bayou Stalkers","Ashford Hawks",LB,61,31,true,K,58,"",42.9,39,1.099
+C,103,6,0,picks,"Ember City Beasts","Eastport Phantoms",S,64,22,false,,,"7R2:Ember City Beasts 7R1:Ember City Beasts",73.7,74.4,0.99
+C,103,6,0,picks,"Bayou Stalkers","Thunder Mesa",K,67,32,true,,,"7R3:Bayou Stalkers 7R1:Bayou Stalkers",67.3,60.8,1.107
+C,103,6,0,picks,"Stonehaven Titans","Sundown Drakes",CB,65,21,true,,,"7R2:Stonehaven Titans 7R1:Stonehaven Titans",73.6,74.4,0.9890000000000001
+C,103,7,0,picks,"Sundown Drakes","Bayou Stalkers",RB,59,25,true,,,"8R3:Sundown Drakes 8R2:Sundown Drakes",42,37.2,1.129
+C,103,7,0,picks,"Northstar Wolves","Ironpeak Rams",RB,66,32,true,,,"8R3:Northstar Wolves 8R1:Northstar Wolves",60.1,60.8,0.9890000000000001
+C,103,7,0,picks,"Ashford Hawks","Glacier Guardians",OL,60,22,false,,,"8R1:Ashford Hawks",54.8,49,1.12
+C,103,8,0,picks,"Northstar Wolves","Glacier Guardians",RB,70,27,true,,,"9R2:Northstar Wolves 9R1:Northstar Wolves",85.2,74.4,1.145
+C,103,8,0,picks,"Palmetto Vipers","Frostpeak Howlers",S,62,23,true,,,"9R3:Palmetto Vipers 9R1:Palmetto Vipers",61.8,60.8,1.018
+C,103,9,0,picks,"Glacier Guardians","Harbor Sentinels",QB,64,27,true,,,"10R3:Glacier Guardians 10R1:Glacier Guardians",65.4,60.8,1.0759999999999998
+C,103,9,0,picks,"Ashford Hawks","Bayou Stalkers",QB,51,23,true,,,"10R3:Ashford Hawks",12.7,11.8,1.08
+C,103,9,0,picks,"Northstar Wolves","Palmetto Vipers",QB,66,29,true,,,"10R2:Northstar Wolves 10R1:Northstar Wolves",73.8,74.4,0.992
+C,103,10,0,picks,"Sundown Drakes","Palmetto Vipers",QB,71,30,true,,,"11R2:Sundown Drakes 11R1:Sundown Drakes",75.6,74.4,1.016
+C,103,10,0,picks,"Northstar Wolves","Frostpeak Howlers",K,66,32,true,,,"11R1:Northstar Wolves",57.1,49,1.166
+C,103,10,0,picks,"Ashford Hawks","Canyon Crushers",QB,71,30,true,,,"11R2:Ashford Hawks 11R1:Ashford Hawks",75,74.4,1.008
+C,103,11,0,picks,"Glacier Guardians","Stonehaven Titans",K,68,32,true,,,"12R3:Glacier Guardians 12R1:Glacier Guardians",65.5,60.8,1.077
+C,103,11,0,swap,"Eastport Phantoms","Ashford Hawks",DL,62,28,true,RB,58,"",50.4,44.2,1.139
+C,103,11,0,picks,"Sundown Drakes","Bayou Stalkers",K,64,24,true,,,"12R2:Sundown Drakes 12R1:Sundown Drakes",74.9,74.4,1.006
+C,103,12,0,picks,"Thunder Mesa","Ashford Hawks",K,73,30,true,,,"13R2:Thunder Mesa 13R1:Thunder Mesa",82.1,74.4,1.104
+C,103,12,0,picks,"Glacier Guardians","Palmetto Vipers",S,50,23,false,,,"13R3:Glacier Guardians",10.9,11.8,0.927
+C,103,12,0,picks,"Northstar Wolves","Frostpeak Howlers",DL,62,39,true,,,"13R1:Northstar Wolves",44.6,49,0.9109999999999999
+C,103,13,0,picks,"Ashford Hawks","Stonehaven Titans",OL,53,23,false,,,"14R2:Ashford Hawks",23.1,25.4,0.909
+C,103,13,0,picks,"Northstar Wolves","Frostpeak Howlers",TE,69,35,true,,,"14R3:Northstar Wolves 14R1:Northstar Wolves",67.8,60.8,1.1159999999999999
+C,103,13,0,picks,"Ironpeak Rams","Harbor Sentinels",OL,67,22,false,,,"14R2:Ironpeak Rams 14R1:Ironpeak Rams",84.8,74.4,1.139
+C,103,14,0,picks,"Ashford Hawks","Ironpeak Rams",CB,59,22,false,,,"15R1:Ashford Hawks",46.5,49,0.95
+C,103,14,0,picks,"Glacier Guardians","Bayou Stalkers",WR,54,25,false,,,"15R2:Glacier Guardians",24,25.4,0.9440000000000001
+C,103,14,0,picks,"Sundown Drakes","Ember City Beasts",WR,67,27,true,,,"15R2:Sundown Drakes 15R1:Sundown Drakes",75,74.4,1.008
+C,103,15,0,picks,"Ashford Hawks","Ironpeak Rams",QB,69,33,true,,,"16R3:Ashford Hawks 16R1:Ashford Hawks",69.6,60.8,1.146
+C,103,15,0,picks,"Northstar Wolves","Ember City Beasts",DL,67,37,true,,,"16R3:Northstar Wolves 16R1:Northstar Wolves",63.1,60.8,1.038
+C,103,16,0,picks,"Ashford Hawks","Bayou Stalkers",S,62,24,true,,,"17R3:Ashford Hawks 17R1:Ashford Hawks",61.2,60.8,1.008
+C,103,16,0,picks,"Northstar Wolves","Sunfire Lions",RB,56,27,true,,,"17R2:Northstar Wolves",28.8,25.4,1.133
+C,103,16,0,picks,"Sundown Drakes","Ember City Beasts",K,71,40,true,,,"17R2:Sundown Drakes 17R1:Sundown Drakes",75,74.4,1.008
+C,103,16,2,swap,"Northstar Wolves","Ashford Hawks",RB,67,26,true,S,65,"",71.4,67.8,1.053
+C,103,17,0,picks,"Sunfire Lions","Bayou Stalkers",LB,66,29,false,,,"18R2:Sunfire Lions 18R1:Sunfire Lions",76.2,74.4,1.024
+C,103,17,0,picks,"Ashford Hawks","Ironpeak Rams",DL,62,22,true,,,"18R3:Ashford Hawks 18R1:Ashford Hawks",63.6,60.8,1.048
+C,103,17,0,picks,"Northstar Wolves","Sundown Drakes",K,64,26,true,,,"18R3:Northstar Wolves 18R1:Northstar Wolves",61.2,60.8,1.0070000000000001
+C,103,18,0,picks,"Glacier Guardians","Sunfire Lions",K,66,23,true,,,"19R2:Glacier Guardians 19R1:Glacier Guardians",83.1,74.4,1.1159999999999999
+C,103,18,0,picks,"Ashford Hawks","Sundown Drakes",CB,62,23,true,,,"19R3:Ashford Hawks 19R1:Ashford Hawks",62.4,60.8,1.028
+C,103,19,0,picks,"Sundown Drakes","Ashford Hawks",K,73,31,true,,,"20R2:Sundown Drakes 20R1:Sundown Drakes",85.1,74.4,1.1440000000000001
+C,103,19,0,picks,"Glacier Guardians","Northstar Wolves",TE,64,24,true,,,"20R3:Glacier Guardians 20R1:Glacier Guardians",71.3,60.8,1.173
+C,103,20,0,picks,"Ashford Hawks","Sundown Drakes",QB,68,32,true,,,"21R3:Ashford Hawks 21R1:Ashford Hawks",66.7,60.8,1.097
+C,103,20,0,picks,"Northstar Wolves","Palmetto Vipers",QB,57,23,true,,,"21R1:Northstar Wolves",43.1,49,0.8809999999999999
+C,104,2,0,picks,"Glacier Guardians","Stormport Bolts",S,49,27,true,,,"3R3:Glacier Guardians",12.6,11.8,1.07
+C,104,2,0,picks,"Canyon Crushers","Palmetto Vipers",CB,67,21,true,,,"3R2:Canyon Crushers 3R1:Canyon Crushers",87.2,74.4,1.172
+C,104,3,0,picks,"Glacier Guardians","Sunfire Lions",OL,57,24,true,,,"4R3:Glacier Guardians 4R2:Glacier Guardians",37.1,37.2,0.998
+C,104,3,0,picks,"Northstar Wolves","Stonehaven Titans",RB,60,23,true,,,"4R1:Northstar Wolves",54.2,49,1.107
+C,104,4,0,picks,"Glacier Guardians","Sundown Drakes",OL,62,24,true,,,"5R3:Glacier Guardians 5R1:Glacier Guardians",61.8,60.8,1.018
+C,104,4,0,picks,"Bayou Stalkers","Ashford Hawks",DL,59,23,false,,,"5R1:Bayou Stalkers",45.3,49,0.9259999999999999
+C,104,5,0,picks,"Bayou Stalkers","Ironpeak Rams",TE,55,22,true,,,"6R3:Bayou Stalkers 6R2:Bayou Stalkers",34.9,37.2,0.9390000000000001
+C,104,6,0,picks,"Bayou Stalkers","Sundown Drakes",DL,54,26,false,,,"7R2:Bayou Stalkers",22.2,25.4,0.873
+C,104,6,0,picks,"Stonehaven Titans","Ashford Hawks",LB,56,24,true,,,"7R3:Stonehaven Titans 7R2:Stonehaven Titans",38.4,37.2,1.033
+C,104,7,0,picks,"Glacier Guardians","Frostpeak Howlers",QB,71,33,true,,,"8R2:Glacier Guardians 8R1:Glacier Guardians",78.6,74.4,1.056
+C,104,7,0,picks,"Bayou Stalkers","Sunfire Lions",QB,66,21,true,,,"8R2:Bayou Stalkers 8R1:Bayou Stalkers",80.1,74.4,1.0759999999999998
+C,104,7,0,picks,"Sundown Drakes","Ashford Hawks",TE,60,24,true,,,"8R1:Sundown Drakes",56.6,49,1.156
+C,104,8,0,picks,"Thunder Mesa","Ashford Hawks",K,68,27,true,,,"9R2:Thunder Mesa 9R1:Thunder Mesa",76.2,74.4,1.024
+C,104,8,0,picks,"Stormport Bolts","Canyon Crushers",LB,57,27,false,,,"9R3:Stormport Bolts 9R2:Stormport Bolts",36.6,37.2,0.9840000000000001
+C,104,8,0,picks,"Ironpeak Rams","Bayou Stalkers",K,69,33,true,,,"9R3:Ironpeak Rams 9R1:Ironpeak Rams",69.6,60.8,1.146
+C,104,9,0,picks,"Sundown Drakes","Ashford Hawks",DL,64,29,true,,,"10R3:Sundown Drakes 10R1:Sundown Drakes",61.8,60.8,1.0170000000000001
+C,104,9,0,picks,"Harbor Sentinels","Palmetto Vipers",WR,74,31,true,,,"10R2:Harbor Sentinels 10R1:Harbor Sentinels",87.5,74.4,1.176
+C,104,9,0,picks,"Stormport Bolts","Glacier Guardians",LB,62,28,false,,,"10R1:Stormport Bolts",52.8,49,1.078
+C,104,10,0,picks,"Stonehaven Titans","Sundown Drakes",K,63,25,true,,,"11R3:Stonehaven Titans 11R1:Stonehaven Titans",60,60.8,0.987
+C,104,10,0,picks,"Bayou Stalkers","Ashford Hawks",K,70,33,true,,,"11R3:Bayou Stalkers 11R1:Bayou Stalkers",71.4,60.8,1.175
+C,104,10,0,picks,"Glacier Guardians","Eastport Phantoms",K,69,31,true,,,"11R3:Glacier Guardians 11R1:Glacier Guardians",69,60.8,1.136
+C,104,11,0,picks,"Stormport Bolts","Palmetto Vipers",TE,58,22,false,,,"12R1:Stormport Bolts",44.2,49,0.903
+C,104,11,0,picks,"Northstar Wolves","Ashford Hawks",TE,64,23,true,,,"12R2:Northstar Wolves 12R1:Northstar Wolves",73.1,74.4,0.982
+C,104,11,0,picks,"Thunder Mesa","Bayou Stalkers",OL,69,32,true,,,"12R3:Thunder Mesa 12R1:Thunder Mesa",70.2,60.8,1.156
+C,104,12,0,picks,"Stormport Bolts","Glacier Guardians",S,66,22,true,,,"13R2:Stormport Bolts 13R1:Stormport Bolts",80.7,74.4,1.084
+C,104,12,0,picks,"Thunder Mesa","Frostpeak Howlers",CB,72,32,true,,,"13R2:Thunder Mesa 13R1:Thunder Mesa",79.1,74.4,1.064
+C,104,12,0,picks,"Sunfire Lions","Canyon Crushers",K,67,24,true,,,"13R2:Sunfire Lions 13R1:Sunfire Lions",83.6,74.4,1.123
+C,104,13,0,picks,"Northstar Wolves","Thunder Mesa",LB,59,31,false,,,"14R3:Northstar Wolves 14R2:Northstar Wolves",36.3,37.2,0.977
+C,104,13,0,picks,"Stonehaven Titans","Harbor Sentinels",DL,60,26,false,,,"14R1:Stonehaven Titans",51,49,1.041
+C,104,13,0,picks,"Bayou Stalkers","Stormport Bolts",TE,59,24,true,,,"14R1:Bayou Stalkers",48.3,49,0.987
+C,104,14,0,picks,"Stormport Bolts","Northstar Wolves",DL,69,36,true,,,"15R3:Stormport Bolts 15R1:Stormport Bolts",69.6,60.8,1.146
+C,104,14,0,picks,"Bayou Stalkers","Thunder Mesa",DL,55,25,true,,,"15R2:Bayou Stalkers",29.4,25.4,1.157
+C,104,14,0,picks,"Glacier Guardians","Eastport Phantoms",TE,66,25,true,,,"15R3:Glacier Guardians 15R1:Glacier Guardians",70.8,60.8,1.165
+C,104,15,0,picks,"Stonehaven Titans","Ironpeak Rams",QB,73,40,true,,,"16R2:Stonehaven Titans 16R1:Stonehaven Titans",84.5,74.4,1.136
+C,104,15,0,picks,"Bayou Stalkers","Eastport Phantoms",S,71,34,true,,,"16R2:Bayou Stalkers 16R1:Bayou Stalkers",75,74.4,1.008
+C,104,15,0,picks,"Stormport Bolts","Thunder Mesa",QB,55,25,true,,,"16R2:Stormport Bolts",25.8,25.4,1.015
+C,104,16,0,swap,"Bayou Stalkers","Stonehaven Titans",LB,53,23,false,RB,53,"",18.3,19.5,0.938
+C,104,16,0,picks,"Glacier Guardians","Ashford Hawks",WR,65,23,false,,,"17R2:Glacier Guardians 17R1:Glacier Guardians",79,74.4,1.061
+C,104,17,0,picks,"Sundown Drakes","Canyon Crushers",DL,63,26,true,,,"18R3:Sundown Drakes 18R1:Sundown Drakes",60.6,60.8,0.997
+C,104,17,0,picks,"Stormport Bolts","Stonehaven Titans",QB,65,30,true,,,"18R3:Stormport Bolts 18R1:Stormport Bolts",57.8,60.8,0.95
+C,104,17,0,picks,"Bayou Stalkers","Ashford Hawks",QB,68,29,false,,,"18R2:Bayou Stalkers 18R1:Bayou Stalkers",81,74.4,1.089
+C,104,18,0,picks,"Sundown Drakes","Bayou Stalkers",S,69,41,true,,,"19R3:Sundown Drakes 19R1:Sundown Drakes",67.8,60.8,1.1159999999999999
+C,104,18,0,picks,"Stormport Bolts","Sunfire Lions",K,72,30,true,,,"19R2:Stormport Bolts 19R1:Stormport Bolts",79.1,74.4,1.064
+C,104,19,0,picks,"Stonehaven Titans","Frostpeak Howlers",DL,58,27,false,,,"20R1:Stonehaven Titans",45,49,0.919
+C,104,19,0,picks,"Glacier Guardians","Thunder Mesa",K,61,24,false,,,"20R3:Glacier Guardians 20R1:Glacier Guardians",58.3,60.8,0.96
+C,104,20,0,picks,"Bayou Stalkers","Canyon Crushers",DL,60,26,true,,,"21R1:Bayou Stalkers",49.8,49,1.0170000000000001
+C,104,20,0,picks,"Glacier Guardians","Northstar Wolves",TE,65,26,true,,,"21R3:Glacier Guardians 21R1:Glacier Guardians",66.6,60.8,1.0959999999999999
+C,104,20,0,picks,"Stormport Bolts","Harbor Sentinels",QB,74,32,true,,,"21R2:Stormport Bolts 21R1:Stormport Bolts",85.7,74.4,1.1520000000000001
+C,105,2,0,picks,"Stormport Bolts","Eastport Phantoms",DL,54,23,true,,,"3R2:Stormport Bolts",24.8,25.4,0.976
+C,105,2,0,picks,"Ember City Beasts","Ironpeak Rams",TE,62,25,true,,,"3R1:Ember City Beasts",53.4,49,1.09
+C,105,3,0,picks,"Ember City Beasts","Thunder Mesa",CB,61,26,true,,,"4R1:Ember City Beasts",52.8,49,1.078
+C,105,4,0,picks,"Ember City Beasts","Palmetto Vipers",S,54,23,false,,,"5R2:Ember City Beasts",24.2,25.4,0.953
+C,105,4,0,picks,"Stormport Bolts","Ironpeak Rams",K,64,31,true,,,"5R3:Stormport Bolts 5R1:Stormport Bolts",59,60.8,0.971
+C,105,5,0,picks,"Bayou Stalkers","Glacier Guardians",RB,57,23,false,,,"6R3:Bayou Stalkers 6R2:Bayou Stalkers",36.5,37.2,0.982
+C,105,5,0,picks,"Ember City Beasts","Ashford Hawks",QB,58,21,true,,,"6R3:Ember City Beasts 6R2:Ember City Beasts",41.2,37.2,1.1079999999999999
+C,105,6,0,picks,"Canyon Crushers","Ironpeak Rams",CB,66,22,false,,,"7R2:Canyon Crushers 7R1:Canyon Crushers",84.9,74.4,1.141
+C,105,7,0,picks,"Ember City Beasts","Harbor Sentinels",CB,61,27,false,,,"8R1:Ember City Beasts",55.8,49,1.139
+C,105,8,0,picks,"Ember City Beasts","Stormport Bolts",CB,55,23,false,,,"9R2:Ember City Beasts",26.5,25.4,1.043
+C,105,8,0,picks,"Sunfire Lions","Harbor Sentinels",OL,64,29,false,,,"9R3:Sunfire Lions 9R1:Sunfire Lions",60.6,60.8,0.997
+C,105,9,0,picks,"Frostpeak Howlers","Thunder Mesa",OL,70,30,true,,,"10R2:Frostpeak Howlers 10R1:Frostpeak Howlers",73.8,74.4,0.992
+C,105,9,0,picks,"Ember City Beasts","Stormport Bolts",QB,66,27,true,,,"10R2:Ember City Beasts 10R1:Ember City Beasts",76.8,74.4,1.032
+C,105,9,0,picks,"Sunfire Lions","Sundown Drakes",S,61,25,false,,,"10R1:Sunfire Lions",52.2,49,1.0659999999999998
+C,105,10,0,picks,"Ember City Beasts","Bayou Stalkers",K,57,23,false,,,"11R3:Ember City Beasts 11R2:Ember City Beasts",39.5,37.2,1.063
+C,105,11,0,picks,"Sunfire Lions","Thunder Mesa",S,72,31,true,,,"12R2:Sunfire Lions 12R1:Sunfire Lions",78.5,74.4,1.056
+C,105,11,0,picks,"Northstar Wolves","Ember City Beasts",S,67,34,true,,,"12R3:Northstar Wolves 12R1:Northstar Wolves",61.9,60.8,1.0190000000000001
+C,105,12,0,picks,"Ember City Beasts","Bayou Stalkers",QB,68,29,true,,,"13R2:Ember City Beasts 13R1:Ember City Beasts",81.6,74.4,1.097
+C,105,12,0,picks,"Stormport Bolts","Sundown Drakes",DL,62,22,true,,,"13R3:Stormport Bolts 13R1:Stormport Bolts",64.8,60.8,1.067
+C,105,13,0,picks,"Ember City Beasts","Glacier Guardians",OL,64,27,false,,,"14R3:Ember City Beasts 14R1:Ember City Beasts",67.8,60.8,1.1159999999999999
+C,105,13,0,picks,"Stormport Bolts","Northstar Wolves",RB,63,35,true,,,"14R1:Stormport Bolts",49.4,49,1.0090000000000001
+C,105,14,0,picks,"Ember City Beasts","Ironpeak Rams",K,60,26,true,,,"15R1:Ember City Beasts",50.4,49,1.0290000000000001
+C,105,15,0,swap,"Frostpeak Howlers","Palmetto Vipers",DL,72,30,true,K,70,"",80.9,93,0.87
+C,105,15,0,picks,"Ember City Beasts","Thunder Mesa",TE,61,27,true,,,"16R1:Ember City Beasts",51.6,49,1.053
+C,105,16,0,picks,"Ember City Beasts","Sundown Drakes",QB,60,23,true,,,"17R1:Ember City Beasts",53.6,49,1.095
+C,105,17,0,picks,"Stormport Bolts","Ironpeak Rams",LB,58,26,false,,,"18R3:Stormport Bolts 18R2:Stormport Bolts",39,37.2,1.048
+C,105,17,0,picks,"Ember City Beasts","Sunfire Lions",CB,57,21,true,,,"18R1:Ember City Beasts",44.9,49,0.917
+C,105,18,0,picks,"Ember City Beasts","Sundown Drakes",TE,66,30,true,,,"19R3:Ember City Beasts 19R1:Ember City Beasts",58.3,60.8,0.96
+C,105,19,0,picks,"Ashford Hawks","Ember City Beasts",DL,70,43,true,,,"20R2:Ashford Hawks 20R1:Ashford Hawks",75.6,74.4,1.016
+C,105,20,0,picks,"Harbor Sentinels","Thunder Mesa",LB,71,34,false,,,"21R2:Harbor Sentinels 21R1:Harbor Sentinels",76.2,74.4,1.024
