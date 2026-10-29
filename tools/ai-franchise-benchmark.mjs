@@ -57,6 +57,8 @@ function clubState(f, club) {
   for (const pos of POS) { const at = byPos[pos] || []; const n = GROUP_SLOTS[pos].length; starters[pos] = at.slice(0, n).map(monsterOverall); backups[pos] = at.slice(n).map(monsterOverall); for (const m of at.slice(0, n)) startIds.add(m.id); }
   return { roster, chart, byPos, starters, backups, startIds, problems: lineupProblems(roster, chart) };
 }
+/** Unused picks a club holds in one class year, by round [r1, r2, r3] (harness v3, read only). */
+function picksHeld(f, club, year) { const out = [0, 0, 0]; for (const p of T.picksOwnedBy(f, club, year, ALL_TEAMS)) if (!T.pickUsed(f, p) && p.round >= 1 && p.round <= 3) out[p.round - 1]++; return out; }
 /** Where a monster came from, read from his own history and the harness's record of where he was seen before arriving. */
 function originOf(m, club, seenSource) {
   const h = (m.history || []); const stint = [...h].reverse().find((x) => x.club === club);
@@ -70,7 +72,7 @@ function originOf(m, club, seenSource) {
 
 export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF, scenario = null } = {}) {
   const t0 = Date.now(); let peak = process.memoryUsage().heapUsed;
-  const rows = []; const decisions = { draft: [], departures: [], arrivals: [], trades: [], nudge: [] }; const integrity = [];
+  const rows = []; const decisions = { draft: [], departures: [], arrivals: [], trades: [], nudge: [], calls: [], tradeFollow: [] }; const integrity = [];
   const seenSource = new Map();          // id -> 'pool' | 'waivers': where an unrostered monster was last seen
   let prev = null;                        // last weekly snapshot: club -> Map(id -> {m, ovr, age, starter, pos})
   let prevOvr = new Map();                // id -> season-end ovr (development)
@@ -79,6 +81,19 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
   let applied = false; let scenarioSetup = null;
 
   const snap = (f) => { const out = {}; for (const c of REG.leagueClubs(f)) { const st = clubState(f, c); const mp = new Map(); for (const m of st.roster) mp.set(m.id, { m, ovr: monsterOverall(m), age: m.age, starter: st.startIds.has(m.id), pos: m.position }); out[c] = mp; } return out; };
+  // Harness v3 (Task 5.5, recording only): cap room per club at each check, so a deal's cap effect can be read against the check before it.
+  const capSnap = (f) => { const cap = tierById(f.tier).cap; return Object.fromEntries(REG.leagueClubs(f).map((c) => [c, REG.clubCapRoom(f, c, cap)])); };
+  let prevCap = null; const callsSeen = new Set();
+  /** Depth at one position in a snapshot: players there, the starter floor, the best backup. */
+  const depthAt = (snapMap, pos) => { const xs = [...(snapMap?.values() || [])].filter((x) => x.pos === pos); const st = xs.filter((x) => x.starter).map((x) => x.ovr); const bk = xs.filter((x) => !x.starter).map((x) => x.ovr); return { n: xs.length, floor: st.length ? Math.min(...st) : null, mean: st.length ? r1(st.reduce((a, v) => a + v, 0) / st.length) : null, backup: bk.length ? Math.max(...bk) : null }; };
+  /** An incoming offer to the owner (GDD §19.6), as it stands: who calls, what moves each way, and how it sits against the owner's own depth chart. Read only. */
+  const noteCall = (f) => {
+    const c = f.tradeCall; if (!c) return; const key = `${c.expires}|${c.team}|${c.kind || 'legacy'}`; if (callsSeen.has(key)) return; callsSeen.add(key);
+    const sends = c.sends || (c.player ? [{ ...c.player, id: c.playerId }] : []); const asks = c.asks || [];
+    const pos = c.position || sends[0]?.position || asks[0]?.position; const mine = f.roster.filter((m) => m.position === pos).sort((a, b) => monsterOverall(b) - monsterOverall(a)); const n = GROUP_SLOTS[pos]?.length || 1;
+    const floor = mine.length >= n ? monsterOverall(mine[n - 1]) : 0;
+    decisions.calls.push({ year: f.season.year, week: f.season.finished ? 0 : f.season.week, offseason: !!f.offseason || !!f.season.finished, team: c.team, kind: c.kind || 'legacy', pos, sends: sends.map((m) => ({ pos: m.position, ovr: m.ovr, age: m.age, salary: m.salary ?? null })), asks: asks.map((m) => ({ pos: m.position, ovr: m.ovr, age: m.age, salary: m.salary ?? null })), give: (c.give || []).map((p) => `${p.year}R${p.round}`), sendPicks: (c.sendPicks || []).map((p) => `${p.year}R${p.round}`), value: c.value ?? null, ownerCountAtPos: mine.length, ownerFloorAtPos: floor, ownerBestAtPos: mine[0] ? monsterOverall(mine[0]) : null, wouldStart: sends[0] ? sends[0].ovr > floor : null, ownerRoster: f.roster.length });
+  };
   const notePools = (f) => { for (const m of f.league?.waivers || []) seenSource.set(m.id, 'waivers'); for (const m of Object.values(f.pool || {}).flat()) seenSource.set(m.id, 'pool'); };
 
   // Roster movement between two snapshots: arrivals (with source) and departures (with reason), per club.
@@ -96,7 +111,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
     if (scenario && !applied && F.hasLeague(f)) { scenarioSetup = scenario.apply(f, { REG, LS, L, T, monsterOverall, GROUP_SLOTS, ALL_TEAMS }); applied = true; }
     const p = base(f, where); for (const x of p) integrity.push(x);
     if (!F.hasLeague(f)) return p;
-    const now = snap(f);
+    const now = snap(f); const capNow = capSnap(f); noteCall(f);
     if (prev) diff(f, prev, now, f.season.finished ? 'season-end' : where.endsWith('start') ? 'offseason' : 'in-season');
     notePools(f);
     // AI–AI trades, valued at the first observation after the deal (ratings do not change between a deal and the next check).
@@ -113,10 +128,15 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
       const startersOf = (snapMap) => [...(snapMap?.values() || [])].filter((x) => x.starter); const meanOf = (xs) => (xs.length ? xs.reduce((s, x) => s + x.ovr, 0) / xs.length : null);
       const floorOf = (snapMap, pos) => { const xs = startersOf(snapMap).filter((x) => x.pos === pos).map((x) => x.ovr); return xs.length ? Math.min(...xs) : null; };
       const pre = prev?.[t.A], post = now[t.A], preB = prev?.[t.B], postB = now[t.B];
-      decisions.trades.push({ year: t.year, week: t.week, kind: t.kind, A: t.A, B: t.B, toA: t.toA, toAPos: mA?.position, toAOvr: mA ? monsterOverall(mA) : null, toAAge: mA?.age, toAStarter: mA ? stA.startIds.has(mA.id) : null, toB: t.toB || null, toBPos: mB?.position || null, toBOvr: mB ? monsterOverall(mB) : null, picks: (t.picks || []).map((p) => `${p.year}R${p.round}:${p.original}`), valueToA: r1(gotA), valueToB: r1(gotB), ratio: gotA && gotB ? r1(gotA / gotB * 100) / 100 : null, toBAllPos: mBs.map((m) => m.position), mvToA: r1(mvA), mvToB: r1(mvB), mvRatio: mvA && mvB ? r1(mvA / mvB * 100) / 100 : null, aFloorBefore: mA ? floorOf(pre, mA.position) : null, aFloorAfter: mA ? floorOf(post, mA.position) : null, aMeanBefore: r1(meanOf(startersOf(pre))), aMeanAfter: r1(meanOf(startersOf(post))), bMeanBefore: r1(meanOf(startersOf(preB))), bMeanAfter: r1(meanOf(startersOf(postB))), inSeason: !f.season.finished && t.week > 0, dealFloor: t.fl || null, dealMeans: t.sm || null });
+      decisions.trades.push({ year: t.year, week: t.week, kind: t.kind, A: t.A, B: t.B, toA: t.toA, toAPos: mA?.position, toAOvr: mA ? monsterOverall(mA) : null, toAAge: mA?.age, toAStarter: mA ? stA.startIds.has(mA.id) : null, toB: t.toB || null, toBPos: mB?.position || null, toBOvr: mB ? monsterOverall(mB) : null, picks: (t.picks || []).map((p) => `${p.year}R${p.round}:${p.original}`), valueToA: r1(gotA), valueToB: r1(gotB), ratio: gotA && gotB ? r1(gotA / gotB * 100) / 100 : null, toBAllPos: mBs.map((m) => m.position), mvToA: r1(mvA), mvToB: r1(mvB), mvRatio: mvA && mvB ? r1(mvA / mvB * 100) / 100 : null, aFloorBefore: mA ? floorOf(pre, mA.position) : null, aFloorAfter: mA ? floorOf(post, mA.position) : null, aMeanBefore: r1(meanOf(startersOf(pre))), aMeanAfter: r1(meanOf(startersOf(post))), bMeanBefore: r1(meanOf(startersOf(preB))), bMeanAfter: r1(meanOf(startersOf(postB))), inSeason: !f.season.finished && t.week > 0, dealFloor: t.fl || null, dealMeans: t.sm || null,
+        // harness v3 (recording only): salaries, cap room before (the check before the deal) and after, depth at the position on both sides, protection flags
+        toASalary: mA?.salary ?? null, toBSalaries: mBs.map((m) => m.salary ?? null), toAContractEnds: mA?.contract?.ends ?? null, toAProtected: !!(mA && REG.isProtected(mA)), toBProtected: mBs.some((m) => REG.isProtected(m)),
+        aCapBefore: prevCap?.[t.A] ?? null, aCapAfter: capNow[t.A] ?? null, bCapBefore: prevCap?.[t.B] ?? null, bCapAfter: capNow[t.B] ?? null,
+        aDepthBefore: mA ? depthAt(pre, mA.position) : null, aDepthAfter: mA ? depthAt(post, mA.position) : null, bDepthBefore: mA ? depthAt(preB, mA.position) : null, bDepthAfter: mA ? depthAt(postB, mA.position) : null,
+        bGotStarter: mB ? clubState(f, t.B).startIds.has(mB.id) : null, toBAge: mB?.age ?? null, toBAll: t.toBAll || (t.toB ? [t.toB] : []) });
     }
     if (f.season.week === 6 && !f.season.finished && !mid[f.season.year]) mid[f.season.year] = Object.fromEntries(REG.leagueClubs(f).map((c) => [c, teamOverall(F.aiTeam(f, c))]));
-    prev = now; peak = Math.max(peak, process.memoryUsage().heapUsed);
+    prev = now; prevCap = capNow; peak = Math.max(peak, process.memoryUsage().heapUsed);
     return p;
   };
 
@@ -167,8 +187,19 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
         meanAge: r1(mean(ages)), age30plus: ages.filter((a) => a >= 30).length, age24minus: ages.filter((a) => a <= 24).length, starterAge: r1(mean(roster.filter((m) => st.startIds.has(m.id) && !REG.isProtected(m)).map((m) => m.age))),
         provenance: prov, provenanceStarters: provStart, devMean: r1(mean(devs)), devN: devs.length, evolved, meanLevel: r1(mean(roster.map((m) => m.level))), stage2: roster.filter((m) => (m.stage || 0) >= 2).length, stage1: roster.filter((m) => (m.stage || 0) === 1).length,
         protected: roster.filter((m) => REG.isProtected(m)).length, injured: roster.filter((m) => m.injury).length,
-        draftedStarters: roster.filter((m) => drafted.get(m.id)?.club === c && st.startIds.has(m.id)).length, draftedOnRoster: roster.filter((m) => drafted.get(m.id)?.club === c).length });
+        draftedStarters: roster.filter((m) => drafted.get(m.id)?.club === c && st.startIds.has(m.id)).length, draftedOnRoster: roster.filter((m) => drafted.get(m.id)?.club === c).length,
+        // harness v3 (recording only): draft capital for the next two classes by round, and each starter and backup as [overall, age, (potential,) protected]
+        picksNext: picksHeld(f, c, year + 2), picksNext2: picksHeld(f, c, year + 3),
+        startersDetail: Object.fromEntries(POS.map((p) => [p, (st.byPos[p] || []).slice(0, GROUP_SLOTS[p].length).map((m) => [monsterOverall(m), m.age, REG.isProtected(m) ? 1 : 0])])),
+        backupsDetail: Object.fromEntries(POS.map((p) => [p, (st.byPos[p] || []).slice(GROUP_SLOTS[p].length).map((m) => [monsterOverall(m), m.age, m.potential ?? null, REG.isProtected(m) ? 1 : 0])])) });
     }
+    // harness v3: every pick of the next four classes has exactly one owner and it is a club of the league (draft-asset integrity)
+    for (let y = year + 1; y <= year + 4; y++) for (let round = 1; round <= 3; round++) for (const original of ALL_TEAMS) { const o = T.pickOwner(f, { year: y, round, original }); if (!ALL_TEAMS.includes(o)) integrity.push(`season ${year}: pick ${y}R${round}:${original} owned by unknown club ${o}`); }
+    // harness v3: where every monster a trade moved is now (club, starter, overall), season by season after the deal
+    { const where = new Map(); for (const c of clubs) for (const [id, x] of tableSnap[c]) where.set(id, { club: c, starter: x.starter, ovr: x.ovr, age: x.age }); for (const m of f.roster) where.set(m.id, { club: f.club, starter: null, ovr: monsterOverall(m), age: m.age });
+      decisions.trades.forEach((t, ti) => { if (t.year > year) return; const follow = (side, id, club) => { const w = where.get(id); decisions.tradeFollow.push([ti, year, side, id, w?.club ?? null, w ? (w.club === club ? 1 : 0) : 0, w?.starter == null ? null : (w.starter ? 1 : 0), w?.ovr ?? null, w?.age ?? null]); };
+        if (t.toA) follow('A', t.toA, t.A); for (const id of t.toBAll || []) follow('B', id, t.B); }); }
+    noteCall(f);
     // the owner's club, labelled (not one of the 15)
     { const rec = s.records[f.club]; rows.push({ seed, year, club: f.club, owner: true, w: rec.w, l: rec.l, playoffs: seeds.includes(f.club), finalist: !!fin && (fin.home === f.club || fin.away === f.club), champion: s.champion === f.club, teamOvr: teamOverall(F.playerTeam(f)), rosterSize: f.roster.length }); }
     decisions.nudge.push({ year, contracts: lo.contracts ? { resigned: lo.contracts.resigned, walked: lo.contracts.walked, released: lo.contracts.released, runaway: lo.contracts.runaway || [], overCap: lo.contracts.overCap || [] } : null, freeAgency: lo.opened === year ? lo.freeAgency : null, nudge: lo.opened === year && lo.nudge ? { boosted: lo.nudge.boosted, slowed: lo.nudge.slowed } : null, offseasonTrades: lo.opened === year ? lo.trades : null, problems: lo.problems || [] });
@@ -188,7 +219,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const scenario = SCEN && args.scenario ? SCEN.SCENARIOS[args.scenario] : null; if (args.scenario && !scenario) { console.error(`unknown scenario ${args.scenario}`); process.exit(2); }
-  const out = { harnessV: 2, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
+  const out = { harnessV: 3, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
   for (const seed of SEEDS) {
     const r = await benchmarkSeed(seed, { scenario });
     out.runs.push(r);
