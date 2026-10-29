@@ -304,10 +304,11 @@ test('AI trades: a club with a real weak starter and a rival with a spare to sel
     for (const d of deals) {
       found++; const m = f.league.monsters[d.toA]; assert.ok(m && R.clubOf(f, m.id) === d.A && !before[d.A].includes(m.id));
       assert.ok(R.clubCapRoom(f, d.A, cap) >= 0 && R.clubCapRoom(f, d.B, cap) >= 0); assert.ok(R.clubRoster(f, d.A).length <= 38 && R.clubRoster(f, d.B).length >= 26);
-      assert.ok(!R.isProtected(m) && tradable(f, m) || true);
+      assert.ok(d.fl[1] >= d.fl[0], 'the shopper\'s weakest starter at that position does not get weaker'); assert.ok(d.na >= LT.AI_TRADE_RULES.season.minGain - 1, `in season the shopper gains at least ${LT.AI_TRADE_RULES.season.minGain} (${d.na})`); assert.ok(d.nb >= DEAL_RULES.sellerFloor - 1, 'the seller gains too (rounded)');
     }
     assert.deepEqual(R.verifyLeague(f), []);
   }
+  assert.ok(LT.AI_TRADE_RULES.season.upgrade === 2 * LT.AI_TRADE_RULES.upgrade && LT.AI_TRADE_RULES.season.minGain === 2 * DEAL_RULES.minGain, 'the in-season bar is twice the offseason bar');
   assert.ok(found >= 1, 'a club with a hole finds a deal in the season');
 });
 test('AI trades: a club with a full roster still trades in season (a spare goes the other way), and every deal is fair at market value', () => {
