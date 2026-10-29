@@ -7,6 +7,20 @@ for a change, the change is re-confirmed on the reserved fresh seeds (21–40) a
 
 > **Erratum (before any Task 5 benchmark run):** T4 first read "within 0.85–1.15; median 0.95–1.05". A pilot showed the band is applied as given ÷ received, so received ÷ given runs 0.87–1.18, and that deals sit nearer the shopper's side of the band than the baseline's position-blind figures did (a shopper must gain by its own roster measure). T4 was restated as above. No threshold was changed after seeing a Stage B result.
 
+> **Addendum 2 (after the first Stage B half-run of the frozen design, seeds 1–10; recorded before any further run).** The frozen design
+> passed the kicker, fairness and shopper-gain thresholds but made **3.87 deals a season against 2.06** and **1.56 in-season deals a
+> season against 0.01**: nearly every weekly attempt (25% chance, weeks 2–8) became a deal, which is not the "occasional deal" of GDD
+> §46.5 and breaches T8 (≤ 1.5× baseline). The owner's brief prefers fewer intelligent trades. Change made (one, in-season only): an
+> in-season deal must lift the shopper's weakest starter by **4** overall (was 2) and gain **16** roster-worth (was 8), twice the offseason bar.
+> The weekly chance, the weeks, the offseason cap, the band, spares-only selling and every legality rule are untouched. A probe on
+> seeds 1–4 × 4 seasons gave 0.50 in-season deals a season. Per the rule above, the **final design is confirmed on the reserved seeds 21–40**
+> (both trees); seeds 1–20 are rerun for the matched comparison and the frozen design's own seed 1–20 run is reported alongside, as a first
+> result. Two threshold *wordings* are also clarified before the final run, with no change of level: T6 asks that the seller's starter mean
+> **never falls** (sellers may gain a starter from a swap, which is not a loss; the "unchanged" figure is still reported), and T11's absolute
+> clause "no club ≥ 40% of a seed's titles" is already breached by the baseline (a Task 4 finding), so it is judged as "not worse than baseline".
+> T2's "zero lineup failures" is read at the **season start** (what `validateClubs` checks); the season-end `lineupProblems` count is
+> reported for both trees and is judged as "not worse than baseline".
+
 ## Code under test
 - **Baseline:** `main` at `db7c0c6` (PR #81 merged). Its game code is the published v42.16.0-run-game; the merge added documentation and tooling only.
 - **Task 5:** branch `trading-second-pass`, forked from that commit. Football-engine files are unchanged (checked by diff in the results).

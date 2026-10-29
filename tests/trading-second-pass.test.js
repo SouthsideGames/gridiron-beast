@@ -319,7 +319,7 @@ test('AI trades: a club with a full roster still trades in season (a spare goes 
     const done = LT.aiTrades(f, createRng(77 + s), { year: f.season.year, cap, window: 'offseason' }); // the window rolls three deals; the full club is among the shoppers
     for (const d of done) {
       deals++; const m = f.league.monsters[d.toA]; const gave = (d.toBAll || []).map((id) => f.league.monsters[id]).filter(Boolean); const paid = (d.picks || []).reduce((x, p) => x + pickValue(p, { yearsAhead: p.year - 2 }), 0) + gave.reduce((x, y) => x + marketValue(y, { year: f.season.year }), 0);
-      const ratio = marketValue(m, { year: f.season.year }) / paid; assert.ok(ratio >= LT.AI_TRADE_RULES.band[0] - 0.02 && ratio <= LT.AI_TRADE_RULES.band[1] + 0.02, `fair at market value: ${ratio.toFixed(2)} (${d.kind})`);
+      const ratio = paid / marketValue(m, { year: f.season.year }); assert.ok(ratio >= LT.AI_TRADE_RULES.band[0] - 0.02 && ratio <= LT.AI_TRADE_RULES.band[1] + 0.02, `fair at market value (what the shopper pays ÷ what it gets): ${ratio.toFixed(2)} (${d.kind})`);
       if (d.kind !== 'picks') swaps++;
       if (m.position === 'K') assert.ok(!(d.picks || []).some((p) => p.round === 1), 'no first-round pick for a kicker');
     }

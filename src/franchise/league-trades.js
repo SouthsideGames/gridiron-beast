@@ -16,6 +16,7 @@ export const AI_TRADE_RULES = Object.freeze({
   offseasonMax: 3,     // deals in one offseason window
   weekChance: 0.25,    // chance of one deal attempt in each of weeks 2–8 (about 1.75 a season, 2–4 with the offseason)
   weeks: [2, 8],
+  season: { upgrade: 4, minGain: 16 }, // in season a deal must lift a starting slot by a margin a coach would act on: twice the offseason bar (the first Task 5 design, with the offseason bar in season, made 1.6 in-season deals a season and nearly every attempt a deal: not the "occasional deal" of §46.5)
   picksAhead: 2,       // classes a club will pay picks from
   targets: 6,          // the biggest upgrades a club looks at per window
 });
@@ -39,14 +40,14 @@ const startersMean = (roster) => { let sum = 0, n = 0; for (const pos of Object.
  * A must come out ahead by DEAL_RULES.minGain on its own measure (roster worth plus picks), B by sellerFloor; both rosters
  * stay legal, both clubs stay under the cap. Returns { na, nb } or null.
  */
-function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB }) {
+function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB, minGain = DEAL_RULES.minGain }) {
   const afterA = rosterAfter(rosterA, { give: ys, get: [m] }), afterB = rosterAfter(rosterB, { give: [m], get: ys });
   if (rosterProblems(rosterA, afterA).length || rosterProblems(rosterB, afterB).length) return null;
   const toB = salaryOf(ys), toA = m.salary || 0;
   if (roomA + toB - toA < Math.min(0, roomA) || roomB + toA - toB < Math.min(0, roomB)) return null;
   const paid = picks.reduce((s, x) => s + x.v, 0);
   const na = rosterNet(rosterA, { give: ys, get: [m] }, year) - paid, nb = rosterNet(rosterB, { give: [m], get: ys }, year) + paid;
-  if (na < DEAL_RULES.minGain || nb < DEAL_RULES.sellerFloor) return null;
+  if (na < minGain || nb < DEAL_RULES.sellerFloor) return null;
   return { na, nb, fl: [floorAt(rosterA, m.position), floorAt(afterA, m.position)], sm: [startersMean(rosterA), startersMean(afterA), startersMean(rosterB), startersMean(afterB)] };
 }
 
@@ -56,13 +57,14 @@ function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB }) 
  * better off: A's spares for his, A's picks, or a spare and a pick when A's roster has no room. Returns the deal executed, or null.
  * `done` is the set of clubs that already dealt this window.
  */
-function attempt(f, r, A, { year, cap, done }) {
+function attempt(f, r, A, { year, cap, done, window }) {
+  const bar = window === 'season' ? AI_TRADE_RULES.season : { upgrade: AI_TRADE_RULES.upgrade, minGain: DEAL_RULES.minGain };
   const rosterA = clubRoster(f, A);
   const others = order(f).filter((c) => c !== A && !done.has(c)).sort(() => r.next() - 0.5);
   const roomA = clubCapRoom(f, A, cap); const y0 = currentClassYear(f);
   const targets = [];
   for (const B of others) { const rosterB = clubRoster(f, B); for (const m of sparesOf(rosterB)) {
-    if (!tradable(f, m) || isProtected(m) || isUnavailable(m) || ovr(m) < floorAt(rosterA, m.position) + AI_TRADE_RULES.upgrade) continue;
+    if (!tradable(f, m) || isProtected(m) || isUnavailable(m) || ovr(m) < floorAt(rosterA, m.position) + bar.upgrade) continue;
     targets.push({ B, m, rosterB, gain: rosterNet(rosterA, { get: [m] }, year) });
   } }
   targets.sort((a, b) => b.gain - a.gain || (a.m.id < b.m.id ? -1 : 1));
@@ -78,7 +80,7 @@ function attempt(f, r, A, { year, cap, done }) {
       for (const y of mySpares) { const vy = marketValue(y, { year }); if (vy >= vm * AI_TRADE_RULES.band[0]) continue; for (const x of myPicks) if (inBand(vy + x.v, vm)) { options.push({ ys: [y], picks: [x] }); break; } }
     let best = null;
     for (const o of options) {
-      const j = judge(f, { A, B, rosterA, rosterB, m, ys: o.ys, picks: o.picks, year, roomA, roomB }); if (!j) continue;
+      const j = judge(f, { A, B, rosterA, rosterB, m, ys: o.ys, picks: o.picks, year, roomA, roomB, minGain: bar.minGain }); if (!j) continue;
       const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { ...o, ...j, score };
     }
     if (best) return execute(f, { A, B, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s, y) => s + marketValue(y, { year }), 0) + best.picks.reduce((s, x) => s + x.v, 0) });
@@ -114,7 +116,7 @@ function aiTradesNow(f, r, { year, cap, window }) {
   for (const A of shoppers) {
     if (deals.length >= max) break;
     if (done.has(A)) continue;
-    const d = attempt(f, r, A, { year, cap, done }); if (!d) continue;
+    const d = attempt(f, r, A, { year, cap, done, window }); if (!d) continue;
     done.add(d.A); done.add(d.B); deals.push(d);
     (f.league.trades ||= []).push({ year, week: f.season?.finished ? 0 : f.season?.week ?? 0, ...d });
     if (f.league.trades.length > 60) f.league.trades.shift();
