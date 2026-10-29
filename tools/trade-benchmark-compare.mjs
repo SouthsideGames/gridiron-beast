@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { analyse } from './ai-benchmark-analyze.mjs';
+import { pickValue } from '../src/franchise/trades.js';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v = '1'] = a.replace(/^--/, '').split('='); return [k, v]; }));
 const DIR = args.dir; const BASE = args.base || 'base'; const NEW = args.new || 't5';
@@ -17,7 +18,21 @@ const median = (a) => { const b = a.filter((x) => x != null).slice().sort((x, y)
 const sd = (a) => { const m = mean(a); return a.length > 1 ? Math.sqrt(a.reduce((s, v) => s + (v - m) ** 2, 0) / (a.length - 1)) : null; };
 const pct = (n, d) => (d ? r1(100 * n / d) : null);
 
-const load = (tree, stage) => fs.readdirSync(DIR).filter((f) => f.startsWith(`${tree}-${stage}`) && f.endsWith('.json') && !['jobs'].includes(f)).sort().flatMap((f) => JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8')).runs);
+// Harness v1 (every run before 2026-10-29 12:30) valued the picks of an offseason deal one class year too late (it read the class year at the first check
+// after the deal, after the season had rolled over). Deals made by the Task 5 tree carry the clubs' own values (`mv`), which were never affected; the old
+// yardstick and the baseline's position-aware figure are repaired here from the pick strings, exactly (pickValue is a pure function of year and round).
+const parsePick = (s) => { const m = /^(\d+)R(\d+):/.exec(s); return m ? { year: +m[1], round: +m[2] } : null; };
+function repair(run) {
+  if (run.harnessV >= 2 || !run.decisions) return run;
+  for (const t of run.decisions.trades) {
+    if (t.week !== 0 || !(t.picks || []).length) continue;
+    const delta = t.picks.map(parsePick).filter(Boolean).reduce((s, p) => s + pickValue(p, { yearsAhead: Math.max(0, p.year - t.year) }) - pickValue(p, { yearsAhead: Math.max(0, p.year - (t.year + 1)) }), 0);
+    if (t.valueToB != null) { t.valueToB = r1(t.valueToB + delta); t.ratio = t.valueToA && t.valueToB ? r2(t.valueToA / t.valueToB) : t.ratio; }
+    if (t.mvToB != null && !t.dealFloor) { t.mvToB = r1(t.mvToB + delta); t.mvRatio = t.mvToA && t.mvToB ? r2(t.mvToA / t.mvToB) : t.mvRatio; } // deals with a dealFloor come from the Task 5 tree: their mv is the clubs' own record, never repaired
+  }
+  return run;
+}
+const load = (tree, stage) => fs.readdirSync(DIR).filter((f) => f.startsWith(`${tree}-${stage}`) && f.endsWith('.json') && !['jobs'].includes(f)).sort().flatMap((f) => JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8')).runs.map(repair));
 const scenarios = ['aging', 'expiring', 'thin', 'injuries', 'rebuild', 'picks'];
 
 /** Trading metrics for one tree's runs of one stage. */

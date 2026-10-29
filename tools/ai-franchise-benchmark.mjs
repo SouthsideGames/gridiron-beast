@@ -103,10 +103,12 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
     for (const t of f.league.trades || []) {
       const key = `${t.year}|${t.week}|${t.A}|${t.B}|${t.toA}`; if (tradesSeen.has(key)) continue; tradesSeen.add(key);
       const mA = f.league.monsters[t.toA]; const mB = t.toB ? f.league.monsters[t.toB] : null; const mBs = (t.toBAll || (t.toB ? [t.toB] : [])).map((id) => f.league.monsters[id]).filter(Boolean);
-      const y0 = currentClassYear(f); // the game's own: the next draft's class is yearsAhead 0, in season as in the offseason (Task 4 discounted it one year in season; only 2 baseline deals were in season)
+      // The class year AT THE DEAL (not at the first check after it: by then the season may have rolled over): an offseason deal (week 0) is made as the
+      // season ends, so the next draft's class is the deal's year; an in-season deal sees next season's class, except in year 1 before the creation draft closes (week 10).
+      const y0 = t.week === 0 ? t.year : (t.year === 1 && t.week <= 9 ? 1 : t.year + 1);
       const picksV = (t.picks || []).reduce((s, p) => s + pickValue(p, { yearsAhead: Math.max(0, p.year - y0) }), 0);
       const gotA = mA ? playerValue(mA) : null; const gotB = mBs.reduce((s, m) => s + playerValue(m), 0) + picksV; // the position-blind yardstick of the Task 4 baseline
-      const mvYear = f.season.finished ? f.season.year + 1 : f.season.year; let mvA = mA && marketValue ? marketValue(mA, { year: mvYear }) : null; let mvB = marketValue ? mBs.reduce((s, m) => s + marketValue(m, { year: mvYear }), 0) + picksV : null; if (t.mv) { mvA = t.mv[0]; mvB = t.mv[1]; } // the deal's own record (Task 5 tree) is the values the clubs saw at the time // the position-aware one (Task 5 tree only)
+      const mvYear = t.year; let mvA = mA && marketValue ? marketValue(mA, { year: mvYear }) : null; let mvB = marketValue ? mBs.reduce((s, m) => s + marketValue(m, { year: mvYear }), 0) + picksV : null; if (t.mv) { mvA = t.mv[0]; mvB = t.mv[1]; } // the deal's own record (Task 5 tree) is the values the clubs saw at the time // the position-aware one (Task 5 tree only)
       const stA = clubState(f, t.A);
       const startersOf = (snapMap) => [...(snapMap?.values() || [])].filter((x) => x.starter); const meanOf = (xs) => (xs.length ? xs.reduce((s, x) => s + x.ovr, 0) / xs.length : null);
       const floorOf = (snapMap, pos) => { const xs = startersOf(snapMap).filter((x) => x.pos === pos).map((x) => x.ovr); return xs.length ? Math.min(...xs) : null; };
@@ -186,7 +188,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const scenario = SCEN && args.scenario ? SCEN.SCENARIOS[args.scenario] : null; if (args.scenario && !scenario) { console.error(`unknown scenario ${args.scenario}`); process.exit(2); }
-  const out = { label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
+  const out = { harnessV: 2, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
   for (const seed of SEEDS) {
     const r = await benchmarkSeed(seed, { scenario });
     out.runs.push(r);
