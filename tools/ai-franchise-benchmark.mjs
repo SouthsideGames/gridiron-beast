@@ -31,7 +31,7 @@ const REG = await imp('src/franchise/league-registry.js');
 const LS = await imp('src/franchise/league-season.js');
 const { buildDepthChart, lineupProblems, GROUP_SLOTS, teamOverall } = await imp('src/franchise/roster.js');
 const { monsterOverall, FULL_ROSTER, ROSTER_MIN, ROSTER_MAX } = await imp('src/data/monsters.js');
-const { playerValue, pickValue, positionNeeds } = await imp('src/franchise/trades.js');
+const { playerValue, pickValue, positionNeeds, currentClassYear } = await imp('src/franchise/trades.js');
 // The position-aware yardstick. The v42.16.0 tree has none, so `--valuation=PATH` (the Task 5 tree's src/franchise/trade-value.js) scores
 // both trees' deals with the same function; without it the tree's own is used when it has one.
 let marketValue = null;
@@ -103,10 +103,10 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
     for (const t of f.league.trades || []) {
       const key = `${t.year}|${t.week}|${t.A}|${t.B}|${t.toA}`; if (tradesSeen.has(key)) continue; tradesSeen.add(key);
       const mA = f.league.monsters[t.toA]; const mB = t.toB ? f.league.monsters[t.toB] : null; const mBs = (t.toBAll || (t.toB ? [t.toB] : [])).map((id) => f.league.monsters[id]).filter(Boolean);
-      const y0 = (f.season.finished ? f.season.year + 1 : f.season.year);
+      const y0 = currentClassYear(f); // the game's own: the next draft's class is yearsAhead 0, in season as in the offseason (Task 4 discounted it one year in season; only 2 baseline deals were in season)
       const picksV = (t.picks || []).reduce((s, p) => s + pickValue(p, { yearsAhead: Math.max(0, p.year - y0) }), 0);
       const gotA = mA ? playerValue(mA) : null; const gotB = mBs.reduce((s, m) => s + playerValue(m), 0) + picksV; // the position-blind yardstick of the Task 4 baseline
-      const mvYear = f.season.finished ? f.season.year + 1 : f.season.year; const mvA = mA && marketValue ? marketValue(mA, { year: mvYear }) : null; const mvB = marketValue ? mBs.reduce((s, m) => s + marketValue(m, { year: mvYear }), 0) + picksV : null; // the position-aware one (Task 5 tree only)
+      const mvYear = f.season.finished ? f.season.year + 1 : f.season.year; let mvA = mA && marketValue ? marketValue(mA, { year: mvYear }) : null; let mvB = marketValue ? mBs.reduce((s, m) => s + marketValue(m, { year: mvYear }), 0) + picksV : null; if (t.mv) { mvA = t.mv[0]; mvB = t.mv[1]; } // the deal's own record (Task 5 tree) is the values the clubs saw at the time // the position-aware one (Task 5 tree only)
       const stA = clubState(f, t.A);
       const startersOf = (snapMap) => [...(snapMap?.values() || [])].filter((x) => x.starter); const meanOf = (xs) => (xs.length ? xs.reduce((s, x) => s + x.ovr, 0) / xs.length : null);
       const floorOf = (snapMap, pos) => { const xs = startersOf(snapMap).filter((x) => x.pos === pos).map((x) => x.ovr); return xs.length ? Math.min(...xs) : null; };

@@ -79,7 +79,7 @@ function attempt(f, r, A, { year, cap, done }) {
       const j = judge(f, { A, B, rosterA, rosterB, m, ys: o.ys, picks: o.picks, year, roomA, roomB }); if (!j) continue;
       const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { ...o, ...j, score };
     }
-    if (best) return execute(f, { A, B, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb });
+    if (best) return execute(f, { A, B, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, got: vm, paid: best.ys.reduce((s, y) => s + marketValue(y, { year }), 0) + best.picks.reduce((s, x) => s + x.v, 0) });
   }
   return null;
 }
@@ -90,12 +90,12 @@ function moveMonster(f, from, to, m, year) {
   m.traded = { from, year };
 }
 /** Carry out a deal: monsters both ways, picks to B, one League News event naming what A paid. */
-function execute(f, { A, B, m, ys, picks, year, na, nb }) {
+function execute(f, { A, B, m, ys, picks, year, na, nb, got, paid }) {
   moveMonster(f, B, A, m, year); for (const y of ys) moveMonster(f, A, B, y, year); for (const p of picks) setPickOwner(f, p, B);
   const label = [...ys.map((y) => `${y.name} (${y.position}, ${ovr(y)} OVR)`), ...picks.map((p) => `a round-${p.round} pick (${p.year})`)].join(' and ');
   leagueEvent(f, { kind: 'trade', from: B, to: A, consideration: label, ...moveIdentity(f, m) });
   const kind = ys.length && picks.length ? 'swap+picks' : ys.length ? 'swap' : 'picks';
-  return { kind, A, B, toA: m.id, ...(ys.length ? { toB: ys[0].id, toBAll: ys.map((y) => y.id) } : {}), ...(picks.length ? { picks } : {}), pos: m.position, na: Math.round(na), nb: Math.round(nb) };
+  return { kind, A, B, toA: m.id, ...(ys.length ? { toB: ys[0].id, toBAll: ys.map((y) => y.id) } : {}), ...(picks.length ? { picks } : {}), pos: m.position, na: Math.round(na), nb: Math.round(nb), mv: [Math.round(got * 10) / 10, Math.round(paid * 10) / 10] }; // mv: market value received and given, as the clubs saw it when they dealt (ratings move a little afterwards)
 }
 
 /**

@@ -5,6 +5,8 @@ number into a pass or a finding are fixed here. Results are reported in `TRADING
 change after this point, the report says so and why. Parameters are **frozen** at this commit: if a result sends the design back
 for a change, the change is re-confirmed on the reserved fresh seeds (21–40) and reported as a change, never folded in silently.
 
+> **Erratum (before any Task 5 benchmark run):** T4 first read "within 0.85–1.15; median 0.95–1.05". A pilot showed the band is applied as given ÷ received, so received ÷ given runs 0.87–1.18, and that deals sit nearer the shopper's side of the band than the baseline's position-blind figures did (a shopper must gain by its own roster measure). T4 was restated as above. No threshold was changed after seeing a Stage B result.
+
 ## Code under test
 - **Baseline:** `main` at `db7c0c6` (PR #81 merged). Its game code is the published v42.16.0-run-game; the merge added documentation and tooling only.
 - **Task 5:** branch `trading-second-pass`, forked from that commit. Football-engine files are unchanged (checked by diff in the results).
@@ -58,7 +60,7 @@ cap usage, competition, integrity). Added for trading:
 | T1 | Integrity | zero invariant violations, exceptions, save round-trip changes — in every stage and scenario. Any is reported as a defect, not a metric |
 | T2 | Lineups, cap, rosters | zero lineup failures, zero cap violations at a season start, every roster 26–38 after every deal |
 | T3 | Kickers | kicker share of AI–AI trades ≤ 8% (baseline 14.3%); at most 3 first-round picks given for a kicker across Stage B, and kickers no more than 10% of all first-round picks spent (baseline: 51 of 58 kicker deals paid a first-round pick — the most of any position — 51 of 292 first-round picks spent, 17%) |
-| T4 | Fairness | ≥ 95% of deals within 0.85–1.15 on `mvRatio`; median 0.95–1.05 |
+| T4 | Fairness | ≥ 95% of deals within 0.85–1.18 on `mvRatio` (received ÷ given by the shopper; the engine applies the owner's band as given ÷ received within 0.85–1.15, which is 0.87–1.18 this way round, the same range as the baseline's 0.87–1.176); median 0.95–1.15. `mvRatio` uses the values the clubs saw when they dealt (stored on the deal), because ratings move a little after an in-season deal |
 | T5 | Do shoppers improve | acquired starter ≥ 85% of deals (baseline 81.3%); median starter-floor change at the acquired position ≥ +2; shopper starter mean never falls in ≥ 95% of deals |
 | T6 | Do sellers lose | seller starter mean unchanged in ≥ 95% of deals (they sell spares) |
 | T7 | In-season | informational, **no minimum**. The root cause is reported with the funnel (needs → targets → priced → accepted). Pass if the in-season count is ≥ the baseline (2) *or* the funnel shows the limiter is a rule the owner approved (reported, not relaxed) |
