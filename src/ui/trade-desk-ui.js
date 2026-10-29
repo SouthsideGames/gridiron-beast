@@ -26,7 +26,7 @@ export function tradeStatusHtml(f) {
 function monsterRow(m, side, on) {
   const blocked = !!m.why;
   const note = m.why || (side === 'theirs' && !m.forSale ? 'A starter with no ready replacement: only if you send a ready replacement back in the same proposal.' : '');
-  return `<button type="button" class="item ${on ? 'mine' : ''}" data-m="${side}:${m.id}" aria-pressed="${on ? 'true' : 'false'}" ${blocked ? 'disabled' : ''} style="min-height:44px;padding:4px 8px;${on ? 'border-color:var(--accent)' : ''}">
+  return `<button type="button" class="item ${on ? 'mine' : ''}" data-m="${side}:${m.id}" data-sale="${side === 'theirs' && !m.forSale ? '0' : '1'}" aria-pressed="${on ? 'true' : 'false'}" ${blocked ? 'disabled' : ''} style="min-height:44px;padding:4px 8px;${on ? 'border-color:var(--accent)' : ''}">
     ${monsterSprite({ species: m.species, name: m.name, id: m.id }, 28)}<span class="grow" style="min-width:0"><b>${esc(m.name)}</b> <span class="dim" style="font-size:12px">${esc(m.position)} · ${m.ovr} OVR · ${m.age}y</span>
     <span class="chip ${m.role === 0 ? 'accent' : ''}" style="margin-left:4px">${ROLE[m.role] || 'bench'}</span>${m.injured ? ' <span title="Out for weeks">🩹</span>' : ''}</span><span class="dim" style="font-size:12px">${fmtMoney(m.salary)}</span></button>${note ? `<div class="dim" style="font-size:11px;margin:-2px 0 4px 10px">${esc(note)}</div>` : ''}`;
 }

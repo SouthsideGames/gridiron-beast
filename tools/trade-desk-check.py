@@ -55,7 +55,7 @@ with sync_playwright() as pw:
         check(p['myRows'] >= 26 and p['theirRows'] >= 26, f'{w}px: both rosters listed ({p["myRows"]}, {p["theirRows"]})')
         p['blocked'] = pg.locator('.sheet [data-m][disabled]').count(); check(p['blocked'] >= 1, f'{w}px: monsters that cannot move are shown, disabled')
         # choose one of theirs that is for sale and one pick of ours; preview
-        pg.locator('.sheet [data-m^="theirs:"]:not([disabled])').first.click(); pg.locator('.sheet [data-p^="mine:"]').first.click(); pg.wait_for_timeout(200)
+        pg.locator('.sheet [data-m^="theirs:"][data-sale="1"]:not([disabled])').first.click(); pg.locator('.sheet [data-p^="mine:"]').first.click(); pg.wait_for_timeout(200)
         txt = pg.inner_text('.sheet'); check('Your roster' in txt and 'cap room after' in txt, f'{w}px: preview shows roster and cap'); check('accept' not in txt.lower().split('whether the club says yes')[0][-400:], f'{w}px: preview does not announce an answer')
         overflow(pg, f'desk preview at {w}px'); shot(pg, 'desk-2-preview', w)
         send = pg.locator('.sheet [data-send]'); check(send.is_enabled(), f'{w}px: a legal proposal can be sent')

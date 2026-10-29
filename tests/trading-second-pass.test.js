@@ -454,3 +454,17 @@ test('roster floor: the owner cannot start a season below the minimum', () => {
   F.beginDraft(f); let g = 0; while (!f.draft.done && g++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
   const r = F.startNextSeason(f); assert.equal(r.ok, false); assert.match(r.reason, /at least 26/);
 });
+
+test('AI trades: at the moment of a deal the selling club gives up a spare, never a starter (offseason window, by the ratings of that moment)', () => {
+  const f0 = played(); const cap = tierById(f0.tier).cap; let deals = 0;
+  for (let s = 1; s <= 14; s++) {
+    const f = JSON.parse(JSON.stringify(f0)); const before = {};
+    for (const c of aiClubs(f)) before[c] = R.clubRoster(f, c).map((m) => ({ id: m.id, pos: m.position, o: ovr(m), out: (m.injury?.weeks || 0) >= 3 }));
+    for (const d of LT.aiTrades(f, createRng(7000 + s), { year: f.season.year + 1, cap, window: 'offseason' })) {
+      deals++; const roster = before[d.B]; const m = roster.find((x) => x.id === d.toA);
+      const ranked = roster.filter((x) => x.pos === m.pos).sort((a, b) => (b.out ? -1 : b.o) - (a.out ? -1 : a.o));
+      assert.ok(ranked.findIndex((x) => x.id === m.id) >= GROUP_SLOTS[m.pos].length, `${d.B} sold a starter at ${m.pos}`);
+    }
+  }
+  assert.ok(deals >= 5, `enough deals to mean something (${deals})`);
+});

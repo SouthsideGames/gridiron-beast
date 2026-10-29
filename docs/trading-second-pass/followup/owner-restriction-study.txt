@@ -1,0 +1,7 @@
+seeds 51,52,53: 890 tradable AI monsters (516 starters, 374 backups/bench)
+starters held back by the 6-overall gap (as they stand): 69.6% (359/516); backups/bench held back: 0% (0/374)
+by position, starters held back: QB 100% (24/24) · RB 87.1% (27/31) · WR 54.7% (41/75) · TE 79.2% (19/24) · OL 63% (51/81) · DL 67.3% (66/98) · LB 67.3% (37/55) · CB 60.5% (23/38) · S 70.9% (39/55) · K 91.4% (32/35)
+young (<=23) starters held back: 70% (77/110); top-quartile starters (ovr >= 67) held back: 95.7% (135/141)
+starters not for sale as they stand, by the gap (margin = his overall minus the man behind him; no cover counts as held back): gap 6: 69.6% (359/516) · gap 8: 53.5% (276/516) · gap 10: 39.5% (204/516) · gap 12: 28.7% (148/516) · gap 15: 17.8% (92/516)
+likeForLike: 270 tried · gap cleared 81.1% (219/270) · and accepted at the price 80% (216/270)
+prospectFor: 77 tried · gap cleared 19.5% (15/77) · and accepted at the price 19.5% (15/77)

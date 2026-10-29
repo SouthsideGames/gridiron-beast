@@ -48,7 +48,8 @@ async function run() {
   const [s0, s1] = String(args.seeds || '1-2').split('-').map(Number); const SEEDS = []; for (let s = s0; s <= (s1 || s0); s++) SEEDS.push(s);
   const SEASONS = Number(args.seasons || 2);
   const slotsOf = (pos) => GROUP_SLOTS[pos]?.length || 1;
-  const avail = (r) => r.filter((m) => !((m.injury?.weeks || 0) >= RULES.longInjuryWeeks));
+  // The game's own rule for a deal: out 3+ weeks does not count as a starter; a shorter injury does not change who the club's starters are (the chart builder alone would bench him, so the injury is cleared on a copy).
+  const avail = (r) => r.filter((m) => !((m.injury?.weeks || 0) >= RULES.longInjuryWeeks)).map((m) => (m.injury ? { ...m, injury: null } : m));
   const take = (roster) => { roster = avail(roster); const chart = buildDepthChart(roster); const byId = new Map(roster.map((m) => [m.id, m])); const st = Object.values(chart).map((id) => byId.get(id)).filter(Boolean); return { st, sum: st.reduce((s, m) => s + monsterOverall(m), 0), at: (pos) => st.filter((m) => m.position === pos).reduce((s, m) => s + monsterOverall(m), 0) }; };
   const snapRoster = (f, c) => REG.clubRoster(f, c).map((m) => JSON.parse(JSON.stringify(m)));
   const out = { tool: 'trade-audit', rules: RULES, root: ROOT, seeds: SEEDS, seasons: SEASONS, deals: [] };
@@ -73,6 +74,7 @@ async function run() {
           got: { pos, ovr: monsterOverall(m), age: m.age, salary: m.salary, yearsLeft: years, id: m.id },
           paid: { picks: picks.map((q) => `${q.year}R${q.round}`), picksR1: picks.filter((q) => q.round === 1).length, picksTop2: top2, monsters: ys.map((y) => `${y.position}${monsterOverall(y)}`) },
           buyer: { startBefore: a0.sum, startGain: a1.sum - a0.sum, posGain: a1.at(pos) - a0.at(pos), weakestAt: Math.min(...a0.st.filter((x) => x.position === pos).map(monsterOverall), 99), countBefore: cnt(rA, pos), countAfter: cnt(A1, pos), slots: slotsOf(pos), backupAfter: backups(A1, pos, a1), roomBefore: cap - allow - pay(rA), roomAfter: cap - allow - pay(A1), payrollShift: pay(A1) - pay(rA) },
+          full: { seller: rB.filter((q) => q.position === pos).map((q) => [monsterOverall(q), q.injury?.weeks || 0, q.age]).sort((u, v) => v[0] - u[0]), sellerGets: ys.map((y) => [y.position, monsterOverall(y), y.injury?.weeks || 0]), sellerPosAfter: B1.filter((q) => q.position === pos).map((q) => [monsterOverall(q), q.injury?.weeks || 0]).sort((u, v) => v[0] - u[0]), gotInjury: m.injury?.weeks || 0 },
           detail: { buyerAt: [a0, a1].map((x) => x.st.filter((q) => q.position === pos).map(monsterOverall).sort((u, v) => v - u)), sellerAt: [b0, b1].map((x) => x.st.filter((q) => q.position === pos).map(monsterOverall).sort((u, v) => v - u)) },
           seller: { startLoss: b0.sum - b1.sum, countAfter: cnt(B1, pos), slots: slotsOf(pos), backupAfter: backups(B1, pos, b1), roomAfter: cap - allow - pay(B1), gotPos: yPos || null },
           teamAfter: { buyer: Math.round((a1.sum / a1.st.length) * 100) / 100, seller: Math.round((b1.sum / b1.st.length) * 100) / 100 } });
@@ -81,6 +83,7 @@ async function run() {
     };
     runFranchise(seed, { seasons: SEASONS, check, onSeason: () => {} });
     for (const r of rows) { const mon = last.league.monsters[r.got.id]; const stint = (mon?.history || []).find((h) => h.club === r.A && h.from >= r.year); r.stayed = stint ? (stint.to == null ? SEASONS - r.year + 1 : stint.to - (r.week === 0 ? r.year + 1 : r.year)) : null; r.flags = flagsOf(r); out.deals.push(r); }
+    fs.writeFileSync(args.out || 'audit.json', JSON.stringify(out)); // after every seed: a long run that dies keeps what it has
     console.error(`seed ${seed}: ${rows.length} deals`);
   }
   fs.writeFileSync(args.out || 'audit.json', JSON.stringify(out));
