@@ -15,6 +15,7 @@ import { GROUP_SLOTS } from './roster.js';
 import { newContract } from './contracts.js';
 import { DRAFT_ROUNDS } from './draft.js';
 import { hasLeague, isProtected, removeFromClub } from './league-registry.js';
+import { marketValue } from './trade-value.js';
 
 export const TRADE_YEARS_AHEAD = 3;
 export const ASKS_PER_PICK = 2;
@@ -31,6 +32,8 @@ export const pickKey = (p) => `${p.year}:${p.round}:${p.original}`;
 export const samePick = (a, b) => a.year === b.year && a.round === b.round && a.original === b.original;
 export function pickOwner(f, p) { return f.pickOwners?.[p.year]?.[p.round]?.[p.original] || p.original; }
 export function setPickOwner(f, p, owner) { ((((f.pickOwners ||= {})[p.year] ||= {})[p.round] ||= {})[p.original]) = owner; }
+/** The season a trade's contract terms are read for: the coming one once this one is over. */
+export function contractYear(f) { return (f.season?.year || 1) + (f.season?.finished || f.offseason ? 1 : 0); }
 /** The class year of the draft on now (or next): the creation draft is the class of season 1; the offseason draft after season Y is the class of Y+1. */
 export function currentClassYear(f) { return f.draft?.creation ? 1 : (f.season?.year || 0) + 1; }
 /** Every pick a club owns in a class year, from its own slots and anything it has acquired. */
@@ -99,6 +102,13 @@ function pickValueFor(f, team, p, needs, ctx) {
   }
   return v;
 }
+/** A pick's worth right now: the slot when the order is known, the future discount otherwise (the figure every trade path uses). */
+export function pickWorth(f, p) { return pickValue(p, { slotInRound: slotOf(f, p), yearsAhead: Math.max(0, p.year - currentClassYear(f)) }); }
+/** Hand a pick to another club; if its class is being drafted, the slot on the clock order goes with it. */
+export function transferPick(f, p, to) {
+  setPickOwner(f, p, to);
+  const d = f.draft; if (d?.started && currentClassYear(f) === p.year) for (let i = d.index; i < d.order.length; i++) { const o = d.order[i]; if (o.round === p.round && (o.original || o.team) === p.original) { o.original = p.original; o.team = to; } }
+}
 function teamRng(f, team, p, kind) { return createRng(hashString(`trade|${f.seed}|${team}|${pickKey(p)}|${kind}|${f.season?.year}`)); }
 
 // ---------------------------------------------------------------- asks
@@ -127,10 +137,10 @@ export function askForPlayer(f, { give, position, teams, rosterOf, difficulty = 
     for (const m of candidates) {
       const starter = keepStarters.has(m.id);
       if (starter) { const next = at.filter((x) => x.id !== m.id)[slots - 1]; if (!next || monsterOverall(next) < monsterOverall(m) - 6) continue; } // no replacement ready: the starter is not for sale
-      const cost = playerValue(m) * (starter ? 1.3 : 1); // starters cost more to pry loose
-      if (cost <= budget && playerValue(m) >= floor && (!best || monsterOverall(m) > monsterOverall(best))) best = m;
+      const worth = marketValue(m, { year: contractYear(f) }); const cost = worth * (starter ? 1.3 : 1); // starters cost more to pry loose; price follows the position (Task 5: trade-value.js)
+      if (cost <= budget && worth >= floor && (!best || monsterOverall(m) > monsterOverall(best))) best = m;
     }
-    if (best) offers.push({ team, give, get: { player: best }, value: playerValue(best), starter: keepStarters.has(best.id) });
+    if (best) offers.push({ team, give, get: { player: best }, value: marketValue(best, { year: contractYear(f) }), starter: keepStarters.has(best.id) });
   }
   offers.sort((a, b) => b.value - a.value);
   return { offers: offers.slice(0, MAX_OFFERS), teams: offers.length };
@@ -176,10 +186,7 @@ export function askForPicks(f, { give, year, round, count = 1, teams, rosterOf, 
 // ---------------------------------------------------------------- doing the deal
 /** Move the given picks to the other club and bring back the player or the picks. Returns what changed. */
 export function executeTrade(f, offer, { club, year, nextYear }) {
-  for (const p of offer.give) {
-    setPickOwner(f, p, offer.team);
-    const d = f.draft; if (d?.started && currentClassYear(f) === p.year) for (let i = d.index; i < d.order.length; i++) { const o = d.order[i]; if (o.round === p.round && (o.original || o.team) === p.original) { o.original = p.original; o.team = offer.team; } }
-  }
+  for (const p of offer.give) transferPick(f, p, offer.team);
   const got = { player: null, picks: [] };
   if (offer.get.player) {
     const src = offer.get.player; let m;
@@ -199,7 +206,7 @@ export function executeTrade(f, offer, { club, year, nextYear }) {
     f.roster.push(m);
     got.player = m;
   }
-  if (offer.get.picks) for (const p of offer.get.picks) { setPickOwner(f, p, club); const d = f.draft; if (d?.started && currentClassYear(f) === p.year) for (let i = d.index; i < d.order.length; i++) { const o = d.order[i]; if (o.round === p.round && (o.original || o.team) === p.original) { o.original = p.original; o.team = club; } } got.picks.push(p); }
+  if (offer.get.picks) for (const p of offer.get.picks) { transferPick(f, p, club); got.picks.push(p); }
   (f.trades ||= []).push({ year, team: offer.team, give: offer.give, got: offer.get.player ? { player: { id: got.player.id, name: got.player.name, position: got.player.position, ovr: monsterOverall(got.player) } } : { picks: got.picks } });
   return got;
 }
@@ -235,7 +242,7 @@ export function buildTradeCall(f, { teams, rosterOf, difficulty = 'pro', myRoste
       if (at.length <= slots) continue; // they cannot spare one
       const spare = at.slice(slots).filter((m) => tradable(f, m) && monsterOverall(m) >= myBest + 2); // only a real upgrade at the position
       const m = spare.sort((a, b) => monsterOverall(b) - monsterOverall(a))[0]; if (!m) continue;
-      const price = playerValue(m) * CALL_PREMIUM / gen;
+      const price = marketValue(m, { year: contractYear(f) }) * CALL_PREMIUM / gen;
       // The pick (or two) closest to his worth, between 85% and 130% of it: a club never asks a first-rounder for a backup.
       const fair = (v) => v >= price * 0.85 && v <= price * 1.3;
       let best = null;

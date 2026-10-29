@@ -33,7 +33,9 @@ import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
 import { recordAchievementGlobal } from './achievement-store.js';
-import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds, buildTradeCall } from './trades.js';
+import { pickOwner, setPickOwner, currentClassYear, picksOwnedBy, pickUsed, tradableYears, askForPlayer, askForPicks, executeTrade, canTakePlayer, pickKey, samePick, ASKS_PER_PICK, TRADE_YEARS_AHEAD, pickValue, playerValue, positionNeeds, buildTradeCall, contractYear, transferPick, CALL_CHANCE } from './trades.js';
+import { evaluateProposal, deskAssets, deskUsage, spendProposal, buildIncomingOffer, DESK_RULES } from './trade-desk.js';
+export { DESK_RULES } from './trade-desk.js';
 import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
@@ -987,29 +989,118 @@ export function acceptTrade(f, offer) {
   return { ok: true, got };
 }
 
-// ---------------------------------------------------------------- AI clubs calling (GDD §19.6, second pass)
+// ---------------------------------------------------------------- the trade desk (GDD §19.6c, Task 5): monsters and picks, both ways
+/** Everything the trade desk judges a deal with: the owner's roster, cap room and picks, and each club's roster and cap room. */
+function deskEnv(f, extra = {}) {
+  const cap = tierById(f.tier).cap;
+  return { ownerRoster: f.roster, ownerRoom: salarySummary(f).remaining, ownerPicks: myTradablePicks(f), roster: (t) => clubRoster(f, t), room: (t) => clubCapRoom(f, t, cap), difficulty: f.settings?.difficulty || 'pro', year: contractYear(f), allTeams: ALL_TEAMS, clubs: leagueClubs(f), windowOpen: tradeOpen(f), ...extra };
+}
+/** Monster trades need the persistent league (every save since v41); older saves keep the picks-only desk. */
+export const deskAvailable = (f) => hasLeague(f);
+/** The 15 clubs and what the owner may still ask each this window. */
+export function deskPartners(f) { return leagueClubs(f).slice().sort().map((team) => ({ team, ...deskUsage(f, team), roster: clubRoster(f, team).length, room: clubCapRoom(f, team, tierById(f.tier).cap) })); }
+/** One club's side of the desk: who can move on each side and why not, the picks each holds, how many proposals are left. */
+export function deskAssetsFor(f, team) { return deskAssets(f, team, deskEnv(f)); }
+const proposalShape = (p) => ({ team: p.team, giveMonsters: [...(p.giveMonsters || [])], givePicks: (p.givePicks || []).map((x) => ({ year: x.year, round: x.round, original: x.original })), getMonsters: [...(p.getMonsters || [])], getPicks: (p.getPicks || []).map((x) => ({ year: x.year, round: x.round, original: x.original })) });
+/** What a proposal would do, before you send it: legality, roster and cap, depth. Never says whether the club would accept. */
+export function deskPreview(f, prop) {
+  if (!deskAvailable(f)) return { ok: false, reason: 'This save has no persistent league; monster trades need a newer save.' };
+  const e = evaluateProposal(f, proposalShape(prop), deskEnv(f, { counter: false }));
+  return { ok: e.ok, legal: e.legal, reasons: e.reasons.filter((r) => r.blocking), detail: e.detail };
+}
+const nameList = (ms, picks) => [...ms.map((m) => `${m.name} (${m.position}, ${monsterOverall(m)} OVR)`), ...picks.map((p) => `${yearOf(p.year)} R${p.round}`)].join(', ') || 'nothing';
+/** Make the proposal. A club that is asked answers once; a legal proposal uses one of your calls to that club this window. */
+export function deskPropose(f, prop) {
+  if (!deskAvailable(f)) return { ok: false, reason: 'This save has no persistent league; monster trades need a newer save.' };
+  const p = proposalShape(prop); const env = deskEnv(f);
+  const e = evaluateProposal(f, p, { ...env, count: true });
+  if (!e.ok) return { ok: false, reason: e.reasons[0].text, reasons: e.reasons };
+  if (!e.legal) return { ok: true, accepted: false, legal: false, reasons: e.reasons, detail: e.detail, counter: null };
+  spendProposal(f, p.team);
+  if (!e.accept) { news(f, `The ${p.team} turned down your proposal.`, 'info'); return { ok: true, accepted: false, legal: true, reasons: e.reasons, detail: e.detail, counter: e.counter }; }
+  const got = executeProposal(f, p);
+  return { ok: true, accepted: true, legal: true, reasons: [], detail: e.detail, got };
+}
+/** What accepting the waiting call would do to your roster, depth and cap (null for a call from before Task 5). */
+export function callEffect(f) {
+  const c = tradeCall(f); if (!c?.kind) return null;
+  const prop = proposalShape({ team: c.team, giveMonsters: c.askIds || [], givePicks: c.give || [], getMonsters: c.sendIds || [], getPicks: c.sendPicks || [] });
+  return evaluateProposal(f, prop, deskEnv(f, { windowOpen: true, noLimit: true, counter: false })).detail || null;
+}
+/** Carry out a deal that has been judged and accepted: monsters and picks both ways, news, career, captains, the draft clock. */
+function executeProposal(f, p) {
+  const year = f.season.year; const nextYear = f.draft?.creation ? year : (f.offseason || f.season.finished) ? year + 1 : year;
+  const outs = p.giveMonsters.map((id) => f.roster.find((m) => m.id === id)); const ins = p.getMonsters.map((id) => clubRoster(f, p.team).find((m) => m.id === id));
+  const sentLabel = nameList(outs, p.givePicks), gotLabel = nameList(ins, p.getPicks);
+  for (const m of outs) {
+    f.roster = f.roster.filter((x) => x.id !== m.id);
+    for (const [slot, mid] of Object.entries(f.lineupManual || {})) if (mid === m.id) delete f.lineupManual[slot];
+    (m.history ||= []).push({ club: f.club, from: m.contract?.signed || year, to: year, reason: 'traded' });
+    addToClub(f, p.team, m, { year, via: 'traded', contract: m.contract && !m.contract.permanent ? { ...m.contract } : newContract(nextYear, 2), salary: m.salary || salaryFor(m) });
+    m.traded = { from: f.club, year };
+    leagueEvent(f, { kind: 'trade', from: f.club, to: p.team, fromOwner: true, consideration: gotLabel, ...moveIdentity(f, m) });
+    noteCaptainLeft(f, f.club, m, 'traded');
+  }
+  const got = { monsters: [], picks: [] };
+  for (const src of ins) {
+    const m = removeFromClub(f, p.team, src.id, { year, reason: 'traded' });
+    m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: p.team, year };
+    backfillCareer(f, m); noteJoin(f, m, 'trade', { from: p.team });
+    f.roster.push(m); uniqueName(f, m); dexRecord(f, m, 'signed');
+    leagueEvent(f, { kind: 'trade', from: p.team, to: f.club, toOwner: true, consideration: sentLabel, ...moveIdentity(f, m) });
+    noteCaptainLeft(f, p.team, m, 'traded'); got.monsters.push(m);
+  }
+  for (const pick of p.givePicks) transferPick(f, pick, p.team);
+  for (const pick of p.getPicks) { transferPick(f, pick, f.club); got.picks.push(pick); }
+  (f.trades ||= []).push({ year, team: p.team, give: p.givePicks, got: ins.length ? { player: { id: got.monsters[0].id, name: got.monsters[0].name, position: got.monsters[0].position, ovr: monsterOverall(got.monsters[0]) } } : { picks: got.picks }, desk: { sent: outs.map((m) => m.id), received: got.monsters.map((m) => m.id) } });
+  const cap = salarySummary(f);
+  news(f, `Trade with the ${p.team}: you send ${sentLabel}; you receive ${gotLabel}${cap.over ? '. Over the cap: the commissioner will review' : ''}.`, 'roster', got.monsters[0] ? { mid: got.monsters[0].id, mname: got.monsters[0].name } : null);
+  if (f.draft?.started && !f.draft.done) runDraftToMe(f); // if the pick on the clock went out, the new holder uses it now
+  checkAchievements(f, 'trade');
+  return got;
+}
+
+// ---------------------------------------------------------------- AI clubs calling (GDD §19.6, second pass; Task 5: from the club's own needs, monsters and picks)
 /** The week (or offseason) a call belongs to: it lasts until this changes. */
 function callStamp(f) { return f.offseason ? `off:${f.season.year}` : `wk:${f.season.year}:${f.season.week}`; }
 /** The call waiting for an answer, or null. */
 export function tradeCall(f) { const c = f.tradeCall; return c && c.expires === callStamp(f) ? c : null; }
+const callMonster = (m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, ovr: monsterOverall(m), age: m.age, salary: m.salary });
 /** Once a week in season (weeks 2-8) and once when the offseason opens, a club may call with an offer. */
 export function maybeTradeCall(f) {
   const stamp = callStamp(f);
-  if (f.tradeCall && f.tradeCall.expires !== stamp) { news(f, `The ${f.tradeCall.team} offer for your ${f.tradeCall.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} expired.`, 'info'); f.tradeCall = null; }
+  if (f.tradeCall && f.tradeCall.expires !== stamp) { news(f, `The ${f.tradeCall.team} offer ${f.tradeCall.kind ? 'to you' : `for your ${f.tradeCall.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}`} expired.`, 'info'); f.tradeCall = null; }
   if (f.tradeCall || isFired(f)) return null;
   const inSeason = !f.offseason && !f.season.finished && !inPlayoffs(f) && f.season.week >= 2 && f.season.week <= 8;
   if (!inSeason && !f.offseason) return null;
   f.callsMade ||= {}; if (f.callsMade[stamp]) return null; f.callsMade[stamp] = true;
+  const until = f.offseason ? 'the new season' : 'the end of the week';
+  if (hasLeague(f)) { // the club's own roster decides who calls and what for (trade-desk.js buildIncomingOffer)
+    const o = buildIncomingOffer(f, deskEnv(f, { windowOpen: true }), { key: stamp, chance: CALL_CHANCE[f.settings?.difficulty || 'pro'] ?? 0.26 });
+    if (!o) return null;
+    const p = o.proposal; const sends = p.getMonsters.map((id) => callMonster(clubRoster(f, o.team).find((m) => m.id === id))); const asks = p.giveMonsters.map((id) => callMonster(f.roster.find((m) => m.id === id)));
+    f.tradeCall = { team: o.team, kind: o.kind, give: p.givePicks, askIds: p.giveMonsters, sendIds: p.getMonsters, sendPicks: p.getPicks, sends, asks, position: (sends[0] || asks[0]).position, playerId: sends[0]?.id || null, player: sends[0] || null, value: Math.round(o.gain), expires: stamp };
+    const lines = { sell: `${sends[0]?.name} (${sends[0]?.position}, ${sends[0]?.ovr} OVR) for your ${p.givePicks.map((x) => `${yearOf(x.year)} R${x.round}`).join(' + ')}`, buy: `${asks[0]?.name} (${asks[0]?.position}, ${asks[0]?.ovr} OVR) for their ${p.getPicks.map((x) => `${yearOf(x.year)} R${x.round}`).join(' + ')}`, swap: `${sends[0]?.name} (${sends[0]?.position}, ${sends[0]?.ovr} OVR) for ${asks[0]?.name} (${asks[0]?.position}, ${asks[0]?.ovr} OVR)` };
+    news(f, `📞 The ${o.team} called: ${lines[o.kind]}. The offer stands until ${until}.`, 'info');
+    return f.tradeCall;
+  }
   const c = buildTradeCall(f, { ...tradeCtx(f), myRoster: f.roster, myPicks: myTradablePicks(f), key: stamp });
   if (!c) return null;
   f.tradeCall = { ...c, expires: stamp };
-  news(f, `📞 The ${c.team} called: ${c.player.name} (${c.player.position}, ${c.player.ovr} OVR) for your ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}. The offer stands until ${f.offseason ? 'the new season' : 'the end of the week'}.`, 'info');
+  news(f, `📞 The ${c.team} called: ${c.player.name} (${c.player.position}, ${c.player.ovr} OVR) for your ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}. The offer stands until ${until}.`, 'info');
   return f.tradeCall;
 }
-/** Answer the call: accept (picks go out, he joins on a two-year deal) or decline. */
+/** Answer the call: accept (the deal is carried out) or decline. A call made before Task 5 (no `kind`) is picks for one player, as it always was. */
 export function answerTradeCall(f, accept) {
   const c = tradeCall(f); if (!c) return { ok: false, reason: 'No call is waiting.' };
-  if (!accept) { f.tradeCall = null; news(f, `Declined the ${c.team} offer for ${c.player.name}.`, 'info'); return { ok: true, declined: true }; }
+  if (!accept) { f.tradeCall = null; news(f, `Declined the ${c.team} offer.`, 'info'); return { ok: true, declined: true }; }
+  if (c.kind) {
+    const prop = proposalShape({ team: c.team, giveMonsters: c.askIds || [], givePicks: c.give || [], getMonsters: c.sendIds || [], getPicks: c.sendPicks || [] });
+    const e = evaluateProposal(f, prop, deskEnv(f, { windowOpen: true, noLimit: true, counter: false }));
+    if (!e.legal || !e.accept) { f.tradeCall = null; return { ok: false, reason: `The offer is off: ${(e.reasons[0]?.text || 'the situation has changed')}` }; }
+    const got = executeProposal(f, prop); f.tradeCall = null;
+    return { ok: true, got: { player: got.monsters[0] || null, monsters: got.monsters, picks: got.picks } };
+  }
   if (!canTakePlayer(f)) return { ok: false, reason: `Roster full (${ROSTER_MAX}). Release someone first.` };
   const mine = myTradablePicks(f); if (!c.give.every((p) => mine.some((x) => samePick(x, p)))) { f.tradeCall = null; return { ok: false, reason: 'You no longer hold those picks; the offer is off.' }; }
   const src = aiTeam(f, c.team).roster.find((m) => m.id === c.playerId); if (!src) { f.tradeCall = null; return { ok: false, reason: `${c.player.name} is no longer with the ${c.team}.` }; }

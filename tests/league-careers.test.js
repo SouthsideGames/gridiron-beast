@@ -16,7 +16,7 @@ import { leagueInvariants } from '../tools/league-soak.mjs';
 import { createRng } from '../src/core/rng.js';
 import { monsterOverall } from '../src/data/monsters.js';
 import { ALL_TEAMS, tierById } from '../src/data/league.js';
-import { playerValue } from '../src/franchise/trades.js';
+import { marketValue } from '../src/franchise/trade-value.js';
 
 const clubsOf = (f) => ALL_TEAMS.filter((t) => t !== f.club);
 let shared = null; const two = () => (shared ||= runFranchise(51, { seasons: 2, difficulty: 'pro', check: leagueInvariants }));
@@ -67,7 +67,7 @@ test('AI–AI trades: uncommon, fair, within the cap and the roster limits, neve
     assert.ok(R.clubCapRoom(f, d.A, cap) >= 0 && R.clubCapRoom(f, d.B, cap) >= 0, 'both under the cap');
     assert.ok(R.clubRoster(f, d.A).length <= 38 && R.clubRoster(f, d.B).length >= 26);
     const m = f.league.monsters[d.toA]; assert.ok(m && !R.isProtected(m) && R.clubOf(f, m.id) === d.A && !before[d.A].includes(m.id));
-    if (d.kind === 'swap') { const x = f.league.monsters[d.toB]; const ratio = playerValue(m) / playerValue(x); assert.ok(ratio >= LT.AI_TRADE_RULES.band[0] && ratio <= LT.AI_TRADE_RULES.band[1], `fair: ${ratio}`); }
+    if (d.kind === 'swap') { const x = f.league.monsters[d.toB]; const ratio = marketValue(m, { year: 2 }) / marketValue(x, { year: 2 }); assert.ok(ratio >= LT.AI_TRADE_RULES.band[0] - 1e-9 && ratio <= LT.AI_TRADE_RULES.band[1] + 1e-9, `fair: ${ratio}`); }
   }
   for (const c of clubsOf(f)) for (const id of R.clubRecord(f, c).protected) assert.ok(R.clubRoster(f, c).some((m) => m.id === id), 'protected monsters never move');
   assert.deepEqual(R.verifyLeague(f), []);
