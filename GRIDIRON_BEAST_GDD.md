@@ -4073,3 +4073,6 @@ No save migration. `f.tradeDesk` (proposal counts and the window stamp) appears 
 ### 54.8 Tests and tools
 `tests/trading-second-pass.test.js` (34 with the neighbours: valuation, desk, adversarial, incoming offers, a played franchise end to end, reload). `tools/owner-trading-scenarios.mjs` (12 scenarios), `tools/trade-desk-check.py` (320–412 px), `tools/trade-perf-check.mjs`, `tools/trade-benchmark-compare.mjs`, `tools/post-trading-benchmark.sh`, `tools/trade-funnel.mjs`, `tools/position-leverage.mjs`.
 
+
+### 54.9 Results (full tables: `docs/TRADING_SECOND_PASS_RESULTS.md`)
+Matched-seed benchmark against v42.16.0, seeds 1–40 (10 seasons), 106–110 (20 seasons), six stress scenarios. Kicker purchases 16.8% → 2.9% of AI deals, first-round picks for kickers 107 → 4, deals within the fair band 31% → 100%, acquiring clubs gain a starter 83% → 92%, persistent weak groups with cap room 12.1% → 9.7%. **Not met:** T8 volume (about 1.6× baseline, entirely the repaired in-season window; no quota exists), T2 season-end lineup problems (pooled 67 vs 54, within noise, season-start clean), T11 persistent losers on seeds 1–20 (+4.0; pooled +2.0), T3 marginal in the 20-season stage (4 first-round kicker picks). Open for Task 5.5: empty-starting-slot value in roster worth, OL, volume decision, leverage strength.
