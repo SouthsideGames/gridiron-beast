@@ -3731,6 +3731,277 @@ Owner's Phase B brief and approval of the audit (2026-10-28), in `src/sim/engine
   - **Deployment:** https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq (URL unchanged), artifact version 113 (`1793216121-96e1`). The live files replaced were first confirmed to be v42.14.0 (manifest hashes); the page and 4 changed game files were published; afterwards all 155 game files read back byte-identical, the built page sits unchanged in the host wrapper, `src/version.js` serves v42.15.0-coverage. Capabilities db, downloads, user and runtime contract 0.2.77 carried forward. `release/manifest.json` regenerated (artifact version 113). The private test link was not touched.
   - **Saves:** no save format change, no migration, no save-layer file changed.
 
+### 53.5l Phase C: the offensive run game (C1 + C2, v42.16.0, PROPOSED, awaiting owner review)
+Phase C ships as one release: C1 (below, owner-approved 2026-10-28) and C2 (running-back vision and the Outside Zone redesign, at the end of this section).
+Owner's Phase C audit (2026-10-28, audit-only) and approval of fixes F1–F6. In `src/sim/engine.js` and `src/data/playbook.js`. Follows §1b: blockers and the ball carrier act on where players are and how they move; nobody reads an assignment or the play call. No scripted yardage, no guaranteed block. Not changed (owner): running-back vision (F7) and Outside Zone's design (F8), both for Phase C2; Blink, Quake Step, Vanishing Cut, Riptide and Updraft stay in the ability review. Baseline v42.15.0 (`9e3b327`); identical seeds throughout; probes in `tools/run-study.mjs`.
+- **Audit findings (v42.15.0).**
+  - *Teleport handoff.* Stretch Left's back ran away from the mesh. The quarterback's 1.1 s fallback handed him the ball from about 7 yards, at the line, so the defence saw no run until then. The result was 11.4 yards per carry (plain 65s), 61% of runs 10+, and 12.5 in games. Read Option's paths never came within 2.8 yards, so every give also moved the ball 3–6 yards.
+  - *Designed blocks ended at the handoff.* Every free blocker switched to the escort at 0.3–0.8 s. Receivers' stalk blocks landed on 0–5% of runs, and pulling guards on Power and Counter on 12–27%.
+  - *A blocker silently dropped.* Eight of the twelve runs (and 15 passes, with no effect) assigned the centre in Pro and Spread sets, which have no centre. Inside Zone and Trap left the linebacker unblocked by design.
+  - *Trap could not trap.* The guard who should release the tackle blocked him.
+  - *Pullers trailed the back.* At 1.1 s the back was 0.7–1.7 yards ahead of his pulling guard.
+  - *Bulwark did nothing on runs* (pass-protection assignments only).
+  - *The 13.2 points per team-game is game length.* Franchise games use 3-minute quarters, about 5.1 drives per team-game at 2.56 points per drive.
+- **Fixes.**
+  1. *F1 handoff integrity.* A handoff happens only hand to hand: the event records `reach`, the distance between quarterback and back, which is always 1.5 yards or less. When the back has run past a mesh he never reached, the quarterback keeps it (`mesh_missed`; the defence reads it as it reads an option keep) instead of the ball jumping to him.
+     - Stretch Left's back steps to the quarterback's hip, then bends outside: the handoff comes at about 0.45 s, behind the line.
+     - Read Option: the back crosses the quarterback's face (Gun Pro). The quarterback waits for a back still coming to him and rides the mesh while the back is in his hands. He gives before the back is out of reach, or keeps. A pitch can still wait for the read defender, as before. The owner's read rule (who is read, and when) is unchanged.
+  2. *F2 designed blocks persist.* On a designed run a run-block, pull, stalk or default block job lasts until the carrier is past the blocker; then he escorts as before.
+     - A block in space by a puller, a climber, or anyone still on his job after the handoff, against a defender off the line, is one try. Its landing chance between equal 65s is the open-field block's own 0.58. Blocking is set against the defender's Agility and Awareness, and a defender who slips him is past him for the rest of the play.
+     - The 0.3 s pause after a missed open-field block, set but never checked before, now applies on runs.
+     - A blocker in space takes an angle on where the defender will be 0.25 s later.
+  3. *F3 restored blockers.* Each of the eight runs gives the absent centre's role to a player on the field:
+     - Inside Zone, Dive and QB Draw: the tight end climbs to the linebacker.
+     - Trap and Toss Sweep: the tight end blocks down.
+     - Outside Zone: the tight end reaches the play-side edge.
+     - Read Option: the tight end seals the keep side.
+     - Jet Sweep: the back leads to the edge.
+
+     `offFieldAssignments` / `validatePlaybook` now report any assignment for a slot the package leaves off the field.
+  4. *F4 climb blocks and Trap.* A `CLIMB` run block works past defenders on the line of scrimmage (judged by where they lined up and are now) to the second level. It ends once at its landmark or 1.2 s in.
+     - Trap: the left guard climbs, the tight end blocks down, and the pulling guard kicks out the lineman who was let through.
+     - On a designed run, a defender held up by a block can reach for a carrier who passes within a yard of him, once a play. His chance is a clean tackle's chance × (0.15 + 0.35 × Awareness), 0.33× at 65. It triggers no tackle ability, and a miss is not a broken tackle.
+  5. *F5 pulls and pacing.* Power and Counter pull just behind the centre (via 1.2 yards deep instead of 2–2.5), so the guard reaches the hole first. A puller takes the first defender who shows in the hole, moving or not. The back reads his lead block: once the puller engages near the hole, the back bends his path once to the side away from the defender. There is no change of pace and no waiting.
+  6. *F6 Bulwark* reaches run-block and pull assignments as well as blocks. It still reaches only blockers lined up within 2.2 yards, and is applied once however many Bulwarks stand beside a blocker. In Pro and Spread sets the two guards are 3.4 yards apart, so a guard Bulwark reaches nobody there (an existing limit, recorded).
+- **Measured** (v42.15.0 → v42.16.0, same seeds).
+  - *All 12 runs × 26 calls, plain 65s, 100 plays per cell* (yards per carry, success, 10+):
+
+    | Play | Yards per carry | Success | 10+ |
+    |---|---|---|---|
+    | Stretch Left | 11.39 → 5.91 | 85 → 50% | 61 → 18% |
+    | Read Option | 5.81 → 3.34 | 62 → 34% | |
+    | Counter | 5.36 → 5.93 | | |
+    | Power Left | 5.01 → 6.13 | | |
+    | Power Right | 4.56 → 5.59 | | |
+    | Toss Sweep | 4.18 → 3.44 | | |
+    | Dive | 3.61 → 3.34 | | |
+    | QB Draw | 3.07 → 3.21 | | |
+    | Outside Zone | 2.78 → 2.36 | | |
+    | Jet Sweep | 2.76 → 2.52 | | |
+    | Trap | 1.78 → 3.33 | 11 → 28% | |
+    | Inside Zone | 1.70 → 2.56 | 17 → 25% | |
+    | All | 4.33 → 3.97 | | |
+
+  - *Run calls still stop the run.* Lowest yards per carry: All-Out 0.72, Goal Line 0.94, Double A Mug 1.24, Run Wall 2.25, Bear Front 2.87. Call order correlates 0.89 (Spearman) with v42.15. Lesson claims that hold: 11 → 15 of 37.
+  - *Blocking.*
+    - Receivers' stalk blocks land on 23–64% of runs (0–5%).
+    - Pullers block someone on 38–54% on Power and Counter, and 78% on Toss (12–27%). They are 0.35–1.08 yards ahead of the back at 1.1 s (−0.7 to −1.7).
+    - Trap's pulling guard kicks out a lineman on 74%, and its left guard's block is at the second level.
+    - Stretch Left hands off by 0.7 s (1.15 s before).
+  - *Attributes* (9 runs × 10 calls, 50 → 95):
+    - RB Agility +0.65 → +1.40.
+    - OL Blocking +1.71 → +2.55.
+    - RB Speed +5.5 → +5.9 (still the dominant lever).
+    - RB Awareness +0.21 → +0.22 (F7).
+    - The defensive attributes as before.
+  - *Abilities on runs* (with vs without): a Bulwark centre adds +0.28 to +0.65 yards per carry on tight-set runs (it added 0) and cuts his guards' sheds by 6–15%. Others are within noise of v42.15. Blink still adds about 24 yards per use (ability review).
+  - *League, 360 matched games in three seed sets:*
+    - Points per team-game 13.10 → 13.06; per drive 2.56 → 2.46.
+    - Yards per carry 5.66 → 5.50; success 48.4 → 46.1%; negative 6.4 → 7.9%; 10+ 20.0 → 18.1%.
+    - Yards per pass play 7.96 → 8.00; run share 35.6 → 35.4%.
+    - By play: Stretch Left 12.54 → 7.74, Trap 2.59 → 5.55, Inside Zone 2.48 → 3.35, Counter 5.81 → 7.00, Read Option 7.23 → 3.80.
+  - *Phase A and B:*
+    - Every pass play, play-action included, replays identically in the Lab (1,716 of 1,716 on fixed seeds).
+    - Play-action against run calls is unchanged (13.24 yards per attempt).
+    - The run-defense Awareness total is 0.95 → 1.09.
+    - The counter against Cover 3 still rewards defensive Awareness, by less: 50 → 95 lowers it 0.3–0.9 yards, against 1.7 before.
+- **Trade-offs.**
+  - Read Option and Stretch Left lose the yards the teleport gave them.
+  - Outside Zone stays weak (F8).
+  - Toss Sweep loses about 0.7 yards to arm tackles and missed blocks in space.
+  - Negative runs rise slightly, because an attacking defender now sometimes meets a back who has the ball earlier.
+  - Goal Line Man and Edge Contain give up more to Power and Counter. Both lessons say so; Goal Line Man's free linebacker is now blocked by the puller on about half of those plays.
+- **Test amended (owner-approved, 2026-10-28).** `run-read.test.js`, "Goal Line Man: the free linebacker makes plays…": his share of solo tackles on Counter and Power fell from about 0.5 to 0.24, against a bar of 0.25. The assertion now counts tackles and assists (0.34), with the threshold unchanged. A new behaviour test guards him without a quota: he recognises the observable run on more than 80% of plays (measured 0.92–0.96 over three seed sets), and on the plays no blocker engages him he is in on the stop more than 45% of the time (measured 0.61–0.84). The alignment and run-support test is unchanged and passes.
+- **Recorded for Phase C2 (addressed below):** running-back vision (Awareness still near inert, with more negative runs at 95 on Inside Zone); the Outside Zone redesign; Stretch Left (7.7 in games, the edge left open by some fronts); Counter against Bear Front; and the run lessons that do not hold (22 of 37). The Toss pitch still has no ball flight.
+- **Reserve-play accessibility audit (owner request, 2026-10-28).** Pin and Pull, End Around, Pistol Zone Read and Midline Read cannot be reached by any franchise, AI club, saved plan or practice:
+  - They are reserve plays, not in `OFFENSE_IDS`, and none is legendary.
+  - None of the six coordinator playbooks (`PLAYBOOKS`) contains a reserve play, and no version ever has.
+  - Generated AI playbooks draw from fixed live lists (`playbookFor`), and scouting swaps draw from `OFFENSE_IDS` (`adaptPlaybook`). None of 5,000 generated clubs carries one.
+  - A franchise plan is filtered to the coordinators' catalogs plus available Legendary Plays (`setGamePlan`, `startingPlan`), so no save the game writes can hold one.
+  - The Practice Field lists only the catalog (`teamsForPractice`).
+  - The owner's "OK to add this play to the practice field" review flag is stored but read by nothing.
+
+  The only routes in are the development tools (Developer → Playbook Audit, and the Defensive scenario lab in the Attribute Testing Lab), which never touch a franchise. There the Audit marks them "built and reviewable here, but no coach, AI club or practice field can call it yet".
+
+  Corrections are deferred to the reserve-play release. Measured on this engine (26 calls × 10 seeds):
+  - Pin and Pull misses the mesh on 100% of plays: its back runs straight away from the quarterback, like v42.15's Stretch Left. Adding the same hip point (`[-4.6, -1.4]`) gives 0% misses and handoffs within 1.48 yards.
+  - Pistol Zone Read misses on 39%, Midline Read on 24%: the quarterback never steps toward the back's track. A one-point mesh step (`[-3.6, 0.6]` and `[-3.4, 0.5]`) gives 0% misses.
+  - End Around misses on 99%. The receiver needs about two seconds to loop back to the quarterback, so it needs a small timing rule for reverses, not a path point; even a quarterback who waits for a carrier still coming leaves 59% missed.
+- Tests: `tests/run-game.test.js` (13): every live handoff in reach, Stretch Left's mesh, the missed mesh keeps, the read option's keeps and gives, receivers' blocks and their limits, the hand-over to the escort, the off-field check, Trap's kick-out and climb, slipping a block in space, pullers ahead of the back and blocking, the back not held back, and Bulwark's reach, single count and measurable but uncertain effect.
+- **Phase C2 (owner-approved 2026-10-28): running-back vision (F7) and Outside Zone (F8).** Baseline for every comparison: v42.15.0, same seeds; "C1" is the C1 head (`8d0d2e3`).
+  - *F7 vision.* The pre-contact read (`preContactLane`, v42.8) made a sharp back worse on Inside Zone: at Awareness 95 he cut back more and lost more (negative runs 26% → 36%). Its read is kept: from the handoff the back presses the designed hole and reads it and the lanes 2 and 4 yards either side every quarter second, then bends his path once if a lane reads clearly better. Corrected:
+    - A defender held by a block counts for part of his weight, because the block may not hold. Before, he did not count at all.
+    - A defender running straight at the carrier is counted where he stands, since he will follow the cut. Before, his motion was read as leaving the lane.
+    - A free defender whom a team-mate is visibly closing on (a puller, a climber, a lead back) counts for less: the pickup is in sight but can miss.
+    - A cut has a price: the plant costs ground (less for an agile back, more for a wider cut), and much more the farther short of the hole he makes it, because a plant in the backfield lets the chase catch up.
+    - A poor reader needs the other lane to look much better before he leaves the call.
+    - His misreads come from a hash of the seed, his slot and the tick, not the play's dice, so reading well or badly changes nothing else in the play.
+
+    Nothing reads a defender's assignment, attributes or next move. A tried alternative, a race-to-the-lane model, was rejected: it multiplied Speed's effect and never cut on Inside Zone.
+  - *F8 Outside Zone.*
+    - The back aligns in Gun Pro beside the quarterback and meets him at a mesh point behind the line (about 0.45 s, always within 1.5 yards), then presses toward the edge: through 6.5 yards wide at the line and 9 at five yards.
+    - The left guard and the right guard reach to the play side, the tight end reaches the edge, and both receivers stalk.
+    - No block is certain, and nothing is scripted after the mesh.
+  - *F8 Edge Contain.*
+    - Its ends now line up outside the tackle box (±5 yards; they were over the guards, where nothing outside was contained).
+    - Before the handoff, an end who has read the run (Phase A) sets the edge outside the ball.
+    - Leverage: a contain end plays with his outside arm free. Once the carrier comes to his side (no more than 1.5 yards inside him, or outside him), a blocker who reached him sheds at +1.5 a second. This is his own assignment and where the ball plainly is, and the shed is still a rate, not a certainty.
+    - Only Edge Contain uses contain, and only on runs.
+  - *Measured, plain 65s, all 12 runs × 26 calls × 100 plays* (v42.15 → C1 → C2):
+    - Outside Zone 2.78 → 2.36 → 4.39 yards per carry: negative runs 33 → 30 → 11%, success 32 → 29 → 43%, 10+ 9 → 5 → 15%.
+    - Inside Zone 1.70 → 2.56 → 2.60, negative runs 30 → 27 → 25%.
+    - Power Right 4.56 → 5.59 → 6.00; Power Left 5.01 → 6.13 → 6.36; Counter 5.36 → 5.93 → 6.13.
+    - Stretch Left 11.39 → 5.91 → 5.55; Read Option 5.81 → 3.34 → 3.60.
+    - The rest within 0.2 yd of C1.
+    - All runs 4.33 → 3.97 → 4.20; negative runs 14.0 → 16.3 → 14.1%.
+  - *The run calls still stop the run.* Lowest: All-Out 1.03, Goal Line Stand 1.35, Double A Mug 1.60, Run Wall 2.71, Cover 0 2.94. Call order correlates 0.84 (Spearman) with v42.15.
+    - Outside Zone is stopped by Goal Line Man (−0.9), Cover 0 (−0.9), Goal Line Stand (0.1), All-Out (0.9) and the blitzes.
+    - Edge Contain holds it to 3.9 (12th of 26). It holds Stretch Left to −0.9 and Toss Sweep to 0.5, and gives up 12 to Power Left and Counter.
+  - *Edge Contain against Outside Zone (investigated before the lesson changed).*
+    - In this 7-on-7 the redesigned play blocks every play-side Edge Contain defender: the tight end reaches the end, the right guard climbs to the lone linebacker, and a receiver stalks the corner.
+    - The leverage rule wins the edge some of the time (5.9 → 3.9 yards per carry). Calls that penetrate before the edge forms do better.
+    - Also measured, not adopted, so as not to tune a matchup to its lesson: a +2.0 leverage rate (3.7), and ends at ±6 yards (2.9, but Power Right gained 9.6 against it).
+  - *Running back, RB only, 10 runs × 26 calls × 20 seeds, 50 → 95* (v42.15 → C2):
+
+    | Attribute | v42.15 | C2 |
+    |---|---|---|
+    | Awareness | +0.53 yd, negative runs 12.7 → 14.3% | +0.41 yd, negative runs 12.0 → 12.3% |
+    | Agility | +0.89 | +1.67 |
+    | Speed (weighting unchanged) | +8.24 | +7.43 |
+    | Strength | +1.30 | +1.48 |
+
+    - Inside Zone at Awareness 50 → 95 (30 seeds): v42.15 1.50 → 2.08 with negatives 26 → 36%; C2 2.31 → 2.52 with negatives 24 → 24%.
+    - Power Right is the clearest gain (4.93 → 6.64): the aware back sees the cutback behind the pull.
+    - On Power and Counter, a back's cutback gains about 4 yards over the same seed uncut at 50. Cuts on Inside Zone, Dive and the rest still sometimes lose.
+  - *Line and defence attributes* (9 runs × 10 calls, 50 → 95, v42.15 → C2): OL Blocking +1.71 → +2.91; OL Strength +1.40 → +1.36; DL Strength −1.68 → −1.36; DL Agility −1.29 → −1.23; LB/DB Tackling −0.56 → −0.87; LB/DB Speed −0.80 → −1.05.
+  - *Blocking* as in C1: every handoff is in reach, stalks land on some runs and not others, and pullers lead. Outside Zone's tight end reach is the play's key block and can be lost.
+  - *Abilities on runs* within noise of C1 (Bulwark centre +0.18 to +0.73; Landslide +0.9; Eruption +0.8). Blink still adds about 24.6 yards per use (ability review).
+  - *Read Option:* keeps 3.42, gives 2.18; there are no missed meshes.
+  - *League, 360 matched games* (v42.15 → C1 → C2):
+    - Points per team-game 13.10 → 13.06 → 13.39; per drive 2.56 → 2.46 → 2.57.
+    - Yards per carry 5.66 → 5.50 → 5.85; success 48.4 → 46.1 → 47.7%; negative 6.4 → 7.9 → 7.0%; 10+ 20.0 → 18.1 → 18.9%.
+    - Yards per pass play 7.96 → 8.00 → 8.00; run share 35.6 → 35.4 → 35.6%.
+    - By play: Power Right 5.93 → 6.17 → 7.33 (the best run in games); Power Left 5.64 → 5.49 → 6.47; Outside Zone 5.47 → 5.11 → 6.46; Inside Zone 2.48 → 3.35 → 3.67; Stretch Left 12.54 → 7.74 → 7.51; Read Option 7.23 → 3.80 → 4.39.
+  - *Phase A and B:*
+    - Every pass play replays identically except against Edge Contain (1,659 of 1,716). The 57 that differ are all against Edge Contain, from its new alignment: 8.87 → 9.32 yards per pass play, sacks 0.8 → 0.3%.
+    - Defensive Awareness still lowers run yards in every call group with no inversion (largest step 0.41).
+    - The run-defense Awareness total is 1.09 → 1.17. Play-action against run calls is 13.24 → 13.39 yards per attempt.
+    - Counter against run fronts: Awareness 50 → 95 lowers it 9.6 → 4.5.
+  - *Lessons.* The 37 run claims in the v42.15 text hold 11 (v42.15) → 15 (C1) → 16 on this engine. The lessons were rewritten where the engine contradicts them, after the matchup was checked first. The rewritten text makes 58 claims, of which 57 hold. The one exception, Dive losing to Run Wall, ranks 10th on one 100-seed range and 8th on another.
+    - Edge Contain against Outside Zone: see above.
+    - Power Right against Goal Line Stand: the aware back now finds the cutback the front leaves (24 of 100 plays cut, for 14.9 yards).
+    - Power Right against Cover 0: middling in every version.
+  - *Speed test (owner-approved revision, 2026-10-28).* The old `attr-trials.test.js` "Speed: … a 95 back gains more" used one cell, Outside Zone against Cover 3, over seeds 1000–1059, and asks for +1.5 yards.
+    - The redesigned play measures +1.06 there. On other ranges it measures +2.04, +3.10 and +4.75, and across ten calls +21.
+    - v42.15 measured +31.6 in that cell, because the back outran a defence that saw no run.
+    - Cover 3's strong safety now comes down and meets a fast back who arrives before his receiver's stalk block. The slower back gets the block.
+    - Replaced (owner-approved) by "Speed: a faster back gains more across run concepts, calls and seed ranges". It runs six live runs (Inside Zone, Power Right, Counter, Outside Zone, Stretch Left, Toss Sweep) × six calls (Cover 3, Cover 1, Cover 2 Zone, Run Wall, Edge Contain, Tampa 2) × three independent 8-seed ranges, at Speed 50, 65, 80 and 95.
+    - The same +1.5-yard bar now applies to the aggregate and to each seed range on its own. Every concept must gain at least 0.5. The aggregate must rise at every step. No concept may fall more than 0.5 between neighbouring levels (an inversion).
+    - Measured: all runs 3.81 → 4.65 → 6.85 → 11.35; seed ranges +6.3, +9.9 and +6.4. By concept, 50 → 95: Inside Zone +4.7, Power Right +3.0, Counter +4.6, Outside Zone +15.8, Stretch Left +11.6, Toss Sweep +5.5.
+    - The old cell is printed as a diagnostic only (5.72 → 6.78). Speed weighting and gameplay are unchanged.
+- **Final validation (owner request, 2026-10-28).**
+  - *Running-back Awareness, behaviour* (9 runs × 26 calls × 12 seeds, two independent seed ranges; Awareness 50 / 65 / 80 / 95). Future frames are used to judge the read, never to make it.
+    - Yards per carry: 4.02 / 4.21 / 4.43 / 4.38 on the first range, 4.99 / 5.16 / 5.46 / 5.53 on the second.
+    - How often he cuts: 1.9% / 3.5% / 5.5% / 8.6% of runs (1.9% / 3.4% / 4.8% / 7.6%).
+    - When he cuts, the lane he chooses really is more open than the called one (nearest free defender over the next 0.8 s) on 88–95% of cuts. Only 4–6% of cuts go into a lane a free defender closes to within a yard.
+    - Against the same seed at Awareness 50 without a cut, a cut gains +1.4 yd on the first range and +3.2 to +5.1 on the second.
+    - Cuts stopped short (under 2 yd) fall from 56–65% at 50 to 45–51% at 95; cuts gaining 4+ rise from 11–19% to 21–30%.
+    - Negative runs are the same at every level on every play except Trap, because they are settled before the read: penetration in the backfield.
+    - So Awareness improves decisions on the plays where a read matters. The aggregate gain stays modest because only about 1 run in 12 offers a read worth changing.
+  - *Findings reported for the owner (both corrected below, owner-approved):*
+    - Reading the lead block (F5, C1) does not use Awareness. Every back follows his engaged puller the same way, on about 46% of Power, Counter, Trap and Toss runs at every level.
+    - Trap at Awareness 80–95 sometimes cuts 4.5 yards short of the hole, mostly against All-Out Pressure, giving up a 0-yard run for −1 (negative runs 7 → 11%). On 48 such cuts in 312 plays the net is −0.8 yd. It is a small early-cut case that the cut price does not fully cover.
+  - *Power Right in games* (5.93 → 7.33 in the first three sets).
+    - Over six independent 120-game sets: C1 6.03 → C2 7.09 pooled (about 1,550 runs each). The median is 4 in both; runs of 20+ yards rise from 3.4% to 5.3%.
+    - The rise is in the tail and against fronts. Cuts (30 of 1,556) add 0.26. Against Edge Contain it rises 4.05 → 12.81 (its intended inside weakness, now real since the ends moved outside), adding 0.33. Against Goal Line Man (2.76 → 15.19), Bear Front (2.53 → 6.76) and Goal Line Stand (2.39 → 4.88) it adds 0.42.
+    - Against coverage calls it is unchanged.
+    - The same mechanics with only the dice stream changed measure 6.58, so about 0.5 of any one set's figure is noise.
+    - Lab, plain 65s, three 60-seed ranges, v42.15 → C1 → C2:
+
+      | Front | v42.15 | C1 | C2 |
+      |---|---|---|---|
+      | Goal Line Stand | 3.5 | 2.3 | 4.8 |
+      | Goal Line Man | 2.8 | 8.1 | 8.9 |
+      | Bear Front | 1.2 | 2.7 | 5.2 |
+      | Run Wall | 1.8 | 3.1 | 3.3 |
+      | Edge Contain | 3.5 | 3.1 | 4.9 |
+      | All-Out Pressure | 1.1 | 1.3 | 1.3 |
+
+    - Traced plays: the gains come from the back bouncing outside a front that has nobody outside the box (Bear Front, Goal Line Man), or cutting back behind a linebacker or corner who has pursued into the backfield, where he chased the carrier's earlier position (Phase A perception delay). Both are visible on the field.
+    - No hidden information and no defect was found. Not rebalanced.
+  - *Edge Contain against v42.15* (three 40-seed ranges):
+    - Edge runs: Stretch Left 14.8 → −1.2; Toss Sweep 3.8 → −0.7.
+      - The unblocked contain end makes 88% of Stretch Left's tackles. No blocker is assigned to him, and he is never engaged, so this is the scheme, not the shed.
+      - Stretch Left still gains 4+ on 8 of 120 plays, Toss on 18.
+    - Outside Zone 1.7 → 3.4: 4+ on 46 of 120, 10+ on 6.7%, its end engaged on every play. The leverage shed is a rate, not a win.
+    - Jet Sweep −0.4 → 2.2; Read Option 2.4 → 3.6.
+    - Inside, its intended weakness, now real: Power Left 1.6 → 9.7, Counter 2.1 → 11.7, QB Draw −0.2 → 5.5, Inside Zone −0.3 → 3.5, Power Right 3.4 → 4.6, Dive 2.2 → 2.9, Trap 0.3 → 3.6. In v42.15 Edge Contain stopped nearly every run, because its ends lined up inside.
+    - Passing:
+      - Play-action: 8.61 → 8.19 yards per play, completion 46.7 → 45.9%, sacks 6.7 → 2.2%, interceptions 1.5 → 1.5%.
+      - Other passes: 7.65 → 7.59 yards, completion 59.9 → 58.7%, sacks 0.2 → 1.3%, interceptions 2.6 → 3.2%.
+      - PA Boot against it: 7.46 (13th of 26) → 6.55 (11th).
+    - Nothing abnormal.
+- **Final refinements (owner-approved, 2026-10-28): premature cutbacks and the lead-block read.** Both are in `src/sim/engine.js`. All comparisons use matched seeds against the Phase C commit `c57a1e8` and v42.15.0.
+  - *Premature cuts (the defect).*
+    - The lane read dropped any defender whose motion carried him behind the carrier.
+    - A lineman who had penetrated beside the back and was chasing the quarterback therefore vanished from the read. A cut toward him then looked clean.
+    - Against All-Out Pressure, the aware back cut 4.5 yards short of Trap's hole into that defender: 8 of 48 plays at Awareness 95 against the four pressure calls.
+  - *Corrections.*
+    - A free defender already across the line, beside the back (within 2.5 yards behind him and 6 to the side), is counted where he is.
+    - More than 3 yards short of the hole, the back keeps pressing unless something he can see threatens his own track now: a free defender across the line, near the path between him and the hole. A penetrator can still force an early adjustment. A crowded hole further on cannot, because it may open by the time he gets there.
+    - The existing cut price (more the farther short of the hole) is unchanged.
+  - *Lead-block read (Awareness).* Before, every back followed his engaged puller the same way. Now:
+    - The open side is the blocker's side away from the man he has engaged. A poor reader sometimes takes the wrong shoulder: chance 0.3 × (1 − Awareness)^1.5, about 11% at 50 and 0.3% at 95.
+    - He then compares the free defenders he can see near the lane beside the block and near the designed lane. He uses the lane read's own perception: Awareness sets how many defenders he misses and how far off he places them, and an aware back reads a scraping defender's current flow. A chaser counts where he is.
+    - He stays on the design (`lead_pass`) only when the lane beside the block reads clearly more crowded.
+    - The rule is the same for every back. Nothing knows whether the block will hold or where anyone goes next.
+    - Considered and rejected: letting a sharp back wait until closer to the hole before reading the block. It cut lead-block reads from 46% to 7–16% of runs, and least for the sharpest backs, so following the block would no longer be a normal choice.
+  - *Measured* (9 runs × 26 calls × 12 seeds per range, Awareness 50 / 65 / 80 / 95). Future frames judge the read; they never feed it.
+
+    | | v42.15 | Phase C before | Final |
+    |---|---|---|---|
+    | Cut rate at 95 | 27.8% | 8.6% | 9.4% |
+    | Cut into a lane closing to within 1 yard | 9–13% | 4–6% | 3–5% |
+    | Cut chose a more open lane than the call | 86–90% | 89–93% | 91–95% |
+    | Premature cuts (more than 3 yd short) at 95 | 14.7% of runs | 1.2% | 0.7–0.8% |
+    | Negative runs, 50 → 95 | 10.7 → 13.0% | 10.7 → 11.1% | 10.7 → 10.8% |
+    | Trap vs All-Out, Double A Mug, Cover 0, Zone Blitz, Goal Line Stand, Bear Front at 95 | 0.68 yd, 50% negative | 0.61 yd, 31.9% negative | 1.21 yd, 16.7% negative (range 2: 0.32, 26.4%, the same as at 50) |
+
+    - Trap's negative runs no longer rise with Awareness: 6.7 → 7.1% (was 7.1 → 11.2%).
+    - Against the four pressure calls, early cuts at 95 fell from 8 of 48 to at most 3. Negative runs there are 1 at 50 against 9 at 95 before the fix.
+    - Yards per carry: 4.06 / 4.26 / 4.43 / 4.37 and 5.03 / 5.19 / 5.46 / 5.49.
+    - RB-only sweep (10 runs × 26 calls × 20 seeds): Awareness +0.38 yd, negatives 12.1 → 12.2%. Phase C before: +0.41, 12.0 → 12.3%. v42.15: +0.53, 12.7 → 14.3%.
+  - *Lead-block read, measured* (Power Right, Power Left, Counter, Trap, Toss Sweep):
+    - The block is read on about 46% of those runs at every level.
+    - The back follows it on 92–95% of reads at every level, so it stays the normal choice. Before, he followed 100% of the time.
+    - Where the 95 back stays and the 50 back follows on the same seed: +1.5 yd (n 34). Where the 95 back follows and the 50 back stayed: −1.0 yd (n 55).
+    - Stays gain 6.16 vs 4.23 yd (95 vs 50) on one range, but 3.88 vs 5.41 on the other.
+    - So the read is now Awareness-dependent, as specified, but its yardage effect is within noise: it changes the decision on about 3% of lead plays. Nothing was tuned toward a yardage target.
+  - *Speed and Agility with Awareness* (9 runs × 10 calls × 10 seeds, Awareness 50 → 95):
+    - At Speed 50 → 95 the Awareness gain is +0.30 → +2.76 (v42.15 +0.15 → +2.70): a fast back's open-field reads, unchanged.
+    - At Agility 50 → 95 it is +0.48 → +0.59 (v42.15 +0.64 → +0.65).
+    - The Speed curve is 3.25 / 4.29 / 6.74 / 10.82 and the Agility curve 3.62 / 4.29 / 4.79 / 5.31, both unchanged.
+  - *Regression.*
+    - Plain-65 matrix within 0.15 yd of the Phase C commit on every run: all runs 4.20 → 4.22; Counter 6.13 → 6.22; Toss Sweep 3.35 → 3.48.
+    - Lesson claims 56 of 58 hold. Dive vs Run Wall ranks 10th, and Trap vs Fire Zone 17th here and 18th on a second range: both borderline.
+    - League, 360 games: points 13.39 → 13.14; yards per carry 5.85 → 5.78; Power Right 7.33 → 7.35; Counter 6.53 → 6.51.
+    - Power Right over six 120-game sets: 7.09 → 7.08 (median 4; Edge Contain 12.8 → 11.9, Goal Line Man 15.2 → 13.9).
+    - Edge Contain runs and passes unchanged, except Power Right 4.6 → 5.3 and Read Option 3.6 → 3.2.
+    - Pass plays identical except against Edge Contain (unchanged).
+    - Phase A Awareness studies: no inversions; mean total 1.12; play-action unchanged.
+    - Abilities within noise; Read Option split unchanged.
+  - *Tests* (`tests/run-vision.test.js`, 3 more):
+    - Trap against pressure: at most 3 premature cuts at Awareness 95, and negative runs no more than 5 points above Awareness 50. The Phase C commit measured 8 premature cuts and 2% → 19% negative runs, so it fails this test.
+    - Every early cut has a free defender across the line near the back, and early cuts still happen.
+    - Following the lead block is at least 80% of reads at every level, and staying on the design is a real choice.
+- Tests (C2): `tests/run-vision.test.js` (4):
+  - a sharp back does not lose more on Inside Zone;
+  - cutbacks are reads, not certainties;
+  - Outside Zone meets behind the line, early and in reach, and reaches the line outside the tackle box;
+  - Edge Contain lines up outside, holds Outside Zone below the median and gives up more to Power, but Outside Zone still breaks some.
+
+  The carrier-vision, attribute-fixes and awareness-matters tests pass unchanged.
+
 ### 53.6 Testing
 `tests/qb-read.test.js` (17): the owner's tests 1–16 on the real engine (primary open; primary double-covered at Awareness 95; secondary open; checkdown; everyone covered; blitz timing; zone windows; play action; option/RPO; the same play against different defenses; Awareness 50 vs 95; save/load; replay accuracy; the indicator setting; the Lab; a named target obeyed) plus model sanity. `tools/qb-study.mjs` (before/after and Awareness sweeps), `tools/ai-lab-check.py` (Lab at 320–430 px: live, paused, comparison only after deciding, storage across reloads, export → clear → import, no franchise touched), `tools/qb-compat-check.mjs` (a v42.4.1 save opened byte-identical and played on; the new setting both ways). Replay planner fix: a long catch-and-run touchdown no longer exceeds the replay window (lead-in shortened first, then the end trimmed).
 

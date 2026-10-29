@@ -39,6 +39,8 @@ const norm = (v) => clamp(v, 1, 99) / 99;
 
 const EDGE_ATTRS = ['speed', 'agility', 'strength', 'awareness', 'catching', 'accuracy', 'tackling', 'coverage', 'blocking'];
 // ---- Pursuit effort (v42.13, GDD §53.5i): pure helpers, exported for tests and the Lab ----
+const AURA_BLOCK_JOBS = new Set(['block', 'run_block', 'pull']); // Phase C1 (F6): the blocking jobs Bulwark's line bonus reaches
+const DESIGNED_RUN_BLOCK = new Set(['run_block', 'pull', 'stalk', 'block']); // Phase C1 (F2): run-blocking jobs that outlast the handoff
 export const PURSUIT_EFFORT = 1.05, CARRY_PACE = 0.94, EFFORT_FADE = 0.5;
 /** How much a pursuer at (rx, ry) from the carrier, who moves at (vx, vy), is chasing him from behind along his run: 0 when he
  * is beside him (120° or less off his heading), meets him head-on, or the carrier is barely moving (under 2.5 yd/s); 1 when he
@@ -126,7 +128,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const [x, y] = play.align[slot];
     const a = {
       team, slot, mid, type: input?.type || null, overcharged, sovereignQ4, baseAwareness: attrs.awareness, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
-      x, y, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
+      x, y, lineX: x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0,
     };
@@ -146,7 +148,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     for (const b of actors) {
       if (b === a || b.team !== a.team) continue;
       if (aura.reaction) b.reactionBonus += aura.reaction;
-      if (aura.blocking && b.assignment?.a === 'block' && Math.abs(b.y - a.y) <= 2.2) b.attrs.blocking = Math.min(99, b.attrs.blocking + aura.blocking);
+      // Bulwark (Phase C1, F6): run blocks get it too (v42.15 gave it to pass protection only, so it did nothing on a run); still
+      // only a blocker lined up within 2.2 yards of him, and only once however many Bulwarks stand beside him.
+      if (aura.blocking && AURA_BLOCK_JOBS.has(b.assignment?.a) && Math.abs(b.y - a.y) <= 2.2 && !b.bulwarked) { b.bulwarked = true; b.attrs.blocking = Math.min(99, b.attrs.blocking + aura.blocking); }
     }
   }
   // Canopy Read (breakRadius) carries its reaction for one thing only, breaking on the throw from a deep zone (Phase B fix 7, as its
@@ -258,6 +262,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // ------------------------------------------------------------ blocking
   function tryEngage(blocker, defender, soft = false) {
     if (blocker.engaged || defender.engaged || blocker.stun > 0 || defender.noEngage > 0) return false;
+    // A missed open-field block costs him a moment before he can try again (Phase C1, F2). v42.15 set that pause on a miss but
+    // never checked it, so on a run a soft block was retried every tick until it landed: a sure block. Runs only, so passes,
+    // screens and the catch-and-run replay exactly as before.
+    if (soft && isRun && blocker.noEngage > 0) return false;
     if (dist(blocker, defender) > (soft ? 1.2 : 1.6)) return false;
     // Dragon's Roar: the lineman across from him is slow to engage off the snap.
     if (blocker.roarUntil && t < blocker.roarUntil) return false;
@@ -304,7 +312,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (holdsForever && t > 0.5) abilityUsed(blocker, 'landslide');
     blocker.x = d.x + (gx / gd) * 0.9; blocker.y = d.y + (gy / gd) * 0.9;
     blocker.vx = d.vx = 0; blocker.vy = d.vy = 0;
-    const shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.58) + edge * 1.6, 0.06, 2.2);
+    let shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.58) + edge * 1.6, 0.06, 2.2);
+    // Leverage (Phase C2, F8): a contain defender plays with his outside arm free, so once the carrier comes to his side (no more
+    // than a step and a half inside him, or outside him) the blocker who reached him cannot hold him for long. It is his own job
+    // and where the ball plainly is; the shed is still a rate, never certain, and inside runs get no help from it.
+    if (isRun && d.assignment?.a === 'contain' && ball.holder && ball.holder.team !== d.team) { const c = ball.holder; if (Math.sign(c.y) === Math.sign(d.y) && Math.abs(c.y) > Math.abs(d.y) - 1.5) shedPerSec += 1.5; }
     if (!holdsForever && rng.chance(shedPerSec * DT)) {
       blocker.engaged = null; d.engaged = null; blocker.stun = be.rebound ? 0.1 : (0.45 + (d.ability?.blockerStun || 0)) * (be.dragonhide || 1); d.noEngage = runFit ? 0.5 : 0.85; // a beaten pass blocker cannot recover at once
       if (be.dragonhide) abilityUsed(blocker, 'dragonhide'); // Dragonhide: recovers twice as fast
@@ -393,12 +405,22 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     return best ? best.y : a.y;
   }
   /**
-   * Vision before contact (v42.8, attribute audit fix 3). From the handoff the carrier keeps attacking the designed lane, and
-   * every quarter second he reads what is in front of it: unengaged defenders he can see (Awareness sets how far ahead he
-   * looks: 7 yards at 50, 10 at 95) against the blockers in each lane. If the designed gap is closing and a neighbouring lane
-   * clearly reads better, he bends the rest of his path to it, once, and plants for the cut (Agility makes the cut; Speed runs
-   * it). A poor reader sees less, judges with more noise, and so commits to the closing gap or reacts late. Nothing here looks
-   * at a defender's assignment or where he will be: only where everyone is now.
+   * Vision before contact (v42.8; corrected in Phase C2, F7). From the handoff the carrier keeps attacking the designed lane, and
+   * every quarter second he reads what is in front of it: the defenders he can see (Awareness sets how far ahead he looks: 7 yards
+   * at 50, 10 at 95, and how often he misses or misplaces one) against the blockers in each lane. If a neighbouring lane clearly
+   * reads better, he bends the rest of his path to it, once, and plants for the cut. Phase C2 corrected three blind spots that
+   * made a sharp back worse on Inside Zone (more cutbacks, more losses):
+   * - a defender held by a block still counts, for part of his weight (the block may not hold);
+   * - a defender running straight at him will follow him wherever he goes, so his motion is not read as leaving a lane: he is
+   *   counted where he stands;
+   * - a free defender a team-mate is visibly closing on (a puller, a climbing lineman, a lead back) counts for less: the pickup
+   *   is in sight, though it may still miss;
+   * - the cut has a price: the plant costs ground, less for an agile back, more for a wider cut, and much more the farther short
+   *   of the hole he makes it, because a plant in the backfield lets the chase catch up;
+   * - a poor reader needs a lane to look much better before he trusts it over the call.
+   * His misreads (a missed or misplaced defender) come from a hash of the seed, his slot and the tick, not the play's dice, so
+   * reading well or badly changes nothing else in the play. Nothing here looks at a defender's assignment or where he will
+   * choose to go: only where everyone is and how they are moving now.
    */
   function preContactLane(a, path) {
     if (a.laneDecided || a.wp >= path.length) return;
@@ -406,32 +428,81 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const dir = a.team === 'off' ? 1 : -1; const aw = norm(a.attrs.awareness);
     const look = 4 + 6 * aw, miss = 0.45 * Math.pow(1 - aw, 1.2), jitter = 1.6 * (1 - aw); // how far he reads, how often he misses a defender, how far off he places one
     const ahead = path.slice(a.wp); const gate = ahead.find((p) => p[0] * dir >= 0) || path[path.length - 1]; const laneY = gate[1];
-    const gateAhead = (gate[0] - a.x) * dir; if (gateAhead > 2.5 + 2.5 * aw) return; // he presses the designed hole first and reads it on the way in: a sharp back reads from five yards out, a poor one from under four, often too late
-    // What he sees: unengaged defenders between him and just past the hole (a safety ten yards deep is not closing it), each possibly missed or misplaced.
+    const gateAhead = (gate[0] - a.x) * dir; if (gateAhead > 2.5 + 2.5 * aw) return; // he presses the designed hole first and reads it on the way in
+    // Short of the hole (Phase C final, owner-approved 2026-10-28): well before the hole he keeps pressing it unless something he can see
+    // threatens his own track now: a free defender already across the line, near the path between him and the hole. A penetrator
+    // can force an early adjustment; a crowded hole further on cannot, because it may still open by the time he gets there.
+    if (gateAhead > 3) {
+      const ex = gate[0] - a.x, ey = gate[1] - a.y, eL = Math.hypot(ex, ey) || 1;
+      const threat = opponents(a.team).some((d) => !d.engaged && d.stun <= 0 && d.x * dir < 0 && (d.x - a.x) * dir > -1 && (d.x - a.x) * dir < gateAhead && Math.abs(((d.x - a.x) * ey - (d.y - a.y) * ex) / eL) < 2.5);
+      if (!threat) return;
+    }
     const seen = []; const reach = Math.min(look, gateAhead + 3.5);
     const flow = 0.3 * aw; // where each defender is going, from his movement now (an aware back reads the flow; a poor one sees him where he stands)
-    for (const d of opponents(a.team)) { if (d.engaged || d.stun > 0) continue; const ax = (d.x + d.vx * flow - a.x) * dir; if (ax < -0.5 || ax > reach) continue; if (rng.chance(miss)) continue; seen.push({ y: d.y + d.vy * flow + rng.normal() * jitter, ax }); }
+    for (const d of opponents(a.team)) {
+      if (d.stun > 0) continue;
+      const sp = Math.hypot(d.vx, d.vy), toMe = Math.hypot(a.x - d.x, a.y - d.y) || 1;
+      const chasing = !d.engaged && sp > 1.5 && (d.vx * (a.x - d.x) + d.vy * (a.y - d.y)) / (sp * toMe) > 0.8;
+      const px = d.x + (d.engaged || chasing ? 0 : d.vx * flow), py = d.y + (d.engaged || chasing ? 0 : d.vy * flow);
+      // A defender already in the backfield beside him is counted where he is even when his motion carries him behind the carrier:
+      // he is close enough to make the tackle in a lane the back cuts to (v42.16: the read dropped him, so a cut toward him looked clean).
+      const axNow = (d.x - a.x) * dir; const beside = !d.engaged && d.x * dir < 0 && axNow > -2.5 && Math.abs(d.y - a.y) < 6;
+      let ax = (px - a.x) * dir; if ((ax < -0.5 && !beside) || ax > reach) continue; if (ax < 0) ax = 0; const hk = `${seed}|${a.slot}|see|${d.slot}|${tick}`; if (hash01(hk) < miss) continue; // perception noise comes from a hash, not the dice, so how well he reads changes nothing else in the play
+      const held = d.engaged ? ((d.x - a.x) * dir < gateAhead + 1.5 ? 0.35 + 0.3 * aw : 0) : 1; if (!held) continue; // a block that is holding: part of his weight (an aware back trusts a good block less blindly)
+      // A free defender a team-mate is visibly on his way to (a puller, a climber) is being picked up: the back trusts the block.
+      const onHim = !d.engaged && teammates(a.team).some((m) => m !== a && m !== qb && !m.engaged && m.stun <= 0 && dist(m, d) < 4 && (dist(m, d) < 1.5 || (m.vx * (d.x - m.x) + m.vy * (d.y - m.y)) / ((Math.hypot(m.vx, m.vy) || 1) * dist(m, d)) > 0.7));
+      const nz = Math.sqrt(-2 * Math.log(hash01(hk + '|u') + 1e-4)) * Math.cos(2 * Math.PI * hash01(hk + '|v'));
+      seen.push({ y: py + nz * jitter, ax, held: onHim ? 0.4 + 0.2 * (1 - aw) : held });
+    }
     const blockers = teammates(a.team).filter((m) => m !== a && m !== qb && !m.engaged && (m.x - a.x) * dir > 0 && (m.x - a.x) * dir <= reach);
-    // How a lane reads: each defender he sees in it counts against it (more the nearer he is, less if a free blocker is on his way to him), each free blocker in it counts for it.
     const read = (ly) => {
       let sc = 0;
-      for (const d of seen) { const w = Math.max(0, 2.6 - Math.abs(d.y - ly)) * (1.3 - d.ax / (reach + 1)); const picked = blockers.some((m) => Math.abs(m.y - ly) < 2.0 && (m.x - a.x) * dir < d.ax); sc -= picked ? w * 0.4 : w; }
+      for (const d of seen) { let w = Math.max(0, 2.6 - Math.abs(d.y - ly)) * (1.3 - d.ax / (reach + 1)) * d.held; const picked = d.held === 1 && blockers.some((m) => Math.abs(m.y - ly) < 2.0 && (m.x - a.x) * dir < d.ax); sc -= picked ? w * 0.4 : w; }
       for (const m of blockers) if (Math.abs(m.y - ly) < 2.2) sc += 0.5;
       return sc;
     };
     const base = read(laneY); let best = { off: 0, sc: base };
-    for (const off of [-2, 2, -4, 4]) { const ly = laneY + off; if (ly < B.left + 1.5 || ly > B.right - 1.5) continue; const sc = read(ly) - Math.abs(off) * 0.15; if (sc > best.sc) best = { off, sc }; }
-    if (best.off === 0 || best.sc < base + 1.6) return; // the call reads fine, or nothing next to it reads clearly better: he takes the call
+    // A plant far behind the hole only lets the chase catch up: the cut costs more the farther from the hole he makes it.
+    for (const off of [-2, 2, -4, 4]) { const ly = laneY + off; if (ly < B.left + 1.5 || ly > B.right - 1.5) continue; const sc = read(ly) - Math.abs(off) * 0.15 - (0.4 + 0.1 * Math.abs(off)) * (1.3 - norm(a.attrs.agility)) - 1.2 * Math.max(0, gateAhead - 3); if (sc > best.sc) best = { off, sc }; }
+    if (best.off === 0 || best.sc < base + 1.6 + 1.2 * (1 - aw)) return; // the call reads fine, or nothing next to it reads clearly better: he takes the call (a poor reader needs it plainer before he trusts it)
     a.laneDecided = true; a.cutUntil = t + 0.3; const off = best.off; // he plants to bend the run
     const pts = path.map((p, i) => (i < a.wp ? p : [p[0], clamp(p[1] + off * (i === a.wp ? 0.6 : 1), B.left + 1.5, B.right - 1.5)]));
     a.assignment = { ...a.assignment, points: pts }; // his own copy: the playbook's drawn path is never changed
     log(`${a.name} cuts it back`, { kind: 'cutback', by: a.slot, side: a.team, off, at: +((gate[0] - a.x) * dir).toFixed(1) });
   }
+  /**
+   * Reading the lead block (Phase C1, F5). When the guard (or tight end) pulling ahead of him engages a defender near the hole,
+   * the carrier takes the side of that block away from the defender: inside a kick-out, outside a block that turns the defender
+   * in. Once, a gentle bend (no plant, no change of pace); what he reads is where the two are now.
+   */
+  function readLeadBlock(a, path) {
+    if (a.leadRead || a.laneDecided || a.wp >= path.length) return;
+    const dir = a.team === 'off' ? 1 : -1;
+    const lead = teammates(a.team).find((m) => m.assignment?.a === 'pull' && m.engaged && (m.x - a.x) * dir > 0 && (m.x - a.x) * dir < 4 && Math.abs(m.y - a.y) < 3.5);
+    if (!lead) return;
+    a.leadRead = true; const d = lead.engaged; const aw = norm(a.attrs.awareness); const hk = `${seed}|${a.slot}|lead|${tick}`;
+    // Awareness reads the block (Phase C final, owner-approved 2026-10-28). The open side is the blocker's side away from the man he
+    // has engaged; a poor reader sometimes takes the wrong shoulder. He then checks the lane beside the block against the designed
+    // lane: free defenders he can see near each (a penetrator, a scraping linebacker). Awareness sets how many he misses and how far
+    // off he places them, as in the lane read; the rule is the same for every back, so following the block stays the normal choice
+    // and only a lane he sees closing keeps him on the design. Nothing here knows whether the block will hold or where anyone goes next.
+    let side = Math.sign(lead.y - d.y) || 1; if (hash01(hk) < 0.3 * Math.pow(1 - aw, 1.5)) side = -side;
+    const gate = path.slice(a.wp).find((p) => p[0] * dir >= 0) || path[path.length - 1];
+    const off = clamp(lead.y + side * 1.1 - gate[1], -2, 2); if (Math.abs(off) < 0.3) return;
+    const miss = 0.45 * Math.pow(1 - aw, 1.2), jitter = 1.6 * (1 - aw);
+    const free = opponents(a.team).filter((o) => !o.engaged && o.stun <= 0 && (o.x - a.x) * dir > -1.5 && (o.x - a.x) * dir < 5 && hash01(`${hk}|${o.slot}`) >= miss)
+      .map((o) => { const sp = Math.hypot(o.vx, o.vy), toMe = Math.hypot(a.x - o.x, a.y - o.y) || 1; const chasing = sp > 1.5 && (o.vx * (a.x - o.x) + o.vy * (a.y - o.y)) / (sp * toMe) > 0.8;
+        return o.y + (chasing ? 0 : o.vy * 0.3 * aw) + (hash01(`${hk}|${o.slot}|j`) * 2 - 1) * jitter; }); // where he is heading now (an aware back reads a scraping linebacker's flow), placed less exactly by a poor reader
+    const crowd = (ly) => free.reduce((sum, y) => sum + Math.max(0, 1.8 - Math.abs(y - ly)), 0);
+    if (crowd(gate[1] + off) > crowd(gate[1]) + 0.6) { log(`${a.name} stays on the design: the lane beside ${lead.name} is closing`, { kind: 'lead_pass', by: a.slot, side: a.team, blocker: lead.slot, off: +off.toFixed(1) }); return; }
+    a.assignment = { ...a.assignment, points: path.map((p, i) => (i < a.wp ? p : [p[0], clamp(p[1] + off * (i === a.wp ? 0.6 : 1), B.left + 1.5, B.right - 1.5)])) }; // his own copy: the drawn path is never changed
+    log(`${a.name} follows ${lead.name}'s block`, { kind: 'lead_read', by: a.slot, side: a.team, blocker: lead.slot, off: +off.toFixed(1) });
+  }
   function carrierMove(a) {
     const dir = a.team === 'off' ? 1 : -1;
     const path = a.assignment?.points;
     const onDesignedPath = a.team === 'off' && path && ['carry', 'keep', 'option'].includes(a.assignment.a) && a.wp < path.length && a.x * dir < 1.5;
-    if (onDesignedPath) { if (ball.holder === a) preContactLane(a, path); followPath(a, a.assignment.points, 1); return; }
+    if (onDesignedPath) { if (ball.holder === a) { readLeadBlock(a, path); preContactLane(a, path); } followPath(a, a.assignment.points, 1); return; }
     // Walk-through: the carrier runs his whole drawn path and stops at its end.
     if (dry && a.team === 'off' && path && ['carry', 'keep', 'option'].includes(a.assignment.a)) { if (a.wp === path.length - 1 && dist(a, { x: path[a.wp][0], y: path[a.wp][1] }) < 2) a.wp = path.length; if (a.wp < path.length) followPath(a, path, 1); else steer(a, a.x, a.y, 0, 0.3); return; }
     if (a.laneTimer === undefined || a.laneTimer <= 0) { a.laneY = laneChoice(a); a.laneTimer = 0.42 - 0.22 * norm(a.attrs.awareness); } // v42.8: a sharp runner re-reads the field every 0.2 s, a poor one every 0.3 s and reacts late
@@ -466,7 +537,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const someoneCarrying = phase === 'carry' || (phase === 'run' && handoffDone) || (ball.holder && ball.holder !== qb);
     if (a === qb && (ball.inAir || (ball.holder && ball.holder !== qb) || result)) { steer(a, a.x, a.y, 0, 0.2); return; }
     if (a.released) { screenBlock(a); return; } // screen linemen stay on their wall
-    if (ball.holder && ball.holder.team === 'off' && ball.holder !== qb && a !== qb && !dry?.noDefense) { escortBlock(a); return; } // walk-through: blockers stay on their drawn assignments
+    // Phase C1, F2 (owner-approved, 2026-10-28): on a designed run a blocker keeps his drawn job after the handoff (v42.15 sent
+    // every free blocker to the escort at the handoff, 0.3-0.8 s in, so stalks, pulls and climbs were abandoned). His job is done
+    // once the carrier is past him; from then on he escorts as before.
+    if (isRun && DESIGNED_RUN_BLOCK.has(asg.a) && !a.jobDone && ball.holder && ball.holder.team === 'off' && ball.holder !== qb && (ball.holder.x - a.x) * (a.team === 'off' ? 1 : -1) > 1.0) a.jobDone = true;
+    const onJob = isRun && DESIGNED_RUN_BLOCK.has(asg.a) && !a.jobDone;
+    if (ball.holder && ball.holder.team === 'off' && ball.holder !== qb && a !== qb && !dry?.noDefense && !onJob) { escortBlock(a); return; } // walk-through: blockers stay on their drawn assignments
     if (ball.holder && ball.holder.team === 'def') { pursue(a); return; }
     if (ball.inAir) {
       // The target adjusts to the ball (v42.8, attribute audit fix 1): he runs to the landing spot at the pace that gets him
@@ -572,11 +648,33 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   function runBlock(a, landmark, searchRadius = 2.2, soft = false) {
     const [lx, ly] = landmark;
+    // Climb block (Phase C1, F4): he works past the linemen on the line of scrimmage, leaving them to the play's design (Trap's
+    // pulling guard, a down block), to the second level. A lineman is known by where he lined up and where he is now (on the
+    // line, within 1.5 yards of it), never by his assignment. Once at his landmark, or 1.2 s in, he blocks like anyone else.
+    const climbing = a.assignment.climb && !a.climbed;
+    if (climbing && (dist(a, { x: lx, y: ly }) < 1.2 || t > 1.2)) a.climbed = true;
+    const onLine = (d) => d.lineX <= 1.6 && Math.abs(d.x) < 1.5;
     // Block the most immediate threat: a defender attacking the gap takes priority over the landmark.
-    const threat = (d) => !d.engaged && d.stun <= 0 && d.noEngage <= 0;
+    const threat = (d) => !d.engaged && d.stun <= 0 && d.noEngage <= 0 && !(climbing && onLine(d)) && !a.whiffed?.[d.slot];
     const attacking = defs.filter((d) => threat(d) && Math.abs(d.y - a.y) < 2.6 && d.x > a.x - 1 && d.x < a.x + 4.5 && (d.vx < -1 || dist(d, a) < 1.8));
-    const nearby = (attacking.length ? attacking : defs.filter((d) => threat(d) && dist(d, a) < searchRadius)).sort((p, q) => dist(p, a) - dist(q, a))[0];
-    if (nearby) { steer(a, nearby.x, nearby.y, 1, 0.3); tryEngage(a, nearby, soft); return; }
+    // A lead blocker (a puller) takes the first defender who shows in the hole he is leading through, moving or not (Phase C1, F5):
+    // v42.15 only took defenders running at him, so a linebacker who sat in the hole was left for the back.
+    const inHole = a.assignment.a === 'pull' ? defs.filter((d) => threat(d) && dist(d, { x: lx, y: ly }) < 3.5 && d.x > a.x - 1) : [];
+    const nearby = (attacking.length || inHole.length ? [...attacking, ...inHole] : defs.filter((d) => threat(d) && dist(d, a) < searchRadius)).sort((p, q) => dist(p, a) - dist(q, a))[0];
+    // A block in space is never a sure thing (Phase C1, F2/F4/F5): a puller, a climber, or anyone still on his job after the handoff
+    // who reaches a defender off the line gets one try at him. Blocking against the defender's Agility and Awareness decides it; a defender who
+    // slips him is past him for the rest of the play. A block that lands is a run block like any other.
+    const inSpace = (d) => !onLine(d) && (a.assignment.a === 'pull' || a.assignment.climb || handoffDone);
+    if (nearby) {
+      const lead = inSpace(nearby) ? 0.25 : 0; // in space he takes an angle on the defender, where he will be a moment from now
+      steer(a, nearby.x + nearby.vx * lead, nearby.y + nearby.vy * lead, 1, 0.3);
+      if (!soft && inSpace(nearby) && dist(a, nearby) <= 1.6 && !nearby.engaged && a.stun <= 0) {
+        const slip = 0.5 * norm(nearby.attrs.agility * scaleVs(nearby, a, 'shed')) + 0.5 * norm(nearby.attrs.awareness); // he sees it coming (Awareness) and gets around it (Agility)
+        const p = clamp(0.25 + 0.5 * norm(a.attrs.blocking * scaleVs(a, nearby, 'block')) + 1.0 * (norm(a.attrs.blocking) - slip), 0.25, 0.9); // between equals, the open-field block's own landing rate (0.58 at 65)
+        if (!rng.chance(p)) { (a.whiffed ||= {})[nearby.slot] = true; log(`${nearby.name} slips ${a.name}'s block`, { kind: 'whiff', by: nearby.slot, side: nearby.team, blocker: a.slot }); return; }
+      }
+      tryEngage(a, nearby, soft); return;
+    }
     if (dist(a, { x: lx, y: ly }) > 0.8) { steer(a, lx, ly, 1, 0.5); return; }
     // At the landmark: climb to the next unblocked defender ahead.
     const next = defs.filter((d) => !d.engaged && d.x > a.x - 1 && dist(d, a) < 7).sort((p, q) => dist(p, a) - dist(q, a))[0];
@@ -588,7 +686,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function giveBall(to) {
     ball.holder = to; handoffDone = true; phase = 'carry'; stats.carrier = to.slot; handoffAt = t;
     to.laneTimer = 0; to.jukeCooldown = 0;
-    log(`Handoff to ${to.name}`, { kind: 'handoff', to: to.slot });
+    log(`Handoff to ${to.name}`, { kind: 'handoff', to: to.slot, reach: qb ? +dist(qb, to).toFixed(2) : null }); // reach: how far apart the two were (Phase C1, F1)
   }
   // The handoff: the quarterback steps to a meeting point just off the runner's drawn path (owner review,
   // 2026-10-20) instead of chasing him, so the two never collide and the runner keeps his line.
@@ -608,10 +706,18 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (!handoffDone) {
       if (rb) { a.mesh ||= meshPoint({ x: a.assignment.points[0][0], y: a.assignment.points[0][1] }, rb); steer(a, a.mesh.x, a.mesh.y, 0.8, 0.3); } else steer(a, a.x, a.y, 0, 0.2);
       if (rb && dist(a, rb) < 1.5 && t > 0.2) giveBall(rb);
-      else if (rb && t > 1.1) giveBall(rb);
+      else if (rb && t > 1.1) missedMesh(a, rb); // Phase C1 (F1): the exchange can no longer happen; the ball never jumps to a back out of reach
       return;
     }
     steer(a, a.x - 2, a.y + 2, 0.5, 0.5); // carry out the fake
+  }
+  // Phase C1, F1 (owner-approved, 2026-10-28): a handoff happens only hand to hand. When the back has run past the mesh and
+  // the two never met (v42.15 handed him the ball anyway at 1.1 s from as far as 7 yards, so the defence saw no run until he
+  // was at the line), the quarterback still has it and keeps it: he is the runner from where he stands, and the defence reads
+  // the keep the way it reads an option keep.
+  function missedMesh(a, rb) {
+    ball.holder = a; handoffDone = true; phase = 'carry'; stats.carrier = a.slot; keepAt = t; a.laneTimer = 0; a.jukeCooldown = 0;
+    log(`${a.name} and ${rb.name} miss the mesh; ${a.name} keeps it`, { kind: 'mesh_missed', by: a.slot, to: rb.slot });
   }
   function qbPitch(a) {
     const rb = offs.find((o) => o.assignment.a === 'carry');
@@ -648,8 +754,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         }
         const { key } = a.optionRead;
         // Hold the ball until the read defender commits (or the timing runs out), then get rid of it.
-        if (key && !key.engaged && dist(key, a) > 2.5 && t < 1.2) return;
-        if (a.optionRead.word === 'pitch') log(`${a.name} pitches`, { kind: 'pitch', read: key?.slot || null });
+        // A give is made at the mesh (Phase C1, F1): he waits for a back still coming to him, rides the mesh while the back is in
+        // his hands, and gives before the back is out of reach; a back who has gone past it can no longer be given the ball, so
+        // he keeps. Only a pitch can wait for the read defender to come all the way.
+        if (a.optionRead.word === 'pitch') { if (key && !key.engaged && dist(key, a) > 2.5 && t < 1.2) return; log(`${a.name} pitches`, { kind: 'pitch', read: key?.slot || null }); }
+        else {
+          const dR = dist(a, rb), closing = (rb.x - a.x) * (rb.vx - a.vx) + (rb.y - a.y) * (rb.vy - a.vy) < 0;
+          if (closing && dR > 0.9 && t < 1.2) return; // he is still coming to the mesh
+          if (dR > 1.5) { missedMesh(a, rb); return; }
+          if (key && !key.engaged && dist(key, a) > 2.5 && t < 1.2 && dR < 1.0) return; // he rides the mesh while the back is still in his hands
+        }
         giveBall(rb);
       }
       return;
@@ -1511,6 +1625,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         const outside = carrier && Math.abs(carrier.y) > Math.abs(pt[1]) - 2 && Math.sign(carrier.y) === Math.sign(pt[1]);
         const crossed = carrier && carrier.x > 0.5;
         if (outside || crossed || (scrambled)) { mark('contain', 'pursue'); pursue(d); return; }
+        // Phase C2 (F8): once he has read a run (observable, Phase A), the contain man stops working to quarterback depth and sets the
+        // edge on the carrier: he keeps himself outside the ball and a step ahead of it, so the run has to turn back inside.
+        if (c && c.team !== d.team && d.recognised) { const side = Math.sign(pt[1]) || 1; mark('contain', 'set edge'); steer(d, Math.max(c.x + 1.5, d.x - 1), side * Math.max(Math.abs(c.y) + 2, 4), 1, 0.4); return; } // never pinching inside four yards: inside runs are not his
         mark('contain', 'edge'); steer(d, pt[0], pt[1], 0.9, 0.4); return;
       }
       case 'man': {
@@ -1680,11 +1797,31 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
 
   // ------------------------------------------------------------ contact and dead balls
+  // The arm off a block (Phase C1, F4): the clean-tackle odds, scaled down; no tackle abilities, and a miss is no broken tackle.
+  function armTackle(d, c) {
+    const tackleScore = (d.attrs.tackling * 0.55 + d.attrs.strength * 0.3) * scaleVs(d, c, 'tackle');
+    const carryStrength = c.attrs.strength + (c.ability?.carryStrength && Math.abs(c.y) < 6 ? c.ability.carryStrength : 0);
+    const carryScore = (carryStrength * 0.5 + c.attrs.agility * 0.3 + c.attrs.speed * 0.1) * scaleVs(c, d, 'breakTackle');
+    const p = sigmoid((tackleScore - carryScore + 18) / 16) * (0.15 + 0.35 * norm(d.attrs.awareness)); // 0.33 of a clean tackle at 65 Awareness
+    if (!rng.chance(p)) return false;
+    const dir = c.team === 'off' ? 1 : -1; c.x += dir * Math.min(1.2, Math.hypot(c.vx, c.vy) * 0.14);
+    if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
+    stats.tackler = d.slot;
+    if (c.team === 'off' && c.x <= B.ownGoal) { endPlay('safety', c.x, c.y); log(`${d.name} tackles ${c.name} in the end zone. SAFETY`, { kind: 'safety' }); return true; }
+    endPlay('tackle', c.x, c.y); log(`${d.name} reaches off his block and drags ${c.name} down`, { kind: 'tackle', by: d.slot, side: d.team, victim: c.slot, offBlock: true });
+    return true;
+  }
   function tryTackle(d, c) {
-    if (d.stun > 0 || d.engaged || dist(d, c) > 1.25) return false;
+    // Off the block (Phase C1, F4): on a designed run, a defender held up by a block can still reach out for a carrier who runs
+    // right past him, once a play, at a fraction of a clean tackle's chance (Awareness: he sees him coming). Blocks that work no
+    // longer make the man they hold invisible, which is what had turned an aware linebacker into a worse one once pullers arrived.
+    const offBlock = !!d.engaged && isRun && !d.armTried && dist(d, c) <= 1.0;
+    if (d.stun > 0 || (d.engaged && !offBlock) || dist(d, c) > 1.25) return false;
+    if (offBlock) d.armTried = true;
     const fwd = c.team === 'off' ? 1 : -1;
     // Daybreak: nobody can bring him down from behind.
     if (c.daybreak && (d.x - c.x) * fwd < -0.2) return false;
+    if (offBlock) return armTackle(d, c);
     // Permafrost: a run that meets him at his gap loses a yard on contact.
     if (d.ability?.permafrost && !c.permafrosted && handoffDone && !stats.receiver) { // v42.14: a handed-off (or kept) ball, not the play type
       c.permafrosted = true; c.x -= fwd * d.ability.permafrost; c.vx = 0; c.vy = 0; c.stun = Math.max(c.stun, 0.35); setStatus(c, 'frozen', 0.5); abilityUsed(d, 'permafrost'); abilityOutcome('stuffed', d, `${d.name} freezes ${c.name} in place`, { victim: c.slot });
@@ -1963,7 +2100,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const gain = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(endX * 10) / 10;
   const endYard = clamp(ballOn + gain, -10, 110);
   stats.yac = stats.catchX != null && !['incomplete'].includes(result) ? Math.max(0, Math.round(endX - stats.catchX)) : 0;
-  return {
+  const out = {
     result, yards: Math.round(gain), endYard: Math.round(endYard * 10) / 10, endLat: Math.round((ballLat + endLat) * 10) / 10,
     frames, events, elapsed: +t.toFixed(2), seed, offensePlay: offensePlay.id, defensePlay: defensePlay.id, ballOn, ballLat,
     names: { off: Object.fromEntries(offs.map((a) => [a.slot, a.name])), def: Object.fromEntries(defs.map((a) => [a.slot, a.name])) },
@@ -1971,6 +2108,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     touchdown: result === 'touchdown', safety: result === 'safety', bounds: B,
     qb: qr.order ? { v: QB_MODEL_VERSION, order: qr.order, reads: qr.log, decision: qr.decision, aiWould: qr.aiWould, sensedAt: qr.sensedAt, fakeAt: qr.fakeAt ?? null } : null, // the recorded read log (replays, AI Testing Lab)
   };
+  // Developer trace only (Phase C1 tests): each offensive player's Blocking after auras, kept out of the play's data (not enumerable,
+  // so a traced play still serialises exactly as an untraced one).
+  if (TRACE) Object.defineProperty(out, 'blockingAtSnap', { value: Object.fromEntries(offs.map((a) => [a.slot, a.attrs.blocking])), enumerable: false });
+  return out;
 }
 
 export { DT as TICK };

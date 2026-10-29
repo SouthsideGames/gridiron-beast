@@ -229,8 +229,12 @@ test('Goal Line Man: the free linebacker keeps his alignment and supports the ru
 
 test('Goal Line Man: the free linebacker makes plays on one-back runs, which still break sometimes; only Goal Line Man changes', () => {
   const ys = [], tacklers = {};
-  for (const off of oneBackRuns) for (let s = 0; s < 60; s++) { const sim = play({ off, def: 'goal_line_man', attr: 'speed', value: 65, seed: 19800 + s }); ys.push(sim.yards); const k = sim.stats.tackler || '-'; tacklers[k] = (tacklers[k] || 0) + 1; }
-  assert.ok((tacklers.LB2 || 0) / ys.length > 0.25, `the free linebacker is in on the stops: ${JSON.stringify(tacklers)}`);
+  let inOn = 0;
+  for (const off of oneBackRuns) for (let s = 0; s < 60; s++) { const sim = play({ off, def: 'goal_line_man', attr: 'speed', value: 65, seed: 19800 + s }); ys.push(sim.yards); const k = sim.stats.tackler || '-'; tacklers[k] = (tacklers[k] || 0) + 1; if (sim.stats.tackler === 'LB2' || sim.stats.assistBy === 'LB2') inOn++; }
+  // Phase C1 (owner review pending): "in on the stops" counts his tackles and his assists. Since the pulling guards on Power and
+  // Counter reach the hole (F5), they block this free linebacker on about half of those plays, which is what the call's lesson
+  // says ("loses: Power"); his solo-tackle share fell from about 0.5 to 0.24 while his tackles plus assists stay at about 0.34.
+  assert.ok(inOn / ys.length > 0.25, `the free linebacker is in on the stops: ${inOn} of ${ys.length} (tacklers ${JSON.stringify(tacklers)})`);
   assert.ok(Math.max(...ys) >= 15 && ys.some((y) => y >= 10), `long runs still happen (max ${Math.max(...ys)})`);
   // The rule needs a run front or goal-line call AND a man defender with nobody to cover. Only a man key on 'back' can be empty
   // ('inside', 'wideL' and 'wideR' always resolve, manKeyTargets), so across the whole book (base, reserve and legendary calls)
@@ -239,6 +243,21 @@ test('Goal Line Man: the free linebacker makes plays on one-back runs, which sti
     && PLAYS[k].onField.some((sl) => PLAYS[k].assignments[sl]?.a === 'man' && PLAYS[k].assignments[sl].key === 'back'));
   assert.deepEqual(callsWithFreeMen, ['goal_line_man']);
   for (const off of OFFENSE_IDS) for (const key of ['inside', 'wideL', 'wideR']) assert.ok(manKeyTargets(PLAYS[off])[key], `${off}: '${key}' always has a man`);
+});
+
+test('Goal Line Man: the free linebacker reads the run he sees and makes the play when no blocker gets him (Phase C1)', () => {
+  // Behaviour, not a solo-tackle quota: the pulling guards may block him now (the call's lesson: "loses: Power"). What must hold is
+  // that he lines up in his run fit (the test above), recognises an observable run on nearly every play, and, on the plays where no
+  // blocker ever engages him, is in on the stop most of the time.
+  let n = 0, read = 0, free = 0, freeInOn = 0;
+  for (const off of oneBackRuns) for (let s = 0; s < 60; s++) {
+    const sim = play({ off, def: 'goal_line_man', attr: 'speed', value: 65, seed: 19800 + s, options: { trace: true } }); n++;
+    if (sim.frames.some((f) => f.dbg?.find((x) => x[0] === 'LB2')?.[5])) read++;
+    if (!sim.frames.some((f) => lb(f, 'LB2')[3])) { free++; if (sim.stats.tackler === 'LB2' || sim.stats.assistBy === 'LB2') freeInOn++; }
+  }
+  assert.ok(read / n > 0.8, `he recognises the run on ${read} of ${n} plays`);
+  assert.ok(free >= 20, `he is left unblocked on some plays (${free})`);
+  assert.ok(freeInOn / free > 0.45, `unblocked, he is in on the stop on ${freeInOn} of ${free} plays`);
 });
 
 test('Goal Line Man: on a pass he covers again, it still stops screens and the quick game, and play-action still hurts it', () => {
