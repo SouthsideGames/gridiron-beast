@@ -57,6 +57,10 @@ function clubState(f, club) {
   for (const pos of POS) { const at = byPos[pos] || []; const n = GROUP_SLOTS[pos].length; starters[pos] = at.slice(0, n).map(monsterOverall); backups[pos] = at.slice(n).map(monsterOverall); for (const m of at.slice(0, n)) startIds.add(m.id); }
   return { roster, chart, byPos, starters, backups, startIds, problems: lineupProblems(roster, chart) };
 }
+/** Lineup points: the sum of the starters' overalls, best by overall at every position (harness v3, read only). */
+function lineupPoints(roster) { let s = 0; for (const pos of POS) s += roster.filter((m) => m.position === pos).map(monsterOverall).sort((a, b) => b - a).slice(0, GROUP_SLOTS[pos].length).reduce((a, v) => a + v, 0); return s; }
+/** One position's starters on a roster: [floor, mean, players there] (harness v3, read only). */
+function posLine(roster, pos) { const at = roster.filter((m) => m.position === pos).map(monsterOverall).sort((a, b) => b - a); const st = at.slice(0, GROUP_SLOTS[pos]?.length || 1); return [st.length ? st[st.length - 1] : null, st.length ? r1(st.reduce((a, v) => a + v, 0) / st.length) : null, at.length]; }
 /** Unused picks a club holds in one class year, by round [r1, r2, r3] (harness v3, read only). */
 function picksHeld(f, club, year) { const out = [0, 0, 0]; for (const p of T.picksOwnedBy(f, club, year, ALL_TEAMS)) if (!T.pickUsed(f, p) && p.round >= 1 && p.round <= 3) out[p.round - 1]++; return out; }
 /** Where a monster came from, read from his own history and the harness's record of where he was seen before arriving. */
@@ -133,7 +137,12 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
         toASalary: mA?.salary ?? null, toBSalaries: mBs.map((m) => m.salary ?? null), toAContractEnds: mA?.contract?.ends ?? null, toAProtected: !!(mA && REG.isProtected(mA)), toBProtected: mBs.some((m) => REG.isProtected(m)),
         aCapBefore: prevCap?.[t.A] ?? null, aCapAfter: capNow[t.A] ?? null, bCapBefore: prevCap?.[t.B] ?? null, bCapAfter: capNow[t.B] ?? null,
         aDepthBefore: mA ? depthAt(pre, mA.position) : null, aDepthAfter: mA ? depthAt(post, mA.position) : null, bDepthBefore: mA ? depthAt(preB, mA.position) : null, bDepthAfter: mA ? depthAt(postB, mA.position) : null,
-        bGotStarter: mB ? clubState(f, t.B).startIds.has(mB.id) : null, toBAge: mB?.age ?? null, toBAll: t.toBAll || (t.toB ? [t.toB] : []) });
+        bGotStarter: mB ? clubState(f, t.B).startIds.has(mB.id) : null, toBAge: mB?.age ?? null, toBAll: t.toBAll || (t.toB ? [t.toB] : []),
+        // harness v3: the deal against its own undoing at the same moment (both clubs' rosters now, with and without the deal): plain ratings, best by overall,
+        // so an offseason deal is not credited with the draft, free agency and the nudge that ran between the check before it and the check after it
+        ...(mA ? (() => { const rA = REG.clubRoster(f, t.A), rB = REG.clubRoster(f, t.B); const sent = new Set(mBs.map((m) => m.id));
+          const cfA = rA.filter((m) => m.id !== mA.id).concat(mBs.filter((m) => !rA.includes(m))), cfB = rB.filter((m) => !sent.has(m.id)).concat(rB.includes(mA) ? [] : [mA]);
+          return { cfALineup: [lineupPoints(rA), lineupPoints(cfA)], cfAPos: [posLine(rA, mA.position), posLine(cfA, mA.position)], cfBLineup: [lineupPoints(rB), lineupPoints(cfB)], cfBPos: [posLine(rB, mA.position), posLine(cfB, mA.position)] }; })() : {}) });
     }
     if (f.season.week === 6 && !f.season.finished && !mid[f.season.year]) mid[f.season.year] = Object.fromEntries(REG.leagueClubs(f).map((c) => [c, teamOverall(F.aiTeam(f, c))]));
     prev = now; prevCap = capNow; peak = Math.max(peak, process.memoryUsage().heapUsed);
