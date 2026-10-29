@@ -32,6 +32,9 @@ const sparesOf = (roster) => Object.keys(GROUP_SLOTS).flatMap((pos) => starters(
 const salaryOf = (ms) => ms.reduce((s, m) => s + (m.salary || 0), 0);
 const ownedPicks = (f, club, y0) => { const out = []; for (let y = y0; y < y0 + AI_TRADE_RULES.picksAhead; y++) for (const p of picksOwnedBy(f, club, y, ALL_TEAMS)) if (!pickUsed(f, p)) out.push({ p, v: pickValue(p, { yearsAhead: y - y0 }) }); return out.sort((a, b) => a.v - b.v || (a.p.round - b.p.round) || (a.p.year - b.p.year) || (a.p.original < b.p.original ? -1 : 1)); };
 
+/** Mean overall of a club's starters (the best available at each position, as many as the position has slots). A record of what a deal did, never read by a decision. */
+const startersMean = (roster) => { let sum = 0, n = 0; for (const pos of Object.keys(GROUP_SLOTS)) for (const m of starters(roster, pos).filter((x) => !isUnavailable(x)).slice(0, slotsOf(pos))) { sum += ovr(m); n++; } return n ? Math.round(sum / n * 10) / 10 : 0; };
+
 /**
  * Can this deal stand, and is it good for both clubs? `pay` is what A sends (monsters and picks) for B's monster `m`.
  * A must come out ahead by DEAL_RULES.minGain on its own measure (roster worth plus picks), B by sellerFloor; both rosters
@@ -45,7 +48,7 @@ function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB }) 
   const paid = picks.reduce((s, x) => s + x.v, 0);
   const na = rosterNet(rosterA, { give: ys, get: [m] }, year) - paid, nb = rosterNet(rosterB, { give: [m], get: ys }, year) + paid;
   if (na < DEAL_RULES.minGain || nb < DEAL_RULES.sellerFloor) return null;
-  return { na, nb };
+  return { na, nb, fl: [floorAt(rosterA, m.position), floorAt(afterA, m.position)], sm: [startersMean(rosterA), startersMean(afterA), startersMean(rosterB), startersMean(afterB)] };
 }
 
 /**
@@ -79,7 +82,7 @@ function attempt(f, r, A, { year, cap, done }) {
       const j = judge(f, { A, B, rosterA, rosterB, m, ys: o.ys, picks: o.picks, year, roomA, roomB }); if (!j) continue;
       const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { ...o, ...j, score };
     }
-    if (best) return execute(f, { A, B, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, got: vm, paid: best.ys.reduce((s, y) => s + marketValue(y, { year }), 0) + best.picks.reduce((s, x) => s + x.v, 0) });
+    if (best) return execute(f, { A, B, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s, y) => s + marketValue(y, { year }), 0) + best.picks.reduce((s, x) => s + x.v, 0) });
   }
   return null;
 }
@@ -90,12 +93,12 @@ function moveMonster(f, from, to, m, year) {
   m.traded = { from, year };
 }
 /** Carry out a deal: monsters both ways, picks to B, one League News event naming what A paid. */
-function execute(f, { A, B, m, ys, picks, year, na, nb, got, paid }) {
+function execute(f, { A, B, m, ys, picks, year, na, nb, fl, sm, got, paid }) {
   moveMonster(f, B, A, m, year); for (const y of ys) moveMonster(f, A, B, y, year); for (const p of picks) setPickOwner(f, p, B);
   const label = [...ys.map((y) => `${y.name} (${y.position}, ${ovr(y)} OVR)`), ...picks.map((p) => `a round-${p.round} pick (${p.year})`)].join(' and ');
   leagueEvent(f, { kind: 'trade', from: B, to: A, consideration: label, ...moveIdentity(f, m) });
   const kind = ys.length && picks.length ? 'swap+picks' : ys.length ? 'swap' : 'picks';
-  return { kind, A, B, toA: m.id, ...(ys.length ? { toB: ys[0].id, toBAll: ys.map((y) => y.id) } : {}), ...(picks.length ? { picks } : {}), pos: m.position, na: Math.round(na), nb: Math.round(nb), mv: [Math.round(got * 10) / 10, Math.round(paid * 10) / 10] }; // mv: market value received and given, as the clubs saw it when they dealt (ratings move a little afterwards)
+  return { kind, A, B, toA: m.id, ...(ys.length ? { toB: ys[0].id, toBAll: ys.map((y) => y.id) } : {}), ...(picks.length ? { picks } : {}), pos: m.position, na: Math.round(na), nb: Math.round(nb), mv: [Math.round(got * 10) / 10, Math.round(paid * 10) / 10], fl, sm }; // mv: market value received and given, as the clubs saw it when they dealt (ratings move a little afterwards)
 }
 
 /**

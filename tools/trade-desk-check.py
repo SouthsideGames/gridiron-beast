@@ -24,7 +24,7 @@ problems, errors, report = [], [], {'widths': {}}
 def check(cond, msg):
     if not cond: problems.append(msg)
 def shot(page, name, w):
-    if SHOTS: os.makedirs(SHOTS, exist_ok=True); page.screenshot(path=os.path.join(SHOTS, f'{name}-{w}.png'), full_page=True)
+    if SHOTS: os.makedirs(SHOTS, exist_ok=True); page.screenshot(path=os.path.join(SHOTS, f'{name}-{w}.png'))
 def overflow(page, where):
     d = page.evaluate("() => Math.max(document.documentElement.scrollWidth - window.innerWidth, ...[...document.querySelectorAll('.sheet')].map(s => s.scrollWidth - s.clientWidth))")
     check(d <= 1, f'horizontal overflow on {where} ({d}px)')
@@ -60,15 +60,14 @@ with sync_playwright() as pw:
         overflow(pg, f'desk preview at {w}px'); shot(pg, 'desk-2-preview', w)
         send = pg.locator('.sheet [data-send]'); check(send.is_enabled(), f'{w}px: a legal proposal can be sent')
         pg.evaluate("() => { window.__confirmed = 0; }")
-        send.click(); pg.wait_for_selector('.sheet-confirm, [data-confirm], .confirm', timeout=5000) if False else pg.wait_for_timeout(300)
-        # the confirm sheet is the app's own; accept it
-        ok = pg.locator('button:has-text("Send")').last; ok.click(); pg.wait_for_timeout(600)
+        send.click(); pg.wait_for_selector('[data-action="yes"]', timeout=5000)
+        shot(pg, 'desk-2b-confirm', w); pg.click('[data-action="yes"]'); pg.wait_for_timeout(600)
         res = pg.inner_text('.sheet'); p['answered'] = ('Deal done' in res) or ('said no' in res)
         check(p['answered'], f'{w}px: the club answered ({res[-200:]!r})'); overflow(pg, f'desk answer at {w}px'); shot(pg, 'desk-3-answer', w); small_controls(pg, f'desk answer {w}px')
         # a second proposal to the same club is counted
         left = pg.evaluate("() => import('./src/franchise/franchise.js').then((F) => F.deskPartners(window.__gb.f).map((x) => x.clubLeft).reduce((a, c) => a + (3 - c), 0))")
         check(left >= 1, f'{w}px: the proposal was counted ({left})')
-        pg.keyboard.press('Escape'); pg.wait_for_timeout(300)
+        pg.click('.sheet [data-action="sheet-close"]'); pg.wait_for_timeout(300)
         # a call
         info = pg.evaluate("""async () => { const F = await import('./src/franchise/franchise.js'); const f = window.__gb.f; f.offseason ||= { items: [] }; let c = null; for (let s = 1; s <= 80 && !c; s++) { f.seed = s; f.callsMade = {}; f.tradeCall = null; c = F.maybeTradeCall(f); } window.__gb.save(); const R = await import('./src/ui/router.js'); R.go('offseason', {}, { reset: true }); return c ? { kind: c.kind, team: c.team } : null; }""")
         p['call'] = info; check(info is not None, f'{w}px: a club calls')
