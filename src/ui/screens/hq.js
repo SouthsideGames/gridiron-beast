@@ -34,6 +34,7 @@ import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
 import { captainWarning, captainBadge } from '../captains-ui.js';
+import { callPanelHtml, callConfirmText, openTradeDesk, tradeStatusHtml, tradeLineHtml } from '../trade-desk-ui.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -43,29 +44,14 @@ export function weekStrip(f) {
   return `<div class="week" aria-label="Week ${f.season.week}">${F.DAYS.map((d, i) => `<div class="day ${i < f.season.day ? 'done' : i === f.season.day ? 'today' : ''}" title="${esc(F.DAY_ACTIONS[i])}">${d.slice(0, 3)}</div>`).join('')}</div>`;
 }
 
-/**
- * A club on the line (GDD §19.6, second pass): who, which player, for which picks, and the answer buttons.
- * Shown on HQ and the offseason screen while the offer stands.
- */
-function callPanelHtml(f) {
-  const c = F.tradeCall(f); if (!c) return '';
-  const pk = c.give.map((p) => `${yearOf(p.year)} round ${p.round}${p.original !== f.club ? ` (from the ${esc(p.original)})` : ''}`).join(' + ');
-  const mine = f.roster.filter((m) => m.position === c.player.position).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
-  return `<div class="panel call-panel"><div class="row" style="gap:10px;align-items:flex-start">${monsterSprite({ species: c.player.species, name: c.player.name, id: c.playerId }, 44)}<div class="grow" style="min-width:0">
-    <div class="muted" style="font-size:12px">📞 THE ${esc(c.team.toUpperCase())} ARE ON THE LINE</div>
-    <div style="margin:2px 0"><b>${c.playerId ? careerLink(c.playerId, c.player.name) : esc(c.player.name)}</b> · ${esc(c.player.position)} · ${c.player.ovr} OVR · age ${c.player.age}</div>
-    <div class="muted" style="font-size:13px">“We hear you are thin at ${esc(c.player.position)}${mine ? ` (your best is ${esc(mine.name)}, ${monsterOverall(mine)})` : ''}. He is yours for your ${pk}.”</div>
-    <div class="dim" style="font-size:11px;margin-top:2px">Good until ${f.offseason ? 'the new season' : 'the end of the week'} · he joins on a two-season deal at ${(c.player.salary || 0).toLocaleString('en-US')}/yr</div>
-    <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn small primary" data-call="yes">Accept</button><button class="btn small" data-call="no">No thanks</button>${c.player.species ? `<button class="btn small see-it" data-see-it="${resolveSpecies({ species: c.player.species }).id}" ${resolveSpecies({ species: c.player.species }).ability ? '' : 'hidden'}>▶ His ability</button>` : ''}</div></div></div></div>`;
-}
 export function registerHqScreens(Router, app) {
   // Answering a call works wherever the panel shows.
   document.addEventListener('click', async (e) => {
     const b = e.target.closest?.('[data-call]'); if (!b || !app.f) return; e.preventDefault();
     const yes = b.dataset.call === 'yes'; const c = F.tradeCall(app.f); if (!c) return;
-    if (yes && !(await confirmSheet(`Send your ${c.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} to the ${c.team} for ${c.player.name}?`, { title: 'Accept the trade', okLabel: 'Trade' }))) return;
+    if (yes && !(await confirmSheet(callConfirmText(app.f, c), { title: 'Accept the trade', okLabel: 'Trade' }))) return;
     const r = F.answerTradeCall(app.f, yes); if (!r.ok) { toast(r.reason, 'bad'); Router.render(); return; }
-    app.save(); toast(yes ? `${c.player.name} is yours.` : 'Offer declined.', yes ? 'good' : 'info'); Router.render();
+    app.save(); toast(yes ? (c.kind === 'buy' ? 'Deal done.' : `${r.got?.player?.name || 'Deal'} ${r.got?.player ? 'is yours.' : 'done.'}`) : 'Offer declined.', yes ? 'good' : 'info'); Router.render();
   });
   const need = () => app.f;
 
@@ -99,7 +85,7 @@ export function registerHqScreens(Router, app) {
       const lastGame = lgFresh ? `<div class="panel tight last-game ${lg.won ? 'won' : 'lost'}"><div class="row between"><span><b>${lg.forfeit ? 'FORFEIT' : lg.won ? 'WIN' : 'LOSS'}</b> ${lg.playerScore}–${lg.oppScore} vs ${esc(lg.opponent)}</span><span class="dim">week ${lg.week}</span></div>${lgLvl.length || lgInj.length ? `<div class="dim" style="margin-top:2px">${lgLvl.map((e) => e.kind === 'evolve' ? `✨ ${esc(e.from)} → ${esc(e.to)}` : `⬆️ ${esc(e.name)} Lv ${e.level}`).join(' · ')}${lgLvl.length && lgInj.length ? ' · ' : ''}${lgInj.map((e) => `<span style="color:var(--bad)">🩹 ${esc(e.name)} ${e.weeks}w</span>`).join(' · ')}</div>` : ''}</div>` : '';
       const lb = f.campaign?.lastBadge; const lbGym = lb && lb.year === f.season.year && f.season.week - lb.week <= 1 ? GYM_BY_CLUB[lb.club] : null;
       const badgeBanner = lbGym ? `<div class="badge-banner" style="--hue:${TYPES[lbGym.element]?.hue ?? 120}"><span class="badge-banner-star">★</span><div><b>${esc(lbGym.badge)} earned</b> · badge ${lb.n} of 8<div class="dim">${esc(lbGym.coach.name)}'s ${esc(lb.club)} beaten in week ${lb.week}. ${lb.n === 8 ? 'All eight. The gyms are yours.' : `${8 - lb.n} to go.`}</div></div></div>` : '';
-      return `${badgeBanner}${callPanelHtml(f)}${lastGame}
+      return `${badgeBanner}${callPanelHtml(f)}${tradeLineHtml(f)}${lastGame}
         <div class="panel tight"><div class="row between"><div><b>${yearOf(F.displayYear(f))}</b> · ${phaseLabel(f)}</div><div class="chip accent">Team OVR ${s.overall}</div></div>
           <div class="row between" style="margin-top:4px"><span>${f.season.playoffs ? playoffStatus(f) : `Record <b class="mono">${s.record}</b>${rival ? ` · <span class="dim">⚔️ rival ${esc(rival.team)}</span>` : ''}`}</span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
         ${weekStrip(f)}
@@ -326,7 +312,7 @@ export function registerHqScreens(Router, app) {
   /** The phone: choose what to give, ask for a player or for picks, see up to three offers. */
   function tradeSheet(f, { lead = null, onDone = null } = {}) {
     const state = { give: lead ? [lead] : [], tab: 'player', position: F.depthNeeds(f).find((n) => n.status !== 'ok')?.position || 'S', year: F.tradableYears(f)[1] || F.tradableYears(f)[0], round: 2, count: 1, result: null, busy: false };
-    const { el, close } = sheet('', { title: '☎️ Shop a pick', onClose: () => onDone?.() });
+    const { el, close } = sheet('', { title: '☎️ Trades', onClose: () => onDone?.() });
     const body = el.querySelector('.sheet-body');
     const render = () => {
       const mine = F.myTradablePicks(f); const years = F.tradableYears(f);
@@ -349,13 +335,15 @@ export function registerHqScreens(Router, app) {
         else resultHtml = `<h3>${r.offers.length} offer${r.offers.length === 1 ? '' : 's'}</h3><div class="list">${r.offers.map((o, i) => o.get.player ? `<div class="item static" style="align-items:flex-start">${monsterSprite(o.get.player, 40)}<div class="grow"><div class="name">${esc(o.get.player.name)} <span class="dim">${esc(o.get.player.position)} · ${monsterOverall(o.get.player)} OVR · age ${o.get.player.age}</span>${o.starter ? ' <span class="chip">their starter</span>' : ''}</div><div class="sub">from ${esc(o.team)} · ${fmtMoney(o.get.player.salary)}/yr, two seasons · for ${o.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}</div></div><button class="btn small primary" data-accept="${i}">Accept</button></div>`
           : `<div class="item static"><div class="grow"><div class="name">${o.get.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} <span class="chip ${o.exact ? 'good' : ''}">${o.exact ? 'yes' : 'counter'}</span></div><div class="sub">from ${esc(o.team)} · for ${o.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}</div></div><button class="btn small primary" data-accept="${i}">Accept</button></div>`).join('')}</div>`;
       }
-      body.innerHTML = `${giveHtml}${askHtml}${callHtml}${resultHtml}`;
+      const deskHtml = F.deskAvailable(f) ? `<button type="button" class="btn block" data-desk="1" style="margin-bottom:8px">🤝 Trade desk: monsters and picks with a club</button><div class="dim" style="font-size:12px;margin-bottom:8px">Below: shop your picks to the whole league for a veteran or future picks.</div>` : '';
+      body.innerHTML = `${tradeStatusHtml(f)}${deskHtml}${giveHtml}${askHtml}${callHtml}${resultHtml}`;
     };
     body.addEventListener('change', (e) => {
       const t = e.target;
       if (t.dataset.field) { const v = t.value; state[t.dataset.field] = t.dataset.field === 'position' ? v : Number(v); state.result = null; }
     });
     body.addEventListener('click', (e) => {
+      if (e.target.closest('[data-desk]')) { close(); openTradeDesk(app, { onDone }); return; }
       const gv = e.target.closest('[data-give]'); if (gv) { const mine = F.myTradablePicks(f); const p = mine.find((x) => F.pickKey(x) === gv.dataset.give); if (state.give.some((g) => F.pickKey(g) === gv.dataset.give)) state.give = state.give.filter((g) => F.pickKey(g) !== gv.dataset.give); else state.give.push(p); state.result = null; render(); return; }
       const tab = e.target.closest('[data-tab]'); if (tab) { state.tab = tab.dataset.tab; state.result = null; render(); return; }
       if (e.target.closest('[data-call]')) { state.result = state.tab === 'player' ? F.tradeAskPlayer(f, { give: state.give, position: state.position }) : F.tradeAskPicks(f, { give: state.give, year: state.year, round: state.round, count: state.count }); app.save(); render(); return; }

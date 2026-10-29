@@ -6,6 +6,7 @@ import * as F from '../src/franchise/franchise.js';
 import { teamSchedule, leagueSeasonFixtures, standings, blankRecord, applyResult, ALL_TEAMS } from '../src/data/league.js';
 import { STAFF_ROLES } from '../src/data/staff.js';
 import { ROSTER_MAX } from '../src/data/monsters.js';
+import { slotsOf } from '../src/franchise/trade-value.js';
 import { exportJson, importJson, importLegacy, legacySummary } from '../src/franchise/save.js';
 import { monsterOverall } from '../src/data/monsters.js';
 import * as awaitRules from '../src/sim/rules.js';
@@ -893,26 +894,33 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   assert.equal(f.draft, null);
 });
 
-test('AI trade calls: only real upgrades at a need, priced fairly in picks, and accepting moves the player', () => {
-  let calls = 0, accepted = false;
-  for (let seed = 1; seed <= 40 && calls < 6; seed++) {
+test('AI trade calls: they come from the club\'s own roster, are legal and fair when made, and accepting carries out exactly what the call said', () => {
+  let calls = 0, accepted = 0; const kinds = new Set();
+  for (let seed = 1; seed <= 60 && calls < 8; seed++) {
     const f = newFranchise(seed);
     for (let w = 2; w <= 8; w++) {
-      f.season.week = w; const c = F.maybeTradeCall(f); if (!c) continue; calls++;
-      const myBest = f.roster.filter((m) => m.position === c.position).reduce((b, m) => Math.max(b, monsterOverall(m)), 0);
-      assert.ok(c.player.ovr >= myBest + 2, `${c.player.name} is an upgrade (${c.player.ovr} vs ${myBest})`);
-      assert.ok(c.give.length >= 1 && c.give.length <= 2, 'one or two picks');
+      f.season.week = w; const c = F.maybeTradeCall(f); if (!c) continue; calls++; kinds.add(c.kind);
+      assert.ok(['sell', 'buy', 'swap'].includes(c.kind), c.kind);
+      const owners = (ids) => ids.filter((id) => f.roster.some((m) => m.id === id)).length;
+      assert.equal(owners(c.askIds || []), (c.askIds || []).length, 'what they ask for is on your roster');
+      if (c.kind === 'sell') { const at = f.roster.filter((m) => m.position === c.position && !(m.injury && m.injury.weeks >= 3)).sort((x, y) => monsterOverall(y) - monsterOverall(x)); const n = slotsOf(c.position); const floor = at.length < n ? 0 : monsterOverall(at[n - 1]); assert.ok(c.sends[0].ovr >= floor + 3, `${c.sends[0].name} would start for you (${c.sends[0].ovr} vs ${floor})`); }
+      assert.ok((c.give || []).length <= 3, 'at most three picks');
       assert.equal(F.tradeCall(f), c, 'the call waits for an answer this week');
       if (!accepted) {
-        const before = f.roster.length; const r = F.answerTradeCall(f, true);
-        assert.equal(r.ok, true, r.reason); assert.equal(f.roster.length, before + 1);
-        assert.ok(f.roster.some((m) => m.id === c.playerId), 'he joins the roster');
-        assert.equal(F.tradeCall(f), null); accepted = true;
+        const before = { n: f.roster.length, send: c.sendIds.slice(), ask: (c.askIds || []).slice() };
+        const r = F.answerTradeCall(f, true);
+        if (r.ok) {
+          assert.equal(f.roster.length, before.n + before.send.length - before.ask.length);
+          for (const id of before.send) assert.ok(f.roster.some((m) => m.id === id), 'he joins the roster');
+          for (const id of before.ask) assert.ok(!f.roster.some((m) => m.id === id), 'he leaves the roster');
+          accepted++;
+        } else assert.ok(r.reason, 'a call that is off says why');
+        assert.equal(F.tradeCall(f), null);
       } else { assert.equal(F.answerTradeCall(f, false).declined, true); }
       break;
     }
   }
-  assert.ok(calls >= 3, `clubs call sometimes (${calls})`); assert.ok(accepted);
+  assert.ok(calls >= 3, `clubs call sometimes (${calls})`); assert.ok(accepted >= 1, 'at least one call was accepted and carried out');
 });
 
 test('free agents: the whole card is public (v42.11), whatever the scout, and the ask is the real figure', () => {

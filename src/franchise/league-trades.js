@@ -6,62 +6,85 @@
 import { monsterOverall, ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { ALL_TEAMS } from '../data/league.js';
 import { GROUP_SLOTS } from './roster.js';
-import { playerValue, pickValue, positionNeeds, picksOwnedBy, pickUsed, setPickOwner, tradable, currentClassYear } from './trades.js';
+import { pickValue, picksOwnedBy, pickUsed, setPickOwner, tradable, currentClassYear } from './trades.js';
+import { FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK, seasonTradeWeek } from './trade-window.js';
+import { marketValue, rosterNet, rosterAfter, rosterProblems, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
 import { hasLeague, leagueClubs, clubRoster, clubCapRoom, addToClub, removeFromClub, leagueEvent, moveIdentity, isProtected } from './league-registry.js';
 
 export const AI_TRADE_RULES = Object.freeze({
-  need: 0.25,          // a club shops when a position's need reaches this (positionNeeds, 0–1)
-  upgrade: 2,          // the incoming monster must beat the club's weakest starter at the position by this much
-  band: [0.85, 1.15],  // value received / value given, both ways
+  upgrade: 2,          // the incoming monster must beat the club's weakest available starter at the position by this much
+  band: DEAL_RULES.band, // market value received / given, both ways (position-sensitive since Task 5: trade-value.js)
   offseasonMax: 3,     // deals in one offseason window
   weekChance: 0.25,    // chance of one deal attempt in each of weeks 2–8 (about 1.75 a season, 2–4 with the offseason)
-  weeks: [2, 8],
+  weeks: [FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK], // the trade deadline is the end of week 8 (trade-window.js)
+  season: { upgrade: 4, minGain: 16 }, // in season a deal must lift a starting slot by a margin a coach would act on: twice the offseason bar (the first Task 5 design, with the offseason bar in season, made 1.6 in-season deals a season and nearly every attempt a deal: not the "occasional deal" of §46.5)
   picksAhead: 2,       // classes a club will pay picks from
+  targets: 6,          // the biggest upgrades a club looks at per window
 });
 
 const order = (f) => leagueClubs(f).slice().sort();
-/** The rating the incoming monster has to beat: the club's weakest starter at the position (0 when a starting slot is empty). */
-const floorAt = (roster, pos) => { const at = roster.filter((m) => m.position === pos).sort((a, b) => monsterOverall(b) - monsterOverall(a)); const n = GROUP_SLOTS[pos]?.length || 1; return at.length < n ? 0 : monsterOverall(at[n - 1]); };
 const slotsOf = (pos) => GROUP_SLOTS[pos]?.length || 1;
-/** B's spare at `pos` that A would want: beyond B's starters, tradable, an upgrade for A. */
-function spareFor(f, B, pos, floor) {
-  const at = clubRoster(f, B).filter((m) => m.position === pos).sort((a, b) => monsterOverall(b) - monsterOverall(a));
-  return at.slice(slotsOf(pos)).filter((m) => tradable(f, m) && !isProtected(m) && monsterOverall(m) >= floor + AI_TRADE_RULES.upgrade).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0] || null;
-}
 const inBand = (got, gave) => gave > 0 && got / gave >= AI_TRADE_RULES.band[0] && got / gave <= AI_TRADE_RULES.band[1];
+const starters = (roster, pos) => roster.filter((m) => m.position === pos).sort((a, b) => (isUnavailable(a) - isUnavailable(b)) || (ovr(b) - ovr(a)) || (a.id < b.id ? -1 : 1));
+/** The rating the incoming monster has to beat: the club's weakest available starter at the position (0 when a starting slot is empty). */
+const floorAt = (roster, pos) => { const at = starters(roster, pos).filter((m) => !isUnavailable(m)); const n = slotsOf(pos); return at.length < n ? 0 : ovr(at[n - 1]); };
+/** A club's spares: the monsters beyond its starters (a long-injured starter counts as a spare until he is back). Only these are for sale between AI clubs. */
+const sparesOf = (roster) => Object.keys(GROUP_SLOTS).flatMap((pos) => starters(roster, pos).slice(slotsOf(pos)));
+const salaryOf = (ms) => ms.reduce((s, m) => s + (m.salary || 0), 0);
+const ownedPicks = (f, club, y0) => { const out = []; for (let y = y0; y < y0 + AI_TRADE_RULES.picksAhead; y++) for (const p of picksOwnedBy(f, club, y, ALL_TEAMS)) if (!pickUsed(f, p)) out.push({ p, v: pickValue(p, { yearsAhead: y - y0 }) }); return out.sort((a, b) => a.v - b.v || (a.p.round - b.p.round) || (a.p.year - b.p.year) || (a.p.original < b.p.original ? -1 : 1)); };
+
+/** Mean overall of a club's starters (the best available at each position, as many as the position has slots). A record of what a deal did, never read by a decision. */
+const startersMean = (roster) => { let sum = 0, n = 0; for (const pos of Object.keys(GROUP_SLOTS)) for (const m of starters(roster, pos).filter((x) => !isUnavailable(x)).slice(0, slotsOf(pos))) { sum += ovr(m); n++; } return n ? Math.round(sum / n * 10) / 10 : 0; };
 
 /**
- * One deal attempt for club A (the one in need): need-for-need with B when both gain, else A's picks for B's spare.
- * Returns the deal executed, or null. `done` is the set of clubs that already dealt this window.
+ * Can this deal stand, and is it good for both clubs? `pay` is what A sends (monsters and picks) for B's monster `m`.
+ * A must come out ahead by DEAL_RULES.minGain on its own measure (roster worth plus picks), B by sellerFloor; both rosters
+ * stay legal, both clubs stay under the cap. Returns { na, nb } or null.
  */
-function attempt(f, r, A, { year, cap, done }) {
-  const rosterA = clubRoster(f, A); const needsA = positionNeeds(rosterA);
-  const wants = Object.entries(needsA).filter(([, n]) => n >= AI_TRADE_RULES.need).sort((a, b) => b[1] - a[1]).map(([p]) => p);
-  if (!wants.length) return null;
+function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB, minGain = DEAL_RULES.minGain }) {
+  const afterA = rosterAfter(rosterA, { give: ys, get: [m] }), afterB = rosterAfter(rosterB, { give: [m], get: ys });
+  if (rosterProblems(rosterA, afterA).length || rosterProblems(rosterB, afterB).length) return null;
+  const toB = salaryOf(ys), toA = m.salary || 0;
+  if (roomA + toB - toA < Math.min(0, roomA) || roomB + toA - toB < Math.min(0, roomB)) return null;
+  const paid = picks.reduce((s, x) => s + x.v, 0);
+  const na = rosterNet(rosterA, { give: ys, get: [m] }, year) - paid, nb = rosterNet(rosterB, { give: [m], get: ys }, year) + paid;
+  if (na < minGain || nb < DEAL_RULES.sellerFloor) return null;
+  return { na, nb, fl: [floorAt(rosterA, m.position), floorAt(afterA, m.position)], sm: [startersMean(rosterA), startersMean(afterA), startersMean(rosterB), startersMean(afterB)] };
+}
+
+/**
+ * One deal attempt for club A: find the monsters in the league that would most improve its lineup (a spare at another club
+ * who beats A's weakest available starter by 2), then the way to pay that is fair in market value and leaves both clubs
+ * better off: A's spares for his, A's picks, or a spare and a pick when A's roster has no room. Returns the deal executed, or null.
+ * `done` is the set of clubs that already dealt this window.
+ */
+function attempt(f, r, A, { year, cap, done, window }) {
+  const bar = window === 'season' ? AI_TRADE_RULES.season : { upgrade: AI_TRADE_RULES.upgrade, minGain: DEAL_RULES.minGain };
+  const rosterA = clubRoster(f, A);
   const others = order(f).filter((c) => c !== A && !done.has(c)).sort(() => r.next() - 0.5);
-  for (const pos of wants) {
-    const floor = floorAt(rosterA, pos);
-    for (const B of others) {
-      const m = spareFor(f, B, pos, floor); if (!m) continue;
-      const vm = playerValue(m); const roomA = clubCapRoom(f, A, cap), roomB = clubCapRoom(f, B, cap);
-      // need-for-need: A's surplus at a position B needs, within the band, both under the cap afterwards
-      const needsB = positionNeeds(clubRoster(f, B));
-      const give = Object.entries(needsB).filter(([q, n]) => n >= 0.3 && q !== pos).map(([q]) => q).flatMap((q) => {
-        const atA = rosterA.filter((x) => x.position === q).sort((a, b) => monsterOverall(b) - monsterOverall(a));
-        return atA.slice(slotsOf(q)).filter((x) => tradable(f, x) && !isProtected(x) && inBand(vm, playerValue(x)) && roomA + (x.salary || 0) - (m.salary || 0) >= 0 && roomB + (m.salary || 0) - (x.salary || 0) >= 0);
-      }).sort((a, b) => Math.abs(playerValue(b) - vm) - Math.abs(playerValue(a) - vm))[0];
-      if (give) return swap(f, { A, B, toA: m, toB: give, year });
-      // player for picks: A's picks in the next classes covering B's monster, if A has room under the cap and on the roster
-      if (rosterA.length >= ROSTER_MAX || clubRoster(f, B).length <= ROSTER_MIN || roomA < (m.salary || 0)) continue;
-      const y0 = currentClassYear(f); const picks = [];
-      for (let y = y0; y < y0 + AI_TRADE_RULES.picksAhead; y++) for (const p of picksOwnedBy(f, A, y, ALL_TEAMS)) if (!pickUsed(f, p)) picks.push({ p, v: pickValue(p, { yearsAhead: y - y0 }) });
-      picks.sort((a, b) => a.v - b.v);
-      let pay = null;
-      for (const x of picks) if (inBand(x.v, vm)) { pay = [x]; break; }
-      if (!pay) for (let i = 0; i < picks.length && !pay; i++) for (let j = i + 1; j < picks.length; j++) if (inBand(picks[i].v + picks[j].v, vm)) { pay = [picks[i], picks[j]]; break; }
-      if (!pay) continue;
-      return forPicks(f, { A, B, m, picks: pay.map((x) => x.p), year });
+  const roomA = clubCapRoom(f, A, cap); const y0 = currentClassYear(f);
+  const targets = [];
+  for (const B of others) { const rosterB = clubRoster(f, B); for (const m of sparesOf(rosterB)) {
+    if (!tradable(f, m) || isProtected(m) || isUnavailable(m) || ovr(m) < floorAt(rosterA, m.position) + bar.upgrade) continue;
+    targets.push({ B, m, rosterB, gain: rosterNet(rosterA, { get: [m] }, year) });
+  } }
+  targets.sort((a, b) => b.gain - a.gain || (a.m.id < b.m.id ? -1 : 1));
+  const mySpares = sparesOf(rosterA).filter((x) => tradable(f, x) && !isProtected(x) && !isUnavailable(x));
+  const myPicks = ownedPicks(f, A, y0);
+  for (const { B, m, rosterB } of targets.slice(0, AI_TRADE_RULES.targets)) {
+    const vm = marketValue(m, { year }); const roomB = clubCapRoom(f, B, cap);
+    const options = [];
+    for (const y of mySpares) { const vy = marketValue(y, { year }); if (inBand(vy, vm)) options.push({ ys: [y], picks: [] }); }
+    const single = myPicks.find((x) => inBand(x.v, vm)); if (single) options.push({ ys: [], picks: [single] });
+    if (!single) for (let i = 0; i < myPicks.length; i++) for (let j = i + 1; j < myPicks.length; j++) if (inBand(myPicks[i].v + myPicks[j].v, vm)) { options.push({ ys: [], picks: [myPicks[i], myPicks[j]] }); i = myPicks.length; break; }
+    if (rosterA.length >= ROSTER_MAX || !options.length) // no room for a body, or nothing fits alone: a spare and a pick together
+      for (const y of mySpares) { const vy = marketValue(y, { year }); if (vy >= vm * AI_TRADE_RULES.band[0]) continue; for (const x of myPicks) if (inBand(vy + x.v, vm)) { options.push({ ys: [y], picks: [x] }); break; } }
+    let best = null;
+    for (const o of options) {
+      const j = judge(f, { A, B, rosterA, rosterB, m, ys: o.ys, picks: o.picks, year, roomA, roomB, minGain: bar.minGain }); if (!j) continue;
+      const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { ...o, ...j, score };
     }
+    if (best) return execute(f, { A, B, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s, y) => s + marketValue(y, { year }), 0) + best.picks.reduce((s, x) => s + x.v, 0) });
   }
   return null;
 }
@@ -71,32 +94,30 @@ function moveMonster(f, from, to, m, year) {
   addToClub(f, to, m, { year, via: 'traded', contract, salary: m.salary });
   m.traded = { from, year };
 }
-function swap(f, { A, B, toA, toB, year }) {
-  moveMonster(f, B, A, toA, year); moveMonster(f, A, B, toB, year);
-  leagueEvent(f, { kind: 'trade', from: B, to: A, consideration: `${toB.name} (${toB.position}, ${monsterOverall(toB)} OVR)`, ...moveIdentity(f, toA) });
-  return { kind: 'swap', A, B, toA: toA.id, toB: toB.id };
-}
-function forPicks(f, { A, B, m, picks, year }) {
-  moveMonster(f, B, A, m, year); for (const p of picks) setPickOwner(f, p, B);
-  const label = picks.map((p) => `a round-${p.round} pick (${p.year})`).join(' and ');
+/** Carry out a deal: monsters both ways, picks to B, one League News event naming what A paid. */
+function execute(f, { A, B, m, ys, picks, year, na, nb, fl, sm, got, paid }) {
+  moveMonster(f, B, A, m, year); for (const y of ys) moveMonster(f, A, B, y, year); for (const p of picks) setPickOwner(f, p, B);
+  const label = [...ys.map((y) => `${y.name} (${y.position}, ${ovr(y)} OVR)`), ...picks.map((p) => `a round-${p.round} pick (${p.year})`)].join(' and ');
   leagueEvent(f, { kind: 'trade', from: B, to: A, consideration: label, ...moveIdentity(f, m) });
-  return { kind: 'picks', A, B, toA: m.id, picks };
+  const kind = ys.length && picks.length ? 'swap+picks' : ys.length ? 'swap' : 'picks';
+  return { kind, A, B, toA: m.id, ...(ys.length ? { toB: ys[0].id, toBAll: ys.map((y) => y.id) } : {}), ...(picks.length ? { picks } : {}), pos: m.position, na: Math.round(na), nb: Math.round(nb), mv: [Math.round(got * 10) / 10, Math.round(paid * 10) / 10], fl, sm }; // mv: market value received and given, as the clubs saw it when they dealt (ratings move a little afterwards)
 }
 
 /**
  * The window's deals: in the offseason up to `offseasonMax`; in season one attempt with `weekChance`. Clubs shop in a
  * generator-shuffled order, one deal per club per window. Returns the deals made.
  */
-export function aiTrades(f, r, { year, cap, window }) {
+export function aiTrades(f, r, opts) { return scoped(() => aiTradesNow(f, r, opts)); }
+function aiTradesNow(f, r, { year, cap, window }) {
   if (!hasLeague(f)) return [];
   const deals = []; const done = new Set();
-  if (window === 'season') { const w = f.season?.week || 0; if (w < AI_TRADE_RULES.weeks[0] || w > AI_TRADE_RULES.weeks[1] || !r.chance(AI_TRADE_RULES.weekChance)) return deals; }
+  if (window === 'season') { if (f.season?.finished || !seasonTradeWeek(f.season?.week || 0) || !r.chance(AI_TRADE_RULES.weekChance)) return deals; } // after the deadline no draw is made at all, so the stream of random numbers for later weeks is the same as before
   const max = window === 'season' ? 1 : AI_TRADE_RULES.offseasonMax;
   const shoppers = order(f).sort(() => r.next() - 0.5);
   for (const A of shoppers) {
     if (deals.length >= max) break;
     if (done.has(A)) continue;
-    const d = attempt(f, r, A, { year, cap, done }); if (!d) continue;
+    const d = attempt(f, r, A, { year, cap, done, window }); if (!d) continue;
     done.add(d.A); done.add(d.B); deals.push(d);
     (f.league.trades ||= []).push({ year, week: f.season?.finished ? 0 : f.season?.week ?? 0, ...d });
     if (f.league.trades.length > 60) f.league.trades.shift();
