@@ -1,0 +1,6342 @@
+{
+ "generated": "2026-10-29T10:39:57.543Z",
+ "B": {
+  "label": "B",
+  "seeds": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20
+  ],
+  "seasonsPerSeed": 10,
+  "clubSeasons": 3000,
+  "errors": [],
+  "integrity": {
+   "problems": 0,
+   "problemSamples": [],
+   "exceptions": 0,
+   "seconds": 3980,
+   "secondsPerSeason": 19.9,
+   "peakHeapMB": 273,
+   "lineupFailures": 23,
+   "overCapAtSeasonEnd": 0,
+   "rosterSize": {
+    "min": 27,
+    "median": 38,
+    "max": 38
+   }
+  },
+  "roster": {
+   "rosterSizeMedian": 38,
+   "lineupFailures": 23,
+   "shortageClubSeasons": 84,
+   "shortagePct": 2.8,
+   "shortageByPos": {
+    "CB": 12,
+    "WR": 10,
+    "DL": 13,
+    "TE": 11,
+    "OL": 15,
+    "S": 11,
+    "LB": 12,
+    "RB": 4,
+    "QB": 4
+   },
+   "weakGroupClubSeasonsPct": 28.4,
+   "weakByPos": {
+    "WR": 70,
+    "DL": 122,
+    "TE": 170,
+    "LB": 91,
+    "RB": 103,
+    "CB": 131,
+    "OL": 222,
+    "QB": 122,
+    "S": 112
+   },
+   "persistentWeakPct": 14.3,
+   "persistentWeakWithCapRoomPct": 11.8,
+   "persistentWeakByPos": {
+    "TE": 64,
+    "DL": 44,
+    "OL": 113,
+    "RB": 31,
+    "S": 34,
+    "LB": 29,
+    "WR": 16,
+    "CB": 47,
+    "QB": 40
+   },
+   "persistentStreakMedian": 2,
+   "persistentStreakMax": 9,
+   "surplusPct": 0.1,
+   "surplusByPos": {
+    "QB": 1,
+    "RB": 1,
+    "TE": 2
+   },
+   "starterMeanByPos": {
+    "QB": 74.2,
+    "RB": 72.4,
+    "WR": 68.3,
+    "TE": 70.3,
+    "OL": 67,
+    "DL": 68.1,
+    "LB": 69,
+    "CB": 69,
+    "S": 69.1
+   },
+   "backupMeanByPos": {
+    "QB": 56.6,
+    "RB": 56.2,
+    "WR": 54.4,
+    "TE": 55.4,
+    "OL": 54.3,
+    "DL": 54.1,
+    "LB": 54.8,
+    "CB": 54.6,
+    "S": 54.6
+   },
+   "backupGapByPos": {
+    "QB": 18.1,
+    "RB": 16.5,
+    "WR": 13.9,
+    "TE": 15,
+    "OL": 12.8,
+    "DL": 14.1,
+    "LB": 14.3,
+    "CB": 14.5,
+    "S": 14.7
+   },
+   "noBackupPctByPos": {
+    "QB": 12.5,
+    "RB": 9.7,
+    "WR": 3.5,
+    "TE": 14.5,
+    "OL": 4.7,
+    "DL": 3.9,
+    "LB": 7.6,
+    "CB": 6.9,
+    "S": 9.1
+   },
+   "meanAge": 25,
+   "starterAge": 27.1
+  },
+  "cap": {
+   "utilizationMedianPct": null,
+   "capRoomMedian": 139260,
+   "capRoomP10": 80880,
+   "payrollMedian": 1255740,
+   "overCap": 0,
+   "capRoomOver200kPct": 27.2
+  },
+  "draft": {
+   "aiPicks": 9000,
+   "byRound": {
+    "1": 3000,
+    "2": 3000,
+    "3": 3000
+   },
+   "byPos": {
+    "QB": 712,
+    "TE": 678,
+    "S": 840,
+    "LB": 864,
+    "CB": 1050,
+    "DL": 1177,
+    "WR": 1392,
+    "RB": 897,
+    "OL": 1216,
+    "K": 174
+   },
+   "ovrGapToBestMedian": 1,
+   "ovrGapToBestMean": 0.8,
+   "potGapToBestMedian": 5,
+   "pickedNeedZeroPct": 46.6,
+   "misalignedPct": 24.6,
+   "misalignedN": 2210,
+   "wouldStartPct": 9.8,
+   "wouldStartByRound": {
+    "1": 22.6,
+    "2": 3.7,
+    "3": 3.2
+   },
+   "atTopNeedPct": 11.5,
+   "atNeed025Pct": 16.1,
+   "wouldNotStartAndNoNeedPct": 42.2,
+   "sameDraftDuplicatePct": 0.1,
+   "kickerPct": 1.9,
+   "contributionByRoundHorizon": {
+    "1|1": {
+     "n": 300,
+     "starterForDrafter": 16.3,
+     "stillWithDrafter": 98,
+     "stillInLeague": 98
+    },
+    "1|2": {
+     "n": 300,
+     "starterForDrafter": 17,
+     "stillWithDrafter": 89.3,
+     "stillInLeague": 89.7
+    },
+    "1|3": {
+     "n": 300,
+     "starterForDrafter": 23.3,
+     "stillWithDrafter": 85.3,
+     "stillInLeague": 89.7
+    },
+    "1|4": {
+     "n": 300,
+     "starterForDrafter": 22.3,
+     "stillWithDrafter": 81.3,
+     "stillInLeague": 85.7
+    },
+    "1|5": {
+     "n": 300,
+     "starterForDrafter": 29.3,
+     "stillWithDrafter": 73.3,
+     "stillInLeague": 86
+    },
+    "1|6": {
+     "n": 1200,
+     "starterForDrafter": 34.8,
+     "stillWithDrafter": 48.9,
+     "stillInLeague": 61.9
+    },
+    "2|1": {
+     "n": 300,
+     "starterForDrafter": 4,
+     "stillWithDrafter": 92.7,
+     "stillInLeague": 92.7
+    },
+    "2|2": {
+     "n": 300,
+     "starterForDrafter": 5,
+     "stillWithDrafter": 81.3,
+     "stillInLeague": 82
+    },
+    "2|3": {
+     "n": 300,
+     "starterForDrafter": 5.3,
+     "stillWithDrafter": 75.7,
+     "stillInLeague": 78.3
+    },
+    "2|4": {
+     "n": 300,
+     "starterForDrafter": 7.7,
+     "stillWithDrafter": 73,
+     "stillInLeague": 76.3
+    },
+    "2|5": {
+     "n": 300,
+     "starterForDrafter": 8.3,
+     "stillWithDrafter": 70.7,
+     "stillInLeague": 76
+    },
+    "2|6": {
+     "n": 1200,
+     "starterForDrafter": 5.7,
+     "stillWithDrafter": 19.3,
+     "stillInLeague": 24.7
+    },
+    "3|1": {
+     "n": 300,
+     "starterForDrafter": 3,
+     "stillWithDrafter": 89,
+     "stillInLeague": 89
+    },
+    "3|2": {
+     "n": 300,
+     "starterForDrafter": 2.7,
+     "stillWithDrafter": 73.3,
+     "stillInLeague": 73.7
+    },
+    "3|3": {
+     "n": 300,
+     "starterForDrafter": 3,
+     "stillWithDrafter": 65,
+     "stillInLeague": 65
+    },
+    "3|4": {
+     "n": 300,
+     "starterForDrafter": 2.7,
+     "stillWithDrafter": 64.3,
+     "stillInLeague": 65
+    },
+    "3|5": {
+     "n": 300,
+     "starterForDrafter": 3.7,
+     "stillWithDrafter": 57,
+     "stillInLeague": 60.3
+    },
+    "3|6": {
+     "n": 1200,
+     "starterForDrafter": 2.3,
+     "stillWithDrafter": 13,
+     "stillInLeague": 15.4
+    }
+   },
+   "round1StarterAt2": 17
+  },
+  "arrivals": {
+   "total": 12792,
+   "perClubSeason": 4.26,
+   "byOrigin": {
+    "drafted": 7987,
+    "signed:generated": 1464,
+    "signed:pool": 787,
+    "traded": 423,
+    "signed:waivers": 2131
+   },
+   "byPhase": {
+    "offseason": 12773,
+    "in-season": 19
+   },
+   "nonDraftByOrigin": {
+    "signed:generated": 1464,
+    "signed:pool": 787,
+    "traded": 423,
+    "signed:waivers": 2131
+   },
+   "nonDraftStartingPct": 45.5,
+   "generatedStartingPct": 42.6,
+   "atSurplusPct": 0,
+   "atWeakGroupPct": 15.6,
+   "meanAgeNonDraft": 27.5,
+   "meanOvrByOrigin": {
+    "drafted": 55.7,
+    "signed:generated": 65.5,
+    "signed:pool": 55.7,
+    "traded": 61.4,
+    "signed:waivers": 66.3
+   }
+  },
+  "departures": {
+   "total": 14244,
+   "byReason": {
+    "walked": 11772,
+    "released": 2048,
+    "traded": 424
+   },
+   "byPhase": {
+    "season-end": 11772,
+    "offseason": 2453,
+    "in-season": 19
+   },
+   "contractTimeStarterPct": 15.2,
+   "contractTimeStarters": 1788,
+   "walkedAgeMedian": 27,
+   "walkedOvrMedian": 56,
+   "walkedStarterOvrMedian": 67,
+   "releasedAgeMedian": 23,
+   "youngWalkedPct": 0,
+   "replacementDeltaMedian": 3.5,
+   "replacementDeltaMean": 4.5,
+   "replacementN": 1362,
+   "replacementWorse3Pct": 5.6
+  },
+  "aging": {
+   "meanAge": 25,
+   "starterAgeMedian": 26.9,
+   "age30plusMedian": 5,
+   "age24minusMedian": 17,
+   "byYear": {
+    "1": {
+     "meanAge": 23.2,
+     "starterAge": 23.7,
+     "age30plus": 0
+    },
+    "2": {
+     "meanAge": 23.6,
+     "starterAge": 24.5,
+     "age30plus": 0.1
+    },
+    "3": {
+     "meanAge": 23.9,
+     "starterAge": 25.3,
+     "age30plus": 1.8
+    },
+    "4": {
+     "meanAge": 24.4,
+     "starterAge": 26,
+     "age30plus": 3.3
+    },
+    "5": {
+     "meanAge": 24.8,
+     "starterAge": 26.9,
+     "age30plus": 4.9
+    },
+    "6": {
+     "meanAge": 25.3,
+     "starterAge": 27.5,
+     "age30plus": 6.2
+    },
+    "7": {
+     "meanAge": 25.7,
+     "starterAge": 28.4,
+     "age30plus": 7.7
+    },
+    "8": {
+     "meanAge": 26.1,
+     "starterAge": 29,
+     "age30plus": 9
+    },
+    "9": {
+     "meanAge": 26.5,
+     "starterAge": 29.8,
+     "age30plus": 10.6
+    },
+    "10": {
+     "meanAge": 26.8,
+     "starterAge": 30.2,
+     "age30plus": 11.9
+    }
+   }
+  },
+  "trades": {
+   "total": 407,
+   "perSeason": 2.04,
+   "byKind": {
+    "picks": 390,
+    "swap": 17
+   },
+   "byWindow": {
+    "offseason": 405,
+    "in-season": 2
+   },
+   "ratioMedian": 1.0290000000000001,
+   "ratioMin": 0.87,
+   "ratioMax": 1.176,
+   "acquiredStarterPct": 81.3,
+   "acquiredAgeMedian": 25,
+   "acquiredOvrMedian": 61,
+   "byPos": {
+    "CB": 38,
+    "K": 58,
+    "WR": 29,
+    "LB": 44,
+    "RB": 32,
+    "TE": 52,
+    "DL": 28,
+    "OL": 45,
+    "S": 46,
+    "QB": 35
+   },
+   "departedWithin1SeasonPct": 12,
+   "picksGiven": 621
+  },
+  "development": {
+   "devMeanReturning": 0.7,
+   "evolutionsPerClubSeason": 1.01,
+   "meanLevel": 6.9,
+   "stage2PerClub": 0.3,
+   "byYear": {
+    "1": {
+     "dev": null,
+     "evolved": 0.03,
+     "level": 3.2,
+     "stage2": 0,
+     "starters": {
+      "original": 91.3,
+      "drafted": 8.7,
+      "generated": 0,
+      "pool": 0,
+      "waivers": 0,
+      "traded": 0,
+      "own": 100
+     }
+    },
+    "2": {
+     "dev": 1.2,
+     "evolved": 0.47,
+     "level": 4.4,
+     "stage2": 0,
+     "starters": {
+      "original": 87.4,
+      "drafted": 10.8,
+      "generated": 0.3,
+      "pool": 0.5,
+      "waivers": 0.6,
+      "traded": 0.5,
+      "own": 98.2
+     }
+    },
+    "3": {
+     "dev": 1,
+     "evolved": 1.18,
+     "level": 5.5,
+     "stage2": 0,
+     "starters": {
+      "original": 84.2,
+      "drafted": 12.9,
+      "generated": 0.5,
+      "pool": 0.4,
+      "waivers": 1.3,
+      "traded": 0.8,
+      "own": 97
+     }
+    },
+    "4": {
+     "dev": 0.8,
+     "evolved": 1.88,
+     "level": 6.1,
+     "stage2": 0,
+     "starters": {
+      "original": 78.8,
+      "drafted": 16.1,
+      "generated": 1,
+      "pool": 0.7,
+      "waivers": 2,
+      "traded": 1.4,
+      "own": 94.8
+     }
+    },
+    "5": {
+     "dev": 0.7,
+     "evolved": 1.84,
+     "level": 7,
+     "stage2": 0.1,
+     "starters": {
+      "original": 75.4,
+      "drafted": 17,
+      "generated": 1.2,
+      "pool": 0.7,
+      "waivers": 3.8,
+      "traded": 2,
+      "own": 92.4
+     }
+    },
+    "6": {
+     "dev": 0.6,
+     "evolved": 1.51,
+     "level": 7.4,
+     "stage2": 0.2,
+     "starters": {
+      "original": 69.1,
+      "drafted": 20.3,
+      "generated": 2.1,
+      "pool": 1,
+      "waivers": 5,
+      "traded": 2.5,
+      "own": 89.4
+     }
+    },
+    "7": {
+     "dev": 0.5,
+     "evolved": 1.18,
+     "level": 8.3,
+     "stage2": 0.4,
+     "starters": {
+      "original": 65.4,
+      "drafted": 20.7,
+      "generated": 2.7,
+      "pool": 0.7,
+      "waivers": 7.9,
+      "traded": 2.7,
+      "own": 86.1
+     }
+    },
+    "8": {
+     "dev": 0.4,
+     "evolved": 0.85,
+     "level": 8.6,
+     "stage2": 0.5,
+     "starters": {
+      "original": 57.7,
+      "drafted": 22.2,
+      "generated": 5.5,
+      "pool": 1.1,
+      "waivers": 10.2,
+      "traded": 3.4,
+      "own": 79.9
+     }
+    },
+    "9": {
+     "dev": 0.4,
+     "evolved": 0.62,
+     "level": 9.2,
+     "stage2": 0.7,
+     "starters": {
+      "original": 54.2,
+      "drafted": 20.8,
+      "generated": 7.1,
+      "pool": 0.9,
+      "waivers": 13.6,
+      "traded": 3.4,
+      "own": 75
+     }
+    },
+    "10": {
+     "dev": 0.4,
+     "evolved": 0.54,
+     "level": 9.5,
+     "stage2": 0.9,
+     "starters": {
+      "original": 48.6,
+      "drafted": 20.8,
+      "generated": 10.8,
+      "pool": 0.9,
+      "waivers": 15.3,
+      "traded": 3.6,
+      "own": 69.4
+     }
+    }
+   }
+  },
+  "competition": {
+   "winsSd": 2.2,
+   "winsMean": 4.45,
+   "playoffPct": 49.2,
+   "titlesByAi": 196,
+   "titlesByOwner": 4,
+   "ownerWinPct": 57.8,
+   "distinctChampionsMedian": 4,
+   "maxTitlesOneClubMax": 7,
+   "maxTitleShareMax": 0.7,
+   "repeatChampions": 57,
+   "persistentLoserPct": 35.3,
+   "recoveryMedian": 2,
+   "unrecoveredPct": 45.8,
+   "recoveryN": 624,
+   "perSeed": [
+    {
+     "seed": 1,
+     "seasons": 10,
+     "distinct": 5,
+     "maxTitles": 5,
+     "ownerTitles": 0,
+     "repeat": 2
+    },
+    {
+     "seed": 2,
+     "seasons": 10,
+     "distinct": 4,
+     "maxTitles": 5,
+     "ownerTitles": 0,
+     "repeat": 2
+    },
+    {
+     "seed": 3,
+     "seasons": 10,
+     "distinct": 4,
+     "maxTitles": 4,
+     "ownerTitles": 0,
+     "repeat": 3
+    },
+    {
+     "seed": 4,
+     "seasons": 10,
+     "distinct": 3,
+     "maxTitles": 5,
+     "ownerTitles": 0,
+     "repeat": 5
+    },
+    {
+     "seed": 5,
+     "seasons": 10,
+     "distinct": 4,
+     "maxTitles": 6,
+     "ownerTitles": 0,
+     "repeat": 5
+    },
+    {
+     "seed": 6,
+     "seasons": 10,
+     "distinct": 8,
+     "maxTitles": 2,
+     "ownerTitles": 0,
+     "repeat": 0
+    },
+    {
+     "seed": 7,
+     "seasons": 10,
+     "distinct": 5,
+     "maxTitles": 6,
+     "ownerTitles": 0,
+     "repeat": 2
+    },
+    {
+     "seed": 8,
+     "seasons": 10,
+     "distinct": 5,
+     "maxTitles": 3,
+     "ownerTitles": 0,
+     "repeat": 2
+    },
+    {
+     "seed": 9,
+     "seasons": 10,
+     "distinct": 3,
+     "maxTitles": 4,
+     "ownerTitles": 0,
+     "repeat": 2
+    },
+    {
+     "seed": 10,
+     "seasons": 10,
+     "distinct": 3,
+     "maxTitles": 6,
+     "ownerTitles": 2,
+     "repeat": 3
+    },
+    {
+     "seed": 11,
+     "seasons": 10,
+     "distinct": 3,
+     "maxTitles": 5,
+     "ownerTitles": 0,
+     "repeat": 4
+    },
+    {
+     "seed": 12,
+     "seasons": 10,
+     "distinct": 3,
+     "maxTitles": 5,
+     "ownerTitles": 0,
+     "repeat": 4
+    },
+    {
+     "seed": 13,
+     "seasons": 10,
+     "distinct": 5,
+     "maxTitles": 4,
+     "ownerTitles": 0,
+     "repeat": 1
+    },
+    {
+     "seed": 14,
+     "seasons": 10,
+     "distinct": 7,
+     "maxTitles": 3,
+     "ownerTitles": 0,
+     "repeat": 1
+    },
+    {
+     "seed": 15,
+     "seasons": 10,
+     "distinct": 4,
+     "maxTitles": 4,
+     "ownerTitles": 0,
+     "repeat": 3
+    },
+    {
+     "seed": 16,
+     "seasons": 10,
+     "distinct": 4,
+     "maxTitles": 4,
+     "ownerTitles": 0,
+     "repeat": 3
+    },
+    {
+     "seed": 17,
+     "seasons": 10,
+     "distinct": 3,
+     "maxTitles": 7,
+     "ownerTitles": 0,
+     "repeat": 7
+    },
+    {
+     "seed": 18,
+     "seasons": 10,
+     "distinct": 5,
+     "maxTitles": 5,
+     "ownerTitles": 1,
+     "repeat": 1
+    },
+    {
+     "seed": 19,
+     "seasons": 10,
+     "distinct": 4,
+     "maxTitles": 5,
+     "ownerTitles": 0,
+     "repeat": 4
+    },
+    {
+     "seed": 20,
+     "seasons": 10,
+     "distinct": 4,
+     "maxTitles": 7,
+     "ownerTitles": 1,
+     "repeat": 3
+    }
+   ],
+   "rTeamOvrWins": 0.54,
+   "rQualityWins": 0.58,
+   "rQualityTeamOvr": 0.92,
+   "rTargetTeamOvr": 0.92,
+   "teamOvrMinusTargetMedian": -1,
+   "teamOvrMinusTargetSd": 3.1,
+   "rResidualWins": -0.4,
+   "rWinsYoY": 0.53
+  },
+  "balance": {
+   "boostedClubSeasonsPct": 10.9,
+   "nudgeSignings": 541,
+   "slowedClubSeasonsPct": 16.5,
+   "runawayClubSeasons": 583,
+   "runawayPct": 19.4,
+   "generatedArrivalPct": 30.5,
+   "teamOvrSdByYear": {
+    "1": 3.52,
+    "2": 3.56,
+    "3": 3.44,
+    "4": 3.59,
+    "5": 3.33,
+    "6": 3.72,
+    "7": 3.37,
+    "8": 4.02,
+    "9": 4.01,
+    "10": 4.79
+   },
+   "teamOvrSdMean": 3.73,
+   "clubsLow8For3PlusPct": 0
+  },
+  "decisions": {
+   "contenders6plus": {
+    "clubSeasons": 991,
+    "arrivalsPerClubSeason": 1.1,
+    "arrivalMeanAge": 27.3,
+    "pickMeanAge": 20.5,
+    "pickMeanPot": 66.4,
+    "pickOvrGap": 0.9,
+    "boostedPct": 20.1,
+    "slowedPct": 4.8,
+    "meanAge": 25.2
+   },
+   "strugglers3minus": {
+    "clubSeasons": 1087,
+    "arrivalsPerClubSeason": 2.03,
+    "arrivalMeanAge": 27.6,
+    "pickMeanAge": 20.5,
+    "pickMeanPot": 67.9,
+    "pickOvrGap": 0.7,
+    "boostedPct": 3.7,
+    "slowedPct": 27.5,
+    "meanAge": 24.8
+   },
+   "agingPlanning": {
+    "picksAtGroupsWithStarter29plusPct": null
+   },
+   "weakGroupResponse": {
+    "arrivalsAtWeakGroupPct": 15.6,
+    "picksAtTopNeedPct": 11.5
+   }
+  },
+  "tiers": {
+   "top": {
+    "n": 75,
+    "winPct": 75.9,
+    "titlesPerClub": 2.24,
+    "quality0": 61.8,
+    "teamOvr0": 67.5,
+    "meanOvr": 73.6,
+    "meanQuality": 69.3,
+    "gapToTarget": -3,
+    "nudgeSignings": 3.64,
+    "slowedSeasons": 0.08,
+    "persistentWeakSeasons": 0.51,
+    "ownStarterShare": 93.9,
+    "meanAge": 25.3,
+    "dev": 0.62,
+    "rivalShare": 8
+   },
+   "bottom": {
+    "n": 75,
+    "winPct": 28.4,
+    "titlesPerClub": 0.01,
+    "quality0": 53.5,
+    "teamOvr0": 59.2,
+    "meanOvr": 65,
+    "meanQuality": 56.6,
+    "gapToTarget": 2.1,
+    "nudgeSignings": 0.11,
+    "slowedSeasons": 4.12,
+    "persistentWeakSeasons": 2,
+    "ownStarterShare": 79.4,
+    "meanAge": 24.7,
+    "dev": 0.73,
+    "rivalShare": 2.7
+   },
+   "middle": {
+    "n": 150,
+    "winPct": 46.8,
+    "titlesPerClub": 0.18,
+    "quality0": 57.1,
+    "teamOvr0": 62.5,
+    "meanOvr": 68.4,
+    "meanQuality": 62.3,
+    "gapToTarget": -0.8,
+    "nudgeSignings": 1.73,
+    "slowedSeasons": 1.19,
+    "persistentWeakSeasons": 1.33,
+    "ownStarterShare": 89.7,
+    "meanAge": 25.1,
+    "dev": 0.66,
+    "rivalShare": 8
+   },
+   "rMeanQualityWinPct": 0.89,
+   "rMeanOvrWinPct": 0.92,
+   "rStartQualityWinPct": 0.89,
+   "clubs": 300
+  }
+ },
+ "C": {
+  "label": "C",
+  "seeds": [
+   101,
+   102,
+   103,
+   104,
+   105
+  ],
+  "seasonsPerSeed": 20,
+  "clubSeasons": 1500,
+  "errors": [],
+  "integrity": {
+   "problems": 0,
+   "problemSamples": [],
+   "exceptions": 0,
+   "seconds": 2044,
+   "secondsPerSeason": 20.4,
+   "peakHeapMB": 289,
+   "lineupFailures": 19,
+   "overCapAtSeasonEnd": 9,
+   "rosterSize": {
+    "min": 27,
+    "median": 37,
+    "max": 38
+   }
+  },
+  "roster": {
+   "rosterSizeMedian": 37,
+   "lineupFailures": 19,
+   "shortageClubSeasons": 46,
+   "shortagePct": 3.1,
+   "shortageByPos": {
+    "OL": 6,
+    "QB": 5,
+    "WR": 5,
+    "S": 4,
+    "RB": 5,
+    "LB": 5,
+    "CB": 7,
+    "DL": 8,
+    "TE": 3
+   },
+   "weakGroupClubSeasonsPct": 36.3,
+   "weakByPos": {
+    "WR": 48,
+    "TE": 99,
+    "S": 76,
+    "DL": 81,
+    "QB": 75,
+    "LB": 83,
+    "OL": 110,
+    "CB": 76,
+    "RB": 81
+   },
+   "persistentWeakPct": 19.1,
+   "persistentWeakWithCapRoomPct": 13.2,
+   "persistentWeakByPos": {
+    "OL": 56,
+    "S": 23,
+    "QB": 29,
+    "DL": 31,
+    "RB": 40,
+    "TE": 45,
+    "CB": 29,
+    "LB": 40,
+    "WR": 9
+   },
+   "persistentStreakMedian": 2,
+   "persistentStreakMax": 15,
+   "surplusPct": 0.1,
+   "surplusByPos": {
+    "RB": 2
+   },
+   "starterMeanByPos": {
+    "QB": 78.2,
+    "RB": 77.9,
+    "WR": 73.3,
+    "TE": 76.3,
+    "OL": 71.8,
+    "DL": 72.2,
+    "LB": 73.9,
+    "CB": 73.3,
+    "S": 73.9
+   },
+   "backupMeanByPos": {
+    "QB": 57.7,
+    "RB": 56.4,
+    "WR": 55.8,
+    "TE": 56.8,
+    "OL": 55.9,
+    "DL": 55.2,
+    "LB": 56.3,
+    "CB": 55.9,
+    "S": 55.3
+   },
+   "backupGapByPos": {
+    "QB": 20.9,
+    "RB": 22.1,
+    "WR": 17.5,
+    "TE": 19.7,
+    "OL": 15.9,
+    "DL": 17.2,
+    "LB": 17.6,
+    "CB": 17.7,
+    "S": 18.6
+   },
+   "noBackupPctByPos": {
+    "QB": 12.2,
+    "RB": 10.5,
+    "WR": 3.7,
+    "TE": 14.3,
+    "OL": 6.9,
+    "DL": 5.9,
+    "LB": 10.5,
+    "CB": 7.1,
+    "S": 10
+   },
+   "meanAge": 26.8,
+   "starterAge": 30.2
+  },
+  "cap": {
+   "utilizationMedianPct": null,
+   "capRoomMedian": 115080,
+   "capRoomP10": 45500,
+   "payrollMedian": 1280000,
+   "overCap": 9,
+   "capRoomOver200kPct": 22.9
+  },
+  "draft": {
+   "aiPicks": 4500,
+   "byRound": {
+    "1": 1500,
+    "2": 1500,
+    "3": 1500
+   },
+   "byPos": {
+    "LB": 451,
+    "OL": 573,
+    "RB": 459,
+    "WR": 693,
+    "DL": 570,
+    "TE": 343,
+    "CB": 537,
+    "QB": 353,
+    "S": 423,
+    "K": 98
+   },
+   "ovrGapToBestMedian": 1,
+   "ovrGapToBestMean": 0.9,
+   "potGapToBestMedian": 5,
+   "pickedNeedZeroPct": 45.8,
+   "misalignedPct": 25.2,
+   "misalignedN": 1134,
+   "wouldStartPct": 7.3,
+   "wouldStartByRound": {
+    "1": 16.7,
+    "2": 2.5,
+    "3": 2.7
+   },
+   "atTopNeedPct": 9.8,
+   "atNeed025Pct": 16.5,
+   "wouldNotStartAndNoNeedPct": 42.9,
+   "sameDraftDuplicatePct": 0,
+   "kickerPct": 2.2,
+   "contributionByRoundHorizon": {
+    "1|1": {
+     "n": 75,
+     "starterForDrafter": 10.7,
+     "stillWithDrafter": 100,
+     "stillInLeague": 100
+    },
+    "1|2": {
+     "n": 75,
+     "starterForDrafter": 6.7,
+     "stillWithDrafter": 86.7,
+     "stillInLeague": 86.7
+    },
+    "1|3": {
+     "n": 75,
+     "starterForDrafter": 12,
+     "stillWithDrafter": 94.7,
+     "stillInLeague": 94.7
+    },
+    "1|4": {
+     "n": 75,
+     "starterForDrafter": 16,
+     "stillWithDrafter": 85.3,
+     "stillInLeague": 86.7
+    },
+    "1|5": {
+     "n": 75,
+     "starterForDrafter": 12,
+     "stillWithDrafter": 76,
+     "stillInLeague": 82.7
+    },
+    "1|6": {
+     "n": 1050,
+     "starterForDrafter": 15.5,
+     "stillWithDrafter": 19.4,
+     "stillInLeague": 31
+    },
+    "2|1": {
+     "n": 75,
+     "starterForDrafter": 1.3,
+     "stillWithDrafter": 96,
+     "stillInLeague": 96
+    },
+    "2|2": {
+     "n": 75,
+     "starterForDrafter": 2.7,
+     "stillWithDrafter": 84,
+     "stillInLeague": 84
+    },
+    "2|3": {
+     "n": 75,
+     "starterForDrafter": 6.7,
+     "stillWithDrafter": 84,
+     "stillInLeague": 84
+    },
+    "2|4": {
+     "n": 75,
+     "starterForDrafter": 0,
+     "stillWithDrafter": 77.3,
+     "stillInLeague": 77.3
+    },
+    "2|5": {
+     "n": 75,
+     "starterForDrafter": 9.3,
+     "stillWithDrafter": 72,
+     "stillInLeague": 76
+    },
+    "2|6": {
+     "n": 1050,
+     "starterForDrafter": 1.1,
+     "stillWithDrafter": 5.4,
+     "stillInLeague": 7.1
+    },
+    "3|1": {
+     "n": 75,
+     "starterForDrafter": 5.3,
+     "stillWithDrafter": 70.7,
+     "stillInLeague": 70.7
+    },
+    "3|2": {
+     "n": 75,
+     "starterForDrafter": 1.3,
+     "stillWithDrafter": 58.7,
+     "stillInLeague": 61.3
+    },
+    "3|3": {
+     "n": 75,
+     "starterForDrafter": 2.7,
+     "stillWithDrafter": 44,
+     "stillInLeague": 44
+    },
+    "3|4": {
+     "n": 75,
+     "starterForDrafter": 2.7,
+     "stillWithDrafter": 53.3,
+     "stillInLeague": 53.3
+    },
+    "3|5": {
+     "n": 75,
+     "starterForDrafter": 1.3,
+     "stillWithDrafter": 44,
+     "stillInLeague": 45.3
+    },
+    "3|6": {
+     "n": 1050,
+     "starterForDrafter": 0.4,
+     "stillWithDrafter": 3.5,
+     "stillInLeague": 4.3
+    }
+   },
+   "round1StarterAt2": 6.7
+  },
+  "arrivals": {
+   "total": 7346,
+   "perClubSeason": 4.9,
+   "byOrigin": {
+    "drafted": 4103,
+    "signed:waivers": 1807,
+    "signed:pool": 349,
+    "signed:generated": 849,
+    "traded": 238
+   },
+   "byPhase": {
+    "offseason": 7311,
+    "in-season": 35
+   },
+   "nonDraftByOrigin": {
+    "signed:waivers": 1807,
+    "signed:pool": 349,
+    "signed:generated": 849,
+    "traded": 238
+   },
+   "nonDraftStartingPct": 49,
+   "generatedStartingPct": 58,
+   "atSurplusPct": 0,
+   "atWeakGroupPct": 16.7,
+   "meanAgeNonDraft": 29.5,
+   "meanOvrByOrigin": {
+    "drafted": 55.8,
+    "signed:waivers": 68.8,
+    "signed:pool": 56.3,
+    "signed:generated": 73.3,
+    "traded": 62.7
+   }
+  },
+  "departures": {
+   "total": 7729,
+   "byReason": {
+    "walked": 6348,
+    "released": 1143,
+    "traded": 238
+   },
+   "byPhase": {
+    "season-end": 6349,
+    "offseason": 1370,
+    "in-season": 10
+   },
+   "contractTimeStarterPct": 16.3,
+   "contractTimeStarters": 1036,
+   "walkedAgeMedian": 27,
+   "walkedOvrMedian": 59,
+   "walkedStarterOvrMedian": 70,
+   "releasedAgeMedian": 23,
+   "youngWalkedPct": 0,
+   "replacementDeltaMedian": 3.6666666666666714,
+   "replacementDeltaMean": 5,
+   "replacementN": 877,
+   "replacementWorse3Pct": 8.2
+  },
+  "aging": {
+   "meanAge": 26.8,
+   "starterAgeMedian": 30.3,
+   "age30plusMedian": 11,
+   "age24minusMedian": 15,
+   "byYear": {
+    "1": {
+     "meanAge": 23.1,
+     "starterAge": 23.6,
+     "age30plus": 0
+    },
+    "2": {
+     "meanAge": 23.5,
+     "starterAge": 24.4,
+     "age30plus": 0
+    },
+    "3": {
+     "meanAge": 23.9,
+     "starterAge": 25.2,
+     "age30plus": 1.6
+    },
+    "4": {
+     "meanAge": 24.3,
+     "starterAge": 25.9,
+     "age30plus": 3.1
+    },
+    "5": {
+     "meanAge": 24.8,
+     "starterAge": 26.7,
+     "age30plus": 4.6
+    },
+    "6": {
+     "meanAge": 25.2,
+     "starterAge": 27.4,
+     "age30plus": 5.9
+    },
+    "7": {
+     "meanAge": 25.7,
+     "starterAge": 28.3,
+     "age30plus": 7.5
+    },
+    "8": {
+     "meanAge": 26.1,
+     "starterAge": 28.9,
+     "age30plus": 8.6
+    },
+    "9": {
+     "meanAge": 26.4,
+     "starterAge": 29.6,
+     "age30plus": 9.9
+    },
+    "10": {
+     "meanAge": 26.8,
+     "starterAge": 30.2,
+     "age30plus": 11.9
+    },
+    "11": {
+     "meanAge": 27.1,
+     "starterAge": 30.8,
+     "age30plus": 13.5
+    },
+    "12": {
+     "meanAge": 27.4,
+     "starterAge": 31.2,
+     "age30plus": 13.9
+    },
+    "13": {
+     "meanAge": 27.8,
+     "starterAge": 31.9,
+     "age30plus": 14.7
+    },
+    "14": {
+     "meanAge": 28,
+     "starterAge": 32.4,
+     "age30plus": 14.5
+    },
+    "15": {
+     "meanAge": 28.4,
+     "starterAge": 33.2,
+     "age30plus": 15.2
+    },
+    "16": {
+     "meanAge": 28.6,
+     "starterAge": 33.6,
+     "age30plus": 14.9
+    },
+    "17": {
+     "meanAge": 29.2,
+     "starterAge": 34.3,
+     "age30plus": 15.9
+    },
+    "18": {
+     "meanAge": 29.4,
+     "starterAge": 34.9,
+     "age30plus": 15.7
+    },
+    "19": {
+     "meanAge": 29.9,
+     "starterAge": 35.6,
+     "age30plus": 16.5
+    },
+    "20": {
+     "meanAge": 30,
+     "starterAge": 36.1,
+     "age30plus": 16.2
+    }
+   }
+  },
+  "trades": {
+   "total": 229,
+   "perSeason": 2.29,
+   "byKind": {
+    "picks": 220,
+    "swap": 9
+   },
+   "byWindow": {
+    "offseason": 226,
+    "in-season": 3
+   },
+   "ratioMedian": 1.024,
+   "ratioMin": 0.856,
+   "ratioMax": 1.176,
+   "acquiredStarterPct": 72.1,
+   "acquiredAgeMedian": 26,
+   "acquiredOvrMedian": 62,
+   "byPos": {
+    "S": 22,
+    "TE": 27,
+    "LB": 19,
+    "K": 38,
+    "OL": 19,
+    "CB": 17,
+    "DL": 25,
+    "RB": 15,
+    "WR": 13,
+    "QB": 34
+   },
+   "departedWithin1SeasonPct": 20.5,
+   "picksGiven": 370
+  },
+  "development": {
+   "devMeanReturning": 0.5,
+   "evolutionsPerClubSeason": 0.72,
+   "meanLevel": 9,
+   "stage2PerClub": 0.9,
+   "byYear": {
+    "1": {
+     "dev": null,
+     "evolved": 0.01,
+     "level": 3.2,
+     "stage2": 0,
+     "starters": {
+      "original": 91.6,
+      "drafted": 8.4,
+      "generated": 0,
+      "pool": 0,
+      "waivers": 0,
+      "traded": 0,
+      "own": 100
+     }
+    },
+    "2": {
+     "dev": 1.2,
+     "evolved": 0.47,
+     "level": 4.3,
+     "stage2": 0,
+     "starters": {
+      "original": 86.7,
+      "drafted": 10.7,
+      "generated": 0.6,
+      "pool": 0.4,
+      "waivers": 0.9,
+      "traded": 0.8,
+      "own": 97.3
+     }
+    },
+    "3": {
+     "dev": 1,
+     "evolved": 1.36,
+     "level": 5.4,
+     "stage2": 0,
+     "starters": {
+      "original": 83.1,
+      "drafted": 12.8,
+      "generated": 0.8,
+      "pool": 0.4,
+      "waivers": 1.8,
+      "traded": 1.1,
+      "own": 95.9
+     }
+    },
+    "4": {
+     "dev": 0.8,
+     "evolved": 1.77,
+     "level": 6.1,
+     "stage2": 0,
+     "starters": {
+      "original": 77.3,
+      "drafted": 16.3,
+      "generated": 0.8,
+      "pool": 0.3,
+      "waivers": 3.7,
+      "traded": 1.6,
+      "own": 93.6
+     }
+    },
+    "5": {
+     "dev": 0.7,
+     "evolved": 1.84,
+     "level": 7,
+     "stage2": 0.1,
+     "starters": {
+      "original": 72.5,
+      "drafted": 18,
+      "generated": 1.3,
+      "pool": 0.6,
+      "waivers": 5.5,
+      "traded": 2.1,
+      "own": 90.5
+     }
+    },
+    "6": {
+     "dev": 0.6,
+     "evolved": 1.28,
+     "level": 7.4,
+     "stage2": 0.3,
+     "starters": {
+      "original": 65.7,
+      "drafted": 20.3,
+      "generated": 3.1,
+      "pool": 0.6,
+      "waivers": 7.5,
+      "traded": 2.7,
+      "own": 86
+     }
+    },
+    "7": {
+     "dev": 0.5,
+     "evolved": 1.01,
+     "level": 8.3,
+     "stage2": 0.3,
+     "starters": {
+      "original": 63.2,
+      "drafted": 20.1,
+      "generated": 3.7,
+      "pool": 0.7,
+      "waivers": 10,
+      "traded": 2.3,
+      "own": 83.3
+     }
+    },
+    "8": {
+     "dev": 0.4,
+     "evolved": 0.91,
+     "level": 8.6,
+     "stage2": 0.5,
+     "starters": {
+      "original": 56,
+      "drafted": 21.5,
+      "generated": 6.5,
+      "pool": 0.6,
+      "waivers": 12.3,
+      "traded": 3,
+      "own": 77.6
+     }
+    },
+    "9": {
+     "dev": 0.4,
+     "evolved": 0.68,
+     "level": 9.1,
+     "stage2": 0.7,
+     "starters": {
+      "original": 52.4,
+      "drafted": 20.5,
+      "generated": 8.5,
+      "pool": 0.8,
+      "waivers": 14.7,
+      "traded": 3.2,
+      "own": 72.9
+     }
+    },
+    "10": {
+     "dev": 0.4,
+     "evolved": 0.68,
+     "level": 9.5,
+     "stage2": 0.9,
+     "starters": {
+      "original": 47.1,
+      "drafted": 20.9,
+      "generated": 11.5,
+      "pool": 0.7,
+      "waivers": 16.5,
+      "traded": 3.4,
+      "own": 68
+     }
+    },
+    "11": {
+     "dev": 0.4,
+     "evolved": 0.6,
+     "level": 9.9,
+     "stage2": 1.1,
+     "starters": {
+      "original": 43.8,
+      "drafted": 20.5,
+      "generated": 13.2,
+      "pool": 0.7,
+      "waivers": 18,
+      "traded": 3.8,
+      "own": 64.3
+     }
+    },
+    "12": {
+     "dev": 0.3,
+     "evolved": 0.57,
+     "level": 10.1,
+     "stage2": 1.3,
+     "starters": {
+      "original": 39.2,
+      "drafted": 21.3,
+      "generated": 17.2,
+      "pool": 0.5,
+      "waivers": 17.7,
+      "traded": 4.1,
+      "own": 60.5
+     }
+    },
+    "13": {
+     "dev": 0.3,
+     "evolved": 0.55,
+     "level": 10.5,
+     "stage2": 1.4,
+     "starters": {
+      "original": 37,
+      "drafted": 20.1,
+      "generated": 18.5,
+      "pool": 0.6,
+      "waivers": 19.9,
+      "traded": 3.9,
+      "own": 57.1
+     }
+    },
+    "14": {
+     "dev": 0.3,
+     "evolved": 0.45,
+     "level": 10.6,
+     "stage2": 1.5,
+     "starters": {
+      "original": 33.6,
+      "drafted": 18.8,
+      "generated": 21.7,
+      "pool": 0.8,
+      "waivers": 20.9,
+      "traded": 4.2,
+      "own": 52.4
+     }
+    },
+    "15": {
+     "dev": 0.3,
+     "evolved": 0.52,
+     "level": 11.1,
+     "stage2": 1.6,
+     "starters": {
+      "original": 31.3,
+      "drafted": 18.3,
+      "generated": 23.6,
+      "pool": 0.7,
+      "waivers": 21.4,
+      "traded": 4.7,
+      "own": 49.6
+     }
+    },
+    "16": {
+     "dev": 0.3,
+     "evolved": 0.37,
+     "level": 11.2,
+     "stage2": 1.6,
+     "starters": {
+      "original": 29.1,
+      "drafted": 18.3,
+      "generated": 26,
+      "pool": 0.4,
+      "waivers": 21.4,
+      "traded": 4.8,
+      "own": 47.4
+     }
+    },
+    "17": {
+     "dev": 0.2,
+     "evolved": 0.29,
+     "level": 11.7,
+     "stage2": 1.7,
+     "starters": {
+      "original": 27.3,
+      "drafted": 17.5,
+      "generated": 27.5,
+      "pool": 0.5,
+      "waivers": 22.3,
+      "traded": 4.8,
+      "own": 44.8
+     }
+    },
+    "18": {
+     "dev": 0.3,
+     "evolved": 0.35,
+     "level": 11.9,
+     "stage2": 1.7,
+     "starters": {
+      "original": 25.5,
+      "drafted": 17.2,
+      "generated": 30,
+      "pool": 0.4,
+      "waivers": 22.4,
+      "traded": 4.4,
+      "own": 42.7
+     }
+    },
+    "19": {
+     "dev": 0.2,
+     "evolved": 0.39,
+     "level": 12.4,
+     "stage2": 1.8,
+     "starters": {
+      "original": 24.4,
+      "drafted": 17.1,
+      "generated": 30.6,
+      "pool": 0.4,
+      "waivers": 23.1,
+      "traded": 4.4,
+      "own": 41.5
+     }
+    },
+    "20": {
+     "dev": 0.2,
+     "evolved": 0.31,
+     "level": 12.5,
+     "stage2": 1.8,
+     "starters": {
+      "original": 23.1,
+      "drafted": 17.5,
+      "generated": 32,
+      "pool": 0.4,
+      "waivers": 22.2,
+      "traded": 4.8,
+      "own": 40.6
+     }
+    }
+   }
+  },
+  "competition": {
+   "winsSd": 2.37,
+   "winsMean": 4.52,
+   "playoffPct": 50.5,
+   "titlesByAi": 98,
+   "titlesByOwner": 2,
+   "ownerWinPct": 47.4,
+   "distinctChampionsMedian": 5,
+   "maxTitlesOneClubMax": 15,
+   "maxTitleShareMax": 0.75,
+   "repeatChampions": 35,
+   "persistentLoserPct": 57.3,
+   "recoveryMedian": 3,
+   "unrecoveredPct": 47.6,
+   "recoveryN": 349,
+   "perSeed": [
+    {
+     "seed": 101,
+     "seasons": 20,
+     "distinct": 5,
+     "maxTitles": 10,
+     "ownerTitles": 0,
+     "repeat": 8
+    },
+    {
+     "seed": 102,
+     "seasons": 20,
+     "distinct": 6,
+     "maxTitles": 6,
+     "ownerTitles": 0,
+     "repeat": 5
+    },
+    {
+     "seed": 103,
+     "seasons": 20,
+     "distinct": 5,
+     "maxTitles": 8,
+     "ownerTitles": 0,
+     "repeat": 8
+    },
+    {
+     "seed": 104,
+     "seasons": 20,
+     "distinct": 3,
+     "maxTitles": 15,
+     "ownerTitles": 0,
+     "repeat": 9
+    },
+    {
+     "seed": 105,
+     "seasons": 20,
+     "distinct": 7,
+     "maxTitles": 6,
+     "ownerTitles": 2,
+     "repeat": 5
+    }
+   ],
+   "rTeamOvrWins": 0.59,
+   "rQualityWins": 0.62,
+   "rQualityTeamOvr": 0.97,
+   "rTargetTeamOvr": 0.96,
+   "teamOvrMinusTargetMedian": -1,
+   "teamOvrMinusTargetSd": 3.63,
+   "rResidualWins": -0.53,
+   "rWinsYoY": 0.67
+  },
+  "balance": {
+   "boostedClubSeasonsPct": 21.3,
+   "nudgeSignings": 577,
+   "slowedClubSeasonsPct": 15.4,
+   "runawayClubSeasons": 292,
+   "runawayPct": 19.5,
+   "generatedArrivalPct": 26.2,
+   "teamOvrSdByYear": {
+    "1": 3.98,
+    "2": 3.98,
+    "3": 3.82,
+    "4": 4.18,
+    "5": 3.69,
+    "6": 3.99,
+    "7": 3.76,
+    "8": 4.42,
+    "9": 4.54,
+    "10": 5.23,
+    "11": 5.41,
+    "12": 6.23,
+    "13": 6.53,
+    "14": 6.93,
+    "15": 7.33,
+    "16": 7.67,
+    "17": 7.76,
+    "18": 8.02,
+    "19": 7.95,
+    "20": 8.12
+   },
+   "teamOvrSdMean": 5.68,
+   "clubsLow8For3PlusPct": 18.7
+  },
+  "decisions": {
+   "contenders6plus": {
+    "clubSeasons": 539,
+    "arrivalsPerClubSeason": 1.67,
+    "arrivalMeanAge": 28.8,
+    "pickMeanAge": 20.5,
+    "pickMeanPot": 66.4,
+    "pickOvrGap": 0.9,
+    "boostedPct": 42.9,
+    "slowedPct": 2.6,
+    "meanAge": 27.1
+   },
+   "strugglers3minus": {
+    "clubSeasons": 562,
+    "arrivalsPerClubSeason": 2.59,
+    "arrivalMeanAge": 30.1,
+    "pickMeanAge": 20.5,
+    "pickMeanPot": 67.9,
+    "pickOvrGap": 0.9,
+    "boostedPct": 3.2,
+    "slowedPct": 26.9,
+    "meanAge": 26.5
+   },
+   "agingPlanning": {
+    "picksAtGroupsWithStarter29plusPct": null
+   },
+   "weakGroupResponse": {
+    "arrivalsAtWeakGroupPct": 16.7,
+    "picksAtTopNeedPct": 9.8
+   }
+  },
+  "tiers": {
+   "top": {
+    "n": 18,
+    "winPct": 78.4,
+    "titlesPerClub": 4.28,
+    "quality0": 62.7,
+    "teamOvr0": 68.4,
+    "meanOvr": 80.5,
+    "meanQuality": 77.9,
+    "gapToTarget": -4.1,
+    "nudgeSignings": 15.67,
+    "slowedSeasons": 0.28,
+    "persistentWeakSeasons": 1.5,
+    "ownStarterShare": 71.6,
+    "meanAge": 27.1,
+    "dev": 0.42,
+    "rivalShare": 22.2
+   },
+   "bottom": {
+    "n": 18,
+    "winPct": 26.2,
+    "titlesPerClub": 0,
+    "quality0": 53.3,
+    "teamOvr0": 59.2,
+    "meanOvr": 67.9,
+    "meanQuality": 59.2,
+    "gapToTarget": 2.3,
+    "nudgeSignings": 0.5,
+    "slowedSeasons": 8.11,
+    "persistentWeakSeasons": 6,
+    "ownStarterShare": 60,
+    "meanAge": 26.4,
+    "dev": 0.53,
+    "rivalShare": 0
+   },
+   "middle": {
+    "n": 39,
+    "winPct": 48.2,
+    "titlesPerClub": 0.54,
+    "quality0": 57,
+    "teamOvr0": 62.2,
+    "meanOvr": 73.1,
+    "meanQuality": 67.6,
+    "gapToTarget": -1.4,
+    "nudgeSignings": 7.33,
+    "slowedSeasons": 2.05,
+    "persistentWeakSeasons": 3.51,
+    "ownStarterShare": 70.5,
+    "meanAge": 26.8,
+    "dev": 0.47,
+    "rivalShare": 2.6
+   },
+   "rMeanQualityWinPct": 0.94,
+   "rMeanOvrWinPct": 0.96,
+   "rStartQualityWinPct": 0.89,
+   "clubs": 75
+  }
+ },
+ "D": {
+  "aging": {
+   "clubs": 15,
+   "seasons": {},
+   "base": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 61.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.1,
+     "starterAge": 23.6,
+     "roster": 35.6,
+     "capRoom": 277231,
+     "drafted": 3,
+     "backups": 6.7
+    },
+    "2": {
+     "w": 4.27,
+     "teamOvr": 63.5,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 23.6,
+     "starterAge": 24.3,
+     "roster": 36.9,
+     "capRoom": 168148,
+     "drafted": 5.5,
+     "backups": 7
+    },
+    "3": {
+     "w": 3.93,
+     "teamOvr": 65.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 24.1,
+     "starterAge": 25.3,
+     "roster": 36.9,
+     "capRoom": 163047,
+     "drafted": 8.1,
+     "backups": 7.1
+    },
+    "4": {
+     "w": 3.87,
+     "teamOvr": 65.8,
+     "lineupFail": 0,
+     "shortage": 2,
+     "weak": 1.07,
+     "boosted": 0,
+     "age": 24.4,
+     "starterAge": 25.6,
+     "roster": 36.3,
+     "capRoom": 171933,
+     "drafted": 10.6,
+     "backups": 7.5
+    },
+    "5": {
+     "w": 3.47,
+     "teamOvr": 67.3,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.93,
+     "boosted": 0,
+     "age": 24.9,
+     "starterAge": 26.6,
+     "roster": 36.3,
+     "capRoom": 159591,
+     "drafted": 12.9,
+     "backups": 6.9
+    },
+    "6": {
+     "w": 3.73,
+     "teamOvr": 67.6,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.8,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 27,
+     "roster": 35.9,
+     "capRoom": 169753,
+     "drafted": 15.3,
+     "backups": 6.9
+    }
+   },
+   "stressed": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 61.1,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 27.2,
+     "starterAge": 30.8,
+     "roster": 34.7,
+     "capRoom": 308924,
+     "drafted": 3,
+     "backups": 6.3
+    },
+    "2": {
+     "w": 3.4,
+     "teamOvr": 63.1,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.2,
+     "boosted": 0,
+     "age": 27.3,
+     "starterAge": 31.1,
+     "roster": 36.4,
+     "capRoom": 184477,
+     "drafted": 5.3,
+     "backups": 7.1
+    },
+    "3": {
+     "w": 3.07,
+     "teamOvr": 64.9,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.2,
+     "boosted": 0,
+     "age": 27.6,
+     "starterAge": 31.7,
+     "roster": 36,
+     "capRoom": 196767,
+     "drafted": 8.1,
+     "backups": 6.9
+    },
+    "4": {
+     "w": 3.4,
+     "teamOvr": 65.1,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.87,
+     "boosted": 2,
+     "age": 27.4,
+     "starterAge": 31,
+     "roster": 35.4,
+     "capRoom": 202715,
+     "drafted": 10.2,
+     "backups": 7.1
+    },
+    "5": {
+     "w": 2.93,
+     "teamOvr": 67.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.47,
+     "boosted": 1,
+     "age": 27.9,
+     "starterAge": 32,
+     "roster": 36.1,
+     "capRoom": 167451,
+     "drafted": 12.3,
+     "backups": 7.3
+    },
+    "6": {
+     "w": 3.33,
+     "teamOvr": 67.1,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.6,
+     "boosted": 0,
+     "age": 27.7,
+     "starterAge": 31.7,
+     "roster": 35.3,
+     "capRoom": 185340,
+     "drafted": 14.3,
+     "backups": 7.1
+    }
+   },
+   "arrivals": {
+    "stressed": {
+     "drafted": 203,
+     "traded": 21,
+     "signed:generated": 62,
+     "signed:pool": 40,
+     "signed:waivers": 56
+    },
+    "base": {
+     "drafted": 211,
+     "traded": 19,
+     "signed:generated": 40,
+     "signed:pool": 31,
+     "signed:waivers": 39
+    }
+   },
+   "departures": {
+    "stressed": {
+     "walked": 425,
+     "released": 29,
+     "traded": 4
+    },
+    "base": {
+     "walked": 369,
+     "released": 26,
+     "traded": 8
+    }
+   },
+   "draft": {
+    "stressed": {
+     "n": 240,
+     "round1": 76,
+     "misaligned": 68
+    },
+    "base": {
+     "n": 254,
+     "round1": 78
+    }
+   },
+   "trades": {
+    "stressed": 25,
+    "base": 24,
+    "stressedPicksGiven": 40
+   },
+   "integrity": {
+    "problems": 0,
+    "errors": 0
+   }
+  },
+  "expiring": {
+   "clubs": 15,
+   "seasons": {},
+   "base": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 61.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.1,
+     "starterAge": 23.6,
+     "roster": 35.6,
+     "capRoom": 277231,
+     "drafted": 3,
+     "backups": 6.7
+    },
+    "2": {
+     "w": 4.27,
+     "teamOvr": 63.5,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 23.6,
+     "starterAge": 24.3,
+     "roster": 36.9,
+     "capRoom": 168148,
+     "drafted": 5.5,
+     "backups": 7
+    },
+    "3": {
+     "w": 3.93,
+     "teamOvr": 65.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 24.1,
+     "starterAge": 25.3,
+     "roster": 36.9,
+     "capRoom": 163047,
+     "drafted": 8.1,
+     "backups": 7.1
+    },
+    "4": {
+     "w": 3.87,
+     "teamOvr": 65.8,
+     "lineupFail": 0,
+     "shortage": 2,
+     "weak": 1.07,
+     "boosted": 0,
+     "age": 24.4,
+     "starterAge": 25.6,
+     "roster": 36.3,
+     "capRoom": 171933,
+     "drafted": 10.6,
+     "backups": 7.5
+    },
+    "5": {
+     "w": 3.47,
+     "teamOvr": 67.3,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.93,
+     "boosted": 0,
+     "age": 24.9,
+     "starterAge": 26.6,
+     "roster": 36.3,
+     "capRoom": 159591,
+     "drafted": 12.9,
+     "backups": 6.9
+    },
+    "6": {
+     "w": 3.73,
+     "teamOvr": 67.6,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.8,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 27,
+     "roster": 35.9,
+     "capRoom": 169753,
+     "drafted": 15.3,
+     "backups": 6.9
+    }
+   },
+   "stressed": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 61,
+     "lineupFail": 2,
+     "shortage": 3,
+     "weak": 0.6,
+     "boosted": 0,
+     "age": 22.7,
+     "starterAge": 23.3,
+     "roster": 32.3,
+     "capRoom": 334480,
+     "drafted": 3,
+     "backups": 5.5
+    },
+    "2": {
+     "w": 4.2,
+     "teamOvr": 63.6,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.07,
+     "boosted": 0,
+     "age": 23.8,
+     "starterAge": 24.3,
+     "roster": 38,
+     "capRoom": 139160,
+     "drafted": 5.2,
+     "backups": 7.9
+    },
+    "3": {
+     "w": 3.07,
+     "teamOvr": 65,
+     "lineupFail": 0,
+     "shortage": 3,
+     "weak": 0.4,
+     "boosted": 0,
+     "age": 23.8,
+     "starterAge": 25,
+     "roster": 34.1,
+     "capRoom": 248951,
+     "drafted": 8.1,
+     "backups": 6.1
+    },
+    "4": {
+     "w": 3.87,
+     "teamOvr": 66.7,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.2,
+     "boosted": 1,
+     "age": 24.7,
+     "starterAge": 26,
+     "roster": 38,
+     "capRoom": 110156,
+     "drafted": 9.7,
+     "backups": 7.8
+    },
+    "5": {
+     "w": 3.27,
+     "teamOvr": 67.5,
+     "lineupFail": 1,
+     "shortage": 0,
+     "weak": 0.27,
+     "boosted": 0,
+     "age": 24.8,
+     "starterAge": 26.7,
+     "roster": 34.3,
+     "capRoom": 224691,
+     "drafted": 12.3,
+     "backups": 6.2
+    },
+    "6": {
+     "w": 3.4,
+     "teamOvr": 69,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.33,
+     "boosted": 0,
+     "age": 25.7,
+     "starterAge": 27.5,
+     "roster": 37.9,
+     "capRoom": 92723,
+     "drafted": 13.3,
+     "backups": 7.4
+    }
+   },
+   "arrivals": {
+    "stressed": {
+     "drafted": 213,
+     "traded": 18,
+     "signed:pool": 62,
+     "signed:generated": 82,
+     "signed:waivers": 42
+    },
+    "base": {
+     "drafted": 211,
+     "traded": 19,
+     "signed:generated": 40,
+     "signed:pool": 31,
+     "signed:waivers": 39
+    }
+   },
+   "departures": {
+    "stressed": {
+     "walked": 348,
+     "traded": 3,
+     "released": 77
+    },
+    "base": {
+     "walked": 369,
+     "released": 26,
+     "traded": 8
+    }
+   },
+   "draft": {
+    "stressed": {
+     "n": 245,
+     "round1": 80,
+     "misaligned": 57
+    },
+    "base": {
+     "n": 254,
+     "round1": 78
+    }
+   },
+   "trades": {
+    "stressed": 21,
+    "base": 24,
+    "stressedPicksGiven": 33
+   },
+   "integrity": {
+    "problems": 0,
+    "errors": 0
+   }
+  },
+  "thin": {
+   "clubs": 15,
+   "seasons": {},
+   "base": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 61.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.1,
+     "starterAge": 23.6,
+     "roster": 35.6,
+     "capRoom": 277231,
+     "drafted": 3,
+     "backups": 6.7
+    },
+    "2": {
+     "w": 4.27,
+     "teamOvr": 63.5,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 23.6,
+     "starterAge": 24.3,
+     "roster": 36.9,
+     "capRoom": 168148,
+     "drafted": 5.5,
+     "backups": 7
+    },
+    "3": {
+     "w": 3.93,
+     "teamOvr": 65.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 24.1,
+     "starterAge": 25.3,
+     "roster": 36.9,
+     "capRoom": 163047,
+     "drafted": 8.1,
+     "backups": 7.1
+    },
+    "4": {
+     "w": 3.87,
+     "teamOvr": 65.8,
+     "lineupFail": 0,
+     "shortage": 2,
+     "weak": 1.07,
+     "boosted": 0,
+     "age": 24.4,
+     "starterAge": 25.6,
+     "roster": 36.3,
+     "capRoom": 171933,
+     "drafted": 10.6,
+     "backups": 7.5
+    },
+    "5": {
+     "w": 3.47,
+     "teamOvr": 67.3,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.93,
+     "boosted": 0,
+     "age": 24.9,
+     "starterAge": 26.6,
+     "roster": 36.3,
+     "capRoom": 159591,
+     "drafted": 12.9,
+     "backups": 6.9
+    },
+    "6": {
+     "w": 3.73,
+     "teamOvr": 67.6,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.8,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 27,
+     "roster": 35.9,
+     "capRoom": 169753,
+     "drafted": 15.3,
+     "backups": 6.9
+    }
+   },
+   "stressed": {
+    "1": {
+     "w": 3.53,
+     "teamOvr": 61.2,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.3,
+     "starterAge": 23.8,
+     "roster": 30.1,
+     "capRoom": 443741,
+     "drafted": 2.5,
+     "backups": 1.5
+    },
+    "2": {
+     "w": 4.07,
+     "teamOvr": 63.4,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.2,
+     "boosted": 0,
+     "age": 24.3,
+     "starterAge": 24.6,
+     "roster": 36.9,
+     "capRoom": 158149,
+     "drafted": 4.5,
+     "backups": 7.1
+    },
+    "3": {
+     "w": 3.73,
+     "teamOvr": 65.2,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.2,
+     "boosted": 0,
+     "age": 24.2,
+     "starterAge": 25.5,
+     "roster": 33.4,
+     "capRoom": 275695,
+     "drafted": 7.3,
+     "backups": 4
+    },
+    "4": {
+     "w": 3.73,
+     "teamOvr": 65.9,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.8,
+     "boosted": 1,
+     "age": 24.7,
+     "starterAge": 25.7,
+     "roster": 36.2,
+     "capRoom": 169173,
+     "drafted": 9.7,
+     "backups": 6.6
+    },
+    "5": {
+     "w": 3.47,
+     "teamOvr": 67.4,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.47,
+     "boosted": 0,
+     "age": 24.9,
+     "starterAge": 26.6,
+     "roster": 34.6,
+     "capRoom": 217600,
+     "drafted": 12.1,
+     "backups": 5
+    },
+    "6": {
+     "w": 3.8,
+     "teamOvr": 67.5,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.8,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 27,
+     "roster": 35.3,
+     "capRoom": 188429,
+     "drafted": 14.5,
+     "backups": 6.9
+    }
+   },
+   "arrivals": {
+    "stressed": {
+     "traded": 29,
+     "drafted": 195,
+     "signed:generated": 118,
+     "signed:pool": 89,
+     "signed:waivers": 61
+    },
+    "base": {
+     "drafted": 211,
+     "traded": 19,
+     "signed:generated": 40,
+     "signed:pool": 31,
+     "signed:waivers": 39
+    }
+   },
+   "departures": {
+    "stressed": {
+     "walked": 412,
+     "released": 28,
+     "traded": 6
+    },
+    "base": {
+     "walked": 369,
+     "released": 26,
+     "traded": 8
+    }
+   },
+   "draft": {
+    "stressed": {
+     "n": 237,
+     "round1": 72,
+     "misaligned": 44
+    },
+    "base": {
+     "n": 254,
+     "round1": 78
+    }
+   },
+   "trades": {
+    "stressed": 34,
+    "base": 24,
+    "stressedPicksGiven": 49
+   },
+   "integrity": {
+    "problems": 0,
+    "errors": 0
+   }
+  },
+  "injuries": {
+   "clubs": 15,
+   "seasons": {},
+   "base": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 61.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.1,
+     "starterAge": 23.6,
+     "roster": 35.6,
+     "capRoom": 277231,
+     "drafted": 3,
+     "backups": 6.7
+    },
+    "2": {
+     "w": 4.27,
+     "teamOvr": 63.5,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 23.6,
+     "starterAge": 24.3,
+     "roster": 36.9,
+     "capRoom": 168148,
+     "drafted": 5.5,
+     "backups": 7
+    },
+    "3": {
+     "w": 3.93,
+     "teamOvr": 65.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 24.1,
+     "starterAge": 25.3,
+     "roster": 36.9,
+     "capRoom": 163047,
+     "drafted": 8.1,
+     "backups": 7.1
+    },
+    "4": {
+     "w": 3.87,
+     "teamOvr": 65.8,
+     "lineupFail": 0,
+     "shortage": 2,
+     "weak": 1.07,
+     "boosted": 0,
+     "age": 24.4,
+     "starterAge": 25.6,
+     "roster": 36.3,
+     "capRoom": 171933,
+     "drafted": 10.6,
+     "backups": 7.5
+    },
+    "5": {
+     "w": 3.47,
+     "teamOvr": 67.3,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.93,
+     "boosted": 0,
+     "age": 24.9,
+     "starterAge": 26.6,
+     "roster": 36.3,
+     "capRoom": 159591,
+     "drafted": 12.9,
+     "backups": 6.9
+    },
+    "6": {
+     "w": 3.73,
+     "teamOvr": 67.6,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.8,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 27,
+     "roster": 35.9,
+     "capRoom": 169753,
+     "drafted": 15.3,
+     "backups": 6.9
+    }
+   },
+   "stressed": {
+    "1": {
+     "w": 2.93,
+     "teamOvr": 60.9,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.2,
+     "starterAge": 23.7,
+     "roster": 35.9,
+     "capRoom": 266591,
+     "drafted": 3,
+     "backups": 7.3
+    },
+    "2": {
+     "w": 4.4,
+     "teamOvr": 63,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.4,
+     "boosted": 0,
+     "age": 23.5,
+     "starterAge": 24.3,
+     "roster": 36.3,
+     "capRoom": 190775,
+     "drafted": 5.7,
+     "backups": 7.3
+    },
+    "3": {
+     "w": 3.47,
+     "teamOvr": 64.8,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.33,
+     "boosted": 0,
+     "age": 24,
+     "starterAge": 25.1,
+     "roster": 35.9,
+     "capRoom": 194737,
+     "drafted": 8,
+     "backups": 7
+    },
+    "4": {
+     "w": 3.6,
+     "teamOvr": 65.8,
+     "lineupFail": 1,
+     "shortage": 1,
+     "weak": 0.73,
+     "boosted": 1,
+     "age": 24.4,
+     "starterAge": 25.7,
+     "roster": 36.7,
+     "capRoom": 157163,
+     "drafted": 10.6,
+     "backups": 7.6
+    },
+    "5": {
+     "w": 3.87,
+     "teamOvr": 67.2,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.6,
+     "boosted": 0,
+     "age": 24.8,
+     "starterAge": 26.4,
+     "roster": 35.8,
+     "capRoom": 177964,
+     "drafted": 12.9,
+     "backups": 7.1
+    },
+    "6": {
+     "w": 3.4,
+     "teamOvr": 67.4,
+     "lineupFail": 0,
+     "shortage": 2,
+     "weak": 0.93,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 26.7,
+     "roster": 35.9,
+     "capRoom": 169969,
+     "drafted": 15.3,
+     "backups": 7.1
+    }
+   },
+   "arrivals": {
+    "stressed": {
+     "drafted": 213,
+     "traded": 17,
+     "signed:generated": 49,
+     "signed:pool": 34,
+     "signed:waivers": 53
+    },
+    "base": {
+     "drafted": 211,
+     "traded": 19,
+     "signed:generated": 40,
+     "signed:pool": 31,
+     "signed:waivers": 39
+    }
+   },
+   "departures": {
+    "stressed": {
+     "walked": 397,
+     "released": 28,
+     "traded": 10
+    },
+    "base": {
+     "walked": 369,
+     "released": 26,
+     "traded": 8
+    }
+   },
+   "draft": {
+    "stressed": {
+     "n": 257,
+     "round1": 85,
+     "misaligned": 48
+    },
+    "base": {
+     "n": 254,
+     "round1": 78
+    }
+   },
+   "trades": {
+    "stressed": 26,
+    "base": 24,
+    "stressedPicksGiven": 41
+   },
+   "integrity": {
+    "problems": 0,
+    "errors": 0
+   }
+  },
+  "rebuild": {
+   "clubs": 15,
+   "seasons": {},
+   "base": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 61.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.1,
+     "starterAge": 23.6,
+     "roster": 35.6,
+     "capRoom": 277231,
+     "drafted": 3,
+     "backups": 6.7
+    },
+    "2": {
+     "w": 4.27,
+     "teamOvr": 63.5,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 23.6,
+     "starterAge": 24.3,
+     "roster": 36.9,
+     "capRoom": 168148,
+     "drafted": 5.5,
+     "backups": 7
+    },
+    "3": {
+     "w": 3.93,
+     "teamOvr": 65.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 24.1,
+     "starterAge": 25.3,
+     "roster": 36.9,
+     "capRoom": 163047,
+     "drafted": 8.1,
+     "backups": 7.1
+    },
+    "4": {
+     "w": 3.87,
+     "teamOvr": 65.8,
+     "lineupFail": 0,
+     "shortage": 2,
+     "weak": 1.07,
+     "boosted": 0,
+     "age": 24.4,
+     "starterAge": 25.6,
+     "roster": 36.3,
+     "capRoom": 171933,
+     "drafted": 10.6,
+     "backups": 7.5
+    },
+    "5": {
+     "w": 3.47,
+     "teamOvr": 67.3,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.93,
+     "boosted": 0,
+     "age": 24.9,
+     "starterAge": 26.6,
+     "roster": 36.3,
+     "capRoom": 159591,
+     "drafted": 12.9,
+     "backups": 6.9
+    },
+    "6": {
+     "w": 3.73,
+     "teamOvr": 67.6,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.8,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 27,
+     "roster": 35.9,
+     "capRoom": 169753,
+     "drafted": 15.3,
+     "backups": 6.9
+    }
+   },
+   "stressed": {
+    "1": {
+     "w": 2.6,
+     "teamOvr": 59.2,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.3,
+     "starterAge": 23.8,
+     "roster": 32.7,
+     "capRoom": 362701,
+     "drafted": 2.3,
+     "backups": 6
+    },
+    "2": {
+     "w": 3.07,
+     "teamOvr": 62.9,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 2,
+     "age": 23.8,
+     "starterAge": 24.7,
+     "roster": 36.7,
+     "capRoom": 180817,
+     "drafted": 4.7,
+     "backups": 7.2
+    },
+    "3": {
+     "w": 3.07,
+     "teamOvr": 64.5,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.2,
+     "boosted": 0,
+     "age": 24.1,
+     "starterAge": 25.2,
+     "roster": 35.3,
+     "capRoom": 213633,
+     "drafted": 7.4,
+     "backups": 7.3
+    },
+    "4": {
+     "w": 3.53,
+     "teamOvr": 66.1,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.53,
+     "boosted": 2,
+     "age": 24.7,
+     "starterAge": 26,
+     "roster": 37.1,
+     "capRoom": 143333,
+     "drafted": 10.1,
+     "backups": 8.1
+    },
+    "5": {
+     "w": 3.6,
+     "teamOvr": 67.3,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.4,
+     "boosted": 1,
+     "age": 24.9,
+     "starterAge": 26.5,
+     "roster": 35.7,
+     "capRoom": 183249,
+     "drafted": 12.7,
+     "backups": 7.7
+    },
+    "6": {
+     "w": 3.33,
+     "teamOvr": 67.9,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.53,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 27.2,
+     "roster": 36.7,
+     "capRoom": 144511,
+     "drafted": 15.5,
+     "backups": 8.5
+    }
+   },
+   "arrivals": {
+    "stressed": {
+     "signed:waivers": 88,
+     "signed:pool": 52,
+     "traded": 22,
+     "drafted": 210,
+     "signed:generated": 73
+    },
+    "base": {
+     "drafted": 211,
+     "traded": 19,
+     "signed:generated": 40,
+     "signed:pool": 31,
+     "signed:waivers": 39
+    }
+   },
+   "departures": {
+    "stressed": {
+     "walked": 351,
+     "traded": 14,
+     "released": 42
+    },
+    "base": {
+     "walked": 369,
+     "released": 26,
+     "traded": 8
+    }
+   },
+   "draft": {
+    "stressed": {
+     "n": 262,
+     "round1": 88,
+     "misaligned": 51
+    },
+    "base": {
+     "n": 254,
+     "round1": 78
+    }
+   },
+   "trades": {
+    "stressed": 34,
+    "base": 24,
+    "stressedPicksGiven": 49
+   },
+   "integrity": {
+    "problems": 0,
+    "errors": 0
+   }
+  },
+  "picks": {
+   "clubs": 15,
+   "seasons": {},
+   "base": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 61.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 23.1,
+     "starterAge": 23.6,
+     "roster": 35.6,
+     "capRoom": 277231,
+     "drafted": 3,
+     "backups": 6.7
+    },
+    "2": {
+     "w": 4.27,
+     "teamOvr": 63.5,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 23.6,
+     "starterAge": 24.3,
+     "roster": 36.9,
+     "capRoom": 168148,
+     "drafted": 5.5,
+     "backups": 7
+    },
+    "3": {
+     "w": 3.93,
+     "teamOvr": 65.3,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.13,
+     "boosted": 0,
+     "age": 24.1,
+     "starterAge": 25.3,
+     "roster": 36.9,
+     "capRoom": 163047,
+     "drafted": 8.1,
+     "backups": 7.1
+    },
+    "4": {
+     "w": 3.87,
+     "teamOvr": 65.8,
+     "lineupFail": 0,
+     "shortage": 2,
+     "weak": 1.07,
+     "boosted": 0,
+     "age": 24.4,
+     "starterAge": 25.6,
+     "roster": 36.3,
+     "capRoom": 171933,
+     "drafted": 10.6,
+     "backups": 7.5
+    },
+    "5": {
+     "w": 3.47,
+     "teamOvr": 67.3,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.93,
+     "boosted": 0,
+     "age": 24.9,
+     "starterAge": 26.6,
+     "roster": 36.3,
+     "capRoom": 159591,
+     "drafted": 12.9,
+     "backups": 6.9
+    },
+    "6": {
+     "w": 3.73,
+     "teamOvr": 67.6,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.8,
+     "boosted": 0,
+     "age": 25.2,
+     "starterAge": 27,
+     "roster": 35.9,
+     "capRoom": 169753,
+     "drafted": 15.3,
+     "backups": 6.9
+    }
+   },
+   "stressed": {
+    "1": {
+     "w": 3.6,
+     "teamOvr": 62,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0,
+     "boosted": 0,
+     "age": 22.9,
+     "starterAge": 23.3,
+     "roster": 37.4,
+     "capRoom": 241007,
+     "drafted": 5.9,
+     "backups": 7.6
+    },
+    "2": {
+     "w": 4.13,
+     "teamOvr": 63.8,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.4,
+     "boosted": 0,
+     "age": 23.1,
+     "starterAge": 23.7,
+     "roster": 36.3,
+     "capRoom": 183691,
+     "drafted": 8.5,
+     "backups": 7.2
+    },
+    "3": {
+     "w": 3.73,
+     "teamOvr": 65.7,
+     "lineupFail": 0,
+     "shortage": 1,
+     "weak": 0.33,
+     "boosted": 0,
+     "age": 23.7,
+     "starterAge": 24.7,
+     "roster": 36.9,
+     "capRoom": 158209,
+     "drafted": 11.2,
+     "backups": 7.7
+    },
+    "4": {
+     "w": 4.33,
+     "teamOvr": 65.9,
+     "lineupFail": 2,
+     "shortage": 3,
+     "weak": 0.87,
+     "boosted": 0,
+     "age": 23.9,
+     "starterAge": 25,
+     "roster": 36.1,
+     "capRoom": 179868,
+     "drafted": 13.9,
+     "backups": 7.3
+    },
+    "5": {
+     "w": 3.47,
+     "teamOvr": 67.7,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 0.6,
+     "boosted": 0,
+     "age": 24.5,
+     "starterAge": 26.1,
+     "roster": 36.8,
+     "capRoom": 139067,
+     "drafted": 16.2,
+     "backups": 7.7
+    },
+    "6": {
+     "w": 4.13,
+     "teamOvr": 67.8,
+     "lineupFail": 0,
+     "shortage": 0,
+     "weak": 1.13,
+     "boosted": 0,
+     "age": 24.8,
+     "starterAge": 26.5,
+     "roster": 35.8,
+     "capRoom": 167513,
+     "drafted": 18,
+     "backups": 6.7
+    }
+   },
+   "arrivals": {
+    "stressed": {
+     "drafted": 258,
+     "signed:generated": 32,
+     "signed:pool": 23,
+     "traded": 18,
+     "signed:waivers": 33
+    },
+    "base": {
+     "drafted": 211,
+     "traded": 19,
+     "signed:generated": 40,
+     "signed:pool": 31,
+     "signed:waivers": 39
+    }
+   },
+   "departures": {
+    "stressed": {
+     "walked": 370,
+     "released": 50,
+     "traded": 5
+    },
+    "base": {
+     "walked": 369,
+     "released": 26,
+     "traded": 8
+    }
+   },
+   "draft": {
+    "stressed": {
+     "n": 299,
+     "round1": 131,
+     "misaligned": 73
+    },
+    "base": {
+     "n": 254,
+     "round1": 78
+    }
+   },
+   "trades": {
+    "stressed": 20,
+    "base": 24,
+    "stressedPicksGiven": 26
+   },
+   "integrity": {
+    "problems": 0,
+    "errors": 0
+   }
+  }
+ },
+ "E": {
+  "no-nudge": {
+   "variant": {
+    "label": "no-nudge",
+    "seeds": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ],
+    "seasonsPerSeed": 10,
+    "clubSeasons": 1200,
+    "errors": [],
+    "integrity": {
+     "problems": 0,
+     "problemSamples": [],
+     "exceptions": 0,
+     "seconds": 1511,
+     "secondsPerSeason": 18.9,
+     "peakHeapMB": 256,
+     "lineupFailures": 1,
+     "overCapAtSeasonEnd": 0,
+     "rosterSize": {
+      "min": 32,
+      "median": 38,
+      "max": 38
+     }
+    },
+    "roster": {
+     "rosterSizeMedian": 38,
+     "lineupFailures": 1,
+     "shortageClubSeasons": 1,
+     "shortagePct": 0.1,
+     "shortageByPos": {
+      "QB": 1
+     },
+     "weakGroupClubSeasonsPct": 19.7,
+     "weakByPos": {
+      "TE": 49,
+      "CB": 25,
+      "DL": 35,
+      "OL": 71,
+      "RB": 24,
+      "WR": 12,
+      "LB": 17,
+      "S": 22,
+      "QB": 10
+     },
+     "persistentWeakPct": 13.8,
+     "persistentWeakWithCapRoomPct": 9.1,
+     "persistentWeakByPos": {
+      "DL": 24,
+      "CB": 11,
+      "TE": 34,
+      "OL": 47,
+      "RB": 15,
+      "S": 14,
+      "WR": 3,
+      "LB": 7,
+      "QB": 5
+     },
+     "persistentStreakMedian": 3,
+     "persistentStreakMax": 8,
+     "surplusPct": 0,
+     "surplusByPos": {},
+     "starterMeanByPos": {
+      "QB": 75.3,
+      "RB": 72,
+      "WR": 68.4,
+      "TE": 70.6,
+      "OL": 66.6,
+      "DL": 68.4,
+      "LB": 68.6,
+      "CB": 68.9,
+      "S": 69.4
+     },
+     "backupMeanByPos": {
+      "QB": 56.4,
+      "RB": 55.6,
+      "WR": 54.5,
+      "TE": 55,
+      "OL": 54.2,
+      "DL": 54.1,
+      "LB": 54.5,
+      "CB": 54.5,
+      "S": 54.4
+     },
+     "backupGapByPos": {
+      "QB": 19,
+      "RB": 16.6,
+      "WR": 13.9,
+      "TE": 15.8,
+      "OL": 12.4,
+      "DL": 14.3,
+      "LB": 14,
+      "CB": 14.5,
+      "S": 15
+     },
+     "noBackupPctByPos": {
+      "QB": 10.8,
+      "RB": 9,
+      "WR": 1.5,
+      "TE": 12.2,
+      "OL": 3.7,
+      "DL": 2.8,
+      "LB": 6.8,
+      "CB": 5,
+      "S": 8.3
+     },
+     "meanAge": 25.3,
+     "starterAge": 27.7
+    },
+    "cap": {
+     "utilizationMedianPct": null,
+     "capRoomMedian": 123760,
+     "capRoomP10": 77040,
+     "payrollMedian": 1271300,
+     "overCap": 0,
+     "capRoomOver200kPct": 12.6
+    },
+    "draft": {
+     "aiPicks": 3600,
+     "byRound": {
+      "1": 1200,
+      "2": 1200,
+      "3": 1200
+     },
+     "byPos": {
+      "QB": 282,
+      "TE": 276,
+      "S": 342,
+      "LB": 337,
+      "CB": 420,
+      "DL": 487,
+      "WR": 556,
+      "RB": 359,
+      "OL": 471,
+      "K": 70
+     },
+     "ovrGapToBestMedian": 1,
+     "ovrGapToBestMean": 0.8,
+     "potGapToBestMedian": 5,
+     "pickedNeedZeroPct": 49.1,
+     "misalignedPct": 25.8,
+     "misalignedN": 929,
+     "wouldStartPct": 8.1,
+     "wouldStartByRound": {
+      "1": 20.8,
+      "2": 1.5,
+      "3": 1.8
+     },
+     "atTopNeedPct": 11.4,
+     "atNeed025Pct": 14.6,
+     "wouldNotStartAndNoNeedPct": 44.4,
+     "sameDraftDuplicatePct": 0.1,
+     "kickerPct": 1.9,
+     "contributionByRoundHorizon": {
+      "1|1": {
+       "n": 120,
+       "starterForDrafter": 15,
+       "stillWithDrafter": 99.2,
+       "stillInLeague": 99.2
+      },
+      "1|2": {
+       "n": 120,
+       "starterForDrafter": 20.8,
+       "stillWithDrafter": 93.3,
+       "stillInLeague": 93.3
+      },
+      "1|3": {
+       "n": 120,
+       "starterForDrafter": 25,
+       "stillWithDrafter": 93.3,
+       "stillInLeague": 94.2
+      },
+      "1|4": {
+       "n": 120,
+       "starterForDrafter": 20,
+       "stillWithDrafter": 84.2,
+       "stillInLeague": 85.8
+      },
+      "1|5": {
+       "n": 120,
+       "starterForDrafter": 22.5,
+       "stillWithDrafter": 83.3,
+       "stillInLeague": 89.2
+      },
+      "1|6": {
+       "n": 480,
+       "starterForDrafter": 34.4,
+       "stillWithDrafter": 50.8,
+       "stillInLeague": 59.2
+      },
+      "2|1": {
+       "n": 120,
+       "starterForDrafter": 1.7,
+       "stillWithDrafter": 99.2,
+       "stillInLeague": 99.2
+      },
+      "2|2": {
+       "n": 120,
+       "starterForDrafter": 0,
+       "stillWithDrafter": 90,
+       "stillInLeague": 90
+      },
+      "2|3": {
+       "n": 120,
+       "starterForDrafter": 2.5,
+       "stillWithDrafter": 77.5,
+       "stillInLeague": 78.3
+      },
+      "2|4": {
+       "n": 120,
+       "starterForDrafter": 1.7,
+       "stillWithDrafter": 80,
+       "stillInLeague": 80
+      },
+      "2|5": {
+       "n": 120,
+       "starterForDrafter": 1.7,
+       "stillWithDrafter": 77.5,
+       "stillInLeague": 79.2
+      },
+      "2|6": {
+       "n": 480,
+       "starterForDrafter": 2.5,
+       "stillWithDrafter": 20.2,
+       "stillInLeague": 21.3
+      },
+      "3|1": {
+       "n": 120,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 98.3,
+       "stillInLeague": 98.3
+      },
+      "3|2": {
+       "n": 120,
+       "starterForDrafter": 3.3,
+       "stillWithDrafter": 90,
+       "stillInLeague": 90
+      },
+      "3|3": {
+       "n": 120,
+       "starterForDrafter": 0,
+       "stillWithDrafter": 80.8,
+       "stillInLeague": 80.8
+      },
+      "3|4": {
+       "n": 120,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 76.7,
+       "stillInLeague": 78.3
+      },
+      "3|5": {
+       "n": 120,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 71.7,
+       "stillInLeague": 71.7
+      },
+      "3|6": {
+       "n": 480,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 17.5,
+       "stillInLeague": 18.3
+      }
+     },
+     "round1StarterAt2": 20.8
+    },
+    "arrivals": {
+     "total": 4106,
+     "perClubSeason": 3.42,
+     "byOrigin": {
+      "drafted": 3240,
+      "signed:generated": 260,
+      "signed:pool": 219,
+      "traded": 71,
+      "signed:waivers": 316
+     },
+     "byPhase": {
+      "offseason": 4100,
+      "in-season": 6
+     },
+     "nonDraftByOrigin": {
+      "signed:generated": 260,
+      "signed:pool": 219,
+      "traded": 71,
+      "signed:waivers": 316
+     },
+     "nonDraftStartingPct": 17.6,
+     "generatedStartingPct": 6.2,
+     "atSurplusPct": 0,
+     "atWeakGroupPct": 3.7,
+     "meanAgeNonDraft": 26.9,
+     "meanOvrByOrigin": {
+      "drafted": 55.5,
+      "signed:generated": 57.2,
+      "signed:pool": 55.8,
+      "traded": 63.2,
+      "signed:waivers": 63.3
+     }
+    },
+    "departures": {
+     "total": 4514,
+     "byReason": {
+      "walked": 3799,
+      "released": 644,
+      "traded": 71
+     },
+     "byPhase": {
+      "season-end": 3799,
+      "offseason": 709,
+      "in-season": 6
+     },
+     "contractTimeStarterPct": 0.6,
+     "contractTimeStarters": 22,
+     "walkedAgeMedian": 27,
+     "walkedOvrMedian": 55,
+     "walkedStarterOvrMedian": 70,
+     "releasedAgeMedian": 23,
+     "youngWalkedPct": 0,
+     "replacementDeltaMedian": 2.5,
+     "replacementDeltaMean": 3,
+     "replacementN": 46,
+     "replacementWorse3Pct": 0
+    },
+    "aging": {
+     "meanAge": 25.3,
+     "starterAgeMedian": 27.6,
+     "age30plusMedian": 7,
+     "age24minusMedian": 17,
+     "byYear": {
+      "1": {
+       "meanAge": 23.2,
+       "starterAge": 23.8,
+       "age30plus": 0
+      },
+      "2": {
+       "meanAge": 23.7,
+       "starterAge": 24.7,
+       "age30plus": 0.1
+      },
+      "3": {
+       "meanAge": 24.1,
+       "starterAge": 25.6,
+       "age30plus": 2.3
+      },
+      "4": {
+       "meanAge": 24.6,
+       "starterAge": 26.5,
+       "age30plus": 4.3
+      },
+      "5": {
+       "meanAge": 25,
+       "starterAge": 27.3,
+       "age30plus": 5.9
+      },
+      "6": {
+       "meanAge": 25.5,
+       "starterAge": 28.1,
+       "age30plus": 7.4
+      },
+      "7": {
+       "meanAge": 26,
+       "starterAge": 29,
+       "age30plus": 9.1
+      },
+      "8": {
+       "meanAge": 26.4,
+       "starterAge": 29.8,
+       "age30plus": 10.7
+      },
+      "9": {
+       "meanAge": 26.8,
+       "starterAge": 30.7,
+       "age30plus": 12.1
+      },
+      "10": {
+       "meanAge": 27.3,
+       "starterAge": 31.5,
+       "age30plus": 13.9
+      }
+     }
+    },
+    "trades": {
+     "total": 69,
+     "perSeason": 0.86,
+     "byKind": {
+      "picks": 67,
+      "swap": 2
+     },
+     "byWindow": {
+      "offseason": 69
+     },
+     "ratioMedian": 1.053,
+     "ratioMin": 0.87,
+     "ratioMax": 1.176,
+     "acquiredStarterPct": 97.1,
+     "acquiredAgeMedian": 26,
+     "acquiredOvrMedian": 63,
+     "byPos": {
+      "CB": 8,
+      "K": 16,
+      "DL": 6,
+      "LB": 7,
+      "OL": 9,
+      "RB": 3,
+      "S": 9,
+      "TE": 4,
+      "QB": 5,
+      "WR": 2
+     },
+     "departedWithin1SeasonPct": 4.3,
+     "picksGiven": 113
+    },
+    "development": {
+     "devMeanReturning": 0.6,
+     "evolutionsPerClubSeason": 1.06,
+     "meanLevel": 7.2,
+     "stage2PerClub": 0.3,
+     "byYear": {
+      "1": {
+       "dev": null,
+       "evolved": 0.03,
+       "level": 3.2,
+       "stage2": 0,
+       "starters": {
+        "original": 91.9,
+        "drafted": 8.1,
+        "generated": 0,
+        "pool": 0,
+        "waivers": 0,
+        "traded": 0,
+        "own": 100
+       }
+      },
+      "2": {
+       "dev": 1.4,
+       "evolved": 0.51,
+       "level": 4.5,
+       "stage2": 0,
+       "starters": {
+        "original": 89.7,
+        "drafted": 9.4,
+        "generated": 0.1,
+        "pool": 0.1,
+        "waivers": 0.2,
+        "traded": 0.5,
+        "own": 99.1
+       }
+      },
+      "3": {
+       "dev": 0.9,
+       "evolved": 1.33,
+       "level": 5.6,
+       "stage2": 0,
+       "starters": {
+        "original": 87.7,
+        "drafted": 10.9,
+        "generated": 0.2,
+        "pool": 0.2,
+        "waivers": 0.4,
+        "traded": 0.7,
+        "own": 98.6
+       }
+      },
+      "4": {
+       "dev": 0.8,
+       "evolved": 1.92,
+       "level": 6.4,
+       "stage2": 0,
+       "starters": {
+        "original": 85.3,
+        "drafted": 12.2,
+        "generated": 0.4,
+        "pool": 0.3,
+        "waivers": 0.7,
+        "traded": 1.1,
+        "own": 97.5
+       }
+      },
+      "5": {
+       "dev": 0.6,
+       "evolved": 2.02,
+       "level": 7.2,
+       "stage2": 0.1,
+       "starters": {
+        "original": 84.1,
+        "drafted": 13.3,
+        "generated": 0.4,
+        "pool": 0.3,
+        "waivers": 0.8,
+        "traded": 1.1,
+        "own": 97.4
+       }
+      },
+      "6": {
+       "dev": 0.6,
+       "evolved": 1.69,
+       "level": 7.8,
+       "stage2": 0.3,
+       "starters": {
+        "original": 81.7,
+        "drafted": 14.9,
+        "generated": 0.4,
+        "pool": 0.3,
+        "waivers": 1.3,
+        "traded": 1.4,
+        "own": 96.6
+       }
+      },
+      "7": {
+       "dev": 0.5,
+       "evolved": 1.12,
+       "level": 8.6,
+       "stage2": 0.4,
+       "starters": {
+        "original": 80,
+        "drafted": 15.9,
+        "generated": 0.6,
+        "pool": 0.3,
+        "waivers": 1.5,
+        "traded": 1.7,
+        "own": 95.9
+       }
+      },
+      "8": {
+       "dev": 0.4,
+       "evolved": 1.02,
+       "level": 9,
+       "stage2": 0.6,
+       "starters": {
+        "original": 77.9,
+        "drafted": 16.9,
+        "generated": 0.6,
+        "pool": 0.3,
+        "waivers": 2,
+        "traded": 2.3,
+        "own": 94.8
+       }
+      },
+      "9": {
+       "dev": 0.3,
+       "evolved": 0.61,
+       "level": 9.6,
+       "stage2": 0.8,
+       "starters": {
+        "original": 76.5,
+        "drafted": 18,
+        "generated": 0.6,
+        "pool": 0.3,
+        "waivers": 2.1,
+        "traded": 2.5,
+        "own": 94.5
+       }
+      },
+      "10": {
+       "dev": 0.3,
+       "evolved": 0.4,
+       "level": 10.1,
+       "stage2": 1,
+       "starters": {
+        "original": 74.8,
+        "drafted": 18.9,
+        "generated": 0.7,
+        "pool": 0.3,
+        "waivers": 2.7,
+        "traded": 2.7,
+        "own": 93.7
+       }
+      }
+     }
+    },
+    "competition": {
+     "winsSd": 2.16,
+     "winsMean": 4.46,
+     "playoffPct": 49.3,
+     "titlesByAi": 78,
+     "titlesByOwner": 2,
+     "ownerWinPct": 56.7,
+     "distinctChampionsMedian": 5,
+     "maxTitlesOneClubMax": 6,
+     "maxTitleShareMax": 0.6,
+     "repeatChampions": 26,
+     "persistentLoserPct": 35,
+     "recoveryMedian": 2,
+     "unrecoveredPct": 39.3,
+     "recoveryN": 244,
+     "perSeed": [
+      {
+       "seed": 1,
+       "seasons": 10,
+       "distinct": 3,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 3
+      },
+      {
+       "seed": 2,
+       "seasons": 10,
+       "distinct": 3,
+       "maxTitles": 6,
+       "ownerTitles": 0,
+       "repeat": 5
+      },
+      {
+       "seed": 3,
+       "seasons": 10,
+       "distinct": 4,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 4
+      },
+      {
+       "seed": 4,
+       "seasons": 10,
+       "distinct": 4,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 6
+      },
+      {
+       "seed": 5,
+       "seasons": 10,
+       "distinct": 6,
+       "maxTitles": 2,
+       "ownerTitles": 2,
+       "repeat": 1
+      },
+      {
+       "seed": 6,
+       "seasons": 10,
+       "distinct": 6,
+       "maxTitles": 3,
+       "ownerTitles": 0,
+       "repeat": 1
+      },
+      {
+       "seed": 7,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 3
+      },
+      {
+       "seed": 8,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 6,
+       "ownerTitles": 0,
+       "repeat": 3
+      }
+     ],
+     "rTeamOvrWins": 0.46,
+     "rQualityWins": 0.43,
+     "rQualityTeamOvr": 0.81,
+     "rTargetTeamOvr": 0.81,
+     "teamOvrMinusTargetMedian": -1,
+     "teamOvrMinusTargetSd": 4.43,
+     "rResidualWins": -0.24,
+     "rWinsYoY": 0.5
+    },
+    "balance": {
+     "boostedClubSeasonsPct": 0,
+     "nudgeSignings": 0,
+     "slowedClubSeasonsPct": 0,
+     "runawayClubSeasons": 0,
+     "runawayPct": 0,
+     "generatedArrivalPct": 30,
+     "teamOvrSdByYear": {
+      "1": 3.38,
+      "2": 3.24,
+      "3": 3.14,
+      "4": 3.14,
+      "5": 3.05,
+      "6": 2.76,
+      "7": 2.76,
+      "8": 2.46,
+      "9": 2.24,
+      "10": 2.15
+     },
+     "teamOvrSdMean": 2.83,
+     "clubsLow8For3PlusPct": 0
+    },
+    "decisions": {
+     "contenders6plus": {
+      "clubSeasons": 390,
+      "arrivalsPerClubSeason": 0.65,
+      "arrivalMeanAge": 26.9,
+      "pickMeanAge": 20.5,
+      "pickMeanPot": 66.1,
+      "pickOvrGap": 0.9,
+      "boostedPct": 0,
+      "slowedPct": 0,
+      "meanAge": 25.3
+     },
+     "strugglers3minus": {
+      "clubSeasons": 419,
+      "arrivalsPerClubSeason": 0.78,
+      "arrivalMeanAge": 26.9,
+      "pickMeanAge": 20.5,
+      "pickMeanPot": 67.7,
+      "pickOvrGap": 0.6,
+      "boostedPct": 0,
+      "slowedPct": 0,
+      "meanAge": 25.2
+     },
+     "agingPlanning": {
+      "picksAtGroupsWithStarter29plusPct": null
+     },
+     "weakGroupResponse": {
+      "arrivalsAtWeakGroupPct": 3.7,
+      "picksAtTopNeedPct": 11.4
+     }
+    }
+   },
+   "matchedBaseline": {
+    "label": "B-matched",
+    "seeds": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ],
+    "seasonsPerSeed": 10,
+    "clubSeasons": 1200,
+    "errors": [],
+    "integrity": {
+     "problems": 0,
+     "problemSamples": [],
+     "exceptions": 0,
+     "seconds": 1603,
+     "secondsPerSeason": 20,
+     "peakHeapMB": 211,
+     "lineupFailures": 7,
+     "overCapAtSeasonEnd": 0,
+     "rosterSize": {
+      "min": 27,
+      "median": 38,
+      "max": 38
+     }
+    },
+    "roster": {
+     "rosterSizeMedian": 38,
+     "lineupFailures": 7,
+     "shortageClubSeasons": 32,
+     "shortagePct": 2.7,
+     "shortageByPos": {
+      "CB": 6,
+      "WR": 3,
+      "DL": 6,
+      "TE": 5,
+      "OL": 3,
+      "S": 4,
+      "LB": 4,
+      "RB": 1
+     },
+     "weakGroupClubSeasonsPct": 27.7,
+     "weakByPos": {
+      "WR": 27,
+      "DL": 54,
+      "TE": 66,
+      "LB": 38,
+      "RB": 45,
+      "CB": 54,
+      "OL": 70,
+      "QB": 44,
+      "S": 43
+     },
+     "persistentWeakPct": 14.4,
+     "persistentWeakWithCapRoomPct": 12.1,
+     "persistentWeakByPos": {
+      "TE": 25,
+      "DL": 21,
+      "OL": 29,
+      "RB": 17,
+      "S": 17,
+      "LB": 13,
+      "WR": 10,
+      "CB": 21,
+      "QB": 13
+     },
+     "persistentStreakMedian": 2,
+     "persistentStreakMax": 9,
+     "surplusPct": 0.1,
+     "surplusByPos": {
+      "QB": 1
+     },
+     "starterMeanByPos": {
+      "QB": 74.2,
+      "RB": 72.5,
+      "WR": 68.2,
+      "TE": 70.3,
+      "OL": 67,
+      "DL": 68.2,
+      "LB": 69,
+      "CB": 69,
+      "S": 69.3
+     },
+     "backupMeanByPos": {
+      "QB": 56.5,
+      "RB": 55.9,
+      "WR": 54.5,
+      "TE": 55.4,
+      "OL": 54.3,
+      "DL": 54,
+      "LB": 54.9,
+      "CB": 54.6,
+      "S": 54.7
+     },
+     "backupGapByPos": {
+      "QB": 18.1,
+      "RB": 16.9,
+      "WR": 13.7,
+      "TE": 15.1,
+      "OL": 12.8,
+      "DL": 14.2,
+      "LB": 14.2,
+      "CB": 14.6,
+      "S": 14.6
+     },
+     "noBackupPctByPos": {
+      "QB": 12.5,
+      "RB": 9.8,
+      "WR": 4.3,
+      "TE": 15.2,
+      "OL": 4.9,
+      "DL": 4.1,
+      "LB": 6.9,
+      "CB": 7.2,
+      "S": 9.7
+     },
+     "meanAge": 25.1,
+     "starterAge": 27.2
+    },
+    "cap": {
+     "utilizationMedianPct": null,
+     "capRoomMedian": 138920,
+     "capRoomP10": 80220,
+     "payrollMedian": 1256120,
+     "overCap": 0,
+     "capRoomOver200kPct": 26.6
+    },
+    "draft": {
+     "aiPicks": 3600,
+     "byRound": {
+      "1": 1200,
+      "2": 1200,
+      "3": 1200
+     },
+     "byPos": {
+      "QB": 283,
+      "TE": 269,
+      "S": 344,
+      "LB": 345,
+      "CB": 420,
+      "DL": 470,
+      "WR": 548,
+      "RB": 360,
+      "OL": 491,
+      "K": 70
+     },
+     "ovrGapToBestMedian": 1,
+     "ovrGapToBestMean": 0.9,
+     "potGapToBestMedian": 5,
+     "pickedNeedZeroPct": 46.7,
+     "misalignedPct": 25.3,
+     "misalignedN": 912,
+     "wouldStartPct": 10.1,
+     "wouldStartByRound": {
+      "1": 23.6,
+      "2": 3.8,
+      "3": 2.9
+     },
+     "atTopNeedPct": 10.6,
+     "atNeed025Pct": 15.3,
+     "wouldNotStartAndNoNeedPct": 41.9,
+     "sameDraftDuplicatePct": 0.1,
+     "kickerPct": 1.9,
+     "contributionByRoundHorizon": {
+      "1|1": {
+       "n": 120,
+       "starterForDrafter": 23.3,
+       "stillWithDrafter": 98.3,
+       "stillInLeague": 98.3
+      },
+      "1|2": {
+       "n": 120,
+       "starterForDrafter": 15,
+       "stillWithDrafter": 87.5,
+       "stillInLeague": 88.3
+      },
+      "1|3": {
+       "n": 120,
+       "starterForDrafter": 20.8,
+       "stillWithDrafter": 88.3,
+       "stillInLeague": 91.7
+      },
+      "1|4": {
+       "n": 120,
+       "starterForDrafter": 23.3,
+       "stillWithDrafter": 83.3,
+       "stillInLeague": 89.2
+      },
+      "1|5": {
+       "n": 120,
+       "starterForDrafter": 28.3,
+       "stillWithDrafter": 74.2,
+       "stillInLeague": 88.3
+      },
+      "1|6": {
+       "n": 480,
+       "starterForDrafter": 36.3,
+       "stillWithDrafter": 49.4,
+       "stillInLeague": 62.5
+      },
+      "2|1": {
+       "n": 120,
+       "starterForDrafter": 3.3,
+       "stillWithDrafter": 90,
+       "stillInLeague": 90
+      },
+      "2|2": {
+       "n": 120,
+       "starterForDrafter": 4.2,
+       "stillWithDrafter": 80.8,
+       "stillInLeague": 80.8
+      },
+      "2|3": {
+       "n": 120,
+       "starterForDrafter": 6.7,
+       "stillWithDrafter": 85,
+       "stillInLeague": 85
+      },
+      "2|4": {
+       "n": 120,
+       "starterForDrafter": 7.5,
+       "stillWithDrafter": 75.8,
+       "stillInLeague": 78.3
+      },
+      "2|5": {
+       "n": 120,
+       "starterForDrafter": 9.2,
+       "stillWithDrafter": 67.5,
+       "stillInLeague": 69.2
+      },
+      "2|6": {
+       "n": 480,
+       "starterForDrafter": 6,
+       "stillWithDrafter": 20.4,
+       "stillInLeague": 24.6
+      },
+      "3|1": {
+       "n": 120,
+       "starterForDrafter": 1.7,
+       "stillWithDrafter": 90,
+       "stillInLeague": 90
+      },
+      "3|2": {
+       "n": 120,
+       "starterForDrafter": 5.8,
+       "stillWithDrafter": 75.8,
+       "stillInLeague": 75.8
+      },
+      "3|3": {
+       "n": 120,
+       "starterForDrafter": 3.3,
+       "stillWithDrafter": 57.5,
+       "stillInLeague": 57.5
+      },
+      "3|4": {
+       "n": 120,
+       "starterForDrafter": 3.3,
+       "stillWithDrafter": 66.7,
+       "stillInLeague": 67.5
+      },
+      "3|5": {
+       "n": 120,
+       "starterForDrafter": 4.2,
+       "stillWithDrafter": 59.2,
+       "stillInLeague": 65
+      },
+      "3|6": {
+       "n": 480,
+       "starterForDrafter": 2.1,
+       "stillWithDrafter": 14.6,
+       "stillInLeague": 16.9
+      }
+     },
+     "round1StarterAt2": 15
+    },
+    "arrivals": {
+     "total": 5114,
+     "perClubSeason": 4.26,
+     "byOrigin": {
+      "drafted": 3197,
+      "signed:generated": 560,
+      "signed:pool": 324,
+      "traded": 175,
+      "signed:waivers": 858
+     },
+     "byPhase": {
+      "offseason": 5106,
+      "in-season": 8
+     },
+     "nonDraftByOrigin": {
+      "signed:generated": 560,
+      "signed:pool": 324,
+      "traded": 175,
+      "signed:waivers": 858
+     },
+     "nonDraftStartingPct": 46.7,
+     "generatedStartingPct": 43.2,
+     "atSurplusPct": 0,
+     "atWeakGroupPct": 16.1,
+     "meanAgeNonDraft": 27.5,
+     "meanOvrByOrigin": {
+      "drafted": 55.7,
+      "signed:generated": 65.8,
+      "signed:pool": 55.7,
+      "traded": 61.3,
+      "signed:waivers": 66.3
+     }
+    },
+    "departures": {
+     "total": 5678,
+     "byReason": {
+      "walked": 4739,
+      "released": 763,
+      "traded": 176
+     },
+     "byPhase": {
+      "season-end": 4739,
+      "offseason": 931,
+      "in-season": 8
+     },
+     "contractTimeStarterPct": 15.6,
+     "contractTimeStarters": 739,
+     "walkedAgeMedian": 27,
+     "walkedOvrMedian": 56,
+     "walkedStarterOvrMedian": 67,
+     "releasedAgeMedian": 23,
+     "youngWalkedPct": 0,
+     "replacementDeltaMedian": 3.3333333333333357,
+     "replacementDeltaMean": 4.3,
+     "replacementN": 577,
+     "replacementWorse3Pct": 5.7
+    },
+    "aging": {
+     "meanAge": 25.1,
+     "starterAgeMedian": 26.9,
+     "age30plusMedian": 5,
+     "age24minusMedian": 18,
+     "byYear": {
+      "1": {
+       "meanAge": 23.2,
+       "starterAge": 23.7,
+       "age30plus": 0
+      },
+      "2": {
+       "meanAge": 23.6,
+       "starterAge": 24.6,
+       "age30plus": 0.1
+      },
+      "3": {
+       "meanAge": 24,
+       "starterAge": 25.4,
+       "age30plus": 2
+      },
+      "4": {
+       "meanAge": 24.4,
+       "starterAge": 26,
+       "age30plus": 3.6
+      },
+      "5": {
+       "meanAge": 24.9,
+       "starterAge": 26.9,
+       "age30plus": 5.1
+      },
+      "6": {
+       "meanAge": 25.3,
+       "starterAge": 27.6,
+       "age30plus": 6.2
+      },
+      "7": {
+       "meanAge": 25.7,
+       "starterAge": 28.4,
+       "age30plus": 7.7
+      },
+      "8": {
+       "meanAge": 26.1,
+       "starterAge": 29.1,
+       "age30plus": 9.1
+      },
+      "9": {
+       "meanAge": 26.5,
+       "starterAge": 29.8,
+       "age30plus": 10.7
+      },
+      "10": {
+       "meanAge": 26.9,
+       "starterAge": 30.2,
+       "age30plus": 11.8
+      }
+     }
+    },
+    "trades": {
+     "total": 167,
+     "perSeason": 2.09,
+     "byKind": {
+      "picks": 158,
+      "swap": 9
+     },
+     "byWindow": {
+      "offseason": 166,
+      "in-season": 1
+     },
+     "ratioMedian": 1.034,
+     "ratioMin": 0.87,
+     "ratioMax": 1.176,
+     "acquiredStarterPct": 79,
+     "acquiredAgeMedian": 25,
+     "acquiredOvrMedian": 61,
+     "byPos": {
+      "CB": 19,
+      "K": 24,
+      "WR": 12,
+      "LB": 23,
+      "RB": 8,
+      "TE": 19,
+      "DL": 8,
+      "OL": 23,
+      "S": 17,
+      "QB": 14
+     },
+     "departedWithin1SeasonPct": 13.8,
+     "picksGiven": 247
+    },
+    "development": {
+     "devMeanReturning": 0.7,
+     "evolutionsPerClubSeason": 0.98,
+     "meanLevel": 6.9,
+     "stage2PerClub": 0.3,
+     "byYear": {
+      "1": {
+       "dev": null,
+       "evolved": 0.03,
+       "level": 3.2,
+       "stage2": 0,
+       "starters": {
+        "original": 91.4,
+        "drafted": 8.6,
+        "generated": 0,
+        "pool": 0,
+        "waivers": 0,
+        "traded": 0,
+        "own": 100
+       }
+      },
+      "2": {
+       "dev": 1.3,
+       "evolved": 0.41,
+       "level": 4.4,
+       "stage2": 0,
+       "starters": {
+        "original": 87,
+        "drafted": 10.4,
+        "generated": 0.4,
+        "pool": 0.7,
+        "waivers": 0.9,
+        "traded": 0.6,
+        "own": 97.5
+       }
+      },
+      "3": {
+       "dev": 0.9,
+       "evolved": 1.22,
+       "level": 5.5,
+       "stage2": 0,
+       "starters": {
+        "original": 83.9,
+        "drafted": 12.6,
+        "generated": 0.6,
+        "pool": 0.7,
+        "waivers": 1.4,
+        "traded": 0.9,
+        "own": 96.5
+       }
+      },
+      "4": {
+       "dev": 0.8,
+       "evolved": 1.78,
+       "level": 6.1,
+       "stage2": 0,
+       "starters": {
+        "original": 78,
+        "drafted": 16.2,
+        "generated": 1,
+        "pool": 1,
+        "waivers": 2.2,
+        "traded": 1.6,
+        "own": 94.2
+       }
+      },
+      "5": {
+       "dev": 0.7,
+       "evolved": 1.72,
+       "level": 7,
+       "stage2": 0.1,
+       "starters": {
+        "original": 74.4,
+        "drafted": 17.2,
+        "generated": 0.9,
+        "pool": 1,
+        "waivers": 4.3,
+        "traded": 2.3,
+        "own": 91.6
+       }
+      },
+      "6": {
+       "dev": 0.6,
+       "evolved": 1.53,
+       "level": 7.4,
+       "stage2": 0.2,
+       "starters": {
+        "original": 68.6,
+        "drafted": 20.1,
+        "generated": 1.7,
+        "pool": 1.2,
+        "waivers": 5.5,
+        "traded": 2.8,
+        "own": 88.7
+       }
+      },
+      "7": {
+       "dev": 0.5,
+       "evolved": 1.13,
+       "level": 8.3,
+       "stage2": 0.3,
+       "starters": {
+        "original": 64.9,
+        "drafted": 20.9,
+        "generated": 2.3,
+        "pool": 1,
+        "waivers": 8.2,
+        "traded": 2.7,
+        "own": 85.8
+       }
+      },
+      "8": {
+       "dev": 0.4,
+       "evolved": 0.88,
+       "level": 8.6,
+       "stage2": 0.5,
+       "starters": {
+        "original": 57.6,
+        "drafted": 21.7,
+        "generated": 4.9,
+        "pool": 1.4,
+        "waivers": 10.9,
+        "traded": 3.5,
+        "own": 79.3
+       }
+      },
+      "9": {
+       "dev": 0.4,
+       "evolved": 0.53,
+       "level": 9.2,
+       "stage2": 0.6,
+       "starters": {
+        "original": 54,
+        "drafted": 20.9,
+        "generated": 6.5,
+        "pool": 1.3,
+        "waivers": 13.9,
+        "traded": 3.5,
+        "own": 74.9
+       }
+      },
+      "10": {
+       "dev": 0.4,
+       "evolved": 0.61,
+       "level": 9.5,
+       "stage2": 0.8,
+       "starters": {
+        "original": 48.2,
+        "drafted": 21.1,
+        "generated": 10,
+        "pool": 1.1,
+        "waivers": 15.9,
+        "traded": 3.6,
+        "own": 69.3
+       }
+      }
+     }
+    },
+    "competition": {
+     "winsSd": 2.18,
+     "winsMean": 4.48,
+     "playoffPct": 50,
+     "titlesByAi": 80,
+     "titlesByOwner": 0,
+     "ownerWinPct": 53.2,
+     "distinctChampionsMedian": 5,
+     "maxTitlesOneClubMax": 6,
+     "maxTitleShareMax": 0.6,
+     "repeatChampions": 21,
+     "persistentLoserPct": 35.8,
+     "recoveryMedian": 2,
+     "unrecoveredPct": 40.3,
+     "recoveryN": 236,
+     "perSeed": [
+      {
+       "seed": 1,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 2,
+       "seasons": 10,
+       "distinct": 4,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 3,
+       "seasons": 10,
+       "distinct": 4,
+       "maxTitles": 4,
+       "ownerTitles": 0,
+       "repeat": 3
+      },
+      {
+       "seed": 4,
+       "seasons": 10,
+       "distinct": 3,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 5
+      },
+      {
+       "seed": 5,
+       "seasons": 10,
+       "distinct": 4,
+       "maxTitles": 6,
+       "ownerTitles": 0,
+       "repeat": 5
+      },
+      {
+       "seed": 6,
+       "seasons": 10,
+       "distinct": 8,
+       "maxTitles": 2,
+       "ownerTitles": 0,
+       "repeat": 0
+      },
+      {
+       "seed": 7,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 6,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 8,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 3,
+       "ownerTitles": 0,
+       "repeat": 2
+      }
+     ],
+     "rTeamOvrWins": 0.52,
+     "rQualityWins": 0.55,
+     "rQualityTeamOvr": 0.92,
+     "rTargetTeamOvr": 0.92,
+     "teamOvrMinusTargetMedian": -1,
+     "teamOvrMinusTargetSd": 3.13,
+     "rResidualWins": -0.37,
+     "rWinsYoY": 0.5
+    },
+    "balance": {
+     "boostedClubSeasonsPct": 10.3,
+     "nudgeSignings": 207,
+     "slowedClubSeasonsPct": 16.3,
+     "runawayClubSeasons": 239,
+     "runawayPct": 19.9,
+     "generatedArrivalPct": 29.2,
+     "teamOvrSdByYear": {
+      "1": 3.45,
+      "2": 3.42,
+      "3": 3.33,
+      "4": 3.52,
+      "5": 3.29,
+      "6": 3.62,
+      "7": 3.41,
+      "8": 3.82,
+      "9": 3.97,
+      "10": 4.71
+     },
+     "teamOvrSdMean": 3.65,
+     "clubsLow8For3PlusPct": 0
+    },
+    "decisions": {
+     "contenders6plus": {
+      "clubSeasons": 409,
+      "arrivalsPerClubSeason": 1.13,
+      "arrivalMeanAge": 27.3,
+      "pickMeanAge": 20.5,
+      "pickMeanPot": 66.3,
+      "pickOvrGap": 0.9,
+      "boostedPct": 19.1,
+      "slowedPct": 5.9,
+      "meanAge": 25.3
+     },
+     "strugglers3minus": {
+      "clubSeasons": 433,
+      "arrivalsPerClubSeason": 2.01,
+      "arrivalMeanAge": 27.7,
+      "pickMeanAge": 20.5,
+      "pickMeanPot": 68,
+      "pickOvrGap": 0.7,
+      "boostedPct": 3,
+      "slowedPct": 24,
+      "meanAge": 24.9
+     },
+     "agingPlanning": {
+      "picksAtGroupsWithStarter29plusPct": null
+     },
+     "weakGroupResponse": {
+      "arrivalsAtWeakGroupPct": 16.1,
+      "picksAtTopNeedPct": 10.6
+     }
+    }
+   },
+   "variantTiers": {
+    "top": {
+     "n": 30,
+     "winPct": 73.9,
+     "titlesPerClub": 2.13,
+     "quality0": 61.6,
+     "teamOvr0": 67.2,
+     "meanOvr": 72.4,
+     "meanQuality": 68.7,
+     "gapToTarget": -3.5,
+     "nudgeSignings": 0,
+     "slowedSeasons": 0,
+     "persistentWeakSeasons": 0.67,
+     "ownStarterShare": 99.1,
+     "meanAge": 25.4,
+     "dev": 0.62,
+     "rivalShare": 10
+    },
+    "bottom": {
+     "n": 30,
+     "winPct": 30.2,
+     "titlesPerClub": 0,
+     "quality0": 54.6,
+     "teamOvr0": 60.2,
+     "meanOvr": 66.6,
+     "meanQuality": 58.8,
+     "gapToTarget": 1.2,
+     "nudgeSignings": 0,
+     "slowedSeasons": 0,
+     "persistentWeakSeasons": 2.07,
+     "ownStarterShare": 94.9,
+     "meanAge": 25.1,
+     "dev": 0.67,
+     "rivalShare": 0
+    },
+    "middle": {
+     "n": 60,
+     "winPct": 47.1,
+     "titlesPerClub": 0.23,
+     "quality0": 57,
+     "teamOvr0": 62.6,
+     "meanOvr": 68.4,
+     "meanQuality": 62,
+     "gapToTarget": -0.5,
+     "nudgeSignings": 0,
+     "slowedSeasons": 0,
+     "persistentWeakSeasons": 1.12,
+     "ownStarterShare": 96.6,
+     "meanAge": 25.3,
+     "dev": 0.63,
+     "rivalShare": 8.3
+    },
+    "rMeanQualityWinPct": 0.73,
+    "rMeanOvrWinPct": 0.84,
+    "rStartQualityWinPct": 0.81,
+    "clubs": 120
+   },
+   "baselineTiers": {
+    "top": {
+     "n": 30,
+     "winPct": 74.6,
+     "titlesPerClub": 2.2,
+     "quality0": 61.8,
+     "teamOvr0": 67.4,
+     "meanOvr": 73.5,
+     "meanQuality": 69,
+     "gapToTarget": -2.9,
+     "nudgeSignings": 3.67,
+     "slowedSeasons": 0.13,
+     "persistentWeakSeasons": 0.33,
+     "ownStarterShare": 93.7,
+     "meanAge": 25.4,
+     "dev": 0.6,
+     "rivalShare": 13.3
+    },
+    "bottom": {
+     "n": 30,
+     "winPct": 29.6,
+     "titlesPerClub": 0.03,
+     "quality0": 53.9,
+     "teamOvr0": 59.5,
+     "meanOvr": 65.4,
+     "meanQuality": 57,
+     "gapToTarget": 2,
+     "nudgeSignings": 0.1,
+     "slowedSeasons": 3.87,
+     "persistentWeakSeasons": 2.07,
+     "ownStarterShare": 78.7,
+     "meanAge": 24.7,
+     "dev": 0.71,
+     "rivalShare": 0
+    },
+    "middle": {
+     "n": 60,
+     "winPct": 47.5,
+     "titlesPerClub": 0.22,
+     "quality0": 57.2,
+     "teamOvr0": 62.5,
+     "meanOvr": 68.4,
+     "meanQuality": 62.3,
+     "gapToTarget": -0.8,
+     "nudgeSignings": 1.57,
+     "slowedSeasons": 1.27,
+     "persistentWeakSeasons": 1.38,
+     "ownStarterShare": 89.3,
+     "meanAge": 25.1,
+     "dev": 0.67,
+     "rivalShare": 6.7
+    },
+    "rMeanQualityWinPct": 0.86,
+    "rMeanOvrWinPct": 0.9,
+    "rStartQualityWinPct": 0.87,
+    "clubs": 120
+   }
+  },
+  "flat-market": {
+   "variant": {
+    "label": "flat-market",
+    "seeds": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ],
+    "seasonsPerSeed": 10,
+    "clubSeasons": 1200,
+    "errors": [],
+    "integrity": {
+     "problems": 0,
+     "problemSamples": [],
+     "exceptions": 0,
+     "seconds": 1573,
+     "secondsPerSeason": 19.7,
+     "peakHeapMB": 252,
+     "lineupFailures": 0,
+     "overCapAtSeasonEnd": 0,
+     "rosterSize": {
+      "min": 32,
+      "median": 38,
+      "max": 38
+     }
+    },
+    "roster": {
+     "rosterSizeMedian": 38,
+     "lineupFailures": 0,
+     "shortageClubSeasons": 1,
+     "shortagePct": 0.1,
+     "shortageByPos": {
+      "LB": 1
+     },
+     "weakGroupClubSeasonsPct": 18.7,
+     "weakByPos": {
+      "TE": 11,
+      "LB": 28,
+      "QB": 6,
+      "DL": 47,
+      "OL": 59,
+      "WR": 13,
+      "S": 16,
+      "RB": 33,
+      "CB": 26
+     },
+     "persistentWeakPct": 12.7,
+     "persistentWeakWithCapRoomPct": 7.6,
+     "persistentWeakByPos": {
+      "DL": 34,
+      "WR": 3,
+      "OL": 37,
+      "LB": 14,
+      "QB": 3,
+      "TE": 5,
+      "S": 10,
+      "RB": 20,
+      "CB": 17
+     },
+     "persistentStreakMedian": 3,
+     "persistentStreakMax": 8,
+     "surplusPct": 0.1,
+     "surplusByPos": {
+      "RB": 1
+     },
+     "starterMeanByPos": {
+      "QB": 75.4,
+      "RB": 71.8,
+      "WR": 68.2,
+      "TE": 70.9,
+      "OL": 66.5,
+      "DL": 68.3,
+      "LB": 68.7,
+      "CB": 69,
+      "S": 69.8
+     },
+     "backupMeanByPos": {
+      "QB": 56.7,
+      "RB": 56.1,
+      "WR": 54.5,
+      "TE": 55.1,
+      "OL": 54.1,
+      "DL": 53.8,
+      "LB": 54.5,
+      "CB": 54.7,
+      "S": 54.6
+     },
+     "backupGapByPos": {
+      "QB": 18.8,
+      "RB": 15.9,
+      "WR": 13.7,
+      "TE": 15.9,
+      "OL": 12.4,
+      "DL": 14.5,
+      "LB": 14.2,
+      "CB": 14.4,
+      "S": 15.1
+     },
+     "noBackupPctByPos": {
+      "QB": 12.1,
+      "RB": 8.6,
+      "WR": 1.1,
+      "TE": 9.6,
+      "OL": 2,
+      "DL": 1.7,
+      "LB": 6.3,
+      "CB": 4.8,
+      "S": 9.3
+     },
+     "meanAge": 25.3,
+     "starterAge": 27.8
+    },
+    "cap": {
+     "utilizationMedianPct": null,
+     "capRoomMedian": 121400,
+     "capRoomP10": 74660,
+     "payrollMedian": 1273740,
+     "overCap": 0,
+     "capRoomOver200kPct": 13.1
+    },
+    "draft": {
+     "aiPicks": 3600,
+     "byRound": {
+      "1": 1200,
+      "2": 1200,
+      "3": 1200
+     },
+     "byPos": {
+      "QB": 282,
+      "TE": 284,
+      "S": 341,
+      "LB": 344,
+      "CB": 429,
+      "DL": 465,
+      "WR": 547,
+      "RB": 352,
+      "OL": 485,
+      "K": 71
+     },
+     "ovrGapToBestMedian": 1,
+     "ovrGapToBestMean": 0.8,
+     "potGapToBestMedian": 5,
+     "pickedNeedZeroPct": 48,
+     "misalignedPct": 25.1,
+     "misalignedN": 902,
+     "wouldStartPct": 7.6,
+     "wouldStartByRound": {
+      "1": 19.5,
+      "2": 1.7,
+      "3": 1.5
+     },
+     "atTopNeedPct": 11.3,
+     "atNeed025Pct": 14.2,
+     "wouldNotStartAndNoNeedPct": 44.1,
+     "sameDraftDuplicatePct": 0.1,
+     "kickerPct": 2,
+     "contributionByRoundHorizon": {
+      "1|1": {
+       "n": 120,
+       "starterForDrafter": 10,
+       "stillWithDrafter": 100,
+       "stillInLeague": 100
+      },
+      "1|2": {
+       "n": 120,
+       "starterForDrafter": 19.2,
+       "stillWithDrafter": 90,
+       "stillInLeague": 90
+      },
+      "1|3": {
+       "n": 120,
+       "starterForDrafter": 20,
+       "stillWithDrafter": 90,
+       "stillInLeague": 92.5
+      },
+      "1|4": {
+       "n": 120,
+       "starterForDrafter": 24.2,
+       "stillWithDrafter": 90.8,
+       "stillInLeague": 92.5
+      },
+      "1|5": {
+       "n": 120,
+       "starterForDrafter": 20,
+       "stillWithDrafter": 79.2,
+       "stillInLeague": 85.8
+      },
+      "1|6": {
+       "n": 480,
+       "starterForDrafter": 31.3,
+       "stillWithDrafter": 53.8,
+       "stillInLeague": 61.7
+      },
+      "2|1": {
+       "n": 120,
+       "starterForDrafter": 0,
+       "stillWithDrafter": 100,
+       "stillInLeague": 100
+      },
+      "2|2": {
+       "n": 120,
+       "starterForDrafter": 2.5,
+       "stillWithDrafter": 93.3,
+       "stillInLeague": 93.3
+      },
+      "2|3": {
+       "n": 120,
+       "starterForDrafter": 0,
+       "stillWithDrafter": 79.2,
+       "stillInLeague": 79.2
+      },
+      "2|4": {
+       "n": 120,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 79.2,
+       "stillInLeague": 81.7
+      },
+      "2|5": {
+       "n": 120,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 79.2,
+       "stillInLeague": 81.7
+      },
+      "2|6": {
+       "n": 480,
+       "starterForDrafter": 3.3,
+       "stillWithDrafter": 21,
+       "stillInLeague": 22.9
+      },
+      "3|1": {
+       "n": 120,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 95.8,
+       "stillInLeague": 95.8
+      },
+      "3|2": {
+       "n": 120,
+       "starterForDrafter": 1.7,
+       "stillWithDrafter": 82.5,
+       "stillInLeague": 82.5
+      },
+      "3|3": {
+       "n": 120,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 81.7,
+       "stillInLeague": 82.5
+      },
+      "3|4": {
+       "n": 120,
+       "starterForDrafter": 0,
+       "stillWithDrafter": 73.3,
+       "stillInLeague": 73.3
+      },
+      "3|5": {
+       "n": 120,
+       "starterForDrafter": 0.8,
+       "stillWithDrafter": 67.5,
+       "stillInLeague": 69.2
+      },
+      "3|6": {
+       "n": 480,
+       "starterForDrafter": 0.2,
+       "stillWithDrafter": 15.6,
+       "stillInLeague": 17.1
+      }
+     },
+     "round1StarterAt2": 19.2
+    },
+    "arrivals": {
+     "total": 4088,
+     "perClubSeason": 3.41,
+     "byOrigin": {
+      "drafted": 3240,
+      "signed:generated": 268,
+      "signed:pool": 276,
+      "traded": 61,
+      "signed:waivers": 243
+     },
+     "byPhase": {
+      "offseason": 4080,
+      "in-season": 8
+     },
+     "nonDraftByOrigin": {
+      "signed:generated": 268,
+      "signed:pool": 276,
+      "traded": 61,
+      "signed:waivers": 243
+     },
+     "nonDraftStartingPct": 16.4,
+     "generatedStartingPct": 8.6,
+     "atSurplusPct": 0,
+     "atWeakGroupPct": 3.7,
+     "meanAgeNonDraft": 26.7,
+     "meanOvrByOrigin": {
+      "drafted": 55.5,
+      "signed:generated": 58.1,
+      "signed:pool": 55.7,
+      "traded": 62.9,
+      "signed:waivers": 63
+     }
+    },
+    "departures": {
+     "total": 4480,
+     "byReason": {
+      "walked": 3755,
+      "released": 664,
+      "traded": 61
+     },
+     "byPhase": {
+      "season-end": 3755,
+      "offseason": 717,
+      "in-season": 8
+     },
+     "contractTimeStarterPct": 0.6,
+     "contractTimeStarters": 22,
+     "walkedAgeMedian": 27,
+     "walkedOvrMedian": 54,
+     "walkedStarterOvrMedian": 70,
+     "releasedAgeMedian": 23,
+     "youngWalkedPct": 0,
+     "replacementDeltaMedian": 3,
+     "replacementDeltaMean": 2.8,
+     "replacementN": 30,
+     "replacementWorse3Pct": 6.7
+    },
+    "aging": {
+     "meanAge": 25.3,
+     "starterAgeMedian": 27.7,
+     "age30plusMedian": 6,
+     "age24minusMedian": 17,
+     "byYear": {
+      "1": {
+       "meanAge": 23.2,
+       "starterAge": 23.8,
+       "age30plus": 0
+      },
+      "2": {
+       "meanAge": 23.7,
+       "starterAge": 24.7,
+       "age30plus": 0.1
+      },
+      "3": {
+       "meanAge": 24,
+       "starterAge": 25.6,
+       "age30plus": 2.2
+      },
+      "4": {
+       "meanAge": 24.6,
+       "starterAge": 26.5,
+       "age30plus": 4.2
+      },
+      "5": {
+       "meanAge": 25,
+       "starterAge": 27.4,
+       "age30plus": 5.9
+      },
+      "6": {
+       "meanAge": 25.6,
+       "starterAge": 28.2,
+       "age30plus": 7.5
+      },
+      "7": {
+       "meanAge": 26,
+       "starterAge": 29.1,
+       "age30plus": 9
+      },
+      "8": {
+       "meanAge": 26.4,
+       "starterAge": 29.9,
+       "age30plus": 10.6
+      },
+      "9": {
+       "meanAge": 26.9,
+       "starterAge": 30.8,
+       "age30plus": 12.2
+      },
+      "10": {
+       "meanAge": 27.3,
+       "starterAge": 31.6,
+       "age30plus": 13.9
+      }
+     }
+    },
+    "trades": {
+     "total": 59,
+     "perSeason": 0.74,
+     "byKind": {
+      "picks": 57,
+      "swap": 2
+     },
+     "byWindow": {
+      "offseason": 59
+     },
+     "ratioMedian": 1.037,
+     "ratioMin": 0.915,
+     "ratioMax": 1.176,
+     "acquiredStarterPct": 98.3,
+     "acquiredAgeMedian": 25,
+     "acquiredOvrMedian": 63,
+     "byPos": {
+      "CB": 8,
+      "K": 13,
+      "WR": 2,
+      "TE": 5,
+      "QB": 3,
+      "RB": 3,
+      "LB": 8,
+      "OL": 7,
+      "S": 7,
+      "DL": 3
+     },
+     "departedWithin1SeasonPct": 1.7,
+     "picksGiven": 99
+    },
+    "development": {
+     "devMeanReturning": 0.6,
+     "evolutionsPerClubSeason": 1.08,
+     "meanLevel": 7.2,
+     "stage2PerClub": 0.3,
+     "byYear": {
+      "1": {
+       "dev": null,
+       "evolved": 0.03,
+       "level": 3.2,
+       "stage2": 0,
+       "starters": {
+        "original": 91.9,
+        "drafted": 8.1,
+        "generated": 0,
+        "pool": 0,
+        "waivers": 0,
+        "traded": 0,
+        "own": 100
+       }
+      },
+      "2": {
+       "dev": 1.3,
+       "evolved": 0.49,
+       "level": 4.5,
+       "stage2": 0,
+       "starters": {
+        "original": 89.3,
+        "drafted": 9.7,
+        "generated": 0.2,
+        "pool": 0.1,
+        "waivers": 0.2,
+        "traded": 0.5,
+        "own": 99
+       }
+      },
+      "3": {
+       "dev": 1,
+       "evolved": 1.38,
+       "level": 5.6,
+       "stage2": 0,
+       "starters": {
+        "original": 87.7,
+        "drafted": 10.8,
+        "generated": 0.3,
+        "pool": 0.2,
+        "waivers": 0.4,
+        "traded": 0.7,
+        "own": 98.6
+       }
+      },
+      "4": {
+       "dev": 0.8,
+       "evolved": 2.03,
+       "level": 6.4,
+       "stage2": 0,
+       "starters": {
+        "original": 85.8,
+        "drafted": 12.1,
+        "generated": 0.5,
+        "pool": 0.2,
+        "waivers": 0.6,
+        "traded": 0.8,
+        "own": 97.9
+       }
+      },
+      "5": {
+       "dev": 0.7,
+       "evolved": 1.95,
+       "level": 7.2,
+       "stage2": 0.1,
+       "starters": {
+        "original": 84.8,
+        "drafted": 12.9,
+        "generated": 0.6,
+        "pool": 0.2,
+        "waivers": 0.6,
+        "traded": 0.9,
+        "own": 97.7
+       }
+      },
+      "6": {
+       "dev": 0.5,
+       "evolved": 1.68,
+       "level": 7.8,
+       "stage2": 0.3,
+       "starters": {
+        "original": 82.9,
+        "drafted": 14.1,
+        "generated": 0.7,
+        "pool": 0.3,
+        "waivers": 0.8,
+        "traded": 1.3,
+        "own": 97
+       }
+      },
+      "7": {
+       "dev": 0.5,
+       "evolved": 1.18,
+       "level": 8.6,
+       "stage2": 0.4,
+       "starters": {
+        "original": 81.7,
+        "drafted": 15,
+        "generated": 0.7,
+        "pool": 0.3,
+        "waivers": 0.9,
+        "traded": 1.5,
+        "own": 96.7
+       }
+      },
+      "8": {
+       "dev": 0.4,
+       "evolved": 1.02,
+       "level": 9.1,
+       "stage2": 0.6,
+       "starters": {
+        "original": 79.6,
+        "drafted": 16.1,
+        "generated": 0.7,
+        "pool": 0.3,
+        "waivers": 1.4,
+        "traded": 1.9,
+        "own": 95.7
+       }
+      },
+      "9": {
+       "dev": 0.3,
+       "evolved": 0.61,
+       "level": 9.6,
+       "stage2": 0.7,
+       "starters": {
+        "original": 78.4,
+        "drafted": 16.6,
+        "generated": 0.8,
+        "pool": 0.3,
+        "waivers": 1.8,
+        "traded": 2.1,
+        "own": 95
+       }
+      },
+      "10": {
+       "dev": 0.3,
+       "evolved": 0.43,
+       "level": 10,
+       "stage2": 1,
+       "starters": {
+        "original": 76.4,
+        "drafted": 17.9,
+        "generated": 1,
+        "pool": 0.3,
+        "waivers": 2.1,
+        "traded": 2.3,
+        "own": 94.3
+       }
+      }
+     }
+    },
+    "competition": {
+     "winsSd": 2.14,
+     "winsMean": 4.45,
+     "playoffPct": 48.7,
+     "titlesByAi": 79,
+     "titlesByOwner": 1,
+     "ownerWinPct": 59,
+     "distinctChampionsMedian": 5,
+     "maxTitlesOneClubMax": 6,
+     "maxTitleShareMax": 0.6,
+     "repeatChampions": 21,
+     "persistentLoserPct": 34.2,
+     "recoveryMedian": 2,
+     "unrecoveredPct": 31,
+     "recoveryN": 248,
+     "perSeed": [
+      {
+       "seed": 1,
+       "seasons": 10,
+       "distinct": 3,
+       "maxTitles": 6,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 2,
+       "seasons": 10,
+       "distinct": 3,
+       "maxTitles": 6,
+       "ownerTitles": 0,
+       "repeat": 4
+      },
+      {
+       "seed": 3,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 4,
+       "ownerTitles": 1,
+       "repeat": 0
+      },
+      {
+       "seed": 4,
+       "seasons": 10,
+       "distinct": 3,
+       "maxTitles": 4,
+       "ownerTitles": 0,
+       "repeat": 4
+      },
+      {
+       "seed": 5,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 4,
+       "ownerTitles": 0,
+       "repeat": 5
+      },
+      {
+       "seed": 6,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 4,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 7,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 4,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 8,
+       "seasons": 10,
+       "distinct": 3,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 2
+      }
+     ],
+     "rTeamOvrWins": 0.47,
+     "rQualityWins": 0.47,
+     "rQualityTeamOvr": 0.81,
+     "rTargetTeamOvr": 0.81,
+     "teamOvrMinusTargetMedian": -1,
+     "teamOvrMinusTargetSd": 4.36,
+     "rResidualWins": -0.29,
+     "rWinsYoY": 0.49
+    },
+    "balance": {
+     "boostedClubSeasonsPct": 0,
+     "nudgeSignings": 0,
+     "slowedClubSeasonsPct": 0,
+     "runawayClubSeasons": 0,
+     "runawayPct": 0,
+     "generatedArrivalPct": 31.6,
+     "teamOvrSdByYear": {
+      "1": 3.38,
+      "2": 3.27,
+      "3": 3.04,
+      "4": 3.11,
+      "5": 2.92,
+      "6": 2.77,
+      "7": 2.65,
+      "8": 2.48,
+      "9": 2.34,
+      "10": 2.24
+     },
+     "teamOvrSdMean": 2.82,
+     "clubsLow8For3PlusPct": 0
+    },
+    "decisions": {
+     "contenders6plus": {
+      "clubSeasons": 384,
+      "arrivalsPerClubSeason": 0.61,
+      "arrivalMeanAge": 26.6,
+      "pickMeanAge": 20.5,
+      "pickMeanPot": 66.1,
+      "pickOvrGap": 1,
+      "boostedPct": 0,
+      "slowedPct": 0,
+      "meanAge": 25.3
+     },
+     "strugglers3minus": {
+      "clubSeasons": 432,
+      "arrivalsPerClubSeason": 0.85,
+      "arrivalMeanAge": 26.8,
+      "pickMeanAge": 20.5,
+      "pickMeanPot": 67.6,
+      "pickOvrGap": 0.7,
+      "boostedPct": 0,
+      "slowedPct": 0,
+      "meanAge": 25.2
+     },
+     "agingPlanning": {
+      "picksAtGroupsWithStarter29plusPct": null
+     },
+     "weakGroupResponse": {
+      "arrivalsAtWeakGroupPct": 3.7,
+      "picksAtTopNeedPct": 11.3
+     }
+    }
+   },
+   "matchedBaseline": {
+    "label": "B-matched",
+    "seeds": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8
+    ],
+    "seasonsPerSeed": 10,
+    "clubSeasons": 1200,
+    "errors": [],
+    "integrity": {
+     "problems": 0,
+     "problemSamples": [],
+     "exceptions": 0,
+     "seconds": 1603,
+     "secondsPerSeason": 20,
+     "peakHeapMB": 211,
+     "lineupFailures": 7,
+     "overCapAtSeasonEnd": 0,
+     "rosterSize": {
+      "min": 27,
+      "median": 38,
+      "max": 38
+     }
+    },
+    "roster": {
+     "rosterSizeMedian": 38,
+     "lineupFailures": 7,
+     "shortageClubSeasons": 32,
+     "shortagePct": 2.7,
+     "shortageByPos": {
+      "CB": 6,
+      "WR": 3,
+      "DL": 6,
+      "TE": 5,
+      "OL": 3,
+      "S": 4,
+      "LB": 4,
+      "RB": 1
+     },
+     "weakGroupClubSeasonsPct": 27.7,
+     "weakByPos": {
+      "WR": 27,
+      "DL": 54,
+      "TE": 66,
+      "LB": 38,
+      "RB": 45,
+      "CB": 54,
+      "OL": 70,
+      "QB": 44,
+      "S": 43
+     },
+     "persistentWeakPct": 14.4,
+     "persistentWeakWithCapRoomPct": 12.1,
+     "persistentWeakByPos": {
+      "TE": 25,
+      "DL": 21,
+      "OL": 29,
+      "RB": 17,
+      "S": 17,
+      "LB": 13,
+      "WR": 10,
+      "CB": 21,
+      "QB": 13
+     },
+     "persistentStreakMedian": 2,
+     "persistentStreakMax": 9,
+     "surplusPct": 0.1,
+     "surplusByPos": {
+      "QB": 1
+     },
+     "starterMeanByPos": {
+      "QB": 74.2,
+      "RB": 72.5,
+      "WR": 68.2,
+      "TE": 70.3,
+      "OL": 67,
+      "DL": 68.2,
+      "LB": 69,
+      "CB": 69,
+      "S": 69.3
+     },
+     "backupMeanByPos": {
+      "QB": 56.5,
+      "RB": 55.9,
+      "WR": 54.5,
+      "TE": 55.4,
+      "OL": 54.3,
+      "DL": 54,
+      "LB": 54.9,
+      "CB": 54.6,
+      "S": 54.7
+     },
+     "backupGapByPos": {
+      "QB": 18.1,
+      "RB": 16.9,
+      "WR": 13.7,
+      "TE": 15.1,
+      "OL": 12.8,
+      "DL": 14.2,
+      "LB": 14.2,
+      "CB": 14.6,
+      "S": 14.6
+     },
+     "noBackupPctByPos": {
+      "QB": 12.5,
+      "RB": 9.8,
+      "WR": 4.3,
+      "TE": 15.2,
+      "OL": 4.9,
+      "DL": 4.1,
+      "LB": 6.9,
+      "CB": 7.2,
+      "S": 9.7
+     },
+     "meanAge": 25.1,
+     "starterAge": 27.2
+    },
+    "cap": {
+     "utilizationMedianPct": null,
+     "capRoomMedian": 138920,
+     "capRoomP10": 80220,
+     "payrollMedian": 1256120,
+     "overCap": 0,
+     "capRoomOver200kPct": 26.6
+    },
+    "draft": {
+     "aiPicks": 3600,
+     "byRound": {
+      "1": 1200,
+      "2": 1200,
+      "3": 1200
+     },
+     "byPos": {
+      "QB": 283,
+      "TE": 269,
+      "S": 344,
+      "LB": 345,
+      "CB": 420,
+      "DL": 470,
+      "WR": 548,
+      "RB": 360,
+      "OL": 491,
+      "K": 70
+     },
+     "ovrGapToBestMedian": 1,
+     "ovrGapToBestMean": 0.9,
+     "potGapToBestMedian": 5,
+     "pickedNeedZeroPct": 46.7,
+     "misalignedPct": 25.3,
+     "misalignedN": 912,
+     "wouldStartPct": 10.1,
+     "wouldStartByRound": {
+      "1": 23.6,
+      "2": 3.8,
+      "3": 2.9
+     },
+     "atTopNeedPct": 10.6,
+     "atNeed025Pct": 15.3,
+     "wouldNotStartAndNoNeedPct": 41.9,
+     "sameDraftDuplicatePct": 0.1,
+     "kickerPct": 1.9,
+     "contributionByRoundHorizon": {
+      "1|1": {
+       "n": 120,
+       "starterForDrafter": 23.3,
+       "stillWithDrafter": 98.3,
+       "stillInLeague": 98.3
+      },
+      "1|2": {
+       "n": 120,
+       "starterForDrafter": 15,
+       "stillWithDrafter": 87.5,
+       "stillInLeague": 88.3
+      },
+      "1|3": {
+       "n": 120,
+       "starterForDrafter": 20.8,
+       "stillWithDrafter": 88.3,
+       "stillInLeague": 91.7
+      },
+      "1|4": {
+       "n": 120,
+       "starterForDrafter": 23.3,
+       "stillWithDrafter": 83.3,
+       "stillInLeague": 89.2
+      },
+      "1|5": {
+       "n": 120,
+       "starterForDrafter": 28.3,
+       "stillWithDrafter": 74.2,
+       "stillInLeague": 88.3
+      },
+      "1|6": {
+       "n": 480,
+       "starterForDrafter": 36.3,
+       "stillWithDrafter": 49.4,
+       "stillInLeague": 62.5
+      },
+      "2|1": {
+       "n": 120,
+       "starterForDrafter": 3.3,
+       "stillWithDrafter": 90,
+       "stillInLeague": 90
+      },
+      "2|2": {
+       "n": 120,
+       "starterForDrafter": 4.2,
+       "stillWithDrafter": 80.8,
+       "stillInLeague": 80.8
+      },
+      "2|3": {
+       "n": 120,
+       "starterForDrafter": 6.7,
+       "stillWithDrafter": 85,
+       "stillInLeague": 85
+      },
+      "2|4": {
+       "n": 120,
+       "starterForDrafter": 7.5,
+       "stillWithDrafter": 75.8,
+       "stillInLeague": 78.3
+      },
+      "2|5": {
+       "n": 120,
+       "starterForDrafter": 9.2,
+       "stillWithDrafter": 67.5,
+       "stillInLeague": 69.2
+      },
+      "2|6": {
+       "n": 480,
+       "starterForDrafter": 6,
+       "stillWithDrafter": 20.4,
+       "stillInLeague": 24.6
+      },
+      "3|1": {
+       "n": 120,
+       "starterForDrafter": 1.7,
+       "stillWithDrafter": 90,
+       "stillInLeague": 90
+      },
+      "3|2": {
+       "n": 120,
+       "starterForDrafter": 5.8,
+       "stillWithDrafter": 75.8,
+       "stillInLeague": 75.8
+      },
+      "3|3": {
+       "n": 120,
+       "starterForDrafter": 3.3,
+       "stillWithDrafter": 57.5,
+       "stillInLeague": 57.5
+      },
+      "3|4": {
+       "n": 120,
+       "starterForDrafter": 3.3,
+       "stillWithDrafter": 66.7,
+       "stillInLeague": 67.5
+      },
+      "3|5": {
+       "n": 120,
+       "starterForDrafter": 4.2,
+       "stillWithDrafter": 59.2,
+       "stillInLeague": 65
+      },
+      "3|6": {
+       "n": 480,
+       "starterForDrafter": 2.1,
+       "stillWithDrafter": 14.6,
+       "stillInLeague": 16.9
+      }
+     },
+     "round1StarterAt2": 15
+    },
+    "arrivals": {
+     "total": 5114,
+     "perClubSeason": 4.26,
+     "byOrigin": {
+      "drafted": 3197,
+      "signed:generated": 560,
+      "signed:pool": 324,
+      "traded": 175,
+      "signed:waivers": 858
+     },
+     "byPhase": {
+      "offseason": 5106,
+      "in-season": 8
+     },
+     "nonDraftByOrigin": {
+      "signed:generated": 560,
+      "signed:pool": 324,
+      "traded": 175,
+      "signed:waivers": 858
+     },
+     "nonDraftStartingPct": 46.7,
+     "generatedStartingPct": 43.2,
+     "atSurplusPct": 0,
+     "atWeakGroupPct": 16.1,
+     "meanAgeNonDraft": 27.5,
+     "meanOvrByOrigin": {
+      "drafted": 55.7,
+      "signed:generated": 65.8,
+      "signed:pool": 55.7,
+      "traded": 61.3,
+      "signed:waivers": 66.3
+     }
+    },
+    "departures": {
+     "total": 5678,
+     "byReason": {
+      "walked": 4739,
+      "released": 763,
+      "traded": 176
+     },
+     "byPhase": {
+      "season-end": 4739,
+      "offseason": 931,
+      "in-season": 8
+     },
+     "contractTimeStarterPct": 15.6,
+     "contractTimeStarters": 739,
+     "walkedAgeMedian": 27,
+     "walkedOvrMedian": 56,
+     "walkedStarterOvrMedian": 67,
+     "releasedAgeMedian": 23,
+     "youngWalkedPct": 0,
+     "replacementDeltaMedian": 3.3333333333333357,
+     "replacementDeltaMean": 4.3,
+     "replacementN": 577,
+     "replacementWorse3Pct": 5.7
+    },
+    "aging": {
+     "meanAge": 25.1,
+     "starterAgeMedian": 26.9,
+     "age30plusMedian": 5,
+     "age24minusMedian": 18,
+     "byYear": {
+      "1": {
+       "meanAge": 23.2,
+       "starterAge": 23.7,
+       "age30plus": 0
+      },
+      "2": {
+       "meanAge": 23.6,
+       "starterAge": 24.6,
+       "age30plus": 0.1
+      },
+      "3": {
+       "meanAge": 24,
+       "starterAge": 25.4,
+       "age30plus": 2
+      },
+      "4": {
+       "meanAge": 24.4,
+       "starterAge": 26,
+       "age30plus": 3.6
+      },
+      "5": {
+       "meanAge": 24.9,
+       "starterAge": 26.9,
+       "age30plus": 5.1
+      },
+      "6": {
+       "meanAge": 25.3,
+       "starterAge": 27.6,
+       "age30plus": 6.2
+      },
+      "7": {
+       "meanAge": 25.7,
+       "starterAge": 28.4,
+       "age30plus": 7.7
+      },
+      "8": {
+       "meanAge": 26.1,
+       "starterAge": 29.1,
+       "age30plus": 9.1
+      },
+      "9": {
+       "meanAge": 26.5,
+       "starterAge": 29.8,
+       "age30plus": 10.7
+      },
+      "10": {
+       "meanAge": 26.9,
+       "starterAge": 30.2,
+       "age30plus": 11.8
+      }
+     }
+    },
+    "trades": {
+     "total": 167,
+     "perSeason": 2.09,
+     "byKind": {
+      "picks": 158,
+      "swap": 9
+     },
+     "byWindow": {
+      "offseason": 166,
+      "in-season": 1
+     },
+     "ratioMedian": 1.034,
+     "ratioMin": 0.87,
+     "ratioMax": 1.176,
+     "acquiredStarterPct": 79,
+     "acquiredAgeMedian": 25,
+     "acquiredOvrMedian": 61,
+     "byPos": {
+      "CB": 19,
+      "K": 24,
+      "WR": 12,
+      "LB": 23,
+      "RB": 8,
+      "TE": 19,
+      "DL": 8,
+      "OL": 23,
+      "S": 17,
+      "QB": 14
+     },
+     "departedWithin1SeasonPct": 13.8,
+     "picksGiven": 247
+    },
+    "development": {
+     "devMeanReturning": 0.7,
+     "evolutionsPerClubSeason": 0.98,
+     "meanLevel": 6.9,
+     "stage2PerClub": 0.3,
+     "byYear": {
+      "1": {
+       "dev": null,
+       "evolved": 0.03,
+       "level": 3.2,
+       "stage2": 0,
+       "starters": {
+        "original": 91.4,
+        "drafted": 8.6,
+        "generated": 0,
+        "pool": 0,
+        "waivers": 0,
+        "traded": 0,
+        "own": 100
+       }
+      },
+      "2": {
+       "dev": 1.3,
+       "evolved": 0.41,
+       "level": 4.4,
+       "stage2": 0,
+       "starters": {
+        "original": 87,
+        "drafted": 10.4,
+        "generated": 0.4,
+        "pool": 0.7,
+        "waivers": 0.9,
+        "traded": 0.6,
+        "own": 97.5
+       }
+      },
+      "3": {
+       "dev": 0.9,
+       "evolved": 1.22,
+       "level": 5.5,
+       "stage2": 0,
+       "starters": {
+        "original": 83.9,
+        "drafted": 12.6,
+        "generated": 0.6,
+        "pool": 0.7,
+        "waivers": 1.4,
+        "traded": 0.9,
+        "own": 96.5
+       }
+      },
+      "4": {
+       "dev": 0.8,
+       "evolved": 1.78,
+       "level": 6.1,
+       "stage2": 0,
+       "starters": {
+        "original": 78,
+        "drafted": 16.2,
+        "generated": 1,
+        "pool": 1,
+        "waivers": 2.2,
+        "traded": 1.6,
+        "own": 94.2
+       }
+      },
+      "5": {
+       "dev": 0.7,
+       "evolved": 1.72,
+       "level": 7,
+       "stage2": 0.1,
+       "starters": {
+        "original": 74.4,
+        "drafted": 17.2,
+        "generated": 0.9,
+        "pool": 1,
+        "waivers": 4.3,
+        "traded": 2.3,
+        "own": 91.6
+       }
+      },
+      "6": {
+       "dev": 0.6,
+       "evolved": 1.53,
+       "level": 7.4,
+       "stage2": 0.2,
+       "starters": {
+        "original": 68.6,
+        "drafted": 20.1,
+        "generated": 1.7,
+        "pool": 1.2,
+        "waivers": 5.5,
+        "traded": 2.8,
+        "own": 88.7
+       }
+      },
+      "7": {
+       "dev": 0.5,
+       "evolved": 1.13,
+       "level": 8.3,
+       "stage2": 0.3,
+       "starters": {
+        "original": 64.9,
+        "drafted": 20.9,
+        "generated": 2.3,
+        "pool": 1,
+        "waivers": 8.2,
+        "traded": 2.7,
+        "own": 85.8
+       }
+      },
+      "8": {
+       "dev": 0.4,
+       "evolved": 0.88,
+       "level": 8.6,
+       "stage2": 0.5,
+       "starters": {
+        "original": 57.6,
+        "drafted": 21.7,
+        "generated": 4.9,
+        "pool": 1.4,
+        "waivers": 10.9,
+        "traded": 3.5,
+        "own": 79.3
+       }
+      },
+      "9": {
+       "dev": 0.4,
+       "evolved": 0.53,
+       "level": 9.2,
+       "stage2": 0.6,
+       "starters": {
+        "original": 54,
+        "drafted": 20.9,
+        "generated": 6.5,
+        "pool": 1.3,
+        "waivers": 13.9,
+        "traded": 3.5,
+        "own": 74.9
+       }
+      },
+      "10": {
+       "dev": 0.4,
+       "evolved": 0.61,
+       "level": 9.5,
+       "stage2": 0.8,
+       "starters": {
+        "original": 48.2,
+        "drafted": 21.1,
+        "generated": 10,
+        "pool": 1.1,
+        "waivers": 15.9,
+        "traded": 3.6,
+        "own": 69.3
+       }
+      }
+     }
+    },
+    "competition": {
+     "winsSd": 2.18,
+     "winsMean": 4.48,
+     "playoffPct": 50,
+     "titlesByAi": 80,
+     "titlesByOwner": 0,
+     "ownerWinPct": 53.2,
+     "distinctChampionsMedian": 5,
+     "maxTitlesOneClubMax": 6,
+     "maxTitleShareMax": 0.6,
+     "repeatChampions": 21,
+     "persistentLoserPct": 35.8,
+     "recoveryMedian": 2,
+     "unrecoveredPct": 40.3,
+     "recoveryN": 236,
+     "perSeed": [
+      {
+       "seed": 1,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 2,
+       "seasons": 10,
+       "distinct": 4,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 3,
+       "seasons": 10,
+       "distinct": 4,
+       "maxTitles": 4,
+       "ownerTitles": 0,
+       "repeat": 3
+      },
+      {
+       "seed": 4,
+       "seasons": 10,
+       "distinct": 3,
+       "maxTitles": 5,
+       "ownerTitles": 0,
+       "repeat": 5
+      },
+      {
+       "seed": 5,
+       "seasons": 10,
+       "distinct": 4,
+       "maxTitles": 6,
+       "ownerTitles": 0,
+       "repeat": 5
+      },
+      {
+       "seed": 6,
+       "seasons": 10,
+       "distinct": 8,
+       "maxTitles": 2,
+       "ownerTitles": 0,
+       "repeat": 0
+      },
+      {
+       "seed": 7,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 6,
+       "ownerTitles": 0,
+       "repeat": 2
+      },
+      {
+       "seed": 8,
+       "seasons": 10,
+       "distinct": 5,
+       "maxTitles": 3,
+       "ownerTitles": 0,
+       "repeat": 2
+      }
+     ],
+     "rTeamOvrWins": 0.52,
+     "rQualityWins": 0.55,
+     "rQualityTeamOvr": 0.92,
+     "rTargetTeamOvr": 0.92,
+     "teamOvrMinusTargetMedian": -1,
+     "teamOvrMinusTargetSd": 3.13,
+     "rResidualWins": -0.37,
+     "rWinsYoY": 0.5
+    },
+    "balance": {
+     "boostedClubSeasonsPct": 10.3,
+     "nudgeSignings": 207,
+     "slowedClubSeasonsPct": 16.3,
+     "runawayClubSeasons": 239,
+     "runawayPct": 19.9,
+     "generatedArrivalPct": 29.2,
+     "teamOvrSdByYear": {
+      "1": 3.45,
+      "2": 3.42,
+      "3": 3.33,
+      "4": 3.52,
+      "5": 3.29,
+      "6": 3.62,
+      "7": 3.41,
+      "8": 3.82,
+      "9": 3.97,
+      "10": 4.71
+     },
+     "teamOvrSdMean": 3.65,
+     "clubsLow8For3PlusPct": 0
+    },
+    "decisions": {
+     "contenders6plus": {
+      "clubSeasons": 409,
+      "arrivalsPerClubSeason": 1.13,
+      "arrivalMeanAge": 27.3,
+      "pickMeanAge": 20.5,
+      "pickMeanPot": 66.3,
+      "pickOvrGap": 0.9,
+      "boostedPct": 19.1,
+      "slowedPct": 5.9,
+      "meanAge": 25.3
+     },
+     "strugglers3minus": {
+      "clubSeasons": 433,
+      "arrivalsPerClubSeason": 2.01,
+      "arrivalMeanAge": 27.7,
+      "pickMeanAge": 20.5,
+      "pickMeanPot": 68,
+      "pickOvrGap": 0.7,
+      "boostedPct": 3,
+      "slowedPct": 24,
+      "meanAge": 24.9
+     },
+     "agingPlanning": {
+      "picksAtGroupsWithStarter29plusPct": null
+     },
+     "weakGroupResponse": {
+      "arrivalsAtWeakGroupPct": 16.1,
+      "picksAtTopNeedPct": 10.6
+     }
+    }
+   },
+   "variantTiers": {
+    "top": {
+     "n": 30,
+     "winPct": 73.7,
+     "titlesPerClub": 2.4,
+     "quality0": 61.6,
+     "teamOvr0": 67.3,
+     "meanOvr": 72.5,
+     "meanQuality": 68.7,
+     "gapToTarget": -3.4,
+     "nudgeSignings": 0,
+     "slowedSeasons": 0,
+     "persistentWeakSeasons": 0.4,
+     "ownStarterShare": 99.5,
+     "meanAge": 25.4,
+     "dev": 0.61,
+     "rivalShare": 10
+    },
+    "bottom": {
+     "n": 30,
+     "winPct": 29.1,
+     "titlesPerClub": 0,
+     "quality0": 54.1,
+     "teamOvr0": 59.7,
+     "meanOvr": 66.4,
+     "meanQuality": 58.4,
+     "gapToTarget": 1.3,
+     "nudgeSignings": 0,
+     "slowedSeasons": 0,
+     "persistentWeakSeasons": 2.17,
+     "ownStarterShare": 94.4,
+     "meanAge": 25.1,
+     "dev": 0.69,
+     "rivalShare": 0
+    },
+    "middle": {
+     "n": 60,
+     "winPct": 47.4,
+     "titlesPerClub": 0.12,
+     "quality0": 57.2,
+     "teamOvr0": 62.8,
+     "meanOvr": 68.4,
+     "meanQuality": 61.8,
+     "gapToTarget": -0.2,
+     "nudgeSignings": 0,
+     "slowedSeasons": 0,
+     "persistentWeakSeasons": 1,
+     "ownStarterShare": 97.4,
+     "meanAge": 25.3,
+     "dev": 0.63,
+     "rivalShare": 8.3
+    },
+    "rMeanQualityWinPct": 0.77,
+    "rMeanOvrWinPct": 0.89,
+    "rStartQualityWinPct": 0.85,
+    "clubs": 120
+   },
+   "baselineTiers": {
+    "top": {
+     "n": 30,
+     "winPct": 74.6,
+     "titlesPerClub": 2.2,
+     "quality0": 61.8,
+     "teamOvr0": 67.4,
+     "meanOvr": 73.5,
+     "meanQuality": 69,
+     "gapToTarget": -2.9,
+     "nudgeSignings": 3.67,
+     "slowedSeasons": 0.13,
+     "persistentWeakSeasons": 0.33,
+     "ownStarterShare": 93.7,
+     "meanAge": 25.4,
+     "dev": 0.6,
+     "rivalShare": 13.3
+    },
+    "bottom": {
+     "n": 30,
+     "winPct": 29.6,
+     "titlesPerClub": 0.03,
+     "quality0": 53.9,
+     "teamOvr0": 59.5,
+     "meanOvr": 65.4,
+     "meanQuality": 57,
+     "gapToTarget": 2,
+     "nudgeSignings": 0.1,
+     "slowedSeasons": 3.87,
+     "persistentWeakSeasons": 2.07,
+     "ownStarterShare": 78.7,
+     "meanAge": 24.7,
+     "dev": 0.71,
+     "rivalShare": 0
+    },
+    "middle": {
+     "n": 60,
+     "winPct": 47.5,
+     "titlesPerClub": 0.22,
+     "quality0": 57.2,
+     "teamOvr0": 62.5,
+     "meanOvr": 68.4,
+     "meanQuality": 62.3,
+     "gapToTarget": -0.8,
+     "nudgeSignings": 1.57,
+     "slowedSeasons": 1.27,
+     "persistentWeakSeasons": 1.38,
+     "ownStarterShare": 89.3,
+     "meanAge": 25.1,
+     "dev": 0.67,
+     "rivalShare": 6.7
+    },
+    "rMeanQualityWinPct": 0.86,
+    "rMeanOvrWinPct": 0.9,
+    "rStartQualityWinPct": 0.87,
+    "clubs": 120
+   }
+  }
+ }
+}
