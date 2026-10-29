@@ -51,3 +51,33 @@ test('F8: Edge Contain sets the edge against Outside Zone; inside runs are what 
   const some = new Set(Array.from({ length: 16 }, (_, i) => play({ off: 'outside_zone', def: 'edge_contain', attr: 'speed', value: 65, seed: 79000 + i }).yards >= 6));
   assert.ok(some.has(true), 'the edge is not a wall: Outside Zone still breaks some against it');
 });
+
+// ---- Phase C final refinements (owner-approved 2026-10-28)
+const AGGRESSIVE = ['all_out', 'double_a_mug', 'cover_0', 'zone_blitz'];
+test('F7 final: well short of the hole a sharp back keeps pressing Trap against pressure instead of cutting away early', () => {
+  const run = (aw) => { let neg = 0, early = 0, n = 0; for (const def of AGGRESSIVE) for (let i = 0; i < 12; i++) { const s = play({ off: 'trap', def, offSubjects: ['RB'], attr: 'awareness', value: aw, seed: 86000 + i }); n++; if (s.yards < 0) neg++; if (s.events.some((e) => e.kind === 'cutback' && e.at > 3)) early++; } return { neg: neg / n, early, n }; };
+  const a50 = run(50), a95 = run(95);
+  // Phase C before this fix: 13 of 48 plays at Awareness 95 cut 4.5 yd short of the hole (mostly into a lane an unseen penetrator
+  // was beside), and negative runs on Trap rose 7% -> 11% with Awareness.
+  assert.ok(a95.early <= 3, `premature cuts at 95: ${a95.early} of ${a95.n}`);
+  assert.ok(a95.neg <= a50.neg + 0.05, `negative runs ${(100 * a50.neg).toFixed(1)}% -> ${(100 * a95.neg).toFixed(1)}%`);
+});
+test('F7 final: an early cut is still possible, but only with a free defender across the line near the back\'s track', () => {
+  let early = 0;
+  for (const off of ['inside_zone', 'power_right', 'power_left', 'dive', 'counter', 'trap', 'outside_zone', 'stretch_left', 'toss_sweep']) for (const def of DEFENSE_IDS) for (let i = 0; i < 4; i++) {
+    const s = play({ off, def, offSubjects: ['RB'], attr: 'awareness', value: 95, seed: 86000 + i }); const c = s.events.find((e) => e.kind === 'cutback' && e.at > 3); if (!c) continue; early++;
+    const f = s.frames.filter((x) => x.t <= c.t + 1e-6).at(-1); const rb = pos(f, 'off', 'RB');
+    assert.ok(f.def.some((d) => !d[3] && d[1] < 0 && d[1] > rb[1] - 1.5 && Math.abs(d[2] - rb[2]) < 6), `${off} vs ${def} seed ${86000 + i}: an early cut with nobody across the line near him`);
+  }
+  assert.ok(early >= 1, 'early cuts are not prohibited');
+});
+test('Lead block read (final): every back usually follows his engaged puller; any back may stay on the design when he sees the lane beside the block closing', () => {
+  for (const aw of [50, 65, 80, 95]) { let follow = 0, stay = 0;
+    for (const off of ['power_right', 'power_left', 'counter', 'trap', 'toss_sweep']) for (const def of DEFENSE_IDS) for (let i = 0; i < 4; i++) {
+      const s = play({ off, def, offSubjects: ['RB'], attr: 'awareness', value: aw, seed: 86000 + i }); if (s.events.some((e) => e.kind === 'lead_read')) follow++; if (s.events.some((e) => e.kind === 'lead_pass')) stay++; }
+    assert.ok(follow / (follow + stay) >= 0.8, `Awareness ${aw}: follows on ${follow} of ${follow + stay} reads`);
+    assert.ok(follow + stay > 100, `Awareness ${aw}: the lead block is read (${follow + stay})`);
+  }
+  let stays = 0; for (const aw of [50, 95]) for (const def of DEFENSE_IDS) for (let i = 0; i < 12; i++) if (play({ off: 'power_right', def, offSubjects: ['RB'], attr: 'awareness', value: aw, seed: 87000 + i }).events.some((e) => e.kind === 'lead_pass')) stays++;
+  assert.ok(stays > 0, 'staying on the design is a real choice');
+});

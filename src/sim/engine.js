@@ -429,6 +429,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const look = 4 + 6 * aw, miss = 0.45 * Math.pow(1 - aw, 1.2), jitter = 1.6 * (1 - aw); // how far he reads, how often he misses a defender, how far off he places one
     const ahead = path.slice(a.wp); const gate = ahead.find((p) => p[0] * dir >= 0) || path[path.length - 1]; const laneY = gate[1];
     const gateAhead = (gate[0] - a.x) * dir; if (gateAhead > 2.5 + 2.5 * aw) return; // he presses the designed hole first and reads it on the way in
+    // Short of the hole (Phase C final, owner-approved 2026-10-28): well before the hole he keeps pressing it unless something he can see
+    // threatens his own track now: a free defender already across the line, near the path between him and the hole. A penetrator
+    // can force an early adjustment; a crowded hole further on cannot, because it may still open by the time he gets there.
+    if (gateAhead > 3) {
+      const ex = gate[0] - a.x, ey = gate[1] - a.y, eL = Math.hypot(ex, ey) || 1;
+      const threat = opponents(a.team).some((d) => !d.engaged && d.stun <= 0 && d.x * dir < 0 && (d.x - a.x) * dir > -1 && (d.x - a.x) * dir < gateAhead && Math.abs(((d.x - a.x) * ey - (d.y - a.y) * ex) / eL) < 2.5);
+      if (!threat) return;
+    }
     const seen = []; const reach = Math.min(look, gateAhead + 3.5);
     const flow = 0.3 * aw; // where each defender is going, from his movement now (an aware back reads the flow; a poor one sees him where he stands)
     for (const d of opponents(a.team)) {
@@ -436,7 +444,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const sp = Math.hypot(d.vx, d.vy), toMe = Math.hypot(a.x - d.x, a.y - d.y) || 1;
       const chasing = !d.engaged && sp > 1.5 && (d.vx * (a.x - d.x) + d.vy * (a.y - d.y)) / (sp * toMe) > 0.8;
       const px = d.x + (d.engaged || chasing ? 0 : d.vx * flow), py = d.y + (d.engaged || chasing ? 0 : d.vy * flow);
-      const ax = (px - a.x) * dir; if (ax < -0.5 || ax > reach) continue; const hk = `${seed}|${a.slot}|see|${d.slot}|${tick}`; if (hash01(hk) < miss) continue; // perception noise comes from a hash, not the dice, so how well he reads changes nothing else in the play
+      // A defender already in the backfield beside him is counted where he is even when his motion carries him behind the carrier:
+      // he is close enough to make the tackle in a lane the back cuts to (v42.16: the read dropped him, so a cut toward him looked clean).
+      const axNow = (d.x - a.x) * dir; const beside = !d.engaged && d.x * dir < 0 && axNow > -2.5 && Math.abs(d.y - a.y) < 6;
+      let ax = (px - a.x) * dir; if ((ax < -0.5 && !beside) || ax > reach) continue; if (ax < 0) ax = 0; const hk = `${seed}|${a.slot}|see|${d.slot}|${tick}`; if (hash01(hk) < miss) continue; // perception noise comes from a hash, not the dice, so how well he reads changes nothing else in the play
       const held = d.engaged ? ((d.x - a.x) * dir < gateAhead + 1.5 ? 0.35 + 0.3 * aw : 0) : 1; if (!held) continue; // a block that is holding: part of his weight (an aware back trusts a good block less blindly)
       // A free defender a team-mate is visibly on his way to (a puller, a climber) is being picked up: the back trusts the block.
       const onHim = !d.engaged && teammates(a.team).some((m) => m !== a && m !== qb && !m.engaged && m.stun <= 0 && dist(m, d) < 4 && (dist(m, d) < 1.5 || (m.vx * (d.x - m.x) + m.vy * (d.y - m.y)) / ((Math.hypot(m.vx, m.vy) || 1) * dist(m, d)) > 0.7));
@@ -469,9 +480,21 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const dir = a.team === 'off' ? 1 : -1;
     const lead = teammates(a.team).find((m) => m.assignment?.a === 'pull' && m.engaged && (m.x - a.x) * dir > 0 && (m.x - a.x) * dir < 4 && Math.abs(m.y - a.y) < 3.5);
     if (!lead) return;
-    a.leadRead = true; const d = lead.engaged; const side = Math.sign(lead.y - d.y) || 1;
+    a.leadRead = true; const d = lead.engaged; const aw = norm(a.attrs.awareness); const hk = `${seed}|${a.slot}|lead|${tick}`;
+    // Awareness reads the block (Phase C final, owner-approved 2026-10-28). The open side is the blocker's side away from the man he
+    // has engaged; a poor reader sometimes takes the wrong shoulder. He then checks the lane beside the block against the designed
+    // lane: free defenders he can see near each (a penetrator, a scraping linebacker). Awareness sets how many he misses and how far
+    // off he places them, as in the lane read; the rule is the same for every back, so following the block stays the normal choice
+    // and only a lane he sees closing keeps him on the design. Nothing here knows whether the block will hold or where anyone goes next.
+    let side = Math.sign(lead.y - d.y) || 1; if (hash01(hk) < 0.3 * Math.pow(1 - aw, 1.5)) side = -side;
     const gate = path.slice(a.wp).find((p) => p[0] * dir >= 0) || path[path.length - 1];
     const off = clamp(lead.y + side * 1.1 - gate[1], -2, 2); if (Math.abs(off) < 0.3) return;
+    const miss = 0.45 * Math.pow(1 - aw, 1.2), jitter = 1.6 * (1 - aw);
+    const free = opponents(a.team).filter((o) => !o.engaged && o.stun <= 0 && (o.x - a.x) * dir > -1.5 && (o.x - a.x) * dir < 5 && hash01(`${hk}|${o.slot}`) >= miss)
+      .map((o) => { const sp = Math.hypot(o.vx, o.vy), toMe = Math.hypot(a.x - o.x, a.y - o.y) || 1; const chasing = sp > 1.5 && (o.vx * (a.x - o.x) + o.vy * (a.y - o.y)) / (sp * toMe) > 0.8;
+        return o.y + (chasing ? 0 : o.vy * 0.3 * aw) + (hash01(`${hk}|${o.slot}|j`) * 2 - 1) * jitter; }); // where he is heading now (an aware back reads a scraping linebacker's flow), placed less exactly by a poor reader
+    const crowd = (ly) => free.reduce((sum, y) => sum + Math.max(0, 1.8 - Math.abs(y - ly)), 0);
+    if (crowd(gate[1] + off) > crowd(gate[1]) + 0.6) { log(`${a.name} stays on the design: the lane beside ${lead.name} is closing`, { kind: 'lead_pass', by: a.slot, side: a.team, blocker: lead.slot, off: +off.toFixed(1) }); return; }
     a.assignment = { ...a.assignment, points: path.map((p, i) => (i < a.wp ? p : [p[0], clamp(p[1] + off * (i === a.wp ? 0.6 : 1), B.left + 1.5, B.right - 1.5)])) }; // his own copy: the drawn path is never changed
     log(`${a.name} follows ${lead.name}'s block`, { kind: 'lead_read', by: a.slot, side: a.team, blocker: lead.slot, off: +off.toFixed(1) });
   }

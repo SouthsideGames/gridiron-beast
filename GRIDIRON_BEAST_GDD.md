@@ -3908,7 +3908,7 @@ Owner's Phase C audit (2026-10-28, audit-only) and approval of fixes F1–F6. In
     - Cuts stopped short (under 2 yd) fall from 56–65% at 50 to 45–51% at 95; cuts gaining 4+ rise from 11–19% to 21–30%.
     - Negative runs are the same at every level on every play except Trap, because they are settled before the read: penetration in the backfield.
     - So Awareness improves decisions on the plays where a read matters. The aggregate gain stays modest because only about 1 run in 12 offers a read worth changing.
-  - *Findings, not changed (reported for the owner):*
+  - *Findings reported for the owner (both corrected below, owner-approved):*
     - Reading the lead block (F5, C1) does not use Awareness. Every back follows his engaged puller the same way, on about 46% of Power, Counter, Trap and Toss runs at every level.
     - Trap at Awareness 80–95 sometimes cuts 4.5 yards short of the hole, mostly against All-Out Pressure, giving up a 0-yard run for −1 (negative runs 7 → 11%). On 48 such cuts in 312 plays the net is −0.8 yd. It is a small early-cut case that the cut price does not fully cover.
   - *Power Right in games* (5.93 → 7.33 in the first three sets).
@@ -3941,6 +3941,59 @@ Owner's Phase C audit (2026-10-28, audit-only) and approval of fixes F1–F6. In
       - Other passes: 7.65 → 7.59 yards, completion 59.9 → 58.7%, sacks 0.2 → 1.3%, interceptions 2.6 → 3.2%.
       - PA Boot against it: 7.46 (13th of 26) → 6.55 (11th).
     - Nothing abnormal.
+- **Final refinements (owner-approved, 2026-10-28): premature cutbacks and the lead-block read.** Both are in `src/sim/engine.js`. All comparisons use matched seeds against the Phase C commit `c57a1e8` and v42.15.0.
+  - *Premature cuts (the defect).*
+    - The lane read dropped any defender whose motion carried him behind the carrier.
+    - A lineman who had penetrated beside the back and was chasing the quarterback therefore vanished from the read. A cut toward him then looked clean.
+    - Against All-Out Pressure, the aware back cut 4.5 yards short of Trap's hole into that defender: 8 of 48 plays at Awareness 95 against the four pressure calls.
+  - *Corrections.*
+    - A free defender already across the line, beside the back (within 2.5 yards behind him and 6 to the side), is counted where he is.
+    - More than 3 yards short of the hole, the back keeps pressing unless something he can see threatens his own track now: a free defender across the line, near the path between him and the hole. A penetrator can still force an early adjustment. A crowded hole further on cannot, because it may open by the time he gets there.
+    - The existing cut price (more the farther short of the hole) is unchanged.
+  - *Lead-block read (Awareness).* Before, every back followed his engaged puller the same way. Now:
+    - The open side is the blocker's side away from the man he has engaged. A poor reader sometimes takes the wrong shoulder: chance 0.3 × (1 − Awareness)^1.5, about 11% at 50 and 0.3% at 95.
+    - He then compares the free defenders he can see near the lane beside the block and near the designed lane. He uses the lane read's own perception: Awareness sets how many defenders he misses and how far off he places them, and an aware back reads a scraping defender's current flow. A chaser counts where he is.
+    - He stays on the design (`lead_pass`) only when the lane beside the block reads clearly more crowded.
+    - The rule is the same for every back. Nothing knows whether the block will hold or where anyone goes next.
+    - Considered and rejected: letting a sharp back wait until closer to the hole before reading the block. It cut lead-block reads from 46% to 7–16% of runs, and least for the sharpest backs, so following the block would no longer be a normal choice.
+  - *Measured* (9 runs × 26 calls × 12 seeds per range, Awareness 50 / 65 / 80 / 95). Future frames judge the read; they never feed it.
+
+    | | v42.15 | Phase C before | Final |
+    |---|---|---|---|
+    | Cut rate at 95 | 27.8% | 8.6% | 9.4% |
+    | Cut into a lane closing to within 1 yard | 9–13% | 4–6% | 3–5% |
+    | Cut chose a more open lane than the call | 86–90% | 89–93% | 91–95% |
+    | Premature cuts (more than 3 yd short) at 95 | 14.7% of runs | 1.2% | 0.7–0.8% |
+    | Negative runs, 50 → 95 | 10.7 → 13.0% | 10.7 → 11.1% | 10.7 → 10.8% |
+    | Trap vs All-Out, Double A Mug, Cover 0, Zone Blitz, Goal Line Stand, Bear Front at 95 | 0.68 yd, 50% negative | 0.61 yd, 31.9% negative | 1.21 yd, 16.7% negative (range 2: 0.32, 26.4%, the same as at 50) |
+
+    - Trap's negative runs no longer rise with Awareness: 6.7 → 7.1% (was 7.1 → 11.2%).
+    - Against the four pressure calls, early cuts at 95 fell from 8 of 48 to at most 3. Negative runs there are 1 at 50 against 9 at 95 before the fix.
+    - Yards per carry: 4.06 / 4.26 / 4.43 / 4.37 and 5.03 / 5.19 / 5.46 / 5.49.
+    - RB-only sweep (10 runs × 26 calls × 20 seeds): Awareness +0.38 yd, negatives 12.1 → 12.2%. Phase C before: +0.41, 12.0 → 12.3%. v42.15: +0.53, 12.7 → 14.3%.
+  - *Lead-block read, measured* (Power Right, Power Left, Counter, Trap, Toss Sweep):
+    - The block is read on about 46% of those runs at every level.
+    - The back follows it on 92–95% of reads at every level, so it stays the normal choice. Before, he followed 100% of the time.
+    - Where the 95 back stays and the 50 back follows on the same seed: +1.5 yd (n 34). Where the 95 back follows and the 50 back stayed: −1.0 yd (n 55).
+    - Stays gain 6.16 vs 4.23 yd (95 vs 50) on one range, but 3.88 vs 5.41 on the other.
+    - So the read is now Awareness-dependent, as specified, but its yardage effect is within noise: it changes the decision on about 3% of lead plays. Nothing was tuned toward a yardage target.
+  - *Speed and Agility with Awareness* (9 runs × 10 calls × 10 seeds, Awareness 50 → 95):
+    - At Speed 50 → 95 the Awareness gain is +0.30 → +2.76 (v42.15 +0.15 → +2.70): a fast back's open-field reads, unchanged.
+    - At Agility 50 → 95 it is +0.48 → +0.59 (v42.15 +0.64 → +0.65).
+    - The Speed curve is 3.25 / 4.29 / 6.74 / 10.82 and the Agility curve 3.62 / 4.29 / 4.79 / 5.31, both unchanged.
+  - *Regression.*
+    - Plain-65 matrix within 0.15 yd of the Phase C commit on every run: all runs 4.20 → 4.22; Counter 6.13 → 6.22; Toss Sweep 3.35 → 3.48.
+    - Lesson claims 56 of 58 hold. Dive vs Run Wall ranks 10th, and Trap vs Fire Zone 17th here and 18th on a second range: both borderline.
+    - League, 360 games: points 13.39 → 13.14; yards per carry 5.85 → 5.78; Power Right 7.33 → 7.35; Counter 6.53 → 6.51.
+    - Power Right over six 120-game sets: 7.09 → 7.08 (median 4; Edge Contain 12.8 → 11.9, Goal Line Man 15.2 → 13.9).
+    - Edge Contain runs and passes unchanged, except Power Right 4.6 → 5.3 and Read Option 3.6 → 3.2.
+    - Pass plays identical except against Edge Contain (unchanged).
+    - Phase A Awareness studies: no inversions; mean total 1.12; play-action unchanged.
+    - Abilities within noise; Read Option split unchanged.
+  - *Tests* (`tests/run-vision.test.js`, 3 more):
+    - Trap against pressure: at most 3 premature cuts at Awareness 95, and negative runs no more than 5 points above Awareness 50. The Phase C commit measured 8 premature cuts and 2% → 19% negative runs, so it fails this test.
+    - Every early cut has a free defender across the line near the back, and early cuts still happen.
+    - Following the lead block is at least 80% of reads at every level, and staying on the design is a real choice.
 - Tests (C2): `tests/run-vision.test.js` (4):
   - a sharp back does not lose more on Inside Zone;
   - cutbacks are reads, not certainties;
