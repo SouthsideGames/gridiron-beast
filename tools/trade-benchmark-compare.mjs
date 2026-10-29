@@ -70,7 +70,7 @@ for (const stage of ['B', 'C']) { const b = load(BASE, `${stage}-`), n = load(NE
 out.stages.D = {}; for (const s of scenarios) { const b = load(BASE, `D-${s}`), n = load(NEW, `D-${s}`); if (!b.length && !n.length) continue; out.stages.D[s] = { [BASE]: b.length ? { ...leagueMetrics(b), trades: tradeMetrics(b).total } : null, [NEW]: n.length ? { ...leagueMetrics(n), trades: tradeMetrics(n).total } : null }; }
 
 // ---- thresholds
-const B = out.stages.B; const rows = out.thresholds; const add = (id, area, base, now, rule, pass) => rows.push({ id, area, base, new: now, rule, pass: pass == null ? null : !!pass });
+const B = out.stages.B || out.stages.C; const rows = out.thresholds; const add = (id, area, base, now, rule, pass) => rows.push({ id, area, base, new: now, rule, pass: pass == null ? null : !!pass });
 if (B) {
   const b = B[BASE], n = B[NEW]; const nl = n.league, bl = b.league, nt = n.trades, bt = b.trades;
   const everyStage = Object.values(out.stages).flatMap((s) => (s.league !== undefined ? [s] : Object.values(s)));
