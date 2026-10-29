@@ -1,13 +1,13 @@
 {
- "version": "v42.15.0-coverage",
- "commit": "9e3b3277019b456b705dbd7d08b7246e8e2bc1d6",
- "artifactVersion": 113,
+ "version": "v42.16.0-run-game",
+ "commit": "ffd488b0a147c723df18f37129925df8b96fc330",
+ "artifactVersion": 114,
  "extra": {
   "src/clash/level1.js": "Beast Clash Level 1 ability check (Lab and tools only; nothing in the game imports it). Published in every release since it was added; kept for parity with the live link.",
   "src/clash/reference-teams.js": "Reference teams for src/clash/level1.js (Lab and tools only). Published with it."
  },
  "files": {
-  "index.html": "7cb9d8f7bffc56d4f7276f41e25b6fcf11814e93de765185af796a20238e41de",
+  "index.html": "2a8fb71d5fe1eebc0bad8253eadbaa442fcec7ad21bb977594bc7e4ccaa47b7d",
   "manifest.webmanifest": "4823bbf93ae4e2c431e7951d667976f7f762c4697f3f0652540a91140ba6b9ef",
   "src/clash/ai.js": "c52693ab6096d9c488bde2025b0c8b3ab5e6694952eb9a25c485980308826931",
   "src/clash/balance-manifest.js": "53a95dc09140e5c0363b6862a56d1bf8ee028c8630cc510fddab17e4c9c540cd",
@@ -40,7 +40,7 @@
   "src/data/monsters.js": "4730eb449f0964c70ecf040b2cbbda1b44c339c9579b565778a9e1aeba511b1e",
   "src/data/personnel.js": "eea3007d7767a00fedbc4e3522dee0de54f2c0b1346f1b546e48be9235220599",
   "src/data/playbook-reserve.js": "32484ca3fd625384e3698f565a7c27493cc77b20d38d75b76a2212325dd639c0",
-  "src/data/playbook.js": "043d16d09f784cc50c16f0456ce38b7ce4d756204f1d776657e79d8e1a4b0acf",
+  "src/data/playbook.js": "1041e3bffc8d2be51619da97f4cdd826e723f791f45e2c72c31a3b99859d54f7",
   "src/data/postseason.js": "9d5f698045b63c277013a0633f23e7bddbdd447e29e52aadae1cc6ce159d54f9",
   "src/data/reserve/defense-coverage.js": "6454954319b52cf58f05a53b0b4fc464903b0bc19710e5c0c7183dc024ad906e",
   "src/data/reserve/defense-pressure.js": "7ec610fc21904c85b68bc481854b42ddd2080d011d677ef23fc3573b221e76ab",
@@ -99,7 +99,7 @@
   "src/lab/qb-lab.js": "780ddab00b72cf5c2d11cf4ef38f60be484753b6b3840a5bdd0b441a6b982a51",
   "src/main.js": "4002e3774e39ffa7698fb2e1ba627feaf470444b11cea6d9ca35a4a6b3499864",
   "src/sim/coach-ai.js": "7aa60075743af4416b5a2f1822a3fa62cb2ece2bcf8c670ece1b6c3b1ee31c75",
-  "src/sim/engine.js": "8c845d11ce9ba4bf00d72f3a9b2dc9d74c3edac337df8e559129279560a3eeaf",
+  "src/sim/engine.js": "a2e5a8eb062609feb2aa2d2dba1f33f6355173af5f628251b9d1524f31534b7b",
   "src/sim/game-runner.js": "43463f2e136b02619786073760ed40d6983fa1d405ec7074aa5cf5c7f63b2a7f",
   "src/sim/partnership-play.js": "babfa0e78384eaf047c7a734157fcb8c3064068468df04f63639f2d149fca114",
   "src/sim/qb-read.js": "13f41fcd0c3b6f0d546b810ca1f52c4634d6bcab26f8d82a5250499cf0167505",
@@ -160,7 +160,7 @@
   "src/ui/storage-ui.js": "0a2825da41cb855924eeb6a8f5126e114101aaa98e512c4a5fe04a75428d7845",
   "src/ui/tutorial.js": "d2f8f94189ca1d5ba9c6e782d1dbef588a43a629bbac5446ccd58b9ce8bf8866",
   "src/ui/type-chart.js": "70c5d2c7f537486a4f8450351cf625108f92672251c9f831527b815ad753d934",
-  "src/version.js": "439de7048949a0abf1ca54931fb0e253bad4403bfb50af6b705a862bf7093b74",
+  "src/version.js": "ee7bd21fa8a0636b5f25024680d12946e440cb7e338f26e03737d2bdd9d3b114",
   "styles/app.css": "741192d0cbe53a16d0843d6153aadb93360a10ca57f721ffe3f6193699788bb7",
   "styles/clash.css": "97eb75f9b0ca649be5c55c5673ed53169116fad87d02ff880fbf3646e667c4d6"
  }

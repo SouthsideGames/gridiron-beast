@@ -3731,7 +3731,7 @@ Owner's Phase B brief and approval of the audit (2026-10-28), in `src/sim/engine
   - **Deployment:** https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq (URL unchanged), artifact version 113 (`1793216121-96e1`). The live files replaced were first confirmed to be v42.14.0 (manifest hashes); the page and 4 changed game files were published; afterwards all 155 game files read back byte-identical, the built page sits unchanged in the host wrapper, `src/version.js` serves v42.15.0-coverage. Capabilities db, downloads, user and runtime contract 0.2.77 carried forward. `release/manifest.json` regenerated (artifact version 113). The private test link was not touched.
   - **Saves:** no save format change, no migration, no save-layer file changed.
 
-### 53.5l Phase C: the offensive run game (C1 + C2, v42.16.0, PROPOSED, awaiting owner review)
+### 53.5l Phase C: the offensive run game (C1 + C2, v42.16.0, released 2026-10-29)
 Phase C ships as one release: C1 (below, owner-approved 2026-10-28) and C2 (running-back vision and the Outside Zone redesign, at the end of this section).
 Owner's Phase C audit (2026-10-28, audit-only) and approval of fixes F1–F6. In `src/sim/engine.js` and `src/data/playbook.js`. Follows §1b: blockers and the ball carrier act on where players are and how they move; nobody reads an assignment or the play call. No scripted yardage, no guaranteed block. Not changed (owner): running-back vision (F7) and Outside Zone's design (F8), both for Phase C2; Blink, Quake Step, Vanishing Cut, Riptide and Updraft stay in the ability review. Baseline v42.15.0 (`9e3b327`); identical seeds throughout; probes in `tools/run-study.mjs`.
 - **Audit findings (v42.15.0).**
@@ -4001,6 +4001,28 @@ Owner's Phase C audit (2026-10-28, audit-only) and approval of fixes F1–F6. In
   - Edge Contain lines up outside, holds Outside Zone below the median and gives up more to Power, but Outside Zone still breaks some.
 
   The carrier-vision, attribute-fixes and awareness-matters tests pass unchanged.
+
+- **Release v42.16.0 (2026-10-29).** The owner approved the merge and publication of the complete Phase C (C1 + C2 and the final refinements).
+  - **Merge:**
+    - PR #80 (`phase-c-run-plays` → `main`) was merged at the approved head `e7986c3` as merge commit `ffd488b0a147c723df18f37129925df8b96fc330`.
+    - The merge tree equals the approved head's tree (`6c746d0`), so the full suite was not rerun. It had passed 724/724 on `e7986c3`.
+    - Release smoke: the `release-stamp`, `run-vision` and `run-game` tests, 22/22.
+  - **Release files:** 156, the same set as v42.15.0. Four have changed content (`index.html`, `src/data/playbook.js`, `src/sim/engine.js`, `src/version.js`), each byte-identical to `git show ffd488b:<file>`.
+  - **Deploy check** (iPhone Safari emulation), run twice: on the publish folder, and on the files read back from the live link. Both passed:
+    - the build label reads v42.16.0-run-game, with `test: false`;
+    - two existing franchise saves load after a reload;
+    - the AI Testing Lab opens by taps;
+    - a setting survives a reload;
+    - live franchise plays draw the QB read ring, and the replay shows the read list.
+    - A phone-width (390 px) smoke test on the release build also reached the Practice Field through Developer Tools and ran a play, with no page errors and no horizontal overflow.
+  - **Deployment:** https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq (URL unchanged), artifact version 114 (`1793261185-337e`).
+    - Before publishing, the live files to be replaced were confirmed to be v42.15.0 (manifest hashes).
+    - The page and the 3 changed game files were published.
+    - Afterwards, all 155 game files read back byte-identical, and the built page sits unchanged in the host wrapper.
+    - `src/version.js` serves v42.16.0-run-game.
+    - The separate test link was not touched.
+    - `release/manifest.json` was regenerated (version v42.16.0-run-game, commit `ffd488b`, artifact version 114).
+  - **Saves:** no save format change and no migration; no save-layer file changed.
 
 ### 53.6 Testing
 `tests/qb-read.test.js` (17): the owner's tests 1–16 on the real engine (primary open; primary double-covered at Awareness 95; secondary open; checkdown; everyone covered; blitz timing; zone windows; play action; option/RPO; the same play against different defenses; Awareness 50 vs 95; save/load; replay accuracy; the indicator setting; the Lab; a named target obeyed) plus model sanity. `tools/qb-study.mjs` (before/after and Awareness sweeps), `tools/ai-lab-check.py` (Lab at 320–430 px: live, paused, comparison only after deciding, storage across reloads, export → clear → import, no franchise touched), `tools/qb-compat-check.mjs` (a v42.4.1 save opened byte-identical and played on; the new setting both ways). Replay planner fix: a long catch-and-run touchdown no longer exceeds the replay window (lead-in shortened first, then the end trimmed).
