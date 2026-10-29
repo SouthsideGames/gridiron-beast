@@ -16,7 +16,7 @@ export const AI_TRADE_RULES = Object.freeze({
   offseasonMax: 3,     // deals in one offseason window
   weekChance: 0.25,    // chance of one deal attempt in each of weeks 2–8 (about 1.75 a season, 2–4 with the offseason)
   weeks: [2, 8],
-  season: { upgrade: 6, minGain: 24 }, // in season a deal must lift a starting slot by a margin a coach would act on: three times the offseason bar. With the offseason bar the first Task 5 design made 1.6 in-season deals a season (nearly every attempt a deal), with twice the bar 0.95: more than the "occasional deal" of §46.5 and the owner's preference for fewer, meaningful trades (plan addenda 2 and 3)
+  season: { upgrade: 4, minGain: 16 }, // in season a deal must lift a starting slot by a margin a coach would act on: twice the offseason bar (the first Task 5 design, with the offseason bar in season, made 1.6 in-season deals a season and nearly every attempt a deal: not the "occasional deal" of §46.5)
   picksAhead: 2,       // classes a club will pay picks from
   targets: 6,          // the biggest upgrades a club looks at per window
 });

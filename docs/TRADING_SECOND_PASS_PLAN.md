@@ -21,14 +21,16 @@ for a change, the change is re-confirmed on the reserved fresh seeds (21–40) a
 > T2's "zero lineup failures" is read at the **season start** (what `validateClubs` checks); the season-end `lineupProblems` count is
 > reported for both trees and is judged as "not worse than baseline".
 
-> **Addendum 3 (after Stage B on the reserved seeds 21–40 with the Addendum 2 design; recorded before any further run).** With the in-season bar
-> at 4 / 16 the confirmation seeds gave: kickers 2.6% of deals (baseline 19.2%) and 1 first-round pick for a kicker (baseline 56); every
-> fairness, shopper-gain, seller, consequence, weakness and competition threshold passed; **volume 3.33 deals a season against 2.13 (1.56×; limit
-> 1.5×)**, 0.95 of them in season (0.03 at baseline). T8 therefore failed narrowly. The in-season deals' own data (median starter-floor gain
-> +6; 107 of 190 gained 6 or more) shows a bar of **6 overall / 24 roster-worth, three times the offseason bar,** keeps the in-season repair
-> (about 0.5 deals a season) and brings the total near 3 a season. That is the second and last change to the design. It is confirmed on new
-> reserved seeds **41–60** (both trees); seeds 1–20 are rerun with the final design for the matched comparison, and the first design's
-> (seeds 1–20) and the Addendum 2 design's (seeds 21–40) results are reported as earlier results, not hidden.
+> **Addendum 3 (after Stage B on the reserved seeds 21–40 with the Addendum 2 design).** With the in-season bar at 4 / 16 the confirmation
+> seeds gave: kickers 2.6% of deals (baseline 19.2%) and 1 first-round pick for a kicker (baseline 56); every fairness, shopper-gain, seller,
+> consequence, weakness and competition threshold passed; **volume 3.33 deals a season against 2.13 (1.56×; limit 1.5×)**, 0.95 of them in
+> season (0.03 at baseline) and 2.38 in the offseason (1.13× baseline). T8 therefore **failed narrowly**. A third design (bar 6 / 24, three times
+> the offseason bar) was tried on paper from the deals' floor gains and then run through the search on a prepared league: the bar is applied to
+> the *net* gain after paying a fair price, and even a 40 → 62 upgrade nets about 8, so 24 is effectively unreachable and in-season trading
+> would be switched off again. It was **not adopted** and no benchmark was run on it. **The Addendum 2 design (4 / 16) is final.** T8 is
+> reported as a narrow fail, with the numbers, for the owner to decide whether the in-season bar (one line, `AI_TRADE_RULES.season`) should
+> be higher. The matched seeds 1–20 are run with the final design and reported next to the first design's seeds 1–20 and the confirmation
+> seeds 21–40.
 
 ## Code under test
 - **Baseline:** `main` at `db7c0c6` (PR #81 merged). Its game code is the published v42.16.0-run-game; the merge added documentation and tooling only.
