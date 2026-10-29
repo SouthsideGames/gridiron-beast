@@ -34,7 +34,7 @@ import { HELP_HTML as CLASH_HELP } from './clash-battle.js';
 import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
 import { captainWarning, captainBadge } from '../captains-ui.js';
-import { callPanelHtml, callConfirmText, openTradeDesk } from '../trade-desk-ui.js';
+import { callPanelHtml, callConfirmText, openTradeDesk, tradeStatusHtml, tradeLineHtml } from '../trade-desk-ui.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -85,7 +85,7 @@ export function registerHqScreens(Router, app) {
       const lastGame = lgFresh ? `<div class="panel tight last-game ${lg.won ? 'won' : 'lost'}"><div class="row between"><span><b>${lg.forfeit ? 'FORFEIT' : lg.won ? 'WIN' : 'LOSS'}</b> ${lg.playerScore}–${lg.oppScore} vs ${esc(lg.opponent)}</span><span class="dim">week ${lg.week}</span></div>${lgLvl.length || lgInj.length ? `<div class="dim" style="margin-top:2px">${lgLvl.map((e) => e.kind === 'evolve' ? `✨ ${esc(e.from)} → ${esc(e.to)}` : `⬆️ ${esc(e.name)} Lv ${e.level}`).join(' · ')}${lgLvl.length && lgInj.length ? ' · ' : ''}${lgInj.map((e) => `<span style="color:var(--bad)">🩹 ${esc(e.name)} ${e.weeks}w</span>`).join(' · ')}</div>` : ''}</div>` : '';
       const lb = f.campaign?.lastBadge; const lbGym = lb && lb.year === f.season.year && f.season.week - lb.week <= 1 ? GYM_BY_CLUB[lb.club] : null;
       const badgeBanner = lbGym ? `<div class="badge-banner" style="--hue:${TYPES[lbGym.element]?.hue ?? 120}"><span class="badge-banner-star">★</span><div><b>${esc(lbGym.badge)} earned</b> · badge ${lb.n} of 8<div class="dim">${esc(lbGym.coach.name)}'s ${esc(lb.club)} beaten in week ${lb.week}. ${lb.n === 8 ? 'All eight. The gyms are yours.' : `${8 - lb.n} to go.`}</div></div></div>` : '';
-      return `${badgeBanner}${callPanelHtml(f)}${lastGame}
+      return `${badgeBanner}${callPanelHtml(f)}${tradeLineHtml(f)}${lastGame}
         <div class="panel tight"><div class="row between"><div><b>${yearOf(F.displayYear(f))}</b> · ${phaseLabel(f)}</div><div class="chip accent">Team OVR ${s.overall}</div></div>
           <div class="row between" style="margin-top:4px"><span>${f.season.playoffs ? playoffStatus(f) : `Record <b class="mono">${s.record}</b>${rival ? ` · <span class="dim">⚔️ rival ${esc(rival.team)}</span>` : ''}`}</span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
         ${weekStrip(f)}
@@ -336,7 +336,7 @@ export function registerHqScreens(Router, app) {
           : `<div class="item static"><div class="grow"><div class="name">${o.get.picks.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')} <span class="chip ${o.exact ? 'good' : ''}">${o.exact ? 'yes' : 'counter'}</span></div><div class="sub">from ${esc(o.team)} · for ${o.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}</div></div><button class="btn small primary" data-accept="${i}">Accept</button></div>`).join('')}</div>`;
       }
       const deskHtml = F.deskAvailable(f) ? `<button type="button" class="btn block" data-desk="1" style="margin-bottom:8px">🤝 Trade desk: monsters and picks with a club</button><div class="dim" style="font-size:12px;margin-bottom:8px">Below: shop your picks to the whole league for a veteran or future picks.</div>` : '';
-      body.innerHTML = `${deskHtml}${giveHtml}${askHtml}${callHtml}${resultHtml}`;
+      body.innerHTML = `${tradeStatusHtml(f)}${deskHtml}${giveHtml}${askHtml}${callHtml}${resultHtml}`;
     };
     body.addEventListener('change', (e) => {
       const t = e.target;

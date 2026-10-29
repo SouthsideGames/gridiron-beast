@@ -4076,3 +4076,21 @@ No save migration. `f.tradeDesk` (proposal counts and the window stamp) appears 
 
 ### 54.9 Results (full tables: `docs/TRADING_SECOND_PASS_RESULTS.md`)
 Matched-seed benchmark against v42.16.0, seeds 1–40 (10 seasons), 106–110 (20 seasons), six stress scenarios. Kicker purchases 16.8% → 2.9% of AI deals, first-round picks for kickers 107 → 4, deals within the fair band 31% → 100%, acquiring clubs gain a starter 83% → 92%, persistent weak groups with cap room 12.1% → 9.7%. **Not met:** T8 volume (about 1.6× baseline, entirely the repaired in-season window; no quota exists), T2 season-end lineup problems (pooled 67 vs 54, within noise, season-start clean), T11 persistent losers on seeds 1–20 (+4.0; pooled +2.0), T3 marginal in the 20-season stage (4 first-round kicker picks). Open for Task 5.5: empty-starting-slot value in roster worth, OL, volume decision, leverage strength.
+
+### 54.10 The trade calendar and the deadline (owner follow-up 2026-10-29; `src/franchise/trade-window.js`)
+**Before this change** Franchise Mode had a window but no deadline: club-to-club deals (`league-trades.js`) and incoming calls (`franchise.js`) each carried their own literal "weeks 2–8", a waiting call was checked only by its week stamp, and nothing in the UI said whether trading was open. The owner's own desk was already closed in season (approved) and open on the draft clock and in the offseason.
+
+**The rule (one function, `tradeWindowState`, read by every path).** The regular season is 10 weeks. Trades are processed before the games of weeks 2 through 8; **the deadline is the end of week 8**. Once week 8 has been played (week 9 and 10) and in the postseason, regular-season trading is closed. Trading reopens when the season ends: on the draft clock and through the offseason (the existing approved window). This matches the existing weeks 2–8 and the 10-week schedule, so no conflict with the GDD and no change to the number of in-season trades (same seeds, same deals: checked by comparing simulation state before and after).
+
+| Phase | Owner's desk | Clubs call the owner | Clubs trade with each other |
+|---|---|---|---|
+| Week 1 | closed | no | no |
+| Weeks 2–8 | closed (approved) | yes | yes |
+| Weeks 9–10 (after the deadline) | closed | no | no |
+| Postseason | closed | no | no |
+| Draft clock, offseason | open | yes | yes (before free agency) |
+
+**Enforcement.** AI–AI trades: `aiTrades` makes no draw after week 8. Incoming offers: none are made after week 8; a waiting offer is shown only while the window is open and `answerTradeCall` refuses and clears it past the deadline whatever its stamp says (a stale or edited save cannot bring it back). The owner's proposals and counters: the desk evaluates with the window, so a closed window answers "window" and never offers a counter. Free agency is governed by its own rules and does not read the calendar. **UI:** the HQ shows a one-line calendar in season (open, closed, why, when it reopens); the desk opens with a green/red banner; an offer says its deadline.
+
+### 54.11 Replacement rule and the Rookie round trip (owner follow-up)
+A starter at an AI club is for sale only if the man behind him is within 6 overall (§19.6, unchanged). **Proposed change for owner review (made in this PR, one clause):** what the owner sends back in the same proposal now counts as that man. Before, a like-for-like swap or an upgrade at the position was refused as "no ready replacement" and the desk did not even let the owner select the starter. The gap itself, the AI–AI rule that clubs sell only spares, and every price check are unchanged. The Rookie pick-shopping generosity (×1.35) is a long-standing difficulty benefit; a measured round trip (buy with the ask, wait out the flip lock, sell at the desk) recovers less than the pick it started with at every difficulty (details in `docs/TRADING_SECOND_PASS_FOLLOWUP.md`).

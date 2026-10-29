@@ -68,9 +68,9 @@ function scenarios(f) {
   add(7, 'a monster just bought cannot be sent on in the same season', !flip || (!flip.back.accepted && flip.codes.includes('immovable')), flip ? `refused: ${flip.codes.join(',')}` : 'no purchase available to test');
 
   // 8 — illegal: protected, full roster, cap
-  const prot = A.theirs.find((m) => m.why && /protect|signature|legend/i.test(m.why)); const rk = A.theirs.find((m) => m.why && /rookie|first/i.test(m.why));
+  const prot = A.theirs.find((m) => m.why && /cannot be traded|protect|signature|legend/i.test(m.why)); const rk = A.theirs.find((m) => m.why && /rookie|first/i.test(m.why));
   const rProt = prot ? F.deskPropose(clone(f), { team, givePicks: picks.slice(-1), getMonsters: [prot.id] }) : null;
-  add(8, 'protected monsters and rookies on a first deal cannot be traded', (!prot || (rProt.ok === false && codes(rProt).includes('immovable'))) && !!(prot || rk), `${prot ? 'protected → ' + codes(rProt).join(',') : 'no protected monster listed'}; rookie row ${rk ? 'listed with reason: ' + rk.why : 'none'}`);
+  add(8, 'protected monsters and rookies on a first deal cannot be traded', (!prot || (!rProt.accepted && codes(rProt).includes('immovable'))) && !!(prot || rk), `${prot ? 'protected → ' + codes(rProt).join(',') : 'no protected monster listed'}; rookie row ${rk ? 'listed with reason: ' + rk.why : 'none'}`);
 
   // 9 — windows
   const w = clone(f); w.offseason = null; w.draft = null; w.season = { ...w.season, finished: false, week: 3 };

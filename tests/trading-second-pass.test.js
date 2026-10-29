@@ -108,6 +108,23 @@ test('desk: protected, cornerstone, rookie and just-arrived monsters cannot be t
   }
   assert.ok(immovable(f, { ...at(theirs, 'S')[0], legendary: true }, 'theirs'));
 });
+test('desk: what you send back counts as the replacement — a like-for-like swap or an upgrade is not a hole, a weak body still is', () => {
+  const { f, mine, theirs, env } = world(); const qb = at(theirs, 'QB'); setOvr(qb[1], ovr(qb[0]) - 15); // nobody ready behind their starter
+  const picks = [{ year: 2, round: 1, original: OWNER }, { year: 3, round: 1, original: OWNER }];
+  const noRep = (give) => evaluateProposal(f, prop({ getMonsters: [qb[0].id], giveMonsters: give.map((m) => m.id), givePicks: picks }), env()).reasons.some((r) => r.code === 'noReplacement');
+  assert.equal(noRep([]), true, 'picks alone leave them without a quarterback');
+  const mine1 = at(mine, 'QB')[0];
+  setOvr(mine1, ovr(qb[0]) - 4); assert.equal(noRep([mine1]), false, 'a quarterback within the gap steps in');
+  setOvr(mine1, ovr(qb[0]) + 6); assert.equal(noRep([mine1]), false, 'an upgrade steps in');
+  setOvr(mine1, ovr(qb[0]) - 12); assert.equal(noRep([mine1]), true, 'a body twelve points worse is not a replacement');
+  const wr = at(mine, 'WR')[0]; assert.equal(noRep([wr]), true, 'a different position is not a replacement');
+  // the listing still says he is not for sale as he stands, but the desk lets the owner select him
+  assert.equal(readyReplacement(theirs, qb[0]), false);
+  // a backup or a spare never needs cover
+  const spare = at(theirs, 'WR').at(-1); assert.equal(evaluateProposal(f, prop({ getMonsters: [spare.id], givePicks: picks }), env()).reasons.some((r) => r.code === 'noReplacement'), false);
+  // two starters of one position asked together: the pair leaves the club short, and the pair is judged together
+  const wrs = at(theirs, 'WR'); const e2 = evaluateProposal(f, prop({ getMonsters: [wrs[0].id, wrs[1].id], givePicks: picks }), env()); assert.ok(e2.reasons.some((r) => r.code === 'noReplacement') || !wrs.slice(2, 3).length || ovr(wrs[2]) >= ovr(wrs[1]) - 6);
+});
 test('desk: a club does not sell a starter with no ready replacement, and says why', () => {
   const { f, theirs, env } = world(); const qb = at(theirs, 'QB'); setOvr(qb[1], ovr(qb[0]) - 15); // nobody ready behind him
   assert.equal(readyReplacement(theirs, qb[0]), false);
@@ -331,4 +348,109 @@ test('AI trades: a club with a full roster still trades in season (a spare goes 
 test('AI trades: deterministic by seed, same deals, same order', () => {
   const run = () => { const f = played(); f.season.finished = false; f.season.week = 4; const cap = tierById(f.tier).cap; const out = []; for (let i = 0; i < 10; i++) out.push(...LT.aiTrades(f, createRng(300 + i), { year: f.season.year, cap, window: 'season' }).map((d) => `${d.kind}:${d.A}>${d.B}:${d.toA}`)); return out; };
   assert.deepEqual(run(), run());
+});
+
+// ---------------------------------------------------------------- the trade deadline (end of week 8) and the offseason roster floor
+import { tradeWindowState, TRADE_DEADLINE_WEEK, FIRST_TRADE_WEEK, seasonTradeWeek } from '../src/franchise/trade-window.js';
+import { releaseFromClub } from '../src/franchise/league.js';
+import { validateClubs } from '../src/franchise/league-season.js';
+const regular = (week, extra = {}) => ({ fired: false, finished: false, offseason: false, draftOpen: false, playoffs: week > 10, week, ...extra });
+/** The played franchise moved to a week of the regular season (no offseason, no draft). */
+function inSeason(week, seed = 51) { const f = played(); f.season.finished = false; f.season.week = week; f.offseason = null; f.draft = null; f.tradeCall = null; f.callsMade = {}; f.seed = seed; return f; }
+const sellable = (f) => { const team = aiClubs(f)[1]; const a = F.deskAssetsFor(f, team); const m = a.theirs.find((x) => !x.why && x.forSale); return { team, m, pick: F.myTradablePicks(f).at(-1) }; };
+
+test('trade deadline: the calendar is week 8 — closed in week 1, open weeks 2–8, closed after, closed in the postseason, open again when the season ends', () => {
+  assert.equal(TRADE_DEADLINE_WEEK, 8); assert.equal(FIRST_TRADE_WEEK, 2);
+  const rows = [1, 2, 7, 8, 9, 10, 11, 12].map((w) => [w, tradeWindowState(regular(w))]);
+  for (const [w, s] of rows) {
+    const open = w >= 2 && w <= 8;
+    assert.equal(s.calls, open, `calls, week ${w}`); assert.equal(s.aiAi, open, `AI–AI, week ${w}`); assert.equal(s.desk, false, `the owner's desk is closed in season, week ${w}`); assert.equal(s.open, false);
+    assert.ok(s.reason.length > 20 && s.next.length > 20, `week ${w} says why and when it reopens`);
+  }
+  assert.equal(rows.find(([w]) => w === 9)[1].phase, 'deadline-passed'); assert.match(rows.find(([w]) => w === 9)[1].reason, /end of week 8/);
+  assert.equal(rows.find(([w]) => w === 11)[1].phase, 'postseason');
+  assert.equal(seasonTradeWeek(8), true); assert.equal(seasonTradeWeek(9), false); assert.equal(seasonTradeWeek(1), false); assert.equal(seasonTradeWeek(NaN), false);
+  for (const s of [tradeWindowState(regular(10, { finished: true, offseason: true })), tradeWindowState(regular(10, { finished: true })), tradeWindowState(regular(1, { draftOpen: true }))]) assert.equal(s.desk, true, s.phase);
+  const off = tradeWindowState(regular(10, { finished: true, offseason: true })); assert.deepEqual([off.calls, off.aiAi, off.open], [true, true, true]);
+  assert.equal(tradeWindowState(regular(5, { fired: true })).calls, false);
+});
+
+test('trade deadline: clubs trade with each other through week 8 and not at all after it', () => {
+  const cap = tierById(played().tier).cap; let w8 = 0, late = 0;
+  for (let s = 1; s <= 40; s++) {
+    for (const week of [8, 9, 10, 11]) {
+      const f = inSeason(week, s); const clubs = aiClubs(f); const A = clubs[s % clubs.length]; const starter = at(R.clubRoster(f, A), 'LB')[1]; if (R.isProtected(starter)) continue; weak(starter, 44);
+      const deals = []; for (let i = 0; i < 12; i++) deals.push(...LT.aiTrades(f, createRng(1000 + s * 20 + i), { year: f.season.year, cap, window: 'season' }));
+      if (week === 8) w8 += deals.length; else late += deals.length;
+    }
+  }
+  assert.ok(w8 >= 1, 'the same leagues do trade in week 8'); assert.equal(late, 0, 'no deal in weeks 9, 10 or the postseason');
+  const f = inSeason(5); f.season.finished = true; assert.deepEqual(LT.aiTrades(f, createRng(1), { year: f.season.year, cap, window: 'season' }), [], 'a finished season has no in-season window');
+});
+
+test('trade deadline: a club calls through week 8; the offer is answerable then and gone after; a stale or edited save cannot bring it back', () => {
+  let call = null, week = 0;
+  for (const w of [8, 7, 6, 5, 4, 3, 2]) { for (let seed = 1; seed <= 80 && !call; seed++) { const f = inSeason(w, seed); call = F.maybeTradeCall(f); if (call) week = w; } if (call) break; }
+  assert.ok(call, 'some club calls in the window'); assert.ok(week >= 2 && week <= 8);
+  // week 8 itself: the call is made and can be accepted
+  let f8 = null; for (let seed = 1; seed <= 200 && !f8; seed++) { const f = inSeason(8, seed); if (F.maybeTradeCall(f)) f8 = f; }
+  assert.ok(f8, 'a club calls in week 8'); const waiting = F.tradeCall(f8); assert.ok(waiting); assert.ok(F.callEffect(f8) !== undefined);
+  const reloaded = Save.importJson(Save.exportJson(f8)); assert.ok(F.tradeCall(reloaded), 'a reload in week 8 keeps the offer');
+  const ok = F.answerTradeCall(JSON.parse(JSON.stringify(f8)), true); assert.equal(ok.ok, true, ok.reason);
+  // the week rolls over: the offer expires with its week
+  const f9 = JSON.parse(JSON.stringify(f8)); f9.season.week = 9; assert.equal(F.tradeCall(f9), null); assert.equal(F.answerTradeCall(f9, true).ok, false);
+  // a forged offer stamped for week 9, 10 or the postseason is refused and cleared, and nothing moves
+  for (const w of [9, 10, 11]) {
+    const f = JSON.parse(JSON.stringify(f8)); f.season.week = w; f.tradeCall.expires = `wk:${f.season.year}:${w}`;
+    const before = f.roster.map((m) => m.id).join() + '|' + F.myTradablePicks(f).length;
+    assert.equal(F.tradeCall(f), null, `week ${w}: no offer is shown`); const r = F.answerTradeCall(f, true); assert.equal(r.ok, false); assert.match(r.reason, /deadline/);
+    assert.equal(f.tradeCall, null, 'the stale offer is cleared'); assert.equal(f.roster.map((m) => m.id).join() + '|' + F.myTradablePicks(f).length, before, 'nothing moved');
+    const back = Save.importJson(Save.exportJson(f)); assert.equal(F.tradeCall(back), null, 'a reload does not bring it back');
+  }
+  // nobody calls after the deadline or in week 1, whatever the seed
+  for (const w of [1, 9, 10, 11]) for (let seed = 1; seed <= 60; seed++) assert.equal(F.maybeTradeCall(inSeason(w, seed)), null, `no call in week ${w}`);
+});
+
+test('trade deadline: the owner\'s proposals and counters respect the calendar all season, and the desk reopens with the offseason', () => {
+  const { team, m, pick } = sellable(played()); assert.ok(m && pick);
+  const ask = { team, givePicks: [pick], getMonsters: [m.id] };
+  for (const w of [1, 2, 5, 8, 9, 10, 11]) {
+    const f = inSeason(w); const r = F.deskPropose(f, ask);
+    assert.equal(r.ok, false, `week ${w}`); assert.ok((r.reasons || []).some((x) => x.code === 'window'), `week ${w}: refused for the window`); assert.ok(!r.counter, 'no counter in a closed window');
+    assert.equal(F.deskPreview(f, ask).legal, false); assert.equal(F.tradeWindow(f).desk, false);
+    assert.equal(F.tradeAskPicks ? F.tradeAskPicks(f, { give: [pick], position: 'QB' }).ok : false, false);
+  }
+  for (const week of [8, 9, 10]) { const f = played(); f.season.week = week; assert.equal(f.season.finished, true); assert.equal(F.tradeWindow(f).desk, true, 'the offseason reopens the desk whatever week the season ended on'); const r = F.deskPropose(f, ask); assert.ok(!(r.reasons || []).some((x) => x.code === 'window'), 'not refused for the window'); }
+  const d = played(); d.season.finished = false; d.offseason = null; d.season.week = 1; d.draft = { started: true, done: false, creation: true, year: d.season.year, order: [], picks: [], class: [] };
+  assert.equal(F.tradeWindow(d).desk, true, 'the draft clock opens the desk');
+});
+
+test('trade deadline: free agency keeps its own rules, and the protections of a trade still hold after the calendar changes', () => {
+  const f = played(); f.season.week = 10; const mk = F.offseasonMarket(f); assert.ok(mk.length); f.roster = f.roster.slice(0, 30);
+  const s = F.signFreeAgent(f, mk[0].monster.id); assert.equal(s.ok, true, s.reason);
+  const { team, pick } = sellable(played()); const g = played(); const prot = F.deskAssetsFor(g, team).theirs.find((x) => x.why);
+  if (prot) { const r = F.deskPropose(g, { team, givePicks: [pick], getMonsters: [prot.id] }); assert.equal(r.accepted, false, 'a protected or locked monster still cannot be bought'); assert.ok(r.reasons.some((x) => x.code === 'immovable')); }
+  const w = inSeason(4); assert.equal(F.deskPropose(w, { team, givePicks: [pick], getMonsters: [F.deskAssetsFor(g, team).theirs[0].id] }).ok, false);
+});
+
+test('trade deadline: determinism — a played week-8 call and week-8 AI deals are the same on every run', () => {
+  const run = () => { const out = []; for (let seed = 1; seed <= 30; seed++) { const f = inSeason(8, seed); const c = F.maybeTradeCall(f); out.push(c ? `${c.kind}|${c.team}|${(c.sendIds || []).join(',')}` : '-'); } return out; };
+  assert.deepEqual(run(), run());
+});
+
+test('roster floor: a club cut far below 26 in the offseason (a contract cliff) is back to a legal roster before the season starts', () => {
+  const f = played(); const clubs = aiClubs(f).filter((c) => c !== f.club);
+  for (const [c, keep] of [[clubs[2], 18], [clubs[5], 25], [clubs[8], 10]]) { const drop = R.clubRoster(f, c).filter((m) => !R.isProtected(m)).slice(0, R.clubRoster(f, c).length - keep); for (const m of drop) releaseFromClub(f, c, m.id, { year: f.season.year, reason: 'walked' }); assert.equal(R.clubRoster(f, c).length, keep); }
+  for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
+  F.beginDraft(f); let g = 0; while (!f.draft.done && g++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
+  const r = F.startNextSeason(f); assert.equal(r.ok, true, r.reason);
+  assert.deepEqual(validateClubs(f, { cap: tierById(f.tier).cap }), [], 'every club has 26–38 monsters, a legal lineup and is under the cap');
+  for (const c of aiClubs(f)) assert.ok(R.clubRoster(f, c).length >= 26 && R.clubRoster(f, c).length <= 38, `${c}: ${R.clubRoster(f, c).length}`);
+  assert.deepEqual(R.verifyLeague(f), []);
+});
+
+test('roster floor: the owner cannot start a season below the minimum', () => {
+  const f = played(); f.roster = f.roster.slice(0, 20); for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
+  F.beginDraft(f); let g = 0; while (!f.draft.done && g++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; }
+  const r = F.startNextSeason(f); assert.equal(r.ok, false); assert.match(r.reason, /at least 26/);
 });

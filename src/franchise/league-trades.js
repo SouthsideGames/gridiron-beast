@@ -7,6 +7,7 @@ import { monsterOverall, ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { ALL_TEAMS } from '../data/league.js';
 import { GROUP_SLOTS } from './roster.js';
 import { pickValue, picksOwnedBy, pickUsed, setPickOwner, tradable, currentClassYear } from './trades.js';
+import { FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK, seasonTradeWeek } from './trade-window.js';
 import { marketValue, rosterNet, rosterAfter, rosterProblems, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
 import { hasLeague, leagueClubs, clubRoster, clubCapRoom, addToClub, removeFromClub, leagueEvent, moveIdentity, isProtected } from './league-registry.js';
 
@@ -15,7 +16,7 @@ export const AI_TRADE_RULES = Object.freeze({
   band: DEAL_RULES.band, // market value received / given, both ways (position-sensitive since Task 5: trade-value.js)
   offseasonMax: 3,     // deals in one offseason window
   weekChance: 0.25,    // chance of one deal attempt in each of weeks 2–8 (about 1.75 a season, 2–4 with the offseason)
-  weeks: [2, 8],
+  weeks: [FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK], // the trade deadline is the end of week 8 (trade-window.js)
   season: { upgrade: 4, minGain: 16 }, // in season a deal must lift a starting slot by a margin a coach would act on: twice the offseason bar (the first Task 5 design, with the offseason bar in season, made 1.6 in-season deals a season and nearly every attempt a deal: not the "occasional deal" of §46.5)
   picksAhead: 2,       // classes a club will pay picks from
   targets: 6,          // the biggest upgrades a club looks at per window
@@ -110,7 +111,7 @@ export function aiTrades(f, r, opts) { return scoped(() => aiTradesNow(f, r, opt
 function aiTradesNow(f, r, { year, cap, window }) {
   if (!hasLeague(f)) return [];
   const deals = []; const done = new Set();
-  if (window === 'season') { const w = f.season?.week || 0; if (w < AI_TRADE_RULES.weeks[0] || w > AI_TRADE_RULES.weeks[1] || !r.chance(AI_TRADE_RULES.weekChance)) return deals; }
+  if (window === 'season') { if (f.season?.finished || !seasonTradeWeek(f.season?.week || 0) || !r.chance(AI_TRADE_RULES.weekChance)) return deals; } // after the deadline no draw is made at all, so the stream of random numbers for later weeks is the same as before
   const max = window === 'season' ? 1 : AI_TRADE_RULES.offseasonMax;
   const shoppers = order(f).sort(() => r.next() - 0.5);
   for (const A of shoppers) {

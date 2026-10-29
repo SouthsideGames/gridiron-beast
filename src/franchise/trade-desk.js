@@ -105,7 +105,12 @@ function evaluateProposalNow(f, prop, env) {
   const roomT = env.room(team), roomAfter = roomT + get.reduce((s, m) => s + (m.salary || 0), 0) - give.reduce((s, m) => s + (m.salary || 0), 0);
   if (roomAfter < Math.min(0, roomT)) block('cap', `The ${team} cannot fit the salary: ${money(-roomAfter)} cr over their cap.`);
   // 4. their lineup
-  for (const m of get) if (!readyReplacement(theirs, m)) block('noReplacement', `The ${team} have no ready replacement for ${m.name}; a starter is only for sale when the man behind him is within ${DESK_RULES.replacementGap} points.`);
+  // A starter leaves only if the man who takes his place is within the gap — and what you send them in the same proposal counts: a like-for-like swap or an upgrade at the position is a replacement, not a hole.
+  for (const m of get) {
+    if (roleIn(theirs, m) !== 0) continue; // a backup or a spare: nothing to cover
+    const n = slotsOf(m.position); const next = ordered(theirAfter.filter((x) => x.position === m.position))[n - 1];
+    if (!next || ovr(next) < ovr(m) - DESK_RULES.replacementGap) block('noReplacement', `The ${team} have no ready replacement for ${m.name}; a starter is only for sale when the man behind him (or the one you send) is within ${DESK_RULES.replacementGap} points.`);
+  }
   // 5. the price
   const margin = DESK_RULES.margin[env.difficulty] ?? DESK_RULES.margin.pro; const stamp = deskStamp(f); const mood = moodOf(f, prop, stamp);
   const pw = (list) => list.reduce((s, p) => s + pickWorth(f, p), 0);
@@ -156,7 +161,7 @@ function findCounter(f, prop, env, { give, get }) {
 /** Everything the desk needs for one club: who can move on each side and why not. */
 export function deskAssets(f, team, env) {
   const mine = env.ownerRoster, theirs = env.roster(team);
-  const row = (roster, side) => ordered(roster).map((m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, ovr: ovr(m), age: m.age, salary: m.salary || salaryFor(m), ends: m.contract?.ends ?? null, role: roleIn(roster, m), injured: isUnavailable(m), why: immovable(f, m, side), forSale: side === 'theirs' ? readyReplacement(roster, m) : true }));
+  const row = (roster, side) => ordered(roster).map((m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, ovr: ovr(m), age: m.age, salary: m.salary || salaryFor(m), ends: m.contract?.ends ?? null, role: roleIn(roster, m), injured: isUnavailable(m), why: immovable(f, m, side), forSale: side === 'theirs' ? readyReplacement(roster, m) : true })); // forSale: for sale as he stands; a starter without cover can still be asked for if a ready replacement goes back in the same proposal
   return { mine: row(mine, 'mine'), theirs: row(theirs, 'theirs'), myPicks: env.ownerPicks, theirPicks: tradableYears(f).flatMap((y) => picksOwnedBy(f, team, y, env.allTeams).filter((p) => !pickUsed(f, p)).map((p) => ({ year: p.year, round: p.round, original: p.original }))), usage: deskUsage(f, team) };
 }
 

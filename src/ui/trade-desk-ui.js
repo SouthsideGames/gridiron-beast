@@ -15,9 +15,17 @@ const key = (p) => F.pickKey(p);
 const signed = (n) => `${n >= 0 ? '+' : '−'}${Math.abs(Math.round(n)).toLocaleString('en-US')}`;
 const ROLE = ['starter', 'backup', 'backup', 'bench'];
 
+/** Whether trading is open, why not, and when it reopens (franchise/trade-window.js). Used at the top of the desk and of the pick-shopping sheet. */
+export function tradeStatusHtml(f) {
+  const w = F.tradeWindow(f);
+  const tone = w.open ? 'good' : 'bad';
+  return `<div class="panel tight" role="status" data-trade-status="${esc(w.phase)}" style="margin-bottom:8px;border-color:var(--${tone})"><b class="${tone}">${w.open ? '🟢 Trading is open' : '🔴 Trading is closed'}</b>
+    <div style="font-size:13px;margin-top:2px">${esc(w.reason)}</div>${w.next ? `<div class="dim" style="font-size:12px;margin-top:2px">${esc(w.next)}</div>` : ''}</div>`;
+}
+
 function monsterRow(m, side, on) {
-  const blocked = m.why || (side === 'theirs' && !m.forSale);
-  const note = m.why || (side === 'theirs' && !m.forSale ? 'A starter with no ready replacement: not for sale.' : '');
+  const blocked = !!m.why;
+  const note = m.why || (side === 'theirs' && !m.forSale ? 'A starter with no ready replacement: only if you send a ready replacement back in the same proposal.' : '');
   return `<button type="button" class="item ${on ? 'mine' : ''}" data-m="${side}:${m.id}" aria-pressed="${on ? 'true' : 'false'}" ${blocked ? 'disabled' : ''} style="min-height:44px;padding:4px 8px;${on ? 'border-color:var(--accent)' : ''}">
     ${monsterSprite({ species: m.species, name: m.name, id: m.id }, 28)}<span class="grow" style="min-width:0"><b>${esc(m.name)}</b> <span class="dim" style="font-size:12px">${esc(m.position)} · ${m.ovr} OVR · ${m.age}y</span>
     <span class="chip ${m.role === 0 ? 'accent' : ''}" style="margin-left:4px">${ROLE[m.role] || 'bench'}</span>${m.injured ? ' <span title="Out for weeks">🩹</span>' : ''}</span><span class="dim" style="font-size:12px">${fmtMoney(m.salary)}</span></button>${note ? `<div class="dim" style="font-size:11px;margin:-2px 0 4px 10px">${esc(note)}</div>` : ''}`;
@@ -50,7 +58,7 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
       ${d.depth.map((x) => `<div class="dim" style="font-size:12px;margin-top:3px"><b>${esc(x.pos)}</b>: ${x.before.count} → ${x.after.count} monsters · best ${x.before.best ?? '—'} → ${x.after.best ?? '—'}${x.before.weakestStarter !== x.after.weakestStarter ? ` · weakest starter ${x.before.weakestStarter ?? '—'} → ${x.after.weakestStarter ?? '—'}` : ''}${x.after.count < x.after.slots ? ' <span class="chip bad">short of starters</span>' : ''}</div>`).join('')}` : ''}
       ${pv.legal ? '<div class="chip good" style="margin-top:6px">Legal: roster, positions and cap all work</div>' : `<div style="margin-top:6px">${pv.reasons.map((r) => `<div class="bad" style="font-size:13px">✗ ${esc(r.text)}</div>`).join('')}</div>`}
       <div class="dim" style="font-size:11px;margin-top:6px">Whether the club says yes depends on its own roster and the price; you find out when you send it. Monsters arrive on a new two-season deal at their salary; picks change hands at once.</div></div>`;
-    const canSend = pv?.ok && pv.legal && use.clubLeft > 0 && use.totalLeft > 0;
+    const canSend = F.tradeWindow(f).desk && pv?.ok && pv.legal && use.clubLeft > 0 && use.totalLeft > 0;
     let result = '';
     if (state.result) {
       const r = state.result;
@@ -59,7 +67,7 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
       else result = `<div class="panel tight" style="border-color:var(--bad)"><b class="bad">The ${esc(state.team)} said no.</b>${r.reasons.map((x) => `<div style="font-size:13px;margin-top:4px">• ${esc(x.text)}</div>`).join('')}
         ${r.counter ? `<div style="margin-top:8px"><div style="font-size:13px"><b>Counter:</b> ${esc(r.counter.text)}</div><button type="button" class="btn small" data-counter="1" style="margin-top:4px">Add it to the proposal</button></div>` : ''}</div>`;
     }
-    body.innerHTML = `${partnerSel}
+    body.innerHTML = `${tradeStatusHtml(f)}${partnerSel}
       <div class="panel tight" style="margin-top:8px">${list('mine', assets.mine, state.giveM, state.fPos)}${picks('mine', assets.myPicks, state.giveP)}</div>
       <div class="panel tight">${list('theirs', assets.theirs, state.getM, state.fPosTheirs)}${picks('theirs', assets.theirPicks, state.getP)}</div>
       ${summary}
@@ -93,10 +101,17 @@ export function openTradeDesk(app, { onDone = null, team = null } = {}) {
 }
 
 // ---------------------------------------------------------------- an AI club's call
+/** One line for the HQ during the regular season and postseason, when the desk itself is closed: where the trade calendar stands. '' in the offseason and on the draft clock (the desk is open there and has its own banner). */
+export function tradeLineHtml(f) {
+  const w = F.tradeWindow(f); if (!['early', 'open-season', 'deadline-passed', 'postseason'].includes(w.phase) || !F.deskAvailable(f)) return '';
+  const tone = w.phase === 'open-season' ? 'accent' : 'bad';
+  return `<div class="panel tight" role="status" data-trade-status="${esc(w.phase)}" style="padding:6px 10px"><span class="chip ${tone}">${w.phase === 'open-season' ? '📞 Trade window open' : '🔒 Trading closed'}</span> <span style="font-size:13px">${esc(w.reason)}</span> <span class="dim" style="font-size:12px">${esc(w.next)}</span></div>`;
+}
+
 /** The panel for the call that is waiting, or ''. Calls made before Task 5 (no `kind`) show exactly as they did. */
 export function callPanelHtml(f) {
   const c = F.tradeCall(f); if (!c) return '';
-  const until = f.offseason ? 'the new season' : 'the end of the week';
+  const until = f.offseason ? 'the new season' : `the end of the week (trade deadline: the end of week ${F.TRADE_DEADLINE_WEEK})`;
   const asks = (c.asks || []).map((m) => `${esc(m.name)} (${esc(m.position)}, ${m.ovr} OVR)`).join(' + ');
   const sends = (c.sends || []).map((m) => `${esc(m.name)} (${esc(m.position)}, ${m.ovr} OVR, age ${m.age})`).join(' + ');
   const myPicks = (c.give || []).map((p) => `${yearOf(p.year)} round ${p.round}${p.original !== f.club ? ` (from the ${esc(p.original)})` : ''}`).join(' + ');

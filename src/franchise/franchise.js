@@ -45,6 +45,7 @@ import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
 import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague } from './league.js';
 import { aiTrades } from './league-trades.js';
+import { tradeWindowState, seasonTradeWeek } from './trade-window.js';
 import { slimSeasonAwards } from './history-compact.js';
 import { leagueSeasonEnd, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, leagueInjuryCover, leagueTrim, CREATION_LIFT } from './league-season.js';
 export { validateClubs } from './league-season.js';
@@ -948,7 +949,13 @@ export function myTradablePicks(f) {
 }
 /** Picks the owner has sent away or taken in (for the office and the draft panel). */
 export function pickLedger(f) { const mine = myTradablePicks(f); const acquired = mine.filter((p) => p.original !== f.club); const gone = []; for (const year of tradableYears(f)) for (let round = 1; round <= DRAFT_ROUNDS; round++) { const p = { year, round, original: f.club }; if (pickOwner(f, p) !== f.club) gone.push({ ...p, owner: pickOwner(f, p) }); } return { acquired, gone }; }
-function tradeOpen(f) { return (f.draft?.started && !f.draft.done) || (f.season?.finished && !isFired(f)); }
+/** The trade calendar for this franchise right now (trade-window.js): is the owner's desk open, may clubs call, may clubs trade with each other. */
+export function tradeWindow(f) {
+  const s = f.season || {};
+  return tradeWindowState({ fired: isFired(f), finished: !!s.finished, offseason: !!f.offseason, draftOpen: !!(f.draft?.started && !f.draft.done), playoffs: !s.finished && inPlayoffs(f), week: s.week });
+}
+export { TRADE_DEADLINE_WEEK, FIRST_TRADE_WEEK } from './trade-window.js';
+function tradeOpen(f) { return tradeWindow(f).desk; }
 function spendAsk(f, give) { const key = pickKey(give[0]); const n = f.pickAsks?.[key] || 0; if (n >= ASKS_PER_PICK) return { ok: false, reason: `That pick has been shopped ${ASKS_PER_PICK} times already.` }; (f.pickAsks ||= {})[key] = n + 1; return { ok: true }; }
 function checkGive(f, give) {
   if (!tradeOpen(f)) return { ok: false, reason: 'Trades are open on the clock and in the offseason.' };
@@ -1064,15 +1071,14 @@ function executeProposal(f, p) {
 /** The week (or offseason) a call belongs to: it lasts until this changes. */
 function callStamp(f) { return f.offseason ? `off:${f.season.year}` : `wk:${f.season.year}:${f.season.week}`; }
 /** The call waiting for an answer, or null. */
-export function tradeCall(f) { const c = f.tradeCall; return c && c.expires === callStamp(f) ? c : null; }
+export function tradeCall(f) { const c = f.tradeCall; return c && c.expires === callStamp(f) && tradeWindow(f).calls ? c : null; } // a call never outlives the window: past the deadline it is simply gone
 const callMonster = (m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, ovr: monsterOverall(m), age: m.age, salary: m.salary });
 /** Once a week in season (weeks 2-8) and once when the offseason opens, a club may call with an offer. */
 export function maybeTradeCall(f) {
   const stamp = callStamp(f);
   if (f.tradeCall && f.tradeCall.expires !== stamp) { news(f, `The ${f.tradeCall.team} offer ${f.tradeCall.kind ? 'to you' : `for your ${f.tradeCall.give.map((p) => `${yearOf(p.year)} R${p.round}`).join(' + ')}`} expired.`, 'info'); f.tradeCall = null; }
   if (f.tradeCall || isFired(f)) return null;
-  const inSeason = !f.offseason && !f.season.finished && !inPlayoffs(f) && f.season.week >= 2 && f.season.week <= 8;
-  if (!inSeason && !f.offseason) return null;
+  if (!tradeWindow(f).calls) return null; // weeks 2–8 and the offseason: the trade deadline is the end of week 8 (trade-window.js)
   f.callsMade ||= {}; if (f.callsMade[stamp]) return null; f.callsMade[stamp] = true;
   const until = f.offseason ? 'the new season' : 'the end of the week';
   if (hasLeague(f)) { // the club's own roster decides who calls and what for (trade-desk.js buildIncomingOffer)
@@ -1092,6 +1098,7 @@ export function maybeTradeCall(f) {
 }
 /** Answer the call: accept (the deal is carried out) or decline. A call made before Task 5 (no `kind`) is picks for one player, as it always was. */
 export function answerTradeCall(f, accept) {
+  if (f.tradeCall && !tradeWindow(f).calls) { f.tradeCall = null; return { ok: false, reason: 'The trade deadline has passed; the offer is off.' }; } // a pending offer cannot be accepted after the deadline, however it got here (a stale or edited save too)
   const c = tradeCall(f); if (!c) return { ok: false, reason: 'No call is waiting.' };
   if (!accept) { f.tradeCall = null; news(f, `Declined the ${c.team} offer.`, 'info'); return { ok: true, declined: true }; }
   if (c.kind) {
