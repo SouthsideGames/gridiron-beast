@@ -3891,11 +3891,56 @@ Owner's Phase C audit (2026-10-28, audit-only) and approval of fixes F1–F6. In
     - Edge Contain against Outside Zone: see above.
     - Power Right against Goal Line Stand: the aware back now finds the cutback the front leaves (24 of 100 plays cut, for 14.9 yards).
     - Power Right against Cover 0: middling in every version.
-  - *Flagged for the owner (not changed):* `attr-trials.test.js` "Speed: … a 95 back gains more" uses one cell, Outside Zone against Cover 3, over seeds 1000–1059, and asks for +1.5 yards.
+  - *Speed test (owner-approved revision, 2026-10-28).* The old `attr-trials.test.js` "Speed: … a 95 back gains more" used one cell, Outside Zone against Cover 3, over seeds 1000–1059, and asks for +1.5 yards.
     - The redesigned play measures +1.06 there. On other ranges it measures +2.04, +3.10 and +4.75, and across ten calls +21.
     - v42.15 measured +31.6 in that cell, because the back outran a defence that saw no run.
     - Cover 3's strong safety now comes down and meets a fast back who arrives before his receiver's stalk block. The slower back gets the block.
-    - Threshold unchanged; awaiting the owner's decision (for example, the same comparison over several calls).
+    - Replaced (owner-approved) by "Speed: a faster back gains more across run concepts, calls and seed ranges". It runs six live runs (Inside Zone, Power Right, Counter, Outside Zone, Stretch Left, Toss Sweep) × six calls (Cover 3, Cover 1, Cover 2 Zone, Run Wall, Edge Contain, Tampa 2) × three independent 8-seed ranges, at Speed 50, 65, 80 and 95.
+    - The same +1.5-yard bar now applies to the aggregate and to each seed range on its own. Every concept must gain at least 0.5. The aggregate must rise at every step. No concept may fall more than 0.5 between neighbouring levels (an inversion).
+    - Measured: all runs 3.81 → 4.65 → 6.85 → 11.35; seed ranges +6.3, +9.9 and +6.4. By concept, 50 → 95: Inside Zone +4.7, Power Right +3.0, Counter +4.6, Outside Zone +15.8, Stretch Left +11.6, Toss Sweep +5.5.
+    - The old cell is printed as a diagnostic only (5.72 → 6.78). Speed weighting and gameplay are unchanged.
+- **Final validation (owner request, 2026-10-28).**
+  - *Running-back Awareness, behaviour* (9 runs × 26 calls × 12 seeds, two independent seed ranges; Awareness 50 / 65 / 80 / 95). Future frames are used to judge the read, never to make it.
+    - Yards per carry: 4.02 / 4.21 / 4.43 / 4.38 on the first range, 4.99 / 5.16 / 5.46 / 5.53 on the second.
+    - How often he cuts: 1.9% / 3.5% / 5.5% / 8.6% of runs (1.9% / 3.4% / 4.8% / 7.6%).
+    - When he cuts, the lane he chooses really is more open than the called one (nearest free defender over the next 0.8 s) on 88–95% of cuts. Only 4–6% of cuts go into a lane a free defender closes to within a yard.
+    - Against the same seed at Awareness 50 without a cut, a cut gains +1.4 yd on the first range and +3.2 to +5.1 on the second.
+    - Cuts stopped short (under 2 yd) fall from 56–65% at 50 to 45–51% at 95; cuts gaining 4+ rise from 11–19% to 21–30%.
+    - Negative runs are the same at every level on every play except Trap, because they are settled before the read: penetration in the backfield.
+    - So Awareness improves decisions on the plays where a read matters. The aggregate gain stays modest because only about 1 run in 12 offers a read worth changing.
+  - *Findings, not changed (reported for the owner):*
+    - Reading the lead block (F5, C1) does not use Awareness. Every back follows his engaged puller the same way, on about 46% of Power, Counter, Trap and Toss runs at every level.
+    - Trap at Awareness 80–95 sometimes cuts 4.5 yards short of the hole, mostly against All-Out Pressure, giving up a 0-yard run for −1 (negative runs 7 → 11%). On 48 such cuts in 312 plays the net is −0.8 yd. It is a small early-cut case that the cut price does not fully cover.
+  - *Power Right in games* (5.93 → 7.33 in the first three sets).
+    - Over six independent 120-game sets: C1 6.03 → C2 7.09 pooled (about 1,550 runs each). The median is 4 in both; runs of 20+ yards rise from 3.4% to 5.3%.
+    - The rise is in the tail and against fronts. Cuts (30 of 1,556) add 0.26. Against Edge Contain it rises 4.05 → 12.81 (its intended inside weakness, now real since the ends moved outside), adding 0.33. Against Goal Line Man (2.76 → 15.19), Bear Front (2.53 → 6.76) and Goal Line Stand (2.39 → 4.88) it adds 0.42.
+    - Against coverage calls it is unchanged.
+    - The same mechanics with only the dice stream changed measure 6.58, so about 0.5 of any one set's figure is noise.
+    - Lab, plain 65s, three 60-seed ranges, v42.15 → C1 → C2:
+
+      | Front | v42.15 | C1 | C2 |
+      |---|---|---|---|
+      | Goal Line Stand | 3.5 | 2.3 | 4.8 |
+      | Goal Line Man | 2.8 | 8.1 | 8.9 |
+      | Bear Front | 1.2 | 2.7 | 5.2 |
+      | Run Wall | 1.8 | 3.1 | 3.3 |
+      | Edge Contain | 3.5 | 3.1 | 4.9 |
+      | All-Out Pressure | 1.1 | 1.3 | 1.3 |
+
+    - Traced plays: the gains come from the back bouncing outside a front that has nobody outside the box (Bear Front, Goal Line Man), or cutting back behind a linebacker or corner who has pursued into the backfield, where he chased the carrier's earlier position (Phase A perception delay). Both are visible on the field.
+    - No hidden information and no defect was found. Not rebalanced.
+  - *Edge Contain against v42.15* (three 40-seed ranges):
+    - Edge runs: Stretch Left 14.8 → −1.2; Toss Sweep 3.8 → −0.7.
+      - The unblocked contain end makes 88% of Stretch Left's tackles. No blocker is assigned to him, and he is never engaged, so this is the scheme, not the shed.
+      - Stretch Left still gains 4+ on 8 of 120 plays, Toss on 18.
+    - Outside Zone 1.7 → 3.4: 4+ on 46 of 120, 10+ on 6.7%, its end engaged on every play. The leverage shed is a rate, not a win.
+    - Jet Sweep −0.4 → 2.2; Read Option 2.4 → 3.6.
+    - Inside, its intended weakness, now real: Power Left 1.6 → 9.7, Counter 2.1 → 11.7, QB Draw −0.2 → 5.5, Inside Zone −0.3 → 3.5, Power Right 3.4 → 4.6, Dive 2.2 → 2.9, Trap 0.3 → 3.6. In v42.15 Edge Contain stopped nearly every run, because its ends lined up inside.
+    - Passing:
+      - Play-action: 8.61 → 8.19 yards per play, completion 46.7 → 45.9%, sacks 6.7 → 2.2%, interceptions 1.5 → 1.5%.
+      - Other passes: 7.65 → 7.59 yards, completion 59.9 → 58.7%, sacks 0.2 → 1.3%, interceptions 2.6 → 3.2%.
+      - PA Boot against it: 7.46 (13th of 26) → 6.55 (11th).
+    - Nothing abnormal.
 - Tests (C2): `tests/run-vision.test.js` (4):
   - a sharp back does not lose more on Inside Zone;
   - cutbacks are reads, not certainties;

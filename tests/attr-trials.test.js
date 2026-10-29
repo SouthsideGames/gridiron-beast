@@ -16,9 +16,33 @@ test('controlled setup: everyone a plain 65 with no ability or type, only the su
   for (const [slot, m] of Object.entries(o)) { assert.equal(m.ability, null); assert.equal(m.type, null); for (const k of ATTR_ORDER) assert.equal(m.attrs[k], slot === 'WR1' && k === 'speed' ? 95 : 65, `${slot}.${k}`); }
   const t = byId('speed_rb'); assert.deepEqual(t.measure(t.run(75, 1234)), t.measure(t.run(75, 1234)));
 });
-test('Speed: a 95 receiver reaches 20 yards sooner and peaks faster than a 50 (movement), and a 95 back gains more', () => {
+test('Speed: a 95 receiver reaches 20 yards sooner and peaks faster than a 50 (movement)', () => {
   const r = T.runTrial(byId('speed_wr_go'), 10, [50, 95]); assert.ok(r.levels[95].t20 < r.levels[50].t20 - 0.3); assert.ok(r.levels[95].peak > r.levels[50].peak + 1.5);
-  const rb = T.runTrial(byId('speed_rb'), 60, [50, 95]); assert.ok(rb.levels[95].yards > rb.levels[50].yards + 1.5, JSON.stringify(rb.levels));
+});
+// RB Speed across run concepts (Phase C, owner-approved 2026-10-28). Replaces one cell, Outside Zone vs Cover 3 over seeds 1000-1059,
+// asked for +1.5 yd: after the Outside Zone redesign that cell measured +1.06 (the Cover 3 strong safety meets a fast back before his
+// receiver's block lands) while other seed ranges gave +2.0 to +4.8 and ten calls +21. The same +1.5 bar now applies to six live runs
+// x six calls x three independent seed ranges, to each range on its own, and every concept must gain; the curve 50-65-80-95 must
+// rise at every step overall and no concept may fall by more than noise between neighbouring levels. The old cell stays a diagnostic.
+test('Speed: a faster back gains more across run concepts, calls and seed ranges, rising at every level with no inversion', (t) => {
+  const runs = ['inside_zone', 'power_right', 'counter', 'outside_zone', 'stretch_left', 'toss_sweep'];
+  const calls = ['cover_3', 'cover_1', 'cover_2_zone', 'run_wall', 'edge_contain', 'tampa_2'];
+  const ranges = [82000, 83000, 84000], per = 8, L = [50, 65, 80, 95];
+  const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length; const all = {}, byRun = {}, byRange = {};
+  for (const v of L) for (const off of runs) for (const def of calls) for (const r of ranges) for (let i = 0; i < per; i++) {
+    const y = T.play({ off, def, offSubjects: ['RB'], attr: 'speed', value: v, seed: r + i }).yards;
+    (all[v] ||= []).push(y); ((byRun[off] ||= {})[v] ||= []).push(y); ((byRange[r] ||= {})[v] ||= []).push(y);
+  }
+  const curve = (o) => L.map((v) => +mean(o[v]).toFixed(2));
+  t.diagnostic(`all: ${curve(all).join(' -> ')}`);
+  for (const [k, o] of Object.entries(byRun)) t.diagnostic(`${k}: ${curve(o).join(' -> ')}`);
+  for (const [k, o] of Object.entries(byRange)) t.diagnostic(`seeds ${k}+: ${curve(o).join(' -> ')}`);
+  const oz = T.runTrial(byId('speed_rb'), 60, [50, 95]); t.diagnostic(`diagnostic only, Outside Zone vs Cover 3, seeds 1000-1059: ${oz.levels[50].yards.toFixed(2)} -> ${oz.levels[95].yards.toFixed(2)}`);
+  const a = curve(all); assert.ok(a[3] > a[0] + 1.5, `aggregate 50 -> 95: ${a.join(' -> ')}`);
+  for (let i = 1; i < L.length; i++) assert.ok(a[i] > a[i - 1], `the aggregate rises from ${L[i - 1]} to ${L[i]}: ${a.join(' -> ')}`);
+  for (const [k, o] of Object.entries(byRange)) { const c = curve(o); assert.ok(c[3] > c[0] + 1.5, `seeds ${k}+: ${c.join(' -> ')}`); }
+  for (const [k, o] of Object.entries(byRun)) { const c = curve(o); assert.ok(c[3] > c[0] + 0.5, `${k} gains from Speed: ${c.join(' -> ')}`);
+    for (let i = 1; i < L.length; i++) assert.ok(c[i] > c[i - 1] - 0.5, `${k}: no inversion from ${L[i - 1]} to ${L[i]}: ${c.join(' -> ')}`); }
 });
 test('Blocking, Tackling and Catching move their outcomes the right way (60 plays, same seeds)', () => {
   const b = T.runTrial(byId('blocking_pass'), 60, [50, 95]); assert.ok(b.levels[95].pressureAt > b.levels[50].pressureAt + 0.15, 'blocking delays pressure');
