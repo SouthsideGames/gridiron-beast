@@ -68,3 +68,6 @@ Filled from `TRADING_SECOND_PASS_RESULTS.md` and re-measured at the checkpoint.
 - **Thresholds.** T1–T15 of `TRADING_SECOND_PASS_PLAN.md` with Addenda 2–3 apply unchanged, evaluated per sample by `tools/trade-benchmark-compare.mjs`. T8 is reported as measured; the owner accepted the T8 exception on 2026-10-29. The Task 4 thresholds of `AI_FRANCHISE_BENCHMARK_PLAN.md` are reported unchanged through `tools/ai-benchmark-analyze.mjs`.
 - **New measures (descriptive, no new pass/fail lines):** each deal against its own undoing at the same moment (lineup points and the position's starters, both clubs); weak-group response (resolved a season later, traded for or not); draft capital held; succession cover for starters aged 30+; draftee growth; incoming offers to the owner; paired per-seed differences with a bootstrap 95% interval (2,000 resamples, generator seed 55). Tool: `tools/post-trading-analyze.mjs`.
 - **Pilot (seeds 1–2 × 3 seasons, both trees, each twice):** identical results on repeat; every value the v2 harness records is identical under v3 (recording only); the base tree reproduces Task 4's stored club-season rows exactly; 17.6 s per simulated season per lane on 2 cores.
+
+## Task 5.5 results
+Run and reported in `POST_TRADING_FRANCHISE_BENCHMARK.md` (data: `docs/post-trading-benchmark/`). The side-by-side table above is filled there (§4, §8, §9).

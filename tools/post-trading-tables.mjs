@@ -27,7 +27,7 @@ table('What a deal did, measured against its own undoing (plain ratings, no valu
   ['In season: buyer lineup gain, median', 'trading.quality.inSeason.cfLineupGainMedian'], ['In season: no lineup gain (%)', 'trading.quality.inSeason.cfNoLineupGainPct'], ['Offseason: buyer lineup gain, median', 'trading.quality.offseason.cfLineupGainMedian'], ['Offseason: no lineup gain (%)', 'trading.quality.offseason.cfNoLineupGainPct'],
   ['Deals at a weak group (%)', 'trading.needCf.dealsAtWeakGroupPct'], ['… weak group resolved by the deal (%)', 'trading.needCf.resolvedByDealPct'], ['… still weak at that season\'s end (%)', 'trading.needCf.stillWeakAtSeasonEndPct'],
   ['Buyer left with no backup at the position (%)', 'trading.quality.all.buyerNoBackupAfterPct'], ['Acquired monster aged 31+ (%)', 'trading.quality.all.age31plusPct'], ['Deal pushes buyer under 1.5% cap room (%)', 'trading.cap.capStrainPct'], ['Salary taken on, median (cr)', 'trading.cap.salaryDeltaMedian'],
-  ['Still with the buyer at the season end (%)', 'trading.outcomes.withAcquirerSeasonEndPct'], ['Starting for the buyer a season later (%)', 'trading.outcomes.startingNextSeasonPct'], ['Still with the buyer two seasons later (%)', 'trading.outcomes.withAcquirer2Pct'], ['Monsters re-traded within a season', 'trading.outcomes.reTradedWithinASeason'],
+  ['Still with the buyer at the season end (%)', 'trading.outcomes.withAcquirerSeasonEndPct'], ['Starting for the buyer a season later (%)', 'trading.outcomes.startingNextSeasonPct'], ['Still with the buyer two seasons later (%)', 'trading.outcomes.withAcquirer2Pct'], ['Monsters traded again in the same or the next season', 'trading.outcomes.reTradedWithinASeason'],
 ]);
 table('Weak groups: traded for, or left alone (resolved by the next season end)', [
   ['Weak groups traded for (% of weak groups)', 'weakResponse.tradedShareOfWeak'], ['Resolved when traded for (%)', 'weakResponse.traded.resolvedPct'], ['… n', 'weakResponse.traded.n'], ['Resolved when not traded for (%)', 'weakResponse.notTraded.resolvedPct'], ['… n', 'weakResponse.notTraded.n'],
@@ -55,6 +55,13 @@ table('Integrity', [
   ['Season-end lineup problems (club-seasons)', 'integrity.seasonEndLineupProblems'], ['Season-end over the cap (club-seasons)', 'integrity.seasonEndOverCap'], ['Roster min–max at season end', null],
 ]);
 { const i = out.findIndex((l) => l.startsWith('| Roster min–max')); out[i] = `| Roster min–max at season end | ${groups.map((g) => [BASE, NEW].map((t) => { const x = S.groups[g]?.[t]?.integrity; return x ? `${x.rosterMin}–${x.rosterMax}` : '–'; }).join(' | ')).join(' | ')} |`; }
+// by position, for each sample
+for (const g of groups) { const P = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S', 'K']; const b = S.groups[g][BASE], n = S.groups[g][NEW]; if (!b || !n) continue;
+  out.push(`### By position, ${NAME[g] || g} (${BASE} → ${NEW})`, '', `| | ${P.join(' | ')} |`, `|---|${P.map(() => '---').join('|')}|`);
+  const row = (label, f) => out.push(`| ${label} | ${P.map((p) => `${v(f(b, p))} → ${v(f(n, p))}`).join(' | ')} |`);
+  row('Deals acquiring the position', (x, p) => x.trading.byPos[p] || 0); row('First-round picks given for it', (x, p) => x.trading.r1ByPos[p] || 0);
+  row('Persistent weak club-seasons', (x, p) => (p === 'K' ? null : x.extra.persistentWeakByPos[p] || 0)); row('Starter mean overall', (x, p) => (p === 'K' ? null : x.task4.roster.starterMeanByPos[p]));
+  row('Starter age, last season', (x, p) => (p === 'K' ? null : x.extra.starterAgeByPos[p]?.last)); out.push(''); }
 // paired differences
 out.push('### Matched-seed paired differences (new − base), mean over seeds, bootstrap 95% interval', '');
 const pm = ['tradesPerSeason', 'inSeasonPerSeason', 'r1Traded', 'kickerDeals', 'persistentWeakPct', 'persistentWeakRoomPct', 'olPersistent', 'weakGroupsPerClubSeason', 'avgStarter', 'teamOvr', 'teamOvrSd', 'starterAgeLast', 'ownStarterShareLast', 'persistentLoserPct', 'distinctChampions', 'maxTitleShare', 'gymTitleShare', 'nudgeSigningsPerClubSeason', 'slowedPct', 'seasonEndLineupProblems', 'seasonEndOverCap', 'noR1DraftPct', 'successionCoveredPct', 'ownerWinPct'];

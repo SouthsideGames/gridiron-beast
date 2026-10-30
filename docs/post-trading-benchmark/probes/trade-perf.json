@@ -1,0 +1,25 @@
+{
+ "seed": 51,
+ "n": 200,
+ "previewMs": {
+  "p50": 0.3,
+  "p95": 0.53,
+  "max": 4.3
+ },
+ "deskAssetsMs": {
+  "p50": 2.83,
+  "p95": 4.62,
+  "max": 11.16
+ },
+ "incomingOfferMs": {
+  "p50": 0.06,
+  "p95": 34.52,
+  "max": 44.86,
+  "n": 60
+ },
+ "thresholds": {
+  "previewP95": 50,
+  "offerP95": 150
+ },
+ "pass": true
+}

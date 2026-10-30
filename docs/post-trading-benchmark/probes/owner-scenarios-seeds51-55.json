@@ -1,0 +1,381 @@
+{
+ "seeds": [
+  51,
+  52,
+  53,
+  54,
+  55
+ ],
+ "results": {
+  "51": [
+   {
+    "id": 1,
+    "name": "a fair offer for a spare is accepted; a cheaper one is refused with a value reason",
+    "ok": true,
+    "note": "pays 25 pick-value for Coglet (K 55); cheaper pick refused: value"
+   },
+   {
+    "id": 2,
+    "name": "a club will not give up a starter with no ready replacement",
+    "ok": true,
+    "note": "Ashford Hawks: Lumen (QB 73) refused: noReplacement"
+   },
+   {
+    "id": 3,
+    "name": "the same club sells a starter once the next man is within six overall",
+    "ok": true,
+    "note": "covered by tests/trading-second-pass.test.js (\"a club does not sell a starter with no ready replacement\")"
+   },
+   {
+    "id": 4,
+    "name": "three bench bodies do not buy a good player",
+    "ok": true,
+    "note": "refused: value"
+   },
+   {
+    "id": 5,
+    "name": "many small picks for a star are refused (size limit, then value)",
+    "ok": true,
+    "note": "ten: size; three: noReplacement"
+   },
+   {
+    "id": 6,
+    "name": "the 4th proposal to one club is blocked by the limit, not re-judged",
+    "ok": true,
+    "note": "no · no · no · blocked:limit"
+   },
+   {
+    "id": 7,
+    "name": "a monster just bought cannot be sent on in the same season",
+    "ok": true,
+    "note": "refused: immovable"
+   },
+   {
+    "id": 8,
+    "name": "protected monsters and rookies on a first deal cannot be traded",
+    "ok": true,
+    "note": "protected → immovable,noReplacement; rookie row listed with reason: Rookies stay with the club that signed them for their first two seasons."
+   },
+   {
+    "id": 9,
+    "name": "the desk is closed outside the draft clock and the offseason",
+    "ok": true,
+    "note": "reasons: window"
+   },
+   {
+    "id": 10,
+    "name": "the preview shows legality, roster, cap and depth but never whether the club accepts",
+    "ok": true,
+    "note": "keys: ok,legal,reasons,detail"
+   },
+   {
+    "id": 11,
+    "name": "incoming offers: from real needs, each shows its effect, each can be accepted as legal, and many weeks bring none",
+    "ok": true,
+    "note": "12/60 weeks had a call; kinds {\"buy\":5,\"sell\":7}; 3 different clubs"
+   },
+   {
+    "id": 12,
+    "name": "a reload keeps the proposal count and gives the same answer to the same proposal",
+    "ok": true,
+    "note": "left 2; first no, after reload no"
+   }
+  ],
+  "52": [
+   {
+    "id": 1,
+    "name": "a fair offer for a spare is accepted; a cheaper one is refused with a value reason",
+    "ok": true,
+    "note": "pays 49 pick-value for Lumini (WR 57); cheaper pick refused: value"
+   },
+   {
+    "id": 2,
+    "name": "a club will not give up a starter with no ready replacement",
+    "ok": true,
+    "note": "Ashford Hawks: Solchirp (K 69) refused: noReplacement"
+   },
+   {
+    "id": 3,
+    "name": "the same club sells a starter once the next man is within six overall",
+    "ok": true,
+    "note": "covered by tests/trading-second-pass.test.js (\"a club does not sell a starter with no ready replacement\")"
+   },
+   {
+    "id": 4,
+    "name": "three bench bodies do not buy a good player",
+    "ok": true,
+    "note": "refused: noNeed,value"
+   },
+   {
+    "id": 5,
+    "name": "many small picks for a star are refused (size limit, then value)",
+    "ok": true,
+    "note": "ten: size; three: noReplacement"
+   },
+   {
+    "id": 6,
+    "name": "the 4th proposal to one club is blocked by the limit, not re-judged",
+    "ok": true,
+    "note": "no · no · no · blocked:limit"
+   },
+   {
+    "id": 7,
+    "name": "a monster just bought cannot be sent on in the same season",
+    "ok": true,
+    "note": "refused: immovable"
+   },
+   {
+    "id": 8,
+    "name": "protected monsters and rookies on a first deal cannot be traded",
+    "ok": true,
+    "note": "protected → immovable,noReplacement; rookie row listed with reason: Rookies stay with the club that signed them for their first two seasons."
+   },
+   {
+    "id": 9,
+    "name": "the desk is closed outside the draft clock and the offseason",
+    "ok": true,
+    "note": "reasons: window"
+   },
+   {
+    "id": 10,
+    "name": "the preview shows legality, roster, cap and depth but never whether the club accepts",
+    "ok": true,
+    "note": "keys: ok,legal,reasons,detail"
+   },
+   {
+    "id": 11,
+    "name": "incoming offers: from real needs, each shows its effect, each can be accepted as legal, and many weeks bring none",
+    "ok": true,
+    "note": "12/60 weeks had a call; kinds {\"buy\":6,\"sell\":6}; 4 different clubs"
+   },
+   {
+    "id": 12,
+    "name": "a reload keeps the proposal count and gives the same answer to the same proposal",
+    "ok": true,
+    "note": "left 2; first no, after reload no"
+   }
+  ],
+  "53": [
+   {
+    "id": 1,
+    "name": "a fair offer for a spare is accepted; a cheaper one is refused with a value reason",
+    "ok": true,
+    "note": "pays 25 pick-value for Mossmaw (DL 53); cheaper pick refused: value"
+   },
+   {
+    "id": 2,
+    "name": "a club will not give up a starter with no ready replacement",
+    "ok": true,
+    "note": "Ashford Hawks: Psyflutter (S 69) refused: noReplacement"
+   },
+   {
+    "id": 3,
+    "name": "the same club sells a starter once the next man is within six overall",
+    "ok": true,
+    "note": "covered by tests/trading-second-pass.test.js (\"a club does not sell a starter with no ready replacement\")"
+   },
+   {
+    "id": 4,
+    "name": "three bench bodies do not buy a good player",
+    "ok": true,
+    "note": "refused: rosterFull"
+   },
+   {
+    "id": 5,
+    "name": "many small picks for a star are refused (size limit, then value)",
+    "ok": true,
+    "note": "ten: size; three: noReplacement"
+   },
+   {
+    "id": 6,
+    "name": "the 4th proposal to one club is blocked by the limit, not re-judged",
+    "ok": true,
+    "note": "no · no · no · blocked:limit"
+   },
+   {
+    "id": 7,
+    "name": "a monster just bought cannot be sent on in the same season",
+    "ok": true,
+    "note": "refused: immovable"
+   },
+   {
+    "id": 8,
+    "name": "protected monsters and rookies on a first deal cannot be traded",
+    "ok": true,
+    "note": "protected → immovable,noReplacement; rookie row listed with reason: Rookies stay with the club that signed them for their first two seasons."
+   },
+   {
+    "id": 9,
+    "name": "the desk is closed outside the draft clock and the offseason",
+    "ok": true,
+    "note": "reasons: window"
+   },
+   {
+    "id": 10,
+    "name": "the preview shows legality, roster, cap and depth but never whether the club accepts",
+    "ok": true,
+    "note": "keys: ok,legal,reasons,detail"
+   },
+   {
+    "id": 11,
+    "name": "incoming offers: from real needs, each shows its effect, each can be accepted as legal, and many weeks bring none",
+    "ok": true,
+    "note": "12/60 weeks had a call; kinds {\"buy\":12}; 2 different clubs"
+   },
+   {
+    "id": 12,
+    "name": "a reload keeps the proposal count and gives the same answer to the same proposal",
+    "ok": true,
+    "note": "left 2; first no, after reload no"
+   }
+  ],
+  "54": [
+   {
+    "id": 1,
+    "name": "a fair offer for a spare is accepted; a cheaper one is refused with a value reason",
+    "ok": true,
+    "note": "pays 49 pick-value for Ripplet (WR 58); cheaper pick refused: value"
+   },
+   {
+    "id": 2,
+    "name": "a club will not give up a starter with no ready replacement",
+    "ok": true,
+    "note": "Ashford Hawks: Lumen (QB 75) refused: position,noReplacement"
+   },
+   {
+    "id": 3,
+    "name": "the same club sells a starter once the next man is within six overall",
+    "ok": true,
+    "note": "covered by tests/trading-second-pass.test.js (\"a club does not sell a starter with no ready replacement\")"
+   },
+   {
+    "id": 4,
+    "name": "three bench bodies do not buy a good player",
+    "ok": true,
+    "note": "refused: noNeed,value"
+   },
+   {
+    "id": 5,
+    "name": "many small picks for a star are refused (size limit, then value)",
+    "ok": true,
+    "note": "ten: size; three: position,noReplacement"
+   },
+   {
+    "id": 6,
+    "name": "the 4th proposal to one club is blocked by the limit, not re-judged",
+    "ok": true,
+    "note": "no · no · no · blocked:limit"
+   },
+   {
+    "id": 7,
+    "name": "a monster just bought cannot be sent on in the same season",
+    "ok": true,
+    "note": "refused: immovable"
+   },
+   {
+    "id": 8,
+    "name": "protected monsters and rookies on a first deal cannot be traded",
+    "ok": true,
+    "note": "protected → immovable,noReplacement; rookie row listed with reason: Rookies stay with the club that signed them for their first two seasons."
+   },
+   {
+    "id": 9,
+    "name": "the desk is closed outside the draft clock and the offseason",
+    "ok": true,
+    "note": "reasons: window"
+   },
+   {
+    "id": 10,
+    "name": "the preview shows legality, roster, cap and depth but never whether the club accepts",
+    "ok": true,
+    "note": "keys: ok,legal,reasons,detail"
+   },
+   {
+    "id": 11,
+    "name": "incoming offers: from real needs, each shows its effect, each can be accepted as legal, and many weeks bring none",
+    "ok": true,
+    "note": "12/60 weeks had a call; kinds {\"buy\":12}; 3 different clubs"
+   },
+   {
+    "id": 12,
+    "name": "a reload keeps the proposal count and gives the same answer to the same proposal",
+    "ok": true,
+    "note": "left 2; first no, after reload no"
+   }
+  ],
+  "55": [
+   {
+    "id": 1,
+    "name": "a fair offer for a spare is accepted; a cheaper one is refused with a value reason",
+    "ok": true,
+    "note": "pays 49 pick-value for Joltrex (DL 58); cheaper pick refused: value"
+   },
+   {
+    "id": 2,
+    "name": "a club will not give up a starter with no ready replacement",
+    "ok": true,
+    "note": "Ashford Hawks: Lumen (QB 74) refused: position,noReplacement"
+   },
+   {
+    "id": 3,
+    "name": "the same club sells a starter once the next man is within six overall",
+    "ok": true,
+    "note": "covered by tests/trading-second-pass.test.js (\"a club does not sell a starter with no ready replacement\")"
+   },
+   {
+    "id": 4,
+    "name": "three bench bodies do not buy a good player",
+    "ok": true,
+    "note": "refused: rosterFull"
+   },
+   {
+    "id": 5,
+    "name": "many small picks for a star are refused (size limit, then value)",
+    "ok": true,
+    "note": "ten: size; three: position,noReplacement"
+   },
+   {
+    "id": 6,
+    "name": "the 4th proposal to one club is blocked by the limit, not re-judged",
+    "ok": true,
+    "note": "no · no · no · blocked:limit"
+   },
+   {
+    "id": 7,
+    "name": "a monster just bought cannot be sent on in the same season",
+    "ok": true,
+    "note": "refused: immovable"
+   },
+   {
+    "id": 8,
+    "name": "protected monsters and rookies on a first deal cannot be traded",
+    "ok": true,
+    "note": "protected → immovable,noReplacement; rookie row listed with reason: Rookies stay with the club that signed them for their first two seasons."
+   },
+   {
+    "id": 9,
+    "name": "the desk is closed outside the draft clock and the offseason",
+    "ok": true,
+    "note": "reasons: window"
+   },
+   {
+    "id": 10,
+    "name": "the preview shows legality, roster, cap and depth but never whether the club accepts",
+    "ok": true,
+    "note": "keys: ok,legal,reasons,detail"
+   },
+   {
+    "id": 11,
+    "name": "incoming offers: from real needs, each shows its effect, each can be accepted as legal, and many weeks bring none",
+    "ok": true,
+    "note": "12/60 weeks had a call; kinds {\"buy\":12}; 1 different clubs"
+   },
+   {
+    "id": 12,
+    "name": "a reload keeps the proposal count and gives the same answer to the same proposal",
+    "ok": true,
+    "note": "left 2; first no, after reload no"
+   }
+  ]
+ }
+}
