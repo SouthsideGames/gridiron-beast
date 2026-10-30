@@ -7,7 +7,7 @@ each phase still needs its own authorisation.
 | Group | Decisions | Status |
 |---|---|---|
 | 1 — Aging and Longevity | D1–D8 | **Approved with modifications, 2026-10-30** (below) |
-| 2 — Draft Quality and Competitive Balance | D9, D10 | Presented, awaiting decision |
+| 2 — Draft Quality and Competitive Balance | D9, D10 | **Presented 2026-10-30, awaiting decision** (below) |
 | 3 — AI Roster Intelligence | D13, D14, D15, T3 (and Phase B items) | Not yet presented |
 | 4 — Prospect Development | D12 | Not yet presented |
 | 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | Not yet presented |
@@ -164,3 +164,37 @@ Source: `tools/aging-projection.mjs`, seeds 106 and 107 (`docs/task6-plan/group1
    - Training costs must be shown wherever points are spent.
 6. **Pools and waivers.** Unsigned monsters age and retire too (×2 odds), or the market fills with ancient veterans.
 7. **Performance.** All work is offseason-only and linear in league size; no weekly cost.
+
+## Group 2 — Draft Quality and Competitive Balance (D9, D10): presented 2026-10-30, awaiting decision
+
+Evidence: `docs/task6-plan/group2-gym-balance.txt`, `docs/task6-plan/draft-and-gym-seeds106-110.txt`, Task 5.5 data (PR #83).
+Every 20-season figure comes from 5 seeds and is provisional. Any balance claim must be confirmed on 10 or more twenty-season seeds before implementation.
+
+### Intended gym advantage (protected; the benchmark must not remove it)
+- Gym anchors start 1, 4 or 7 points above their tier (`GYM_TIER`), plus studied tape after a loss to the owner.
+- Each gym has one ageless, cap-exempt legendary, and gym coaches get IQ + 0.2.
+- Gyms are never slowed by the nudge.
+- Gyms should remain favourites and win most AI titles, and each later gym should be harder than the one before.
+- **Proposed protection floor**, measured on 10+ seeds × 20 seasons:
+  - gym win % against ordinary clubs ≥ 60;
+  - gym share of AI titles ≥ 75%;
+  - gym team-overall lead over the ordinary mean ≥ 6 at every season from 5 to 20;
+  - gym tier order preserved.
+
+### Unintended long-term imbalance (to correct)
+- Gym growth of 1.5 a season against 0.5 has no end. The anchor gap is 5.5 / 14.9 / 24.9 at seasons 1 / 10 / 20.
+- Ordinary AI clubs become near-permanent losers: 63.6% over 10 seasons (60 seeds) and 91.4% over 20 seasons. They win 4.8% and 1% of titles respectively.
+- Gyms reach their anchor through nudge signings: 58.6% of gym starters are generated veterans at season 20.
+- The brake slows ordinary clubs above anchor + 4, so ordinary clubs that improve are pushed back. This would also hide Task 6 AI gains.
+- Draft classes have fixed quality while anchors grow, so the draft stops supplying starters: 49% → 2.7% of round-1 picks would start.
+
+### Recommendation as presented
+- **D9:** draft-class quality and potential rise by `round(0.5 × (year − 1))`, the ordinary growth rate, capped at +10. The owner drafts from the same classes.
+- **D10a (measured):** gym growth plateau. 1.5 a season up to season 10, then 0.5 a season (the ordinary rate). Tier offsets, legendary and coach IQ are unchanged.
+- **D10b (not yet measured):** an asymmetric band for ordinary clubs. Lift below anchor − 4 (unchanged), but slow only above anchor + 8 (today + 4). Gyms and the rival are unchanged.
+- **D10c:** nudge recalibration authorised after Group 1, measured against §45.6. The values are confirmed in Phase 0 and A.
+- **Proposed corridor for ordinary clubs**, 10+ seeds × 20 seasons:
+  - persistent losers ≤ 50%;
+  - 5–15% of AI titles;
+  - 20–30% of AI playoff berths;
+  - gym lead at season 20 between 6 and 12 team-overall points.
