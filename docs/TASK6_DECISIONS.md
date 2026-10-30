@@ -15,6 +15,8 @@ words) governs.
 | 3 — AI Roster Intelligence | D13, D14, D15, T3 (and Phase B items) | **Approved with modifications, 2026-10-30** (below); thresholds provisional |
 | 4 — Prospect Development | D12 | **Approved with refinements, 2026-10-30** (below); values provisional |
 | 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | **Approved with clarifications, 2026-10-30** (below). **Phase 0 authorised; Phases A–D and T1, T2, T4 not authorised** |
+| Phase 0 | Benchmark foundation | **Approved complete, 2026-10-30** (PR #85, open). Thresholds version 2 |
+| Phase A-1 | Ageing, training, retirement, transition, labels | **Authorised 2026-10-30** (implementation only; no merge, no publish) |
 | Trading follow-ups | T1–T4 | Owner's provisional preferences recorded: approve T1; roster-compliant offers for T2; valuation-based protection for T3; a limited repeat-trade restriction for T4. Not final authorisation |
 
 ## Group 1 — Aging and Longevity (D1–D8): owner decision of 2026-10-30
@@ -773,3 +775,49 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 **Gate thresholds.**
 - Whether the gym protection floor and the ordinary-club corridor are achievable together: report any conflict.
 - The drift tolerance of ±5 for seasons 1–8 is initial.
+
+## Phase 0 approval and Phase A-1 authorisation (owner, 2026-10-30)
+**Phase 0 accepted.**
+- Approved: the harness v4, baselines, methodology and tools.
+- PRs #83, #84 and #85 stay open and unmerged.
+
+**Measurement decisions** (thresholds version 2; methodology §8):
+- **Round-1 conversion:** ≥ 44% for the drafting club by the end of the second season; the late-pick target ≥ 30% is kept.
+- **Succession:** ≥ 40% (10-season sample) and ≥ 30% (20-season sample) on the original definition; the expanded definition is reported.
+- **Misaligned picks:** ≤ 7.4% (position-relative), without loss of draft quality.
+- **Physical decline:**
+  - no improvement past the onset window;
+  - ≥ 1.5 points at 3 seasons past onset and ≥ 2.5 at 5;
+  - progressive, with no sudden collapse.
+- **Kept unchanged:** retirement ranges, career lengths and the exceptional-longevity rules.
+- **Gym lead:** ≥ 6 from season 8; seasons 5–7 no worse than v42.17.0.
+- **Gym tier order:** judged on pooled means, with per-seed inversions reported. Gym protections are not weakened.
+- **All-Star drift:** 24 seeds for formal phase validation only. The contract is kept.
+- **Stage P:** median of 3 repetitions.
+
+**New workflow: Feature-Complete Development with Consolidated Testing.**
+1. Plan.
+2. Implement the whole phase, with focused tests only.
+3. Prepare a development preview. Ask before updating the preview link.
+4. Run one consolidated validation against the frozen Phase 0 baseline:
+   - no needless reruns;
+   - no automatic restarts;
+   - logs kept.
+5. Consolidate the fixes, with targeted re-tests.
+6. Final review.
+- All gates still apply.
+
+**Phase A-1 authorised:**
+- ageing and physical decline;
+- retirement;
+- historical and roster integrity (reason `retired`);
+- old-save transition, with a validation tool;
+- long-term roster viability.
+
+**Not authorised:**
+- Phases A-2, B, C and D;
+- trading redesigns;
+- balance changes outside scope;
+- the Legacy System;
+- merges;
+- publishing.
