@@ -113,16 +113,25 @@ export function trading(runs) {
     cap: { salaryDeltaMedian: median(deals.map((d) => (d.salaryIn ?? 0) - d.salaryOut)), capStrainPct: pct(deals.filter((d) => d.capStrain).length, deals.length), buyerRoomAfterMedian: median(deals.map((d) => d.aCapAfter)) },
     outcomes: { withAcquirerSeasonEndPct: follow('withA0', deals), startingSeasonEndPct: follow('startA0', deals), withAcquirerNextSeasonPct: follow('withA1', deals), startingNextSeasonPct: follow('startA1', deals), withAcquirer2Pct: follow('withA2', deals), starting2Pct: follow('startA2', deals), reTradedWithinASeason: reTraded },
     integrity: { protectedMoved: deals.filter((d) => d.protectedMoved).length, afterDeadline: ins.filter((d) => d.week > TRADE_DEADLINE_WEEK || d.week < FIRST_TRADE_WEEK).length },
+    byBuyerStatus: buyerStatus(runs, deals), perClubSeasonMax: (() => { const c = count(deals, (d) => `${d.seed}|${d.A}|${d.year}`); return Math.max(0, ...Object.values(c)); })(),
   };
 }
 
-/** Does trading for a weak position fix it? Every AI club-season with a weak group at its end: was a monster at that position acquired by trade in the next window (the offseason or weeks 2–8), and was the group still weak a season later? Observational, both trees. */
+/** Strategy signal: do strugglers (≤ 3 wins the season before) trade differently from contenders (6+)? Age of what they buy, what they pay. */
+function buyerStatus(runs, deals) {
+  const rows = aiRows(runs); const rec = {}; for (const x of rows) rec[`${x.seed}|${x.club}|${x.year}`] = x.w;
+  const part = (pred) => { const ds = deals.filter((d) => { const w = rec[`${d.seed}|${d.A}|${d.year - 1}`]; return w != null && pred(w); }); return { n: ds.length, ageMedian: median(ds.map((d) => d.age)), age29plusPct: pct(ds.filter((d) => d.age >= 29).length, ds.length), r1PerDeal: r2(mean(ds.map((d) => d.r1Given))), picksPerDeal: r2(mean(ds.map((d) => d.picks.length))), cfLineupGainMedian: median(ds.map((d) => d.cfLineupGain)) }; };
+  const sold = (pred) => { const ds = deals.filter((d) => { const w = rec[`${d.seed}|${d.B}|${d.year - 1}`]; return w != null && pred(w); }); return { n: ds.length, picksReceivedPerDeal: r2(mean(ds.map((d) => d.picks.length))), r1ReceivedPerDeal: r2(mean(ds.map((d) => d.r1Given))) }; };
+  return { strugglersBuying: part((w) => w <= 3), contendersBuying: part((w) => w >= 6), strugglersSelling: sold((w) => w <= 3), contendersSelling: sold((w) => w >= 6) };
+}
+/** Does trading for a weak position fix it? Every AI club-season with a weak group at its end: did the club receive a monster at that position by trade in the next window (the offseason or weeks 2–8; as shopper or as the seller in a swap), and was the group still weak a season later? Observational, both trees. */
 export function weakResponse(runs) {
   const rows = aiRows(runs); const bySC = bySeedClub(rows); const tradesBy = {};
-  for (const r of runs.filter((x) => !x.error)) for (const t of r.decisions.trades) (tradesBy[`${r.seed}|${t.A}|${t.year}`] ||= []).push(t);
+  // a club "traded for" a position when it received a monster there: as the shopper (toA), or as the seller in a swap (toB)
+  for (const r of runs.filter((x) => !x.error)) for (const t of r.decisions.trades) { (tradesBy[`${r.seed}|${t.A}|${t.year}`] ||= []).push(t.toAPos); (tradesBy[`${r.seed}|${t.B}|${t.year}`] ||= []).push(...(t.toBAllPos || [])); }
   const cell = () => ({ n: 0, resolved: 0 }); const out = { traded: cell(), notTraded: cell(), byPos: {} };
   for (const l of Object.values(bySC)) for (let i = 0; i + 1 < l.length; i++) { const x = l[i], y = l[i + 1]; for (const p of x.weakGroups) { if (p === 'K') continue;
-    const traded = (tradesBy[`${x.seed}|${x.club}|${y.year}`] || []).some((t) => t.toAPos === p); const c = traded ? out.traded : out.notTraded; c.n++; if (!y.weakGroups.includes(p)) c.resolved++;
+    const traded = (tradesBy[`${x.seed}|${x.club}|${y.year}`] || []).includes(p); const c = traded ? out.traded : out.notTraded; c.n++; if (!y.weakGroups.includes(p)) c.resolved++;
     const b = (out.byPos[p] ||= { traded: cell(), notTraded: cell() }); const cc = traded ? b.traded : b.notTraded; cc.n++; if (!y.weakGroups.includes(p)) cc.resolved++; } }
   const rate = (c) => ({ n: c.n, resolvedPct: pct(c.resolved, c.n) });
   return { traded: rate(out.traded), notTraded: rate(out.notTraded), tradedShareOfWeak: pct(out.traded.n, out.traded.n + out.notTraded.n), byPos: Object.fromEntries(Object.entries(out.byPos).map(([p, v]) => [p, { traded: rate(v.traded), notTraded: rate(v.notTraded) }])) };
@@ -131,12 +140,15 @@ export function weakResponse(runs) {
 /** Draft capital, succession cover, draftee growth, OL detail, gym titles: the franchise measures Task 4 did not record. */
 export function franchiseExtra(runs) {
   const rows = aiRows(runs); const bySC = bySeedClub(rows); const years = [...new Set(rows.map((x) => x.year))].sort((a, b) => a - b);
-  // draft capital (unused picks for the next class, by round)
-  const withPicks = rows.filter((x) => x.picksNext);
-  const r1s = withPicks.map((x) => x.picksNext[0]);
-  const capital = { r1HeldMean: r2(mean(r1s)), r1NoneNextPct: pct(r1s.filter((v) => v === 0).length, r1s.length), r1TwoPlusPct: pct(r1s.filter((v) => v >= 2).length, r1s.length), allHeldMean: r2(mean(withPicks.map((x) => x.picksNext.reduce((a, b) => a + b, 0)))), r1NoneNext2Pct: pct(withPicks.filter((x) => x.picksNext2 && x.picksNext[0] === 0 && x.picksNext2[0] === 0).length, withPicks.length) };
-  { const strug = withPicks.filter((x) => x.w <= 3), cont = withPicks.filter((x) => x.w >= 6); capital.strugglersR1Mean = r2(mean(strug.map((x) => x.picksNext[0]))); capital.contendersR1Mean = r2(mean(cont.map((x) => x.picksNext[0]))); capital.strugglersR1NonePct = pct(strug.filter((x) => x.picksNext[0] === 0).length, strug.length); capital.contendersR1NonePct = pct(cont.filter((x) => x.picksNext[0] === 0).length, cont.length); }
-  capital.byYear = Object.fromEntries(years.map((y) => { const ys = withPicks.filter((x) => x.year === y); return [y, { r1Mean: r2(mean(ys.map((x) => x.picksNext[0]))), r1NonePct: pct(ys.filter((x) => x.picksNext[0] === 0).length, ys.length), r1Max: ys.length ? Math.max(...ys.map((x) => x.picksNext[0])) : null }]; }));
+  // draft capital, from the drafts themselves: how many first-round selections each AI club made in each draft (the harness's picksNext
+  // snapshot is taken before the offseason deals of the same window, so it cannot see picks those deals move; the draft record can)
+  const sel = {}; for (const r of runs.filter((x) => !x.error)) for (const d of r.decisions.draft) if (d.round === 1) { const k = `${r.seed}|${d.club}|${d.year}`; sel[k] = (sel[k] || 0) + 1; }
+  const draftYears = new Set(runs.filter((x) => !x.error).flatMap((r) => r.decisions.draft.map((d) => `${r.seed}|${d.year}`)));
+  const cd = rows.filter((x) => draftYears.has(`${x.seed}|${x.year}`)).map((x) => ({ w: x.w, year: x.year, n: sel[`${x.seed}|${x.club}|${x.year}`] || 0 }));
+  const capital = { clubDrafts: cd.length, r1PerClubDraft: r2(mean(cd.map((x) => x.n))), noR1Pct: pct(cd.filter((x) => x.n === 0).length, cd.length), twoPlusR1Pct: pct(cd.filter((x) => x.n >= 2).length, cd.length), maxR1OneClub: cd.length ? Math.max(...cd.map((x) => x.n)) : null };
+  { const strug = cd.filter((x) => x.w <= 3), cont = cd.filter((x) => x.w >= 6); capital.strugglersNoR1Pct = pct(strug.filter((x) => x.n === 0).length, strug.length); capital.contendersNoR1Pct = pct(cont.filter((x) => x.n === 0).length, cont.length); capital.strugglersTwoPlusPct = pct(strug.filter((x) => x.n >= 2).length, strug.length); capital.contendersTwoPlusPct = pct(cont.filter((x) => x.n >= 2).length, cont.length); }
+  // repeated loss of first-round picks: a club with no first-rounder in two drafts running
+  { const by = {}; for (const r of runs.filter((x) => !x.error)) { const ys = [...new Set(r.decisions.draft.map((d) => d.year))].sort((a, b) => a - b); for (const c of new Set(r.rows.filter((x) => !x.owner).map((x) => x.club))) for (let i = 1; i < ys.length; i++) { const k = `${r.seed}|${c}`; by[k] ||= 0; if (!sel[`${r.seed}|${c}|${ys[i]}`] && !sel[`${r.seed}|${c}|${ys[i - 1]}`]) by[k]++; } } capital.clubsNoR1TwoDraftsRunningPct = pct(Object.values(by).filter((n) => n > 0).length, Object.keys(by).length); }
   // succession: starter slots held by a (non-protected) starter aged 30+, and whether a backup aged 26 or less within 8 overall is there to take over
   let old = 0, covered = 0, old33 = 0, slots = 0; const ageByPosYear = {}; const succByYear = {};
   for (const x of rows) { if (!x.startersDetail) continue; let o = 0, c = 0; for (const p of POS) { const st = x.startersDetail[p] || []; const bk = (x.backupsDetail?.[p] || []).filter((b) => !b[3]); for (const s of st) { if (s[2]) continue; slots++; (ageByPosYear[`${p}|${x.year}`] ||= []).push(s[1]); if (s[1] >= 30) { old++; o++; if (bk.some((b) => b[1] <= 26 && b[0] >= s[0] - 8)) { covered++; c++; } } if (s[1] >= 33) old33++; } }
@@ -191,7 +203,7 @@ export function seedMetrics(r) {
     avgStarter: mean(rows.map((x) => x.avgStarter)), teamOvr: mean(rows.map((x) => x.teamOvr)), teamOvrSd: sdYear, starterAgeLast: mean(lastRows.map((x) => x.starterAge)), ownStarterShareLast: 100 * mean(lastRows.map(own)),
     persistentLoserPct: 100 * losers / Math.max(1, Object.keys(bySC).length), distinctChampions: new Set(champs).size, maxTitleShare: champs.length ? Math.max(...Object.values(cc)) / r.seasons : 0, gymTitleShare: champs.length ? 100 * champs.filter((c) => GYMS.has(c)).length / champs.length : null,
     nudgeSigningsPerClubSeason: mean(rows.map((x) => x.boosted || 0)), slowedPct: 100 * rows.filter((x) => x.slowed > 0).length / rows.length, seasonEndLineupProblems: rows.filter((x) => x.lineupProblems > 0).length, seasonEndOverCap: rows.filter((x) => x.capRoom < 0).length,
-    r1HeldMean: mean(rows.filter((x) => x.picksNext).map((x) => x.picksNext[0])), r1NonePct: 100 * rows.filter((x) => x.picksNext && x.picksNext[0] === 0).length / Math.max(1, rows.filter((x) => x.picksNext).length), successionCoveredPct: old ? 100 * cov / old : null,
+    noR1DraftPct: (() => { const sel = {}; for (const d of r.decisions.draft) if (d.round === 1) sel[`${d.club}|${d.year}`] = (sel[`${d.club}|${d.year}`] || 0) + 1; const ys = new Set(r.decisions.draft.map((d) => d.year)); const cd = rows.filter((x) => ys.has(x.year)); return cd.length ? 100 * cd.filter((x) => !sel[`${x.club}|${x.year}`]).length / cd.length : null; })(), successionCoveredPct: old ? 100 * cov / old : null,
     ownerWinPct: (() => { const o = r.rows.filter((x) => x.owner); const w = o.reduce((s, x) => s + x.w, 0), l = o.reduce((s, x) => s + x.l, 0); return w + l ? 100 * w / (w + l) : null; })(),
   };
 }
@@ -227,7 +239,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       summary.groups[g][t] = { task4: analyse(rs, { label: `${t}-${g}` }), trading: trading(rs), weakResponse: weakResponse(rs), extra: franchiseExtra(rs), calls: callsSummary(rs), integrity: integrity(rs) };
       for (const d of dealTable(rs)) tradeRows.push({ tree: t, group: g, ...d });
       for (const r of rs.filter((x) => !x.error)) for (const c of r.decisions.calls || []) callRows.push({ tree: t, group: g, seed: r.seed, year: c.year, week: c.week, offseason: c.offseason, team: c.team, kind: c.kind, pos: c.pos, sendsOvr: c.sends.map((m) => m.ovr), sendsAge: c.sends.map((m) => m.age), asksOvr: c.asks.map((m) => m.ovr), give: c.give, sendPicks: c.sendPicks, ownerFloorAtPos: c.ownerFloorAtPos, wouldStart: c.wouldStart });
-      for (const x of aiRows(rs)) clubRows.push({ tree: t, group: g, seed: x.seed, year: x.year, club: x.club, gym: GYMS.has(x.club), w: x.w, l: x.l, playoffs: x.playoffs, champion: x.champion, teamOvr: x.teamOvr, target: x.target, quality: x.quality, boosted: x.boosted, slowed: x.slowed, rosterSize: x.rosterSize, payroll: x.payroll, capRoom: x.capRoom, lineupProblems: x.lineupProblems, avgStarter: x.avgStarter, weakGroups: x.weakGroups, meanAge: x.meanAge, starterAge: x.starterAge, devMean: x.devMean, r1Next: x.picksNext?.[0], r2Next: x.picksNext?.[1], r3Next: x.picksNext?.[2], r1Next2: x.picksNext2?.[0], ...Object.fromEntries(POS.map((p) => [`st_${p}`, x.starters?.[p] || []])) });
+      const r1Sel = {}; for (const r of rs.filter((z) => !z.error)) for (const d of r.decisions.draft) if (d.round === 1) r1Sel[`${r.seed}|${d.club}|${d.year}`] = (r1Sel[`${r.seed}|${d.club}|${d.year}`] || 0) + 1;
+      for (const x of aiRows(rs)) clubRows.push({ tree: t, group: g, seed: x.seed, year: x.year, club: x.club, gym: GYMS.has(x.club), w: x.w, l: x.l, playoffs: x.playoffs, champion: x.champion, teamOvr: x.teamOvr, target: x.target, quality: x.quality, boosted: x.boosted, slowed: x.slowed, rosterSize: x.rosterSize, payroll: x.payroll, capRoom: x.capRoom, lineupProblems: x.lineupProblems, avgStarter: x.avgStarter, weakGroups: x.weakGroups, meanAge: x.meanAge, starterAge: x.starterAge, devMean: x.devMean, r1Selections: r1Sel[`${x.seed}|${x.club}|${x.year}`] || 0, ...Object.fromEntries(POS.map((p) => [`st_${p}`, x.starters?.[p] || []])) });
     }
     if (runs[BASE][g] && runs[NEW][g]) { const p = paired(runs[BASE][g], runs[NEW][g]); summary.paired[g] = { seeds: p.seeds, metrics: p.metrics }; for (const ps of p.perSeed || []) for (const t of ['base', 'new']) seedRows.push({ group: g, tree: t === 'base' ? BASE : NEW, seed: ps.seed, ...Object.fromEntries(Object.entries(ps[t]).map(([k, v]) => [k, r2(v)])) }); }
   }

@@ -39,9 +39,10 @@ test('integrity flags a protected monster moved and a deal or an offer past the 
 });
 
 test('franchise extras: draft capital and succession cover for ageing starters', () => {
-  const old = detail(31); const rows = [row('A', 1, { picksNext: [0, 1, 2], startersDetail: old, backupsDetail: { ...Object.fromEntries(Object.keys(starters).map((p) => [p, []])), QB: [[66, 24, 75, 0]] } }), row('A', 2)];
-  const x = franchiseExtra([run(1, { rows })]);
-  assert.equal(x.capital.r1NoneNextPct, 50); assert.ok(x.succession.coveredPct > 0 && x.succession.coveredPct < 100, 'only the QB has a young backup within 8');
+  const old = detail(31); const rows = [row('A', 1, { startersDetail: old, backupsDetail: { ...Object.fromEntries(Object.keys(starters).map((p) => [p, []])), QB: [[66, 24, 75, 0]] } }), row('B', 1), row('A', 2), row('B', 2)];
+  const r = run(1, { rows }); r.decisions.draft = [{ year: 1, club: 'B', round: 1, id: 'd1', ovr: 60 }, { year: 1, club: 'B', round: 1, id: 'd2', ovr: 59 }, { year: 1, club: 'A', round: 2, id: 'd3', ovr: 55 }];
+  const x = franchiseExtra([r]);
+  assert.equal(x.capital.noR1Pct, 50, 'A made no first-round selection in draft 1 (it had traded the pick to B)'); assert.equal(x.capital.twoPlusR1Pct, 50); assert.ok(x.succession.coveredPct > 0 && x.succession.coveredPct < 100, 'only the QB has a young backup within 8');
 });
 
 test('paired differences are deterministic and the interval brackets the mean difference', () => {
