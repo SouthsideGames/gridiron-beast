@@ -1,0 +1,1 @@
+Task 6 Group 2 diagnostic: gym anchor growth 1.5/season to season 10, then 0.5/season. NOT production.
