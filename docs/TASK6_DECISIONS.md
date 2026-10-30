@@ -9,8 +9,8 @@ each phase still needs its own authorisation.
 | 1 — Aging and Longevity | D1–D8 | **Approved with modifications, 2026-10-30** (below) |
 | 2 — Draft Quality and Competitive Balance | D9, D10 | **Approved with modifications, 2026-10-30** (below); numbers provisional pending Phase A testing |
 | 3 — AI Roster Intelligence | D13, D14, D15, T3 (and Phase B items) | **Approved with modifications, 2026-10-30** (below); thresholds provisional |
-| 4 — Prospect Development | D12 | Presented 2026-10-30, awaiting decision (below) |
-| 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | Not yet presented |
+| 4 — Prospect Development | D12 | **Approved with refinements, 2026-10-30** (below); values provisional |
+| 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | Presented 2026-10-30, awaiting decision (below) |
 | Trading follow-ups | T1–T4 | Owner's provisional preferences recorded: approve T1; roster-compliant offers for T2; valuation-based protection for T3; a limited repeat-trade restriction for T4. Not final authorisation |
 
 ## Group 1 — Aging and Longevity (D1–D8): owner decision of 2026-10-30
@@ -496,7 +496,7 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
    - The T4 flip lock applies to sold starters too.
 7. **Gyms.** The Compete floor removes Rebuild selling for gyms only. R1, R3, R5, R6 and R7 apply to them in full, which supports the gym protection floor (Group 2) without forcing outcomes.
 
-## Group 4 — Prospect Development (D12; Phase C1, C2): presented 2026-10-30, awaiting decision
+## Group 4 — Prospect Development (D12; Phase C1, C2): presented 2026-10-30 (decision recorded below)
 
 ### Existing behaviour (verified)
 - `progression.js afterGame` gives XP only to monsters in a depth-chart slot: 24 base, +10 for a win, plus stats. A reserve who does not play earns nothing.
@@ -540,3 +540,132 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
   - an offseason training-camp lump of XP instead of per game;
   - real game snaps (engine work; changes results; deferred);
   - maturation only (+1.2; insufficient).
+
+### Owner decision on Group 4 (2026-10-30): approved with refinements. Values provisional.
+
+**C1 / D12 — development slots.** Approved.
+- **Eligibility, the same for AI and GM:**
+  - 6 slots per club, at most 2 per position;
+  - reserves aged 25 or under;
+  - healthy;
+  - potential at least overall + 3.
+- No engine substitutions.
+- **Practice XP:**
+  - initial share 0.35 × the existing base game XP;
+  - benchmark 0.35 and 0.50. The owner prefers 0.35; 0.50 is never chosen merely because it grows faster.
+- **How practice XP is awarded:**
+  - after each completed game;
+  - no win or stat bonus;
+  - no extra injury or fatigue roll;
+  - the existing XP slowdown applies;
+  - existing level-up mechanics;
+  - deterministic.
+- **No double counting:** a monster who earned starter XP in a game gets no practice XP for that game.
+
+**Prospect quality and potential.**
+- Gems, solid prospects and projects must stay meaningfully different over their careers.
+- Development respects potential, attribute ceilings, position progression, evolution and the Group 1 ageing rules.
+- No XP multiplier by draft classification unless testing shows a need. Higher ceilings give more opportunity by themselves; there is no hidden extra XP.
+- Evaluate whether evolutions triggered by practice XP create excessive progression.
+
+**C2 — maturation.** Approved.
+- One position-weighted +1 each offseason through age 24, never above potential.
+- Respects the ageing rules; applies to starters and reserves alike; deterministic.
+- **Validation:** check the combined effect of maturation, practice XP and evolution. If it is excessive, recommend adjustments before implementation rather than changing the approved values silently.
+
+**GM development slots.** Approved.
+- Filled automatically by the same priority (designated successors and high-upside prospects).
+- The GM can reassign them. Manual assignments persist until changed or until the monster becomes ineligible; then the game says why and offers a replacement.
+- The game shows who receives development XP, and the XP earned after games.
+- Works on mobile through Capacitor.
+- An additive, backward-compatible save field.
+
+**Real-game developmental snaps.** Deferred. The football simulation engine is not changed in Task 6; this may be a separate future enhancement.
+
+**Benchmark requirements (Group 4).**
+1. Three-season growth of young reserves.
+2. Three-season growth of starting prospects.
+3. High-potential against low-potential development.
+4. Evolution frequency and its effect on potential.
+5. Round-1 picks starting within 2 seasons.
+6. Successor readiness.
+7. League roster strength at 10 and 20 seasons.
+8. Interaction with Group 1 ageing.
+9. Interaction with Group 2 draft scaling.
+10. Gym against ordinary development.
+11. The owner win-rate requirements.
+12. Save compatibility and determinism.
+- Matched seeds, and 10+ twenty-season seeds for long-run conclusions.
+- Success is never declared on reserve ratings alone: development must produce useful future starters and real succession decisions.
+
+**Rebuilding clubs and the nudge.** Not changed now.
+- **Evaluate three options in calibration:**
+  1. keep the current behaviour;
+  2. younger generated replacements (22–26) for rebuilding clubs;
+  3. draft capital in the assistance calculation.
+- The owner's preliminary preference is option 2. Nothing is approved or implemented without benchmark evidence and owner approval.
+
+### Interactions: development with ageing, drafting, evolution and balance
+1. **Ageing (Group 1).** Prospects in slots are almost always before their physical onset, so practice level-ups buy at cost 1. Age-adjusted training starts to bite only for monsters past onset, who are never eligible (25 or under).
+2. **Draft scaling (Group 2).**
+   - Scaled classes start higher, and slots let them close the gap.
+   - The combination is checked against "no excessive rookie strength": round-1 picks must not routinely start in their first season above established starters.
+3. **Evolution.**
+   - `tryEvolve` runs on every AI level-up (`autoEvolve: true`) and adds +4 potential.
+   - Practice level-ups raise AI evolution frequency. The owner's monsters wait for the owner (`autoEvolve: false`).
+   - Measure evolution counts and potential gained per prospect against v42.17.0. Report and recommend if they are excessive.
+4. **Competitive balance.**
+   - Development raises reserves, not starters, so team overall moves only when a prospect wins a starting slot.
+   - The nudge sees that through the team overall it already reads. No new balance input.
+   - The slowdown scale covers practice XP for slowed clubs (above +8 if D10b holds).
+5. **Gyms.** The same slots and rules. Gym rosters lean on generated veterans (aged 24–30), so they have fewer eligible prospects. This is reported as gym-against-ordinary development, not adjusted.
+6. **Roster plan (Group 3).** Slot priority reads R1's successor designation. Contracts (R3) and releases (R5) protect successors, so slotted prospects are not churned out before they mature.
+
+## Group 5 — Benchmark Standards and Implementation Authorization (D11, D16, Phase 0): presented 2026-10-30, awaiting decision
+
+### Code finding: what the owner contract (§45.6) can and cannot see
+- `tools/balance-compare.mjs` compares persistent rosters with today's generator (`legacyAiTeam`). That generator reads `clubQuality`, so any anchor change (D10a) moves both sides of the comparison.
+- So the contract checks that persistent rosters follow the anchors. It cannot detect a change in absolute difficulty.
+- **Proposed addition:** an owner-difficulty drift check against v42.17.0 on matched seeds, per difficulty.
+
+### Proposed gate classes
+- **Hard gates** — every phase must pass all of them:
+  - integrity 0;
+  - determinism (same seed, same hash; twice);
+  - cap and roster legality;
+  - save compatibility;
+  - the full suite on the final commit, with no test weakened;
+  - §45.6 on every difficulty (owner ±5, AI mid-season ±2);
+  - Stage P time ≤ +10%;
+  - phone-width browser checks for any UI.
+- **Target metrics.** The provisional thresholds from Groups 1–4. A miss is reported with a recommendation; it is never tuned silently or failed automatically.
+- **Monitor metrics.** Reported, never targeted: titles, distinct champions, the hands-off owner's late-run win rate.
+
+### Proposed statistics standard
+- **Seed sets:**
+  - B 1–60 (10 seasons, development);
+  - held-out 61–80 (run once per phase on the final commit);
+  - C 106–115 (10 × 20 seasons, development);
+  - C held-out 116–125 (10 × 20 seasons, final confirmation for Phases A and D).
+- **What counts as confirmed:** the paired bootstrap interval excludes zero on pooled B, the held-out run agrees in direction, and (for long-run claims) the result holds on C. Anything else is "uncertain".
+- **Labelling:** observed and projected results are always labelled. The pre-registered thresholds change only with owner approval.
+
+### Proposed sequence and gates
+- **Phase 0** (tools only):
+  - harness v4, with the non-interference test against v3;
+  - a `task6-compare` tool;
+  - pre-registration of the thresholds;
+  - the v42.17.0 baseline on all four seed sets;
+  - the drift check.
+- **Trading track:** T1 can go independently. T3 moves to Phase B, because it needs R1's successor designation and the A1 forecast.
+- **Phase A** — two PRs:
+  - **A-1:** ageing, age-adjusted training, retirement, transition, notices and labels.
+  - **A-2:** draft scaling, gym plateau, brake and runaway width tests, nudge recalibration (checkpoint 1).
+- **Phase B:** roster plan, contracts, successor valuation (T3), need-aware drafting, successor protection in cap trims.
+- **Phase C:** development slots (AI and GM UI), maturation, free-agency upgrades (R5); evolution check; recalibration checkpoint 2.
+- **Phase D:** strategy modes, starter sales, mode weights in R3, R5 and R7; the rebuild-nudge evaluation (it needs Rebuild mode to exist); final checkpoint 3; C held-out confirmation.
+- **Release milestones** (proposed). A alone retires monsters before AI clubs can plan successions, so:
+  - **M1** = A + B;
+  - **M2** = C;
+  - **M3** = D.
+  - Each milestone needs its own release approval. Merges to `main` need owner approval and do not publish.
