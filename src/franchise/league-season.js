@@ -98,16 +98,16 @@ function trimToCap(f, club, { year, cap, starters }) {
 
 // ------------------------------------------------------------ the next season
 /**
- * Ageing (the owner's `offseason()` rules): the unprotected age, decline past 30 or grow to 23, and every salary is refreshed.
+ * Ageing (the owner's `offseason()` rules, GDD §52): the unprotected age, decline by position past their onset or grow to 23, and every salary is refreshed.
  * Legendaries and the rival's signature monster never age (owner's rules, 2026-10-23); the signature still gains
  * SIGNATURE_GROWTH points a season on what his position uses, never past his potential. This offseason's draftees enter
  * their first season (as the owner's rookies do).
  */
-export function leagueAgeing(f, r, { year }) {
+export function leagueAgeing(f, r, { year, ctx = {} }) {
   if (!hasLeague(f)) return 0; let n = 0;
   for (const club of order(f)) {
     const roster = clubRoster(f, club);
-    offseason(roster, r); // skips the ageless itself (progression.js)
+    offseason(roster, r, ctx); // skips the ageless itself (progression.js); ctx: the old-save transition and last season's injuries (GDD §52)
     for (const m of roster) { if (m.rookie === year) { m.yearsPro = 0; m.age -= 1; } if (m.signature) growSignature(m); n++; }
   }
   return n;

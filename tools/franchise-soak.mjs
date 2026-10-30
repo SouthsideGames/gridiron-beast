@@ -59,9 +59,12 @@ export function invariants(f, where) {
 
 // `stopWeek` (UI checks): stop in the first season once that week begins, mid-season.
 // `onSeason(f, s)` (studies): called after each season's offseason is settled, before the next season starts.
-export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false } = {}) {
-  const f = newFranchise(seed, { difficulty, legacy });
-  const problems = [...check(f, 'created')]; const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
+// `from` (Task 6 transition check): continue an existing franchise (an imported save) instead of creating one; a save taken at a
+// season's end starts the next season first.
+export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null } = {}) {
+  const f = from || newFranchise(seed, { difficulty, legacy });
+  const problems = [...check(f, from ? 'loaded' : 'created')];
+  if (from && f.season?.finished) { const n = F.startNextSeason(f); if (!n.ok) problems.push(`loaded save: next season blocked (${n.reason})`); else problems.push(...check(f, 'loaded: next season'));} const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
   for (let s = 1; s <= seasons && !log.fired; s++) {
     if (F.needsGoal(f)) { const g = F.commissionerGoals(f); F.chooseGoal(f, g[0]?.id); }
     let guard = 0;
