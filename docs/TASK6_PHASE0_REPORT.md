@@ -11,6 +11,7 @@
 - `docs/TASK6_APPROVED_SPECIFICATION.md` (what is measured and why).
 
 ## 1. PR and commits
+- **PR:** [#85](https://github.com/SouthsideGames/gridiron-beast/pull/85), open, do not merge.
 - **Branch:** `task6-phase0`, stacked on `task6-plan` (PR #84), which is stacked on `post-trading-benchmark` (PR #83). All open and unmerged.
 - **Commits:** the harness tree used for every baseline run is **`d6ecec1`**, frozen in its own worktree during the runs. The PR head carries this report and the record.
 
