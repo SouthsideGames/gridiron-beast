@@ -50,7 +50,7 @@ const { GYM_BY_CLUB } = await imp('src/data/gyms.js');
 const IH = await imp('src/franchise/injury-history.js');
 /** Harness v4: the columns of one monster's season-end row (arrays keep a 20-season file small). */
 export const V4_MONSTER = Object.freeze(['id', 'club', 'pos', 'age', 'ovr', 'level', 'xp', 'potential', 'starter', 'protected', 'ageless', 'origin', 'draftedYear', 'draftedRound',
-  'contractEnds', 'contractYears', 'salary', 'stage', 'injIncidents', 'injMissed', 'injOpp', 'attrs']);
+  'contractEnds', 'contractYears', 'salary', 'stage', 'injIncidents', 'injMissed', 'injOpp', 'yearsPro', 'attrs']);
 const SCEN = args.scenario ? await import(path.join(path.dirname(new URL(import.meta.url).pathname), 'ai-benchmark-scenarios.mjs')) : null;
 
 const [s0, s1] = String(args.seeds || '1-2').split('-').map(Number); const SEEDS = []; for (let s = s0; s <= (s1 || s0); s++) SEEDS.push(s);
@@ -232,7 +232,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
         if (!v4.attrKeys) v4.attrKeys = Object.keys(m.attributes || {});
         const inj = IH.injurySummary(f, m.id) || {};
         monsters.push([m.id, club, m.position, m.age, monsterOverall(m), m.level ?? null, m.xp ?? null, m.potential ?? null, starter ? 1 : 0, REG.isProtected(m) ? 1 : 0, REG.isAgeless(m) ? 1 : 0, originOf(m, club, seenSource),
-          m.drafted?.year ?? null, m.drafted?.round ?? null, m.contract?.ends ?? null, m.contract?.years ?? null, m.salary ?? null, m.stage ?? 0, inj.incidents ?? null, inj.missed ?? null, inj.opp ?? null,
+          m.drafted?.year ?? null, m.drafted?.round ?? null, m.contract?.ends ?? null, m.contract?.years ?? null, m.salary ?? null, m.stage ?? 0, inj.incidents ?? null, inj.missed ?? null, inj.opp ?? null, m.yearsPro ?? null,
           v4.attrKeys.map((k) => m.attributes?.[k] ?? null)]);
       };
       for (const c of clubs) { for (const [, x] of tableSnap[c]) row(x.m, c, x.starter); if (!v4.clubs[c]) v4.clubs[c] = { gym: GYM_BY_CLUB[c]?.tier || null }; }
