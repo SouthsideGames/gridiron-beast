@@ -1,0 +1,412 @@
+{
+ "generated": "2026-10-30T04:15:09.267Z",
+ "dir": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/t55wt/cmp/B21",
+ "base": "base",
+ "new": "t55",
+ "stages": {
+  "B": {
+   "base": {
+    "league": {
+     "seeds": 20,
+     "seasonsPerSeed": 10,
+     "clubSeasons": 3000,
+     "problems": 0,
+     "exceptions": 0,
+     "lineupFailures": 31,
+     "overCap": 0,
+     "rosterMin": 27,
+     "rosterMax": 38,
+     "secondsPerSeason": 17.7,
+     "peakHeapMB": 261,
+     "distinctChampionsMedian": 4,
+     "maxTitleShareMax": 0.9,
+     "persistentLoserPct": 39,
+     "teamOvrSd": 4,
+     "winsSd": 2.25,
+     "persistentWeakPct": 14.6,
+     "persistentWeakWithCapRoomPct": 12.3,
+     "weakGroupPct": 29.4,
+     "shortagePct": 2.3,
+     "persistentWeakByPos": {
+      "DL": 48,
+      "S": 43,
+      "OL": 120,
+      "LB": 25,
+      "TE": 73,
+      "QB": 26,
+      "CB": 38,
+      "RB": 45,
+      "WR": 10
+     },
+     "starterMeanByPos": {
+      "QB": 74,
+      "RB": 72.4,
+      "WR": 68.7,
+      "TE": 70.7,
+      "OL": 66.9,
+      "DL": 68.2,
+      "LB": 69.1,
+      "CB": 69.5,
+      "S": 69.1
+     },
+     "teamOvrMinusTargetMedian": -1,
+     "departedWithin1SeasonPct": 15.5
+    },
+    "trades": {
+     "total": 426,
+     "perSeason": 2.13,
+     "inSeason": 5,
+     "byKind": {
+      "picks": 405,
+      "swap": 21
+     },
+     "byPos": {
+      "K": 82,
+      "TE": 57,
+      "RB": 41,
+      "QB": 52,
+      "S": 29,
+      "WR": 26,
+      "CB": 34,
+      "DL": 39,
+      "LB": 32,
+      "OL": 34
+     },
+     "r1ByPos": {
+      "K": 56,
+      "TE": 36,
+      "RB": 31,
+      "S": 20,
+      "WR": 19,
+      "DL": 26,
+      "QB": 35,
+      "LB": 16,
+      "CB": 22,
+      "OL": 23
+     },
+     "r1Total": 284,
+     "kickerDeals": 82,
+     "kickerSharePct": 19.2,
+     "r1ForKickers": 56,
+     "kickerShareOfR1Pct": 19.7,
+     "mvRatioN": 426,
+     "mvRatioMedian": 0.95,
+     "mvRatioMin": 0.35,
+     "mvRatioMax": 2.53,
+     "mvInBandPct": 27.9,
+     "oldRatioMedian": 1.04,
+     "acquiredStarterPct": 84.3,
+     "acquiredAgeMedian": 26,
+     "dealFloorN": 0,
+     "floorChangeMedian": null,
+     "floorGainAtLeast2Pct": null,
+     "shopperMeanNeverFallsPct": null,
+     "sellerMeanUnchangedPct": null,
+     "sellerMeanNeverFallsPct": null,
+     "picksGiven": 648
+    }
+   },
+   "t55": {
+    "league": {
+     "seeds": 20,
+     "seasonsPerSeed": 10,
+     "clubSeasons": 3000,
+     "problems": 0,
+     "exceptions": 0,
+     "lineupFailures": 29,
+     "overCap": 0,
+     "rosterMin": 27,
+     "rosterMax": 38,
+     "secondsPerSeason": 16.5,
+     "peakHeapMB": 298,
+     "distinctChampionsMedian": 4,
+     "maxTitleShareMax": 0.8,
+     "persistentLoserPct": 39,
+     "teamOvrSd": 3.9,
+     "winsSd": 2.24,
+     "persistentWeakPct": 11.8,
+     "persistentWeakWithCapRoomPct": 9.7,
+     "weakGroupPct": 28.2,
+     "shortagePct": 2.6,
+     "persistentWeakByPos": {
+      "S": 20,
+      "OL": 114,
+      "DL": 41,
+      "CB": 41,
+      "LB": 24,
+      "WR": 14,
+      "RB": 22,
+      "TE": 44,
+      "QB": 17
+     },
+     "starterMeanByPos": {
+      "QB": 74.3,
+      "RB": 72.6,
+      "WR": 68.8,
+      "TE": 70.7,
+      "OL": 67.1,
+      "DL": 68.2,
+      "LB": 69.4,
+      "CB": 69.5,
+      "S": 69.5
+     },
+     "teamOvrMinusTargetMedian": 0,
+     "departedWithin1SeasonPct": 9.2
+    },
+    "trades": {
+     "total": 666,
+     "perSeason": 3.33,
+     "inSeason": 190,
+     "byKind": {
+      "swap+picks": 363,
+      "swap": 299,
+      "picks": 4
+     },
+     "byPos": {
+      "TE": 50,
+      "S": 68,
+      "WR": 127,
+      "DL": 91,
+      "OL": 74,
+      "QB": 35,
+      "CB": 87,
+      "LB": 74,
+      "RB": 43,
+      "K": 17
+     },
+     "r1ByPos": {
+      "TE": 30,
+      "QB": 16,
+      "RB": 22,
+      "CB": 7,
+      "WR": 1,
+      "S": 2,
+      "LB": 4,
+      "K": 1,
+      "DL": 1
+     },
+     "r1Total": 84,
+     "kickerDeals": 17,
+     "kickerSharePct": 2.6,
+     "r1ForKickers": 1,
+     "kickerShareOfR1Pct": 1.2,
+     "mvRatioN": 666,
+     "mvRatioMedian": 1.08,
+     "mvRatioMin": 0.87,
+     "mvRatioMax": 1.18,
+     "mvInBandPct": 100,
+     "oldRatioMedian": 1.2,
+     "acquiredStarterPct": 91.7,
+     "acquiredAgeMedian": 24,
+     "dealFloorN": 666,
+     "floorChangeMedian": 5,
+     "floorGainAtLeast2Pct": 91.1,
+     "shopperMeanNeverFallsPct": 97.1,
+     "sellerMeanUnchangedPct": 89.9,
+     "sellerMeanNeverFallsPct": 99.7,
+     "picksGiven": 371
+    }
+   }
+  },
+  "D": {}
+ },
+ "thresholds": [
+  {
+   "id": "T1",
+   "area": "Integrity",
+   "base": "0 problems, 0 exceptions",
+   "new": "0 problems, 0 exceptions (stages with any: none)",
+   "rule": "zero violations and exceptions in every stage",
+   "pass": true
+  },
+  {
+   "id": "T2",
+   "area": "Lineups, cap, rosters",
+   "base": "lineup 31, over cap 0, roster 27–38",
+   "new": "lineup 29, over cap 0, roster 27–38",
+   "rule": "zero cap violations, rosters 26–38, season-end lineup problems not worse than baseline (season-start lineups are in T1)",
+   "pass": true
+  },
+  {
+   "id": "T3",
+   "area": "Kickers",
+   "base": "19.2% of deals; 56 first-round picks for kickers (19.7% of 284)",
+   "new": "2.6% of deals; 1 first-round picks for kickers (1.2% of 84)",
+   "rule": "share ≤ 8%; ≤ 3 first-round picks for kickers per 20 seeds; ≤ 10% of first-round picks spent",
+   "pass": true
+  },
+  {
+   "id": "T4",
+   "area": "Fairness (market value)",
+   "base": "median 0.95, 27.9% in band (n=426)",
+   "new": "median 1.08, 100% in band (n=666)",
+   "rule": "≥ 95% within 0.85–1.18; median 0.95–1.15",
+   "pass": true
+  },
+  {
+   "id": "T5",
+   "area": "Shoppers improve",
+   "base": "acquired starter 84.3%",
+   "new": "acquired starter 91.7%; floor change median 5 (91.1% ≥ +2); starter mean never falls 97.1%",
+   "rule": "acquired starter ≥ 85%; floor change median ≥ +2; shopper starter mean never falls in ≥ 95%",
+   "pass": true
+  },
+  {
+   "id": "T6",
+   "area": "Sellers do not lose",
+   "base": "not recorded at deal time",
+   "new": "seller starter mean never falls in 99.7% (unchanged in 89.9%)",
+   "rule": "never falls in ≥ 95% (Addendum 2 wording)",
+   "pass": true
+  },
+  {
+   "id": "T7",
+   "area": "In-season (informational, no minimum)",
+   "base": "5 deals",
+   "new": "190 deals",
+   "rule": "≥ baseline, or the funnel names an approved rule as the limiter",
+   "pass": true
+  },
+  {
+   "id": "T8",
+   "area": "Volume",
+   "base": "2.13 per season",
+   "new": "3.33 per season",
+   "rule": "not above 1.5× baseline (a fall is fine if T3–T6 hold)",
+   "pass": false
+  },
+  {
+   "id": "T9",
+   "area": "Consequences",
+   "base": "age median 26; leave within a season 15.5%",
+   "new": "age median 24; leave within a season 9.2%",
+   "rule": "age median ≤ 27; leaving within a season ≤ 15%",
+   "pass": true
+  },
+  {
+   "id": "T10",
+   "area": "Unaddressed weakness",
+   "base": "12.3% persistent weak group with cap room",
+   "new": "9.7%",
+   "rule": "not higher than baseline + 2 points",
+   "pass": true
+  },
+  {
+   "id": "T11",
+   "area": "Competition",
+   "base": "distinct champions 4, max title share 0.9, team-overall sd 4, persistent losers 39%",
+   "new": "distinct champions 4, max title share 0.8, team-overall sd 3.9, persistent losers 39%",
+   "rule": "distinct champions ≥ base − 0.5; max title share not above baseline (Addendum 2); sd within ±15%; persistent losers ≤ base + 2",
+   "pass": true
+  },
+  {
+   "id": "T13",
+   "area": "Performance (Stage B wall time; the dedicated Stage P timing decides)",
+   "base": "17.7 s/season",
+   "new": "16.5 s/season",
+   "rule": "within +10% (indicative only: lanes shared the machine)",
+   "pass": true
+  }
+ ],
+ "remaining": {
+  "persistentWeakByPos": {
+   "base": {
+    "DL": 48,
+    "S": 43,
+    "OL": 120,
+    "LB": 25,
+    "TE": 73,
+    "QB": 26,
+    "CB": 38,
+    "RB": 45,
+    "WR": 10
+   },
+   "t55": {
+    "S": 20,
+    "OL": 114,
+    "DL": 41,
+    "CB": 41,
+    "LB": 24,
+    "WR": 14,
+    "RB": 22,
+    "TE": 44,
+    "QB": 17
+   }
+  },
+  "starterMeanByPos": {
+   "base": {
+    "QB": 74,
+    "RB": 72.4,
+    "WR": 68.7,
+    "TE": 70.7,
+    "OL": 66.9,
+    "DL": 68.2,
+    "LB": 69.1,
+    "CB": 69.5,
+    "S": 69.1
+   },
+   "t55": {
+    "QB": 74.3,
+    "RB": 72.6,
+    "WR": 68.8,
+    "TE": 70.7,
+    "OL": 67.1,
+    "DL": 68.2,
+    "LB": 69.4,
+    "CB": 69.5,
+    "S": 69.5
+   }
+  },
+  "tradesByPos": {
+   "base": {
+    "K": 82,
+    "TE": 57,
+    "RB": 41,
+    "QB": 52,
+    "S": 29,
+    "WR": 26,
+    "CB": 34,
+    "DL": 39,
+    "LB": 32,
+    "OL": 34
+   },
+   "t55": {
+    "TE": 50,
+    "S": 68,
+    "WR": 127,
+    "DL": 91,
+    "OL": 74,
+    "QB": 35,
+    "CB": 87,
+    "LB": 74,
+    "RB": 43,
+    "K": 17
+   }
+  },
+  "firstRoundPicksByPosition": {
+   "base": {
+    "K": 56,
+    "TE": 36,
+    "RB": 31,
+    "S": 20,
+    "WR": 19,
+    "DL": 26,
+    "QB": 35,
+    "LB": 16,
+    "CB": 22,
+    "OL": 23
+   },
+   "t55": {
+    "TE": 30,
+    "QB": 16,
+    "RB": 22,
+    "CB": 7,
+    "WR": 1,
+    "S": 2,
+    "LB": 4,
+    "K": 1,
+    "DL": 1
+   }
+  }
+ }
+}

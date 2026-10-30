@@ -1,0 +1,299 @@
+[
+ {
+  "file": "save.json",
+  "problems": [],
+  "deadline": {
+   "aiDealsAfterWeek8": 0,
+   "offersAliveAfterWeek8": 0
+  },
+  "calendar": [
+   {
+    "at": "loaded y1 w14",
+    "phase": "offseason",
+    "desk": true,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "start y2",
+    "phase": "early",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "y2 w8",
+    "phase": "open-season",
+    "desk": false,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "y2 w9",
+    "phase": "deadline-passed",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "start y3",
+    "phase": "early",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   }
+  ],
+  "loaded": {
+   "year": 1,
+   "week": 14,
+   "finished": true,
+   "league": false
+  },
+  "deals": {
+   "total": 0,
+   "inSeason": 0,
+   "weeks": []
+  },
+  "roundTrip": true,
+  "ended": {
+   "year": 3,
+   "week": 1
+  },
+  "ok": true
+ },
+ {
+  "file": "evo-save.json",
+  "problems": [],
+  "deadline": {
+   "aiDealsAfterWeek8": 0,
+   "offersAliveAfterWeek8": 0
+  },
+  "calendar": [
+   {
+    "at": "loaded y1 w4",
+    "phase": "open-season",
+    "desk": false,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "y1 w8",
+    "phase": "open-season",
+    "desk": false,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "y1 w9",
+    "phase": "deadline-passed",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "start y2",
+    "phase": "early",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "y2 w8",
+    "phase": "open-season",
+    "desk": false,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "y2 w9",
+    "phase": "deadline-passed",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "start y3",
+    "phase": "early",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   }
+  ],
+  "loaded": {
+   "year": 1,
+   "week": 4,
+   "finished": false,
+   "league": true
+  },
+  "deals": {
+   "total": 5,
+   "inSeason": 2,
+   "weeks": [
+    0,
+    3,
+    8,
+    0,
+    0
+   ]
+  },
+  "roundTrip": true,
+  "ended": {
+   "year": 3,
+   "week": 1
+  },
+  "ok": true
+ },
+ {
+  "file": "inj-save.json",
+  "problems": [],
+  "deadline": {
+   "aiDealsAfterWeek8": 0,
+   "offersAliveAfterWeek8": 0
+  },
+  "calendar": [
+   {
+    "at": "loaded y4 w4",
+    "phase": "open-season",
+    "desk": false,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "y4 w8",
+    "phase": "open-season",
+    "desk": false,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "y4 w9",
+    "phase": "deadline-passed",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "start y5",
+    "phase": "early",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "y5 w8",
+    "phase": "open-season",
+    "desk": false,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "y5 w9",
+    "phase": "deadline-passed",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "start y6",
+    "phase": "early",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   }
+  ],
+  "loaded": {
+   "year": 4,
+   "week": 4,
+   "finished": false,
+   "league": true
+  },
+  "deals": {
+   "total": 6,
+   "inSeason": 0,
+   "weeks": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "roundTrip": true,
+  "ended": {
+   "year": 6,
+   "week": 1
+  },
+  "ok": true
+ },
+ {
+  "file": "base-save.json",
+  "problems": [],
+  "deadline": {
+   "aiDealsAfterWeek8": 0,
+   "offersAliveAfterWeek8": 0
+  },
+  "calendar": [
+   {
+    "at": "loaded y2 w14",
+    "phase": "offseason",
+    "desk": true,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "start y3",
+    "phase": "early",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "y3 w8",
+    "phase": "open-season",
+    "desk": false,
+    "calls": true,
+    "aiAi": true
+   },
+   {
+    "at": "y3 w9",
+    "phase": "deadline-passed",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   },
+   {
+    "at": "start y4",
+    "phase": "early",
+    "desk": false,
+    "calls": false,
+    "aiAi": false
+   }
+  ],
+  "loaded": {
+   "year": 2,
+   "week": 14,
+   "finished": true,
+   "league": true
+  },
+  "deals": {
+   "total": 7,
+   "inSeason": 1,
+   "weeks": [
+    0,
+    0,
+    0,
+    7,
+    0,
+    0,
+    0
+   ]
+  },
+  "roundTrip": true,
+  "ended": {
+   "year": 4,
+   "week": 1
+  },
+  "ok": true
+ }
+]
