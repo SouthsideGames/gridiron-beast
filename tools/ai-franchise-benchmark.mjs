@@ -237,7 +237,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
       };
       for (const c of clubs) { for (const [, x] of tableSnap[c]) row(x.m, c, x.starter); if (!v4.clubs[c]) v4.clubs[c] = { gym: GYM_BY_CLUB[c]?.tier || null }; }
       for (const m of f.roster) row(m, f.club, ownerStart.has(m.id));
-      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), monsters });
+      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), monsters });
     }
     prevOvr = new Map(); for (const mp of Object.values(tableSnap)) for (const [id, x] of mp) prevOvr.set(id, x.ovr);
     // Save integrity at the season boundary: the whole league registry survives an export/import round trip unchanged.
