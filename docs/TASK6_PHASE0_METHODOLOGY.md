@@ -146,6 +146,7 @@ The definitions below are the code in `tools/task6-analyze.mjs`, with the same n
 
 **Drift against published v42.17.0** (owner decision of 2026-10-30).
 - balance-compare persistent with the board reset, seeds 1–12 × 20 seasons, per difficulty. Candidate against the v42.17.0 baseline files, matched seeds.
+- **Seeds:** 1–12 on Rookie and Pro; All-Star 1–24 for formal phase validation (24 seeds are not run repeatedly during implementation).
 - **Seasons 1–8:** the mean paired difference in owner win rate must be within ±5 points (hard gate). If the 95% interval reaches past ±5 while the point estimate is inside, the gate passes but is escalated to the owner as uncertain.
 - **Seasons 9–20:** reported only.
 - **If an approved change genuinely conflicts with drift:** stop and present the evidence. Never tune to conceal it.
@@ -203,6 +204,7 @@ Each phase is a separate PR. Its report contains:
 | Date | Change | Approved by |
 |---|---|---|
 | 2026-10-30 | Version 1 pre-registered (Groups 1–5) | Owner, Groups 1–5 |
+| 2026-10-30 | **Version 2 — owner approval of Phase 0.** Approved: round-1 target ≥ 44% (late ≥ 30% kept); succession targets on the Task 4 definition (≥ 40% / ≥ 30%), with the expanded definition reported; misaligned picks ≤ 7.4% without loss of draft quality; physical decline (no improvement past onset, ≥ 1.5 at 3 seasons, ≥ 2.5 at 5, progressive); gym lead ≥ 6 from season 8, seasons 5–7 no worse than v42.17.0 (`gymLeadS5to7Min`); tier order judged on pooled means, per-seed inversions reported; All-Star drift on 24 seeds for formal phase validation only (`--only=drift,drift24`); Stage P with 3 repetitions, median | Owner, 2026-10-30 |
 | 2026-10-30 | **After the v42.17.0 baseline, before any candidate data.** Re-based measures whose Task 6 definition differs from the Task 4/5 measure the spec's target was written against. This is not a change to any approved value. Marked `proposed` in thresholds.json, awaiting owner review | Proposed, Phase 0 |
 
 **Detail of the post-baseline re-basing:**

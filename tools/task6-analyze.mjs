@@ -127,6 +127,7 @@ export function seedMeasures(run) {
   const tierOvr = (t) => mean(rows.filter((x) => x.year >= 5 && gymOf(x.club) === t).map((x) => x.teamOvr));
   out.gymTierOrderHeld = last.year >= 5 ? (tierOvr('early') < tierOvr('mid') && tierOvr('mid') < tierOvr('late') ? 1 : 0) : null;
   out.gymEarlyOvrS5on = tierOvr('early'); out.gymMidOvrS5on = tierOvr('mid'); out.gymLateOvrS5on = tierOvr('late');
+  { const v = [5, 6, 7].map(lead).filter((x) => x != null); out.gymLeadS5to7Min = v.length ? Math.min(...v) : null; }
   const leads8 = []; for (let y = 8; y <= last.year; y++) { const v = lead(y); if (v != null) leads8.push(v); } out.gymLeadMinS8on = leads8.length ? Math.min(...leads8) : null;
   out.distinctChampions = new Set(titles.map((x) => x.club)).size;
   const genShare = (pred) => { let a = 0, s = 0; for (const x of rows.filter((r) => r.year === last.year && pred(r.club))) { const p = x.provenanceStarters || {}; s += Object.values(p).reduce((q, v) => q + v, 0); a += p['signed:generated'] || 0; } return pct(a, s); };

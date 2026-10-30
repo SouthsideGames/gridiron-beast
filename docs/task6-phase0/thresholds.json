@@ -1,6 +1,6 @@
 {
- "about": "Task 6 pre-registered acceptance thresholds (Phase 0, 2026-10-30). Provisional values approved by the owner in Groups 1-5 (docs/TASK6_DECISIONS.md). Changes need owner approval and are recorded in docs/TASK6_PHASE0_METHODOLOGY.md section 8. 'sample' names the seed set the measure is judged on (B = 1-60 x 10 seasons, H = held-out 61-80, C = 106-115 x 20, CH = held-out 116-125). 'better' gives the direction of improvement for the supported/inconclusive classification; 'band' is the target. Measures without a band are reported against baseline only. Version 1 was set before any candidate data; after the v42.17.0 baseline was measured (Phase 0), definitions that differ from the Task 4/5 yardsticks the targets were written against were re-based or annotated (methodology section 8). Entries marked 'proposed' await the owner's review of Phase 0.",
- "version": 1,
+ "about": "Task 6 pre-registered acceptance thresholds (Phase 0, 2026-10-30). Provisional values approved by the owner in Groups 1-5 (docs/TASK6_DECISIONS.md). Changes need owner approval and are recorded in docs/TASK6_PHASE0_METHODOLOGY.md section 8. 'sample' names the seed set the measure is judged on (B = 1-60 x 10 seasons, H = held-out 61-80, C = 106-115 x 20, CH = held-out 116-125). 'better' gives the direction of improvement for the supported/inconclusive classification; 'band' is the target. Measures without a band are reported against baseline only. Version 1 was set before any candidate data; after the v42.17.0 baseline was measured (Phase 0), definitions that differ from the Task 4/5 yardsticks the targets were written against were re-based or annotated (methodology section 8). Entries marked 'proposed' await the owner's review of Phase 0. Version 2 (2026-10-30): the owner approved Phase 0 and its proposed re-basings and gym-floor corrections; 'proposed' flags removed.",
+ "version": 2,
  "hardGates": {
   "integrityProblems": {
    "max": 0,
@@ -28,11 +28,11 @@
   },
   "ownerDriftS1to8": {
    "band": 5,
-   "how": "owner win rate seasons 1-8, candidate against published v42.17.0, matched seeds 1-12 per difficulty (balance-compare persistent, board reset); tools/task6-balance-gates.mjs --drift. Point estimate within +/-5; an interval reaching past 5 is reported as inconclusive and escalated"
+   "how": "owner win rate seasons 1-8, candidate against published v42.17.0, matched seeds per difficulty (balance-compare persistent, board reset): Rookie and Pro seeds 1-12; All-Star seeds 1-24 for formal phase validation only (owner 2026-10-30; not run repeatedly during implementation). Point estimate within +/-5; an interval reaching past 5 is reported and escalated"
   },
   "performance": {
    "maxIncreasePct": 10,
-   "how": "Stage P time per season against the v42.17.0 baseline on the same machine, measured alone"
+   "how": "Stage P (tools/task6-stage-p.mjs) seeds 1-3 x 6 seasons, 3 repetitions, median against the v42.17.0 baseline median measured the same way on the same machine (owner 2026-10-30)"
   },
   "mobileBrowser": {
    "how": "phone-width browser checks for every changed screen (docs/TESTING_POLICY.md section 2)"
@@ -224,21 +224,17 @@
    "class": "target",
    "phase": "A-2+",
    "sample": "C",
-   "band": {
-    "min": 6
-   },
+   "band": null,
    "better": null,
-   "conflict": "v42.17.0 itself is below 6 in seasons 1-7 (C: 4.7, 5.6, 5.2 in seasons 5-7; 6.3 from season 8) and the approved plateau does not change seasons 1-10. Reported to the owner; gymLeadMinS8on is reported alongside. Not changed without approval"
+   "note": "seasons 5-7: no worse than the v42.17.0 baseline (owner 2026-10-30); judged with gymLeadS5to7Min against baseline"
   },
   "gymTierOrderHeld": {
-   "class": "target",
+   "class": "monitor",
    "phase": "A-2+",
    "sample": "C",
-   "band": {
-    "min": 1
-   },
+   "band": null,
    "better": null,
-   "conflict": "per-seed: v42.17.0 holds the order in 90% (C) and 70% (CH) of seeds; inversions are within 0.5 points between neighbouring tiers. Pooled tier means (gymEarly/Mid/LateOvrS5on) are reported alongside. Not changed without approval"
+   "note": "per-seed inversions reported (owner 2026-10-30); the gate is the pooled order below"
   },
   "ordinaryPersistentLoserPct": {
    "class": "evaluation",
@@ -347,8 +343,8 @@
     "max": 7.4
    },
    "better": "down",
-   "proposed": true,
-   "note": "position-relative yardstick (baseline 10.6%); the spec's 15% was written for the Task 4 club-relative measure (24.5%). Proposed: -30% against baseline, with r1Ovr not lower than baseline"
+   "note": "position-relative yardstick (baseline 10.6%); approved <= 7.4%; improvements must not come at the expense of overall draft quality (r1Ovr not lower than baseline)",
+   "approved": "owner 2026-10-30 (Phase 0 approval)"
   },
   "contract3PlusPct": {
    "class": "target",
@@ -421,8 +417,8 @@
     "min": 44
    },
    "better": "up",
-   "proposed": true,
-   "note": "Task 4 sense: starter for the drafting club at the end of the second season. Baseline 33.0%; the spec's +10.7-point intent (24.3% to 35%) gives 44%"
+   "note": "Task 4 sense: starter for the drafting club at the end of the second season. Baseline 33.0%; the spec's +10.7-point intent (24.3% to 35%) gives 44%",
+   "approved": "owner 2026-10-30 (Phase 0 approval)"
   },
   "r1StarterAt2LatePct": {
    "class": "target",
@@ -451,16 +447,19 @@
    "class": "target",
    "phase": "A-1",
    "sample": "C",
-   "proposed": true,
-   "rule": "never positive from 1 season past the public onset; mean at 3 seasons <= -1.5 and at 5 seasons <= -2.5; loss increasing",
-   "note": "baseline: +0.29 at 0, -0.08 at 1, -0.40 at 3, -0.47 at 5 (C)"
+   "rule": "no physical improvement beyond the decline-onset window (never positive from 1 season past the public onset); mean decline at 3 seasons >= 1.5 points and at 5 seasons >= 2.5 points; decline progresses (no sudden collapse: the step between consecutive seasons past onset no larger than 3 points on average)",
+   "note": "baseline: +0.29 at 0, -0.08 at 1, -0.40 at 3, -0.47 at 5 (C)",
+   "approved": "owner 2026-10-30 (Phase 0 approval)"
   },
   "gymLeadMinS8on": {
    "class": "target",
    "phase": "A-2+",
    "sample": "C",
+   "band": {
+    "min": 6
+   },
    "better": null,
-   "note": "reported alongside the approved floor (see its conflict note)"
+   "approved": "owner 2026-10-30: the minimum of 6 applies from season 8"
   },
   "gymEarlyOvrS5on": {
    "class": "target",
@@ -482,6 +481,21 @@
    "sample": "C",
    "better": null,
    "note": "pooled tier order: early < mid < late"
+  },
+  "gymLeadS5to7Min": {
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "better": null,
+   "relative": "not below baseline",
+   "approved": "owner 2026-10-30: seasons 5-7 no worse than v42.17.0"
+  },
+  "gymTierOrderPooled": {
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "rule": "pooled across seeds: gymEarlyOvrS5on < gymMidOvrS5on < gymLateOvrS5on",
+   "approved": "owner 2026-10-30"
   }
  }
 }
