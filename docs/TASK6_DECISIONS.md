@@ -8,8 +8,8 @@ each phase still needs its own authorisation.
 |---|---|---|
 | 1 — Aging and Longevity | D1–D8 | **Approved with modifications, 2026-10-30** (below) |
 | 2 — Draft Quality and Competitive Balance | D9, D10 | **Approved with modifications, 2026-10-30** (below); numbers provisional pending Phase A testing |
-| 3 — AI Roster Intelligence | D13, D14, D15, T3 (and Phase B items) | Presented 2026-10-30, awaiting decision (below) |
-| 4 — Prospect Development | D12 | Not yet presented |
+| 3 — AI Roster Intelligence | D13, D14, D15, T3 (and Phase B items) | **Approved with modifications, 2026-10-30** (below); thresholds provisional |
+| 4 — Prospect Development | D12 | Presented 2026-10-30, awaiting decision (below) |
 | 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | Not yet presented |
 | Trading follow-ups | T1–T4 | Owner's provisional preferences recorded: approve T1; roster-compliant offers for T2; valuation-based protection for T3; a limited repeat-trade restriction for T4. Not final authorisation |
 
@@ -268,7 +268,7 @@ Every 20-season figure comes from 5 seeds and is provisional. Any balance claim 
 4. **Owner contract.** All Group 2 changes alter the league's strength curve, so §45.6 needs re-measurement on every difficulty. The hands-off owner proxy is not the contract itself.
 5. **Cost.** 10 twenty-season seeds for each of 3 brake widths (plus the runaway variants) is about 3–4 hours on 2 lanes per calibration round. Phase A should budget at least two rounds.
 
-## Group 3 — AI Roster Intelligence (D13, D14, D15, T3; Phase B and D designs): presented 2026-10-30, awaiting decision
+## Group 3 — AI Roster Intelligence (D13, D14, D15, T3; Phase B and D designs): presented 2026-10-30 (decision recorded below)
 
 ### Shared principles
 - Every decision reads observable data only (Group 1, Modification 3): the forecast window, never hidden longevity.
@@ -382,3 +382,161 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 4. Task 5 trading gains (T3–T10) must still pass.
 5. Rebuild selling could weaken the gym floor if gyms rebuild (handled by the gym option).
 6. Gains can stay invisible if the D10b band is not widened.
+
+### Owner decision on Group 3 (2026-10-30): approved with modifications. All numbers are provisional pending benchmarks.
+
+**R1 / D15 — shared roster plan.** Approved.
+- One coordinated plan per AI club each offseason, and every AI roster decision reads it.
+- **What the plan evaluates:**
+  - position strength against the league;
+  - starter age and expected decline;
+  - retirement risk;
+  - successor availability;
+  - development potential;
+  - cap commitments;
+  - draft capital;
+  - competitive position.
+- **Thresholds:**
+  - weak at −4 against the league position benchmark;
+  - approaching decline within 2 seasons of forecast;
+  - a successor is aged 26 or under, within 8 overall or with realistic potential to reach that level;
+  - a successor is ready within 4.
+
+**R2 — strategy modes.** Approved: Contend, Compete, Retool, Rebuild.
+- **Inputs:** recent results, roster quality, age distribution, salary commitments, draft capital.
+- **Stability:**
+  - a change normally needs two consecutive evaluations;
+  - an immediate change is allowed after a major shift;
+  - a rebuild normally lasts at least 2 seasons.
+- **Gyms** never fall below Compete. They must still recognise ageing starters, develop successors, manage contracts and fix weaknesses: the floor must not make them unintelligent.
+
+**R3 — contracts.** Approved: flexible 1-, 2- or 3-year deals.
+- **Inputs:** current overall, projected performance, position decline, retirement risk, cap impact, replacement availability, strategy.
+- Age-based lengths are guidelines; an exceptional veteran may get longer when projection justifies it.
+- The fixed age-32 reserve rule is replaced by position-specific evaluation.
+- Valuable young successors are protected from unnecessary expiry. They are not forced through when unaffordable, no longer viable, or replaced by better prospects.
+
+**R4 / D13 — rebuilding clubs selling starters.** Approved, testing one starter sale per window.
+- **Conditions:**
+  - the player is approaching or past decline;
+  - the club receives useful young players or draft capital;
+  - the club keeps a legal lineup;
+  - the player is not protected;
+  - the buyer has a legitimate need;
+  - existing valuation and integrity rules are met.
+- Productive young stars are never sold indiscriminately.
+- Evaluate whether one sale per window is too restrictive, but do not raise it without approval.
+
+**R5 / D14 — free-agency upgrades.** Approved.
+- **Triggers:** a weak starting group, or a succession need, with a legal finance position and a meaningful improvement (+3 provisional).
+- Releasing the weakest expendable reserve is approved.
+- **Never release:**
+  - protected monsters;
+  - necessary injury replacements;
+  - valuable designated successors without a better replacement;
+  - anyone whose release breaks roster or cap rules.
+- **Limits:** 2 upgrades per offseason for contenders, 1 for others.
+- Pools only; the GM's free-agency priority is kept.
+
+**R6 / T3 — successor protection.** Approved, provisional.
+- A qualifying successor is valued at 0.8 of a starter when the starter is within 2 seasons of decline or declining, and 0.6 at 3–4 seasons. Both replace 0.45.
+- Applied consistently in AI–AI deals and in AI valuation of deals with the GM.
+- Successors are never untradeable: a sufficiently valuable offer overcomes the premium, subject to protection and legality.
+
+**R7 — need-aware drafting.** Approved.
+- +4 for a succession need; up to +3 for a weak position; −3 at a position with a strong young starter and successor.
+- Contenders favour immediate contribution; rebuilders weight potential more.
+- Test a rebuild potential weight of 0.35 against 0.20.
+- Draft randomness, the kicker penalty and the duplicate penalty are kept.
+- Need bonuses must not make clubs consistently pick significantly inferior prospects.
+- Both draft quality and positional suitability are measured.
+
+**Group 2 follow-up — runaway veteran rule.** Approved for experiment.
+- Test the veteran-release threshold at anchor +4, +6 and +8 alongside the XP-slowdown thresholds.
+- The owner prefers aligning both thresholds if the benchmark supports it.
+- Legitimate cap pressure and normal veteran departures are kept.
+
+**Benchmark requirements (Group 3).**
+- **Compared against:** the Task 5.5 baseline and the approved Phase A foundation.
+- **Measures:**
+  - succession coverage;
+  - weak-position persistence;
+  - picks spent at unneeded positions;
+  - young successors traded away;
+  - contract-length distribution;
+  - veteran retention and retirement;
+  - free-agency starter improvements;
+  - rebuilding recovery rates;
+  - strategy-mode stability;
+  - gym roster intelligence;
+  - cap and roster integrity;
+  - the existing trading regression tests.
+- Held-out seeds and at least 10 twenty-season seeds for long-run conclusions. Projections are never treated as confirmed results.
+
+### Interactions: strategy modes, contracts, trading and balance anchors
+1. **Mode inputs do not read the anchor.** Modes use results and roster facts, not `teamOvr − target`, so a club cannot be steered into a mode by the balance system itself.
+2. **Rebuild against the nudge (code evidence).**
+   - A rebuilding club that sells veterans can fall more than 4 below its anchor.
+   - The nudge then signs up to 3 generated veterans aged 24–30 at target + 2, partly undoing the rebuild.
+   - **Options for the Phase A recalibration (owner decision; not changed here):**
+     - leave as is;
+     - make the nudge's arrivals for a Rebuild club younger (for example 22–26) at the same quality;
+     - count draft picks gained towards the lift.
+3. **Contend against the runaway rule.**
+   - An ordinary Contend club above +4 today sheds expiring veterans aged 27+, contradicting R3's one-year veteran deals.
+   - The aligned-threshold test (+4 / +6 / +8) resolves this, and the result is reported per mode.
+4. **The brake and development.** A slowed club's XP scale applies to all its XP. Under D10b that happens only above +8.
+5. **Contracts against the cap.**
+   - Three-year deals raise committed salary.
+   - `trimToCap` releases the reserve with the lowest value per salary, which can be a successor or prospect.
+   - Phase B should give successors the same release protection in cap trims as in R5, where legal.
+6. **Trading.**
+   - Successor premiums change payment choices in the Task 5 search, and starter sales add a new class of deal (Rebuild → Contend/Compete).
+   - The Task 5 tests (T3–T10) and the persistent-weak measures must still pass.
+   - The T4 flip lock applies to sold starters too.
+7. **Gyms.** The Compete floor removes Rebuild selling for gyms only. R1, R3, R5, R6 and R7 apply to them in full, which supports the gym protection floor (Group 2) without forcing outcomes.
+
+## Group 4 — Prospect Development (D12; Phase C1, C2): presented 2026-10-30, awaiting decision
+
+### Existing behaviour (verified)
+- `progression.js afterGame` gives XP only to monsters in a depth-chart slot: 24 base, +10 for a win, plus stats. A reserve who does not play earns nothing.
+- The only reserve growth is `offseason`: +1 awareness and strength a season up to age 23, towards potential.
+- The owner's Wednesday practice (`setTraining`, `INTENSITIES`) is a temporary game-week bonus with an injury risk, not permanent growth.
+- Level cost `xpForLevel = 30 + 18 × level`. Draftees start at level 1. Each level gives 3 weighted +1s (30% chance of +2) and 2 auto-spent points, capped at the monster's single potential value.
+- **Measured (v42.17.0):**
+  - young reserves gain +0.7 overall in three seasons;
+  - round-1 reserves about +1.5, against about +10 for round-1 picks who start.
+
+### Model (`tools/development-model.mjs`, `docs/task6-plan/group4-development-model.txt`; planning only)
+- **Method:**
+  - real generated draftees aged 21;
+  - the real `levelUp` and auto-spend;
+  - 11 games a season;
+  - starters at 39 XP a game (reproduces the measured starter gain).
+- **Results** — gain over 3 seasons, the same in every draft band:
+
+| Regime | Gain over 3 seasons |
+|---|---|
+| Starter | +8.4 |
+| Reserve today | +0.5 |
+| Practice 0.25 | +4.0 |
+| Practice 0.35 | +4.0 |
+| Practice 0.5 | +5.0 |
+| Practice 0.35 + maturation | +4.6 |
+| Practice 0.5 + maturation | +5.5 |
+
+- Level thresholds quantise the results: shares 0.25 and 0.35 happen to land on the same levels.
+
+### Recommendation as presented
+- **C1 — development slots with practice XP (D12 option a).**
+  - **Who:** up to 6 reserves per club (at most 2 per position), aged 25 or under, with potential at least overall + 3, not injured.
+  - **What they get:** after every game each one gains 0.35 × 24 base XP (about 8). No win bonus, no stats, no fatigue or injury roll, and the club's existing XP scale still applies.
+  - **AI selection:** from the roster plan — successors first, then the largest gap between potential and overall.
+  - **Owner:** the same rules and limits. Slots are filled automatically by the same priority, and the owner may override them (one additive save field).
+- **C2 — maturation.** One extra position-weighted +1 per offseason up to age 24, towards potential, for every young monster.
+- **Target:** prospects in slots gain about 55% of a starter's development over 3 seasons (+4.5 against +8.4). Starting remains the fastest route, and potential still caps every attribute.
+- **Alternatives:**
+  - share 0.5 (+5.5);
+  - an offseason training-camp lump of XP instead of per game;
+  - real game snaps (engine work; changes results; deferred);
+  - maturation only (+1.2; insufficient).
