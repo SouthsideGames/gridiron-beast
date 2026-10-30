@@ -137,6 +137,32 @@ export function weakResponse(runs) {
   return { traded: rate(out.traded), notTraded: rate(out.notTraded), tradedShareOfWeak: pct(out.traded.n, out.traded.n + out.notTraded.n), byPos: Object.fromEntries(Object.entries(out.byPos).map(([p, v]) => [p, { traded: rate(v.traded), notTraded: rate(v.notTraded) }])) };
 }
 
+/** How weak groups that were NOT traded for got resolved: a drafted monster, a signing (free agency, pools, waivers, the nudge's generated
+ *  veterans), or nothing arriving at the position (development, ageing elsewhere, the club's mean moving). Arrivals in the next window. */
+export function weakResolution(runs) {
+  const rows = aiRows(runs); const bySC = bySeedClub(rows); const tradesBy = {}; const arr = {};
+  for (const r of runs.filter((x) => !x.error)) { for (const t of r.decisions.trades) { (tradesBy[`${r.seed}|${t.A}|${t.year}`] ||= []).push(t.toAPos); (tradesBy[`${r.seed}|${t.B}|${t.year}`] ||= []).push(...(t.toBAllPos || [])); }
+    for (const a of r.decisions.arrivals) if (a.phase !== 'season-end') (arr[`${r.seed}|${a.club}|${a.year}|${a.pos}`] ||= []).push(a); }
+  const ch = {}; const add = (k, ok) => { const c = (ch[k] ||= { n: 0, resolved: 0 }); c.n++; if (ok) c.resolved++; };
+  for (const l of Object.values(bySC)) for (let i = 0; i + 1 < l.length; i++) { const x = l[i], y = l[i + 1]; for (const p of x.weakGroups) { if (p === 'K') continue;
+    const ok = !y.weakGroups.includes(p); if ((tradesBy[`${x.seed}|${x.club}|${y.year}`] || []).includes(p)) { add('traded', ok); continue; }
+    const as = arr[`${x.seed}|${x.club}|${y.year}|${p}`] || []; const start = (o) => as.some((a) => a.origin.startsWith(o) && a.starterNow);
+    add(start('drafted') ? 'draftedStarter' : start('signed') ? 'signedStarter' : as.length ? 'arrivalNotStarting' : 'noArrival', ok); } }
+  const tot = Object.values(ch).reduce((s, c) => s + c.n, 0);
+  return Object.fromEntries(Object.entries(ch).map(([k, c]) => [k, { n: c.n, shareOfWeakPct: pct(c.n, tot), resolvedPct: pct(c.resolved, c.n) }]));
+}
+/** Monsters moved twice within a season by AI–AI deals: when, and on which side they arrived first. */
+export function reTrades(runs) {
+  const out = []; for (const r of runs.filter((x) => !x.error)) { const ev = {}; r.decisions.trades.forEach((t) => { ev[t.toA] ||= []; ev[t.toA].push({ year: t.year, week: t.week, side: 'A', club: t.A, from: t.B }); for (const id of t.toBAll || []) { ev[id] ||= []; ev[id].push({ year: t.year, week: t.week, side: 'B', club: t.B, from: t.A }); } });
+    for (const [id, es] of Object.entries(ev)) for (let i = 1; i < es.length; i++) { const a = es[i - 1], b = es[i]; const gap = (b.year - a.year) * 20 + (b.week - a.week); if (b.year - a.year <= 1) out.push({ seed: r.seed, id, firstSide: a.side, first: `${a.year}w${a.week}`, second: `${b.year}w${b.week}`, backToOrigin: b.club === a.from, sameSeason: b.year === a.year, gapWeeks: gap }); } }
+  return { n: out.length, firstAsSwapPayment: out.filter((x) => x.firstSide === 'B').length, backToOrigin: out.filter((x) => x.backToOrigin).length, sameSeason: out.filter((x) => x.sameSeason).length, sample: out.slice(0, 8) };
+}
+/** Who pays: ages and roles of the monsters sent as payment (the seller's received monsters in swaps are the buyer's spares). */
+export function payment(runs) {
+  const given = []; for (const r of runs.filter((x) => !x.error)) for (const t of r.decisions.trades) { if (t.toBAge != null) given.push({ age: t.toBAge, ovr: t.toBOvr, sellerStarts: t.bGotStarter }); }
+  return { n: given.length, ageMedian: median(given.map((g) => g.age)), age24minusPct: pct(given.filter((g) => g.age <= 24).length, given.length), startsForSellerPct: pct(given.filter((g) => g.sellerStarts).length, given.length) };
+}
+
 /** Draft capital, succession cover, draftee growth, OL detail, gym titles: the franchise measures Task 4 did not record. */
 export function franchiseExtra(runs) {
   const rows = aiRows(runs); const bySC = bySeedClub(rows); const years = [...new Set(rows.map((x) => x.year))].sort((a, b) => a - b);
@@ -236,7 +262,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (g.startsWith('D:')) continue;
     summary.groups[g] = {};
     for (const t of [BASE, NEW]) { const rs = runs[t][g]; if (!rs?.length) continue;
-      summary.groups[g][t] = { task4: analyse(rs, { label: `${t}-${g}` }), trading: trading(rs), weakResponse: weakResponse(rs), extra: franchiseExtra(rs), calls: callsSummary(rs), integrity: integrity(rs) };
+      summary.groups[g][t] = { task4: analyse(rs, { label: `${t}-${g}` }), trading: trading(rs), weakResponse: weakResponse(rs), weakResolution: weakResolution(rs), reTrades: reTrades(rs), payment: payment(rs), extra: franchiseExtra(rs), calls: callsSummary(rs), integrity: integrity(rs) };
       for (const d of dealTable(rs)) tradeRows.push({ tree: t, group: g, ...d });
       for (const r of rs.filter((x) => !x.error)) for (const c of r.decisions.calls || []) callRows.push({ tree: t, group: g, seed: r.seed, year: c.year, week: c.week, offseason: c.offseason, team: c.team, kind: c.kind, pos: c.pos, sendsOvr: c.sends.map((m) => m.ovr), sendsAge: c.sends.map((m) => m.age), asksOvr: c.asks.map((m) => m.ovr), give: c.give, sendPicks: c.sendPicks, ownerFloorAtPos: c.ownerFloorAtPos, wouldStart: c.wouldStart });
       const r1Sel = {}; for (const r of rs.filter((z) => !z.error)) for (const d of r.decisions.draft) if (d.round === 1) r1Sel[`${r.seed}|${d.club}|${d.year}`] = (r1Sel[`${r.seed}|${d.club}|${d.year}`] || 0) + 1;
@@ -245,7 +271,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (runs[BASE][g] && runs[NEW][g]) { const p = paired(runs[BASE][g], runs[NEW][g]); summary.paired[g] = { seeds: p.seeds, metrics: p.metrics }; for (const ps of p.perSeed || []) for (const t of ['base', 'new']) seedRows.push({ group: g, tree: t === 'base' ? BASE : NEW, seed: ps.seed, ...Object.fromEntries(Object.entries(ps[t]).map(([k, v]) => [k, r2(v)])) }); }
   }
   // pooled Stage B (every B seed both trees ran)
-  { const pool = (t) => ['B1', 'B21', 'Bx'].flatMap((g) => runs[t][g] || []); const bp = pool(BASE), np = pool(NEW); if (bp.length && np.length) { summary.groups.Bpool = { [BASE]: { task4: analyse(bp), trading: trading(bp), weakResponse: weakResponse(bp), extra: franchiseExtra(bp), calls: callsSummary(bp), integrity: integrity(bp) }, [NEW]: { task4: analyse(np), trading: trading(np), weakResponse: weakResponse(np), extra: franchiseExtra(np), calls: callsSummary(np), integrity: integrity(np) } }; const p = paired(bp, np); summary.paired.Bpool = { seeds: p.seeds, metrics: p.metrics }; } }
+  { const pool = (t) => ['B1', 'B21', 'Bx'].flatMap((g) => runs[t][g] || []); const bp = pool(BASE), np = pool(NEW); if (bp.length && np.length) { summary.groups.Bpool = { [BASE]: { task4: analyse(bp), trading: trading(bp), weakResponse: weakResponse(bp), weakResolution: weakResolution(bp), reTrades: reTrades(bp), payment: payment(bp), extra: franchiseExtra(bp), calls: callsSummary(bp), integrity: integrity(bp) }, [NEW]: { task4: analyse(np), trading: trading(np), weakResponse: weakResponse(np), weakResolution: weakResolution(np), reTrades: reTrades(np), payment: payment(np), extra: franchiseExtra(np), calls: callsSummary(np), integrity: integrity(np) } }; const p = paired(bp, np); summary.paired.Bpool = { seeds: p.seeds, metrics: p.metrics }; } }
   // stress scenarios: each tree's stressed clubs against the same clubs in that tree's Stage B seeds 1–5
   for (const g of groups.filter((x) => x.startsWith('D:'))) { summary.stress[g.slice(2)] = {}; for (const t of [BASE, NEW]) { const sc = runs[t][g]; const b = runs[t].B1 || []; if (sc?.length) summary.stress[g.slice(2)][t] = { compare: scenarioCompare(sc, b), integrity: integrity(sc), trading: { deals: trading(sc).deals, inSeason: trading(sc).window.inSeason } }; } }
   // attribution: the trading effect with and without the balance nudge (difference in differences on seeds 1–8)
