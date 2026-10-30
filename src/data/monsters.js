@@ -226,7 +226,7 @@ export const xpForLevel = (level) => 30 + level * 18; // level 10 in about two s
 export const POINTS_PER_LEVEL = 2; // attribute points the owner spends by hand (GDD §17.3)
 /** Never ages, so never pays the age cost (owner's rule, 2026-10-23): a legendary or the rival's signature monster. */
 const agelessMon = (m) => !!(m?.legendary || m?.signature) || (() => { try { return resolveSpecies(m)?.rarity === 'legendary'; } catch { return false; } })();
-/** Points one +1 to `attr` costs this monster now (age-adjusted training, GDD §52.2): 1 until his decline begins. */
+/** Points one +1 to `attr` costs this monster now (age-adjusted training, GDD §55.2): 1 until his decline begins. */
 export const pointCost = (m, attr) => attributeCost(m, attr, { ageless: agelessMon(m) });
 export function levelUp(m, rng, { autoSpend = false } = {}) {
   m.level += 1;

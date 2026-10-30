@@ -76,7 +76,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   const f = {
     schemaVersion: LEGACY_SCHEMA_VERSION, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
     owner: { ...owner }, club, tier: 'challenger', staff: {},
-    roster, lineupManual: {}, depth: {}, aging: nativeAging(), // born under the ageing rules of GDD §52: no transition
+    roster, lineupManual: {}, depth: {}, aging: nativeAging(), // born under the ageing rules of GDD §55: no transition
     season: null, week: blankWeek(), game: null,
     rivals: { challenger: { team: rivalTeam, gm: RIVAL_GMS[rivalTeam] || 'Rival GM', headToHead: { w: 0, l: 0 } } },
     badges: { challenger: 0, vanguard: 0, sovereign: 0 }, qualification: { challenger: 0, vanguard: 0, sovereign: 0 }, bottomFourStreak: 0,
@@ -1159,7 +1159,7 @@ export function displayYear(f) { const s = f.season; if (!s) return 1; return s.
 /** Attribute points are frozen while contract decisions are open (GDD §21.6): settle the book first. */
 export function pointsLocked(f) { return !!(f.season?.finished && f.offseason && offseasonPending(f).length); }
 export function spendAttributePoint(f, id, attr) { if (pointsLocked(f)) return { ok: false, reason: 'Attribute points are frozen until every contract decision is made.' }; const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not found.' }; return spendPoint(m, attr); }
-/** The owner's view of a monster's career stage and retirement outlook (GDD §52.6): observable facts only, never hidden longevity. */
+/** The owner's view of a monster's career stage and retirement outlook (GDD §55.6): observable facts only, never hidden longevity. */
 export function monsterOutlook(f, m) { if (!m) return null; const starters = new Set(Object.values(buildDepthChart(f.roster, f.lineupManual, f.depth)).filter(Boolean)); return retirementOutlook(f, m, { starter: starters.has(m.id) }); }
 /** Monsters with points waiting to be spent. */
 export function unspentPoints(f) { return f.roster.filter((m) => (m.points || 0) > 0); }
@@ -2078,7 +2078,7 @@ function endSeason(f) {
   leagueSeasonEnd(f, { year: s.year, awards: s.awards, records: f.records, champion }); // the 15 persistent rosters' season-end events (GDD §42.6)
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   if (hasLeague(f)) slimSeasonAwards(f.history[f.history.length - 1].awards, s.year, (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id] || null); // forward-only compaction of the winner rows (GDD §46): every number keeps one copy, in the book
-  { const { r, save } = frng(f); retirementPass(f, r, { year: s.year, news: (t, k) => news(f, t, k) }); save(); } // retirements as the offseason opens, before contracts and the draft (GDD §52.3)
+  { const { r, save } = frng(f); retirementPass(f, r, { year: s.year, news: (t, k) => news(f, t, k) }); save(); } // retirements as the offseason opens, before contracts and the draft (GDD §55.3)
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   noteGrowth(f, (c) => aiTeam(f, c, s.year));
   if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, s.year + 1)); st.todayYear = s.year + 1; } // today's generated strength for the coming season, computed once and reused by the transition and the Board's forecast
@@ -2178,7 +2178,7 @@ export function startNextSeason(f) {
   if (f.legendPick && !f.legendPick.resolved) return { ok: false, reason: 'Choose your Legend Track first.' };
   f.deadCap = f.pendingDeadCap || 0; f.pendingDeadCap = 0; // bonuses and raises agreed in the offseason land on the new season's books
   const { r, save } = frng(f);
-  const ageCtx = agingContext(f, f.season.year); // GDD §52: ageing and decline, with the old-save transition
+  const ageCtx = agingContext(f, f.season.year); // GDD §55: ageing and decline, with the old-save transition
   const events = offseason(f.roster, r, ageCtx);
   for (const list of Object.values(f.pool || {})) offseason(list, r, ageCtx); // unsigned monsters age too (in pool order)
   if (hasLeague(f) && f.league.waivers?.length) offseason(f.league.waivers, r, ageCtx);

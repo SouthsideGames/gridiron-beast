@@ -1,4 +1,4 @@
-// Monster ageing, age-adjusted training and retirement (Task 6 Phase A-1; owner's Group 1 decisions of 2026-10-30, GDD §52).
+// Monster ageing, age-adjusted training and retirement (Task 6 Phase A-1; owner's Group 1 decisions of 2026-10-30, GDD §55).
 // Pure rules, no state: every value is the approved specification's (docs/TASK6_APPROVED_SPECIFICATION.md §1.1–§1.5).
 //
 //   - Each position has a physical decline onset (at normal longevity), a technical onset a little later and a physical rate.

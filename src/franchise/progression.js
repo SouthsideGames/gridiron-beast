@@ -62,7 +62,7 @@ export function recoverWeek(roster, { bye = false } = {}) {
 }
 
 /**
- * Offseason: ageing, decline and growth, salary refresh (GDD §52, Task 6 Phase A-1). Legendary monsters and the rival's signature
+ * Offseason: ageing, decline and growth, salary refresh (GDD §55, Task 6 Phase A-1). Legendary monsters and the rival's signature
  * monster do not age and never decline (owner's rules, 2026-10-23); they still gain a season of experience, rest and heal like everyone.
  *   - Growth to 23 as before: +1 awareness and strength toward potential.
  *   - Physical decline from the monster's (hidden) onset, more each season past it, by position; technical decline later and slower.

@@ -4104,3 +4104,62 @@ A starter at an AI club is for sale only if the man behind him is within 6 overa
 - **Saves:** no format change and no migration. Older saves load (two checked in the deploy check); a save taken after Week 8 or in the offseason loads with the correct trade window.
 - **Accepted exception (T8).** In-season trading volume is about 1.6× the v42.16.0 baseline, entirely the repaired in-season window (weeks 2–8). No quota exists and none was added.
 - **Remaining benchmark limitations (for Task 5.5):** season-end lineup problems pooled 67 vs 54 (within noise); persistent losers +4.0 on seeds 1–20 (+2.0 pooled); T3 marginal in the 20-season stage (4 first-round kicker picks); over-cap clubs 12 vs 9 (pre-existing); offseason audit flags use stale ratings; roster worth has no empty-starting-slot penalty; offensive-line persistent weakness 233→222; leverage at half strength is a judgement call; AI–AI sellers sell only spares; the owner's in-season desk stays closed.
+
+## 55. Ageing, retirement and age-adjusted training (Task 6 Phase A-1; IMPLEMENTED 2026-10-30, owner's Group 1 decisions; branch `task6-phase-a1`; NOT MERGED, NOT RELEASED)
+The rules of `src/data/aging.js` and `src/franchise/retirement.js`. The values are the owner's approved specification (`docs/TASK6_APPROVED_SPECIFICATION.md` §1.1–§1.5).
+
+**55.1 Ageing curves.**
+- **Each position has a physical decline onset at normal longevity:**
+  - RB 27; WR and CB 28; LB, S, DL and TE 29; OL and QB 30; K 32.
+- **Technical decline** starts 2 years later (3 for OL, QB and K).
+- **Hidden longevity** of −3 to +3 years comes from the monster's id (5 / 10 / 20 / 30 / 20 / 10 / 5 %); nothing is stored.
+- **Durability at peak** (recorded once, `durPeak`, at onset − 3): 75+ moves the onset a year later, 45 or less a year earlier.
+- **Decline amounts:**
+  - physical loss per attribute in the y-th season past the true onset: rate × (1.5 + 0.75 (y − 1));
+  - physical rates: RB 1.3; WR and CB 1.15; LB, S, DL and TE 1.0; OL 0.9; QB 0.8; K 0.6;
+  - technical loss: 0.75 + 0.5 (y − 1);
+  - integer draws; the attribute floor is 20;
+  - a severe injury last season past the onset costs one more physical point (once).
+- **Growth to 23** is unchanged.
+- **Legendary monsters and the rival's signature monster** never age, decline or retire.
+- **Unsigned monsters** (pools, waivers) age by the same rules.
+
+**55.2 Age-adjusted training.**
+- **Physical +1 cost**, by seasons past the public onset (position plus durability, no longevity): 1 at or before it, 2 for 1–2 seasons, 3 for 3–4, and 4 for 5+.
+- **Technical +1 cost:** 1, rising to 2 past the public technical onset.
+- **Level-ups:** a physical pick lands with chance 1 / cost.
+- **Auto-spend** weights by position weight ÷ cost.
+- **The owner** can still buy any point at its cost, which is shown on the + button.
+- **Ageless monsters** always pay 1.
+
+**55.3 Retirement.**
+- **When:** offseason only, decided as the offseason opens (before contracts, the draft and free agency), at the age the monster would play next season. There is no hard age, and retirement is permanent.
+- **Base hazard**, by seasons from the career age (true onset + 4): −3: 2%, −2: 5%, −1: 10%, 0: 20%, +1: 35%, +2: 55%, +3: 75%, +4 or more: 90%.
+- **Odds multipliers:**
+  - a starter within 4 of his career-high overall ×0.5;
+  - a reserve 10+ below it ×1.8;
+  - unsigned ×2;
+  - **one** injury factor, the most severe that applies: a severe injury last season ×1.5, else 4+ games missed ×1.25, else a High Injury History ×1.15.
+- **Cap:** 0.97.
+
+**55.4 Old saves.**
+- A save made before these rules starts a transition at its first retirement pass.
+- With s = offseasons under the rules:
+  - decline reads at most 2s seasons past the onset;
+  - the hazard is scaled by min(1, s/4);
+  - while s ≤ 3, at most 15% of a club's roster retires in one offseason.
+- From s = 4 the normal rules apply.
+- A franchise created under these rules has no transition (`aging.native`).
+
+**55.5 Exits and records.**
+- **AI monsters** leave their club with the reason `retired` and leave the league.
+- **Legend stubs** are kept for a decorated monster, a career top-10 monster and every former monster of the owner's.
+- **The owner's retirees** leave the roster, lineup and depth chart, always keep a stub, and are announced in News and on the Offseason screen.
+- **League News** reports a retirement that matters (a decorated monster, a starter, 65+ overall, or a former owner monster); the rest go into a one-line summary.
+
+**55.6 What the owner sees.**
+- On the monster page:
+  - the career stage (Rising, Prime, Veteran, Late career);
+  - the retirement outlook (Low, Moderate or High, with a likely age range), estimated from observable facts only;
+  - the point cost on each + button.
+- The Offseason screen lists the club's retirements and the league count.

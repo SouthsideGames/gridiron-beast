@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Task 6 Phase A-1: old-save transition check (GDD §52.4; approved target: peak offseason retirements ≤ 2.5 × the steady rate, no
+// Task 6 Phase A-1: old-save transition check (GDD §55.4; approved target: peak offseason retirements ≤ 2.5 × the steady rate, no
 // lasting difference). Old saves are made by a pre-A-1 tree (tools/task6/make-old-save.mjs: the old ageing, no retirement), then
 // loaded into this tree and played forward twice: with the transition (as a real old save meets it) and without it (the rules
 // at once, `aging.native`), for comparison. Records every offseason's retirements, starter age and team strength.

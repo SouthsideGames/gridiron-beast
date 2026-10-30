@@ -1,4 +1,4 @@
-// Retirement (Task 6 Phase A-1; GDD §52.3–§52.5; owner's Group 1 decisions of 2026-10-30). Offseason only: decided when the
+// Retirement (Task 6 Phase A-1; GDD §55.3–§55.5; owner's Group 1 decisions of 2026-10-30). Offseason only: decided when the
 // offseason opens (at the season's end, before contracts, the draft and free agency), so the owner learns of a retirement while
 // he can still answer it. Permanent. The same rules for the owner's monsters, the AI clubs' monsters and unsigned monsters
 // (unsigned retire at twice the odds). Legendary monsters and the rival's signature monster never retire.
@@ -86,7 +86,7 @@ export function retirementPass(f, r, { year, news = null }) {
       const formerMine = (gone.history || []).some((h) => h.club === f.club);
       if (isDecorated(f, gone) || leaderIds().has(gone.id) || formerMine) f.league.legends[gone.id] = legendStub(gone, { year, club });
       // League News: a retirement always stands as a line, so only the ones that matter are reported (about 30 retire a season,
-      // GDD §52.5): a decorated career, a starter, a 65+ monster or a former monster of the owner's; the rest are in the summary
+      // GDD §55.5): a decorated career, a starter, a 65+ monster or a former monster of the owner's; the rest are in the summary
       const honours = honoursLine(f, gone);
       if (honours || starter || ovr >= 65 || formerMine) leagueEvent(f, { kind: 'retire', club, honours, starter, ...moveIdentity(f, gone), age, ovr });
       out.league.push({ id: gone.id, name: gone.name, position: gone.position, age, ovr, club, starter });

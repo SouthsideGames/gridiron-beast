@@ -127,7 +127,7 @@ export function registerRosterScreens(Router, app) {
   const browseNav = (f, id) => { const list = browseOrder(f); const i = list.findIndex((m) => m.id === id); if (i < 0 || list.length < 2) return '';
     const prev = list[(i - 1 + list.length) % list.length], next = list[(i + 1) % list.length];
     return `<nav class="mon-nav" aria-label="Browse the roster"><button class="mon-nav-btn" data-action="mon-go" data-id="${prev.id}" aria-label="Previous: ${esc(prev.name)}"><span aria-hidden="true">‹</span><span class="nm">${esc(prev.name)}</span></button><span class="mon-nav-pos">${i + 1} / ${list.length}<span class="dim"> · ${esc(list[i].position)}</span></span><button class="mon-nav-btn next" data-action="mon-go" data-id="${next.id}" aria-label="Next: ${esc(next.name)}"><span class="nm">${esc(next.name)}</span><span aria-hidden="true">›</span></button></nav>`; };
-  /** Career stage and retirement outlook (GDD §52.6): observable estimates only; legendary monsters never age. */
+  /** Career stage and retirement outlook (GDD §55.6): observable estimates only; legendary monsters never age. */
   const outlookHtml = (f, m) => { const o = F.monsterOutlook(f, m); if (!o) return '<div class="muted">Ageless: never declines or retires</div>'; const [a, b, c] = o.window;
     return `<div class="muted">Career stage: <span class="chip stage-${o.key}">${esc(o.label)}</span> · retirement outlook <b class="${o.outlook === 'high' ? 'bad' : o.outlook === 'moderate' ? 'warn' : ''}">${esc(o.outlookLabel)}</b> <span class="dim" title="An estimate from age, position, durability, visible decline and injury history: careers vary.">(likely ${a}–${c}, around ${b})</span></div>`; };
   Router.registerScreen('monster', {

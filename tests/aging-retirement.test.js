@@ -1,4 +1,4 @@
-// Task 6 Phase A-1: ageing, age-adjusted training and retirement (GDD §52). Focused tests: the rules carry the approved values,
+// Task 6 Phase A-1: ageing, age-adjusted training and retirement (GDD §55). Focused tests: the rules carry the approved values,
 // costs and decline behave by position and age, legendary monsters are exempt, retirement leaves through the existing exits with
 // the reason "retired", the old-save transition, determinism and the save round trip.
 import { test } from 'node:test';
