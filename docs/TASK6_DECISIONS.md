@@ -4,13 +4,17 @@ This record tracks the owner's decisions on the Task 6 proposal (`docs/TASK6_AI_
 identifiers D1–D16 and T1–T4 are those of the proposal (§8). **Nothing is implemented**: every approval below is a design approval, and
 each phase still needs its own authorisation.
 
+**All five groups are decided.** The consolidated result — specification, phases, trading plan, acceptance criteria, regression and save
+requirements, risks and sequence — is `docs/TASK6_APPROVED_SPECIFICATION.md`. Where it and this record differ, this record (the owner's
+words) governs.
+
 | Group | Decisions | Status |
 |---|---|---|
 | 1 — Aging and Longevity | D1–D8 | **Approved with modifications, 2026-10-30** (below) |
 | 2 — Draft Quality and Competitive Balance | D9, D10 | **Approved with modifications, 2026-10-30** (below); numbers provisional pending Phase A testing |
 | 3 — AI Roster Intelligence | D13, D14, D15, T3 (and Phase B items) | **Approved with modifications, 2026-10-30** (below); thresholds provisional |
 | 4 — Prospect Development | D12 | **Approved with refinements, 2026-10-30** (below); values provisional |
-| 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | Presented 2026-10-30, awaiting decision (below) |
+| 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | **Approved with clarifications, 2026-10-30** (below). **Phase 0 authorised; Phases A–D and T1, T2, T4 not authorised** |
 | Trading follow-ups | T1–T4 | Owner's provisional preferences recorded: approve T1; roster-compliant offers for T2; valuation-based protection for T3; a limited repeat-trade restriction for T4. Not final authorisation |
 
 ## Group 1 — Aging and Longevity (D1–D8): owner decision of 2026-10-30
@@ -621,7 +625,7 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 5. **Gyms.** The same slots and rules. Gym rosters lean on generated veterans (aged 24–30), so they have fewer eligible prospects. This is reported as gym-against-ordinary development, not adjusted.
 6. **Roster plan (Group 3).** Slot priority reads R1's successor designation. Contracts (R3) and releases (R5) protect successors, so slotted prospects are not churned out before they mature.
 
-## Group 5 — Benchmark Standards and Implementation Authorization (D11, D16, Phase 0): presented 2026-10-30, awaiting decision
+## Group 5 — Benchmark Standards and Implementation Authorization (D11, D16, Phase 0): presented 2026-10-30 (decision recorded below)
 
 ### Code finding: what the owner contract (§45.6) can and cannot see
 - `tools/balance-compare.mjs` compares persistent rosters with today's generator (`legacyAiTeam`). That generator reads `clubQuality`, so any anchor change (D10a) moves both sides of the comparison.
@@ -669,3 +673,103 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
   - **M2** = C;
   - **M3** = D.
   - Each milestone needs its own release approval. Merges to `main` need owner approval and do not publish.
+
+### Owner decision on Group 5 (2026-10-30): approved with clarifications
+**Authorisation.**
+- **Phase 0 only.**
+- **Not authorised:**
+  - Phases A, B, C and D;
+  - trading changes T1–T4;
+  - merging any PR;
+  - publishing a game version.
+
+**D11 — the owner balance contract.** Approved.
+- §45.6 is a hard gate for every phase, on every difficulty: owner win rate within ±5 points and AI mid-season mean within ±2, matched seeds against the existing roster generator.
+- **Independent drift check against published v42.17.0:**
+  - seasons 1–8: ±5 points, a hard gate (initial);
+  - seasons 9–20: reported, never an automatic failure, because the owner simulation is hands-off.
+- The limits of the hands-off owner proxy are documented.
+- **If an approved change genuinely conflicts with drift:** stop and present the evidence. Never tune silently to hide it.
+
+**Gate classes.** Approved.
+- **Hard gates:**
+  - integrity 0;
+  - determinism;
+  - legal rosters and cap;
+  - save compatibility;
+  - the existing regression tests (the 671-test suite and the trading tests);
+  - the owner balance requirements;
+  - performance within +10% (initial);
+  - mobile-width compatibility of affected interfaces.
+  - No test is weakened or removed to pass.
+- **Target metrics:** the provisional targets of Groups 1–4. A miss is reported with its likely cause and a recommendation; approved parameters are never changed quietly.
+- **Monitor metrics:**
+  - championship distribution;
+  - unique champions;
+  - gym and ordinary playoff representation;
+  - long-term owner win rates;
+  - league strength progression;
+  - unusual roster or contract patterns.
+  - These inform decisions; they never force changes.
+
+**Statistical standards.** Approved.
+- **Seed sets:**
+  - 1–60 × 10 seasons (development);
+  - 61–80 × 10 (held-out);
+  - 106–115 × 20 (development);
+  - 116–125 × 20 (held-out).
+- Matched seeds wherever applicable.
+- **Reporting:** effect sizes, uncertainty intervals and held-out agreement. Significance is never the only measure.
+- **Four outcome classes:**
+  1. a functional requirement passing;
+  2. a numerical target achieved;
+  3. a statistically supported improvement over baseline;
+  4. inconclusive.
+- Long-term balance conclusions need 10+ independent 20-season seeds, with the held-out set for final confirmation.
+- Held-out sets are never tuned against. Inconclusive is said plainly.
+
+**Phase 0 scope (authorised).**
+1. Harness v4.
+2. v4 reproduces v3.
+3. Written thresholds.
+4. v42.17.0 baselines on the approved seed sets.
+5. The drift check.
+6. Comparison and reporting tools.
+7. Statistical methodology.
+8. Reproducibility checks.
+- Observational only: no change to gameplay, progression, retirement, contracts, drafting, trading, roster decisions or balance.
+- **If a benchmark needs a production change:** stop and ask.
+
+**Implementation sequence (approved for planning, not authorised):**
+- **A-1:** ageing, age-adjusted training, retirement, save transition, labels and notices.
+- **A-2:** draft scaling, gym plateau, XP-slowdown and runaway threshold comparisons, initial nudge recalibration.
+- **B:** shared roster plan, succession, contracts, T3, need-aware drafting.
+- **C:** development slots, maturation, free-agency upgrades, evolution checks, second recalibration.
+- **D:** modes, limited veteran starter sales, strategy-specific decisions, rebuilding-nudge experiments, final recalibration, long-term held-out confirmation.
+- Each phase needs separate authorisation.
+
+**Trading follow-ups.**
+- T1, T2 and T4 each need separate approval.
+- T3 is in the planned Phase B scope.
+- None is implemented in Phase 0.
+
+**Releases.**
+- **Milestones:** M1 = A + B; M2 = C; M3 = D. Each needs explicit release approval.
+- Every phase has its own branch, PR, benchmark report and review checkpoint.
+- Merging to `main` and publishing are separate authorisations.
+
+### Unresolved, carried forward explicitly
+**Numbers.** Every numerical value in Groups 1–4 is provisional pending its phase benchmark.
+
+**Balance choices, decided by benchmark and then by the owner:**
+- the XP-slowdown width (+4 / +6 / +8);
+- the runaway-rule width (+4 / +6 / +8), with alignment preferred;
+- the nudge recalibration values;
+- the rebuilding-nudge option (1, 2 or 3; preference 2);
+- the practice-XP share (0.35 against 0.50; preference 0.35);
+- the rebuild potential weight (0.35 against 0.20);
+- whether one starter sale per window is too restrictive.
+
+**Gate thresholds.**
+- Whether the gym protection floor and the ordinary-club corridor are achievable together: report any conflict.
+- The drift tolerance of ±5 for seasons 1–8 is initial.
