@@ -22,8 +22,8 @@ const pct = (n, d) => (d ? r1(100 * n / d) : null);
 // after the deal, after the season had rolled over). Deals made by the Task 5 tree carry the clubs' own values (`mv`), which were never affected; the old
 // yardstick and the baseline's position-aware figure are repaired here from the pick strings, exactly (pickValue is a pure function of year and round).
 const parsePick = (s) => { const m = /^(\d+)R(\d+):/.exec(s); return m ? { year: +m[1], round: +m[2] } : null; };
-function repair(run) {
-  if (run.harnessV >= 2 || !run.decisions) return run;
+function repair(run, harnessV) {
+  if (harnessV >= 2 || !run.decisions) return run; // the version is recorded once per file, not per run (fixed in Task 5.5: v2+ files were being repaired as if v1)
   for (const t of run.decisions.trades) {
     if (t.week !== 0 || !(t.picks || []).length) continue;
     const delta = t.picks.map(parsePick).filter(Boolean).reduce((s, p) => s + pickValue(p, { yearsAhead: Math.max(0, p.year - t.year) }) - pickValue(p, { yearsAhead: Math.max(0, p.year - (t.year + 1)) }), 0);
@@ -32,7 +32,7 @@ function repair(run) {
   }
   return run;
 }
-const load = (tree, stage) => fs.readdirSync(DIR).filter((f) => f.startsWith(`${tree}-${stage}`) && f.endsWith('.json') && !['jobs'].includes(f)).sort().flatMap((f) => JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8')).runs.map(repair));
+const load = (tree, stage) => fs.readdirSync(DIR).filter((f) => f.startsWith(`${tree}-${stage}`) && f.endsWith('.json') && !['jobs'].includes(f)).sort().flatMap((f) => { const j = JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8')); return j.runs.map((r) => repair(r, j.harnessV)); });
 const scenarios = ['aging', 'expiring', 'thin', 'injuries', 'rebuild', 'picks'];
 
 /** Trading metrics for one tree's runs of one stage. */
