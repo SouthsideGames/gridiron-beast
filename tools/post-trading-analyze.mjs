@@ -248,6 +248,18 @@ export function paired(baseRuns, newRuns, { reps = 2000, rngSeed = 55 } = {}) {
   return out;
 }
 
+/** Who benefits: the same club (same seed, same creation league) in both trees, its win rate, team overall and titles, by gym status and by
+ *  starting strength quartile (team overall in season 1). Matched clubs, so the difference is the trading change and its knock-on effects. */
+export function clubBenefit(baseRuns, newRuns) {
+  const by = (runs) => { const o = {}; for (const r of runs.filter((x) => !x.error)) for (const x of r.rows.filter((z) => !z.owner)) (o[`${r.seed}|${x.club}`] ||= []).push(x); return o; };
+  const B = by(baseRuns), N = by(newRuns); const clubs = Object.keys(B).filter((k) => N[k]);
+  const stat = (l) => ({ win: l.reduce((s, x) => s + x.w, 0) / l.reduce((s, x) => s + x.w + x.l, 0), ovr: mean(l.map((x) => x.teamOvr)), titles: l.filter((x) => x.champion).length, ovr0: l.slice().sort((a, b) => a.year - b.year)[0].teamOvr });
+  const rows = clubs.map((k) => { const b = stat(B[k]), n = stat(N[k]); return { k, gym: GYMS.has(k.split('|')[1]), ovr0: b.ovr0, dWin: 100 * (n.win - b.win), dOvr: n.ovr - b.ovr, dTitles: n.titles - b.titles }; });
+  const q = rows.map((r) => r.ovr0).sort((a, b) => a - b); const cut = [q[Math.floor(q.length / 4)], q[Math.floor(q.length / 2)], q[Math.floor(3 * q.length / 4)]];
+  const part = (rs) => ({ clubs: rs.length, winPctChange: r2(mean(rs.map((r) => r.dWin))), teamOvrChange: r2(mean(rs.map((r) => r.dOvr))), titlesChange: rs.reduce((s, r) => s + r.dTitles, 0) });
+  return { gym: part(rows.filter((r) => r.gym)), other: part(rows.filter((r) => !r.gym)), bottomQuartile: part(rows.filter((r) => r.ovr0 <= cut[0])), topQuartile: part(rows.filter((r) => r.ovr0 > cut[2])), winPctChangeSd: r2(sd(rows.map((r) => r.dWin))) };
+}
+
 // ---------------------------------------------------------------- CSV writers
 const esc = (v) => (v == null ? '' : /[,"\s]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v);
 function toCsv(rows, cols) { return [cols.join(','), ...rows.map((r) => cols.map((c) => esc(Array.isArray(r[c]) ? r[c].join(' ') : r[c])).join(','))].join('\n') + '\n'; }
@@ -268,10 +280,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const r1Sel = {}; for (const r of rs.filter((z) => !z.error)) for (const d of r.decisions.draft) if (d.round === 1) r1Sel[`${r.seed}|${d.club}|${d.year}`] = (r1Sel[`${r.seed}|${d.club}|${d.year}`] || 0) + 1;
       for (const x of aiRows(rs)) clubRows.push({ tree: t, group: g, seed: x.seed, year: x.year, club: x.club, gym: GYMS.has(x.club), w: x.w, l: x.l, playoffs: x.playoffs, champion: x.champion, teamOvr: x.teamOvr, target: x.target, quality: x.quality, boosted: x.boosted, slowed: x.slowed, rosterSize: x.rosterSize, payroll: x.payroll, capRoom: x.capRoom, lineupProblems: x.lineupProblems, avgStarter: x.avgStarter, weakGroups: x.weakGroups, meanAge: x.meanAge, starterAge: x.starterAge, devMean: x.devMean, r1Selections: r1Sel[`${x.seed}|${x.club}|${x.year}`] || 0, ...Object.fromEntries(POS.map((p) => [`st_${p}`, x.starters?.[p] || []])) });
     }
-    if (runs[BASE][g] && runs[NEW][g]) { const p = paired(runs[BASE][g], runs[NEW][g]); summary.paired[g] = { seeds: p.seeds, metrics: p.metrics }; for (const ps of p.perSeed || []) for (const t of ['base', 'new']) seedRows.push({ group: g, tree: t === 'base' ? BASE : NEW, seed: ps.seed, ...Object.fromEntries(Object.entries(ps[t]).map(([k, v]) => [k, r2(v)])) }); }
+    if (runs[BASE][g] && runs[NEW][g]) { const p = paired(runs[BASE][g], runs[NEW][g]); summary.paired[g] = { seeds: p.seeds, metrics: p.metrics, clubBenefit: clubBenefit(runs[BASE][g], runs[NEW][g]) }; for (const ps of p.perSeed || []) for (const t of ['base', 'new']) seedRows.push({ group: g, tree: t === 'base' ? BASE : NEW, seed: ps.seed, ...Object.fromEntries(Object.entries(ps[t]).map(([k, v]) => [k, r2(v)])) }); }
   }
   // pooled Stage B (every B seed both trees ran)
-  { const pool = (t) => ['B1', 'B21', 'Bx'].flatMap((g) => runs[t][g] || []); const bp = pool(BASE), np = pool(NEW); if (bp.length && np.length) { summary.groups.Bpool = { [BASE]: { task4: analyse(bp), trading: trading(bp), weakResponse: weakResponse(bp), weakResolution: weakResolution(bp), reTrades: reTrades(bp), payment: payment(bp), extra: franchiseExtra(bp), calls: callsSummary(bp), integrity: integrity(bp) }, [NEW]: { task4: analyse(np), trading: trading(np), weakResponse: weakResponse(np), weakResolution: weakResolution(np), reTrades: reTrades(np), payment: payment(np), extra: franchiseExtra(np), calls: callsSummary(np), integrity: integrity(np) } }; const p = paired(bp, np); summary.paired.Bpool = { seeds: p.seeds, metrics: p.metrics }; } }
+  { const pool = (t) => ['B1', 'B21', 'Bx'].flatMap((g) => runs[t][g] || []); const bp = pool(BASE), np = pool(NEW); if (bp.length && np.length) { summary.groups.Bpool = { [BASE]: { task4: analyse(bp), trading: trading(bp), weakResponse: weakResponse(bp), weakResolution: weakResolution(bp), reTrades: reTrades(bp), payment: payment(bp), extra: franchiseExtra(bp), calls: callsSummary(bp), integrity: integrity(bp) }, [NEW]: { task4: analyse(np), trading: trading(np), weakResponse: weakResponse(np), weakResolution: weakResolution(np), reTrades: reTrades(np), payment: payment(np), extra: franchiseExtra(np), calls: callsSummary(np), integrity: integrity(np) } }; const p = paired(bp, np); summary.paired.Bpool = { seeds: p.seeds, metrics: p.metrics, clubBenefit: clubBenefit(bp, np) }; } }
   // stress scenarios: each tree's stressed clubs against the same clubs in that tree's Stage B seeds 1–5
   for (const g of groups.filter((x) => x.startsWith('D:'))) { summary.stress[g.slice(2)] = {}; for (const t of [BASE, NEW]) { const sc = runs[t][g]; const b = runs[t].B1 || []; if (sc?.length) summary.stress[g.slice(2)][t] = { compare: scenarioCompare(sc, b), integrity: integrity(sc), trading: { deals: trading(sc).deals, inSeason: trading(sc).window.inSeason } }; } }
   // attribution: the trading effect with and without the balance nudge (difference in differences on seeds 1–8)
