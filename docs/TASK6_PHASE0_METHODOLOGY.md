@@ -74,6 +74,7 @@ The definitions below are the code in `tools/task6-analyze.mjs`, with the same n
 **Draft:**
 - `r1StartSeason1Pct`: share of round-1 picks starting at the end of their first season.
 - `r1StartWithin2Pct`: share starting by the end of the second season (anywhere in the league). `r1StartWithin2LatePct` is the same for picks from draft year 12 on.
+- `r1StarterAt2Pct` (and `r1StarterAt2LatePct` for draft year 12 on): starter **for the drafting club** at the end of the second season after the draft. This is the Task 4 sense that the spec's targets were written for.
 - `r1GapToFloor`: the club's starter floor at the position minus the pick's overall.
 - `r1Ovr`: the round-1 pick's overall.
 - `misalignedPosRelPct`: share of picks made at a position where the club's starters are at or above the league mean at that position, while another of its positions is weak and the board had a player there within 3 overall.
@@ -98,7 +99,8 @@ The definitions below are the code in `tools/task6-analyze.mjs`, with the same n
 - `ordinaryPlayoffSharePct`.
 - `ordinaryPersistentLoserPct` and `gymPersistentLoserPct`: clubs with a run of three seasons at 3 wins or fewer.
 - `gymLeadS5/S10/S20` and `gymLeadMinS5on`: gym mean team overall minus the ordinary mean.
-- `gymTierOrderHeld`: from season 5, the early < mid < late gym tiers by mean team overall.
+- `gymLeadMinS8on`: the same minimum from season 8, reported alongside the approved floor (see §8).
+- `gymTierOrderHeld`: from season 5, the early < mid < late gym tiers by mean team overall, per seed. `gymEarlyOvrS5on`, `gymMidOvrS5on` and `gymLateOvrS5on` give the pooled tier means.
 - `gymGeneratedStarterPctFinal` and `ordinaryGeneratedStarterPctFinal`: share of starters who are generated signings.
 - `ordinarySlowedPct`: share of ordinary club-seasons under the XP slowdown. `ordinarySlowedDev` against `ordinaryUnslowedDev` compares their development.
 - `distinctChampions`.
@@ -201,6 +203,31 @@ Each phase is a separate PR. Its report contains:
 | Date | Change | Approved by |
 |---|---|---|
 | 2026-10-30 | Version 1 pre-registered (Groups 1–5) | Owner, Groups 1–5 |
+| 2026-10-30 | **After the v42.17.0 baseline, before any candidate data.** Re-based measures whose Task 6 definition differs from the Task 4/5 measure the spec's target was written against. This is not a change to any approved value. Marked `proposed` in thresholds.json, awaiting owner review | Proposed, Phase 0 |
+
+**Detail of the post-baseline re-basing:**
+- **Round-1 conversion.**
+  - The target applies to `r1StarterAt2Pct`, starter for the drafting club at draft year + 2 (baseline 33.0%), with a proposed band of ≥ 44%, the spec's +10.7-point intent.
+  - The late target of ≥ 30% applies to `r1StarterAt2LatePct` (baseline 14.4%, as the spec's 14%).
+  - The looser "started anywhere" measures are reported.
+- **Succession.**
+  - The spec's ≥ 40% (B) and ≥ 30% (C) targets apply to `task5.successionCoveredPct`, the definition they were written for (baseline 17.6% and 11.4%).
+  - The approved R1 definition, which also counts potential (`successionCoverPct`, baseline 36.1% and 25.1%), is reported against baseline.
+- **Misaligned picks.**
+  - The Task 6 position-relative yardstick has a baseline of 10.6%, already inside the spec's 15% (written for the club-relative 24.5%).
+  - Proposed: −30% against baseline, a band of ≤ 7.4%.
+- **Physical decline.**
+  - The aggregate `physChangePastOnset` (−0.44) already meets "≤ 0".
+  - Proposed pooled rule: never positive from 1 season past the public onset, mean ≤ −1.5 at 3 seasons and ≤ −2.5 at 5 seasons.
+
+**Conflicts found in the approved gym floor.** Reported to the owner; nothing changed.
+- **Gym lead ≥ 6 in seasons 5–20.**
+  - v42.17.0 is below 6 in seasons 5–7 (C: 4.7, 5.6, 5.2; CH: 4.3, 5.1, 4.8) and above from season 8.
+  - The approved plateau leaves seasons 1–10 unchanged, so the floor as worded cannot hold in seasons 5–7 without a change nobody has proposed.
+  - `gymLeadMinS8on` is reported alongside.
+- **Tier order.**
+  - Held per seed in 90% (C) and 70% (CH) of baseline seeds; the inversions are within 0.5 points between neighbouring tiers.
+  - Pooled tier means are reported alongside.
 
 ## 9. Known limitations
 

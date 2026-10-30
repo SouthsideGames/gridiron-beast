@@ -64,6 +64,9 @@ export function seedMeasures(run) {
   const elig2 = draft.filter((d) => d.year + 2 <= last.year);
   out.r1StartWithin2Pct = pct(elig2.filter((d) => startedBy(d.id, d.year + 2)).length, elig2.length);
   const late = elig2.filter((d) => d.year >= 12); out.r1StartWithin2LatePct = late.length ? pct(late.filter((d) => startedBy(d.id, d.year + 2)).length, late.length) : null;
+  // the Task 4/5 sense (a starter for the club that drafted him, at the end of the second season after the draft), from the snapshot
+  const onClubAt2 = (d) => at(d.year + 2)?.monsters.some((m) => m.id === d.id && m.club === d.club && m.starter);
+  out.r1StarterAt2Pct = pct(elig2.filter(onClubAt2).length, elig2.length); out.r1StarterAt2LatePct = late.length ? pct(late.filter(onClubAt2).length, late.length) : null;
   const elig1 = draft.filter((d) => d.year + 1 <= last.year);
   out.r1StartSeason1Pct = pct(elig1.filter((d) => at(d.year + 1)?.monsters.some((m) => m.id === d.id && m.starter)).length, elig1.length);
   out.r1GapToFloor = mean(draft.map((d) => (d.starterFloorAtPos ? d.starterFloorAtPos - d.ovr : null)));
@@ -123,6 +126,8 @@ export function seedMeasures(run) {
   const leads = []; for (let y = 5; y <= last.year; y++) { const v = lead(y); if (v != null) leads.push(v); } out.gymLeadMinS5on = leads.length ? Math.min(...leads) : null;
   const tierOvr = (t) => mean(rows.filter((x) => x.year >= 5 && gymOf(x.club) === t).map((x) => x.teamOvr));
   out.gymTierOrderHeld = last.year >= 5 ? (tierOvr('early') < tierOvr('mid') && tierOvr('mid') < tierOvr('late') ? 1 : 0) : null;
+  out.gymEarlyOvrS5on = tierOvr('early'); out.gymMidOvrS5on = tierOvr('mid'); out.gymLateOvrS5on = tierOvr('late');
+  const leads8 = []; for (let y = 8; y <= last.year; y++) { const v = lead(y); if (v != null) leads8.push(v); } out.gymLeadMinS8on = leads8.length ? Math.min(...leads8) : null;
   out.distinctChampions = new Set(titles.map((x) => x.club)).size;
   const genShare = (pred) => { let a = 0, s = 0; for (const x of rows.filter((r) => r.year === last.year && pred(r.club))) { const p = x.provenanceStarters || {}; s += Object.values(p).reduce((q, v) => q + v, 0); a += p['signed:generated'] || 0; } return pct(a, s); };
   out.gymGeneratedStarterPctFinal = genShare(isGym); out.ordinaryGeneratedStarterPctFinal = genShare((c) => !isGym(c));
