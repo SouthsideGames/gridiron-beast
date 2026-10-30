@@ -1,0 +1,16 @@
+{
+ "root": "/home/claude/gridiron-beast",
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "seasons": 6,
+ "reps": 2,
+ "secondsPerSeason": 13.73,
+ "all": [
+  13.19,
+  13.73
+ ],
+ "node": "v22.22.0"
+}

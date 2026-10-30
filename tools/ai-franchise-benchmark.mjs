@@ -17,6 +17,12 @@
 // possible, the best visible prospect at each pick, the cheapest free agents only up to the roster minimum; no trades, no
 // calls answered. A dismissed owner is reinstated after the season (simulation only, the owner's rule of 2026-10-24) so every
 // seed runs its full length.
+//
+// Harness v4 (Task 6 Phase 0, recording only). Every v3 field is produced exactly as before; v4 adds one field per run, `v4`, with
+// a season-end snapshot of every monster in the league and on the owner's roster (see V4_MONSTER below), each club's gym tier and
+// strategy record, and per-season league facts. Removing `v4` from every run gives the v3 output byte for byte: the file carries
+// `hashV3` (the v3 hash of the same runs) next to `hash` (over everything), and tools/task6-harness-check.mjs verifies both that
+// and that the harness does not change the game (the final save with and without the harness's hooks is identical).
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -40,6 +46,11 @@ const { ALL_TEAMS, tierById } = await imp('src/data/league.js');
 const Save = await imp('src/franchise/save.js');
 const L = await imp('src/franchise/league.js');
 const T = await imp('src/franchise/trades.js');
+const { GYM_BY_CLUB } = await imp('src/data/gyms.js');
+const IH = await imp('src/franchise/injury-history.js');
+/** Harness v4: the columns of one monster's season-end row (arrays keep a 20-season file small). */
+export const V4_MONSTER = Object.freeze(['id', 'club', 'pos', 'age', 'ovr', 'level', 'xp', 'potential', 'starter', 'protected', 'ageless', 'origin', 'draftedYear', 'draftedRound',
+  'contractEnds', 'contractYears', 'salary', 'stage', 'injIncidents', 'injMissed', 'injOpp', 'yearsPro', 'attrs']);
 const SCEN = args.scenario ? await import(path.join(path.dirname(new URL(import.meta.url).pathname), 'ai-benchmark-scenarios.mjs')) : null;
 
 const [s0, s1] = String(args.seeds || '1-2').split('-').map(Number); const SEEDS = []; for (let s = s0; s <= (s1 || s0); s++) SEEDS.push(s);
@@ -83,6 +94,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
   const tradesSeen = new Set(); const drafted = new Map(); // id -> {club, year, round, overall}
   const mid = {};
   let applied = false; let scenarioSetup = null;
+  const v4 = { monsterColumns: V4_MONSTER, attrKeys: null, clubs: {}, seasons: [] }; // harness v4 (recording only)
 
   const snap = (f) => { const out = {}; for (const c of REG.leagueClubs(f)) { const st = clubState(f, c); const mp = new Map(); for (const m of st.roster) mp.set(m.id, { m, ovr: monsterOverall(m), age: m.age, starter: st.startIds.has(m.id), pos: m.position }); out[c] = mp; } return out; };
   // Harness v3 (Task 5.5, recording only): cap room per club at each check, so a deal's cap effect can be read against the check before it.
@@ -212,6 +224,21 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
     // the owner's club, labelled (not one of the 15)
     { const rec = s.records[f.club]; rows.push({ seed, year, club: f.club, owner: true, w: rec.w, l: rec.l, playoffs: seeds.includes(f.club), finalist: !!fin && (fin.home === f.club || fin.away === f.club), champion: s.champion === f.club, teamOvr: teamOverall(F.playerTeam(f)), rosterSize: f.roster.length }); }
     decisions.nudge.push({ year, contracts: lo.contracts ? { resigned: lo.contracts.resigned, walked: lo.contracts.walked, released: lo.contracts.released, runaway: lo.contracts.runaway || [], overCap: lo.contracts.overCap || [] } : null, freeAgency: lo.opened === year ? lo.freeAgency : null, nudge: lo.opened === year && lo.nudge ? { boosted: lo.nudge.boosted, slowed: lo.nudge.slowed } : null, offseasonTrades: lo.opened === year ? lo.trades : null, problems: lo.problems || [] });
+    // Harness v4 (recording only): every monster of the league and of the owner's roster at the season's end, and each club's strategy record.
+    {
+      const ownerStart = new Set(); for (const pos of POS) for (const m of f.roster.filter((x) => x.position === pos).sort((a, b) => monsterOverall(b) - monsterOverall(a)).slice(0, GROUP_SLOTS[pos].length)) ownerStart.add(m.id);
+      const monsters = [];
+      const row = (m, club, starter) => {
+        if (!v4.attrKeys) v4.attrKeys = Object.keys(m.attributes || {});
+        const inj = IH.injurySummary(f, m.id) || {};
+        monsters.push([m.id, club, m.position, m.age, monsterOverall(m), m.level ?? null, m.xp ?? null, m.potential ?? null, starter ? 1 : 0, REG.isProtected(m) ? 1 : 0, REG.isAgeless(m) ? 1 : 0, originOf(m, club, seenSource),
+          m.drafted?.year ?? null, m.drafted?.round ?? null, m.contract?.ends ?? null, m.contract?.years ?? null, m.salary ?? null, m.stage ?? 0, inj.incidents ?? null, inj.missed ?? null, inj.opp ?? null, m.yearsPro ?? null,
+          v4.attrKeys.map((k) => m.attributes?.[k] ?? null)]);
+      };
+      for (const c of clubs) { for (const [, x] of tableSnap[c]) row(x.m, c, x.starter); if (!v4.clubs[c]) v4.clubs[c] = { gym: GYM_BY_CLUB[c]?.tier || null }; }
+      for (const m of f.roster) row(m, f.club, ownerStart.has(m.id));
+      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), monsters });
+    }
     prevOvr = new Map(); for (const mp of Object.values(tableSnap)) for (const [id, x] of mp) prevOvr.set(id, x.ovr);
     // Save integrity at the season boundary: the whole league registry survives an export/import round trip unchanged.
     try { const back = Save.importJson(Save.exportJson(f)); if (!back) integrity.push(`season ${year}: save import failed`); else if (JSON.stringify(back.league) !== JSON.stringify(f.league)) integrity.push(`season ${year}: save round trip changed the league registry`); } catch (e) { integrity.push(`season ${year}: save round trip threw ${e.message}`); }
@@ -219,22 +246,28 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
 
   let res;
   try { res = runFranchise(seed, { seasons, difficulty, check, onSeason }); }
-  catch (e) { return { seed, error: String(e?.stack || e).slice(0, 2000), rows, decisions, integrity, seconds: Math.round((Date.now() - t0) / 1000) }; }
+  catch (e) { return { seed, error: String(e?.stack || e).slice(0, 2000), rows, decisions, integrity, seconds: Math.round((Date.now() - t0) / 1000), v4 }; }
   const { f, problems, log } = res;
+  v4.finalState = finalStateHash(f); // harness v4: the whole franchise at the end, for the non-interference check
   // Later contribution of AI draftees: where each one is at the end of the run.
   const draftOutcome = [...drafted.entries()].map(([id, x]) => { const m = f.league.monsters[id]; const club = m ? REG.leagueClubs(f).find((c) => REG.clubRecord(f, c).roster.includes(id)) : null; const st = club ? clubState(f, club) : null; return { id, ...x, endClub: club, sameClub: club === x.club, endOvr: m ? monsterOverall(m) : null, endStarter: st ? st.startIds.has(id) : false, inLeague: !!m }; });
-  return { seed, difficulty, scenarioSetup, seasons: log.seasons.length, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, problems: [...new Set([...problems, ...integrity])].slice(0, 50), problemCount: problems.length, rows, decisions, draftOutcome, seconds: Math.round((Date.now() - t0) / 1000), peakHeapMB: Math.round(peak / 1048576), fired: log.fired };
+  return { seed, difficulty, scenarioSetup, seasons: log.seasons.length, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, problems: [...new Set([...problems, ...integrity])].slice(0, 50), problemCount: problems.length, rows, decisions, draftOutcome, seconds: Math.round((Date.now() - t0) / 1000), peakHeapMB: Math.round(peak / 1048576), fired: log.fired, v4 };
 }
+/** The whole franchise, less its two wall-clock identity fields (`uid`, `createdAt`: a new id and the creation time on every run). */
+export const finalStateHash = (f) => { const { uid, createdAt, ...rest } = f; return createHash('sha256').update(JSON.stringify(rest)).digest('hex'); };
+/** The v3 hash of a set of runs: everything but the timings and the v4 field (so a v4 file proves it reproduces v3). */
+export const hashV3Of = (runs) => createHash('sha256').update(JSON.stringify(runs.map(({ seconds, peakHeapMB, v4, ...x }) => x))).digest('hex');
+export const hashOf = (runs) => createHash('sha256').update(JSON.stringify(runs.map(({ seconds, peakHeapMB, ...x }) => x))).digest('hex');
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const scenario = SCEN && args.scenario ? SCEN.SCENARIOS[args.scenario] : null; if (args.scenario && !scenario) { console.error(`unknown scenario ${args.scenario}`); process.exit(2); }
-  const out = { harnessV: 3, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
+  const out = { harnessV: 4, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
   for (const seed of SEEDS) {
     const r = await benchmarkSeed(seed, { scenario });
     out.runs.push(r);
     if (!quiet) console.error(`seed ${seed}: ${r.seasons ?? '?'} seasons, ${r.seconds}s, heap ${r.peakHeapMB} MB, problems ${r.problemCount ?? 'n/a'}${r.error ? ' ERROR ' + r.error.split('\n')[0] : ''}`);
   }
-  out.hash = createHash('sha256').update(JSON.stringify(out.runs.map(({ seconds, peakHeapMB, ...x }) => x))).digest('hex');
+  out.hash = hashOf(out.runs); out.hashV3 = hashV3Of(out.runs);
   if (args.json) fs.writeFileSync(args.json, JSON.stringify(out));
-  console.log(JSON.stringify({ hash: out.hash, seeds: SEEDS.length, seconds: out.runs.reduce((s, r) => s + r.seconds, 0), errors: out.runs.filter((r) => r.error).length, problems: out.runs.reduce((s, r) => s + (r.problemCount || 0), 0) }));
+  console.log(JSON.stringify({ hash: out.hash, hashV3: out.hashV3, seeds: SEEDS.length, seconds: out.runs.reduce((s, r) => s + r.seconds, 0), errors: out.runs.filter((r) => r.error).length, problems: out.runs.reduce((s, r) => s + (r.problemCount || 0), 0) }));
 }

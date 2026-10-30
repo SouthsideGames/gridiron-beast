@@ -1,0 +1,37 @@
+{
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "seasons": 3,
+ "nonInterference": [
+  {
+   "seed": 1,
+   "plain": "f0b85283702794a77a23b4d704a4a5ebcf9b26958db3b01cb7773ec9ad6134c2",
+   "harness": "f0b85283702794a77a23b4d704a4a5ebcf9b26958db3b01cb7773ec9ad6134c2",
+   "identical": true
+  },
+  {
+   "seed": 2,
+   "plain": "65530b4898e307508d97a146e01c3659a7b9c82c40d6ae3a1e9d1762557e0dd7",
+   "harness": "65530b4898e307508d97a146e01c3659a7b9c82c40d6ae3a1e9d1762557e0dd7",
+   "identical": true
+  },
+  {
+   "seed": 3,
+   "plain": "a09c622f85d7524742d956e9b15ed3fba3a2c1ac00a8b389815d94f199f7d846",
+   "harness": "a09c622f85d7524742d956e9b15ed3fba3a2c1ac00a8b389815d94f199f7d846",
+   "identical": true
+  }
+ ],
+ "determinism": {
+  "hashA": "943e8a58f834eb815cd46edca93d0bc7ed5c260d20e756ab0de8a5372f0e9656",
+  "hashB": "943e8a58f834eb815cd46edca93d0bc7ed5c260d20e756ab0de8a5372f0e9656",
+  "hashV3A": "686edab851dc03b064b3b3f7f72adaa270f470d08a83ca67379c41b6c29962c0",
+  "hashV3B": "686edab851dc03b064b3b3f7f72adaa270f470d08a83ca67379c41b6c29962c0",
+  "identical": true
+ },
+ "v3": null,
+ "pass": true
+}
