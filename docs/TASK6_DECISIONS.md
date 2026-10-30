@@ -7,8 +7,8 @@ each phase still needs its own authorisation.
 | Group | Decisions | Status |
 |---|---|---|
 | 1 — Aging and Longevity | D1–D8 | **Approved with modifications, 2026-10-30** (below) |
-| 2 — Draft Quality and Competitive Balance | D9, D10 | **Presented 2026-10-30, awaiting decision** (below) |
-| 3 — AI Roster Intelligence | D13, D14, D15, T3 (and Phase B items) | Not yet presented |
+| 2 — Draft Quality and Competitive Balance | D9, D10 | **Approved with modifications, 2026-10-30** (below); numbers provisional pending Phase A testing |
+| 3 — AI Roster Intelligence | D13, D14, D15, T3 (and Phase B items) | Presented 2026-10-30, awaiting decision (below) |
 | 4 — Prospect Development | D12 | Not yet presented |
 | 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | Not yet presented |
 | Trading follow-ups | T1–T4 | Owner's provisional preferences recorded: approve T1; roster-compliant offers for T2; valuation-based protection for T3; a limited repeat-trade restriction for T4. Not final authorisation |
@@ -165,7 +165,7 @@ Source: `tools/aging-projection.mjs`, seeds 106 and 107 (`docs/task6-plan/group1
 6. **Pools and waivers.** Unsigned monsters age and retire too (×2 odds), or the market fills with ancient veterans.
 7. **Performance.** All work is offseason-only and linear in league size; no weekly cost.
 
-## Group 2 — Draft Quality and Competitive Balance (D9, D10): presented 2026-10-30, awaiting decision
+## Group 2 — Draft Quality and Competitive Balance (D9, D10): presented 2026-10-30 (decision recorded below)
 
 Evidence: `docs/task6-plan/group2-gym-balance.txt`, `docs/task6-plan/draft-and-gym-seeds106-110.txt`, Task 5.5 data (PR #83).
 Every 20-season figure comes from 5 seeds and is provisional. Any balance claim must be confirmed on 10 or more twenty-season seeds before implementation.
@@ -198,3 +198,187 @@ Every 20-season figure comes from 5 seeds and is provisional. Any balance claim 
   - 5–15% of AI titles;
   - 20–30% of AI playoff berths;
   - gym lead at season 20 between 6 and 12 team-overall points.
+
+### Owner decision on Group 2 (2026-10-30): approved with modifications
+**D9 — draft-class quality.** Provisionally approved, pending Phase A testing.
+- Class overall rises by about +0.5 a season, with matching potential scaling, capped at +10.
+- The gem / solid / project distribution is unchanged.
+- The same rules apply to the owner and AI.
+- Generation stays deterministic, and existing saves need no migration.
+- **Validation.**
+  - No excessive rookie strength.
+  - Veterans keep their value.
+  - Evaluated together with Group 1 (ageing and retirement) and Group 4 (development).
+
+**D10a — gym growth plateau.** Approved.
+- Gyms grow +1.5 a season through season 10, then +0.5 (the ordinary rate).
+- Unchanged: tier offsets, legendaries, coaching advantage, studied tape, and the progression of gym difficulty.
+- Purpose: stop an endlessly growing advantage, not make gyms ordinary.
+
+**D10b — ordinary-club brake.** Testing approved; the threshold is provisional.
+- Slow ordinary clubs only above anchor + 8 (today + 4). Lift for clubs below their anchor is unchanged at first.
+- Compare +4, +6 and +8 on matched seeds; +8 is adopted only if it gives the best balance.
+- No hidden penalties for an ordinary club simply because it is competitive.
+
+**D10 — nudge recalibration.** Authorised for design and testing within Phase A; this does not authorise implementation.
+- **Must account for:**
+  - retirement turnover;
+  - position-specific ageing;
+  - draft quality;
+  - prospect development;
+  - gym anchor changes;
+  - the wider band.
+- **No additional hidden balance mechanisms** without owner approval.
+
+**Gym protection floor.** Provisional design target.
+- Gym win rate ≥ 60% against ordinary clubs.
+- Gym share of AI titles ≥ 75%.
+- Gym team-overall lead ≥ 6 in seasons 5–20.
+- Tier order preserved.
+- Outcomes are never forced to meet it: if it conflicts with realistic development or integrity, report the conflict and recommend adjustments.
+
+**Ordinary-franchise competitive health.** Provisional evaluation targets, not pass/fail until the benchmark shows they are achievable.
+- Persistent losers ≤ 50%.
+- About 5–15% of AI titles.
+- About 20–30% of playoff berths, subject to league structure.
+- Season-20 gym lead of about 6–12.
+- Ordinary success must come from roster decisions.
+
+**Benchmark requirements (Group 2).**
+1. At least 10 independent 20-season seeds for long-run balance claims.
+2. Matched seeds against v42.17.0.
+3. Held-out seeds 61–80 for confirmation.
+4. Gym and ordinary clubs measured separately.
+5. Championship diversity, persistent losing and playoff representation measured.
+6. Share of gym starters from generated-veteran assistance tracked.
+7. Ordinary-club XP slowdowns tracked, including whether they suppress successful AI development.
+8. Owner win-rate contract (§45.6) verified.
+9. Determinism, legal rosters, cap integrity and save compatibility preserved.
+10. Observed outcomes distinguished from projections.
+- Success is never declared on championship distribution alone.
+
+### Remaining calibration risks (Group 2)
+1. **Runaway-veteran rule (code evidence, new).**
+   - `leagueContracts` lets an AI club whose team overall is more than `BAND` (4) above its pre-season target release expiring veterans aged 27+ (`RUNAWAY_VETERAN_AGE`).
+   - So the +4 threshold appears in a second place besides the XP brake.
+   - Under D10b, an ordinary club between +4 and +8 would no longer be slowed but would still shed veterans.
+   - **Recommendation:** test the runaway threshold at the same width as the brake (+4 / +6 / +8). It is an approved attrition rule (decision A), so this is raised for the owner, not changed.
+2. **Interactions.** Draft scaling, retirement turnover and the wider band all raise ordinary rosters at once, so the lift and runaway thresholds must be calibrated jointly, not one at a time.
+3. **Gym floor against plateau.** The plateau measured a team-overall gym lead of 10.0 at season 20 on 5 seeds. With the wider band the lead may fall towards the floor of 6. If the floor and the ordinary corridor conflict, report the conflict rather than tune the outcome.
+4. **Owner contract.** All Group 2 changes alter the league's strength curve, so §45.6 needs re-measurement on every difficulty. The hands-off owner proxy is not the contract itself.
+5. **Cost.** 10 twenty-season seeds for each of 3 brake widths (plus the runaway variants) is about 3–4 hours on 2 lanes per calibration round. Phase A should budget at least two rounds.
+
+## Group 3 — AI Roster Intelligence (D13, D14, D15, T3; Phase B and D designs): presented 2026-10-30, awaiting decision
+
+### Shared principles
+- Every decision reads observable data only (Group 1, Modification 3): the forecast window, never hidden longevity.
+- There is no new balance mechanism (Group 2): anchors, nudge and arrivals keep their rules, and AI success must come from roster decisions.
+- All work happens in the offseason. The cost is linear in league size, with no weekly cost.
+- No new random draws except the existing draft noise.
+- The only stored state is the strategy mode, added to the existing `clubRecord.strategy`. A missing value is read as "Compete", so existing saves still load.
+
+### R1 — Roster plan (B1, B4, D15)
+Derived once per offseason per AI club, after retirements and before contracts. Not stored.
+
+For each position group:
+- **Gap:** the starter group's mean minus the league mean of starters at that position that season. This is D15, the position-relative measure, and replaces the club-relative `positionNeeds` term.
+  - Weak at a gap of −4 or worse; severe at −8 or worse.
+- **Horizon:** for each starter, the forecast decline onset minus his age. "Ageing" means a horizon of 2 or less, or already past onset.
+- **Successor:** the best backup aged 26 or under (or at least 4 years younger than the starter) who is within 8 overall of the starter, or whose potential is at or above the starter's overall. He is "ready" when within 4.
+- **Needs:**
+  - Succession need 2: an ageing starter with no successor.
+  - Succession need 1: a successor who is not ready while the starter's horizon is 1 or less.
+  - Weakness need: from the gap.
+  - These needs are read by the draft, contracts, free agency and trades.
+
+### R2 — Strategy mode (Phase D)
+**Modes:** Contend, Compete, Retool, Rebuild.
+
+**Inputs:**
+- two-season win % (because 10-game seasons are noisy);
+- team overall against the league mean;
+- share of starters past onset;
+- next-season salary committed;
+- own draft picks.
+
+**Rules:**
+- **Contend:** two-season win % ≥ 0.60, or team overall ≥ league mean + 3 with fewer than 40% of starters ageing.
+- **Rebuild:** two-season win % ≤ 0.35 and (≥ 40% of starters ageing, or committed salary above 90% of the cap).
+- **Retool:** two-season win % ≤ 0.35 with a young roster.
+- **Compete:** everything else.
+
+**Hysteresis:** a change needs the new condition in two consecutive offseasons, or a swing of ≥ 0.30 in win %. Rebuild lasts at least 2 seasons.
+
+**Gyms (option):** gyms never go below Compete, an open intended advantage that preserves the boss role. The alternative is the same rules as everyone else.
+
+### R3 — Contracts (B3)
+- **Re-signing:** by projected overall over the term (from the forecast), against the monster's role.
+- **Length:** 3 years until onset − 2; 2 years near onset; 1 year past onset. This staggers expiries.
+- **Starters past onset:** re-signed for 1 year if the club is Contending or has no ready successor; otherwise allowed to walk.
+- **Successors:** a designated successor always counts as "value" and is re-signed as a reserve.
+- **Reserve age limit (option):** replace the fixed `RESIGN_AGE_LIMIT` 32 with a position-aware limit: no new deal for a reserve past his public onset + 2.
+- **Unchanged:**
+  - the runaway rule (its threshold is under test, per the Group 2 risks);
+  - `trimToCap`;
+  - `renewalAsk`.
+
+### R4 — Rebuilding and starter sales (D13)
+- Rebuild-mode clubs may sell a starter to an AI club. This changes the approved rule that AI sellers sell only spares.
+- **Who may be sold:**
+  - only a starter aged at least his public onset − 1;
+  - never a successor, never a protected monster.
+- **Payment:** picks and/or monsters aged 25 or under only.
+- **Seller safeguards:**
+  - the seller keeps a legal lineup;
+  - the seller has a replacement within 8 overall, or a successor.
+- **Limits:**
+  - at most one starter sold per window;
+  - buyers must be Contend or Compete clubs with a need at that position.
+- **Owner trades:** unchanged here. Rebuilders offering veterans to the owner belongs to the T2 track, if approved.
+
+### R5 — Free-agency upgrades (C3, D14)
+- **When:** a starting group is weak (gap ≤ −4) or has a succession need, the club has cap room, and a pool candidate is +3 over the starter (or is a successor-age fit).
+- **Making room:**
+  - the club may release its weakest unprotected spare, never a successor and never below the legal composition;
+  - limit of 2 upgrades per offseason for Contend clubs, 1 for others.
+- **Source:** pool candidates only. Generated arrivals keep today's anchor rule, so there is no new generation rule.
+- **Owner:** the owner still has first choice (AI free agency runs after the owner, decision F), and released spares join the pools.
+
+### R6 — Successor protection (T3 / A4)
+- **Valuation:** in `rosterWorth`, the designated successor's role share rises from 0.45 to:
+  - 0.8 when the starter is within 2 seasons of forecast onset or past it;
+  - 0.6 when he is 3–4 seasons away;
+  - 0.45 otherwise.
+- **Where it applies:** whenever an AI club prices its own roster — AI–AI deals, the owner's proposals and incoming offers.
+- **Owner:** the owner's own monsters are unaffected.
+- Contracts (R3) and free-agency releases (R5) also never discard a successor.
+
+### R7 — Drafting (B2)
+- **Score:** the existing score, plus +4 for a succession need at the position, plus up to +3 for a weak group, minus 3 at a position with a good young starter and a successor.
+- **By mode:**
+  - Contend raises the overall weight (readiness);
+  - Rebuild raises the potential weight from 0.2 to 0.35.
+- **Unchanged:** the noise, the kicker penalty and the duplicate penalty. The owner's picks are unaffected.
+
+### Expected effects (projections; not measured)
+**By season 10:**
+- succession cover from 17.6% to at least 40%;
+- persistent weak groups with cap room from 9.8% to at most 5%;
+- misaligned picks from 24.5% to at most 15%;
+- staggered expiries;
+- rebuilding clubs younger, with higher potential, after 3 seasons.
+
+**By season 20:**
+- succession cover from 10.7% (6.6% at season 20) to at least 30%;
+- shorter losing streaks (up to 14 seasons today);
+- a better recovery rate from 2-win seasons (46.7% never recover today).
+
+Titles are not a target. The nudge and anchors still bound outcomes, and the wider band from D10b lets some gains show.
+
+### Risks
+1. Mode oscillation (handled by hysteresis).
+2. Contract churn, and cap lock-in from 3-year deals.
+3. A tighter owner market: successors become pricier and the pools more contested.
+4. Task 5 trading gains (T3–T10) must still pass.
+5. Rebuild selling could weaken the gym floor if gyms rebuild (handled by the gym option).
+6. Gains can stay invisible if the D10b band is not widened.
