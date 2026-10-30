@@ -37,7 +37,7 @@ Planning-branch documents (decision record and approved specification) arrive th
 ## 3. Production game behaviour is unchanged
 - **No game files touched.** `git diff fc19d34 HEAD -- src index.html` is empty: no file under `src/`, and no game entry point, differs from published v42.17.0. Phase 0 changes only `tools/`, `tests/` and `docs/`.
 - **No interference** (`docs/task6-phase0/harness-check.json`). Seeds 1–3 × 3 seasons, played by the game alone and under harness v4, end in the **identical franchise** (sha-256 of the whole franchise object, less `uid` and `createdAt`, which differ on every run of the game itself).
-- **Full test suite** on the PR head: see §11.
+- **Full test suite:** 777 of 777 pass (§11).
 - **The published game** (artifact version 115) was not touched.
 
 ## 4. Harness v3 against v4: reproducibility
@@ -219,4 +219,6 @@ Measured on this 2-CPU container, two lanes:
 Phase A-1 has not been started.
 
 ## 11. Full test suite
-See the PR description for the result on the PR head (`npm test`, run alone after the baselines).
+- `npm test` was run alone, after the baselines, on the Phase 0 code: **777 tests, 777 pass, 0 fail**, in 27.9 minutes.
+- The count is higher than the 671 in `docs/TESTING_POLICY.md` because Tasks 5 and 5.5 and this phase have since added tests.
+- The new fast tests (`tests/task6-phase0.test.js`, 6 tests) pass.
