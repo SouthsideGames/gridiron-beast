@@ -1,0 +1,332 @@
+{
+ "label": "v42170",
+ "files": [
+  {
+   "file": "v42170-B-1-10.json",
+   "harnessV": 4,
+   "seeds": "1-10",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "2b5a5d08c18ec910b8fce63a40608009aeea0c75ab22a83685c3472bd4d194fb",
+   "hashV3": "1fd3be9af11de92da8ad6c691b584756a0009cb4449873c68aadf6b5c6bffe5b",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1567,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-B-11-20.json",
+   "harnessV": 4,
+   "seeds": "11-20",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "e8aee45be0e1c1b82586e19cdbc04f8f94649f32606c97f5d064a409605c2bd8",
+   "hashV3": "56f12b82fdc30a2fa0136ce0a020eebaeb20b83715955c50b2378469048a8216",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1510,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-B-21-30.json",
+   "harnessV": 4,
+   "seeds": "21-30",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "b59c3485c63b72dcc92c866cb55ec1148a8869d3ce760444473233fd2f138352",
+   "hashV3": "b73f26ba26c0c30703609e1edc49e9e8c9775d564dc82974e929be9e22e0e86a",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1506,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-B-31-40.json",
+   "harnessV": 4,
+   "seeds": "31-40",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "0b6ebabb7ed71c55895857fa6be8cd81c59fa8d7f4d24e713b8b9255c2e6173d",
+   "hashV3": "e4726cda764df98f27cdfee2c53033ce2693245d0843ae5d36ae07006853a387",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1526,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-B-41-50.json",
+   "harnessV": 4,
+   "seeds": "41-50",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "29772368cb126ccf229dd9a06810196620994c1b1812c2a0c360d900652ddb26",
+   "hashV3": "7426a7b3e66d36a78ea2a8d313c2ab85de4388bab2b78be23be5a8da4f975c3f",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1721,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-B-51-60-repeat.json",
+   "harnessV": 4,
+   "seeds": "51-60",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "a89ccdb3c7c85e06c902fa1fd761b329efb0895dacea7009f42c87ab1a54bfad",
+   "hashV3": "f101de8b2e367e2f0415581682fbfcd8602c9dfffefbdca6ff0c3359ffc07579",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1399,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-B-51-60.json",
+   "harnessV": 4,
+   "seeds": "51-60",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "a89ccdb3c7c85e06c902fa1fd761b329efb0895dacea7009f42c87ab1a54bfad",
+   "hashV3": "f101de8b2e367e2f0415581682fbfcd8602c9dfffefbdca6ff0c3359ffc07579",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1549,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-B-61-70.json",
+   "harnessV": 4,
+   "seeds": "61-70",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "13b3cc5ff996ac305522d50e5ea6b436fe39b4e761a5f9e8d1b7955c5cfc4c25",
+   "hashV3": "868003576752988296ee491c1156dba0077514faa7da3c5928b72e1a5e6736e1",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1640,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-B-71-80.json",
+   "harnessV": 4,
+   "seeds": "71-80",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "a0e16cbedf86fa0df3b4f8ee879b617d9678371316caba0083682f32c3b73349",
+   "hashV3": "60f0ed5b6ae568b4aa9b44e84b1a890c0802b89380165ebff2a18b9b1a436770",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1642,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-C-106-108.json",
+   "harnessV": 4,
+   "seeds": "106-108",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "0e272a6e2e27d1aef5fbb1f9282e4c6e0fc4cd4b302c01dc97d3aa1dd779b340",
+   "hashV3": "b94c8331eea53cb0da4bbf3556d733f3ff9b54f0f2717083c9f6dc59c72d5b6a",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1120,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-C-109-110.json",
+   "harnessV": 4,
+   "seeds": "109-110",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "974e70c573ce9161f6d1bb1fe879014d197006bb07257a0ba5622800a36df879",
+   "hashV3": "426e1ab77aefb6022b6d0bddb227010e9acc9bb5737f2329d750df37b4c223d8",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 756,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-C-111-115.json",
+   "harnessV": 4,
+   "seeds": "111-115",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "08a96174b33f6dbfc3ee9a0e98658864792f2685e72c054f7514fc1ad465ca12",
+   "hashV3": "0a700f7c3134d67adf144e7c310f9ae07d1da13f984b4fa5692b9a12ea648284",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1583,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-C-116-120.json",
+   "harnessV": 4,
+   "seeds": "116-120",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "7ec10870f4ae0ec7f7d17ec4a9586c829cba7ed82cba1528aa8ea6ef75e42893",
+   "hashV3": "20bf670a31ac075a3705b545a5827534a4c6cac9969c299b767871e7de7fbdcb",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1563,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-C-121-125.json",
+   "harnessV": 4,
+   "seeds": "121-125",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "fc0c76253beb1e9463790f8f5424f34d12b163209e518ab9fac5923416725b85",
+   "hashV3": "a1e75241baf85e292b5a7459d1a63256f8e22b6dade73e826165577c3d5d091e",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 1714,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-D-aging.json",
+   "harnessV": 4,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "aging",
+   "hash": "2bb12b7898d46d5623f2e387ac3297cc3db7f3c234889b0f6c6a08cca7e9374a",
+   "hashV3": "52eb0052d7105e21ffb96e57cb0fbee1fcdaea9cbb6fac35801a7b256d7036f1",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 441,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-D-expiring.json",
+   "harnessV": 4,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "expiring",
+   "hash": "38454e59e67765df5cf3a6aa9cb795f227a5a25f5852941451fdb446931c813b",
+   "hashV3": "604085b4729a71bbd5f22d00ada61233aa1ac50e0581886a38dcafe5457d8d48",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 439,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-D-injuries.json",
+   "harnessV": 4,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "injuries",
+   "hash": "9322ce25c1048b599d126e45277c1c7481041229a53545a47bbf4cb547e8a686",
+   "hashV3": "25c80830530d471587f65b2522fb72463016fb58d5dc77642bc7707822760ffc",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 435,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-D-picks.json",
+   "harnessV": 4,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "picks",
+   "hash": "09cb68155a50c2a40cad2a8683a002a22400b60a1029632e1acecc6b0a555171",
+   "hashV3": "d94ca48ae55ab350bdc8e2cf504a0d1b3a36a2844c2cd75ddaabe24962977763",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 436,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-D-rebuild.json",
+   "harnessV": 4,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "rebuild",
+   "hash": "9a5fc783ba29cd2d4a5cb05f634d817aa104ad3cadeb946e559aa62ee68e9cf8",
+   "hashV3": "749d16e97e4a8d918113dbc02de30d803c4a72321e382ad545a0eecef559eafa",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 438,
+   "node": "v22.22.0"
+  },
+  {
+   "file": "v42170-D-thin.json",
+   "harnessV": 4,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "thin",
+   "hash": "d416b0868e98311fa9014a0d4f5a51480809783284bccf270a140d6a5769088f",
+   "hashV3": "bdcf11a74bf3b1711a674a851d1775fcc3161a59212774d2b69269d844206aa6",
+   "problems": 0,
+   "errors": 0,
+   "seconds": 447,
+   "node": "v22.22.0"
+  }
+ ],
+ "v3Reproduction": {
+  "checked": 8,
+  "identical": 8,
+  "detail": [
+   {
+    "file": "v42170-B-1-10.json",
+    "v3File": "t55-B-1-10.json",
+    "v3Hash": "1fd3be9af11de92da8ad6c691b584756a0009cb4449873c68aadf6b5c6bffe5b",
+    "v4HashV3": "1fd3be9af11de92da8ad6c691b584756a0009cb4449873c68aadf6b5c6bffe5b",
+    "identical": true
+   },
+   {
+    "file": "v42170-B-11-20.json",
+    "v3File": "t55-B-11-20.json",
+    "v3Hash": "56f12b82fdc30a2fa0136ce0a020eebaeb20b83715955c50b2378469048a8216",
+    "v4HashV3": "56f12b82fdc30a2fa0136ce0a020eebaeb20b83715955c50b2378469048a8216",
+    "identical": true
+   },
+   {
+    "file": "v42170-B-21-30.json",
+    "v3File": "t55-B-21-30.json",
+    "v3Hash": "b73f26ba26c0c30703609e1edc49e9e8c9775d564dc82974e929be9e22e0e86a",
+    "v4HashV3": "b73f26ba26c0c30703609e1edc49e9e8c9775d564dc82974e929be9e22e0e86a",
+    "identical": true
+   },
+   {
+    "file": "v42170-B-31-40.json",
+    "v3File": "t55-B-31-40.json",
+    "v3Hash": "e4726cda764df98f27cdfee2c53033ce2693245d0843ae5d36ae07006853a387",
+    "v4HashV3": "e4726cda764df98f27cdfee2c53033ce2693245d0843ae5d36ae07006853a387",
+    "identical": true
+   },
+   {
+    "file": "v42170-B-41-50.json",
+    "v3File": "t55-B-41-50.json",
+    "v3Hash": "7426a7b3e66d36a78ea2a8d313c2ab85de4388bab2b78be23be5a8da4f975c3f",
+    "v4HashV3": "7426a7b3e66d36a78ea2a8d313c2ab85de4388bab2b78be23be5a8da4f975c3f",
+    "identical": true
+   },
+   {
+    "file": "v42170-B-51-60.json",
+    "v3File": "t55-B-51-60.json",
+    "v3Hash": "f101de8b2e367e2f0415581682fbfcd8602c9dfffefbdca6ff0c3359ffc07579",
+    "v4HashV3": "f101de8b2e367e2f0415581682fbfcd8602c9dfffefbdca6ff0c3359ffc07579",
+    "identical": true
+   },
+   {
+    "file": "v42170-C-106-108.json",
+    "v3File": "t55-C-106-108.json",
+    "v3Hash": "b94c8331eea53cb0da4bbf3556d733f3ff9b54f0f2717083c9f6dc59c72d5b6a",
+    "v4HashV3": "b94c8331eea53cb0da4bbf3556d733f3ff9b54f0f2717083c9f6dc59c72d5b6a",
+    "identical": true
+   },
+   {
+    "file": "v42170-C-109-110.json",
+    "v3File": "t55-C-109-110.json",
+    "v3Hash": "426e1ab77aefb6022b6d0bddb227010e9acc9bb5737f2329d750df37b4c223d8",
+    "v4HashV3": "426e1ab77aefb6022b6d0bddb227010e9acc9bb5737f2329d750df37b4c223d8",
+    "identical": true
+   }
+  ]
+ },
+ "repeatDeterminism": {
+  "original": "a89ccdb3c7c85e06c902fa1fd761b329efb0895dacea7009f42c87ab1a54bfad",
+  "repeat": "a89ccdb3c7c85e06c902fa1fd761b329efb0895dacea7009f42c87ab1a54bfad",
+  "identical": true
+ }
+}
