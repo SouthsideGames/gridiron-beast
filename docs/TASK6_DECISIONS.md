@@ -856,3 +856,21 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 - the A-1 mechanics are preserved.
 
 **Not authorised:** Phase B, merges, changes to the main game, and publishing without approval.
+
+## Phase A-2 review decision; Phase B authorised (owner, 2026-10-31)
+**Phase A-2.**
+1. **Preview:** publishing `v42.18.1-dev.a2` to the private development test link is authorised (done: version `1793474475-b588`). Production and the main game are not touched.
+2. **Ordinary-club bands:** stay at +4 (slowdown and runaway, aligned). +6 and +8 are not adopted.
+3. **Status:** A-2 is accepted as implemented for continued development. This is **not** final balance approval.
+4. **Binding unresolved issues:** the §45.6 owner contract failure on Pro and the Rookie and Pro difficulty drift.
+5. **Thresholds kept:** the gym protection floor of 6 and the owner difficulty requirements. No acceptance threshold is weakened to make a test pass.
+
+**Phase B authorised** under the approved specification (§1.8; §2 Phase B row): the roster plan (R1, D15), succession, contracts (R3), successor valuation (R6/T3), need-aware drafting (R7), and successor protection in cap trims.
+
+**Working method:**
+- complete the full Phase B scope in one development assignment, with targeted tests during implementation;
+- at the integrated A-2/B milestone, run the consolidated benchmark and evaluate together: owner difficulty drift, Pro balance, ordinary-club competitiveness, gym protection, rookie-versus-veteran balance and weak position groups;
+- investigate and correct issues within the approved scope before reporting; a significant design change, or a conflict with an approved requirement, is documented and brought to the owner first;
+- deliver test results, unresolved issues and a private playable preview.
+
+**Not authorised:** merges, production publishing, Phase C.
