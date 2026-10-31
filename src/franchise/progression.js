@@ -3,6 +3,7 @@
 import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints } from '../data/monsters.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
 import { isAgeless } from './league-registry.js';
+import { CURVE, trueOnset, technicalOffset, peakWindowAge, isPhysical, physLoss, techLoss, drawLoss, transitionYears, SEVERE_INJURY_PHYSICAL, ATTRIBUTE_FLOOR } from '../data/aging.js';
 /** Injury-risk multiplier for a monster playing a secondary position. */
 export const OUT_OF_POSITION_RISK = 1.75;
 
@@ -61,22 +62,38 @@ export function recoverWeek(roster, { bye = false } = {}) {
 }
 
 /**
- * Offseason: ageing, mild decline/growth, salary refresh. Legendary monsters and the rival's signature monster do not age
- * and never decline (owner's rules, 2026-10-23); they still gain a season of experience, rest and heal like everyone.
+ * Offseason: ageing, decline and growth, salary refresh (GDD §55, Task 6 Phase A-1). Legendary monsters and the rival's signature
+ * monster do not age and never decline (owner's rules, 2026-10-23); they still gain a season of experience, rest and heal like everyone.
+ *   - Growth to 23 as before: +1 awareness and strength toward potential.
+ *   - Physical decline from the monster's (hidden) onset, more each season past it, by position; technical decline later and slower.
+ *   - One severe injury last season past the onset costs a further point of each physical attribute (once).
+ *   - Durability at peak is recorded once, at the start of the peak window (onset − 3): it sets the onset's ±1 year.
+ * `ctx`: `s` = offseasons under these rules for a save made before them (the transition's decline cap; null = none);
+ * `severeOf(m)` = did he suffer a severe injury last season. Draws come from `rng` in roster order, attribute by attribute.
  */
-export function offseason(roster, rng) {
+export function offseason(roster, rng, { s = null, severeOf = null } = {}) {
   const events = [];
   for (const m of roster) {
     const ageless = isAgeless(m);
+    const severe = !ageless && !!severeOf?.(m); // read before the injury clears
     if (!ageless) m.age += 1;
     m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
     if (ageless) { m.salary = salaryFor(m); continue; }
-    if (m.age >= 30) {
-      for (const k of ['speed', 'agility', 'durability']) m.attributes[k] = Math.max(20, m.attributes[k] - 1 - rng.int(2));
+    if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = m.attributes.durability;
+    const onset = trueOnset(m); const yP = transitionYears(m.age - onset, s); const yT = transitionYears(m.age - onset - technicalOffset(m.position), s);
+    let physLost = 0;
+    if (yP > 0 || yT > 0) {
+      const rate = (CURVE[m.position] || CURVE.WR).rate;
+      for (const k of Object.keys(m.attributes)) {
+        const mean = isPhysical(k) ? (yP > 0 ? physLoss(yP, rate) + (severe ? SEVERE_INJURY_PHYSICAL : 0) : 0) : techLoss(yT);
+        if (mean <= 0) continue;
+        const before = m.attributes[k]; m.attributes[k] = Math.max(ATTRIBUTE_FLOOR, before - drawLoss(mean, rng));
+        if (isPhysical(k)) physLost += before - m.attributes[k];
+      }
       events.push({ kind: 'decline', id: m.id, name: m.name });
-    } else if (m.age <= 23) {
-      for (const k of ['awareness', 'strength']) if (m.attributes[k] < m.potential) m.attributes[k] += 1;
     }
+    if (m.age <= 23) for (const k of ['awareness', 'strength']) if (m.attributes[k] < m.potential) m.attributes[k] += 1;
+    if (physLost) m.physDrop = physLost; else delete m.physDrop; // what the forecast may read: did his body visibly decline this offseason
     m.salary = salaryFor(m);
   }
   return events;

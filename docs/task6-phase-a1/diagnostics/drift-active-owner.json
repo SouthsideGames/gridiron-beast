@@ -1,0 +1,50 @@
+{
+ "contract": null,
+ "drift": {
+  "rookie": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 76.9,
+   "baseOwnerWinS9to20": 45,
+   "s1to8": {
+    "n": 12,
+    "base": 76.85,
+    "cand": 71.18,
+    "diff": -5.67,
+    "lo": -10.3,
+    "hi": -0.93,
+    "effect": -0.71,
+    "up": 2,
+    "down": 10,
+    "gate": "fail"
+   },
+   "s9to20": {
+    "n": 0,
+    "gate": "report only"
+   }
+  },
+  "pro": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 61,
+   "baseOwnerWinS9to20": 35.6,
+   "s1to8": {
+    "n": 12,
+    "base": 61,
+    "cand": 52.08,
+    "diff": -8.91,
+    "lo": -12.85,
+    "hi": -4.51,
+    "effect": -1.18,
+    "up": 1,
+    "down": 11,
+    "gate": "fail"
+   },
+   "s9to20": {
+    "n": 0,
+    "gate": "report only"
+   }
+  },
+  "allstar": {
+   "missing": true
+  }
+ }
+}

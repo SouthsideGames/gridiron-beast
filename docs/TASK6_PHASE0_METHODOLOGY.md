@@ -68,7 +68,7 @@ The definitions below are the code in `tools/task6-analyze.mjs`, with the same n
 - `physChangePastOnset`: mean season change in the physical-attribute mean, for monsters aged at least public onset + 1.
 - **Pooled across seeds:**
   - physical change by seasons past public onset;
-  - retirements by position (mean age; early = age ≤ base − 2; exceptional = age ≥ base + 3; base = normal onset + 5);
+  - retirements by position (mean age; early = age ≤ base − 2; exceptional = age ≥ base + 3; base = normal onset + 4, corrected 2026-10-31 from onset + 5, see §8);
   - career seasons (years in the league at the last snapshot) p10, p50 and p90.
 
 **Draft:**
@@ -204,6 +204,8 @@ Each phase is a separate PR. Its report contains:
 | Date | Change | Approved by |
 |---|---|---|
 | 2026-10-30 | Version 1 pre-registered (Groups 1–5) | Owner, Groups 1–5 |
+| 2026-10-31 | **Version 4 — 33+ improvement** (owner decision): the ≤ 2% threshold applies to *ordinary* improvement (`tools/task6-improve33-breakdown.mjs`); kicker progression and evolution seasons are reported separately; the overall rate stays reported. **Owner drift (seasons 1–8)** stays a binding hard gate, evaluated at milestone M1 after Phases A-2 and B (Option B) | Owner, 2026-10-31 |
+| 2026-10-31 | **Early/exceptional retirement base corrected** (owner decision, Phase A-1 review). **Original definition (Phase 0, written 2026-10-30):** position base = normal onset + 5, so early = age ≤ onset + 3 and exceptional = age ≥ onset + 8. **Corrected definition:** base = normal onset + 4 (the career age, `CAREER_AFTER_ONSET`), so early = age ≤ onset + 2 and exceptional = age ≥ onset + 7. **Why:** the approved bands (early ≤ 30%, backup QB ≤ 35%; exceptional 3–20%, K ≤ 40%) were set from the Group 1 projection (`tools/aging-projection.mjs`), which counted on onset + 4; the Phase 0 text used onset + 5 by mistake, so the same retirements were judged against bands calibrated on a different yardstick. The retirement mechanics are unchanged; the original-definition figures stay reported (`earlyPctOrig`, `exceptionalPctOrig`) | Owner, 2026-10-31 |
 | 2026-10-30 | **Version 2 — owner approval of Phase 0.** Approved: round-1 target ≥ 44% (late ≥ 30% kept); succession targets on the Task 4 definition (≥ 40% / ≥ 30%), with the expanded definition reported; misaligned picks ≤ 7.4% without loss of draft quality; physical decline (no improvement past onset, ≥ 1.5 at 3 seasons, ≥ 2.5 at 5, progressive); gym lead ≥ 6 from season 8, seasons 5–7 no worse than v42.17.0 (`gymLeadS5to7Min`); tier order judged on pooled means, per-seed inversions reported; All-Star drift on 24 seeds for formal phase validation only (`--only=drift,drift24`); Stage P with 3 repetitions, median | Owner, 2026-10-30 |
 | 2026-10-30 | **After the v42.17.0 baseline, before any candidate data.** Re-based measures whose Task 6 definition differs from the Task 4/5 measure the spec's target was written against. This is not a change to any approved value. Marked `proposed` in thresholds.json, awaiting owner review | Proposed, Phase 0 |
 
