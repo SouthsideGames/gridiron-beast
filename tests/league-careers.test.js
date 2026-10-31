@@ -58,7 +58,7 @@ test('AI–AI trades: uncommon, fair, within the cap and the roster limits, neve
   assert.deepEqual(a.league.trades, b.league.trades, 'one seed, one league');
   const tr = a.league.trades || []; assert.ok(tr.length >= 2 && tr.length <= 12, `${tr.length} trades in three offseasons and seasons`);
   const perYear = {}; for (const t of tr) perYear[t.year] = (perYear[t.year] || 0) + 1; assert.ok(Object.values(perYear).every((n) => n <= LT.AI_TRADE_RULES.offseasonMax + 2), JSON.stringify(perYear));
-  for (const t of tr) { const m = a.league.monsters[t.toA]; if (m) { assert.ok(!R.isProtected(m)); assert.equal(m.traded?.from, t.B); assert.ok(m.history.some((h) => h.club === t.B && h.reason === 'traded')); } }
+  for (const t of tr) { const m = a.league.monsters[t.toA]; if (m) { assert.ok(!R.isProtected(m)); const later = tr.slice(tr.indexOf(t) + 1).some((u) => u.toA === m.id || u.toB === m.id || (u.toBAll || []).includes(m.id)); if (!later) assert.equal(m.traded?.from, t.B); assert.ok(m.history.some((h) => h.club === t.B && h.reason === 'traded')); } } // `traded` names his latest seller: a monster traded on again (no repeat-trade rule yet, trading track T4) keeps this deal in his history
   assert.deepEqual(R.verifyLeague(a), []);
   // a window on a prepared league: value bands and the cap hold for every deal made
   const f = newFranchise(53); const cap = tierById(f.tier).cap; const r = createRng(4); const before = Object.fromEntries(clubsOf(f).map((c) => [c, R.clubRoster(f, c).map((m) => m.id)]));
