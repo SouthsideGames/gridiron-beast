@@ -4163,3 +4163,25 @@ The rules of `src/data/aging.js` and `src/franchise/retirement.js`. The values a
   - the retirement outlook (Low, Moderate or High, with a likely age range), estimated from observable facts only;
   - the point cost on each + button.
 - The Offseason screen lists the club's retirements and the league count.
+
+## 56. AI roster intelligence: roster plan, succession, contracts, successor valuation, need-aware drafting (Task 6 Phase B; IMPLEMENTED 2026-10-31, owner's Group 3 decisions R1, R3, R6, R7; branch `task6-phase-b`; NOT MERGED, NOT RELEASED)
+Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is recorded in `docs/TASK6_PHASE_A2_REPORT.md`. Phase B gives the 15 persistent AI clubs one shared roster plan that their offseason decisions read. The owner's own rules, deals and valuation are unchanged.
+
+**56.1 The roster plan (R1, D15; `src/franchise/roster-plan.js`).** Derived, never stored, from observable facts only (ratings, ages, potential, the public decline onset of §55; never hidden longevity). No random draws.
+- **Gap:** a starting group's mean overall minus the league mean of starters at that position (every club, the owner's included). Weak at −4, severe at −8.
+- **Horizon:** public onset minus age. Ageing at 2 or less. Legendary and signature monsters never age.
+- **Successor:** for each starter, the most ageing first, the best unassigned backup aged 26 or under (or 4+ years younger) within 8 overall, or with potential at the starter's overall. Ready within 4. Protected monsters are never successors.
+- **Needs:** succession 2 (ageing starter, no successor), succession 1 (successor not ready, starter's horizon ≤ 1), weakness (0 above −4, up to 1 at −8).
+
+**56.2 Contracts (R3).** At the season's end, for each expiring deal:
+- a starter is re-signed, except one past his public onset whose successor is ready (he walks to the pools);
+- the designated successor always counts as value and is re-signed;
+- other reserves are re-signed for value (roster median, or young with potential) up to public onset + 2 (replaces the fixed age-32 limit);
+- length: 3 seasons up to onset − 2, 2 near the onset, 1 past it (2 for an exceptional veteran at most 2 past his onset and 6+ above the league's starters at his position). AI deals may run 3 seasons (`leagueContract`); the owner's stay at 2;
+- the runaway rule (§42.6, D10b band +4) is unchanged except that it never lets a designated successor walk.
+
+**56.3 Successor protection in cap trims.** `trimToCap`, and the cap-room releases of the nudge and injury cover, release a designated successor only when no other reserve can go. Salaries still refresh every offseason (§55), so a 3-year deal does not lock salary.
+
+**56.4 Successor valuation (R6 / T3; `trade-value.js`).** When an AI club prices its own roster (AI–AI deals, the owner's proposals, incoming calls), its designated successor counts at 0.8 of a starter when the starter is within 2 seasons of his onset or past it, 0.6 at 3–4, 0.45 otherwise (never below his role share). On the ask path the same shares raise his price (×1.35 / ×1.15). He is never untradeable. The owner's roster is valued without the premium.
+
+**56.5 Need-aware drafting (R7; `draft.js`).** An AI club's pick score adds +4 for a succession need at the position (+2 at level 1), up to +3 for a weak group, −3 for a settled group (at or above the league, no ageing starter, a successor in place). The plan is derived at each pick, so a rookie just taken counts. Noise, the kicker penalty and the duplicate penalty are unchanged. Mode weights (Contend readiness, Rebuild potential 0.35) belong to Phase D.

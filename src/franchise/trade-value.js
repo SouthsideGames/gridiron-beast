@@ -14,6 +14,7 @@
 
 import { monsterOverall, salaryFor, ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { GROUP_SLOTS } from './roster.js';
+import { groupSuccession, successorShare } from './roster-plan.js';
 
 // ---------------------------------------------------------------- positional leverage
 /**
@@ -84,16 +85,31 @@ export function roleIn(roster, m) {
   const at = order(roster.filter((x) => x.position === m.position && x.id !== m.id).concat(m)); const i = at.indexOf(m); const n = slotsOf(m.position);
   return i < n ? 0 : Math.min(i - n + 1, 3);
 }
-/** What a whole roster is worth to its club. */
-export function rosterWorth(roster, year = 1) {
+/**
+ * What a whole roster is worth to its club. Task 6 Phase B (R6 / T3, owner 2026-10-30): when an AI club prices its own roster
+ * (`succession`, the default), each designated successor (roster-plan.js, R1) counts at 0.8 of a starter when the starter he
+ * succeeds is within 2 seasons of his public decline onset or past it, 0.6 at 3–4 seasons, 0.45 otherwise (never less than his
+ * role share). He is never untradeable: a good enough offer still clears the premium. The owner's own roster passes
+ * `succession: false` and is valued as before.
+ */
+export function rosterWorth(roster, year = 1, { succession = true } = {}) {
   let w = 0;
-  for (const list of Object.values(byPosition(roster))) { const n = slotsOf(list[0].position); order(list).forEach((m, i) => { w += marketValue(m, { year }) * ROLE_SHARE[i < n ? 0 : Math.min(i - n + 1, 3)]; }); }
+  for (const list of Object.values(byPosition(roster))) {
+    const n = slotsOf(list[0].position); const ordered = order(list); const premium = new Map();
+    if (succession && ordered.length > n) for (const row of groupSuccession(ordered, n, ovr)) if (row.successor) premium.set(row.successor, successorShare(row.horizon));
+    ordered.forEach((m, i) => { const role = ROLE_SHARE[i < n ? 0 : Math.min(i - n + 1, 3)]; w += marketValue(m, { year }) * (premium.has(m) ? Math.max(role, premium.get(m)) : role); });
+  }
   return w;
+}
+/** R6 for the ask path (trades.js): how much dearer a club's designated successor is than an ordinary backup (1 when he is not one). */
+export function successorPremium(roster, m) {
+  const list = order(roster.filter((x) => x.position === m.position)); const n = slotsOf(m.position); if (list.indexOf(m) < n) return 1;
+  const row = groupSuccession(list, n, ovr).find((r) => r.successor === m); return row ? 1 + (successorShare(row.horizon) - ROLE_SHARE[1]) : 1;
 }
 /** The roster after a deal: `give` leave, `get` arrive. */
 export function rosterAfter(roster, { give = [], get = [] }) { const out = new Set(give.map((m) => m.id)); return roster.filter((m) => !out.has(m.id)).concat(get); }
 /** How much better (or worse) off the club is, in market-value points, from the monsters alone. */
-export function rosterNet(roster, { give = [], get = [] }, year = 1) { return rosterWorth(rosterAfter(roster, { give, get }), year) - rosterWorth(roster, year); }
+export function rosterNet(roster, { give = [], get = [] }, year = 1, opts = {}) { return rosterWorth(rosterAfter(roster, { give, get }), year, opts) - rosterWorth(roster, year, opts); }
 
 // ---------------------------------------------------------------- legality
 export const countsAt = (roster) => { const c = {}; for (const m of roster) c[m.position] = (c[m.position] || 0) + 1; return c; };

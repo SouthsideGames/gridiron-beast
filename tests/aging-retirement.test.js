@@ -70,7 +70,7 @@ test('retirement pass on a real league: exits with reason "retired", registry in
   const old = roster.filter((m) => !R.isProtected(m)).slice(0, 3); for (const m of old) m.age = 45;
   const prot = roster.find((m) => R.isProtected(m)); if (prot) prot.age = 60;
   const mine = f.roster.find((m) => !R.isAgeless(m)); mine.age = 45; f.lineupManual = { QB: mine.id };
-  const lines = []; const out = retirementPass(f, createRng(9), { year: 1, news: (t) => lines.push(t) });
+  const lines = []; const out = retirementPass(f, createRng(10), { year: 1, news: (t) => lines.push(t) }); // a 45-year-old starter near his peak retires with about 82% (the hazard is capped and halved for starters), so the draw seed is one where all four land; Task 6 Phase B's need-aware creation draft changed this league's rosters and so seed 9's draws
   for (const m of old) { assert.ok(!R.clubRoster(f, club).some((x) => x.id === m.id), `${m.name} retired`); assert.ok(!f.league.monsters[m.id]); }
   assert.ok(out.league.length >= 3); if (prot) assert.ok(R.clubRoster(f, club).some((x) => x.id === prot.id), 'a protected monster never retires');
   assert.ok(!f.roster.some((x) => x.id === mine.id) && !f.lineupManual.QB, 'the owner\'s retiree leaves the roster and the lineup');

@@ -8,6 +8,7 @@ import { noteJoin, markCareerFresh } from './career.js';
 import { generateMonster, regionSpecies, salaryFor, monsterOverall, ROSTER_MAX } from '../data/monsters.js';
 import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
+import { draftNeedBonus } from './roster-plan.js';
 
 export const DRAFT_ROUNDS = 3;
 export const ROOKIE_SCALE = 0.70;
@@ -77,11 +78,14 @@ export function startDraft(f, standingsBestFirst, { ownerOf = null } = {}) {
 }
 export const onTheClock = (f) => f.draft?.started && !f.draft.done ? f.draft.order[f.draft.index]?.team : null;
 
-/** AI pick: best available by overall with a little positional taste, never two kickers. */
-export function aiDraftPick(f, team, rng) {
+/** AI pick: best available by overall with a little positional taste, never two kickers. Task 6 Phase B (R7): with the club's roster
+ *  plan (`plan`, roster-plan.js) the score adds +4 for a succession need at the position, up to +3 for a weak group and −3 where the
+ *  group is settled (good young starters with a successor); the noise, the kicker and the duplicate penalties are unchanged. */
+export function aiDraftPick(f, team, rng, { plan = null } = {}) {
   const d = f.draft; const avail = d.class.filter((m) => d.available.includes(m.id));
   const taken = d.picks.filter((p) => p.team === team).map((p) => p.position);
-  const score = (m) => monsterOverall(m) + (m.potential - 70) * 0.2 + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0);
+  const need = {}; if (plan) for (const m of avail) if (need[m.position] == null) need[m.position] = draftNeedBonus(plan, m.position);
+  const score = (m) => monsterOverall(m) + (m.potential - 70) * 0.2 + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.position] || 0);
   return avail.sort((a, b) => score(b) - score(a))[0] || null;
 }
 
@@ -95,10 +99,10 @@ function recordPick(f, team, m, { mine = false }) {
 
 /** Run AI picks until it is the owner's turn or the draft ends. Returns the picks made. */
 /** `persist`: keep AI picks in `draftResults` for the generated rosters (v40 and before); with the league registry the club takes the rookie through `onAiPick` and the historical classes stay as they are (Phase 3, decision 6). */
-export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = true }) {
+export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = true, planOf = null }) {
   const d = f.draft; const made = [];
   while (d.started && !d.done && d.order[d.index].team !== playerClub) {
-    const team = d.order[d.index].team; const m = aiDraftPick(f, team, rng);
+    const team = d.order[d.index].team; const m = aiDraftPick(f, team, rng, { plan: planOf ? planOf(team) : null });
     if (!m) { d.done = true; break; }
     recordPick(f, team, m, { mine: false }); { const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: team }; } made.push({ team, m });
     if (persist) { (f.draftResults ||= {}); (f.draftResults[f.draft.year] ||= {}); (f.draftResults[f.draft.year][team] ||= []).push(m); }
