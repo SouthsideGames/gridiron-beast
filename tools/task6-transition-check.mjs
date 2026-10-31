@@ -3,7 +3,7 @@
 // lasting difference). Old saves are made by a pre-A-1 tree (tools/task6/make-old-save.mjs: the old ageing, no retirement), then
 // loaded into this tree and played forward twice: with the transition (as a real old save meets it) and without it (the rules
 // at once, `aging.native`), for comparison. Records every offseason's retirements, starter age and team strength.
-//   node tools/task6-transition-check.mjs --old=OLD_TREE [--seeds=106-108] [--oldSeasons=15] [--newSeasons=8] [--json=out.json] [--keep=DIR]
+//   node tools/task6-transition-check.mjs --old=OLD_TREE [--seeds=106-108] [--oldSeasons=12] [--newSeasons=8] [--json=out.json] [--keep=DIR]
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -17,7 +17,7 @@ import { leagueInvariants, withBoardReset } from './league-soak.mjs';
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v = '1'] = a.replace(/^--/, '').split('='); return [k, v]; }));
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const [s0, s1] = String(args.seeds || '106-108').split('-').map(Number); const seeds = []; for (let s = s0; s <= (s1 || s0); s++) seeds.push(s);
-const oldSeasons = Number(args.oldSeasons || 15), newSeasons = Number(args.newSeasons || 8);
+const oldSeasons = Number(args.oldSeasons || 12), newSeasons = Number(args.newSeasons || 8); // 12 + 8 = the 20-season career cap (GDD §42.1): an old save of 15 seasons can only be played 5 more
 const keep = args.keep || fs.mkdtempSync('/tmp/t6-old-'); fs.mkdirSync(keep, { recursive: true });
 const mean = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null); const r1 = (x) => (x == null ? null : Math.round(x * 10) / 10);
 const out = { old: args.old, oldSeasons, newSeasons, seeds: [], summary: null };

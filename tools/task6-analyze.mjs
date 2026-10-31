@@ -18,7 +18,8 @@ const pct = (n, d) => (d ? 100 * n / d : null);
 const r2 = (x) => (x == null ? null : Math.round(x * 100) / 100);
 /** The public decline onset (position + durability, no hidden longevity) — the Group 1 yardstick for "veteran" and "past onset". */
 export const publicOnset = (pos, dur) => (CURVE[pos] || CURVE.WR).onset + (dur >= 75 ? 1 : dur <= 45 ? -1 : 0);
-/** Position base retirement age for early/exceptional counts: normal onset + 5 (the forecast's "likely" age at normal longevity). */
+/** Position base retirement age for early/exceptional counts: normal onset + 5 as written in Phase 0. The Group 1 projection, which the
+ *  approved bands came from, used onset + 4 (CAREER_AFTER_ONSET): both are reported (`earlyPctBase4`, `exceptionalPctBase4`). */
 export const baseRetireAge = (pos) => (CURVE[pos] || CURVE.WR).onset + 5;
 
 /** A run's v4 snapshot as objects: seasons[i] = { year, ownerClub, strategy, monsters: [{id, club, ...}] }. */
@@ -151,10 +152,10 @@ export function pooled(runs) {
   const ret = []; const phys = {}; const careers = [];
   for (const run of runs) { const U = unpack(run); if (!U || run.error) continue;
     const S = U.seasons; const lastSeen = new Map(); for (const s of S) for (const m of s.monsters) lastSeen.set(m.id, m);
-    for (const d of (run.decisions.departures || []).filter((x) => x.reason === 'retired')) { const m = lastSeen.get(d.id); ret.push({ pos: d.pos, age: d.age, early: d.age <= baseRetireAge(d.pos) - 2, exceptional: d.age >= baseRetireAge(d.pos) + 3, career: m?.yearsPro ?? null }); }
+    for (const d of (run.decisions.departures || []).filter((x) => x.reason === 'retired')) { const m = lastSeen.get(d.id); const b4 = baseRetireAge(d.pos) - 1; ret.push({ pos: d.pos, age: d.age, early: d.age <= baseRetireAge(d.pos) - 2, exceptional: d.age >= baseRetireAge(d.pos) + 3, early4: d.age <= b4 - 2, exceptional4: d.age >= b4 + 3, career: m?.yearsPro ?? null }); }
     for (let i = 1; i < S.length; i++) { const prev = new Map(S[i - 1].monsters.map((m) => [m.id, m])); for (const m of S[i].monsters) { const p = prev.get(m.id); if (!p || m.ageless || !m.starter || m.club === S[i].ownerClub) continue; const y = m.age - publicOnset(m.pos, m.attr.durability); if (y < -4 || y > 8) continue; (phys[y] ||= []).push(m.phys - p.phys); } }
   }
-  const byPos = {}; for (const p of POS) { const r = ret.filter((x) => x.pos === p); byPos[p] = r.length ? { n: r.length, meanAge: r2(mean(r.map((x) => x.age))), earlyPct: r2(pct(r.filter((x) => x.early).length, r.length)), exceptionalPct: r2(pct(r.filter((x) => x.exceptional).length, r.length)) } : { n: 0 }; }
+  const byPos = {}; for (const p of POS) { const r = ret.filter((x) => x.pos === p); byPos[p] = r.length ? { n: r.length, meanAge: r2(mean(r.map((x) => x.age))), earlyPct: r2(pct(r.filter((x) => x.early).length, r.length)), exceptionalPct: r2(pct(r.filter((x) => x.exceptional).length, r.length)), earlyPctBase4: r2(pct(r.filter((x) => x.early4).length, r.length)), exceptionalPctBase4: r2(pct(r.filter((x) => x.exceptional4).length, r.length)) } : { n: 0 }; }
   const car = ret.map((x) => x.career).filter((x) => x != null).sort((a, b) => a - b); const q = (p) => (car.length ? car[Math.min(car.length - 1, Math.floor(p * car.length))] : null);
   return { retirements: ret.length, retirementByPos: byPos, careerSeasons: { n: car.length, p10: q(0.1), p50: q(0.5), p90: q(0.9) }, physChangeBySeasonsPastPublicOnset: Object.fromEntries(Object.entries(phys).sort((a, b) => a[0] - b[0]).map(([k, v]) => [k, { n: v.length, mean: r2(mean(v)) }])) };
 }
