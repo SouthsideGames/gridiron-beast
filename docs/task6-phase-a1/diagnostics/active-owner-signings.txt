@@ -1,0 +1,4 @@
+rookie-1-6 {"signed":0,"noAffordableReplacement":13}
+rookie-7-12 {"signed":0,"noAffordableReplacement":5}
+pro-1-6 {"signed":1,"noAffordableReplacement":0}
+pro-7-12 {"signed":0,"noAffordableReplacement":12}

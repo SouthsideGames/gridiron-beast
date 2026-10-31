@@ -205,3 +205,16 @@ Stage P: +1.8% (11.67 → 11.88 s per season). Retirement is offseason-only, wit
 
 ## 10. Ready for final approval?
 **Not yet fully validated.** Every A-1 target is met, or is met under the corrected definition (see §8.2). The kicker-driven 33+ item is the exception. All hard gates pass **except the owner drift for seasons 1–8 on Rookie and Pro.** Per the instruction, that conflict is presented rather than tuned. A-1 can be approved once the owner decides §8.1 (and §8.2–§8.3), plus the owner's own manual testing on the preview.
+
+## Addendum (2026-10-31): owner review follow-ups
+See `docs/TASK6_PHASE_A1_DECISION_REPORT.md`.
+- **Preview:** published to the private test link (artifact version `1793451979-9db2`) and verified.
+- **Drift diagnostic** (active-replacement owner):
+  - Rookie −5.7, Pro −8.9: **did not pass**;
+  - in 30 of 31 cases the proxy had no cap room to replace a retired starter;
+  - the gate stays failing and unresolved.
+- **Early-retirement base:** corrected to onset + 4; the original is documented and still reported.
+- **33+ improvement** (9.09% on B):
+  - kicker curve 3.83%, evolution seasons 4.43%, ordinary 0.82%;
+  - **0% contradicting the rules**;
+  - the ≤ 2% target stays visible and unmet, pending the owner's decision on clarifying it.
