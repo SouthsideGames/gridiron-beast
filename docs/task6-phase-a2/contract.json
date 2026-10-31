@@ -1,0 +1,56 @@
+{
+ "contract": {
+  "rookie": {
+   "ownerWinToday": 68.7,
+   "ownerWinRegistry": 66.1,
+   "ownerWinDiff": -2.6,
+   "aiMidToday": 64.7,
+   "aiMidRegistry": 65,
+   "aiMidDiff": 0.3,
+   "seasons": [
+    64,
+    64
+   ],
+   "firings": [
+    0,
+    0
+   ],
+   "pass": true
+  },
+  "pro": {
+   "ownerWinToday": 55.1,
+   "ownerWinRegistry": 47.5,
+   "ownerWinDiff": -7.6,
+   "aiMidToday": 66.6,
+   "aiMidRegistry": 67.1,
+   "aiMidDiff": 0.5,
+   "seasons": [
+    49,
+    62
+   ],
+   "firings": [
+    3,
+    1
+   ],
+   "pass": false
+  },
+  "allstar": {
+   "ownerWinToday": 36.7,
+   "ownerWinRegistry": 37,
+   "ownerWinDiff": 0.3,
+   "aiMidToday": 70.8,
+   "aiMidRegistry": 70.5,
+   "aiMidDiff": -0.3,
+   "seasons": [
+    59,
+    61
+   ],
+   "firings": [
+    2,
+    1
+   ],
+   "pass": true
+  }
+ },
+ "drift": null
+}
