@@ -835,3 +835,24 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 - PRs #83–#86 stay unmerged.
 - Phases A-2 and B are not authorised.
 - The working method stays feature-complete development: implement the scope, use lightweight checks, publish a preview, and test comprehensively at integration milestones.
+
+## Phase A-1 manual testing approved; Phase A-2 authorised (owner, 2026-10-31)
+**Phase A-1.**
+- The owner completed manual testing of the development preview `v42.18.0-dev.a1` (private test link) and is satisfied with the implementation. **Manual testing is approved.**
+- Phase A-1 stays open only for the integrated A-2/B validation milestone.
+- The Rookie and Pro difficulty drift stays documented, unresolved and binding for that milestone.
+
+**Phase A-2 authorised:**
+- draft-class scaling (D9);
+- gym growth plateau (D10a);
+- XP-slowdown and runaway-rule threshold comparisons (D10b);
+- initial nudge recalibration.
+
+**Conditions:**
+- feature-complete development with targeted tests and lightweight checks only;
+- no repeated full suite or multi-season benchmark;
+- prepare a development preview, but do not publish it without approval;
+- a concise implementation report;
+- the A-1 mechanics are preserved.
+
+**Not authorised:** Phase B, merges, changes to the main game, and publishing without approval.
