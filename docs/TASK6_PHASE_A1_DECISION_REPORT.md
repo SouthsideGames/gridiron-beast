@@ -123,3 +123,40 @@ The original **≤ 2% target stays visible and is not met.**
 - **(b)** Carry the drift gate, still binding, to milestone M1, where A-2 (nudge recalibration, draft scaling) and B change how both sides refill.
 
 **Phase A-1 readiness:** **remain open.** It is not ready for final approval while the drift hard gate is unresolved. It is functionally complete and the preview is live for manual testing. The recommended path is (a); then either approve A-1 with the drift documented as an interim integration issue (if the managed owner passes), or keep it open until A-2 and B are integrated.
+
+## 6. Owner decision (2026-10-31): Option B
+Recorded as the owner gave it. No gameplay code was changed, no PR was merged and no build was published for this record.
+
+1. **Phase A-1 mechanics: provisionally accepted as implemented.** Ageing and retirement function as designed. No gameplay changes are authorised.
+2. **Difficulty drift: an unresolved, binding requirement.**
+   - It is not passed and not waived, and the ±5-point tolerance stands.
+   - It is evaluated at the integrated release milestone after Phases A-2 and B (milestone M1), on the formal drift sample: Rookie and Pro on 12 seeds, All-Star on 24.
+   - **The owner's reading of the evidence:** ageing and retirement work as designed, while the simulated owner and the AI roster-management systems are not yet equipped to respond to turnover.
+3. **Early-retirement methodology: the documented correction is approved.**
+   - The base is normal onset + 4, matching the originally approved position-specific ranges (methodology §8, thresholds version 3).
+   - The original definition's figures stay reported.
+4. **Age 33+ improvement: ordinary improvement is measured against ≤ 2%.**
+   - Kicker progression and evolution seasons are reported separately.
+   - The original overall result (**9.09%**, seeds 1–60) is preserved for transparency.
+   - Current standing:
+
+     | Measure | Result | Threshold |
+     |---|---|---|
+     | Ordinary improvement | **0.82%** | ≤ 2%: met |
+     | Kicker progression | 3.83% | reported separately |
+     | Evolution seasons | 4.43% | reported separately |
+     | Contradicting the ageing rules | 0% | — |
+
+5. **Additional diagnostics:** no further owner-management diagnostic and no repeat of the full benchmark at this time. The option (a) diagnostic in §5 is not authorised.
+6. **Manual testing:** the owner is testing the published preview (`v42.18.0-dev.a1`, private test link) and will report any issues.
+
+**Status:**
+- **Phase A-1 stays open** for final integration validation at M1.
+- PRs #83, #84, #85 and #86 stay open and unmerged.
+- Phases A-2 and B are not authorised until the owner authorises them separately.
+
+**Working method for the next steps** (owner, 2026-10-31): feature-complete development.
+1. Implement the authorised scope.
+2. Use lightweight checks during development.
+3. Publish a stable preview.
+4. Consolidate comprehensive testing at meaningful integration milestones.

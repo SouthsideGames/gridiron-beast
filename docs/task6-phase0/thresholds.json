@@ -1,6 +1,6 @@
 {
- "about": "Task 6 pre-registered acceptance thresholds (Phase 0, 2026-10-30). Provisional values approved by the owner in Groups 1-5 (docs/TASK6_DECISIONS.md). Changes need owner approval and are recorded in docs/TASK6_PHASE0_METHODOLOGY.md section 8. 'sample' names the seed set the measure is judged on (B = 1-60 x 10 seasons, H = held-out 61-80, C = 106-115 x 20, CH = held-out 116-125). 'better' gives the direction of improvement for the supported/inconclusive classification; 'band' is the target. Measures without a band are reported against baseline only. Version 1 was set before any candidate data; after the v42.17.0 baseline was measured (Phase 0), definitions that differ from the Task 4/5 yardsticks the targets were written against were re-based or annotated (methodology section 8). Entries marked 'proposed' await the owner's review of Phase 0. Version 2 (2026-10-30): the owner approved Phase 0 and its proposed re-basings and gym-floor corrections; 'proposed' flags removed. Version 3 (2026-10-31): the early/exceptional retirement base corrected to onset + 4 (owner decision); methodology section 8.",
- "version": 3,
+ "about": "Task 6 pre-registered acceptance thresholds (Phase 0, 2026-10-30). Provisional values approved by the owner in Groups 1-5 (docs/TASK6_DECISIONS.md). Changes need owner approval and are recorded in docs/TASK6_PHASE0_METHODOLOGY.md section 8. 'sample' names the seed set the measure is judged on (B = 1-60 x 10 seasons, H = held-out 61-80, C = 106-115 x 20, CH = held-out 116-125). 'better' gives the direction of improvement for the supported/inconclusive classification; 'band' is the target. Measures without a band are reported against baseline only. Version 1 was set before any candidate data; after the v42.17.0 baseline was measured (Phase 0), definitions that differ from the Task 4/5 yardsticks the targets were written against were re-based or annotated (methodology section 8). Entries marked 'proposed' await the owner's review of Phase 0. Version 2 (2026-10-30): the owner approved Phase 0 and its proposed re-basings and gym-floor corrections; 'proposed' flags removed. Version 3 (2026-10-31): the early/exceptional retirement base corrected to onset + 4 (owner decision); methodology section 8. Version 4 (2026-10-31): improvingAt33Pct is judged on ordinary improvement (owner decision); kicker progression and evolution seasons are reported separately; the overall figure stays reported.",
+ "version": 4,
  "hardGates": {
   "integrityProblems": {
    "max": 0,
@@ -28,7 +28,8 @@
   },
   "ownerDriftS1to8": {
    "band": 5,
-   "how": "owner win rate seasons 1-8, candidate against published v42.17.0, matched seeds per difficulty (balance-compare persistent, board reset): Rookie and Pro seeds 1-12; All-Star seeds 1-24 for formal phase validation only (owner 2026-10-30; not run repeatedly during implementation). Point estimate within +/-5; an interval reaching past 5 is reported and escalated"
+   "how": "owner win rate seasons 1-8, candidate against published v42.17.0, matched seeds per difficulty (balance-compare persistent, board reset): Rookie and Pro seeds 1-12; All-Star seeds 1-24 for formal phase validation only (owner 2026-10-30; not run repeatedly during implementation). Point estimate within +/-5; an interval reaching past 5 is reported and escalated",
+   "status": "A-1: failing (Rookie -5.6, Pro -7.9); unresolved and binding; evaluated at milestone M1 after Phases A-2 and B (owner 2026-10-31, Option B); not waived"
   },
   "performance": {
    "maxIncreasePct": 10,
@@ -76,7 +77,7 @@
     "max": 2
    },
    "better": "down",
-   "note": "Group 1 Modification 1: older monsters cannot keep improving"
+   "note": "owner 2026-10-31: the <= 2% threshold applies to ordinary improvement (tools/task6-improve33-breakdown.mjs: not a kicker, no evolution that season); kicker progression and evolution seasons are reported separately, and the overall rate is still reported (A-1: overall 9.09%, ordinary 0.82%)"
   },
   "physChangePastOnset": {
    "class": "target",
@@ -497,6 +498,17 @@
    "sample": "C",
    "rule": "pooled across seeds: gymEarlyOvrS5on < gymMidOvrS5on < gymLateOvrS5on",
    "approved": "owner 2026-10-30"
+  },
+  "ordinaryImprovingAt33Pct": {
+   "class": "target",
+   "phase": "A-1",
+   "sample": "B",
+   "band": {
+    "max": 2
+   },
+   "better": "down",
+   "how": "tools/task6-improve33-breakdown.mjs",
+   "approved": "owner 2026-10-31"
   }
  }
 }
