@@ -11,6 +11,10 @@ import { newContract } from './contracts.js';
 
 export const DRAFT_ROUNDS = 3;
 export const ROOKIE_SCALE = 0.70;
+/** Draft-class scaling (Task 6 Phase A-2, D9, owner 2026-10-30): classes rise about +0.5 a season with the league, capped at +10;
+ *  the gem / solid / project mix and every random draw are unchanged, and potential (quality + 6…19) rises with quality. */
+export const CLASS_GROWTH_PER_SEASON = 0.5, CLASS_GROWTH_CAP = 10;
+export const classQualityOffset = (year) => Math.min(CLASS_GROWTH_CAP, Math.max(0, Math.round(CLASS_GROWTH_PER_SEASON * ((year || 1) - 1))));
 export const CLASS_SHAPE = Object.freeze([['QB', 4], ['RB', 5], ['WR', 8], ['TE', 4], ['OL', 7], ['DL', 7], ['LB', 5], ['CB', 6], ['S', 5], ['K', 2]]); // 53
 
 /** Build the class: ages 19-22, all first-year, a spread of quality with a few gems. Scouting reveals them. */
@@ -23,7 +27,7 @@ export function generateDraftClass(rng, { year, uniqueName }) {
       let regionName = regions[0], pool = [];
       for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position || s.secondary === position); if (p.length) { regionName = rn; pool = p; break; } }
       const sp = pool.length ? rng.pick(pool) : null; if (!sp) continue;
-      const roll = rng.next(); const quality = roll < 0.08 ? 62 + rng.int(6) : roll < 0.35 ? 55 + rng.int(6) : 47 + rng.int(8); // gems, solid, projects
+      const roll = rng.next(); const quality = (roll < 0.08 ? 62 + rng.int(6) : roll < 0.35 ? 55 + rng.int(6) : 47 + rng.int(8)) + classQualityOffset(year); // gems, solid, projects, plus the league's growth (D9)
       const m = generateMonster(rng, { position, quality, species: sp.id, age: 19 + rng.int(4), yearsPro: 0 });
       m.origin = regionName; m.rookie = year; m.draftRank = ++n;
       uniqueName?.(m, out.map((x) => x.name));

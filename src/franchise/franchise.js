@@ -29,7 +29,7 @@ import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
-import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_GROWTH_PER_SEASON, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES } from '../data/gyms.js';
+import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES, gymGrowth } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
@@ -660,7 +660,7 @@ export function clubQuality(f, name, year = f.season?.year || 1) {
   const D = difficultyOf(f);
   const gym = GYM_BY_CLUB[name];
   const seasons = Math.max(0, year - 1);
-  const growth = gym ? GYM_TIER[gym.tier] + seasons * GYM_GROWTH_PER_SEASON + (f.campaign?.gymWins?.[name] ? GYM_STUDIED_TAPE : 0) : seasons * ORDINARY_GROWTH_PER_SEASON;
+  const growth = gym ? GYM_TIER[gym.tier] + gymGrowth(seasons) + (f.campaign?.gymWins?.[name] ? GYM_STUDIED_TAPE : 0) : seasons * ORDINARY_GROWTH_PER_SEASON; // gyms plateau after season 10 (Task 6 A-2, D10a)
   const floor = (f.campaign?.titles || 0) * 1; // every Beast Bowl the player wins lifts the whole league
   return Math.round(base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + D.quality + growth + floor);
 }

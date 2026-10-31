@@ -28,3 +28,7 @@ export const GYM_TIER = Object.freeze({ early: 1, mid: 4, late: 7 });
 export const GYM_GROWTH_PER_SEASON = 1.5;
 export const GYM_STUDIED_TAPE = 1;
 export const ORDINARY_GROWTH_PER_SEASON = 0.5;
+/** Gym growth plateau (Task 6 Phase A-2, D10a, owner 2026-10-30): +1.5 a season through season 10, then the ordinary +0.5. */
+export const GYM_PLATEAU_SEASON = 10;
+/** A gym's anchor growth after `seasons` seasons (year − 1): the full rate up to season 10, the ordinary rate after it. */
+export const gymGrowth = (seasons) => GYM_GROWTH_PER_SEASON * Math.min(seasons, GYM_PLATEAU_SEASON - 1) + ORDINARY_GROWTH_PER_SEASON * Math.max(0, seasons - (GYM_PLATEAU_SEASON - 1));
