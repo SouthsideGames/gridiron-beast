@@ -16,7 +16,7 @@ words) governs.
 | 4 — Prospect Development | D12 | **Approved with refinements, 2026-10-30** (below); values provisional |
 | 5 — Benchmark and Implementation Authorization | D11, D16, Phase 0 | **Approved with clarifications, 2026-10-30** (below). **Phase 0 authorised; Phases A–D and T1, T2, T4 not authorised** |
 | Phase 0 | Benchmark foundation | **Approved complete, 2026-10-30** (PR #85, open). Thresholds version 2 |
-| Phase A-1 | Ageing, training, retirement, transition, labels | **Authorised 2026-10-30** (implementation only; no merge, no publish) |
+| Phase A-1 | Ageing, training, retirement, transition, labels | **Implemented (PR #86); mechanics provisionally accepted 2026-10-31; open** for integration validation at M1. Owner drift is unresolved and binding. Preview on the private test link |
 | Trading follow-ups | T1–T4 | Owner's provisional preferences recorded: approve T1; roster-compliant offers for T2; valuation-based protection for T3; a limited repeat-trade restriction for T4. Not final authorisation |
 
 ## Group 1 — Aging and Longevity (D1–D8): owner decision of 2026-10-30
@@ -821,3 +821,17 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 - the Legacy System;
 - merges;
 - publishing.
+
+## Phase A-1 review decision (owner, 2026-10-31): Option B
+1. **Mechanics:** provisionally accepted as implemented. No gameplay changes are authorised.
+2. **Difficulty drift:** unresolved and binding (±5 not waived). It is evaluated at the integrated milestone after Phases A-2 and B.
+3. **Early-retirement methodology:** the correction to onset + 4 is approved (thresholds version 3).
+4. **33+ improvement:** ordinary improvement is measured against ≤ 2%, with kickers and evolution seasons reported separately. The overall 9.09% stays on record (thresholds version 4).
+5. **Diagnostics:** no further owner-management diagnostic, and no full benchmark repeat now.
+6. **Manual testing:** the owner tests the preview `v42.18.0-dev.a1` on the private test link.
+
+**Status:**
+- Phase A-1 stays open.
+- PRs #83–#86 stay unmerged.
+- Phases A-2 and B are not authorised.
+- The working method stays feature-complete development: implement the scope, use lightweight checks, publish a preview, and test comprehensively at integration milestones.
