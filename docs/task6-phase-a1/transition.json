@@ -1,0 +1,416 @@
+{
+ "old": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/t55wt/t55",
+ "oldSeasons": 15,
+ "newSeasons": 8,
+ "seeds": [
+  {
+   "seed": 106,
+   "variants": {
+    "transition": {
+     "rows": [
+      {
+       "year": 16,
+       "s": 1,
+       "retired": 31,
+       "aiRetired": 25,
+       "starterAge": 31.4,
+       "starters33Pct": 44.9,
+       "starterOvr": 76.7
+      },
+      {
+       "year": 17,
+       "s": 2,
+       "retired": 56,
+       "aiRetired": 48,
+       "starterAge": 30.7,
+       "starters33Pct": 38.6,
+       "starterOvr": 76.4
+      },
+      {
+       "year": 18,
+       "s": 3,
+       "retired": 80,
+       "aiRetired": 72,
+       "starterAge": 29.1,
+       "starters33Pct": 23.2,
+       "starterOvr": 75.6
+      },
+      {
+       "year": 19,
+       "s": 4,
+       "retired": 86,
+       "aiRetired": 67,
+       "starterAge": 27.6,
+       "starters33Pct": 11.1,
+       "starterOvr": 76.2
+      },
+      {
+       "year": 20,
+       "s": 5,
+       "retired": 41,
+       "aiRetired": 40,
+       "starterAge": 27.9,
+       "starters33Pct": 11.1,
+       "starterOvr": 78.9
+      }
+     ],
+     "problems": 1,
+     "problemSample": [
+      "season 5: next season blocked (This franchise has completed its 20 seasons. Retire it to the Hall of Fame and the Franchise Legacy; a new franchise can begin in another slot.)"
+     ],
+     "peakFirst4": 72,
+     "steadyLater": 40,
+     "peakRatio": 1.8
+    },
+    "none": {
+     "rows": [
+      {
+       "year": 16,
+       "s": null,
+       "retired": 166,
+       "aiRetired": 137,
+       "starterAge": 28,
+       "starters33Pct": 19.3,
+       "starterOvr": 72.6
+      },
+      {
+       "year": 17,
+       "s": null,
+       "retired": 56,
+       "aiRetired": 43,
+       "starterAge": 27.7,
+       "starters33Pct": 11.9,
+       "starterOvr": 76.8
+      },
+      {
+       "year": 18,
+       "s": null,
+       "retired": 36,
+       "aiRetired": 33,
+       "starterAge": 28,
+       "starters33Pct": 9.7,
+       "starterOvr": 77.5
+      },
+      {
+       "year": 19,
+       "s": null,
+       "retired": 27,
+       "aiRetired": 26,
+       "starterAge": 28.3,
+       "starters33Pct": 8.3,
+       "starterOvr": 78.8
+      },
+      {
+       "year": 20,
+       "s": null,
+       "retired": 35,
+       "aiRetired": 33,
+       "starterAge": 28.5,
+       "starters33Pct": 11.6,
+       "starterOvr": 79
+      }
+     ],
+     "problems": 1,
+     "problemSample": [
+      "season 5: next season blocked (This franchise has completed its 20 seasons. Retire it to the Hall of Fame and the Franchise Legacy; a new franchise can begin in another slot.)"
+     ],
+     "peakFirst4": 137,
+     "steadyLater": 33,
+     "peakRatio": 4.2
+    }
+   },
+   "atLoad": {
+    "year": 15,
+    "starterAge": 32.3,
+    "starters33Pct": 50.2
+   }
+  },
+  {
+   "seed": 107,
+   "variants": {
+    "transition": {
+     "rows": [
+      {
+       "year": 16,
+       "s": 1,
+       "retired": 40,
+       "aiRetired": 29,
+       "starterAge": 32,
+       "starters33Pct": 50.5,
+       "starterOvr": 76.7
+      },
+      {
+       "year": 17,
+       "s": 2,
+       "retired": 62,
+       "aiRetired": 54,
+       "starterAge": 31,
+       "starters33Pct": 39.7,
+       "starterOvr": 76.8
+      },
+      {
+       "year": 18,
+       "s": 3,
+       "retired": 79,
+       "aiRetired": 74,
+       "starterAge": 29.5,
+       "starters33Pct": 22.6,
+       "starterOvr": 76.7
+      },
+      {
+       "year": 19,
+       "s": 4,
+       "retired": 80,
+       "aiRetired": 62,
+       "starterAge": 27.9,
+       "starters33Pct": 11.6,
+       "starterOvr": 77.1
+      },
+      {
+       "year": 20,
+       "s": 5,
+       "retired": 35,
+       "aiRetired": 31,
+       "starterAge": 28.3,
+       "starters33Pct": 11.5,
+       "starterOvr": 78.7
+      }
+     ],
+     "problems": 1,
+     "problemSample": [
+      "season 5: next season blocked (This franchise has completed its 20 seasons. Retire it to the Hall of Fame and the Franchise Legacy; a new franchise can begin in another slot.)"
+     ],
+     "peakFirst4": 74,
+     "steadyLater": 31,
+     "peakRatio": 2.4
+    },
+    "none": {
+     "rows": [
+      {
+       "year": 16,
+       "s": null,
+       "retired": 190,
+       "aiRetired": 154,
+       "starterAge": 27.5,
+       "starters33Pct": 18.1,
+       "starterOvr": 72.8
+      },
+      {
+       "year": 17,
+       "s": null,
+       "retired": 53,
+       "aiRetired": 43,
+       "starterAge": 27.9,
+       "starters33Pct": 12.5,
+       "starterOvr": 77.3
+      },
+      {
+       "year": 18,
+       "s": null,
+       "retired": 28,
+       "aiRetired": 27,
+       "starterAge": 28,
+       "starters33Pct": 8.7,
+       "starterOvr": 78.4
+      },
+      {
+       "year": 19,
+       "s": null,
+       "retired": 30,
+       "aiRetired": 28,
+       "starterAge": 28.4,
+       "starters33Pct": 10.2,
+       "starterOvr": 78.9
+      },
+      {
+       "year": 20,
+       "s": null,
+       "retired": 36,
+       "aiRetired": 34,
+       "starterAge": 28.5,
+       "starters33Pct": 13,
+       "starterOvr": 78.6
+      }
+     ],
+     "problems": 1,
+     "problemSample": [
+      "season 5: next season blocked (This franchise has completed its 20 seasons. Retire it to the Hall of Fame and the Franchise Legacy; a new franchise can begin in another slot.)"
+     ],
+     "peakFirst4": 154,
+     "steadyLater": 34,
+     "peakRatio": 4.5
+    }
+   },
+   "atLoad": {
+    "year": 15,
+    "starterAge": 32.7,
+    "starters33Pct": 56
+   }
+  },
+  {
+   "seed": 108,
+   "variants": {
+    "transition": {
+     "rows": [
+      {
+       "year": 16,
+       "s": 1,
+       "retired": 35,
+       "aiRetired": 27,
+       "starterAge": 31.8,
+       "starters33Pct": 45.6,
+       "starterOvr": 78.1
+      },
+      {
+       "year": 17,
+       "s": 2,
+       "retired": 58,
+       "aiRetired": 48,
+       "starterAge": 30.9,
+       "starters33Pct": 38.9,
+       "starterOvr": 77
+      },
+      {
+       "year": 18,
+       "s": 3,
+       "retired": 79,
+       "aiRetired": 71,
+       "starterAge": 29.3,
+       "starters33Pct": 26.6,
+       "starterOvr": 76.4
+      },
+      {
+       "year": 19,
+       "s": 4,
+       "retired": 85,
+       "aiRetired": 66,
+       "starterAge": 28.1,
+       "starters33Pct": 14.1,
+       "starterOvr": 77.1
+      },
+      {
+       "year": 20,
+       "s": 5,
+       "retired": 41,
+       "aiRetired": 38,
+       "starterAge": 27.5,
+       "starters33Pct": 6.9,
+       "starterOvr": 78.7
+      }
+     ],
+     "problems": 1,
+     "problemSample": [
+      "season 5: next season blocked (This franchise has completed its 20 seasons. Retire it to the Hall of Fame and the Franchise Legacy; a new franchise can begin in another slot.)"
+     ],
+     "peakFirst4": 71,
+     "steadyLater": 38,
+     "peakRatio": 1.9
+    },
+    "none": {
+     "rows": [
+      {
+       "year": 16,
+       "s": null,
+       "retired": 167,
+       "aiRetired": 128,
+       "starterAge": 28.3,
+       "starters33Pct": 20.3,
+       "starterOvr": 73.6
+      },
+      {
+       "year": 17,
+       "s": null,
+       "retired": 57,
+       "aiRetired": 52,
+       "starterAge": 27.7,
+       "starters33Pct": 11.2,
+       "starterOvr": 76.9
+      },
+      {
+       "year": 18,
+       "s": null,
+       "retired": 37,
+       "aiRetired": 34,
+       "starterAge": 27.9,
+       "starters33Pct": 10.9,
+       "starterOvr": 77.9
+      },
+      {
+       "year": 19,
+       "s": null,
+       "retired": 40,
+       "aiRetired": 39,
+       "starterAge": 28.1,
+       "starters33Pct": 8,
+       "starterOvr": 78.8
+      },
+      {
+       "year": 20,
+       "s": null,
+       "retired": 26,
+       "aiRetired": 25,
+       "starterAge": 28.6,
+       "starters33Pct": 10.1,
+       "starterOvr": 79.4
+      }
+     ],
+     "problems": 1,
+     "problemSample": [
+      "season 5: next season blocked (This franchise has completed its 20 seasons. Retire it to the Hall of Fame and the Franchise Legacy; a new franchise can begin in another slot.)"
+     ],
+     "peakFirst4": 128,
+     "steadyLater": 25,
+     "peakRatio": 5.1
+    }
+   },
+   "atLoad": {
+    "year": 15,
+    "starterAge": 31.9,
+    "starters33Pct": 48.4
+   }
+  }
+ ],
+ "summary": {
+  "peakRatioTransition": [
+   1.8,
+   2.4,
+   1.9
+  ],
+  "peakRatioNone": [
+   4.2,
+   4.5,
+   5.1
+  ],
+  "firstOffseasonTransition": [
+   25,
+   29,
+   27
+  ],
+  "firstOffseasonNone": [
+   137,
+   154,
+   128
+  ],
+  "finalStarterAgeTransition": [
+   27.9,
+   28.3,
+   27.5
+  ],
+  "finalStarterAgeNone": [
+   28.5,
+   28.5,
+   28.6
+  ],
+  "finalStarterOvrTransition": [
+   78.9,
+   78.7,
+   78.7
+  ],
+  "finalStarterOvrNone": [
+   79,
+   78.6,
+   79.4
+  ],
+  "problems": 6
+ }
+}
