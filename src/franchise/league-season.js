@@ -18,11 +18,11 @@ import { hasLeague, leagueClubs, clubRoster, clubRecord, isProtected, isAgeless,
 import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegionOf } from './league.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
-/** Task 6 Phase A-2 (D10b, owner 2026-10-30): an ordinary club is slowed only above target + ORDINARY_SLOW_BAND and lets its
- *  expiring veterans go only above target + ORDINARY_RUNAWAY_BAND (aligned, as the owner prefers). Gyms keep BAND for both; the
- *  rival keeps RIVAL_BAND; the lift below target − BAND is unchanged. Provisional values from the A-2 comparison (+4 / +6 / +8). */
-export const ORDINARY_SLOW_BAND = 8;
-export const ORDINARY_RUNAWAY_BAND = 8;
+/** Task 6 Phase A-2 (D10b, owner 2026-10-30): the ordinary clubs' slowdown band and runaway-veteran band, separate from the gyms'
+ *  (BAND) and the rival's (RIVAL_BAND); the lift below target − BAND is unchanged. The A-2 matched-seed comparison of +4 / +6 / +8
+ *  found no width best on every count (docs/TASK6_PHASE_A2_REPORT.md), so both stay at today's +4 until the owner chooses. */
+export const ORDINARY_SLOW_BAND = 4;
+export const ORDINARY_RUNAWAY_BAND = 4;
 export const RIVAL_BAND = 2;           // the rival's club is held closer: his signature monster's growth is capped by his potential (decision V), so without this the club drifted 3–4 under today's rival from season 6 (measured 2026-10-24)
 export const NUDGE_SIGNINGS = 3;       // arrivals a weak club gets in one offseason
 export const SIGNATURE_GROWTH = 2;     // the rival's signature monster: attribute points per offseason (GDD §15.8, kept), within potential

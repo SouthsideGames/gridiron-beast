@@ -22,6 +22,6 @@ test('D10a: gyms grow +1.5 a season through season 10, then +0.5', () => {
   assert.equal(gymGrowth(10) - gymGrowth(9), ORDINARY_GROWTH_PER_SEASON); assert.equal(gymGrowth(19), 13.5 + 10 * 0.5, 'season 20: 18.5 instead of 28.5');
 });
 
-test('D10b: ordinary clubs are slowed and shed veterans only above the wider band; the lift is unchanged', () => {
-  assert.equal(BAND, 4); assert.equal(ORDINARY_SLOW_BAND, 8); assert.equal(ORDINARY_RUNAWAY_BAND, ORDINARY_SLOW_BAND, 'aligned');
+test('D10b: the ordinary bands are separate constants, aligned, at today\'s +4 until the owner chooses a width; the lift is unchanged', () => {
+  assert.equal(BAND, 4); assert.equal(ORDINARY_SLOW_BAND, 4); assert.equal(ORDINARY_RUNAWAY_BAND, ORDINARY_SLOW_BAND, 'aligned');
 });
