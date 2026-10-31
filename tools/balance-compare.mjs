@@ -4,15 +4,24 @@
 // rate, playoff rate and firings, the AI clubs' mean team overall at mid-season and at season end (live against today's
 // generator), the rival's strength, and the title spread. The acceptance bands (test plan, Phase 3) are checked by
 // tools/balance-report.mjs over the JSON files this writes.
-//   node tools/balance-compare.mjs --mode=persistent|legacy [--difficulty=pro] [--seeds=1-8] [--seasons=8] [--json=out.json]
+//   node tools/balance-compare.mjs --mode=persistent|legacy [--difficulty=pro] [--seeds=1-8] [--seasons=8] [--owner=active] [--json=out.json]
+// --owner=active (Task 6 A-1 drift diagnostic, owner decision 2026-10-31): the hands-off owner also signs the best affordable free agent at
+// the position of each of his starters who retired this offseason (after the draft). A build without retirement never triggers it.
 import { writeFileSync } from 'node:fs';
 import * as F from '../src/franchise/franchise.js';
 import { runFranchise, invariants } from './franchise-soak.mjs';
 import { withBoardReset } from './league-soak.mjs';
 import { teamOverall } from '../src/franchise/roster.js';
+import { monsterOverall, salaryFor, ROSTER_MAX } from '../src/data/monsters.js';
 import { ALL_TEAMS } from '../src/data/league.js';
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v = '1'] = a.replace(/^--/, '').split('='); return [k, v]; }));
+const ACTIVE = args.owner === 'active'; let activeSigned = 0, activeNone = 0;
+/** The active-replacement owner: for each of his starters who retired this offseason, the best free agent at that position he can afford. */
+const activeReplace = (f) => { const R = f.retirementsLast; if (!R || R.year !== f.season.year) return;
+  for (const x of R.owner.filter((o) => o.starter)) { if (f.roster.length >= ROSTER_MAX) break; const room = F.salarySummary(f).remaining;
+    const best = F.offseasonMarket(f).map((e) => e.monster).filter((m) => m.position === x.position && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+    if (best && F.signFreeAgent(f, best.id).ok) activeSigned++; else activeNone++; } };
 const mode = args.mode || 'persistent', difficulty = args.difficulty || 'pro', seasons = Number(args.seasons || 8), boardReset = args.boardReset === '1' || args.boardReset === 'true';
 const [s0, s1] = String(args.seeds || '1-8').split('-').map(Number); const seeds = []; for (let s = s0; s <= (s1 || s0); s++) seeds.push(s);
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
@@ -24,7 +33,7 @@ for (const seed of seeds) {
   const clubsOf = (f) => ALL_TEAMS.filter((t) => t !== f.club);
   const base = boardReset ? withBoardReset(invariants) : invariants; // simulation only: a dismissed owner is reinstated so 20 seasons can be compared
   const check = (f, where) => { if (f.season?.week === 6 && !mid[f.season.year]) mid[f.season.year] = r1(mean(clubsOf(f).map((c) => teamOverall(F.aiTeam(f, c))))); return base(f, where); };
-  const { f, problems, log } = runFranchise(seed, { seasons, difficulty, legacy: mode === 'legacy', check, onSeason: (f) => {
+  const { f, problems, log } = runFranchise(seed, { seasons, difficulty, legacy: mode === 'legacy', check, onOffseason: ACTIVE ? activeReplace : null, onSeason: (f) => {
     const y = f.season.year; const clubs = clubsOf(f); const rec = f.season.records[f.club]; const rival = f.rivals[f.tier]?.team;
     rows.push({ year: y, w: rec.w, l: rec.l, playoffs: !!f.season.playoffs?.seeds && Object.values(f.season.playoffs.seeds).flat().includes(f.club), champion: f.season.champion, mine: teamOverall(F.playerTeam(f)), aiMid: mid[y] ?? null, aiEnd: r1(mean(clubs.map((c) => teamOverall(F.aiTeam(f, c, y))))), today: r1(mean(clubs.map((c) => teamOverall(F.legacyAiTeam(f, c, y))))), rivalEnd: teamOverall(F.aiTeam(f, rival, y)), rivalToday: teamOverall(F.legacyAiTeam(f, rival, y)), forecast: f.season.boardForecast ?? null });
   } });
@@ -34,5 +43,6 @@ for (const seed of seeds) {
 const all = out.runs.flatMap((r) => r.rows);
 out.summary = { seasons: all.length, winPct: r1(100 * mean(all.map((r) => r.w / (r.w + r.l)))), playoffPct: r1(100 * mean(all.map((r) => (r.playoffs ? 1 : 0)))), titles: all.filter((r) => r.champion === out.runs.find((x) => x.rows.includes(r))?.club).length, fired: out.runs.filter((r) => r.fired).length, aiMid: r1(mean(all.map((r) => r.aiMid).filter((x) => x != null))), aiEnd: r1(mean(all.map((r) => r.aiEnd))), today: r1(mean(all.map((r) => r.today))), rivalEnd: r1(mean(all.map((r) => r.rivalEnd))), rivalToday: r1(mean(all.map((r) => r.rivalToday))), distinctChampions: r1(mean(out.runs.map((r) => new Set(r.rows.map((x) => x.champion)).size))), byYear: Object.fromEntries(Array.from({ length: seasons }, (_, i) => i + 1).map((y) => { const ys = all.filter((r) => r.year === y); return [y, ys.length ? { n: ys.length, winPct: r1(100 * mean(ys.map((r) => r.w / (r.w + r.l)))), aiMid: r1(mean(ys.map((r) => r.aiMid).filter((x) => x != null))), aiEnd: r1(mean(ys.map((r) => r.aiEnd))), today: r1(mean(ys.map((r) => r.today))) } : null]; })) };
 out.summary.byBlock = Object.fromEntries([[1, 5], [6, 10], [11, 15], [16, 20]].filter(([a]) => a <= seasons).map(([a, b]) => { const ys = all.filter((r) => r.year >= a && r.year <= b); return [`${a}-${b}`, ys.length ? { n: ys.length, winPct: r1(100 * mean(ys.map((r) => r.w / (r.w + r.l)))), aiMid: r1(mean(ys.map((r) => r.aiMid).filter((x) => x != null))), aiEnd: r1(mean(ys.map((r) => r.aiEnd))), today: r1(mean(ys.map((r) => r.today))), rivalGap: r1(mean(ys.map((r) => r.rivalEnd - r.rivalToday))), champions: new Set(ys.map((r) => r.champion)).size } : null]; }));
+if (ACTIVE) out.summary.activeOwner = { signed: activeSigned, noAffordableReplacement: activeNone };
 console.log(JSON.stringify(out.summary, null, 1));
 if (args.json) writeFileSync(args.json, JSON.stringify(out, null, 1));
