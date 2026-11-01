@@ -213,12 +213,15 @@ import { runFranchise } from '../tools/franchise-soak.mjs';
 import { leagueInvariants, withBoardReset } from '../tools/league-soak.mjs';
 import { tierById } from '../src/data/league.js';
 
-let snapshot = null;
-/** A franchise at the end of its first offseason (draft done, free agency done), fresh from a copy each time. */
-function played() {
-  if (!snapshot) { const { problems } = runFranchise(51, { seasons: 1, check: withBoardReset(leagueInvariants), onSeason: (f) => { snapshot = JSON.stringify(f); } }); assert.deepEqual(problems, []); }
-  return JSON.parse(snapshot);
+const snapshots = {};
+/** A franchise at the end of its first offseason (draft done, free agency done), fresh from a copy each time. `league`: the seed of the
+ *  league played (51 by default). The in-season trade tests search a few leagues: whether one particular league has a club that can
+ *  afford a deal is a matter of its rosters (Task 6 Phase C changed them), not of the trade rules. */
+function played(league = 51) {
+  if (!snapshots[league]) { const { problems } = runFranchise(league, { seasons: 1, check: withBoardReset(leagueInvariants), onSeason: (f) => { snapshots[league] = JSON.stringify(f); } }); assert.deepEqual(problems, []); }
+  return JSON.parse(snapshots[league]);
 }
+const TRADE_LEAGUES = [51, 52, 53, 54];
 const aiClubs = (f) => R.leagueClubs(f).slice().sort();
 /** Find a proposal some club would accept: a bench body of theirs for the owner's cheapest pick that works. */
 function findAccepted(f, { kind = 'picks' } = {}) {
@@ -311,7 +314,8 @@ test('incoming calls: a waiting offer is withdrawn if the situation changed', ()
 // ---------------------------------------------------------------- AI–AI trades, in the season
 function weak(m, to) { setOvr(m, to); m.potential = Math.max(m.potential || 0, to); }
 test('AI trades: a club with a real weak starter and a rival with a spare to sell makes a fair, legal in-season deal', () => {
-  let found = 0; const f0 = played();
+  let found = 0;
+  for (const league of TRADE_LEAGUES) { if (found) break; const f0 = played(league);
   for (let s = 1; s <= 40 && found < 3; s++) {
     const f = JSON.parse(JSON.stringify(f0)); f.season.finished = false; f.season.week = 4; f.seed = s;
     const clubs = aiClubs(f); const A = clubs[s % clubs.length]; const cap = tierById(f.tier).cap;
@@ -324,7 +328,7 @@ test('AI trades: a club with a real weak starter and a rival with a spare to sel
       assert.ok(d.fl[1] >= d.fl[0], 'the shopper\'s weakest starter at that position does not get weaker'); assert.ok(d.na >= LT.AI_TRADE_RULES.season.minGain - 1, `in season the shopper gains at least ${LT.AI_TRADE_RULES.season.minGain} (${d.na})`); assert.ok(d.nb >= DEAL_RULES.sellerFloor - 1, 'the seller gains too (rounded)');
     }
     assert.deepEqual(R.verifyLeague(f), []);
-  }
+  } }
   assert.ok(LT.AI_TRADE_RULES.season.upgrade === 2 * LT.AI_TRADE_RULES.upgrade && LT.AI_TRADE_RULES.season.minGain === 2 * DEAL_RULES.minGain, 'the in-season bar is twice the offseason bar');
   assert.ok(found >= 1, 'a club with a hole finds a deal in the season');
 });
@@ -356,7 +360,7 @@ import { releaseFromClub } from '../src/franchise/league.js';
 import { validateClubs } from '../src/franchise/league-season.js';
 const regular = (week, extra = {}) => ({ fired: false, finished: false, offseason: false, draftOpen: false, playoffs: week > 10, week, ...extra });
 /** The played franchise moved to a week of the regular season (no offseason, no draft). */
-function inSeason(week, seed = 51) { const f = played(); f.season.finished = false; f.season.week = week; f.offseason = null; f.draft = null; f.tradeCall = null; f.callsMade = {}; f.seed = seed; return f; }
+function inSeason(week, seed = 51, league = 51) { const f = played(league); f.season.finished = false; f.season.week = week; f.offseason = null; f.draft = null; f.tradeCall = null; f.callsMade = {}; f.seed = seed; return f; }
 const sellable = (f) => { const team = aiClubs(f)[1]; const a = F.deskAssetsFor(f, team); const m = a.theirs.find((x) => !x.why && x.forSale); return { team, m, pick: F.myTradablePicks(f).at(-1) }; };
 
 test('trade deadline: the calendar is week 8 — closed in week 1, open weeks 2–8, closed after, closed in the postseason, open again when the season ends', () => {
@@ -377,13 +381,14 @@ test('trade deadline: the calendar is week 8 — closed in week 1, open weeks 2�
 
 test('trade deadline: clubs trade with each other through week 8 and not at all after it', () => {
   const cap = tierById(played().tier).cap; let w8 = 0, late = 0;
+  for (const league of TRADE_LEAGUES) { if (w8) break;
   for (let s = 1; s <= 40; s++) {
     for (const week of [8, 9, 10, 11]) {
-      const f = inSeason(week, s); const clubs = aiClubs(f); const A = clubs[s % clubs.length]; const starter = at(R.clubRoster(f, A), 'LB')[1]; if (R.isProtected(starter)) continue; weak(starter, 44);
+      const f = inSeason(week, s, league); const clubs = aiClubs(f); const A = clubs[s % clubs.length]; const starter = at(R.clubRoster(f, A), 'LB')[1]; if (R.isProtected(starter)) continue; weak(starter, 44);
       const deals = []; for (let i = 0; i < 12; i++) deals.push(...LT.aiTrades(f, createRng(1000 + s * 20 + i), { year: f.season.year, cap, window: 'season' }));
       if (week === 8) w8 += deals.length; else late += deals.length;
     }
-  }
+  } }
   assert.ok(w8 >= 1, 'the same leagues do trade in week 8'); assert.equal(late, 0, 'no deal in weeks 9, 10 or the postseason');
   const f = inSeason(5); f.season.finished = true; assert.deepEqual(LT.aiTrades(f, createRng(1), { year: f.season.year, cap, window: 'season' }), [], 'a finished season has no in-season window');
 });
