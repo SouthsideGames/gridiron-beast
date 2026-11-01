@@ -79,13 +79,13 @@ export function startDraft(f, standingsBestFirst, { ownerOf = null } = {}) {
 export const onTheClock = (f) => f.draft?.started && !f.draft.done ? f.draft.order[f.draft.index]?.team : null;
 
 /** AI pick: best available by overall with a little positional taste, never two kickers. Task 6 Phase B (R7): with the club's roster
- *  plan (`plan`, roster-plan.js) the score adds +4 for a succession need at the position, up to +3 for a weak group and −3 where the
- *  group is settled (good young starters with a successor); the noise, the kicker and the duplicate penalties are unchanged. */
+ *  plan (`plan`, roster-plan.js) the score adds the plan's need for this prospect (draftNeedBonus: succession for a prospect who can
+ *  become the successor, weak groups first, −3 where the group is settled); the noise, the kicker and the duplicate penalties are unchanged. */
 export function aiDraftPick(f, team, rng, { plan = null } = {}) {
   const d = f.draft; const avail = d.class.filter((m) => d.available.includes(m.id));
   const taken = d.picks.filter((p) => p.team === team).map((p) => p.position);
-  const need = {}; if (plan) for (const m of avail) if (need[m.position] == null) need[m.position] = draftNeedBonus(plan, m.position);
-  const score = (m) => monsterOverall(m) + (m.potential - 70) * 0.2 + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.position] || 0);
+  const need = {}; if (plan) for (const m of avail) need[m.id] = draftNeedBonus(plan, m.position, m);
+  const score = (m) => monsterOverall(m) + (m.potential - 70) * 0.2 + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0);
   return avail.sort((a, b) => score(b) - score(a))[0] || null;
 }
 

@@ -88,11 +88,27 @@ export function rosterPlan(roster, bench = null, { starters = null, ovrOf = mons
   return { groups, successors, readyFor };
 }
 
-/** R7: the draft-score adjustment the plan gives a prospect at `pos`: +4 succession need (+2 at level 1), up to +3 weak, −3 settled. */
-export const DRAFT_NEED = Object.freeze({ succession: 4, successionSoon: 2, weakMax: 3, settled: -3 });
-export function draftNeedBonus(plan, pos) {
+/**
+ * R7: the draft-score adjustment the plan gives a prospect at `pos`. Owner's decisions of 2026-10-30, revised 2026-10-31 (A-2/B
+ * milestone review, draft weights A + B):
+ *   (A) the succession bonus (+4 at need 2, +2 at need 1) goes only to a prospect who can realistically become the successor of the
+ *       starter in need (qualifiesAsSuccessor: potential at least his overall, or within 8 of him);
+ *   (B) weak groups are not outranked by succession: a weak group gets WEAK_MIN at −4 rising to WEAK_MAX at −8 (or a missing
+ *       starter), and while the club has a weak group elsewhere the succession bonus is capped at SUCCESSION_WHEN_WEAK.
+ * A settled group (at or above the league, no ageing starter, a successor in place) gets −3. Without `prospect` the succession
+ * bonus is the group's (used by tests and diagnostics).
+ */
+export const DRAFT_NEED = Object.freeze({ succession: 4, successionSoon: 2, successionWhenWeak: 2, weakMin: 4, weakMax: 6, settled: -3 });
+export function draftNeedBonus(plan, pos, prospect = null, ovrOf = monsterOverall) {
   const g = plan?.groups?.[pos]; if (!g) return 0;
-  const succ = g.successionNeed >= 2 ? DRAFT_NEED.succession : g.successionNeed === 1 ? DRAFT_NEED.successionSoon : 0;
-  const weak = DRAFT_NEED.weakMax * g.weakNeed;
+  let level = 0;
+  for (const r of g.rows) {
+    const need = r.horizon <= PLAN.ageingHorizon && !r.successor ? 2 : r.successor && !r.ready && r.horizon <= 1 ? 1 : 0;
+    if (need > level && (!prospect || qualifiesAsSuccessor(prospect, r.starter, ovrOf))) level = need;
+  }
+  let succ = level === 2 ? DRAFT_NEED.succession : level === 1 ? DRAFT_NEED.successionSoon : 0;
+  const weakElsewhere = Object.entries(plan.groups).some(([p, x]) => p !== pos && p !== 'K' && x.weakNeed > 0);
+  if (weakElsewhere) succ = Math.min(succ, DRAFT_NEED.successionWhenWeak);
+  const weak = g.weakNeed > 0 ? DRAFT_NEED.weakMin + (DRAFT_NEED.weakMax - DRAFT_NEED.weakMin) * Math.max(0, Math.min(1, 2 * g.weakNeed - 1)) : 0;
   return succ + weak + (g.settled && !succ && !weak ? DRAFT_NEED.settled : 0);
 }
