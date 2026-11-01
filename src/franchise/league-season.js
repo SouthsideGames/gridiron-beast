@@ -17,7 +17,7 @@ import { buildDepthChart, lineupProblems, GROUP_SLOTS, teamOverall } from './ros
 import { hasLeague, leagueClubs, clubRoster, clubRecord, isProtected, isAgeless, addToClub, clubPayroll, clubCapRoom, claimMonster } from './league-registry.js';
 import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegionOf } from './league.js';
 import { publicOnset } from '../data/aging.js';
-import { rosterPlan, leagueBench, horizonOf } from './roster-plan.js';
+import { rosterPlan, leagueBench, horizonOf, qualifiesAsSuccessor, PLAN } from './roster-plan.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
 /** Task 6 Phase A-2 (D10b, owner 2026-10-30): the ordinary clubs' slowdown band and runaway-veteran band, separate from the gyms'
@@ -195,6 +195,50 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
     }
   }
   return out;
+}
+/**
+ * R5 free-agency upgrades (Task 6 Phase C; owner's Group 3 decision D14, 2026-10-30), after the owner's free agency (decision F) and
+ * the needs fill. A club whose starting group is weak (gap ≤ −4 against the league) or has a succession need, and that can afford
+ * it, signs a pool monster who is at least UPGRADE_MIN better than the starter he replaces (weak group), or who qualifies as the
+ * ageing starter's successor (succession need). Weak groups are served first. To make room it may release its weakest expendable
+ * reserve: never a protected monster, a designated successor, the cover for an injured starter, or one whose release leaves the
+ * position without its starters. Pools only: generated arrivals keep the anchor rule. UPGRADES_PER_OFFSEASON per club (the spec's
+ * 2 for contenders needs strategy modes, Phase D).
+ */
+export const UPGRADE_MIN = 3, UPGRADES_PER_OFFSEASON = 1;
+export function leagueUpgrades(f, { year, cap }) {
+  if (!hasLeague(f)) return null; const out = { signed: [], released: 0 };
+  const bench = leagueBenchOf(f);
+  for (const club of order(f)) {
+    let done = 0;
+    while (done < UPGRADES_PER_OFFSEASON) {
+      const pick = bestUpgrade(f, club, bench, cap); if (!pick) break;
+      if (pick.release) { releaseFromClub(f, club, pick.release.id, { year, reason: 'released', why: 'upgrade' }); out.released++; }
+      const m = takeFromPool(f, pick.m.id); if (!m) break;
+      m.salary = salaryFor(m); addToClub(f, club, m, { year, via: 'signed', contract: leagueContract(year, contractLength(m, { bench })), source: 'pool' });
+      out.signed.push({ club, id: m.id, pos: m.position, ovr: monsterOverall(m), replaces: pick.starterOvr, kind: pick.kind, released: pick.release?.id || null }); done++;
+    }
+  }
+  return out;
+}
+function bestUpgrade(f, club, bench, cap) {
+  const roster = clubRoster(f, club); const starters = starterIds(roster); const plan = rosterPlan(roster, bench, { starters });
+  const pool = Object.values(f.pool || {}).flat().filter((m) => !isProtected(m) && !m.injury);
+  const room = clubCapRoom(f, club, cap); const full = roster.length >= ROSTER_MAX;
+  const cover = new Set(); for (const [pos, slots] of Object.entries(GROUP_SLOTS)) { const at = roster.filter((m) => m.position === pos).sort((a, b) => monsterOverall(b) - monsterOverall(a)); if (at.slice(0, slots.length).some((m) => m.injury)) { const next = at.slice(slots.length).find((m) => !m.injury); if (next) cover.add(next.id); } }
+  const expendable = (pos) => roster.filter((m) => !isProtected(m) && !starters.has(m.id) && !plan.successors.has(m.id) && !cover.has(m.id) && roster.filter((x) => x.position === m.position).length > (GROUP_SLOTS[m.position]?.length || 1))
+    .sort((a, b) => playerValue(a) / (a.salary || 1) - playerValue(b) / (b.salary || 1))[0] || null;
+  const afford = (m, pos) => { const sal = salaryFor(m); if (!full && sal <= room) return { release: null }; const rel = expendable(pos); if (!rel) return null; return sal <= room + (rel.salary || 0) ? { release: rel } : null; };
+  const options = [];
+  for (const [pos, g] of Object.entries(plan.groups)) {
+    if (pos === 'K' || !g.rows.length) continue;
+    if (g.weak) { const st = g.rows.map((r) => r.starter).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; const so = monsterOverall(st);
+      for (const m of pool) if (m.position === pos && monsterOverall(m) >= so + UPGRADE_MIN) { const a = afford(m, pos); if (a) options.push({ kind: 'weak', m, starterOvr: so, gain: monsterOverall(m) - so, ...a }); } }
+    for (const r of g.rows) { if (!(r.horizon <= PLAN.ageingHorizon && !r.successor)) continue;
+      for (const m of pool) if (m.position === pos && qualifiesAsSuccessor(m, r.starter)) { const a = afford(m, pos); if (a) options.push({ kind: 'succession', m, starterOvr: monsterOverall(r.starter), gain: monsterOverall(m) - monsterOverall(r.starter), ...a }); } }
+  }
+  options.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'weak' ? -1 : 1) || (b.gain - a.gain) || (a.m.id < b.m.id ? -1 : 1));
+  return options[0] || null;
 }
 /** A regional veteran at about `quality`, cheaper if the room does not allow it; null when nothing affordable and the need is not urgent. */
 export function generateArrival(f, r, { club, position, quality, room, floor = false }) {
