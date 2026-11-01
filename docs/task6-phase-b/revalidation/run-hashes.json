@@ -1,0 +1,103 @@
+{
+ "pb2-B-1-10": {
+  "hash": "9df6fd31e5a7e101f9ff6052f09e29821053d5f201c28101b653ac661b211bfe",
+  "hashV3": "f2ad7a03877dc7e5fb1806bcbe71ae24a69f78664cb5d9634bdfa279677cab2f",
+  "seeds": 10
+ },
+ "pb2-B-11-20": {
+  "hash": "92f8e4b6df75692119340a5853bbc747f8f6c1cfa65b65028fc9ba8e7ac1d588",
+  "hashV3": "38bd4ba2083d1b7daa319ed1e58c1080010f04123d6c8debd1843816d73ec5fb",
+  "seeds": 10
+ },
+ "pb2-B-21-30": {
+  "hash": "e70da36544293298d9fd021bedb113a26afb78579f3b15aff7a1acd1ed69e424",
+  "hashV3": "1d171aa2d716fe8ebc501d935e45a675364db0338b290dec58edbb428b3c7ccd",
+  "seeds": 10
+ },
+ "pb2-B-31-40": {
+  "hash": "05ed7b658f1d627ca0d521f8e9c6d7c853f509d3b62c2578addb26caeafcd685",
+  "hashV3": "4441a07244fdd98a75faa318496d5ef7a1bae508f50ea2a7ec2249c8de844a18",
+  "seeds": 10
+ },
+ "pb2-B-41-50": {
+  "hash": "62cd653c0b13cee654e88a05fdeed145f39f5d736df52904e89945a84ed26223",
+  "hashV3": "576f928108cd482a50b5c6a2294e53f375d6860dd2c505c89afb276bda97c639",
+  "seeds": 10
+ },
+ "pb2-B-51-60-repeat": {
+  "hash": "ed383c221b1b1e55874cd7316af081289f7ab1845174501f86f102e3e0ddd98c",
+  "hashV3": "3fe9546fa49eb7ed39e198901ba31ea885d2a26eed747e7e010e46394bedd9fa",
+  "seeds": 10
+ },
+ "pb2-B-51-60": {
+  "hash": "ed383c221b1b1e55874cd7316af081289f7ab1845174501f86f102e3e0ddd98c",
+  "hashV3": "3fe9546fa49eb7ed39e198901ba31ea885d2a26eed747e7e010e46394bedd9fa",
+  "seeds": 10
+ },
+ "pb2-B-61-70": {
+  "hash": "f1fddcccf41e20840dcf834c6879f15be8781f14a59f49dbca20833e09ed97b9",
+  "hashV3": "e8416acda093398da543212c75b5a23a1677f4e7b5a0e982b2c811a77527a29e",
+  "seeds": 10
+ },
+ "pb2-B-71-80": {
+  "hash": "db2b71fbb1d7961c417dd2529319a7cf239b369503ff2862d1a176b154f2051a",
+  "hashV3": "3437c720360848bdb8f0b3912c0ad2f9317130b2d3292277179f2f8046161c9a",
+  "seeds": 10
+ },
+ "pb2-C-106-108": {
+  "hash": "4e44c3e8d1d9db15341e30df028503554dc9dbdd117dcac63254c2cef610cdae",
+  "hashV3": "842037cd3e92739f7a6100624a9c2271534db9a45b394f40b2aaadbeb2f32941",
+  "seeds": 3
+ },
+ "pb2-C-109-110": {
+  "hash": "755e813dc5c9413e4eb54c18a236f30787266f2c6d04429adc03aec29a2dc233",
+  "hashV3": "f4e29ee35a33a25bc4eb4c71ef56657d39d3c36d2841cf52704f5d28952932e0",
+  "seeds": 2
+ },
+ "pb2-C-111-115": {
+  "hash": "0be3309b2b4f94ca5079449d4bdf01f8bdf4bffdae01a9eb3d6a6b8d12546416",
+  "hashV3": "6795ac413c5b2f195caca9fd4bed96725683aae84467a733f4924058249cb943",
+  "seeds": 5
+ },
+ "pb2-C-116-120": {
+  "hash": "cc7425290edab74dc77392b4f1d9f940520b16a60abc98b830d3cd60c723bcfc",
+  "hashV3": "407ec6ed30e97be769a59acd173d214ca95dc93b8569371d0bf175e7dab7a804",
+  "seeds": 5
+ },
+ "pb2-C-121-125": {
+  "hash": "cae930da481c6ecbc84a9c62979a7d50575c0adc08837496bdc02f6733bbead6",
+  "hashV3": "fe05ae7da8bd053b70743a0cdf4fa5faa99d4b6c958f61fe4720057cda174247",
+  "seeds": 5
+ },
+ "pb2-D-aging": {
+  "hash": "9f24225a2f813b323188147730909de298bd8764bf31760ceff88a27070d4a85",
+  "hashV3": "87c6ce865b022387c3930469b7a3b1b5c92c78c410eb76cfe1bb70d26826fe01",
+  "seeds": 5
+ },
+ "pb2-D-expiring": {
+  "hash": "9aa96e1e82d7055d06b461c63b5115fbeec13b8206c8f6cce7009a58337acbdb",
+  "hashV3": "bb856552d57740a07b13693a17110407487f35dec806c569c71e102ef12e3e2f",
+  "seeds": 5
+ },
+ "pb2-D-injuries": {
+  "hash": "bc97fc411f0f344106875f51428097de1e57d3a76552e19aa4827de09a28adcb",
+  "hashV3": "e0dbf787b1d440c2cff9d8fbb4731ff2d8be27477c87cbf9345600bb8c14ef11",
+  "seeds": 5
+ },
+ "pb2-D-picks": {
+  "hash": "7bdc6d5d22d171a6386e3c0647202363e4f67c93f1a04d2ed773385448a3cabb",
+  "hashV3": "8e8490e5318e9829cc504bc742627b20507316b174618d5298724c286009ebdf",
+  "seeds": 5
+ },
+ "pb2-D-rebuild": {
+  "hash": "fc1d4009ff28aef6ba9e4c72628bec51d65fe87ae26e8e428779e716566a469e",
+  "hashV3": "b537e38af16d15d98abfa10cc1351227c108db1a89573c0e551c480d84ff883c",
+  "seeds": 5
+ },
+ "pb2-D-thin": {
+  "hash": "fe074f302c96e350785c66699d0f86b1e35ae40adeb2d2bf726e69e234aaa412",
+  "hashV3": "a8ce62844a4e8a22b3814563a001af524509a5afb0b5e5e8a97698345bd2d2bd",
+  "seeds": 5
+ },
+ "_tree": "728856b (draft weights A+B)"
+}

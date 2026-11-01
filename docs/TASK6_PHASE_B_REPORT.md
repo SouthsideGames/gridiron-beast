@@ -162,3 +162,67 @@ No assertion was removed or loosened.
    - **Recommendation:** (a) plus a decision between (b) and (d), validated together in one run.
 4. **Rookie strength:** 51% of round-1 picks start in their first season. Accept, or ask for a dampener (for example, a lower D9 growth rate).
 5. **Succession on the Task 4 definition** (28.7% / 23.6%): accept that R1's approved potential clause is the intended successor test, or tighten R1.
+
+---
+
+## 8. Revalidation after the owner's draft-weight decision (2026-11-01; supersedes §3–§5 for the current build)
+**What changed** (commit `728856b`; owner decision 3, A + B, of 2026-10-31):
+- **(A)** the +4 succession bonus goes only to a prospect who can become the successor (potential at least the starter's overall, or within 8);
+- **(B)** a weak group gets +4 at −4 rising to +6 at −8; while a club has a weak group elsewhere, succession is capped at +2.
+
+Noise, the kicker and duplicate penalties, and every other rule and measure are unchanged. Thresholds version 5 records decision 5: succession is judged on the R1 definition, and the Task 4 measure becomes a secondary diagnostic.
+
+**How it was chosen:**
+- Two variants were tried on B 1–10. Keeping the weak bonus at +1.5 to +3 with succession capped at +1 gave misaligned picks of 7.9%. The adopted variant gave 5.2%.
+- The full validation then ran once on the adopted build, against the same frozen v42.17.0 baseline (§3 sets: B, H, C, CH, scenarios, repeat, contract, drift with All-Star on 24 seeds).
+
+### 8.1 Passing gates
+| Gate | Result |
+|---|---|
+| Integrity, legal rosters and cap | 0 problems and 0 errors in all 41 runs |
+| Determinism | repeat hashes identical; harness check passes (non-interference and determinism) |
+| Save play-through and round trip | 6 of 6 |
+| Stage P | 13.29 against 12.64 s per season: +5.1% (≤ +10%) |
+| §45.6 contract | Rookie +2.3 (AI +0.3); Pro −3.2 (−0.6 matched; AI +0.2); All-Star −1.3 (−3.3 matched; AI −1.5). All within ±5 and ±2 |
+| Owner drift, All-Star (24 seeds) | −4.1 [−8.4, +0.6]: pass, but the interval reaches past the band (escalate) |
+| Phone-width UI | no screen changed |
+
+### 8.2 Failing gates
+| Gate | Result | Cause |
+|---|---|---|
+| **Owner drift, Rookie** | −6.0 [−8.9, −3.4] (was −6.3) | **Deferred by the owner's decision 1**: binding, re-measured after Phase C |
+| **Owner drift, Pro** | **−7.2 [−10.3, −4.1]** (was −4.9, a pass) | **New failure.** The owner's and the AI's team overall per season match the previous build within 0.2, so strength did not move; the difference is in results. Season 1 alone moved −14 points at identical strength, which is game-outcome variance. The change against the previous build is not distinguishable from noise, but by the rule Pro now fails. **Owner decision needed:** treat it like Rookie (binding, re-measured after Phase C), or investigate further now |
+| **Full suite** | 792 of 793 after the fix below | See next row |
+| — AI–AI trade fairness test | fails: one swap at a value ratio of 1.176 | **A defect in v42.17.0, not caused by Phase B.** The approved rule is market value received / given within 0.85–1.15 *both ways*. `league-trades.js` (unchanged since the release) checks only the payer's direction, so a deal at 0.850 one way is 1.176 the other. Phase B's new creation draft produced such a deal on this test's seed. The fix is to check both directions; it is not applied, because it changes the released trading module. **Owner decision needed** |
+
+The retirement test failed again for the same seed-luck reason as in §2. It now uses a fixed draw of 0.5 instead of a chosen seed, which tests the same thing and no longer depends on the rosters.
+
+### 8.3 Phase B targets on the revised draft
+| Target | Band | v42.17.0 | Previous build | **Revised draft** | Status |
+|---|---|---|---|---|---|
+| Misaligned picks | ≤ 7.4, pick quality kept | 10.6 | 12.1 | **4.5** (held-out agrees) | **pass** |
+| Round-1 overall (pick quality) | not lower | 61.0 | 63.3 | **63.1** | **pass** |
+| Succession cover, R1 definition, B / C | ≥ 40 / ≥ 30 (version 5) | 36.1 / 25.1 | 51.3 / 40.9 | **49.4 / 41.1** | **pass** |
+| Succession cover, Task 4 definition (diagnostic), B | — | 17.6 | 28.7 | 27.6 | reported |
+| Contract lengths 1 / 2 / 3 | all present | 0 / 100 / 0 | 11.7 / 33.9 / 54.5 | 12.1 / 33.9 / 54.1 | **pass** |
+| Largest expiry year | staggered | 54.0 | 51.9 | 52.3 | **pass** |
+| Round-1 starting for his club by year + 2 | ≥ 44 | 33.0 | 55.4 | 57.1 | **pass** |
+| Round-1 starting within 2 seasons, drafted year 12+ (C) | ≥ 30 | 14.4 | 63.4 | 66.4 | **pass** |
+| Persistent weak, club-relative | ≤ 8 | 11.9 | 13.3 | **11.0** | **not met** (now below baseline) |
+| Persistent weak, position-relative | −30% | 15.7 | 15.0 | **14.0 (−11%)** | **not met** |
+| Young players in AI–AI payments | below baseline | 48.2 | 47.6 | 49.0 | **not met** (no change) |
+
+### 8.4 Items deferred to reassessment after Phase C
+| Item | Revised draft | Previous build | Floor or target | Owner decision |
+|---|---|---|---|---|
+| Rookie owner drift | −6.0 | −6.3 | ±5 | 1 (A) |
+| Gym lead, minimum from season 8 | 5.3 | 5.6 | ≥ 6 | 2 (A) |
+| Gym lead, seasons 5–7 | 3.7 | 3.9 | ≥ 4.6 (v42.17.0) | 2 (A) |
+| Gym lead, season 20 (evaluation) | **6.0, just under the corridor** | 6.6 | 6–12 | 2 (A) |
+| Gym win rate / title share / tier order | 81.8% / 99% / held | — | ≥ 60 / ≥ 75 / held | all pass |
+| Ordinary persistent losers / titles / playoff berths (evaluation) | 91% / 1.0% / 19.6% | 86% / 2.5% / 19.8% | ≤ 50 / 5–15 / 20–30 | Phases C–D levers |
+| Persistent weak groups (R5 is the designed lever) | as §8.3 | | | Phase C |
+
+**Accepted:** rookie strength, by the owner's decision 4 (53% of round-1 picks start in their first season, from 51%; veterans still starting 86%).
+
+**Also reported:** the revised draft narrows the gym lead a little further, and ordinary-club measures do not improve. Both are within the deferred items; no rule was changed in response.
