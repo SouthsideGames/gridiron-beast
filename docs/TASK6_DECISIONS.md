@@ -874,3 +874,15 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 - deliver test results, unresolved issues and a private playable preview.
 
 **Not authorised:** merges, production publishing, Phase C.
+
+## A-2/B milestone review (owner, 2026-10-31)
+1. **Rookie owner drift — option A.** Stays binding (±5, seasons 1–8). Re-measured after Phase C; if it still fails, the difficulty curve is revisited then.
+2. **Gym protection floor — option A.** The approved D10a plateau stays unchanged and the floor (≥ 6 from season 8; seasons 5–7 no worse than v42.17.0) stays as approved. Reassessed after Phase C. The requirement is not adjusted to make the current result pass.
+3. **Draft weights — options A + B.**
+   - (A) The +4 succession bonus goes only to a prospect who can realistically become the successor (potential at least the ageing starter's overall, or within 8 of him).
+   - (B) The draft priorities are rebalanced so that weak position groups are not consistently outranked by succession needs.
+   - The original misaligned-pick measure (`misalignedPosRelPct`, ≤ 7.4%, no loss of pick quality) is kept, and validation is rerun.
+4. **Rookie strength — accepted** at 51% of round-1 picks starting in their first season. No dampener now.
+5. **Succession definition — the approved R1 rule is kept.** High-potential young monsters count toward succession coverage: the spec's ≥ 40% (B) / ≥ 30% (C) targets are judged on `successionCoverPct` (the R1 definition). The stricter Task 4 measure (`task5.successionCoveredPct`, backup 26 or under within 8) is kept and reported as a secondary diagnostic.
+
+**Conditions:** the updated draft logic is validated against the existing requirements before anything else proceeds, with passing gates, failing gates and items deferred to after Phase C kept distinct. No other approved rule or measurement definition changes without further approval. Work stays unmerged; the main game is untouched. Phase C is not authorised.
