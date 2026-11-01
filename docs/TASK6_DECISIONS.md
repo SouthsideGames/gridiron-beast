@@ -893,3 +893,27 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 3. **Rookie drift** stays binding and deferred until after Phase C. The gym floor, ordinary-club performance and persistent weak-group targets stay documented as **unmet**; their thresholds do not change and they are not treated as passing.
 4. **Retirement test:** the deterministic adjustment (a fixed draw instead of a chosen seed) is approved, provided it keeps the original intent. Modified tests must be shown to still catch the regressions they were written for.
 5. **Next:** finish the Pro investigation and the trading fix, rerun the relevant gates and the full suite, update the private preview, and deliver one report with every gate passing, failing or explicitly deferred. All on the existing development branches; no merge to main; Phase C not authorised.
+
+## Phase B closure and Phase C authorisation (owner, 2026-11-01)
+**Phase B is accepted for progression with explicitly documented outstanding gates. It is not marked as fully passing.**
+
+**Passed and accepted:**
+- **AI–AI trade validation** (decision 5): the two-direction 0.85–1.15 check is the correct implementation of the approved rule; the boundary regression tests stay.
+- **Draft revisions** (decision 6): the revised succession eligibility and weak-position weighting stay. Misaligned picks 4.3% and succession cover 49.4% (B) / 39.4% (C) meet their approved targets. The stricter Task 4 succession measure stays a secondary diagnostic.
+- **Rookie starting strength** (decision 7): 53.8% first-season starts accepted; no dampener.
+- Integrity, determinism, saves, performance, the full suite, the Rookie and Pro §45.6 contract, All-Star drift, contract lengths, staggered expiries, round-1 starters (consolidated report §1.1).
+
+**Binding, deferred for reassessment after Phase C** (decisions 1 and 4; no definition, target or underlying rule changes without approval):
+- Rookie and Pro owner drift. Pro is deferred like Rookie: the 36-seed investigation places the decline in seasons 5–8, associated with ageing, not with the draft weights or the trade fix. Difficulty curves, ageing rules and drift thresholds are not changed to force a pass.
+- Gym strength floor and the approved plateau behaviour.
+- Ordinary-club competitiveness: persistent losers, title share, playoff appearances.
+- Persistent weak-position groups.
+- Young-player participation in AI trades.
+
+**Inconclusive, binding** (decision 2): **All-Star owner balance (§45.6).** The standard 8-seed result of +6.6 fails the ±5 requirement; the expanded 24-seed result is +3.2 [+0.2, +6.2]. It is neither a pass nor waived. Reassessed after Phase C; no change to the difficulty system or the owner-balance target.
+
+**Post-Phase C drift method approved** (decision 3): early owner drift on Rookie, Pro and All-Star is evaluated on **36 matched seeds over seasons 1–8**, with identical seeds for baseline and candidate and the same hands-off owner behaviour. The ±5 requirement stays. Reports give the mean, the uncertainty interval and season-by-season results; an interval crossing the limit is not proof of passing. Requirements involving later seasons keep the full-horizon validation.
+
+**Test coverage** (decision 8): a deterministic test that media boosts of one nature accumulate (up to the cap) was added. It found no defect; no gameplay change.
+
+**Phase C authorised** under the approved specification (§1.9; §2 Phase C row). Scope is confirmed before implementation; no new systems and no change to approved requirements beyond that scope. Priorities: the player-development and free-agency improvements, measured against the outstanding balance gates, on the frozen v42.17.0 baseline with the approved methods, reporting improvements and regressions. The owner team's roster valuation and deal rules are not altered unless Phase C explicitly authorises it. Development stays unmerged; the main game is preserved; the Phase C build goes to the private test link when ready. One consolidated milestone report at the end of Phase C (items 1–9 of the owner's message). No merge and no next phase without approval.
