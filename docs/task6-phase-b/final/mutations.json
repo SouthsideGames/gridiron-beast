@@ -1,15 +1,65 @@
 {
  "tree": "4f7919d with one mutation at a time; each row runs only the named test",
  "results": [
-  ["baseline, no mutation", "retirement pass on a real league", "pass"],
-  ["M1 one-way value band (the v42.17.0 defect)", "trade band boundaries", "FAIL (caught)"],
-  ["M2 nobody retires", "retirement pass on a real league", "FAIL (caught)"],
-  ["M3 owner not told of his retiree", "retirement pass on a real league", "FAIL (caught)"],
-  ["M4 protected monsters not skipped by the retirement pass", "retirement pass on a real league", "FAIL (caught)"],
-  ["M5 traded monster not marked with his seller", "AI-AI trades: uncommon, fair, ...", "FAIL (caught)"],
-  ["M6 trade not written to the monster's history", "AI-AI trades: uncommon, fair, ...", "FAIL (caught)"],
-  ["M7 media boost not applied", "media day", "FAIL (caught)"],
-  ["M8 media boosts of one nature not added up", "media day", "pass (not caught: this seed asks no two questions of one nature; the original assertion could not catch it either)"],
-  ["M9 media cap ignored", "media day", "FAIL (caught)"]
+  [
+   "baseline, no mutation",
+   "retirement pass on a real league",
+   "pass"
+  ],
+  [
+   "M1 one-way value band (the v42.17.0 defect)",
+   "trade band boundaries",
+   "FAIL (caught)"
+  ],
+  [
+   "M2 nobody retires",
+   "retirement pass on a real league",
+   "FAIL (caught)"
+  ],
+  [
+   "M3 owner not told of his retiree",
+   "retirement pass on a real league",
+   "FAIL (caught)"
+  ],
+  [
+   "M4 protected monsters not skipped by the retirement pass",
+   "retirement pass on a real league",
+   "FAIL (caught)"
+  ],
+  [
+   "M5 traded monster not marked with his seller",
+   "AI-AI trades: uncommon, fair, ...",
+   "FAIL (caught)"
+  ],
+  [
+   "M6 trade not written to the monster's history",
+   "AI-AI trades: uncommon, fair, ...",
+   "FAIL (caught)"
+  ],
+  [
+   "M7 media boost not applied",
+   "media day",
+   "FAIL (caught)"
+  ],
+  [
+   "M8 media boosts of one nature not added up",
+   "media day",
+   "pass (not caught: this seed asks no two questions of one nature; the original assertion could not catch it either)"
+  ],
+  [
+   "M9 media cap ignored",
+   "media day",
+   "FAIL (caught)"
+  ],
+  [
+   "M8 again, with the new deterministic test (tests/media-boost.test.js)",
+   "media day: answers of the same nature accumulate",
+   "FAIL (caught)"
+  ],
+  [
+   "M9 cap ignored, new test",
+   "media day: answers of the same nature accumulate",
+   "FAIL (caught)"
+  ]
  ]
 }

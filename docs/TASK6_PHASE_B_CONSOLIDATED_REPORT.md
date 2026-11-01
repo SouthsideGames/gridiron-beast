@@ -11,6 +11,17 @@
 
 **Private preview:** `v42.18.3-dev.b2` (branch `task6-phase-b-preview2`), on the private development test link, artifact version `1793566079-7411`. It loads a save at 390 px with 0 errors.
 
+## Phase B closure (owner, 2026-11-01)
+**Phase B is accepted for progression with explicitly documented outstanding gates. It is not fully passing.**
+
+| Category | Items |
+|---|---|
+| **Passed and accepted** | Integrity, determinism, saves, Stage P, full suite (796 with the media test); §45.6 contract on Rookie and Pro; All-Star drift; misaligned picks 4.3%; pick quality; succession (R1 definition) 49.4% / 39.4%; contract lengths and staggered expiries; round-1 starters; the two-direction trade validation with its boundary tests; the revised draft weights; rookie starting strength 53.8% (accepted) |
+| **Binding, deferred to after Phase C** | Rookie and Pro owner drift (36 matched seeds, seasons 1–8, ±5); gym strength floor and plateau behaviour; ordinary-club competitiveness (persistent losers, title share, playoff appearances); persistent weak-position groups; young-player participation in AI trades |
+| **Inconclusive (binding)** | All-Star owner balance (§45.6): +6.6 on the standard 8 seeds (fails ±5); +3.2 [+0.2, +6.2] on 24 seeds. Not a pass, not waived; reassessed after Phase C |
+| **Test coverage** | Closed. The deterministic media accumulation test (`tests/media-boost.test.js`) passes on the game and catches both "boosts not added up" and "cap ignored". No defect was found, so there was no gameplay change |
+| **Secondary diagnostic** | Succession cover on the Task 4 definition: 27.4% (B) |
+
 ---
 
 ## 1. Gate summary
