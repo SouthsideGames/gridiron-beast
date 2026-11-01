@@ -24,7 +24,10 @@ export const AI_TRADE_RULES = Object.freeze({
 
 const order = (f) => leagueClubs(f).slice().sort();
 const slotsOf = (pos) => GROUP_SLOTS[pos]?.length || 1;
-const inBand = (got, gave) => gave > 0 && got / gave >= AI_TRADE_RULES.band[0] && got / gave <= AI_TRADE_RULES.band[1];
+/** Fair in market value BOTH ways (the owner's rule, 2026-10-24): what each club receives over what it gives within the band, so
+ *  got / gave and gave / got both lie in [0.85, 1.15]. Until the Task 6 fix (owner-approved 2026-11-01) only got / gave was checked,
+ *  which let a deal at 0.85 one way stand at 1.176 the other. */
+export const inBand = (got, gave) => gave > 0 && got > 0 && got / gave >= AI_TRADE_RULES.band[0] && got / gave <= AI_TRADE_RULES.band[1] && gave / got >= AI_TRADE_RULES.band[0] && gave / got <= AI_TRADE_RULES.band[1];
 const starters = (roster, pos) => roster.filter((m) => m.position === pos).sort((a, b) => (isUnavailable(a) - isUnavailable(b)) || (ovr(b) - ovr(a)) || (a.id < b.id ? -1 : 1));
 /** The rating the incoming monster has to beat: the club's weakest available starter at the position (0 when a starting slot is empty). */
 const floorAt = (roster, pos) => { const at = starters(roster, pos).filter((m) => !isUnavailable(m)); const n = slotsOf(pos); return at.length < n ? 0 : ovr(at[n - 1]); };
