@@ -1,0 +1,2873 @@
+{
+ "seeds": {
+  "B": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   39,
+   40,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   48,
+   49,
+   50,
+   51,
+   52,
+   53,
+   54,
+   55,
+   56,
+   57,
+   58,
+   59,
+   60
+  ],
+  "H": [
+   61,
+   62,
+   63,
+   64,
+   65,
+   66,
+   67,
+   68,
+   69,
+   70,
+   71,
+   72,
+   73,
+   74,
+   75,
+   76,
+   77,
+   78,
+   79,
+   80
+  ],
+  "C": [
+   106,
+   107,
+   108,
+   109,
+   110,
+   111,
+   112,
+   113,
+   114,
+   115
+  ],
+  "CH": [
+   116,
+   117,
+   118,
+   119,
+   120,
+   121,
+   122,
+   123,
+   124,
+   125
+  ]
+ },
+ "gates": {
+  "baseIntegrityProblems": 0,
+  "candIntegrityProblems": 0,
+  "integrity": "functional pass"
+ },
+ "rows": [
+  {
+   "measure": "starterAgeS10",
+   "class": "target",
+   "phase": "A-1",
+   "sample": "B",
+   "band": {
+    "min": 27,
+    "max": 30
+   },
+   "better": null,
+   "base": 29.92,
+   "baseSeeds": 60,
+   "baseInBand": true,
+   "baseHeldOut": 29.77,
+   "cand": 27.16,
+   "candInBand": true,
+   "dev": {
+    "n": 60,
+    "base": 29.92,
+    "cand": 27.16,
+    "diff": -2.76,
+    "lo": -2.84,
+    "hi": -2.67,
+    "effect": -7.8,
+    "up": 0,
+    "down": 60
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 29.77,
+    "cand": 27.23,
+    "diff": -2.54,
+    "lo": -2.7,
+    "hi": -2.38,
+    "effect": -6.86,
+    "up": 0,
+    "down": 20
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "starterAgeS20",
+   "class": "target",
+   "phase": "A-1",
+   "sample": "C",
+   "band": {
+    "min": 27,
+    "max": 30
+   },
+   "better": null,
+   "base": 35.12,
+   "baseSeeds": 10,
+   "baseInBand": false,
+   "baseHeldOut": 35.58,
+   "cand": 26.75,
+   "candInBand": false,
+   "dev": {
+    "n": 10,
+    "base": 35.12,
+    "cand": 26.75,
+    "diff": -8.37,
+    "lo": -8.64,
+    "hi": -8.11,
+    "effect": -19.3,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 35.58,
+    "cand": 26.81,
+    "diff": -8.76,
+    "lo": -9.06,
+    "hi": -8.48,
+    "effect": -18.54,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "starters33PctS20",
+   "class": "target",
+   "phase": "A-1",
+   "sample": "C",
+   "band": {
+    "max": 18
+   },
+   "better": "down",
+   "base": 64.84,
+   "baseSeeds": 10,
+   "baseInBand": false,
+   "baseHeldOut": 67.13,
+   "cand": 9.24,
+   "candInBand": true,
+   "dev": {
+    "n": 10,
+    "base": 64.84,
+    "cand": 9.24,
+    "diff": -55.61,
+    "lo": -57.68,
+    "hi": -54,
+    "effect": -18.35,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 67.13,
+    "cand": 9.53,
+    "diff": -57.6,
+    "lo": -59.99,
+    "hi": -55.41,
+    "effect": -15.88,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "improvingAt33Pct",
+   "class": "target",
+   "phase": "A-1",
+   "sample": "B",
+   "band": {
+    "max": 2
+   },
+   "better": "down",
+   "base": 24.86,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 24.98,
+   "cand": 10.87,
+   "candInBand": false,
+   "dev": {
+    "n": 60,
+    "base": 24.86,
+    "cand": 10.87,
+    "diff": -13.99,
+    "lo": -15.04,
+    "hi": -12.95,
+    "effect": -3.34,
+    "up": 0,
+    "down": 60
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 24.98,
+    "cand": 11.14,
+    "diff": -13.84,
+    "lo": -15.71,
+    "hi": -11.84,
+    "effect": -3.09,
+    "up": 0,
+    "down": 20
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "physChangePastOnset",
+   "class": "target",
+   "phase": "A-1",
+   "sample": "C",
+   "band": {
+    "max": 0
+   },
+   "better": "down",
+   "base": -0.44,
+   "baseSeeds": 10,
+   "baseInBand": true,
+   "baseHeldOut": -0.45,
+   "cand": -1.74,
+   "candInBand": true,
+   "dev": {
+    "n": 10,
+    "base": -0.44,
+    "cand": -1.74,
+    "diff": -1.3,
+    "lo": -1.32,
+    "hi": -1.27,
+    "effect": -36.24,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": -0.45,
+    "cand": -1.73,
+    "diff": -1.28,
+    "lo": -1.31,
+    "hi": -1.25,
+    "effect": -23.83,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "retirementsPerSeason",
+   "class": "target",
+   "phase": "A-1",
+   "sample": "C",
+   "band": {
+    "min": 20,
+    "max": 50
+   },
+   "better": null,
+   "base": 0,
+   "baseSeeds": 10,
+   "baseInBand": false,
+   "baseHeldOut": 0,
+   "cand": 21.61,
+   "candInBand": true,
+   "dev": {
+    "n": 10,
+    "base": 0,
+    "cand": 21.61,
+    "diff": 21.61,
+    "lo": 21.19,
+    "hi": 22.08,
+    "effect": 30.35,
+    "up": 10,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 0,
+    "cand": 21.81,
+    "diff": 21.81,
+    "lo": 21.29,
+    "hi": 22.31,
+    "effect": 26.83,
+    "up": 10,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "veteransStartingPct",
+   "class": "target",
+   "phase": "A-1",
+   "sample": "C",
+   "band": {
+    "min": 50
+   },
+   "better": null,
+   "base": 96.07,
+   "baseSeeds": 10,
+   "baseInBand": true,
+   "baseHeldOut": 96.16,
+   "cand": 84.01,
+   "candInBand": true,
+   "dev": {
+    "n": 10,
+    "base": 96.07,
+    "cand": 84.01,
+    "diff": -12.05,
+    "lo": -15.42,
+    "hi": -9.21,
+    "effect": -2.43,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 96.16,
+    "cand": 81.64,
+    "diff": -14.52,
+    "lo": -18.09,
+    "hi": -10.72,
+    "effect": -2.4,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "r1StartSeason1Pct",
+   "class": "target",
+   "phase": "A-2",
+   "sample": "B",
+   "band": null,
+   "better": null,
+   "base": 29.81,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 29.89,
+   "cand": 53.84,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 29.81,
+    "cand": 53.84,
+    "diff": 24.03,
+    "lo": 23.14,
+    "hi": 24.91,
+    "effect": 6.56,
+    "up": 60,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 29.89,
+    "cand": 52.7,
+    "diff": 22.81,
+    "lo": 20.78,
+    "hi": 24.82,
+    "effect": 4.96,
+    "up": 20,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "r1StartWithin2Pct",
+   "class": "target",
+   "phase": "B,C",
+   "sample": "B",
+   "band": null,
+   "better": "up",
+   "base": 35.65,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 35.5,
+   "cand": 62.65,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 35.65,
+    "cand": 62.65,
+    "diff": 27,
+    "lo": 25.83,
+    "hi": 28.21,
+    "effect": 5.55,
+    "up": 60,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 35.5,
+    "cand": 60.67,
+    "diff": 25.17,
+    "lo": 23.25,
+    "hi": 26.96,
+    "effect": 6.01,
+    "up": 20,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "r1StartWithin2LatePct",
+   "class": "target",
+   "phase": "A-2,B,C",
+   "sample": "C",
+   "band": null,
+   "better": "up",
+   "base": 19.43,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 19.24,
+   "cand": 72.48,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 19.43,
+    "cand": 72.48,
+    "diff": 53.05,
+    "lo": 49.81,
+    "hi": 55.9,
+    "effect": 10.49,
+    "up": 10,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 19.24,
+    "cand": 75.62,
+    "diff": 56.38,
+    "lo": 52.57,
+    "hi": 60.48,
+    "effect": 8.85,
+    "up": 10,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "gymVsOrdinaryWinPct",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": {
+    "min": 60
+   },
+   "better": null,
+   "base": 84.7,
+   "baseSeeds": 10,
+   "baseInBand": true,
+   "baseHeldOut": 84.29,
+   "cand": 82.02,
+   "candInBand": true,
+   "dev": {
+    "n": 10,
+    "base": 84.7,
+    "cand": 82.02,
+    "diff": -2.68,
+    "lo": -4.2,
+    "hi": -1.24,
+    "effect": -1.13,
+    "up": 2,
+    "down": 8
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 84.29,
+    "cand": 80.21,
+    "diff": -4.09,
+    "lo": -5.96,
+    "hi": -2.51,
+    "effect": -1.44,
+    "up": 1,
+    "down": 9
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymTitleSharePct",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": {
+    "min": 75
+   },
+   "better": null,
+   "base": 98.94,
+   "baseSeeds": 10,
+   "baseInBand": true,
+   "baseHeldOut": 95.95,
+   "cand": 99.5,
+   "candInBand": true,
+   "dev": {
+    "n": 10,
+    "base": 98.94,
+    "cand": 99.5,
+    "diff": 0.56,
+    "lo": -1,
+    "hi": 2.5,
+    "effect": 0.2,
+    "up": 2,
+    "down": 1
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 95.95,
+    "cand": 98.5,
+    "diff": 2.55,
+    "lo": 0.5,
+    "hi": 5.11,
+    "effect": 0.73,
+    "up": 4,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymLeadMinS5on",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 4.64,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 4.1,
+   "cand": 3.86,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 4.64,
+    "cand": 3.86,
+    "diff": -0.78,
+    "lo": -1.12,
+    "hi": -0.46,
+    "effect": -1.48,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 4.1,
+    "cand": 3.77,
+    "diff": -0.33,
+    "lo": -0.64,
+    "hi": -0.02,
+    "effect": -0.67,
+    "up": 1,
+    "down": 9
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymTierOrderHeld",
+   "class": "monitor",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 0.9,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 0.7,
+   "cand": 0.8,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 0.9,
+    "cand": 0.8,
+    "diff": -0.1,
+    "lo": -0.3,
+    "hi": 0,
+    "effect": -0.33,
+    "up": 0,
+    "down": 1
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 0.7,
+    "cand": 0.8,
+    "diff": 0.1,
+    "lo": 0,
+    "hi": 0.3,
+    "effect": 0.33,
+    "up": 1,
+    "down": 0
+   },
+   "heldOutAgrees": false,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "ordinaryPersistentLoserPct",
+   "class": "evaluation",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": {
+    "max": 50
+   },
+   "better": "down",
+   "base": 90,
+   "baseSeeds": 10,
+   "baseInBand": false,
+   "baseHeldOut": 97.14,
+   "cand": 91.43,
+   "candInBand": false,
+   "dev": {
+    "n": 10,
+    "base": 90,
+    "cand": 91.43,
+    "diff": 1.43,
+    "lo": -7.15,
+    "hi": 10,
+    "effect": 0.11,
+    "up": 3,
+    "down": 3
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 97.14,
+    "cand": 95.71,
+    "diff": -1.43,
+    "lo": -7.15,
+    "hi": 5.72,
+    "effect": -0.14,
+    "up": 2,
+    "down": 3
+   },
+   "heldOutAgrees": false,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "ordinaryTitleSharePct",
+   "class": "evaluation",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": {
+    "min": 5,
+    "max": 15
+   },
+   "better": null,
+   "base": 1.06,
+   "baseSeeds": 10,
+   "baseInBand": false,
+   "baseHeldOut": 4.05,
+   "cand": 0.5,
+   "candInBand": false,
+   "dev": {
+    "n": 10,
+    "base": 1.06,
+    "cand": 0.5,
+    "diff": -0.56,
+    "lo": -2.22,
+    "hi": 1,
+    "effect": -0.2,
+    "up": 1,
+    "down": 2
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 4.05,
+    "cand": 1.5,
+    "diff": -2.55,
+    "lo": -5.11,
+    "hi": -0.5,
+    "effect": -0.73,
+    "up": 0,
+    "down": 4
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "ordinaryPlayoffSharePct",
+   "class": "evaluation",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": {
+    "min": 20,
+    "max": 30
+   },
+   "better": null,
+   "base": 15.49,
+   "baseSeeds": 10,
+   "baseInBand": false,
+   "baseHeldOut": 17.1,
+   "cand": 19.2,
+   "candInBand": false,
+   "dev": {
+    "n": 10,
+    "base": 15.49,
+    "cand": 19.2,
+    "diff": 3.72,
+    "lo": 1.98,
+    "hi": 5.5,
+    "effect": 1.29,
+    "up": 9,
+    "down": 1
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 17.1,
+    "cand": 21.4,
+    "diff": 4.3,
+    "lo": 2,
+    "hi": 6.51,
+    "effect": 1.12,
+    "up": 8,
+    "down": 2
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymLeadS20",
+   "class": "evaluation",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": {
+    "min": 6,
+    "max": 12
+   },
+   "better": null,
+   "base": 15.18,
+   "baseSeeds": 10,
+   "baseInBand": false,
+   "baseHeldOut": 14.71,
+   "cand": 6.36,
+   "candInBand": true,
+   "dev": {
+    "n": 10,
+    "base": 15.18,
+    "cand": 6.36,
+    "diff": -8.82,
+    "lo": -9.45,
+    "hi": -8.12,
+    "effect": -8.5,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 14.71,
+    "cand": 6.44,
+    "diff": -8.27,
+    "lo": -9.02,
+    "hi": -7.54,
+    "effect": -7.12,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymGeneratedStarterPctFinal",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": "down",
+   "base": 58.03,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 58.55,
+   "cand": 37.37,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 58.03,
+    "cand": 37.37,
+    "diff": -20.66,
+    "lo": -23.29,
+    "hi": -17.89,
+    "effect": -4.67,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 58.55,
+    "cand": 37.24,
+    "diff": -21.31,
+    "lo": -25.57,
+    "hi": -17.63,
+    "effect": -3.4,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "ordinarySlowedPct",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": "down",
+   "base": 41.43,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 33.5,
+   "cand": 41.29,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 41.43,
+    "cand": 41.29,
+    "diff": -0.14,
+    "lo": -3.64,
+    "hi": 4.29,
+    "effect": -0.02,
+    "up": 2,
+    "down": 6
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 33.5,
+    "cand": 30.79,
+    "diff": -2.71,
+    "lo": -8.14,
+    "hi": 2.79,
+    "effect": -0.31,
+    "up": 5,
+    "down": 5
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "successionCoverPct",
+   "class": "target",
+   "phase": "B",
+   "sample": "B",
+   "band": {
+    "min": 40
+   },
+   "better": "up",
+   "base": 36.13,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 35.94,
+   "cand": 49.41,
+   "candInBand": true,
+   "dev": {
+    "n": 60,
+    "base": 36.13,
+    "cand": 49.41,
+    "diff": 13.28,
+    "lo": 12.11,
+    "hi": 14.44,
+    "effect": 2.85,
+    "up": 60,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 35.94,
+    "cand": 49,
+    "diff": 13.06,
+    "lo": 11.32,
+    "hi": 14.91,
+    "effect": 3.27,
+    "up": 20,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "successionReadyPct",
+   "class": "target",
+   "phase": "B,C",
+   "sample": "B",
+   "band": null,
+   "better": "up",
+   "base": 5.32,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 5.84,
+   "cand": 6.57,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 5.32,
+    "cand": 6.57,
+    "diff": 1.25,
+    "lo": 0.85,
+    "hi": 1.65,
+    "effect": 0.78,
+    "up": 49,
+    "down": 11
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 5.84,
+    "cand": 6.2,
+    "diff": 0.37,
+    "lo": -0.39,
+    "hi": 1.11,
+    "effect": 0.21,
+    "up": 13,
+    "down": 7
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "youngPaymentPct",
+   "class": "target",
+   "phase": "B",
+   "sample": "B",
+   "band": null,
+   "better": "down",
+   "base": 48.17,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 49.32,
+   "cand": 49.43,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 48.17,
+    "cand": 49.43,
+    "diff": 1.26,
+    "lo": -2.03,
+    "hi": 4.74,
+    "effect": 0.09,
+    "up": 36,
+    "down": 24
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 49.32,
+    "cand": 51.61,
+    "diff": 2.29,
+    "lo": -2.2,
+    "hi": 7.2,
+    "effect": 0.22,
+    "up": 8,
+    "down": 11
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "task5.persistentWeakPct",
+   "class": "target",
+   "phase": "B,C",
+   "sample": "B",
+   "band": {
+    "max": 8
+   },
+   "better": "down",
+   "base": 11.86,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 12.56,
+   "cand": 11.2,
+   "candInBand": false,
+   "dev": {
+    "n": 60,
+    "base": 11.86,
+    "cand": 11.2,
+    "diff": -0.67,
+    "lo": -2.19,
+    "hi": 0.88,
+    "effect": -0.11,
+    "up": 23,
+    "down": 34
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 12.56,
+    "cand": 12.41,
+    "diff": -0.15,
+    "lo": -2.67,
+    "hi": 2.26,
+    "effect": -0.03,
+    "up": 10,
+    "down": 9
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "task5.persistentWeakRoomPct",
+   "class": "target",
+   "phase": "C",
+   "sample": "B",
+   "band": {
+    "max": 5
+   },
+   "better": "down",
+   "base": 9.77,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 10.44,
+   "cand": 9.59,
+   "candInBand": false,
+   "dev": {
+    "n": 60,
+    "base": 9.77,
+    "cand": 9.59,
+    "diff": -0.17,
+    "lo": -1.51,
+    "hi": 1.16,
+    "effect": -0.03,
+    "up": 25,
+    "down": 33
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 10.44,
+    "cand": 10.74,
+    "diff": 0.3,
+    "lo": -2.04,
+    "hi": 2.59,
+    "effect": 0.05,
+    "up": 10,
+    "down": 10
+   },
+   "heldOutAgrees": false,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "persistentWeakPosRelPct",
+   "class": "target",
+   "phase": "B,C",
+   "sample": "B",
+   "band": null,
+   "better": "down",
+   "base": 15.74,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 15.82,
+   "cand": 13.93,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 15.74,
+    "cand": 13.93,
+    "diff": -1.81,
+    "lo": -2.18,
+    "hi": -1.41,
+    "effect": -1.17,
+    "up": 9,
+    "down": 51
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 15.82,
+    "cand": 14.39,
+    "diff": -1.43,
+    "lo": -1.95,
+    "hi": -0.87,
+    "effect": -1.17,
+    "up": 3,
+    "down": 17
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "misalignedPosRelPct",
+   "class": "target",
+   "phase": "B",
+   "sample": "B",
+   "band": {
+    "max": 7.4
+   },
+   "better": "down",
+   "base": 10.63,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 9.12,
+   "cand": 4.28,
+   "candInBand": true,
+   "dev": {
+    "n": 60,
+    "base": 10.63,
+    "cand": 4.28,
+    "diff": -6.35,
+    "lo": -7.01,
+    "hi": -5.7,
+    "effect": -2.43,
+    "up": 1,
+    "down": 59
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 9.12,
+    "cand": 4.31,
+    "diff": -4.81,
+    "lo": -5.76,
+    "hi": -3.89,
+    "effect": -2.21,
+    "up": 0,
+    "down": 20
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "contract3PlusPct",
+   "class": "target",
+   "phase": "B",
+   "sample": "B",
+   "band": {
+    "min": 1
+   },
+   "better": null,
+   "base": 0,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 0,
+   "cand": 54.63,
+   "candInBand": true,
+   "dev": {
+    "n": 60,
+    "base": 0,
+    "cand": 54.63,
+    "diff": 54.63,
+    "lo": 54.23,
+    "hi": 54.99,
+    "effect": 34.87,
+    "up": 60,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 0,
+    "cand": 54.15,
+    "diff": 54.15,
+    "lo": 53.26,
+    "hi": 54.96,
+    "effect": 28.14,
+    "up": 20,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "maxExpiryShare",
+   "class": "target",
+   "phase": "B",
+   "sample": "B",
+   "band": null,
+   "better": "down",
+   "base": 53.98,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 53.38,
+   "cand": 52.02,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 53.98,
+    "cand": 52.02,
+    "diff": -1.96,
+    "lo": -2.46,
+    "hi": -1.43,
+    "effect": -0.99,
+    "up": 9,
+    "down": 51
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 53.38,
+    "cand": 52.4,
+    "diff": -0.98,
+    "lo": -1.82,
+    "hi": -0.01,
+    "effect": -0.49,
+    "up": 5,
+    "down": 15
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "youngReserveGain3",
+   "class": "target",
+   "phase": "C",
+   "sample": "B",
+   "band": {
+    "min": 3
+   },
+   "better": "up",
+   "base": 0.75,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 0.77,
+   "cand": 0.66,
+   "candInBand": false,
+   "dev": {
+    "n": 60,
+    "base": 0.75,
+    "cand": 0.66,
+    "diff": -0.09,
+    "lo": -0.11,
+    "hi": -0.08,
+    "effect": -1.98,
+    "up": 1,
+    "down": 59
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 0.77,
+    "cand": 0.65,
+    "diff": -0.12,
+    "lo": -0.14,
+    "hi": -0.1,
+    "effect": -2.67,
+    "up": 0,
+    "down": 20
+   },
+   "heldOutAgrees": true,
+   "outcome": "worse"
+  },
+  {
+   "measure": "highPotentialGain3",
+   "class": "target",
+   "phase": "C",
+   "sample": "B",
+   "band": null,
+   "better": "up",
+   "base": 2.24,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 2.26,
+   "cand": 2.82,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 2.24,
+    "cand": 2.82,
+    "diff": 0.58,
+    "lo": 0.52,
+    "hi": 0.64,
+    "effect": 2.33,
+    "up": 58,
+    "down": 1
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 2.26,
+    "cand": 2.75,
+    "diff": 0.49,
+    "lo": 0.41,
+    "hi": 0.59,
+    "effect": 2.33,
+    "up": 20,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "evolutionsPerClubSeason",
+   "class": "target",
+   "phase": "C",
+   "sample": "B",
+   "band": null,
+   "better": null,
+   "base": 0.99,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 0.98,
+   "cand": 0.99,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 0.99,
+    "cand": 0.99,
+    "diff": 0,
+    "lo": -0.01,
+    "hi": 0.02,
+    "effect": 0.07,
+    "up": 29,
+    "down": 26
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 0.98,
+    "cand": 0.99,
+    "diff": 0.01,
+    "lo": -0.01,
+    "hi": 0.04,
+    "effect": 0.22,
+    "up": 9,
+    "down": 8
+   },
+   "heldOutAgrees": false,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "modeChangesPer10",
+   "class": "target",
+   "phase": "D",
+   "sample": "C",
+   "band": null,
+   "better": "down",
+   "base": null,
+   "baseSeeds": 0,
+   "baseInBand": null,
+   "baseHeldOut": null,
+   "cand": null,
+   "candInBand": null,
+   "dev": {
+    "n": 0
+   },
+   "heldOut": {
+    "n": 0
+   },
+   "heldOutAgrees": null,
+   "outcome": "no data"
+  },
+  {
+   "measure": "distinctChampions",
+   "class": "monitor",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 5.8,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 6.2,
+   "cand": 5.9,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 5.8,
+    "cand": 5.9,
+    "diff": 0.1,
+    "lo": -0.6,
+    "hi": 0.8,
+    "effect": 0.08,
+    "up": 3,
+    "down": 3
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 6.2,
+    "cand": 5.3,
+    "diff": -0.9,
+    "lo": -1.8,
+    "hi": -0.2,
+    "effect": -0.69,
+    "up": 1,
+    "down": 6
+   },
+   "heldOutAgrees": false,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "ownerWinPctS9to20",
+   "class": "monitor",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 28.33,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 39.63,
+   "cand": 20.56,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 28.33,
+    "cand": 20.56,
+    "diff": -7.78,
+    "lo": -13.15,
+    "hi": -2.22,
+    "effect": -0.87,
+    "up": 3,
+    "down": 7
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 39.63,
+    "cand": 24.35,
+    "diff": -15.28,
+    "lo": -20.09,
+    "hi": -9.44,
+    "effect": -1.75,
+    "up": 1,
+    "down": 9
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "leagueStarterOvrS20",
+   "class": "monitor",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 80.98,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 81.32,
+   "cand": 77.12,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 80.98,
+    "cand": 77.12,
+    "diff": -3.86,
+    "lo": -4.22,
+    "hi": -3.52,
+    "effect": -6.66,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 81.32,
+    "cand": 77.6,
+    "diff": -3.72,
+    "lo": -4.04,
+    "hi": -3.35,
+    "effect": -6.82,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "task5.teamOvrSd",
+   "class": "monitor",
+   "sample": "B",
+   "band": null,
+   "better": null,
+   "base": 3.84,
+   "baseSeeds": 60,
+   "baseInBand": null,
+   "baseHeldOut": 3.97,
+   "cand": 3.56,
+   "candInBand": null,
+   "dev": {
+    "n": 60,
+    "base": 3.84,
+    "cand": 3.56,
+    "diff": -0.28,
+    "lo": -0.32,
+    "hi": -0.24,
+    "effect": -1.86,
+    "up": 2,
+    "down": 58
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 3.97,
+    "cand": 3.68,
+    "diff": -0.29,
+    "lo": -0.33,
+    "hi": -0.23,
+    "effect": -2.43,
+    "up": 1,
+    "down": 19
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "r1StarterAt2Pct",
+   "class": "target",
+   "phase": "B,C",
+   "sample": "B",
+   "band": {
+    "min": 44
+   },
+   "better": "up",
+   "base": 33.01,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 32.92,
+   "cand": 57.57,
+   "candInBand": true,
+   "dev": {
+    "n": 60,
+    "base": 33.01,
+    "cand": 57.57,
+    "diff": 24.56,
+    "lo": 23.44,
+    "hi": 25.75,
+    "effect": 5.35,
+    "up": 60,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 32.92,
+    "cand": 55.88,
+    "diff": 22.96,
+    "lo": 20.92,
+    "hi": 24.96,
+    "effect": 5.08,
+    "up": 20,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "r1StarterAt2LatePct",
+   "class": "target",
+   "phase": "A-2,B,C",
+   "sample": "C",
+   "band": {
+    "min": 30
+   },
+   "better": "up",
+   "base": 14.38,
+   "baseSeeds": 10,
+   "baseInBand": false,
+   "baseHeldOut": 14.48,
+   "cand": 63.14,
+   "candInBand": true,
+   "dev": {
+    "n": 10,
+    "base": 14.38,
+    "cand": 63.14,
+    "diff": 48.76,
+    "lo": 45.62,
+    "hi": 51.81,
+    "effect": 9.55,
+    "up": 10,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 14.48,
+    "cand": 65.52,
+    "diff": 51.05,
+    "lo": 46.86,
+    "hi": 55.52,
+    "effect": 7.33,
+    "up": 10,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "task5.successionCoveredPct",
+   "class": "diagnostic",
+   "phase": "B",
+   "sample": "B",
+   "band": {
+    "min": 40
+   },
+   "better": "up",
+   "base": 17.55,
+   "baseSeeds": 60,
+   "baseInBand": false,
+   "baseHeldOut": 17.22,
+   "cand": 27.43,
+   "candInBand": false,
+   "dev": {
+    "n": 60,
+    "base": 17.55,
+    "cand": 27.43,
+    "diff": 9.88,
+    "lo": 9.05,
+    "hi": 10.75,
+    "effect": 2.92,
+    "up": 60,
+    "down": 0
+   },
+   "heldOut": {
+    "n": 20,
+    "base": 17.22,
+    "cand": 27.1,
+    "diff": 9.88,
+    "lo": 8.52,
+    "hi": 11.22,
+    "effect": 3.18,
+    "up": 20,
+    "down": 0
+   },
+   "heldOutAgrees": true,
+   "outcome": "supported"
+  },
+  {
+   "measure": "gymLeadMinS8on",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": {
+    "min": 6
+   },
+   "better": null,
+   "base": 6.26,
+   "baseSeeds": 10,
+   "baseInBand": true,
+   "baseHeldOut": 6.49,
+   "cand": 5.29,
+   "candInBand": false,
+   "dev": {
+    "n": 10,
+    "base": 6.26,
+    "cand": 5.29,
+    "diff": -0.97,
+    "lo": -1.2,
+    "hi": -0.69,
+    "effect": -2.3,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 6.49,
+    "cand": 5.74,
+    "diff": -0.74,
+    "lo": -1.4,
+    "hi": -0.2,
+    "effect": -0.76,
+    "up": 0,
+    "down": 8
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymEarlyOvrS5on",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 77.86,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 77.77,
+   "cand": 74.59,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 77.86,
+    "cand": 74.59,
+    "diff": -3.27,
+    "lo": -3.69,
+    "hi": -2.96,
+    "effect": -5.19,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 77.77,
+    "cand": 74.72,
+    "diff": -3.04,
+    "lo": -3.3,
+    "hi": -2.77,
+    "effect": -7.19,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymMidOvrS5on",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 80.66,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 80.94,
+   "cand": 77.1,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 80.66,
+    "cand": 77.1,
+    "diff": -3.56,
+    "lo": -3.95,
+    "hi": -3.21,
+    "effect": -5.59,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 80.94,
+    "cand": 77.44,
+    "diff": -3.49,
+    "lo": -3.75,
+    "hi": -3.26,
+    "effect": -8.83,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymLateOvrS5on",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 81.81,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 82.38,
+   "cand": 78.27,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 81.81,
+    "cand": 78.27,
+    "diff": -3.55,
+    "lo": -3.88,
+    "hi": -3.22,
+    "effect": -6.43,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 82.38,
+    "cand": 79.08,
+    "diff": -3.3,
+    "lo": -3.64,
+    "hi": -2.93,
+    "effect": -5.89,
+    "up": 0,
+    "down": 10
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymLeadS5to7Min",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": 4.64,
+   "baseSeeds": 10,
+   "baseInBand": null,
+   "baseHeldOut": 4.1,
+   "cand": 3.86,
+   "candInBand": null,
+   "dev": {
+    "n": 10,
+    "base": 4.64,
+    "cand": 3.86,
+    "diff": -0.78,
+    "lo": -1.12,
+    "hi": -0.46,
+    "effect": -1.48,
+    "up": 0,
+    "down": 10
+   },
+   "heldOut": {
+    "n": 10,
+    "base": 4.1,
+    "cand": 3.77,
+    "diff": -0.33,
+    "lo": -0.64,
+    "hi": -0.02,
+    "effect": -0.67,
+    "up": 1,
+    "down": 9
+   },
+   "heldOutAgrees": true,
+   "outcome": "inconclusive"
+  },
+  {
+   "measure": "gymTierOrderPooled",
+   "class": "target",
+   "phase": "A-2+",
+   "sample": "C",
+   "band": null,
+   "better": null,
+   "base": null,
+   "baseSeeds": 0,
+   "baseInBand": null,
+   "baseHeldOut": null,
+   "cand": null,
+   "candInBand": null,
+   "dev": {
+    "n": 0
+   },
+   "heldOut": {
+    "n": 0
+   },
+   "heldOutAgrees": null,
+   "outcome": "no data"
+  },
+  {
+   "measure": "ordinaryImprovingAt33Pct",
+   "class": "target",
+   "phase": "A-1",
+   "sample": "B",
+   "band": {
+    "max": 2
+   },
+   "better": "down",
+   "base": null,
+   "baseSeeds": 0,
+   "baseInBand": null,
+   "baseHeldOut": null,
+   "cand": null,
+   "candInBand": null,
+   "dev": {
+    "n": 0
+   },
+   "heldOut": {
+    "n": 0
+   },
+   "heldOutAgrees": null,
+   "outcome": "no data"
+  }
+ ],
+ "pooled": {
+  "base": {
+   "B": {
+    "retirements": 0,
+    "retirementByPos": {
+     "QB": {
+      "n": 0
+     },
+     "RB": {
+      "n": 0
+     },
+     "WR": {
+      "n": 0
+     },
+     "TE": {
+      "n": 0
+     },
+     "OL": {
+      "n": 0
+     },
+     "DL": {
+      "n": 0
+     },
+     "LB": {
+      "n": 0
+     },
+     "CB": {
+      "n": 0
+     },
+     "S": {
+      "n": 0
+     },
+     "K": {
+      "n": 0
+     }
+    },
+    "careerSeasons": {
+     "n": 0,
+     "p10": null,
+     "p50": null,
+     "p90": null
+    },
+    "physChangeBySeasonsPastPublicOnset": {
+     "0": {
+      "n": 11949,
+      "mean": 0.39
+     },
+     "1": {
+      "n": 10680,
+      "mean": 0
+     },
+     "2": {
+      "n": 8887,
+      "mean": -0.22
+     },
+     "3": {
+      "n": 7041,
+      "mean": -0.28
+     },
+     "4": {
+      "n": 5408,
+      "mean": -0.33
+     },
+     "5": {
+      "n": 3959,
+      "mean": -0.36
+     },
+     "6": {
+      "n": 2793,
+      "mean": -0.38
+     },
+     "7": {
+      "n": 1766,
+      "mean": -0.36
+     },
+     "8": {
+      "n": 931,
+      "mean": -0.33
+     },
+     "-4": {
+      "n": 11992,
+      "mean": 0.75
+     },
+     "-3": {
+      "n": 12631,
+      "mean": 0.72
+     },
+     "-2": {
+      "n": 12540,
+      "mean": 0.62
+     },
+     "-1": {
+      "n": 12466,
+      "mean": 0.6
+     }
+    }
+   },
+   "H": {
+    "retirements": 0,
+    "retirementByPos": {
+     "QB": {
+      "n": 0
+     },
+     "RB": {
+      "n": 0
+     },
+     "WR": {
+      "n": 0
+     },
+     "TE": {
+      "n": 0
+     },
+     "OL": {
+      "n": 0
+     },
+     "DL": {
+      "n": 0
+     },
+     "LB": {
+      "n": 0
+     },
+     "CB": {
+      "n": 0
+     },
+     "S": {
+      "n": 0
+     },
+     "K": {
+      "n": 0
+     }
+    },
+    "careerSeasons": {
+     "n": 0,
+     "p10": null,
+     "p50": null,
+     "p90": null
+    },
+    "physChangeBySeasonsPastPublicOnset": {
+     "0": {
+      "n": 3894,
+      "mean": 0.39
+     },
+     "1": {
+      "n": 3477,
+      "mean": -0.01
+     },
+     "2": {
+      "n": 2878,
+      "mean": -0.22
+     },
+     "3": {
+      "n": 2261,
+      "mean": -0.29
+     },
+     "4": {
+      "n": 1776,
+      "mean": -0.34
+     },
+     "5": {
+      "n": 1297,
+      "mean": -0.39
+     },
+     "6": {
+      "n": 901,
+      "mean": -0.38
+     },
+     "7": {
+      "n": 548,
+      "mean": -0.4
+     },
+     "8": {
+      "n": 284,
+      "mean": -0.35
+     },
+     "-4": {
+      "n": 4035,
+      "mean": 0.77
+     },
+     "-3": {
+      "n": 4248,
+      "mean": 0.72
+     },
+     "-2": {
+      "n": 4154,
+      "mean": 0.64
+     },
+     "-1": {
+      "n": 4115,
+      "mean": 0.59
+     }
+    }
+   },
+   "C": {
+    "retirements": 0,
+    "retirementByPos": {
+     "QB": {
+      "n": 0
+     },
+     "RB": {
+      "n": 0
+     },
+     "WR": {
+      "n": 0
+     },
+     "TE": {
+      "n": 0
+     },
+     "OL": {
+      "n": 0
+     },
+     "DL": {
+      "n": 0
+     },
+     "LB": {
+      "n": 0
+     },
+     "CB": {
+      "n": 0
+     },
+     "S": {
+      "n": 0
+     },
+     "K": {
+      "n": 0
+     }
+    },
+    "careerSeasons": {
+     "n": 0,
+     "p10": null,
+     "p50": null,
+     "p90": null
+    },
+    "physChangeBySeasonsPastPublicOnset": {
+     "0": {
+      "n": 3174,
+      "mean": 0.29
+     },
+     "1": {
+      "n": 3147,
+      "mean": -0.08
+     },
+     "2": {
+      "n": 2948,
+      "mean": -0.29
+     },
+     "3": {
+      "n": 2704,
+      "mean": -0.4
+     },
+     "4": {
+      "n": 2492,
+      "mean": -0.42
+     },
+     "5": {
+      "n": 2251,
+      "mean": -0.47
+     },
+     "6": {
+      "n": 2055,
+      "mean": -0.5
+     },
+     "7": {
+      "n": 1780,
+      "mean": -0.52
+     },
+     "8": {
+      "n": 1553,
+      "mean": -0.53
+     },
+     "-4": {
+      "n": 2772,
+      "mean": 0.74
+     },
+     "-3": {
+      "n": 2919,
+      "mean": 0.72
+     },
+     "-2": {
+      "n": 2991,
+      "mean": 0.63
+     },
+     "-1": {
+      "n": 3112,
+      "mean": 0.56
+     }
+    }
+   },
+   "CH": {
+    "retirements": 0,
+    "retirementByPos": {
+     "QB": {
+      "n": 0
+     },
+     "RB": {
+      "n": 0
+     },
+     "WR": {
+      "n": 0
+     },
+     "TE": {
+      "n": 0
+     },
+     "OL": {
+      "n": 0
+     },
+     "DL": {
+      "n": 0
+     },
+     "LB": {
+      "n": 0
+     },
+     "CB": {
+      "n": 0
+     },
+     "S": {
+      "n": 0
+     },
+     "K": {
+      "n": 0
+     }
+    },
+    "careerSeasons": {
+     "n": 0,
+     "p10": null,
+     "p50": null,
+     "p90": null
+    },
+    "physChangeBySeasonsPastPublicOnset": {
+     "0": {
+      "n": 3150,
+      "mean": 0.27
+     },
+     "1": {
+      "n": 3146,
+      "mean": -0.1
+     },
+     "2": {
+      "n": 2987,
+      "mean": -0.34
+     },
+     "3": {
+      "n": 2756,
+      "mean": -0.36
+     },
+     "4": {
+      "n": 2496,
+      "mean": -0.44
+     },
+     "5": {
+      "n": 2301,
+      "mean": -0.48
+     },
+     "6": {
+      "n": 2071,
+      "mean": -0.48
+     },
+     "7": {
+      "n": 1863,
+      "mean": -0.51
+     },
+     "8": {
+      "n": 1615,
+      "mean": -0.55
+     },
+     "-4": {
+      "n": 2786,
+      "mean": 0.73
+     },
+     "-3": {
+      "n": 2987,
+      "mean": 0.73
+     },
+     "-2": {
+      "n": 3045,
+      "mean": 0.68
+     },
+     "-1": {
+      "n": 3103,
+      "mean": 0.58
+     }
+    }
+   }
+  },
+  "cand": {
+   "B": {
+    "retirements": 6882,
+    "retirementByPos": {
+     "QB": {
+      "n": 301,
+      "meanAge": 33.03,
+      "earlyPct": 39.87,
+      "exceptionalPct": 1.99,
+      "earlyPctOrig": 54.82,
+      "exceptionalPctOrig": 0
+     },
+     "RB": {
+      "n": 591,
+      "meanAge": 30.03,
+      "earlyPct": 38.24,
+      "exceptionalPct": 2.88,
+      "earlyPctOrig": 57.87,
+      "exceptionalPctOrig": 1.52
+     },
+     "WR": {
+      "n": 1344,
+      "meanAge": 30.79,
+      "earlyPct": 44.2,
+      "exceptionalPct": 3.5,
+      "earlyPctOrig": 61.38,
+      "exceptionalPctOrig": 0.89
+     },
+     "TE": {
+      "n": 355,
+      "meanAge": 32.12,
+      "earlyPct": 38.87,
+      "exceptionalPct": 4.23,
+      "earlyPctOrig": 52.96,
+      "exceptionalPctOrig": 0.56
+     },
+     "OL": {
+      "n": 692,
+      "meanAge": 32.82,
+      "earlyPct": 41.33,
+      "exceptionalPct": 1.3,
+      "earlyPctOrig": 58.38,
+      "exceptionalPctOrig": 0
+     },
+     "DL": {
+      "n": 973,
+      "meanAge": 32.05,
+      "earlyPct": 38.23,
+      "exceptionalPct": 3.49,
+      "earlyPctOrig": 56.32,
+      "exceptionalPctOrig": 0.41
+     },
+     "LB": {
+      "n": 801,
+      "meanAge": 32.14,
+      "earlyPct": 36.08,
+      "exceptionalPct": 4.37,
+      "earlyPctOrig": 54.31,
+      "exceptionalPctOrig": 0.87
+     },
+     "CB": {
+      "n": 889,
+      "meanAge": 30.97,
+      "earlyPct": 40.72,
+      "exceptionalPct": 3.71,
+      "earlyPctOrig": 56.47,
+      "exceptionalPctOrig": 0.79
+     },
+     "S": {
+      "n": 748,
+      "meanAge": 32.15,
+      "earlyPct": 36.63,
+      "exceptionalPct": 4.14,
+      "earlyPctOrig": 53.61,
+      "exceptionalPctOrig": 0.4
+     },
+     "K": {
+      "n": 188,
+      "meanAge": 34.15,
+      "earlyPct": 49.47,
+      "exceptionalPct": 0,
+      "earlyPctOrig": 79.26,
+      "exceptionalPctOrig": 0
+     }
+    },
+    "careerSeasons": {
+     "n": 6708,
+     "p10": 6,
+     "p50": 9,
+     "p90": 12
+    },
+    "physChangeBySeasonsPastPublicOnset": {
+     "0": {
+      "n": 12819,
+      "mean": 0.19
+     },
+     "1": {
+      "n": 9698,
+      "mean": -0.66
+     },
+     "2": {
+      "n": 6653,
+      "mean": -1.27
+     },
+     "3": {
+      "n": 4168,
+      "mean": -2.13
+     },
+     "4": {
+      "n": 2286,
+      "mean": -2.77
+     },
+     "5": {
+      "n": 1016,
+      "mean": -3.28
+     },
+     "6": {
+      "n": 350,
+      "mean": -3.74
+     },
+     "7": {
+      "n": 87,
+      "mean": -4.21
+     },
+     "8": {
+      "n": 18,
+      "mean": -4.71
+     },
+     "-4": {
+      "n": 13266,
+      "mean": 0.78
+     },
+     "-3": {
+      "n": 14071,
+      "mean": 0.73
+     },
+     "-2": {
+      "n": 14288,
+      "mean": 0.64
+     },
+     "-1": {
+      "n": 13894,
+      "mean": 0.49
+     }
+    }
+   },
+   "H": {
+    "retirements": 2273,
+    "retirementByPos": {
+     "QB": {
+      "n": 102,
+      "meanAge": 33.06,
+      "earlyPct": 42.16,
+      "exceptionalPct": 3.92,
+      "earlyPctOrig": 52.94,
+      "exceptionalPctOrig": 0
+     },
+     "RB": {
+      "n": 207,
+      "meanAge": 29.87,
+      "earlyPct": 42.03,
+      "exceptionalPct": 4.83,
+      "earlyPctOrig": 60.87,
+      "exceptionalPctOrig": 0.97
+     },
+     "WR": {
+      "n": 427,
+      "meanAge": 30.82,
+      "earlyPct": 43.79,
+      "exceptionalPct": 3.04,
+      "earlyPctOrig": 59.48,
+      "exceptionalPctOrig": 1.17
+     },
+     "TE": {
+      "n": 124,
+      "meanAge": 32.46,
+      "earlyPct": 31.45,
+      "exceptionalPct": 8.87,
+      "earlyPctOrig": 54.03,
+      "exceptionalPctOrig": 1.61
+     },
+     "OL": {
+      "n": 248,
+      "meanAge": 32.88,
+      "earlyPct": 39.11,
+      "exceptionalPct": 2.82,
+      "earlyPctOrig": 55.24,
+      "exceptionalPctOrig": 0
+     },
+     "DL": {
+      "n": 328,
+      "meanAge": 31.83,
+      "earlyPct": 44.21,
+      "exceptionalPct": 4.27,
+      "earlyPctOrig": 59.15,
+      "exceptionalPctOrig": 0.61
+     },
+     "LB": {
+      "n": 263,
+      "meanAge": 32.17,
+      "earlyPct": 35.36,
+      "exceptionalPct": 3.42,
+      "earlyPctOrig": 50.95,
+      "exceptionalPctOrig": 0
+     },
+     "CB": {
+      "n": 291,
+      "meanAge": 30.91,
+      "earlyPct": 40.89,
+      "exceptionalPct": 3.09,
+      "earlyPctOrig": 56.7,
+      "exceptionalPctOrig": 0.69
+     },
+     "S": {
+      "n": 224,
+      "meanAge": 32.17,
+      "earlyPct": 37.95,
+      "exceptionalPct": 4.91,
+      "earlyPctOrig": 54.46,
+      "exceptionalPctOrig": 0.45
+     },
+     "K": {
+      "n": 59,
+      "meanAge": 34.64,
+      "earlyPct": 45.76,
+      "exceptionalPct": 0,
+      "earlyPctOrig": 62.71,
+      "exceptionalPctOrig": 0
+     }
+    },
+    "careerSeasons": {
+     "n": 2207,
+     "p10": 6,
+     "p50": 9,
+     "p90": 12
+    },
+    "physChangeBySeasonsPastPublicOnset": {
+     "0": {
+      "n": 4249,
+      "mean": 0.16
+     },
+     "1": {
+      "n": 3240,
+      "mean": -0.67
+     },
+     "2": {
+      "n": 2168,
+      "mean": -1.27
+     },
+     "3": {
+      "n": 1372,
+      "mean": -2.13
+     },
+     "4": {
+      "n": 746,
+      "mean": -2.76
+     },
+     "5": {
+      "n": 325,
+      "mean": -3.3
+     },
+     "6": {
+      "n": 115,
+      "mean": -3.7
+     },
+     "7": {
+      "n": 30,
+      "mean": -4.23
+     },
+     "8": {
+      "n": 4,
+      "mean": -4.12
+     },
+     "-4": {
+      "n": 4446,
+      "mean": 0.8
+     },
+     "-3": {
+      "n": 4769,
+      "mean": 0.72
+     },
+     "-2": {
+      "n": 4776,
+      "mean": 0.66
+     },
+     "-1": {
+      "n": 4610,
+      "mean": 0.48
+     }
+    }
+   },
+   "C": {
+    "retirements": 4322,
+    "retirementByPos": {
+     "QB": {
+      "n": 182,
+      "meanAge": 33.84,
+      "earlyPct": 24.73,
+      "exceptionalPct": 11.54,
+      "earlyPctOrig": 40.11,
+      "exceptionalPctOrig": 4.95
+     },
+     "RB": {
+      "n": 331,
+      "meanAge": 30.48,
+      "earlyPct": 31.12,
+      "exceptionalPct": 8.46,
+      "earlyPctOrig": 48.94,
+      "exceptionalPctOrig": 2.72
+     },
+     "WR": {
+      "n": 744,
+      "meanAge": 31.88,
+      "earlyPct": 26.75,
+      "exceptionalPct": 10.89,
+      "earlyPctOrig": 41.4,
+      "exceptionalPctOrig": 4.3
+     },
+     "TE": {
+      "n": 223,
+      "meanAge": 32.91,
+      "earlyPct": 24.66,
+      "exceptionalPct": 8.97,
+      "earlyPctOrig": 40.81,
+      "exceptionalPctOrig": 3.59
+     },
+     "OL": {
+      "n": 567,
+      "meanAge": 34.03,
+      "earlyPct": 24.16,
+      "exceptionalPct": 13.93,
+      "earlyPctOrig": 39.51,
+      "exceptionalPctOrig": 4.76
+     },
+     "DL": {
+      "n": 606,
+      "meanAge": 32.91,
+      "earlyPct": 27.06,
+      "exceptionalPct": 12.87,
+      "earlyPctOrig": 40.43,
+      "exceptionalPctOrig": 2.97
+     },
+     "LB": {
+      "n": 485,
+      "meanAge": 32.79,
+      "earlyPct": 27.63,
+      "exceptionalPct": 10.72,
+      "earlyPctOrig": 44.12,
+      "exceptionalPctOrig": 3.71
+     },
+     "CB": {
+      "n": 500,
+      "meanAge": 31.7,
+      "earlyPct": 27.8,
+      "exceptionalPct": 8.2,
+      "earlyPctOrig": 41.4,
+      "exceptionalPctOrig": 3.6
+     },
+     "S": {
+      "n": 443,
+      "meanAge": 33.07,
+      "earlyPct": 25.06,
+      "exceptionalPct": 15.12,
+      "earlyPctOrig": 37.25,
+      "exceptionalPctOrig": 5.19
+     },
+     "K": {
+      "n": 241,
+      "meanAge": 36.25,
+      "earlyPct": 21.16,
+      "exceptionalPct": 14.94,
+      "earlyPctOrig": 34.85,
+      "exceptionalPctOrig": 4.56
+     }
+    },
+    "careerSeasons": {
+     "n": 4261,
+     "p10": 7,
+     "p50": 11,
+     "p90": 14
+    },
+    "physChangeBySeasonsPastPublicOnset": {
+     "0": {
+      "n": 4074,
+      "mean": 0.15
+     },
+     "1": {
+      "n": 3518,
+      "mean": -0.72
+     },
+     "2": {
+      "n": 2843,
+      "mean": -1.33
+     },
+     "3": {
+      "n": 2134,
+      "mean": -2.15
+     },
+     "4": {
+      "n": 1405,
+      "mean": -2.74
+     },
+     "5": {
+      "n": 828,
+      "mean": -3.28
+     },
+     "6": {
+      "n": 389,
+      "mean": -3.68
+     },
+     "7": {
+      "n": 147,
+      "mean": -4.13
+     },
+     "8": {
+      "n": 43,
+      "mean": -4.3
+     },
+     "-4": {
+      "n": 4075,
+      "mean": 0.76
+     },
+     "-3": {
+      "n": 4365,
+      "mean": 0.72
+     },
+     "-2": {
+      "n": 4408,
+      "mean": 0.63
+     },
+     "-1": {
+      "n": 4295,
+      "mean": 0.45
+     }
+    }
+   },
+   "CH": {
+    "retirements": 4362,
+    "retirementByPos": {
+     "QB": {
+      "n": 199,
+      "meanAge": 34.21,
+      "earlyPct": 27.14,
+      "exceptionalPct": 17.59,
+      "earlyPctOrig": 38.69,
+      "exceptionalPctOrig": 7.04
+     },
+     "RB": {
+      "n": 324,
+      "meanAge": 30.84,
+      "earlyPct": 28.09,
+      "exceptionalPct": 10.8,
+      "earlyPctOrig": 41.05,
+      "exceptionalPctOrig": 4.63
+     },
+     "WR": {
+      "n": 765,
+      "meanAge": 31.82,
+      "earlyPct": 26.41,
+      "exceptionalPct": 9.15,
+      "earlyPctOrig": 41.96,
+      "exceptionalPctOrig": 3.27
+     },
+     "TE": {
+      "n": 236,
+      "meanAge": 32.9,
+      "earlyPct": 23.31,
+      "exceptionalPct": 10.17,
+      "earlyPctOrig": 41.53,
+      "exceptionalPctOrig": 4.24
+     },
+     "OL": {
+      "n": 546,
+      "meanAge": 34.08,
+      "earlyPct": 23.26,
+      "exceptionalPct": 12.45,
+      "earlyPctOrig": 37,
+      "exceptionalPctOrig": 3.3
+     },
+     "DL": {
+      "n": 601,
+      "meanAge": 32.87,
+      "earlyPct": 24.96,
+      "exceptionalPct": 10.48,
+      "earlyPctOrig": 40.77,
+      "exceptionalPctOrig": 3.66
+     },
+     "LB": {
+      "n": 507,
+      "meanAge": 33.13,
+      "earlyPct": 22.88,
+      "exceptionalPct": 14.4,
+      "earlyPctOrig": 38.26,
+      "exceptionalPctOrig": 6.11
+     },
+     "CB": {
+      "n": 498,
+      "meanAge": 31.68,
+      "earlyPct": 27.91,
+      "exceptionalPct": 8.23,
+      "earlyPctOrig": 43.57,
+      "exceptionalPctOrig": 2.81
+     },
+     "S": {
+      "n": 447,
+      "meanAge": 33.03,
+      "earlyPct": 26.17,
+      "exceptionalPct": 15.88,
+      "earlyPctOrig": 42.51,
+      "exceptionalPctOrig": 6.49
+     },
+     "K": {
+      "n": 239,
+      "meanAge": 36.08,
+      "earlyPct": 24.27,
+      "exceptionalPct": 15.06,
+      "earlyPctOrig": 39.75,
+      "exceptionalPctOrig": 3.77
+     }
+    },
+    "careerSeasons": {
+     "n": 4315,
+     "p10": 7,
+     "p50": 11,
+     "p90": 14
+    },
+    "physChangeBySeasonsPastPublicOnset": {
+     "0": {
+      "n": 4222,
+      "mean": 0.16
+     },
+     "1": {
+      "n": 3610,
+      "mean": -0.69
+     },
+     "2": {
+      "n": 2896,
+      "mean": -1.3
+     },
+     "3": {
+      "n": 2220,
+      "mean": -2.06
+     },
+     "4": {
+      "n": 1507,
+      "mean": -2.73
+     },
+     "5": {
+      "n": 887,
+      "mean": -3.28
+     },
+     "6": {
+      "n": 427,
+      "mean": -3.69
+     },
+     "7": {
+      "n": 167,
+      "mean": -4.05
+     },
+     "8": {
+      "n": 63,
+      "mean": -4.4
+     },
+     "-4": {
+      "n": 4033,
+      "mean": 0.8
+     },
+     "-3": {
+      "n": 4290,
+      "mean": 0.73
+     },
+     "-2": {
+      "n": 4443,
+      "mean": 0.65
+     },
+     "-1": {
+      "n": 4399,
+      "mean": 0.44
+     }
+    }
+   }
+  }
+ }
+}
