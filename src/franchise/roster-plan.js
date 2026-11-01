@@ -102,7 +102,7 @@ export const DRAFT_NEED = Object.freeze({ succession: 4, successionSoon: 2, succ
 export function draftNeedBonus(plan, pos, prospect = null, ovrOf = monsterOverall) {
   const g = plan?.groups?.[pos]; if (!g) return 0;
   let level = 0;
-  for (const r of g.rows) {
+  for (const r of g.rows || []) {
     const need = r.horizon <= PLAN.ageingHorizon && !r.successor ? 2 : r.successor && !r.ready && r.horizon <= 1 ? 1 : 0;
     if (need > level && (!prospect || qualifiesAsSuccessor(prospect, r.starter, ovrOf))) level = need;
   }

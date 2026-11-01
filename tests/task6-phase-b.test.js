@@ -2,7 +2,7 @@
 // (R6 / T3) and need-aware drafting (R7). Owner's Group 3 decisions of 2026-10-30; docs/TASK6_APPROVED_SPECIFICATION.md §1.8.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rosterPlan, leagueBench, horizonOf, qualifiesAsSuccessor, successorShare, draftNeedBonus, groupSuccession, PLAN } from '../src/franchise/roster-plan.js';
+import { rosterPlan, leagueBench, horizonOf, qualifiesAsSuccessor, successorShare, draftNeedBonus, groupSuccession, PLAN, DRAFT_NEED } from '../src/franchise/roster-plan.js';
 import { contractLength, leagueContracts, leagueBenchOf, successorIds, RESERVE_PAST_ONSET } from '../src/franchise/league-season.js';
 import { rosterWorth, successorPremium, marketValue } from '../src/franchise/trade-value.js';
 import { aiDraftPick } from '../src/franchise/draft.js';
@@ -11,6 +11,7 @@ import * as R from '../src/franchise/league-registry.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 import { createRng } from '../src/core/rng.js';
 import { generateMonster, monsterOverall } from '../src/data/monsters.js';
+import { GROUP_SLOTS } from '../src/franchise/roster.js';
 import { ALL_TEAMS, tierById } from '../src/data/league.js';
 
 let n = 0;
@@ -34,7 +35,7 @@ test('R1 / D15: the gap is position-relative (weak −4, severe −8); successio
   const p = rosterPlan(roster, bench);
   assert.ok(p.groups.QB.weak && p.groups.QB.severe); assert.equal(p.groups.QB.weakNeed, 1); assert.equal(p.groups.QB.successionNeed, 2, 'an ageing QB with nobody behind him');
   assert.ok(!p.groups.RB.weak); assert.ok(p.groups.RB.settled, 'a young RB above the league with a successor');
-  assert.ok(draftNeedBonus(p, 'QB') === 4 + 3, 'succession +4, severe weakness +3'); assert.equal(draftNeedBonus(p, 'RB'), -3);
+  assert.equal(draftNeedBonus(p, 'QB'), DRAFT_NEED.successionWhenWeak + DRAFT_NEED.weakMax, 'the full weak bonus at severe; succession capped (this roster has empty, so weak, groups elsewhere)'); assert.equal(draftNeedBonus(p, 'RB'), DRAFT_NEED.settled);
   const lb = leagueBench([roster, [mon('QB', 80, 26)]]); assert.ok(lb.QB > monsterOverall(roster[0]));
   // succession need 1: a successor not ready while the starter is at his onset
   const st = mon('LB', 74, 0); st.age = publicOnset(st) - 1; const kid = mon('LB', 60, 21, { potential: 90 });
@@ -94,7 +95,21 @@ test('R6: the successor premium (0.8 / 0.6 / 0.45 by the starter\'s horizon) on 
   assert.ok(successorPremium(roster, kid) > 1 && successorPremium(roster, body) === 1 && successorPremium(roster, st) === 1);
 });
 
-test('R7: the draft adds the plan\'s need (+4 succession, up to +3 weak, −3 settled); kicker and duplicate penalties stay', () => {
+test('R7 (revised 2026-10-31): succession only for a prospect who can become the successor; weak groups not outranked; settled −3', () => {
+  const st = mon('QB', 72, 0); st.age = publicOnset(st); const so = monsterOverall(st);
+  const roster = [st]; for (const [pos, slots] of Object.entries(GROUP_SLOTS)) if (pos !== 'QB') for (let i = 0; i < slots.length; i++) roster.push(mon(pos, 64, 24));
+  const lbs = roster.filter((m) => m.position === 'LB');
+  const flat = leagueBench([roster]); const benchAll = { ...flat, LB: flat.LB + 6 };
+  const can = mon('QB', 58, 21, { potential: so + 2 }), cannot = mon('QB', 52, 21, { potential: so - 6 }), lb = mon('LB', 56, 21);
+  const weakPlan = rosterPlan(roster, benchAll); assert.ok(weakPlan.groups.LB.weak); assert.equal(weakPlan.groups.QB.successionNeed, 2);
+  assert.equal(draftNeedBonus(weakPlan, 'QB', cannot), 0, '(A) no succession bonus for a prospect who cannot succeed him');
+  assert.equal(draftNeedBonus(weakPlan, 'QB', can), Math.min(DRAFT_NEED.succession, DRAFT_NEED.successionWhenWeak), '(B) capped while a group is weak elsewhere');
+  assert.ok(draftNeedBonus(weakPlan, 'LB', lb) >= DRAFT_NEED.weakMin && DRAFT_NEED.weakMin > DRAFT_NEED.successionWhenWeak, '(B) the weak group outranks succession');
+  const calmPlan = rosterPlan(roster, flat); void lbs;
+  assert.equal(draftNeedBonus(calmPlan, 'QB', can), DRAFT_NEED.succession, 'no weak group: the full succession bonus');
+});
+
+test('R7 in the draft: the plan\'s need decides a close call; kicker and duplicate penalties stay', () => {
   const base = (m) => monsterOverall(m) + (m.potential - 70) * 0.2;
   const qb = mon('QB', 62, 21), rb = mon('RB', 66, 21), k = mon('K', 70, 21);
   for (let i = 0; i < 40 && base(rb) - base(qb) < 3.6; i++) { qb.potential -= 1; }
@@ -102,9 +117,10 @@ test('R7: the draft adds the plan\'s need (+4 succession, up to +3 weak, −3 se
   k.potential = 70; for (const key of Object.keys(k.attributes)) k.attributes[key] = Math.min(k.attributes[key], 60);
   const cls = [qb, rb, k];
   const f = { draft: { class: cls, available: cls.map((m) => m.id), picks: [] } };
-  const plan = { groups: { QB: { successionNeed: 2, weakNeed: 1 }, RB: { successionNeed: 0, weakNeed: 0, settled: true }, K: { successionNeed: 0, weakNeed: 0 } } };
+  const g = (x) => ({ rows: [], successionNeed: 0, weakNeed: 0, ...x });
+  const plan = { groups: { QB: g({ weakNeed: 1 }), RB: g({ settled: true }), K: g({}) } }; // QB: a missing starter
   const noPlan = aiDraftPick(f, 'X', createRng(5)); const withPlan = aiDraftPick(f, 'X', createRng(5), { plan });
-  assert.equal(noPlan.position, 'RB', 'without the plan, the better prospect'); assert.equal(withPlan.position, 'QB', 'a succession need wins a close call');
-  f.draft.picks.push({ team: 'X', position: 'QB' }); const second = aiDraftPick(f, 'X', createRng(5), { plan: { groups: { QB: { successionNeed: 0, weakNeed: 0 }, RB: { successionNeed: 0, weakNeed: 0 } } } });
+  assert.equal(noPlan.position, 'RB', 'without the plan, the better prospect'); assert.equal(withPlan.position, 'QB', 'a weak group wins a close call');
+  f.draft.picks.push({ team: 'X', position: 'QB' }); const second = aiDraftPick(f, 'X', createRng(5), { plan: { groups: { QB: g({}), RB: g({}) } } });
   assert.equal(second.position, 'RB', 'the duplicate penalty still applies');
 });
