@@ -60,6 +60,16 @@ export function leagueBench(rosters, ovrOf = monsterOverall) {
   return Object.fromEntries(Object.entries(acc).map(([pos, v]) => [pos, mean(v)]));
 }
 
+/** The designated successors at the given positions only, exactly as rosterPlan designates them (same ordering, same rule). */
+export function successorsAt(roster, positions, { starters = null, ovrOf = monsterOverall } = {}) {
+  const out = new Map();
+  for (const pos of positions) {
+    const list = roster.filter((m) => m.position === pos).sort((a, b) => (starters ? (starters.has(b.id) - starters.has(a.id)) : 0) || (ovrOf(b) - ovrOf(a)) || (a.id < b.id ? -1 : 1));
+    for (const r of groupSuccession(list, slotsOf(pos), ovrOf)) if (r.successor) out.set(r.successor.id, { starterId: r.starter.id, horizon: r.horizon, ready: r.ready });
+  }
+  return out;
+}
+
 /**
  * The roster plan of one club. `bench`: leagueBench(...). `starters` (optional): the ids on the club's depth chart; without it the
  * best `slots` at each position start. Returns { groups: { pos: { gap, weak, severe, rows, successionNeed, weakNeed } },

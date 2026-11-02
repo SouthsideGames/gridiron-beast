@@ -1,0 +1,141 @@
+{
+ "method": "approved drift method: 36 matched seeds, seasons 1-8, hands-off owner, board reset; scratch builds from de0e7ae, never committed",
+ "trials": {
+  "pc": {
+   "what": "Phase C reference",
+   "vsV42": {
+    "diff": -5.4,
+    "lo": -7.9,
+    "hi": -2.8,
+    "n": 36
+   },
+   "vsPhaseC": null,
+   "season8": {
+    "owner": 68.2,
+    "ai": 70.4
+   },
+   "winBySeason": {
+    "1": 81.5,
+    "2": 75,
+    "3": 85.5,
+    "4": 75.3,
+    "5": 76.5,
+    "6": 63.6,
+    "7": 58.6,
+    "8": 47.8
+   }
+  },
+  "s1": {
+   "what": "ordinary clubs Rookie quality -1 from season 6 (gyms untouched)",
+   "vsV42": {
+    "diff": -5.4,
+    "lo": -7.9,
+    "hi": -2.9,
+    "n": 36
+   },
+   "vsPhaseC": {
+    "diff": 0,
+    "lo": -1.6,
+    "hi": 1.6
+   },
+   "season8": {
+    "owner": 68.4,
+    "ai": 70.3
+   },
+   "winBySeason": {
+    "1": 81.5,
+    "2": 75,
+    "3": 85.5,
+    "4": 75.3,
+    "5": 76.5,
+    "6": 61.1,
+    "7": 61.4,
+    "8": 47.2
+   }
+  },
+  "s2": {
+   "what": "Rookie ordinary-club slowdown band 4 -> 2 from season 6",
+   "vsV42": {
+    "diff": -4.7,
+    "lo": -6.9,
+    "hi": -2.5,
+    "n": 36
+   },
+   "vsPhaseC": {
+    "diff": 0.6,
+    "lo": -0.8,
+    "hi": 2.2
+   },
+   "season8": {
+    "owner": 68.4,
+    "ai": 70.3
+   },
+   "winBySeason": {
+    "1": 81.5,
+    "2": 75,
+    "3": 85.5,
+    "4": 75.3,
+    "5": 76.5,
+    "6": 65.1,
+    "7": 64.2,
+    "8": 45.7
+   }
+  },
+  "s2b": {
+   "what": "Rookie ordinary-club slowdown band 4 -> 0 from season 6",
+   "vsV42": {
+    "diff": -5.2,
+    "lo": -7.9,
+    "hi": -2.5,
+    "n": 36
+   },
+   "vsPhaseC": {
+    "diff": 0.2,
+    "lo": -1.7,
+    "hi": 1.9
+   },
+   "season8": {
+    "owner": 68.4,
+    "ai": 70.3
+   },
+   "winBySeason": {
+    "1": 81.5,
+    "2": 75,
+    "3": 85.5,
+    "4": 75.3,
+    "5": 76.5,
+    "6": 66,
+    "7": 60.5,
+    "8": 44.8
+   }
+  },
+  "s3": {
+   "what": "Rookie: decline onset (true and public) and peak window one season later, every club",
+   "vsV42": {
+    "diff": -2.2,
+    "lo": -4.6,
+    "hi": 0.4,
+    "n": 36
+   },
+   "vsPhaseC": {
+    "diff": 3.1,
+    "lo": 0.2,
+    "hi": 6.3
+   },
+   "season8": {
+    "owner": 69,
+    "ai": 70.6
+   },
+   "winBySeason": {
+    "1": 83.3,
+    "2": 78.4,
+    "3": 84.3,
+    "4": 79.9,
+    "5": 81.8,
+    "6": 64.2,
+    "7": 68.2,
+    "8": 48.8
+   }
+  }
+ }
+}

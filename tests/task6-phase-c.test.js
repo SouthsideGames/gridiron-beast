@@ -101,3 +101,31 @@ test('GM slots: filled automatically, manual picks persist, an ineligible pick l
   F.resetDevSlots(f); assert.equal(f.devSlots, undefined);
   const r = F.setDevSlot(f, f.roster.find((x) => (x.age || 0) > 25)?.id || 'nobody', true); assert.equal(r.ok, false);
 });
+
+test('performance refactor: successorsAt designates exactly the successors rosterPlan does (every league club, after a season)', async () => {
+  const { successorsAt, rosterPlan } = await import('../src/franchise/roster-plan.js');
+  const { runFranchise } = await import('../tools/franchise-soak.mjs');
+  const { buildDepthChart } = await import('../src/franchise/roster.js');
+  const { f } = runFranchise(63, { seasons: 1 }); let compared = 0;
+  for (const c of R.leagueClubs(f)) { const roster = R.clubRoster(f, c); const starters = new Set(Object.values(buildDepthChart(roster)).filter(Boolean));
+    const full = rosterPlan(roster, null, { starters }).successors; const fast = successorsAt(roster, [...new Set(roster.map((m) => m.position))], { starters });
+    assert.deepEqual([...fast.entries()].sort(), [...full.entries()].sort(), c); compared++; }
+  assert.equal(compared, 15);
+});
+
+test('performance refactor: the roster-worth group cache never serves a stale value (deals, signings, ratings, injuries, contracts, ages, seasons)', async () => {
+  const TV = await import('../src/franchise/trade-value.js');
+  const { runFranchise } = await import('../tools/franchise-soak.mjs');
+  const { f } = runFranchise(64, { seasons: 1 }); const clubs = R.leagueClubs(f); const [a, b] = clubs.slice(0, 2);
+  const A = R.clubRoster(f, a).slice(), B = R.clubRoster(f, b).slice(); const mover = B.find((m) => m.position === A[0].position) || B[0];
+  const dealt = A.filter((m) => m !== A[0]).concat(mover); // A gives its first monster and gets one of B's: two groups change content
+  const expect = { a2: TV.rosterWorth(A, 2), a3: TV.rosterWorth(A, 3), aOwn: TV.rosterWorth(A, 2, { succession: false }), dealt: TV.rosterWorth(dealt, 2), b2: TV.rosterWorth(B, 2) };
+  TV.scoped(() => { // inside one read-only scope: repeated, mixed and changed rosters all equal the uncached sums
+    for (let i = 0; i < 2; i++) { assert.equal(TV.rosterWorth(A, 2), expect.a2); assert.equal(TV.rosterWorth(dealt, 2), expect.dealt); assert.equal(TV.rosterWorth(B, 2), expect.b2); }
+    assert.equal(TV.rosterWorth(A, 3), expect.a3, 'another season is another key'); assert.equal(TV.rosterWorth(A, 2, { succession: false }), expect.aOwn, 'the owner-style valuation is another key');
+  });
+  const m = A[1]; // between scopes anything may change; a new scope starts empty
+  const changes = [() => { for (const k of Object.keys(m.attributes)) m.attributes[k] = Math.max(20, m.attributes[k] - 9); }, () => { m.injury = { weeks: 5 }; }, () => { m.contract = { ...(m.contract || {}), ends: 1 }; m.salary = (m.salary || 1000) * 2; }, () => { m.age = (m.age || 25) + 6; }];
+  for (const change of changes) { TV.scoped(() => TV.rosterWorth(A, 2)); change(); const fresh = TV.rosterWorth(A, 2); assert.equal(TV.scoped(() => TV.rosterWorth(A, 2)), fresh); }
+  assert.notEqual(TV.rosterWorth(A, 2), expect.a2, 'the changes did change the value');
+});
