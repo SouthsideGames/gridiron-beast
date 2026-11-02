@@ -1,0 +1,17 @@
+{
+ "root": "/home/claude/t6work/pctree",
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "seasons": 6,
+ "reps": 3,
+ "secondsPerSeason": 14.91,
+ "all": [
+  14.8,
+  14.91,
+  15.01
+ ],
+ "node": "v22.22.0"
+}
