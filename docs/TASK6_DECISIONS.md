@@ -930,3 +930,38 @@ Titles are not a target. The nudge and anchors still bound outcomes, and the wid
 6. **Closeout:** update the Phase C report and this log; focused diagnostics and regression tests only (no unnecessary repeated full-horizon benchmarks); one concise report and the updated private preview.
 
 **Next (owner's stated intent):** Phase D as the final planned implementation phase of Task 6, then its approved held-out validation and the M3 release decision. No further phase or scope expansion without authorisation. All changes unmerged; the main game untouched.
+
+## Phase C closeout (2026-11-02): findings recorded; no rule changed
+Findings in `TASK6_PHASE_C_REPORT.md` §10. Nothing below has been adopted. Each item marked as a decision is for the owner.
+
+1. **Rookie drift: diagnosis.**
+   - The approved Phase A-1 ageing and retirement act on the hands-off owner's closed squad: full at 38 from season 3, over the cap from season 4, re-signing everyone and never buying. That costs about 1.1 overall by seasons 7–8, on Rookie and Pro alike. The v42.17.0 reference had no decline and no retirement.
+   - Two things make Rookie worse:
+     - Rookie AI clubs end 0.3–0.6 above v42.17.0, while Pro and All-Star clubs end level or lower.
+     - The owner's Rookie lead runs out exactly in seasons 6–8, near an even match, where each point swings the most games.
+2. **Rookie drift: the difficulty curve is not an effective lever** (36-seed scratch trials, not committed):
+   - a Rookie target of −1 from season 6: 0.0 against Phase C;
+   - a slowdown band of 2: +0.6;
+   - a slowdown band of 0: +0.2;
+   - none is significant, and AI clubs moved at most 0.1.
+   - Trial S3 (Rookie decline onset one season later, for all clubs): +3.1 [+0.2, +6.3] against Phase C, drift −2.2 [−4.6, +0.4] (inside ±5 with its whole interval); it is the only trial that moves the result.
+   - **Recommendation for the owner's decision:** S3 scoped to Rookie (an ageing-rule change, so not implemented). Tradeoffs: longer Rookie careers and slower turnover; it helps the owner where Rookie §45.6 already fails in the owner's favour; Pro and All-Star are unaffected by construction. If ageing is not to be touched, no curve change is recommended and Rookie drift stays FAIL.
+3. **§45.6 Rookie and All-Star:**
+   - the standard 8-seed checks stay **FAILED** (Rookie +5.1, All-Star +6.8);
+   - the 24-seed results (Rookie −0.3 [−3.1, +2.8], All-Star +0.1 [−3.0, +3.3]) are supporting evidence;
+   - the interpretation is **inconclusive**;
+   - thresholds and seed selections are unchanged, and both carry into the final integrated validation.
+4. **Performance:** two behaviour-preserving commits (`b43274b`, `de0e7ae`) and an invalidation test (`f2e1682`, mutation-checked).
+   - They are proven identical: final franchise hashes, harness check, save compatibility output, the Rookie 24 × 8 records, and `successorsAt` against `rosterPlan`.
+   - Stage P interleaved: +8.0% and +4.4% against the gate of ≤ +10%.
+   - The optimised code is about twice as fast. But Task 6 logic is only about 1% of run time, so Phase D has about 2–5 points of headroom, mostly limited by run-to-run variation.
+5. **Development (+2.64; practice stays 0.35):**
+   - The shortfall is mainly slot capacity: 11.1 eligible reserves per club-game for 6 slots. Reserves who hold a slot most of the time gain +3.9.
+   - The XP slowdown costs only 6%. Eligibility is not a constraint. Rising level costs and a 9–10-game season are secondary.
+   - **Recommendation:** keep 0.35 and 6 slots, and keep the target unmet. More reserve development works against the gym floor and Rookie drift.
+   - If ≥ +3 is wanted, trial 8 slots (not a larger share), measured together with the gym lead and Rookie drift.
+6. **Unresolved, unchanged:** gym floor, ordinary persistent losers and title share, persistent weak groups, and young-player trade participation. §10.5 separates what Phase D can address from what needs an owner decision:
+   - **Phase D can help:** persistent losers (mode cycling), weak groups (club-relative), and young-player payments (mode-specific payment choices).
+   - **Little or nothing from Phase D:** gym floor, title share, Rookie drift.
+
+**Not authorised:** merging, publishing to production, beginning Phase D, any rule, constant, target or threshold change. All changes stay unmerged; the main game is untouched.
