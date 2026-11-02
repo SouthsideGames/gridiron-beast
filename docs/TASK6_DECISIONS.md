@@ -965,3 +965,35 @@ Findings in `TASK6_PHASE_C_REPORT.md` §10. Nothing below has been adopted. Each
    - **Little or nothing from Phase D:** gym floor, title share, Rookie drift.
 
 **Not authorised:** merging, publishing to production, beginning Phase D, any rule, constant, target or threshold change. All changes stay unmerged; the main game is untouched.
+
+## Phase C decisions resolved; Phase D authorised (owner, 2026-11-02)
+**Phase D is authorised** as the final planned implementation phase of Task 6, to be implemented and validated in one continuous cycle: implement everything first, run one consolidated validation, fix defects inside the approved scope, then run the held-out confirmation once.
+
+**Phase C decisions:**
+1. **Rookie ageing:**
+   - The Rookie-only one-season ageing delay (closeout trial S3) is **not** adopted. Ageing and retirement stay identical across difficulties.
+   - The approved 36-seed drift gate and its **FAIL** classification are preserved.
+   - Final validation adds a **supplementary** diagnostic: the hands-off owner against an owner who actively maintains the roster (replaces declining starters, manages the cap). It does not replace or weaken the drift requirement.
+2. **Development:**
+   - 6 slots per club, at most 2 per position, and practice XP of 0.35 are kept. Neither slots nor XP are raised to meet the +3 target.
+   - Results are reported separately for consistently slotted prospects and for the broader eligible-reserve population.
+3. **Gyms and ordinary clubs:**
+   - Both the gym protection requirement and the ordinary-club championship target are preserved.
+   - Investigate why gyms win about 99.5% of AI titles despite a shrinking overall lead. Separate roster strength, gym-specific advantages, playoff qualification, matchups and postseason results.
+   - No manufactured wins and no change to gym bonuses to meet a benchmark.
+
+**Phase D scope** (specification §1.8 R2, R4, and the mode weights in R3, R5 and R7; §1.7 rebuild-nudge options; §2 Phase D row):
+- **D1:** strategy modes.
+- **D2:** limited starter sales (one per window).
+- **D3:** strategy-weighted contracts.
+- **D4:** two upgrades for Contend, one for all other modes.
+- **D5:** strategy-weighted drafting (rebuilders' potential weight 0.35 against 0.20).
+- **D6:** the three rebuild-nudge options are evaluated, not adopted.
+- **D7:** checkpoint 3 and the held-out confirmation (H 61–80, CH 116–125, run once on the final commit).
+
+**Boundaries:**
+- No change to ageing, development slots, practice XP, difficulty constants, gym bonuses, acceptance thresholds or trading rules without approval.
+- No T1, T2 or T4.
+- No Phase E.
+- No merge to main, and no production publish.
+- Design conflicts are documented and independent work continues.
