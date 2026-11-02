@@ -101,3 +101,14 @@ test('GM slots: filled automatically, manual picks persist, an ineligible pick l
   F.resetDevSlots(f); assert.equal(f.devSlots, undefined);
   const r = F.setDevSlot(f, f.roster.find((x) => (x.age || 0) > 25)?.id || 'nobody', true); assert.equal(r.ok, false);
 });
+
+test('performance refactor: successorsAt designates exactly the successors rosterPlan does (every league club, after a season)', async () => {
+  const { successorsAt, rosterPlan } = await import('../src/franchise/roster-plan.js');
+  const { runFranchise } = await import('../tools/franchise-soak.mjs');
+  const { buildDepthChart } = await import('../src/franchise/roster.js');
+  const { f } = runFranchise(63, { seasons: 1 }); let compared = 0;
+  for (const c of R.leagueClubs(f)) { const roster = R.clubRoster(f, c); const starters = new Set(Object.values(buildDepthChart(roster)).filter(Boolean));
+    const full = rosterPlan(roster, null, { starters }).successors; const fast = successorsAt(roster, [...new Set(roster.map((m) => m.position))], { starters });
+    assert.deepEqual([...fast.entries()].sort(), [...full.entries()].sort(), c); compared++; }
+  assert.equal(compared, 15);
+});

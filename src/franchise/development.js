@@ -11,7 +11,7 @@
 // Derived each game from the roster; the only stored state is the owner's `f.devSlots` ({ manual: [ids], excluded: [ids] }),
 // an additive field (absent: every slot automatic).
 import { xpForLevel, levelUp, monsterOverall, tryEvolve } from '../data/monsters.js';
-import { rosterPlan } from './roster-plan.js';
+import { successorsAt } from './roster-plan.js';
 import { GROUP_SLOTS } from './roster.js';
 
 export const DEV = Object.freeze({ slots: 6, perPosition: 2, maxAge: 25, minHeadroom: 3, share: 0.35, baseXp: 24 });
@@ -29,9 +29,11 @@ export const DEV_REASON = Object.freeze({ gone: 'is no longer on the roster', st
 
 /** Eligible monsters in priority order: successors first (most urgent first), then potential minus overall. */
 export function devPriority(roster, starters) {
-  const plan = rosterPlan(roster, null, { starters });
-  const elig = roster.filter((m) => !devIneligibility(m, starters));
-  const key = (m) => { const s = plan.successors.get(m.id); return [s ? 0 : 1, s ? s.horizon : 0, -((m.potential || 0) - monsterOverall(m)), m.id]; };
+  const elig = roster.filter((m) => !devIneligibility(m, starters)); if (!elig.length) return [];
+  // the plan's successor designation, worked out only at the eligible monsters' positions (identical result, less work: Phase C closeout)
+  const memo = new Map(); const ovrOf = (m) => { let v = memo.get(m); if (v === undefined) { v = monsterOverall(m); memo.set(m, v); } return v; };
+  const successors = successorsAt(roster, [...new Set(elig.map((m) => m.position))], { starters, ovrOf });
+  const key = (m) => { const s = successors.get(m.id); return [s ? 0 : 1, s ? s.horizon : 0, -((m.potential || 0) - ovrOf(m)), m.id]; };
   return elig.map((m) => ({ m, k: key(m) })).sort((a, b) => { for (let i = 0; i < 4; i++) { if (a.k[i] < b.k[i]) return -1; if (a.k[i] > b.k[i]) return 1; } return 0; }).map((x) => x.m);
 }
 
