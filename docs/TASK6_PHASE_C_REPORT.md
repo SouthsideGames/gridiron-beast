@@ -320,4 +320,10 @@ Nothing below was weakened, manufactured or re-thresholded.
 | **Pro and All-Star drift** | within ±5, intervals cross the limit | Like Rookie, unaffected by Phase D on the owner side. | — |
 
 ### 10.6 Closeout build and preview
-{{PREVIEW}}
+- **Closeout build:** `task6-phase-c` at the closeout commits.
+- **Preview: `v42.19.1-dev.c`** (branch `task6-phase-c-preview`, commit `b0c8453`; new `?v=42.19.1` stamp; test build), on the private development test link at artifact version `1793653702-27a2`.
+  - Release file list check: 164 files.
+  - The live files were verified after publishing.
+  - Smoke test at 390 px: 0 errors, no horizontal overflow; a one-season franchise plays in the browser with 0 problems and 6 development slots.
+- **No gameplay difference from the Phase C preview:** the closeout's code changes are the behaviour-preserving performance commits only.
+- The main game (v42.17.0) is untouched. Nothing is merged.
