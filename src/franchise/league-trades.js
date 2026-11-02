@@ -10,6 +10,8 @@ import { pickValue, picksOwnedBy, pickUsed, setPickOwner, tradable, currentClass
 import { FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK, seasonTradeWeek } from './trade-window.js';
 import { marketValue, rosterNet, rosterAfter, rosterProblems, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
 import { hasLeague, leagueClubs, clubRoster, clubCapRoom, addToClub, removeFromClub, leagueEvent, moveIdentity, isProtected } from './league-registry.js';
+import { modeOf } from './strategy.js';
+import { horizonOf, PLAN } from './roster-plan.js';
 
 export const AI_TRADE_RULES = Object.freeze({
   upgrade: 2,          // the incoming monster must beat the club's weakest available starter at the position by this much
@@ -91,6 +93,52 @@ function attempt(f, r, A, { year, cap, done, window }) {
   }
   return null;
 }
+/**
+ * R4 starter sales (Task 6 Phase D; owner's decision D13, specification §1.8 R4): a club in Rebuild mode may sell ONE starter, and only
+ * STARTER_SALE.perWindow sale happens in the whole league in one trading window (the offseason window, or weeks 2–8 of a season).
+ *   the starter    not protected, tradable (no rookie on his first deal), available, within PLAN.ageingHorizon (2) seasons of his public
+ *                  decline onset or past it, and older than STARTER_SALE.youngStarAge (never a young star)
+ *   the buyer      not rebuilding, with a legitimate need: he beats its weakest available starter at the position by the window's bar
+ *   the price      young players (aged STARTER_SALE.youngAge or under) from the buyer's spares, or picks, or both, fair in market value
+ *                  both ways (inBand); judged by the existing rules (judge): both rosters legal, both under the cap, the buyer ahead by
+ *                  the window's minimum gain and the seller not behind (seller floor), on their own roster worth
+ * The existing valuation, cap, roster and window rules are reused unchanged; nothing here draws from the generator.
+ */
+export const STARTER_SALE = Object.freeze({ perWindow: 1, youngAge: 25, youngStarAge: 26 });
+/** No sale yet in this window (offseason window: week 0 of `year`; in season: weeks 2–8 of `year`). */
+export function saleOpen(f, year, week) { return !(f.league?.trades || []).some((t) => t.sale && t.year === year && (week > 0 ? t.week > 0 : t.week === 0)); }
+/** The starters a rebuilding club may sell, the furthest past onset first. */
+export function sellableStarters(f, roster) {
+  return Object.keys(GROUP_SLOTS).flatMap((pos) => starters(roster, pos).filter((m) => !isUnavailable(m)).slice(0, slotsOf(pos)))
+    .filter((m) => !isProtected(m) && tradable(f, m) && (m.age || 0) > STARTER_SALE.youngStarAge && horizonOf(m) <= PLAN.ageingHorizon)
+    .sort((a, b) => horizonOf(a) - horizonOf(b) || ovr(b) - ovr(a) || (a.id < b.id ? -1 : 1));
+}
+function starterSale(f, r, { year, cap, done, window }) {
+  const bar = window === 'season' ? AI_TRADE_RULES.season : { upgrade: AI_TRADE_RULES.upgrade, minGain: DEAL_RULES.minGain };
+  const y0 = currentClassYear(f);
+  for (const S of order(f).filter((c) => !done.has(c) && modeOf(f, c) === 'rebuild')) {
+    const rosterS = clubRoster(f, S); const roomS = clubCapRoom(f, S, cap);
+    for (const m of sellableStarters(f, rosterS)) {
+      const vm = marketValue(m, { year }); let best = null;
+      for (const B of order(f).filter((c) => c !== S && !done.has(c) && modeOf(f, c) !== 'rebuild')) {
+        const rosterB = clubRoster(f, B); if (ovr(m) < floorAt(rosterB, m.position) + bar.upgrade) continue; // a legitimate need
+        const young = sparesOf(rosterB).filter((y) => tradable(f, y) && !isProtected(y) && !isUnavailable(y) && (y.age || 99) <= STARTER_SALE.youngAge);
+        const picks = ownedPicks(f, B, y0); const options = [];
+        for (const y of young) if (inBand(marketValue(y, { year }), vm)) options.push({ ys: [y], picks: [] });
+        const single = picks.find((x) => inBand(x.v, vm)); if (single) options.push({ ys: [], picks: [single] });
+        if (!single) for (let i = 0; i < picks.length; i++) for (let j = i + 1; j < picks.length; j++) if (inBand(picks[i].v + picks[j].v, vm)) { options.push({ ys: [], picks: [picks[i], picks[j]] }); i = picks.length; break; }
+        for (const y of young) { const vy = marketValue(y, { year }); if (vy >= vm * AI_TRADE_RULES.band[0]) continue; for (const x of picks) if (inBand(vy + x.v, vm)) { options.push({ ys: [y], picks: [x] }); break; } }
+        const roomB = clubCapRoom(f, B, cap);
+        for (const o of options) {
+          const j = judge(f, { A: B, B: S, rosterA: rosterB, rosterB: rosterS, m, ys: o.ys, picks: o.picks, year, roomA: roomB, roomB: roomS, minGain: bar.minGain }); if (!j) continue;
+          const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { B, ...o, ...j, score };
+        }
+      }
+      if (best) { const d = execute(f, { A: best.B, B: S, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s2, y) => s2 + marketValue(y, { year }), 0) + best.picks.reduce((s2, x) => s2 + x.v, 0) }); return { ...d, sale: true, seller: S, age: m.age, horizon: horizonOf(m), buyerMode: modeOf(f, best.B), paidAges: best.ys.map((y) => y.age) }; }
+    }
+  }
+  return null;
+}
 function moveMonster(f, from, to, m, year) {
   const contract = m.contract && !m.contract.permanent ? { ...m.contract } : null;
   removeFromClub(f, from, m.id, { year, reason: 'traded', quiet: true });
@@ -116,6 +164,8 @@ function aiTradesNow(f, r, { year, cap, window }) {
   const deals = []; const done = new Set();
   if (window === 'season') { if (f.season?.finished || !seasonTradeWeek(f.season?.week || 0) || !r.chance(AI_TRADE_RULES.weekChance)) return deals; } // after the deadline no draw is made at all, so the stream of random numbers for later weeks is the same as before
   const max = window === 'season' ? 1 : AI_TRADE_RULES.offseasonMax;
+  const week = f.season?.finished ? 0 : f.season?.week ?? 0;
+  if (saleOpen(f, year, week)) { const d = starterSale(f, r, { year, cap, done, window }); if (d) { done.add(d.A); done.add(d.B); deals.push(d); (f.league.trades ||= []).push({ year, week, ...d }); if (f.league.trades.length > 60) f.league.trades.shift(); } }
   const shoppers = order(f).sort(() => r.next() - 0.5);
   for (const A of shoppers) {
     if (deals.length >= max) break;

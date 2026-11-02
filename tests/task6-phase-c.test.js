@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DEV, devIneligibility, selectDevSlots, practiceAfterGame, devPriority } from '../src/franchise/development.js';
 import { offseason } from '../src/franchise/progression.js';
-import { leagueUpgrades, UPGRADE_MIN, UPGRADES_PER_OFFSEASON, successorIds } from '../src/franchise/league-season.js';
+import { leagueUpgrades, UPGRADE_MIN, UPGRADES_PER_OFFSEASON, upgradesAllowed, successorIds } from '../src/franchise/league-season.js';
 import * as F from '../src/franchise/franchise.js';
 import * as R from '../src/franchise/league-registry.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
@@ -77,7 +77,7 @@ test('R5 upgrades: a weak group signs a pool monster +3 better, releasing an exp
   const star = mon('TE', 80, 30); star.salary = 30000; star.history = []; R.claimMonster(f, star, 'test|pool'); (f.pool[Object.keys(f.pool)[0]] ||= []).push(star); // 30: too old to be anyone's successor, so only a weak group signs him
   const before = new Set(roster.map((m) => m.id));
   const out = leagueUpgrades(f, { year, cap });
-  for (const c of new Set(out.signed.map((x) => x.club))) assert.ok(out.signed.filter((x) => x.club === c).length <= UPGRADES_PER_OFFSEASON, 'one upgrade per club');
+  for (const c of new Set(out.signed.map((x) => x.club))) assert.ok(out.signed.filter((x) => x.club === c).length <= upgradesAllowed(out.signed.find((x) => x.club === c).mode), "the upgrades its mode allows (Phase D: 2 for Contend, else 1)");
   const s = out.signed.find((x) => x.id === star.id); assert.ok(s, `the pool star was signed by a club that needed him: ${JSON.stringify({ star: star.id, ovr: monsterOverall(star), signed: out.signed.slice(0, 4) })}`);
   assert.equal(s.kind, 'weak'); assert.ok(s.ovr >= s.replaces + UPGRADE_MIN, `+${UPGRADE_MIN} over the starter he replaces`);
   for (const x of out.signed) if (x.released) assert.ok(!R.clubRoster(f, x.club).some((m) => m.id === x.released), 'the released reserve left');
