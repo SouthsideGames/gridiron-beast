@@ -1,6 +1,6 @@
 # Task 6 Phase D — Implementation and Final Validation Report (2026-11-03)
 
-**Build:** branch `task6-phase-d`, stacked on `task6-phase-c`. The simulation code validated here is commit **`c132ce4`**; later commits change only documents, tools and the import map.
+**Build:** branch `task6-phase-d`, stacked on `task6-phase-c`. The benchmarks ran on simulation commit **`c132ce4`**. The final commit adds one fix (`bcd7b7f`, §9): whether a league retirement gets a League News line no longer depends on the career timeline. Rerunning a drift seed and a harness seed on the final commit gave identical results, decisions and season snapshots, so every benchmark here stands for the final build.
 
 **Status:**
 - Not merged. The main game (v42.17.0) is untouched. No Phase E.
@@ -79,7 +79,7 @@
 
 Rebuilders pick earlier, so these figures are confounded with draft position; §4 isolates the weight.
 
-**Comparison with v42.17.0 and Phase C** (matched seeds; 95% bootstrap intervals; Phase D minus the earlier build). {{HELDNOTE}}
+**Comparison with v42.17.0 and Phase C** (matched seeds; 95% bootstrap intervals; Phase D minus the earlier build). The held-out sets (H 61–80, CH 116–125, run once) agree in direction with every result below that is classed as supported or worse, except where noted in §5.
 
 | Measure (set) | Band | v42.17.0 | Phase C | **Phase D** | D − v42.17.0 | D − C |
 |---|---|---|---|---|---|---|
@@ -147,9 +147,9 @@ Rebuilders pick earlier, so these figures are confounded with draft position; §
 | Gate | Requirement | Result | Status |
 |---|---|---|---|
 | Integrity | 0 | 0 problems and 0 errors in 239 Phase D validation runs, plus the experiment, managing-owner and held-out runs (§9) | **pass** |
-| Determinism and non-interference | identical hashes | §9 | {{DET}} |
-| Save compatibility | v42.16/17 saves play through and round-trip | §9 | {{SAVE}} |
-| Full suite | all tests, none weakened | §9 | {{SUITE}} |
+| Determinism and non-interference | identical hashes | `task6-harness-check` on the final commit: pass | **pass** |
+| Save compatibility | v42.16/17 saves play through and round-trip | 6 of 6 saves (owner-only, league, mid-season, injuries, old mid-season, 15-season) play on and round-trip; saves without modes start at Compete | **pass** |
+| Full suite | all tests, none weakened | **814 of 814** on the final commit `bcd7b7f` | **pass** |
 | Trading tests | pass | `trading-second-pass`, `ai-trade-band`: pass | **pass** |
 | §45.6 owner contract, Rookie (8 seeds) | ±5 | **+7.2** (AI +0.2); 24 seeds: +0.7 [−2.3, +4.2] (seeds 1–8 +6.8, 9–16 −2.8, 17–24 −1.9) | **FAIL** on the standard check; 24 seeds inside: **inconclusive**, carried forward |
 | §45.6, Pro (8) | ±5 | −0.4 (AI +0.1) | **pass** |
@@ -157,15 +157,15 @@ Rebuilders pick earlier, so these figures are confounded with draft position; §
 | Owner drift, Rookie (36 seeds, seasons 1–8) | ±5 | **−4.1 [−6.7, −1.4]**; against Phase C +1.3 [−0.8, +3.2] | **FAIL classification preserved.** The point estimate is inside ±5 but the interval crosses the limit, which is not proof of passing |
 | Owner drift, Pro (36) | ±5 | **−4.3 [−7.3, −1.1]**; against Phase C −1.0 [−3.7, +1.6] | within ±5, **interval crosses: inconclusive** |
 | Owner drift, All-Star (36) | ±5 | **−1.5 [−4.6, +1.5]** | **pass** (whole interval inside) |
-| Stage P | ≤ +10% | §9 | {{PERF}} |
-| Phone width | affected screens | No screen changed in Phase D; the preview's checks are in §9 | {{PHONE}} |
+| Stage P | ≤ +10% | interleaved with v42.17.0: +5.5% and −2.4% | **pass** |
+| Phone width | affected screens | No screen changed. The preview loads at 360 and 390 px with 0 errors and no horizontal overflow | **pass** |
 
 ### 5.2 Targets (every Task 6 target; status on the final build)
 | Target | Band | Phase D | Status |
 |---|---|---|---|
 | Mode stability | report | 1.47 / 1.54 changes per club per 10 seasons | reported |
-| Rebuilding clubs after 3 seasons | younger, higher potential than baseline | −3.87 years, +1.49 potential | **met** (supported against v42.17.0) {{HELDAGREE}} |
-| Recovery from ≤ 2 wins | report; improved if anchors permit | 42.0% against 31.1% (v42.17.0) | improved against baseline; not against Phase C |
+| Rebuilding clubs after 3 seasons | younger, higher potential than baseline | −3.87 years, +1.49 potential | **met**: supported against v42.17.0, with held-out agreement (CH: −4.24 years, +1.39 potential) |
+| Recovery from ≤ 2 wins | report; improved if anchors permit | 42.0% against 31.1% (v42.17.0); CH 42.8 against 26.8 | improved against the baseline (supported, held-out agrees); not against Phase C |
 | Succession cover, B / C | ≥ 40 / ≥ 30 | 48.2 / see C | **met** |
 | Misaligned picks | ≤ 7.4 | 4.4 | **met** |
 | Round-1 starting within 2, all / late | ≥ 44 / ≥ 30 | 59.3 / 63.6 | **met** |
@@ -250,7 +250,42 @@ Phase D changes AI behaviour only. The owner's team, valuation and deal rules ar
 8. **Development +2.60:** unmet, kept as decided.
 
 ## 9. Integrity, determinism, saves, performance, regression, preview
-{{SEC9}}
+| Check | Result |
+|---|---|
+| Integrity | 0 problems and 0 errors in every run: 239 validation, 45 experiment, 72 managing-owner and 30 held-out. 12 firings, all in contract runs, which have no board reset (as in Phase C) |
+| Determinism and non-interference | `tools/task6-harness-check.mjs` on the final commit: pass |
+| Save compatibility | `tools/save-compat-check.mjs`: 6 of 6 saves play forward and round-trip (deals, calendar and invariants checked). An old save takes its first modes at its next season close |
+| Stage P | seeds 1–3 × 6 seasons, 3 repetitions, interleaved with v42.17.0: 13.87 → 14.63 s (+5.5%) and 14.26 → 13.92 s (−2.4%). Phase D adds one evaluation a season and one sale search per window |
+| Full suite | **814 of 814** on `bcd7b7f`. Ten Phase D tests added. One Phase C test updated so it checks the mode's allowance (one upgrade, or two for Contend); its intent is unchanged |
+| **Defect found and fixed** | The suite's career-timeline identity test failed. Whether a league retirement was reported in League News depended on the career timeline's honours (Phase A-1 code), so turning the timeline off changed the league's news queue. The decision now uses the record (`isDecorated`: awards, records, titles). Rerunning drift seed 1 and harness seed 1 on the fix gave identical rows, decisions and season snapshots; only the news queue differs |
+| Legacy contract runs | Reused from Phase C; seeds 1–2 rerun on Phase D are identical |
+| Preview | **`v42.20.1-dev.d`** (branch `task6-phase-d-preview`, commit `5f17f15`) on the private test link, artifact version `1793692977-d517`. Release list check: 165 files. In the browser at 360 and 390 px: 0 errors, no horizontal overflow, a one-season franchise plays with 0 problems, and every AI club gets a mode |
 
 ## 10. Recommendation on M3
-{{M3}}
+**Task 6 is implementation-complete and ready to be put to the M3 decision, but it does not pass every hard gate.** I do not recommend an unconditional M3 release.
+
+**What is delivered and validated (held-out confirmed):**
+- ageing and retirement;
+- the roster plan, succession and contracts;
+- need-aware drafting;
+- development slots and maturation;
+- free-agency upgrades;
+- strategy modes with stable behaviour (1.5 changes per club per 10 seasons; gyms never below Compete);
+- rebuilding clubs that are younger with more potential after 3 seasons and recover more often than in v42.17.0.
+
+Integrity, determinism, saves, performance and the full suite pass.
+
+**What stands in the way, for the owner to rule on:**
+1. **Hard gates still not passed:**
+   - Rookie owner drift: FAIL preserved, point estimate −4.1 inside ±5 but the interval crosses;
+   - Rookie §45.6 on the standard 8 seeds (+7.2; 24 seeds +0.7);
+   - Pro drift (−4.3, interval crosses) is inconclusive.
+   - The managing-owner diagnostic shows these are not artefacts of a passive test owner.
+2. **Targets the approved design pulls against:**
+   - young players in AI payments (R4; 48.6 without sales);
+   - persistent weak groups;
+   - ordinary persistent losers.
+3. **The gym floor and the ordinary title share conflict structurally** (§7).
+4. **Development +2.60** (accepted as unmet by the owner).
+
+If the owner accepts or reclassifies items 1–3 as listed in §8, Task 6 can go forward for M3 as it stands, with one optional change to approve first (D5: Rebuild potential weight 0.20). No further phase is proposed.

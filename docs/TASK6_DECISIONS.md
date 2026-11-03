@@ -997,3 +997,51 @@ Findings in `TASK6_PHASE_C_REPORT.md` §10. Nothing below has been adopted. Each
 - No Phase E.
 - No merge to main, and no production publish.
 - Design conflicts are documented and independent work continues.
+
+## Phase D implemented and validated (2026-11-03): for the owner's review and the M3 decision
+Full report: `docs/TASK6_PHASE_D_REPORT.md`. Nothing is merged. No approved rule, constant, threshold or seed selection was changed.
+
+**Implemented:**
+- R2 strategy modes;
+- R4 starter sales (one per window, league-wide);
+- mode weights in R3, R5 (Contend 2) and R7 (Rebuild potential 0.35; Contend readiness);
+- one defect fix: League News retirement lines no longer depend on the career timeline.
+
+**Hard gates:**
+
+| Gate | Result |
+|---|---|
+| Integrity, determinism, saves, Stage P (+5.5% / −2.4%), full suite (814/814) | **pass** |
+| §45.6 Pro | **pass** |
+| §45.6 All-Star | **pass** (+2.0) |
+| All-Star drift | **pass** |
+| Rookie drift | **FAIL preserved** (−4.1 [−6.7, −1.4], inside ±5, interval crosses) |
+| Pro drift | **inconclusive** (−4.3 [−7.3, −1.1]) |
+| §45.6 Rookie, 8 seeds | **FAIL** (+7.2; 24 seeds +0.7 [−2.3, +4.2]) |
+
+**Targets:**
+- **Met** (held-out agrees):
+  - rebuilding clubs younger and with more potential after 3 seasons;
+  - recovery improved against v42.17.0;
+  - succession, draft alignment, round-1 starts and contract lengths.
+- **Unmet:**
+  - development +2.60;
+  - persistent weak groups (worse than C);
+  - young-player payments 56.4 (48.6 without R4 sales);
+  - gym floor;
+  - ordinary persistent losers (worse than C) and title share.
+
+**Findings:**
+- **D6:** rebuild-nudge options 2 and 3 have no effect. Every nudge boost goes to a gym; ordinary clubs never fall 4 below target.
+- **D5:** Rebuild potential weight 0.35 against 0.20 shows no rebuild benefit; 0.20 leaves a higher gym lead (5 seeds).
+- **Managing owner:** does not close the Rookie drift. The free-agent market rarely offers a starter-grade replacement (0.15 a season).
+- **Gym title dominance:** about 96% of it is roster strength concentrated at the top. The strongest club is always a gym, and no ordinary club ever holds a top-2 spot in a playoff field. At equal overall a gym edge is worth about 3 win points. Ordinary clubs would need about +2 overall to reach 5% of titles, which conflicts with the gym floor.
+
+**Decisions requested:**
+1. Rookie drift and §45.6 Rookie classification.
+2. R4 against the young-payment measure (recommend judging the measure without R4 sales).
+3. Rebuild costs.
+4. D5 revert to 0.20 (recommended).
+5. D6 keep option 1 (recommended).
+6. Gym floor against ordinary title share.
+7. M3.
