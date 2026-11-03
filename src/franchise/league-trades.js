@@ -10,7 +10,7 @@ import { pickValue, picksOwnedBy, pickUsed, setPickOwner, tradable, currentClass
 import { FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK, seasonTradeWeek } from './trade-window.js';
 import { marketValue, rosterNet, rosterAfter, rosterProblems, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
 import { hasLeague, leagueClubs, clubRoster, clubCapRoom, addToClub, removeFromClub, leagueEvent, moveIdentity, isProtected } from './league-registry.js';
-import { modeOf } from './strategy.js';
+import { modeOf, M3 } from './strategy.js';
 import { horizonOf, PLAN } from './roster-plan.js';
 
 export const AI_TRADE_RULES = Object.freeze({
@@ -119,6 +119,7 @@ function starterSale(f, r, { year, cap, done, window }) {
   for (const S of order(f).filter((c) => !done.has(c) && modeOf(f, c) === 'rebuild')) {
     const rosterS = clubRoster(f, S); const roomS = clubCapRoom(f, S, cap);
     for (const m of sellableStarters(f, rosterS)) {
+      if (M3.readySale) { const next = starters(rosterS, m.position).filter((x) => x !== m && !isUnavailable(x))[slotsOf(m.position) - 1]; if (!next || ovr(next) < ovr(m) - 4) continue; } // M3 candidate F4 (proposal): only with a ready replacement (within 4) behind him
       const vm = marketValue(m, { year }); let best = null;
       for (const B of order(f).filter((c) => c !== S && !done.has(c) && modeOf(f, c) !== 'rebuild')) {
         const rosterB = clubRoster(f, B); if (ovr(m) < floorAt(rosterB, m.position) + bar.upgrade) continue; // a legitimate need
