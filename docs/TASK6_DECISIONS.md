@@ -1045,3 +1045,46 @@ Full report: `docs/TASK6_PHASE_D_REPORT.md`. Nothing is merged. No approved rule
 5. D6 keep option 1 (recommended).
 6. Gym floor against ordinary title share.
 7. M3.
+
+## Phase D accepted as implementation-complete; M3 remediation pass (owner, 2026-11-03)
+Phase D is accepted as **implementation-complete**. **M3 release and merging are not approved.** One focused remediation pass is authorised. It is not Phase E, and it authorises no new features.
+
+**Decisions:**
+
+| Item | Decision |
+|---|---|
+| Rookie drift | Hard gate stays unresolved. No ageing or difficulty change; no waiver. |
+| Rookie owner balance (§45.6) | The standard 8-seed failure and the 24-seed supporting results are preserved. Thresholds and seeds unchanged. |
+| Young-player payments | Report the overall measure **and** a separate measure excluding approved R4 starter sales. The combined result stays; the target is not redefined. |
+| Rebuilding effectiveness (highest priority) | Investigate why ordinary persistent losers rose to 95.7% and persistent weak groups worsened: the timing of sales, successor readiness, contract decisions, rebuild duration. Rebuilding clubs need a realistic path back. |
+| D5 | Controlled trial of 0.20 against 0.35 for Rebuild clubs authorised. Recommend adoption only on a supported improvement without meaningful regressions. The approved value is not changed until the owner reviews. |
+| D6 | Keep the current nudge; no more experiments. |
+| Gyms and ordinary championships | Investigate whether a few strong ordinary clubs can become legitimate contenders without reducing the required average gym advantage. No change to gym bonuses, anchors or slowdown bands without approval. |
+
+**Method:** focused diagnostics and targeted experiments; no full multi-hour benchmark unless a proposed change needs confirmation. The validated Phase D build stays available for comparison. No merge, publish or unapproved balance change.
+
+### M3 remediation findings (2026-11-03): proposals only, nothing adopted
+Full report: `docs/TASK6_M3_REMEDIATION_REPORT.md`. The validated Phase D build is unchanged. The candidate fixes are behind flags that are off.
+
+**Root causes:**
+- **Persistent losers sit on a structural floor:** ordinary clubs lose (≤ 3 wins) in 56% of seasons, so random order alone gives about 84%. Phase D's 95.7 is clustering from long rebuilds.
+- **Rebuilds last too long:** mean 4.4 seasons. The fixed ageing test sits below the league norm.
+- **The approved ordinary-club brakes act on losing clubs:**
+  - runaway attrition fires in about 49% of ordinary club-seasons, 54% of them after losing;
+  - two thirds of starter departures at contract time come from it;
+  - the slowdown is applied in 56% of losing seasons.
+- **Rebuilders lose 2.7 starters a season to unready successors.**
+- **Persistent weak groups:** longer persistence, partly a club-relative effect at contenders.
+- **Young-player payments:** 56.4 (all deals) and 48.7 (excluding R4 sales); the combined measure is kept.
+
+**Proposed, within the approved scope:** package B (F1b rebuild exit, F2/F3 readiness-tied contracts, F4 ready replacement for sales).
+- **Benefit:** rebuilds 4.5 → 2.8 seasons (supported); safer sales; no gym change.
+- **Limits:** losers and weak groups unresolved (noise around the floor).
+
+**D5:** 0.20 shows no supported, replicated improvement; 0.35 stays.
+
+**Rule changes for approval:**
+- **R-1:** brakes skip clubs coming off a losing season. Recovery +9.8 with B, ordinary playoffs +2.3; gym lead −0.7.
+- **R-2:** the two strongest ordinary clubs exempt from the brakes. Gym lead unchanged; owner's late seasons −6.4.
+
+**Remaining hard-gate failures:** only the two Rookie gates, unchanged by any Task 6 lever.
