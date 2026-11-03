@@ -33,7 +33,6 @@ export const STRATEGY = Object.freeze({
   recentWeight: 0.6,             // this season against last season
   contendQuality: 4,             // team overall above the AI mean that contends without a winning record (while not losing)
   ageingShare: 0.35,             // Phase D (validated build): share of starters within 2 seasons of onset (or past it) that makes a losing roster "old"
-  ageingAboveLeague: 0.10,       // M3 candidate F1: "old" means this far above the league's median share instead (the fixed 0.35 sat below the league norm)
   cappedShare: 0.97,             // next season's committed payroll at or above this share of the cap: capped out
   extraPicks: 2,                 // picks held above the normal 2 × DRAFT_ROUNDS that count as a stock of draft capital
   confirm: 2,                    // consecutive evaluations needed for an ordinary change
@@ -42,8 +41,6 @@ export const STRATEGY = Object.freeze({
   gymFloor: 'compete',
 });
 const rank = (m) => MODES.indexOf(m);
-/** M3 remediation candidates (owner 2026-11-03; proposals, not approved): F1 relative ageing test. Off = the validated Phase D build. */
-export const M3 = { relativeAgeing: false, modeContracts: false, readySale: false, rebuildExit: false }; // rebuildExit (F1b): a club already rebuilding stays "old" only while its ageing share is at or above the league median (entry keeps the 0.35 test)
 export const modeOf = (f, club) => (hasLeague(f) && clubRecord(f, club)?.strategy?.mode) || 'compete';
 
 /** The facts a club decides from. `teamOf(club)`: its team for the season just played; `aiMean`: the mean AI team overall. */
@@ -92,10 +89,10 @@ export function evaluateStrategies(f, { year, cap, teamOf }) {
   if (!hasLeague(f)) return []; const clubs = leagueClubs(f).slice().sort();
   const ovr = Object.fromEntries(clubs.map((c) => [c, teamOverall(teamOf(c))])); const aiMean = clubs.reduce((s, c) => s + ovr[c], 0) / (clubs.length || 1);
   const changes = []; const inputs = Object.fromEntries(clubs.map((c) => [c, strategyInputs(f, c, { year, cap, teamOf, aiMean })]));
-  let ageingBar = STRATEGY.ageingShare; if (M3.relativeAgeing) { const sh = clubs.map((c) => inputs[c].ageingShare).sort((a, b) => a - b); ageingBar = (sh[Math.floor(sh.length / 2)] ?? 0) + STRATEGY.ageingAboveLeague; }
+  const ageingBar = STRATEGY.ageingShare;
   const median = (() => { const sh = clubs.map((c) => inputs[c].ageingShare).sort((a, b) => a - b); return sh[Math.floor(sh.length / 2)] ?? 0; })();
   for (const club of clubs) {
-    const st = clubRecord(f, club).strategy; const x = inputs[club]; const raw = rawMode(x, { ageingBar: M3.rebuildExit && st.mode === 'rebuild' ? Math.max(ageingBar, median) : ageingBar });
+    const st = clubRecord(f, club).strategy; const x = inputs[club]; const raw = rawMode(x, { ageingBar: st.mode === 'rebuild' ? Math.max(ageingBar, median) : ageingBar }); // F1 (owner-approved 2026-11-03): a club already rebuilding stays "old" only while its ageing share is at or above the league median
     const before = st.mode || null; const n = nextMode(st, raw.mode, year, { gym: isGymClub(club) });
     st.mode = n.mode; st.modeSince = n.modeSince; st.modePending = n.modePending; st.modeLastWin = Math.round(x.win * 1000) / 1000; st.modeWhy = raw.why;
     if (n.mode !== before) changes.push({ club, mode: n.mode, from: before, why: raw.why });
