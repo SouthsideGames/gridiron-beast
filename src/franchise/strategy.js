@@ -43,7 +43,7 @@ export const STRATEGY = Object.freeze({
 });
 const rank = (m) => MODES.indexOf(m);
 /** M3 remediation candidates (owner 2026-11-03; proposals, not approved): F1 relative ageing test. Off = the validated Phase D build. */
-export const M3 = { relativeAgeing: false, modeContracts: false, readySale: false };
+export const M3 = { relativeAgeing: false, modeContracts: false, readySale: false, rebuildExit: false }; // rebuildExit (F1b): a club already rebuilding stays "old" only while its ageing share is at or above the league median (entry keeps the 0.35 test)
 export const modeOf = (f, club) => (hasLeague(f) && clubRecord(f, club)?.strategy?.mode) || 'compete';
 
 /** The facts a club decides from. `teamOf(club)`: its team for the season just played; `aiMean`: the mean AI team overall. */
@@ -93,8 +93,9 @@ export function evaluateStrategies(f, { year, cap, teamOf }) {
   const ovr = Object.fromEntries(clubs.map((c) => [c, teamOverall(teamOf(c))])); const aiMean = clubs.reduce((s, c) => s + ovr[c], 0) / (clubs.length || 1);
   const changes = []; const inputs = Object.fromEntries(clubs.map((c) => [c, strategyInputs(f, c, { year, cap, teamOf, aiMean })]));
   let ageingBar = STRATEGY.ageingShare; if (M3.relativeAgeing) { const sh = clubs.map((c) => inputs[c].ageingShare).sort((a, b) => a - b); ageingBar = (sh[Math.floor(sh.length / 2)] ?? 0) + STRATEGY.ageingAboveLeague; }
+  const median = (() => { const sh = clubs.map((c) => inputs[c].ageingShare).sort((a, b) => a - b); return sh[Math.floor(sh.length / 2)] ?? 0; })();
   for (const club of clubs) {
-    const st = clubRecord(f, club).strategy; const x = inputs[club]; const raw = rawMode(x, { ageingBar });
+    const st = clubRecord(f, club).strategy; const x = inputs[club]; const raw = rawMode(x, { ageingBar: M3.rebuildExit && st.mode === 'rebuild' ? Math.max(ageingBar, median) : ageingBar });
     const before = st.mode || null; const n = nextMode(st, raw.mode, year, { gym: isGymClub(club) });
     st.mode = n.mode; st.modeSince = n.modeSince; st.modePending = n.modePending; st.modeLastWin = Math.round(x.win * 1000) / 1000; st.modeWhy = raw.why;
     if (n.mode !== before) changes.push({ club, mode: n.mode, from: before, why: raw.why });
