@@ -18,6 +18,7 @@ import { hasLeague, leagueClubs, clubRoster, clubRecord, isProtected, isAgeless,
 import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegionOf } from './league.js';
 import { publicOnset } from '../data/aging.js';
 import { rosterPlan, leagueBench, horizonOf, qualifiesAsSuccessor, PLAN } from './roster-plan.js';
+import { modeOf } from './strategy.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
 /** Task 6 Phase A-2 (D10b, owner 2026-10-30): the ordinary clubs' slowdown band and runaway-veteran band, separate from the gyms'
@@ -37,6 +38,15 @@ export const EXCEPTIONAL_VETERAN = 6;
 export function contractLength(m, { bench = null } = {}) {
   const h = horizonOf(m); if (h >= 2) return 3; if (h >= 0) return 2;
   const b = bench?.[m.position]; return h >= -2 && b != null && monsterOverall(m) >= b + EXCEPTIONAL_VETERAN ? 2 : 1;
+}
+/** Phase D (R3 by strategy mode, owner 2026-11-02): the R3 length, then the mode. A contender signs a starter past his onset for one
+ *  season at a time (readiness now, no lock-in); a rebuilder commits long only to youth: a monster within 2 seasons of his onset
+ *  gets at most 1 season, and a young monster (25 or under) with upside always gets 3. Compete and Retool keep the R3 length. */
+export const REBUILD_UPSIDE = 3;
+export function modeLength(len, m, mode) {
+  if (mode === 'contend') return horizonOf(m) < 0 ? 1 : len;
+  if (mode === 'rebuild') { if (horizonOf(m) < PLAN.ageingHorizon) return 1; if ((m.age || 30) <= 25 && (m.potential || 0) >= monsterOverall(m) + REBUILD_UPSIDE) return 3; }
+  return len;
 }
 export const RUNAWAY_VETERAN_AGE = 27; // a club above its band lets expiring veterans of this age or more go (attrition, not rating edits)
 export const MIN_QUALITY = 45;
@@ -83,22 +93,27 @@ export function leagueSeasonEnd(f, { year, awards, records, champion }) {
  */
 export function leagueContracts(f, { year, cap, excessOf = null }) {
   if (!hasLeague(f)) return null;
-  const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [], lengths: { 1: 0, 2: 0, 3: 0 } };
+  const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [], lengths: { 1: 0, 2: 0, 3: 0 }, byMode: {} };
   const bench = leagueBenchOf(f);
   for (const club of order(f)) {
     const roster = clubRoster(f, club); const starters = starterIds(roster);
     const plan = rosterPlan(roster, bench, { starters });
     const med = median(roster.map(monsterOverall));
     const runaway = (excessOf?.(club) || 0) > (isGymClub(club) ? BAND : ORDINARY_RUNAWAY_BAND); if (runaway) out.runaway.push(club); let letGo = 0;
+    const mode = modeOf(f, club); const hasSuccessor = new Set(); for (const g of Object.values(plan.groups)) for (const r of g.rows) if (r.successor) hasSuccessor.add(r.starter.id);
     for (const m of roster.slice()) {
       if (isProtected(m) || !contractEnds(m, year)) continue;
       const ovr = monsterOverall(m); const starter = starters.has(m.id); const successor = plan.successors.has(m.id);
       const pastOnset = (m.age || 0) > publicOnset(m);
-      const value = successor || ovr >= med || ((m.age || 30) <= 25 && (m.potential || 0) >= ovr + 5);
+      const value = successor || ovr >= med || ((m.age || 30) <= 25 && (m.potential || 0) >= ovr + (mode === 'rebuild' ? REBUILD_UPSIDE : 5));
       let keep = starter ? !(pastOnset && plan.readyFor.has(m.id)) : value && (successor || (m.age || 0) <= publicOnset(m) + RESERVE_PAST_ONSET);
+      // Phase D (R3 by mode): a contender keeps its veteran starters for now (one-season deals past onset); a rebuilder lets a starter past
+      // onset go once anyone is lined up to succeed him, ready or not, and gives no new deal to a reserve past his onset
+      if (starter && mode === 'contend') keep = true;
+      if (mode === 'rebuild' && pastOnset && (starter ? hasSuccessor.has(m.id) : !successor)) keep = false;
       // a club far above today's strength lets its expiring veterans walk (they are claimed within the league): attrition, decision A
       if (keep && runaway && !successor && (m.age || 0) >= RUNAWAY_VETERAN_AGE && clubRoster(f, club).length - letGo > ROSTER_MIN + 2) { keep = false; letGo++; }
-      if (keep) { const len = contractLength(m, { bench }); m.salary = renewalAsk(m).ask; m.contract = leagueContract(year + 1, len); out.resigned++; out.lengths[len]++; }
+      if (keep) { const len = modeLength(contractLength(m, { bench }), m, mode); m.salary = renewalAsk(m).ask; m.contract = leagueContract(year + 1, len); out.resigned++; out.lengths[len]++; out.byMode[mode] = (out.byMode[mode] || 0) + 1; }
       else { releaseFromClub(f, club, m.id, { year, reason: 'walked' }); out.walked++; }
     }
     out.released += trimToCap(f, club, { year, cap, starters: starterIds(clubRoster(f, club)), bench });
@@ -202,21 +217,22 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
  * it, signs a pool monster who is at least UPGRADE_MIN better than the starter he replaces (weak group), or who qualifies as the
  * ageing starter's successor (succession need). Weak groups are served first. To make room it may release its weakest expendable
  * reserve: never a protected monster, a designated successor, the cover for an injured starter, or one whose release leaves the
- * position without its starters. Pools only: generated arrivals keep the anchor rule. UPGRADES_PER_OFFSEASON per club (the spec's
- * 2 for contenders needs strategy modes, Phase D).
+ * position without its starters. Pools only: generated arrivals keep the anchor rule. UPGRADES_PER_OFFSEASON per club, and
+ * CONTEND_UPGRADES for a club in Contend mode (Phase D, R5; the owner's free agency always comes first).
  */
-export const UPGRADE_MIN = 3, UPGRADES_PER_OFFSEASON = 1;
+export const UPGRADE_MIN = 3, UPGRADES_PER_OFFSEASON = 1, CONTEND_UPGRADES = 2;
+export const upgradesAllowed = (mode) => (mode === 'contend' ? CONTEND_UPGRADES : UPGRADES_PER_OFFSEASON);
 export function leagueUpgrades(f, { year, cap }) {
   if (!hasLeague(f)) return null; const out = { signed: [], released: 0 };
   const bench = leagueBenchOf(f);
   for (const club of order(f)) {
-    let done = 0;
-    while (done < UPGRADES_PER_OFFSEASON) {
+    let done = 0; const allowed = upgradesAllowed(modeOf(f, club));
+    while (done < allowed) {
       const pick = bestUpgrade(f, club, bench, cap); if (!pick) break;
       if (pick.release) { releaseFromClub(f, club, pick.release.id, { year, reason: 'released', why: 'upgrade' }); out.released++; }
       const m = takeFromPool(f, pick.m.id); if (!m) break;
       m.salary = salaryFor(m); addToClub(f, club, m, { year, via: 'signed', contract: leagueContract(year, contractLength(m, { bench })), source: 'pool' });
-      out.signed.push({ club, id: m.id, pos: m.position, ovr: monsterOverall(m), replaces: pick.starterOvr, kind: pick.kind, released: pick.release?.id || null }); done++;
+      out.signed.push({ club, mode: modeOf(f, club), id: m.id, pos: m.position, ovr: monsterOverall(m), replaces: pick.starterOvr, kind: pick.kind, released: pick.release?.id || null }); done++;
     }
   }
   return out;

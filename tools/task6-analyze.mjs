@@ -142,6 +142,30 @@ export function seedMeasures(run) {
   // ---- strategy modes (Phase D; null until the field exists)
   const modes = S.map((s) => s.strategy).filter(Boolean); const hasMode = modes.some((m) => Object.values(m).some((x) => x && x.mode != null));
   if (hasMode) { let ch = 0, n = 0; for (const club of Object.keys(modes[0])) for (let i = 1; i < modes.length; i++) { n++; if (modes[i][club]?.mode !== modes[i - 1][club]?.mode) ch++; } out.modeChangesPer10 = n ? 10 * ch / n : null; } else out.modeChangesPer10 = null;
+  // Phase D measures (pre-registered 2026-11-02, before any Phase D benchmark: methodology §8). Mode-independent definitions so v42.17.0
+  // and Phase C are measured the same way: a "struggling" club is one that won 3 or fewer games in a season (the population a rebuild
+  // is meant for); "after 3 seasons" is its season-end snapshot three seasons later. Recovery: a season of 2 or fewer wins followed by a
+  // season of 5 or more within 3 seasons.
+  if (hasMode) { const cnt = { contend: 0, compete: 0, retool: 0, rebuild: 0 }; let tot = 0, gymLow = 0;
+    for (const s of S) for (const [club, st] of Object.entries(s.strategy || {})) { if (!st?.mode) continue; cnt[st.mode] = (cnt[st.mode] || 0) + 1; tot++; if (gymOf(club) && (st.mode === 'rebuild' || st.mode === 'retool')) gymLow++; }
+    for (const k of Object.keys(cnt)) out[`modeSharePct_${k}`] = pct(cnt[k], tot); out.gymBelowCompete = gymLow;
+    const rebuildRuns = []; for (const club of Object.keys(modes[0] || {})) { let len = 0; for (const m of modes) { if (m[club]?.mode === 'rebuild') len++; else if (len) { rebuildRuns.push(len); len = 0; } } if (len) rebuildRuns.push(len); }
+    out.rebuildSpells = rebuildRuns.length; out.rebuildSpellMeanSeasons = mean(rebuildRuns); }
+  else { for (const k of ['contend', 'compete', 'retool', 'rebuild']) out[`modeSharePct_${k}`] = null; out.gymBelowCompete = null; out.rebuildSpells = null; out.rebuildSpellMeanSeasons = null; }
+  { const after = { age: [], pot: [], ovr: [] }; const afterRebuild = { age: [], pot: [] };
+    const clubOf = (s, club) => s.monsters.filter((m) => m.club === club);
+    for (const x of rows) { if (x.w > 3) continue; const later = at(x.year + 3); if (!later) continue; const r = clubOf(later, x.club); if (!r.length) continue;
+      const st = r.filter((m) => m.starter && !m.protected); after.age.push(mean(st.map((m) => m.age))); after.pot.push(mean(r.filter((m) => !m.protected).map((m) => m.potential).filter((v) => v != null))); after.ovr.push(mean(st.map((m) => m.ovr))); }
+    out.strugglerAfter3StarterAge = mean(after.age); out.strugglerAfter3Potential = mean(after.pot); out.strugglerAfter3StarterOvr = mean(after.ovr); out.strugglerCases = after.age.length;
+    if (hasMode) for (const s of S) for (const [club, st] of Object.entries(s.strategy || {})) { if (st?.mode !== 'rebuild' || st.modeSince !== s.year) continue; const later = at(s.year + 3); if (!later) continue; const r = clubOf(later, club); if (!r.length) continue;
+      afterRebuild.age.push(mean(r.filter((m) => m.starter && !m.protected).map((m) => m.age))); afterRebuild.pot.push(mean(r.filter((m) => !m.protected).map((m) => m.potential).filter((v) => v != null))); }
+    out.rebuildAfter3StarterAge = mean(afterRebuild.age); out.rebuildAfter3Potential = mean(afterRebuild.pot); out.rebuildCases = afterRebuild.age.length;
+    let low = 0, rec = 0; const yrs = []; const byC = {}; for (const x of rows) (byC[x.club] ||= {})[x.year] = x.w;
+    for (const x of rows) { if (x.w > 2) continue; const w = byC[x.club]; if (w[x.year + 3] == null && w[x.year + 1] == null) continue; low++; for (let k = 1; k <= 3; k++) if (w[x.year + k] != null && w[x.year + k] >= 5) { rec++; yrs.push(k); break; } }
+    out.recoveryCases = low; out.recoveryWithin3Pct = pct(rec, low); out.recoverySeasonsMean = mean(yrs); }
+  { const sales = run.v4?.sales || []; out.starterSalesPerSeason = S.length ? sales.length / S.length : null; out.starterSaleAgeMean = mean(sales.map((x) => x.age));
+    const mc = {}; const mu = {}; for (const s of S) { for (const [k, v] of Object.entries(s.modeContracts || {})) mc[k] = (mc[k] || 0) + v; for (const [k, v] of Object.entries(s.modeUpgrades || {})) mu[k] = (mu[k] || 0) + v; }
+    out.upgradesContendPerSeason = S.length ? (mu.contend || 0) / S.length : null; out.upgradesOtherPerSeason = S.length ? Object.entries(mu).filter(([k]) => k !== 'contend').reduce((a, [, v]) => a + v, 0) / S.length : null; }
 
   // ---- integrity
   out.problems = run.problemCount ?? (run.problems || []).length;
