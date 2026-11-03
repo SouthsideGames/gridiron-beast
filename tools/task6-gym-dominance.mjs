@@ -63,6 +63,10 @@ let expGymTitles = 0, nT = 0; for (const f2 of field) { if (f2.length < 2) conti
   const p = f2.map((x) => { const avgWin = mean(f2.filter((y) => y !== x).map((y) => 1 / (1 + Math.exp(-(M.b * (x.teamOvr - y.teamOvr)))))); return avgWin ** rounds; });
   const tot = p.reduce((s, x) => s + x, 0); f2.forEach((x, i) => { if (x.gym) expGymTitles += p[i] / tot; }); nT++; }
 out.postseason.strengthOnlyGymTitleSharePct = r2(pct(expGymTitles, nT));
+// how far ordinary playoff clubs' overall would have to rise for the strength-only yardstick to give them 5% of titles (the field kept as it was)
+out.postseason.ordinaryShareIfOrdinaryRaised = {}; for (const k of [0, 2, 4, 6, 8]) { let g = 0, n = 0; for (const f2 of field) { if (f2.length < 2) continue; const rounds = Math.ceil(Math.log2(f2.length)); const o = f2.map((x) => x.teamOvr + (x.gym ? 0 : k));
+  const p = o.map((v, i) => mean(o.filter((_, j) => j !== i).map((w) => 1 / (1 + Math.exp(-(M.b * (v - w)))))) ** rounds); const tot = p.reduce((s2, x) => s2 + x, 0); f2.forEach((x, i) => { if (!x.gym) g += p[i] / tot; }); n++; }
+  out.postseason.ordinaryShareIfOrdinaryRaised[`+${k}`] = r2(pct(g, n)); }
 // ---- matchups
 const mk = { 'gym–gym': 0, 'gym–ordinary': 0, 'ordinary–ordinary': 0 }; for (const x of games) mk[x.gh && x.ga ? 'gym–gym' : x.gh || x.ga ? 'gym–ordinary' : 'ordinary–ordinary']++;
 out.matchups = Object.fromEntries(Object.entries(mk).map(([k, v]) => [k, r2(pct(v, games.length))]));
