@@ -113,13 +113,15 @@ export function sellableStarters(f, roster) {
     .filter((m) => !isProtected(m) && tradable(f, m) && (m.age || 0) > STARTER_SALE.youngStarAge && horizonOf(m) <= PLAN.ageingHorizon)
     .sort((a, b) => horizonOf(a) - horizonOf(b) || ovr(b) - ovr(a) || (a.id < b.id ? -1 : 1));
 }
+/** F4: the monster who would take the sold starter's slot (the next available at the position) is within STARTER_SALE.replacementWithin of him. */
+export function hasReplacement(roster, m) { const next = starters(roster, m.position).filter((x) => x !== m && !isUnavailable(x))[slotsOf(m.position) - 1]; return !!next && ovr(next) >= ovr(m) - STARTER_SALE.replacementWithin; }
 function starterSale(f, r, { year, cap, done, window }) {
   const bar = window === 'season' ? AI_TRADE_RULES.season : { upgrade: AI_TRADE_RULES.upgrade, minGain: DEAL_RULES.minGain };
   const y0 = currentClassYear(f);
   for (const S of order(f).filter((c) => !done.has(c) && modeOf(f, c) === 'rebuild')) {
     const rosterS = clubRoster(f, S); const roomS = clubCapRoom(f, S, cap);
     for (const m of sellableStarters(f, rosterS)) {
-      { const next = starters(rosterS, m.position).filter((x) => x !== m && !isUnavailable(x))[slotsOf(m.position) - 1]; if (!next || ovr(next) < ovr(m) - STARTER_SALE.replacementWithin) continue; } // F4 (owner-approved 2026-11-03): only with a replacement within 4 behind him
+      if (!hasReplacement(rosterS, m)) continue; // F4 (owner-approved 2026-11-03): only with a replacement within 4 behind him
       const vm = marketValue(m, { year }); let best = null;
       for (const B of order(f).filter((c) => c !== S && !done.has(c) && modeOf(f, c) !== 'rebuild')) {
         const rosterB = clubRoster(f, B); if (ovr(m) < floorAt(rosterB, m.position) + bar.upgrade) continue; // a legitimate need

@@ -2,10 +2,10 @@
 // and the draft (R7). Approved specification §1.8; owner's authorisation of 2026-11-02 (docs/TASK6_DECISIONS.md).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MODES, STRATEGY, rawMode, nextMode, evaluateStrategies, modeOf } from '../src/franchise/strategy.js';
+import { MODES, STRATEGY, rawMode, nextMode, evaluateStrategies, modeOf, strategyInputs } from '../src/franchise/strategy.js';
 import { modeLength, leagueContracts, leagueUpgrades, upgradesAllowed, CONTEND_UPGRADES, UPGRADES_PER_OFFSEASON, UPGRADE_MIN } from '../src/franchise/league-season.js';
 import { POTENTIAL_WEIGHT, READY_BONUS, aiDraftPick } from '../src/franchise/draft.js';
-import { STARTER_SALE, saleOpen, sellableStarters, aiTrades } from '../src/franchise/league-trades.js';
+import { STARTER_SALE, saleOpen, sellableStarters, aiTrades, hasReplacement } from '../src/franchise/league-trades.js';
 import { horizonOf, PLAN, rosterPlan } from '../src/franchise/roster-plan.js';
 import * as R from '../src/franchise/league-registry.js';
 import * as F from '../src/franchise/franchise.js';
@@ -76,14 +76,35 @@ test('R3 by mode: contenders sign veterans past onset for one season; rebuilders
 function leagueWith(seed) { const f = newFranchise(seed); f.season.finished = true; return f; }
 function setMode(f, club, mode) { Object.assign(R.clubRecord(f, club).strategy, { mode, modeSince: 1 }); }
 
-test('R3 by mode on a league: a contender keeps an expiring veteran starter whom a rebuilder lets go to his successor', () => {
-  const outcome = (mode) => { const f = leagueWith(73); const club = R.leagueClubs(f).slice().sort().find((c) => !isGymClub(c)); setMode(f, club, mode);
+test('R3 by mode on a league (F2/F3, owner-approved 2026-11-03): veterans past onset go only to a ready successor; a rebuilder also once 2+ past onset', () => {
+  const outcome = (mode, { ready, pastBy }) => /* ready: true (within 4, slightly behind), 'equal' (as good), false (5–8 behind) */ { const f = leagueWith(73); const club = R.leagueClubs(f).slice().sort().find((c) => !isGymClub(c)); setMode(f, club, mode);
     const roster = R.clubRoster(f, club); const starters = new Set(Object.values(buildDepthChart(roster)).filter(Boolean));
-    const plan = rosterPlan(roster, null, { starters }); const row = Object.values(plan.groups).flatMap((g) => g.rows).find((r) => r.successor && !R.isProtected(r.starter));
-    assert.ok(row, 'a starter with a successor'); const st = row.starter; st.age = publicOnset(st) + 1; st.contract = { ends: 1 };
-    leagueContracts(f, { year: 1, cap: 10 ** 9 }); return { kept: R.clubRoster(f, club).some((m) => m.id === st.id), st, f }; };
-  const c = outcome('contend'); assert.ok(c.kept, 'the contender re-signs him'); assert.equal(c.st.contract.ends, 2, 'for one season');
-  assert.ok(!outcome('rebuild').kept, 'the rebuilder lets him go to the successor');
+    const plan = rosterPlan(roster, null, { starters }); const row = Object.values(plan.groups).flatMap((g) => g.rows).find((r) => r.successor && !R.isProtected(r.starter) && !R.isProtected(r.successor));
+    assert.ok(row, 'a starter with a successor'); const st = row.starter, su = row.successor;
+    su.attributes = Object.fromEntries(Object.entries(st.attributes).map(([k, v]) => [k, ready === 'equal' ? v : ready ? Math.max(20, v - 1) : Math.max(20, v - 7)])); su.potential = 99; su.age = 23; // ready and as good, or 5–8 behind (qualifies by potential, not ready)
+    st.age = publicOnset(st) + pastBy; st.contract = { ends: 1 };
+    const check = rosterPlan(R.clubRoster(f, club), null, { starters }).successors.get(su.id); assert.ok(check && check.ready === !!ready, `setup: successor ready=${ready}`); assert.ok(new Set(Object.values(buildDepthChart(R.clubRoster(f, club))).filter(Boolean)).has(st.id), 'setup: he still starts');
+    leagueContracts(f, { year: 1, cap: 10 ** 9 }); return { kept: R.clubRoster(f, club).some((m) => m.id === st.id), st }; };
+  const c1 = outcome('contend', { ready: false, pastBy: 1 }); assert.ok(c1.kept, 'a contender keeps him while his successor is not ready'); assert.equal(c1.st.contract.ends, 2, 'for one season');
+  assert.ok(outcome('contend', { ready: false, pastBy: 3 }).kept, 'however far past onset');
+  assert.ok(outcome('contend', { ready: true, pastBy: 1 }).kept, 'a ready successor who is not as good does not displace him');
+  assert.ok(!outcome('contend', { ready: 'equal', pastBy: 1 }).kept, 'a ready successor at least as good takes over');
+  assert.ok(outcome('rebuild', { ready: false, pastBy: 1 }).kept, 'a rebuilder keeps him one season past onset while his successor is not ready');
+  assert.ok(!outcome('rebuild', { ready: false, pastBy: 2 }).kept, 'but lets him go at 2+ seasons past onset to any successor');
+  assert.ok(!outcome('rebuild', { ready: true, pastBy: 1 }).kept, 'and to a ready successor at once');
+});
+
+test('R2 F1 (owner-approved 2026-11-03): a club already rebuilding stays "ageing" only at or above the league median share; entry keeps 0.35', () => {
+  const f = newFranchise(75); const clubs = R.leagueClubs(f).slice().sort(); const cap = tierById(f.tier).cap;
+  f.season.records = Object.fromEntries(clubs.map((c) => [c, { w: 1, l: 8 }])); // everyone losing
+  const shares = clubs.map((c) => [c, strategyInputs(f, c, { year: 1, cap, teamOf: (x) => F.aiTeam(f, x, 1), aiMean: 0 }).ageingShare]); const sorted = shares.map(([, v]) => v).sort((a, b) => a - b); const median = sorted[Math.floor(sorted.length / 2)];
+  const target = shares.find(([c, v]) => !isGymClub(c) && v >= STRATEGY.ageingShare && v < median); if (!target) return; // this league has no club between 0.35 and the median
+  const [club] = target; const other = shares.find(([c, v]) => c !== club && !isGymClub(c) && v >= STRATEGY.ageingShare && v < median)?.[0];
+  for (const c of clubs) Object.assign(R.clubRecord(f, c).strategy, { mode: 'compete', modeSince: 1 });
+  Object.assign(R.clubRecord(f, club).strategy, { mode: 'rebuild', modeSince: 1 }); // two seasons in: free to leave
+  evaluateStrategies(f, { year: 3, cap, teamOf: (x) => F.aiTeam(f, x, 3) });
+  assert.equal(R.clubRecord(f, club).strategy.modeWhy, 'losing with a young roster', 'a rebuilder below the league median reads as young');
+  if (other) assert.equal(R.clubRecord(f, other).strategy.modeWhy, 'losing with an ageing roster', 'a club not yet rebuilding still enters at 0.35');
 });
 
 test('R5 by mode: Contend may make two upgrades, every other mode one; the pools and the existing rules are unchanged', () => {
@@ -126,6 +147,14 @@ test('R4 sellable starters: ageing or past onset, older than 26, never protected
   assert.equal(STARTER_SALE.perWindow, 1);
 });
 
+test('R4 F4 (owner-approved 2026-11-03): a starter is sold only with a replacement within 4 behind him', () => {
+  const a = mon('LB', 70, 30), b = mon('LB', 70, 27), c = mon('LB', 70, 25); const o = (m) => monsterOverall(m); const set = (m, v) => { const d = v - o(m); for (const k of Object.keys(m.attributes)) m.attributes[k] = Math.max(20, Math.min(99, m.attributes[k] + d)); };
+  set(a, 72); set(b, 70); set(c, 60); // LB has 2 starting slots: a and b start; selling a puts c in
+  const roster = [a, b, c]; const gap = o(a) - o(c); assert.ok(gap > STARTER_SALE.replacementWithin, `setup gap ${gap}`); assert.equal(hasReplacement(roster, a), false, 'no replacement within 4');
+  set(c, o(a) - 3); assert.equal(hasReplacement(roster, a), true, 'within 4: allowed'); assert.equal(hasReplacement([a, b], a), false, 'nobody to step in');
+  assert.equal(STARTER_SALE.replacementWithin, 4);
+});
+
 test('R4 one sale per window: the offseason window and the season window are counted apart', () => {
   const f = { league: { trades: [{ year: 4, week: 0, sale: true }, { year: 4, week: 3 }] } };
   assert.equal(saleOpen(f, 4, 0), false, 'this offseason window has had its sale'); assert.equal(saleOpen(f, 4, 5), true, 'the season window has not');
@@ -134,7 +163,7 @@ test('R4 one sale per window: the offseason window and the season window are cou
 
 test('R4 in play: rebuilding clubs sell ageing starters to clubs that need them, for youth or picks, at most one sale per window', async () => {
   const { runFranchise } = await import('../tools/franchise-soak.mjs');
-  const { f, problems } = runFranchise(3, { seasons: 4 }); assert.deepEqual(problems, []);
+  const { f, problems } = runFranchise(112, { seasons: 4 }); assert.deepEqual(problems, []); // seed 112: a sale in the season-4 offseason window under F4 (fewer, safer sales)
   const sales = (f.league.trades || []).filter((t) => t.sale); assert.ok(sales.length >= 1, 'sales happen');
   const windows = new Map(); for (const t of sales) { const k = `${t.year}|${t.week > 0 ? 'season' : 'offseason'}`; windows.set(k, (windows.get(k) || 0) + 1); }
   for (const [k, c] of windows) assert.ok(c <= STARTER_SALE.perWindow, `one sale in window ${k}`);
