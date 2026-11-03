@@ -1088,3 +1088,33 @@ Full report: `docs/TASK6_M3_REMEDIATION_REPORT.md`. The validated Phase D build 
 - **R-2:** the two strongest ordinary clubs exempt from the brakes. Gym lead unchanged; owner's late seasons −6.4.
 
 **Remaining hard-gate failures:** only the two Rookie gates, unchanged by any Task 6 lever.
+
+## Final release validation (2026-11-03): release conditions not met; nothing merged or deployed
+Under the owner's conditional authorisation of 2026-11-03:
+- **F1–F4 implemented as tested.** The final commit reproduces the tested arm exactly.
+- **Not changed:** Rebuild potential weight stays 0.35; no R-1, R-2 or nudge change.
+- **Validation:** the approved seed sets and the held-out sets were run once.
+
+Full report: `docs/TASK6_FINAL_RELEASE_REPORT.md`.
+
+**Conditions:**
+
+| Condition | Result |
+|---|---|
+| **A. Technical integrity** | **pass**: suite 816/816; integrity 0; determinism; saves 6/6; Stage P +4.1% / −4.0%; preview checks |
+| **B. Rebuilding** | **met**: rebuild length 4.5 → 2.8 (C) and 4.3 → 2.9 (CH), supported; 5+ season rebuilds about 6% (was 31–37%); no regressions |
+| **C. Balance** | **failed** on owner balance and drift (details below); gym, development, draft and succession show no meaningful deterioration |
+| **D. Exceptions** | the two new items above are not covered; the Rookie gates are not worse |
+
+**Condition C failures:**
+- **Pro drift:** −5.7 [−8.4, −2.7]. This is a FAIL by point estimate; Phase D was −4.3, inconclusive.
+- **All-Star §45.6, 8 seeds:** +5.4 FAIL. Phase D was +2.0, a pass. On 24 seeds: −0.7 [−4.1, +2.9].
+- **All-Star drift:** −2.7 [−6.0, +0.7], now inconclusive (was a pass).
+- None of these changes against Phase D is significant: Pro −1.3 [−3.6, +0.9]; All-Star drift −1.2 [−3.2, +0.7].
+
+**Decision required from the owner:**
+1. accept the two new items as documented exceptions and release;
+2. release Phase D without F1–F4;
+3. or hold M3.
+
+Recommended: option 1. The automatic release was **not** carried out.

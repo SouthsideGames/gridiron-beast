@@ -1,0 +1,75 @@
+{
+ "seeds": 10,
+ "rebuildSpells": {
+  "n": 164,
+  "meanSeasons": 4.21,
+  "share3plus": 66.46,
+  "share5plus": 31.1,
+  "exits": {
+   "compete": 93,
+   "end": 45,
+   "retool": 25,
+   "contend": 1
+  }
+ },
+ "whyStillRebuild": {
+  "losing with an ageing roster": 589,
+  "between the two": 37,
+  "losing with a young roster": 61,
+  "losing with extra draft picks": 4
+ },
+ "picksHeldNext2InRebuild": null,
+ "sales": {
+  "n": 265,
+  "inSeasonPct": 38.11,
+  "soldOvr": 73.88,
+  "soldAge": 28.83,
+  "backupGap": 2.4,
+  "backupReadyPct": 58.11,
+  "noBackupPct": 3.02,
+  "weakBeforePct": 0.75,
+  "weakAfterPct": 11.32,
+  "weakAfterWhenReadyPct": 7.14,
+  "weakAfterWhenNotReadyPct": 17.12
+ },
+ "walks": {
+  "rebuildStarterWalksPerRebuildClubSeason": null,
+  "rebuild": {
+   "starter": 1588,
+   "starterPastOnsetWithSucc": 0,
+   "n": 3832
+  },
+  "other": {
+   "starter": 1386,
+   "n": 8117
+  }
+ },
+ "weakByMode": {
+  "compete": {
+   "clubSeasons": 1175,
+   "weakGroupsPerClubSeason": 0.54,
+   "persistentWeakPct": 19.61
+  },
+  "rebuild": {
+   "clubSeasons": 646,
+   "weakGroupsPerClubSeason": 0.9,
+   "persistentWeakPct": 30.8
+  },
+  "retool": {
+   "clubSeasons": 259,
+   "weakGroupsPerClubSeason": 0.62,
+   "persistentWeakPct": 22.01
+  },
+  "contend": {
+   "clubSeasons": 920,
+   "weakGroupsPerClubSeason": 0.91,
+   "persistentWeakPct": 25.22
+  }
+ },
+ "persistentLoserSeasonsByMode": {
+  "rebuild": 634,
+  "retool": 252,
+  "compete": 92,
+  "contend": 3
+ }
+}

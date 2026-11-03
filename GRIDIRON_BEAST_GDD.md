@@ -4253,3 +4253,10 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 - Succession and weak-position bonuses, the noise, and the kicker and duplicate penalties are unchanged.
 
 **58.6 Not changed.** Ageing, retirement, development slots, practice XP, difficulty constants, gym bonuses and the nudge. The three rebuild-nudge options (§1.7) are evaluated in `docs/TASK6_PHASE_D_REPORT.md`, not adopted. Nothing new is shown to the owner beyond League News of the trades.
+
+**58.7 Rebuilding fixes (owner-approved 2026-11-03; release candidate v42.21.0, branch `task6-final-rc`; NOT MERGED, NOT RELEASED).**
+- **F1:** a club already rebuilding counts as "ageing" only while its ageing share is at or above the league median. Entry keeps the 0.35 test.
+- **F2:** a Rebuild club lets a starter past onset go only to a ready successor, or to any successor once he is 2+ seasons past onset.
+- **F3:** a Contend club lets a veteran past onset go only when a ready successor at least as good is behind him.
+- **F4:** a Rebuild club sells a starter only when the next monster at the position is within 4 overall of him.
+- **Measured:** rebuilds average 2.8 seasons (Phase D 4.5); 6% last 5+ seasons (Phase D 31–37%). The Rebuild draft weight stays 0.35, and the brakes, anchors and nudge are unchanged.
