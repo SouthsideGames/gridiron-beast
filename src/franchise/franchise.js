@@ -63,7 +63,7 @@ import { overLimit, legendsBySide, legendSide, legendCheck } from './fa-legendar
 import { bonusCharge, capCharge, makeContract, allocateBonus } from './fa-contracts.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
-import { guarded, mayStartSeason, isArchived } from './lifecycle.js';
+import { guarded, mayStartSeason, isArchived, seasonsCompleted, SEASON_CAP } from './lifecycle.js';
 import { newUid } from '../core/uid.js';
 import { CLASH_SIZE, SWAP_EVERY, FRANCHISE_POLICIES, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES } from './clash-link.js';
 
@@ -2200,6 +2200,7 @@ function endSeason(f) {
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   if (hasLeague(f)) slimSeasonAwards(f.history[f.history.length - 1].awards, s.year, (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id] || null); // forward-only compaction of the winner rows (GDD §46): every number keeps one copy, in the book
   { const { r, save } = frng(f); retirementPass(f, r, { year: s.year, news: (t, k) => news(f, t, k) }); save(); } // retirements as the offseason opens, before contracts and the draft (GDD §55.3)
+  if (hasFreeAgency(f) && seasonsCompleted(f) >= SEASON_CAP) f.freeAgency.lastSeason = s.year; // the 20-season endpoint: no free-agency offseason after the last season (specification edge cases)
   if (task7Offseason(f, s.year)) closeSeasonTask7(f, s, rec); else { // Task 7 (fa-state.js): strategy, ageing, then contract processing, before free agency
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   noteGrowth(f, (c) => aiTeam(f, c, s.year));

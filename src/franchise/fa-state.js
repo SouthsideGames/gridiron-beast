@@ -52,7 +52,7 @@ export function ensureFreeAgency(f, { fresh = false, schema = 9 } = {}) {
 }
 export const hasFreeAgency = (f) => !!f?.freeAgency?.v;
 /** Is the offseason that follows season `year` run by the Task 7 system? */
-export const task7Offseason = (f, year = f?.season?.year) => hasFreeAgency(f) && year >= f.freeAgency.activeFrom;
+export const task7Offseason = (f, year = f?.season?.year) => hasFreeAgency(f) && year >= f.freeAgency.activeFrom && year !== f.freeAgency.lastSeason; // `lastSeason`: the 20th season closed, no offseason follows (lifecycle.js)
 /** The league year in force: the season's year, until Free Agency Period 1 of the following offseason opens. */
 export const leagueYear = (f) => f?.freeAgency?.leagueYear ?? f?.season?.year ?? 1;
 
