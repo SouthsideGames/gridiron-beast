@@ -290,3 +290,26 @@ Only items the specification marks as not approved, or where it can be read two 
 ## 7. Not done in this phase
 
 No gameplay code, no merge, no publish, no Task 8 work. Implementation starts after the owner's answers to §6.
+
+---
+
+## 8. Owner decisions (2026-11-04, 01:21)
+
+- **D1:** approved as recommended.
+- **D2:** approved as recommended.
+- **D3:** approved as recommended.
+- **D4:** approved as recommended.
+- **D5:** approved, provided winning a Beast Clash encounter keeps the existing recruitment advantage.
+  - The negotiation system is integrated without reducing or removing that reward.
+  - Legendary recruitment follows the new legendary restrictions.
+- **D6:** approved.
+  - New monsters get only their species' primary position, with no secondary eligibility.
+  - Existing monsters keep their currently assigned position.
+  - Verify that generation still supports adequate depth at every required football position.
+- **D7:** the integrity, determinism, roster, cap and performance gates are approved.
+  - Before the final benchmark, document the exact comparative metrics, seed counts, statistical methods and thresholds for Task 6 regressions.
+  - The accepted Task 6 exceptions are preserved and not reclassified as passing.
+- **Authorisation:** Phases 2–9 on the isolated branch (`task7-free-agency`).
+  - No unrelated gameplay, difficulty or balance-rule changes may be made to force benchmark results.
+  - No merge or publish without the owner's explicit approval.
+  - A genuine design conflict comes back to the owner as a specific decision.

@@ -261,7 +261,7 @@ function bestUpgrade(f, club, bench, cap) {
 /** A regional veteran at about `quality`, cheaper if the room does not allow it; null when nothing affordable and the need is not urgent. */
 export function generateArrival(f, r, { club, position, quality, room, floor = false }) {
   const regions = Object.keys(REGIONS).sort(() => r.next() - 0.5); let regionName = regions[0], pool = [];
-  for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => (s.position === position || s.secondary === position) && s.rarity !== 'legendary'); if (p.length) { regionName = rn; pool = p; break; } }
+  for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position && s.rarity !== 'legendary'); if (p.length) { regionName = rn; pool = p; break; } }
   if (!pool.length) return null;
   const sp = r.pick(pool);
   let q = Math.max(MIN_QUALITY, Math.round(quality)); let m = null;

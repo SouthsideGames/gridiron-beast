@@ -56,13 +56,16 @@ export { validateClubs } from './league-season.js';
 import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRoom, captureLeague, verifyLeague, addToClub, removeFromClub, isProtected, findInLeague, leagueEvent, takeEvents, moveIdentity } from './league-registry.js';
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
+import { ensureFreeAgency } from './fa-state.js';
+import { bonusCharge } from './fa-contracts.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
 import { guarded, mayStartSeason, isArchived } from './lifecycle.js';
 import { newUid } from '../core/uid.js';
 import { CLASH_SIZE, SWAP_EVERY, FRANCHISE_POLICIES, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES } from './clash-link.js';
 
-export const SCHEMA_VERSION = 8; // 8: the league registry (GDD §42.6, Phase 3); 6: every save before it, still read and migrated
+export const SCHEMA_VERSION = 9; // 9: Task 7 free agency (`f.freeAgency`, fa-state.js); 8: the league registry (GDD §42.6, Phase 3); 6: every save before it. All three are read; an 8 becomes a 9 when read
+export const LEAGUE_SCHEMA_VERSION = 8;
 export const LEGACY_SCHEMA_VERSION = 6;
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 export const DAY_ACTIONS = ['Scout a region', 'Recruit', 'Training focus', 'Scout opponent', 'Game plan', 'Lineup check', 'Game day'];
@@ -97,7 +100,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   noteNewFranchise();
   for (const m of roster) dexRecord(f, m, 'signed');
   for (const m of roster) { noteJoin(f, m, 'founding', m.cornerstone ? { cornerstone: 1 } : {}); markCareerFresh(m); } // Career Timeline (GDD §38)
-  if (persistentLeague) ensureLeague(f, { qualityDelta: -CREATION_LIFT }); // a new universe starts persistent (GDD §42.6): rosters open a little under today's year-1 quality because they will grow by playing (league-season.js calibration)
+  if (persistentLeague) ensureLeague(f, { qualityDelta: -CREATION_LIFT, fresh: true }); // a new universe starts persistent (GDD §42.6): rosters open a little under today's year-1 quality because they will grow by playing (league-season.js calibration)
   openCreationDraft(f);
   return f;
 }
@@ -542,7 +545,7 @@ export function catalog(f, side) {
 export const ownerPerk = (f) => BACKGROUNDS[f?.owner?.background]?.perk || null;
 export const capFor = (f) => Math.round(tierById(f.tier).cap * (ownerPerk(f) === 'cap' ? 1.04 : 1));
 export function salarySummary(f, proposed = 0) {
-  const monsters = f.roster.reduce((s, m) => s + (m.salary || salaryFor(m)), 0);
+  const ly = f.freeAgency?.leagueYear ?? f.season?.year; const monsters = f.roster.reduce((s, m) => s + (m.salary || salaryFor(m)) + bonusCharge(m, ly), 0); // Task 7: plus this league year's bonus allocation
   const staff = Object.keys(f.staff).reduce((sum, role) => sum + staffSalary(f, role), 0);
   const dead = f.deadCap || 0; // severance for fired staff and retention bonuses, this season only
   const cap = capFor(f);
@@ -708,8 +711,8 @@ function leagueTeam(f, name, year, { scouting = null } = {}) {
  * first time it is opened by this build, built from the very rosters it was facing (`persistentFrom`), verified on the copy
  * before anything is kept. Returns { ok, created, rekeyed, problems }. Archives are never migrated (they are read-only).
  */
-export function ensureLeague(f, { qualityDelta = 0 } = {}) {
-  if (hasLeague(f)) return { ok: true, created: false, rekeyed: [], problems: [] };
+export function ensureLeague(f, { qualityDelta = 0, fresh = false } = {}) {
+  if (hasLeague(f)) { ensureFreeAgency(f); return { ok: true, created: false, rekeyed: [], problems: [] }; }
   if (!f?.season || isArchived(f)) return { ok: false, created: false, rekeyed: [], problems: ['not an active franchise'] };
   const year = f.season.year, week = f.season.week;
   const clubs = ALL_TEAMS.filter((t) => t !== f.club);
@@ -737,7 +740,7 @@ export function ensureLeague(f, { qualityDelta = 0 } = {}) {
     const back = JSON.parse(snapshot); for (const k of Object.keys(f)) delete f[k]; Object.assign(f, back); // nothing kept
     return { ok: false, created: false, rekeyed: [], problems: e.problems || [e.message] };
   }
-  f.schemaVersion = SCHEMA_VERSION;
+  f.schemaVersion = LEAGUE_SCHEMA_VERSION; ensureFreeAgency(f, { fresh }); // schema 9: the Task 7 block (fa-state.js)
   notePreseason(f, (c) => leagueTeam(f, c, year));
   return { ok: true, created: true, rekeyed: result.rekeyed, problems: [] };
 }
@@ -1442,7 +1445,7 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   const weights = pool.map((sp) => [sp.id, (sp.rarity === 'common' ? 60 : sp.rarity === 'uncommon' ? 30 * rarityBonus : sp.rarity === 'legendary' ? 14 * rarityBonus : 9 * rarityBonus)]);
   for (let i = 0; i < count; i++) {
     const pickId = r.weighted(weights); const sp = pool.find((x) => x.id === pickId);
-    const position = sp.secondary && r.chance(0.2) ? sp.secondary : sp.position;
+    const position = sp.position; // one position per species (Task 7 D6)
     const quality = 52 + r.int(12) + (skill >= 80 ? 3 : 0) + (sp.rarity === 'legendary' ? 8 : sp.rarity === 'rare' ? 3 : sp.rarity === 'uncommon' ? 1 : 0);
     const m = generateMonster(r, { position, quality, species: sp.id }); claimMonster(f, m, 'scout');
     uniqueName(f, m, prospects.map((p) => p.monster.name));
@@ -1453,7 +1456,7 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   // The scout also goes looking for the position you need: the one you asked for, else the shortest-handed, else one with no backup (GDD §17.6).
   const needs = depthNeeds(f); const needList = focus ? [focus] : needs.filter((n) => n.status !== 'ok').map((n) => n.position);
   const need = needList.find((pos) => !prospects.some((p) => p.monster.position === pos)) || null;
-  const needPool = need ? pool.filter((sp) => sp.position === need || sp.secondary === need) : [];
+  const needPool = need ? pool.filter((sp) => sp.position === need) : [];
   if (need && needPool.length) {
     const sp = needPool[r.int(needPool.length)];
     const m = generateMonster(r, { position: need, quality: 50 + r.int(10), species: sp.id }); claimMonster(f, m, 'scout-need');

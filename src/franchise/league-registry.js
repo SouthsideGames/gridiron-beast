@@ -20,6 +20,7 @@
 import { monsterOverall, resolveSpecies, salaryFor } from '../data/monsters.js';
 import { hashString } from '../core/rng.js';
 import { newContract } from './contracts.js';
+import { bonusCharge } from './fa-contracts.js';
 import { rolloverMonster, addInto } from './stats.js';
 
 export const LEAGUE_VERSION = 1;
@@ -127,7 +128,7 @@ export function removeFromClub(f, club, id, { year, reason = 'released', why = n
 
 // ------------------------------------------------------------ the cap for an AI club (decision D, with the protected exemption)
 /** What an AI club's monsters cost against the cap: protected monsters are exempt (owner's rule, 2026-10-23). */
-export function clubPayroll(f, club) { return clubRoster(f, club).reduce((s, m) => s + (isProtected(m) ? 0 : (m.salary || salaryFor(m))), 0); }
+export function clubPayroll(f, club) { const ly = f.freeAgency?.leagueYear ?? f.season?.year; return clubRoster(f, club).reduce((s, m) => s + (isProtected(m) ? 0 : (m.salary || salaryFor(m)) + bonusCharge(m, ly)), 0); } // Task 7: plus this league year's signing-bonus allocation
 /** The room an AI club has: the tier cap less the fixed staff allowance less its counted payroll. */
 export function clubCapRoom(f, club, cap) { return cap - (f.league.staffAllowance || 0) - clubPayroll(f, club); }
 
