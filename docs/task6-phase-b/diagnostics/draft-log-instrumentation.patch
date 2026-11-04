@@ -1,0 +1,16 @@
+diff --git a/src/franchise/draft.js b/src/franchise/draft.js
+index 7662a16..5d7f2be 100644
+--- a/src/franchise/draft.js
++++ b/src/franchise/draft.js
+@@ -86,7 +86,10 @@ export function aiDraftPick(f, team, rng, { plan = null } = {}) {
+   const taken = d.picks.filter((p) => p.team === team).map((p) => p.position);
+   const need = {}; if (plan) for (const m of avail) if (need[m.position] == null) need[m.position] = draftNeedBonus(plan, m.position);
+   const score = (m) => monsterOverall(m) + (m.potential - 70) * 0.2 + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.position] || 0);
+-  return avail.sort((a, b) => score(b) - score(a))[0] || null;
++  const pick = avail.sort((a, b) => score(b) - score(a))[0] || null;
++  if (globalThis.__draftLog && plan && pick) { const best = {}; for (const m of avail) { const o = monsterOverall(m); if (best[m.position] == null || o > best[m.position]) best[m.position] = o; }
++    globalThis.__draftLog.push({ year: d.year, team, round: d.order[d.index]?.round, pos: pick.position, ovr: monsterOverall(pick), pot: pick.potential, best, need: Object.fromEntries(Object.entries(plan.groups).map(([p, g]) => [p, { gap: Math.round(g.gap * 10) / 10, succ: g.successionNeed, weak: g.weakNeed, settled: g.settled, bonus: draftNeedBonus(plan, p) }])), dup: taken.includes(pick.position) }); }
++  return pick;
+ }
+ 
+ function recordPick(f, team, m, { mine = false }) {

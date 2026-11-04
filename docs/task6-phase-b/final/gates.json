@@ -1,0 +1,144 @@
+{
+ "contract": {
+  "rookie": {
+   "ownerWinToday": 68.7,
+   "ownerWinRegistry": 72.9,
+   "ownerWinDiff": 4.2,
+   "aiMidToday": 64.7,
+   "aiMidRegistry": 65.2,
+   "aiMidDiff": 0.5,
+   "seasons": [
+    64,
+    64
+   ],
+   "firings": [
+    0,
+    0
+   ],
+   "pass": true
+  },
+  "pro": {
+   "ownerWinToday": 55.1,
+   "ownerWinRegistry": 52.2,
+   "ownerWinDiff": -2.9,
+   "aiMidToday": 66.6,
+   "aiMidRegistry": 66.9,
+   "aiMidDiff": 0.3,
+   "seasons": [
+    49,
+    57
+   ],
+   "firings": [
+    3,
+    2
+   ],
+   "pass": true
+  },
+  "allstar": {
+   "ownerWinToday": 36.7,
+   "ownerWinRegistry": 43.3,
+   "ownerWinDiff": 6.6,
+   "aiMidToday": 70.8,
+   "aiMidRegistry": 70.3,
+   "aiMidDiff": -0.5,
+   "seasons": [
+    59,
+    50
+   ],
+   "firings": [
+    2,
+    2
+   ],
+   "pass": false
+  }
+ },
+ "drift": {
+  "rookie": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 76.9,
+   "baseOwnerWinS9to20": 45,
+   "s1to8": {
+    "n": 12,
+    "base": 76.85,
+    "cand": 74.19,
+    "diff": -2.66,
+    "lo": -6.13,
+    "hi": 1.39,
+    "effect": -0.39,
+    "up": 3,
+    "down": 8,
+    "gate": "pass (interval reaches past the band: escalate)"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 44.98,
+    "cand": 24.92,
+    "diff": -20.06,
+    "lo": -25.85,
+    "hi": -14.2,
+    "effect": -1.95,
+    "up": 0,
+    "down": 11,
+    "gate": "report only"
+   }
+  },
+  "pro": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 61,
+   "baseOwnerWinS9to20": 35.6,
+   "s1to8": {
+    "n": 12,
+    "base": 61,
+    "cand": 53.36,
+    "diff": -7.64,
+    "lo": -11.92,
+    "hi": -3.7,
+    "effect": -1.03,
+    "up": 1,
+    "down": 9,
+    "gate": "fail"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 35.57,
+    "cand": 22.53,
+    "diff": -13.04,
+    "lo": -17.98,
+    "hi": -8.02,
+    "effect": -1.48,
+    "up": 1,
+    "down": 11,
+    "gate": "report only"
+   }
+  },
+  "allstar": {
+   "seeds": 24,
+   "baseOwnerWinS1to8": 39.8,
+   "baseOwnerWinS9to20": 24.3,
+   "s1to8": {
+    "n": 24,
+    "base": 39.81,
+    "cand": 39.76,
+    "diff": -0.06,
+    "lo": -4.34,
+    "hi": 4.22,
+    "effect": -0.01,
+    "up": 12,
+    "down": 11,
+    "gate": "pass"
+   },
+   "s9to20": {
+    "n": 24,
+    "base": 24.31,
+    "cand": 16.05,
+    "diff": -8.26,
+    "lo": -12.35,
+    "hi": -4.09,
+    "effect": -0.8,
+    "up": 7,
+    "down": 15,
+    "gate": "report only"
+   }
+  }
+ }
+}

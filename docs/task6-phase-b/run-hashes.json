@@ -1,0 +1,123 @@
+{
+ "pb-B-1-10": {
+  "hash": "6d04653e2694f584eb7d2c2b5e91607fb7fff603eb0a65cb94b22ee8cf1f0444",
+  "hashV3": "17481d6dbb1bc4374e8a14dd7eb284dae53119b0a3354a42efa038ae433964d3",
+  "seeds": 10,
+  "seconds": 1546
+ },
+ "pb-B-11-20": {
+  "hash": "147b9dbb1babd86feeb03b1d7a392caf1531db33cd4614af5f1c2cc56571f7d4",
+  "hashV3": "a85dd8abbae45473f278cbbe22ec510f438317fa4c1ebb745872f20aaf12f866",
+  "seeds": 10,
+  "seconds": 1537
+ },
+ "pb-B-21-30": {
+  "hash": "ee5163e9451fb163501654efce6a9df21a92e7ea69153c3cd6a8ac1710ff27cd",
+  "hashV3": "2224d3118f0498680bd3f5f3ee89db490e69fb23a97ff6696c70bea06b1c3064",
+  "seeds": 10,
+  "seconds": 1479
+ },
+ "pb-B-31-40": {
+  "hash": "8701cae33330c08270177137e46ac6bbddc108dc8b51eeb65450a5287f7ddc47",
+  "hashV3": "c07011616e50d2b9b4c5555f70cf3a76863a22bbb05c30af0954186235ceaf8a",
+  "seeds": 10,
+  "seconds": 1414
+ },
+ "pb-B-41-50": {
+  "hash": "8dc93b5d4f0f3aeaedcb6494877baf7fd5aa28b83641627b4803bc812b9fce5d",
+  "hashV3": "1c0f68e84793f5e825d52829fe3c508808eaff0510fb57016698a7c2b13e08d5",
+  "seeds": 10,
+  "seconds": 1507
+ },
+ "pb-B-51-60-repeat": {
+  "hash": "9b28eb7282a38d159f8cee7f7e51d1f66ac1468d6627f7a10ab1ec80ae1909ce",
+  "hashV3": "dd9717145493db2028861e1bffb81dba6514f5d13187f05719ad0dd42e1b12a7",
+  "seeds": 10,
+  "seconds": 1417
+ },
+ "pb-B-51-60": {
+  "hash": "9b28eb7282a38d159f8cee7f7e51d1f66ac1468d6627f7a10ab1ec80ae1909ce",
+  "hashV3": "dd9717145493db2028861e1bffb81dba6514f5d13187f05719ad0dd42e1b12a7",
+  "seeds": 10,
+  "seconds": 1378
+ },
+ "pb-B-61-70": {
+  "hash": "a748327df3b3a8c161cf992b80d8be950537edb0a4f88200823677aa5cb6332c",
+  "hashV3": "08cda01d3910359fc8a47715009ea02936d28a7a38fddc1f2a9859737e41d15b",
+  "seeds": 10,
+  "seconds": 1455
+ },
+ "pb-B-71-80": {
+  "hash": "02e61711bb4af8c3c37914f7545f26e9df39af8883abb28e8171af08f7f4b2f6",
+  "hashV3": "317f759e81125adc6f3bb8c0f00e0342d0bb109e4c7bdbba88994146e0d868ab",
+  "seeds": 10,
+  "seconds": 1525
+ },
+ "pb-C-106-108": {
+  "hash": "da7282beb5cd537a4511a068c92ccfcd53db5d4a4134d40c1e9f4973fb6f1abe",
+  "hashV3": "00c95db53c9235e9ddd77a92b5519ee7e6cc2e2a6463f63e9de7ad1f5ffe4bc6",
+  "seeds": 3,
+  "seconds": 906
+ },
+ "pb-C-109-110": {
+  "hash": "bd83dab0d30535c636d53470c5ea3eef4a2bf2af5ad0883bba441f728890001c",
+  "hashV3": "f4929c94c995e60eacbe12e14463b68d716285a3559c8798bee3304a6288be9e",
+  "seeds": 2,
+  "seconds": 571
+ },
+ "pb-C-111-115": {
+  "hash": "39f8bb35c007dbc9cab4c1d807c8bd539407e6895c76389f7144ef3ecbc72a5f",
+  "hashV3": "429bc5ca1974b370d0d6407547d5c083e71822d913e291453a442fae108d9ad8",
+  "seeds": 5,
+  "seconds": 1462
+ },
+ "pb-C-116-120": {
+  "hash": "bdba7ff93b9282d19a6cfd3867aa52917e36f35fe281ea22f07a8ee5ae88f80f",
+  "hashV3": "8b14078cf17a1397aceca47f1ecad4a0745b631ca5ece7100842dccbe6cedc97",
+  "seeds": 5,
+  "seconds": 1331
+ },
+ "pb-C-121-125": {
+  "hash": "3f5668927cfcdfc188a67d1783419bc35aa912e1331e49b27614ae8a1d9bf5d2",
+  "hashV3": "20fabead9002f2b89f6f71f2a573d6f5dab25eb1366cc960676c40c2773fdafc",
+  "seeds": 5,
+  "seconds": 1402
+ },
+ "pb-D-aging": {
+  "hash": "2a4824422bea24668b270b00ceb3e20f5c4d1243965fc570a4bc742b435da980",
+  "hashV3": "1d1bd193c6a4c5d7096c21fcc4a7322c853747edc01ee66006207bc38652cfb2",
+  "seeds": 5,
+  "seconds": 467
+ },
+ "pb-D-expiring": {
+  "hash": "af977f69ffc7c929ec21eac1b27fefc6e84cd05cb2b8d12ebba707ca8267c4a3",
+  "hashV3": "c9bdb97fa7f8f5e5801f94b1dc3a67ff9d8180828677e087c882799c2824be99",
+  "seeds": 5,
+  "seconds": 468
+ },
+ "pb-D-injuries": {
+  "hash": "aa496449a8054764af049c96e06b00eabac6c9f57aee7b61206e5ae54d6558ed",
+  "hashV3": "5aed80c3c72ffb8aa6362f9bdf5c642e4ccae74f42effb058b1e8c4e268bf7dd",
+  "seeds": 5,
+  "seconds": 639
+ },
+ "pb-D-picks": {
+  "hash": "405e3d8e6999939f933edbc434a545bb4b7aabdee801fa15d3b208bf2e1dcdc0",
+  "hashV3": "d8f9f988d3b0a37a125daa4fb7233bfce94c542de199974a7aab207a27211524",
+  "seeds": 5,
+  "seconds": 965
+ },
+ "pb-D-rebuild": {
+  "hash": "f90a6b26b4aa514bb188bca06d2c1fa633fa8162840c4087392605cad60d8f78",
+  "hashV3": "818352168e862098193534cb59ae70e07292933813365ed2221ccc29896a5365",
+  "seeds": 5,
+  "seconds": 957
+ },
+ "pb-D-thin": {
+  "hash": "9b99c6b067edff964a7f4bf0db538e5415179aa71687755025cedf2f40627941",
+  "hashV3": "c758bc3f9fe45948b2db408df197815d0e477efe66783efef974df8686aa6f09",
+  "seeds": 5,
+  "seconds": 508
+ },
+ "_tree": "7a14393 (task6-phase-b; simulation code unchanged since)"
+}

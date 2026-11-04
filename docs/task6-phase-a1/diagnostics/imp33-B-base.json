@@ -1,0 +1,76 @@
+{
+ "files": 6,
+ "monsterSeasons33": 15167,
+ "improved": 3769,
+ "improvedPct": "24.85",
+ "byCategoryPctOfAll33": {
+  "kicker": "1.56% (236)",
+  "evolution": "3.75% (569)",
+  "beforeOnset": "0.07% (11)",
+  "techCompensation": "13.93% (2113)",
+  "physGainPastOnset": "5.54% (840)",
+  "noDeclineApplied": "0.00% (0)"
+ },
+ "examples": [
+  {
+   "c": "physGainPastOnset",
+   "pos": "WR",
+   "age": 33,
+   "y": 5,
+   "ovr": "65->66",
+   "dPhys": 3,
+   "dTech": 2,
+   "lvl": "12->14"
+  },
+  {
+   "c": "physGainPastOnset",
+   "pos": "WR",
+   "age": 34,
+   "y": 6,
+   "ovr": "74->75",
+   "dPhys": 4,
+   "dTech": 2,
+   "lvl": "16->18"
+  },
+  {
+   "c": "physGainPastOnset",
+   "pos": "TE",
+   "age": 33,
+   "y": 4,
+   "ovr": "75->76",
+   "dPhys": 2,
+   "dTech": 0,
+   "lvl": "16->18"
+  },
+  {
+   "c": "physGainPastOnset",
+   "pos": "LB",
+   "age": 33,
+   "y": 2,
+   "ovr": "79->80",
+   "dPhys": 1,
+   "dTech": 3,
+   "lvl": "18->20"
+  },
+  {
+   "c": "physGainPastOnset",
+   "pos": "DL",
+   "age": 34,
+   "y": 5,
+   "ovr": "71->72",
+   "dPhys": 1,
+   "dTech": 5,
+   "lvl": "14->16"
+  },
+  {
+   "c": "physGainPastOnset",
+   "pos": "WR",
+   "age": 34,
+   "y": 6,
+   "ovr": "73->74",
+   "dPhys": 7,
+   "dTech": 0,
+   "lvl": "16->18"
+  }
+ ]
+}

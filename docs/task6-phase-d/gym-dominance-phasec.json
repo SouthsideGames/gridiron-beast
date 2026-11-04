@@ -1,0 +1,163 @@
+{
+ "seeds": [
+  106,
+  107,
+  108,
+  109,
+  110,
+  111,
+  112,
+  113,
+  114,
+  115
+ ],
+ "seasons": 200,
+ "strength": {
+  "gymLeadMean": 5.67,
+  "strongestClubIsGymPct": 100,
+  "strongestGymClubWinsTitlePct": 33,
+  "strongestOrdinaryClubWinsTitlePct": null,
+  "bestOrdinaryRankMean": 7.5
+ },
+ "games": {
+  "sameKindGames": 6537,
+  "mixedGames": 5379,
+  "logistic": {
+   "intercept": 0.04,
+   "perOverallPoint": 0.26
+  },
+  "gymVsOrdinaryWinPct": 81.04,
+  "expectedFromOverallPct": 78.04,
+  "gymEdgePctPoints": 3,
+  "gymEdgeInOverallPoints": 0.29,
+  "byOverallGap": {
+   "0": {
+    "games": 147,
+    "gymWinPct": 53.06,
+    "expectedPct": 50.02
+   },
+   "≥ +4": {
+    "games": 3956,
+    "gymWinPct": 88.02,
+    "expectedPct": 84.77
+   },
+   "+1…+3": {
+    "games": 1108,
+    "gymWinPct": 66.16,
+    "expectedPct": 63.63
+   },
+   "−3…−1": {
+    "games": 159,
+    "gymWinPct": 37.74,
+    "expectedPct": 40.06
+   },
+   "≤ −4": {
+    "games": 9,
+    "gymWinPct": 66.67,
+    "expectedPct": 23.27
+   }
+  }
+ },
+ "qualification": {
+  "gym": {
+   "clubSeasons": 1600,
+   "playoffPct": 75.13,
+   "meanWins": 5.72,
+   "meanOvr": 74.87
+  },
+  "ordinary": {
+   "clubSeasons": 1400,
+   "playoffPct": 25.21,
+   "meanWins": 3.31,
+   "meanOvr": 69.2
+  },
+  "berthSharePct": {
+   "gym": 77.3
+  },
+  "playoffPctByWins": {
+   "≤ 4": {
+    "gym": 21.16,
+    "ordinary": 7.82,
+    "n": 1510
+   },
+   "7+": {
+    "gym": 100,
+    "ordinary": 97.83,
+    "n": 684
+   },
+   "5–6": {
+    "gym": 91.42,
+    "ordinary": 76.79,
+    "n": 806
+   }
+  }
+ },
+ "postseason": {
+  "gym": {
+   "playoffClubs": 1202,
+   "finalistPct": 31.61,
+   "championPct": 16.47,
+   "titleIfFinalistPct": 52.11
+  },
+  "ordinary": {
+   "playoffClubs": 353,
+   "finalistPct": 5.1,
+   "championPct": 0.28,
+   "titleIfFinalistPct": 5.56
+  },
+  "playoffFieldSize": 7.78,
+  "byOverallRankInField": {
+   "1–2": {
+    "gym": {
+     "playoffClubs": 400,
+     "finalistPct": 48.25,
+     "championPct": 29.75,
+     "titleIfFinalistPct": 61.66
+    },
+    "ordinary": {
+     "playoffClubs": 0,
+     "finalistPct": null,
+     "championPct": null,
+     "titleIfFinalistPct": null
+    }
+   },
+   "3–4": {
+    "gym": {
+     "playoffClubs": 388,
+     "finalistPct": 28.87,
+     "championPct": 13.92,
+     "titleIfFinalistPct": 48.21
+    },
+    "ordinary": {
+     "playoffClubs": 12,
+     "finalistPct": 16.67,
+     "championPct": 0,
+     "titleIfFinalistPct": 0
+    }
+   },
+   "5+": {
+    "gym": {
+     "playoffClubs": 414,
+     "finalistPct": 18.12,
+     "championPct": 6.04,
+     "titleIfFinalistPct": 33.33
+    },
+    "ordinary": {
+     "playoffClubs": 341,
+     "finalistPct": 4.69,
+     "championPct": 0.29,
+     "titleIfFinalistPct": 6.25
+    }
+   }
+  },
+  "titleSharePct": {
+   "gym": 99.5
+  },
+  "strengthOnlyGymTitleSharePct": 96.51
+ },
+ "matchups": {
+  "gym–gym": 31.47,
+  "gym–ordinary": 45.14,
+  "ordinary–ordinary": 23.39
+ }
+}

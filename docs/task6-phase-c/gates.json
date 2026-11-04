@@ -1,0 +1,144 @@
+{
+ "contract": {
+  "rookie": {
+   "ownerWinToday": 68.2,
+   "ownerWinRegistry": 73.3,
+   "ownerWinDiff": 5.1,
+   "aiMidToday": 65,
+   "aiMidRegistry": 65.4,
+   "aiMidDiff": 0.4,
+   "seasons": [
+    64,
+    64
+   ],
+   "firings": [
+    0,
+    0
+   ],
+   "pass": false
+  },
+  "pro": {
+   "ownerWinToday": 55.6,
+   "ownerWinRegistry": 57.9,
+   "ownerWinDiff": 2.3,
+   "aiMidToday": 67.3,
+   "aiMidRegistry": 67,
+   "aiMidDiff": -0.3,
+   "seasons": [
+    64,
+    52
+   ],
+   "firings": [
+    0,
+    3
+   ],
+   "pass": true
+  },
+  "allstar": {
+   "ownerWinToday": 37,
+   "ownerWinRegistry": 43.8,
+   "ownerWinDiff": 6.8,
+   "aiMidToday": 70.4,
+   "aiMidRegistry": 70.4,
+   "aiMidDiff": 0,
+   "seasons": [
+    49,
+    50
+   ],
+   "firings": [
+    3,
+    2
+   ],
+   "pass": false
+  }
+ },
+ "drift": {
+  "rookie": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 76.9,
+   "baseOwnerWinS9to20": 45,
+   "s1to8": {
+    "n": 12,
+    "base": 76.85,
+    "cand": 73.96,
+    "diff": -2.89,
+    "lo": -6.25,
+    "hi": 0.81,
+    "effect": -0.47,
+    "up": 4,
+    "down": 8,
+    "gate": "pass (interval reaches past the band: escalate)"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 44.98,
+    "cand": 25.77,
+    "diff": -19.21,
+    "lo": -25.31,
+    "hi": -13.19,
+    "effect": -1.84,
+    "up": 0,
+    "down": 12,
+    "gate": "report only"
+   }
+  },
+  "pro": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 61,
+   "baseOwnerWinS9to20": 35.6,
+   "s1to8": {
+    "n": 12,
+    "base": 61,
+    "cand": 58.45,
+    "diff": -2.55,
+    "lo": -9.49,
+    "hi": 4.28,
+    "effect": -0.2,
+    "up": 5,
+    "down": 7,
+    "gate": "pass (interval reaches past the band: escalate)"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 35.57,
+    "cand": 22.61,
+    "diff": -12.96,
+    "lo": -18.9,
+    "hi": -6.48,
+    "effect": -1.19,
+    "up": 2,
+    "down": 10,
+    "gate": "report only"
+   }
+  },
+  "allstar": {
+   "seeds": 24,
+   "baseOwnerWinS1to8": 39.8,
+   "baseOwnerWinS9to20": 24.3,
+   "s1to8": {
+    "n": 24,
+    "base": 39.81,
+    "cand": 38.77,
+    "diff": -1.04,
+    "lo": -5.84,
+    "hi": 3.47,
+    "effect": -0.09,
+    "up": 9,
+    "down": 14,
+    "gate": "pass (interval reaches past the band: escalate)"
+   },
+   "s9to20": {
+    "n": 24,
+    "base": 24.31,
+    "cand": 20.68,
+    "diff": -3.63,
+    "lo": -6.56,
+    "hi": -0.73,
+    "effect": -0.49,
+    "up": 7,
+    "down": 16,
+    "gate": "report only"
+   }
+  }
+ }
+}

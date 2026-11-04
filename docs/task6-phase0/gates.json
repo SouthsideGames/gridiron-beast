@@ -1,0 +1,144 @@
+{
+ "contract": {
+  "rookie": {
+   "ownerWinToday": 75.5,
+   "ownerWinRegistry": 76.4,
+   "ownerWinDiff": 0.9,
+   "aiMidToday": 65,
+   "aiMidRegistry": 65.1,
+   "aiMidDiff": 0.1,
+   "seasons": [
+    64,
+    64
+   ],
+   "firings": [
+    0,
+    0
+   ],
+   "pass": true
+  },
+  "pro": {
+   "ownerWinToday": 59.9,
+   "ownerWinRegistry": 59.5,
+   "ownerWinDiff": -0.4,
+   "aiMidToday": 67.4,
+   "aiMidRegistry": 67.3,
+   "aiMidDiff": -0.1,
+   "seasons": [
+    64,
+    59
+   ],
+   "firings": [
+    0,
+    1
+   ],
+   "pass": true
+  },
+  "allstar": {
+   "ownerWinToday": 39.1,
+   "ownerWinRegistry": 37,
+   "ownerWinDiff": -2.1,
+   "aiMidToday": 70.4,
+   "aiMidRegistry": 70.8,
+   "aiMidDiff": 0.4,
+   "seasons": [
+    46,
+    61
+   ],
+   "firings": [
+    3,
+    2
+   ],
+   "pass": true
+  }
+ },
+ "drift": {
+  "rookie": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 76.9,
+   "baseOwnerWinS9to20": 45,
+   "s1to8": {
+    "n": 12,
+    "base": 76.85,
+    "cand": 76.85,
+    "diff": 0,
+    "lo": 0,
+    "hi": 0,
+    "effect": null,
+    "up": 0,
+    "down": 0,
+    "gate": "pass"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 44.98,
+    "cand": 44.98,
+    "diff": 0,
+    "lo": 0,
+    "hi": 0,
+    "effect": null,
+    "up": 0,
+    "down": 0,
+    "gate": "report only"
+   }
+  },
+  "pro": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 61,
+   "baseOwnerWinS9to20": 35.6,
+   "s1to8": {
+    "n": 12,
+    "base": 61,
+    "cand": 61,
+    "diff": 0,
+    "lo": 0,
+    "hi": 0,
+    "effect": null,
+    "up": 0,
+    "down": 0,
+    "gate": "pass"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 35.57,
+    "cand": 35.57,
+    "diff": 0,
+    "lo": 0,
+    "hi": 0,
+    "effect": null,
+    "up": 0,
+    "down": 0,
+    "gate": "report only"
+   }
+  },
+  "allstar": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 39.5,
+   "baseOwnerWinS9to20": 25.8,
+   "s1to8": {
+    "n": 12,
+    "base": 39.47,
+    "cand": 39.47,
+    "diff": 0,
+    "lo": 0,
+    "hi": 0,
+    "effect": null,
+    "up": 0,
+    "down": 0,
+    "gate": "pass"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 25.77,
+    "cand": 25.77,
+    "diff": 0,
+    "lo": 0,
+    "hi": 0,
+    "effect": null,
+    "up": 0,
+    "down": 0,
+    "gate": "report only"
+   }
+  }
+ }
+}
