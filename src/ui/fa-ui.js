@@ -62,6 +62,17 @@ function myOffersHtml(f) {
     return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR</span></div><div class="sub">${fmt(o.salary)}/yr × ${o.years}${o.bonus ? ` + ${fmt(o.bonus)} bonus` : ''} · <b>${STATE_LABEL[o.state]}</b> · answers by Period ${o.expires}</div></div>${o.state === 'countered' ? '<span class="chip warn">counter</span>' : ''}</div>`; }).join('')}</div>`;
 }
 
+/** The roster minimum against the cap (owner rule 2026-11-04): what is missing, and the releases the owner may choose, with their savings. */
+export function floorPanelHtml(f) {
+  if (!F.freeAgencyDone(f)) return '';
+  const p = F.rosterFloorPlan(f); if (!p.short) return '';
+  const head = `<b>📋 Roster minimum: ${f.roster.length} of ${F.ROSTER_MIN}</b>`;
+  if (!p.enough) return `<div class="panel tight" style="border-color:var(--bad)">${head}<div class="muted">The market has fewer than ${p.short} free agents you can sign right now. Release no one yet: check the market and the trade desk.</div></div>`;
+  if (!p.gap) return `<div class="panel tight" style="border-color:var(--warn)">${head}<div class="muted">Sign ${p.short} more. The ${p.short} cheapest free agents ask ${fmt(p.needed)} cr. in total and you have ${fmt(p.usable)} cr. of usable cap. A monster may still turn you down: then try the next.</div></div>`;
+  const rows = p.releases.slice(0, 6).map((x) => `<div class="item static"><div class="grow"><div class="name">${esc(x.name)} <span class="dim">${esc(x.position)} · ${x.ovr} OVR</span></div><div class="sub">frees <b>${fmt(x.saving)}</b> cr. · ${x.gapAfter ? `then still ${fmt(x.gapAfter)} cr. short (one more signing to make)` : 'then the cheapest replacements fit'}</div></div><button class="btn small" data-action="fafloorrel" data-id="${x.id}">Release…</button></div>`).join('');
+  return `<div class="panel tight" style="border-color:var(--bad)">${head}<div class="muted">You need ${p.short} more. The ${p.short} cheapest free agents ask <b>${fmt(p.needed)}</b> cr. and you have <b>${fmt(Math.max(0, p.usable))}</b> cr. of usable cap: free <b>${fmt(p.gap)}</b> cr. more. No signing may go over the cap. In the offseason you may release below ${F.ROSTER_MIN} to make room: there is no dead cap, so his whole charge leaves the books. You choose who goes.</div><div class="list" style="margin-top:6px">${rows}</div><div class="dim" style="margin-top:4px">Each release is one more monster to sign. Monsters may turn you down, so leave a little room.</div></div>`;
+}
+
 /** The free-agency section of the Task 7 offseason screen. */
 export function faOffseasonHtml(f) {
   if (!F.task7Offseason(f)) return null;
@@ -72,7 +83,7 @@ export function faOffseasonHtml(f) {
   const list = F.freeAgentMarket(f).filter((x) => !filter || x.monster.position === filter).map((x) => ({ x, i: interestOf(f, x.monster, x.ask) })).filter(({ i }) => !keenOnly || i.ratio >= 1).sort((a, b) => monsterOverall(b.x.monster) - monsterOverall(a.x.monster));
   const shown = showAll ? list : list.slice(0, 25);
   const head = open ? `<div class="row between"><b>Free agency · Period ${p} of ${E.FA_RULES.periods}</b><span class="dim">${F.freeAgentMarket(f).length} unsigned</span></div>` : `<div class="row between"><b>Free agency closed</b><span class="dim">unsigned monsters stay on the market all year: offers are answered at once</span></div>`;
-  return `${compHtml}<h3>Free agency</h3>${head}${capPanelHtml(f)}${assistantHtml(f)}${myOffersHtml(f)}
+  return `${compHtml}${floorPanelHtml(f)}<h3>Free agency</h3>${head}${capPanelHtml(f)}${assistantHtml(f)}${myOffersHtml(f)}
     <div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${keenOnly ? 'primary' : ''}" data-action="fakeen" aria-pressed="${keenOnly}">Interested in you</button><button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'on' : 'off'}</button></div>
     <div class="list">${shown.map(({ x, i }) => { const m = x.monster; const rival = x.offers.filter((o) => o.club !== f.club).length; const legend = legendSide(m);
       return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${legend ? '🌟 ' : ''}${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR · ${esc(rarityOf(m))} · age ${m.age}</span></div><div class="sub">asks <b>${fmt(x.ask.salary)}</b>/yr · ${x.ask.years} season${x.ask.years === 1 ? '' : 's'} · ${fitOf(f, m)}${rival ? ` · ${rival} other offer${rival === 1 ? '' : 's'}` : ''}</div></div><span class="chip ${i.cls}">${i.label}</span></div>`; }).join('') || '<p class="dim">Nobody on the market at this position.</p>'}</div>
@@ -141,6 +152,11 @@ export function faHandlers(app, Router) {
   return {
     faopenmarket: () => { const r = F.openFreeAgency(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save({ immediate: true }); Router.render(); }, // a checkpoint around each period step (specification: persistence)
     faopen: (el) => negotiationSheet(app, el.dataset.id, () => Router.render()),
+    fafloorrel: async (el) => { // owner rule 2026-11-04: the owner chooses each release; nothing is released automatically
+      const x = F.rosterFloorPlan(app.f).releases.find((r) => r.id === el.dataset.id); if (!x) return;
+      if (!(await confirmSheet(`Release ${x.name} (${x.position}, ${x.ovr} OVR)? His ${fmt(x.saving)} cr. charge leaves next season's books (no dead cap). He joins the free-agent pool and cannot rejoin you this league year.`, { title: 'Release to make cap room', okLabel: 'Release' }))) return;
+      const r = F.releaseMonster(app.f, x.id); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save({ immediate: true }); toast(`${x.name} released: ${fmt(x.saving)} cr. freed.`, 'info'); Router.render();
+    },
     fafilter: (el) => { filter = el.dataset.v || ''; Router.render(); },
     faall: () => { showAll = true; Router.render(); },
     fakeen: () => { keenOnly = !keenOnly; Router.render(); },

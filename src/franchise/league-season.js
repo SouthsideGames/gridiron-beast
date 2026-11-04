@@ -194,6 +194,16 @@ export function clubNeeds(f, club) {
  * with generated regional veterans whose quality tracks the club's target (how the curve of difficulty is carried, decision C),
  * up to the full 38 and never over the cap. A club short of a legal lineup signs at the minimum quality regardless.
  */
+/** A replacement-level deal (the cheapest arrival a club can always sign), with a small margin. */
+const FLOOR_DEAL = 18000 + 280 * MIN_QUALITY + 2000;
+/** The monster an AI club releases to afford the roster minimum: never protected, never the last starters at a position, never at `pos`;
+ *  the weakest whose salary pays for two replacement deals, else the best-paid. */
+function floorSpare(f, club, pos) {
+  const roster = clubRoster(f, club); const count = (p) => roster.filter((m) => m.position === p).length;
+  const ok = roster.filter((m) => !isProtected(m) && m.position !== pos && count(m.position) > (GROUP_SLOTS[m.position]?.length || 1));
+  const rich = ok.filter((m) => (m.salary || 0) >= 2 * FLOOR_DEAL).sort((a, b) => monsterOverall(a) - monsterOverall(b) || (a.id < b.id ? -1 : 1));
+  return rich[0] || ok.filter((m) => (m.salary || 0) > FLOOR_DEAL).sort((a, b) => (b.salary || 0) - (a.salary || 0) || (a.id < b.id ? -1 : 1))[0] || null;
+}
 export function leagueFreeAgency(f, r, { year, cap, targetOf, signUnsigned = null }) { // Task 7: `signUnsigned(club, m)` signs a pool or waiver monster through the market's immediate negotiation (he may refuse)
   if (!hasLeague(f)) return null;
   const out = { fromPools: 0, fromWaivers: 0, generated: 0 };
@@ -216,6 +226,9 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf, signUnsigned = nul
       const pooled = Object.values(f.pool || {}).flat().filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
       if (pooled) { takeFromPool(f, pooled.id); pooled.salary = salaryFor(pooled); addToClub(f, club, pooled, { year, via: 'signed', contract: newContract(year, 2), source: 'pool' }); out.fromPools++; continue; }
       }
+      // owner rule (2026-11-04): no signing over the cap. A Task 7 club short of the minimum without room for a replacement-level
+      // deal first releases a well-paid expendable monster (the offseason allows going below the minimum to do it), then signs.
+      if (signUnsigned && urgent && clubRoster(f, club).length < ROSTER_MIN && room < FLOOR_DEAL) { const spare = floorSpare(f, club, pos); if (spare) { releaseFromClub(f, club, spare.id, { year, reason: 'released', why: 'cap' }); out.floorReleases = (out.floorReleases || 0) + 1; continue; } }
       const starterSlot = clubRoster(f, club).filter((m) => m.position === pos).length < (GROUP_SLOTS[pos]?.length || 1);
       const quality = targetOf(club) + (starterSlot ? 1 : -4) + r.int(5) - 2;
       const m = generateArrival(f, r, { club, position: pos, quality, room, floor: urgent });

@@ -560,9 +560,41 @@ registerOwnerHooks({ // Task 7: the engine's view of the owner's club (fa-engine
   staffTotal: (f) => Object.keys(f.staff || {}).reduce((sum, role) => sum + staffSalary(f, role), 0),
   joinOwner: (f, m, via, start) => { uniqueName(f, m); m.origin ||= homeRegion(m); m.joined = start; backfillCareer(f, m); noteJoin(f, m, via, { region: homeRegion(m) }); f.roster.push(m); dexRecord(f, m, 'signed'); news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed: ${m.contract.years} season${m.contract.years === 1 ? '' : 's'} at ${m.contract.salary.toLocaleString('en-US')} cr.${m.contract.bonus ? ` plus a ${m.contract.bonus.toLocaleString('en-US')} cr. bonus` : ''}.`, 'roster', { mid: m.id, mname: m.name }); },
 });
+/** Owner rule (2026-11-04): in a Task 7 offseason a club may release below the 26-monster minimum to free cap; the minimum still gates the next season. */
+const offseasonRelease = (f) => hasFreeAgency(f) && !!f.season?.finished;
+/** Why a release is refused, or null (the same rules as releaseMonster). */
+function releaseRefusal(f, m) {
+  if (f.roster.length <= ROSTER_MIN && !offseasonRelease(f)) return `You must keep at least ${ROSTER_MIN} monsters.`;
+  if (f.roster.filter((x) => x.position === m.position).length <= 1 && m.position !== 'TE') return `${m.name} is your only ${m.position}.`;
+  return null;
+}
+/**
+ * The roster minimum against the cap (owner rule 2026-11-04). How many signings the club still needs, what the cheapest legal free
+ * agents ask in total (first-season charge at their asks), the usable cap, the shortfall, and each release the owner may choose with
+ * its cap saving (zero dead cap: his whole charge leaves the books) and what would still be missing after it. `path` is a sequence of
+ * releases that closes the shortfall (a check that the club can recover); nothing is released here: the owner chooses.
+ */
+export function rosterFloorPlan(f) {
+  const short = Math.max(0, ROSTER_MIN - f.roster.length);
+  if (!hasFreeAgency(f) || !f.season?.finished) return { short, needed: 0, usable: null, gap: 0, releases: [], path: [], recoverable: short === 0 };
+  const ly = leagueYear(f); const usable = capView(f, f.club).usable;
+  const asks = freeAgentMarket(f).filter((x) => !faBlocker(f, f.club, x.monster, null, { final: true })).map((x) => x.ask.salary).sort((a, b) => a - b);
+  const cost = (k) => (k <= asks.length ? asks.slice(0, k).reduce((a, b) => a + b, 0) : Infinity);
+  const needed = cost(short); const gap = Math.max(0, needed - usable);
+  const saving = (m) => capCharge(m, ly, { current: true });
+  const options = (roster) => roster.filter((m) => !releaseRefusal({ ...f, roster }, m));
+  const releases = options(f.roster).map((m) => { const sv = saving(m); const after = Math.max(0, cost(short + 1) - usable - sv); return { id: m.id, name: m.name, position: m.position, ovr: monsterOverall(m), saving: sv, gapAfter: after }; })
+    .sort((a, b) => (a.gapAfter === 0) !== (b.gapAfter === 0) ? (a.gapAfter === 0 ? -1 : 1) : a.gapAfter - b.gapAfter || a.ovr - b.ovr || (a.id < b.id ? -1 : 1));
+  const path = []; let roster = f.roster.slice(), k = short, room = usable;
+  while (short > 0 && cost(k) > room && path.length < 12) {
+    const best = options(roster).map((m) => ({ m, net: saving(m) - (asks[k] ?? Infinity) })).sort((a, b) => b.net - a.net || monsterOverall(a.m) - monsterOverall(b.m))[0];
+    if (!best || best.net <= 0) break; path.push(best.m.id); roster = roster.filter((x) => x !== best.m); room += saving(best.m); k++;
+  }
+  return { short, needed, usable, gap, enough: asks.length >= short, releases, path, recoverable: short === 0 || cost(k) <= room };
+}
 export function releaseMonster(f, id) {
   const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not on roster.' };
-  if (f.roster.length <= ROSTER_MIN) return { ok: false, reason: `You must keep at least ${ROSTER_MIN} monsters.` };
+  if (f.roster.length <= ROSTER_MIN && !offseasonRelease(f)) return { ok: false, reason: `You must keep at least ${ROSTER_MIN} monsters.` }; // owner rule 2026-11-04: offseason releases may go below the minimum, which still gates the next season
   const positionCount = f.roster.filter((x) => x.position === m.position).length;
   if (positionCount <= 1 && m.position !== 'TE') return { ok: false, reason: `${m.name} is your only ${m.position}.` };
   f.roster = f.roster.filter((x) => x.id !== id);
@@ -2413,7 +2445,9 @@ export function startNextSeason(f) {
   if (t7 && !freeAgencyDone(f)) return { ok: false, reason: freeAgencyOpen(f) ? `Free agency is in Period ${f.freeAgency.period} of ${FA_RULES.periods}: finish it first.` : 'Free agency has not been held.' };
   if (!draftDone(f)) return { ok: false, reason: 'The draft has not been held.' };
   { const lc = legendCompliance(f); if (lc?.due) return { ok: false, reason: lc.reason, code: 'legendary', compliance: lc }; } // Task 7 resolution 3: never deletes; trade or release
-  if (f.roster.length < ROSTER_MIN) return { ok: false, reason: `You need at least ${ROSTER_MIN} monsters to start a season (you have ${f.roster.length}). Sign free agents in the offseason market.` };
+  if (f.roster.length < ROSTER_MIN) { const fp = t7 ? rosterFloorPlan(f) : null; const short = ROSTER_MIN - f.roster.length;
+    const how = fp && fp.gap > 0 && Number.isFinite(fp.needed) ? ` The ${short} cheapest free agents ask ${fp.needed.toLocaleString('en-US')} cr. and you have ${Math.max(0, fp.usable).toLocaleString('en-US')} cr. of usable cap: free ${fp.gap.toLocaleString('en-US')} cr. more by releasing monsters (no dead cap; in the offseason you may go below ${ROSTER_MIN} to do it).` : ' Sign free agents in the offseason market.';
+    return { ok: false, code: 'roster', reason: `You need at least ${ROSTER_MIN} monsters to start a season (you have ${f.roster.length}).${how}`, floor: fp }; }
   if (nextStaffRole(f)) return { ok: false, reason: 'Hire a full staff first.' };
   if (f.postseason && !f.postseason.resolved) return { ok: false, reason: 'A postseason decision is waiting.' };
   if (f.legendPick && !f.legendPick.resolved) return { ok: false, reason: 'Choose your Legend Track first.' };
