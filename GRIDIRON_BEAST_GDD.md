@@ -4342,6 +4342,14 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
   - staff severance, retention and firing charges stay one-season staff charges (D2);
   - the 70% rookie scale, which now lasts its two seasons, and rookie trade protection stay (D2);
   - every acquisition path must fit usable cap (D4).
+- **The roster minimum against the cap (owner rule, 2026-11-04):**
+  - **The dead end it closes:** a club short of 26 with no usable cap for a replacement could neither sign (D4) nor release (the old 26 floor on releases), so its next season could never start.
+  - **Offseason releases below 26:** in a Task 7 offseason any club may release below 26 to free cap. The 26 minimum still gates the next season; in season the release floor stays at 26.
+  - **No signing over the cap,** for any club, on any path.
+  - **The owner chooses:** nothing on the owner's roster is released automatically. The offseason screen's *Roster minimum* panel shows how many signings are missing, what the cheapest legal free agents ask in total, the usable cap and the shortfall, and each release the owner may make with its cap saving and what would still be missing after it; each release is confirmed. The season-start refusal gives the same figures.
+  - **AI clubs resolve it themselves:** a club short of 26 without room for a replacement-level deal releases its weakest well-paid expendable monster (never protected, never a position's last starters), then signs within the cap.
+  - **Unchanged:** zero dead cap (a release removes the whole charge), the no-return lock for a released monster, and the legendary limits.
+  - **Monsters may still refuse:** the plan prices replacements at their asks; a refusal means trying the next one.
 
 **59.3 The offseason (resolution 5, decisions 3, 12, 27).**
 - **Order:**

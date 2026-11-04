@@ -313,3 +313,15 @@ No gameplay code, no merge, no publish, no Task 8 work. Implementation starts af
   - No unrelated gameplay, difficulty or balance-rule changes may be made to force benchmark results.
   - No merge or publish without the owner's explicit approval.
   - A genuine design conflict comes back to the owner as a specific decision.
+
+## 9. Owner decision during the consolidated benchmark (2026-11-04)
+
+- **Finding:** in 6 of 20 twenty-season runs (build `875c976`), the owner reached a season 18–19 offseason with 23–25 monsters and almost no usable cap. D4 forbids signing over the cap and the existing rule refused any release below 26, so the next season could never start.
+- **D8 (approved): offseason releases below the minimum.**
+  - Clubs may release below 26 in the offseason to free cap; the 26 minimum is still enforced before the next season begins.
+  - No signing may exceed the cap.
+  - Nothing is released from the owner's team automatically: the owner chooses, with the cap saving shown, and sees how much cap an affordable replacement needs.
+  - AI clubs manage their own rosters to resolve it.
+  - The owner can always recover; zero dead cap and the legendary limits are unchanged.
+  - The affected benchmark seeds are rerun and checked for new roster or cap violations; the GDD and Task 7 documents are updated.
+- **Implemented in:** `f37b629` (rule, plan, interface, AI, tests) and `9df9d50` (benchmark recording only). See GDD §59.2.

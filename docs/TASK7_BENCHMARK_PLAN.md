@@ -6,6 +6,13 @@
 - The Task 6 exceptions accepted for v42.21.0 stay accepted exceptions. They are never reclassified as passing.
 - The benchmark runs **once**, on the final Task 7 commit, after checkpoint C.
 
+## 0. Amendment (2026-11-04, owner decision D8)
+
+- The first run (build `875c976`) found the roster-minimum dead end in 6 of 20 C/CH runs (Integrity and Rosters gates). It was stopped after 42 of 271 jobs; its files are kept in `bench-875c976` as evidence.
+- After D8 was implemented, the **whole** job set reruns once on build `9df9d50`, with the same seeds, flags, thresholds and statistics. Only the candidate build changed.
+- Recording only: each season's `fa` record also carries `floor` (AI floor releases that offseason; the hands-off owner's cumulative floor releases).
+- **Hands-off owner (the harness policy):** when the market fill cannot reach 26, it releases the plan's first suggestion and signs again. In the game the owner chooses.
+
 ## 1. Builds and files
 
 | Role | Build | Run files |
