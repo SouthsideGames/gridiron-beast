@@ -101,6 +101,7 @@ export function seedMeasures(run) {
   out.contract1Pct = pct(cl.filter((m) => m.contractYears === 1).length, cl.length); out.contract2Pct = pct(cl.filter((m) => m.contractYears === 2).length, cl.length); out.contract3PlusPct = pct(cl.filter((m) => m.contractYears >= 3).length, cl.length);
   const ends = {}; for (const m of cl) ends[m.contractEnds] = (ends[m.contractEnds] || 0) + 1; out.maxExpiryShare = cl.length ? 100 * Math.max(...Object.values(ends)) / cl.length : null;
   const pays = (run.decisions.trades || []).filter((t) => t.toBAge != null); out.youngPaymentPct = pct(pays.filter((t) => t.toBAge <= 24).length, pays.length);
+  { const sk = new Set((run.v4?.sales || []).map((x) => `${x.year}|${x.week}|${x.A}|${x.B}|${x.toA}`)); const ex = pays.filter((t) => !sk.has(`${t.year}|${t.week}|${t.A}|${t.B}|${t.toA}`)); out.youngPaymentExSalesPct = pct(ex.filter((t) => t.toBAge <= 24).length, ex.length); } // owner 2026-11-03: reported alongside, never instead of, youngPaymentPct (R4 starter sales excluded)
 
   // ---- development (Group 4)
   const traj = new Map(); for (const s of S) for (const m of ai(s)) { if (!traj.has(m.id)) traj.set(m.id, []); traj.get(m.id).push({ y: s.year, ...m }); }

@@ -32,7 +32,7 @@ export const STRATEGY = Object.freeze({
   winning: 0.6, losing: 0.4,     // recent win share
   recentWeight: 0.6,             // this season against last season
   contendQuality: 4,             // team overall above the AI mean that contends without a winning record (while not losing)
-  ageingShare: 0.35,             // share of starters within 2 seasons of onset (or past it) that makes a losing roster "old"
+  ageingShare: 0.35,             // Phase D (validated build): share of starters within 2 seasons of onset (or past it) that makes a losing roster "old"
   cappedShare: 0.97,             // next season's committed payroll at or above this share of the cap: capped out
   extraPicks: 2,                 // picks held above the normal 2 × DRAFT_ROUNDS that count as a stock of draft capital
   confirm: 2,                    // consecutive evaluations needed for an ordinary change
@@ -57,11 +57,11 @@ export function strategyInputs(f, club, { year, cap, teamOf, aiMean }) {
   return { win, recent, quality, ageingShare, committedShare, picks, extraPicks: picks - 2 * DRAFT_ROUNDS };
 }
 /** The mode the facts point to, before the stability rules. Returns { mode, why }. */
-export function rawMode(x) {
+export function rawMode(x, { ageingBar = STRATEGY.ageingShare } = {}) {
   const losing = x.recent <= STRATEGY.losing, winning = x.recent >= STRATEGY.winning;
   if ((winning && x.quality >= 0) || (!losing && x.quality >= STRATEGY.contendQuality)) return { mode: 'contend', why: winning ? 'winning with a strong roster' : 'a roster well above the league' };
   if (losing) {
-    if (x.ageingShare >= STRATEGY.ageingShare) return { mode: 'rebuild', why: 'losing with an ageing roster' };
+    if (x.ageingShare >= ageingBar) return { mode: 'rebuild', why: 'losing with an ageing roster' };
     if (x.committedShare >= STRATEGY.cappedShare) return { mode: 'rebuild', why: 'losing and capped out' };
     if (x.extraPicks >= STRATEGY.extraPicks) return { mode: 'rebuild', why: 'losing with extra draft picks' };
     return { mode: 'retool', why: 'losing with a young roster' };
@@ -88,9 +88,11 @@ export function nextMode(cur, raw, year, { gym = false } = {}) {
 export function evaluateStrategies(f, { year, cap, teamOf }) {
   if (!hasLeague(f)) return []; const clubs = leagueClubs(f).slice().sort();
   const ovr = Object.fromEntries(clubs.map((c) => [c, teamOverall(teamOf(c))])); const aiMean = clubs.reduce((s, c) => s + ovr[c], 0) / (clubs.length || 1);
-  const changes = [];
+  const changes = []; const inputs = Object.fromEntries(clubs.map((c) => [c, strategyInputs(f, c, { year, cap, teamOf, aiMean })]));
+  const ageingBar = STRATEGY.ageingShare;
+  const median = (() => { const sh = clubs.map((c) => inputs[c].ageingShare).sort((a, b) => a - b); return sh[Math.floor(sh.length / 2)] ?? 0; })();
   for (const club of clubs) {
-    const st = clubRecord(f, club).strategy; const x = strategyInputs(f, club, { year, cap, teamOf, aiMean }); const raw = rawMode(x);
+    const st = clubRecord(f, club).strategy; const x = inputs[club]; const raw = rawMode(x, { ageingBar: st.mode === 'rebuild' ? Math.max(ageingBar, median) : ageingBar }); // F1 (owner-approved 2026-11-03): a club already rebuilding stays "old" only while its ageing share is at or above the league median
     const before = st.mode || null; const n = nextMode(st, raw.mode, year, { gym: isGymClub(club) });
     st.mode = n.mode; st.modeSince = n.modeSince; st.modePending = n.modePending; st.modeLastWin = Math.round(x.win * 1000) / 1000; st.modeWhy = raw.why;
     if (n.mode !== before) changes.push({ club, mode: n.mode, from: before, why: raw.why });

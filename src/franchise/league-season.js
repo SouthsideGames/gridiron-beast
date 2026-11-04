@@ -100,17 +100,19 @@ export function leagueContracts(f, { year, cap, excessOf = null }) {
     const plan = rosterPlan(roster, bench, { starters });
     const med = median(roster.map(monsterOverall));
     const runaway = (excessOf?.(club) || 0) > (isGymClub(club) ? BAND : ORDINARY_RUNAWAY_BAND); if (runaway) out.runaway.push(club); let letGo = 0;
-    const mode = modeOf(f, club); const hasSuccessor = new Set(); for (const g of Object.values(plan.groups)) for (const r of g.rows) if (r.successor) hasSuccessor.add(r.starter.id);
+    const mode = modeOf(f, club); const succOf = new Map(); for (const g of Object.values(plan.groups)) for (const r of g.rows) if (r.successor) succOf.set(r.starter.id, { m: r.successor, ready: r.ready });
     for (const m of roster.slice()) {
       if (isProtected(m) || !contractEnds(m, year)) continue;
       const ovr = monsterOverall(m); const starter = starters.has(m.id); const successor = plan.successors.has(m.id);
       const pastOnset = (m.age || 0) > publicOnset(m);
       const value = successor || ovr >= med || ((m.age || 30) <= 25 && (m.potential || 0) >= ovr + (mode === 'rebuild' ? REBUILD_UPSIDE : 5));
       let keep = starter ? !(pastOnset && plan.readyFor.has(m.id)) : value && (successor || (m.age || 0) <= publicOnset(m) + RESERVE_PAST_ONSET);
-      // Phase D (R3 by mode): a contender keeps its veteran starters for now (one-season deals past onset); a rebuilder lets a starter past
-      // onset go once anyone is lined up to succeed him, ready or not, and gives no new deal to a reserve past his onset
-      if (starter && mode === 'contend') keep = true;
-      if (mode === 'rebuild' && pastOnset && (starter ? hasSuccessor.has(m.id) : !successor)) keep = false;
+      // R3 by mode (Phase D; F2/F3 owner-approved 2026-11-03): a contender lets a veteran past onset go only to a ready successor at least as
+      // good; a rebuilder lets him go to a ready successor, or to any successor once he is 2+ seasons past onset, and gives no new deal to a
+      // reserve past onset who is not a designated successor
+      { const pastBy = (m.age || 0) - publicOnset(m); const succ = succOf.get(m.id);
+        if (starter && mode === 'contend') keep = !(pastOnset && succ?.ready && monsterOverall(succ.m) >= ovr);
+        if (mode === 'rebuild' && pastOnset) keep = starter ? !(succ?.ready || (succ && pastBy >= 2)) : (successor ? keep : false); }
       // a club far above today's strength lets its expiring veterans walk (they are claimed within the league): attrition, decision A
       if (keep && runaway && !successor && (m.age || 0) >= RUNAWAY_VETERAN_AGE && clubRoster(f, club).length - letGo > ROSTER_MIN + 2) { keep = false; letGo++; }
       if (keep) { const len = modeLength(contractLength(m, { bench }), m, mode); m.salary = renewalAsk(m).ask; m.contract = leagueContract(year + 1, len); out.resigned++; out.lengths[len]++; out.byMode[mode] = (out.byMode[mode] || 0) + 1; }

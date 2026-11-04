@@ -104,7 +104,7 @@ function attempt(f, r, A, { year, cap, done, window }) {
  *                  the window's minimum gain and the seller not behind (seller floor), on their own roster worth
  * The existing valuation, cap, roster and window rules are reused unchanged; nothing here draws from the generator.
  */
-export const STARTER_SALE = Object.freeze({ perWindow: 1, youngAge: 25, youngStarAge: 26 });
+export const STARTER_SALE = Object.freeze({ perWindow: 1, youngAge: 25, youngStarAge: 26, replacementWithin: 4 });
 /** No sale yet in this window (offseason window: week 0 of `year`; in season: weeks 2–8 of `year`). */
 export function saleOpen(f, year, week) { return !(f.league?.trades || []).some((t) => t.sale && t.year === year && (week > 0 ? t.week > 0 : t.week === 0)); }
 /** The starters a rebuilding club may sell, the furthest past onset first. */
@@ -113,12 +113,15 @@ export function sellableStarters(f, roster) {
     .filter((m) => !isProtected(m) && tradable(f, m) && (m.age || 0) > STARTER_SALE.youngStarAge && horizonOf(m) <= PLAN.ageingHorizon)
     .sort((a, b) => horizonOf(a) - horizonOf(b) || ovr(b) - ovr(a) || (a.id < b.id ? -1 : 1));
 }
+/** F4: the monster who would take the sold starter's slot (the next available at the position) is within STARTER_SALE.replacementWithin of him. */
+export function hasReplacement(roster, m) { const next = starters(roster, m.position).filter((x) => x !== m && !isUnavailable(x))[slotsOf(m.position) - 1]; return !!next && ovr(next) >= ovr(m) - STARTER_SALE.replacementWithin; }
 function starterSale(f, r, { year, cap, done, window }) {
   const bar = window === 'season' ? AI_TRADE_RULES.season : { upgrade: AI_TRADE_RULES.upgrade, minGain: DEAL_RULES.minGain };
   const y0 = currentClassYear(f);
   for (const S of order(f).filter((c) => !done.has(c) && modeOf(f, c) === 'rebuild')) {
     const rosterS = clubRoster(f, S); const roomS = clubCapRoom(f, S, cap);
     for (const m of sellableStarters(f, rosterS)) {
+      if (!hasReplacement(rosterS, m)) continue; // F4 (owner-approved 2026-11-03): only with a replacement within 4 behind him
       const vm = marketValue(m, { year }); let best = null;
       for (const B of order(f).filter((c) => c !== S && !done.has(c) && modeOf(f, c) !== 'rebuild')) {
         const rosterB = clubRoster(f, B); if (ovr(m) < floorAt(rosterB, m.position) + bar.upgrade) continue; // a legitimate need

@@ -1045,3 +1045,76 @@ Full report: `docs/TASK6_PHASE_D_REPORT.md`. Nothing is merged. No approved rule
 5. D6 keep option 1 (recommended).
 6. Gym floor against ordinary title share.
 7. M3.
+
+## Phase D accepted as implementation-complete; M3 remediation pass (owner, 2026-11-03)
+Phase D is accepted as **implementation-complete**. **M3 release and merging are not approved.** One focused remediation pass is authorised. It is not Phase E, and it authorises no new features.
+
+**Decisions:**
+
+| Item | Decision |
+|---|---|
+| Rookie drift | Hard gate stays unresolved. No ageing or difficulty change; no waiver. |
+| Rookie owner balance (§45.6) | The standard 8-seed failure and the 24-seed supporting results are preserved. Thresholds and seeds unchanged. |
+| Young-player payments | Report the overall measure **and** a separate measure excluding approved R4 starter sales. The combined result stays; the target is not redefined. |
+| Rebuilding effectiveness (highest priority) | Investigate why ordinary persistent losers rose to 95.7% and persistent weak groups worsened: the timing of sales, successor readiness, contract decisions, rebuild duration. Rebuilding clubs need a realistic path back. |
+| D5 | Controlled trial of 0.20 against 0.35 for Rebuild clubs authorised. Recommend adoption only on a supported improvement without meaningful regressions. The approved value is not changed until the owner reviews. |
+| D6 | Keep the current nudge; no more experiments. |
+| Gyms and ordinary championships | Investigate whether a few strong ordinary clubs can become legitimate contenders without reducing the required average gym advantage. No change to gym bonuses, anchors or slowdown bands without approval. |
+
+**Method:** focused diagnostics and targeted experiments; no full multi-hour benchmark unless a proposed change needs confirmation. The validated Phase D build stays available for comparison. No merge, publish or unapproved balance change.
+
+### M3 remediation findings (2026-11-03): proposals only, nothing adopted
+Full report: `docs/TASK6_M3_REMEDIATION_REPORT.md`. The validated Phase D build is unchanged. The candidate fixes are behind flags that are off.
+
+**Root causes:**
+- **Persistent losers sit on a structural floor:** ordinary clubs lose (≤ 3 wins) in 56% of seasons, so random order alone gives about 84%. Phase D's 95.7 is clustering from long rebuilds.
+- **Rebuilds last too long:** mean 4.4 seasons. The fixed ageing test sits below the league norm.
+- **The approved ordinary-club brakes act on losing clubs:**
+  - runaway attrition fires in about 49% of ordinary club-seasons, 54% of them after losing;
+  - two thirds of starter departures at contract time come from it;
+  - the slowdown is applied in 56% of losing seasons.
+- **Rebuilders lose 2.7 starters a season to unready successors.**
+- **Persistent weak groups:** longer persistence, partly a club-relative effect at contenders.
+- **Young-player payments:** 56.4 (all deals) and 48.7 (excluding R4 sales); the combined measure is kept.
+
+**Proposed, within the approved scope:** package B (F1b rebuild exit, F2/F3 readiness-tied contracts, F4 ready replacement for sales).
+- **Benefit:** rebuilds 4.5 → 2.8 seasons (supported); safer sales; no gym change.
+- **Limits:** losers and weak groups unresolved (noise around the floor).
+
+**D5:** 0.20 shows no supported, replicated improvement; 0.35 stays.
+
+**Rule changes for approval:**
+- **R-1:** brakes skip clubs coming off a losing season. Recovery +9.8 with B, ordinary playoffs +2.3; gym lead −0.7.
+- **R-2:** the two strongest ordinary clubs exempt from the brakes. Gym lead unchanged; owner's late seasons −6.4.
+
+**Remaining hard-gate failures:** only the two Rookie gates, unchanged by any Task 6 lever.
+
+## Final release validation (2026-11-03): release conditions not met; nothing merged or deployed
+Under the owner's conditional authorisation of 2026-11-03:
+- **F1–F4 implemented as tested.** The final commit reproduces the tested arm exactly.
+- **Not changed:** Rebuild potential weight stays 0.35; no R-1, R-2 or nudge change.
+- **Validation:** the approved seed sets and the held-out sets were run once.
+
+Full report: `docs/TASK6_FINAL_RELEASE_REPORT.md`.
+
+**Conditions:**
+
+| Condition | Result |
+|---|---|
+| **A. Technical integrity** | **pass**: suite 816/816; integrity 0; determinism; saves 6/6; Stage P +4.1% / −4.0%; preview checks |
+| **B. Rebuilding** | **met**: rebuild length 4.5 → 2.8 (C) and 4.3 → 2.9 (CH), supported; 5+ season rebuilds about 6% (was 31–37%); no regressions |
+| **C. Balance** | **failed** on owner balance and drift (details below); gym, development, draft and succession show no meaningful deterioration |
+| **D. Exceptions** | the two new items above are not covered; the Rookie gates are not worse |
+
+**Condition C failures:**
+- **Pro drift:** −5.7 [−8.4, −2.7]. This is a FAIL by point estimate; Phase D was −4.3, inconclusive.
+- **All-Star §45.6, 8 seeds:** +5.4 FAIL. Phase D was +2.0, a pass. On 24 seeds: −0.7 [−4.1, +2.9].
+- **All-Star drift:** −2.7 [−6.0, +0.7], now inconclusive (was a pass).
+- None of these changes against Phase D is significant: Pro −1.3 [−3.6, +0.9]; All-Star drift −1.2 [−3.2, +0.7].
+
+**Decision required from the owner:**
+1. accept the two new items as documented exceptions and release;
+2. release Phase D without F1–F4;
+3. or hold M3.
+
+Recommended: option 1. The automatic release was **not** carried out.
