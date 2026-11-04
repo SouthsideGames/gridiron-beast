@@ -1,0 +1,30 @@
+{
+ "seeds": [
+  1,
+  2
+ ],
+ "seasons": 2,
+ "nonInterference": [
+  {
+   "seed": 1,
+   "plain": "3f476186d58250278484a3b31c837be46b7e1ee935848be75721ffe0ea9f7ca5",
+   "harness": "3f476186d58250278484a3b31c837be46b7e1ee935848be75721ffe0ea9f7ca5",
+   "identical": true
+  },
+  {
+   "seed": 2,
+   "plain": "364e715ded0315b7b9c407f71d48d68328daca8957e335349becf24d6bdaad16",
+   "harness": "364e715ded0315b7b9c407f71d48d68328daca8957e335349becf24d6bdaad16",
+   "identical": true
+  }
+ ],
+ "determinism": {
+  "hashA": "b1e67a7593708b5bd23e51cc68a54f19eee63315abeb9a2ca1b33af5a86aadbf",
+  "hashB": "b1e67a7593708b5bd23e51cc68a54f19eee63315abeb9a2ca1b33af5a86aadbf",
+  "hashV3A": "b3708063194961d1ff7aee8470bd8c5ce943ead777575eb0894cda9cdd3e860b",
+  "hashV3B": "b3708063194961d1ff7aee8470bd8c5ce943ead777575eb0894cda9cdd3e860b",
+  "identical": true
+ },
+ "v3": null,
+ "pass": true
+}

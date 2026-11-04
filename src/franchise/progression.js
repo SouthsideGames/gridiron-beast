@@ -1,7 +1,8 @@
 // XP, level-ups, fatigue, injuries and recovery (GDD §5.1 and §8).
 
 import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints } from '../data/monsters.js';
-import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
+import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, POSITION_WEIGHTS } from '../data/personnel.js';
+import { maturationTarget, MATURATION_MAX_AGE } from './development.js';
 import { isAgeless } from './league-registry.js';
 import { CURVE, trueOnset, technicalOffset, peakWindowAge, isPhysical, physLoss, techLoss, drawLoss, transitionYears, SEVERE_INJURY_PHYSICAL, ATTRIBUTE_FLOOR } from '../data/aging.js';
 /** Injury-risk multiplier for a monster playing a secondary position. */
@@ -93,6 +94,8 @@ export function offseason(roster, rng, { s = null, severeOf = null } = {}) {
       events.push({ kind: 'decline', id: m.id, name: m.name });
     }
     if (m.age <= 23) for (const k of ['awareness', 'strength']) if (m.attributes[k] < m.potential) m.attributes[k] += 1;
+    // C2 maturation (Task 6 Phase C, owner 2026-10-30): one position-weighted +1 each offseason through age 24, never above potential; no draw
+    if (m.age <= MATURATION_MAX_AGE) { const k = maturationTarget(m, POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR); if (k) { m.attributes[k] += 1; events.push({ kind: 'mature', id: m.id, name: m.name, attr: k }); } }
     if (physLost) m.physDrop = physLost; else delete m.physDrop; // what the forecast may read: did his body visibly decline this offseason
     m.salary = salaryFor(m);
   }

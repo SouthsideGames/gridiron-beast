@@ -16,6 +16,7 @@ import { createRng, hashString } from '../core/rng.js';
 import { GROUP_SLOTS } from './roster.js';
 import { tradable, pickKey, samePick, pickWorth, picksOwnedBy, pickUsed, tradableYears } from './trades.js';
 import { marketValue, rosterWorth, rosterAfter, rosterProblems, roleIn, slotsOf, countsAt, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
+const MINE = Object.freeze({ succession: false }); // Task 6 Phase B (R6): the owner's own roster is valued without the AI successor premium
 import { isProtected } from './league-registry.js';
 
 export const DESK_RULES = Object.freeze({
@@ -185,7 +186,7 @@ function buildIncomingOfferNow(f, env, { key, chance }) {
   const spares = (roster, side) => Object.keys(GROUP_SLOTS).flatMap((pos) => ordered(roster.filter((m) => m.position === pos)).slice(slotsOf(pos))).filter((m) => !immovable(f, m, side) && !isUnavailable(m));
   const floorAt = (roster, pos) => { const at = ordered(roster.filter((m) => m.position === pos)).filter((m) => !isUnavailable(m)); return at.length < slotsOf(pos) ? 0 : ovr(at[slotsOf(pos) - 1]); };
   const mySpares = spares(mine, 'mine'); const out = { sell: [], buy: [], swap: [] };
-  const ownerNet = (give, get, picksIn, picksOut) => rosterWorth(rosterAfter(mine, { give, get }), year) - rosterWorth(mine, year) + picksIn - picksOut;
+  const ownerNet = (give, get, picksIn, picksOut) => rosterWorth(rosterAfter(mine, { give, get }), year, MINE) - rosterWorth(mine, year, MINE) + picksIn - picksOut;
   const accepted = (p) => evaluateProposal(f, p, { ...env, counter: false, count: false, windowOpen: true, noLimit: true });
   const consider = (kind, cand) => { const at = out[kind].findIndex((x) => x.team === cand.team); if (at < 0) out[kind].push(cand); else if (cand.score > out[kind][at].score) out[kind][at] = cand; }; // the best offer of each club, per kind
   for (const team of clubs) {
@@ -193,7 +194,7 @@ function buildIncomingOfferNow(f, env, { key, chance }) {
     // sell: their spare for your picks
     for (const m of theirSpares.filter((x) => ovr(x) >= floorAt(mine, x.position) + DEAL_RULES.band[0] * 0 + 2).sort((a, b) => ovr(b) - ovr(a)).slice(0, 2)) {
       const upgrade = ovr(m) - floorAt(mine, m.position); if (upgrade < 3) continue; // he must start for you, by a margin you would notice
-      const gain = rosterWorth(rosterAfter(mine, { get: [m] }), year) - rosterWorth(mine, year); if (gain < DEAL_RULES.minGain) continue;
+      const gain = rosterWorth(rosterAfter(mine, { get: [m] }), year, MINE) - rosterWorth(mine, year, MINE); if (gain < DEAL_RULES.minGain) continue;
       const price = marketValue(m, { year }) * 1.3;
       const combos = [...myPicks.map((p) => [p]), ...myPicks.flatMap((p, i) => myPicks.slice(i + 1).map((q) => [p, q]))].sort((a, b) => a.reduce((s, p) => s + pickWorth(f, p), 0) - b.reduce((s, p) => s + pickWorth(f, p), 0)).slice(0, 40);
       for (const give of combos) { const prop = { team, giveMonsters: [], givePicks: give, getMonsters: [m.id], getPicks: [] }; const e = accepted(prop); if (!e.accept) continue; const cost = give.reduce((s, p) => s + pickWorth(f, p), 0); if (cost > price) break; consider('sell', { team, kind: 'sell', proposal: prop, gain, score: gain / cost + r.next() * 0.001 }); break; }

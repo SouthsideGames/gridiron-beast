@@ -8,6 +8,7 @@ import { noteJoin, markCareerFresh } from './career.js';
 import { generateMonster, regionSpecies, salaryFor, monsterOverall, ROSTER_MAX } from '../data/monsters.js';
 import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
+import { draftNeedBonus } from './roster-plan.js';
 
 export const DRAFT_ROUNDS = 3;
 export const ROOKIE_SCALE = 0.70;
@@ -77,11 +78,21 @@ export function startDraft(f, standingsBestFirst, { ownerOf = null } = {}) {
 }
 export const onTheClock = (f) => f.draft?.started && !f.draft.done ? f.draft.order[f.draft.index]?.team : null;
 
-/** AI pick: best available by overall with a little positional taste, never two kickers. */
-export function aiDraftPick(f, team, rng) {
+/** AI pick: best available by overall with a little positional taste, never two kickers. Task 6 Phase B (R7): with the club's roster
+ *  plan (`plan`, roster-plan.js) the score adds the plan's need for this prospect (draftNeedBonus: succession for a prospect who can
+ *  become the successor, weak groups first, −3 where the group is settled); the noise, the kicker and the duplicate penalties are unchanged. */
+/** Task 6 Phase D (R7 mode weights, owner 2026-10-30 / 2026-11-02): the weight on potential by the club's strategy mode (`plan.mode`).
+ *  Rebuilders 0.35 against the standing 0.20 (the approved test); contenders 0.10 plus READY_BONUS for a prospect who would start
+ *  at once (his overall at or above the club's weakest starter at the position). Compete and Retool keep 0.20. */
+export const POTENTIAL_WEIGHT = Object.freeze({ contend: 0.1, compete: 0.2, retool: 0.2, rebuild: 0.35 });
+export const READY_BONUS = 2;
+export function aiDraftPick(f, team, rng, { plan = null } = {}) {
   const d = f.draft; const avail = d.class.filter((m) => d.available.includes(m.id));
   const taken = d.picks.filter((p) => p.team === team).map((p) => p.position);
-  const score = (m) => monsterOverall(m) + (m.potential - 70) * 0.2 + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0);
+  const need = {}; if (plan) for (const m of avail) need[m.id] = draftNeedBonus(plan, m.position, m);
+  const mode = plan?.mode || 'compete'; const pw = POTENTIAL_WEIGHT[mode] ?? 0.2;
+  const ready = {}; if (mode === 'contend' && plan?.groups) for (const m of avail) { const rows = plan.groups[m.position]?.rows || []; const weakest = rows.length ? Math.min(...rows.map((r) => monsterOverall(r.starter))) : 0; if (monsterOverall(m) >= weakest) ready[m.id] = READY_BONUS; }
+  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0);
   return avail.sort((a, b) => score(b) - score(a))[0] || null;
 }
 
@@ -95,10 +106,10 @@ function recordPick(f, team, m, { mine = false }) {
 
 /** Run AI picks until it is the owner's turn or the draft ends. Returns the picks made. */
 /** `persist`: keep AI picks in `draftResults` for the generated rosters (v40 and before); with the league registry the club takes the rookie through `onAiPick` and the historical classes stay as they are (Phase 3, decision 6). */
-export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = true }) {
+export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = true, planOf = null }) {
   const d = f.draft; const made = [];
   while (d.started && !d.done && d.order[d.index].team !== playerClub) {
-    const team = d.order[d.index].team; const m = aiDraftPick(f, team, rng);
+    const team = d.order[d.index].team; const m = aiDraftPick(f, team, rng, { plan: planOf ? planOf(team) : null });
     if (!m) { d.done = true; break; }
     recordPick(f, team, m, { mine: false }); { const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: team }; } made.push({ team, m });
     if (persist) { (f.draftResults ||= {}); (f.draftResults[f.draft.year] ||= {}); (f.draftResults[f.draft.year][team] ||= []).push(m); }

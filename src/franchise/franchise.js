@@ -48,7 +48,10 @@ import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague } from './lea
 import { aiTrades } from './league-trades.js';
 import { tradeWindowState, seasonTradeWeek } from './trade-window.js';
 import { slimSeasonAwards } from './history-compact.js';
-import { leagueSeasonEnd, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, leagueInjuryCover, leagueTrim, CREATION_LIFT } from './league-season.js';
+import { rosterPlan } from './roster-plan.js';
+import { selectDevSlots, practiceAfterGame, playedIds, devIneligibility, DEV, DEV_REASON } from './development.js';
+import { evaluateStrategies, modeOf } from './strategy.js';
+import { leagueSeasonEnd, leagueBenchOf, leagueUpgrades, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, leagueInjuryCover, leagueTrim, CREATION_LIFT } from './league-season.js';
 export { validateClubs } from './league-season.js';
 import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRoom, captureLeague, verifyLeague, addToClub, removeFromClub, isProtected, findInLeague, leagueEvent, takeEvents, moveIdentity } from './league-registry.js';
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
@@ -750,7 +753,9 @@ const leagueBooks = (f, team) => team !== f.club && hasLeague(f) && !!clubRecord
 function aiAfterGame(f, team, game, side, r) {
   if (!leagueBooks(f, team.name)) return [];
   const won = game.winner === side;
-  const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale: slowScale(clubRecord(f, team.name)?.strategy?.slow || 0) });
+  const xpScale = slowScale(clubRecord(f, team.name)?.strategy?.slow || 0);
+  const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale });
+  { const played = playedIds(team.chart); const slots = selectDevSlots(team.roster, played); events.push(...practiceAfterGame(team.roster, slots.ids, played, r, { xpScale, autoSpend: true, autoEvolve: true })); } // C1 development slots (Task 6 Phase C)
   for (const e of events) if (e.kind === 'evolve') { const x = team.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: team.name, from: e.from, to: e.to }); } // Career Timeline (GDD §46)
   return events;
 }
@@ -934,7 +939,8 @@ export function beginDraft(f) {
 function runDraftToMe(f) {
   const { r, save } = frng(f);
   const league = hasLeague(f); const creation = !!f.draft?.creation; const year = creation ? f.season.year : f.season.year + 1;
-  const made = draftAdvance(f, r, { playerClub: f.club, persist: !league, onAiPick: league ? (team, m) => { if (clubRecord(f, team)) joinAsDraftee(f, team, m, { year, silent: creation }); } : null });
+  const bench = league ? leagueBenchOf(f) : null; // Task 6 Phase B (R7): each AI club drafts by its roster plan, derived at its pick
+  const made = draftAdvance(f, r, { playerClub: f.club, persist: !league, onAiPick: league ? (team, m) => { if (clubRecord(f, team)) joinAsDraftee(f, team, m, { year, silent: creation }); } : null, planOf: league ? (team) => (clubRecord(f, team) ? { ...rosterPlan(clubRoster(f, team), bench), mode: modeOf(f, team) } : null) : null }); // Phase D (R7): the club's strategy mode weights the pick
   save(); return made;
 }
 export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; uniqueName(f, r.monster); dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}), rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster', { mid: r.monster.id, mname: r.monster.name }); runDraftToMe(f); return r; }
@@ -1891,6 +1897,51 @@ export function sundayMatchup(f) {
   return { home: home === f.club ? mine : theirs, away: away === f.club ? mine : theirs, playerSide: home === f.club ? 'home' : 'away', opponent: oppName, tag, rival, playoff: !!po, forfeit: !!mine.forfeit, forfeitReason: mine.forfeitReason || null };
 }
 
+// ------------------------------------------------------------ development slots (Task 6 Phase C, GM slots; GDD §57)
+/** The owner's depth-chart starters (the monsters who develop by playing). */
+function ownerStarters(f) { return new Set(Object.values(buildDepthChart(f.roster, f.lineupManual, f.depth)).filter(Boolean)); }
+/**
+ * The owner's development slots now: his manual picks first (while eligible), the rest filled by the same priority as the AI's.
+ * With `notify`, a manual pick that has become ineligible leaves the manual list, and League News says why and who fills the slot.
+ */
+export function ownerDevSlots(f, { notify = false } = {}) {
+  const st = f.devSlots || { manual: [], excluded: [] };
+  const res = selectDevSlots(f.roster, ownerStarters(f), { manual: st.manual || [], excluded: st.excluded || [] });
+  if (notify && res.dropped.length) {
+    f.devSlots = { manual: (st.manual || []).filter((id) => !res.dropped.some((d) => d.id === id)), excluded: st.excluded || [] };
+    for (const d of res.dropped) {
+      const m = f.roster.find((x) => x.id === d.id); const repl = f.roster.find((x) => res.auto.has(x.id) && !(st.manual || []).includes(x.id));
+      news(f, `Development slots: ${m ? m.name : 'a monster'} ${DEV_REASON[d.reason] || 'is no longer eligible'}, so he leaves his slot.${repl ? ` Suggested replacement: ${repl.name} (${repl.position}, ${monsterOverall(repl)} OVR, potential ${repl.potential}), now practising in it; change it on the Roster.` : ''}`, 'roster', m ? { mid: m.id, mname: m.name } : undefined);
+    }
+  }
+  return res;
+}
+/** What the Roster screen shows: the slots (manual or automatic), the eligible reserves not in a slot, and why the rest are not eligible. */
+export function devSlotsView(f) {
+  const starters = ownerStarters(f); const st = f.devSlots || { manual: [], excluded: [] }; const res = ownerDevSlots(f);
+  const row = (m) => ({ id: m.id, name: m.name, position: m.position, age: m.age, ovr: monsterOverall(m), potential: m.potential, manual: (st.manual || []).includes(m.id), excluded: (st.excluded || []).includes(m.id) });
+  const inSlot = new Set(res.ids);
+  return { size: DEV.slots, perPosition: DEV.perPosition, share: DEV.share, xpPerGame: Math.round(DEV.share * DEV.baseXp),
+    slots: res.ids.map((id) => row(f.roster.find((m) => m.id === id))),
+    candidates: f.roster.filter((m) => !inSlot.has(m.id) && !devIneligibility(m, starters)).map(row),
+    dropped: res.dropped };
+}
+/** Put a monster in a development slot (`on`) or take him out. A manual pick replaces the lowest-priority automatic one when full. */
+export function setDevSlot(f, id, on) {
+  const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not on your roster.' };
+  const st = { manual: [...(f.devSlots?.manual || [])], excluded: [...(f.devSlots?.excluded || [])] };
+  if (on) {
+    const why = devIneligibility(m, ownerStarters(f)); if (why) return { ok: false, reason: `${m.name} ${DEV_REASON[why]}.` };
+    if (st.manual.includes(id)) return { ok: true };
+    if (st.manual.length >= DEV.slots) return { ok: false, reason: `All ${DEV.slots} slots hold your own picks. Take one out first.` };
+    if (st.manual.filter((x) => f.roster.find((y) => y.id === x)?.position === m.position).length >= DEV.perPosition) return { ok: false, reason: `At most ${DEV.perPosition} ${m.position} in development slots.` };
+    st.manual.push(id); st.excluded = st.excluded.filter((x) => x !== id);
+  } else { st.manual = st.manual.filter((x) => x !== id); if (!st.excluded.includes(id)) st.excluded.push(id); }
+  f.devSlots = st; return { ok: true, slots: devSlotsView(f) };
+}
+/** Hand every slot back to the automatic priority. */
+export function resetDevSlots(f) { delete f.devSlots; return { ok: true, slots: devSlotsView(f) }; }
+
 /** Record the player's finished game and roll the week forward. */
 export function finishSunday(f, gameState) {
   syncLegendary(f); // Legendary Plays: discovery and plan cleanup (GDD §36)
@@ -1905,6 +1956,7 @@ export function finishSunday(f, gameState) {
   const pg = f.week.pregame; const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true, winner: gameState.winner ? m[gameState.winner].name : null, clash: gameState.tiebreak || null, pregameClash: pg?.result ? { winner: gameState.coin?.winner || null, choice: gameState.coin?.choice || null, by: pg.result.by, exchanges: pg.result.exchanges, playerWon: pg.result.winner === 'a' } : null };
   const { r, save } = frng(f);
   const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false });
+  { const played = playedIds(m[side].chart); const slots = ownerDevSlots(f, { notify: true }); events.push(...practiceAfterGame(f.roster, slots.ids, played, r, { autoSpend: !!f.settings.autoPoints, autoEvolve: false })); } // C1: the owner's development slots (Task 6 Phase C)
   aiAfterGame(f, m[oppSide], gameState, oppSide, r); // the persistent opponent develops from this game too (GDD §42.6)
   save();
   injuriesAfterGame(f, it, ig);
@@ -2083,7 +2135,8 @@ function endSeason(f) {
   noteGrowth(f, (c) => aiTeam(f, c, s.year));
   if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, s.year + 1)); st.todayYear = s.year + 1; } // today's generated strength for the coming season, computed once and reused by the transition and the Board's forecast
   const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, todayOverall(f, c, s.year + 1));
-  if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
+  const modeChanges = hasLeague(f) ? evaluateStrategies(f, { year: s.year, cap: tierById(f.tier).cap, teamOf: (c) => aiTeam(f, c, s.year) }) : []; // Task 6 Phase D (R2): each AI club's strategy mode, before contracts and the draft
+  if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
@@ -2192,10 +2245,11 @@ export function startNextSeason(f) {
     leagueAgeing(f, r, { year, ctx: ageCtx }); leagueTrim(f, { year: next, cap }); // salaries refreshed with the ratings: back under the cap before anyone shops
     const trades = aiTrades(f, r, { year: next, cap, window: 'offseason' }); // AI–AI trades before the market opens: a need filled by a deal, uncommon and at fair value (GDD §46)
     const fa = leagueFreeAgency(f, r, { year: next, cap, targetOf });
+    const upgrades = leagueUpgrades(f, { year: next, cap }); // R5 free-agency upgrades from the pools (Task 6 Phase C)
     const nudge = leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next), rival: f.rivals?.[f.tier]?.team || null });
     const overCap = leagueTrim(f, { year: next, cap }); leagueInjuryCover(f, r, { year: next, cap, targetOf });
     const problems = validateClubs(f, { cap }); const structural = verifyLeague(f);
-    f.leagueOffseason = { ...(f.leagueOffseason?.closed === year ? f.leagueOffseason : {}), opened: next, freeAgency: fa, trades: trades.length, nudge, overCap, problems }; lastTransitionMs = Math.round(((globalThis.performance?.now?.() ?? Date.now()) - t0) * 10) / 10; // the timing stays out of the save
+    f.leagueOffseason = { ...(f.leagueOffseason?.closed === year ? f.leagueOffseason : {}), opened: next, freeAgency: fa, upgrades: upgrades?.signed?.length || 0, upgradesByMode: (upgrades?.signed || []).reduce((o, x) => { o[x.mode] = (o[x.mode] || 0) + 1; return o; }, {}), trades: trades.length, nudge, overCap, problems }; lastTransitionMs = Math.round(((globalThis.performance?.now?.() ?? Date.now()) - t0) * 10) / 10; // the timing stays out of the save
     if (structural.length) throw Object.assign(new Error(`The league registry is damaged: ${structural[0]}`), { code: 'league', problems: structural }); // never the owner's fault, never silent; a club over the cap at the roster floor is reported, not fatal
   }
   save();

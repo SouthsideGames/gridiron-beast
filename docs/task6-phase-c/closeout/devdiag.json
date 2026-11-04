@@ -1,0 +1,32 @@
+{
+ "seeds": [
+  1,
+  6
+ ],
+ "seasons": 10,
+ "clubGames": 8895,
+ "eligiblePerClubGame": 11.13,
+ "slotsFilledPerClubGame": 5.97,
+ "eligibleWithoutSlotPerClubGame": 5.16,
+ "slowedClubGamesPct": 20.91,
+ "practiceXpPerRow": 7.51,
+ "practiceLevelUps": 4785,
+ "ovrPerPracticeLevel": 1.25,
+ "gain3BySlotShare": {
+  "none": {
+   "n": 991,
+   "ovr": 1.25,
+   "levels": 0.4
+  },
+  "some": {
+   "n": 1517,
+   "ovr": 2.32,
+   "levels": 0.99
+  },
+  "most": {
+   "n": 3295,
+   "ovr": 3.93,
+   "levels": 2.84
+  }
+ }
+}
