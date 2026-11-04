@@ -46,8 +46,8 @@ export const DEAL_RULES = Object.freeze({
 export const slotsOf = (pos) => GROUP_SLOTS[pos]?.length || 1;
 // A monster's overall is worked out from his attributes every time it is asked, and a deal search asks thousands of times about the
 // same few hundred monsters. Inside `scoped` (read-only work: nothing changes a rating) each is worked out once.
-let ovrCache = null, fairCache = null;
-export const scoped = (fn) => { if (ovrCache) return fn(); ovrCache = new Map(); fairCache = new Map(); try { return fn(); } finally { ovrCache = null; fairCache = null; } };
+let ovrCache = null, fairCache = null, groupCache = null;
+export const scoped = (fn) => { if (ovrCache) return fn(); ovrCache = new Map(); fairCache = new Map(); groupCache = new Map(); try { return fn(); } finally { ovrCache = null; fairCache = null; groupCache = null; } };
 const fairSalary = (m) => { if (!fairCache) return salaryFor(m); let v = fairCache.get(m); if (v === undefined) { v = salaryFor(m); fairCache.set(m, v); } return v; };
 export const ovr = (m) => { if (!ovrCache) return monsterOverall(m); let v = ovrCache.get(m); if (v === undefined) { v = monsterOverall(m); ovrCache.set(m, v); } return v; };
 /** Out for three weeks or more: valued, and ranked, as a reserve until he is back. */
@@ -94,12 +94,23 @@ export function roleIn(roster, m) {
  */
 export function rosterWorth(roster, year = 1, { succession = true } = {}) {
   let w = 0;
-  for (const list of Object.values(byPosition(roster))) {
-    const n = slotsOf(list[0].position); const ordered = order(list); const premium = new Map();
-    if (succession && ordered.length > n) for (const row of groupSuccession(ordered, n, ovr)) if (row.successor) premium.set(row.successor, successorShare(row.horizon));
-    ordered.forEach((m, i) => { const role = ROLE_SHARE[i < n ? 0 : Math.min(i - n + 1, 3)]; w += marketValue(m, { year }) * (premium.has(m) ? Math.max(role, premium.get(m)) : role); });
-  }
+  for (const list of Object.values(byPosition(roster))) for (const c of groupContributions(list, year, succession)) w += c; // the same additions, in the same order, as before the cache
   return w;
+}
+/**
+ * One position group's contributions to its club's roster worth, in rank order. Inside `scoped` (read-only valuation: no rating,
+ * age, contract, salary or injury changes while it runs) a group with the same monsters is worked out once: the key is the year,
+ * the successor flag and the group's ids, so a group that gains or loses a monster (a deal, a signing) is a different key.
+ * Outside `scoped` nothing is cached. Behaviour-preserving (Task 6 Phase C closeout, owner-approved 2026-11-02).
+ */
+function groupContributions(list, year, succession) {
+  let key = null;
+  if (groupCache) { key = `${year}|${succession ? 1 : 0}|${list.map((m) => m.id).sort().join(',')}`; const hit = groupCache.get(key); if (hit) return hit; }
+  const n = slotsOf(list[0].position); const ordered = order(list.slice()); const premium = new Map();
+  if (succession && ordered.length > n) for (const row of groupSuccession(ordered, n, ovr)) if (row.successor) premium.set(row.successor, successorShare(row.horizon));
+  const out = ordered.map((m, i) => { const role = ROLE_SHARE[i < n ? 0 : Math.min(i - n + 1, 3)]; return marketValue(m, { year }) * (premium.has(m) ? Math.max(role, premium.get(m)) : role); });
+  if (groupCache) groupCache.set(key, out);
+  return out;
 }
 /** R6 for the ask path (trades.js): how much dearer a club's designated successor is than an ordinary backup (1 when he is not one). */
 export function successorPremium(roster, m) {
