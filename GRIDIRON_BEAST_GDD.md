@@ -4197,3 +4197,66 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 **57.3 Maturation (C2; `progression.js offseason`).** Each offseason through age 24, every monster gains +1 in the attribute his position weighs most that is still below his potential (no draw). Ageless monsters are untouched.
 
 **57.4 Free-agency upgrades (R5; `league-season.js leagueUpgrades`).** After the owner's free agency and the needs fill: an AI club whose starting group is weak (−4 against the league) signs a pool monster at least +3 better than the starter he replaces; failing that, a club with a succession need signs a pool monster who qualifies as the ageing starter's successor. It may release its weakest expendable reserve to make room: never a protected monster, a designated successor, the cover for an injured starter, or one that leaves a position without its starters. Pools only; 1 upgrade per club per offseason (the spec's 2 for contenders needs strategy modes, Phase D).
+
+## 58. AI strategy modes and mode-specific decisions (Task 6 Phase D; IMPLEMENTED 2026-11-02, owner's Group 3 decisions R2, R4 and the mode weights of R3, R5, R7; branch `task6-phase-d`; NOT MERGED, NOT RELEASED)
+**58.1 Strategy modes (R2; `src/franchise/strategy.js`).** Every AI club holds one of four modes: Contend, Compete, Retool or Rebuild. The mode is set once a season as the offseason opens: after retirements, before contracts and the draft.
+- **Facts it uses** (only what the club can see):
+  - this season's win share, blended 0.6 / 0.4 with last season's;
+  - the club's team overall against the mean of the 15 AI clubs;
+  - the share of its starters within 2 seasons of their public decline onset, or past it;
+  - next season's committed payroll against the cap;
+  - the picks it holds in the next two classes.
+- **Raw mode:**
+  - **Contend:** winning (≥ 0.60) with a league-average roster or better, or 4+ above the AI mean while not losing.
+  - **Rebuild:** losing (≤ 0.40) with an ageing roster (≥ 35% of starters), a capped-out payroll (≥ 97% committed), or 2+ extra picks.
+  - **Retool:** losing otherwise (a young roster).
+  - **Compete:** everything else.
+- **Stability:**
+  - A change normally needs the same raw mode at two consecutive evaluations.
+  - A shift of two or more steps changes at once.
+  - A rebuild lasts at least two seasons.
+  - Gyms never fall below Compete.
+- **Stored** additively in the existing `clubRecord.strategy` (`mode`, `modeSince`, `modePending`, `modeLastWin`, `modeWhy`). An old save reads as Compete until its first evaluation.
+- **Deterministic:** no random draw.
+
+**58.2 Rebuilding clubs selling starters (R4; `league-trades.js starterSale`).**
+- **Limit:** in each trading window (the offseason window; weeks 2–8 of a season), at most **one starter sale in the whole league**.
+- **Seller:** a club in Rebuild.
+- **The starter:**
+  - not protected;
+  - tradable (no rookie on his first deal) and available;
+  - within 2 seasons of his public onset, or past it;
+  - older than 26 (never a young star).
+- **The buyer:** not rebuilding, with a legitimate need: the starter beats its weakest available starter at the position by the window's bar (+2 in the offseason, +4 in season).
+- **The price:**
+  - young players (25 or under) from the buyer's spares, picks, or both;
+  - fair in market value both ways (0.85–1.15);
+  - judged by the existing rules: legal rosters, cap, the buyer's minimum gain and the seller's floor on its own roster worth.
+- The sale is logged in `f.league.trades` with `sale: true`.
+
+**58.3 Contracts by mode (R3).** The R3 rules (§56.2) apply first, then the mode:
+- **Contend:** keeps its expiring starters, a veteran past onset included, on one-season deals.
+- **Rebuild:**
+  - lets a starter past onset go once anyone is lined up to succeed him, ready or not;
+  - gives no new deal to a reserve past his onset;
+  - values young reserves with upside from +3 over overall (instead of +5);
+  - signs monsters within 2 seasons of their onset for one season, and young monsters with upside for three.
+- **Compete and Retool:** R3 unchanged.
+- Succession protection, the cap trims and the runaway rule are unchanged.
+
+**58.4 Free-agency upgrades by mode (R5).** Contend clubs may make **2** upgrades per offseason; every other mode **1**. Pools only, after the owner's free agency, with the existing improvement, protection, cap and roster requirements.
+
+**58.5 Drafting by mode (R7).** The weight on potential in an AI pick score depends on the mode:
+- **Rebuild:** 0.35 (the approved test, against the standing 0.20).
+- **Compete and Retool:** 0.20.
+- **Contend:** 0.10, plus +2 for a prospect who would start at once (his overall at or above the club's weakest starter at the position).
+- Succession and weak-position bonuses, the noise, and the kicker and duplicate penalties are unchanged.
+
+**58.6 Not changed.** Ageing, retirement, development slots, practice XP, difficulty constants, gym bonuses and the nudge. The three rebuild-nudge options (§1.7) are evaluated in `docs/TASK6_PHASE_D_REPORT.md`, not adopted. Nothing new is shown to the owner beyond League News of the trades.
+
+**58.7 Rebuilding fixes (owner-approved 2026-11-03; release candidate v42.21.0, branch `task6-final-rc`; NOT MERGED, NOT RELEASED).**
+- **F1:** a club already rebuilding counts as "ageing" only while its ageing share is at or above the league median. Entry keeps the 0.35 test.
+- **F2:** a Rebuild club lets a starter past onset go only to a ready successor, or to any successor once he is 2+ seasons past onset.
+- **F3:** a Contend club lets a veteran past onset go only when a ready successor at least as good is behind him.
+- **F4:** a Rebuild club sells a starter only when the next monster at the position is within 4 overall of him.
+- **Measured:** rebuilds average 2.8 seasons (Phase D 4.5); 6% last 5+ seasons (Phase D 31–37%). The Rebuild draft weight stays 0.35, and the brakes, anchors and nudge are unchanged.

@@ -1,0 +1,36 @@
+diff --git a/src/franchise/league-season.js b/src/franchise/league-season.js
+index 1735fb2..c729472 100644
+--- a/src/franchise/league-season.js
++++ b/src/franchise/league-season.js
+@@ -94,12 +94,12 @@ export function leagueSeasonEnd(f, { year, awards, records, champion }) {
+ export function leagueContracts(f, { year, cap, excessOf = null }) {
+   if (!hasLeague(f)) return null;
+   const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [], lengths: { 1: 0, 2: 0, 3: 0 }, byMode: {} };
+-  const bench = leagueBenchOf(f);
++  const bench = leagueBenchOf(f); const topOrdinaryContract = new Set(order(f).filter((c) => !isGymClub(c)).sort((a, b) => teamOverall({ roster: clubRoster(f, b), chart: buildDepthChart(clubRoster(f, b)) }) - teamOverall({ roster: clubRoster(f, a), chart: buildDepthChart(clubRoster(f, a)) }) || (a < b ? -1 : 1)).slice(0, 2)); /* SCRATCH X2 */
+   for (const club of order(f)) {
+     const roster = clubRoster(f, club); const starters = starterIds(roster);
+     const plan = rosterPlan(roster, bench, { starters });
+     const med = median(roster.map(monsterOverall));
+-    const runaway = (excessOf?.(club) || 0) > (isGymClub(club) ? BAND : ORDINARY_RUNAWAY_BAND); if (runaway) out.runaway.push(club); let letGo = 0;
++    const runaway = !topOrdinaryContract.has(club) && (excessOf?.(club) || 0) > (isGymClub(club) ? BAND : ORDINARY_RUNAWAY_BAND); /* SCRATCH X2 */ if (runaway) out.runaway.push(club); let letGo = 0;
+     const mode = modeOf(f, club); const hasSuccessor = new Set(); const succOf = new Map(); for (const g of Object.values(plan.groups)) for (const r of g.rows) if (r.successor) { hasSuccessor.add(r.starter.id); succOf.set(r.starter.id, { m: r.successor, ready: r.ready }); }
+     for (const m of roster.slice()) {
+       if (isProtected(m) || !contractEnds(m, year)) continue;
+@@ -288,12 +288,15 @@ export function clubUniqueName(f, club, m) {
+  * regional free agents at the target at its weakest starting positions (making room among its unprotected spares); a club more
+  * than BAND above it develops at SLOW_XP for the coming season. No rating of an existing monster is ever edited.
+  */
++/** SCRATCH X2: the two strongest ordinary clubs (any mode) are exempt from the XP slowdown and the runaway attrition. */
++function topOrdinaryContenders(f, teamOf) { return new Set(order(f).filter((c) => !isGymClub(c)).sort((a, b) => teamOverall(teamOf(b)) - teamOverall(teamOf(a)) || (a < b ? -1 : 1)).slice(0, 2)); }
+ export function leagueNudge(f, r, { year, cap, targetOf, teamOf, rival = null }) {
+   if (!hasLeague(f)) return null;
+   const out = { boosted: [], slowed: [], unchanged: 0 };
++  const topOrdinary = topOrdinaryContenders(f, teamOf); /* SCRATCH X2 */
+   for (const club of order(f)) {
+     const c = clubRecord(f, club); const target = targetOf(club); let ovr = teamOverall(teamOf(club)); const band = club === rival ? RIVAL_BAND : BAND; const slowBand = club === rival ? RIVAL_BAND : isGymClub(club) ? BAND : ORDINARY_SLOW_BAND; // D10b: ordinary clubs are slowed only above the wider band
+-    c.strategy.slow = Math.max(0, ovr - (target + slowBand)); if (c.strategy.slow) out.slowed.push(club); // how far above the band: the brake's strength
++    c.strategy.slow = topOrdinary.has(club) ? 0 : Math.max(0, ovr - (target + slowBand)); if (c.strategy.slow) out.slowed.push(club); /* SCRATCH X2 */ // how far above the band: the brake's strength
+     let signed = 0;
+     while (ovr < target - band && signed < NUDGE_SIGNINGS) {
+       const pos = weakestStartingGroup(f, club); if (!pos) break;

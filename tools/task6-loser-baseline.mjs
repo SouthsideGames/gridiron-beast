@@ -1,0 +1,9 @@
+// What share of ordinary clubs would be "persistent losers" (3 straight seasons of <= 3 wins in 20) if each club's seasons came in random order?
+import fs from 'node:fs';
+for (const [lab, dir, re] of [['v42', 'base', /^v42170-C-1(0[6-9]|1[0-5])-.*json$/], ['pc', 'm4', /^pc-C-1(0[6-9]|1[0-5])-.*json$/], ['pd', 'm5', /^pd-C-1(0[6-9]|1[0-5])-.*json$/], ['m3A', 'm6', /^m3A-C-.*json$/], ['m3B', 'm6', /^m3B-C-.*json$/], ['pw', 'm6', /^pdpw-C-.*json$/], ['x2', 'm6', /^m3X2-C-.*json$/], ['c1', 'm6', /^m3C1-C-.*json$/], ['c2', 'm6', /^m3C2-C-.*json$/], ['d', 'm6', /^m3D-C-.*json$/]]) {
+  let clubs = 0, actual = 0, shuffled = 0, lowShare = 0, seasons = 0; let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (const f of fs.readdirSync(dir).filter((f) => re.test(f))) { if (fs.lstatSync(`${dir}/${f}`).isSymbolicLink()) continue; for (const run of JSON.parse(fs.readFileSync(`${dir}/${f}`)).runs) { const gym = (c) => !!run.v4.clubs[c]?.gym; const by = {};
+    for (const x of run.rows) if (!x.owner && !gym(x.club)) (by[x.club] ||= []).push(x); for (const l of Object.values(by)) { l.sort((a, b) => a.year - b.year); const lo = l.map((x) => x.w <= 3); clubs++; seasons += lo.length; lowShare += lo.filter(Boolean).length;
+      const run3 = (a) => a.some((_, i) => i + 2 < a.length && a[i] && a[i + 1] && a[i + 2]); if (run3(lo)) actual++; let k = 0; for (let t = 0; t < 200; t++) { const a = lo.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } if (run3(a)) k++; } shuffled += k / 200; } } }
+  console.log(lab, { ordinaryClubs: clubs, seasonsWith3OrFewerWinsPct: (100 * lowShare / seasons).toFixed(1), persistentLoserPct: (100 * actual / clubs).toFixed(1), ifSeasonsRandomPct: (100 * shuffled / clubs).toFixed(1) });
+}

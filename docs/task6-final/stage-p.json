@@ -1,0 +1,70 @@
+{
+ "v42-1": {
+  "root": "/home/claude/t6work/v42tree",
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "seasons": 6,
+  "reps": 3,
+  "secondsPerSeason": 13.04,
+  "all": [
+   12.94,
+   13.04,
+   14.63
+  ],
+  "node": "v22.22.0"
+ },
+ "rc-1": {
+  "root": "/home/claude/t6work/rc",
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "seasons": 6,
+  "reps": 3,
+  "secondsPerSeason": 13.58,
+  "all": [
+   13.5,
+   13.58,
+   14.69
+  ],
+  "node": "v22.22.0"
+ },
+ "v42-2": {
+  "root": "/home/claude/t6work/v42tree",
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "seasons": 6,
+  "reps": 3,
+  "secondsPerSeason": 13.78,
+  "all": [
+   13.76,
+   13.78,
+   13.81
+  ],
+  "node": "v22.22.0"
+ },
+ "rc-2": {
+  "root": "/home/claude/t6work/rc",
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "seasons": 6,
+  "reps": 3,
+  "secondsPerSeason": 13.23,
+  "all": [
+   12.42,
+   13.23,
+   13.31
+  ],
+  "node": "v22.22.0"
+ }
+}

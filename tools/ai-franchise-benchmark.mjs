@@ -133,6 +133,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
     // AI–AI trades, valued at the first observation after the deal (ratings do not change between a deal and the next check).
     for (const t of f.league.trades || []) {
       const key = `${t.year}|${t.week}|${t.A}|${t.B}|${t.toA}`; if (tradesSeen.has(key)) continue; tradesSeen.add(key);
+      if (t.sale) (v4.sales ||= []).push({ year: t.year, week: t.week, A: t.A, B: t.B, toA: t.toA, age: t.age, horizon: t.horizon, mv: t.mv, paidAges: t.paidAges || [], picks: (t.picks || []).length, buyerMode: t.buyerMode || null }); // harness v4 (Phase D): R4 starter sales
       const mA = f.league.monsters[t.toA]; const mB = t.toB ? f.league.monsters[t.toB] : null; const mBs = (t.toBAll || (t.toB ? [t.toB] : [])).map((id) => f.league.monsters[id]).filter(Boolean);
       // The class year AT THE DEAL (not at the first check after it: by then the season may have rolled over): an offseason deal (week 0) is made as the
       // season ends, so the next draft's class is the deal's year; an in-season deal sees next season's class, except in year 1 before the creation draft closes (week 10).
@@ -237,7 +238,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
       };
       for (const c of clubs) { for (const [, x] of tableSnap[c]) row(x.m, c, x.starter); if (!v4.clubs[c]) v4.clubs[c] = { gym: GYM_BY_CLUB[c]?.tier || null }; }
       for (const m of f.roster) row(m, f.club, ownerStart.has(m.id));
-      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), monsters });
+      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), modeContracts: f.leagueOffseason?.contracts?.byMode || null, modeUpgrades: f.leagueOffseason?.upgradesByMode || null, monsters });
     }
     prevOvr = new Map(); for (const mp of Object.values(tableSnap)) for (const [id, x] of mp) prevOvr.set(id, x.ovr);
     // Save integrity at the season boundary: the whole league registry survives an export/import round trip unchanged.

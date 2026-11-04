@@ -88,7 +88,10 @@ export function retirementPass(f, r, { year, news = null }) {
       // League News: a retirement always stands as a line, so only the ones that matter are reported (about 30 retire a season,
       // GDD §55.5): a decorated career, a starter, a 65+ monster or a former monster of the owner's; the rest are in the summary
       const honours = honoursLine(f, gone);
-      if (honours || starter || ovr >= 65 || formerMine) leagueEvent(f, { kind: 'retire', club, honours, starter, ...moveIdentity(f, gone), age, ovr });
+      // whether to report is decided from the record (isDecorated: awards, records, titles), never from the career timeline, so the
+      // timeline writers cannot change the league's state (Task 6 Phase D fix); the honours text still reads the timeline when it is on
+      const decorated = isDecorated(f, gone);
+      if (decorated || starter || ovr >= 65 || formerMine) leagueEvent(f, { kind: 'retire', club, honours, starter, ...moveIdentity(f, gone), age, ovr });
       out.league.push({ id: gone.id, name: gone.name, position: gone.position, age, ovr, club, starter });
     }
   }
