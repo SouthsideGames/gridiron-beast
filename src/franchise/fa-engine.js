@@ -42,7 +42,7 @@ export const FA_RULES = Object.freeze({
 export const LIVE = new Set(['pending', 'countered', 'accepted']);
 
 // ------------------------------------------------------------ owner hooks (franchise.js registers them; keeps imports one-way)
-const HOOKS = { capFor: null, staffTotal: null, joinOwner: null, news: null };
+const HOOKS = { capFor: null, staffTotal: null, joinOwner: null, news: null, leagueNews: null };
 export function registerOwnerHooks(h) { Object.assign(HOOKS, h); }
 
 // ------------------------------------------------------------ clubs, rosters, the cap
@@ -191,6 +191,7 @@ export function submitOffer(f, club, mid, terms) {
   const o = { id: nextId(f), v: 1, club, mid, ...terms, reserved: reservationFor(terms), state: 'pending', period: periodNow(f), expires: deadlineFor(f, m), round: 1, tie: tieOf(f, club, mid), revisions: {}, counter: null, history: [{ p: periodNow(f), ...terms, act: 'submit' }], ly: leagueYear(f) };
   if (legendSide(m)) { const lc = legendCheck(rosterOf(f, club), m); if (lc.conditional) o.replace = lc.replace; }
   fa(f).offers[o.id] = o; e.first ??= periodNow(f); logTx(f, { kind: 'offer', club, mid, id: o.id });
+  if (legendSide(m) && liveOffers(f, (x) => x.mid === mid).length === 1) HOOKS.news?.(f, `🌟 Bidding opens for the legendary ${m.name}: ${club} has made an offer.`, 'info'); // decision 18, cosmetic
   return { ok: true, offer: o };
 }
 function lowball(f, m, e, club) {
@@ -244,6 +245,7 @@ export function sign(f, club, mid, terms, { offer = null, via = 'free_agent', st
   if (isOwner(f, club)) { m.contract = contract; HOOKS.joinOwner?.(f, m, via, start); }
   else addToClub(f, club, m, { year: start, via: 'signed', contract, salary: contract.salary, source: u.where === 'extra' ? 'pool' : u.where });
   noteSigned(f, m); delete f.freeAgency.market[mid];
+  if (legendSide(m)) HOOKS.news?.(f, `🌟 Legendary signing: ${m.name} joins ${club}${contract.years > 1 ? ` for ${contract.years} seasons` : ''}.`, isOwner(f, club) ? 'win' : 'info'); // decision 18, cosmetic: no competitive rule depends on it
   logTx(f, { kind: 'sign', club, mid, salary: contract.salary, years: contract.years, bonus: contract.bonus });
   return { ok: true, monster: m, contract };
 }

@@ -4310,3 +4310,96 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
   - the post-release verification evidence in `docs/task6-final/release/`;
   - the benchmark data in `docs/task6-final/`, `docs/task6-m3/`, `docs/task6-phase-d/` and the earlier `docs/task6-*` folders;
   - the decision log `docs/TASK6_DECISIONS.md`.
+
+## 59. Free Agency Overhaul (Task 7; IMPLEMENTED 2026-11-04 on branch `task7-free-agency`; NOT MERGED, NOT RELEASED)
+
+**Authority:**
+- The owner's *Task 7 Free Agency Implementation Specification* (`docs/TASK7_FREE_AGENCY_SPECIFICATION.md`): 30 decisions and the 2026-10-31 audit resolutions.
+- The Phase 1 audit and the owner's decisions D1–D7 (`docs/TASK7_PHASE1_AUDIT.md` §8).
+- Where §18.1, §27.5C or §45–§46 differ, this section supersedes them.
+
+**59.1 One position per monster (D6; resolution 2).**
+- **Single position:** every species has one football position; species secondaries are gone.
+- **Eligibility:** a monster fills only its own position group's slots (a WR plays WR1–WR3, never TE). This holds for the owner and every AI club, in depth charts, auto-lineups, in-game substitutions and legendary plays.
+- **New monsters:** generated at their species' position only.
+- **Existing monsters:** keep their assigned position.
+- **Old lineups:** repaired on load by removing out-of-position manual entries. Nobody is released or changed.
+- **Effects (measured):**
+  - package slots no longer borrow across positions; plays needing an unfillable package drop out;
+  - a base slot nobody can fill is a forfeit, as before;
+  - gym clubs lean to their element at 21–55% (40%+ before; ordinary clubs about 8%), because each element has species at 4–5 positions.
+
+**59.2 Contracts and the cap (resolution 1, decisions 5–7, 23, 24).**
+- **Terms:** whole credits, with offers in 100s. Contracts run 1, 2 or 3 seasons for every club, with a fixed salary and an optional signing bonus.
+- **Bonus:** split into integer yearly allocations, the remainder to the earliest years. It is paid once and never refunded.
+- **Cap charge:** a season's charge is the salary plus that season's allocation, carried by whoever holds the monster.
+- **Trades:** a trade keeps the contract and its remaining schedule.
+- **Departures:** release and retirement leave no charge (zero dead cap).
+- **Negotiated salary is fixed:** ageing and development never overwrite it. Only unsigned monsters, and the protected permanent deals (D1), carry the market figure.
+- **Extensions:** offered in a contract's final season, in season or in the offseason.
+- **Reservations:** a live offer reserves its first season's charge until it closes. Usable cap = cap − committed − reserved.
+- **Unchanged:**
+  - staff severance, retention and firing charges stay one-season staff charges (D2);
+  - the 70% rookie scale, which now lasts its two seasons, and rookie trade protection stay (D2);
+  - every acquisition path must fit usable cap (D4).
+
+**59.3 The offseason (resolution 5, decisions 3, 12, 27).**
+- **Order:**
+  1. Season close.
+  2. Retirement (Task 6).
+  3. Task 6 strategy snapshot.
+  4. Ageing.
+  5. Contract processing: the owner's renewals and the AI's Task 6 renewals, each answered by the monster. A refusal makes him a free agent.
+  6. Free agency opens: the AI–AI trade window, the league year turns, extensions take over.
+  7. **Periods 1–5**, each advanced by the owner, with early completion and a warning when offers are pending.
+  8. The draft.
+  9. Roster preparation: Task 6 fill (generated arrivals unchanged), nudge, trims, injury cover and legendary compliance.
+  10. The season.
+- **Reloads:** each step is recorded, so a reload never repeats it.
+- **Old saves (D3):** a save opened during an offseason finishes it the old way.
+- **Endpoint:** there is no free-agency offseason after the 20th season.
+
+**59.4 The market and negotiation (decisions 1, 2, 4, 9, 11, 13, 15–17, 25, 29; resolution 4).**
+- **One market:** the regional pools, the waivers and the offseason's generated veterans form a single market for all clubs. A signing removes the monster for everyone at once.
+- **Personality priorities:** each monster has six (money, security, playing time, winning, patience, timing). They come from his identity and nature and change with his career stage; nothing is drawn at random.
+- **How he rates an offer:** money (with up-front bonus), term against his preference, his likely role at the club, the club's results, and his market alternatives. He accepts at 90% of what his alternatives would give (the tolerance).
+- **Low offers:** cost patience. Two low offers at low patience end talks with that club for the league year.
+- **Deadlines:** 1–3 period advances, set by his patience and shown before submission.
+- **Revisions:** two per period, at the same deadline. Patience is never restored.
+- **Counters:** come when an offer is close.
+- **Tie order:** offer score, then his strongest priority, then a saved seeded value, then the club name. The player's club gets no advantage.
+- **Outside the periods:** negotiation is immediate (accept, reject or counter).
+- **Unsigned asks:** relax 3–7% per period, by personality, to at least 70% of the first ask.
+- **Unsigned retirement:** age-based (Task 6) times a personality factor of ×0.75–×1.25. Legendaries never retire.
+
+**59.5 AI clubs (decisions 10, 28).**
+- **Bidding is driven by Task 6:** `clubNeeds`, the R5 `bestUpgrade` (Contend 2, other modes 1 a league year), and the R3 term by onset and mode.
+- **Limits:**
+  - offers: 2 a period, or 3 in Contend;
+  - one 5% raise in a bidding war, up to 115% of the ask;
+  - places kept for the club's draft picks;
+  - next season's commitments kept under the cap.
+- **Same rules as the owner:** same validation, evaluation, locks and legendary limit. There are no hidden exceptions.
+
+**59.6 Locks and legendaries (resolutions 3, 6, 7; decisions 18, 20–22).**
+- **Locks, for every club:**
+  - a signed free agent cannot be traded until the next offseason;
+  - no release and re-sign in the same league year;
+  - no return to the club that traded him away in the same league year.
+- **No compensatory picks.**
+- **Legendary limit:** at most one offensive and one defensive legendary per club. The side comes from the species' position, and no legendary is a kicker.
+- **Replacement:** a club at the limit may negotiate a replacement, but the signing is official only once the other legendary has left. A protected gym legendary closes its side.
+- **Legacy saves:** keep any excess but cannot add on that side. They must comply before the season after their first complete Task 7 offseason, through trade or release options. Nothing is deleted.
+- **AI compliance:** AI clubs comply by releasing the excess to the market.
+- **Announcements:** cosmetic only.
+
+**59.7 Interface (decisions 14, 19, 30).**
+- **Market:** period, cap (total, committed, reserved, usable), position filter, "Interested in you", each monster's interest with reasons, and competing offers.
+- **Negotiation sheet:** salary and term, with an expandable advanced view: bonus, priorities, competing offers, cap schedule and history.
+- **Feedback:** block explanations with actionable links, plus advance and finish warnings.
+- **GM Assistant:** optional, recommendations only.
+- **Other screens:** extensions and the year-round market are reached from Salary & Contracts.
+
+**59.8 Saves.**
+- **Schema 9** adds `f.freeAgency`. Schemas 6, 8 and 9 are read; an 8 gains the block on read; later schemas are refused.
+- **Checkpoints:** an immediate save follows each period step and signing.

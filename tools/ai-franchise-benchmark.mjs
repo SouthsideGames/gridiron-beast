@@ -48,6 +48,20 @@ const L = await imp('src/franchise/league.js');
 const T = await imp('src/franchise/trades.js');
 const { GYM_BY_CLUB } = await imp('src/data/gyms.js');
 const IH = await imp('src/franchise/injury-history.js');
+// Task 7 (recording only): the free-agency market, when the tree has one. Absent in older trees; `v4.seasons[].fa` is then not written.
+let FAE = null, FAL = null; try { FAE = await imp('src/franchise/fa-engine.js'); FAL = await imp('src/franchise/fa-legendary.js'); } catch { /* a tree before Task 7 */ }
+/** One offseason's market, read from the franchise after it (recording only; nothing here changes the game). */
+function faRecord(f) {
+  if (!FAE || !f.freeAgency?.v) return null;
+  const fa = f.freeAgency; const ly = fa.leagueYear; const log = (fa.log || []).filter((e) => e.ly === ly);
+  const offers = Object.values(fa.offers || {}).filter((o) => o.ly === ly);
+  const byMid = new Map(); for (const o of offers) byMid.set(o.mid, (byMid.get(o.mid) || 0) + 1);
+  const ageOf = (id) => (f.roster.find((m) => m.id === id) || f.league.monsters[id])?.age ?? null;
+  const signs = log.filter((e) => e.kind === 'sign').map((e) => ({ club: e.club, owner: e.club === f.club, mid: e.mid, salary: e.salary, years: e.years, bonus: e.bonus || 0, bidders: byMid.get(e.mid) || 1, age: ageOf(e.mid) }));
+  const clubs = FAE.allClubs(f); const cap = Object.fromEntries(clubs.map((c) => { const v = FAE.capView(f, c); return [c, [v.committed, v.reserved, v.usable]]; }));
+  const legends = Object.fromEntries(clubs.map((c) => { const b = FAL.legendsBySide(FAE.rosterOf(f, c)); return [c, [b.offense.length, b.defense.length]]; }));
+  return { ly, signs, offers: log.filter((e) => e.kind === 'offer').length, revisions: log.filter((e) => e.kind === 'revise').length, withdrawals: log.filter((e) => e.kind === 'withdraw').length, extensions: log.filter((e) => e.kind === 'extend').length, renewalsDeclined: f.leagueOffseason?.contracts?.declined || 0, renewalsSigned: f.leagueOffseason?.contracts?.resigned || 0, unsignedAtClose: FAE.marketList(f).length, cap, legends, marketProblems: FAE.marketProblems(f) };
+}
 /** Harness v4: the columns of one monster's season-end row (arrays keep a 20-season file small). */
 export const V4_MONSTER = Object.freeze(['id', 'club', 'pos', 'age', 'ovr', 'level', 'xp', 'potential', 'starter', 'protected', 'ageless', 'origin', 'draftedYear', 'draftedRound',
   'contractEnds', 'contractYears', 'salary', 'stage', 'injIncidents', 'injMissed', 'injOpp', 'yearsPro', 'attrs']);
@@ -238,7 +252,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
       };
       for (const c of clubs) { for (const [, x] of tableSnap[c]) row(x.m, c, x.starter); if (!v4.clubs[c]) v4.clubs[c] = { gym: GYM_BY_CLUB[c]?.tier || null }; }
       for (const m of f.roster) row(m, f.club, ownerStart.has(m.id));
-      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), modeContracts: f.leagueOffseason?.contracts?.byMode || null, modeUpgrades: f.leagueOffseason?.upgradesByMode || null, monsters });
+      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), modeContracts: f.leagueOffseason?.contracts?.byMode || null, modeUpgrades: f.leagueOffseason?.upgradesByMode || null, monsters, ...(FAE ? { fa: faRecord(f) } : {}) });
     }
     prevOvr = new Map(); for (const mp of Object.values(tableSnap)) for (const [id, x] of mp) prevOvr.set(id, x.ovr);
     // Save integrity at the season boundary: the whole league registry survives an export/import round trip unchanged.

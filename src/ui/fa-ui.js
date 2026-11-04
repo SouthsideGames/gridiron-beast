@@ -19,7 +19,7 @@ import { yearOf } from '../data/calendar.js';
 const fmt = (n) => Math.round(n || 0).toLocaleString('en-US');
 const POS = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S', 'K'];
 const STATE_LABEL = { pending: 'waiting for his answer', countered: 'he countered', accepted: 'accepted: waiting for your legendary to leave', signed: 'signed', rejected: 'turned down', withdrawn: 'withdrawn', expired: 'expired' };
-let filter = ''; let showAll = false;
+let filter = ''; let showAll = false; let keenOnly = false; // decision 14: the interest dashboard can show only those interested in your club
 
 /** How keen he is on the owner's club at given terms: { label, cls, why[] } (a readable explanation, decision 30). */
 export function interestOf(f, m, terms) {
@@ -69,11 +69,11 @@ export function faOffseasonHtml(f) {
   const comp = F.legendCompliance(f);
   const compHtml = comp ? `<div class="panel tight" style="border-color:var(--bad)"><b>⚖️ Legendary limit</b><div class="muted">${esc(comp.reason)}${comp.due ? '' : ` Until then you keep them, but cannot add another on that side.`}</div><div class="row" style="gap:6px;margin-top:6px"><button class="btn small" data-action="releasemon">Release…</button><button class="btn small" data-action="shop">Trade desk…</button></div></div>` : '';
   if (!open && !done) return `${compHtml}<h3>Free agency</h3><div class="panel tight"><b>Five periods, before the draft.</b><div class="dim">Every club bids in the same market. Make offers in a period; monsters answer when you advance it, by their own priorities and deadlines.</div><button class="btn primary block" data-action="faopenmarket" ${pending ? 'disabled' : ''} style="margin-top:6px">Open free agency (Period 1)</button>${pending ? `<p class="dim center">Settle the ${pending} renewal${pending === 1 ? '' : 's'} first.</p>` : ''}</div>`;
-  const list = F.freeAgentMarket(f).filter((x) => !filter || x.monster.position === filter).map((x) => ({ x, i: interestOf(f, x.monster, x.ask) })).sort((a, b) => monsterOverall(b.x.monster) - monsterOverall(a.x.monster));
+  const list = F.freeAgentMarket(f).filter((x) => !filter || x.monster.position === filter).map((x) => ({ x, i: interestOf(f, x.monster, x.ask) })).filter(({ i }) => !keenOnly || i.ratio >= 1).sort((a, b) => monsterOverall(b.x.monster) - monsterOverall(a.x.monster));
   const shown = showAll ? list : list.slice(0, 25);
   const head = open ? `<div class="row between"><b>Free agency · Period ${p} of ${E.FA_RULES.periods}</b><span class="dim">${F.freeAgentMarket(f).length} unsigned</span></div>` : `<div class="row between"><b>Free agency closed</b><span class="dim">unsigned monsters stay on the market all year: offers are answered at once</span></div>`;
   return `${compHtml}<h3>Free agency</h3>${head}${capPanelHtml(f)}${assistantHtml(f)}${myOffersHtml(f)}
-    <div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'on' : 'off'}</button></div>
+    <div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${keenOnly ? 'primary' : ''}" data-action="fakeen" aria-pressed="${keenOnly}">Interested in you</button><button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'on' : 'off'}</button></div>
     <div class="list">${shown.map(({ x, i }) => { const m = x.monster; const rival = x.offers.filter((o) => o.club !== f.club).length; const legend = legendSide(m);
       return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${legend ? '🌟 ' : ''}${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR · ${esc(rarityOf(m))} · age ${m.age}</span></div><div class="sub">asks <b>${fmt(x.ask.salary)}</b>/yr · ${x.ask.years} season${x.ask.years === 1 ? '' : 's'} · ${fitOf(f, m)}${rival ? ` · ${rival} other offer${rival === 1 ? '' : 's'}` : ''}</div></div><span class="chip ${i.cls}">${i.label}</span></div>`; }).join('') || '<p class="dim">Nobody on the market at this position.</p>'}</div>
     ${list.length > shown.length ? `<button class="btn small block" data-action="faall">Show all ${list.length}</button>` : ''}
@@ -114,7 +114,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
   const { el, close } = sheet(draw(), { title: mode === 'extend' ? 'Contract extension' : 'Free agent' }); let advOpen = false;
   const root = () => el;
   const redraw = () => { const body = el.querySelector('.sheet-body') || el; advOpen = !!el.querySelector('details')?.open; body.innerHTML = draw(); if (advOpen) el.querySelector('details')?.setAttribute('open', ''); };
-  const done = (msg, kind = 'good') => { app.save(); toast(msg, kind); close(); onDone?.(); };
+  const done = (msg, kind = 'good') => { app.save({ immediate: true }); toast(msg, kind); close(); onDone?.(); };
   root()?.addEventListener('click', async (ev) => {
     const b = ev.target.closest('button'); if (!b) return;
     if (b.dataset.t === 'sal') { t.salary = Math.max(OFFER_STEP, t.salary + Number(b.dataset.d)); redraw(); return; }
@@ -139,19 +139,20 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
 /** Handlers the offseason screen delegates (kept here with the markup they serve). */
 export function faHandlers(app, Router) {
   return {
-    faopenmarket: () => { const r = F.openFreeAgency(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.render(); },
+    faopenmarket: () => { const r = F.openFreeAgency(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save({ immediate: true }); Router.render(); }, // a checkpoint around each period step (specification: persistence)
     faopen: (el) => negotiationSheet(app, el.dataset.id, () => Router.render()),
     fafilter: (el) => { filter = el.dataset.v || ''; Router.render(); },
     faall: () => { showAll = true; Router.render(); },
+    fakeen: () => { keenOnly = !keenOnly; Router.render(); },
     faassist: () => { app.f.settings ||= {}; app.f.settings.gmAssistant = !app.f.settings.gmAssistant; app.save(); Router.render(); },
     faadvance: async () => {
       const w = F.advanceWarning(app.f); const last = app.f.freeAgency.period >= E.FA_RULES.periods;
       if (w.length && !(await confirmSheet(`${w.length} of your offers will be answered or expire at this advance${last ? ', and the market closes' : ''}. Advance anyway?`, { title: 'Pending offers', okLabel: 'Advance' }))) return;
-      const r = F.advanceFreeAgency(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save();
+      const r = F.advanceFreeAgency(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save({ immediate: true });
       const mine = r.signed.filter((x) => x.club === app.f.club); for (const s of r.signed) { const m = app.f.roster.find((x) => x.id === s.mid) || null; if (m && legendSide(m)) toast(`🌟 Legendary signing: ${m.name} joins ${s.club}!`, 'good', 4000); }
       toast(mine.length ? `Signed: ${mine.map((x) => x.name).join(', ')}.` : r.period ? `Period ${r.period} of ${E.FA_RULES.periods}.` : 'Free agency closed. The draft is next.', mine.length ? 'good' : 'info'); Router.render();
     },
-    fafinish: async () => { const w = E.liveOffers(app.f, (o) => o.club === app.f.club); /* finishing settles every live offer, not only those due this period */ if (!(await confirmSheet(`Finish free agency now? Every remaining period passes at once${w.length ? `; ${w.length} live offer${w.length === 1 ? '' : 's'} of yours will be answered or expire` : ''}.`, { title: 'Finish free agency', okLabel: 'Finish' }))) return; F.finishFreeAgency(app.f); app.save(); Router.render(); },
+    fafinish: async () => { const w = E.liveOffers(app.f, (o) => o.club === app.f.club); /* finishing settles every live offer, not only those due this period */ if (!(await confirmSheet(`Finish free agency now? Every remaining period passes at once${w.length ? `; ${w.length} live offer${w.length === 1 ? '' : 's'} of yours will be answered or expire` : ''}.`, { title: 'Finish free agency', okLabel: 'Finish' }))) return; F.finishFreeAgency(app.f); app.save({ immediate: true }); Router.render(); },
   };
 }
 
@@ -169,9 +170,9 @@ export function registerFaScreens(R, app) {
   });
 }
 function marketListHtml(f) {
-  const list = F.freeAgentMarket(f).filter((x) => !filter || x.monster.position === filter).map((x) => ({ x, i: interestOf(f, x.monster, x.ask) })).sort((a, b) => monsterOverall(b.x.monster) - monsterOverall(a.x.monster));
+  const list = F.freeAgentMarket(f).filter((x) => !filter || x.monster.position === filter).map((x) => ({ x, i: interestOf(f, x.monster, x.ask) })).filter(({ i }) => !keenOnly || i.ratio >= 1).sort((a, b) => monsterOverall(b.x.monster) - monsterOverall(a.x.monster));
   const shown = showAll ? list : list.slice(0, 25);
-  return `<div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'on' : 'off'}</button></div>
+  return `<div class="row" style="gap:4px;flex-wrap:wrap;margin:6px 0"><button class="btn small ${filter ? '' : 'primary'}" data-action="fafilter" data-v="">All</button>${POS.map((x) => `<button class="btn small ${filter === x ? 'primary' : ''}" data-action="fafilter" data-v="${x}">${x}</button>`).join('')}<button class="btn small ${keenOnly ? 'primary' : ''}" data-action="fakeen" aria-pressed="${keenOnly}">Interested in you</button><button class="btn small ${f.settings?.gmAssistant ? 'primary' : ''}" data-action="faassist" aria-pressed="${f.settings?.gmAssistant ? 'true' : 'false'}" style="margin-left:auto">🧭 GM Assistant ${f.settings?.gmAssistant ? 'on' : 'off'}</button></div>
     <div class="list">${shown.map(({ x, i }) => { const m = x.monster; return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${legendSide(m) ? '🌟 ' : ''}${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR · ${esc(rarityOf(m))} · age ${m.age}</span></div><div class="sub">asks <b>${fmt(x.ask.salary)}</b>/yr · ${x.ask.years} season${x.ask.years === 1 ? '' : 's'} · ${fitOf(f, m)}</div></div><span class="chip ${i.cls}">${i.label}</span></div>`; }).join('') || '<p class="dim">Nobody on the market at this position.</p>'}</div>
     ${list.length > shown.length ? `<button class="btn small block" data-action="faall">Show all ${list.length}</button>` : ''}`;
 }

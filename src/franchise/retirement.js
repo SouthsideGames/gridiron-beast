@@ -15,6 +15,7 @@ import { buildDepthChart } from './roster.js';
 import * as IH from './injury-history.js';
 import { universeCareerLeaders } from './league-careers.js';
 import { addEvent } from './career.js';
+import { personaOf } from './fa-personality.js';
 
 export const AGING_VERSION = 1;
 /** A franchise born under these rules: no transition. */
@@ -49,8 +50,14 @@ export function notePeaks(f) {
 export function chanceFor(f, m, { year, starter, unsigned = false, s = null }) {
   const ovr = monsterOverall(m); const peak = Math.max(m.peakOvr || 0, ovr);
   const y = (m.age + 1) - (trueOnset(m) + CAREER_AFTER_ONSET);
-  return retireChance(y, { starterNearPeak: !!starter && ovr >= peak - NEAR_PEAK, declinedReserve: !starter && !unsigned && ovr <= peak - DECLINED, unsigned, injury: injuryClass(injuryOf(f, m, year)), ramp: transitionRamp(s) });
+  const p = retireChance(y, { starterNearPeak: !!starter && ovr >= peak - NEAR_PEAK, declinedReserve: !starter && !unsigned && ovr <= peak - DECLINED, unsigned, injury: injuryClass(injuryOf(f, m, year)), ramp: transitionRamp(s) });
+  return unsigned && f?.freeAgency?.v ? Math.min(1, p * unsignedTemper(m)) : p;
 }
+/**
+ * Task 7 decision 26: an unsigned monster's retirement also depends on his personality. The impatient give up sooner, the patient
+ * wait longer for a call: ×0.75 to ×1.25 around the Task 6 age-based chance (about 1 on average). Legendaries never retire (above).
+ */
+export const unsignedTemper = (m) => 0.75 + (100 - personaOf(m).patience) / 200;
 
 /** The observable outlook the owner sees on a monster (no hidden longevity): career stage, retirement window, next-season risk. */
 export function retirementOutlook(f, m, { starter = false } = {}) {
