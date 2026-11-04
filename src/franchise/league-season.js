@@ -91,7 +91,9 @@ export function leagueSeasonEnd(f, { year, awards, records, champion }) {
  * The runaway rule is unchanged except that it never lets a designated successor walk. Then the cap: a club over it releases its
  * lowest value per salary among the unprotected reserves until under, successors last, never below the roster minimum.
  */
-export function leagueContracts(f, { year, cap, excessOf = null }) {
+/** Task 7: `accepts(club, m, { salary, years })` — the monster's own answer to the renewal (fa-engine rateOffer, the same evaluation the
+ *  owner's renewals get); declined, he walks to the market. Absent (pre-Task-7 offseasons): every renewal the club wants happens. */
+export function leagueContracts(f, { year, cap, excessOf = null, accepts = null }) {
   if (!hasLeague(f)) return null;
   const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [], lengths: { 1: 0, 2: 0, 3: 0 }, byMode: {} };
   const bench = leagueBenchOf(f);
@@ -115,7 +117,8 @@ export function leagueContracts(f, { year, cap, excessOf = null }) {
         if (mode === 'rebuild' && pastOnset) keep = starter ? !(succ?.ready || (succ && pastBy >= 2)) : (successor ? keep : false); }
       // a club far above today's strength lets its expiring veterans walk (they are claimed within the league): attrition, decision A
       if (keep && runaway && !successor && (m.age || 0) >= RUNAWAY_VETERAN_AGE && clubRoster(f, club).length - letGo > ROSTER_MIN + 2) { keep = false; letGo++; }
-      if (keep) { const len = modeLength(contractLength(m, { bench }), m, mode); m.salary = renewalAsk(m).ask; m.contract = leagueContract(year + 1, len); out.resigned++; out.lengths[len]++; out.byMode[mode] = (out.byMode[mode] || 0) + 1; }
+      let len = 0, ask = 0; if (keep) { len = modeLength(contractLength(m, { bench }), m, mode); ask = renewalAsk(m).ask; if (accepts && !accepts(club, m, { salary: Math.round(ask / 100) * 100, years: len })) { keep = false; out.declined = (out.declined || 0) + 1; } }
+      if (keep) { m.salary = accepts ? Math.round(ask / 100) * 100 : ask; m.contract = leagueContract(year + 1, len); out.resigned++; out.lengths[len]++; out.byMode[mode] = (out.byMode[mode] || 0) + 1; }
       else { releaseFromClub(f, club, m.id, { year, reason: 'walked' }); out.walked++; }
     }
     out.released += trimToCap(f, club, { year, cap, starters: starterIds(clubRoster(f, club)), bench });
@@ -191,7 +194,7 @@ export function clubNeeds(f, club) {
  * with generated regional veterans whose quality tracks the club's target (how the curve of difficulty is carried, decision C),
  * up to the full 38 and never over the cap. A club short of a legal lineup signs at the minimum quality regardless.
  */
-export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
+export function leagueFreeAgency(f, r, { year, cap, targetOf, signUnsigned = null }) { // Task 7: `signUnsigned(club, m)` signs a pool or waiver monster through the market's immediate negotiation (he may refuse)
   if (!hasLeague(f)) return null;
   const out = { fromPools: 0, fromWaivers: 0, generated: 0 };
   for (const club of order(f)) {
@@ -200,10 +203,19 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
       const needs = clubNeeds(f, club); if (!needs.length) break;
       const [pos, , urgent] = needs[0]; const room = clubCapRoom(f, club, cap);
       // the league's waivers, then the pools: the best monster at the position the club can afford
+      if (signUnsigned) { // Task 7: the best affordable monster at the position who accepts; the waivers first, then the pools
+        let got = false;
+        for (const [list, key] of [[f.league.waivers || [], 'fromWaivers'], [Object.values(f.pool || {}).flat(), 'fromPools']]) {
+          for (const m of list.filter((x) => x.position === pos && salaryFor(x) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a) || (a.id < b.id ? -1 : 1))) if (signUnsigned(club, m)) { out[key] = (out[key] || 0) + 1; got = true; break; }
+          if (got) break;
+        }
+        if (got) continue;
+      } else {
       const waived = (f.league.waivers || []).filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
       if (waived) { takeFromWaivers(f, waived.id); waived.salary = salaryFor(waived); addToClub(f, club, waived, { year, via: 'signed', contract: newContract(year, 2), source: 'waivers' }); out.fromWaivers = (out.fromWaivers || 0) + 1; continue; }
       const pooled = Object.values(f.pool || {}).flat().filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
       if (pooled) { takeFromPool(f, pooled.id); pooled.salary = salaryFor(pooled); addToClub(f, club, pooled, { year, via: 'signed', contract: newContract(year, 2), source: 'pool' }); out.fromPools++; continue; }
+      }
       const starterSlot = clubRoster(f, club).filter((m) => m.position === pos).length < (GROUP_SLOTS[pos]?.length || 1);
       const quality = targetOf(club) + (starterSlot ? 1 : -4) + r.int(5) - 2;
       const m = generateArrival(f, r, { club, position: pos, quality, room, floor: urgent });
@@ -239,7 +251,8 @@ export function leagueUpgrades(f, { year, cap }) {
   }
   return out;
 }
-function bestUpgrade(f, club, bench, cap) {
+/** The best R5 upgrade a club could make from the pools now (exported for the Task 7 market, which bids for it instead of taking it). */
+export function bestUpgrade(f, club, bench, cap) {
   const roster = clubRoster(f, club); const starters = starterIds(roster); const plan = rosterPlan(roster, bench, { starters });
   const pool = Object.values(f.pool || {}).flat().filter((m) => !isProtected(m) && !m.injury);
   const room = clubCapRoom(f, club, cap); const full = roster.length >= ROSTER_MAX;

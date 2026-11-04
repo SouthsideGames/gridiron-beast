@@ -44,7 +44,7 @@ import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } 
 import { careerSnapshot } from './career-profile.js';
 import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, recordNews, movesNews, offseasonDigest, draftDigest } from './league-news.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
-import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague } from './league.js';
+import { joinAsDraftee, takeFromPool, takeFromWaivers, leaveLeague, releaseFromClub } from './league.js';
 import { aiTrades } from './league-trades.js';
 import { tradeWindowState, seasonTradeWeek } from './trade-window.js';
 import { slimSeasonAwards } from './history-compact.js';
@@ -56,8 +56,11 @@ export { validateClubs } from './league-season.js';
 import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRoom, captureLeague, verifyLeague, addToClub, removeFromClub, isProtected, findInLeague, leagueEvent, takeEvents, moveIdentity } from './league-registry.js';
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
-import { ensureFreeAgency } from './fa-state.js';
-import { bonusCharge } from './fa-contracts.js';
+import { ensureFreeAgency, hasFreeAgency, task7Offseason, leagueYear, pruneLocks, noteReleased, noteTraded, tradeLock, returnLock } from './fa-state.js';
+import { registerOwnerHooks, submitOffer, reviseOffer, withdrawOffer, acceptCounter, resolvePeriod, ageMarket, negotiateNow, extend, promoteExtensions, rateOffer, askOf, FA_RULES, capView, liveOffers, marketList, competingOffers, unsigned as unsignedFA, sign as signFA, blocker as faBlocker, entryOf } from './fa-engine.js';
+import { aiMarketTurn, aiTerms } from './fa-ai.js';
+import { overLimit, legendsBySide, legendSide, legendCheck } from './fa-legendary.js';
+import { bonusCharge, capCharge, makeContract, allocateBonus } from './fa-contracts.js';
 import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
 import { guarded, mayStartSeason, isArchived } from './lifecycle.js';
@@ -552,6 +555,11 @@ export function salarySummary(f, proposed = 0) {
   const total = monsters + staff + dead + proposed;
   return { cap, monsters, staff, dead, proposed, total, remaining: cap - total, over: total > cap, rosterCount: f.roster.length };
 }
+registerOwnerHooks({ // Task 7: the engine's view of the owner's club (fa-engine.js)
+  capFor: (f) => capFor(f),
+  staffTotal: (f) => Object.keys(f.staff || {}).reduce((sum, role) => sum + staffSalary(f, role), 0),
+  joinOwner: (f, m, via, start) => { uniqueName(f, m); m.origin ||= homeRegion(m); m.joined = start; backfillCareer(f, m); noteJoin(f, m, via, { region: homeRegion(m) }); f.roster.push(m); dexRecord(f, m, 'signed'); news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed: ${m.contract.years} season${m.contract.years === 1 ? '' : 's'} at ${m.contract.salary.toLocaleString('en-US')} cr.${m.contract.bonus ? ` plus a ${m.contract.bonus.toLocaleString('en-US')} cr. bonus` : ''}.`, 'roster', { mid: m.id, mname: m.name }); },
+});
 export function releaseMonster(f, id) {
   const m = f.roster.find((x) => x.id === id); if (!m) return { ok: false, reason: 'Not on roster.' };
   if (f.roster.length <= ROSTER_MIN) return { ok: false, reason: `You must keep at least ${ROSTER_MIN} monsters.` };
@@ -559,7 +567,7 @@ export function releaseMonster(f, id) {
   if (positionCount <= 1 && m.position !== 'TE') return { ok: false, reason: `${m.name} is your only ${m.position}.` };
   f.roster = f.roster.filter((x) => x.id !== id);
   for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === id) delete f.lineupManual[slot];
-  toPool(f, m, 'released');
+  toPool(f, m, 'released'); noteReleased(f, m, f.club); // Task 7 resolution 6: no re-signing him this league year
   news(f, `${m.name} released. Back to ${homeRegion(m)}.`, 'roster');
   noteCaptainLeft(f, f.club, m, 'released');
   return { ok: true };
@@ -838,9 +846,38 @@ export function forfeitSunday(f) {
   return { ok: true, result: f.lastGame };
 }
 // ------------------------------------------------------------ the offseason (GDD §18.1)
+/**
+ * Task 7 contract processing (decision 23; §3.2 of the audit): a renewal is an extension in the contract's final league year. The
+ * monster answers with the same evaluation every offer gets (personality, money, years, role, the club's results). 'sign' offers his
+ * ask (or `salary`), 'counter' 85% of it; a refusal leaves him a free agent when Period 1 opens (the club may still bid), and a low
+ * offer costs patience. 'walk' lets him go now. A contract runs 1–3 seasons, with an optional bonus.
+ */
+function renewTask7(f, item, m, choice, { years, salary, bonus }) {
+  const nextYear = f.season.year + 1;
+  if (choice === 'walk') { f.roster = f.roster.filter((x) => x.id !== m.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === m.id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); item.status = 'walked'; news(f, `${m.name} walks as a free agent. Back to ${homeRegion(m)}'s pool.`, 'loss'); return { ok: true, status: 'walked' }; }
+  const ask = Math.round(item.ask / 100) * 100;
+  const pay = salary != null ? Math.round(salary / 100) * 100 : choice === 'counter' ? Math.round(ask * COUNTER_PCT / 100) * 100 : ask;
+  const terms = { salary: pay, years, bonus: Math.max(0, Math.round((bonus || 0) / 100) * 100) };
+  const charge = terms.salary + allocateBonus(terms.bonus, years)[0]; const room = capFor(f) - committedNext(f, m);
+  if (charge > room) return { ok: false, code: 'cap', reason: `Next season's cap has ${Math.max(0, room).toLocaleString('en-US')} cr. free; this deal needs ${charge.toLocaleString('en-US')} cr. in its first season.` };
+  entryOf(f, m); const r = rateOffer(f, m, f.club, terms);
+  if (r.low) { const e = entryOf(f, m); e.patience = Math.max(0, e.patience - FA_RULES.lowballCost); }
+  if (r.score >= r.need) {
+    m.salary = terms.salary; m.contract = makeContract({ start: nextYear, years, salary: terms.salary, bonus: terms.bonus, kind: 'renewal' }); m.contract.bonusPaid = { by: f.club, ly: nextYear };
+    item.status = 'signed'; item.final = terms.salary; item.years = years; if (choice === 'counter') item.countered = 'accepted';
+    news(f, `${m.name} re-signed for ${years === 1 ? 'one season' : `${years} seasons`} at ${terms.salary.toLocaleString('en-US')} cr.${terms.bonus ? ` plus a ${terms.bonus.toLocaleString('en-US')} cr. bonus` : ''}.`, 'roster');
+    return { ok: true, status: 'signed' };
+  }
+  item.status = 'declined'; if (choice === 'counter') item.countered = 'refused';
+  news(f, `${m.name} turned down ${choice === 'counter' ? 'your counter' : 'the renewal'}. He becomes a free agent when Period 1 opens: you may still bid.`, 'loss');
+  return { ok: true, status: 'declined' };
+}
+/** The owner's commitments in the coming league year without `except` (whose deal is being renewed). */
+function committedNext(f, except) { const ly = f.season.year + 1; let s = 0; for (const m of f.roster) if (m !== except) s += capCharge(m, ly); s += Object.keys(f.staff || {}).reduce((sum, role) => sum + staffSalary(f, role), 0) + (f.pendingDeadCap || 0); return s; }
 /** Decide one renewal: 'sign' at the ask, 'counter' at 85% (they may walk), 'walk' (to the pool; a coach's role falls empty). */
-export function resolveContract(f, id, choice, { years = CONTRACT_YEARS } = {}) {
-  years = Math.max(1, Math.min(CONTRACT_YEARS, years | 0)); // one year for the veteran you want one more season of, two at most
+export function resolveContract(f, id, choice, { years = CONTRACT_YEARS, salary = null, bonus = 0 } = {}) {
+  const t7 = task7Offseason(f) && f.season.finished;
+  years = Math.max(1, Math.min(t7 ? 3 : CONTRACT_YEARS, years | 0)); // one year for the veteran you want one more season of; two at most before Task 7, three with it (resolution 1)
   const item = (f.offseason?.items || []).find((i) => i.id === id && !i.status); if (!item) return { ok: false, reason: 'Nothing to decide.' };
   const nextYear = f.season.year + 1;
   if (item.kind === 'staff') {
@@ -848,6 +885,7 @@ export function resolveContract(f, id, choice, { years = CONTRACT_YEARS } = {}) 
     delete f.staff[item.role]; delete f.staffContracts[item.role]; item.status = 'walked'; news(f, `${item.name} leaves. Hire a new ${item.role.replace(/_/g, ' ')} before the season.`, 'loss'); return { ok: true, status: 'walked' };
   }
   const m = f.roster.find((x) => x.id === id); if (!m) { item.status = 'gone'; return { ok: true, status: 'gone' }; }
+  if (t7) return renewTask7(f, item, m, choice, { years, salary, bonus });
   const { r, save } = frng(f);
   const sign = (salary) => { m.salary = salary; m.contract = newContract(nextYear, years); item.status = 'signed'; item.final = salary; item.years = years; news(f, `${m.name} re-signed for ${years === 1 ? 'one season' : 'two seasons'} at ${salary.toLocaleString('en-US')} cr.`, 'roster'); };
   const walk = (why) => { f.roster = f.roster.filter((x) => x.id !== id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); item.status = 'walked'; news(f, `${m.name} ${why}. Back to ${homeRegion(m)}'s pool.`, 'loss'); };
@@ -934,6 +972,7 @@ export function draftReady(f) { return !!f.draft && f.draft.year === f.season.ye
 export function beginDraft(f) {
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
   if (!offseasonReady(f)) return { ok: false, reason: 'Settle the contracts first.' };
+  if (task7Offseason(f) && !freeAgencyDone(f)) return { ok: false, reason: 'Free agency comes before the draft: finish Periods 1–5 first.' };
   ensureDraftClass(f);
   const r = draftStart(f, leagueStandings(f).overall, { ownerOf: (o) => pickOwner(f, { year: f.season.year + 1, ...o }) }); if (!r.ok) return r;
   runDraftToMe(f);
@@ -2134,12 +2173,14 @@ function endSeason(f) {
   archiveSeasonTables(f); // the season's league tables stay readable from the statistics screens (2026-10-22)
   if (hasLeague(f)) slimSeasonAwards(f.history[f.history.length - 1].awards, s.year, (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id] || null); // forward-only compaction of the winner rows (GDD §46): every number keeps one copy, in the book
   { const { r, save } = frng(f); retirementPass(f, r, { year: s.year, news: (t, k) => news(f, t, k) }); save(); } // retirements as the offseason opens, before contracts and the draft (GDD §55.3)
+  if (task7Offseason(f, s.year)) closeSeasonTask7(f, s, rec); else { // Task 7 (fa-state.js): strategy, ageing, then contract processing, before free agency
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   noteGrowth(f, (c) => aiTeam(f, c, s.year));
   if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, s.year + 1)); st.todayYear = s.year + 1; } // today's generated strength for the coming season, computed once and reused by the transition and the Board's forecast
   const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, todayOverall(f, c, s.year + 1));
   const modeChanges = hasLeague(f) ? evaluateStrategies(f, { year: s.year, cap: tierById(f.tier).cap, teamOf: (c) => aiTeam(f, c, s.year) }) : []; // Task 6 Phase D (R2): each AI club's strategy mode, before contracts and the draft
   if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
+  }
   maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
   // The board's goal (GDD §17.4): settled now, before the offseason.
   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
@@ -2221,13 +2262,116 @@ export function seasonAwards(f) {
   };
 }
 function ensureRival(f) { if (!f.rivals[f.tier]) { const { r, save } = frng(f); const choices = DIVISIONS[divisionOf(f.club)].filter((t) => t !== f.club); const team = r.pick(choices); save(); f.rivals[f.tier] = { team, gm: RIVAL_GMS[team] || 'Rival GM', headToHead: { w: 0, l: 0 } }; } }
+// ------------------------------------------------------------ Task 7: the free-agency offseason (fa-*.js; specification "Offseason sequencing")
+// Season close → retirement (Task 6, unchanged) → Task 6 strategy snapshot → ageing → contract processing (the owner's renewals and
+// the AI's Task 6 renewals, each answered by the monster) → [the owner opens free agency: AI–AI trade window, the league year turns,
+// extensions take over] → Periods 1–5 → draft → roster preparation → next season. Each step records itself in
+// `f.freeAgency.steps[year]`, so a reload never repeats ageing, expiries or renewals.
+function closeSeasonTask7(f, s, rec) {
+  const year = s.year; const cap = tierById(f.tier).cap; const steps = (f.freeAgency.steps[year] ||= {});
+  // Task 6 strategy, exactly where and from what Task 6 validated it: this season's results and the rosters before ageing
+  noteGrowth(f, (c) => aiTeam(f, c, year));
+  if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, year + 1)); st.todayYear = year + 1; }
+  const excess = Object.fromEntries(leagueClubs(f).map((c) => [c, teamOverall(aiTeam(f, c, year)) - preseasonTarget(f, c, todayOverall(f, c, year + 1))]));
+  const modeChanges = evaluateStrategies(f, { year, cap, teamOf: (c) => aiTeam(f, c, year) });
+  // ageing, once: the owner's roster, the pools, the waivers and the AI clubs (moved here from the season start; GDD §55 rules unchanged)
+  if (!steps.aged) {
+    const { r, save } = frng(f); const ageCtx = agingContext(f, year);
+    offseason(f.roster, r, ageCtx); for (const list of Object.values(f.pool || {})) offseason(list, r, ageCtx);
+    if (f.league.waivers?.length) offseason(f.league.waivers, r, ageCtx);
+    leagueAgeing(f, r, { year, ctx: ageCtx }); save(); steps.aged = true;
+  }
+  // contract processing: the owner's renewals (answered by the monster when decided) and the AI's Task 6 renewals
+  { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal. Free agency opens when they are settled.`, 'info'); }
+  f.leagueOffseason = { ...(f.leagueOffseason?.opened === year ? f.leagueOffseason : {}), closed: year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year, cap, excessOf: (c) => excess[c] || 0, accepts: (club, m, terms) => { const r = rateOffer(f, m, club, terms); return r.score >= r.need; } }) };
+  steps.contracts = true;
+}
+/** This offseason's generated veterans (the market has always had a dozen besides the pools). */
+function generateVeterans(f, r) {
+  const gen = []; const positions = ['QB', 'RB', 'WR', 'WR', 'TE', 'OL', 'OL', 'DL', 'DL', 'LB', 'CB', 'S', 'K'];
+  for (const pos of positions) { const regionName = r.pick(Object.keys(REGIONS)); const sp = r.pick(regionSpecies(regionName, REGIONS[regionName].types, 10).filter((x) => x.position === pos) || []) || null; if (!sp) continue; const m = generateMonster(r, { position: pos, quality: 50 + r.int(10), species: sp.id }); m.origin = regionName; claimMonster(f, m, 'market'); uniqueName(f, m, gen.map((x) => x.name)); m.contract = null; gen.push(m); }
+  return gen;
+}
+const t7fail = (reason, extra = {}) => ({ ok: false, reason, ...extra });
+export const freeAgencyOpen = (f) => !!f?.freeAgency?.period;
+export const freeAgencyDone = (f) => !!f?.freeAgency?.steps?.[f.season?.year]?.faDone;
+/** Open free agency (Period 1): the owner's renewals must be settled. Idempotent. */
+export function openFreeAgency(f) {
+  if (!task7Offseason(f)) return t7fail('The new free agency begins with the next offseason.');
+  if (!f.season.finished) return t7fail('The season is not over.');
+  const fa = f.freeAgency; const year = f.season.year; const steps = (fa.steps[year] ||= {});
+  if (steps.faOpen) return { ok: true, already: true, period: fa.period };
+  if (!offseasonReady(f)) return t7fail(`${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} still waiting.`);
+  const { r, save } = frng(f); const cap = tierById(f.tier).cap, next = year + 1;
+  for (const i of f.offseason?.items || []) if (i.kind === 'monster' && i.status === 'declined') { const m = f.roster.find((x) => x.id === i.id); if (m) { f.roster = f.roster.filter((x) => x !== m); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === m.id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); news(f, `${m.name} turned down your renewal and is a free agent.`, 'loss'); } i.status = 'walked'; }
+  const trades = hasLeague(f) ? aiTrades(f, r, { year: next, cap, window: 'offseason' }) : []; // AI–AI trades before the market, as before Task 7 (GDD §46)
+  fa.leagueYear = next; pruneLocks(f); promoteExtensions(f, next); // the league year turns (Task 7 §3.2)
+  fa.extra = generateVeterans(f, r); save();
+  fa.period = 1; steps.faOpen = true; steps.trades = trades.length;
+  aiMarketTurn(f);
+  news(f, `Free agency is open: Period 1 of ${FA_RULES.periods}.`, 'info');
+  return { ok: true, period: 1 };
+}
+/** The owner's live offers that this advance will settle or expire (the advance warning, decision 12). */
+export function advanceWarning(f) {
+  const p = f.freeAgency?.period; if (!p) return [];
+  return liveOffers(f, (o) => o.club === f.club).filter((o) => o.expires <= p || p >= FA_RULES.periods || o.state === 'countered').map((o) => ({ id: o.id, mid: o.mid, state: o.state, expires: o.expires }));
+}
+/** Advance one period: monsters decide, the market relaxes, AI clubs act in the next period; Period 5 closes the market. */
+export function advanceFreeAgency(f) {
+  const fa = f.freeAgency; const p = fa?.period; if (!p) return t7fail('Free agency is not open.');
+  const closing = p >= FA_RULES.periods; const res = resolvePeriod(f, { closing }); ageMarket(f);
+  const mine = res.signed.filter((x) => x.club === f.club).length;
+  if (closing) { fa.period = null; fa.steps[f.season.year].faDone = true; news(f, `Free agency closed${mine ? ` (${mine} signed)` : ''}. The draft is next.`, 'info'); }
+  else { fa.period = p + 1; aiMarketTurn(f); }
+  return { ok: true, period: fa.period, ...res };
+}
+/** Early completion (decision 12): advance through every remaining period. */
+export function finishFreeAgency(f) { let last = null; let g = 0; while (f.freeAgency?.period && g++ < 10) last = advanceFreeAgency(f); return last || { ok: true, period: null }; }
+// the owner's side of the market: the same engine as every AI club
+export const offerFreeAgent = (f, mid, terms) => submitOffer(f, f.club, mid, terms);
+export const reviseFreeAgentOffer = (f, id, terms) => reviseOffer(f, id, terms);
+export const withdrawFreeAgentOffer = (f, id) => withdrawOffer(f, id);
+export const acceptFreeAgentCounter = (f, id) => acceptCounter(f, id);
+/** Immediate negotiation outside the periods (in season, and between the close of Period 5 and the season start; decision 17). */
+export function negotiateFreeAgent(f, mid, terms) {
+  if (!hasFreeAgency(f) || !hasLeague(f)) return t7fail('Not available in this franchise.');
+  if (f.freeAgency.period) return t7fail('During the free-agency periods, make an offer: he answers when the period advances.');
+  if (f.season.finished && !freeAgencyDone(f) && task7Offseason(f)) return t7fail('The market opens with free agency, after the renewals.');
+  return negotiateNow(f, f.club, mid, terms);
+}
+export function extendContract(f, id, terms) { const m = f.roster.find((x) => x.id === id); if (!m) return t7fail('Not on the roster.'); if (!hasFreeAgency(f)) return t7fail('Extensions come with the new free agency.'); return extend(f, f.club, m, terms); }
+export const freeAgencyCap = (f, club = f.club) => capView(f, club);
+export { task7Offseason } from './fa-state.js';
+/** The market the owner sees: every unsigned monster with his current ask and the offers on him (grounded, decision 11). */
+export function freeAgentMarket(f) { if (!hasFreeAgency(f)) return []; return marketList(f).map((x) => ({ monster: x.m, where: x.where, ask: askOf(f, x.m), offers: competingOffers(f, x.m.id), mine: liveOffers(f, (o) => o.club === f.club && o.mid === x.m.id)[0] || null })); }
+/** AI clubs over the legendary limit comply by legal transactions before the season gate: the lowest-rated unprotected excess is released (to the market, never deleted). */
+function aiLegendCompliance(f, year) {
+  let n = 0; if (!hasLeague(f)) return n;
+  for (const club of leagueClubs(f).slice().sort()) { const sides = legendsBySide(clubRoster(f, club));
+    for (const side of ['offense', 'defense']) { const list = sides[side].filter((m) => !isProtected(m)).sort((a, b) => monsterOverall(a) - monsterOverall(b)); let over = sides[side].length - 1;
+      while (over > 0 && list.length) { const m = list.shift(); releaseFromClub(f, club, m.id, { year, reason: 'released', why: 'legendary limit' }); noteReleased(f, m, club); n++; over--; } } }
+  return n;
+}
+/** The owner's legendary compliance at the deadline (resolution 3): null, or what must happen first (with the monsters to trade or release). */
+export function legendCompliance(f) {
+  if (!hasFreeAgency(f)) return null; const starting = f.season.year + 1; const over = overLimit(f.roster);
+  if (!(over.offense || over.defense)) return null;
+  const sides = legendsBySide(f.roster); const due = starting >= f.freeAgency.complianceFrom;
+  return { due, deadline: f.freeAgency.complianceFrom, over, offense: sides.offense.map((m) => m.id), defense: sides.defense.map((m) => m.id), reason: `One offensive and one defensive legendary per club. Trade or release ${[over.offense ? `${over.offense} offensive` : null, over.defense ? `${over.defense} defensive` : null].filter(Boolean).join(' and ')} legendar${(over.offense + over.defense) === 1 ? 'y' : 'ies'} before the ${yearOf(f.freeAgency.complianceFrom)} season.` };
+}
+/** AI clubs sign from the market in roster preparation and in season through the same immediate negotiation (their Task 6 terms). */
+function aiSignNow(f, club, m) { const t = aiTerms(f, club, m, null); return negotiateNow(f, club, m.id, t).outcome === 'signed'; }
 export function startNextSeason(f) {
   syncLegendary(f); // Legendary Plays: discovery and plan cleanup (GDD §36)
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
   if (isFired(f)) return { ok: false, reason: 'The board has let you go. This franchise is over.' };
   { const cap = mayStartSeason(f); if (!cap.ok) return { ok: false, reason: cap.reason, cap: !!cap.cap }; } // the 20-season career (GDD §42.1)
   if (!offseasonReady(f)) return { ok: false, reason: `${offseasonPending(f).length} contract decision${offseasonPending(f).length === 1 ? '' : 's'} still waiting.` };
+  const t7 = task7Offseason(f);
+  if (t7 && !freeAgencyDone(f)) return { ok: false, reason: freeAgencyOpen(f) ? `Free agency is in Period ${f.freeAgency.period} of ${FA_RULES.periods}: finish it first.` : 'Free agency has not been held.' };
   if (!draftDone(f)) return { ok: false, reason: 'The draft has not been held.' };
+  { const lc = legendCompliance(f); if (lc?.due) return { ok: false, reason: lc.reason, code: 'legendary', compliance: lc }; } // Task 7 resolution 3: never deletes; trade or release
   if (f.roster.length < ROSTER_MIN) return { ok: false, reason: `You need at least ${ROSTER_MIN} monsters to start a season (you have ${f.roster.length}). Sign free agents in the offseason market.` };
   if (nextStaffRole(f)) return { ok: false, reason: 'Hire a full staff first.' };
   if (f.postseason && !f.postseason.resolved) return { ok: false, reason: 'A postseason decision is waiting.' };
@@ -2235,20 +2379,23 @@ export function startNextSeason(f) {
   f.deadCap = f.pendingDeadCap || 0; f.pendingDeadCap = 0; // bonuses and raises agreed in the offseason land on the new season's books
   const { r, save } = frng(f);
   const ageCtx = agingContext(f, f.season.year); // GDD §55: ageing and decline, with the old-save transition
-  const events = offseason(f.roster, r, ageCtx);
-  for (const list of Object.values(f.pool || {})) offseason(list, r, ageCtx); // unsigned monsters age too (in pool order)
-  if (hasLeague(f) && f.league.waivers?.length) offseason(f.league.waivers, r, ageCtx);
-  if (!hasLeague(f)) ageDraftees(f, f.season.year); // the generated rosters' draftees (v40 saves); persistent rosters age below
-  for (const m of f.roster) if (m.rookie === f.season.year) { m.yearsPro = 0; m.age -= 1; } // just drafted: the coming season is their first (offseason() aged everyone)
+  const events = t7 ? [] : offseason(f.roster, r, ageCtx); // Task 7: ageing ran at the season close, before contracts and free agency
+  if (!t7) {
+    for (const list of Object.values(f.pool || {})) offseason(list, r, ageCtx); // unsigned monsters age too (in pool order)
+    if (hasLeague(f) && f.league.waivers?.length) offseason(f.league.waivers, r, ageCtx);
+    if (!hasLeague(f)) ageDraftees(f, f.season.year); // the generated rosters' draftees (v40 saves); persistent rosters age below
+    for (const m of f.roster) if (m.rookie === f.season.year) { m.yearsPro = 0; m.age -= 1; } // just drafted: the coming season is their first (offseason() aged everyone)
+  }
   if (hasLeague(f)) { // the league's offseason after the owner's (GDD §42.6 steps 3, 6-8; decisions C, D, F)
     const t0 = globalThis.performance?.now?.() ?? Date.now();
     const year = f.season.year, next = year + 1, cap = tierById(f.tier).cap;
     const targetOf = (club) => clubQuality(f, club, next); // arrivals are generated at the club's quality for the coming season
     const overallTarget = (club) => preseasonTarget(f, club, todayOverall(f, club, next)); // today's generated team for the season, less the growth the club will gain by playing it (league-season.js calibration)
-    leagueAgeing(f, r, { year, ctx: ageCtx }); leagueTrim(f, { year: next, cap }); // salaries refreshed with the ratings: back under the cap before anyone shops
-    const trades = aiTrades(f, r, { year: next, cap, window: 'offseason' }); // AI–AI trades before the market opens: a need filled by a deal, uncommon and at fair value (GDD §46)
-    const fa = leagueFreeAgency(f, r, { year: next, cap, targetOf });
-    const upgrades = leagueUpgrades(f, { year: next, cap }); // R5 free-agency upgrades from the pools (Task 6 Phase C)
+    if (!t7) leagueAgeing(f, r, { year, ctx: ageCtx }); leagueTrim(f, { year: next, cap }); // salaries refreshed with the ratings: back under the cap before anyone shops
+    const trades = t7 ? [] : aiTrades(f, r, { year: next, cap, window: 'offseason' }); // AI–AI trades before the market opens (Task 7: at the market's opening)
+    if (t7) aiLegendCompliance(f, next); // Task 7 resolution 3: AI clubs comply by legal transactions before the same gate
+    const fa = leagueFreeAgency(f, r, { year: next, cap, targetOf, signUnsigned: t7 ? (club, m) => aiSignNow(f, club, m) : null }); // Task 7: pool and waiver monsters answer the AI's offer
+    const upgrades = t7 ? null : leagueUpgrades(f, { year: next, cap }); // R5 free-agency upgrades from the pools (Task 6 Phase C; Task 7: bid for in the periods)
     const nudge = leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next), rival: f.rivals?.[f.tier]?.team || null });
     const overCap = leagueTrim(f, { year: next, cap }); leagueInjuryCover(f, r, { year: next, cap, targetOf });
     const problems = validateClubs(f, { cap }); const structural = verifyLeague(f);
@@ -2258,6 +2405,7 @@ export function startNextSeason(f) {
   save();
   startSeason(f, f.season.year + 1);
   f.offseason = null; f.draft = null;
+  if (t7) { const fa = f.freeAgency; fa.extra = []; fa.leagueYear = f.season.year; for (const id of Object.keys(fa.offers)) if (fa.offers[id].ly < fa.leagueYear) delete fa.offers[id]; const un = new Set(marketList(f).map((x) => x.m.id)); for (const id of Object.keys(fa.market)) if (!un.has(id)) delete fa.market[id]; }
   news(f, `The ${yearOf(f.season.year)} season begins.`, 'info');
   seasonCaptains(f, f.season.year); // every club names its captains for the new season (the owner's offseason pick, else the suggestion)
   return { ok: true, events };
