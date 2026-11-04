@@ -586,12 +586,14 @@ export function toPool(f, m, reason = 'released') {
 export function poolMonsters(f, region) { return (f.pool?.[region] || []); }
 /** Once a week an AI club may sign from the pool (15% per monster). */
 export function poolActivity(f, r) {
-  if (hasLeague(f)) for (const m of (f.league.waivers || []).slice()) { if (!r.chance(0.15)) continue; const club = clubInNeed(f, m, r); if (!club) continue; takeFromWaivers(f, m.id); m.salary = salaryFor(m); addToClub(f, club, m, { year: f.season.year, via: 'signed', contract: newContract(f.season.year, 2), source: 'waivers' }); }
+  const t7 = hasFreeAgency(f) && hasLeague(f); // Task 7: the AI club makes its Task 6 offer and the monster answers at once (decision 17)
+  if (hasLeague(f)) for (const m of (f.league.waivers || []).slice()) { if (!r.chance(0.15)) continue; const club = clubInNeed(f, m, r); if (!club) continue; if (t7) { aiSignNow(f, club, m); continue; } takeFromWaivers(f, m.id); m.salary = salaryFor(m); addToClub(f, club, m, { year: f.season.year, via: 'signed', contract: newContract(f.season.year, 2), source: 'waivers' }); }
   for (const [region, list] of Object.entries(f.pool || {})) {
     for (const m of list.slice()) {
       if (!r.chance(0.15)) continue;
       if (hasLeague(f)) { // persistent rosters (GDD §42.6): the club that needs him most, with room under the cap, really signs him
         const club = clubInNeed(f, m, r); if (!club) continue;
+        if (t7) { if (aiSignNow(f, club, m)) news(f, `${m.name} (${m.position}) signed with ${club} from the ${region} pool.`, 'info'); continue; }
         takeFromPool(f, m.id); m.salary = salaryFor(m); addToClub(f, club, m, { year: f.season.year, via: 'signed', contract: newContract(f.season.year, 2), source: 'pool' });
         news(f, `${m.name} (${m.position}) signed with ${club} from the ${region} pool.`, 'info'); continue;
       }
@@ -1093,14 +1095,14 @@ function executeProposal(f, p) {
     for (const [slot, mid] of Object.entries(f.lineupManual || {})) if (mid === m.id) delete f.lineupManual[slot];
     (m.history ||= []).push({ club: f.club, from: m.contract?.signed || year, to: year, reason: 'traded' });
     addToClub(f, p.team, m, { year, via: 'traded', contract: m.contract && !m.contract.permanent ? { ...m.contract } : newContract(nextYear, 2), salary: m.salary || salaryFor(m) });
-    m.traded = { from: f.club, year };
+    m.traded = { from: f.club, year }; noteTraded(f, m, f.club);
     leagueEvent(f, { kind: 'trade', from: f.club, to: p.team, fromOwner: true, consideration: gotLabel, ...moveIdentity(f, m) });
     noteCaptainLeft(f, f.club, m, 'traded');
   }
   const got = { monsters: [], picks: [] };
   for (const src of ins) {
     const m = removeFromClub(f, p.team, src.id, { year, reason: 'traded' });
-    m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: p.team, year };
+    m.salary = m.salary || salaryFor(m); m.contract = hasFreeAgency(f) && src.contract && !src.contract.permanent ? { ...src.contract } : newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: p.team, year }; noteTraded(f, m, p.team); // Task 7: the contract and its remaining schedule move with him
     backfillCareer(f, m); noteJoin(f, m, 'trade', { from: p.team });
     f.roster.push(m); uniqueName(f, m); dexRecord(f, m, 'signed');
     leagueEvent(f, { kind: 'trade', from: p.team, to: f.club, toOwner: true, consideration: sentLabel, ...moveIdentity(f, m) });
@@ -1562,12 +1564,25 @@ export function recruit(f, prospectIndex, approachId, { releaseId = null } = {})
   const success = r.chance(chance);
   save();
   enc.pitch = { approach: approachId, success };
-  if (success) { enc.status = 'signed'; return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) }; }
+  if (success) { const blocked = recruitBlock(f, p, rc.needed ? releaseId : null); if (blocked) { enc.status = 'offer'; return { ok: true, success: true, signed: false, ...blocked }; } enc.status = 'signed'; return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) }; } // Task 7 D5: a won pitch keeps its reward; a blocked signing waits as an offer
   enc.status = 'walked'; f.season.day = 2; return { ok: true, success: false, final: true };
+}
+/**
+ * Task 7 (D4, D5): what keeps a won recruit from signing on his terms now (the shared rules: the legendary limit, a lock, usable cap),
+ * or null. The reward is kept: he accepts his ask at his preferred term, and the offer waits while the owner makes room.
+ */
+function recruitTerms(f, m) { const a = askOf(f, m); return { salary: a.salary, years: a.years, bonus: 0 }; }
+function recruitBlock(f, p, releaseId) {
+  if (!hasFreeAgency(f) || !hasLeague(f)) return null;
+  const m = p.monster; const out = releaseId ? f.roster.find((x) => x.id === releaseId) : null;
+  if (out) f.roster = f.roster.filter((x) => x !== out);
+  try { const b = faBlocker(f, f.club, m, recruitTerms(f, m), { final: true, newSpot: false }); return b ? { reason: b.reason, code: b.code } : null; }
+  finally { if (out) f.roster.push(out); }
 }
 /** Add a prospect to the roster: the release (if one was chosen), a two-season contract, salary, dex and news. Shared by the battle offer and the pitch. */
 function signProspect(f, p, releaseId) {
   const m = p.monster;
+  if (hasFreeAgency(f) && hasLeague(f)) return signProspectTask7(f, p, releaseId);
   if (releaseId) { const out = f.roster.find((x) => x.id === releaseId); if (out) { f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); } }
   m.contract = newContract(f.season.year); m.origin = m.origin || f.week.region; m.salary = m.salary || salaryFor(m);
   if (p.fromPool) { for (const list of Object.values(f.pool || {})) { const i = list.indexOf(m); if (i >= 0) list.splice(i, 1); } }
@@ -1576,6 +1591,17 @@ function signProspect(f, p, releaseId) {
   const cap = salarySummary(f);
   if (cap.over) news(f, `Over the salary cap by ${Math.round(-cap.remaining).toLocaleString('en-US')} cr. The commissioner reviews the books on Saturday.`, 'loss');
   return { monster: m, overCap: cap.over };
+}
+/** Task 7: the recruit signs through the shared transaction (his ask, his preferred term: the Beast Clash reward, D5). */
+function signProspectTask7(f, p, releaseId) {
+  const m = p.monster;
+  if (releaseId) { const out = f.roster.find((x) => x.id === releaseId); if (out) { f.roster = f.roster.filter((x) => x.id !== releaseId); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === releaseId) delete f.lineupManual[slot]; toPool(f, out, 'released'); noteReleased(f, out, f.club); news(f, `${out.name} released to make room for ${m.name}.`, 'roster'); } }
+  m.origin = m.origin || f.week.region;
+  if (!unsignedFA(f, m.id)) (f.freeAgency.extra ||= []).push(m); // a prospect met on the road joins through the same market transaction
+  const s = signFA(f, f.club, m.id, recruitTerms(f, m), { via: 'encounter' });
+  if (!s.ok) { f.freeAgency.extra = (f.freeAgency.extra || []).filter((x) => x !== m); return { monster: null, signed: false, reason: s.reason }; }
+  f.week.recruited = m.id; f.week.prospects = []; f.season.day = 2;
+  return { monster: m, overCap: false };
 }
 /** Skip the encounter: no battle, no signing, no penalty of any kind; Wednesday begins. */
 export function skipRecruit(f) { if (f.season.day === 1) { if (f.week.encounter && !['signed', 'walked', 'declined'].includes(f.week.encounter.status)) f.week.encounter.status = 'skipped'; f.season.day = 2; f.week.prospects = []; } }
@@ -1679,6 +1705,7 @@ export function acceptOffer(f, { releaseId = null } = {}) {
   const rc = releaseCandidates(f, p);
   if (rc.needed && !releaseId) return { ok: false, reason: rc.reason, needRelease: true };
   if (rc.needed && !rc.list.find((c) => c.id === releaseId)) return { ok: false, reason: 'That monster cannot be released.' };
+  { const blocked = recruitBlock(f, p, rc.needed ? releaseId : null); if (blocked) return { ok: false, ...blocked }; } // Task 7 (D4, D5): the offer stays on the table while the club makes the signing legal
   e.status = 'signed';
   return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) };
 }

@@ -11,6 +11,8 @@ import { FIRST_TRADE_WEEK, TRADE_DEADLINE_WEEK, seasonTradeWeek } from './trade-
 import { marketValue, rosterNet, rosterAfter, rosterProblems, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
 import { hasLeague, leagueClubs, clubRoster, clubCapRoom, addToClub, removeFromClub, leagueEvent, moveIdentity, isProtected } from './league-registry.js';
 import { modeOf } from './strategy.js';
+import { noteTraded, returnLock } from './fa-state.js';
+import { legendSide, legendCheck } from './fa-legendary.js';
 import { horizonOf, PLAN } from './roster-plan.js';
 
 export const AI_TRADE_RULES = Object.freeze({
@@ -47,7 +49,10 @@ const startersMean = (roster) => { let sum = 0, n = 0; for (const pos of Object.
  * stay legal, both clubs stay under the cap. Returns { na, nb } or null.
  */
 function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB, minGain = DEAL_RULES.minGain }) {
+  if (returnLock(f, m, A) || ys.some((y) => returnLock(f, y, B))) return null; // Task 7 resolution 6: no return to the club that traded him this league year
   const afterA = rosterAfter(rosterA, { give: ys, get: [m] }), afterB = rosterAfter(rosterB, { give: [m], get: ys });
+  if (legendSide(m) && !legendCheck(afterA.filter((x) => x !== m), m, { final: true }).ok) return null; // the legendary limit (Task 7)
+  if (ys.some((y) => legendSide(y) && !legendCheck(afterB.filter((x) => x !== y), y, { final: true }).ok)) return null;
   if (rosterProblems(rosterA, afterA).length || rosterProblems(rosterB, afterB).length) return null;
   const toB = salaryOf(ys), toA = m.salary || 0;
   if (roomA + toB - toA < Math.min(0, roomA) || roomB + toA - toB < Math.min(0, roomB)) return null;
@@ -143,7 +148,7 @@ function starterSale(f, r, { year, cap, done, window }) {
   return null;
 }
 function moveMonster(f, from, to, m, year) {
-  const contract = m.contract && !m.contract.permanent ? { ...m.contract } : null;
+  const contract = m.contract && !m.contract.permanent ? { ...m.contract } : null; noteTraded(f, m, from); // Task 7: no return this league year
   removeFromClub(f, from, m.id, { year, reason: 'traded', quiet: true });
   addToClub(f, to, m, { year, via: 'traded', contract, salary: m.salary });
   m.traded = { from, year };

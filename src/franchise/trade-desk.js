@@ -18,6 +18,8 @@ import { tradable, pickKey, samePick, pickWorth, picksOwnedBy, pickUsed, tradabl
 import { marketValue, rosterWorth, rosterAfter, rosterProblems, roleIn, slotsOf, countsAt, isUnavailable, DEAL_RULES, ovr, scoped } from './trade-value.js';
 const MINE = Object.freeze({ succession: false }); // Task 6 Phase B (R6): the owner's own roster is valued without the AI successor premium
 import { isProtected } from './league-registry.js';
+import { returnLock, tradeLock } from './fa-state.js';
+import { legendSide, legendCheck } from './fa-legendary.js';
 
 export const DESK_RULES = Object.freeze({
   perClub: 3,                                       // proposals to one club in a window
@@ -50,8 +52,20 @@ export const justArrived = (f, m) => !!m.traded && m.traded.year === (f.season?.
 export function immovable(f, m, side) {
   if (isProtected(m)) return m.legendary ? 'A gym legendary is bound to his club for good.' : 'A rival GM’s signature monster stays with his club.';
   if (m.cornerstone) return 'A cornerstone is the face of a club and is never traded.';
+  { const lock = tradeLock(f, m); if (lock) return lock; } // Task 7 resolution 6
   if (!tradable(f, m)) return m.contract?.rookie || m.drafted || m.rookie ? 'Rookies stay with the club that signed them for their first two seasons.' : 'He cannot be traded.';
   if (justArrived(f, m)) return side === 'mine' ? 'He just arrived in a trade; he cannot be moved again this season.' : 'He just arrived in a trade; his club will not move him again this season.';
+  return null;
+}
+/** Task 7 resolution 6 and the legendary limit for a proposal: a monster may not return to the club that traded him away this
+ *  league year, and neither club may end up over one offensive and one defensive legendary. Returns a reason or null. */
+export function task7TradeBlock(f, { give, get, team, ownerRoster, theirRoster }) {
+  for (const m of get) { const r = returnLock(f, m, f.club); if (r) return r; }
+  for (const m of give) { const r = returnLock(f, m, team); if (r) return r; }
+  const after = (roster, out, inn) => [...roster.filter((x) => !out.includes(x)), ...inn];
+  const ownerAfter = after(ownerRoster, give, get), theirsAfter = after(theirRoster, get, give);
+  for (const m of get) if (legendSide(m) && !legendCheck(ownerAfter.filter((x) => x !== m), m, { final: true }).ok) return `${m.name}: one ${legendSide(m) === 'offense' ? 'offensive' : 'defensive'} legendary per club, and you would have two.`;
+  for (const m of give) if (legendSide(m) && !legendCheck(theirsAfter.filter((x) => x !== m), m, { final: true }).ok) return `${m.name}: the ${team} already hold a ${legendSide(m) === 'offense' ? 'n offensive' : ' defensive'} legendary.`.replace('a n ', 'an ').replace('a  ', 'a ');
   return null;
 }
 /** Is a starter at this club for sale? Only if the man behind him is within a few points. */
@@ -89,6 +103,7 @@ function evaluateProposalNow(f, prop, env) {
   // 1. who can move
   for (const m of give) { const why = immovable(f, m, 'mine'); if (why) block('immovable', `${m.name}: ${why}`); }
   for (const m of get) { const why = immovable(f, m, 'theirs'); if (why) block('immovable', `${m.name}: ${why}`); }
+  { const why = task7TradeBlock(f, { give, get, team, ownerRoster: env.ownerRoster, theirRoster: env.roster ? env.roster(team) : [] }); if (why) block('task7', why); }
   for (const p of givePicks) if (!env.ownerPicks.some((x) => samePick(x, p))) block('pick', 'You no longer hold one of those picks.');
   const clubPicks = (y) => picksOwnedBy(f, team, y, env.allTeams).filter((p) => !pickUsed(f, p));
   for (const p of getPicks) if (!clubPicks(p.year).some((x) => samePick(x, p))) block('pick', `The ${team} no longer hold one of those picks.`);

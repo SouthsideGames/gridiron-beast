@@ -3,6 +3,8 @@ import { monsterOverall as monsterOverallOf } from '../src/data/monsters.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as F from '../src/franchise/franchise.js';
+import { t7FA, t7FillToMin } from './t7-support.js';
+import { PLAYS as PLAYS_T7 } from '../src/data/playbook.js';
 import { teamSchedule, leagueSeasonFixtures, standings, blankRecord, applyResult, ALL_TEAMS } from '../src/data/league.js';
 import { STAFF_ROLES } from '../src/data/staff.js';
 import { ROSTER_MAX } from '../src/data/monsters.js';
@@ -12,7 +14,7 @@ import { monsterOverall } from '../src/data/monsters.js';
 import * as awaitRules from '../src/sim/rules.js';
 
 /** Hold the draft (passing every pick) so a test can start the next season. */
-function holdDraft(f) { for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign'); const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } return { ok: f.draft.done }; }
+function holdDraft(f) { for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign'); if (F.task7Offseason(f) && f.season.finished) { F.openFreeAgency(f); F.finishFreeAgency(f); } /* Task 7: free agency (Periods 1–5) before the draft */ const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } t7FillToMin(f); /* Task 7: a renewal may be refused; the hands-off owner fills to the minimum from the market */ return { ok: f.draft.done }; }
 /** Step one in-season day with the staff's defaults, draft window included. */
 function stepDay(f) {
   const d = f.season.day;
@@ -316,7 +318,7 @@ test('traded future picks are honored when that draft comes', async () => {
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id);
   if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
   for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
-  const b = F.beginDraft(f); assert.equal(b.ok, true);
+  const b = (t7FA(f), F.beginDraft(f)); assert.equal(b.ok, true);
   const mineR1 = f.draft.order.find((o) => o.round === 1 && o.original === f.club); assert.equal(mineR1.team, other, 'my R1 is theirs');
   const theirR2 = f.draft.order.find((o) => o.round === 2 && o.original === other); assert.equal(theirR2.team, f.club, 'their R2 is mine');
   assert.equal(f.draft.order.filter((o) => o.team === f.club).length, 3);
@@ -505,7 +507,7 @@ test('campaign: an ordinary club meets four gyms a season (all eight over two), 
     assert.ok(leg && leg.legendary, `${club} carries ${g.legendary}`);
     assert.ok(Object.values(team.chart).includes(leg.id), 'the legendary starts');
     const share = team.roster.filter((m) => SPECIES_BY_ID[m.species].element === g.element).length / team.roster.length;
-    assert.ok(share >= 0.4, `${club} leans ${g.element} (${Math.round(share * 100)}%)`);
+    assert.ok(share >= 0.2, `${club} leans ${g.element} (${Math.round(share * 100)}%)`); // Task 7 D6: one position per species leaves each element 4–5 positions, so the lean fell from 40%+ to 21–55%; ordinary clubs hold about 8% (at most 16%) of any one element
     assert.ok(F.clubQuality(f, club, 3) > F.clubQuality(f, club, 1), 'gym clubs grow by season');
   }
   // One legendary in the league: no other club rolls one.
@@ -707,24 +709,20 @@ test('playtest round 3: comeback mode lifts the trailing side in the fourth on P
   assert.equal(r.newBadge, 'Harbor Sentinels'); assert.deepEqual(f.campaign.lastBadge, { club: 'Harbor Sentinels', year: 1, week: 1, n: 1 });
 });
 
-test('a roster that cannot staff a package slot still plays: the package borrows a healthy body, the lineup check passes, nobody is on the field twice', async () => {
+test('a roster that cannot staff a package slot still plays (Task 7 D6): nobody from another position borrows the slot; the plays that need it drop out; the base lineup plays', async () => {
   const { buildDepthChart, lineupProblems, borrowedSlots } = await import('../src/franchise/roster.js');
   const { pickSlots } = await import('../src/sim/rules.js');
   const f = newFranchise(71);
   const S = f.roster.filter((m) => m.position === 'S'); for (const m of S.slice(1)) f.roster = f.roster.filter((x) => x !== m);
-  for (const m of f.roster.filter((m) => m.position === 'CB').slice(2)) m.injury = { severity: 'Minor', weeks: 2, type: 'ankle' };
-  for (const m of f.roster.filter((m) => m.position === 'LB').slice(2)) m.injury = { severity: 'Minor', weeks: 1, type: 'knee' };
   const chart = buildDepthChart(f.roster, f.lineupManual, f.depth);
   assert.equal(chart.SS, null, 'no dedicated strong safety');
   assert.deepEqual(lineupProblems(f.roster, chart), [], 'a package slot never blocks the game');
-  const b = borrowedSlots(f.roster, chart); assert.equal(b.length, 1); assert.equal(b[0].slot, 'SS'); assert.ok(['LB', 'CB', 'S'].includes(b[0].position), 'borrows someone who can cover');
-  F.autoRunToSunday(f); assert.equal(F.lineupCheck(f, { advance: false }).ok, true);
+  const b = borrowedSlots(f.roster, chart).filter((x) => x.slot === 'SS'); assert.equal(b.length, 1); assert.equal(b[0].legal, false, 'no corner or linebacker may play safety');
+  F.autoRunToSunday(f);
   for (const m of f.roster.filter((m) => m.position === 'S').slice(1)) f.roster = f.roster.filter((x) => x !== m); // the staff may have signed a safety on Tuesday; keep the scenario
-  for (const m of f.roster.filter((m) => m.position === 'CB').slice(2)) m.injury = { severity: 'Minor', weeks: 2, type: 'ankle' };
-  for (const m of f.roster.filter((m) => m.position === 'LB').slice(2)) m.injury = { severity: 'Minor', weeks: 1, type: 'knee' };
-  const team = F.playerTeam(f); const nickel = ['DL1', 'DL2', 'LB1', 'CB1', 'CB2', 'FS', 'SS'];
-  const on = pickSlots(team.defense, nickel, team);
-  assert.ok(on.SS.id && on.SS.borrowed, 'SS is filled at the snap');
+  const team = F.playerTeam(f);
+  assert.ok(!team.defensePlays.some((id) => PLAYS_T7[id]?.onField.includes('SS')), 'no Nickel play in the Sunday plan');
+  const base = ['DL1', 'DL2', 'LB1', 'LB2', 'CB1', 'CB2', 'FS']; const on = pickSlots(team.defense, base, team);
   assert.equal(new Set(Object.values(on).map((p) => p.id)).size, 7, 'seven different monsters on the field');
   const g = F.simulatePlayerGame(f); assert.ok(g.finished); F.finishSunday(f, g); assert.equal(f.season.week, 2, 'the week advances');
 });
@@ -838,14 +836,17 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   const items = f.offseason.items; assert.ok(items.filter((i) => i.kind === 'monster').length >= 14 && items.filter((i) => i.kind === 'staff').length === 5, 'the two-year founders and the staff come up after season 2');
   assert.equal(F.startNextSeason(f).ok, false, 'decisions gate the new season');
   const first = items.find((i) => i.kind === 'monster'); const mon = f.roster.find((x) => x.id === first.id);
-  assert.equal(F.resolveContract(f, first.id, 'sign').ok, true); assert.equal(mon.salary, first.ask); assert.equal(mon.contract.ends, 4);
+  { const rs = F.resolveContract(f, first.id, 'sign'); assert.equal(rs.ok, true, rs.reason); // Task 7: the monster answers the renewal (personality, role, the club's results)
+    if (rs.status === 'signed') { assert.equal(mon.salary, Math.round(first.ask / 100) * 100); assert.equal(mon.contract.ends, 4); } else assert.equal(rs.status, 'declined', 'a refusal makes him a free agent when Period 1 opens'); }
   const second = items.find((i) => i.kind === 'monster' && !i.status); F.resolveContract(f, second.id, 'walk'); assert.ok(!f.roster.some((x) => x.id === second.id)); assert.ok(Object.values(f.pool).flat().some((x) => x.id === second.id), 'walked to the pool');
   for (const i of items.filter((x) => !x.status)) F.resolveContract(f, i.id, i.kind === 'staff' ? 'sign' : 'counter');
   assert.equal(F.offseasonPending(f).length, 0);
   assert.ok(Object.values(f.staffRaise).every((x) => Math.abs(x - 1.1) < 1e-9), 'staff raises');
-  // Market: sign to the floor if needed, roster cap at 38.
-  const market = F.offseasonMarket(f); assert.ok(market.length >= 10);
-  while (f.roster.length < F.ROSTER_MIN) { const e = F.offseasonMarket(f)[0]; assert.equal(F.signFreeAgent(f, e.monster.id).ok, true); }
+  // Market (Task 7): free agency opens after the renewals; offers in the periods, then immediate signings up to the floor.
+  assert.ok(F.openFreeAgency(f).ok); const market = F.freeAgentMarket(f); assert.ok(market.length >= 10);
+  F.finishFreeAgency(f);
+  for (let g = 0; f.roster.length < F.ROSTER_MIN && g < 60; g++) { const e = F.freeAgentMarket(f).sort((a, b) => a.ask.salary - b.ask.salary)[g]; if (!e) break; let r = F.negotiateFreeAgent(f, e.monster.id, e.ask); if (r.outcome === 'countered') r = F.negotiateFreeAgent(f, e.monster.id, r.counter); }
+  assert.ok(f.roster.length >= F.ROSTER_MIN, 'the floor is reachable from the market');
   holdDraft(f); const r3 = F.startNextSeason(f); assert.equal(r3.ok, true, r3.reason); assert.equal(f.season.year, 3); assert.equal(f.offseason, null);
 });
 
@@ -872,8 +873,8 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   for (let g = 0; g < 40 && !f.season.finished; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
   for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
-  assert.match(F.startNextSeason(f).reason, /draft/i);
-  const b = F.beginDraft(f); assert.ok(b.ok); assert.equal(F.onTheClock(f), f.club);
+  assert.match(F.startNextSeason(f).reason, /draft|free agency/i); // Task 7: free agency, then the draft, gate the season
+  const b = (t7FA(f), F.beginDraft(f)); assert.ok(b.ok); assert.equal(F.onTheClock(f), f.club);
   const st = F.leagueStandings(f).overall; const myRank = st.indexOf(f.club); assert.equal(f.draft.index, 15 - myRank, 'worst record picks first');
   const before = f.roster.length; const first = f.draft.class.find((m) => f.draft.available.includes(m.id));
   const p = F.myDraftPick(f, first.id); assert.ok(p.ok); assert.equal(f.roster.length, before + 1); assert.ok(p.monster.contract.rookie && p.monster.contract.ends === 3); assert.equal(p.monster.salary, Math.round((18000 + 280 * monsterOverall(p.monster)) * 0.7 / 100) * 100);

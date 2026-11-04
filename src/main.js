@@ -25,6 +25,7 @@ import { $, toast, confirmSheet } from './ui/dom.js';
 import { registerMenuScreens } from './ui/screens/menu.js';
 import { registerOnboardingScreens } from './ui/screens/onboarding.js';
 import { registerHqScreens } from './ui/screens/hq.js';
+import { registerFaScreens } from './ui/fa-ui.js';
 import { registerRosterScreens } from './ui/screens/roster.js';
 import { registerMatchScreens } from './ui/screens/match.js';
 import { registerCeremony } from './ui/screens/ceremony.js';
@@ -206,6 +207,7 @@ export function start() {
   registerMenuScreens(Router, app);
   registerOnboardingScreens(Router, app);
   registerHqScreens(Router, app);
+  registerFaScreens(Router, app); // Task 7: the year-round free-agent market
   registerRosterScreens(Router, app);
   registerCaptainScreens(Router, app); // Captain Partnerships (GDD §27.4B)
   registerMatchScreens(Router, app);
@@ -372,7 +374,7 @@ function onStoreStatus() {
 /** Which bottom tab a secondary screen belongs to. */
 export const TAB_OF = {
   hq: 'hq', commissioner: 'hq', postseason: 'hq', legend: 'hq', scout: 'hq', recruit: 'hq', training: 'hq', scoutopp: 'hq', gameplan: 'playbook', lineup: 'roster', pregame: 'hq', match: 'hq',
-  roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', staff: 'more',
+  roster: 'roster', monster: 'roster', assign: 'roster', contracts: 'roster', famarket: 'roster', staff: 'more',
   playbook: 'playbook', playdetail: 'playbook', practice: 'playbook', audit: 'more',
   league: 'league', schedule: 'league', standings: 'league', history: 'league',
   more: 'more', settings: 'more', developer: 'more', about: 'more', dex: 'more', hof: 'more', achievements: 'more',

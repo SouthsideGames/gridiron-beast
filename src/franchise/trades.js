@@ -13,6 +13,7 @@ import { monsterOverall, salaryFor, ROSTER_MAX } from '../data/monsters.js';
 import { createRng, hashString } from '../core/rng.js';
 import { GROUP_SLOTS } from './roster.js';
 import { newContract } from './contracts.js';
+import { tradeLock, noteTraded } from './fa-state.js';
 import { DRAFT_ROUNDS } from './draft.js';
 import { hasLeague, isProtected, removeFromClub } from './league-registry.js';
 import { marketValue, successorPremium } from './trade-value.js';
@@ -69,6 +70,7 @@ export function playerValue(m) {
 /** Whom an AI club will even discuss: never a protected monster or a cornerstone, never a draftee still on his rookie deal (his first two seasons). */
 export function tradable(f, m) {
   if (isProtected(m) || m.cornerstone || !(m.yearsPro > 0)) return false;
+  if (tradeLock(f, m)) return false; // Task 7 resolution 6: a signed free agent stays until the next offseason (every club)
   if (m.contract?.rookie && m.contract.ends >= (f.season?.year || 1)) return false;
   return !(m.drafted && (m.yearsPro || 0) < 2) && !(m.rookie && !m.drafted);
 }
@@ -194,7 +196,7 @@ export function executeTrade(f, offer, { club, year, nextYear }) {
       // Persistent rosters (GDD §42.6): the very monster moves, career intact; the registry refuses a protected one.
       if (isProtected(src)) throw Object.assign(new Error(`${src.name} is bound to ${offer.team}.`), { code: 'protected' });
       m = removeFromClub(f, offer.team, src.id, { year, reason: 'traded' });
-      m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year };
+      m.salary = m.salary || salaryFor(m); m.contract = f.freeAgency && m.contract && !m.contract.permanent ? { ...m.contract } : newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year }; noteTraded(f, m, offer.team); // Task 7: a trade keeps the contract and its schedule
     } else {
       m = JSON.parse(JSON.stringify(src));
       m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year };
