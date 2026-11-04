@@ -1,0 +1,38 @@
+{
+ "v42170": {
+  "reserveSlotEligibleGain3": 0.75,
+  "n": 49544,
+  "reserveLowHeadroomGain3": 0.41,
+  "starterGain3": 3.73,
+  "prospectPotentialGainOverCareer": 0.4,
+  "evolutionsPerClubSeason": 0.99,
+  "highPotGain3": 2.24,
+  "lowPotGain3": 2.69,
+  "r1Ovr": 61.01,
+  "successionReady": 5.32
+ },
+ "pb3": {
+  "reserveSlotEligibleGain3": 0.66,
+  "n": 48522,
+  "reserveLowHeadroomGain3": 0.23,
+  "starterGain3": 3.93,
+  "prospectPotentialGainOverCareer": 0.47,
+  "evolutionsPerClubSeason": 0.99,
+  "highPotGain3": 2.82,
+  "lowPotGain3": 2.99,
+  "r1Ovr": 63.19,
+  "successionReady": 6.57
+ },
+ "pc": {
+  "reserveSlotEligibleGain3": 2.64,
+  "n": 43102,
+  "reserveLowHeadroomGain3": 0.45,
+  "starterGain3": 3.99,
+  "prospectPotentialGainOverCareer": 0.49,
+  "evolutionsPerClubSeason": 0.96,
+  "highPotGain3": 5.42,
+  "lowPotGain3": 3.83,
+  "r1Ovr": 63.09,
+  "successionReady": 8.69
+ }
+}

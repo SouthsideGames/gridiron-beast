@@ -1,0 +1,17 @@
+{
+ "root": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/p0/tree",
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "seasons": 6,
+ "reps": 3,
+ "secondsPerSeason": 11.67,
+ "all": [
+  11.58,
+  11.67,
+  11.79
+ ],
+ "node": "v22.22.0"
+}

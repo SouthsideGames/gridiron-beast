@@ -1,0 +1,103 @@
+{
+ "pc-B-1-10": {
+  "hash": "8de5f30b3e8d46ec8395df3eb9d5c8aa9717103b60eb7568c2432a0440e9991d",
+  "hashV3": "56e0144ae09f2cbc797330b58d41c8c7299433463cb421ee827fad19292bac79",
+  "seeds": 10
+ },
+ "pc-B-11-20": {
+  "hash": "98f7a4c0f0967778b9cdace3b4fc2cc92aba07cfe7e901cdaca9730b321da132",
+  "hashV3": "66d84a498343f740e7c2db8d59f9b0a304a4a53ed263cbb7612e7211688804ae",
+  "seeds": 10
+ },
+ "pc-B-21-30": {
+  "hash": "880cdf04f0d2e05bde735f98a74742e89dc2c08e3ad7e8a470f64a324ca4e9df",
+  "hashV3": "1faee85a368ad7c401ed6137a6d98b774a224bcd4e70a28fead52ed30ce7302c",
+  "seeds": 10
+ },
+ "pc-B-31-40": {
+  "hash": "79366d106b7b5df5c3dab2fab73daa27e761e12c492094fd227b78a4e0d354b5",
+  "hashV3": "786b279ddbd8e6431297990f86b82b40b566e8e5400b95eea1f66af8e6040133",
+  "seeds": 10
+ },
+ "pc-B-41-50": {
+  "hash": "afebc273064314a13ba0d6b4630dfa2468c56b32a5978a3bf84d677a3802d857",
+  "hashV3": "15df516774c042ff637ffb54d58fe6935d2777406f4a2f123648ccb7ad8a2b43",
+  "seeds": 10
+ },
+ "pc-B-51-60-repeat": {
+  "hash": "8949acee2f97295486a6e106a013f8eb699100a385389fb02a062049d2703098",
+  "hashV3": "e7d17f6a3f6395b0a54a1734bf92a6241003b84f506faecbe782f7cdede12201",
+  "seeds": 10
+ },
+ "pc-B-51-60": {
+  "hash": "8949acee2f97295486a6e106a013f8eb699100a385389fb02a062049d2703098",
+  "hashV3": "e7d17f6a3f6395b0a54a1734bf92a6241003b84f506faecbe782f7cdede12201",
+  "seeds": 10
+ },
+ "pc-B-61-70": {
+  "hash": "0144f8dcde6648dd0f791720b9b72512d46da968677e98b3f1237f68ade3258a",
+  "hashV3": "491f374cdf013bbfb7c84a00421e4aebfdf1bddaf93685789d5da4ce7b1b0e90",
+  "seeds": 10
+ },
+ "pc-B-71-80": {
+  "hash": "570713d4154bc12a736dc2a8c484a8aced94017161f06e7a1de496e284c60103",
+  "hashV3": "0e65cb2b1b13bf3966ac8ff4e1b1a03b214ad41b125cc3ad21bd6d2fb845d960",
+  "seeds": 10
+ },
+ "pc-C-106-108": {
+  "hash": "ed9aa8631739a175987dd936e29eb3885abae15570be220e274f76e8045ac8f6",
+  "hashV3": "625b65ed2a77854d22d461debcca01a03c8b1992b13823a5d358d8088f248b27",
+  "seeds": 3
+ },
+ "pc-C-109-110": {
+  "hash": "6149275b805f806777ecaf5955238637731965778de065cdb325f6306656eb70",
+  "hashV3": "84f22a59e82b4ed3fa13d2038f9833a35eb3481f9d751b14bab544f23467164f",
+  "seeds": 2
+ },
+ "pc-C-111-115": {
+  "hash": "d904201db5770ce86331fe085d8a30563522b52feb3f7d733fe754bf20c53be8",
+  "hashV3": "c32182800950b317936eb6b2ed702387927cb934c67a4c5e3d2f5b0ad4bb4871",
+  "seeds": 5
+ },
+ "pc-C-116-120": {
+  "hash": "9e84f9b447d88290520692cef8b5f8f6731007ebaf84777d981aa2e137cad612",
+  "hashV3": "34309f4387221867cb2ea7e66d7896c9def99f0b1a5a3b58a9e3f36084583522",
+  "seeds": 5
+ },
+ "pc-C-121-125": {
+  "hash": "4c4058cf4ab1ef8d8651a9f835b6a1a20e97bee99fb00a428b32f803935f4e6d",
+  "hashV3": "aaa055eb7ed14c0d8f594ba0528f90f9c8ed805ad0465befcf8990a8b96e9bbe",
+  "seeds": 5
+ },
+ "pc-D-aging": {
+  "hash": "7057fe67d9a81dd5929508ee89bb46341a102cb239e88c0d0d46463f0a0790e4",
+  "hashV3": "d557a9db15ff4799003c462c6ef3c092d60d2c74a5c9a3d21c652de69de80296",
+  "seeds": 5
+ },
+ "pc-D-expiring": {
+  "hash": "563e846a8af74a19ca3b9915bf07b88859e75d137b552822d93f81610d551ccd",
+  "hashV3": "f2418ddef6c6583021caa532d168ba8cc6a25f63970538f3c0c2e1c9dfabbec9",
+  "seeds": 5
+ },
+ "pc-D-injuries": {
+  "hash": "6d52a43c138658b59dbffd4177527d9898f1e8407d3e160f2d5de0c66b03c482",
+  "hashV3": "262d7e08de4a4226c6303958c07d9ee547c8a1cc465036c8201378d5acf246fe",
+  "seeds": 5
+ },
+ "pc-D-picks": {
+  "hash": "c6bd65e8436eb6c44ceb39da86521564163016959ab7031c583215e65b678d00",
+  "hashV3": "46a58e337238484a529a376d39a30c34163ea757295f6a04cf0658c93b2ef62e",
+  "seeds": 5
+ },
+ "pc-D-rebuild": {
+  "hash": "77415a4ddd0ff2f0e6917a541b0e77411774eeb88ab9f2cde836f66dbf87ca1e",
+  "hashV3": "0b502a9d7b46d1d9d308a804f804954a65e1328dc210552ab46f7d8a1f0e8f1a",
+  "seeds": 5
+ },
+ "pc-D-thin": {
+  "hash": "1eeba3e14822066513dd9b014e3873826e2fab4dd09be5ba2bc8fd4a521e2cda",
+  "hashV3": "48ada4eafb4aac00ae02782b8f097f1e926a3daa81ced17e9c75eec0825de5cd",
+  "seeds": 5
+ },
+ "_tree": "16aaeec (Phase C simulation; later commits change tests, docs, the import map and the GDD only)"
+}

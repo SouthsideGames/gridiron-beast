@@ -1,0 +1,24 @@
+Δoverall per season (same monster, next season end), by age band and role: mean [n]; level gain
+  23-25|reserve    0.1 [2724] lvl 0.09
+  23-25|starter    1.15 [1694] lvl 1.69
+  26-29|reserve    0.35 [133] lvl 0.53
+  26-29|starter    0.84 [2540] lvl 1.59
+  30-32|reserve    -0.07 [46] lvl 0.28
+  30-32|starter    0.33 [1673] lvl 1.24
+  33-35|reserve    -0.5 [6] lvl 0.17
+  33-35|starter    0.14 [1225] lvl 0.99
+  36+|reserve      -0.45 [11] lvl 0.27
+  36+|starter      0.02 [1451] lvl 0.79
+  ≤22|reserve      0.37 [4521] lvl 0.09
+  ≤22|starter      1.83 [1093] lvl 2
+Δoverall per season for monsters 30+ by position: QB 0.03 · OL 0.25 · DL 0.1 · LB 0.28 · CB 0.17 · RB 0.16 · K 0.22 · WR 0.08 · S 0.18 · TE 0.22
+starters aged 33+ at a season end, next season: still starting 2593 benched 83 gone 226 of 2902
+round-1 draftees 630 started for drafter within 1/2/3/5 seasons: 25% 29% 30% 32%
+  drafted years 1-5: 180 start within 2: 45% | years 12+: 270 start within 2: 14%
+young reserves (≤24) who stay reserves 3 seasons: overall gain 0.69 [3432]
+ season 1 starter age 23.44 33+ share 0% max age 28
+ season 5 starter age 26.65 33+ share 0% max age 32
+ season 10 starter age 29.5 33+ share 27% max age 37
+ season 15 starter age 32.5 33+ share 53% max age 42
+ season 20 starter age 34.82 33+ share 62% max age 47
+protected monsters at season 20: 18 on gyms 18 mean ovr 79.83 starting 12

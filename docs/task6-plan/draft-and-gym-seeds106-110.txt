@@ -1,0 +1,14 @@
+Source: Task 5.5 runs t55-C-106-108.json, t55-C-109-110.json (v42.17.0, seeds 106-110, 20 seasons).
+Round-1 picks by draft year: mean overall, mean potential, gap to the drafting club starter mean, gap to the starter floor at the position, would start at once (%)
+  year 1 61.4 72.9 1.8 -0.7 49.3
+  year 2 60.5 71.9 5.1 2.5 38.7
+  year 5 60.7 71.3 8.7 6.8 20
+  year 10 60.1 72.5 13.3 9.9 16
+  year 15 61.5 72.6 16.6 12.2 9.3
+  year 19 60.4 71.6 21.4 17.8 2.7
+Gym against ordinary clubs by season: anchor (clubQuality), nudge target, team overall, wins | generated share of starters (%) | protected monsters per club | nudge signings per club | slowed club-seasons (%)
+  season 1 gym 60 67.6 65.4 5.5 | other 54.5 59.1 60.3 3.1 | generated 0 0 | protected 1.1 0 | nudge signings 0 0 | slowed% 0 0
+  season 5 gym 66.3 74.4 71.7 5.4 | other 56.5 63.5 66.7 3.3 | generated 1.3 1.5 | protected 1.1 0 | nudge signings 0.1 0 | slowed% 0 37.1
+  season 10 gym 74.4 81.4 77.5 6 | other 59.5 65.6 68.6 3 | generated 17.7 1.4 | protected 1.1 0 | nudge signings 1.1 0 | slowed% 0 57.1
+  season 15 gym 81.5 88.6 83.8 6.3 | other 61.5 68.8 70.9 2.8 | generated 40.8 1.1 | protected 1.1 0 | nudge signings 1 0 | slowed% 0 45.7
+  season 20 gym 89.5 93.6 88 6.5 | other 64.5 70.4 72.6 2.7 | generated 58.6 1.5 | protected 1.1 0 | nudge signings 0.9 0 | slowed% 0 28.6

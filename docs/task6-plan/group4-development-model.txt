@@ -1,0 +1,31 @@
+Mean overall gain of draftees aged 21 after 1 / 2 / 3 seasons (9 positions × 60 each per band; 11 games a season)
+
+gem (class quality 64)
+  starter            + 5.6  + 7.2  + 8.4   level after 3 seasons 10.0
+  reserve-now        + 0.3  + 0.6  + 0.6   level after 3 seasons 1.0
+  practice-0.25      + 1.5  + 2.9  + 4.0   level after 3 seasons 4.0
+  practice-0.35      + 1.5  + 2.9  + 4.0   level after 3 seasons 4.0
+  practice-0.5       + 2.7  + 3.9  + 5.0   level after 3 seasons 5.0
+  reserve-now+C2     + 0.5  + 1.0  + 1.2   level after 3 seasons 1.0
+  practice-0.35+C2   + 1.7  + 3.3  + 4.5   level after 3 seasons 4.0
+  practice-0.5+C2    + 2.9  + 4.4  + 5.5   level after 3 seasons 5.0
+
+solid (class quality 57)
+  starter            + 5.6  + 7.2  + 8.4   level after 3 seasons 10.0
+  reserve-now        + 0.3  + 0.5  + 0.5   level after 3 seasons 1.0
+  practice-0.25      + 1.5  + 2.9  + 4.0   level after 3 seasons 4.0
+  practice-0.35      + 1.5  + 2.9  + 4.0   level after 3 seasons 4.0
+  practice-0.5       + 2.6  + 4.0  + 4.9   level after 3 seasons 5.0
+  reserve-now+C2     + 0.5  + 1.0  + 1.2   level after 3 seasons 1.0
+  practice-0.35+C2   + 1.7  + 3.3  + 4.6   level after 3 seasons 4.0
+  practice-0.5+C2    + 2.9  + 4.3  + 5.5   level after 3 seasons 5.0
+
+project (class quality 50)
+  starter            + 5.6  + 7.3  + 8.4   level after 3 seasons 10.0
+  reserve-now        + 0.3  + 0.5  + 0.5   level after 3 seasons 1.0
+  practice-0.25      + 1.5  + 2.9  + 4.0   level after 3 seasons 4.0
+  practice-0.35      + 1.5  + 2.9  + 4.0   level after 3 seasons 4.0
+  practice-0.5       + 2.8  + 4.0  + 5.0   level after 3 seasons 5.0
+  reserve-now+C2     + 0.5  + 1.0  + 1.2   level after 3 seasons 1.0
+  practice-0.35+C2   + 1.8  + 3.4  + 4.6   level after 3 seasons 4.0
+  practice-0.5+C2    + 2.9  + 4.4  + 5.5   level after 3 seasons 5.0
