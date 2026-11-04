@@ -5,22 +5,49 @@
 // Every decision draws from the franchise generator in a fixed club order, so one seed gives one league. The owner's rules
 // are reused as they are: renewalAsk, newContract, salaryFor, offseason(), positionNeeds, buildDepthChart.
 
+import { isGymClub } from '../data/gyms.js';
 import { generateMonster, monsterOverall, salaryFor, regionSpecies, ROSTER_MAX, ROSTER_MIN, FULL_ROSTER, clampAttr, resolveSpecies } from '../data/monsters.js';
 import { POSITION_WEIGHTS, OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
 import { REGIONS } from '../data/staff.js';
-import { newContract, contractEnds, renewalAsk } from './contracts.js';
+import { newContract, leagueContract, contractEnds, renewalAsk } from './contracts.js';
 import { offseason } from './progression.js';
 import { playerValue } from './trades.js';
 import { careerSeasonEnd } from './career.js';
 import { buildDepthChart, lineupProblems, GROUP_SLOTS, teamOverall } from './roster.js';
 import { hasLeague, leagueClubs, clubRoster, clubRecord, isProtected, isAgeless, addToClub, clubPayroll, clubCapRoom, claimMonster } from './league-registry.js';
 import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegionOf } from './league.js';
+import { publicOnset } from '../data/aging.js';
+import { rosterPlan, leagueBench, horizonOf, qualifiesAsSuccessor, PLAN } from './roster-plan.js';
+import { modeOf } from './strategy.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
+/** Task 6 Phase A-2 (D10b, owner 2026-10-30): the ordinary clubs' slowdown band and runaway-veteran band, separate from the gyms'
+ *  (BAND) and the rival's (RIVAL_BAND); the lift below target − BAND is unchanged. The A-2 matched-seed comparison of +4 / +6 / +8
+ *  found no width best on every count (docs/TASK6_PHASE_A2_REPORT.md), so both stay at today's +4 until the owner chooses. */
+export const ORDINARY_SLOW_BAND = 4;
+export const ORDINARY_RUNAWAY_BAND = 4;
 export const RIVAL_BAND = 2;           // the rival's club is held closer: his signature monster's growth is capped by his potential (decision V), so without this the club drifted 3–4 under today's rival from season 6 (measured 2026-10-24)
 export const NUDGE_SIGNINGS = 3;       // arrivals a weak club gets in one offseason
 export const SIGNATURE_GROWTH = 2;     // the rival's signature monster: attribute points per offseason (GDD §15.8, kept), within potential
-export const RESIGN_AGE_LIMIT = 32;    // a reserve of this age or more is not re-signed (decision A: attrition through the pools)
+export const RESIGN_AGE_LIMIT = 32;    // v42.17 and before: a reserve of this age or more was not re-signed. Task 6 Phase B (R3) replaces it with RESERVE_PAST_ONSET; kept for reference
+/** Task 6 Phase B (R3, owner 2026-10-30): no new deal for a reserve more than this many seasons past his public decline onset (position-aware). */
+export const RESERVE_PAST_ONSET = 2;
+/** R3 contract length by the public onset: 3 seasons up to onset − 2, 2 near it, 1 past it; an exceptional veteran (this far above
+ *  the league's starters at his position, at most 2 past his onset) gets 2. */
+export const EXCEPTIONAL_VETERAN = 6;
+export function contractLength(m, { bench = null } = {}) {
+  const h = horizonOf(m); if (h >= 2) return 3; if (h >= 0) return 2;
+  const b = bench?.[m.position]; return h >= -2 && b != null && monsterOverall(m) >= b + EXCEPTIONAL_VETERAN ? 2 : 1;
+}
+/** Phase D (R3 by strategy mode, owner 2026-11-02): the R3 length, then the mode. A contender signs a starter past his onset for one
+ *  season at a time (readiness now, no lock-in); a rebuilder commits long only to youth: a monster within 2 seasons of his onset
+ *  gets at most 1 season, and a young monster (25 or under) with upside always gets 3. Compete and Retool keep the R3 length. */
+export const REBUILD_UPSIDE = 3;
+export function modeLength(len, m, mode) {
+  if (mode === 'contend') return horizonOf(m) < 0 ? 1 : len;
+  if (mode === 'rebuild') { if (horizonOf(m) < PLAN.ageingHorizon) return 1; if ((m.age || 30) <= 25 && (m.potential || 0) >= monsterOverall(m) + REBUILD_UPSIDE) return 3; }
+  return len;
+}
 export const RUNAWAY_VETERAN_AGE = 27; // a club above its band lets expiring veterans of this age or more go (attrition, not rating edits)
 export const MIN_QUALITY = 45;
 /**
@@ -42,6 +69,10 @@ const order = (f) => leagueClubs(f).slice().sort();
 /** Starters: the ids on the club's depth chart (base and package slots). */
 function starterIds(roster) { return new Set(Object.values(buildDepthChart(roster)).filter(Boolean)); }
 const median = (xs) => { const a = xs.slice().sort((x, y) => x - y); return a.length ? a[Math.floor(a.length / 2)] : 0; };
+/** The league benchmark for the roster plan (D15): every club's starters at each position, the owner's included (observable). */
+export function leagueBenchOf(f) { return leagueBench([...order(f).map((c) => clubRoster(f, c)), ...(Array.isArray(f.roster) ? [f.roster] : [])]); }
+/** The ids of a club's designated successors (R1), derived now. */
+export function successorIds(f, club, bench = leagueBenchOf(f)) { const roster = clubRoster(f, club); return new Set(rosterPlan(roster, bench, { starters: starterIds(roster) }).successors.keys()); }
 
 // ------------------------------------------------------------ season end
 /** Career season-end events for every persistent monster (awards, records, season marks, title runs): the owner's writer, per club. */
@@ -52,48 +83,74 @@ export function leagueSeasonEnd(f, { year, awards, records, champion }) {
 }
 
 /**
- * Contracts (decision D): expiring deals are re-signed for starters and good value, otherwise the monster walks to his
- * region's pool. Then the cap: a club over it releases its lowest value per salary among the unprotected reserves until under,
- * never below the roster minimum. Protected monsters have permanent deals and cost nothing against the cap.
+ * Contracts (decision D; Task 6 Phase B R3): every expiring deal is judged against the club's roster plan (roster-plan.js).
+ *   starters      re-signed; one past his public decline onset only when he has no ready successor (otherwise he walks)
+ *   successors    the designated successor always counts as value and is re-signed (not forced through: the cap still applies)
+ *   reserves      re-signed for value (at or above the roster median, or young with potential), never past public onset + 2
+ *   length        3 / 2 / 1 seasons by the public onset (contractLength), so expiries stagger
+ * The runaway rule is unchanged except that it never lets a designated successor walk. Then the cap: a club over it releases its
+ * lowest value per salary among the unprotected reserves until under, successors last, never below the roster minimum.
  */
 export function leagueContracts(f, { year, cap, excessOf = null }) {
   if (!hasLeague(f)) return null;
-  const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [] };
+  const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [], lengths: { 1: 0, 2: 0, 3: 0 }, byMode: {} };
+  const bench = leagueBenchOf(f);
   for (const club of order(f)) {
     const roster = clubRoster(f, club); const starters = starterIds(roster);
+    const plan = rosterPlan(roster, bench, { starters });
     const med = median(roster.map(monsterOverall));
-    const runaway = (excessOf?.(club) || 0) > BAND; if (runaway) out.runaway.push(club); let letGo = 0;
-    for (const m of roster) {
+    const runaway = (excessOf?.(club) || 0) > (isGymClub(club) ? BAND : ORDINARY_RUNAWAY_BAND); if (runaway) out.runaway.push(club); let letGo = 0;
+    const mode = modeOf(f, club); const succOf = new Map(); for (const g of Object.values(plan.groups)) for (const r of g.rows) if (r.successor) succOf.set(r.starter.id, { m: r.successor, ready: r.ready });
+    for (const m of roster.slice()) {
       if (isProtected(m) || !contractEnds(m, year)) continue;
-      const ovr = monsterOverall(m); const starter = starters.has(m.id);
-      const value = ovr >= med || ((m.age || 30) <= 25 && (m.potential || 0) >= ovr + 5);
-      let keep = (starter || value) && !((m.age || 0) >= RESIGN_AGE_LIMIT && !starter);
+      const ovr = monsterOverall(m); const starter = starters.has(m.id); const successor = plan.successors.has(m.id);
+      const pastOnset = (m.age || 0) > publicOnset(m);
+      const value = successor || ovr >= med || ((m.age || 30) <= 25 && (m.potential || 0) >= ovr + (mode === 'rebuild' ? REBUILD_UPSIDE : 5));
+      let keep = starter ? !(pastOnset && plan.readyFor.has(m.id)) : value && (successor || (m.age || 0) <= publicOnset(m) + RESERVE_PAST_ONSET);
+      // R3 by mode (Phase D; F2/F3 owner-approved 2026-11-03): a contender lets a veteran past onset go only to a ready successor at least as
+      // good; a rebuilder lets him go to a ready successor, or to any successor once he is 2+ seasons past onset, and gives no new deal to a
+      // reserve past onset who is not a designated successor
+      { const pastBy = (m.age || 0) - publicOnset(m); const succ = succOf.get(m.id);
+        if (starter && mode === 'contend') keep = !(pastOnset && succ?.ready && monsterOverall(succ.m) >= ovr);
+        if (mode === 'rebuild' && pastOnset) keep = starter ? !(succ?.ready || (succ && pastBy >= 2)) : (successor ? keep : false); }
       // a club far above today's strength lets its expiring veterans walk (they are claimed within the league): attrition, decision A
-      if (keep && runaway && (m.age || 0) >= RUNAWAY_VETERAN_AGE && clubRoster(f, club).length - letGo > ROSTER_MIN + 2) { keep = false; letGo++; }
-      if (keep) { m.salary = renewalAsk(m).ask; m.contract = newContract(year + 1, 2); out.resigned++; }
+      if (keep && runaway && !successor && (m.age || 0) >= RUNAWAY_VETERAN_AGE && clubRoster(f, club).length - letGo > ROSTER_MIN + 2) { keep = false; letGo++; }
+      if (keep) { const len = modeLength(contractLength(m, { bench }), m, mode); m.salary = renewalAsk(m).ask; m.contract = leagueContract(year + 1, len); out.resigned++; out.lengths[len]++; out.byMode[mode] = (out.byMode[mode] || 0) + 1; }
       else { releaseFromClub(f, club, m.id, { year, reason: 'walked' }); out.walked++; }
     }
-    out.released += trimToCap(f, club, { year, cap, starters: starterIds(clubRoster(f, club)) });
+    out.released += trimToCap(f, club, { year, cap, starters: starterIds(clubRoster(f, club)), bench });
     if (clubCapRoom(f, club, cap) < 0) out.overCap.push(club);
   }
   return out;
 }
 /** Every club trimmed to the cap (after the ageing pass refreshed salaries, and after the nudge). Returns the clubs still over it at the roster floor. */
 export function leagueTrim(f, { year, cap }) {
-  if (!hasLeague(f)) return []; const over = [];
-  for (const club of order(f)) { trimToCap(f, club, { year, cap, starters: starterIds(clubRoster(f, club)) }); if (clubCapRoom(f, club, cap) < 0) over.push(club); }
+  if (!hasLeague(f)) return []; const over = []; let bench = null;
+  for (const club of order(f)) { if (clubCapRoom(f, club, cap) < 0) trimToCap(f, club, { year, cap, starters: starterIds(clubRoster(f, club)), bench: (bench ||= leagueBenchOf(f)) }); if (clubCapRoom(f, club, cap) < 0) over.push(club); }
   return over;
 }
-/** Release the cheapest-to-lose unprotected reserves until the club fits under the cap (or sits at the roster minimum). */
-function trimToCap(f, club, { year, cap, starters }) {
-  let n = 0;
+/** Release the cheapest-to-lose unprotected reserves until the club fits under the cap (or sits at the roster minimum). Phase B:
+ *  designated successors go only when no other reserve is left (successor protection in cap trims, where legal). */
+function trimToCap(f, club, { year, cap, starters, bench = null }) {
+  let n = 0; let succ = null;
+  const perSalary = (a, b) => playerValue(a) / (a.salary || 1) - playerValue(b) / (b.salary || 1);
   while (clubCapRoom(f, club, cap) < 0 && clubRoster(f, club).length > ROSTER_MIN) {
-    const spare = clubRoster(f, club).filter((m) => !isProtected(m) && !starters.has(m.id)).sort((a, b) => playerValue(a) / (a.salary || 1) - playerValue(b) / (b.salary || 1))[0]
-      || clubRoster(f, club).filter((m) => !isProtected(m)).sort((a, b) => playerValue(a) / (a.salary || 1) - playerValue(b) / (b.salary || 1))[0];
+    succ ||= successorIds(f, club, bench || (bench = leagueBenchOf(f)));
+    const roster = clubRoster(f, club);
+    const spare = roster.filter((m) => !isProtected(m) && !starters.has(m.id) && !succ.has(m.id)).sort(perSalary)[0]
+      || roster.filter((m) => !isProtected(m) && !starters.has(m.id)).sort(perSalary)[0]
+      || roster.filter((m) => !isProtected(m)).sort(perSalary)[0];
     if (!spare) break;
     releaseFromClub(f, club, spare.id, { year, reason: 'released', why: 'cap' }); n++;
   }
   return n;
+}
+/** A spare to release for cap room (the nudge, injury cover): weakestSpare, never a designated successor while another spare will do. */
+function capSpare(f, club, { position = null, exclude = new Set() } = {}) {
+  const succ = successorIds(f, club); const a = weakestSpare(f, club, { position, exclude: new Set([...exclude, ...succ]) }), b = weakestSpare(f, club, { position, exclude });
+  if (!a || !b || a === b) return a || b;
+  const roster = clubRoster(f, club); const topN = (m) => roster.filter((x) => x.position === m.position && monsterOverall(x) > monsterOverall(m)).length < (GROUP_SLOTS[m.position]?.length || 1);
+  return topN(a) && !topN(b) ? b : a; // a successor goes before a starter
 }
 
 // ------------------------------------------------------------ the next season
@@ -156,6 +213,51 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
   }
   return out;
 }
+/**
+ * R5 free-agency upgrades (Task 6 Phase C; owner's Group 3 decision D14, 2026-10-30), after the owner's free agency (decision F) and
+ * the needs fill. A club whose starting group is weak (gap ≤ −4 against the league) or has a succession need, and that can afford
+ * it, signs a pool monster who is at least UPGRADE_MIN better than the starter he replaces (weak group), or who qualifies as the
+ * ageing starter's successor (succession need). Weak groups are served first. To make room it may release its weakest expendable
+ * reserve: never a protected monster, a designated successor, the cover for an injured starter, or one whose release leaves the
+ * position without its starters. Pools only: generated arrivals keep the anchor rule. UPGRADES_PER_OFFSEASON per club, and
+ * CONTEND_UPGRADES for a club in Contend mode (Phase D, R5; the owner's free agency always comes first).
+ */
+export const UPGRADE_MIN = 3, UPGRADES_PER_OFFSEASON = 1, CONTEND_UPGRADES = 2;
+export const upgradesAllowed = (mode) => (mode === 'contend' ? CONTEND_UPGRADES : UPGRADES_PER_OFFSEASON);
+export function leagueUpgrades(f, { year, cap }) {
+  if (!hasLeague(f)) return null; const out = { signed: [], released: 0 };
+  const bench = leagueBenchOf(f);
+  for (const club of order(f)) {
+    let done = 0; const allowed = upgradesAllowed(modeOf(f, club));
+    while (done < allowed) {
+      const pick = bestUpgrade(f, club, bench, cap); if (!pick) break;
+      if (pick.release) { releaseFromClub(f, club, pick.release.id, { year, reason: 'released', why: 'upgrade' }); out.released++; }
+      const m = takeFromPool(f, pick.m.id); if (!m) break;
+      m.salary = salaryFor(m); addToClub(f, club, m, { year, via: 'signed', contract: leagueContract(year, contractLength(m, { bench })), source: 'pool' });
+      out.signed.push({ club, mode: modeOf(f, club), id: m.id, pos: m.position, ovr: monsterOverall(m), replaces: pick.starterOvr, kind: pick.kind, released: pick.release?.id || null }); done++;
+    }
+  }
+  return out;
+}
+function bestUpgrade(f, club, bench, cap) {
+  const roster = clubRoster(f, club); const starters = starterIds(roster); const plan = rosterPlan(roster, bench, { starters });
+  const pool = Object.values(f.pool || {}).flat().filter((m) => !isProtected(m) && !m.injury);
+  const room = clubCapRoom(f, club, cap); const full = roster.length >= ROSTER_MAX;
+  const cover = new Set(); for (const [pos, slots] of Object.entries(GROUP_SLOTS)) { const at = roster.filter((m) => m.position === pos).sort((a, b) => monsterOverall(b) - monsterOverall(a)); if (at.slice(0, slots.length).some((m) => m.injury)) { const next = at.slice(slots.length).find((m) => !m.injury); if (next) cover.add(next.id); } }
+  const expendable = (pos) => roster.filter((m) => !isProtected(m) && !starters.has(m.id) && !plan.successors.has(m.id) && !cover.has(m.id) && roster.filter((x) => x.position === m.position).length > (GROUP_SLOTS[m.position]?.length || 1))
+    .sort((a, b) => playerValue(a) / (a.salary || 1) - playerValue(b) / (b.salary || 1))[0] || null;
+  const afford = (m, pos) => { const sal = salaryFor(m); if (!full && sal <= room) return { release: null }; const rel = expendable(pos); if (!rel) return null; return sal <= room + (rel.salary || 0) ? { release: rel } : null; };
+  const options = [];
+  for (const [pos, g] of Object.entries(plan.groups)) {
+    if (pos === 'K' || !g.rows.length) continue;
+    if (g.weak) { const st = g.rows.map((r) => r.starter).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; const so = monsterOverall(st);
+      for (const m of pool) if (m.position === pos && monsterOverall(m) >= so + UPGRADE_MIN) { const a = afford(m, pos); if (a) options.push({ kind: 'weak', m, starterOvr: so, gain: monsterOverall(m) - so, ...a }); } }
+    for (const r of g.rows) { if (!(r.horizon <= PLAN.ageingHorizon && !r.successor)) continue;
+      for (const m of pool) if (m.position === pos && qualifiesAsSuccessor(m, r.starter)) { const a = afford(m, pos); if (a) options.push({ kind: 'succession', m, starterOvr: monsterOverall(r.starter), gain: monsterOverall(m) - monsterOverall(r.starter), ...a }); } }
+  }
+  options.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'weak' ? -1 : 1) || (b.gain - a.gain) || (a.m.id < b.m.id ? -1 : 1));
+  return options[0] || null;
+}
 /** A regional veteran at about `quality`, cheaper if the room does not allow it; null when nothing affordable and the need is not urgent. */
 export function generateArrival(f, r, { club, position, quality, room, floor = false }) {
   const regions = Object.keys(REGIONS).sort(() => r.next() - 0.5); let regionName = regions[0], pool = [];
@@ -185,15 +287,15 @@ export function leagueNudge(f, r, { year, cap, targetOf, teamOf, rival = null })
   if (!hasLeague(f)) return null;
   const out = { boosted: [], slowed: [], unchanged: 0 };
   for (const club of order(f)) {
-    const c = clubRecord(f, club); const target = targetOf(club); let ovr = teamOverall(teamOf(club)); const band = club === rival ? RIVAL_BAND : BAND;
-    c.strategy.slow = Math.max(0, ovr - (target + band)); if (c.strategy.slow) out.slowed.push(club); // how far above the band: the brake's strength
+    const c = clubRecord(f, club); const target = targetOf(club); let ovr = teamOverall(teamOf(club)); const band = club === rival ? RIVAL_BAND : BAND; const slowBand = club === rival ? RIVAL_BAND : isGymClub(club) ? BAND : ORDINARY_SLOW_BAND; // D10b: ordinary clubs are slowed only above the wider band
+    c.strategy.slow = Math.max(0, ovr - (target + slowBand)); if (c.strategy.slow) out.slowed.push(club); // how far above the band: the brake's strength
     let signed = 0;
     while (ovr < target - band && signed < NUDGE_SIGNINGS) {
       const pos = weakestStartingGroup(f, club); if (!pos) break;
       if (clubRoster(f, club).length >= ROSTER_MAX) { const spare = weakestSpare(f, club, { position: pos }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
       const m = generateArrival(f, r, { club, position: pos, quality: target + 2, room: clubCapRoom(f, club, cap), floor: false });
       if (!m) { // make cap room: the lowest value per salary among the spares goes
-        const spare = weakestSpare(f, club, { position: null }); if (!spare || spare.position === pos) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' });
+        const spare = capSpare(f, club, { position: null }); if (!spare || spare.position === pos) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' });
         const again = generateArrival(f, r, { club, position: pos, quality: target + 2, room: clubCapRoom(f, club, cap), floor: false }); if (!again) break;
         addToClub(f, club, again, { year, via: 'signed', contract: newContract(year, 2), source: 'generated' });
       } else addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 2), source: 'generated' });
@@ -232,7 +334,7 @@ export function leagueInjuryCover(f, r, { year, cap, targetOf }) {
       if (roster.length >= ROSTER_MAX) { const spare = weakestSpare(f, club, { position: null, exclude: new Set(roster.filter((m) => m.position === pos).map((m) => m.id)) }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
       // cap room for at least a replacement-level deal: spares go first (never a starter at another short position, never the protected)
       const minDeal = 18000 + 280 * MIN_QUALITY + 2000; let trims = 0;
-      while (clubCapRoom(f, club, cap) < minDeal && clubRoster(f, club).length > ROSTER_MIN && trims++ < 6) { const spare = weakestSpare(f, club, { position: null, exclude: new Set(clubRoster(f, club).filter((m) => m.position === pos).map((m) => m.id)) }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
+      while (clubCapRoom(f, club, cap) < minDeal && clubRoster(f, club).length > ROSTER_MIN && trims++ < 6) { const spare = capSpare(f, club, { position: null, exclude: new Set(clubRoster(f, club).filter((m) => m.position === pos).map((m) => m.id)) }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
       const room = clubCapRoom(f, club, cap);
       const fit = (m) => m.position === pos && !m.injury && salaryFor(m) <= room;
       const waived = (f.league.waivers || []).filter(fit).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];

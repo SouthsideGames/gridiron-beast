@@ -1,0 +1,191 @@
+{
+ "pb3-B-1-10": {
+  "hash": "575e752573d07388adaa6c71053276a55f98ea5f104bd7307c1c1fa6bb197363",
+  "seeds": 10
+ },
+ "pb3-B-11-20": {
+  "hash": "8edeaba764b0c5edbeb93225825dbc7c4e98180db54e83a7e399df76f576a97f",
+  "seeds": 10
+ },
+ "pb3-B-21-30": {
+  "hash": "63f58ac5d8e79571c60ab8651c5be89d542e9bf93d1c6013e16ff5e538e9d5a1",
+  "seeds": 10
+ },
+ "pb3-B-31-40": {
+  "hash": "abfb3c6b4e35424d169d315fe22c15b7714a3ecb39dc134b8e29f2cc79a6534c",
+  "seeds": 10
+ },
+ "pb3-B-41-50": {
+  "hash": "fb9c787a17569bba569c091944f374ed265e9998ca519d08c340ee771077cf8e",
+  "seeds": 10
+ },
+ "pb3-B-51-60-repeat": {
+  "hash": "0fd4b1c6929b537df8b94dfaae44bef5e9a5e1e86f78c25f7a675d5bd7cefaac",
+  "seeds": 10
+ },
+ "pb3-B-51-60": {
+  "hash": "0fd4b1c6929b537df8b94dfaae44bef5e9a5e1e86f78c25f7a675d5bd7cefaac",
+  "seeds": 10
+ },
+ "pb3-B-61-70": {
+  "hash": "c8dd64f8bc79e5d0a47b7b47f0fb75eb49833ebd3e0c5b139a4203faabf6f894",
+  "seeds": 10
+ },
+ "pb3-B-71-80": {
+  "hash": "0e91f43bbc7e5e0a019f2baa4f964c878f5a2de2a7779a11b24b9ba8a53668bf",
+  "seeds": 10
+ },
+ "pb3-C-106-108": {
+  "hash": "69d9f53a5767d2164b1f5aa659636eb5bf2fc98b967b711eb4ce269f06fc38b2",
+  "seeds": 3
+ },
+ "pb3-C-109-110": {
+  "hash": "79682500648e7ccbb8d5ef8149683032c505648e07d708a12b3738e9f3ba90dd",
+  "seeds": 2
+ },
+ "pb3-C-111-115": {
+  "hash": "6469168751b213feea72ddc7d30cf8dbf54427b7a1fdff6aa7e99a763f9a8a5e",
+  "seeds": 5
+ },
+ "pb3-C-116-120": {
+  "hash": "d1351f1a4d5d3efc31bf026f511983887b64ed7c887f9808eda448ad86c37664",
+  "seeds": 5
+ },
+ "pb3-C-121-125": {
+  "hash": "1e8547c5e0b6374337c2f2d7c04f0a597b9c2b81d2db706be1cc61a9ccda046a",
+  "seeds": 5
+ },
+ "pb3-D-aging": {
+  "hash": "0b8c7acf581033ca22007932a03a7f24c85b91e7e418cb697051b51cf57b9dbe",
+  "seeds": 5
+ },
+ "pb3-D-expiring": {
+  "hash": "adfbef2c9beb083376002952c68a4f15ce29af850e10f99ddccf13312ff68912",
+  "seeds": 5
+ },
+ "pb3-D-injuries": {
+  "hash": "d3a2d982eb578e027139e5e007e47f1f86c50192d6a4ea7d11d7feec8e54a24a",
+  "seeds": 5
+ },
+ "pb3-D-picks": {
+  "hash": "9e0caea659b8ec37294151cd7c2d7b7b0ad156101d3cc63f0fdf4f690f0f0aa9",
+  "seeds": 5
+ },
+ "pb3-D-rebuild": {
+  "hash": "053a0a9157802b368f5cebec34d5ae89db63b9ff6da5db93c9c32f05c9146eb9",
+  "seeds": 5
+ },
+ "pb3-D-thin": {
+  "hash": "71583cf45170eefdee3a886f3f05e5a05e23aae6bceb7368361f7de08b1e0975",
+  "seeds": 5
+ },
+ "pb3-contract-allstar-legacy": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-contract-allstar-persistent": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-contract-pro-legacy": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-contract-pro-persistent": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-contract-rookie-legacy": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-contract-rookie-persistent": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-drift-allstar-1-6": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-drift-allstar-13-18": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-drift-allstar-19-24": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-drift-allstar-7-12": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-drift-pro-1-6": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-drift-pro-7-12": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-drift-rookie-1-6": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "pb3-drift-rookie-7-12": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb-pro-13-18": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb-pro-19-24": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb-pro-25-30": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb-pro-31-36": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb2-pro-13-18": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb2-pro-19-24": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb2-pro-25-30": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb2-pro-31-36": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb3-pro-13-18": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb3-pro-19-24": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb3-pro-25-30": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-pb3-pro-31-36": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-v42-pro-13-18": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-v42-pro-19-24": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-v42-pro-25-30": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "inv-v42-pro-31-36": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "con-legacy-allstar-17-24": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "con-legacy-allstar-9-16": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "con-pb2-allstar-persistent-17-24": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "con-pb2-allstar-persistent-9-16": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "con-pb3-allstar-persistent-17-24": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "con-pb3-allstar-persistent-9-16": {
+  "note": "balance-compare (no hash line); JSON alongside in the run folder"
+ },
+ "_tree": "4f7919d (revised draft weights + both-ways trade band)"
+}

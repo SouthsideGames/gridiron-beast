@@ -1,0 +1,36 @@
+{
+ "pb3": {
+  "seeds": 70,
+  "seasons": 800,
+  "trades": 2930,
+  "perSeason": 3.663,
+  "inSeasonShare": 30.5,
+  "kinds": {
+   "swap": 1165,
+   "swap+picks": 1758,
+   "picks": 7
+  },
+  "mvRatioMin": 0.8690000000000001,
+  "mvRatioMax": 1.153,
+  "outsideBothWays": 4,
+  "youngPaymentPct": 49,
+  "starterGainShare": 90.5
+ },
+ "pc": {
+  "seeds": 70,
+  "seasons": 800,
+  "trades": 3138,
+  "perSeason": 3.922,
+  "inSeasonShare": 32.9,
+  "kinds": {
+   "swap": 1198,
+   "swap+picks": 1931,
+   "picks": 9
+  },
+  "mvRatioMin": 0.87,
+  "mvRatioMax": 1.151,
+  "outsideBothWays": 4,
+  "youngPaymentPct": 46.2,
+  "starterGainShare": 92.1
+ }
+}

@@ -237,11 +237,11 @@ test('media day: 250 nature questions (ten per nature), answers lift the monster
   for (const q of qs) for (const a of q.a) { assert.ok(a.reach && typeof a.reach.total === 'number', 'every answer says how many monsters it reaches'); assert.ok(!/\{(opp|star|record|rival|club|week)\}/.test(a.text + q.q), 'placeholders are filled'); }
   const before = F.playerTeam(f);
   const t = qs[0].a[0].t;
-  const r = F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6); assert.equal(r.boosts[t], F.MEDIA_BOOST);
+  const r = F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6); assert.equal(r.boosts[t], Math.min(F.MEDIA_CAP ?? Infinity, F.MEDIA_BOOST * qs.filter((q) => q.a[0].t === t).length), 'each answer of that nature adds its boost (up to the cap)');
   const after = F.playerTeam(f);
   const onField = (team) => [...Object.values(team.offense), ...Object.values(team.defense)];
   const m = f.roster.find((x) => x.nature === t && onField(after).some((p) => p.id === x.id));
-  if (m) { const slotOf = (team) => onField(team).find((p) => p.id === m.id); const up = NATURES[t].up || 'awareness'; assert.ok(slotOf(after).attrs[up] > slotOf(before).attrs[up], `${t} monster lifted on ${up}`); assert.equal(after.boosts[m.id].media.amount, F.MEDIA_BOOST); }
+  if (m) { const slotOf = (team) => onField(team).find((p) => p.id === m.id); const up = NATURES[t].up || 'awareness'; assert.ok(slotOf(after).attrs[up] > slotOf(before).attrs[up], `${t} monster lifted on ${up}`); assert.equal(after.boosts[m.id].media.amount, r.boosts[t]); }
   const other = f.roster.find((x) => x.nature !== t && !qs.some((q) => q.a[0].t === x.nature) && onField(after).some((p) => p.id === x.id));
   if (other) assert.ok(!after.boosts[other.id]?.media, 'a nature nobody spoke for gets nothing');
   // Asked questions are not asked again this season; a rival week leads with the rival question.
