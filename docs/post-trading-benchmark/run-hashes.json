@@ -1,0 +1,330 @@
+{
+ "trees": {
+  "base": "db7c0c6 (v42.16.0-run-game game code)",
+  "t55": "fc19d34 (v42.17.0-trading-second-pass)",
+  "harness": "a0df7d5 (tools/ai-franchise-benchmark.mjs v3)"
+ },
+ "files": [
+  {
+   "file": "base-B-1-10.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "1-10",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "7650f9239349d65e0918814d5b7331e44156837885da1b39669ede20b8bb1c1f",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-B-11-20.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "11-20",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "4aac96397d4c937b5fa087ecba166cde7c093bb86deed6b1fe687b6b0448946e",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-B-21-30.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "21-30",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "cca27b297f8e979ef1c6be78f82775fe15ab5922c5036f6eb4a9ab268c366529",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-B-31-40.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "31-40",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "8e90aec3fd244ddb0bc0509ac990e448101e08e4d2f728a5f2652d0e4d4e2b2c",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-B-41-50.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "41-50",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "6ba45940cacdaa114beb58f3b33f5538934e931c9c7867f0ab5ca88ae9f9d813",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-B-51-60.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "51-60",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "e64b63207b51ae256600017b75de3d425396945ed2c600db2f7c2167e7829903",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-C-106-108.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "106-108",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "01afe46786be85b696b3eea01f01cb892b2dbf673f2a102240fcb50ada6f6b9c",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-C-109-110.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "109-110",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "65e722ac1f168653cca5bc54b884f362c7cd507556d725bf9f018e3ff9f86729",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-D-aging.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "aging",
+   "hash": "8f1cce400a187738d3b76a2d7302a6311f6406e2de2c699c2aae50b6293c924c",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-D-expiring.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "expiring",
+   "hash": "d87b0d43b104b9a415f58835ed040b041853fb1a17c0fdf94aa24d1b4e03a6e3",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-D-injuries.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "injuries",
+   "hash": "ff28d34df6bef08dad3826d9a5fb047408bd1fcc8871474c1718881347fe2339",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-D-picks.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "picks",
+   "hash": "8247d14868e20164fb7f623b807fbd9e416b1ec4d93d02bbafc10eba33af028e",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-D-rebuild.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "rebuild",
+   "hash": "1c9ca359ae9eccd6e8bbe7794cd0178c6d40d8b36d5f7939040ffcfd157a24e9",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-D-thin.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "thin",
+   "hash": "5f08d9fb3bd5659aafc440b366b552435760b80c7e9297d471077420aff1d875",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "base-E-nonudge-1-8.json",
+   "tree": "base",
+   "harnessV": 3,
+   "seeds": "1-8",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "7ad52946f43d8837225a813ee8d6fe89322ade924ed40d1c224a69409afb0a97",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-B-1-10.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "1-10",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "1fd3be9af11de92da8ad6c691b584756a0009cb4449873c68aadf6b5c6bffe5b",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-B-11-20.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "11-20",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "56f12b82fdc30a2fa0136ce0a020eebaeb20b83715955c50b2378469048a8216",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-B-21-30.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "21-30",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "b73f26ba26c0c30703609e1edc49e9e8c9775d564dc82974e929be9e22e0e86a",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-B-31-40.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "31-40",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "e4726cda764df98f27cdfee2c53033ce2693245d0843ae5d36ae07006853a387",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-B-41-50.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "41-50",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "7426a7b3e66d36a78ea2a8d313c2ab85de4388bab2b78be23be5a8da4f975c3f",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-B-51-60.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "51-60",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "f101de8b2e367e2f0415581682fbfcd8602c9dfffefbdca6ff0c3359ffc07579",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-C-106-108.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "106-108",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "b94c8331eea53cb0da4bbf3556d733f3ff9b54f0f2717083c9f6dc59c72d5b6a",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-C-109-110.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "109-110",
+   "seasons": 20,
+   "scenario": null,
+   "hash": "426e1ab77aefb6022b6d0bddb227010e9acc9bb5737f2329d750df37b4c223d8",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-D-aging.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "aging",
+   "hash": "52eb0052d7105e21ffb96e57cb0fbee1fcdaea9cbb6fac35801a7b256d7036f1",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-D-expiring.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "expiring",
+   "hash": "604085b4729a71bbd5f22d00ada61233aa1ac50e0581886a38dcafe5457d8d48",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-D-injuries.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "injuries",
+   "hash": "25c80830530d471587f65b2522fb72463016fb58d5dc77642bc7707822760ffc",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-D-picks.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "picks",
+   "hash": "d94ca48ae55ab350bdc8e2cf504a0d1b3a36a2844c2cd75ddaabe24962977763",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-D-rebuild.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "rebuild",
+   "hash": "749d16e97e4a8d918113dbc02de30d803c4a72321e382ad545a0eecef559eafa",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-D-thin.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "1-5",
+   "seasons": 6,
+   "scenario": "thin",
+   "hash": "bdcf11a74bf3b1711a674a851d1775fcc3161a59212774d2b69269d844206aa6",
+   "node": "v22.22.0"
+  },
+  {
+   "file": "t55-E-nonudge-1-8.json",
+   "tree": "t55",
+   "harnessV": 3,
+   "seeds": "1-8",
+   "seasons": 10,
+   "scenario": null,
+   "hash": "1ecdbd2915eed2c18ba647ab8513c76642e2498ec12a4b5d7482183460453d13",
+   "node": "v22.22.0"
+  }
+ ],
+ "stageP": {
+  "note": "seeds 1-2 x 3 seasons, each tree twice, run alone on the 2-core machine",
+  "runs": {
+   "base-a": {
+    "hash": "9c1a420f8943adf6e085ad4abd4f0c51b5ac7e085f070e8e3d900438677a1fca",
+    "seconds": 83
+   },
+   "base-b": {
+    "hash": "9c1a420f8943adf6e085ad4abd4f0c51b5ac7e085f070e8e3d900438677a1fca",
+    "seconds": 79
+   },
+   "t55-a": {
+    "hash": "84d12cde0bc4f8a68d66c1a678d40fbed281219333ead341a8142f4deaef8e5d",
+    "seconds": 80
+   },
+   "t55-b": {
+    "hash": "84d12cde0bc4f8a68d66c1a678d40fbed281219333ead341a8142f4deaef8e5d",
+    "seconds": 84
+   }
+  }
+ }
+}

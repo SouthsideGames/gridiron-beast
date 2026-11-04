@@ -1,0 +1,48 @@
+{
+ "draft": {
+  "retool": {
+   "picks": 3204,
+   "ovr": 57.87,
+   "pot": 69.44,
+   "upside": 11.57,
+   "wouldStartPct": 32.99,
+   "belowBestAvailOvr": 1.12
+  },
+  "compete": {
+   "picks": 9932,
+   "ovr": 58.04,
+   "pot": 69.84,
+   "upside": 11.79,
+   "wouldStartPct": 17.72,
+   "belowBestAvailOvr": 1.14
+  },
+  "contend": {
+   "picks": 7100,
+   "ovr": 57.12,
+   "pot": 68.43,
+   "upside": 11.31,
+   "wouldStartPct": 6.17,
+   "belowBestAvailOvr": 1
+  },
+  "rebuild": {
+   "picks": 4064,
+   "ovr": 58.77,
+   "pot": 71.08,
+   "upside": 12.31,
+   "wouldStartPct": 31.27,
+   "belowBestAvailOvr": 1.35
+  }
+ },
+ "resignedPerSeason": {
+  "compete": 71.55,
+  "retool": 21.02,
+  "contend": 54.23,
+  "rebuild": 24.11
+ },
+ "upgradesPerSeason": {
+  "compete": 0.99,
+  "retool": 0.65,
+  "contend": 0.3,
+  "rebuild": 0.47
+ }
+}

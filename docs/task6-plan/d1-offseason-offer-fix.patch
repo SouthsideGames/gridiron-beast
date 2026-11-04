@@ -1,0 +1,18 @@
+--- a/src/franchise/franchise.js	2026-10-29 19:36:36.138088786 -0400
++++ b/src/franchise/franchise.js	2026-10-30 01:57:18.510821258 -0400
+@@ -2080,7 +2080,6 @@
+   if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, s.year + 1)); st.todayYear = s.year + 1; } // today's generated strength for the coming season, computed once and reused by the transition and the Board's forecast
+   const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, todayOverall(f, c, s.year + 1));
+   if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
+-  maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6)
+   // The board's goal (GDD §17.4): settled now, before the offseason.
+   { const gymWinsThisYear = Object.values(f.campaign?.badges || {}).filter((b) => b.year === s.year).length;
+     const verdict = settleGoal(f, { wins: rec.w, playoffs: !!s.playoffs?.seeds && Object.values(s.playoffs.seeds).flat().includes(f.club), badgesWon: gymWinsThisYear, champion: champion === f.club, forecastWins: boardForecastFor(f, s.schedule.filter((g) => !g.bye).length || 9).wins });
+@@ -2092,6 +2091,7 @@
+   const mine = Object.entries(s.awards.league || {}).filter(([, w]) => w && w.team === f.club);
+   f.campaign.awards += mine.length;
+   s.finished = true;
++  maybeTradeCall(f); // a club may call as the offseason opens (GDD §19.6): after the season is marked finished, so the trade calendar reads the offseason, not the postseason
+   checkAchievements(f, 'season', { wins: rec.w, losses: rec.l, champion: champion === f.club, awardsWon: mine.length, awardLine: mine.length ? mine.map(([k, w]) => `${w.name}: ${AWARDS[k]?.label || k}.`).join(' ') : '', wasHotSeat, goalMet: !!s.boardVerdict?.met });
+ }
+ export const TIERS_ENABLED = false;

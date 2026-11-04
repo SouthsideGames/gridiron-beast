@@ -15,7 +15,7 @@ import { GROUP_SLOTS } from './roster.js';
 import { newContract } from './contracts.js';
 import { DRAFT_ROUNDS } from './draft.js';
 import { hasLeague, isProtected, removeFromClub } from './league-registry.js';
-import { marketValue } from './trade-value.js';
+import { marketValue, successorPremium } from './trade-value.js';
 
 export const TRADE_YEARS_AHEAD = 3;
 export const ASKS_PER_PICK = 2;
@@ -137,7 +137,7 @@ export function askForPlayer(f, { give, position, teams, rosterOf, difficulty = 
     for (const m of candidates) {
       const starter = keepStarters.has(m.id);
       if (starter) { const next = at.filter((x) => x.id !== m.id)[slots - 1]; if (!next || monsterOverall(next) < monsterOverall(m) - 6) continue; } // no replacement ready: the starter is not for sale
-      const worth = marketValue(m, { year: contractYear(f) }); const cost = worth * (starter ? 1.3 : 1); // starters cost more to pry loose; price follows the position (Task 5: trade-value.js)
+      const worth = marketValue(m, { year: contractYear(f) }); const cost = worth * (starter ? 1.3 : successorPremium(roster, m)); // Task 6 Phase B (R6): a designated successor is dearer, by the same shares as rosterWorth // starters cost more to pry loose; price follows the position (Task 5: trade-value.js)
       if (cost <= budget && worth >= floor && (!best || monsterOverall(m) > monsterOverall(best))) best = m;
     }
     if (best) offers.push({ team, give, get: { player: best }, value: marketValue(best, { year: contractYear(f) }), starter: keepStarters.has(best.id) });

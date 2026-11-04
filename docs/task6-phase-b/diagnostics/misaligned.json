@@ -1,0 +1,14 @@
+{
+ "run": "B seeds 1-10 x 10 seasons, instrumented copy of 7a14393 (patch alongside; logging only, no random draws), identical league to pb-B-1-10",
+ "picks": 4500,
+ "misalignedByYardstick": 578,
+ "atSuccessionNeedPosition": 551,
+ "staleSnapshot": 14,
+ "other": 13,
+ "allPicksAtSuccessionNeedPct": 77.9,
+ "meanGroupsWithSuccessionNeed2PerClub": 3.22,
+ "meanWeakGroupsPerClub": 1.77,
+ "successionPicksQualifyingAsSuccessor": 2572,
+ "successionPicksNotQualifying": 1140,
+ "byRound_qualifying_notQualifying": { "1": [1097, 164], "2": [926, 371], "3": [549, 605] }
+}

@@ -5,6 +5,7 @@ import { ATTRIBUTES, POSITION_WEIGHTS } from './personnel.js';
 import { createRng, hashString } from '../core/rng.js';
 import { attributeHelps, ATTR_NAME, POSITION_NAME } from './stat-guide.js';
 import { SPECIES_DEX, RARITIES, ELEMENT_REGIONS, TRAITS } from './species.js';
+import { attributeCost } from './aging.js';
 
 export const TYPES = Object.freeze({
   Fire: { icon: 'flame', bias: { strength: 4, agility: 2 }, hue: 14, blurb: 'Explosive power' },
@@ -223,12 +224,19 @@ export const xpForLevel = (level) => 30 + level * 18; // level 10 in about two s
 
 /** Apply a level-up: +1 to three weighted attributes (potential-capped). */
 export const POINTS_PER_LEVEL = 2; // attribute points the owner spends by hand (GDD §17.3)
+/** Never ages, so never pays the age cost (owner's rule, 2026-10-23): a legendary or the rival's signature monster. */
+const agelessMon = (m) => !!(m?.legendary || m?.signature) || (() => { try { return resolveSpecies(m)?.rarity === 'legendary'; } catch { return false; } })();
+/** Points one +1 to `attr` costs this monster now (age-adjusted training, GDD §55.2): 1 until his decline begins. */
+export const pointCost = (m, attr) => attributeCost(m, attr, { ageless: agelessMon(m) });
 export function levelUp(m, rng, { autoSpend = false } = {}) {
   m.level += 1;
   const weights = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR);
   for (let i = 0; i < 3; i++) {
     const k = rng.weighted(weights);
-    if (m.attributes[k] < m.potential) m.attributes[k] = clampAttr(m.attributes[k] + 1 + (rng.chance(0.3) ? 1 : 0));
+    if (m.attributes[k] >= m.potential) continue;
+    const cost = pointCost(m, k); // an ageing body: a pick on a physical attribute lands with chance 1 / cost (no draw while it costs 1)
+    if (cost > 1 && !rng.chance(1 / cost)) continue;
+    m.attributes[k] = clampAttr(m.attributes[k] + 1 + (rng.chance(0.3) ? 1 : 0));
   }
   m.points = (m.points || 0) + POINTS_PER_LEVEL;
   if (autoSpend) autoSpendPoints(m, rng);
@@ -241,14 +249,20 @@ export function spendPoint(m, attr) {
   // Points only go where they help the monster's position (GDD §8.2, stat-guide.js): no kicking for a quarterback.
   if (!attributeHelps(m.position, attr)) return { ok: false, reason: `${ATTR_NAME[attr]} does not help a ${(POSITION_NAME[m.position] || m.position).toLowerCase()}.`, notUseful: true };
   if (m.attributes[attr] >= m.potential) return { ok: false, reason: `${attr} is at this monster's potential (${m.potential}).` };
-  m.attributes[attr] = clampAttr(m.attributes[attr] + 1); m.points -= 1;
-  return { ok: true, value: m.attributes[attr], left: m.points };
+  const cost = pointCost(m, attr);
+  if (m.points < cost) return { ok: false, reason: `${ATTR_NAME[attr]} costs ${cost} points at age ${m.age} (${m.points} banked): an ageing body is harder to build.`, cost };
+  m.attributes[attr] = clampAttr(m.attributes[attr] + 1); m.points -= cost;
+  return { ok: true, value: m.attributes[attr], left: m.points, cost };
 }
 /** AI clubs (and the staff, if asked) spend by position weight. */
 export function autoSpendPoints(m, rng) {
-  const weights = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR).filter(([k]) => m.attributes[k] < m.potential);
+  // by position weight ÷ cost (an old monster's points go mostly to technique); while everything costs 1 this is exactly the old rule
+  const all = Object.entries(POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR).filter(([k]) => m.attributes[k] < m.potential).map(([k, w]) => { const c = pointCost(m, k); return [k, w / c, c]; });
   let guard = 20;
-  while ((m.points || 0) > 0 && weights.length && guard-- > 0) { const k = rng.weighted(weights); if (spendPoint(m, k).ok === false) break; }
+  while ((m.points || 0) > 0 && guard-- > 0) {
+    const opts = all.filter(([, , c]) => c <= m.points); if (!opts.length) break;
+    const k = rng.weighted(opts.map(([kk, w]) => [kk, w])); if (spendPoint(m, k).ok === false) break;
+  }
 }
 
 /** Cornerstone starters offered during onboarding (GDD §8). */

@@ -1,0 +1,17 @@
+{
+ "root": "/home/claude/t6work/v42tree",
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "seasons": 6,
+ "reps": 3,
+ "secondsPerSeason": 13.63,
+ "all": [
+  13.51,
+  13.63,
+  13.94
+ ],
+ "node": "v22.22.0"
+}

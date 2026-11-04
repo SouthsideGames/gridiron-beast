@@ -1,0 +1,57 @@
+{
+ "root": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/t55wt/t55",
+ "seed": 21,
+ "perSeason": {
+  "1": {
+   "weeks": 6,
+   "offers": 2,
+   "ownerRoster": "32–34",
+   "aiRostersFull": "15–15 of 15",
+   "builds": 6,
+   "sell:candidate": 24,
+   "buy:candidate": 58,
+   "buy:clubRefused:rosterFull": 2320,
+   "sell:startsBy3": 12,
+   "sell:ownerGains": 12,
+   "sell:clubRefused:value": 468,
+   "sell:clubAccepts": 2
+  },
+  "2": {
+   "weeks": 6,
+   "offers": 1,
+   "ownerRoster": "37–37",
+   "aiRostersFull": "15–15 of 15",
+   "builds": 6,
+   "sell:candidate": 16,
+   "sell:startsBy3": 11,
+   "sell:ownerGains": 11,
+   "sell:clubRefused:value": 426,
+   "buy:candidate": 26,
+   "buy:clubRefused:rosterFull": 1040,
+   "sell:clubAccepts": 2
+  },
+  "3": {
+   "weeks": 6,
+   "offers": 0,
+   "ownerRoster": "38–38",
+   "aiRostersFull": "15–15 of 15",
+   "builds": 6,
+   "buy:candidate": 8,
+   "buy:clubRefused:rosterFull": 320,
+   "sell:candidate": 6
+  },
+  "4": {
+   "weeks": 6,
+   "offers": 0,
+   "ownerRoster": "38–38",
+   "aiRostersFull": "15–15 of 15",
+   "builds": 6,
+   "buy:candidate": 8,
+   "buy:clubRefused:rosterFull": 320,
+   "sell:candidate": 12,
+   "sell:startsBy3": 6,
+   "sell:ownerGains": 6,
+   "sell:clubRefused:rosterFull": 240
+  }
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "root": "/home/claude/t6work/pb2tree",
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "seasons": 6,
+ "reps": 3,
+ "secondsPerSeason": 13.29,
+ "all": [
+  13.19,
+  13.29,
+  14.1
+ ],
+ "node": "v22.22.0"
+}

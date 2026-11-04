@@ -1,0 +1,252 @@
+tree,group,seed,year,week,offseason,team,kind,pos,sendsOvr,sendsAge,asksOvr,give,sendPicks,ownerFloorAtPos,wouldStart
+base,B1,2,1,2,false,"Palmetto Vipers",legacy,S,64,25,,"2R2 2R1",,58,true
+base,B1,4,1,8,false,"Ironpeak Rams",legacy,QB,61,24,,"3R2 2R1",,59,true
+base,B1,8,1,3,false,"Eastport Phantoms",legacy,S,60,26,,2R1,,56,true
+base,B1,8,9,3,false,"Sunfire Lions",legacy,S,72,27,,"11R2 10R1",,65,true
+base,B1,8,10,4,false,"Eastport Phantoms",legacy,S,72,29,,"12R2 11R1",,65,true
+base,B1,10,10,8,false,"Ironpeak Rams",legacy,S,70,32,,11R1,,67,true
+base,B1,19,1,4,false,"Ironpeak Rams",legacy,S,62,28,,"3R2 2R1",,58,true
+base,B1,19,1,6,false,"Ironpeak Rams",legacy,S,62,28,,"3R2 2R1",,58,true
+t55,B1,1,1,4,false,"Thunder Mesa",sell,S,54,23,,"2R3 3R2",,51,true
+t55,B1,1,1,7,false,"Ironpeak Rams",sell,S,54,23,,"2R3 3R2",,51,true
+t55,B1,1,2,2,false,"Harbor Sentinels",sell,S,58,28,,"5R2 6R1",,55,true
+t55,B1,3,1,4,false,"Canyon Crushers",sell,DL,58,23,,"4R1 2R2",,51,true
+t55,B1,4,1,3,false,"Palmetto Vipers",sell,WR,56,26,,"4R2 3R1",,56,false
+t55,B1,4,1,4,false,"Ashford Hawks",sell,WR,55,23,,"2R3 2R2",,57,false
+t55,B1,4,1,6,false,"Canyon Crushers",sell,OL,60,25,,"2R3 3R2",,56,true
+t55,B1,4,2,5,false,"Ironpeak Rams",sell,OL,61,22,,"6R2 5R1",,57,true
+t55,B1,6,1,2,false,"Palmetto Vipers",sell,WR,58,24,,"4R3 2R1",,54,true
+t55,B1,6,1,4,false,"Harbor Sentinels",sell,DL,60,25,,"2R3 3R1",,52,true
+t55,B1,6,1,8,false,"Stonehaven Titans",sell,DL,56,23,,"3R3 2R2",,53,true
+t55,B1,6,2,2,false,"Harbor Sentinels",sell,DL,60,26,,"6R1 3R3",,55,true
+t55,B1,6,2,3,false,"Harbor Sentinels",sell,DL,60,26,,"6R1 3R3",,55,true
+t55,B1,6,2,4,false,"Harbor Sentinels",sell,DL,60,26,,"6R1 3R3",,55,true
+t55,B1,6,2,5,false,"Canyon Crushers",sell,DL,58,26,,"4R3 4R2",,55,true
+t55,B1,7,1,6,false,"Canyon Crushers",sell,DL,63,26,,"4R3 2R1",,54,true
+t55,B1,7,1,7,false,"Canyon Crushers",sell,DL,63,26,,"4R3 2R1",,54,true
+t55,B1,7,3,3,false,"Stonehaven Titans",sell,OL,65,30,,"5R3 5R2",,61,true
+t55,B1,7,3,6,false,"Stonehaven Titans",sell,OL,65,30,,"5R3 5R2",,61,true
+t55,B1,7,3,8,false,"Palmetto Vipers",sell,OL,64,30,,"6R3 5R2",,61,true
+t55,B1,8,1,4,false,"Eastport Phantoms",sell,LB,62,28,,"4R3 2R1",,57,true
+t55,B1,9,2,2,false,"Palmetto Vipers",sell,OL,62,23,,"5R2 6R1",,58,true
+t55,B1,11,1,4,false,"Palmetto Vipers",sell,WR,61,25,,"2R2 3R1",,58,true
+t55,B1,11,2,2,false,"Palmetto Vipers",sell,OL,61,22,,"6R2 5R1",,56,true
+t55,B1,11,2,3,false,"Palmetto Vipers",sell,OL,61,22,,"6R2 5R1",,57,true
+t55,B1,11,2,5,false,"Palmetto Vipers",sell,OL,61,22,,"6R2 5R1",,57,true
+t55,B1,11,2,7,false,"Thunder Mesa",sell,OL,60,24,,"5R3 4R2",,57,true
+t55,B1,13,1,4,false,"Canyon Crushers",sell,S,56,28,,"3R3 4R1",,53,true
+t55,B1,13,1,6,false,"Palmetto Vipers",sell,OL,59,23,,"4R3 2R2",,55,true
+t55,B1,13,1,8,false,"Palmetto Vipers",sell,OL,59,23,,"4R3 2R2",,55,true
+t55,B1,14,2,5,false,"Ironpeak Rams",sell,CB,58,29,,"6R2 5R1",,59,false
+t55,B1,15,1,2,false,"Stonehaven Titans",sell,DL,56,24,,"3R2 4R1",,52,true
+t55,B1,15,1,4,false,"Sunfire Lions",sell,S,55,27,,"4R2 2R3",,52,true
+t55,B1,15,1,8,false,"Frostpeak Howlers",sell,S,56,28,,"3R3 3R2",,53,true
+t55,B1,15,2,2,false,"Frostpeak Howlers",sell,WR,58,21,,"6R2 5R1",,55,true
+t55,B1,15,2,4,false,"Frostpeak Howlers",sell,WR,58,21,,"6R2 5R1",,55,true
+t55,B1,16,3,2,false,"Ironpeak Rams",sell,WR,60,29,,"6R2 5R2",,56,true
+t55,B1,17,1,4,false,"Thunder Mesa",sell,WR,59,26,,2R1,,55,true
+t55,B1,17,1,7,false,"Thunder Mesa",sell,WR,59,26,,2R1,,55,true
+t55,B1,17,2,5,false,"Ashford Hawks",sell,OL,57,22,,"6R2 6R1",,60,false
+t55,B1,18,1,4,false,"Canyon Crushers",sell,OL,57,25,,2R2,,53,true
+t55,B1,18,1,6,false,"Palmetto Vipers",sell,OL,60,28,,"4R2 4R1",,54,true
+t55,B1,18,2,3,false,"Canyon Crushers",sell,OL,59,26,,"6R2 5R2",,56,true
+t55,B1,18,2,5,false,"Palmetto Vipers",sell,OL,60,29,,4R2,,56,true
+t55,B1,19,1,2,false,"Ironpeak Rams",sell,LB,64,28,,"4R2 2R1",,55,true
+t55,B1,19,1,6,false,"Canyon Crushers",sell,DL,60,25,,"4R2 3R1",,57,true
+t55,B1,19,1,7,false,"Canyon Crushers",sell,DL,60,25,,"4R2 3R1",,57,true
+t55,B1,20,1,2,false,"Frostpeak Howlers",sell,WR,60,22,,"4R3 2R1",,55,true
+t55,B1,20,1,4,false,"Frostpeak Howlers",sell,WR,60,22,,"4R3 2R1",,57,true
+t55,B1,20,1,7,false,"Frostpeak Howlers",sell,WR,60,22,,"4R3 2R1",,57,true
+base,B21,24,1,2,false,"Ironpeak Rams",legacy,DL,59,24,,2R1,,52,true
+base,B21,24,9,6,false,"Ironpeak Rams",legacy,S,73,32,,10R1,,71,true
+base,B21,24,10,2,false,"Thunder Mesa",legacy,S,74,35,,"13R2 11R1",,70,true
+base,B21,24,10,5,false,"Thunder Mesa",legacy,S,74,35,,"13R2 11R1",,70,true
+base,B21,24,10,6,false,"Thunder Mesa",legacy,S,74,35,,"13R2 11R1",,70,true
+base,B21,26,10,7,false,"Northstar Wolves",legacy,S,71,32,,11R1,,61,true
+base,B21,27,2,3,false,"Palmetto Vipers",legacy,S,68,25,,3R1,,59,true
+base,B21,27,2,7,false,"Palmetto Vipers",legacy,S,68,25,,3R1,,60,true
+base,B21,29,8,6,false,"Ember City Beasts",legacy,CB,64,27,,9R1,,60,true
+base,B21,29,9,5,false,"Bayou Stalkers",legacy,CB,68,32,,10R1,,60,true
+base,B21,30,1,6,false,"Ironpeak Rams",legacy,OL,64,23,,"3R1 2R1",,57,true
+base,B21,32,7,5,false,"Frostpeak Howlers",legacy,CB,69,34,,8R1,,58,true
+base,B21,32,8,2,false,"Ironpeak Rams",legacy,CB,69,34,,9R1,,58,true
+base,B21,32,10,8,false,"Canyon Crushers",legacy,CB,70,30,,11R1,,58,true
+base,B21,34,1,3,false,"Palmetto Vipers",legacy,CB,61,24,,"4R2 2R1",,55,true
+base,B21,35,7,2,false,"Palmetto Vipers",legacy,S,71,24,,"10R1 8R1",,62,true
+base,B21,35,7,3,false,"Palmetto Vipers",legacy,S,71,24,,"10R1 8R1",,62,true
+base,B21,35,7,4,false,"Palmetto Vipers",legacy,S,71,24,,"10R1 8R1",,62,true
+base,B21,35,7,5,false,"Palmetto Vipers",legacy,S,71,24,,"10R1 8R1",,62,true
+base,B21,35,7,8,false,"Palmetto Vipers",legacy,S,71,24,,"10R1 8R1",,62,true
+base,B21,35,8,0,true,"Canyon Crushers",legacy,S,69,33,,9R1,,62,true
+base,B21,35,10,2,false,"Harbor Sentinels",legacy,S,66,33,,11R1,,62,true
+base,B21,35,10,3,false,"Palmetto Vipers",legacy,S,72,27,,"13R1 11R1",,62,true
+base,B21,36,1,2,false,"Palmetto Vipers",legacy,OL,63,26,,"4R1 2R1",,52,true
+base,B21,38,1,3,false,"Ironpeak Rams",legacy,DL,61,26,,"2R3 2R1",,54,true
+base,B21,38,1,7,false,"Ironpeak Rams",legacy,CB,66,24,,"3R1 2R1",,57,true
+base,B21,39,1,4,false,"Canyon Crushers",legacy,OL,60,24,,"2R3 2R1",,52,true
+t55,B21,22,1,8,false,"Palmetto Vipers",sell,WR,59,23,,2R1,,56,true
+t55,B21,23,1,8,false,"Canyon Crushers",sell,OL,61,25,,"2R3 2R2",,58,true
+t55,B21,23,2,5,false,"Frostpeak Howlers",sell,DL,58,25,,"5R2 6R1",,60,false
+t55,B21,24,1,2,false,"Thunder Mesa",sell,S,59,23,,"4R2 3R1",,54,true
+t55,B21,24,1,7,false,"Canyon Crushers",sell,DL,60,26,,"4R1 2R2",,55,true
+t55,B21,24,1,8,false,"Eastport Phantoms",sell,WR,60,27,,"2R3 3R1",,57,true
+t55,B21,25,1,7,false,"Thunder Mesa",sell,OL,60,23,,"4R3 2R2",,52,true
+t55,B21,25,1,8,false,"Canyon Crushers",sell,OL,60,26,,"3R3 2R2",,52,true
+t55,B21,25,2,3,false,"Canyon Crushers",sell,OL,60,27,,"6R3 4R2",,56,true
+t55,B21,26,1,7,false,"Eastport Phantoms",sell,OL,59,28,,"2R3 3R2",,55,true
+t55,B21,27,1,6,false,"Sunfire Lions",sell,LB,60,26,,2R1,,57,true
+t55,B21,28,1,6,false,"Sunfire Lions",sell,S,58,25,,"3R2 4R1",,53,true
+t55,B21,28,1,7,false,"Sunfire Lions",sell,S,58,25,,"3R2 4R1",,54,true
+t55,B21,28,1,8,false,"Sunfire Lions",sell,S,58,25,,"3R2 4R1",,54,true
+t55,B21,29,1,8,false,"Frostpeak Howlers",sell,DL,59,26,,"4R2 3R1",,56,true
+t55,B21,30,1,2,false,"Palmetto Vipers",sell,S,63,28,,"3R3 2R1",,55,true
+t55,B21,30,1,3,false,"Palmetto Vipers",sell,S,63,28,,"3R3 2R1",,56,true
+t55,B21,30,1,4,false,"Ironpeak Rams",sell,DL,66,27,,"2R2 3R1",,55,true
+t55,B21,30,1,7,false,"Frostpeak Howlers",sell,WR,62,28,,2R1,,58,true
+t55,B21,30,2,2,false,"Canyon Crushers",sell,WR,58,27,,"4R3 4R2",,59,false
+t55,B21,31,2,2,false,"Thunder Mesa",sell,DL,59,26,,"6R3 5R1",,56,true
+t55,B21,31,2,5,false,"Thunder Mesa",sell,DL,59,26,,"6R3 5R1",,56,true
+t55,B21,32,1,8,false,"Thunder Mesa",sell,CB,59,25,,"2R2 3R1",,56,true
+t55,B21,33,1,3,false,"Ironpeak Rams",sell,WR,59,28,,"4R1 2R2",,56,true
+t55,B21,33,1,4,false,"Palmetto Vipers",sell,DL,58,22,,"3R2 2R2",,55,true
+t55,B21,33,1,7,false,"Palmetto Vipers",sell,DL,58,22,,"3R2 2R2",,57,true
+t55,B21,34,1,3,false,"Palmetto Vipers",sell,S,58,22,,"2R3 2R2",,55,true
+t55,B21,34,1,4,false,"Ironpeak Rams",sell,DL,59,24,,"4R2 3R1",,54,true
+t55,B21,34,1,7,false,"Ironpeak Rams",sell,WR,59,23,,"4R3 2R1",,56,true
+t55,B21,34,2,2,false,"Canyon Crushers",sell,DL,59,27,,"5R3 4R2",,56,true
+t55,B21,34,2,3,false,"Canyon Crushers",sell,DL,59,27,,"5R3 4R2",,56,true
+t55,B21,34,2,7,false,"Stonehaven Titans",sell,DL,58,27,,"6R3 4R2",,55,true
+t55,B21,35,1,4,false,"Thunder Mesa",sell,CB,59,25,,"4R3 2R1",,56,true
+t55,B21,35,1,6,false,"Canyon Crushers",sell,WR,61,25,,"4R3 2R1",,55,true
+t55,B21,35,1,7,false,"Bayou Stalkers",sell,DL,61,27,,"4R2 3R1",,56,true
+t55,B21,36,1,6,false,"Palmetto Vipers",sell,S,65,27,,"4R2 2R1",,60,true
+t55,B21,36,2,5,false,"Eastport Phantoms",sell,OL,59,28,,"6R3 3R3",,55,true
+t55,B21,38,1,3,false,"Canyon Crushers",sell,S,57,23,,"3R3 3R1",,54,true
+t55,B21,38,2,3,false,"Thunder Mesa",sell,OL,61,21,,"5R3 4R2",,58,true
+t55,B21,38,2,4,false,"Thunder Mesa",sell,OL,61,21,,"5R3 4R2",,58,true
+t55,B21,39,1,7,false,"Eastport Phantoms",sell,OL,60,23,,"3R2 4R1",,54,true
+base,Bx,41,1,2,false,"Palmetto Vipers",legacy,DL,60,28,,2R1,,54,true
+base,Bx,42,1,2,false,"Palmetto Vipers",legacy,S,62,25,,"2R3 2R1",,55,true
+base,Bx,42,1,3,false,"Ironpeak Rams",legacy,S,62,25,,"4R1 2R1",,57,true
+base,Bx,45,1,3,false,"Eastport Phantoms",legacy,S,62,26,,"4R1 2R1",,53,true
+base,Bx,49,1,2,false,"Palmetto Vipers",legacy,K,62,26,,"4R2 2R1",,55,true
+base,Bx,51,1,2,false,"Thunder Mesa",legacy,S,58,27,,2R1,,52,true
+base,Bx,52,1,7,false,"Palmetto Vipers",legacy,DL,60,27,,2R1,,54,true
+base,Bx,52,10,2,false,"Canyon Crushers",legacy,S,74,36,,"13R2 11R1",,66,true
+base,Bx,52,10,6,false,"Palmetto Vipers",legacy,S,74,34,,"13R2 11R1",,66,true
+base,Bx,53,8,3,false,"Stormport Bolts",legacy,S,67,31,,9R1,,64,true
+base,Bx,53,9,6,false,"Sundown Drakes",legacy,S,69,26,,10R1,,64,true
+base,Bx,53,9,7,false,"Stormport Bolts",legacy,S,67,32,,10R1,,64,true
+base,Bx,53,10,0,true,"Eastport Phantoms",legacy,S,75,32,,"11R3 11R1",,64,true
+base,Bx,56,1,2,false,"Thunder Mesa",legacy,OL,61,28,,"2R3 2R1",,52,true
+base,Bx,56,1,6,false,"Thunder Mesa",legacy,OL,61,28,,"2R3 2R1",,57,true
+base,Bx,56,10,4,false,"Thunder Mesa",legacy,S,71,30,,11R1,,66,true
+base,Bx,56,10,0,true,"Thunder Mesa",legacy,S,71,30,,11R1,,66,true
+base,Bx,60,1,2,false,"Palmetto Vipers",legacy,S,63,27,,"2R2 2R1",,53,true
+base,Bx,60,1,3,false,"Ironpeak Rams",legacy,DL,62,23,,"4R1 2R1",,53,true
+t55,Bx,41,1,7,false,"Frostpeak Howlers",sell,S,58,24,,"4R2 3R1",,54,true
+t55,Bx,42,1,4,false,"Palmetto Vipers",sell,S,62,25,,2R1,,57,true
+t55,Bx,43,1,2,false,"Harbor Sentinels",sell,WR,56,28,,3R1,,53,true
+t55,Bx,43,1,8,false,"Thunder Mesa",sell,DL,62,24,,"4R3 2R1",,55,true
+t55,Bx,44,1,2,false,"Ironpeak Rams",sell,CB,60,24,,"2R2 3R1",,57,true
+t55,Bx,44,1,7,false,"Ironpeak Rams",sell,WR,61,26,,"2R2 3R1",,57,true
+t55,Bx,45,2,3,false,"Eastport Phantoms",sell,OL,60,23,,"4R3 4R2",,57,true
+t55,Bx,46,1,6,false,"Eastport Phantoms",sell,WR,60,23,,"4R3 2R1",,57,true
+t55,Bx,46,1,7,false,"Ironpeak Rams",sell,DL,58,28,,"4R3 2R2",,55,true
+t55,Bx,46,2,3,false,"Eastport Phantoms",sell,DL,59,29,,"5R3 4R2",,56,true
+t55,Bx,47,1,2,false,"Frostpeak Howlers",sell,WR,59,22,,"4R3 2R1",,54,true
+t55,Bx,47,1,4,false,"Canyon Crushers",sell,OL,59,22,,"3R3 2R2",,56,true
+t55,Bx,47,1,7,false,"Palmetto Vipers",sell,LB,59,24,,"4R1 2R2",,55,true
+t55,Bx,48,1,2,false,"Palmetto Vipers",sell,OL,64,27,,"2R3 2R2",,56,true
+t55,Bx,48,1,8,false,"Palmetto Vipers",sell,OL,64,27,,"2R3 2R2",,58,true
+t55,Bx,48,2,4,false,"Palmetto Vipers",sell,DL,61,27,,"6R2 5R1",,58,true
+t55,Bx,48,2,7,false,"Palmetto Vipers",sell,DL,61,27,,"6R2 5R1",,58,true
+t55,Bx,51,1,7,false,"Canyon Crushers",sell,OL,55,25,,"3R3 2R3",,52,true
+t55,Bx,51,2,4,false,"Thunder Mesa",sell,OL,57,21,,"6R2 6R1",,54,true
+t55,Bx,51,2,7,false,"Sunfire Lions",sell,OL,57,25,,"6R3 5R2",,54,true
+t55,Bx,51,3,4,false,"Sunfire Lions",sell,OL,57,26,,"6R3 6R2",,54,true
+t55,Bx,52,1,7,false,"Palmetto Vipers",sell,DL,60,27,,"2R3 3R1",,54,true
+t55,Bx,53,2,2,false,"Sundown Drakes",sell,DL,59,21,,"4R3 4R2",,56,true
+t55,Bx,55,1,7,false,"Canyon Crushers",sell,CB,60,25,,"2R2 3R1",,56,true
+t55,Bx,56,1,3,false,"Ironpeak Rams",sell,S,60,24,,2R1,,55,true
+t55,Bx,56,1,4,false,"Ironpeak Rams",sell,S,60,24,,2R1,,56,true
+t55,Bx,56,1,7,false,"Ironpeak Rams",sell,WR,60,26,,"4R3 2R1",,57,true
+t55,Bx,57,1,3,false,"Sunfire Lions",sell,S,55,27,,4R1,,52,true
+t55,Bx,59,1,2,false,"Ironpeak Rams",sell,OL,63,26,,"3R3 3R1",,53,true
+t55,Bx,59,1,4,false,"Sundown Drakes",sell,CB,57,28,,"2R3 2R2",,54,true
+t55,Bx,59,1,7,false,"Ironpeak Rams",sell,CB,60,27,,"4R3 2R1",,55,true
+t55,Bx,60,1,2,false,"Canyon Crushers",sell,LB,57,25,,"2R3 3R1",,54,true
+t55,Bx,60,1,3,false,"Palmetto Vipers",sell,S,63,27,,"4R3 2R1",,53,true
+base,C,106,7,2,false,"Bayou Stalkers",legacy,S,75,25,,"8R2 8R1",,66,true
+base,C,106,8,4,false,"Bayou Stalkers",legacy,S,75,26,,"9R2 9R1",,66,true
+base,C,106,8,6,false,"Bayou Stalkers",legacy,S,75,26,,"9R2 9R1",,66,true
+base,C,106,9,4,false,"Bayou Stalkers",legacy,S,75,27,,"10R2 10R1",,66,true
+base,C,106,9,6,false,"Bayou Stalkers",legacy,S,75,27,,"10R2 10R1",,66,true
+base,C,106,15,4,false,"Palmetto Vipers",legacy,S,75,39,,"16R3 16R1",,66,true
+base,C,106,15,0,true,"Palmetto Vipers",legacy,S,75,39,,"16R3 16R1",,66,true
+base,C,106,18,2,false,"Harbor Sentinels",legacy,S,74,43,,"21R2 19R1",,65,true
+base,C,106,18,0,true,"Harbor Sentinels",legacy,S,74,43,,"21R2 19R1",,66,true
+base,C,106,20,3,false,"Ashford Hawks",legacy,S,75,29,,"21R2 21R1",,66,true
+base,C,106,20,5,false,"Ashford Hawks",legacy,S,75,29,,"21R2 21R1",,66,true
+base,C,107,10,3,false,"Ironpeak Rams",legacy,S,75,34,,"11R3 11R1",,65,true
+base,C,107,10,4,false,"Ironpeak Rams",legacy,S,75,34,,"11R3 11R1",,65,true
+base,C,107,10,7,false,"Ironpeak Rams",legacy,S,75,34,,"11R3 11R1",,65,true
+base,C,107,10,8,false,"Ironpeak Rams",legacy,S,75,34,,"11R3 11R1",,65,true
+base,C,107,10,0,true,"Ironpeak Rams",legacy,S,75,34,,"11R3 11R1",,65,true
+base,C,107,13,2,false,"Ironpeak Rams",legacy,S,75,29,,"14R2 14R1",,65,true
+base,C,107,13,4,false,"Ironpeak Rams",legacy,S,75,29,,"14R2 14R1",,65,true
+base,C,107,13,5,false,"Ironpeak Rams",legacy,S,75,29,,"14R2 14R1",,65,true
+base,C,107,14,2,false,"Ironpeak Rams",legacy,S,75,30,,"15R3 15R1",,65,true
+base,C,107,14,7,false,"Ironpeak Rams",legacy,S,75,30,,"15R3 15R1",,65,true
+base,C,107,16,8,false,"Frostpeak Howlers",legacy,S,77,27,,"18R1 17R1",,66,true
+base,C,107,17,2,false,"Frostpeak Howlers",legacy,S,77,28,,"19R1 18R1",,66,true
+base,C,107,17,8,false,"Frostpeak Howlers",legacy,S,77,28,,"19R1 18R1",,66,true
+base,C,107,17,0,true,"Frostpeak Howlers",legacy,S,77,28,,"19R1 18R1",,66,true
+base,C,107,18,2,false,"Frostpeak Howlers",legacy,S,77,29,,"20R1 19R1",,66,true
+base,C,107,18,3,false,"Frostpeak Howlers",legacy,S,77,29,,"20R1 19R1",,66,true
+base,C,107,19,6,false,"Sunfire Lions",legacy,S,75,41,,"20R3 20R1",,66,true
+base,C,107,19,7,false,"Sunfire Lions",legacy,S,75,41,,"20R3 20R1",,66,true
+base,C,107,20,5,false,"Sunfire Lions",legacy,S,75,42,,"21R3 21R1",,66,true
+base,C,107,20,0,true,"Frostpeak Howlers",legacy,S,78,47,,"23R1 21R1",,66,true
+base,C,108,1,6,false,"Ironpeak Rams",legacy,DL,62,25,,"3R2 2R1",,55,true
+base,C,109,1,4,false,"Ironpeak Rams",legacy,DL,61,24,,"2R3 2R1",,52,true
+base,C,110,14,4,false,"Harbor Sentinels",legacy,S,76,40,,"16R2 15R1",,59,true
+base,C,110,15,7,false,"Ashford Hawks",legacy,S,76,40,,"17R2 16R1",,59,true
+t55,C,106,1,3,false,"Frostpeak Howlers",sell,S,59,24,,"2R3 3R1",,56,true
+t55,C,106,1,8,false,"Harbor Sentinels",sell,WR,58,25,,"3R2 2R2",,55,true
+t55,C,106,2,8,false,"Ironpeak Rams",sell,OL,62,21,,"6R2 5R1",,61,true
+t55,C,107,1,4,false,"Palmetto Vipers",sell,DL,56,23,,"3R3 2R2",,53,true
+t55,C,107,1,8,false,"Ironpeak Rams",sell,LB,59,24,,"4R2 2R1",,54,true
+t55,C,108,1,2,false,"Eastport Phantoms",sell,DL,60,22,,"4R3 2R1",,52,true
+t55,C,108,1,4,false,"Canyon Crushers",sell,WR,60,25,,2R1,,51,true
+t55,C,108,1,7,false,"Palmetto Vipers",sell,WR,55,24,,"2R3 2R2",,52,true
+t55,C,108,2,2,false,"Canyon Crushers",sell,OL,62,28,,"5R2 6R1",,59,true
+t55,C,108,2,3,false,"Canyon Crushers",sell,OL,62,28,,"5R2 6R1",,59,true
+t55,C,109,1,7,false,"Ironpeak Rams",sell,WR,62,24,,"4R2 2R1",,58,true
+base,E,2,1,2,false,"Palmetto Vipers",legacy,S,64,25,,"2R2 2R1",,58,true
+base,E,4,1,8,false,"Ironpeak Rams",legacy,QB,61,24,,"3R2 2R1",,59,true
+base,E,8,1,3,false,"Eastport Phantoms",legacy,S,60,26,,2R1,,56,true
+t55,E,1,1,4,false,"Thunder Mesa",sell,S,54,23,,"2R3 3R2",,51,true
+t55,E,1,1,7,false,"Ironpeak Rams",sell,S,54,23,,"2R3 3R2",,51,true
+t55,E,1,2,2,false,"Harbor Sentinels",sell,S,58,28,,"5R2 6R1",,55,true
+t55,E,2,3,6,false,"Ironpeak Rams",sell,OL,62,30,,"5R3 4R3",,59,true
+t55,E,2,3,8,false,"Canyon Crushers",sell,WR,60,28,,"6R2 5R2",,60,false
+t55,E,3,1,4,false,"Canyon Crushers",sell,DL,58,23,,"4R1 2R2",,51,true
+t55,E,3,2,5,false,"Ironpeak Rams",sell,DL,60,25,,"4R3 5R1",,57,true
+t55,E,3,2,7,false,"Ironpeak Rams",sell,DL,60,25,,"4R3 5R1",,57,true
+t55,E,3,2,8,false,"Ironpeak Rams",sell,DL,60,25,,"4R3 5R1",,57,true
+t55,E,4,1,3,false,"Palmetto Vipers",sell,WR,56,26,,"4R2 3R1",,56,false
+t55,E,4,1,4,false,"Ashford Hawks",sell,WR,55,23,,"2R3 2R2",,57,false
+t55,E,4,1,6,false,"Canyon Crushers",sell,OL,60,25,,"2R3 3R2",,56,true
+t55,E,4,2,5,false,"Ironpeak Rams",sell,OL,61,22,,"6R2 5R1",,57,true
+t55,E,6,1,2,false,"Palmetto Vipers",sell,WR,58,24,,"4R3 2R1",,54,true
+t55,E,6,1,4,false,"Harbor Sentinels",sell,DL,60,25,,"2R3 3R1",,52,true
+t55,E,6,1,8,false,"Stonehaven Titans",sell,DL,56,23,,"3R3 2R2",,53,true
+t55,E,6,2,2,false,"Harbor Sentinels",sell,DL,60,26,,"6R1 3R3",,55,true
+t55,E,6,2,3,false,"Harbor Sentinels",sell,DL,60,26,,"6R1 3R3",,55,true
+t55,E,6,2,4,false,"Harbor Sentinels",sell,DL,60,26,,"6R1 3R3",,55,true
+t55,E,6,2,5,false,"Canyon Crushers",sell,DL,58,26,,"4R3 4R2",,55,true
+t55,E,7,1,6,false,"Canyon Crushers",sell,DL,63,26,,"4R3 2R1",,54,true
+t55,E,7,1,7,false,"Canyon Crushers",sell,DL,63,26,,"4R3 2R1",,54,true
+t55,E,7,2,2,false,"Harbor Sentinels",sell,DL,60,29,,"5R2 6R1",,56,true
+t55,E,8,1,4,false,"Eastport Phantoms",sell,LB,62,28,,"4R3 2R1",,57,true

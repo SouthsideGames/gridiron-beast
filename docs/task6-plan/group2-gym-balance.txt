@@ -1,0 +1,12 @@
+Task 6 Group 2 evidence (planning diagnostics; nothing here is production behaviour)
+
+1. Gym against ordinary AI clubs on v42.17.0 (Task 5.5 data, docs/post-trading-benchmark/club-seasons.csv, tree t55)
+   10 seasons, 60 seeds: AI titles 581, ordinary 28 (4.8%); seeds with an ordinary champion 22 of 60; win % gym 60.0, ordinary 37.3;
+                         clubs with a 3-season run of <= 3 wins: gym 18.8%, ordinary 63.6%; ordinary share of AI playoff berths 25.6%
+   20 seasons, 5 seeds:  AI titles 100, ordinary 1; seeds with an ordinary champion 1 of 5; win % gym 65.6, ordinary 34.0;
+                         persistent losers gym 22.5%, ordinary 91.4%; ordinary share of AI playoff berths 15.7%
+
+2. Diagnostic variant "gym growth plateau" (scratch tree: clubQuality gym growth 1.5/season to season 10, then 0.5/season, as ordinary
+   clubs); harness v3, seeds 106-110 x 20 seasons, against v42.17.0 on the same seeds
+   v42.17.0 | gym share of AI titles s1-10 98%, s11-20 100% | ordinary titles 1/100 | distinct champions per seed 4,5,7,5,6 | ordinary persistent losers 91.4% | win % s11-20 gym 70.1 ordinary 30.7 | anchor / team-overall gap s10 14.9 / 8.9, s20 24.9 / 15.4 | generated veterans among gym starters s20 58.6% | owner (hands-off) win % s1-10 49.6, s11-20 24.7
+   plateau  | gym share of AI titles s1-10 98%, s11-20 98% | ordinary titles 2/100 | distinct champions per seed 5,6,6,6,6 | ordinary persistent losers 91.4% | win % s11-20 gym 67.5 ordinary 33 | anchor / team-overall gap s10 14.9 / 8.9, s20 14.9 / 10 | generated veterans among gym starters s20 31.1% | owner (hands-off) win % s1-10 49.6, s11-20 28.9

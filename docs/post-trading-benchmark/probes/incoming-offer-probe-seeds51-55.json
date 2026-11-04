@@ -1,0 +1,2734 @@
+{
+ "root": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/t55wt/t55",
+ "seeds": [
+  51,
+  52,
+  53,
+  54,
+  55
+ ],
+ "probes": [
+  {
+   "seed": 51,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    55
+   ],
+   "picksAsked": [
+    "R3",
+    "R3"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    55
+   ],
+   "picksAsked": [
+    "R3",
+    "R3"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    56
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    55
+   ],
+   "picksAsked": [
+    "R3",
+    "R3"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    55
+   ],
+   "picksAsked": [
+    "R3",
+    "R3"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    55
+   ],
+   "picksAsked": [
+    "R3",
+    "R3"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 14",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 week 14",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 51,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 51,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 51,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 51,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R2",
+    "R3"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 51,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 51,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    58
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    57
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 32,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 28,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 52,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 35,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 52,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 35,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 35,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 31,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 35,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 31,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 35,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 31,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 35,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 31,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 35,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 31,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 52,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 35,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 52,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 52,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 38,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 52,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    62
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    61
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    62
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 32,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 28,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    62
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    62
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    62
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    62
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 53,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    62
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    62
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 53,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 53,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 53,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 38,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 53,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "DL",
+   "sendsOvr": [
+    63
+   ],
+   "picksAsked": [
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    58
+   ],
+   "picksAsked": [
+    "R1",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": true,
+   "kind": "sell",
+   "pos": "OL",
+   "sendsOvr": [
+    56
+   ],
+   "picksAsked": [
+    "R3",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 31,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 27,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 32,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 28,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "sell",
+   "pos": "CB",
+   "sendsOvr": [
+    58
+   ],
+   "picksAsked": [
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": true,
+   "kind": "sell",
+   "pos": "CB",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 54,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 54,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 54,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 36,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 32,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 54,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 54,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 54,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 38,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 54,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 32,
+   "offer": true,
+   "kind": "sell",
+   "pos": "CB",
+   "sendsOvr": [
+    58
+   ],
+   "picksAsked": [
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 2",
+   "stamp": "wk:1:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 28,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R1",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R1",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 3",
+   "stamp": "wk:1:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": true,
+   "kind": "sell",
+   "pos": "CB",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    59
+   ],
+   "picksAsked": [
+    "R1",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 4",
+   "stamp": "wk:1:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": true,
+   "kind": "sell",
+   "pos": "CB",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 33,
+   "offer": true,
+   "kind": "sell",
+   "pos": "CB",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 6",
+   "stamp": "wk:1:6",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 29,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    56
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "WR",
+   "sendsOvr": [
+    56
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 7",
+   "stamp": "wk:1:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "sell",
+   "pos": "CB",
+   "sendsOvr": [
+    60
+   ],
+   "picksAsked": [
+    "R2",
+    "R1"
+   ],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 week 8",
+   "stamp": "wk:1:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season 1 end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 30,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season-end",
+   "stamp": "off:1",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 2",
+   "stamp": "wk:2:2",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 3",
+   "stamp": "wk:2:3",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 4",
+   "stamp": "wk:2:4",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 5",
+   "stamp": "wk:2:5",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 37,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 7",
+   "stamp": "wk:2:7",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 33,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "actual",
+   "ownerRoster": 38,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 8",
+   "stamp": "wk:2:8",
+   "offseason": false,
+   "variant": "room4",
+   "ownerRoster": 34,
+   "offer": false,
+   "kind": null,
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 0
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 14",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 38,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season 2 week 14",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 38,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season 2 end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "actual",
+   "ownerRoster": 38,
+   "offer": true,
+   "kind": "buy",
+   "pos": null,
+   "sendsOvr": [],
+   "picksAsked": [],
+   "askMonsters": 1
+  },
+  {
+   "seed": 55,
+   "where": "season-end",
+   "stamp": "off:2",
+   "offseason": true,
+   "variant": "room4",
+   "ownerRoster": 34,
+   "offer": true,
+   "kind": "sell",
+   "pos": "S",
+   "sendsOvr": [
+    56
+   ],
+   "picksAsked": [
+    "R3",
+    "R2"
+   ],
+   "askMonsters": 0
+  }
+ ],
+ "mutated": 0,
+ "summary": {
+  "actual": {
+   "probes": 82,
+   "offers": 55,
+   "offerPct": 67.1,
+   "byKind": {
+    "sell": 37,
+    "buy": 18
+   },
+   "ownerRosterMedian": 34
+  },
+  "room4": {
+   "probes": 82,
+   "offers": 54,
+   "offerPct": 65.9,
+   "byKind": {
+    "sell": 37,
+    "buy": 17
+   },
+   "ownerRosterMedian": 30
+  },
+  "actualAt38": {
+   "probes": 7,
+   "offers": 6,
+   "offerPct": 85.7,
+   "byKind": {
+    "buy": 6
+   },
+   "ownerRosterMedian": 38
+  },
+  "actualBelow38": {
+   "probes": 75,
+   "offers": 49,
+   "offerPct": 65.3,
+   "byKind": {
+    "sell": 37,
+    "buy": 12
+   },
+   "ownerRosterMedian": 34
+  },
+  "offseasonActual": {
+   "probes": 22,
+   "offers": 21,
+   "offerPct": 95.5,
+   "byKind": {
+    "sell": 3,
+    "buy": 18
+   },
+   "ownerRosterMedian": 36
+  },
+  "offseasonRoom4": {
+   "probes": 22,
+   "offers": 20,
+   "offerPct": 90.9,
+   "byKind": {
+    "buy": 17,
+    "sell": 3
+   },
+   "ownerRosterMedian": 32
+  }
+ }
+}

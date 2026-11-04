@@ -77,7 +77,9 @@ development; seeds 21–40 were held out and run once (`conf`); `pool` combines 
 | T11 | Competition | distinct champions 4, max title share 0.9, team-overall sd 3.87, persistent losers 37.2% | distinct champions 5, max title share 0.8, team-overall sd 3.8, persistent losers 39.2% | distinct champions ≥ base − 0.5; max title share not above baseline (Addendum 2); sd within ±15%; persistent losers ≤ base + 2 | pass |
 | T13 | Performance (Stage B wall time; the dedicated Stage P timing decides) | 22.7 s/season | 20.1 s/season | within +10% (indicative only: lanes shared the machine) | pass |
 
-### Final design, 20-season stage (seeds 106–110)
+### Final design, 20-season stage (seeds 101–105)
+
+> **Correction (Task 5.5, 2026-10-29):** this heading first read "seeds 106–110". The runs behind this table (`tools/post-trading-benchmark.sh --C=101-103,104-105`, both trees) used seeds **101–105**, the same as Task 4's Stage C; seeds 106–110 were first run in Task 5.5. The figures are unchanged.
 | # | Area | base | t5v2 | Rule | Result |
 |---|---|---|---|---|---|
 | T1 | Integrity | 0 problems, 0 exceptions | 0 problems, 0 exceptions (stages with any: none) | zero violations and exceptions in every stage | pass |

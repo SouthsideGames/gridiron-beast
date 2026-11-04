@@ -17,6 +17,12 @@
 // possible, the best visible prospect at each pick, the cheapest free agents only up to the roster minimum; no trades, no
 // calls answered. A dismissed owner is reinstated after the season (simulation only, the owner's rule of 2026-10-24) so every
 // seed runs its full length.
+//
+// Harness v4 (Task 6 Phase 0, recording only). Every v3 field is produced exactly as before; v4 adds one field per run, `v4`, with
+// a season-end snapshot of every monster in the league and on the owner's roster (see V4_MONSTER below), each club's gym tier and
+// strategy record, and per-season league facts. Removing `v4` from every run gives the v3 output byte for byte: the file carries
+// `hashV3` (the v3 hash of the same runs) next to `hash` (over everything), and tools/task6-harness-check.mjs verifies both that
+// and that the harness does not change the game (the final save with and without the harness's hooks is identical).
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -40,6 +46,11 @@ const { ALL_TEAMS, tierById } = await imp('src/data/league.js');
 const Save = await imp('src/franchise/save.js');
 const L = await imp('src/franchise/league.js');
 const T = await imp('src/franchise/trades.js');
+const { GYM_BY_CLUB } = await imp('src/data/gyms.js');
+const IH = await imp('src/franchise/injury-history.js');
+/** Harness v4: the columns of one monster's season-end row (arrays keep a 20-season file small). */
+export const V4_MONSTER = Object.freeze(['id', 'club', 'pos', 'age', 'ovr', 'level', 'xp', 'potential', 'starter', 'protected', 'ageless', 'origin', 'draftedYear', 'draftedRound',
+  'contractEnds', 'contractYears', 'salary', 'stage', 'injIncidents', 'injMissed', 'injOpp', 'yearsPro', 'attrs']);
 const SCEN = args.scenario ? await import(path.join(path.dirname(new URL(import.meta.url).pathname), 'ai-benchmark-scenarios.mjs')) : null;
 
 const [s0, s1] = String(args.seeds || '1-2').split('-').map(Number); const SEEDS = []; for (let s = s0; s <= (s1 || s0); s++) SEEDS.push(s);
@@ -57,6 +68,12 @@ function clubState(f, club) {
   for (const pos of POS) { const at = byPos[pos] || []; const n = GROUP_SLOTS[pos].length; starters[pos] = at.slice(0, n).map(monsterOverall); backups[pos] = at.slice(n).map(monsterOverall); for (const m of at.slice(0, n)) startIds.add(m.id); }
   return { roster, chart, byPos, starters, backups, startIds, problems: lineupProblems(roster, chart) };
 }
+/** Lineup points: the sum of the starters' overalls, best by overall at every position (harness v3, read only). */
+function lineupPoints(roster) { let s = 0; for (const pos of POS) s += roster.filter((m) => m.position === pos).map(monsterOverall).sort((a, b) => b - a).slice(0, GROUP_SLOTS[pos].length).reduce((a, v) => a + v, 0); return s; }
+/** One position's starters on a roster: [floor, mean, players there] (harness v3, read only). */
+function posLine(roster, pos) { const at = roster.filter((m) => m.position === pos).map(monsterOverall).sort((a, b) => b - a); const st = at.slice(0, GROUP_SLOTS[pos]?.length || 1); return [st.length ? st[st.length - 1] : null, st.length ? r1(st.reduce((a, v) => a + v, 0) / st.length) : null, at.length]; }
+/** Unused picks a club holds in one class year, by round [r1, r2, r3] (harness v3, read only). */
+function picksHeld(f, club, year) { const out = [0, 0, 0]; for (const p of T.picksOwnedBy(f, club, year, ALL_TEAMS)) if (!T.pickUsed(f, p) && p.round >= 1 && p.round <= 3) out[p.round - 1]++; return out; }
 /** Where a monster came from, read from his own history and the harness's record of where he was seen before arriving. */
 function originOf(m, club, seenSource) {
   const h = (m.history || []); const stint = [...h].reverse().find((x) => x.club === club);
@@ -70,15 +87,29 @@ function originOf(m, club, seenSource) {
 
 export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF, scenario = null } = {}) {
   const t0 = Date.now(); let peak = process.memoryUsage().heapUsed;
-  const rows = []; const decisions = { draft: [], departures: [], arrivals: [], trades: [], nudge: [] }; const integrity = [];
+  const rows = []; const decisions = { draft: [], departures: [], arrivals: [], trades: [], nudge: [], calls: [], tradeFollow: [] }; const integrity = [];
   const seenSource = new Map();          // id -> 'pool' | 'waivers': where an unrostered monster was last seen
   let prev = null;                        // last weekly snapshot: club -> Map(id -> {m, ovr, age, starter, pos})
   let prevOvr = new Map();                // id -> season-end ovr (development)
   const tradesSeen = new Set(); const drafted = new Map(); // id -> {club, year, round, overall}
   const mid = {};
   let applied = false; let scenarioSetup = null;
+  const v4 = { monsterColumns: V4_MONSTER, attrKeys: null, clubs: {}, seasons: [] }; // harness v4 (recording only)
 
   const snap = (f) => { const out = {}; for (const c of REG.leagueClubs(f)) { const st = clubState(f, c); const mp = new Map(); for (const m of st.roster) mp.set(m.id, { m, ovr: monsterOverall(m), age: m.age, starter: st.startIds.has(m.id), pos: m.position }); out[c] = mp; } return out; };
+  // Harness v3 (Task 5.5, recording only): cap room per club at each check, so a deal's cap effect can be read against the check before it.
+  const capSnap = (f) => { const cap = tierById(f.tier).cap; return Object.fromEntries(REG.leagueClubs(f).map((c) => [c, REG.clubCapRoom(f, c, cap)])); };
+  let prevCap = null; const callsSeen = new Set();
+  /** Depth at one position in a snapshot: players there, the starter floor, the best backup. */
+  const depthAt = (snapMap, pos) => { const xs = [...(snapMap?.values() || [])].filter((x) => x.pos === pos); const st = xs.filter((x) => x.starter).map((x) => x.ovr); const bk = xs.filter((x) => !x.starter).map((x) => x.ovr); return { n: xs.length, floor: st.length ? Math.min(...st) : null, mean: st.length ? r1(st.reduce((a, v) => a + v, 0) / st.length) : null, backup: bk.length ? Math.max(...bk) : null }; };
+  /** An incoming offer to the owner (GDD §19.6), as it stands: who calls, what moves each way, and how it sits against the owner's own depth chart. Read only. */
+  const noteCall = (f) => {
+    const c = f.tradeCall; if (!c) return; const key = `${c.expires}|${c.team}|${c.kind || 'legacy'}`; if (callsSeen.has(key)) return; callsSeen.add(key);
+    const sends = c.sends || (c.player ? [{ ...c.player, id: c.playerId }] : []); const asks = c.asks || [];
+    const pos = c.position || sends[0]?.position || asks[0]?.position; const mine = f.roster.filter((m) => m.position === pos).sort((a, b) => monsterOverall(b) - monsterOverall(a)); const n = GROUP_SLOTS[pos]?.length || 1;
+    const floor = mine.length >= n ? monsterOverall(mine[n - 1]) : 0;
+    decisions.calls.push({ year: f.season.year, week: f.season.finished ? 0 : f.season.week, offseason: !!f.offseason || !!f.season.finished, team: c.team, kind: c.kind || 'legacy', pos, sends: sends.map((m) => ({ pos: m.position, ovr: m.ovr, age: m.age, salary: m.salary ?? null })), asks: asks.map((m) => ({ pos: m.position, ovr: m.ovr, age: m.age, salary: m.salary ?? null })), give: (c.give || []).map((p) => `${p.year}R${p.round}`), sendPicks: (c.sendPicks || []).map((p) => `${p.year}R${p.round}`), value: c.value ?? null, ownerCountAtPos: mine.length, ownerFloorAtPos: floor, ownerBestAtPos: mine[0] ? monsterOverall(mine[0]) : null, wouldStart: sends[0] ? sends[0].ovr > floor : null, ownerRoster: f.roster.length });
+  };
   const notePools = (f) => { for (const m of f.league?.waivers || []) seenSource.set(m.id, 'waivers'); for (const m of Object.values(f.pool || {}).flat()) seenSource.set(m.id, 'pool'); };
 
   // Roster movement between two snapshots: arrivals (with source) and departures (with reason), per club.
@@ -96,12 +127,13 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
     if (scenario && !applied && F.hasLeague(f)) { scenarioSetup = scenario.apply(f, { REG, LS, L, T, monsterOverall, GROUP_SLOTS, ALL_TEAMS }); applied = true; }
     const p = base(f, where); for (const x of p) integrity.push(x);
     if (!F.hasLeague(f)) return p;
-    const now = snap(f);
+    const now = snap(f); const capNow = capSnap(f); noteCall(f);
     if (prev) diff(f, prev, now, f.season.finished ? 'season-end' : where.endsWith('start') ? 'offseason' : 'in-season');
     notePools(f);
     // AI–AI trades, valued at the first observation after the deal (ratings do not change between a deal and the next check).
     for (const t of f.league.trades || []) {
       const key = `${t.year}|${t.week}|${t.A}|${t.B}|${t.toA}`; if (tradesSeen.has(key)) continue; tradesSeen.add(key);
+      if (t.sale) (v4.sales ||= []).push({ year: t.year, week: t.week, A: t.A, B: t.B, toA: t.toA, age: t.age, horizon: t.horizon, mv: t.mv, paidAges: t.paidAges || [], picks: (t.picks || []).length, buyerMode: t.buyerMode || null }); // harness v4 (Phase D): R4 starter sales
       const mA = f.league.monsters[t.toA]; const mB = t.toB ? f.league.monsters[t.toB] : null; const mBs = (t.toBAll || (t.toB ? [t.toB] : [])).map((id) => f.league.monsters[id]).filter(Boolean);
       // The class year AT THE DEAL (not at the first check after it: by then the season may have rolled over): an offseason deal (week 0) is made as the
       // season ends, so the next draft's class is the deal's year; an in-season deal sees next season's class, except in year 1 before the creation draft closes (week 10).
@@ -113,10 +145,20 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
       const startersOf = (snapMap) => [...(snapMap?.values() || [])].filter((x) => x.starter); const meanOf = (xs) => (xs.length ? xs.reduce((s, x) => s + x.ovr, 0) / xs.length : null);
       const floorOf = (snapMap, pos) => { const xs = startersOf(snapMap).filter((x) => x.pos === pos).map((x) => x.ovr); return xs.length ? Math.min(...xs) : null; };
       const pre = prev?.[t.A], post = now[t.A], preB = prev?.[t.B], postB = now[t.B];
-      decisions.trades.push({ year: t.year, week: t.week, kind: t.kind, A: t.A, B: t.B, toA: t.toA, toAPos: mA?.position, toAOvr: mA ? monsterOverall(mA) : null, toAAge: mA?.age, toAStarter: mA ? stA.startIds.has(mA.id) : null, toB: t.toB || null, toBPos: mB?.position || null, toBOvr: mB ? monsterOverall(mB) : null, picks: (t.picks || []).map((p) => `${p.year}R${p.round}:${p.original}`), valueToA: r1(gotA), valueToB: r1(gotB), ratio: gotA && gotB ? r1(gotA / gotB * 100) / 100 : null, toBAllPos: mBs.map((m) => m.position), mvToA: r1(mvA), mvToB: r1(mvB), mvRatio: mvA && mvB ? r1(mvA / mvB * 100) / 100 : null, aFloorBefore: mA ? floorOf(pre, mA.position) : null, aFloorAfter: mA ? floorOf(post, mA.position) : null, aMeanBefore: r1(meanOf(startersOf(pre))), aMeanAfter: r1(meanOf(startersOf(post))), bMeanBefore: r1(meanOf(startersOf(preB))), bMeanAfter: r1(meanOf(startersOf(postB))), inSeason: !f.season.finished && t.week > 0, dealFloor: t.fl || null, dealMeans: t.sm || null });
+      decisions.trades.push({ year: t.year, week: t.week, kind: t.kind, A: t.A, B: t.B, toA: t.toA, toAPos: mA?.position, toAOvr: mA ? monsterOverall(mA) : null, toAAge: mA?.age, toAStarter: mA ? stA.startIds.has(mA.id) : null, toB: t.toB || null, toBPos: mB?.position || null, toBOvr: mB ? monsterOverall(mB) : null, picks: (t.picks || []).map((p) => `${p.year}R${p.round}:${p.original}`), valueToA: r1(gotA), valueToB: r1(gotB), ratio: gotA && gotB ? r1(gotA / gotB * 100) / 100 : null, toBAllPos: mBs.map((m) => m.position), mvToA: r1(mvA), mvToB: r1(mvB), mvRatio: mvA && mvB ? r1(mvA / mvB * 100) / 100 : null, aFloorBefore: mA ? floorOf(pre, mA.position) : null, aFloorAfter: mA ? floorOf(post, mA.position) : null, aMeanBefore: r1(meanOf(startersOf(pre))), aMeanAfter: r1(meanOf(startersOf(post))), bMeanBefore: r1(meanOf(startersOf(preB))), bMeanAfter: r1(meanOf(startersOf(postB))), inSeason: !f.season.finished && t.week > 0, dealFloor: t.fl || null, dealMeans: t.sm || null,
+        // harness v3 (recording only): salaries, cap room before (the check before the deal) and after, depth at the position on both sides, protection flags
+        toASalary: mA?.salary ?? null, toBSalaries: mBs.map((m) => m.salary ?? null), toAContractEnds: mA?.contract?.ends ?? null, toAProtected: !!(mA && REG.isProtected(mA)), toBProtected: mBs.some((m) => REG.isProtected(m)),
+        aCapBefore: prevCap?.[t.A] ?? null, aCapAfter: capNow[t.A] ?? null, bCapBefore: prevCap?.[t.B] ?? null, bCapAfter: capNow[t.B] ?? null,
+        aDepthBefore: mA ? depthAt(pre, mA.position) : null, aDepthAfter: mA ? depthAt(post, mA.position) : null, bDepthBefore: mA ? depthAt(preB, mA.position) : null, bDepthAfter: mA ? depthAt(postB, mA.position) : null,
+        bGotStarter: mB ? clubState(f, t.B).startIds.has(mB.id) : null, toBAge: mB?.age ?? null, toBAll: t.toBAll || (t.toB ? [t.toB] : []),
+        // harness v3: the deal against its own undoing at the same moment (both clubs' rosters now, with and without the deal): plain ratings, best by overall,
+        // so an offseason deal is not credited with the draft, free agency and the nudge that ran between the check before it and the check after it
+        ...(mA ? (() => { const rA = REG.clubRoster(f, t.A), rB = REG.clubRoster(f, t.B); const sent = new Set(mBs.map((m) => m.id));
+          const cfA = rA.filter((m) => m.id !== mA.id).concat(mBs.filter((m) => !rA.includes(m))), cfB = rB.filter((m) => !sent.has(m.id)).concat(rB.includes(mA) ? [] : [mA]);
+          return { cfALineup: [lineupPoints(rA), lineupPoints(cfA)], cfAPos: [posLine(rA, mA.position), posLine(cfA, mA.position)], cfBLineup: [lineupPoints(rB), lineupPoints(cfB)], cfBPos: [posLine(rB, mA.position), posLine(cfB, mA.position)] }; })() : {}) });
     }
     if (f.season.week === 6 && !f.season.finished && !mid[f.season.year]) mid[f.season.year] = Object.fromEntries(REG.leagueClubs(f).map((c) => [c, teamOverall(F.aiTeam(f, c))]));
-    prev = now; peak = Math.max(peak, process.memoryUsage().heapUsed);
+    prev = now; prevCap = capNow; peak = Math.max(peak, process.memoryUsage().heapUsed);
     return p;
   };
 
@@ -167,11 +209,37 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
         meanAge: r1(mean(ages)), age30plus: ages.filter((a) => a >= 30).length, age24minus: ages.filter((a) => a <= 24).length, starterAge: r1(mean(roster.filter((m) => st.startIds.has(m.id) && !REG.isProtected(m)).map((m) => m.age))),
         provenance: prov, provenanceStarters: provStart, devMean: r1(mean(devs)), devN: devs.length, evolved, meanLevel: r1(mean(roster.map((m) => m.level))), stage2: roster.filter((m) => (m.stage || 0) >= 2).length, stage1: roster.filter((m) => (m.stage || 0) === 1).length,
         protected: roster.filter((m) => REG.isProtected(m)).length, injured: roster.filter((m) => m.injury).length,
-        draftedStarters: roster.filter((m) => drafted.get(m.id)?.club === c && st.startIds.has(m.id)).length, draftedOnRoster: roster.filter((m) => drafted.get(m.id)?.club === c).length });
+        draftedStarters: roster.filter((m) => drafted.get(m.id)?.club === c && st.startIds.has(m.id)).length, draftedOnRoster: roster.filter((m) => drafted.get(m.id)?.club === c).length,
+        // harness v3 (recording only): draft capital for the next two classes by round, and each starter and backup as [overall, age, (potential,) protected]
+        picksNext: picksHeld(f, c, year + 2), picksNext2: picksHeld(f, c, year + 3),
+        startersDetail: Object.fromEntries(POS.map((p) => [p, (st.byPos[p] || []).slice(0, GROUP_SLOTS[p].length).map((m) => [monsterOverall(m), m.age, REG.isProtected(m) ? 1 : 0])])),
+        backupsDetail: Object.fromEntries(POS.map((p) => [p, (st.byPos[p] || []).slice(GROUP_SLOTS[p].length).map((m) => [monsterOverall(m), m.age, m.potential ?? null, REG.isProtected(m) ? 1 : 0])])) });
     }
+    // harness v3: every pick of the next four classes has exactly one owner and it is a club of the league (draft-asset integrity)
+    for (let y = year + 1; y <= year + 4; y++) for (let round = 1; round <= 3; round++) for (const original of ALL_TEAMS) { const o = T.pickOwner(f, { year: y, round, original }); if (!ALL_TEAMS.includes(o)) integrity.push(`season ${year}: pick ${y}R${round}:${original} owned by unknown club ${o}`); }
+    // harness v3: where every monster a trade moved is now (club, starter, overall), season by season after the deal
+    { const where = new Map(); for (const c of clubs) for (const [id, x] of tableSnap[c]) where.set(id, { club: c, starter: x.starter, ovr: x.ovr, age: x.age }); for (const m of f.roster) where.set(m.id, { club: f.club, starter: null, ovr: monsterOverall(m), age: m.age });
+      decisions.trades.forEach((t, ti) => { if (t.year > year) return; const follow = (side, id, club) => { const w = where.get(id); decisions.tradeFollow.push([ti, year, side, id, w?.club ?? null, w ? (w.club === club ? 1 : 0) : 0, w?.starter == null ? null : (w.starter ? 1 : 0), w?.ovr ?? null, w?.age ?? null]); };
+        if (t.toA) follow('A', t.toA, t.A); for (const id of t.toBAll || []) follow('B', id, t.B); }); }
+    noteCall(f);
     // the owner's club, labelled (not one of the 15)
     { const rec = s.records[f.club]; rows.push({ seed, year, club: f.club, owner: true, w: rec.w, l: rec.l, playoffs: seeds.includes(f.club), finalist: !!fin && (fin.home === f.club || fin.away === f.club), champion: s.champion === f.club, teamOvr: teamOverall(F.playerTeam(f)), rosterSize: f.roster.length }); }
     decisions.nudge.push({ year, contracts: lo.contracts ? { resigned: lo.contracts.resigned, walked: lo.contracts.walked, released: lo.contracts.released, runaway: lo.contracts.runaway || [], overCap: lo.contracts.overCap || [] } : null, freeAgency: lo.opened === year ? lo.freeAgency : null, nudge: lo.opened === year && lo.nudge ? { boosted: lo.nudge.boosted, slowed: lo.nudge.slowed } : null, offseasonTrades: lo.opened === year ? lo.trades : null, problems: lo.problems || [] });
+    // Harness v4 (recording only): every monster of the league and of the owner's roster at the season's end, and each club's strategy record.
+    {
+      const ownerStart = new Set(); for (const pos of POS) for (const m of f.roster.filter((x) => x.position === pos).sort((a, b) => monsterOverall(b) - monsterOverall(a)).slice(0, GROUP_SLOTS[pos].length)) ownerStart.add(m.id);
+      const monsters = [];
+      const row = (m, club, starter) => {
+        if (!v4.attrKeys) v4.attrKeys = Object.keys(m.attributes || {});
+        const inj = IH.injurySummary(f, m.id) || {};
+        monsters.push([m.id, club, m.position, m.age, monsterOverall(m), m.level ?? null, m.xp ?? null, m.potential ?? null, starter ? 1 : 0, REG.isProtected(m) ? 1 : 0, REG.isAgeless(m) ? 1 : 0, originOf(m, club, seenSource),
+          m.drafted?.year ?? null, m.drafted?.round ?? null, m.contract?.ends ?? null, m.contract?.years ?? null, m.salary ?? null, m.stage ?? 0, inj.incidents ?? null, inj.missed ?? null, inj.opp ?? null, m.yearsPro ?? null,
+          v4.attrKeys.map((k) => m.attributes?.[k] ?? null)]);
+      };
+      for (const c of clubs) { for (const [, x] of tableSnap[c]) row(x.m, c, x.starter); if (!v4.clubs[c]) v4.clubs[c] = { gym: GYM_BY_CLUB[c]?.tier || null }; }
+      for (const m of f.roster) row(m, f.club, ownerStart.has(m.id));
+      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), modeContracts: f.leagueOffseason?.contracts?.byMode || null, modeUpgrades: f.leagueOffseason?.upgradesByMode || null, monsters });
+    }
     prevOvr = new Map(); for (const mp of Object.values(tableSnap)) for (const [id, x] of mp) prevOvr.set(id, x.ovr);
     // Save integrity at the season boundary: the whole league registry survives an export/import round trip unchanged.
     try { const back = Save.importJson(Save.exportJson(f)); if (!back) integrity.push(`season ${year}: save import failed`); else if (JSON.stringify(back.league) !== JSON.stringify(f.league)) integrity.push(`season ${year}: save round trip changed the league registry`); } catch (e) { integrity.push(`season ${year}: save round trip threw ${e.message}`); }
@@ -179,22 +247,28 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
 
   let res;
   try { res = runFranchise(seed, { seasons, difficulty, check, onSeason }); }
-  catch (e) { return { seed, error: String(e?.stack || e).slice(0, 2000), rows, decisions, integrity, seconds: Math.round((Date.now() - t0) / 1000) }; }
+  catch (e) { return { seed, error: String(e?.stack || e).slice(0, 2000), rows, decisions, integrity, seconds: Math.round((Date.now() - t0) / 1000), v4 }; }
   const { f, problems, log } = res;
+  v4.finalState = finalStateHash(f); // harness v4: the whole franchise at the end, for the non-interference check
   // Later contribution of AI draftees: where each one is at the end of the run.
   const draftOutcome = [...drafted.entries()].map(([id, x]) => { const m = f.league.monsters[id]; const club = m ? REG.leagueClubs(f).find((c) => REG.clubRecord(f, c).roster.includes(id)) : null; const st = club ? clubState(f, club) : null; return { id, ...x, endClub: club, sameClub: club === x.club, endOvr: m ? monsterOverall(m) : null, endStarter: st ? st.startIds.has(id) : false, inLeague: !!m }; });
-  return { seed, difficulty, scenarioSetup, seasons: log.seasons.length, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, problems: [...new Set([...problems, ...integrity])].slice(0, 50), problemCount: problems.length, rows, decisions, draftOutcome, seconds: Math.round((Date.now() - t0) / 1000), peakHeapMB: Math.round(peak / 1048576), fired: log.fired };
+  return { seed, difficulty, scenarioSetup, seasons: log.seasons.length, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, problems: [...new Set([...problems, ...integrity])].slice(0, 50), problemCount: problems.length, rows, decisions, draftOutcome, seconds: Math.round((Date.now() - t0) / 1000), peakHeapMB: Math.round(peak / 1048576), fired: log.fired, v4 };
 }
+/** The whole franchise, less its two wall-clock identity fields (`uid`, `createdAt`: a new id and the creation time on every run). */
+export const finalStateHash = (f) => { const { uid, createdAt, ...rest } = f; return createHash('sha256').update(JSON.stringify(rest)).digest('hex'); };
+/** The v3 hash of a set of runs: everything but the timings and the v4 field (so a v4 file proves it reproduces v3). */
+export const hashV3Of = (runs) => createHash('sha256').update(JSON.stringify(runs.map(({ seconds, peakHeapMB, v4, ...x }) => x))).digest('hex');
+export const hashOf = (runs) => createHash('sha256').update(JSON.stringify(runs.map(({ seconds, peakHeapMB, ...x }) => x))).digest('hex');
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const scenario = SCEN && args.scenario ? SCEN.SCENARIOS[args.scenario] : null; if (args.scenario && !scenario) { console.error(`unknown scenario ${args.scenario}`); process.exit(2); }
-  const out = { harnessV: 2, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
+  const out = { harnessV: 4, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
   for (const seed of SEEDS) {
     const r = await benchmarkSeed(seed, { scenario });
     out.runs.push(r);
     if (!quiet) console.error(`seed ${seed}: ${r.seasons ?? '?'} seasons, ${r.seconds}s, heap ${r.peakHeapMB} MB, problems ${r.problemCount ?? 'n/a'}${r.error ? ' ERROR ' + r.error.split('\n')[0] : ''}`);
   }
-  out.hash = createHash('sha256').update(JSON.stringify(out.runs.map(({ seconds, peakHeapMB, ...x }) => x))).digest('hex');
+  out.hash = hashOf(out.runs); out.hashV3 = hashV3Of(out.runs);
   if (args.json) fs.writeFileSync(args.json, JSON.stringify(out));
-  console.log(JSON.stringify({ hash: out.hash, seeds: SEEDS.length, seconds: out.runs.reduce((s, r) => s + r.seconds, 0), errors: out.runs.filter((r) => r.error).length, problems: out.runs.reduce((s, r) => s + (r.problemCount || 0), 0) }));
+  console.log(JSON.stringify({ hash: out.hash, hashV3: out.hashV3, seeds: SEEDS.length, seconds: out.runs.reduce((s, r) => s + r.seconds, 0), errors: out.runs.filter((r) => r.error).length, problems: out.runs.reduce((s, r) => s + (r.problemCount || 0), 0) }));
 }

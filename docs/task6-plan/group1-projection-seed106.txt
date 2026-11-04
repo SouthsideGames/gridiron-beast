@@ -1,0 +1,114 @@
+
+=== new league, 20 seasons
+retirement age by position (n, mean, p10/p50/p90, early ≤ base−2 %, exceptional ≥ base+3 %):
+  QB  n=  23 mean 34 31/34/37 early 34.8% exceptional 13%
+  RB  n=  47 mean 30.7 29/31/32 early 19.1% exceptional 2.1%
+  WR  n=  97 mean 32 30/32/34 early 16.5% exceptional 4.1%
+  TE  n=  29 mean 33.5 31/33/36 early 10.3% exceptional 13.8%
+  OL  n=  61 mean 34.3 32/35/37 early 27.9% exceptional 19.7%
+  DL  n=  75 mean 33.2 31/33/36 early 18.7% exceptional 13.3%
+  LB  n=  55 mean 33.2 30/33/36 early 25.5% exceptional 12.7%
+  CB  n=  57 mean 32.1 30/32/35 early 17.5% exceptional 15.8%
+  S   n=  41 mean 33.4 30/33/36 early 19.5% exceptional 19.5%
+  K   n=  16 mean 37.5 35/38/40 early 6.3% exceptional 37.5%
+career length (seasons since entering the league): p10 7 · p50 11 · p90 15 · mean 11.1
+retirement age by durability at peak: ≤45 {"n":13,"meanAge":31.1} · 46–74 {"n":482,"meanAge":33} · 75+ {"n":6,"meanAge":34} | severe injury ever 34.1 (n=110) vs never 32.6
+retirement age vs position base, by hidden longevity: 0: 0.3 (n=155) · 1: 1.9 (n=70) · 2: 2.7 (n=29) · 3: 3.7 (n=10) · -3: -1.9 (n=40) · -2: -1.2 (n=75) · -1: -0.3 (n=122)
+per season (retirements · starter age · starters 33+ % · oldest starter · starter overall): t1: 1·24.6·0%·29·59.2  t2: 2·25.5·0%·30·61  t3: 5·26.4·0%·31·61.9  t4: 9·27.2·0%·32·62.7  t5: 19·27.7·6.5%·33·63.2  t6: 19·28·9.1%·34·63.4  t7: 33·27.9·7.6%·35·63.8  t8: 30·28.2·10.2%·36·64.2  t9: 39·28.2·10.3%·36·64.4  t10: 30·28.3·12%·37·64.4  t11: 33·28.5·16.1%·38·64.5  t12: 34·28.1·16.1%·37·64.3  t13: 40·27.7·15.2%·38·64.3  t14: 28·27.8·14.5%·39·64.9  t15: 31·28·11.9%·37·65.1  t16: 16·28.4·13.8%·38·65  t17: 27·28.4·11.6%·39·64.9  t18: 37·28.6·12.3%·40·64.7  t19: 36·28.2·10.9%·36·64.3  t20: 32·28.4·12.6%·36·64.1
+veterans (age ≥ public onset + 2) who start, %: t1:25 t2:50 t3:51 t4:58.7 t5:67.4 t6:61.3 t7:52.3 t8:63.1 t9:61.7 t10:72.5 t11:74.1 t12:73.3 t13:71 t14:70 t15:76.1 t16:77.5 t17:72.9 t18:72.6 t19:70.6 t20:72
+starters: attribute change per season by seasons from true onset (physical / technical): 0: 0/0  1: -1.6/0  2: -2.4/0  3: -3.1/-0.6  4: -3.8/-1.1  5: -4.5/-1.6  6: -4.9/-2  7: -4.8/-2.4  8: -4.7/-3  -4: 0/0  -3: 0/0  -2: 0/0  -1: 0/0
+
+=== old save (15 seasons under today's rules), 8 seasons with the transition
+retirement age by position (n, mean, p10/p50/p90, early ≤ base−2 %, exceptional ≥ base+3 %):
+  QB  n=  10 mean 37.4 34/37/45 early 0% exceptional 60%
+  RB  n=  24 mean 33.5 28/32/41 early 20.8% exceptional 37.5%
+  WR  n=  48 mean 35.3 31/35/39 early 8.3% exceptional 58.3%
+  TE  n=  14 mean 35.8 30/35/40 early 14.3% exceptional 42.9%
+  OL  n=  40 mean 37.8 33/38/43 early 10% exceptional 65%
+  DL  n=  50 mean 36.2 31/36/43 early 12% exceptional 56%
+  LB  n=  29 mean 36.2 32/36/41 early 0% exceptional 58.6%
+  CB  n=  34 mean 35.4 31/36/42 early 8.8% exceptional 55.9%
+  S   n=  27 mean 37.1 33/37/42 early 7.4% exceptional 66.7%
+  K   n=  10 mean 39.8 39/40/41 early 0% exceptional 90%
+career length (seasons since entering the league): p10 9 · p50 15 · p90 20 · mean 14.7
+retirement age by durability at peak: ≤45 {"n":29,"meanAge":39.9} · 46–74 {"n":249,"meanAge":35.8} · 75+ {"n":8,"meanAge":34.5} | severe injury ever 35.8 (n=26) vs never 36.2
+retirement age vs position base, by hidden longevity: 0: 4.4 (n=77) · 1: 4.3 (n=57) · 2: 4.6 (n=19) · 3: 5.3 (n=6) · -3: 0.9 (n=20) · -2: 1.9 (n=39) · -1: 2.4 (n=68)
+per season (retirements · starter age · starters 33+ % · oldest starter · starter overall): t1: 21·32.1·51.3%·43·75.3  t2: 44·31·41.1%·44·72.6  t3: 65·28.9·22%·45·69.8  t4: 52·27.9·12.6%·41·67.8  t5: 24·28·13%·39·67.4  t6: 30·28·10.4%·38·66.9  t7: 24·28.3·12.5%·38·66.5  t8: 26·28.6·14.8%·39·66.7
+veterans (age ≥ public onset + 2) who start, %: t1:95.4 t2:93.8 t3:91.1 t4:89.3 t5:79.3 t6:74.4 t7:68.3 t8:69.4
+starters: attribute change per season by seasons from true onset (physical / technical): 0: 0/0  1: -1.6/0  2: -2.3/0  3: -3.1/-0.6  4: -3.7/-1.1  5: -3.9/-1.5  6: -3.9/-1.8  7: -3.6/-1.9  8: -3.4/-2  -4: 0/0  -3: 0/0  -2: 0/0  -1: 0/0
+
+=== old save, 8 seasons, rules applied at once (no transition)
+retirement age by position (n, mean, p10/p50/p90, early ≤ base−2 %, exceptional ≥ base+3 %):
+  QB  n=  12 mean 36.2 33/36/40 early 0% exceptional 25%
+  RB  n=  26 mean 33 29/32/39 early 15.4% exceptional 30.8%
+  WR  n=  65 mean 34.2 31/34/38 early 7.7% exceptional 43.1%
+  TE  n=  14 mean 35.1 31/35/39 early 14.3% exceptional 35.7%
+  OL  n=  42 mean 37.2 33/37/41 early 4.8% exceptional 54.8%
+  DL  n=  56 mean 35.7 32/35/41 early 7.1% exceptional 42.9%
+  LB  n=  34 mean 35.3 32/35/39 early 8.8% exceptional 38.2%
+  CB  n=  37 mean 34.8 30/35/40 early 16.2% exceptional 56.8%
+  S   n=  30 mean 36.2 32/36/40 early 10% exceptional 60%
+  K   n=  13 mean 38.1 35/39/40 early 7.7% exceptional 53.8%
+career length (seasons since entering the league): p10 7 · p50 14 · p90 19 · mean 13.4
+retirement age by durability at peak: ≤45 {"n":34,"meanAge":38.4} · 46–74 {"n":285,"meanAge":35} · 75+ {"n":10,"meanAge":34.4} | severe injury ever 33.8 (n=25) vs never 35.5
+retirement age vs position base, by hidden longevity: 0: 3.3 (n=93) · 1: 3.7 (n=59) · 2: 3.6 (n=23) · 3: 4.1 (n=7) · -3: 0.3 (n=24) · -2: 1 (n=46) · -1: 2.1 (n=77)
+per season (retirements · starter age · starters 33+ % · oldest starter · starter overall): t1: 114·28.5·21.3%·42·71.7  t2: 41·27.8·14.1%·37·70.2  t3: 21·28.3·12.8%·38·69.9  t4: 27·28.3·12.5%·38·69.2  t5: 21·28.7·15.5%·39·68.4  t6: 30·28.7·13.6%·38·67.5  t7: 43·28.6·14.1%·38·66.7  t8: 32·28.8·16.3%·39·66
+veterans (age ≥ public onset + 2) who start, %: t1:90.5 t2:79.7 t3:89.4 t4:88.5 t5:78.4 t6:79.8 t7:77.3 t8:69.8
+starters: attribute change per season by seasons from true onset (physical / technical): 0: 0/0  1: -1.6/0  2: -2.4/0  3: -3.1/-0.6  4: -3.9/-1.1  5: -4.6/-1.7  6: -5.4/-2.2  7: -5.7/-2.6  8: -8/-4  -4: 0/0  -3: 0/0  -2: 0/0  -1: 0/0
+
+=== old save, transition variant A {"rampSeasons":3,"capShare":0.2,"capSeasons":2,"declineFactor":2}
+retirement age by position (n, mean, p10/p50/p90, early ≤ base−2 %, exceptional ≥ base+3 %):
+  QB  n=  10 mean 37.2 34/37/44 early 0% exceptional 60%
+  RB  n=  26 mean 33.2 29/32/39 early 19.2% exceptional 34.6%
+  WR  n=  63 mean 34.5 30/34/39 early 12.7% exceptional 46%
+  TE  n=  15 mean 35.6 33/35/39 early 0% exceptional 46.7%
+  OL  n=  37 mean 37.9 34/38/42 early 8.1% exceptional 67.6%
+  DL  n=  45 mean 36.8 32/36/43 early 4.4% exceptional 57.8%
+  LB  n=  27 mean 35.9 32/36/41 early 7.4% exceptional 55.6%
+  CB  n=  30 mean 35.6 31/36/42 early 10% exceptional 53.3%
+  S   n=  26 mean 37 32/37/41 early 7.7% exceptional 65.4%
+  K   n=  11 mean 39.5 37/40/41 early 0% exceptional 72.7%
+career length (seasons since entering the league): p10 8 · p50 15 · p90 20 · mean 14.3
+retirement age by durability at peak: ≤45 {"n":31,"meanAge":39.7} · 46–74 {"n":249,"meanAge":35.6} · 75+ {"n":10,"meanAge":33.7} | severe injury ever 35.6 (n=17) vs never 36
+retirement age vs position base, by hidden longevity: 0: 3.6 (n=87) · 1: 4.5 (n=53) · 2: 5.4 (n=17) · 3: 4.7 (n=7) · -3: 0.4 (n=23) · -2: 2.1 (n=36) · -1: 2.4 (n=67)
+per season (retirements · starter age · starters 33+ % · oldest starter · starter overall): t1: 26·31.9·49.5%·43·75.2  t2: 59·30.1·34.7%·44·71.9  t3: 71·28·15.4%·45·69.2  t4: 33·27.9·12.2%·44·68.3  t5: 19·28.3·13.7%·39·68.2  t6: 38·28·10.1%·38·67  t7: 19·28.4·13.8%·37·67.1  t8: 25·28.9·15.9%·38·66.7
+veterans (age ≥ public onset + 2) who start, %: t1:94.8 t2:91.3 t3:87.2 t4:82.3 t5:80.7 t6:76.5 t7:71.8 t8:73.8
+starters: attribute change per season by seasons from true onset (physical / technical): 0: 0/0  1: -1.6/0  2: -2.3/0  3: -3/-0.6  4: -3.6/-1.1  5: -4.1/-1.5  6: -4/-1.9  7: -3.7/-1.9  8: -3/-1.8  -4: 0/0  -3: 0/0  -2: 0/0  -1: 0/0
+
+=== old save, transition variant B {"rampSeasons":4,"capShare":0.15,"capSeasons":3,"declineFactor":2}
+retirement age by position (n, mean, p10/p50/p90, early ≤ base−2 %, exceptional ≥ base+3 %):
+  QB  n=  10 mean 37.4 34/37/45 early 0% exceptional 60%
+  RB  n=  24 mean 33.5 28/32/41 early 20.8% exceptional 37.5%
+  WR  n=  48 mean 35.3 31/35/39 early 8.3% exceptional 58.3%
+  TE  n=  14 mean 35.8 30/35/40 early 14.3% exceptional 42.9%
+  OL  n=  40 mean 37.8 33/38/43 early 10% exceptional 65%
+  DL  n=  50 mean 36.2 31/36/43 early 12% exceptional 56%
+  LB  n=  29 mean 36.2 32/36/41 early 0% exceptional 58.6%
+  CB  n=  34 mean 35.4 31/36/42 early 8.8% exceptional 55.9%
+  S   n=  27 mean 37.1 33/37/42 early 7.4% exceptional 66.7%
+  K   n=  10 mean 39.8 39/40/41 early 0% exceptional 90%
+career length (seasons since entering the league): p10 9 · p50 15 · p90 20 · mean 14.7
+retirement age by durability at peak: ≤45 {"n":29,"meanAge":39.9} · 46–74 {"n":249,"meanAge":35.8} · 75+ {"n":8,"meanAge":34.5} | severe injury ever 35.8 (n=26) vs never 36.2
+retirement age vs position base, by hidden longevity: 0: 4.4 (n=77) · 1: 4.3 (n=57) · 2: 4.6 (n=19) · 3: 5.3 (n=6) · -3: 0.9 (n=20) · -2: 1.9 (n=39) · -1: 2.4 (n=68)
+per season (retirements · starter age · starters 33+ % · oldest starter · starter overall): t1: 21·32.1·51.3%·43·75.3  t2: 44·31·41.1%·44·72.6  t3: 65·28.9·22%·45·69.8  t4: 52·27.9·12.6%·41·67.8  t5: 24·28·13%·39·67.4  t6: 30·28·10.4%·38·66.9  t7: 24·28.3·12.5%·38·66.5  t8: 26·28.6·14.8%·39·66.7
+veterans (age ≥ public onset + 2) who start, %: t1:95.4 t2:93.8 t3:91.1 t4:89.3 t5:79.3 t6:74.4 t7:68.3 t8:69.4
+starters: attribute change per season by seasons from true onset (physical / technical): 0: 0/0  1: -1.6/0  2: -2.3/0  3: -3.1/-0.6  4: -3.7/-1.1  5: -3.9/-1.5  6: -3.9/-1.8  7: -3.6/-1.9  8: -3.4/-2  -4: 0/0  -3: 0/0  -2: 0/0  -1: 0/0
+
+=== old save, transition variant C {"rampSeasons":4,"capShare":0.12,"capSeasons":4,"declineFactor":2}
+retirement age by position (n, mean, p10/p50/p90, early ≤ base−2 %, exceptional ≥ base+3 %):
+  QB  n=  12 mean 36.8 33/37/40 early 8.3% exceptional 50%
+  RB  n=  24 mean 33.8 30/32/39 early 8.3% exceptional 37.5%
+  WR  n=  53 mean 34.6 30/34/39 early 11.3% exceptional 49.1%
+  TE  n=  15 mean 35.4 31/36/39 early 13.3% exceptional 53.3%
+  OL  n=  40 mean 37.7 33/38/43 early 7.5% exceptional 60%
+  DL  n=  48 mean 36.7 32/37/42 early 8.3% exceptional 58.3%
+  LB  n=  27 mean 36.6 33/36/42 early 0% exceptional 59.3%
+  CB  n=  32 mean 35.8 31/36/42 early 9.4% exceptional 56.3%
+  S   n=  28 mean 37 31/38/41 early 10.7% exceptional 60.7%
+  K   n=  12 mean 39.5 37/40/41 early 0% exceptional 75%
+career length (seasons since entering the league): p10 8 · p50 15 · p90 20 · mean 14.5
+retirement age by durability at peak: ≤45 {"n":27,"meanAge":40.3} · 46–74 {"n":255,"meanAge":35.8} · 75+ {"n":9,"meanAge":33.7} | severe injury ever 35.6 (n=23) vs never 36.2
+retirement age vs position base, by hidden longevity: 0: 4 (n=82) · 1: 4.7 (n=53) · 2: 5.8 (n=17) · 3: 5.5 (n=6) · -3: 1.1 (n=20) · -2: 1.4 (n=47) · -1: 2.6 (n=66)
+per season (retirements · starter age · starters 33+ % · oldest starter · starter overall): t1: 21·32.1·51.3%·43·75.3  t2: 44·30.8·39.6%·44·72.5  t3: 58·28.9·22.8%·45·69.9  t4: 46·28.2·14.9%·42·68.2  t5: 30·28·14.1%·39·67.3  t6: 32·28.1·12.7%·40·66.8  t7: 29·28.3·13.1%·38·66.2  t8: 31·28.6·14.9%·39·65.9
+veterans (age ≥ public onset + 2) who start, %: t1:95.4 t2:90.3 t3:89.6 t4:86.5 t5:76.9 t6:77.7 t7:73.8 t8:66.9
+starters: attribute change per season by seasons from true onset (physical / technical): 0: 0/0  1: -1.6/0  2: -2.3/0  3: -3/-0.5  4: -3.6/-1.1  5: -3.9/-1.6  6: -4/-1.9  7: -3.9/-2  8: -3.5/-2  -4: 0/0  -3: 0/0  -2: 0/0  -1: 0/0
