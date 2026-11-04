@@ -18,8 +18,11 @@ const pct = (n, d) => (d ? 100 * n / d : null);
 const r2 = (x) => (x == null ? null : Math.round(x * 100) / 100);
 /** The public decline onset (position + durability, no hidden longevity) — the Group 1 yardstick for "veteran" and "past onset". */
 export const publicOnset = (pos, dur) => (CURVE[pos] || CURVE.WR).onset + (dur >= 75 ? 1 : dur <= 45 ? -1 : 0);
-/** Position base retirement age for early/exceptional counts: normal onset + 5 (the forecast's "likely" age at normal longevity). */
-export const baseRetireAge = (pos) => (CURVE[pos] || CURVE.WR).onset + 5;
+/** Position base retirement age for early/exceptional counts. CORRECTED (owner, 2026-10-31): normal onset + 4 (CAREER_AFTER_ONSET), the
+ *  base of the Group 1 projection the approved bands came from. Phase 0 had written onset + 5 by mistake; that original definition is
+ *  still reported as `earlyPctOrig` / `exceptionalPctOrig` (methodology §8). */
+export const baseRetireAge = (pos) => (CURVE[pos] || CURVE.WR).onset + 4;
+export const baseRetireAgeOrig = (pos) => (CURVE[pos] || CURVE.WR).onset + 5;
 
 /** A run's v4 snapshot as objects: seasons[i] = { year, ownerClub, strategy, monsters: [{id, club, ...}] }. */
 export function unpack(run) {
@@ -98,6 +101,7 @@ export function seedMeasures(run) {
   out.contract1Pct = pct(cl.filter((m) => m.contractYears === 1).length, cl.length); out.contract2Pct = pct(cl.filter((m) => m.contractYears === 2).length, cl.length); out.contract3PlusPct = pct(cl.filter((m) => m.contractYears >= 3).length, cl.length);
   const ends = {}; for (const m of cl) ends[m.contractEnds] = (ends[m.contractEnds] || 0) + 1; out.maxExpiryShare = cl.length ? 100 * Math.max(...Object.values(ends)) / cl.length : null;
   const pays = (run.decisions.trades || []).filter((t) => t.toBAge != null); out.youngPaymentPct = pct(pays.filter((t) => t.toBAge <= 24).length, pays.length);
+  { const sk = new Set((run.v4?.sales || []).map((x) => `${x.year}|${x.week}|${x.A}|${x.B}|${x.toA}`)); const ex = pays.filter((t) => !sk.has(`${t.year}|${t.week}|${t.A}|${t.B}|${t.toA}`)); out.youngPaymentExSalesPct = pct(ex.filter((t) => t.toBAge <= 24).length, ex.length); } // owner 2026-11-03: reported alongside, never instead of, youngPaymentPct (R4 starter sales excluded)
 
   // ---- development (Group 4)
   const traj = new Map(); for (const s of S) for (const m of ai(s)) { if (!traj.has(m.id)) traj.set(m.id, []); traj.get(m.id).push({ y: s.year, ...m }); }
@@ -139,6 +143,30 @@ export function seedMeasures(run) {
   // ---- strategy modes (Phase D; null until the field exists)
   const modes = S.map((s) => s.strategy).filter(Boolean); const hasMode = modes.some((m) => Object.values(m).some((x) => x && x.mode != null));
   if (hasMode) { let ch = 0, n = 0; for (const club of Object.keys(modes[0])) for (let i = 1; i < modes.length; i++) { n++; if (modes[i][club]?.mode !== modes[i - 1][club]?.mode) ch++; } out.modeChangesPer10 = n ? 10 * ch / n : null; } else out.modeChangesPer10 = null;
+  // Phase D measures (pre-registered 2026-11-02, before any Phase D benchmark: methodology §8). Mode-independent definitions so v42.17.0
+  // and Phase C are measured the same way: a "struggling" club is one that won 3 or fewer games in a season (the population a rebuild
+  // is meant for); "after 3 seasons" is its season-end snapshot three seasons later. Recovery: a season of 2 or fewer wins followed by a
+  // season of 5 or more within 3 seasons.
+  if (hasMode) { const cnt = { contend: 0, compete: 0, retool: 0, rebuild: 0 }; let tot = 0, gymLow = 0;
+    for (const s of S) for (const [club, st] of Object.entries(s.strategy || {})) { if (!st?.mode) continue; cnt[st.mode] = (cnt[st.mode] || 0) + 1; tot++; if (gymOf(club) && (st.mode === 'rebuild' || st.mode === 'retool')) gymLow++; }
+    for (const k of Object.keys(cnt)) out[`modeSharePct_${k}`] = pct(cnt[k], tot); out.gymBelowCompete = gymLow;
+    const rebuildRuns = []; for (const club of Object.keys(modes[0] || {})) { let len = 0; for (const m of modes) { if (m[club]?.mode === 'rebuild') len++; else if (len) { rebuildRuns.push(len); len = 0; } } if (len) rebuildRuns.push(len); }
+    out.rebuildSpells = rebuildRuns.length; out.rebuildSpellMeanSeasons = mean(rebuildRuns); }
+  else { for (const k of ['contend', 'compete', 'retool', 'rebuild']) out[`modeSharePct_${k}`] = null; out.gymBelowCompete = null; out.rebuildSpells = null; out.rebuildSpellMeanSeasons = null; }
+  { const after = { age: [], pot: [], ovr: [] }; const afterRebuild = { age: [], pot: [] };
+    const clubOf = (s, club) => s.monsters.filter((m) => m.club === club);
+    for (const x of rows) { if (x.w > 3) continue; const later = at(x.year + 3); if (!later) continue; const r = clubOf(later, x.club); if (!r.length) continue;
+      const st = r.filter((m) => m.starter && !m.protected); after.age.push(mean(st.map((m) => m.age))); after.pot.push(mean(r.filter((m) => !m.protected).map((m) => m.potential).filter((v) => v != null))); after.ovr.push(mean(st.map((m) => m.ovr))); }
+    out.strugglerAfter3StarterAge = mean(after.age); out.strugglerAfter3Potential = mean(after.pot); out.strugglerAfter3StarterOvr = mean(after.ovr); out.strugglerCases = after.age.length;
+    if (hasMode) for (const s of S) for (const [club, st] of Object.entries(s.strategy || {})) { if (st?.mode !== 'rebuild' || st.modeSince !== s.year) continue; const later = at(s.year + 3); if (!later) continue; const r = clubOf(later, club); if (!r.length) continue;
+      afterRebuild.age.push(mean(r.filter((m) => m.starter && !m.protected).map((m) => m.age))); afterRebuild.pot.push(mean(r.filter((m) => !m.protected).map((m) => m.potential).filter((v) => v != null))); }
+    out.rebuildAfter3StarterAge = mean(afterRebuild.age); out.rebuildAfter3Potential = mean(afterRebuild.pot); out.rebuildCases = afterRebuild.age.length;
+    let low = 0, rec = 0; const yrs = []; const byC = {}; for (const x of rows) (byC[x.club] ||= {})[x.year] = x.w;
+    for (const x of rows) { if (x.w > 2) continue; const w = byC[x.club]; if (w[x.year + 3] == null && w[x.year + 1] == null) continue; low++; for (let k = 1; k <= 3; k++) if (w[x.year + k] != null && w[x.year + k] >= 5) { rec++; yrs.push(k); break; } }
+    out.recoveryCases = low; out.recoveryWithin3Pct = pct(rec, low); out.recoverySeasonsMean = mean(yrs); }
+  { const sales = run.v4?.sales || []; out.starterSalesPerSeason = S.length ? sales.length / S.length : null; out.starterSaleAgeMean = mean(sales.map((x) => x.age));
+    const mc = {}; const mu = {}; for (const s of S) { for (const [k, v] of Object.entries(s.modeContracts || {})) mc[k] = (mc[k] || 0) + v; for (const [k, v] of Object.entries(s.modeUpgrades || {})) mu[k] = (mu[k] || 0) + v; }
+    out.upgradesContendPerSeason = S.length ? (mu.contend || 0) / S.length : null; out.upgradesOtherPerSeason = S.length ? Object.entries(mu).filter(([k]) => k !== 'contend').reduce((a, [, v]) => a + v, 0) / S.length : null; }
 
   // ---- integrity
   out.problems = run.problemCount ?? (run.problems || []).length;
@@ -151,10 +179,10 @@ export function pooled(runs) {
   const ret = []; const phys = {}; const careers = [];
   for (const run of runs) { const U = unpack(run); if (!U || run.error) continue;
     const S = U.seasons; const lastSeen = new Map(); for (const s of S) for (const m of s.monsters) lastSeen.set(m.id, m);
-    for (const d of (run.decisions.departures || []).filter((x) => x.reason === 'retired')) { const m = lastSeen.get(d.id); ret.push({ pos: d.pos, age: d.age, early: d.age <= baseRetireAge(d.pos) - 2, exceptional: d.age >= baseRetireAge(d.pos) + 3, career: m?.yearsPro ?? null }); }
+    for (const d of (run.decisions.departures || []).filter((x) => x.reason === 'retired')) { const m = lastSeen.get(d.id); const bo = baseRetireAgeOrig(d.pos); ret.push({ pos: d.pos, age: d.age, early: d.age <= baseRetireAge(d.pos) - 2, exceptional: d.age >= baseRetireAge(d.pos) + 3, earlyOrig: d.age <= bo - 2, exceptionalOrig: d.age >= bo + 3, career: m?.yearsPro ?? null }); }
     for (let i = 1; i < S.length; i++) { const prev = new Map(S[i - 1].monsters.map((m) => [m.id, m])); for (const m of S[i].monsters) { const p = prev.get(m.id); if (!p || m.ageless || !m.starter || m.club === S[i].ownerClub) continue; const y = m.age - publicOnset(m.pos, m.attr.durability); if (y < -4 || y > 8) continue; (phys[y] ||= []).push(m.phys - p.phys); } }
   }
-  const byPos = {}; for (const p of POS) { const r = ret.filter((x) => x.pos === p); byPos[p] = r.length ? { n: r.length, meanAge: r2(mean(r.map((x) => x.age))), earlyPct: r2(pct(r.filter((x) => x.early).length, r.length)), exceptionalPct: r2(pct(r.filter((x) => x.exceptional).length, r.length)) } : { n: 0 }; }
+  const byPos = {}; for (const p of POS) { const r = ret.filter((x) => x.pos === p); byPos[p] = r.length ? { n: r.length, meanAge: r2(mean(r.map((x) => x.age))), earlyPct: r2(pct(r.filter((x) => x.early).length, r.length)), exceptionalPct: r2(pct(r.filter((x) => x.exceptional).length, r.length)), earlyPctOrig: r2(pct(r.filter((x) => x.earlyOrig).length, r.length)), exceptionalPctOrig: r2(pct(r.filter((x) => x.exceptionalOrig).length, r.length)) } : { n: 0 }; }
   const car = ret.map((x) => x.career).filter((x) => x != null).sort((a, b) => a - b); const q = (p) => (car.length ? car[Math.min(car.length - 1, Math.floor(p * car.length))] : null);
   return { retirements: ret.length, retirementByPos: byPos, careerSeasons: { n: car.length, p10: q(0.1), p50: q(0.5), p90: q(0.9) }, physChangeBySeasonsPastPublicOnset: Object.fromEntries(Object.entries(phys).sort((a, b) => a[0] - b[0]).map(([k, v]) => [k, { n: v.length, mean: r2(mean(v)) }])) };
 }

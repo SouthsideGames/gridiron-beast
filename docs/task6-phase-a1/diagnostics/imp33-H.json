@@ -1,0 +1,15 @@
+{
+ "files": 2,
+ "monsterSeasons33": 1997,
+ "improved": 202,
+ "improvedPct": "10.12",
+ "byCategoryPctOfAll33": {
+  "kicker": "4.11% (82)",
+  "evolution": "4.91% (98)",
+  "beforeOnset": "0.35% (7)",
+  "techCompensation": "0.75% (15)",
+  "physGainPastOnset": "0.00% (0)",
+  "noDeclineApplied": "0.00% (0)"
+ },
+ "examples": []
+}

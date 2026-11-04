@@ -1,0 +1,144 @@
+{
+ "contract": {
+  "rookie": {
+   "ownerWinToday": 68.7,
+   "ownerWinRegistry": 68.8,
+   "ownerWinDiff": 0.1,
+   "aiMidToday": 64.7,
+   "aiMidRegistry": 65,
+   "aiMidDiff": 0.3,
+   "seasons": [
+    64,
+    64
+   ],
+   "firings": [
+    0,
+    0
+   ],
+   "pass": true
+  },
+  "pro": {
+   "ownerWinToday": 55.1,
+   "ownerWinRegistry": 55.6,
+   "ownerWinDiff": 0.5,
+   "aiMidToday": 66.6,
+   "aiMidRegistry": 67.2,
+   "aiMidDiff": 0.6,
+   "seasons": [
+    49,
+    62
+   ],
+   "firings": [
+    3,
+    1
+   ],
+   "pass": true
+  },
+  "allstar": {
+   "ownerWinToday": 36.7,
+   "ownerWinRegistry": 40,
+   "ownerWinDiff": 3.3,
+   "aiMidToday": 70.8,
+   "aiMidRegistry": 70.3,
+   "aiMidDiff": -0.5,
+   "seasons": [
+    59,
+    58
+   ],
+   "firings": [
+    2,
+    2
+   ],
+   "pass": true
+  }
+ },
+ "drift": {
+  "rookie": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 76.9,
+   "baseOwnerWinS9to20": 45,
+   "s1to8": {
+    "n": 12,
+    "base": 76.85,
+    "cand": 70.6,
+    "diff": -6.25,
+    "lo": -10.76,
+    "hi": -1.5,
+    "effect": -0.75,
+    "up": 4,
+    "down": 8,
+    "gate": "fail"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 44.98,
+    "cand": 25.15,
+    "diff": -19.83,
+    "lo": -26.08,
+    "hi": -13.58,
+    "effect": -1.81,
+    "up": 0,
+    "down": 12,
+    "gate": "report only"
+   }
+  },
+  "pro": {
+   "seeds": 12,
+   "baseOwnerWinS1to8": 61,
+   "baseOwnerWinS9to20": 35.6,
+   "s1to8": {
+    "n": 12,
+    "base": 61,
+    "cand": 56.13,
+    "diff": -4.86,
+    "lo": -9.49,
+    "hi": 0,
+    "effect": -0.56,
+    "up": 2,
+    "down": 8,
+    "gate": "pass (interval reaches past the band: escalate)"
+   },
+   "s9to20": {
+    "n": 12,
+    "base": 35.57,
+    "cand": 22.84,
+    "diff": -12.73,
+    "lo": -18.36,
+    "hi": -6.94,
+    "effect": -1.23,
+    "up": 1,
+    "down": 11,
+    "gate": "report only"
+   }
+  },
+  "allstar": {
+   "seeds": 24,
+   "baseOwnerWinS1to8": 39.8,
+   "baseOwnerWinS9to20": 24.3,
+   "s1to8": {
+    "n": 24,
+    "base": 39.81,
+    "cand": 37.33,
+    "diff": -2.49,
+    "lo": -7.23,
+    "hi": 2.55,
+    "effect": -0.21,
+    "up": 9,
+    "down": 12,
+    "gate": "pass (interval reaches past the band: escalate)"
+   },
+   "s9to20": {
+    "n": 24,
+    "base": 24.31,
+    "cand": 16.13,
+    "diff": -8.18,
+    "lo": -11.61,
+    "hi": -4.67,
+    "effect": -0.94,
+    "up": 3,
+    "down": 20,
+    "gate": "report only"
+   }
+  }
+ }
+}

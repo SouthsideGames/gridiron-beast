@@ -16,6 +16,9 @@ export const STAFF_RAISE = 1.10;
 
 /** A fresh deal covering this season and the next. */
 export function newContract(year, years = CONTRACT_YEARS) { years = Math.max(1, Math.min(CONTRACT_YEARS, years | 0)); return { signed: year, ends: year + years - 1, years }; }
+/** Task 6 Phase B (R3): an AI club's deal of 1, 2 or 3 seasons (the owner's deals stay at CONTRACT_YEARS). */
+export const LEAGUE_CONTRACT_MAX = 3;
+export function leagueContract(year, years = CONTRACT_YEARS) { years = Math.max(1, Math.min(LEAGUE_CONTRACT_MAX, years | 0)); return { signed: year, ends: year + years - 1, years }; }
 export function contractEnds(m, year) { return !!m.contract && m.contract.ends <= year; }
 
 /** What the monster asks for at renewal: today's market rate for their ratings plus a premium for a big season or a league award. */
