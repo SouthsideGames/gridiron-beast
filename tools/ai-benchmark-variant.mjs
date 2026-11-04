@@ -26,7 +26,8 @@ const patch = (from, to) => { if (!s.includes(from)) throw new Error(`variant pa
 patch('export const BAND = 4;', 'export const BAND = 1e9; // DIAGNOSTIC VARIANT: nudge off');
 patch('export const RIVAL_BAND = 2;', 'export const RIVAL_BAND = 1e9; // DIAGNOSTIC VARIANT: nudge off');
 if (variant === 'flat-market') {
-  patch('export function leagueFreeAgency(f, r, { year, cap, targetOf }) {\n  if (!hasLeague(f)) return null;', 'export function leagueFreeAgency(f, r, { year, cap, targetOf: own }) {\n  if (!hasLeague(f)) return null;\n  const flat = order(f).reduce((s, c) => s + own(c), 0) / order(f).length; const targetOf = () => flat; // DIAGNOSTIC VARIANT: one market quality for every club\n ');
+  patch('export function leagueFreeAgency(f, r, { year, cap, targetOf, signUnsigned = null }) {', 'export function leagueFreeAgency(f, r, { year, cap, targetOf: own, signUnsigned = null }) {'); // Task 7 added signUnsigned to the signature
+  patch('  if (!hasLeague(f)) return null;\n  const out = { fromPools: 0', '  if (!hasLeague(f)) return null;\n  const flat = order(f).reduce((s, c) => s + own(c), 0) / order(f).length; const targetOf = () => flat; // DIAGNOSTIC VARIANT: one market quality for every club\n  const out = { fromPools: 0');
   patch('export function leagueInjuryCover(f, r, { year, cap, targetOf }) {\n  if (!hasLeague(f)) return 0;', 'export function leagueInjuryCover(f, r, { year, cap, targetOf: own }) {\n  if (!hasLeague(f)) return 0;\n  const flat = order(f).reduce((s, c) => s + own(c), 0) / order(f).length; const targetOf = () => flat; // DIAGNOSTIC VARIANT\n ');
 }
 fs.writeFileSync(file, s);

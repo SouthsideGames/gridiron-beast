@@ -245,7 +245,7 @@ test('a played franchise: the desk lists both sides, previews a deal, and the pr
 });
 test('a played franchise: an accepted deal moves the monster, the pick, the contract and the history, and leaves the league sound', () => {
   const f = played(); const found = findAccepted(f); assert.ok(found, 'some club sells somebody for a pick');
-  const { team, prop, m } = found; const before = f.roster.length; const cap0 = F.salarySummary(f).total; const pickBefore = F.myTradablePicks(f).length; const contract0 = JSON.stringify(m.contract);
+  const { team, prop, m } = found; const before = f.roster.length; const cap0 = F.salarySummary(f).total; const pickBefore = F.myTradablePicks(f).length; const contract0 = JSON.stringify(R.clubRoster(f, team).find((x) => x.id === m.id).contract); assert.ok(contract0, 'he holds a contract at his club');
   const r = F.deskPropose(f, prop); assert.equal(r.accepted, true);
   assert.equal(f.roster.length, before + 1); const got = f.roster.find((x) => x.id === m.id); assert.ok(got);
   assert.equal(R.clubOf(f, m.id), null, 'he is no longer on the club'); assert.ok(!f.league.monsters[m.id]);

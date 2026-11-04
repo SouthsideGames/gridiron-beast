@@ -8,3 +8,9 @@ export function t7FillToMin(f) {
   for (let g = 0; f.roster.length < F.ROSTER_MIN && g < 80; g++) { const e = F.freeAgentMarket(f).filter((x) => !tried.has(x.monster.id)).sort((a, b) => a.ask.salary - b.ask.salary || (a.monster.id < b.monster.id ? -1 : 1))[0]; if (!e) break; tried.add(e.monster.id); let r = F.negotiateFreeAgent(f, e.monster.id, e.ask); if (r.ok && r.outcome === 'countered') r = F.negotiateFreeAgent(f, e.monster.id, r.counter); }
   return f;
 }
+/** Hands-off owner: settle every open renewal at the ask; when the monster counters, take it; what is still open walks. */
+export function t7Settle(f, choice = 'sign') {
+  for (const i of F.offseasonPending(f)) { const r = F.resolveContract(f, i.id, i.kind === 'staff' ? 'sign' : choice); if (r.status === 'countered') F.resolveContract(f, i.id, 'acceptcounter'); }
+  for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'walk');
+  return f;
+}

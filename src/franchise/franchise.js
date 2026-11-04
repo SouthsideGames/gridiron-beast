@@ -1104,8 +1104,9 @@ function executeProposal(f, p) {
   }
   const got = { monsters: [], picks: [] };
   for (const src of ins) {
+    const kept = src.contract ? { ...src.contract } : null; /* removeFromClub clears the contract: keep his copy first */
     const m = removeFromClub(f, p.team, src.id, { year, reason: 'traded' });
-    m.salary = m.salary || salaryFor(m); m.contract = hasFreeAgency(f) && src.contract && !src.contract.permanent ? { ...src.contract } : newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: p.team, year }; noteTraded(f, m, p.team); // Task 7: the contract and its remaining schedule move with him
+    m.salary = m.salary || salaryFor(m); m.contract = hasFreeAgency(f) && kept && !kept.permanent ? kept : newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: p.team, year }; noteTraded(f, m, p.team); // Task 7: the contract and its remaining schedule move with him
     backfillCareer(f, m); noteJoin(f, m, 'trade', { from: p.team });
     f.roster.push(m); uniqueName(f, m); dexRecord(f, m, 'signed');
     leagueEvent(f, { kind: 'trade', from: p.team, to: f.club, toOwner: true, consideration: sentLabel, ...moveIdentity(f, m) });
@@ -1709,8 +1710,10 @@ export function acceptOffer(f, { releaseId = null } = {}) {
   if (rc.needed && !releaseId) return { ok: false, reason: rc.reason, needRelease: true };
   if (rc.needed && !rc.list.find((c) => c.id === releaseId)) return { ok: false, reason: 'That monster cannot be released.' };
   { const blocked = recruitBlock(f, p, rc.needed ? releaseId : null); if (blocked) return { ok: false, ...blocked }; } // Task 7 (D4, D5): the offer stays on the table while the club makes the signing legal
+  const out = signProspect(f, p, rc.needed ? releaseId : null);
+  if (out.signed === false) return { ok: false, reason: out.reason }; /* the offer stays on the table */
   e.status = 'signed';
-  return { ok: true, success: true, ...signProspect(f, p, rc.needed ? releaseId : null) };
+  return { ok: true, success: true, ...out };
 }
 /** Let the monster go: after a win (turn down its offer) or after a loss (skip the one pitch). Nothing else changes. */
 export function declineOffer(f) {

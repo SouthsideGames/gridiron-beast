@@ -48,7 +48,7 @@ test('win: an offer that respects the roster limit and the cap rules; decline co
     assert.ok(battlers.every((m) => m.fatigue >= Link.CLASH_FATIGUE.encounter), 'battlers tire a little');
     if (b.won) {
       wins++; assert.equal(f.week.encounter.status, 'offer'); assert.equal(F.recruit(f, 0, 'development').ok, false, 'no pitch needed after a win');
-      if (seed % 2) { const r = F.acceptOffer(f); assert.ok(r.ok); assert.equal(f.roster.length, n + 1); assert.ok(f.roster.includes(p.monster)); assert.equal(p.monster.contract.years, 2); assert.equal(f.week.recruited, p.monster.id); }
+      if (seed % 2) { const r = F.acceptOffer(f); assert.ok(r.ok); assert.equal(f.roster.length, n + 1); assert.ok(f.roster.includes(p.monster)); { const c = p.monster.contract; assert.ok(c.years >= 1 && c.years <= 3, 'Task 7 (D5): the recruit signs at his preferred term, one to three seasons'); assert.equal(c.ends, f.season.year + c.years - 1); } assert.equal(f.week.recruited, p.monster.id); }
       else { assert.ok(F.declineOffer(f).ok); assert.equal(f.roster.length, n); assert.equal(f.week.encounter.status, 'declined'); }
       assert.equal(f.season.day, 2);
     } else {
@@ -119,7 +119,8 @@ const toSunday = (f) => { F.autoRunToSunday(f); assert.equal(f.season.day, 6); i
 
 test('pregame: a 3v3 between the two Sunday rosters, seeded once, rebuilt from a saved copy with the same AI monsters; the winner chooses possession', () => {
   let mine = 0, theirs = 0;
-  for (let seed = 200; seed < 216; seed++) {
+  // at least 16 seeds, and on until both outcomes have appeared twice (the starting roster usually wins; which seeds lose follows the generator)
+  for (let seed = 200; seed < 216 || ((mine < 2 || theirs < 2) && seed < 280); seed++) {
     const f = newFranchise(seed); toSunday(f);
     const pv = F.pregamePreview(f); assert.ok(pv.ok, pv.reason); assert.equal(pv.size, 3); assert.equal(pv.wild.length, 3); assert.ok(pv.wild.every((m) => !m.injury));
     const st = F.startPregameClash(f); assert.ok(st.ok, st.reason); const e = f.week.pregame; assert.equal(e.status, 'battle'); assert.equal(e.side, pv.matchup.playerSide);

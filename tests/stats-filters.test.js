@@ -3,13 +3,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
-import { t7FA } from './t7-support.js';
+import { t7FA, t7Settle } from './t7-support.js';
 import * as Save from '../src/franchise/save.js';
 import { ensureStats, monsterLine, monsterSeasons, combinedTable, seasonTables, leagueSeasons, leaders, ARCHIVE_SEASONS, archiveSeasonTables } from '../src/franchise/stats.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 
 function playSeason(f) { F.chooseGoal(f, 'wins'); let g = 0; while (!f.season.finished && g++ < 40) { if (F.inPlayoffs(f) && !F.playoffFixture(f)) { F.skipPlayoffs(f); continue; } F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); } }
-function offseason(f) { if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id); for (const it of F.offseasonPending(f)) { if (!F.resolveContract(f, it.id, 'sign').ok) F.resolveContract(f, it.id, 'walk'); } (t7FA(f), F.beginDraft(f)); let d = 0; while (!f.draft.done && d++ < 80) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } let fa = 0; while (f.roster.length < F.ROSTER_MIN && fa++ < 20) { const mk = F.offseasonMarket(f).map((x) => x.monster).sort((a, b) => a.salary - b.salary); if (!mk[0] || !F.signFreeAgent(f, mk[0].id).ok) break; } const r = F.startNextSeason(f); assert.ok(r.ok, r.reason); }
+function offseason(f) { if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id); t7Settle(f); (t7FA(f), F.beginDraft(f)); let d = 0; while (!f.draft.done && d++ < 80) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } let fa = 0; while (f.roster.length < F.ROSTER_MIN && fa++ < 20) { const mk = F.offseasonMarket(f).map((x) => x.monster).sort((a, b) => a.salary - b.salary); if (!mk[0] || !F.signFreeAgent(f, mk[0].id).ok) break; } const r = F.startNextSeason(f); assert.ok(r.ok, r.reason); }
 const withGames = (f) => f.roster.slice().sort((a, b) => (ensureStats(b).season.reg.games || 0) - (ensureStats(a).season.reg.games || 0) || (ensureStats(b).season.post.games || 0) - (ensureStats(a).season.post.games || 0))[0]; // the most-played monster: a regular who plays the playoff game too (among equals, one who did: a regular can miss it injured)
 
 test('a monster\'s current season is a filter of its own and updates as games are played; past seasons and the career are the others', () => {

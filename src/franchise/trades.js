@@ -195,8 +195,9 @@ export function executeTrade(f, offer, { club, year, nextYear }) {
     if (hasLeague(f) && f.league.monsters[src.id] === src) {
       // Persistent rosters (GDD §42.6): the very monster moves, career intact; the registry refuses a protected one.
       if (isProtected(src)) throw Object.assign(new Error(`${src.name} is bound to ${offer.team}.`), { code: 'protected' });
+      const kept = src.contract ? { ...src.contract } : null; /* removeFromClub clears the contract: keep his copy first */
       m = removeFromClub(f, offer.team, src.id, { year, reason: 'traded' });
-      m.salary = m.salary || salaryFor(m); m.contract = f.freeAgency && m.contract && !m.contract.permanent ? { ...m.contract } : newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year }; noteTraded(f, m, offer.team); // Task 7: a trade keeps the contract and its schedule
+      m.salary = m.salary || salaryFor(m); m.contract = f.freeAgency && kept && !kept.permanent ? kept : newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year }; noteTraded(f, m, offer.team); // Task 7: a trade keeps the contract and its schedule
     } else {
       m = JSON.parse(JSON.stringify(src));
       m.salary = m.salary || salaryFor(m); m.contract = newContract(nextYear, 2); m.joined = nextYear; m.traded = { from: offer.team, year };

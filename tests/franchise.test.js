@@ -14,7 +14,9 @@ import { monsterOverall } from '../src/data/monsters.js';
 import * as awaitRules from '../src/sim/rules.js';
 
 /** Hold the draft (passing every pick) so a test can start the next season. */
-function holdDraft(f) { for (const i of F.offseasonPending(f)) { const r = F.resolveContract(f, i.id, 'sign'); if (r.status === 'countered') F.resolveContract(f, i.id, 'acceptcounter'); } if (F.task7Offseason(f) && f.season.finished) { F.openFreeAgency(f); F.finishFreeAgency(f); } /* Task 7: free agency (Periods 1–5) before the draft */ const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } t7FillToMin(f); /* Task 7: a renewal may be refused; the hands-off owner fills to the minimum from the market */ return { ok: f.draft.done }; }
+/** Task 7: settle every open renewal with `choice`; the monster may counter (taken) and a deal the cap cannot carry walks. */
+function settle(f, choice = 'sign') { for (const i of F.offseasonPending(f)) { const r = F.resolveContract(f, i.id, i.kind === 'staff' ? 'sign' : choice); if (r.status === 'countered') F.resolveContract(f, i.id, 'acceptcounter'); } for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'walk'); }
+function holdDraft(f) { settle(f); if (F.task7Offseason(f) && f.season.finished) { F.openFreeAgency(f); F.finishFreeAgency(f); } /* Task 7: free agency (Periods 1–5) before the draft */ const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } t7FillToMin(f); /* Task 7: a renewal may be refused; the hands-off owner fills to the minimum from the market */ return { ok: f.draft.done }; }
 /** Step one in-season day with the staff's defaults, draft window included. */
 function stepDay(f) {
   const d = f.season.day;
@@ -839,7 +841,7 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   { const rs = F.resolveContract(f, first.id, 'sign'); assert.equal(rs.ok, true, rs.reason); // Task 7: the monster answers the renewal (personality, role, the club's results)
     if (rs.status === 'signed') { assert.equal(mon.salary, Math.round(first.ask / 100) * 100); assert.equal(mon.contract.ends, 4); } else assert.equal(rs.status, 'declined', 'a refusal makes him a free agent when Period 1 opens'); }
   const second = items.find((i) => i.kind === 'monster' && !i.status); F.resolveContract(f, second.id, 'walk'); assert.ok(!f.roster.some((x) => x.id === second.id)); assert.ok(Object.values(f.pool).flat().some((x) => x.id === second.id), 'walked to the pool');
-  for (const i of items.filter((x) => !x.status)) F.resolveContract(f, i.id, i.kind === 'staff' ? 'sign' : 'counter');
+  settle(f, 'counter');
   assert.equal(F.offseasonPending(f).length, 0);
   assert.ok(Object.values(f.staffRaise).every((x) => Math.abs(x - 1.1) < 1e-9), 'staff raises');
   // Market (Task 7): free agency opens after the renewals; offers in the periods, then immediate signings up to the floor.
@@ -872,7 +874,7 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   const rec = F.recoveryDay(f); assert.ok(rec.ok && rec.healed.includes(hurt.name)); assert.equal(hurt.fatigue, 25); assert.equal(f.season.day, 2);
   for (let g = 0; g < 40 && !f.season.finished; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
-  for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
+  settle(f);
   assert.match(F.startNextSeason(f).reason, /draft|free agency/i); // Task 7: free agency, then the draft, gate the season
   const b = (t7FA(f), F.beginDraft(f)); assert.ok(b.ok); assert.equal(F.onTheClock(f), f.club);
   const st = F.leagueStandings(f).overall; const myRank = st.indexOf(f.club); assert.equal(f.draft.index, 15 - myRank, 'worst record picks first');
