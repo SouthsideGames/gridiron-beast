@@ -14,7 +14,7 @@ import { monsterOverall } from '../src/data/monsters.js';
 import * as awaitRules from '../src/sim/rules.js';
 
 /** Hold the draft (passing every pick) so a test can start the next season. */
-function holdDraft(f) { for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign'); if (F.task7Offseason(f) && f.season.finished) { F.openFreeAgency(f); F.finishFreeAgency(f); } /* Task 7: free agency (Periods 1–5) before the draft */ const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } t7FillToMin(f); /* Task 7: a renewal may be refused; the hands-off owner fills to the minimum from the market */ return { ok: f.draft.done }; }
+function holdDraft(f) { for (const i of F.offseasonPending(f)) { const r = F.resolveContract(f, i.id, 'sign'); if (r.status === 'countered') F.resolveContract(f, i.id, 'acceptcounter'); } if (F.task7Offseason(f) && f.season.finished) { F.openFreeAgency(f); F.finishFreeAgency(f); } /* Task 7: free agency (Periods 1–5) before the draft */ const b = F.beginDraft(f); if (!b.ok) return b; let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } t7FillToMin(f); /* Task 7: a renewal may be refused; the hands-off owner fills to the minimum from the market */ return { ok: f.draft.done }; }
 /** Step one in-season day with the staff's defaults, draft window included. */
 function stepDay(f) {
   const d = f.season.day;

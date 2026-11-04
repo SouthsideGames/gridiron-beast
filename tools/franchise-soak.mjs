@@ -97,7 +97,7 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
     // offseason
     if (f.postseason && !f.postseason.resolved) { const ev = F.postseasonEvent(f); const r = F.resolvePostseason(f, ev.options[0].id); if (!r.ok) problems.push(`season ${s}: postseason ${r.reason}`); }
     if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
-    for (const i of F.offseasonPending(f)) { const r = F.resolveContract(f, i.id, contractChoice ? contractChoice(f, i) : 'sign'); if (!r.ok) { const w = F.resolveContract(f, i.id, 'walk'); if (!w.ok) problems.push(`season ${s}: contract for ${i.id} could not be settled (${r.reason}; ${w.reason})`); } }
+    for (const i of F.offseasonPending(f)) { let r = F.resolveContract(f, i.id, contractChoice ? contractChoice(f, i) : 'sign'); if (r.ok && r.status === 'countered') r = F.resolveContract(f, i.id, 'acceptcounter'); /* Task 7: the hands-off owner takes a renewal counter (re-signs every contract it can) */ if (!r.ok) { const w = F.resolveContract(f, i.id, 'walk'); if (!w.ok) problems.push(`season ${s}: contract for ${i.id} could not be settled (${r.reason}; ${w.reason})`); } }
     const t7 = F.task7Offseason(f);
     if (t7) { // Task 7: free agency, Periods 1–5, before the draft. The hands-off owner offers asks to the cheapest monsters he needs to reach the roster minimum.
       const o = F.openFreeAgency(f); if (!o.ok) { problems.push(`season ${s}: free agency would not open (${o.reason})`); break; }

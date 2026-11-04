@@ -57,7 +57,7 @@ import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRo
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { ensureFreeAgency, hasFreeAgency, task7Offseason, leagueYear, pruneLocks, noteReleased, noteTraded, tradeLock, returnLock } from './fa-state.js';
-import { registerOwnerHooks, submitOffer, reviseOffer, withdrawOffer, acceptCounter, resolvePeriod, ageMarket, negotiateNow, extend, promoteExtensions, rateOffer, askOf, FA_RULES, capView, liveOffers, marketList, competingOffers, unsigned as unsignedFA, sign as signFA, blocker as faBlocker, entryOf } from './fa-engine.js';
+import { counterTerms, registerOwnerHooks, submitOffer, reviseOffer, withdrawOffer, acceptCounter, resolvePeriod, ageMarket, negotiateNow, extend, promoteExtensions, rateOffer, askOf, FA_RULES, capView, liveOffers, marketList, competingOffers, unsigned as unsignedFA, sign as signFA, blocker as faBlocker, entryOf } from './fa-engine.js';
 import { aiMarketTurn, aiTerms } from './fa-ai.js';
 import { overLimit, legendsBySide, legendSide, legendCheck } from './fa-legendary.js';
 import { bonusCharge, capCharge, makeContract, allocateBonus } from './fa-contracts.js';
@@ -856,6 +856,7 @@ export function forfeitSunday(f) {
  */
 function renewTask7(f, item, m, choice, { years, salary, bonus }) {
   const nextYear = f.season.year + 1;
+  if (choice === 'acceptcounter') { if (!item.counter) return { ok: false, reason: 'There is no counter to accept.' }; ({ salary, years, bonus } = item.counter); choice = 'sign'; item.tookCounter = true; }
   if (choice === 'walk') { f.roster = f.roster.filter((x) => x.id !== m.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === m.id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); item.status = 'walked'; news(f, `${m.name} walks as a free agent. Back to ${homeRegion(m)}'s pool.`, 'loss'); return { ok: true, status: 'walked' }; }
   const ask = Math.round(item.ask / 100) * 100;
   const pay = salary != null ? Math.round(salary / 100) * 100 : choice === 'counter' ? Math.round(ask * COUNTER_PCT / 100) * 100 : ask;
@@ -866,10 +867,12 @@ function renewTask7(f, item, m, choice, { years, salary, bonus }) {
   if (r.low) { const e = entryOf(f, m); e.patience = Math.max(0, e.patience - FA_RULES.lowballCost); }
   if (r.score >= r.need) {
     m.salary = terms.salary; m.contract = makeContract({ start: nextYear, years, salary: terms.salary, bonus: terms.bonus, kind: 'renewal' }); m.contract.bonusPaid = { by: f.club, ly: nextYear };
-    item.status = 'signed'; item.final = terms.salary; item.years = years; if (choice === 'counter') item.countered = 'accepted';
+    item.status = 'signed'; item.final = terms.salary; item.years = years; if (choice === 'counter') item.countered = 'accepted'; delete item.counter;
     news(f, `${m.name} re-signed for ${years === 1 ? 'one season' : `${years} seasons`} at ${terms.salary.toLocaleString('en-US')} cr.${terms.bonus ? ` plus a ${terms.bonus.toLocaleString('en-US')} cr. bonus` : ''}.`, 'roster');
     return { ok: true, status: 'signed' };
   }
+  item.rounds = (item.rounds || 0) + 1;
+  { const c = r.score >= r.need * FA_RULES.counterBand && item.rounds < 3 ? counterTerms(f, m, f.club, terms) : null; if (c) { item.counter = c; return { ok: true, status: 'countered', counter: c }; } } // close: he counters (the negotiation engine's rule) // close: he counters (the negotiation engine's rule)
   item.status = 'declined'; if (choice === 'counter') item.countered = 'refused';
   news(f, `${m.name} turned down ${choice === 'counter' ? 'your counter' : 'the renewal'}. He becomes a free agent when Period 1 opens: you may still bid.`, 'loss');
   return { ok: true, status: 'declined' };
@@ -2311,8 +2314,15 @@ function closeSeasonTask7(f, s, rec) {
   }
   // contract processing: the owner's renewals (answered by the monster when decided) and the AI's Task 6 renewals
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal. Free agency opens when they are settled.`, 'info'); }
-  f.leagueOffseason = { ...(f.leagueOffseason?.opened === year ? f.leagueOffseason : {}), closed: year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year, cap, excessOf: (c) => excess[c] || 0, accepts: (club, m, terms) => { const r = rateOffer(f, m, club, terms); return r.score >= r.need; } }) };
+  f.leagueOffseason = { ...(f.leagueOffseason?.opened === year ? f.leagueOffseason : {}), closed: year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year, cap, excessOf: (c) => excess[c] || 0, accepts: (club, m, terms) => aiRenewalAnswer(f, club, m, terms, cap) }) };
   steps.contracts = true;
+}
+/** A monster's answer to his AI club's renewal: yes; or, when close, his counter, which the club pays if next season's cap can carry it. */
+function aiRenewalAnswer(f, club, m, terms, cap) {
+  const r = rateOffer(f, m, club, terms); if (r.score >= r.need) return true;
+  if (r.score < r.need * FA_RULES.counterBand) return false;
+  const c = counterTerms(f, m, club, terms); if (!c) return false; const room = clubCapRoom(f, club, cap) + (m.salary || 0); // his current salary leaves with the old deal
+  return c.salary - terms.salary <= Math.max(0, room - terms.salary) ? { salary: c.salary, years: c.years } : false;
 }
 /** This offseason's generated veterans (the market has always had a dozen besides the pools). */
 function generateVeterans(f, r) {

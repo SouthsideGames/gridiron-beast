@@ -136,3 +136,11 @@ test('locks apply to every club: no release and re-sign in a league year; a sign
   const m = f.roster.find((x) => x.position === 'WR' && !x.legendary); F.releaseMonster(f, m.id);
   const back = F.offerFreeAgent(f, m.id, { salary: E.askOf(f, m).salary, years: 1 }); assert.equal(back.ok, false); assert.equal(back.code, 'lock');
 });
+
+test('a counter always satisfies the monster who made it (accepting it signs), or there is none', () => {
+  const f = openMarket(71);
+  for (const { m } of E.marketList(f).slice(0, 40)) for (const club of [f.club, ...leagueClubs(f).slice(0, 3)]) {
+    const ask = E.askOf(f, m); const c = E.counterTerms(f, m, club, { salary: Math.round(ask.salary * 0.8 / 100) * 100, years: 1, bonus: 0 });
+    if (!c) continue; const r = E.rateOffer(f, m, club, c); assert.ok(r.score >= r.need, `${m.name} at ${club}: his counter ${c.salary} satisfies him`); assert.equal(c.salary % 100, 0);
+  }
+});

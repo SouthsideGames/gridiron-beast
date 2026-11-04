@@ -142,9 +142,15 @@ export function rateOffer(f, m, club, terms, { guaranteed = false } = {}) {
 }
 /** The terms that would satisfy him at this club: his preferred years and the salary that closes the gap (in 100s). */
 export function counterTerms(f, m, club, terms) {
-  const ask = askOf(f, m); const t = { salary: terms.salary, years: ask.years, bonus: terms.bonus || 0 };
-  for (let i = 0; i < 60; i++) { const r = rateOffer(f, m, club, t); if (r.score >= r.need) return t; t.salary += OFFER_STEP; }
-  return { ...t, salary: Math.max(t.salary, ask.salary) };
+  const ask = askOf(f, m); const p = personaOf(m); const t = { salary: terms.salary, years: ask.years, bonus: terms.bonus || 0 };
+  const r = rateOffer(f, m, club, t); if (r.score >= r.need) return t;
+  const tot = Object.values(r.weights).reduce((x, y) => x + y, 0) || 1; const wm = r.weights.money / tot;
+  const others = r.score - wm * r.parts.money; const moneyNeed = (r.need - others) / (wm || 1e-9); // the money part that closes the gap
+  if (!(wm > 0) || moneyNeed > 1.4) return null; // money alone cannot win him at this club: no counter
+  const bonusEq = (t.bonus * (1 + p.money / 200)) / t.years;
+  t.salary = Math.max(t.salary, Math.ceil((moneyNeed * ask.salary - bonusEq) / OFFER_STEP) * OFFER_STEP);
+  for (let i = 0; i < 20; i++) { const x = rateOffer(f, m, club, t); if (x.score >= x.need) return t; t.salary += OFFER_STEP; } // rounding guard (a step or two)
+  return null;
 }
 
 // ------------------------------------------------------------ validation shared by every path
@@ -278,7 +284,7 @@ export function resolvePeriod(f, { closing = false } = {}) {
       if (atDeadline) { if (close(f, o, 'expired', 'deadline')) out.expired++; continue; }
       if (!ready || o.state !== 'pending') continue;
       const r = rateOffer(f, m, o.club, o);
-      if (r.score >= r.need * FA_RULES.counterBand && r.score < r.need) { o.state = 'countered'; o.counter = counterTerms(f, m, o.club, o); o.counterV = o.v; o.history.push({ p, ...o.counter, act: 'counter' }); out.countered++; }
+      if (r.score >= r.need * FA_RULES.counterBand && r.score < r.need && counterTerms(f, m, o.club, o)) { o.state = 'countered'; o.counter = counterTerms(f, m, o.club, o); o.counterV = o.v; o.history.push({ p, ...o.counter, act: 'counter' }); out.countered++; }
       else if (r.score < r.need * FA_RULES.counterBand && ready && o.round++ >= 2) { if (close(f, o, 'rejected', 'too low')) out.rejected++; }
     }
   }
@@ -299,7 +305,7 @@ export function negotiateNow(f, club, mid, terms, { guaranteed = false, via = 'f
   const e = entryOf(f, m); const r = rateOffer(f, m, club, terms, { guaranteed: guaranteed && terms.salary >= askOf(f, m).salary });
   if (r.low && !guaranteed) lowball(f, m, e, club);
   if (r.score >= r.need) { const s = sign(f, club, mid, terms, { via }); return s.ok ? { ok: true, outcome: 'signed', monster: s.monster, contract: s.contract } : s; }
-  if (r.score >= r.need * FA_RULES.counterBand) return { ok: true, outcome: 'countered', counter: counterTerms(f, m, club, terms) };
+  { const c = r.score >= r.need * FA_RULES.counterBand ? counterTerms(f, m, club, terms) : null; if (c) return { ok: true, outcome: 'countered', counter: c }; }
   return { ok: true, outcome: 'rejected', reason: `${m.name} is looking for more${r.low ? ', and low offers try his patience' : ''}.` };
 }
 
@@ -319,7 +325,7 @@ export function extend(f, club, m, terms) {
   if (charge > room) return { ok: false, code: 'cap', reason: `The extension's first season needs ${charge.toLocaleString('en-US')} cr.; ${start} has ${Math.max(0, room).toLocaleString('en-US')} cr. free.` };
   hasFreeAgency(f) && entryOf(f, m); const r = rateOffer(f, m, club, terms); if (r.low) lowball(f, m, entryOf(f, m), club);
   if (r.score >= r.need) { m.contract.next = makeContract({ start, years: terms.years, salary: terms.salary, bonus: terms.bonus, kind: 'extension' }); m.contract.next.bonusPaid = { by: club, ly: start }; delete f.freeAgency.market[m.id]; logTx(f, { kind: 'extend', club, mid: m.id, salary: terms.salary, years: terms.years }); return { ok: true, outcome: 'signed', contract: m.contract.next }; }
-  if (r.score >= r.need * FA_RULES.counterBand) return { ok: true, outcome: 'countered', counter: counterTerms(f, m, club, terms) };
+  { const c = r.score >= r.need * FA_RULES.counterBand ? counterTerms(f, m, club, terms) : null; if (c) return { ok: true, outcome: 'countered', counter: c }; }
   return { ok: true, outcome: 'rejected' };
 }
 /** At the turn of the league year, extensions signed to follow a contract take over (salary included). */
