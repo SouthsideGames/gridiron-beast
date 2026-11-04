@@ -245,11 +245,11 @@ test('a played franchise: the desk lists both sides, previews a deal, and the pr
 });
 test('a played franchise: an accepted deal moves the monster, the pick, the contract and the history, and leaves the league sound', () => {
   const f = played(); const found = findAccepted(f); assert.ok(found, 'some club sells somebody for a pick');
-  const { team, prop, m } = found; const before = f.roster.length; const cap0 = F.salarySummary(f).total; const pickBefore = F.myTradablePicks(f).length;
+  const { team, prop, m } = found; const before = f.roster.length; const cap0 = F.salarySummary(f).total; const pickBefore = F.myTradablePicks(f).length; const contract0 = JSON.stringify(m.contract);
   const r = F.deskPropose(f, prop); assert.equal(r.accepted, true);
   assert.equal(f.roster.length, before + 1); const got = f.roster.find((x) => x.id === m.id); assert.ok(got);
   assert.equal(R.clubOf(f, m.id), null, 'he is no longer on the club'); assert.ok(!f.league.monsters[m.id]);
-  assert.equal(got.traded.from, team); assert.ok(got.contract.years === 2 && got.contract.ends >= got.contract.signed + 1); assert.ok(got.history.some((h) => h.club === team && h.reason === 'traded'));
+  assert.equal(got.traded.from, team); assert.equal(JSON.stringify(got.contract), contract0, 'Task 7: the contract and its remaining schedule move with him, unchanged'); assert.ok(got.history.some((h) => h.club === team && h.reason === 'traded'));
   assert.equal(F.myTradablePicks(f).length, pickBefore - 1); assert.equal(R.verifyLeague(f).length, 0); assert.deepEqual(leagueInvariants(f, 'after a desk deal'), []);
   assert.ok(F.salarySummary(f).total > cap0, 'his salary counts against the cap');
   assert.ok((f.trades || []).some((t) => t.desk?.received.includes(m.id)));

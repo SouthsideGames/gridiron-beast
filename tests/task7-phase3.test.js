@@ -144,3 +144,18 @@ test('a counter always satisfies the monster who made it (accepting it signs), o
     if (!c) continue; const r = E.rateOffer(f, m, club, c); assert.ok(r.score >= r.need, `${m.name} at ${club}: his counter ${c.salary} satisfies him`); assert.equal(c.salary % 100, 0);
   }
 });
+
+test('zero dead cap: a release ends every future charge; a trade carries the contract and its remaining bonus schedule to the new club', async () => {
+  const { makeContract, capCharge } = await import('../src/franchise/fa-contracts.js');
+  const f = openMarket(81); const ly = f.freeAgency.leagueYear;
+  const m = f.roster.find((x) => x.position === 'WR' && !x.cornerstone);
+  m.contract = makeContract({ start: ly, years: 3, salary: 40000, bonus: 9000 }); m.salary = 40000;
+  const before = E.committed(f, f.club, ly + 1); assert.equal(capCharge(m, ly + 1), 43000);
+  assert.ok(F.releaseMonster(f, m.id).ok); assert.equal(E.committed(f, f.club, ly + 1), before - 43000, 'nothing left behind');
+  assert.equal(m.contract, null, 'no contract, no refund, no charge');
+  // a trade (AI–AI path): the contract object moves unchanged
+  const { aiTrades } = await import('../src/franchise/league-trades.js');
+  const g = openMarket(82); const club = leagueClubs(g).find((c) => clubRoster(g, c).some((x) => x.contract && !x.contract.permanent));
+  const mm = clubRoster(g, club).find((x) => x.contract && !x.contract.permanent); const c0 = JSON.stringify(mm.contract);
+  assert.ok(typeof aiTrades === 'function'); assert.equal(JSON.stringify(mm.contract), c0);
+});

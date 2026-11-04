@@ -33,7 +33,7 @@ export function interestOf(f, m, terms) {
   return { label, cls, why, ratio };
 }
 const rarityOf = (m) => { try { return resolveSpecies(m).rarity; } catch { return 'common'; } };
-const fitOf = (f, m) => { const role = E.roleAt(f, f.club, m); return role === 'starter' ? '⬆ would start' : role === 'backup' ? 'first backup' : 'depth'; };
+const fitOf = (f, m) => { const role = E.roleAt(f, f.club, m); let scheme = null; try { scheme = F.fitFor(f, m)?.fits; } catch { /* no scheme read */ } return `${role === 'starter' ? '⬆ would start' : role === 'backup' ? 'first backup' : 'depth'}${scheme === true ? ' · fits your scheme' : scheme === false ? ' · off-scheme' : ''}`; }; // team fit: role from the actual roster, scheme where the game has one
 
 /** The cap line the market shows: total, committed, reserved by live offers, usable. */
 export function capPanelHtml(f) {
