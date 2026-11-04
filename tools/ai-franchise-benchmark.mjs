@@ -31,7 +31,7 @@ const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v =
 const ROOT = path.resolve(args.root || path.join(path.dirname(new URL(import.meta.url).pathname), '..'));
 const imp = (p) => import(path.join(ROOT, p));
 const F = await imp('src/franchise/franchise.js');
-const { runFranchise } = await imp('tools/franchise-soak.mjs');
+const { runFranchise, floorLog } = await imp('tools/franchise-soak.mjs');
 const { leagueInvariants, withBoardReset } = await imp('tools/league-soak.mjs');
 const REG = await imp('src/franchise/league-registry.js');
 const LS = await imp('src/franchise/league-season.js');
@@ -60,7 +60,8 @@ function faRecord(f) {
   const signs = log.filter((e) => e.kind === 'sign').map((e) => ({ club: e.club, owner: e.club === f.club, mid: e.mid, salary: e.salary, years: e.years, bonus: e.bonus || 0, bidders: byMid.get(e.mid) || 1, age: ageOf(e.mid) }));
   const clubs = FAE.allClubs(f); const cap = Object.fromEntries(clubs.map((c) => { const v = FAE.capView(f, c); return [c, [v.committed, v.reserved, v.usable]]; }));
   const legends = Object.fromEntries(clubs.map((c) => { const b = FAL.legendsBySide(FAE.rosterOf(f, c)); return [c, [b.offense.length, b.defense.length]]; }));
-  return { ly, signs, offers: log.filter((e) => e.kind === 'offer').length, revisions: log.filter((e) => e.kind === 'revise').length, withdrawals: log.filter((e) => e.kind === 'withdraw').length, extensions: log.filter((e) => e.kind === 'extend').length, renewalsDeclined: f.leagueOffseason?.contracts?.declined || 0, renewalsSigned: f.leagueOffseason?.contracts?.resigned || 0, unsignedAtClose: FAE.marketList(f).length, cap, legends, marketProblems: FAE.marketProblems(f) };
+  const floor = { ai: f.leagueOffseason?.freeAgency?.floorReleases || 0, ownerTotal: floorLog?.owner ?? null }; // recording only (owner rule 2026-11-04)
+  return { ly, floor, signs, offers: log.filter((e) => e.kind === 'offer').length, revisions: log.filter((e) => e.kind === 'revise').length, withdrawals: log.filter((e) => e.kind === 'withdraw').length, extensions: log.filter((e) => e.kind === 'extend').length, renewalsDeclined: f.leagueOffseason?.contracts?.declined || 0, renewalsSigned: f.leagueOffseason?.contracts?.resigned || 0, unsignedAtClose: FAE.marketList(f).length, cap, legends, marketProblems: FAE.marketProblems(f) };
 }
 /** Harness v4: the columns of one monster's season-end row (arrays keep a 20-season file small). */
 export const V4_MONSTER = Object.freeze(['id', 'club', 'pos', 'age', 'ovr', 'level', 'xp', 'potential', 'starter', 'protected', 'ageless', 'origin', 'draftedYear', 'draftedRound',

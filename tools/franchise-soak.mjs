@@ -65,6 +65,8 @@ export function invariants(f, where) {
 // `contractChoice(f, item)` (Task 6 Phase D owner-management diagnostic): 'sign' or 'walk' for each expiring deal; default: sign everyone.
 const liveOwnerOffers = (f) => Object.values(f.freeAgency?.offers || {}).filter((o) => o.club === f.club && ['pending', 'countered', 'accepted'].includes(o.state)).length;
 let triedT7 = null;
+/** Recording only (Task 7 owner rule 2026-11-04): releases the hands-off owner made to reach the minimum within the cap, cumulative. */
+export const floorLog = { owner: 0 };
 export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null, onOffseason = null, contractChoice = null } = {}) {
   const f = from || newFranchise(seed, { difficulty, legacy });
   const problems = [...check(f, from ? 'loaded' : 'created')];
@@ -114,7 +116,7 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
     onOffseason?.(f, s);
     if (t7) { triedT7 = new Set(); const capFail = new Set(); const fill = () => { let g = 0; while (f.roster.length < ROSTER_MIN && g++ < 40) { const pick = F.freeAgentMarket(f).sort((a, b) => a.ask.salary - b.ask.salary || (a.monster.id < b.monster.id ? -1 : 1)).find((x) => !triedT7.has(x.monster.id)); if (!pick) break; let r = F.negotiateFreeAgent(f, pick.monster.id, { salary: pick.ask.salary, years: pick.ask.years }); if (r.ok && r.outcome === 'countered') r = F.negotiateFreeAgent(f, pick.monster.id, r.counter); if (!r.ok || r.outcome !== 'signed') { triedT7.add(pick.monster.id); if (r.code === 'cap') capFail.add(pick.monster.id); if (triedT7.size > 60) break; } } };
       fill(); // owner rule 2026-11-04: short of the minimum without the cap for it, the hands-off owner releases the plan's first suggestion (the player's choice in the game) and signs again
-      for (let k = 0; f.roster.length < ROSTER_MIN && k < 15; k++) { const plan = F.rosterFloorPlan(f); const c = plan.releases[0]; if (!c || !F.releaseMonster(f, c.id).ok) break; for (const id of capFail) triedT7.delete(id); capFail.clear(); fill(); } }
+      for (let k = 0; f.roster.length < ROSTER_MIN && k < 15; k++) { const plan = F.rosterFloorPlan(f); const c = plan.releases[0]; if (!c || !F.releaseMonster(f, c.id).ok) break; floorLog.owner++; for (const id of capFail) triedT7.delete(id); capFail.clear(); fill(); } }
     let fa = 0; while (!t7 && f.roster.length < ROSTER_MIN && fa++ < 20) { const mk = F.offseasonMarket(f); const pick = mk.map((x) => x.monster).sort((a, b) => a.salary - b.salary)[0]; if (!pick) break; const r = F.signFreeAgent(f, pick.id); if (!r.ok) { problems.push(`season ${s}: free agency ${r.reason}`); break; } }
     for (const role of ['head_coach', 'off_coord', 'def_coord', 'head_scout', 'monster_trainer']) if (!f.staff?.[role]) F.hireDefaultStaff(f);
     // save round-trip at the season boundary
