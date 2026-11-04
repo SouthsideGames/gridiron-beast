@@ -1118,3 +1118,58 @@ Full report: `docs/TASK6_FINAL_RELEASE_REPORT.md`.
 3. or hold M3.
 
 Recommended: option 1. The automatic release was **not** carried out.
+
+## Release approved and carried out (2026-11-03): Task 6 COMPLETE / RELEASED as v42.21.0-ai-franchise
+**Owner decision (2026-11-03):** release Task 6, AI Franchise Intelligence, including the F1–F4 rebuilding fixes tested as `v42.21.0-rc.1`. This is Option 1 of the final validation, and it accepts the exceptions below for this release only.
+
+**Merged** (merge API, each PR at its approved head, top-down, all clean; no conflict resolution and no gameplay change):
+
+| PR | Into | Merge commit |
+|---|---|---|
+| #91 `task6-final-rc` | `task6-phase-d` | `788bd2d` |
+| #90 Phase D | `task6-phase-c` | `7b80a06` |
+| #89 Phase C | `task6-phase-b` | `90513bc` |
+| #88 Phase B | `task6-phase-a2` | `ff06c6a` |
+| #87 Phase A-2 | `task6-phase-a1` | `4176f26` |
+| #86 Phase A-1 | `task6-phase0` | `e202a6e` |
+| #85 Phase 0 | `task6-plan` | `d738e77` |
+| #84 plan | `post-trading-benchmark` | `806ca05` |
+| #83 Task 5.5 + stack | `main` | **`d2159f8`** |
+
+- **Tree check:** the tree of `main` equals the candidate's final tree (`1dd8fed`).
+- **Scope:** no unrelated or experimental code was merged. The private-preview branch `task6-final-rc-preview` (test build) was not merged.
+
+**Production:**
+- **Version:** `v42.21.0-ai-franchise` (`test: false`).
+- **Link:** the existing main game link, https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq.
+- **Artifact version:** 116 (`1793751077-3e7b`), 165 files.
+- **Before publishing:** the live files were confirmed to be v42.17.0 (artifact version 115).
+- **After publishing:**
+  - read-back of every added and changed file, plus a sample of the rest: byte-identical;
+  - live `version.js` shows `v42.21.0-ai-franchise`;
+  - the test link was not touched.
+- **Manifest:** `release/manifest.json`.
+
+**Verification:**
+- **Deploy check:** passed.
+- **Phone widths:** 320, 360, 390 and 430 px with 0 errors and no overflow.
+- **Full suite on `main`:** 816 of 816.
+- **Harness check:** passed; the hashes equal the candidate's.
+- **Saves:** 6/6.
+- **Season runs:** 3 seeds, 4–8 seasons each, with 0 integrity problems.
+  - Modes, sales, drafting, contracts, free agency, trading, ageing and retirement were all observed working.
+  - Details: GDD §58.8.
+
+**Accepted exceptions: for THIS release only, not reclassified as passing, and no authority to weaken future acceptance criteria.**
+- Rookie owner balance (§45.6 +5.7) and Rookie drift (−4.3 [−6.8, −1.8]).
+- Pro drift −5.7 [−8.4, −2.7]: FAIL by point estimate.
+- All-Star owner balance (§45.6 +5.4 on 8 seeds; 24 seeds −0.7 [−4.1, +2.9]) and the All-Star drift uncertainty (−2.7 [−6.0, +0.7]).
+- The documented unmet franchise-balance targets:
+  - ordinary titles 1.5%;
+  - persistent losers 88.6% / 95.7%;
+  - gym lead 4.93 (target ≥ 6);
+  - young-reserve growth +2.58 (target ≥ +3);
+  - persistent weak groups 10.63 / 8.69 (targets ≤ 8 / ≤ 5);
+  - young-player payments 53.5 / 50.0 excluding R4 (baseline 48.2).
+
+**Task 6 is closed.** Task 7 was not started.

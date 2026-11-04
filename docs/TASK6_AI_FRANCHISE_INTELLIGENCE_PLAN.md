@@ -1,5 +1,7 @@
 # Task 6 — Long-Term AI Franchise Intelligence: implementation proposal
 
+> **Status update (2026-11-03): Task 6 COMPLETE / RELEASED as v42.21.0-ai-franchise.** It is merged as PRs #83–#91 and published at artifact version 116; see GRIDIRON_BEAST_GDD.md §58.8. The proposal below is kept as written.
+
 **Status: proposal for owner approval. Nothing here is implemented.**
 - No production file was changed. The published game is v42.17.0. PR #83 (Task 5.5) is open and unmerged.
 - Evidence comes from:

@@ -1,0 +1,9 @@
+note: extra (not imported, published deliberately): src/clash/level1.js — Beast Clash Level 1 ability check (Lab and tools only; nothing in the game imports it). Published in every release since it was added; kept for parity with the live link.
+note: extra (not imported, published deliberately): src/clash/reference-teams.js — Reference teams for src/clash/level1.js (Lab and tools only). Published with it.
+note: ADDED since v42.17.0-trading-second-pass: src/data/aging.js
+note: ADDED since v42.17.0-trading-second-pass: src/franchise/development.js
+note: ADDED since v42.17.0-trading-second-pass: src/franchise/retirement.js
+note: ADDED since v42.17.0-trading-second-pass: src/franchise/roster-plan.js
+note: ADDED since v42.17.0-trading-second-pass: src/franchise/strategy.js
+note: previous release v42.17.0-trading-second-pass: 160 files; this list 165; changed content 18: index.html, src/data/gyms.js, src/data/monsters.js, src/franchise/career.js, src/franchise/contracts.js, src/franchise/draft.js, src/franchise/franchise.js, src/franchise/league-season.js, src/franchise/league-trades.js, src/franchise/progression.js, src/franchise/trade-desk.js, src/franchise/trade-value.js, src/franchise/trades.js, src/ui/screens/hq.js, src/ui/screens/match.js, src/ui/screens/roster.js, src/version.js, styles/app.css
+RELEASE FILE LIST OK: 165 files

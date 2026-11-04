@@ -950,7 +950,7 @@ This register is the **current planning index** for Franchise Mode. The detailed
 | Persistent AI rosters, league-wide careers, AI–AI trades | RELEASED | §§45–47 | Multi-season balance and integrity validation |
 | QB intelligence, AI testing lab, defensive AI corrections | IMPLEMENTED; release status requires reconciliation | §53 historical implementation entries; recent main commits | Verify latest merged release and deployment; do not rely on §53's original NOT MERGED heading |
 | Broader owner trading: monster-for-monster, monster-plus-pick, incoming offers, Simple/Advanced | APPROVED | §27.5A | Define exact scope, implement and test; in-season trading remains conditional on rules |
-| Smarter AI long-term management | APPROVED | §27.5B; existing AI improvements in §§45–46 | Benchmark existing AI first; implement only demonstrated gaps |
+| Smarter AI long-term management (Task 6, AI Franchise Intelligence: ageing, roster plan, development, strategy modes, F1–F4) | RELEASED v42.21.0-ai-franchise, 2026-11-03 (PRs #83–#91, `main` `d2159f8`, artifact version 116) | §§55–58, §58.8; `docs/TASK6_FINAL_RELEASE_REPORT.md` | Task 6 closed. Accepted exceptions for this release only (§58.8): Rookie owner balance and drift, Pro drift, All-Star owner balance and drift uncertainty, the unmet franchise-balance targets. These do not lower future acceptance criteria |
 | Free-agency clarity and AI decisions | APPROVED | §27.5C; later owner-feedback work in §53 | Verify which improvements shipped; close remaining acceptance criteria |
 | GM mobility, stadium management, mentorship, weather/expanded penalties, 32 clubs, separate Battle Room/Career Mode | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
 
@@ -4105,7 +4105,7 @@ A starter at an AI club is for sale only if the man behind him is within 6 overa
 - **Accepted exception (T8).** In-season trading volume is about 1.6× the v42.16.0 baseline, entirely the repaired in-season window (weeks 2–8). No quota exists and none was added.
 - **Remaining benchmark limitations (for Task 5.5):** season-end lineup problems pooled 67 vs 54 (within noise); persistent losers +4.0 on seeds 1–20 (+2.0 pooled); T3 marginal in the 20-season stage (4 first-round kicker picks); over-cap clubs 12 vs 9 (pre-existing); offseason audit flags use stale ratings; roster worth has no empty-starting-slot penalty; offensive-line persistent weakness 233→222; leverage at half strength is a judgement call; AI–AI sellers sell only spares; the owner's in-season desk stays closed.
 
-## 55. Ageing, retirement and age-adjusted training (Task 6 Phase A-1; IMPLEMENTED 2026-10-30, owner's Group 1 decisions; branch `task6-phase-a1`; NOT MERGED, NOT RELEASED)
+## 55. Ageing, retirement and age-adjusted training (Task 6 Phase A-1; IMPLEMENTED 2026-10-30, owner's Group 1 decisions; branch `task6-phase-a1`; MERGED and RELEASED in v42.21.0-ai-franchise, 2026-11-03, §58.8)
 The rules of `src/data/aging.js` and `src/franchise/retirement.js`. The values are the owner's approved specification (`docs/TASK6_APPROVED_SPECIFICATION.md` §1.1–§1.5).
 
 **55.1 Ageing curves.**
@@ -4164,7 +4164,7 @@ The rules of `src/data/aging.js` and `src/franchise/retirement.js`. The values a
   - the point cost on each + button.
 - The Offseason screen lists the club's retirements and the league count.
 
-## 56. AI roster intelligence: roster plan, succession, contracts, successor valuation, need-aware drafting (Task 6 Phase B; IMPLEMENTED 2026-10-31, owner's Group 3 decisions R1, R3, R6, R7; branch `task6-phase-b`; NOT MERGED, NOT RELEASED)
+## 56. AI roster intelligence: roster plan, succession, contracts, successor valuation, need-aware drafting (Task 6 Phase B; IMPLEMENTED 2026-10-31, owner's Group 3 decisions R1, R3, R6, R7; branch `task6-phase-b`; MERGED and RELEASED in v42.21.0-ai-franchise, 2026-11-03, §58.8)
 Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is recorded in `docs/TASK6_PHASE_A2_REPORT.md`. Phase B gives the 15 persistent AI clubs one shared roster plan that their offseason decisions read. The owner's own rules, deals and valuation are unchanged.
 
 **56.1 The roster plan (R1, D15; `src/franchise/roster-plan.js`).** Derived, never stored, from observable facts only (ratings, ages, potential, the public decline onset of §55; never hidden longevity). No random draws.
@@ -4186,7 +4186,7 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 
 **56.5 Need-aware drafting (R7; `draft.js`; revised by the owner 2026-10-31, draft weights A + B).** An AI club's pick score adds, for each prospect: +4 for a succession need at the position (+2 at level 1), **only if that prospect can become the successor** (potential at least the starter's overall, or within 8 of him); a weak group gets +4 at a gap of −4 rising to +6 at −8 (or a missing starter), and while the club has a weak group elsewhere the succession bonus is capped at +2, so weak groups are not outranked by succession; −3 for a settled group (at or above the league, no ageing starter, a successor in place). The plan is derived at each pick, so a rookie just taken counts. Noise, the kicker penalty and the duplicate penalty are unchanged. Mode weights (Contend readiness, Rebuild potential 0.35) belong to Phase D.
 
-## 57. Prospect development and free-agency upgrades (Task 6 Phase C; IMPLEMENTED 2026-11-01, owner's Group 4 decisions C1, C2, GM slots and Group 3 decision R5; branch `task6-phase-c`; NOT MERGED, NOT RELEASED)
+## 57. Prospect development and free-agency upgrades (Task 6 Phase C; IMPLEMENTED 2026-11-01, owner's Group 4 decisions C1, C2, GM slots and Group 3 decision R5; branch `task6-phase-c`; MERGED and RELEASED in v42.21.0-ai-franchise, 2026-11-03, §58.8)
 **57.1 Development slots (C1; `src/franchise/development.js`).** Every club, the owner's included, has 6 development slots (at most 2 per position).
 - **Eligible:** a reserve (not on the depth chart) aged 25 or under, healthy, with potential at least overall + 3.
 - **Practice XP:** after each completed game every slotted monster who did not start gains 0.35 × the base game XP (24): **+8**. No win or stat bonus, no fatigue or injury roll, the club's XP slowdown applies, the existing level-ups (AI clubs evolve when ready; the owner's monsters wait for the owner). A monster who earned starter XP in that game gets none. Deterministic.
@@ -4198,7 +4198,7 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 
 **57.4 Free-agency upgrades (R5; `league-season.js leagueUpgrades`).** After the owner's free agency and the needs fill: an AI club whose starting group is weak (−4 against the league) signs a pool monster at least +3 better than the starter he replaces; failing that, a club with a succession need signs a pool monster who qualifies as the ageing starter's successor. It may release its weakest expendable reserve to make room: never a protected monster, a designated successor, the cover for an injured starter, or one that leaves a position without its starters. Pools only; 1 upgrade per club per offseason (the spec's 2 for contenders needs strategy modes, Phase D).
 
-## 58. AI strategy modes and mode-specific decisions (Task 6 Phase D; IMPLEMENTED 2026-11-02, owner's Group 3 decisions R2, R4 and the mode weights of R3, R5, R7; branch `task6-phase-d`; NOT MERGED, NOT RELEASED)
+## 58. AI strategy modes and mode-specific decisions (Task 6 Phase D; IMPLEMENTED 2026-11-02, owner's Group 3 decisions R2, R4 and the mode weights of R3, R5, R7; branch `task6-phase-d`; MERGED and RELEASED in v42.21.0-ai-franchise, 2026-11-03, §58.8)
 **58.1 Strategy modes (R2; `src/franchise/strategy.js`).** Every AI club holds one of four modes: Contend, Compete, Retool or Rebuild. The mode is set once a season as the offseason opens: after retirements, before contracts and the draft.
 - **Facts it uses** (only what the club can see):
   - this season's win share, blended 0.6 / 0.4 with last season's;
@@ -4254,9 +4254,57 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 
 **58.6 Not changed.** Ageing, retirement, development slots, practice XP, difficulty constants, gym bonuses and the nudge. The three rebuild-nudge options (§1.7) are evaluated in `docs/TASK6_PHASE_D_REPORT.md`, not adopted. Nothing new is shown to the owner beyond League News of the trades.
 
-**58.7 Rebuilding fixes (owner-approved 2026-11-03; release candidate v42.21.0, branch `task6-final-rc`; NOT MERGED, NOT RELEASED).**
+**58.7 Rebuilding fixes (owner-approved 2026-11-03; released in v42.21.0-ai-franchise, branch `task6-final-rc`, PR #91; MERGED and RELEASED 2026-11-03, §58.8).**
 - **F1:** a club already rebuilding counts as "ageing" only while its ageing share is at or above the league median. Entry keeps the 0.35 test.
 - **F2:** a Rebuild club lets a starter past onset go only to a ready successor, or to any successor once he is 2+ seasons past onset.
 - **F3:** a Contend club lets a veteran past onset go only when a ready successor at least as good is behind him.
 - **F4:** a Rebuild club sells a starter only when the next monster at the position is within 4 overall of him.
 - **Measured:** rebuilds average 2.8 seasons (Phase D 4.5); 6% last 5+ seasons (Phase D 31–37%). The Rebuild draft weight stays 0.35, and the brakes, anchors and nudge are unchanged.
+
+**58.8 Release v42.21.0-ai-franchise (2026-11-03): Task 6 COMPLETE and RELEASED.**
+- **Approval.** On 2026-11-03 the owner approved the release of Task 6 (AI Franchise Intelligence), including the F1–F4 rebuilding fixes tested as `v42.21.0-rc.1`. The approval accepts the exceptions listed below for this release only.
+- **Merge.** The stack was merged top-down with the merge API, each PR at its approved head. All merges were clean, with no conflict resolution and no gameplay change:
+  - #91 `task6-final-rc` → `task6-phase-d` (`788bd2d`);
+  - #90 → `task6-phase-c` (`7b80a06`); #89 → `task6-phase-b` (`90513bc`); #88 → `task6-phase-a2` (`ff06c6a`);
+  - #87 → `task6-phase-a1` (`4176f26`); #86 → `task6-phase0` (`e202a6e`); #85 → `task6-plan` (`d738e77`);
+  - #84 → `post-trading-benchmark` (`806ca05`); #83 → `main` (`d2159f8`).
+- **Tree check.** The tree of `main` at `d2159f8` equals the tree of the validated candidate's final commit `1dd8fed`. No `src/`, `index.html` or `styles/` file differs from `1a70e32`, the commit the full suite ran on.
+- **Release files: 165** (160 before).
+  - Added: `src/data/aging.js`, `src/franchise/development.js`, `retirement.js`, `roster-plan.js` and `strategy.js`.
+  - Changed content (18): `index.html`, `src/version.js`, `styles/app.css`, `gyms.js`, `monsters.js`, `career.js`, `contracts.js`, `draft.js`, `franchise.js`, `league-season.js`, `league-trades.js`, `progression.js`, `trade-desk.js`, `trade-value.js`, `trades.js`, and `hq.js`, `match.js`, `roster.js` in `src/ui/screens/`.
+  - Each file is byte-identical to `git archive d2159f8`. The manifest is `release/manifest.json`.
+- **Deployment.**
+  - Link: https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq (URL unchanged), artifact version 116 (`1793751077-3e7b`), 165 files.
+  - Before publishing, the live files were confirmed to be v42.17.0 by matching their hashes to the previous manifest.
+  - Afterwards, 30 files read back byte-identical: every added and changed file, plus a sample of unchanged ones. The page sits unchanged in the host wrapper.
+  - The live `src/version.js` reads `v42.21.0-ai-franchise`, `test: false`.
+  - The separate test link was not touched.
+- **Verification on the released build.**
+  - **Deploy check:** passed. This covers the build label, `test: false`, three saves loading after reload, the AI Testing Lab, a setting persisting, the QB read ring, and the replay read list.
+  - **Phone widths:** at 320, 360, 390 and 430 px the menu and New Franchise screens show 0 page errors, no horizontal overflow, and the correct build label.
+  - **Post-merge tests on `main`:** the full suite passed 816 of 816 (0 failed, skipped or cancelled).
+  - **Determinism and non-interference:** `task6-harness-check` passed. Its hashes equal the candidate's exactly.
+  - **Saves:** save compatibility 6/6 (legacy and league saves play forward with 0 problems).
+  - **Season runs on `main`:** seeds 4, 112 and 7, 4–8 seasons each, with 0 integrity problems. The runs showed the following:
+    - all four modes in use, with rebuilds starting and ending;
+    - R4 starter sales at most one per window, to non-rebuilding buyers, paid with players aged 25 or under;
+    - about 45 rookies drafted per class;
+    - free-agent signings, contract walks and releases every offseason;
+    - retirements every offseason;
+    - every returning monster ageing one year, except the class just drafted, which is by design as in v42.17.0.
+- **Saves:** no format change and no migration. All new state is additive; absent state means Compete, no development slots chosen, and no manual picks.
+- **Accepted exceptions (this release only).** These are not reclassified as passing, and they do not authorise weaker acceptance criteria in future work:
+  - Rookie owner balance (§45.6 +5.7 on 8 seeds) and Rookie drift (−4.3);
+  - Pro drift (−5.7 [−8.4, −2.7], a FAIL by point estimate);
+  - All-Star owner balance (§45.6 +5.4 on 8 seeds; 24 seeds −0.7) and the All-Star drift uncertainty (−2.7 [−6.0, +0.7], inconclusive);
+  - the documented unmet franchise-balance targets:
+    - ordinary-club titles 1.5% and persistent losers 88.6% / 95.7%;
+    - gym lead 4.93 from season 8 (target ≥ 6);
+    - young-reserve growth +2.58 (target ≥ +3);
+    - persistent weak groups 10.63 / 8.69 (targets ≤ 8 / ≤ 5);
+    - young-player payments 53.5 all deals, 50.0 excluding R4 sales (baseline 48.2).
+- **Reports kept:**
+  - `docs/TASK6_FINAL_RELEASE_REPORT.md`, `docs/TASK6_M3_REMEDIATION_REPORT.md` and `docs/TASK6_PHASE_D_REPORT.md`, with the earlier phase reports;
+  - the post-release verification evidence in `docs/task6-final/release/`;
+  - the benchmark data in `docs/task6-final/`, `docs/task6-m3/`, `docs/task6-phase-d/` and the earlier `docs/task6-*` folders;
+  - the decision log `docs/TASK6_DECISIONS.md`.

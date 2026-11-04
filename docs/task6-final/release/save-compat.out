@@ -1,0 +1,7 @@
+ok   base-save.json: loaded {"year":2,"week":14,"finished":true,"league":true} -> {"year":4,"week":1}, deals 7 (in season 1), problems 0
+ok   save.json: loaded {"year":1,"week":14,"finished":true,"league":false} -> {"year":3,"week":1}, deals 0 (in season 0), problems 0
+ok   save2.json: loaded {"year":1,"week":14,"finished":true,"league":false} -> {"year":3,"week":1}, deals 0 (in season 0), problems 0
+ok   inj-save.json: loaded {"year":4,"week":4,"finished":false,"league":true} -> {"year":6,"week":1}, deals 9 (in season 3), problems 0
+ok   old-midseason.json: loaded {"year":1,"week":6,"finished":false,"league":true} -> {"year":3,"week":1}, deals 7 (in season 1), problems 0
+ok   old-106-15.json: loaded {"year":15,"week":14,"finished":true,"league":true} -> {"year":17,"week":1}, deals 0 (in season 0), problems 0
+EXIT 0

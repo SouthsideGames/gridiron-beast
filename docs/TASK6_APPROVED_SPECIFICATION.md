@@ -1,5 +1,7 @@
 # Task 6 — Approved Specification (AI Franchise Intelligence)
 
+> **Status (2026-11-03): COMPLETE / RELEASED as v42.21.0-ai-franchise.** Merged as PRs #83–#91 and published at artifact version 116. See GRIDIRON_BEAST_GDD.md §58.8 for the release record and the exceptions accepted for this release only.
+
 The consolidated result of the owner's five decision groups of 2026-10-30. The decisions themselves, in the owner's words, are in
 `docs/TASK6_DECISIONS.md`, which governs where the two differ. The original proposal and its evidence are in
 `docs/TASK6_AI_FRANCHISE_INTELLIGENCE_PLAN.md`.

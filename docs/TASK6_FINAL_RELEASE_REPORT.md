@@ -1,6 +1,13 @@
 # Task 6 — Final Release Validation and M3 Decision (2026-11-03)
 
-**Outcome: release conditions NOT met. Nothing was merged or deployed.** The production game remains v42.17.0 (artifact version 115).
+> **FINAL STATUS (2026-11-03): Task 6 COMPLETE / RELEASED.** The owner approved Option 1 on 2026-11-03.
+> - **Merged:** PRs #83–#91; `main` is at `d2159f8`.
+> - **Published:** `v42.21.0-ai-franchise` on the existing main game link, artifact version 116 (`1793751077-3e7b`), 165 files.
+> - **Exceptions:** the exceptions in §1 D and §3 are accepted for this release only. They are **not** reclassified as passing and do not weaken future acceptance criteria.
+> - **Records:** release record in GRIDIRON_BEAST_GDD.md §58.8 and `docs/TASK6_DECISIONS.md`.
+> - **History:** the report below is kept unchanged as the pre-approval validation record.
+
+**Outcome at validation (before the owner's approval): release conditions NOT met.** Nothing was merged or deployed at that point; the production game was then v42.17.0 (artifact version 115).
 
 **Release candidate:**
 - Branch `task6-final-rc`.
@@ -136,3 +143,16 @@
 
 ## 6. Preview
 **`v42.21.0-rc.1`** (branch `task6-final-rc-preview`, commit `32ba537`, test build) is on the private test link at artifact version `1793746294-6a5d`. The production game link was not touched.
+
+
+## 7. Release (2026-11-03, after the owner's approval)
+- **Merged:** the stack, top-down and all clean; the merge commits are listed in `docs/TASK6_DECISIONS.md`. `main` = `d2159f8`, whose tree equals the candidate's.
+- **Published:** `v42.21.0-ai-franchise` to https://claude.ai/artifact/GJG2k6eqG3qfeteJEbXvFq, artifact version 116, 165 files, byte-identical to `git archive d2159f8`. The test link was not touched.
+- **Post-release verification:**
+  - deploy check passed;
+  - 320–430 px: 0 errors and no overflow;
+  - full suite on `main`: 816 of 816;
+  - harness check passed, with hashes identical to the candidate's;
+  - saves 6/6;
+  - season runs on 3 seeds with 0 problems.
+- **Remaining limitations:** the accepted exceptions of §1 D and §3, which apply to this release only. The rookie's first-offseason age skip is unchanged from v42.17.0, by design.
