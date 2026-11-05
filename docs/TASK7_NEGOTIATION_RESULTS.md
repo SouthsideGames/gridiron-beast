@@ -109,7 +109,82 @@ RESULTS_TESTS
 
 ## 6. Targeted diagnostics
 
-RESULTS_DIAG
+**How they were run:**
+- **Builds:** v42.21.0 (the same baseline files as the previous targeted results) and this build (`bc75960`). Both recorded with `--measure=start`.
+- **Seeds:** C 106–115 (20 seasons) and B 1–20 (10 seasons). Owner drift: seeds 1–12 × Rookie, Pro, All-Star, seasons 1–8.
+- **Statistics:** `task6-compare`, unchanged thresholds, 95% bootstrap, matched seeds, no held-out set: indicative only.
+- **Integrity:** 0 harness problems in 30 runs; 0 market problems; usable cap never negative; 0 legendary-limit violations; 0 minimum-staff exceptions.
+
+**Two intermediate versions were measured and are reported, not hidden:**
+- **First version:** AI clubs accepted his counter at his own term. Contract structure regressed: 3-year deals fell to 22.4% and the largest expiry share rose by 6.5.
+- **Second version:** AI clubs insisted on their own term in every offer and counter. Negotiations broke down far more often: recovery −16.8 on C, and young departures from losing clubs rose to 1.31.
+- **This build:** an AI club opens at its own term (Task 6 R3, moved to his preference when one season apart and its mode allows). It takes his counter, at his term, within its ceiling. The monster's preference and the club's planning both count, and talks rarely break down over the term alone. No probability in the monster's model was changed between the versions.
+
+### A. The nine originally failed measures (v42.21.0 → this build; previous builds for reference)
+
+| Measure | Remediation (before Ambition) | Ambition as first built | **This build** |
+|---|---|---|---|
+| Rebuild recovery within 3 seasons (C) | −5.3 inconclusive | −8.3 worse | **−1.3 [−7.2, 5.1] inconclusive** |
+| Struggler starter age after 3 (C) | −0.02 inconclusive | −0.04 inconclusive | +0.06 [−0.06, 0.17] inconclusive |
+| Persistent weak groups (B) | +0.3 inconclusive | +5.0 worse | **−0.04 [−2.6, 2.4] inconclusive** |
+| Persistent weak groups with cap room (B) | +9.0 (not interpretable) | +14.2 | +9.8 (not interpretable) |
+| Persistent weak, position-relative (B) | +0.2 inconclusive | +1.3 worse | +0.9 [0.4, 1.4] worse |
+| Young-reserve growth (B) | −0.05 worse | +0.01 inconclusive | −0.01 [−0.06, 0.03] inconclusive |
+| High-potential growth (B) | −0.08 inconclusive | +0.06 inconclusive | −0.14 [−0.24, −0.05] worse (small) |
+| Round-1 starter at year 2, late seasons (C) | −1.9 inconclusive | −9.5 worse | −2.8 [−4.4, −1.1] worse |
+| Generated gym starters, final season (C) | +5.3 worse | +7.4 worse | **+3.7 [1.7, 6.0] worse** (the smallest of any Task 7 build) |
+
+### B. Departures and composition (C, AI clubs, per club-season)
+
+| | v42.21.0 | Remediation | Ambition as first built | **This build** |
+|---|---|---|---|---|
+| Young (≤ 25) walks, losing clubs | 0.15 | 0.24 | 1.37 | **0.60** |
+| Young walks, all clubs | 0.23 | 0.21 | 1.11 | **0.43** |
+| Starter walks (established starters) | 1.06 | 0.97 | 1.47 | **0.94** |
+| Starter walks, 75+ overall | 0.19 | 0.18 | 0.30 | **0.17** |
+| Generated arrivals, losing clubs | 0.63 | 1.12 | 1.67 | **1.06** |
+| Recovery within 3 seasons (raw, C) | 41.8% | 36.2% | 32.9% | **38.6%** |
+
+Young monsters still leave more often than in v42.21.0, by their own decisions: about 0.2 more per club-season. Established stars leave at the v42.21.0 rate.
+
+### C. The negotiations (400 offseasons)
+
+- **AI extension windows** (at the league year's turn; mid-season):
+  - accepted at the opening: 36% and 26%;
+  - agreed after counteroffers: 45% and 40%;
+  - no agreement after negotiating: 1.2% and 3.7%;
+  - not negotiating in that window: 18% and 30%.
+- **Not negotiating early, by Ambition** (turn window): Money 11%, Loyalty 4.5%, Championship 34%, Opportunity 23%.
+- **Starters declining early talks per offseason:** mean 16.8, median 15, range 5 to 52.
+- **AI renewals at expiry:** 85% re-signed. Of the 15% refused, two-thirds declined to negotiate (they test free agency) and one-third broke down in negotiation (previous build: 42.5% refused).
+- **Free agency:**
+  - 27.8 signings per offseason (remediation 24.4; Ambition as first built 38.3);
+  - 1.14 bidders per signing;
+  - 6.2% of signings contested; per offseason from 0 to 6 contested signings, median 2.
+
+  The market is a little busier than before the Ambition and varies naturally; nothing is forced.
+- **Signing age:** 29.0.
+- **Contract lengths** (signings): 1 year 37.9%, 2 years 38.7%, 3 years 23.4%. League-wide 3-year deals 32.4% (remediation 36.6%, v42.21.0 50.4%). Largest expiry share +3.1 worse (remediation +2.8). Succession ready −0.9 and succession cover −0.5, both inconclusive.
+
+### D. Other measures (this build against v42.21.0)
+
+- Round-1 starters at year 2, all seasons: −5.6 worse.
+- Veterans starting: +6.9.
+- Retirements: −1.9 per season.
+- Improving at 33+: +1.2, inconclusive.
+- Physical change past onset: +0.12 worse (a measuring-point effect, unchanged).
+- Gyms: against ordinary clubs +0.6, inconclusive; lead in season 20 +1.2; tier order held as in v42.21.0.
+- Staff: owner staff 22.5% of the cap at season 1, 24.1% at 8, 27.2% at 19; 0 minimum-staff exceptions.
+- GYM_LINE
+
+### E. Owner drift
+
+DRIFT_LINE
+
+### F. Performance
+
+STAGEP_LINE
+
 
 ---
 
