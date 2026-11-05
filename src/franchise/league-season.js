@@ -202,7 +202,7 @@ export function clubNeeds(f, club) {
 const FLOOR_DEAL = 18000 + 280 * MIN_QUALITY + 2000;
 /** The monster an AI club releases to afford the roster minimum: never protected, never the last starters at a position, never at `pos`;
  *  the weakest whose salary pays for two replacement deals, else the best-paid. */
-function floorSpare(f, club, pos) {
+export function floorSpare(f, club, pos) {
   const roster = clubRoster(f, club); const count = (p) => roster.filter((m) => m.position === p).length;
   const ok = roster.filter((m) => !isProtected(m) && m.position !== pos && count(m.position) > (GROUP_SLOTS[m.position]?.length || 1));
   const rich = ok.filter((m) => (m.salary || 0) >= 2 * FLOOR_DEAL).sort((a, b) => monsterOverall(a) - monsterOverall(b) || (a.id < b.id ? -1 : 1));

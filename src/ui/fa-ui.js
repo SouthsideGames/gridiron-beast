@@ -41,6 +41,7 @@ export function capPanelHtml(f) {
   return `<div class="panel tight"><div class="row between"><b>Cap ${fmt(c.cap)}</b><span class="dim">league year ${yearOf(c.leagueYear)}</span></div>
     <div class="bar ${c.usable < 0 ? 'bad' : c.usable < c.cap * 0.05 ? 'warn' : ''}" style="margin:6px 0"><i style="width:${pct(c.committed)}%"></i></div>
     <div class="row between muted" style="flex-wrap:wrap;gap:6px"><span>Committed ${fmt(c.committed)}</span><span>Reserved ${fmt(c.reserved)}</span><span style="color:${c.usable < 0 ? 'var(--bad)' : 'var(--good)'}">Usable ${fmt(c.usable)}</span></div>
+    ${(() => { const d = F.draftReserve(f); return d.picks ? `<div class="row between muted" style="margin-top:4px"><span>Draft reserve (${d.picks} pick${d.picks === 1 ? '' : 's'})</span><span>≈ ${fmt(d.total)}</span></div><div class="dim" style="font-size:12px">What your remaining picks are expected to cost on rookie deals${d.estimate ? ' (at the board prospect for each slot the standings give)' : ''}. Shown, not locked: spend it and you may have to pass or draft cheaper.</div>` : ''; })()}
     <div class="dim" style="font-size:12px">A live offer reserves his first season (salary and that year's share of any bonus) until he answers.</div></div>`;
 }
 

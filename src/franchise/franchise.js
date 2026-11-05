@@ -12,7 +12,7 @@ import { recordGame, ensureStats, rolloverMonster, leadersSnapshot, monsterLine,
 import { AWARDS, computeAwards, headCoachName } from './awards.js';
 import { newContract, contractEnds, renewalAsk, acceptsCounter, staffSalary, openOffseason, offseasonPending, offseasonReady, CONTRACT_YEARS, COUNTER_PCT, STAFF_RAISE } from './contracts.js';
 export { offseasonPending, offseasonReady, renewalAsk, CONTRACT_YEARS } from './contracts.js';
-import { openDraftClass, scoutDraftClass as draftScout, startDraft as draftStart, advanceDraft as draftAdvance, playerPick as draftPlayerPick, passPick as draftPassPick, prospectView, injectDraftees, ageDraftees, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js';
+import { openDraftClass, scoutDraftClass as draftScout, startDraft as draftStart, advanceDraft as draftAdvance, playerPick as draftPlayerPick, passPick as draftPassPick, prospectView, injectDraftees, ageDraftees, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE, rookieCharge } from './draft.js';
 export { prospectView, onTheClock, DRAFT_ROUNDS, ROOKIE_SCALE } from './draft.js';
 import { ensureBoard, goalOffers, needsGoal, chooseGoal as boardChooseGoal, settleGoal, onHotSeat, isFired, scoutBonusActive, confidenceLabel, boardForecast } from './board.js';
 export { needsGoal, onHotSeat, isFired, confidenceLabel } from './board.js';
@@ -51,7 +51,7 @@ import { slimSeasonAwards } from './history-compact.js';
 import { rosterPlan } from './roster-plan.js';
 import { selectDevSlots, practiceAfterGame, playedIds, devIneligibility, DEV, DEV_REASON } from './development.js';
 import { evaluateStrategies, modeOf } from './strategy.js';
-import { leagueSeasonEnd, leagueBenchOf, leagueUpgrades, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, leagueInjuryCover, leagueTrim, CREATION_LIFT } from './league-season.js';
+import { leagueSeasonEnd, leagueBenchOf, leagueUpgrades, leagueContracts, leagueAgeing, leagueFreeAgency, leagueNudge, validateClubs, notePreseason, noteGrowth, preseasonTarget, leagueInjuryCover, leagueTrim, CREATION_LIFT, floorSpare } from './league-season.js';
 export { validateClubs } from './league-season.js';
 import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRoom, captureLeague, verifyLeague, addToClub, removeFromClub, isProtected, findInLeague, leagueEvent, takeEvents, moveIdentity } from './league-registry.js';
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
@@ -476,14 +476,27 @@ export function firstWeekWelcome(f) {
 }
 export const DEFAULT_STAFF = Object.freeze({ head_coach: 'hc_vale', offensive_coordinator: 'oc_park', defensive_coordinator: 'dc_ice', head_scout: 'sc_moss', monster_trainer: 'tr_focus' });
 /** Quick start: a balanced default staff so a new owner can play immediately. */
-export function hireDefaultStaff(f) { for (const [role, id] of Object.entries(DEFAULT_STAFF)) if (!f.staff[role]) { f.staff[role] = id; (f.staffContracts ||= {})[role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[role] = 1; } }
+export function hireDefaultStaff(f) {
+  const t7 = task7Offseason(f) && f.season?.finished; const out = [];
+  for (const [role, id0] of Object.entries(DEFAULT_STAFF)) if (!f.staff[role]) {
+    let id = id0; let exception = false;
+    if (t7) { // R7: the default if he fits next season's cap; else the cheapest candidate who fits; else the default under a logged, limited exception
+      const room = staffRoom(f, role); if (staffById(id0).salary > room) { const fit = STAFF.filter((c) => c.role === role && c.salary <= room).sort((a, b) => a.salary - b.salary || (a.id < b.id ? -1 : 1))[0]; if (fit) id = fit.id; else exception = true; } }
+    f.staff[role] = id; (f.staffContracts ||= {})[role] = newContract(f.season?.year || 1); (f.staffRaise ||= {})[role] = 1;
+    if (exception) { const ly = f.season.year + 1; const x = { ly, role, id, salary: staffById(id).salary, kind: 'minimum-staff', why: 'no candidate fits the cap' };
+      if ((f.capExceptions ||= []).some((e) => e.ly === ly && e.role === role && e.kind === 'minimum-staff')) { /* once per role per league year: already logged */ } else f.capExceptions.push(x);
+      news(f, `Commissioner exception: ${staffById(id).name} hired as ${role.replace(/_/g, ' ')} at the base salary although it exceeds the cap (no candidate fits). The commissioner reviews the books in week 1.`, 'loss'); }
+    out.push({ role, id, exception });
+  }
+  return out;
+}
 /** Front office: swap one staff member for a candidate (cap permitting). */
 export function replaceStaff(f, id) {
   const c = staffById(id); if (!c) return { ok: false, reason: 'Unknown candidate.' };
   if (f.staff[c.role] === id) return { ok: false, reason: 'Already on staff.' };
   const current = staffById(f.staff[c.role]);
-  const budget = salarySummary(f, c.salary - (current?.salary || 0));
-  if (budget.over) return { ok: false, reason: 'Exceeds the salary cap.' };
+  if (task7Offseason(f) && f.season?.finished) { const room = staffRoom(f, c.role); if (c.salary > room) return { ok: false, code: 'cap', reason: `${c.name} needs ${c.salary.toLocaleString('en-US')} cr. next season; ${Math.max(0, room).toLocaleString('en-US')} cr. is free for this role.` }; } // R7
+  else { const budget = salarySummary(f, c.salary - (current?.salary || 0)); if (budget.over) return { ok: false, reason: 'Exceeds the salary cap.' }; }
   // Firing mid-season costs: the rest of the outgoing coach's salary stays on the books this season.
   let severance = 0;
   if (current && f.season && !f.season.finished) { severance = Math.round(current.salary * Math.max(0, (10 - (f.season.week || 1)) / 10)); f.deadCap = (f.deadCap || 0) + severance; }
@@ -912,6 +925,18 @@ function renewTask7(f, item, m, choice, { years, salary, bonus }) {
 }
 /** The owner's commitments in the coming league year without `except` (whose deal is being renewed). */
 function committedNext(f, except) { const ly = f.season.year + 1; let s = 0; for (const m of f.roster) if (m !== except) s += capCharge(m, ly); s += Object.keys(f.staff || {}).reduce((sum, role) => sum + staffSalary(f, role), 0) + (f.pendingDeadCap || 0); return s; }
+// ------------------------------------------------------------ R7: staff affordability (owner approval 2026-11-05)
+// Staff commitments are checked against next season's books in a Task 7 offseason. The renewal demand itself is unchanged (STAFF_RAISE)
+// until the performance-based staff negotiation (owner's Section 9) is approved; this framework applies to whatever the demand is.
+/** Next season's room for `role`: the cap less every commitment for next season except that role's current salary. */
+export function staffRoom(f, role) { return capFor(f) - committedNext(f, null) + staffSalary(f, role); }
+/** Can the owner renew `role` at its demand? { ok } or { ok: false, code: 'cap', demand, room, options }. */
+export function staffRenewalCheck(f, role) {
+  const demand = Math.round(staffSalary(f, role) * STAFF_RAISE); const room = staffRoom(f, role);
+  if (demand <= room) return { ok: true, demand, room };
+  const fits = STAFF.filter((c) => c.role === role && c.salary <= room).sort((a, b) => a.salary - b.salary).map((c) => c.id);
+  return { ok: false, code: 'cap', demand, room, fits, reason: `Renewing needs ${demand.toLocaleString('en-US')} cr. next season; ${Math.max(0, room).toLocaleString('en-US')} cr. is free for this role. Free room by releasing monsters (no dead cap), or let him go and hire ${fits.length ? 'a candidate who fits' : `the default ${role.replace(/_/g, ' ')} (a logged commissioner exception, since no candidate fits)`}.` };
+}
 /** Decide one renewal: 'sign' at the ask, 'counter' at 85% (they may walk), 'walk' (to the pool; a coach's role falls empty). */
 export function resolveContract(f, id, choice, { years = CONTRACT_YEARS, salary = null, bonus = 0 } = {}) {
   const t7 = task7Offseason(f) && f.season.finished;
@@ -919,6 +944,7 @@ export function resolveContract(f, id, choice, { years = CONTRACT_YEARS, salary 
   const item = (f.offseason?.items || []).find((i) => i.id === id && !i.status); if (!item) return { ok: false, reason: 'Nothing to decide.' };
   const nextYear = f.season.year + 1;
   if (item.kind === 'staff') {
+    if (choice === 'sign' && t7) { const a = staffRenewalCheck(f, item.role); if (!a.ok) return a; } // R7: the renewal must fit next season's cap
     if (choice === 'sign') { (f.staffRaise ||= {})[item.role] = (f.staffRaise[item.role] || 1) * STAFF_RAISE; f.staffContracts[item.role] = newContract(nextYear, years); item.status = 'signed'; item.years = years; news(f, `${item.name} re-signed for ${years === 1 ? 'one season' : 'two seasons'} at ${staffSalary(f, item.role).toLocaleString('en-US')} cr.`, 'roster'); return { ok: true, status: 'signed' }; }
     delete f.staff[item.role]; delete f.staffContracts[item.role]; item.status = 'walked'; news(f, `${item.name} leaves. Hire a new ${item.role.replace(/_/g, ' ')} before the season.`, 'loss'); return { ok: true, status: 'walked' };
   }
@@ -1020,10 +1046,33 @@ function runDraftToMe(f) {
   const { r, save } = frng(f);
   const league = hasLeague(f); const creation = !!f.draft?.creation; const year = creation ? f.season.year : f.season.year + 1;
   const bench = league ? leagueBenchOf(f) : null; // Task 6 Phase B (R7): each AI club drafts by its roster plan, derived at its pick
-  const made = draftAdvance(f, r, { playerClub: f.club, persist: !league, onAiPick: league ? (team, m) => { if (clubRecord(f, team)) joinAsDraftee(f, team, m, { year, silent: creation }); } : null, planOf: league ? (team) => (clubRecord(f, team) ? { ...rosterPlan(clubRoster(f, team), bench), mode: modeOf(f, team) } : null) : null }); // Phase D (R7): the club's strategy mode weights the pick
+  const t7 = league && !creation && hasFreeAgency(f); const cap = tierById(f.tier).cap; // R7 (owner 2026-11-05): AI picks within the cap
+  const r7 = t7 ? { affordOf: (team) => (m) => rookieCharge(m) <= clubCapRoom(f, team, cap), makeRoom: (team) => { const sp = floorSpare(f, team, null); if (!sp) return false; releaseFromClub(f, team, sp.id, { year, reason: 'released', why: 'cap' }); return true; },
+    onAiPass: (team, why) => { (f.draft.aiPasses ||= []).push({ team, overall: f.draft.index, why }); news(f, `${team} passed at pick ${f.draft.index}: ${why}.`, 'info'); } } : {};
+  const made = draftAdvance(f, r, { ...r7, playerClub: f.club, persist: !league, onAiPick: league ? (team, m) => { if (clubRecord(f, team)) joinAsDraftee(f, team, m, { year, silent: creation }); } : null, planOf: league ? (team) => (clubRecord(f, team) ? { ...rosterPlan(clubRoster(f, team), bench), mode: modeOf(f, team) } : null) : null }); // Phase D (R7): the club's strategy mode weights the pick
   save(); return made;
 }
-export function myDraftPick(f, id) { const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; uniqueName(f, r.monster); dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}), rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster', { mid: r.monster.id, mname: r.monster.name }); runDraftToMe(f); return r; }
+/** R7 (owner 2026-11-05): can the owner pay this prospect's rookie deal now (Task 7)? null when yes; else the shortfall and the options. */
+export function draftAffordability(f, id) {
+  if (!hasFreeAgency(f) || f.draft?.creation) return null; const m = f.draft?.class?.find((x) => x.id === id); if (!m) return null;
+  const charge = rookieCharge(m); const usable = capView(f, f.club).usable; if (charge <= usable) return null;
+  const cheaper = f.draft.class.filter((x) => f.draft.available.includes(x.id) && rookieCharge(x) <= usable).map((x) => x.id);
+  return { code: 'cap', charge, usable, short: charge - Math.max(0, usable), cheaper, reason: `His rookie deal needs ${charge.toLocaleString('en-US')} cr. in its first season; you have ${Math.max(0, usable).toLocaleString('en-US')} cr. usable. Choose a prospect you can afford${cheaper.length ? ` (${cheaper.length} available)` : ''}, release a monster (no dead cap; the offseason allows going below ${ROSTER_MIN}), trade the pick, or pass.` };
+}
+/** R7: what the owner's remaining picks this draft are expected to cost (rookie deals at the board's prospect for each slot). */
+export function draftReserve(f, club = f.club) {
+  const d = f.draft; if (!hasFreeAgency(f) || !d?.class?.length || d.done || d.year !== f.season.year || d.creation) return { picks: 0, total: 0 };
+  if (!d.started) { // before the draft: the order the standings will give (worst first), the board prospect at each of the club's slots
+    const board = d.class.filter((x) => !d.available || d.available.includes(x.id)).sort((a, b) => a.boardRank - b.boardRank); const st = leagueStandings(f).overall; const n = st.length;
+    const mine = picksOwnedBy(f, club, f.season.year + 1, ALL_TEAMS).filter((p) => !pickUsed(f, p)).map((p) => (p.round - 1) * n + (n - 1 - st.indexOf(p.original)));
+    return { picks: mine.length, total: mine.reduce((s2, i) => s2 + (board[Math.min(board.length - 1, i)] ? rookieCharge(board[Math.min(board.length - 1, i)]) : 0), 0), estimate: true };
+  }
+  const board = d.class.filter((x) => d.available.includes(x.id)).sort((a, b) => a.boardRank - b.boardRank);
+  const mine = d.order.map((o, i) => ({ ...o, i })).filter((o) => o.i >= d.index && o.team === club);
+  const total = mine.reduce((s, o) => s + (board[Math.min(board.length - 1, o.i - d.index)] ? rookieCharge(board[Math.min(board.length - 1, o.i - d.index)]) : 0), 0);
+  return { picks: mine.length, total };
+}
+export function myDraftPick(f, id) { { const a = draftAffordability(f, id); if (a) return { ok: false, ...a }; } const r = draftPlayerPick(f, id, { playerClub: f.club, nextYear: f.draft?.creation ? f.season.year : f.season.year + 1 }); if (!r.ok) return r; uniqueName(f, r.monster); dexRecord(f, r.monster, 'signed'); news(f, `Drafted ${r.monster.name} (${r.monster.position}), rookie deal ${r.monster.salary.toLocaleString('en-US')} cr for two seasons.`, 'roster', { mid: r.monster.id, mname: r.monster.name }); runDraftToMe(f); return r; }
 export function passDraftPick(f) { const r = draftPassPick(f, { playerClub: f.club }); if (!r.ok) return r; runDraftToMe(f); return r; }
 export const draftDone = (f) => !f.draft || f.draft.year !== f.season.year || f.draft.done;
 // ------------------------------------------------------------ draft-pick trading (GDD §19.6)
