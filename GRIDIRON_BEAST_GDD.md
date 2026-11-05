@@ -4322,12 +4322,19 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 - **Single position:** every species has one football position; species secondaries are gone.
 - **Eligibility:** a monster fills only its own position group's slots (a WR plays WR1–WR3, never TE). This holds for the owner and every AI club, in depth charts, auto-lineups, in-game substitutions and legendary plays.
 - **New monsters:** generated at their species' position only.
-- **Existing monsters:** keep their assigned position.
+- **Final rule (owner, 2026-11-05):** every species family has exactly one permanent position, for every individual and through every evolution stage. No secondary positions, dual eligibility, individual positions or evolution changes.
+- **Existing saves (supersedes the D6 clarification that existing monsters kept their position):**
+  - **When:** once per save, at the next offseason boundary (the close of the season in progress, or at load when the save is already in an offseason), every monster takes its family's position.
+  - **What is kept:** identity, species, attributes, abilities, evolution, contract, salary and history. Only the position changes, so the position-weighted overall is recalculated.
+  - **Repair:** the owner's lineup is repaired; AI clubs refill through their own roster management.
+  - **Report:** the owner sees who moved and any open starting slot (offseason screen, news). Nothing is deleted.
 - **Old lineups:** repaired on load by removing out-of-position manual entries. Nobody is released or changed.
 - **Effects (measured):**
   - package slots no longer borrow across positions; plays needing an unfillable package drop out;
   - a base slot nobody can fill is a forfeit, as before;
   - gym clubs lean to their element at 21–55% (40%+ before; ordinary clubs about 8%), because each element has species at 4–5 positions.
+
+- **Lineup warnings (R5):** the lineup screen and the optional GM Assistant name each base slot (forfeit risk) or package slot (plays unavailable) that nobody can fill. Each warning gives the position needed, the formation affected, why (healthy players at the position; only that position may play there) and what would fix it. Nobody is substituted out of position.
 
 **59.2 Contracts and the cap (resolution 1, decisions 5–7, 23, 24).**
 - **Terms:** whole credits, with offers in 100s. Contracts run 1, 2 or 3 seasons for every club, with a fixed salary and an optional signing bonus.
@@ -4389,6 +4396,28 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
   - next season's commitments kept under the cap.
 - **Same rules as the owner:** same validation, evaluation, locks and legendary limit. There are no hidden exceptions.
 
+**59.5a Remediation (owner approval, 2026-11-05).**
+- **R1, AI free agency by Task 6 strategy:**
+  - **Timing:** before the draft an AI club bids only for urgent lineup holes and its R5 upgrade. Depth is filled after the draft, at the season start.
+  - **Strategy value:** candidates are ranked by strategy value (`fa-strategy.js`):
+    - overall plus the draft's potential weight by mode;
+    - minus an age weight inside the ageing horizon (Rebuild 2, Retool 1, Compete 0.5, Contend 0);
+    - minus a cost weight per 10,000 credits asked (Compete 1, Rebuild and Retool 0.5, Contend 0);
+    - plus Contend readiness;
+    - plus a gym element tie-break (1.5).
+  - **Upgrade with a release:** an R5 upgrade may release an expendable reserve. The release is made only when the signing completes, with zero dead cap.
+  - **Priority terms:** for a priority target the club may offer the monster's preferred term (within the mode's rule) and the terms that would satisfy him (the engine's counter rule), when it can carry them now and next year and its mode says he is worth it (Rebuild: outside the ageing horizon; Contend: would start now). He still accepts, refuses or counters.
+- **R2:** AI renewal answers unchanged.
+- **R4, gym element:** gyms prefer their element where a species of it exists at the position:
+  - generated arrivals are of that element;
+  - the draft and the market give a small tie-break that never outweighs a real difference.
+
+  Positions never change, and supporting players may be of any element.
+- **R6, AI extensions and bonuses:**
+  - **Extensions:** AI clubs extend their Task 6 core (a starter not past onset, a designated successor, a young monster with upside by mode) in two windows: mid-season (week 6) and the offseason at the league year's turn. They use the shared engine (`extend`); the monster answers by the shared evaluation, and a counter is accepted when the extension's first season fits.
+  - **Bonuses:** a bonus is used only where it buys the same value to a money-minded monster on a multi-year deal for less cap (25% of the salary moved into a bonus, within the 50% limit).
+  - **Expiry:** an extended contract no longer counts as ending.
+
 **59.6 Locks and legendaries (resolutions 3, 6, 7; decisions 18, 20–22).**
 - **Locks, for every club:**
   - a signed free agent cannot be traded until the next offseason;
@@ -4400,6 +4429,20 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 - **Legacy saves:** keep any excess but cannot add on that side. They must comply before the season after their first complete Task 7 offseason, through trade or release options. Nothing is deleted.
 - **AI compliance:** AI clubs comply by releasing the excess to the market.
 - **Announcements:** cosmetic only.
+
+**59.6a Draft and staff affordability (R7, owner approval 2026-11-05).**
+- **Draft reserve:** the expected rookie-scale cost of the owner's remaining picks is shown from free agency onward (at the board prospect for each slot). It is shown, not locked.
+- **Owner's pick:** must fit usable cap. Otherwise the screen gives the shortfall and the choices: a cheaper prospect, an offseason release, trading the pick, or passing (explicit).
+- **AI picks:** AI clubs pick only affordable prospects. If none is affordable they release a well-paid expendable, otherwise they pass; the pass is recorded with its reason (`draft.aiPasses`, news).
+- **Staff:** renewals and hires in a Task 7 offseason must fit next season's cap. The owner sees the cost and the room before deciding. The renewal demand itself is unchanged (+10%) until the performance-based staff negotiation (`docs/TASK7_STAFF_NEGOTIATION_PROPOSAL.md`) is approved.
+- **Minimum-staff exception:**
+  - **When:** a required role is empty and no candidate fits.
+  - **What is allowed:** the role's default member at base salary.
+  - **How it is recorded:** in `f.capExceptions` (league year, role, amount), announced in the news, once per role per league year. The commissioner review applies as before.
+
+**59.6b Renewal outlook (R3).**
+- In a contract's final season, Salary & Contracts shows the monster's renewal outlook (Interested, Listening, Not interested). It is the same evaluation his extension or renewal gets: his ask, his preferred term, the club's role for him and its results.
+- The optional GM Assistant recommends extension opportunities for core monsters. It never offers or signs anything without the owner.
 
 **59.7 Interface (decisions 14, 19, 30).**
 - **Market:** period, cap (total, committed, reserved, usable), position filter, "Interested in you", each monster's interest with reasons, and competing offers.

@@ -349,3 +349,36 @@ No gameplay code, no merge, no publish, no Task 8 work. Implementation starts af
   - Allowed: read-only analysis, targeted diagnostics and documentation.
   - Not allowed: gameplay changes before approval, merge, publish.
   - Next deliverable: a prioritised remediation proposal (`docs/TASK7_REMEDIATION_PROPOSAL.md`). Every proposal in it is **pending approval**.
+
+## 11. Owner decisions on the remediation proposal (2026-11-05, 01:36; supersedes earlier instructions where they conflict)
+
+- **Benchmark measuring point: approved.**
+  - Both builds are measured at the start of the following season, after their offseasons.
+  - The original pre-registered results and the nine failures stay on record.
+  - Thresholds and statistics are unchanged; matched seeds and held-out sets are used in the final benchmark.
+  - Short runs are measured consistently, including their final offseason.
+  - Other affected measures (succession, contracts) are to be investigated.
+- **R1: approved.** Draft-aware timing, strategy-based evaluation by mode, atomic upgrade-with-release under zero dead cap, competitive negotiation within the existing rules. No guarantee that rebuilders win the best free agents.
+- **R2: no change.** AI renewal answers stay; renewals are not forced.
+- **R3: approved.**
+  - The All-Star drift is accepted as an intended consequence and keeps being reported.
+  - Renewal outlook in the final season (Interested / Listening / Not interested), reflecting the real evaluation.
+  - GM Assistant extension advice, optional, never automatic.
+- **R4: approved.** Elemental preference where species exist at the position; mixed support allowed; positions never changed; talent, needs and affordability first; legendary rules kept.
+- **R5: approved.** Lineup and package warnings (position, formation, why, fix); nobody substituted out of position.
+- **R6: approved.** AI extensions (by strategy, age, potential, role, cap, personality; mid-season and offseason windows) and strategic bonuses, with the player's rules and safeguards.
+- **R7: approved with conditions.**
+  - Draft and staff affordability, with no dead ends, no silent losses and no unlogged exceptions; the default-staff exception limited and logged.
+  - Integrate with the new staff design rather than preserving the automatic 10% raise.
+  - Validate the fallback over long progressions and existing saves.
+- **Staff renewals (section 9): new design direction.**
+  - Performance-based demands over the contract period, role-specific evaluation adjusted for talent, interactive negotiation, meaningful turnover.
+  - A detailed design must be approved before implementation.
+  - No 5% or other replacement percentage without approval; no poaching or carousel.
+- **Single-position rule: final.** One permanent position per family, for every individual and every evolution stage.
+- **Existing-save migration: approved (option A).** Migrate to the family position at the next offseason boundary, once per save, preserving identity, attributes, contracts and history, with lineup repair and no dead ends. Supersedes the D6 clarification.
+- **Task 8:** separate, not implemented, not assumed to fix Task 7.
+- **Next:**
+  - deliver the implemented and tested changes, the staff design proposal, and the remaining risks and decisions;
+  - no final consolidated benchmark until the owner reviews the targeted results;
+  - no merge, no publish.
