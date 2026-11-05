@@ -8,6 +8,7 @@ import { resolveSpecies } from '../data/monsters.js';
 import { hasLeague, leagueClubs, clubRoster } from './league-registry.js';
 import { repairLineups } from './fa-state.js';
 import { buildDepthChart, lineupProblems } from './roster.js';
+import { AMBITIONS, assignAmbition } from './ambition.js';
 
 /** The family position of a monster, or null when its species is unknown (left alone). */
 export const familyPosition = (m) => resolveSpecies(m?.species)?.position || null;
@@ -36,4 +37,17 @@ export function migratePositions(f, { year = f.season?.year ?? 1 } = {}) {
   const aiHoles = hasLeague(f) ? leagueClubs(f).map((c) => ({ club: c, holes: lineupProblems(clubRoster(f, c), buildDepthChart(clubRoster(f, c))) })).filter((x) => x.holes.length) : [];
   f.positionMigration = { year, moved: moved.length, owner: moved.filter((x) => x.where === 'owner'), ownerHoles, aiClubsWithHoles: aiHoles.length, repairs: repairs.removed.length };
   return f.positionMigration;
+}
+
+/**
+ * The hidden Ambition for existing saves (owner 2026-11-05 §1B, §9): every monster the save holds without one gets his permanent
+ * Ambition, once, from his id (ambition.js), so the same save always receives the same Ambitions; nothing else about a monster changes.
+ * Recorded in `f.ambitionMigration` the first time; later calls only fill monsters that somehow lack one (idempotent, never a reroll).
+ */
+export function migrateAmbitions(f) {
+  let n = 0; const seen = new Set();
+  const all = [...everyMonster(f).map((x) => x.m), ...(hasLeague(f) ? Object.values(f.league.monsters || {}) : [])];
+  for (const m of all) { if (!m || seen.has(m)) continue; seen.add(m); if (!AMBITIONS.includes(m.ambition)) { assignAmbition(m); n++; } }
+  if (!f.ambitionMigration) f.ambitionMigration = { at: f.season?.year ?? 1, assigned: n };
+  return n;
 }

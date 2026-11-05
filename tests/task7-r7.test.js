@@ -8,6 +8,7 @@ import { rookieCharge } from '../src/franchise/draft.js';
 import { leagueClubs, clubRoster, clubCapRoom, isProtected } from '../src/franchise/league-registry.js';
 import { tierById } from '../src/data/league.js';
 import { STAFF, staffById } from '../src/data/staff.js';
+import { staffSalary } from '../src/franchise/contracts.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 import { t7Settle } from './t7-support.js';
 
@@ -52,7 +53,7 @@ test('R7 staff: a renewal must fit next season\'s cap (the owner sees the cost f
   const role = 'head_coach';
   f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.max(0, F.staffRoom(f, role) - 1000); // nothing fits for this role
   const c = F.staffRenewalCheck(f, role); assert.equal(c.ok, false); assert.equal(c.code, 'cap'); assert.ok(c.demand > c.room); assert.match(c.reason, /exception|candidate/);
-  f.offseason.items.push({ kind: 'staff', id: 'st_' + role, role, name: staffById(f.staff[role]).name, current: F.staffSalary ? 0 : 0, ask: c.demand, status: null });
+  f.offseason.items.push({ kind: 'staff', id: 'st_' + role, role, name: staffById(f.staff[role]).name, current: staffSalary(f, role), ask: c.demand, status: null });
   const r = F.resolveContract(f, 'st_' + role, 'sign'); assert.equal(r.ok, false, 'unaffordable renewal refused'); assert.equal(f.staff[role] != null, true, 'nobody lost by the refusal');
   assert.ok(F.resolveContract(f, 'st_' + role, 'walk').ok); assert.equal(f.staff[role], undefined);
   F.hireDefaultStaff(f); const h = f.lastStaffHires.find((x) => x.role === role); assert.ok(h);

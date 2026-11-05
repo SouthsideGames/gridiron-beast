@@ -66,7 +66,14 @@ function myOffersHtml(f) {
 
 /** R3 (owner 2026-11-05): a monster's renewal outlook in his contract's final season — the same evaluation his extension or renewal gets
  *  (his ask, his preferred term, the club's role for him and its results), as Interested, Listening or Not interested. */
-export function renewalOutlook(f, m) { if (!f.freeAgency?.v || !E.extensionEligible(f, m)) return null; const ask = E.askOf(f, m); const terms = { salary: ask.salary, years: ask.years, bonus: 0 }; return { ...interestOf(f, m, terms), terms }; }
+export function renewalOutlook(f, m) {
+  if (!f.freeAgency?.v || !E.extensionEligible(f, m)) return null; const ask = E.askOf(f, m); const terms = { salary: ask.salary, years: ask.years, bonus: 0 };
+  const t = E.talksOpen(f, m, f.club); // his own say: an observation is shown, never the reason itself
+  if (!t.open) return { label: 'Not interested', cls: 'bad', why: [t.clue, 'He is not ready to discuss an extension now; circumstances may change, and you may still bid for him in free agency.'], ratio: 0, terms, talks: false, clue: t.clue };
+  const o = interestOf(f, m, terms); const r = E.rateOffer(f, m, f.club, terms);
+  const clue = r.moneyRatio < 1 && o.label !== 'Interested' ? 'He is looking for a stronger financial offer.' : t.clue;
+  return { ...o, why: [clue, ...o.why], terms, talks: true, clue };
+}
 /** R3: the GM Assistant's extension advice (optional, recommendations only): core monsters in their final season who are Interested now. */
 export function extensionAdviceHtml(f, { action = 'faopen' } = {}) {
   if (!f.settings?.gmAssistant || !f.freeAgency?.v) return '';
@@ -122,7 +129,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
   const t = { salary: mine?.salary ?? ask.salary, years: mine?.years ?? ask.years, bonus: mine?.bonus ?? 0 };
   const p = personaOf(m);
   const draw = () => {
-    const it = interestOf(f, m, t); const block = mode === 'extend' ? null : E.blocker(f, f.club, m, t, { own: mine, final: mode === 'now' });
+    const it = (() => { if (mode !== 'extend') return interestOf(f, m, t); const tk = E.talksOpen(f, m, f.club); return tk.open ? interestOf(f, m, t) : { label: 'Not interested', cls: 'bad', why: [tk.clue, 'He is not ready to discuss an extension now; circumstances may change, and you may still bid for him in free agency.'], ratio: 0 }; })(); const block = mode === 'extend' ? null : E.blocker(f, f.club, m, t, { own: mine, final: mode === 'now' });
     const sched = (() => { const start = mode === 'extend' ? (m.contract?.ends ?? 0) + 1 : (f.freeAgency?.leagueYear ?? f.season.year); const a = allocateBonus(t.bonus, t.years); return a.map((b, i) => ({ year: start + i, salary: t.salary, bonus: b, total: t.salary + b })); })();
     const rivals = E.competingOffers(f, id).filter((o) => o.club !== f.club);
     const hist = mine?.history || [];

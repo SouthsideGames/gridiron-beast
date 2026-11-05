@@ -50,6 +50,8 @@ const { GYM_BY_CLUB } = await imp('src/data/gyms.js');
 const IH = await imp('src/franchise/injury-history.js');
 // Task 7 (recording only): the free-agency market, when the tree has one. Absent in older trees; `v4.seasons[].fa` is then not written.
 let FAE = null, FAL = null; try { FAE = await imp('src/franchise/fa-engine.js'); FAL = await imp('src/franchise/fa-legendary.js'); } catch { /* a tree before Task 7 */ }
+let AMB = null; try { AMB = await imp('src/franchise/ambition.js'); } catch { /* a tree before the Ambition system */ }
+let CON = null; try { CON = await imp('src/franchise/contracts.js'); } catch { /* */ }
 /** One offseason's market, read from the franchise after it (recording only; nothing here changes the game). */
 function faRecord(f) {
   if (!FAE || !f.freeAgency?.v) return null;
@@ -57,11 +59,15 @@ function faRecord(f) {
   const offers = Object.values(fa.offers || {}).filter((o) => o.ly === ly);
   const byMid = new Map(); for (const o of offers) byMid.set(o.mid, (byMid.get(o.mid) || 0) + 1);
   const ageOf = (id) => (f.roster.find((m) => m.id === id) || f.league.monsters[id])?.age ?? null;
-  const signs = log.filter((e) => e.kind === 'sign').map((e) => ({ club: e.club, owner: e.club === f.club, mid: e.mid, salary: e.salary, years: e.years, bonus: e.bonus || 0, bidders: byMid.get(e.mid) || 1, age: ageOf(e.mid) }));
+  const monOf = (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id];
+  const signs = log.filter((e) => e.kind === 'sign').map((e) => ({ club: e.club, owner: e.club === f.club, mid: e.mid, salary: e.salary, years: e.years, bonus: e.bonus || 0, bidders: byMid.get(e.mid) || 1, age: ageOf(e.mid), ...(AMB ? { amb: AMB.ambitionOf(monOf(e.mid)) } : {}) }));
   const clubs = FAE.allClubs(f); const cap = Object.fromEntries(clubs.map((c) => { const v = FAE.capView(f, c); return [c, [v.committed, v.reserved, v.usable]]; }));
   const legends = Object.fromEntries(clubs.map((c) => { const b = FAL.legendsBySide(FAE.rosterOf(f, c)); return [c, [b.offense.length, b.defense.length]]; }));
   const floor = { ai: f.leagueOffseason?.freeAgency?.floorReleases || 0, ownerTotal: floorLog?.owner ?? null }; // recording only (owner rule 2026-11-04)
-  return { ly, floor, signs, offers: log.filter((e) => e.kind === 'offer').length, revisions: log.filter((e) => e.kind === 'revise').length, withdrawals: log.filter((e) => e.kind === 'withdraw').length, extensions: log.filter((e) => e.kind === 'extend').length, renewalsDeclined: f.leagueOffseason?.contracts?.declined || 0, renewalsSigned: f.leagueOffseason?.contracts?.resigned || 0, unsignedAtClose: FAE.marketList(f).length, cap, legends, marketProblems: FAE.marketProblems(f) };
+  return { ly, floor, signs, offers: log.filter((e) => e.kind === 'offer').length, revisions: log.filter((e) => e.kind === 'revise').length, withdrawals: log.filter((e) => e.kind === 'withdraw').length, extensions: log.filter((e) => e.kind === 'extend').length, renewalsDeclined: f.leagueOffseason?.contracts?.declined || 0, renewalsSigned: f.leagueOffseason?.contracts?.resigned || 0, unsignedAtClose: FAE.marketList(f).length, cap, legends, marketProblems: FAE.marketProblems(f),
+    // the Ambition system and the staff negotiation (owner 2026-11-05; recording only): extension windows, renewal talks, the owner's staff
+    ...(AMB ? { ambition: { ext: fa.steps?.[ly - 1]?.ext || null, midExt: fa.steps?.[ly - 1]?.midExt || null, renewalTalksDeclined: f.leagueOffseason?.contracts?.talksDeclined || 0 } } : {}),
+    staff: { total: CON ? Object.keys(f.staff || {}).reduce((a, r) => a + CON.staffSalary(f, r), 0) : null, raise: { ...(f.staffRaise || {}) }, exceptions: (f.capExceptions || []).filter((e) => e.ly === ly).length, renewals: (f.staffRenewalLog || []).filter((e) => e.ly === ly) } };
 }
 /** Harness v4: the columns of one monster's season-end row (arrays keep a 20-season file small). */
 export const V4_MONSTER = Object.freeze(['id', 'club', 'pos', 'age', 'ovr', 'level', 'xp', 'potential', 'starter', 'protected', 'ageless', 'origin', 'draftedYear', 'draftedRound',

@@ -36,6 +36,7 @@ import { LIVE, FA_RULES, marketList, askOf, preferredYears, rateOffer, counterTe
 import { rosterPlan, horizonOf } from './roster-plan.js';
 import { buildDepthChart } from './roster.js';
 import { reservationFor, allocateBonus, OFFER_STEP } from './fa-contracts.js';
+import { ambitionOf } from './ambition.js';
 
 export const AI_MARKET = Object.freeze({ offers: 2, contendExtra: 1, raise: 0.05, raiseCap: 1.15, futureCap: 1.0, bonusShare: 0.25, bonusMinded: 60 });
 
@@ -143,16 +144,18 @@ export function extensionCandidates(f, club, bench) {
 /** Each AI club offers its core extensions at the club's term and his ask; accepts his counter when the club can carry it in the
  *  extension's first season; a bonus only where it saves cap (R6). He answers by the shared evaluation. */
 export function aiExtensions(f, { bench = leagueBenchOf(f) } = {}) {
-  const out = { offered: 0, signed: 0, countered: 0, rejected: 0, bonus: 0 };
+  const out = { offered: 0, signed: 0, countered: 0, rejected: 0, bonus: 0, declined: 0, declinedStarters: 0, byAmbition: {} }; // byAmbition: developer diagnostics only (never shown)
   for (const club of leagueClubs(f).slice().sort()) {
+    const starters = new Set(Object.values(buildDepthChart(rosterOf(f, club))).filter(Boolean));
     for (const m of extensionCandidates(f, club, bench)) {
-      let t = aiTerms(f, club, m, bench); out.offered++;
+      let t = aiTerms(f, club, m, bench); out.offered++; const a = (out.byAmbition[ambitionOf(m)] ||= { offered: 0, declined: 0, signed: 0 }); a.offered++;
       let r = extend(f, club, m, t);
+      if (r.ok && r.outcome === 'declined') { out.declined++; a.declined++; if (starters.has(m.id)) out.declinedStarters++; continue; } // his say: no talks this window
       if (!r.ok && r.code === 'cap') { const b = bonusTerms(f, m, t); if (b !== t) { t = b; r = extend(f, club, m, t); } }
       if (r.ok && r.outcome === 'countered' && r.counter) { let c = r.counter; const room = capOf(f, club) - committed(f, club, (m.contract?.ends ?? leagueYear(f)) + 1);
         if (reservationFor(c) > room) c = bonusTerms(f, m, c);
         if (reservationFor(c) <= room) { r = extend(f, club, m, c); t = c; } else out.countered++; }
-      if (r.ok && r.outcome === 'signed') { out.signed++; if (t.bonus) out.bonus++; } else if (r.ok && r.outcome === 'rejected') out.rejected++;
+      if (r.ok && r.outcome === 'signed') { out.signed++; a.signed++; if (t.bonus) out.bonus++; } else if (r.ok && r.outcome === 'rejected') out.rejected++;
     }
   }
   return out;

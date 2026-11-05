@@ -2,7 +2,7 @@
 // a one-way import of the v5 (11v11) prototype's owner, club, staff, rival
 // and records. The legacy key is never modified.
 
-import { migrationDue, migratePositions } from './position-migration.js';
+import { migrationDue, migratePositions, migrateAmbitions } from './position-migration.js';
 import { SCHEMA_VERSION, LEAGUE_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
 import { ensureFreeAgency } from './fa-state.js';
 import { verifyLeague, hasLeague } from './league-registry.js';
@@ -50,6 +50,7 @@ export function migrate(f) {
   if (!Array.isArray(f.leagueNews)) backfillLeagueNews(f);
   f.news = f.news.filter((n) => !/ reached level \d+/.test(n?.text || '') && !/^Rival watch: /.test(n?.text || ''));
   if (hasLeague(f)) ensureFreeAgency(f); // schema 8 → 9 (Task 7)
+  migrateAmbitions(f); // the hidden Ambition, once per save; deterministic from each monster's id (owner 2026-11-05)
   if (hasLeague(f) && f.season?.finished && migrationDue(f)) migratePositions(f); // the final single-position rule: a save opened in an offseason is at the boundary (owner 2026-11-05)
   return f;
 }

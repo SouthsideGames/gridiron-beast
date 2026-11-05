@@ -1,6 +1,7 @@
 // Monster data model: attributes, natures, elemental types, abilities,
 // generation and OVR. Everything here feeds the simulation (GDD §5.1).
 
+import { assignAmbition } from '../franchise/ambition.js';
 import { ATTRIBUTES, POSITION_WEIGHTS } from './personnel.js';
 import { createRng, hashString } from '../core/rng.js';
 import { attributeHelps, ATTR_NAME, POSITION_NAME } from './stat-guide.js';
@@ -214,6 +215,7 @@ export function generateMonster(rng, { position = null, quality = 58, type = nul
   };
   m.yearsPro = yearsPro ?? (m.age <= 21 ? 0 : Math.max(0, m.age - 21 - (m.id.charCodeAt(m.id.length - 1) & 1))); // derived from the id, so the rng stream (and every generated roster) is unchanged // seasons already played; 0 = rookie (GDD §16.4)
   m.salary = salaryFor(m);
+  assignAmbition(m); // Task 7: one hidden career Ambition, from the seeded id (no generator draw, so every generated roster is unchanged)
   return m;
 }
 

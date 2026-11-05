@@ -843,7 +843,7 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   const second = items.find((i) => i.kind === 'monster' && !i.status); F.resolveContract(f, second.id, 'walk'); assert.ok(!f.roster.some((x) => x.id === second.id)); assert.ok(Object.values(f.pool).flat().some((x) => x.id === second.id), 'walked to the pool');
   settle(f, 'counter');
   assert.equal(F.offseasonPending(f).length, 0);
-  assert.ok(Object.values(f.staffRaise).every((x) => Math.abs(x - 1.1) < 1e-9), 'staff raises');
+  assert.ok(items.filter((i) => i.kind === 'staff').every((i) => i.status !== 'signed' || (Math.abs(f.staffRaise[i.role] - i.final / i.current) < 1e-9 && i.final / i.current >= 0.92 - 1e-9 && i.final / i.current <= 1.08 + 1e-9)), 'staff renewals at a performance-based demand within ±8% (owner 2026-11-05 §8), not +10%');
   // Market (Task 7): free agency opens after the renewals; offers in the periods, then immediate signings up to the floor.
   assert.ok(F.openFreeAgency(f).ok); const market = F.freeAgentMarket(f); assert.ok(market.length >= 10);
   F.finishFreeAgency(f);

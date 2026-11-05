@@ -26,6 +26,8 @@ import { makeContract, capCharge, reservationFor, toStep, clampYears, allocateBo
 import { legendCheck, legendSide } from './fa-legendary.js';
 import { personaOf, responseWindow } from './fa-personality.js';
 import { leagueYear, hasFreeAgency, noteSigned, returnLock } from './fa-state.js';
+import { ambitionOf, AMBITION, moodOf, talkChance, isHomeClub, draw, clueFor } from './ambition.js';
+import { OFFENSE_GROUPS, DEFENSE_GROUPS } from './roster.js';
 
 export const FA_RULES = Object.freeze({
   periods: 5,               // free-agency periods before the draft (decisions 12, 27)
@@ -120,6 +122,53 @@ export function marketRole(f, m) { const b = benchOf(f)[m.position]; if (b == nu
 /** The club's results as he sees them: this (or the just-finished) season's win share, 0.5 before a game is played. */
 export function clubSuccess(f, club) { const r = f.season?.records?.[club]; const g = (r?.w || 0) + (r?.l || 0); return g ? r.w / g : 0.5; }
 
+// ------------------------------------------------------------ competitive outlook (the Ambition system, owner 2026-11-05 §1)
+/** At each season's close: every club's record, the last three kept (`f.freeAgency.results[club] = [[year, w, l], ...]`). Additive. */
+export function noteClubResults(f, year = f.season?.year) {
+  if (!f.freeAgency || !f.season?.records) return; const R = (f.freeAgency.results ||= {});
+  for (const [club, r] of Object.entries(f.season.records)) { const l = (R[club] ||= []).filter((x) => x[0] !== year); l.push([year, r.w || 0, r.l || 0]); R[club] = l.slice(-3); }
+}
+/** Recent results as he reads them: this season (from the third game) and the last two completed, weighted 0.5 / 0.3 / 0.2. */
+export function recentWin(f, club) {
+  const vals = []; const rec = f.season?.records?.[club]; const g = (rec?.w || 0) + (rec?.l || 0); const yr = f.season?.year;
+  const done = (f.freeAgency?.results?.[club] || []).slice().sort((a, b) => b[0] - a[0]);
+  if (g >= 3 && !done.some((x) => x[0] === yr)) vals.push(rec.w / g);
+  for (const [, w, l] of done) { if (vals.length >= 3) break; if (w + l) vals.push(w / (w + l)); }
+  if (!vals.length && g) vals.push(rec.w / g);
+  if (!vals.length) { const last = isOwner(f, club) ? f.history?.[f.history.length - 1]?.record : null; if (last && last.w + last.l) vals.push(last.w / (last.w + last.l)); }
+  if (!vals.length) return 0.5;
+  const W = [0.5, 0.3, 0.2]; let s = 0, t = 0; vals.forEach((v, i) => { s += W[i] * v; t += W[i]; }); return s / t;
+}
+/** A roster's starters' mean overall (best healthy monsters by position), overall, offence and defence. */
+export function starterStrength(roster) {
+  const out = { team: 0, off: 0, def: 0 }; const n = { team: 0, off: 0, def: 0 };
+  for (const [pos, slots] of Object.entries(GROUP_SLOTS)) { if (pos === 'K') continue;
+    const at = roster.filter((m) => m.position === pos && !m.injury).map((m) => monsterOverall(m)).sort((a, b) => b - a).slice(0, slots.length);
+    const side = OFFENSE_GROUPS.includes(pos) ? 'off' : DEFENSE_GROUPS.includes(pos) ? 'def' : null;
+    for (let i = 0; i < slots.length; i++) { const v = at[i] ?? 40; out.team += v; n.team++; if (side) { out[side] += v; n[side]++; } } }
+  return { team: out.team / (n.team || 1), off: out.off / (n.off || 1), def: out.def / (n.def || 1) };
+}
+const strengthCache = new WeakMap();
+/** Each club's starter strength and its rank (1 = strongest) among all the league's clubs, cached for one moment of the calendar. */
+export function strengthTable(f) {
+  const stamp = `${leagueYear(f)}|${f.freeAgency?.period ?? '-'}|${f.season?.year}|${f.season?.week}|${f.season?.day}|${f.season?.finished ? 1 : 0}`;
+  const c = strengthCache.get(f); if (c?.stamp === stamp) return c.table;
+  const clubs = allClubs(f); const s = Object.fromEntries(clubs.map((club) => [club, starterStrength(rosterOf(f, club))]));
+  const rankBy = (k) => { const order = clubs.slice().sort((a, b) => s[b][k] - s[a][k] || (a < b ? -1 : 1)); return Object.fromEntries(order.map((club, i) => [club, i + 1])); };
+  const table = { n: clubs.length, strength: s, rank: { team: rankBy('team'), off: rankBy('off'), def: rankBy('def') } };
+  strengthCache.set(f, { stamp, table }); return table;
+}
+/** A club's competitive outlook (0–1) as a monster judges it: half recent results, half the strength of its roster against the league's. */
+export function clubOutlook(f, club) {
+  const t = strengthTable(f); const r = t.rank.team[club]; const talent = r == null || t.n < 2 ? 0.5 : 1 - (r - 1) / (t.n - 1);
+  return 0.5 * recentWin(f, club) + 0.5 * talent;
+}
+/** Is `club` the organization that drafted or established him? (The owner's club counts his seasons since he joined.) */
+export function homeFor(f, m, club) {
+  const y = f.season?.year ?? 1; if (isHomeClub(m, club, y)) return true;
+  return isOwner(f, club) && f.roster.includes(m) && (m.drafted?.club === club || y - (m.joined ?? y) + 1 >= 2);
+}
+
 /**
  * How he rates an offer (decision 25): { score, need, parts, moneyRatio, low }. `score` against `need`, the score an offer at his
  * ask from an ordinary club would earn: at or above it he accepts; within FA_RULES.counterBand he counters.
@@ -129,23 +178,26 @@ export function rateOffer(f, m, club, terms, { guaranteed = false } = {}) {
   const bonus = Math.max(0, terms.bonus || 0);
   const moneyEq = terms.salary + (bonus * (1 + p.money / 200)) / years; // up-front money counts a little more to the money-minded
   const moneyRatio = moneyEq / Math.max(1, ask.salary);
+  const amb = ambitionOf(m); const k = AMBITION.weight[amb] || {};
   const parts = {
     money: Math.min(1.4, moneyRatio),
     security: Math.max(0, 1 - 0.2 * Math.abs(years - ask.years)),
     role: ROLE_VALUE[roleAt(f, club, m)],
-    winning: clubSuccess(f, club),
+    winning: amb === 'championship' ? clubOutlook(f, club) : clubSuccess(f, club), // Ambition: a championship-driven monster reads the club's direction
   };
-  const w = { money: p.money, security: p.security, role: p.role, winning: p.winning }; const tot = Object.values(w).reduce((s, x) => s + x, 0) || 1;
-  const score = Object.keys(w).reduce((s, k) => s + (w[k] / tot) * parts[k], 0);
+  const w = { money: p.money * (k.money ?? 1), security: p.security * (k.security ?? 1), role: p.role * (k.role ?? 1), winning: p.winning * (k.winning ?? 1) }; const tot = Object.values(w).reduce((s, x) => s + x, 0) || 1;
+  let score = Object.keys(w).reduce((s, k) => s + (w[k] / tot) * parts[k], 0);
+  if (amb === 'loyalty' && homeFor(f, m, club)) score += (w.money / tot) * AMBITION.loyalHome; // the club that drafted or established him: a bounded value
+  score *= moodOf(f.seed, leagueYear(f), m.id, club); // seeded per monster, club and league year: the same offer always gets the same answer
   const need = FA_RULES.tolerance * (w.money + w.security + w.role * ROLE_VALUE[marketRole(f, m)] + w.winning * 0.5) / tot; // what his alternatives would give him, less the tolerance
-  return { score, need: guaranteed ? Math.min(need, score) : need, parts, moneyRatio, low: moneyRatio < FA_RULES.lowball, strongest: p.strongest, weights: w };
+  return { score, need: guaranteed ? Math.min(need, score) : need, parts, moneyRatio, low: moneyRatio < FA_RULES.lowball, strongest: p.strongest, weights: w, home: amb === 'loyalty' && homeFor(f, m, club) ? (w.money / tot) * AMBITION.loyalHome : 0 };
 }
 /** The terms that would satisfy him at this club: his preferred years and the salary that closes the gap (in 100s). */
 export function counterTerms(f, m, club, terms) {
   const ask = askOf(f, m); const p = personaOf(m); const t = { salary: terms.salary, years: ask.years, bonus: terms.bonus || 0 };
   const r = rateOffer(f, m, club, t); if (r.score >= r.need) return t;
   const tot = Object.values(r.weights).reduce((x, y) => x + y, 0) || 1; const wm = r.weights.money / tot;
-  const others = r.score - wm * r.parts.money; const moneyNeed = (r.need - others) / (wm || 1e-9); // the money part that closes the gap
+  const mood = moodOf(f.seed, leagueYear(f), m.id, club); const others = r.score / mood - wm * r.parts.money; const moneyNeed = (r.need / mood - others) / (wm || 1e-9); // the money part that closes the gap (his mood and any home value included)
   if (!(wm > 0) || moneyNeed > 1.4) return null; // money alone cannot win him at this club: no counter
   const bonusEq = (t.bonus * (1 + p.money / 200)) / t.years;
   t.salary = Math.max(t.salary, Math.ceil((moneyNeed * ask.salary - bonusEq) / OFFER_STEP) * OFFER_STEP);
@@ -319,8 +371,24 @@ export function negotiateNow(f, club, mid, terms, { guaranteed = false, via = 'f
 /** A contract in its final league year, with nothing signed to follow it. */
 export function extensionEligible(f, m) { const c = m?.contract; return !!c && !c.permanent && !c.next && c.ends === leagueYear(f) && !isProtected(m); }
 /**
+ * Ambition (owner 2026-11-05 §1E): will he discuss an extension (or the renewal of his expiring deal) with `club` now? One seeded draw
+ * for each monster, club and contract (`contract.ends`), so asking again never rerolls it; the chance is his Ambition's, read against
+ * the circumstances at the time of asking (results, roster strength, his role here and the role his level earns elsewhere, his stage),
+ * so changed circumstances can reopen talks. Returns { open, chance, clue, apply } — `chance` is internal (never shown); `clue` is an
+ * observation for the outlook. Declining talks refuses nothing in free agency: the club may still bid there.
+ */
+export function talksOpen(f, m, club) {
+  const amb = ambitionOf(m); const role = roleAt(f, club, m); const mrole = marketRole(f, m); const outlook = clubOutlook(f, club); const home = homeFor(f, m, club);
+  const chance = talkChance({ ambition: amb, outlook, role, marketRole: mrole, home, veteran: personaOf(m).stage === 'veteran' });
+  const key = `${f.seed ?? 0}|${m.id}|${club}|${m.contract?.ends ?? leagueYear(f)}`; const open = draw(`talk|${key}`) < chance;
+  const rk = (r) => (r === 'starter' ? 2 : r === 'backup' ? 1 : 0);
+  const apply = { direction: outlook < 0.45, role: rk(mrole) > rk(role), home: home && open };
+  return { open, chance, apply, clue: clueFor(amb, apply, key, { talks: open }), key };
+}
+/**
  * Extend `m` (on `club`) from the year after his deal ends. The club's cap in that first new year must hold it. Returns
- * { ok, outcome: 'signed' | 'countered' | 'rejected', counter? } — an extension never touches the running contract.
+ * { ok, outcome: 'signed' | 'countered' | 'rejected' | 'declined', counter? } — 'declined': he will not discuss it now (Ambition);
+ * an extension never touches the running contract.
  */
 export function extend(f, club, m, terms) {
   if (!rosterOf(f, club).some((x) => x.id === m.id)) return { ok: false, code: 'roster', reason: 'He is not on the roster.' };
@@ -329,6 +397,7 @@ export function extend(f, club, m, terms) {
   const start = m.contract.ends + 1; const charge = terms.salary + allocateBonus(terms.bonus, terms.years)[0];
   const room = capOf(f, club) - committed(f, club, start);
   if (charge > room) return { ok: false, code: 'cap', reason: `The extension's first season needs ${charge.toLocaleString('en-US')} cr.; ${start} has ${Math.max(0, room).toLocaleString('en-US')} cr. free.` };
+  { const t = talksOpen(f, m, club); if (!t.open) return { ok: true, outcome: 'declined', reason: `${m.name} is not ready to discuss an extension. ${t.clue}`, clue: t.clue }; } // Ambition: his say, before any offer
   hasFreeAgency(f) && entryOf(f, m); const r = rateOffer(f, m, club, terms); if (r.low) lowball(f, m, entryOf(f, m), club);
   if (r.score >= r.need) { m.contract.next = makeContract({ start, years: terms.years, salary: terms.salary, bonus: terms.bonus, kind: 'extension' }); m.contract.next.bonusPaid = { by: club, ly: start }; delete f.freeAgency.market[m.id]; logTx(f, { kind: 'extend', club, mid: m.id, salary: terms.salary, years: terms.years }); return { ok: true, outcome: 'signed', contract: m.contract.next }; }
   { const c = r.score >= r.need * FA_RULES.counterBand ? counterTerms(f, m, club, terms) : null; if (c) return { ok: true, outcome: 'countered', counter: c }; }

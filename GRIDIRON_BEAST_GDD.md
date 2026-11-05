@@ -4417,6 +4417,17 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
   - **Extensions:** AI clubs extend their Task 6 core (a starter not past onset, a designated successor, a young monster with upside by mode) in two windows: mid-season (week 6) and the offseason at the league year's turn. They use the shared engine (`extend`); the monster answers by the shared evaluation, and a counter is accepted when the extension's first season fits.
   - **Bonuses:** a bonus is used only where it buys the same value to a money-minded monster on a multi-year deal for less cap (25% of the salary moved into a bonus, within the 50% limit).
   - **Expiry:** an extended contract no longer counts as ending.
+- **Younger depth (owner 2026-11-05 §6):** for a non-essential depth place (the starting group complete, no lineup hole), Rebuild and Retool clubs subtract 0.75 and 0.4 points per year past 26 from a candidate's strategy value. A clearly better, cheaper or needed veteran still wins; starters, holes and contenders are unaffected; no younger monsters are generated.
+- **Gym replacements (owner 2026-11-05 §5):** before a balance-nudge arrival is generated, a gym signs an available waiver or pool monster at the position at least as good as the arrival would be (target + 1) who fits its cap and accepts. The existing order otherwise stands: roster, draft, the market (urgent holes and the upgrade before the draft; waivers and pools after it), then a generated arrival when needed for a legal, full roster.
+
+**59.5b Monster Ambition (owner approval, 2026-11-05 §1; `ambition.js`).**
+- **What it is:** each monster has one hidden career Ambition: Money, Loyalty, Championship or Opportunity. It is separate from Nature; Task 8 owns Nature and Temper, and nothing here reads or changes Nature, Temper, training costs, development or ceilings.
+- **Assignment:** to the individual, never the species family; about a quarter each; derived from the monster's id with the game's seeded hash (no generator draw), so generation is unchanged and reproducible. It never changes: evolution, trades, releases and free agency keep it, and saves store it. Existing saves receive it once (`f.ambitionMigration`), with the same value on every load.
+- **Hidden:** no player-facing screen shows it or its weights. The renewal outlook and the negotiation sheet show observations only ("He appears concerned about the team's competitive direction", "He is looking for a stronger financial offer", "He would like a clearer path to a starting role", "He appears interested in remaining with the organization"). An observation is chosen with a seeded draw that favours, but does not always name, what matters to him.
+- **Offer evaluation** (the one evaluation for every club, `rateOffer`): the Ambition multiplies the weight of a priority. Money: money ×1.6, winning ×0.7. Championship: winning ×1.7, read as the club's competitive outlook (half recent results over three seasons, half its starter strength's rank among the league's clubs). Opportunity: role ×1.7, against the role his level earns elsewhere. Loyalty: security ×1.2, and at the club that drafted or established him (two seasons or more) a value worth at most 6% of the money part.
+- **Mood:** a seeded ±5% of his evaluation for each monster, club and league year. Equal offers need not get the same answer; the same offer to the same club always does; a better offer is never less likely to be accepted.
+- **Extension talks:** before any extension or renewal offer the monster decides whether to talk at all: one seeded draw per monster, club and contract, against a chance set by his Ambition and the circumstances when asked (about 0.86 by default; Money 0.9; Loyalty 0.97 at home; Championship 0.30 + 0.75 × outlook; Opportunity 0.92 starter, 0.62 backup, 0.5 depth, 0.18 less when his level would start elsewhere; +0.08 past onset; −0.04 for a monster who would start anywhere, except Loyalty; always between 0.15 and 0.98). Asking again never rerolls it; changed circumstances can reopen talks. Declining talks refuses nothing in free agency, where his club may still bid. The owner and the AI use the same rule (`talksOpen`, `extend`, the owner's renewal book, the AI's renewals).
+- **Not touched:** contract value and every cap safeguard, counteroffer and deadline rules, the AI extension windows and Task 6 strategy, the number of free agents (no quotas).
 
 **59.6 Locks and legendaries (resolutions 3, 6, 7; decisions 18, 20–22).**
 - **Locks, for every club:**
@@ -4434,11 +4445,24 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 - **Draft reserve:** the expected rookie-scale cost of the owner's remaining picks is shown from free agency onward (at the board prospect for each slot). It is shown, not locked.
 - **Owner's pick:** must fit usable cap. Otherwise the screen gives the shortfall and the choices: a cheaper prospect, an offseason release, trading the pick, or passing (explicit).
 - **AI picks:** AI clubs pick only affordable prospects. If none is affordable they release a well-paid expendable, otherwise they pass; the pass is recorded with its reason (`draft.aiPasses`, news).
-- **Staff:** renewals and hires in a Task 7 offseason must fit next season's cap. The owner sees the cost and the room before deciding. The renewal demand itself is unchanged (+10%) until the performance-based staff negotiation (`docs/TASK7_STAFF_NEGOTIATION_PROPOSAL.md`) is approved.
+- **Staff:** renewals and hires in a Task 7 offseason must fit next season's cap. The owner sees the cost and the room before deciding. Every staff offer is checked before it is made. The demand is performance-based (§59.6c).
 - **Minimum-staff exception:**
   - **When:** a required role is empty and no candidate fits.
   - **What is allowed:** the role's default member at base salary.
   - **How it is recorded:** in `f.capExceptions` (league year, role, amount), announced in the news, once per role per league year. The commissioner review applies as before.
+
+**59.6c Performance-based staff renewals (owner approval, 2026-11-05 §8; `staff-negotiation.js`).** Replaces the automatic +10% in a Task 7 offseason. The owner's staff only; AI clubs keep the fixed allowance; the candidate pool, base salaries and the cap rules are unchanged; no poaching, promotions or carousel.
+- **Evaluation** (each season a score from −1 to +1, against the roster's talent; clubs ranked among all the league's clubs):
+  - head coach: win-share rank against the starter-strength rank at the season's start; playoffs +0.15, title +0.3;
+  - offensive coordinator: points-for-per-game rank against the offence's starter-strength rank;
+  - defensive coordinator: points-against-per-game rank against the defence's;
+  - head scout: the club's draft picks (overall + 0.3 × (potential − 70)) against the picks within three slots, ÷ 4;
+  - monster trainer: the training-week bonus delivered against a league-average trainer in the same sessions, ÷ 25%;
+  - the scout's and trainer's scores ×0.6, since the owner's own choices share the result.
+- **Contract period:** the seasons of the expiring contract in this role, weighted latest first (1; 0.6/0.4; 0.5/0.3/0.2). No season on record: Average.
+- **Demand bands** (initial values for testing): Excellent (≥ 0.45) +6–8%, Good +3–5%, Average 0–2%, Poor −4–0%, Very poor (< −0.45) −8 to −4%; placed by the score and moved a quarter of the band by the member's overall (83 neutral).
+- **Negotiation:** accept the demand, a smaller raise (half), the same salary, a 5% reduction, or decline and hire a replacement. He accepts, counters halfway or rejects. His reservation is the demand less his band's flexibility (0, 2, 4, 8, 12%; 2 points less at overall 85+; 2 more when a comparable candidate would take the job for the offer; a seeded ±2%). Between reservation and demand he accepts with a chance from 35% upward, else counters; just below it he may counter (half the time) or refuse; a Very poor member refused his floor leaves. Two offers at most; one seeded draw per member, season and round, so a repeated offer gets the same answer.
+- **Records:** `f.staffEval[year]` (season start ranks, results ranks, draft and training records; eight seasons kept) and `f.staffRenewalLog` (outcomes). Older saves without records are judged on the seasons they have, or as Average.
 
 **59.6b Renewal outlook (R3).**
 - In a contract's final season, Salary & Contracts shows the monster's renewal outlook (Interested, Listening, Not interested). It is the same evaluation his extension or renewal gets: his ask, his preferred term, the club's role for him and its results.
