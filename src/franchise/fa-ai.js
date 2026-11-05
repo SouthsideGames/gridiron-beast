@@ -155,14 +155,15 @@ export function aiBargain(f, club, m, neg, { core = false, fits, years = null, b
   const target = step(ask * (AI_NEG.target[mode] ?? 0.96)); const ceiling = step(ask * ((core ? AI_NEG.ceiling.core : AI_NEG.ceiling.other) + (mode === 'contend' ? AI_NEG.contendCeiling : 0)));
   const ok = (t) => { if (fits(t)) return t; if (!bonus) return null; const b = bonusTerms(f, m, t); return b !== t && fits(b) ? b : null; };
   const term = years ?? neg.demand.years; // the club's own term (Task 6 R3 by mode and onset, moved to his preference when one season apart and the mode allows: aiYears): its roster planning
-  const D = neg.demand; if (D.salary <= target * (1 + AI_NEG.near) && D.years === term && fits(D)) { const r = negotiate(f, m, neg, null, { accept: true }); return r.terms; }
-  let offer = { salary: Math.min(target, D.salary), years: term, bonus: 0 };
+  const D = neg.demand; const near = D.salary <= target * (1 + AI_NEG.near);
+  if (near && D.years === term && fits(D)) { const r = negotiate(f, m, neg, null, { accept: true }); return r.terms; }
+  let offer = { salary: near ? D.salary : Math.min(target, D.salary), years: term, bonus: 0 }; // his money at its term, or its target at its term
   for (let round = 0; round < NEG.counters && neg.state === 'active'; round++) {
     const t = ok(offer); if (!t) return null; // it cannot afford even its own offer: it lets him go
     const r = negotiate(f, m, neg, t);
     if (r.outcome === 'agreed') return r.terms;
     if (r.outcome !== 'countered') return null;
-    const c = r.counter; if (c.salary <= ceiling && c.years === term && fits(c)) return negotiate(f, m, neg, null, { accept: true }).terms;
+    const c = r.counter; if (c.salary <= ceiling && fits(c)) return negotiate(f, m, neg, null, { accept: true }).terms; // his counter (at his term) within its ceiling: his preference wins the compromise
     offer = { salary: step(Math.min(ceiling, (t.salary + c.salary) / 2)), years: term, bonus: 0 }; // it keeps its term: his preference still counts in his answer
   }
   return neg.state === 'agreed' ? neg.agreed : null;
