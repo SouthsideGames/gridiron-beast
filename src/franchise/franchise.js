@@ -41,7 +41,7 @@ export { DESK_RULES } from './trade-desk.js';
 import { QUESTIONS, isSituational, MEDIA_BOOST, MEDIA_CAP, HYPE_BOOST, MEDIA_QUESTIONS_PER_WEEK } from '../data/media.js';
 import { pregameDialogue, dialogueState, REPLIES } from '../data/dialogue.js';
 import { POSTSEASON_EVENTS, RAISE_PCT, RETENTION_BONUS_PCT, PROMISE_BENCH_LIMIT } from '../data/postseason.js';
-import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../data/personnel.js';
+import { OFFENSE_BASE, DEFENSE_BASE, OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, PACKAGE_SLOT_USE } from '../data/personnel.js';
 import { careerSnapshot } from './career-profile.js';
 import { ensureLeagueNews, addLeagueNews, resultsNews, playoffNews, championNews, playoffFieldNews, raceNews, awardNews, recordNews, movesNews, offseasonDigest, draftDigest } from './league-news.js';
 import { buildTeam, generatedTeam, buildDepthChart, lineupProblems, borrowedSlots, unavailableSlots, teamOverall, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, playbookFor, adaptPlaybook } from './roster.js';
@@ -1052,6 +1052,19 @@ function runDraftToMe(f) {
     onAiPass: (team, why) => { (f.draft.aiPasses ||= []).push({ team, overall: f.draft.index, why }); news(f, `${team} passed at pick ${f.draft.index}: ${why}.`, 'info'); } } : {};
   const made = draftAdvance(f, r, { ...r7, playerClub: f.club, persist: !league, onAiPick: league ? (team, m) => { if (clubRecord(f, team)) joinAsDraftee(f, team, m, { year, silent: creation }); } : null, planOf: league ? (team) => (clubRecord(f, team) ? { ...rosterPlan(clubRoster(f, team), bench), mode: modeOf(f, team) } : null) : null }); // Phase D (R7): the club's strategy mode weights the pick
   save(); return made;
+}
+/**
+ * R5 (owner 2026-11-05): what the owner's lineup cannot field. Base slots nobody can fill (a forfeit if it lasts to game day) and package
+ * slots nobody can fill (the plays of that package drop out). Each warning names the slot, the position needed, the formation affected,
+ * why (healthy players at the position, and the rule that nobody else may play it) and what would fix it. Nobody is ever substituted
+ * out of position.
+ */
+export function lineupWarnings(f, roster = f.roster, chart = buildDepthChart(roster, f.lineupManual, f.depth)) {
+  const healthy = (pos) => roster.filter((m) => m.position === pos && !m.injury).length; const hurt = (pos) => roster.filter((m) => m.position === pos && m.injury).length;
+  const why = (pos) => `${healthy(pos)} healthy ${pos}${hurt(pos) ? ` (${hurt(pos)} injured)` : ''}; only a ${pos} may play there (one position per family)`;
+  const base = lineupProblems(roster, chart).map((slot) => { const pos = positionOf(slot); return { kind: 'base', slot, position: pos, formation: 'every play', severity: 'forfeit', why: why(pos), fix: `Sign, draft or trade for a ${pos}${hurt(pos) ? ', or wait for the injured to return' : ''}.` }; });
+  const pkg = borrowedSlots(roster, chart).filter((b) => !b.legal).map((b) => { const pos = positionOf(b.slot); return { kind: 'package', slot: b.slot, position: pos, formation: `${PACKAGE_SLOT_USE[b.slot]} plays`, severity: 'plays unavailable', why: why(pos), fix: `Add a ${pos} beyond your starters to bring back the ${PACKAGE_SLOT_USE[b.slot]} plays.` }; });
+  return [...base, ...pkg];
 }
 /** R7 (owner 2026-11-05): can the owner pay this prospect's rookie deal now (Task 7)? null when yes; else the shortfall and the options. */
 export function draftAffordability(f, id) {

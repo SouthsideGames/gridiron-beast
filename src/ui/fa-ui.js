@@ -53,7 +53,8 @@ export function assistantHtml(f) {
   const thin = POS.filter((p) => (count[p] || 0) < (p === 'K' ? 1 : p === 'QB' || p === 'RB' || p === 'TE' ? 2 : 3));
   const usable = F.freeAgencyCap(f).usable; const want = [...new Set([...holes, ...thin])];
   const recs = []; for (const pos of want) { const best = F.freeAgentMarket(f).filter((x) => x.monster.position === pos && !x.mine && x.ask.salary <= usable).sort((a, b) => monsterOverall(b.monster) - monsterOverall(a.monster))[0]; if (best) recs.push({ pos, x: best, hole: holes.includes(pos) }); if (recs.length >= 3) break; }
-  return `<div class="panel tight"><b>🧭 GM Assistant</b> <span class="dim">recommendations only</span>${recs.length ? `<div class="list" style="margin-top:4px">${recs.map(({ pos, x, hole }) => `<div class="item static"><div class="grow"><div class="name">${esc(x.monster.name)} <span class="dim">${pos} · ${monsterOverall(x.monster)} OVR · asks ${fmt(x.ask.salary)}</span></div><div class="sub">${hole ? `You have no healthy ${pos} for a starting slot.` : `You are thin at ${pos}.`}</div></div><button class="btn small" data-action="faopen" data-id="${x.monster.id}">Prepare offer</button></div>`).join('')}</div>` : '<div class="dim">Nothing urgent within your usable cap.</div>'}</div>`;
+  const warn = F.lineupWarnings(f); const warnHtml = warn.length ? `<div class="dim" style="margin-top:4px">${warn.map((x) => `<b>${esc(x.slot)}</b> ${esc(x.formation)}: ${esc(x.fix)}`).join('<br>')}</div>` : '';
+  return extensionAdviceHtml(f) + `<div class="panel tight"><b>🧭 GM Assistant</b> <span class="dim">recommendations only</span>${warnHtml}${recs.length ? `<div class="list" style="margin-top:4px">${recs.map(({ pos, x, hole }) => `<div class="item static"><div class="grow"><div class="name">${esc(x.monster.name)} <span class="dim">${pos} · ${monsterOverall(x.monster)} OVR · asks ${fmt(x.ask.salary)}</span></div><div class="sub">${hole ? `You have no healthy ${pos} for a starting slot.` : `You are thin at ${pos}.`}</div></div><button class="btn small" data-action="faopen" data-id="${x.monster.id}">Prepare offer</button></div>`).join('')}</div>` : '<div class="dim">Nothing urgent within your usable cap.</div>'}</div>`;
 }
 
 /** The owner's live offers. */
@@ -61,6 +62,19 @@ function myOffersHtml(f) {
   const mine = E.liveOffers(f, (o) => o.club === f.club); if (!mine.length) return '';
   return `<h3>Your offers (${mine.length})</h3><div class="list">${mine.map((o) => { const u = E.unsigned(f, o.mid); const m = u?.m; if (!m) return '';
     return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR</span></div><div class="sub">${fmt(o.salary)}/yr × ${o.years}${o.bonus ? ` + ${fmt(o.bonus)} bonus` : ''} · <b>${STATE_LABEL[o.state]}</b> · answers by Period ${o.expires}</div></div>${o.state === 'countered' ? '<span class="chip warn">counter</span>' : ''}</div>`; }).join('')}</div>`;
+}
+
+/** R3 (owner 2026-11-05): a monster's renewal outlook in his contract's final season — the same evaluation his extension or renewal gets
+ *  (his ask, his preferred term, the club's role for him and its results), as Interested, Listening or Not interested. */
+export function renewalOutlook(f, m) { if (!f.freeAgency?.v || !E.extensionEligible(f, m)) return null; const ask = E.askOf(f, m); const terms = { salary: ask.salary, years: ask.years, bonus: 0 }; return { ...interestOf(f, m, terms), terms }; }
+/** R3: the GM Assistant's extension advice (optional, recommendations only): core monsters in their final season who are Interested now. */
+export function extensionAdviceHtml(f, { action = 'faopen' } = {}) {
+  if (!f.settings?.gmAssistant || !f.freeAgency?.v) return '';
+  const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const starters = new Set(Object.values(chart).filter(Boolean));
+  const core = f.roster.map((m) => ({ m, o: renewalOutlook(f, m) })).filter(({ m, o }) => o && (starters.has(m.id) || ((m.age || 30) <= 25 && (m.potential || 0) >= monsterOverall(m) + 5)));
+  if (!core.length) return '';
+  const row = ({ m, o }) => `<div class="item static"><div class="grow"><div class="name">${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR · age ${m.age}</span></div><div class="sub"><span class="chip ${o.cls}">${o.label}</span> at ${fmt(o.terms.salary)}/yr × ${o.terms.years}${o.label === 'Interested' ? ' · a good moment to extend' : o.label === 'Listening' ? ' · he may counter' : ' · he would likely say no now'}</div></div><button class="btn small" data-action="${action}" data-id="${m.id}">Extend…</button></div>`;
+  return `<div class="panel tight"><b>🧭 GM Assistant · extensions</b> <span class="dim">recommendations only; nothing is offered without you</span><div class="list" style="margin-top:4px">${core.sort((a, b) => b.o.ratio - a.o.ratio).slice(0, 6).map(row).join('')}</div></div>`;
 }
 
 /** The single-position migration report (owner 2026-11-05), shown in the offseason it ran: who moved, and any open starting slot. */

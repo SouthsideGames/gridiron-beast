@@ -104,3 +104,28 @@ test('R6: AI extensions — core monsters only, mid-season (week 6) and at the l
   assert.ok(f.freeAgency.steps[f.season.year].ext, 'the offseason window ran');
   assert.deepEqual(E.marketProblems(f), []);
 });
+
+test('R3: the renewal outlook is the extension evaluation itself (Interested / Listening / Not interested), only in a final season; the GM Assistant only recommends', async () => {
+  const UI = await import('../src/ui/fa-ui.js');
+  const f = newFranchise(38); f.settings.gmAssistant = true; let n = 0;
+  for (const m of f.roster) {
+    const o = UI.renewalOutlook(f, m);
+    if (!E.extensionEligible(f, m)) { assert.equal(o, null); continue; }
+    const r = E.rateOffer(f, m, f.club, o.terms); const ratio = r.score / r.need;
+    assert.equal(o.label, ratio >= 1 ? 'Interested' : ratio >= E.FA_RULES.counterBand ? 'Listening' : 'Not interested'); n++;
+    assert.deepEqual(o.terms, { salary: E.askOf(f, m).salary, years: E.askOf(f, m).years, bonus: 0 });
+  }
+  assert.ok(n > 3, `${n} final-season contracts`);
+  const before = JSON.stringify(f.roster.map((m) => m.contract));
+  const html = UI.extensionAdviceHtml(f); assert.match(html, /recommendations only/); assert.equal(JSON.stringify(f.roster.map((m) => m.contract)), before, 'advice changes nothing');
+  f.settings.gmAssistant = false; assert.equal(UI.extensionAdviceHtml(f), '', 'optional');
+});
+
+test('R5: lineup warnings name the slot, the position, the formation, why, and the fix; nobody is substituted out of position', () => {
+  const f = newFranchise(39); assert.deepEqual(F.lineupWarnings(f), [], 'a full roster has no warning');
+  const cbs = f.roster.filter((m) => m.position === 'CB'); f.roster = f.roster.filter((m) => m.position !== 'CB' || m === cbs[0]); // one cornerback left
+  const w = F.lineupWarnings(f); const base = w.find((x) => x.kind === 'base' && x.position === 'CB');
+  assert.ok(base, JSON.stringify(w)); assert.equal(base.severity, 'forfeit'); assert.match(base.why, /1 healthy CB/); assert.match(base.fix, /CB/);
+  const g = newFranchise(40); const s = g.roster.filter((m) => m.position === 'S'); g.roster = g.roster.filter((m) => m.position !== 'S' || m === s[0]); // one safety: FS is filled, the Nickel slot (SS) is not
+  const pk = F.lineupWarnings(g).find((x) => x.kind === 'package'); assert.ok(pk, JSON.stringify(F.lineupWarnings(g))); assert.match(pk.formation, /Nickel/); assert.equal(pk.position, 'S');
+});
