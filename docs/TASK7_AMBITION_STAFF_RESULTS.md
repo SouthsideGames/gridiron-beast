@@ -162,7 +162,7 @@ Round-1 starts at year 2 fall (all seasons −8.4 [−10.8, −5.9]); veterans s
 
 - **Generated gym starters:** +7.4 (above). Gyms lose more monsters to the Ambition: walks per gym club-season 4.47 [3.43; v42.21.0 3.11], generated arrivals 1.29 [0.99; 1.12]. The pool-first nudge works but rarely finds a monster as good as the target.
 - **Strength:** gym against ordinary win% +1.2 inconclusive; gym title share 100% [98.5]; gym lead in season 20 +1.7; tier order held 9 of 10 seeds (same as v42.21.0).
-- **Elemental identity:** GYM_ELEMENT_LINE
+- **Elemental identity** (gym starters of the gym's element, 3 seeds × 8 seasons, legendaries excluded): season 1 38%, season 4 30%, season 8 **24%** (previous build 38 / 34 / 31%; v42.21.0 47 / 43 / 27%). Roster share at season 8: 22% (previous 24%). The element rule for replacements is unchanged; more departures are now replaced from the pools and the draft, where the element counts only as a tie-break. On 3 seeds this is indicative.
 - **Lineup completeness:** AI club-seasons recorded with an open starting slot: 0.08% (5 of 6,000), the same as the previous build (0.08%) and v42.21.0 (0.13%).
 
 ### E. Owner drift (seasons 1–8, 12 seeds, against v42.21.0; previous build in brackets)
@@ -192,7 +192,7 @@ The owner's monsters answer with the same Ambition rule, so the hands-off owner 
 
 - **Full suite: 871 of 871 passed** (`18af5b3`), including 11 new tests (6 Ambition, 5 staff). Three older tests were updated: the staff-raise expectation (now the performance-based demand), a stats test that now fills the roster when monsters decline to renew, and the R3/R7 tests (talks first; a real current salary on the injected staff item).
 - **Browser check (320 and 390 px):** staff renewal rows, the renewal outlook with its observation, HQ: no Ambition words, no overflow, no page errors.
-- **Stage P:** STAGE_P_LINE
+- **Stage P** (interleaved, run alone, seeds 1–3 × 6 seasons × 3 repetitions): v42.21.0 14.51 and 14.09 s per season; this build 15.28 and 14.64. Means 14.30 against 14.96: **+4.6%**, inside the +10% limit (**pass**; the previous build was −0.3%).
 
 ---
 
@@ -221,7 +221,7 @@ No parameter was tuned toward a benchmark number. Both readings are within the o
    My recommendation is C, or B if a simpler rule is preferred. Under A the size of the youth effect is larger than "believable variation" seems to call for.
 2. **Talk-chance values:** the table in §2 is my calibration, not owner-approved values. If the owner prefers A, Opportunity's backup and depth chances (0.62 and 0.50, less 0.18 when blocked) are the main lever on youth departures.
 3. **Staff acceptance of less than the demand:** Excellent staff accept an offer 2% under their demand 33% of the time. Lower it if "limited" should mean rarer.
-4. **Generated gym starters** remain worse under every reading. The pool-first nudge is the narrow change the owner allowed; it rarely finds a monster good enough. Accept this as the one-position catalogue's limit, or approve a further change.
+4. **Generated gym starters** remain worse under every reading, and gym elemental identity at season 8 fell back to 24% (§5 D). The pool-first nudge is the narrow change the owner allowed; it rarely finds a monster good enough. Accept this as the one-position catalogue's limit, or approve a further change.
 5. **Round-1 starts at year 2, late seasons** remain worse in the variant (−5.3). Under B or C this should be re-measured with B seeds and held-out sets before any change.
 6. **Final benchmark:** once 1 is decided, run it at the season-start point for both builds with held-out seeds, keeping the original and previous results on record. It waits for approval.
 
