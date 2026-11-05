@@ -92,7 +92,8 @@ export function aiClubTurn(f, club, { bench }) {
   const spots = () => openSpots(f, club) - picksHeld(f, club);
   const roster = rosterOf(f, club);
   const market = marketList(f).map((x) => x.m).filter((m) => wants(f, club, m) && !liveOffers(f, (o) => o.club === club && o.mid === m.id).length);
-  const valueOf = (m) => strategyValue(m, { mode, ask: askOf(f, m).salary, weakestStarter: weakestStarter(roster, m.position), element });
+  const weakAt = {}; const vcache = new Map(); // computed once per turn (the sort compares many times)
+  const valueOf = (m) => { if (vcache.has(m)) return vcache.get(m); if (!(m.position in weakAt)) weakAt[m.position] = weakestStarter(roster, m.position); const v = strategyValue(m, { mode, ask: askOf(f, m).salary, weakestStarter: weakAt[m.position], element }); vcache.set(m, v); return v; };
   /** Offer on `m`: the club's terms, improved for a priority target when the mode says he is worth it, a bonus only where it saves cap. */
   const tryOffer = (m, { tag = null, priority = false, release = null } = {}) => {
     let t = aiTerms(f, club, m, bench);

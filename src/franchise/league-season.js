@@ -223,7 +223,7 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf, signUnsigned = nul
           // R1 b / R4 (owner 2026-11-05): the club's Task 6 strategy and, for a gym, its element decide among the affordable monsters at the position
           const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null; const ro = clubRoster(f, club); const n = GROUP_SLOTS[pos]?.length || 1;
           const atPos = ro.filter((x) => x.position === pos && !x.injury).map(monsterOverall).sort((a, b) => b - a); const weakest = atPos.length >= n ? atPos[n - 1] : null;
-          const val = (x) => strategyValue(x, { mode, ask: salaryFor(x), weakestStarter: weakest, element });
+          const vc = new Map(); const val = (x) => { if (!vc.has(x)) vc.set(x, strategyValue(x, { mode, ask: salaryFor(x), weakestStarter: weakest, element })); return vc.get(x); };
           for (const m of list.filter((x) => x.position === pos && salaryFor(x) <= room).sort((a, b) => val(b) - val(a) || (a.id < b.id ? -1 : 1))) if (signUnsigned(club, m)) { out[key] = (out[key] || 0) + 1; got = true; break; }
           if (got) break;
         }
