@@ -103,7 +103,24 @@ Measured on one league (the negotiation tests and a 600-monster probe): opening 
 
 ## 5. Tests
 
-RESULTS_TESTS
+- **Full suite: 878 of 878 passed** (`bc75960`), including 7 new negotiation tests:
+  - the renewal flow: opening demand, two counteroffers, his counters, final decision, binding acceptance, nothing past the limit;
+  - answer rules: closer offers accepted more often, insults sometimes ending the talks, counters that move;
+  - persistence and no rerolls across save and reload; never more than two counteroffers;
+  - extension refusal separate from the renewal;
+  - the cap checked before an offer counts;
+  - Ambition shaping demands and decisions, never with certainty;
+  - owner and AI parity.
+- **Updated tests:** the Ambition agency test, the R3 outlook test, and two older contract tests. Accepting his demand now signs at his term.
+- **A sale seed changed:** a rare-event test (a rebuilding club's starter sale within 4 seasons) moved from seed 9 to seed 11, because the league's history changed.
+- **Browser check (320 and 390 px), real screens:**
+  - the renewal book shows the opening demand and counteroffers left;
+  - the sheet shows the negotiation (opening, his latest counter, your counteroffers and his answers, attempts left, status);
+  - a counteroffer gets an answer and uses an attempt, and the count survives a reload;
+  - the extension sheet shows the same;
+  - no Ambition words, no overflow, no page errors.
+- **Nature and Temper:** untouched (the Ambition tests' checks pass).
+- **Staff negotiation:** untouched (its tests pass).
 
 ---
 
@@ -175,11 +192,24 @@ Young monsters still leave more often than in v42.21.0, by their own decisions: 
 - Physical change past onset: +0.12 worse (a measuring-point effect, unchanged).
 - Gyms: against ordinary clubs +0.6, inconclusive; lead in season 20 +1.2; tier order held as in v42.21.0.
 - Staff: owner staff 22.5% of the cap at season 1, 24.1% at 8, 27.2% at 19; 0 minimum-staff exceptions.
-- GYM_LINE
+- **Gym elemental identity** (gym starters of the gym's element, 3 seeds × 8 seasons): season 1 38%, season 4 34%, season 8 **31%**. That is back to the pre-Ambition remediation (38 / 34 / 31%), up from 24% with the Ambition as first built, and above v42.21.0's 27% at season 8.
 
 ### E. Owner drift
 
-DRIFT_LINE
+Seasons 1–8, 12 seeds, against v42.21.0:
+
+| Difficulty | v42.21.0 | Remediation (before Ambition) | **This build** | This build against v42.21.0 | Against remediation |
+|---|---|---|---|---|---|
+| Rookie | 73.7 | 69.8 | 69.4 | −4.3 [−8.9, 0.5] | −0.3 [−5.6, 4.9] |
+| Pro | 58.1 | 55.7 | 53.1 | −5.0 [−10.6, 0.7] | −2.5 [−6.6, 1.5] |
+| All-Star | 39.5 | 35.3 | 32.6 | **−6.8 [−10.8, −3.0]** | −2.7 [−7.3, 2.2] |
+
+- Rookie is no longer significantly below v42.21.0. With the Ambition as first built it was −8.1.
+- All-Star stays significantly below: −6.8, against −6.6 as first built and −4.2 before the Ambition.
+- No difference against the remediation build is significant.
+- The hands-off owner accepts every opening demand, which is close to the market ask on average (0.95–1.02 by Ambition), and never counteroffers. A playing owner negotiates.
+- Owner win% in seasons 9–20 (C): −8.5 [−13.4, −4.2], inconclusive (remediation −8.4).
+- No difficulty value was changed.
 
 ### F. Performance
 
@@ -190,4 +220,17 @@ STAGEP_LINE
 
 ## 7. Remaining regressions and decisions
 
-RESULTS_DECISIONS
+**Remaining regressions against v42.21.0 (this build):**
+- **All-Star owner drift: −6.8, significant.** It was −4.2 before the Ambition. The owner's own monsters now decide whether to negotiate, and the hands-off owner never counteroffers.
+- **Generated gym starters +3.7.** This is the smallest of any Task 7 build. It comes from the one-position catalogue and from departures that are now the monsters' own decisions.
+- **Round-1 starters at year 2: −2.8 (late seasons) and −5.6 (all seasons).** Some young players now choose free agency at their first expiry.
+- **Small:** position-relative weak groups +0.9; high-potential growth −0.14.
+- **Contract structure:** 3-year deals 32% (v42.21.0 50%); largest expiry share +3.1. Monster preferences count, as approved; this is about the remediation level.
+- **Young departures:** 0.43 per club-season against 0.23 in v42.21.0. They are by the monsters' own decisions; established stars leave at the v42.21.0 rate.
+
+**Decisions requiring the owner's approval before the final benchmark:**
+1. **The negotiation values** (opening margin and range; concessions; acceptance curves; the insult threshold; AI targets and ceilings) are my calibration for initial testing, not owner-approved values. Approve them as initial values, or ask for changes.
+2. **The renewal talk chance:** refusing to negotiate the renewal is half as likely as refusing an early extension (`NEG.renewWill` 0.5). This is what keeps "testing free agency" a genuine, rarer decision. Approve, or set another value.
+3. **All-Star drift (−6.8):** accept it as the consequence of monsters' own decisions (as the earlier All-Star drift was accepted), or ask for an investigation of the owner's side. No difficulty value was changed.
+4. **Generated gym starters (+3.7):** accept it as the one-position catalogue's limit.
+5. **The final consolidated benchmark:** run it at the season-start point for both builds, with held-out seeds, keeping the original and earlier results on record. It waits for approval.
