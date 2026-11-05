@@ -58,7 +58,7 @@ export { hasLeague, isProtected, clubRoster, findInLeague } from './league-regis
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { ensureFreeAgency, hasFreeAgency, task7Offseason, leagueYear, pruneLocks, noteReleased, noteTraded, tradeLock, returnLock } from './fa-state.js';
 import { counterTerms, registerOwnerHooks, submitOffer, reviseOffer, withdrawOffer, acceptCounter, resolvePeriod, ageMarket, negotiateNow, extend, promoteExtensions, rateOffer, askOf, FA_RULES, capView, liveOffers, marketList, competingOffers, unsigned as unsignedFA, sign as signFA, blocker as faBlocker, entryOf } from './fa-engine.js';
-import { aiMarketTurn, aiTerms } from './fa-ai.js';
+import { aiMarketTurn, aiTerms, aiExtensions, EXTENSION_WEEK } from './fa-ai.js';
 import { overLimit, legendsBySide, legendSide, legendCheck } from './fa-legendary.js';
 import { bonusCharge, capCharge, makeContract, allocateBonus } from './fa-contracts.js';
 import { playGame } from '../sim/game-runner.js';
@@ -1451,7 +1451,8 @@ export function captainStatus(f, side, club = f.club) {
 function simulateLeagueWeek(f) {
   const { r, save } = frng(f);
   ensureCaptains(f); // Captain Partnerships (GDD §27.4B): a season without captains yet gets them before its next games
-  if (hasLeague(f)) { const deals = aiTrades(f, r, { year: f.season.year, cap: tierById(f.tier).cap, window: 'season' }); noteCaptainTrades(f, deals); } // weeks 2–8: an occasional deal between AI clubs (GDD §46); a traded captain leaves his partnership inactive
+  if (hasLeague(f)) { const deals = aiTrades(f, r, { year: f.season.year, cap: tierById(f.tier).cap, window: 'season' }); noteCaptainTrades(f, deals); }
+  if (hasLeague(f) && hasFreeAgency(f) && f.season.week === EXTENSION_WEEK) { const st = (f.freeAgency.steps[f.season.year] ||= {}); if (!st.midExt) { st.midExt = aiExtensions(f); } } // R6: the mid-season extension window, once // weeks 2–8: an occasional deal between AI clubs (GDD §46); a traded captain leaves his partnership inactive
   const fixtures = leagueSeasonFixtures(f.season.year).find((w) => w.week === f.season.week);
   const results = [];
   if (fixtures && !fixtures.bye) {
@@ -2381,6 +2382,7 @@ export function openFreeAgency(f) {
   const trades = hasLeague(f) ? aiTrades(f, r, { year: next, cap, window: 'offseason' }) : []; // AI–AI trades before the market, as before Task 7 (GDD §46)
   fa.leagueYear = next; pruneLocks(f); promoteExtensions(f, next); // the league year turns (Task 7 §3.2)
   fa.extra = generateVeterans(f, r); save();
+  steps.ext = aiExtensions(f); // R6: the offseason extension window, at the league year's turn (contracts entering their final season)
   fa.period = 1; steps.faOpen = true; steps.trades = trades.length;
   aiMarketTurn(f);
   news(f, `Free agency is open: Period 1 of ${FA_RULES.periods}.`, 'info');

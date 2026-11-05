@@ -32,7 +32,9 @@ import { leagueYear } from './fa-state.js';
 import { personaOf } from './fa-personality.js';
 import { GROUP_SLOTS } from './roster.js';
 import { strategyValue, worthPursuing } from './fa-strategy.js';
-import { LIVE, FA_RULES, marketList, askOf, preferredYears, rateOffer, counterTerms, submitOffer, reviseOffer, acceptCounter, liveOffers, rankOffers, usableCap, openSpots, committed, capOf, rosterOf, unsigned, blocker } from './fa-engine.js';
+import { LIVE, FA_RULES, marketList, askOf, preferredYears, rateOffer, counterTerms, submitOffer, reviseOffer, acceptCounter, liveOffers, rankOffers, usableCap, openSpots, committed, capOf, rosterOf, unsigned, blocker, extensionEligible, extend } from './fa-engine.js';
+import { rosterPlan, horizonOf } from './roster-plan.js';
+import { buildDepthChart } from './roster.js';
 import { reservationFor, allocateBonus, OFFER_STEP } from './fa-contracts.js';
 
 export const AI_MARKET = Object.freeze({ offers: 2, contendExtra: 1, raise: 0.05, raiseCap: 1.15, futureCap: 1.0, bonusShare: 0.25, bonusMinded: 60 });
@@ -120,4 +122,37 @@ export function aiMarketTurn(f) {
   const bench = leagueBenchOf(f);
   let n = 0; for (const club of leagueClubs(f).slice().sort()) n += aiClubTurn(f, club, { bench });
   return { offers: n };
+}
+
+// ------------------------------------------------------------ R6: AI extensions (owner approval 2026-11-05)
+/** The two extension windows: mid-season (week 6, when Task 6 strategies already look at the season) and the offseason at the league
+ *  year's turn (contracts entering their final season). */
+export const EXTENSION_WEEK = 6;
+/** The Task 6 core a club extends before expiry: a starter not past his public onset, a designated successor, or a young monster (25 or
+ *  under) with upside by the club's mode (potential at least overall + 5; Rebuild + 3). Never one Task 6 would let walk. */
+export function extensionCandidates(f, club, bench) {
+  const roster = rosterOf(f, club); const mode = modeOf(f, club);
+  const starters = new Set(Object.values(buildDepthChart(roster)).filter(Boolean)); const plan = rosterPlan(roster, bench, { starters });
+  const upside = mode === 'rebuild' ? 3 : 5;
+  return roster.filter((m) => extensionEligible(f, m) && !isProtected(m) && !m.legendary).filter((m) => {
+    const ovr = monsterOverall(m); const pastOnset = horizonOf(m) < 0;
+    return (starters.has(m.id) && !pastOnset) || plan.successors.has(m.id) || ((m.age || 30) <= 25 && (m.potential || 0) >= ovr + upside);
+  }).sort((a, b) => (starters.has(b.id) - starters.has(a.id)) || monsterOverall(b) - monsterOverall(a) || (a.id < b.id ? -1 : 1));
+}
+/** Each AI club offers its core extensions at the club's term and his ask; accepts his counter when the club can carry it in the
+ *  extension's first season; a bonus only where it saves cap (R6). He answers by the shared evaluation. */
+export function aiExtensions(f, { bench = leagueBenchOf(f) } = {}) {
+  const out = { offered: 0, signed: 0, countered: 0, rejected: 0, bonus: 0 };
+  for (const club of leagueClubs(f).slice().sort()) {
+    for (const m of extensionCandidates(f, club, bench)) {
+      let t = aiTerms(f, club, m, bench); out.offered++;
+      let r = extend(f, club, m, t);
+      if (!r.ok && r.code === 'cap') { const b = bonusTerms(f, m, t); if (b !== t) { t = b; r = extend(f, club, m, t); } }
+      if (r.ok && r.outcome === 'countered' && r.counter) { let c = r.counter; const room = capOf(f, club) - committed(f, club, (m.contract?.ends ?? leagueYear(f)) + 1);
+        if (reservationFor(c) > room) c = bonusTerms(f, m, c);
+        if (reservationFor(c) <= room) { r = extend(f, club, m, c); t = c; } else out.countered++; }
+      if (r.ok && r.outcome === 'signed') { out.signed++; if (t.bonus) out.bonus++; } else if (r.ok && r.outcome === 'rejected') out.rejected++;
+    }
+  }
+  return out;
 }

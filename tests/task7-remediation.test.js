@@ -86,3 +86,21 @@ test('R4: a gym\'s generated arrival is of its element when the element has a sp
     assert.equal(SPECIES_DEX.find((s) => s.id === m.species).position, pos, 'the family position');
   }
 });
+
+test('R6: AI extensions — core monsters only, mid-season (week 6) and at the league year\'s turn; an extended contract does not expire; promoted once', () => {
+  const f = newFranchise(37);
+  for (let g = 0; g < 30 && f.season.week < 7; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else F.finishSunday(f, F.simulatePlayerGame(f)); }
+  const mid = f.freeAgency.steps[f.season.year]?.midExt; assert.ok(mid, 'the mid-season window ran'); assert.ok(mid.offered > 0);
+  const extended = leagueClubs(f).flatMap((c) => clubRoster(f, c).filter((m) => m.contract?.next).map((m) => ({ c, m })));
+  assert.equal(extended.length, mid.signed);
+  for (const { m } of extended) { assert.equal(m.contract.next.signed, m.contract.ends + 1); assert.ok(!isProtected(m)); }
+  for (let g = 0; g < 40 && !f.season.finished; g++) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) F.finishSunday(f, F.simulatePlayerGame(f)); else F.skipPlayoffs(f); }
+  for (const { c, m } of extended) if (!m.retired) assert.ok(clubRoster(f, c).includes(m) || !m.contract || m.traded, `${m.name} did not walk at expiry`);
+  if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id); if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
+  for (const i of F.offseasonPending(f)) { const r = F.resolveContract(f, i.id, i.kind === 'staff' ? 'sign' : 'sign'); if (r.status === 'countered') F.resolveContract(f, i.id, 'acceptcounter'); }
+  for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'walk');
+  assert.ok(F.openFreeAgency(f).ok);
+  for (const { c, m } of extended) if (clubRoster(f, c).includes(m)) { assert.equal(m.contract.kind, 'extension', 'promoted at the turn'); assert.ok(!m.contract.next || m.contract.ends === f.freeAgency.leagueYear, 'a further extension only in its final season'); }
+  assert.ok(f.freeAgency.steps[f.season.year].ext, 'the offseason window ran');
+  assert.deepEqual(E.marketProblems(f), []);
+});
