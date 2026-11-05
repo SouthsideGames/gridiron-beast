@@ -489,7 +489,7 @@ export function hireDefaultStaff(f) {
       news(f, `Commissioner exception: ${staffById(id).name} hired as ${role.replace(/_/g, ' ')} at the base salary although it exceeds the cap (no candidate fits). The commissioner reviews the books in week 1.`, 'loss'); }
     out.push({ role, id, exception });
   }
-  return out;
+  f.lastStaffHires = out; // what was hired, and whether under the exception (callers keep the old void return)
 }
 /** Front office: swap one staff member for a candidate (cap permitting). */
 export function replaceStaff(f, id) {

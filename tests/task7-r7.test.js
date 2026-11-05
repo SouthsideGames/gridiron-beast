@@ -55,7 +55,7 @@ test('R7 staff: a renewal must fit next season\'s cap (the owner sees the cost f
   f.offseason.items.push({ kind: 'staff', id: 'st_' + role, role, name: staffById(f.staff[role]).name, current: F.staffSalary ? 0 : 0, ask: c.demand, status: null });
   const r = F.resolveContract(f, 'st_' + role, 'sign'); assert.equal(r.ok, false, 'unaffordable renewal refused'); assert.equal(f.staff[role] != null, true, 'nobody lost by the refusal');
   assert.ok(F.resolveContract(f, 'st_' + role, 'walk').ok); assert.equal(f.staff[role], undefined);
-  const out = F.hireDefaultStaff(f); const h = out.find((x) => x.role === role); assert.ok(h);
+  F.hireDefaultStaff(f); const h = f.lastStaffHires.find((x) => x.role === role); assert.ok(h);
   assert.ok(h.exception, 'no candidate fits: the default under the exception');
   assert.equal(f.capExceptions.filter((e) => e.role === role && e.kind === 'minimum-staff').length, 1, 'logged once');
   assert.ok(f.news.some((n) => /Commissioner exception/.test(n.text || n.msg || JSON.stringify(n))), 'announced');
@@ -63,6 +63,6 @@ test('R7 staff: a renewal must fit next season\'s cap (the owner sees the cost f
   f.pendingDeadCap = 0; const role2 = 'defensive_coordinator'; delete f.staff[role2]; delete f.staffContracts[role2];
   const cheapest = STAFF.filter((x) => x.role === role2).sort((a, b) => a.salary - b.salary)[0];
   f.pendingDeadCap = Math.max(0, F.staffRoom(f, role2) - cheapest.salary - 100); // the default (93,000) no longer fits, the cheapest (72,000) does
-  const o2 = F.hireDefaultStaff(f).find((x) => x.role === role2); assert.equal(o2.exception, false); assert.equal(o2.id, cheapest.id);
+  F.hireDefaultStaff(f); const o2 = f.lastStaffHires.find((x) => x.role === role2); assert.equal(o2.exception, false); assert.equal(o2.id, cheapest.id);
   assert.equal(f.capExceptions.length, 1);
 });

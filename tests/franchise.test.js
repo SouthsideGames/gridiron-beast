@@ -319,7 +319,7 @@ test('traded future picks are honored when that draft comes', async () => {
   let guard = 0; while (!f.season.finished && guard++ < 80) { F.autoRunToSunday(f); if (F.isBye(f)) F.takeBye(f); else if (F.playerAlive(f)) { const m = F.sundayMatchup(f); if (m?.forfeit) F.forfeitSunday(f); else F.finishSunday(f, F.simulatePlayerGame(f)); } else F.skipPlayoffs(f); }
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id);
   if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
-  for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
+  settle(f);
   const b = (t7FA(f), F.beginDraft(f)); assert.equal(b.ok, true);
   const mineR1 = f.draft.order.find((o) => o.round === 1 && o.original === f.club); assert.equal(mineR1.team, other, 'my R1 is theirs');
   const theirR2 = f.draft.order.find((o) => o.round === 2 && o.original === other); assert.equal(theirR2.team, f.club, 'their R2 is mine');
