@@ -2,6 +2,7 @@
 // simulation, progression and economy. One plain state object; every
 // mutation goes through a function here so the UI stays thin.
 
+import { migrationDue, migratePositions } from './position-migration.js';
 import { venueFor } from '../data/stadiums.js';
 import { noteJoin, markCareerFresh, noteEvolution, careerAfterGame, careerSeasonEnd, noteHallOfFame, backfillCareer, careerTimeline, careerSummary, CAREER_MILESTONES, addEvent } from './career.js';
 import * as CP from './partnerships.js';
@@ -2290,6 +2291,7 @@ function endSeason(f) {
   if (hasLeague(f)) slimSeasonAwards(f.history[f.history.length - 1].awards, s.year, (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id] || null); // forward-only compaction of the winner rows (GDD §46): every number keeps one copy, in the book
   { const { r, save } = frng(f); retirementPass(f, r, { year: s.year, news: (t, k) => news(f, t, k) }); save(); } // retirements as the offseason opens, before contracts and the draft (GDD §55.3)
   if (hasFreeAgency(f) && seasonsCompleted(f) >= SEASON_CAP) f.freeAgency.lastSeason = s.year; // the 20-season endpoint: no free-agency offseason after the last season (specification edge cases)
+  if (hasLeague(f) && migrationDue(f)) { const rep = migratePositions(f, { year: s.year }); news(f, `Single-position rule: ${rep.moved} monsters now play their family's position (${rep.owner.length} of yours).${rep.ownerHoles.length ? ` Your lineup has ${rep.ownerHoles.length} open starting slot${rep.ownerHoles.length === 1 ? '' : 's'}: see the offseason screen.` : ''}`, rep.ownerHoles.length ? 'loss' : 'info'); } // owner 2026-11-05, once per save, at this offseason boundary
   if (task7Offseason(f, s.year)) closeSeasonTask7(f, s, rec); else { // Task 7 (fa-state.js): strategy, ageing, then contract processing, before free agency
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   noteGrowth(f, (c) => aiTeam(f, c, s.year));

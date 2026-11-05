@@ -63,6 +63,13 @@ function myOffersHtml(f) {
     return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR</span></div><div class="sub">${fmt(o.salary)}/yr × ${o.years}${o.bonus ? ` + ${fmt(o.bonus)} bonus` : ''} · <b>${STATE_LABEL[o.state]}</b> · answers by Period ${o.expires}</div></div>${o.state === 'countered' ? '<span class="chip warn">counter</span>' : ''}</div>`; }).join('')}</div>`;
 }
 
+/** The single-position migration report (owner 2026-11-05), shown in the offseason it ran: who moved, and any open starting slot. */
+export function migrationPanelHtml(f) {
+  const r = f.positionMigration; if (!r || r.year !== f.season?.year || !f.season?.finished || (!r.owner?.length && !r.ownerHoles?.length)) return '';
+  const rows = (r.owner || []).slice(0, 12).map((x) => `<div class="muted">${esc(x.name)}: ${esc(x.from)} → <b>${esc(x.to)}</b></div>`).join('');
+  return `<div class="panel tight" style="border-color:var(--warn)"><b>🔁 One position per family</b><div class="muted">Every monster now plays its species family's position. ${r.owner.length} of yours moved; their overall now reflects the new position. Nothing else about them changed.</div>${rows}${r.owner.length > 12 ? `<div class="dim">…and ${r.owner.length - 12} more.</div>` : ''}${r.ownerHoles?.length ? `<div class="muted" style="color:var(--bad);margin-top:4px">Open starting slots: ${r.ownerHoles.map(esc).join(', ')}. Fill them in free agency or the draft before the season.</div>` : ''}</div>`;
+}
+
 /** The roster minimum against the cap (owner rule 2026-11-04): what is missing, and the releases the owner may choose, with their savings. */
 export function floorPanelHtml(f) {
   if (!F.freeAgencyDone(f)) return '';
