@@ -1,11 +1,9 @@
 # Task 7 — Performance-Based Staff Contract Negotiation: Design Proposal (2026-11-05)
 
-**Status: PENDING THE OWNER'S APPROVAL. Nothing in this document is implemented.**
-
-- Until approval, the existing renewal demand stays: +10% on each renewal, compounding.
-- The approved R7 affordability framework already applies to it. Renewals and hires are checked against next season's cap, with a logged minimum-staff exception.
-- No replacement percentage, ceiling or automatic raise has been introduced.
-- Staff poaching, promotions and a coaching carousel are out of scope (owner's section 9G).
+**Status: APPROVED WITH REFINEMENTS (owner, 2026-11-05 §8) and IMPLEMENTED on `task7-free-agency`.** The implemented rule is GDD §59.6c and `src/franchise/staff-negotiation.js`; results are in `docs/TASK7_AMBITION_STAFF_RESULTS.md`. This document is kept as the proposal that was approved. Differences in the implementation:
+- **Scout and trainer measures changed after verification (the owner asked for it).** In the game code the trainer affects only the Wednesday training bonus (success chance and size), not development; the scout affects prospect reveals and region scouting, not who starts. So the scout is judged on the value of his club's picks against the picks made around them, and the trainer on the training bonus delivered against a league-average trainer in the same sessions. Both scores are shrunk by 0.6 because the owner's own choices share the result.
+- **Negotiation made less predictable, as the owner asked:** a seeded ±2% pride on the reservation, 2 more points of flexibility when a comparable candidate would take the job for the offer, and an acceptance chance (from 35%) rather than a certain counter between reservation and demand. Excellent staff therefore sometimes take a little less, and poor staff usually but not always take a cut.
+- **The five options are concrete offers:** the demand; half the raise; the same salary; a 5% cut (from the lower of the salary and the demand); let go and replace.
 
 ---
 
