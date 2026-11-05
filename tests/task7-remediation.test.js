@@ -111,10 +111,9 @@ test('R3: the renewal outlook is the extension evaluation itself (Interested / L
   for (const m of f.roster) {
     const o = UI.renewalOutlook(f, m);
     if (!E.extensionEligible(f, m)) { assert.equal(o, null); continue; }
-    const r = E.rateOffer(f, m, f.club, o.terms); const ratio = r.score / r.need;
-    const talks = E.talksOpen(f, m, f.club).open; // the monster's own say comes first (Ambition, owner 2026-11-05 §1E)
-    assert.equal(o.label, !talks ? 'Not interested' : ratio >= 1 ? 'Interested' : ratio >= E.FA_RULES.counterBand ? 'Listening' : 'Not interested'); n++;
-    assert.deepEqual(o.terms, { salary: E.askOf(f, m).salary, years: E.askOf(f, m).years, bonus: 0 });
+    const neg = F.extensionTalks(f, m.id); // the negotiation he would open now (owner 2026-11-05, 13:23): his talk decision and opening demand
+    assert.equal(o.label, neg.state !== 'active' ? 'Not interested' : E.askOf(f, m).salary / neg.demand.salary >= 1 / 1.05 ? 'Interested' : 'Listening'); n++;
+    assert.deepEqual(o.terms, neg.demand);
   }
   assert.ok(n > 3, `${n} final-season contracts`);
   const before = JSON.stringify(f.roster.map((m) => m.contract));

@@ -67,12 +67,13 @@ function myOffersHtml(f) {
 /** R3 (owner 2026-11-05): a monster's renewal outlook in his contract's final season — the same evaluation his extension or renewal gets
  *  (his ask, his preferred term, the club's role for him and its results), as Interested, Listening or Not interested. */
 export function renewalOutlook(f, m) {
-  if (!f.freeAgency?.v || !E.extensionEligible(f, m)) return null; const ask = E.askOf(f, m); const terms = { salary: ask.salary, years: ask.years, bonus: 0 };
-  const t = E.talksOpen(f, m, f.club); // his own say: an observation is shown, never the reason itself
-  if (!t.open) return { label: 'Not interested', cls: 'bad', why: [t.clue, 'He is not ready to discuss an extension now; circumstances may change, and you may still bid for him in free agency.'], ratio: 0, terms, talks: false, clue: t.clue };
-  const o = interestOf(f, m, terms); const r = E.rateOffer(f, m, f.club, terms);
-  const clue = r.moneyRatio < 1 && o.label !== 'Interested' ? 'He is looking for a stronger financial offer.' : t.clue;
-  return { ...o, why: [clue, ...o.why], terms, talks: true, clue };
+  if (!f.freeAgency?.v || !E.extensionEligible(f, m)) return null; const neg = F.extensionTalks(f, m.id); if (!neg) return null;
+  const ask = E.askOf(f, m); const terms = { ...neg.demand };
+  if (neg.state === 'no-talks') return { label: 'Not interested', cls: 'bad', why: [neg.clue, 'He does not want to discuss an extension in this window. That is “not now”, not a decision to leave: a later window and the renewal of his expiring contract are new talks.'], ratio: 0, terms, talks: false, clue: neg.clue, state: neg.state, left: 0 };
+  if (neg.state === 'ended') return { label: 'Not interested', cls: 'bad', why: ['Talks ended in this window. A later window, and the renewal of his expiring contract, are new talks.'], ratio: 0, terms, talks: false, clue: null, state: neg.state, left: 0 };
+  const ratio = ask.salary / Math.max(1, neg.demand.salary); const label = ratio >= 1 / 1.05 ? 'Interested' : 'Listening';
+  const clue = ratio < 0.9 ? 'He is looking for a stronger financial offer.' : neg.clue;
+  return { label, cls: label === 'Interested' ? 'good' : 'warn', why: [clue, `He opens at ${fmt(neg.opening.salary)}/yr for ${neg.opening.years} season${neg.opening.years === 1 ? '' : 's'}; you have ${neg.left} counteroffer${neg.left === 1 ? '' : 's'} in this window.`], ratio, terms, talks: true, clue, state: neg.state, left: neg.left };
 }
 /** R3: the GM Assistant's extension advice (optional, recommendations only): core monsters in their final season who are Interested now. */
 export function extensionAdviceHtml(f, { action = 'faopen' } = {}) {
@@ -126,11 +127,14 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
   const m = inRoster || u?.m; if (!m) return;
   mode ||= inRoster ? 'extend' : F.freeAgencyOpen(f) ? 'offer' : 'now';
   const ask = E.askOf(f, m); const mine = E.liveOffers(f, (o) => o.club === f.club && o.mid === id)[0] || null;
-  const t = { salary: mine?.salary ?? ask.salary, years: mine?.years ?? ask.years, bonus: mine?.bonus ?? 0 };
+  const talks = () => (mode === 'extend' ? F.extensionTalks(f, id) : mode === 'renew' ? F.renewalTalks(f, id) : null); // the negotiation as it stands (owner 2026-11-05, 13:23)
+  const n0 = talks();
+  const t = { salary: mine?.salary ?? n0?.demand?.salary ?? ask.salary, years: mine?.years ?? n0?.demand?.years ?? ask.years, bonus: mine?.bonus ?? n0?.demand?.bonus ?? 0 };
   const p = personaOf(m);
   const draw = () => {
-    const it = (() => { if (mode !== 'extend') return interestOf(f, m, t); const tk = E.talksOpen(f, m, f.club); return tk.open ? interestOf(f, m, t) : { label: 'Not interested', cls: 'bad', why: [tk.clue, 'He is not ready to discuss an extension now; circumstances may change, and you may still bid for him in free agency.'], ratio: 0 }; })(); const block = mode === 'extend' ? null : E.blocker(f, f.club, m, t, { own: mine, final: mode === 'now' });
-    const sched = (() => { const start = mode === 'extend' ? (m.contract?.ends ?? 0) + 1 : (f.freeAgency?.leagueYear ?? f.season.year); const a = allocateBonus(t.bonus, t.years); return a.map((b, i) => ({ year: start + i, salary: t.salary, bonus: b, total: t.salary + b })); })();
+    const neg = talks(); const negHtml = neg ? negotiationPanel(neg) : '';
+    const it = (() => { if (mode === 'renew') return interestOf(f, m, t); if (mode !== 'extend') return interestOf(f, m, t); const tk = E.talksOpen(f, m, f.club); return tk.open ? interestOf(f, m, t) : { label: 'Not interested', cls: 'bad', why: [tk.clue, 'He is not ready to discuss an extension now; circumstances may change, and you may still bid for him in free agency.'], ratio: 0 }; })(); const block = mode === 'extend' || mode === 'renew' ? null : E.blocker(f, f.club, m, t, { own: mine, final: mode === 'now' });
+    const sched = (() => { const start = mode === 'extend' ? (m.contract?.ends ?? 0) + 1 : mode === 'renew' ? f.season.year + 1 : (f.freeAgency?.leagueYear ?? f.season.year); const a = allocateBonus(t.bonus, t.years); return a.map((b, i) => ({ year: start + i, salary: t.salary, bonus: b, total: t.salary + b })); })();
     const rivals = E.competingOffers(f, id).filter((o) => o.club !== f.club);
     const hist = mine?.history || [];
     const deadline = mine ? mine.expires : mode === 'offer' ? E.deadlineFor(f, m) : null;
@@ -140,7 +144,7 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
         <div class="row between" style="margin-top:6px"><b>Seasons</b><span class="seg">${[1, 2, 3].map((y) => `<button class="btn small ${t.years === y ? 'primary' : ''}" data-t="yrs" data-v="${y}">${y}</button>`).join('')}</span></div>
         <div class="row between" style="margin-top:6px"><b>Interest</b><span class="chip ${it.cls}">${it.label}</span></div><ul class="dim" style="margin:4px 0 0 16px;padding:0">${it.why.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
         ${deadline ? `<div class="dim" style="margin-top:4px">He answers by <b>Period ${deadline}</b>${mode === 'offer' && !mine ? ' (his patience sets it; revisions keep it)' : ''}.</div>` : mode === 'now' ? '<div class="dim" style="margin-top:4px">Outside the periods he answers at once.</div>' : ''}</div>
-      ${blockHtml}
+      ${negHtml}${blockHtml}
       <details class="panel tight"><summary><b>Advanced</b> <span class="dim">bonus, priorities, competing offers, cap schedule, history</span></summary>
         <div class="row between" style="margin-top:6px"><b>Signing bonus</b><span><button class="btn small" data-t="bon" data-d="-1000">−1k</button> <b>${fmt(t.bonus)}</b> <button class="btn small" data-t="bon" data-d="1000">+1k</button></span></div>
         <div class="dim" style="font-size:12px">Paid once; spread over the seasons for the cap. No refund and no charge left behind if he leaves.</div>
@@ -149,9 +153,9 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
         <b style="display:block;margin-top:8px">Cap schedule</b>${sched.map((r) => `<div class="row between muted"><span>${yearOf(r.year)}</span><span>${fmt(r.salary)} + ${fmt(r.bonus)} = <b>${fmt(r.total)}</b></span></div>`).join('')}
         ${hist.length ? `<b style="display:block;margin-top:8px">History</b>${hist.map((h) => `<div class="dim">P${h.p ?? '–'} ${esc(h.act)}${h.salary ? ` · ${fmt(h.salary)} × ${h.years}${h.bonus ? ` + ${fmt(h.bonus)}` : ''}` : ''}</div>`).join('')}` : ''}
       </details>
-      <div class="row" style="gap:6px;margin-top:8px">${mode === 'offer' ? (mine ? `<button class="btn primary grow" data-act="revise">Revise offer</button>${mine.state === 'countered' ? '<button class="btn grow" data-act="counter">Accept his counter</button>' : ''}<button class="btn danger" data-act="withdraw">Withdraw</button>` : `<button class="btn primary grow" data-act="offer" ${block ? 'disabled' : ''}>Make offer</button>`) : mode === 'extend' ? '<button class="btn primary grow" data-act="extend">Offer extension</button>' : `<button class="btn primary grow" data-act="now" ${block ? 'disabled' : ''}>Offer now</button>`}</div>`;
+      <div class="row" style="gap:6px;margin-top:8px">${mode === 'offer' ? (mine ? `<button class="btn primary grow" data-act="revise">Revise offer</button>${mine.state === 'countered' ? '<button class="btn grow" data-act="counter">Accept his counter</button>' : ''}<button class="btn danger" data-act="withdraw">Withdraw</button>` : `<button class="btn primary grow" data-act="offer" ${block ? 'disabled' : ''}>Make offer</button>`) : mode === 'extend' || mode === 'renew' ? negButtons(neg, mode) : `<button class="btn primary grow" data-act="now" ${block ? 'disabled' : ''}>Offer now</button>`}</div>`;
   };
-  const { el, close } = sheet(draw(), { title: mode === 'extend' ? 'Contract extension' : 'Free agent' }); let advOpen = false;
+  const { el, close } = sheet(draw(), { title: mode === 'extend' ? 'Contract extension' : mode === 'renew' ? 'Contract renewal' : 'Free agent' }); let advOpen = false;
   const root = () => el;
   const redraw = () => { const body = el.querySelector('.sheet-body') || el; advOpen = !!el.querySelector('details')?.open; body.innerHTML = draw(); if (advOpen) el.querySelector('details')?.setAttribute('open', ''); };
   const done = (msg, kind = 'good') => { app.save({ immediate: true }); toast(msg, kind); close(); onDone?.(); };
@@ -166,6 +170,12 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
     if (act === 'revise') { r = F.reviseFreeAgentOffer(f, mine.id, t); if (r.ok) return done('Offer revised (same deadline).'); }
     if (act === 'counter') { r = F.acceptFreeAgentCounter(f, mine.id); if (r.ok) return done('You took his counter: he answers when the period advances.'); }
     if (act === 'withdraw') { if (!(await confirmSheet(`Withdraw your offer to ${m.name}? The reserved cap is released.`, { title: 'Withdraw', okLabel: 'Withdraw', danger: true }))) return; r = F.withdrawFreeAgentOffer(f, mine.id); if (r.ok) return done('Offer withdrawn.', 'info'); }
+    if (act === 'acceptdemand' || act === 'renewoffer') {
+      r = mode === 'extend' ? F.extendContract(f, id, t, { accept: act === 'acceptdemand' }) : F.resolveContract(f, id, act === 'acceptdemand' ? 'sign' : 'offer', act === 'acceptdemand' ? {} : { salary: t.salary, years: t.years, bonus: t.bonus });
+      if (r.ok && (r.outcome === 'signed' || r.status === 'signed')) return done(mode === 'extend' ? `${m.name} extended.` : `${m.name} re-signed.`);
+      if (r.ok && (r.outcome === 'countered' || r.status === 'countered')) { Object.assign(t, r.counter); toast(`He counters: ${fmt(r.counter.salary)}/yr for ${r.counter.years}.`, 'info'); redraw(); return; }
+      if (r.ok) { toast(r.reason || (r.status === 'declined' ? 'He ends the talks and will test free agency.' : 'He ends the talks for now.'), 'bad'); redraw(); onDone?.(); return; }
+    }
     if (act === 'now' || act === 'extend') {
       r = act === 'now' ? F.negotiateFreeAgent(f, id, t) : F.extendContract(f, id, t);
       if (r.ok && r.outcome === 'signed') return done(act === 'now' ? `${m.name} signed.` : `${m.name} extended.`);
@@ -174,6 +184,23 @@ export function negotiationSheet(app, id, onDone, { mode = null } = {}) {
     }
     if (r && !r.ok) toast(r.reason, 'bad');
   });
+}
+
+/** The negotiation as the owner sees it: opening demand, his current demand, the offers made and his answers, attempts left, status. */
+function negotiationPanel(neg) {
+  const st = neg.state === 'active' ? 'Negotiating' : neg.state === 'agreed' ? 'Agreed' : neg.state === 'no-talks' ? (neg.window === 'renew' ? 'Not negotiating: he will test free agency' : 'Not negotiating in this window') : neg.window === 'renew' ? 'Ended: he will test free agency' : 'Ended for this window';
+  const ans = { accept: 'accepted', counter: 'countered', end: 'ended the talks' };
+  return `<div class="panel tight"><div class="row between"><b>Negotiation</b><span class="chip ${neg.state === 'active' ? 'warn' : neg.state === 'agreed' ? 'good' : 'bad'}">${esc(st)}</span></div>
+    <div class="row between muted"><span>Opening demand</span><span>${fmt(neg.opening.salary)}/yr × ${neg.opening.years}</span></div>
+    ${neg.demand.salary !== neg.opening.salary || neg.demand.bonus ? `<div class="row between muted"><span>His latest counter</span><b>${fmt(neg.demand.salary)}/yr × ${neg.demand.years}${neg.demand.bonus ? ` + ${fmt(neg.demand.bonus)}` : ''}</b></div>` : ''}
+    ${neg.offers.filter((o) => !o.free).map((o, i) => `<div class="row between dim"><span>Your counteroffer ${i + 1}</span><span>${fmt(o.salary)} × ${o.years}${o.bonus ? ` + ${fmt(o.bonus)}` : ''} · ${ans[o.answer] || o.answer}</span></div>`).join('')}
+    <div class="row between muted"><span>Counteroffers left</span><b>${neg.left}</b></div>
+    ${neg.state === 'no-talks' && neg.clue ? `<div class="dim">${esc(neg.clue)}</div>` : ''}
+    <div class="dim" style="font-size:12px">Accepting his demand is binding and uses no counteroffer. Each counteroffer gets an answer: accept, counter or end the talks; the second gets his final decision.</div></div>`;
+}
+function negButtons(neg, mode) {
+  if (!neg || neg.state !== 'active') return `<button class="btn grow" disabled>${neg?.state === 'agreed' ? 'Agreed' : 'Talks closed'}</button>`;
+  return `<button class="btn primary grow" data-act="acceptdemand">Accept ${fmt(neg.demand.salary)}/yr</button><button class="btn grow" data-act="renewoffer" ${neg.left ? '' : 'disabled'}>Counteroffer (${neg.left} left)</button>`;
 }
 
 /** Handlers the offseason screen delegates (kept here with the markup they serve). */

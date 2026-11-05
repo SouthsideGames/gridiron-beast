@@ -59,8 +59,8 @@ import { hasLeague, clubRecord, clubRoster, leagueClubs, claimMonster, clubCapRo
 export { hasLeague, isProtected, clubRoster, findInLeague } from './league-registry.js';
 import { afterGame, recoverWeek, offseason, OUT_OF_POSITION_RISK } from './progression.js';
 import { ensureFreeAgency, hasFreeAgency, task7Offseason, leagueYear, pruneLocks, noteReleased, noteTraded, tradeLock, returnLock } from './fa-state.js';
-import { talksOpen, noteClubResults, strengthTable, counterTerms, registerOwnerHooks, submitOffer, reviseOffer, withdrawOffer, acceptCounter, resolvePeriod, ageMarket, negotiateNow, extend, promoteExtensions, rateOffer, askOf, FA_RULES, capView, liveOffers, marketList, competingOffers, unsigned as unsignedFA, sign as signFA, blocker as faBlocker, entryOf } from './fa-engine.js';
-import { aiMarketTurn, aiTerms, aiExtensions, EXTENSION_WEEK } from './fa-ai.js';
+import { negotiation, negotiate, countersLeft, NEG, extWindow, talksOpen, noteClubResults, strengthTable, counterTerms, registerOwnerHooks, submitOffer, reviseOffer, withdrawOffer, acceptCounter, resolvePeriod, ageMarket, negotiateNow, extend, promoteExtensions, rateOffer, askOf, FA_RULES, capView, liveOffers, marketList, competingOffers, unsigned as unsignedFA, sign as signFA, blocker as faBlocker, entryOf } from './fa-engine.js';
+import { aiMarketTurn, aiTerms, aiExtensions, aiBargain, EXTENSION_WEEK } from './fa-ai.js';
 import { overLimit, legendsBySide, legendSide, legendCheck } from './fa-legendary.js';
 import { bonusCharge, capCharge, makeContract, allocateBonus } from './fa-contracts.js';
 import { playGame } from '../sim/game-runner.js';
@@ -903,30 +903,38 @@ export function forfeitSunday(f) {
  * offer costs patience. 'walk' lets him go now. A contract runs 1–3 seasons, with an optional bonus.
  */
 function renewTask7(f, item, m, choice, { years, salary, bonus }) {
+  // owner 2026-11-05 (13:23): the renewal is a negotiation — his own decision to talk (or to test free agency), his opening demand, at
+  // most two counteroffers from the club, his counters and his final decision; the AI clubs' renewals run the same negotiation
   const nextYear = f.season.year + 1;
-  if (choice === 'acceptcounter') { if (!item.counter) return { ok: false, reason: 'There is no counter to accept.' }; ({ salary, years, bonus } = item.counter); choice = 'sign'; item.tookCounter = true; }
   if (choice === 'walk') { f.roster = f.roster.filter((x) => x.id !== m.id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === m.id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); item.status = 'walked'; news(f, `${m.name} walks as a free agent. Back to ${homeRegion(m)}'s pool.`, 'loss'); return { ok: true, status: 'walked' }; }
-  if (!item.talks) { const t = talksOpen(f, m, f.club); item.talks = t.open ? 'open' : 'closed'; if (!t.open) item.clue = t.clue; } // Ambition: one answer per contract, kept on the item
-  if (item.talks === 'closed') { item.status = 'declined'; news(f, `${m.name} would rather test free agency than renew now. ${item.clue || ''} You may still bid for him when Period 1 opens.`, 'loss'); return { ok: true, status: 'declined', talks: 'closed', clue: item.clue }; }
-  const ask = Math.round(item.ask / 100) * 100;
-  const pay = salary != null ? Math.round(salary / 100) * 100 : choice === 'counter' ? Math.round(ask * COUNTER_PCT / 100) * 100 : ask;
-  const terms = { salary: pay, years, bonus: Math.max(0, Math.round((bonus || 0) / 100) * 100) };
-  const charge = terms.salary + allocateBonus(terms.bonus, years)[0]; const room = capFor(f) - committedNext(f, m);
-  if (charge > room) return { ok: false, code: 'cap', reason: `Next season's cap has ${Math.max(0, room).toLocaleString('en-US')} cr. free; this deal needs ${charge.toLocaleString('en-US')} cr. in its first season.` };
-  entryOf(f, m); const r = rateOffer(f, m, f.club, terms);
-  if (r.low) { const e = entryOf(f, m); e.patience = Math.max(0, e.patience - FA_RULES.lowballCost); }
-  if (r.score >= r.need) {
-    m.salary = terms.salary; m.contract = makeContract({ start: nextYear, years, salary: terms.salary, bonus: terms.bonus, kind: 'renewal' }); m.contract.bonusPaid = { by: f.club, ly: nextYear };
-    item.status = 'signed'; item.final = terms.salary; item.years = years; if (choice === 'counter') item.countered = 'accepted'; delete item.counter;
-    news(f, `${m.name} re-signed for ${years === 1 ? 'one season' : `${years} seasons`} at ${terms.salary.toLocaleString('en-US')} cr.${terms.bonus ? ` plus a ${terms.bonus.toLocaleString('en-US')} cr. bonus` : ''}.`, 'roster');
+  const neg = renewalNeg(f, item, m);
+  if (neg.state === 'no-talks') { item.status = 'declined'; return { ok: true, status: 'declined', talks: 'closed', clue: neg.clue }; }
+  if (neg.state === 'ended') { item.status = 'declined'; return { ok: true, status: 'declined' }; }
+  const accept = choice === 'sign' || choice === 'acceptcounter';
+  let terms = accept ? { ...neg.demand } : { salary: Math.round((salary ?? (choice === 'counter' ? neg.demand.salary * COUNTER_PCT : neg.demand.salary)) / 100) * 100, years: years ?? neg.demand.years, bonus: Math.max(0, Math.round((bonus || 0) / 100) * 100) };
+  const charge = terms.salary + allocateBonus(terms.bonus, terms.years)[0]; const room = capFor(f) - committedNext(f, m);
+  if (charge > room) return { ok: false, code: 'cap', reason: `Next season's cap has ${Math.max(0, room).toLocaleString('en-US')} cr. free; this deal needs ${charge.toLocaleString('en-US')} cr. in its first season.` }; // checked before the offer counts
+  const r = negotiate(f, m, neg, terms, { accept }); item.left = countersLeft(neg); item.ask = neg.demand.salary;
+  if (r.outcome === 'agreed') {
+    const t = r.terms; m.salary = t.salary; m.contract = makeContract({ start: nextYear, years: t.years, salary: t.salary, bonus: t.bonus, kind: 'renewal' }); m.contract.bonusPaid = { by: f.club, ly: nextYear };
+    item.status = 'signed'; item.final = t.salary; item.years = t.years; if (neg.offers.length) item.countered = 'accepted'; delete item.counter;
+    news(f, `${m.name} re-signed for ${t.years === 1 ? 'one season' : `${t.years} seasons`} at ${t.salary.toLocaleString('en-US')} cr.${t.bonus ? ` plus a ${t.bonus.toLocaleString('en-US')} cr. bonus` : ''}.`, 'roster');
     return { ok: true, status: 'signed' };
   }
-  item.rounds = (item.rounds || 0) + 1;
-  { const c = r.score >= r.need * FA_RULES.counterBand && item.rounds < 3 ? counterTerms(f, m, f.club, terms) : null; if (c) { item.counter = c; return { ok: true, status: 'countered', counter: c }; } } // close: he counters (the negotiation engine's rule) // close: he counters (the negotiation engine's rule)
-  item.status = 'declined'; if (choice === 'counter') item.countered = 'refused';
-  news(f, `${m.name} turned down ${choice === 'counter' ? 'your counter' : 'the renewal'}. He becomes a free agent when Period 1 opens: you may still bid.`, 'loss');
-  return { ok: true, status: 'declined' };
+  if (r.outcome === 'countered') { item.counter = r.counter; return { ok: true, status: 'countered', counter: r.counter, left: item.left }; }
+  item.status = 'declined'; item.countered = 'refused';
+  news(f, `${m.name} ends the renewal talks and will test free agency when Period 1 opens. You may still bid for him there.`, 'loss');
+  return { ok: true, status: 'declined', reason: r.reason };
 }
+/** The renewal negotiation behind an offseason book item (opened once; its opening demand becomes the item's ask). */
+function renewalNeg(f, item, m) {
+  const neg = negotiation(f, m, f.club, 'renew'); item.negKey = neg.key; if (item.opening == null) item.opening = neg.opening.salary;
+  item.ask = neg.demand.salary; item.demandYears = neg.demand.years; item.left = countersLeft(neg);
+  if (neg.state === 'no-talks' && !item.status) { item.status = 'declined'; item.talks = 'closed'; item.clue = neg.clue; news(f, `${m.name} does not want to negotiate a renewal: he will test free agency when Period 1 opens. ${neg.clue} You may still bid for him there.`, 'loss'); }
+  return neg;
+}
+/** Open the owner's renewal negotiations for the offseason book (Task 7): opening demands, and any monster who will not negotiate. */
+function monsterRenewals(f) { for (const i of f.offseason?.items || []) if (i.kind === 'monster' && !i.status) { const m = f.roster.find((x) => x.id === i.id); if (m) renewalNeg(f, i, m); } }
 /** The owner's commitments in the coming league year without `except` (whose deal is being renewed). */
 function committedNext(f, except) { const ly = f.season.year + 1; let s = 0; for (const m of f.roster) if (m !== except) s += capCharge(m, ly); s += Object.keys(f.staff || {}).reduce((sum, role) => sum + staffSalary(f, role), 0) + (f.pendingDeadCap || 0); return s; }
 // ------------------------------------------------------------ R7: staff affordability (owner approval 2026-11-05)
@@ -979,7 +987,7 @@ function negotiateStaff(f, item, choice, { years, salary }) {
 }
 /** Decide one renewal: 'sign' at the ask, 'counter' at 85% (they may walk), 'walk' (to the pool; a coach's role falls empty). */
 export function resolveContract(f, id, choice, { years = CONTRACT_YEARS, salary = null, bonus = 0 } = {}) {
-  const t7 = task7Offseason(f) && f.season.finished;
+  const t7 = task7Offseason(f) && f.season.finished; const asked = arguments[3]?.years; // Task 7 monsters: a counteroffer without a term keeps his preferred term
   years = Math.max(1, Math.min(t7 ? 3 : CONTRACT_YEARS, years | 0)); // one year for the veteran you want one more season of; two at most before Task 7, three with it (resolution 1)
   const item = (f.offseason?.items || []).find((i) => i.id === id && !i.status); if (!item) return { ok: false, reason: 'Nothing to decide.' };
   const nextYear = f.season.year + 1;
@@ -991,7 +999,7 @@ export function resolveContract(f, id, choice, { years = CONTRACT_YEARS, salary 
     delete f.staff[item.role]; delete f.staffContracts[item.role]; item.status = 'walked'; news(f, `${item.name} leaves. Hire a new ${item.role.replace(/_/g, ' ')} before the season.`, 'loss'); return { ok: true, status: 'walked' };
   }
   const m = f.roster.find((x) => x.id === id); if (!m) { item.status = 'gone'; return { ok: true, status: 'gone' }; }
-  if (t7) return renewTask7(f, item, m, choice, { years, salary, bonus });
+  if (t7) return renewTask7(f, item, m, choice, { years: asked == null ? null : years, salary, bonus });
   const { r, save } = frng(f);
   const sign = (salary) => { m.salary = salary; m.contract = newContract(nextYear, years); item.status = 'signed'; item.final = salary; item.years = years; news(f, `${m.name} re-signed for ${years === 1 ? 'one season' : 'two seasons'} at ${salary.toLocaleString('en-US')} cr.`, 'roster'); };
   const walk = (why) => { f.roster = f.roster.filter((x) => x.id !== id); for (const [slot, mid] of Object.entries(f.lineupManual)) if (mid === id) delete f.lineupManual[slot]; toPool(f, m, 'walked'); item.status = 'walked'; news(f, `${m.name} ${why}. Back to ${homeRegion(m)}'s pool.`, 'loss'); };
@@ -2459,17 +2467,18 @@ function closeSeasonTask7(f, s, rec) {
     leagueAgeing(f, r, { year, ctx: ageCtx }); save(); steps.aged = true;
   }
   // contract processing: the owner's renewals (answered by the monster when decided) and the AI's Task 6 renewals
-  { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); staffDemands(f, year); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal. Free agency opens when they are settled.`, 'info'); }
-  f.leagueOffseason = { ...(f.leagueOffseason?.opened === year ? f.leagueOffseason : {}), closed: year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year, cap, excessOf: (c) => excess[c] || 0, accepts: (club, m, terms) => aiRenewalAnswer(f, club, m, terms, cap) }) };
+  { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); staffDemands(f, year); monsterRenewals(f); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal. Free agency opens when they are settled.`, 'info'); }
+  f.leagueOffseason = { ...(f.leagueOffseason?.opened === year ? f.leagueOffseason : {}), closed: year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year, cap, excessOf: (c) => excess[c] || 0, accepts: (club, m, terms, x) => aiRenewalAnswer(f, club, m, terms, cap, x) }) };
   steps.contracts = true;
 }
 /** A monster's answer to his AI club's renewal: yes; or, when close, his counter, which the club pays if next season's cap can carry it. */
-function aiRenewalAnswer(f, club, m, terms, cap) {
-  if (!talksOpen(f, m, club).open) return 'talks'; // Ambition: he would rather test the market (the club may still bid there)
-  const r = rateOffer(f, m, club, terms); if (r.score >= r.need) return true;
-  if (r.score < r.need * FA_RULES.counterBand) return false;
-  const c = counterTerms(f, m, club, terms); if (!c) return false; const room = clubCapRoom(f, club, cap) + (m.salary || 0); // his current salary leaves with the old deal
-  return c.salary - terms.salary <= Math.max(0, room - terms.salary) ? { salary: c.salary, years: c.years } : false;
+function aiRenewalAnswer(f, club, m, terms, cap, { core = false } = {}) {
+  // the renewal negotiation of the expiring contract (owner 2026-11-05, 13:23): his own talk decision for this window, his opening demand,
+  // the club's counteroffers within its mode's target and ceiling, his counters and final decision — the owner's rules exactly
+  const neg = negotiation(f, m, club, 'renew'); if (neg.state === 'no-talks') return 'talks';
+  const room = clubCapRoom(f, club, cap) + (m.salary || 0); // his current salary leaves with the old deal
+  const t = aiBargain(f, club, m, neg, { core, fits: (x) => x.salary <= room, years: terms.years, bonus: false });
+  return t ? { salary: t.salary, years: t.years } : false;
 }
 /** This offseason's generated veterans (the market has always had a dozen besides the pools). */
 function generateVeterans(f, r) {
@@ -2526,7 +2535,11 @@ export function negotiateFreeAgent(f, mid, terms) {
   if (f.season.finished && !freeAgencyDone(f) && task7Offseason(f)) return t7fail('The market opens with free agency, after the renewals.');
   return negotiateNow(f, f.club, mid, terms);
 }
-export function extendContract(f, id, terms) { const m = f.roster.find((x) => x.id === id); if (!m) return t7fail('Not on the roster.'); if (!hasFreeAgency(f)) return t7fail('Extensions come with the new free agency.'); return extend(f, f.club, m, terms); }
+export function extendContract(f, id, terms, { accept = false } = {}) { const m = f.roster.find((x) => x.id === id); if (!m) return t7fail('Not on the roster.'); if (!hasFreeAgency(f)) return t7fail('Extensions come with the new free agency.'); return extend(f, f.club, m, terms, { accept }); }
+/** The extension negotiation with `id` in the current window, as it stands (or as it would open: viewing opens nothing). */
+export function extensionTalks(f, id) { const m = f.roster.find((x) => x.id === id); if (!m || !hasFreeAgency(f)) return null; const neg = negotiation(f, m, f.club, extWindow(f), { peek: true }); return neg ? { ...neg, left: countersLeft(neg) } : null; }
+/** The renewal negotiation behind an offseason book item (Task 7), as it stands. */
+export function renewalTalks(f, id) { const i = (f.offseason?.items || []).find((x) => x.id === id && x.kind === 'monster'); const neg = i?.negKey ? f.freeAgency?.talks?.[i.negKey] : null; return neg ? { ...neg, left: countersLeft(neg) } : null; }
 export const freeAgencyCap = (f, club = f.club) => capView(f, club);
 export { task7Offseason } from './fa-state.js';
 /** The market the owner sees: every unsigned monster with his current ask and the offers on him (grounded, decision 11). */

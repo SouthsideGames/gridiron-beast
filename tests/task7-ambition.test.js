@@ -96,25 +96,20 @@ test('probabilities: each Ambition moves the relevant decision, and none guarant
   for (const a of AMBITIONS) { const x = acc(a, mid, 0.95); assert.ok(x > 0 && x < 1, `${a}: ${x}`); }
 });
 
-test('extension agency: a monster may decline talks despite an acceptable offer; the club may still bid in free agency; owner and AI share the logic; no reroll', () => {
+test('extension agency: a monster may decline to talk in a window; asking again changes nothing; owner and AI use the same negotiation', () => {
   const f = seasonDone(75); t7Settle(f); assert.ok(F.openFreeAgency(f).ok); F.finishFreeAgency(f);
-  // in the new league year, find final-season contracts on AI clubs and the owner
-  let declinedOk = 0, compared = 0;
+  let declined = 0, eligible = 0;
   for (const club of E.allClubs(f)) for (const m of E.rosterOf(f, club)) {
-    if (!E.extensionEligible(f, m)) continue; const t = E.talksOpen(f, m, club); const terms = { ...E.askOf(f, m), bonus: 3 * E.askOf(f, m).salary > 0 ? 0 : 0 }; terms.salary = Math.round(terms.salary * 1.3 / 100) * 100; // generous
-    const r = E.rateOffer(f, m, club, terms); compared++;
-    if (!t.open && r.score >= r.need) {
-      const before = JSON.stringify(m.contract); const x = E.extend(f, club, m, terms); assert.equal(x.outcome, 'declined'); assert.equal(JSON.stringify(m.contract), before, 'nothing signed');
-      assert.equal(E.extend(f, club, m, terms).outcome, 'declined', 'asking again with the same offer draws nothing new'); assert.equal(E.talksOpen(f, m, club).open, false);
-      assert.ok(x.reason && !/ambition/i.test(x.reason)); declinedOk++;
-    }
-    if (declinedOk >= 3) break;
+    if (!E.extensionEligible(f, m)) continue; eligible++;
+    const neg = E.negotiation(f, m, club, E.extWindow(f), { peek: true }); if (neg.state !== 'no-talks' || declined >= 3) continue;
+    const terms = { salary: Math.round(E.askOf(f, m).salary * 1.3 / 100) * 100, years: E.askOf(f, m).years, bonus: 0 }; const before = JSON.stringify(m.contract);
+    const x = E.extend(f, club, m, terms); assert.equal(x.outcome, 'declined', 'even a generous offer: he will not talk in this window'); assert.equal(JSON.stringify(m.contract), before);
+    assert.equal(E.extend(f, club, m, terms).outcome, 'declined', 'asking again draws nothing new'); assert.ok(!/ambition/i.test(x.reason)); declined++;
   }
-  assert.ok(compared > 10, `${compared}`); assert.ok(declinedOk >= 1, 'some monsters decline despite an acceptable financial offer');
-  // the owner's path is the shared engine: extendContract gives exactly E.extend's answer, talks first
-  const mine = f.roster.filter((m) => E.extensionEligible(f, m));
-  for (const m of mine.slice(0, 6)) { const t = E.talksOpen(f, m, f.club); const terms = { ...E.askOf(f, m), bonus: 0 }; const r = E.rateOffer(f, m, f.club, terms);
-    const expect = !t.open ? 'declined' : r.score >= r.need ? 'signed' : null; const got = F.extendContract(f, m.id, terms); if (expect) assert.equal(got.outcome, expect); }
+  assert.ok(eligible > 10); assert.ok(declined >= 1);
+  // the owner's extensions are the shared engine: F.extendContract is E.extend for the owner's club
+  const mine = f.roster.find((m) => E.extensionEligible(f, m) && E.negotiation(f, m, f.club, E.extWindow(f), { peek: true }).state === 'active');
+  if (mine) { const r = F.extendContract(f, mine.id, null, { accept: true }); assert.ok(r.ok && r.outcome === 'signed', JSON.stringify(r)); assert.equal(mine.contract.next.salary, r.neg.opening.salary); }
 });
 
 test('Nature, Temper, training and development are untouched by the Ambition', () => {

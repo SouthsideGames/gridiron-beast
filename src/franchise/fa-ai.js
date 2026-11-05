@@ -32,7 +32,7 @@ import { leagueYear } from './fa-state.js';
 import { personaOf } from './fa-personality.js';
 import { GROUP_SLOTS } from './roster.js';
 import { strategyValue, worthPursuing } from './fa-strategy.js';
-import { LIVE, FA_RULES, marketList, askOf, preferredYears, rateOffer, counterTerms, submitOffer, reviseOffer, acceptCounter, liveOffers, rankOffers, usableCap, openSpots, committed, capOf, rosterOf, unsigned, blocker, extensionEligible, extend } from './fa-engine.js';
+import { LIVE, FA_RULES, marketList, askOf, preferredYears, rateOffer, counterTerms, submitOffer, reviseOffer, acceptCounter, liveOffers, rankOffers, usableCap, openSpots, committed, capOf, rosterOf, unsigned, blocker, extensionEligible, extend, negotiation, negotiate, extWindow, sealExtension, NEG } from './fa-engine.js';
 import { rosterPlan, horizonOf } from './roster-plan.js';
 import { buildDepthChart } from './roster.js';
 import { reservationFor, allocateBonus, OFFER_STEP } from './fa-contracts.js';
@@ -141,21 +141,45 @@ export function extensionCandidates(f, club, bench) {
     return (starters.has(m.id) && !pastOnset) || plan.successors.has(m.id) || ((m.age || 30) <= 25 && (m.potential || 0) >= ovr + upside);
   }).sort((a, b) => (starters.has(b.id) - starters.has(a.id)) || monsterOverall(b) - monsterOverall(a) || (a.id < b.id ? -1 : 1));
 }
-/** Each AI club offers its core extensions at the club's term and his ask; accepts his counter when the club can carry it in the
- *  extension's first season; a bonus only where it saves cap (R6). He answers by the shared evaluation. */
+/**
+ * An AI club's side of a contract negotiation (owner 2026-11-05, 13:23): the same negotiation as the owner's (fa-engine negotiate). The
+ * club's target is the monster's market ask scaled by its Task 6 mode; it pays up to a ceiling that is higher for its core and for a
+ * contender; every offer must fit its cap (`fits`), with a cap-saving bonus only where it buys the same value (R6). It accepts an opening
+ * demand at or near its target, else counters at its target, takes his counter when within its ceiling, else counters once more halfway
+ * (within its ceiling). He may still end the talks, and the club may still lose him.
+ */
+export const AI_NEG = Object.freeze({ target: Object.freeze({ contend: 1.0, compete: 0.96, retool: 0.94, rebuild: 0.92 }), ceiling: Object.freeze({ core: 1.12, other: 1.03 }), contendCeiling: 0.04, near: 0.02 });
+export function aiBargain(f, club, m, neg, { core = false, fits, years = null, bonus = true }) {
+  if (!neg || neg.state !== 'active') return neg?.state === 'agreed' ? neg.agreed : null;
+  const mode = modeOf(f, club); const ask = askOf(f, m).salary;
+  const target = step(ask * (AI_NEG.target[mode] ?? 0.96)); const ceiling = step(ask * ((core ? AI_NEG.ceiling.core : AI_NEG.ceiling.other) + (mode === 'contend' ? AI_NEG.contendCeiling : 0)));
+  const ok = (t) => { if (fits(t)) return t; if (!bonus) return null; const b = bonusTerms(f, m, t); return b !== t && fits(b) ? b : null; };
+  const D = neg.demand; if (D.salary <= target * (1 + AI_NEG.near) && fits(D)) { const r = negotiate(f, m, neg, null, { accept: true }); return r.terms; }
+  let offer = { salary: Math.min(target, D.salary), years: years ?? D.years, bonus: 0 };
+  for (let round = 0; round < NEG.counters && neg.state === 'active'; round++) {
+    const t = ok(offer); if (!t) return null; // it cannot afford even its own offer: it lets him go
+    const r = negotiate(f, m, neg, t);
+    if (r.outcome === 'agreed') return r.terms;
+    if (r.outcome !== 'countered') return null;
+    const c = r.counter; if (c.salary <= ceiling && fits(c)) return negotiate(f, m, neg, null, { accept: true }).terms;
+    offer = { salary: step(Math.min(ceiling, (t.salary + c.salary) / 2)), years: c.years, bonus: 0 };
+  }
+  return neg.state === 'agreed' ? neg.agreed : null;
+}
+/** Each AI club negotiates its core extensions in the current window (the same negotiation as the owner's). */
 export function aiExtensions(f, { bench = leagueBenchOf(f) } = {}) {
-  const out = { offered: 0, signed: 0, countered: 0, rejected: 0, bonus: 0, declined: 0, declinedStarters: 0, byAmbition: {} }; // byAmbition: developer diagnostics only (never shown)
+  const out = { offered: 0, signed: 0, countered: 0, rejected: 0, bonus: 0, declined: 0, declinedStarters: 0, byAmbition: {}, accepted: 0, compromised: 0 }; // byAmbition: developer diagnostics only (never shown)
+  const window = extWindow(f);
   for (const club of leagueClubs(f).slice().sort()) {
     const starters = new Set(Object.values(buildDepthChart(rosterOf(f, club))).filter(Boolean));
     for (const m of extensionCandidates(f, club, bench)) {
-      let t = aiTerms(f, club, m, bench); out.offered++; const a = (out.byAmbition[ambitionOf(m)] ||= { offered: 0, declined: 0, signed: 0 }); a.offered++;
-      let r = extend(f, club, m, t);
-      if (r.ok && r.outcome === 'declined') { out.declined++; a.declined++; if (starters.has(m.id)) out.declinedStarters++; continue; } // his say: no talks this window
-      if (!r.ok && r.code === 'cap') { const b = bonusTerms(f, m, t); if (b !== t) { t = b; r = extend(f, club, m, t); } }
-      if (r.ok && r.outcome === 'countered' && r.counter) { let c = r.counter; const room = capOf(f, club) - committed(f, club, (m.contract?.ends ?? leagueYear(f)) + 1);
-        if (reservationFor(c) > room) c = bonusTerms(f, m, c);
-        if (reservationFor(c) <= room) { r = extend(f, club, m, c); t = c; } else out.countered++; }
-      if (r.ok && r.outcome === 'signed') { out.signed++; a.signed++; if (t.bonus) out.bonus++; } else if (r.ok && r.outcome === 'rejected') out.rejected++;
+      out.offered++; const a = (out.byAmbition[ambitionOf(m)] ||= { offered: 0, declined: 0, signed: 0 }); a.offered++;
+      const neg = negotiation(f, m, club, window);
+      if (neg.state === 'no-talks') { out.declined++; a.declined++; if (starters.has(m.id)) out.declinedStarters++; continue; } // his say: not now
+      const start = m.contract.ends + 1; const room = capOf(f, club) - committed(f, club, start);
+      const t = aiBargain(f, club, m, neg, { core: true, fits: (x) => x.salary + allocateBonus(x.bonus || 0, x.years)[0] <= room, years: aiTerms(f, club, m, bench).years });
+      if (t) { sealExtension(f, club, m, t); out.signed++; a.signed++; if (t.bonus) out.bonus++; if (neg.offers.length) out.compromised++; else out.accepted++; }
+      else { out.rejected++; if (neg.offers.some((o) => o.counter)) out.countered++; }
     }
   }
   return out;

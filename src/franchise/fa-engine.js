@@ -377,34 +377,127 @@ export function extensionEligible(f, m) { const c = m?.contract; return !!c && !
  * so changed circumstances can reopen talks. Returns { open, chance, clue, apply } — `chance` is internal (never shown); `clue` is an
  * observation for the outlook. Declining talks refuses nothing in free agency: the club may still bid there.
  */
-export function talksOpen(f, m, club) {
+export function talksOpen(f, m, club, { window = null } = {}) {
   const amb = ambitionOf(m); const role = roleAt(f, club, m); const mrole = marketRole(f, m); const outlook = clubOutlook(f, club); const home = homeFor(f, m, club);
-  const chance = talkChance({ ambition: amb, outlook, role, marketRole: mrole, home, veteran: personaOf(m).stage === 'veteran' });
-  const key = `${f.seed ?? 0}|${m.id}|${club}|${m.contract?.ends ?? leagueYear(f)}`; const open = draw(`talk|${key}`) < chance;
+  let chance = talkChance({ ambition: amb, outlook, role, marketRole: mrole, home, veteran: personaOf(m).stage === 'veteran' });
+  if (window === 'renew') chance = 1 - NEG.renewWill * (1 - chance); // the expiring contract: a final opportunity; refusing it is a decision to test free agency, rarer than waiting on an early extension
+  const key = `${f.seed ?? 0}|${m.id}|${club}|${m.contract?.ends ?? leagueYear(f)}${window ? `|${window}` : ''}`; const open = draw(`talk|${key}`) < chance;
   const rk = (r) => (r === 'starter' ? 2 : r === 'backup' ? 1 : 0);
   const apply = { direction: outlook < 0.45, role: rk(mrole) > rk(role), home: home && open };
   return { open, chance, apply, clue: clueFor(amb, apply, key, { talks: open }), key };
 }
+
+// ------------------------------------------------------------ contract negotiations (owner 2026-11-05, 13:23)
+/**
+ * One negotiation per monster, club, contract and window — an early extension window ('ext-pre': from the league year's turn to week
+ * NEG.midWeek − 1; 'ext-mid': from week NEG.midWeek to the season's close) or the renewal of the expiring contract ('renew', at the
+ * season's close, before free agency opens). The same rules for the owner and every AI club; stored in `f.freeAgency.talks` (saved).
+ *   1. Talks: the monster first decides whether to negotiate in this window (talksOpen, Ambition; an independent draw per window, so an
+ *      early refusal is never carried into the renewal). Declining an extension is "not now"; declining the renewal is "testing free agency".
+ *   2. Opening demand: his market ask at his preferred term, moved by the circumstances at this club — half the difference between his
+ *      reservation here (from the shared evaluation rateOffer: money, years, role, the club's results and direction, his Ambition and
+ *      mood) and an ordinary club's — plus a margin (more for Money), between 0.92 and 1.35 of the ask. Nothing below 85% of his ask is
+ *      ever inside his reservation (the lowball rule), and his counters never go below it.
+ *   3. The club may accept the current demand at any time (binding; uses no attempt) or make a counteroffer — at most NEG.counters per
+ *      window. He answers each: accept (more likely the closer the offer is to his demand), counter (between the offer and his demand,
+ *      never below his reservation; Money concedes least, Loyalty most), or — after an insulting offer, sometimes — end the talks. The
+ *      second counteroffer gets his final decision: accept, or end the talks (an expiring contract then goes to free agency).
+ *   One seeded draw per negotiation and round: equivalent or repeated offers, reopened screens and reloads change nothing.
+ */
+export const NEG = Object.freeze({
+  counters: 2, midWeek: 6, renewWill: 0.5,
+  margin: 0.04, circumstance: 0.5, openRange: [0.92, 1.35], gap: Object.freeze({ money: 0.06, loyalty: 0, championship: 0.02, opportunity: 0.02 }),
+  concede: Object.freeze({ money: 0.35, loyalty: 0.6, championship: 0.5, opportunity: 0.5 }),
+  firstAccept: [0.35, 0.85], finalAccept: [0.6, 0.95], insult: 0.82, endOnInsult: Object.freeze({ money: 0.5, loyalty: 0.15, championship: 0.35, opportunity: 0.35 }), lateAccept: 0.15,
+  unreachable: 1.4,
+});
+/** The window an extension negotiation belongs to now. */
+export const extWindow = (f) => (f.season && !f.season.finished && (f.season.week || 1) >= NEG.midWeek && (f.freeAgency?.leagueYear ?? f.season.year) === f.season.year ? 'ext-mid' : 'ext-pre');
+/** The lowest salary (at `years`, with `bonus`) at which `club`'s offer satisfies him now, or null when money cannot. */
+export function reservationAt(f, m, club, years, bonus = 0) {
+  const t = { salary: OFFER_STEP, years: clampYears(years), bonus }; const r = rateOffer(f, m, club, t); const p = personaOf(m); const ask = askOf(f, m);
+  const tot = Object.values(r.weights).reduce((x, y) => x + y, 0) || 1; const wm = r.weights.money / tot; if (!(wm > 0)) return null;
+  const mood = moodOf(f.seed, leagueYear(f), m.id, club); const others = r.score / mood - wm * r.parts.money; const moneyNeed = (r.need / mood - others) / wm;
+  if (moneyNeed > NEG.unreachable) return null; const bonusEq = (bonus * (1 + p.money / 200)) / t.years;
+  t.salary = Math.max(OFFER_STEP, Math.ceil((moneyNeed * ask.salary - bonusEq) / OFFER_STEP) * OFFER_STEP);
+  for (let i = 0; i < 20; i++) { const x = rateOffer(f, m, club, t); if (x.score >= x.need) return t.salary; t.salary += OFFER_STEP; }
+  return null;
+}
+const negStore = (f) => (f.freeAgency.talks ||= {});
+/** The negotiation for (monster, club, this contract, window): the existing one, or a new one with his talk decision and opening demand. */
+export function negotiation(f, m, club, window, { peek = false } = {}) {
+  if (!f.freeAgency) return null;
+  const key = `${m.id}|${club}|${m.contract?.ends ?? leagueYear(f)}|${window}`; const S = peek ? (f.freeAgency.talks || {}) : negStore(f); if (S[key]) return S[key];
+  const t = talksOpen(f, m, club, { window }); const ask = askOf(f, m); const amb = ambitionOf(m); const R = reservationAt(f, m, club, ask.years, 0);
+  // anchored on his market ask; the circumstances (his reservation at this club against an ordinary club's, 0.9 of the ask) move it
+  const c = R == null ? NEG.unreachable : R / ask.salary; const share = Math.max(NEG.openRange[0], Math.min(NEG.openRange[1], 1 + NEG.margin + (NEG.gap[amb] || 0) + NEG.circumstance * (c - FA_RULES.tolerance)));
+  const salary = toStep(ask.salary * share);
+  const opening = { salary: Math.max(OFFER_STEP, salary), years: ask.years, bonus: 0 };
+  const neg = { key, mid: m.id, club, window, kind: window === 'renew' ? 'renewal' : 'extension', ly: leagueYear(f), ends: m.contract?.ends ?? null, opening, demand: { ...opening }, offers: [], state: t.open ? 'active' : 'no-talks', clue: t.clue, testsMarket: !t.open && window === 'renew', agreed: null };
+  if (!peek) S[key] = neg; return neg; // `peek`: what he would say, without opening anything (screens never change the game)
+}
+/** Counteroffers left to the club in this negotiation. */
+export const countersLeft = (neg) => (neg?.state === 'active' ? Math.max(0, NEG.counters - neg.offers.length) : 0);
+/**
+ * The club's move in a negotiation: `accept` his current demand (binding, no attempt used), or a counteroffer `terms`. Returns
+ * { outcome: 'agreed' | 'countered' | 'ended' | 'no-talks', terms?, counter?, reason } and updates the stored negotiation. The caller
+ * checks the cap before calling and seals an agreement into the contract.
+ */
+export function negotiate(f, m, neg, terms, { accept = false } = {}) {
+  if (!neg) return { outcome: 'ended', reason: 'There is no negotiation.' };
+  if (neg.state === 'no-talks') return { outcome: 'no-talks', reason: `${m.name} does not want to negotiate now. ${neg.clue}` };
+  if (neg.state !== 'active') return { outcome: neg.state === 'agreed' ? 'agreed' : 'ended', terms: neg.agreed, reason: neg.state === 'agreed' ? 'Already agreed.' : `Talks with ${m.name} have ended for now.` };
+  if (accept) { neg.state = 'agreed'; neg.agreed = { ...neg.demand }; return { outcome: 'agreed', terms: neg.agreed }; }
+  terms = { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
+  const rO = rateOffer(f, m, neg.club, terms); const rD = rateOffer(f, m, neg.club, neg.demand);
+  if (rO.score >= rD.score) { neg.offers.push({ ...terms, answer: 'accept', free: true }); neg.state = 'agreed'; neg.agreed = terms; return { outcome: 'agreed', terms }; } // at or above his demand: no attempt used
+  if (countersLeft(neg) <= 0) return { outcome: 'ended', reason: 'No counteroffers left in this window.' };
+  if (rO.low && f.freeAgency) lowball(f, m, entryOf(f, m), neg.club); // a lowball still costs patience (decision 4)
+  const round = neg.offers.length + 1; const final = round >= NEG.counters; const amb = ambitionOf(m);
+  const u = draw(`neg|${f.seed ?? 0}|${neg.key}|${round}`); const u2 = draw(`neg2|${f.seed ?? 0}|${neg.key}|${round}`);
+  const span = rD.score - rO.need; let x = span > 1e-9 ? (rO.score - rO.need) / span : rO.score >= rO.need ? 1 : -1; const q = rO.score / (rO.need || 1);
+  if (rO.low) x = Math.min(x, -1e-9); // below 85% of his market ask is never inside his reservation, whatever the club (no lowball exploit, Loyalty included)
+  const lerp = ([a, b], t) => a + (b - a) * Math.max(0, Math.min(1, t));
+  let answer;
+  if (x >= 0) answer = u < lerp(final ? NEG.finalAccept : NEG.firstAccept, x) ? 'accept' : final ? 'end' : 'counter';
+  else if (!final) answer = q < NEG.insult && u2 < (NEG.endOnInsult[amb] ?? 0.35) ? 'end' : 'counter';
+  else answer = u < NEG.lateAccept * Math.max(0, Math.min(1, (q - 0.9) / 0.1)) ? 'accept' : 'end';
+  const rec = { ...terms, answer }; neg.offers.push(rec);
+  if (answer === 'accept') { neg.state = 'agreed'; neg.agreed = terms; return { outcome: 'agreed', terms }; }
+  if (answer === 'end') { neg.state = 'ended'; neg.testsMarket = neg.window === 'renew'; return { outcome: 'ended', reason: neg.window === 'renew' ? `${m.name} ends the talks and will test free agency.` : `${m.name} ends the talks for now; he may listen again in a later window.` }; }
+  // his counter: between the offer and his demand, never below his reservation at his term (with the offered bonus)
+  const Rp = reservationAt(f, m, neg.club, neg.demand.years, terms.bonus); const prev = neg.demand.salary;
+  let sal = prev - (NEG.concede[amb] ?? 0.5) * Math.max(0, prev - terms.salary); sal = Math.max(sal, Rp ?? 0, askOf(f, m).salary * FA_RULES.lowball);
+  sal = Math.min(prev, toStep(sal)); neg.demand = { salary: Math.max(OFFER_STEP, sal), years: neg.demand.years, bonus: terms.bonus }; rec.counter = { ...neg.demand };
+  return { outcome: 'countered', counter: { ...neg.demand } };
+}
+/** Drop negotiations from finished league years (called at the league year's turn). */
+export function pruneTalks(f, ly = leagueYear(f)) { const S = f.freeAgency?.talks; if (!S) return; for (const k of Object.keys(S)) if (S[k].ly < ly) delete S[k]; } // the finished league year's talks are settled: kept small in the save
 /**
  * Extend `m` (on `club`) from the year after his deal ends. The club's cap in that first new year must hold it. Returns
  * { ok, outcome: 'signed' | 'countered' | 'rejected' | 'declined', counter? } — 'declined': he will not discuss it now (Ambition);
  * an extension never touches the running contract.
  */
-export function extend(f, club, m, terms) {
+export function extend(f, club, m, terms, { accept = false } = {}) {
   if (!rosterOf(f, club).some((x) => x.id === m.id)) return { ok: false, code: 'roster', reason: 'He is not on the roster.' };
   if (!extensionEligible(f, m)) return { ok: false, code: 'eligible', reason: 'Extensions are offered in a contract’s final season.' };
-  terms = { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
+  const neg = negotiation(f, m, club, extWindow(f));
+  if (neg.state === 'no-talks') return { ok: true, outcome: 'declined', reason: `${m.name} is not ready to discuss an extension. ${neg.clue}`, clue: neg.clue, neg };
+  if (neg.state !== 'active') return { ok: false, code: 'ended', reason: `Talks with ${m.name} have ended for this window.`, neg };
+  terms = accept ? { ...neg.demand } : { salary: toStep(terms.salary), years: clampYears(terms.years), bonus: toStep(terms.bonus || 0) };
   const start = m.contract.ends + 1; const charge = terms.salary + allocateBonus(terms.bonus, terms.years)[0];
   const room = capOf(f, club) - committed(f, club, start);
-  if (charge > room) return { ok: false, code: 'cap', reason: `The extension's first season needs ${charge.toLocaleString('en-US')} cr.; ${start} has ${Math.max(0, room).toLocaleString('en-US')} cr. free.` };
-  { const t = talksOpen(f, m, club); if (!t.open) return { ok: true, outcome: 'declined', reason: `${m.name} is not ready to discuss an extension. ${t.clue}`, clue: t.clue }; } // Ambition: his say, before any offer
-  hasFreeAgency(f) && entryOf(f, m); const r = rateOffer(f, m, club, terms); if (r.low) lowball(f, m, entryOf(f, m), club);
-  if (r.score >= r.need) { m.contract.next = makeContract({ start, years: terms.years, salary: terms.salary, bonus: terms.bonus, kind: 'extension' }); m.contract.next.bonusPaid = { by: club, ly: start }; delete f.freeAgency.market[m.id]; logTx(f, { kind: 'extend', club, mid: m.id, salary: terms.salary, years: terms.years }); return { ok: true, outcome: 'signed', contract: m.contract.next }; }
-  { const c = r.score >= r.need * FA_RULES.counterBand ? counterTerms(f, m, club, terms) : null; if (c) return { ok: true, outcome: 'countered', counter: c }; }
-  return { ok: true, outcome: 'rejected' };
+  if (charge > room) return { ok: false, code: 'cap', reason: `The extension's first season needs ${charge.toLocaleString('en-US')} cr.; ${start} has ${Math.max(0, room).toLocaleString('en-US')} cr. free.` }; // checked before the offer counts
+  const res = negotiate(f, m, neg, terms, { accept });
+  if (res.outcome === 'agreed') return { ok: true, outcome: 'signed', contract: sealExtension(f, club, m, res.terms), neg };
+  if (res.outcome === 'countered') return { ok: true, outcome: 'countered', counter: res.counter, left: countersLeft(neg), neg };
+  return { ok: true, outcome: 'rejected', reason: res.reason, neg };
 }
+/** Write an agreed extension (it follows the running contract; binding). */
+export function sealExtension(f, club, m, t) { const start = m.contract.ends + 1; m.contract.next = makeContract({ start, years: t.years, salary: t.salary, bonus: t.bonus || 0, kind: 'extension' }); m.contract.next.bonusPaid = { by: club, ly: start }; delete f.freeAgency.market[m.id]; logTx(f, { kind: 'extend', club, mid: m.id, salary: t.salary, years: t.years }); return m.contract.next; }
 /** At the turn of the league year, extensions signed to follow a contract take over (salary included). */
 export function promoteExtensions(f, ly) {
+  pruneTalks(f, ly);
   let n = 0; const all = [...f.roster, ...(hasLeague(f) ? Object.values(f.league.monsters) : [])];
   for (const m of all) { const x = m.contract?.next; if (x && x.signed === ly) { m.contract = x; m.salary = x.salary; n++; } }
   return n;
