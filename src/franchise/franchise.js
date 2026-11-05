@@ -557,6 +557,7 @@ export function salarySummary(f, proposed = 0) {
 }
 registerOwnerHooks({ // Task 7: the engine's view of the owner's club (fa-engine.js)
   capFor: (f) => capFor(f), news: (f, text, kind) => news(f, text, kind),
+  releaseAi: (f, club, id) => releaseFromClub(f, club, id, { year: leagueYear(f), reason: 'released', why: 'upgrade' }), // R1 c: an AI upgrade's release, made with the signing
   staffTotal: (f) => Object.keys(f.staff || {}).reduce((sum, role) => sum + staffSalary(f, role), 0),
   joinOwner: (f, m, via, start) => { uniqueName(f, m); m.origin ||= homeRegion(m); m.joined = start; backfillCareer(f, m); noteJoin(f, m, via, { region: homeRegion(m) }); f.roster.push(m); dexRecord(f, m, 'signed'); news(f, `${m.name} (${m.position}, ${monsterOverall(m)} OVR) signed: ${m.contract.years} season${m.contract.years === 1 ? '' : 's'} at ${m.contract.salary.toLocaleString('en-US')} cr.${m.contract.bonus ? ` plus a ${m.contract.bonus.toLocaleString('en-US')} cr. bonus` : ''}.`, 'roster', { mid: m.id, mname: m.name }); },
 });

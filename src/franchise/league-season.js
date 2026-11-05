@@ -19,6 +19,10 @@ import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegio
 import { publicOnset } from '../data/aging.js';
 import { rosterPlan, leagueBench, horizonOf, qualifiesAsSuccessor, PLAN } from './roster-plan.js';
 import { modeOf } from './strategy.js';
+import { strategyValue } from './fa-strategy.js';
+import { hasFreeAgency } from './fa-state.js';
+import { GYM_BY_CLUB } from '../data/gyms.js';
+import { SPECIES_DEX } from '../data/species.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
 /** Task 6 Phase A-2 (D10b, owner 2026-10-30): the ordinary clubs' slowdown band and runaway-veteran band, separate from the gyms'
@@ -216,7 +220,11 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf, signUnsigned = nul
       if (signUnsigned) { // Task 7: the best affordable monster at the position who accepts; the waivers first, then the pools
         let got = false;
         for (const [list, key] of [[f.league.waivers || [], 'fromWaivers'], [Object.values(f.pool || {}).flat(), 'fromPools']]) {
-          for (const m of list.filter((x) => x.position === pos && salaryFor(x) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a) || (a.id < b.id ? -1 : 1))) if (signUnsigned(club, m)) { out[key] = (out[key] || 0) + 1; got = true; break; }
+          // R1 b / R4 (owner 2026-11-05): the club's Task 6 strategy and, for a gym, its element decide among the affordable monsters at the position
+          const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null; const ro = clubRoster(f, club); const n = GROUP_SLOTS[pos]?.length || 1;
+          const atPos = ro.filter((x) => x.position === pos && !x.injury).map(monsterOverall).sort((a, b) => b - a); const weakest = atPos.length >= n ? atPos[n - 1] : null;
+          const val = (x) => strategyValue(x, { mode, ask: salaryFor(x), weakestStarter: weakest, element });
+          for (const m of list.filter((x) => x.position === pos && salaryFor(x) <= room).sort((a, b) => val(b) - val(a) || (a.id < b.id ? -1 : 1))) if (signUnsigned(club, m)) { out[key] = (out[key] || 0) + 1; got = true; break; }
           if (got) break;
         }
         if (got) continue;
@@ -289,6 +297,9 @@ export function generateArrival(f, r, { club, position, quality, room, floor = f
   const regions = Object.keys(REGIONS).sort(() => r.next() - 0.5); let regionName = regions[0], pool = [];
   for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position && s.rarity !== 'legendary'); if (p.length) { regionName = rn; pool = p; break; } }
   if (!pool.length) return null;
+  // R4 (owner 2026-11-05): a gym's arrival is of its element when the element has a species at the position (else any element: mixed support)
+  { const el = hasFreeAgency(f) ? GYM_BY_CLUB[club]?.element : null; const own = el ? SPECIES_DEX.filter((s) => s.element === el && s.position === position && s.rarity !== 'legendary') : [];
+    if (own.length) { pool = own; regionName = regions.find((rn) => (REGIONS[rn].types || []).includes(el)) || regionName; } }
   const sp = r.pick(pool);
   let q = Math.max(MIN_QUALITY, Math.round(quality)); let m = null;
   for (let i = 0; i < 12; i++) { m = generateMonster(r, { position, quality: q, species: sp.id, age: 24 + r.int(7) }); if (salaryFor(m) <= room || (floor && q <= MIN_QUALITY)) break; m = null; q = Math.max(MIN_QUALITY, q - 3); if (q === MIN_QUALITY && !floor && i > 6) break; }

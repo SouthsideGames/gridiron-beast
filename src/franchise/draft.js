@@ -9,6 +9,9 @@ import { generateMonster, regionSpecies, salaryFor, monsterOverall, ROSTER_MAX }
 import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
 import { draftNeedBonus } from './roster-plan.js';
+import { GYM_BY_CLUB } from '../data/gyms.js';
+/** R4 (owner 2026-11-05): a gym's tie-break for prospects of its element (Task 7 franchises only); as small as the market's. */
+export const GYM_ELEMENT_BONUS = 1.5;
 
 export const DRAFT_ROUNDS = 3;
 export const ROOKIE_SCALE = 0.70;
@@ -92,7 +95,8 @@ export function aiDraftPick(f, team, rng, { plan = null } = {}) {
   const need = {}; if (plan) for (const m of avail) need[m.id] = draftNeedBonus(plan, m.position, m);
   const mode = plan?.mode || 'compete'; const pw = POTENTIAL_WEIGHT[mode] ?? 0.2;
   const ready = {}; if (mode === 'contend' && plan?.groups) for (const m of avail) { const rows = plan.groups[m.position]?.rows || []; const weakest = rows.length ? Math.min(...rows.map((r) => monsterOverall(r.starter))) : 0; if (monsterOverall(m) >= weakest) ready[m.id] = READY_BONUS; }
-  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0);
+  const element = f.freeAgency?.v ? GYM_BY_CLUB[team]?.element : null;
+  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0) + (element && m.type === element ? GYM_ELEMENT_BONUS : 0);
   return avail.sort((a, b) => score(b) - score(a))[0] || null;
 }
 
