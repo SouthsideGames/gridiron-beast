@@ -325,3 +325,27 @@ No gameplay code, no merge, no publish, no Task 8 work. Implementation starts af
   - The owner can always recover; zero dead cap and the legendary limits are unchanged.
   - The affected benchmark seeds are rerun and checked for new roster or cap violations; the GDD and Task 7 documents are updated.
 - **Implemented in:** `f37b629` (rule, plan, interface, AI, tests) and `9df9d50` (benchmark recording only). See GDD §59.2.
+
+## 10. Owner decisions on the benchmark report (2026-11-04, 19:17)
+
+- **Decision 1 — comparative regressions: option B, targeted remediation.**
+  - The nine regressions are **not** accepted as a new baseline.
+  - Investigate first, then propose targeted fixes for review. Priorities: rebuilding recovery, AI veteran retention, young-monster development, positional shortages, gym roster replenishment.
+  - No gameplay value changes or speculative balance fixes before the owner reviews the proposals.
+- **Decision 2 — All-Star drift (−3.5, significant): investigate.** Find the actual cause (free-agency economy, roster construction or another Task 7 change). Do not adjust difficulty settings, owner advantages or AI strength to make the benchmark pass.
+- **Decision 3 — draft and staff: extend affordability enforcement**, in addition to trades, free agency and Beast Clash recruitment.
+  - Before implementation, present a safe process for a club that cannot afford a selection or a staff commitment.
+  - Requirements: no permanent offseason dead end; no silent discarding of picks, monsters or staff contracts; zero dead cap for monsters preserved; existing saves compatible; any commissioner exception explicit, limited and auditable.
+- **Decision 4 — AI signing bonuses and extensions: implement both,** under the player's financial rules, driven by Task 6 strategies, roster needs, future cap obligations, personalities and contract value. No forced usage to improve statistics. Explain the integration with AI contract management before implementation.
+- **Final single-position rule (final):**
+  - Every species family has exactly one permanent football position, unchanged through every evolution stage.
+  - Monsters of the same family cannot hold different positions.
+  - Secondary positions, dual eligibility and position changes through evolution are not restored.
+  - Existing saves: established monsters are preserved, with a non-destructive migration and lineup repair consistent with the specification.
+- **Task 8 boundary:**
+  - Task 8 (72-family catalog, 7 families per position with 8 at WR and CB, individual attribute variation and ceilings, Tempers) is approved in design but **not** authorised.
+  - It is not assumed to fix Task 7's regressions and is not started during this investigation.
+- **Boundaries:**
+  - Allowed: read-only analysis, targeted diagnostics and documentation.
+  - Not allowed: gameplay changes before approval, merge, publish.
+  - Next deliverable: a prioritised remediation proposal (`docs/TASK7_REMEDIATION_PROPOSAL.md`). Every proposal in it is **pending approval**.
