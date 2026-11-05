@@ -839,7 +839,7 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   assert.equal(F.startNextSeason(f).ok, false, 'decisions gate the new season');
   const first = items.find((i) => i.kind === 'monster'); const mon = f.roster.find((x) => x.id === first.id);
   { const rs = F.resolveContract(f, first.id, 'sign'); assert.equal(rs.ok, true, rs.reason); // Task 7: the monster answers the renewal (personality, role, the club's results)
-    if (rs.status === 'signed') { assert.equal(mon.salary, Math.round(first.ask / 100) * 100); assert.equal(mon.contract.ends, 4); } else assert.equal(rs.status, 'declined', 'a refusal makes him a free agent when Period 1 opens'); }
+    if (rs.status === 'signed') { assert.equal(mon.salary, Math.round(first.ask / 100) * 100); assert.equal(mon.contract.ends, 2 + mon.contract.years, 'his demand, at his preferred term (Task 7 negotiation)'); } else assert.equal(rs.status, 'declined', 'a refusal makes him a free agent when Period 1 opens'); }
   const second = items.find((i) => i.kind === 'monster' && !i.status); F.resolveContract(f, second.id, 'walk'); assert.ok(!f.roster.some((x) => x.id === second.id)); assert.ok(Object.values(f.pool).flat().some((x) => x.id === second.id), 'walked to the pool');
   settle(f, 'counter');
   assert.equal(F.offseasonPending(f).length, 0);
@@ -857,7 +857,8 @@ test('contracts: a renewal may be one season or two, never more', async () => {
   assert.deepEqual(newContract(3, 1), { signed: 3, ends: 3, years: 1 }); assert.deepEqual(newContract(3, 5), { signed: 3, ends: 4, years: 2 }); assert.equal(newContract(3).years, 2);
   const f = newFranchise(71); f.season.finished = true; f.season.year = 2; const m = f.roster[0]; m.contract = { signed: 1, ends: 2, years: 2 };
   f.offseason = { year: 2, items: [{ kind: 'monster', id: m.id, name: m.name, position: m.position, ovr: 60, current: m.salary, ask: 40000, status: null }], winningRecord: true };
-  assert.equal(F.resolveContract(f, m.id, 'sign', { years: 1 }).ok, true); assert.equal(m.contract.ends, 3); assert.equal(m.contract.years, 1); assert.equal(m.salary, 40000);
+  if (!F.task7Offseason(f)) { assert.equal(F.resolveContract(f, m.id, 'sign', { years: 1 }).ok, true); assert.equal(m.contract.ends, 3); assert.equal(m.contract.years, 1); assert.equal(m.salary, 40000); }
+  else { const r = F.resolveContract(f, m.id, 'sign', { years: 1 }); assert.equal(r.ok, true); const it = f.offseason.items[0]; if (r.status === 'signed') { assert.equal(m.salary, it.ask, 'accepting his demand (Task 7 negotiation)'); assert.ok(m.contract.years >= 1 && m.contract.years <= 3); } else assert.equal(r.status, 'declined'); }
 });
 
 test('the draft: class opens in the final week, Mondays scout it and Tuesdays recover, no recruiting; offseason draft runs worst-first snake with rookie deals; AI draftees persist and are rookies next season', async () => {

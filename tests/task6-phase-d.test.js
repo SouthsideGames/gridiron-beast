@@ -163,7 +163,7 @@ test('R4 one sale per window: the offseason window and the season window are cou
 
 test('R4 in play: rebuilding clubs sell ageing starters to clubs that need them, for youth or picks, at most one sale per window', async () => {
   const { runFranchise } = await import('../tools/franchise-soak.mjs');
-  const { f, problems } = runFranchise(9, { seasons: 4 }); assert.deepEqual(problems, []); // seed 9: a sale within 4 seasons (sales are rare events; Task 7 changed the seeds' leagues — one position per species, the free-agency offseason, the R1 market strategy)
+  const { f, problems } = runFranchise(11, { seasons: 4 }); assert.deepEqual(problems, []); // seed 11: a sale within 4 seasons (the negotiation change of 2026-11-05 moved seed 9's) (sales are rare events; Task 7 changed the seeds' leagues — one position per species, the free-agency offseason, the R1 market strategy)
   const sales = (f.league.trades || []).filter((t) => t.sale); assert.ok(sales.length >= 1, 'sales happen');
   const windows = new Map(); for (const t of sales) { const k = `${t.year}|${t.week > 0 ? 'season' : 'offseason'}`; windows.set(k, (windows.get(k) || 0) + 1); }
   for (const [k, c] of windows) assert.ok(c <= STARTER_SALE.perWindow, `one sale in window ${k}`);
