@@ -408,7 +408,7 @@ export const NEG = Object.freeze({
   counters: 2, midWeek: 6, renewWill: 0.5,
   margin: 0.04, circumstance: 0.5, openRange: [0.92, 1.35], gap: Object.freeze({ money: 0.06, loyalty: 0, championship: 0.02, opportunity: 0.02 }),
   concede: Object.freeze({ money: 0.35, loyalty: 0.6, championship: 0.5, opportunity: 0.5 }),
-  firstAccept: [0.35, 0.85], finalAccept: [0.6, 0.95], insult: 0.82, endOnInsult: Object.freeze({ money: 0.5, loyalty: 0.15, championship: 0.35, opportunity: 0.35 }), lateAccept: 0.15,
+  firstAccept: [0.35, 0.85], finalAccept: [0.6, 0.95], insult: 0.75, endOnInsult: Object.freeze({ money: 0.5, loyalty: 0.15, championship: 0.35, opportunity: 0.35 }), lateAccept: 0.15,
   unreachable: 1.4,
 });
 /** The window an extension negotiation belongs to now. */
@@ -460,7 +460,7 @@ export function negotiate(f, m, neg, terms, { accept = false } = {}) {
   const lerp = ([a, b], t) => a + (b - a) * Math.max(0, Math.min(1, t));
   let answer;
   if (x >= 0) answer = u < lerp(final ? NEG.finalAccept : NEG.firstAccept, x) ? 'accept' : final ? 'end' : 'counter';
-  else if (!final) answer = q < NEG.insult && u2 < (NEG.endOnInsult[amb] ?? 0.35) ? 'end' : 'counter';
+  else if (!final) answer = rO.moneyRatio < NEG.insult && u2 < (NEG.endOnInsult[amb] ?? 0.35) ? 'end' : 'counter'; // an insult: money under NEG.insult of his ask
   else answer = u < NEG.lateAccept * Math.max(0, Math.min(1, (q - 0.9) / 0.1)) ? 'accept' : 'end';
   const rec = { ...terms, answer }; neg.offers.push(rec);
   if (answer === 'accept') { neg.state = 'agreed'; neg.agreed = terms; return { outcome: 'agreed', terms }; }

@@ -143,7 +143,7 @@ export function extensionCandidates(f, club, bench) {
 }
 /**
  * An AI club's side of a contract negotiation (owner 2026-11-05, 13:23): the same negotiation as the owner's (fa-engine negotiate). The
- * club's target is the monster's market ask scaled by its Task 6 mode; it pays up to a ceiling that is higher for its core and for a
+ * club's target is the monster's market ask scaled by its Task 6 mode, at its own term (aiYears); it pays up to a ceiling that is higher for its core and for a
  * contender; every offer must fit its cap (`fits`), with a cap-saving bonus only where it buys the same value (R6). It accepts an opening
  * demand at or near its target, else counters at its target, takes his counter when within its ceiling, else counters once more halfway
  * (within its ceiling). He may still end the talks, and the club may still lose him.
@@ -154,15 +154,16 @@ export function aiBargain(f, club, m, neg, { core = false, fits, years = null, b
   const mode = modeOf(f, club); const ask = askOf(f, m).salary;
   const target = step(ask * (AI_NEG.target[mode] ?? 0.96)); const ceiling = step(ask * ((core ? AI_NEG.ceiling.core : AI_NEG.ceiling.other) + (mode === 'contend' ? AI_NEG.contendCeiling : 0)));
   const ok = (t) => { if (fits(t)) return t; if (!bonus) return null; const b = bonusTerms(f, m, t); return b !== t && fits(b) ? b : null; };
-  const D = neg.demand; if (D.salary <= target * (1 + AI_NEG.near) && fits(D)) { const r = negotiate(f, m, neg, null, { accept: true }); return r.terms; }
-  let offer = { salary: Math.min(target, D.salary), years: years ?? D.years, bonus: 0 };
+  const term = years ?? neg.demand.years; // the club's own term (Task 6 R3 by mode and onset, moved to his preference when one season apart and the mode allows: aiYears): its roster planning
+  const D = neg.demand; if (D.salary <= target * (1 + AI_NEG.near) && D.years === term && fits(D)) { const r = negotiate(f, m, neg, null, { accept: true }); return r.terms; }
+  let offer = { salary: Math.min(target, D.salary), years: term, bonus: 0 };
   for (let round = 0; round < NEG.counters && neg.state === 'active'; round++) {
     const t = ok(offer); if (!t) return null; // it cannot afford even its own offer: it lets him go
     const r = negotiate(f, m, neg, t);
     if (r.outcome === 'agreed') return r.terms;
     if (r.outcome !== 'countered') return null;
-    const c = r.counter; if (c.salary <= ceiling && fits(c)) return negotiate(f, m, neg, null, { accept: true }).terms;
-    offer = { salary: step(Math.min(ceiling, (t.salary + c.salary) / 2)), years: c.years, bonus: 0 };
+    const c = r.counter; if (c.salary <= ceiling && c.years === term && fits(c)) return negotiate(f, m, neg, null, { accept: true }).terms;
+    offer = { salary: step(Math.min(ceiling, (t.salary + c.salary) / 2)), years: term, bonus: 0 }; // it keeps its term: his preference still counts in his answer
   }
   return neg.state === 'agreed' ? neg.agreed : null;
 }

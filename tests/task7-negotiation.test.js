@@ -51,7 +51,7 @@ test('rules of the answer: closer offers are accepted more often; insults someti
     if (r.outcome === 'countered' && r.counter.salary >= neg.opening.salary) same++;
   }
   const rate = (x) => x.accept / (x.accept + x.counter + x.end);
-  assert.ok(rate(c.near) > rate(c.far), JSON.stringify(c)); assert.ok(c.insult.end > 0 && c.insult.counter > 0, 'an insult may end the talks, not always');
+  assert.ok(rate(c.near) > rate(c.far), JSON.stringify(c)); assert.ok(c.insult.end > 0 && c.insult.counter > 0, `an insult may end the talks, not always ${JSON.stringify(c)}`);
   assert.ok(c.far.end < c.insult.end, 'a reasonable offer rarely ends the talks');
   assert.ok(same / Math.max(1, c.near.counter + c.far.counter + c.insult.counter) < 0.2, 'counters move toward the offer');
 });
