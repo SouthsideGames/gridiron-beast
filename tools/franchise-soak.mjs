@@ -67,7 +67,7 @@ const liveOwnerOffers = (f) => Object.values(f.freeAgency?.offers || {}).filter(
 let triedT7 = null;
 /** Recording only (Task 7 owner rule 2026-11-04): releases the hands-off owner made to reach the minimum within the cap, cumulative. */
 export const floorLog = { owner: 0 };
-export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null, onOffseason = null, contractChoice = null, negotiate = null } = {}) {
+export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null, onOffseason = null, contractChoice = null, negotiate = null, beforeGame = null } = {}) {
   const f = from || newFranchise(seed, { difficulty, legacy });
   const problems = [...check(f, from ? 'loaded' : 'created')];
   if (from && f.season?.finished) { const n = F.startNextSeason(f); if (!n.ok) problems.push(`loaded save: next season blocked (${n.reason})`); else problems.push(...check(f, 'loaded: next season'));} const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
@@ -82,6 +82,7 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
       const ar = F.autoRunToSunday(f); if (!ar.ok && f.season.day < 6) { problems.push(`season ${s} week ${f.season.week}: auto-run stuck on day ${f.season.day} (${ar.reason})`); break; }
       const e = f.week.encounter; if (e?.result) { log.clash.encounters++; if (e.result.winner === 'a') log.clash.encounterWins++; if (e.status === 'signed') log.clash.signed++; }
       if (F.isBye(f)) { F.takeBye(f); continue; }
+      if (beforeGame) beforeGame(f); // Task 7 diagnostic (owner 2026-11-05): a variant owner acts before kickoff; absent by default
       const m = F.sundayMatchup(f); if (!m) { problems.push(`season ${s} week ${f.season.week}: no matchup on day ${f.season.day}`); break; }
       if (m.forfeit) { F.forfeitSunday(f); continue; }
       const game = F.simulatePlayerGame(f); if (!game?.finished) { problems.push(`season ${s} week ${f.season.week}: game did not finish`); break; }
