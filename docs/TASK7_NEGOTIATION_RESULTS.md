@@ -2,6 +2,7 @@
 
 **Status:**
 - Development branch `task7-free-agency` only. Nothing is merged, nothing is published, and the final consolidated benchmark has **not** been run.
+- **Result:** the monsters' agency is kept, and the regressions the Ambition introduced are largely back to the pre-Ambition remediation level. Recovery and persistent weak groups are inconclusive, and generated gym starters are the lowest of any Task 7 build. All-Star owner drift remains significantly below v42.21.0 (§7).
 - The original pre-registered results and the earlier targeted results (`TASK7_REMEDIATION_RESULTS.md`, `TASK7_AMBITION_STAFF_RESULTS.md`) stand unchanged.
 - The figures below are targeted comparisons at the corrected measuring point (`--measure=start`, both builds), on the development seed sets: indicative, not gate results.
 
@@ -213,7 +214,7 @@ Seasons 1–8, 12 seeds, against v42.21.0:
 
 ### F. Performance
 
-STAGEP_LINE
+**Stage P** (interleaved, run alone, seeds 1–3 × 6 seasons × 3 repetitions): v42.21.0 14.61 and 13.94 s per season; this build 14.33 and 13.90. Means 14.28 against 14.12: **−1.1%**, inside the +10% limit (**pass**).
 
 
 ---
