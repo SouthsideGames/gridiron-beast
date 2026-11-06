@@ -179,22 +179,7 @@
     "noFixedTotalBudget": true,
     "preserveIndividualAcrossSaveTradeEvolution": true,
     "requireCurrentAtMostPotential": true,
-    "invalidApprovedRangePairs": [
-      {
-        "form": "Cindruff",
-        "attribute": "coverage",
-        "starting": [
-          23,
-          33
-        ],
-        "potential": [
-          23,
-          33
-        ],
-        "issue": "Starting maximum exceeds minimum potential; independent rolls can produce invalid individual",
-        "resolution": "Owner decision required; no numbers changed automatically"
-      }
-    ]
+    "invalidApprovedRangePairs": []
   },
   "evolution": {
     "currentRatingFormula": "roundHalfUp(oldPermanentCurrent * newIndividualPotential / oldIndividualPotential)",
@@ -251,20 +236,21 @@
     "unresolved": "Whether no abilities also removes shared type moves and archetype perks"
   },
   "status": "Approved profile consolidation, not completed Task 8 implementation",
-  "knownConflicts": [
+  "knownConflicts": [],
+  "approvedCorrections": [
     {
       "form": "Cindruff",
       "attribute": "coverage",
       "starting": [
-        23,
-        33
+        8,
+        18
       ],
       "potential": [
         23,
         33
       ],
-      "issue": "Starting maximum exceeds minimum potential; independent rolls can produce invalid individual",
-      "resolution": "Owner decision required; no numbers changed automatically"
+      "reason": "Owner-approved correction permits independent starting/potential rolls",
+      "date": "2026-11-06"
     }
   ]
 }

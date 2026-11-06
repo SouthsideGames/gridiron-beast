@@ -37,7 +37,7 @@ These bands govern potential, not starting ratings. Explicit approved weaknesses
 
 Result: 26 Common, 21 Uncommon, 13 Rare, 12 Legendary; 72 families. Basic has no authored families yet. Existing abilities, positions and Clash archetypes remain unchanged by these amendments.
 
-Ripplet's ordinary Catching maximum remains 78. Its approved ordinary Speed maximum is now 94, superseding 95. Lumen's starting Accuracy is 52–62 and Awareness 50–60; Cerebrix's starting Awareness is 58–68. All other table values are in `data/forms.json`.
+Ripplet's ordinary Catching maximum remains 78. Its approved ordinary Speed maximum is now 94, superseding 95. Lumen's starting Accuracy is 52–62 and Awareness 50–60; Cerebrix's starting Awareness is 58–68. Cindruff’s starting Coverage is 8–18, replacing 23–33; its potential remains 23–33. All other table values are in `data/forms.json`.
 
 ## Generation and evolution
 

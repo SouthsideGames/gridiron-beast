@@ -1,10 +1,8 @@
 # Remaining specifications before the final Claude handoff
 
-## Approved-data conflict requiring owner choice
+## Resolved profile correction
 
-Cindruff's approved starting Coverage is **23–33**, and its explicitly approved early-form potential Coverage is also **23–33**. Independent rolls can generate a starting rating above its potential. The potential correctly follows the approved reduction of 7 from Magmaul’s 30–40. The incompatible starting range is retained unchanged for review.
-
-Recommendation for owner consideration only: change Cindruff's starting Coverage to **8–18**, matching the intended weak early-form profile and permitting every independent potential roll. This is **not applied**. Alternative: explicitly choose a different valid starting range. Do not silently clamp or reroll to hide the conflict.
+The owner approved Cindruff’s starting Coverage **8–18**, replacing **23–33**. Potential remains **23–33**. Every starting roll is now valid with every independent potential roll. This correction is applied to the structured data and generated family page. No other profile numbers changed.
 
 ## Evolution and progression closure
 
@@ -17,10 +15,10 @@ The owner selected percentage-of-ceiling current-rating evolution (10/20 → 20/
 
 ## Existing consolidated Task 8 release dependencies
 
-The 72-family/102-form starting and potential ranges are now approved except the explicit Cindruff conflict. Their existence does not close all of the consolidated document's R01–R15 items.
+The 72-family/102-form starting and potential ranges are now approved including the approved Cindruff correction. Their existence does not close all of the consolidated document's R01–R15 items.
 
 - R01: final generation age/level rules, natural growth schedule and integration of evolution math.
-- R02: review and synchronize the workbook/specification with this dataset, clear the known conflict, pin final GitHub revision and hash. This branch is an initial consolidation, not final certification.
+- R02: review and synchronize the workbook/specification with this dataset, pin final GitHub revision and hash. This branch is an initial consolidation, not final certification.
 - R03: audit the actual Task 7 integration branch, exact attribute contests/pancake formulas and performance telemetry.
 - R04: reserve XP and post-level-50 eligibility, offseason qualification, partial participation and denominators.
 - R05: fixed career test schedules/seeds/creation ages/AI allocation and tuning selection rules.

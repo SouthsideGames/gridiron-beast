@@ -23,7 +23,7 @@ Stage 0; starting reference level 1. Evolution preserves rarity.
 | Accuracy | 3–13 | 13–27 | — |
 | Blocking | 13–23 | 33–47 | — |
 | Tackling | 38–48 | 63–67 | — |
-| Coverage | 23–33 | 23–33 | Yes |
+| Coverage | 8–18 | 23–33 | Yes |
 | Durability | 34–44 | 59–67 | — |
 | Kicking | 3–13 | 13–27 | — |
 

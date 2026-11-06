@@ -25,9 +25,7 @@
     "rare": 13,
     "legendary": 12
   },
-  "errors": [
-    "Cindruff/coverage: starting 23\u201333 exceeds minimum potential 23 (approved ranges require resolution)"
-  ],
+  "errors": [],
   "runtimeTested": false,
-  "status": "BLOCKED: approved-data conflict"
+  "status": "PASS"
 }
