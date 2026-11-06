@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "approvalDate": "2026-11-06",
+  "scope": {
+    "families": 72,
+    "forms": 102,
+    "modeAbilities": 144,
+    "basicFamilies": 0
+  },
+  "authority": [
+    "Owner-approved later position/range and evolution decisions in this package",
+    "Consolidated Task 8 specification, except where superseded",
+    "Workbook v18 ability details, except where superseded"
+  ],
+  "attributeOrder": [
+    "speed",
+    "agility",
+    "strength",
+    "awareness",
+    "catching",
+    "arm",
+    "accuracy",
+    "blocking",
+    "tackling",
+    "coverage",
+    "durability",
+    "kicking"
+  ],
+  "bands": {
+    "weak": [
+      1,
+      39
+    ],
+    "limited": [
+      40,
+      59
+    ],
+    "capable": [
+      60,
+      74
+    ],
+    "strong": [
+      75,
+      84
+    ],
+    "elite": [
+      85,
+      94
+    ],
+    "exceptional": [
+      95,
+      99
+    ]
+  },
+  "rarityPotentialBands": {
+    "basic": [
+      1,
+      59
+    ],
+    "common": [
+      40,
+      74
+    ],
+    "uncommon": [
+      60,
+      84
+    ],
+    "rare": [
+      75,
+      94
+    ],
+    "legendary": [
+      85,
+      99
+    ]
+  },
+  "primaryAttributesByPosition": {
+    "QB": [
+      "arm",
+      "accuracy",
+      "awareness",
+      "speed",
+      "agility",
+      "strength",
+      "durability"
+    ],
+    "RB": [
+      "speed",
+      "agility",
+      "strength",
+      "awareness",
+      "catching",
+      "blocking",
+      "durability"
+    ],
+    "WR": [
+      "speed",
+      "agility",
+      "catching",
+      "awareness",
+      "strength",
+      "blocking",
+      "durability"
+    ],
+    "TE": [
+      "speed",
+      "agility",
+      "catching",
+      "awareness",
+      "strength",
+      "blocking",
+      "durability"
+    ],
+    "OL": [
+      "blocking",
+      "strength",
+      "awareness",
+      "durability",
+      "speed",
+      "agility",
+      "tackling"
+    ],
+    "DL": [
+      "strength",
+      "agility",
+      "tackling",
+      "awareness",
+      "speed",
+      "durability"
+    ],
+    "LB": [
+      "speed",
+      "agility",
+      "strength",
+      "awareness",
+      "tackling",
+      "coverage",
+      "catching",
+      "durability"
+    ],
+    "CB": [
+      "coverage",
+      "speed",
+      "agility",
+      "awareness",
+      "catching",
+      "strength",
+      "tackling",
+      "durability"
+    ],
+    "S": [
+      "awareness",
+      "coverage",
+      "catching",
+      "tackling",
+      "speed",
+      "agility",
+      "strength",
+      "durability"
+    ],
+    "K": [
+      "kicking"
+    ]
+  },
+  "rarityRules": {
+    "ceilingMaximumIsFirm": true,
+    "explicitBelowMinimumWeaknessesAllowed": true,
+    "secondaryAttributesMayBeLower": true,
+    "startingRatingsMayBeLower": true,
+    "evolutionPreservesRarity": true,
+    "nonLegendaryNonApexMaximum": 98,
+    "legendarySelected99Allowed": true
+  },
+  "generation": {
+    "startingDistribution": "uniform inclusive integers per approved range",
+    "potentialDistribution": "uniform inclusive integers per approved range",
+    "startingAndPotentialIndependent": true,
+    "attributesIndependent": true,
+    "noFixedTotalBudget": true,
+    "preserveIndividualAcrossSaveTradeEvolution": true,
+    "requireCurrentAtMostPotential": true,
+    "invalidApprovedRangePairs": [
+      {
+        "form": "Cindruff",
+        "attribute": "coverage",
+        "starting": [
+          23,
+          33
+        ],
+        "potential": [
+          23,
+          33
+        ],
+        "issue": "Starting maximum exceeds minimum potential; independent rolls can produce invalid individual",
+        "resolution": "Owner decision required; no numbers changed automatically"
+      }
+    ]
+  },
+  "evolution": {
+    "currentRatingFormula": "roundHalfUp(oldPermanentCurrent * newIndividualPotential / oldIndividualPotential)",
+    "ceilingRoll": "Preserve original relative placement through form ranges; never reroll or use rounded intermediate placement",
+    "ceilingRounding": "nearest integer; exact halves up",
+    "temporaryModifiersIncluded": false,
+    "capCurrentAtNewPotential": true,
+    "preserve": [
+      "level",
+      "Temper",
+      "ability mastery",
+      "individual identity"
+    ],
+    "supersedes": [
+      "starting-reference-relative scaling",
+      "unchanged current ratings on evolution"
+    ],
+    "remainingClosure": [
+      "mapping of automatic level growth allowance after evolution",
+      "handling of aging-decline ledger during evolution",
+      "rounding-order exploit verification across optional evolution timing"
+    ]
+  },
+  "temper": {
+    "affects": "training efficiency only",
+    "startingRatings": false,
+    "potential": false,
+    "kickingModified": false,
+    "ordinaryUniformSelection": true,
+    "favoredEfficiency": 2,
+    "neutralEfficiency": 1,
+    "unfavoredEfficiency": 0.5
+  },
+  "apex": {
+    "isRarity": false,
+    "nonLegendaryGenerationChance": 0.01,
+    "startingRange": [
+      10,
+      15
+    ],
+    "allAttributePotential": 99,
+    "neutralTemperOnly": true,
+    "ageless": true,
+    "ordinaryRangesApply": false
+  },
+  "basic": {
+    "isElementalType": false,
+    "rarityBelow": "common",
+    "types": "existing 12",
+    "footballAbilities": false,
+    "clashAbilities": false,
+    "futureSelectedAbilitiesPossible": true,
+    "designAfterOriginal72": true,
+    "unresolved": "Whether no abilities also removes shared type moves and archetype perks"
+  },
+  "status": "Approved profile consolidation, not completed Task 8 implementation",
+  "knownConflicts": [
+    {
+      "form": "Cindruff",
+      "attribute": "coverage",
+      "starting": [
+        23,
+        33
+      ],
+      "potential": [
+        23,
+        33
+      ],
+      "issue": "Starting maximum exceeds minimum potential; independent rolls can produce invalid individual",
+      "resolution": "Owner decision required; no numbers changed automatically"
+    }
+  ]
+}
