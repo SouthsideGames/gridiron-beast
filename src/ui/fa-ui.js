@@ -248,3 +248,41 @@ function marketListHtml(f) {
     <div class="list">${shown.map(({ x, i }) => { const m = x.monster; return `<div class="item tappable" data-action="faopen" data-id="${m.id}" role="button" tabindex="0">${monsterSprite(m, 32)}<div class="grow"><div class="name">${legendSide(m) ? '🌟 ' : ''}${esc(m.name)} <span class="dim">${esc(m.position)} · ${monsterOverall(m)} OVR · ${esc(rarityOf(m))} · age ${m.age}</span></div><div class="sub">asks <b>${fmt(x.ask.salary)}</b>/yr · ${x.ask.years} season${x.ask.years === 1 ? '' : 's'} · ${fitOf(f, m)}</div></div><span class="chip ${i.cls}">${i.label}</span></div>`; }).join('') || '<p class="dim">Nobody on the market at this position.</p>'}</div>
     ${list.length > shown.length ? `<button class="btn small block" data-action="faall">Show all ${list.length}</button>` : ''}`;
 }
+
+/**
+ * The lineup safeguard (owner's final Task 7 decision): shown before a game that would be forfeited, or before a season that would start
+ * into forfeits. It names each open starting slot and why, lists the cheapest legal free agents for it (with cap and roster status),
+ * opens the signing sheet, the contracts screen (releases, zero dead cap) and the lineup, re-checks after every move, and offers a
+ * deliberate, confirmed way to continue under the existing forfeit rule. It never signs, releases or moves anyone by itself.
+ * `mode`: 'game' (Sunday) or 'season' (the season start). `onContinue`: the deliberate continue (forfeit the game / start anyway).
+ */
+export function lineupGateSheet(app, { mode = 'game', onContinue, onDone } = {}) {
+  const f = app.f; let closed = false;
+  const body = () => {
+    const g = F.lineupGate(f);
+    if (g.ok) return `<div class="panel tight" style="border-color:var(--good)"><b>✅ Lineup complete.</b><div class="muted">Every starting slot has a legal, healthy monster.</div></div><button class="btn primary block" data-act="close">Continue</button>`;
+    const holes = g.holes.map((h) => {
+      const list = g.fixes[h.position] || [];
+      const rows = list.map((x) => `<div class="item static"><div class="grow"><div class="name">${esc(x.name)} <span class="dim">${esc(h.position)} · ${x.ovr} OVR</span></div><div class="sub">asks ${fmt(x.ask)}/yr · ${x.fits ? 'fits your usable cap' : `needs ${fmt(x.short)} more usable cap: release a monster first (zero dead cap)`}${x.needsRoomOnRoster ? ' · roster full: release a monster first' : ''}</div></div>${g.canSign ? `<button class="btn small" data-act="sign" data-id="${x.id}">Sign…</button>` : ''}</div>`).join('');
+      return `<div class="panel tight"><b>${esc(h.slot)} needs a ${esc(h.position)}</b><div class="muted">${h.healthy} healthy ${esc(h.position)}${h.injured ? `, ${h.injured} injured` : ''}. Only a ${esc(h.position)} may play there: nobody plays out of position.</div>
+        ${rows ? `<div class="list" style="margin-top:4px">${rows}</div>` : `<div class="muted" style="margin-top:4px;color:var(--bad)">No healthy ${esc(h.position)} is on the market now. Try a trade, wait for an injury to heal, or continue under the forfeit rule.</div>`}</div>`;
+    }).join('');
+    const short = g.shortRoster ? `<div class="panel tight"><b>Roster below the minimum</b><div class="muted">${esc(g.reason)}</div></div>` : '';
+    const periods = !g.canSign ? `<div class="dim">During the free-agency periods you make offers in the market; they are answered when the period advances.</div>` : '';
+    const cont = mode === 'game' ? 'Forfeit this game' : 'Start the season anyway';
+    return `<div class="assist-note critical" role="alert">⚠️ ${esc(g.reason)}</div>
+      <div class="muted" style="margin:6px 0">Usable cap ${fmt(g.cap)} · roster ${g.roster}/${F.ROSTER_MAX}</div>${short}${holes}${periods}
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn small" data-act="market">Free-agent market</button><button class="btn small" data-act="contracts">Release a monster</button><button class="btn small" data-act="lineup">Lineup</button></div>
+      <div class="dim" style="margin-top:8px">${mode === 'game' ? 'If you continue without a legal lineup, this game is recorded as a forfeit (0-21 loss, no stats).' : 'If you start without a legal lineup, each game is forfeited (0-21, no stats) until the slot is filled.'}</div>
+      <button class="btn danger block" data-act="continue" style="margin-top:6px">${cont}</button>`;
+  };
+  const { el, close } = sheet(body(), { title: mode === 'game' ? 'Lineup incomplete' : 'Lineup incomplete for the new season' });
+  const redraw = () => { if (closed) return; const b = el.querySelector('.sheet-body') || el; b.innerHTML = body(); };
+  el.addEventListener('click', async (ev) => {
+    const b = ev.target.closest('[data-act]'); if (!b) return; const act = b.dataset.act;
+    if (act === 'close') { closed = true; close(); onDone?.(); return; }
+    if (act === 'sign') { negotiationSheet(app, b.dataset.id, () => { redraw(); onDone?.(); }, { mode: 'now' }); return; } // re-checked when the signing sheet closes
+    if (act === 'market' || act === 'contracts' || act === 'lineup') { closed = true; close(); Router.go(act === 'market' ? 'famarket' : act); return; }
+    if (act === 'continue') { if (!(await confirmSheet(mode === 'game' ? 'Forfeit this game? It is recorded as a 0-21 loss with no stats.' : 'Start the season without a legal lineup? Each game is forfeited until the slot is filled.', { title: 'Continue under the forfeit rule', okLabel: mode === 'game' ? 'Forfeit' : 'Start anyway', danger: true }))) return; closed = true; close(); onContinue?.(); }
+  });
+}

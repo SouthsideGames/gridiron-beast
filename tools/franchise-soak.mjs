@@ -70,7 +70,7 @@ export const floorLog = { owner: 0 };
 export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, check = invariants, stopWeek = null, onSeason = null, legacy = false, from = null, onOffseason = null, contractChoice = null, negotiate = null, beforeGame = null } = {}) {
   const f = from || newFranchise(seed, { difficulty, legacy });
   const problems = [...check(f, from ? 'loaded' : 'created')];
-  if (from && f.season?.finished) { const n = F.startNextSeason(f); if (!n.ok) problems.push(`loaded save: next season blocked (${n.reason})`); else problems.push(...check(f, 'loaded: next season'));} const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
+  if (from && f.season?.finished) { const n = F.startNextSeason(f, { acceptForfeits: true }); if (!n.ok) problems.push(`loaded save: next season blocked (${n.reason})`); else problems.push(...check(f, 'loaded: next season'));} const log = { seasons: [], clash: { encounters: 0, encounterWins: 0, signed: 0, pregame: 0, pregameWins: 0, ot: 0, otWins: 0 }, fired: false };
   for (let s = 1; s <= seasons && !log.fired; s++) {
     if (F.needsGoal(f)) { const g = F.commissionerGoals(f); F.chooseGoal(f, g[0]?.id); }
     let guard = 0;
@@ -124,7 +124,7 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
     // save round-trip at the season boundary
     const back = Save.importJson(Save.exportJson(f)); if (!back) problems.push(`season ${s}: save round-trip failed`); else if (JSON.stringify(back.roster) !== JSON.stringify(f.roster)) problems.push(`season ${s}: save round-trip changed the roster`);
     onSeason?.(f, s);
-    if (s < seasons) { const n = F.startNextSeason(f); if (!n.ok) { problems.push(`season ${s}: next season blocked (${n.reason})`); break; } problems.push(...check(f, `season ${s + 1} start`)); }
+    if (s < seasons) { const n = F.startNextSeason(f, { acceptForfeits: true }); /* the hands-off owner continues under the forfeit rule, as before the lineup safeguard */ if (!n.ok) { problems.push(`season ${s}: next season blocked (${n.reason})`); break; } problems.push(...check(f, `season ${s + 1} start`)); }
   }
   return { f, problems, log };
 }

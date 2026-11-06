@@ -1115,6 +1115,29 @@ export function lineupWarnings(f, roster = f.roster, chart = buildDepthChart(ros
   const pkg = borrowedSlots(roster, chart).filter((b) => !b.legal).map((b) => { const pos = positionOf(b.slot); return { kind: 'package', slot: b.slot, position: pos, formation: `${PACKAGE_SLOT_USE[b.slot]} plays`, severity: 'plays unavailable', why: why(pos), fix: `Add a ${pos} beyond your starters to bring back the ${PACKAGE_SLOT_USE[b.slot]} plays.` }; });
   return [...base, ...pkg];
 }
+/**
+ * The lineup safeguard (owner's final Task 7 decision, 2026-11-05): before a season starts or a game is played, can the owner field a
+ * complete legal starting lineup? Returns { ok, holes, fixes, cap, rosterFull, roster, canSign, noLegalReplacement, reason }.
+ *   holes  each starting slot nobody legal and healthy can fill: { slot, position, healthy, injured, why }
+ *   fixes  per open position, the cheapest legal healthy free agents on the market: { id, name, ovr, ask, fits, short, needsRoomOnRoster }
+ * Read only. Nothing is signed, released, generated or moved out of position; the forfeit rule is unchanged. The caller shows it and lets
+ * the owner act (sign, release, lineup) or continue deliberately under the forfeit rule.
+ */
+export function lineupGate(f) {
+  const warn = lineupWarnings(f).filter((w) => w.kind === 'base'); const shortRoster = f.roster.length < ROSTER_MIN;
+  const holes = warn.map((w) => ({ slot: w.slot, position: w.position, healthy: f.roster.filter((m) => m.position === w.position && !m.injury).length, injured: f.roster.filter((m) => m.position === w.position && m.injury).length, why: w.why }));
+  const usable = hasFreeAgency(f) ? freeAgencyCap(f).usable : salarySummary(f).remaining; const rosterFull = f.roster.length >= ROSTER_MAX;
+  const market = hasFreeAgency(f) ? freeAgentMarket(f).filter((x) => !x.mine) : [];
+  const fixes = {}; for (const pos of [...new Set(holes.map((h) => h.position))]) {
+    fixes[pos] = market.filter((x) => x.monster.position === pos && !x.monster.injury && !faBlocker(f, f.club, x.monster, null, { newSpot: false })).sort((a, b) => a.ask.salary - b.ask.salary || (a.monster.id < b.monster.id ? -1 : 1)).slice(0, 4)
+      .map((x) => ({ id: x.monster.id, name: x.monster.name, ovr: monsterOverall(x.monster), ask: x.ask.salary, fits: x.ask.salary <= usable, short: Math.max(0, x.ask.salary - usable), needsRoomOnRoster: rosterFull }));
+  }
+  const canSign = !f.freeAgency?.period && !(f.season?.finished && task7Offseason(f) && !freeAgencyDone(f)); // the year-round market is open (in the periods, offers are made and answered as they advance)
+  const noLegalReplacement = holes.length > 0 && Object.values(fixes).some((l) => !l.length);
+  const ok = !holes.length && !shortRoster;
+  const reason = ok ? null : shortRoster ? `Only ${f.roster.length} monsters on the roster; the league minimum is ${ROSTER_MIN}.` : `No legal healthy starter for ${holes.map((h) => `${h.slot} (${h.position})`).join(', ')}. Only a monster of that position may play there (one position per family), so every game is forfeited until the slot is filled.`;
+  return { ok, holes, fixes, cap: usable, rosterFull, roster: f.roster.length, shortRoster, canSign, noLegalReplacement, reason };
+}
 /** R7 (owner 2026-11-05): can the owner pay this prospect's rookie deal now (Task 7)? null when yes; else the shortfall and the options. */
 export function draftAffordability(f, id) {
   if (!hasFreeAgency(f) || f.draft?.creation) return null; const m = f.draft?.class?.find((x) => x.id === id); if (!m) return null;
@@ -2562,7 +2585,7 @@ export function legendCompliance(f) {
 }
 /** AI clubs sign from the market in roster preparation and in season through the same immediate negotiation (their Task 6 terms). */
 function aiSignNow(f, club, m) { const t = aiTerms(f, club, m, null); return negotiateNow(f, club, m.id, t).outcome === 'signed'; }
-export function startNextSeason(f) {
+export function startNextSeason(f, opts = {}) {
   syncLegendary(f); // Legendary Plays: discovery and plan cleanup (GDD §36)
   if (!f.season.finished) return { ok: false, reason: 'The season is not over.' };
   if (isFired(f)) return { ok: false, reason: 'The board has let you go. This franchise is over.' };
@@ -2576,6 +2599,7 @@ export function startNextSeason(f) {
     const how = fp && fp.gap > 0 && Number.isFinite(fp.needed) ? ` The ${short} cheapest free agents ask ${fp.needed.toLocaleString('en-US')} cr. and you have ${Math.max(0, fp.usable).toLocaleString('en-US')} cr. of usable cap: free ${fp.gap.toLocaleString('en-US')} cr. more by releasing monsters (no dead cap; in the offseason you may go below ${ROSTER_MIN} to do it).` : ' Sign free agents in the offseason market.';
     return { ok: false, code: 'roster', reason: `You need at least ${ROSTER_MIN} monsters to start a season (you have ${f.roster.length}).${how}`, floor: fp }; }
   if (nextStaffRole(f)) return { ok: false, reason: 'Hire a full staff first.' };
+  if (hasFreeAgency(f) && !opts.acceptForfeits) { const g = lineupGate(f); if (!g.ok && !g.shortRoster) return { ok: false, code: 'lineup', reason: g.reason, gate: g }; } // the lineup safeguard: never start a season into forfeits unknowingly; the owner may continue deliberately
   if (f.postseason && !f.postseason.resolved) return { ok: false, reason: 'A postseason decision is waiting.' };
   if (f.legendPick && !f.legendPick.resolved) return { ok: false, reason: 'Choose your Legend Track first.' };
   f.deadCap = f.pendingDeadCap || 0; f.pendingDeadCap = 0; // bonuses and raises agreed in the offseason land on the new season's books

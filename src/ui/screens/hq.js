@@ -35,7 +35,7 @@ import { warningsHtml, noteHtml } from '../tutorial.js';
 import { suggestProspect, suggestDraftPick, suggestContract, suggestGoal, consequence } from '../../franchise/assist-advice.js';
 import { captainWarning, captainBadge } from '../captains-ui.js';
 import { callPanelHtml, callConfirmText, openTradeDesk, tradeStatusHtml, tradeLineHtml } from '../trade-desk-ui.js';
-import { faOffseasonHtml, faHandlers, migrationPanelHtml, negotiationSheet } from '../fa-ui.js';
+import { faOffseasonHtml, faHandlers, migrationPanelHtml, negotiationSheet, lineupGateSheet } from '../fa-ui.js';
 
 const STARTERS_BY_POS = { QB: 1, RB: 1, WR: 2, TE: 1, OL: 2, DL: 2, LB: 2, CB: 2, S: 1, K: 1 };
 
@@ -91,7 +91,7 @@ export function registerHqScreens(Router, app) {
           <div class="row between" style="margin-top:4px"><span>${f.season.playoffs ? playoffStatus(f) : `Record <b class="mono">${s.record}</b>${rival ? ` · <span class="dim">⚔️ rival ${esc(rival.team)}</span>` : ''}`}</span><span class="muted">Cap room <b style="color:${cap.over ? 'var(--bad)' : 'var(--good)'}">${fmtMoney(cap.remaining)}</b></span></div>${race}</div>
         ${weekStrip(f)}
         <div class="panel"><div class="muted" style="font-size:12px">THIS WEEK</div><div style="margin:4px 0 8px">${gameLine}${(() => { const g = opp && GYM_BY_CLUB[opp]; if (!g || f.season.finished) return ''; const b = F.badgeOf(f, opp); return `<div class="muted" style="margin-top:4px">${b ? `🏅 You hold the ${esc(g.badge)} (${yearOf(b.year)})` : `<b>Badge game</b> · beat ${esc(g.coach.name)}'s ${esc(opp)} for the ${esc(g.badge)}`}</div>`; })()}</div>
-          ${next ? `<button class="btn primary big block ${next.action === 'forfeit' ? 'danger' : ''}" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>${next.note ? `<p class="dim" style="margin:4px 0 0;color:var(--bad)">${esc(next.note)}. Fix the depth chart or sign a monster; out-of-position bodies must match a primary or secondary position.</p>` : ''}${next.skip ? `<button class="btn block" data-action="skipplayoffs" style="margin-top:8px">⏩ Skip to the offseason</button>` : ''}` : ''}
+          ${next ? `<button class="btn primary big block ${next.action === 'forfeit' || next.action === 'lineupgate' ? 'danger' : ''}" data-action="${next.action}">${next.icon} ${esc(next.label)}</button>${next.note ? `<p class="dim" style="margin:4px 0 0;color:var(--bad)">${esc(next.note)}. Fix the depth chart or sign a monster; out-of-position bodies must match a primary or secondary position.</p>` : ''}${next.skip ? `<button class="btn block" data-action="skipplayoffs" style="margin-top:8px">⏩ Skip to the offseason</button>` : ''}` : ''}
           ${!f.season.finished && day < 6 && !f.week.commissioner && !(F.inPlayoffs(f) && !F.playoffFixture(f)) && !F.needsGoal(f) ? `<button class="btn block" data-action="autorun" style="margin-top:8px">⏩ Let the staff run the week → Sunday</button>` : ''}
           ${cap.over && !f.week.commissioner ? `<p class="muted" style="color:var(--warn);margin-top:8px">⚠️ Over the cap by ${fmtMoney(-cap.remaining)}. The commissioner reviews the books on Saturday: get under it by then or he picks who goes. <button class="btn small" data-action="releasemon">Release a monster</button></p>` : ''}
           ${f.week.commissioner ? `<p class="muted" style="color:var(--bad);margin-top:8px">🏛️ The commissioner is waiting. Over the cap by ${fmtMoney(f.week.commissioner.over)}.</p>` : ''}${warningsHtml(f, { max: 2, only: ['min', 'depth', 'hurt', 'tight', 'points'] })}</div>
@@ -120,6 +120,7 @@ export function registerHqScreens(Router, app) {
         scout: () => Router.go('scout'), recruit: () => Router.go('recruit'), training: () => Router.go('training'), scoutopp: () => Router.go('scoutopp'), gameplan: () => Router.go('gameplan'), lineup: () => Router.go('lineup'),
         bye: () => { F.takeBye(app.f); app.save(); toast('Bye week taken. Fatigue recovered.'); Router.render(); },
         game: () => { if (!F.canPlayGames(app.f)) { Router.go('commissioner'); return; } Router.go('pregame'); },
+        lineupgate: () => lineupGateSheet(app, { mode: 'game', onContinue: () => { F.forfeitSunday(app.f); app.save(); Router.go('hq', {}, { reset: true }); }, onDone: () => { app.save(); Router.render(); } }), // the lineup safeguard
         forfeit: async () => { const m = F.sundayMatchup(app.f); if (!(await confirmSheet(`${m?.forfeitReason || 'No legal lineup'}. Forfeit to ${m?.opponent}? It is recorded as a 0-21 loss with no stats. Sign or heal a monster first if you can.`, { title: 'Forfeit', okLabel: 'Forfeit', danger: true }))) return; F.forfeitSunday(app.f); app.save(); Router.go('hq', {}, { reset: true }); },
         commissioner: () => Router.go('commissioner'),
         restbye: () => { F.skipToByeIfIdle(app.f); app.save(); Router.render(); },
@@ -164,7 +165,7 @@ export function registerHqScreens(Router, app) {
     if (F.inPlayoffs(f) && !F.playoffFixture(f) && !f.season.finished) return { label: `Playoffs · play the ${F.ROUND_NAMES[f.season.playoffs?.round] || 'next round'}`, action: 'watchround', icon: '🏆', skip: true };
     if (f.week.commissioner) return { label: "The commissioner's office", action: 'commissioner', icon: '🏛️' };
     if (F.isBye(f) && d >= 3 && d < 6) return { label: 'Bye week · rest until Sunday', action: 'restbye', icon: '😴' };
-    if (d === 6) { if (F.isBye(f)) return { label: 'Take the bye week', action: 'bye', icon: '😴' }; const m = F.sundayMatchup(f); if (m?.forfeit) return { label: 'Forfeit the game (no legal lineup)', action: 'forfeit', icon: '🏳️', note: m.forfeitReason }; return { label: 'Play Sunday game', action: 'game', icon: '🏈' }; }
+    if (d === 6) { if (F.isBye(f)) return { label: 'Take the bye week', action: 'bye', icon: '😴' }; const m = F.sundayMatchup(f); if (m?.forfeit) return { label: 'Lineup incomplete: review before kickoff', action: 'lineupgate', icon: '⚠️', note: m.forfeitReason }; return { label: 'Play Sunday game', action: 'game', icon: '🏈' }; }
     return [{ label: 'Monday · Scout a region', action: 'scout', icon: '🧭' }, { label: 'Tuesday · Monster encounter', action: 'recruit', icon: '⚔️' }, { label: 'Wednesday · Training focus', action: 'training', icon: '💪' }, { label: 'Thursday · Scout opponent', action: 'scoutopp', icon: '🔍' }, { label: 'Friday · Set game plan', action: 'gameplan', icon: '📋' }, { label: 'Saturday · Media day', action: 'lineup', icon: '🎤' }][d];
   }
 
@@ -216,7 +217,7 @@ export function registerHqScreens(Router, app) {
         releasemon: () => Router.go('contracts'), staffroom: () => Router.go('staff'),
         signall: async () => { const left = (app.f.offseason?.items || []).filter((i) => i.kind === 'monster' && !i.status); if (!(await confirmSheet(`Re-sign all ${left.length} remaining monsters at their asks?`, { title: 'Sign everyone', okLabel: 'Sign all' }))) return; for (const i of left) F.resolveContract(app.f, i.id, 'sign'); app.save(); Router.render(); },
         ...faHandlers(app, Router), // Task 7: the market (fa-ui.js)
-        start: async () => { if (!(await confirmSheet(`Start the ${yearOf(app.f.season.year + 1)} season? ${F.task7Offseason(app.f) ? 'The record resets (your roster aged at the season close).' : 'Your roster ages one year and the record resets.'}`, { title: 'New season', okLabel: 'Start' }))) return; const r = F.startNextSeason(app.f); if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); },
+        start: async () => { if (!(await confirmSheet(`Start the ${yearOf(app.f.season.year + 1)} season? ${F.task7Offseason(app.f) ? 'The record resets (your roster aged at the season close).' : 'Your roster ages one year and the record resets.'}`, { title: 'New season', okLabel: 'Start' }))) return; const r = F.startNextSeason(app.f); if (!r.ok && r.code === 'lineup') { lineupGateSheet(app, { mode: 'season', onContinue: () => { const x = F.startNextSeason(app.f, { acceptForfeits: true }); if (!x.ok) { toast(x.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); }, onDone: () => { app.save(); Router.render(); } }); return; } if (!r.ok) { toast(r.reason, 'bad'); return; } app.save(); Router.go('hq', {}, { reset: true }); }, // the lineup safeguard at the season start
       });
     },
   });

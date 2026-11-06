@@ -951,8 +951,11 @@ This register is the **current planning index** for Franchise Mode. The detailed
 | QB intelligence, AI testing lab, defensive AI corrections | IMPLEMENTED; release status requires reconciliation | §53 historical implementation entries; recent main commits | Verify latest merged release and deployment; do not rely on §53's original NOT MERGED heading |
 | Broader owner trading: monster-for-monster, monster-plus-pick, incoming offers, Simple/Advanced | APPROVED | §27.5A | Define exact scope, implement and test; in-season trading remains conditional on rules |
 | Smarter AI long-term management (Task 6, AI Franchise Intelligence: ageing, roster plan, development, strategy modes, F1–F4) | RELEASED v42.21.0-ai-franchise, 2026-11-03 (PRs #83–#91, `main` `d2159f8`, artifact version 116) | §§55–58, §58.8; `docs/TASK6_FINAL_RELEASE_REPORT.md` | Task 6 closed. Accepted exceptions for this release only (§58.8): Rookie owner balance and drift, Pro drift, All-Star owner balance and drift uncertainty, the unmet franchise-balance targets. These do not lower future acceptance criteria |
-| **Task 7 — Free Agency Overhaul** | **DESIGN APPROVED; implementation pending** | Owner-approved Task 7 Free Agency Implementation Specification (30 decisions; 2026-10-31 audit resolutions); §27.5C; Task 6 §§55–58 | Repository audit, integration decisions, implementation plan and isolated preview; explicit owner approval required before coding/merge/publish |
+| **Task 7 — Free Agency Overhaul** | **TASK 7 — COMPLETE AND RELEASED** (v42.22.0-free-agency, 2026-11-05; owner's final authorization) | §59 (incl. §59.9 the lineup safeguard and §59.10 the Task 7 → Task 8 dependency); `docs/TASK7_*` | **Comprehensive franchise AI and difficulty balance testing is PENDING until Task 8** (owner decision, §59.10); the Task 7 results are kept as historical reference |
+| **Task 8 — Monster catalogue expansion and Nature/Temper** | **NEXT** | §59.10 | Expand and balance the catalogue across positions; then the mandatory validation of §59.10 |
 | GM mobility, stadium management, mentorship, weather/expanded penalties, 32 clubs, separate Battle Room/Career Mode | DEFERRED | §§24, 27.6–27.7 | No implementation without separate approval |
+
+**Status update (2026-11-05): TASK 7 — COMPLETE AND RELEASED (v42.22.0-free-agency, §59). Next: Task 8 (§59.10). Comprehensive franchise AI and difficulty balance testing is pending until Task 8. The paragraph below is the historical 2026-11-04 entry.**
 
 **Next approved work (2026-11-04): Task 7 — Free Agency Overhaul.** The owner-provided *Gridiron Beast — Task 7 Free Agency Implementation Specification* (foundational design approved, 30/30 decisions, October 31 audit resolutions) governs Task 7 scope. **DESIGN APPROVED; IMPLEMENTATION, MERGE AND PUBLICATION NOT YET AUTHORIZED.** Task 7 includes five manually advanced offseason free-agency periods before the draft; personality-driven negotiations, rival bidding and deadlines; salary/term/signing-bonus contracts and cap reservations; extensions and year-round simplified signings; AI integration with Task 6; legendary limits and legacy-save compliance; optional GM Assistant and Free-Agent Interest Dashboard; and deterministic migration and testing. Start with the specified repository/integration audit and resolve outstanding exceptions before coding. Trading Task 5 and AI Task 6 are already released; do not repeat them. Do not silently promote proposed monster-depth additions into approved work.
 
@@ -4311,7 +4314,7 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
   - the benchmark data in `docs/task6-final/`, `docs/task6-m3/`, `docs/task6-phase-d/` and the earlier `docs/task6-*` folders;
   - the decision log `docs/TASK6_DECISIONS.md`.
 
-## 59. Free Agency Overhaul (Task 7; IMPLEMENTED 2026-11-04 on branch `task7-free-agency`; NOT MERGED, NOT RELEASED)
+## 59. Free Agency Overhaul (Task 7; COMPLETE AND RELEASED v42.22.0-free-agency, 2026-11-05)
 
 **Authority:**
 - The owner's *Task 7 Free Agency Implementation Specification* (`docs/TASK7_FREE_AGENCY_SPECIFICATION.md`): 30 decisions and the 2026-10-31 audit resolutions.
@@ -4488,3 +4491,60 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 **59.8 Saves.**
 - **Schema 9** adds `f.freeAgency`. Schemas 6, 8 and 9 are read; an 8 gains the block on read; later schemas are refused.
 - **Checkpoints:** an immediate save follows each period step and signing.
+
+**59.9 The lineup safeguard (owner's final Task 7 decision, 2026-11-05; `franchise.js lineupGate`, `fa-ui.js lineupGateSheet`).**
+- **When:** before a season starts (the Start button; `startNextSeason` returns `code: 'lineup'`) and before a Sunday game that would be forfeited (the HQ action "Lineup incomplete: review before kickoff").
+- **What it shows:**
+  - every starting slot with no legal healthy monster: the slot, the position, healthy and injured counts, and why ("only a CB may play there: nobody plays out of position");
+  - for each position, the cheapest legal free agents the owner may sign now (locks, refusals and legendary limits excluded), each with its ask and whether it fits the usable cap, or how much more is needed, and whether the roster is full;
+  - links to the signing sheet, the free-agent market, Release a monster (zero dead cap) and the Lineup.
+- **Re-check:** after every move (the sheet redraws when a signing sheet closes).
+- **Deliberate continue:** "Forfeit this game" or "Start the season anyway", each confirmed, under the unchanged forfeit rule (0-21, no stats). This includes the case with no legal replacement on the market, so there is never a dead end.
+- **Never:** it never signs, generates, releases or moves a monster out of position. The one-position rule and the forfeit rule are unchanged. Nothing is saved that could bypass the check: it is computed from the franchise each time.
+
+**59.10 Task 7 → Task 8 dependency (owner decision, 2026-11-05).**
+- **Known limitation after Task 7 (accepted for the release):** because every monster now has one assigned position, the current catalogue may not provide enough eligible monsters to keep complete rosters for every club in every season. This can contribute to:
+  - missing starting positions;
+  - more roster shortages after injuries;
+  - greater vulnerability to contract departures;
+  - more reliance on generated replacement monsters;
+  - unbalanced position availability;
+  - avoidable forfeits;
+  - distorted automated-owner benchmark results. The All-Star investigation (`docs/TASK7_ALLSTAR_INVESTIGATION.md`) measured forfeits of 5.6–9.4% of the hands-off owner's games (Rookie, Pro, All-Star: 48, 81 and 75 of 864).
+- **Planned Task 8 resolution:** expand and balance the monster catalogue with sufficient representation across every football position. The goal is a sustainable supply of eligible monsters through injuries, retirements, contract departures, the draft and free agency.
+- **Mandatory validation after Task 8**, establishing an updated franchise-balance baseline. Task 7 results are kept as historical reference points. Do not assume more monsters fix every metric: verify each.
+  1. monster availability by position;
+  2. legal starting-lineup completion rates;
+  3. injury and departure replacement availability;
+  4. long-term roster stability;
+  5. draft position distribution;
+  6. first-round pick development and starting opportunities;
+  7. free-agent availability by position;
+  8. generated replacement frequency;
+  9. gym elemental identity and starter composition;
+  10. rebuilding recovery;
+  11. persistent weak franchises;
+  12. monster development and high-potential growth;
+  13. contract retention and monster departures;
+  14. salary-cap sustainability;
+  15. forfeit frequency;
+  16. AI franchise-management performance;
+  17. Rookie, Pro and All-Star win rates;
+  18. owner and AI competitive balance across multiple seasons.
+- **Benchmark decision (explicit project decision, not a claim that historical regressions are gone):** the comprehensive Task 7 franchise-balance benchmark was waived by the owner and is **deferred until Task 8**. The following stay on record:
+  - the original v42.21.0 benchmark (`docs/TASK7_FINAL_REPORT.md`);
+  - the pre-Ambition remediation results;
+  - the initial Ambition results;
+  - the negotiation rework results;
+  - the All-Star investigation;
+  - the hands-off owner results.
+
+  The repaired-owner results are a **separate diagnostic policy**, not a replacement for the benchmark owner.
+- **Accepted difficulty results (hands-off automated owner):** Rookie 69.4%, Pro 53.1%, All-Star 32.6%. The design targets are Rookie 54–70%, Pro 45–53% and All-Star 32–40%. They are targets, not hard-coded outcomes. Difficulty should come from better AI decisions, not unfair advantages.
+- **Future design-review considerations (documented, not changed in Task 7):**
+  - the **balance nudge** (decision C): generated arrivals for AI clubs below their difficulty target, which the owner never receives;
+  - AI clubs' automatic in-season injury cover, against the owner's forfeit rule (now with the lineup safeguard);
+  - the AI's fixed staff allowance, against the owner's negotiated staff;
+  - cap-exempt protected gym legendaries on AI clubs (D1);
+  - the difficulty quality targets, coach IQ, opponent film and trade margins (GDD §15.2).
+
