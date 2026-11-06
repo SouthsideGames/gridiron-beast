@@ -19,6 +19,10 @@ import { releaseFromClub, takeFromPool, takeFromWaivers, weakestSpare, homeRegio
 import { publicOnset } from '../data/aging.js';
 import { rosterPlan, leagueBench, horizonOf, qualifiesAsSuccessor, PLAN } from './roster-plan.js';
 import { modeOf } from './strategy.js';
+import { strategyValue } from './fa-strategy.js';
+import { hasFreeAgency } from './fa-state.js';
+import { GYM_BY_CLUB } from '../data/gyms.js';
+import { SPECIES_DEX } from '../data/species.js';
 
 export const BAND = 4;                 // the nudge acts beyond ±4 of the club's target (decision C)
 /** Task 6 Phase A-2 (D10b, owner 2026-10-30): the ordinary clubs' slowdown band and runaway-veteran band, separate from the gyms'
@@ -91,7 +95,9 @@ export function leagueSeasonEnd(f, { year, awards, records, champion }) {
  * The runaway rule is unchanged except that it never lets a designated successor walk. Then the cap: a club over it releases its
  * lowest value per salary among the unprotected reserves until under, successors last, never below the roster minimum.
  */
-export function leagueContracts(f, { year, cap, excessOf = null }) {
+/** Task 7: `accepts(club, m, { salary, years })` — the monster's own answer to the renewal (fa-engine rateOffer, the same evaluation the
+ *  owner's renewals get); declined, he walks to the market. Absent (pre-Task-7 offseasons): every renewal the club wants happens. */
+export function leagueContracts(f, { year, cap, excessOf = null, accepts = null }) {
   if (!hasLeague(f)) return null;
   const out = { resigned: 0, walked: 0, released: 0, overCap: [], runaway: [], lengths: { 1: 0, 2: 0, 3: 0 }, byMode: {} };
   const bench = leagueBenchOf(f);
@@ -115,7 +121,8 @@ export function leagueContracts(f, { year, cap, excessOf = null }) {
         if (mode === 'rebuild' && pastOnset) keep = starter ? !(succ?.ready || (succ && pastBy >= 2)) : (successor ? keep : false); }
       // a club far above today's strength lets its expiring veterans walk (they are claimed within the league): attrition, decision A
       if (keep && runaway && !successor && (m.age || 0) >= RUNAWAY_VETERAN_AGE && clubRoster(f, club).length - letGo > ROSTER_MIN + 2) { keep = false; letGo++; }
-      if (keep) { const len = modeLength(contractLength(m, { bench }), m, mode); m.salary = renewalAsk(m).ask; m.contract = leagueContract(year + 1, len); out.resigned++; out.lengths[len]++; out.byMode[mode] = (out.byMode[mode] || 0) + 1; }
+      let len = 0, ask = 0; if (keep) { len = modeLength(contractLength(m, { bench }), m, mode); ask = renewalAsk(m).ask; if (accepts) { const a = accepts(club, m, { salary: Math.round(ask / 100) * 100, years: len }, { core: starter || successor }); if (a === 'talks') { keep = false; out.declined = (out.declined || 0) + 1; out.talksDeclined = (out.talksDeclined || 0) + 1; } else if (!a) { keep = false; out.declined = (out.declined || 0) + 1; } else if (a !== true) { ask = a.salary; len = a.years; out.countered = (out.countered || 0) + 1; } } }
+      if (keep) { m.salary = accepts ? Math.round(ask / 100) * 100 : ask; m.contract = leagueContract(year + 1, len); out.resigned++; out.lengths[len]++; out.byMode[mode] = (out.byMode[mode] || 0) + 1; }
       else { releaseFromClub(f, club, m.id, { year, reason: 'walked' }); out.walked++; }
     }
     out.released += trimToCap(f, club, { year, cap, starters: starterIds(clubRoster(f, club)), bench });
@@ -191,7 +198,17 @@ export function clubNeeds(f, club) {
  * with generated regional veterans whose quality tracks the club's target (how the curve of difficulty is carried, decision C),
  * up to the full 38 and never over the cap. A club short of a legal lineup signs at the minimum quality regardless.
  */
-export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
+/** A replacement-level deal (the cheapest arrival a club can always sign), with a small margin. */
+const FLOOR_DEAL = 18000 + 280 * MIN_QUALITY + 2000;
+/** The monster an AI club releases to afford the roster minimum: never protected, never the last starters at a position, never at `pos`;
+ *  the weakest whose salary pays for two replacement deals, else the best-paid. */
+export function floorSpare(f, club, pos) {
+  const roster = clubRoster(f, club); const count = (p) => roster.filter((m) => m.position === p).length;
+  const ok = roster.filter((m) => !isProtected(m) && m.position !== pos && count(m.position) > (GROUP_SLOTS[m.position]?.length || 1));
+  const rich = ok.filter((m) => (m.salary || 0) >= 2 * FLOOR_DEAL).sort((a, b) => monsterOverall(a) - monsterOverall(b) || (a.id < b.id ? -1 : 1));
+  return rich[0] || ok.filter((m) => (m.salary || 0) > FLOOR_DEAL).sort((a, b) => (b.salary || 0) - (a.salary || 0) || (a.id < b.id ? -1 : 1))[0] || null;
+}
+export function leagueFreeAgency(f, r, { year, cap, targetOf, signUnsigned = null }) { // Task 7: `signUnsigned(club, m)` signs a pool or waiver monster through the market's immediate negotiation (he may refuse)
   if (!hasLeague(f)) return null;
   const out = { fromPools: 0, fromWaivers: 0, generated: 0 };
   for (const club of order(f)) {
@@ -200,15 +217,32 @@ export function leagueFreeAgency(f, r, { year, cap, targetOf }) {
       const needs = clubNeeds(f, club); if (!needs.length) break;
       const [pos, , urgent] = needs[0]; const room = clubCapRoom(f, club, cap);
       // the league's waivers, then the pools: the best monster at the position the club can afford
+      if (signUnsigned) { // Task 7: the best affordable monster at the position who accepts; the waivers first, then the pools
+        let got = false;
+        for (const [list, key] of [[f.league.waivers || [], 'fromWaivers'], [Object.values(f.pool || {}).flat(), 'fromPools']]) {
+          // R1 b / R4 (owner 2026-11-05): the club's Task 6 strategy and, for a gym, its element decide among the affordable monsters at the position
+          const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null; const ro = clubRoster(f, club); const n = GROUP_SLOTS[pos]?.length || 1;
+          const atPos = ro.filter((x) => x.position === pos && !x.injury).map(monsterOverall).sort((a, b) => b - a); const weakest = atPos.length >= n ? atPos[n - 1] : null;
+          const depth = !urgent && ro.filter((x) => x.position === pos).length >= n; // non-essential depth (owner 2026-11-05 §6)
+          const vc = new Map(); const val = (x) => { if (!vc.has(x)) vc.set(x, strategyValue(x, { mode, ask: salaryFor(x), weakestStarter: weakest, element, depth })); return vc.get(x); };
+          for (const m of list.filter((x) => x.position === pos && salaryFor(x) <= room).sort((a, b) => val(b) - val(a) || (a.id < b.id ? -1 : 1))) if (signUnsigned(club, m)) { out[key] = (out[key] || 0) + 1; got = true; break; }
+          if (got) break;
+        }
+        if (got) continue;
+      } else {
       const waived = (f.league.waivers || []).filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
       if (waived) { takeFromWaivers(f, waived.id); waived.salary = salaryFor(waived); addToClub(f, club, waived, { year, via: 'signed', contract: newContract(year, 2), source: 'waivers' }); out.fromWaivers = (out.fromWaivers || 0) + 1; continue; }
       const pooled = Object.values(f.pool || {}).flat().filter((m) => m.position === pos && salaryFor(m) <= room).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
       if (pooled) { takeFromPool(f, pooled.id); pooled.salary = salaryFor(pooled); addToClub(f, club, pooled, { year, via: 'signed', contract: newContract(year, 2), source: 'pool' }); out.fromPools++; continue; }
+      }
+      // owner rule (2026-11-04): no signing over the cap. A Task 7 club short of the minimum without room for a replacement-level
+      // deal first releases a well-paid expendable monster (the offseason allows going below the minimum to do it), then signs.
+      if (signUnsigned && urgent && clubRoster(f, club).length < ROSTER_MIN && room < FLOOR_DEAL) { const spare = floorSpare(f, club, pos); if (spare) { releaseFromClub(f, club, spare.id, { year, reason: 'released', why: 'cap' }); out.floorReleases = (out.floorReleases || 0) + 1; continue; } }
       const starterSlot = clubRoster(f, club).filter((m) => m.position === pos).length < (GROUP_SLOTS[pos]?.length || 1);
       const quality = targetOf(club) + (starterSlot ? 1 : -4) + r.int(5) - 2;
       const m = generateArrival(f, r, { club, position: pos, quality, room, floor: urgent });
       if (!m) break; // nothing affordable and nothing urgent: the club plays short of 38
-      addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 2), source: 'generated' }); out.generated++;
+      addToClub(f, club, m, { year, via: 'signed', contract: newContract(year, 2), source: 'generated' }); out.generated++; (out.generatedBy ||= {})[club] = (out.generatedBy[club] || 0) + 1;
     }
   }
   return out;
@@ -239,7 +273,8 @@ export function leagueUpgrades(f, { year, cap }) {
   }
   return out;
 }
-function bestUpgrade(f, club, bench, cap) {
+/** The best R5 upgrade a club could make from the pools now (exported for the Task 7 market, which bids for it instead of taking it). */
+export function bestUpgrade(f, club, bench, cap) {
   const roster = clubRoster(f, club); const starters = starterIds(roster); const plan = rosterPlan(roster, bench, { starters });
   const pool = Object.values(f.pool || {}).flat().filter((m) => !isProtected(m) && !m.injury);
   const room = clubCapRoom(f, club, cap); const full = roster.length >= ROSTER_MAX;
@@ -261,8 +296,11 @@ function bestUpgrade(f, club, bench, cap) {
 /** A regional veteran at about `quality`, cheaper if the room does not allow it; null when nothing affordable and the need is not urgent. */
 export function generateArrival(f, r, { club, position, quality, room, floor = false }) {
   const regions = Object.keys(REGIONS).sort(() => r.next() - 0.5); let regionName = regions[0], pool = [];
-  for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => (s.position === position || s.secondary === position) && s.rarity !== 'legendary'); if (p.length) { regionName = rn; pool = p; break; } }
+  for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position && s.rarity !== 'legendary'); if (p.length) { regionName = rn; pool = p; break; } }
   if (!pool.length) return null;
+  // R4 (owner 2026-11-05): a gym's arrival is of its element when the element has a species at the position (else any element: mixed support)
+  { const el = hasFreeAgency(f) ? GYM_BY_CLUB[club]?.element : null; const own = el ? SPECIES_DEX.filter((s) => s.element === el && s.position === position && s.rarity !== 'legendary') : [];
+    if (own.length) { pool = own; regionName = regions.find((rn) => (REGIONS[rn].types || []).includes(el)) || regionName; } }
   const sp = r.pick(pool);
   let q = Math.max(MIN_QUALITY, Math.round(quality)); let m = null;
   for (let i = 0; i < 12; i++) { m = generateMonster(r, { position, quality: q, species: sp.id, age: 24 + r.int(7) }); if (salaryFor(m) <= room || (floor && q <= MIN_QUALITY)) break; m = null; q = Math.max(MIN_QUALITY, q - 3); if (q === MIN_QUALITY && !floor && i > 6) break; }
@@ -283,9 +321,17 @@ export function clubUniqueName(f, club, m) {
  * regional free agents at the target at its weakest starting positions (making room among its unprotected spares); a club more
  * than BAND above it develops at SLOW_XP for the coming season. No rating of an existing monster is ever edited.
  */
-export function leagueNudge(f, r, { year, cap, targetOf, teamOf, rival = null }) {
+export function leagueNudge(f, r, { year, cap, targetOf, teamOf, rival = null, signUnsigned = null }) {
   if (!hasLeague(f)) return null;
-  const out = { boosted: [], slowed: [], unchanged: 0 };
+  const out = { boosted: [], slowed: [], unchanged: 0, fromPool: 0 };
+  // Owner 2026-11-05 §5 (Task 7, gyms): an available monster first. Before a generated arrival, a gym signs a waiver or pool monster at the
+  // position who is at least as good as the arrival would be and fits its cap (he may refuse, through the market's immediate negotiation).
+  const available = (club, pos, q, room) => {
+    if (!signUnsigned || !isGymClub(club)) return null; const element = GYM_BY_CLUB[club]?.element || null;
+    const list = [...(f.league.waivers || []), ...Object.values(f.pool || {}).flat()].filter((m) => m.position === pos && !m.injury && !isProtected(m) && monsterOverall(m) >= q && salaryFor(m) <= room)
+      .sort((a, b) => strategyValue(b, { mode: modeOf(f, club), ask: salaryFor(b), element }) - strategyValue(a, { mode: modeOf(f, club), ask: salaryFor(a), element }) || (a.id < b.id ? -1 : 1));
+    for (const m of list) if (signUnsigned(club, m)) return m; return null;
+  };
   for (const club of order(f)) {
     const c = clubRecord(f, club); const target = targetOf(club); let ovr = teamOverall(teamOf(club)); const band = club === rival ? RIVAL_BAND : BAND; const slowBand = club === rival ? RIVAL_BAND : isGymClub(club) ? BAND : ORDINARY_SLOW_BAND; // D10b: ordinary clubs are slowed only above the wider band
     c.strategy.slow = Math.max(0, ovr - (target + slowBand)); if (c.strategy.slow) out.slowed.push(club); // how far above the band: the brake's strength
@@ -293,6 +339,7 @@ export function leagueNudge(f, r, { year, cap, targetOf, teamOf, rival = null })
     while (ovr < target - band && signed < NUDGE_SIGNINGS) {
       const pos = weakestStartingGroup(f, club); if (!pos) break;
       if (clubRoster(f, club).length >= ROSTER_MAX) { const spare = weakestSpare(f, club, { position: pos }); if (!spare) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' }); }
+      if (available(club, pos, target + 1, clubCapRoom(f, club, cap))) { out.fromPool++; signed++; ovr = teamOverall(teamOf(club)); continue; }
       const m = generateArrival(f, r, { club, position: pos, quality: target + 2, room: clubCapRoom(f, club, cap), floor: false });
       if (!m) { // make cap room: the lowest value per salary among the spares goes
         const spare = capSpare(f, club, { position: null }); if (!spare || spare.position === pos) break; releaseFromClub(f, club, spare.id, { year, reason: 'released' });

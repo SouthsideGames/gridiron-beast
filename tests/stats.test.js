@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { expandWinner } from '../src/franchise/history-compact.js';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
+import { t7FA, t7FillToMin } from './t7-support.js';
 import { recordGame, ensureStats, withDerived, passerRating, derive, leaders, monsterLine, rolloverMonster, addInto } from '../src/franchise/stats.js';
 import { computeAwards, eligibleRows } from '../src/franchise/awards.js';
 import { generatedTeam } from '../src/franchise/roster.js';
@@ -171,9 +172,11 @@ test('awards freeze when the playoffs are drawn and a full season books leaders 
   if (f.postseason && !f.postseason.resolved) F.resolvePostseason(f, F.postseasonEvent(f).options[0].id);
   if (f.legendPick && !f.legendPick.resolved) F.chooseLegendTrack(f, F.legendChoices(f)[0]?.id);
   for (const i of F.offseasonPending(f)) F.resolveContract(f, i.id, 'sign');
-  { const b = F.beginDraft(f); assert.ok(b.ok, b.reason); let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } }
+  const agedAtClose = F.task7Offseason(f); // Task 7: ageing (and a season of experience) happens at the season close, before contracts and free agency
+  { const b = (t7FA(f), F.beginDraft(f)); assert.ok(b.ok, b.reason); let guard = 0; while (!f.draft.done && guard++ < 60) { if (F.onTheClock(f) === f.club) F.passDraftPick(f); else break; } }
+  t7FillToMin(f); // monsters who decline to renew (their own say) leave places to fill
   assert.equal(F.startNextSeason(f).ok, true, F.startNextSeason(f).reason);
-  assert.equal(starter.yearsPro, yp + 1, 'a season of experience');
+  assert.equal(starter.yearsPro, agedAtClose ? yp : yp + 1, 'a season of experience (counted once)');
   assert.equal(starter.stats.seasons.length, 1); assert.equal(starter.stats.season.year, 2); assert.deepEqual(starter.stats.season.reg, {});
   assert.ok(monsterLine(starter, 'career', 'reg').games >= 5, 'career totals survive');
   assert.ok(f.season.expectations['Ember City Beasts'].lastWinPct != null, 'next season remembers last season for COY');

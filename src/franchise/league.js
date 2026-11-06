@@ -9,6 +9,7 @@ import { newContract } from './contracts.js';
 import { ROOKIE_SCALE } from './draft.js';
 import { addToClub, removeFromClub, clubRoster, isProtected, legendStub, hasLeague, leagueEvent, moveIdentity } from './league-registry.js';
 import { GROUP_SLOTS } from './roster.js';
+import { noteReleased } from './fa-state.js';
 
 export const POOL_CAP = 12;            // monsters a regional pool holds (GDD §18.3), the oldest leaving first
 export const POOL_WORTH = Object.freeze({ ovr: 52, age: 24, market: 60 }); // an AI club's castoff enters a pool only if someone might want him, and only at the owner's market grade (≤ 60): better ones go through the league's waivers
@@ -97,7 +98,7 @@ export function takeFromPool(f, id) {
 export function releaseFromClub(f, club, id, { year, reason = 'released', silent = false, why = null } = {}) {
   const m = f.league?.monsters?.[id]; if (!m) return { ok: false, reason: 'Not on a league roster.' };
   if (isProtected(m)) return { ok: false, reason: `${m.name} is bound to ${club}.`, code: 'protected' };
-  removeFromClub(f, club, id, { year, reason, why, quiet: silent });
+  removeFromClub(f, club, id, { year, reason, why, quiet: silent }); if (reason === 'released') noteReleased(f, m, club); // Task 7 resolution 6 (owner and AI alike)
   const where = silent ? leaveLeague(f, m, { year, club }) : enterPool(f, m, { year, club, from: 'ai' });
   return { ok: true, where, monster: m };
 }

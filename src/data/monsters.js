@@ -1,6 +1,7 @@
 // Monster data model: attributes, natures, elemental types, abilities,
 // generation and OVR. Everything here feeds the simulation (GDD §5.1).
 
+import { assignAmbition } from '../franchise/ambition.js';
 import { ATTRIBUTES, POSITION_WEIGHTS } from './personnel.js';
 import { createRng, hashString } from '../core/rng.js';
 import { attributeHelps, ATTR_NAME, POSITION_NAME } from './stat-guide.js';
@@ -131,14 +132,14 @@ export function speciesEffect(m) {
   return null;
 }
 const RARITY_WEIGHT = (s) => RARITIES[s.rarity]?.weight ?? 0;
-/** Pick a species that plays `position` (natural, or secondary at a quarter of the weight), by rarity weight. */
+/** Pick a species whose (only) position is `position`, by rarity weight (Task 7 D6: one position per species). */
 export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set(), element = null, elementChance = 0.75 } = {}) {
-  const cands = pool.filter((s) => !exclude.has(s.id) && (s.position === position || s.secondary === position) && RARITY_WEIGHT(s) > 0);
-  let list = cands.length ? cands : pool.filter((s) => s.position === position || s.secondary === position);
+  const cands = pool.filter((s) => !exclude.has(s.id) && s.position === position && RARITY_WEIGHT(s) > 0);
+  let list = cands.length ? cands : pool.filter((s) => s.position === position);
   // A club with a home element (the gym clubs) fills most spots from that element when it has a species for the position.
   const home = element ? list.filter((s) => s.element === element) : [];
   if (home.length && rng.chance(elementChance)) list = home;
-  const w = list.map((s) => [s.id, Math.max(0.01, RARITY_WEIGHT(s)) * (s.position === position ? 1 : 0.25)]);
+  const w = list.map((s) => [s.id, Math.max(0.01, RARITY_WEIGHT(s))]);
   return SPECIES_BY_ID[rng.weighted(w)];
 }
 /** Species scoutable in a region this week: the region's elements, rares only in their home region from their week, never legendaries. */
@@ -183,7 +184,7 @@ export function generateMonster(rng, { position = null, quality = 58, type = nul
   // `species` may be a dex id, a species name or an old name; the dex fixes the element.
   const sp = species || name ? resolveSpecies(species || name) : (position ? pickSpeciesForPosition(rng, position) : rng.pick(SPECIES_DEX));
   species = sp.id;
-  position = position || sp.position;
+  position = sp.position; // a new monster always plays his species' one position (Task 7 D6); `position` only chooses the species
   type = sp.element;
   const base = BASE[position] || BASE.WR;
   const bias = TYPES[type].bias;
@@ -214,6 +215,7 @@ export function generateMonster(rng, { position = null, quality = 58, type = nul
   };
   m.yearsPro = yearsPro ?? (m.age <= 21 ? 0 : Math.max(0, m.age - 21 - (m.id.charCodeAt(m.id.length - 1) & 1))); // derived from the id, so the rng stream (and every generated roster) is unchanged // seasons already played; 0 = rookie (GDD §16.4)
   m.salary = salaryFor(m);
+  assignAmbition(m); // Task 7: one hidden career Ambition, from the seeded id (no generator draw, so every generated roster is unchanged)
   return m;
 }
 

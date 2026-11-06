@@ -63,6 +63,12 @@ export function recoverWeek(roster, { bye = false } = {}) {
 }
 
 /**
+ * Task 7 (specification audit resolution 1): a negotiated salary is a contract. Ageing, development and rating changes never
+ * overwrite it; only a monster without a running deal (unsigned) or on a protected permanent deal (gym legendaries, the rival's
+ * signature: owner decision D1, unchanged) carries today's market figure.
+ */
+export const marketPriced = (m) => !m.contract || !!m.contract.permanent;
+/**
  * Offseason: ageing, decline and growth, salary refresh (GDD §55, Task 6 Phase A-1). Legendary monsters and the rival's signature
  * monster do not age and never decline (owner's rules, 2026-10-23); they still gain a season of experience, rest and heal like everyone.
  *   - Growth to 23 as before: +1 awareness and strength toward potential.
@@ -79,7 +85,7 @@ export function offseason(roster, rng, { s = null, severeOf = null } = {}) {
     const severe = !ageless && !!severeOf?.(m); // read before the injury clears
     if (!ageless) m.age += 1;
     m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
-    if (ageless) { m.salary = salaryFor(m); continue; }
+    if (ageless) { if (marketPriced(m)) m.salary = salaryFor(m); continue; }
     if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = m.attributes.durability;
     const onset = trueOnset(m); const yP = transitionYears(m.age - onset, s); const yT = transitionYears(m.age - onset - technicalOffset(m.position), s);
     let physLost = 0;
@@ -97,7 +103,7 @@ export function offseason(roster, rng, { s = null, severeOf = null } = {}) {
     // C2 maturation (Task 6 Phase C, owner 2026-10-30): one position-weighted +1 each offseason through age 24, never above potential; no draw
     if (m.age <= MATURATION_MAX_AGE) { const k = maturationTarget(m, POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR); if (k) { m.attributes[k] += 1; events.push({ kind: 'mature', id: m.id, name: m.name, attr: k }); } }
     if (physLost) m.physDrop = physLost; else delete m.physDrop; // what the forecast may read: did his body visibly decline this offseason
-    m.salary = salaryFor(m);
+    if (marketPriced(m)) m.salary = salaryFor(m);
   }
   return events;
 }

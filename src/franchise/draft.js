@@ -9,6 +9,11 @@ import { generateMonster, regionSpecies, salaryFor, monsterOverall, ROSTER_MAX }
 import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
 import { draftNeedBonus } from './roster-plan.js';
+import { GYM_BY_CLUB } from '../data/gyms.js';
+/** R7 (owner 2026-11-05): a prospect's first-season charge on his rookie deal (70% of market, as the owner's and the AI's picks are paid). */
+export const rookieCharge = (m) => Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100;
+/** R4 (owner 2026-11-05): a gym's tie-break for prospects of its element (Task 7 franchises only); as small as the market's. */
+export const GYM_ELEMENT_BONUS = 1.5;
 
 export const DRAFT_ROUNDS = 3;
 export const ROOKIE_SCALE = 0.70;
@@ -26,7 +31,7 @@ export function generateDraftClass(rng, { year, uniqueName }) {
       // A region that has species for the position (not every region does).
       const regions = Object.keys(REGIONS).sort(() => rng.next() - 0.5);
       let regionName = regions[0], pool = [];
-      for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position || s.secondary === position); if (p.length) { regionName = rn; pool = p; break; } }
+      for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position); if (p.length) { regionName = rn; pool = p; break; } }
       const sp = pool.length ? rng.pick(pool) : null; if (!sp) continue;
       const roll = rng.next(); const quality = (roll < 0.08 ? 62 + rng.int(6) : roll < 0.35 ? 55 + rng.int(6) : 47 + rng.int(8)) + classQualityOffset(year); // gems, solid, projects, plus the league's growth (D9)
       const m = generateMonster(rng, { position, quality, species: sp.id, age: 19 + rng.int(4), yearsPro: 0 });
@@ -86,13 +91,14 @@ export const onTheClock = (f) => f.draft?.started && !f.draft.done ? f.draft.ord
  *  at once (his overall at or above the club's weakest starter at the position). Compete and Retool keep 0.20. */
 export const POTENTIAL_WEIGHT = Object.freeze({ contend: 0.1, compete: 0.2, retool: 0.2, rebuild: 0.35 });
 export const READY_BONUS = 2;
-export function aiDraftPick(f, team, rng, { plan = null } = {}) {
-  const d = f.draft; const avail = d.class.filter((m) => d.available.includes(m.id));
+export function aiDraftPick(f, team, rng, { plan = null, afford = null } = {}) {
+  const d = f.draft; const avail = d.class.filter((m) => d.available.includes(m.id) && (!afford || afford(m))); // R7: only prospects the club can pay
   const taken = d.picks.filter((p) => p.team === team).map((p) => p.position);
   const need = {}; if (plan) for (const m of avail) need[m.id] = draftNeedBonus(plan, m.position, m);
   const mode = plan?.mode || 'compete'; const pw = POTENTIAL_WEIGHT[mode] ?? 0.2;
   const ready = {}; if (mode === 'contend' && plan?.groups) for (const m of avail) { const rows = plan.groups[m.position]?.rows || []; const weakest = rows.length ? Math.min(...rows.map((r) => monsterOverall(r.starter))) : 0; if (monsterOverall(m) >= weakest) ready[m.id] = READY_BONUS; }
-  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0);
+  const element = f.freeAgency?.v ? GYM_BY_CLUB[team]?.element : null;
+  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0) + (element && m.type === element ? GYM_ELEMENT_BONUS : 0);
   return avail.sort((a, b) => score(b) - score(a))[0] || null;
 }
 
@@ -106,10 +112,14 @@ function recordPick(f, team, m, { mine = false }) {
 
 /** Run AI picks until it is the owner's turn or the draft ends. Returns the picks made. */
 /** `persist`: keep AI picks in `draftResults` for the generated rosters (v40 and before); with the league registry the club takes the rookie through `onAiPick` and the historical classes stay as they are (Phase 3, decision 6). */
-export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = true, planOf = null }) {
+export function advanceDraft(f, rng, { playerClub, onAiPick = null, persist = true, planOf = null, affordOf = null, makeRoom = null, onAiPass = null }) {
   const d = f.draft; const made = [];
   while (d.started && !d.done && d.order[d.index].team !== playerClub) {
-    const team = d.order[d.index].team; const m = aiDraftPick(f, team, rng, { plan: planOf ? planOf(team) : null });
+    const team = d.order[d.index].team; const afford = affordOf ? affordOf(team) : null;
+    let m = aiDraftPick(f, team, rng, { plan: planOf ? planOf(team) : null, afford });
+    // R7: nobody affordable — the club makes room by its own roster management (a release, zero dead cap), else passes, recorded and explained
+    if (!m && afford && d.available.length) { if (makeRoom?.(team)) m = aiDraftPick(f, team, rng, { plan: planOf ? planOf(team) : null, afford: affordOf(team) });
+      if (!m) { const why = 'no prospect fits its salary cap'; d.picks.push({ round: d.order[d.index].round, overall: d.index + 1, team, id: null, name: '(passed)', position: '', ovr: 0, mine: false, passed: true, why }); d.index += 1; d.round = d.order[d.index]?.round || d.round; if (d.index >= d.order.length) d.done = true; onAiPass?.(team, why); continue; } }
     if (!m) { d.done = true; break; }
     recordPick(f, team, m, { mine: false }); { const pk = d.picks[d.picks.length - 1]; m.drafted = { year: d.year, round: pk.round, overall: pk.overall, club: team }; } made.push({ team, m });
     if (persist) { (f.draftResults ||= {}); (f.draftResults[f.draft.year] ||= {}); (f.draftResults[f.draft.year][team] ||= []).push(m); }

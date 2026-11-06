@@ -31,7 +31,7 @@ const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v =
 const ROOT = path.resolve(args.root || path.join(path.dirname(new URL(import.meta.url).pathname), '..'));
 const imp = (p) => import(path.join(ROOT, p));
 const F = await imp('src/franchise/franchise.js');
-const { runFranchise } = await imp('tools/franchise-soak.mjs');
+const { runFranchise, floorLog } = await imp('tools/franchise-soak.mjs');
 const { leagueInvariants, withBoardReset } = await imp('tools/league-soak.mjs');
 const REG = await imp('src/franchise/league-registry.js');
 const LS = await imp('src/franchise/league-season.js');
@@ -48,6 +48,27 @@ const L = await imp('src/franchise/league.js');
 const T = await imp('src/franchise/trades.js');
 const { GYM_BY_CLUB } = await imp('src/data/gyms.js');
 const IH = await imp('src/franchise/injury-history.js');
+// Task 7 (recording only): the free-agency market, when the tree has one. Absent in older trees; `v4.seasons[].fa` is then not written.
+let FAE = null, FAL = null; try { FAE = await imp('src/franchise/fa-engine.js'); FAL = await imp('src/franchise/fa-legendary.js'); } catch { /* a tree before Task 7 */ }
+let AMB = null; try { AMB = await imp('src/franchise/ambition.js'); } catch { /* a tree before the Ambition system */ }
+let CON = null; try { CON = await imp('src/franchise/contracts.js'); } catch { /* */ }
+/** One offseason's market, read from the franchise after it (recording only; nothing here changes the game). */
+function faRecord(f) {
+  if (!FAE || !f.freeAgency?.v) return null;
+  const fa = f.freeAgency; const ly = fa.leagueYear; const log = (fa.log || []).filter((e) => e.ly === ly);
+  const offers = Object.values(fa.offers || {}).filter((o) => o.ly === ly);
+  const byMid = new Map(); for (const o of offers) byMid.set(o.mid, (byMid.get(o.mid) || 0) + 1);
+  const ageOf = (id) => (f.roster.find((m) => m.id === id) || f.league.monsters[id])?.age ?? null;
+  const monOf = (id) => f.roster.find((m) => m.id === id) || f.league.monsters[id];
+  const signs = log.filter((e) => e.kind === 'sign').map((e) => ({ club: e.club, owner: e.club === f.club, mid: e.mid, salary: e.salary, years: e.years, bonus: e.bonus || 0, bidders: byMid.get(e.mid) || 1, age: ageOf(e.mid), ...(AMB ? { amb: AMB.ambitionOf(monOf(e.mid)) } : {}) }));
+  const clubs = FAE.allClubs(f); const cap = Object.fromEntries(clubs.map((c) => { const v = FAE.capView(f, c); return [c, [v.committed, v.reserved, v.usable]]; }));
+  const legends = Object.fromEntries(clubs.map((c) => { const b = FAL.legendsBySide(FAE.rosterOf(f, c)); return [c, [b.offense.length, b.defense.length]]; }));
+  const floor = { ai: f.leagueOffseason?.freeAgency?.floorReleases || 0, ownerTotal: floorLog?.owner ?? null }; // recording only (owner rule 2026-11-04)
+  return { ly, floor, signs, offers: log.filter((e) => e.kind === 'offer').length, revisions: log.filter((e) => e.kind === 'revise').length, withdrawals: log.filter((e) => e.kind === 'withdraw').length, extensions: log.filter((e) => e.kind === 'extend').length, renewalsDeclined: f.leagueOffseason?.contracts?.declined || 0, renewalsSigned: f.leagueOffseason?.contracts?.resigned || 0, unsignedAtClose: FAE.marketList(f).length, cap, legends, marketProblems: FAE.marketProblems(f),
+    // the Ambition system and the staff negotiation (owner 2026-11-05; recording only): extension windows, renewal talks, the owner's staff
+    ...(AMB ? { ambition: { ext: fa.steps?.[ly - 1]?.ext || null, midExt: fa.steps?.[ly - 1]?.midExt || null, renewalTalksDeclined: f.leagueOffseason?.contracts?.talksDeclined || 0 } } : {}),
+    staff: { total: CON ? Object.keys(f.staff || {}).reduce((a, r) => a + CON.staffSalary(f, r), 0) : null, raise: { ...(f.staffRaise || {}) }, exceptions: (f.capExceptions || []).filter((e) => e.ly === ly).length, renewals: (f.staffRenewalLog || []).filter((e) => e.ly === ly) } };
+}
 /** Harness v4: the columns of one monster's season-end row (arrays keep a 20-season file small). */
 export const V4_MONSTER = Object.freeze(['id', 'club', 'pos', 'age', 'ovr', 'level', 'xp', 'potential', 'starter', 'protected', 'ageless', 'origin', 'draftedYear', 'draftedRound',
   'contractEnds', 'contractYears', 'salary', 'stage', 'injIncidents', 'injMissed', 'injOpp', 'yearsPro', 'attrs']);
@@ -55,6 +76,12 @@ const SCEN = args.scenario ? await import(path.join(path.dirname(new URL(import.
 
 const [s0, s1] = String(args.seeds || '1-2').split('-').map(Number); const SEEDS = []; for (let s = s0; s <= (s1 || s0); s++) SEEDS.push(s);
 const SEASONS = Number(args.seasons || 2), DIFF = args.difficulty || 'pro', quiet = !!args.quiet;
+/** Measuring point (owner decision 2026-11-05). 'end' (the pre-registered harness v4): each season is recorded in the soak's `onSeason`, after
+ *  the owner's offseason. 'start': each season is recorded at the start of the following season, after the whole offseason has run in
+ *  either build (Task 7 runs its AI offseason at the season's close, v42.21.0 at the season start); a run's last season is followed by its
+ *  offseason and the start of the next season before it is recorded, unless the franchise cannot start another season (the 20th). The
+ *  draft is recorded at the season's end in both modes (the game clears it at the season start). Recording only: no game call changes. */
+const MEASURE = args.measure === 'start' ? 'start' : 'end';
 const POS = Object.keys(GROUP_SLOTS);
 const r1 = (x) => (x == null || Number.isNaN(x) ? null : Math.round(x * 10) / 10);
 const mean = (a) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : null);
@@ -124,6 +151,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
 
   const base = withBoardReset(leagueInvariants);
   const check = (f, where) => {
+    if (MEASURE === 'start' && /^season \d+ start$/.test(where)) flushSeason(f);
     if (scenario && !applied && F.hasLeague(f)) { scenarioSetup = scenario.apply(f, { REG, LS, L, T, monsterOverall, GROUP_SLOTS, ALL_TEAMS }); applied = true; }
     const p = base(f, where); for (const x of p) integrity.push(x);
     if (!F.hasLeague(f)) return p;
@@ -162,13 +190,17 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
     return p;
   };
 
-  const onSeason = (f) => {
+  let pendingSeason = null;
+  const onSeason = (f) => { if (MEASURE === 'end') return onSeasonCore(f, { draft: true, rest: true }); onSeasonCore(f, { draft: true, rest: false }); pendingSeason = f.season; };
+  /** Measure 'start': record the finished season now (f.season points at it only for the recording, restored at once). */
+  const flushSeason = (f) => { if (!pendingSeason) return; const cur = f.season; f.season = pendingSeason; pendingSeason = null; try { onSeasonCore(f, { draft: false, rest: true }); } finally { f.season = cur; } };
+  const onSeasonCore = (f, opts) => {
     const year = f.season.year; const cap = tierById(f.tier).cap; const clubs = REG.leagueClubs(f).slice().sort();
     const s = f.season; const seeds = Object.values(s.playoffs?.seeds || {}).flat(); const fin = (s.playoffs?.results || []).find((x) => x.round === 3);
     const lo = f.leagueOffseason || {};
     const d = f.draft && !f.draft.creation ? f.draft : null;
     // Draft: every AI pick against the board at that moment (the class minus earlier picks) and the club's depth before the draft.
-    if (d) {
+    if (d && opts.draft) {
       const clsById = Object.fromEntries(d.class.map((m) => [m.id, m]));
       const taken = new Set(); const thisDraft = {}; for (const p of d.picks) if (!p.mine && p.id) (thisDraft[p.team] ||= new Set()).add(p.id);
       for (const p of d.picks) {
@@ -188,6 +220,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
         decisions.draft.push(rec); drafted.set(m.id, { club: p.team, year, round: p.round, overall: p.overall });
       }
     }
+    if (!opts.rest) return;
     const tableSnap = snap(f);
     for (const c of clubs) {
       const st = clubState(f, c); const rec = s.records[c]; const roster = st.roster;
@@ -238,7 +271,7 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
       };
       for (const c of clubs) { for (const [, x] of tableSnap[c]) row(x.m, c, x.starter); if (!v4.clubs[c]) v4.clubs[c] = { gym: GYM_BY_CLUB[c]?.tier || null }; }
       for (const m of f.roster) row(m, f.club, ownerStart.has(m.id));
-      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), modeContracts: f.leagueOffseason?.contracts?.byMode || null, modeUpgrades: f.leagueOffseason?.upgradesByMode || null, monsters });
+      v4.seasons.push({ year, ownerClub: f.club, rival: f.rivals?.[f.tier]?.team || null, games: (s.results || []).map((g) => [g.week ?? null, g.home, g.away, g.homeScore, g.awayScore]), strategy: Object.fromEntries(clubs.map((c) => [c, JSON.parse(JSON.stringify(REG.clubRecord(f, c).strategy || {}))])), modeContracts: f.leagueOffseason?.contracts?.byMode || null, modeUpgrades: f.leagueOffseason?.upgradesByMode || null, monsters, ...(FAE ? { fa: faRecord(f) } : {}) });
     }
     prevOvr = new Map(); for (const mp of Object.values(tableSnap)) for (const [id, x] of mp) prevOvr.set(id, x.ovr);
     // Save integrity at the season boundary: the whole league registry survives an export/import round trip unchanged.
@@ -249,6 +282,10 @@ export async function benchmarkSeed(seed, { seasons = SEASONS, difficulty = DIFF
   try { res = runFranchise(seed, { seasons, difficulty, check, onSeason }); }
   catch (e) { return { seed, error: String(e?.stack || e).slice(0, 2000), rows, decisions, integrity, seconds: Math.round((Date.now() - t0) / 1000), v4 }; }
   const { f, problems, log } = res;
+  if (MEASURE === 'start' && pendingSeason) { // the last season: its offseason has run; start the next season when the franchise can, then record
+    const y = pendingSeason.year; const n = F.startNextSeason(f);
+    if (n.ok) { const p = check(f, `season ${y + 1} start`); for (const x of p) problems.push(x); } else flushSeason(f);
+  }
   v4.finalState = finalStateHash(f); // harness v4: the whole franchise at the end, for the non-interference check
   // Later contribution of AI draftees: where each one is at the end of the run.
   const draftOutcome = [...drafted.entries()].map(([id, x]) => { const m = f.league.monsters[id]; const club = m ? REG.leagueClubs(f).find((c) => REG.clubRecord(f, c).roster.includes(id)) : null; const st = club ? clubState(f, club) : null; return { id, ...x, endClub: club, sameClub: club === x.club, endOvr: m ? monsterOverall(m) : null, endStarter: st ? st.startIds.has(id) : false, inLeague: !!m }; });
@@ -262,7 +299,7 @@ export const hashOf = (runs) => createHash('sha256').update(JSON.stringify(runs.
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const scenario = SCEN && args.scenario ? SCEN.SCENARIOS[args.scenario] : null; if (args.scenario && !scenario) { console.error(`unknown scenario ${args.scenario}`); process.exit(2); }
-  const out = { harnessV: 4, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
+  const out = { harnessV: 4, measure: MEASURE, label: args.label || null, root: ROOT, difficulty: DIFF, seasonsRequested: SEASONS, seeds: SEEDS, scenario: args.scenario || null, node: process.version, started: new Date().toISOString(), runs: [] };
   for (const seed of SEEDS) {
     const r = await benchmarkSeed(seed, { scenario });
     out.runs.push(r);

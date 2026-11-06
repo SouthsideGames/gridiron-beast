@@ -1,0 +1,149 @@
+[
+ {
+  "label": "base-save.json",
+  "owner": {
+   "monsters": 38,
+   "posNotSpeciesPrimary": 6,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 1,
+   "manualOop": 0
+  },
+  "ai": {
+   "monsters": 557,
+   "posNotSpeciesPrimary": 150,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 15,
+   "manualOop": 0
+  }
+ },
+ {
+  "label": "inj-save.json",
+  "owner": {
+   "monsters": 38,
+   "posNotSpeciesPrimary": 9,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 1,
+   "manualOop": 0
+  },
+  "ai": {
+   "monsters": 570,
+   "posNotSpeciesPrimary": 159,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 15,
+   "manualOop": 0
+  }
+ },
+ {
+  "label": "old-106-15.json",
+  "owner": {
+   "monsters": 38,
+   "posNotSpeciesPrimary": 7,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 1,
+   "teams": 1,
+   "bySlot": {
+    "S": 1
+   },
+   "manualOop": 0,
+   "holesPrimaryOnly": 1,
+   "holeBy": {
+    "S": 1
+   }
+  },
+  "ai": {
+   "monsters": 555,
+   "posNotSpeciesPrimary": 202,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 15,
+   "manualOop": 0
+  }
+ },
+ {
+  "label": "old-midseason.json",
+  "owner": {
+   "monsters": 32,
+   "posNotSpeciesPrimary": 7,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 1,
+   "manualOop": 0
+  },
+  "ai": {
+   "monsters": 570,
+   "posNotSpeciesPrimary": 133,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 15,
+   "manualOop": 0
+  }
+ },
+ {
+  "label": "save.json",
+  "owner": {
+   "monsters": 30,
+   "posNotSpeciesPrimary": 9,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 1,
+   "manualOop": 0
+  },
+  "ai": {
+   "monsters": 570,
+   "posNotSpeciesPrimary": 140,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 15,
+   "manualOop": 0
+  }
+ },
+ {
+  "label": "save2.json",
+  "owner": {
+   "monsters": 29,
+   "posNotSpeciesPrimary": 8,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 1,
+   "manualOop": 0
+  },
+  "ai": {
+   "monsters": 569,
+   "posNotSpeciesPrimary": 148,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 15,
+   "manualOop": 0
+  }
+ },
+ {
+  "label": "seed1-3seasons",
+  "owner": {
+   "monsters": 38,
+   "posNotSpeciesPrimary": 7,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 0,
+   "teams": 1,
+   "manualOop": 0
+  },
+  "ai": {
+   "monsters": 562,
+   "posNotSpeciesPrimary": 152,
+   "legendaryCrossSide": 0,
+   "outOfPositionSlots": 1,
+   "teams": 15,
+   "manualOop": 0,
+   "bySlot": {
+    "S": 1
+   },
+   "holesPrimaryOnly": 1,
+   "holeBy": {
+    "S": 1
+   }
+  }
+ }
+]

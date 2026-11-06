@@ -21,4 +21,6 @@ legacy/       the previous v5.0 (11-on-11) prototype, unchanged and still runnab
 docs/         historical design documents (superseded by the four GRIDIRON_BEAST_*.md files at the root)
 ```
 
+Current release: **v42.22.0-free-agency** — Task 7 (Free Agency Overhaul) complete and released 2026-11-05; next, Task 8 (catalogue expansion). Comprehensive franchise balance testing is pending until Task 8 (GDD §59.10).
+
 Design and status: `GRIDIRON_BEAST_AUDIT.md`, `GRIDIRON_BEAST_GDD.md`, `GRIDIRON_BEAST_REBUILD_PLAN.md`, `GRIDIRON_BEAST_TEST_PLAN.md`.

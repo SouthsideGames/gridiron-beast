@@ -57,7 +57,7 @@ export function speciesSheet(s, f) {
   const owned = f ? f.roster.filter((m) => m.species === s.id) : [];
   const st = dexStatus(f, s.id);
   return `<div class="row" style="align-items:flex-start">${sprite16(s, 96)}<div class="grow"><div class="muted">${esc(s.element)} type · <span class="dex-r r-${s.rarity}">${RARITIES[s.rarity].label}</span>${s.cornerstone ? ' · cornerstone' : ''}</div>
-    <div class="muted">${POS_NAME[s.position]} (${s.position})${s.secondary ? ` · also ${POS_NAME[s.secondary]} (${s.secondary})` : ''}</div>
+    <div class="muted">${POS_NAME[s.position]} (${s.position})</div>
     <div class="muted">${esc(s.size)} ${esc(s.body)} · ${esc(s.look)}</div>
     <div class="muted" style="margin-top:4px">${st === 'signed' ? `Signed${f ? ` · ${owned.length} on your roster` : ''}` : st === 'seen' ? 'Seen, never signed' : 'Not yet discovered'}</div></div></div>
     <p style="font-style:italic">“${esc(s.personality)}”</p>

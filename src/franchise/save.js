@@ -2,7 +2,9 @@
 // a one-way import of the v5 (11v11) prototype's owner, club, staff, rival
 // and records. The legacy key is never modified.
 
-import { SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
+import { migrationDue, migratePositions, migrateAmbitions } from './position-migration.js';
+import { SCHEMA_VERSION, LEAGUE_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, createFranchise, dexRecord } from './franchise.js';
+import { ensureFreeAgency } from './fa-state.js';
 import { verifyLeague, hasLeague } from './league-registry.js';
 import { backfillCareer } from './career.js';
 import { backfillLeagueNews } from './league-news.js';
@@ -33,8 +35,10 @@ export function migrate(f) {
   if (!f || typeof f !== 'object') return null;
   // Schema 6 (every save before Phase 3) and schema 8 (with the league registry, GDD §42.6) are both read; a 6 becomes an 8 the
   // first time the game opens it (franchise.ensureLeague, verified on the copy), never here, so backups and cloud copies are shown as they are.
-  if (f.schemaVersion !== LEGACY_SCHEMA_VERSION && f.schemaVersion !== SCHEMA_VERSION) return null;
-  if (f.schemaVersion === SCHEMA_VERSION && !hasLeague(f)) return null; // an 8 without its registry is not a save this game wrote
+  // Schema 9 (Task 7) adds `f.freeAgency`; an 8 gets it here, additively and once (fa-state.js ensureFreeAgency), with the D3 rule
+  // for a save opened partway through an offseason. A save from a later build (10+) is refused, never guessed at.
+  if (![LEGACY_SCHEMA_VERSION, LEAGUE_SCHEMA_VERSION, SCHEMA_VERSION].includes(f.schemaVersion)) return null;
+  if (f.schemaVersion !== LEGACY_SCHEMA_VERSION && !hasLeague(f)) return null; // an 8 or 9 without its registry is not a save this game wrote
   if (hasLeague(f)) { const p = verifyLeague(f); if (p.length) throw Object.assign(new Error(`The league registry is damaged: ${p[0]}`), { code: 'league', problems: p }); }
   f.news ||= []; f.history ||= []; f.lineupManual ||= {}; f.depth ||= {}; f.settings ||= {}; f.week ||= {}; f.campaign ||= { badges: {}, gymWins: {}, titles: f.badges ? Object.values(f.badges).reduce((a, b) => a + b, 0) : 0, wins: 0, awards: 0 };
   migrateSpecies(f);
@@ -45,6 +49,9 @@ export function migrate(f) {
   // club log (they live after the game, on the Career Timeline and on the League News scoreboard now).
   if (!Array.isArray(f.leagueNews)) backfillLeagueNews(f);
   f.news = f.news.filter((n) => !/ reached level \d+/.test(n?.text || '') && !/^Rival watch: /.test(n?.text || ''));
+  if (hasLeague(f)) ensureFreeAgency(f); // schema 8 → 9 (Task 7)
+  migrateAmbitions(f); // the hidden Ambition, once per save; deterministic from each monster's id (owner 2026-11-05)
+  if (hasLeague(f) && f.season?.finished && migrationDue(f)) migratePositions(f); // the final single-position rule: a save opened in an offseason is at the boundary (owner 2026-11-05)
   return f;
 }
 /** Saves from before the duplicate-name fix (2026-10-22) may hold two roster monsters with one name: the later one gets a numeral. Stats and history are keyed by id, so nothing else changes. */

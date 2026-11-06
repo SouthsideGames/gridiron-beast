@@ -131,8 +131,7 @@ export function stagedSim(entry) {
 export function findActivation(entry, { tries = 80 } = {}) {
   const sp = entry.sp; const pos = sp.position; const rng = createRng(11);
   const slots = entry.side === 'off' ? OFFENSE_SLOTS : DEFENSE_SLOTS; const natural = slots.find((s) => positionOf(s) === pos) || slots[0];
-  // A ball-carrier ability on a tight end shows up more often from the backfield (his secondary position).
-  const alt = sp.secondary === 'RB' && ['move', 'contact'].includes(entry.family) ? 'RB' : null;
+  const alt = null; // one position per species (Task 7 D6): the ability is audited at the species' own position only
   const fam = entry.family;
   const offPlays = entry.key === 'glacierWall' || entry.key === 'foresight' ? ['mesh', 'deep_post', 'dagger', 'smash'] : entry.key === 'echoRead' ? ['pa_post', 'pa_boot', 'pa_shot'] : fam === 'block' ? ['inside_zone', 'mesh', 'power_right', 'deep_post'] : fam === 'contact' ? ['inside_zone', 'power_right', 'dive', 'outside_zone', 'mesh'] : fam === 'throw' || fam === 'cover' ? ['deep_post', 'three_verticals', 'mesh', 'deep_corner', 'curl_flat'] : ['quick_slants', 'inside_zone', 'curl_flat', 'deep_corner', 'te_seam', 'stick'];
   const defPlays = entry.key === 'ambush' || entry.key === 'glacierWall' || entry.key === 'foresight' ? ['all_out', 'zone_blitz', 'fire_zone', 'double_a_mug'] : fam === 'throw' || fam === 'cover' || fam === 'move' ? ['cover_3', 'cover_1', 'man_press', 'cover_2_man'] : ['cover_2_zone', 'run_wall', 'bear_front', 'cover_1'];

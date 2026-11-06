@@ -52,16 +52,14 @@ export function positionOf(slot) {
   return slot; // QB, RB, TE, K
 }
 
-/** Positions a monster may fill with the secondary-position penalty. */
-export const SECONDARY_ELIGIBILITY = Object.freeze({
-  QB: [], RB: ['WR'], WR: ['TE', 'RB'], TE: ['WR', 'OL'], OL: ['TE'],
-  DL: ['LB'], LB: ['DL', 'S'], CB: ['S'], S: ['CB', 'LB'], K: [],
-});
+/**
+ * One football position per monster (Task 7, owner decision 2026-11-04, specification audit resolution 2): a monster fills only
+ * the depth-chart slots of its own position group (a WR plays WR1, WR2 or WR3, never TE). No secondary-position fallback exists,
+ * for the owner's club or the AI's. Kept as an empty table so older callers read "no secondary positions".
+ */
+export const SECONDARY_ELIGIBILITY = Object.freeze({ QB: [], RB: [], WR: [], TE: [], OL: [], DL: [], LB: [], CB: [], S: [], K: [] });
 
-export function canPlay(position, slot) {
-  const need = positionOf(slot);
-  return position === need || (SECONDARY_ELIGIBILITY[position] || []).includes(need);
-}
+export function canPlay(position, slot) { return position === positionOf(slot); }
 
 /** Attributes that matter most per position; used for OVR and level-ups. */
 export const POSITION_WEIGHTS = Object.freeze({

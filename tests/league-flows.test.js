@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
+import { t7FA } from './t7-support.js';
 import * as R from '../src/franchise/league-registry.js';
 import * as S from '../src/franchise/league-season.js';
 import * as L from '../src/franchise/lifecycle.js';
@@ -46,10 +47,10 @@ test('migration at the offseason (contracts open) and mid-draft: the registry is
     let g = 0; while (!f.season.finished && g++ < 40) { if (F.inPlayoffs(f) && !F.playoffFixture(f)) { F.skipPlayoffs(f); continue; } F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); continue; } const gm = F.simulatePlayerGame(f); if (!gm) break; F.finishSunday(f, gm); }
     assert.ok(f.season.finished); while (f.scenes?.length) F.dismissScene(f);
     settle(f);
-    if (when === 'draft') { assert.ok(F.beginDraft(f).ok); assert.ok(f.draft.started && !f.draft.done, 'the owner is on the clock'); }
+    if (when === 'draft') { assert.ok((t7FA(f), F.beginDraft(f)).ok); assert.ok(f.draft.started && !f.draft.done, 'the owner is on the clock'); }
     const r = F.ensureLeague(f); assert.ok(r.ok, `${when}: ${r.problems.join('; ')}`);
     assert.deepEqual(R.verifyLeague(f), []);
-    if (when === 'offseason') assert.ok(F.beginDraft(f).ok);
+    if (when === 'offseason') assert.ok((t7FA(f), F.beginDraft(f)).ok);
     draftAll(f); assert.ok(f.draft.done);
     const aiPicks = f.draft.picks.filter((p) => p.team !== f.club && p.id);
     const inRegistry = aiPicks.filter((p) => F.findInLeague(f, p.id)?.where === 'league').length;

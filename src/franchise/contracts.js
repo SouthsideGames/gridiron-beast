@@ -19,7 +19,7 @@ export function newContract(year, years = CONTRACT_YEARS) { years = Math.max(1, 
 /** Task 6 Phase B (R3): an AI club's deal of 1, 2 or 3 seasons (the owner's deals stay at CONTRACT_YEARS). */
 export const LEAGUE_CONTRACT_MAX = 3;
 export function leagueContract(year, years = CONTRACT_YEARS) { years = Math.max(1, Math.min(LEAGUE_CONTRACT_MAX, years | 0)); return { signed: year, ends: year + years - 1, years }; }
-export function contractEnds(m, year) { return !!m.contract && m.contract.ends <= year; }
+export function contractEnds(m, year) { return !!m.contract && m.contract.ends <= year && !m.contract.next; } // Task 7: an extension signed to follow the deal means it does not end (promoted at the league year's turn)
 
 /** What the monster asks for at renewal: today's market rate for their ratings plus a premium for a big season or a league award. */
 /**
