@@ -4316,6 +4316,8 @@ Phase A-2 (D9 draft-class scaling, D10a gym plateau, D10b bands at +4) is record
 
 ## 59. Free Agency Overhaul (Task 7; COMPLETE AND RELEASED v42.22.0-free-agency, 2026-11-05)
 
+**Release record (2026-11-06):** PR #94 merged into `main` at `1756ccb`. The release was rebuilt from that merge (176 files: 11 added, 22 changed, none removed), byte-checked against git and deploy-checked, then published to the existing main game link as artifact version 117. Verification: 176 live files; 40 read back byte-identical, including every added and changed file; `src/version.js` reports v42.22.0-free-agency; `index.html` holds the built page; capabilities and the runtime contract were carried forward. `release/manifest.json` was regenerated from the merge. Comprehensive franchise AI and difficulty testing remains pending until Task 8 (§59.10).
+
 **Authority:**
 - The owner's *Task 7 Free Agency Implementation Specification* (`docs/TASK7_FREE_AGENCY_SPECIFICATION.md`): 30 decisions and the 2026-10-31 audit resolutions.
 - The Phase 1 audit and the owner's decisions D1–D7 (`docs/TASK7_PHASE1_AUDIT.md` §8).
