@@ -400,6 +400,7 @@ export function attemptTryKick(state, teams) {
   save();
   if (res.good) state.score[state.tryTeam] += 1;
   kickerStat(state, state.tryTeam, 'xpa'); if (res.good) kickerStat(state, state.tryTeam, 'xpm');
+  creditFormulaUnits(state, teams, state.tryTeam, 'xp'); // B5
   finishTry(state, res.text);
   return res;
 }
@@ -563,13 +564,32 @@ export function recordKickoffStats(state, kicking, receiving, units, sim, res) {
   for (const e of sim.events || []) { const k = keyOf[e.kind]; if (!k || !e.by) continue; bump(e.side === 'def' ? kicking : receiving, e.by, k); }
 }
 
+/** B5: the formula plays' units (punt, field goal, extra point), from the depth lists. Kicking unit: the K plus 6; the other unit: 7. */
+export const FG_PROTECT_ORDER = Object.freeze(['LG', 'C', 'RG', 'TE', 'RB', 'WR1', 'WR2', 'QB']);
+export const FG_BLOCK_ORDER = Object.freeze(['DL1', 'DL2', 'DL3', 'LB1', 'LB2', 'CB1', 'CB2', 'SS', 'FS']);
+export function formulaUnits(kickTeam, otherTeam, kind) {
+  if (kind === 'punt') { const u = kickoffUnits(kickTeam, otherTeam); return { kicking: u.coverage, other: u.ret }; }
+  const fill = (out, order, lineup, used) => { for (const s of order) { if (Object.keys(out).length >= KICKOFF_UNIT) break; const p = lineup?.[s]; if (!filled(p) || out[s] || (p.id && used.has(p.id))) continue; out[s] = p; if (p.id) used.add(p.id); } return out; };
+  const kicker = kickTeam.kicker || { attrs: {}, name: 'K', id: null };
+  return { kicking: fill({ K: kicker }, FG_PROTECT_ORDER, kickTeam.offense, new Set(kicker.id ? [kicker.id] : [])), other: fill({}, FG_BLOCK_ORDER, otherTeam.defense, new Set()) };
+}
+/**
+ * B5: a formula-resolved play (punt, field goal, extra point) grants its units participation (a special-teams snap, the status
+ * countdown, rewards through participation) without fabricated performance events.
+ */
+function creditFormulaUnits(state, teams, kicking, kind) {
+  const other = opponent(kicking); const u = formulaUnits(teams[kicking], teams[other], kind);
+  const bump = (team, slot) => { const p = (state.stats[team].players[slot] ||= {}); p.stSnaps = (p.stSnaps || 0) + 1; };
+  for (const slot of Object.keys(u.kicking)) bump(kicking, slot); for (const slot of Object.keys(u.other)) bump(other, slot);
+  T8S.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)].map((x) => x?.id).filter(Boolean));
+}
 export function doPunt(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
   const { r, save } = rng(state);
   const kicking = state.possession, receiving = opponent(kicking);
   const res = ST.punt(r, { ballOn: state.ballOn, kicker: teams[kicking].kicker, returner: teams[receiving].returner });
   save();
-  state.stats[kicking].punts += 1;
+  state.stats[kicking].punts += 1; kickerStat(state, kicking, 'punts'); creditFormulaUnits(state, teams, kicking, 'punt'); // B5: the K's punt and the units' participation
   const lines = [res.text];
   runClock(state, 6);
   if (res.blocked) { changePossession(state, res.ballOn, lines); }
@@ -589,6 +609,7 @@ export function doFieldGoal(state, teams) {
   const kicking = state.possession;
   const res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
   save();
+  creditFormulaUnits(state, teams, kicking, 'fg'); // B5
   { const bin = res.distance < 30 ? 'fg0' : res.distance < 40 ? 'fg30' : res.distance < 50 ? 'fg40' : 'fg50';
     kickerStat(state, kicking, 'fga'); kickerStat(state, kicking, bin + 'a'); if (res.good) { kickerStat(state, kicking, 'fgm'); kickerStat(state, kicking, bin + 'm'); const p = state.stats[kicking].players.K; if ((p.fgLong || 0) < res.distance) p.fgLong = res.distance; } }
   runClock(state, 5);

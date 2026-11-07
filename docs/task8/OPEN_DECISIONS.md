@@ -13,6 +13,7 @@ until the owner rules. Evidence: `M1_STARTER_CALIBRATION.md`, `LEAGUE_HEALTH_M2.
 | D6 | Stat guide versus the Appendix C role register | **Follow the register** in the guide (M6 presentation) |
 | D7 | AI identities (four questions in AI_IDENTITIES.md) | Approve as proposed (details below) |
 | D8 | Cheap free agents accepting half their ask | **Review at #30**; no change now |
+| D10 | Live kickoff return balance | **Keep live returns; tune only the return unit's escort blocking within the existing engine at M6 if the season reports confirm short returns** |
 | D9 | Gyms losing their strength edge over 10 seasons | **Structural, not boosts**: implement the identities (D7) and the gym mode floor, then re-measure at season 5/10 reports |
 
 ## D1. Founding-roster strength
@@ -108,3 +109,25 @@ by season 10. With the old nudge the lead held at about 2. The gym tier bonus se
 
 Re-measure in the franchise-health reports at seasons 5 and 10. If the edge still collapses, the owner can choose a structural
 lever, for example a larger initial tier gap or a scouting/draft priority for gyms. No automatic yearly boost.
+
+## D10. Live kickoff returns
+
+**What happens now.**
+- Kickoffs are live plays (P7). The approved kicking formula still decides distance and touchback, so touchbacks are unchanged at 46%.
+- The return and coverage are played by the engine's existing movement, blocking and tackling.
+- Over 1,500 kickoffs (`tools/ko-probe.mjs`):
+  - live returns average 20.2 yards, to a start at the 23.5;
+  - the formula averaged 23.8 yards, to the 28.0;
+  - live returns produced 0 return touchdowns in 804 (the formula had 6 in 923) and 5 lost fumbles.
+
+**Choices made where the spec is silent** (minimal; for review):
+- 7 per side, with the unit fill orders taken from the starters, package slots first;
+- a hang time of 2.6 s, reused from the existing kickoff animation;
+- the kickoff still takes 5 s off the clock;
+- no muffed catches;
+- coverage tackles counted separately (`stTackles`);
+- no comeback, scheme edge or partnership credit on kickoffs.
+
+**Recommendation.** Keep live returns as they are for the M2 preview, so the owner can watch them. If the franchise-health reports
+confirm the shorter returns and the missing touchdowns, tune only the return unit's escort blocking inside the existing engine at
+M6. Do not reintroduce formula yards.

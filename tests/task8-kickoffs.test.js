@@ -143,3 +143,18 @@ test('a full game with live kickoffs finishes; kickoffs are credited; every kick
   assert.equal(koByK, kicks, 'one kickoff credited per kick');
   for (const side of ['home', 'away']) assert.ok(Object.values(g.stats[side].players).some((p) => p.stSnaps > 0), `${side} special-teams snaps`);
 });
+
+test('B5: punts, field goals and extra points credit their units with a special-teams snap and the K with the kick, without fabricated events', async () => {
+  const R = await import('../src/sim/rules.js');
+  const L = (await import('./tools/lineup.js')).lineup;
+  const mk = (name, seed) => { const x = L(seed, 60); for (const side of ['offense', 'defense']) for (const [slot, p] of Object.entries(x[side])) p.id = `${name}_${slot}`; return { id: name, name, offense: x.offense, defense: x.defense, kicker: { attrs: { kicking: 80 }, name: 'K', id: `${name}_K` } }; };
+  const teams = { home: mk('H', 11), away: mk('A', 12) };
+  const g = R.newGame({ home: teams.home, away: teams.away, seed: 3, quarterLength: 120 }); R.doKickoff(g, teams);
+  const k = g.possession; g.ballOn = 70; R.doFieldGoal(g, teams);
+  const P = g.stats[k].players; assert.equal(P.K.fga, 1); assert.equal(P.K.stSnaps, 1);
+  assert.equal(Object.keys(P).filter((s) => P[s].stSnaps).length >= 7, true, 'the kicking unit of 7');
+  const other = k === 'home' ? 'away' : 'home'; assert.ok(Object.values(g.stats[other].players).filter((p) => p.stSnaps).length >= 7, 'the block unit of 7');
+  assert.ok(!Object.values(g.stats[k].players).some((p) => (p.snapsOff || 0) > 0 && p.stSnaps && p.rec), 'no fabricated receptions');
+  const g2 = R.newGame({ home: teams.home, away: teams.away, seed: 4, quarterLength: 120 }); R.doKickoff(g2, teams); const kk = g2.possession; g2.ballOn = 30; R.doPunt(g2, teams);
+  assert.equal(g2.stats[kk].players.K.punts, 1, 'the K is credited with the punt');
+});
