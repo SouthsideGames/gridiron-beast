@@ -103,7 +103,7 @@ test('3. reflected damage that does not knock out changes nothing: no ko, the at
     const a = lineup(rng, ['pyroclast', pick(rng, STRIKERS)]), b = lineup(rng, [pick(rng, STRIKERS), 'thornback']); const seed = rng.int(1e6);
     const now = simulateClash({ a, b, seed, config: battleConfig({}) }); checkCorrected(now);
     if (reflectedKOs(now).length) continue;
-    const hist = simulateClash({ a, b, seed, config: battleConfig({ ruleset: 'v1.0.0', duration: 'C6', swapCost: 'half', patches: [] }) });
+    const hist = simulateClash({ a, b, seed, config: battleConfig({ ruleset: 'v1.0.0', duration: 'C6', swapCost: 'half', patches: [], legacyNature: false }) }); // Nature-free on both sides (Task 8 retired Nature, N7c B14)
     if (hist.log.some((e) => REFLECT(e) && e.hpAfter === 0)) continue;
     // same rules except the move table; compare only battles where no approved move is involved
     if ([...a, ...b].some((m) => ['elderoot', 'tidefin', 'tsunarok', 'duskrunner', 'cinderclaw', 'ashkit'].includes(m.species))) continue;
