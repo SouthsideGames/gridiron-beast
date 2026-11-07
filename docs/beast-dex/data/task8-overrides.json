@@ -5,7 +5,8 @@
     "R1": "Owner rulings on Phase 1 items 1-40, 2026-11-06 23:46 (docs/task8/DECISIONS.md)",
     "N7a": "Owner instruction 2026-11-07 00:13: no universal evasion, no multi-play Stunned, ordinary attacks normally connect",
     "N7b": "Owner rulings on P1-P10 and additional rulings, 2026-11-07 09:21 (docs/task8/RULINGS_2026-11-07.md)",
-    "N7c": "Owner rulings on B1-B20, 2026-11-07 10:00 (docs/task8/RULINGS_2026-11-07b.md)"
+    "N7c": "Owner rulings on B1-B20, 2026-11-07 10:00 (docs/task8/RULINGS_2026-11-07b.md)",
+    "N7d": "Owner rulings on G1-G3, 2026-11-07 10:21 (docs/task8/RULINGS_2026-11-07c.md)"
   },
   "abilities": {
     "FIR-01-C": {
@@ -186,13 +187,13 @@
     },
     {
       "id": "cap-diagnostics",
-      "ruling": "N7b P9; N7c B4",
+      "ruling": "N7b P9; N7c B4; N7d",
       "rule": "Simultaneous-effect limits are diagnostics only. Never cancel, delay or delete a legitimate effect because a limit is exceeded; log a diagnostic and fail the test suite.",
       "values": {
-        "fieldRectangles": 45,
+        "fieldRectangles": 44,
         "objectsPerScrimmagePlay": 13,
         "collisionObjectsPerScrimmagePlay": 9,
-        "objectsPerKickoff": 6,
+        "objectsPerKickoff": 0,
         "objectsBetweenPlays": 0,
         "livingTerrainClumpsPerOverlap": 4,
         "mindstormEchoesPerPlay": 15,
@@ -319,28 +320,29 @@
       "id": "kickoff-classification",
       "ruling": "N7c B20",
       "rule": "Kickoff catches are not receptions; kickoffs are not defensive snaps. Per-ability field clocks and creation eligibility are preserved; Impact Pyre creates at its creator next eligible defensive snap; a cooldown never cancels an already-earned queued field."
-    }
-  ],
-  "openGaps": [
+    },
     {
-      "id": "G1",
+      "id": "field-clock-any-scrimmage",
+      "ruling": "N7d G1",
       "abilities": [
         "FIR-02-F",
         "FIR-06-F",
         "WAT-06-F"
       ],
-      "missing": "which completed plays count toward the lifetime"
+      "rule": "Lifetime counts every completed scrimmage play by either team, including incompletions; special-teams plays do not count; explicit creation-play and halftime exceptions preserved."
     },
     {
-      "id": "G2",
+      "id": "field-clock-creator-participation",
+      "ruling": "N7d G2",
       "abilities": [
         "WIN-01-F",
         "LIG-01-F"
       ],
-      "missing": "whose participation the lifetime counts"
+      "rule": "Lifetime decrements only when the creator participates in an offensive scrimmage play; the field remains active while the countdown is paused."
     },
     {
-      "id": "G3",
+      "id": "field-creation-on-field",
+      "ruling": "N7d G3",
       "abilities": [
         "FIR-06-F",
         "NAT-01-F",
@@ -351,7 +353,15 @@
         "WIN-04-F",
         "PSY-01-F"
       ],
-      "missing": "whether the field may spawn while its creator is off the field"
+      "offFieldAllowed": [
+        "ICE-01-F",
+        "PSY-04-F",
+        "MET-03-F",
+        "WAT-06-F",
+        "WAT-01-F"
+      ],
+      "rule": "Wait for the creator next eligible on-field snap before spawning; the listed off-field abilities keep their explicit permissions."
     }
-  ]
+  ],
+  "openGaps": []
 }

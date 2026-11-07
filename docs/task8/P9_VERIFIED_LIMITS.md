@@ -253,3 +253,32 @@ The previous Clash figures are corrected:
 | Clash delayed attacks | 2 per side / 4 total | same |
 | Clash Twin Thunder constructs | 2 total | same (Lab: 10 per side) |
 | Clash Dawn Song schedules | 5 per side / 10 total | same (3 per side in 3v3) |
+
+---
+
+## 9. Recalculation under the approved clocks (N7c B20, N7d G1–G3)
+
+The bounds in §3–§4 were computed under readings A1–A6. The owner has now ruled on each one. Recalculated at the same worst instant (a team-A offensive snap):
+
+| Group | Before (firm / conservative) | Ruling applied | Now |
+| --- | --- | --- | ---: |
+| I. A's current offense | 9 / 10 | **G3:** Burning Wake, Bloom Break, Beacon Lane and Bulwark Grid spawn only with the creator on the field. The 10 required an off-field spawn. **G2:** a WR3 Runway or Beacon field stays alive while paused off the field. In Pro that gives QB 1 + RB 1 + 2 Bloom × 2 + Pyroclast 2 + paused WR3 field 1 = 9. Spread is also 9. | **9** |
+| Tsunami Line | 1 / 2 | **G1:** every completed scrimmage play by either team counts, so a field can't wait out the opponent's possession. Two fields can't coexist (5-play cooldown, life 2). | **1** |
+| II. B's current defense | 11 | Unchanged. Impact Pyre now also counts offensive plays, which only shortens its life. | **11** |
+| III. A's paused defense | 11 (two Galyx) / 9 (Tsunarok) | **G3:** satisfied, since every field there spawned with its creator on the field (Heavy, then Nickel). **G1:** Impact Pyre keeps ticking during A's offense, but at A's first offensive snap it has used only 1 of up to 4 plays. | **11** |
+| IV. B's paused offense | 4 / 5 | **G2:** a Runway or Beacon field pauses while its creator is off the field, and over a whole opponent possession. So QB 1 + 3 WR fields (one created earlier in Spread and paused) + TE Bulwark 1 = 5. | **5** |
+| V. Kickers (Frostmark × 2 teams) | 8 | Unchanged: the clock counts opposing offensive scrimmage plays only. | **8** |
+
+**Whole-field maximum.**
+- With two Galyx at A's S slots: 9 + 11 + 11 + 5 + 8 = **44**.
+- With Tsunarok replacing a Galyx: 9 + 1 + 9 + 11 + 5 + 8 = 43.
+- **Approved diagnostic threshold: 44 field rectangles** (was 45).
+
+**Kickoff objects.** N7c B20 rules that kickoff catches are not receptions and kickoffs are not defensive snaps, so neither Cyclonic Release nor Fortress Gate can act on a kickoff. **0 objects on a live kickoff** (was 6).
+
+All other limits are unchanged:
+- 13 objects (9 collision) per scrimmage play;
+- 0 between plays;
+- 4 clumps per Nature–Earth overlap;
+- 15 Mindstorm echoes and 10 auras per play;
+- Clash: 2 delayed impacts per side, 2 Twin Thunder constructs per battle, Dawn Song up to lineup size per side.

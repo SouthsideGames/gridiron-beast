@@ -20,22 +20,20 @@ This is the single register of every Task 8 decision item: round 1 (items 1–40
 | **N7a** | Owner instruction, 2026-11-07 00:13: no universal evasion; no multi-play Stunned proposal; ordinary attacks normally connect |
 | **N7b** | Owner rulings on P1–P10, 2026-11-07 09:21 ([RULINGS_2026-11-07.md](RULINGS_2026-11-07.md)) |
 | **N7c** | Owner rulings on B1–B20, 2026-11-07 10:00 ([RULINGS_2026-11-07b.md](RULINGS_2026-11-07b.md)) |
+| **N7d** | Owner rulings on G1–G3, 2026-11-07 10:21 ([RULINGS_2026-11-07c.md](RULINGS_2026-11-07c.md)) |
 
 The consolidated rules are in [SPECIFICATION_BASELINE.md §20–§21](../beast-dex/SPECIFICATION_BASELINE.md) and
 [task8-overrides.json](../beast-dex/data/task8-overrides.json).
 
-## Still open: three gaps in field-ability wording
+## Field-wording gaps G1–G3 (N7d)
 
-These are not reopened decisions. They are rules the approved contracts don't contain. Details and recommendations:
-[FIELD_CLOCKS.md](FIELD_CLOCKS.md).
+| Gap | Status | Ruling |
+| --- | --- | --- |
+| **G1** | **Approved** | Impact Pyre, Burning Wake and Tsunami Line count every completed scrimmage play by either team, including incompletions; special teams don't count; creation-play and halftime exceptions preserved |
+| **G2** | **Approved** | Runway and Beacon Lane decrement only when their creator participates in an offensive scrimmage play; the field stays active while paused |
+| **G3** | **Approved** | The eight listed abilities wait for their creator's next eligible on-field snap; the five explicit off-field permissions are preserved |
 
-| Gap | Missing rule | Affected abilities | Affected work |
-| --- | --- | --- | --- |
-| **G1** | Which plays count when a lifetime says only "completed plays" | Impact Pyre, Burning Wake, Tsunami Line | WP5 field clocks; B4 field limit |
-| **G2** | Whose participation "participating offensive scrimmage plays" means | Runway, Beacon Lane | WP5 field clocks |
-| **G3** | Whether a field may spawn while its creator is off the field | Burning Wake, Bloom Break, Bramble Trap, Beacon Lane, Bulwark Grid, Shadow Patch, Crosswind Rescue, Mind Bend | WP6 creation hooks |
-
-All other work proceeds in dependency order. Only these clauses of these abilities wait.
+The field limits were recalculated under these clocks: 44 rectangles, and 0 objects on a live kickoff (B4 below; P9_VERIFIED_LIMITS.md §9).
 
 ## Remaining batch B1–B20 (all N7c)
 
@@ -44,7 +42,7 @@ All other work proceeds in dependency order. Only these clauses of these abiliti
 | B1 | Pancake constants | **Approved** | Proposed constants and bounds. One opportunity roll per OL per play, not per tick. Positive advantage required; a0 ≥ 0. Rebenchmark with Dex-generated ratings. |
 | B2 | Ordinary shed formula | **Approved** | DL, CB, S: 0.5 Agility + 0.3 Strength + 0.2 Tackling; LB unchanged; initial values. Report ordinary shed effects separately from pancake results. |
 | B3 | Event order | **Approved** (corrected) | Revised order. Correction: determine whether a fumble would occur first; Shielded then prevents it and consumes its episode. Post-KO exceptions verified against each contract ([RULINGS_2026-11-07b.md](RULINGS_2026-11-07b.md)). |
-| B4 | Effect limits | **Approved** | Verified limits are diagnostic thresholds, never gameplay restrictions; legitimate effects execute on overflow. Legendary uniqueness verified against the approved GDD. |
+| B4 | Effect limits | **Approved** | Thresholds recalculated under N7d: 44 rectangles, 0 kickoff objects. Verified limits are diagnostic thresholds, never gameplay restrictions; legitimate effects execute on overflow. Legendary uniqueness verified against the approved GDD. |
 | B5 | Special-teams units | **Approved** | Depth-list units, including kickoff kicking and return units. Formula-only participation grants the participation foundation without fabricated performance events. |
 | B6 | Level-XP curve | **Approved** | 75 XP per level (starting curve), subject to the development benchmarks. |
 | B7 | Veteran history | **Approved** | Simulated prior seasons, subject to the stated benchmarks. |
@@ -60,7 +58,7 @@ All other work proceeds in dependency order. Only these clauses of these abiliti
 | B17 | Basic shares | **Approved** | 25 / 25 / 30 / 35 / 40% (rosters, scouting, encounters, drafts, FA arrivals). Governs generation events, not forced composition of existing rosters or markets. |
 | B18 | Clash Stunned into football | **Approved** (recommendation rejected) | Preserve remaining duration 1:1 across Clash and football; each remaining unit disables one participating football play. Multi-play Stunned from carryover is approved; unrelated future sources still need approval. |
 | B19 | Legendary kickers | **Approved** | All legendary kickers count toward the offensive legendary limit. |
-| B20 | Ambiguous wording | **Approved** in part | Kickoff catches are not receptions; kickoffs are not defensive snaps. Per-ability field clocks and creation eligibility are preserved (the blanket readings are not adopted). Impact Pyre waits for its creator's next eligible defensive snap. A cooldown cannot cancel an already-earned queued field. Clock table published; G1–G3 open. |
+| B20 | Ambiguous wording | **Approved** in part | Kickoff catches are not receptions; kickoffs are not defensive snaps. Per-ability field clocks and creation eligibility are preserved (the blanket readings are not adopted). Impact Pyre waits for its creator's next eligible defensive snap. A cooldown cannot cancel an already-earned queued field. Clock table published; G1–G3 resolved by N7d. |
 
 ## Final packet P1–P10
 
@@ -153,4 +151,4 @@ All other work proceeds in dependency order. Only these clauses of these abiliti
 | 39 | AI use of Basics | **Approved** | R1; N7b |
 | 40 | Dex and collection | **Approved** | R1; N7b |
 
-**Specification status:** closed except gaps G1–G3, which affect only the named clauses of 11 field abilities.
+**Specification status: closed.** Every item has a binding ruling (N7d resolved the last gaps).

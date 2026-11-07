@@ -637,15 +637,15 @@ Owner rulings N7c (2026-11-07 10:00, verbatim in docs/task8/RULINGS_2026-11-07b.
   - Each field ability keeps its own contract clock and creation eligibility (docs/task8/FIELD_CLOCKS.md).
   - Impact Pyre creates at its creator's next eligible defensive snap.
   - A cooldown never cancels an already-earned queued field; the field waits under its contract's pending rule.
-  - Gaps G1–G3 in FIELD_CLOCKS.md remain open for the named abilities only.
+  - Gaps G1–G3 were resolved by N7d (§22).
 - **Stunned carryover (B18).** Remaining duration transfers 1:1 between Clash and football; each remaining unit disables one participating football play. This is the only approved multi-play football Stunned.
 
 **Limits (B4).**
 - Diagnostic thresholds only, never gameplay restrictions; legitimate effects always execute, and an overflow logs a diagnostic and fails the test suite. Derivation: docs/task8/P9_VERIFIED_LIMITS.md.
 - Thresholds:
-  - 45 field rectangles on the whole field;
+  - 44 field rectangles on the whole field (recalculated under §22);
   - 13 objects per scrimmage play, 9 of them collision objects;
-  - 6 on a live kickoff; 0 persisting between plays;
+  - 0 on a live kickoff (N7c B20); 0 persisting between plays;
   - 4 Living Terrain clumps per connected Nature–Earth overlap;
   - 15 Mindstorm echoes and 10 moving auras per play;
   - Clash: 2 delayed impacts per side, 2 Twin Thunder constructs per battle, Dawn Song schedules up to lineup size per side.
@@ -674,4 +674,15 @@ Owner rulings N7c (2026-11-07 10:00, verbatim in docs/task8/RULINGS_2026-11-07b.
 - Contract-derived cases.
 - Each probability's tolerance and sample size are frozen before testing, with N = 3.29²·p(1 − p)/h².
 - Guaranteed behaviour must succeed in every case.
+
+## 22 Approved field-clock rulings, 2026-11-07 (G1–G3)
+
+Owner rulings N7d (2026-11-07 10:21, verbatim in docs/task8/RULINGS_2026-11-07c.md). Per-ability table: docs/task8/FIELD_CLOCKS.md.
+
+- **G1, lifetime clocks.** Impact Pyre, Burning Wake and Tsunami Line count every completed scrimmage play by either team, including incompletions. Special-teams plays don't count. Their explicit creation-play and halftime exceptions are preserved.
+- **G2, paused clocks.** Runway and Beacon Lane decrement only when their creator participates in an offensive scrimmage play. The field stays active while the countdown is paused.
+- **G3, creation.** Burning Wake, Bloom Break, Bramble Trap, Beacon Lane, Bulwark Grid, Shadow Patch, Crosswind Rescue and Mind Bend wait for their creator's next eligible on-field snap before spawning. Frostmark, Echo Landing, Gear Grid, Tsunami Line and Splashdown keep their explicit off-field creation permissions.
+- **Recalculated limits.** Diagnostic thresholds only: 44 field rectangles on the whole field, and 0 objects on a live kickoff. Derivation: docs/task8/P9_VERIFIED_LIMITS.md §9.
+
+The Task 8 specification has no open decisions.
 

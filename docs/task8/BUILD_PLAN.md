@@ -1,8 +1,7 @@
 # Task 8 build plan (dependency order)
 
 **Status.** The specification is consolidated: SPECIFICATION_BASELINE.md §20–§21, task8-overrides.json and APPROVAL_REGISTER.md.
-Every decision is approved except the field-wording gaps G1–G3 ([FIELD_CLOCKS.md](FIELD_CLOCKS.md)), which hold back only the
-named clauses of 11 field abilities.
+Every decision is approved; N7d closed the field-wording gaps G1–G3 ([FIELD_CLOCKS.md](FIELD_CLOCKS.md)).
 
 **Rules for the build.**
 - Work stays on development branches off `task8-implementation`. Nothing merges or publishes without owner instruction.
@@ -23,13 +22,9 @@ named clauses of 11 field abilities.
 | **M5** Grading, mastery and AI | WP8, WP9 | Football §7 and Clash §8 grading; mastery 0/10/30/60; AI knowledge and scouting (B16); legendary limit with legendary kickers counted as offensive (B19); AI may start Basics; training allocation | Grading fixtures; AI benchmark parity |
 | **M6** Presentation and gates | WP11, WP12 | Shared status badge, charge bar, battery, Apex markers, Temper, three bars, the 192-family Dex and collection achievements (72 / 120 / 192); settings (60/30 FPS, quality, reduced flash); rebenchmarks: pancakes on Dex ratings (B1), XP multiplier (B6), Apex ask (B9), economy (#30); CPU gate; frozen probability tests (B12) | Full suite; career and pacing reports; CPU gate. Physical-device frame gates reported as unverified unless devices are available |
 
-## Held clauses (open gaps)
+## Field clocks
 
-| Gap | Abilities | What is built meanwhile |
-| --- | --- | --- |
-| G1 | Impact Pyre, Burning Wake, Tsunami Line | Everything except the lifetime clock's play filter. Each takes a single configurable clock predicate, so the ruling slots in without rework. |
-| G2 | Runway, Beacon Lane | The same: a participation predicate. |
-| G3 | Burning Wake, Bloom Break, Bramble Trap, Beacon Lane, Bulwark Grid, Shadow Patch, Crosswind Rescue, Mind Bend | Earning, pending and placement. Only the "creator off the field at the spawn snap" branch waits on the ruling. |
+G1–G3 are resolved (N7d). Field clocks and creation hooks are built straight from FIELD_CLOCKS.md.
 
 ## Rebenchmark commitments from the rulings
 
