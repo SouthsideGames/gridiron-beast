@@ -1450,6 +1450,8 @@ Kick replays follow the ball as the live kick did. When the replay ends, the scr
 
 ## 36. Legendary Plays pilot (IMPLEMENTED 2026-10-22; branch `stadiums-replays-legendary`)
 
+> **Task 8 amendment (owner, 2026-11-07).** Avalanche is retired with its unlock references and is not replaced: Glacivern is a K under the approved Dex (B19) and keeps Second Chance and Deep Winter. The pilot now has five plays (three offense, two defense). Not every legendary needs an unlocked play. The Avalanche rows below are historical.
+
 **36.0 Scope.** The game defines **12 Legendaries**, one per type, not 60. The pilot gives six of them a play, three offense and three defense. Each was chosen because its position, slot and existing signature ability give the play a real tactical identity. All six are existing species, and none was created for this.
 
 | Legendary (type, position) | Play | Side | Why this monster |

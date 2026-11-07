@@ -28,6 +28,8 @@ import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REG
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
 import { pickChannelSpecies, basicsFor, raiseToLevel } from '../data/monsters.js';
 import { BASIC_SHARE } from './t8/generation.js';
+import { createRewardLedger } from './reward-ledger.js';
+import { approvedRule } from '../data/beast-dex.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, autoSpendPoints as autoSpendPointsFn, ROSTER_MAX, ROSTER_MIN, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
 import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
@@ -1805,6 +1807,17 @@ export function clubBattleStrength(f) {
   const line = autoLineup(f.roster, CLASH_SIZE.encounter, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`));
   return line.length ? line.reduce((a, m) => a + monsterOverall(m), 0) / line.length : 0;
 }
+/**
+ * N7g Basic scouting encounter XP bonus: active when the recruitable target (the prospect, never a companion) is a Basic. It applies
+ * on a win, whether or not he is then recruited; +pct level XP for every eligible participant; never training progress or mastery.
+ */
+export function basicEncounterBonus(target) {
+  const pct = approvedRule('basic-encounter-xp-bonus').values.levelXpBonusPct;
+  const active = !!target && !target.companion && resolveSpecies(target).rarity === 'basic';
+  return { active, pct, onWin: true, label: `Basic encounter bonus +${pct}% level XP` };
+}
+/** The most prior seasons a wild companion is given while matching the club (its legal development limit, with level 50). */
+export const COMPANION_MAX_SEASONS = 12;
 export function encounterCompanions(f, prospectIndex, n = CLASH_SIZE.encounter - 1, rule = COMPANION_RULE) {
   const p = f.week.prospects[prospectIndex]; if (!p || n <= 0) return [];
   const r = createRng(hashString(`${f.seed}|companions|${f.season.year}|${f.season.week}|${prospectIndex}`));
@@ -1812,9 +1825,10 @@ export function encounterCompanions(f, prospectIndex, n = CLASH_SIZE.encounter -
   const pool = regionSpecies(regionName, REGIONS[regionName].types, f.season.week).filter((sp) => sp.rarity !== 'legendary');
   const S = clubBattleStrength(f); const R = { ...COMPANION_RULE, ...rule }; const out = [];
   for (let i = 0; i < n; i++) {
-    // OPEN (owner question, IMPLEMENTATION_LOG): the B17 encounter share is not applied to these unsignable companions, because a
-    // Basic's ceiling cannot reach the club's strength and the approved companion rule is "matched to the club's battle strength".
-    const sp = pool[r.int(pool.length)] || pool[0];
+    // N7c B17: the encounter channel's 30% Basic share applies to companions (owner 2026-11-07); strength matching is best-effort
+    // within legal development limits, so a Basic companion may stay below the target (easier encounters are acceptable).
+    const wildBasics = SPECIES_DEX.filter((x) => x.rarity === 'basic' && REGIONS[regionName].types.includes(x.element));
+    const sp = wildBasics.length && r.next() < BASIC_SHARE.encounter ? wildBasics[r.int(wildBasics.length)] : (pool[r.int(pool.length)] || pool[0]);
     // The wild group as a whole (prospect + companions) is matched to the club: S − gap on average. Companions make up for a weak
     // or strong prospect, but never fight above the club's own battle strength.
     const base = (CLASH_SIZE.encounter * (S - R.gap) - monsterOverall(p.monster)) / (CLASH_SIZE.encounter - 1);
@@ -1824,10 +1838,10 @@ export function encounterCompanions(f, prospectIndex, n = CLASH_SIZE.encounter -
     const seed = r.seed(); let q = target, m = null; // eslint-disable-line prefer-const
     // Task 8: the quality maps to a percentile of a level-1 form, so a wild companion is given the approved prior-career history
     // (B7: natural growth, training, evolution) for as many seasons as it takes to reach the target, then the quality is corrected
-    // from above, all from the same seed (one Apex roll). "Matched to the club's battle strength as today" (N7f channel criteria).
+    // from above, all from the same seed (one Apex roll). Matched to the club's battle strength, best-effort within legal limits (owner 2026-11-07).
     const gen = (qq, y) => generateMonster(createRng(seed), { position: sp.position, quality: qq, species: sp.id, id: `wild_${f.season.year}_${f.season.week}_${prospectIndex}_${i}`, age: 21 + y, yearsPro: y, channel: 'encounter' });
     let y = 0; m = gen(q, 0);
-    while (monsterOverall(m) < target - 1 && y < 12) { y += 1; m = gen(q, y); }
+    while (monsterOverall(m) < target - 1 && y < COMPANION_MAX_SEASONS && m.dev.level < 50) { y += 1; m = gen(q, y); }
     for (let k = 0; k < 4 && monsterOverall(m) > target + 1 && !m.dev.apex; k++) { q -= monsterOverall(m) - target; m = gen(q, y); }
     m.companion = true; m.name = `Wild ${speciesName(m)}`; out.push(m);
   }
@@ -1839,7 +1853,7 @@ export function encounterPreview(f, prospectIndex) {
   const size = Math.min(CLASH_SIZE.encounter, eligible.length);
   if (size < 1) return { ok: false, reason: 'Nobody healthy enough to battle this week.', eligible, size: 0 };
   const wild = [p.monster, ...encounterCompanions(f, prospectIndex, size - 1)];
-  return { ok: true, eligible, size, wild, lineup: autoLineup(f.roster, size, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`)) };
+  return { ok: true, eligible, size, wild, basicBonus: basicEncounterBonus(p.monster), lineup: autoLineup(f.roster, size, hashString(`${f.seed}|enc|${f.season.year}|${f.season.week}`)) };
 }
 /** Enter the encounter: draw the battle seed once and fix the lineup (yours in the order given; the wild side is the monster you chose plus the others the scout found). */
 export function startEncounter(f, prospectIndex, { lineup = null, mode = 'watch' } = {}) {
@@ -1878,8 +1892,10 @@ export function resolveEncounter(f) {
   const result = encounterBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
   if (policiesOf(e).a === 'manual' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
   const { r, save } = frng(f);
-  const events = applyBattleEffects(f.roster, result, 'a', 'encounter', r, { autoSpend: !!f.settings.autoPoints });
-  save();
+  // N7g: winning against a Basic recruitable target adds the Basic encounter bonus (level XP only), once per encounter via the ledger
+  const bonus = basicEncounterBonus(f.week.prospects[e.prospectIndex]?.monster); const winBonus = result.winner === 'a' && bonus.active ? bonus.pct : 0;
+  const events = applyBattleEffects(f.roster, result, 'a', 'encounter', r, { autoSpend: !!f.settings.autoPoints, bonusPct: winBonus, bonusLabel: bonus.label, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `encounter:${f.season.year}:w${f.season.week}:p${e.prospectIndex}` });
+  save(); e.bonus = winBonus ? { pct: winBonus, label: bonus.label } : null;
   e.result = battleSummary(result); e.events = events;
   const won = result.winner === 'a'; e.status = won ? 'offer' : 'pitch';
   const p = f.week.prospects[e.prospectIndex];

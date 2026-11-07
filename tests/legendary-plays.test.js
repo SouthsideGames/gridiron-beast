@@ -13,8 +13,8 @@ import { weighOffense } from '../src/sim/coach-ai.js';
 import { legendaryStatus, unannouncedLegendary, equipLegendaryForAI } from '../src/franchise/legendary.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 
-test('six pilot plays: three offence, three defence, each built on a real Legendary who can play its slot; valid, with lessons, outside the standard pools', () => {
-  assert.equal(LEGENDARY_IDS.length, 6);
+test('five pilot plays (Avalanche retired 2026-11-07: Glacivern is a K): three offence, two defence, each built on a real Legendary who can play its slot; valid, with lessons, outside the standard pools', () => {
+  assert.equal(LEGENDARY_IDS.length, 5); assert.ok(!LEGENDARY_IDS.includes('lp_avalanche') && !PLAYS.lp_avalanche && !LESSONS.lp_avalanche, 'Avalanche retired with its lesson');
   assert.equal(LEGENDARY_IDS.filter((id) => PLAYS[id].side === 'offense').length, 3);
   const species = new Set();
   for (const id of LEGENDARY_IDS) {
@@ -81,12 +81,13 @@ test('execution: the Legendary takes the play\'s slot for the snap (from another
 
 test('AI: a club holding a Legendary equips its play in one of its six and calls it in fitting situations', () => {
   const f = newFranchise(44); let found = 0;
-  for (const club of ['Palmetto Vipers', 'Canyon Crushers', 'Eastport Phantoms', 'Frostpeak Howlers']) {
+  for (const club of ['Palmetto Vipers', 'Canyon Crushers', 'Eastport Phantoms']) { // Frostpeak's Glacivern has no pilot play (owner 2026-11-07)
     const t = F.aiTeam(f, club); const lp = LEGENDARY_IDS.find((id) => t.roster.some((m) => m.species === PLAYS[id].legendary.species && !m.injury));
     if (!lp) continue; found++;
     const key = PLAYS[lp].side === 'offense' ? 'offensePlays' : 'defensePlays'; assert.ok(t[key].includes(lp), `${club} equips ${lp}`); assert.equal(t[key].length, 6);
   }
-  assert.equal(found, 4, `${found} gym clubs with a pilot Legendary`);
+  assert.equal(found, 3, `${found} gym clubs with a pilot Legendary`);
+  assert.ok(!F.aiTeam(f, 'Frostpeak Howlers').defensePlays.some((id) => PLAYS[id]?.legendary), 'Frostpeak equips no legendary play');
   const t = F.aiTeam(f, 'Palmetto Vipers'); const opp = F.aiTeam(f, 'Ashford Hawks');
   if (t.offensePlays.includes('lp_dragons_gambit')) {
     let calls = 0; playGame({ home: t, away: opp, seed: 9, onStep: (ev) => { if (ev?.offensePlayId === 'lp_dragons_gambit') calls++; } });

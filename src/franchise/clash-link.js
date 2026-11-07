@@ -3,6 +3,7 @@
 // every battle here is a seed (drawn once from the franchise generator), two lineups of real monsters and the player's recorded
 // decisions, so the same battle can be rebuilt for the screen, for a replay or for a test. The permanent balance values are the
 // game's defaults (battleConfig with no overrides); nothing here changes them.
+import { applyActivity } from './reward-ledger.js';
 import { simulateClash, battleConfig, logHash, battleXp, chooseLineup, archetypeOf, CLASH_VALUES } from '../clash/index.js';
 import { createRng } from '../core/rng.js';
 import { monsterOverall, xpForLevel, levelUp } from '../data/monsters.js';
@@ -76,11 +77,16 @@ export function pendingDecision(result) {
  * same level-up loop as a football game, and the occasion's fatigue. Evolutions wait for the owner, as after a game.
  * Returns level-up events in the football event shape, plus one { kind: 'xp' } event per battler (XP gained, progress to the next level).
  */
-export function applyBattleEffects(roster, result, side, occasion, rng, { autoSpend = false } = {}) {
+/**
+ * Apply a battle's level XP and fatigue to one side's monsters. `bonusPct` adds extra level XP (N7g: the Basic encounter bonus;
+ * level XP only, never training progress or mastery). With `ledger` and `activityId` the awards go through the reward ledger
+ * (spec §15): once per activity and monster, so a replay or reload awards nothing more.
+ */
+export function applyBattleEffects(roster, result, side, occasion, rng, { autoSpend = false, bonusPct = 0, bonusLabel = null, ledger = null, activityId = null } = {}) {
   const events = []; const xp = battleXp(result, side); const fatigue = CLASH_FATIGUE[occasion] || 0;
-  for (const x of result.lines[side]) {
-    const m = roster.find((mm) => mm.id === x.combatant.monsterId); if (!m) continue;
-    const gained = Math.round(xp[x.id] || 0); const startLevel = m.level;
+  const entries = []; for (const x of result.lines[side]) { const m = roster.find((mm) => mm.id === x.combatant.monsterId); if (m && !entries.some((e) => e.monsterId === m.id)) entries.push({ monsterId: m.id, x, m }); }
+  const award = ({ x, m }) => {
+    const base = Math.round(xp[x.id] || 0); const bonus = bonusPct ? Math.round(base * bonusPct / 100) : 0; const gained = base + bonus; const startLevel = m.level;
     m.xp = (m.xp || 0) + gained;
     while (m.xp >= xpForLevel(m.level)) {
       m.xp -= xpForLevel(m.level);
@@ -89,8 +95,9 @@ export function applyBattleEffects(roster, result, side, occasion, rng, { autoSp
     }
     m.fatigue = Math.min(100, (m.fatigue || 0) + fatigue);
     // What the result screen shows for each battler: XP gained and progress toward the next level.
-    events.push({ kind: 'xp', id: m.id, name: m.name, amount: gained, level: m.level, levelsGained: m.level - startLevel, xp: m.xp, next: xpForLevel(m.level) });
-  }
+    events.push({ kind: 'xp', id: m.id, name: m.name, amount: gained, base, bonus, bonusLabel: bonus ? bonusLabel : null, level: m.level, levelsGained: m.level - startLevel, xp: m.xp, next: xpForLevel(m.level) });
+  };
+  if (ledger && activityId) applyActivity(ledger, activityId, entries, award); else for (const e of entries) award(e);
   return events;
 }
 

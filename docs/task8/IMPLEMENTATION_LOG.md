@@ -92,8 +92,8 @@ keep it.
 - seed drift re-seeded or made explicit.
 
 **Open questions for the owner (flagged, not decided):**
-1. **Glacivern pilot play.** `lp_avalanche` (playbook) puts the Ice legendary at FS, but the approved Dex makes Glacivern a K (B19). Rebuild the play for a kicker, or replace it? The two legendary-plays tests are left failing until the owner rules.
-2. **Encounter Basic share vs matched companions.**
+1. **Resolved by N7g:** **Glacivern pilot play.** `lp_avalanche` (playbook) puts the Ice legendary at FS, but the approved Dex makes Glacivern a K (B19). Rebuild the play for a kicker, or replace it? The two legendary-plays tests are left failing until the owner rules.
+2. **Resolved by N7g:** **Encounter Basic share vs matched companions.**
    - B17 gives encounters a 30% Basic share. A Basic's ceilings cannot reach a club's battle strength, while the approved companion rule is "matched to the club's battle strength".
    - Interim: the share is not applied to the unsignable companions.
    - Also, a Dex family stops at its ceilings, so against a much stronger club a companion can top out short of the target.
@@ -101,3 +101,17 @@ keep it.
 4. **Starter calibration** (`M1_STARTER_CALIBRATION.md`).
 5. **Rating-scale thresholds.** The salary cap and pool thresholds were set for the old rating scale: AI payrolls no longer press the cap, and fewer castoffs reach the market. This is part of economy recalibration #30.
 6. **Stat guide.** It disagrees with the Appendix C role register on 21 position/attribute pairs (presentation, M6).
+
+## N7g implemented (2026-11-07 15:08 rulings)
+
+- **Basic scouting encounter XP bonus:**
+  - `basicEncounterBonus` (franchise.js) reads `approvedRule('basic-encounter-xp-bonus')` (25%).
+  - `applyBattleEffects` (clash-link.js) takes a level-XP `bonusPct` and awards through the reward ledger (`f.rewardLedger`, activity `encounter:<year>:w<week>:p<prospect>`).
+  - The encounter preview and the XP breakdown (base + bonus) show it.
+  - Tests: `tests/task8-encounter-bonus.test.js`.
+  - First live use of the reward ledger.
+- **Companions:** the 30% Basic share is restored. Matching is best-effort, through the approved prior-career history up to `COMPANION_MAX_SEASONS` (12) or level 50.
+- **Glacivern:**
+  - `lp_avalanche` and its lesson are removed (playbook.js); the pilot now has five plays.
+  - The GDD §36 amendment note is added.
+  - Glacivern keeps K, Second Chance and Deep Winter.

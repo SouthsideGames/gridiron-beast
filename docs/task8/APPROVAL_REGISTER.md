@@ -153,6 +153,16 @@ The field limits were recalculated under these clocks: 44 rectangles, and 0 obje
 | 39 | AI use of Basics | **Approved** | R1; N7b |
 | 40 | Dex and collection | **Approved** | R1; N7b |
 
+## Encounters and Glacivern (N7g, 2026-11-07 15:08)
+
+Verbatim: [RULINGS_2026-11-07e.md](RULINGS_2026-11-07e.md).
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Basic scouting encounter XP bonus | **Approved** | Winning an encounter whose recruitable target is a Basic: +25% level XP for eligible participants (normal participation rules); recruiting not required; Basic companions alone do not activate it; no bonus to training progress or mastery; once per encounter through the reward ledger; shown in the preview and the reward breakdown; a shared encounter rule, not an ability |
+| Encounter companions | **Approved** | Keep the 30% Basic share (B17) for companions; strength matching best-effort within legal development limits; easier encounters acceptable |
+| Glacivern | **Approved** | Keeps K, Second Chance and Deep Winter; Avalanche and its unlock references retired, not replaced; not every legendary has an unlocked play |
+
 ## Club strength, identity and scope (N7f)
 
 | Item | Status | Ruling |

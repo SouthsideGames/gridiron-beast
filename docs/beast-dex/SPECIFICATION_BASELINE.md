@@ -691,5 +691,22 @@ Owner rulings N7d (2026-11-07 10:21, verbatim in docs/task8/RULINGS_2026-11-07c.
   - Exact fractions are preserved through saves and evolution.
   - This closes the §4 display gap.
 
+## 23 Approved rulings, 2026-11-07 15:08 (N7g)
+
+Owner rulings N7g (verbatim in docs/task8/RULINGS_2026-11-07e.md).
+
+- **Basic scouting encounter XP bonus.**
+  - Winning a scouting encounter whose recruitable target is a Basic awards 25% extra level XP to the eligible participants, under the normal participation rules.
+  - Recruiting the Basic is not required. Basic companions alone do not activate the bonus.
+  - Training progress and ability mastery get no bonus.
+  - It is awarded once per encounter through the reward ledger (§15): no stacking, and no duplication on replay or reload.
+  - The encounter preview and the reward breakdown show it.
+  - It is a shared encounter rule, not a unique monster ability.
+- **Encounter companions.** The approved 30% Basic share (B17) applies to encounter companions. Strength matching is best-effort within legal development limits; easier encounters are acceptable.
+- **Glacivern.**
+  - Glacivern keeps K, Second Chance and Deep Winter.
+  - The pilot legendary play Avalanche and its unlock references are retired and not replaced.
+  - Not every legendary needs an unlocked play.
+
 The Task 8 specification has no open decisions.
 

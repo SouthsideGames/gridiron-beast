@@ -16,7 +16,11 @@ test('the wild side is the scouted prospect, untouched, plus two companions that
   const S = F.clubBattleStrength(f); const R = F.COMPANION_RULE;
   for (const c of pv.wild.slice(1)) { assert.equal(c.companion, true); assert.match(c.id, /^wild_/); assert.ok(monsterOverall(c) <= Math.round(S) + 1, 'never above the club'); }
   const group = pv.wild.reduce((a, m) => a + monsterOverall(m), 0) / 3; const expected = Math.min(S - R.gap, (monsterOverall(p.monster) + 2 * Math.round(S)) / 3);
-  assert.ok(Math.abs(group - expected) <= R.spread + 1.5, `wild group ${group.toFixed(1)} vs ${expected.toFixed(1)}`);
+  // Owner 2026-11-07: matching is best-effort within legal development limits (Basic companions keep the 30% share); easier is
+  // acceptable, harder is not. Each companion either reaches the low edge of its target or stops at its development limit.
+  assert.ok(group <= expected + R.spread + 1.5, `wild group ${group.toFixed(1)} never above ${expected.toFixed(1)}`);
+  const base = (3 * (S - R.gap) - monsterOverall(p.monster)) / 2; const low = Math.max(R.floor, Math.min(R.ceiling, Math.round(S), Math.round(base - R.spread)));
+  for (const c of pv.wild.slice(1)) assert.ok(monsterOverall(c) >= low - 1 || c.dev.level >= 50 || c.yearsPro >= F.COMPANION_MAX_SEASONS, `${c.name} ${monsterOverall(c)} reaches ${low} or its limit`);
   assert.equal(JSON.stringify(p.monster), before, 'the scouted prospect keeps every rating');
   assert.ok(!f.week.prospects.some((x) => x.monster.companion), 'companions are not prospects');
 });

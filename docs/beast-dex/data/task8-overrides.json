@@ -7,7 +7,9 @@
     "N7b": "Owner rulings on P1-P10 and additional rulings, 2026-11-07 09:21 (docs/task8/RULINGS_2026-11-07.md)",
     "N7c": "Owner rulings on B1-B20, 2026-11-07 10:00 (docs/task8/RULINGS_2026-11-07b.md)",
     "N7d": "Owner rulings on G1-G3, 2026-11-07 10:21 (docs/task8/RULINGS_2026-11-07c.md)",
-    "N7e": "Owner ruling on fractional training display, 2026-11-07 10:32"
+    "N7e": "Owner ruling on fractional training display, 2026-11-07 10:32",
+    "N7f": "Owner rulings on club strength, identities and scope, 2026-11-07 12:44 (docs/task8/RULINGS_2026-11-07d.md)",
+    "N7g": "Owner rulings on the Basic encounter XP bonus, encounter companions and Glacivern, 2026-11-07 15:08 (docs/task8/RULINGS_2026-11-07e.md)"
   },
   "abilities": {
     "FIR-01-C": {
@@ -367,6 +369,24 @@
       "id": "fractional-display",
       "ruling": "N7e",
       "rule": "Show banked points floored to whole numbers and attribute bars as whole percentages; enable the exact-cost purchase when the exact banked balance covers the exact remaining cost; show that cost to two decimals rounded up. Display rounding never changes balances, deducts extra points or determines affordability. Preserve exact fractions through saves and evolution."
+    },
+    {
+      "id": "basic-encounter-xp-bonus",
+      "ruling": "N7g",
+      "rule": "Winning a scouting encounter whose recruitable target is a Basic awards extra level XP to eligible participants under normal participation rules; recruiting not required; Basic companions alone do not activate it; no bonus to training progress or ability mastery; once per encounter through the reward ledger; shown in the encounter preview and reward breakdown; a shared encounter rule, not an ability.",
+      "values": {
+        "levelXpBonusPct": 25
+      }
+    },
+    {
+      "id": "encounter-companion-basics",
+      "ruling": "N7g",
+      "rule": "The 30% encounter Basic share applies to encounter companions; strength matching is best-effort within legal development limits; easier encounters are acceptable."
+    },
+    {
+      "id": "glacivern-no-pilot-play",
+      "ruling": "N7g",
+      "rule": "Glacivern keeps K, Second Chance and Deep Winter; the Avalanche pilot play and its unlock references are retired and not replaced; not every legendary needs an unlocked play."
     }
   ],
   "openGaps": []
