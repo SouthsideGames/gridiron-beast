@@ -131,3 +131,37 @@ lever, for example a larger initial tier gap or a scouting/draft priority for gy
 **Recommendation.** Keep live returns as they are for the M2 preview, so the owner can watch them. If the franchise-health reports
 confirm the shorter returns and the missing touchdowns, tune only the return unit's escort blocking inside the existing engine at
 M6. Do not reintroduce formula yards.
+
+### D10 update: verification before tuning (owner 18:20)
+
+`tools/ko-diagnose.mjs 1000`. "Before" is commit 0019383; "after" is the fix at 3d1ad9f (branch task8-m2-kickoffs-fix, merged).
+
+| Check | Before | After the fix |
+| --- | --- | --- |
+| Coverage starts within a yard behind the kick, 7 lanes | 523/523 | 523/523 |
+| Catch | every live return, at 2.65 s | same |
+| Blockers engaging anyone | 11.7%, first contact 3.15 s after the catch (median) | 68.1%, first contact 1.95 s after the catch |
+| Blocks on a man already past the blocker | 10.9% (probe of the real pairs) | 0% |
+| Tackled with no block engaged | 325 of 519 | 98 of 517 |
+| Returner lateral path, median / p90 | 4.2 / 6.0 yd | 5.7 / 8.6 yd |
+| Play length after the catch, median | 3.2 s | 4.5 s |
+| Plays ending within 1 s of the catch | 0 | 0 |
+| Return yards p10 / p50 / p90, max | 17 / 20 / 23, 27 | 21 / 29 / 37, 98 |
+| Returns over 30 / over 40 | 0 / 0 | 198 / 27 |
+| Touchdowns, turnovers (1,000 kicks) | 0, 4 | 1, 5 |
+
+**What was wrong** (correctness, not balance):
+- blockers had no target and waited as a convoy;
+- engagements in flight were not resolved;
+- coverage abandoned its lanes at the catch, so the K made 92 tackles.
+
+**What changed** (engine primitives only):
+- blockers share out the legal targets in front of them and meet them with the pursuit's intercept maths;
+- coverage holds its lanes, then pursues;
+- the K keeps the safety cushion.
+
+**Remaining observations** (not tuned):
+- the returner still runs mostly straight, because his carrier logic looks only 4–10 yards ahead;
+- LB1 makes more tackles than LB2 (ratings, not geometry).
+
+Hang time 2.6 s and the 5 s clock runoff stay provisional. No muffed catches.
