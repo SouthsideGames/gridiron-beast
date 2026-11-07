@@ -6,7 +6,7 @@
 // are reused as they are: renewalAsk, newContract, salaryFor, offseason(), positionNeeds, buildDepthChart.
 
 import { isGymClub } from '../data/gyms.js';
-import { generateMonster, monsterOverall, salaryFor, regionSpecies, ROSTER_MAX, ROSTER_MIN, FULL_ROSTER, clampAttr, resolveSpecies } from '../data/monsters.js';
+import { generateMonster, monsterOverall, salaryFor, regionSpecies, ROSTER_MAX, ROSTER_MIN, FULL_ROSTER, clampAttr, resolveSpecies, pickChannelSpecies } from '../data/monsters.js';
 import { POSITION_WEIGHTS, OFFENSE_BASE, DEFENSE_BASE, positionOf } from '../data/personnel.js';
 import { REGIONS } from '../data/staff.js';
 import { newContract, leagueContract, contractEnds, renewalAsk } from './contracts.js';
@@ -172,7 +172,7 @@ export function leagueAgeing(f, r, { year, ctx = {} }) {
   for (const club of order(f)) {
     const roster = clubRoster(f, club);
     offseason(roster, r, ctx); // skips the ageless itself (progression.js); ctx: the old-save transition and last season's injuries (GDD §55)
-    for (const m of roster) { if (m.rookie === year) { m.yearsPro = 0; m.age -= 1; } if (m.signature) growSignature(m); n++; }
+    for (const m of roster) { if (m.rookie === year) { m.yearsPro = 0; m.age -= 1; } n++; } // Task 8 (N7f): the rival's signature monster no longer grows automatically each season; he develops like everyone else
   }
   return n;
 }
@@ -299,12 +299,20 @@ export function generateArrival(f, r, { club, position, quality, room, floor = f
   for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position && s.rarity !== 'legendary'); if (p.length) { regionName = rn; pool = p; break; } }
   if (!pool.length) return null;
   // R4 (owner 2026-11-05): a gym's arrival is of its element when the element has a species at the position (else any element: mixed support)
-  { const el = hasFreeAgency(f) ? GYM_BY_CLUB[club]?.element : null; const own = el ? SPECIES_DEX.filter((s) => s.element === el && s.position === position && s.rarity !== 'legendary') : [];
-    if (own.length) { pool = own; regionName = regions.find((rn) => (REGIONS[rn].types || []).includes(el)) || regionName; } }
-  const sp = r.pick(pool);
+  let el = null;
+  { el = hasFreeAgency(f) ? GYM_BY_CLUB[club]?.element : null; const own = el ? SPECIES_DEX.filter((s) => s.element === el && s.position === position && s.rarity !== 'legendary' && s.rarity !== 'basic') : [];
+    if (own.length) { pool = own; regionName = regions.find((rn) => (REGIONS[rn].types || []).includes(el)) || regionName; } else el = null; }
+  // Task 8 (N7c B17): the arrival channel's Basic share first, from the same element or region; else today's pick among originals
+  const basics = SPECIES_DEX.filter((s) => s.rarity === 'basic' && s.position === position && (el ? s.element === el : (REGIONS[regionName].types || []).includes(s.element)));
+  const sp = pickChannelSpecies(r, 'arrival', position, { originals: pool.filter((s) => s.rarity !== 'basic'), basics, pickOriginal: (rr, list) => rr.pick(list) });
   let q = Math.max(MIN_QUALITY, Math.round(quality)); let m = null;
-  for (let i = 0; i < 12; i++) { m = generateMonster(r, { position, quality: q, species: sp.id, age: 24 + r.int(7) }); if (salaryFor(m) <= room || (floor && q <= MIN_QUALITY)) break; m = null; q = Math.max(MIN_QUALITY, q - 3); if (q === MIN_QUALITY && !floor && i > 6) break; }
+  for (let i = 0; i < 12; i++) {
+    m = generateMonster(r, { position, quality: q, species: sp.id, age: 24 + r.int(7), channel: 'arrival' });
+    if (m.apex) break; // an Apex is never discarded by an affordability retry (N7f)
+    if (salaryFor(m) <= room || (floor && q <= MIN_QUALITY)) break; m = null; q = Math.max(MIN_QUALITY, q - 3); if (q === MIN_QUALITY && !floor && i > 6) break;
+  }
   if (!m) return null;
+  if (m.apex && salaryFor(m) > room && !floor) { m.origin = regionName; claimMonster(f, m, `${club}|arrival-apex`); (f.pool ||= {}); (f.pool[regionName] ||= []).push(m); return null; } // unaffordable: he enters the market instead
   m.origin = regionName; m.salary = salaryFor(m); claimMonster(f, m, `${club}|arrival`);
   clubUniqueName(f, club, m);
   return m;

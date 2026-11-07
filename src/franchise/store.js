@@ -554,7 +554,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     // First launch of v39.2 (or an interrupted migration): migrate the legacy save.
     if (!done && legacyText) {
       try { const f = await migrateLegacy({ legacyText }); notes.push('migrated'); return { mode: 'ready', franchise: f, source: 'migrated', notes }; }
-      catch (e) { notes.push(`migration failed: ${e.message}`); const f = Save.migrate(JSON.parse(legacyText)); return f ? { mode: 'legacy', franchise: f, source: 'legacy', notes, error: classify(e) } : { mode: 'recovery', franchise: null, notes, backups: await listBackups().catch(() => []) }; }
+      catch (e) { notes.push(`migration failed: ${e.message}`); if (e?.code === 'incompatible') return { mode: 'recovery', franchise: null, notes, error: classify(e), backups: await listBackups().catch(() => []) }; /* an earlier-version save: refused, left in place (Task 8 fresh-save break) */ const f = Save.migrate(JSON.parse(legacyText)); return f ? { mode: 'legacy', franchise: f, source: 'legacy', notes, error: classify(e) } : { mode: 'recovery', franchise: null, notes, backups: await listBackups().catch(() => []) }; }
     }
     let m = slotRec?.state === 'active' ? await readManifest().catch(() => null) : null;
     // An old cached copy of the game (v39.1) wrote the localStorage save after migration. Its timestamp cannot tell newer

@@ -26,7 +26,9 @@ export { GROUP_SLOTS } from './roster.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
-import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, autoSpendPoints as autoSpendPointsFn, ROSTER_MAX, ROSTER_MIN, CORNERSTONES, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
+import { pickChannelSpecies, basicsFor } from '../data/monsters.js';
+import { BASIC_SHARE } from './t8/generation.js';
+import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, autoSpendPoints as autoSpendPointsFn, ROSTER_MAX, ROSTER_MIN, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
 import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
@@ -69,7 +71,7 @@ import { guarded, mayStartSeason, isArchived, seasonsCompleted, SEASON_CAP } fro
 import { newUid } from '../core/uid.js';
 import { CLASH_SIZE, SWAP_EVERY, FRANCHISE_POLICIES, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES } from './clash-link.js';
 
-export const SCHEMA_VERSION = 9; // 9: Task 7 free agency (`f.freeAgency`, fa-state.js); 8: the league registry (GDD §42.6, Phase 3); 6: every save before it. All three are read; an 8 becomes a 9 when read
+export const SCHEMA_VERSION = 10; // 10: Task 8, the fresh-save break (Dex individuals with `m.dev`; spec §15): saves 6, 8 and 9 are refused with a Start New Franchise message (save.js). Earlier: 9 Task 7 free agency, 8 the league registry, 6 every save before it
 export const LEAGUE_SCHEMA_VERSION = 8;
 export const LEGACY_SCHEMA_VERSION = 6;
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -85,7 +87,7 @@ export function createFranchise({ owner, club, rival = null, cornerstone = null,
   const rivalTeam = rivalChoices.includes(rival) ? rival : rng.pick(rivalChoices);
   const roster = createRoster(rng.seed(), { cornerstone, cornerstoneOffense, cornerstoneDefense, quality: 56 });
   const f = {
-    schemaVersion: LEGACY_SCHEMA_VERSION, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
+    schemaVersion: SCHEMA_VERSION, uid: newUid(), createdAt: new Date().toISOString(), seed, rngState: rng.state, // uid: the permanent identity of this franchise universe (GDD §42.3)
     owner: { ...owner }, club, tier: 'challenger', staff: {},
     roster, lineupManual: {}, depth: {}, aging: nativeAging(), // born under the ageing rules of GDD §55: no transition
     season: null, week: blankWeek(), game: null,
@@ -726,8 +728,9 @@ export function clubQuality(f, name, year = f.season?.year || 1) {
   const D = difficultyOf(f);
   const gym = GYM_BY_CLUB[name];
   const seasons = Math.max(0, year - 1);
-  const growth = gym ? GYM_TIER[gym.tier] + gymGrowth(seasons) + (f.campaign?.gymWins?.[name] ? GYM_STUDIED_TAPE : 0) : seasons * ORDINARY_GROWTH_PER_SEASON; // gyms plateau after season 10 (Task 6 A-2, D10a)
-  const floor = (f.campaign?.titles || 0) * 1; // every Beast Bowl the player wins lifts the whole league
+  // Task 8 (N7f): initial strength only. No seasonal growth, title floor or 'studied tape' boost: a club changes through its own
+  // roster (development, ageing, drafting, trades, free agency). `seasons` is kept for the signature, unused.
+  void seasons; const growth = gym ? GYM_TIER[gym.tier] : 0; const floor = 0;
   return Math.round(base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + D.quality + growth + floor);
 }
 /** An AI club's coach: the gym's named coach, or one shaped by the club's hash; difficulty sets the IQ (GDD §15.2). */
@@ -772,7 +775,7 @@ function leagueTeam(f, name, year, { scouting = null } = {}) {
  * before anything is kept. Returns { ok, created, rekeyed, problems }. Archives are never migrated (they are read-only).
  */
 export function ensureLeague(f, { qualityDelta = 0, fresh = false } = {}) {
-  if (hasLeague(f)) { ensureFreeAgency(f); return { ok: true, created: false, rekeyed: [], problems: [] }; }
+  if (hasLeague(f)) { ensureFreeAgency(f, { schema: SCHEMA_VERSION }); return { ok: true, created: false, rekeyed: [], problems: [] }; }
   if (!f?.season || isArchived(f)) return { ok: false, created: false, rekeyed: [], problems: ['not an active franchise'] };
   const year = f.season.year, week = f.season.week;
   const clubs = ALL_TEAMS.filter((t) => t !== f.club);
@@ -800,7 +803,7 @@ export function ensureLeague(f, { qualityDelta = 0, fresh = false } = {}) {
     const back = JSON.parse(snapshot); for (const k of Object.keys(f)) delete f[k]; Object.assign(f, back); // nothing kept
     return { ok: false, created: false, rekeyed: [], problems: e.problems || [e.message] };
   }
-  f.schemaVersion = LEAGUE_SCHEMA_VERSION; ensureFreeAgency(f, { fresh }); // schema 9: the Task 7 block (fa-state.js)
+  ensureFreeAgency(f, { fresh, schema: SCHEMA_VERSION }); // the Task 7 block (fa-state.js); a Task 8 save keeps schema 10
   notePreseason(f, (c) => leagueTeam(f, c, year));
   return { ok: true, created: true, rekeyed: result.rekeyed, problems: [] };
 }
@@ -1013,7 +1016,7 @@ export function resolveContract(f, id, choice, { years = CONTRACT_YEARS, salary 
 /** Offseason market: free agents the owner may sign to reach the roster floor, the regional pools plus a dozen generated veterans. */
 export function offseasonMarket(f) {
   if (!f.offseason) return [];
-  if (!f.offseason.market) { const { r, save } = frng(f); const gen = []; const positions = ['QB', 'RB', 'WR', 'WR', 'TE', 'OL', 'OL', 'DL', 'DL', 'LB', 'CB', 'S', 'K']; for (const pos of positions) { const regionName = r.pick(Object.keys(REGIONS)); const sp = r.pick(regionSpecies(regionName, REGIONS[regionName].types, 10).filter((x) => x.position === pos) || []) || null; if (!sp) continue; const m = generateMonster(r, { position: pos, quality: 50 + r.int(10), species: sp.id }); m.origin = regionName; claimMonster(f, m, 'market'); uniqueName(f, m, gen.map((x) => x.name)); gen.push(m); } save(); f.offseason.market = gen; }
+  if (!f.offseason.market) { const { r, save } = frng(f); const gen = []; const positions = ['QB', 'RB', 'WR', 'WR', 'TE', 'OL', 'OL', 'DL', 'DL', 'LB', 'CB', 'S', 'K']; for (const pos of positions) { const regionName = r.pick(Object.keys(REGIONS)); const sp = marketSpecies(r, regionName, pos); if (!sp) continue; const m = generateMonster(r, { position: pos, quality: 50 + r.int(10), species: sp.id, channel: 'arrival' }); m.origin = regionName; claimMonster(f, m, 'market'); uniqueName(f, m, gen.map((x) => x.name)); gen.push(m); } save(); f.offseason.market = gen; }
   const pool = Object.values(f.pool || {}).flat();
   return [...pool.map((m) => ({ monster: m, fromPool: true })), ...f.offseason.market.map((m) => ({ monster: m, fromPool: false }))];
 }
@@ -1660,10 +1663,12 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   const rarityBonus = skill >= 80 ? 1.6 : skill >= 60 ? 1.25 : 1;
   const weights = pool.map((sp) => [sp.id, (sp.rarity === 'common' ? 60 : sp.rarity === 'uncommon' ? 30 * rarityBonus : sp.rarity === 'legendary' ? 14 * rarityBonus : 9 * rarityBonus)]);
   for (let i = 0; i < count; i++) {
-    const pickId = r.weighted(weights); const sp = pool.find((x) => x.id === pickId);
+    // N7c B17: the scouting channel's Basic share (a Basic of the region's elements); otherwise the rarity-weighted pick as before.
+    const regionBasics = SPECIES_DEX.filter((x) => x.rarity === 'basic' && region.types.includes(x.element));
+    let sp; if (regionBasics.length && r.next() < BASIC_SHARE.scouting) sp = regionBasics[r.int(regionBasics.length)]; else { const pickId = r.weighted(weights); sp = pool.find((x) => x.id === pickId); }
     const position = sp.position; // one position per species (Task 7 D6)
     const quality = 52 + r.int(12) + (skill >= 80 ? 3 : 0) + (sp.rarity === 'legendary' ? 8 : sp.rarity === 'rare' ? 3 : sp.rarity === 'uncommon' ? 1 : 0);
-    const m = generateMonster(r, { position, quality, species: sp.id }); claimMonster(f, m, 'scout');
+    const m = generateMonster(r, { position, quality, species: sp.id, metric: 'potential' }); claimMonster(f, m, 'scout'); // N7f: recruits are prospects
     uniqueName(f, m, prospects.map((p) => p.monster.name));
     dexRecord(f, m, 'seen');
     const revealed = Math.min(6, (skill >= 85 ? 6 : skill >= 65 ? 4 : skill >= 40 ? 2 : 1) + (ownerPerk(f) === 'scouting' ? 1 : 0));
@@ -1674,8 +1679,8 @@ export function scoutRegion(f, regionName, { focus = null } = {}) {
   const need = needList.find((pos) => !prospects.some((p) => p.monster.position === pos)) || null;
   const needPool = need ? pool.filter((sp) => sp.position === need) : [];
   if (need && needPool.length) {
-    const sp = needPool[r.int(needPool.length)];
-    const m = generateMonster(r, { position: need, quality: 50 + r.int(10), species: sp.id }); claimMonster(f, m, 'scout-need');
+    const sp = pickChannelSpecies(r, 'scouting', need, { originals: needPool.filter((x) => x.rarity !== 'legendary'), basics: basicsFor(need, region.types), pickOriginal: (rr, list) => list[rr.int(list.length)] }) || needPool[r.int(needPool.length)];
+    const m = generateMonster(r, { position: need, quality: 50 + r.int(10), species: sp.id }); claimMonster(f, m, 'scout-need'); // N7f: a need now, so current strength
     uniqueName(f, m, prospects.map((p) => p.monster.name)); dexRecord(f, m, 'seen');
     prospects.push({ monster: m, revealed: Math.min(6, (skill >= 65 ? 4 : 2) + (ownerPerk(f) === 'scouting' ? 1 : 0)), natureKnown: skill >= 70, potentialKnown: skill >= 55, need: needs.find((n) => n.position === need)?.status || 'focus' });
   }
@@ -1807,7 +1812,9 @@ export function encounterCompanions(f, prospectIndex, n = CLASH_SIZE.encounter -
   const pool = regionSpecies(regionName, REGIONS[regionName].types, f.season.week).filter((sp) => sp.rarity !== 'legendary');
   const S = clubBattleStrength(f); const R = { ...COMPANION_RULE, ...rule }; const out = [];
   for (let i = 0; i < n; i++) {
-    const sp = pool[r.int(pool.length)] || pool[0];
+    // N7c B17: the encounter channel's Basic share among the wild companions (Basics of the region's elements).
+    const wildBasics = SPECIES_DEX.filter((x) => x.rarity === 'basic' && REGIONS[regionName].types.includes(x.element));
+    const sp = wildBasics.length && r.next() < BASIC_SHARE.encounter ? wildBasics[r.int(wildBasics.length)] : (pool[r.int(pool.length)] || pool[0]);
     // The wild group as a whole (prospect + companions) is matched to the club: S − gap on average. Companions make up for a weak
     // or strong prospect, but never fight above the club's own battle strength.
     const base = (CLASH_SIZE.encounter * (S - R.gap) - monsterOverall(p.monster)) / (CLASH_SIZE.encounter - 1);
@@ -2486,7 +2493,7 @@ function closeSeasonTask7(f, s, rec) {
   // ageing, once: the owner's roster, the pools, the waivers and the AI clubs (moved here from the season start; GDD §55 rules unchanged)
   if (!steps.aged) {
     const { r, save } = frng(f); const ageCtx = agingContext(f, year);
-    offseason(f.roster, r, ageCtx); for (const list of Object.values(f.pool || {})) offseason(list, r, ageCtx);
+    offseason(f.roster, r, { ...ageCtx, autoAllocate: !!f.settings?.autoPoints }); for (const list of Object.values(f.pool || {})) offseason(list, r, ageCtx);
     if (f.league.waivers?.length) offseason(f.league.waivers, r, ageCtx);
     leagueAgeing(f, r, { year, ctx: ageCtx }); save(); steps.aged = true;
   }
@@ -2505,10 +2512,16 @@ function aiRenewalAnswer(f, club, m, terms, cap, { core = false, bench = null } 
   const t = aiBargain(f, club, m, neg, { core, fits: (x) => x.salary <= room, years: aiYears(f, club, m, bench || leagueBenchOf(f)), bonus: false }); // the club's term: Task 6 R3, moved to his preference when one season apart and the mode allows (as in the market)
   return t ? { salary: t.salary, years: t.years } : false;
 }
+/** A generated market veteran's family: the free-agent arrival channel's Basic share (N7c B17), else one of the region's families. */
+function marketSpecies(r, regionName, pos) {
+  const originals = regionSpecies(regionName, REGIONS[regionName].types, 10).filter((x) => x.position === pos);
+  if (!originals.length) return null;
+  return pickChannelSpecies(r, 'arrival', pos, { originals, basics: basicsFor(pos, REGIONS[regionName].types), pickOriginal: (rr, list) => rr.pick(list) });
+}
 /** This offseason's generated veterans (the market has always had a dozen besides the pools). */
 function generateVeterans(f, r) {
   const gen = []; const positions = ['QB', 'RB', 'WR', 'WR', 'TE', 'OL', 'OL', 'DL', 'DL', 'LB', 'CB', 'S', 'K'];
-  for (const pos of positions) { const regionName = r.pick(Object.keys(REGIONS)); const sp = r.pick(regionSpecies(regionName, REGIONS[regionName].types, 10).filter((x) => x.position === pos) || []) || null; if (!sp) continue; const m = generateMonster(r, { position: pos, quality: 50 + r.int(10), species: sp.id }); m.origin = regionName; claimMonster(f, m, 'market'); uniqueName(f, m, gen.map((x) => x.name)); m.contract = null; gen.push(m); }
+  for (const pos of positions) { const regionName = r.pick(Object.keys(REGIONS)); const sp = marketSpecies(r, regionName, pos); if (!sp) continue; const m = generateMonster(r, { position: pos, quality: 50 + r.int(10), species: sp.id, channel: 'arrival' }); m.origin = regionName; claimMonster(f, m, 'market'); uniqueName(f, m, gen.map((x) => x.name)); m.contract = null; gen.push(m); }
   return gen;
 }
 const t7fail = (reason, extra = {}) => ({ ok: false, reason, ...extra });
@@ -2606,7 +2619,7 @@ export function startNextSeason(f, opts = {}) {
   f.deadCap = f.pendingDeadCap || 0; f.pendingDeadCap = 0; // bonuses and raises agreed in the offseason land on the new season's books
   const { r, save } = frng(f);
   const ageCtx = agingContext(f, f.season.year); // GDD §55: ageing and decline, with the old-save transition
-  const events = t7 ? [] : offseason(f.roster, r, ageCtx); // Task 7: ageing ran at the season close, before contracts and free agency
+  const events = t7 ? [] : offseason(f.roster, r, { ...ageCtx, autoAllocate: !!f.settings?.autoPoints }); // Task 7: ageing ran at the season close, before contracts and free agency
   if (!t7) {
     for (const list of Object.values(f.pool || {})) offseason(list, r, ageCtx); // unsigned monsters age too (in pool order)
     if (hasLeague(f) && f.league.waivers?.length) offseason(f.league.waivers, r, ageCtx);

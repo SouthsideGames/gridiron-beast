@@ -44,3 +44,11 @@ export function temperEfficiency(temperId, attribute) {
 }
 /** Uniform draw: all 25 for ordinary individuals, the three neutral Tempers for Apex. `rng` is the game's seeded generator. */
 export function drawTemper(rng, { apex = false } = {}) { const pool = apex ? NEUTRAL_TEMPERS : TEMPER_IDS; return pool[rng.int(pool.length)]; }
+
+const ATTR_WORD = Object.freeze({ speed: 'Speed', strength: 'Strength', blocking: 'Blocking', awareness: 'Awareness', accuracy: 'Accuracy', arm: 'Arm', durability: 'Durability', tackling: 'Tackling', coverage: 'Coverage', catching: 'Catching', agility: 'Agility', kicking: 'Kicking' });
+/** Display text for a Temper (UI): its name and what it does to training. A Temper never changes ratings or ceilings. */
+export function temperSummary(temperId) {
+  const t = TEMPERS[temperId]; if (!t) return { name: 'Unknown', text: '' };
+  const text = t.favored ? `Trains ${ATTR_WORD[t.favored]} at double efficiency and ${ATTR_WORD[t.unfavored]} at half; every other attribute at normal cost.` : 'Trains every attribute at normal cost.';
+  return { name: t.name, text, favored: t.favored, unfavored: t.unfavored };
+}

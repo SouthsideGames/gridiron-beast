@@ -5,7 +5,7 @@
 // two-year deals at 70% of market rate. AI picks persist on their clubs.
 
 import { noteJoin, markCareerFresh } from './career.js';
-import { generateMonster, regionSpecies, salaryFor, monsterOverall, ROSTER_MAX } from '../data/monsters.js';
+import { generateMonster, regionSpecies, pickChannelSpecies, basicsFor, salaryFor, monsterOverall, ROSTER_MAX } from '../data/monsters.js';
 import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
 import { draftNeedBonus } from './roster-plan.js';
@@ -32,9 +32,10 @@ export function generateDraftClass(rng, { year, uniqueName }) {
       const regions = Object.keys(REGIONS).sort(() => rng.next() - 0.5);
       let regionName = regions[0], pool = [];
       for (const rn of regions) { const p = regionSpecies(rn, REGIONS[rn].types, 10).filter((s) => s.position === position); if (p.length) { regionName = rn; pool = p; break; } }
-      const sp = pool.length ? rng.pick(pool) : null; if (!sp) continue;
+      // N7c B17: the draft channel's Basic share; otherwise one of the region's families as before.
+      const sp = pool.length ? pickChannelSpecies(rng, 'draft', position, { originals: pool, basics: basicsFor(position, REGIONS[regionName].types), pickOriginal: (r, list) => r.pick(list) }) : null; if (!sp) continue;
       const roll = rng.next(); const quality = (roll < 0.08 ? 62 + rng.int(6) : roll < 0.35 ? 55 + rng.int(6) : 47 + rng.int(8)) + classQualityOffset(year); // gems, solid, projects, plus the league's growth (D9)
-      const m = generateMonster(rng, { position, quality, species: sp.id, age: 19 + rng.int(4), yearsPro: 0 });
+      const m = generateMonster(rng, { position, quality, species: sp.id, age: 19 + rng.int(4), yearsPro: 0, channel: 'draft', metric: 'potential' }); // N7f: prospects are classified by potential
       m.origin = regionName; m.rookie = year; m.draftRank = ++n;
       uniqueName?.(m, out.map((x) => x.name));
       out.push(m);

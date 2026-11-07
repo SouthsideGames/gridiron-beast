@@ -7,7 +7,8 @@ import * as F from '../../franchise/franchise.js';
 import { negotiationSheet, renewalOutlook, extensionAdviceHtml } from '../fa-ui.js';
 import { extensionEligible } from '../../franchise/fa-engine.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS, PACKAGE_SLOT_USE, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
-import { monsterOverall, effectiveAttributes, NATURES, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies, POINTS_PER_LEVEL, schemePreferences, evolutionReady, nextEvolution, pointCost } from '../../data/monsters.js';
+import { temperSummary } from '../../data/temper.js';
+import { monsterOverall, effectiveAttributes, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies, POINTS_PER_LEVEL, schemePreferences, evolutionReady, nextEvolution, pointCost } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
 import { speciesSheet, silhouette } from './dex.js';
 import { buildDepthChart, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, borrowedSlots } from '../../franchise/roster.js';
@@ -44,16 +45,16 @@ export function registerRosterScreens(Router, app) {
   const GROUP_LABEL = { QB: 'Quarterback', RB: 'Running back', WR: 'Wide receiver', TE: 'Tight end', OL: 'Offensive line', DL: 'Defensive line', LB: 'Linebacker', CB: 'Cornerback', S: 'Safety', K: 'Kicker' };
   /** "More details" on the depth chart (GDD §21.5): the year the contract ends (amber in its final year) and the nature. */
   function detailHtml(f, m) {
-    const ends = m.contract?.ends; const last = ends != null && ends <= f.season.year; const nat = NATURES[m.nature]?.name || m.nature;
+    const ends = m.contract?.ends; const last = ends != null && ends <= f.season.year; const nat = `${temperSummary(m.temper).name} Temper`;
     return `<span class="dc-more"><span class="${last ? 'dc-expiring' : ''}">${ends != null ? `${last ? '⏳' : '📄'} ${yearOf(ends)}` : 'no contract'}</span> · ${esc(nat)}</span>`;
   }
   /** With details on: who is in a final year, by position, and the natures on the roster (for scouting). */
   function depthSummary(f) {
     const expiring = f.roster.filter((m) => m.contract && m.contract.ends <= f.season.year);
     const byPos = {}; for (const m of expiring) (byPos[m.position] ||= []).push(m.name);
-    const nat = {}; for (const m of f.roster) nat[m.nature] = (nat[m.nature] || 0) + 1;
-    const natList = Object.entries(nat).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${esc(NATURES[k]?.name || k)} ${n}`).join(' · ');
-    return `<div class="panel tight" style="margin-bottom:8px"><div><b>⏳ Final year (${yearOf(f.season.year)}):</b> ${expiring.length ? Object.entries(byPos).map(([p, ns]) => `<b>${p}</b> ${ns.map(esc).join(', ')}`).join(' · ') : '<span class="dim">nobody</span>'}</div><div class="dim" style="margin-top:4px"><b>Natures:</b> ${natList}</div><div class="dim" style="margin-top:4px;font-size:12px">Each line: 📄 contract runs through that year · ⏳ final year · nature.</div></div>`;
+    const nat = {}; for (const m of f.roster) nat[m.temper] = (nat[m.temper] || 0) + 1;
+    const natList = Object.entries(nat).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${esc(temperSummary(k).name)} ${n}`).join(' · ');
+    return `<div class="panel tight" style="margin-bottom:8px"><div><b>⏳ Final year (${yearOf(f.season.year)}):</b> ${expiring.length ? Object.entries(byPos).map(([p, ns]) => `<b>${p}</b> ${ns.map(esc).join(', ')}`).join(' · ') : '<span class="dim">nobody</span>'}</div><div class="dim" style="margin-top:4px"><b>Tempers:</b> ${natList}</div><div class="dim" style="margin-top:4px;font-size:12px">Each line: 📄 contract runs through that year · ⏳ final year · Temper.</div></div>`;
   }
   /** Depth chart: every position in order, starters first, with the slot each monster fills and thin spots flagged. */
   function depthHtml(f) {
@@ -152,7 +153,7 @@ export function registerRosterScreens(Router, app) {
     title: ({ f, params }) => f.roster.find((m) => m.id === params.id)?.name || 'Monster',
     render({ f, params }) {
       const m = f.roster.find((x) => x.id === params.id); if (!m) return '<p>Not found.</p>';
-      const base = m.attributes, eff = effectiveAttributes(m); const nature = NATURES[m.nature]; const ab = m.ability ? ABILITIES[m.ability] : null;
+      const base = m.attributes, eff = effectiveAttributes(m); const temper = temperSummary(m.temper); const ab = m.ability ? ABILITIES[m.ability] : null;
       const chart = buildDepthChart(f.roster, f.lineupManual, f.depth); const slot = Object.entries(chart).find(([, id]) => id === m.id)?.[0];
       return `${browseNav(f, m.id)}<div class="panel"><div class="row">${monsterSprite(m, 72)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(m.name)}${m.cornerstone ? ' <span class="chip cornerstone">★ CORNERSTONE</span>' : ''}</div><div class="muted">${m.position}${slot ? ' · starts at ' + slot : ' · reserve'} · ${esc(m.type)} type · age ${m.age}</div><div class="muted">Level ${m.level} · XP ${m.xp}/${xpForLevel(m.level)} · potential ${m.potential}</div>${outlookHtml(f, m)}</div><span class="ovr hi" style="font-size:26px">${monsterOverall(m)}</span></div>
         <div class="bar" style="margin:8px 0 4px"><i style="width:${Math.round(m.xp / xpForLevel(m.level) * 100)}%"></i></div>
@@ -162,7 +163,7 @@ export function registerRosterScreens(Router, app) {
         ${bioHtml(f, m)}
         ${(() => { F.monsterTimeline(f, m); return careerSectionHtml(f, fullProfile(f, m, 'roster'), { domId: 'timeline' }); })()}
         <button class="btn block cp-open" data-career="${esc(m.id)}">📖 Full career profile ›</button>
-        <div class="panel"><b>Nature: ${esc(nature.name)}</b><p class="muted" style="margin:2px 0">${esc(nature.behavior)}${nature.up ? ` <span class="chip good">+10% ${ATTR_LABEL[nature.up]}</span> <span class="chip bad">−10% ${ATTR_LABEL[nature.down]}</span>` : ''}</p>
+        <div class="panel"><b>Temper: ${esc(temper.name)}</b><p class="muted" style="margin:2px 0">${esc(temper.text)}</p>
           <div class="row between" style="gap:6px"><b>Type: ${esc(m.type)}</b><button class="btn small" data-action="typechart" data-type="${esc(m.type)}">🔺 Type Chart</button></div><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}. ${(() => { const p = typeProfile(m.type); return `Strong against ${p.strong.join(' and ')}; weak against ${p.weak.join(' and ')}.`; })()}</p>
           ${ab ? `<b>Signature ability: ${esc(ab.name)}</b><p class="muted" style="margin:2px 0">${esc(ab.text)}</p><button class="btn small see-it" data-see-it="${resolveSpecies(m).id}">▶ See it</button>` : (() => { const sp = resolveSpecies(m); return sp.ability ? `<b>Signature ability: ${esc(sp.ability.name)}</b><p class="muted" style="margin:2px 0">${esc(sp.ability.text)}</p><button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : `<b>Species trait: ${esc(TRAITS[sp.trait]?.name)}</b><p class="muted" style="margin:2px 0">${esc(TRAITS[sp.trait]?.text)}</p>`; })()}
           ${evolutionHtml(m)}
@@ -170,7 +171,7 @@ export function registerRosterScreens(Router, app) {
         <h3>Ratings</h3>${headlineHtml(m)}${schemeHtml(f, m)}
         ${(m.points || 0) > 0 && F.pointsLocked(f) ? `<div class="panel points"><b>🔒 ${m.points} attribute point${m.points === 1 ? '' : 's'} banked, frozen</b><div class="dim">Points are frozen until every contract decision is made. Banked points already count toward what a monster asks for.</div></div>` : ''}${(m.points || 0) > 0 && !F.pointsLocked(f) ? `<div class="panel points"><b>✨ ${m.points} attribute point${m.points === 1 ? '' : 's'} to spend</b><div class="dim">Level-ups bank ${POINTS_PER_LEVEL} points. Tap + next to an attribute that helps this position (capped at potential ${m.potential}).${ATTRIBUTES.some((k) => pointCost(m, k) > 1) ? ' Past his peak, a + can cost more than one point (shown on the button): physical attributes first, then technique.' : ''}</div><button class="btn small" data-action="autospendone" style="margin-top:6px">Let the trainer spend them</button></div>` : ''}
         <details style="margin-top:8px" ${(m.points || 0) > 0 && !F.pointsLocked(f) ? 'open' : ''}><summary class="muted" style="cursor:pointer">All twelve attributes</summary><div class="attr-grid" style="margin-top:8px">${ATTRIBUTES.map((k) => `<div class="attr ${attributeHelps(m.position, k) ? '' : 'no-help'}" title="${esc(statMeaning(m.position, k))}" style="${attributeHelps(m.position, k) ? '' : 'opacity:.45'}"><button class="linkish" data-action="statinfo" data-attr="${k}" style="all:unset;cursor:pointer;text-decoration:underline dotted">${ATTR_LABEL[k]}</button><div class="bar ${eff[k] < 45 ? 'bad' : eff[k] < 60 ? 'warn' : ''}"><i style="width:${eff[k]}%"></i></div><span class="v" style="color:${eff[k] > base[k] ? 'var(--good)' : eff[k] < base[k] ? 'var(--bad)' : 'inherit'}">${eff[k]}</span>${(m.points || 0) > 0 && !F.pointsLocked(f) ? (attributeHelps(m.position, k) ? (() => { const c = pointCost(m, k); return `<button class="btn small plus" data-action="spend" data-attr="${k}" ${base[k] >= m.potential ? 'disabled title="At potential"' : c > (m.points || 0) ? `disabled title="Costs ${c} points at age ${m.age}"` : c > 1 ? `title="Costs ${c} points at age ${m.age}: an ageing body is harder to build"` : ''} aria-label="Add 1 to ${ATTR_LABEL[k]}${c > 1 ? ` for ${c} points` : ''}">+${c > 1 ? `<small class="cost">${c}</small>` : ''}</button>`; })() : '<span class="btn small plus" style="visibility:hidden">+</span>') : ''}</div>`).join('')}</div>
-        <p class="dim" style="margin-top:8px">Green/red values include nature, fatigue and position penalties. Faded attributes do nothing for a ${esc(POSITION_NAME[m.position]?.toLowerCase() || m.position)}, so points cannot go there. Tap a name to see what it does.</p>
+        <p class="dim" style="margin-top:8px">Green/red values include fatigue and position penalties. Faded attributes do nothing for a ${esc(POSITION_NAME[m.position]?.toLowerCase() || m.position)}, so points cannot go there. Tap a name to see what it does.</p>
         <button class="btn small" data-action="statguide" style="margin-top:4px">📊 What the stats mean for a ${esc(POSITION_NAME[m.position]?.toLowerCase() || m.position)}</button></details>
         ${monsterStatsHtml(m, f)}`;
     },

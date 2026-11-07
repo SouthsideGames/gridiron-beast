@@ -1,8 +1,9 @@
 // XP, level-ups, fatigue, injuries and recovery (GDD §5.1 and §8).
 
-import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints } from '../data/monsters.js';
+import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints, syncFromDev } from '../data/monsters.js';
+import { addBankedPoints } from './t8/progression.js';
+import { OFFSEASON_POINTS } from './t8/awards.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, POSITION_WEIGHTS } from '../data/personnel.js';
-import { maturationTarget, MATURATION_MAX_AGE } from './development.js';
 import { isAgeless } from './league-registry.js';
 import { CURVE, trueOnset, technicalOffset, peakWindowAge, isPhysical, physLoss, techLoss, drawLoss, transitionYears, SEVERE_INJURY_PHYSICAL, ATTRIBUTE_FLOOR } from '../data/aging.js';
 /** Injury-risk multiplier for a monster playing a secondary position. */
@@ -78,30 +79,34 @@ export const marketPriced = (m) => !m.contract || !!m.contract.permanent;
  * `ctx`: `s` = offseasons under these rules for a save made before them (the transition's decline cap; null = none);
  * `severeOf(m)` = did he suffer a severe injury last season. Draws come from `rng` in roster order, attribute by attribute.
  */
-export function offseason(roster, rng, { s = null, severeOf = null } = {}) {
+export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate = true } = {}) {
   const events = [];
   for (const m of roster) {
-    const ageless = isAgeless(m);
+    const ageless = isAgeless(m) || !!m.dev?.apex; // Apex is ageless (spec §5)
     const severe = !ageless && !!severeOf?.(m); // read before the injury clears
     if (!ageless) m.age += 1;
     m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
+    // Task 8: the eligible offseason award, 2 banked training points (replaces the old direct maturation increases, spec §6).
+    // AI and pool monsters allocate it with the approved policy; the owner's club passes autoAllocate: false and decides.
+    if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng); }
     if (ageless) { if (marketPriced(m)) m.salary = salaryFor(m); continue; }
-    if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = m.attributes.durability;
+    const cur = m.dev ? m.dev.current : m.attributes;
+    if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = cur.durability;
     const onset = trueOnset(m); const yP = transitionYears(m.age - onset, s); const yT = transitionYears(m.age - onset - technicalOffset(m.position), s);
     let physLost = 0;
     if (yP > 0 || yT > 0) {
       const rate = (CURVE[m.position] || CURVE.WR).rate;
-      for (const k of Object.keys(m.attributes)) {
+      for (const k of Object.keys(cur)) {
         const mean = isPhysical(k) ? (yP > 0 ? physLoss(yP, rate) + (severe ? SEVERE_INJURY_PHYSICAL : 0) : 0) : techLoss(yT);
         if (mean <= 0) continue;
-        const before = m.attributes[k]; m.attributes[k] = Math.max(ATTRIBUTE_FLOOR, before - drawLoss(mean, rng));
-        if (isPhysical(k)) physLost += before - m.attributes[k];
+        // the decline floor never raises a rating (R1 item 34); losses go to the development record's ledger
+        const before = cur[k]; const after = Math.min(before, Math.max(ATTRIBUTE_FLOOR, before - drawLoss(mean, rng))); cur[k] = after;
+        if (m.dev) m.dev.loss[k] += before - after;
+        if (isPhysical(k)) physLost += before - after;
       }
       events.push({ kind: 'decline', id: m.id, name: m.name });
     }
-    if (m.age <= 23) for (const k of ['awareness', 'strength']) if (m.attributes[k] < m.potential) m.attributes[k] += 1;
-    // C2 maturation (Task 6 Phase C, owner 2026-10-30): one position-weighted +1 each offseason through age 24, never above potential; no draw
-    if (m.age <= MATURATION_MAX_AGE) { const k = maturationTarget(m, POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR); if (k) { m.attributes[k] += 1; events.push({ kind: 'mature', id: m.id, name: m.name, attr: k }); } }
+    if (m.dev) syncFromDev(m);
     if (physLost) m.physDrop = physLost; else delete m.physDrop; // what the forecast may read: did his body visibly decline this offseason
     if (marketPriced(m)) m.salary = salaryFor(m);
   }

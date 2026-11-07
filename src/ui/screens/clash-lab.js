@@ -77,7 +77,7 @@ export function registerClashLab(Router, app) {
     const row = (k, v) => `<tr><td>${esc(k)}</td><td class="mono" style="text-align:right">${esc(String(v))}</td></tr>`;
     return `<div class="panel" style="margin-top:8px"><div class="row between"><b>${esc(m.name)}: how the engine builds its stats</b><button class="btn small ghost" data-action="statsClose">Close</button></div>
       <table class="compare" style="font-size:12px;width:100%"><tbody>
-      ${row('1. Overall from effective attributes (nature + fatigue once)', `${b.overall} (fatigue ${c.fatigue}, nature ${c.nature}, stage ${c.stage})`)}
+      ${row('1. Overall from effective attributes (fatigue once)', `${b.overall} (fatigue ${c.fatigue}, stage ${c.stage})`)}
       ${row('2. Base HP = 28 + 0.85 × overall', b.hpBase.toFixed(2))}${row('   Durability tilt', b.durabilityTilt.toFixed(3))}${row('   Archetype HP ×', b.archetype.hp)}${row('   O2 Tank HP ×', b.o2)}${row('   Battle HP', c.hp)}
       ${row('3. Base attack = 6 + 0.22 × overall', b.atkBase.toFixed(2))}${row('   Strength tilt', b.strengthTilt.toFixed(3))}${row('   Archetype attack ×', b.archetype.atk)}${row('   Battle attack', c.atk)}
       ${row('4. Speed', c.spd)}${row('5. Guard in front (Tank 0.88 unless pierced)', c.guard)}${row('Move', `${c.move.name} (${c.move.kind})`)}</tbody></table>
