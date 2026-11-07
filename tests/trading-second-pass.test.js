@@ -52,7 +52,11 @@ test('valuation: age, contract and potential move the price; the factors are bou
   assert.ok(v({ ...m, potential: ovr(m) + 15, age: 22 }) > v({ ...m, age: 22 }), 'potential adds for the young');
 });
 test('valuation: a monster is worth more to a club that needs him than to one that is deep; starters outrank backups', () => {
-  const { mine, theirs } = world(); const wr = at(theirs, 'WR').sort((a, b) => ovr(b) - ovr(a) || (a.id < b.id ? -1 : 1)); // ties broken by id, as the game's depth order does (Task 8 retired Nature, N7c B14: two WRs now tie at 58)
+  const { mine, theirs } = world();
+  // Task 8 M1 (fixture drift): the Dex roster's WRs now spread 68/58/54/52/33/32, so a deep club's cascade gains almost as much as
+  // the needy club. The scenario is a deep, even group: its six WRs are set explicitly to 60–55 (as the legacy generator gave).
+  at(theirs, 'WR').forEach((m, i) => { setOvr(m, [60, 59, 58, 57, 56, 55][i]); m.salary = salaryFor(m); });
+  const wr = at(theirs, 'WR').sort((a, b) => ovr(b) - ovr(a) || (a.id < b.id ? -1 : 1)); // ties broken by id, as the game's depth order does
   const star = setOvr(dress(createRoster(31, { quality: 60, composition: [['WR', 1]] })[0]), ovr(wr[0]) + 8);
   const needy = theirs.filter((m) => m.position !== 'WR' || m.id === wr[3].id), deep = theirs.slice();
   const gainNeedy = rosterNet(needy, { get: [star] }, YEAR), gainDeep = rosterNet(deep, { get: [star] }, YEAR);
@@ -185,7 +189,10 @@ test('adversarial: every club\'s answer to the same proposal is the same, but di
 
 // ---------------------------------------------------------------- incoming offers
 test('incoming offers: deterministic, built from the club\'s roster, acceptable to the club, and good for the owner', () => {
-  const { f, mine, env } = world({ ownerQ: 55, aiQ: 66 }); // a thin owner, a deep club
+  const { f, mine, theirs, env } = world({ ownerQ: 55, aiQ: 66 }); // a thin owner, a deep club
+  // Task 8 M1 (fixture drift): quality is now a percentile target inside random Dex forms, so 55 vs 66 no longer makes the owner
+  // thin and the club deep; made explicit: every owner monster 6 below as generated, every club monster 6 above.
+  for (const m of mine) { setOvr(m, Math.max(25, ovr(m) - 6)); m.salary = salaryFor(m); } for (const m of theirs) { setOvr(m, Math.min(95, ovr(m) + 6)); m.salary = salaryFor(m); }
   let seen = 0; const kinds = new Set();
   for (let k = 0; k < 80 && seen < 8; k++) {
     const a = buildIncomingOffer(f, env({ counter: undefined }), { key: `wk:1:${k}`, chance: 1 }); const b = buildIncomingOffer(f, env({ counter: undefined }), { key: `wk:1:${k}`, chance: 1 });
@@ -268,8 +275,12 @@ test('a played franchise: sending a monster to a club moves him into its registr
 });
 test('a played franchise: saving and reloading keeps the deal, the proposal count, and the same answer to the same proposal', () => {
   const f = played(); const found = findAccepted(f); const team = found.team;
-  const bad = { team, givePicks: [F.myTradablePicks(f).at(-1)], getMonsters: [F.deskAssetsFor(f, team).theirs.filter((m) => !m.why && m.forSale).sort((a, b) => b.ovr - a.ovr)[0].id] };
-  const refused = F.deskPropose(f, bad); const left = F.deskPartners(f).find((p) => p.team === team).clubLeft; assert.equal(left, DESK_RULES.perClub - 1);
+  // Task 8 M1 (fixture drift): the club's best monster for sale is no longer always worth more than the owner's last pick (Dex
+  // rosters), so "bad" is now chosen explicitly: the best monster for sale whose deal for that pick the club refuses (on a copy).
+  const badFor = (id) => ({ team, givePicks: [F.myTradablePicks(f).at(-1)], getMonsters: [id] });
+  const badId = F.deskAssetsFor(f, team).theirs.filter((m) => !m.why && m.forSale).sort((a, b) => b.ovr - a.ovr).map((m) => m.id).find((id) => !F.deskPropose(JSON.parse(JSON.stringify(f)), badFor(id)).accepted);
+  assert.ok(badId, 'a proposal the club refuses'); const bad = badFor(badId);
+  const refused = F.deskPropose(f, bad); assert.ok(!refused.accepted); const left = F.deskPartners(f).find((p) => p.team === team).clubLeft; assert.equal(left, DESK_RULES.perClub - 1);
   const back = Save.importJson(Save.exportJson(f)); assert.ok(back);
   assert.equal(F.deskPartners(back).find((p) => p.team === team).clubLeft, left, 'the allowance survives a reload');
   const again = F.deskPropose(back, bad); assert.equal(again.accepted, refused.accepted, 'same proposal, same answer after a reload');
