@@ -30,3 +30,16 @@ test('a counted Stunned carried into a play keeps him out of that whole play; th
   assert.ok(sim); assert.equal(S.statusOf(g, qb), null, 'the Stunned play counted and expired');
   S.applyStatus(g, qb, { id: 'slowed', strength: 1, duration: 5 }); S.atGameEnd(g); assert.equal(S.statusOf(g, qb), null);
 });
+
+test('stamina (spec §12): capacity equals permanent Durability; each played play drains 1; halftime restores half; at zero the monster is exhausted for the game and his attributes are halved', async () => {
+  const K = await import('../src/sim/t8/stamina-runtime.js'); const FR = await import('../src/core/fraction.js');
+  const st = {}; const x = { id: 'm1', attrs: { durability: 70 }, permDurability: 3 };
+  K.afterPlay(st, [x, x]); assert.equal(FR.toNumber(st.t8.stamina.m1.stamina), 2, 'one drain per play, however many slots');
+  K.afterPlay(st, [x]); K.afterPlay(st, [x]); assert.equal(st.t8.stamina.m1.exhausted, true); assert.ok(K.exhaustedSet(st).has('m1'));
+  K.halftime(st); assert.equal(FR.toNumber(st.t8.stamina.m1.stamina), 1.5); assert.equal(st.t8.stamina.m1.exhausted, true, 'halftime never erases exhaustion');
+  const { simulatePlay } = await import('../src/sim/engine.js'); const { PLAYS } = await import('../src/data/playbook.js');
+  const L = lineup(11, 60); const rb = { ...L.offense.RB, id: 'rb1' };
+  const a = simulatePlay({ offensePlay: PLAYS.dive, defensePlay: PLAYS.cover_3, offense: { ...L.offense, RB: rb }, defense: lineup(12, 64).defense, ballOn: 30, seed: 4, options: { trace: true } });
+  const b = simulatePlay({ offensePlay: PLAYS.dive, defensePlay: PLAYS.cover_3, offense: { ...L.offense, RB: rb }, defense: lineup(12, 64).defense, ballOn: 30, seed: 4, options: { trace: true, exhausted: new Set(['rb1']) } });
+  assert.notDeepEqual(a.frames, b.frames, 'the exhausted running back plays on halved attributes');
+});

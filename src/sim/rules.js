@@ -9,6 +9,7 @@ import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
 import { simulatePlay } from './engine.js';
 import * as T8S from './t8/status-runtime.js';
+import * as T8K from './t8/stamina-runtime.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
@@ -147,9 +148,10 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
     offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), t8: (state.t8 ||= { status: {} }) },
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) },
   });
   T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
+  T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12)
   if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
@@ -498,7 +500,7 @@ export function doKickoff(state, teams, { onside = false } = {}) {
       const seed = r.seed(); const catchAt = Math.max(-9, flight.landingFromGoal);
       const plays = kickoffPlays(units); const slots = { offense: units.ret, defense: units.coverage };
       sim = simulatePlay({ offensePlay: plays.ret, defensePlay: plays.cov, offense: units.ret, defense: units.coverage, ballOn: KICK_SPOT, ballLat: 0, seed,
-        options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots) } });
+        options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) } });
       rememberAbilities(state, sim);
       res = kickoffOutcome(sim, catchAt, state[receiving].name, sim.names.off[units.returnerSlot] || 'The returner');
     }
@@ -521,6 +523,7 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   if (units) {
     recordKickoffStats(state, kicking, receiving, units, sim, res);
     T8S.afterPlay(state, [...Object.values(units.coverage), ...Object.values(units.ret)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
+    T8K.afterPlay(state, [...Object.values(units.coverage), ...Object.values(units.ret)]); // Task 8 stamina
   } else kickerStat(state, kicking, 'kickoffs'); // onside and free kicks stay formula plays: the kick itself is credited
   if (state.clock <= 0 && state.phase === 'scrimmage') endOfPeriod(state);
   return { res, text, sim };
@@ -582,6 +585,7 @@ function creditFormulaUnits(state, teams, kicking, kind) {
   const bump = (team, slot) => { const p = (state.stats[team].players[slot] ||= {}); p.stSnaps = (p.stSnaps || 0) + 1; };
   for (const slot of Object.keys(u.kicking)) bump(kicking, slot); for (const slot of Object.keys(u.other)) bump(other, slot);
   T8S.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)].map((x) => x?.id).filter(Boolean));
+  T8K.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)]); // B5: participation drains stamina
 }
 export function doPunt(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
@@ -666,6 +670,7 @@ export function endOfPeriod(state) {
   }
   state.quarter += 1; state.clock = state.quarterLength; state.clockRunning = false;
   if (state.quarter === 3) {
+    T8K.halftime(state); // Task 8 §12: halftime restores 50% of each stamina capacity (exhaustion stays)
     state.timeouts = { home: 3, away: 3 };
     state.phase = 'kickoff'; state.possession = state.secondHalfReceiver; state.kickingTeam = opponent(state.secondHalfReceiver);
     log(state, `HALFTIME. ${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}. ${state[state.secondHalfReceiver].name} receive the second-half kickoff.`, 'period', { important: true });

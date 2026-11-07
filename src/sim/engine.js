@@ -117,6 +117,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const bySlot = { off: {}, def: {} };
   const makeActor = (team, slot, play, input) => {
     const attrs = { ...DEFAULT_ATTRS, ...(input?.attrs || {}) };
+    if (options.exhausted?.has?.(input?.id)) for (const k of Object.keys(attrs)) attrs[k] = Math.max(1, Math.round(attrs[k] / 2)); // Task 8 §12: an exhausted monster plays the rest of the game on halved attributes (once)
     // Signature ability: a legacy id in ABILITIES, else the species' own ability or trait.
     // Task 8 M3: a family with a registered Dex contract uses it; its legacy effect never also applies (no stacking).
     const contract = input?.species ? contractOf(input.species) : null;
