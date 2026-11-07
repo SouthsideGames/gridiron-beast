@@ -259,6 +259,9 @@ export function levelUp(m, rng, { autoSpend = false } = {}) {
   syncFromDev(m);
   if (autoSpend) autoSpendPoints(m, rng);
 }
+/** Raise a monster to `level` through the approved level-up path (natural growth at each level). Never lowers a level. For
+ *  previews, tools and legacy year-based AI rosters: setting `m.level` alone would leave the development record behind. */
+export function raiseToLevel(m, level) { const d = devOf(m); const L = Math.min(MAX_LEVEL, level); while (d.level < L) { d.level += 1; applyNaturalGrowth(d); } syncFromDev(m); }
 /** Banked training points (exact; the display floors to whole points, N7e). */
 export const bankedPoints = (m) => devOf(m).bank;
 /** Invest one banked point (or the remainder if less) in an attribute. Exact fractions; refunds at the ceiling (spec §4). */
@@ -342,7 +345,7 @@ export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cor
   const seen = {}; const roman = ['', ' II', ' III', ' IV', ' V', ' VI'];
   for (const m of roster) { const n = seen[m.name] = (seen[m.name] || 0) + 1; if (n > 1) m.name = `${m.name}${roman[n - 1] || ' ' + n}`; }
   // Later seasons: AI clubs field evolved commons (the league grows with the calendar).
-  if (evolveStage > 0) for (const m of roster) { const sp = SPECIES_BY_ID[m.species]; const st = Math.min(evolveStage, sp.evolution.length); for (let i = 0; i < st; i++) { m.level = Math.max(m.level, sp.evolution[i].level); tryEvolve(m); } }
+  if (evolveStage > 0) for (const m of roster) { const sp = SPECIES_BY_ID[m.species]; const st = Math.min(evolveStage, sp.evolution.length); for (let i = 0; i < st; i++) { raiseToLevel(m, sp.evolution[i].level); tryEvolve(m); } }
   // A gym club's legendary takes the first spot at its natural position, a cut above the rest of the roster.
   if (legendary && SPECIES_BY_ID[legendary]) {
     const sp = SPECIES_BY_ID[legendary]; const target = roster.find((m) => m.position === sp.position) || roster[0];
@@ -451,7 +454,7 @@ export function schemePreferences(m) {
   return { side, schemes: out, best: out[0] || null };
 }
 /** Manual evolution for the owner's monsters (GDD §20.6): ready when the level is reached; `tryEvolve` performs it. */
-export function evolutionReady(m) { const sp = resolveSpecies(m); const next = sp.evolution[m.stage || 0]; return !!next && (m.level || 1) >= next.level; }
+export function evolutionReady(m) { const sp = resolveSpecies(m); const next = sp.evolution[m.stage || 0]; return !!next && (m.dev ? m.dev.level : (m.level || 1)) >= next.level; } // Task 8: the development record's level is authoritative
 export function nextEvolution(m) { const sp = resolveSpecies(m); const st = m.stage || 0; const next = sp.evolution[st]; return next ? { ...next, stage: st + 1, spec: evolvedSpec(sp, st + 1) } : null; }
 export function schemeFit(m, { offense = 'balanced', defense = 'coverage' } = {}) {
   const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(m.position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(m.position) ? 'defense' : null;
