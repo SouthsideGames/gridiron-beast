@@ -10,17 +10,19 @@
 // - Legacy traits and legacy ability effects are NOT carried: traits are retired (N7c B13) and every family's football and Clash
 //   abilities come from the Dex contract registry (WP6, WP7). Basics have no unique ability.
 import { FAMILIES, formsOf, abilitiesOf } from './beast-dex.js';
-import { SPECIES_DEX as LEGACY } from './species.js';
+import { SPECIES_DEX as LEGACY } from './species-legacy.js';
 
 const LEGACY_BY_ID = new Map(LEGACY.map((s) => [s.id, s]));
+
+const spriteSpec = (a) => ({ body: a.body, size: a.size, look: a.look, features: [...a.features], colors: [...a.colors], ...(a.pattern ? { pattern: a.pattern } : {}) });
 
 function speciesFromFamily(f) {
   const old = LEGACY_BY_ID.get(f.id);
   const ab = abilitiesOf(f.id);
   const rec = {
     id: f.id, name: f.name, element: f.type, rarity: f.rarity, position: f.position, clashArchetype: f.clashArchetype,
-    body: f.appearance.body, size: f.appearance.size, look: f.appearance.look, features: [...f.appearance.features], colors: [...f.appearance.colors],
-    ...(f.appearance.pattern ? { pattern: f.appearance.pattern } : {}),
+    // Sprite spec: the original 102 forms keep their approved art exactly (legacy spec); Basics use their Dex recipe.
+    ...spriteSpec(old || f.appearance),
     personality: f.description,
     evolution: formsOf(f.id).slice(1).map((x) => ({ name: x.name, level: x.evolutionLevel })),
     dexAbilities: { football: ab.football?.id || null, clash: ab.clash?.id || null },

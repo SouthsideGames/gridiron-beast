@@ -18,7 +18,8 @@ export function legendSide(m) {
   const pos = sp.position;
   if (OFFENSE_GROUPS.includes(pos)) return 'offense';
   if (DEFENSE_GROUPS.includes(pos)) return 'defense';
-  return null; // a kicker can never be a legendary (no legendary special teams)
+  if (pos === 'K') return 'offense'; // Task 8 (N7c B19): the Dex makes Glacivern a K; every legendary kicker counts toward the offensive limit
+  return null;
 }
 export const isLegend = (m) => legendSide(m) != null;
 /** A club's legendaries by side. */

@@ -146,7 +146,7 @@ export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, excl
 }
 /** Species scoutable in a region this week: the region's elements, rares only in their home region from their week, never legendaries. */
 export function regionSpecies(regionName, regionTypes, week = 1) {
-  return SPECIES_DEX.filter((s) => regionTypes.includes(s.element) && s.rarity !== 'legendary' && (s.rarity !== 'rare' || ((s.regions || ELEMENT_REGIONS[s.element]).includes(regionName) && week >= (s.fromWeek || 1))));
+  return SPECIES_DEX.filter((s) => regionTypes.includes(s.element) && s.rarity !== 'legendary' && s.rarity !== 'basic' /* Basics enter channels only through the B17 shares (Task 8 M1) */ && (s.rarity !== 'rare' || ((s.regions || ELEMENT_REGIONS[s.element]).includes(regionName) && week >= (s.fromWeek || 1))));
 }
 
 export function clampAttr(v) { return Math.max(1, Math.min(99, Math.round(v))); }

@@ -2,6 +2,7 @@
 import { createRng } from '../../src/core/rng.js';
 import { generateMonster } from '../../src/data/monsters.js';
 import { SPECIES_DEX } from '../../src/data/species.js';
+import { SPECIES_DEX as ORIGINAL_72 } from '../../src/data/species-legacy.js'; // pre-Task 8 balance fixtures are defined over the original 72
 import { archetypeOf } from '../../src/clash/stats.js';
 
 export const SP = Object.fromEntries(SPECIES_DEX.map((s) => [s.id, s]));
@@ -9,8 +10,8 @@ export function mon(id, seed = 1, { overall = 65, fatigue = 0, stage = 0, nature
   const s = SP[id]; const m = generateMonster(createRng(seed), { species: id, position: s.position, quality: overall, type: s.element, nature });
   m.fatigue = fatigue; if (stage) m.stage = stage; return m;
 }
-export const byArch = (a) => SPECIES_DEX.filter((s) => archetypeOf(s.id) === a).map((s) => s.id);
-export function randomLineup(rng, n, pool = SPECIES_DEX.map((s) => s.id)) { return Array.from({ length: n }, (_, i) => mon(pool[rng.int(pool.length)], rng.seed(), { overall: 60 + rng.int(10) })); }
+export const byArch = (a) => ORIGINAL_72.filter((s) => archetypeOf(s.id) === a).map((s) => s.id);
+export function randomLineup(rng, n, pool = ORIGINAL_72.map((s) => s.id)) { return Array.from({ length: n }, (_, i) => mon(pool[rng.int(pool.length)], rng.seed(), { overall: 60 + rng.int(10) })); }
 /** Run `fn` with Math.random and Date.now replaced by throwing stubs, so any engine use of them fails the test. */
 export function withoutRandomness(fn) {
   const R = Math.random, D = Date.now, P = globalThis.performance?.now;

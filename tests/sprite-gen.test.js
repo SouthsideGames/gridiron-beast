@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { spriteGrid, sprite16, palette } from '../src/ui/sprite16.js';
 import { STRUCTURE_IDS, STRUCTURES, POSES, structureGrid, recipeProblems } from '../src/ui/sprite-gen.js';
-import { SPECIES_DEX } from '../src/data/species.js';
+import { SPECIES_DEX } from '../src/data/species-legacy.js'; // the original 72 (the 120 Basic recipes are read from the Dex files below)
 import { evolvedSpec } from '../src/data/monsters.js';
 
 const C = ['#8f9a94', '#c9d1cc'];

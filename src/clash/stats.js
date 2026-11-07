@@ -18,7 +18,14 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const round2 = (x) => Math.round(x * 100) / 100;
 
 /** The move table a battle plays: the permanent table, or the frozen values 1.0.0 table for the historical ruleset. */
-export function moveTableFor(config) { return config?.ruleset === 'v1.0.0' ? CLASH_MOVES_V1_0_0 : CLASH_MOVES; }
+// Basic families have no unique move (approved, R1 item 37): they fight with ordinary attacks and their archetype's perks.
+const BASIC_MOVES = Object.freeze(Object.fromEntries(SPECIES_DEX.filter((s) => s.rarity === 'basic').map((s) => [s.id, Object.freeze({ name: 'Strike', archetype: s.clashArchetype, text: 'Ordinary attacks; its archetype perks apply (Basic: no unique move)', kind: 'strike', trigger: Object.freeze({ kind: 'always' }), basic: true })])));
+const TABLES = new Map();
+export function moveTableFor(config) {
+  const base = config?.ruleset === 'v1.0.0' ? CLASH_MOVES_V1_0_0 : CLASH_MOVES;
+  if (!TABLES.has(base)) TABLES.set(base, Object.freeze({ ...base, ...BASIC_MOVES }));
+  return TABLES.get(base);
+}
 
 export function archetypeOf(speciesId) { return CLASH_MOVES[speciesId]?.archetype || null; }
 

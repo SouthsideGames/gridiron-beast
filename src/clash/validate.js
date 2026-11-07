@@ -16,7 +16,7 @@ const FIXED = new Set(['name', 'archetype', 'text', 'kind', 'trigger']);
 export function validateMoves(moves = CLASH_MOVES) {
   const out = []; const ids = Object.keys(moves); const species = new Set(SPECIES_DEX.map((s) => s.id));
   for (const id of ids) if (!species.has(id)) out.push(`${id}: not a species ID`);
-  for (const s of SPECIES_DEX) if (!moves[s.id]) out.push(`${s.id}: no battle move`);
+  for (const s of SPECIES_DEX) if (s.rarity !== 'basic' && !moves[s.id]) out.push(`${s.id}: no battle move`); // Basics use the ordinary Strike (R1 item 37)
   const names = new Set(); const counts = {};
   for (const [id, m] of Object.entries(moves)) {
     if (names.has(m.name)) out.push(`${id}: duplicate move name ${m.name}`); names.add(m.name);

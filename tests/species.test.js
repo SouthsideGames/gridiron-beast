@@ -1,32 +1,37 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SPECIES_DEX, RARITIES, TRAITS, ELEMENT_REGIONS } from '../src/data/species.js';
+import { SPECIES_DEX as ORIGINAL_72 } from '../src/data/species-legacy.js';
 import { TYPES } from '../src/data/monsters.js';
 import { REGIONS } from '../src/data/staff.js';
 import { sprite16, spriteGrid } from '../src/ui/sprite16.js';
 
 const POS = new Set(['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S', 'K']);
 
-test('species dex: 72 species, 6 per element with the rarity split', () => {
-  assert.equal(SPECIES_DEX.length, 72);
+test('species dex: 192 families (Task 8): the original 72, 6 per element with the rarity split, plus 120 Basics, one per element and position', () => {
+  assert.equal(SPECIES_DEX.length, 192);
   for (const el of Object.keys(TYPES)) {
-    const s = SPECIES_DEX.filter((x) => x.element === el);
-    assert.equal(s.length, 6, el);
-    const r = (k) => s.filter((x) => x.rarity === k).length;
-    assert.deepEqual([r('common'), r('uncommon'), r('rare'), r('legendary')], [2, 2, 1, 1], el);
+    const b = SPECIES_DEX.filter((x) => x.element === el && x.rarity === 'basic'); assert.equal(b.length, 10, el); assert.equal(new Set(b.map((x) => x.position)).size, 10, el);
+    const s = SPECIES_DEX.filter((x) => x.element === el && x.rarity !== 'basic');
+    assert.equal(s.length, 6, el); assert.equal(s.filter((x) => x.rarity === 'legendary').length, 1, el);
   }
+  // the approved rarity amendments (APPROVED_RULES.md) replace the old 2/2/1/1 split: 26 Common, 21 Uncommon, 13 Rare, 12 Legendary
+  const r = (k) => SPECIES_DEX.filter((x) => x.rarity === k).length;
+  assert.deepEqual([r('common'), r('uncommon'), r('rare'), r('legendary'), r('basic')], [26, 21, 13, 12, 120]);
 });
 
 test('species dex: names unique (including evolutions), fields valid', () => {
   const names = SPECIES_DEX.flatMap((s) => [s.name, ...s.evolution.map((e) => e.name)]);
   assert.equal(new Set(names).size, names.length);
-  assert.equal(names.length, 102);
+  assert.equal(names.length, 222);
   const regionNames = new Set(Object.keys(REGIONS));
   for (const s of SPECIES_DEX) {
     assert.ok(RARITIES[s.rarity], s.id);
     assert.ok(POS.has(s.position) && (s.secondary == null || POS.has(s.secondary)), s.id);
-    assert.ok(s.rarity === 'common' ? TRAITS[s.trait] : s.ability?.name, s.id);
-    assert.ok(s.rarity === 'common' || s.evolution.length === 0, `${s.id} only commons evolve`);
+    const legacy = ORIGINAL_72.find((x) => x.id === s.id);
+    assert.ok(!s.trait, s.id); // traits retired (N7c B13)
+    assert.equal(!!s.ability, !!legacy?.ability, s.id); // legacy signature effects stay transitional on the original families until M3; Basics have none
+    assert.ok(s.rarity !== 'basic' || s.evolution.length === 0, `${s.id}: Basics never evolve`);
     for (const r of s.regions || []) assert.ok(regionNames.has(r) && ELEMENT_REGIONS[s.element].includes(r), `${s.id} ${r}`);
     assert.match(s.colors[0], /^#[0-9a-f]{6}$/); assert.match(s.colors[1], /^#[0-9a-f]{6}$/);
   }
@@ -36,9 +41,10 @@ test('element regions match the region element lists', () => {
   for (const [el, regs] of Object.entries(ELEMENT_REGIONS)) for (const r of regs) assert.ok(REGIONS[r].types.includes(el), `${el} ${r}`);
 });
 
-test('sprite16: every species draws a distinct, outlined 16×16 sprite', () => {
+test('sprite16: every original species draws a distinct, outlined 16×16 sprite; Basics draw valid temporary sprites (art refinement deferred)', () => {
+  for (const s of SPECIES_DEX.filter((x) => x.rarity === 'basic')) { const g = spriteGrid(s); assert.equal(g.length, 16); assert.ok(g.flat().includes('O'), s.id); }
   const seen = new Set();
-  for (const s of SPECIES_DEX) {
+  for (const s of ORIGINAL_72) {
     const g = spriteGrid(s);
     assert.equal(g.length, 16); assert.equal(g[0].length, 16);
     const filled = g.flat().filter(Boolean).length;
@@ -89,7 +95,7 @@ test('sprite export writes valid PNGs and an atlas for every form', async () => 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gb-sprites-'));
   execFileSync(process.execPath, ['tools/export-sprites.mjs', dir, '1']);
   const atlas = JSON.parse(fs.readFileSync(path.join(dir, 'atlas.json'), 'utf8'));
-  assert.equal(atlas.sprites.length, 102);
+  assert.equal(atlas.sprites.length, 222); // every form: 192 families + 30 evolutions (Task 8)
   for (const s of atlas.sprites) { const head = fs.readFileSync(path.join(dir, s.file)).subarray(0, 8); assert.equal(head.toString('hex'), '89504e470d0a1a0a', s.file); }
   assert.ok(fs.existsSync(path.join(dir, 'sheet.png')));
   fs.rmSync(dir, { recursive: true, force: true });
@@ -100,7 +106,7 @@ test('every species ability and trait maps to known engine primitives, and they 
   const { PLAYS, OFFENSE_IDS, DEFENSE_IDS } = await import('../src/data/playbook.js');
   const { lineup } = await import('./tools/lineup.js');
   const KNOWN = new Set(['pincer', 'deepRoots', 'bramble', 'vanishing', 'longKick', 'foresight', 'echoRead', 'mindGame', 'dragonhide', 'eruption', 'undertow', 'grove', 'thunderclap', 'whiteout', 'cyclone', 'landslide', 'nightVeil', 'daybreak', 'fortress', 'blink', 'sovereign', 'riptide', 'overcharge', 'refraction', 'roar', 'eclipse', 'permafrost', 'heatHaze', 'glacierWall', 'quakeStep', 'radiantPursuit', 'ambush', 'staticField', 'wingShadow', 'tailwind', 'attrs', 'deepThrow', 'burst', 'carryStrength', 'shedStrength', 'pickCatching', 'reaction', 'afterCatch', 'anchor', 'blockStrength', 'blockerStun', 'rebound', 'runStuff', 'elusive', 'elusiveFirst', 'forceFumble', 'fumbleResist', 'noFumble', 'contest', 'catchContest', 'manCoverage', 'rushSpeed', 'pursuitSpeed', 'closeSpeed', 'routeAgility', 'openAccuracy', 'throwVelocity', 'pressureSense', 'noPlayActionBite', 'breakRadius', 'zoneRange', 'aura', 'fatigue']);
-  for (const s of SPECIES_DEX) { const e = s.ability?.effect || TRAITS[s.trait]?.effect; assert.ok(e, s.id); for (const k of Object.keys(e)) assert.ok(KNOWN.has(k), `${s.id}: unknown primitive ${k}`); }
+  for (const s of SPECIES_DEX.filter((x) => x.ability)) { const e = s.ability.effect; assert.ok(e, s.id); for (const k of Object.keys(e)) assert.ok(KNOWN.has(k), `${s.id}: unknown primitive ${k}`); }
   // Put each species in a slot for its natural position and count how often its ability logs across a batch.
   const PASSIVE = new Set(['attrs', 'fatigue', 'forceFumble', 'pickCatching']); // passive, or only on rare events (fumbles, picks)
   const SLOT = { QB: ['QB', 'off'], RB: ['RB', 'off'], WR: ['WR1', 'off'], TE: ['TE', 'off'], OL: ['LG', 'off'], DL: ['DL1', 'def'], LB: ['LB1', 'def'], CB: ['CB1', 'def'], S: ['FS', 'def'] };
@@ -109,8 +115,9 @@ test('every species ability and trait maps to known engine primitives, and they 
   for (const sp of SPECIES_DEX) {
     if (!sp.ability?.effect) continue; // shared traits are retired (N7c B13): only signature abilities still act
     const e = sp.ability.effect;
-    if (Object.keys(e).every((k) => PASSIVE.has(k) || k === 'zoneRange') || !SLOT[sp.position]) continue;
-    const [slot, side] = SLOT[sp.position];
+    const legacyPos = ORIGINAL_72.find((x) => x.id === sp.id).position; // transitional legacy effects were written for the legacy position (M3 replaces them)
+    if (Object.keys(e).every((k) => PASSIVE.has(k) || k === 'zoneRange') || !SLOT[legacyPos]) continue;
+    const [slot, side] = SLOT[legacyPos];
     let n = 0;
     for (let seed = 1; seed <= 80; seed++) { // 80 plays: rare-event abilities sat right at the edge of a 40-play sample
       const off = { ...L.offense }, def = { ...L.defense };

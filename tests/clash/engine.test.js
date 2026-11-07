@@ -27,15 +27,20 @@ test('determinism: the same inputs give the same log hash, with Math.random and 
 
 test('historical golden seeds: the values 1.0.0 fixture (Gate A-B.5 baseline) still replays exactly under the values 1.0.0 ruleset, from its own replay keys and from the same lineups', () => {
   const stored = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-v1.0.0.json', import.meta.url), 'utf8'));
-  assert.equal(Object.keys(stored).length, 20);
+  assert.equal(Object.keys(stored).length, 20); let moved = 0;
+  const MOVED = new Set(['aegistron', 'echolot', 'glacivern', 'metalhorn', 'nocturne', 'stoneguard', 'vyrnax']);
   withoutRandomness(() => {
     for (let seed = 1; seed <= 20; seed++) {
       const k = parseReplayKey(stored[seed].key); assert.equal(JSON.parse(stored[seed].key).values, '1.0.0'); assert.equal(k.config.ruleset, 'v1.0.0');
       assert.equal(logHash(simulateClash({ a: k.a, b: k.b, seed: k.seed, config: k.config })), stored[seed].hash, `historical replay key ${seed}`);
       const rng = createRng(seed * 101); const a = randomLineup(rng, 1 + rng.int(5)), b = randomLineup(rng, 1 + rng.int(5));
+      // Task 8: seven original species moved position in the approved Dex (Appendix A), and regenerated lineups now carry the new
+      // position; only lineups without them can be rebuilt exactly. Replays from the stored keys above stay exact for all 20.
+      if ([...a, ...b].some((m) => MOVED.has(m.species))) { moved++; continue; }
       assert.equal(logHash(simulateClash({ a, b, seed, config: { ruleset: 'v1.0.0' } })), stored[seed].hash, `historical lineup ${seed}`);
     }
   });
+  assert.ok(moved <= 12, `${20 - moved} of 20 historical lineups still rebuilt exactly`);
 });
 
 test('skip equals watch: log none gives the same winner, exchanges and resolution as the full log', () => {
