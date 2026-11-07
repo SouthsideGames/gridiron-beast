@@ -13,6 +13,7 @@ until the owner rules. Evidence: `M1_STARTER_CALIBRATION.md`, `LEAGUE_HEALTH_M2.
 | D6 | Stat guide versus the Appendix C role register | **Follow the register** in the guide (M6 presentation) |
 | D7 | AI identities (four questions in AI_IDENTITIES.md) | Approve as proposed (details below) |
 | D8 | Cheap free agents accepting half their ask | **Review at #30**; no change now |
+| D9 | Gyms losing their strength edge over 10 seasons | **Structural, not boosts**: implement the identities (D7) and the gym mode floor, then re-measure at season 5/10 reports |
 
 ## D1. Founding-roster strength
 
@@ -94,3 +95,16 @@ Recommendations on the four questions in `AI_IDENTITIES.md`:
 negotiation and the 85% floor not being extended (N7f).
 
 **Recommendation.** No change now. Re-examine with D3 at #30, because the asks themselves move with the rating scale.
+
+## D9. Gyms' strength edge over time
+
+**What happens now** (`LEAGUE_HEALTH_M2.md`). With no seasonal boosts, gyms lead ordinary clubs by 4.9 OVR in season 1 but only 0.9
+by season 10. With the old nudge the lead held at about 2. The gym tier bonus sets initial strength only.
+
+**Recommendation.** Keep gyms stronger through legal, visible structure rather than boosts, all already proposed:
+- the identity-guided drafting, training and signings (D7, item 3);
+- the gym mode floor (never below Compete, D7, item 1);
+- element-first rosters with their legendary.
+
+Re-measure in the franchise-health reports at seasons 5 and 10. If the edge still collapses, the owner can choose a structural
+lever, for example a larger initial tier gap or a scouting/draft priority for gyms. No automatic yearly boost.
