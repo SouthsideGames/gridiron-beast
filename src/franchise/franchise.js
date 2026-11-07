@@ -28,7 +28,7 @@ import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REG
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
 import { pickChannelSpecies, basicsFor, raiseToLevel } from '../data/monsters.js';
 import { BASIC_SHARE } from './t8/generation.js';
-import { createRewardLedger } from './reward-ledger.js';
+import { createRewardLedger, prune as pruneLedger } from './reward-ledger.js';
 import { approvedRule } from '../data/beast-dex.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, autoSpendPoints as autoSpendPointsFn, ROSTER_MAX, ROSTER_MIN, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
 import { ELEMENT_REGIONS } from '../data/species.js';
@@ -817,13 +817,17 @@ let lastTransitionMs = null; export const leagueTransitionMs = () => lastTransit
 function todayOverall(f, club, year) { const st = clubRecord(f, club)?.strategy; if (st && st.todayYear === year && st.today != null) return st.today; return teamOverall(legacyAiTeam(f, club, year)); }
 /** Persistent AI monsters keep season and career totals (decision G); the generated rosters of older saves keep nothing. */
 const leagueBooks = (f, team) => team !== f.club && hasLeague(f) && !!clubRecord(f, team);
+/** The reward-ledger activity id of this week's football game for a club (spec §15: once per activity and monster). */
+const actClub = (club) => String(club).replace(/\s+/g, '_');
+export const gameActivityId = (f, club) => `fb:${f.season.year}:w${f.season.week}:${f.season.playoffs && !f.season.finished ? 'p' : 'r'}:${actClub(club)}`;
 /** One simulated game's consequences for a persistent AI roster: XP, level-ups (points spent by the club), evolution when ready, fatigue, injuries. */
 function aiAfterGame(f, team, game, side, r) {
   if (!leagueBooks(f, team.name)) return [];
   const won = game.winner === side;
-  const xpScale = slowScale(clubRecord(f, team.name)?.strategy?.slow || 0);
-  const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale });
-  { const played = playedIds(team.chart); const slots = selectDevSlots(team.roster, played); events.push(...practiceAfterGame(team.roster, slots.ids, played, r, { xpScale, autoSpend: true, autoEvolve: true })); } // C1 development slots (Task 6 Phase C)
+  const xpScale = 1; // N7f: no rubber-banding; the decision-C development slowdown for a club above its target is retired
+  const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, team.name);
+  const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale, ledger, activityId: act });
+  { const played = playedIds(team.chart); const slots = selectDevSlots(team.roster, played); events.push(...practiceAfterGame(team.roster, slots.ids, played, r, { xpScale, autoSpend: true, autoEvolve: true, ledger, activityId: `${act}:reserve` })); } // C1 development slots (Task 6 Phase C)
   for (const e of events) if (e.kind === 'evolve') { const x = team.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: team.name, from: e.from, to: e.to }); } // Career Timeline (GDD §46)
   return events;
 }
@@ -846,6 +850,10 @@ function leagueCareerAfterGame(f, teams, _game, lines, { playoff = false, round 
 /** Weekly rest and healing for the 15 persistent rosters, as the owner's roster gets on Saturday. */
 function leagueRecoverWeek(f, { bye = false } = {}) { if (!hasLeague(f)) return; for (const club of leagueClubs(f)) recoverWeek(clubRoster(f, club), { bye }); }
 /** The balance nudge's brake (GDD §42.6 decision C): a club above its band develops at a share of the XP for one season, by how far above it sits. */
+/** N7f (owner 2026-11-07): no rubber-banding, forced results or hidden boosts. The decision-C balance nudge (boost signings for a club
+ *  below its target, the development slowdown and runaway-veteran attrition for one above it) no longer runs; clubs move only through
+ *  their own development, ageing, drafting, trades, free agency and training. Kept for reference and the historical studies. */
+export const RUBBER_BANDING_RETIRED = true;
 export const SLOW_XP = Object.freeze({ mild: 0.75, strong: 0.5, strongFrom: 3 });
 export const slowScale = (excess) => (excess <= 0 ? 1 : excess >= SLOW_XP.strongFrom ? SLOW_XP.strong : SLOW_XP.mild);
 /** The rival GM's signature monster: the same species every season, a little stronger each year (GDD §15.8). */
@@ -859,6 +867,7 @@ export function rivalSignature(f) {
 
 // ------------------------------------------------------------ season
 export function startSeason(f, year) {
+  if (f.rewardLedger) pruneLedger(f.rewardLedger, (id) => Number(id.split(':')[1]) >= year); // completed activities of earlier seasons are no longer needed
   const records = Object.fromEntries(ALL_TEAMS.map((t) => [t, blankRecord()]));
   const lastRecords = f.season?.records || null;
   f.season = { year, week: 1, day: 0, records, results: [], playoffs: null, champion: null, finished: false, schedule: teamSchedule(year, f.club), leagueStats: {}, playoffStats: {}, recorded: [], expectations: {} };
@@ -2230,8 +2239,9 @@ export function finishSunday(f, gameState) {
   settleTiebreak(f, gameState); // a tied game that reached the screen's end without the Clash (should not happen) is settled headless
   const pg = f.week.pregame; const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true, winner: gameState.winner ? m[gameState.winner].name : null, clash: gameState.tiebreak || null, pregameClash: pg?.result ? { winner: gameState.coin?.winner || null, choice: gameState.coin?.choice || null, by: pg.result.by, exchanges: pg.result.exchanges, playerWon: pg.result.winner === 'a' } : null };
   const { r, save } = frng(f);
-  const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false });
-  { const played = playedIds(m[side].chart); const slots = ownerDevSlots(f, { notify: true }); events.push(...practiceAfterGame(f.roster, slots.ids, played, r, { autoSpend: !!f.settings.autoPoints, autoEvolve: false })); } // C1: the owner's development slots (Task 6 Phase C)
+  const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, f.club);
+  const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: act });
+  { const played = playedIds(m[side].chart); const slots = ownerDevSlots(f, { notify: true }); events.push(...practiceAfterGame(f.roster, slots.ids, played, r, { autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: `${act}:reserve` })); } // C1: the owner's development slots (Task 6 Phase C)
   aiAfterGame(f, m[oppSide], gameState, oppSide, r); // the persistent opponent develops from this game too (GDD §42.6)
   save();
   injuriesAfterGame(f, it, ig);
@@ -2414,7 +2424,7 @@ function endSeason(f) {
   { const winners = new Set(Object.values(s.awards?.league || {}).filter((w) => w && w.team === f.club).map((w) => w.id)); openOffseason(f, { year: s.year, awardWinnerIds: winners, winningRecord: rec.w > rec.l }); if (offseasonPending(f).length) news(f, `Offseason: ${offseasonPending(f).length} contract${offseasonPending(f).length === 1 ? '' : 's'} up for renewal.`, 'info'); }
   noteGrowth(f, (c) => aiTeam(f, c, s.year));
   if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, s.year + 1)); st.todayYear = s.year + 1; } // today's generated strength for the coming season, computed once and reused by the transition and the Board's forecast
-  const excessOf = (c) => teamOverall(aiTeam(f, c, s.year)) - preseasonTarget(f, c, todayOverall(f, c, s.year + 1));
+  const excessOf = () => 0; // N7f: no rubber-banding; the runaway-veteran attrition (decision C) is retired
   const modeChanges = hasLeague(f) ? evaluateStrategies(f, { year: s.year, cap: tierById(f.tier).cap, teamOf: (c) => aiTeam(f, c, s.year) }) : []; // Task 6 Phase D (R2): each AI club's strategy mode, before contracts and the draft
   if (hasLeague(f)) f.leagueOffseason = { ...(f.leagueOffseason?.opened === s.year ? f.leagueOffseason : {}), closed: s.year, modeChanges: modeChanges.length, contracts: leagueContracts(f, { year: s.year, cap: tierById(f.tier).cap, excessOf }) }; // AI clubs re-sign or let walk, and trim to the cap (GDD §42.6 steps 4; decision D)
   }
@@ -2510,7 +2520,7 @@ function closeSeasonTask7(f, s, rec) {
   noteGrowth(f, (c) => aiTeam(f, c, year));
   noteClubResults(f, year); // Ambition: every club's record, the last three seasons (competitive outlook)
   if (hasLeague(f)) for (const c of leagueClubs(f)) { const st = clubRecord(f, c).strategy; st.today = teamOverall(legacyAiTeam(f, c, year + 1)); st.todayYear = year + 1; }
-  const excess = Object.fromEntries(leagueClubs(f).map((c) => [c, teamOverall(aiTeam(f, c, year)) - preseasonTarget(f, c, todayOverall(f, c, year + 1))]));
+  const excess = {}; // N7f: no rubber-banding; the runaway-veteran attrition (decision C) is retired
   const modeChanges = evaluateStrategies(f, { year, cap, teamOf: (c) => aiTeam(f, c, year) });
   // ageing, once: the owner's roster, the pools, the waivers and the AI clubs (moved here from the season start; GDD §55 rules unchanged)
   if (!steps.aged) {
@@ -2658,7 +2668,7 @@ export function startNextSeason(f, opts = {}) {
     if (t7) aiLegendCompliance(f, next); // Task 7 resolution 3: AI clubs comply by legal transactions before the same gate
     const fa = leagueFreeAgency(f, r, { year: next, cap, targetOf, signUnsigned: t7 ? (club, m) => aiSignNow(f, club, m) : null }); // Task 7: pool and waiver monsters answer the AI's offer
     const upgrades = t7 ? null : leagueUpgrades(f, { year: next, cap }); // R5 free-agency upgrades from the pools (Task 6 Phase C; Task 7: bid for in the periods)
-    const nudge = leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next), rival: f.rivals?.[f.tier]?.team || null, signUnsigned: t7 ? (club, m) => aiSignNow(f, club, m) : null }); // Task 7 (owner §5): a gym tries an available monster before a generated arrival
+    const nudge = RUBBER_BANDING_RETIRED ? null : leagueNudge(f, r, { year: next, cap, targetOf: overallTarget, teamOf: (club) => aiTeam(f, club, next), rival: f.rivals?.[f.tier]?.team || null, signUnsigned: t7 ? (club, m) => aiSignNow(f, club, m) : null }); // Task 7 (owner §5): a gym tries an available monster before a generated arrival
     const overCap = leagueTrim(f, { year: next, cap }); leagueInjuryCover(f, r, { year: next, cap, targetOf });
     const problems = validateClubs(f, { cap }); const structural = verifyLeague(f);
     f.leagueOffseason = { ...(f.leagueOffseason?.closed === year ? f.leagueOffseason : {}), opened: next, freeAgency: fa, upgrades: upgrades?.signed?.length || 0, upgradesByMode: (upgrades?.signed || []).reduce((o, x) => { o[x.mode] = (o[x.mode] || 0) + 1; return o; }, {}), trades: trades.length, nudge, overCap, problems }; lastTransitionMs = Math.round(((globalThis.performance?.now?.() ?? Date.now()) - t0) * 10) / 10; // the timing stays out of the save
@@ -2729,7 +2739,7 @@ export function resolveOvertimeClash(f) {
   const result = overtimeBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
   if (policiesOf(e).a === 'manual' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
   const { r, save } = frng(f);
-  const events = applyBattleEffects(f.roster, result, 'a', 'overtime', r, { autoSpend: !!f.settings.autoPoints });
+  const events = applyBattleEffects(f.roster, result, 'a', 'overtime', r, { autoSpend: !!f.settings.autoPoints, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${f.season.year}:w${f.season.week}:overtime:${actClub(f.club)}` });
   save();
   e.result = battleSummary(result); e.events = events; e.status = 'done';
   return { ok: true, overtime: e, won: result.winner === 'a', result, events };
@@ -2807,7 +2817,7 @@ export function resolvePregameClash(f) {
   const result = pregameBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
   if (policiesOf(e).a === 'manual' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
   const { r, save } = frng(f);
-  const events = applyBattleEffects(f.roster, result, 'a', 'pregame', r, { autoSpend: !!f.settings.autoPoints });
+  const events = applyBattleEffects(f.roster, result, 'a', 'pregame', r, { autoSpend: !!f.settings.autoPoints, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${f.season.year}:w${f.season.week}:pregame:${actClub(f.club)}` });
   const won = result.winner === 'a';
   if (!won) e.choice = aiPossessionChoice(r);
   save();

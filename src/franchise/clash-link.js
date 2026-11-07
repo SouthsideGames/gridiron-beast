@@ -4,6 +4,9 @@
 // decisions, so the same battle can be rebuilt for the screen, for a replay or for a test. The permanent balance values are the
 // game's defaults (battleConfig with no overrides); nothing here changes them.
 import { applyActivity } from './reward-ledger.js';
+import { clashAward } from './t8/awards.js';
+import { applyAward } from './progression.js';
+import * as FR from '../core/fraction.js';
 import { simulateClash, battleConfig, logHash, battleXp, chooseLineup, archetypeOf, CLASH_VALUES } from '../clash/index.js';
 import { createRng } from '../core/rng.js';
 import { monsterOverall, xpForLevel, levelUp } from '../data/monsters.js';
@@ -83,19 +86,17 @@ export function pendingDecision(result) {
  * (spec §15): once per activity and monster, so a replay or reload awards nothing more.
  */
 export function applyBattleEffects(roster, result, side, occasion, rng, { autoSpend = false, bonusPct = 0, bonusLabel = null, ledger = null, activityId = null } = {}) {
-  const events = []; const xp = battleXp(result, side); const fatigue = CLASH_FATIGUE[occasion] || 0;
+  const events = []; const fatigue = CLASH_FATIGUE[occasion] || 0;
   const entries = []; for (const x of result.lines[side]) { const m = roster.find((mm) => mm.id === x.combatant.monsterId); if (m && !entries.some((e) => e.monsterId === m.id)) entries.push({ monsterId: m.id, x, m }); }
   const award = ({ x, m }) => {
-    const base = Math.round(xp[x.id] || 0); const bonus = bonusPct ? Math.round(base * bonusPct / 100) : 0; const gained = base + bonus; const startLevel = m.level;
-    m.xp = (m.xp || 0) + gained;
-    while (m.xp >= xpForLevel(m.level)) {
-      m.xp -= xpForLevel(m.level);
-      const before = monsterOverall(m); levelUp(m, rng, { autoSpend });
-      events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
-    }
+    // Task 8 M2 (spec §6): every selected lineup member, unused reserves included, gets the approved Clash award: 25 level XP and 25%
+    // of a training bar. The archetype grade adjustment arrives with grading (M5); until then 0 (TRANSITIONAL). Skips and early KOs keep it.
+    const a = clashAward({ gradeAdj: 0, involved: true }); const base = FR.toNumber(a.xp); const bonus = bonusPct ? base * bonusPct / 100 : 0;
+    const r = applyAward(m, { xp: FR.add(a.xp, FR.frac(Math.round(bonus * 100), 100)), training: a.training }, rng, { autoSpend });
+    events.push(...r.events);
     m.fatigue = Math.min(100, (m.fatigue || 0) + fatigue);
-    // What the result screen shows for each battler: XP gained and progress toward the next level.
-    events.push({ kind: 'xp', id: m.id, name: m.name, amount: gained, base, bonus, bonusLabel: bonus ? bonusLabel : null, level: m.level, levelsGained: m.level - startLevel, xp: m.xp, next: xpForLevel(m.level) });
+    // What the result screen shows for each battler: XP gained (base + any Basic bonus), training progress and progress toward the next level.
+    events.push({ kind: 'xp', id: m.id, name: m.name, amount: r.xp, base: r.xp ? base : 0, bonus: r.xp ? bonus : 0, bonusLabel: bonus && r.xp ? bonusLabel : null, training: FR.toNumber(r.training), points: r.points, level: m.level, levelsGained: r.levelsGained, xp: m.xp, next: xpForLevel(m.level), max: m.level >= 50 });
   };
   if (ledger && activityId) applyActivity(ledger, activityId, entries, award); else for (const e of entries) award(e);
   return events;

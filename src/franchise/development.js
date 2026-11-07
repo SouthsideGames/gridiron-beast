@@ -10,7 +10,11 @@
 //                         owner may reassign them (manual picks persist until changed or until the monster becomes ineligible).
 // Derived each game from the roster; the only stored state is the owner's `f.devSlots` ({ manual: [ids], excluded: [ids] }),
 // an additive field (absent: every slot automatic).
-import { xpForLevel, levelUp, monsterOverall, tryEvolve } from '../data/monsters.js';
+import { xpForLevel, monsterOverall } from '../data/monsters.js';
+import { reserveAward, reserveEligible } from './t8/awards.js';
+import { applyAward } from './progression.js';
+import { applyActivity } from './reward-ledger.js';
+import * as FR from '../core/fraction.js';
 import { successorsAt } from './roster-plan.js';
 import { GROUP_SLOTS } from './roster.js';
 
@@ -20,12 +24,13 @@ export const DEV = Object.freeze({ slots: 6, perPosition: 2, maxAge: 25, minHead
 export function devIneligibility(m, starters) {
   if (!m) return 'gone';
   if (starters?.has(m.id)) return 'starter';
-  if ((m.age ?? 99) > DEV.maxAge) return 'age';
   if (m.injury) return 'injured';
-  if ((m.potential || 0) < monsterOverall(m) + DEV.minHeadroom) return 'ceiling';
+  if (m.dev?.apex) return null; // R1 item 10: Apex is exempt from the age and headroom limits
+  if ((m.age ?? 99) > DEV.maxAge) return 'age';
+  if (m.dev ? !reserveEligible(m.dev, m.position) : (m.potential || 0) < monsterOverall(m) + DEV.minHeadroom) return 'ceiling'; // R1 item 10: a position-relevant attribute at least 3 below its ceiling
   return null;
 }
-export const DEV_REASON = Object.freeze({ gone: 'is no longer on the roster', starter: 'is now a starter and develops by playing', age: 'is past 25', injured: 'is injured', ceiling: 'is within 3 of his potential' });
+export const DEV_REASON = Object.freeze({ gone: 'is no longer on the roster', starter: 'is now a starter and develops by playing', age: 'is past 25', injured: 'is injured', ceiling: 'has no position attribute 3 or more below its ceiling' });
 
 /** Eligible monsters in priority order: successors first (most urgent first), then potential minus overall. */
 export function devPriority(roster, starters) {
@@ -51,22 +56,20 @@ export function selectDevSlots(roster, starters, { manual = [], excluded = [] } 
   return { ids, auto, dropped };
 }
 
-/** Practice XP after a completed game for the monsters in `ids` who did not play (`played`: the ids that earned starter XP). */
-export function practiceAfterGame(roster, ids, played, rng, { xpScale = 1, autoSpend = true, autoEvolve = true } = {}) {
+/**
+ * Reserve development after a completed game (spec §6; R1 items 9-10): every slotted reserve who did not play gets the approved reserve
+ * award, 12.5 level XP and 25% of the standard training award (6.25% of a bar); at level 50, training only. No double starter/reserve
+ * award. Once per activity and monster through the reward ledger when one is given.
+ */
+export function practiceAfterGame(roster, ids, played, rng, { xpScale = 1, autoSpend = true, autoEvolve = true, ledger = null, activityId = null } = {}) {
   const events = []; const byId = new Map(roster.map((m) => [m.id, m]));
-  const amount = Math.round(DEV.share * DEV.baseXp * xpScale);
-  if (amount <= 0) return events;
-  for (const id of ids) {
-    const m = byId.get(id); if (!m || played.has(id) || m.injury) continue;
-    m.xp = (m.xp || 0) + amount; const startLevel = m.level;
-    while (m.xp >= xpForLevel(m.level)) {
-      m.xp -= xpForLevel(m.level); const before = monsterOverall(m);
-      levelUp(m, rng, { autoSpend });
-      events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m), practice: true });
-      if (autoEvolve) { const evo = tryEvolve(m); if (evo) events.push(evo); }
-    }
-    events.push({ kind: 'practice', id: m.id, name: m.name, position: m.position, amount, level: m.level, levelsGained: m.level - startLevel, xp: m.xp, next: xpForLevel(m.level) });
-  }
+  const entries = ids.map((id) => byId.get(id)).filter((m) => m && !played.has(m.id) && !m.injury && m.dev).map((m) => ({ monsterId: m.id, m }));
+  const award = ({ m }) => {
+    const r = applyAward(m, reserveAward(), rng, { autoSpend, autoEvolve });
+    for (const e of r.events) events.push(e.kind === 'levelup' ? { ...e, practice: true } : e);
+    events.push({ kind: 'practice', id: m.id, name: m.name, position: m.position, amount: r.xp, training: FR.toNumber(r.training), points: r.points, level: m.level, levelsGained: r.levelsGained, xp: m.xp, next: xpForLevel(m.level) });
+  };
+  if (ledger && activityId) applyActivity(ledger, activityId, entries, award); else for (const e of entries) award(e);
   return events;
 }
 
