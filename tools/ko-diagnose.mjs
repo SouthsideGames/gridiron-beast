@@ -10,7 +10,7 @@ const pct = (a, p) => { const s = [...a].sort((x, y) => x - y); return s.length 
 const mean = (a) => (a.length ? +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(2) : null);
 const out = { kicks: 0, touchbacks: 0, live: 0, noCatch: 0, coverageStartOk: 0, coverageLanes: new Set(), returnerStart: [], catchT: [],
   blockers: 0, blockersEngaged: 0, engagementsFromBehind: 0, engagementsTotal: 0, firstEngageAfterCatch: [], noBlockerEngagedAtTackle: 0,
-  lateral: [], gain2s: [], afterCatch: [], endsWithin1s: 0, results: {}, tacklers: {}, returns: [], td: 0, fumbles: 0, contacts: [] };
+  lateral: [], latPath: [], gain2s: [], afterCatch: [], endsWithin1s: 0, results: {}, tacklers: {}, returns: [], td: 0, fumbles: 0, contacts: [] };
 for (let i = 1; i <= N; i++) {
   const home = generatedTeam(10 + (i % 7), { id: 'h', name: 'H' }), away = generatedTeam(50 + (i % 5), { id: 'a', name: 'A' });
   const s = R.newGame({ home, away, seed: i, coinWinner: 'home', choice: 'receive' }); out.kicks++;
@@ -34,6 +34,7 @@ for (let i = 1; i <= N; i++) {
   // the returner after the catch: lateral movement, yards in the first 2 s, time to the end
   const end = F[F.length - 1]; const re = end.off.find((p) => p[0] === ret) || end.def.find((p) => p[0] === ret);
   const r2 = at(tc + 2).off.find((p) => p[0] === ret);
+  { let path = 0, prevY = null; for (const fr of F) { if (fr.t < tc) continue; const p = fr.off.find((x) => x[0] === ret); if (!p) continue; if (prevY !== null) path += Math.abs(p[2] - prevY); prevY = p[2]; } out.latPath.push(+path.toFixed(1)); } // total side-to-side running after the catch (net lateral hides weaving)
   if (rc && re) { out.lateral.push(+Math.abs(re[2] - rc[2]).toFixed(1)); if (r2) out.gain2s.push(+(r2[1] - rc[1]).toFixed(1)); }
   const dur = end.t - tc; out.afterCatch.push(+dur.toFixed(2)); if (dur < 1) out.endsWithin1s++;
   const engagedAtEnd = end.off.some((p) => p[0] !== ret && p[3] === 1); if (!engagedAtEnd && sim.result === 'tackle') out.noBlockerEngagedAtTackle++;
@@ -46,7 +47,7 @@ const rep = { N: out.kicks, touchbacks: out.touchbacks, liveReturns: out.live, n
   coverage: { startedWithinAYardBehindTheKick: `${out.coverageStartOk}/${out.live}`, lanesY: [...out.coverageLanes].sort((a, b) => a - b) },
   returnerStartX: { min: Math.min(...out.returnerStart), max: Math.max(...out.returnerStart) }, catchTime: { mean: mean(out.catchT), min: Math.min(...out.catchT), max: Math.max(...out.catchT) },
   blockers: { engagedAtLeastOnce: `${out.blockersEngaged}/${out.blockers} (${(100 * out.blockersEngaged / out.blockers).toFixed(1)}%)`, engagements: out.engagementsTotal, fromBehindPct: +(100 * out.engagementsFromBehind / Math.max(1, out.engagementsTotal)).toFixed(1), firstEngageAfterCatchS: { p10: pct(out.firstEngageAfterCatch, 0.1), p50: pct(out.firstEngageAfterCatch, 0.5), p90: pct(out.firstEngageAfterCatch, 0.9) } },
-  returner: { lateralYds: { p50: pct(out.lateral, 0.5), p90: pct(out.lateral, 0.9) }, gainFirst2s: { p10: pct(out.gain2s, 0.1), p50: pct(out.gain2s, 0.5), p90: pct(out.gain2s, 0.9) } },
+  returner: { lateralYds: { p50: pct(out.lateral, 0.5), p90: pct(out.lateral, 0.9) }, lateralPathYds: { p50: pct(out.latPath, 0.5), p90: pct(out.latPath, 0.9) }, gainFirst2s: { p10: pct(out.gain2s, 0.1), p50: pct(out.gain2s, 0.5), p90: pct(out.gain2s, 0.9) } },
   playEnd: { secondsAfterCatch: { p10: pct(out.afterCatch, 0.1), p50: pct(out.afterCatch, 0.5), p90: pct(out.afterCatch, 0.9) }, endedWithin1sOfCatch: out.endsWithin1s, tackledWithNoBlockEngaged: out.noBlockerEngagedAtTackle, results: out.results, tacklers: out.tacklers },
   returns: { mean: mean(out.returns), p10: pct(out.returns, 0.1), p25: pct(out.returns, 0.25), p50: pct(out.returns, 0.5), p75: pct(out.returns, 0.75), p90: pct(out.returns, 0.9), max: Math.max(...out.returns), over30: out.returns.filter((x) => x > 30).length, over40: out.returns.filter((x) => x > 40).length, touchdowns: out.td, turnovers: out.fumbles } };
 console.log(JSON.stringify(rep, null, 1));
