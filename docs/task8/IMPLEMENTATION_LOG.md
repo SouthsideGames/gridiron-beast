@@ -36,3 +36,18 @@ amounts, the level-XP curve, and the reviewer scenario and rendering layers.
   2. The AI training allocation used by it.
   3. Then the integration switch: fresh-save schema; the monster record carries `dev`; species and generation from the Dex; traits, Nature and the legacy cornerstone list retired. Run the full regression at the switch.
 - **Interim note.** Until M3 replaces them, the 72 original families keep their legacy football ability effects in the engine, so the game stays playable between milestones. Traits are retired at the M1 switch (B13).
+
+## Testing record (per owner ruling N7f)
+
+- **Full run** (started before commits edf5b82 and dd2245d): **924/925**.
+- **The one failure,** the Clash reflected-damage comparison, was fixed in dd2245d; `tests/clash/reflect-ko.test.js` then passed 8/8.
+- **Later changes passed targeted checks only:**
+  - `tests/task7-floor.test.js` 4/4;
+  - the task6-phase-d R4 test;
+  - `tests/task7-remediation.test.js` 9/9.
+- **The latest combined revision is not fully regression-tested.** The next broad regression runs at the M1 integration milestone.
+
+## M1 unblocked (N7f)
+
+- `src/franchise/t8/selection.js`: nine-candidate percentile selection, with criteria in `CLUB_STRENGTH_SELECTION.md`.
+- AI identities: proposal in `AI_IDENTITIES.md` (under review).

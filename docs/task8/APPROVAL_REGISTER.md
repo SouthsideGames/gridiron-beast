@@ -20,6 +20,7 @@ This is the single register of every Task 8 decision item: round 1 (items 1–40
 | **N7a** | Owner instruction, 2026-11-07 00:13: no universal evasion; no multi-play Stunned proposal; ordinary attacks normally connect |
 | **N7b** | Owner rulings on P1–P10, 2026-11-07 09:21 ([RULINGS_2026-11-07.md](RULINGS_2026-11-07.md)) |
 | **N7c** | Owner rulings on B1–B20, 2026-11-07 10:00 ([RULINGS_2026-11-07b.md](RULINGS_2026-11-07b.md)) |
+| **N7f** | Owner rulings on club strength, franchise identity, free agency, testing record and scope, 2026-11-07 12:44 ([RULINGS_2026-11-07d.md](RULINGS_2026-11-07d.md)) |
 | **N7e** | Owner ruling on fractional training display, 2026-11-07 10:32 |
 | **N7d** | Owner rulings on G1–G3, 2026-11-07 10:21 ([RULINGS_2026-11-07c.md](RULINGS_2026-11-07c.md)) |
 
@@ -151,6 +152,17 @@ The field limits were recalculated under these clocks: 44 rectangles, and 0 obje
 | 37–38 | Basic Clash action; contracts | **Approved** | R1 |
 | 39 | AI use of Basics | **Approved** | R1; N7b |
 | 40 | Dex and collection | **Approved** | R1; N7b |
+
+## Club strength, identity and scope (N7f)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Club strength in the Dex generator | **Approved** | Option A: nine-candidate percentile selection (initial calibration). Family by channel share first; one independent 1% Apex roll per event (never selected among or discarded); legal ratings and ceilings; Temper-neutral; current strength versus potential distinguished by channel ([CLUB_STRENGTH_SELECTION.md](CLUB_STRENGTH_SELECTION.md)) |
+| No seasonal regeneration or boosts | **Approved** | Initial strength only; no automatic yearly boosts; no rubber-banding, forced results or hidden matchup boosts |
+| AI club identities | **Open: proposal for review** | Long-term offensive and defensive identities; gyms add an element and a legendary-built strategy; the player's club has none ([AI_IDENTITIES.md](AI_IDENTITIES.md)) |
+| Free-agency 85% floor | **Approved: not applied** | Market negotiation unchanged |
+| Season scope | **Approved** | 20 seasons; franchise-health reports at seasons 5, 10, 15 and 20 |
+| Ability deliverables | **Approved** | Functional football and Clash visuals, updated football reviewer, Beast Clash review support, affected developer tools; art polish deferred |
 
 ## Fractional training display (N7e)
 
