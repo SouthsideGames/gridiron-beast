@@ -7,8 +7,9 @@
 | Checkpoint | State |
 | --- | --- |
 | Before baseline | The initial 120 Basic batch is preserved at commit `6abcf3b` (branch `task8-basic-families`, local tag `basic-batch-v1`; the egress policy refused a tag push, so the commit is the remote reference). Its recipes, SVGs, PNGs and review sheets are unchanged. |
-| 1. Silhouette structure sheet | Reviewed 2026-11-06; five targeted revisions requested. **Revisions ready for owner review** ([before/after](generator/revisions-1.html), [png](generator/png/revisions-1.png)). Waiting for approval before the structure library is finalized. |
-| 2. 20-monster sample | Not started; waits for checkpoint 1 approval. |
+| 1. Silhouette structure sheet | **Approved by the owner, 2026-11-06**, after five targeted revisions ([before/after](generator/revisions-1.html)), including the insectoid's dorsal view and the arachnid's simplified anatomy. The 150 approved renders are pinned in `tests/fixtures/v2-structures-approved.json`. |
+| Controls and feature library | Built after checkpoint 1: proportion controls, the 60-feature library with shape variants, face and marking controls, compatibility diagnostics. Sheets: [features](generator/features.html), [controls](generator/controls.html), [face and markings](generator/face-markings.html); [compatibility matrix](generator/compatibility.json). |
+| 2. 20-monster sample | Presented for owner review ([sample](sample/checkpoint-2.html)). |
 | 3. Full Basic revision | Not started; waits for checkpoint 2 approval. |
 
 Gameplay is untouched: no stats, abilities, collisions, rarity, positions, IDs or archetypes change. The game renders only legacy recipes, and they are pixel-identical to before.
@@ -50,6 +51,10 @@ A recipe opts into v2 by carrying `structure`. Fields accepted by this version:
 | `colors` | `[main, accent]`, each `#rrggbb` | the same palette and shading as legacy |
 | `mirror` | `true` / `false` | optional symmetry (default `false`, so raised claws and uneven horns survive) |
 | `eyes` | `default` · `none` | `none` for anatomically eyeless designs |
+| `proportions` | `{ control: value }` | see the proportion controls below; omitted controls use their default |
+| `features` | `[{ id, variant? }]` or ids | up to one tail and one wing feature; see the feature library |
+| `face` | `{ eyeShape, eyeSpacing, mouth }` | eyeSpacing is for front views |
+| `markings` | `{ pattern, color }` | color `accent` (default) or `dark` |
 | `id`, `name`, `gen` | identity and version | cache identity only |
 
 **Diagnostics:** an unknown structure, pose, size, eye mode or field is reported with the accepted values (`recipeProblems`), and drawing throws instead of falling back to a biped. A recipe **without** `structure` takes the unchanged legacy path, including its documented legacy defaults.
@@ -147,9 +152,67 @@ The game caches rendered SVGs, so each sprite is drawn once per size and tint. N
 - Thin appendages (tendrils, antennae, insect legs) are 1 px wide with outline. They survive at 48 px and above, but are faint at 24 px; the sample checkpoint will show both sizes.
 - Wide bodies (bat wings, rays, spiders) fill the frame, so the fit rule scales a few poses down by up to 12%.
 
-## Next steps (after checkpoint 1 approval)
+## Proportion controls
 
-1. Proportion controls: head size and shape (rounded, wedge, long-snouted, beaked, broad-jawed, flattened), neck, muzzle, torso, back, belly, limbs, stance, feet, tail, wings and shell. Each will be validated per structure with diagnostics.
-2. The 60-feature library, attached to these anchors, with three shape variants for ears, horns, antlers, tails, wings, crests and frills, shells, claws and pincers, and antennae. Each gets fixtures and checks that it survives occlusion.
-3. Face and marking controls.
-4. The 20-monster representative sample (checkpoint 2).
+The first value is the default. A control is applied as a per-part transform (each structure tags its head, neck, torso, legs, arms, tail and wings), so it reshapes only the anatomy it names and moves the anchors with it.
+
+| Control | Values | Needs |
+| --- | --- | --- |
+| `headSize` | medium, small, large | head |
+| `headShape` | rounded, wedge, long_snouted, beaked, broad_jawed, flattened | head |
+| `headPlacement` | normal, high, low | head |
+| `muzzleLength` | none, short, long | head |
+| `neckLength` | normal, short, long | neck |
+| `torsoLength`, `torsoWidth` | normal, short/narrow, long/wide | torso (length is horizontal on side views, vertical on front views) |
+| `backProfile` | plain, humped, arched | back |
+| `bellyProfile` | plain, round | torso |
+| `limbLength`, `limbThickness` | normal, short/thin, long/thick | legs or arms |
+| `stanceWidth` | normal, narrow, wide | legs |
+| `footShape` | plain, paw, hoof, flat | feet |
+| `tailLength`, `tailThickness` | normal, short/thin, long/thick | tail |
+| `tailCurve` | straight, curled, raised | a tail feature |
+| `wingSpan` | normal, narrow, wide | wings |
+| `wingFold` | open, folded | a wing feature |
+| `shellShape` | smooth, ridged, angular | shell |
+
+## Feature library (60)
+
+| Group | Features (shape variants in brackets) |
+| --- | --- |
+| Head | ears [pointed, rounded, drooping], horns [short, swept, curled], antlers [forked, branching, palmate], crest [spike, fan, plume], frill [fan, spiked, round], antennae [straight, curled, clubbed] |
+| Face | muzzle, beak [short, long, hooked], tusks, fangs, whiskers, brows |
+| Back | mane, ridge, spines, dorsal fin, hump, shell [smooth, ridged, angular] |
+| Limbs | claws [straight, hooked, large], hooves, paws, pincers [open, closed, large], flippers, webbed feet |
+| Tails | tufted, paddle, club, forked, finned [each straight, raised, curled]; curled tail [loose, tight, raised] |
+| Wings | feathered, membrane, insect, finlike, leaf, reduced [each folded, spread, raised] |
+| Surface | plates, scales, fur tufts, crystal growths, stone segments, metal panels |
+| Plant | leaves, vines, buds, flowers, mushrooms, root feet |
+| Elemental | flame tufts, water sacs, frost shards, static prongs, light orbs, shadow wisps |
+| Special | halo, lure, cheek pouches, shoulder shells, vent fins, orbiting masses |
+
+**Layering.** Each feature is either *behind* (it fills only empty cells, so it never covers the body: manes, frills, open wings, tails, halos) or *front* (drawn over the body). Folded wings lie over the body; spread and raised wings sit behind it. Order: markings, behind features, front features, face.
+
+**Built-in anatomy is configured, not duplicated.** A shell on the shelled structure sets its shell shape; a beak on the perching or running avian sets its beak; pincers on the crustacean set its claws; antennae on the insectoid shape its own antennae tips. A tail or wing feature replaces the structure's built-in tail or wings (the batlike structure keeps its membrane).
+
+**Dorsal (insect) view.** Head features attach to the top of the head segment, back features run along the thorax and abdomen midline, wings attach at the thorax and spread sideways, tails extend behind the abdomen, and leg features attach at the six leg tips. Muzzle-type features and eye spacing that need a side or front face are reported as unsupported.
+
+**Gameplay anchors.** The ground line, frame, collision behaviour and field placement are unchanged: features never move the ground anchor, and the fit rule shrinks a design rather than clipping it.
+
+## Diagnostics
+
+- `recipeProblems` (static): unknown fields, controls, values, features and variants; duplicates; anatomy needs (feet, hands, tail, wings, head); conflicts (a muzzle on a built-in beak, membrane wings on the batlike, orbiting masses on the multi-bodied, root feet or wings on the plant-bodied, more than one tail or wing feature). Drawing such a recipe throws.
+- `recipeDiagnostics` (render): every non-default control, every feature and the face and markings are removed one at a time, and the finished pixels (after the game's shading and outline) are compared. A choice that changes no pixel is reported as invisible, never credited as diversity. A design that fits only below 88% scale is reported.
+- Matrix over 30 structures × 5 poses ([compatibility.json](generator/compatibility.json)):
+
+| | ok | invisible | too big | unsupported |
+| --- | ---: | ---: | ---: | ---: |
+| Features (first variant), 9,000 | 8,070 | 172 | 253 | 505 |
+| Non-default control values, 6,000 | 2,516 | 425 | 129 | 2,930 |
+
+Invisible examples: horns or antlers with no room above a tall head; thin limbs on structures whose limbs are already 1 px; a hump inside a heavy body. Too big: tails on structures whose bodies already reach the frame edge (low elongated quadruped, elongated serpent, shelled). Every feature and every control value has at least one compatible, visible structure (`library-checks.json`), and each feature's variants are pixel-distinct there.
+
+Regenerate with `node docs/beast-dex/tools/library_review.mjs`.
+
+## Tests (controls and features)
+
+`tests/sprite-gen.test.js`, 12/12: the approved 150 renders are unchanged; every control value changes its fixture; all 60 features and their variants are visible and distinct on their fixtures; face and markings change the render; unsupported combinations are rejected and the render diagnostics agree with the pixels across all 1,800 structure × feature cases; determinism, cache identity and preview/export agreement with controls and features. `tests/species.test.js` 11/11, the legacy 222-sprite snapshot unchanged, and the Beast Dex validator passes.

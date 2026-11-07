@@ -78,3 +78,68 @@ test('cache identity includes every v2 control; preview SVG and the exported gri
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) assert.equal(decoded[y][x], g[y][x] ? pal[g[y][x]] : null, `${id} (${x},${y})`);
   }
 });
+
+// ---------------------------------------------------------------- generator v2: proportion controls, 60 features, face and markings
+import { CONTROLS, recipeDiagnostics } from '../src/ui/sprite-gen.js';
+import { FEATURES, FEATURE_IDS, FEATURE_GROUPS, FACE, MARKINGS } from '../src/ui/sprite-features.js';
+const H = (g) => createHash('sha256').update(JSON.stringify(g)).digest('hex').slice(0, 16);
+const key = (g) => JSON.stringify(g);
+const ok = (r) => { const d = recipeDiagnostics(r); return !d.problems.length && !d.invisible.length && !d.warnings.length; };
+const checks = JSON.parse(readFileSync(new URL('../docs/beast-dex/art/generator/library-checks.json', import.meta.url)));
+
+test('the owner-approved checkpoint 1 renders are unchanged by the control and feature layers (150/150)', () => {
+  const fx = JSON.parse(readFileSync(new URL('./fixtures/v2-structures-approved.json', import.meta.url))).grids;
+  for (const s of STRUCTURE_IDS) for (const p of POSES) assert.equal(H(spriteGrid({ structure: s, pose: p, colors: C })), fx[`${s}/${p}`], `${s}/${p}`);
+});
+
+test('every proportion control value changes the render on its demonstration structure', () => {
+  for (const [k, def] of Object.entries(CONTROLS)) {
+    const fx = checks.controls[k]; assert.ok(fx, `${k} has a fixture`); const vals = Object.keys(def.values);
+    const feat = k === 'tailCurve' ? [{ id: 'tufted_tail' }] : k === 'wingFold' ? [{ id: 'feathered_wings' }] : undefined;
+    const gs = vals.map((v) => spriteGrid({ structure: fx.structure, colors: C, proportions: { [k]: v }, ...(feat ? { features: feat } : {}) }));
+    assert.equal(new Set(gs.map(key)).size, vals.length, `${k} on ${fx.structure}`);
+    for (const v of vals.slice(1)) assert.ok(ok({ structure: fx.structure, proportions: { [k]: v }, ...(feat ? { features: feat } : {}) }), `${k}=${v} visible`);
+  }
+});
+
+test('60 features in 10 groups; each has a visible demonstration fixture and the required variant sets render distinctly', () => {
+  assert.equal(FEATURE_IDS.length, 60); assert.equal(Object.keys(FEATURE_GROUPS).length, 10);
+  for (const id of FEATURE_IDS) {
+    const fx = checks.featureFixtures[id]; assert.ok(fx, `${id} fixture`);
+    const vars = FEATURES[id].variants || [null]; const base = key(spriteGrid({ structure: fx.structure, colors: C })); const seen = new Set();
+    for (const v of vars) { const r = { structure: fx.structure, colors: C, features: [v ? { id, variant: v } : { id }] }; assert.ok(ok(r), `${id}/${v} visible on ${fx.structure}`); const g = key(spriteGrid(r)); assert.notEqual(g, base, `${id}/${v} changes pixels`); seen.add(g); }
+    assert.equal(seen.size, vars.length, `${id} variants distinct`);
+  }
+  for (const id of ['ears', 'horns', 'antlers', 'crest', 'frill', 'shell', 'claws', 'pincers', 'antennae', 'tufted_tail', 'feathered_wings', 'membrane_wings', 'insect_wings']) assert.ok(FEATURES[id].variants?.length >= 3, `${id} has three shapes`);
+});
+
+test('face and marking controls each change the render', () => {
+  for (const [k, vals] of Object.entries(FACE)) assert.equal(new Set(vals.map((v) => key(spriteGrid({ structure: 'compact_upright', colors: C, face: { [k]: v } })))).size, vals.length, `face ${k}`);
+  assert.equal(new Set(MARKINGS.pattern.map((p) => key(spriteGrid({ structure: 'compact_quadruped', colors: C, markings: { pattern: p } })))).size, MARKINGS.pattern.length);
+});
+
+test('unsupported and invisible combinations produce diagnostics instead of passing silently', () => {
+  assert.match(recipeProblems({ structure: 'jellyfish', features: [{ id: 'hooves' }] }).join(), /hooves/);
+  assert.match(recipeProblems({ structure: 'compact_quadruped', features: [{ id: 'horns', variant: 'giant' }] }).join(), /variant/);
+  assert.match(recipeProblems({ structure: 'compact_quadruped', features: [{ id: 'wings' }] }).join(), /unknown feature/);
+  assert.match(recipeProblems({ structure: 'compact_quadruped', proportions: { tailCurve: 'curled' } }).join(), /needs a tail feature/);
+  assert.match(recipeProblems({ structure: 'batlike', features: [{ id: 'membrane_wings' }] }).join(), /membrane/);
+  assert.match(recipeProblems({ structure: 'compact_quadruped', features: [{ id: 'tufted_tail' }, { id: 'club_tail' }] }).join(), /tail/);
+  assert.throws(() => spriteGrid({ structure: 'jellyfish', colors: C, features: [{ id: 'hooves' }] }), /sprite recipe/);
+  // an occluded choice is reported by the render check: no proportion or feature may count as diversity without changing pixels
+  let invisible = 0;
+  for (const s of STRUCTURE_IDS) for (const id of FEATURE_IDS) { const v = FEATURES[id].variants?.[0]; const r = { structure: s, features: [v ? { id, variant: v } : { id }] }; if (recipeProblems(r).length) continue;
+    const d = recipeDiagnostics(r); const same = key(spriteGrid({ structure: s, colors: C })) === key(spriteGrid({ ...r, colors: C }));
+    assert.equal(same, d.invisible.length > 0, `${s} ${id}: diagnostics agree with the pixels`); if (same) invisible++; }
+  assert.ok(invisible > 0, 'the matrix contains reported invisible cases (e.g. horns with no room above the head)');
+});
+
+test('deterministic, cache-keyed and preview/export-consistent with controls and features', () => {
+  const r = { id: 'probe2', structure: 'compact_quadruped', colors: C, proportions: { headSize: 'large', limbLength: 'long' }, features: [{ id: 'horns', variant: 'curled' }, { id: 'tufted_tail', variant: 'raised' }], face: { mouth: 'grin' }, markings: { pattern: 'stripes' } };
+  assert.equal(key(spriteGrid(r)), key(spriteGrid(structuredClone(r))));
+  const svg = sprite16(r, 48);
+  for (const alt of [{ proportions: { headSize: 'small' } }, { features: [{ id: 'horns', variant: 'swept' }] }, { face: { mouth: 'frown' } }, { markings: { pattern: 'spots' } }]) assert.notEqual(sprite16({ ...r, ...alt }, 48), svg, JSON.stringify(alt));
+  const g = spriteGrid(r); const pal = palette(C); const decoded = Array.from({ length: 16 }, () => Array(16).fill(null));
+  for (const [, x, y, w, fill] of sprite16(r, 16).matchAll(/<rect x="(\d+)" y="(\d+)" width="(\d+)" height="1" fill="([^"]+)"/g)) for (let k = 0; k < +w; k++) decoded[+y][+x + k] = fill;
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) assert.equal(decoded[y][x], g[y][x] ? pal[g[y][x]] : null);
+});

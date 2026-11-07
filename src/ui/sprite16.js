@@ -9,7 +9,8 @@
 // E eye, H eye highlight, K dark detail. Shading turns M/A into light/shade
 // variants; the outline pass rings everything in a dark tone of the main colour.
 
-import { structureGrid } from './sprite-gen.js';
+import { structureGrid, installPixelFinish } from './sprite-gen.js';
+import './sprite-features.js'; // installs the v2 feature library, face and marking controls
 
 const W = 16, H = 16;
 const SCALE = { small: 0.78, medium: 0.9, large: 1 };
@@ -267,6 +268,7 @@ function eyes(c, a, look) {
 }
 
 // ---------------------------------------------------------------- passes
+installPixelFinish((g) => shadeAndOutline(g));
 function shadeAndOutline(g) {
   const out = g.map((r) => r.slice());
   const empty = (x, y) => x < 0 || y < 0 || x >= W || y >= H || !g[y][x];
@@ -313,7 +315,7 @@ const cache = new Map();
 
 /** Inline SVG for a species spec. `tint` (−6..6) nudges lightness per individual. */
 export function sprite16(spec, size = 48, { tint = 0, flip = false, cls = 'sprite' } = {}) {
-  const key = JSON.stringify([spec.id || spec.name, size, tint, flip, spec.body, spec.size, spec.look, spec.features, spec.colors, spec.pattern || '', ...(spec.structure != null ? [spec.structure, spec.pose || '', spec.mirror || false, spec.eyes || ''] : [])]); // v2 fields only for v2 recipes, so legacy keys are unchanged
+  const key = JSON.stringify([spec.id || spec.name, size, tint, flip, spec.body, spec.size, spec.look, spec.features, spec.colors, spec.pattern || '', ...(spec.structure != null ? [spec.structure, spec.pose || '', spec.mirror || false, spec.eyes || '', spec.proportions || null, spec.features || null, spec.face || null, spec.markings || null] : [])]); // v2 fields only for v2 recipes, so legacy keys are unchanged
   if (cache.has(key)) return cache.get(key);
   const pal = palette(spec.colors || ['#888888', '#cccccc'], tint);
   const grid = spriteGrid(spec);
