@@ -10,6 +10,8 @@ import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
 import { simulatePlay } from './engine.js';
 import * as T8S from './t8/status-runtime.js';
 import * as T8K from './t8/stamina-runtime.js';
+import * as T8F from './t8/field-runtime.js';
+import { extraCooldownUnit } from './abilities/registry.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
@@ -133,6 +135,25 @@ export function abilityMemory(state, { drive = null } = {}) {
 export function rememberAbilities(state, sim) { if (sim?.memoryUsed?.length) { state.abilityMemory ||= {}; for (const k of sim.memoryUsed) state.abilityMemory[k] = true; } }
 /** Task 8 (B18): the monsters a counted Stunned keeps out of this whole play (they line up but cannot act); null when none. */
 function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter((id) => id && T8S.sitsOutPlay(state, id)); return ids.length ? new Set(ids) : null; }
+/** A field's absolute placement (home-goal frame; lat in the home frame) from the upcoming formation reference (spec §11). */
+const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
+const absLat = (state, l) => (state.possession === 'home' ? l : -l);
+function fieldPlacement(state, p) {
+  const ref = state.ballOn + (p.lbDepth ?? 5); // the fixed LB reference, offense frame
+  const a = absYard(state, ref - p.length / 2), b = absYard(state, ref + p.length / 2); // the rectangle centred on the reference (placement choice, documented in M3_PLAN)
+  return { centerLat: absLat(state, state.ballLat || 0), yardFrom: a, yardTo: b, width: p.width };
+}
+/** After a play with fields: the Light recharge for non-Light participants finishing inside a Light field (once per monster per play;
+ *  never from his own field), then each field's clock (G1/G2). */
+function afterPlayFields(state, t8, slots, sim, offIds) {
+  const last = sim.frames?.[sim.frames.length - 1]; const inputs = { ...Object.fromEntries(Object.entries(slots.offense).map(([k, v]) => [`off:${k}`, v])), ...Object.fromEntries(Object.entries(slots.defense).map(([k, v]) => [`def:${k}`, v])) };
+  if (last) for (const [team, rows] of [['off', last.off], ['def', last.def]]) for (const row of rows || []) {
+    const x = inputs[`${team}:${row[0]}`]; if (!x?.id || x.type === 'Light') continue;
+    const yard = absYard(state, sim.ballOn + row[1]), lat = absLat(state, (sim.ballLat || 0) + row[2]);
+    const lights = T8F.fieldsAt(t8, yard, lat).filter((f) => f.type === 'Light' && f.owner !== x.id); if (lights.length) extraCooldownUnit(t8, x.id);
+  }
+  T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : f.clock === 'scrimmageAny'));
+}
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
   const { r, save } = rng(state);
@@ -144,14 +165,17 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   (state.calls ||= []).push(call);
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
+  const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: offIds, playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p) }) : []; // G3: at the creator's next eligible offensive snap
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
     offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) },
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo },
   });
   T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
   T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12)
+  if (t8.fields?.list?.length) afterPlayFields(state, t8, slots, sim, offIds); // Task 8 fields: Light recharge, then the clocks
   if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
@@ -671,6 +695,7 @@ export function endOfPeriod(state) {
   state.quarter += 1; state.clock = state.quarterLength; state.clockRunning = false;
   if (state.quarter === 3) {
     T8K.halftime(state); // Task 8 §12: halftime restores 50% of each stamina capacity (exhaustion stays)
+    if (state.t8) T8F.halftime(state.t8); // Task 8 §11: non-legendary fields clear at halftime (pending creations carry)
     state.timeouts = { home: 3, away: 3 };
     state.phase = 'kickoff'; state.possession = state.secondHalfReceiver; state.kickingTeam = opponent(state.secondHalfReceiver);
     log(state, `HALFTIME. ${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}. ${state[state.secondHalfReceiver].name} receive the second-half kickoff.`, 'period', { important: true });

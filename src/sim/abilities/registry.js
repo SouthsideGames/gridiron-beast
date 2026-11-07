@@ -53,3 +53,9 @@ export function recordExecution(t8, monsterId, family, { passive = false } = {})
   if (passive) { if (rec.passiveCredited) return false; rec.passiveCredited = true; rec.executions += 1; return true; }
   rec.executions += 1; return true;
 }
+
+/** Light field (spec §11): one extra cooldown unit, after the ordinary decrement, on the monster's repeatable-signature cooldown if it is
+ *  running (positive), once per monster per play. A creator never receives his own field's recharge. Returns true when applied. */
+export function extraCooldownUnit(t8, monsterId) {
+  const st = t8.ability?.[monsterId]; if (!st || !(st.cd > 0)) return false; st.cd -= 1; return true;
+}

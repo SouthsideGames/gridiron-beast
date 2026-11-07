@@ -157,7 +157,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13);
   const t8g = options.t8 || { status: {} };
   const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
-    state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q) };
+    state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
+    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q) };
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
   // Pre-snap motion: the motion man is snapped on the move, at his motion spot, already running (owner, 2026-10-20).
   const motion = offensePlay.motion ? { ...offensePlay.motion, man: bySlot.off[offensePlay.motion.slot], from: offensePlay.align[offensePlay.motion.slot] } : null;
@@ -2176,7 +2177,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   if (stats.interceptor && ['tackle', 'out_of_bounds'].includes(result)) result = 'interception';
 
   // Task 8 M3: the whistle for every contract on the field (charges, clocks, field creation)
-  { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(clamp(ball.x, B.ownEndLine, B.endLine)); const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint };
+  { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(clamp(ball.x, B.ownEndLine, B.endLine)); const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, firstDown: options.toGo != null && g0 >= options.toGo && !['incomplete', 'throwaway', 'interception', 'fumble'].includes(result) };
     for (const a of actors) hook('playEnd', a, summary); }
   // ------------------------------------------------------------ outcome
   const endX = result === 'incomplete' || result === 'throwaway' ? 0 : clamp(ball.x, B.ownEndLine, B.endLine);

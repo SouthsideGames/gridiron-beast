@@ -49,3 +49,27 @@ test('Blazing Resolve charging: a rush reaching the form threshold earns a charg
   for (let seed = 1; seed <= 10; seed++) play(seed, t8, { form: 'emberfox:2', twoPoint: true });
   assert.deepEqual(t8.ability.rb1, { charges: 2, ignited: false }, 'two-point attempts neither charge nor ignite');
 });
+
+test('Beacon Lane: a first-down reception while ready banks a Light field, created at his next offensive snap (G3), clocked on his offensive plays (G2), cooldown from creation; the Light field recharges others', async () => {
+  const R = await import('../src/sim/rules.js');
+  const mk = (name, seed) => { const x = lineup(seed, 60); for (const side of ['offense', 'defense']) for (const [slot, p] of Object.entries(x[side])) { p.id = `${name}_${slot}`; p.type = p.type || 'Fire'; } return { id: name, name, offense: x.offense, defense: x.defense, kicker: { attrs: { kicking: 70 }, name: 'K', id: `${name}_K` } }; };
+  let checked = 0;
+  for (let seed = 1; seed <= 40 && checked < 3; seed++) {
+    const teams = { home: mk('H', 11), away: mk('A', 12) };
+    const g = R.newGame({ home: teams.home, away: teams.away, seed, quarterLength: 600, coinWinner: 'home', choice: 'receive' }); R.doKickoff(g, teams);
+    const side = g.possession; const wr = teams[side].offense.WR1; Object.assign(wr, { species: 'glimmer', form: 'glimmer:0', mastery: 0, type: 'Light' });
+    const other = teams[side].offense.RB; g.t8 = { status: {}, ability: { [other.id]: { cd: 3 } } }; // a stand-in teammate with a running cooldown
+    g.toGo = 1; // any completion gains the first down
+    const { sim } = R.runScrimmagePlay(g, teams, 'slant_flat' in (await import('../src/data/playbook.js')).PLAYS ? 'slant_flat' : (await import('../src/data/playbook.js')).OFFENSE_IDS[0], (await import('../src/data/playbook.js')).DEFENSE_IDS[0], { forcedTarget: 'WR1' });
+    if (sim.stats.receiver !== 'WR1' || g.possession !== side || sim.yards < 1) continue;
+    const st = g.t8.ability[wr.id]; assert.equal(st.banked, true, 'banked'); assert.equal(g.t8.fields.pending.length, 1); assert.equal(g.t8.fields.list.length, 0, 'not yet created');
+    R.runScrimmagePlay(g, teams, (await import('../src/data/playbook.js')).OFFENSE_IDS[1], (await import('../src/data/playbook.js')).DEFENSE_IDS[1]);
+    if (g.possession !== side) continue;
+    assert.equal(st.cd, 6, 'Lumini cooldown 6, started at creation'); assert.equal(st.banked, false);
+    assert.equal(g.t8.fields.list.length, 0, 'lifetime 1 at mastery 0: the creation play counted and the field cleared');
+    checked++;
+  }
+  assert.ok(checked >= 1, `observed ${checked}`);
+  const reg = await import('../src/sim/abilities/registry.js'); const t8 = { ability: { a: { cd: 2 }, b: { cd: 0 } } };
+  assert.equal(reg.extraCooldownUnit(t8, 'a'), true); assert.equal(t8.ability.a.cd, 1); assert.equal(reg.extraCooldownUnit(t8, 'b'), false, 'only a running cooldown');
+});
