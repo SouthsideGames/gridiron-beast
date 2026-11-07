@@ -58,7 +58,7 @@ test('migration at the offseason (contracts open) and mid-draft: the registry is
     assert.ok(inRegistry + legacyPicks >= aiPicks.length - 2, `${when}: picks made before the capture stayed in draftResults, after it joined rosters (${inRegistry} + ${legacyPicks} of ${aiPicks.length})`);
     fill(f); const sn = F.startNextSeason(f); assert.ok(sn.ok, `${when}: ${sn.reason}`);
     assert.deepEqual(leagueInvariants(f, when), []);
-    assert.ok(f.leagueOffseason?.opened === f.season.year && f.leagueOffseason.freeAgency && f.leagueOffseason.nudge);
+    assert.ok(f.leagueOffseason?.opened === f.season.year && f.leagueOffseason.freeAgency && f.leagueOffseason.nudge === null) // N7f: the balance nudge is retired;
   }
 });
 

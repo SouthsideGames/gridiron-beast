@@ -238,7 +238,7 @@ test('XP is shown: every battler gets an xp record (amount, level, progress) tha
     const b = F.resolveEncounter(f); assert.ok(b.ok);
     const rows = b.events.filter((x) => x.kind === 'xp'); assert.equal(rows.length, e.mine.length, 'one XP record per battler');
     for (const row of rows) {
-      const m = f.roster.find((x) => x.id === row.id); assert.ok(row.amount > 0, 'XP is earned'); assert.equal(row.xp, m.xp); assert.equal(row.level, m.level); assert.ok(row.next > row.xp);
+      const m = f.roster.find((x) => x.id === row.id); if (row.max) { assert.equal(row.amount, 0, 'level 50: no level XP (spec §6)'); assert.ok(row.training > 0, 'training still earned at level 50'); continue; } assert.ok(row.amount > 0, 'XP is earned'); assert.equal(row.xp, m.xp); assert.equal(row.level, m.level); assert.ok(row.next > row.xp);
       if (!row.levelsGained) assert.equal(m.xp - before[row.id].xp, row.amount, 'the number shown is the XP added');
     }
     assert.ok(!f.news.some((n) => /undefined/.test(n.text)), 'xp records never leak into the news');

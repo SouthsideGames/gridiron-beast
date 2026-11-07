@@ -65,7 +65,7 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
     events.push(...r.events);
     events.push({ kind: 'xp', id: p.m.id, name: p.m.name, position: p.m.position, amount: r.xp, training: FR.toNumber(r.training), points: r.points, level: p.m.level, levelsGained: r.levelsGained, xp: p.m.xp, next: xpForLevel(p.m.level), max: p.m.level >= MAX_LEVEL });
   };
-  const entries = [...part.values()];
+  const entries = [...part.values()].filter((p) => p.m.dev); // a lab's synthetic monster (no development record) earns nothing; its fatigue and injury roll below still run
   if (ledger && activityId) applyActivity(ledger, activityId, entries, award); else for (const p of entries) award(p);
   for (const slot of slots) {
     const m = byId[chart[slot]]; if (!m) continue;

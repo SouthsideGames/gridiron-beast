@@ -16,6 +16,8 @@ import { ALL_TEAMS, tierById } from '../src/data/league.js';
 let n = 0;
 function mon(position, quality, age, extra = {}) { const m = generateMonster(createRng(5000 + n), { position, quality, age }); m.id = `c${n++}`; m.age = age; return Object.assign(m, extra); }
 const withHeadroom = (m, h = 8) => { m.potential = monsterOverall(m) + h; return m; };
+/** R1 item 10 (Task 8): reserve eligibility is per attribute: the best position attribute's room below its own ceiling is `h`. */
+const roomOf = (m, h) => { const w = POSITION_WEIGHTS[m.position]; for (const a of Object.keys(m.dev.current)) m.dev.potential[a] = Math.min(99, m.dev.current[a] + (w[a] ? h : 0)); m.potential = monsterOverall(m) + h; return m; };
 
 test('C1 eligibility: a healthy reserve aged 25 or under with potential at least overall + 3', () => {
   const m = withHeadroom(mon('WR', 55, 22)); const none = new Set();
@@ -23,8 +25,10 @@ test('C1 eligibility: a healthy reserve aged 25 or under with potential at least
   assert.equal(devIneligibility(m, new Set([m.id])), 'starter');
   assert.equal(devIneligibility(withHeadroom(mon('WR', 55, 26)), none), 'age');
   assert.equal(devIneligibility(Object.assign(withHeadroom(mon('WR', 55, 21)), { injury: { weeks: 2 } }), none), 'injured');
-  assert.equal(devIneligibility(withHeadroom(mon('WR', 55, 21), 2), none), 'ceiling');
-  assert.equal(devIneligibility(withHeadroom(mon('WR', 55, 21), 3), none), null, 'exactly +3 is enough');
+  // Task 8 R1 item 10: a position-relevant attribute at least 3 below its own ceiling (not the scalar potential); Apex exempt
+  assert.equal(devIneligibility(roomOf(mon('WR', 55, 21), 2), none), 'ceiling');
+  assert.equal(devIneligibility(roomOf(mon('WR', 55, 21), 3), none), null, 'exactly 3 below a ceiling is enough');
+  const apex = roomOf(mon('WR', 55, 30), 0); apex.dev.apex = true; assert.equal(devIneligibility(apex, none), null, 'Apex is exempt from age and headroom');
 });
 
 test('C1 selection: at most 6, at most 2 per position, successors first, then upside; manual picks first; exclusions honoured', () => {
@@ -43,14 +47,12 @@ test('C1 selection: at most 6, at most 2 per position, successors first, then up
   assert.deepEqual(s3.dropped, [{ id: old.id, reason: 'age' }], 'an ineligible manual pick is reported, not kept');
 });
 
-test('C1 practice XP: 0.35 × 24 base, slowdown applied, nothing for a monster who played, no fatigue or injury roll, deterministic', () => {
+test('C1 reserve development (Task 8 spec §6; R1 item 9): 12.5 level XP and 6.25% of a bar, nothing for a monster who played, no fatigue or injury roll, deterministic', () => {
   const a = withHeadroom(mon('CB', 50, 21)), b = withHeadroom(mon('CB', 50, 21)); a.xp = 0; b.xp = 0; a.fatigue = 7;
   const ev = practiceAfterGame([a, b], [a.id, b.id], new Set([b.id]), createRng(1));
-  assert.equal(Math.round(DEV.share * DEV.baseXp), 8);
-  assert.equal(a.xp + (a.level - 1) * 0 >= 0, true); assert.equal(ev.find((e) => e.kind === 'practice' && e.id === a.id).amount, 8);
-  assert.equal(b.xp, 0, 'starter XP already earned: no practice XP'); assert.equal(a.fatigue, 7, 'no fatigue'); assert.ok(!a.injury, 'no injury roll');
-  const c = withHeadroom(mon('CB', 50, 21)); c.xp = 0; practiceAfterGame([c], [c.id], new Set(), createRng(1), { xpScale: 0.5 }); assert.equal(c.xp, 4, 'the slowdown scales practice XP');
-  const x1 = withHeadroom(mon('LB', 50, 21)); const x2 = JSON.parse(JSON.stringify(x1)); x1.xp = x2.xp = 200;
+  const row = ev.find((e) => e.kind === 'practice' && e.id === a.id); assert.equal(row.amount, 12.5); assert.equal(row.training, 0.0625);
+  assert.equal(b.xp, 0, 'starter XP already earned: no reserve award'); assert.equal(a.fatigue, 7, 'no fatigue'); assert.ok(!a.injury, 'no injury roll');
+  const x1 = withHeadroom(mon('LB', 50, 21)); const x2 = JSON.parse(JSON.stringify(x1)); x1.xp = x2.xp = 70;
   practiceAfterGame([x1], [x1.id], new Set(), createRng(9)); practiceAfterGame([x2], [x2.id], new Set(), createRng(9));
   assert.deepEqual(x1, x2, 'same draws, same monster');
 });
