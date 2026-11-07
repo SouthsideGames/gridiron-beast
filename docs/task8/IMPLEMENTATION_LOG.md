@@ -17,7 +17,7 @@ into gameplay yet; the running game still uses `src/data/species.js`, the curren
 
 Tests: `tests/task8-foundations.test.js` (fast tier), including the generated-module drift check.
 
-## Not built, pending the owner
+## Not built, pending the owner (historical: superseded by the 2026-11-07 rulings below)
 
 Everything that depends on P1–P10 or on items still marked revise / clarify / pending in `DECISIONS.md`: ability effects,
 pancakes, event ordering, return gameplay, Clash rotation, simultaneous-effect caps, evasion-dependent contracts, reward
