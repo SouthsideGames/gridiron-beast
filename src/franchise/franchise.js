@@ -683,18 +683,17 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
   // Per-monster boost ledger for the pregame screen: which starters carry a training or media-day boost today.
   team.boosts = {};
   if (tb) { const keys = Object.keys(tb); for (const side of ['offense', 'defense']) for (const p of Object.values(team[side])) if (p.id) (team.boosts[p.id] ||= {}).training = keys; }
-  // Saturday media day (GDD §20.1): monsters whose nature matches an answer get a boost to their nature's strength and to awareness.
-  // The pregame reply to the other coach adds one more point to the physical or the mental natures (GDD §15.5).
-  const reply = REPLIES.find((r) => r.id === f.week.pregameReply)?.effect || null;
-  const md = f.week.media || (reply ? { boosts: {} } : null);
+  // Saturday media day (GDD §20.1): the hype and star boosts remain. The nature-targeted boost and the pregame reply's
+  // nature-group point are retired with Nature (N7c B14); press answers are flavour plus these non-nature effects.
+  const md = f.week.media || null;
   if (md) {
     const byId = Object.fromEntries(f.roster.map((m) => [m.id, m]));
     for (const side of ['offense', 'defense']) for (const p of Object.values(team[side])) {
       const m = byId[p.id]; if (!m || !p.attrs) continue;
-      let amt = (md.boosts?.[m.nature] || 0) + (md.hype ? HYPE_BOOST : 0) + (md.star === m.id ? 2 : 0) + (reply && natureGroup(m.nature) === reply.natureGroup ? reply.amount : 0);
+      const amt = (md.hype ? HYPE_BOOST : 0) + (md.star === m.id ? 2 : 0);
       if (!amt) continue;
-      const up = NATURES[m.nature]?.up || 'awareness';
-      p.attrs[up] = Math.min(99, (p.attrs[up] || 0) + amt); if (up !== 'awareness') p.attrs.awareness = Math.min(99, (p.attrs.awareness || 0) + 1);
+      const up = 'awareness'; // the boost's attribute for every monster (it was already awareness for neutral natures)
+      p.attrs[up] = Math.min(99, (p.attrs[up] || 0) + amt);
       (team.boosts[p.id] ||= {}).media = { amount: amt, attr: up };
     }
   }
@@ -2011,10 +2010,9 @@ export function mediaQuestions(f) {
     const live = { rival: !!m?.rival, hotseat: onHotSeat(f), playoff: !!f.season.playoffs && !f.season.finished, streakW: streakOf(f) >= 3, streakL: streakOf(f) <= -3, injury: injuredStarter(f) };
     const picks = [];
     for (const [i, q] of QUESTIONS.entries()) { if (!isSituational(q) || asked.has(i)) continue; const key = Object.keys(live).find((k) => q[k]); if (key && live[key] && picks.length < 2) picks.push(i); }
-    const weights = natureWeights(f);
     const pool = QUESTIONS.map((q, i) => ({ q, i })).filter(({ q, i }) => !isSituational(q) && !asked.has(i) && !picks.includes(i));
     while (picks.length < MEDIA_QUESTIONS_PER_WEEK && pool.length) {
-      const weighted = pool.map(({ q, i }) => [i, 1 + (weights[q.nature] || 0) * 2]);
+      const weighted = pool.map(({ i }) => [i, 1]); // no nature weighting (N7c B14)
       const i = r.weighted(weighted); picks.push(i); pool.splice(pool.findIndex((x) => x.i === i), 1);
     }
     if (picks.length < MEDIA_QUESTIONS_PER_WEEK) { f.season.mediaAsked = []; } // a very long season: the press repeats itself
@@ -2032,11 +2030,11 @@ function injuredStarter(f) { const hurt = f.roster.filter((m) => m.injury); if (
 /** Answers: array of answer indexes, one per question. Boosts apply on Sunday. */
 export function answerMedia(f, answers) {
   const qs = mediaQuestions(f); const boosts = {}; let hype = false; let star = null;
-  qs.forEach((q, k) => { const a = q.a[answers[k]]; if (!a) return; boosts[a.t] = Math.min(MEDIA_CAP, (boosts[a.t] || 0) + MEDIA_BOOST); if (a.hype) hype = true; if (a.star) star = mediaStar(f)?.id || null; });
+  qs.forEach((q, k) => { const a = q.a[answers[k]]; if (!a) return; if (a.hype) hype = true; if (a.star) star = mediaStar(f)?.id || null; }); // nature boosts retired (N7c B14)
   f.week.media = { answers, boosts, hype, star };
   lineupCheck(f); // Saturday is done: lineup confirmed, on to Sunday
-  const groups = Object.entries(boosts).map(([t, v]) => { const reach = natureReach(f, t); return `${NATURES[t].name} +${v}${reach.total ? ` (${reach.total})` : ' (nobody)'}`; }).join(', ');
-  news(f, `Media day: ${groups || 'no headlines'}${hype ? ' · you talked trash before the rival game' : ''}.`, 'info');
+  const starName = star ? f.roster.find((x) => x.id === star)?.name : null;
+  news(f, `Media day: ${[starName ? `${starName} in the spotlight` : null, hype ? 'you talked trash before the rival game' : null].filter(Boolean).join(' · ') || 'no headlines'}.`, 'info');
   return { ok: true, boosts, hype, star };
 }
 /**

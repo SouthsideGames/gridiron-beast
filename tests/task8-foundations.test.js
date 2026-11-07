@@ -124,3 +124,12 @@ test('WP1 Dex species table: 192 families in the game shape; only owner-approved
   assert.deepEqual(d.filter((x) => x.field === 'rarity').map((x) => x.id).sort(), ['duskrunner', 'icehorn', 'lumen', 'terrabull', 'tidefin', 'wavehorn', 'windlynx']);
   assert.equal(d.filter((x) => !['position', 'rarity'].includes(x.field)).length, 0);
 });
+
+test('transitional legacy effects are marked; retired traits never reach the engine (N7c B13; M3 replaces the rest)', async () => {
+  const M = await import('../src/data/monsters.js');
+  const { SPECIES_DEX } = await import('../src/data/species.js');
+  assert.equal(M.LEGACY_ABILITY_EFFECTS_TRANSITIONAL, true); // M3 flips this off and this test with it
+  for (const s of SPECIES_DEX) { const e = M.speciesEffect({ species: s.id }); if (e) { assert.equal(e.kind, 'ability'); assert.equal(e.transitional, true); } else assert.ok(!s.ability?.effect, s.id); }
+  const n = M.NATURES.swift; const m = { attributes: Object.fromEntries(Object.keys(M.effectiveAttributes({ attributes: {} })).map((k) => [k, 50])), nature: 'swift', fatigue: 0 };
+  assert.equal(M.effectiveAttributes(m)[n.up], 50); assert.equal(M.effectiveAttributes(m)[n.down], 50); // Nature multipliers retired (B14)
+});

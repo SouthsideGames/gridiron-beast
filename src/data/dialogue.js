@@ -95,8 +95,8 @@ export const RIVAL_LINES = Object.freeze({
 });
 
 export const REPLIES = Object.freeze([
-  { id: 'confident', label: 'We’re taking this one.', text: 'Confident: the physical natures (speed, strength, agility, arm, tackling, durability) feed off it (+1), but lose and the room is rattled next week.', effect: { natureGroup: 'physical', amount: 1, rattleOnLoss: true } },
-  { id: 'respectful', label: 'Respect. It’ll be a good game.', text: 'Respectful: the thinking natures (awareness, accuracy, hands, coverage, blocking, and the neutral three) settle (+1).', effect: { natureGroup: 'mental', amount: 1 } },
+  { id: 'confident', label: 'We’re taking this one.', text: 'Confident: back it up and the other coach remembers; lose and the room is rattled next week.', effect: null },
+  { id: 'respectful', label: 'Respect. It’ll be a good game.', text: 'Respectful: a calm word before kickoff.', effect: null },
   { id: 'silent', label: 'Say nothing.', text: 'No effect.', effect: null },
 ]);
 

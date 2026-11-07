@@ -43,11 +43,11 @@ export function renewalAsk(m, { award = false, year = null } = {}) {
   return { ask: Math.round(base * premium / 100) * 100, base, premium, big, award, current: m.salary || base };
 }
 
-/** Will the monster take a counter at 85%? Nature and the club's season decide; deterministic from the rng given. */
+/** Will the monster take a counter at 85%? The club's season decides (the Nature term is retired, N7c B14); deterministic from the rng given. */
 export function acceptsCounter(m, { winningRecord = false, rng }) {
   const calm = ['calm', 'patient', 'disciplined', 'sturdy', 'balanced', 'secure', 'protective', 'resistant', 'focused', 'cerebral'];
   const fiery = ['powerful', 'ferocious', 'aggressive', 'explosive', 'gifted'];
-  let p = 0.5 + (winningRecord ? 0.2 : -0.1) + (calm.includes(m.nature) ? 0.15 : 0) - (fiery.includes(m.nature) ? 0.15 : 0);
+  void calm; void fiery; const p = 0.5 + (winningRecord ? 0.2 : -0.1);
   return rng.chance(Math.max(0.1, Math.min(0.9, p)));
 }
 

@@ -125,10 +125,12 @@ export function tryEvolve(m) {
   return { kind: 'evolve', id: m.id, name: m.name, from, to: next.name, stage: m.stage, species: sp.id };
 }
 /** The engine effect a monster carries: its signature ability (uncommon and up) or its species' shared trait (commons). */
+// TRANSITIONAL (Task 8 build plan): legacy signature ability effects stay until M3 registers each family's Dex contract and
+// removes the legacy effect in the same change. The ten shared traits are retired (N7c B13) and no longer reach the engine.
+export const LEGACY_ABILITY_EFFECTS_TRANSITIONAL = true;
 export function speciesEffect(m) {
   const sp = resolveSpecies(m);
-  if (sp.ability?.effect) return { name: sp.ability.name, effect: sp.ability.effect, kind: 'ability' };
-  const t = TRAITS[sp.trait]; if (t?.effect) return { name: t.name, effect: t.effect, kind: 'trait' };
+  if (sp.ability?.effect) return { name: sp.ability.name, effect: sp.ability.effect, kind: 'ability', transitional: true };
   return null;
 }
 const RARITY_WEIGHT = (s) => RARITIES[s.rarity]?.weight ?? 0;
@@ -149,16 +151,13 @@ export function regionSpecies(regionName, regionTypes, week = 1) {
 
 export function clampAttr(v) { return Math.max(1, Math.min(99, Math.round(v))); }
 
-/** Effective attributes = base × nature × fatigue × secondary-position penalty. */
+/** Effective attributes = base × fatigue × secondary-position penalty. Nature multipliers are retired (spec §3; N7c B14). */
 export function effectiveAttributes(m, { slotPosition = null, trainingBonus = null } = {}) {
-  const nature = NATURES[m.nature] || NATURES.balanced;
   const fatiguePenalty = 1 - Math.min(0.06, (m.fatigue || 0) / 100 * 0.06);
   const secondary = slotPosition && slotPosition !== m.position ? 0.9 : 1;
   const out = {};
   for (const k of ATTRIBUTES) {
     let v = m.attributes[k] || 1;
-    if (nature.up === k) v *= 1.1;
-    if (nature.down === k) v *= 0.9;
     if (trainingBonus && trainingBonus[k]) v += trainingBonus[k];
     if (['speed', 'strength', 'agility'].includes(k)) v *= fatiguePenalty;
     v *= secondary;
