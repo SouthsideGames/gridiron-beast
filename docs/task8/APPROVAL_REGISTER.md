@@ -115,5 +115,5 @@ Committing a file is not an owner ruling.
 | 39 | AI use of Basics | **Approved** | R1, reaffirmed N7b |
 | 40 | Dex and collection | **Approved** | R1; achievement scope N7b |
 
-**Open rows: 18 decision groups (B1–B18)** in [REMAINING_DECISIONS.md](REMAINING_DECISIONS.md). The specification stays open until
+**Open rows: 20 decision groups (B1–B20).** B19 (Glacivern K versus the legendary rule) and B20 (ambiguous ability wording) were found while verifying P9. Details: [REMAINING_DECISIONS.md](REMAINING_DECISIONS.md). The specification stays open until
 each one has a ruling.

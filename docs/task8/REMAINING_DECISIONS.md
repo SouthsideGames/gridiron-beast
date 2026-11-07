@@ -184,7 +184,46 @@ the current hit, not at the end of the turn.
 
 ## B4 — Verified effect limits (P9)
 
-*Filled in from the verification below.*
+**Method.** The limits are re-derived from real rules, not slot sums. Full derivation with file citations:
+[P9_VERIFIED_LIMITS.md](P9_VERIFIED_LIMITS.md).
+
+**Inputs used:**
+
+| Input | Rule |
+| --- | --- |
+| On-field players | Exactly 7 per side. WR 3 only in Spread; no TE in Spread; OL 3 only in Tight; DL 3 only in Heavy or Pressure; S 2 only in Nickel |
+| Substitution | No in-game substitution |
+| Legendaries | One offensive and one defensive legendary per club; each legendary unique in the league |
+| Fields | Fields persist across possessions on paused clocks |
+| Clash lineups | 3, or 5 in playoff overtime; one normal turn per side per exchange |
+
+**Recommended diagnostic limits.** These use the reading that allows the most effects, so each is a true upper bound:
+
+| Quantity | Limit | Revision 2 |
+| --- | ---: | ---: |
+| Field rectangles, whole field, any instant | **45** | 50 |
+| Objects in one scrimmage play, all kinds | **13** | 29 |
+| Collision objects in one scrimmage play | **9** | — |
+| Objects on a live kickoff | **6** | — |
+| Objects persisting between plays | **0** | — |
+| Living Terrain clumps | **4 per connected Nature–Earth overlap** (0 today) | 4 |
+| Mindstorm echoes per play | **15** | — |
+| Moving auras per play | **10** | — |
+| Clash delayed impacts | **2 per side** | 5 |
+| Clash Twin Thunder constructs | **2 per battle** | 2 per Voltarch |
+| Clash Dawn Song heal schedules | **lineup size per side** (3, or 5) | 25 |
+| Other Clash persistent state | Cinder Clamp grips, Molten Brand marks, Shared Burden links, Echo Strike memories, Mind Game tricks: at most lineup size per side (Shared Burden: lineup − 1). Heat Mirage decoy and Foresight mirror: 1 per side | — |
+
+**Biggest corrections.**
+- **The legendary limit was ignored.** Tempestra, Voltarch and Titanolith are all offensive legendaries, and Aegistron is unique. That cuts objects per play from 29 to 13.
+- **Echo Landing and Bulwark Grid reach 1 each, not 3 and 2.** Their cooldowns are longer than their lifetimes.
+- **Clash delayed impacts are 2 per side**, because each side has one normal turn per exchange.
+
+**Assumptions.**
+- The limits apply within league play.
+- The Clash Lab test screen allows duplicate legendaries, so its diagnostics scale with the copies in its lineup.
+- If in-game substitution is ever added, these must be recomputed.
+- The B20 interpretations use the conservative reading. The approved never-cancel rule (P9) applies regardless.
 
 ## B5 — Participation on formula-resolved punts, field goals and extra points (R2-11, item 21)
 
@@ -192,6 +231,7 @@ the current hit, not at the end of the turn.
 (P7), and today only the kicker and one returner are read.
 
 **Recommendation.**
+- **Kickoffs (live, approved P7) need defined units,** which no source specifies. Recommendation: a kicking unit (K plus 6) and a return unit (returner plus 6), declared from a depth list, auto-filled from non-starters first and then starters.
 - Each side declares a 7-player punt / FG unit from a depth list.
 - That unit counts as participating for status countdowns, stamina drain and rewards.
 - No play outcome changes, and no return tackle is credited on formula punts.
@@ -314,3 +354,31 @@ Temper affects training only.
 | (c) | It counts down over football plays | Multi-play Stunned; unapproved |
 
 Football Stunned always clears at the whistle, so nothing carries from football into Clash.
+
+## B19 — Glacivern is a legendary K, but the legendary rule refuses kickers (new conflict)
+
+**Context.**
+- The Dex (authoritative, Appendix A, approved) makes Glacivern a K.
+- The approved Task 7 legendary policy allows one offensive and one defensive legendary per club, and states "no legendary is a kicker". The code refuses a legendary K (`src/franchise/fa-legendary.js`).
+- Without a rule, Glacivern escapes the per-side limit.
+
+**Options.**
+- **(a) Recommended.** A legendary K counts toward the **offensive** limit, since field goals and extra points are scoring plays.
+- (b) It counts toward the defensive limit.
+- (c) A separate special-teams limit of 1, allowing three legendaries per club.
+
+**Departure.** Every option changes the Task 7 text "no legendary is a kicker", which the Dex has already overtaken. (c) also raises the per-club legendary count.
+
+## B20 — Ability wording the limits check found ambiguous
+
+These decide how some approved abilities are implemented, not just the limits. Each recommendation picks the reading closest to
+similar approved text.
+
+| # | Question | Recommendation |
+| --- | --- | --- |
+| a | **Field clocks.** Do "participating" plays (Runway, Beacon Lane, Mind Bend) mean the creator's own participation, or the field team's? | The **field team's** offensive scrimmage plays. Fields are environmental and persist without their creator (Echo Landing: "Source bench does not prevent creation"). |
+| b | **Can an earned field spawn with its creator off the field?** (Burning Wake, Bloom Break, Beacon Lane) | **Yes.** Placement uses the creator's or the ball's initial reference, as each contract states. |
+| c | **Cooldown "after creation".** Does it block creating a field earned during the creation play? (Bulwark Grid, Blackout Pocket, Echo Landing) | **Yes, it blocks**, matching Splashdown's explicit wording. |
+| d | **Tsunami Line and Burning Wake "two completed plays" / Impact Pyre "completed plays".** Which plays count? | The **creating team's** scrimmage plays on the side where the field sits: defensive plays for Tsunami Line and Impact Pyre, offensive plays for Burning Wake. Kickoffs and formula kicks don't count. |
+| e | **Is a kickoff catch a "reception", and is a kickoff a "defensive snap"?** (Cyclonic Release, Fortress Gate) | **No to both.** Kickoffs are special teams, which these contracts' scrimmage wording excludes. |
+
