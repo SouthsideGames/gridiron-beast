@@ -27,6 +27,8 @@ import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
 import { ABILITIES, speciesEffect } from '../data/monsters.js';
 import { QUICK_ROUTES, SETTLE_ROUTES } from '../data/routes.js';
 import { contestMod } from './type-matchups.js';
+import { resolvePancakeOpportunity, shedScore } from './t8/pancake.js';
+import { positionOf } from '../data/personnel.js';
 import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION } from './qb-read.js';
 
 const DT = 0.05;
@@ -63,6 +65,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // The quarterback's perception has its own stream, so how he reads the field never shifts the physics of the play, and the AI
   // Testing Lab can replay an identical play with a different decision (GDD §53).
   const qrng = createRng(((Number(seed) >>> 0) ^ 0x5bd1e995) >>> 0 || 7);
+  const prng = createRng(((Number(seed) >>> 0) ^ 0x2c1b3c6d) >>> 0 || 11); // Task 8 M2: the pancake contest's own draws (opportunity, success, recovery), so plays without one keep their physics draws
   const B = boundsFor(ballOn, ballLat);
   const maxTime = options.maxTime ?? 20;
   const frameEvery = options.frameEvery ?? 2;
@@ -285,14 +288,36 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (soft && !rng.chance(0.25 + 0.5 * norm(blocker.attrs.blocking * (scaleVs(blocker, defender, 'block') - modOf(defender, blocker))))) { blocker.noEngage = 0.3; return false; }
     blocker.engaged = defender; defender.engaged = blocker; defender.engagedAt = t; blocker.softBlock = soft; defender.wasBlocked = true;
     const bk = (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }); if (isRun) bk.run = 1; else bk.pass = 1;
+    pancakeOpportunity(blocker, defender);
     return true;
+  }
+  /**
+   * Task 8 M2 pancake (R1 item 7; N7b P5; N7c B1): one opportunity roll per OL per play, at his first engagement, only from a positive
+   * block advantage (the block contest's own type scaling). Success: Knocked Down for the rest of the play (on the ground: cannot move,
+   * block or tackle; clears at the whistle). Failure: Awareness decides recovery; a recovered failure keeps the block; an unrecovered
+   * failure ends the engagement and the OL Stumbles (40% of current speed lost, ordinary acceleration, no timer, ordinary re-engagement).
+   */
+  function pancakeOpportunity(blocker, d) {
+    if (blocker.pancakeRolled || blocker.team !== 'off' || positionOf(blocker.slot) !== 'OL') return;
+    blocker.pancakeRolled = true;
+    const res = resolvePancakeOpportunity(prng, blocker.attrs, d.attrs, positionOf(d.slot), { blockScale: scaleVs(blocker, d, 'block'), shedScale: scaleVs(d, blocker, 'shed') });
+    if (res.outcome === 'none') return;
+    const bk = (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }); bk.pancakeAttempts = (bk.pancakeAttempts || 0) + 1;
+    if (res.outcome === 'pancake' && !d.knockedDown) {
+      blocker.engaged = null; d.engaged = null; d.knockedDown = true; d.stun = 1e6; d.noEngage = 1e6; d.vx = 0; d.vy = 0; setStatus(d, 'flat', 1e6);
+      bk.pancakes = (bk.pancakes || 0) + 1; stats.pancakes = (stats.pancakes || 0) + 1;
+      log(`${blocker.name} pancakes ${d.name}`, { kind: 'pancake', by: blocker.slot, side: blocker.team, victim: d.slot });
+    } else if (res.outcome === 'lostBlock') {
+      blocker.engaged = null; d.engaged = null; blocker.vx *= 0.6; blocker.vy *= 0.6; blocker.stumbled = true; // Stumbled: current speed only, no timer, no lock
+      bk.lost += 1; log(`${blocker.name} loses ${d.name} on a failed pancake`, { kind: 'stumble', by: blocker.slot, side: blocker.team, victim: d.slot });
+    }
   }
   function resolveEngagement(blocker) {
     const d = blocker.engaged;
     const runFit = phase === 'carry' || phase === 'run';
     const be = blocker.ability || {};
     const bScore = blocker.attrs.blocking * 0.6 + blocker.attrs.strength * 0.4 + (be.blockStrength || 0) + (!runFit ? (be.anchor || 0) : 0);
-    const dScore = d.attrs.strength * 0.5 + d.attrs.agility * 0.3 + d.attrs.tackling * 0.2 + (d.ability?.shedStrength || 0) + (runFit ? (d.ability?.runStuff || 0) : 0);
+    const dScore = shedScore(d.attrs, positionOf(d.slot)) + (d.ability?.shedStrength || 0) + (runFit ? (d.ability?.runStuff || 0) : 0); // N7c B2: DL/CB/S 0.5 Agility + 0.3 Strength + 0.2 Tackling; LB 0.5 Strength + 0.3 Agility + 0.2 Tackling
     if ((be.blockStrength || (!runFit && be.anchor)) && t > 0.5) abilityUsed(blocker, be.blockStrength ? 'blockStrength' : 'anchor');
     const edge = (dScore * scaleVs(d, blocker, 'shed') - bScore * scaleVs(blocker, d, 'block')) / 100; // positive when the defender is winning (type edges: the pair actually engaged)
     // The pair moves slowly along the defender's intent; the blocker stays between.

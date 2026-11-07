@@ -320,7 +320,7 @@ export function recordPlayerStats(state, sim, off, def, { toGo = 10 } = {}) {
   // Fumbles: charged to the monster who lost the ball; "lost" only when the defense recovered.
   if (st.fumbledBy && sim.names?.off?.[st.fumbledBy]) { bump(off, st.fumbledBy, 'fum'); if (st.recoveredTeam === 'def') bump(off, st.fumbledBy, 'fumLost'); }
   // Blocking: a snap per blocker, split pass/run; blocks lost; sacks and pressures allowed only when a blocker was beaten for them.
-  for (const [slot, b] of Object.entries(st.blockers || {})) { if (b.pass) bump(off, slot, 'pbSnaps'); if (b.run) bump(off, slot, 'rbSnaps'); if (b.lost) bump(off, slot, 'blocksLost', b.lost); }
+  for (const [slot, b] of Object.entries(st.blockers || {})) { if (b.pass) bump(off, slot, 'pbSnaps'); if (b.run) bump(off, slot, 'rbSnaps'); if (b.lost) bump(off, slot, 'blocksLost', b.lost); if (b.pancakes) bump(off, slot, 'pancakes', b.pancakes); if (b.pancakeAttempts) bump(off, slot, 'pancakeAttempts', b.pancakeAttempts); } // Task 8 M2: pancakes (B1)
   if (st.sackAllowedBy) bump(off, st.sackAllowedBy, 'sacksAllowed');
   if (st.pressureAllowedBy) bump(off, st.pressureAllowedBy, 'pressuresAllowed');
   // Defense.
