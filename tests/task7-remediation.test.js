@@ -42,7 +42,7 @@ test('R1 a: before the draft an AI club bids only for urgent lineup holes and it
 });
 
 test('R1 c: an upgrade that needs a release is atomic — released only when the signing completes, zero dead cap, no return', () => {
-  const f = openMarket(34); const club = leagueClubs(f).slice().sort()[2];
+  const f = openMarket(37); const club = leagueClubs(f).slice().sort()[2]; // seed 37: the released monster is still unsigned when free agency ends (Task 8 retired Nature, N7c B14; seed 34 before: another club now signs him in a later period)
   const roster = clubRoster(f, club); let i = 0; while (clubRoster(f, club).length < ROSTER_MAX) addToClub(f, club, Object.assign(mon({ id: `pad${i}`, pos: 'OL', q: 45, seed: 40 + i++ }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 }), { year: 1 });
   const spare = clubRoster(f, club).find((m) => m.id.startsWith('pad')) || clubRoster(f, club).filter((m) => !isProtected(m) && !m.legendary && clubRoster(f, club).filter((x) => x.position === m.position).length > 3).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; assert.ok(spare);
   const target = E.marketList(f).map((x) => x.m).find((m) => !E.liveOffers(f, (o) => o.club === club && o.mid === m.id).length && !m.legendary && !m.injury); assert.ok(target, 'a free agent');

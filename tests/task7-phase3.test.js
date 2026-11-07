@@ -98,7 +98,7 @@ test('periods: five, early completion, then the draft; the draft refuses to star
 });
 
 test('immediate negotiation (in season): accept, counter or reject at once, under the same rules', () => {
-  const f = openMarket(); F.finishFreeAgency(f);
+  const f = openMarket(23); F.finishFreeAgency(f); // seed 23: the cheapest free agent counters a half-price offer (Task 8 retired Nature, N7c B14; seed 21 before: its cheapest is now a money-indifferent veteran who takes half his ask)
   makeRoom(f, 1); const m = cheapest(f)[0]; const ask = E.askOf(f, m);
   const low = F.negotiateFreeAgent(f, m.id, { salary: Math.round(ask.salary * 0.5 / 100) * 100, years: ask.years }); assert.ok(low.ok); assert.notEqual(low.outcome, 'signed');
   let fair = F.negotiateFreeAgent(f, m.id, { salary: Math.round(ask.salary * 1.3 / 100) * 100, years: ask.years });

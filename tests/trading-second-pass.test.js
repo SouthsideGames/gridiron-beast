@@ -52,7 +52,7 @@ test('valuation: age, contract and potential move the price; the factors are bou
   assert.ok(v({ ...m, potential: ovr(m) + 15, age: 22 }) > v({ ...m, age: 22 }), 'potential adds for the young');
 });
 test('valuation: a monster is worth more to a club that needs him than to one that is deep; starters outrank backups', () => {
-  const { mine, theirs } = world(); const wr = at(theirs, 'WR');
+  const { mine, theirs } = world(); const wr = at(theirs, 'WR').sort((a, b) => ovr(b) - ovr(a) || (a.id < b.id ? -1 : 1)); // ties broken by id, as the game's depth order does (Task 8 retired Nature, N7c B14: two WRs now tie at 58)
   const star = setOvr(dress(createRoster(31, { quality: 60, composition: [['WR', 1]] })[0]), ovr(wr[0]) + 8);
   const needy = theirs.filter((m) => m.position !== 'WR' || m.id === wr[3].id), deep = theirs.slice();
   const gainNeedy = rosterNet(needy, { get: [star] }, YEAR), gainDeep = rosterNet(deep, { get: [star] }, YEAR);

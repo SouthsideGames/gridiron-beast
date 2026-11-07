@@ -32,7 +32,7 @@ test('releases below 26: allowed in the Task 7 offseason only; the minimum still
 });
 
 test('the dead end resolves: the plan shows the shortfall and the savings, the owner releases and signs within the cap, the season starts', () => {
-  const f = toGate(newFranchise(303)); const cap0 = E.capOf(f, f.club);
+  const f = toGate(newFranchise(305)); const cap0 = E.capOf(f, f.club); // seed 305: the owner's cap-only, position-blind script still leaves a legal lineup (Task 8 retired Nature, N7c B14; seed 303 before: its releases now leave one CB for two CB slots)
   while (f.roster.length > F.ROSTER_MIN - 2) F.releaseMonster(f, spare(f)[0].id);
   // squeeze next season's books (staff charges) until the cheapest two replacements no longer fit
   const plan0 = F.rosterFloorPlan(f); f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.max(0, plan0.usable - 1000);
