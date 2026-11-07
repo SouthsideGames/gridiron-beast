@@ -135,6 +135,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0,
     };
+    if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
     actors.push(a); bySlot[team][slot] = a; return a;
   };
   for (const slot of offensePlay.onField) makeActor('off', slot, offensePlay, offense[slot]);

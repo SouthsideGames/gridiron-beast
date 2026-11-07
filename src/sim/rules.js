@@ -8,6 +8,7 @@ import { boostSlots, qualifyingEvent, slotOf } from './partnership-play.js';
 import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
 import { simulatePlay } from './engine.js';
+import * as T8S from './t8/status-runtime.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
@@ -129,6 +130,8 @@ export function abilityMemory(state, { drive = null } = {}) {
   return { drive: drive ?? `${state.drive?.team}@${(state.playCount || 0) - (state.drive?.plays || 0)}`, half, quarter: state.quarter, used: state.abilityMemory || {} };
 }
 export function rememberAbilities(state, sim) { if (sim?.memoryUsed?.length) { state.abilityMemory ||= {}; for (const k of sim.memoryUsed) state.abilityMemory[k] = true; } }
+/** Task 8 (B18): the monsters a counted Stunned keeps out of this whole play (they line up but cannot act); null when none. */
+function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter((id) => id && T8S.sitsOutPlay(state, id)); return ids.length ? new Set(ids) : null; }
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
   const { r, save } = rng(state);
@@ -144,8 +147,9 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
     offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null },
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots) },
   });
+  T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
   if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
@@ -537,7 +541,7 @@ export function endOfPeriod(state) {
   } else log(state, `End of the ${state.quarter === 2 ? 'first' : 'third'} quarter.`, 'period');
 }
 function finish(state) {
-  state.finished = true; state.phase = 'final'; state.clockRunning = false;
+  state.finished = true; state.phase = 'final'; state.clockRunning = false; T8S.atGameEnd(state); // Task 8: every status clears at the end of the game
   state.winner = state.score.home > state.score.away ? 'home' : state.score.away > state.score.home ? 'away' : null;
   log(state, `FINAL: ${state.home.name} ${state.score.home}, ${state.away.name} ${state.score.away}.`, 'period', { important: true });
 }
