@@ -78,3 +78,20 @@ test('evolution: percentage of potential kept (halves up, capped), relative ceil
   // approved worked example: developed 30/40 with a 4-point loss -> 45/60 with a 6-point loss, leaving 39/60
   const k = F.frac(60, 40); assert.equal(Math.floor(F.toNumber(F.mul(26, k)) + 0.5), 39); assert.equal(Math.floor(F.toNumber(F.mul(4, k)) + 0.5), 6);
 });
+
+test('B17 generation shares: Basic share per channel, original mix untouched, empty pools handled', async () => {
+  const { pickFamily, BASIC_SHARE } = await import('../src/franchise/t8/generation.js');
+  const { FAMILIES } = await import('../src/data/beast-dex.js');
+  assert.deepEqual({ ...BASIC_SHARE }, { roster: 0.25, scouting: 0.25, encounter: 0.30, draft: 0.35, arrival: 0.40 });
+  const basics = FAMILIES.filter((f) => f.rarity === 'basic' && f.position === 'WR');
+  const originals = FAMILIES.filter((f) => !['basic', 'legendary'].includes(f.rarity) && f.position === 'WR');
+  const uniform = (rng, list) => list[rng.int(list.length)];
+  for (const [ch, s] of Object.entries(BASIC_SHARE)) {
+    const rng = createRng(77); let b = 0; const N = 20000; const orig = {};
+    for (let i = 0; i < N; i++) { const f = pickFamily(rng, { channel: ch, basics, originals, pickOriginal: uniform }); if (f.rarity === 'basic') b++; else orig[f.rarity] = (orig[f.rarity] || 0) + 1; assert.equal(f.position, 'WR'); }
+    assert.ok(Math.abs(b / N - s) < 0.015, `${ch} basic share ${b / N}`);
+  }
+  assert.equal(pickFamily(createRng(1), { channel: 'draft', basics: [], originals, pickOriginal: uniform }).rarity !== 'basic', true);
+  assert.equal(pickFamily(createRng(1), { channel: 'draft', basics, originals: [], pickOriginal: uniform }).rarity, 'basic');
+  assert.throws(() => pickFamily(createRng(1), { channel: 'market', basics, originals, pickOriginal: uniform }));
+});
