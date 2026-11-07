@@ -12,8 +12,14 @@ test('D9: classes rise about +0.5 a season, capped at +10, with the same draws a
   const a = generateDraftClass(createRng(77), { year: 1 }), b = generateDraftClass(createRng(77), { year: 11 });
   assert.equal(a.length, b.length); assert.deepEqual(a.map((m) => m.position).sort(), b.map((m) => m.position).sort());
   const mean = (c, k) => c.reduce((s, m) => s + k(m), 0) / c.length;
-  const dOvr = mean(b, monsterOverall) - mean(a, monsterOverall), dPot = mean(b, (m) => m.potential) - mean(a, (m) => m.potential);
-  assert.ok(dOvr > 3 && dOvr < 6, `class overall +${dOvr.toFixed(2)} at offset 5`); assert.ok(Math.abs(dPot - 5) < 0.6, `potential +${dPot.toFixed(2)}`);
+  // N7f (CLUB_STRENGTH_SELECTION.md): the D9 offset (kept, open owner question) now moves the target *percentile* of a
+  // potential-metric selection among nine Dex candidates, so it no longer adds whole points to OVR or potential. What it must
+  // still do: lift the class's potential, more at a bigger offset, without changing the mix. Measured (seed 77): potential
+  // +1.1 at offset 5, +2.3 at offset 10; OVR moves < 0.5 (prospects are chosen by potential, not current rating).
+  const c = generateDraftClass(createRng(77), { year: 21 });
+  const dPot = mean(b, (m) => m.potential) - mean(a, (m) => m.potential), dPot10 = mean(c, (m) => m.potential) - mean(a, (m) => m.potential);
+  assert.ok(dPot > 0.5, `potential +${dPot.toFixed(2)} at offset 5`); assert.ok(dPot10 > dPot + 0.5, `potential +${dPot10.toFixed(2)} at offset 10`);
+  assert.ok(Math.abs(mean(b, monsterOverall) - mean(a, monsterOverall)) < 2, 'selection by potential leaves current OVR about level');
   assert.deepEqual(generateDraftClass(createRng(77), { year: 11 }).map((m) => m.id), b.map((m) => m.id), 'deterministic');
 });
 
