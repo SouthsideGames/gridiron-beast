@@ -63,7 +63,7 @@ Basic is a rarity below Common, within the same 12 elemental types. Basic famili
 
 ## Ability source precedence
 
-`data/abilities.json` preserves the 144 source ability entries and their detailed source rows from workbook version 18. This imports approved design evidence, not a verified final runtime schema. Historical “core approved” statuses and old audit language remain source metadata. Apply the consolidated specification's later corrections first, including encounter-based Blazing Resolve, engagement/acceleration-based pancake whiffs, bounded HP transfers, movement override priority, clone performance-credit exclusions, and fresh-save break.
+`data/abilities.json` preserves the 144 source ability entries and their detailed source rows from workbook version 18. This imports approved design evidence, not a verified final runtime schema. Historical “core approved” statuses and old audit language remain source metadata. Apply the owner-approved Task 8 overrides in `data/task8-overrides.json` (SPECIFICATION_BASELINE.md §20) and the consolidated specification's later corrections first, including encounter-based Blazing Resolve, engagement/acceleration-based pancake whiffs, bounded HP transfers, movement override priority, clone performance-credit exclusions, and fresh-save break.
 
 Fields are environmental modifiers, not shared statuses. Dragon has no base zone. Actual football/Clash effect lifetime rules, targeting, cooldowns and source-specific exceptions remain governed by the consolidated specification and detailed ability contracts. This data export does not authorize generic substitutes or stronger effects.
 

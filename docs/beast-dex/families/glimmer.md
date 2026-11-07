@@ -78,7 +78,9 @@ Creator cooldown 6 / 5 / 4 / 3 offensive plays; starts creation and cannot recei
 
 ### Lifetime / persistence
 
-Pending carries halves; created common field clears half. Spawn play counts.
+**Approved Task 8 rule (N7b P3, P4):** Created field lasts 1 / 1 / 2 / 2 participating offensive scrimmage plays by mastery, counting its creation play, for both forms. Created field clears at halftime. Pending creation carries through halftime under its approved carryover rule.
+
+> Superseded v18 text: Pending carries halves; created common field clears half. Spawn play counts.
 
 ### Exceptions / counterplay
 
@@ -90,7 +92,9 @@ Golden low rectangle with small clock particles along perimeter.
 
 ### Progression / notes
 
-Approved Light field exposure cadence finalized in closeout10. Keep existing creator lifetime/placement/mastery.
+**Approved Task 8 rule (N7b P3, P4):** Approved Light field exposure cadence finalized in closeout10. Lifetime by mastery as above; placement and creator cooldown as approved.
+
+> Superseded v18 text: Approved Light field exposure cadence finalized in closeout10. Keep existing creator lifetime/placement/mastery.
 
 ## Beast Clash: Glow Mend
 

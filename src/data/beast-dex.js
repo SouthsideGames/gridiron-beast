@@ -1,12 +1,12 @@
 // Task 8 WP1: read-only access to the authoritative Beast Dex (192 families, 222 forms, 144 mode abilities).
 // Data comes from beast-dex.generated.js (tools/build-beast-dex.mjs). This module is not yet wired into gameplay: the running
 // game still reads src/data/species.js until the Task 8 generator and fresh-save schema replace it.
-import { FAMILIES, FORMS, ABILITIES, RULES, SOURCE } from './beast-dex.generated.js';
+import { FAMILIES, FORMS, ABILITIES, RULES, SOURCE, APPROVED_RULINGS } from './beast-dex.generated.js';
 
 const deepFreeze = (o) => { if (o && typeof o === 'object' && !Object.isFrozen(o)) { Object.freeze(o); for (const v of Object.values(o)) deepFreeze(v); } return o; };
-deepFreeze(FAMILIES); deepFreeze(FORMS); deepFreeze(ABILITIES); deepFreeze(RULES);
+deepFreeze(FAMILIES); deepFreeze(FORMS); deepFreeze(ABILITIES); deepFreeze(RULES); deepFreeze(APPROVED_RULINGS);
 
-export { FAMILIES, FORMS, ABILITIES, RULES, SOURCE };
+export { FAMILIES, FORMS, ABILITIES, RULES, SOURCE, APPROVED_RULINGS };
 
 /** Rarities from lowest to highest. Basic sits below Common (APPROVED_RULES.md). Apex is an individual designation, not a rarity. */
 export const RARITY_ORDER = Object.freeze(['basic', 'common', 'uncommon', 'rare', 'legendary']);
@@ -29,6 +29,10 @@ export const formId = (familyId, stage) => `${familyId}:${stage}`;
 /** Forms of a family, ordered by stage. Basic families have exactly one (stage 0). */
 export const formsOf = (familyId) => FORMS_BY_FAMILY.get(familyId) || [];
 export const abilityById = (id) => ABILITY_BY_ID.get(id) || null;
+/** Approved numeric values attached by an owner ruling (task8-overrides.json), or null. Throws for an unknown ability. */
+export function approvedValues(abilityId) { const a = abilityById(abilityId); if (!a) throw new Error(`unknown ability ${abilityId}`); return a.values || null; }
+/** An approved global ruling by id (e.g. 'clash-rotation'). Throws if missing, so callers never run on an unapproved rule. */
+export function approvedRule(id) { const r = APPROVED_RULINGS.rules.find((x) => x.id === id); if (!r) throw new Error(`no approved ruling "${id}"`); return r; }
 /** The family's mode abilities: { football, clash } records, each null when the family has none (all Basics). */
 export function abilitiesOf(familyId) {
   const f = familyById(familyId); if (!f) return null;

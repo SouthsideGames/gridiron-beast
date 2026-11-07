@@ -87,7 +87,9 @@ Source: workbook v18. Apply the later shared overrides in [Approved Rules](../AP
 
 ### Trigger / eligibility
 
-Direct enemy normal attack missing source completely earns one trick. Every hit of multihit attack must miss. Reactions cannot earn trick.
+**Approved Task 8 rule (N7b P10):** Direct enemy normal attack missing source completely earns one trick. Every hit of multihit attack must miss. Reactions cannot earn trick. While no trick is stored, each enemy normal attack against the active Enigmane has an explicit 15% chance to strike an afterimage and miss entirely (one roll for the whole attack); explicitly undodgeable attacks bypass it without a roll.
+
+> Superseded v18 text: Direct enemy normal attack missing source completely earns one trick. Every hit of multihit attack must miss. Reactions cannot earn trick.
 
 ### Targets / placement
 

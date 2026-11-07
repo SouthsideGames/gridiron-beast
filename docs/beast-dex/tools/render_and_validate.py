@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def load(n): return json.loads((ROOT / 'data' / f'{n}.json').read_text())
 families, forms, abilities, rules = [load(n) for n in ['families', 'forms', 'abilities', 'rules']]
 baseline = load('original-baseline')
+overrides = load('task8-overrides')  # owner-approved Task 8 rulings (SPECIFICATION_BASELINE.md §20)
 attrs = rules['attributeOrder']; by_family = {x['id']: x for x in families}; by_ability = {x['id']: x for x in abilities}
 TYPES = ['Fire', 'Water', 'Nature', 'Electric', 'Earth', 'Ice', 'Wind', 'Dark', 'Light', 'Metal', 'Psychic', 'Dragon']
 POSITIONS = list(rules['primaryAttributesByPosition'])
@@ -160,7 +161,11 @@ def render():
         else:
             for mode, aid in f['abilities'].items():
                 a = by_ability[aid]; lines += ['', f'## {mode}: {a["name"]}', '', f'Ability ID: `{aid}`. Category: {a["category"]}.', '', str(a['activation']), '', str(a['mechanic']), '', 'Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.']
-                for item in a['details']: lines += ['', f'### {item["section"]}', '', str(item['rule'])]
+                ov = overrides['abilities'].get(aid, {})
+                for item in a['details']:
+                    rep = ov.get('sections', {}).get(item['section'])
+                    if rep: lines += ['', f'### {item["section"]}', '', f'**Approved Task 8 rule ({ov["ruling"]}):** {rep}', '', f'> Superseded v18 text: {item["rule"]}']
+                    else: lines += ['', f'### {item["section"]}', '', str(item['rule'])]
         out[f'families/{f["id"]}.md'] = '\n'.join(lines) + '\n'
     # The new-family index and manifest
     lines = ['# Basic families: index', '', '[Back to Beast Dex](README.md) · [Art review guide](art/REVIEW_GUIDE.md) · [Creation brief](BASIC_CREATION_BRIEF.md)', '',

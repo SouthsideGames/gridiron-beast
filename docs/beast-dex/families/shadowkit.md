@@ -116,7 +116,9 @@ Counter at 70 / 80% normal damage by Umbrikit / Obscurat, standard evasion/type/
 
 ### Recharge / frequency
 
-One counter per Clash, committed at eligible miss; no passive guaranteed dodge is granted.
+**Approved Task 8 rule (N7b P10):** One counter per Clash, committed at eligible miss. While the counter is unused, each enemy normal attack against the active, able Umbrikit / Obscurat has an explicit 15% / 20% chance to miss entirely (one roll for the whole attack); explicitly undodgeable attacks bypass it without a roll. The dodge ends once the counter is used. No universal evasion is implied.
+
+> Superseded v18 text: One counter per Clash, committed at eligible miss; no passive guaranteed dodge is granted.
 
 ### Lifetime / persistence
 

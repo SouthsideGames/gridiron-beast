@@ -88,3 +88,22 @@ test('ability catalogue lists all 144 abilities, every form × mastery variant, 
   assert.equal(formsWithAbilities, 102);
   assert.equal(cat.entries.reduce((s, e) => s + e.variants.length, 0), 2 * formsWithAbilities * MASTERY_TIERS.length);
 });
+
+test('approved rulings: overrides applied, source text kept, values exposed (N7b P1-P3, P7, P8, P10)', async () => {
+  const v = await import('../src/data/approved-values.js');
+  assert.equal(v.stokeTheFlamePct('emberfox:0', 'Developing'), 60); assert.equal(v.stokeTheFlamePct('emberfox:2', 'Mastered'), 95); assert.equal(v.stokeTheFlamePct('emberfox:1', 'Expert'), 80);
+  assert.equal(v.blazingResolveQualifies('emberfox:0', 7), false); assert.equal(v.blazingResolveQualifies('emberfox:0', 8), true);
+  assert.equal(v.blazingResolveQualifies('emberfox:1', 4), false); assert.equal(v.blazingResolveQualifies('emberfox:1', 5), true);
+  assert.equal(v.blazingResolveQualifies('emberfox:2', 0), false); assert.equal(v.blazingResolveQualifies('emberfox:2', 1), true);
+  assert.deepEqual(['Developing', 'Practiced', 'Expert', 'Mastered'].map((t) => v.beaconLaneLifetime('glimmer:1', t)), [1, 1, 2, 2]);
+  assert.equal(v.shadowPounceDodgePct('shadowkit:0', false), 15); assert.equal(v.shadowPounceDodgePct('shadowkit:1', false), 20); assert.equal(v.shadowPounceDodgePct('shadowkit:1', true), 0);
+  assert.equal(v.mindGameAfterimagePct(false), 15); assert.equal(v.mindGameAfterimagePct(true), 0);
+  assert.deepEqual(v.rotationEntryPenalty({ firstAfterVoluntaryRotation: true }), { factor: 0.5, spent: true });
+  assert.deepEqual(v.rotationEntryPenalty({ firstAfterVoluntaryRotation: true, stunnedSkip: true }), { factor: 1, spent: true });
+  assert.deepEqual(v.rotationEntryPenalty({ firstAfterVoluntaryRotation: false }), { factor: 1, spent: false });
+  assert.throws(() => v.stokeTheFlamePct('glimmer:0', 'Developing')); assert.throws(() => v.beaconLaneLifetime('glimmer:0', 'Legend'));
+  const br = dex.abilityById('FIR-01-F').details.find((d) => d.section === 'Core resolution');
+  assert.match(br.rule, /No one-second window/); assert.match(br.supersededRule, /one live second/); assert.equal(br.ruling.startsWith('N7b P2'), true);
+  for (const id of ['clash-rotation', 'ordinary-attacks-connect', 'live-kickoffs', 'football-stunned-scope', 'collection-achievements']) assert.ok(dex.approvedRule(id).rule);
+  assert.throws(() => dex.approvedRule('universal-evasion'));
+});

@@ -90,7 +90,9 @@ Song notes fly to coverage teammate; green boot badge if accepted.
 
 ### Progression / notes
 
-Quickened strength +0 / +3 / +6 / +9 percentage points by mastery. Special teams may lack controllable coverage actors; needs real coverage simulation, not decorative stat bonus. Flag implementation prerequisite.
+**Approved Task 8 rule (N7b P7):** Quickened strength +0 / +3 / +6 / +9 percentage points by mastery. Kickoffs are live plays using existing movement, blocking and tackling, so the Quickened coverage teammate's speed and acceleration take real effect; actual participants and return events are credited. Punts, field goals and extra points keep their approved scope.
+
+> Superseded v18 text: Quickened strength +0 / +3 / +6 / +9 percentage points by mastery. Special teams may lack controllable coverage actors; needs real coverage simulation, not decorative stat bonus. Flag implementation prerequisite.
 
 ## Beast Clash: Dawn Song
 

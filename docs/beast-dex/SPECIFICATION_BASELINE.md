@@ -14,6 +14,8 @@ Implement the current 72 monster families, 102 forms and 12 legendaries across F
 
 Preserve the target engine's existing football team size. The inspected source uses 7v7; this task does not authorize an 11v11 conversion. Preserve one active Clash fighter per side with reserves. Do not interpret opening 3v3 lineups as three simultaneous active fighters. Approved reserve and rotation mechanics require explicit integration with the current franchise battle policy.
 
+> **Approved Task 8 ruling (2026-11-07, N7b P8; R1 item 26).** Ordinary bench attacks are removed; explicit reserve abilities remain. Voluntary rotation, its timing and its entry penalty are defined in [§20](#20-approved-task-8-rulings-2026-11-07).
+
 Every species family has one fixed football position through evolution. No random individual position, secondary position, cross-position eligibility or position-changing evolution. Type, football position, Clash archetype, Temper and Apex designation are separate concepts. Evolution preserves family rarity. Do not raise rarity automatically on evolution.
 
 Position targets count families once, not individual roster copies or forms.
@@ -361,7 +363,11 @@ Store charge, once-use ledgers, delayed events, readiness and cooldowns in autho
 ### Later corrections overriding the workbook
 Blazing Resolve: first eligible tackle begins one tackle encounter. Snapshot all defenders already within tackling reach, break their attempts, spend ignition; later arrivals can tackle normally. No one-second window. Keep other approved charge, rushing eligibility, fumble and persistence rules. Do not copy old Eruption's defender stun. Exact encounter snapshot and duplicate-contact handling must be defined in event tests.
 
+> **Approved values (N7b P2).** A completed official rushing attempt qualifies when its net gain exceeds the form threshold: Flaroo over 7 yards, Blazynx over 4 yards, Infernox any positive gain. See §20.
+
 Failed-pancake Stumbled: remove one-second recovery. Lose40% current speed, preserve maximum speed and use ordinary acceleration. Clear at whistle. End failed engagement; require legal ordinary reacquisition, with no automatic reattachment and no additional timed lock. A stationary OL can still lose its engagement. This is distinct from Slowed and from Knocked Down.
+
+> **Superseded in part (R1 item 7; N7b P5).** A failed pancake no longer ends the engagement automatically: Awareness decides recovery. A recovered failure keeps the block; only an unrecovered failure ends the engagement and attempts Stumbled as described above. See §20.
 
 Shared Burden: compute attacker power and outgoing modifiers once before raw splitting; apply each recipient's own type, defense and shield rules. Floor source share and give original target remainder, conserving raw budget. Example101 at 30% gives30 and 71. Strongest link applies; equal links choose earliest creation then stable monsterID. Keep active-only Tank protection, no reserve Tank guard, no link chains and approved owner-KO behavior.
 
@@ -383,6 +389,8 @@ Exactly one shared status type is active per monster, beneficial or harmful. Dif
 Football counts completed plays the monster actually participates in, including special teams and conversions where status rules permit. Bench and other-unit plays pause countdown. Clash counts recipient normal turns, including Stunned skips; reserve, reactions and counters do not tick. The application play/turn does not consume duration, unless an explicit within-play exception applies. Effect persists through the last counted participation, then expires. Afflicted ticks at end of recipient normal turn before decrement; not on application turn or in reserve.
 
 Supported statuses transfer1:1 between opening/overtime Clash and football, keeping remaining duration and episode history. Unsupported destination effects clear rather than remain dormant in the slot. Preserve through possessions, halftime and overtime; actual complete football-game end clears. Clash KO immediately clears that monster's status and episode. Standalone battle boundaries must not accidentally clear same-game carryover.
+
+> **Approved scope (R1 item 16; N7b).** Implement only the currently approved rest-of-play football Stunned sources; multi-play football Stunned is unapproved. How a Clash-applied Stunned with turns remaining behaves on entering football is still open (docs/task8/REMAINING_DECISIONS.md, B18).
 
 Pancake is a blocking outcome applying existing Knocked Down through the shared gate; every pancake-caused knockdown lasts the rest of current play and clears at whistle. Stumbled is football-only current-speed loss, not complete immobilization; Slowed changes maximum speed. Keep explicit Water slip once-success-per-play and application-play cleanup exceptions.
 
@@ -442,6 +450,8 @@ Permanent Durability defines maximum and initial stamina1:1. Temporary Durabilit
 At zero stamina halve all 12 effective attributes once for the remaining actual game, including overtime/deciding Clash. Halftime restoration does not erase the game-long exhaustion flag. Apply other normal modifiers and the single halving consistently without compounding. Show a low-stamina battery at 25% capacity or below, cycling with status/charge; it is informational, not a status. Reconcile Afflicted's fatigue-resistance role against permanent-capacity rules in the final formulas.
 
 Speed governs movement maximum and acceleration; Agility turning and the approved position-specific evasive behavior. Strength governs contact displacement, fumble resistance and applicable contests; WR Strength improves contested catching. Blocking governs maintaining blocks/block-shed opposition according to approved position rules. Appendix C preserves the full attribute-role register. Those are intended effects, not finalized numeric contest weights.
+
+> **Approved (N7b).** TE contested catching keeps the approved Agility-based role; TE Strength adds no contested-catch contribution.
 
 OL has one ordinary pancake attempt total per play. Establish an advantage first; Awareness informs attempt risk and failure recovery. Strength, Blocking and Tackling contribute as approved; defender Strength/Agility resist. Exact contest weights and thresholds are not authorized for Claude to invent. Guaranteed individual pancake abilities use their explicit exceptions and shared status gate.
 
@@ -561,6 +571,8 @@ These items are not new approved mechanics. They identify what still prevents th
 The remaining profile work occurs in the later player-facing Beast Dex phase, as instructed. The final handoff must not contain these unresolved alternatives. Final owner visual approval and physical-device verification occur after implementation and must be reported honestly rather than substituted with an automated claim.
 
 ## 19 Superseded instructions and source record
+Retired (2026-11-07 additions, see §20): universal ordinary evasion; multi-play football Stunned; Dawn Signal as a stat bonus without live coverage; voluntary rotation at the start of an exchange; free or action-cost rotation entry; ordinary bench attacks; TE Strength contested catching.
+
 Retired:500-monster implementation scope;11v11 mandate in this task; secondary positions; rarity increasing with evolution; identical fully trained individuals; hard30-build cap; direct Temper stat multipliers; Kicking favored/unfavored Tempers; Apex limited by ordinary species ceilings; Apex nonneutral Temper; Apex instant all 99 starts; finite post-level 50 training ban; six training points per level; mastery from participation alone; old mastery XP thresholds; one-second Blazing Resolve; one-second pancake-failure recovery; five-second pancake Knocked Down; and old-save migration requirements.
 
 Do not delete historical audit evidence to hide changes. Label it historical and link the replacement rule. The present consolidation records later approvals even while the version 18 workbook still contains older text. It does not claim that the workbook itself has been updated by this operation.
@@ -571,3 +583,29 @@ Repository: https://github.com/SouthsideGames/gridiron-beast
 Companion Dex: https://chatgpt.com/library?file_id=libfile_9251839d08b08191a12777876b1b274c&account_id=personal
 
 The appendices preserve the family ability index, status journal and attribute-role reference to make the consolidated document reviewable. Per-ability trigger/target/visual/progression details remain in the companion Dex; the finalized GitHub dataset must carry them into implementation. Where an appendix retains older wording, the explicit overrides in the main document take precedence.
+
+## 20 Approved Task 8 rulings, 2026-11-07
+
+Owner rulings N7b (2026-11-07 09:21, recorded verbatim in docs/task8/RULINGS_2026-11-07.md) and N7a (2026-11-07 00:13). They override any conflicting statement above, in the appendices and in the v18 ability rows. Machine-readable values and the replaced ability sections are in `docs/beast-dex/data/task8-overrides.json`; the build (`tools/build-beast-dex.mjs`) applies them and keeps the v18 text as `supersededRule`. Items not listed here are not approved by this section; the full status of every item is in docs/task8/APPROVAL_REGISTER.md.
+
+**Abilities**
+- **Stoke the Flame (P1).** Counterburst deals 60 / 70 / 80% of normal attack damage for Flaroo / Blazynx / Infernox, plus 0 / 5 / 10 / 15 percentage points by mastery. Normal mitigation applies.
+- **Blazing Resolve (P2).** Qualifying carry: net rushing gain over 7 yards (Flaroo), over 4 yards (Blazynx), any positive gain (Infernox). All other approved charge and tackle-encounter rules unchanged.
+- **Beacon Lane (P3).** Created field lasts 1 / 1 / 2 / 2 participating offensive scrimmage plays by mastery, counting its creation play. Created fields clear at halftime; pending creation follows its approved carryover rule.
+- **Mastery-only values (P4).** Apply equally across forms unless an explicit approved form exception exists.
+- **Dawn Signal and kickoffs (P7).** Kickoffs are live plays using existing movement, blocking and tackling, which makes Dawn Signal functional. Credit actual participants and return events. Punts, field goals and extra points keep their approved scope.
+- **Miss-only Clash abilities (P10).** Shadow Pounce: explicit 15% (Umbrikit) / 20% (Obscurat) dodge against enemy normal attacks while its counter is unused. Mind Game: explicit 15% afterimage miss while no trick is stored. Their stated eligibility and undodgeable exceptions are preserved. Arc Rebound is unchanged.
+
+**Shared rules**
+- **Ordinary attacks connect (N7a, P10).** No universal evasion system. Misses come only from explicit effects; contract wording such as "normal evasion" refers to those effects.
+- **Clash rotation (P8).** Voluntary rotation occurs after both normal turns and before delayed impacts, at most once per side every four exchanges. The entrant acts next exchange. On its first normal turn after a voluntary rotation its damage multipliers, heals, shields and status-application chances are halved; a Stunned skip consumes that penalty. Entry effects, reactions and defensive effects are unchanged and nonnumeric effects remain usable. Explicit ability exceptions are preserved.
+- **Pancakes (P5, structure only).** One attempt per OL per play, eligible from an established block advantage. Success: Knocked Down for the rest of the play. Failure: Awareness decides recovery; recovered keeps the block; unrecovered ends the engagement and attempts Stumbled through the shared gate. Contest constants and the separate ordinary block-shed change are not yet approved.
+- **Football Stunned.** Only currently approved rest-of-play sources are implemented. Multi-play football Stunned is unapproved.
+- **Simultaneous-effect limits (P9, behaviour only).** Limits are diagnostics: a legitimate effect is never cancelled, delayed or deleted because a limit is exceeded. The verified limit values are not yet approved.
+- **TE contested catching.** Agility-based role only; no TE Strength contribution.
+- **AI and Basics.** AI may start a Basic when it is the best eligible individual.
+- **Collection achievements.** Separate achievements for the original 72 families, the 120 Basics and all 192 families. Evolutions add no family count.
+- **Art and reviewers.** Art refinement remains paused. Both runtime-backed ability reviewers (football and Beast Clash) remain required.
+
+**Still open** (no ruling; not approved by silence): event order (P6 revision), pancake constants and the ordinary shed formula, verified effect limits, formula-kick participation, the level-XP curve, veteran generation, telemetry definitions, Apex contract, Afflicted drain, mid-Clash save, test matrix, trait and Nature retirement, cornerstone rule, AI information rules, Basic appearance shares, and Clash-to-football Stunned carryover. See docs/task8/REMAINING_DECISIONS.md.
+

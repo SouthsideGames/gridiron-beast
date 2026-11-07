@@ -83,7 +83,9 @@ Source: workbook v18. Apply the later shared overrides in [Approved Rules](../AP
 
 ### Trigger / eligibility
 
-Completed official rushing attempts only. Three qualifying charges ignite for a future rushing carry. No receiving, returns or two-point charge/activation. Positive whole-yard thresholds are in Progression.
+**Approved Task 8 rule (N7b P2; spec §9 (encounter rule)):** Completed official rushing attempts only. Three qualifying charges ignite for a future rushing carry. No receiving, returns or two-point charge/activation. A rushing attempt qualifies when its net gain exceeds the form threshold: Flaroo over 7 yards, Blazynx over 4 yards, Infernox any positive gain (whole yards: at least 8 / 5 / 1).
+
+> Superseded v18 text: Completed official rushing attempts only. Three qualifying charges ignite for a future rushing carry. No receiving, returns or two-point charge/activation. Positive whole-yard thresholds are in Progression.
 
 ### Targets / placement
 
@@ -91,7 +93,9 @@ Self as ball carrier on a rushing attempt
 
 ### Core resolution
 
-First eligible tackle starts one live second of automatic tackle breaks, including multiple defenders reaching runner within that window. Charge consumed; consuming carry earns no new charge. Normal strip/fumble rules remain.
+**Approved Task 8 rule (N7b P2; spec §9 (encounter rule)):** First eligible tackle begins one tackle encounter. Snapshot all defenders already within tackling reach, break their attempts, spend ignition; later arrivals can tackle normally. No one-second window. Consuming carry earns no new charge. Normal strip/fumble rules remain. Do not copy old Eruption's defender stun.
+
+> Superseded v18 text: First eligible tackle starts one live second of automatic tackle breaks, including multiple defenders reaching runner within that window. Charge consumed; consuming carry earns no new charge. Normal strip/fumble rules remain.
 
 ### Recharge / frequency
 
@@ -153,4 +157,6 @@ Three-charge heat indicator and fiery counterburst; detailed choreography pendin
 
 ### Progression / notes
 
-Damage scales by form/mastery. No status or splash.
+**Approved Task 8 rule (N7b P1):** Counterburst deals 60 / 70 / 80% of normal attack damage by Flaroo / Blazynx / Infernox, plus 0 / 5 / 10 / 15 percentage points by mastery. Normal type, damage-reduction and shield mitigation applies. No status or splash.
+
+> Superseded v18 text: Damage scales by form/mastery. No status or splash.
