@@ -45,7 +45,7 @@ t = Φ((quality − 56) / 5.3), clamped to 5–95%.
 | Free-agency veteran arrivals | Current | The club's **fixed natural level** (no seasonal growth). The affordable candidate nearest the target is kept; if none is affordable, the cheapest candidate |
 | Offseason market veterans | Current | Today's quality 50–59, so 23–72nd percentile |
 | Need scouting (a position the club needs now) | Current | Today's quality 50–59 |
-| Draft classes: gems, solid, projects | **Potential** | Gems 62–67 (87–95th), solid 55–60 (43–77th), projects 47–54 (5–35th), plus the class offset |
+| Draft classes: gems, solid, projects | **Potential** | Gems 62–67 (87–95th), solid 55–60 (43–77th), projects 47–54 (5–35th), plus the Task 6 class offset (+0.5 per season, cap +10; **open question**, see IMPLEMENTATION_LOG) |
 | Regional scouting recruits (young prospects) | **Potential** | Today's quality 52–63 plus skill and rarity bonuses (23–91st) |
 | Tuesday encounter prospect | **Potential** | Its scouting quality |
 | Tuesday encounter companions | Current | Matched to the club's battle strength as today |

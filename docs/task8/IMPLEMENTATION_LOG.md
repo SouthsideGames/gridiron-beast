@@ -1,8 +1,7 @@
 # Task 8 implementation log
 
-Branch `task8-implementation`. Nothing here is merged or published. The specification is **not closed**: items P1–P10 in
-`DECISION_PACKET_FINAL.md` await the owner. Only work that depends on approved rules alone is built, and none of it is wired
-into gameplay yet; the running game still uses `src/data/species.js`, the current engines and the current save format.
+Branch `task8-implementation`. Nothing here is merged or published. The specification is closed (2026-11-07 rulings); the build
+follows `BUILD_PLAN.md`. The opening paragraphs below are kept as history.
 
 ## Foundation modules (no gameplay wiring)
 
@@ -51,3 +50,23 @@ amounts, the level-XP curve, and the reviewer scenario and rendering layers.
 
 - `src/franchise/t8/selection.js`: nine-candidate percentile selection, with criteria in `CLUB_STRENGTH_SELECTION.md`.
 - AI identities: proposal in `AI_IDENTITIES.md` (under review).
+
+## M1 integration switch (commit b4d47a0)
+
+| Area | Change | Rule |
+| --- | --- | --- |
+| Species | Live table from the Dex: 192 families, Basic rarity; originals keep their legacy sprites | WP1, B13 |
+| Individuals | Every monster carries `m.dev` (approved generator, Temper, Apex 1%, ceilings); ratings mirror it | WP2, §3 |
+| Selection | Nine-candidate percentile selection in every channel: roster, draft (potential), regional scouting (potential), need scouting, encounter companions, market veterans, free-agency arrivals | N7f |
+| Basic shares | B17 shares in roster, draft, scouting, encounter and arrival channels | B17 |
+| Apex | One roll per event; an unaffordable Apex arrival goes to the regional pool, never re-rolled | N7f |
+| Progression | 75 XP per level to 50; natural growth only on level-up; offseason banks 2 training points; decline on `dev.current` with the loss ledger | B6, B7 |
+| Seasonal boosts | Club-quality growth, the title floor and the rival signature's level formula retired | N7f |
+| Saves | Schema 10. Saves 6, 8 and 9 are refused with code `incompatible`, a clear message and Start New Franchise; nothing is changed or deleted | §15 |
+| UI | Temper replaces Nature (roster, monster page, prospects, free agents, onboarding, Clash lab) | B14 |
+| Cornerstones | Fixed legacy list retired; any eligible Dex family, never K (Granigor is a K under R1 item 32, so it is no longer a cornerstone) | B15 |
+
+**Flagged, not decided (owner question).** Draft classes still rise +0.5 quality per season, capped at +10 (Task 6 D9,
+`classQualityOffset`). D9 was approved to keep classes in step with the league's seasonal growth, which N7f has now retired. It is
+an automatic seasonal rise in incoming talent. Kept unchanged until the owner rules: retire it with the other seasonal boosts, or
+keep it.
