@@ -169,7 +169,7 @@ test('R4 in play: rebuilding clubs sell ageing starters to clubs that need them,
   for (const [k, c] of windows) assert.ok(c <= STARTER_SALE.perWindow, `one sale in window ${k}`);
   for (const s of sales) {
     assert.equal(s.B, s.seller); assert.ok(s.horizon <= PLAN.ageingHorizon, 'approaching or past decline'); assert.ok(s.age > STARTER_SALE.youngStarAge, 'never a young star');
-    assert.notEqual(s.buyerMode, 'rebuild'); assert.ok(s.fl[1] >= s.fl[0] + 2, 'the buyer had a legitimate need at the position');
+    assert.notEqual(s.buyerMode, 'rebuild'); assert.ok(s.inOvr >= s.fl[0] + s.upgradeBar && s.upgradeBar >= 2, 'a legitimate need: the incoming monster beats the buyer\'s weakest starter at the position by the rule\'s margin (league-trades.js AI_TRADE_RULES.upgrade)');
     assert.ok((s.picks || []).length + (s.paidAges || []).length > 0 && (s.paidAges || []).every((a) => a <= STARTER_SALE.youngAge), 'paid in young players or picks');
     const [a, b] = s.mv; assert.ok(a / b >= 0.848 && a / b <= 1.152 && b / a >= 0.848 && b / a <= 1.152, 'fair both ways');
     assert.ok(s.na >= 8 && s.nb >= 2 - 0.5, 'the existing gain and seller-floor rules');

@@ -41,8 +41,8 @@ test('R1 a: before the draft an AI club bids only for urgent lineup holes and it
   }
 });
 
-test('R1 c: an upgrade that needs a release is atomic — released only when the signing completes, zero dead cap, no return', () => {
-  const f = openMarket(37); const club = leagueClubs(f).slice().sort()[2]; // seed 37: the released monster is still unsigned when free agency ends (Task 8 retired Nature, N7c B14; seed 34 before: another club now signs him in a later period)
+function atomicUpgradeCase(seed, { releasedSignedElsewhere = false } = {}) {
+  const f = openMarket(seed); const club = leagueClubs(f).slice().sort()[2];
   const roster = clubRoster(f, club); let i = 0; while (clubRoster(f, club).length < ROSTER_MAX) addToClub(f, club, Object.assign(mon({ id: `pad${i}`, pos: 'OL', q: 45, seed: 40 + i++ }), { contract: { signed: 1, ends: 3, years: 2 }, salary: 20000 }), { year: 1 });
   const spare = clubRoster(f, club).find((m) => m.id.startsWith('pad')) || clubRoster(f, club).filter((m) => !isProtected(m) && !m.legendary && clubRoster(f, club).filter((x) => x.position === m.position).length > 3).sort((a, b) => monsterOverall(a) - monsterOverall(b))[0]; assert.ok(spare);
   const target = E.marketList(f).map((x) => x.m).find((m) => !E.liveOffers(f, (o) => o.club === club && o.mid === m.id).length && !m.legendary && !m.injury); assert.ok(target, 'a free agent');
@@ -55,11 +55,25 @@ test('R1 c: an upgrade that needs a release is atomic — released only when the
   const signed = clubRoster(f, club).some((m) => m.id === target.id);
   if (signed) {
     assert.ok(!clubRoster(f, club).includes(spare), 'released with the signing'); assert.equal(clubRoster(f, club).length, ROSTER_MAX);
-    assert.ok(E.marketList(f).some((x) => x.m === spare), 'the released monster is on the market');
+    const elsewhere = leagueClubs(f).find((c) => c !== club && clubRoster(f, c).some((m) => m.id === spare.id));
+    if (releasedSignedElsewhere) assert.ok(elsewhere, 'the released monster was signed by another club in a later period');
+    else assert.ok(E.marketList(f).some((x) => x.m === spare), 'the released monster is on the market');
+    assert.ok(elsewhere || E.marketList(f).some((x) => x.m === spare), 'the release went to the market, never vanished');
     assert.equal(E.blocker(f, club, spare, null, { newSpot: false })?.code, 'lock', 'and cannot rejoin this league year');
     assert.ok(E.committed(f, club) <= before + reservationFor(terms), 'no charge left behind');
   } else assert.ok(clubRoster(f, club).includes(spare), 'no signing, no release');
   assert.deepEqual(E.marketProblems(f), []);
+  return { signed };
+}
+
+test('R1 c: an upgrade that needs a release is atomic — released only when the signing completes, zero dead cap, no return', () => {
+  // seed 37: the released monster is still unsigned when free agency ends (Task 8 retired Nature, N7c B14; seed 34 before)
+  assert.equal(atomicUpgradeCase(37).signed, true, 'the upgrade completes in this scenario');
+});
+
+test('R1 c: an intervening signing elsewhere never makes the release-and-sign partial (the released monster legally signs with another club)', () => {
+  // seed 34 (the original seed): after Task 8 retired Nature, another club signs the released monster in a later period
+  assert.equal(atomicUpgradeCase(34, { releasedSignedElsewhere: true }).signed, true, 'the upgrade completes in this scenario');
 });
 
 test('R1 d / R6: priority terms satisfy him or are null; a bonus keeps his valuation for less cap, within the limit', () => {

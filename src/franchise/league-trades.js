@@ -142,7 +142,7 @@ function starterSale(f, r, { year, cap, done, window }) {
           const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { B, ...o, ...j, score };
         }
       }
-      if (best) { const d = execute(f, { A: best.B, B: S, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s2, y) => s2 + marketValue(y, { year }), 0) + best.picks.reduce((s2, x) => s2 + x.v, 0) }); return { ...d, sale: true, seller: S, age: m.age, horizon: horizonOf(m), buyerMode: modeOf(f, best.B), paidAges: best.ys.map((y) => y.age) }; }
+      if (best) { const d = execute(f, { A: best.B, B: S, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s2, y) => s2 + marketValue(y, { year }), 0) + best.picks.reduce((s2, x) => s2 + x.v, 0) }); return { ...d, sale: true, seller: S, age: m.age, horizon: horizonOf(m), buyerMode: modeOf(f, best.B), paidAges: best.ys.map((y) => y.age), inOvr: ovr(m), upgradeBar: bar.upgrade }; } // inOvr/upgradeBar: the need rule's inputs, recorded for audit
     }
   }
   return null;

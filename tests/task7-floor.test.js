@@ -32,7 +32,7 @@ test('releases below 26: allowed in the Task 7 offseason only; the minimum still
 });
 
 test('the dead end resolves: the plan shows the shortfall and the savings, the owner releases and signs within the cap, the season starts', () => {
-  const f = toGate(newFranchise(305)); const cap0 = E.capOf(f, f.club); // seed 305: the owner's cap-only, position-blind script still leaves a legal lineup (Task 8 retired Nature, N7c B14; seed 303 before: its releases now leave one CB for two CB slots)
+  const f = toGate(newFranchise(303)); const cap0 = E.capOf(f, f.club); // seed 303 restored: with the lineup-aware planner its suggested releases no longer leave one CB for two CB slots
   while (f.roster.length > F.ROSTER_MIN - 2) F.releaseMonster(f, spare(f)[0].id);
   // squeeze next season's books (staff charges) until the cheapest two replacements no longer fit
   const plan0 = F.rosterFloorPlan(f); f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.max(0, plan0.usable - 1000);
@@ -50,6 +50,22 @@ test('the dead end resolves: the plan shows the shortfall and the savings, the o
   assert.equal(f.roster.length, F.ROSTER_MIN); assert.ok(E.usableCap(f, f.club) >= 0); assert.equal(E.capOf(f, f.club), cap0);
   assert.deepEqual(overLimit(f.roster), { offense: 0, defense: 0 }, 'legendary limits hold');
   const go = F.startNextSeason(f); assert.equal(go.ok, true, go.reason);
+});
+
+test('release suggestions never leave fewer eligible monsters than the required lineup slots; the manual release policy is unchanged', () => {
+  const f = toGate(newFranchise(303));
+  while (f.roster.length > F.ROSTER_MIN - 2) F.releaseMonster(f, spare(f)[0].id);
+  const plan0 = F.rosterFloorPlan(f); f.pendingDeadCap = (f.pendingDeadCap || 0) + Math.max(0, plan0.usable - 1000);
+  // keep exactly the two CBs the base formation needs (CB1, CB2), so any CB release would open a lineup hole
+  const cbs = f.roster.filter((m) => m.position === 'CB'); for (const m of cbs.slice(2)) F.releaseMonster(f, m.id);
+  assert.equal(f.roster.filter((m) => m.position === 'CB').length, 2);
+  const plan = F.rosterFloorPlan(f);
+  assert.ok(plan.releases.length > 0, 'other releases are still offered');
+  const cbIds = new Set(f.roster.filter((m) => m.position === 'CB').map((m) => m.id));
+  assert.ok(!plan.releases.some((x) => cbIds.has(x.id)), 'no suggested release leaves one CB for two CB slots');
+  assert.ok(!plan.path.some((id) => cbIds.has(id)), 'nor does the recovery path');
+  // the explicit manual policy still allows releasing the second-to-last CB (it only refuses the last at a position)
+  assert.equal(F.releaseMonster(f, [...cbIds][0]).ok, true);
 });
 
 test('AI clubs short of the minimum without cap room release a well-paid expendable and fill within the cap', () => {

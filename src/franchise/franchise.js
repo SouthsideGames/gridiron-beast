@@ -598,7 +598,10 @@ export function rosterFloorPlan(f) {
   const cost = (k) => (k <= asks.length ? asks.slice(0, k).reduce((a, b) => a + b, 0) : Infinity);
   const needed = cost(short); const gap = Math.max(0, needed - usable);
   const saving = (m) => capCharge(m, ly, { current: true });
-  const options = (roster) => roster.filter((m) => !releaseRefusal({ ...f, roster }, m));
+  // Advisory only (the manual release policy in releaseMonster is unchanged): never suggest a release that leaves fewer eligible,
+  // healthy monsters than the formation's required lineup slots, checked with the same depth-chart rule the season gate uses.
+  const holes = (roster) => { const ids = new Set(roster.map((x) => x.id)); const manual = Object.fromEntries(Object.entries(f.lineupManual || {}).filter(([, id]) => ids.has(id))); return lineupProblems(roster, buildDepthChart(roster, manual, f.depth)).length; };
+  const options = (roster) => { const base = holes(roster); return roster.filter((m) => !releaseRefusal({ ...f, roster }, m) && holes(roster.filter((x) => x !== m)) <= base); };
   const releases = options(f.roster).map((m) => { const sv = saving(m); const after = Math.max(0, cost(short + 1) - usable - sv); return { id: m.id, name: m.name, position: m.position, ovr: monsterOverall(m), saving: sv, gapAfter: after }; })
     .sort((a, b) => (a.gapAfter === 0) !== (b.gapAfter === 0) ? (a.gapAfter === 0 ? -1 : 1) : a.gapAfter - b.gapAfter || a.ovr - b.ovr || (a.id < b.id ? -1 : 1));
   const path = []; let roster = f.roster.slice(), k = short, room = usable;
