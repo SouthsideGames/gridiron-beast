@@ -36,3 +36,9 @@ The 72-family/102-form starting and potential ranges are now approved including 
 Basic creation is now authorized by BASIC_CREATION_BRIEF.md: 120 standalone families, with shared type moves and existing archetype perks retained, but no unique mode abilities. The 120 families are now authored as design data and art (pending owner review; see BASIC_INDEX.md and BASIC_AUDIT.md). They are not implemented in the game. Later progression approvals are recorded in PROGRESSION_DECISIONS.md and require technical reconciliation.
 
 All production tests, balancing, mobile measurements, ability reviewer updates and owner visual checks remain implementation work. No runtime test is claimed by static profile validation.
+
+## Phase 1 audit (2026-11-06)
+
+[`docs/TASK8_PHASE1_AUDIT.md`](../TASK8_PHASE1_AUDIT.md) checks each R01–R15 item against the later GitHub rules, with citations. It lists the genuine remaining gaps and consolidates them, together with the Basic integration items and the gaps found in the code audit, into one numbered batch of 40 decisions with recommendations.
+
+The spec appendices A–C were missing from the repository. They have now been imported as [SPECIFICATION_APPENDICES.md](SPECIFICATION_APPENDICES.md).
