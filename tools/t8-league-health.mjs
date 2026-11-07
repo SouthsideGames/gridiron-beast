@@ -38,7 +38,9 @@ function snapshot(f, s) {
 const all = [];
 for (const seed of seeds) {
   const t0 = Date.now(); const series = [];
-  const { problems } = runFranchise(seed, { seasons, onSeason: (f, s) => { series.push(snapshot(f, s)); process.stderr.write(`seed ${seed} season ${s} ${((Date.now() - t0) / 1000).toFixed(0)}s\n`); } });
+  // the study owner is never dismissed (board misses reset before each game): the run measures the league over all the seasons
+  const keep = (f) => { const b = f.board; if (b) { b.misses = 0; b.confidence = Math.max(b.confidence || 0, 3); } };
+  const { problems } = runFranchise(seed, { seasons, beforeGame: keep, onSeason: (f, s) => { series.push(snapshot(f, s)); process.stderr.write(`seed ${seed} season ${s} ${((Date.now() - t0) / 1000).toFixed(0)}s\n`); } });
   all.push({ seed, problems: problems.slice(0, 10), problemCount: problems.length, series });
 }
 const text = JSON.stringify({ seasons, seeds, at: new Date().toISOString(), runs: all }, null, 1);
