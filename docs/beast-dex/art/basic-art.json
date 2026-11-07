@@ -1,0 +1,2901 @@
+{
+  "generatedBy": "docs/beast-dex/tools/art_review.mjs",
+  "pipeline": "src/ui/sprite16.js (16×16 spec builder; static, no animation frames)",
+  "families": 120,
+  "problems": [],
+  "notes": [],
+  "records": [
+    {
+      "id": "kindlet",
+      "name": "Kindlet",
+      "type": "Fire",
+      "position": "QB",
+      "archetype": "Support",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "glow"
+        ],
+        "colors": [
+          "#d9542b",
+          "#ffcf6b"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/kindlet.svg",
+      "svgSha256": "e1faf1197e5491410d99b5b43bf31c2792272cb29e6ee0d657232b5472cf808d",
+      "filledPixels": 100,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "charbun",
+      "name": "Charbun",
+      "type": "Fire",
+      "position": "RB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#7a3426",
+          "#ff9a3c"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/charbun.svg",
+      "svgSha256": "5a99e8e86bbcfa1762d4afadc24706916628ecad3698d57a69717f4f9e841279",
+      "filledPixels": 97,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "sparkwick",
+      "name": "Sparkwick",
+      "type": "Fire",
+      "position": "WR",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#f07a2a",
+          "#ffe08a"
+        ]
+      },
+      "asset": "art/basic/sparkwick.svg",
+      "svgSha256": "9b95bb4253774ebc804b36a79f72a85da5aeb478cb8323235229e00967d06150",
+      "filledPixels": 120,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "coalump",
+      "name": "Coalump",
+      "type": "Fire",
+      "position": "TE",
+      "archetype": "Tank",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#4a3a36",
+          "#ff7a3a"
+        ]
+      },
+      "asset": "art/basic/coalump.svg",
+      "svgSha256": "1367cbb19978a6a9a09f48d016a7ee999d22383013440f31da3432d3f9f181a4",
+      "filledPixels": 102,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "kilnback",
+      "name": "Kilnback",
+      "type": "Fire",
+      "position": "OL",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "shelled",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#a3482c",
+          "#f2b45a"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/kilnback.svg",
+      "svgSha256": "f55bd6b69bb60b05470092dba6286a925b2635d76a19949e8a0eaf67d28fbad6",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "scorchub",
+      "name": "Scorchub",
+      "type": "Fire",
+      "position": "DL",
+      "archetype": "Striker",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#c2402a",
+          "#ffb04a"
+        ]
+      },
+      "asset": "art/basic/scorchub.svg",
+      "svgSha256": "b8ae23c29f6270db75ba96d09ae0d5592cf64448fa39782886e57c1aa763ea13",
+      "filledPixels": 120,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "embadger",
+      "name": "Embadger",
+      "type": "Fire",
+      "position": "LB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "ears",
+          "claws"
+        ],
+        "colors": [
+          "#5a4038",
+          "#ff8a2a"
+        ],
+        "pattern": "stripes"
+      },
+      "asset": "art/basic/embadger.svg",
+      "svgSha256": "68811c315d385f10ddaa7ad4e25276f2cd960ce67b5fb0e7242542a6e6346701",
+      "filledPixels": 112,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "singecat",
+      "name": "Singecat",
+      "type": "Fire",
+      "position": "CB",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "whiskers",
+          "flametail"
+        ],
+        "colors": [
+          "#e0602e",
+          "#fff0b0"
+        ]
+      },
+      "asset": "art/basic/singecat.svg",
+      "svgSha256": "7f36d9337a4f5a748fb72ec717a61b6b17ce956fd2c01d2057561b4cde5cf22e",
+      "filledPixels": 104,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "ashpeck",
+      "name": "Ashpeck",
+      "type": "Fire",
+      "position": "S",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#6b5a52",
+          "#ff6a3a"
+        ]
+      },
+      "asset": "art/basic/ashpeck.svg",
+      "svgSha256": "8addef8bf876789f2188d1cdde05373382ca5f18082f80dde19105f9377f2c3e",
+      "filledPixels": 72,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "fusebug",
+      "name": "Fusebug",
+      "type": "Fire",
+      "position": "K",
+      "archetype": "Support",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "glow"
+        ],
+        "colors": [
+          "#ff8a3a",
+          "#ffd84a"
+        ]
+      },
+      "asset": "art/basic/fusebug.svg",
+      "svgSha256": "6313c08e10b9471aa5b09b6a56922cf9f66cca0e9305e84cf3c62a2dd09ca150",
+      "filledPixels": 68,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "brookit",
+      "name": "Brookit",
+      "type": "Water",
+      "position": "QB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "fins",
+          "crest"
+        ],
+        "colors": [
+          "#3a86c8",
+          "#c8ecff"
+        ]
+      },
+      "asset": "art/basic/brookit.svg",
+      "svgSha256": "65157999eaf613e3f92a324970f42a28f6546c230576a4eebc1d9119237ce0be",
+      "filledPixels": 91,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "ottrip",
+      "name": "Ottrip",
+      "type": "Water",
+      "position": "RB",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "whiskers",
+          "tail"
+        ],
+        "colors": [
+          "#7a5a3e",
+          "#9ed8f0"
+        ]
+      },
+      "asset": "art/basic/ottrip.svg",
+      "svgSha256": "960723cb1bc816e54d7ee88bdfb6c23118b0b79a5fa66f45f3dace4328d2efe0",
+      "filledPixels": 103,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "minnodart",
+      "name": "Minnodart",
+      "type": "Water",
+      "position": "WR",
+      "archetype": "Striker",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "fins"
+        ],
+        "colors": [
+          "#5ab0d8",
+          "#f0f8ff"
+        ],
+        "pattern": "stripes"
+      },
+      "asset": "art/basic/minnodart.svg",
+      "svgSha256": "a177cfd234b90a094f8960c166b34388245d36a079d9a26abb1763492fe464a0",
+      "filledPixels": 86,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "kelpup",
+      "name": "Kelpup",
+      "type": "Water",
+      "position": "TE",
+      "archetype": "Support",
+      "spec": {
+        "body": "serpent",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "fins"
+        ],
+        "colors": [
+          "#2e7a6a",
+          "#a8e0a0"
+        ],
+        "pattern": "backstripe"
+      },
+      "asset": "art/basic/kelpup.svg",
+      "svgSha256": "3f8a4fa6b7840b5210b8521213fdc0d55353b901ccc4799ebe53747e7c287d33",
+      "filledPixels": 113,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "barnaclod",
+      "name": "Barnaclod",
+      "type": "Water",
+      "position": "OL",
+      "archetype": "Tank",
+      "spec": {
+        "body": "shelled",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#6a7a8a",
+          "#d8f0f8"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/barnaclod.svg",
+      "svgSha256": "f458a897fdb6a214b7ca22862703567102e99112dbe012044a4d9a0f50916c0a",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "sploshog",
+      "name": "Sploshog",
+      "type": "Water",
+      "position": "DL",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "shelled",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks"
+        ],
+        "colors": [
+          "#4a7aa0",
+          "#e0f4ff"
+        ]
+      },
+      "asset": "art/basic/sploshog.svg",
+      "svgSha256": "542992b4053418bd54abca48b4b11d149b68ad33e7a312c80ce4ad151a698bb1",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "newtide",
+      "name": "Newtide",
+      "type": "Water",
+      "position": "LB",
+      "archetype": "Support",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "fins",
+          "crest"
+        ],
+        "colors": [
+          "#2a9a8a",
+          "#ffd06a"
+        ]
+      },
+      "asset": "art/basic/newtide.svg",
+      "svgSha256": "964b733e9abac9c070e7a05b1d99ee6c62d9ba9a3b9f1bceea1ade0acbcb1f00",
+      "filledPixels": 91,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "pondskip",
+      "name": "Pondskip",
+      "type": "Water",
+      "position": "CB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings"
+        ],
+        "colors": [
+          "#3a6ab0",
+          "#a0f0e0"
+        ]
+      },
+      "asset": "art/basic/pondskip.svg",
+      "svgSha256": "0c6d4d1aea96ee89f8b1954c4dd32a111e2cb34d246f85a01d36bae10ce42da1",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "wadelet",
+      "name": "Wadelet",
+      "type": "Water",
+      "position": "S",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#8ab0c8",
+          "#ffffff"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/wadelet.svg",
+      "svgSha256": "b301670b01282ea8fe346f83dab53e80c489554d96fbf73196357973856d1ad2",
+      "filledPixels": 72,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "bubblop",
+      "name": "Bubblop",
+      "type": "Water",
+      "position": "K",
+      "archetype": "Tank",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#5ac0e8",
+          "#e8fbff"
+        ]
+      },
+      "asset": "art/basic/bubblop.svg",
+      "svgSha256": "f19d2c824cdd447e3b2a8e2ced572cfb6acd7611fb0a5d2eb08be4251da3f9a3",
+      "filledPixels": 80,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "acornet",
+      "name": "Acornet",
+      "type": "Nature",
+      "position": "QB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#8a6a3a",
+          "#a8d870"
+        ]
+      },
+      "asset": "art/basic/acornet.svg",
+      "svgSha256": "f8427dc207e52c2d632bb95c78b2c85f0adcf04b14daa99665b1ad1109dfbedd",
+      "filledPixels": 86,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "thistlehop",
+      "name": "Thistlehop",
+      "type": "Nature",
+      "position": "RB",
+      "archetype": "Support",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "spikes"
+        ],
+        "colors": [
+          "#7a9a4a",
+          "#d88ad8"
+        ]
+      },
+      "asset": "art/basic/thistlehop.svg",
+      "svgSha256": "6fdb2ec32f5bdd2486b48f59fc2cda9e958b0bf361da6c776fbbd22184a953e6",
+      "filledPixels": 93,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "fernflit",
+      "name": "Fernflit",
+      "type": "Nature",
+      "position": "WR",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#4a8a3a",
+          "#e0f0a0"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/fernflit.svg",
+      "svgSha256": "16b8cada6b09a12a9ac7e7c49cc6cb333716cb30357e11600d91caff41b65461",
+      "filledPixels": 120,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "stumpkin",
+      "name": "Stumpkin",
+      "type": "Nature",
+      "position": "TE",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#7a5a3a",
+          "#8ac860"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/stumpkin.svg",
+      "svgSha256": "43a683aa785ee88ee2daa5901a9368624f550897dd7c5045af95fa9abddb64c9",
+      "filledPixels": 112,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "trunkle",
+      "name": "Trunkle",
+      "type": "Nature",
+      "position": "OL",
+      "archetype": "Support",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks",
+          "ears"
+        ],
+        "colors": [
+          "#6a5a4a",
+          "#9ad86a"
+        ]
+      },
+      "asset": "art/basic/trunkle.svg",
+      "svgSha256": "1a6fc5a46485825fe8e9c09252d948c2a2656f33f9bdc45a218c56529ef07b17",
+      "filledPixels": 111,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "briarhog",
+      "name": "Briarhog",
+      "type": "Nature",
+      "position": "DL",
+      "archetype": "Tank",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "spikes"
+        ],
+        "colors": [
+          "#5a6a3a",
+          "#c8a0e0"
+        ]
+      },
+      "asset": "art/basic/briarhog.svg",
+      "svgSha256": "ceae709c85fff53a0432a22368f2531089887121729a2c13037ff9f0f1fa31aa",
+      "filledPixels": 109,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "barkbug",
+      "name": "Barkbug",
+      "type": "Nature",
+      "position": "LB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "insectoid",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "antennae",
+          "plates"
+        ],
+        "colors": [
+          "#6a4a2a",
+          "#a0c860"
+        ]
+      },
+      "asset": "art/basic/barkbug.svg",
+      "svgSha256": "3c7b3e2ac03db133cd5412d58785e3f3f00bcea90a41821ffab8d5d1d448f8aa",
+      "filledPixels": 92,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "fawnleaf",
+      "name": "Fawnleaf",
+      "type": "Nature",
+      "position": "CB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#a07a4a",
+          "#d8f0a0"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/fawnleaf.svg",
+      "svgSha256": "fd2af955cf30f97b1a175360c43ac24ac7b8183197b408d902bb0249c71e78e8",
+      "filledPixels": 91,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "ivyowl",
+      "name": "Ivyowl",
+      "type": "Nature",
+      "position": "S",
+      "archetype": "Striker",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "beak"
+        ],
+        "colors": [
+          "#4a7a4a",
+          "#f0e080"
+        ]
+      },
+      "asset": "art/basic/ivyowl.svg",
+      "svgSha256": "288e886d9d166574a4ee684d48df0fb24fac304ac6e07fbecc9568e424b06f91",
+      "filledPixels": 86,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "podling",
+      "name": "Podling",
+      "type": "Nature",
+      "position": "K",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "bulb"
+        ],
+        "colors": [
+          "#6aa84a",
+          "#f0d86a"
+        ]
+      },
+      "asset": "art/basic/podling.svg",
+      "svgSha256": "9172d23af14568357feace5387bfd9a2f3a48b325c64942860a7393adf884b42",
+      "filledPixels": 92,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "ampette",
+      "name": "Ampette",
+      "type": "Electric",
+      "position": "QB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "glow"
+        ],
+        "colors": [
+          "#e8c22a",
+          "#5ae0ff"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/ampette.svg",
+      "svgSha256": "14d397b2e4c937a0b28de9df1550319a567d782298c61c1d0db558ad8afe3dd1",
+      "filledPixels": 68,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "fuzzvolt",
+      "name": "Fuzzvolt",
+      "type": "Electric",
+      "position": "RB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#f0d040",
+          "#4a4a6a"
+        ],
+        "pattern": "stripes"
+      },
+      "asset": "art/basic/fuzzvolt.svg",
+      "svgSha256": "878b510f205dc069c043c39dbb9e3bddc27ec86a1640a0559aab1965d3502db0",
+      "filledPixels": 106,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "boltdart",
+      "name": "Boltdart",
+      "type": "Electric",
+      "position": "WR",
+      "archetype": "Support",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#ffd83a",
+          "#3a6ad8"
+        ]
+      },
+      "asset": "art/basic/boltdart.svg",
+      "svgSha256": "9e95d5b80006f4fb61ebf20900cd0c2b472bf772b4f3074671d79cb1d5d26a25",
+      "filledPixels": 97,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "wattram",
+      "name": "Wattram",
+      "type": "Electric",
+      "position": "TE",
+      "archetype": "Striker",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn"
+        ],
+        "colors": [
+          "#c8a82a",
+          "#7af0ff"
+        ]
+      },
+      "asset": "art/basic/wattram.svg",
+      "svgSha256": "49ce616f5eec2b0a4a391b82cd84542089675b60059c26a303dcab5fcb25b635",
+      "filledPixels": 111,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "capaclod",
+      "name": "Capaclod",
+      "type": "Electric",
+      "position": "OL",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "insectoid",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "bulb",
+          "plates"
+        ],
+        "colors": [
+          "#8a8a3a",
+          "#ffe85a"
+        ]
+      },
+      "asset": "art/basic/capaclod.svg",
+      "svgSha256": "f941277e9be082afa8282ff66f48f8c4ca04d27a3ead8ce0f77c6c9f2534d69a",
+      "filledPixels": 88,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "zaphog",
+      "name": "Zaphog",
+      "type": "Electric",
+      "position": "DL",
+      "archetype": "Support",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks",
+          "ears"
+        ],
+        "colors": [
+          "#d8b030",
+          "#5a5a8a"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/zaphog.svg",
+      "svgSha256": "418100593cc9efaed01d37b56708c8f98428b22c73bf9b2d6715486baebbd884",
+      "filledPixels": 122,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "staticub",
+      "name": "Staticub",
+      "type": "Electric",
+      "position": "LB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "glow"
+        ],
+        "colors": [
+          "#e0c040",
+          "#a05ad8"
+        ]
+      },
+      "asset": "art/basic/staticub.svg",
+      "svgSha256": "a799e8d689329f48f5a918b2e7bc14a08ad15f04f6b2fc259d8ea7a40a7ec3db",
+      "filledPixels": 100,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "neonnewt",
+      "name": "Neonnewt",
+      "type": "Electric",
+      "position": "CB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "fins",
+          "glow"
+        ],
+        "colors": [
+          "#3ad8a0",
+          "#ffe84a"
+        ]
+      },
+      "asset": "art/basic/neonnewt.svg",
+      "svgSha256": "dc76c2e0268b5ef422599287df946c66cb0125db1e5c1c642af2f59ee82105d2",
+      "filledPixels": 86,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "buzzhawk",
+      "name": "Buzzhawk",
+      "type": "Electric",
+      "position": "S",
+      "archetype": "Tank",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "beak",
+          "wings"
+        ],
+        "colors": [
+          "#c8a020",
+          "#e8f8ff"
+        ]
+      },
+      "asset": "art/basic/buzzhawk.svg",
+      "svgSha256": "b6d92a7a12f81cd2f043ad75d855e934d3964b18a6a5bb388933edc27015b816",
+      "filledPixels": 116,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "wattlet",
+      "name": "Wattlet",
+      "type": "Electric",
+      "position": "K",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "bulb"
+        ],
+        "colors": [
+          "#f0e05a",
+          "#5ac8ff"
+        ]
+      },
+      "asset": "art/basic/wattlet.svg",
+      "svgSha256": "5845d088bf2120aea42102c927967d20a6e776e868fa5048402fb6abdfbbcb41",
+      "filledPixels": 72,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "slatelet",
+      "name": "Slatelet",
+      "type": "Earth",
+      "position": "QB",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#7a7068",
+          "#c8a878"
+        ]
+      },
+      "asset": "art/basic/slatelet.svg",
+      "svgSha256": "406e6da1074e7516826c9e2c76979ae8d1d5a497f9c9848fcee797d8701aac17",
+      "filledPixels": 92,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "gravelpup",
+      "name": "Gravelpup",
+      "type": "Earth",
+      "position": "RB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "plates"
+        ],
+        "colors": [
+          "#8a7a6a",
+          "#e0c890"
+        ]
+      },
+      "asset": "art/basic/gravelpup.svg",
+      "svgSha256": "fe6dbf4b8d3f29eddd0d3cceebd74097f5bc107388146c16493de64a9597f020",
+      "filledPixels": 91,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "mudlark",
+      "name": "Mudlark",
+      "type": "Earth",
+      "position": "WR",
+      "archetype": "Tank",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#7a6040",
+          "#d8c8a0"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/mudlark.svg",
+      "svgSha256": "9aec7146349ec629751eb647c01d1153114563be188a2fe6bc0b4e5a677503fd",
+      "filledPixels": 72,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "clodhorn",
+      "name": "Clodhorn",
+      "type": "Earth",
+      "position": "TE",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn"
+        ],
+        "colors": [
+          "#8a6a4a",
+          "#b8d870"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/clodhorn.svg",
+      "svgSha256": "97f12977cdcfb979c6217ed7ae18f3b75f101f063a64f0f04426f64e7b5fb0dd",
+      "filledPixels": 111,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "cobblump",
+      "name": "Cobblump",
+      "type": "Earth",
+      "position": "OL",
+      "archetype": "Striker",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#9a8a78",
+          "#6a5a4a"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/cobblump.svg",
+      "svgSha256": "4ae9092cffa8594524f11223a0eb4dffc8694cbbc0c675496072739ac594db80",
+      "filledPixels": 102,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "quarrox",
+      "name": "Quarrox",
+      "type": "Earth",
+      "position": "DL",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns",
+          "plates"
+        ],
+        "colors": [
+          "#6a6058",
+          "#e0a060"
+        ]
+      },
+      "asset": "art/basic/quarrox.svg",
+      "svgSha256": "7ba37e773f23c59f54ecfa106332a2a7209e088139ea3ae4ef69f38ecce58299",
+      "filledPixels": 114,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "diggit",
+      "name": "Diggit",
+      "type": "Earth",
+      "position": "LB",
+      "archetype": "Support",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "claws",
+          "whiskers"
+        ],
+        "colors": [
+          "#8a6a50",
+          "#f0d8b0"
+        ]
+      },
+      "asset": "art/basic/diggit.svg",
+      "svgSha256": "d41bdfa46c4d28e66e410b7719dd8dfaa84018f399bec037b948521cfc6ca14e",
+      "filledPixels": 96,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "pumicat",
+      "name": "Pumicat",
+      "type": "Earth",
+      "position": "CB",
+      "archetype": "Support",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#b0a090",
+          "#5a4a40"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/pumicat.svg",
+      "svgSha256": "89127071a2b030c43f5ab4277c90eeb55929dac3d5a919dec41a458c153a071c",
+      "filledPixels": 97,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "siltadillo",
+      "name": "Siltadillo",
+      "type": "Earth",
+      "position": "S",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "shelled",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#9a8060",
+          "#e8d0a0"
+        ]
+      },
+      "asset": "art/basic/siltadillo.svg",
+      "svgSha256": "cc67601abd7631c5deadb5d936ccf18aac1005bf2b752a41ac4726d903d5bd40",
+      "filledPixels": 84,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "geodot",
+      "name": "Geodot",
+      "type": "Earth",
+      "position": "K",
+      "archetype": "Striker",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#7a6a8a",
+          "#d890ff"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/geodot.svg",
+      "svgSha256": "2451a8519f5b33afac66f45351fa661407ecd20f653828d06b131f9e3f205bfa",
+      "filledPixels": 92,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "chillip",
+      "name": "Chillip",
+      "type": "Ice",
+      "position": "QB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#9ad0f0",
+          "#3a6aa0"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/chillip.svg",
+      "svgSha256": "75fac73484742b7554624aa3c55818fb847f1e82982c16ad172243689146c89f",
+      "filledPixels": 72,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "skiddle",
+      "name": "Skiddle",
+      "type": "Ice",
+      "position": "RB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#c8e8f8",
+          "#5a8ab8"
+        ]
+      },
+      "asset": "art/basic/skiddle.svg",
+      "svgSha256": "b525fca4a8807c7a1160afc4fa433b1d3401e045189f260cd18e9d5caa22e21a",
+      "filledPixels": 94,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "snowdart",
+      "name": "Snowdart",
+      "type": "Ice",
+      "position": "WR",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#e8f4ff",
+          "#6aa8e0"
+        ],
+        "pattern": "stripes"
+      },
+      "asset": "art/basic/snowdart.svg",
+      "svgSha256": "0c845017f8777e2f51f94e9807c3e9ecc41fa76d79f0440e7b03fa17c1a190ea",
+      "filledPixels": 97,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "walrump",
+      "name": "Walrump",
+      "type": "Ice",
+      "position": "TE",
+      "archetype": "Striker",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "tusks",
+          "whiskers"
+        ],
+        "colors": [
+          "#8a7a70",
+          "#d8f0ff"
+        ]
+      },
+      "asset": "art/basic/walrump.svg",
+      "svgSha256": "3352fb7c8a249fc3901434dbe2351926a53bb8835dc55d354f63b8fa7fc8cccd",
+      "filledPixels": 102,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "floebear",
+      "name": "Floebear",
+      "type": "Ice",
+      "position": "OL",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#e0f0f8",
+          "#7ab0d8"
+        ]
+      },
+      "asset": "art/basic/floebear.svg",
+      "svgSha256": "1a465a4740ad433e6130d7f6227fac4332fd78e262d3b6311ce4945ea113b5ea",
+      "filledPixels": 122,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "rimeboar",
+      "name": "Rimeboar",
+      "type": "Ice",
+      "position": "DL",
+      "archetype": "Tank",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks",
+          "spikes"
+        ],
+        "colors": [
+          "#a8c8e0",
+          "#ffffff"
+        ]
+      },
+      "asset": "art/basic/rimeboar.svg",
+      "svgSha256": "8de136ce943b502bf61e9af3336364e42c6f5fabdb957ea9d6baf7afea93b49e",
+      "filledPixels": 109,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "hoarcub",
+      "name": "Hoarcub",
+      "type": "Ice",
+      "position": "LB",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "fangs"
+        ],
+        "colors": [
+          "#b8d8f0",
+          "#4a6a9a"
+        ]
+      },
+      "asset": "art/basic/hoarcub.svg",
+      "svgSha256": "5792f5840113bd467b5688dd5f5e9c24474030d2c4224325e5bef051fa1b433d",
+      "filledPixels": 91,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "shiverkit",
+      "name": "Shiverkit",
+      "type": "Ice",
+      "position": "CB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "whiskers"
+        ],
+        "colors": [
+          "#90b8d8",
+          "#f0faff"
+        ],
+        "pattern": "backstripe"
+      },
+      "asset": "art/basic/shiverkit.svg",
+      "svgSha256": "b3e0de223cd3fd3b78209afe3e8d98978625203b9ba8c5b6d15473de52ca7477",
+      "filledPixels": 95,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "ptarmilet",
+      "name": "Ptarmilet",
+      "type": "Ice",
+      "position": "S",
+      "archetype": "Support",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#f4f8ff",
+          "#8a98a8"
+        ],
+        "pattern": "mask"
+      },
+      "asset": "art/basic/ptarmilet.svg",
+      "svgSha256": "8516a7e1bbae6ba1bf2796927401f5f4aa48dc7f0719235c2b836e72f5026224",
+      "filledPixels": 72,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "cubeling",
+      "name": "Cubeling",
+      "type": "Ice",
+      "position": "K",
+      "archetype": "Striker",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#c8f0ff",
+          "#5ab0e8"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/cubeling.svg",
+      "svgSha256": "40eccbb53ad70c64c0a8ff0e29d4b73a2c0c192fa57297d1e35758ca320c2308",
+      "filledPixels": 80,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "breezle",
+      "name": "Breezle",
+      "type": "Wind",
+      "position": "QB",
+      "archetype": "Support",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "wings",
+          "crest"
+        ],
+        "colors": [
+          "#a8e0d0",
+          "#ffffff"
+        ]
+      },
+      "asset": "art/basic/breezle.svg",
+      "svgSha256": "4be827a6f72e2f46b0a47c3a42680b2f9116cd8a8a19e744d4f57ceb6ef62156",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "whirlhare",
+      "name": "Whirlhare",
+      "type": "Wind",
+      "position": "RB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#8ad0c0",
+          "#f8fff8"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/whirlhare.svg",
+      "svgSha256": "04f139ce48ed5d182f190c14e2d58e10d25d98c8f0da1a026a11be83eaea7bc2",
+      "filledPixels": 97,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "kitelet",
+      "name": "Kitelet",
+      "type": "Wind",
+      "position": "WR",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "wings",
+          "crest"
+        ],
+        "colors": [
+          "#7ad0e0",
+          "#ff8aa0"
+        ],
+        "pattern": "stripes"
+      },
+      "asset": "art/basic/kitelet.svg",
+      "svgSha256": "c44022439472ff0db02f576299c36a8ee1f3131472d576d03c2fc611404af322",
+      "filledPixels": 116,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "sailmoth",
+      "name": "Sailmoth",
+      "type": "Wind",
+      "position": "TE",
+      "archetype": "Tank",
+      "spec": {
+        "body": "insectoid",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#c8f0e8",
+          "#5a9a8a"
+        ]
+      },
+      "asset": "art/basic/sailmoth.svg",
+      "svgSha256": "678bf1474a0238f2bf584d7cba2d66be7fd5490f97419a93ef8bb35ba14404c9",
+      "filledPixels": 152,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "nimbulk",
+      "name": "Nimbulk",
+      "type": "Wind",
+      "position": "OL",
+      "archetype": "Tank",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#e8f4f8",
+          "#9ab8c8"
+        ]
+      },
+      "asset": "art/basic/nimbulk.svg",
+      "svgSha256": "7a4c7483fa81c8f94279b2c71c9c74d768bd211578f0ef00c5a26354a1b6efd3",
+      "filledPixels": 102,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "galebuck",
+      "name": "Galebuck",
+      "type": "Wind",
+      "position": "DL",
+      "archetype": "Striker",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#9ab8a8",
+          "#f0fff0"
+        ]
+      },
+      "asset": "art/basic/galebuck.svg",
+      "svgSha256": "ba86ce464bf12b44da5fa283cc7c2bb0b7732f8121646a456333ce6d56a8f1b8",
+      "filledPixels": 114,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "windrook",
+      "name": "Windrook",
+      "type": "Wind",
+      "position": "LB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "avian",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#5a7a78",
+          "#c8f0e0"
+        ]
+      },
+      "asset": "art/basic/windrook.svg",
+      "svgSha256": "d83cb59e4fbfe386c103218abb67d1c3aeb2ddd42123ec63636d50eaa73c36cb",
+      "filledPixels": 92,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "swallit",
+      "name": "Swallit",
+      "type": "Wind",
+      "position": "CB",
+      "archetype": "Support",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "beak"
+        ],
+        "colors": [
+          "#4a6a8a",
+          "#ffe0c0"
+        ],
+        "pattern": "mask"
+      },
+      "asset": "art/basic/swallit.svg",
+      "svgSha256": "9a83c3507404cb7755506d1326c3fd41b5a1cb7c5fd1a28499a6419ef76cb90e",
+      "filledPixels": 116,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "pinwhirl",
+      "name": "Pinwhirl",
+      "type": "Wind",
+      "position": "S",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings"
+        ],
+        "colors": [
+          "#a8d8c8",
+          "#ff6a8a"
+        ],
+        "pattern": "stripes"
+      },
+      "asset": "art/basic/pinwhirl.svg",
+      "svgSha256": "33f0569c44a1c6cba0e7b725e90f94053fed073a1233b69e6febd3494df40f0c",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "gustpuff",
+      "name": "Gustpuff",
+      "type": "Wind",
+      "position": "K",
+      "archetype": "Tank",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#d8f8f0",
+          "#7ac8b8"
+        ]
+      },
+      "asset": "art/basic/gustpuff.svg",
+      "svgSha256": "5e5260a005d5de6d94f8882f3b46dad1d31014b576e1ab687c74ba71cb05ce01",
+      "filledPixels": 72,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "murkit",
+      "name": "Murkit",
+      "type": "Dark",
+      "position": "QB",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#3a3048",
+          "#c8a0ff"
+        ],
+        "pattern": "mask"
+      },
+      "asset": "art/basic/murkit.svg",
+      "svgSha256": "4c27c2728ff0a569253122089b1d7dee4063821910df17f947d69cf368cd964d",
+      "filledPixels": 100,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "minkurk",
+      "name": "Minkurk",
+      "type": "Dark",
+      "position": "RB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#2e2838",
+          "#e0d0ff"
+        ],
+        "pattern": "mask"
+      },
+      "asset": "art/basic/minkurk.svg",
+      "svgSha256": "d521db57163cc9c7d8d548c36bce764da8608a002b677cebf59b67ab6e91f9e9",
+      "filledPixels": 87,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "batwhisk",
+      "name": "Batwhisk",
+      "type": "Dark",
+      "position": "WR",
+      "archetype": "Support",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "wings"
+        ],
+        "colors": [
+          "#4a3a5a",
+          "#ff8ad8"
+        ]
+      },
+      "asset": "art/basic/batwhisk.svg",
+      "svgSha256": "a44ce481bafbda6c412817968153c9ce666ab4ee8fc99b7ea3244c8f1bfcb20d",
+      "filledPixels": 130,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "gloamtoad",
+      "name": "Gloamtoad",
+      "type": "Dark",
+      "position": "TE",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#3a4a3a",
+          "#a0ffb0"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/gloamtoad.svg",
+      "svgSha256": "d57de2f52ab5797b5231e2993abb0c1c07b3ea44428a7fec55203670dd95ebf2",
+      "filledPixels": 102,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "umbruin",
+      "name": "Umbruin",
+      "type": "Dark",
+      "position": "OL",
+      "archetype": "Tank",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "ears",
+          "claws"
+        ],
+        "colors": [
+          "#2a2430",
+          "#8a6aa8"
+        ]
+      },
+      "asset": "art/basic/umbruin.svg",
+      "svgSha256": "2ec93dbea459df14453d61007bcef62262b0b7fc2f971d6ae1c64fc459a6bfe8",
+      "filledPixels": 126,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "vexhound",
+      "name": "Vexhound",
+      "type": "Dark",
+      "position": "DL",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "fierce",
+        "features": [
+          "ears",
+          "fangs"
+        ],
+        "colors": [
+          "#3a2a3a",
+          "#ff5a6a"
+        ]
+      },
+      "asset": "art/basic/vexhound.svg",
+      "svgSha256": "f75f2f6ee6101abbbea01c974e3302a8633dd88905165e34e47f6c5d676d5ddb",
+      "filledPixels": 118,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "crowlurk",
+      "name": "Crowlurk",
+      "type": "Dark",
+      "position": "LB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "avian",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#2a2a38",
+          "#9ab0ff"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/crowlurk.svg",
+      "svgSha256": "363f157914f627d40d863e8b067e29f0080402eaf149dddde9efd115e7f7c856",
+      "filledPixels": 92,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "spindlet",
+      "name": "Spindlet",
+      "type": "Dark",
+      "position": "CB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "antennae"
+        ],
+        "colors": [
+          "#3a3040",
+          "#e0e080"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/spindlet.svg",
+      "svgSha256": "af83ababb66753feb6ab3cf4b4c0eb0f7fa7d9a02cf573d8ffb088ab1b024b9a",
+      "filledPixels": 68,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "gloomoth",
+      "name": "Gloomoth",
+      "type": "Dark",
+      "position": "S",
+      "archetype": "Support",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#4a405a",
+          "#d8c0ff"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/gloomoth.svg",
+      "svgSha256": "6c20e2cbd70a2a8cf580ae348ced173d7ac8a57e243bb2fc76769955db00747c",
+      "filledPixels": 120,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "inklet",
+      "name": "Inklet",
+      "type": "Dark",
+      "position": "K",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "fins"
+        ],
+        "colors": [
+          "#2a2a40",
+          "#7a8aff"
+        ]
+      },
+      "asset": "art/basic/inklet.svg",
+      "svgSha256": "eb2800b261dd03df919d6e3b4fd577c8f0bcc2c606992376a68f55eac34290dc",
+      "filledPixels": 86,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "beamlet",
+      "name": "Beamlet",
+      "type": "Light",
+      "position": "QB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "halo"
+        ],
+        "colors": [
+          "#f8e8a0",
+          "#ffb84a"
+        ]
+      },
+      "asset": "art/basic/beamlet.svg",
+      "svgSha256": "fbf146a58e6b4d42ece111bac5f044f2daf7088547e6e0409d86d4206679a3f3",
+      "filledPixels": 100,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "glowhare",
+      "name": "Glowhare",
+      "type": "Light",
+      "position": "RB",
+      "archetype": "Support",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "glow"
+        ],
+        "colors": [
+          "#fff0c0",
+          "#ffd04a"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/glowhare.svg",
+      "svgSha256": "feaef67f10ab87969b31afea3025b115036f4d7a356632758e252d33363c0bb5",
+      "filledPixels": 68,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "dawnfinch",
+      "name": "Dawnfinch",
+      "type": "Light",
+      "position": "WR",
+      "archetype": "Striker",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest",
+          "beak"
+        ],
+        "colors": [
+          "#ffd88a",
+          "#ff8a5a"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/dawnfinch.svg",
+      "svgSha256": "24c062a7c67ef829aa045830e46f782b52b829636fe4780156d8271c692e6fe8",
+      "filledPixels": 72,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "lanternox",
+      "name": "Lanternox",
+      "type": "Light",
+      "position": "TE",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn",
+          "glow"
+        ],
+        "colors": [
+          "#e8d8a0",
+          "#ffe85a"
+        ]
+      },
+      "asset": "art/basic/lanternox.svg",
+      "svgSha256": "bc82b72ccb5fa8a4434e11f19a1332fd8229d0c978987563d1009b6e724e7fc8",
+      "filledPixels": 116,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "waxwick",
+      "name": "Waxwick",
+      "type": "Light",
+      "position": "OL",
+      "archetype": "Support",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "glow",
+          "crest"
+        ],
+        "colors": [
+          "#f8f0d8",
+          "#ffa84a"
+        ]
+      },
+      "asset": "art/basic/waxwick.svg",
+      "svgSha256": "b115e91cb4766bd2a0910c57a694936e7ffba52b15a501d0093fb650f3e24cb3",
+      "filledPixels": 112,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "solram",
+      "name": "Solram",
+      "type": "Light",
+      "position": "DL",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#f0d878",
+          "#ffffff"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/solram.svg",
+      "svgSha256": "74cc724c4e7a5c40172fd710854c9190abd49c25801b59181b216ea3c3f9b131",
+      "filledPixels": 120,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "lumbear",
+      "name": "Lumbear",
+      "type": "Light",
+      "position": "LB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "ears",
+          "halo"
+        ],
+        "colors": [
+          "#f8e0b0",
+          "#f0c040"
+        ]
+      },
+      "asset": "art/basic/lumbear.svg",
+      "svgSha256": "eb8d680157ca4603e336c6e48f0087b8e736e50eb832ce1413ae36cc4bddd256",
+      "filledPixels": 130,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "glarefly",
+      "name": "Glarefly",
+      "type": "Light",
+      "position": "CB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "glow"
+        ],
+        "colors": [
+          "#fff8c0",
+          "#ffb040"
+        ]
+      },
+      "asset": "art/basic/glarefly.svg",
+      "svgSha256": "490d3f87cf14972fc7000f7fbf56b647d489dedb004c94516630ff4ec70e41e4",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "dazzlet",
+      "name": "Dazzlet",
+      "type": "Light",
+      "position": "S",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "crest",
+          "glow"
+        ],
+        "colors": [
+          "#ffe8a8",
+          "#ff7a9a"
+        ]
+      },
+      "asset": "art/basic/dazzlet.svg",
+      "svgSha256": "b4290da0a8346a7526b4909b7c92ee217bdd548cb707120d675fde1bf49780fa",
+      "filledPixels": 94,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "twinklet",
+      "name": "Twinklet",
+      "type": "Light",
+      "position": "K",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest",
+          "halo"
+        ],
+        "colors": [
+          "#fff8e0",
+          "#ffd860"
+        ]
+      },
+      "asset": "art/basic/twinklet.svg",
+      "svgSha256": "1716d27b8549865f610356a3367a6691daec2597c6676d4f8b1c316ff6cd6189",
+      "filledPixels": 80,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "rivetto",
+      "name": "Rivetto",
+      "type": "Metal",
+      "position": "QB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "shelled",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "antennae"
+        ],
+        "colors": [
+          "#8a98a8",
+          "#e85a3a"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/rivetto.svg",
+      "svgSha256": "2189a26851831fe5deae618904b8abc440228438b691c6cb00edd58973d38af7",
+      "filledPixels": 86,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "tinhare",
+      "name": "Tinhare",
+      "type": "Metal",
+      "position": "RB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "shelled",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "plates"
+        ],
+        "colors": [
+          "#a8b0b8",
+          "#5a7a9a"
+        ]
+      },
+      "asset": "art/basic/tinhare.svg",
+      "svgSha256": "6b3f10078f332a4b367150564024e0999572b07698055039f546dc404a49c115",
+      "filledPixels": 84,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "springlet",
+      "name": "Springlet",
+      "type": "Metal",
+      "position": "WR",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "antennae",
+          "wings"
+        ],
+        "colors": [
+          "#b8c0c8",
+          "#d8a03a"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/springlet.svg",
+      "svgSha256": "67e38f6c6c60678005d40a909928239cc5f8d2bc3a953def31c4c6969dead671",
+      "filledPixels": 120,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "anvilox",
+      "name": "Anvilox",
+      "type": "Metal",
+      "position": "TE",
+      "archetype": "Support",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn",
+          "plates"
+        ],
+        "colors": [
+          "#5a6068",
+          "#c8d0d8"
+        ]
+      },
+      "asset": "art/basic/anvilox.svg",
+      "svgSha256": "0829175070c7ab07f55ff98e2d0fb52199bccf8175c66cce9b2148601e86d610",
+      "filledPixels": 111,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "kettlump",
+      "name": "Kettlump",
+      "type": "Metal",
+      "position": "OL",
+      "archetype": "Striker",
+      "spec": {
+        "body": "shelled",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "plates",
+          "collar"
+        ],
+        "colors": [
+          "#7a8088",
+          "#e8b860"
+        ]
+      },
+      "asset": "art/basic/kettlump.svg",
+      "svgSha256": "f5f48d7c58792ed25289bed431601b569368bc3a7db0deb4ab374c114dd35e4b",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "ingotusk",
+      "name": "Ingotusk",
+      "type": "Metal",
+      "position": "DL",
+      "archetype": "Support",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks",
+          "plates"
+        ],
+        "colors": [
+          "#9a8a6a",
+          "#e0e0e8"
+        ]
+      },
+      "asset": "art/basic/ingotusk.svg",
+      "svgSha256": "117fc5fbd8b0d4b3f5e48691c88b721fc3a489f8f68978fb922f985758e55d88",
+      "filledPixels": 102,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "brasshound",
+      "name": "Brasshound",
+      "type": "Metal",
+      "position": "LB",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "ears",
+          "collar"
+        ],
+        "colors": [
+          "#b89048",
+          "#5a5a68"
+        ]
+      },
+      "asset": "art/basic/brasshound.svg",
+      "svgSha256": "4c706f47670ccd5dbaa49a6e3c3f46b29e1299ea79365703b4050e1d8b3390ac",
+      "filledPixels": 111,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "gyroflit",
+      "name": "Gyroflit",
+      "type": "Metal",
+      "position": "CB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#9aa8b8",
+          "#5ae8d8"
+        ],
+        "pattern": "stripes"
+      },
+      "asset": "art/basic/gyroflit.svg",
+      "svgSha256": "4fc290f8c79f3a8f6216bb4a07547ad54144292fcab03809ba1d96920d9b1608",
+      "filledPixels": 120,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "clockcrow",
+      "name": "Clockcrow",
+      "type": "Metal",
+      "position": "S",
+      "archetype": "Striker",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#6a7078",
+          "#d8b048"
+        ],
+        "pattern": "backstripe"
+      },
+      "asset": "art/basic/clockcrow.svg",
+      "svgSha256": "381c1d4c605785640ebcdc6a96ee729efc10b9aa2aa250890542a6f17c5ca38c",
+      "filledPixels": 94,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "washerling",
+      "name": "Washerling",
+      "type": "Metal",
+      "position": "K",
+      "archetype": "Tank",
+      "spec": {
+        "body": "shelled",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#a0a8b0",
+          "#8ad0f0"
+        ]
+      },
+      "asset": "art/basic/washerling.svg",
+      "svgSha256": "fb3be15d2e3b886e4edcf5a94bd9d7280cf7a2804a2031ab22116a4331996cf3",
+      "filledPixels": 82,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "mindle",
+      "name": "Mindle",
+      "type": "Psychic",
+      "position": "QB",
+      "archetype": "Support",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "glow"
+        ],
+        "colors": [
+          "#c88ad8",
+          "#fff0ff"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/mindle.svg",
+      "svgSha256": "776cc38aba98aa940291b4f5b7f7a5e271e1c846c8effa11c616f1fa12b6947a",
+      "filledPixels": 102,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "dreamhop",
+      "name": "Dreamhop",
+      "type": "Psychic",
+      "position": "RB",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "glow"
+        ],
+        "colors": [
+          "#b07ad0",
+          "#ffd8f0"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/dreamhop.svg",
+      "svgSha256": "212849e016b63dd0291a0dea5602144dfd6c188d0d7c422956e0809b9208ab9c",
+      "filledPixels": 90,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "trancefin",
+      "name": "Trancefin",
+      "type": "Psychic",
+      "position": "WR",
+      "archetype": "Tank",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "fins",
+          "glow"
+        ],
+        "colors": [
+          "#8a5ac8",
+          "#80f0e0"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/trancefin.svg",
+      "svgSha256": "0cc06cdb4c704aa7bc1025adfeeada6419ea28ac418aadb74ff7e989427251f2",
+      "filledPixels": 86,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "pondermoose",
+      "name": "Pondermoose",
+      "type": "Psychic",
+      "position": "TE",
+      "archetype": "Striker",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#7a5a90",
+          "#f0c0ff"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/pondermoose.svg",
+      "svgSha256": "f5527514642bb38a001614a4a604ccf939690320c2b318ca22b7e551101c1ca0",
+      "filledPixels": 114,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "thinkump",
+      "name": "Thinkump",
+      "type": "Psychic",
+      "position": "OL",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "bulb",
+          "glow"
+        ],
+        "colors": [
+          "#d8a8e8",
+          "#7a4aa0"
+        ]
+      },
+      "asset": "art/basic/thinkump.svg",
+      "svgSha256": "9c2938cc47bc6d961fce7af8e7c7a8402551ba7acf05e73f6b5ca19be8c4f6b3",
+      "filledPixels": 110,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "omenox",
+      "name": "Omenox",
+      "type": "Psychic",
+      "position": "DL",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "serpent",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn",
+          "glow"
+        ],
+        "colors": [
+          "#6a4a80",
+          "#ffd0ff"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/omenox.svg",
+      "svgSha256": "d9310f3af444fafe9542db3239223572fda5bc589b143b7086d24d6952bc38e1",
+      "filledPixels": 114,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "seerling",
+      "name": "Seerling",
+      "type": "Psychic",
+      "position": "LB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "crest",
+          "halo"
+        ],
+        "colors": [
+          "#a080c0",
+          "#e8e0ff"
+        ]
+      },
+      "asset": "art/basic/seerling.svg",
+      "svgSha256": "3abfe520485d63aa520224be2b2b3c7303ef030bc1671d6ea81ce42fa106be72",
+      "filledPixels": 104,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "riddlet",
+      "name": "Riddlet",
+      "type": "Psychic",
+      "position": "CB",
+      "archetype": "Support",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#9a6ab0",
+          "#f8e8a0"
+        ],
+        "pattern": "mask"
+      },
+      "asset": "art/basic/riddlet.svg",
+      "svgSha256": "315c4770d244d126645a8f221e2033ef8f1e2d81506b81b39a6ac8d0a2f63214",
+      "filledPixels": 97,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "gazeling",
+      "name": "Gazeling",
+      "type": "Psychic",
+      "position": "S",
+      "archetype": "Tank",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "horns"
+        ],
+        "colors": [
+          "#d0b0e8",
+          "#6a3a8a"
+        ]
+      },
+      "asset": "art/basic/gazeling.svg",
+      "svgSha256": "d9b9b0bc2933109cc6b9945be0bf40b3805e245348ca6a9d6ae28d57cfae53e9",
+      "filledPixels": 91,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "orblet",
+      "name": "Orblet",
+      "type": "Psychic",
+      "position": "K",
+      "archetype": "Striker",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "glow",
+          "halo"
+        ],
+        "colors": [
+          "#e0b8f8",
+          "#a050d8"
+        ]
+      },
+      "asset": "art/basic/orblet.svg",
+      "svgSha256": "886ef6c922d574234d908eb24033e715a0a0c43892f5494ecb6956d06afe678c",
+      "filledPixels": 100,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "scalekin",
+      "name": "Scalekin",
+      "type": "Dragon",
+      "position": "QB",
+      "archetype": "Striker",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "horns",
+          "wings"
+        ],
+        "colors": [
+          "#a83a3a",
+          "#f0c060"
+        ]
+      },
+      "asset": "art/basic/scalekin.svg",
+      "svgSha256": "25a5c6acabd69f4c2dba46d08d8a051014fcb5ac203182af9be3d0c96ddc2b5e",
+      "filledPixels": 122,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "raptlet",
+      "name": "Raptlet",
+      "type": "Dragon",
+      "position": "RB",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "horns",
+          "tail"
+        ],
+        "colors": [
+          "#5a8a4a",
+          "#f0e070"
+        ],
+        "pattern": "backstripe"
+      },
+      "asset": "art/basic/raptlet.svg",
+      "svgSha256": "fea4116202b121e1af0e1fc6db3fe038bca2150522665668309a420a7e480628",
+      "filledPixels": 98,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "glidrake",
+      "name": "Glidrake",
+      "type": "Dragon",
+      "position": "WR",
+      "archetype": "Tank",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "crest"
+        ],
+        "colors": [
+          "#3a6a9a",
+          "#ffb050"
+        ],
+        "pattern": "band"
+      },
+      "asset": "art/basic/glidrake.svg",
+      "svgSha256": "b1df5cc12ce65c46ac5d8771af65a3cc881fc6006d8ca6cf3bb448a12cd961f6",
+      "filledPixels": 116,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "crestback",
+      "name": "Crestback",
+      "type": "Dragon",
+      "position": "TE",
+      "archetype": "Support",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "crest",
+          "ridge"
+        ],
+        "colors": [
+          "#8a3a4a",
+          "#e0d0a0"
+        ]
+      },
+      "asset": "art/basic/crestback.svg",
+      "svgSha256": "3c12c0fc7acde7633fd2d67904ed1f2a89c7b93d90fc332079029c0c09b11bb2",
+      "filledPixels": 116,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "bulwyrm",
+      "name": "Bulwyrm",
+      "type": "Dragon",
+      "position": "OL",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "serpent",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#4a5a3a",
+          "#d8c070"
+        ]
+      },
+      "asset": "art/basic/bulwyrm.svg",
+      "svgSha256": "f01050b1baac94d73eca3c6a4e01c744d924149015a10e5af93f607d10328943",
+      "filledPixels": 112,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "gnashlet",
+      "name": "Gnashlet",
+      "type": "Dragon",
+      "position": "DL",
+      "archetype": "Striker",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "fierce",
+        "features": [
+          "horns",
+          "fangs"
+        ],
+        "colors": [
+          "#7a2a2a",
+          "#f0d880"
+        ]
+      },
+      "asset": "art/basic/gnashlet.svg",
+      "svgSha256": "2232e85080fe3d98fdc4a47e2dbd22a5074ab9eac81398ecedbf79be840a5e93",
+      "filledPixels": 132,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "drakhound",
+      "name": "Drakhound",
+      "type": "Dragon",
+      "position": "LB",
+      "archetype": "Tank",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns",
+          "ears"
+        ],
+        "colors": [
+          "#6a3a5a",
+          "#ffa060"
+        ]
+      },
+      "asset": "art/basic/drakhound.svg",
+      "svgSha256": "150dadec94640931d3849ff12e9ce0530291605f96616bd3556c11e0a3815526",
+      "filledPixels": 114,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "wyvlet",
+      "name": "Wyvlet",
+      "type": "Dragon",
+      "position": "CB",
+      "archetype": "Disruptor",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "horns"
+        ],
+        "colors": [
+          "#3a5a6a",
+          "#ff7a5a"
+        ]
+      },
+      "asset": "art/basic/wyvlet.svg",
+      "svgSha256": "61de2ea250647e9564613dc4241a4c99e4b7c393cce47a1cbb0b10111d71c3e3",
+      "filledPixels": 126,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "skinklet",
+      "name": "Skinklet",
+      "type": "Dragon",
+      "position": "S",
+      "archetype": "Support",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#2a7a7a",
+          "#f0e0a0"
+        ],
+        "pattern": "stripes"
+      },
+      "asset": "art/basic/skinklet.svg",
+      "svgSha256": "b3592ee39bd99fa385b0d14d5b4eb8f2cd870ee863bbbadd9baba232c1db7f3d",
+      "filledPixels": 90,
+      "reviewStatus": "pending owner art/content review"
+    },
+    {
+      "id": "eggling",
+      "name": "Eggling",
+      "type": "Dragon",
+      "position": "K",
+      "archetype": "Balanced",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#f0e0c8",
+          "#c84a4a"
+        ],
+        "pattern": "spots"
+      },
+      "asset": "art/basic/eggling.svg",
+      "svgSha256": "39f9298a060687b137b876cc007b99563b1aeb068e9f838635408a698f0b7b2a",
+      "filledPixels": 94,
+      "reviewStatus": "pending owner art/content review"
+    }
+  ]
+}

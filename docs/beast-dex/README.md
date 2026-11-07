@@ -1,29 +1,27 @@
 # Gridiron Beast — Beast Dex
 
-**72 families · 102 forms · 144 mode abilities**
+**192 families · 222 forms · 12 types · 144 mode abilities**
 
-Owner-approved attribute profiles and rarity amendments. This is a design dataset and browsable GitHub reference; it does not modify the running game.
+Original roster: 72 families and 102 forms (26 Common, 21 Uncommon, 13 Rare, 12 Legendary), owner-approved attribute profiles and rarity amendments, 144 mode abilities. Basic creation batch: 120 standalone families and 120 forms, one per type and position, with no unique abilities; pending owner art and content review. These are authored design counts, not counts of generated individual monsters. This is a design dataset and browsable GitHub reference; it does not modify the running game.
 
-## Approved Basic expansion
+## Basic families
 
-[Claude creation brief: 120 Basic families](BASIC_CREATION_BRIEF.md) · [Later progression decisions](PROGRESSION_DECISIONS.md)
-
-Current authored roster: 72 families and 102 forms. Approved expansion target: **192 families and 222 forms**. The 120 new Basic designs and art have not been created yet.
+[Basic family index](BASIC_INDEX.md) · [Art review guide](art/REVIEW_GUIDE.md) · [Creation brief](BASIC_CREATION_BRIEF.md) · [Technical audit](BASIC_AUDIT.md) · [Later progression decisions](PROGRESSION_DECISIONS.md)
 
 ## Browse by position
 
-| Position | Families | Forms |
-| --- | ---: | ---: |
-| [QB](positions/QB.md) | 7 | 7 |
-| [RB](positions/RB.md) | 7 | 13 |
-| [WR](positions/WR.md) | 8 | 14 |
-| [TE](positions/TE.md) | 7 | 8 |
-| [OL](positions/OL.md) | 7 | 11 |
-| [DL](positions/DL.md) | 7 | 8 |
-| [LB](positions/LB.md) | 7 | 10 |
-| [CB](positions/CB.md) | 8 | 13 |
-| [S](positions/S.md) | 7 | 9 |
-| [K](positions/K.md) | 7 | 9 |
+| Position | Families | of which Basic | Forms |
+| --- | ---: | ---: | ---: |
+| [QB](positions/QB.md) | 19 | 12 | 19 |
+| [RB](positions/RB.md) | 19 | 12 | 25 |
+| [WR](positions/WR.md) | 20 | 12 | 26 |
+| [TE](positions/TE.md) | 19 | 12 | 20 |
+| [OL](positions/OL.md) | 19 | 12 | 23 |
+| [DL](positions/DL.md) | 19 | 12 | 20 |
+| [LB](positions/LB.md) | 19 | 12 | 22 |
+| [CB](positions/CB.md) | 20 | 12 | 25 |
+| [S](positions/S.md) | 19 | 12 | 21 |
+| [K](positions/K.md) | 19 | 12 | 21 |
 
 ## Rules and readiness
 
@@ -35,4 +33,4 @@ The structured files in `data/` are the profile source for the generated family 
 
 This is not yet the no-questions Claude handoff. Do not silently resolve conflicts or treat this dataset as deployed gameplay.
 
-To regenerate pages and repeat the checks, run `python3 docs/beast-dex/tools/render_and_validate.py` from the repository root. No third-party packages are needed.
+To regenerate pages and repeat the checks, run `python3 docs/beast-dex/tools/render_and_validate.py` from the repository root (this README is generated too). No third-party packages are needed. The Basic records are built from `data/basic-authoring.json`; see [Data format](DATA_FORMAT.md).

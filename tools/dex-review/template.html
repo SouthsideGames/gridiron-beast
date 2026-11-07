@@ -1,4 +1,4 @@
-<title>Gridiron Beast Dex</title>
+<title>/*__TITLE__*/</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
@@ -52,7 +52,7 @@ main { padding-block: 16px 60px; display: grid; gap: 28px }
 .card .nm { font: 700 17px var(--display); display: flex; gap: 6px; align-items: center; min-width: 0 }
 .meta { font: 500 12px var(--mono); color: var(--muted) }
 .pill { display: inline-block; font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .06em; padding: 1px 6px; border-radius: 3px; color: #fff }
-.r-common { background: var(--c-common) } .r-uncommon { background: var(--c-uncommon) } .r-rare { background: var(--c-rare) } .r-legendary { background: var(--c-legendary) }
+.r-common { background: var(--c-common) } .r-uncommon { background: var(--c-uncommon) } .r-rare { background: var(--c-rare) } .r-legendary { background: var(--c-legendary) } .r-basic { background: #8a948d }
 .card .ab { grid-column: 1 / -1; font-size: 13px; color: var(--muted); min-width: 0 }
 .card .ab b { color: var(--ink) }
 .evo { grid-column: 1 / -1; display: flex; gap: 4px; align-items: center; font: 500 11px var(--mono); color: var(--muted); flex-wrap: wrap }
@@ -89,14 +89,14 @@ textarea { min-height: 64px; resize: vertical }
 </style>
 
 <header class="top"><div class="wrap">
-  <h1>Gridiron Beast Dex</h1>
-  <div class="sub">Round 2. Your renames and edits from round 1 are now the baseline (and live in the game). Five monsters are back for another look: Flarynx, Craggo and Tsunarok were redesigned; Statyx and Shardok were renamed. Tap a monster to edit it, approve it, or leave a note.</div>
+  <h1>/*__TITLE__*/</h1>
+  <div class="sub">/*__INTRO__*/</div>
   <div class="tally" id="tally"></div>
 </div></header>
 <div class="rail"><div class="wrap">
   <input type="search" id="q" placeholder="Search name, ability, position" aria-label="Search">
   <select id="fEl" aria-label="Element"><option value="">All elements</option></select>
-  <select id="fRar" aria-label="Rarity"><option value="">All rarities</option><option>common</option><option>uncommon</option><option>rare</option><option>legendary</option></select>
+  <select id="fRar" aria-label="Rarity"><option value="">All rarities</option><option>common</option><option>uncommon</option><option>rare</option><option>legendary</option><option>basic</option></select>
   <select id="fPos" aria-label="Position"><option value="">All positions</option></select>
   <select id="fSt" aria-label="Review status"><option value="">Any status</option><option value="pending">Not reviewed</option><option value="approved">Approved</option><option value="changes">Needs changes</option><option value="cut">Cut</option></select>
 </div></div>
@@ -160,7 +160,7 @@ function render() {
 function cardHtml(s) {
   const r = reviews[s.id] || {}; const st = r.status || 'pending';
   const edited = r.edits && Object.keys(r.edits).length;
-  const ab = s.ability ? `<b>${esc(s.ability.name)}</b> ${esc(s.ability.text)}` : `<b>Trait: ${esc(META.traits[s.trait]?.name)}</b> ${esc(META.traits[s.trait]?.text)}`;
+  const ab = s.ability ? `<b>${esc(s.ability.name)}</b> ${esc(s.ability.text)}` : s.trait ? `<b>Trait: ${esc(META.traits[s.trait]?.name)}</b> ${esc(META.traits[s.trait]?.text)}` : s.summary ? `<b>${esc(s.summary.title)}</b> ${esc(s.summary.text)}` : '<b>No unique ability</b>';
   const evo = s.evolution?.length ? `<div class="evo">${art(s, 28)}${s.evolution.map((e, i) => `→ ${art({ ...evoSpec(s, i + 1), name: e.name }, 28)} ${esc(e.name)} <span>L${e.level}</span>`).join(' ')}</div>` : '';
   return `<div class="card" tabindex="0" role="button" data-id="${s.id}" aria-label="Edit ${esc(s.name)}">
     <span class="status st-${st}" title="${STATUS_LABEL[st]}"></span>
@@ -183,6 +183,10 @@ function rulesHtml() {
   const eff = DEX.map(effective).filter((s) => (reviews[s.id]?.status || 'pending') !== 'cut');
   const pos = POSITIONS.map((p) => [p, eff.filter((s) => s.position === p).length]);
   const max = Math.max(...pos.map((x) => x[1]), 1);
+  if (META.rulesHtml) return `<section class="rules"><h2>Rules for review</h2><div class="cols">${META.rulesHtml}<div><h3>Natural positions</h3><div class="bars">${pos.map(([p, n]) => `<div><span>${p}</span><i style="width:${(n / max) * 100}%"></i><span>${n}</span></div>`).join('')}</div></div></div>
+  <label class="full" for="general"><b>General notes for the whole batch</b><textarea id="general" placeholder="Anything about the batch as a whole: names, art direction, balance">${esc(general)}</textarea></label>
+  <div class="actions"><button class="primary" id="saveGeneral">Save general notes</button></div>
+  </section>`;
   return `<section class="rules"><h2>Rules for review</h2><div class="cols">
     <div><h3>Rarity</h3><ul>${Object.entries(META.rarities).map(([k, r]) => `<li><span class="pill r-${k}">${r.label}</span> ${esc(r.note)}</li>`).join('')}</ul></div>
     <div><h3>Legend Tracks (working name)</h3><p>Win the Beast Bowl and choose one track toward any legendary no club owns. ${META.legend.tracksNeeded} tracks on the same legendary put it in your recruiting pool in its home region; you still have to sign it. ${META.legend.aiLegendaries} AI clubs start each league with one legendary each, and every legendary exists only once in the league.</p></div>
@@ -210,7 +214,7 @@ function drawEditor() {
     <div class="preview" id="pv"></div>
     <div class="fields">
       <label>Name<input type="text" id="e-name" value="${esc(d.name)}"></label>
-      <label>Rarity<select id="e-rarity">${opt(['common','uncommon','rare','legendary'], d.rarity)}</select></label>
+      <label>Rarity<select id="e-rarity">${opt(['basic','common','uncommon','rare','legendary'], d.rarity)}</select></label>
       <label>Natural position<select id="e-position">${opt(POSITIONS, d.position)}</select></label>
       <label>Secondary position<select id="e-secondary"><option value="">none</option>${opt(POSITIONS, d.secondary)}</select></label>
       <label>Body<select id="e-body">${opt(BODIES, d.body)}</select></label>

@@ -5,7 +5,7 @@
     "families": 72,
     "forms": 102,
     "modeAbilities": 144,
-    "basicFamilies": 0
+    "basicFamilies": 120
   },
   "authority": [
     "Owner-approved later position/range and evolution decisions in this package",
@@ -250,9 +250,17 @@
       "Disruptor": 23,
       "Balanced": 24
     },
-    "status": "Approved creation brief; 120 families not authored yet"
+    "status": "120 families authored (data/basic-authoring.json \u2192 tools/build_basic.py); pending owner art/content review; not implemented in the game",
+    "archetypeTargets": {
+      "Striker": 39,
+      "Tank": 38,
+      "Support": 38,
+      "Disruptor": 38,
+      "Balanced": 39
+    },
+    "authoredFamilies": 120
   },
-  "status": "Approved profile consolidation, not completed Task 8 implementation",
+  "status": "Approved profile consolidation plus the authored Basic creation batch (pending owner review); not completed Task 8 implementation",
   "knownConflicts": [],
   "approvedCorrections": [
     {
@@ -275,6 +283,6 @@
     "forms": 222,
     "basicFamilies": 120,
     "originalModeAbilities": 144,
-    "authoredBasicFamilies": 0
+    "authoredBasicFamilies": 120
   }
 }

@@ -1,0 +1,50 @@
+# Kitelet
+
+**Wind · Basic · WR · Clash: Balanced**
+
+[Position comparison](../positions/WR.md) · [Beast Dex](../README.md)
+
+Family ID: `kitelet`. Source labels are not runtime implementation proof.
+
+![Kitelet sprite](../art/basic/kitelet.svg)
+
+**Review status:** pending owner art/content review.
+
+**Personality and appearance:** A kite-tailed bird that cuts on a dime and gets blown off its route.
+
+**Positional strength:** Sharp-cutting slot (Agility).
+
+**Weaknesses:** Strength, Durability.
+
+**Art recipe** (game sprite builder): avian, small, cute; features wings, crest; pattern stripes; colours #7ad0e0 / #ff8aa0.
+
+Standalone Basic family: no evolutions, no unique football ability and no unique Beast Clash ability. Shared type rules, shared type moves, the shared archetype perks and ordinary teammate-effect eligibility apply as for any monster (approved rules; not yet implemented in the game).
+
+## Kitelet
+
+Stage 0; starting reference level 1.
+
+| Attribute | Level-1 start | Individual potential | Below-band weakness |
+| --- | ---: | ---: | --- |
+| Speed | 24–34 | 43–53 | — |
+| Agility | 30–40 | 49–57 | — |
+| Strength | 5–15 | 18–28 | — |
+| Awareness | 12–22 | 29–39 | — |
+| Catching | 18–28 | 36–46 | — |
+| Arm | 2–8 | 8–20 | — |
+| Accuracy | 2–8 | 8–20 | — |
+| Blocking | 18–28 | 36–46 | — |
+| Tackling | 2–8 | 8–20 | — |
+| Coverage | 2–8 | 8–20 | — |
+| Durability | 5–15 | 18–28 | — |
+| Kicking | 1–6 | 6–16 | — |
+
+These are ordinary non-Apex profiles. Apex has separate 10–15 starting ratings and all-99 potential.
+
+## Football: none
+
+No unique football ability (approved Basic rule).
+
+## Beast Clash: none
+
+No unique Beast Clash ability (approved Basic rule). Clash archetype: Balanced; its existing shared archetype perks apply.
