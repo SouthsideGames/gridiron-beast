@@ -208,10 +208,10 @@ export function pickChannelSpecies(rng, channel, position, { originals = null, b
  * ('current' for starters and veterans, 'potential' for prospect classifications). One independent 1% Apex roll per event. Veterans
  * (yearsPro > 0) are generated at level 1 and their prior seasons simulated (N7c B7), after selection.
  */
-export function generateMonster(rng, { position = null, quality = 58, name = null, id = null, species = null, age = null, yearsPro = null, channel = 'roster', metric = 'current' }) {
+export function generateMonster(rng, { position = null, quality = 58, name = null, id = null, species = null, age = null, yearsPro = null, channel = 'roster', metric = 'current', apexRoll = true }) {
   // `species` may be a dex id, a species name or an old name; the dex fixes the element and the one position.
   const sp = species || name ? resolveSpecies(species || name) : (position ? pickChannelSpecies(rng, channel, position) : rng.pick(SPECIES_DEX.filter((x) => x.rarity !== 'legendary')));
-  const sel = selectIndividual(rng, `${sp.id}:0`, { target: targetPercentile(quality), metric });
+  const sel = selectIndividual(rng, `${sp.id}:0`, { target: targetPercentile(quality), metric, apexRoll });
   const m = {
     id: id || `m_${rng.seed().toString(36)}`,
     name: name || sp.name,

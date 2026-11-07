@@ -300,14 +300,16 @@ export function generateArrival(f, r, { club, position, quality, room, floor = f
   if (!pool.length) return null;
   // R4 (owner 2026-11-05): a gym's arrival is of its element when the element has a species at the position (else any element: mixed support)
   let el = null;
-  { el = hasFreeAgency(f) ? GYM_BY_CLUB[club]?.element : null; const own = el ? SPECIES_DEX.filter((s) => s.element === el && s.position === position && s.rarity !== 'legendary' && s.rarity !== 'basic') : [];
-    if (own.length) { pool = own; regionName = regions.find((rn) => (REGIONS[rn].types || []).includes(el)) || regionName; } else el = null; }
+  { el = hasFreeAgency(f) ? GYM_BY_CLUB[club]?.element : null; const own = el ? SPECIES_DEX.filter((s) => s.element === el && s.position === position && s.rarity !== 'legendary') : [];
+    if (own.length) { pool = own; regionName = regions.find((rn) => (REGIONS[rn].types || []).includes(el)) || regionName; } else el = null; } // Task 8: the element's Basics count (B17), so R4 holds where its only family at the position is a Basic
   // Task 8 (N7c B17): the arrival channel's Basic share first, from the same element or region; else today's pick among originals
   const basics = SPECIES_DEX.filter((s) => s.rarity === 'basic' && s.position === position && (el ? s.element === el : (REGIONS[regionName].types || []).includes(s.element)));
-  const sp = pickChannelSpecies(r, 'arrival', position, { originals: pool.filter((s) => s.rarity !== 'basic'), basics, pickOriginal: (rr, list) => rr.pick(list) });
+  const originals = pool.filter((s) => s.rarity !== 'basic');
+  const sp = originals.length ? pickChannelSpecies(r, 'arrival', position, { originals, basics, pickOriginal: (rr, list) => rr.pick(list) }) : basics.length ? basics[r.int(basics.length)] : null; // an element with only a Basic here: that Basic
+  if (!sp) return null;
   let q = Math.max(MIN_QUALITY, Math.round(quality)); let m = null;
   for (let i = 0; i < 12; i++) {
-    m = generateMonster(r, { position, quality: q, species: sp.id, age: 24 + r.int(7), channel: 'arrival' });
+    m = generateMonster(r, { position, quality: q, species: sp.id, age: 24 + r.int(7), channel: 'arrival', apexRoll: i === 0 }); // one Apex roll per arrival event: retries never roll again (N7f)
     if (m.apex) break; // an Apex is never discarded by an affordability retry (N7f)
     if (salaryFor(m) <= room || (floor && q <= MIN_QUALITY)) break; m = null; q = Math.max(MIN_QUALITY, q - 3); if (q === MIN_QUALITY && !floor && i > 6) break;
   }

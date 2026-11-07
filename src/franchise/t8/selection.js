@@ -44,10 +44,11 @@ export function percentileOf(formId, metric, value) {
  *                      kept, else the one with the lowest metric (the cheapest). It never applies to Apex.
  * Returns { dev, apex, percentile }. An Apex result is final: it is never discarded or re-selected.
  */
-export function selectIndividual(rng, formId, { target, metric = 'current', candidates = CANDIDATES, affordable = null } = {}) {
+export function selectIndividual(rng, formId, { target, metric = 'current', candidates = CANDIDATES, affordable = null, apexRoll = true } = {}) {
   const form = formById(formId); if (!form) throw new Error(`unknown form ${formId}`);
   if (!(target >= 0 && target <= 1)) throw new RangeError('target percentile must be in 0..1');
-  if (form.rarity !== 'legendary' && rng.next() < APEX_CHANCE) return { dev: generateIndividual(rng, formId, { apex: true }), apex: true, percentile: null };
+  // `apexRoll: false` only for a retry within the SAME event, whose Apex roll already happened (one roll per event, N7f)
+  if (apexRoll && form.rarity !== 'legendary' && rng.next() < APEX_CHANCE) return { dev: generateIndividual(rng, formId, { apex: true }), apex: true, percentile: null };
   const pool = [];
   for (let i = 0; i < candidates; i++) { const d = generateIndividual(rng, formId, { apex: false }); const val = METRICS[metric](d, form.position); pool.push({ d, val, p: percentileOf(formId, metric, val), i }); }
   const ok = affordable ? pool.filter((c) => affordable(c.d)) : pool;

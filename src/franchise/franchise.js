@@ -26,7 +26,7 @@ export { GROUP_SLOTS } from './roster.js';
 import { DIVISIONS, ALL_TEAMS, TEAM_META, STARTER_CLUBS, RIVAL_GMS, TIERS, tierById, leagueSeasonFixtures, teamSchedule, blankRecord, applyResult, standings, playoffRound, divisionOf, conferenceFor } from '../data/league.js';
 import { STAFF, STAFF_ROLES, PLAYBOOKS, staffById, alignment, trainingBonus, REGIONS, TRAINING_FOCI, BACKGROUNDS } from '../data/staff.js';
 import { retirementPass, agingContext, nativeAging, retirementOutlook } from './retirement.js';
-import { pickChannelSpecies, basicsFor } from '../data/monsters.js';
+import { pickChannelSpecies, basicsFor, raiseToLevel } from '../data/monsters.js';
 import { BASIC_SHARE } from './t8/generation.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, autoSpendPoints as autoSpendPointsFn, ROSTER_MAX, ROSTER_MIN, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
 import { ELEMENT_REGIONS } from '../data/species.js';
@@ -1812,17 +1812,23 @@ export function encounterCompanions(f, prospectIndex, n = CLASH_SIZE.encounter -
   const pool = regionSpecies(regionName, REGIONS[regionName].types, f.season.week).filter((sp) => sp.rarity !== 'legendary');
   const S = clubBattleStrength(f); const R = { ...COMPANION_RULE, ...rule }; const out = [];
   for (let i = 0; i < n; i++) {
-    // N7c B17: the encounter channel's Basic share among the wild companions (Basics of the region's elements).
-    const wildBasics = SPECIES_DEX.filter((x) => x.rarity === 'basic' && REGIONS[regionName].types.includes(x.element));
-    const sp = wildBasics.length && r.next() < BASIC_SHARE.encounter ? wildBasics[r.int(wildBasics.length)] : (pool[r.int(pool.length)] || pool[0]);
+    // OPEN (owner question, IMPLEMENTATION_LOG): the B17 encounter share is not applied to these unsignable companions, because a
+    // Basic's ceiling cannot reach the club's strength and the approved companion rule is "matched to the club's battle strength".
+    const sp = pool[r.int(pool.length)] || pool[0];
     // The wild group as a whole (prospect + companions) is matched to the club: S − gap on average. Companions make up for a weak
     // or strong prospect, but never fight above the club's own battle strength.
     const base = (CLASH_SIZE.encounter * (S - R.gap) - monsterOverall(p.monster)) / (CLASH_SIZE.encounter - 1);
     const target = Math.max(R.floor, Math.min(R.ceiling, Math.round(S), Math.round(base + (r.next() * 2 - 1) * R.spread)));
     // generateMonster's quality is only roughly the overall a position and species end up with: re-roll the same monster
     // (same seed) with a corrected quality until its overall is within a point of the target.
-    const seed = r.seed(); let q = target, m = null;
-    for (let k = 0; k < 4; k++) { m = generateMonster(createRng(seed), { position: sp.position, quality: q, species: sp.id, id: `wild_${f.season.year}_${f.season.week}_${prospectIndex}_${i}` }); const d = target - monsterOverall(m); if (Math.abs(d) <= 1) break; q += d; }
+    const seed = r.seed(); let q = target, m = null; // eslint-disable-line prefer-const
+    // Task 8: the quality maps to a percentile of a level-1 form, so a wild companion is given the approved prior-career history
+    // (B7: natural growth, training, evolution) for as many seasons as it takes to reach the target, then the quality is corrected
+    // from above, all from the same seed (one Apex roll). "Matched to the club's battle strength as today" (N7f channel criteria).
+    const gen = (qq, y) => generateMonster(createRng(seed), { position: sp.position, quality: qq, species: sp.id, id: `wild_${f.season.year}_${f.season.week}_${prospectIndex}_${i}`, age: 21 + y, yearsPro: y, channel: 'encounter' });
+    let y = 0; m = gen(q, 0);
+    while (monsterOverall(m) < target - 1 && y < 12) { y += 1; m = gen(q, y); }
+    for (let k = 0; k < 4 && monsterOverall(m) > target + 1 && !m.dev.apex; k++) { q -= monsterOverall(m) - target; m = gen(q, y); }
     m.companion = true; m.name = `Wild ${speciesName(m)}`; out.push(m);
   }
   return out;

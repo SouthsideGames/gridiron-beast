@@ -62,11 +62,11 @@ test('contracts: expiring starters and value re-sign at the ask, reserves walk t
   let after = R.clubRoster(f, club); assert.ok(after.length >= ROSTER_MIN && after.length < roster.length);
   assert.ok(R.clubCapRoom(f, club, cap) >= 0 || after.length === ROSTER_MIN, 'under the cap, or at the roster floor');
   for (const m of after) if (!R.isProtected(m)) assert.ok(m.contract.ends > year, 're-signed for two more seasons');
+  assert.ok(Object.values(f.pool).flat().some((m) => (m.history || []).some((h) => h.club === club && h.reason === 'walked')), 'reserves walk to the pools'); // checked before the trim, whose releases rotate the AI share of the pools (AI_POOL_SHARE)
   const tight = cap - R.clubCapRoom(f, club, cap) - 60_000; const n0 = after.length; S.leagueTrim(f, { year, cap: tight });
   after = R.clubRoster(f, club); assert.ok(after.length >= ROSTER_MIN && after.length < n0, 'the cap trims');
   assert.ok(R.clubCapRoom(f, club, tight) >= 0 || after.length === ROSTER_MIN, 'under the tighter cap, or at the roster floor');
   for (const [c, id, s0] of prot) { const m = R.clubRoster(f, c).find((x) => x.id === id); assert.ok(m, `${id} still on ${c}`); assert.equal(snap(m), s0); assert.equal(m.contract.permanent, true); }
-  assert.ok(Object.values(f.pool).flat().some((m) => (m.history || []).some((h) => h.club === club && h.reason === 'walked')));
   assert.deepEqual(R.verifyLeague(f), []);
 });
 

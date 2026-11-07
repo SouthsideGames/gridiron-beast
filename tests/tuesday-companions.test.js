@@ -44,7 +44,11 @@ test('companions grow with the club and make up for the prospect: a stronger ros
   const cf = F.encounterPreview(f, 0).wild, cg = F.encounterPreview(g, 0).wild;
   assert.ok(F.clubBattleStrength(g) > F.clubBattleStrength(f) + 5);
   const avg = (xs) => xs.reduce((s, m) => s + monsterOverall(m), 0) / xs.length;
-  assert.ok(avg(cg.slice(1)) > avg(cf.slice(1)) + 5); assert.equal(monsterOverall(cg[0]), monsterOverall(cf[0]));
+  // Task 8: a companion grows by the approved prior-career history until it reaches its target; a Dex family cannot pass its own
+  // ceilings, so against a much stronger club a companion may stop at level 50 short of the target (reported to the owner, M1).
+  assert.ok(avg(cg.slice(1)) > avg(cf.slice(1)), 'a stronger roster meets stronger companions');
+  for (const c of cg.slice(1)) assert.ok(c.dev.level === 50 || c.dev.level > cf.find((x) => x.species === c.species)?.dev.level || monsterOverall(c) >= Math.round(F.clubBattleStrength(g)) - 1 - F.COMPANION_RULE.spread - F.COMPANION_RULE.gap, `${c.name} grew toward the stronger club or reached his level cap`);
+  assert.equal(monsterOverall(cg[0]), monsterOverall(cf[0]));
 });
 
 test('companions cannot be signed: a win offers the prospect only, and no wild monster ever joins the roster', () => {

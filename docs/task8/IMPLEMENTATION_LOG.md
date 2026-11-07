@@ -70,3 +70,34 @@ amounts, the level-XP curve, and the reviewer scenario and rendering layers.
 `classQualityOffset`). D9 was approved to keep classes in step with the league's seasonal growth, which N7f has now retired. It is
 an automatic seasonal rise in incoming talent. Kept unchanged until the owner rules: retire it with the other seasonal boosts, or
 keep it.
+
+## M1 regression fixes (after the first full run, 783/927)
+
+**Real bugs found and fixed in src:**
+- Evolution readiness read the mirrored level while evolution used the development record. Readiness now reads the record, and `raiseToLevel` raises a level through natural growth.
+- The evolution preview now builds a level-1 individual.
+- `index.html` re-stamped for the new modules.
+- An ageless monster's banked offseason points now mirror to `m.points` when the trainer is off.
+- A schema-10 save without its league registry is refused again (guard restored).
+- Free-agency arrivals:
+  - a gym's arrival keeps its element when the element's only family at the position is a Basic (R4 with B17);
+  - an affordability retry no longer rolls Apex again, so there is one Apex roll per event (N7f).
+- Tuesday companions: a companion reaches its target through the approved prior-career history (B7) instead of a level-1 percentile that could not reach it.
+
+**Tests:** updated under approved rules only, by five parallel passes:
+- historical engine and Clash inputs frozen as data from dd2245d/75f2a27 (no hash re-pinned);
+- older-save tests turned into refusal tests;
+- the storage tests moved onto a schema-10 fixture (`tests/fixtures/save-v10-season2.json`);
+- retired rules rewritten with citations;
+- seed drift re-seeded or made explicit.
+
+**Open questions for the owner (flagged, not decided):**
+1. **Glacivern pilot play.** `lp_avalanche` (playbook) puts the Ice legendary at FS, but the approved Dex makes Glacivern a K (B19). Rebuild the play for a kicker, or replace it? The two legendary-plays tests are left failing until the owner rules.
+2. **Encounter Basic share vs matched companions.**
+   - B17 gives encounters a 30% Basic share. A Basic's ceilings cannot reach a club's battle strength, while the approved companion rule is "matched to the club's battle strength".
+   - Interim: the share is not applied to the unsignable companions.
+   - Also, a Dex family stops at its ceilings, so against a much stronger club a companion can top out short of the target.
+3. **Draft class growth** (above).
+4. **Starter calibration** (`M1_STARTER_CALIBRATION.md`).
+5. **Rating-scale thresholds.** The salary cap and pool thresholds were set for the old rating scale: AI payrolls no longer press the cap, and fewer castoffs reach the market. This is part of economy recalibration #30.
+6. **Stat guide.** It disagrees with the Appendix C role register on 21 position/attribute pairs (presentation, M6).
