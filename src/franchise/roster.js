@@ -65,7 +65,7 @@ export function lineupFromChart(roster, chart, { trainingBonus = null } = {}) {
   const slotInput = (slot) => {
     const m = byId[chart[slot]];
     if (!m) return { attrs: {}, name: slot, id: null };
-    return { attrs: effectiveAttributes(m, { slotPosition: positionOf(slot), trainingBonus }), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position, yearsPro: m.yearsPro ?? null };
+    return { attrs: effectiveAttributes(m, { slotPosition: positionOf(slot), trainingBonus }), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position, yearsPro: m.yearsPro ?? null, form: m.dev?.form || null, mastery: m.dev?.mastery?.football ?? 0 }; // form and mastery: the Task 8 ability contracts (M3)
   };
   const offense = Object.fromEntries(OFFENSE_SLOTS.map((s) => [s, slotInput(s)]));
   const defense = Object.fromEntries(DEFENSE_SLOTS.map((s) => [s, slotInput(s)]));

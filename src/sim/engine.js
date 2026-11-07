@@ -29,6 +29,8 @@ import { QUICK_ROUTES, SETTLE_ROUTES } from '../data/routes.js';
 import { contestMod } from './type-matchups.js';
 import { resolvePancakeOpportunity, shedScore } from './t8/pancake.js';
 import { positionOf } from '../data/personnel.js';
+import { contractOf, abilityState, recordExecution } from './abilities/registry.js';
+import './abilities/index.js'; // registers every Task 8 football ability contract (M3)
 import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION } from './qb-read.js';
 
 const DT = 0.05;
@@ -116,8 +118,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const makeActor = (team, slot, play, input) => {
     const attrs = { ...DEFAULT_ATTRS, ...(input?.attrs || {}) };
     // Signature ability: a legacy id in ABILITIES, else the species' own ability or trait.
-    const legacy = input?.ability ? ABILITIES[input.ability] : null;
-    const sp = !legacy && input?.species ? speciesEffect(input.species) : null;
+    // Task 8 M3: a family with a registered Dex contract uses it; its legacy effect never also applies (no stacking).
+    const contract = input?.species ? contractOf(input.species) : null;
+    const legacy = !contract && input?.ability ? ABILITIES[input.ability] : null;
+    const sp = !contract && !legacy && input?.species ? speciesEffect(input.species) : null;
     const ability = legacy?.effect || sp?.effect || null;
     const abilityName = legacy?.name || sp?.name || null;
     const abilityKind = legacy ? 'ability' : sp?.kind || null;
@@ -141,10 +145,19 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0,
     };
     if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
+    if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; }
     actors.push(a); bySlot[team][slot] = a; return a;
   };
   for (const slot of offensePlay.onField) makeActor('off', slot, offensePlay, offense[slot]);
   if (!dry?.noDefense) for (const slot of defensePlay.onField) makeActor('def', slot, defensePlay, defense[slot]);
+  // ------------------------------------------------------------ Task 8 M3: ability contract hooks (src/sim/abilities/registry.js)
+  // Abilities draw from their own stream, so plays where no contract acts keep every physics draw. Game-scope state (charges,
+  // cooldowns) lives in options.t8 (the football game state's Task 8 block); without one (labs, previews) it is per play only.
+  const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13);
+  const t8g = options.t8 || { status: {} };
+  const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
+    state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q) };
+  const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
   // Pre-snap motion: the motion man is snapped on the move, at his motion spot, already running (owner, 2026-10-20).
   const motion = offensePlay.motion ? { ...offensePlay.motion, man: bySlot.off[offensePlay.motion.slot], from: offensePlay.align[offensePlay.motion.slot] } : null;
   if (motion?.man) {
@@ -215,6 +228,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   };
   const frames = [];
   if (qb && qb.assignment.a === 'keep') { phase = 'carry'; stats.carrier = 'QB'; handoffDone = true; }
+  for (const a of actors) hook('playStart', a); // Task 8 M3: contracts see the snap (after the ball and the stat sheet exist)
 
   const carrierTeam = () => ball.holder?.team || null;
   const opponents = (team) => (team === 'off' ? defs : offs);
@@ -1878,6 +1892,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (d.stun > 0 || (d.engaged && !offBlock) || dist(d, c) > 1.25) return false;
     if (offBlock) d.armTried = true;
     const fwd = c.team === 'off' ? 1 : -1;
+    // Task 8 M3 (P6 pre-resolution): a carrier's contract may break this attempt before it is decided (normal strips still apply later)
+    if (hook('tackleAttempt', c, d)?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); return false; }
     // Daybreak: nobody can bring him down from behind.
     if (c.daybreak && (d.x - c.x) * fwd < -0.2) return false;
     if (offBlock) return armTackle(d, c);
@@ -2158,6 +2174,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   if (!result) { result = 'guard'; log('Simulation guard reached', { kind: 'guard' }); }
   if (stats.interceptor && ['tackle', 'out_of_bounds'].includes(result)) result = 'interception';
 
+  // Task 8 M3: the whistle for every contract on the field (charges, clocks, field creation)
+  { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(clamp(ball.x, B.ownEndLine, B.endLine)); const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint };
+    for (const a of actors) hook('playEnd', a, summary); }
   // ------------------------------------------------------------ outcome
   const endX = result === 'incomplete' || result === 'throwaway' ? 0 : clamp(ball.x, B.ownEndLine, B.endLine);
   const endLat = clamp(ball.y, B.left, B.right);

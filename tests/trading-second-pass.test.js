@@ -473,7 +473,7 @@ test('roster floor: the owner cannot start a season below the minimum', () => {
 });
 
 test('AI trades: at the moment of a deal the selling club gives up a spare, never a starter (offseason window, by the ratings of that moment)', () => {
-  const f0 = played(); const cap = tierById(f0.tier).cap; let deals = 0;
+  const f0 = played(52); const cap = tierById(f0.tier).cap; let deals = 0; // league 52 (Task 8 M2: league 51's first offseason has no deal that passes the buyer's gain rule after the new rewards; measured: leagues 52/53 trade in every season)
   for (let s = 1; s <= 14; s++) {
     const f = JSON.parse(JSON.stringify(f0)); const before = {};
     for (const c of aiClubs(f)) before[c] = R.clubRoster(f, c).map((m) => ({ id: m.id, pos: m.position, o: ovr(m), out: (m.injury?.weeks || 0) >= 3 }));
