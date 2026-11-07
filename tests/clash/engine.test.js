@@ -53,6 +53,7 @@ test('invariants over 2,000 random battles: HP never below 0 or NaN, every battl
     assert.ok(r.exchanges >= 1 && r.exchanges <= V.battle.exchangeCap);
     for (const x of [...r.lines.a, ...r.lines.b]) { assert.ok(Number.isFinite(x.hp) && x.hp >= 0 && x.hp <= x.maxHp, `${x.name} hp ${x.hp}`); assert.ok(x.shield >= 0); }
     if (r.by === 'knockout') assert.ok(r.lines[r.winner].some((x) => x.hp > 0) && r.lines[r.winner === 'a' ? 'b' : 'a'].every((x) => x.hp <= 0));
+    else if (r.by === 'coin' && !r.capped) { assert.ok([...r.lines.a, ...r.lines.b].every((x) => x.hp <= 0), 'an uncapped coin is a double knockout'); coin++; } // approved: a double knockout goes to the seeded coin
     else { assert.ok(r.capped); capped++; if (r.by === 'coin') coin++; }
     assert.deepEqual(a, snapA); assert.deepEqual(b, snapB); assert.ok(deepFrozen(r));
   }

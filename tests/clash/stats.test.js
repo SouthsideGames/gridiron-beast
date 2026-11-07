@@ -41,11 +41,13 @@ test('evolution enters once: an evolved form is stronger only through its stored
   assert.deepEqual(m, mon('emberfox', 7), 'the original monster is unchanged');
 });
 
-test('nature once: swapping the nature changes exactly the boosted and lowered attribute by x1.1 / x0.9', () => {
+test('nature retired (N7c B14): active play ignores Nature; only the historical values 1.0.0 ruleset re-applies x1.1 / x0.9 for exact replays', () => {
   const m = mon('ashkit', 9); m.nature = 'balanced'; const base = effectiveAttributes(m, {});
-  const n = Object.entries(NATURES).find(([, v]) => v.up && v.down); const [name, nat] = n; const m2 = { ...m, nature: name }; const e2 = effectiveAttributes(m2, {});
-  for (const k of Object.keys(base)) { const want = k === nat.up ? Math.round(base[k] * 1.1) : k === nat.down ? Math.round(base[k] * 0.9) : base[k]; assert.ok(Math.abs(e2[k] - want) <= 1, `${k}: ${e2[k]} vs ${want}`); }
-  assert.equal(build(m2).breakdown.attributes[nat.up], e2[nat.up]);
+  const [name, nat] = Object.entries(NATURES).find(([, v]) => v.up && v.down); const m2 = { ...m, nature: name };
+  assert.deepEqual(effectiveAttributes(m2, {}), base);
+  assert.equal(build(m2).breakdown.attributes[nat.up], base[nat.up]);
+  const hist = buildCombatant(m2, { perSide: 3, config: battleConfig({ ruleset: 'v1.0.0' }) }).breakdown.attributes;
+  assert.ok(Math.abs(hist[nat.up] - Math.round(base[nat.up] * 1.1)) <= 1); assert.ok(Math.abs(hist[nat.down] - Math.round(base[nat.down] * 0.9)) <= 1);
 });
 
 test('archetype once: removing the archetype multiplier divides the final stat by exactly that multiplier', () => {

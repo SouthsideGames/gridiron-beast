@@ -117,8 +117,10 @@ test('the permanent defaults play exactly like the approved candidate, except fr
     // the Approved gate (values 1.0.0 + 15 patches) on this build is still exactly the recorded candidate battle
     const hist = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: gateConfig('Approved', r.config.policies.a !== 'none' ? { policies: r.config.policies } : {}) });
     assert.equal(hashOf(hist.log.slice(1)), r.bodyHash); assert.equal(hist.winner, r.winner); assert.equal(hist.exchanges, r.exchanges);
-    const cmp = sameUntilReflect(out, hist);
-    if (cmp.same) { assert.equal(hashOf(out.log.slice(1)), r.bodyHash, `Approved #${r.i}`); assert.equal(out.winner, r.winner); assert.equal(out.by, r.by); assert.equal(out.exchanges, r.exchanges); }
+    // Task 8 (N7c B14): Nature is retired from active play, so the defaults are compared with the candidate replayed without Nature.
+    const histNoNature = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: gateConfig('Approved', { ...(r.config.policies.a !== 'none' ? { policies: r.config.policies } : {}), legacyNature: false }) });
+    const cmp = sameUntilReflect(out, histNoNature);
+    if (cmp.same) { assert.equal(hashOf(out.log.slice(1)), hashOf(histNoNature.log.slice(1)), `Approved #${r.i}`); assert.equal(out.winner, histNoNature.winner); assert.equal(out.by, histNoNature.by); assert.equal(out.exchanges, histNoNature.exchanges); }
     else { differ++; assert.ok(cmp.ok, `Approved #${r.i} diverges at ${cmp.k} without a prior reflected knockout (${cmp.d})`); assert.ok(out.log.some((e) => e.kind === 'ko' && / by .*'s (Magma Crust|Bramble Shell)$/.test(e.text))); }
   }
   assert.ok(differ <= 4, `${differ} of 40 recorded battles touched by the correction`);
@@ -128,7 +130,7 @@ test('the permanent defaults play exactly like the approved candidate, except fr
     const n = i % 2 ? 5 : 3; const pick = () => ({ species: pool[rng.int(pool.length)], seed: rng.seed(), overall: 60 + rng.int(10) });
     const a = Array.from({ length: n }, pick), b = Array.from({ length: n }, pick); const seed = rng.seed(); const policies = i % 4 >= 2 ? { a: 'smart', b: 'smart' } : undefined;
     const perm = simulateClash({ a: mk(a), b: mk(b), seed, config: battleConfig(policies ? { policies } : {}) });
-    const hist = simulateClash({ a: mk(a), b: mk(b), seed, config: gateConfig('Approved', policies ? { policies } : {}) });
+    const hist = simulateClash({ a: mk(a), b: mk(b), seed, config: gateConfig('Approved', { ...(policies ? { policies } : {}), legacyNature: false }) });
     const cmp = sameUntilReflect(perm, hist); checked++; if (!cmp.same) { touched++; assert.ok(cmp.ok, `random #${i} diverges at ${cmp.k} without a prior reflected knockout`); }
   }
   assert.ok(touched > 5 && touched < checked, `${touched} of ${checked} Tank-heavy battles touched`);
@@ -160,7 +162,7 @@ test('Elderoot (12%): heals every living ally at most 12% of max HP, never above
 
 test('Tempestra (Storm Cyclone): every third strike; a sweep Dazes the monster pulled forward, a refusal Dazes the front', () => {
   const rng = createRng(1301); let cyclones = 0, sweeps = 0, refused = 0;
-  for (let k = 0; k < 80; k++) {
+  for (let k = 0; k < 120; k++) { // 120 battles (80 before Task 8 retired Nature, which moved this seeded sample's sweep count to the threshold)
     const a = [mon('tempestra', 700 + k), mon('rockram', 710 + k), mon('leafhorn', 720 + k)];
     const b = k % 3 ? [mon('reefclaw', 730 + k), mon('emberfox', 740 + k), mon('tidepaw', 750 + k)] : [mon('reefclaw', 730 + k)];
     const r = simulateClash({ a, b, seed: rng.int(1e6), config: battleConfig({ policies: { a: 'smart', b: 'smart' } }) }); assert.deepEqual(integrityProblems(r), []);

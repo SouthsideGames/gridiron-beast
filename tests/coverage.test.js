@@ -149,7 +149,7 @@ test('fix 7: Heat Haze, Sticky and Canopy Read do what their cards say, and noth
     if (JSON.stringify(c.frames.map((f) => f.def)) !== JSON.stringify(e.frames.map((f) => f.def))) differ++;
   }
   assert.ok(n >= 10 && same === n, `Sticky never acts beyond a step (${same}/${n})`);
-  assert.ok(differ > 0, 'Sticky acts on a press corner within a step');
+  assert.equal(differ, 0, 'Sticky is retired (N7c B13): a Sticky carrier plays exactly like any other corner'); // before Task 8: Sticky acted on a press corner within a step
   // Canopy Read: outside a deep zone (a man assignment) it changes nothing; in a deep zone it does.
   const ident = (def, slot, seedBase) => { let s = 0; for (let i = 0; i < 20; i++) { const a = play('deep_post', def, seedBase + i), b = play('deep_post', def, seedBase + i, {}, withSpecies(slot, 'leafhorn')); if (JSON.stringify(a.frames.map((f) => f.def)) === JSON.stringify(b.frames.map((f) => f.def))) s++; } return s; };
   assert.equal(ident('cover_1', 'CB1', 90500), 20, 'Canopy Read in man coverage: no effect');

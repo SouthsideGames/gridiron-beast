@@ -231,7 +231,7 @@ test('training: odds shown match the rule, the third straight week of one focus 
   assert.equal(f.week.trainingFocus, r.success ? 'coverage' : null);
 });
 
-test('media day: 250 nature questions (ten per nature), answers lift the monsters who share that nature, no repeats in a season', async () => {
+test('media day: 250 questions (ten per legacy nature tag), no nature boost (N7c B14), only hype and star lifts, no repeats in a season', async () => {
   const M = await import('../src/data/media.js'); const { NATURE_IDS, NATURES } = await import('../src/data/monsters.js');
   for (const n of NATURE_IDS) assert.equal(M.questionCount(n), 10, `${n} has ten questions`);
   for (const q of M.QUESTIONS) { assert.equal(q.a.length, 3); for (const a of q.a) assert.ok(NATURE_IDS.includes(a.t), `${a.t} is a nature`); if (!M.isSituational(q)) assert.equal(q.a[0].t, q.nature, 'the first answer speaks the question’s own nature'); }
@@ -241,13 +241,11 @@ test('media day: 250 nature questions (ten per nature), answers lift the monster
   for (const q of qs) for (const a of q.a) { assert.ok(a.reach && typeof a.reach.total === 'number', 'every answer says how many monsters it reaches'); assert.ok(!/\{(opp|star|record|rival|club|week)\}/.test(a.text + q.q), 'placeholders are filled'); }
   const before = F.playerTeam(f);
   const t = qs[0].a[0].t;
-  const r = F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6); assert.equal(r.boosts[t], Math.min(F.MEDIA_CAP ?? Infinity, F.MEDIA_BOOST * qs.filter((q) => q.a[0].t === t).length), 'each answer of that nature adds its boost (up to the cap)');
+  // Task 8 (N7c B14): the nature-targeted boost is retired; answers are flavour plus the hype and star boosts, which remain.
+  const r = F.answerMedia(f, [0, 0, 0]); assert.equal(f.season.day, 6); assert.deepEqual(r.boosts, {}, 'no nature boosts');
   const after = F.playerTeam(f);
-  const onField = (team) => [...Object.values(team.offense), ...Object.values(team.defense)];
-  const m = f.roster.find((x) => x.nature === t && onField(after).some((p) => p.id === x.id));
-  if (m) { const slotOf = (team) => onField(team).find((p) => p.id === m.id); const up = NATURES[t].up || 'awareness'; assert.ok(slotOf(after).attrs[up] > slotOf(before).attrs[up], `${t} monster lifted on ${up}`); assert.equal(after.boosts[m.id].media.amount, r.boosts[t]); }
-  const other = f.roster.find((x) => x.nature !== t && !qs.some((q) => q.a[0].t === x.nature) && onField(after).some((p) => p.id === x.id));
-  if (other) assert.ok(!after.boosts[other.id]?.media, 'a nature nobody spoke for gets nothing');
+  const starId = r.star; for (const [id, b] of Object.entries(after.boosts)) if (b.media) assert.ok(r.hype || id === starId, 'only hype or the star is lifted');
+  void before; void t;
   // Asked questions are not asked again this season; a rival week leads with the rival question.
   assert.deepEqual(f.season.mediaAsked, qs.map((q) => q.id));
   f.week.mediaQs = null; f.week.media = null; f.season.day = 5; const qs2 = F.mediaQuestions(f); assert.ok(!qs2.some((q) => qs.some((p) => p.id === q.id)), 'no repeats');
@@ -449,7 +447,9 @@ test('training and media boosts reach the Sunday lineup (not just the UI)', () =
   const m2 = F.sundayMatchup(f); const mine = m2.playerSide === 'home' ? m2.home : m2.away;
   assert.ok(qb(m2).attrs.accuracy > base, 'training boost applied to the QB on Sunday');
   assert.ok(Object.values(mine.boosts).every((b) => b.training?.includes('accuracy')), 'ledger marks every starter');
-  f.season.day = 5; const qs = F.mediaQuestions(f); F.answerMedia(f, qs.map(() => 0));
+  // Task 8 (N7c B14): only the star and hype boosts remain, so pick the star answer where one is offered, else force the star.
+  f.season.day = 5; const qs = F.mediaQuestions(f); F.answerMedia(f, qs.map((q) => Math.max(0, q.a.findIndex((x) => x.star))));
+  if (!f.week.media.star) f.week.media.star = f.roster.find((x) => Object.values(mine.offense).some((p) => p.id === x.id))?.id;
   const m3 = F.sundayMatchup(f); const mine3 = m3.playerSide === 'home' ? m3.home : m3.away;
   assert.ok(Object.values(mine3.boosts).some((b) => b.media), 'media boosts marked on some starters');
 });
@@ -558,7 +558,7 @@ test('commissioner: signing over the cap is allowed with a warning; Saturday nam
   const f = newFranchise(12);
   // Push the club over the cap with an expensive signing.
   const cap = F.salarySummary(f);
-  const star = { ...f.roster[0], id: 'm_big', name: 'Big Signing', salary: cap.remaining + 40000, cornerstone: false };
+  const star = { ...f.roster[0], id: 'm_big', name: 'Big Signing', salary: cap.remaining + 35000, cornerstone: false }; // 35,000 over (40,000 before Task 8 retired Nature, which lowered OVR-based salaries)
   f.roster.push(star);
   assert.ok(F.salarySummary(f).over);
   assert.equal(F.canPlayGames(f), true, 'the cap alone does not lock games');

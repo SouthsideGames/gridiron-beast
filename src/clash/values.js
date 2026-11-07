@@ -75,7 +75,7 @@ export const CLASH_VALUES = deepFreeze({
   // and rollback comparisons keep their meaning. stats.js picks the move table; these are the defaults each ruleset fills in.
   rulesets: { tag: 'approved', default: 'current',
     current: { label: 'Values 1.1.0 (permanent)', duration: 'C6', swapCost: 'half', reflectedKO: true }, // reflectedKO: engine correction, see engine.js
-    'v1.0.0': { label: 'Values 1.0.0 (historical: Gate A-B.5 baseline)', duration: 'F', swapCost: 'action' },
+    'v1.0.0': { label: 'Values 1.0.0 (historical: Gate A-B.5 baseline)', duration: 'F', swapCost: 'action', legacyNature: true }, // legacyNature: historical replay only (Nature retired from active play, N7c B14)
   },
   // Candidate move patches: named, reversible overrides of one species' move, applied only when a battle's config lists the patch
   // id. The 15 marked implemented: '1.1.0' are already in clash-moves.js (listing them again under 'current' changes nothing);
@@ -229,6 +229,8 @@ export function battleConfig(overrides = {}) {
     swapCost: overrides.swapCost || rs.swapCost,
     sdFromE: Number(overrides.sdFromE) || v.experiments.sdFromE.default,
     patches: Object.freeze([...new Set(overrides.patches || [])].sort()),
+    // Tests only: compare a historical ruleset with Nature already retired (the key is absent unless explicitly given, so configs and replay keys are unchanged).
+    ...(overrides.legacyNature === false ? { legacyNature: false } : {}),
   };
   if (!v.experiments.swapCost.options[c.swapCost]) throw new Error(`Unknown swap cost ${c.swapCost}`);
   for (const id of c.patches) if (!v.movePatches[id]) throw new Error(`Unknown move patch ${id}`);
