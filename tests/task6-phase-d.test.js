@@ -123,7 +123,11 @@ test('R5 by mode: Contend may make two upgrades, every other mode one; the pools
 
 test('R7 by mode: potential weighted 0.35 by rebuilders, 0.20 by Compete and Retool, 0.10 plus readiness by contenders', () => {
   assert.deepEqual({ ...POTENTIAL_WEIGHT }, { contend: 0.1, compete: 0.2, retool: 0.2, rebuild: 0.35 }); assert.equal(READY_BONUS, 2);
-  const now = mon('LB', 72, 22), upside = mon('LB', 60, 21); const D = monsterOverall(now) - monsterOverall(upside); assert.ok(D >= 3);
+  const now = mon('LB', 72, 22), upside = mon('LB', 60, 21);
+  // Task 8 M1 (fixture drift): quality is a percentile target inside a random Dex form, not an overall; the two prospects are set
+  // to the overalls the scenario names (72 and 60), explicitly
+  for (const [m, v] of [[now, 72], [upside, 60]]) { for (let i = 0; i < 40 && monsterOverall(m) !== v; i++) { const d = v - monsterOverall(m); for (const k of Object.keys(m.attributes)) m.attributes[k] = Math.max(20, Math.min(99, m.attributes[k] + Math.sign(d) * Math.max(1, Math.abs(d) >> 1))); } m.dev.current = { ...m.attributes }; }
+  const D = monsterOverall(now) - monsterOverall(upside); assert.ok(D >= 3);
   now.potential = Math.max(70, monsterOverall(now)); upside.potential = now.potential + Math.round(D / 0.27); // 0.35 × gap > D > 0.20 × gap
   const pickFor = (mode, rows = []) => { const f = { draft: { class: [now, upside], available: [now.id, upside.id], picks: [] } };
     return aiDraftPick(f, 'X', { next: () => 0.5 }, { plan: { mode, groups: { LB: { rows, weakNeed: 0 } } } }).id; };

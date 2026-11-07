@@ -7,7 +7,8 @@ import * as F from '../src/franchise/franchise.js';
 import * as Save from '../src/franchise/save.js';
 import { canPlay } from '../src/data/personnel.js';
 import { leagueClubs, clubRoster, isProtected } from '../src/franchise/league-registry.js';
-import { releaseFromClub } from '../src/franchise/league.js';
+import { releaseFromClub, POOL_WORTH } from '../src/franchise/league.js';
+import { monsterOverall } from '../src/data/monsters.js';
 import { newFranchise } from '../tools/franchise-soak.mjs';
 import { t7Settle, t7FillToMin } from './t7-support.js';
 
@@ -16,7 +17,10 @@ import { t7Settle, t7FillToMin } from './t7-support.js';
 function openCB(f) {
   const cbs = f.roster.filter((m) => m.position === 'CB'); for (const m of cbs.slice(1)) m.injury = { weeks: 12, name: 'test injury' };
   for (const k of Object.keys(f.lineupManual)) delete f.lineupManual[k];
-  let n = 0; for (const c of leagueClubs(f).slice().sort()) { const cb = clubRoster(f, c).find((m) => m.position === 'CB' && !isProtected(m)); if (cb && releaseFromClub(f, c, cb.id, { year: f.season.year }).ok) n++; if (n >= 2) break; }
+  // Task 8 M1 (fixture drift): a castoff reaches the owner's market only at the pool grade (POOL_WORTH: OVR 52–60, or 24 and under);
+  // Dex CBs are often weaker and older, so they left the league and the market had no CB. Each released CB is chosen within the
+  // market grade and made pool-worthy explicitly (aged 24 at most) so he enters the pool, as the scenario needs.
+  let n = 0; for (const c of leagueClubs(f).slice().sort()) { const cb = clubRoster(f, c).find((m) => m.position === 'CB' && !isProtected(m) && monsterOverall(m) <= POOL_WORTH.market); if (cb) cb.age = Math.min(cb.age, POOL_WORTH.age); if (cb && releaseFromClub(f, c, cb.id, { year: f.season.year }).ok) n++; if (n >= 2) break; }
   return cbs.slice(1);
 }
 function toNextSeason(seed) {
