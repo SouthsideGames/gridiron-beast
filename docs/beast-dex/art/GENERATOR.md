@@ -7,7 +7,7 @@
 | Checkpoint | State |
 | --- | --- |
 | Before baseline | The initial 120 Basic batch is preserved at commit `6abcf3b` (branch `task8-basic-families`, local tag `basic-batch-v1`; the egress policy refused a tag push, so the commit is the remote reference). Its recipes, SVGs, PNGs and review sheets are unchanged. |
-| 1. Silhouette structure sheet | **Ready for owner review.** 30 structures × 5 poses implemented. Waiting for approval before the structure library is finalized. |
+| 1. Silhouette structure sheet | Reviewed 2026-11-06; five targeted revisions requested. **Revisions ready for owner review** ([before/after](generator/revisions-1.html), [png](generator/png/revisions-1.png)). Waiting for approval before the structure library is finalized. |
 | 2. 20-monster sample | Not started; waits for checkpoint 1 approval. |
 | 3. Full Basic revision | Not started; waits for checkpoint 2 approval. |
 
@@ -82,7 +82,7 @@ A recipe opts into v2 by carrying `structure`. Fields accepted by this version:
 | 12 | `batlike` | Batlike winged | front |
 | 13 | `coiled_serpent` | Coiled serpent | side |
 | 14 | `elongated_serpent` | Elongated serpent | side |
-| 15 | `insectoid` | Insectoid | side |
+| 15 | `insectoid` | Insectoid | dorsal (top-down) |
 | 16 | `arachnid` | Arachnidlike | front |
 | 17 | `crustacean` | Crustaceanlike | front |
 | 18 | `shelled` | Shelled | side |
@@ -101,6 +101,22 @@ A recipe opts into v2 by carrying `structure`. Fields accepted by this version:
 
 **Poses** are authored per structure and adapted to its anatomy, not added limbs. Floating and winged bodies change height, tilt, wing span or tendril sway. The expressive pose is characteristic: a raised fist (knuckle-walker), a raised claw (crustacean), a sitting stance (compact quadruped), a pseudopod (amorphous), a raised tentacle, a stamping foot (heavy quadruped) or a folded wing (batlike).
 
+## Checkpoint 1 revisions (owner review, 2026-11-06)
+
+All other structures are unchanged.
+
+| Structure | Change | Closest other structure, before → after |
+| --- | --- | --- |
+| Long-limbed upright | A stick-limbed build: a thin torso on a neck, legs in a wide inverted V, and elbowed arms held away from the body, so open space shows between the legs and beside the torso. A bird has an egg-shaped body and no arms. | perching avian 0.83 → plant-bodied 0.73 (perching avian now 0.72) |
+| Insectoid | Changed to a **dorsal (top-down) view**: three body parts in a column with waists, six legs splayed sideways, and forward antennae. The open-wing-case pose keeps the legs visible. | knuckle-walker 0.68 → heavy upright 0.68 |
+| Arachnid | A small low body slung between one long arching leg a side, with an open triangle under each arch. The inner legs are dark detail under the body. | heavy upright 0.69 → shelled 0.56 |
+| Mineral/construct | Straight-edged blocks only: a hexagonal core, a chamfered head block on a peg, shoulder blocks hung from one-pixel pins, and leg blocks under a pelvis plate. The pins leave notches, so the masses read as assembled. | heavy upright 0.80 → heavy upright 0.76 |
+| Multi-bodied | A lead mass with eyes and two to four satellites spaced far enough apart that background shows between every pair after outlining, linked by thin tethers. Poses rearrange the orbit. | floating 0.58 → batlike 0.55 |
+
+**Why the insect changed view.** Three side-view attempts all read as a four-legged mammal. In a 16×16 side view the outline fills the waist pinches and only three legs can show, so any outlined body on legs becomes a quadruped silhouette. The dorsal view is the usual pixel-art solution for insects. It keeps the same ground anchor and frame, and the field renderer only places and flips sprites. **Approval of this view change is requested.**
+
+**Why the arachnid has one silhouette leg a side.** Two separated legs a side need gaps of at least 3 px on each side of a body, which 16 px cannot hold. That arrangement merged into the crown shape seen before. One clear arch a side plus dark inner legs was the intentional simplification.
+
 ## Functional checks (checkpoint 1)
 
 These are automated rendering checks, separate from the owner's artistic approval.
@@ -111,8 +127,8 @@ These are automated rendering checks, separate from the owner's artistic approva
 - Preview SVG and the exported grid agree pixel for pixel.
 - All 222 legacy sprites are unchanged in grid and SVG.
 - Unknown fields and values produce diagnostics.
-- `tests/sprite-gen.test.js`: 6 tests pass. `tests/species.test.js` (including the PNG exporter) passes 11/11.
-- Closest neutral-pose silhouette pairs (Jaccard on outlined masks, mirror included): long-limbed upright and perching avian 0.835; heavy upright and construct 0.80; heavy quadruped and shelled 0.80. They share broad proportions but differ in anatomy (arms against folded wings, a faceted block against a rounded mass, legs against a shell). Owner review decides whether that is enough.
+- `tests/sprite-gen.test.js`: 6/6 pass, and `tests/species.test.js` (including the PNG exporter) 11/11, re-run after the revisions.
+- Closest neutral-pose silhouette pairs after the revisions (Jaccard on outlined masks, mirror included): heavy quadruped and shelled 0.80; burrowing and segmented crawler 0.77; heavy quadruped and amorphous 0.77; perching avian and plant-bodied 0.77; heavy upright and heavy quadruped 0.77. Before the revisions the closest pair was long-limbed upright and perching avian at 0.835. Similarity scores assist review; they do not certify quality.
 
 **Renderer cost.** Matched scenario on this container, not a phone:
 

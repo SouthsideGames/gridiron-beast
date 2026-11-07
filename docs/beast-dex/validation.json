@@ -9,11 +9,11 @@
     "basicForms": 120,
     "legendaryFamilies": 12,
     "types": 12,
-    "assertions": 28459,
+    "assertions": 28461,
     "attributePairs": 2664,
     "basicAttributePairs": 1440,
     "evolutionCases": 5400,
-    "links": 1331
+    "links": 1333
   },
   "positions": {
     "RB": 19,

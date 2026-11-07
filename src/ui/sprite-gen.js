@@ -64,17 +64,16 @@ def('heavy_upright', 'Heavy upright', 'Broad torso, thick limbs, heavy lower-bod
   return { head: [8, hy, 2.4, 2.1], eyes: [[7.1, hy], [8.9, hy]], mouth: [8, hy + 1.1], back: [8, 7], tail: [12, 13], ground: 15 };
 });
 def('long_limbed_upright', 'Long-limbed upright', 'Narrow torso, elongated arms and legs, taller outline', { view: 'front', grounded: true }, (c, v) => {
-  const st = v(1, 1, 2.2, 1.4, 1), crouch = v(0, -0.6, 1, 0.6, 0);
-  c.capsule(7.2, 10 + crouch, 8 - st - 0.6, 15, 0.7, 'M'); c.capsule(8.8, 10 + crouch, 8 + st + 0.6, 15, 0.7, 'M');
-  c.ellipse(8, 7.6 + crouch, 1.9, 3, 'M'); c.ellipse(8, 8.4 + crouch, 1, 1.8, 'B');
-  const arm = (s, mode) => { const sx = 8 + s * 1.6, sy = 5.6 + crouch;
-    if (mode === 'down') c.capsule(sx, sy, 8 + s * 4.2, 12.6 + crouch, 0.6, 'M');
-    else if (mode === 'out') c.capsule(sx, sy, 8 + s * 6.2, 8 + crouch, 0.6, 'M');
-    else if (mode === 'up') c.capsule(sx, sy, 8 + s * 4.6, 1.2, 0.6, 'M');
-    else c.capsule(sx, sy, 8 + s * 5.4, 10.4 + crouch, 0.6, 'M'); };
-  arm(-1, v('down', 'down', 'out', 'forward', 'up')); arm(1, v('down', 'down', 'out', 'forward', 'down'));
-  const hy = v(3.4, 2.8, 4.2, 4, 3.4); c.ellipse(8, hy, 2.2, 2, 'M');
-  return { head: [8, hy, 2.2, 2], eyes: [[7.2, hy], [8.8, hy]], mouth: [8, hy + 1], back: [8, 6], tail: [10, 11], ground: 15 };
+  // A spindly stick-like build: a thin torso on a neck, legs in a wide inverted V and arms held away from the body, so open space
+  // shows between the legs and on both sides of the torso. A bird has a full egg-shaped body and no arms; this has neither.
+  const p = v('n', 'a', 'b', 'f', 'e');
+  const hip = p === 'b' ? 10.6 : p === 'a' ? 9.4 : 10, stance = p === 'b' ? 5.6 : p === 'f' ? 4.6 : 4;
+  c.capsule(7.4, hip, 8 - stance, 15, 0.6, 'M'); c.capsule(8.6, hip, 8 + stance, 15, 0.6, 'M'); // legs: inverted V
+  c.capsule(8, hip, 8, hip - 4.6, 1, 'M'); c.ellipse(8, hip - 2.6, 1.3, 2, 'M'); // narrow torso
+  const sh = hip - 4.4; const hand = { n: [[3, 10.4], [13, 10.4]], a: [[3.4, 9], [12.6, 9]], b: [[1.8, sh + 1.4], [14.2, sh + 1.4]], f: [[2.6, 12.4], [13.4, 7.4]], e: [[2.6, 1.6], [13, 10.6]] }[p];
+  for (const [i, s] of [[0, -1], [1, 1]]) { const [x, y] = hand[i]; const ex = 8 + s * 2.8, ey = (sh + y) / 2 - (p === 'e' && s < 0 ? 0.6 : -0.6); c.capsule(8 + s * 1, sh, ex, ey, 0.55, 'M'); c.capsule(ex, ey, x, y, 0.5, 'M'); }
+  const hy = sh - 2.8; c.capsule(8, sh, 8, hy + 1, 0.45, 'M'); c.ellipse(8, hy, 1.8, 1.6, 'M'); // thin neck, small head
+  return { head: [8, hy, 1.8, 1.6], eyes: [[7.3, hy], [8.7, hy]], mouth: [8, hy + 0.9], back: [8, sh], tail: [8, hip], ground: 15 };
 });
 def('knuckle_walker', 'Hunched knuckle-walker', 'Forward torso, low head, long weight-bearing forearms', { view: 'side', grounded: true }, (c, v) => {
   const lift = v(0, -0.8, 0.6, 0.4, 0);
@@ -196,25 +195,42 @@ def('elongated_serpent', 'Elongated serpent', 'Extended, curved body distinct fr
   c.chain(pts, 'M'); const [hx, hy] = pts[0]; c.oval(hx - 0.4, hy, 2, 1.3, 0, 'M');
   return { head: [hx - 0.4, hy, 2, 1.3], eyes: [[hx - 0.9, hy - 0.4]], mouth: [hx - 2.2, hy + 0.5], back: pts[2], tail: pts[pts.length - 1], ground: 15, side: true };
 });
-def('insectoid', 'Insectoid', 'Segmented body with readable insectlike appendages', { view: 'side', grounded: true }, (c, v) => {
+def('insectoid', 'Insectoid', 'Segmented body with readable insectlike appendages', { view: 'dorsal', grounded: true }, (c, v) => {
+  // Dorsal (top-down) view, the usual pixel-art solution for insects: in a 16×16 side view the outline fills the waist pinches
+  // and only three legs can show, so any insect reads as a four-legged mammal. Seen from above, the three body parts sit in a
+  // column with visible waists, six legs splay out to the sides with open space between them, and two antennae point forward.
   const p = v('n', 'a', 'b', 'f', 'e');
-  const ay = p === 'b' ? 9.6 : p === 'a' ? 7.8 : 8.4, tilt = p === 'a' ? -16 : p === 'e' ? -34 : 0;
-  const feet = p === 'f' ? [2.4, 7, 13.4] : p === 'b' ? [3.4, 8, 12.6] : [3, 7.6, 12.4], knee = ay - (p === 'b' ? 0.4 : 1.4);
-  feet.forEach((fx, i) => { const hx = 6.6 + i * 1.6; const kx = (hx + fx) / 2 + (i - 1) * 0.6; if (p === 'e' && i === 0) { c.capsule(hx, ay, 3.4, ay - 3.2, 0.4, 'K'); c.capsule(3.4, ay - 3.2, 2, ay - 4.6, 0.4, 'K'); return; } c.capsule(hx, ay, kx, knee, 0.4, 'K'); c.capsule(kx, knee, fx, 15, 0.4, 'K'); });
-  c.oval(11.4, ay - (p === 'e' ? 1.2 : 0), 3, 1.9, tilt, 'M'); c.ellipse(7.6, ay - 0.2, 1.6, 1.4, 'M'); c.ellipse(7.6, ay + 0.4, 0.8, 0.6, 'B');
-  const hx = 4.8, hy = p === 'a' ? 5.8 : p === 'b' ? 8.6 : 7; c.ellipse(hx, hy, 1.7, 1.5, 'M');
-  return { head: [hx, hy, 1.7, 1.5], eyes: [[hx - 0.6, hy - 0.3]], mouth: [hx - 1.5, hy + 0.6], back: [11, ay - 2], tail: [14.2, ay], ground: 15, side: true };
+  const yo = p === 'b' ? 0.6 : 0;
+  if (p === 'e') for (const s of [-1, 1]) c.oval(8 + s * 3, 10.4, 1.7, 3.4, s * 26, 'A'); // wing cases opened (narrow, so the legs still show)
+  const legs = p === 'b' ? [[[2, 4.4], [1.4, 7.6]], [[1.4, 9], [1, 10.4]], [[2, 13.4], [1.8, 15]]]
+    : p === 'f' ? [[[3.4, 3.6], [2.8, 1.6]], [[1.6, 8], [1.2, 9.6]], [[2.8, 12], [3.2, 14.8]]]
+    : p === 'a' ? [[[3.2, 3.2], [3.4, 1.2]], [[1.6, 7.6], [1.2, 9]], [[2.6, 12.4], [2.2, 14.6]]]
+    : [[[2.8, 4], [2.2, 2.4]], [[1.6, 8], [1.2, 9.6]], [[2.6, 12.2], [2.2, 14.4]]];
+  if (p !== 'e') for (const s of [-1, 1]) legs.forEach(([[kx, ky], [fx, fy]], i) => { const ox = 8 + s * 1, oy = 6.8 + i * 0.9 + yo; const K = [8 + s * (8 - kx), ky + yo], F = [8 + s * (8 - fx), fy + yo]; c.capsule(ox, oy, K[0], K[1], 0.38, 'K'); c.capsule(K[0], K[1], F[0], Math.min(15, F[1]), 0.38, 'K'); });
+  else for (const s of [-1, 1]) for (let i = 0; i < 3; i++) c.capsule(8 + s * 1, 6.8 + i * 0.9, 8 + s * (6.6 - i * 0.4), 4.4 + i * 4.2, 0.38, 'K');
+  const abY = p === 'b' ? 11.6 : 11.2; c.ellipse(8, abY, 2.6, 3.2, 'M'); for (const dy of [-1, 0.8, 2.4]) c.rect(6, abY + dy, 9.6, abY + dy, 'Md'); // banded abdomen
+  c.rect(7.6, 8.4 + yo, 8, 8.4 + yo, 'M'); // waist
+  c.ellipse(8, 7.2 + yo, 1.6, 1.3, 'M'); c.rect(7.6, 5.6 + yo, 8, 5.6 + yo, 'M'); // thorax and neck
+  const hy = 4.4 + yo; c.ellipse(8, hy, 1.7, 1.3, 'M');
+  const ant = p === 'a' ? [[5.4, 0.6], [10.6, 0.6]] : p === 'b' ? [[4.6, 2.6], [11.4, 2.6]] : p === 'f' ? [[6, 0.4], [10, 0.4]] : [[5, 1], [11, 1]];
+  for (const [ax, ay] of ant) c.capsule(8 + (ax < 8 ? -0.6 : 0.6), hy - 1, ax, ay, 0.3, 'K');
+  return { head: [8, hy, 1.7, 1.3], eyes: [[7, hy - 0.2], [9, hy - 0.2]], mouth: [8, hy + 1], back: [8, 10], tail: [8, abY + 3], ground: 15, antennae: true, smallEyes: true, dorsal: true };
 });
 def('arachnid', 'Arachnidlike', 'Low central body with a spread-leg outline', { view: 'front', grounded: true }, (c, v) => {
+  // At 16×16 the outline closes any gap under three pixels, so two separated legs a side cannot fit. The silhouette carries one
+  // long arching leg a side (high knee, foot far out) with an open triangle under each arch; the inner legs are dark detail
+  // under the low body.
   const p = v('n', 'a', 'b', 'f', 'e');
-  const by = p === 'a' ? 9.2 : p === 'b' ? 11 : p === 'f' ? 11.4 : 10.2, kneeY = p === 'b' ? 7.6 : p === 'a' ? 5 : p === 'f' ? 8.4 : 6; // forward-ready: body dropped low between bent legs
-  for (const s of [-1, 1]) for (let i = 0; i < 2; i++) { // two visible legs a side: high knees, wide feet, open triangles between
-    const kx = 8 + s * (3.6 + i * 2.4 + (p === 'f' ? 0.8 : 0)), fx = 8 + s * (2.6 + i * 4.4 + (p === 'f' && i === 0 ? 1.6 : 0)), ky = kneeY + i * 1.4;
-    c.capsule(8 + s * 1.4, by, kx, ky, 0.42, 'M');
-    if (p === 'e' && s < 0 && i === 1) c.capsule(kx, ky, kx + 0.6, 1.4, 0.42, 'M'); else c.capsule(kx, ky, Math.max(1, Math.min(14.6, fx)), 15, 0.42, 'M');
+  const by = p === 'a' ? 12 : p === 'b' ? 13 : p === 'f' ? 12.8 : 12.4;
+  const arch = { n: [[2.6, 5], [1.2]], a: [[3, 3.4], [1.6]], b: [[1.8, 7.4], [1]], f: [[2.2, 6.2], [1]], e: [[2.6, 5], [1.2]] }[p];
+  for (const s of [-1, 1]) {
+    const knee = [8 + s * (8 - arch[0][0]), arch[0][1] + (p === 'f' && s > 0 ? 1.4 : 0)], foot = [8 + s * (8 - arch[1][0]), 15];
+    c.capsule(8 + s * 1.6, by - 0.6, knee[0], knee[1], 0.5, 'M');
+    if (p === 'e' && s < 0) c.capsule(knee[0], knee[1], knee[0] + 1, 1.4, 0.5, 'M'); else c.capsule(knee[0], knee[1], foot[0], foot[1], 0.5, 'M');
+    c.capsule(8 + s * 1.4, by + 0.4, 8 + s * 2.6, 15, 0.35, 'K'); // inner leg as dark detail tucked under the body
   }
-  c.ellipse(8, by + 0.4, 2.6, 2.2, 'M'); c.ellipse(8, by - 1.6, 1.7, 1.3, 'M'); c.ellipse(8, by + 1, 1.4, 0.9, 'B');
-  return { head: [8, by - 1.6, 1.7, 1.3], eyes: [[7.2, by - 1.8], [8.8, by - 1.8], [7.6, by - 1], [8.4, by - 1]], mouth: [8, by - 0.6], back: [8, by - 1], tail: [8, by + 2.4], ground: 15, smallEyes: true };
+  c.ellipse(8, by + 0.4, 2.1, 1.5, 'M'); c.ellipse(8, by - 1, 1.4, 1, 'M'); c.ellipse(8, by + 0.9, 1.1, 0.6, 'B');
+  return { head: [8, by - 1, 1.4, 1], eyes: [[7.4, by - 1.2], [8.6, by - 1.2]], mouth: [8, by - 0.4], back: [8, by - 1.6], tail: [8, by + 2], ground: 15, smallEyes: true };
 });
 def('crustacean', 'Crustaceanlike', 'Broad body and prominent pincers, not a turtle with claws', { view: 'front', grounded: true }, (c, v) => {
   const p = v('n', 'a', 'b', 'f', 'e');
@@ -353,28 +369,43 @@ def('plant_bodied', 'Plant-bodied', 'Stem, fronds, roots or branches form the ac
   return { head: [hx, top, 3.2, 2.8], eyes: [[hx - 1.2, top], [hx + 1.2, top]], mouth: [hx, top + 1.4], back: [8, top + 3], tail: [8, 12.6], ground: 15, plant: true };
 });
 def('construct', 'Mineral/construct', 'Angular connected masses and nonanimal joints', { view: 'front', grounded: true }, (c, v) => {
+  // Straight-edged blocks only: a faceted core, a separate head block on a peg, shoulder blocks hung from single-pixel pins and
+  // two leg blocks under a pelvis plate. The pins leave notches in the silhouette, so the masses read as assembled, not grown.
   const p = v('n', 'a', 'b', 'f', 'e');
-  const drop = p === 'b' ? 1 : p === 'a' ? -0.6 : 0;
-  c.poly([[5, 13], [4.4, 15.4], [6.8, 15.4], [7, 13]], 'M'); c.poly([[9, 13], [9.2, 15.4], [11.6, 15.4], [11, 13]], 'M');
-  c.poly([[4.2, 7 + drop], [11.8, 7 + drop], [12.6, 10.4 + drop], [10.4, 12.8 + drop], [5.6, 12.8 + drop], [3.4, 10.4 + drop]], 'M'); // faceted torso
-  c.rect(6.4, 12.6 + drop, 9.6, 12.6 + drop, 'K'); // visible joint gap line
-  const arm = (s, mode) => { const x = 8 + s * 5.4; if (mode === 'up') { c.poly([[x - 1, 7 + drop], [x + 1, 7 + drop], [x + s * 1.4 + 0.8, 2.6], [x + s * 1.4 - 0.8, 2.6]], 'M'); }
-    else if (mode === 'fwd') { c.poly([[x - 1.2, 8 + drop], [x + 1.2, 8 + drop], [x + 1.2, 10.4 + drop], [x - 1.2, 10.4 + drop]], 'M'); c.rect(x - 1, 11 + drop, x + 1, 12.4 + drop, 'M'); }
-    else { c.poly([[x - 1, 8 + drop], [x + 1, 8 + drop], [x + 1.4, 12 + drop], [x - 1.4, 12 + drop]], 'M'); } };
-  arm(-1, p === 'e' ? 'up' : p === 'f' ? 'fwd' : 'down'); arm(1, p === 'f' ? 'fwd' : 'down');
-  const hy = (p === 'a' ? 2.8 : 3.8) + drop; c.poly([[6, hy + 2.4], [6.4, hy - 0.6], [9.6, hy - 1.2], [10.2, hy + 2.4]], 'M'); c.rect(7, hy + 2.4, 9, hy + 2.6, 'K');
-  return { head: [8, hy + 0.8, 2.2, 1.8], eyes: [[7, hy + 0.8], [9, hy + 0.8]], mouth: [8, hy + 2], back: [8, 7 + drop], tail: [8, 13], ground: 15, construct: true, noMouth: true };
+  const d = p === 'b' ? 1 : p === 'a' ? -0.6 : 0;
+  const block = (x0, y0, x1, y1) => c.poly([[x0, y0], [x1, y0], [x1, y1], [x0, y1]], 'M');
+  c.poly([[5.4, 6.6 + d], [10.6, 6.6 + d], [11.6, 9 + d], [9.6, 11.6 + d], [6.4, 11.6 + d], [4.4, 9 + d]], 'M'); // faceted core (hexagon)
+  c.rect(7.4, 11.6 + d, 8.4, 12.2 + d, 'K'); // waist pin
+  if (p === 'b') { block(4.2, 12.8, 7.4, 15.4); block(8.6, 12.8, 11.8, 15.4); } else { block(5, 12.8, 7.4, 15.4); block(8.6, 12.8, 11, 15.4); } // leg blocks under the pin
+  c.rect(5.4, 12.4 + d, 10.4, 12.6 + d, 'Md');
+  const arm = (s, mode) => { const sx = 8 + s * 4.1; c.rect(sx - 0.4 + (s > 0 ? 0 : -0.2), 7.6 + d, sx + 0.4, 7.6 + d, 'K'); // shoulder pin
+    const ax = 8 + s * 5.6;
+    if (mode === 'up') block(ax - 1.2, 2.4, ax + 1.2, 6.8 + d);
+    else if (mode === 'fwd') block(ax - 1.2 - s * 1, 8.4 + d, ax + 1.2 - s * 1, 11 + d);
+    else if (mode === 'out') block(ax - 1.4 + s * 0.4, 6.4 + d, ax + 1.4 + s * 0.4, 8.8 + d);
+    else block(ax - 1.2, 6.6 + d, ax + 1.2, 11.4 + d); };
+  arm(-1, p === 'e' ? 'up' : p === 'f' ? 'fwd' : p === 'b' ? 'out' : 'down'); arm(1, p === 'f' ? 'fwd' : p === 'b' ? 'out' : 'down');
+  const hy = (p === 'a' ? 2.4 : 3) + d; c.rect(7.6, hy + 2.6, 8.4, hy + 3.2, 'K'); // neck peg
+  c.poly([[6.2, hy + 2.6], [6.2, hy], [7.2, hy - 1], [9.8, hy - 1], [9.8, hy + 2.6]], 'M'); // chamfered head block
+  return { head: [8, hy + 0.8, 1.8, 1.8], eyes: [[7.2, hy + 0.8], [8.8, hy + 0.8]], mouth: [8, hy + 2], back: [8, 6.6 + d], tail: [8, 12.4], ground: 15, construct: true, noMouth: true };
 });
 def('multi_bodied', 'Multi-bodied', 'Coherent connected or orbiting masses', { view: 'front', grounded: false }, (c, v) => {
+  // One lead mass with eyes and two or three separate satellite masses spaced well apart, joined only by thin tethers, so open
+  // space shows between every mass. Poses rearrange the orbit; the creature never merges into a single blob.
   const p = v('n', 'a', 'b', 'f', 'e');
-  const orbs = p === 'a' ? [[8, 4.6, 2.6], [4, 9.4, 1.8], [12, 9.4, 1.8]] : p === 'b' ? [[8, 9, 2.8], [5, 11.6, 2], [11, 11.6, 2]]
-    : p === 'f' ? [[6, 7.4, 2.6], [10.6, 8.6, 2], [13.4, 11, 1.4]] : p === 'e' ? [[8, 7.6, 2.6], [3, 4, 1.5], [13, 4, 1.5], [8, 13, 1.2]] : [[8, 6.4, 2.6], [4.4, 10.6, 1.8], [11.6, 10.6, 1.8]];
-  for (const [x, y] of orbs.slice(1)) c.capsule(orbs[0][0], orbs[0][1], x, y, 0.45, 'A'); // the linking tethers keep it one creature
-  orbs.forEach(([x, y, r], i) => c.ellipse(x, y, r, r, i ? 'A' : 'M'));
-  const [hx, hy, r] = orbs[0];
-  return { head: [hx, hy, r, r], eyes: [[hx - 0.9, hy - 0.2], [hx + 0.9, hy - 0.2]], mouth: [hx, hy + 1.2], back: [hx, hy - r], tail: orbs[orbs.length - 1], ground: 15, floating: true, multi: true };
+  const sets = { // centres at least r1 + r2 + 3 px apart, so background shows between every pair of masses after outlining
+    n: [[8, 10.4, 2.5], [2.8, 5, 1.7], [13.2, 5.8, 1.7]],
+    a: [[8, 6.4, 2.4], [2.6, 12, 1.6], [13.4, 12, 1.6], [8, 1.6, 0.9]],
+    b: [[8, 11.6, 2.6], [2.6, 8.4, 1.7], [13.4, 8.4, 1.7]],
+    f: [[4.4, 9.4, 2.5], [10.2, 5.4, 1.6], [13.2, 11.8, 1.5]],
+    e: [[8, 8.4, 2.4], [2.6, 3.2, 1.5], [13.4, 3.2, 1.5], [2.8, 13.2, 1.3], [13.2, 13.2, 1.3]],
+  }[p];
+  const [m, ...sat] = sets;
+  sat.forEach(([x, y], i) => { const from = p === 'f' && i === 1 ? sat[0] : m; c.capsule(from[0], from[1], x, y, 0.32, 'K'); }); // tethers
+  c.ellipse(m[0], m[1], m[2], m[2] * 0.95, 'M'); c.ellipse(m[0], m[1] + m[2] * 0.5, m[2] * 0.55, m[2] * 0.35, 'B');
+  sat.forEach(([x, y, r]) => c.ellipse(x, y, r, r, 'A'));
+  return { head: [m[0], m[1], m[2], m[2]], eyes: [[m[0] - 0.9, m[1] - 0.2], [m[0] + 0.9, m[1] - 0.2]], mouth: [m[0], m[1] + 1.2], back: [m[0], m[1] - m[2]], tail: sat[sat.length - 1], ground: 15, floating: true, multi: true, satellites: sat.length };
 });
-
 export const STRUCTURES = Object.freeze(S);
 export const STRUCTURE_IDS = Object.freeze(Object.keys(S));
 

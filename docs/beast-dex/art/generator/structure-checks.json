@@ -5,16 +5,6 @@
  "poseCollapses": [],
  "closestNeutralPairs": [
   {
-   "a": "long_limbed_upright",
-   "b": "perching_avian",
-   "jaccard": 0.835
-  },
-  {
-   "a": "heavy_upright",
-   "b": "construct",
-   "jaccard": 0.804
-  },
-  {
    "a": "heavy_quadruped",
    "b": "shelled",
    "jaccard": 0.797
@@ -40,6 +30,11 @@
    "jaccard": 0.77
   },
   {
+   "a": "heavy_upright",
+   "b": "construct",
+   "jaccard": 0.763
+  },
+  {
    "a": "compact_upright",
    "b": "perching_avian",
    "jaccard": 0.757
@@ -53,6 +48,11 @@
    "a": "shelled",
    "b": "amorphous",
    "jaccard": 0.752
+  },
+  {
+   "a": "compact_upright",
+   "b": "jellyfish",
+   "jaccard": 0.736
   }
  ]
 }
