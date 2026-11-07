@@ -390,7 +390,7 @@ Football counts completed plays the monster actually participates in, including 
 
 Supported statuses transfer1:1 between opening/overtime Clash and football, keeping remaining duration and episode history. Unsupported destination effects clear rather than remain dormant in the slot. Preserve through possessions, halftime and overtime; actual complete football-game end clears. Clash KO immediately clears that monster's status and episode. Standalone battle boundaries must not accidentally clear same-game carryover.
 
-> **Approved scope (R1 item 16; N7b).** Implement only the currently approved rest-of-play football Stunned sources; multi-play football Stunned is unapproved. How a Clash-applied Stunned with turns remaining behaves on entering football is still open (docs/task8/REMAINING_DECISIONS.md, B18).
+> **Approved scope (R1 item 16; N7b; N7c B18).** Football-applied Stunned sources are the currently approved rest-of-play sources only. A Stunned carried from Clash keeps its remaining duration 1:1, and each remaining unit disables one participating football play. Football Stunned left over at a mode transfer carries back 1:1 the same way. No other multi-play football Stunned source is approved.
 
 Pancake is a blocking outcome applying existing Knocked Down through the shared gate; every pancake-caused knockdown lasts the rest of current play and clears at whistle. Stumbled is football-only current-speed loss, not complete immobilization; Slowed changes maximum speed. Keep explicit Water slip once-success-per-play and application-play cleanup exceptions.
 
@@ -571,7 +571,7 @@ These items are not new approved mechanics. They identify what still prevents th
 The remaining profile work occurs in the later player-facing Beast Dex phase, as instructed. The final handoff must not contain these unresolved alternatives. Final owner visual approval and physical-device verification occur after implementation and must be reported honestly rather than substituted with an automated claim.
 
 ## 19 Superseded instructions and source record
-Retired (2026-11-07 additions, see §20): universal ordinary evasion; multi-play football Stunned; Dawn Signal as a stat bonus without live coverage; voluntary rotation at the start of an exchange; free or action-cost rotation entry; ordinary bench attacks; TE Strength contested catching.
+Retired (2026-11-07 additions, see §20–§21): universal ordinary evasion; football Stunned from unapproved multi-play sources (carryover is approved, §21 B18); clearing Stunned on mode transfer; hard pancake advantage threshold; slot-sum effect caps as gameplay limits; legendary-kicker refusal; Dawn Signal as a stat bonus without live coverage; voluntary rotation at the start of an exchange; free or action-cost rotation entry; ordinary bench attacks; TE Strength contested catching.
 
 Retired:500-monster implementation scope;11v11 mandate in this task; secondary positions; rarity increasing with evolution; identical fully trained individuals; hard30-build cap; direct Temper stat multipliers; Kicking favored/unfavored Tempers; Apex limited by ordinary species ceilings; Apex nonneutral Temper; Apex instant all 99 starts; finite post-level 50 training ban; six training points per level; mastery from participation alone; old mastery XP thresholds; one-second Blazing Resolve; one-second pancake-failure recovery; five-second pancake Knocked Down; and old-save migration requirements.
 
@@ -599,13 +599,79 @@ Owner rulings N7b (2026-11-07 09:21, recorded verbatim in docs/task8/RULINGS_202
 **Shared rules**
 - **Ordinary attacks connect (N7a, P10).** No universal evasion system. Misses come only from explicit effects; contract wording such as "normal evasion" refers to those effects.
 - **Clash rotation (P8).** Voluntary rotation occurs after both normal turns and before delayed impacts, at most once per side every four exchanges. The entrant acts next exchange. On its first normal turn after a voluntary rotation its damage multipliers, heals, shields and status-application chances are halved; a Stunned skip consumes that penalty. Entry effects, reactions and defensive effects are unchanged and nonnumeric effects remain usable. Explicit ability exceptions are preserved.
-- **Pancakes (P5, structure only).** One attempt per OL per play, eligible from an established block advantage. Success: Knocked Down for the rest of the play. Failure: Awareness decides recovery; recovered keeps the block; unrecovered ends the engagement and attempts Stumbled through the shared gate. Contest constants and the separate ordinary block-shed change are not yet approved.
-- **Football Stunned.** Only currently approved rest-of-play sources are implemented. Multi-play football Stunned is unapproved.
-- **Simultaneous-effect limits (P9, behaviour only).** Limits are diagnostics: a legitimate effect is never cancelled, delayed or deleted because a limit is exceeded. The verified limit values are not yet approved.
+- **Pancakes (P5, structure only).** One attempt per OL per play, eligible from an established block advantage. Success: Knocked Down for the rest of the play. Failure: Awareness decides recovery; recovered keeps the block; unrecovered ends the engagement and attempts Stumbled through the shared gate. Contest constants: §21 (B1); ordinary shed formula: §21 (B2).
+- **Football Stunned.** Only currently approved rest-of-play sources are implemented, plus carried-over Stunned under §21 (B18). No other multi-play football Stunned source is approved.
+- **Simultaneous-effect limits (P9, behaviour only).** Limits are diagnostics: a legitimate effect is never cancelled, delayed or deleted because a limit is exceeded. Verified limits: §21 (B4).
 - **TE contested catching.** Agility-based role only; no TE Strength contribution.
 - **AI and Basics.** AI may start a Basic when it is the best eligible individual.
 - **Collection achievements.** Separate achievements for the original 72 families, the 120 Basics and all 192 families. Evolutions add no family count.
 - **Art and reviewers.** Art refinement remains paused. Both runtime-backed ability reviewers (football and Beast Clash) remain required.
 
-**Still open** (no ruling; not approved by silence): event order (P6 revision), pancake constants and the ordinary shed formula, verified effect limits, formula-kick participation, the level-XP curve, veteran generation, telemetry definitions, Apex contract, Afflicted drain, mid-Clash save, test matrix, trait and Nature retirement, cornerstone rule, AI information rules, Basic appearance shares, and Clash-to-football Stunned carryover. See docs/task8/REMAINING_DECISIONS.md.
+Items listed as open when this section was written were resolved by N7c; see §21.
+
+## 21 Approved Task 8 rulings, 2026-11-07 (B1–B20)
+
+Owner rulings N7c (2026-11-07 10:00, verbatim in docs/task8/RULINGS_2026-11-07b.md). They override conflicting text above. Status of every item: docs/task8/APPROVAL_REGISTER.md.
+
+**Football**
+- **Pancake constants (B1).**
+  - Opportunity: one roll per OL per play (not per tick), at the OL's first engagement of the play, with chance q = qmax × clamp((A − a0)/w, 0, 1). A = (B − shed)/100, type-scaled; B = 0.6 Blocking + 0.4 Strength. A positive advantage is required, and a0 is never tuned below 0.
+  - Success: p = clamp(b + s(P − R)/100, lo, hi), with P = 0.4 Strength + 0.4 Blocking + 0.2 Tackling (OL) and R = 0.6 Strength + 0.4 Agility (defender).
+  - Recovery: r = clamp(c + k·Awareness/99, c, rmax).
+  - Start values (bounds): a0 0.00 (0–0.05), w 0.15 (0.10–0.20), qmax 0.15 (0.10–0.20), b 0.35 (0.25–0.45), s 1.5 (1.0–2.0), lo 0.05 (0.02–0.10), hi 0.80 (0.70–0.90), c 0.60 (0.55–0.70), k 0.40 (0.30–0.45), rmax 0.95 (0.90–0.97).
+  - Targets: 0.2–0.6 pancakes per starting OL per game; 30–50% success; at most 15% of attempts losing the block (league average). Rebenchmark with Dex-generated ratings.
+- **Ordinary shed (B2).** DL, CB, S: 0.5 Agility + 0.3 Strength + 0.2 Tackling; LB: 0.5 Strength + 0.3 Agility + 0.2 Tackling (initial values). Report ordinary block-shed effects separately from pancake results.
+- **Event order (B3).** The packet's football and Clash order (docs/task8/DECISION_PACKET_FINAL.md §P6), with the revised phases in docs/task8/REMAINING_DECISIONS.md §B3:
+  - catches: provisional outcome, then Sovereign Arm, then the final outcome;
+  - contact: tackle declared, then carrier pre-tackle hooks, then the contest, then **the fumble determination; a fumble that would occur is prevented by Shielded, which consumes its episode**; then strips, then post-tackle triggers;
+  - Clash: raw damage once, then Emergency Cover, then the Shared Burden raw split, then each recipient's mitigation, then Last Root, then HP;
+  - immediate KO on every damage path, with only the contract-verified post-KO exceptions;
+  - the replacement enters right after the current hit finishes resolving.
+- **Special teams (B5).** Kickoff kicking and return units, and punt / FG / XP units, come from depth lists. Live kickoffs credit actual participants and return events. Formula-resolved plays grant the participation foundation (status countdown, stamina, participation rewards) with no fabricated performance events.
+- **Telemetry (B8).**
+  - Pressure is credited only for attributable disruption.
+  - Separation of at least 1.0 yd from the responsible defender is an initial coverage measurement only. A viable window additionally requires, at a tick when a throw is possible, that along the actual ball-flight path and time no defender could reach the ball first to intercept or break it up.
+  - Grading measurements change no gameplay.
+- **Field clocks (B20).**
+  - Kickoff catches are not receptions; kickoffs are not defensive snaps.
+  - Each field ability keeps its own contract clock and creation eligibility (docs/task8/FIELD_CLOCKS.md).
+  - Impact Pyre creates at its creator's next eligible defensive snap.
+  - A cooldown never cancels an already-earned queued field; the field waits under its contract's pending rule.
+  - Gaps G1–G3 in FIELD_CLOCKS.md remain open for the named abilities only.
+- **Stunned carryover (B18).** Remaining duration transfers 1:1 between Clash and football; each remaining unit disables one participating football play. This is the only approved multi-play football Stunned.
+
+**Limits (B4).**
+- Diagnostic thresholds only, never gameplay restrictions; legitimate effects always execute, and an overflow logs a diagnostic and fails the test suite. Derivation: docs/task8/P9_VERIFIED_LIMITS.md.
+- Thresholds:
+  - 45 field rectangles on the whole field;
+  - 13 objects per scrimmage play, 9 of them collision objects;
+  - 6 on a live kickoff; 0 persisting between plays;
+  - 4 Living Terrain clumps per connected Nature–Earth overlap;
+  - 15 Mindstorm echoes and 10 moving auras per play;
+  - Clash: 2 delayed impacts per side, 2 Twin Thunder constructs per battle, Dawn Song schedules up to lineup size per side.
+- Legendary uniqueness (one copy in the league) is an approved rule (GRIDIRON_BEAST_GDD.md §15).
+
+**Progression and economy**
+- **XP and veterans (B6, B7).**
+  - 75 XP per level to level 50 is the starting curve; the approved multiplier is tuned to the 5–8 season median benchmark.
+  - Veterans are generated at level 1, then their prior seasons are simulated under the approved model. Accept when the median is within 1 level and 2 rating points, and quartiles within 2 levels.
+- **Apex contract (B9).** Ask = salary(current OVR) + 0.5 × (salary(OVR 99) − salary(current OVR)); revalidated after economy recalibration.
+- **Afflicted (B10).** Stamina drain per counted play = permanent Durability ÷ max(1, effective Durability), as an exact fraction. Exhaustion begins the moment stamina reaches 0.
+- **Basic shares (B17).** Per generation event: rosters 25%, scouting 25%, encounters 30%, drafts 35%, FA arrivals 40%. Rarity is picked first; the remaining share keeps today's mix among the original rarities. Existing rosters and markets are never forced to a composition.
+
+**Clash and saves**
+- **Mid-Clash save (B11).** At exchange boundaries, preserving committed decisions, RNG state and reward idempotency.
+
+**Retirements and AI**
+- **Retired (B13–B15).**
+  - The ten legacy common traits.
+  - Nature side effects; legitimate Ambition behaviour is preserved.
+  - The fixed legacy cornerstone list. No-K cornerstone eligibility is kept.
+- **AI information (B16).** AI clubs scout under the player's rules. Close both player information leaks: the recruit card's exact salary, and the assistant's use of hidden potential.
+- **Legendary kickers (B19).** Count toward the offensive legendary limit. This supersedes Task 7's "No legendary kickers or special teams".
+
+**Testing (B12)**
+- Contract-derived cases.
+- Each probability's tolerance and sample size are frozen before testing, with N = 3.29²·p(1 − p)/h².
+- Guaranteed behaviour must succeed in every case.
 

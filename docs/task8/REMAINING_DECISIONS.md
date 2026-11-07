@@ -1,5 +1,7 @@
 # Task 8: remaining decisions (one batch)
 
+> **Resolved 2026-11-07 10:00 (N7c).** Every item below has a binding ruling; see [APPROVAL_REGISTER.md](APPROVAL_REGISTER.md) and [RULINGS_2026-11-07b.md](RULINGS_2026-11-07b.md). Where a ruling differs from a recommendation here (B3 fumble order, B18, B20), the ruling governs. Kept as the proposal record.
+
 This batch lists every row still **Open** in [APPROVAL_REGISTER.md](APPROVAL_REGISTER.md). Each item gives a recommendation and
 flags any departure from an approved rule. Nothing here is approved until you rule on it.
 

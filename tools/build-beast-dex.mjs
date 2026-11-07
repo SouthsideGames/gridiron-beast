@@ -57,7 +57,7 @@ export function buildModule() {
     `export const FORMS = ${JSON.stringify(frm)};`,
     `export const ABILITIES = ${JSON.stringify(abl)};`,
     `export const RULES = ${JSON.stringify(rul)};`,
-    `export const APPROVED_RULINGS = ${JSON.stringify({ version: overrides.version, sources: overrides.rulingSources, rules: overrides.rules })};`,
+    `export const APPROVED_RULINGS = ${JSON.stringify({ version: overrides.version, sources: overrides.rulingSources, rules: overrides.rules, openGaps: overrides.openGaps || [] })};`,
     '',
   ].join('\n');
   return { body, counts: { families: fam.length, forms: frm.length, abilities: abl.length } };
