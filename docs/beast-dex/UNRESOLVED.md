@@ -33,6 +33,6 @@ The 72-family/102-form starting and potential ranges are now approved including 
 - R14: field/object caps, safe spawn ties and performance scenarios.
 - R15: complete per-ability functional case matrix and numeric tolerances; visual/reviewer coverage.
 
-Basic families are a later design group. Shared type moves and archetype perks for ability-free Basic monsters remain unresolved. No Basic families or unapproved abilities have been invented.
+Basic creation is now authorized by BASIC_CREATION_BRIEF.md: 120 standalone families, with shared type moves and existing archetype perks retained, but no unique mode abilities. These families are not yet authored. Later progression approvals are recorded in PROGRESSION_DECISIONS.md and require technical reconciliation.
 
 All production tests, balancing, mobile measurements, ability reviewer updates and owner visual checks remain implementation work. No runtime test is claimed by static profile validation.

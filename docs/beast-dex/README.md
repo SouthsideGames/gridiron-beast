@@ -4,6 +4,12 @@
 
 Owner-approved attribute profiles and rarity amendments. This is a design dataset and browsable GitHub reference; it does not modify the running game.
 
+## Approved Basic expansion
+
+[Claude creation brief: 120 Basic families](BASIC_CREATION_BRIEF.md) · [Later progression decisions](PROGRESSION_DECISIONS.md)
+
+Current authored roster: 72 families and 102 forms. Approved expansion target: **192 families and 222 forms**. The 120 new Basic designs and art have not been created yet.
+
 ## Browse by position
 
 | Position | Families | Forms |

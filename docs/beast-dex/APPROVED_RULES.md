@@ -59,7 +59,7 @@ Temper changes training efficiency, not starting attributes, individual ceilings
 
 Apex: 1% initial generation chance for eligible nonlegendary individuals; level-1 starts 10–15 in every attribute, all potential 99, neutral Temper, ageless. No instant maxing and no training-efficiency multiplier. Apex is separate from Basic/Common/Uncommon/Rare/Legendary. Discovery, presentation and contracts retain the shared specification requirements and unresolved details.
 
-Basic is a rarity below Common, within the same 12 elemental types. Basic families currently have no football or Clash abilities; selected families may gain abilities in future. Individual variation, fixed positions and Temper remain. Design Basic after the original 72. Whether shared type moves and archetype perks are included in “no abilities” remains unresolved. Do not generate new Basic families or alter their rules to fill roster shortages without the approved later design.
+Basic is a rarity below Common, within the same 12 elemental types. Basic families currently have no football or Clash abilities; selected families may gain abilities in future. Individual variation, fixed positions and Temper remain. Design Basic after the original 72. The owner has now confirmed shared type moves, existing Clash archetype perks and all ordinary shared-system/teammate-effect eligibility remain. Only unique football and Clash abilities are absent. The owner approved a creation batch of 120 standalone Basic families, exactly one per type and position; see BASIC_CREATION_BRIEF.md. Those families are not yet authored.
 
 ## Ability source precedence
 

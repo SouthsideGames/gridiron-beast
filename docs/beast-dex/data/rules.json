@@ -233,7 +233,24 @@
     "clashAbilities": false,
     "futureSelectedAbilitiesPossible": true,
     "designAfterOriginal72": true,
-    "unresolved": "Whether no abilities also removes shared type moves and archetype perks"
+    "unresolved": null,
+    "plannedFamilies": 120,
+    "evolution": false,
+    "uniqueFootballAbilities": false,
+    "uniqueClashAbilities": false,
+    "sharedTypeRules": true,
+    "sharedTypeMoves": true,
+    "sameTypeZoneNeutrality": true,
+    "sharedArchetypePerks": true,
+    "normalTeammateEffectEligibility": true,
+    "archetypeAdditions": {
+      "Striker": 25,
+      "Tank": 25,
+      "Support": 23,
+      "Disruptor": 23,
+      "Balanced": 24
+    },
+    "status": "Approved creation brief; 120 families not authored yet"
   },
   "status": "Approved profile consolidation, not completed Task 8 implementation",
   "knownConflicts": [],
@@ -252,5 +269,12 @@
       "reason": "Owner-approved correction permits independent starting/potential rolls",
       "date": "2026-11-06"
     }
-  ]
+  ],
+  "expansionTarget": {
+    "families": 192,
+    "forms": 222,
+    "basicFamilies": 120,
+    "originalModeAbilities": 144,
+    "authoredBasicFamilies": 0
+  }
 }
