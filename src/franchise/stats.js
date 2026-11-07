@@ -13,7 +13,7 @@ import { TEAM_META } from '../data/league.js';
 export const STATS_VERSION = 2;
 
 /** Keys that are a maximum (longest play), not a sum. */
-export const MAX_KEYS = new Set(['longPass', 'longRec', 'longRush', 'fgLong']);
+export const MAX_KEYS = new Set(['longPass', 'longRec', 'longRush', 'fgLong', 'krLong']);
 
 /** Human labels for every counting key the sim records. */
 export const STAT_LABEL = Object.freeze({
@@ -26,6 +26,8 @@ export const STAT_LABEL = Object.freeze({
   tackles: 'Solo', assists: 'Ast', tfl: 'TFL', sacks: 'Sacks', pressures: 'Press', ff: 'FF', fr: 'FR', pd: 'PD', int: 'INT', defTd: 'Def TD',
   covTargets: 'Tgt vs', recAllowed: 'Rec alw', ydsAllowed: 'Yds alw', tdAllowed: 'TD alw',
   fga: 'FGA', fgm: 'FGM', fgLong: 'Long', xpa: 'XPA', xpm: 'XPM', fg0a: '<30 A', fg0m: '<30 M', fg30a: '30s A', fg30m: '30s M', fg40a: '40s A', fg40m: '40s M', fg50a: '50+ A', fg50m: '50+ M',
+  // Task 8 M2 live kickoffs: special-teams snaps, the kick, the return and its coverage (never receptions, defensive snaps or scrimmage tackles, B20).
+  stSnaps: 'ST snaps', kickoffs: 'Kickoffs', koTouchbacks: 'KO TB', krAtt: 'KR', krYds: 'KR yds', krLong: 'KR long', krTd: 'KR TD', stTackles: 'ST tkl', stAssists: 'ST ast', stTd: 'ST TD',
   jukes: 'Jukes', broken: 'Broken tkl', sheds: 'Sheds', abilities: 'Abilities', abilityPlays: 'Ability plays', abilityImpact: 'Ability impact', traitPlays: 'Trait plays',
 });
 

@@ -39,6 +39,20 @@ export function attemptExtraPoint(rng, kicker) {
  * Kickoff from the kicking team's 35. Result is from the RECEIVING team's
  * perspective: { ballOn, touchback, returnYards, touchdown, onside, recovered, text }.
  */
+/**
+ * Task 8 M2 (N7b P7): the ball's flight on a normal kickoff, from the approved kicking formula, with exactly the draws `kickoff()`
+ * makes before its return (distance, then the touchback roll when the ball comes down in the end zone). A live kickoff
+ * (rules.js) uses this for the flight and the touchback and plays the return in the engine; `kickoff()` keeps the full formula.
+ * `landingFromGoal`: where the ball comes down, in yards from the receiving team's goal line (negative: in its end zone).
+ */
+export function kickoffFlight(rng, { kicker }) {
+  const k = norm(kicker?.attrs?.kicking);
+  const distance = 52 + 18 * k + rng.normal() * 5; // yards from the 35
+  const landingFromGoal = 100 - (FIELD.kickoffSpot + distance);
+  const touchback = landingFromGoal <= -4 || (landingFromGoal <= 0 && rng.chance(0.75));
+  return { distance, landingFromGoal, touchback };
+}
+
 export function kickoff(rng, { kicker, returner, onside = false }) {
   const k = norm(kicker?.attrs?.kicking);
   if (onside) {
@@ -48,12 +62,8 @@ export function kickoff(rng, { kicker, returner, onside = false }) {
       ? { onside: true, recovered: true, ballOn: 100 - spot, text: `ONSIDE KICK recovered by the kicking team at the ${100 - spot > 50 ? 'opponent ' + (100 - (100 - spot)) : (100 - spot)}!` }
       : { onside: true, recovered: false, ballOn: spot, text: `Onside kick recovered by the receiving team at the ${spot > 50 ? 'opponent ' + (100 - spot) : spot}.` };
   }
-  const distance = 52 + 18 * k + rng.normal() * 5; // yards from the 35
-  const landing = FIELD.kickoffSpot + distance; // receiving team's yard line counting from their goal: 100 - landing
-  const landingFromGoal = 100 - landing; // negative = in the end zone
-  if (landingFromGoal <= -4 || (landingFromGoal <= 0 && rng.chance(0.75))) {
-    return { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, text: 'Kickoff sails into the end zone. Touchback.' };
-  }
+  const { landingFromGoal, touchback } = kickoffFlight(rng, { kicker });
+  if (touchback) return { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, text: 'Kickoff sails into the end zone. Touchback.' };
   const r = returner?.attrs || {};
   const returnYards = Math.max(4, 16 + 10 * norm(r.speed) + 6 * norm(r.agility) + rng.normal() * 7);
   const start = Math.max(-9, landingFromGoal);
