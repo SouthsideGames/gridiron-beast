@@ -60,11 +60,10 @@ test('no bonus for an ordinary target, and none on a loss', () => {
   const { f } = wonEncounter({ basic: false }); const r = F.resolveEncounter(f);
   assert.ok(r.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0)); assert.equal(f.week.encounter.bonus, null);
   for (let seed = 1; seed < 40; seed++) {
-    const g = withTarget(seed); const p = g.week.prospects[0];
-    p.monster = generateMonster(createRng(seed), { species: basicAt(p.monster.position).id, quality: 90, age: 30, yearsPro: 9, id: p.monster.id });
+    const g = withTarget(seed); for (const m of g.roster) for (const k of Object.keys(m.attributes)) m.attributes[k] = 1; // a club that cannot win
     if (!F.startEncounter(g, 0).ok || F.encounterBattle(g).winner === 'a') continue;
-    const lost = F.resolveEncounter(g); assert.equal(lost.won, false);
-    assert.ok(lost.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0), 'a lost encounter earns no bonus'); return;
+    const lost = F.resolveEncounter(g); assert.equal(lost.won, false); assert.equal(g.week.encounter.bonus, null);
+    assert.ok(lost.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0), 'a lost Basic encounter earns no bonus'); return;
   }
   assert.fail('no lost encounter found to check');
 });
