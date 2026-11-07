@@ -107,3 +107,20 @@ test('approved rulings: overrides applied, source text kept, values exposed (N7b
   for (const id of ['clash-rotation', 'ordinary-attacks-connect', 'live-kickoffs', 'football-stunned-scope', 'collection-achievements']) assert.ok(dex.approvedRule(id).rule);
   assert.throws(() => dex.approvedRule('universal-evasion'));
 });
+
+test('WP1 Dex species table: 192 families in the game shape; only owner-approved differences from the legacy 72', async () => {
+  const { DEX_SPECIES, legacyDifferences } = await import('../src/data/dex-species.js');
+  assert.equal(DEX_SPECIES.length, 192);
+  assert.equal(DEX_SPECIES.filter((s) => s.rarity === 'basic').length, 120);
+  for (const s of DEX_SPECIES) {
+    assert.ok(s.body && s.size && s.look && s.colors.length === 2, s.id);
+    if (s.rarity === 'basic') { assert.deepEqual(s.evolution, []); assert.deepEqual(s.dexAbilities, { football: null, clash: null }); assert.ok(!s.cornerstone); }
+    else { assert.ok(s.dexAbilities.football && s.dexAbilities.clash, s.id); }
+    assert.equal('trait' in s, false); assert.equal('ability' in s, false);
+  }
+  const d = legacyDifferences();
+  // Appendix A (owner-approved): 7 position and 7 rarity changes; names, elements and evolution plans are identical.
+  assert.deepEqual(d.filter((x) => x.field === 'position').map((x) => x.id).sort(), ['aegistron', 'echolot', 'glacivern', 'metalhorn', 'nocturne', 'stoneguard', 'vyrnax']);
+  assert.deepEqual(d.filter((x) => x.field === 'rarity').map((x) => x.id).sort(), ['duskrunner', 'icehorn', 'lumen', 'terrabull', 'tidefin', 'wavehorn', 'windlynx']);
+  assert.equal(d.filter((x) => !['position', 'rarity'].includes(x.field)).length, 0);
+});
