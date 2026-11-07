@@ -4,9 +4,9 @@
 
 Authored roster: 192 families and 222 forms in 12 types: the original 72 families / 102 forms (including 12 legendary families) and 120 Basic families / 120 Basic forms. 144 mode abilities, all on original families; Basic families have none.
 
-2664 complete start/potential pairs (1440 Basic); 5400 evolution arithmetic checks; 1318 local links.
+2664 complete start/potential pairs (1440 Basic); 5400 evolution arithmetic checks; 1321 local links.
 
-28446 assertions evaluated; 0 failed.
+28449 assertions evaluated; 0 failed.
 
 ## What is checked
 

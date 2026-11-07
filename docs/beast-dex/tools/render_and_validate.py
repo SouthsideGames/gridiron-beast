@@ -184,6 +184,8 @@ def render():
         f'Original roster: {len(orig_f)} families and {len(orig_s)} forms ({rar["common"]} Common, {rar["uncommon"]} Uncommon, {rar["rare"]} Rare, {rar["legendary"]} Legendary), owner-approved attribute profiles and rarity amendments, {len(abilities)} mode abilities. '
         f'Basic creation batch: {len(basic_f)} standalone families and {len(basic_s)} forms, one per type and position, with no unique abilities; pending owner art and content review. '
         'These are authored design counts, not counts of generated individual monsters. This is a design dataset and browsable GitHub reference; it does not modify the running game.', '',
+        '## Approved sprite generator upgrade', '',
+        '[Claude generator brief: 30 structures, five poses, 60 feature options](SPRITE_GENERATOR_BRIEF.md) · [Generator status and checkpoints](art/GENERATOR.md). The initial Basic art is kept as the before baseline (commit `6abcf3b`); silhouettes and a representative sample are reviewed before the 120 appearances are revised.', '',
         '## Basic families', '',
         '[Basic family index](BASIC_INDEX.md) · [Art review guide](art/REVIEW_GUIDE.md) · [Creation brief](BASIC_CREATION_BRIEF.md) · [Technical audit](BASIC_AUDIT.md) · [Later progression decisions](PROGRESSION_DECISIONS.md)', '',
         '## Browse by position', '', '| Position | Families | of which Basic | Forms |', '| --- | ---: | ---: | ---: |', *rows, '',
