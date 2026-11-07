@@ -5,7 +5,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as A from '../src/data/aging.js';
 import * as P from '../tools/task6/aging-proposal.mjs';
-import { generateMonster, pointCost, spendPoint, levelUp, monsterOverall } from '../src/data/monsters.js';
+import { generateMonster, pointCost, spendPoint, levelUp, monsterOverall, effectiveCost, bankedPoints, syncFromDev } from '../src/data/monsters.js';
+import { addBankedPoints } from '../src/franchise/t8/progression.js';
+import * as FR from '../src/core/fraction.js';
 import { offseason } from '../src/franchise/progression.js';
 import { retirementPass, chanceFor, ensureAging, agingContext } from '../src/franchise/retirement.js';
 import * as R from '../src/franchise/league-registry.js';
@@ -29,28 +31,39 @@ test('age-adjusted training: physical points cost more past the public onset; ag
   const young = mon({ age: 24 }); for (const k of A.PHYSICAL) assert.equal(pointCost(young, k), 1);
   const old = mon({ age: 33 }); old.durPeak = 60; // RB public onset 27: six seasons past it
   assert.equal(pointCost(old, 'speed'), 4); assert.equal(pointCost(old, 'awareness'), 2, 'technique too, past the technical onset (29)');
-  old.points = 3; old.attributes.speed = 40; old.potential = 90; const r = spendPoint(old, 'speed'); assert.equal(r.ok, false); assert.match(r.reason, /costs 4 points/);
-  old.points = 4; assert.equal(spendPoint(old, 'speed').ok, true); assert.equal(old.points, 0);
+  // Task 8 training (spec §20-22): banked points are invested from m.dev.bank at C / E per +1 (E = 1 for a neutral Temper), with
+  // partial progress carried; the old all-or-nothing "costs 4 points" refusal is superseded. An old RB still pays 4 per speed point.
+  old.dev.temper = 'calm'; old.dev.current.speed = 40; old.dev.potential.speed = 90; old.dev.invest.speed = FR.ZERO; syncFromDev(old); // clear the veteran's prior progress (B7 history) assert.ok(FR.eq(effectiveCost(old, 'speed'), 4));
+  addBankedPoints(old.dev, 3); let r = spendPoint(old, 'speed', { points: 3 }); assert.equal(r.ok, true); assert.equal(r.increases, 0, '3 points do not buy a +1 that costs 4');
+  assert.equal(old.attributes.speed, 40); assert.ok(FR.eq(bankedPoints(old), 0));
+  addBankedPoints(old.dev, 1); r = spendPoint(old, 'speed'); assert.equal(r.increases, 1, 'the 4th point completes it'); assert.equal(old.attributes.speed, 41); assert.ok(FR.eq(bankedPoints(old), 0));
+  assert.match(spendPoint(old, 'speed').reason, /No training points/, 'nothing left to spend');
+  old.dev.temper = 'swift'; assert.ok(FR.eq(effectiveCost(old, 'speed'), 2), 'a favoring Temper halves it (E = 2)');
   const legend = mon({ age: 40, extra: { legendary: true } }); assert.equal(pointCost(legend, 'speed'), 1);
-  // level-ups: a 34-year-old RB's physical picks mostly fail; a 24-year-old's never do (and draw nothing extra)
-  let gainOld = 0, gainYoung = 0;
-  for (let i = 0; i < 200; i++) { const o = mon({ seed: 100 + i, age: 34 }); o.durPeak = 60; o.potential = 99; const b = A.PHYSICAL.reduce((s, k) => s + o.attributes[k], 0); levelUp(o, createRng(i)); gainOld += A.PHYSICAL.reduce((s, k) => s + o.attributes[k], 0) - b;
-    const y = mon({ seed: 100 + i, age: 24 }); y.potential = 99; const by = A.PHYSICAL.reduce((s, k) => s + y.attributes[k], 0); levelUp(y, createRng(i)); gainYoung += A.PHYSICAL.reduce((s, k) => s + y.attributes[k], 0) - by; }
-  assert.ok(gainOld < gainYoung * 0.4, `old physical gain ${gainOld} vs young ${gainYoung}`);
+  // level-ups (B6): natural growth only, no points, on a schedule age does not change (spec §161; decline is separate): the same
+  // individual at 34 and at 24 grows identically, and a 34-year-old pays nothing extra at a level-up
+  let gain = 0;
+  for (let i = 0; i < 50; i++) { const y = generateMonster(createRng(100 + i), { position: 'RB', quality: 62, age: 20, yearsPro: 0 }); y.age = 24; const o = JSON.parse(JSON.stringify(y)); o.age = 34; o.durPeak = 60; /* a level-1 individual, aged by hand */ const b = { ...o.attributes }; const bank = bankedPoints(o);
+    for (let l = 0; l < 10; l++) { levelUp(o, createRng(i)); levelUp(y, createRng(i)); } assert.deepEqual(o.attributes, y.attributes, 'age does not change level growth'); assert.ok(FR.eq(bankedPoints(o), bank), 'no points on level-up (B6)');
+    gain += A.PHYSICAL.reduce((s, k) => s + o.attributes[k] - b[k], 0); }
+  assert.ok(gain > 0, 'level-ups do grow physical ratings');
 });
 
-test('offseason decline: by position, physical before technical, increasing; growth to 23; legendary monsters do not age', () => {
-  const run = (pos, age, id) => { const m = mon({ position: pos, age }); m.id = id; m.durPeak = 60; const before = { ...m.attributes }; offseason([m], createRng(3)); return { m, phys: A.PHYSICAL.reduce((s, k) => s + m.attributes[k] - before[k], 0), tech: ['awareness', 'catching'].reduce((s, k) => s + m.attributes[k] - before[k], 0) }; };
+test('offseason decline: by position, physical before technical, increasing; no maturation growth; legendary monsters do not age', () => {
+  // autoAllocate: false isolates decline from the 2 banked offseason points (the owner's club decides how to spend them)
+  const run = (pos, age, id) => { const m = mon({ position: pos, age }); m.id = id; m.durPeak = 60; const before = { ...m.attributes }; offseason([m], createRng(3), { autoAllocate: false }); return { m, phys: A.PHYSICAL.reduce((s, k) => s + m.attributes[k] - before[k], 0), tech: ['awareness', 'catching'].reduce((s, k) => s + m.attributes[k] - before[k], 0) }; };
   const id = 'm_norm'; const lon = A.longevityOf(id);
   const rbEarly = run('RB', 27 + lon, id), rbLate = run('RB', 27 + lon + 4, id), qb = run('QB', 27 + lon, id);
   assert.ok(rbLate.phys < rbEarly.phys && rbLate.phys < -8, `RB decline grows past onset: ${rbEarly.phys} → ${rbLate.phys}`);
   assert.equal(qb.phys, 0, 'a QB of the same age is before his onset (30)');
   assert.equal(rbEarly.tech, 0, 'technique holds in the first season past the physical onset');
-  const kid = mon({ age: 21 }); kid.potential = 99; const aw = kid.attributes.awareness; offseason([kid], createRng(1)); assert.equal(kid.attributes.awareness, aw + 1);
-  const legend = mon({ age: 38, extra: { legendary: true } }); const a0 = { ...legend.attributes }; offseason([legend], createRng(1)); assert.equal(legend.age, 38); assert.deepEqual(legend.attributes, a0);
+  // B7: the old growth-to-23 maturation is removed; a young monster banks the 2 offseason training points instead
+  const kid = mon({ age: 21 }); const k0 = { ...kid.attributes }; const kb = bankedPoints(kid); offseason([kid], createRng(1), { autoAllocate: false });
+  assert.deepEqual(kid.attributes, k0, 'no maturation increase'); assert.ok(FR.eq(bankedPoints(kid), FR.add(kb, 2)), '2 points banked');
+  const legend = mon({ age: 38, extra: { legendary: true } }); const a0 = { ...legend.attributes }; const l0 = { ...legend.dev.loss }; offseason([legend], createRng(1), { autoAllocate: false }); assert.equal(legend.age, 38); assert.deepEqual(legend.attributes, a0); assert.deepEqual(legend.dev.loss, l0, 'nothing added to the decline ledger');
   // determinism and the transition's decline cap (s = 1: at most 2 seasons' worth)
   const a = run('WR', 36, 'm_det'), b = run('WR', 36, 'm_det'); assert.deepEqual(a.m.attributes, b.m.attributes);
-  const capped = mon({ position: 'WR', age: 36 }); capped.id = 'm_det'; capped.durPeak = 60; const c0 = A.PHYSICAL.reduce((s, k) => s + capped.attributes[k], 0); offseason([capped], createRng(3), { s: 1 });
+  const capped = mon({ position: 'WR', age: 36 }); capped.id = 'm_det'; capped.durPeak = 60; const c0 = A.PHYSICAL.reduce((s, k) => s + capped.attributes[k], 0); offseason([capped], createRng(3), { s: 1, autoAllocate: false });
   assert.ok(c0 - A.PHYSICAL.reduce((s, k) => s + capped.attributes[k], 0) < -a.phys, 'transition caps the first offseason\'s decline');
 });
 
@@ -79,4 +92,13 @@ test('retirement pass on a real league: exits with reason "retired", registry in
   assert.deepEqual(R.verifyLeague(f), [], 'registry intact');
   assert.equal(f.retirementsLast.owner.length, 1);
   const back = Save.importJson(Save.exportJson(f)); assert.deepEqual(back.aging, f.aging); assert.deepEqual(back.retirementsLast, f.retirementsLast);
+});
+
+test('ageless monsters bank offseason points visibly: the m.points mirror follows dev.bank when the trainer is off (M1 regression)', () => {
+  const rng = createRng(41);
+  const m = generateMonster(rng, { position: 'RB', quality: 60, species: 'boulderox', age: 26, yearsPro: 0 }); m.legendary = true;
+  const before = FR.floor(bankedPoints(m));
+  offseason([m], createRng(42), { autoAllocate: false });
+  assert.equal(FR.floor(bankedPoints(m)), before + 2, 'two offseason points banked');
+  assert.equal(m.points, FR.floor(bankedPoints(m)), 'the m.points mirror (notices, unspentPoints) matches the bank');
 });

@@ -89,7 +89,7 @@ export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate
     // Task 8: the eligible offseason award, 2 banked training points (replaces the old direct maturation increases, spec §6).
     // AI and pool monsters allocate it with the approved policy; the owner's club passes autoAllocate: false and decides.
     if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng); }
-    if (ageless) { if (marketPriced(m)) m.salary = salaryFor(m); continue; }
+    if (ageless) { if (m.dev) syncFromDev(m); if (marketPriced(m)) m.salary = salaryFor(m); continue; } // ageless: banked points still mirror to m.points
     const cur = m.dev ? m.dev.current : m.attributes;
     if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = cur.durability;
     const onset = trueOnset(m); const yP = transitionYears(m.age - onset, s); const yT = transitionYears(m.age - onset - technicalOffset(m.position), s);
