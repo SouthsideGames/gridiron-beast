@@ -10,7 +10,7 @@
 | 1. Silhouette structure sheet | **Approved by the owner, 2026-11-06**, after five targeted revisions ([before/after](generator/revisions-1.html)), including the insectoid's dorsal view and the arachnid's simplified anatomy. The 150 approved renders are pinned in `tests/fixtures/v2-structures-approved.json`. |
 | Controls and feature library | Built after checkpoint 1: proportion controls, the 60-feature library with shape variants, face and marking controls, compatibility diagnostics. Sheets: [features](generator/features.html), [controls](generator/controls.html), [face and markings](generator/face-markings.html); [compatibility matrix](generator/compatibility.json). |
 | 2. 20-monster sample | **Direction approved by the owner, 2026-11-06**: [before/after sample](sample/checkpoint-2.html) ([png](sample/png/checkpoint-2.png)), [crowded-field preview](sample/crowded-field.html) ([png](sample/png/crowded-field.png)), [audit](sample/sample-audit.json). |
-| 3. Full Basic revision | **Ready for the owner's final review**: [overview](basic-v2/index.html), per-type sheets, [crowded field](basic-v2/crowded-field.html), [closest pairs](basic-v2/similarity.html), [audit](basic-v2/audit.json); PNGs in `basic-v2/png/`. Recipes in [`data/basic-art-v2.json`](../data/basic-art-v2.json); not wired into the game. |
+| 3. Full Basic revision | **Paused by the owner, 2026-11-06**, before final approval; see *Deferred art work* below. Proposals kept on the branch: [overview](basic-v2/index.html), per-type sheets, [crowded field](basic-v2/crowded-field.html), [closest pairs](basic-v2/similarity.html), [audit](basic-v2/audit.json); PNGs in `basic-v2/png/`. Recipes in [`data/basic-art-v2.json`](../data/basic-art-v2.json); not wired into the game. |
 | 3. Full Basic revision | Not started; waits for checkpoint 2 approval. |
 
 Gameplay is untouched: no stats, abilities, collisions, rarity, positions, IDs or archetypes change. The game renders only legacy recipes, and they are pixel-identical to before.
@@ -299,3 +299,18 @@ These are judgments, not automated results.
 - `tests/species.test.js`: 11/11.
 - Beast Dex validator: PASS, with 0 failed assertions.
 - Validator self-test: 13/13.
+
+## Deferred art work (owner decision, 2026-11-06)
+
+The owner has paused all further monster-art revisions. The pending refinement requests are withdrawn and recorded here as deferred work:
+
+- Staticub / Cindruff closest pair (0.844), which looks close at 16 px.
+- Dark-type palettes with low contrast on turf (Murkit, Umbruin, Inklet and others).
+- Small decorative details (49 features of 1–3 px) that vanish at 16–24 px.
+- The small on-field size of the shelled designs (Kilnback, Kettlump, Washerling).
+- Owner final approval of the 120 proposed v2 designs (Checkpoint 3), and wiring `data/basic-art-v2.json` into the game.
+- Final visual polish of monster and ability art, deferred by the Task 8 instruction until the gameplay systems are complete.
+
+**Kept on the branch:** the expanded generator (`src/ui/sprite-gen.js`, `src/ui/sprite-features.js`) and the proposed Basic art (`data/basic-art-v2.json`, `art/basic-v2/`).
+
+**Task 8 artwork:** the existing Basic sprites (the recipes in `basic-authoring.json` / `families.json`, baseline `6abcf3b`) are the temporary artwork. Final art approval does not block Task 8 implementation.
