@@ -95,3 +95,22 @@ test('B17 generation shares: Basic share per channel, original mix untouched, em
   assert.equal(pickFamily(createRng(1), { channel: 'draft', basics, originals: [], pickOriginal: uniform }).rarity, 'basic');
   assert.throws(() => pickFamily(createRng(1), { channel: 'market', basics, originals, pickOriginal: uniform }));
 });
+
+test('career: AI allocation favours positional benefit without ignoring unfavored attributes; decline floor never raises; veteran history is deterministic and valid', async () => {
+  const C = await import('../src/franchise/t8/career.js');
+  const d = P.generateIndividual(createRng(21), 'emberfox:0', { apex: false }); d.temper = 'powerful'; // unfavored speed for an RB
+  P.addBankedPoints(d, 40); const m = { id: 'v1', age: 22, position: 'RB' };
+  const spent = C.allocateTraining(d, m);
+  const by = spent.reduce((o, s) => ((o[s.attr] = (o[s.attr] || 0) + F.toNumber(s.points)), o), {});
+  assert.ok(by.speed > 0, 'important unfavored Speed still developed'); assert.ok(!by.kicking && !by.arm, 'irrelevant attributes untouched');
+  assert.deepEqual(P.devProblems(d), []);
+  // decline floor never increases a rating
+  const e = P.generateIndividual(createRng(4), 'emberfox:0', { apex: false }); e.current.speed = 15; const om = { id: 'old', age: 36, position: 'RB' };
+  C.applyDecline(e, om, createRng(2)); assert.ok(e.current.speed <= 15);
+  // veteran history
+  const run = () => { const v = P.generateIndividual(createRng(31), 'emberfox:0', { apex: false }); const vm = { id: 'vet', age: 21, position: 'RB', yearsPro: 0 }; C.simulateHistory(createRng(32), v, vm, { seasons: 5 }); return { v, vm }; };
+  const a = run(), b = run(); assert.deepEqual(a, b);
+  assert.equal(a.vm.age, 26); assert.equal(a.vm.yearsPro, 5); assert.ok(a.v.level > 20, `level ${a.v.level}`); assert.ok(['emberfox:1', 'emberfox:2'].includes(a.v.form));
+  assert.deepEqual(P.devProblems(a.v), []);
+  assert.throws(() => C.simulateHistory(createRng(1), a.v, a.vm, { seasons: 1, xpMultiplier: 3 }));
+});
