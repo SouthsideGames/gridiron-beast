@@ -428,29 +428,139 @@ function finishTry(state, text) {
 }
 
 // --------------------------------------------------------------------------- kicks
+// Task 8 M2 live kickoffs (N7b P7; N7c B5, B20). Units: the kicking unit is the K plus up to six coverage players, the return unit
+// the returner plus up to six blockers, both filled from the club's depth chart (its lineups): package-slot players (not base
+// starters) first, then base starters, in the order below. Only charted monsters are used, so every participant has a stat slot.
+export const KICKOFF_UNIT = 7;
+export const COVERAGE_ORDER = Object.freeze(['SS', 'DL3', 'LB1', 'LB2', 'FS', 'CB2', 'CB1', 'DL1', 'DL2']);
+export const RETURN_BLOCK_ORDER = Object.freeze(['WR3', 'C', 'TE', 'RB', 'WR1', 'WR2', 'LG', 'RG', 'QB']);
+/**
+ * Seconds the kickoff is in the air. The approved kicking formula has no hang time; this is the kickoff flight the game already
+ * draws (kick-anim.js), reused unchanged rather than a new tuned value (unspecified: flagged for the owner's balance check).
+ */
+export const KICKOFF_HANG = 2.6;
+const KICK_SPOT = FIELD.length - FIELD.kickoffSpot; // the kick spot in the receiving team's yards (its 65)
+const filled = (p) => !!p && (!!p.id || Object.keys(p.attrs || {}).length > 0);
+/**
+ * The two kickoff units, as engine slot maps keyed by each monster's lineup slot (stats are credited to that slot).
+ * coverage: { K, ...6 from the kicking club's defense lineup }; ret: { [returnerSlot], ...6 from the receiving club's offense lineup }.
+ */
+export function kickoffUnits(kickTeam, recvTeam) {
+  const fill = (out, order, lineup, used) => { for (const s of order) { if (Object.keys(out).length >= KICKOFF_UNIT) break; const p = lineup?.[s]; if (!filled(p) || out[s] || (p.id && used.has(p.id))) continue; out[s] = p; if (p.id) used.add(p.id); } };
+  const kicker = kickTeam.kicker || { attrs: {}, name: 'K', id: null };
+  const coverage = { K: kicker }; fill(coverage, COVERAGE_ORDER, kickTeam.defense, new Set(kicker.id ? [kicker.id] : []));
+  // The returner: the club's own (lineupFromChart's pick), credited at his lineup slot; one with no id (test teams) gets slot KR.
+  const lineups = { ...(recvTeam.offense || {}), ...(recvTeam.defense || {}) };
+  let returner = recvTeam.returner || null;
+  let returnerSlot = returner?.id ? Object.keys(lineups).find((s) => lineups[s]?.id === returner.id) || null : null;
+  if (!returner) { returnerSlot = ['WR2', 'RB', 'WR1', 'CB2'].find((s) => filled(lineups[s])) || null; returner = returnerSlot ? lineups[returnerSlot] : { attrs: {}, name: 'KR', id: null }; }
+  returnerSlot ||= 'KR';
+  const ret = { [returnerSlot]: returner }; fill(ret, RETURN_BLOCK_ORDER, recvTeam.offense, new Set(returner.id ? [returner.id] : []));
+  return { coverage, ret, returnerSlot };
+}
+/** The live kickoff's two "plays": alignments and jobs for the engine (x from the kick spot, the return unit attacking +x). */
+const COVER_LANES = [-20, 20, -12, 12, -4.5, 4.5];
+const BLOCK_SPOTS = [[-15, -16, 14, -10], [-15, 16, 14, 10], [-15, -6, 12, -4], [-15, 6, 12, 4], [-40, -8, 7, -3], [-40, 8, 7, 3]]; // [x, y, setup dx, setup dy] (setup: from the landing spot)
+function kickoffPlays(units) {
+  const cov = { id: 'kickoff_coverage', side: 'defense', type: 'kickoff', tags: [], onField: [], align: {}, assignments: {} };
+  let i = 0;
+  for (const s of Object.keys(units.coverage)) {
+    cov.onField.push(s);
+    if (s === 'K') { cov.align[s] = [1, 0]; cov.assignments[s] = { a: 'cover', lane: 0, safety: true }; continue; }
+    const lane = COVER_LANES[i++ % COVER_LANES.length]; cov.align[s] = [1, lane]; cov.assignments[s] = { a: 'cover', lane: lane * 0.55 };
+  }
+  const ret = { id: 'kickoff_return', side: 'offense', type: 'run', tags: [], onField: [], align: {}, assignments: {} };
+  let j = 0;
+  for (const s of Object.keys(units.ret)) {
+    ret.onField.push(s);
+    if (s === units.returnerSlot) { ret.align[s] = [-(KICK_SPOT - 5), 0]; ret.assignments[s] = { a: 'kick_return' }; continue; }
+    const [x, y, dx, dy] = BLOCK_SPOTS[j++ % BLOCK_SPOTS.length]; ret.align[s] = [x, y]; ret.assignments[s] = { a: 'ko_block', setup: [dx, dy] };
+  }
+  return { cov, ret };
+}
+
 export function doKickoff(state, teams, { onside = false } = {}) {
   if (state.phase !== 'kickoff' && state.phase !== 'free_kick') throw new Error('not a kickoff');
   const { r, save } = rng(state);
   const kicking = state.kickingTeam, receiving = opponent(kicking);
-  let res;
+  let res; let sim = null; let units = null;
   if (state.phase === 'free_kick') {
     res = ST.punt(r, { ballOn: 20, kicker: teams[kicking].kicker, returner: teams[receiving].returner, rushPressure: 0 });
     res.text = 'Free kick: ' + res.text;
-  } else res = ST.kickoff(r, { kicker: teams[kicking].kicker, returner: teams[receiving].returner, onside });
+  } else if (onside) res = ST.kickoff(r, { kicker: teams[kicking].kicker, returner: teams[receiving].returner, onside });
+  else {
+    // Live kickoff (N7b P7): the flight and the touchback come from the approved kicking formula; the return is played in the engine.
+    units = kickoffUnits(teams[kicking], teams[receiving]);
+    const flight = ST.kickoffFlight(r, { kicker: teams[kicking].kicker });
+    if (flight.touchback) res = { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, live: true, text: 'Kickoff sails into the end zone. Touchback.' };
+    else {
+      const seed = r.seed(); const catchAt = Math.max(-9, flight.landingFromGoal);
+      const plays = kickoffPlays(units); const slots = { offense: units.ret, defense: units.coverage };
+      sim = simulatePlay({ offensePlay: plays.ret, defensePlay: plays.cov, offense: units.ret, defense: units.coverage, ballOn: KICK_SPOT, ballLat: 0, seed,
+        options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots) } });
+      rememberAbilities(state, sim);
+      res = kickoffOutcome(sim, catchAt, state[receiving].name, sim.names.off[units.returnerSlot] || 'The returner');
+    }
+  }
   save();
   const lines = [res.text];
   state.phase = 'scrimmage'; state.clockRunning = false; state.ballLat = 0;
   if (res.onside && res.recovered) { state.possession = kicking; state.ballOn = res.ballOn; firstDown(state); }
+  else if (res.kickingTouchdown) { state.possession = kicking; touchdown(state, kicking, lines); }
+  else if (res.recoveredByKicking) { state.possession = kicking; state.ballOn = clamp(Math.round(res.kickingBallOn), 1, 99); firstDown(state); }
   else if (res.touchdown) { state.possession = receiving; touchdown(state, receiving, lines); }
   else { state.possession = receiving; state.ballOn = res.ballOn; firstDown(state); }
   state.drive = { team: state.possession, plays: 0, yards: 0, start: state.ballOn };
   runClock(state, 5);
   if (state.phase === 'scrimmage') lines.push(`${state[state.possession].name} ball at the ${yardLabel(state.ballOn).toLowerCase()}.`);
   const text = lines.join(' ');
-  state.lastPlay = { text, result: 'kickoff' };
-  log(state, text, 'kick', { team: kicking, important: !!res.touchdown });
+  state.lastPlay = { text, result: 'kickoff', ...(sim ? { seed: sim.seed, stats: sim.stats, kickResult: sim.result } : {}) };
+  log(state, text, 'kick', { team: kicking, important: !!res.touchdown || !!res.kickingTouchdown || !!res.recoveredByKicking, ...(sim ? { result: sim.result, repro: `kickoff|${sim.ballOn}|${sim.seed}` } : {}) });
+  // Participation and kick credit (B5, B20): special-teams snaps for both units, a kickoff for the kicker, the return's events.
+  if (units) {
+    recordKickoffStats(state, kicking, receiving, units, sim, res);
+    T8S.afterPlay(state, [...Object.values(units.coverage), ...Object.values(units.ret)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
+  } else kickerStat(state, kicking, 'kickoffs'); // onside and free kicks stay formula plays: the kick itself is credited
   if (state.clock <= 0 && state.phase === 'scrimmage') endOfPeriod(state);
-  return { res, text };
+  return { res, text, sim };
+}
+/** What a live kickoff's engine result means for the game (receiving team's yards unless noted). */
+function kickoffOutcome(sim, catchAt, team, who) {
+  const end = sim.endYard; const ret = Math.round(end - catchAt);
+  if (sim.result === 'touchdown') return { touchdown: true, live: true, ballOn: 100, returnYards: Math.round(100 - catchAt), text: `${who} takes the kickoff back for a TOUCHDOWN!` };
+  if (sim.result === 'fumble') { // the kicking team recovered: its ball at the spot, or its touchdown in the receiving end zone
+    if (end <= 0) return { kickingTouchdown: true, live: true, returnYards: ret, ballOn: 100, text: `${who} fumbles the kickoff in the end zone and the kicking team recovers. TOUCHDOWN!` };
+    return { recoveredByKicking: true, live: true, returnYards: ret, kickingBallOn: 100 - end, ballOn: end, text: `${who} fumbles the return and the kicking team recovers!` };
+  }
+  if (sim.result === 'touchback' || end <= 0) return { touchback: true, live: true, returned: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, text: `${who} fields the kickoff in the end zone and is downed there. Touchback.` };
+  const ballOn = clamp(Math.round(end), 1, 99);
+  return { touchback: false, live: true, ballOn, returnYards: ret, text: `${who} returns the kickoff ${ret} yards${sim.result === 'out_of_bounds' ? ', out of bounds' : sim.stats.tackler ? `, tackled by ${sim.names.def[sim.stats.tackler] || sim.stats.tackler}` : ''}.` };
+}
+/**
+ * One live kickoff's stat lines. Everyone on either unit gets a special-teams snap (`stSnaps`: never snapsOff or snapsDef; a
+ * kickoff is not a defensive snap, B20); the kicker a kickoff. The return's actual events: the returner's return (krAtt, krYds,
+ * krLong, krTd; a kick catch is never a reception, B20), the coverage's tackles (stTackles, stAssists: kept apart from scrimmage
+ * tackles), fumbles, and the engine's juke, broken-tackle, shed and pancake events.
+ */
+export function recordKickoffStats(state, kicking, receiving, units, sim, res) {
+  const bump = (team, slot, key, n = 1) => { if (!slot || !n) return; const p = (state.stats[team].players[slot] ||= {}); p[key] = (p[key] || 0) + n; };
+  for (const slot of Object.keys(units.coverage)) bump(kicking, slot, 'stSnaps');
+  for (const slot of Object.keys(units.ret)) bump(receiving, slot, 'stSnaps');
+  kickerStat(state, kicking, 'kickoffs');
+  if (res.touchback && !res.returned) { kickerStat(state, kicking, 'koTouchbacks'); return; }
+  if (!sim) return;
+  const st = sim.stats || {}; const rs = units.returnerSlot;
+  bump(receiving, rs, 'krAtt'); bump(receiving, rs, 'krYds', res.returnYards || 0);
+  { const p = (state.stats[receiving].players[rs] ||= {}); if ((p.krLong ?? -Infinity) < (res.returnYards || 0)) p.krLong = res.returnYards || 0; }
+  if (res.touchdown) { bump(receiving, rs, 'krTd'); bump(receiving, rs, 'td'); }
+  if (st.tackler && !res.touchdown) { bump(kicking, st.tackler, 'stTackles'); if (st.assistBy && st.assistBy !== st.tackler) bump(kicking, st.assistBy, 'stAssists'); }
+  if (st.fumbledBy) { bump(receiving, st.fumbledBy, 'fum'); if (st.recoveredTeam === 'def') bump(receiving, st.fumbledBy, 'fumLost'); }
+  if (st.forcedBy) bump(kicking, st.forcedBy, 'ff');
+  if (st.recoveredSlot && st.recoveredTeam === 'def') bump(kicking, st.recoveredSlot, 'fr');
+  if (res.kickingTouchdown && st.recoveredSlot) bump(kicking, st.recoveredSlot, 'stTd');
+  for (const [slot, b] of Object.entries(st.blockers || {})) { if (b.pancakes) bump(receiving, slot, 'pancakes', b.pancakes); if (b.pancakeAttempts) bump(receiving, slot, 'pancakeAttempts', b.pancakeAttempts); }
+  const keyOf = { juke: 'jukes', broken: 'broken', shed: 'sheds', ability: 'abilities' };
+  for (const e of sim.events || []) { const k = keyOf[e.kind]; if (!k || !e.by) continue; bump(e.side === 'def' ? kicking : receiving, e.by, k); }
 }
 
 export function doPunt(state, teams) {

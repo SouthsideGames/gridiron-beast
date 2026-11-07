@@ -66,6 +66,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // Testing Lab can replay an identical play with a different decision (GDD §53).
   const qrng = createRng(((Number(seed) >>> 0) ^ 0x5bd1e995) >>> 0 || 7);
   const prng = createRng(((Number(seed) >>> 0) ^ 0x2c1b3c6d) >>> 0 || 11); // Task 8 M2: the pancake contest's own draws (opportunity, success, recovery), so plays without one keep their physics draws
+  // Task 8 M2 live kickoff (N7b P7; N7c B5): { returner, landing: [x, y], hang }. The return unit is the offense (it runs +x), the
+  // kicking unit the defense. The ball is in the air from the kick spot (x 0) for `hang` seconds (the approved kicking formula's
+  // flight); the coverage runs down and the return unit sets up meanwhile; the returner fields it at the landing spot and the rest
+  // is the ordinary carry: lane choice and jukes, escort blocks, pursuit and tackles. No quarterback, no reads, no handoff.
+  const KO = options.kickoff || null;
   const B = boundsFor(ballOn, ballLat);
   const maxTime = options.maxTime ?? 20;
   const frameEvery = options.frameEvery ?? 2;
@@ -168,7 +173,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const offs = actors.filter((a) => a.team === 'off');
   const screenPlay = offensePlay.onField.some((sl) => offensePlay.assignments[sl]?.a === 'release');
   const defs = actors.filter((a) => a.team === 'def');
-  const qb = bySlot.off.QB;
+  const qb = KO ? null : bySlot.off.QB;
   const manKeys = manKeyTargets(offensePlay);
   const receivers = eligibleReceivers(offensePlay);
   const isRun = offensePlay.type === 'run';
@@ -187,10 +192,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const history = new Map(actors.map((a) => [a, []])); const facingHist = [];
 
   // ------------------------------------------------------------ ball
-  const ball = { x: qb.x, y: qb.y, holder: qb, inAir: false, from: null, to: null, flight: 0, flightTime: 0, target: null, landing: null, airYards: 0 };
+  const ball = KO ? { x: 0, y: 0, holder: null, inAir: true, from: { x: 0, y: 0 }, to: null, flight: 0, flightTime: Math.max(0.05, KO.hang), target: null, landing: { x: KO.landing[0], y: KO.landing[1] }, airYards: 0, kick: true }
+    : { x: qb.x, y: qb.y, holder: qb, inAir: false, from: null, to: null, flight: 0, flightTime: 0, target: null, landing: null, airYards: 0 };
   let t = 0;
   let result = null;
-  let phase = isRun ? 'run' : 'dropback'; // dropback | run | air | carry | dead
+  let phase = KO ? 'kick' : isRun ? 'run' : 'dropback'; // dropback | run | air | carry | dead | kick (a live kickoff's flight)
   let handoffAt = Infinity; // when the ball changed hands (giveBall); a defender sees it only after his delay and the mesh
   let keepAt = Infinity; // when an option quarterback pulled the ball and kept it (seen the same way as a handoff)
   const snapPos = new Map(actors.map((a) => [a, { x: a.x, y: a.y }])); // where everyone lined up (refreshed at the snap)
@@ -208,7 +214,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     blockers: {}, // slot -> { pass: 0|1, run: 0|1, lost: n } one entry per blocker who had a block assignment
   };
   const frames = [];
-  if (qb.assignment.a === 'keep') { phase = 'carry'; stats.carrier = 'QB'; handoffDone = true; }
+  if (qb && qb.assignment.a === 'keep') { phase = 'carry'; stats.carrier = 'QB'; handoffDone = true; }
 
   const carrierTeam = () => ball.holder?.team || null;
   const opponents = (team) => (team === 'off' ? defs : offs);
@@ -555,8 +561,34 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     steer(a, goalX, a.laneY, CARRY_PACE, 0.3);
   }
 
+  /** A live kickoff in the air: the returner goes to the landing spot and arrives with the ball; his blockers set up in front of it. */
+  function kickoffFlightOffense(a) {
+    const L = ball.landing;
+    if (a.slot === KO.returner) {
+      const dL = dist(a, L); const vCatch = a.maxSpeed * 0.75; const brake = Math.sqrt(vCatch * vCatch + 2 * a.accel * 0.8 * Math.max(0, dL - 0.3));
+      steer(a, L.x, L.y, 1, 0.3, brake); return;
+    }
+    const [dx, dy] = a.assignment.setup || [10, a.y * 0.5];
+    steer(a, clamp(L.x + dx, B.ownEndLine + 1, B.endLine - 1), clamp(L.y + dy, B.left + 1, B.right - 1), 0.95, 0.5);
+  }
+  /** A live kickoff in the air: the coverage runs down its lanes toward the landing spot; the kicker trails as the last man. */
+  function kickoffFlightDefense(d) {
+    const L = ball.landing; const asg = d.assignment || {};
+    if (asg.safety) { steer(d, Math.max(L.x + 20, d.x - 30), L.y + (asg.lane || 0), 0.85, 0.5); return; }
+    steer(d, L.x, asg.lane ?? d.y, 1, 0.6);
+  }
+  /** The returner fields the kickoff at the landing spot (a kick catch: never a reception). */
+  function kickoffCatch() {
+    const r = bySlot.off[KO.returner]; const L = ball.landing; ball.inAir = false;
+    if (!r) { endPlay('guard', L.x, L.y); return; }
+    ball.holder = r; r.x = L.x; r.y = L.y; r.laneTimer = 0; r.jukeCooldown = 0; phase = 'carry';
+    stats.carrier = r.slot; stats.kickCatchX = L.x;
+    for (const d of defs) d.recognised = true; // nothing to read: everyone sees the ball in his hands
+    log(`${r.name} fields the kickoff`, { kind: 'kick_catch', by: r.slot, side: 'off' });
+  }
   function offenseTick(a) {
     const asg = a.assignment;
+    if (KO && ball.inAir) { kickoffFlightOffense(a); return; }
     if (ball.holder === a && (phase === 'carry' || a !== qb)) { carrierMove(a); return; }
     if (asg.a === 'release' && !a.released && t >= screenReleaseAt()) screenRelease(a); // lets go of his man on time, even mid-block
     if (a.engaged) { resolveEngagement(a); return; }
@@ -1574,6 +1606,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const asg = d.assignment;
     const mark = TRACE ? (m, x) => { d.why = m; d.why2 = x ?? null; } : () => {}; // developer trace: the branch he acted on
     if (d.engaged) { mark('engaged'); return; } // movement handled by the blocker's engagement
+    if (KO) { if (ball.inAir) { mark('cover', 'flight'); kickoffFlightDefense(d); return; } if (ball.holder?.team === 'off') { mark('pursue', 'kickoff'); pursue(d); return; } }
     const c = ball.holder;
     if (c && c.team === 'def') { // we have the ball: escort or carry
       if (c === d) { mark('carry'); carrierMove(d); return; }
@@ -1833,7 +1866,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const dir = c.team === 'off' ? 1 : -1; c.x += dir * Math.min(1.2, Math.hypot(c.vx, c.vy) * 0.14);
     if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
     stats.tackler = d.slot;
-    if (c.team === 'off' && c.x <= B.ownGoal) { endPlay('safety', c.x, c.y); log(`${d.name} tackles ${c.name} in the end zone. SAFETY`, { kind: 'safety' }); return true; }
+    if (c.team === 'off' && c.x <= B.ownGoal) { downedInEndZone(d, c); return true; }
     endPlay('tackle', c.x, c.y); log(`${d.name} reaches off his block and drags ${c.name} down`, { kind: 'tackle', by: d.slot, side: d.team, victim: c.slot, offBlock: true });
     return true;
   }
@@ -1900,7 +1933,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       }
       stats.tackler = d.slot;
       { const helper = opponents(c.team).filter((o) => o !== d && o.stun <= 0 && dist(o, c) < 1.3).sort((p, q) => dist(p, c) - dist(q, c))[0]; if (helper) stats.assistBy = helper.slot; }
-      if (c.team === 'off' && c.x <= B.ownGoal) { endPlay('safety', c.x, c.y); log(`${d.name} tackles ${c.name} in the end zone. SAFETY`, { kind: 'safety' }); return true; }
+      if (c.team === 'off' && c.x <= B.ownGoal) { downedInEndZone(d, c); return true; }
       endPlay('tackle', c.x, c.y);
       if (d.ability?.reaction) abilityUsed(d, 'reaction'); log(`${d.name} tackles ${c.name}`, { kind: 'tackle', by: d.slot, side: d.team, victim: c.slot, ability: fired(d, 'reaction', 'pursuitSpeed', 'runStuff') });
       return true;
@@ -1911,6 +1944,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     c.vx *= 0.55; c.vy *= 0.55; // the arm tackle still slows him down
     log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, ability: fired(c, 'carryStrength', 'elusive', 'elusiveFirst', 'noFumble') });
     return false;
+  }
+  /** Tackled behind his own goal line: a safety, except on a kickoff, where the kick put the ball there (a touchback). */
+  function downedInEndZone(d, c) {
+    if (KO) { endPlay('touchback', c.x, c.y); log(`${d.name} downs ${c.name} in the end zone. Touchback`, { kind: 'touchback' }); return; }
+    endPlay('safety', c.x, c.y); log(`${d.name} tackles ${c.name} in the end zone. SAFETY`, { kind: 'safety' });
   }
   function trySack(d) {
     if (d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false;
@@ -2063,14 +2101,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (lifted && tick > 2) abilityUsed(g, 'grove');
     }
     for (const a of offs) offenseTick(a);
-    for (const d of defs) updateRead(d);
+    if (!KO) for (const d of defs) updateRead(d); // a kickoff has nothing to read
     for (const d of defs) defenseTick(d);
     for (const a of actors) if (!a.engaged) integrate(a);
     separate();
     {
       const c = ball.holder;
-      // Landslide: a run that crosses the line within 2.5 yards of him gets his two extra yards when tackled.
-      if (c && c.team === 'off' && phase === 'carry' && !stats.receiver && !c.landslideChecked && c.x >= 0) { c.landslideChecked = true; c.landslide = offs.find((o) => o !== c && o.ability?.landslide && Math.abs(o.y - c.y) <= 2.5) || null; }
+      // Landslide: a run that crosses the line within 2.5 yards of him gets his two extra yards when tackled (special teams excluded).
+      if (!KO && c && c.team === 'off' && phase === 'carry' && !stats.receiver && !c.landslideChecked && c.x >= 0) { c.landslideChecked = true; c.landslide = offs.find((o) => o !== c && o.ability?.landslide && Math.abs(o.y - c.y) <= 2.5) || null; }
       // Quake Step: a hard cut makes every defender within 2 yards stumble for a moment.
       if (c?.ability?.quakeStep && phase === 'carry') {
         const sp = Math.hypot(c.vx, c.vy); const pv = c.prevV;
@@ -2084,7 +2122,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       ball.flight += DT;
       const k = clamp(ball.flight / Math.max(0.05, ball.flightTime), 0, 1);
       ball.x = ball.from.x + (ball.landing.x - ball.from.x) * k; ball.y = ball.from.y + (ball.landing.y - ball.from.y) * k;
-      if (k >= 1) resolveArrival();
+      if (k >= 1) { if (KO) kickoffCatch(); else resolveArrival(); }
     } else if (ball.holder) { ball.x = ball.holder.x; ball.y = ball.holder.y; }
 
     // Contact
@@ -2099,7 +2137,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (h.y <= B.left || h.y >= B.right) { const yy = h.y <= B.left ? B.left : B.right; endPlay('out_of_bounds', h.x, yy); log(`${h.name} steps out of bounds`, { kind: 'oob' }); }
       else if (h.team === 'off' && h.x >= B.goal && (h !== qb || scrambled || phase === 'carry')) { endPlay('touchdown', h.x, h.y); log(`${h.name} reaches the end zone. TOUCHDOWN`, { kind: 'touchdown' }); }
       else if (h.team === 'def' && h.x <= B.ownGoal) { endPlay('touchdown', h.x, h.y, { defensiveScore: true }); log(`${h.name} returns it all the way. TOUCHDOWN`, { kind: 'touchdown' }); }
-      else if (h.team === 'off' && h.x <= B.ownEndLine + 0.2) { endPlay('safety', h.x, h.y); log('Carrier runs out of the back of the end zone. SAFETY', { kind: 'safety' }); }
+      else if (h.team === 'off' && h.x <= B.ownEndLine + 0.2) { if (KO) { endPlay('touchback', h.x, h.y); log('Returner runs out of the back of the end zone. Touchback', { kind: 'touchback' }); } else { endPlay('safety', h.x, h.y); log('Carrier runs out of the back of the end zone. SAFETY', { kind: 'safety' }); } }
     }
     if (options.debugSlot) { const d = actors.find((a) => a.slot === options.debugSlot); if (d) log(`dbg ${d.slot} x=${d.x.toFixed(2)} y=${d.y.toFixed(2)} v=${Math.hypot(d.vx, d.vy).toFixed(2)} stun=${d.stun.toFixed(2)} eng=${d.engaged ? d.engaged.slot : '-'} st=${d.state} ne=${d.noEngage.toFixed(2)}`, { kind: 'debug' }); }
     if (dry && !result) {
@@ -2134,6 +2172,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     touchdown: result === 'touchdown', safety: result === 'safety', bounds: B,
     qb: qr.order ? { v: QB_MODEL_VERSION, order: qr.order, reads: qr.log, decision: qr.decision, aiWould: qr.aiWould, sensedAt: qr.sensedAt, fakeAt: qr.fakeAt ?? null } : null, // the recorded read log (replays, AI Testing Lab)
   };
+  if (KO) out.kickoff = { returner: KO.returner, catchX: stats.kickCatchX ?? null, hang: ball.flightTime };
   // Developer trace only (Phase C1 tests): each offensive player's Blocking after auras, kept out of the play's data (not enumerable,
   // so a traced play still serialises exactly as an untraced one).
   if (TRACE) Object.defineProperty(out, 'blockingAtSnap', { value: Object.fromEntries(offs.map((a) => [a.slot, a.attrs.blocking])), enumerable: false });

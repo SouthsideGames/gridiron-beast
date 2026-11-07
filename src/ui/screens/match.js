@@ -399,6 +399,7 @@ export function registerMatchScreens(Router, app) {
   function afterStep(f, ev) {
     const G = f.game;
     if (!ev) { app.save(); Router.render(); return; }
+    if (ev.kind === 'kickoff' && ev.sim) ev.offenseSide = R.opponent(ev.kicking); // a live kickoff (Task 8 M2): the return unit is the engine's offense
     if (ev.sim && ev.sim.frames?.length > 1 && !f.settings.reducedMotion) { startAnim(f, ev); return; }
     if (!ev.sim && !f.settings.reducedMotion && (ev.kind === 'kickoff' || ev.kind === 'punt' || ev.kind === 'field_goal')) {
       const frames = kickFrames(ev);
@@ -409,7 +410,7 @@ export function registerMatchScreens(Router, app) {
   }
   function startAnim(f, ev) {
     const G = f.game; const sim = ev.sim;
-    anim = { frames: sim.frames, i: 0, ev, camera: sim.kick ? cameraFor(Math.max(0, sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / ((f.settings.speed || 1) * (G.auto ? (G.autoSpeed || 1) : 1)), follow: !!sim.kick, sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
+    anim = { frames: sim.frames, i: 0, ev, camera: followsBall(sim) ? cameraFor(Math.max(0, (sim.ballOn || 0) + sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / ((f.settings.speed || 1) * (G.auto ? (G.autoSpeed || 1) : 1)), follow: followsBall(sim), sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
     anim.fx = sim.kick ? null : buildFx(sim, fxLookup(f, ev.offenseSide || G.state.possession));
     G.lastEvent = null;
     Router.render();
@@ -436,7 +437,7 @@ export function registerMatchScreens(Router, app) {
       if (key !== anim.key && svg) {
         anim.key = key; anim.i = idx;
         const s = G.state; const t0 = performance.now();
-        if (anim.follow) { const target = cameraFor(sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
+        if (anim.follow) { const target = cameraFor((sim.ballOn || 0) + sim.frames[idx].ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const prevT = sim.frames[Math.max(0, idx - 1)].t ?? 0, ft = sim.frames[idx].t ?? 0;
         const drawFrame = half ? midFrame(sim.frames[idx], sim.frames[idx + 1]) : sim.frames[idx];
         svg.innerHTML = fieldSvg({ venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), qbRead: qbReadsShown(f.settings, { live: true }), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
@@ -448,13 +449,17 @@ export function registerMatchScreens(Router, app) {
     };
     anim.raf = requestAnimationFrame(tick);
   }
+  /** Kick plays follow the ball with the camera: the formula animations (kick-anim.js) and the live kickoff's engine frames. */
+  function followsBall(sim) { return !!(sim.kick || sim.kickoff); }
   /** Monster art for the field (null = simple circles/squares, per Settings). */
   function spritesFor(f, offSide) {
     if (f.settings.fieldMarkers === 'simple') return null;
     const T = teamsFor(f); const defSide = R.opponent(offSide);
     const pack = (team) => { const map = { ...team.offense, ...team.defense }; const pool = Object.values(map).filter((m) => m?.id); return { map, pool: team.kicker?.id ? [team.kicker, ...pool] : pool }; };
     const off = pack(T[offSide]), def = pack(T[defSide]);
-    return { off: { map: T[offSide].offense, pool: off.pool }, def: { map: T[defSide].defense, pool: def.pool } };
+    // A live kickoff's units mix lineups (a kicker covering, a corner returning): its slots are looked up in the whole club.
+    const kickMap = (team, p) => ({ ...p.map, ...(team.kicker?.id ? { K: team.kicker } : {}) });
+    return { off: { map: { ...kickMap(T[offSide], off), ...T[offSide].offense }, pool: off.pool }, def: { map: { ...kickMap(T[defSide], def), ...T[defSide].defense }, pool: def.pool } };
   }
   /** The midpoint between two sim frames: positions and the ball lerped, everything else (engagement, status, holder) from the first. Frames across a phase change are not blended. */
   function midFrame(a, b) {
@@ -487,7 +492,7 @@ export function registerMatchScreens(Router, app) {
   function startReplay(f, rp) {
     const G = f.game; const sim = rp.ev.sim; if (!sim?.frames?.length || anim) return;
     const plan = replayPlan(sim, rp.reason);
-    anim = { replay: rp, plan, frames: sim.frames, i: plan.i0, ev: rp.ev, camera: sim.kick ? cameraFor(Math.max(0, sim.frames[plan.i0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, follow: !!sim.kick, sprites: spritesFor(f, rp.ev.offenseSide || G.state.possession), start: performance.now() + REPLAY.transitionMs };
+    anim = { replay: rp, plan, frames: sim.frames, i: plan.i0, ev: rp.ev, camera: followsBall(sim) ? cameraFor(Math.max(0, (sim.ballOn || 0) + sim.frames[plan.i0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, follow: followsBall(sim), sprites: spritesFor(f, rp.ev.offenseSide || G.state.possession), start: performance.now() + REPLAY.transitionMs };
     anim.fx = sim.kick ? null : buildFx(sim, fxLookup(f, rp.ev.offenseSide || G.state.possession));
     if (G.lastEvent) G.lastEvent.fresh = false; // the touchdown flash and score pulse belong to the live play only
     Router.render();
@@ -502,7 +507,7 @@ export function registerMatchScreens(Router, app) {
         anim.key = key; anim.i = pos.i;
         const a = sim.frames[pos.i], b = sim.frames[Math.min(plan.i1, pos.i + 1)];
         const frame = pos.k >= 0.5 && b !== a ? midFrame(a, b) : a;
-        if (anim.follow) { const target = cameraFor(a.ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
+        if (anim.follow) { const target = cameraFor((sim.ballOn || 0) + a.ball[0] + 4); anim.camera = { bottom: anim.camera.bottom + (target.bottom - anim.camera.bottom) * 0.35, top: 0 }; anim.camera.top = anim.camera.bottom + (target.top - target.bottom); }
         const s2 = G.state;
         svg.innerHTML = fieldSvg({ venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s2, anim.ev), frame, prevFrame: sim.frames[pos.i - 1] || null, fx: anim.fx, fxQuality: fxQualityFor(f), qbRead: qbReadsShown(f.settings), ownLabel: s2[anim.ev.offenseSide || s2.possession].abbr, oppLabel: s2[R.opponent(anim.ev.offenseSide || s2.possession)].abbr, camera: anim.camera, event: G.event, noLines: true, sprites: anim.sprites, time: frame.t });
         // Camera: a slight zoom that tracks the ball (CSS transform on the svg; the wrap clips it).
@@ -547,7 +552,8 @@ export function registerMatchScreens(Router, app) {
   /** Species lookup for the effect layer: team side + slot → { element, name }. */
   function fxLookup(f, offSide) {
     const T = teamsFor(f); const defSide = R.opponent(offSide);
-    return (team, slot) => { const m = (team === 'off' ? T[offSide].offense : T[defSide].defense)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name, species: sp?.id || null }; };
+    const club = (t) => ({ ...t.defense, ...t.offense, ...(t.kicker?.id ? { K: t.kicker } : {}) }); // a live kickoff's units mix lineups
+    return (team, slot) => { const m = (team === 'off' ? T[offSide].offense : T[defSide].defense)?.[slot] || club(team === 'off' ? T[offSide] : T[defSide])[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name, species: sp?.id || null }; };
   }
   function fxQualityFor(f) { return f.settings.reducedMotion ? 'min' : f.settings.fieldMarkers === 'simple' ? 'low' : 'full'; }
   let shakeTimer = null;

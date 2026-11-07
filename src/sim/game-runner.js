@@ -48,8 +48,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
     const mode = choices.kickoff || ctrl(kicking).kickoff(state);
     done();
     const free = state.phase === 'free_kick';
-    const { text, res } = R.doKickoff(state, teams, { onside: mode === 'onside' && state.phase === 'kickoff' });
-    return { kind: 'kickoff', text, res, kicking, free, scored: res?.touchdown ? { team: R.opponent(kicking) } : null };
+    const { text, res, sim } = R.doKickoff(state, teams, { onside: mode === 'onside' && state.phase === 'kickoff' });
+    // A live kickoff (Task 8 M2) carries its engine play: frames in the scrimmage format, the return unit as the offense.
+    return { kind: 'kickoff', text, res, kicking, free, scored: res?.touchdown ? { team: R.opponent(kicking) } : res?.kickingTouchdown ? { team: kicking } : null, ...(sim ? { sim } : {}) };
   }
   if (state.phase === 'try') {
     const tryTeam = state.tryTeam;
