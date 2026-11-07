@@ -311,6 +311,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (soft && !rng.chance(0.25 + 0.5 * norm(blocker.attrs.blocking * (scaleVs(blocker, defender, 'block') - modOf(defender, blocker))))) { blocker.noEngage = 0.3; return false; }
     blocker.engaged = defender; defender.engaged = blocker; defender.engagedAt = t; blocker.softBlock = soft; defender.wasBlocked = true;
     const bk = (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }); if (isRun) bk.run = 1; else bk.pass = 1;
+    hook('engage', blocker, defender); hook('engage', defender, blocker); // Task 8 M3
     pancakeOpportunity(blocker, defender);
     return true;
   }
@@ -1955,6 +1956,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     endPlay('tackle', c.x, c.y); log(`${d.name} reaches off his block and drags ${c.name} down`, { kind: 'tackle', by: d.slot, side: d.team, victim: c.slot, offBlock: true });
     return true;
   }
+  /** Task 8 (B3): after a fumble is determined, a Shielded carrier's save prevents it and consumes the whole episode; then contracts. */
+  function fumbleSaved(c) {
+    const st = t8g.status?.[c.mid]; if (st?.id === 'shielded') { delete t8g.status[c.mid]; log(`${c.name}'s shield holds the ball`, { kind: 'ability', by: c.slot, side: c.team, status: 'shielded' }); return true; }
+    return !!hook('fumble', c)?.prevent;
+  }
   function tryTackle(d, c) {
     // Off the block (Phase C1, F4): on a designed run, a defender held up by a block can still reach out for a carrier who runs
     // right past him, once a play, at a fraction of a clean tackle's chance (Awareness: he sees him coming). Blocks that work no
@@ -2010,7 +2016,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       // Forward progress across the goal line is a score, not a tackle at the 1.
       if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
       if (c.team === 'def' && c.x <= B.ownGoal) { stats.tackler = d.slot; endPlay('touchdown', Math.min(c.x, B.ownGoal), c.y, { defensiveScore: true }); log(`${c.name} falls into the end zone. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
-      if (rng.chance(fumbleP)) {
+      if (rng.chance(fumbleP) && !fumbleSaved(c)) {
         const near = actors.filter((a) => dist(a, c) < 2.5);
         const recoverer = near.length ? rng.pick(near) : d;
         stats.forcedBy = d.slot; stats.tackler = d.slot; stats.fumbledBy = c.slot; stats.recoveredSlot = recoverer.slot; stats.recoveredTeam = recoverer.team;
@@ -2048,7 +2054,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         return false;
       }
       stats.tackler = d.slot;
-      if (qb.windup && rng.chance(0.25)) { // strip sack on the wind-up
+      if (qb.windup && rng.chance(0.25) && !fumbleSaved(qb)) { // strip sack on the wind-up (Task 8 B3: a Shielded QB's save first)
         const near = actors.filter((x) => dist(x, qb) < 2.5); const rec = near.length ? rng.pick(near) : d;
         qb.windup = null; stats.forcedBy = d.slot; stats.fumbledBy = qb.slot; stats.recoveredSlot = rec.slot; stats.recoveredTeam = rec.team;
         log(`${d.name} strips ${qb.name} as he throws; ${rec.name} recovers`, { kind: 'fumble', by: d.slot, recoveredBy: rec.slot, team: rec.team });
@@ -2084,6 +2090,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Thunderclap: a defender trailing the receiver (behind him on his path) cannot break up a quick pass.
     const trailing = nearest && ((nearest.d.x - r.x) * r.vx + (nearest.d.y - r.y) * r.vy) < 0;
     const thunderShield = ball.thunder && ball.quick && trailing && nearest.dd < (deep ? 1.6 : 1.1) * sepScale;
+    // Task 8 M3 (P6 pre-resolution at the catch point): contracts of the receiver and the nearest defender may act before the outcome
+    // is decided; a hook sets ball.t8 flags (noContest: no breakup; noInterception: a would-be interception falls incomplete).
+    ball.t8 = {}; hook('catchPoint', r, ball, nearest?.d || null); if (nearest) hook('catchPoint', nearest.d, ball, r);
+    if (ball.t8.noContest) contested = false;
     if (thunderShield) { contested = false; abilityOutcome('no_breakup', qb, `${qb.name}'s Thunderclap beats ${nearest.d.name} to the spot`, { victim: nearest.d.slot }); }
     // Coverage responsibility: the man defender assigned to this receiver; in zone, only a defender close enough to have had him (within 2.5 yards); otherwise nobody, the zone was open.
     { const manD = defs.find((d) => d.assignment?.a === 'man' && bySlot.off[manKeys[d.assignment.key]] === r);
@@ -2114,7 +2124,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       let pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.78); // v42.8: with the ball led onto the receiver, a defender who got there too has a real play on it (0.5 before, when under-led balls fell to him anyway)
       if (ball.undertow) { pickP *= ball.undertow.ability.undertow; abilityUsed(ball.undertow, 'undertow'); } // Undertow: 25% more likely
       const picked = rng.chance(pickP);
-      if (picked && ball.sovereign) { abilityUsed(qb, 'sovereign'); abilityOutcome('pick_denied', qb, `${qb.name}'s Sovereign Arm: ${nearest.d.name} cannot hold it`, { victim: nearest.d.slot }); }
+      if (picked && ball.t8?.noInterception) { log(`${nearest.d.name} cannot hold it`, { kind: 'ability', by: r.slot, side: r.team, contract: true }); }
+      else if (picked && ball.sovereign) { abilityUsed(qb, 'sovereign'); abilityOutcome('pick_denied', qb, `${qb.name}'s Sovereign Arm: ${nearest.d.name} cannot hold it`, { victim: nearest.d.slot }); }
       else if (picked) {
         ball.inAir = false; ball.holder = nearest.d; stats.interceptor = nearest.d.slot; nearest.d.x = L.x; nearest.d.y = L.y;
         nearest.d.laneTimer = 0; nearest.d.jukeCooldown = 0;
@@ -2173,6 +2184,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const fr = ball.holder === qb && phase === 'dropback' && !scrambled ? (qb.windup ? qb.windup.r : qr.cur ? bySlot.off[qr.cur.slot] : null) : null;
       facingHist.push(fr ? { ang: Math.atan2(fr.y - qb.y, fr.x - qb.x), windup: !!qb.windup, qx: qb.x, qy: qb.y } : null); if (facingHist.length > 40) facingHist.shift();
     }
+    for (const a of actors) if (a.contract) hook('tick', a); // Task 8 M3 contracts, every tick
     if (tick === 1) for (const a of actors) snapPos.set(a, { x: a.x, y: a.y });
 
     if (tick === 4) for (const a of actors) { if (a.ability?.aura) abilityUsed(a, 'aura'); if (a.overcharged) abilityUsed(a, 'overcharge'); if (a.sovereignQ4 && !isRun) abilityUsed(a, 'sovereign'); }
