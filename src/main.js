@@ -36,6 +36,7 @@ import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { registerAiLab } from './ui/screens/ai-lab.js';
 import { registerAttrLab } from './ui/screens/attr-lab.js';
 import { registerEvoPreview } from './ui/screens/evo-preview.js';
+import { registerT8Lab } from './ui/screens/t8-lab.js';
 import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './ui/dev-review.js';
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
@@ -216,6 +217,7 @@ export function start() {
   registerClashLab(Router, app); // Beast Clash developer tools
   registerAiLab(Router, app); // AI Testing Lab (GDD §53.8): Developer Tools only
   registerAttrLab(Router, app); // Attribute Testing Lab (GDD §8.2 audit): Developer Tools only
+  registerT8Lab(Router, app); // Task 8 test tools: private test build only (shortcutsEnabled)
   registerEvoPreview(Router, app); // Preview Evolution: the real evolution scene on throwaway data, Developer Tools only
   registerClashBattle(Router, app); // Beast Clash in Franchise Mode: Tuesday encounters, the pregame Clash and the overtime Clash (GDD §26)
   registerAbilityBalance(Router);

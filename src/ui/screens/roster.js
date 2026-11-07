@@ -8,6 +8,7 @@ import { negotiationSheet, renewalOutlook, extensionAdviceHtml } from '../fa-ui.
 import { extensionEligible } from '../../franchise/fa-engine.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS, PACKAGE_SLOT_USE, ATTRIBUTES, positionOf, canPlay } from '../../data/personnel.js';
 import { temperSummary } from '../../data/temper.js';
+import { LEGACY_ABILITY_EFFECTS_TRANSITIONAL } from '../../data/monsters.js';
 import { monsterOverall, effectiveAttributes, TYPES, ABILITIES, xpForLevel, HEADLINE, headlineAttributes, resolveSpecies, POINTS_PER_LEVEL, schemePreferences, evolutionReady, nextEvolution, pointCost } from '../../data/monsters.js';
 import { TRAITS } from '../../data/species.js';
 import { speciesSheet, silhouette } from './dex.js';
@@ -165,7 +166,7 @@ export function registerRosterScreens(Router, app) {
         <button class="btn block cp-open" data-career="${esc(m.id)}">📖 Full career profile ›</button>
         <div class="panel"><b>Temper: ${esc(temper.name)}</b><p class="muted" style="margin:2px 0">${esc(temper.text)}</p>
           <div class="row between" style="gap:6px"><b>Type: ${esc(m.type)}</b><button class="btn small" data-action="typechart" data-type="${esc(m.type)}">🔺 Type Chart</button></div><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}. ${(() => { const p = typeProfile(m.type); return `Strong against ${p.strong.join(' and ')}; weak against ${p.weak.join(' and ')}.`; })()}</p>
-          ${ab ? `<b>Signature ability: ${esc(ab.name)}</b><p class="muted" style="margin:2px 0">${esc(ab.text)}</p><button class="btn small see-it" data-see-it="${resolveSpecies(m).id}">▶ See it</button>` : (() => { const sp = resolveSpecies(m); return sp.ability ? `<b>Signature ability: ${esc(sp.ability.name)}</b><p class="muted" style="margin:2px 0">${esc(sp.ability.text)}</p><button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : `<b>Species trait: ${esc(TRAITS[sp.trait]?.name)}</b><p class="muted" style="margin:2px 0">${esc(TRAITS[sp.trait]?.text)}</p>`; })()}
+          ${ab ? `<b>Signature ability: ${esc(ab.name)}</b>${LEGACY_ABILITY_EFFECTS_TRANSITIONAL ? ' <span class="chip warn" title="Legacy football effect kept until Task 8 M3 replaces it with the Dex ability">transitional</span>' : ''}<p class="muted" style="margin:2px 0">${esc(ab.text)}</p><button class="btn small see-it" data-see-it="${resolveSpecies(m).id}">▶ See it</button>` : (() => { const sp = resolveSpecies(m); return sp.ability ? `<b>Signature ability: ${esc(sp.ability.name)}</b>${LEGACY_ABILITY_EFFECTS_TRANSITIONAL ? ' <span class="chip warn" title="Legacy football effect kept until Task 8 M3 replaces it with the Dex ability">transitional</span>' : ''}<p class="muted" style="margin:2px 0">${esc(sp.ability.text)}</p><button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : `<b>Species trait: ${esc(TRAITS[sp.trait]?.name)}</b><p class="muted" style="margin:2px 0">${esc(TRAITS[sp.trait]?.text)}</p>`; })()}
           ${evolutionHtml(m)}
           <button class="btn small" data-action="species" style="margin-top:6px">📖 ${esc(resolveSpecies(m).name)} in the Beast Dex</button></div>
         <h3>Ratings</h3>${headlineHtml(m)}${schemeHtml(f, m)}

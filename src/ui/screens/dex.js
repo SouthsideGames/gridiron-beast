@@ -4,6 +4,7 @@
 // shows as a silhouette with "???" so there is always something to hunt for.
 
 import { esc, delegate, sheet } from '../dom.js';
+import { LEGACY_ABILITY_EFFECTS_TRANSITIONAL } from '../../data/monsters.js';
 import { SPECIES_DEX, RARITIES, TRAITS, ELEMENT_REGIONS, COLLECTION_MILESTONES } from '../../data/species.js';
 import { TYPES, evolvedSpec } from '../../data/monsters.js';
 export { evolvedSpec };
@@ -61,7 +62,7 @@ export function speciesSheet(s, f) {
     <div class="muted">${esc(s.size)} ${esc(s.body)} · ${esc(s.look)}</div>
     <div class="muted" style="margin-top:4px">${st === 'signed' ? `Signed${f ? ` · ${owned.length} on your roster` : ''}` : st === 'seen' ? 'Seen, never signed' : 'Not yet discovered'}</div></div></div>
     <p style="font-style:italic">“${esc(s.personality)}”</p>
-    <h3>${s.ability ? 'Signature ability' : 'Trait'}</h3>${ab}${s.ability && (st === 'signed' || st === 'seen') ? `<button class="btn small see-it" data-see-it="${s.id}">▶ See it</button>` : ''}
+    <h3>${s.ability ? 'Signature ability' : 'Trait'}${s.ability && LEGACY_ABILITY_EFFECTS_TRANSITIONAL ? ' <span class="chip warn" title="Legacy football effect kept until Task 8 M3 replaces it with the Dex ability">transitional</span>' : ''}</h3>${ab}${s.ability && (st === 'signed' || st === 'seen') ? `<button class="btn small see-it" data-see-it="${s.id}">▶ See it</button>` : ''}
     <h3>Where to find it</h3><p class="muted">${esc((s.regions || ELEMENT_REGIONS[s.element]).join(', '))}${s.fromWeek ? ` · from week ${s.fromWeek}` : ''}${s.rarity === 'legendary' ? (f?.campaign?.unlocked?.[s.id] ? ' · unlocked: scoutable there now' : ` · Legend Tracks ${f?.campaign?.tracks?.[s.id] || 0}/3`) : ''}</p>
     ${evo}`;
 }
