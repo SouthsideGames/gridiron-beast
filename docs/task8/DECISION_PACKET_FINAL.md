@@ -1,354 +1,632 @@
-# Task 8: final decision packet
+# Task 8: final decision packet (P1–P10), revision 2
 
-This is the compact packet the owner asked for before the specification is called closed. It replaces the matching items in [round 2](DECISIONS_ROUND2.md). Two proposals from round 2 are **withdrawn as instructed**:
+**Status: the specification is open.** Nothing in this packet changes gameplay until you approve it. Once you rule on P1–P10, the
+rulings are consolidated into the GitHub specification, and the contradictory active instructions listed in §11 are removed
+*before* any new system is connected to gameplay.
 
+**What changed from revision 1 (commit ade3c07).** A line-by-line check against the Dex and the specification found three places
+where revision 1 departed from approved text without saying so. The recommendations change:
+
+| Item | Revision 1 | Problem found | Revision 2 |
+| --- | --- | --- | --- |
+| P5 | Called the defender shed weights "approved, fixed" | Only the *roles* are approved (Appendix C). Spec §12 says exact contest weights "are not authorized for Claude to invent". | Every weight is now shown as a proposal for you to approve. |
+| P7 | Recommended a return-yards multiplier for Dawn Signal | Dawn Signal's approved notes say it "needs real coverage simulation, not decorative stat bonus". A yards multiplier is exactly that. | Recommend a live kickoff-return simulation; the multiplier is listed only as a flagged departure. |
+| P8 | Recommended that rotation be "free" | The approved Clash balance setting is `swapCost: 'half'` (Gate B.2). "Free" would make rotation cheaper than the approved balance, and revision 1 didn't flag that. | Recommend keeping the half-strength cost, applied to the entering monster's first turn. |
+
+Throughout:
+- **"Departure"** means a recommendation that changes or adds to an approved rule.
+- **"Fills a gap"** means the approved text leaves the value open and nothing approved is changed.
+
+Two round-2 proposals stay **withdrawn**:
 - the universal evasion system (R2-17);
 - the future multi-play Stunned rule (R2-8).
 
-Ordinary attacks connect. Nothing here changes gameplay until approved. **Bold IDs (P1–P10) are the decisions requested.**
+The approved rule that **ordinary attacks connect** is preserved everywhere.
+
+Quoted ability text is copied word for word from `docs/beast-dex/data/abilities.json` (Beast Dex v18).
 
 ---
 
-## 1. The three incomplete abilities
+## P1 — Stoke the Flame: counterburst damage
 
-### Stoke the Flame (FIR-01-C, Flaroo → Blazynx → Infernox; Common RB; Clash archetype Balanced)
+**In plain language:** After Flaroo survives three hits in a Clash, it immediately fires back. The approved design says the damage "scales by form/mastery" but never gives the numbers. This decision supplies them.
 
-> **Category / activation:** Retaliation; three incoming attacks survived.
->
-> **Trigger / eligibility:** One charge per enemy direct-damage attack survived, including HP or shield damage. Multi-hit counts once. Delayed direct attacks count; misses, fully prevented zero damage, damage over time, counters and reactions do not.
->
-> **Targets / placement:** Triggering attacker; if invalid, current opposing active monster.
->
-> **Core resolution:** At three charges, immediate Fire counterburst outside normal turn; reset charge.
->
-> **Recharge / frequency:** Three hits, no separate cooldown approved.
->
-> **Lifetime / persistence:** Retain partial charge through rotations; reset each Clash.
->
-> **Exceptions / counterplay:** At third charge must survive and be able to act immediately, otherwise consume charge with no queued retaliation. If Stunned blocks counter, consume Stoke charge but NOT Stunned duration. Only normal turns advance status. Invalid attacker redirects to opposing active monster. Counterburst is reaction damage; no reaction chain. Shared status system supersedes old Shock-skip consumption exception.
->
-> **Visuals:** Three-charge heat indicator and fiery counterburst; detailed choreography pending.
->
-> **Progression / notes:** Damage scales by form/mastery. No status or splash.
+**Approved text** (FIR-01-C, Flaroo → Blazynx → Infernox; Common RB; Clash archetype Balanced):
 
-**Missing:** the counterburst damage for each form and mastery tier.
+| Section | Approved rule |
+| --- | --- |
+| Category / activation | Retaliation; Three incoming attacks survived |
+| Trigger / eligibility | One charge per enemy direct-damage attack survived, including HP or shield damage. Multi-hit counts once. Delayed direct attacks count; misses, fully prevented zero damage, damage over time, counters and reactions do not. |
+| Targets / placement | Triggering attacker; if invalid, current opposing active monster |
+| Core resolution | At three charges, immediate Fire counterburst outside normal turn; reset charge. |
+| Recharge / frequency | Three hits, no separate cooldown approved. |
+| Lifetime / persistence | Retain partial charge through rotations; reset each Clash. |
+| Exceptions / counterplay | At third charge must survive and be able to act immediately, otherwise consume charge with no queued retaliation. If Stunned blocks counter, consume Stoke charge but NOT Stunned duration. Only normal turns advance status. Invalid attacker redirects to opposing active monster. Counterburst is reaction damage; no reaction chain. Shared status system supersedes old Shock-skip consumption exception. |
+| Visuals | Three-charge heat indicator and fiery counterburst; detailed choreography pending. |
+| Progression / notes | Damage scales by form/mastery. No status or splash. |
 
-**P1, recommended:** 60 / 70 / 80% of normal attack damage for Flaroo / Blazynx / Infernox, plus 0 / +5 / +10 / +15 percentage points by mastery (Developing → Mastered). That gives a range of 60–95%.
-- **Basis:** the approved counters it most resembles.
-  - Shadow Pounce: 70 / 80% by form, plus 0–15 points by mastery.
-  - Arc Rebound: 60 / 75% by form.
-  - Riptide Pursuit: 75–105% by mastery.
-- Stoke the Flame needs three survived attacks before it fires, so it sits at a similar level.
+**Missing:** the damage for each form and mastery tier.
 
-### Blazing Resolve (FIR-01-F, same family; football RB)
+**Recommendation:**
+- **Base damage by form:** 60% of normal attack damage (Flaroo), 70% (Blazynx), 80% (Infernox).
+- **Mastery bonus:** +0, +5, +10 or +15 percentage points (Developing, Practiced, Expert, Mastered).
+- **Range:** 60–95%.
+- Type, shield and damage-reduction rules apply as for any hit.
 
-> **Category / activation:** Self enhancement; conditional charge.
->
-> **Trigger / eligibility:** Completed official rushing attempts only. Three qualifying charges ignite for a future rushing carry. No receiving, returns or two-point charge/activation. Positive whole-yard thresholds are in Progression.
->
-> **Targets / placement:** Self as ball carrier on a rushing attempt.
->
-> **Core resolution:** *(superseded by spec §9; the encounter rule applies)* First eligible tackle begins one tackle encounter: snapshot all defenders already within tackling reach, break their attempts, spend ignition. Later arrivals tackle normally. No one-second window.
->
-> **Recharge / frequency:** No separate cooldown. No second bar or charging while ignited; resume following carry. Two-point attempts neither charge nor trigger ignition. Existing fields still apply during conversions.
->
-> **Lifetime / persistence:** Unused ignition and partial charge persist across possessions, halftime and overtime; reset per game; save/reload preserves.
->
-> **Exceptions / counterplay:** No receiving/return charge or activation. Stuns, fields, forced movement, out of bounds, strips and fumbles still apply.
->
-> **Visuals:** Visible three-part charge bar above monster; full charge engulfs body in flame.
->
-> **Progression / notes:** Guaranteed tackle-break window is explicitly approved. Not the legacy Eruption flatten/stun.
+**Why:** the most similar approved counters use the same scale:
+- Shadow Pounce: 70 / 80% by form, plus 0–15 points by mastery.
+- Arc Rebound: 60 / 75% by form.
 
-**Missing:** the "positive whole-yard thresholds". Progression doesn't contain them.
+Stoke the Flame needs three survived hits before it fires, so it starts slightly lower than those.
 
-**P2, recommended:** a completed rushing attempt earns one charge if it gains at least **4 / 3 / 2 / 1 whole yards** (Developing / Practiced / Expert / Mastered). The threshold is the same for all three forms.
-- The plural "thresholds" suggests a mastery scale.
-- Mastery then speeds up charging without touching the approved guaranteed effect.
-
-### Beacon Lane (LIG-01-F, Lumini → Photara; Common WR; Clash archetype Support)
-
-> **Trigger / eligibility:** After own reception that gains a first down while ready, bank next offensive field.
->
-> **Targets / placement:** 8-wide by 6-long Light rectangle at upcoming fixed 5-yard LB reference, centered on initial ball lateral position.
->
-> **Core resolution:** Non-Light finishing a participating scrimmage play inside Light gets one extra cooldown unit after ordinary decrement on shortest-running positive repeatable signature cooldown. One benefit per monster per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply.
->
-> **Recharge / frequency:** Creator cooldown 6 / 5 / 4 / 3 offensive plays; starts creation and cannot receive its own field recharge.
->
-> **Lifetime / persistence:** Pending carries halves; created common field clears half. Spawn play counts.
->
-> **Exceptions / counterplay:** Receiver can help enemy recharge. Light family immune gains no acceleration. Ordinary status timers untouched.
->
-> **Visuals:** Golden low rectangle with small clock particles along perimeter.
->
-> **Progression / notes:** Approved Light field exposure cadence finalized in closeout10. Keep existing creator lifetime/placement/mastery.
-
-**Missing:** the field's lifetime. "Keep existing" points to a value that doesn't exist.
-
-**P3, recommended:** **1 / 1 / 2 / 2 participating offensive scrimmage plays, including the spawn play**, by mastery, the same for both forms.
-- Every comparable Common field uses exactly this: Runway, Shadow Patch and Bulwark Grid.
-- The creator's cooldown (at least 3) is always longer than the lifetime.
-
-**P4:** confirm that seven abilities whose values are given only by mastery apply equally to every form: Lightning Rod, Emergency Cover, Beacon Lane, Dawn Song, Anchor Plate, Iron Lungs, Tempered Guard.
+**Departures:** none. This fills a gap.
 
 ---
 
-## 2. Pancake formulas and tuning bounds (P5)
+## P2 — Blazing Resolve: what counts as a qualifying carry
 
-The structure follows the approved rules:
-- one attempt per OL per play;
-- the attempt opens on an advantage, not a timer;
-- on failure, Awareness decides recovery;
-- defender Strength and Agility resist.
+**In plain language:** Flaroo's football ability charges from good runs. After three, its next carry breaks the first set of tackles. The approved text says that runs must gain a "positive whole-yard threshold" to count, and that the threshold is listed under Progression. It isn't there.
 
-All ratings are effective ratings, and every contest is type-scaled exactly as today's block contest is.
+**Approved text** (FIR-01-F; Common RB):
 
-| Step | Formula | Start value | Tuning bounds |
-| --- | --- | --- | --- |
-| Block score (existing) | B = 0.6 Blocking + 0.4 Strength | unchanged | fixed |
-| Shed score (approved roles) | DL, CB, S: 0.5 Agility + 0.3 Strength + 0.2 Tackling. LB: 0.5 Strength + 0.3 Agility + 0.2 Tackling | weights fixed | fixed |
-| OL advantage | A = (B − shed score) / 100 | | |
-| Opportunity | Attempt offered the first time A ≥ θ in an engagement. Checked when the engagement starts and when the block changes between pass and run. | θ = 0.10 | 0.05 – 0.20 |
-| Pancake power | P = 0.4 Strength + 0.4 Blocking + 0.2 Tackling (OL) | weights fixed | fixed |
-| Resistance | R = 0.6 Strength + 0.4 Agility (defender) | weights fixed | fixed |
-| Success | p = clamp(b + s × (P − R)/100, lo, hi) | b = 0.30, s = 1.5, lo = 0.05, hi = 0.80 | b 0.20–0.40; s 1.0–2.0; lo 0.02–0.10; hi 0.70–0.90 |
-| Success effect | Knocked Down through the shared gate, rest of the play | approved | — |
-| Recovery after a failure | r = clamp(c + k × Awareness/99, c, rmax) | c = 0.30, k = 0.60, rmax = 0.90 | c 0.20–0.40; k 0.40–0.70; rmax 0.80–0.95 |
-| Failure, recovered | engagement continues unchanged; the attempt is spent | — | — |
-| Failure, not recovered | engagement ends; the OL *attempts* Stumbled through the shared gate (40% current-speed loss, ordinary re-acceleration, legal re-engagement only) | approved | — |
+| Section | Approved rule |
+| --- | --- |
+| Category / activation | Self enhancement; Conditional charge |
+| Trigger / eligibility | Completed official rushing attempts only. Three qualifying charges ignite for a future rushing carry. No receiving, returns or two-point charge/activation. Positive whole-yard thresholds are in Progression. |
+| Targets / placement | Self as ball carrier on a rushing attempt |
+| Core resolution (Dex text, **superseded**) | First eligible tackle starts one live second of automatic tackle breaks, including multiple defenders reaching runner within that window. Charge consumed; consuming carry earns no new charge. Normal strip/fumble rules remain. |
+| Core resolution (**governing**, spec §9) | First eligible tackle begins one tackle encounter. Snapshot all defenders already within tackling reach, break their attempts, spend ignition; later arrivals can tackle normally. No one-second window. Keep other approved charge, rushing eligibility, fumble and persistence rules. Do not copy old Eruption's defender stun. Exact encounter snapshot and duplicate-contact handling must be defined in event tests. |
+| Recharge / frequency | No separate cooldown. No second bar or charging while ignited; resume following carry. Two-point attempts neither charge nor trigger ignition. Existing fields still apply during conversions. |
+| Lifetime / persistence | Unused ignition and partial charge persist across possessions, halftime and overtime; reset per game; save/reload preserves. |
+| Exceptions / counterplay | No receiving/return charge or activation. Stuns, fields, forced movement, out of bounds, strips and fumbles still apply. |
+| Visuals | Visible three-part charge bar above monster; full charge engulfs body in flame. |
+| Progression / notes | Guaranteed tackle-break window is explicitly approved. Not the legacy Eruption flatten/stun. |
 
-**Proposed tuning targets (part of P5):**
-- 0.2–0.6 pancakes per starting OL per game across the league;
-- 30–50% success per attempt;
-- at most 15% of attempts ending in a lost engagement.
+**Missing:** the yard thresholds.
 
-Only the constants inside the stated bounds may move to meet them.
+**Recommendation:**
+- A completed rushing attempt earns one charge if it gains at least **4 yards** (Developing), **3** (Practiced), **2** (Expert) or **1** (Mastered).
+- The same thresholds apply to all three forms.
+- Losses and no-gain runs never charge.
 
-**Example:**
-- OL: Strength 70, Blocking 75, Tackling 40, Awareness 60.
-- DL: Strength 60, Agility 65, Tackling 50.
-- A = 0.125, so an attempt is offered.
-- p = 0.36. On failure, r = 0.66.
+**Why:**
+- The text says "thresholds", plural, in Progression, which points to a mastery scale.
+- Mastery then makes the charge come faster without changing the approved guaranteed tackle break.
+
+**Departures:** none. This fills a gap.
+
+The Dex's one-second wording is already retired by spec §19. It is listed for removal in §11.
 
 ---
 
-## 3. Exact event order (P6)
+## P3 — Beacon Lane: how long the field lasts
 
-### Football play
+**In plain language:** When Lumini catches a pass for a first down, it places a golden field for the next offensive play. Teammates who finish a play inside it get their cooldowns sped up by one step. The approved text says to "keep the existing lifetime", but no lifetime was ever written down.
+
+**Approved text** (LIG-01-F, Lumini → Photara; Common WR):
+
+| Section | Approved rule |
+| --- | --- |
+| Trigger / eligibility | Lumini; common; WR; After own reception that gains a first down while ready, bank next offensive field. |
+| Targets / placement | 8-wide by 6-long Light rectangle at upcoming fixed 5-yard LB reference, centered on initial ball lateral position. |
+| Core resolution | Non-Light finishing a participating scrimmage play inside Light gets one extra cooldown unit after ordinary decrement on shortest-running positive repeatable signature cooldown. One benefit per monster per play. No charge-bar or once-use restoration. Same-type neutrality and bench pause apply. |
+| Recharge / frequency | Creator cooldown 6 / 5 / 4 / 3 offensive plays; starts creation and cannot receive its own field recharge. |
+| Lifetime / persistence | Pending carries halves; created common field clears half. Spawn play counts. |
+| Exceptions / counterplay | Receiver can help enemy recharge. Light family immune gains no acceleration. Ordinary status timers untouched. |
+| Visuals | Golden low rectangle with small clock particles along perimeter. |
+| Progression / notes | Approved Light field exposure cadence finalized in closeout10. Keep existing creator lifetime/placement/mastery. |
+
+**Missing:** the lifetime in plays.
+
+**Recommendation:**
+- The field lasts **1 / 1 / 2 / 2 participating offensive scrimmage plays, counting the play it appears on**, by mastery (Developing → Mastered).
+- The same lifetime applies to both forms.
+- It clears at halftime, as already approved.
+
+**Why:**
+- Every comparable Common field uses exactly this scale: Runway, Shadow Patch and Bulwark Grid.
+- The creator's cooldown is never shorter than 3 plays, so the field always expires before Lumini can create a new one.
+
+**Departures:** none. This fills a gap.
+
+## P4 — Mastery-only values apply to every form
+
+**In plain language:** Seven abilities list numbers only by mastery tier, not by form:
+- Lightning Rod;
+- Emergency Cover;
+- Beacon Lane;
+- Dawn Song;
+- Anchor Plate;
+- Iron Lungs;
+- Tempered Guard.
+
+This confirms that a first-form and an evolved monster at the same mastery tier get the same value.
+
+**Recommendation:** confirm.
+
+**Departures:** none. This interprets the text as written.
+
+---
+
+## P5 — Pancakes: formulas and tuning bounds
+
+**In plain language:**
+- Once per play, an offensive lineman who has clearly won his block gets one chance to flatten the defender.
+- If it works, the defender is Knocked Down for the rest of the play.
+- If it fails, the lineman's Awareness decides whether he keeps his block.
+- If he doesn't keep it, he loses the block and stumbles.
+
+**What is already approved:**
+
+| Source | Rule |
+| --- | --- |
+| Spec §12 | One ordinary attempt per OL per play; establish an advantage first; Awareness informs attempt risk and failure recovery; Strength, Blocking and Tackling contribute; defender Strength/Agility resist. **"Exact contest weights and thresholds are not authorized for Claude to invent."** |
+| Spec §10 | Success applies Knocked Down through the shared status gate, lasting the rest of the play. |
+| Spec §9 | Failure Stumbled = lose 40% of current speed, normal re-acceleration, block ends, legal re-engagement only. |
+| Round 1, item 7 | Failure does not automatically cause Stumbled; Awareness decides recovery; replace the old timer with an advantage condition. |
+
+So every number below is a **proposal for you to approve**, as the spec requires.
+
+| Step | Proposed formula | Start | Bounds tuning may use | Plain language |
+| --- | --- | --- | --- | --- |
+| Lineman block score | B = 0.6 Blocking + 0.4 Strength | from today's engine | not tunable | How well the lineman holds the block (unchanged from today). |
+| Defender shed score | DL, CB, S: S = 0.5 Agility + 0.3 Strength + 0.2 Tackling. LB: S = 0.5 Strength + 0.3 Agility + 0.2 Tackling | proposal | not tunable | How well the defender escapes. Today everyone uses the LB formula; this follows the approved roles (Agility first for DL, CB and S). |
+| Advantage | A = (B − S) / 100, type-scaled as today | — | — | How clearly the lineman is winning. |
+| When a chance appears | The first time A ≥ θ during a block. Checked when the block starts and when it switches between pass and run blocking. | θ = 0.10 | 0.05–0.20 | Only a clearly winning lineman gets a chance. |
+| Pancake power | P = 0.4 Strength + 0.4 Blocking + 0.2 Tackling (lineman) | proposal | not tunable | |
+| Resistance | R = 0.6 Strength + 0.4 Agility (defender) | proposal | not tunable | |
+| Success chance | p = clamp(0.30 + 1.5 × (P − R)/100, 0.05, 0.80) | b 0.30, s 1.5, floor 0.05, ceiling 0.80 | b 0.20–0.40; s 1.0–2.0; floor 0.02–0.10; ceiling 0.70–0.90 | Even monsters: 30%. Never below 5% or above 80%. |
+| Recovery after a miss | r = clamp(0.30 + 0.60 × Awareness/99, 0.30, 0.90) | c 0.30, k 0.60, cap 0.90 | c 0.20–0.40; k 0.40–0.70; cap 0.80–0.95 | An aware lineman usually keeps the block. |
+| Miss, recovered | block continues unchanged; the attempt is used up | — | — | |
+| Miss, not recovered | block ends; Stumbled attempted through the shared gate | approved | — | |
+
+**Tuning targets:**
+- 0.2–0.6 pancakes per starting OL per game;
+- 30–50% of attempts succeed;
+- at most 15% of attempts end in a lost block.
+
+Only the constants marked tunable may move, and only inside their bounds.
+
+**Worked example:**
+
+| Monster | Ratings |
+| --- | --- |
+| Lineman | Strength 70, Blocking 75, Tackling 40, Awareness 60 |
+| DL | Strength 60, Agility 65, Tackling 50 |
+
+- B = 73, S = 60.5, so A = 0.125: a chance appears.
+- P = 66 and R = 62, so p = 0.36.
+- If it misses, r = 0.66.
+
+**Departures and interpretations, all flagged:**
+1. **Contest weights.** The shed, power and resistance weights, θ and the constants are new numbers. That is why they need your approval rather than being "fixed".
+2. **Shed formula change.** The new shed formula changes today's engine for DL, CB and S. It also affects ordinary block sheds, not only pancakes.
+3. **"Awareness informs attempt risk."** This is read as the risk of losing the block after a miss, which the recovery roll covers. If you also want Awareness in the success chance, say so.
+4. **Recovered miss.** A recovered miss leaves the block in place. Spec §9 says the failed engagement "ends", but round 1 item 7 says Awareness can prevent that, so item 7 governs.
+
+---
+
+## P6 — Exact event order
+
+**In plain language:** When several things happen at once, this fixes which happens first, so every replay of a seed gives the same result. Within any one step, ties go to event order, then source ID, then ability ID (spec §9). There is never a random tie roll.
+
+### Football
 
 **A. Before the snap**
-1. Possession and period transitions. At halftime: clear non-legendary fields, restore 50% stamina, keep the approved legendary-field exceptions.
+1. Possession and period changes. At halftime:
+   - clear non-legendary fields (keeping the approved Burning Wake and Tsunami Line exceptions);
+   - restore 50% of maximum stamina (spec §12).
 2. Serve pending absences (Sovereign Arm).
-3. Place pending fields against the upcoming formation reference.
-4. Show placed fields and readiness to both teams.
-5. Both teams choose plays; audibles happen here.
+3. Place pending fields against the upcoming formation reference (spec §11).
+4. Show the placed fields and readiness to both teams.
+5. Both teams choose their plays; audibles happen here.
 6. Manual activation: Dragon Roar at the field-goal decision.
-7. Snap. Record the formation and on-field participants.
+7. Snap. Record the formation and the on-field participants.
 
-**B. Each 0.05 s tick.** Today's engine order, with Task 8 steps inserted at fixed points:
+**B. Every 0.05 s tick.** Today's engine order, with the new steps (marked ★) inserted at fixed points:
 1. Position history.
 2. QB facing.
 3. Snap positions (first tick only).
-4. Field exposure: entering and leaving fields, Electric first-entry Stunned rolls, field movement modifiers recalculated.
-5. Auras and timed ability effects.
-6. Offense: status disables (Stunned, Knocked Down) stop steering. Steering and route cuts, including Water-slip Stumbled checks at sharp cuts and stops. Blocks, with the pancake check inside the engagement.
+4. ★ Field exposure:
+   - entering and leaving fields;
+   - Electric first-entry Stunned rolls;
+   - field movement modifiers recalculated.
+5. ★ Auras and timed ability effects.
+6. Offense:
+   - ★ status disables (Stunned, Knocked Down) stop steering;
+   - steering and route cuts, including ★ Water-slip Stumbled checks at sharp cuts and stops;
+   - blocks, with ★ the pancake check inside the block.
 7. Defensive read update.
-8. Defense: the same status and steering rules; sheds.
-9. Movement integration (unengaged actors).
-10. Body separation and object collisions (walls, guards, gates, snowballs).
+8. Defense:
+   - the same status and steering rules;
+   - sheds.
+9. Movement for players not engaged in a block.
+10. Body separation, then ★ object collisions (walls, guards, gates, snowballs).
 11. Ball flight and catch resolution.
-12. Contact: sacks and tackles, then the fumble roll (a Shielded save happens here), then strips.
+12. Contact, in this order:
+    1. sacks and tackles;
+    2. the fumble roll, where ★ a Shielded save happens;
+    3. strips.
 13. Boundaries.
-14. Ability triggers from this tick's events, in event order. Ties go to source ID, then ability ID.
+14. ★ Ability triggers from this tick's events, in event order. Ties go to source ID, then ability ID.
 
 **C. Whistle**
 1. Fix the play result.
-2. Clean up within-play effects: Stumbled, Knocked Down, rest-of-play Stunned, clones, guards, walls, gates, projectiles, afterimages.
-3. Close the play's telemetry.
+2. Clear within-play effects:
+   - Stumbled;
+   - Knocked Down;
+   - rest-of-play Stunned;
+   - clones, guards, walls, gates and projectiles;
+   - afterimages.
+3. Close the play's records.
 
-**D. End of play**
-1. Stamina drain for participants, then the exhaustion flag.
-2. Status durations decrement for participants, excluding the application play.
-3. Field lifetimes decrement and expire.
-4. Cooldowns decrement, then the Light field's extra unit (after the ordinary decrement, per §11), then charges.
-5. Mastery credits.
-6. Pending effects are queued for the next snap.
-7. Reward and telemetry ledger entry.
+**D. After the play**
+1. Stamina drain for participants, then the exhaustion check.
+2. Status durations count down for participants. The play a status was applied on doesn't count.
+3. Field lifetimes count down; expired fields are removed.
+4. Cooldowns count down, then the Light field's extra step (after the ordinary step, per spec §11), then charges.
+5. Mastery credit.
+6. Pending effects queued for the next snap.
+7. Reward ledger and records entry.
 
 ### Beast Clash exchange
 
-1. **Round start.** Reserve start-of-round hooks in stable ID order (Eclipse Call, then Second Wind before initiative).
-2. **Initiative.** Explicit interrupts, then priority attacks (Night Swoop), then ordinary speed, then a seeded tie.
-3. **Each actor's normal turn, in initiative order:**
-   1. Turn-start adjustments: Lightning Rod transfer and its one-turn decrement.
-   2. Stunned check. A skipped turn still counts as a turn.
+1. **Round start:** reserve start-of-round effects in stable ID order (Eclipse Call, then Second Wind before initiative).
+2. **Initiative:** explicit interrupts, then priority attacks (Night Swoop), then ordinary speed, then a seeded tie-break.
+3. **Each active monster's turn, in initiative order:**
+   1. Turn-start adjustments: the Lightning Rod transfer and its one-turn countdown.
+   2. Stunned check. A skipped turn still counts as a turn, as approved for Arc Rebound and Heat Mirage.
    3. Choose the action. A team support action (Feather Relay) replaces the attack.
-   4. **Launch:** pay costs, spend once-uses, lock targets, Confused redirect roll, Snowbank Shot's launch accuracy.
+   4. **Launch:**
+      - pay costs;
+      - spend once-only effects;
+      - lock targets;
+      - Confused redirect roll;
+      - Snowbank Shot's own launch accuracy.
    5. Interception: Stone Divide.
-   6. **Explicit evasion effects only:** Heat Mirage decoy and ability-specific miss sources (§7). There is no ordinary evasion roll.
-   7. Lethality hooks before damage: Emergency Cover redirect, Last Root survival at 1 HP.
-   8. Damage: Guarded reduction, then the shield pool, then HP. Shared Burden split.
-   9. Attached effects: status attempts through the shared gate (a blocked status never cancels damage), Spore Detonation removal.
-   10. Retaliation and reactions to that hit, with no chains.
-   11. After the whole hit: Glacier Wall rebuild, Wing Shelter, Mirage Veil, Forge Swipe, Shadow Pounce counter, Rubble Reprisal.
-   12. Follow-ups that need retaliation resolved first: Twin Thunder bolts, Bank Shot ricochet.
-   13. Knockouts: clear status and episode, the replacement enters, entry effects run, then Victory Surge.
-   14. End of turn: Afflicted damage, then that turn's decrements, then Dawn Song pulses and owner and recipient countdowns.
-4. **Rotation phase** (§5).
-5. **End of exchange:** delayed impacts (Falling Star, Faultline). Targets are frozen when the impact starts.
+   6. **Explicit miss effects only:** the Heat Mirage decoy and the ability-specific miss sources in P10. There is no ordinary evasion roll.
+   7. Survival effects before damage:
+      - Emergency Cover redirect;
+      - Last Root's survival at 1 HP.
+   8. Damage: Guarded reduction, then the shield, then HP. Shared Burden splits here.
+   9. Attached effects:
+      - status attempts through the shared gate (a blocked status never cancels the damage);
+      - Spore Detonation removal.
+   10. Retaliation and reactions to that hit, with no chains (Stoke the Flame fires here).
+   11. After the whole hit:
+       - Glacier Wall rebuild;
+       - Wing Shelter;
+       - Mirage Veil;
+       - Forge Swipe;
+       - Shadow Pounce counter;
+       - Rubble Reprisal.
+   12. Follow-ups that need retaliation settled first: Twin Thunder bolts, Bank Shot ricochet.
+   13. Knockouts:
+       1. clear the knocked-out monster's status;
+       2. the replacement enters and its entry effects run;
+       3. Victory Surge.
+   14. End of turn:
+       1. Afflicted damage;
+       2. that turn's countdowns;
+       3. Dawn Song pulses;
+       4. owner and recipient countdowns.
+4. **Rotation phase:** see P8.
+5. **End of exchange:** delayed impacts (Falling Star, Faultline). Their targets are fixed when the impact starts.
 6. **End check:** a double knockout goes to the existing seeded coin.
 
-Simultaneous events within one step follow spec §9: event order, then source ID, then ability ID.
+**Departures:**
+- **Football:** none. Spec §9 requires preserving the established order, and the new steps are inserted into it, not reordered.
+- **Clash rotation (one engine change, flagged):** rotation moves from the *start* of the exchange to *after both turns*. No approved rule fixes the old placement, but two approved contracts require the new one:
+  - Falling Star / Faultline: "impact at end of following exchange after rotations";
+  - Cinder Clamp: "next legal rotation opportunity".
 
 ---
 
-## 4. Special-teams participation: does it need new return gameplay?
+## P7 — Special teams: is new return gameplay needed?
 
-**No for participation itself. Yes only for Dawn Signal's effect.**
+**In plain language:**
+- **Counting who played on special teams needs no new gameplay.**
+- **One ability, Dawn Signal, does need it.** Its approved text requires a real kickoff-coverage player to run faster, and today no coverage players exist.
 
-- **Today:** kicks resolve by formula, reading only the kicker and one returner. No blocker or tackler exists, and no tackle is credited.
-- **Participation accounting:** a declared special-teams unit of 7 per side, taken from a depth list, counts for status durations, stamina drain and rewards. This changes no play outcome.
-- **The Dex abilities that use kicks:**
-  - Stone Cradle (ends a caught punt), Echo Landing and Gear Grid (earned by kick results), Frostmark, Second Chance and Dragon Roar all **work within the existing formulas.**
-  - **Dawn Signal** makes a kickoff-coverage teammate faster "for that kickoff play". Under the formula, coverage speed affects nothing.
+**Today's engine:**
+- Kicks and returns are resolved by a formula that reads only the kicker and one returner.
+- Nobody else runs, blocks or tackles, and no return tackle is credited.
 
-**P7, choose one:**
-- **(a)** Add one bounded input to the kickoff return formula: return yards × (1 − 0.5 × the Quickened bonus). A +15% / +20% bonus means −7.5% / −10% return yards.
-- **(b)** Keep returns unchanged. Dawn Signal stays inert until a special-teams simulation exists, and is reported as an outlier.
+**Participation (no new gameplay):**
+- Each side declares a special-teams unit of 7 from a depth list.
+- Those monsters count as participating for status countdowns, stamina drain and rewards.
+- No play result changes.
+- This answers round 1 item 21 ("check actual special-teams actors").
 
-Recommendation: **(a)**. Under either option, no return tackles are credited until coverage is simulated, so tackle grading is unaffected.
+**Every kick-related ability, checked against today's formula:**
+
+| Ability | What it needs | Works with today's formula? |
+| --- | --- | --- |
+| Stone Cradle | ends a caught punt at the catch spot ("Current engine resolves punts abstractly; no new bounce system requested") | Yes |
+| Gear Grid | punt net distance ("current return sim sufficient without bounce physics") | Yes |
+| Echo Landing | kickoff caught and returned without a TD; return-end spot | Yes |
+| Frostmark, Second Chance, Dragon Roar | field-goal results | Yes |
+| Tsunami Line, Hoard Flight, Daybreak | interception or recovery returns from scrimmage | Yes (scrimmage plays, not kicks) |
+| **Dawn Signal** | **a coverage teammate who runs faster** | **No** |
+
+**Dawn Signal approved text** (LIG-02-F, Solchirp → Heliark; Common K):
+
+| Section | Approved rule |
+| --- | --- |
+| Trigger / eligibility | Solchirp; common; K; After successful extra point ONLY, bank support for own next kickoff. Field goals excluded. |
+| Targets / placement | One nearest eligible non-K teammate on kickoff coverage at snap, stable lineup tie. |
+| Core resolution | Attempt Quickened +15 / +20% Speed by Solchirp / Heliark for that kickoff play only; increases max speed AND acceleration. Does not affect kick distance or returner. |
+| Recharge / frequency | No extra cooldown; max one pending, consumed on eligible kickoff cast even status blocked. |
+| Lifetime / persistence | Pending persists halftime if kickoff delayed. Buff clears whistle; kickoff is one play. No eligible target retains token until next own kickoff. |
+| Exceptions / counterplay | No guaranteed tackle/touchback; existing different status blocks; Stunned source at cast delays pending. |
+| Visuals | Song notes fly to coverage teammate; green boot badge if accepted. |
+| Progression / notes | Quickened strength +0 / +3 / +6 / +9 percentage points by mastery. Special teams may lack controllable coverage actors; **needs real coverage simulation, not decorative stat bonus. Flag implementation prerequisite.** |
+
+**Options:**
+- **(a) Live kickoff returns. Recommended; the only option with no departure.**
+  - Kickoffs become a real play: 7 versus 7 using the existing movement, blocking and tackling code.
+  - Kick distance and hang time still come from today's kicking formula.
+  - Punts, field goals and extra points stay as they are.
+  - Consequences:
+    - kickoff return yards and touchdowns will change;
+    - return tackles get credited and graded;
+    - a balance check against today's return averages is needed;
+    - it adds roughly one live play per score to simulation time.
+- **(b) Leave Dawn Signal inert until a later task builds coverage.**
+  - **Departs from spec §9,** which says to implement every approved ability.
+  - Dawn Signal would be reported as unimplemented.
+- **(c) Reduce return yards by a factor.** Return yards × (1 − 0.5 × the Quickened bonus).
+  - **Departs from Dawn Signal's own approved note** ("not decorative stat bonus").
+  - Listed only because revision 1 proposed it.
 
 ---
 
-## 5. Rotation timing and the reduced-entry rule (P8)
+## P8 — Clash rotation: timing and entry cost
 
-**Timing.**
-- The voluntary rotation phase moves to **after both normal turns** of each exchange, before delayed impacts. This is the only placement that satisfies both "impact at end of following exchange after rotations" and Cinder Clamp's "next legal rotation opportunity".
-- Each side may rotate voluntarily at most once every 4 exchanges (existing cadence).
-- Requests are decided from the state at the start of the phase. They resolve with side A, then side B, each in this order:
-  1. Cinder Clamp delay check;
-  2. Riptide Pursuit's hit before departure;
+**In plain language:** "Rotation" means voluntarily swapping the active fighter for a reserve. Two questions:
+- *when* in the exchange the swap happens;
+- whether the incoming monster pays a price on arrival.
+
+**Timing (recommendation, fills a gap):**
+- Swaps happen **after both monsters have taken their turns**, before delayed impacts.
+- Each side may swap at most once every 4 exchanges (existing cadence).
+- Requests are decided from the state at the start of the phase.
+- They resolve side A, then side B, each in this order:
+  1. Cinder Clamp's delay check;
+  2. Riptide Pursuit's hit on the departing monster;
   3. Shell Harvest cash-out;
-  4. departure;
+  4. the departure;
   5. the entering monster's entry effects;
   6. Cold Welcome and Downdraft on the entrant.
-- The entering monster first acts in the **next** exchange.
+- The entrant first acts in the **next** exchange.
 
-**Reduced-entry rule.** Moving rotation after both actions removes the reason for the old penalty: the swap no longer gives the new monster an action in the same exchange, exactly like a knockout replacement. **Recommendation: no reduced action ("free").**
+**Entry cost: what is approved now.**
+- The approved Clash balance setting is `swapCost: 'half'` (Gate B.2; `src/clash/balance-manifest.js`, `APPROVED_SETTINGS`). Under it the incoming monster **acts in the same exchange** at half strength:
+  - damage, heals and shields are halved;
+  - status chances are halved;
+  - effects without a size (sweeps, dodge setups, stacking boosts) are withheld;
+  - entry effects stay full.
+- Round 1 item 26 approved rotation but asked for "half-strength entry" to be explained before it is approved for Task 8.
 
-If you prefer to keep a cost, the precise rule would be **"half"**:
-- **Applies to:** the incoming monster's first normal turn after a *voluntary* rotation.
-- **Halved** (before rounding):
-  - every damage multiplier, including ability-enhanced attacks;
-  - heals and shields it grants;
-  - its chances to apply statuses.
-- **Unchanged:**
-  - entry effects;
-  - reactions, retaliation and defensive effects;
-  - charges, counters and trigger progress (they still advance);
-  - once-uses (still spent);
-  - knockout replacements and forced rotations.
-- Nothing is withheld outright.
-- **Consequence:** an ability built around entry, such as Ambush (130–175% on first active entry), would be halved after a voluntary rotation.
+**The problem:**
+- Moving the swap after both turns means the incoming monster no longer acts in the swap exchange, so "half" as written no longer applies to anything.
+- With no cost at all, a swap would cost **nothing**: the outgoing monster already acted in full.
+- That makes swapping cheaper than the approved balance, which made a swap cost half an action.
+
+**Options:**
+- **(a) Half on the first turn. Recommended.** The half-strength cost moves to the entrant's first normal turn after a *voluntary* swap.
+  - **Halved** (before rounding):
+    - every damage multiplier, including ability-boosted attacks;
+    - heals and shields it grants;
+    - its status-application chances.
+  - **Unchanged:**
+    - entry effects;
+    - reactions, retaliation and defensive effects;
+    - charges, counters and trigger progress (they still advance);
+    - once-only effects (still spent);
+    - knockout replacements and forced swaps (no cost).
+  - **Nothing is withheld outright.**
+  - **Departures:**
+    1. The cost applies one exchange later than today.
+    2. Size-less effects are no longer withheld. Withholding them would switch off approved Dex abilities on that turn; halving doesn't.
+  - **Consequence to note:** an entry-based ability such as Ambush (130–175% on first active entry) is halved after a voluntary swap, but not after a knockout replacement.
+- **(b) Free.**
+  - **Departs from the approved `half` setting.**
+  - Makes swapping cheaper than the approved balance.
+- **(c) The swap uses the side's turn.**
+  - The outgoing monster forfeits its turn in the swap exchange.
+  - **Departs from the approved setting.** It was the Gate B configuration that Gate B.2 replaced.
 
 ---
 
-## 6. Maximum simultaneous effects and cap behaviour (P9)
+## P9 — Maximum simultaneous effects and what happens at a cap
 
-The limits below are computed from the contract text. Each ability gets a per-source maximum:
+**In plain language:** This gives the most fields and objects that can ever exist at once, so the game can be tested at that worst case. It also fixes what happens if a limit is ever reached: nothing is cancelled.
 
-**ceil(lifetime ÷ minimum re-creation interval) × rectangles per creation.**
+**Method:**
+- Each ability's maximum is (lifetime ÷ shortest time before it can make another) rounded up, × the pieces it makes each time.
+- Each team takes the worst case over its 19 depth-chart slots: the strongest field maker for each position, in every slot, with duplicate families allowed.
+- These maxima are worked out from the contract text. A static test will recompute them from the Dex.
 
-Each team then takes the worst case over its 19 depth-chart slots, putting the strongest field creator for each position in every slot. Duplicate copies of a family are allowed.
+**Football field rectangles, per-source maximum:**
 
-**Football field rectangles.**
-
-| Per-source maximum | Abilities |
+| Max | Source |
 | --- | --- |
-| 4 (Frostmark: lifetime up to 4 opposing plays, a new field after each made FG) | K |
-| 3 (Echo Landing: lifetime up to 3, earned per returned kickoff) | K |
-| 2 (Bloom Break: 2 rectangles. Crosswind Rescue: 1 pair. Bulwark Grid: earnable on its own creation play) | WR, S, TE |
-| 1 (all others: cooldown or charge interval ≥ lifetime, or "max one own field") | QB, RB, DL, LB, CB, S, K and the rest |
+| 4 | Frostmark (K): lasts up to 4 opposing plays; a new one after each made field goal |
+| 3 | Echo Landing (K): lasts up to 3; one per returned kickoff |
+| 2 | Bloom Break (WR, 2 patches); Crosswind Rescue (S, 1 pair); Bulwark Grid (TE, can re-earn on its creation play) |
+| 1 | every other field ability (its cooldown or charge is at least its lifetime, or it allows only one at a time) |
 
-Worst case per team, by slot:
+**Worst case per team, by slot:**
 
-| Slots | Count × rectangles |
-| --- | --- |
+| Slot | Rectangles |
+| --- | ---: |
 | QB | 1 |
 | RB | 1 |
-| WR ×3 | 6 |
+| WR × 3 | 6 |
 | TE | 2 |
-| OL ×3 | 0 |
-| DL ×3 | 3 |
-| LB ×2 | 2 |
-| CB ×2 | 2 |
-| S ×2 | 4 |
+| OL × 3 | 0 |
+| DL × 3 | 3 |
+| LB × 2 | 2 |
+| CB × 2 | 2 |
+| S × 2 | 4 |
 | K | 4 |
 | **Total** | **25** |
 
 Both teams: **50 rectangles**.
 
-**Football physical objects per play.** Only 7 per side are on the field.
+**Physical objects in one play** (7 per side on the field):
 
-| Side | Worst case | Total |
+| Side | Worst case | Objects |
 | --- | --- | ---: |
-| Offense | QB 2 guards (Stormguard); 3 WR × (1 tornado + 3 blasts) = 12; TE 1 wall or afterimage; 2 OL × 1 Landslide wall = 2 | 17 |
-| Defense | 3 DL × 2 gate panels = 6; 2 LB × 2 snowballs = 4; 2 CB × 1 Frost Nip snowball = 2 | 12 |
+| Offense | QB: 2 Stormguard guards. 3 WR × (1 tornado + 3 blasts) = 12. TE: 1 wall or afterimage. 2 OL × 1 Landslide wall = 2. | 17 |
+| Defense | 3 DL × 2 gate panels = 6. 2 LB × 2 snowballs = 4. 2 CB × 1 Frost Nip snowball = 2. | 12 |
 | **Both** | | **29** |
 
-**Living Terrain:** 4 vine clumps per Nature–Earth overlap. No current ability creates an Earth field, so today it is 0.
+**Living Terrain:** 4 vine clumps per Nature–Earth overlap. No current ability makes an Earth field, so today the count is 0.
 
-**Beast Clash, per side** (lineup at most 5):
-- delayed effects: one Falling Star or Faultline per member → **5**;
-- constructs: Twin Thunder 2 per Voltarch → 2 per Voltarch copy (2 if legendaries are unique; 10 in theory);
-- heal schedules (Dawn Song): one per caster per target → at most 5 × 5.
+**Beast Clash, per side** (at most 5 in a lineup):
 
-**Cap behaviour (P9).**
-- Caps equal these computed maxima: 50 fields, 29 objects per play, 4 clumps per overlap, 5 delayed effects per Clash side, 2 constructs per Voltarch.
-- A static test recomputes them from the Dex contracts. Adding content that raises a maximum fails the build until the cap is raised.
-- **At runtime a legitimate spawn is never refused, delayed or deleted.** If a count ever exceeded its cap, the spawn would still happen, a diagnostic would be logged and the test suite would fail, because that can only be a defect.
-- Under heavy load only optional particles and secondary visuals are reduced (§13/§14). Gameplay objects, their collision and their outlines always render.
-- **Placement when the nominal spot is illegal:** deterministic outward search on a ½-yard grid. Ties go to the smaller lateral offset, then the smaller depth offset, then the stable ID. If nothing is legal, the ability's own rule applies (for example, Stormguard summons only if both guards fit); otherwise readiness is kept.
+| Effect | Maximum |
+| --- | --- |
+| Delayed impacts | 5 (one Falling Star or Faultline per member) |
+| Twin Thunder constructs | 2 per Voltarch |
+| Dawn Song heal schedules | one per caster per target, so at most 25 |
+
+**Recommended cap behaviour:**
+- **Cap values:** 50 fields, 29 objects per play, 4 clumps per overlap, 5 delayed impacts per Clash side, 2 constructs per Voltarch.
+- **Build check:** content that raises a maximum fails the build until the cap is raised.
+- **During play, a legitimate effect is never refused, delayed or deleted.** If a count somehow went over, the effect still happens, a diagnostic is logged and the test suite fails, because that can only be a bug.
+- **Under heavy load:** only optional particles and secondary visuals are reduced (spec §14). Gameplay objects, their collision and their outlines always draw.
+- **If a spot is illegal**, the game searches outward on a half-yard grid:
+  - ties go to the smaller sideways shift, then the smaller depth shift, then stable ID;
+  - if nothing fits, the ability's own rule applies (for example, Stormguard summons only if both guards fit);
+  - otherwise the ability stays ready.
+
+**Departures:** none. Spec §14 already says to reduce secondary visuals first and never misrepresent state; this adds the never-refuse rule and the test.
 
 ---
 
-## 7. Evasion-dependent contracts: ability-specific fixes (P10)
+## P10 — Abilities that only trigger on a miss
 
-The approved rule is that **ordinary attacks connect.** Misses happen only through explicit ability effects:
-- Heat Mirage's decoy diverts one whole attack, with a 30 / 35 / 40 / 45% chance.
-- Snowbank Shot has its own 80% launch accuracy.
+**In plain language:**
+- Under the approved rule, ordinary attacks always connect.
+- Misses come only from explicit effects:
+  - Heat Mirage's decoy (30 / 35 / 40 / 45% to divert one whole attack);
+  - Snowbank Shot's own 80% launch accuracy.
+- That leaves three abilities that trigger *only* on a miss with almost nothing to trigger them.
+- This decision chooses an ability-specific fix for each. There is **no universal evasion system**.
 
-**(a) No change needed: 39 contracts.** Each says something like "normal evasion applies", "each hit independently respects evasion" or "spent even if evaded". Under the approved rule these clauses apply only when an explicit effect is present (a decoy, or a miss source from (b)), so the contracts work as written:
-- Falling Star, Molten Brand, Faultline, Shared Burden, Wash Away, Riptide Charge, Riptide Pursuit (undodgeable: it bypasses decoys), Spore Detonation, Canopy Assist, Phase Strike, Circuit Breaker, Victory Surge, Twin Thunder, Emergency Cover;
-- Rubble Reprisal, Bank Shot, Stone Divide, Cold Welcome, Snowbank Shot, Gust Hop, Night Swoop, Predator Rhythm, Ambush, Refraction, Radiant Pursuit, Daybreak Lance, Gear Shot (no critical-hit system exists; none to preserve);
+**No change needed: 39 contracts.** Their wording ("normal evasion applies", "spent even if evaded", "each hit independently respects evasion") simply means "if an explicit miss effect applies". They work as written:
+- Falling Star, Molten Brand, Faultline, Shared Burden, Wash Away, Riptide Charge;
+- Riptide Pursuit (undodgeable: it bypasses decoys);
+- Spore Detonation, Canopy Assist, Phase Strike, Circuit Breaker, Victory Surge, Twin Thunder, Emergency Cover, Rubble Reprisal, Bank Shot, Stone Divide, Cold Welcome, Snowbank Shot, Gust Hop, Night Swoop, Predator Rhythm, Ambush, Refraction, Radiant Pursuit, Daybreak Lance;
+- Gear Shot (there is no critical-hit system, so none needs preserving);
 - Iron Bite, Mirage Veil, Foresight, Echo Strike, Astral Strike, Dragon Pounce, Coil Renewal, Dragonhide, Dragon Roar, Sovereign Balance, Stoke the Flame, Cinder Clamp.
 
-**(b) Abilities that trigger on a miss.** Three would almost never trigger under "attacks connect", so each needs a fix.
+### Shadow Pounce (DAR-01-C, Umbrikit → Obscurat; Common CB; Balanced)
 
-| Ability | Problem | Fix (P10) |
-| --- | --- | --- |
-| **Shadow Pounce** (Umbrikit / Obscurat, Common CB, Balanced) | Triggers only when an enemy attack entirely misses Umbrikit, but nothing can make it miss. The contract says it grants "no passive *guaranteed* dodge". | Give the ability its own **shadow-step miss source**. While its counter is unused, each enemy normal attack against the active Umbrikit rolls **15% (Umbrikit) / 20% (Obscurat)** to miss entirely, which then triggers the approved counter (once per Clash). It is not guaranteed, it ends once the counter is used, and decoy and undodgeable rules apply as for Heat Mirage. Expected to fire in about 70% of Clashes where the owner takes 8 attacks. |
-| **Mind Game** (Enigmane, Rare TE, Disruptor; Clash) | Earns its trick only when an enemy attack misses Enigmane. | Its approved visual is already "purple afterimage flashes where missed attack landed". Make that the miss source: while no trick is stored, each enemy normal attack against the active Enigmane rolls **15%** to strike an **afterimage** (a full miss), earning the trick. Everything else is unchanged. |
-| **Arc Rebound** (Volcoil / Eelectra, Common RB, Balanced) | Triggers when *Volcoil's own* attack is evaded, which happens only against an enemy decoy or the miss sources above. | **Keep as written**, as a counter-pick against evasion monsters. Report it as a rare-trigger outlier in mastery pacing (spec §16 allows this). A redesign, for example triggering on an attack fully absorbed by a shield, would contradict its approved text ("a shield absorbing a connected attack is not a miss"), so it is not proposed. |
+| Section | Approved rule |
+| --- | --- |
+| Trigger / eligibility | First enemy normal-action attack, including an enhanced normal attack, whose entire attack misses the active, able source triggers a counter after the whole attack. Counters and reactions never qualify. |
+| Targets / placement | Same attacker if still active and alive; no target replacement. |
+| Core resolution | Counter at 70 / 80% normal damage by Umbrikit / Obscurat, standard evasion/type/shields; not ordinary attack for archetype perks. |
+| Recharge / frequency | One counter per Clash, committed at eligible miss; no passive guaranteed dodge is granted. |
+| Lifetime / persistence | If unable at reaction point, preserve use; no queue. No carry from actual Clash to another Clash. |
+| Exceptions / counterplay | Multi-hit move qualifies only if EVERY hit misses; shield absorption is not miss. No reaction to counters or own Confused self-hit. |
+| Visuals | Shadow crouches then lunges back along attack trail. |
+| Progression / notes | Counter power +0 / +5 / +10 / +15 percentage points by mastery. Needs completed-attack all-miss event, counter recursion guard and one-use state. |
 
-Football has no evasion concept, so no football contract is affected.
+**Problem:** nothing makes an enemy attack miss Umbrikit except an enemy using Snowbank Shot. In practice the counter almost never fires.
+
+**Options:**
+- **(a) Shadow-step. Recommended.**
+  - While the counter is unused, each enemy normal attack on the active Umbrikit rolls **15% (Umbrikit) / 20% (Obscurat)** to miss entirely, which triggers the approved counter.
+  - Once the counter is used, the shadow-step ends for that Clash.
+  - Undodgeable attacks bypass it, as with Heat Mirage.
+  - Over 8 enemy attacks, the counter fires in about 73% (Umbrikit) or 83% (Obscurat) of Clashes.
+  - **Departure:** this adds a chance-based dodge the contract doesn't contain. It respects "no passive *guaranteed* dodge", since it is neither guaranteed nor permanent, but it is still new behaviour.
+- **(b) Keep as written.**
+  - No departure.
+  - The ability is near-inert and is reported as an outlier.
+
+### Mind Game, Clash version (PSY-05-C, Enigmane; Rare TE; Disruptor)
+
+| Section | Approved rule |
+| --- | --- |
+| Trigger / eligibility | Direct enemy normal attack missing source completely earns one trick. Every hit of multihit attack must miss. Reactions cannot earn trick. |
+| Targets / placement | Next normal attack intended active enemy. Maximum one stored trick. No extra cooldown. |
+| Core resolution | Next performed normal attack consumes trick on launch even miss. Connected hit, including shield-absorbed hit, attempts Confused under usual slot rules. Base attack normal damage, Confused 25% self-side redirect chance. |
+| Recharge / frequency | No charge accumulation beyond one. No extra normal attack. Once launched trick spent even status blocked or evaded. |
+| Lifetime / persistence | Confused 1 / 2 / 2 / 3 recipient normal turns by mastery, application turn excluded under shared rules. Stored trick persists reserve, clears knockout/Clash end. Existing status mode carry applies. |
+| Exceptions / counterplay | No extra accuracy roll for application once hit connects, only shared eligibility. Exact enhanced/ordinary archetype policy follows final shared reconciliation. |
+| Visuals | Purple afterimage flashes where missed attack landed to signal stored trick. Next hit sends ghostly grin past enemy, standard Confused badge on acceptance. |
+| Progression / notes | Disruptor retained. All seven A approved. Duration varies, fixed 25% redirect chance at every tier. |
+
+**Problem:** the same as Shadow Pounce. A trick is earned only on a miss.
+
+**Options:**
+- **(a) Afterimage. Recommended.**
+  - While no trick is stored, each enemy normal attack on the active Enigmane rolls **15%** to strike an afterimage. That is a full miss, and it earns the trick.
+  - The approved visual ("afterimage flashes where missed attack landed") already shows this.
+  - **Departure:** this adds a chance-based miss the contract doesn't contain.
+- **(b) Keep as written.**
+  - No departure.
+  - The ability is near-inert and is reported as an outlier.
+
+### Arc Rebound (ELE-02-C, Volcoil → Eelectra; Common RB; Balanced)
+
+| Section | Approved rule |
+| --- | --- |
+| Trigger / eligibility | While ready, an ordinary normal attack is evaded by normal dodge, decoy or applicable miss effect. A shield absorbing a connected attack is not a miss. |
+| Targets / placement | Redirect once at the first living enemy reserve in stable lineup order. No eligible reserve: preserve readiness; do not store damage. |
+| Core resolution | Rebound deals 60% of normal attack damage for Volcoil, 75% for Eelectra. New target resolves its own normal type, damage reduction, shield and evasion checks. A second miss ends the sequence. |
+| Recharge / frequency | Cooldown 5 / 4 / 3 / 2 subsequent owner normal turns, starts at launch even if rebound misses. Stunned skipped normal turns count; reserve and reaction events pause. |
+| Lifetime / persistence | No stored rebound or recursive redirection. Ordinary original attack retains its normal resource accounting. |
+| Exceptions / counterplay | Rebound is reaction damage: no retaliation chain, extra normal turn, charge consumption, normal attack-counter progress or ordinary-only offensive archetype perks. Do not consume original attack resources twice. |
+| Visuals | Missed bolt curves sharply toward the reserve target. |
+| Progression / notes | Balanced archetype retained. Different trigger and target from knockout-earned Victory Surge and voluntary-exit Riptide Pursuit. |
+
+**Recommendation: keep as written. No departure.**
+- Here it is Volcoil's *own* attack that has to miss, so it triggers against Heat Mirage, Shadow Pounce or Mind Game users. That makes it a natural counter-pick.
+- It is reported as a rare-trigger outlier for mastery pacing, which spec §16 allows.
+- Making a shield block count as a miss would contradict its approved text, so that is not proposed.
+
+Football has no evasion, so no football ability is affected.
 
 ---
 
-## Decisions requested
+## Summary of decisions requested
 
-| ID | Decision | Recommendation |
-| --- | --- | --- |
-| P1 | Stoke the Flame counterburst damage | 60 / 70 / 80% by form, +0 / 5 / 10 / 15 points by mastery |
-| P2 | Blazing Resolve qualifying carry | at least 4 / 3 / 2 / 1 yards by mastery, all forms |
-| P3 | Beacon Lane lifetime | 1 / 1 / 2 / 2 participating offensive plays including spawn |
-| P4 | Mastery-only values apply to every form (7 abilities) | Confirm |
-| P5 | Pancake formulas, bounds and tuning targets | Approve the table in §2 |
-| P6 | Event order | Approve the football and Clash lists in §3 |
-| P7 | Dawn Signal effect | (a) bounded return-yards input |
-| P8 | Rotation after both actions; entry cost | After actions; no reduced action ("free") |
-| P9 | Caps and cap behaviour | Approve the computed caps and the never-refuse rule |
-| P10 | Miss-dependent fixes | Shadow Pounce 15 / 20% shadow-step; Mind Game 15% afterimage; Arc Rebound unchanged |
+| ID | Decision | Recommendation | Departure from an approved rule? |
+| --- | --- | --- | --- |
+| P1 | Stoke the Flame damage | 60 / 70 / 80% by form, +0 / 5 / 10 / 15 by mastery | No (fills a gap) |
+| P2 | Blazing Resolve carry threshold | at least 4 / 3 / 2 / 1 yards by mastery | No (fills a gap) |
+| P3 | Beacon Lane lifetime | 1 / 1 / 2 / 2 plays including the spawn play | No (fills a gap) |
+| P4 | Mastery-only values apply to every form | Confirm | No |
+| P5 | Pancake formulas and bounds | Approve the table | New numbers by design; changes today's shed formula for DL, CB and S |
+| P6 | Event order | Approve both lists | Clash rotation moves after both turns (engine change, required by two contracts) |
+| P7 | Special teams | Count participation; (a) live kickoff returns for Dawn Signal | (a) none; (b) and (c) depart |
+| P8 | Rotation timing and entry cost | After both turns; (a) half on first turn | (a) cost timing moves and nothing is withheld; (b) and (c) depart from `half` |
+| P9 | Caps and cap behaviour | Computed caps; never refuse a legitimate effect | No |
+| P10 | Miss-only abilities | Shadow Pounce shadow-step 15 / 20%; Mind Game afterimage 15%; Arc Rebound unchanged | Shadow Pounce and Mind Game (a) add behaviour; (b) keeps the text |
 
-The other items from round 2 (R2-1–7, R2-9–16, R2-18–22) carry their round-2 recommendations unless you say otherwise. R2-8 and R2-17 are withdrawn.
+## Other open items, outside P1–P10
+
+- **Round 1 item 16, Football Stunned.** Stunned disables a monster for the rest of the play (approved). It is still undecided how that interacts with a remaining multi-play duration. The round-2 proposal (R2-8) is withdrawn, and no replacement is offered without your direction.
+- **Round 1 item 6, TE Strength and contested catches.** Not approved. Only WR Strength is approved (spec §12). It stays as Clarify.
+- **Round 2 items.** R2-1–7, R2-9–16 and R2-18–22 carry their round-2 recommendations unless you object. R2-16 (entry cost) is replaced by P8.
+
+## §11 Contradictory active instructions to remove at consolidation
+
+When P1–P10 are resolved, these are rewritten or marked superseded in the GitHub specification and Dex data, before any new
+system is connected to gameplay:
+
+1. **`abilities.json` FIR-01-F, Blazing Resolve core resolution:** the "one live second" text. Spec §9 and §19 already retire it.
+2. **The phrases "normal evasion", "normal dodge" and "standard evasion"** in the 39 + 3 Clash contracts in P10. Restate them as "explicit miss effects".
+3. **Dawn Signal's "Flag implementation prerequisite" note.** Replace it with the P7 ruling.
+4. **`src/clash/balance-manifest.js`, `swapCost: 'half'`.** Redefine it under the P8 ruling.
+5. **Beacon Lane's "Keep existing creator lifetime", and Blazing Resolve's "thresholds are in Progression".** Replace them with the P3 and P2 values.
+6. **Spec §9's failed-pancake "End failed engagement".** Qualify it with the recovery roll (round 1 item 7, P5).
+7. **The Nov 5 natural-growth cap wording in spec §6.** Already marked superseded; delete it from the active text.
+8. **Legacy `src/data/species.js` and the old Nature multipliers.** These are retired once the Dex adapter is connected to gameplay (spec §3, §19).
