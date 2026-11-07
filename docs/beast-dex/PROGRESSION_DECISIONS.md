@@ -12,3 +12,14 @@ These owner decisions were made after the initial GitHub profile consolidation. 
 - Initial league rosters, including inherited player and opposing teams, should reflect some prior career training. This applies on initial creation, not on signing/trading/loading/training an existing individual. The amount, allocation formula and initial banked/partial points remain to settle. Draft/scouting prospect policy must be considered separately; do not generalize initial-veteran approval into unlimited past training for every prospect.
 
 The owner approved remaining-growth bookkeeping principles; the final audit must demonstrate that they coexist without double rewards, erased training, erased aging, repeated evolution gains or unintended rounding benefits.
+
+## Owner decisions, 2026-11-06 (Task 8 pre-flight)
+
+- **Natural growth: the Nov 6 allowance rule governs.**
+  - Compute automatic growth from the approved starting rating and the individual ceiling, independently of training investment. Early training does not reduce the allowance.
+  - All gains remain bounded by the individual ceiling. Reaching the ceiling never creates overflow or bonus training points.
+  - The Nov 5 rating-cap wording in the consolidated specification (§6 *Natural growth*) is superseded. It is marked so in `SPECIFICATION_BASELINE.md`.
+- **Task 8 scope includes all 120 Basics:** 192 families and 222 forms in total.
+  - Basics have no evolutions and no unique football or Beast Clash abilities.
+  - They keep the normal shared type rules, their Clash archetypes, the development systems and eligibility for teammate effects.
+  - Their unresolved integration decisions remain for owner approval: appearance rates, shared Clash actions, Apex distribution, contracts and roster generation. Inclusion in scope does not authorize inventing those rules.
