@@ -378,6 +378,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const carrier = ball.holder;
     if (carrier && carrier.team === 'off' && d.recognised) return { x: carrier.x, y: carrier.y }; // only a run HE has read (v42.14; was `|| isRun`)
     if (carrier && carrier.team === 'def') return { x: carrier.x, y: carrier.y };
+    if (KO && ball.inAir) return ball.landing; // a kickoff's coverage, blocked while the ball is in the air, still drives toward where it comes down
     const a = d.assignment;
     if ((a.a === 'rush' || a.a === 'contain') && qb) return d.state === 'gap' ? { x: a.points[1][0], y: a.points[1][1] } : { x: qb.x, y: qb.y };
     return { x: d.x + 1, y: d.y };
@@ -587,11 +588,73 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const [dx, dy] = a.assignment.setup || [10, a.y * 0.5];
     steer(a, clamp(L.x + dx, B.ownEndLine + 1, B.endLine - 1), clamp(L.y + dy, B.left + 1, B.right - 1), 0.95, 0.5);
   }
+  /**
+   * Return blocking (Task 8 M2 fix, owner 2026-11-07 18:20). A blocker can only legally block a coverage player who is in front of
+   * him (toward the kicking team, +x) or level with him, never one already past him (a block in the back). Each tick the return
+   * unit's free blockers share out the legal, unblocked coverage players, nearest first in each blocker's area (distance plus half
+   * the lateral offset, the escort's own measure), one blocker per man; a blocker with no man of his own left helps on the nearest
+   * legal one. Deterministic: no dice, fixed order.
+   */
+  const koLegal = (a, d) => d.x >= a.x;
+  function kickoffTargets() {
+    const free = offs.filter((a) => a.assignment?.a === 'ko_block' && !a.engaged);
+    for (const a of free) a.koTarget = null;
+    const open = (d) => !d.engaged && !d.knockedDown;
+    const pairs = [];
+    for (const a of free) for (const d of defs) if (open(d) && koLegal(a, d)) pairs.push({ a, d, s: dist(a, d) + Math.abs(d.y - a.y) * 0.5 });
+    pairs.sort((p, q) => p.s - q.s);
+    const claimed = new Set();
+    for (const p of pairs) { if (p.a.koTarget || claimed.has(p.d)) continue; p.a.koTarget = p.d; claimed.add(p.d); }
+    for (const p of pairs) if (!p.a.koTarget) p.a.koTarget = p.d; // more blockers than men left: help on the nearest
+  }
+  /**
+   * A return blocker: while the ball is in the air he drops to his set-up spot in front of the landing spot; once set (or once
+   * the ball is caught) he goes to meet his man (the point where he can intercept him on his current run, the pursuit's own
+   * intercept) and engages him with the ordinary open-field block (tryEngage, resolveEngagement, pancakes). A man who reaches him
+   * while he is still dropping is taken on the spot. With nobody legal left in front of him he escorts the returner.
+   */
+  function kickoffBlock(a) {
+    if (a.engaged) { resolveEngagement(a); return; }
+    const L = ball.landing; const [dx, dy] = a.assignment.setup || [10, a.y * 0.5];
+    const sx = clamp(L.x + dx, B.ownEndLine + 1, B.endLine - 1), sy = clamp(L.y + dy, B.left + 1, B.right - 1);
+    if (!a.koSet && (!ball.inAir || dist(a, { x: sx, y: sy }) < 0.5)) a.koSet = true;
+    const d = a.koTarget && koLegal(a, a.koTarget) ? a.koTarget : null;
+    if (!a.koSet) { steer(a, sx, sy, 0.95, 0.5); if (d) tryEngage(a, d, true); return; }
+    if (d) {
+      const tInt = interceptTime(a, d, a.maxSpeed);
+      const k = tInt !== null && tInt < 8 ? tInt : 0;
+      steer(a, d.x + d.vx * k, d.y + d.vy * k, 1, 0.3);
+      tryEngage(a, d, true); return;
+    }
+    const c = ball.holder || bySlot.off[KO.returner] || L;
+    steer(a, c.x + 5, c.y + (a.y < c.y ? -3 : 3), 0.95);
+  }
   /** A live kickoff in the air: the coverage runs down its lanes toward the landing spot; the kicker trails as the last man. */
   function kickoffFlightDefense(d) {
     const L = ball.landing; const asg = d.assignment || {};
     if (asg.safety) { steer(d, Math.max(L.x + 20, d.x - 30), L.y + (asg.lane || 0), 0.85, 0.5); return; }
     steer(d, L.x, asg.lane ?? d.y, 1, 0.6);
+  }
+  /**
+   * The coverage after the catch (Task 8 M2 fix). Each coverage player stays in his lane, running down it to the returner's depth,
+   * until the returner is no farther ahead of him than he is across from his lane (the 45-degree point: from there the lane is
+   * his to close), or has got past him; then he pursues with the ordinary pursuit, for the rest of the play. The kicker stays the
+   * safety: he keeps his cushion in front of the returner (the flight's safety depth), mirroring him across the field, until no
+   * free team-mate is left in front of the returner or the returner is nearer to him than to any free team-mate.
+   * Returns true when it moved him (he is still holding his lane or his cushion).
+   */
+  function kickoffCover(d, c) {
+    if (d.koBroke) return false;
+    const asg = d.assignment || {};
+    if (asg.safety) {
+      const mates = defs.filter((m) => m !== d && !m.engaged && !m.knockedDown && m.stun <= 0);
+      const lastMan = !mates.some((m) => m.x > c.x) || mates.every((m) => dist(m, c) > dist(d, c));
+      if (lastMan) { d.koBroke = true; return false; }
+      steer(d, Math.max(c.x + 20, d.x - 30), c.y, 0.85, 0.5); return true;
+    }
+    const lane = asg.lane ?? d.y;
+    if (d.x - c.x <= Math.abs(c.y - lane)) { d.koBroke = true; return false; }
+    steer(d, c.x, lane, 1, 0.6); return true;
   }
   /** The returner fields the kickoff at the landing spot (a kick catch: never a reception). */
   function kickoffCatch() {
@@ -604,6 +667,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   function offenseTick(a) {
     const asg = a.assignment;
+    if (KO && asg?.a === 'ko_block') { kickoffBlock(a); return; }
     if (KO && ball.inAir) { kickoffFlightOffense(a); return; }
     if (ball.holder === a && (phase === 'carry' || a !== qb)) { carrierMove(a); return; }
     if (asg.a === 'release' && !a.released && t >= screenReleaseAt()) screenRelease(a); // lets go of his man on time, even mid-block
@@ -1242,6 +1306,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (c === qb && phase !== 'carry') return PURSUIT_EFFORT; // the pass rush: unchanged
     return effortFor(chaseFromBehind(d, c), c.maxSpeed, d.maxSpeed);
   }
+  /** The earliest time at which `chaser`, running at `vp`, can meet `target` on his current velocity (null: he cannot). */
+  function interceptTime(chaser, target, vp) {
+    const rx = target.x - chaser.x, ry = target.y - chaser.y;
+    const a2 = target.vx * target.vx + target.vy * target.vy - vp * vp, b2 = 2 * (rx * target.vx + ry * target.vy), c2 = rx * rx + ry * ry;
+    let tInt = null;
+    if (Math.abs(a2) < 1e-6) { if (Math.abs(b2) > 1e-6) tInt = -c2 / b2; }
+    else { const disc = b2 * b2 - 4 * a2 * c2; if (disc >= 0) { const r1 = (-b2 - Math.sqrt(disc)) / (2 * a2), r2 = (-b2 + Math.sqrt(disc)) / (2 * a2); tInt = [r1, r2].filter((v) => v > 0).sort((p, q) => p - q)[0] ?? null; } }
+    return tInt;
+  }
   function pursue(d) {
     const c = ball.holder;
     if (!c) return;
@@ -1251,11 +1324,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     let effort = pursuitEffort(d, c);
     if (d.effortT != null && t - d.effortT < DT * 1.5) effort = d.effort + clamp(effort - d.effort, -0.01, 0.01);
     d.effort = effort; d.effortT = t; const vp = d.maxSpeed * effort;
-    const rx = c.x - d.x, ry = c.y - d.y;
-    const a2 = c.vx * c.vx + c.vy * c.vy - vp * vp, b2 = 2 * (rx * c.vx + ry * c.vy), c2 = rx * rx + ry * ry;
-    let tInt = null;
-    if (Math.abs(a2) < 1e-6) { if (Math.abs(b2) > 1e-6) tInt = -c2 / b2; }
-    else { const disc = b2 * b2 - 4 * a2 * c2; if (disc >= 0) { const r1 = (-b2 - Math.sqrt(disc)) / (2 * a2), r2 = (-b2 + Math.sqrt(disc)) / (2 * a2); tInt = [r1, r2].filter((v) => v > 0).sort((p, q) => p - q)[0] ?? null; } }
+    const tInt = interceptTime(d, c, vp);
     const dir = c.team === 'off' ? 1 : -1;
     let tx, ty;
     if (tInt !== null && tInt < 8) { tx = c.x + c.vx * tInt; ty = c.y + c.vy * tInt; }
@@ -1622,7 +1691,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const asg = d.assignment;
     const mark = TRACE ? (m, x) => { d.why = m; d.why2 = x ?? null; } : () => {}; // developer trace: the branch he acted on
     if (d.engaged) { mark('engaged'); return; } // movement handled by the blocker's engagement
-    if (KO) { if (ball.inAir) { mark('cover', 'flight'); kickoffFlightDefense(d); return; } if (ball.holder?.team === 'off') { mark('pursue', 'kickoff'); pursue(d); return; } }
+    if (KO) { if (ball.inAir) { mark('cover', 'flight'); kickoffFlightDefense(d); return; } if (ball.holder?.team === 'off') { if (kickoffCover(d, ball.holder)) { mark('cover', 'lane'); return; } mark('pursue', 'kickoff'); pursue(d); return; } }
     const c = ball.holder;
     if (c && c.team === 'def') { // we have the ball: escort or carry
       if (c === d) { mark('carry'); carrierMove(d); return; }
@@ -2118,6 +2187,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       for (const b of teammates(g.team)) { if (b === g) continue; const near = dist(b, g) <= g.ability.grove.radius; b.attrs.awareness = Math.min(99, b.baseAwareness + (near ? g.ability.grove.awareness : 0)); lifted ||= near; }
       if (lifted && tick > 2) abilityUsed(g, 'grove');
     }
+    if (KO) kickoffTargets();
     for (const a of offs) offenseTick(a);
     if (!KO) for (const d of defs) updateRead(d); // a kickoff has nothing to read
     for (const d of defs) defenseTick(d);

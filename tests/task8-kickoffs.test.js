@@ -70,6 +70,23 @@ test('the coverage tackles and the returner\'s yards are the events credited; lo
   assert.ok(Math.max(...yards) > Math.min(...yards) + 10, 'returns vary with the play');
 });
 
+test('return blockers acquire coverage players and block them; the coverage holds its lanes after the catch, the K stays deep', () => {
+  let blockers = 0, engaged = 0, returns = 0, laneHeld = 0, kDeep = 0;
+  for (let seed = 1; seed <= 80; seed++) {
+    const s = kickoffState(seed); const { sim } = R.doKickoff(s, teams); if (!sim) continue; returns++;
+    const ret = sim.kickoff.returner; const F = sim.frames; const tc = sim.events.find((e) => e.kind === 'kick_catch').t;
+    for (const [slot] of F[0].off) if (slot !== ret) { blockers++; if (F.some((f) => f.off.find((p) => p[0] === slot)?.[3] === 1)) engaged++; }
+    // half a second after the catch the outside coverage is still spread across the field, and the kicker is the deepest man
+    const f = F.find((x) => x.t >= tc + 0.5); if (!f) continue;
+    const ys = f.def.filter((p) => p[0] !== 'K').map((p) => p[2]); if (Math.max(...ys) - Math.min(...ys) > 15) laneHeld++;
+    const k = f.def.find((p) => p[0] === 'K'); if (k && f.def.every((p) => p[1] <= k[1] + 3)) kDeep++;
+  }
+  assert.ok(returns >= 20);
+  assert.ok(engaged >= blockers * 0.5, `${engaged} of ${blockers} return blockers engaged someone`);
+  assert.ok(laneHeld >= returns * 0.9, `lanes held in ${laneHeld}/${returns}`);
+  assert.ok(kDeep >= returns * 0.9, `the K deep in ${kDeep}/${returns}`);
+});
+
 test('participants are credited: a special-teams snap for every monster on both units, a kickoff for the kicker', () => {
   const { s, out } = returnedKickoff();
   const names = out.sim.names;
