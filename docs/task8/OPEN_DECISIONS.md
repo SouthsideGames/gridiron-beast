@@ -1,0 +1,96 @@
+# Open roster-strength and economy decisions, with recommendations (2026-11-07)
+
+Each item says what is open, what the evidence shows, and what I recommend. Nothing here is implemented beyond today's behaviour
+until the owner rules. Evidence: `M1_STARTER_CALIBRATION.md`, `LEAGUE_HEALTH_M2.md` (10-season study), the M1 preview.
+
+| # | Decision | Recommendation |
+| --- | --- | --- |
+| D1 | Founding-roster strength | **Option 2**: map the selection target onto each channel's post-history ratings |
+| D2 | Draft-class growth (+0.5 per season) | **Retire it** with the other seasonal boosts |
+| D3 | Salary cap and pool thresholds on the Dex rating scale | **Percentile-based thresholds**, set at the M6 economy recalibration (#30); interim: no change |
+| D4 | Level-XP multiplier (B6) | **Keep 1.0** until the M6 pacing benchmark; adjust only within the 5–8-season target |
+| D5 | Comeback mode | **Retire it** under N7f (no rubber-banding) |
+| D6 | Stat guide versus the Appendix C role register | **Follow the register** in the guide (M6 presentation) |
+| D7 | AI identities (four questions in AI_IDENTITIES.md) | Approve as proposed (details below) |
+| D8 | Cheap free agents accepting half their ask | **Review at #30**; no change now |
+
+## D1. Founding-roster strength
+
+**What happens now.** Starters average 49.3 OVR (10th percentile 34, lowest 21) against 57.9 (52) before Task 8. The approved
+mapping picks a percentile of each form's *level-1* distribution, and the prior-career simulation then adds growth by age, so a
+young starter lands far below the old floor. Running backs average 41.
+
+**Options.**
+1. Keep it. Wider spread; age and development matter more; the engines (tuned on 52–66) see much weaker lineups.
+2. Map the target onto the channel's post-history distribution: draw the nine candidates, simulate each candidate's prior career
+   first, and pick by the resulting current rating. Ratings stay legal and untouched; only which individual is kept changes.
+3. Give founding starters a veteran age profile (fewer 20–22-year-old starters).
+
+**Recommendation: option 2.** It keeps the approved mechanism (nine legal candidates, one Apex roll, Temper-neutral) and the
+percentile meaning (a 50th-percentile starter is a typical starter at his age), and it fixes the cause rather than the symptom.
+Cost: about nine prior-career simulations per veteran generated (measured later; the reference sample would be cached per form
+and age band). Option 3 changes the league's age structure, which drives ageing and contracts.
+
+## D2. Draft-class growth
+
+**What happens now.** Draft classes rise +0.5 quality per season, capped at +10 (Task 6 D9). D9 existed to keep classes level with
+the league's seasonal growth, which N7f retired. With N7f, it is an automatic yearly rise in incoming talent.
+
+**Recommendation: retire it.** Class strength then comes from the generator alone, every season alike. If later seasons prove too
+weak in the franchise-health reports, adjust the class quality tiers once, not per season.
+
+## D3. Salary cap and pool thresholds
+
+**What happens now.** Salaries follow OVR (18,000 + 280 × OVR). With lower Dex ratings, AI payrolls sit well under the fixed caps
+(about 1.12M re-sign asks against a 1.8M Challenger cap in one measured club), so the cap trim rarely fires. The pool thresholds
+(`POOL_WORTH`: castoffs worth keeping at OVR 52, the owner's market mark at 60) were set for the old scale, so fewer AI castoffs
+reach the owner's market.
+
+**Recommendation.** Express both as positions in the league's own distribution instead of fixed numbers, and set them at the M6
+economy recalibration (#30) from the franchise-health runs:
+- the caps at the payroll percentile they held before Task 8 (median AI payroll as a share of the cap);
+- `POOL_WORTH.ovr` and `.market` at the starter percentiles that 52 and 60 represented before (about the 10th and 70th).
+
+No interim change: the M1/M2 previews keep today's numbers so the effects stay visible.
+
+## D4. Level-XP multiplier
+
+**What happens now.** B6 approves 75 XP per level and a multiplier tuned to the benchmark (median level 50 in 5–8 seasons). The
+M2 awards (50 XP per full game, 25 per Clash, 12.5 per reserve game) run with multiplier 1.0.
+
+**Recommendation.** Keep 1.0 until the M6 pacing benchmark measures played monsters (not generated veterans) under mixed
+participation; then adjust once within the 5–8-season band. Today's evidence is in `LEAGUE_HEALTH_M2.md`.
+
+## D5. Comeback mode
+
+**What happens now.** On Pro and All-Star, a side trailing by 10+ in the fourth quarter plays with +5 on every core rating
+(GDD §17; shown to the player; off on Rookie).
+
+**Recommendation: retire it.** N7f rules out rubber-banding and forced results. Comeback mode is symmetric and visible, but it is
+an in-game rubber band. If the owner wants to keep it as a difficulty option, it needs an explicit exception to N7f.
+
+## D6. Stat guide versus the role register
+
+**What happens now.** The in-game stat guide's "does nothing for this position" marks disagree with the approved Appendix C role
+register on 21 position/attribute pairs (examples: a kicker's speed and strength, a quarterback's blocking). The trainer follows the
+register.
+
+**Recommendation: follow the register** and show two levels in the guide: "counts toward OVR" and "used by the position" (the
+register's approved non-OVR uses). Presentation only (M6).
+
+## D7. AI identities
+
+Recommendations on the four questions in `AI_IDENTITIES.md`:
+1. **Gym mode floor:** keep it. Gyms never fall below Compete, so they stay the stronger strategic tests.
+2. **Ordinary coaches:** fix each ordinary club's coach tendencies for the franchise, matching its identity.
+3. **Identity table:** approve as proposed; the strategies use only the gyms' approved legendary abilities, with Glacivern's
+   field-position plan built on Second Chance and Deep Winter (no Avalanche, N7g).
+4. **Rookie:** "more forgiving ordinary opponents" applies to ordinary clubs only. Today Rookie's −4 also lowers gyms; change it to
+   ordinary clubs only, so gyms remain the stronger tests on every difficulty.
+
+## D8. Cheap free agents
+
+**What happens now.** Many low-salary free agents accept half their ask outright. This is consistent with the unchanged
+negotiation and the 85% floor not being extended (N7f).
+
+**Recommendation.** No change now. Re-examine with D3 at #30, because the asks themselves move with the rating scale.

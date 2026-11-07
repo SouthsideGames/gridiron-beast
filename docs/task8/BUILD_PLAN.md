@@ -62,3 +62,24 @@ The switch connects the M1 core (`src/franchise/t8/*`, `src/data/dex-species.js`
 
 **Regression at the switch:** the full suite. Fixtures tied to Nature, traits, points per level, the old XP curve, scalar
 potential growth and the legacy cornerstone list change by design. Each change is listed with the ruling that retires it.
+
+## M2 progress and scope notes (2026-11-07)
+
+**Done** (targeted tests; the milestone's full regression comes at the end of M2):
+- **Activity rewards and the training bar** through the reward ledger.
+- **Rubber-banding retired (N7f):** the balance nudge, the development slowdown and the runaway-veteran attrition.
+- **Pancake contest and the approved shed formula.**
+- **Shared status slot** in the football game:
+  - the gate;
+  - participation clocks;
+  - whistle and game-end clearing;
+  - Stunned carryover;
+  - Clash transfer helpers.
+
+**In progress:** live kickoffs and special-teams participation (separate branch `task8-m2-kickoffs`).
+
+**Scope moves** (build order only; no rule changes):
+- **Field geometry effects and stamina drain** wire in with their producers in M3. Every field and every Afflicted source is an ability.
+  - The pure modules (`src/sim/t8/fields.js`, `stamina.js`) are done; M3 registers the producers.
+- **Telemetry (B8)** is a measurement consumed by grading, so it is built with grading in M5.
+  - Today's `pressure` stat (nearest rusher within 3.2 yards) stays as it is until then.
