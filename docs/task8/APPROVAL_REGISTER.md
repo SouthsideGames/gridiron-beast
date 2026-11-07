@@ -152,6 +152,10 @@ The field limits were recalculated under these clocks: 44 rectangles, and 0 obje
 | 39 | AI use of Basics | **Approved** | R1; N7b |
 | 40 | Dex and collection | **Approved** | R1; N7b |
 
+## Fractional training display (N7e)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
 | Fractional training display (spec §4 gap) | **Approved** (N7e) | Floor banked points and whole-percent bars; the exact-cost purchase is affordable on exact balances, with its cost shown to two decimals rounded up; display never changes balances, deducts extra or decides affordability; fractions preserved through saves and evolution |
 
 **Specification status: closed.** Every item has a binding ruling (N7d resolved the last gaps).
