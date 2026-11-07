@@ -19,10 +19,14 @@ const mon = (o) => { const m = generateMonster(createRng(o.seed || 5), { positio
 
 test('R1 b: strategy value — Rebuild favours youth and potential, Contend readiness, Compete affordability; never overall alone', () => {
   const young = mon({ id: 'y', age: 22, q: 60, seed: 3 }); young.potential = monsterOverall(young) + 15;
-  const vet = mon({ id: 'v', age: 33, q: 60, seed: 3 }); vet.potential = monsterOverall(vet);
+  const vet = mon({ id: 'v', age: 33, q: 60, seed: 3 });
+  // Task 8 M1 (fixture drift): the 33-year-old's simulated prior career (B7) now lifts him to 57 against the level-1 youngster's 34;
+  // the scenario compares equals, so the veteran gets the youngster's ratings explicitly (same overall; only age and potential differ).
+  vet.attributes = { ...young.attributes }; vet.dev.current = { ...young.attributes }; vet.potential = monsterOverall(vet);
   assert.ok(ageingSeasons(vet) > 0 && ageingSeasons(young) === 0);
   assert.ok(strategyValue(young, { mode: 'rebuild' }) > strategyValue(vet, { mode: 'rebuild' }), 'Rebuild: the young prospect');
   const a = mon({ id: 'a', age: 27, q: 62, seed: 9 }); const b = mon({ id: 'b', age: 27, q: 62, seed: 9 });
+  b.attributes = { ...a.attributes }; b.dev.current = { ...a.attributes }; b.potential = a.potential; // two equals, explicitly (their ids now give different simulated prior careers, B7: 39 vs 40)
   assert.ok(strategyValue(a, { mode: 'compete', ask: 20000 }) > strategyValue(b, { mode: 'compete', ask: 50000 }), 'Compete: the cheaper of two equals');
   assert.equal(strategyValue(a, { mode: 'contend', ask: 20000 }), strategyValue(b, { mode: 'contend', ask: 50000 }), 'Contend: cost does not decide');
   assert.ok(strategyValue(a, { mode: 'contend', weakestStarter: monsterOverall(a) - 1 }) > strategyValue(a, { mode: 'contend', weakestStarter: monsterOverall(a) + 1 }), 'Contend: readiness');

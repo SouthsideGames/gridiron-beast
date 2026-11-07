@@ -6,6 +6,10 @@ import { simulateClash, logHash, parseReplayKey, rampFor, rampModelFor } from '.
 import { CLASH_VALUES } from '../../src/clash/values.js';
 import { createRng } from '../../src/core/rng.js';
 import { mon, byArch, randomLineup, withoutRandomness, deepFrozen } from './helpers.js';
+import { legacyMonsters } from './legacy-monsters.js';
+
+// Task 8 M1 replaced the monster generator; the golden fixtures are fed the monsters they were pinned with (see legacy-monsters.js).
+const GOLDEN_LINEUP = legacyMonsters('75f2a27').randomLineup, HISTORICAL_LINEUP = legacyMonsters('dd2245d').randomLineup;
 
 const V = CLASH_VALUES;
 const quick = (a, b, seed = 1, config = {}) => simulateClash({ a, b, seed, config });
@@ -15,7 +19,7 @@ test('determinism: the same inputs give the same log hash, with Math.random and 
   const golden = {};
   withoutRandomness(() => {
     for (let seed = 1; seed <= 20; seed++) {
-      const rng = createRng(seed * 101); const a = randomLineup(rng, 1 + rng.int(5)), b = randomLineup(rng, 1 + rng.int(5));
+      const rng = createRng(seed * 101); const a = GOLDEN_LINEUP(rng, 1 + rng.int(5)), b = GOLDEN_LINEUP(rng, 1 + rng.int(5));
       const r1 = simulateClash({ a, b, seed }), r2 = simulateClash({ a, b, seed });
       assert.equal(logHash(r1), logHash(r2)); golden[seed] = { hash: logHash(r1), key: r1.replayKey };
     }
@@ -27,20 +31,18 @@ test('determinism: the same inputs give the same log hash, with Math.random and 
 
 test('historical golden seeds: the values 1.0.0 fixture (Gate A-B.5 baseline) still replays exactly under the values 1.0.0 ruleset, from its own replay keys and from the same lineups', () => {
   const stored = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-v1.0.0.json', import.meta.url), 'utf8'));
-  assert.equal(Object.keys(stored).length, 20); let moved = 0;
-  const MOVED = new Set(['aegistron', 'echolot', 'glacivern', 'metalhorn', 'nocturne', 'stoneguard', 'vyrnax']);
+  assert.equal(Object.keys(stored).length, 20);
   withoutRandomness(() => {
     for (let seed = 1; seed <= 20; seed++) {
       const k = parseReplayKey(stored[seed].key); assert.equal(JSON.parse(stored[seed].key).values, '1.0.0'); assert.equal(k.config.ruleset, 'v1.0.0');
       assert.equal(logHash(simulateClash({ a: k.a, b: k.b, seed: k.seed, config: k.config })), stored[seed].hash, `historical replay key ${seed}`);
-      const rng = createRng(seed * 101); const a = randomLineup(rng, 1 + rng.int(5)), b = randomLineup(rng, 1 + rng.int(5));
-      // Task 8: seven original species moved position in the approved Dex (Appendix A), and regenerated lineups now carry the new
-      // position; only lineups without them can be rebuilt exactly. Replays from the stored keys above stay exact for all 20.
-      if ([...a, ...b].some((m) => MOVED.has(m.species))) { moved++; continue; }
+      // Task 8 M1: the lineups are the frozen dd2245d monsters these seeds produced (original generator, original positions; see
+      // legacy-monsters.js), so all 20 rebuild exactly again; the earlier skip for the 7 species that moved position is not needed.
+      const rng = createRng(seed * 101); const a = HISTORICAL_LINEUP(rng, 1 + rng.int(5)), b = HISTORICAL_LINEUP(rng, 1 + rng.int(5));
+      assert.deepEqual({ a, b }, { a: k.a, b: k.b }, `historical lineup ${seed} is the one in its replay key`);
       assert.equal(logHash(simulateClash({ a, b, seed, config: { ruleset: 'v1.0.0' } })), stored[seed].hash, `historical lineup ${seed}`);
     }
   });
-  assert.ok(moved <= 12, `${20 - moved} of 20 historical lineups still rebuilt exactly`);
 });
 
 test('skip equals watch: log none gives the same winner, exchanges and resolution as the full log', () => {

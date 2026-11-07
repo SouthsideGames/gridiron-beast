@@ -16,9 +16,12 @@ import { ALL_TEAMS, tierById } from '../src/data/league.js';
 
 let n = 0;
 /** A monster at `position` of about `quality`, aged `age`, with an id of its own. */
-function mon(position, quality, age, extra = {}) { const m = generateMonster(createRng(1000 + n), { position, quality, age }); m.id = `t${n++}`; m.age = age; return Object.assign(m, extra); }
+// Task 8 M1 (N7f): `quality` no longer maps to an overall (it is a percentile target within a random Dex form, and young level-1
+// individuals can be weak), so each scenario monster is brought to exactly that overall, with potential at least that high
+// (explicit construction; the generated potential is kept when higher). An explicit `potential` in `extra` still wins.
+function mon(position, quality, age, extra = {}) { const m = generateMonster(createRng(1000 + n), { position, quality, age }); m.id = `t${n++}`; m.age = age; toOvr(m, quality); m.potential = Math.max(m.potential, quality); return Object.assign(m, extra); }
 /** Bring a monster to an exact overall by moving every attribute together (draws nothing, so later monsters are unchanged). */
-function toOvr(m, target) { for (let i = 0; i < 40 && monsterOverall(m) !== target; i++) { const d = target - monsterOverall(m); for (const k of Object.keys(m.attributes)) m.attributes[k] = Math.max(20, Math.min(99, m.attributes[k] + Math.sign(d) * Math.max(1, Math.abs(d) >> 1))); } assert.equal(monsterOverall(m), target); return m; }
+function toOvr(m, target) { for (let i = 0; i < 40 && monsterOverall(m) !== target; i++) { const d = target - monsterOverall(m); for (const k of Object.keys(m.attributes)) m.attributes[k] = Math.max(20, Math.min(99, m.attributes[k] + Math.sign(d) * Math.max(1, Math.abs(d) >> 1))); } assert.equal(monsterOverall(m), target); if (m.dev) m.dev.current = { ...m.attributes }; return m; }
 
 test('R1: horizon from the public onset; successors young and close (or with the potential); ready within 4; protected never successors', () => {
   const st = mon('QB', 72, 31); const h = horizonOf(st); assert.equal(h, publicOnset(st) - 31); assert.ok(h <= PLAN.ageingHorizon);
@@ -61,6 +64,9 @@ test('R3 in the league: a declining starter with a ready successor walks, one wi
   const [qb1, qb2] = qbs; qb1.age = publicOnset(qb1) + 2; qb2.age = 23; for (const k of Object.keys(qb2.attributes)) qb2.attributes[k] = qb1.attributes[k]; qb2.potential = Math.max(qb2.potential, monsterOverall(qb2) + 2);
   // RB: starter past his onset with nobody young behind him → kept, one season
   const [rb1, ...rbRest] = rbs; rb1.age = publicOnset(rb1) + 1; for (const b of rbRest) b.age = Math.max(b.age, 29);
+  // Task 8 M1 (seed drift): the Dex roster's RB1 now rates 52 against a league bench of 42, an exceptional veteran (2 seasons);
+  // the scenario is an ordinary declining starter, so his overall is set to the bench explicitly (still above his backups).
+  toOvr(rb1, Math.max(Math.round(leagueBenchOf(f).RB), ...rbRest.map((x) => monsterOverall(x) + 1)));
   // a reserve well past his onset → walks
   const res = roster.find((m) => !R.isProtected(m) && m.position === 'WR' && roster.filter((x) => x.position === 'WR' && monsterOverall(x) > monsterOverall(m)).length >= 3);
   res.age = publicOnset(res) + RESERVE_PAST_ONSET + 1;

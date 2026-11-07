@@ -55,17 +55,23 @@ test('C1 practice XP: 0.35 × 24 base, slowdown applied, nothing for a monster w
   assert.deepEqual(x1, x2, 'same draws, same monster');
 });
 
-test('C2 maturation: one position-weighted +1 each offseason through age 24, never above potential; not at 25; ageless untouched', () => {
-  const m = mon('QB', 55, 23); m.potential = 99; const before = { ...m.attributes }; // QB: decline onset 27 at the earliest, far off
+test('C2 maturation (superseded, B6/B7): each offseason banks 2 training points at any age, spent by policy for AI clubs, never above the ceiling; ageless monsters do not age but still develop', () => {
+  // Task 8 B6/B7 (IMPLEMENTATION_LOG "M1 integration switch"): the age-limited +1 maturation (through 24, none at 25) is
+  // replaced by the offseason award of 2 banked training points (OFFSEASON_POINTS), auto-spent for AI and pool monsters.
+  const total = (m) => Object.values(m.dev.current).reduce((a, b) => a + b, 0);
+  const m = mon('QB', 55, 23); const before = { ...m.attributes }; const t0 = total(m);
   offseason([m], createRng(2)); // now 24
+  assert.equal(m.age, 24);
   const top = Object.entries(POSITION_WEIGHTS.QB).sort((a, b) => b[1] - a[1])[0][0];
-  const grew = Object.keys(m.attributes).filter((k) => m.attributes[k] > before[k]);
-  assert.ok(grew.includes(top), `the position's most weighted attribute (${top}) grew`);
-  const n24 = mon('QB', 55, 24); n24.potential = 99; const b24 = { ...n24.attributes }; offseason([n24], createRng(2)); // now 25: no maturation, no growth to 23
-  assert.ok(Object.keys(n24.attributes).every((k) => n24.attributes[k] <= b24[k]), 'none at 25');
-  const capped = mon('QB', 55, 22); capped.potential = Math.max(...Object.values(capped.attributes)); const bc = { ...capped.attributes }; offseason([capped], createRng(2));
-  assert.ok(Object.keys(bc).every((k) => capped.attributes[k] <= Math.max(bc[k], capped.potential)), 'never above potential');
-  const leg = mon('RB', 60, 21, { legendary: true }); const bl = JSON.stringify(leg.attributes); offseason([leg], createRng(2)); assert.equal(JSON.stringify(leg.attributes), bl);
+  assert.ok(Object.keys(m.attributes).filter((k) => m.attributes[k] > before[k]).includes(top), `the position's most weighted attribute (${top}) grew`);
+  assert.equal(total(m) - t0, 2, 'two points spent');
+  const n24 = mon('QB', 55, 24); const t24 = total(n24); offseason([n24], createRng(2)); // now 25: the award does not stop at 25 any more
+  assert.equal(n24.age, 25); assert.equal(total(n24) - t24, 2, 'B6/B7: the offseason award has no age limit');
+  const banked = mon('QB', 55, 24); const tb = total(banked); offseason([banked], createRng(2), { autoAllocate: false });
+  assert.equal(total(banked), tb, 'the owner\'s club banks the points and decides');
+  for (const x of [m, n24]) assert.ok(Object.keys(x.dev.current).every((k) => x.dev.current[k] <= x.dev.potential[k]), 'never above the ceiling');
+  const leg = mon('RB', 60, 21, { legendary: true }); const tl = total(leg); offseason([leg], createRng(2));
+  assert.equal(leg.age, 21, 'ageless: never ages'); assert.equal(total(leg) - tl, 2, 'ageless monsters can still develop via training');
 });
 
 test('R5 upgrades: a weak group signs a pool monster +3 better, releasing an expendable reserve (never a successor or protected); one per club', () => {

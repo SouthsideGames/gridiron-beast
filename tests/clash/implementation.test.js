@@ -16,11 +16,16 @@ import { APPROVED_PATCHES, FINAL_PATCHES, OWNER_ADDED, APPROVED_SETTINGS, DECLIN
 import { integrityProblems } from '../../src/clash/level1.js';
 import { createRng } from '../../src/core/rng.js';
 import { mon } from './helpers.js';
+import { legacyMonsters } from './legacy-monsters.js';
 
 const V = CLASH_VALUES; const P = V.movePatches;
 const SNAP = JSON.parse(fs.readFileSync(new URL('./fixtures/pre-1.1.0-snapshot.json', import.meta.url)));
 const hashOf = (log) => { let h = 2166136261; const s = log.map((e) => `${e.ex}|${e.kind}|${e.actor}|${e.target}|${e.text}`).join('\n'); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
 const mk = (L) => L.map((x) => syntheticMonster(x.species, { seed: x.seed, overall: x.overall }));
+// The snapshot stores only species + seed + overall per monster. Task 8 M1 replaced the generator, so its battles are rebuilt from
+// the monsters those inputs gave when it was recorded, frozen at dd2245d (legacy-monsters.js). Fresh random battles use `mk`.
+const LEGACY = legacyMonsters('dd2245d');
+const mkSnap = (L) => L.map((x) => LEGACY.synthetic(x.species, { seed: x.seed, overall: x.overall }));
 const APPROVED_IDS = ['scorchulk_maul_first', 'wispira_veil_every4', 'duskyre_cut_every3', 'umbrikit_pounce_not_voluntary', 'echolot_echo_flat', 'zephiro_tailwind_combo', 'tsunarok_undertow_hit_chill', 'ripplet_undercurrent_08',
   'aurodrax_sovereign_surge', 'cindruff_tumble_always', 'cerebrix_foresight_refused_daze', 'nocturne_eclipse_2', 'aeralis_downdraft_daze', 'elderoot_grove_12', 'tempestra_cyclone_storm'];
 // Hooks used only by unapproved experiments: the permanent table must carry none of them.
@@ -92,7 +97,7 @@ test('the values 1.0.0 ruleset replays all 200 pre-implementation battles byte f
   for (const r of SNAP.records) {
     const config = r.name === 'defaults' ? battleConfig({ ruleset: 'v1.0.0', policies: r.config.policies }) : battleConfig({ ...r.config, ruleset: 'v1.0.0' });
     if (r.name !== 'defaults') assert.deepEqual(config, gateConfig(r.name, r.config.policies.a !== 'none' ? { policies: r.config.policies } : {}), `${r.name} #${r.i} gate config`);
-    const out = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config });
+    const out = simulateClash({ a: mkSnap(r.a), b: mkSnap(r.b), seed: r.seed, config });
     assert.equal(logHash(out), r.hash, `${r.name} #${r.i}`);
   }
 });
@@ -112,13 +117,13 @@ function sameUntilReflect(perm, hist) {
 test('the permanent defaults play exactly like the approved candidate, except from a reflected-damage knockout onward (the authorised correction)', () => {
   const recs = SNAP.records.filter((r) => r.name === 'Approved'); assert.equal(recs.length, 40); let differ = 0;
   for (const r of recs) {
-    const out = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: battleConfig({ policies: r.config.policies }) });
-    const again = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: battleConfig({ policies: r.config.policies }) }); assert.equal(logHash(again), logHash(out), 'deterministic');
+    const out = simulateClash({ a: mkSnap(r.a), b: mkSnap(r.b), seed: r.seed, config: battleConfig({ policies: r.config.policies }) });
+    const again = simulateClash({ a: mkSnap(r.a), b: mkSnap(r.b), seed: r.seed, config: battleConfig({ policies: r.config.policies }) }); assert.equal(logHash(again), logHash(out), 'deterministic');
     // the Approved gate (values 1.0.0 + 15 patches) on this build is still exactly the recorded candidate battle
-    const hist = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: gateConfig('Approved', r.config.policies.a !== 'none' ? { policies: r.config.policies } : {}) });
+    const hist = simulateClash({ a: mkSnap(r.a), b: mkSnap(r.b), seed: r.seed, config: gateConfig('Approved', r.config.policies.a !== 'none' ? { policies: r.config.policies } : {}) });
     assert.equal(hashOf(hist.log.slice(1)), r.bodyHash); assert.equal(hist.winner, r.winner); assert.equal(hist.exchanges, r.exchanges);
     // Task 8 (N7c B14): Nature is retired from active play, so the defaults are compared with the candidate replayed without Nature.
-    const histNoNature = simulateClash({ a: mk(r.a), b: mk(r.b), seed: r.seed, config: gateConfig('Approved', { ...(r.config.policies.a !== 'none' ? { policies: r.config.policies } : {}), legacyNature: false }) });
+    const histNoNature = simulateClash({ a: mkSnap(r.a), b: mkSnap(r.b), seed: r.seed, config: gateConfig('Approved', { ...(r.config.policies.a !== 'none' ? { policies: r.config.policies } : {}), legacyNature: false }) });
     const cmp = sameUntilReflect(out, histNoNature);
     if (cmp.same) { assert.equal(hashOf(out.log.slice(1)), hashOf(histNoNature.log.slice(1)), `Approved #${r.i}`); assert.equal(out.winner, histNoNature.winner); assert.equal(out.by, histNoNature.by); assert.equal(out.exchanges, histNoNature.exchanges); }
     else { differ++; assert.ok(cmp.ok, `Approved #${r.i} diverges at ${cmp.k} without a prior reflected knockout (${cmp.d})`); assert.ok(out.log.some((e) => e.kind === 'ko' && / by .*'s (Magma Crust|Bramble Shell)$/.test(e.text))); }
@@ -135,11 +140,19 @@ test('the permanent defaults play exactly like the approved candidate, except fr
   }
   assert.ok(touched > 5 && touched < checked, `${touched} of ${checked} Tank-heavy battles touched`);
   const old = SNAP.records.find((r) => r.name === 'defaults' && r.winner);
-  assert.equal(moveTableFor(battleConfig({ ruleset: 'v1.0.0' })), CLASH_MOVES_V1_0_0); assert.equal(moveTableFor(battleConfig({})), CLASH_MOVES); assert.ok(old);
+  // Task 8 M1 (75f2a27, approved R1 item 37): each table also carries the ordinary Strike for the Basic families, which have no
+  // unique move; apart from those added entries the historical and permanent tables are exactly the two move tables.
+  for (const [cfg, table] of [[battleConfig({ ruleset: 'v1.0.0' }), CLASH_MOVES_V1_0_0], [battleConfig({}), CLASH_MOVES]]) {
+    const t = moveTableFor(cfg); const added = Object.keys(t).filter((id) => !(id in table));
+    assert.ok(added.length > 0 && added.every((id) => t[id].basic === true && t[id].kind === 'strike'), 'only Basic Strike entries are added');
+    assert.deepEqual(Object.fromEntries(Object.entries(t).filter(([id]) => id in table)), { ...table });
+    for (const id of Object.keys(table)) assert.equal(t[id], table[id], `${id} is the table's own entry`);
+  }
+  assert.ok(old);
 });
 
 test('replay keys: 1.1.0 keys round-trip; 1.0.0 keys replay under the historical ruleset; unknown versions are refused', () => {
-  const r0 = SNAP.records[5]; const a = mk(r0.a), b = mk(r0.b);
+  const r0 = SNAP.records[5]; const a = mkSnap(r0.a), b = mkSnap(r0.b);
   const out = simulateClash({ a, b, seed: r0.seed, config: battleConfig({}) });
   const k = parseReplayKey(out.replayKey); assert.equal(k.config.ruleset, 'current');
   const old = JSON.parse(replayKey({ a, b, seed: r0.seed, config: r0.config })); old.values = '1.0.0'; delete old.config.ruleset;

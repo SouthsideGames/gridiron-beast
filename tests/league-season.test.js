@@ -29,9 +29,12 @@ test('ageing: legendaries (the owner\'s too) and the rival\'s signature monster 
   sig.age = 34; leg.age = 35; // age itself is irrelevant to them
   offseason([sig, leg, mine, old], rng);
   assert.equal(sig.age, 34); assert.equal(leg.age, 35); assert.equal(mine.age, 31);
-  assert.equal(JSON.stringify(sig.attributes), JSON.parse(before.sig).attributes && JSON.stringify(JSON.parse(before.sig).attributes));
-  assert.equal(JSON.stringify(leg.attributes), JSON.stringify(JSON.parse(before.leg).attributes));
-  assert.equal(JSON.stringify(mine.attributes), JSON.stringify(JSON.parse(before.mine).attributes));
+  // Task 8 B6/B7: ageless monsters never age or decline, but the offseason's 2 banked training points still develop them
+  // (spent by policy here), so "unchanged" became "never lower anywhere, and no more than the 2 points".
+  for (const [m, b] of [[sig, before.sig], [leg, before.leg], [mine, before.mine]]) {
+    const a0 = JSON.parse(b).attributes; const gain = Object.keys(a0).reduce((s, k) => s + (m.attributes[k] - a0[k]), 0);
+    assert.ok(Object.keys(a0).every((k) => m.attributes[k] >= a0[k]), `${m.name}: no decline`); assert.ok(gain <= 2, `${m.name}: training only (+${gain})`);
+  }
   assert.equal(sig.yearsPro, before.sigYears + 1, 'a season of experience still counts');
   assert.ok(old.attributes.speed < before.oldSpeed || old.age === 31, 'an ordinary veteran aged and declined'); assert.equal(old.age, 32);
 });
@@ -49,12 +52,19 @@ test('contracts: expiring starters and value re-sign at the ask, reserves walk t
   const f = newFranchise(33); const cap = tierById(f.tier).cap; const year = 1;
   const clubs = clubsOf(f); const prot = clubs.flatMap((c) => R.clubRoster(f, c).filter(R.isProtected).map((m) => [c, m.id, snap(m)]));
   const club = clubs[1]; const roster = R.clubRoster(f, club);
-  for (const m of roster) if (!R.isProtected(m)) { m.contract = { signed: 0, ends: year, years: 2 }; m.salary = m.salary * 1.6; } // everyone expiring, and the club well over the cap
+  // Task 8 M1 (fixture drift): Dex individuals rate lower, so asks (18,000 + 280 × OVR) no longer reach the cap after re-signing,
+  // and young reserves now nearly always carry upside (potential ≥ OVR + 5), so none walked. Made explicit: the below-median
+  // reserves have no upside left (they walk), and the cap trim is exercised by a cap set just under the re-signed payroll.
+  const med = roster.map(monsterOverall).sort((a, b) => a - b)[Math.floor(roster.length / 2)];
+  for (const m of roster) if (!R.isProtected(m)) { m.contract = { signed: 0, ends: year, years: 2 }; m.salary = m.salary * 1.6; if (monsterOverall(m) < med) m.potential = monsterOverall(m); } // everyone expiring
   const prot1 = roster.find(R.isProtected); if (prot1) prot1.salary = 2_000_000;
   const out = S.leagueContracts(f, { year, cap }); assert.ok(out.resigned > 0 && out.walked > 0);
-  const after = R.clubRoster(f, club); assert.ok(after.length >= ROSTER_MIN && after.length < roster.length);
+  let after = R.clubRoster(f, club); assert.ok(after.length >= ROSTER_MIN && after.length < roster.length);
   assert.ok(R.clubCapRoom(f, club, cap) >= 0 || after.length === ROSTER_MIN, 'under the cap, or at the roster floor');
   for (const m of after) if (!R.isProtected(m)) assert.ok(m.contract.ends > year, 're-signed for two more seasons');
+  const tight = cap - R.clubCapRoom(f, club, cap) - 60_000; const n0 = after.length; S.leagueTrim(f, { year, cap: tight });
+  after = R.clubRoster(f, club); assert.ok(after.length >= ROSTER_MIN && after.length < n0, 'the cap trims');
+  assert.ok(R.clubCapRoom(f, club, tight) >= 0 || after.length === ROSTER_MIN, 'under the tighter cap, or at the roster floor');
   for (const [c, id, s0] of prot) { const m = R.clubRoster(f, c).find((x) => x.id === id); assert.ok(m, `${id} still on ${c}`); assert.equal(snap(m), s0); assert.equal(m.contract.permanent, true); }
   assert.ok(Object.values(f.pool).flat().some((m) => (m.history || []).some((h) => h.club === club && h.reason === 'walked')));
   assert.deepEqual(R.verifyLeague(f), []);

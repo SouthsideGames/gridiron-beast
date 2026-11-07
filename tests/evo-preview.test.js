@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { previewTransitions, previewSpecies, buildPreview, isValidTransition } from '../src/lab/evo-preview.js';
 import { SPECIES_DEX } from '../src/data/species.js';
-import { generateMonster, tryEvolve, evolutionReady } from '../src/data/monsters.js';
+import { generateMonster, tryEvolve, evolutionReady, raiseToLevel, resolveSpecies } from '../src/data/monsters.js';
 import { evolutionSnapshot, evolutionReport } from '../src/franchise/evolution-report.js';
 import { createRng, hashString } from '../src/core/rng.js';
 import * as F from '../src/franchise/franchise.js';
@@ -25,7 +25,10 @@ test('a preview is the real evolution: tryEvolve on a copy, evolutionReport from
     const p = buildPreview(t.species, t.fromStage); assert.ok(p, `${t.species} ${t.fromStage}`);
     assert.equal(p.beforeMon.stage, t.fromStage); assert.equal(p.afterMon.stage, t.toStage); assert.equal(p.report.fromName, t.fromName); assert.equal(p.report.toName, t.toName);
     // rebuild by hand with the gameplay functions: identical report
-    const m = generateMonster(createRng(hashString(`evo-preview|${t.species}|${t.fromStage}|1`)), { species: t.species, quality: 62, id: `preview_${t.species}_${t.fromStage}` }); m.stage = t.fromStage; m.name = t.fromName; m.level = t.level; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
+    const m = generateMonster(createRng(hashString(`evo-preview|${t.species}|${t.fromStage}|1`)), { species: t.species, quality: 62, id: `preview_${t.species}_${t.fromStage}`, age: 20, yearsPro: 0 }); // a level-1 individual
+    // Task 8: level and stage live on the development record; earlier stages are reached through the real evolution rule
+    { const sp = resolveSpecies(t.species); for (let i = 0; i < t.fromStage; i++) { raiseToLevel(m, sp.evolution[i].level); assert.ok(tryEvolve(m)); } }
+    raiseToLevel(m, t.level); assert.equal(m.stage, t.fromStage); m.name = t.fromName; m.xp = 0; m.potential = m.potential ?? 72; m.salary = m.salary ?? null; m.fatigue = 0; m.injury = null;
     assert.ok(evolutionReady(m), 'the temporary monster is at the evolution level'); const before = evolutionSnapshot(m); tryEvolve(m);
     assert.deepEqual(p.report, evolutionReport(before, evolutionSnapshot(m), {}));
   }
@@ -48,7 +51,7 @@ test('the screen opens the gameplay evolution scene and never imports save, fran
 });
 test('normal evolution gameplay is unchanged: evolveMonster still evolves once, records the timeline and the Dex', () => {
   const f = newFranchise(44); const m = f.roster.find((x) => { const sp = SPECIES_DEX.find((s) => s.id === x.species); return sp?.evolution?.length && sp.rarity !== 'legendary'; });
-  m.level = SPECIES_DEX.find((s) => s.id === m.species).evolution[0].level; const name0 = m.name;
+  assert.equal(m.stage || 0, 0); raiseToLevel(m, SPECIES_DEX.find((s) => s.id === m.species).evolution[0].level); const name0 = m.name; // Task 8: raiseToLevel, not m.level
   for (const t of previewTransitions()) buildPreview(t.species, t.fromStage); // previews first, then the real thing
   const r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1); assert.notEqual(m.name, name0);
   assert.ok((m.career?.ev || []).some((e) => e.t === 'evolve'), 'Career Timeline entry'); assert.equal(F.evolveMonster(f, m.id).ok, false, 'not twice');

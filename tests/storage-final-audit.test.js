@@ -7,7 +7,7 @@ import * as Save from '../src/franchise/save.js';
 import { createStore, memoryBackend, JOURNAL_KEY } from '../src/franchise/store.js';
 import { replaceThenAdopt } from '../src/franchise/activation.js';
 
-const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise;
+const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v10-season2.json', import.meta.url), 'utf8')).franchise;
 const legacyText = () => JSON.stringify({ ...Save.migrate(fixture()), savedAt: 1_790_000_000_000 });
 const mkLs = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, m }; };
 let clock = 1_800_000_000_000; const now = () => (clock += 1000);

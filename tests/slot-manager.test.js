@@ -8,7 +8,7 @@ import { memoryBackend, createStore } from '../src/franchise/store.js';
 import { createSlotManager, ACTIVE_SLOT_KEY } from '../src/franchise/slots.js';
 import { memoryLocalStorage } from './helpers/cloud-sim.js';
 
-const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise;
+const fixture = () => JSON.parse(fs.readFileSync(new URL('./fixtures/save-v10-season2.json', import.meta.url), 'utf8')).franchise;
 const legacyText = () => JSON.stringify({ ...Save.migrate(fixture()), savedAt: 1_790_000_000_000 });
 let clock = 1_800_000_000_000; const now = () => (clock += 1000);
 const mgr = (backend, ls) => createSlotManager({ backend, localStorage: ls, now, debounce: 0 });

@@ -63,7 +63,7 @@ test('a new franchise and its league: every monster at his species position', ()
   const all = [...f.roster, ...Object.values(f.league.monsters)];
   assert.ok(all.length > 500);
   assert.deepEqual(all.filter((m) => m.position !== SPECIES_BY_ID[m.species]?.position).map((m) => `${m.name} ${m.position}`), []);
-  assert.equal(f.schemaVersion, 9); assert.equal(f.freeAgency.activeFrom, 1);
+  assert.equal(f.schemaVersion, 10); assert.equal(f.freeAgency.activeFrom, 1); // schema 10: Task 8 (fresh-save break)
 });
 
 test('lineup repair: entries that put a monster in another position are removed, nobody is released or changed', () => {

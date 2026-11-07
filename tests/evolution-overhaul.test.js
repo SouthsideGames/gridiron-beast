@@ -7,7 +7,8 @@ import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import * as Save from '../src/franchise/save.js';
 import { runFranchise } from '../tools/franchise-soak.mjs';
-import { tryEvolve, evolutionReady, nextEvolution, formOf, speciesEffect, resolveSpecies, clampAttr, monsterOverall } from '../src/data/monsters.js';
+import { tryEvolve, evolutionReady, nextEvolution, formOf, speciesEffect, resolveSpecies, monsterOverall, overall, raiseToLevel, syncFromDev } from '../src/data/monsters.js';
+import { formById } from '../src/data/beast-dex.js';
 import { ATTRIBUTES, POSITION_WEIGHTS } from '../src/data/personnel.js';
 import { careerEvents, careerTimeline } from '../src/franchise/career.js';
 import { evolutionSnapshot, evolutionReport } from '../src/franchise/evolution-report.js';
@@ -20,27 +21,36 @@ const copy = (x) => JSON.parse(JSON.stringify(x));
 let base = null; // one played franchise (week 4: injury history, captains, chemistry live), cloned per test
 const fresh = () => { base ||= runFranchise(9, { seasons: 1, stopWeek: 4 }).f; return Save.importJson(Save.exportJson(base)); };
 const evolvable = (f, n = 0) => f.roster.filter((m) => nextEvolution(m))[n];
-const ready = (m) => { m.level = Math.max(m.level, nextEvolution(m).level); return m; }; // test fixture: reach the level
+const ready = (m) => { raiseToLevel(m, nextEvolution(m).level); return m; }; // test fixture: reach the level (Task 8: through the development record, never m.level)
+const rhu = (num, den) => Math.floor((2 * num + den) / (2 * den)); // roundHalfUp(num / den), positive integers
 
 test('eligibility: below the level, fully evolved and not on the roster are refused; at the level it evolves once', () => {
   const f = fresh(); const m = evolvable(f); const n = nextEvolution(m);
-  m.level = n.level - 1; let r = F.evolveMonster(f, m.id); assert.equal(r.ok, false); assert.match(r.reason, new RegExp(`level ${n.level}`)); assert.equal(m.stage || 0, 0);
-  m.level = n.level; assert.equal(evolutionReady(m), true); r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1);
+  assert.ok(m.level < n.level - 1, 'fixture starts below the level'); raiseToLevel(m, n.level - 1); let r = F.evolveMonster(f, m.id); assert.equal(r.ok, false); assert.match(r.reason, new RegExp(`level ${n.level}`)); assert.equal(m.stage || 0, 0);
+  raiseToLevel(m, n.level); assert.equal(evolutionReady(m), true); r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1);
   r = F.evolveMonster(f, m.id); assert.equal(r.ok, false, 'not again at the same level (unless the next form is reached)');
   assert.equal(F.evolveMonster(f, 'nobody').ok, false);
   const full = f.roster.find((x) => !nextEvolution(x)); if (full) { const r2 = F.evolveMonster(f, full.id); assert.equal(r2.ok, false); assert.match(r2.reason, /fully evolved/); }
-  const two = f.roster.find((x) => resolveSpecies(x).evolution.length >= 2 && x.id !== m.id);
-  if (two) { const lv = resolveSpecies(two).evolution; two.level = lv[1].level; assert.equal(F.evolveMonster(f, two.id).ok, true); assert.equal(F.evolveMonster(f, two.id).ok, true); assert.equal(two.stage, 2); assert.equal(F.evolveMonster(f, two.id).ok, false); }
+  const two = f.roster.find((x) => resolveSpecies(x).evolution.length >= 2 && !(x.stage || 0) && x.id !== m.id); // a base form with two evolutions to come
+  if (two) { const lv = resolveSpecies(two).evolution; raiseToLevel(two, lv[1].level); assert.equal(F.evolveMonster(f, two.id).ok, true); assert.equal(F.evolveMonster(f, two.id).ok, true); assert.equal(two.stage, 2); assert.equal(F.evolveMonster(f, two.id).ok, false); }
 });
 
-test('the evolution itself is exactly the existing rule: same id, form, +3/+1 attributes, +4 potential, salary until renewal', () => {
+test('the evolution itself is exactly the approved rule: same id, form, ratings scale with the ceiling, salary until renewal', () => {
   const f = fresh(); const m = ready(evolvable(f)); const twin = copy(m); const before = copy(m);
   assert.equal(F.evolveMonster(f, m.id).ok, true); tryEvolve(twin);
-  for (const k of ['id', 'name', 'stage', 'attributes', 'potential', 'salary', 'level', 'xp', 'position', 'type', 'species', 'nature', 'age', 'contract', 'injury', 'fatigue', 'stats'])
+  for (const k of ['id', 'name', 'stage', 'attributes', 'potential', 'salary', 'level', 'xp', 'position', 'type', 'species', 'temper', 'apex', 'dev', 'age', 'contract', 'injury', 'fatigue', 'stats'])
     assert.deepEqual(m[k], twin[k], `${k} as tryEvolve makes it`);
-  const w = POSITION_WEIGHTS[m.position];
-  for (const k of ATTRIBUTES) assert.equal(m.attributes[k], clampAttr(before.attributes[k] + (w[k] ? 3 : 1)), k);
-  assert.equal(m.potential, clampAttr(before.potential + 4)); assert.equal(m.salary, before.salary, 'salary unchanged until renewal');
+  // Approved rule (SPEC §20-22, t8 evolve; supersedes the old +3/+1 attributes, +4 potential): each individual ceiling keeps its
+  // relative placement in the new form's range, and each rating scales roundHalfUp(cur x P2 / P), capped at P2.
+  const fromForm = formById(before.dev.form), toForm = formById(m.dev.form); assert.equal(toForm.stage, fromForm.stage + 1);
+  for (const k of ATTRIBUTES) {
+    const P = before.dev.potential[k], P2 = m.dev.potential[k], [lo, hi] = fromForm.potential[k], [lo2, hi2] = toForm.potential[k];
+    assert.equal(P2, before.dev.apex ? 99 : lo2 + rhu((P - lo) * (hi2 - lo2), hi - lo), `${k} ceiling keeps its placement`);
+    assert.equal(m.dev.current[k], Math.min(P2, rhu(before.dev.current[k] * P2, P)), `${k} scales with the ceiling`);
+    assert.equal(m.attributes[k], m.dev.current[k], `${k} mirrored`);
+  }
+  assert.equal(m.potential, overall(m.dev.potential, m.position)); assert.ok(m.potential > before.potential, 'the evolved form raises the ceiling');
+  assert.equal(m.salary, before.salary, 'salary unchanged until renewal'); assert.equal(m.level, before.level, 'level unchanged');
   assert.equal(m.id, before.id); assert.equal(m.name, nextEvolution(before).name + (before.name.match(/ (II|III|IV|V|VI|\d+)$/)?.[0] || ''));
 });
 
@@ -53,14 +63,17 @@ test('the original and evolved forms and their sprites are the real ones', () =>
   assert.equal(monsterSprite(m, 256), monsterSprite({ ...m }, 256), 'same individual tint (by id)');
 });
 
-test('the report shows only real changes: capped attributes and potential are not improvements; no invented ability', () => {
+test('the report shows only real changes: an unchanged attribute is not an improvement; no invented ability', () => {
   const f = fresh(); const m = ready(evolvable(f)); const w = POSITION_WEIGHTS[m.position];
-  const capped = ATTRIBUTES.find((k) => w[k]); m.attributes[capped] = 99; m.potential = 97;
+  // Approved rule (t8 evolve): ratings scale with the ceiling, so a rating at its ceiling now rises with it (the old fixed cap at 99
+  // is superseded). A rating that rounds back to itself (1 x P2 / P < 1.5) is the real zero change the report must not list.
+  const capped = ATTRIBUTES.find((k) => !w[k]); const d = m.dev;
+  d.ref[capped] = d.current[capped] = 1; d.natural[capped] = d.trained[capped] = d.loss[capped] = 0; syncFromDev(m);
   const s0 = evolutionSnapshot(m); assert.equal(F.evolveMonster(f, m.id).ok, true); const s1 = evolutionSnapshot(m);
   const r = evolutionReport(s0, s1, { year: f.season.year, week: f.season.week, club: f.club });
   assert.equal(r.all.find((a) => a.key === capped).delta, 0); assert.ok(!r.changed.some((a) => a.key === capped), 'a capped attribute is not listed as improved');
   for (const a of r.changed) assert.equal(a.to - a.from, a.delta); assert.ok(r.changed.every((a) => a.delta !== 0));
-  assert.deepEqual(r.potential, { from: 97, to: 99, delta: 2 });
+  assert.deepEqual(r.potential, { from: s0.potential, to: overall(m.dev.potential, m.position), delta: overall(m.dev.potential, m.position) - s0.potential }); assert.ok(r.potential.delta > 0);
   assert.equal(r.overall.from, s0.overall); assert.equal(r.overall.to, monsterOverall(m));
   assert.deepEqual(speciesEffect(m)?.name ?? null, s0.ability?.name ?? null, 'evolution keeps the ability'); assert.equal(r.ability, null);
   assert.equal(r.salary.unchanged, true); assert.equal(r.fromStage, 0); assert.equal(r.toStage, 1);
