@@ -285,3 +285,17 @@ These are judgments, not automated results.
   - The shelled designs (Kilnback, Kettlump, Washerling) are small on the field.
   - Dark-type palettes (Murkit, Umbruin, Inklet) are low-contrast on turf, as they were before.
   - Small decorative details (fangs, hooked claws, thin crests) vanish at 16–24 px. The identity of these designs comes from silhouette, proportions and colour.
+
+### Test results (2026-11-06)
+
+**Full suite** (`npm test`): 895 tests; 893 passed and 2 failed in the first run.
+
+**The two failures** were in `tests/release-stamp.test.js`. The game page's module import map did not list the two generator modules, `src/ui/sprite-gen.js` and `src/ui/sprite-features.js`, which were added on this branch.
+
+**Fix:** re-running `node tools/stamp-release.mjs` added only those two entries. The version stays at 42.22.0 and nothing else on the page changed. Both tests then passed (2/2).
+
+**Other checks:**
+- `tests/sprite-gen.test.js`: 13/13, including the Basic v2 regression test.
+- `tests/species.test.js`: 11/11.
+- Beast Dex validator: PASS, with 0 failed assertions.
+- Validator self-test: 13/13.
