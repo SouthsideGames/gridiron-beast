@@ -1,32 +1,55 @@
 // Task 8 M1 (WP2-WP3): AI training allocation, age-related decline on the development record, and the simulated prior-career
 // history used to generate veterans (N7c B7). Pure functions over the record from progression.js; not yet wired.
 import * as F from '../../core/fraction.js';
-import { ATTRIBUTES } from '../../data/beast-dex.js';
+import { ATTRIBUTES, RULES } from '../../data/beast-dex.js';
 import { POSITION_WEIGHTS } from '../../data/personnel.js';
 import { CURVE, trueOnset, technicalOffset, isPhysical, physLoss, techLoss, drawLoss, ATTRIBUTE_FLOOR, peakWindowAge } from '../../data/aging.js';
 import { addLevelXp, addTrainingProgress, addBankedPoints, invest, trainingCost, evolve } from './progression.js';
 
+/** Weight of an attribute for AI and auto allocation (spec §4; corrected per owner instruction 2026-11-07 10:39). */
+export const ALLOCATION_TIER = Object.freeze({ approvedNonOvrUse: 0.5, apexUnusedAtPosition: 0.2 });
+export function allocationWeight(d, position, a) {
+  const ovr = (POSITION_WEIGHTS[position] || POSITION_WEIGHTS.WR)[a];
+  if (ovr) return ovr;                                         // positional value first
+  if (RULES.attributeRoles[position]?.[a]) return ALLOCATION_TIER.approvedNonOvrUse; // approved non-OVR use (Appendix C "Active")
+  return d.apex ? ALLOCATION_TIER.apexUnusedAtPosition : 0;   // "Not used" at the position: Apex only, so all 12 can reach 99
+}
+
 /**
  * AI and auto allocation (spec §4): spend banked points one at a time (then the fractional remainder) on the attribute with the best
- * positional benefit, considering current rating, the individual ceiling, age cost and Temper efficiency. The score divides by the
- * square root of the effective cost rather than the cost itself, so an important unfavored or age-expensive attribute is still
- * developed instead of being ignored for cheap irrelevant ones. Attributes outside the position's OVR weights are never chosen.
+ * score = weight × min(1, headroom / 10) / sqrt(effective cost).
+ * - Ordinary monsters: positional OVR attributes first, plus attributes with an approved non-OVR use at the position (Appendix C
+ *   "Active": e.g. Durability's fatigue and injury resistance); attributes "Not used" at the position are not chosen.
+ * - Apex: every attribute is eligible, including those excluded from OVR or unused at the position, so a legal path to all-99
+ *   exists; positional value still comes first.
+ * - Dividing by the square root of the cost keeps an important unfavored or age-expensive attribute in development.
+ * This is ordinary AI policy. The equal-investment Apex benchmark policy is `allocateEqualBenchmark`, used only by benchmarks.
  * Returns the list of { attr, points } spent.
  */
 export function allocateTraining(d, m) {
-  const w = POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR;
   const spent = [];
   while (F.cmp(d.bank, F.ZERO) > 0) {
     let best = null, bestScore = 0;
     for (const a of ATTRIBUTES) {
-      if (!w[a] || d.current[a] >= d.potential[a]) continue;
+      const w = allocationWeight(d, m.position, a);
+      if (!w || d.current[a] >= d.potential[a]) continue;
       const gap = d.potential[a] - d.current[a];
-      const score = (w[a] * Math.min(1, gap / 10)) / Math.sqrt(F.toNumber(trainingCost(d, m, a).effective));
+      const score = (w * Math.min(1, gap / 10)) / Math.sqrt(F.toNumber(trainingCost(d, m, a).effective));
       if (score > bestScore + 1e-12) { bestScore = score; best = a; }
     }
     if (!best) break;
     const pts = F.min(d.bank, F.ONE);
     invest(d, m, best, pts); spent.push({ attr: best, points: pts });
+  }
+  return spent;
+}
+
+/** Benchmark-only policy (Apex all-99 benchmark): one point at a time round-robin over every attribute with headroom. Never used by AI clubs. */
+export function allocateEqualBenchmark(d, m) {
+  const spent = []; let i = 0;
+  while (F.cmp(d.bank, F.ZERO) > 0) {
+    const open = ATTRIBUTES.filter((a) => d.current[a] < d.potential[a]); if (!open.length) break;
+    const a = open[i++ % open.length]; const pts = F.min(d.bank, F.ONE); invest(d, m, a, pts); spent.push({ attr: a, points: pts });
   }
   return spent;
 }

@@ -114,3 +114,35 @@ test('career: AI allocation favours positional benefit without ignoring unfavore
   assert.deepEqual(P.devProblems(a.v), []);
   assert.throws(() => C.simulateHistory(createRng(1), a.v, a.vm, { seasons: 1, xpMultiplier: 3 }));
 });
+
+test('allocation tiers: ordinary uses OVR plus approved non-OVR roles only; Apex can develop all 12; equal benchmark is separate', async () => {
+  const C = await import('../src/franchise/t8/career.js');
+  const { RULES } = await import('../src/data/beast-dex.js');
+  const m = { id: 'q', age: 22, position: 'RB' };
+  assert.equal(C.allocationWeight({ apex: false }, 'RB', 'speed'), 3);
+  assert.equal(C.allocationWeight({ apex: false }, 'RB', 'durability'), 0.5); // Appendix C: fatigue and injury resistance
+  assert.equal(RULES.attributeRoles.RB.arm, false); assert.equal(C.allocationWeight({ apex: false }, 'RB', 'arm'), 0);
+  assert.equal(C.allocationWeight({ apex: true }, 'RB', 'arm'), 0.2);
+  // ordinary monster with lots of points never trains an attribute unused at its position
+  const d = P.generateIndividual(createRng(61), 'emberfox:0', { apex: false }); P.addBankedPoints(d, 400); C.allocateTraining(d, m);
+  for (const a of ['arm', 'accuracy', 'coverage', 'kicking']) assert.equal(d.trained[a], 0, a);
+  assert.ok(d.trained.durability > 0);
+  // Apex: a legal path to all-99 under ordinary AI allocation (enough points eventually raises every attribute)
+  const x = P.generateIndividual(createRng(62), 'emberfox:0', { apex: true }); P.addBankedPoints(x, 2000); C.allocateTraining(x, m);
+  for (const a of ATTRIBUTES) assert.equal(x.current[a], 99, a);
+  // benchmark policy spreads evenly
+  const y = P.generateIndividual(createRng(63), 'emberfox:0', { apex: true }); P.addBankedPoints(y, 24); const sp = C.allocateEqualBenchmark(y, m);
+  assert.equal(new Set(sp.map((s) => s.attr)).size, 12);
+});
+
+test('training bar is independent of levels: awards keep working, no level-up points, training continues at level 50', () => {
+  const d = P.generateIndividual(createRng(71), 'emberfox:0', { apex: false });
+  P.addLevelXp(d, 75 * 10); assert.deepEqual(d.bank, F.ZERO); // level-ups grant no training points
+  P.addLevelXp(d, 75 * 100); assert.equal(d.level, 50);
+  assert.equal(P.addTrainingProgress(d, F.frac(1, 4)), 0); assert.deepEqual(d.bar, F.frac(1, 4));
+  assert.equal(P.addTrainingProgress(d, F.frac(3, 4)), 1); assert.deepEqual(d.bank, F.ONE); // full bar → one point, at level 50
+  P.addTrainingProgress(d, F.frac(1, 16)); assert.deepEqual(d.bar, F.frac(1, 16)); // reserve award 6.25%
+  P.addBankedPoints(d, 2); assert.deepEqual(d.bank, F.frac(3)); // offseason award
+  const r = P.invest(d, { id: 'z', age: 22, position: 'RB' }, 'speed', 1); assert.ok(r.increases >= 0);
+  const back = JSON.parse(JSON.stringify(d)); assert.deepEqual(back.bar, d.bar); assert.deepEqual(back.bank, d.bank); // fractions survive saves
+});
