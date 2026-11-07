@@ -107,7 +107,8 @@ test('every species ability and trait maps to known engine primitives, and they 
   const L = lineup(11, 60);
   const quiet = [];
   for (const sp of SPECIES_DEX) {
-    const e = sp.ability?.effect || TRAITS[sp.trait].effect;
+    if (!sp.ability?.effect) continue; // shared traits are retired (N7c B13): only signature abilities still act
+    const e = sp.ability.effect;
     if (Object.keys(e).every((k) => PASSIVE.has(k) || k === 'zoneRange') || !SLOT[sp.position]) continue;
     const [slot, side] = SLOT[sp.position];
     let n = 0;

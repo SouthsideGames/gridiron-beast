@@ -15,7 +15,7 @@ function questionsFor(t, n = 3) {
   return out;
 }
 
-test('media day: answers of the same nature accumulate, one MEDIA_BOOST each, never above MEDIA_CAP', () => {
+test('media day: answers tagged with a legacy nature no longer boost anyone (Nature retired, N7c B14)', () => {
   const t = QUESTIONS.find((q) => !isSituational(q)).a[0].t;
   for (const count of [1, 2, 3]) {
     const f = franchiseOnMediaDay(); const qs = questionsFor(t, 3); assert.equal(qs.length, 3, `three questions offer ${t}`);
@@ -23,6 +23,6 @@ test('media day: answers of the same nature accumulate, one MEDIA_BOOST each, ne
     // `count` answers speak for t; the rest pick an answer of another nature
     const answers = qs.map(([i, k], j) => (j < count ? k : QUESTIONS[i].a.findIndex((a) => a.t !== t)));
     const r = F.answerMedia(f, answers);
-    assert.equal(r.boosts[t], Math.min(F.MEDIA_CAP, count * F.MEDIA_BOOST), `${count} answer(s) of ${t}`);
+    assert.equal(r.boosts[t], undefined, `${count} answer(s) of ${t}: nature boosts are retired (N7c B14)`);
   }
 });
