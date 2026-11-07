@@ -48,6 +48,8 @@ Choose individual assignments within these exact totals. Spread roles across typ
 
 ## Names and art
 
+Finish this creation batch first. The later owner-approved generator upgrade is specified in [SPRITE_GENERATOR_BRIEF.md](SPRITE_GENERATOR_BRIEF.md). Preserve the initial art as a baseline; follow its silhouette and sample checkpoints before revising the 120 appearances.
+
 Create stable unique family/form IDs and names distinct from the original 72 and from one another. Ground designs in their type and football role while varying silhouettes, body plans and personalities. Basic rarity should look simpler than legendary designs without looking unfinished.
 
 Inspect the existing sprite pipeline and use its actual pixel-art conventions, dimensions, animation frames, palette practices, transparency, orientation and asset registration. Do not assume the historical spreadsheet art fields alone specify the current renderer. Produce the real assets/recipes needed by that pipeline, not unrelated concept images. Reuse established art tooling; do not require an unavailable external generation service or invent an integration.
@@ -91,6 +93,10 @@ Track separately:
 - Player exposure: actual draft selections offered and scouting prospects seen over 20-season careers, separately from all AI-roster generation and unseen pools. Freeze and report draft sizes, scouting frequency, seeds, roster attrition and sample size so the results are reproducible. Do not invent acquisition rules to obtain favorable diversity.
 
 Keep the approved initial 10,000 eligible Apex-roll report at 1%; expected count is about 100, not exactly 100. Exact duplicates are reportable findings, not proof of a bug by themselves. Do not promise uniqueness or add automatic rerolls/quotas to suppress repeats. Additional generation samples and career scenarios can be proposed as audit methodology; label them rather than claiming the owner already selected all sample sizes/tolerances.
+
+## Authoritative Beast Dex and workbook override
+
+GitHub is the single source of truth. An Excel workbook is not required; disregard older workbook-update requirements. An Excel export may be added later, but is not a prerequisite or deliverable of this assignment.
 
 ## Technical audit after Basic creation
 

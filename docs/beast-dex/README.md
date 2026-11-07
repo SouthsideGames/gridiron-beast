@@ -4,6 +4,10 @@
 
 Owner-approved attribute profiles and rarity amendments. This is a design dataset and browsable GitHub reference; it does not modify the running game.
 
+## Approved sprite generator upgrade
+
+[Claude generator brief: 30 structures, five poses, 60 feature options](SPRITE_GENERATOR_BRIEF.md). Finish the initial Basic batch before upgrading; review silhouettes and a representative sample before the full art revision.
+
 ## Approved Basic expansion
 
 [Claude creation brief: 120 Basic families](BASIC_CREATION_BRIEF.md) · [Later progression decisions](PROGRESSION_DECISIONS.md)
