@@ -269,6 +269,8 @@ The bounds in §3–§4 were computed under readings A1–A6. The owner has now 
 | IV. B's paused offense | 4 / 5 | **G2:** a Runway or Beacon field pauses while its creator is off the field, and over a whole opponent possession. So QB 1 + 3 WR fields (one created earlier in Spread and paused) + TE Bulwark 1 = 5. | **5** |
 | V. Kickers (Frostmark × 2 teams) | 8 | Unchanged: the clock counts opposing offensive scrimmage plays only. | **8** |
 
+**Scope of the creator-presence rule (N7d G3).** The requirement that the creator be on the field at the spawn snap applies only to the eight named abilities: Burning Wake, Bloom Break, Bramble Trap, Beacon Lane, Bulwark Grid, Shadow Patch, Crosswind Rescue and Mind Bend. The five explicit off-field creation permissions remain approved and are counted that way above: Frostmark, Echo Landing, Gear Grid, Tsunami Line and Splashdown.
+
 **Whole-field maximum.**
 - With two Galyx at A's S slots: 9 + 11 + 11 + 5 + 8 = **44**.
 - With Tsunarok replacing a Galyx: 9 + 1 + 9 + 11 + 5 + 8 = 43.

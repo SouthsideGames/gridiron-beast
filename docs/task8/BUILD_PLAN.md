@@ -22,6 +22,14 @@ Every decision is approved; N7d closed the field-wording gaps G1–G3 ([FIELD_CL
 | **M5** Grading, mastery and AI | WP8, WP9 | Football §7 and Clash §8 grading; mastery 0/10/30/60; AI knowledge and scouting (B16); legendary limit with legendary kickers counted as offensive (B19); AI may start Basics; training allocation | Grading fixtures; AI benchmark parity |
 | **M6** Presentation and gates | WP11, WP12 | Shared status badge, charge bar, battery, Apex markers, Temper, three bars, the 192-family Dex and collection achievements (72 / 120 / 192); settings (60/30 FPS, quality, reduced flash); rebenchmarks: pancakes on Dex ratings (B1), XP multiplier (B6), Apex ask (B9), economy (#30); CPU gate; frozen probability tests (B12) | Full suite; career and pacing reports; CPU gate. Physical-device frame gates reported as unverified unless devices are available |
 
+## Transitional legacy ability effects (until M3)
+
+- **Scope.** From the M1 switch until M3, the 72 original families keep their legacy football ability effect keys (the engine's inline effect primitives) so the game stays playable. They are transitional, not Task 8 behaviour.
+- **Marking.** They are marked transitional in code (`LEGACY_ABILITY_EFFECTS_TRANSITIONAL`) and in the species table, and listed in the M1 report.
+- **M3 replaces them completely.** Each family's legacy effect is removed in the same change that registers its Dex contract, so old and new effects never stack.
+- **M3 gate.** A static test fails if any legacy effect key or trait key remains reachable from the engine, or if a family has both a legacy effect and a registered contract.
+- **Clash.** Legacy Clash moves are replaced the same way at M4.
+
 ## Field clocks
 
 G1–G3 are resolved (N7d). Field clocks and creation hooks are built straight from FIELD_CLOCKS.md.

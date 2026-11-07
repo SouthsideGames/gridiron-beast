@@ -6,7 +6,8 @@
     "N7a": "Owner instruction 2026-11-07 00:13: no universal evasion, no multi-play Stunned, ordinary attacks normally connect",
     "N7b": "Owner rulings on P1-P10 and additional rulings, 2026-11-07 09:21 (docs/task8/RULINGS_2026-11-07.md)",
     "N7c": "Owner rulings on B1-B20, 2026-11-07 10:00 (docs/task8/RULINGS_2026-11-07b.md)",
-    "N7d": "Owner rulings on G1-G3, 2026-11-07 10:21 (docs/task8/RULINGS_2026-11-07c.md)"
+    "N7d": "Owner rulings on G1-G3, 2026-11-07 10:21 (docs/task8/RULINGS_2026-11-07c.md)",
+    "N7e": "Owner ruling on fractional training display, 2026-11-07 10:32"
   },
   "abilities": {
     "FIR-01-C": {
@@ -361,6 +362,11 @@
         "WAT-01-F"
       ],
       "rule": "Wait for the creator next eligible on-field snap before spawning; the listed off-field abilities keep their explicit permissions."
+    },
+    {
+      "id": "fractional-display",
+      "ruling": "N7e",
+      "rule": "Show banked points floored to whole numbers and attribute bars as whole percentages; enable the exact-cost purchase when the exact banked balance covers the exact remaining cost; show that cost to two decimals rounded up. Display rounding never changes balances, deducts extra points or determines affordability. Preserve exact fractions through saves and evolution."
     }
   ],
   "openGaps": []

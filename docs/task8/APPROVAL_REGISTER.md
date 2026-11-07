@@ -20,6 +20,7 @@ This is the single register of every Task 8 decision item: round 1 (items 1–40
 | **N7a** | Owner instruction, 2026-11-07 00:13: no universal evasion; no multi-play Stunned proposal; ordinary attacks normally connect |
 | **N7b** | Owner rulings on P1–P10, 2026-11-07 09:21 ([RULINGS_2026-11-07.md](RULINGS_2026-11-07.md)) |
 | **N7c** | Owner rulings on B1–B20, 2026-11-07 10:00 ([RULINGS_2026-11-07b.md](RULINGS_2026-11-07b.md)) |
+| **N7e** | Owner ruling on fractional training display, 2026-11-07 10:32 |
 | **N7d** | Owner rulings on G1–G3, 2026-11-07 10:21 ([RULINGS_2026-11-07c.md](RULINGS_2026-11-07c.md)) |
 
 The consolidated rules are in [SPECIFICATION_BASELINE.md §20–§21](../beast-dex/SPECIFICATION_BASELINE.md) and
@@ -150,5 +151,7 @@ The field limits were recalculated under these clocks: 44 rectangles, and 0 obje
 | 37–38 | Basic Clash action; contracts | **Approved** | R1 |
 | 39 | AI use of Basics | **Approved** | R1; N7b |
 | 40 | Dex and collection | **Approved** | R1; N7b |
+
+| Fractional training display (spec §4 gap) | **Approved** (N7e) | Floor banked points and whole-percent bars; the exact-cost purchase is affordable on exact balances, with its cost shown to two decimals rounded up; display never changes balances, deducts extra or decides affordability; fractions preserved through saves and evolution |
 
 **Specification status: closed.** Every item has a binding ruling (N7d resolved the last gaps).

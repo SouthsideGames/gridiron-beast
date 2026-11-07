@@ -684,5 +684,12 @@ Owner rulings N7d (2026-11-07 10:21, verbatim in docs/task8/RULINGS_2026-11-07c.
 - **G3, creation.** Burning Wake, Bloom Break, Bramble Trap, Beacon Lane, Bulwark Grid, Shadow Patch, Crosswind Rescue and Mind Bend wait for their creator's next eligible on-field snap before spawning. Frostmark, Echo Landing, Gear Grid, Tsunami Line and Splashdown keep their explicit off-field creation permissions.
 - **Recalculated limits.** Diagnostic thresholds only: 44 field rectangles on the whole field, and 0 objects on a live kickoff. Derivation: docs/task8/P9_VERIFIED_LIMITS.md §9.
 
+- **Fractional training display (owner ruling N7e, 2026-11-07 10:32).**
+  - Banked points are shown rounded down to whole numbers, and each attribute's bar as a whole percentage.
+  - The exact-cost purchase is enabled when the exact banked balance covers the exact remaining cost. That cost is shown to two decimals, rounded up.
+  - Display rounding never changes balances, never deducts extra points and never decides affordability.
+  - Exact fractions are preserved through saves and evolution.
+  - This closes the §4 display gap.
+
 The Task 8 specification has no open decisions.
 
