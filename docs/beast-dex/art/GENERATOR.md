@@ -9,7 +9,7 @@
 | Before baseline | The initial 120 Basic batch is preserved at commit `6abcf3b` (branch `task8-basic-families`, local tag `basic-batch-v1`; the egress policy refused a tag push, so the commit is the remote reference). Its recipes, SVGs, PNGs and review sheets are unchanged. |
 | 1. Silhouette structure sheet | **Approved by the owner, 2026-11-06**, after five targeted revisions ([before/after](generator/revisions-1.html)), including the insectoid's dorsal view and the arachnid's simplified anatomy. The 150 approved renders are pinned in `tests/fixtures/v2-structures-approved.json`. |
 | Controls and feature library | Built after checkpoint 1: proportion controls, the 60-feature library with shape variants, face and marking controls, compatibility diagnostics. Sheets: [features](generator/features.html), [controls](generator/controls.html), [face and markings](generator/face-markings.html); [compatibility matrix](generator/compatibility.json). |
-| 2. 20-monster sample | Presented for owner review ([sample](sample/checkpoint-2.html)). |
+| 2. 20-monster sample | **Ready for owner review**: [before/after sample](sample/checkpoint-2.html) ([png](sample/png/checkpoint-2.png)), [crowded-field preview](sample/crowded-field.html) ([png](sample/png/crowded-field.png)), [audit](sample/sample-audit.json). The full Basic revision waits for approval. |
 | 3. Full Basic revision | Not started; waits for checkpoint 2 approval. |
 
 Gameplay is untouched: no stats, abilities, collisions, rarity, positions, IDs or archetypes change. The game renders only legacy recipes, and they are pixel-identical to before.
@@ -216,3 +216,15 @@ Regenerate with `node docs/beast-dex/tools/library_review.mjs`.
 ## Tests (controls and features)
 
 `tests/sprite-gen.test.js`, 12/12: the approved 150 renders are unchanged; every control value changes its fixture; all 60 features and their variants are visible and distinct on their fixtures; face and markings change the render; unsupported combinations are rejected and the render diagnostics agree with the pixels across all 1,800 structure × feature cases; determinism, cache identity and preview/export agreement with controls and features. `tests/species.test.js` 11/11, the legacy 222-sprite snapshot unchanged, and the Beast Dex validator passes.
+
+## Checkpoint 2: the 20-monster sample
+
+Proposed v2 recipes for 20 existing Basic families are in [sample/checkpoint-2-recipes.json](sample/checkpoint-2-recipes.json). Names, types, positions, colours, sizes, personalities and gameplay profiles are unchanged, and nothing is wired into the game data. Regenerate the sheets with `node docs/beast-dex/tools/sample_review.mjs`.
+
+- **Coverage:** all 12 types, all 10 positions, 20 different structures, 13 small and 7 medium forms. The Basic batch has no large forms.
+- **Diagnostics:** all 20 recipes are clean. While authoring, the diagnostics rejected 10 choices: invisible claws, ears, tusks, webbed feet and markings, and two designs that would have shrunk below 88%. They were replaced, not hidden.
+- **Similarity,** measured against the other 19 proposals, the 102 original forms and the other 119 current Basics:
+  - no exact duplicates, no identical silhouettes and no match at 0.85 or above;
+  - mean nearest-silhouette score 0.992 before, 0.751 after. The current Basics almost all share a silhouette with an existing design.
+- **Small features:** nine features change only 1–3 pixels and may be lost at 16–24 px: vent fins, straight antennae, pointed ears on the hopper, hooked beak, hooked claws, crystal growths, fangs (twice) and a spike crest. They read at 32–48 px.
+- **Field read:** in the crowded-field preview, the low, wide designs (badger, otter, mole, walrus) occupy less height than their former upright templates at the same 3.4-yard sprite size.
