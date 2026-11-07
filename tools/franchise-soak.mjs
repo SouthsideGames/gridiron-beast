@@ -122,7 +122,8 @@ export function runFranchise(seed, { difficulty = 'pro', seasons = SEASONS, chec
     let fa = 0; while (!t7 && f.roster.length < ROSTER_MIN && fa++ < 20) { const mk = F.offseasonMarket(f); const pick = mk.map((x) => x.monster).sort((a, b) => a.salary - b.salary)[0]; if (!pick) break; const r = F.signFreeAgent(f, pick.id); if (!r.ok) { problems.push(`season ${s}: free agency ${r.reason}`); break; } }
     for (const role of ['head_coach', 'off_coord', 'def_coord', 'head_scout', 'monster_trainer']) if (!f.staff?.[role]) F.hireDefaultStaff(f);
     // save round-trip at the season boundary
-    const back = Save.importJson(Save.exportJson(f)); if (!back) problems.push(`season ${s}: save round-trip failed`); else if (JSON.stringify(back.roster) !== JSON.stringify(f.roster)) problems.push(`season ${s}: save round-trip changed the roster`);
+    // a registry-less (legacy: true) universe is a tool-only baseline; Task 8 saves without a registry are refused, so it skips the round trip
+    const back = legacy ? f : Save.importJson(Save.exportJson(f)); if (!back) problems.push(`season ${s}: save round-trip failed`); else if (JSON.stringify(back.roster) !== JSON.stringify(f.roster)) problems.push(`season ${s}: save round-trip changed the roster`);
     onSeason?.(f, s);
     if (s < seasons) { const n = F.startNextSeason(f, { acceptForfeits: true }); /* the hands-off owner continues under the forfeit rule, as before the lineup safeguard */ if (!n.ok) { problems.push(`season ${s}: next season blocked (${n.reason})`); break; } problems.push(...check(f, `season ${s + 1} start`)); }
   }
