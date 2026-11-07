@@ -145,6 +145,7 @@ test('schema 10 round trips through export and import; a damaged registry, an ea
     assert.throws(() => Save.migrate(old), (e) => e.code === 'incompatible' && e.message === Save.INCOMPATIBLE_MESSAGE, `a ${v} is refused`);
     assert.equal(JSON.stringify(old), before, `the refused ${v} is not changed`);
   }
+  const noLeague = JSON.parse(JSON.stringify(f)); delete noLeague.league; assert.equal(Save.migrate(noLeague), null, 'a 10 without its registry is not a save this game wrote');
   const later = JSON.parse(JSON.stringify(f)); later.schemaVersion = 11; assert.equal(Save.migrate(later), null, 'a save from a later build is refused');
 });
 

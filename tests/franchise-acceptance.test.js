@@ -89,7 +89,11 @@ test('a lost Tuesday battle with a full roster: the one pitch can name who leave
   for (let seed = 400; seed < 460 && checked < 1; seed++) {
     const f = ready(seed); F.scoutRegion(f, 'Coral Coast');
     let k = 0; while (f.roster.length < ROSTER_MAX) { const c = JSON.parse(JSON.stringify(f.roster[k++ % 20])); c.id = `fill_${k}`; c.name = `Filler ${k}`; c.cornerstone = false; f.roster.push(c); }
-    F.startEncounter(f, 0); F.resolveEncounter(f); if (f.week.encounter.status !== 'pitch') continue; checked++;
+    F.startEncounter(f, 0);
+    // Task 8 M1 (fixture drift): no seed in 400–459 loses its Tuesday battle any more (the wild companions now come out weak; see the
+    // tuesday-companions failures), so the loss is made explicit: the stored wild side fights at 99 everywhere.
+    for (const m of f.week.encounter.b) for (const a of Object.keys(m.attributes)) m.attributes[a] = 99;
+    F.resolveEncounter(f); if (f.week.encounter.status !== 'pitch') continue; checked++;
     const g = JSON.parse(JSON.stringify(f));
     const no = F.recruit(f, 0, 'development'); assert.equal(no.ok, false); assert.equal(no.needRelease, true);
     const rel = F.releaseCandidates(f, f.week.prospects[0]).list[0].id; const r = F.recruit(f, 0, 'development', { releaseId: rel });

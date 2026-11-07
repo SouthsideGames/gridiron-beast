@@ -150,18 +150,21 @@ test('the Beast Dex outlives a franchise: discoveries merge into the player stor
 });
 
 test('evolution: commons evolve at their level, keep numerals, grow, and the dex remembers the form', async () => {
-  const { tryEvolve, formOf, generateMonster, createRoster, monsterOverall } = await import('../src/data/monsters.js');
+  const { tryEvolve, formOf, generateMonster, createRoster, monsterOverall, raiseToLevel } = await import('../src/data/monsters.js');
   const { createRng } = await import('../src/core/rng.js');
   const F = await import('../src/franchise/franchise.js');
   const rng = createRng(3);
-  const m = generateMonster(rng, { species: 'emberfox', position: 'RB', quality: 58 }); m.name = 'Flaroo II';
+  // Task 8 M1 (fixture drift): a generated veteran now carries a simulated prior career (B7) and this one arrived at level 34, already
+  // fully evolved; the scenario is a first-year Flaroo at level 1, made explicit (yearsPro 0)
+  const m = generateMonster(rng, { species: 'emberfox', position: 'RB', quality: 58, age: 20, yearsPro: 0 }); m.name = 'Flaroo II';
+  assert.equal(m.level, 1); assert.equal(m.stage, 0);
   assert.equal(tryEvolve(m), null, 'not before level 10');
   const before = monsterOverall(m);
-  m.level = 10; const e1 = tryEvolve(m);
+  raiseToLevel(m, 10); const e1 = tryEvolve(m); // Task 8 M1: readiness reads the development record's level (m.level is its mirror), so the level is reached honestly
   assert.equal(e1.to, 'Blazynx'); assert.equal(m.name, 'Blazynx II'); assert.equal(m.stage, 1); assert.ok(monsterOverall(m) > before);
   assert.equal(formOf(m).name, 'Blazynx'); assert.equal(formOf(m).size, 'medium');
-  m.level = 20; const e2 = tryEvolve(m); assert.equal(e2.to, 'Infernox'); assert.equal(m.name, 'Infernox II'); assert.equal(tryEvolve(m), null, 'no third evolution');
-  const u = generateMonster(rng, { species: 'voltfang', position: 'WR', quality: 58 }); u.level = 30; assert.equal(tryEvolve(u), null, 'uncommons do not evolve');
+  raiseToLevel(m, 20); const e2 = tryEvolve(m); assert.equal(e2.to, 'Infernox'); assert.equal(m.name, 'Infernox II'); assert.equal(tryEvolve(m), null, 'no third evolution');
+  const u = generateMonster(rng, { species: 'voltfang', position: 'WR', quality: 58, age: 20, yearsPro: 0 }); raiseToLevel(u, 30); assert.equal(tryEvolve(u), null, 'uncommons do not evolve');
   // AI rosters in later seasons field evolved commons; the dex remembers forms the player has faced.
   const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Zappard', cornerstoneDefense: 'Cryolynx', seed: 77 });
   f.season.year = 4;

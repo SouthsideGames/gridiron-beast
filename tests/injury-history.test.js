@@ -109,8 +109,12 @@ test('trades, releases, evolution and retirement keep the history (it belongs to
 
 test('save and reload keep the record; an existing save gets none until a game is played, and no history is invented', () => {
   const f = played(); const back = Save.importJson(Save.exportJson(f)); assert.deepEqual(back.injuryHistory, f.injuryHistory);
+  // Task 8 fresh-save break (spec §15, schema 10): the pre-Task 8 fixture is refused unchanged, so "an existing save" without a
+  // record is now a schema-10 save that has none (the played franchise with its record removed).
   const fx = JSON.parse(fs.readFileSync(new URL('./fixtures/save-v31-season2.json', import.meta.url), 'utf8')).franchise;
-  const old = Save.migrate(fx); assert.equal(old.injuryHistory, undefined, 'loading creates nothing');
+  assert.throws(() => Save.migrate(fx), (e) => e.code === 'incompatible', 'a pre-Task 8 save is refused');
+  const pre = JSON.parse(JSON.stringify(f)); delete pre.injuryHistory;
+  const old = Save.migrate(pre); assert.equal(old.injuryHistory, undefined, 'loading creates nothing');
   const html = careerPageHtml({ f: old, settings: {} }, { id: old.roster[0].id }); assert.match(html, /Injury History/); assert.match(html, /tracking starts with your next game/); assert.ok(!/Injury log/.test(html), 'before tracking: the section explains when it starts, with no log'); assert.equal(old.injuryHistory, undefined, 'viewing creates nothing');
 });
 
