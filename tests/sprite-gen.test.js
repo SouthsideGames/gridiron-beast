@@ -143,3 +143,22 @@ test('deterministic, cache-keyed and preview/export-consistent with controls and
   for (const [, x, y, w, fill] of sprite16(r, 16).matchAll(/<rect x="(\d+)" y="(\d+)" width="(\d+)" height="1" fill="([^"]+)"/g)) for (let k = 0; k < +w; k++) decoded[+y][+x + k] = fill;
   for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) assert.equal(decoded[y][x], g[y][x] ? pal[g[y][x]] : null);
 });
+
+// ---------------------------------------------------------------- the 120 Basics redrawn with generator v2 (pending owner final review)
+test('Basic v2 art: one clean recipe per Basic family; identities untouched; no duplicate or near-identical silhouettes', () => {
+  const fams = JSON.parse(readFileSync(new URL('../docs/beast-dex/data/basic-authoring.json', import.meta.url))).families;
+  const recs = JSON.parse(readFileSync(new URL('../docs/beast-dex/data/basic-art-v2.json', import.meta.url))).recipes;
+  assert.equal(recs.length, 120); assert.deepEqual(recs.map((r) => r.id).sort(), fams.map((f) => f.id).sort());
+  const allowed = new Set(['id', 'structure', 'pose', 'proportions', 'features', 'face', 'markings', 'colors']);
+  for (const r of recs) for (const k of Object.keys(r)) assert.ok(allowed.has(k), `${r.id}: field ${k} (identity and gameplay fields stay in the family data)`);
+  const F = Object.fromEntries(fams.map((f) => [f.id, f]));
+  const grids = recs.map((r) => { const spec = { colors: F[r.id].art.colors, ...r, id: `${r.id}_v2`, size: F[r.id].art.size }; const d = recipeDiagnostics(spec);
+    assert.deepEqual([d.problems.length, d.invisible.length, d.warnings.length], [0, 0, 0], `${r.id}: ${[...d.problems, ...d.invisible, ...d.warnings].join('; ')}`); return spriteGrid(spec); });
+  const originals = SPECIES_DEX.flatMap((s) => [0, 1, 2].slice(0, s.evolution.length + 1).map((st) => spriteGrid(evolvedSpec(s, st))));
+  const bitsOf = (g) => g.flat().map((v) => (v ? 1 : 0)); const mirr = (g) => g.map((row) => row.slice().reverse());
+  const jac = (a, b) => { let i = 0, u = 0; for (let k = 0; k < 256; k++) { i += a[k] & b[k]; u += a[k] | b[k]; } return i / u; };
+  const S = grids.map((g) => [bitsOf(g), bitsOf(mirr(g))]); const O = originals.map((g) => bitsOf(g));
+  let worst = 0;
+  for (let i = 0; i < S.length; i++) { for (let j = i + 1; j < S.length; j++) worst = Math.max(worst, jac(S[i][0], S[j][0]), jac(S[i][0], S[j][1])); for (const o of O) worst = Math.max(worst, jac(S[i][0], o), jac(S[i][1], o)); }
+  assert.ok(worst < 0.85, `closest silhouette pair ${worst.toFixed(3)} must stay below the 0.85 review threshold`);
+});

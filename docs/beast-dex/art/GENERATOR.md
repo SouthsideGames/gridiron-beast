@@ -9,7 +9,8 @@
 | Before baseline | The initial 120 Basic batch is preserved at commit `6abcf3b` (branch `task8-basic-families`, local tag `basic-batch-v1`; the egress policy refused a tag push, so the commit is the remote reference). Its recipes, SVGs, PNGs and review sheets are unchanged. |
 | 1. Silhouette structure sheet | **Approved by the owner, 2026-11-06**, after five targeted revisions ([before/after](generator/revisions-1.html)), including the insectoid's dorsal view and the arachnid's simplified anatomy. The 150 approved renders are pinned in `tests/fixtures/v2-structures-approved.json`. |
 | Controls and feature library | Built after checkpoint 1: proportion controls, the 60-feature library with shape variants, face and marking controls, compatibility diagnostics. Sheets: [features](generator/features.html), [controls](generator/controls.html), [face and markings](generator/face-markings.html); [compatibility matrix](generator/compatibility.json). |
-| 2. 20-monster sample | **Ready for owner review**: [before/after sample](sample/checkpoint-2.html) ([png](sample/png/checkpoint-2.png)), [crowded-field preview](sample/crowded-field.html) ([png](sample/png/crowded-field.png)), [audit](sample/sample-audit.json). The full Basic revision waits for approval. |
+| 2. 20-monster sample | **Direction approved by the owner, 2026-11-06**: [before/after sample](sample/checkpoint-2.html) ([png](sample/png/checkpoint-2.png)), [crowded-field preview](sample/crowded-field.html) ([png](sample/png/crowded-field.png)), [audit](sample/sample-audit.json). |
+| 3. Full Basic revision | **Ready for the owner's final review**: [overview](basic-v2/index.html), per-type sheets, [crowded field](basic-v2/crowded-field.html), [closest pairs](basic-v2/similarity.html), [audit](basic-v2/audit.json); PNGs in `basic-v2/png/`. Recipes in [`data/basic-art-v2.json`](../data/basic-art-v2.json); not wired into the game. |
 | 3. Full Basic revision | Not started; waits for checkpoint 2 approval. |
 
 Gameplay is untouched: no stats, abilities, collisions, rarity, positions, IDs or archetypes change. The game renders only legacy recipes, and they are pixel-identical to before.
@@ -228,3 +229,59 @@ Proposed v2 recipes for 20 existing Basic families are in [sample/checkpoint-2-r
   - mean nearest-silhouette score 0.992 before, 0.751 after. The current Basics almost all share a silhouette with an existing design.
 - **Small features:** nine features change only 1–3 pixels and may be lost at 16–24 px: vent fins, straight antennae, pointed ears on the hopper, hooked beak, hooked claws, crystal growths, fangs (twice) and a spike crest. They read at 32–48 px.
 - **Field read:** in the crowded-field preview, the low, wide designs (badger, otter, mole, walrus) occupy less height than their former upright templates at the same 3.4-yard sprite size.
+
+## Checkpoint 3: the 120 Basics redrawn
+
+The recipes are in `docs/beast-dex/data/basic-art-v2.json`, one per family, keyed by ID.
+
+- **Unchanged:** names, IDs, types, positions, sizes, colours and attribute profiles. They stay in `basic-authoring.json`, `families.json` and `forms.json`, and none of those files was touched.
+- **One exception:** Pondskip's palette is lightened, at the owner's request.
+- **Original forms:** the 102 original forms and the current Basic art (baseline `6abcf3b`) are unchanged.
+- **Game wiring:** the game does not read the new file yet. Switching the Basic forms to it waits for final approval.
+
+Regenerate the sheets with `node docs/beast-dex/tools/basic_v2_review.mjs`.
+
+### Automated checks
+
+| Check | Result |
+| --- | --- |
+| Generator diagnostics: no unsupported, invisible or oversized choice | 120/120 clean |
+| Structures used | 29 of 30; crustacean unused, because no Basic identity is crablike |
+| Exact pixel duplicates, mirror included | before 0 → after 0 |
+| Identical silhouettes, mirror included | before 167 → after 0 |
+| Silhouette pairs at or above 0.85 | before 949 → after 0 |
+| Mean similarity to each Basic's nearest design | before 0.987 → after 0.768 |
+| Closest pair after the revision | 0.844 |
+| Decorative features of 1–3 px | 49, all listed in the audit |
+| Recipes changed after the first draft | 68 of 120, recorded in [tuning.json](basic-v2/tuning.json) with the cause |
+
+**Comparison set:** every pair among the 120 Basics, and every Basic against every one of the 102 original forms. Each comparison uses the better of the direct and the horizontally mirrored silhouette.
+
+**Structure counts:**
+- 9 floating; 8 each compact quadruped and perching avian; 7 running avian; 6 each compact upright, long-legged quadruped, low elongated quadruped, heavy quadruped and shelled.
+- Every other used structure has 1–5.
+- Floating is the most used because most of the flying insects, sprites and orbs fit it. Moving them to the dorsal insect view made them read as one blob.
+
+**How similar designs were separated.** Silhouettes were separated by changing pose, proportions or a feature's shape variant, never by colour alone. The distinctness pass changed one of these at a time, and only when a silhouette came within 0.82 of another design. Every result still had to pass the diagnostics.
+
+**Regression test.** `tests/sprite-gen.test.js` checks that there are 120 recipes, one per family, all clean, with no identity fields and every pair below 0.85.
+
+### Closest pairs investigated (visual judgment)
+
+These are judgments, not automated results.
+
+- **Staticub and Cindruff, 0.844** (an original form). Both are compact bipedal cubs. Staticub has a large head, drooping ears and static prongs, and a different palette. They are distinct at 32–48 px but close at 16 px. The pair is left for the owner to judge. Other poses and anatomies for Staticub came out closer (0.86–0.92).
+- **Anvilox, 0.82, with several original heavy quadrupeds** (Thornback, Cobblon). This is the shared mass of a heavy ox. Anvilox has a flattened anvil head and a horn.
+- **Barnaclod with original quadrupeds, 0.82.** Its domed ridged shell and low legs read as a tortoise, not a mammal.
+- **Lanternox and Crestback, 0.81.** Both are heavy upright. Lanternox has horns and a lure; Crestback has a fan crest and a club tail.
+- **Washerling and Springlet, 0.82.** A low snail shell against a low armoured crawler. They differ in colour and shell profile.
+
+### Visual review (judgment, not automated)
+
+- **Redesigned after review:** Kettlump (a kettle-shelled tortoise read as a robot), Washerling (a snail read as a ray), Ingotusk (a square hog read as a figure), Glarefly and Fernflit (both read as blobs in the dorsal insect view), Mindle (too close to an original) and Crestback.
+- **Pondskip:** the palette is lightened to sky blue and the legs are splayed, so the body and legs stay readable on turf at phone size.
+- **Low, wide and unusual anatomies are kept,** for example the badger, otter, weasels, mole, serpents, rays, crawlers, jellyfish, spider and the multi-bodied designs. Heights vary deliberately.
+- **Still worth the owner's eye:**
+  - The shelled designs (Kilnback, Kettlump, Washerling) are small on the field.
+  - Dark-type palettes (Murkit, Umbruin, Inklet) are low-contrast on turf, as they were before.
+  - Small decorative details (fangs, hooked claws, thin crests) vanish at 16–24 px. The identity of these designs comes from silhouette, proportions and colour.
