@@ -1,0 +1,1658 @@
+[
+  {
+    "id": "emberfox",
+    "name": "Flaroo",
+    "type": "Fire",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "RB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "FIR-01-F",
+      "Beast Clash": "FIR-01-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, flametail",
+      "colors": "#e8662c, #ffd25a"
+    },
+    "description": "Can’t sit still; bounces laps around the bench during timeouts.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Dependable downhill runner"
+  },
+  {
+    "id": "ashkit",
+    "name": "Cindruff",
+    "type": "Fire",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "LB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "FIR-02-F",
+      "Beast Clash": "FIR-02-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, glow",
+      "colors": "#6b5a55, #ff7a2f"
+    },
+    "description": "Soot-covered and stubborn; shows up to every tackle a little smoky.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Physical run stopper"
+  },
+  {
+    "id": "firestorm",
+    "name": "Pyronix",
+    "type": "Fire",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "QB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "FIR-03-F",
+      "Beast Clash": "FIR-03-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "mane, glow",
+      "colors": "#c8402a, #ffb13d"
+    },
+    "description": "Throws like the ball owes him money.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Strong-arm passer"
+  },
+  {
+    "id": "cinderclaw",
+    "name": "Scorchulk",
+    "type": "Fire",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "DL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "FIR-04-F",
+      "Beast Clash": "FIR-04-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "spikes, claws, glow, fangs",
+      "colors": "#8f2b22, #ff8a3d"
+    },
+    "description": "Linemen say his hands are hot to the touch. They are.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Power pass rusher"
+  },
+  {
+    "id": "pyrelynx",
+    "name": "Flarynx",
+    "type": "Fire",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "CB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "FIR-05-F",
+      "Beast Clash": "FIR-05-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "fierce",
+      "features": "ears, mane, flametail, spikes, fangs",
+      "colors": "#5a1e1e, #ffb347"
+    },
+    "description": "A black-coated lynx wreathed in flame. Hunts the deep ball in silence; you only see the smoke.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Physical coverage corner"
+  },
+  {
+    "id": "pyroclast",
+    "name": "Pyroclast",
+    "type": "Fire",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "TE",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "FIR-06-F",
+      "Beast Clash": "FIR-06-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "horns, claws, plates, glow, crown",
+      "colors": "#3a2a2a, #ff5a1f"
+    },
+    "description": "A walking volcano. The ground under the goal posts still glows.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Powerful receiving threat"
+  },
+  {
+    "id": "tidepaw",
+    "name": "Aquip",
+    "type": "Water",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "CB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "WAT-01-F",
+      "Beast Clash": "WAT-01-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, fins, whiskers",
+      "colors": "#3d8fd6, #bde6ff"
+    },
+    "description": "Playful and slippery; treats every route like a game of tag.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Balanced coverage defender"
+  },
+  {
+    "id": "mudcub",
+    "name": "Muddlet",
+    "type": "Water",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "OL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "WAT-02-F",
+      "Beast Clash": "WAT-02-C"
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cute",
+      "features": "ears",
+      "colors": "#7a6248, #4fb3c9"
+    },
+    "description": "Heavy, happy, and impossible to move once he sits down.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Aware protection specialist"
+  },
+  {
+    "id": "reefclaw",
+    "name": "Crustank",
+    "type": "Water",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "DL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "WAT-03-F",
+      "Beast Clash": "WAT-03-C"
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "medium",
+      "look": "cool",
+      "features": "spikes",
+      "colors": "#d9584a, #ffd0b0"
+    },
+    "description": "Sideways in conversation, straight ahead at the snap. Built like a tank.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Endurance run stopper"
+  },
+  {
+    "id": "tidefin",
+    "name": "Ripplet",
+    "type": "Water",
+    "rarity": "rare",
+    "sourceRarity": "uncommon",
+    "position": "WR",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "WAT-04-F",
+      "Beast Clash": "WAT-04-C"
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "medium",
+      "look": "cool",
+      "features": "fins",
+      "colors": "#2b78c4, #7ef0e0"
+    },
+    "description": "Glides through traffic like it isn’t there.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Speed-focused receiver with Catching capped at 78"
+  },
+  {
+    "id": "wavehorn",
+    "name": "Tideram",
+    "type": "Water",
+    "rarity": "uncommon",
+    "sourceRarity": "rare",
+    "position": "TE",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "WAT-05-F",
+      "Beast Clash": "WAT-05-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "cool",
+      "features": "horn, fins",
+      "colors": "#25609e, #e8f6ff"
+    },
+    "description": "A ram of the tides; blocks like the water coming in.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Balanced blocking tight end"
+  },
+  {
+    "id": "tsunarok",
+    "name": "Tsunarok",
+    "type": "Water",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "S",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "WAT-06-F",
+      "Beast Clash": "WAT-06-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "fins, crest, plates, glow, crown",
+      "colors": "#0f2f5c, #4af0ff"
+    },
+    "description": "A leviathan that stands up out of the deep. Quarterbacks call it the blue wall.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Physical ball hawk"
+  },
+  {
+    "id": "thornkit",
+    "name": "Spriglet",
+    "type": "Nature",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "WR",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "NAT-01-F",
+      "Beast Clash": "NAT-01-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, tail, crest",
+      "colors": "#4f9a3a, #e0f29a"
+    },
+    "description": "Leaf-eared and curious; chases anything that bounces.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Technical route runner"
+  },
+  {
+    "id": "mossclaw",
+    "name": "Mossmaw",
+    "type": "Nature",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "DL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "NAT-02-F",
+      "Beast Clash": "NAT-02-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "mane, claws",
+      "colors": "#4c6b34, #a6d36b"
+    },
+    "description": "Quiet, patient, and covered in moss from sitting still too long.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Mobile pass rusher"
+  },
+  {
+    "id": "rootram",
+    "name": "Bramblet",
+    "type": "Nature",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "OL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "NAT-03-F",
+      "Beast Clash": "NAT-03-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "cool",
+      "features": "horns",
+      "colors": "#7a5a3a, #7fcf5a"
+    },
+    "description": "Plants his feet and grows there.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Strong stationary anchor"
+  },
+  {
+    "id": "leafhorn",
+    "name": "Florant",
+    "type": "Nature",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "S",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "NAT-04-F",
+      "Beast Clash": "NAT-04-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns, tail",
+      "colors": "#3f8f5a, #f0e08a"
+    },
+    "description": "A stag who sees the whole field from the back.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Reliable run-support safety"
+  },
+  {
+    "id": "thornback",
+    "name": "Thornback",
+    "type": "Nature",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "TE",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "NAT-05-F",
+      "Beast Clash": "NAT-05-C"
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "fierce",
+      "features": "spikes, shell",
+      "colors": "#5a6b2a, #c8a94a"
+    },
+    "description": "Curls up when hit and rolls for extra yards.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Contact specialist"
+  },
+  {
+    "id": "elderoot",
+    "name": "Elderoot",
+    "type": "Nature",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "LB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "NAT-06-F",
+      "Beast Clash": "NAT-06-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "horns, mane, glow",
+      "colors": "#4a3a2a, #8cff7a"
+    },
+    "description": "The oldest tree in the Wilds decided to play middle linebacker.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Defensive organizer"
+  },
+  {
+    "id": "flicker",
+    "name": "Zippit",
+    "type": "Electric",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "WR",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "ELE-01-F",
+      "Beast Clash": "ELE-01-C"
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, antennae, glow",
+      "colors": "#e0c22a, #7af0ff"
+    },
+    "description": "Buzzes, blinks, and is somehow always open.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Catch-and-run receiver"
+  },
+  {
+    "id": "voltfin",
+    "name": "Volcoil",
+    "type": "Electric",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "RB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "ELE-02-F",
+      "Beast Clash": "ELE-02-C"
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cute",
+      "features": "fins, glow, bulb",
+      "colors": "#3a7ad6, #ffe34a"
+    },
+    "description": "A pocket-sized eel with a shocking first step.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Receiving back"
+  },
+  {
+    "id": "voltfang",
+    "name": "Zappard",
+    "type": "Electric",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "WR",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "ELE-03-F",
+      "Beast Clash": "ELE-03-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, spikes, tail",
+      "colors": "#e6b42a, #3a3a6a"
+    },
+    "description": "First off the line, first to celebrate.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Physical possession receiver"
+  },
+  {
+    "id": "stormlynx",
+    "name": "Statyx",
+    "type": "Electric",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "S",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "ELE-04-F",
+      "Beast Clash": "ELE-04-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, mane, glow",
+      "colors": "#5a4ac8, #ffe85a"
+    },
+    "description": "The air crackles when he backpedals.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Fast coverage safety"
+  },
+  {
+    "id": "joltrex",
+    "name": "Joltrex",
+    "type": "Electric",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "DL",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "ELE-05-F",
+      "Beast Clash": "ELE-05-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "spikes, tail, claws, glow, fangs",
+      "colors": "#2a3a5a, #ffef3a"
+    },
+    "description": "A storm with teeth. Quarterbacks hear him before they see him.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Explosive edge rusher"
+  },
+  {
+    "id": "stormcrown",
+    "name": "Voltarch",
+    "type": "Electric",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "QB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "ELE-06-F",
+      "Beast Clash": "ELE-06-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "large",
+      "look": "fierce",
+      "features": "wings, crest, glow, crown",
+      "colors": "#232a52, #fff04a"
+    },
+    "description": "The thunderbird of the plains. Every pass is a lightning bolt.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Elite pocket passer"
+  },
+  {
+    "id": "snowmoth",
+    "name": "Flurrit",
+    "type": "Ice",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "K",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "ICE-01-F",
+      "Beast Clash": "ICE-01-C"
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, antennae",
+      "colors": "#dceefa, #8ac6ff"
+    },
+    "description": "Floats around the sideline; never misses from 30.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Dependable scoring kicker"
+  },
+  {
+    "id": "hailfang",
+    "name": "Frostpup",
+    "type": "Ice",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "CB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "ICE-02-F",
+      "Beast Clash": "ICE-02-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, spikes, tail, fangs",
+      "colors": "#9ac8e8, #ffffff"
+    },
+    "description": "Snaps at receivers’ heels all game long.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Fast recovery corner"
+  },
+  {
+    "id": "frostclaw",
+    "name": "Cryolynx",
+    "type": "Ice",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "LB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "ICE-03-F",
+      "Beast Clash": "ICE-03-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "cool",
+      "features": "ears, claws, collar",
+      "colors": "#e8f4ff, #5aa8e8"
+    },
+    "description": "Calm as a frozen lake, until the ball is snapped.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Coverage linebacker"
+  },
+  {
+    "id": "icehorn",
+    "name": "Glaciram",
+    "type": "Ice",
+    "rarity": "common",
+    "sourceRarity": "uncommon",
+    "position": "DL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "ICE-04-F",
+      "Beast Clash": "ICE-04-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "cool",
+      "features": "horns, mane",
+      "colors": "#7aa8c8, #e8f8ff"
+    },
+    "description": "A shaggy mountain ram with a cold stare.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Disciplined finisher"
+  },
+  {
+    "id": "glaciron",
+    "name": "Shardok",
+    "type": "Ice",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "OL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "ICE-05-F",
+      "Beast Clash": "ICE-05-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "plates, spikes",
+      "colors": "#8ab8d8, #d8f0ff"
+    },
+    "description": "Part monster, part iceberg. Nothing gets through.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Technical pass protector"
+  },
+  {
+    "id": "glacivern",
+    "name": "Glacivern",
+    "type": "Ice",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "K",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "ICE-06-F",
+      "Beast Clash": "ICE-06-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "large",
+      "look": "fierce",
+      "features": "wings, crest, glow",
+      "colors": "#c8e8ff, #3ad8ff"
+    },
+    "description": "An ice wyvern; the stadium gets cold when it lands.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Premium kicking specialist"
+  },
+  {
+    "id": "gustling",
+    "name": "Gustling",
+    "type": "Wind",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "WR",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "WIN-01-F",
+      "Beast Clash": "WIN-01-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, crest",
+      "colors": "#7ad8c8, #ffffff"
+    },
+    "description": "A fluffy bird who runs faster than he flies.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Straight-line deep threat"
+  },
+  {
+    "id": "breezefang",
+    "name": "Zephyroo",
+    "type": "Wind",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "RB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "WIN-02-F",
+      "Beast Clash": "WIN-02-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, tail",
+      "colors": "#8ac8b8, #e8fff8"
+    },
+    "description": "Low to the ground, then one hop and gone.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Elusive speed specialist"
+  },
+  {
+    "id": "skywarden",
+    "name": "Aeralis",
+    "type": "Wind",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "CB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "WIN-03-F",
+      "Beast Clash": "WIN-03-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "medium",
+      "look": "cool",
+      "features": "wings, crest, beak",
+      "colors": "#4aa8a0, #f0f8f0"
+    },
+    "description": "Watches the ball the whole way. Every time.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Agile coverage specialist"
+  },
+  {
+    "id": "windlynx",
+    "name": "Galyx",
+    "type": "Wind",
+    "rarity": "rare",
+    "sourceRarity": "uncommon",
+    "position": "S",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "WIN-04-F",
+      "Beast Clash": "WIN-04-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, tail, wings",
+      "colors": "#5ab8a8, #d8fff0"
+    },
+    "description": "Arrives at the ball like a gust out of nowhere.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Deep-coverage specialist"
+  },
+  {
+    "id": "zephyr",
+    "name": "Zephiro",
+    "type": "Wind",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "QB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "WIN-05-F",
+      "Beast Clash": "WIN-05-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "mane, tail",
+      "colors": "#3a9a8a, #ffffff"
+    },
+    "description": "Throws a ball that seems to float forever.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Mobile playmaker"
+  },
+  {
+    "id": "tempestra",
+    "name": "Tempestra",
+    "type": "Wind",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "WR",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "WIN-06-F",
+      "Beast Clash": "WIN-06-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "large",
+      "look": "fierce",
+      "features": "tail, wings, crest, glow",
+      "colors": "#1e5a5a, #9affea"
+    },
+    "description": "The storm queen. Cornerbacks call in sick.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Powerful yards-after-catch receiver"
+  },
+  {
+    "id": "pebble",
+    "name": "Pebblit",
+    "type": "Earth",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "OL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "EAR-01-F",
+      "Beast Clash": "EAR-01-C"
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "plates",
+      "colors": "#9a8a7a, #c8b89a"
+    },
+    "description": "Small, round, and very, very heavy.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Pancake specialist"
+  },
+  {
+    "id": "rockram",
+    "name": "Craggo",
+    "type": "Earth",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "LB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "EAR-02-F",
+      "Beast Clash": "EAR-02-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns, plates, claws",
+      "colors": "#5e6670, #b7d36a"
+    },
+    "description": "A bighorn brawler who stands up to hit. Head first, every play, no exceptions.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Disciplined all-rounder"
+  },
+  {
+    "id": "boulderox",
+    "name": "Bouldrox",
+    "type": "Earth",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "RB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "EAR-03-F",
+      "Beast Clash": "EAR-03-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "cool",
+      "features": "horns, plates",
+      "colors": "#7a5a3a, #e0c89a"
+    },
+    "description": "Runs through people, not around them.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Power back"
+  },
+  {
+    "id": "stoneguard",
+    "name": "Granigor",
+    "type": "Earth",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "K",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "EAR-04-F",
+      "Beast Clash": "EAR-04-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "claws, plates",
+      "colors": "#6a5a4a, #e8a85a"
+    },
+    "description": "A granite gorilla. A wall that walks forward.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Sturdy specialist"
+  },
+  {
+    "id": "terrabull",
+    "name": "Terrabull",
+    "type": "Earth",
+    "rarity": "uncommon",
+    "sourceRarity": "rare",
+    "position": "TE",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "EAR-05-F",
+      "Beast Clash": "EAR-05-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "fierce",
+      "features": "horns, fins, tail, plates",
+      "colors": "#5a3a2a, #f0a84a"
+    },
+    "description": "The ground shakes when he changes direction.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Mobile receiving tight end"
+  },
+  {
+    "id": "titanolith",
+    "name": "Titanolith",
+    "type": "Earth",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "OL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "EAR-06-F",
+      "Beast Clash": "EAR-06-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "plates, glow, crown, tusks",
+      "colors": "#4a4038, #ffb84a"
+    },
+    "description": "A living mountain. The only lineman ever to have fans.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Dominant power blocker"
+  },
+  {
+    "id": "shadowkit",
+    "name": "Umbrikit",
+    "type": "Dark",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "CB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "DAR-01-F",
+      "Beast Clash": "DAR-01-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, tail, whiskers",
+      "colors": "#3a2a5a, #b88aff"
+    },
+    "description": "A shy kitten who becomes a shadow at the snap.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Interception specialist"
+  },
+  {
+    "id": "nightowl",
+    "name": "Noctlet",
+    "type": "Dark",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "S",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "DAR-02-F",
+      "Beast Clash": "DAR-02-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, wings, beak",
+      "colors": "#4a3a6a, #ffd84a"
+    },
+    "description": "Huge eyes, sees every route from the deep middle.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Defensive reader"
+  },
+  {
+    "id": "duskrunner",
+    "name": "Duskyre",
+    "type": "Dark",
+    "rarity": "rare",
+    "sourceRarity": "uncommon",
+    "position": "RB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "DAR-03-F",
+      "Beast Clash": "DAR-03-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, tail, glow, collar",
+      "colors": "#2a2240, #9a6aff"
+    },
+    "description": "A hound that disappears in the hole and reappears downfield.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Patient cutback runner"
+  },
+  {
+    "id": "mireclaw",
+    "name": "Murklaw",
+    "type": "Dark",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "LB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "DAR-04-F",
+      "Beast Clash": "DAR-04-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "fierce",
+      "features": "spikes, claws, fangs",
+      "colors": "#3a3a2a, #8aff6a"
+    },
+    "description": "Lurks in the swamp of the line, then strikes.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Pass-rushing linebacker"
+  },
+  {
+    "id": "nocturne",
+    "name": "Nocturne",
+    "type": "Dark",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "QB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "DAR-05-F",
+      "Beast Clash": "DAR-05-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, wings, glow",
+      "colors": "#1e1a33, #c86aff"
+    },
+    "description": "A bat-winged receiver who only plays well at night games… and day games.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Strong, elusive passer"
+  },
+  {
+    "id": "nyxshade",
+    "name": "Nyxshade",
+    "type": "Dark",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "CB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "DAR-06-F",
+      "Beast Clash": "DAR-06-C"
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "large",
+      "look": "fierce",
+      "features": "spikes, crest, glow",
+      "colors": "#140f24, #a64aff"
+    },
+    "description": "A shadow serpent. Receivers swear the ball vanished.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Elite coverage organizer"
+  },
+  {
+    "id": "glimmer",
+    "name": "Lumini",
+    "type": "Light",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "WR",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "LIG-01-F",
+      "Beast Clash": "LIG-01-C"
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, glow, halo",
+      "colors": "#f0d88a, #ffffff"
+    },
+    "description": "A firefly who glows brighter on big catches.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Reliable possession receiver"
+  },
+  {
+    "id": "sunwhistle",
+    "name": "Solchirp",
+    "type": "Light",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "K",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "LIG-02-F",
+      "Beast Clash": "LIG-02-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, crest, beak",
+      "colors": "#ffd84a, #ff8a4a"
+    },
+    "description": "Sings before every kick. Nobody has asked him to stop.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Mobile kickoff contributor"
+  },
+  {
+    "id": "lumen",
+    "name": "Lumen",
+    "type": "Light",
+    "rarity": "common",
+    "sourceRarity": "uncommon",
+    "position": "QB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "LIG-03-F",
+      "Beast Clash": "LIG-03-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "mane, halo",
+      "colors": "#f0e0b0, #ffd84a"
+    },
+    "description": "Sees the open man before the play starts.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Dependable distributor"
+  },
+  {
+    "id": "prism",
+    "name": "Prismara",
+    "type": "Light",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "S",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "LIG-04-F",
+      "Beast Clash": "LIG-04-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horn, plates, glow",
+      "colors": "#c8d8f8, #ff8af0"
+    },
+    "description": "A crystal stag; light bends around it.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Versatile safety"
+  },
+  {
+    "id": "halofang",
+    "name": "Haloryx",
+    "type": "Light",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "LB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "LIG-05-F",
+      "Beast Clash": "LIG-05-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "fierce",
+      "features": "mane, tail, halo, collar",
+      "colors": "#e8c87a, #ffffff"
+    },
+    "description": "An oryx with a halo and very bad intentions.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Sideline-to-sideline tackler"
+  },
+  {
+    "id": "aurelion",
+    "name": "Aurelion",
+    "type": "Light",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "WR",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "LIG-06-F",
+      "Beast Clash": "LIG-06-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "large",
+      "look": "fierce",
+      "features": "wings, crest, glow, halo",
+      "colors": "#ffd84a, #ff5a2a"
+    },
+    "description": "A sun-phoenix. The sky gets brighter when it runs a go route.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Elite receiving technician"
+  },
+  {
+    "id": "ironcub",
+    "name": "Ferrcub",
+    "type": "Metal",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "OL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "MET-01-F",
+      "Beast Clash": "MET-01-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, plates",
+      "colors": "#8a9aa8, #d8e0e8"
+    },
+    "description": "Clanks when he walks. Loves a good shove.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Mobile run blocker"
+  },
+  {
+    "id": "steelpaw",
+    "name": "Steelpaw",
+    "type": "Metal",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "LB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "MET-02-F",
+      "Beast Clash": "MET-02-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, tail, claws, ridge",
+      "colors": "#6a7a8a, #5ad8ff"
+    },
+    "description": "Never tired, never late, slightly squeaky.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Endurance specialist"
+  },
+  {
+    "id": "gearwing",
+    "name": "Coglet",
+    "type": "Metal",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "K",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "MET-03-F",
+      "Beast Clash": "MET-03-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "wings, crest, beak",
+      "colors": "#b88a4a, #e8e8e8"
+    },
+    "description": "A clockwork bird. Calculates every kick to the inch.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Reliable all-round kicker"
+  },
+  {
+    "id": "ironjaw",
+    "name": "Ferronox",
+    "type": "Metal",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "DL",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "MET-04-F",
+      "Beast Clash": "MET-04-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "plates, tusks",
+      "colors": "#5a6670, #ff6a4a"
+    },
+    "description": "His jaw is literally iron. He bites the ball loose.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Physical turnover hunter"
+  },
+  {
+    "id": "metalhorn",
+    "name": "Ferrhorn",
+    "type": "Metal",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "TE",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "MET-05-F",
+      "Beast Clash": "MET-05-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "fierce",
+      "features": "horn, plates",
+      "colors": "#4a5560, #c8d0d8"
+    },
+    "description": "A steel rhino. Pass rushers bounce off.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Blocking specialist"
+  },
+  {
+    "id": "aegistron",
+    "name": "Aegistron",
+    "type": "Metal",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "DL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "MET-06-F",
+      "Beast Clash": "MET-06-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "crest, plates, glow, crown",
+      "colors": "#2e3640, #4af0ff"
+    },
+    "description": "An ancient guardian machine. Its shield has never been beaten.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Dominant interior anchor"
+  },
+  {
+    "id": "mindwing",
+    "name": "Psyflutter",
+    "type": "Psychic",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "S",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "PSY-01-F",
+      "Beast Clash": "PSY-01-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, antennae",
+      "colors": "#c86ad8, #ffd8ff"
+    },
+    "description": "Knows where the ball is going. Won’t say how.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Mobile pursuit safety"
+  },
+  {
+    "id": "shadewisp",
+    "name": "Wispira",
+    "type": "Psychic",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "CB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": "PSY-02-F",
+      "Beast Clash": "PSY-02-C"
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "tail, glow, bulb",
+      "colors": "#8a6ac8, #e8d8ff"
+    },
+    "description": "A floating wisp that drifts wherever the receiver goes.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Close-coverage technician"
+  },
+  {
+    "id": "cerebrix",
+    "name": "Cerebrix",
+    "type": "Psychic",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "QB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "PSY-03-F",
+      "Beast Clash": "PSY-03-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "crest, glow",
+      "colors": "#7a4ab8, #ff8af0"
+    },
+    "description": "Reads the defense before it reads itself.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Anticipation specialist"
+  },
+  {
+    "id": "echolot",
+    "name": "Echolot",
+    "type": "Psychic",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "K",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "PSY-04-F",
+      "Beast Clash": "PSY-04-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, crest, glow, whiskers",
+      "colors": "#5a4a8a, #8af0ff"
+    },
+    "description": "Hears the snap count before the quarterback says it.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Recovery specialist"
+  },
+  {
+    "id": "enigmane",
+    "name": "Enigmane",
+    "type": "Psychic",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "TE",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": "PSY-05-F",
+      "Beast Clash": "PSY-05-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "cool",
+      "features": "mane, tail, glow",
+      "colors": "#4a2a6a, #ff6af0"
+    },
+    "description": "A maned trickster. Defenders lose their train of thought.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Technical route runner"
+  },
+  {
+    "id": "astralux",
+    "name": "Astralux",
+    "type": "Psychic",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "RB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "PSY-06-F",
+      "Beast Clash": "PSY-06-C"
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "large",
+      "look": "fierce",
+      "features": "crest, glow, halo",
+      "colors": "#2a1a4a, #ff9aff"
+    },
+    "description": "A star-spirit that blinks through the line. Nobody has tackled it clean.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Explosive all-purpose back"
+  },
+  {
+    "id": "drakeling",
+    "name": "Drakling",
+    "type": "Dragon",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "RB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "DRA-01-F",
+      "Beast Clash": "DRA-01-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "horns, tail, wings",
+      "colors": "#c83a3a, #ffd84a"
+    },
+    "description": "A baby dragon who thinks he is already enormous.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Physical escape specialist"
+  },
+  {
+    "id": "wyrmkit",
+    "name": "Wyrmlet",
+    "type": "Dragon",
+    "rarity": "common",
+    "sourceRarity": "common",
+    "position": "TE",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": "DRA-02-F",
+      "Beast Clash": "DRA-02-C"
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cute",
+      "features": "horns, fins",
+      "colors": "#3a8a5a, #f0d88a"
+    },
+    "description": "A coiled little wyrm who never gets tired.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Dependable all-rounder"
+  },
+  {
+    "id": "sablewing",
+    "name": "Sablewing",
+    "type": "Dragon",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "CB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "DRA-03-F",
+      "Beast Clash": "DRA-03-C"
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns, tail, wings",
+      "colors": "#2a2a3a, #e84a4a"
+    },
+    "description": "A dark-winged drake who shadows the best receiver.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Physical turnover hunter"
+  },
+  {
+    "id": "scaleguard",
+    "name": "Scalor",
+    "type": "Dragon",
+    "rarity": "uncommon",
+    "sourceRarity": "uncommon",
+    "position": "OL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "DRA-04-F",
+      "Beast Clash": "DRA-04-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "cool",
+      "features": "horns, tail, plates",
+      "colors": "#2a6a4a, #e8c84a"
+    },
+    "description": "Armoured in scales; protects his quarterback like treasure.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Balanced physical blocker"
+  },
+  {
+    "id": "vyrnax",
+    "name": "Vyrnax",
+    "type": "Dragon",
+    "rarity": "rare",
+    "sourceRarity": "rare",
+    "position": "K",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": "DRA-05-F",
+      "Beast Clash": "DRA-05-C"
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "large",
+      "look": "fierce",
+      "features": "horns, spikes, tail, wings, ridge",
+      "colors": "#5a1a2a, #ff6a3a"
+    },
+    "description": "Roars before every snap. It works.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Strong ordinary kicker"
+  },
+  {
+    "id": "aurodrax",
+    "name": "Aurodrax",
+    "type": "Dragon",
+    "rarity": "legendary",
+    "sourceRarity": "legendary",
+    "position": "QB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": "DRA-06-F",
+      "Beast Clash": "DRA-06-C"
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "large",
+      "look": "fierce",
+      "features": "horns, tail, wings, glow, crown",
+      "colors": "#8a5a1a, #ffe84a"
+    },
+    "description": "The golden dragon king. Every franchise dreams of one.",
+    "profileStatus": "owner-approved ranges; see validation and unresolved items",
+    "buildIdentity": "Powerful passer and runner"
+  }
+]

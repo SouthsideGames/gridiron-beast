@@ -1,0 +1,31 @@
+{
+  "counts": {
+    "families": 72,
+    "forms": 102,
+    "modeAbilities": 144,
+    "assertions": 14095,
+    "attributePairs": 1224,
+    "evolutionCases": 5400
+  },
+  "positions": {
+    "RB": 7,
+    "LB": 7,
+    "QB": 7,
+    "DL": 7,
+    "CB": 8,
+    "TE": 7,
+    "OL": 7,
+    "WR": 8,
+    "S": 7,
+    "K": 7
+  },
+  "rarities": {
+    "common": 26,
+    "uncommon": 21,
+    "rare": 13,
+    "legendary": 12
+  },
+  "errors": [],
+  "runtimeTested": false,
+  "status": "PASS"
+}
