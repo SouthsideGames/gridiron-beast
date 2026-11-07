@@ -69,4 +69,5 @@ export function buildCombatant(m, { perSide = 3, config = null, slot = 0, side =
 }
 
 /** Lab convenience: a synthetic monster for a species at an overall, from a seeded generator (no save involved). */
-export function speciesList() { return SPECIES_DEX.map((s) => ({ id: s.id, name: s.name, element: s.element, rarity: s.rarity, position: s.position, archetype: archetypeOf(s.id), move: CLASH_MOVES[s.id].name })); }
+export function speciesList() { return SPECIES_DEX.map((s) => ({ id: s.id, name: s.name, element: s.element, rarity: s.rarity, position: s.position, archetype: archetypeOf(s.id), move: (CLASH_MOVES[s.id] || BASIC_MOVES[s.id]).name })); } // Basics: the ordinary Strike (R1 item 37)
+export function labMoveOf(id) { return CLASH_MOVES[id] || BASIC_MOVES[id] || null; }

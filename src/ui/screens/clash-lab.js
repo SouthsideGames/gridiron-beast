@@ -177,7 +177,7 @@ export function registerClashLab(Router, app) {
       ${problems.length ? `<div class="panel tight warn" style="font-size:12px">${problems.map((p) => esc(p)).join('<br>')}</div>` : ''}
       <div class="chips" style="margin:6px 0">${['All', ...ARCHETYPES].map((a) => chip('march', a, a, M.arch)).join('')}</div>
       <div class="chips" style="margin:0 0 8px">${elements.map((e) => chip('mel', e, e, M.filter)).join('')}</div>
-      <div class="list">${list.map((s) => { const m = Clash.CLASH_MOVES[s.id]; const nums = Object.entries(m).filter(([k, v]) => !['name', 'archetype', 'text', 'kind', 'trigger'].includes(k)).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' · ');
+      <div class="list">${list.map((s) => { const m = Clash.CLASH_MOVES[s.id] || Clash.labMoveOf?.(s.id) || { name: 'Strike' }; const nums = Object.entries(m).filter(([k, v]) => !['name', 'archetype', 'text', 'kind', 'trigger'].includes(k)).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' · ');
         return `<div class="item static" style="min-height:0;padding:6px 8px;align-items:flex-start"><div class="grow" style="font-size:12px"><div><b>${esc(m.name)}</b> <span class="dim">${esc(s.name)} (${esc(s.id)}) · ${ARCH_GLYPH[m.archetype]} ${esc(m.archetype)} · ${esc(s.element)}${s.position === 'K' ? ' · kicker' : ''}</span></div><div>${esc(m.text)}</div><div class="dim" style="font-size:11px">${esc(m.kind)} · ${esc(m.trigger.kind)}${m.trigger.n ? ` ${m.trigger.n}` : ''} · ${esc(nums)}</div></div></div>`; }).join('')}</div>`;
   }
 
