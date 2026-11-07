@@ -46,7 +46,7 @@ This is the consolidated audit the creation brief asks for after the Basic batch
 
 ## 2. Validation results
 
-`python3 docs/beast-dex/tools/render_and_validate.py`: **PASS**, 29,000+ assertions, 0 failed. Details are in [VALIDATION.md](VALIDATION.md).
+`python3 docs/beast-dex/tools/render_and_validate.py`: **PASS**, 28,446 assertions, 0 failed. Details are in [VALIDATION.md](VALIDATION.md).
 
 | Gate from the brief | Result |
 | --- | --- |
@@ -73,7 +73,48 @@ Not tested here: the production generator, ability behaviour, balance, saves, UI
 
 The game on this branch still uses the **legacy generator**: position template + quality + type bias + random Nature, a single scalar potential, no Temper, no Apex. Basic families are not in the game, so the legacy run measures the 72 original species only. The **approved-model reference experiment** is a separate model built from `data/rules.json` and `data/forms.json`. Neither result validates the other.
 
-LEGACY_RESULTS_PLACEHOLDER
+### Legacy generator (`tools/basic-audit-legacy.mjs`, the game as it is)
+
+Six hands-off careers, each set to run 20 seasons, on the game's own franchise loop (`tools/franchise-soak.mjs`): seeds 11–13 on Pro and seeds 21–23 on Rookie. **None reached 20 seasons.** The hands-off owner was fired in every career, after 6–13 seasons, on both difficulties. The careers are reported as played; no 20-season extrapolation is claimed. Frozen settings:
+
+- the soak tool's hands-off owner: the staff scouts one region a week, the best visible prospect is drafted, and the cheapest free agents fill the roster to its minimum;
+- draft classes of 53;
+- 15 AI clubs on the league registry.
+
+Each individual is counted once, at first sight:
+
+- draft and scouting individuals are true creation profiles;
+- AI-roster individuals are first seen at a season boundary, so some have already developed (the level column shows how many);
+- AI rosters are generated league depth the player does not normally see.
+
+| Seed | Difficulty | Seasons | Channel | Individuals | Distinct species | Exact repeats | Near-identical pairs | Level 1 at first sight |
+| ---: | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 11 | Pro | 12 (fired) | Draft classes offered | 583 | 58 | 0 | 7 | 583 |
+| 11 | Pro | 12 (fired) | Scouting reports seen | 294 | 14 | 0 | 6 | 294 |
+| 11 | Pro | 12 (fired) | AI rosters (unseen) | 1,105 | 68 | 0 | 14 | 671 |
+| 12 | Pro | 8 (fired) | Draft classes offered | 371 | 60 | 0 | 3 | 371 |
+| 12 | Pro | 8 (fired) | Scouting reports seen | 194 | 14 | 0 | 1 | 194 |
+| 12 | Pro | 8 (fired) | AI rosters (unseen) | 880 | 68 | 0 | 15 | 487 |
+| 13 | Pro | 6 (fired) | Draft classes offered | 265 | 59 | 0 | 2 | 265 |
+| 13 | Pro | 6 (fired) | Scouting reports seen | 165 | 14 | 0 | 0 | 165 |
+| 13 | Pro | 6 (fired) | AI rosters (unseen) | 757 | 68 | 0 | 11 | 373 |
+| 21 | Rookie | 13 (fired) | Draft classes offered | 636 | 60 | 0 | 3 | 636 |
+| 21 | Rookie | 13 (fired) | Scouting reports seen | 383 | 14 | 0 | 6 | 383 |
+| 21 | Rookie | 13 (fired) | AI rosters (unseen) | 1,210 | 68 | 0 | 10 | 737 |
+| 22 | Rookie | 12 (fired) | Draft classes offered | 583 | 60 | 0 | 7 | 583 |
+| 22 | Rookie | 12 (fired) | Scouting reports seen | 296 | 14 | 0 | 6 | 296 |
+| 22 | Rookie | 12 (fired) | AI rosters (unseen) | 1,122 | 68 | 0 | 13 | 693 |
+| 23 | Rookie | 11 (fired) | Draft classes offered | 530 | 60 | 0 | 4 | 530 |
+| 23 | Rookie | 11 (fired) | Scouting reports seen | 289 | 14 | 0 | 6 | 289 |
+| 23 | Rookie | 11 (fired) | AI rosters (unseen) | 1,078 | 68 | 0 | 15 | 637 |
+
+Exact creation-profile repeats across all six careers: draft 0, scouting 0, AI rosters 0. Species (family) repeats are expected: the legacy game has only 4–8 species per position, and the most-drafted species appeared up to 32 times at one position in one career. The full per-position counts are in [audit/legacy-exposure.json](audit/legacy-exposure.json).
+
+**Finding:** the hands-off staff scouted only 14 distinct species in every career, the same handful of elements each time, because the region choice follows the head scout's fixed biome preferences. Player exposure through scouting is therefore much narrower than the draft's 58–60 species. Today that is a property of the soak tool's owner policy and of staff region choice, not of the generator.
+
+**Methodology gap:** a 20-season player-exposure figure needs an owner policy that keeps its job for 20 seasons, or an audit-only option to continue past firing. Neither exists, and choosing one is listed as a decision below.
+
+The legacy definitions use the legacy stand-ins: one scalar potential instead of 12 individual potentials, and Nature instead of Temper. There is no Apex. Near-identity uses the same ±2 audit assumption on the position-weighted attributes. Sample: 6 careers. These are reproducible from the seeds above, but too few to estimate rare events precisely.
 
 ### Approved-model reference experiment (`tools/reference_experiment.py`, deterministic)
 
@@ -177,7 +218,10 @@ Each item is a gameplay decision this batch did not settle. Recommendations are 
 7. **Apex details (R06).** Open: exact sampling among the three neutral Tempers and of the 10–15 starts (the reference experiment assumed uniform), contract valuation, and discovery persistence. Basics add 120 eligible families, so about two-thirds of Apex individuals would be Basic under uniform family selection. *Decide whether that is intended*, or whether Apex likelihood follows channel weights.
 8. **Contracts and salaries for Basics.** Today's salary is a function of overall rating, so a Basic would simply be cheap. There is no decision on rookie scale, minimum salary or roster-filler contract terms.
 9. **AI roster policy.** Open: whether AI clubs may carry Basics as depth, and how many. This interacts with the forfeit and open-slot finding from Task 7, since Basics are an obvious source of legal depth at thin positions.
-10. **Similarity thresholds for the duplicate audit.** The ±2 near-identity rule and the per-position primary-attribute choice are audit assumptions. Approve or replace them before they are used as targets.
+10. **The career exposure methodology.** The brief asks for 20-season player exposure, but the game's hands-off test owner is fired after 6–13 seasons on both Pro and Rookie.
+    - *Recommendation:* approve either an audit owner policy (for example a negotiating owner that drafts and signs for need), or an audit-only option to keep playing after firing.
+    - Also freeze the scouting policy. The default staff scouts one region repeatedly, so a career sees only 14 species.
+11. **Similarity thresholds for the duplicate audit.** The ±2 near-identity rule and the per-position primary-attribute choice are audit assumptions. Approve or replace them before they are used as targets.
     - Example: with Kicking as a kicker's only primary attribute, nearly every near-identical pair in the reference experiment is a kicker.
     - *Recommendation:* compare kickers on Kicking plus Awareness and Durability, or report them separately.
 
@@ -197,6 +241,7 @@ node tools/export-sprites.mjs docs/beast-dex/art/basic/png 1 --basic
 python3 docs/beast-dex/tools/render_and_validate.py    # pages, manifest, validation
 python3 docs/beast-dex/tools/validator_selftest.py
 python3 docs/beast-dex/tools/reference_experiment.py --out=docs/beast-dex/audit/reference-experiment.json
-node tools/basic-audit-legacy.mjs --seed=11 --seasons=20 --out=legacy-11.json   # also 12 and 13
-python3 docs/beast-dex/tools/legacy_audit_report.py docs/beast-dex/audit/legacy-exposure.json legacy-11.json legacy-12.json legacy-13.json
+node tools/basic-audit-legacy.mjs --seed=11 --seasons=20 --out=legacy-11.json                       # also seeds 12 and 13
+node tools/basic-audit-legacy.mjs --seed=21 --seasons=20 --difficulty=rookie --out=legacy-r21.json  # also seeds 22 and 23
+python3 docs/beast-dex/tools/legacy_audit_report.py docs/beast-dex/audit/legacy-exposure.json legacy-11.json legacy-12.json legacy-13.json legacy-r21.json legacy-r22.json legacy-r23.json
 ```

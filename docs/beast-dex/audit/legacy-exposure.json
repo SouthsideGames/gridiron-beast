@@ -1,0 +1,605 @@
+{
+ "generator": "LEGACY (pre-Task 8); Basic families not reachable; measures the 72 original species only",
+ "runs": [
+  {
+   "seed": 11,
+   "seasonsPlayed": 12,
+   "fired": true,
+   "soakProblems": 0,
+   "draft": {
+    "individuals": 583,
+    "distinctSpecies": 58,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 7,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 15,
+     "DL": 20,
+     "K": 9,
+     "LB": 12,
+     "OL": 22,
+     "QB": 19,
+     "RB": 14,
+     "S": 23,
+     "TE": 23,
+     "WR": 32
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 7,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 6,
+     "QB": 3,
+     "RB": 6,
+     "S": 6,
+     "TE": 5,
+     "WR": 7
+    },
+    "levelAtFirstSight": {
+     "1": 583
+    }
+   },
+   "scout": {
+    "individuals": 294,
+    "distinctSpecies": 14,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 6,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 9,
+     "DL": 21,
+     "LB": 30,
+     "OL": 32,
+     "QB": 31,
+     "RB": 36,
+     "TE": 40
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 2,
+     "DL": 3,
+     "LB": 2,
+     "OL": 2,
+     "QB": 1,
+     "RB": 3,
+     "TE": 1
+    },
+    "levelAtFirstSight": {
+     "1": 294
+    }
+   },
+   "ai": {
+    "individuals": 1105,
+    "distinctSpecies": 68,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 14,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 25,
+     "DL": 23,
+     "K": 19,
+     "LB": 26,
+     "OL": 33,
+     "QB": 29,
+     "RB": 20,
+     "S": 35,
+     "TE": 39,
+     "WR": 44
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 9,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 8,
+     "QB": 6,
+     "RB": 6,
+     "S": 8,
+     "TE": 5,
+     "WR": 8
+    },
+    "levelAtFirstSight": {
+     "2+": 434,
+     "1": 671
+    }
+   }
+  },
+  {
+   "seed": 12,
+   "seasonsPlayed": 8,
+   "fired": true,
+   "soakProblems": 0,
+   "draft": {
+    "individuals": 371,
+    "distinctSpecies": 60,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 3,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 14,
+     "DL": 11,
+     "K": 7,
+     "LB": 9,
+     "OL": 12,
+     "QB": 12,
+     "RB": 15,
+     "S": 16,
+     "TE": 11,
+     "WR": 13
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 7,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 7,
+     "QB": 4,
+     "RB": 6,
+     "S": 6,
+     "TE": 5,
+     "WR": 7
+    },
+    "levelAtFirstSight": {
+     "1": 371
+    }
+   },
+   "scout": {
+    "individuals": 194,
+    "distinctSpecies": 14,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 1,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 20,
+     "DL": 14,
+     "LB": 20,
+     "OL": 20,
+     "QB": 14,
+     "RB": 20,
+     "TE": 13
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 2,
+     "DL": 3,
+     "LB": 2,
+     "OL": 2,
+     "QB": 1,
+     "RB": 3,
+     "TE": 1
+    },
+    "levelAtFirstSight": {
+     "1": 194
+    }
+   },
+   "ai": {
+    "individuals": 880,
+    "distinctSpecies": 68,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 15,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 23,
+     "DL": 21,
+     "K": 19,
+     "LB": 17,
+     "OL": 25,
+     "QB": 18,
+     "RB": 22,
+     "S": 24,
+     "TE": 23,
+     "WR": 25
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 9,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 8,
+     "QB": 6,
+     "RB": 6,
+     "S": 8,
+     "TE": 5,
+     "WR": 8
+    },
+    "levelAtFirstSight": {
+     "2+": 393,
+     "1": 487
+    }
+   }
+  },
+  {
+   "seed": 13,
+   "seasonsPlayed": 6,
+   "fired": true,
+   "soakProblems": 0,
+   "draft": {
+    "individuals": 265,
+    "distinctSpecies": 59,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 2,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 9,
+     "DL": 10,
+     "K": 5,
+     "LB": 5,
+     "OL": 9,
+     "QB": 7,
+     "RB": 8,
+     "S": 7,
+     "TE": 7,
+     "WR": 13
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 7,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 7,
+     "QB": 4,
+     "RB": 6,
+     "S": 6,
+     "TE": 5,
+     "WR": 6
+    },
+    "levelAtFirstSight": {
+     "1": 265
+    }
+   },
+   "scout": {
+    "individuals": 165,
+    "distinctSpecies": 14,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 0,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 7,
+     "DL": 10,
+     "LB": 15,
+     "OL": 14,
+     "QB": 22,
+     "RB": 18,
+     "TE": 17
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 2,
+     "DL": 3,
+     "LB": 2,
+     "OL": 2,
+     "QB": 1,
+     "RB": 3,
+     "TE": 1
+    },
+    "levelAtFirstSight": {
+     "1": 165
+    }
+   },
+   "ai": {
+    "individuals": 757,
+    "distinctSpecies": 68,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 11,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 18,
+     "DL": 22,
+     "K": 16,
+     "LB": 17,
+     "OL": 22,
+     "QB": 17,
+     "RB": 12,
+     "S": 19,
+     "TE": 18,
+     "WR": 26
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 9,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 8,
+     "QB": 6,
+     "RB": 6,
+     "S": 8,
+     "TE": 5,
+     "WR": 8
+    },
+    "levelAtFirstSight": {
+     "2+": 384,
+     "1": 373
+    }
+   }
+  },
+  {
+   "seed": 21,
+   "seasonsPlayed": 13,
+   "fired": true,
+   "soakProblems": 0,
+   "draft": {
+    "individuals": 636,
+    "distinctSpecies": 60,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 3,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 17,
+     "DL": 28,
+     "K": 12,
+     "LB": 13,
+     "OL": 18,
+     "QB": 22,
+     "RB": 18,
+     "S": 19,
+     "TE": 16,
+     "WR": 30
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 7,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 7,
+     "QB": 4,
+     "RB": 6,
+     "S": 6,
+     "TE": 5,
+     "WR": 7
+    },
+    "levelAtFirstSight": {
+     "1": 636
+    }
+   },
+   "scout": {
+    "individuals": 383,
+    "distinctSpecies": 14,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 6,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 33,
+     "DL": 39,
+     "LB": 25,
+     "OL": 38,
+     "QB": 25,
+     "RB": 43,
+     "TE": 26
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 2,
+     "DL": 3,
+     "LB": 2,
+     "OL": 2,
+     "QB": 1,
+     "RB": 3,
+     "TE": 1
+    },
+    "levelAtFirstSight": {
+     "1": 383
+    }
+   },
+   "ai": {
+    "individuals": 1210,
+    "distinctSpecies": 68,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 10,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 26,
+     "DL": 43,
+     "K": 25,
+     "LB": 30,
+     "OL": 39,
+     "QB": 26,
+     "RB": 24,
+     "S": 28,
+     "TE": 32,
+     "WR": 45
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 9,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 8,
+     "QB": 6,
+     "RB": 6,
+     "S": 8,
+     "TE": 5,
+     "WR": 8
+    },
+    "levelAtFirstSight": {
+     "2+": 473,
+     "1": 737
+    }
+   }
+  },
+  {
+   "seed": 22,
+   "seasonsPlayed": 12,
+   "fired": true,
+   "soakProblems": 0,
+   "draft": {
+    "individuals": 583,
+    "distinctSpecies": 60,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 7,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 15,
+     "DL": 16,
+     "K": 16,
+     "LB": 14,
+     "OL": 16,
+     "QB": 20,
+     "RB": 16,
+     "S": 14,
+     "TE": 17,
+     "WR": 28
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 7,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 7,
+     "QB": 4,
+     "RB": 6,
+     "S": 6,
+     "TE": 5,
+     "WR": 7
+    },
+    "levelAtFirstSight": {
+     "1": 583
+    }
+   },
+   "scout": {
+    "individuals": 296,
+    "distinctSpecies": 14,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 6,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 21,
+     "DL": 21,
+     "LB": 32,
+     "OL": 36,
+     "QB": 22,
+     "RB": 38,
+     "TE": 19
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 2,
+     "DL": 3,
+     "LB": 2,
+     "OL": 2,
+     "QB": 1,
+     "RB": 3,
+     "TE": 1
+    },
+    "levelAtFirstSight": {
+     "1": 296
+    }
+   },
+   "ai": {
+    "individuals": 1122,
+    "distinctSpecies": 68,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 13,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 25,
+     "DL": 28,
+     "K": 24,
+     "LB": 26,
+     "OL": 34,
+     "QB": 26,
+     "RB": 23,
+     "S": 31,
+     "TE": 28,
+     "WR": 38
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 9,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 8,
+     "QB": 6,
+     "RB": 6,
+     "S": 8,
+     "TE": 5,
+     "WR": 8
+    },
+    "levelAtFirstSight": {
+     "2+": 429,
+     "1": 693
+    }
+   }
+  },
+  {
+   "seed": 23,
+   "seasonsPlayed": 11,
+   "fired": true,
+   "soakProblems": 0,
+   "draft": {
+    "individuals": 530,
+    "distinctSpecies": 60,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 4,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 13,
+     "DL": 18,
+     "K": 10,
+     "LB": 12,
+     "OL": 18,
+     "QB": 18,
+     "RB": 17,
+     "S": 13,
+     "TE": 17,
+     "WR": 20
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 7,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 7,
+     "QB": 4,
+     "RB": 6,
+     "S": 6,
+     "TE": 5,
+     "WR": 7
+    },
+    "levelAtFirstSight": {
+     "1": 530
+    }
+   },
+   "scout": {
+    "individuals": 289,
+    "distinctSpecies": 14,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 6,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 19,
+     "DL": 18,
+     "LB": 24,
+     "OL": 28,
+     "QB": 37,
+     "RB": 25,
+     "TE": 35
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 2,
+     "DL": 3,
+     "LB": 2,
+     "OL": 2,
+     "QB": 1,
+     "RB": 3,
+     "TE": 1
+    },
+    "levelAtFirstSight": {
+     "1": 289
+    }
+   },
+   "ai": {
+    "individuals": 1078,
+    "distinctSpecies": 68,
+    "exactPairs": 0,
+    "nearIdenticalPairs": 15,
+    "maxSpeciesAppearancesByPosition": {
+     "CB": 20,
+     "DL": 32,
+     "K": 18,
+     "LB": 21,
+     "OL": 32,
+     "QB": 26,
+     "RB": 18,
+     "S": 27,
+     "TE": 31,
+     "WR": 35
+    },
+    "distinctSpeciesByPosition": {
+     "CB": 9,
+     "DL": 8,
+     "K": 3,
+     "LB": 7,
+     "OL": 8,
+     "QB": 6,
+     "RB": 6,
+     "S": 8,
+     "TE": 5,
+     "WR": 8
+    },
+    "levelAtFirstSight": {
+     "2+": 441,
+     "1": 637
+    }
+   }
+  }
+ ]
+}
