@@ -3,7 +3,7 @@
 // src/franchise imports from src/clash (tests/clash/boundary.test.js enforces both directions).
 export { CLASH_VALUES, TAG_LABEL, battleConfig, activeExperiments } from './values.js';
 export { BEATS, TYPES, typeFactor, typeEdge, CONDITION_BY_TYPE, CONDITION_LABEL } from './types.js';
-export { buildCombatant, archetypeOf, speciesList } from './stats.js';
+export { buildCombatant, archetypeOf, speciesList, labMoveOf } from './stats.js';
 export { KINDS, TRIGGERS, EFFECTS } from './handlers.js';
 export { CONDITION_KINDS, applyCondition, tickCondition, consumeShock, cleanse, pauseCondition, resumeCondition, freshState } from './conditions.js';
 export { simulateClash, replayKey, parseReplayKey, logHash, rampFor, rampModelFor } from './engine.js';
