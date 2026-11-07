@@ -9,11 +9,11 @@
     "basicForms": 120,
     "legendaryFamilies": 12,
     "types": 12,
-    "assertions": 28437,
+    "assertions": 28445,
     "attributePairs": 2664,
     "basicAttributePairs": 1440,
     "evolutionCases": 5400,
-    "links": 1309
+    "links": 1317
   },
   "positions": {
     "RB": 19,
@@ -57,9 +57,7 @@
       "Support": 38
     }
   },
-  "errors": [
-    "README.md: broken link BASIC_AUDIT.md"
-  ],
+  "errors": [],
   "runtimeTested": false,
-  "status": "BLOCKED: approved-data conflict"
+  "status": "PASS"
 }

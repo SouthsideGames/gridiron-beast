@@ -1,12 +1,12 @@
 # Validation report
 
-**BLOCKED: approved-data conflict**
+**PASS**
 
 Authored roster: 192 families and 222 forms in 12 types: the original 72 families / 102 forms (including 12 legendary families) and 120 Basic families / 120 Basic forms. 144 mode abilities, all on original families; Basic families have none.
 
-2664 complete start/potential pairs (1440 Basic); 5400 evolution arithmetic checks; 1309 local links.
+2664 complete start/potential pairs (1440 Basic); 5400 evolution arithmetic checks; 1317 local links.
 
-28437 assertions evaluated; 1 failed.
+28445 assertions evaluated; 0 failed.
 
 ## What is checked
 
@@ -16,7 +16,7 @@ Authored roster: 192 families and 222 forms in 12 types: the original 72 familie
 
 ## Unresolved data conflicts
 
-- README.md: broken link BASIC_AUDIT.md
+None.
 
 ## Scope
 
