@@ -115,3 +115,15 @@ keep it.
   - `lp_avalanche` and its lesson are removed (playbook.js); the pilot now has five plays.
   - The GDD §36 amendment note is added.
   - Glacivern keeps K, Second Chance and Deep Winter.
+
+## M1 integration milestone and preview (2026-11-07)
+
+- **Full regression** (0f953e3): 930/933.
+  - Fixed after the run:
+    - league-careers: a registry-less tool universe no longer round-trips through the save;
+    - release-stamp ×2.
+  - Those files then passed 8/8.
+- **Browser boot check** found a crash present since the Dex species switch (75f2a27).
+  - The Clash Lab species list assumed every species has a Clash move; Basics have only the ordinary Strike.
+  - Fixed in `src/clash/stats.js`. No node test loads the UI, so a browser boot check is now part of every preview.
+- **Preview:** see PREVIEW_M1.md.
