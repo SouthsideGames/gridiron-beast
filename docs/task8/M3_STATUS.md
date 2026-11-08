@@ -38,7 +38,7 @@ Status at 466ee7e (2026-11-07, 23:59). Branch `task8-implementation`; nothing me
   - Shadow Exchange: the partner is tested at the release, before defenders converge.
   - Foresight, and Prism Break's overlap selection.
 - **AI use of player-selectable signatures:** the AI now calls Dragon Roar under the player's rules. This is a PROVISIONAL policy.
-- **Reviewer:**
+- **Reviewer:** (superseded for the owner's §25 standard by Reviewer v2 on branch `task8-reviewer-v2`: complete-interaction runs with a four-phase checklist, see REVIEWER_V2.md)
   - **Fixes:** it stops only on the subject's own recorded execution (it could stop on a cue or on an opponent of the same family),
     and its review namespace now exists (its cloud sync threw on mount).
   - **Strict sweep at 68add50:** 67 of 72 execute within six unstaged-or-staged games. Tsunami Line, Frostmark, Second Chance
