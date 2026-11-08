@@ -1,3 +1,6 @@
+// FROZEN LEGACY RULESET (Task 8 M4 S0, docs/task8/M4_STATUS.md): this file plays the legacy rulesets ('current' = values 1.1.0,
+// 'v1.0.0') and must not change behaviour, so finished records and the golden fixtures keep replaying exactly. The Task 8
+// engine is ruleset 't8' in src/clash/t8/; src/clash/rulesets.js picks between them.
 // Beast Clash conditions: Burn, Chill, Daze, Shock. One active condition per combatant, with the
 // approved priority rules (addendum A) and the safeguards (addendum E). Every call returns a
 // result the engine logs, so the lifecycle is visible: applied, resisted, replaced, paused,
