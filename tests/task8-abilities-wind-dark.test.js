@@ -5,6 +5,7 @@
 // exercised the rule (sample sizes are fixed in each test before running).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { simulatePlay } from '../src/sim/engine.js';
 import { PLAYS, OFFENSE_IDS } from '../src/data/playbook.js';
 import { lineup } from './tools/lineup.js';
@@ -495,4 +496,19 @@ test('Wind / Dark contracts: registered once, no legacy effect stacking, game-sc
   const t8 = JSON.parse(JSON.stringify({ status: {}, ability: { rb: { charges: 2 } } }));
   const r = play({ seed: 1, offensePlay: RUNS[0], off: { RB: mon(lineup(11, 60).offense.RB, { id: 'rb', species: 'breezefang', type: 'Wind' }) }, t8 });
   assert.ok(t8.ability.rb.charges >= 2, 'partial charge persists across plays'); assert.ok(!r.events.some((e) => e.kind === 'ability' && e.trait), 'no legacy trait fires');
+});
+
+test('Shadow Exchange (owner N8b): the partner is judged at his predicted position at the ball\'s arrival (position + velocity x remaining flight), from current information only', () => {
+  const mod = contractOf('nyxshade');
+  const run = (partner, flightTime) => {
+    const self = { slot: 'FS', team: 'def', x: 0, y: -8, vx: 0, vy: 0, mastery: 0, sx: { armed: true, fired: false }, name: 'N' }; const st = { charges: 2 };
+    const ctx = { state: () => st, statusOf: () => null, canStartSignature: () => true, canGainCharge: () => true, actors: [self, partner], dist: (p, q) => Math.hypot(p.x - q.x, p.y - q.y), bounds: { left: -26, right: 26, ownEndLine: -30, endLine: 70 }, executed: () => {}, log: () => {} };
+    mod.hooks.passRelease(ctx, self, { ball: { landing: { x: 2, y: 0 }, flightTime, flight: 0 } }); return { self, st };
+  };
+  // LB 5 yd from the catch point now, running at it at 8 yd/s: predicted 1.8 yd away after a 0.4 s flight -> qualifies; swap now
+  const mk = () => ({ slot: 'LB1', team: 'def', x: 2, y: -5, vx: 0, vy: 8 });
+  { const p = mk(); const { self, st } = run(p, 0.4); assert.equal(st.charges, 0, 'swapped'); assert.deepEqual([self.x, self.y], [2, -5], 'Nyxshade takes the partner\'s CURRENT spot (the swap is at the release)'); assert.deepEqual([p.x, p.y], [0, -8]); }
+  { const p = mk(); const { st } = run(p, 0); assert.equal(st.charges, 2, 'no flight time left: judged where he stands (5 yd): no swap'); }
+  { const p = { ...mk(), vy: -8 }; const { st } = run(p, 0.4); assert.equal(st.charges, 2, 'running away from the catch point: no swap'); }
+  const src = readFileSync(new URL('../src/sim/abilities/nyxshade.js', import.meta.url), 'utf8'); assert.ok(!/rng|simulate/.test(src.slice(src.indexOf('passRelease'), src.indexOf('playEnd'))), 'no random draw or simulation in the prediction');
 });

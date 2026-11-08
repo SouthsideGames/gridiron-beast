@@ -10,6 +10,7 @@
 //
 // Choices where the contract is silent (documented, minimal):
 // - The projected catch point is where the thrown ball will come down (ball.landing), the point the catch resolves at.
+// - Owner N8b: the partner is judged at his predicted position at the ball's arrival (position + velocity x remaining flight time).
 // - Each release on which he is charged is one opportunity (the first that is valid swaps); two-point tries do not charge the bar.
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the swap at a
 // release is the live activation (gated: the bar is preserved); pass-breakup charges are in-play charge gains (gated).
@@ -28,11 +29,17 @@ export default registerAbility({
     passRelease(ctx, self, { ball }) {
       const sx = self.sx; if (!sx?.armed || sx.fired || self.team !== 'def' || !ball?.landing) return;
       if (!able(ctx, self) || self.engaged) return;
+      // Owner ruling N8b (item I): the partner's distance to the catch point is taken at his PREDICTED position when the ball arrives,
+      // from current information only: his position plus his current velocity times the ball's known remaining flight time (no future
+      // simulation, no random draw). Nyxshade's own distance, the swap range and the legal endpoints use current positions; the swap
+      // itself still happens now, at the release.
+      const T = Math.max(0, (ball.flightTime || 0) - (ball.flight || 0));
       const P = ball.landing, B = ctx.bounds, dP = (a) => Math.hypot(a.x - P.x, a.y - P.y), mine = dP(self);
+      const dPred = (a) => Math.hypot(a.x + (a.vx || 0) * T - P.x, a.y + (a.vy || 0) * T - P.y);
       const legal = (p) => !B || (p.y > B.left && p.y < B.right && p.x > B.ownEndLine && p.x < B.endLine);
       const cands = ctx.actors.filter((d) => d !== self && d.team === self.team && !d.sitsOut && able(ctx, d) && !d.engaged
-        && dP(d) <= PARTNER_RADIUS && dP(d) < mine && ctx.dist(d, self) <= byMastery(MAX_SWAP, self.mastery) && legal(d) && legal(self))
-        .sort((p, q) => dP(p) - dP(q) || byLineup(p, q));
+        && dPred(d) <= PARTNER_RADIUS && dPred(d) < mine && ctx.dist(d, self) <= byMastery(MAX_SWAP, self.mastery) && legal(d) && legal(self))
+        .sort((p, q) => dPred(p) - dPred(q) || byLineup(p, q));
       const d = cands[0]; if (!d) return; // invalid: the bar is preserved
       if (!ctx.canStartSignature(self)) return; // denied: the bar is preserved
       const a = [self.x, self.y], b = [d.x, d.y];
