@@ -127,6 +127,8 @@ applied.
 | Crossed Wires ELE-01-F | Yes (staged bunch playbook: 50 activations in 10 games) | **No**: no released pass play aligns two route runners within 5 yd (closest 7, Mesh) | **Release** the designed bunch/stack reserve plays (10 have a pair within 5 yd); no rule change |
 | Shadow Exchange DAR-06-F | Yes (forced: 2 at mastery 0, 8 at mastery 3) | **Barely**: at the release a partner is within 3 yd of the catch point in 5% of cases, and also within Nyxshade's 8-yd range in 0.7% | Test the partner's **projected position at the ball's arrival**, with the swap still at the release |
 
+| Fortress Gate MET-06-F, mastery 2–3 | Yes (refusals are the contract's "safe placement only") | **Nearly no**: across the 26 released fronts and their DL slots (60 placements), panels are legal in 39 of 60 at mastery 0–1 but only 3 of 60 at mastery 2–3. The wider 2.5 / 3-yd panels reach the neighbouring lineman (all 156 refusals were "body"). Higher mastery makes it less usable. | Place each panel at the **longest safe length, never shorter than the mastery-0 width (1.5 yd)**, instead of refusing the whole gate |
+
 Measurements behind each proposal:
 
 **Guiding Halo**, the share of completions inside the radius (10 games, 101 completions):
@@ -165,8 +167,17 @@ Lesser findings (correct, and usable but rare):
 - **Genuinely rare situations, no change needed:** Hoard Flight, Tsunami Line, Frostmark, Second Chance, Slipstream Step, Crosswind
   Rescue, Air Brake and Stone Cradle.
 
-**Reviewer.** A deterministic scenario mode on the real engine is being added, so every ability can be shown directly at each
-form and mastery. Natural-game search stays as an optional demonstration.
+**Reviewer: deterministic scenarios, built and merged (b9317fc).**
+- "▶ Scenario" (the default) runs a fixed-seed staged setup on the real engine for every one of the 72 abilities. It covers every
+  form and all four mastery tiers, and two runs give the same result.
+- "▶ Natural game" stays as the optional search.
+- A scenario that stages conditions released gameplay does not reach says so on screen. That applies to Crossed Wires (reserve
+  bunch plays), Shadow Exchange (reserve passes thrown at chosen receivers) and Guiding Halo at mastery 0–1 (chosen short throws).
+- Hoard Flight's scenario uses one review-only engine option that forces a fumble on a tackle; recovery stays the engine's ordinary
+  pick. The option is a JavaScript Symbol key, so it cannot come from a save, a setting or the UI, and a test checks who uses it.
+- The scenarios also exposed two usability details:
+  - Guiding Halo's short catches are reachable on a base play (pa_boot) when the target is chosen; the AI's reads never choose them.
+  - Fortress Gate at mastery 2–3: see the table above.
 
 ## 4. Dragon Roar (DRA-05-F): AI use (implemented, **PROVISIONAL policy**)
 
