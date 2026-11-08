@@ -21,7 +21,8 @@
 //   R2 = cand abilities on / base abilities off = R0 x R1 (reported, not gated).
 //   same-process R1 = abilities on / abilities off, both run in the ability worker: the abilities' direct cost, without the difference
 //   between two processes' JIT states (the protocol R1 compares the ability worker with the matched candidate worker).
-//   sub-measurement only:KEY / abilities off in the ability worker: one ability (or the staged fields) alone, for the attribution.
+//   sub-measurement only:KEY / only:none: one ability (or the staged fields) alone against the control (nothing active), both in the
+//   ability worker, in a sequence that rotates every round (so no sub-measurement always follows the heavy abilities-on run).
 // Variability: every job reports the IQR / median and the coefficient of variation; a job over --noise is flagged `noisy`, and a
 // verdict whose paired-ratio interquartile range straddles its budget is flagged `borderline`. Machine load (os.loadavg) is sampled
 // at the start, before every scene and at the end; a run whose 1-minute load ever exceeds 0.5 per CPU is marked PRELIMINARY (busy).
@@ -33,7 +34,7 @@ import { fork } from 'node:child_process';
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const MANIFEST = JSON.parse(fs.readFileSync(path.join(HERE, 'scenes.json'), 'utf8'));
 // the ability sub-measurements of a scene (scene-worker.mjs subVariants; repeated here so the runner never loads a build's engine)
-const W = { subVariants: (sc) => [...Object.keys(sc.abilities || {}), ...(sc.fields?.length ? ['fields'] : [])].map((k) => `only:${k}`) };
+const W = { subVariants: (sc) => ['none', ...Object.keys(sc.abilities || {}), ...(sc.fields?.length ? ['fields'] : [])].map((k) => `only:${k}`) };
 const arg = (k, d = null) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`) || x === `--${k}`); return a ? (a.includes('=') ? a.slice(a.indexOf('=') + 1) : true) : d; };
 const BASE = arg('base'), CAND = arg('cand') || path.join(HERE, '..', '..');
 if (!BASE) { console.error('usage: run-scenes.mjs --base=DIR --cand=DIR [--json=out.json] [--scenes=a,b] [--no-sub] [--label=TEXT]'); process.exit(2); }
@@ -96,7 +97,8 @@ for (const sc of scenes) {
   const rounds = Math.max(REPEATS, subs.length ? SUB_REPEATS : 0);
   for (let r = 0; r < rounds; r++) {
     const main = r < REPEATS ? (r % 2 ? ['cand', 'base', 'abil', 'offA'] : ['base', 'cand', 'offA', 'abil']) : [];
-    const order = [...main, ...(r < SUB_REPEATS ? subs : [])];
+    const rot = subs.length ? r % subs.length : 0; // the sub-measurements rotate each round, so each one follows each other one equally often
+    const order = [...main, ...(r < SUB_REPEATS ? [...subs.slice(rot), ...subs.slice(0, rot)] : [])];
     for (const k of order) if (jobs[k]) { const res = await jobs[k][0].run(sc.id, jobs[k][1]); if (res.fp !== first[k].fp) throw new Error(`${sc.id} ${k}: result changed between runs`); ms[k].push(res[METRIC]); wall[k].push(res.ms); }
   }
   const row = { scene: sc.id, kind: sc.kind, addition: !!sc.addition, tier: sc.tier, plays: first.base.plays, inputsHash: first.base.inputsHash };
@@ -106,15 +108,16 @@ for (const sc of scenes) {
     row.R1 = ratio(row.abil, row.cand, ms.abil, ms.cand, ABILITY);
     row.R1same = ratio(row.abil, row.offA, ms.abil, ms.offA, ABILITY);
     row.R2 = ratio(row.abil, row.base, ms.abil, ms.base, null);
-    const n = (v) => Math.min(ms[v].length, ms.offA.length);
-    row.sub = Object.fromEntries(subs.map((v) => [v, { ...ratio(row[v], row.offA, ms[v].slice(0, n(v)), ms.offA.slice(0, n(v)), null), median: row[v].median, abilityEvents: row[v].abilityEvents, noisyJob: row[v].noisy }]));
+    const ctl = 'only:none';
+    row.sub = Object.fromEntries(subs.filter((v) => v !== ctl).map((v) => [v, { ...ratio(row[v], row[ctl], ms[v], ms[ctl], null), median: row[v].median, abilityEvents: row[v].abilityEvents, noisyJob: row[v].noisy }]));
+    row.subControl = { median: row[ctl].median, overOff: row[ctl].median / row.offA.median, noisy: row[ctl].noisy };
     for (const v of subs) delete row[v]; row.subRuns = Object.fromEntries(subs.map((v) => [v, { runs: ms[v], wallRuns: wall[v], fp: first[v].fp, ticksPerPlay: first[v].ticks / first[v].plays }]));
   }
   results.push(row);
   const flag = (x) => `${x.noisy ? ' NOISY' : ''}${x.borderline ? ' BORDERLINE' : ''}`;
   console.log(`${sc.id.padEnd(24)} base ${fx(row.base.median, 1).padStart(7)} ms (${fx(row.base.msPerPlay, 3)}/play, ${fx(row.base.ticksPerPlay, 1)} ticks)  cand ${fx(row.cand.median, 1).padStart(7)} ms (${fx(row.cand.msPerPlay, 3)}/play, ${fx(row.cand.ticksPerPlay, 1)} ticks)  R0 ${fx(row.R0.ratio, 3)} ${row.R0.pass ? 'pass' : 'FAIL'}${flag(row.R0)} (paired ${fx(row.R0.pairedMedian, 3)}, per tick ${fx(row.R0.perTick, 3)}, wall ${fx(row.R0.wall, 3)})`
     + (jobs.abil ? `\n${''.padEnd(24)} abilities on ${fx(row.abil.median, 1)} ms (${fx(row.abil.ticksPerPlay, 1)} ticks)  R1 ${fx(row.R1.ratio, 3)} ${row.R1.pass ? 'within' : 'OVER'} ${ABILITY}${flag(row.R1)}  same-process R1 ${fx(row.R1same.ratio, 3)}${flag(row.R1same)}  R2 ${fx(row.R2.ratio, 3)}` : ''));
-  for (const [v, s] of Object.entries(row.sub || {})) console.log(`${''.padEnd(26)}${v.padEnd(28)} x${fx(s.ratio, 3)} of abilities off (same process)${s.noisy ? ' NOISY' : ''} (${s.abilityEvents} ability events)`);
+  for (const [v, s] of Object.entries(row.sub || {})) console.log(`${''.padEnd(26)}${v.padEnd(28)} x${fx(s.ratio, 3)} of the control only:none${s.noisy ? ' NOISY' : ''} (${s.abilityEvents} ability events)`);
 }
 loads.push(load());
 base.close(); cand.close(); candA.close();

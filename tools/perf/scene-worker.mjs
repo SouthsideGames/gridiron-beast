@@ -5,7 +5,8 @@
 //
 // Variants: plain (an ordinary scene), inert (an ability scene with its overlays' types but no species, no primes, no staged fields:
 // an ordinary scene both builds can run), ability (the full ability scene; Task 8 builds only), only:KEY (a sub-measurement, Task 8 only:
-// the inert twin plus one overlay's species and primed state, e.g. only:home.offense.WR1, or only:fields for the staged fields alone;
+// the inert twin plus one overlay's species and primed state, e.g. only:home.offense.WR1, or only:fields for the staged fields alone,
+// or only:none, the control with nothing active;
 // subVariants(scene) lists them).
 // Each run returns { ms (wall), cpu (process CPU time), plays, ticks, fp, inputs, playsHash, abilityEvents, fields }: ms is the timed section only (scene inputs,
 // teams and game states are built before the timer starts; fingerprints are computed after it stops).
@@ -40,8 +41,9 @@ const playKey = (p) => { const { desc, name, reserve, ...rest } = p; return JSON
 const player = (p) => ({ id: p.id, name: p.name, position: p.position, type: p.type ?? null, attrs: { ...p.attrs }, permDurability: p.permDurability });
 /** Is overlay `key` (or 'fields', the staged fields) active in this variant? ability: all; only:KEY: that one; inert/plain: none. */
 const active = (variant, key) => variant === 'ability' || variant === `only:${key}`;
-/** Sub-measurement variants of an ability scene: each overlay alone, and the staged fields alone. */
-export const subVariants = (sc) => [...Object.keys(sc.abilities || {}), ...(sc.fields?.length ? ['fields'] : [])].map((k) => `only:${k}`);
+/** Sub-measurement variants of an ability scene: only:none (the control: nothing active, the same setup path as the others), each
+ *  overlay alone, and the staged fields alone. */
+export const subVariants = (sc) => ['none', ...Object.keys(sc.abilities || {}), ...(sc.fields?.length ? ['fields'] : [])].map((k) => `only:${k}`);
 /** Apply a scene's ability overlays to a team ('home'/'away'). variant inert: the overlay's type only; ability (or only:KEY for that
  *  overlay): type + species + form + mastery. */
 function overlay(team, side, sc, variant) {
