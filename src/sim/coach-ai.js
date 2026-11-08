@@ -149,13 +149,25 @@ export function suggestPlay(state, team, available, side, tendencies, opp = null
   return weights.sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 }
 
-/** 'go' | 'punt' | 'fg', fourth-down decision. */
-export function fourthDownDecision(state, team) {
+/**
+ * Task 8 M3 (PROVISIONAL AI policy, owner 22:23: a player-selectable signature is not player-exclusive): the AI's use of an available
+ * field-goal signature (Dragon Roar, DRA-05-F) under exactly the player's eligibility, chart and once-per-game rule. The AI counts a
+ * kick as in range at the same bar as its ordinary range (a 45% chance, fieldGoalRange), and activates the signature on a kick when it
+ * improves the chance by more than AI_SIGNATURE_MARGIN, so the single use is not spent on a kick the ordinary leg already makes.
+ * `sig` = rules.fieldGoalSignature(state, teams) or null.
+ */
+export const AI_SIGNATURE_MARGIN = 0.05; // provisional
+export const AI_FG_RANGE_CHANCE = 0.45; // the ordinary range bar (special-teams.js fieldGoalRange)
+export function fgSignatureInRange(sig) { return !!sig?.available && sig.chance != null && sig.chance >= AI_FG_RANGE_CHANCE; }
+export function fgSignatureDecision(sig, ordinaryChance) { return !!sig?.available && sig.chance != null && sig.chance > ordinaryChance + AI_SIGNATURE_MARGIN; }
+
+/** 'go' | 'punt' | 'fg', fourth-down decision. `sig`: an available field-goal signature (Task 8 M3), or null. */
+export function fourthDownDecision(state, team, sig = null) {
   const s = situation(state);
   const str = teamStrengths(team);
   const coach = team.coach || { aggression: 0.5 };
   const distance = fieldGoalDistance(s.ballOn);
-  const inRange = distance <= str.fgRange;
+  const inRange = distance <= str.fgRange || fgSignatureInRange(sig);
   const desperate = s.late && s.diff < 0 && (s.secondsLeft < 180 || (s.diff < -8 && s.secondsLeft < 420));
   if (s.ot) {
     if (s.diff < -3) return 'go'; // need a touchdown

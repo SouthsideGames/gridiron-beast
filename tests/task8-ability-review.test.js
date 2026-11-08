@@ -26,7 +26,6 @@ test('a review writes nothing outside its own game: no franchise, save or storag
   const r = reviewAbility({ family: 'nonexistent' }); assert.equal(r.found, false);
 });
 
-test('reviewer staging: abilities the AI or the base playbook never reaches are staged on the real engine (Crossed Wires, Dragon Roar, Night Watch)', () => {
+test('reviewer staging: abilities the AI or the base playbook never reaches are staged on the real engine (Crossed Wires, Dragon Roar as the player call, Night Watch)', () => {
   for (const family of ['flicker', 'vyrnax', 'nightowl']) { const r = reviewAbility({ family, seed: 1, games: 3 }); assert.ok(r.found, `${family}: ${r.reason}`); assert.equal(r.primed, true); }
-  const plain = reviewAbility({ family: 'vyrnax', primed: false, games: 2 }); assert.equal(plain.found, false, 'unstaged, the AI never calls Dragon Roar');
 });
