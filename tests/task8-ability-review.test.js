@@ -36,3 +36,8 @@ test('a review stops only on the subject\'s own recorded execution (never a char
     for (const e of r.events) { assert.ok(e.by == null || e.by === r.slot, `${family}: a cue from his slot only`); }
   }
 });
+
+test('the reviewer screen\'s review namespace exists in the review store (its verdicts save; the cloud sync does not throw)', async () => {
+  const RS = await import('../src/franchise/review-store.js');
+  assert.deepEqual(RS.reviews('fbability'), {}); assert.equal(await RS.syncReviews('fbability'), false, 'no cloud in tests: a clean false, not a crash');
+});
