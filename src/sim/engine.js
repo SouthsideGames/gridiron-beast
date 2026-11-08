@@ -179,11 +179,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // ------------------------------------------------------------ Task 8 M3: ability contract hooks (src/sim/abilities/registry.js)
   // Abilities draw from their own stream, so plays where no contract acts keep every physics draw. Game-scope state (charges,
   // cooldowns) lives in options.t8 (the football game state's Task 8 block); without one (labs, previews) it is per play only.
-  const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13);
   const t8g = options.t8 || { status: {} };
   // Task 8 M3 fields (spec §11): options.fields in this play's frame (fields.js toPlayFrame); null without fields (src/sim/t8/field-effects.js)
   const FX = createFieldPlay({ fields: options.fields, actors, seed, log: (...x) => log(...x), t8: t8g, setStatus: (a, c, d) => setStatus(a, c, d), bounds: B, dt: DT, refreshMaxSpeed: (a) => refreshMaxSpeed(a) });
-  const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
+  // Perf (outcome-identical): the contract context (and the ability stream, a pure function of the seed that only it draws from)
+  // is built at the first contract hook call, so a play where no contract acts never allocates it.
+  let abilityCtx = null;
+  const buildAbilityCtx = () => { const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13); return { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
     queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => (!FX || FX.canStart(a)) && activationAllowed(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
     applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null),
@@ -215,7 +217,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // protection against new harmful statuses (status-runtime.js ward); temporary absences and a turnover's awarded spot
     ballOn, get events() { return events; }, manTarget: (d) => (d?.team === 'def' && d.assignment?.a === 'man' ? bySlot.off[manKeys[d.assignment.key]] || null : null),
     removeStatus: (a) => t8Remove(a), ward: (a) => { (t8g.ward ||= {})[a.mid] = true; },
-    queueAbsence: (spec) => { (t8g.absences ||= []).push({ ...spec }); }, turnoverSpot: (n) => { turnoverSpot = n; } };
+    queueAbsence: (spec) => { (t8g.absences ||= []).push({ ...spec }); }, turnoverSpot: (n) => { turnoverSpot = n; } }; };
   let turnoverSpot = null; // M3 hook: an ability-awarded next-offense spot after a turnover (rules.js applies it)
   delete t8g.ward; // M3 hook: protection is per play
   const whistleQueue = []; // M3 hook: ctx.afterWhistle callbacks
@@ -225,7 +227,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // carryover and countdowns are unaffected (statuses are not cleansed). This overrides conflicting contract wording on these plays.
   const SPECIAL_PLAY = !!(KO || options.twoPoint);
   const mayAct = (a) => !SPECIAL_PLAY || (!!KO && a.slot === 'K' && a.kickerAbility);
-  const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h && mayAct(a) ? h(abilityCtx, a, ...args) : undefined; };
+  const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; if (h && !abilityCtx) abilityCtx = buildAbilityCtx(); return h && mayAct(a) ? h(abilityCtx, a, ...args) : undefined; };
   // M3 hook: physical obstacles from contracts (stone walls, snowballs): kinds 'circle' {x, y, r} and 'rect' {x0, x1, y0, y1}, live until
   // removed or the whistle; `blocks(actor)` says whom it stops. Monsters it blocks are kept outside after movement (the ball is not).
   const obstacles = []; const BODY = 0.35;
