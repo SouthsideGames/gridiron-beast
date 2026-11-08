@@ -10,7 +10,7 @@
 //   Water slip chance per sharp cut/stop  Electric Stunned chance on first entry   Psychic inward pull, % of applicable max speed
 // A field with no strength applies no magnitude-dependent effect (no universal magnitude is invented). `payload.deadband` overrides
 // the Psychic centre deadband. Values §11 itself states (40% current-speed loss, the hybrids' numbers) are the constants below.
-import { effectsAt, maxSpeedFactor } from './fields.js';
+import { effectsAt, maxSpeedFactor, contains } from './fields.js';
 import { applyStatus } from './status-runtime.js';
 import { createRng } from '../../core/rng.js';
 
@@ -72,14 +72,31 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     const without = a.attrs[k] - prev, d = -without * r; a.attrs[k] = without + d; a.fx.attr[k] = d;
   }
 
+  // Perf (outcome-identical): a play's field list and its rectangles never change during the play (abilities place and remove fields
+  // in the stored list between plays), so effectsAt depends on the point only through which fields contain it. Each distinct
+  // (monster type, set of containing fields) is resolved once per play, with the base-effect lookup built from it as before; both
+  // are shared read-only (nothing writes into a.fx.base or the effectsAt result).
+  const memo = new Map(); const bigList = fields.length > 30;
+  function effectsHere(a) {
+    let byType = memo.get(a.type); if (!byType) { byType = new Map(); memo.set(a.type, byType); }
+    let k = bigList ? '' : 0;
+    for (let i = 0; i < fields.length; i++) if (contains(fields[i], a.x, a.y)) { if (bigList) k += `${i},`; else k |= 1 << i; }
+    let m = byType.get(k);
+    if (!m) {
+      const e = effectsAt(fields, a.x, a.y, a.type);
+      const base = {}; for (const b of e.base) base[b.type] = { strength: b.strength, field: byId.get(b.fieldId) };
+      m = { e, base }; byType.set(k, m);
+    }
+    return m;
+  }
   function tick(now) {
     t = now;
     if (!placed) { placed = true; clumps = placeClumps(fields, actors, rng); if (clumps.length) log(`Living Terrain raises ${clumps.length} vine clump${clumps.length > 1 ? 's' : ''}`, { kind: 'field_clumps', clumps: clumps.map((c) => [c.x, c.y]) }); }
     for (const a of actors) {
       if (a.envImmune) continue; // M3 hook: an actor immune to environmental modifiers (Stormguard's guards) never experiences a field
       const st = (a.fx ||= { seen: new Set(), attr: {}, drift: 0, cut: a.cutUntil });
-      const e = effectsAt(fields, a.x, a.y, a.type);
-      st.base = {}; for (const b of e.base) st.base[b.type] = { strength: b.strength, field: byId.get(b.fieldId) };
+      const m = effectsHere(a); const e = m.e;
+      st.base = m.base;
       st.hybrid = e.hybrid?.name || null;
       for (const b of e.base) if (!st.seen.has(b.fieldId)) {
         st.seen.add(b.fieldId); ev(a, 'field_enter', `${a.name} enters a ${b.type} field`, { field: b.fieldId, element: b.type });
@@ -173,7 +190,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   }
   /** Eclipse: an active signature cannot start inside (the contract spends nothing on a blocked start). */
   function canStart(a) {
-    const h = effectsAt(fields, a.x, a.y, a.type).hybrid?.name; if (h !== 'Eclipse') return true;
+    const h = effectsHere(a).e.hybrid?.name; if (h !== 'Eclipse') return true;
     ev(a, 'field_blocked_start', `${a.name}'s signature cannot start inside the Eclipse`, { hybrid: 'Eclipse' }); return false;
   }
   // M3 hook: a field's Prism Break removed footprints (holes) go out with it
