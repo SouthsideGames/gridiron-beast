@@ -213,6 +213,10 @@ player wins on Rookie, and per the ruling Rookie balance is not changed on this 
 
 ## Performance against the specification's CPU gate (reconciliation, 2026-11-08)
 
+**Update (branch task8-perf-scenes):** matched scenes (PROPOSED, pending owner approval), the profile attribution, three
+outcome-identical optimisations and the before/after ratios are in [PERF_SCENES.md](PERF_SCENES.md). The indicative figures below are
+superseded by that document's matched measurements.
+
 **Correction to the final-run report above.** "10,000 3v3 Clash battles in under 5 s" is the Beast Clash Phase 1 limit in
 TESTING_POLICY.md. It is not the Task 8 performance requirement. The Task 8 requirement is SPECIFICATION_BASELINE §14/§16:
 
