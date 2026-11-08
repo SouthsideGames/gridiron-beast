@@ -14,8 +14,14 @@
 //   seeds     how many fixed seeds are tried in order (seed0, seed0 + 1, ...; seed0 defaults to 1); snaps: how many snaps per seed. All are fixed, so the scenario is
 //             deterministic: the same seed and snap always execute, and the result is identical on every run. The review clubs are
 //             generated founding rosters, so a change in which individuals they keep moves these: icehorn seed0 4 -> 18 and aurodrax
-//             seeds 12 -> 24 (2026-11-08, post-history founding selection, owner ruling N8b D1; staging unchanged).
+//             seeds 12 -> 24 (2026-11-08, post-history founding selection, owner ruling N8b D1; staging unchanged); tsunarok seed0 5 -> 15
+//             (Reviewer v2: seeds 5-14 never reach the interception, so the reviewer starts at the first that does).
 //   staged    a note shown in the reviewer when the scenario stages conditions that released gameplay does not reach today
+//   after     (Reviewer v2) overrides for the follow-up snaps after the activation, where the effect and its cleanup live: another
+//             unit (`unit` may be a function (k, api) of api.followUp), other calls, `kick: null` after a kick, or `natural: true`
+//             (no restaging: the game continues from its real state). `note` explains it in the reviewer.
+//   options   may return the engine's review-only controls (engine.js REVIEW_ONLY): controlled prerequisites only, labelled by the
+//             reviewer (Hoard Flight's fumble, Sovereign Arm's would-be interception); `seed0` may be a function (form, mastery)
 //   how       one line: how the scenario stages the contract's conditions (shown in the reviewer and the M3 report)
 //
 // The rest of both clubs carry no ability (species removed) unless the entry places one, so only the subject's contract acts.
@@ -43,7 +49,7 @@ export const SCENARIOS = {
   reefclaw: { unit: 'defense', calls: DEF_MIX, how: 'ready; mixed snaps until his first block engagement drains the blocker (natural trigger)' },
   tidefin: { seed0: 3, unit: 'offense', calls: [['quick_slants', 'cover_3'], ['curl_flat', 'cover_2_man'], ['smash', 'cover_4']], target: 'WR1', how: 'ready; passes to him (chosen target) until one he reaches falls' },
   wavehorn: { unit: 'offense', calls: RUN_O, how: 'passive aura; run plays give him a blocking assignment with opponents inside the aura (natural trigger)' },
-  tsunarok: { seed0: 5, unit: 'defense', calls: [['deep_post', 'cover_3'], ['three_verticals', 'cover_3'], ['dagger', 'cover_4']], target: 'WR1', seeds: 24, snaps: 24,
+  tsunarok: { seed0: 15, unit: 'defense', calls: [['deep_post', 'cover_3'], ['three_verticals', 'cover_3'], ['dagger', 'cover_4']], target: 'WR1', seeds: 24, snaps: 24,
     setup: ({ teams }) => { const qb = teams.away.offense.QB; qb.attrs = { ...qb.attrs, accuracy: 5, awareness: 5 }; },
     after: { unit: (k, api) => (api.followUp < 3 ? 'offense' : 'defense'), calls: MIX_O, target: null, note: 'his club\'s offense snaps (the Tsunami Line lands before its first snap and lives two plays), then his defense snaps until the cooldown is ready' },
     how: 'ready; an inaccurate opposing QB throws deep middle into his zone until he secures an interception' },

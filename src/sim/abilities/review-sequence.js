@@ -34,11 +34,11 @@ const nameOf = (teams, mid) => { for (const t of [teams.home, teams.away]) for (
 export function sequenceVariants(family) { return [{ id: 'main', kind: 'main', label: 'Main demonstration' }, ...variantsOf(family).map((v) => ({ id: v.id, kind: v.kind, label: v.label }))]; }
 
 /**
- * One complete-interaction run: `{ family, form, mastery, variant = 'main' }`. Returns { ok, family, abilityId, name, form, mastery,
+ * One complete-interaction run: `{ family, form, mastery, variant = 'main', override? }`. Returns { ok, family, abilityId, name, form, mastery,
  * variant, kind, label, controlled, controls, staging, explain: { source, targets, expect }, seed, seedsTried, plays: [record], activation,
  * phases: [{ id, label, ok, play, t, evidence }], failure, error, frequencyNote }.
  */
-export function reviewSequence({ family, form = null, mastery = 0, variant = 'main', maxFollowUps = MAX_FOLLOW_UPS } = {}) {
+export function reviewSequence({ family, form = null, mastery = 0, variant = 'main', maxFollowUps = MAX_FOLLOW_UPS, override = null } = {}) {
   const fam = FAMILIES.find((f) => f.id === family); const abilityId = fam?.abilities?.football;
   const base = { ok: false, family, abilityId, form: form || `${family}:0`, mastery, variant, plays: [], phases: [], failure: null, error: null };
   if (!abilityId) return { ...base, failure: { condition: 'no football ability' } };
@@ -46,7 +46,7 @@ export function reviewSequence({ family, form = null, mastery = 0, variant = 'ma
   const sc0 = SCENARIOS[family]; if (!sc0) return { ...base, failure: { condition: 'no scenario for this family' } };
   const v = variant === 'main' ? null : variantsOf(family).find((x) => x.id === variant);
   if (variant !== 'main' && !v) return { ...base, failure: { condition: `no variant ${variant}` } };
-  const sc = v ? { ...sc0, ...v.scenario } : sc0; const spec = phaseSpec(family, v); form ||= `${family}:0`;
+  const sc = { ...sc0, ...(v?.scenario || {}), ...(override || {}) }; const spec = phaseSpec(family, v); form ||= `${family}:0`; // override: diagnostics and tests only (e.g. fewer snaps)
   const ab = abilityById(abilityId) || {};
   const out = { ...base, form, name: ab.name || abilityId, kind: v?.kind || 'main', label: v?.label || 'Main demonstration', how: sc.how || '', staging: [], controls: [], controlled: false,
     explain: { source: null, targets: spec.targets, expect: typeof spec.expect === 'function' ? spec.expect(form, mastery) : spec.expect, trigger: spec.trigger, resolve: spec.resolve, cleanup: spec.cleanup } };
