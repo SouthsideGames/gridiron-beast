@@ -23,6 +23,7 @@ This is the single register of every Task 8 decision item: round 1 (items 1–40
 | **N7f** | Owner rulings on club strength, franchise identity, free agency, testing record and scope, 2026-11-07 12:44 ([RULINGS_2026-11-07d.md](RULINGS_2026-11-07d.md)) |
 | **N7e** | Owner ruling on fractional training display, 2026-11-07 10:32 |
 | **N7d** | Owner rulings on G1–G3, 2026-11-07 10:21 ([RULINGS_2026-11-07c.md](RULINGS_2026-11-07c.md)) |
+| **N8d** | Owner rulings on the M4 decisions D1–D19, reviewers and performance, 2026-11-08 14:32 ([SPECIFICATION_BASELINE.md §25](../beast-dex/SPECIFICATION_BASELINE.md)) |
 
 The consolidated rules are in [SPECIFICATION_BASELINE.md §20–§21](../beast-dex/SPECIFICATION_BASELINE.md) and
 [task8-overrides.json](../beast-dex/data/task8-overrides.json).
@@ -213,6 +214,34 @@ Verbatim: [RULINGS_2026-11-07e.md](RULINGS_2026-11-07e.md).
 | Career-history fixture | **Approved** | A constructed title through the real season code; assertions unchanged; no inserted record and no seed search |
 | Trading test 28 (kicker) | **Approved** | Aligned with the approved trading rule; trading rules unchanged |
 | D1 founding rosters | **Approved** | Post-history strength selection; shares, Temper neutrality, one Apex roll per event and ceilings preserved; no added years or boosts |
-| task7-remediation R1 c seed | **Open: explanation for review** | [REMEDIATION_R1C_SEED.md](REMEDIATION_R1C_SEED.md) |
+| task7-remediation R1 c seed | **Approved (10:25)** | Seed change replaced by a constructed scenario through the real free-agency code; "never disappears" means a valid recorded destination or disposition; another club's legitimate signing satisfies the test ([REMEDIATION_R1C_SEED.md](REMEDIATION_R1C_SEED.md)) |
 | Club identities | **Approved (stands)** | Persistent AI identities; compatible coaching changes allowed; the player is unrestricted; the gym Compete floor and the Rookie adjustment kept |
 | Rookie balance | **No change** | Not recalibrated from title frequency in 24 simulated seasons |
+
+## M4 decisions D1–D19 (N8d, 2026-11-08 14:32)
+
+The proposals are in [M4_PLAN.md](M4_PLAN.md) §5. The rulings are in [SPECIFICATION_BASELINE.md §25](../beast-dex/SPECIFICATION_BASELINE.md).
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| D1 Player rotations | **Approved** | Prompt in Watch mode, with "Auto for the rest" |
+| D2 Clash AI | **Approved** | The existing AI, adapted to the new abilities, the rotation rules and the approved information restrictions |
+| D3 Feather Relay | **Approved, conditional** | Counts as a rotation without the 50% entry penalty, provided this matches its approved contract. Other rotation restrictions stay unless the contract exempts them |
+| D4 Stunned | **Approved** | No two consecutive Stunned skips. After one skip, the next normal action is protected. The remaining duration is preserved; countdown handling must be documented |
+| D5 Archetype perks | **Approved** | Striker shield-break and Disruptor pierce on ordinary attacks only. Tank guard only while active. Explicit ability exceptions preserved |
+| D6 Tank bruise | **Open** | Explanation requested: effect, duration, stacking, presentation, and relationship to the single-status rule |
+| D7 Afflicted legacy heal penalty | **Approved** | Retired. Healing Reduced handles healing reduction |
+| D8 Battle-length rules | **Open** | Explanation requested: the exact damage ramp, healing reduction, battle cap, and how pending delayed effects and knockouts resolve at the cap |
+| D9 Modifier arithmetic | **Approved** | Rotation, healing-cut and ramp modifiers multiply and are rounded once. Explicit floor and round-up exceptions and approved bounds are preserved |
+| D10 Status transfer | **Approved** | Same percentage for Slowed, Empowered and Weakened. Confused carried into football is −20% effective Awareness |
+| D11 Shield transfer | **Approved** | A football-origin shield becomes 15% of maximum Clash HP × its remaining fraction. Compared by original strength. Remaining fraction, application history and spent fumble-save state preserved. A mode switch never refills protection |
+| D12 Standalone Clash | **Approved** | Statuses clear at the actual end of a standalone battle. Opening and overtime Clash-to-football continuity preserved |
+| D13 Daybreak Lance, Clear Light | **Open** | Show the conflicting text and Progression values before any precedence decision |
+| D14 Dawn Song | **Open** | Show the approved target text; clarify "self only" versus "self included" |
+| D15 Emergency Cover | **Approved** | The first eligible rescuer in lineup order |
+| D16 Ability-kind table | **Approved process** | The complete table goes to the owner for review before the first ability batch |
+| D17 Canopy Assist | **Approved** | "Strongest" means the highest expected attack damage against the current opponent, using only legitimately available information and no future RNG outcomes |
+| D18 Second Spring | **Approved** | Revives the earliest knocked-out eligible monster, placed at the back of the lineup. Other approved conditions preserved |
+| D19 Historical records | **Approved** | Completed pre-M4 Clash records replay through the isolated historical engine. New battles use the versioned Task 8 engine once integrated |
+| Reviewer standard | **Approved** | Both reviewers demonstrate the complete interaction on the first run (§25) |
+| Performance scenes | **Approved process** | Matched scenes established now. The ≤10% simulation CPU limit is preserved, with no weakening to pass |

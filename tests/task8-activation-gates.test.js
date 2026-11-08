@@ -19,7 +19,7 @@ import { PLAYS } from '../src/data/playbook.js';
 import '../src/sim/abilities/index.js';
 
 const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/sim/abilities');
-const SHARED = new Set(['registry', 'index', 'review', 'review-scenarios', 'eligibility', 'common', 'earth-ice-util', 'fw-util', 'nature-electric-common', 'game']);
+const SHARED = new Set(['registry', 'index', 'review', 'review-scenarios', 'review-sequence', 'review-phases', 'review-texts', 'review-blocked', 'eligibility', 'common', 'earth-ice-util', 'fw-util', 'nature-electric-common', 'game']);
 
 // family: [hooks checking ctx.canStartSignature(self), hooks checking ctx.canGainCharge(self), reading]
 // "Out of play" = the pre-snap / pre-choice step (rules.js preSnap, field creation from a banked token), formula kicks, game hooks.
