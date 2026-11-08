@@ -420,6 +420,20 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (a.anchor) { a.x = a.anchor.x; a.y = a.anchor.y; a.vx = 0; a.vy = 0; } // M3 hook: an anchored actor never translates (own movement or forced)
   }
   function separate() {
+    // Perf (outcome-identical): with no field and no actor carrying a body rule (engaged2, passAllies, phased, anchor; all falsy), every
+    // M3 test below is false and every push is the plain one, so the plain loop (the baseline's, with the far-pair skip) gives the
+    // same pushes in the same order.
+    let rules = !!FX; if (!rules) for (let i = 0; i < actors.length; i++) { const a = actors[i]; if (a.engaged2 || a.passAllies || a.phased || a.anchor) { rules = true; break; } }
+    if (!rules) {
+      for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
+        const a = actors[i], b = actors[j];
+        const sx = a.x - b.x, sy = a.y - b.y; if (sx >= 0.7 || sx <= -0.7 || sy >= 0.7 || sy <= -0.7) continue;
+        if (a.engaged === b) continue;
+        const d = dist(a, b);
+        if (d < 0.7 && d > 0.001) { const push = (0.7 - d) / 2; const ux = (b.x - a.x) / d, uy = (b.y - a.y) / d; a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push; }
+      }
+      return;
+    }
     for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
       const a = actors[i], b = actors[j];
       // Perf (outcome-identical): a pair at least 0.7 apart on either axis is at least 0.7 apart (Math.hypot >= max |component|), so
