@@ -35,7 +35,7 @@ import { maxSpeedPct, accelFactor, effectiveAttr, effectiveMaxSpeed, disablesRes
 import './abilities/index.js'; // registers every Task 8 football ability contract (M3)
 import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION } from './qb-read.js';
 // (maxSpeedFactor no longer used here: one aggregation in refreshMaxSpeed)
-import { createFieldPlay } from './t8/field-effects.js';
+import { createFieldPlay, LIVING_TERRAIN } from './t8/field-effects.js';
 
 const DT = 0.05;
 const DEFAULT_ATTRS = { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 60 };
@@ -165,7 +165,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
     queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => !FX || FX.canStart(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
-    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null) };
+    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null),
+    // M3 hook: generic play capabilities for contracts (the actors, the play bounds and obstacles, the result so far, the ball's
+    // lateral, man/zone coverage responsibility, last nonzero heading, and callbacks run after every playEnd hook)
+    get actors() { return actors; }, bounds: B, obstacles: () => (FX ? FX.clumps.map((c) => ({ x: c.x, y: c.y, r: LIVING_TERRAIN.diameter / 2 + 0.35 })) : []), get result() { return result; }, ballLat,
+    guards: (d, r) => !!d && !!r && ((d.assignment?.a === 'man' && bySlot.off[manKeys[d.assignment.key]] === r) || (d.assignment?.a === 'zone' && d.zoneTgt === r.slot)),
+    heading: (a) => { if (Math.hypot(a.vx, a.vy) > 1e-6) return [a.vx, a.vy]; const h = history.get(a) || []; for (let i = h.length - 1; i > 0; i--) { const dx = h[i].x - h[i - 1].x, dy = h[i].y - h[i - 1].y; if (Math.hypot(dx, dy) > 1e-6) return [dx, dy]; } return null; },
+    afterWhistle: (fn) => { whistleQueue.push(fn); } };
+  const whistleQueue = []; // M3 hook: ctx.afterWhistle callbacks
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
   // ------------------------------------------------------------ Task 8 shared statuses in play (spec §10, §11; Appendix B)
   // One slot per monster in t8g.status (status-runtime.js gate). Effects are read at the snap and again the moment a status is accepted.
@@ -613,6 +620,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         if (a.ability?.quakeStep) quake(a);
         if (a.ability?.vanishing && !a.vanished) { a.vanished = true; nearest.stun = Math.max(nearest.stun, a.ability.vanishing); setStatus(nearest, 'lost', a.ability.vanishing); abilityUsed(a, 'vanishing'); abilityOutcome('vanished', a, `${a.name} vanishes; ${nearest.name} is left frozen`, { victim: nearest.slot }); }
         if (a.ability?.elusiveFirst) abilityUsed(a, 'elusiveFirst'); log(`${a.name} jukes ${nearest.name}`, { kind: 'juke', by: a.slot, side: a.team, victim: nearest.slot, ability: fired(a, 'elusive', 'elusiveFirst') });
+        hook('juke', a, nearest); // M3 hook: a successful ordinary juke (after it is logged)
       }
     }
     // He runs to his lane a few yards ahead, not to the end line at that lateral (v42.8, attribute audit fix 3): aimed at the
@@ -1299,6 +1307,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     phase = 'air'; stats.passer = passer.slot; stats.target = r.slot; stats.airYards = Math.round(landing.x);
     for (const def of defs) def.recognisedPass = true;
     log(`${passer.name} throws to ${r.name}${pressured ? ' under pressure' : ''}`, { kind: 'throw', target: r.slot, pressured });
+    for (const a of actors) if (a.contract) hook('passRelease', a, ball); // M3 hook: a forward pass has left the hand (ball.target, ball.landing set)
   }
   function scramble(a) {
     scrambled = true; phase = 'carry'; ball.holder = a; stats.carrier = a.slot; a.laneTimer = 0; a.jukeCooldown = 0;
@@ -2011,10 +2020,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // longer make the man they hold invisible, which is what had turned an aware linebacker into a worse one once pullers arrived.
     const offBlock = !!d.engaged && isRun && !d.armTried && dist(d, c) <= 1.0;
     if (d.stun > 0 || (d.engaged && !offBlock) || dist(d, c) > 1.25) return false;
+    const pre = hook('tackleAttempt', c, d); // Task 8 M3 (P6 pre-resolution)
+    if (pre?.skip) return false; // M3 hook: tackle-attempt exclusion: this defender cannot initiate this attempt (no attempt, no broken tackle)
     if (offBlock) d.armTried = true;
     const fwd = c.team === 'off' ? 1 : -1;
     // Task 8 M3 (P6 pre-resolution): a carrier's contract may break this attempt before it is decided (normal strips still apply later)
-    if (hook('tackleAttempt', c, d)?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); return false; }
+    if (pre?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); return false; }
     // Daybreak: nobody can bring him down from behind.
     if (c.daybreak && (d.x - c.x) * fwd < -0.2) return false;
     if (offBlock) return armTackle(d, c);
@@ -2188,6 +2199,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (r.ability?.routeAgility) abilityUsed(r, 'routeAgility'); log(`${r.name} catches it${contested ? ' in traffic' : ''}`, { kind: 'catch', by: r.slot, side: 'off', contested: !!contested, ability: fired(r, 'catchContest', 'routeAgility', 'afterCatch') });
       if (L.x >= B.goal) { endPlay('touchdown', L.x, L.y); log('TOUCHDOWN', { kind: 'touchdown' }); }
       if (L.y <= B.left || L.y >= B.right) { endPlay('out_of_bounds', L.x, clamp(L.y, B.left, B.right)); }
+      for (const a of actors) if (a.contract) hook('catchMade', a, r); // M3 hook: a completed catch (after any score / out of bounds at the catch: ctx.result)
       return;
     }
     ball.inAir = false;
@@ -2305,7 +2317,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
 
   // Task 8 M3: the whistle for every contract on the field (charges, clocks, field creation)
   { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(clamp(ball.x, B.ownEndLine, B.endLine)); const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, firstDown: options.toGo != null && g0 >= options.toGo && !['incomplete', 'throwaway', 'interception', 'fumble'].includes(result) };
-    for (const a of actors) hook('playEnd', a, summary); }
+    for (const a of actors) hook('playEnd', a, summary);
+    for (const fn of whistleQueue) fn(summary); } // M3 hook: ctx.afterWhistle callbacks, after every ordinary playEnd
   // ------------------------------------------------------------ outcome
   const endX = result === 'incomplete' || result === 'throwaway' ? 0 : clamp(ball.x, B.ownEndLine, B.endLine);
   const endLat = clamp(ball.y, B.left, B.right);

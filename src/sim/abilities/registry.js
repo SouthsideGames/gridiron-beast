@@ -9,14 +9,20 @@
 //     hooks: { [hookName]: (ctx, self, ...args) => result },   // pure over ctx + the actor/state given; draws only from ctx.rng
 //     initGame?: (form, mastery) => state,                       // game-scope state (charges, cooldowns), saved with an active game
 //     passive?: true,                                            // aura/passive: at most one mastery credit per game
+//     preSnap?: (api, self) => void,                             // M3 hook: before a scrimmage snap's fields are created (rules.js):
+//                                                                //   pre-choice producers queue fields here (api: rules.js preSnapContracts)
 //   }
 // Hook names (engine.js calls them; a hook a module does not declare costs nothing):
 export const HOOKS = Object.freeze([
   'playStart',        // (ctx, self)                         the snap: may read/modify the actor before movement
   'tick',             // (ctx, self)                         every engine tick while the play is live
   'engage',           // (ctx, self, other)                  a block engagement starts (self is blocker or defender)
-  'tackleAttempt',    // (ctx, self, tackler) -> {prevent}   pre-resolution, before the tackle is decided (P6)
+  'tackleAttempt',    // (ctx, self, tackler) -> {prevent|skip} pre-resolution, before the tackle is decided (P6); skip: the tackler
+                      //                                     cannot initiate this attempt at all (M3 hook: no attempt, no broken tackle)
+  'juke',             // (ctx, self, defender)               M3 hook: the carrier's successful ordinary juke of that defender
+  'passRelease',      // (ctx, self, ball)                   M3 hook: a forward pass has left the hand (ball.target, ball.landing)
   'catchPoint',       // (ctx, self, ball, other)            pre-resolution at the catch point (P6): set ball.t8.noContest / ball.t8.noInterception
+  'catchMade',        // (ctx, self, receiver)               M3 hook: after a completed catch (ctx.result is set if the catch ended the play)
   'fumble',           // (ctx, self) -> {prevent}            after a fumble is determined; a Shielded save is applied first (B3)
   'playEnd',          // (ctx, self, result)                 the whistle: charges, clocks, field creation
   'possessionChange', // (ctx, self)
