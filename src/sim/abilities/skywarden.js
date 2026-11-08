@@ -24,6 +24,7 @@ export const PUSH = [5, 6.5, 8, 10]; // yards by mastery
 export default registerAbility({
   family: 'skywarden', abilityId: 'WIN-03-F',
   initGame: () => ({ charges: 0 }),
+  review: { prime: () => ({ charges: PBUS }) }, // reviewer staged input: the bar is full
   hooks: {
     playStart(ctx, self) { self.ab = { armed: ctx.state(self).charges >= PBUS, fired: false }; },
     catchMade(ctx, self, r) {

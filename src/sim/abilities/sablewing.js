@@ -14,6 +14,7 @@ export const HOARD_FLIGHT = Object.freeze({ spot: 65 }); // the opponent 35, in 
 
 export default registerAbility({
   family: 'sablewing', abilityId: 'DRA-03-F',
+  review: { games: 20 }, // reviewer: fumble recoveries are rare; search up to 20 games
   hooks: {
     playEnd(ctx, self, s) {
       if (self.team !== 'def' || ctx.kickoff || ctx.twoPoint || s.result !== 'fumble') return;

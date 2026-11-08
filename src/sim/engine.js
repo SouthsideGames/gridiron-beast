@@ -2314,10 +2314,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       stats.receiver = r.slot; stats.carrier = r.slot; stats.catchX = L.x;
       for (const def of defs) def.recognised = true;
       if (r.ability?.routeAgility) abilityUsed(r, 'routeAgility'); log(`${r.name} catches it${contested ? ' in traffic' : ''}`, { kind: 'catch', by: r.slot, side: 'off', contested: !!contested, ability: fired(r, 'catchContest', 'routeAgility', 'afterCatch') });
-      for (const a of actors) if (a.contract) hook('catchMade', a, r); // M3 hook: post-resolution, a completed catch (before any contact this tick)
       if (L.x >= B.goal) { endPlay('touchdown', L.x, L.y); log('TOUCHDOWN', { kind: 'touchdown' }); }
       if (L.y <= B.left || L.y >= B.right) { endPlay('out_of_bounds', L.x, clamp(L.y, B.left, B.right)); }
-      for (const a of actors) if (a.contract) hook('catchMade', a, r); // M3 hook: a completed catch (after any score / out of bounds at the catch: ctx.result)
+      for (const a of actors) if (a.contract) hook('catchMade', a, r); // M3 hook: a completed catch, once (after any score / out of bounds at the catch: ctx.result; still before any contact)
       for (const a of actors) if (a.contract) hook('reception', a, r); // M3 hook: the same moment (the Light/Metal batch's name)
       return;
     }

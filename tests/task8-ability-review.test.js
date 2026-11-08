@@ -25,3 +25,8 @@ test('a review writes nothing outside its own game: no franchise, save or storag
   for (const bad of ['save', 'storage', 'franchise.js', 'progression', 'reward-ledger', 'localStorage']) assert.ok(!new RegExp(`from '[^']*${bad}`).test(src), bad);
   const r = reviewAbility({ family: 'nonexistent' }); assert.equal(r.found, false);
 });
+
+test('reviewer staging: abilities the AI or the base playbook never reaches are staged on the real engine (Crossed Wires, Dragon Roar, Night Watch)', () => {
+  for (const family of ['flicker', 'vyrnax', 'nightowl']) { const r = reviewAbility({ family, seed: 1, games: 3 }); assert.ok(r.found, `${family}: ${r.reason}`); assert.equal(r.primed, true); }
+  const plain = reviewAbility({ family: 'vyrnax', primed: false, games: 2 }); assert.equal(plain.found, false, 'unstaged, the AI never calls Dragon Roar');
+});

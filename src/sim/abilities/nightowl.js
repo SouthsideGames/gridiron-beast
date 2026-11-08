@@ -16,6 +16,7 @@ export const RADIUS = [4, 5, 6, 7]; // yards by mastery
 
 export default registerAbility({
   family: 'nightowl', abilityId: 'DAR-02-F', passive: true,
+  review: { setup: ({ addField }) => { addField({ type: 'Dark', strength: 25, centerLat: 0, width: 53.3, yardFrom: 0, yardTo: 100, ownerTeam: 'away', ability: 'review-dark' }); } }, // reviewer staging: an opposing Dark base field over the whole field
   hooks: {
     tick(ctx, self) {
       if (self.team !== 'def' || ctx.kickoff) return;

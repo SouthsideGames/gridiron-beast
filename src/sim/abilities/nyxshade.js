@@ -20,6 +20,7 @@ export const MAX_SWAP = [8, 10, 12, 14]; // yards by mastery
 export default registerAbility({
   family: 'nyxshade', abilityId: 'DAR-06-F',
   initGame: () => ({ charges: 0 }),
+  review: { prime: () => ({ charges: PBUS }) }, // reviewer staged input: the bar is full
   hooks: {
     playStart(ctx, self) { self.sx = { armed: ctx.state(self).charges >= PBUS, fired: false }; },
     passRelease(ctx, self, { ball }) {

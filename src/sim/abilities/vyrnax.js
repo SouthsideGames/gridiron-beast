@@ -22,6 +22,7 @@ export function roarChance(distance) {
 export default registerAbility({
   family: 'vyrnax', abilityId: 'DRA-05-F',
   initGame: () => ({ used: false }),
+  review: { choices: (state) => (state.phase === 'scrimmage' && state.possession === 'home' && state.down === 4 ? { fourthDown: 'fg', fgSignature: true } : null) }, // reviewer staging: the player's Dragon Roar call (the AI never activates it)
   fieldGoal: Object.freeze({
     label: 'Dragon Roar',
     chance: (distance) => roarChance(distance),

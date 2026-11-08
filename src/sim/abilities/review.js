@@ -6,6 +6,9 @@
 // Staged inputs: a contract may export `review: { prime(form, mastery) -> state, situation?: {...} }`; a primed review starts the
 // game with that game-scope state (e.g. a charged ignition) so the reviewer reaches the execution without waiting for its build-up.
 // Without one, or with `primed: false`, the state is the contract's own initGame and the execution has to happen naturally.
+// A primed review may also stage the game: `review.setup(api)` (api: { state, teams, subjectSide, addField }) arranges the clubs or
+// the field before kickoff (e.g. a reserve playbook, an opposing field), and `review.choices(state)` supplies a call the AI would not
+// make (e.g. a player-activated signature). Both only shape this review's own game.
 //
 // Nothing here writes progression: the clubs are generated for the review, the game state is local, mastery executions are only
 // counted (M5 awards them in franchise games, never here).
@@ -15,6 +18,7 @@ import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../../data/personnel.j
 import { generatedTeam } from '../../franchise/roster.js';
 import * as R from '../rules.js';
 import { step, aiController, newTendencies } from '../game-runner.js';
+import { placeRect } from '../t8/fields.js';
 import './index.js';
 
 export const MASTERY_TIERS = Object.freeze([0, 1, 2, 3]);
@@ -70,6 +74,7 @@ export function reviewAbility({ family, form = null, mastery = 0, primed = true,
   const fam = FAMILIES.find((f) => f.id === family); if (!fam?.abilities?.football) return { found: false, plays: 0, reason: 'no football ability' };
   const contract = contractOf(family); if (!contract) return { found: false, plays: 0, reason: 'no registered contract (legacy behaviour is not reviewed here)' };
   form ||= `${family}:0`;
+  games = Math.max(games, contract.review?.games || 0); // a rare trigger (e.g. a fumble recovery) declares a longer search
   let plays = 0;
   for (let g = 0; g < games; g++) {
     const gs = seed + g * 7919; const teams = clubs(gs); const at = placeSubject(teams.home, fam, form, mastery);
@@ -77,14 +82,17 @@ export function reviewAbility({ family, form = null, mastery = 0, primed = true,
     const state = R.newGame({ home: teams.home, away: teams.away, seed: gs, quarterLength });
     const init = primed && contract.review?.prime ? contract.review.prime(form, mastery) : contract.initGame ? contract.initGame(form, mastery) : {};
     state.t8 = { status: {}, ability: { [REVIEW_ID]: structuredClone(init) } };
+    const staged = primed ? contract.review || {} : {};
+    if (staged.setup) staged.setup({ state, teams, subjectSide: 'home', addField: (f) => { const b = (state.t8.fields ||= { list: [], pending: [], seq: 0 }); const r = placeRect({ id: `RV${++b.seq}`, createdAt: 0, owner: f.owner ?? null, ...f });
+      b.list.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: f.ability ?? 'review', payload: f.payload ?? null, ownerTeam: f.ownerTeam ?? null, remaining: f.lifetime ?? 999, clock: f.clock ?? 'scrimmageAny', clearsAtHalftime: false, createdThisPlay: false }); } });
     const ctrl = { home: aiController('home'), away: aiController('away') }; const tend = { home: newTendencies(), away: newTendencies() };
     for (let i = 0; i < 2000 && !state.finished; i++) {
       const before = structuredClone(state.t8.ability?.[REVIEW_ID] ?? null); const n0 = executionsOf(state.t8); const ballOn = state.ballOn; const offSide = state.phase === 'kickoff' || state.phase === 'free_kick' ? R.opponent(state.kickingTeam) : state.phase === 'try' ? state.tryTeam : state.possession; // a kickoff's sim offense is the return unit
-      const ev = step(state, teams, ctrl, tend); if (!ev) break;
+      const ev = step(state, teams, ctrl, tend, staged.choices ? staged.choices(state) || {} : {}); if (!ev) break;
       if (ev.sim || ev.kind === 'field_goal' || ev.kind === 'try' || ev.kind === 'punt' || ev.kind === 'kickoff') plays += 1;
       const evs = contractEvents(ev.sim, fam, fam.abilities.football);
       if (executionsOf(state.t8) > n0 || evs.length) {
-        return { found: true, abilityId: fam.abilities.football, family, form, mastery, primed: primed && !!contract.review?.prime, slot: at.slot, side: at.side,
+        return { found: true, abilityId: fam.abilities.football, family, form, mastery, primed: primed && !!(contract.review?.prime || contract.review?.setup || contract.review?.choices), slot: at.slot, side: at.side,
           game: g + 1, step: i + 1, kind: ev.kind, text: ev.text || '', sim: ev.sim || null, events: evs, executed: executionsOf(state.t8) > n0,
           before, after: structuredClone(state.t8.ability?.[REVIEW_ID] ?? null), fields: structuredClone(state.t8.fields?.list || []), plays,
           ballOn, subjectOnOffense: offSide === 'home', sprites: spritesFor(teams, offSide),
