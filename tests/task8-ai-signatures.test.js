@@ -33,3 +33,16 @@ test('AI clubs with Vyrnax call Dragon Roar in real games: once per game at most
 test('the reviewer reaches Dragon Roar without staging now that the AI calls it', () => {
   const r = reviewAbility({ family: 'vyrnax', primed: false, games: 6 }); assert.ok(r.found, r.reason); assert.equal(r.kind, 'field_goal');
 });
+
+test('desperation attempts (owner N8b, provisional): the last play of a half, or late trailing by 3 or less, lets the AI use the signature up to 90 yd', async () => {
+  const { fgSignatureDesperation, fourthDownDecision } = await import('../src/sim/coach-ai.js');
+  const st = (o) => ({ quarter: 4, clock: 5, quarterLength: 180, possession: 'home', score: { home: 10, away: 12 }, down: 4, toGo: 9, ballOn: 18, timeouts: { home: 0, away: 0 }, ot: null, ...o });
+  const far = { available: true, chance: roarChance(89) }; // 89 yd: 32%
+  assert.equal(fgSignatureDesperation(st(), far), true, 'last seconds, trailing by 2');
+  assert.equal(fgSignatureDesperation(st({ quarter: 2, clock: 4, score: { home: 20, away: 0 } }), far), true, 'the last play of the first half, even ahead');
+  assert.equal(fgSignatureDesperation(st({ clock: 300, quarter: 3 }), far), false, 'not late');
+  assert.equal(fgSignatureDesperation(st({ score: { home: 0, away: 7 }, clock: 90 }), far), false, 'down 7 with time left: a field goal is not enough');
+  assert.equal(fgSignatureDesperation(st(), { available: false, chance: 1 }), false, 'spent: never');
+  assert.equal(fgSignatureDesperation(st(), { available: true, chance: null }), false, 'above 90: never');
+  assert.equal(fourthDownDecision(st(), { coach: { aggression: 0.5 }, offense: {}, defense: {}, kicker: { attrs: { kicking: 60 } }, roster: [] }, far), 'fg', 'the AI kicks it');
+});

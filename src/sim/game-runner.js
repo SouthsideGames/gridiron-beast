@@ -15,7 +15,7 @@ export function aiController(side) {
     offensePlay(state, team, available, tendencies, rng, opp) { return AI.chooseOffensePlay(rng, state, team, available, tendencies, opp); },
     defensePlay(state, team, available, oppTendencies, rng, opp, own) { return AI.chooseDefensePlay(rng, state, team, available, oppTendencies, opp, own); },
     fourthDown(state, team, sig = null) { return AI.fourthDownDecision(state, team, sig); },
-    fgSignature(sig, ordinaryChance) { return AI.fgSignatureDecision(sig, ordinaryChance); }, // Task 8 M3: the AI's field-goal signature call (provisional policy)
+    fgSignature(sig, ordinaryChance, state = null) { return AI.fgSignatureDecision(sig, ordinaryChance, state); }, // Task 8 M3: the AI's field-goal signature call (provisional policy)
     tryChoice(state) { return AI.tryDecision(state); },
     kickoff(state) { return AI.kickoffDecision(state); },
     tempo(state) { return AI.tempoDecision(state); },
@@ -91,7 +91,7 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
     const decision = choices.fourthDown || ctrl(side).fourthDown(state, offTeam, sig?.available ? sig : null);
     if (decision === 'punt') { done(); const from = state.ballOn; const { text, res } = R.doPunt(state, teams); return { kind: 'punt', text, res, kicking: side, from }; }
     // The player's call comes in `choices`; an AI side decides with the same availability and chart (a player-selectable action is not player-exclusive)
-    const aiSig = !choices.fourthDown && !!ctrl(side).fgSignature?.(sig, R.fieldGoalInfo(state, teams).chance);
+    const aiSig = !choices.fourthDown && !!ctrl(side).fgSignature?.(sig, R.fieldGoalInfo(state, teams).chance, state);
     if (decision === 'fg') { done(); const from = state.ballOn; const { text, scored, res } = R.doFieldGoal(state, teams, { signature: !!choices.fgSignature || aiSig }); return { kind: 'field_goal', text, scored, res, kicking: side, from }; }
   }
 
