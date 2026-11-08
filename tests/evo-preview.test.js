@@ -50,7 +50,8 @@ test('the screen opens the gameplay evolution scene and never imports save, fran
   const lab = fs.readFileSync(new URL('../src/lab/evo-preview.js', import.meta.url), 'utf8'); assert.ok(!/franchise\/(franchise|save|store|slots|dex-store|achievement-store|career)\.js/.test(imports(lab)), 'the builder imports only the dex, monsters, the report and the rng');
 });
 test('normal evolution gameplay is unchanged: evolveMonster still evolves once, records the timeline and the Dex', () => {
-  const f = newFranchise(44); const m = f.roster.find((x) => { const sp = SPECIES_DEX.find((s) => s.id === x.species); return sp?.evolution?.length && sp.rarity !== 'legendary'; });
+  // an unevolved monster of an evolving family (a veteran may already have evolved during his simulated prior career)
+  const f = newFranchise(44); const m = f.roster.find((x) => { const sp = SPECIES_DEX.find((s) => s.id === x.species); return sp?.evolution?.length && sp.rarity !== 'legendary' && !x.stage; });
   assert.equal(m.stage || 0, 0); raiseToLevel(m, SPECIES_DEX.find((s) => s.id === m.species).evolution[0].level); const name0 = m.name; // Task 8: raiseToLevel, not m.level
   for (const t of previewTransitions()) buildPreview(t.species, t.fromStage); // previews first, then the real thing
   const r = F.evolveMonster(f, m.id); assert.equal(r.ok, true); assert.equal(m.stage, 1); assert.notEqual(m.name, name0);

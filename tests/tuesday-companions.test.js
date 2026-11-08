@@ -72,7 +72,8 @@ test('a battle started before a roster change, or saved under the old companion 
   assert.equal(logHash(F.encounterBattle(f)), h);
   const old = JSON.parse(exportJson(f)); old.franchise.week.encounter.b = [old.franchise.week.encounter.b[0], ...old.franchise.week.prospects.slice(1, 3).map((p) => Link.snapMonster(p.monster))]; // a record made under the previous rule
   const g = importJson(JSON.stringify(old)); const r1 = F.encounterBattle(g), r2 = F.encounterBattle(importJson(JSON.stringify(old)));
-  assert.equal(logHash(r1), logHash(r2)); assert.deepEqual(r1.lines.b.map((x) => x.combatant.monsterId), g.week.encounter.b.map((m) => m.id));
+  // the same members as the stored lineup (`lines` is the end-of-battle line, whose order the battle's own rotations change)
+  assert.equal(logHash(r1), logHash(r2)); assert.deepEqual(r1.lines.b.map((x) => x.combatant.monsterId).sort(), g.week.encounter.b.map((m) => m.id).sort());
 });
 
 test('Play, Auto and Skip to Results still fight the same companions; Skip Encounter still costs nothing', () => {

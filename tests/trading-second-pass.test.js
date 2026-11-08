@@ -191,8 +191,10 @@ test('adversarial: every club\'s answer to the same proposal is the same, but di
 test('incoming offers: deterministic, built from the club\'s roster, acceptable to the club, and good for the owner', () => {
   const { f, mine, theirs, env } = world({ ownerQ: 55, aiQ: 66 }); // a thin owner, a deep club
   // Task 8 M1 (fixture drift): quality is now a percentile target inside random Dex forms, so 55 vs 66 no longer makes the owner
-  // thin and the club deep; made explicit: every owner monster 6 below as generated, every club monster 6 above.
-  for (const m of mine) { setOvr(m, Math.max(25, ovr(m) - 6)); m.salary = salaryFor(m); } for (const m of theirs) { setOvr(m, Math.min(95, ovr(m) + 6)); m.salary = salaryFor(m); }
+  // thin and the club deep; made explicit: every owner monster GAP below as generated, every club monster GAP above. GAP 6 -> 8 on
+  // 2026-11-08: post-history founding selection (N8b D1) changed the generated rosters and 6 no longer produced a call.
+  const GAP = 8;
+  for (const m of mine) { setOvr(m, Math.max(25, ovr(m) - GAP)); m.salary = salaryFor(m); } for (const m of theirs) { setOvr(m, Math.min(95, ovr(m) + GAP)); m.salary = salaryFor(m); }
   let seen = 0; const kinds = new Set();
   for (let k = 0; k < 80 && seen < 8; k++) {
     const a = buildIncomingOffer(f, env({ counter: undefined }), { key: `wk:1:${k}`, chance: 1 }); const b = buildIncomingOffer(f, env({ counter: undefined }), { key: `wk:1:${k}`, chance: 1 });
