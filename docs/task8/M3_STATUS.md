@@ -1,6 +1,6 @@
 # M3 status: football abilities
 
-Status at da639eb (2026-11-07). Branch `task8-implementation`; nothing merged to main; the live game untouched.
+Status at 466ee7e (2026-11-07, 23:59). Branch `task8-implementation`; nothing merged to main; the live game untouched.
 
 ## Done
 
@@ -26,6 +26,30 @@ Status at da639eb (2026-11-07). Branch `task8-implementation`; nothing merged to
   (Eclipse, Cold Snap) and in-play charge gains check `ctx.canGainCharge` (Cold Snap's charge side) in all 72 modules: 44 gate a
   start, 31 gate charge gains, 13 gate neither (formula kicks, pre-snap producers, passive auras with nothing to spend); each module
   header records its reading; `tests/task8-activation-gates.test.js`.
+
+## Verification that every ability works under its intended conditions (owner 22:23)
+
+- **Rare activations investigated** (`M3_RARE_ACTIVATIONS.md`): 15 rarely activating abilities measured as trigger → opportunities
+  → activations → reasons. **No ability defect**: every opportunity meeting the approved conditions activated or was refused by a
+  stated rule.
+- **Geometry findings for ruling** (`DECISION_PACKET_M3.md` §3):
+  - Guiding Halo at mastery 0/1: every catch is at least about 9 yd from the QB.
+  - Crossed Wires: only the unreleased reserve bunch plays align two route runners within 5 yd.
+  - Shadow Exchange: the partner is tested at the release, before defenders converge.
+  - Foresight, and Prism Break's overlap selection.
+- **AI use of player-selectable signatures:** the AI now calls Dragon Roar under the player's rules. This is a PROVISIONAL policy.
+- **Reviewer:**
+  - **Fixes:** it stops only on the subject's own recorded execution (it could stop on a cue or on an opponent of the same family),
+    and its review namespace now exists (its cloud sync threw on mount).
+  - **Strict sweep at 68add50:** 67 of 72 execute within six unstaged-or-staged games. Tsunami Line, Frostmark, Second Chance
+    and Crosswind Rescue execute within 12 (their search budget is now 12). Guiding Halo at mastery 0 cannot execute, which is
+    the geometry finding above.
+  - **Browser check at 466ee7e:**
+    - the app boots;
+    - the reviewer lists 72 abilities, with 72 run buttons;
+    - Blazing Resolve, Dragon Roar, Crossed Wires and Night Watch run on the engine and replay;
+    - a verdict saves;
+    - no page errors.
 
 ## In progress
 
