@@ -42,7 +42,14 @@ export function defenseOnField(pkg) {
 }
 
 /** Position group of a depth-chart slot (roster positions use the group). */
+// perf: a pure function of the slot name, called per tick by the engine (pancake, shed): string results are memoised
+const POSITION_OF = new Map();
 export function positionOf(slot) {
+  if (typeof slot !== 'string') return positionGroup(slot);
+  let p = POSITION_OF.get(slot); if (p === undefined) { p = positionGroup(slot); POSITION_OF.set(slot, p); }
+  return p;
+}
+function positionGroup(slot) {
   if (/^WR/.test(slot)) return 'WR';
   if (/^(LG|C|RG)$/.test(slot)) return 'OL';
   if (/^DL/.test(slot)) return 'DL';

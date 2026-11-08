@@ -8,14 +8,19 @@ const SHED = approvedRule('shed-formula').values;
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 
 /** Constants in force; `override` (benchmarks only) must stay inside the approved bounds, and a0 is never below 0. */
-export function pancakeConstants(override = {}) {
+export function pancakeConstants(override = DEFAULTS) {
+  if (override === DEFAULTS) return DEFAULT_C; // perf: the approved values are frozen, so the no-override result is computed once
   const c = { ...PK, ...override }; delete c.bounds;
   for (const [k, [lo, hi]] of Object.entries(PK.bounds)) if (!(c[k] >= lo && c[k] <= hi)) throw new RangeError(`pancake ${k}=${c[k]} outside approved bounds ${lo}-${hi}`);
   return c;
 }
+const DEFAULTS = Object.freeze({}); const DEFAULT_C = Object.freeze(pancakeConstants({}));
 export const blockScore = (ol) => 0.6 * ol.blocking + 0.4 * ol.strength;
 /** Ordinary shed score by defender position (B2 initial weights). */
-export function shedScore(d, position) { const w = SHED[position === 'S' || position === 'FS' || position === 'SS' ? 'S' : position] || SHED.LB; return Object.entries(w).reduce((s, [a, k]) => s + k * d[a], 0); }
+// perf: the weights (frozen approved values) as [attribute, weight] lists, built once; the sum runs in the same order from 0 as the
+// Object.entries reduce it replaces, so every score is bit-identical
+const SHED_W = new Map(Object.entries(SHED).map(([p, w]) => [w, Object.entries(w)]));
+export function shedScore(d, position) { const w = SHED[position === 'S' || position === 'FS' || position === 'SS' ? 'S' : position] || SHED.LB; const e = SHED_W.get(w) || Object.entries(w); let s = 0; for (let i = 0; i < e.length; i++) s = s + e[i][1] * d[e[i][0]]; return s; }
 /** OL advantage A = (B - shed) / 100 with the engine's type scaling factors for the engaged pair. */
 export const advantage = (ol, d, dPos, { blockScale = 1, shedScale = 1 } = {}) => (blockScore(ol) * blockScale - shedScore(d, dPos) * shedScale) / 100;
 /** Chance that the one opportunity roll of this OL's play opens an attempt. Zero without a positive advantage beyond a0. */

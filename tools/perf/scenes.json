@@ -1,0 +1,672 @@
+{
+ "manifest": "task8-perf-scenes",
+ "version": "0.1.0-proposed",
+ "status": "PROPOSED: pending owner approval (SPECIFICATION_BASELINE §14 / §16 / §25). Not frozen until approved.",
+ "doc": "docs/task8/PERF_SCENES.md",
+ "protocol": {
+  "warmup": 3,
+  "repeats": 15,
+  "order": "interleaved ABBA per scene: base, cand, cand, base, ...",
+  "statistic": "median of repeats; spread = min, max, IQR"
+ },
+ "callSets": {
+  "PASS": [
+   ["quick_slants", "cover_3"],
+   ["deep_post", "cover_2_man"],
+   ["smash", "cover_4"],
+   ["curl_flat", "man_press"],
+   ["te_seam", "cover_3"],
+   ["dagger", "zone_blitz"]
+  ],
+  "RUN": [
+   ["inside_zone", "cover_3"],
+   ["power_right", "cover_2_man"],
+   ["outside_zone", "cover_4"],
+   ["counter", "run_wall"],
+   ["dive", "man_press"],
+   ["toss_sweep", "cover_3"]
+  ],
+  "MIX": [
+   ["inside_zone", "cover_3"],
+   ["quick_slants", "cover_2_man"],
+   ["power_right", "run_wall"],
+   ["deep_post", "cover_3"],
+   ["outside_zone", "zone_blitz"],
+   ["smash", "man_press"]
+  ],
+  "WIDE": [
+   ["bunch_snag", "cover_3"],
+   ["flood", "cover_2_man"],
+   ["pa_boot", "cover_4"],
+   ["three_verticals", "zone_blitz"],
+   ["y_cross", "man_press"],
+   ["stick", "cover_1"],
+   ["counter", "edge_contain"],
+   ["toss_sweep", "cover_3"]
+  ],
+  "REDZONE": [
+   ["inside_zone", "goal_line"],
+   ["quick_slants", "goal_line_man"],
+   ["power_right", "cover_3"],
+   ["curl_flat", "cover_2_man"],
+   ["dive", "goal_line"],
+   ["stick", "man_press"]
+  ],
+  "LEGEND": [
+   ["lp_dragons_gambit", "cover_3"],
+   ["lp_eye_of_the_storm", "cover_2_man"],
+   ["lp_fault_line", "run_wall"],
+   ["lp_dragons_gambit", "lp_phantom_coverage"],
+   ["lp_eye_of_the_storm", "lp_rootbound"],
+   ["lp_fault_line", "lp_rootbound"]
+  ],
+  "SUMMON": [
+   ["quick_slants", "cover_3"],
+   ["inside_zone", "edge_contain"],
+   ["deep_post", "cover_2_man"],
+   ["power_right", "edge_contain"],
+   ["smash", "cover_4"],
+   ["counter", "run_wall"]
+  ]
+ },
+ "scenes": [
+  {
+   "id": "O1-pass-T",
+   "kind": "ordinary",
+   "tier": "engine",
+   "offense": "T62a",
+   "defense": "T62b",
+   "calls": "PASS",
+   "seeds": [1, 16],
+   "ballOn": 35,
+   "note": "Task 8 generator rosters, six base passing calls"
+  },
+  {
+   "id": "O2-run-M",
+   "kind": "ordinary",
+   "tier": "engine",
+   "offense": "M62a",
+   "defense": "M62b",
+   "calls": "RUN",
+   "seeds": [1, 16],
+   "ballOn": 35,
+   "note": "main generator rosters, six base running calls"
+  },
+  {
+   "id": "O3-wide-mismatch",
+   "kind": "ordinary",
+   "tier": "engine",
+   "offense": "M75",
+   "defense": "M50",
+   "calls": "WIDE",
+   "seeds": [101, 112],
+   "ballOn": 25,
+   "envType": "Wind",
+   "note": "strong v weak, a stadium type, a released bunch play, play action, verticals, man and zone"
+  },
+  {
+   "id": "O4-redzone-cross",
+   "kind": "ordinary",
+   "tier": "engine",
+   "offense": "T62a",
+   "defense": "M62a",
+   "calls": "REDZONE",
+   "seeds": [201, 216],
+   "ballOn": 88,
+   "note": "red zone and goal-line fronts, rosters from both generators"
+  },
+  {
+   "id": "O5-legendary-plays",
+   "kind": "ordinary",
+   "tier": "engine",
+   "offense": "M62b",
+   "defense": "T62b",
+   "calls": "LEGEND",
+   "seeds": [301, 316],
+   "ballOn": 40,
+   "note": "the Legendary Plays' designs with no Legendary on the field (no species on either build): geometry only"
+  },
+  {
+   "id": "O6-rules-mix",
+   "kind": "ordinary",
+   "tier": "rules",
+   "home": "M62a",
+   "away": "T62a",
+   "unit": "offense",
+   "calls": "MIX",
+   "sequences": [401, 408],
+   "snaps": 12,
+   "ballOn": 35,
+   "note": "the same plays through rules.js runScrimmagePlay (game wrapper: slots, edges, result, stats; Task 8 stamina and status clocks on the candidate)"
+  },
+  {
+   "id": "O7-rules-pass-T",
+   "kind": "ordinary",
+   "tier": "rules",
+   "home": "T62b",
+   "away": "T62a",
+   "unit": "offense",
+   "calls": "PASS",
+   "sequences": [501, 508],
+   "snaps": 12,
+   "ballOn": 30,
+   "note": "rules-tier passing with Task 8 rosters"
+  },
+  {
+   "id": "A1-overlapping-fields",
+   "kind": "ability",
+   "tier": "rules",
+   "home": "T62a",
+   "away": "T62b",
+   "unit": "offense",
+   "calls": "MIX",
+   "sequences": [601, 608],
+   "snaps": 12,
+   "ballOn": 35,
+   "abilities": {
+    "home.offense.WR1": { "species": "gustling", "type": "Wind" },
+    "home.offense.WR2": {
+     "species": "glimmer",
+     "type": "Light"
+    },
+    "home.offense.RB": {
+     "species": "voltfin",
+     "type": "Electric"
+    },
+    "home.offense.TE": {
+     "species": "pyroclast",
+     "type": "Fire"
+    },
+    "away.defense.SS": {
+     "species": "stormlynx",
+     "type": "Electric"
+    },
+    "away.defense.FS": {
+     "species": "mindwing",
+     "type": "Psychic"
+    },
+    "away.defense.LB1": {
+     "species": "ashkit",
+     "type": "Fire",
+     "prime": {
+      "bar": 2,
+      "queued": false
+     }
+    },
+    "away.defense.DL1": {
+     "species": "icehorn",
+     "type": "Ice"
+    },
+    "away.defense.CB1": {
+     "species": "tidepaw",
+     "type": "Water"
+    },
+    "away.defense.CB2": {
+     "species": "shadowkit",
+     "type": "Dark"
+    }
+   },
+   "fields": [
+    {
+     "type": "Dark",
+     "strength": 25,
+     "centerLat": 0,
+     "width": 53.3,
+     "yardFrom": 0,
+     "yardTo": 100,
+     "ownerTeam": "away",
+     "ability": "perf-dark"
+    },
+    {
+     "type": "Wind",
+     "strength": 20,
+     "centerLat": 0,
+     "width": 12,
+     "yardFrom": 30,
+     "yardTo": 50,
+     "ownerTeam": "away",
+     "ability": "perf-wind"
+    },
+    {
+     "type": "Fire",
+     "strength": 20,
+     "centerLat": 6,
+     "width": 14,
+     "yardFrom": 35,
+     "yardTo": 48,
+     "ownerTeam": "home",
+     "ability": "perf-fire"
+    }
+   ],
+   "note": "three staged overlapping fields plus ten field creators and field readers on both sides; fields accumulate through each 12-snap sequence"
+  },
+  {
+   "id": "A2-summons-constructs",
+   "kind": "ability",
+   "tier": "rules",
+   "home": "T62a",
+   "away": "T62b",
+   "unit": "offense",
+   "calls": "SUMMON",
+   "sequences": [701, 708],
+   "snaps": 12,
+   "ballOn": 35,
+   "newDriveEachSnap": true,
+   "abilities": {
+    "home.offense.QB": { "species": "stormcrown", "type": "Electric" },
+    "home.offense.LG": {
+     "species": "titanolith",
+     "type": "Earth"
+    },
+    "away.defense.LB1": {
+     "species": "elderoot",
+     "type": "Nature"
+    },
+    "away.defense.LB2": {
+     "species": "frostclaw",
+     "type": "Ice",
+     "prime": {
+      "bar": 3
+     },
+     "everySnap": true
+    },
+    "away.defense.DL1": {
+     "species": "aegistron",
+     "type": "Metal",
+     "prime": {
+      "count": 3,
+      "armed": true,
+      "usedDrive": null
+     },
+     "everySnap": true
+    }
+   },
+   "note": "temporary pass blockers (Stormguard), the rock wall (Landslide, every snap a new possession), the extra defender (Grove Guardian), snowballs (Snowfall Slam, re-primed), panels (Aegistron, re-primed)"
+  },
+  {
+   "id": "A3-delayed-effects",
+   "kind": "ability",
+   "tier": "rules",
+   "home": "T62b",
+   "away": "T62a",
+   "unit": "offense",
+   "calls": "MIX",
+   "sequences": [801, 808],
+   "snaps": 12,
+   "ballOn": 35,
+   "abilities": {
+    "home.offense.TE": { "species": "wyrmkit", "type": "Dragon" },
+    "home.offense.RB": {
+     "species": "voltfin",
+     "type": "Electric"
+    },
+    "home.offense.QB": {
+     "species": "nocturne",
+     "type": "Dark"
+    },
+    "home.offense.WR1": {
+     "species": "thornkit",
+     "type": "Nature"
+    },
+    "away.defense.LB1": {
+     "species": "mireclaw",
+     "type": "Dark"
+    },
+    "away.defense.LB2": {
+     "species": "rockram",
+     "type": "Earth"
+    },
+    "away.defense.FS": {
+     "species": "mindwing",
+     "type": "Psychic"
+    },
+    "away.defense.DL1": {
+     "species": "icehorn",
+     "type": "Ice"
+    },
+    "away.defense.CB1": {
+     "species": "hailfang",
+     "type": "Ice"
+    }
+   },
+   "note": "bars filled over several plays and effects banked for a later snap (Dragon pulse, Charge Strip token, Dark field, Bloom Break patches, Mire claw, Stonewall guarantee, Psychic zone, Permafrost) plus status durations"
+  },
+  {
+   "id": "A4-legendary-sequence",
+   "kind": "ability",
+   "tier": "rules",
+   "home": "M62a",
+   "away": "M62b",
+   "unit": "offense",
+   "calls": "LEGEND",
+   "sequences": [901, 908],
+   "snaps": 12,
+   "ballOn": 40,
+   "abilities": {
+    "home.offense.QB": {
+     "species": "aurodrax",
+     "type": "Dragon",
+     "prime": {
+      "streak": 2,
+      "charged": false,
+      "used": false
+     }
+    },
+    "home.offense.WR1": {
+     "species": "tempestra",
+     "type": "Wind"
+    },
+    "home.offense.LG": {
+     "species": "titanolith",
+     "type": "Earth"
+    },
+    "away.defense.CB1": {
+     "species": "nyxshade",
+     "type": "Dark",
+     "prime": {
+      "charges": 2
+     }
+    },
+    "away.defense.LB1": {
+     "species": "elderoot",
+     "type": "Nature"
+    }
+   },
+   "note": "the Legendary Plays with their Legendaries on the field: Sovereign Arm (streak primed at 2 of 3; charge, protected throw, captured defender's absence served next snap), Cyclonic Release, Landslide, Night Veil, Grove Guardian"
+  },
+  {
+   "id": "A5-full-contracts",
+   "kind": "ability",
+   "tier": "rules",
+   "home": "T62a",
+   "away": "T62b",
+   "unit": "offense",
+   "calls": "WIDE",
+   "sequences": [1001, 1008],
+   "snaps": 12,
+   "ballOn": 30,
+   "note": "every on-field slot on both clubs carries a Dex family of its position (as in a Task 8 game, where every monster has a contract); fixed assignment, see PERF_SCENES.md",
+   "abilities": {
+    "home.offense.QB": { "species": "firestorm", "type": "Fire" },
+    "home.offense.RB": {
+     "species": "emberfox",
+     "type": "Fire"
+    },
+    "home.offense.WR1": {
+     "species": "tidefin",
+     "type": "Water"
+    },
+    "home.offense.WR2": {
+     "species": "thornkit",
+     "type": "Nature"
+    },
+    "home.offense.TE": {
+     "species": "wavehorn",
+     "type": "Water"
+    },
+    "home.offense.LG": {
+     "species": "mudcub",
+     "type": "Water"
+    },
+    "home.offense.RG": {
+     "species": "rootram",
+     "type": "Nature"
+    },
+    "home.offense.WR3": {
+     "species": "flicker",
+     "type": "Electric"
+    },
+    "home.offense.C": {
+     "species": "glaciron",
+     "type": "Ice"
+    },
+    "away.defense.DL1": {
+     "species": "cinderclaw",
+     "type": "Fire"
+    },
+    "away.defense.DL2": {
+     "species": "reefclaw",
+     "type": "Water"
+    },
+    "away.defense.LB1": {
+     "species": "ashkit",
+     "type": "Fire"
+    },
+    "away.defense.LB2": {
+     "species": "frostclaw",
+     "type": "Ice"
+    },
+    "away.defense.CB1": {
+     "species": "pyrelynx",
+     "type": "Fire"
+    },
+    "away.defense.CB2": {
+     "species": "tidepaw",
+     "type": "Water"
+    },
+    "away.defense.FS": {
+     "species": "leafhorn",
+     "type": "Nature"
+    },
+    "away.defense.DL3": {
+     "species": "mossclaw",
+     "type": "Nature"
+    },
+    "away.defense.SS": {
+     "species": "stormlynx",
+     "type": "Electric"
+    }
+   }
+  }
+ ],
+ "rosters": {
+  "T62a": {
+   "provenance": "generatedTeam(11, quality 62) from Task 8 acdc91e",
+   "offense": {
+    "QB": { "id": "T62a_QB", "name": "Lumen", "position": "QB", "type": "Light", "attrs": { "speed": 43, "agility": 62, "strength": 42, "awareness": 67, "catching": 46, "arm": 62, "accuracy": 74, "blocking": 34, "tackling": 27, "coverage": 38, "durability": 58, "kicking": 35 }, "permDurability": 58 },
+    "RB": { "id": "T62a_RB", "name": "Zephyroo", "position": "RB", "type": "Wind", "attrs": { "speed": 43, "agility": 47, "strength": 19, "awareness": 36, "catching": 30, "arm": 14, "accuracy": 8, "blocking": 18, "tackling": 9, "coverage": 17, "durability": 18, "kicking": 15 }, "permDurability": 18 },
+    "WR1": { "id": "T62a_WR1", "name": "Zappard", "position": "WR", "type": "Electric", "attrs": { "speed": 58, "agility": 46, "strength": 62, "awareness": 55, "catching": 77, "arm": 26, "accuracy": 20, "blocking": 56, "tackling": 36, "coverage": 28, "durability": 56, "kicking": 17 }, "permDurability": 56 },
+    "WR2": { "id": "T62a_WR2", "name": "Photara", "position": "WR", "type": "Light", "attrs": { "speed": 50, "agility": 44, "strength": 47, "awareness": 67, "catching": 69, "arm": 27, "accuracy": 36, "blocking": 50, "tackling": 36, "coverage": 44, "durability": 51, "kicking": 22 }, "permDurability": 51 },
+    "TE": { "id": "T62a_TE", "name": "Enigmane", "position": "TE", "type": "Psychic", "attrs": { "speed": 74, "agility": 74, "strength": 53, "awareness": 79, "catching": 88, "arm": 33, "accuracy": 38, "blocking": 46, "tackling": 28, "coverage": 39, "durability": 45, "kicking": 26 }, "permDurability": 45 },
+    "LG": { "id": "T62a_LG", "name": "Scalor", "position": "OL", "type": "Dragon", "attrs": { "speed": 44, "agility": 41, "strength": 62, "awareness": 31, "catching": 26, "arm": 20, "accuracy": 17, "blocking": 78, "tackling": 41, "coverage": 20, "durability": 44, "kicking": 14 }, "permDurability": 44 },
+    "RG": { "id": "T62a_RG", "name": "Sludgeon", "position": "OL", "type": "Water", "attrs": { "speed": 35, "agility": 48, "strength": 52, "awareness": 61, "catching": 31, "arm": 20, "accuracy": 20, "blocking": 71, "tackling": 30, "coverage": 24, "durability": 54, "kicking": 20 }, "permDurability": 54 },
+    "WR3": { "id": "T62a_WR3", "name": "Sylvanyx", "position": "WR", "type": "Nature", "attrs": { "speed": 48, "agility": 62, "strength": 24, "awareness": 56, "catching": 64, "arm": 20, "accuracy": 31, "blocking": 33, "tackling": 27, "coverage": 38, "durability": 42, "kicking": 16 }, "permDurability": 42 },
+    "C": { "id": "T62a_C", "name": "Orogon", "position": "OL", "type": "Earth", "attrs": { "speed": 22, "agility": 25, "strength": 67, "awareness": 57, "catching": 23, "arm": 14, "accuracy": 17, "blocking": 59, "tackling": 36, "coverage": 23, "durability": 50, "kicking": 19 }, "permDurability": 50 }
+   },
+   "defense": {
+    "DL1": { "id": "T62a_DL1", "name": "Joltrex", "position": "DL", "type": "Electric", "attrs": { "speed": 75, "agility": 81, "strength": 56, "awareness": 56, "catching": 43, "arm": 26, "accuracy": 17, "blocking": 27, "tackling": 63, "coverage": 39, "durability": 48, "kicking": 16 }, "permDurability": 48 },
+    "DL2": { "id": "T62a_DL2", "name": "Ferronox", "position": "DL", "type": "Metal", "attrs": { "speed": 49, "agility": 45, "strength": 81, "awareness": 35, "catching": 28, "arm": 25, "accuracy": 15, "blocking": 35, "tackling": 72, "coverage": 19, "durability": 61, "kicking": 16 }, "permDurability": 61 },
+    "LB1": { "id": "T62a_LB1", "name": "Cryolynx", "position": "LB", "type": "Ice", "attrs": { "speed": 76, "agility": 65, "strength": 42, "awareness": 78, "catching": 71, "arm": 21, "accuracy": 25, "blocking": 29, "tackling": 77, "coverage": 67, "durability": 49, "kicking": 23 }, "permDurability": 49 },
+    "LB2": { "id": "T62a_LB2", "name": "Craggo", "position": "LB", "type": "Earth", "attrs": { "speed": 20, "agility": 13, "strength": 31, "awareness": 39, "catching": 25, "arm": 10, "accuracy": 15, "blocking": 23, "tackling": 45, "coverage": 37, "durability": 38, "kicking": 10 }, "permDurability": 38 },
+    "CB1": { "id": "T62a_CB1", "name": "Abyssin", "position": "CB", "type": "Water", "attrs": { "speed": 64, "agility": 62, "strength": 31, "awareness": 60, "catching": 33, "arm": 22, "accuracy": 23, "blocking": 32, "tackling": 48, "coverage": 71, "durability": 55, "kicking": 17 }, "permDurability": 55 },
+    "CB2": { "id": "T62a_CB2", "name": "Frostpup", "position": "CB", "type": "Ice", "attrs": { "speed": 48, "agility": 36, "strength": 31, "awareness": 21, "catching": 28, "arm": 12, "accuracy": 6, "blocking": 16, "tackling": 43, "coverage": 29, "durability": 28, "kicking": 12 }, "permDurability": 28 },
+    "FS": { "id": "T62a_FS", "name": "Prismara", "position": "S", "type": "Light", "attrs": { "speed": 52, "agility": 51, "strength": 38, "awareness": 35, "catching": 36, "arm": 14, "accuracy": 23, "blocking": 25, "tackling": 52, "coverage": 52, "durability": 49, "kicking": 15 }, "permDurability": 49 },
+    "DL3": { "id": "T62a_DL3", "name": "Crustank", "position": "DL", "type": "Water", "attrs": { "speed": 22, "agility": 26, "strength": 72, "awareness": 54, "catching": 17, "arm": 11, "accuracy": 7, "blocking": 30, "tackling": 52, "coverage": 22, "durability": 63, "kicking": 7 }, "permDurability": 63 },
+    "SS": { "id": "T62a_SS", "name": "Gloomoth", "position": "S", "type": "Dark", "attrs": { "speed": 44, "agility": 23, "strength": 31, "awareness": 48, "catching": 43, "arm": 7, "accuracy": 9, "blocking": 8, "tackling": 22, "coverage": 25, "durability": 11, "kicking": 9 }, "permDurability": 11 }
+   },
+   "kicker": { "id": "T62a_K", "name": "Echolot", "position": "K", "type": "Psychic", "attrs": { "speed": 65, "agility": 70, "strength": 24, "awareness": 65, "catching": 40, "arm": 27, "accuracy": 34, "blocking": 24, "tackling": 48, "coverage": 34, "durability": 39, "kicking": 84 }, "permDurability": 39 }
+  },
+  "T62b": {
+   "provenance": "generatedTeam(12, quality 62) from Task 8 acdc91e",
+   "offense": {
+    "QB": { "id": "T62b_QB", "name": "Cerebrix", "position": "QB", "type": "Psychic", "attrs": { "speed": 42, "agility": 47, "strength": 30, "awareness": 77, "catching": 37, "arm": 60, "accuracy": 78, "blocking": 22, "tackling": 16, "coverage": 26, "durability": 37, "kicking": 21 }, "permDurability": 37 },
+    "RB": { "id": "T62b_RB", "name": "Whirlhare", "position": "RB", "type": "Wind", "attrs": { "speed": 42, "agility": 46, "strength": 20, "awareness": 31, "catching": 30, "arm": 8, "accuracy": 5, "blocking": 17, "tackling": 7, "coverage": 7, "durability": 20, "kicking": 6 }, "permDurability": 20 },
+    "WR1": { "id": "T62b_WR1", "name": "Zaptera", "position": "WR", "type": "Electric", "attrs": { "speed": 65, "agility": 54, "strength": 32, "awareness": 41, "catching": 58, "arm": 22, "accuracy": 24, "blocking": 23, "tackling": 26, "coverage": 26, "durability": 39, "kicking": 13 }, "permDurability": 39 },
+    "WR2": { "id": "T62b_WR2", "name": "Sylvanyx", "position": "WR", "type": "Nature", "attrs": { "speed": 45, "agility": 59, "strength": 27, "awareness": 58, "catching": 66, "arm": 17, "accuracy": 23, "blocking": 38, "tackling": 32, "coverage": 34, "durability": 47, "kicking": 18 }, "permDurability": 47 },
+    "TE": { "id": "T62b_TE", "name": "Tideram", "position": "TE", "type": "Water", "attrs": { "speed": 36, "agility": 32, "strength": 74, "awareness": 64, "catching": 68, "arm": 22, "accuracy": 30, "blocking": 66, "tackling": 41, "coverage": 29, "durability": 61, "kicking": 10 }, "permDurability": 61 },
+    "LG": { "id": "T62b_LG", "name": "Scalor", "position": "OL", "type": "Dragon", "attrs": { "speed": 49, "agility": 48, "strength": 77, "awareness": 43, "catching": 29, "arm": 20, "accuracy": 23, "blocking": 82, "tackling": 52, "coverage": 26, "durability": 48, "kicking": 23 }, "permDurability": 48 },
+    "RG": { "id": "T62b_RG", "name": "Bramblet", "position": "OL", "type": "Nature", "attrs": { "speed": 13, "agility": 22, "strength": 58, "awareness": 46, "catching": 20, "arm": 13, "accuracy": 14, "blocking": 54, "tackling": 37, "coverage": 15, "durability": 59, "kicking": 7 }, "permDurability": 59 },
+    "WR3": { "id": "T62b_WR3", "name": "Trancefin", "position": "WR", "type": "Psychic", "attrs": { "speed": 39, "agility": 42, "strength": 13, "awareness": 39, "catching": 25, "arm": 8, "accuracy": 6, "blocking": 13, "tackling": 5, "coverage": 7, "durability": 30, "kicking": 4 }, "permDurability": 30 },
+    "C": { "id": "T62b_C", "name": "Kettlump", "position": "OL", "type": "Metal", "attrs": { "speed": 36, "agility": 19, "strength": 50, "awareness": 23, "catching": 11, "arm": 11, "accuracy": 10, "blocking": 35, "tackling": 30, "coverage": 6, "durability": 46, "kicking": 7 }, "permDurability": 46 }
+   },
+   "defense": {
+    "DL1": { "id": "T62b_DL1", "name": "Scorchulk", "position": "DL", "type": "Fire", "attrs": { "speed": 30, "agility": 46, "strength": 62, "awareness": 27, "catching": 25, "arm": 20, "accuracy": 11, "blocking": 27, "tackling": 52, "coverage": 10, "durability": 49, "kicking": 7 }, "permDurability": 49 },
+    "DL2": { "id": "T62b_DL2", "name": "Ferronox", "position": "DL", "type": "Metal", "attrs": { "speed": 41, "agility": 35, "strength": 54, "awareness": 26, "catching": 23, "arm": 17, "accuracy": 5, "blocking": 28, "tackling": 61, "coverage": 18, "durability": 42, "kicking": 8 }, "permDurability": 42 },
+    "LB1": { "id": "T62b_LB1", "name": "Chromane", "position": "LB", "type": "Metal", "attrs": { "speed": 27, "agility": 15, "strength": 35, "awareness": 57, "catching": 33, "arm": 10, "accuracy": 13, "blocking": 23, "tackling": 59, "coverage": 43, "durability": 51, "kicking": 18 }, "permDurability": 51 },
+    "LB2": { "id": "T62b_LB2", "name": "Murklaw", "position": "LB", "type": "Dark", "attrs": { "speed": 57, "agility": 53, "strength": 53, "awareness": 31, "catching": 19, "arm": 10, "accuracy": 9, "blocking": 32, "tackling": 53, "coverage": 23, "durability": 47, "kicking": 9 }, "permDurability": 47 },
+    "CB1": { "id": "T62b_CB1", "name": "Mirageist", "position": "CB", "type": "Psychic", "attrs": { "speed": 64, "agility": 66, "strength": 28, "awareness": 54, "catching": 25, "arm": 29, "accuracy": 33, "blocking": 27, "tackling": 27, "coverage": 69, "durability": 46, "kicking": 14 }, "permDurability": 46 },
+    "CB2": { "id": "T62b_CB2", "name": "Abyssin", "position": "CB", "type": "Water", "attrs": { "speed": 41, "agility": 62, "strength": 26, "awareness": 51, "catching": 28, "arm": 10, "accuracy": 17, "blocking": 23, "tackling": 38, "coverage": 62, "durability": 40, "kicking": 16 }, "permDurability": 40 },
+    "FS": { "id": "T62b_FS", "name": "Strixen", "position": "S", "type": "Dark", "attrs": { "speed": 47, "agility": 35, "strength": 46, "awareness": 69, "catching": 49, "arm": 23, "accuracy": 27, "blocking": 35, "tackling": 68, "coverage": 64, "durability": 53, "kicking": 21 }, "permDurability": 53 },
+    "DL3": { "id": "T62b_DL3", "name": "Ingotusk", "position": "DL", "type": "Metal", "attrs": { "speed": 16, "agility": 25, "strength": 52, "awareness": 32, "catching": 10, "arm": 10, "accuracy": 9, "blocking": 13, "tackling": 45, "coverage": 15, "durability": 34, "kicking": 7 }, "permDurability": 34 },
+    "SS": { "id": "T62b_SS", "name": "Ptarmilet", "position": "S", "type": "Ice", "attrs": { "speed": 8, "agility": 15, "strength": 21, "awareness": 31, "catching": 21, "arm": 4, "accuracy": 4, "blocking": 8, "tackling": 28, "coverage": 33, "durability": 26, "kicking": 5 }, "permDurability": 26 }
+   },
+   "kicker": { "id": "T62b_K", "name": "Solchirp", "position": "K", "type": "Light", "attrs": { "speed": 43, "agility": 36, "strength": 18, "awareness": 24, "catching": 21, "arm": 13, "accuracy": 8, "blocking": 11, "tackling": 40, "coverage": 16, "durability": 13, "kicking": 40 }, "permDurability": 13 }
+  },
+  "T75": {
+   "provenance": "generatedTeam(13, quality 75) from Task 8 acdc91e",
+   "offense": {
+    "QB": { "id": "T75_QB", "name": "Lumen", "position": "QB", "type": "Light", "attrs": { "speed": 26, "agility": 36, "strength": 26, "awareness": 55, "catching": 40, "arm": 45, "accuracy": 62, "blocking": 24, "tackling": 21, "coverage": 22, "durability": 45, "kicking": 22 }, "permDurability": 45 },
+    "RB": { "id": "T75_RB", "name": "Bouldrox", "position": "RB", "type": "Earth", "attrs": { "speed": 53, "agility": 39, "strength": 70, "awareness": 64, "catching": 33, "arm": 19, "accuracy": 27, "blocking": 66, "tackling": 46, "coverage": 19, "durability": 70, "kicking": 17 }, "permDurability": 70 },
+    "WR1": { "id": "T75_WR1", "name": "Stratosoar", "position": "WR", "type": "Wind", "attrs": { "speed": 72, "agility": 48, "strength": 44, "awareness": 30, "catching": 70, "arm": 22, "accuracy": 21, "blocking": 28, "tackling": 24, "coverage": 36, "durability": 47, "kicking": 22 }, "permDurability": 47 },
+    "WR2": { "id": "T75_WR2", "name": "Sylvanyx", "position": "WR", "type": "Nature", "attrs": { "speed": 49, "agility": 58, "strength": 25, "awareness": 55, "catching": 64, "arm": 18, "accuracy": 22, "blocking": 33, "tackling": 35, "coverage": 35, "durability": 40, "kicking": 12 }, "permDurability": 40 },
+    "TE": { "id": "T75_TE", "name": "Terrabull", "position": "TE", "type": "Earth", "attrs": { "speed": 56, "agility": 53, "strength": 54, "awareness": 35, "catching": 57, "arm": 15, "accuracy": 19, "blocking": 31, "tackling": 28, "coverage": 11, "durability": 43, "kicking": 13 }, "permDurability": 43 },
+    "LG": { "id": "T75_LG", "name": "Forgursa", "position": "OL", "type": "Metal", "attrs": { "speed": 56, "agility": 58, "strength": 36, "awareness": 32, "catching": 32, "arm": 16, "accuracy": 18, "blocking": 68, "tackling": 26, "coverage": 30, "durability": 43, "kicking": 13 }, "permDurability": 43 },
+    "RG": { "id": "T75_RG", "name": "Kilnback", "position": "OL", "type": "Fire", "attrs": { "speed": 27, "agility": 19, "strength": 47, "awareness": 19, "catching": 11, "arm": 7, "accuracy": 11, "blocking": 52, "tackling": 31, "coverage": 9, "durability": 28, "kicking": 8 }, "permDurability": 28 },
+    "WR3": { "id": "T75_WR3", "name": "Zippit", "position": "WR", "type": "Electric", "attrs": { "speed": 44, "agility": 41, "strength": 17, "awareness": 32, "catching": 36, "arm": 14, "accuracy": 14, "blocking": 16, "tackling": 17, "coverage": 24, "durability": 26, "kicking": 8 }, "permDurability": 26 },
+    "C": { "id": "T75_C", "name": "Capaclod", "position": "OL", "type": "Electric", "attrs": { "speed": 41, "agility": 39, "strength": 21, "awareness": 33, "catching": 7, "arm": 9, "accuracy": 7, "blocking": 36, "tackling": 27, "coverage": 8, "durability": 15, "kicking": 9 }, "permDurability": 15 }
+   },
+   "defense": {
+    "DL1": { "id": "T75_DL1", "name": "Scorchulk", "position": "DL", "type": "Fire", "attrs": { "speed": 38, "agility": 60, "strength": 77, "awareness": 40, "catching": 25, "arm": 16, "accuracy": 16, "blocking": 31, "tackling": 64, "coverage": 16, "durability": 56, "kicking": 18 }, "permDurability": 56 },
+    "DL2": { "id": "T75_DL2", "name": "Ferronox", "position": "DL", "type": "Metal", "attrs": { "speed": 52, "agility": 35, "strength": 74, "awareness": 33, "catching": 31, "arm": 20, "accuracy": 18, "blocking": 34, "tackling": 76, "coverage": 17, "durability": 52, "kicking": 17 }, "permDurability": 52 },
+    "LB1": { "id": "T75_LB1", "name": "Magmaul", "position": "LB", "type": "Fire", "attrs": { "speed": 51, "agility": 32, "strength": 53, "awareness": 45, "catching": 21, "arm": 15, "accuracy": 18, "blocking": 28, "tackling": 68, "coverage": 26, "durability": 48, "kicking": 14 }, "permDurability": 48 },
+    "LB2": { "id": "T75_LB2", "name": "Chromane", "position": "LB", "type": "Metal", "attrs": { "speed": 21, "agility": 20, "strength": 39, "awareness": 42, "catching": 30, "arm": 14, "accuracy": 9, "blocking": 21, "tackling": 59, "coverage": 41, "durability": 51, "kicking": 16 }, "permDurability": 51 },
+    "CB1": { "id": "T75_CB1", "name": "Hoarhound", "position": "CB", "type": "Ice", "attrs": { "speed": 87, "agility": 53, "strength": 54, "awareness": 55, "catching": 54, "arm": 55, "accuracy": 55, "blocking": 54, "tackling": 54, "coverage": 53, "durability": 55, "kicking": 54 }, "permDurability": 55 },
+    "CB2": { "id": "T75_CB2", "name": "Pondskip", "position": "CB", "type": "Water", "attrs": { "speed": 28, "agility": 43, "strength": 10, "awareness": 29, "catching": 21, "arm": 8, "accuracy": 3, "blocking": 7, "tackling": 12, "coverage": 45, "durability": 30, "kicking": 5 }, "permDurability": 30 },
+    "FS": { "id": "T75_FS", "name": "Prismara", "position": "S", "type": "Light", "attrs": { "speed": 68, "agility": 52, "strength": 44, "awareness": 40, "catching": 36, "arm": 18, "accuracy": 25, "blocking": 28, "tackling": 58, "coverage": 52, "durability": 52, "kicking": 16 }, "permDurability": 52 },
+    "DL3": { "id": "T75_DL3", "name": "Crustank", "position": "DL", "type": "Water", "attrs": { "speed": 25, "agility": 32, "strength": 72, "awareness": 55, "catching": 20, "arm": 8, "accuracy": 12, "blocking": 28, "tackling": 54, "coverage": 21, "durability": 61, "kicking": 12 }, "permDurability": 61 },
+    "SS": { "id": "T75_SS", "name": "Noctlet", "position": "S", "type": "Dark", "attrs": { "speed": 13, "agility": 23, "strength": 32, "awareness": 44, "catching": 27, "arm": 18, "accuracy": 12, "blocking": 20, "tackling": 42, "coverage": 46, "durability": 29, "kicking": 8 }, "permDurability": 29 }
+   },
+   "kicker": { "id": "T75_K", "name": "Coglet", "position": "K", "type": "Metal", "attrs": { "speed": 41, "agility": 36, "strength": 26, "awareness": 46, "catching": 30, "arm": 19, "accuracy": 18, "blocking": 25, "tackling": 22, "coverage": 19, "durability": 53, "kicking": 76 }, "permDurability": 53 }
+  },
+  "T50": {
+   "provenance": "generatedTeam(14, quality 50) from Task 8 acdc91e",
+   "offense": {
+    "QB": { "id": "T50_QB", "name": "Lumen", "position": "QB", "type": "Light", "attrs": { "speed": 49, "agility": 53, "strength": 39, "awareness": 70, "catching": 46, "arm": 57, "accuracy": 72, "blocking": 32, "tackling": 20, "coverage": 38, "durability": 59, "kicking": 31 }, "permDurability": 59 },
+    "RB": { "id": "T50_RB", "name": "Volcoil", "position": "RB", "type": "Electric", "attrs": { "speed": 49, "agility": 32, "strength": 19, "awareness": 31, "catching": 42, "arm": 13, "accuracy": 17, "blocking": 18, "tackling": 17, "coverage": 25, "durability": 30, "kicking": 16 }, "permDurability": 30 },
+    "WR1": { "id": "T50_WR1", "name": "Lumini", "position": "WR", "type": "Light", "attrs": { "speed": 29, "agility": 21, "strength": 30, "awareness": 40, "catching": 43, "arm": 18, "accuracy": 22, "blocking": 42, "tackling": 26, "coverage": 33, "durability": 33, "kicking": 13 }, "permDurability": 33 },
+    "WR2": { "id": "T50_WR2", "name": "Zippit", "position": "WR", "type": "Electric", "attrs": { "speed": 38, "agility": 39, "strength": 22, "awareness": 32, "catching": 26, "arm": 18, "accuracy": 13, "blocking": 17, "tackling": 20, "coverage": 19, "durability": 25, "kicking": 9 }, "permDurability": 25 },
+    "TE": { "id": "T50_TE", "name": "Tideram", "position": "TE", "type": "Water", "attrs": { "speed": 32, "agility": 32, "strength": 80, "awareness": 63, "catching": 65, "arm": 17, "accuracy": 23, "blocking": 65, "tackling": 35, "coverage": 25, "durability": 57, "kicking": 15 }, "permDurability": 57 },
+    "LG": { "id": "T50_LG", "name": "Bramblet", "position": "OL", "type": "Nature", "attrs": { "speed": 12, "agility": 16, "strength": 59, "awareness": 39, "catching": 15, "arm": 10, "accuracy": 5, "blocking": 54, "tackling": 38, "coverage": 12, "durability": 54, "kicking": 15 }, "permDurability": 54 },
+    "RG": { "id": "T50_RG", "name": "Pebblit", "position": "OL", "type": "Earth", "attrs": { "speed": 5, "agility": 15, "strength": 39, "awareness": 40, "catching": 19, "arm": 8, "accuracy": 8, "blocking": 46, "tackling": 22, "coverage": 9, "durability": 31, "kicking": 6 }, "permDurability": 31 },
+    "WR3": { "id": "T50_WR3", "name": "Spriglet", "position": "WR", "type": "Nature", "attrs": { "speed": 22, "agility": 35, "strength": 15, "awareness": 41, "catching": 36, "arm": 11, "accuracy": 15, "blocking": 22, "tackling": 16, "coverage": 25, "durability": 26, "kicking": 10 }, "permDurability": 26 },
+    "C": { "id": "T50_C", "name": "Ferrcub", "position": "OL", "type": "Metal", "attrs": { "speed": 47, "agility": 45, "strength": 14, "awareness": 19, "catching": 27, "arm": 13, "accuracy": 6, "blocking": 48, "tackling": 15, "coverage": 20, "durability": 33, "kicking": 11 }, "permDurability": 33 }
+   },
+   "defense": {
+    "DL1": { "id": "T50_DL1", "name": "Fungorilla", "position": "DL", "type": "Nature", "attrs": { "speed": 54, "agility": 64, "strength": 43, "awareness": 36, "catching": 34, "arm": 19, "accuracy": 14, "blocking": 29, "tackling": 49, "coverage": 31, "durability": 33, "kicking": 18 }, "permDurability": 33 },
+    "DL2": { "id": "T50_DL2", "name": "Ingotusk", "position": "DL", "type": "Metal", "attrs": { "speed": 14, "agility": 9, "strength": 43, "awareness": 21, "catching": 6, "arm": 3, "accuracy": 5, "blocking": 3, "tackling": 31, "coverage": 3, "durability": 29, "kicking": 4 }, "permDurability": 29 },
+    "LB1": { "id": "T50_LB1", "name": "Murklaw", "position": "LB", "type": "Dark", "attrs": { "speed": 61, "agility": 63, "strength": 60, "awareness": 38, "catching": 25, "arm": 21, "accuracy": 10, "blocking": 34, "tackling": 71, "coverage": 30, "durability": 45, "kicking": 16 }, "permDurability": 45 },
+    "LB2": { "id": "T50_LB2", "name": "Craggo", "position": "LB", "type": "Earth", "attrs": { "speed": 18, "agility": 17, "strength": 31, "awareness": 38, "catching": 28, "arm": 12, "accuracy": 14, "blocking": 17, "tackling": 38, "coverage": 36, "durability": 32, "kicking": 11 }, "permDurability": 32 },
+    "CB1": { "id": "T50_CB1", "name": "Umbrikit", "position": "CB", "type": "Dark", "attrs": { "speed": 32, "agility": 29, "strength": 18, "awareness": 43, "catching": 44, "arm": 12, "accuracy": 22, "blocking": 12, "tackling": 14, "coverage": 52, "durability": 25, "kicking": 6 }, "permDurability": 25 },
+    "CB2": { "id": "T50_CB2", "name": "Wispira", "position": "CB", "type": "Psychic", "attrs": { "speed": 28, "agility": 39, "strength": 17, "awareness": 36, "catching": 10, "arm": 18, "accuracy": 21, "blocking": 12, "tackling": 17, "coverage": 41, "durability": 23, "kicking": 6 }, "permDurability": 23 },
+    "FS": { "id": "T50_FS", "name": "Noctlet", "position": "S", "type": "Dark", "attrs": { "speed": 27, "agility": 20, "strength": 23, "awareness": 42, "catching": 32, "arm": 16, "accuracy": 9, "blocking": 17, "tackling": 40, "coverage": 38, "durability": 33, "kicking": 3 }, "permDurability": 33 },
+    "DL3": { "id": "T50_DL3", "name": "Quarrox", "position": "DL", "type": "Earth", "attrs": { "speed": 21, "agility": 9, "strength": 34, "awareness": 26, "catching": 2, "arm": 2, "accuracy": 7, "blocking": 2, "tackling": 8, "coverage": 7, "durability": 16, "kicking": 6 }, "permDurability": 16 },
+    "SS": { "id": "T50_SS", "name": "Buzzhawk", "position": "S", "type": "Electric", "attrs": { "speed": 34, "agility": 14, "strength": 8, "awareness": 17, "catching": 18, "arm": 7, "accuracy": 4, "blocking": 3, "tackling": 7, "coverage": 30, "durability": 18, "kicking": 5 }, "permDurability": 18 }
+   },
+   "kicker": { "id": "T50_K", "name": "Coglet", "position": "K", "type": "Metal", "attrs": { "speed": 33, "agility": 34, "strength": 16, "awareness": 41, "catching": 25, "arm": 13, "accuracy": 24, "blocking": 25, "tackling": 22, "coverage": 16, "durability": 45, "kicking": 61 }, "permDurability": 45 }
+  },
+  "M62a": {
+   "provenance": "generatedTeam(11, quality 62) from main 43976f4",
+   "offense": {
+    "QB": { "id": "M62a_QB", "name": "Lumen", "position": "QB", "type": "Light", "attrs": { "speed": 70, "agility": 71, "strength": 48, "awareness": 71, "catching": 47, "arm": 80, "accuracy": 86, "blocking": 29, "tackling": 35, "coverage": 32, "durability": 68, "kicking": 38 }, "permDurability": 68 },
+    "RB": { "id": "M62a_RB", "name": "Volcoil", "position": "RB", "type": "Electric", "attrs": { "speed": 78, "agility": 72, "strength": 58, "awareness": 62, "catching": 65, "arm": 29, "accuracy": 26, "blocking": 57, "tackling": 35, "coverage": 36, "durability": 60, "kicking": 21 }, "permDurability": 60 },
+    "WR1": { "id": "M62a_WR1", "name": "Zippit", "position": "WR", "type": "Electric", "attrs": { "speed": 80, "agility": 62, "strength": 40, "awareness": 57, "catching": 70, "arm": 33, "accuracy": 33, "blocking": 43, "tackling": 34, "coverage": 27, "durability": 61, "kicking": 33 }, "permDurability": 61 },
+    "WR2": { "id": "M62a_WR2", "name": "Lumini", "position": "WR", "type": "Light", "attrs": { "speed": 67, "agility": 62, "strength": 42, "awareness": 61, "catching": 62, "arm": 27, "accuracy": 28, "blocking": 35, "tackling": 27, "coverage": 30, "durability": 54, "kicking": 20 }, "permDurability": 54 },
+    "TE": { "id": "M62a_TE", "name": "Enigmane", "position": "TE", "type": "Psychic", "attrs": { "speed": 69, "agility": 50, "strength": 69, "awareness": 59, "catching": 56, "arm": 31, "accuracy": 27, "blocking": 73, "tackling": 45, "coverage": 33, "durability": 69, "kicking": 27 }, "permDurability": 69 },
+    "LG": { "id": "M62a_LG", "name": "Pebblit", "position": "OL", "type": "Earth", "attrs": { "speed": 31, "agility": 42, "strength": 82, "awareness": 53, "catching": 27, "arm": 19, "accuracy": 26, "blocking": 69, "tackling": 32, "coverage": 21, "durability": 69, "kicking": 23 }, "permDurability": 69 },
+    "RG": { "id": "M62a_RG", "name": "Muddlet", "position": "OL", "type": "Water", "attrs": { "speed": 48, "agility": 59, "strength": 62, "awareness": 52, "catching": 25, "arm": 28, "accuracy": 29, "blocking": 68, "tackling": 40, "coverage": 11, "durability": 67, "kicking": 21 }, "permDurability": 67 },
+    "WR3": { "id": "M62a_WR3", "name": "Gustling", "position": "WR", "type": "Wind", "attrs": { "speed": 60, "agility": 66, "strength": 45, "awareness": 46, "catching": 64, "arm": 31, "accuracy": 25, "blocking": 33, "tackling": 25, "coverage": 25, "durability": 56, "kicking": 15 }, "permDurability": 56 },
+    "C": { "id": "M62a_C", "name": "Ferrcub", "position": "OL", "type": "Metal", "attrs": { "speed": 39, "agility": 35, "strength": 72, "awareness": 43, "catching": 16, "arm": 16, "accuracy": 24, "blocking": 68, "tackling": 31, "coverage": 18, "durability": 79, "kicking": 9 }, "permDurability": 79 }
+   },
+   "defense": {
+    "DL1": { "id": "M62a_DL1", "name": "Mossmaw", "position": "DL", "type": "Nature", "attrs": { "speed": 63, "agility": 79, "strength": 72, "awareness": 62, "catching": 36, "arm": 29, "accuracy": 27, "blocking": 40, "tackling": 74, "coverage": 30, "durability": 80, "kicking": 30 }, "permDurability": 80 },
+    "DL2": { "id": "M62a_DL2", "name": "Scorchulk", "position": "DL", "type": "Fire", "attrs": { "speed": 40, "agility": 60, "strength": 69, "awareness": 43, "catching": 34, "arm": 23, "accuracy": 23, "blocking": 32, "tackling": 66, "coverage": 27, "durability": 74, "kicking": 22 }, "permDurability": 74 },
+    "LB1": { "id": "M62a_LB1", "name": "Murklaw", "position": "LB", "type": "Dark", "attrs": { "speed": 67, "agility": 58, "strength": 66, "awareness": 65, "catching": 47, "arm": 30, "accuracy": 28, "blocking": 34, "tackling": 64, "coverage": 59, "durability": 64, "kicking": 23 }, "permDurability": 64 },
+    "LB2": { "id": "M62a_LB2", "name": "Steelpaw", "position": "LB", "type": "Metal", "attrs": { "speed": 59, "agility": 60, "strength": 67, "awareness": 57, "catching": 37, "arm": 20, "accuracy": 21, "blocking": 33, "tackling": 65, "coverage": 53, "durability": 68, "kicking": 15 }, "permDurability": 68 },
+    "CB1": { "id": "M62a_CB1", "name": "Frostpup", "position": "CB", "type": "Ice", "attrs": { "speed": 78, "agility": 64, "strength": 47, "awareness": 58, "catching": 41, "arm": 24, "accuracy": 21, "blocking": 31, "tackling": 53, "coverage": 67, "durability": 57, "kicking": 24 }, "permDurability": 57 },
+    "CB2": { "id": "M62a_CB2", "name": "Aquip", "position": "CB", "type": "Water", "attrs": { "speed": 59, "agility": 69, "strength": 36, "awareness": 51, "catching": 42, "arm": 20, "accuracy": 30, "blocking": 27, "tackling": 50, "coverage": 59, "durability": 46, "kicking": 13 }, "permDurability": 46 },
+    "FS": { "id": "M62a_FS", "name": "Prismara", "position": "S", "type": "Light", "attrs": { "speed": 66, "agility": 64, "strength": 65, "awareness": 69, "catching": 55, "arm": 23, "accuracy": 26, "blocking": 34, "tackling": 62, "coverage": 61, "durability": 66, "kicking": 24 }, "permDurability": 66 },
+    "DL3": { "id": "M62a_DL3", "name": "Ferronox", "position": "DL", "type": "Metal", "attrs": { "speed": 51, "agility": 48, "strength": 62, "awareness": 49, "catching": 29, "arm": 23, "accuracy": 12, "blocking": 42, "tackling": 60, "coverage": 28, "durability": 80, "kicking": 25 }, "permDurability": 80 },
+    "SS": { "id": "M62a_SS", "name": "Psyflutter", "position": "S", "type": "Psychic", "attrs": { "speed": 59, "agility": 66, "strength": 52, "awareness": 62, "catching": 57, "arm": 21, "accuracy": 23, "blocking": 20, "tackling": 62, "coverage": 57, "durability": 64, "kicking": 20 }, "permDurability": 64 }
+   },
+   "kicker": { "id": "M62a_K", "name": "Solchirp", "position": "K", "type": "Light", "attrs": { "speed": 43, "agility": 42, "strength": 35, "awareness": 45, "catching": 17, "arm": 30, "accuracy": 38, "blocking": 14, "tackling": 29, "coverage": 10, "durability": 59, "kicking": 71 }, "permDurability": 59 }
+  },
+  "M62b": {
+   "provenance": "generatedTeam(12, quality 62) from main 43976f4",
+   "offense": {
+    "QB": { "id": "M62b_QB", "name": "Zephiro", "position": "QB", "type": "Wind", "attrs": { "speed": 64, "agility": 76, "strength": 59, "awareness": 74, "catching": 39, "arm": 69, "accuracy": 74, "blocking": 37, "tackling": 37, "coverage": 34, "durability": 59, "kicking": 28 }, "permDurability": 59 },
+    "RB": { "id": "M62b_RB", "name": "Zephyroo", "position": "RB", "type": "Wind", "attrs": { "speed": 68, "agility": 77, "strength": 47, "awareness": 67, "catching": 57, "arm": 32, "accuracy": 37, "blocking": 55, "tackling": 42, "coverage": 31, "durability": 63, "kicking": 24 }, "permDurability": 63 },
+    "WR1": { "id": "M62b_WR1", "name": "Gustling", "position": "WR", "type": "Wind", "attrs": { "speed": 63, "agility": 75, "strength": 45, "awareness": 59, "catching": 68, "arm": 32, "accuracy": 35, "blocking": 46, "tackling": 32, "coverage": 29, "durability": 54, "kicking": 33 }, "permDurability": 54 },
+    "WR2": { "id": "M62b_WR2", "name": "Spriglet", "position": "WR", "type": "Nature", "attrs": { "speed": 75, "agility": 70, "strength": 42, "awareness": 46, "catching": 56, "arm": 27, "accuracy": 29, "blocking": 47, "tackling": 20, "coverage": 36, "durability": 63, "kicking": 17 }, "permDurability": 63 },
+    "TE": { "id": "M62b_TE", "name": "Tideram", "position": "TE", "type": "Water", "attrs": { "speed": 64, "agility": 62, "strength": 68, "awareness": 59, "catching": 60, "arm": 28, "accuracy": 30, "blocking": 65, "tackling": 43, "coverage": 41, "durability": 62, "kicking": 25 }, "permDurability": 62 },
+    "LG": { "id": "M62b_LG", "name": "Bramblet", "position": "OL", "type": "Nature", "attrs": { "speed": 41, "agility": 46, "strength": 80, "awareness": 61, "catching": 21, "arm": 22, "accuracy": 24, "blocking": 71, "tackling": 43, "coverage": 18, "durability": 70, "kicking": 25 }, "permDurability": 70 },
+    "RG": { "id": "M62b_RG", "name": "Pebblit", "position": "OL", "type": "Earth", "attrs": { "speed": 37, "agility": 44, "strength": 81, "awareness": 45, "catching": 25, "arm": 18, "accuracy": 22, "blocking": 72, "tackling": 33, "coverage": 14, "durability": 58, "kicking": 22 }, "permDurability": 58 },
+    "WR3": { "id": "M62b_WR3", "name": "Ripplet", "position": "WR", "type": "Water", "attrs": { "speed": 54, "agility": 67, "strength": 31, "awareness": 45, "catching": 63, "arm": 24, "accuracy": 32, "blocking": 35, "tackling": 24, "coverage": 21, "durability": 49, "kicking": 24 }, "permDurability": 49 },
+    "C": { "id": "M62b_C", "name": "Muddlet", "position": "OL", "type": "Water", "attrs": { "speed": 30, "agility": 42, "strength": 71, "awareness": 40, "catching": 23, "arm": 23, "accuracy": 18, "blocking": 72, "tackling": 35, "coverage": 11, "durability": 73, "kicking": 26 }, "permDurability": 73 }
+   },
+   "defense": {
+    "DL1": { "id": "M62b_DL1", "name": "Vyrnax", "position": "DL", "type": "Dragon", "attrs": { "speed": 59, "agility": 67, "strength": 79, "awareness": 67, "catching": 36, "arm": 31, "accuracy": 27, "blocking": 37, "tackling": 77, "coverage": 32, "durability": 73, "kicking": 18 }, "permDurability": 73 },
+    "DL2": { "id": "M62b_DL2", "name": "Crustank", "position": "DL", "type": "Water", "attrs": { "speed": 55, "agility": 59, "strength": 73, "awareness": 49, "catching": 39, "arm": 26, "accuracy": 23, "blocking": 38, "tackling": 62, "coverage": 26, "durability": 66, "kicking": 19 }, "permDurability": 66 },
+    "LB1": { "id": "M62b_LB1", "name": "Craggo", "position": "LB", "type": "Earth", "attrs": { "speed": 63, "agility": 70, "strength": 83, "awareness": 60, "catching": 44, "arm": 23, "accuracy": 30, "blocking": 30, "tackling": 69, "coverage": 54, "durability": 67, "kicking": 15 }, "permDurability": 67 },
+    "LB2": { "id": "M62b_LB2", "name": "Murklaw", "position": "LB", "type": "Dark", "attrs": { "speed": 61, "agility": 55, "strength": 53, "awareness": 70, "catching": 35, "arm": 20, "accuracy": 16, "blocking": 33, "tackling": 64, "coverage": 46, "durability": 72, "kicking": 18 }, "permDurability": 72 },
+    "CB1": { "id": "M62b_CB1", "name": "Aquip", "position": "CB", "type": "Water", "attrs": { "speed": 73, "agility": 80, "strength": 44, "awareness": 54, "catching": 45, "arm": 28, "accuracy": 26, "blocking": 26, "tackling": 47, "coverage": 66, "durability": 51, "kicking": 13 }, "permDurability": 51 },
+    "CB2": { "id": "M62b_CB2", "name": "Umbrikit", "position": "CB", "type": "Dark", "attrs": { "speed": 53, "agility": 66, "strength": 43, "awareness": 57, "catching": 52, "arm": 20, "accuracy": 16, "blocking": 33, "tackling": 49, "coverage": 59, "durability": 52, "kicking": 14 }, "permDurability": 52 },
+    "FS": { "id": "M62b_FS", "name": "Noctlet", "position": "S", "type": "Dark", "attrs": { "speed": 76, "agility": 70, "strength": 58, "awareness": 66, "catching": 57, "arm": 22, "accuracy": 28, "blocking": 37, "tackling": 61, "coverage": 69, "durability": 75, "kicking": 20 }, "permDurability": 75 },
+    "DL3": { "id": "M62b_DL3", "name": "Glaciram", "position": "DL", "type": "Ice", "attrs": { "speed": 45, "agility": 58, "strength": 62, "awareness": 39, "catching": 33, "arm": 20, "accuracy": 20, "blocking": 28, "tackling": 69, "coverage": 30, "durability": 68, "kicking": 18 }, "permDurability": 68 },
+    "SS": { "id": "M62b_SS", "name": "Psyflutter", "position": "S", "type": "Psychic", "attrs": { "speed": 70, "agility": 59, "strength": 52, "awareness": 67, "catching": 49, "arm": 32, "accuracy": 31, "blocking": 22, "tackling": 57, "coverage": 60, "durability": 69, "kicking": 20 }, "permDurability": 69 }
+   },
+   "kicker": { "id": "M62b_K", "name": "Flurrit", "position": "K", "type": "Ice", "attrs": { "speed": 39, "agility": 57, "strength": 50, "awareness": 48, "catching": 33, "arm": 23, "accuracy": 38, "blocking": 24, "tackling": 30, "coverage": 20, "durability": 60, "kicking": 75 }, "permDurability": 60 }
+  },
+  "M75": {
+   "provenance": "generatedTeam(13, quality 75) from main 43976f4",
+   "offense": {
+    "QB": { "id": "M75_QB", "name": "Lumen", "position": "QB", "type": "Light", "attrs": { "speed": 80, "agility": 82, "strength": 62, "awareness": 87, "catching": 50, "arm": 94, "accuracy": 88, "blocking": 38, "tackling": 41, "coverage": 40, "durability": 67, "kicking": 45 }, "permDurability": 67 },
+    "RB": { "id": "M75_RB", "name": "Volcoil", "position": "RB", "type": "Electric", "attrs": { "speed": 87, "agility": 94, "strength": 63, "awareness": 73, "catching": 69, "arm": 40, "accuracy": 37, "blocking": 66, "tackling": 38, "coverage": 34, "durability": 66, "kicking": 39 }, "permDurability": 66 },
+    "WR1": { "id": "M75_WR1", "name": "Ripplet", "position": "WR", "type": "Water", "attrs": { "speed": 86, "agility": 86, "strength": 57, "awareness": 72, "catching": 79, "arm": 36, "accuracy": 36, "blocking": 45, "tackling": 26, "coverage": 41, "durability": 66, "kicking": 27 }, "permDurability": 66 },
+    "WR2": { "id": "M75_WR2", "name": "Zippit", "position": "WR", "type": "Electric", "attrs": { "speed": 85, "agility": 76, "strength": 58, "awareness": 62, "catching": 76, "arm": 36, "accuracy": 30, "blocking": 46, "tackling": 36, "coverage": 37, "durability": 60, "kicking": 30 }, "permDurability": 60 },
+    "TE": { "id": "M75_TE", "name": "Tideram", "position": "TE", "type": "Water", "attrs": { "speed": 85, "agility": 73, "strength": 89, "awareness": 81, "catching": 78, "arm": 40, "accuracy": 37, "blocking": 91, "tackling": 44, "coverage": 44, "durability": 75, "kicking": 37 }, "permDurability": 75 },
+    "LG": { "id": "M75_LG", "name": "Muddlet", "position": "OL", "type": "Water", "attrs": { "speed": 51, "agility": 54, "strength": 90, "awareness": 63, "catching": 24, "arm": 24, "accuracy": 27, "blocking": 79, "tackling": 37, "coverage": 26, "durability": 77, "kicking": 27 }, "permDurability": 77 },
+    "RG": { "id": "M75_RG", "name": "Scalor", "position": "OL", "type": "Dragon", "attrs": { "speed": 53, "agility": 49, "strength": 80, "awareness": 72, "catching": 25, "arm": 31, "accuracy": 30, "blocking": 81, "tackling": 34, "coverage": 27, "durability": 70, "kicking": 20 }, "permDurability": 70 },
+    "WR3": { "id": "M75_WR3", "name": "Spriglet", "position": "WR", "type": "Nature", "attrs": { "speed": 78, "agility": 84, "strength": 58, "awareness": 62, "catching": 73, "arm": 32, "accuracy": 27, "blocking": 45, "tackling": 32, "coverage": 32, "durability": 70, "kicking": 30 }, "permDurability": 70 },
+    "C": { "id": "M75_C", "name": "Pebblit", "position": "OL", "type": "Earth", "attrs": { "speed": 44, "agility": 44, "strength": 87, "awareness": 54, "catching": 29, "arm": 27, "accuracy": 28, "blocking": 77, "tackling": 42, "coverage": 14, "durability": 74, "kicking": 17 }, "permDurability": 74 }
+   },
+   "defense": {
+    "DL1": { "id": "M75_DL1", "name": "Ferronox", "position": "DL", "type": "Metal", "attrs": { "speed": 73, "agility": 85, "strength": 98, "awareness": 68, "catching": 41, "arm": 28, "accuracy": 38, "blocking": 56, "tackling": 88, "coverage": 44, "durability": 88, "kicking": 27 }, "permDurability": 88 },
+    "DL2": { "id": "M75_DL2", "name": "Crustank", "position": "DL", "type": "Water", "attrs": { "speed": 59, "agility": 76, "strength": 86, "awareness": 61, "catching": 40, "arm": 27, "accuracy": 31, "blocking": 43, "tackling": 80, "coverage": 38, "durability": 74, "kicking": 27 }, "permDurability": 74 },
+    "LB1": { "id": "M75_LB1", "name": "Murklaw", "position": "LB", "type": "Dark", "attrs": { "speed": 83, "agility": 73, "strength": 72, "awareness": 77, "catching": 41, "arm": 24, "accuracy": 28, "blocking": 44, "tackling": 79, "coverage": 68, "durability": 73, "kicking": 28 }, "permDurability": 73 },
+    "LB2": { "id": "M75_LB2", "name": "Cindruff", "position": "LB", "type": "Fire", "attrs": { "speed": 65, "agility": 81, "strength": 77, "awareness": 70, "catching": 50, "arm": 24, "accuracy": 34, "blocking": 42, "tackling": 80, "coverage": 67, "durability": 72, "kicking": 21 }, "permDurability": 72 },
+    "CB1": { "id": "M75_CB1", "name": "Umbrikit", "position": "CB", "type": "Dark", "attrs": { "speed": 75, "agility": 82, "strength": 49, "awareness": 71, "catching": 72, "arm": 29, "accuracy": 31, "blocking": 37, "tackling": 54, "coverage": 85, "durability": 66, "kicking": 25 }, "permDurability": 66 },
+    "CB2": { "id": "M75_CB2", "name": "Wispira", "position": "CB", "type": "Psychic", "attrs": { "speed": 82, "agility": 84, "strength": 53, "awareness": 71, "catching": 67, "arm": 24, "accuracy": 26, "blocking": 24, "tackling": 43, "coverage": 74, "durability": 50, "kicking": 24 }, "permDurability": 50 },
+    "FS": { "id": "M75_FS", "name": "Psyflutter", "position": "S", "type": "Psychic", "attrs": { "speed": 84, "agility": 72, "strength": 71, "awareness": 80, "catching": 74, "arm": 37, "accuracy": 35, "blocking": 43, "tackling": 85, "coverage": 80, "durability": 71, "kicking": 31 }, "permDurability": 71 },
+    "DL3": { "id": "M75_DL3", "name": "Mossmaw", "position": "DL", "type": "Nature", "attrs": { "speed": 64, "agility": 73, "strength": 70, "awareness": 68, "catching": 40, "arm": 32, "accuracy": 34, "blocking": 48, "tackling": 80, "coverage": 40, "durability": 82, "kicking": 31 }, "permDurability": 82 },
+    "SS": { "id": "M75_SS", "name": "Florant", "position": "S", "type": "Nature", "attrs": { "speed": 95, "agility": 69, "strength": 52, "awareness": 75, "catching": 60, "arm": 28, "accuracy": 34, "blocking": 34, "tackling": 73, "coverage": 76, "durability": 75, "kicking": 25 }, "permDurability": 75 }
+   },
+   "kicker": { "id": "M75_K", "name": "Solchirp", "position": "K", "type": "Light", "attrs": { "speed": 49, "agility": 48, "strength": 40, "awareness": 60, "catching": 31, "arm": 35, "accuracy": 54, "blocking": 28, "tackling": 34, "coverage": 23, "durability": 70, "kicking": 84 }, "permDurability": 70 }
+  },
+  "M50": {
+   "provenance": "generatedTeam(14, quality 50) from main 43976f4",
+   "offense": {
+    "QB": { "id": "M50_QB", "name": "Lumen", "position": "QB", "type": "Light", "attrs": { "speed": 50, "agility": 62, "strength": 46, "awareness": 56, "catching": 49, "arm": 63, "accuracy": 68, "blocking": 32, "tackling": 30, "coverage": 23, "durability": 55, "kicking": 26 }, "permDurability": 55 },
+    "RB": { "id": "M50_RB", "name": "Zephyroo", "position": "RB", "type": "Wind", "attrs": { "speed": 57, "agility": 58, "strength": 51, "awareness": 49, "catching": 50, "arm": 19, "accuracy": 30, "blocking": 43, "tackling": 30, "coverage": 31, "durability": 57, "kicking": 22 }, "permDurability": 57 },
+    "WR1": { "id": "M50_WR1", "name": "Zippit", "position": "WR", "type": "Electric", "attrs": { "speed": 57, "agility": 54, "strength": 50, "awareness": 43, "catching": 59, "arm": 26, "accuracy": 21, "blocking": 37, "tackling": 24, "coverage": 28, "durability": 56, "kicking": 22 }, "permDurability": 56 },
+    "WR2": { "id": "M50_WR2", "name": "Gustling", "position": "WR", "type": "Wind", "attrs": { "speed": 58, "agility": 58, "strength": 31, "awareness": 32, "catching": 51, "arm": 20, "accuracy": 28, "blocking": 30, "tackling": 17, "coverage": 22, "durability": 44, "kicking": 23 }, "permDurability": 44 },
+    "TE": { "id": "M50_TE", "name": "Wyrmlet", "position": "TE", "type": "Dragon", "attrs": { "speed": 53, "agility": 41, "strength": 61, "awareness": 56, "catching": 53, "arm": 36, "accuracy": 24, "blocking": 60, "tackling": 42, "coverage": 30, "durability": 63, "kicking": 23 }, "permDurability": 63 },
+    "LG": { "id": "M50_LG", "name": "Pebblit", "position": "OL", "type": "Earth", "attrs": { "speed": 33, "agility": 24, "strength": 65, "awareness": 39, "catching": 13, "arm": 22, "accuracy": 15, "blocking": 62, "tackling": 27, "coverage": 11, "durability": 46, "kicking": 11 }, "permDurability": 46 },
+    "RG": { "id": "M50_RG", "name": "Muddlet", "position": "OL", "type": "Water", "attrs": { "speed": 37, "agility": 32, "strength": 54, "awareness": 40, "catching": 12, "arm": 28, "accuracy": 9, "blocking": 56, "tackling": 34, "coverage": 13, "durability": 64, "kicking": 13 }, "permDurability": 64 },
+    "WR3": { "id": "M50_WR3", "name": "Spriglet", "position": "WR", "type": "Nature", "attrs": { "speed": 54, "agility": 61, "strength": 35, "awareness": 36, "catching": 51, "arm": 22, "accuracy": 17, "blocking": 33, "tackling": 28, "coverage": 25, "durability": 55, "kicking": 12 }, "permDurability": 55 },
+    "C": { "id": "M50_C", "name": "Ferrcub", "position": "OL", "type": "Metal", "attrs": { "speed": 31, "agility": 25, "strength": 55, "awareness": 37, "catching": 17, "arm": 16, "accuracy": 14, "blocking": 55, "tackling": 30, "coverage": 13, "durability": 61, "kicking": 10 }, "permDurability": 61 }
+   },
+   "defense": {
+    "DL1": { "id": "M50_DL1", "name": "Mossmaw", "position": "DL", "type": "Nature", "attrs": { "speed": 54, "agility": 55, "strength": 60, "awareness": 46, "catching": 32, "arm": 18, "accuracy": 30, "blocking": 35, "tackling": 58, "coverage": 34, "durability": 68, "kicking": 22 }, "permDurability": 68 },
+    "DL2": { "id": "M50_DL2", "name": "Scorchulk", "position": "DL", "type": "Fire", "attrs": { "speed": 40, "agility": 48, "strength": 62, "awareness": 31, "catching": 25, "arm": 7, "accuracy": 13, "blocking": 29, "tackling": 44, "coverage": 22, "durability": 59, "kicking": 12 }, "permDurability": 59 },
+    "LB1": { "id": "M50_LB1", "name": "Craggo", "position": "LB", "type": "Earth", "attrs": { "speed": 56, "agility": 46, "strength": 65, "awareness": 48, "catching": 30, "arm": 15, "accuracy": 18, "blocking": 32, "tackling": 56, "coverage": 47, "durability": 62, "kicking": 9 }, "permDurability": 62 },
+    "LB2": { "id": "M50_LB2", "name": "Echolot", "position": "LB", "type": "Psychic", "attrs": { "speed": 44, "agility": 55, "strength": 44, "awareness": 51, "catching": 35, "arm": 15, "accuracy": 18, "blocking": 27, "tackling": 60, "coverage": 46, "durability": 65, "kicking": 17 }, "permDurability": 65 },
+    "CB1": { "id": "M50_CB1", "name": "Wispira", "position": "CB", "type": "Psychic", "attrs": { "speed": 59, "agility": 58, "strength": 39, "awareness": 55, "catching": 45, "arm": 16, "accuracy": 22, "blocking": 26, "tackling": 34, "coverage": 59, "durability": 50, "kicking": 19 }, "permDurability": 50 },
+    "CB2": { "id": "M50_CB2", "name": "Umbrikit", "position": "CB", "type": "Dark", "attrs": { "speed": 51, "agility": 58, "strength": 36, "awareness": 35, "catching": 25, "arm": 16, "accuracy": 17, "blocking": 15, "tackling": 29, "coverage": 49, "durability": 50, "kicking": 6 }, "permDurability": 50 },
+    "FS": { "id": "M50_FS", "name": "Prismara", "position": "S", "type": "Light", "attrs": { "speed": 56, "agility": 65, "strength": 55, "awareness": 50, "catching": 42, "arm": 23, "accuracy": 29, "blocking": 26, "tackling": 50, "coverage": 55, "durability": 46, "kicking": 15 }, "permDurability": 46 },
+    "DL3": { "id": "M50_DL3", "name": "Glaciram", "position": "DL", "type": "Ice", "attrs": { "speed": 44, "agility": 51, "strength": 55, "awareness": 34, "catching": 19, "arm": 21, "accuracy": 19, "blocking": 26, "tackling": 48, "coverage": 28, "durability": 54, "kicking": 14 }, "permDurability": 54 },
+    "SS": { "id": "M50_SS", "name": "Psyflutter", "position": "S", "type": "Psychic", "attrs": { "speed": 43, "agility": 68, "strength": 46, "awareness": 61, "catching": 50, "arm": 11, "accuracy": 18, "blocking": 25, "tackling": 52, "coverage": 54, "durability": 60, "kicking": 11 }, "permDurability": 60 }
+   },
+   "kicker": { "id": "M50_K", "name": "Flurrit", "position": "K", "type": "Ice", "attrs": { "speed": 40, "agility": 31, "strength": 36, "awareness": 39, "catching": 26, "arm": 19, "accuracy": 31, "blocking": 15, "tackling": 23, "coverage": 16, "durability": 53, "kicking": 60 }, "permDurability": 53 }
+  }
+ }
+}
