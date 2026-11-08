@@ -114,6 +114,7 @@ test('every species ability and trait maps to known engine primitives, and they 
   const quiet = [];
   for (const sp of SPECIES_DEX) {
     if (!sp.ability?.effect) continue; // shared traits are retired (N7c B13): only signature abilities still act
+    if ((await import('../src/sim/abilities/registry.js')).hasContract(sp.id)) continue; // Task 8 M3: a registered Dex contract replaced its legacy effect (tested with its contract)
     const e = sp.ability.effect;
     const legacyPos = ORIGINAL_72.find((x) => x.id === sp.id).position; // transitional legacy effects were written for the legacy position (M3 replaces them)
     if (Object.keys(e).every((k) => PASSIVE.has(k) || k === 'zoneRange') || !SLOT[legacyPos]) continue;
