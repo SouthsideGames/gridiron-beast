@@ -45,7 +45,9 @@ export function pushSafely({ actors, movers, ux, uy, distance, bounds: B, obstac
       const nx = p.x + ux * ds, ny = p.y + uy * ds;
       if (!inside(nx, ny)) { p.done = true; continue; }
       const next = { x: nx, y: ny };
-      const blocked = [...still, ...stopped, ...obstacles.map((o) => ({ x: o.x, y: o.y, r: o.r ?? BODY }))].some((b) => hyp(b, next) < b.r && hyp(b, next) < hyp(b, p));
+      const circles = obstacles.filter((o) => o.live !== false && o.kind !== 'rect').map((o) => ({ x: o.x, y: o.y, r: o.r ?? BODY }));
+      const inRect = obstacles.some((o) => o.live !== false && o.kind === 'rect' && nx > o.x0 - BODY && nx < o.x1 + BODY && ny > o.y0 - BODY && ny < o.y1 + BODY); // contract walls (Earth/Ice batch)
+      const blocked = inRect || [...still, ...stopped, ...circles].some((b) => hyp(b, next) < b.r && hyp(b, next) < hyp(b, p));
       if (blocked) { p.done = true; continue; }
       p.x = nx; p.y = ny;
     }

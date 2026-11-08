@@ -103,7 +103,7 @@ export function punt(rng, { ballOn, kicker, returner, rushPressure = 0.05 }) {
   if (fairCatch) return { ballOn: Math.round(receiverBallOn), distance: Math.round(distance), fairCatch: true, text: `Punt of ${Math.round(distance)} yards, fair catch at the ${Math.round(receiverBallOn)}.` };
   const ret = Math.max(0, 5 + 8 * norm(r.speed) + 5 * norm(r.agility) + rng.normal() * 6);
   let newBallOn = Math.round(receiverBallOn + ret);
-  if (rng.chance(0.008)) return { touchdown: true, ballOn: 100, distance: Math.round(distance), text: 'PUNT RETURN TOUCHDOWN!' };
+  if (rng.chance(0.008)) return { touchdown: true, ballOn: 100, distance: Math.round(distance), catchAt: Math.round(receiverBallOn), text: 'PUNT RETURN TOUCHDOWN!' }; // M3 hook: catchAt (the catch spot, for kicker contracts)
   newBallOn = clamp(newBallOn, 1, 95);
-  return { ballOn: newBallOn, distance: Math.round(distance), returnYards: Math.round(ret), text: `Punt of ${Math.round(distance)} yards, returned ${Math.round(ret)} to the ${newBallOn <= 50 ? newBallOn : 'opponent ' + (100 - newBallOn)}.` };
+  return { ballOn: newBallOn, distance: Math.round(distance), returnYards: Math.round(ret), catchAt: Math.round(receiverBallOn), text: `Punt of ${Math.round(distance)} yards, returned ${Math.round(ret)} to the ${newBallOn <= 50 ? newBallOn : 'opponent ' + (100 - newBallOn)}.` };
 }

@@ -22,7 +22,7 @@ export default registerAbility({
   initGame: () => ({ charges: 0 }),
   hooks: {
     playStart(ctx, self) { self.sx = { armed: ctx.state(self).charges >= PBUS, fired: false }; },
-    passRelease(ctx, self, ball) {
+    passRelease(ctx, self, { ball }) {
       const sx = self.sx; if (!sx?.armed || sx.fired || self.team !== 'def' || !ball?.landing) return;
       if (!able(ctx, self) || self.engaged) return;
       const P = ball.landing, B = ctx.bounds, dP = (a) => Math.hypot(a.x - P.x, a.y - P.y), mine = dP(self);
