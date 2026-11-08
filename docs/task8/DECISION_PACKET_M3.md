@@ -94,8 +94,38 @@ Decision: confirm the curve, or give a target success rate.
 
 ## 3. Rare activations
 
-Full evidence: `docs/task8/M3_RARE_ACTIVATIONS.md` (approved trigger, opportunities, activations, failure reasons, classification
-for each). Summary in §3a below.
+Full evidence: `docs/task8/M3_RARE_ACTIVATIONS.md` gives, for each ability, the approved trigger, opportunities, activations,
+failure reasons and a classification:
+- (a) a genuinely rare situation;
+- (b) broken detection;
+- (c) placement or geometry that is impossible or nearly so in this engine.
+
+Measured on a frozen copy with real AI games. **No ability defect (b) was found**: every opportunity that met the approved
+conditions activated, or was refused by a rule the contract states. The investigation did find one defect in the reviewer. It could
+stop on a charge or ready cue, or on the opponent's monster of the same family; that is fixed in 68add50.
+
+| Ability | Opportunities → activations | Class | Decision needed |
+| --- | --- | --- | --- |
+| Guiding Halo LIG-03-F | 102 completions, 0 within 6 yd → 0 (mastery 3: 8) | (c) | Yes, see above |
+| Crossed Wires ELE-01-F | 571 ready route snaps, 0 with a partner within 5 yd (min 7.0) → 0 | (c) | Yes: only the unreleased reserve bunch plays align two route runners within 5 yd. Release them, or rule on the 5-yd condition. Staged bunch playbook: 50 activations in 10 games |
+| Shadow Exchange DAR-06-F | forced, 704 armed releases, 3 in swap range → 2 (mastery 3: 8 of 539) | (c) + (a) | Yes: the partner test runs at the release, before defenders converge (nearest ally median 8.5 yd); the bar fills in about 5% of games |
+| Foresight PSY-03-F | 759 ready snaps, 38 with an LB within 3 yd → 19 (every one who blitzed) | (c) | Optional: LBs align 3.5–5 yd deep except in three fronts; about 0.6 a game |
+| Fortress Gate MET-06-F | 131 armed snaps → 93 (11 refused on a body, 2 at the end zone) | not rare; (c) in 3-lineman fronts (12 of 15 refused) | No |
+| Night Watch DAR-02-F | 979 defensive plays, 5 with a Dark field → 0 | (a) + (c) | Optional: an opposing Shadowkit's field forms on Night Watch's offense, so only an opposing Nocturne or an allied Shadowkit makes one |
+| Prism Break LIG-04-F | 195 armed snaps, 19 with an enemy zone → 19 (all base zones) | base zones fine; overlaps: (c) literal, (a) implemented | Yes, §1 |
+| Hoard Flight DRA-03-F | 12 fumbles in 3,163 plays, 1 his → 1 | (a): the engine fumbles on 0.38% of plays | No |
+| Tsunami Line WAT-06-F | 21 interceptions, 2 his → 2 | (a) | No |
+| Frostmark ICE-01-F | 48 made field goals → 47 (1 had a token already pending) | (a) | No |
+| Second Chance ICE-06-F | 14 games with a miss → 14 | (a) | No |
+| Slipstream Step WIN-02-F | 10 armed crossings of the line → 10 | (a) | No |
+| Crosswind Rescue WIN-04-F | 4 games with 2+ breakups → 4 | (a) | No |
+| Air Brake WIN-03-F | natural: 1 game reached 3 breakups → 1; forced 65 | (a): three breakups by one CB in a game | No |
+| Clean Sweep EAR-01-F | 25 banked → 25 | not rare | No |
+| Stone Cradle EAR-04-F | 68 returned punts → 49 (once per game) | (a) | No |
+| Dragon Roar DRA-05-F | with the AI policy: unstaged in 6 of 10 games | was "AI never"; now fixed | §4 |
+
+All the other abilities execute for their own monster within three unstaged games at mastery 0, Pyroclast's Burning Wake first in
+game 4. A strict reviewer sweep at 68add50 is recorded in M3_STATUS.md.
 
 **Guiding Halo (LIG-03-F) is investigated; detection works.** Ten games with Lumen at QB:
 
