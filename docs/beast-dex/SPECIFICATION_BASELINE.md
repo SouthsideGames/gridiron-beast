@@ -708,7 +708,7 @@ Owner rulings N7g (verbatim in docs/task8/RULINGS_2026-11-07e.md).
   - The pilot legendary play Avalanche and its unlock references are retired and not replaced.
   - Not every legendary needs an unlocked play.
 
-The Task 8 specification has no open decisions.
+The Task 8 specification had no open decisions at this point; later open items are listed in §25.
 
 
 ## 24. Special-play eligibility (owner ruling N8b, 2026-11-08)
@@ -724,3 +724,103 @@ Kickoffs and two-point conversions:
 Eligibility table: docs/task8/SPECIAL_PLAY_ELIGIBILITY.md. Of the 72, the kicker abilities with a kickoff condition are Dawn Signal
 (LIG-02-F, cast on his own kickoff) and Echo Landing (PSY-04-F, banked from his own returned kickoff). None acts on a two-point
 conversion.
+
+## 25. Approved rulings, 2026-11-08 14:32 (N8d): M4 Beast Clash, both reviewers, performance
+
+### M4 decisions
+
+1. **Player rotations.** Prompt the player in Watch mode, with an "Auto for the rest" option. Skip, headless play and staff use
+   the AI policy.
+2. **Clash AI.** Adapt the existing AI to the new abilities, the rotation rules and the approved information restrictions.
+3. **Feather Relay.**
+   - It counts as a rotation, without the 50% entry penalty, provided this matches its approved contract.
+   - Other rotation restrictions stay unless the contract explicitly exempts them.
+4. **Stunned.**
+   - A monster cannot skip two consecutive normal turns. After one Stunned skip, its next normal action is protected from another
+     Stunned skip.
+   - The remaining status duration is preserved. Countdown handling is documented with the implementation.
+5. **Archetype perks.**
+   - Striker shield-break and Disruptor pierce apply to ordinary attacks only.
+   - Tank guard applies only while the Tank is active.
+   - Explicit ability exceptions are preserved.
+6. **Tank bruise.** Open: explanation requested.
+7. **Afflicted.** Its legacy healing penalty is retired. Healing Reduced handles healing reduction.
+8. **Battle-length rules.** Open: explanation requested of the exact damage ramp, the healing reduction, the battle cap, and how
+   pending delayed effects and knockouts resolve at the cap.
+9. **Modifier arithmetic.**
+   - Applicable rotation, healing-cut and ramp modifiers multiply, and the result is rounded once.
+   - Explicit floor and round-up exceptions and approved bounds are preserved.
+10. **Status transfer.**
+    - Slowed, Empowered and Weakened keep the same percentage across modes.
+    - Confused carried into football reduces effective Awareness by 20%.
+11. **Shield transfer.**
+    - A football-origin shield becomes 15% of maximum Clash HP, scaled by its remaining fraction.
+    - Shields are compared by original strength.
+    - The remaining fraction, the application history and a spent fumble-save state are preserved.
+    - Mode switching never refills protection.
+12. **Standalone Clash.** Statuses clear at the actual end of a standalone battle. Opening and overtime Clash-to-football
+    continuity is preserved.
+13. **Daybreak Lance and Clear Light.** Open: show the conflicting text and the Progression values before applying any precedence
+    decision.
+14. **Dawn Song.** Open: show the approved target text and clarify whether the proposal means "self only" or "self included".
+15. **Emergency Cover.** The first eligible rescuer in lineup order.
+16. **Ability-kind table.** The complete table is presented for owner review before the first ability batch.
+17. **Canopy Assist.** "Strongest" means the highest expected attack damage against the current opponent, using only
+    legitimately available information and no future RNG outcomes.
+18. **Second Spring.** Revives the earliest knocked-out eligible monster and places it at the back of the lineup, preserving the
+    other approved conditions.
+19. **Historical records.** Completed pre-M4 Clash records replay through the isolated historical engine. New battles use the
+    versioned Task 8 engine once integrated.
+
+Recommendations are not approved by silence.
+
+### Both ability reviewers (football and Beast Clash)
+
+**First-run demonstration.** The reviewer must reliably demonstrate the selected ability's complete interaction on the first run.
+The owner must never need to re-run a review hoping it activates.
+
+**Setup and execution.**
+- The reviewer automatically prepares charge, readiness, participants, positioning and the qualifying trigger conditions.
+- It may use controlled outcomes where needed to establish a rare prerequisite, such as a qualifying fumble or a would-be
+  interception.
+- Execution goes through the real gameplay eligibility, event, effect and rendering code. No scripted animation, and no directly
+  manufactured final result.
+- Scenario controls are isolated from franchise saves and normal gameplay.
+- Controlled demonstrations are clearly labelled. They do not establish ordinary activation frequency.
+
+**Playback.**
+- Before playback, the reviewer explains the expected result and identifies the source and the affected targets.
+- It then shows the sequence: trigger met → ability activated → effect resolved → cleanup.
+- It continues through later plays or turns where required, and never stops at readiness or initial activation.
+- Controls: pause, replay, slow motion, and stepping by event, play or turn.
+- If activation fails, the reviewer shows the unmet condition or the implementation error, never a silent ordinary play.
+
+**Coverage.**
+- Every approved ability, form and mastery variant.
+- Separately labelled scenarios for blocked activations, failures and important interactions.
+- Natural Game remains an optional mode, for ordinary activation frequency.
+
+**Validation.**
+- Each run validates the selected monster's actual execution and the complete resolution and cleanup.
+- Browser checks cover representative rare, delayed, multi-target and cross-play or cross-turn sequences.
+
+**Named examples.**
+- **Ball Clamp:** establish its approved qualifying fumble and contact conditions, then show the full resolution and clearly
+  identify what changed.
+- **Sovereign Arm:** prepare its charge and a would-be interception, then show four things in order: the dragon intervention, the
+  incomplete pass, the defender's absence on the next qualifying offensive play, and the defender's return.
+
+### Performance
+
+- The indicative 45–58% football slowdown needs investigation, but it is not the official matched-scene assessment.
+- Representative matched performance scenes, including ability-heavy cases, are established and documented now.
+- The football slowdown is profiled while independent M4 work continues.
+- The approved limit stands: simulation CPU at most 10% slower than the matched baseline.
+- Mechanics are not weakened, legitimate effects are not removed, and the requirement is not relaxed to obtain a pass.
+
+### Delivery
+
+- Final visual polish stays deferred.
+- Targeted checks are used during development, and broader regression checks at integration milestones.
+- Compatible preview saves are preserved. Any necessary reset is announced before the preview is updated.
+- Nothing merges into main, and the live game is not replaced.
