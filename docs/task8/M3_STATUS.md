@@ -22,10 +22,13 @@ Status at da639eb (2026-11-07). Branch `task8-implementation`; nothing merged to
   Air Brake, Shadow Exchange; reserve bunch plays: Crossed Wires; the player's call: Dragon Roar; an opposing Dark field: Night
   Watch; a 20-game search: Hoard Flight). Guiding Halo at mastery 0 did not execute in ~790 plays (see below).
 
+- **Activation gates** (merged from `task8-m3-activation-gates`): live in-play signature starts check `ctx.canStartSignature`
+  (Eclipse, Cold Snap) and in-play charge gains check `ctx.canGainCharge` (Cold Snap's charge side) in all 72 modules: 44 gate a
+  start, 31 gate charge gains, 13 gate neither (formula kicks, pre-snap producers, passive auras with nothing to spend); each module
+  header records its reading; `tests/task8-activation-gates.test.js`.
+
 ## In progress
 
-- **Activation gates**: Eclipse-style start denial and Cold Snap reach only the contracts that call `ctx.canStartSignature` (22 of
-  72) and `ctx.canGainCharge` (5). An audit of every module is running on branch `task8-m3-activation-gates`.
 - **Regression**: the M2 full run at 7093bfb is finishing; a full run on the M3 head follows the gate merge.
 
 ## Findings to review
@@ -60,6 +63,13 @@ Status at da639eb (2026-11-07). Branch `task8-implementation`; nothing merged to
 | Mind Game (PSY-05-F) | afterimage is a point moving at the TE's top speed (the contract asks for an implementation audit) |
 
 ## Readings applied across batches (confirm or correct)
+
+- Activation gates: Cold Snap itself is not gated (an Eclipse does not switch it off); auras that spend a cooldown or bar at a
+  moment (Guiding Halo, Tailwind Huddle, Dragon Call) are gated like signature starts; banking a token for a later field counts
+  as a charge gain, so an Eclipse does not stop it (§11: charges and cooldowns continue). After a denied start: Blazing Resolve may
+  still ignite on a later attempt that play; Dragon Pounce keeps its preparation; Vanishing Cut and Pressure Drain do not retry that
+  play; Anchor Plate absorbs nothing for the rest of that play. Cold Snap fires only from an engaged offensive blocker, so in play
+  it can only reach defenders.
 
 - Two-point tries and kickoffs neither charge, trigger nor count clocks, except where a contract says so (Echo Landing, Dawn
   Signal) and the auras Heat Haze and Breakwater, which apply on every live play.
