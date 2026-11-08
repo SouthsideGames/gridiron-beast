@@ -1,0 +1,894 @@
+{
+ "note": "Legacy sprite path snapshot from the renderer before generator v2 (commit 6650839): 102 original forms and the 120 Basic recipes.",
+ "count": 222,
+ "sprites": {
+  "emberfox": {
+   "grid": "fd1c08c3852e6b65",
+   "svg48": "f6b75ac75219cad3"
+  },
+  "emberfox_e1": {
+   "grid": "88f3efa6021d9544",
+   "svg48": "d2064b6fb6f652bc"
+  },
+  "emberfox_e2": {
+   "grid": "92809699a4f2266c",
+   "svg48": "44606e49c14101f3"
+  },
+  "ashkit": {
+   "grid": "a5ac696ec9bc77b5",
+   "svg48": "177b8d83c495fd10"
+  },
+  "ashkit_e1": {
+   "grid": "8e5ded4eb3863135",
+   "svg48": "458e78297f2b1cbd"
+  },
+  "firestorm": {
+   "grid": "50a119e499e19f56",
+   "svg48": "745c93b27d388676"
+  },
+  "cinderclaw": {
+   "grid": "ea764c05932c0ba4",
+   "svg48": "2bb1d8d516666f3d"
+  },
+  "pyrelynx": {
+   "grid": "5bfd1891f0f1a978",
+   "svg48": "7a9a9ab2febad98b"
+  },
+  "pyroclast": {
+   "grid": "53376bf6cdd305b9",
+   "svg48": "348fa1b9b36b3cc1"
+  },
+  "tidepaw": {
+   "grid": "eaed08533907f5ea",
+   "svg48": "40d11cec244acd39"
+  },
+  "tidepaw_e1": {
+   "grid": "804ff590d9eeffc2",
+   "svg48": "3a8c52d6b1528078"
+  },
+  "tidepaw_e2": {
+   "grid": "d875eaf01d86c198",
+   "svg48": "367800220b69b089"
+  },
+  "mudcub": {
+   "grid": "93c401fda26b08f2",
+   "svg48": "31c4e9c7288260cb"
+  },
+  "mudcub_e1": {
+   "grid": "259ca99837ca477f",
+   "svg48": "86d5d067e489a234"
+  },
+  "reefclaw": {
+   "grid": "a7611b2ac6aea115",
+   "svg48": "09ee2186940102e9"
+  },
+  "tidefin": {
+   "grid": "ee5feccb646fe357",
+   "svg48": "302833007bd195ab"
+  },
+  "wavehorn": {
+   "grid": "8efdea630d01bb73",
+   "svg48": "cf5ee72a282910b9"
+  },
+  "tsunarok": {
+   "grid": "b5a7c5d42ef711c8",
+   "svg48": "8da17ffc74e839f2"
+  },
+  "thornkit": {
+   "grid": "f4ccb858a8b45eee",
+   "svg48": "a9d822b22c2382e4"
+  },
+  "thornkit_e1": {
+   "grid": "d44c54657de51ff3",
+   "svg48": "7c15f557f9b71730"
+  },
+  "thornkit_e2": {
+   "grid": "e8f5172c263e68cc",
+   "svg48": "6217ad252113b4f7"
+  },
+  "mossclaw": {
+   "grid": "8f3f9661b2d3e926",
+   "svg48": "27965d5625317863"
+  },
+  "mossclaw_e1": {
+   "grid": "caf59e66f239d1ec",
+   "svg48": "78d0d4a0bab213bc"
+  },
+  "rootram": {
+   "grid": "5d2ed91579ceb1c2",
+   "svg48": "4dae01c875432aa9"
+  },
+  "leafhorn": {
+   "grid": "a2515a307e7abdf9",
+   "svg48": "49fef6ba47268eab"
+  },
+  "thornback": {
+   "grid": "3fccfa36669f37ad",
+   "svg48": "9e90793bb6cd256b"
+  },
+  "elderoot": {
+   "grid": "fb855d893ba7e6c1",
+   "svg48": "621bf6996afa1954"
+  },
+  "flicker": {
+   "grid": "0dccd169a1f9abf0",
+   "svg48": "c878290e25399ec1"
+  },
+  "flicker_e1": {
+   "grid": "c1f7ba80e52d637f",
+   "svg48": "c121123f521dfa5b"
+  },
+  "voltfin": {
+   "grid": "dbaa1c1734c22197",
+   "svg48": "c0375540c7dde9ae"
+  },
+  "voltfin_e1": {
+   "grid": "063125cdaaedba03",
+   "svg48": "1b62983356d3b34a"
+  },
+  "voltfang": {
+   "grid": "57f36dece0f55563",
+   "svg48": "9ef5a130c1307f0e"
+  },
+  "stormlynx": {
+   "grid": "4a6545199afc3529",
+   "svg48": "42507e311c26edc5"
+  },
+  "joltrex": {
+   "grid": "03ebf52cf76d7a72",
+   "svg48": "09bafd79b5827922"
+  },
+  "stormcrown": {
+   "grid": "14ecf31661560253",
+   "svg48": "9ca0545ce5f4e303"
+  },
+  "snowmoth": {
+   "grid": "35894d0b1255cdfa",
+   "svg48": "6ff843d3bb6565f8"
+  },
+  "snowmoth_e1": {
+   "grid": "b507b4e61596ef35",
+   "svg48": "2b2322e171f2895c"
+  },
+  "hailfang": {
+   "grid": "dfec3a081c04dfba",
+   "svg48": "d6bfea0c38a11cc0"
+  },
+  "hailfang_e1": {
+   "grid": "ccd64f4a10bf3b1f",
+   "svg48": "c3b2e73ba99464c7"
+  },
+  "frostclaw": {
+   "grid": "92b13e1dfcfd42e3",
+   "svg48": "a089c3d50eac04fe"
+  },
+  "icehorn": {
+   "grid": "75a7da02b4d85504",
+   "svg48": "734a7fe691ec2c23"
+  },
+  "glaciron": {
+   "grid": "34c9f6ebf0655e44",
+   "svg48": "13fe45d09a537c2e"
+  },
+  "glacivern": {
+   "grid": "e958898750cb52d2",
+   "svg48": "75ad47807c4cfb2d"
+  },
+  "gustling": {
+   "grid": "cf9cf5639428aafa",
+   "svg48": "c2fa90730918ac77"
+  },
+  "gustling_e1": {
+   "grid": "6f13f8283a3e73a4",
+   "svg48": "53ad5e14a61ee8a2"
+  },
+  "gustling_e2": {
+   "grid": "b1214c9254c76244",
+   "svg48": "0179b869e8a57eef"
+  },
+  "breezefang": {
+   "grid": "bab855f1c92b3d22",
+   "svg48": "9c00bca920bed203"
+  },
+  "breezefang_e1": {
+   "grid": "aa48c898bba5ec6e",
+   "svg48": "786d905fb8d433cd"
+  },
+  "skywarden": {
+   "grid": "05b2a6d48bf49d98",
+   "svg48": "ffc31d766970cf4d"
+  },
+  "windlynx": {
+   "grid": "42992491e902dc56",
+   "svg48": "b7d594ee387902c0"
+  },
+  "zephyr": {
+   "grid": "1c1c96b0f5038305",
+   "svg48": "fbc0b29d8910d4a7"
+  },
+  "tempestra": {
+   "grid": "bf94c6a54b235161",
+   "svg48": "f3f887d7ec98e2a3"
+  },
+  "pebble": {
+   "grid": "c47c3b3b6e0bb32d",
+   "svg48": "a941720ed1acb4d1"
+  },
+  "pebble_e1": {
+   "grid": "fa4dd79968cc1c19",
+   "svg48": "25130c409ab720e7"
+  },
+  "pebble_e2": {
+   "grid": "62db1a6847b4e061",
+   "svg48": "12e32a77d58da1ba"
+  },
+  "rockram": {
+   "grid": "c48f081c0bd96861",
+   "svg48": "d40bf47644e0d74d"
+  },
+  "rockram_e1": {
+   "grid": "c5689566079d3b04",
+   "svg48": "72213f2ef665410b"
+  },
+  "boulderox": {
+   "grid": "90292271b08a11b1",
+   "svg48": "142cd57b222dc9f8"
+  },
+  "stoneguard": {
+   "grid": "28f2ce0ca4887dbd",
+   "svg48": "3ea438e1aabef7c3"
+  },
+  "terrabull": {
+   "grid": "4834618c88cf0f2f",
+   "svg48": "7348dedf137fed18"
+  },
+  "titanolith": {
+   "grid": "0ce219c943368534",
+   "svg48": "3c8f89bd5c496c49"
+  },
+  "shadowkit": {
+   "grid": "5cf245d63c42deea",
+   "svg48": "972716d91c2c7822"
+  },
+  "shadowkit_e1": {
+   "grid": "442c1cb2cc5f7747",
+   "svg48": "4c8c82364b54db94"
+  },
+  "nightowl": {
+   "grid": "0a27ae6de91dcbac",
+   "svg48": "d0866e4ce3cd869b"
+  },
+  "nightowl_e1": {
+   "grid": "f910653be8369cc6",
+   "svg48": "f01e556c42505f18"
+  },
+  "duskrunner": {
+   "grid": "fc8f95cbdda51cd0",
+   "svg48": "b383e5773b48a36a"
+  },
+  "mireclaw": {
+   "grid": "dc71e46f34db59ee",
+   "svg48": "230ebb1a56a25395"
+  },
+  "nocturne": {
+   "grid": "bbbaf026ac8292a6",
+   "svg48": "8b7e78767e029a47"
+  },
+  "nyxshade": {
+   "grid": "c67972572c6fc73b",
+   "svg48": "24a12d65c718f48b"
+  },
+  "glimmer": {
+   "grid": "aefb4a0ee101e604",
+   "svg48": "c2163d2769c391b4"
+  },
+  "glimmer_e1": {
+   "grid": "c7e0607d1b8d01c1",
+   "svg48": "c2e8cffb361eb5b9"
+  },
+  "sunwhistle": {
+   "grid": "e0764ee9dbf1101e",
+   "svg48": "1383abd6453e3c86"
+  },
+  "sunwhistle_e1": {
+   "grid": "bd25e023bc45fac3",
+   "svg48": "68eae8a8b6687c0c"
+  },
+  "lumen": {
+   "grid": "8f8a06922a51c00e",
+   "svg48": "3d744ee89e91f766"
+  },
+  "prism": {
+   "grid": "3d3b755fb4ce16b6",
+   "svg48": "830c300d080da7ab"
+  },
+  "halofang": {
+   "grid": "61cc6cde3cbd6d45",
+   "svg48": "6ac704a564a583f0"
+  },
+  "aurelion": {
+   "grid": "82c1dd07a9981978",
+   "svg48": "95521f0fe7b68746"
+  },
+  "ironcub": {
+   "grid": "35f4a71ff7af9639",
+   "svg48": "52fc69b512e17d4c"
+  },
+  "ironcub_e1": {
+   "grid": "71e64898788f77d2",
+   "svg48": "05edd607f56cd782"
+  },
+  "steelpaw": {
+   "grid": "628e46901d3d9713",
+   "svg48": "57aa142381cf75c0"
+  },
+  "steelpaw_e1": {
+   "grid": "4a84a896e7042199",
+   "svg48": "78995606c0aa6297"
+  },
+  "gearwing": {
+   "grid": "024a97743fbc926d",
+   "svg48": "d62a7b51b68f820f"
+  },
+  "ironjaw": {
+   "grid": "c532093a58faf494",
+   "svg48": "53d632c800e9e981"
+  },
+  "metalhorn": {
+   "grid": "59778925699b5e61",
+   "svg48": "6f2b4dd75e18d532"
+  },
+  "aegistron": {
+   "grid": "40f86ce89c71b38f",
+   "svg48": "5fbf3417f3e016ad"
+  },
+  "mindwing": {
+   "grid": "d12797bbce824b88",
+   "svg48": "8e895e1667f8df45"
+  },
+  "mindwing_e1": {
+   "grid": "e2a642d587f3d524",
+   "svg48": "cdc7ef46b1655ad3"
+  },
+  "shadewisp": {
+   "grid": "e61ee91a59906f9a",
+   "svg48": "03539bede2cc4077"
+  },
+  "shadewisp_e1": {
+   "grid": "e4553eac78152ce4",
+   "svg48": "c7ee19a1aa258220"
+  },
+  "cerebrix": {
+   "grid": "5af323949785c37c",
+   "svg48": "159342b1e86c530a"
+  },
+  "echolot": {
+   "grid": "2ef1bd689ed7c6ab",
+   "svg48": "bc568feb452013e1"
+  },
+  "enigmane": {
+   "grid": "650fef9f48591237",
+   "svg48": "fbcea88820bce535"
+  },
+  "astralux": {
+   "grid": "958988f44dd9b5a5",
+   "svg48": "9fa70734118f1d9b"
+  },
+  "drakeling": {
+   "grid": "13af748bb4154f2f",
+   "svg48": "37f53a3055d86087"
+  },
+  "drakeling_e1": {
+   "grid": "dff27500f090b9c5",
+   "svg48": "73c7534683f7295e"
+  },
+  "drakeling_e2": {
+   "grid": "5eaf0aa8d91fd9de",
+   "svg48": "98bed62978728544"
+  },
+  "wyrmkit": {
+   "grid": "e1f7f873c7456b07",
+   "svg48": "9d74d5c1e2933ca7"
+  },
+  "wyrmkit_e1": {
+   "grid": "079fcc7e89703be5",
+   "svg48": "66aa88b89f983b78"
+  },
+  "sablewing": {
+   "grid": "ab0011dc1267976a",
+   "svg48": "dec0f42b8789da30"
+  },
+  "scaleguard": {
+   "grid": "b3699e3350190423",
+   "svg48": "20d447c3f0c877bf"
+  },
+  "vyrnax": {
+   "grid": "b9bd92c783212f70",
+   "svg48": "0f78c3b1d13790fd"
+  },
+  "aurodrax": {
+   "grid": "5a5d9445eb8460fc",
+   "svg48": "9a2e4e0a089fa3a0"
+  },
+  "kindlet": {
+   "grid": "86a4c4766ff572a7",
+   "svg48": "4e58b746fd93769a"
+  },
+  "charbun": {
+   "grid": "b6c87a0d05a9a739",
+   "svg48": "73c0696d65c9663f"
+  },
+  "sparkwick": {
+   "grid": "118abfdd048f4833",
+   "svg48": "6002fa26259c6027"
+  },
+  "coalump": {
+   "grid": "fd81d3db4f863bc0",
+   "svg48": "1fb643a739a5502e"
+  },
+  "kilnback": {
+   "grid": "b820827ece043105",
+   "svg48": "08464536abc2d0cd"
+  },
+  "scorchub": {
+   "grid": "bc9f829306aab2ec",
+   "svg48": "10089ddb3cdb0a0f"
+  },
+  "embadger": {
+   "grid": "58121c4d8979b369",
+   "svg48": "1d2202ab16d5bcfb"
+  },
+  "singecat": {
+   "grid": "6a1ccd985738d9c5",
+   "svg48": "c76bb44fdcec1423"
+  },
+  "ashpeck": {
+   "grid": "fbc31b6d8d7532f5",
+   "svg48": "d33af4bebb36f4f2"
+  },
+  "fusebug": {
+   "grid": "bb03c344bf7bd0a5",
+   "svg48": "6acbd092101349f4"
+  },
+  "brookit": {
+   "grid": "efb668486679af4f",
+   "svg48": "18a35f73c2bbec2d"
+  },
+  "ottrip": {
+   "grid": "9c58b59a6ef7ff8e",
+   "svg48": "1b28a23cbb8ff492"
+  },
+  "minnodart": {
+   "grid": "4819f8b4742efefa",
+   "svg48": "00933ac5d516ab10"
+  },
+  "kelpup": {
+   "grid": "e2c9d592a3e8bda2",
+   "svg48": "36c7b4bd3c5c0b8d"
+  },
+  "barnaclod": {
+   "grid": "509ac9975a2bfe3d",
+   "svg48": "9840085712100426"
+  },
+  "sploshog": {
+   "grid": "fa6f5b740abb9c9a",
+   "svg48": "ad126752b01689f7"
+  },
+  "newtide": {
+   "grid": "6429864b57a01801",
+   "svg48": "3f9ee1529643125f"
+  },
+  "pondskip": {
+   "grid": "de8aa4d40c7509ec",
+   "svg48": "e191c14042c81372"
+  },
+  "wadelet": {
+   "grid": "a534671b115affdf",
+   "svg48": "34f1b81e84a426a2"
+  },
+  "bubblop": {
+   "grid": "28995a975e958240",
+   "svg48": "7f6b874b1018ef6d"
+  },
+  "acornet": {
+   "grid": "684762dace757703",
+   "svg48": "5ff0c35e1b4948e6"
+  },
+  "thistlehop": {
+   "grid": "5a509d8803f03435",
+   "svg48": "5c3167595ac72c3a"
+  },
+  "fernflit": {
+   "grid": "14e10137eaa798c0",
+   "svg48": "57e2464923050958"
+  },
+  "stumpkin": {
+   "grid": "74f93abc2fc83683",
+   "svg48": "97319748731fdc9e"
+  },
+  "trunkle": {
+   "grid": "d6e76f1d19112600",
+   "svg48": "27bd37900845dbea"
+  },
+  "briarhog": {
+   "grid": "b6d4c27c76f10cae",
+   "svg48": "2a26cdf3b035c855"
+  },
+  "barkbug": {
+   "grid": "5a8091c013e0bc7b",
+   "svg48": "63dd7cdd6eb0f98b"
+  },
+  "fawnleaf": {
+   "grid": "edaf0bd5cd739135",
+   "svg48": "bb45494c0ddd0815"
+  },
+  "ivyowl": {
+   "grid": "632731863688e7f0",
+   "svg48": "4e00a2e17c900726"
+  },
+  "podling": {
+   "grid": "b76ae7784a2b32a3",
+   "svg48": "26a999ca31e2202c"
+  },
+  "ampette": {
+   "grid": "d0b5d92d3d8de336",
+   "svg48": "342ab81aa2413d8d"
+  },
+  "fuzzvolt": {
+   "grid": "faa754fa26f6da61",
+   "svg48": "3446f460c3f63464"
+  },
+  "boltdart": {
+   "grid": "98681fadce08ee31",
+   "svg48": "f05cd8dabe49b2de"
+  },
+  "wattram": {
+   "grid": "c22a7ab490069134",
+   "svg48": "6d4fe38248a67a84"
+  },
+  "capaclod": {
+   "grid": "578261d525951de8",
+   "svg48": "2d2ee8f496dd37d2"
+  },
+  "zaphog": {
+   "grid": "61d2358a058bedea",
+   "svg48": "ee5a0a64e17f0712"
+  },
+  "staticub": {
+   "grid": "108e56757fe81898",
+   "svg48": "82c9104249b9e0a3"
+  },
+  "neonnewt": {
+   "grid": "f690d01e18c324e8",
+   "svg48": "0ad5ca250f6c8d14"
+  },
+  "buzzhawk": {
+   "grid": "8e67df4eb3a185d0",
+   "svg48": "25df53c35d0ca704"
+  },
+  "wattlet": {
+   "grid": "4758b506e1b3a75c",
+   "svg48": "67dafc57bee0c85e"
+  },
+  "slatelet": {
+   "grid": "f0a8a0d48cc27283",
+   "svg48": "7a332b544d2c532d"
+  },
+  "gravelpup": {
+   "grid": "1833d1a31f1d2c82",
+   "svg48": "d96ff6440d8f8bf1"
+  },
+  "mudlark": {
+   "grid": "fb4a2cc61e81da9b",
+   "svg48": "f010a6dbba708874"
+  },
+  "clodhorn": {
+   "grid": "d730eeece82d1738",
+   "svg48": "581069e23f291839"
+  },
+  "cobblump": {
+   "grid": "3fae5e8963f9d8f0",
+   "svg48": "4421e74fbd4434d5"
+  },
+  "quarrox": {
+   "grid": "337cfb3d7a05f789",
+   "svg48": "441f6af03f5073fa"
+  },
+  "diggit": {
+   "grid": "8b94195ae7b962e0",
+   "svg48": "6471085e378161c2"
+  },
+  "pumicat": {
+   "grid": "c0062cbb97daac65",
+   "svg48": "93275d979eb625a2"
+  },
+  "siltadillo": {
+   "grid": "1f4dfe872b96e74c",
+   "svg48": "47ae635ced7ccd94"
+  },
+  "geodot": {
+   "grid": "741ba5c29c902c93",
+   "svg48": "1b3fc45c65b7249f"
+  },
+  "chillip": {
+   "grid": "b84e8201dd65c1d1",
+   "svg48": "e33608032b12610c"
+  },
+  "skiddle": {
+   "grid": "3d0d4e23486cb096",
+   "svg48": "522f6e22c4f59af1"
+  },
+  "snowdart": {
+   "grid": "5b89800bfcb752c2",
+   "svg48": "70d0c3f4a933bb85"
+  },
+  "walrump": {
+   "grid": "75a281225e8b31e0",
+   "svg48": "49493aa9169d03cd"
+  },
+  "floebear": {
+   "grid": "e32faf713c37236e",
+   "svg48": "a86a1a16416604cb"
+  },
+  "rimeboar": {
+   "grid": "7a9d49b06e80916e",
+   "svg48": "73eb29ebf0b2dc3b"
+  },
+  "hoarcub": {
+   "grid": "d34a1e2fcb614fe2",
+   "svg48": "fb65a2e55e31bf6b"
+  },
+  "shiverkit": {
+   "grid": "6091b9b7123166b1",
+   "svg48": "9a16aef53ea54132"
+  },
+  "ptarmilet": {
+   "grid": "6163acd88c58719f",
+   "svg48": "0fb76798ab252963"
+  },
+  "cubeling": {
+   "grid": "2e7c903319496d97",
+   "svg48": "bc81bb4bb694939e"
+  },
+  "breezle": {
+   "grid": "5e7fefb73f1839b7",
+   "svg48": "6380cb36e18a06f2"
+  },
+  "whirlhare": {
+   "grid": "785c977a7dd950e2",
+   "svg48": "f87cf7624e2aae09"
+  },
+  "kitelet": {
+   "grid": "2ef2b895a5ad58f3",
+   "svg48": "45df30f2e5df6363"
+  },
+  "sailmoth": {
+   "grid": "1ad4dbc744dbe424",
+   "svg48": "abb0d2b598eeea30"
+  },
+  "nimbulk": {
+   "grid": "76a6287e44d29e34",
+   "svg48": "13531f2409a35690"
+  },
+  "galebuck": {
+   "grid": "e8fd784e27c396dd",
+   "svg48": "1dde1570deda60d1"
+  },
+  "windrook": {
+   "grid": "e15c1800ee1986d7",
+   "svg48": "836cb6f6ba47f09e"
+  },
+  "swallit": {
+   "grid": "f21170f4258b151b",
+   "svg48": "ac21ed2652a25dc8"
+  },
+  "pinwhirl": {
+   "grid": "db2f81885043aafc",
+   "svg48": "8236801ff900a2fe"
+  },
+  "gustpuff": {
+   "grid": "ce513711af40a712",
+   "svg48": "d44c48e24478c8e6"
+  },
+  "murkit": {
+   "grid": "9738dacc6d56afb4",
+   "svg48": "c50888c2eac10c16"
+  },
+  "minkurk": {
+   "grid": "acdc8191de3a5216",
+   "svg48": "f26ad8a1c303f8bf"
+  },
+  "batwhisk": {
+   "grid": "75bc788e5522e8bf",
+   "svg48": "596d45110e302218"
+  },
+  "gloamtoad": {
+   "grid": "b49ace02829ff87d",
+   "svg48": "9d1fbeb70bf2664c"
+  },
+  "umbruin": {
+   "grid": "b7b1f896784e4b1c",
+   "svg48": "7eeabe7e6f21b164"
+  },
+  "vexhound": {
+   "grid": "7b0889464c7074e3",
+   "svg48": "d362e6ff7923ab7d"
+  },
+  "crowlurk": {
+   "grid": "78b0fc75bb54b89f",
+   "svg48": "c1b1d8cfd8ceddbe"
+  },
+  "spindlet": {
+   "grid": "acad38a3bdca6b74",
+   "svg48": "5f90625ae4d3fb17"
+  },
+  "gloomoth": {
+   "grid": "a2b9e51b1d830efe",
+   "svg48": "5e7dbd2be8a88da6"
+  },
+  "inklet": {
+   "grid": "e2d7067be0b3d9c2",
+   "svg48": "123e056f837cd475"
+  },
+  "beamlet": {
+   "grid": "cf9301cd53a78ac1",
+   "svg48": "2bef7b016b85ec61"
+  },
+  "glowhare": {
+   "grid": "58e1f9256146a971",
+   "svg48": "8668c5ef400d482d"
+  },
+  "dawnfinch": {
+   "grid": "24beb144425bdb23",
+   "svg48": "945d04f1143b455a"
+  },
+  "lanternox": {
+   "grid": "400a3469d305adf2",
+   "svg48": "c2bc91b81c6f4404"
+  },
+  "waxwick": {
+   "grid": "bcb3e9eecbc0a6c8",
+   "svg48": "9e2f622805604812"
+  },
+  "solram": {
+   "grid": "da0acdee4c9e785b",
+   "svg48": "0f9d860e513a473e"
+  },
+  "lumbear": {
+   "grid": "0e449a644b509f24",
+   "svg48": "cb98285efa41a646"
+  },
+  "glarefly": {
+   "grid": "b50cb9f67de562fc",
+   "svg48": "cdf44b68d94c5aab"
+  },
+  "dazzlet": {
+   "grid": "a7fed99a930f7554",
+   "svg48": "ca2fd2c0fc11e777"
+  },
+  "twinklet": {
+   "grid": "998df2d212f510df",
+   "svg48": "81a65cacf063e61e"
+  },
+  "rivetto": {
+   "grid": "2cf5576e60736ac0",
+   "svg48": "775451aa9b02a185"
+  },
+  "tinhare": {
+   "grid": "250c3a5940435998",
+   "svg48": "31fc7c067fe5756e"
+  },
+  "springlet": {
+   "grid": "38c9e85a3a3dbb4b",
+   "svg48": "1316202794a2c3d3"
+  },
+  "anvilox": {
+   "grid": "9e08bad333541e77",
+   "svg48": "592c0500773b0142"
+  },
+  "kettlump": {
+   "grid": "1c034d37d1f410fa",
+   "svg48": "4bf8049c459e0c53"
+  },
+  "ingotusk": {
+   "grid": "d97de2021bbace0c",
+   "svg48": "803c5977b95075a2"
+  },
+  "brasshound": {
+   "grid": "3900d05869929018",
+   "svg48": "80eac9c98aa2a241"
+  },
+  "gyroflit": {
+   "grid": "5c200d7afc0cffb3",
+   "svg48": "483315396743efe8"
+  },
+  "clockcrow": {
+   "grid": "7dfd97f344c35719",
+   "svg48": "68d68cfc35d727f1"
+  },
+  "washerling": {
+   "grid": "77a7937ef683a56e",
+   "svg48": "cf55f606a8437210"
+  },
+  "mindle": {
+   "grid": "9482e4fb63a00355",
+   "svg48": "26fd612db7ea753e"
+  },
+  "dreamhop": {
+   "grid": "451eb8e8a9747673",
+   "svg48": "7489b5065a5c5052"
+  },
+  "trancefin": {
+   "grid": "38377ece7456721f",
+   "svg48": "59432ca29d94d152"
+  },
+  "pondermoose": {
+   "grid": "b0b01b57d20b3938",
+   "svg48": "c5e19c3ff56734c9"
+  },
+  "thinkump": {
+   "grid": "8e591c8122e139cb",
+   "svg48": "0085512dd6d2c410"
+  },
+  "omenox": {
+   "grid": "e63bee06ebd4fcc4",
+   "svg48": "71673ad087332085"
+  },
+  "seerling": {
+   "grid": "2dcc64282527d4ce",
+   "svg48": "3b857129d99dcfbf"
+  },
+  "riddlet": {
+   "grid": "93fb687426d45c84",
+   "svg48": "6951524ca08dc052"
+  },
+  "gazeling": {
+   "grid": "7c0fe02f6e7e404e",
+   "svg48": "da52b24c2b2f3979"
+  },
+  "orblet": {
+   "grid": "d0c08426515579de",
+   "svg48": "d85536457df2c447"
+  },
+  "scalekin": {
+   "grid": "b1108867ed41ea68",
+   "svg48": "44c6c0b9ace79da0"
+  },
+  "raptlet": {
+   "grid": "9b5fc4a5d51d410c",
+   "svg48": "22568ae5bfb3cc5f"
+  },
+  "glidrake": {
+   "grid": "23422820c99c065b",
+   "svg48": "82f04368507ccb7f"
+  },
+  "crestback": {
+   "grid": "c7033b870177c247",
+   "svg48": "953cb9bfb195c62a"
+  },
+  "bulwyrm": {
+   "grid": "272a4142d82d3f8d",
+   "svg48": "6017b04f94a0a8e8"
+  },
+  "gnashlet": {
+   "grid": "0e9019fff42afd29",
+   "svg48": "bdc57b4783b90e0a"
+  },
+  "drakhound": {
+   "grid": "9cfee39f470f4440",
+   "svg48": "c6a8b1f04047a393"
+  },
+  "wyvlet": {
+   "grid": "0aa2ec624ea2e60a",
+   "svg48": "1f7478d80884e109"
+  },
+  "skinklet": {
+   "grid": "24951aad7ce719c1",
+   "svg48": "8e1b9b8996f9c886"
+  },
+  "eggling": {
+   "grid": "331f8cc12faff3cc",
+   "svg48": "45f3d982d7affc57"
+  }
+ }
+}

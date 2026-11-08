@@ -1,8 +1,11 @@
 {
   "files": {
     "data/abilities.json": "025944502e3d945d088ae93603508b416e854a356dc6b8307fcac1b1d068eb4b",
-    "data/families.json": "8bcf9846935f322d4cb65dc941dc5aa1ba2f2e5996388c9fb3426109881d3ef3",
-    "data/forms.json": "3358961c66b77cb924011ff4bcd415a6a4b7e04c6baf230f2b18ebef0778c11b",
-    "data/rules.json": "e97bc3addb49e515f8a7085b2c9bcef0d11280223c4f0132ac8c5646fd6c13cd"
+    "data/basic-art-v2.json": "2f649ac6e2dc2ef4bee24e139f2b17d6136ddf6c9072d33094fc3e465822d19d",
+    "data/basic-authoring.json": "a32b56f88c374651554795303b2c26998d3f7ab6c458c55a37e7e5d47006949c",
+    "data/families.json": "233cddb947f7db6e4888ea6a9b1173656b5710f875e7a80cc1d66bc5662af57b",
+    "data/forms.json": "7c8f2ffd0acac9f8abb318a40bafb2e414f053eaa26c8c48dbcb3ab6491d784d",
+    "data/original-baseline.json": "3fd01e749514acafbd56b529b43dbc767f2144062881006bdd29af24f62cd9a3",
+    "data/rules.json": "bc49ca51b70a3c888a0cfa7ba8e4fd69934034ea61b5d9f7a21a940455a24c5f"
   }
 }

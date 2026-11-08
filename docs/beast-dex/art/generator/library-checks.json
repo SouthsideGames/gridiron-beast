@@ -1,0 +1,492 @@
+{
+ "featureFixtures": {
+  "ears": {
+   "structure": "compact_quadruped",
+   "variant": "pointed"
+  },
+  "horns": {
+   "structure": "compact_quadruped",
+   "variant": "short"
+  },
+  "antlers": {
+   "structure": "compact_quadruped",
+   "variant": "forked"
+  },
+  "crest": {
+   "structure": "compact_quadruped",
+   "variant": "spike"
+  },
+  "frill": {
+   "structure": "compact_quadruped",
+   "variant": "fan"
+  },
+  "antennae": {
+   "structure": "heavy_quadruped",
+   "variant": "straight"
+  },
+  "muzzle": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "beak": {
+   "structure": "knuckle_walker",
+   "variant": "short"
+  },
+  "tusks": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "fangs": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "whiskers": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "brows": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "mane": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "ridge": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "spines": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "dorsal_fin": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "hump": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "shell": {
+   "structure": "compact_quadruped",
+   "variant": "smooth"
+  },
+  "claws": {
+   "structure": "compact_quadruped",
+   "variant": "straight"
+  },
+  "hooves": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "paws": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "pincers": {
+   "structure": "compact_upright",
+   "variant": "open"
+  },
+  "flippers": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "webbed_feet": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "tufted_tail": {
+   "structure": "compact_upright",
+   "variant": "straight"
+  },
+  "paddle_tail": {
+   "structure": "compact_upright",
+   "variant": "straight"
+  },
+  "curled_tail": {
+   "structure": "compact_quadruped",
+   "variant": "loose"
+  },
+  "club_tail": {
+   "structure": "compact_upright",
+   "variant": "straight"
+  },
+  "forked_tail": {
+   "structure": "compact_upright",
+   "variant": "straight"
+  },
+  "finned_tail": {
+   "structure": "compact_upright",
+   "variant": "straight"
+  },
+  "feathered_wings": {
+   "structure": "compact_quadruped",
+   "variant": "folded"
+  },
+  "membrane_wings": {
+   "structure": "compact_quadruped",
+   "variant": "folded"
+  },
+  "insect_wings": {
+   "structure": "compact_quadruped",
+   "variant": "folded"
+  },
+  "finlike_wings": {
+   "structure": "compact_quadruped",
+   "variant": "folded"
+  },
+  "leaf_wings": {
+   "structure": "compact_quadruped",
+   "variant": "folded"
+  },
+  "reduced_wings": {
+   "structure": "compact_quadruped",
+   "variant": "folded"
+  },
+  "plates": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "scales": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "fur_tufts": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "crystal_growths": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "stone_segments": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "metal_panels": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "leaves": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "vines": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "buds": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "flowers": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "mushrooms": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "root_feet": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "flame_tufts": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "water_sacs": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "frost_shards": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "static_prongs": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "light_orbs": {
+   "structure": "compact_upright",
+   "variant": null
+  },
+  "shadow_wisps": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "halo": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "lure": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "cheek_pouches": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "shoulder_shells": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "vent_fins": {
+   "structure": "compact_quadruped",
+   "variant": null
+  },
+  "orbiting_masses": {
+   "structure": "compact_upright",
+   "variant": null
+  }
+ },
+ "variantSets": {
+  "ears": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "horns": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "antlers": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "crest": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "frill": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "antennae": {
+   "structure": "heavy_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "beak": {
+   "structure": "knuckle_walker",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "shell": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "claws": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "pincers": {
+   "structure": "compact_upright",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "tufted_tail": {
+   "structure": "compact_upright",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "paddle_tail": {
+   "structure": "compact_upright",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "curled_tail": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "club_tail": {
+   "structure": "compact_upright",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "forked_tail": {
+   "structure": "compact_upright",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "finned_tail": {
+   "structure": "compact_upright",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "feathered_wings": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "membrane_wings": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "insect_wings": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "finlike_wings": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "leaf_wings": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  },
+  "reduced_wings": {
+   "structure": "compact_quadruped",
+   "distinctVisible": 3,
+   "of": 3
+  }
+ },
+ "controls": {
+  "headSize": {
+   "structure": "compact_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "headShape": {
+   "structure": "compact_upright",
+   "values": 6,
+   "distinct": 6
+  },
+  "headPlacement": {
+   "structure": "compact_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "muzzleLength": {
+   "structure": "compact_upright",
+   "values": 3,
+   "distinct": 3
+  },
+  "neckLength": {
+   "structure": "heavy_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "torsoLength": {
+   "structure": "compact_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "torsoWidth": {
+   "structure": "compact_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "backProfile": {
+   "structure": "heavy_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "bellyProfile": {
+   "structure": "compact_quadruped",
+   "values": 2,
+   "distinct": 2
+  },
+  "limbLength": {
+   "structure": "compact_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "limbThickness": {
+   "structure": "compact_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "stanceWidth": {
+   "structure": "compact_quadruped",
+   "values": 3,
+   "distinct": 3
+  },
+  "footShape": {
+   "structure": "compact_quadruped",
+   "values": 4,
+   "distinct": 4
+  },
+  "tailLength": {
+   "structure": "running_avian",
+   "values": 3,
+   "distinct": 3
+  },
+  "tailThickness": {
+   "structure": "hopping",
+   "values": 3,
+   "distinct": 3
+  },
+  "tailCurve": {
+   "structure": "compact_upright",
+   "values": 3,
+   "distinct": 3
+  },
+  "wingSpan": {
+   "structure": "perching_avian",
+   "values": 3,
+   "distinct": 3
+  },
+  "wingFold": {
+   "structure": "compact_quadruped",
+   "values": 2,
+   "distinct": 2
+  },
+  "shellShape": {
+   "structure": "shelled",
+   "values": 3,
+   "distinct": 3
+  }
+ },
+ "face": {
+  "eyeShape": {
+   "structure": "compact_upright",
+   "values": 5,
+   "distinct": 5
+  },
+  "eyeSpacing": {
+   "structure": "compact_upright",
+   "values": 3,
+   "distinct": 3
+  },
+  "mouth": {
+   "structure": "compact_upright",
+   "values": 5,
+   "distinct": 5
+  }
+ },
+ "markings": {
+  "pattern": {
+   "structure": "compact_quadruped",
+   "values": 8,
+   "distinct": 8
+  }
+ },
+ "failures": [],
+ "compatibilityTally": {
+  "features": {
+   "ok": 8070,
+   "invisible": 172,
+   "too_big": 253,
+   "unsupported": 505
+  },
+  "controls": {
+   "ok": 2516,
+   "unsupported": 2930,
+   "invisible": 425,
+   "too_big": 129
+  }
+ }
+}

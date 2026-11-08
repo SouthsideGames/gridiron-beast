@@ -1,0 +1,2050 @@
+{
+ "note": "Generator v2 art recipes for the 120 Basic families (pending owner final review). Keyed by family id; name, type, position, size, colours and gameplay data come from basic-authoring.json / families.json and are unchanged. A recipe's own `colors` overrides the family palette only where noted (Pondskip, for field contrast). The game does not read this file yet; the current Basic art (commit 6abcf3b baseline) is unchanged.",
+ "generator": "v2",
+ "recipes": [
+  {
+   "id": "kindlet",
+   "structure": "compact_upright",
+   "pose": "forward",
+   "proportions": {
+    "headSize": "large",
+    "limbLength": "short",
+    "headShape": "wedge"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "drooping"
+    },
+    {
+     "id": "flame_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "large",
+    "mouth": "open"
+   },
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "charbun",
+   "structure": "hopping",
+   "pose": "braced",
+   "proportions": {
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "flame_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   },
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "sparkwick",
+   "structure": "floating",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "insect_wings",
+     "variant": "spread"
+    },
+    {
+     "id": "flame_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "coalump",
+   "structure": "amorphous",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "stone_segments"
+    },
+    {
+     "id": "flame_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "kilnback",
+   "structure": "shelled",
+   "pose": "braced",
+   "proportions": {
+    "shellShape": "angular"
+   },
+   "features": [
+    {
+     "id": "vent_fins"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "scorchub",
+   "structure": "knuckle_walker",
+   "pose": "forward",
+   "proportions": {
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "horns",
+     "variant": "swept"
+    },
+    {
+     "id": "flame_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow",
+    "mouth": "grin"
+   }
+  },
+  {
+   "id": "embadger",
+   "structure": "low_elongated_quadruped",
+   "pose": "forward",
+   "proportions": {
+    "limbThickness": "thick"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "claws",
+     "variant": "hooked"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes",
+    "color": "dark"
+   }
+  },
+  {
+   "id": "singecat",
+   "structure": "compact_quadruped",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "whiskers"
+    },
+    {
+     "id": "tufted_tail",
+     "variant": "raised"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "ashpeck",
+   "structure": "perching_avian",
+   "pose": "forward",
+   "proportions": {
+    "wingSpan": "wide"
+   },
+   "features": [
+    {
+     "id": "beak",
+     "variant": "hooked"
+    },
+    {
+     "id": "crest",
+     "variant": "spike"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "fusebug",
+   "structure": "insectoid",
+   "pose": "neutral",
+   "proportions": {
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "clubbed"
+    },
+    {
+     "id": "flame_tufts"
+    }
+   ]
+  },
+  {
+   "id": "brookit",
+   "structure": "elongated_serpent",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "crest",
+     "variant": "fan"
+    },
+    {
+     "id": "dorsal_fin"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   }
+  },
+  {
+   "id": "ottrip",
+   "structure": "compact_quadruped",
+   "pose": "neutral",
+   "proportions": {
+    "torsoLength": "long",
+    "limbLength": "short",
+    "footShape": "flat"
+   },
+   "features": [
+    {
+     "id": "whiskers"
+    },
+    {
+     "id": "paddle_tail",
+     "variant": "straight"
+    }
+   ],
+   "face": {
+    "mouth": "smile"
+   }
+  },
+  {
+   "id": "minnodart",
+   "structure": "elongated_serpent",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "dorsal_fin"
+    },
+    {
+     "id": "finlike_wings",
+     "variant": "spread"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes"
+   }
+  },
+  {
+   "id": "kelpup",
+   "structure": "coiled_serpent",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "vines"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   },
+   "markings": {
+    "pattern": "backstripe"
+   }
+  },
+  {
+   "id": "barnaclod",
+   "structure": "shelled",
+   "pose": "alert",
+   "proportions": {
+    "shellShape": "ridged"
+   },
+   "features": [
+    {
+     "id": "buds"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   },
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "sploshog",
+   "structure": "amphibian",
+   "pose": "forward",
+   "proportions": {
+    "torsoWidth": "wide"
+   },
+   "features": [
+    {
+     "id": "tusks"
+    },
+    {
+     "id": "water_sacs"
+    }
+   ]
+  },
+  {
+   "id": "newtide",
+   "structure": "amphibian",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "crest",
+     "variant": "fan"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "pondskip",
+   "structure": "insectoid",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "straight"
+    },
+    {
+     "id": "water_sacs"
+    }
+   ],
+   "colors": [
+    "#78b4ee",
+    "#e6fff8"
+   ]
+  },
+  {
+   "id": "wadelet",
+   "structure": "running_avian",
+   "pose": "forward",
+   "proportions": {
+    "limbLength": "long"
+   },
+   "features": [
+    {
+     "id": "beak",
+     "variant": "long"
+    },
+    {
+     "id": "crest",
+     "variant": "plume"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "bubblop",
+   "structure": "jellyfish",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "water_sacs"
+    }
+   ],
+   "face": {
+    "eyeShape": "large",
+    "mouth": "open"
+   }
+  },
+  {
+   "id": "acornet",
+   "structure": "compact_upright",
+   "pose": "braced",
+   "proportions": {
+    "headShape": "flattened",
+    "limbLength": "short",
+    "headSize": "small"
+   },
+   "features": [
+    {
+     "id": "leaves"
+    },
+    {
+     "id": "brows"
+    }
+   ]
+  },
+  {
+   "id": "thistlehop",
+   "structure": "hopping",
+   "pose": "forward",
+   "proportions": {
+    "limbLength": "long"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "spines"
+    }
+   ]
+  },
+  {
+   "id": "fernflit",
+   "structure": "floating",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "leaf_wings",
+     "variant": "raised"
+    },
+    {
+     "id": "antennae",
+     "variant": "curled"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "stumpkin",
+   "structure": "plant_bodied",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "mushrooms"
+    },
+    {
+     "id": "buds"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "trunkle",
+   "structure": "heavy_quadruped",
+   "pose": "alert",
+   "proportions": {
+    "limbLength": "long"
+   },
+   "features": [
+    {
+     "id": "tusks"
+    },
+    {
+     "id": "leaves"
+    }
+   ]
+  },
+  {
+   "id": "briarhog",
+   "structure": "compact_quadruped",
+   "pose": "braced",
+   "proportions": {
+    "torsoLength": "short"
+   },
+   "features": [
+    {
+     "id": "spines"
+    },
+    {
+     "id": "vines"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "barkbug",
+   "structure": "segmented_crawler",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "straight"
+    },
+    {
+     "id": "plates"
+    }
+   ]
+  },
+  {
+   "id": "fawnleaf",
+   "structure": "long_legged_quadruped",
+   "pose": "alert",
+   "proportions": {
+    "stanceWidth": "narrow",
+    "neckLength": "short"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "drooping"
+    },
+    {
+     "id": "leaves"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   },
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "ivyowl",
+   "structure": "perching_avian",
+   "pose": "neutral",
+   "proportions": {
+    "stanceWidth": "narrow"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "vines"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   }
+  },
+  {
+   "id": "podling",
+   "structure": "plant_bodied",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "buds"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "ampette",
+   "structure": "insectoid",
+   "pose": "forward",
+   "proportions": {
+    "torsoLength": "short"
+   },
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "clubbed"
+    },
+    {
+     "id": "static_prongs"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "fuzzvolt",
+   "structure": "hopping",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "static_prongs"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes"
+   }
+  },
+  {
+   "id": "boltdart",
+   "structure": "long_legged_quadruped",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "tufted_tail",
+     "variant": "straight"
+    },
+    {
+     "id": "static_prongs"
+    }
+   ]
+  },
+  {
+   "id": "wattram",
+   "structure": "compact_quadruped",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "curled"
+    },
+    {
+     "id": "fur_tufts"
+    },
+    {
+     "id": "static_prongs"
+    }
+   ]
+  },
+  {
+   "id": "capaclod",
+   "structure": "construct",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "metal_panels"
+    },
+    {
+     "id": "static_prongs"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "zaphog",
+   "structure": "heavy_upright",
+   "pose": "forward",
+   "proportions": {
+    "headPlacement": "high"
+   },
+   "features": [
+    {
+     "id": "tusks"
+    },
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "static_prongs"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "staticub",
+   "structure": "compact_upright",
+   "pose": "neutral",
+   "proportions": {
+    "headSize": "large"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "drooping"
+    },
+    {
+     "id": "static_prongs"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   }
+  },
+  {
+   "id": "neonnewt",
+   "structure": "low_elongated_quadruped",
+   "pose": "neutral",
+   "proportions": {
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "light_orbs"
+    }
+   ],
+   "markings": {
+    "pattern": "backstripe"
+   }
+  },
+  {
+   "id": "buzzhawk",
+   "structure": "perching_avian",
+   "pose": "neutral",
+   "proportions": {
+    "limbLength": "long"
+   },
+   "features": [
+    {
+     "id": "beak",
+     "variant": "hooked"
+    },
+    {
+     "id": "static_prongs"
+    },
+    {
+     "id": "feathered_wings",
+     "variant": "raised"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "wattlet",
+   "structure": "floating",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "insect_wings",
+     "variant": "spread"
+    },
+    {
+     "id": "antennae",
+     "variant": "straight"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   }
+  },
+  {
+   "id": "slatelet",
+   "structure": "construct",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "stone_segments"
+    }
+   ]
+  },
+  {
+   "id": "gravelpup",
+   "structure": "compact_quadruped",
+   "pose": "forward",
+   "proportions": {
+    "headSize": "large"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "drooping"
+    },
+    {
+     "id": "stone_segments"
+    }
+   ],
+   "face": {
+    "mouth": "smile"
+   }
+  },
+  {
+   "id": "mudlark",
+   "structure": "running_avian",
+   "pose": "braced",
+   "proportions": {
+    "torsoWidth": "wide"
+   },
+   "features": [
+    {
+     "id": "beak",
+     "variant": "long"
+    },
+    {
+     "id": "crest",
+     "variant": "fan"
+    }
+   ],
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "clodhorn",
+   "structure": "heavy_quadruped",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "cobblump",
+   "structure": "multi_bodied",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "stone_segments"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   },
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "quarrox",
+   "structure": "heavy_quadruped",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    },
+    {
+     "id": "plates"
+    },
+    {
+     "id": "hump"
+    }
+   ]
+  },
+  {
+   "id": "diggit",
+   "structure": "burrowing",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "claws",
+     "variant": "hooked"
+    },
+    {
+     "id": "whiskers"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "pumicat",
+   "structure": "low_elongated_quadruped",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "tufted_tail",
+     "variant": "curled"
+    }
+   ],
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "siltadillo",
+   "structure": "burrowing",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "plates"
+    }
+   ]
+  },
+  {
+   "id": "geodot",
+   "structure": "construct",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "crystal_growths"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "chillip",
+   "structure": "running_avian",
+   "pose": "forward",
+   "proportions": {
+    "headSize": "large",
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "crest",
+     "variant": "plume"
+    },
+    {
+     "id": "frost_shards"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "skiddle",
+   "structure": "flat_bodied",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   }
+  },
+  {
+   "id": "snowdart",
+   "structure": "low_elongated_quadruped",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "tufted_tail",
+     "variant": "straight"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes"
+   }
+  },
+  {
+   "id": "walrump",
+   "structure": "amorphous",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "tusks"
+    },
+    {
+     "id": "whiskers"
+    },
+    {
+     "id": "flippers"
+    }
+   ]
+  },
+  {
+   "id": "floebear",
+   "structure": "heavy_upright",
+   "pose": "braced",
+   "proportions": {
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "frost_shards"
+    }
+   ]
+  },
+  {
+   "id": "rimeboar",
+   "structure": "heavy_quadruped",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "tusks"
+    },
+    {
+     "id": "frost_shards"
+    }
+   ]
+  },
+  {
+   "id": "hoarcub",
+   "structure": "knuckle_walker",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "fangs"
+    },
+    {
+     "id": "fur_tufts"
+    }
+   ]
+  },
+  {
+   "id": "shiverkit",
+   "structure": "compact_quadruped",
+   "pose": "neutral",
+   "proportions": {
+    "headPlacement": "low"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "tufted_tail",
+     "variant": "curled"
+    }
+   ],
+   "markings": {
+    "pattern": "backstripe"
+   }
+  },
+  {
+   "id": "ptarmilet",
+   "structure": "running_avian",
+   "pose": "neutral",
+   "proportions": {
+    "torsoWidth": "wide"
+   },
+   "features": [
+    {
+     "id": "crest",
+     "variant": "fan"
+    }
+   ],
+   "markings": {
+    "pattern": "mask"
+   }
+  },
+  {
+   "id": "cubeling",
+   "structure": "multi_bodied",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "frost_shards"
+    }
+   ],
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "breezle",
+   "structure": "floating",
+   "pose": "alert",
+   "proportions": {
+    "tailLength": "short"
+   },
+   "features": [
+    {
+     "id": "insect_wings",
+     "variant": "folded"
+    },
+    {
+     "id": "antennae",
+     "variant": "straight"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   }
+  },
+  {
+   "id": "whirlhare",
+   "structure": "hopping",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "curled_tail",
+     "variant": "tight"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "kitelet",
+   "structure": "perching_avian",
+   "pose": "forward",
+   "proportions": {
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "forked_tail",
+     "variant": "straight"
+    },
+    {
+     "id": "crest",
+     "variant": "spike"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes"
+   }
+  },
+  {
+   "id": "sailmoth",
+   "structure": "batlike",
+   "pose": "braced",
+   "proportions": {
+    "wingSpan": "wide"
+   },
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "clubbed"
+    },
+    {
+     "id": "fur_tufts"
+    }
+   ]
+  },
+  {
+   "id": "nimbulk",
+   "structure": "flat_bodied",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "fur_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "galebuck",
+   "structure": "long_legged_quadruped",
+   "pose": "forward",
+   "proportions": {
+    "headPlacement": "high"
+   },
+   "features": [
+    {
+     "id": "antlers",
+     "variant": "branching"
+    }
+   ],
+   "markings": {
+    "pattern": "backstripe"
+   }
+  },
+  {
+   "id": "windrook",
+   "structure": "running_avian",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "beak",
+     "variant": "long"
+    },
+    {
+     "id": "crest",
+     "variant": "fan"
+    },
+    {
+     "id": "feathered_wings",
+     "variant": "spread"
+    }
+   ]
+  },
+  {
+   "id": "swallit",
+   "structure": "perching_avian",
+   "pose": "expressive",
+   "proportions": {
+    "wingSpan": "narrow"
+   },
+   "features": [
+    {
+     "id": "beak",
+     "variant": "hooked"
+    },
+    {
+     "id": "forked_tail",
+     "variant": "raised"
+    }
+   ],
+   "markings": {
+    "pattern": "mask"
+   }
+  },
+  {
+   "id": "pinwhirl",
+   "structure": "multi_bodied",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "insect_wings",
+     "variant": "raised"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes"
+   }
+  },
+  {
+   "id": "gustpuff",
+   "structure": "perching_avian",
+   "pose": "neutral",
+   "proportions": {
+    "bellyProfile": "round",
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "crest",
+     "variant": "fan"
+    }
+   ]
+  },
+  {
+   "id": "murkit",
+   "structure": "compact_upright",
+   "pose": "forward",
+   "proportions": {
+    "limbLength": "short",
+    "headPlacement": "low"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "shadow_wisps"
+    }
+   ],
+   "markings": {
+    "pattern": "mask"
+   }
+  },
+  {
+   "id": "minkurk",
+   "structure": "low_elongated_quadruped",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "shadow_wisps"
+    }
+   ],
+   "markings": {
+    "pattern": "mask"
+   }
+  },
+  {
+   "id": "batwhisk",
+   "structure": "batlike",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "fangs"
+    }
+   ]
+  },
+  {
+   "id": "gloamtoad",
+   "structure": "amphibian",
+   "pose": "neutral",
+   "proportions": {
+    "torsoWidth": "wide"
+   },
+   "features": [
+    {
+     "id": "light_orbs"
+    }
+   ],
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "umbruin",
+   "structure": "knuckle_walker",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "claws",
+     "variant": "large"
+    }
+   ]
+  },
+  {
+   "id": "vexhound",
+   "structure": "long_legged_quadruped",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    },
+    {
+     "id": "fangs"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "crowlurk",
+   "structure": "running_avian",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "beak",
+     "variant": "hooked"
+    },
+    {
+     "id": "crest",
+     "variant": "spike"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   },
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "spindlet",
+   "structure": "arachnid",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "fangs"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "gloomoth",
+   "structure": "batlike",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "curled"
+    },
+    {
+     "id": "fur_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   },
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "inklet",
+   "structure": "tentacled",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "shadow_wisps"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "beamlet",
+   "structure": "floating",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "halo"
+    },
+    {
+     "id": "light_orbs"
+    }
+   ],
+   "face": {
+    "mouth": "smile"
+   }
+  },
+  {
+   "id": "glowhare",
+   "structure": "segmented_crawler",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "clubbed"
+    },
+    {
+     "id": "light_orbs"
+    }
+   ],
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "dawnfinch",
+   "structure": "perching_avian",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "beak",
+     "variant": "hooked"
+    },
+    {
+     "id": "crest",
+     "variant": "fan"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "lanternox",
+   "structure": "heavy_upright",
+   "pose": "neutral",
+   "proportions": {
+    "limbThickness": "thin",
+    "stanceWidth": "wide"
+   },
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    },
+    {
+     "id": "lure"
+    }
+   ]
+  },
+  {
+   "id": "waxwick",
+   "structure": "plant_bodied",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "flame_tufts"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "solram",
+   "structure": "long_limbed_upright",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "lumbear",
+   "structure": "compact_upright",
+   "pose": "neutral",
+   "proportions": {
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "halo"
+    }
+   ]
+  },
+  {
+   "id": "glarefly",
+   "structure": "floating",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "insect_wings",
+     "variant": "spread"
+    },
+    {
+     "id": "lure"
+    }
+   ]
+  },
+  {
+   "id": "dazzlet",
+   "structure": "floating",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "crest",
+     "variant": "fan"
+    },
+    {
+     "id": "light_orbs"
+    }
+   ]
+  },
+  {
+   "id": "twinklet",
+   "structure": "perching_avian",
+   "pose": "expressive",
+   "proportions": {
+    "torsoLength": "short"
+   },
+   "features": [
+    {
+     "id": "crest",
+     "variant": "plume"
+    },
+    {
+     "id": "halo"
+    }
+   ]
+  },
+  {
+   "id": "rivetto",
+   "structure": "shelled",
+   "pose": "alert",
+   "proportions": {
+    "shellShape": "angular",
+    "limbLength": "long"
+   },
+   "features": [
+    {
+     "id": "metal_panels"
+    },
+    {
+     "id": "antennae",
+     "variant": "straight"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "tinhare",
+   "structure": "shelled",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "pointed"
+    }
+   ]
+  },
+  {
+   "id": "springlet",
+   "structure": "segmented_crawler",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "curled"
+    },
+    {
+     "id": "metal_panels"
+    }
+   ],
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "anvilox",
+   "structure": "heavy_quadruped",
+   "pose": "alert",
+   "proportions": {
+    "headShape": "flattened",
+    "torsoLength": "short"
+   },
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    },
+    {
+     "id": "plates"
+    }
+   ]
+  },
+  {
+   "id": "kettlump",
+   "structure": "shelled",
+   "pose": "forward",
+   "proportions": {
+    "shellShape": "smooth",
+    "headSize": "small"
+   },
+   "features": [
+    {
+     "id": "vent_fins"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "ingotusk",
+   "structure": "heavy_quadruped",
+   "pose": "expressive",
+   "proportions": {
+    "headShape": "flattened",
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "tusks"
+    },
+    {
+     "id": "metal_panels"
+    }
+   ]
+  },
+  {
+   "id": "brasshound",
+   "structure": "compact_quadruped",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "drooping"
+    },
+    {
+     "id": "shoulder_shells"
+    }
+   ]
+  },
+  {
+   "id": "gyroflit",
+   "structure": "floating",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "orbiting_masses"
+    },
+    {
+     "id": "antennae",
+     "variant": "straight"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes"
+   }
+  },
+  {
+   "id": "clockcrow",
+   "structure": "long_limbed_upright",
+   "pose": "expressive",
+   "proportions": {
+    "headShape": "beaked"
+   },
+   "features": [
+    {
+     "id": "crest",
+     "variant": "spike"
+    },
+    {
+     "id": "metal_panels"
+    }
+   ],
+   "markings": {
+    "pattern": "backstripe"
+   }
+  },
+  {
+   "id": "washerling",
+   "structure": "shelled",
+   "pose": "neutral",
+   "proportions": {
+    "shellShape": "smooth",
+    "limbLength": "short"
+   },
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "straight"
+    }
+   ]
+  },
+  {
+   "id": "mindle",
+   "structure": "floating",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "antennae",
+     "variant": "clubbed"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "dreamhop",
+   "structure": "jellyfish",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   }
+  },
+  {
+   "id": "trancefin",
+   "structure": "flat_bodied",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "dorsal_fin"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   },
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "pondermoose",
+   "structure": "long_necked_quadruped",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "antlers",
+     "variant": "palmate"
+    }
+   ],
+   "face": {
+    "eyeShape": "sleepy"
+   },
+   "markings": {
+    "pattern": "spots"
+   }
+  },
+  {
+   "id": "thinkump",
+   "structure": "jellyfish",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "brows"
+    }
+   ]
+  },
+  {
+   "id": "omenox",
+   "structure": "elongated_serpent",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "swept"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "seerling",
+   "structure": "long_limbed_upright",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "halo"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "riddlet",
+   "structure": "compact_quadruped",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "ears",
+     "variant": "rounded"
+    },
+    {
+     "id": "curled_tail",
+     "variant": "loose"
+    }
+   ],
+   "markings": {
+    "pattern": "mask"
+   }
+  },
+  {
+   "id": "gazeling",
+   "structure": "long_legged_quadruped",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "curled"
+    },
+    {
+     "id": "ears",
+     "variant": "pointed"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   }
+  },
+  {
+   "id": "orblet",
+   "structure": "multi_bodied",
+   "pose": "neutral",
+   "features": [
+    {
+     "id": "light_orbs"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   }
+  },
+  {
+   "id": "scalekin",
+   "structure": "compact_upright",
+   "pose": "alert",
+   "proportions": {
+    "limbLength": "long"
+   },
+   "features": [
+    {
+     "id": "horns",
+     "variant": "swept"
+    },
+    {
+     "id": "membrane_wings",
+     "variant": "raised"
+    }
+   ]
+  },
+  {
+   "id": "raptlet",
+   "structure": "running_avian",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    },
+    {
+     "id": "tufted_tail",
+     "variant": "straight"
+    }
+   ],
+   "markings": {
+    "pattern": "backstripe"
+   }
+  },
+  {
+   "id": "glidrake",
+   "structure": "batlike",
+   "pose": "expressive",
+   "features": [
+    {
+     "id": "crest",
+     "variant": "spike"
+    }
+   ],
+   "markings": {
+    "pattern": "band"
+   }
+  },
+  {
+   "id": "crestback",
+   "structure": "heavy_upright",
+   "pose": "braced",
+   "proportions": {
+    "limbLength": "long"
+   },
+   "features": [
+    {
+     "id": "crest",
+     "variant": "fan"
+    },
+    {
+     "id": "ridge"
+    },
+    {
+     "id": "club_tail"
+    }
+   ]
+  },
+  {
+   "id": "bulwyrm",
+   "structure": "coiled_serpent",
+   "pose": "braced",
+   "proportions": {
+    "headSize": "large"
+   },
+   "features": [
+    {
+     "id": "horns",
+     "variant": "curled"
+    },
+    {
+     "id": "ridge"
+    }
+   ]
+  },
+  {
+   "id": "gnashlet",
+   "structure": "knuckle_walker",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    },
+    {
+     "id": "fangs"
+    }
+   ],
+   "face": {
+    "mouth": "grin"
+   }
+  },
+  {
+   "id": "drakhound",
+   "structure": "long_legged_quadruped",
+   "pose": "forward",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "swept"
+    },
+    {
+     "id": "ears",
+     "variant": "pointed"
+    }
+   ]
+  },
+  {
+   "id": "wyvlet",
+   "structure": "batlike",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    }
+   ],
+   "face": {
+    "eyeShape": "narrow"
+   }
+  },
+  {
+   "id": "skinklet",
+   "structure": "low_elongated_quadruped",
+   "pose": "alert",
+   "features": [
+    {
+     "id": "crest",
+     "variant": "spike"
+    }
+   ],
+   "markings": {
+    "pattern": "stripes"
+   }
+  },
+  {
+   "id": "eggling",
+   "structure": "amorphous",
+   "pose": "braced",
+   "features": [
+    {
+     "id": "horns",
+     "variant": "short"
+    }
+   ],
+   "face": {
+    "eyeShape": "large"
+   },
+   "markings": {
+    "pattern": "spots"
+   }
+  }
+ ]
+}

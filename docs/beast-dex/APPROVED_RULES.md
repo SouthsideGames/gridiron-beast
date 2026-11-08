@@ -35,7 +35,7 @@ These bands govern potential, not starting ratings. Explicit approved weaknesses
 | Glaciram | Uncommon | Common |
 | Galyx | Uncommon | Rare |
 
-Result: 26 Common, 21 Uncommon, 13 Rare, 12 Legendary; 72 families. Basic has no authored families yet. Existing abilities, positions and Clash archetypes remain unchanged by these amendments.
+Result: 26 Common, 21 Uncommon, 13 Rare, 12 Legendary; 72 families. Basic families were authored afterwards (see BASIC_INDEX.md). Existing abilities, positions and Clash archetypes remain unchanged by these amendments.
 
 Ripplet's ordinary Catching maximum remains 78. Its approved ordinary Speed maximum is now 94, superseding 95. Lumen's starting Accuracy is 52–62 and Awareness 50–60; Cerebrix's starting Awareness is 58–68. Cindruff’s starting Coverage is 8–18, replacing 23–33; its potential remains 23–33. All other table values are in `data/forms.json`.
 
@@ -59,7 +59,7 @@ Temper changes training efficiency, not starting attributes, individual ceilings
 
 Apex: 1% initial generation chance for eligible nonlegendary individuals; level-1 starts 10–15 in every attribute, all potential 99, neutral Temper, ageless. No instant maxing and no training-efficiency multiplier. Apex is separate from Basic/Common/Uncommon/Rare/Legendary. Discovery, presentation and contracts retain the shared specification requirements and unresolved details.
 
-Basic is a rarity below Common, within the same 12 elemental types. Basic families currently have no football or Clash abilities; selected families may gain abilities in future. Individual variation, fixed positions and Temper remain. Design Basic after the original 72. The owner has now confirmed shared type moves, existing Clash archetype perks and all ordinary shared-system/teammate-effect eligibility remain. Only unique football and Clash abilities are absent. The owner approved a creation batch of 120 standalone Basic families, exactly one per type and position; see BASIC_CREATION_BRIEF.md. Those families are not yet authored.
+Basic is a rarity below Common, within the same 12 elemental types. Basic families currently have no football or Clash abilities; selected families may gain abilities in future. Individual variation, fixed positions and Temper remain. Design Basic after the original 72. The owner has now confirmed shared type moves, existing Clash archetype perks and all ordinary shared-system/teammate-effect eligibility remain. Only unique football and Clash abilities are absent. The owner approved a creation batch of 120 standalone Basic families, exactly one per type and position; see BASIC_CREATION_BRIEF.md. The 120 families are authored as design data and art pending owner review (BASIC_INDEX.md); they are not implemented in the game.
 
 ## Ability source precedence
 

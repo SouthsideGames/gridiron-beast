@@ -1654,5 +1654,5576 @@
     "description": "The golden dragon king. Every franchise dreams of one.",
     "profileStatus": "owner-approved ranges; see validation and unresolved items",
     "buildIdentity": "Powerful passer and runner"
+  },
+  {
+    "id": "kindlet",
+    "name": "Kindlet",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, glow",
+      "colors": "#d9542b, #ffcf6b",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "glow"
+        ],
+        "colors": [
+          "#d9542b",
+          "#ffcf6b"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A jittery little kindler who only calms down once the ball is in his paws.",
+    "positionalStrength": "accuracy",
+    "weaknesses": [
+      "arm",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Accurate short-area passer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "charbun",
+    "name": "Charbun",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, tail",
+      "colors": "#7a3426, #ff9a3c",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#7a3426",
+          "#ff9a3c"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A coal-dark rabbit whose speckles glow when it hits the hole.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "strength",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Quick-hitting hole runner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "sparkwick",
+    "name": "Sparkwick",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cool",
+      "features": "wings, antennae",
+      "colors": "#f07a2a, #ffe08a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#f07a2a",
+          "#ffe08a"
+        ]
+      }
+    },
+    "description": "A wick-tailed fly that streaks downfield and forgets to look back for the ball.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "catching",
+      "awareness"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Straight-line deep runner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "coalump",
+    "name": "Coalump",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cute",
+      "features": "plates",
+      "colors": "#4a3a36, #ff7a3a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#4a3a36",
+          "#ff7a3a"
+        ]
+      }
+    },
+    "description": "A warm lump of coal that leans on defenders until they give up.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "speed",
+      "awareness"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Strong in-line blocker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "kilnback",
+    "name": "Kilnback",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "medium",
+      "look": "cool",
+      "features": "plates",
+      "colors": "#a3482c, #f2b45a",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "shelled",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#a3482c",
+          "#f2b45a"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "Carries a little brick kiln on its back and never stops grumbling about the heat.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "awareness",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Power drive blocker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "scorchub",
+    "name": "Scorchub",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns",
+      "colors": "#c2402a, #ffb04a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#c2402a",
+          "#ffb04a"
+        ]
+      }
+    },
+    "description": "An impatient cub that bursts off the line and burns out by the third quarter.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "awareness",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Get-off pass rusher",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "embadger",
+    "name": "Embadger",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, claws",
+      "colors": "#5a4038, #ff8a2a",
+      "pattern": "stripes"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "ears",
+          "claws"
+        ],
+        "colors": [
+          "#5a4038",
+          "#ff8a2a"
+        ],
+        "pattern": "stripes"
+      }
+    },
+    "description": "A smouldering badger who tackles everything, including the wrong thing.",
+    "positionalStrength": "tackling",
+    "weaknesses": [
+      "coverage",
+      "awareness"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Downhill run stuffer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "singecat",
+    "name": "Singecat",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, whiskers, flametail",
+      "colors": "#e0602e, #fff0b0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "whiskers",
+          "flametail"
+        ],
+        "colors": [
+          "#e0602e",
+          "#fff0b0"
+        ]
+      }
+    },
+    "description": "A scorched-whisker alley cat who can run with anyone but rarely turns for the ball.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "awareness",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Recovery-speed corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "ashpeck",
+    "name": "Ashpeck",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "beak, crest",
+      "colors": "#6b5a52, #ff6a3a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#6b5a52",
+          "#ff6a3a"
+        ]
+      }
+    },
+    "description": "A soot-grey bird that dives on ball carriers and drifts out of its zone.",
+    "positionalStrength": "tackling",
+    "weaknesses": [
+      "coverage",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Box-safety tackler",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "fusebug",
+    "name": "Fusebug",
+    "type": "Fire",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "antennae, glow",
+      "colors": "#ff8a3a, #ffd84a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "glow"
+        ],
+        "colors": [
+          "#ff8a3a",
+          "#ffd84a"
+        ]
+      }
+    },
+    "description": "A beetle with a fizzing fuse for antennae and a short, nervous temper.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Short-range kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "brookit",
+    "name": "Brookit",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cute",
+      "features": "fins, crest",
+      "colors": "#3a86c8, #c8ecff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "fins",
+          "crest"
+        ],
+        "colors": [
+          "#3a86c8",
+          "#c8ecff"
+        ]
+      }
+    },
+    "description": "A thoughtful little brook eel that reads the defense before it reads the playbook.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "arm",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Heady game manager",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "ottrip",
+    "name": "Ottrip",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, whiskers, tail",
+      "colors": "#7a5a3e, #9ed8f0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "whiskers",
+          "tail"
+        ],
+        "colors": [
+          "#7a5a3e",
+          "#9ed8f0"
+        ]
+      }
+    },
+    "description": "A slippery otter that wriggles out of arm tackles and never picks up a blitz.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "blocking"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Elusive change-of-pace back",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "minnodart",
+    "name": "Minnodart",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cool",
+      "features": "fins",
+      "colors": "#5ab0d8, #f0f8ff",
+      "pattern": "stripes"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "fins"
+        ],
+        "colors": [
+          "#5ab0d8",
+          "#f0f8ff"
+        ],
+        "pattern": "stripes"
+      }
+    },
+    "description": "A darting minnow with soft hands and very little top speed.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "speed",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sure-handed slot receiver",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "kelpup",
+    "name": "Kelpup",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "medium",
+      "look": "cute",
+      "features": "fins",
+      "colors": "#2e7a6a, #a8e0a0",
+      "pattern": "backstripe"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "fins"
+        ],
+        "colors": [
+          "#2e7a6a",
+          "#a8e0a0"
+        ],
+        "pattern": "backstripe"
+      }
+    },
+    "description": "A kelp-draped sea snake who finds the soft spot in a zone and sits down in it.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "strength",
+      "blocking"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Reliable checkdown target",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "barnaclod",
+    "name": "Barnaclod",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "medium",
+      "look": "cute",
+      "features": "plates",
+      "colors": "#6a7a8a, #d8f0f8",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "shelled",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#6a7a8a",
+          "#d8f0f8"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A barnacle-crusted tortoise that shuffles its feet well but gets pushed back by power.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Light-footed pass protector",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "sploshog",
+    "name": "Sploshog",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "medium",
+      "look": "cool",
+      "features": "tusks",
+      "colors": "#4a7aa0, #e0f4ff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "shelled",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks"
+        ],
+        "colors": [
+          "#4a7aa0",
+          "#e0f4ff"
+        ]
+      }
+    },
+    "description": "A shell-backed river hog that slips blocks with a splash and bounces off ball carriers.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Slippery gap shooter",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "newtide",
+    "name": "Newtide",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cool",
+      "features": "fins, crest",
+      "colors": "#2a9a8a, #ffd06a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "fins",
+          "crest"
+        ],
+        "colors": [
+          "#2a9a8a",
+          "#ffd06a"
+        ]
+      }
+    },
+    "description": "A crested newt that drops into coverage gracefully and tackles like a wet towel.",
+    "positionalStrength": "coverage",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Coverage linebacker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "pondskip",
+    "name": "Pondskip",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cool",
+      "features": "wings",
+      "colors": "#3a6ab0, #a0f0e0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings"
+        ],
+        "colors": [
+          "#3a6ab0",
+          "#a0f0e0"
+        ]
+      }
+    },
+    "description": "A water strider that mirrors every step and bounces off every block.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sticky mirror corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "wadelet",
+    "name": "Wadelet",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "beak, crest",
+      "colors": "#8ab0c8, #ffffff",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#8ab0c8",
+          "#ffffff"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A long-legged wader that patrols the deep middle and hates contact.",
+    "positionalStrength": "coverage",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Deep-zone patroller",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "bubblop",
+    "name": "Bubblop",
+    "type": "Water",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "glow",
+      "colors": "#5ac0e8, #e8fbff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#5ac0e8",
+          "#e8fbff"
+        ]
+      }
+    },
+    "description": "A wobbling bubble who pops a kick straight through, then panics.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "awareness"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Steady extra-point kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "acornet",
+    "name": "Acornet",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "crest",
+      "colors": "#8a6a3a, #a8d870"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#8a6a3a",
+          "#a8d870"
+        ]
+      }
+    },
+    "description": "A stubborn acorn who stands in the pocket and takes the hit.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "speed",
+      "arm"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Tough pocket passer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "thistlehop",
+    "name": "Thistlehop",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, spikes",
+      "colors": "#7a9a4a, #d88ad8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "spikes"
+        ],
+        "colors": [
+          "#7a9a4a",
+          "#d88ad8"
+        ]
+      }
+    },
+    "description": "A prickly hare that carries the ball 25 times and never gets faster.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "speed",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Durable short-yardage back",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "fernflit",
+    "name": "Fernflit",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, antennae",
+      "colors": "#4a8a3a, #e0f0a0",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#4a8a3a",
+          "#e0f0a0"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A fern-winged fly that loves blocking downfield more than catching passes.",
+    "positionalStrength": "blocking",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Blocking receiver",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "stumpkin",
+    "name": "Stumpkin",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cute",
+      "features": "crest",
+      "colors": "#7a5a3a, #8ac860",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#7a5a3a",
+          "#8ac860"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A sprouting stump that plants itself and makes defenders go around.",
+    "positionalStrength": "blocking",
+    "weaknesses": [
+      "speed",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "In-line blocking tight end",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "trunkle",
+    "name": "Trunkle",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "tusks, ears",
+      "colors": "#6a5a4a, #9ad86a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks",
+          "ears"
+        ],
+        "colors": [
+          "#6a5a4a",
+          "#9ad86a"
+        ]
+      }
+    },
+    "description": "A mossy little mammoth who blocks all game without tiring.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Iron-man interior lineman",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "briarhog",
+    "name": "Briarhog",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "spikes",
+      "colors": "#5a6a3a, #c8a0e0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "spikes"
+        ],
+        "colors": [
+          "#5a6a3a",
+          "#c8a0e0"
+        ]
+      }
+    },
+    "description": "A bramble-backed hog that holds its gap all day and never chases.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Two-gap anchor",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "barkbug",
+    "name": "Barkbug",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "medium",
+      "look": "cool",
+      "features": "antennae, plates",
+      "colors": "#6a4a2a, #a0c860"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "antennae",
+          "plates"
+        ],
+        "colors": [
+          "#6a4a2a",
+          "#a0c860"
+        ]
+      }
+    },
+    "description": "A bark-armoured beetle that grinds out tackles and loses every footrace.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "speed",
+      "coverage"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Durable thumper",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "fawnleaf",
+    "name": "Fawnleaf",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears",
+      "colors": "#a07a4a, #d8f0a0",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#a07a4a",
+          "#d8f0a0"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A leaf-spotted fawn that comes up hard in run support and gets beaten deep.",
+    "positionalStrength": "tackling",
+    "weaknesses": [
+      "speed",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Run-support corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "ivyowl",
+    "name": "Ivyowl",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, beak",
+      "colors": "#4a7a4a, #f0e080"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "beak"
+        ],
+        "colors": [
+          "#4a7a4a",
+          "#f0e080"
+        ]
+      }
+    },
+    "description": "An ivy-wrapped owl that plays every snap and never quite catches up.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "speed",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Every-down box safety",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "podling",
+    "name": "Podling",
+    "type": "Nature",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "bulb",
+      "colors": "#6aa84a, #f0d86a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "bulb"
+        ],
+        "colors": [
+          "#6aa84a",
+          "#f0d86a"
+        ]
+      }
+    },
+    "description": "A seed pod with a surprisingly strong leg and no interest in running.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Plant-and-boot kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "ampette",
+    "name": "Ampette",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "antennae, glow",
+      "colors": "#e8c22a, #5ae0ff",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "glow"
+        ],
+        "colors": [
+          "#e8c22a",
+          "#5ae0ff"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A crackling beetle who scrambles first and aims later.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "accuracy",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Scrambling quarterback",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "fuzzvolt",
+    "name": "Fuzzvolt",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, tail",
+      "colors": "#f0d040, #4a4a6a",
+      "pattern": "stripes"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#f0d040",
+          "#4a4a6a"
+        ],
+        "pattern": "stripes"
+      }
+    },
+    "description": "A static-fluffed mouse that zips outside on its hind legs and breaks on the first hit.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Outside-zone speed back",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "boltdart",
+    "name": "Boltdart",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, tail",
+      "colors": "#ffd83a, #3a6ad8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#ffd83a",
+          "#3a6ad8"
+        ]
+      }
+    },
+    "description": "A lightning-quick hound pup that wins with pure speed and never blocks.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "strength",
+      "blocking"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Vertical speed threat",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "wattram",
+    "name": "Wattram",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horn",
+      "colors": "#c8a82a, #7af0ff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn"
+        ],
+        "colors": [
+          "#c8a82a",
+          "#7af0ff"
+        ]
+      }
+    },
+    "description": "A sparking ram who runs routes like a receiver and blocks like one too.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "blocking",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Move tight end",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "capaclod",
+    "name": "Capaclod",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "medium",
+      "look": "cool",
+      "features": "bulb, plates",
+      "colors": "#8a8a3a, #ffe85a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "bulb",
+          "plates"
+        ],
+        "colors": [
+          "#8a8a3a",
+          "#ffe85a"
+        ]
+      }
+    },
+    "description": "A buzzing capacitor beetle that pulls fast and gets bowled over.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Pulling guard",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "zaphog",
+    "name": "Zaphog",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "tusks, ears",
+      "colors": "#d8b030, #5a5a8a",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks",
+          "ears"
+        ],
+        "colors": [
+          "#d8b030",
+          "#5a5a8a"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A static-charged boar on two legs that shoots gaps and gets washed out by double teams.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Penetrating gap shooter",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "staticub",
+    "name": "Staticub",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, glow",
+      "colors": "#e0c040, #a05ad8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "glow"
+        ],
+        "colors": [
+          "#e0c040",
+          "#a05ad8"
+        ]
+      }
+    },
+    "description": "A twitchy cub who flies to the ball and bounces off big backs.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "strength",
+      "coverage"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sideline-to-sideline chaser",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "neonnewt",
+    "name": "Neonnewt",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cool",
+      "features": "fins, glow",
+      "colors": "#3ad8a0, #ffe84a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "fins",
+          "glow"
+        ],
+        "colors": [
+          "#3ad8a0",
+          "#ffe84a"
+        ]
+      }
+    },
+    "description": "A glowing newt that keeps pace with anyone and avoids every tackle.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Speed-matching corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "buzzhawk",
+    "name": "Buzzhawk",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "beak, wings",
+      "colors": "#c8a020, #e8f8ff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "beak",
+          "wings"
+        ],
+        "colors": [
+          "#c8a020",
+          "#e8f8ff"
+        ]
+      }
+    },
+    "description": "A buzzing hawk that covers ground fast and pulls up before contact.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Range safety",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "wattlet",
+    "name": "Wattlet",
+    "type": "Electric",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "antennae, bulb",
+      "colors": "#f0e05a, #5ac8ff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "bulb"
+        ],
+        "colors": [
+          "#f0e05a",
+          "#5ac8ff"
+        ]
+      }
+    },
+    "description": "A firefly-bulbed bug that lights up on every make.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Quick-tempo kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "slatelet",
+    "name": "Slatelet",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cool",
+      "features": "plates",
+      "colors": "#7a7068, #c8a878"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#7a7068",
+          "#c8a878"
+        ]
+      }
+    },
+    "description": "A flat-headed slate sprite who shrugs off sacks but cannot escape them.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sturdy statue passer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "gravelpup",
+    "name": "Gravelpup",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, plates",
+      "colors": "#8a7a6a, #e0c890"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "plates"
+        ],
+        "colors": [
+          "#8a7a6a",
+          "#e0c890"
+        ]
+      }
+    },
+    "description": "A gravel-coated pup that loves picking up blitzers more than carrying the ball.",
+    "positionalStrength": "blocking",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Pass-protecting back",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "mudlark",
+    "name": "Mudlark",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "beak, crest",
+      "colors": "#7a6040, #d8c8a0",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#7a6040",
+          "#d8c8a0"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A muddy lark built like a fullback with wings.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Physical possession receiver",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "clodhorn",
+    "name": "Clodhorn",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horn",
+      "colors": "#8a6a4a, #b8d870",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn"
+        ],
+        "colors": [
+          "#8a6a4a",
+          "#b8d870"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A clod-headed rhino calf that blocks well and catches nothing thrown above its horn.",
+    "positionalStrength": "blocking",
+    "weaknesses": [
+      "agility",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Blocking tight end",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "cobblump",
+    "name": "Cobblump",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cute",
+      "features": "plates",
+      "colors": "#9a8a78, #6a5a4a",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#9a8a78",
+          "#6a5a4a"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A heap of cobblestones that refuses to move once it sets.",
+    "positionalStrength": "blocking",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Immovable pass blocker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "quarrox",
+    "name": "Quarrox",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns, plates",
+      "colors": "#6a6058, #e0a060"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns",
+          "plates"
+        ],
+        "colors": [
+          "#6a6058",
+          "#e0a060"
+        ]
+      }
+    },
+    "description": "A quarry ox that bull-rushes hard, reads the play late and misses tackles in space.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "agility",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Bull-rush nose tackle",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "diggit",
+    "name": "Diggit",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cute",
+      "features": "claws, whiskers",
+      "colors": "#8a6a50, #f0d8b0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "claws",
+          "whiskers"
+        ],
+        "colors": [
+          "#8a6a50",
+          "#f0d8b0"
+        ]
+      }
+    },
+    "description": "A burrowing mole who pops up in the backfield and gets lost in coverage.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "speed",
+      "coverage"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Gap-plugging linebacker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "pumicat",
+    "name": "Pumicat",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, tail",
+      "colors": "#b0a090, #5a4a40",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#b0a090",
+          "#5a4a40"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A pumice-coated cat that jams receivers hard and then trails them.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Press-jam corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "siltadillo",
+    "name": "Siltadillo",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "small",
+      "look": "cute",
+      "features": "ears",
+      "colors": "#9a8060, #e8d0a0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "shelled",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#9a8060",
+          "#e8d0a0"
+        ]
+      }
+    },
+    "description": "A silt-caked armadillo who hits hard and turns slowly.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "speed",
+      "coverage"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Strong safety hitter",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "geodot",
+    "name": "Geodot",
+    "type": "Earth",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cute",
+      "features": "glow",
+      "colors": "#7a6a8a, #d890ff",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#7a6a8a",
+          "#d890ff"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A crystal golem cub with a geode heart and a heavy, long leg.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "awareness"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Big-leg kickoff specialist",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "chillip",
+    "name": "Chillip",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "crest",
+      "colors": "#9ad0f0, #3a6aa0",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#9ad0f0",
+          "#3a6aa0"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A cool-headed chick who places short throws perfectly and never runs.",
+    "positionalStrength": "accuracy",
+    "weaknesses": [
+      "speed",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Precise rhythm passer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "skiddle",
+    "name": "Skiddle",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, tail",
+      "colors": "#c8e8f8, #5a8ab8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#c8e8f8",
+          "#5a8ab8"
+        ]
+      }
+    },
+    "description": "A sliding snowball critter that waits for the hole and slips on the cutback.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "speed",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Patient one-cut runner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "snowdart",
+    "name": "Snowdart",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, tail",
+      "colors": "#e8f4ff, #6aa8e0",
+      "pattern": "stripes"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#e8f4ff",
+          "#6aa8e0"
+        ],
+        "pattern": "stripes"
+      }
+    },
+    "description": "A snow-white ermine that finds the open spot and sits in it.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "speed",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Zone-beating route sitter",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "walrump",
+    "name": "Walrump",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cute",
+      "features": "tusks, whiskers",
+      "colors": "#8a7a70, #d8f0ff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "tusks",
+          "whiskers"
+        ],
+        "colors": [
+          "#8a7a70",
+          "#d8f0ff"
+        ]
+      }
+    },
+    "description": "A walrus calf who knows every assignment and is slower than all of them.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Assignment-sound tight end",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "floebear",
+    "name": "Floebear",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cute",
+      "features": "ears",
+      "colors": "#e0f0f8, #7ab0d8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#e0f0f8",
+          "#7ab0d8"
+        ]
+      }
+    },
+    "description": "A floe-riding bear cub who reads stunts but gets bull-rushed.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "speed",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Stunt-reading tackle",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "rimeboar",
+    "name": "Rimeboar",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "tusks, spikes",
+      "colors": "#a8c8e0, #ffffff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks",
+          "spikes"
+        ],
+        "colors": [
+          "#a8c8e0",
+          "#ffffff"
+        ]
+      }
+    },
+    "description": "A frosted boar that wraps up anything in its gap and cannot chase.",
+    "positionalStrength": "tackling",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sure-tackling run defender",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "hoarcub",
+    "name": "Hoarcub",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, fangs",
+      "colors": "#b8d8f0, #4a6a9a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "fangs"
+        ],
+        "colors": [
+          "#b8d8f0",
+          "#4a6a9a"
+        ]
+      }
+    },
+    "description": "A frost-furred cub that reads passes well and gets run over.",
+    "positionalStrength": "coverage",
+    "weaknesses": [
+      "strength",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Pass-reading linebacker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "shiverkit",
+    "name": "Shiverkit",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, whiskers",
+      "colors": "#90b8d8, #f0faff",
+      "pattern": "backstripe"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "whiskers"
+        ],
+        "colors": [
+          "#90b8d8",
+          "#f0faff"
+        ],
+        "pattern": "backstripe"
+      }
+    },
+    "description": "A shivering fox kit with textbook zone technique and a slow backpedal.",
+    "positionalStrength": "coverage",
+    "weaknesses": [
+      "speed",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Disciplined zone corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "ptarmilet",
+    "name": "Ptarmilet",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "crest",
+      "colors": "#f4f8ff, #8a98a8",
+      "pattern": "mask"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#f4f8ff",
+          "#8a98a8"
+        ],
+        "pattern": "mask"
+      }
+    },
+    "description": "A snow-white grouse that always lines up right and arrives late.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Quarterback-of-the-defense safety",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "cubeling",
+    "name": "Cubeling",
+    "type": "Ice",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "glow",
+      "colors": "#c8f0ff, #5ab0e8",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#c8f0ff",
+          "#5ab0e8"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "An ice cube that keeps its cool and its kicks straight.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Ice-cool accuracy kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "breezle",
+    "name": "Breezle",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, crest",
+      "colors": "#a8e0d0, #ffffff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "wings",
+          "crest"
+        ],
+        "colors": [
+          "#a8e0d0",
+          "#ffffff"
+        ]
+      }
+    },
+    "description": "A breezy dragonfly that dances away from pressure and flinches at contact.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Nimble pocket escapist",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "whirlhare",
+    "name": "Whirlhare",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, tail",
+      "colors": "#8ad0c0, #f8fff8",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#8ad0c0",
+          "#f8fff8"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A whirlwind hare that spins out of tackles and folds when it has to block.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "blocking",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Spin-move scatback",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "kitelet",
+    "name": "Kitelet",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "wings, crest",
+      "colors": "#7ad0e0, #ff8aa0",
+      "pattern": "stripes"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "wings",
+          "crest"
+        ],
+        "colors": [
+          "#7ad0e0",
+          "#ff8aa0"
+        ],
+        "pattern": "stripes"
+      }
+    },
+    "description": "A kite-tailed bird that cuts on a dime and gets blown off its route.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sharp-cutting slot",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "sailmoth",
+    "name": "Sailmoth",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "medium",
+      "look": "cool",
+      "features": "wings, antennae",
+      "colors": "#c8f0e8, #5a9a8a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#c8f0e8",
+          "#5a9a8a"
+        ]
+      }
+    },
+    "description": "A sail-winged moth that floats into soft spots and blocks like a curtain.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Flex receiving tight end",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "nimbulk",
+    "name": "Nimbulk",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cute",
+      "features": "glow",
+      "colors": "#e8f4f8, #9ab8c8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#e8f4f8",
+          "#9ab8c8"
+        ]
+      }
+    },
+    "description": "A puffy cloud that moves its feet nicely and gets pushed straight back.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Zone-step tackle",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "galebuck",
+    "name": "Galebuck",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns",
+      "colors": "#9ab8a8, #f0fff0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#9ab8a8",
+          "#f0fff0"
+        ]
+      }
+    },
+    "description": "A gale-swift buck that loops around blockers and loses track of the ball.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "awareness"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Edge-looping rusher",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "windrook",
+    "name": "Windrook",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "medium",
+      "look": "cool",
+      "features": "beak, crest",
+      "colors": "#5a7a78, #c8f0e0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#5a7a78",
+          "#c8f0e0"
+        ]
+      }
+    },
+    "description": "A gusty rook that flits to the flat and misses tackles in traffic.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Flat-coverage linebacker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "swallit",
+    "name": "Swallit",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "wings, beak",
+      "colors": "#4a6a8a, #ffe0c0",
+      "pattern": "mask"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "beak"
+        ],
+        "colors": [
+          "#4a6a8a",
+          "#ffe0c0"
+        ],
+        "pattern": "mask"
+      }
+    },
+    "description": "A fork-tailed swallow that mirrors routes and gets bodied by big receivers.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Quick-twitch slot corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "pinwhirl",
+    "name": "Pinwhirl",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cool",
+      "features": "wings",
+      "colors": "#a8d8c8, #ff6a8a",
+      "pattern": "stripes"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings"
+        ],
+        "colors": [
+          "#a8d8c8",
+          "#ff6a8a"
+        ],
+        "pattern": "stripes"
+      }
+    },
+    "description": "A pinwheel-winged bug that spins toward the ball and away from collisions.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Ball-hawking rover",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "gustpuff",
+    "name": "Gustpuff",
+    "type": "Wind",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "crest",
+      "colors": "#d8f8f0, #7ac8b8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#d8f8f0",
+          "#7ac8b8"
+        ]
+      }
+    },
+    "description": "A puff-chested wind sparrow that can drift a kick but never powers one.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Wind-reading placekicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "murkit",
+    "name": "Murkit",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cool",
+      "features": "ears",
+      "colors": "#3a3048, #c8a0ff",
+      "pattern": "mask"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#3a3048",
+          "#c8a0ff"
+        ],
+        "pattern": "mask"
+      }
+    },
+    "description": "A masked imp who reads defenses in the dark and cannot throw deep.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "arm",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sneaky timing passer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "minkurk",
+    "name": "Minkurk",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cool",
+      "features": "ears",
+      "colors": "#2e2838, #e0d0ff",
+      "pattern": "mask"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears"
+        ],
+        "colors": [
+          "#2e2838",
+          "#e0d0ff"
+        ],
+        "pattern": "mask"
+      }
+    },
+    "description": "A long shadow mink that slithers through creases it seems to see first.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Vision runner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "batwhisk",
+    "name": "Batwhisk",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, wings",
+      "colors": "#4a3a5a, #ff8ad8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "wings"
+        ],
+        "colors": [
+          "#4a3a5a",
+          "#ff8ad8"
+        ]
+      }
+    },
+    "description": "A bat with a whiplash cut and unreliable hands.",
+    "positionalStrength": "agility",
+    "weaknesses": [
+      "blocking",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Separation route runner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "gloamtoad",
+    "name": "Gloamtoad",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cool",
+      "features": "glow",
+      "colors": "#3a4a3a, #a0ffb0",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "glow"
+        ],
+        "colors": [
+          "#3a4a3a",
+          "#a0ffb0"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A glowing-spotted toad who snatches passes and wilts in a block.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "blocking",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Soft-handed seam target",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "umbruin",
+    "name": "Umbruin",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, claws",
+      "colors": "#2a2430, #8a6aa8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "ears",
+          "claws"
+        ],
+        "colors": [
+          "#2a2430",
+          "#8a6aa8"
+        ]
+      }
+    },
+    "description": "A shadowy bear cub that sees every twist coming and tires fast.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "durability",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Heady interior blocker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "vexhound",
+    "name": "Vexhound",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "fierce",
+      "features": "ears, fangs",
+      "colors": "#3a2a3a, #ff5a6a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "fierce",
+        "features": [
+          "ears",
+          "fangs"
+        ],
+        "colors": [
+          "#3a2a3a",
+          "#ff5a6a"
+        ]
+      }
+    },
+    "description": "A vexing hound that reads the snap count and gets moved by power.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Snap-timing disruptor",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "crowlurk",
+    "name": "Crowlurk",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "medium",
+      "look": "cool",
+      "features": "beak, crest",
+      "colors": "#2a2a38, #9ab0ff",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#2a2a38",
+          "#9ab0ff"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A lurking crow that drops into passing lanes and gets bowled over.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Lane-reading linebacker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "spindlet",
+    "name": "Spindlet",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cool",
+      "features": "antennae",
+      "colors": "#3a3040, #e0e080",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "antennae"
+        ],
+        "colors": [
+          "#3a3040",
+          "#e0e080"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A spindly spider that baits throws into its web and gets beaten by speed.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "speed",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Baiting zone corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "gloomoth",
+    "name": "Gloomoth",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cool",
+      "features": "wings, antennae",
+      "colors": "#4a405a, #d8c0ff",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#4a405a",
+          "#d8c0ff"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A dusk moth that drifts under deep balls and shies from contact.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "tackling",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Ballhawk free safety",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "inklet",
+    "name": "Inklet",
+    "type": "Dark",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cute",
+      "features": "fins",
+      "colors": "#2a2a40, #7a8aff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "fins"
+        ],
+        "colors": [
+          "#2a2a40",
+          "#7a8aff"
+        ]
+      }
+    },
+    "description": "An ink-black eel that splats a kick through and slinks away.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Calm late-game kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "beamlet",
+    "name": "Beamlet",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "halo",
+      "colors": "#f8e8a0, #ffb84a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "halo"
+        ],
+        "colors": [
+          "#f8e8a0",
+          "#ffb84a"
+        ]
+      }
+    },
+    "description": "A beaming little sunbeam with a sharp eye and a glass jaw.",
+    "positionalStrength": "accuracy",
+    "weaknesses": [
+      "agility",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Accurate dropback passer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "glowhare",
+    "name": "Glowhare",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cute",
+      "features": "antennae, glow",
+      "colors": "#fff0c0, #ffd04a",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "glow"
+        ],
+        "colors": [
+          "#fff0c0",
+          "#ffd04a"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A lantern beetle that glows brightest catching passes out of the backfield.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "strength",
+      "blocking"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Receiving back",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "dawnfinch",
+    "name": "Dawnfinch",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "crest, beak",
+      "colors": "#ffd88a, #ff8a5a",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest",
+          "beak"
+        ],
+        "colors": [
+          "#ffd88a",
+          "#ff8a5a"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A dawn-feathered finch that catches anything and bruises easily.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sure-handed possession target",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "lanternox",
+    "name": "Lanternox",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horn, glow",
+      "colors": "#e8d8a0, #ffe85a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn",
+          "glow"
+        ],
+        "colors": [
+          "#e8d8a0",
+          "#ffe85a"
+        ]
+      }
+    },
+    "description": "A lantern-horned ox who walks upright, lights up open zones and lumbers into them.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Zone-finding tight end",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "waxwick",
+    "name": "Waxwick",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cute",
+      "features": "glow, crest",
+      "colors": "#f8f0d8, #ffa84a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "glow",
+          "crest"
+        ],
+        "colors": [
+          "#f8f0d8",
+          "#ffa84a"
+        ]
+      }
+    },
+    "description": "A candle with a calm flame and slow, careful feet.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "speed",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Patient pass protector",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "solram",
+    "name": "Solram",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns",
+      "colors": "#f0d878, #ffffff",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#f0d878",
+          "#ffffff"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A sun-bright ram who stands tall, reads the run well and gets driven off the ball.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "speed",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Read-and-react tackle",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "lumbear",
+    "name": "Lumbear",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cute",
+      "features": "ears, halo",
+      "colors": "#f8e0b0, #f0c040"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "ears",
+          "halo"
+        ],
+        "colors": [
+          "#f8e0b0",
+          "#f0c040"
+        ]
+      }
+    },
+    "description": "A haloed bear cub with soft hands and soft tackles.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Ball-skills linebacker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "glarefly",
+    "name": "Glarefly",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cool",
+      "features": "wings, glow",
+      "colors": "#fff8c0, #ffb040"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "glow"
+        ],
+        "colors": [
+          "#fff8c0",
+          "#ffb040"
+        ]
+      }
+    },
+    "description": "A glaring firefly that breaks on throws and flutters off ball carriers.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Ball-skills corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "dazzlet",
+    "name": "Dazzlet",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cool",
+      "features": "crest, glow",
+      "colors": "#ffe8a8, #ff7a9a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "crest",
+          "glow"
+        ],
+        "colors": [
+          "#ffe8a8",
+          "#ff7a9a"
+        ]
+      }
+    },
+    "description": "A dazzling sprite who sees the throw early and gets there slowly.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Instinctive centerfielder",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "twinklet",
+    "name": "Twinklet",
+    "type": "Light",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cute",
+      "features": "crest, halo",
+      "colors": "#fff8e0, #ffd860"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "crest",
+          "halo"
+        ],
+        "colors": [
+          "#fff8e0",
+          "#ffd860"
+        ]
+      }
+    },
+    "description": "A star-speckled songbird that kicks true when the lights are brightest.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Clutch-accuracy kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "rivetto",
+    "name": "Rivetto",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "small",
+      "look": "cool",
+      "features": "antennae",
+      "colors": "#8a98a8, #e85a3a",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "shelled",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "antennae"
+        ],
+        "colors": [
+          "#8a98a8",
+          "#e85a3a"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A riveted tin turtle that takes every sack and rattles back up.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "agility",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Durable pocket passer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "tinhare",
+    "name": "Tinhare",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "small",
+      "look": "cool",
+      "features": "ears, plates",
+      "colors": "#a8b0b8, #5a7a9a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "shelled",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "ears",
+          "plates"
+        ],
+        "colors": [
+          "#a8b0b8",
+          "#5a7a9a"
+        ]
+      }
+    },
+    "description": "A tin-plated hare in a riveted shell, built to take hits, not make people miss.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "agility",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Workhorse grinder",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "springlet",
+    "name": "Springlet",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cool",
+      "features": "antennae, wings",
+      "colors": "#b8c0c8, #d8a03a",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "antennae",
+          "wings"
+        ],
+        "colors": [
+          "#b8c0c8",
+          "#d8a03a"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A coiled spring bug that catches over the middle and bounces up every time.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "agility",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Tough middle receiver",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "anvilox",
+    "name": "Anvilox",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horn, plates",
+      "colors": "#5a6068, #c8d0d8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn",
+          "plates"
+        ],
+        "colors": [
+          "#5a6068",
+          "#c8d0d8"
+        ]
+      }
+    },
+    "description": "An anvil-headed ox calf that blocks all day and lumbers on routes.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "speed",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Iron in-line tight end",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "kettlump",
+    "name": "Kettlump",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "medium",
+      "look": "cute",
+      "features": "plates, collar",
+      "colors": "#7a8088, #e8b860"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "shelled",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "plates",
+          "collar"
+        ],
+        "colors": [
+          "#7a8088",
+          "#e8b860"
+        ]
+      }
+    },
+    "description": "A dented kettle-shelled tortoise that whistles when pushed, which is rarely.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "awareness",
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Sturdy road-grader",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "ingotusk",
+    "name": "Ingotusk",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cool",
+      "features": "tusks, plates",
+      "colors": "#9a8a6a, #e0e0e8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "tusks",
+          "plates"
+        ],
+        "colors": [
+          "#9a8a6a",
+          "#e0e0e8"
+        ]
+      }
+    },
+    "description": "A nearly square ingot of a hog that holds the point and never chases.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "agility",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Point-of-attack anchor",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "brasshound",
+    "name": "Brasshound",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "ears, collar",
+      "colors": "#b89048, #5a5a68"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "ears",
+          "collar"
+        ],
+        "colors": [
+          "#b89048",
+          "#5a5a68"
+        ]
+      }
+    },
+    "description": "A brass-collared hound that plays every down and drops easy picks.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "agility",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Iron-man linebacker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "gyroflit",
+    "name": "Gyroflit",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "insectoid",
+      "size": "small",
+      "look": "cool",
+      "features": "wings, antennae",
+      "colors": "#9aa8b8, #5ae8d8",
+      "pattern": "stripes"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "insectoid",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "antennae"
+        ],
+        "colors": [
+          "#9aa8b8",
+          "#5ae8d8"
+        ],
+        "pattern": "stripes"
+      }
+    },
+    "description": "A gyroscope-winged bug that never wobbles and never quite turns fast.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "agility",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Physical press corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "clockcrow",
+    "name": "Clockcrow",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cool",
+      "features": "beak, crest",
+      "colors": "#6a7078, #d8b048",
+      "pattern": "backstripe"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "beak",
+          "crest"
+        ],
+        "colors": [
+          "#6a7078",
+          "#d8b048"
+        ],
+        "pattern": "backstripe"
+      }
+    },
+    "description": "A clockwork crow that walks upright, keeps perfect time and has stiff hips.",
+    "positionalStrength": "durability",
+    "weaknesses": [
+      "agility",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Durable box safety",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "washerling",
+    "name": "Washerling",
+    "type": "Metal",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "shelled",
+      "size": "small",
+      "look": "cute",
+      "features": "plates",
+      "colors": "#a0a8b0, #8ad0f0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "shelled",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "plates"
+        ],
+        "colors": [
+          "#a0a8b0",
+          "#8ad0f0"
+        ]
+      }
+    },
+    "description": "A washer-shelled snail that kicks steadily and moves slowly.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "agility"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Reliable mid-range kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "mindle",
+    "name": "Mindle",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cute",
+      "features": "antennae, glow",
+      "colors": "#c88ad8, #fff0ff",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "antennae",
+          "glow"
+        ],
+        "colors": [
+          "#c88ad8",
+          "#fff0ff"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A tiny sprite with a big forehead that sees the blitz and crumples under it.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "durability",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Pre-snap reader",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "dreamhop",
+    "name": "Dreamhop",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, glow",
+      "colors": "#b07ad0, #ffd8f0",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "glow"
+        ],
+        "colors": [
+          "#b07ad0",
+          "#ffd8f0"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A dreamy cloud-puff that floats out for screens and dozes through contact.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "durability",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Screen-game back",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "trancefin",
+    "name": "Trancefin",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cool",
+      "features": "fins, glow",
+      "colors": "#8a5ac8, #80f0e0",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "fins",
+          "glow"
+        ],
+        "colors": [
+          "#8a5ac8",
+          "#80f0e0"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A hypnotic fish that drifts into open space and avoids all contact.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "blocking"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Option-route receiver",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "pondermoose",
+    "name": "Pondermoose",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns",
+      "colors": "#7a5a90, #f0c0ff",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#7a5a90",
+          "#f0c0ff"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A pensive moose calf who always seems to be thinking about something else.",
+    "positionalStrength": "catching",
+    "weaknesses": [
+      "durability",
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Thinking receiving tight end",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "thinkump",
+    "name": "Thinkump",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "medium",
+      "look": "cute",
+      "features": "bulb, glow",
+      "colors": "#d8a8e8, #7a4aa0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "medium",
+        "look": "cute",
+        "features": [
+          "bulb",
+          "glow"
+        ],
+        "colors": [
+          "#d8a8e8",
+          "#7a4aa0"
+        ]
+      }
+    },
+    "description": "A brainy blob that calls every protection and gets pushed around executing it.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Protection-calling center",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "omenox",
+    "name": "Omenox",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "medium",
+      "look": "cool",
+      "features": "horn, glow",
+      "colors": "#6a4a80, #ffd0ff",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horn",
+          "glow"
+        ],
+        "colors": [
+          "#6a4a80",
+          "#ffd0ff"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A horned river serpent that senses the snap and slips off the tackle.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "tackling"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Snap-anticipating rusher",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "seerling",
+    "name": "Seerling",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cool",
+      "features": "crest, halo",
+      "colors": "#a080c0, #e8e0ff"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "crest",
+          "halo"
+        ],
+        "colors": [
+          "#a080c0",
+          "#e8e0ff"
+        ]
+      }
+    },
+    "description": "A haloed seer who knows where the play goes and gets there late.",
+    "positionalStrength": "awareness",
+    "weaknesses": [
+      "strength",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Play-diagnosing linebacker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "riddlet",
+    "name": "Riddlet",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, tail",
+      "colors": "#9a6ab0, #f8e8a0",
+      "pattern": "mask"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "tail"
+        ],
+        "colors": [
+          "#9a6ab0",
+          "#f8e8a0"
+        ],
+        "pattern": "mask"
+      }
+    },
+    "description": "A masked fox kit that seems to know every route and wears down quickly.",
+    "positionalStrength": "coverage",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Route-anticipating corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "gazeling",
+    "name": "Gazeling",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "small",
+      "look": "cute",
+      "features": "ears, horns",
+      "colors": "#d0b0e8, #6a3a8a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "ears",
+          "horns"
+        ],
+        "colors": [
+          "#d0b0e8",
+          "#6a3a8a"
+        ]
+      }
+    },
+    "description": "A wide-eyed little gazelle that stares down the quarterback and wilts against power.",
+    "positionalStrength": "coverage",
+    "weaknesses": [
+      "strength",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Mind-reading deep safety",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "orblet",
+    "name": "Orblet",
+    "type": "Psychic",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "glow, halo",
+      "colors": "#e0b8f8, #a050d8"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "glow",
+          "halo"
+        ],
+        "colors": [
+          "#e0b8f8",
+          "#a050d8"
+        ]
+      }
+    },
+    "description": "A floating orb that lines up every kick with eerie focus.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "strength"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Focused accuracy kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "scalekin",
+    "name": "Scalekin",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "QB",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cool",
+      "features": "horns, wings",
+      "colors": "#a83a3a, #f0c060"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "horns",
+          "wings"
+        ],
+        "colors": [
+          "#a83a3a",
+          "#f0c060"
+        ]
+      }
+    },
+    "description": "A young scaled drake with a cannon arm and no idea where it is going.",
+    "positionalStrength": "arm",
+    "weaknesses": [
+      "agility",
+      "accuracy"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Raw big-arm passer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "raptlet",
+    "name": "Raptlet",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "RB",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "small",
+      "look": "cool",
+      "features": "horns, tail",
+      "colors": "#5a8a4a, #f0e070",
+      "pattern": "backstripe"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "horns",
+          "tail"
+        ],
+        "colors": [
+          "#5a8a4a",
+          "#f0e070"
+        ],
+        "pattern": "backstripe"
+      }
+    },
+    "description": "A sprinting raptor hatchling that runs hard and runs the wrong way.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "awareness",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Hard-charging runner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "glidrake",
+    "name": "Glidrake",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "WR",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "wings, crest",
+      "colors": "#3a6a9a, #ffb050",
+      "pattern": "band"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "crest"
+        ],
+        "colors": [
+          "#3a6a9a",
+          "#ffb050"
+        ],
+        "pattern": "band"
+      }
+    },
+    "description": "A gliding drake that outruns coverage and freezes when the play breaks down.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "awareness",
+      "durability"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Deep glide receiver",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "crestback",
+    "name": "Crestback",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "TE",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "cool",
+      "features": "crest, ridge",
+      "colors": "#8a3a4a, #e0d0a0"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "crest",
+          "ridge"
+        ],
+        "colors": [
+          "#8a3a4a",
+          "#e0d0a0"
+        ]
+      }
+    },
+    "description": "A crested lizard that stands up like a fullback and has stone hands.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "awareness",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Power move blocker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "bulwyrm",
+    "name": "Bulwyrm",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "OL",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns",
+      "colors": "#4a5a3a, #d8c070"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#4a5a3a",
+          "#d8c070"
+        ]
+      }
+    },
+    "description": "A thick-coiled wyrm that walls off rushers and loses track of stunts.",
+    "positionalStrength": "strength",
+    "weaknesses": [
+      "awareness",
+      "speed"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Power drive tackle",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "gnashlet",
+    "name": "Gnashlet",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "DL",
+    "clashArchetype": "Striker",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "biped",
+      "size": "medium",
+      "look": "fierce",
+      "features": "horns, fangs",
+      "colors": "#7a2a2a, #f0d880"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "biped",
+        "size": "medium",
+        "look": "fierce",
+        "features": [
+          "horns",
+          "fangs"
+        ],
+        "colors": [
+          "#7a2a2a",
+          "#f0d880"
+        ]
+      }
+    },
+    "description": "A gnashing hatchling that bites down on ball carriers and bites on every fake.",
+    "positionalStrength": "tackling",
+    "weaknesses": [
+      "agility",
+      "awareness"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Violent run stuffer",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "drakhound",
+    "name": "Drakhound",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "LB",
+    "clashArchetype": "Tank",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "quadruped",
+      "size": "medium",
+      "look": "cool",
+      "features": "horns, ears",
+      "colors": "#6a3a5a, #ffa060"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "quadruped",
+        "size": "medium",
+        "look": "cool",
+        "features": [
+          "horns",
+          "ears"
+        ],
+        "colors": [
+          "#6a3a5a",
+          "#ffa060"
+        ]
+      }
+    },
+    "description": "A scaled hound that runs downhill and forgets about the pass.",
+    "positionalStrength": "tackling",
+    "weaknesses": [
+      "coverage",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Downhill thumper",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "wyvlet",
+    "name": "Wyvlet",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "CB",
+    "clashArchetype": "Disruptor",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "avian",
+      "size": "small",
+      "look": "cool",
+      "features": "wings, horns",
+      "colors": "#3a5a6a, #ff7a5a"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "avian",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "wings",
+          "horns"
+        ],
+        "colors": [
+          "#3a5a6a",
+          "#ff7a5a"
+        ]
+      }
+    },
+    "description": "A little wyvern that hits like a safety and covers like one too.",
+    "positionalStrength": "tackling",
+    "weaknesses": [
+      "coverage",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Tackling nickel corner",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "skinklet",
+    "name": "Skinklet",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "S",
+    "clashArchetype": "Support",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "serpent",
+      "size": "small",
+      "look": "cool",
+      "features": "crest",
+      "colors": "#2a7a7a, #f0e0a0",
+      "pattern": "stripes"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "serpent",
+        "size": "small",
+        "look": "cool",
+        "features": [
+          "crest"
+        ],
+        "colors": [
+          "#2a7a7a",
+          "#f0e0a0"
+        ],
+        "pattern": "stripes"
+      }
+    },
+    "description": "A striped skink that flies to the ball and overruns the angle.",
+    "positionalStrength": "speed",
+    "weaknesses": [
+      "awareness",
+      "catching"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Fast-flow safety",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
+  },
+  {
+    "id": "eggling",
+    "name": "Eggling",
+    "type": "Dragon",
+    "rarity": "basic",
+    "sourceRarity": "basic",
+    "position": "K",
+    "clashArchetype": "Balanced",
+    "abilities": {
+      "Football": null,
+      "Beast Clash": null
+    },
+    "appearance": {
+      "body": "blob",
+      "size": "small",
+      "look": "cute",
+      "features": "horns",
+      "colors": "#f0e0c8, #c84a4a",
+      "pattern": "spots"
+    },
+    "art": {
+      "pipeline": "src/ui/sprite16.js spec",
+      "spec": {
+        "body": "blob",
+        "size": "small",
+        "look": "cute",
+        "features": [
+          "horns"
+        ],
+        "colors": [
+          "#f0e0c8",
+          "#c84a4a"
+        ],
+        "pattern": "spots"
+      }
+    },
+    "description": "A dragon egg with little horns poking through and a hard-shelled leg.",
+    "positionalStrength": "kicking",
+    "weaknesses": [
+      "accuracy"
+    ],
+    "profileStatus": "Basic creation batch; ranges built by tools/build_basic.py; pending owner art/content review",
+    "buildIdentity": "Hard-leg kicker",
+    "reviewStatus": "pending owner art/content review",
+    "standalone": true
   }
 ]

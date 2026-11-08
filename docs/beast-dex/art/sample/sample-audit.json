@@ -1,0 +1,601 @@
+{
+ "note": "Similarity: Jaccard on outlined silhouette masks, horizontal mirror included, against the other 19 proposals, the 102 original forms and the other 119 current Basic designs. Scores assist review; they do not certify quality. featurePixels counts the pixels each feature changes; 1–3 px may be lost at gameplay size.",
+ "summary": {
+  "coverage": {
+   "types": [
+    "Dark",
+    "Dragon",
+    "Earth",
+    "Electric",
+    "Fire",
+    "Ice",
+    "Light",
+    "Metal",
+    "Nature",
+    "Psychic",
+    "Water",
+    "Wind"
+   ],
+   "positions": [
+    "CB",
+    "DL",
+    "K",
+    "LB",
+    "OL",
+    "QB",
+    "RB",
+    "S",
+    "TE",
+    "WR"
+   ],
+   "structures": [
+    "compact_upright",
+    "shelled",
+    "low_elongated_quadruped",
+    "compact_quadruped",
+    "insectoid",
+    "running_avian",
+    "heavy_quadruped",
+    "plant_bodied",
+    "hopping",
+    "perching_avian",
+    "burrowing",
+    "construct",
+    "amorphous",
+    "long_legged_quadruped",
+    "batlike",
+    "arachnid",
+    "floating",
+    "long_limbed_upright",
+    "long_necked_quadruped",
+    "coiled_serpent"
+   ],
+   "sizes": {
+    "small": 13,
+    "medium": 7
+   }
+  },
+  "sameStructurePairs": [],
+  "exactDuplicates": 0,
+  "identicalMasks": 0,
+  "closeMatches085": [],
+  "meanNearestBefore": 0.992,
+  "meanNearestAfter": 0.751,
+  "diagnosticsClean": true,
+  "smallFeatures": [
+   "Kilnback: vent_fins",
+   "Pondskip: antennae/straight",
+   "Fuzzvolt: ears/pointed",
+   "Buzzhawk: beak/hooked",
+   "Diggit: claws/hooked",
+   "Geodot: crystal_growths",
+   "Batwhisk: fangs",
+   "Spindlet: fangs",
+   "Clockcrow: crest/spike"
+  ]
+ },
+ "monsters": [
+  {
+   "id": "kindlet",
+   "name": "Kindlet",
+   "structure": "compact_upright",
+   "pose": "forward",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "original Magmaul 0.80",
+   "nearestBefore": "original Cindruff 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.8,
+   "featurePixels": [
+    {
+     "feature": "ears/pointed",
+     "pixels": 12
+    },
+    {
+     "feature": "flame_tufts",
+     "pixels": 8
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "kilnback",
+   "name": "Kilnback",
+   "structure": "shelled",
+   "pose": "braced",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Washerling 0.76",
+   "nearestBefore": "Basic (current) Barnaclod 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.7640449438202247,
+   "featurePixels": [
+    {
+     "feature": "vent_fins",
+     "pixels": 1
+    }
+   ],
+   "smallFeatures": [
+    "vent_fins"
+   ]
+  },
+  {
+   "id": "embadger",
+   "name": "Embadger",
+   "structure": "low_elongated_quadruped",
+   "pose": "forward",
+   "fit": 0.92,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Washerling 0.69",
+   "nearestBefore": "original Forgursa 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.6853932584269663,
+   "featurePixels": [
+    {
+     "feature": "ears/rounded",
+     "pixels": 6
+    },
+    {
+     "feature": "claws/hooked",
+     "pixels": 8
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "ottrip",
+   "name": "Ottrip",
+   "structure": "compact_quadruped",
+   "pose": "neutral",
+   "fit": 0.88,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Washerling 0.75",
+   "nearestBefore": "original Umbrikit 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.7471264367816092,
+   "featurePixels": [
+    {
+     "feature": "whiskers",
+     "pixels": 23
+    },
+    {
+     "feature": "paddle_tail/straight",
+     "pixels": 6
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "pondskip",
+   "name": "Pondskip",
+   "structure": "insectoid",
+   "pose": "alert",
+   "fit": 0.96,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "original Zephiro 0.78",
+   "nearestBefore": "Basic (current) Breezle 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.782312925170068,
+   "featurePixels": [
+    {
+     "feature": "antennae/straight",
+     "pixels": 2
+    },
+    {
+     "feature": "water_sacs",
+     "pixels": 4
+    }
+   ],
+   "smallFeatures": [
+    "antennae/straight"
+   ]
+  },
+  {
+   "id": "wadelet",
+   "name": "Wadelet",
+   "structure": "running_avian",
+   "pose": "forward",
+   "fit": 0.96,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Trunkle 0.68",
+   "nearestBefore": "Basic (current) Ashpeck 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.6782608695652174,
+   "featurePixels": [
+    {
+     "feature": "beak/long",
+     "pixels": 29
+    },
+    {
+     "feature": "crest/plume",
+     "pixels": 9
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "trunkle",
+   "name": "Trunkle",
+   "structure": "heavy_quadruped",
+   "pose": "alert",
+   "fit": 0.92,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Vexhound 0.84",
+   "nearestBefore": "Basic (current) Brasshound 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.8412698412698413,
+   "featurePixels": [
+    {
+     "feature": "tusks",
+     "pixels": 64
+    },
+    {
+     "feature": "leaves",
+     "pixels": 7
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "podling",
+   "name": "Podling",
+   "structure": "plant_bodied",
+   "pose": "neutral",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Beamlet 0.83",
+   "nearestBefore": "original Wispira 0.96",
+   "nearestBeforeScore": 0.9583333333333334,
+   "nearestAfterScore": 0.83,
+   "featurePixels": [
+    {
+     "feature": "buds",
+     "pixels": 6
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "fuzzvolt",
+   "name": "Fuzzvolt",
+   "structure": "hopping",
+   "pose": "forward",
+   "fit": 0.96,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Ashpeck 0.73",
+   "nearestBefore": "original Cindruff 0.94",
+   "nearestBeforeScore": 0.9433962264150944,
+   "nearestAfterScore": 0.7325581395348837,
+   "featurePixels": [
+    {
+     "feature": "ears/pointed",
+     "pixels": 1
+    },
+    {
+     "feature": "static_prongs",
+     "pixels": 8
+    }
+   ],
+   "smallFeatures": [
+    "ears/pointed"
+   ]
+  },
+  {
+   "id": "buzzhawk",
+   "name": "Buzzhawk",
+   "structure": "perching_avian",
+   "pose": "neutral",
+   "fit": 0.96,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Windrook 0.82",
+   "nearestBefore": "original Gustling 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.8217821782178217,
+   "featurePixels": [
+    {
+     "feature": "beak/hooked",
+     "pixels": 2
+    },
+    {
+     "feature": "static_prongs",
+     "pixels": 18
+    },
+    {
+     "feature": "feathered_wings/raised",
+     "pixels": 37
+    }
+   ],
+   "smallFeatures": [
+    "beak/hooked"
+   ]
+  },
+  {
+   "id": "diggit",
+   "name": "Diggit",
+   "structure": "burrowing",
+   "pose": "alert",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Siltadillo 0.75",
+   "nearestBefore": "Basic (current) Slatelet 0.96",
+   "nearestBeforeScore": 0.9583333333333334,
+   "nearestAfterScore": 0.75,
+   "featurePixels": [
+    {
+     "feature": "claws/hooked",
+     "pixels": 2
+    },
+    {
+     "feature": "whiskers",
+     "pixels": 8
+    }
+   ],
+   "smallFeatures": [
+    "claws/hooked"
+   ]
+  },
+  {
+   "id": "geodot",
+   "name": "Geodot",
+   "structure": "construct",
+   "pose": "neutral",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Diggit 0.78",
+   "nearestBefore": "Basic (current) Slatelet 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.7843137254901961,
+   "featurePixels": [
+    {
+     "feature": "crystal_growths",
+     "pixels": 2
+    }
+   ],
+   "smallFeatures": [
+    "crystal_growths"
+   ]
+  },
+  {
+   "id": "walrump",
+   "name": "Walrump",
+   "structure": "amorphous",
+   "pose": "neutral",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Kilnback 0.85",
+   "nearestBefore": "original Thornback 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.8461538461538461,
+   "featurePixels": [
+    {
+     "feature": "tusks",
+     "pixels": 4
+    },
+    {
+     "feature": "whiskers",
+     "pixels": 11
+    },
+    {
+     "feature": "flippers",
+     "pixels": 14
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "galebuck",
+   "name": "Galebuck",
+   "structure": "long_legged_quadruped",
+   "pose": "forward",
+   "fit": 0.92,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "original Bramblet 0.76",
+   "nearestBefore": "Basic (current) Quarrox 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.7591240875912408,
+   "featurePixels": [
+    {
+     "feature": "antlers/branching",
+     "pixels": 58
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "batwhisk",
+   "name": "Batwhisk",
+   "structure": "batlike",
+   "pose": "alert",
+   "fit": 0.96,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Scalekin 0.69",
+   "nearestBefore": "original Noctlet 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.6911764705882353,
+   "featurePixels": [
+    {
+     "feature": "ears/pointed",
+     "pixels": 10
+    },
+    {
+     "feature": "fangs",
+     "pixels": 2
+    }
+   ],
+   "smallFeatures": [
+    "fangs"
+   ]
+  },
+  {
+   "id": "spindlet",
+   "name": "Spindlet",
+   "structure": "arachnid",
+   "pose": "braced",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "proposed Embadger 0.64",
+   "nearestBefore": "Basic (current) Fusebug 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.6363636363636364,
+   "featurePixels": [
+    {
+     "feature": "fangs",
+     "pixels": 2
+    }
+   ],
+   "smallFeatures": [
+    "fangs"
+   ]
+  },
+  {
+   "id": "beamlet",
+   "name": "Beamlet",
+   "structure": "floating",
+   "pose": "neutral",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "proposed Batwhisk 0.67",
+   "nearestBefore": "Basic (current) Orblet 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.6696428571428571,
+   "featurePixels": [
+    {
+     "feature": "halo",
+     "pixels": 10
+    },
+    {
+     "feature": "light_orbs",
+     "pixels": 14
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "clockcrow",
+   "name": "Clockcrow",
+   "structure": "long_limbed_upright",
+   "pose": "neutral",
+   "fit": 1,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Twinklet 0.77",
+   "nearestBefore": "Basic (current) Dazzlet 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.7674418604651163,
+   "featurePixels": [
+    {
+     "feature": "crest/spike",
+     "pixels": 2
+    },
+    {
+     "feature": "metal_panels",
+     "pixels": 7
+    }
+   ],
+   "smallFeatures": [
+    "crest/spike"
+   ]
+  },
+  {
+   "id": "pondermoose",
+   "name": "Pondermoose",
+   "structure": "long_necked_quadruped",
+   "pose": "neutral",
+   "fit": 0.88,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Bulwyrm 0.64",
+   "nearestBefore": "Basic (current) Quarrox 1.00",
+   "nearestBeforeScore": 1,
+   "nearestAfterScore": 0.6440677966101694,
+   "featurePixels": [
+    {
+     "feature": "antlers/palmate",
+     "pixels": 53
+    }
+   ],
+   "smallFeatures": []
+  },
+  {
+   "id": "bulwyrm",
+   "name": "Bulwyrm",
+   "structure": "coiled_serpent",
+   "pose": "braced",
+   "fit": 0.92,
+   "diagnostics": [],
+   "exactDuplicates": [],
+   "identicalMasks": [],
+   "closeMatches": [],
+   "nearestAfter": "Basic (current) Hoarcub 0.79",
+   "nearestBefore": "original Ouroborn 0.97",
+   "nearestBeforeScore": 0.9739130434782609,
+   "nearestAfterScore": 0.7878787878787878,
+   "featurePixels": [
+    {
+     "feature": "horns/curled",
+     "pixels": 7
+    },
+    {
+     "feature": "ridge",
+     "pixels": 6
+    }
+   ],
+   "smallFeatures": []
+  }
+ ]
+}

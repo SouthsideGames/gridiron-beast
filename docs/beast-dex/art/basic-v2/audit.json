@@ -1,0 +1,278 @@
+{
+ "note": "Automated checks only. Similarity is Jaccard overlap of outlined 16×16 silhouette masks, the better of direct and horizontally mirrored, over every pair among the 120 Basics and between each Basic and the 102 original forms (original–original pairs excluded). Thresholds flag pairs for visual investigation; they do not certify distinctness or quality.",
+ "diagnostics": {
+  "clean": 120,
+  "of": 120,
+  "issues": []
+ },
+ "identityPreserved": {
+  "families": 120,
+  "idsMatch": true,
+  "colourOverrides": [
+   "pondskip"
+  ]
+ },
+ "coverage": {
+  "structuresUsed": 29,
+  "unused": [
+   "crustacean"
+  ],
+  "maxPerStructure": 9,
+  "perStructure": {
+   "compact_upright": 6,
+   "heavy_upright": 4,
+   "long_limbed_upright": 3,
+   "knuckle_walker": 4,
+   "compact_quadruped": 8,
+   "long_legged_quadruped": 6,
+   "low_elongated_quadruped": 6,
+   "heavy_quadruped": 6,
+   "long_necked_quadruped": 1,
+   "perching_avian": 8,
+   "running_avian": 7,
+   "batlike": 5,
+   "coiled_serpent": 2,
+   "elongated_serpent": 3,
+   "insectoid": 3,
+   "arachnid": 1,
+   "crustacean": 0,
+   "shelled": 6,
+   "amorphous": 3,
+   "floating": 9,
+   "amphibian": 3,
+   "hopping": 4,
+   "burrowing": 2,
+   "segmented_crawler": 3,
+   "flat_bodied": 3,
+   "tentacled": 1,
+   "jellyfish": 3,
+   "plant_bodied": 3,
+   "construct": 3,
+   "multi_bodied": 4
+  }
+ },
+ "similarity": {
+  "exactPixelDuplicates": [],
+  "identicalSilhouettes": [],
+  "pairsAtOrAbove085": [],
+  "pairsAtOrAbove080": 53,
+  "before": {
+   "exactPixelDuplicates": 0,
+   "identicalSilhouettes": 167,
+   "pairsAtOrAbove085": 949,
+   "meanNearest": 0.987
+  },
+  "after": {
+   "meanNearest": 0.768,
+   "maxNearest": 0.844
+  },
+  "closest25": [
+   {
+    "a": "Staticub",
+    "b": "Cindruff",
+    "score": 0.844,
+    "sameStructure": false
+   },
+   {
+    "a": "Anvilox",
+    "b": "Thornback",
+    "score": 0.82,
+    "sameStructure": false
+   },
+   {
+    "a": "Anvilox",
+    "b": "Cobblon",
+    "score": 0.82,
+    "sameStructure": false
+   },
+   {
+    "a": "Barnaclod",
+    "b": "Steelpaw",
+    "score": 0.818,
+    "sameStructure": false
+   },
+   {
+    "a": "Springlet",
+    "b": "Washerling",
+    "score": 0.818,
+    "sameStructure": false
+   },
+   {
+    "a": "Washerling",
+    "b": "Eggling",
+    "score": 0.818,
+    "sameStructure": false
+   },
+   {
+    "a": "Anvilox",
+    "b": "Frostpup",
+    "score": 0.817,
+    "sameStructure": false
+   },
+   {
+    "a": "Barnaclod",
+    "b": "Ferrhorn",
+    "score": 0.816,
+    "sameStructure": false
+   },
+   {
+    "a": "Barnaclod",
+    "b": "Drakling",
+    "score": 0.816,
+    "sameStructure": false
+   },
+   {
+    "a": "Ingotusk",
+    "b": "Washerling",
+    "score": 0.814,
+    "sameStructure": false
+   },
+   {
+    "a": "Tinhare",
+    "b": "Ferrcub",
+    "score": 0.814,
+    "sameStructure": false
+   },
+   {
+    "a": "Stumpkin",
+    "b": "Cerebrix",
+    "score": 0.814,
+    "sameStructure": false
+   },
+   {
+    "a": "Lanternox",
+    "b": "Crestback",
+    "score": 0.813,
+    "sameStructure": true
+   },
+   {
+    "a": "Fusebug",
+    "b": "Mossmaw",
+    "score": 0.813,
+    "sameStructure": false
+   },
+   {
+    "a": "Briarhog",
+    "b": "Gravelpup",
+    "score": 0.813,
+    "sameStructure": true
+   },
+   {
+    "a": "Anvilox",
+    "b": "Forgursa",
+    "score": 0.812,
+    "sameStructure": false
+   },
+   {
+    "a": "Whirlhare",
+    "b": "Dawnfinch",
+    "score": 0.812,
+    "sameStructure": false
+   },
+   {
+    "a": "Trunkle",
+    "b": "Orogon",
+    "score": 0.812,
+    "sameStructure": false
+   },
+   {
+    "a": "Snowdart",
+    "b": "Minkurk",
+    "score": 0.812,
+    "sameStructure": true
+   },
+   {
+    "a": "Breezle",
+    "b": "Mindle",
+    "score": 0.812,
+    "sameStructure": true
+   },
+   {
+    "a": "Kettlump",
+    "b": "Crustank",
+    "score": 0.811,
+    "sameStructure": false
+   },
+   {
+    "a": "Scalekin",
+    "b": "Cindruff",
+    "score": 0.81,
+    "sameStructure": false
+   },
+   {
+    "a": "Stumpkin",
+    "b": "Podling",
+    "score": 0.81,
+    "sameStructure": true
+   },
+   {
+    "a": "Fusebug",
+    "b": "Pyronix",
+    "score": 0.81,
+    "sameStructure": false
+   },
+   {
+    "a": "Twinklet",
+    "b": "Cerebrix",
+    "score": 0.808,
+    "sameStructure": false
+   }
+  ]
+ },
+ "smallFeatures": {
+  "note": "features that change only 1–3 pixels; decorative, may vanish at 16–24 px",
+  "count": 49,
+  "list": [
+   "Kilnback: vent_fins (1 px)",
+   "Scorchub: horns/swept (2 px)",
+   "Ashpeck: crest/spike (2 px)",
+   "Brookit: dorsal_fin (2 px)",
+   "Minnodart: dorsal_fin (2 px)",
+   "Sploshog: water_sacs (2 px)",
+   "Pondskip: antennae/straight (2 px)",
+   "Acornet: brows (3 px)",
+   "Thistlehop: ears/pointed (3 px)",
+   "Thistlehop: spines (3 px)",
+   "Fuzzvolt: ears/pointed (1 px)",
+   "Boltdart: ears/pointed (3 px)",
+   "Buzzhawk: beak/hooked (2 px)",
+   "Slatelet: stone_segments (3 px)",
+   "Clodhorn: horns/short (3 px)",
+   "Quarrox: horns/short (2 px)",
+   "Diggit: claws/hooked (2 px)",
+   "Geodot: crystal_growths (2 px)",
+   "Floebear: frost_shards (2 px)",
+   "Hoarcub: ears/rounded (3 px)",
+   "Hoarcub: fangs (3 px)",
+   "Hoarcub: fur_tufts (3 px)",
+   "Shiverkit: ears/pointed (3 px)",
+   "Kitelet: crest/spike (2 px)",
+   "Sailmoth: fur_tufts (1 px)",
+   "Nimbulk: fur_tufts (3 px)",
+   "Murkit: shadow_wisps (3 px)",
+   "Batwhisk: fangs (2 px)",
+   "Umbruin: claws/large (1 px)",
+   "Vexhound: fangs (2 px)",
+   "Crowlurk: beak/hooked (3 px)",
+   "Spindlet: fangs (2 px)",
+   "Gloomoth: fur_tufts (1 px)",
+   "Dawnfinch: beak/hooked (2 px)",
+   "Lanternox: horns/short (1 px)",
+   "Rivetto: metal_panels (2 px)",
+   "Anvilox: horns/short (2 px)",
+   "Kettlump: vent_fins (2 px)",
+   "Clockcrow: crest/spike (2 px)",
+   "Thinkump: brows (3 px)",
+   "Gazeling: ears/pointed (2 px)",
+   "Raptlet: horns/short (1 px)",
+   "Glidrake: crest/spike (2 px)",
+   "Crestback: ridge (1 px)",
+   "Gnashlet: horns/short (3 px)",
+   "Gnashlet: fangs (1 px)",
+   "Drakhound: horns/swept (3 px)",
+   "Drakhound: ears/pointed (3 px)",
+   "Wyvlet: horns/short (2 px)"
+  ]
+ },
+ "tuned": 68
+}
