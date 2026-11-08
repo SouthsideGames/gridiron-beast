@@ -54,28 +54,39 @@ These only set how fast an effect travels across the field. Each still resolves 
 
 ### Gameplay duration: Snowfall Slam (ICE-03-F) landing time (**PROVISIONAL 0.6 s**)
 
-The contract says the linebacker "cannot move, cover, block or tackle until both land". So the landing time is exactly how long
-he is out of the play.
+The contract says the linebacker "cannot move, cover, block or tackle until both land". So the landing time is how long he is out
+of the play. A snowball that lands on empty ground becomes a physical obstacle for both teams, as approved; that is part of the
+ability, not a failure.
 
-Sample: 240 plays per setting, the same plays and seeds with and without the ability, a full bar, mastery 0, against a mix of runs
-and passes.
+**Do the obstacles work?** Yes. Over 400 plays (200 runs, 200 passes), each with a full bar and mastery 0:
+- 750 obstacles stood on 399 of the plays.
+- Offensive players ran into them on 49 plays: 57 offensive players and 21 defenders were stopped or deflected by one.
+- The ball carrier was in contact with an obstacle on 823 ticks (0.05 s each).
 
-| Landing time | Snowballs on an offensive player | Stuns accepted | Obstacles | LB1 tackles (37 without the ability) | Yards a play (5.61 without) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 0.3 s | 23 / 480 | 5 | 457 | 32 | 5.75 |
-| 0.6 s | 22 / 480 | 4 | 455 | 25 | 5.85 |
-| 1.0 s | 21 / 480 | 5 | 443 | 26 | 5.91 |
+The footprints lie between the line and 5 yards into the backfield. So they obstruct handoff paths, the running lanes behind the
+line, pulling linemen and the QB's drop, not routes downfield. Routes start at the line and leave that band at once.
 
-What this shows:
-- Whatever the landing time, about 95% of the snowballs land on empty ground. They become obstacles that block both teams.
-- Only about 5% land on an offensive player, so a stun is rare.
-- Meanwhile the defense loses its linebacker for the landing time. As built, the ability costs the defense yards at every setting.
+**Their effect, separated from the linebacker's hold.** The same 400 plays and seeds, four ways:
 
-That is a consequence of random placement in the 5-yard backfield band (approved), not a timing defect. A shorter landing time
-reduces the cost (0.3 s: 32 tackles and +0.14 yards a play, against 0.6 s: 25 tackles and +0.24).
+| Variant | Run yards | Runs stuffed (≤1 yd) | Pass yards | LB1 tackles |
+| --- | ---: | ---: | ---: | ---: |
+| No ability | 6.01 | 28% | 6.71 | 75 |
+| Full ability (hold + obstacles) | 5.48 | 23% | 7.04 | 77 |
+| Hold only (no obstacles) | 5.53 | 22% | 6.76 | 75 |
+| Obstacles only (no hold) | 5.76 | 28% | 6.96 | 78 |
 
-Decision: a landing time, knowing it is a time out of the play. My recommendation is 0.3–0.4 s, and to review the placement rule
-if you want the ability to help its defense.
+At this sample the differences are within noise: about ±0.5 yards a play, since the sample is 200 plays of each kind and plays
+vary widely. **My earlier statement that the ability "costs the defense yards" is withdrawn.** The 240-play difference it rested
+on (+0.24 yards) was also within noise.
+
+What the measurement does establish:
+- The obstacles function as approved.
+- They act in the backfield band, not on routes.
+- The linebacker's 0.6 s hold does not measurably lower his tackles at this sample.
+
+Separating the two effects properly needs about 2,000 plays per variant, which I can run if you want the number.
+
+Decision: confirm 0.6 s as the landing time (equal to his time out of the play), or set another value.
 
 ### Contest curves (**PROVISIONAL**; contracts give no formula)
 
@@ -92,58 +103,70 @@ Both use the engine's tackle-contest scale: P(success) = 1 / (1 + e^(−d/16)).
 
 Decision: confirm the curve, or give a target success rate.
 
-## 3. Rare activations
+## 3. Rare activations: execution correctness and gameplay usability
 
-Full evidence: `docs/task8/M3_RARE_ACTIVATIONS.md` gives, for each ability, the approved trigger, opportunities, activations,
-failure reasons and a classification:
-- (a) a genuinely rare situation;
+Two separate questions for every ability:
+- **Execution correctness:** when its conditions occur, does the effect resolve exactly as approved?
+- **Gameplay usability:** are those conditions realistically attainable in supported, released gameplay?
+
+Evidence: `docs/task8/M3_RARE_ACTIVATIONS.md`. That file gives, for each ability, the trigger, opportunities, activations, reasons
+and class:
+- (a) a rare situation;
 - (b) broken detection;
-- (c) placement or geometry that is impossible or nearly so in this engine.
+- (c) geometry.
 
-Measured on a frozen copy with real AI games. **No ability defect (b) was found**: every opportunity that met the approved
-conditions activated, or was refused by a rule the contract states. The investigation did find one defect in the reviewer. It could
-stop on a charge or ready cue, or on the opponent's monster of the same family; that is fixed in 68add50.
+**Execution correctness:** no defect found in the 15 abilities measured. Every opportunity that met the approved conditions
+activated, or was refused by a stated rule. The reviewer's own stop rule was faulty and is fixed (68add50).
 
-| Ability | Opportunities → activations | Class | Decision needed |
+**Gameplay usability:** three abilities are not usable in released gameplay as built, and need a change. Proposals below; none is
+applied.
+
+| Ability | Correct when conditions occur | Usable in released gameplay | Smallest proposed change |
 | --- | --- | --- | --- |
-| Guiding Halo LIG-03-F | 102 completions, 0 within 6 yd → 0 (mastery 3: 8) | (c) | Yes, see above |
-| Crossed Wires ELE-01-F | 571 ready route snaps, 0 with a partner within 5 yd (min 7.0) → 0 | (c) | Yes: only the unreleased reserve bunch plays align two route runners within 5 yd. Release them, or rule on the 5-yd condition. Staged bunch playbook: 50 activations in 10 games |
-| Shadow Exchange DAR-06-F | forced, 704 armed releases, 3 in swap range → 2 (mastery 3: 8 of 539) | (c) + (a) | Yes: the partner test runs at the release, before defenders converge (nearest ally median 8.5 yd); the bar fills in about 5% of games |
-| Foresight PSY-03-F | 759 ready snaps, 38 with an LB within 3 yd → 19 (every one who blitzed) | (c) | Optional: LBs align 3.5–5 yd deep except in three fronts; about 0.6 a game |
-| Fortress Gate MET-06-F | 131 armed snaps → 93 (11 refused on a body, 2 at the end zone) | not rare; (c) in 3-lineman fronts (12 of 15 refused) | No |
-| Night Watch DAR-02-F | 979 defensive plays, 5 with a Dark field → 0 | (a) + (c) | Optional: an opposing Shadowkit's field forms on Night Watch's offense, so only an opposing Nocturne or an allied Shadowkit makes one |
-| Prism Break LIG-04-F | 195 armed snaps, 19 with an enemy zone → 19 (all base zones) | base zones fine; overlaps: (c) literal, (a) implemented | Yes, §1 |
-| Hoard Flight DRA-03-F | 12 fumbles in 3,163 plays, 1 his → 1 | (a): the engine fumbles on 0.38% of plays | No |
-| Tsunami Line WAT-06-F | 21 interceptions, 2 his → 2 | (a) | No |
-| Frostmark ICE-01-F | 48 made field goals → 47 (1 had a token already pending) | (a) | No |
-| Second Chance ICE-06-F | 14 games with a miss → 14 | (a) | No |
-| Slipstream Step WIN-02-F | 10 armed crossings of the line → 10 | (a) | No |
-| Crosswind Rescue WIN-04-F | 4 games with 2+ breakups → 4 | (a) | No |
-| Air Brake WIN-03-F | natural: 1 game reached 3 breakups → 1; forced 65 | (a): three breakups by one CB in a game | No |
-| Clean Sweep EAR-01-F | 25 banked → 25 | not rare | No |
-| Stone Cradle EAR-04-F | 68 returned punts → 49 (once per game) | (a) | No |
-| Dragon Roar DRA-05-F | with the AI policy: unstaged in 6 of 10 games | was "AI never"; now fixed | §4 |
+| Guiding Halo LIG-03-F, mastery 0–1 | Yes (mastery 3: 8 shields from 10 qualifying catches) | **No**: 0 of 102 completions within 6 or 8 yd of the QB; the nearest was 9 yd | Measure from the **snap spot** (the ball on the line), not the QB's current spot |
+| Crossed Wires ELE-01-F | Yes (staged bunch playbook: 50 activations in 10 games) | **No**: no released pass play aligns two route runners within 5 yd (closest 7, Mesh) | **Release** the designed bunch/stack reserve plays (10 have a pair within 5 yd); no rule change |
+| Shadow Exchange DAR-06-F | Yes (forced: 2 at mastery 0, 8 at mastery 3) | **Barely**: at the release a partner is within 3 yd of the catch point in 5% of cases, and also within Nyxshade's 8-yd range in 0.7% | Test the partner's **projected position at the ball's arrival**, with the swap still at the release |
 
-All the other abilities execute for their own monster within three unstaged games at mastery 0, Pyroclast's Burning Wake first in
-game 4. A strict reviewer sweep at 68add50 is recorded in M3_STATUS.md.
+Measurements behind each proposal:
 
-**Guiding Halo (LIG-03-F) is investigated; detection works.** Ten games with Lumen at QB:
+**Guiding Halo**, the share of completions inside the radius (10 games, 101 completions):
 
-| | Mastery 0 (6-yd radius) | Mastery 3 (12-yd radius) |
+| Measured from | 6 yd | 8 yd | 10 yd | 12 yd |
+| --- | ---: | ---: | ---: | ---: |
+| QB's position at the catch (built) | 0% | 0% | 2% | 10% |
+| QB's spot at the snap | 1% | 5% | 11% | 13% |
+| **The snap spot of the ball (the line)** | **11%** | **13%** | **24%** | **27%** |
+
+The proposal keeps the radii and changes only the reference point. It matches the contract's visual ("a thin gold halo connects
+the QB to the short-catch receiver"): short catches become the qualifying ones.
+
+**Crossed Wires.** The contract checks for a partner within five yards at the snap. Of the 24 released pass plays, none has such a
+pair; the closest are Mesh and Eye of the Storm at 7 yards. Ten reserve plays do (Bunch Snag, Whip Corner, Y Pivot and others at
+2–2.2 yards). Releasing them needs no rule change. The alternatives are a radius of 8 yards, which 8 released plays meet, or
+measuring the distance later in the route; each changes approved text.
+
+**Shadow Exchange.** Its purpose: when a pass is thrown, Nyxshade takes the place of a teammate who is about to contest the catch.
+The trigger moment is the release, at which defenders have not yet converged. Over 400 passes, testing each defender as Nyxshade
+(1,400 cases):
+
+| Partner test | Ally within 3 yd of the catch point | And within 8 yd of Nyxshade |
 | --- | ---: | ---: |
-| Offensive plays | 265 | 265 |
-| Completions | 102 | 102 |
-| Catches within the radius | 0 | 10 |
-| Shields applied | 0 | 8 (2 on cooldown) |
+| Positions at the release (built) | 73 (5%) | 10 (0.7%) |
+| Positions at the ball's arrival | 521 (37%) | 49 (3.5%) |
 
-The QB-to-receiver distance at the catch was p10 12.2, median 20.4, minimum 9.0 yards. The QB's drop puts every catch at least about
-9 yards away, so the approved 6- and 8-yard radii (mastery 0 and 1) cannot be met in this engine. This is geometry, not broken
-detection. Nothing is changed.
+The nearest ally to the catch point is a median 8.0 yards away at the release and 4.1 at the arrival. The catch point is already
+a projection made at the release, so projecting the partner the same way is the minimal reading that serves the purpose. The swap
+stays at the release.
 
-Decision options for Guiding Halo:
-1. Measure the radius from the QB's spot at the throw, or from the line of scrimmage, instead of his position at the catch.
-2. Change the radii.
-3. Keep it, accepting that mastery 0 and 1 almost never apply.
+Lesser findings (correct, and usable but rare):
+- **Foresight:** about 0.6 activations a game, because LBs line up 3.5–5 yards deep except in three fronts.
+- **Night Watch:** a natural Dark field is rare, because an opposing Shadowkit's field forms on Night Watch's offense.
+- **Prism Break overlaps:** see §1.
+- **Genuinely rare situations, no change needed:** Hoard Flight, Tsunami Line, Frostmark, Second Chance, Slipstream Step, Crosswind
+  Rescue, Air Brake and Stone Cradle.
+
+**Reviewer.** A deterministic scenario mode on the real engine is being added, so every ability can be shown directly at each
+form and mastery. Natural-game search stays as an optional demonstration.
 
 ## 4. Dragon Roar (DRA-05-F): AI use (implemented, **PROVISIONAL policy**)
 
@@ -246,18 +269,31 @@ Averages are over the 8 gyms.
 | 2, S1 | 8 of 8 | 77.5 | 0.38 | 0.42 | 54.2 |
 | 2, S3 | 8 of 8 | 82.4 | 0.35 | 0.34 | 59.1 |
 
-Findings:
-- The legendaries are not the problem. They stay, start, grow by about 11 OVR over six seasons, and do not age (legendaries are
-  ageless).
-- What erodes is the element identity. The own-element share of gym starters falls from 0.40 to 0.30 in six seasons: drafts,
-  signings and trades replace element players with off-element ones.
-- That matters for synergy as well as ratings:
-  - fields grant immunity to their own element;
-  - several gym legendaries' plans (D7) assume same-element support;
-  - Task 8 contracts often exempt same-type allies (for example Night Watch, Heat Haze, the Psychic pull).
+Legendary synergy and elemental identity, evaluated together:
+- **The legendary half holds.** Each gym keeps its legendary, starts him (7–8 of 8 every season), and he gains about 11 OVR in six
+  seasons. Legendaries are ageless.
+- **The identity half erodes.** The own-element share of gym starters falls from 0.40 to 0.30 over six seasons, and of rosters from
+  0.43 to 0.28. Drafts, signings and trades fill places without regard to element.
+- **The two interact less in football than the identity suggests.** I read the eight gym legendaries' football contracts:
+  - Only Tsunami Line (Harbor Sentinels) gains from same-element teammates: its full-width Water field slows non-Water monsters, so
+    Water teammates are immune.
+  - Daybreak explicitly affects every monster, Light types and allies included.
+  - Stormguard, Landslide, Shadow Exchange, Second Chance, Fortress Gate and Sovereign Arm do not depend on teammates' element.
+- **Elsewhere, element matters through fields and other contracts:** fields spare their own element; Heat Haze spares Fire; the
+  Psychic pull spares Psychic; Night Watch and Tailwind Huddle select by element. So a declining element share weakens what a gym's
+  element-mates do for each other, more than what its legendary does.
+- **The Clash side** (gym legendaries' Clash abilities, M4) is not measured yet.
 
-**Recommendation:** make element-first acquisition part of the gym identities (D7 item 3) and measure the share alongside OVR in the
-season 5 and 10 reports. This is structural, not a boost.
+**Conclusion.** The gyms' shrinking OVR edge (4.9 down to 0.9) is mainly acquisition: their starters grow no faster than ordinary
+clubs', while the legendary stays strong. The elemental identity erodes alongside it.
+
+**Options, none applied; no roster quota.**
+1. Leave it, and re-measure OVR, element share and legendary use in the season 5 and 10 reports.
+2. An element preference in the gyms' acquisition weighting, as part of the D7 identities. This is a tie-breaker, not a quota.
+3. A structural strength lever (initial tier gap, scouting priority) under D9.
+
+**Recommendation:** option 1 now, plus a measurement of the Clash side at M4. Option 2 needs your approval because it changes AI
+acquisition.
 
 ### D11: investigated
 
