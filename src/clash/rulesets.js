@@ -7,6 +7,7 @@
 // the game loads reaches it (no import-map change); S12 wires it into the franchise adapter.
 import { simulateClash as simulateLegacy, logHash as legacyLogHash } from './engine.js';
 import { CLASH_VALUES } from './values.js';
+import { simulateClashT8, t8LogHash } from './t8/engine.js';
 
 export const T8_RULESET = 't8';
 /** Rulesets the frozen legacy engine plays (the keys of values.js `rulesets`, minus its tag/default bookkeeping). */
@@ -18,6 +19,7 @@ export const isT8Ruleset = (r) => r === T8_RULESET;
 export function simulateByRuleset(args = {}) {
   const r = args.config?.ruleset;
   if (isLegacyRuleset(r)) return simulateLegacy(args);
+  if (isT8Ruleset(r)) return simulateClashT8(args);
   throw new Error(`Unknown Clash ruleset ${r}`);
 }
-export const logHashFor = (result) => legacyLogHash(result);
+export const logHashFor = (result) => (result.ruleset === T8_RULESET ? t8LogHash(result) : legacyLogHash(result));
