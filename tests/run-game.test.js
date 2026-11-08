@@ -128,27 +128,11 @@ test('F5: the back is not held back to wait for his blocker', () => {
   for (const off of ['power_right', 'power_left', 'counter']) assert.ok(reach(off) < 1.45, `${off}: the back reaches the line by ${reach(off).toFixed(2)} s`);
 });
 
-// ---- F6: Bulwark
-test('F6: Bulwark lifts the blockers beside him on runs, once, and only those within 2.2 yards', () => {
+// ---- F6: Bulwark (retired)
+// Task 8 M3: Ferrhorn's legacy Bulwark aura (+6 Blocking beside him) is retired; his Dex contract MET-05-F Bulwark Grid replaces it
+// (no stacking: tests/task8-abilities-light-metal.test.js). The F6 behaviour tests became this check that the legacy lift is gone.
+test('F6: the retired legacy Bulwark no longer lifts the blockers beside Ferrhorn (his Dex contract replaces it)', () => {
   const blk = (off, extra) => play({ off, def: 'cover_3', attr: 'speed', value: 65, seed: 82000, options: { trace: true }, extra }).blockingAtSnap;
   const one = blk('power_right', (o) => { o.C.species = 'metalhorn'; });
-  assert.equal(one.LG, 71, 'the pulling guard beside him');
-  assert.equal(one.RG, 71, 'the run-blocking guard beside him');
-  assert.equal(one.TE, 65, 'the tight end 3.2 yards away');
-  assert.equal(one.C, 65, 'not himself');
-  const two = blk('power_right', (o) => { o.LG.species = 'metalhorn'; o.RG.species = 'metalhorn'; });
-  assert.equal(two.C, 71, 'two Bulwarks beside the centre still give +6 once');
-  const pro = blk('inside_zone', (o) => { o.LG.species = 'metalhorn'; });
-  assert.equal(pro.RG, 65, 'in a Pro set the other guard is 3.4 yards away: no bonus (the existing 2.2-yard limit)');
-});
-
-test('F6: Bulwark helps measurably on runs, but never makes a block certain', () => {
-  let sheds0 = 0, sheds1 = 0; const y0 = [], y1 = [];
-  for (const off of ['power_right', 'power_left', 'counter']) for (const def of DEFENSE_IDS) for (let s = 0; s < 4; s++) {
-    const a = play({ off, def, attr: 'speed', value: 65, seed: 82100 + s }), b = play({ off, def, attr: 'speed', value: 65, seed: 82100 + s, extra: (o) => { o.C.species = 'metalhorn'; } });
-    sheds0 += a.events.filter((e) => e.kind === 'shed' && ['LG', 'RG'].includes(e.blocker)).length; sheds1 += b.events.filter((e) => e.kind === 'shed' && ['LG', 'RG'].includes(e.blocker)).length; y0.push(a.yards); y1.push(b.yards);
-  }
-  assert.ok(sheds1 < sheds0, `guards beside him are beaten less often (${sheds0} -> ${sheds1})`);
-  assert.ok(sheds1 > 0, 'but they are still beaten sometimes');
-  assert.ok(mean(y1) >= mean(y0), `run yards do not fall (${mean(y0).toFixed(2)} -> ${mean(y1).toFixed(2)})`);
+  assert.equal(one.LG, 65); assert.equal(one.RG, 65);
 });

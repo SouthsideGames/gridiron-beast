@@ -165,7 +165,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
     queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => !FX || FX.canStart(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
-    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null) };
+    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null),
+    // M3 hook: the game's Task 8 block (ledgers), the possession key, the play's result so far, every actor, the bounds, a monster's
+    // ordinary AI decision interval, a per-play movement override (fn(move) replaces his behaviour each tick) and physical obstacles.
+    t8: t8g, drive: memory?.drive ?? null, get result() { return result; }, actors, bounds: B, dt: DT, decisionEvery: (a) => readEvery(a),
+    override: (a, fn) => { a.moveOverride = fn; }, addObstacle: (o) => { obstacles.push({ ...o }); } };
+  const obstacles = []; // M3 hook: physical obstacles for this play ({ x0, x1, y0, y1, owner, ability }): block both teams' bodies, never the ball
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
   // ------------------------------------------------------------ Task 8 shared statuses in play (spec §10, §11; Appendix B)
   // One slot per monster in t8g.status (status-runtime.js gate). Effects are read at the snap and again the moment a status is accepted.
@@ -321,14 +326,27 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
       const a = actors[i], b = actors[j];
       if (a.engaged === b) continue;
+      if (a.team === b.team && (a.passAllies || b.passAllies)) continue; // M3 hook: a contract's pursuit mode ignores allied bodies (enemies still collide)
       const d = dist(a, b);
       if (d < 0.7 && d > 0.001) { const push = (0.7 - d) / 2, pa = FX ? push * FX.resist(a) : push, pb = FX ? push * FX.resist(b) : push; const ux = (b.x - a.x) / d, uy = (b.y - a.y) / d; a.x -= ux * pa; a.y -= uy * pa; b.x += ux * pb; b.y += uy * pb; } // Earth fields resist displacement
+    }
+    if (obstacles.length) for (const a of actors) obstruct(a); // M3 hook: physical obstacles, after the bodies
+  }
+  /** M3 hook: a body (radius half the separation distance) cannot enter an obstacle; he is set back out on the shallowest side and
+   *  loses his velocity into it. Both teams alike; the ball is never stopped. */
+  function obstruct(a) {
+    const R = 0.35;
+    for (const o of obstacles) {
+      if (a.x <= o.x0 - R || a.x >= o.x1 + R || a.y <= o.y0 - R || a.y >= o.y1 + R) continue;
+      const pen = [[a.x - (o.x0 - R), 'x', o.x0 - R, 1], [o.x1 + R - a.x, 'x', o.x1 + R, -1], [a.y - (o.y0 - R), 'y', o.y0 - R, 1], [o.y1 + R - a.y, 'y', o.y1 + R, -1]].sort((p, q) => p[0] - q[0])[0];
+      if (pen[1] === 'x') { a.x = pen[2]; if (a.vx * pen[3] > 0) a.vx = 0; } else { a.y = pen[2]; if (a.vy * pen[3] > 0) a.vy = 0; }
     }
   }
 
   // ------------------------------------------------------------ blocking
   function tryEngage(blocker, defender, soft = false) {
     if (blocker.engaged || defender.engaged || blocker.stun > 0 || defender.noEngage > 0) return false;
+    if (blocker.noContact || defender.noContact) return false; // M3 hook: a contract's per-play override starts no engagement
     // A missed open-field block costs him a moment before he can try again (Phase C1, F2). v42.15 set that pause on a miss but
     // never checked it, so on a run a soft block was retried every tick until it landed: a sure block. Runs only, so passes,
     // screens and the catch-and-run replay exactly as before.
@@ -392,6 +410,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     let push = clamp((runFit ? 0.2 : 0.75) + edge * 2.5, -0.5, 2.4); // yards/s the defender gains
     if (FX) push *= FX.resist(push > 0 ? blocker : d); // Earth field: the one being driven back resists
     if (!runFit && be.deepRoots && push > 0) { push *= be.deepRoots; if (t > 0.5) abilityUsed(blocker, 'deepRoots'); } // Deep Roots: pass rushers drive him back at half speed
+    if (blocker.contract) { const f = hook('blockPush', blocker, d, push); if (typeof f === 'number') push = f; } // M3 hook: the blocker's contract filters the ordinary push
     d.x += (gx / gd) * push * DT; d.y += (gy / gd) * push * DT;
     // Riptide: run blocks drag his defender toward the nearer sideline, up to the card's yard.
     if (runFit && be.riptide && (d.riptideDragged || 0) < be.riptide) {
@@ -709,7 +728,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     for (const d of defs) d.recognised = true; // nothing to read: everyone sees the ball in his hands
     log(`${r.name} fields the kickoff`, { kind: 'kick_catch', by: r.slot, side: 'off' });
   }
+  /** M3 hook: what a movement override may do this tick (steer toward a point; his own steering limits apply). */
+  const moveApi = (a) => ({ steer: (tx, ty, scale = 1, arrive = 0.3) => steer(a, tx, ty, scale, arrive), t });
   function offenseTick(a) {
+    if (a.moveOverride) { a.moveOverride(moveApi(a)); return; } // M3 hook: a contract's per-play behaviour override
     const asg = a.assignment;
     if (KO && asg?.a === 'ko_block') { kickoffBlock(a); return; }
     if (KO && ball.inAir) { kickoffFlightOffense(a); return; }
@@ -1735,6 +1757,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function defenseTick(d) {
     const asg = d.assignment;
     const mark = TRACE ? (m, x) => { d.why = m; d.why2 = x ?? null; } : () => {}; // developer trace: the branch he acted on
+    if (d.moveOverride) { mark('override'); d.moveOverride(moveApi(d)); return; } // M3 hook: a contract's per-play behaviour override
     if (d.engaged) { mark('engaged'); return; } // movement handled by the blocker's engagement
     if (KO) { if (ball.inAir) { mark('cover', 'flight'); kickoffFlightDefense(d); return; } if (ball.holder?.team === 'off') { if (kickoffCover(d, ball.holder)) { mark('cover', 'lane'); return; } mark('pursue', 'kickoff'); pursue(d); return; } }
     const c = ball.holder;
@@ -2010,8 +2033,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // right past him, once a play, at a fraction of a clean tackle's chance (Awareness: he sees him coming). Blocks that work no
     // longer make the man they hold invisible, which is what had turned an aware linebacker into a worse one once pullers arrived.
     const offBlock = !!d.engaged && isRun && !d.armTried && dist(d, c) <= 1.0;
+    if (d.noContact) return false; // M3 hook: a contract's per-play override initiates no tackle
     if (d.stun > 0 || (d.engaged && !offBlock) || dist(d, c) > 1.25) return false;
     if (offBlock) d.armTried = true;
+    if (d.contract) hook('tackling', d, c); // M3 hook: the tackler's contract sees his attempt begin
     const fwd = c.team === 'off' ? 1 : -1;
     // Task 8 M3 (P6 pre-resolution): a carrier's contract may break this attempt before it is decided (normal strips still apply later)
     if (hook('tackleAttempt', c, d)?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); return false; }
@@ -2060,7 +2085,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       // Forward progress across the goal line is a score, not a tackle at the 1.
       if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
       if (c.team === 'def' && c.x <= B.ownGoal) { stats.tackler = d.slot; endPlay('touchdown', Math.min(c.x, B.ownGoal), c.y, { defensiveScore: true }); log(`${c.name} falls into the end zone. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
-      if (rng.chance(fumbleP) && !fumbleSaved(c)) {
+      if ((rng.chance(fumbleP) || (d.contract && !!hook('tackleMade', d, c, { fumbleP })?.fumble)) && !fumbleSaved(c)) { // M3 hook: a tackler's contract may add a fumble check after the first did not fumble
         const near = actors.filter((a) => dist(a, c) < 2.5);
         const recoverer = near.length ? rng.pick(near) : d;
         stats.forcedBy = d.slot; stats.tackler = d.slot; stats.fumbledBy = c.slot; stats.recoveredSlot = recoverer.slot; stats.recoveredTeam = recoverer.team;
@@ -2088,7 +2113,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     endPlay('safety', c.x, c.y); log(`${d.name} tackles ${c.name} in the end zone. SAFETY`, { kind: 'safety' });
   }
   function trySack(d) {
-    if (d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false;
+    if (d.noContact || d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false; // M3 hook: noContact (a per-play override)
+    if (d.contract) hook('tackling', d, qb); // M3 hook
     const p = clamp(0.62 + 0.3 * norm(d.attrs.tackling * scaleVs(d, qb, 'sack')) - 0.35 * norm(qb.attrs.agility * scaleVs(qb, d, 'escape')), 0.25, 0.92);
     if (rng.chance(p)) {
       // Glacier Wall: sacks coming from his side of the line fail 30% of the time.
@@ -2098,7 +2124,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         return false;
       }
       stats.tackler = d.slot;
-      if (qb.windup && rng.chance(0.25) && !fumbleSaved(qb)) { // strip sack on the wind-up (Task 8 B3: a Shielded QB's save first)
+      if (qb.windup && (rng.chance(0.25) || (d.contract && !!hook('tackleMade', d, qb, { fumbleP: 0.25, sack: true })?.fumble)) && !fumbleSaved(qb)) { // M3 hook: as on a tackle // strip sack on the wind-up (Task 8 B3: a Shielded QB's save first)
         const near = actors.filter((x) => dist(x, qb) < 2.5); const rec = near.length ? rng.pick(near) : d;
         qb.windup = null; stats.forcedBy = d.slot; stats.fumbledBy = qb.slot; stats.recoveredSlot = rec.slot; stats.recoveredTeam = rec.team;
         log(`${d.name} strips ${qb.name} as he throws; ${rec.name} recovers`, { kind: 'fumble', by: d.slot, recoveredBy: rec.slot, team: rec.team });
@@ -2188,6 +2214,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (r.ability?.routeAgility) abilityUsed(r, 'routeAgility'); log(`${r.name} catches it${contested ? ' in traffic' : ''}`, { kind: 'catch', by: r.slot, side: 'off', contested: !!contested, ability: fired(r, 'catchContest', 'routeAgility', 'afterCatch') });
       if (L.x >= B.goal) { endPlay('touchdown', L.x, L.y); log('TOUCHDOWN', { kind: 'touchdown' }); }
       if (L.y <= B.left || L.y >= B.right) { endPlay('out_of_bounds', L.x, clamp(L.y, B.left, B.right)); }
+      for (const a of actors) if (a.contract) hook('reception', a, r); // M3 hook: after the catch resolves (ctx.result tells a scoring or dead catch)
       return;
     }
     ball.inAir = false;
@@ -2321,6 +2348,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     qb: qr.order ? { v: QB_MODEL_VERSION, order: qr.order, reads: qr.log, decision: qr.decision, aiWould: qr.aiWould, sensedAt: qr.sensedAt, fakeAt: qr.fakeAt ?? null } : null, // the recorded read log (replays, AI Testing Lab)
   };
   if (FX) { const o = FX.output(); out.fields = o.fields; if (o.clumps.length) out.fieldObjects = { clumps: o.clumps }; } // Task 8: the functional field rectangles (field view, replays)
+  if (obstacles.length) out.obstacles = obstacles.map((o) => ({ ...o })); // M3 hook: this play's physical obstacles (field view, replays)
   if (KO) out.kickoff = { returner: KO.returner, catchX: stats.kickCatchX ?? null, hang: ball.flightTime };
   // Developer trace only (Phase C1 tests): each offensive player's Blocking after auras, kept out of the play's data (not enumerable,
   // so a traced play still serialises exactly as an untraced one).

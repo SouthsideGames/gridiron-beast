@@ -110,9 +110,8 @@ test('scrambles and interception returns use the same rule, and abilities still 
   const fastRet = ret(95), slowRet = ret(60);
   assert.ok(fastRet.n >= 5 && slowRet.n >= 5, `interceptions found ${fastRet.n} / ${slowRet.n}`);
   assert.ok(fastRet.avg > slowRet.avg, `a Speed 95 defense returns interceptions farther than a Speed 60 one against Speed 60 chasers: ${fastRet.avg.toFixed(1)} vs ${slowRet.avg.toFixed(1)} yd`);
-  // Radiant Pursuit (+15% chasing from behind) still multiplies on top of the effort rule
-  const closing = (ability) => { let g = 0, n = 0; for (let i = 0; i < 40; i++) { const sim = play({ off: 'bubble_screen', def: 'cover_3', seed: 46000 + i, options: { trace: true }, extra: (o, d) => { o.WR3.attrs.speed = 92; for (const s of Object.keys(d)) { d[s].attrs.speed = 65; if (ability) d[s].species = 'halofang'; } } }); if (sim.stats.receiver !== 'WR3' && sim.stats.carrier !== 'WR3') continue; g += sim.yards; n++; } return g / n; };
-  assert.ok(closing(true) < closing(false), 'Radiant Pursuit pursuers allow fewer yards: the ability still applies');
+  // (Task 8 M3: the legacy Radiant Pursuit +15% speed is retired; Haloryx's Dex contract LIG-05-F replaces it, no stacking:
+  // tests/task8-abilities-light-metal.test.js)
 });
 
 test('a 95 carrier escapes a 65 defense more often than a 65 carrier does on the same plays (bubble screen and deep go)', () => {

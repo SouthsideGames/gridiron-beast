@@ -13,10 +13,11 @@ export function queueField(t8, spec) { book(t8).pending.push({ ...spec }); }
 export function createPending(t8, { onField, eligible = () => true, place, playIndex }) {
   const b = book(t8); const made = []; const keep = [];
   for (const p of b.pending) {
-    if (!onField.has(p.owner) || !eligible(p)) { keep.push(p); continue; }
+    if (!(p.offField || onField.has(p.owner)) || !eligible(p)) { keep.push(p); continue; } // M3 hook: offField: an approved off-field creation permission (N7d G3)
     const r = placeRect({ id: `F${++b.seq}`, type: p.type, createdAt: playIndex, owner: p.owner, strength: p.strength ?? null, ...place(p) });
     // `payload`: the producing ability's approved per-field data the in-play effects read (src/sim/t8/field-effects.js)
-    const f = { ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, payload: p.payload ?? null, remaining: p.lifetime, clock: p.clock, clearsAtHalftime: p.clearsAtHalftime !== false, createdThisPlay: true };
+    // M3 hook: ownerTeam, the creator's club (home/away)
+    const f = { ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, payload: p.payload ?? null, ownerTeam: p.ownerTeam ?? null, remaining: p.lifetime, clock: p.clock, clearsAtHalftime: p.clearsAtHalftime !== false, createdThisPlay: true };
     b.list.push(f); made.push(f);
   }
   b.pending = keep; return made;

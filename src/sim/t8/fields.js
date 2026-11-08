@@ -16,7 +16,10 @@ export function placeRect({ id, type, createdAt, centerLat, yardFrom, yardTo, wi
   const y0 = Math.max(PLAYABLE.yardMin, Math.min(yardFrom, yardTo)), y1 = Math.min(PLAYABLE.yardMax, Math.max(yardFrom, yardTo));
   return Object.freeze({ id, type, createdAt, strength, owner, lat: [lo, hi], yard: [y0, y1] });
 }
-export const contains = (r, yard, lat) => yard >= r.yard[0] && yard <= r.yard[1] && lat >= r.lat[0] && lat <= r.lat[1];
+const inRect = (r, yard, lat) => yard >= r.yard[0] && yard <= r.yard[1] && lat >= r.lat[0] && lat <= r.lat[1];
+// M3 hook (Prism Break, spec §11): `holes` are removed footprints ({ yard, lat }); a point inside one is not in the field. A removed
+// footprint is never reconstituted when overlaps are recomputed.
+export const contains = (r, yard, lat) => inRect(r, yard, lat) && !(r.holes || []).some((h) => inRect(h, yard, lat));
 
 /** The six approved hybrid recipes (only these create hybrids). */
 export const RECIPES = Object.freeze([
@@ -74,7 +77,8 @@ export function toPlayFrame(fields, { home, ballOn, ballLat = 0 }) {
   const fx = (yard) => (home ? yard : 100 - yard) - ballOn, fy = (lat) => (home ? lat : -lat) - ballLat;
   return (fields || []).map((f) => {
     const xs = f.yard.map(fx), ys = f.lat.map(fy);
+    const hole = (h) => { const hx = h.yard.map(fx), hy = h.lat.map(fy); return { yard: [Math.min(...hx), Math.max(...hx)], lat: [Math.min(...hy), Math.max(...hy)] }; };
     return { id: f.id, type: f.type, createdAt: f.createdAt, strength: f.strength ?? null, owner: f.owner ?? null, ability: f.ability ?? null, payload: f.payload ?? null,
-      yard: [Math.min(...xs), Math.max(...xs)], lat: [Math.min(...ys), Math.max(...ys)] };
+      yard: [Math.min(...xs), Math.max(...xs)], lat: [Math.min(...ys), Math.max(...ys)], ...(f.holes?.length ? { holes: f.holes.map(hole) } : {}) }; // M3 hook: removed footprints
   });
 }

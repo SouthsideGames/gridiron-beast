@@ -173,7 +173,8 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     const h = effectsAt(fields, a.x, a.y, a.type).hybrid?.name; if (h !== 'Eclipse') return true;
     ev(a, 'field_blocked_start', `${a.name}'s signature cannot start inside the Eclipse`, { hybrid: 'Eclipse' }); return false;
   }
-  const output = () => ({ fields: fields.map((f) => ({ id: f.id, type: f.type, strength: f.strength, owner: f.owner, ability: f.ability, yard: [...f.yard], lat: [...f.lat] })), clumps: clumps.map((c) => ({ x: +c.x.toFixed(2), y: +c.y.toFixed(2), d: LIVING_TERRAIN.diameter })) });
+  // M3 hook: a field's Prism Break removed footprints (holes) go out with it
+  const output = () => ({ fields: fields.map((f) => ({ id: f.id, type: f.type, strength: f.strength, owner: f.owner, ability: f.ability, yard: [...f.yard], lat: [...f.lat], ...(f.holes?.length ? { holes: f.holes.map((h) => ({ yard: [...h.yard], lat: [...h.lat] })) } : {}) })), clumps: clumps.map((c) => ({ x: +c.x.toFixed(2), y: +c.y.toFixed(2), d: LIVING_TERRAIN.diameter })) });
   return { tick, shapeDv, coast, resist, displace, defer, lure, canStart, output, get clumps() { return clumps; }, bonds, echoes };
 }
 

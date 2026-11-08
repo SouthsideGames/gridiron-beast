@@ -13,9 +13,10 @@ export function staminaOf(state, input) { const b = book(state); if (!input?.id)
 /** After a completed play: each participant drains (Afflicted drains faster, B10). */
 export function afterPlay(state, inputs) {
   const seen = new Set();
+  const relief = state.t8?.drainRelief || null; if (state.t8) delete state.t8.drainRelief; // M3 hook: this play's ordinary-drain relief by monster id (set by contracts during the play)
   for (const x of inputs) { if (!x?.id || seen.has(x.id)) continue; seen.add(x.id); const s = staminaOf(state, x); const slot = statusOf(state, x.id); const af = slot?.id === 'afflicted';
     // Afflicted (STA-05) lowers effective Durability by its payload; the stored rating is unchanged (status-effects.js).
-    book(state)[x.id] = drainPlay(s, { afflicted: af, effectiveDurability: af ? effectiveAttr(slot, 'durability', x.attrs?.durability ?? perm(x)) : x.attrs?.durability }); }
+    book(state)[x.id] = drainPlay(s, { afflicted: af, effectiveDurability: af ? effectiveAttr(slot, 'durability', x.attrs?.durability ?? perm(x)) : x.attrs?.durability, relief: relief?.[x.id] || 0 }); }
 }
 /** Halftime: every record restores 50% of capacity, capped at full; exhaustion stays. */
 export function halftime(state) { const b = book(state); for (const k of Object.keys(b)) b[k] = restHalf(b[k]); }
