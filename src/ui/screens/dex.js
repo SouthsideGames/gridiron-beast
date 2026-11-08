@@ -8,7 +8,7 @@ import { SPECIES_DEX, RARITIES, TRAITS, ELEMENT_REGIONS, COLLECTION_MILESTONES }
 import { TYPES, evolvedSpec } from '../../data/monsters.js';
 export { evolvedSpec };
 import { sprite16 } from '../sprite16.js';
-import { dexStatus, dexCounts, dexFormSeen } from '../../franchise/franchise.js';
+import { dexStatus, dexCounts, dexFormSeen, DEX_GROUPS } from '../../franchise/franchise.js';
 import { dexCountsGlobal } from '../../franchise/dex-store.js';
 
 const POS_NAME = { QB: 'Quarterback', RB: 'Running back', WR: 'Receiver', TE: 'Tight end', OL: 'Lineman', DL: 'Pass rusher', LB: 'Linebacker', CB: 'Cornerback', S: 'Safety', K: 'Kicker' };
@@ -21,10 +21,14 @@ export function registerDexScreens(Router, app) {
     render({ f, params }) {
       const revealAll = !!params?.all;
       const status = (s) => (revealAll ? 'seen' : dexStatus(f, s.id));
-      const { seen, signed } = dexCounts(f);
+      // Family-based tallies (owner ruling 2026-11-07): the original 72, the 120 Basics and all 192, each counted separately;
+      // an evolved form counts once, as its family. The collection milestones belong to the original 72 (their last step is the
+      // 72-family completion badge), so the next milestone follows the original tally.
+      const counts = revealAll ? Object.fromEntries(Object.entries(DEX_GROUPS).map(([k, ids]) => [k, { seen: ids.length, signed: 0, total: ids.length }])) : dexCounts(f);
+      const { seen, signed, total } = counts.all;
       const career = dexCountsGlobal();
-      const total = SPECIES_DEX.length;
-      const next = COLLECTION_MILESTONES.find((m) => m.at > seen);
+      const next = COLLECTION_MILESTONES.find((m) => m.at > counts.original.seen);
+      const groupLine = [['original', 'Original'], ['basic', 'Basic'], ['all', 'All']].map(([k, l]) => `<span class="chip" data-dex-group="${k}">${l} ${counts[k].seen}/${counts[k].total}</span>`).join(' ');
       const groups = Object.keys(TYPES).map((el) => {
         const list = SPECIES_DEX.filter((s) => s.element === el);
         const found = list.filter((s) => status(s) !== 'unknown').length;
@@ -32,7 +36,8 @@ export function registerDexScreens(Router, app) {
           <div class="dex-grid">${list.map((s) => { const st = status(s); return `<button class="dex-cell ${st}" data-action="open" data-id="${s.id}" aria-label="${st === 'unknown' ? 'Unknown species' : esc(s.name)}">${st === 'unknown' ? silhouette(s, 40) : sprite16(s, 40)}<span class="dex-name">${st === 'unknown' ? '???' : esc(s.name)}</span><span class="dex-r r-${s.rarity}">${st === 'unknown' ? '' : RARITIES[s.rarity].label}</span>${st === 'signed' ? '<span class="dex-tick" title="Signed">✓</span>' : ''}</button>`; }).join('')}</div></section>`;
       }).join('');
       return `
-        <div class="panel tight"><div class="row between"><div><b>${seen} / ${total} discovered</b><div class="muted">${signed} signed · ${revealAll ? 'developer view: all revealed' : career.franchises > 1 ? `your collection across ${career.franchises} franchises` : f ? 'scout a region or play a club to discover more' : 'your collection carries into every franchise'}</div></div>${next ? `<div class="dim" style="text-align:right;font-size:12px;max-width:45%">Next at ${next.at}: ${esc(next.reward)}</div>` : ''}</div>
+        <div class="panel tight"><div class="row between"><div><b>${seen} / ${total} discovered</b><div class="muted">${signed} signed · ${revealAll ? 'developer view: all revealed' : career.franchises > 1 ? `your collection across ${career.franchises} franchises` : f ? 'scout a region or play a club to discover more' : 'your collection carries into every franchise'}</div></div>${next ? `<div class="dim" style="text-align:right;font-size:12px;max-width:45%">Next at ${next.at} original families: ${esc(next.reward)}</div>` : ''}</div>
+          <div class="chips dex-groups" style="margin:6px 0 4px">${groupLine}</div>
           <div class="dex-bar"><i style="width:${(seen / total) * 100}%"></i></div></div>
         ${groups}
         <p class="dim center" style="margin-top:12px">Common and uncommon species are scouted in their regions. Rares appear only in one home region from week 4. Legendaries are won through Legend Tracks (coming in Prototype 2).</p>`;
