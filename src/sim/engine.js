@@ -168,6 +168,21 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       x, y, lineX: x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, baseAttrs: given,
+      // Perf (outcome-identical): the properties set or read later in a play, declared here as undefined so every actor starts with
+      // one object shape (no actor's keys are ever enumerated, spread, serialised or tested with `in`; undefined reads as absent).
+      read: undefined, recognisedPass: undefined, effort: undefined, effortT: undefined, zoneTgt: undefined, softBlock: undefined, engagedAt: undefined,
+      wasBlocked: undefined, pancakeRolled: undefined, zoneTgtLeaving: undefined, cutUntil: undefined, zoneNextEval: undefined, engaged2: undefined,
+      peakSeen: undefined, lastBeat: undefined, sawRelease: undefined, breakPlant: undefined, laneTimer: undefined, jukeCooldown: undefined,
+      maxSpeedMods: undefined, baseMaxSpeed: undefined, windup: undefined, throwRead: undefined, lateralRead: undefined, laneY: undefined,
+      caughtAt: undefined, mesh: undefined, jobDone: undefined, visionTimer: undefined, landslideChecked: undefined, landslide: undefined,
+      t8Base: undefined, status: undefined, knockedDown: undefined, whiffed: undefined, leadRead: undefined, armTried: undefined, koTarget: undefined,
+      koSet: undefined, climbed: undefined, koBroke: undefined, stumbled: undefined, laneDecided: undefined, t8Suppressed: undefined,
+      optionRead: undefined, released: undefined, fx: undefined, m3Aura: undefined, ignoreFieldAwareness: undefined, immune: undefined,
+      maxEngagements: undefined, splitMods: undefined, pairMods: undefined, anchor: undefined, forcedAim: undefined, phased: undefined,
+      passAllies: undefined, moveOverride: undefined, t8Chase: undefined, noContact: undefined, temp: undefined, sitsOut: undefined,
+      noTackle: undefined, noBall: undefined, possessionEndsPlay: undefined, fixedJob: undefined, abilityLogged: undefined, roarUntil: undefined,
+      slowUntil: undefined, daybreak: undefined, prevV: undefined, contract: undefined, family: undefined, form: undefined, mastery: undefined,
+      kickerAbility: undefined,
     };
     if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
     if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; a.kickerAbility = familyById(input.species)?.position === 'K'; } // kickerAbility: N8b special-play eligibility
