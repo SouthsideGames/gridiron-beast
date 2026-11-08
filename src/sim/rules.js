@@ -141,6 +141,9 @@ function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...O
 const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
 const absLat = (state, l) => (state.possession === 'home' ? l : -l);
 function fieldPlacement(state, p, offensePlay = null, alignOf = () => null) {
+  // M3 hook: (Nature / Electric batch) an ability-given rectangle, longitudinally in yards beyond the upcoming LOS (`from`..`to`, offense
+  // frame of the creation play) and laterally centred on `lat` (engine frame: relative to the ball) or `latAbs` (offense-frame field lateral)
+  if (p.rect) return { centerLat: absLat(state, p.rect.latAbs ?? (state.ballLat || 0) + (p.rect.lat || 0)), yardFrom: absYard(state, state.ballOn + p.rect.from), yardTo: absYard(state, state.ballOn + p.rect.to), width: p.width };
   // M3 hook: (Fire/Water batch) p.depth 'creator' centres the length on the creator's formation alignment (Impact Pyre: the LB's starting
   // position), otherwise on the fixed reference p.lbDepth beyond the line (5: LB reference; Tsunami Line 12: safety reference); p.lateral
   // 'creator' centres the width on the creator's initial alignment (Burning Wake), otherwise on the ball.
@@ -206,10 +209,22 @@ function afterPlayFields(state, t8, slots, sim, offIds) {
  *  the contract allows off-field creation (benchOk / offField, N7d G3); maxOwn: one own active field of that ability at a time. */
 function pendingEligible(state, t8, p, offIds, defIds) {
   if (p.immediate) return false; // Fire/Water: an immediate field (Splashdown) is placed at the whistle, not at a snap
-  const def = p.side === 'def' || p.createOn === 'ownerDefense';
+  const def = p.side === 'def' || p.side === 'defense' || p.createOn === 'ownerDefense'; // 'defense': the Nature / Electric batch's spelling
   if (p.ownerTeam && (def ? state.possession === p.ownerTeam : state.possession !== p.ownerTeam)) return false;
   if (!p.offField && !p.benchOk && !(def ? defIds : offIds).has(p.owner)) return false;
   return !(p.maxOwn && T8F.activeFields(t8).some((f) => f.owner === p.owner && f.ability === p.ability));
+}
+/** M3 hook: each on-field contract's pre-snap step (registry.js preSnap), offense then defense in slot order, before pending fields
+ *  are created. Its draws come from a stream seeded by the game seed, the play index and the monster, never the game's own dice. */
+/** M3 hook (Nature / Electric batch): every on-field contract's play-level `hooks.preSnap(pctx, self)`, with its own seeded stream. */
+function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
+  for (const [team, side, play] of [['off', slots.offense, offensePlay], ['def', slots.defense, defensePlay]]) for (const slot of play.onField) {
+    const p = side[slot]; const c = p?.id && p.species ? contractOf(p.species) : null; if (!c?.hooks?.preSnap) continue;
+    const self = { mid: p.id, family: p.species, form: p.form || `${p.species}:0`, mastery: p.mastery || 0, slot, team, type: p.type || null, name: p.name || slot };
+    let h = 2166136261; for (const ch of `${state.seed}|${state.playCount || 0}|${p.id}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+    c.hooks.preSnap({ t8, rng: createRng((h >>> 0) || 23), state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
+      queueField: (spec) => T8F.queueField(t8, spec), ballOn: state.ballOn, offensePlay, defensePlay, slots: { off: slots.offense, def: slots.defense }, playIndex: state.playCount || 0, sitsOut: T8S.sitsOutPlay(state, p.id) }, self);
+  }
 }
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
@@ -226,6 +241,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
   const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) return defensePlay.align[sl] || null; return null; };
   preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers that queue fields for this snap
+  preSnapHooks(state, t8, slots, offensePlay, defensePlay); // M3 hook: (Nature / Electric) play-level preSnap hooks
   const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay, alignOf) }) : []; // G3
   // M3 hook: the snap's pre-choice point for every on-field contract (e.g. Prism Break), after this snap's fields exist
   for (const [team, play, map] of [['off', offensePlay, slots.offense], ['def', defensePlay, slots.defense]]) for (const [slot, m] of Object.entries(map)) {

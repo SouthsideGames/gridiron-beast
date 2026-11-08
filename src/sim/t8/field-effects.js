@@ -47,7 +47,9 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   const unpair = (a) => { if (a.engaged) { a.engaged.engaged = null; a.engaged = null; } };
 
   /** Shared-gate status attempt from a field (§11 "explicit field-inflicted status uses normal status gates"). */
-  function inflict(a, id, b) { return applyStatus(state, a.mid, { id, strength: b.strength, duration: 0, restOfPlay: id === 'stunned', sourceId: b.field.owner, abilityId: b.field.ability }); }
+  function inflict(a, id, b) {
+    if (a.immune && (a.immune.has('*') || a.immune.has(id))) return { accepted: false, reason: 'immune' }; // M3 hook: an ability's per-play status immunity
+    return applyStatus(state, a.mid, { id, strength: b.strength, duration: 0, restOfPlay: id === 'stunned', sourceId: b.field.owner, abilityId: b.field.ability }); }
   /** Electric: chance to apply Stunned on first entry (starting inside counts; no re-entry reroll). */
   function electric(a, b) {
     if (b.strength == null || a.sitsOut || !rng.chance(pct(b.strength))) return;
@@ -74,6 +76,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     t = now;
     if (!placed) { placed = true; clumps = placeClumps(fields, actors, rng); if (clumps.length) log(`Living Terrain raises ${clumps.length} vine clump${clumps.length > 1 ? 's' : ''}`, { kind: 'field_clumps', clumps: clumps.map((c) => [c.x, c.y]) }); }
     for (const a of actors) {
+      if (a.envImmune) continue; // M3 hook: an actor immune to environmental modifiers (Stormguard's guards) never experiences a field
       const st = (a.fx ||= { seen: new Set(), attr: {}, drift: 0, cut: a.cutUntil });
       const e = effectsAt(fields, a.x, a.y, a.type);
       st.base = {}; for (const b of e.base) st.base[b.type] = { strength: b.strength, field: byId.get(b.fieldId) };
@@ -102,7 +105,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   /** Magnetic Storm: once a play, nearest eligible nonparent pairs within 3 yd bond (one partner each); break at 6 yd, exit or whistle. */
   function magnetic() {
     for (const b of bonds) if (b.live && (hyp(b.a, b.b) > MAGNETIC_STORM.breakAt || b.a.fx.hybrid !== 'Magnetic Storm' || b.b.fx.hybrid !== 'Magnetic Storm')) { b.live = false; ev(b.a, 'field_unbond', `${b.a.name} and ${b.b.name} break the Magnetic Storm's hold`, { partner: b.b.slot, partnerSide: b.b.team }); }
-    const free = actors.filter((a) => a.fx.hybrid === 'Magnetic Storm' && !a.fx.bonded && !a.sitsOut); if (free.length < 2) return;
+    const free = actors.filter((a) => a.fx?.hybrid === 'Magnetic Storm' && !a.fx.bonded && !a.sitsOut); if (free.length < 2) return;
     const pairs = [];
     for (let i = 0; i < free.length; i++) for (let j = i + 1; j < free.length; j++) { const d = hyp(free[i], free[j]); if (d <= MAGNETIC_STORM.pairWithin) pairs.push([d, free[i], free[j]]); }
     pairs.sort((p, q) => p[0] - q[0] || `${p[1].team}${p[1].slot}`.localeCompare(`${q[1].team}${q[1].slot}`));
