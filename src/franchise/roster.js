@@ -29,8 +29,11 @@ export function depthOrder(roster, depth, group) {
  * (legacy), the owner's depth order per position (injured monsters are
  * skipped, so the next one in order steps in), then the best available.
  */
-export function buildDepthChart(roster, manual = {}, depth = null) {
+/* Task 8 D7: `prefer(m)` (an AI identity, identities.js lineupPreference) adds a few points to a candidate's overall when the base and
+ * package slots are filled by position; only position-legal monsters are ever candidates, so the preference only orders legal options. */
+export function buildDepthChart(roster, manual = {}, depth = null, { prefer = null } = {}) {
   const chart = {}; const used = new Set();
+  const pv = new Map(); const rank = prefer ? (m) => { let v = pv.get(m); if (v === undefined) { v = monsterOverall(m) + (prefer(m) || 0); pv.set(m, v); } return v; } : monsterOverall;
   const take = (slot, m) => { chart[slot] = m.id; used.add(m.id); };
   const all = [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'];
   const BASE = new Set([...OFFENSE_BASE, ...DEFENSE_BASE, 'K']);
@@ -50,7 +53,7 @@ export function buildDepthChart(roster, manual = {}, depth = null) {
     for (const slot of slots) {
       if (chart[slot]) continue;
       const need = positionOf(slot);
-      const primary = roster.filter((m) => !used.has(m.id) && available(m) && m.position === need).sort((a, b) => monsterOverall(b) - monsterOverall(a))[0];
+      const primary = roster.filter((m) => !used.has(m.id) && available(m) && m.position === need).sort((a, b) => rank(b) - rank(a))[0];
       if (primary) { take(slot, primary); continue; }
       const secondary = roster.filter((m) => !used.has(m.id) && available(m) && canPlay(m.position, slot)).sort((a, b) => monsterOverall(b, { slotPosition: need }) - monsterOverall(a, { slotPosition: need }))[0];
       if (secondary) { take(slot, secondary); continue; }
@@ -113,8 +116,8 @@ export function unavailableSlots(roster, chart) { return borrowedSlots(roster, c
 export const emergencyPick = legalFiller;
 
 /** A complete team object for the runner from a roster. */
-export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = null, offensePlays = null, defensePlays = null, coach = null, trainingBonus = null }) {
-  const chart = buildDepthChart(roster, manual, depth);
+export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = null, offensePlays = null, defensePlays = null, coach = null, trainingBonus = null, prefer = null }) {
+  const chart = buildDepthChart(roster, manual, depth, { prefer });
   const lineup = lineupFromChart(roster, chart, { trainingBonus });
   const onChart = new Set(Object.values(chart).filter(Boolean));
   const bench = roster.filter((m) => available(m) && !onChart.has(m.id)).sort((a, b) => monsterOverall(b) - monsterOverall(a))
@@ -135,6 +138,7 @@ const MAN_D = ['cover_2_man', 'cover_1', 'man_press', 'robber', 'bracket_left', 
 /** AI game plan: exactly 6 offensive and 6 defensive plays, like the player. Mix follows the coach's tendencies. */
 export const AI_PLAN_SIZE = 6;
 export function playbookFor(seed, coach = {}) {
+  if (coach?.identity?.offense && IDENTITY_RUNS[coach.identity.offense] != null) return identityPlaybook(seed, coach);
   const rng = createRng(seed);
   const pick = (arr, n) => { const a = arr.filter((p) => PLAYS_IDS.has(p)); const out = []; while (out.length < n && a.length) out.push(a.splice(rng.int(a.length), 1)[0]); return out; };
   const passBias = coach.passBias ?? 0.55, aggression = coach.aggression ?? 0.5;
@@ -142,6 +146,31 @@ export function playbookFor(seed, coach = {}) {
   const offense = [...pick(RUN_PLAYS, runs), ...pick(PASS_PLAYS, AI_PLAN_SIZE - runs)];
   const primary = aggression > 0.55 ? MAN_D : ZONE_D, secondary = aggression > 0.55 ? ZONE_D : MAN_D;
   const defense = [...pick(primary, 3), ...pick(secondary, 2), ...pick(['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy'], 1)];
+  return { offense, defense };
+}
+/**
+ * Task 8 D7: the 6 + 6 of an AI club with an identity (identities.js). Offence: the identity's run count (Air Raid 2, Balanced 3, Ground
+ * Attack 4, as the pass-bias rule above), plays carrying the identity's style tags drawn IDENTITY_STYLE_WEIGHT times as often. Defence:
+ * three from the identity's family (Blitz Heavy: the blitzes; Zone Control: zone coverages; Man Coverage: man coverages), two from the
+ * other coverage family, one run call (two for a physical run front, in place of one coverage call). Only plays of the released book.
+ */
+const IDENTITY_RUNS = Object.freeze({ pass: 2, balanced: 3, run: 4 });
+export const IDENTITY_STYLE_WEIGHT = 3; // PROVISIONAL
+const PASS_STYLE = Object.freeze({ vertical: ['deep', 'long'], quick: ['quick', 'short'] });
+const RUN_STYLE = Object.freeze({ inside: ['inside', 'goalline'], option: ['option', 'outside', 'misdirection'] });
+const RUN_D = ['run_wall', 'edge_contain', 'bear_front', 'goal_line', 'goal_line_man', 'qb_spy'];
+function identityPlaybook(seed, coach) {
+  const rng = createRng(seed); const id = coach.identity;
+  const tagged = (tags) => (p) => (tags?.length && PLAYS[p]?.tags.some((t) => tags.includes(t)) ? IDENTITY_STYLE_WEIGHT : 1);
+  const pick = (arr, n, w = () => 1) => { const a = arr.filter((p) => PLAYS_IDS.has(p)); const out = []; while (out.length < n && a.length) { const tot = a.reduce((s, p) => s + w(p), 0); let x = rng.next() * tot, i = 0; for (; i < a.length - 1; i++) { x -= w(a[i]); if (x < 0) break; } out.push(a.splice(i, 1)[0]); } return out; };
+  const runs = IDENTITY_RUNS[id.offense];
+  const offense = [...pick(RUN_PLAYS, runs, tagged(RUN_STYLE[id.runStyle])), ...pick(PASS_PLAYS, AI_PLAN_SIZE - runs, tagged(PASS_STYLE[id.passStyle]))];
+  const blitz = [...new Set([...ZONE_D, ...MAN_D, 'fire_zone'])].filter((p) => PLAYS[p]?.tags.includes('blitz'));
+  const zone = ZONE_D.filter((p) => !blitz.includes(p)), man = MAN_D.filter((p) => !blitz.includes(p));
+  const primary = id.defense === 'pressure' ? blitz : id.defense === 'man' ? man : zone;
+  const secondary = id.defense === 'coverage' ? man : id.defense === 'man' ? zone : [...zone, ...man];
+  const runCalls = id.runFront ? 2 : 1;
+  const defense = [...pick(primary, 3), ...pick(secondary, AI_PLAN_SIZE - 3 - runCalls), ...pick(RUN_D, runCalls)];
   return { offense, defense };
 }
 /**
@@ -179,14 +208,14 @@ export function adaptPlaybook(seed, base, profile, { swaps = 2 } = {}) {
   const offense = swapIn(base.offense, OFFENSE_IDS, oppDef, swaps, (id, out) => !(PLAYS[id].type === 'run' && out.filter((x) => PLAYS[x].type === 'run').length <= 2));
   return { offense: [...new Set(offense)].slice(0, 6), defense: [...new Set(defense)].slice(0, 6), notes };
 }
-export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null, scouting = null, element = null, legendary = null, signature = null, evolveStage = 0, composition = undefined, afterRoster = null }) {
+export function generatedTeam(seed, { id, name, abbr, color, quality = 56, coach = null, offensePlays = null, defensePlays = null, scouting = null, element = null, legendary = null, signature = null, evolveStage = 0, composition = undefined, afterRoster = null, prefer = null }) {
   let roster = createRoster(seed, { quality, element, legendary, signature, evolveStage, composition });
   if (afterRoster) roster = afterRoster(roster) || roster;
   for (const m of roster) delete m.cornerstone;
   let pb = playbookFor(seed ^ 0x9e37, coach || {});
   let notes = [];
   if (scouting) { const a = adaptPlaybook(seed, pb, scouting, { swaps: scouting.swaps ?? 2 }); pb = a; notes = a.notes; }
-  const team = buildTeam({ id, name, abbr, color, roster, coach, offensePlays: offensePlays || pb.offense, defensePlays: defensePlays || pb.defense });
+  const team = buildTeam({ id, name, abbr, color, roster, coach, offensePlays: offensePlays || pb.offense, defensePlays: defensePlays || pb.defense, prefer });
   team.scoutingNotes = notes; return team;
 }
 

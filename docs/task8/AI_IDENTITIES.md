@@ -1,6 +1,9 @@
 # AI club identities: proposal for owner review (N7f)
 
-**Status: proposal.** Nothing here is approved or implemented. This review does not block M1 foundation work.
+**Status: approved (N8b K / D7, 2026-11-08) and implemented on branch `task8-d7-identities`.** Coaches may change (an ordinary
+club's coach is still drawn each season, his tendencies centred on the identity); gyms keep the Compete floor and the soft element
+preference; Rookie's −4 lowers ordinary clubs only. Code: `src/data/identities.js` (table, PROVISIONAL weights); tests:
+`tests/task8-identities.test.js`. The text below is the proposal as approved.
 
 ## 1. How league clubs and gyms relate today
 

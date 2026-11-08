@@ -61,11 +61,11 @@ export function selectDevSlots(roster, starters, { manual = [], excluded = [] } 
  * award, 12.5 level XP and 25% of the standard training award (6.25% of a bar); at level 50, training only. No double starter/reserve
  * award. Once per activity and monster through the reward ledger when one is given.
  */
-export function practiceAfterGame(roster, ids, played, rng, { xpScale = 1, autoSpend = true, autoEvolve = true, ledger = null, activityId = null } = {}) {
+export function practiceAfterGame(roster, ids, played, rng, { xpScale = 1, autoSpend = true, autoEvolve = true, ledger = null, activityId = null, train = null } = {}) {
   const events = []; const byId = new Map(roster.map((m) => [m.id, m]));
   const entries = ids.map((id) => byId.get(id)).filter((m) => m && !played.has(m.id) && !m.injury && m.dev).map((m) => ({ monsterId: m.id, m }));
   const award = ({ m }) => {
-    const r = applyAward(m, reserveAward(), rng, { autoSpend, autoEvolve });
+    const r = applyAward(m, reserveAward(), rng, { autoSpend, autoEvolve, train });
     for (const e of r.events) events.push(e.kind === 'levelup' ? { ...e, practice: true } : e);
     events.push({ kind: 'practice', id: m.id, name: m.name, position: m.position, amount: r.xp, training: FR.toNumber(r.training), points: r.points, level: m.level, levelsGained: r.levelsGained, xp: m.xp, next: xpForLevel(m.level) });
   };

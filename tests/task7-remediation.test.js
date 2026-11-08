@@ -76,9 +76,10 @@ test('R1 c: an upgrade that needs a release is atomic — released only when the
 });
 
 test('R1 c: an intervening signing elsewhere never makes the release-and-sign partial (the released monster legally signs with another club)', () => {
-  // seed 39: another club signs the released monster in a later period (Task 8 M1 Dex generator; seed 34 before, whose release now
-  // stays unsigned; seeds 34–45 searched, 39 and 40 give the intervening signing)
-  assert.equal(atomicUpgradeCase(39, { releasedSignedElsewhere: true }).signed, true, 'the upgrade completes in this scenario');
+  // seed 40: another club signs the released monster in a later period. Scenario prerequisite only (the atomicity assertions are the
+  // test): Task 8 M1 moved it from 34 to 39 (seeds 34–45 searched, 39 and 40 gave the intervening signing); with the D7 identities'
+  // free-agency tie-break the other clubs at seed 39 no longer sign that released monster, and of seeds 34–50 only 40 still does.
+  assert.equal(atomicUpgradeCase(40, { releasedSignedElsewhere: true }).signed, true, 'the upgrade completes in this scenario');
 });
 
 test('R1 d / R6: priority terms satisfy him or are null; a bonus keeps his valuation for less cap, within the limit', () => {
