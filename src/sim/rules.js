@@ -11,6 +11,7 @@ import { simulatePlay } from './engine.js';
 import * as T8S from './t8/status-runtime.js';
 import * as T8K from './t8/stamina-runtime.js';
 import * as T8F from './t8/field-runtime.js';
+import { toPlayFrame } from './t8/fields.js';
 import { extraCooldownUnit } from './abilities/registry.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
@@ -145,6 +146,8 @@ function fieldPlacement(state, p) {
 }
 /** After a play with fields: the Light recharge for non-Light participants finishing inside a Light field (once per monster per play;
  *  never from his own field), then each field's clock (G1/G2). */
+/** The active fields in this play's frame (the engine's x from the line toward the offense's goal, y lateral in its frame). */
+const playFields = (state, t8) => toPlayFrame(T8F.activeFields(t8), { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 });
 function afterPlayFields(state, t8, slots, sim, offIds) {
   const last = sim.frames?.[sim.frames.length - 1]; const inputs = { ...Object.fromEntries(Object.entries(slots.offense).map(([k, v]) => [`off:${k}`, v])), ...Object.fromEntries(Object.entries(slots.defense).map(([k, v]) => [`def:${k}`, v])) };
   if (last) for (const [team, rows] of [['off', last.off], ['def', last.def]]) for (const row of rows || []) {
@@ -171,7 +174,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
     offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo },
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo, ...(t8.fields?.list?.length ? { fields: playFields(state, t8) } : {}) },
   });
   T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
   T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12)
