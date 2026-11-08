@@ -184,6 +184,17 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       slowUntil: undefined, daybreak: undefined, prevV: undefined, contract: undefined, family: undefined, form: undefined, mastery: undefined,
       kickerAbility: undefined,
     };
+    // ... and the per-play keys ability contracts (src/sim/abilities) keep on actors, so a contract carrier keeps the same shape. Named
+    // stores in a fixed order (every actor takes the same map transitions): an object literal with more than 128 properties would be
+    // created in dictionary mode.
+    a.envImmune = undefined; a.nwCredited = undefined; a.nightWatch = undefined; a.ironLungsCounted = undefined; a.daybreakBlind = undefined;
+    a.rooted = undefined; a.powered = undefined; a.passiveCredited = undefined; a.guardUsed = undefined; a.doubled = undefined; a.pyre = undefined;
+    a.ready = undefined; a.bb = undefined; a.dr = undefined; a.guard = undefined; a.drain = undefined; a.fn = undefined; a.sw = undefined;
+    a.scorch = undefined; a.cs = undefined; a.ls = undefined; a.meteor = undefined; a.sf = undefined; a.at = undefined; a.stomp = undefined;
+    a.vv = undefined; a.haze = undefined; a.ss = undefined; a.vc = undefined; a.call = undefined; a.gate = undefined; a.sov = undefined;
+    a.cy = undefined; a.sx = undefined; a.br = undefined; a.touch = undefined; a.ms = undefined; a.ab = undefined; a.breakwater = undefined;
+    a.halo = undefined; a.plate = undefined; a.clamp = undefined; a.bt = undefined; a.cold = undefined; a.sc = undefined; a.tw = undefined;
+    a.pr = undefined; a.rp = undefined; a.pounce = undefined; a.mg = undefined; a.blink = undefined;
     if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
     if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; a.kickerAbility = familyById(input.species)?.position === 'K'; } // kickerAbility: N8b special-play eligibility
     if (input?.id) a.staminaInput = { id: input.id, permDurability: input.permDurability, attrs: { durability: input.attrs?.durability } }; // M3 hook: the stamina record's input (permanent Durability), for ctx.drainStamina
