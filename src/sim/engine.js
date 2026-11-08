@@ -416,6 +416,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function separate() {
     for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
       const a = actors[i], b = actors[j];
+      // Perf (outcome-identical): a pair at least 0.7 apart on either axis is at least 0.7 apart (Math.hypot >= max |component|), so
+      // no push; skipping it first, before the pure checks below, changes nothing.
+      const sx = a.x - b.x, sy = a.y - b.y; if (sx >= 0.7 || sx <= -0.7 || sy >= 0.7 || sy <= -0.7) continue;
       if (a.engaged === b || (a.engaged2 && a.engaged2 === b)) continue; // M3 hook: engaged2
       if (a.team === b.team && (a.passAllies || b.passAllies)) continue; // M3 hook: a contract's pursuit mode ignores allied bodies (enemies still collide)
       if ((a.phased || b.phased) && a.team !== b.team) continue; // M3 hook: a phased actor passes through opposing bodies
