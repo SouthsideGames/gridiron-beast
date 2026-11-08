@@ -8,7 +8,10 @@ const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v 
 
 export const T8_VALUES = deepFreeze({
   ruleset: 't8',
-  engineVersion: 't8-s1',
+  engineVersion: 't8-s2',
+  // Engine versions whose replay keys this build replays identically: S2 changes no battle without a status (the 20 golden seeds are
+  // byte-identical), so S1 keys stay valid. The list resets when a step changes ordinary battles.
+  keyCompatible: ['t8-s1', 't8-s2'],
   // The approved values 1.1.0 numbers the t8 engine uses unchanged.
   archetypes: L.archetypes,   // approved: HP/ATK/SPD multipliers and the perks (Tank guard 0.88, Striker shieldBreak 2, Disruptor pierce)
   stats: L.stats,             // approved: the HP/ATK/SPD formula (economy recalibration #30 is M6)
@@ -37,10 +40,25 @@ export const T8_PROVISIONAL = deepFreeze([
     rule: 'An ordinary attack rounds once, half up, at the final HP-loss conversion: round(ATK x ramp x spread x type x Tank guard). No minimum damage.' },
   { id: 'initiative-tie-band', waitsOn: 'none (approved value; reading flagged)',
     rule: 'P6 "seeded tie-break" is read with the approved values 1.1.0 band: speeds closer than 2 are a tie and go to one seeded coin draw.' },
-  { id: 'ko-clears-durations-keeps-cooldowns', waitsOn: 'S2 (statuses) and S5 (ability ledgers)',
-    rule: 'A knockout clears every duration clock the knocked-out monster holds (spec §10 KO clears status; B3 rule 2) and keeps its cooldown clocks (Second Spring restores HP only, "no cooldown reset").' },
-  { id: 'striker-shield-break-inert', waitsOn: 'D5 and S2 (Shielded pool)',
-    rule: 'The Striker shieldBreak perk is carried on the combatant but has nothing to act on until shields exist (S2).' },
-  { id: 'tank-bruise-not-implemented', waitsOn: 'D6',
-    rule: 'The legacy Tank bruise perk (heals x0.75) is not implemented in t8: no heal exists in S1 and its form is an open decision.' },
+  { id: 'ko-clears-durations-keeps-cooldowns', waitsOn: 'S5 (ability ledgers)',
+    rule: 'A knockout clears the status slot and episode (spec §10, approved) and every duration clock the monster holds, and keeps its cooldown clocks (Second Spring restores HP only, "no cooldown reset"). The cooldown half is the provisional part.' },
+  { id: 'tank-bruise-not-implemented', waitsOn: 'D6 (open: explanation requested, §25 item 6)',
+    rule: 'The legacy Tank bruise perk (heals x0.75) is not implemented in t8. It is neither a status nor a heal factor until D6 is ruled.' },
+  // ---- S2: statuses in Clash
+  { id: 'application-turn-in-clash', waitsOn: 'none (reading of spec §10, flagged)',
+    rule: 'A status applied while its recipient is in its own normal turn does not count that turn; a status applied outside the recipient\'s turn (for example by the opponent\'s attack) is consumed by the recipient\'s next normal turn. Same reading as the S1 clock.' },
+  { id: 'd4-protected-turn-hold', waitsOn: 'none (approved D4; the countdown handling is the documented reading, flagged)',
+    rule: 'D4: never two consecutive Stunned skips. The skipped turn counts Stunned down as usual. On the protected next turn the monster acts and Stunned\'s remaining duration is held (that turn does not decrement it), so each Stunned unit costs exactly one skipped turn. The protection is spent by that next normal turn whatever happens on it, and is cleared by a knockout.' },
+  { id: 'deep-winter-freeze-counts-protected-turn', waitsOn: 'S11 (Deep Winter); reading flagged',
+    rule: 'The Deep Winter freeze counter is spent by every recipient normal turn, the D4 protected turn included; while it runs, the expiration countdown does not move (ICE-06-C). Only the freeze field exists in S2; no ability sets it.' },
+  { id: 'afflicted-tick-payload', waitsOn: 'a Clash Afflicted producer (none of the 72 Clash contracts produces Afflicted); D10 is silent on its size',
+    rule: 'The Afflicted end-of-turn tick is exactly its payload (tickHp, or tickPctMaxHp of max HP rounded half up). With no payload it deals 0. No default size is invented.' },
+  { id: 'afflicted-tick-mitigation', waitsOn: 'owner (spec §10 / STA-05 do not say whether type, guards or shields apply to the tick)',
+    rule: 'The Afflicted tick is direct HP loss: no type factor, Tank guard, Guarded or shield. B3\'s pre-KO hook (Last Root) applies to it from S3.' },
+  { id: 'shield-depleted-ends-status', waitsOn: 'owner (spec §10 / STA-09 do not say whether an empty pool ends Shielded)',
+    rule: 'A Shielded pool reduced to 0 HP ends the status and its episode (the shield breaks). A football-origin shield whose converted remaining pool rounds to 0 does not enter the Clash.' },
+  { id: 'shield-strength-units', waitsOn: 'none (approved D11; unit reading flagged)',
+    rule: 'In Clash a Shielded strength is its original pool in whole HP. Carried to football, its strength is that pool as a percentage of the recipient\'s max Clash HP, the same unit as the football Guiding Halo strength (15). Carried back, the pool is that percentage of max Clash HP and the remaining pool is the pool times its remaining fraction, rounded half up. A football-origin shield has original strength 15% of max Clash HP (D11). Nothing is refilled.' },
+  { id: 'shield-break-rounding', waitsOn: 'none (D9 single rounding; reading flagged)',
+    rule: 'The pool loss and the HP loss are each rounded once, half up: a hit the pool fully absorbs removes round(damage x break) pool HP; a hit that breaks it removes the whole pool and loses round(damage - pool / break) HP.' },
 ]);
