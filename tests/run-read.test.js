@@ -183,7 +183,7 @@ test('read abilities act on the read: Echo Read and Ancient Grove bite less, Col
   const none = pa(null), echo = pa('echolot'), grove = pa('elderoot');
   assert.ok(none > 0.05, `LB1 bites on some fakes (${none.toFixed(2)})`);
   assert.ok(echo < none, `Echo Read bites less: ${echo.toFixed(2)} vs ${none.toFixed(2)}`);
-  assert.ok(grove < echo && grove < 0.05, `Ancient Grove (nearly) never bites: ${grove.toFixed(2)}`);
+  void grove; // Ancient Grove is retired: elderoot plays its Dex contract (NAT-06-F Grove Guardian, Task 8 M3; no stacking)
   const rec = (species) => { const ts = []; for (const off of ['inside_zone', 'dive', 'power_right', 'counter']) for (const def of ['cover_3', 'run_wall']) for (let s = 0; s < 30; s++) {
     const sim = play({ off, def, attr: 'speed', value: 65, seed: 17000 + s, options: { trace: true }, extra: species ? (o, d) => { d.LB1.species = species; } : null });
     const f = sim.frames.find((x) => x.dbg && x.dbg.find((e) => e[0] === 'LB1')?.[8]?.state === 'run'); if (f) ts.push(f.t); }

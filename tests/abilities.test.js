@@ -101,5 +101,5 @@ test('abilities (balance pass): Night Veil denies catches within a yard; Ancient
   }
   assert.ok(veiled >= 1, 'Night Veil fires');
   const pa = Object.values(PLAYS).find((p) => p.tags?.includes('play_action'));
-  if (pa) { let rooted = 0; for (let i = 0; i < 60; i++) { const s = sim(pa.id, 'cover_3', {}, { LB1: 'elderoot' }, i); if (s.events.some((e) => e.kind === 'ability' && e.key === 'grove')) rooted++; } assert.ok(rooted > 0, 'the grove fires on play action'); }
+  if (pa) { let rooted = 0; for (let i = 0; i < 60; i++) { const s = sim(pa.id, 'cover_3', {}, { LB1: 'elderoot' }, i); if (s.events.some((e) => e.kind === 'ability' && e.key === 'grove')) rooted++; } assert.equal(rooted, 0, 'Ancient Grove is retired: elderoot plays NAT-06-F Grove Guardian (Task 8 M3; no stacking)'); }
 });

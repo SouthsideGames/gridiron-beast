@@ -12,7 +12,7 @@ import * as T8S from './t8/status-runtime.js';
 import * as T8K from './t8/stamina-runtime.js';
 import * as T8F from './t8/field-runtime.js';
 import { toPlayFrame } from './t8/fields.js';
-import { extraCooldownUnit } from './abilities/registry.js';
+import { extraCooldownUnit, contractOf, abilityState, recordExecution } from './abilities/registry.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
@@ -140,6 +140,9 @@ function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...O
 const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
 const absLat = (state, l) => (state.possession === 'home' ? l : -l);
 function fieldPlacement(state, p) {
+  // M3 hook: an ability-given rectangle, longitudinally in yards beyond the upcoming LOS (`from`..`to`, offense frame of the creation
+  // play) and laterally centred on `lat` (engine frame: relative to the ball) or `latAbs` (offense-frame field lateral)
+  if (p.rect) return { centerLat: absLat(state, p.rect.latAbs ?? (state.ballLat || 0) + (p.rect.lat || 0)), yardFrom: absYard(state, state.ballOn + p.rect.from), yardTo: absYard(state, state.ballOn + p.rect.to), width: p.width };
   const ref = state.ballOn + (p.lbDepth ?? 5); // the fixed LB reference, offense frame
   const a = absYard(state, ref - p.length / 2), b = absYard(state, ref + p.length / 2); // the rectangle centred on the reference (placement choice, documented in M3_PLAN)
   return { centerLat: absLat(state, state.ballLat || 0), yardFrom: a, yardTo: b, width: p.width };
@@ -157,6 +160,17 @@ function afterPlayFields(state, t8, slots, sim, offIds) {
   }
   T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : f.clock === 'scrimmageAny'));
 }
+/** M3 hook: each on-field contract's pre-snap step (registry.js preSnap), offense then defense in slot order, before pending fields
+ *  are created. Its draws come from a stream seeded by the game seed, the play index and the monster, never the game's own dice. */
+function preSnapContracts(state, t8, slots, offensePlay, defensePlay) {
+  for (const [team, side, play] of [['off', slots.offense, offensePlay], ['def', slots.defense, defensePlay]]) for (const slot of play.onField) {
+    const p = side[slot]; const c = p?.id && p.species ? contractOf(p.species) : null; if (!c?.hooks?.preSnap) continue;
+    const self = { mid: p.id, family: p.species, form: p.form || `${p.species}:0`, mastery: p.mastery || 0, slot, team, type: p.type || null, name: p.name || slot };
+    let h = 2166136261; for (const ch of `${state.seed}|${state.playCount || 0}|${p.id}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+    c.hooks.preSnap({ t8, rng: createRng((h >>> 0) || 23), state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
+      queueField: (spec) => T8F.queueField(t8, spec), ballOn: state.ballOn, offensePlay, defensePlay, slots: { off: slots.offense, def: slots.defense }, playIndex: state.playCount || 0, sitsOut: T8S.sitsOutPlay(state, p.id) }, self);
+  }
+}
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
   const { r, save } = rng(state);
@@ -169,7 +183,8 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
   const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
-  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: offIds, playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p) }) : []; // G3: at the creator's next eligible offensive snap
+  const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean)); preSnapContracts(state, t8, slots, offensePlay, defensePlay); // M3 hook
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => (p.side === 'defense' ? defIds : offIds).has(p.owner), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p) }) : []; // G3: at the creator's next eligible snap (offense; `side: 'defense'` specs on the defense, M3 hook)
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.

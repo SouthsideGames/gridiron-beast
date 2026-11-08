@@ -20,7 +20,15 @@ export const HOOKS = Object.freeze([
   'fumble',           // (ctx, self) -> {prevent}            after a fumble is determined; a Shielded save is applied first (B3)
   'playEnd',          // (ctx, self, result)                 the whistle: charges, clocks, field creation
   'possessionChange', // (ctx, self)
+  // M3 hook (Nature / Electric batch): generic capabilities
+  'preSnap',          // (pctx, self)                        rules.js, before the snap and before pending fields are created (both sides; pctx below)
+  'shedAttempt',      // (ctx, self, defender) -> {prevent}  an ordinary block shed has succeeded against this blocker, before it is applied
+  'shed',             // (ctx, self, blocker)                this defender's ordinary block shed has been applied
+  'tackleBroken',     // (ctx, self, tackler)                this carrier has broken a tackle attempt (ordinary or contract-prevented)
 ]);
+// preSnap pctx (rules.js runScrimmagePlay; game only, not labs): { t8, rng (seeded per game play and monster), state(self), executed(self),
+// queueField(spec) (a spec with `side: 'defense'` is created only while its owner is on the defense; `rect` places it, see rules.js),
+// ballOn, offensePlay, defensePlay, slots: { off, def }, playIndex, sitsOut }; self: { mid, family, form, mastery, slot, team, type, name }.
 
 const MODULES = new Map();
 /** Register a family's contract. A family registers at most once; unknown hook names are an error. */

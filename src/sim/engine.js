@@ -121,6 +121,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const bySlot = { off: {}, def: {} };
   const makeActor = (team, slot, play, input) => {
     const attrs = { ...DEFAULT_ATTRS, ...(input?.attrs || {}) };
+    const given = { ...attrs }; // M3 hook: the ratings the game gave this slot, before any in-play modifier (a.baseAttrs)
     if (options.exhausted?.has?.(input?.id)) for (const k of Object.keys(attrs)) attrs[k] = Math.max(1, Math.round(attrs[k] / 2)); // Task 8 §12: an exhausted monster plays the rest of the game on halved attributes (once)
     // Signature ability: a legacy id in ABILITIES, else the species' own ability or trait.
     // Task 8 M3: a family with a registered Dex contract uses it; its legacy effect never also applies (no stacking).
@@ -147,7 +148,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       team, slot, mid, type: input?.type || null, overcharged, sovereignQ4, baseAwareness: attrs.awareness, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
       x, y, lineX: x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
-      target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0,
+      target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, baseAttrs: given,
     };
     if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
     if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; }
@@ -165,18 +166,35 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
     queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => !FX || FX.canStart(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
-    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null) };
+    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null),
+    // M3 hook: every actor (temporaries included), the play bounds and calls, a contest's type scaling, temporary actors (spawnActor)
+    get actors() { return actors; }, bounds: B, offensePlay, defensePlay, scale: (p, q, contest) => scaleVs(p, q, contest), spawn: (spec) => spawnActor(spec) };
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
+  /**
+   * M3 hook: a temporary actor for this play only (a summoned or copied monster), added at the snap. It has no ability and no game
+   * state; it leaves at the whistle (its shared status cleared, its statistics credited to `credit`, a slot, or to nobody when null).
+   * spec: { team, slot (unique), mid, name, type, attrs, x, y, assignment, credit, immune (Set of status ids, '*' all), envImmune
+   * (no field effects), noTackle, noBall (never tackles / never handles the ball), fixedJob (pass protection only), possessionEndsPlay }.
+   */
+  function spawnActor(spec) {
+    const attrs = { ...DEFAULT_ATTRS, ...(spec.attrs || {}) }; const { attrs: _given, credit = null, ...flags } = spec;
+    const a = { overcharged: false, sovereignQ4: false, ability: null, abilityName: null, abilityKind: null, reactionBonus: 0, auraAttrs: null, ...flags,
+      mid: spec.mid || `${spec.team}:${spec.slot}`, type: spec.type || null, name: spec.name || spec.slot, baseAwareness: attrs.awareness, attrs, baseAttrs: { ...attrs },
+      lineX: spec.x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility), wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
+      target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, temp: { credit } };
+    actors.push(a); (a.team === 'off' ? offs : defs).push(a); history.set(a, []); snapPos.set(a, { x: a.x, y: a.y });
+    return a;
+  }
   // ------------------------------------------------------------ Task 8 shared statuses in play (spec §10, §11; Appendix B)
   // One slot per monster in t8g.status (status-runtime.js gate). Effects are read at the snap and again the moment a status is accepted.
   /** Apply a status through the shared gate (football) and take its effect now. attempt: status.js tryApply shape, plus `source` (an
    *  actor) or `sourceId`. Logs { kind: 'status', status, by, victim, accepted, reason } unless quiet. Returns { accepted, reason }. */
   function t8Apply(target, attempt, { quiet = false } = {}) {
-    const src = attempt.source || actors.find((x) => x.mid === attempt.sourceId) || null; const { source, ...att } = attempt;
+    const src = attempt.source || actors.find((x) => x.mid === attempt.sourceId) || null; const { source, keepEngagement, ...att } = attempt;
     if (src && att.sourceId == null) att.sourceId = src.mid;
-    const refusal = footballApplyRefusal(att);
+    const refusal = footballApplyRefusal(att) || (target.immune && (target.immune.has('*') || target.immune.has(att.id)) ? 'immune' : null); // M3 hook: an ability's per-play status immunity
     const r = refusal ? { accepted: false, reason: refusal } : t8GateApply({ t8: t8g }, target.mid, att);
-    if (r.accepted) t8StatusEffect(target, r.slot, true);
+    if (r.accepted) t8StatusEffect(target, r.slot, true, !!keepEngagement); // M3 hook: keepEngagement (an approved exception: the block continues)
     if (!quiet) log(`${target.name} ${r.accepted ? 'is' : 'resists being'} ${att.id}`, { kind: 'status', status: att.id, by: src?.slot ?? null, side: src?.team ?? null, victim: target.slot, victimSide: target.team, accepted: r.accepted, reason: r.reason });
     return { accepted: r.accepted, reason: r.reason };
   }
@@ -184,7 +202,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function refreshMaxSpeed(a) { a.baseMaxSpeed ??= a.maxSpeed; a.maxSpeed = effectiveMaxSpeed(a.baseMaxSpeed, a.maxSpeedMods); }
   function t8Disengage(a) { for (const x of actors) if (x.engaged === a) x.engaged = null; a.engaged = null; }
   /** A slot's football effect on its actor (live: applied mid-play, so immediate physical effects happen too). */
-  function t8StatusEffect(a, slot, live) {
+  function t8StatusEffect(a, slot, live, keepEngagement = false) {
     if (!slot && !a.t8Base) return;
     a.t8Base ??= { strength: a.attrs.strength, awareness: a.baseAwareness, durability: a.attrs.durability, accel: a.accel };
     (a.maxSpeedMods ||= {}).status = maxSpeedPct(slot); refreshMaxSpeed(a); a.accel = a.t8Base.accel * accelFactor(slot); // Slowed / Quickened
@@ -196,7 +214,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (disablesRestOfPlay(slot)) { // Stunned (rest of play) / Knocked Down: movement stops; cannot move, block or tackle
       t8Disengage(a); a.stun = 1e6; a.noEngage = 1e6; a.vx = 0; a.vy = 0;
       if (slot.id === 'knockedDown') { a.knockedDown = true; setStatus(a, 'flat', 1e6); }
-    } else if (slot.id === 'stumbled') { t8Disengage(a); a.vx *= STUMBLE_KEEP; a.vy *= STUMBLE_KEEP; a.stumbled = true; } // current speed only
+    } else if (slot.id === 'stumbled') { if (!keepEngagement) t8Disengage(a); a.vx *= STUMBLE_KEEP; a.vy *= STUMBLE_KEEP; a.stumbled = true; } // current speed only
   }
   for (const a of actors) t8StatusEffect(a, t8g.status?.[a.mid] || null, false); // the snap: statuses active before the play
   // Pre-snap motion: the motion man is snapped on the move, at his motion spot, already running (owner, 2026-10-20).
@@ -316,19 +334,22 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       a.y = clamp(a.y, B.left + 0.3, B.right - 0.3);
       a.x = clamp(a.x, B.ownEndLine + 0.3, B.endLine - 0.3);
     }
+    if (a.anchor) { a.x = a.anchor.x; a.y = a.anchor.y; a.vx = 0; a.vy = 0; } // M3 hook: an anchored actor never translates (own movement or forced)
   }
   function separate() {
     for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
       const a = actors[i], b = actors[j];
       if (a.engaged === b) continue;
-      const d = dist(a, b);
-      if (d < 0.7 && d > 0.001) { const push = (0.7 - d) / 2, pa = FX ? push * FX.resist(a) : push, pb = FX ? push * FX.resist(b) : push; const ux = (b.x - a.x) / d, uy = (b.y - a.y) / d; a.x -= ux * pa; a.y -= uy * pa; b.x += ux * pb; b.y += uy * pb; } // Earth fields resist displacement
+      if ((a.phased || b.phased) && a.team !== b.team) continue; // M3 hook: a phased actor passes through opposing bodies
+      const d = dist(a, b); // M3 hook: an anchored actor takes no share of a collision push (pa / pb below)
+      if (d < 0.7 && d > 0.001) { const push = (0.7 - d) / 2, pa = a.anchor ? 0 : FX ? push * FX.resist(a) : push, pb = b.anchor ? 0 : FX ? push * FX.resist(b) : push; const ux = (b.x - a.x) / d, uy = (b.y - a.y) / d; a.x -= ux * pa; a.y -= uy * pa; b.x += ux * pb; b.y += uy * pb; } // Earth fields resist displacement
     }
   }
 
   // ------------------------------------------------------------ blocking
   function tryEngage(blocker, defender, soft = false) {
     if (blocker.engaged || defender.engaged || blocker.stun > 0 || defender.noEngage > 0) return false;
+    if (blocker.phased) return false; // M3 hook: a phased actor cannot block
     // A missed open-field block costs him a moment before he can try again (Phase C1, F2). v42.15 set that pause on a miss but
     // never checked it, so on a run a soft block was retried every tick until it landed: a sure block. Runs only, so passes,
     // screens and the catch-and-run replay exactly as before.
@@ -392,6 +413,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     let push = clamp((runFit ? 0.2 : 0.75) + edge * 2.5, -0.5, 2.4); // yards/s the defender gains
     if (FX) push *= FX.resist(push > 0 ? blocker : d); // Earth field: the one being driven back resists
     if (!runFit && be.deepRoots && push > 0) { push *= be.deepRoots; if (t > 0.5) abilityUsed(blocker, 'deepRoots'); } // Deep Roots: pass rushers drive him back at half speed
+    if (blocker.anchor) push = 0; // M3 hook: an anchored blocker is neither driven back nor drives forward
     d.x += (gx / gd) * push * DT; d.y += (gy / gd) * push * DT;
     // Riptide: run blocks drag his defender toward the nearer sideline, up to the card's yard.
     if (runFit && be.riptide && (d.riptideDragged || 0) < be.riptide) {
@@ -402,20 +424,21 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Landslide: he never loses a pass-block engagement.
     const holdsForever = !runFit && be.landslide;
     if (holdsForever && t > 0.5) abilityUsed(blocker, 'landslide');
-    blocker.x = d.x + (gx / gd) * 0.9; blocker.y = d.y + (gy / gd) * 0.9;
+    if (!blocker.anchor) { blocker.x = d.x + (gx / gd) * 0.9; blocker.y = d.y + (gy / gd) * 0.9; } // M3 hook: anchor
     blocker.vx = d.vx = 0; blocker.vy = d.vy = 0;
     let shedPerSec = clamp((blocker.softBlock ? 0.9 : runFit ? 0.26 : 0.58) + edge * 1.6, 0.06, 2.2);
     // Leverage (Phase C2, F8): a contain defender plays with his outside arm free, so once the carrier comes to his side (no more
     // than a step and a half inside him, or outside him) the blocker who reached him cannot hold him for long. It is his own job
     // and where the ball plainly is; the shed is still a rate, never certain, and inside runs get no help from it.
     if (isRun && d.assignment?.a === 'contain' && ball.holder && ball.holder.team !== d.team) { const c = ball.holder; if (Math.sign(c.y) === Math.sign(d.y) && Math.abs(c.y) > Math.abs(d.y) - 1.5) shedPerSec += 1.5; }
-    if (!holdsForever && rng.chance(shedPerSec * DT)) {
+    if (!holdsForever && rng.chance(shedPerSec * DT) && !hook('shedAttempt', blocker, d)?.prevent) { // M3 hook: the blocker's contract may prevent this ordinary shed
       blocker.engaged = null; d.engaged = null; blocker.stun = be.rebound ? 0.1 : (0.45 + (d.ability?.blockerStun || 0)) * (be.dragonhide || 1); d.noEngage = runFit ? 0.5 : 0.85; // a beaten pass blocker cannot recover at once
       if (be.dragonhide) abilityUsed(blocker, 'dragonhide'); // Dragonhide: recovers twice as fast
       if (d.ability?.pincer) { blocker.stun = Math.max(blocker.stun, d.ability.pincer); setStatus(blocker, 'pinched', d.ability.pincer); abilityUsed(d, 'pincer'); abilityOutcome('pinched', d, `${d.name}'s Pincer Hold keeps ${blocker.name} from getting free`, { victim: blocker.slot }); } // Pincer Hold: a full second late to the next block
       if (be.rebound) abilityUsed(blocker, 'rebound');
       d.lastBeat = { blocker: blocker.slot, t }; (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }).lost += 1;
       if (d.ability?.shedStrength || d.ability?.runStuff) abilityUsed(d, d.ability.shedStrength ? 'shedStrength' : 'runStuff'); log(`${d.name} sheds ${blocker.name}`, { kind: 'shed', by: d.slot, side: d.team, blocker: blocker.slot, ability: fired(d, 'shedStrength', 'runStuff') });
+      hook('shed', d, blocker); // M3 hook: the defender's contract sees his successful ordinary shed
     }
   }
   function defenderGoal(d) {
@@ -711,6 +734,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   function offenseTick(a) {
     const asg = a.assignment;
+    if (a.fixedJob) { if (a.engaged) resolveEngagement(a); else passBlock(a); return; } // M3 hook: a summoned pass protector keeps that job only
     if (KO && asg?.a === 'ko_block') { kickoffBlock(a); return; }
     if (KO && ball.inAir) { kickoffFlightOffense(a); return; }
     if (ball.holder === a && (phase === 'carry' || a !== qb)) { carrierMove(a); return; }
@@ -2009,12 +2033,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Off the block (Phase C1, F4): on a designed run, a defender held up by a block can still reach out for a carrier who runs
     // right past him, once a play, at a fraction of a clean tackle's chance (Awareness: he sees him coming). Blocks that work no
     // longer make the man they hold invisible, which is what had turned an aware linebacker into a worse one once pullers arrived.
+    if (d.noTackle) return false; // M3 hook: a summoned blocker never tackles
     const offBlock = !!d.engaged && isRun && !d.armTried && dist(d, c) <= 1.0;
     if (d.stun > 0 || (d.engaged && !offBlock) || dist(d, c) > 1.25) return false;
     if (offBlock) d.armTried = true;
     const fwd = c.team === 'off' ? 1 : -1;
     // Task 8 M3 (P6 pre-resolution): a carrier's contract may break this attempt before it is decided (normal strips still apply later)
-    if (hook('tackleAttempt', c, d)?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); return false; }
+    if (hook('tackleAttempt', c, d)?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); hook('tackleBroken', c, d); return false; }
     // Daybreak: nobody can bring him down from behind.
     if (c.daybreak && (d.x - c.x) * fwd < -0.2) return false;
     if (offBlock) return armTackle(d, c);
@@ -2061,7 +2086,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (c.team === 'off' && c.x >= B.goal) { stats.tackler = d.slot; endPlay('touchdown', Math.max(c.x, B.goal), c.y); log(`${c.name} is dragged down past the goal line. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
       if (c.team === 'def' && c.x <= B.ownGoal) { stats.tackler = d.slot; endPlay('touchdown', Math.min(c.x, B.ownGoal), c.y, { defensiveScore: true }); log(`${c.name} falls into the end zone. TOUCHDOWN`, { kind: 'touchdown' }); return true; }
       if (rng.chance(fumbleP) && !fumbleSaved(c)) {
-        const near = actors.filter((a) => dist(a, c) < 2.5);
+        const near = actors.filter((a) => dist(a, c) < 2.5 && !a.noBall); // M3 hook: noBall
         const recoverer = near.length ? rng.pick(near) : d;
         stats.forcedBy = d.slot; stats.tackler = d.slot; stats.fumbledBy = c.slot; stats.recoveredSlot = recoverer.slot; stats.recoveredTeam = recoverer.team;
         if (d.ability?.forceFumble) abilityUsed(d, 'forceFumble'); log(`${d.name} forces a fumble by ${c.name}; ${recoverer.name} recovers`, { kind: 'fumble', by: d.slot, side: d.team, victim: c.slot, recoveredBy: recoverer.slot, team: recoverer.team, ability: fired(d, 'forceFumble') });
@@ -2080,6 +2105,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (c.ability?.carryStrength || ce.elusive || ce.elusiveFirst || ce.noFumble) abilityUsed(c, ce.carryStrength ? 'carryStrength' : ce.noFumble ? 'noFumble' : ce.elusive ? 'elusive' : 'elusiveFirst'); log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken', by: c.slot, side: c.team, victim: d.slot, ability: fired(c, 'carryStrength', 'elusive', 'elusiveFirst', 'noFumble') });
     c.vx *= 0.55; c.vy *= 0.55; // the arm tackle still slows him down
     log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, ability: fired(c, 'carryStrength', 'elusive', 'elusiveFirst', 'noFumble') });
+    hook('tackleBroken', c, d); // M3 hook: the carrier's contract sees a successfully broken tackle
     return false;
   }
   /** Tackled behind his own goal line: a safety, except on a kickoff, where the kick put the ball there (a touchback). */
@@ -2088,7 +2114,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     endPlay('safety', c.x, c.y); log(`${d.name} tackles ${c.name} in the end zone. SAFETY`, { kind: 'safety' });
   }
   function trySack(d) {
-    if (d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false;
+    if (d.noTackle || d.stun > 0 || d.engaged || dist(d, qb) > 0.95) return false; // M3 hook: noTackle
     const p = clamp(0.62 + 0.3 * norm(d.attrs.tackling * scaleVs(d, qb, 'sack')) - 0.35 * norm(qb.attrs.agility * scaleVs(qb, d, 'escape')), 0.25, 0.92);
     if (rng.chance(p)) {
       // Glacier Wall: sacks coming from his side of the line fail 30% of the time.
@@ -2099,7 +2125,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       }
       stats.tackler = d.slot;
       if (qb.windup && rng.chance(0.25) && !fumbleSaved(qb)) { // strip sack on the wind-up (Task 8 B3: a Shielded QB's save first)
-        const near = actors.filter((x) => dist(x, qb) < 2.5); const rec = near.length ? rng.pick(near) : d;
+        const near = actors.filter((x) => dist(x, qb) < 2.5 && !x.noBall); const rec = near.length ? rng.pick(near) : d;
         qb.windup = null; stats.forcedBy = d.slot; stats.fumbledBy = qb.slot; stats.recoveredSlot = rec.slot; stats.recoveredTeam = rec.team;
         log(`${d.name} strips ${qb.name} as he throws; ${rec.name} recovers`, { kind: 'fumble', by: d.slot, recoveredBy: rec.slot, team: rec.team });
         if (rec.team === 'def') endPlay('fumble', qb.x, qb.y, { recoveredBy: 'def' }); else endPlay('sack', qb.x, qb.y, { fumbleRecovered: true });
@@ -2175,6 +2201,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         nearest.d.laneTimer = 0; nearest.d.jukeCooldown = 0;
         if (nearest.d.ability?.pickCatching) abilityUsed(nearest.d, 'pickCatching'); log(`${nearest.d.name} intercepts the pass!`, { kind: 'interception', by: nearest.d.slot, side: 'def', ability: fired(nearest.d, 'pickCatching', 'breakRadius', 'closeSpeed', 'zoneRange', 'manCoverage', 'contest') });
         if (L.x >= B.goal) { endPlay('touchback_return', L.x, L.y, { interception: true }); return; }
+        // M3 hook: a temporary actor's possession ends the play at once, after the normal touchdown / touchback rulings
+        if (nearest.d.possessionEndsPlay) { if (L.x <= B.ownGoal) endPlay('touchdown', L.x, L.y, { defensiveScore: true }); else endPlay('tackle', L.x, L.y); log(`${nearest.d.name}'s possession ends the play`, { kind: 'temp_possession', by: nearest.d.slot, side: 'def' }); return; }
         phase = 'carry'; for (const o of offs) o.engaged = null; return;
       }
     }
@@ -2306,6 +2334,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // Task 8 M3: the whistle for every contract on the field (charges, clocks, field creation)
   { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(clamp(ball.x, B.ownEndLine, B.endLine)); const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, firstDown: options.toGo != null && g0 >= options.toGo && !['incomplete', 'throwaway', 'interception', 'fumble'].includes(result) };
     for (const a of actors) hook('playEnd', a, summary); }
+  // M3 hook: temporary actors leave at the whistle: their shared status clears; their statistics go to their credited slot or nowhere
+  const temps = actors.filter((a) => a.temp);
+  if (temps.length) {
+    const re = new Map(temps.map((a) => [a.slot, a.temp.credit])); const map = (v) => (typeof v === 'string' && re.has(v) ? re.get(v) : v);
+    for (const k of Object.keys(stats)) stats[k] = map(stats[k]);
+    for (const a of temps) { delete stats.blockers[a.slot]; if (t8g.status) delete t8g.status[a.mid]; }
+    for (const e of events) for (const f of ['by', 'victim', 'blocker', 'recoveredBy', 'to', 'partner', 'target']) if (f in e) e[f] = map(e[f]);
+  }
   // ------------------------------------------------------------ outcome
   const endX = result === 'incomplete' || result === 'throwaway' ? 0 : clamp(ball.x, B.ownEndLine, B.endLine);
   const endLat = clamp(ball.y, B.left, B.right);
@@ -2315,7 +2351,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const out = {
     result, yards: Math.round(gain), endYard: Math.round(endYard * 10) / 10, endLat: Math.round((ballLat + endLat) * 10) / 10,
     frames, events, elapsed: +t.toFixed(2), seed, offensePlay: offensePlay.id, defensePlay: defensePlay.id, ballOn, ballLat,
-    names: { off: Object.fromEntries(offs.map((a) => [a.slot, a.name])), def: Object.fromEntries(defs.map((a) => [a.slot, a.name])) },
+    names: { off: Object.fromEntries(offs.filter((a) => !a.temp).map((a) => [a.slot, a.name])), def: Object.fromEntries(defs.filter((a) => !a.temp).map((a) => [a.slot, a.name])) }, // M3 hook: temporaries are not participants
     stats, memoryUsed, typeContests, turnover: ['interception', 'fumble', 'touchback_return'].includes(result) || !!stats.defensiveScore,
     touchdown: result === 'touchdown', safety: result === 'safety', bounds: B,
     qb: qr.order ? { v: QB_MODEL_VERSION, order: qr.order, reads: qr.log, decision: qr.decision, aiWould: qr.aiWould, sensedAt: qr.sensedAt, fakeAt: qr.fakeAt ?? null } : null, // the recorded read log (replays, AI Testing Lab)
