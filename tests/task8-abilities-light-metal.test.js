@@ -109,6 +109,18 @@ test('Guiding Halo: a reception inside the mastery radius of the able QB attempt
   }
   assert.ok(shielded >= 4 && outside >= 1, `${shielded} shielded, ${outside} outside the 6-yard radius`);
 });
+test('Guiding Halo (owner N8a): the radius is measured from the ball\'s line-of-scrimmage spot at the catch, not from the QB', () => {
+  let near = 0;
+  for (const [call, tgt] of [['stick', 'TE'], ['curl_flat', 'RB'], ['pa_boot', 'TE'], ['curl_flat', 'TE'], ['stick', 'RB']]) for (let seed = 1; seed <= 25; seed++) {
+    const t8 = { status: {} }; const r = play(call, 'cover_3', seed, (o) => mon(o.QB, 'lumen', { mastery: 0 }), { t8, forcedTarget: tgt });
+    if (r.stats.receiver !== tgt) continue; const c = r.events.find((e) => e.kind === 'catch'); const f = r.frames.find((x) => x.t >= c.t) || r.frames.at(-1);
+    const rb = f.off.find((p) => p[0] === tgt), qb = f.off.find((p) => p[0] === 'QB'); const fromLos = Math.hypot(rb[1], rb[2]), fromQb = Math.hypot(rb[1] - qb[1], rb[2] - qb[2]);
+    const e = ev(r, 'LIG-03-F');
+    if (fromLos <= 5.5) { assert.equal(e.length, 1, `a catch ${fromLos.toFixed(1)} yd from the line qualifies at mastery 0`); near++; if (fromQb > 6) assert.ok(true, 'even when farther than 6 yd from the QB'); }
+    if (fromLos > 6.5) assert.equal(e.length, 0, `a catch ${fromLos.toFixed(1)} yd from the line does not`);
+  }
+  assert.ok(near >= 1, `catches near the line observed (${near})`);
+});
 test('Guiding Halo exceptions: cooldown, a Stunned QB, a blocked status (still spent), two-point tries', () => {
   let n = 0;
   for (let seed = 1; seed <= 30 && n < 3; seed++) {

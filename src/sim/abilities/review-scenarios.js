@@ -96,9 +96,8 @@ export const SCENARIOS = {
   // ---------------------------------------------------------------------------------------------------------------- Light
   glimmer: { unit: 'offense', calls: PASS_O, target: 'WR1', how: 'ready; passes to him (chosen target) until a receiving first down banks the Light field; created at his next offensive snap' },
   sunwhistle: { unit: 'kick', kick: 'xp', how: 'an extra point (his club\'s try) banks the support, then his own kickoff plays with Quickened coverage' },
-  lumen: { unit: 'offense', calls: [['pa_boot', 'cover_2_man', 'WR1'], ['pa_boot', 'cover_2_man', 'TE'], ['tight_stick_flat', 'cover_2_man', 'TE'], ['tight_stick_flat', 'cover_2_man', 'RB']],
-    staged: (form, mastery) => (mastery <= 1 ? 'staged: conditions not reached in released gameplay (the AI\'s reads never complete a catch within 6 / 8 yd of the QB; here a chosen short target on the bootleg and the reserve tight_stick_flat play put the catch inside the radius)' : null),
-    how: 'ready; short chosen-target throws as the QB rolls toward the receiver (pa_boot), and the reserve tight_stick_flat, so the reception is inside his radius' },
+  lumen: { unit: 'offense', calls: [['stick', 'cover_3', 'TE'], ['curl_flat', 'cover_3', 'RB'], ['pa_boot', 'cover_3', 'TE'], ['curl_flat', 'cover_3', 'TE'], ['stick', 'cover_3', 'RB']],
+    how: 'ready; short released throws (stick, curl-flat, the bootleg) to the TE or RB, so the reception is within his radius of the line-of-scrimmage spot (owner N8a)' },
   prism: { unit: 'defense', calls: DEF_MIX, prime: () => ({ charges: 3, noCharge: false }), setup: ({ addField }) => addField({ type: 'Wind', strength: 20, centerLat: 0, width: 12, yardFrom: 40, yardTo: 50, ownerTeam: 'away', ability: 'scenario-wind' }),
     how: 'bar primed full (3 charges); an enemy Wind zone placed on the field: removed at his next defensive pre-choice point' },
   halofang: { unit: 'defense', calls: DEF_RUN, how: 'run plays: the mastery-required rushing tackles arm the next defensive snap (played, nothing primed)' },

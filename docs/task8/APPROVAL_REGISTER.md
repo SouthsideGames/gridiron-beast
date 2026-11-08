@@ -153,6 +153,16 @@ The field limits were recalculated under these clocks: 44 rectangles, and 0 obje
 | 39 | AI use of Basics | **Approved** | R1; N7b |
 | 40 | Dex and collection | **Approved** | R1; N7b |
 
+## M3 rulings (N8a, 2026-11-08 00:41; RULINGS_2026-11-08.md)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Guiding Halo radius reference | **Approved** | Existing radii measured from the ball's line-of-scrimmage spot, not the QB; other mechanics unchanged |
+| Shadow Exchange partner prediction | Not approved | A concrete before/after example requested |
+| Comeback mode (GDD §17, D5) | **Approved: retire** | Unrelated approved comeback abilities and mechanics preserved |
+| AI identities (D7) | Pending | All proposed club identities to be presented together before implementation |
+| Gym acquisition (D9) | **Approved** | Prefer matching-element monsters among similarly useful candidates; legendary synergy and legal lineups first; no hard quota |
+
 ## Encounters and Glacivern (N7g, 2026-11-07 15:08)
 
 Verbatim: [RULINGS_2026-11-07e.md](RULINGS_2026-11-07e.md).

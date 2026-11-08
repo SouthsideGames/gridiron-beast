@@ -33,11 +33,10 @@ for (const el of elements) {
   });
 }
 
-test('staged notes: the three contracts whose conditions released gameplay does not reach say so; the others do not', () => {
+test('staged notes: the contracts whose conditions released gameplay does not reach say so; the others do not (Guiding Halo is reachable since owner N8a)', () => {
   const note = (family, mastery = 0) => reviewScenario({ family, mastery }).staged;
   for (const f of ['flicker', 'nyxshade']) for (const m of [0, 3]) assert.match(note(f, m) || '', /^staged: conditions not reached in released gameplay/, `${f} m${m}`);
-  for (const m of [0, 1]) assert.match(note('lumen', m) || '', /^staged: conditions not reached in released gameplay/, `lumen m${m}`);
-  for (const m of [2, 3]) assert.equal(note('lumen', m), null, `lumen m${m}: within 10 / 12 yd it happens in games`);
+  for (const m of [0, 1, 2, 3]) assert.equal(note('lumen', m), null, `lumen m${m}: measured from the line (N8a), released short throws reach it`);
   assert.equal(note('emberfox'), null);
 });
 

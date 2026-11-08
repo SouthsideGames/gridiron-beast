@@ -9,7 +9,9 @@
 // consumes the whole episode (engine fumbleSaved, B3).
 // Readings where the contract is silent (documented, minimal):
 //   - The source is Lumen at QB; two-point tries and kickoffs are not offensive scrimmage plays (common.js).
-//   - "Within" is the straight-line distance at the catch, receiver at the catch spot, QB where he stands then.
+//   - Owner ruling N8a (2026-11-08): "within" is the straight-line distance at the catch from the receiver to the ball's
+//     line-of-scrimmage spot (the snap spot), not to the QB; the radii 6 / 8 / 10 / 12 are unchanged. (Built before: from the QB's
+//     position at the catch, which no catch came within 9 yards of.)
 //   - The Shielded strength is its Clash pool percentage (15), so equal re-applications only add duration (no refill).
 //   - Aura mastery: one credit per game, when the Shielded is accepted.
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): Dex category Aura,
@@ -28,7 +30,7 @@ export default registerAbility({
     reception(ctx, self, r) {
       if (self.team !== 'off' || self.slot !== 'QB' || r === self || r.team !== self.team || !scrimmage(ctx)) return;
       const st = ctx.state(self); if (st.cd > 0 || !able(ctx, self)) return;
-      const d = ctx.dist(r, self); if (d > byMastery(HALO.radius, self.mastery)) return;
+      const d = Math.hypot(r.x, r.y); if (d > byMastery(HALO.radius, self.mastery)) return; // owner N8a: from the ball's line-of-scrimmage spot (the play frame's origin), not the QB
       if (!ctx.canStartSignature(self)) return; // denied: the cooldown is not spent
       st.cd = HALO.cooldown; self.halo.fresh = true; // spent on the attempt, even if blocked
       const res = ctx.applyStatus(r, { id: 'shielded', strength: HALO.clashPoolPct, duration: HALO.duration, source: self, abilityId: 'LIG-03-F', payload: { fumbleSaves: 1, clashPoolPct: HALO.clashPoolPct } });
