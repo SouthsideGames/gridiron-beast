@@ -25,6 +25,7 @@ export const TSUNAMI = Object.freeze({ safetyDepth: 12, length: 5, lifetime: 2, 
 
 export default registerAbility({
   family: 'tsunarok', abilityId: 'WAT-06-F', repeatableCooldown: true,
+  review: { games: 12 }, // reviewer: a genuinely rare trigger (his own interceptions (2 in 120 games, M3_RARE_ACTIVATIONS.md)); search up to 12 games
   initGame: () => ({ cd: 0 }),
   hooks: {
     playEnd(ctx, self) {

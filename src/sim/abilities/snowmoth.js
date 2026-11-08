@@ -25,6 +25,7 @@ export const FROSTMARK = Object.freeze({ width: 8, length: 6, maxDepth: 12 });
 
 export default registerAbility({
   family: 'snowmoth', abilityId: 'ICE-01-F',
+  review: { games: 12 }, // reviewer: a genuinely rare trigger (made field goals (about 0.5 a club a game)); search up to 12 games
   hooks: {
     fieldGoalMade(ctx, self) {
       if (ctx.pendingFields().some((p) => p.owner === self.mid && p.ability === 'ICE-01-F')) return; // maximum one pending token

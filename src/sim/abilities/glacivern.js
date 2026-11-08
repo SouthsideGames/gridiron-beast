@@ -13,6 +13,7 @@ import { registerAbility } from './registry.js';
 
 export default registerAbility({
   family: 'glacivern', abilityId: 'ICE-06-F',
+  review: { games: 12 }, // reviewer: a genuinely rare trigger (a missed field goal (14 of 100 games)); search up to 12 games
   initGame: () => ({ used: false }),
   hooks: {
     fieldGoalMiss(ctx, self, res, retry) {

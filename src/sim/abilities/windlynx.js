@@ -27,6 +27,7 @@ const HALF = 80 / 3; // the playable half-width (core/field.js FIELD.halfWidth)
 
 export default registerAbility({
   family: 'windlynx', abilityId: 'WIN-04-F',
+  review: { games: 12 }, // reviewer: a genuinely rare trigger (two of his breakups in one game (4 of 40 games)); search up to 12 games
   initGame: () => ({ charges: 0 }),
   preSnap(api, self) {
     if (api.side !== 'def' || !api.able) return; const st = api.state(); if (st.charges < PBUS) return;
