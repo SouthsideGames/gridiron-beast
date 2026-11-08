@@ -53,6 +53,11 @@ function placeSubject(team, fam, form, mastery) {
   return at;
 }
 
+/** slot -> { species, name, type } for the replay's sprites. `offSide` is the side whose offense the sim's offense is. */
+function spritesFor(teams, offSide) {
+  const other = offSide === 'home' ? 'away' : 'home'; const pick = (lu) => Object.fromEntries(Object.entries(lu || {}).map(([k, v]) => [k, { species: v.species, name: v.name, type: v.type }]));
+  return { off: pick(teams[offSide].offense), def: pick(teams[other].defense) };
+}
 const executionsOf = (t8) => t8?.mastery?.[REVIEW_ID]?.executions || 0;
 const contractEvents = (sim, fam, abilityId) => (sim?.events || []).filter((e) => e.ability === abilityId || e.contract === fam.id);
 
@@ -74,7 +79,7 @@ export function reviewAbility({ family, form = null, mastery = 0, primed = true,
     state.t8 = { status: {}, ability: { [REVIEW_ID]: structuredClone(init) } };
     const ctrl = { home: aiController('home'), away: aiController('away') }; const tend = { home: newTendencies(), away: newTendencies() };
     for (let i = 0; i < 2000 && !state.finished; i++) {
-      const before = structuredClone(state.t8.ability?.[REVIEW_ID] ?? null); const n0 = executionsOf(state.t8);
+      const before = structuredClone(state.t8.ability?.[REVIEW_ID] ?? null); const n0 = executionsOf(state.t8); const ballOn = state.ballOn; const offSide = state.phase === 'kickoff' || state.phase === 'free_kick' ? R.opponent(state.kickingTeam) : state.phase === 'try' ? state.tryTeam : state.possession; // a kickoff's sim offense is the return unit
       const ev = step(state, teams, ctrl, tend); if (!ev) break;
       if (ev.sim || ev.kind === 'field_goal' || ev.kind === 'try' || ev.kind === 'punt' || ev.kind === 'kickoff') plays += 1;
       const evs = contractEvents(ev.sim, fam, fam.abilities.football);
@@ -82,6 +87,7 @@ export function reviewAbility({ family, form = null, mastery = 0, primed = true,
         return { found: true, abilityId: fam.abilities.football, family, form, mastery, primed: primed && !!contract.review?.prime, slot: at.slot, side: at.side,
           game: g + 1, step: i + 1, kind: ev.kind, text: ev.text || '', sim: ev.sim || null, events: evs, executed: executionsOf(state.t8) > n0,
           before, after: structuredClone(state.t8.ability?.[REVIEW_ID] ?? null), fields: structuredClone(state.t8.fields?.list || []), plays,
+          ballOn, subjectOnOffense: offSide === 'home', sprites: spritesFor(teams, offSide),
           situation: { quarter: state.quarter, down: state.down, toGo: state.toGo, ballOn: state.ballOn, possession: state.possession } };
       }
     }
