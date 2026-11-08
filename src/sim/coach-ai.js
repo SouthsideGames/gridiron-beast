@@ -149,13 +149,39 @@ export function suggestPlay(state, team, available, side, tendencies, opp = null
   return weights.sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 }
 
-/** 'go' | 'punt' | 'fg', fourth-down decision. */
-export function fourthDownDecision(state, team) {
+/**
+ * Task 8 M3 (PROVISIONAL AI policy, owner 22:23: a player-selectable signature is not player-exclusive): the AI's use of an available
+ * field-goal signature (Dragon Roar, DRA-05-F) under exactly the player's eligibility, chart and once-per-game rule. The AI counts a
+ * kick as in range at the same bar as its ordinary range (a 45% chance, fieldGoalRange), and activates the signature on a kick when it
+ * improves the chance by more than AI_SIGNATURE_MARGIN, so the single use is not spent on a kick the ordinary leg already makes.
+ * `sig` = rules.fieldGoalSignature(state, teams) or null.
+ */
+export const AI_SIGNATURE_MARGIN = 0.05; // provisional
+export const AI_FG_RANGE_CHANCE = 0.45; // the ordinary range bar (special-teams.js fieldGoalRange)
+export function fgSignatureInRange(sig) { return !!sig?.available && sig.chance != null && sig.chance >= AI_FG_RANGE_CHANCE; }
+export function fgSignatureDecision(sig, ordinaryChance, state = null) { return !!sig?.available && sig.chance != null && (sig.chance > ordinaryChance + AI_SIGNATURE_MARGIN || (!!state && fgSignatureDesperation(state, sig))); }
+/**
+ * Owner N8b (item G, PROVISIONAL values): desperation attempts. The AI may also use an available signature at any distance its chart
+ * covers (up to 90 yd) when points now are worth more than the field position: the last play of a half (second or fourth quarter
+ * with DESPERATION.halfEnd seconds or fewer left), or late in the game trailing by DESPERATION.maxDeficit points or fewer with
+ * DESPERATION.late seconds or fewer left. Same availability, chart and once-per-game rule as the player.
+ */
+export const DESPERATION = Object.freeze({ halfEnd: 10, late: 120, maxDeficit: 3 }); // provisional
+export function fgSignatureDesperation(state, sig) {
+  if (!sig?.available || sig.chance == null) return false; const s = situation(state);
+  if (s.ot) return false;
+  const halfEnd = (s.quarter === 2 || s.quarter === 4) && s.clock <= DESPERATION.halfEnd;
+  const trailingLate = s.late && s.diff < 0 && -s.diff <= DESPERATION.maxDeficit && s.secondsLeft <= DESPERATION.late;
+  return halfEnd || trailingLate;
+}
+
+/** 'go' | 'punt' | 'fg', fourth-down decision. `sig`: an available field-goal signature (Task 8 M3), or null. */
+export function fourthDownDecision(state, team, sig = null) {
   const s = situation(state);
   const str = teamStrengths(team);
   const coach = team.coach || { aggression: 0.5 };
   const distance = fieldGoalDistance(s.ballOn);
-  const inRange = distance <= str.fgRange;
+  const inRange = distance <= str.fgRange || fgSignatureInRange(sig) || fgSignatureDesperation(state, sig); // N8b: desperation attempts with a signature
   const desperate = s.late && s.diff < 0 && (s.secondsLeft < 180 || (s.diff < -8 && s.secondsLeft < 420));
   if (s.ot) {
     if (s.diff < -3) return 'go'; // need a touchdown

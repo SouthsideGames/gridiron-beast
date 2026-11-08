@@ -31,6 +31,7 @@ import { registerMatchScreens } from './ui/screens/match.js';
 import { registerCeremony } from './ui/screens/ceremony.js';
 import { registerPracticeScreens } from './ui/screens/practice.js';
 import { registerAbilityAudit, openAbilityPreview, registerAbilityBalance } from './ui/screens/ability-audit.js';
+import { registerAbilityReviewer } from './ui/screens/ability-reviewer.js';
 import { registerClashLab } from './ui/screens/clash-lab.js';
 import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { registerAiLab } from './ui/screens/ai-lab.js';
@@ -214,6 +215,7 @@ export function start() {
   registerMatchScreens(Router, app);
   registerPracticeScreens(Router, app);
   registerAbilityAudit(Router, app);
+  registerAbilityReviewer(Router, app);
   registerClashLab(Router, app); // Beast Clash developer tools
   registerAiLab(Router, app); // AI Testing Lab (GDD §53.8): Developer Tools only
   registerAttrLab(Router, app); // Attribute Testing Lab (GDD §8.2 audit): Developer Tools only

@@ -12,8 +12,10 @@ import { REVIEWABLE_PLAYS } from '../src/ui/dev-review.js';
 const RESERVE = [...RESERVE_OFFENSE_IDS, ...RESERVE_DEFENSE_IDS];
 const ALL = [...OFFENSE_IDS, ...DEFENSE_IDS, ...RESERVE];
 
-test('150 offensive and 150 defensive reserve plays, every one flagged, none in the live lists', () => {
-  assert.equal(RESERVE_OFFENSE_IDS.length, 150);
+test('150 offensive and 150 defensive reserve plays built; 10 bunch plays released by the owner (N8b, Crossed Wires); the rest flagged, none in the live lists', async () => {
+  const { RELEASED_RESERVE_OFFENSE } = await import('../src/data/playbook.js');
+  assert.equal(RESERVE_OFFENSE_IDS.length + RELEASED_RESERVE_OFFENSE.length, 150); assert.equal(RELEASED_RESERVE_OFFENSE.length, 10);
+  for (const id of RELEASED_RESERVE_OFFENSE) { assert.ok(OFFENSE_IDS.includes(id), `${id} released`); assert.ok(!isReserve(id)); }
   assert.equal(RESERVE_DEFENSE_IDS.length, 150);
   for (const id of RESERVE) { assert.ok(PLAYS[id]?.reserve, `${id} flagged reserve`); assert.ok(isReserve(id)); }
   for (const id of [...OFFENSE_IDS, ...DEFENSE_IDS]) { assert.equal(PLAYS[id].reserve, undefined, `${id} live plays carry no reserve key (keeps review fingerprints)`); assert.ok(!isReserve(id)); }

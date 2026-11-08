@@ -75,7 +75,7 @@ test('the report shows only real changes: an unchanged attribute is not an impro
   for (const a of r.changed) assert.equal(a.to - a.from, a.delta); assert.ok(r.changed.every((a) => a.delta !== 0));
   assert.deepEqual(r.potential, { from: s0.potential, to: overall(m.dev.potential, m.position), delta: overall(m.dev.potential, m.position) - s0.potential }); assert.ok(r.potential.delta > 0);
   assert.equal(r.overall.from, s0.overall); assert.equal(r.overall.to, monsterOverall(m));
-  assert.deepEqual(speciesEffect(m)?.name ?? null, s0.ability?.name ?? null, 'evolution keeps the ability'); assert.equal(r.ability, null);
+  assert.equal(s1.ability?.name ?? null, s0.ability?.name ?? null, 'evolution keeps the ability (the Dex football ability, Task 8 M3)'); assert.equal(r.ability, null);
   assert.equal(r.salary.unchanged, true); assert.equal(r.fromStage, 0); assert.equal(r.toStage, 1);
   assert.deepEqual(r.milestone, { year: f.season.year, week: f.season.week, club: f.club });
   const html = evolutionResultsHtml(r, { beforeSprite: '<svg/>', afterSprite: '<svg/>' });

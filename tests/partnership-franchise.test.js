@@ -187,7 +187,10 @@ test('only league games award chemistry: Beast Clash, encounters and practice ne
   const root = new URL('../src/', import.meta.url); const hits = [];
   const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = new URL(e.name + (e.isDirectory() ? '/' : ''), d); if (e.isDirectory()) walk(p); else if (e.name.endsWith('.js')) { const s = fs.readFileSync(p, 'utf8'); if (/\bplayGame\(|R\.newGame\(|\bnewGame\(\{/.test(s)) hits.push(p.pathname.replace(/.*\/src\//, '')); } } };
   walk(root);
-  assert.deepEqual(hits.sort(), ['franchise/franchise.js', 'sim/game-runner.js', 'sim/rules.js', 'ui/screens/match.js'], 'football games start only in the league game paths and the live match');
+  // sim/abilities/review.js (Task 8 M3): the Ability Reviewer plays its own local games on generated clubs; it reaches no franchise,
+  // so no credit hook (tests/task8-ability-review.test.js checks it imports nothing from the franchise, save or progression)
+  assert.deepEqual(hits.sort(), ['franchise/franchise.js', 'sim/abilities/review.js', 'sim/game-runner.js', 'sim/rules.js', 'ui/screens/match.js'], 'football games start only in the league game paths, the live match and the reviewer');
+  assert.ok(!/afterCaptainGame|creditPartnerships|chemistry/i.test(fs.readFileSync(new URL('../src/sim/abilities/review.js', import.meta.url), 'utf8')), 'the reviewer never credits chemistry');
   for (const f of ['clash', 'franchise/clash-link.js']) { const p = new URL(`../src/${f}`, import.meta.url); if (!fs.existsSync(p)) continue; }
   const fr = fs.readFileSync(new URL('../src/franchise/franchise.js', import.meta.url), 'utf8');
   assert.equal((fr.match(/playGame\(/g) || []).length, 3, 'the three league game paths: AI week, AI playoffs, the owner\'s game');

@@ -25,8 +25,9 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  ballOn, ballLat, toGo, offenseLabel, defenseLabel, colors {off, def}, frame (engine frame or null),
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
+const FIELD_TINT = { Fire: '#ff7a3d', Water: '#5fb6ff', Nature: '#7ad35a', Electric: '#ffe55a', Ice: '#bfe8ff', Wind: '#9ef0dc', Earth: '#d2a86a', Dark: '#9a7ad6', Light: '#fff0a8', Metal: '#cfd5e2', Psychic: '#ff9ae6' };
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
@@ -72,6 +73,11 @@ export function fieldSvg(o) {
     const B = boundsFor(ballOn, ballLat);
     const proj = { p: ([x, y]) => [X(ballLat + y), Y(ballOn + x)] };
     s += `<g opacity="0.95">${assignmentLines(presnap.play, proj, { limitX: B.endLine - 0.8, offenseAlign: presnap.offensePlay?.align || null, referenceOffense: presnap.offensePlay?.id })}</g>`;
+  }
+  // Task 8 fields (spec §11): the functional rectangles of the play (sim.fields, play-relative), outlined and tinted by element.
+  if (fields?.length) for (const f of fields) {
+    const c = FIELD_TINT[f.type] || '#ffffff', x0 = X(ballLat + f.lat[0]), x1 = X(ballLat + f.lat[1]), y0 = Y(ballOn + f.yard[1]), y1 = Y(ballOn + f.yard[0]);
+    s += `<rect class="t8-field" data-element="${f.type}" x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="${c}" fill-opacity="0.16" stroke="${c}" stroke-width="0.3" stroke-opacity="0.85"/>`;
   }
   if (underlay) s += underlay; // caller-drawn layer under the players (Playbook Audit paths)
   // Players.

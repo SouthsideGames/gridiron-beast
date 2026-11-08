@@ -115,3 +115,38 @@ keep it.
   - `lp_avalanche` and its lesson are removed (playbook.js); the pilot now has five plays.
   - The GDD §36 amendment note is added.
   - Glacivern keeps K, Second Chance and Deep Winter.
+
+## M1 integration milestone and preview (2026-11-07)
+
+- **Full regression** (0f953e3): 930/933.
+  - Fixed after the run:
+    - league-careers: a registry-less tool universe no longer round-trips through the save;
+    - release-stamp ×2.
+  - Those files then passed 8/8.
+- **Browser boot check** found a crash present since the Dex species switch (75f2a27).
+  - The Clash Lab species list assumed every species has a Clash move; Basics have only the ordinary Strike.
+  - Fixed in `src/clash/stats.js`. No node test loads the UI, so a browser boot check is now part of every preview.
+- **Preview:** see PREVIEW_M1.md.
+
+## D7 persistent AI club identities (N8b K / D7, N8a item 4; 2026-11-08)
+
+- **Table** (`src/data/identities.js`): the approved AI_IDENTITIES.md §3–§4 identities, derived from the club name (no saved state,
+  no migration; a schema-10 preview save loads unchanged). The owner's club has none.
+- **Coach:** gyms keep their named coach. Ordinary coaches are still drawn from the season's hash (coaches may change), centred on the
+  identity: pass bias Air Raid 0.64 / Balanced 0.54 / Ground Attack 0.42, aggression Blitz Heavy 0.66 / Man 0.56 / Zone 0.42, ±0.06.
+- **Playbook:** the identity's run count (2 / 3 / 4), style tags drawn ×3 (vertical, quick, inside, option), three defensive calls
+  from the identity's family, a second run call for a physical run front (Canyon, Ironpeak).
+- **Lineup:** among position-legal candidates, a monster whose preferred scheme (schemePreferences) is the identity's is ranked
+  +1 overall; a protected monster always counts as suited.
+- **Acquisition:** identity position +0.75, preferred scheme +0.75 (at most 1.5) in the draft, free agency (strategyValue), R5
+  upgrades; AI trades +2 net units at most (the element tie-break scale).
+- **Training:** the identity's scheme attributes, limited to the position's OVR attributes, are ranked first in `allocateTraining`.
+- **Rookie:** −4 for ordinary clubs only; gyms keep the Pro level (−1). Interpretation: the ruling says "ordinary clubs only" and does
+  not name the gyms' Rookie value.
+- All weights PROVISIONAL. Measurement (t8-league-health, seeds 1–2 × 5 seasons, before → after): ordinary pass share Air Raid 0.65 →
+  0.82, Balanced 0.69 → 0.68, Ground Attack 0.66 → 0.44; gym/ordinary starter gap 3.60 → 3.56; AI trades 16 → 22; starter sales 1 → 0.
+- Tests: `tests/task8-identities.test.js` (11). Re-run file by file: all task8-*, task6-phase-b/c/0, task7-*, ai-trade-band,
+  trading-second-pass, playbook-reserve, legendary-plays, league-registry, league-season, league-flows, franchise-save-compat,
+  franchise, post-trading-benchmark, coach-assist pass. `task6-phase-d` "R4 in play" still fails ("sales happen"): the known D11
+  failure, unchanged. `task7-remediation` R1 c: its scenario seed moved 39 → 40 (a prerequisite, the released monster signing
+  elsewhere, no longer occurs at 39; 40 is the second seed the test's own search had found; the atomicity assertions are unchanged).

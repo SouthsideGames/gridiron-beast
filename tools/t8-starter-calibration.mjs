@@ -27,6 +27,6 @@ console.log('starters', all.length, 'mean', (all.reduce((a, b) => a + b, 0) / al
     const st = new Set(Object.values(buildDepthChart(f.roster, {}, {})));
     for (const m of f.roster) if (st.has(m.id)) own.push(monsterOverall(m));
   }
-  for (const [p, v] of Object.entries(by)) { const o = v.map((x) => x[0]).sort((a, b) => a - b); console.log(p, v.length, 'ovr mean', (o.reduce((a, b) => a + b, 0) / o.length).toFixed(1), 'p10', o[Math.floor(o.length * 0.1)], 'p90', o[Math.floor(o.length * 0.9)], 'lvl', (v.reduce((a, x) => a + x[1], 0) / v.length).toFixed(1), 'yearsPro0 share', (v.filter((x) => x[3] === 0).length / v.length).toFixed(2)); }
+  for (const [p, v] of Object.entries(by)) { const o = v.map((x) => x[0]).sort((a, b) => a - b); console.log(p, v.length, 'ovr mean', (o.reduce((a, b) => a + b, 0) / o.length).toFixed(1), 'p10', o[Math.floor(o.length * 0.1)], 'min', o[0], 'p90', o[Math.floor(o.length * 0.9)], 'lvl', (v.reduce((a, x) => a + x[1], 0) / v.length).toFixed(1), 'yearsPro0 share', (v.filter((x) => x[3] === 0).length / v.length).toFixed(2)); }
   own.sort((a, b) => a - b); console.log('owner starters', own.length, 'mean', (own.reduce((a, b) => a + b, 0) / own.length).toFixed(1), 'p10', own[Math.floor(own.length * 0.1)]);
 }

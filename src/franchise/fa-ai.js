@@ -23,6 +23,7 @@ import { monsterOverall } from '../data/monsters.js';
 import { ALL_TEAMS } from '../data/league.js';
 import { tierById } from '../data/league.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
+import { clubIdentity } from '../data/identities.js';
 import { leagueClubs, isProtected } from './league-registry.js';
 import { clubNeeds, bestUpgrade, upgradesAllowed, contractLength, modeLength, leagueBenchOf } from './league-season.js';
 import { modeOf } from './strategy.js';
@@ -76,7 +77,7 @@ const wants = (f, club, m) => { if (isProtected(m) || m.injury) return false; if
 
 /** One AI club's turn in the current period. Returns the number of offers made or revised. */
 export function aiClubTurn(f, club, { bench }) {
-  let acted = 0; const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null;
+  let acted = 0; const mode = modeOf(f, club); const element = GYM_BY_CLUB[club]?.element || null; const identity = clubIdentity(f, club);
   // 1-2: its open offers
   for (const o of liveOffers(f, (x) => x.club === club)) {
     const u = unsigned(f, o.mid); if (!u) continue;
@@ -94,7 +95,7 @@ export function aiClubTurn(f, club, { bench }) {
   const roster = rosterOf(f, club);
   const market = marketList(f).map((x) => x.m).filter((m) => wants(f, club, m) && !liveOffers(f, (o) => o.club === club && o.mid === m.id).length);
   const weakAt = {}; const vcache = new Map(); // computed once per turn (the sort compares many times)
-  const valueOf = (m) => { if (vcache.has(m)) return vcache.get(m); if (!(m.position in weakAt)) weakAt[m.position] = weakestStarter(roster, m.position); const v = strategyValue(m, { mode, ask: askOf(f, m).salary, weakestStarter: weakAt[m.position], element }); vcache.set(m, v); return v; };
+  const valueOf = (m) => { if (vcache.has(m)) return vcache.get(m); if (!(m.position in weakAt)) weakAt[m.position] = weakestStarter(roster, m.position); const v = strategyValue(m, { mode, ask: askOf(f, m).salary, weakestStarter: weakAt[m.position], element, identity }); vcache.set(m, v); return v; };
   /** Offer on `m`: the club's terms, improved for a priority target when the mode says he is worth it, a bonus only where it saves cap. */
   const tryOffer = (m, { tag = null, priority = false, release = null } = {}) => {
     let t = aiTerms(f, club, m, bench);

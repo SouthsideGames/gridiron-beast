@@ -175,30 +175,13 @@ test('Bear Front lines up B-left, head-up nose, B-right', () => {
 });
 
 // ---- abilities on the read
-test('read abilities act on the read: Echo Read and Ancient Grove bite less, Cold Read reads runs sooner', () => {
-  const pa = (species) => { const bites = []; for (const off of PA) for (const def of ['cover_3', 'tampa_2', 'run_wall']) for (let s = 0; s < 30; s++) {
-    const sim = play({ off, def, attr: 'speed', value: 65, seed: 16000 + s, options: { trace: true }, extra: species ? (o, d) => { d.LB1.species = species; } : null });
-    const th = sim.events.find((e) => e.kind === 'throw'); if (!th) continue; bites.push(sim.frames.some((f) => f.dbg && f.t <= th.t && f.dbg.find((e) => e[0] === 'LB1')?.[8]?.state === 'run') ? 1 : 0); }
-    return mean(bites); };
-  const none = pa(null), echo = pa('echolot'), grove = pa('elderoot');
-  assert.ok(none > 0.05, `LB1 bites on some fakes (${none.toFixed(2)})`);
-  assert.ok(echo < none, `Echo Read bites less: ${echo.toFixed(2)} vs ${none.toFixed(2)}`);
-  assert.ok(grove < echo && grove < 0.05, `Ancient Grove (nearly) never bites: ${grove.toFixed(2)}`);
-  const rec = (species) => { const ts = []; for (const off of ['inside_zone', 'dive', 'power_right', 'counter']) for (const def of ['cover_3', 'run_wall']) for (let s = 0; s < 30; s++) {
-    const sim = play({ off, def, attr: 'speed', value: 65, seed: 17000 + s, options: { trace: true }, extra: species ? (o, d) => { d.LB1.species = species; } : null });
-    const f = sim.frames.find((x) => x.dbg && x.dbg.find((e) => e[0] === 'LB1')?.[8]?.state === 'run'); if (f) ts.push(f.t); }
-    return mean(ts); };
-  assert.ok(rec('frostclaw') < rec(null) - 0.03, 'Cold Read commits to real runs sooner');
-});
-
-test('Permafrost and Crushing Rush still work against the run, and only on a ball handed off or kept', () => {
-  const fire = (species, slot, offs, key) => { let n = 0, fired = 0; for (const off of offs) for (const def of ['run_wall', 'bear_front', 'cover_3']) for (let s = 0; s < 20; s++) {
-    const sim = play({ off, def, attr: 'speed', value: 65, seed: 18000 + s, extra: (o, d) => { if (d[slot]) d[slot].species = species; } }); n++; if (sim.events.some((e) => e.kind === 'ability' && e.by === slot && (!key || e.key === key))) fired++; }
-    return fired / n; };
-  assert.ok(fire('icehorn', 'DL2', RUNS) > 0.02, 'Permafrost fires on runs');
-  assert.equal(fire('icehorn', 'DL2', ['quick_slants', 'curl_flat', 'four_verticals', 'pa_post']), 0, 'Permafrost never fires on a pass play');
-  assert.ok(fire('stoneguard', 'DL2', RUNS) > 0.1, 'Crushing Rush fires on runs');
-  assert.match(SRC, /d\.ability\?\.permafrost && !c\.permafrosted && handoffDone && !stats\.receiver/, 'Permafrost: contact with a handed-off ball, not the play type');
+test('the legacy read abilities are retired (Task 8 M3: Ancient Grove, Cold Read, Echo Read, Permafrost and Crushing Rush are Dex contracts now; no stacking)', () => {
+  // The legacy effects these tests pinned no longer reach the engine (tests/task8-ability-gate.test.js); the contracts are tested in
+  // tests/task8-abilities-*.test.js. Here: none of those species changes LB1's read or logs a legacy ability event.
+  for (const species of ['elderoot', 'frostclaw', 'icehorn']) for (const off of ['pa_post', 'inside_zone']) for (let s = 0; s < 6; s++) {
+    const sim = play({ off, def: 'cover_3', attr: 'speed', value: 65, seed: 16000 + s, extra: (o, d) => { d.LB1.species = species; if (d.DL2) d.DL2.species = species; } });
+    assert.ok(!sim.events.some((e) => e.kind === 'ability' && e.key), `${species}: no legacy ability event`);
+  }
 });
 
 // ---- Goal Line Man's free linebacker (owner-approved correction, PR #78). Against one-back sets with an attached tight end

@@ -7,8 +7,9 @@ export const startGame = (permanentDurability) => ({ capacity: permanentDurabili
  * End of a completed played football play (participants only; bench and other-unit time never drain): drain 1, or while Afflicted
  * permanent Durability / max(1, effective Durability). Exhaustion is set the moment stamina reaches 0 and lasts the actual game.
  */
-export function drainPlay(s, { afflicted = false, effectiveDurability = null } = {}) {
-  const drain = afflicted ? F.frac(s.capacity, Math.max(1, Math.round(effectiveDurability ?? s.capacity))) : F.ONE;
+export function drainPlay(s, { afflicted = false, effectiveDurability = null, relief = 0 } = {}) {
+  // M3 hook: `relief` whole points off the ordinary drain (an approved ability, e.g. Iron Lungs), minimum 0; status drain is unchanged
+  const drain = afflicted ? F.frac(s.capacity, Math.max(1, Math.round(effectiveDurability ?? s.capacity))) : relief > 0 ? F.max(F.ZERO, F.sub(F.ONE, F.frac(relief))) : F.ONE;
   const left = F.max(F.ZERO, F.sub(s.stamina, drain));
   return { ...s, stamina: left, exhausted: s.exhausted || F.cmp(left, F.ZERO) === 0 };
 }
@@ -18,3 +19,5 @@ export const halftime = (s) => ({ ...s, stamina: F.min(F.frac(s.capacity), F.add
 export const exhaustionFactor = (s) => (s.exhausted ? 0.5 : 1);
 /** Low-stamina battery: informational, at 25% of capacity or below. */
 export const showBattery = (s) => F.cmp(s.stamina, F.frac(s.capacity, 4)) <= 0;
+/** Task 8 M3: subtract whole current-stamina points (an ability drain, not a play cost), bounded at zero; capacity is unchanged. */
+export function drainBy(s, points) { const left = F.max(F.ZERO, F.sub(s.stamina, F.frac(Math.max(0, points)))); return { ...s, stamina: left, exhausted: s.exhausted || F.cmp(left, F.ZERO) === 0 }; }

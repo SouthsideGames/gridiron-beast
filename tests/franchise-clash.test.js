@@ -14,8 +14,22 @@ test('encounter preview: 3v3 from healthy roster monsters, the chosen prospect i
   const f = newFranchise(21); toTuesday(f);
   f.roster[0].injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
   const pv = F.encounterPreview(f, 0); assert.ok(pv.ok);
-  assert.equal(pv.size, Math.min(3, f.week.prospects.length)); assert.equal(pv.lineup.length, pv.size); assert.ok(pv.lineup.every((m) => !m.injury));
+  // Size follows the approved Tuesday-companions rule (Task 8 M1): min(3, healthy battlers), the wild side filled out by the scout's
+  // companions, so it no longer depends on how many prospects the scout found (the old min(3, prospects) held only while the
+  // fixture's scout found three or more; after D1 it finds two). Stated exactly, and the wild side's size is now checked too.
+  assert.equal(pv.size, Math.min(3, Link.eligibleBattlers(f.roster).length)); assert.equal(pv.wild.length, pv.size); assert.equal(pv.lineup.length, pv.size); assert.ok(pv.lineup.every((m) => !m.injury));
   assert.equal(pv.wild[0], f.week.prospects[0].monster);
+  // prospects are recruitable, companions are not (owner 2026-11-08 10:33): the front is the chosen prospect, the rest are marked
+  // companions that are no prospect of the week, and a recruit can only name a prospect
+  const prospectMonsters = new Set(f.week.prospects.map((x) => x.monster));
+  assert.ok(!pv.wild[0].companion && pv.wild.slice(1).every((m) => m.companion === true && !prospectMonsters.has(m)), 'the chosen prospect, then non-recruitable companions');
+  assert.equal(F.recruit(f, f.week.prospects.length, 'development').ok, false, 'no recruit beyond the prospects');
+  // battle sizes: three with three or more healthy, otherwise one per healthy battler, both sides always equal
+  for (const healthy of [3, 2, 1]) {
+    const g = JSON.parse(JSON.stringify(f)); const ok = Link.eligibleBattlers(g.roster).slice(healthy).map((m) => m.id);
+    for (const m of g.roster) if (ok.includes(m.id)) m.injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
+    const q = F.encounterPreview(g, 0); assert.ok(q.ok); assert.equal(q.size, healthy); assert.equal(q.wild.length, healthy); assert.equal(q.lineup.length, healthy);
+  }
   assert.deepEqual(Link.eligibleBattlers(f.roster).map((m) => m.id).includes(f.roster[0].id), false);
   // nobody healthy: no battle
   const g = newFranchise(22); toTuesday(g); for (const m of g.roster) m.injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
@@ -238,7 +252,7 @@ test('XP is shown: every battler gets an xp record (amount, level, progress) tha
     const b = F.resolveEncounter(f); assert.ok(b.ok);
     const rows = b.events.filter((x) => x.kind === 'xp'); assert.equal(rows.length, e.mine.length, 'one XP record per battler');
     for (const row of rows) {
-      const m = f.roster.find((x) => x.id === row.id); assert.ok(row.amount > 0, 'XP is earned'); assert.equal(row.xp, m.xp); assert.equal(row.level, m.level); assert.ok(row.next > row.xp);
+      const m = f.roster.find((x) => x.id === row.id); if (row.max) { assert.equal(row.amount, 0, 'level 50: no level XP (spec §6)'); assert.ok(row.training > 0, 'training still earned at level 50'); continue; } assert.ok(row.amount > 0, 'XP is earned'); assert.equal(row.xp, m.xp); assert.equal(row.level, m.level); assert.ok(row.next > row.xp);
       if (!row.levelsGained) assert.equal(m.xp - before[row.id].xp, row.amount, 'the number shown is the XP added');
     }
     assert.ok(!f.news.some((n) => /undefined/.test(n.text)), 'xp records never leak into the news');

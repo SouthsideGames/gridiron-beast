@@ -153,6 +153,30 @@ The field limits were recalculated under these clocks: 44 rectangles, and 0 obje
 | 39 | AI use of Basics | **Approved** | R1; N7b |
 | 40 | Dex and collection | **Approved** | R1; N7b |
 
+## M3 and economy rulings (N8b, 2026-11-08 01:30; RULINGS_2026-11-08.md)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| H Special-play eligibility | **Approved (replacement)** | Kickoffs and two-point conversions: non-kicker abilities neither activate nor charge; kicker abilities only under their own approved conditions; effects an eligible kicker ability creates are allowed; statuses carry over and count down normally; overrides conflicting contract wording |
+| A Prism Break exposed-area measure | **Approved** | Footprint reading |
+| B/C/D calibration | **Approved as PROVISIONAL** | 20 / 8 / 15 yd/s; Snowfall 0.6 s; logistic (d/16) curves |
+| E Crossed Wires | **Approved** | Release the bunch/stack reserve plays with a pair within 5 yd |
+| F Fortress Gate | **Approved** | Longest safe panel, at least 1.5 yd |
+| G Dragon Roar AI | **Approved (PROVISIONAL policy)** | Including desperation attempts up to 90 yd |
+| I Shadow Exchange | **Approved** | Predicted partner position from current position, velocity and known flight time; no simulation, no RNG |
+| D1, D2, D3, D4, D6, D8, D10, D11 | **Approved** | As recommended; D11 test split, sale rules not loosened |
+| D7 identities | **Approved** | Persistent club identities; coaches may change; gyms keep the Compete floor and the soft element preference |
+
+## M3 rulings (N8a, 2026-11-08 00:41; RULINGS_2026-11-08.md)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Guiding Halo radius reference | **Approved** | Existing radii measured from the ball's line-of-scrimmage spot, not the QB; other mechanics unchanged |
+| Shadow Exchange partner prediction | Not approved | A concrete before/after example requested |
+| Comeback mode (GDD §17, D5) | **Approved: retire** | Unrelated approved comeback abilities and mechanics preserved |
+| AI identities (D7) | Pending | All proposed club identities to be presented together before implementation |
+| Gym acquisition (D9) | **Approved** | Prefer matching-element monsters among similarly useful candidates; legendary synergy and legal lineups first; no hard quota |
+
 ## Encounters and Glacivern (N7g, 2026-11-07 15:08)
 
 Verbatim: [RULINGS_2026-11-07e.md](RULINGS_2026-11-07e.md).
@@ -181,3 +205,14 @@ Verbatim: [RULINGS_2026-11-07e.md](RULINGS_2026-11-07e.md).
 | Fractional training display (spec §4 gap) | **Approved** (N7e) | Floor banked points and whole-percent bars; the exact-cost purchase is affordable on exact balances, with its cost shown to two decimals rounded up; display never changes balances, deducts extra or decides affordability; fractions preserved through saves and evolution |
 
 **Specification status: closed.** Every item has a binding ruling (N7d resolved the last gaps).
+
+## N8c (2026-11-08, 09:26)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Career-history fixture | **Approved** | A constructed title through the real season code; assertions unchanged; no inserted record and no seed search |
+| Trading test 28 (kicker) | **Approved** | Aligned with the approved trading rule; trading rules unchanged |
+| D1 founding rosters | **Approved** | Post-history strength selection; shares, Temper neutrality, one Apex roll per event and ceilings preserved; no added years or boosts |
+| task7-remediation R1 c seed | **Open: explanation for review** | [REMEDIATION_R1C_SEED.md](REMEDIATION_R1C_SEED.md) |
+| Club identities | **Approved (stands)** | Persistent AI identities; compatible coaching changes allowed; the player is unrestricted; the gym Compete floor and the Rookie adjustment kept |
+| Rookie balance | **No change** | Not recalibrated from title frequency in 24 simulated seasons |

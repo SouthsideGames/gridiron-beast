@@ -11,6 +11,7 @@ import { SPECIES_DEX } from '../src/data/species.js';
 import { createRng } from '../src/core/rng.js';
 import { exportJson, importJson } from '../src/franchise/save.js';
 import { approvedRule } from '../src/data/beast-dex.js';
+import * as FR from '../src/core/fraction.js';
 
 const ready = (seed) => { const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', seed }); F.hireDefaultStaff(f); while (F.creationDraftPending(f) && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); F.scoutRegion(f, 'Coral Coast'); return f; };
 const basicAt = (pos) => SPECIES_DEX.find((s) => s.rarity === 'basic' && s.position === pos);
@@ -43,22 +44,25 @@ test('the bonus is an approved shared encounter rule: 25%, active only for a Bas
 
 test('a won Basic encounter adds 25% level XP to every participant, recruited or not; training banks and mastery get nothing', () => {
   const { f, result } = wonEncounter();
-  const xp = battleXp(result, 'a'); const banks = Object.fromEntries(f.roster.map((m) => [m.id, JSON.stringify(m.dev.bank)]));
+  const xp = battleXp(result, 'a'); const tot = (m) => FR.toNumber(m.dev.bank) + FR.toNumber(m.dev.bar); const banks = Object.fromEntries(f.roster.map((m) => [m.id, tot(m)])); const inLine = new Set(result.lines.a.map((x) => x.combatant.monsterId));
   const r = F.resolveEncounter(f); assert.ok(r.ok && r.won);
   const rows = r.events.filter((e) => e.kind === 'xp'); assert.ok(rows.length >= 1);
   for (const x of result.lines.a) {
     const row = rows.find((e) => e.id === x.combatant.monsterId); assert.ok(row, 'every participant is awarded');
-    const base = Math.round(xp[x.id] || 0); assert.equal(row.base, base); assert.equal(row.bonus, Math.round(base * 0.25)); assert.equal(row.amount, base + row.bonus);
+    // M2: the approved Clash award is 25 level XP and 25% of a training bar for every selected lineup member (spec §6); the bonus is +25% of the level XP only
+    assert.equal(row.training, 0.25, 'training progress is the standard award, never boosted');
+    if (row.max) { assert.equal(row.amount, 0); continue; }
+    assert.equal(row.base, 25); assert.equal(row.bonus, 6.25); assert.equal(row.amount, 31.25); assert.ok(xp[x.id] != null);
     assert.match(row.bonusLabel, /Basic encounter bonus/);
   }
   assert.deepEqual(f.week.encounter.bonus, { pct: 25, label: F.basicEncounterBonus({ species: basicAt('RB').id }).label });
-  for (const m of f.roster) assert.equal(JSON.stringify(m.dev.bank), banks[m.id], `${m.name}: training progress is not boosted`);
+  for (const m of f.roster) assert.equal(tot(m), banks[m.id] + (inLine.has(m.id) ? 0.25 : 0), `${m.name}: training progress is the standard 25%, not boosted`);
   assert.ok(F.declineOffer(f).ok, 'letting him go keeps the bonus already awarded');
 });
 
 test('no bonus for an ordinary target, and none on a loss', () => {
   const { f } = wonEncounter({ basic: false }); const r = F.resolveEncounter(f);
-  assert.ok(r.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0)); assert.equal(f.week.encounter.bonus, null);
+  assert.ok(r.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0 && (e.max || e.amount === 25))); assert.equal(f.week.encounter.bonus, null);
   for (let seed = 1; seed < 40; seed++) {
     const g = withTarget(seed); for (const m of g.roster) for (const k of Object.keys(m.attributes)) m.attributes[k] = 1; // a club that cannot win
     if (!F.startEncounter(g, 0).ok || F.encounterBattle(g).winner === 'a') continue;

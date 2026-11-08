@@ -238,10 +238,10 @@ def run_size(pw, port, w, h, name):
     page.wait_for_selector('[data-action="autospeed"]', timeout=5000); check(True, 'auto: speed toggle shows while Auto is on')
     check(page.evaluate("() => { const t0 = Date.now(); return new Promise((res) => { const iv = setInterval(() => { const stop = document.querySelector('[data-action=\"auto\"]'); const anim = !!document.querySelector('#field .actor, #field circle'); if (!stop) { clearInterval(iv); res(false); } if (Date.now() - t0 > 2500) { clearInterval(iv); res(true); } }, 50); }); }"), 'auto: the stop button never disappears while plays animate'); page.click('[data-action="autospeed"]'); page.wait_for_timeout(100); check(page.evaluate("() => __gb.f.game.autoSpeed") == 2, 'auto: 2x')
     settle(page, '[data-action="auto"]'); page.click('[data-action="auto"]'); page.wait_for_timeout(200); shot(page, f'{name}-15b-auto-off')
-    # Comeback mode chip: stage a fourth-quarter deficit (Pro difficulty was chosen at creation).
+    # Comeback mode is retired (owner N8a): staging a fourth-quarter deficit shows no comeback chip.
     page.evaluate("() => { const G = __gb.f.game; const me = G.playerSide, them = me === 'home' ? 'away' : 'home'; G._q = G.state.quarter; G._s = { ...G.state.score }; G._h = G.halftimeShown; G.halftimeShown = true; G.state.quarter = 4; G.state.score[me] = 3; G.state.score[them] = 20; }")
     page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.render(); }"); page.wait_for_timeout(80)
-    check(page.query_selector('.edge-chip.comeback') is not None, 'comeback chip shows when trailing by 10+ in the fourth'); shot(page, f'{name}-15c-comeback')
+    check(page.query_selector('.edge-chip.comeback') is None, 'comeback mode is retired (owner N8a): no comeback chip when trailing by 10+ in the fourth'); shot(page, f'{name}-15c-comeback')
     page.evaluate("() => { const G = __gb.f.game; G.state.quarter = G._q; Object.assign(G.state.score, G._s); G.halftimeShown = G._h; }"); page.evaluate("async () => { const R = await import('/src/ui/router.js'); R.render(); }"); page.wait_for_timeout(50)
     # The staged fourth quarter can trip the one-time "The clock" tutorial sheet; close it like a player would.
     for mark in ('📘', '✨'):

@@ -126,15 +126,11 @@ export function tryEvolve(m) {
   syncFromDev(m); m.name = formById(next).name + suffix;
   return { kind: 'evolve', id: m.id, name: m.name, from, to: formById(next).name, stage: m.stage, species: sp.id, fromForm };
 }
-/** The engine effect a monster carries: its signature ability (uncommon and up) or its species' shared trait (commons). */
-// TRANSITIONAL (Task 8 build plan): legacy signature ability effects stay until M3 registers each family's Dex contract and
-// removes the legacy effect in the same change. The ten shared traits are retired (N7c B13) and no longer reach the engine.
-export const LEGACY_ABILITY_EFFECTS_TRANSITIONAL = true;
-export function speciesEffect(m) {
-  const sp = resolveSpecies(m);
-  if (sp.ability?.effect) return { name: sp.ability.name, effect: sp.ability.effect, kind: 'ability', transitional: true };
-  return null;
-}
+/** The legacy engine effect a monster carries. Task 8 M3 is complete: every football ability is its Dex contract
+ *  (src/sim/abilities/), the legacy signature effects are retired and the ten shared traits were retired by N7c B13, so this is null
+ *  for every monster. Kept as the single switch for the callers that once read legacy effects (roster kicker, fatigue). */
+export const LEGACY_ABILITY_EFFECTS_TRANSITIONAL = false;
+export function speciesEffect(m) { void m; return null; }
 const RARITY_WEIGHT = (s) => RARITIES[s.rarity]?.weight ?? 0;
 /** Pick a species whose (only) position is `position`, by rarity weight (Task 7 D6: one position per species). */
 export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set(), element = null, elementChance = 0.75 } = {}) {
@@ -206,19 +202,32 @@ export function pickChannelSpecies(rng, channel, position, { originals = null, b
  * Generate a monster (Task 8 M1). The family is the given species, or picked at `position` under the channel's share. The individual
  * comes from the approved generator through nine-candidate selection (N7f): `quality` maps to a target percentile of `metric`
  * ('current' for starters and veterans, 'potential' for prospect classifications). One independent 1% Apex roll per event. Veterans
- * (yearsPro > 0) are generated at level 1 and their prior seasons simulated (N7c B7), after selection.
+ * (yearsPro > 0) are generated at level 1 and their prior seasons simulated (N7c B7), after selection; with `postHistory` (founding
+ * rosters, owner ruling N8b D1) each of the nine candidates lives the prior career first and the kept one is chosen by the resulting
+ * current rating's percentile among his form at the same career band. There the participation profile follows the target
+ * percentile (an Apex result too, whose career is simulated after his roll as before).
  */
-export function generateMonster(rng, { position = null, quality = 58, name = null, id = null, species = null, age = null, yearsPro = null, channel = 'roster', metric = 'current', apexRoll = true }) {
+export function generateMonster(rng, { position = null, quality = 58, name = null, id = null, species = null, age = null, yearsPro = null, channel = 'roster', metric = 'current', apexRoll = true, postHistory = false }) {
   // `species` may be a dex id, a species name or an old name; the dex fixes the element and the one position.
   const sp = species || name ? resolveSpecies(species || name) : (position ? pickChannelSpecies(rng, channel, position) : rng.pick(SPECIES_DEX.filter((x) => x.rarity !== 'legendary')));
-  const sel = selectIndividual(rng, `${sp.id}:0`, { target: targetPercentile(quality), metric, apexRoll });
+  const target = targetPercentile(quality);
+  // Owner ruling N8b D1 (option 2, founding rosters): the career shape (id, age, prior seasons) is fixed first, so each of the nine
+  // candidates can live that prior career before one is kept. Other channels keep the approved order (select, then career).
+  let pre = null, sel = null;
+  if (postHistory) {
+    const mid = id || `m_${rng.seed().toString(36)}`; const a = age ?? 20 + rng.int(9);
+    const yp = yearsPro ?? careerYears(mid, a);
+    pre = { id: mid, age: a, yearsPro: yp };
+    const history = yp > 0 ? { id: mid, startAge: a - yp, seasons: yp, profile: historyProfile(target) } : null;
+    sel = selectIndividual(rng, `${sp.id}:0`, { target, metric, apexRoll, history });
+  } else sel = selectIndividual(rng, `${sp.id}:0`, { target, metric, apexRoll });
   const m = {
-    id: id || `m_${rng.seed().toString(36)}`,
+    id: pre ? pre.id : id || `m_${rng.seed().toString(36)}`,
     name: name || sp.name,
     species: sp.id,
     position: sp.position,
     type: sp.element,
-    age: age ?? 20 + rng.int(9),
+    age: pre ? pre.age : age ?? 20 + rng.int(9),
     xp: 0,
     dev: sel.dev,
     fatigue: 0,
@@ -226,10 +235,11 @@ export function generateMonster(rng, { position = null, quality = 58, name = nul
     ability: null,
     stats: { v: 2, career: { reg: {}, post: {} }, season: { year: null, reg: {}, post: {} }, log: [], seasons: [] },
   };
-  m.yearsPro = yearsPro ?? (m.age <= 21 ? 0 : Math.max(0, m.age - 21 - (m.id.charCodeAt(m.id.length - 1) & 1)));
-  if (m.yearsPro > 0) { // prior seasons from level 1 at the age he turned pro; the profile follows his selected standing
-    const p = sel.percentile ?? 0.5; const probe = { id: m.id, position: m.position, age: m.age - m.yearsPro, yearsPro: 0 };
-    simulateHistory(rng, m.dev, probe, { seasons: m.yearsPro, profile: p >= 0.6 ? 'starter' : p >= 0.3 ? 'rotation' : 'depth' });
+  m.yearsPro = pre ? pre.yearsPro : yearsPro ?? careerYears(m.id, m.age);
+  if (sel.probe) { /* post-history selection: the kept candidate's simulated career is his career (nothing re-simulated) */ }
+  else if (m.yearsPro > 0) { // prior seasons from level 1 at the age he turned pro; the profile follows his selected standing
+    const p = pre ? target : sel.percentile ?? 0.5; /* founding: the target (an Apex there); elsewhere the selected standing */ const probe = { id: m.id, position: m.position, age: m.age - m.yearsPro, yearsPro: 0 };
+    simulateHistory(rng, m.dev, probe, { seasons: m.yearsPro, profile: historyProfile(p) });
     if (m.dev.apex) m.age = probe.age; // Apex is ageless (spec §5)
   }
   syncFromDev(m);
@@ -238,6 +248,11 @@ export function generateMonster(rng, { position = null, quality = 58, name = nul
   assignAmbition(m); // Task 7: one hidden career Ambition, from the seeded id
   return m;
 }
+
+/** Prior seasons as a pro for a generated age: none at 21 or younger, else he turned pro at 21 or 22 (by the id). */
+export const careerYears = (id, age) => (age <= 21 ? 0 : Math.max(0, age - 21 - (id.charCodeAt(id.length - 1) & 1)));
+/** Prior-career participation profile from a standing (percentile): starter from 60%, rotation from 30%, else depth. */
+export const historyProfile = (p) => (p >= 0.6 ? 'starter' : p >= 0.3 ? 'rotation' : 'depth');
 
 export function salaryFor(m) { return 18000 + 280 * monsterOverall(m); }
 
@@ -275,7 +290,8 @@ export function spendPoint(m, attr, { points = null } = {}) {
   return { ok: true, value: d.current[attr], increases: r.increases, refunded: r.refunded, left: d.bank };
 }
 /** AI clubs (and the staff, if asked) spend banked points with the approved allocation (career.js). */
-export function autoSpendPoints(m, rng) { const d = devOf(m); allocateTraining(d, m); syncFromDev(m); }
+/** `first`: Task 8 D7, an AI identity's attributes for his position, ranked first among his OVR attributes (career.js allocateTraining). */
+export function autoSpendPoints(m, rng, { first = null } = {}) { const d = devOf(m); allocateTraining(d, m, { first }); syncFromDev(m); }
 
 /** N7c B15: the fixed legacy cornerstone list is retired. A cornerstone is any eligible Dex family (never a kicker). */
 const OFFENSE_POS = new Set(['QB', 'RB', 'WR', 'TE', 'OL']), DEFENSE_POS = new Set(['DL', 'LB', 'CB', 'S']);
@@ -339,7 +355,7 @@ export function createRoster(seed, { cornerstone = null, cornerstoneOffense, cor
       const homeBasics = element ? basicsAt.filter((x) => x.element === element) : [];
       const sp = pickChannelSpecies(rng, 'roster', position, { basics: homeBasics.length ? homeBasics : basicsAt, originals: SPECIES_DEX.filter((x) => x.position === position && x.rarity !== 'basic' && x.rarity !== 'legendary'), pickOriginal: (rr) => pickSpeciesForPosition(rr, position, { exclude: used, element }) });
       if (sp.element !== element) used.add(sp.id); // a gym club may field its home element more than once ("Aquip II")
-      roster.push(generateMonster(rng, { position, quality: q, species: sp.id }));
+      roster.push(generateMonster(rng, { position, quality: q, species: sp.id, postHistory: true })); // N8b D1: post-history percentile
     }
   }
   const seen = {}; const roman = ['', ' II', ' III', ' IV', ' V', ' VI'];
@@ -442,6 +458,22 @@ function fitThresholds() {
     vals.sort((a, b) => a - b); t[`${scheme}:${pos}`] = vals[Math.floor(vals.length * 0.6)];
   }
   FIT_THRESHOLDS = t; return t;
+}
+/**
+ * The engine attributes behind a scheme's headline keys at a position (the same composition as headlineAttributes), limited to the
+ * position's OVR attributes (POSITION_WEIGHTS). Task 8 D7: an AI identity ranks these first in training. [] for a kicker or an unknown
+ * scheme. Pure; reads no monster.
+ */
+export function schemeAttributes(scheme, position) {
+  const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(position) ? 'defense' : null;
+  const keys = side ? FIT_KEYS[side][scheme]?.[position] : null; if (!keys) return [];
+  const offense = side === 'offense';
+  const raw = { speed: ['speed', 'agility'],
+    power: position === 'QB' ? ['strength'] : position === 'OL' ? ['blocking', 'strength'] : offense ? ['strength', 'blocking'] : ['strength', 'tackling'],
+    hands: position === 'QB' ? ['accuracy', 'arm'] : position === 'OL' ? ['blocking'] : offense ? ['catching'] : ['coverage', 'catching'],
+    smarts: offense ? ['awareness'] : ['awareness', 'coverage'] };
+  const w = POSITION_WEIGHTS[position] || {};
+  return [...new Set(keys.flatMap((k) => raw[k] || []))].filter((a) => w[a] > 0);
 }
 export const SCHEME_LABEL = Object.freeze({ pass: 'Air Raid', run: 'Ground Attack', balanced: 'Balanced', pressure: 'Blitz Heavy', coverage: 'Zone Control', man: 'Man Coverage' });
 /** Every scheme on the monster's side, with whether it fits and how far above/below the bar it sits, so the card can say what it *prefers*. */

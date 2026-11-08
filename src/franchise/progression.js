@@ -1,8 +1,10 @@
 // XP, level-ups, fatigue, injuries and recovery (GDD §5.1 and §8).
 
 import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolve, autoSpendPoints, syncFromDev } from '../data/monsters.js';
-import { addBankedPoints } from './t8/progression.js';
-import { OFFSEASON_POINTS } from './t8/awards.js';
+import { addBankedPoints, addTrainingProgress, MAX_LEVEL } from './t8/progression.js';
+import { OFFSEASON_POINTS, footballAward } from './t8/awards.js';
+import { applyActivity } from './reward-ledger.js';
+import * as FR from '../core/fraction.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, POSITION_WEIGHTS } from '../data/personnel.js';
 import { isAgeless } from './league-registry.js';
 import { CURVE, trueOnset, technicalOffset, peakWindowAge, isPhysical, physLoss, techLoss, drawLoss, transitionYears, SEVERE_INJURY_PHYSICAL, ATTRIBUTE_FLOOR } from '../data/aging.js';
@@ -11,28 +13,62 @@ export const OUT_OF_POSITION_RISK = 1.75;
 
 const norm = (v) => Math.max(1, Math.min(99, v ?? 60)) / 99;
 
+/** N7c B6: the approved level-XP multiplier, tuned to the development benchmarks (median level 50 in 5-8 seasons). Initial value 1. */
+export const XP_MULTIPLIER = 1;
+/**
+ * Apply one approved activity award (spec §6) to a monster: level XP (stops at level 50, never converted to training) and training
+ * progress (one banked point per full bar, excess carried; continues at level 50). Returns { xp, training, events }.
+ * Mastery is separate (M5) and never earned here.
+ */
+export function applyAward(m, { xp, training }, rng, { autoSpend = false, autoEvolve = false, train = null } = {}) { // train: Task 8 D7, an AI identity's training priority { position: [attributes] }
+  const events = []; const d = m.dev; const startLevel = m.level;
+  const xpGain = d.level >= MAX_LEVEL ? 0 : FR.toNumber(FR.mul(xp, XP_MULTIPLIER));
+  if (xpGain > 0) {
+    m.xp = (m.xp || 0) + xpGain;
+    while (m.level < MAX_LEVEL && m.xp >= xpForLevel(m.level)) {
+      m.xp -= xpForLevel(m.level); const before = monsterOverall(m);
+      levelUp(m, rng, { autoSpend: false });
+      events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
+      if (autoEvolve) { const evo = tryEvolve(m); if (evo) events.push(evo); }
+    }
+    if (m.level >= MAX_LEVEL) m.xp = 0;
+  }
+  const points = addTrainingProgress(d, training); syncFromDev(m);
+  if (autoSpend && FR.floor(d.bank) > 0) autoSpendPoints(m, rng, { first: train?.[m.position] || null });
+  return { xp: xpGain, training, points, levelsGained: m.level - startLevel, events };
+}
+/** The kicks a K made in a game (field goals, extra points, kickoffs, punts) from the slot's stats: one qualifies him (spec §6). */
+const kicksOf = (st) => (st?.fga || 0) + (st?.xpa || 0) + (st?.kickoffs || 0) + (st?.punts || 0);
+
 /** Apply one game's consequences to the roster. `chart` maps slots to monster ids; `playerStats` from the game state. */
-/** `xpScale`: the balance nudge for a runaway AI club (GDD §42.6 decision C) slows its development; it never edits a rating. */
-export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1 } = {}) {
+/**
+ * Task 8 M2: level XP and training come from the approved football award (spec §6, R1 items 9-12), aggregated by monster (not slot),
+ * once per activity through the reward ledger when one is given. The positional grade adjustment and performance bonus arrive with
+ * grading (M5); until then gradeAdj is 0 (TRANSITIONAL). Participation: min(1, live snaps / 10); a kicker qualifies with one kick.
+ */
+export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1, ledger = null, activityId = null, train = null } = {}) {
   const events = [];
   const byId = Object.fromEntries(roster.map((m) => [m.id, m]));
-  for (const slot of [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K']) {
+  const slots = [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'];
+  // aggregate participation by monster across the slots he filled
+  const part = new Map(); const counted = Object.keys(playerStats || {}).length > 0;
+  for (const slot of slots) {
+    const m = byId[chart[slot]]; if (!m) continue; const st = playerStats?.[slot] || {};
+    const p = part.get(m.id) || { monsterId: m.id, m, liveSnaps: 0, kicks: 0 };
+    p.liveSnaps += (st.snapsOff || 0) + (st.snapsDef || 0) + (st.stSnaps || 0); if (slot === 'K') p.kicks += kicksOf(st);
+    if (!counted) { p.liveSnaps = Math.max(p.liveSnaps, snaps); if (slot === 'K') p.kicks = Math.max(p.kicks, 1); } // no per-slot counts at all (tools, labs): full participation
+    part.set(m.id, p);
+  }
+  const award = (p) => {
+    const a = footballAward({ position: p.m.position, liveSnaps: p.liveSnaps, kicks: p.kicks, gradeAdj: 0 });
+    const r = applyAward(p.m, { xp: xpScale === 1 ? a.xp : FR.mul(a.xp, FR.frac(Math.round(xpScale * 100), 100)), training: a.training }, rng, { autoSpend, autoEvolve, train });
+    events.push(...r.events);
+    events.push({ kind: 'xp', id: p.m.id, name: p.m.name, position: p.m.position, amount: r.xp, training: FR.toNumber(r.training), points: r.points, level: p.m.level, levelsGained: r.levelsGained, xp: p.m.xp, next: xpForLevel(p.m.level), max: p.m.level >= MAX_LEVEL });
+  };
+  const entries = [...part.values()].filter((p) => p.m.dev); // a lab's synthetic monster (no development record) earns nothing; its fatigue and injury roll below still run
+  if (ledger && activityId) applyActivity(ledger, activityId, entries, award); else for (const p of entries) award(p);
+  for (const slot of slots) {
     const m = byId[chart[slot]]; if (!m) continue;
-    const st = playerStats?.[slot] || {};
-    let xp = 24 + (won ? 10 : 0);
-    xp += Math.round((st.rushYds || 0) / 4 + (st.recYds || 0) / 4 + (st.passYds || 0) / 10);
-    xp += (st.td || 0) * 14 + (st.tackles || 0) * 5 + (st.sacks || 0) * 12 + (st.int || 0) * 14 + (st.rec || 0) * 2;
-    if (xpScale !== 1) xp = Math.round(xp * xpScale);
-    m.xp += xp; const startLevel = m.level;
-    while (m.xp >= xpForLevel(m.level)) {
-      m.xp -= xpForLevel(m.level);
-      const before = monsterOverall(m);
-      levelUp(m, rng, { autoSpend });
-      events.push({ kind: 'levelup', id: m.id, name: m.name, level: m.level, from: before, to: monsterOverall(m) });
-      if (autoEvolve) { const evo = tryEvolve(m); if (evo) events.push(evo); } // the owner's monsters wait for the owner (GDD §20.6)
-    }
-    // What the final-whistle screen shows for every starter (2026-10-22 feedback pass): XP gained and progress toward the next level.
-    events.push({ kind: 'xp', id: m.id, name: m.name, position: m.position, amount: xp, level: m.level, levelsGained: m.level - startLevel, xp: m.xp, next: xpForLevel(m.level) });
     // Fatigue and injury risk.
     const dur = norm(m.attributes.durability);
     const stamina = speciesEffect(m)?.effect?.fatigue || 1; // Iron Lungs: tires slower
@@ -79,7 +115,7 @@ export const marketPriced = (m) => !m.contract || !!m.contract.permanent;
  * `ctx`: `s` = offseasons under these rules for a save made before them (the transition's decline cap; null = none);
  * `severeOf(m)` = did he suffer a severe injury last season. Draws come from `rng` in roster order, attribute by attribute.
  */
-export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate = true } = {}) {
+export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate = true, train = null } = {}) { // train: Task 8 D7 (applyAward)
   const events = [];
   for (const m of roster) {
     const ageless = isAgeless(m) || !!m.dev?.apex; // Apex is ageless (spec §5)
@@ -88,7 +124,7 @@ export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate
     m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
     // Task 8: the eligible offseason award, 2 banked training points (replaces the old direct maturation increases, spec §6).
     // AI and pool monsters allocate it with the approved policy; the owner's club passes autoAllocate: false and decides.
-    if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng); }
+    if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
     if (ageless) { if (m.dev) syncFromDev(m); if (marketPriced(m)) m.salary = salaryFor(m); continue; } // ageless: banked points still mirror to m.points
     const cur = m.dev ? m.dev.current : m.attributes;
     if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = cur.durability;

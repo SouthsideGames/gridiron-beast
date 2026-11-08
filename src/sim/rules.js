@@ -8,6 +8,12 @@ import { boostSlots, qualifyingEvent, slotOf } from './partnership-play.js';
 import { createRng, rngFromState } from '../core/rng.js';
 import { FIELD, yardLabel, fieldGoalDistance, clamp } from '../core/field.js';
 import { simulatePlay } from './engine.js';
+import * as T8S from './t8/status-runtime.js';
+import * as T8K from './t8/stamina-runtime.js';
+import * as T8F from './t8/field-runtime.js';
+import { toPlayFrame } from './t8/fields.js';
+import { extraCooldownUnit, contractOf, abilityState, recordExecution, kickHook } from './abilities/registry.js';
+import { runGameHook } from './abilities/game.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
@@ -103,13 +109,15 @@ export function timeout(state, side) {
 
 // --------------------------------------------------------------------------- scrimmage
 /** Build the engine inputs for the current situation and chosen plays, then apply the result. */
-/** Which side comeback mode lifts right now: trailing by the margin in the fourth quarter (not overtime), else null. */
+/** Comeback mode is RETIRED (owner ruling N8a, 2026-11-08): no side is lifted, including a live game saved before the ruling
+ *  that still carries a `comeback` rule. Kept as a function so callers (the match chip, edgesFor) stay unchanged. */
+export const COMEBACK_RETIRED = true;
 export function comebackSide(state) {
-  const cb = state.comeback; if (!cb || state.ot || state.quarter < 4 || state.finished) return null;
+  const cb = COMEBACK_RETIRED ? null : state.comeback; if (!cb || state.ot || state.quarter < 4 || state.finished) return null;
   const d = state.score.home - state.score.away;
   if (d >= cb.margin) return 'away'; if (-d >= cb.margin) return 'home'; return null;
 }
-/** Per-side rating edges for this snap: comeback mode plus each team's scheme lock. */
+/** Per-side rating edges for this snap: each team's scheme lock (comeback mode is retired, N8a). */
 export function edgesFor(state, teams) {
   const off = state.possession, def = opponent(off); const cb = comebackSide(state);
   const edge = { off: 0, def: 0, why: { off: [], def: [] } };
@@ -129,6 +137,104 @@ export function abilityMemory(state, { drive = null } = {}) {
   return { drive: drive ?? `${state.drive?.team}@${(state.playCount || 0) - (state.drive?.plays || 0)}`, half, quarter: state.quarter, used: state.abilityMemory || {} };
 }
 export function rememberAbilities(state, sim) { if (sim?.memoryUsed?.length) { state.abilityMemory ||= {}; for (const k of sim.memoryUsed) state.abilityMemory[k] = true; } }
+/** Task 8 (B18): the monsters a counted Stunned keeps out of this whole play (they line up but cannot act); null when none. */
+function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter((id) => id && T8S.sitsOutPlay(state, id)); return ids.length ? new Set(ids) : null; }
+/** A field's absolute placement (home-goal frame; lat in the home frame) from the upcoming formation reference (spec §11). */
+const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
+const absLat = (state, l) => (state.possession === 'home' ? l : -l);
+function fieldPlacement(state, p, offensePlay = null, alignOf = () => null) {
+  if (p.span) { // M3 hook: (Psychic/Dragon batch) a span [from, to] from the line in the offense frame (negative: the backfield), shifted only enough to fit the field of play
+    let lo = state.ballOn + Math.min(...p.span), hi = state.ballOn + Math.max(...p.span); const len = hi - lo;
+    if (lo < 0) { lo = 0; hi = len; } if (hi > FIELD.length) { hi = FIELD.length; lo = hi - len; }
+    const lat = (state.ballLat || 0) + (p.centerOn === 'QB' ? offensePlay?.align?.QB?.[1] ?? 0 : 0);
+    return { centerLat: absLat(state, lat), yardFrom: absYard(state, lo), yardTo: absYard(state, hi), width: p.width };
+  }
+  // M3 hook: (Nature / Electric batch) an ability-given rectangle, longitudinally in yards beyond the upcoming LOS (`from`..`to`, offense
+  // frame of the creation play) and laterally centred on `lat` (engine frame: relative to the ball) or `latAbs` (offense-frame field lateral)
+  if (p.rect) return { centerLat: absLat(state, p.rect.latAbs ?? (state.ballLat || 0) + (p.rect.lat || 0)), yardFrom: absYard(state, state.ballOn + p.rect.from), yardTo: absYard(state, state.ballOn + p.rect.to), width: p.width };
+  // M3 hook: (Fire/Water batch) p.depth 'creator' centres the length on the creator's formation alignment (Impact Pyre: the LB's starting
+  // position), otherwise on the fixed reference p.lbDepth beyond the line (5: LB reference; Tsunami Line 12: safety reference); p.lateral
+  // 'creator' centres the width on the creator's initial alignment (Burning Wake), otherwise on the ball.
+  if (p.depth === 'creator' || p.lateral === 'creator') {
+    const at = alignOf(p.owner); const ref = state.ballOn + (p.depth === 'creator' && at ? at[0] : (p.lbDepth ?? 5));
+    return { centerLat: absLat(state, (state.ballLat || 0) + (p.lateral === 'creator' && at ? at[1] : 0)), yardFrom: absYard(state, ref - p.length / 2), yardTo: absYard(state, ref + p.length / 2), width: p.width };
+  }
+  // M3 hook: (Earth/Ice batch) placement kinds. 'randomDefense': the whole rectangle between the upcoming line and `maxDepth` yards
+  // downfield, lateral and depth from the fractions u, v the producer drew when it earned the field (Frostmark). 'backfield': from the
+  // line `length` yards into the offensive backfield, centred on the quarterback's initial alignment (Permafrost).
+  if (p.place === 'randomDefense') {
+    const H = FIELD.halfWidth, w = Math.min(p.width, 2 * H), y0 = state.ballOn + p.v * Math.max(0, p.maxDepth - p.length);
+    return { centerLat: absLat(state, -H + w / 2 + p.u * (2 * H - w)), yardFrom: absYard(state, y0), yardTo: absYard(state, y0 + p.length), width: w };
+  }
+  if (p.place === 'backfield') {
+    const qbY = offensePlay?.align?.QB?.[1] ?? 0;
+    return { centerLat: absLat(state, (state.ballLat || 0) + qbY), yardFrom: absYard(state, state.ballOn - p.length), yardTo: absYard(state, state.ballOn), width: p.width };
+  }
+  // M3 hook: lateral from the producer: p.latHome (home frame, e.g. a breakup spot), p.latOff (offense frame), else the ball plus p.latFromBall
+  let centerLat = p.latHome ?? absLat(state, p.latOff ?? ((state.ballLat || 0) + (p.latFromBall || 0))), width = p.width;
+  if (p.clipWidth) { const lo = Math.max(-FIELD.width / 2, centerLat - width / 2), hi = Math.min(FIELD.width / 2, centerLat + width / 2); centerLat = (lo + hi) / 2; width = Math.max(0, hi - lo); } // M3 hook: clip to the legal field instead of shifting
+  if (p.los) return { centerLat, yardFrom: absYard(state, state.ballOn + p.los[0]), yardTo: absYard(state, state.ballOn + p.los[1]), width }; // M3 hook: yards past the upcoming LOS (offense frame)
+  const ref = state.ballOn + (p.lbDepth ?? 5); // the fixed LB reference, offense frame
+  const a = absYard(state, ref - p.length / 2), b = absYard(state, ref + p.length / 2); // the rectangle centred on the reference (placement choice, documented in M3_PLAN)
+  return { centerLat, yardFrom: a, yardTo: b, width };
+}
+/**
+ * M3 hook: pre-choice producers. Before a scrimmage snap's fields are created, every on-field monster whose contract declares
+ * `preSnap(api, self)` may read its game-scope state and queue fields for this snap (they are created right after, G3). `api.able`:
+ * not held out of the play by a counted Stunned (B18); `api.side`: 'off' | 'def'; `api.teamSide`: his team ('home' | 'away').
+ */
+function preSnapContracts(state, t8, slots) {
+  for (const [side, group] of [['off', slots.offense], ['def', slots.defense]]) for (const [slot, x] of Object.entries(group)) {
+    const c = x?.id && x.species ? contractOf(x.species) : null; if (!c?.preSnap) continue;
+    const self = { mid: x.id, family: x.species, form: x.form || `${x.species}:0`, mastery: x.mastery || 0, slot, team: side, type: x.type || null, name: x.name || slot };
+    c.preSnap({ side, teamSide: side === 'off' ? state.possession : opponent(state.possession), able: !T8S.sitsOutPlay(state, x.id), playIndex: state.playCount || 0,
+      state: () => abilityState(t8, x.id, x.species, self.form, self.mastery), queueField: (spec) => T8F.queueField(t8, { side, ...spec }),
+      fields: () => T8F.activeFields(t8), pending: () => t8.fields?.pending || [], executed: (opts) => recordExecution(t8, x.id, x.species, opts) }, self);
+  }
+}
+/** Task 8 M3: an immediate field (Splashdown), placed after the play at its play-frame spot, in this play's frame. */
+function spotPlacement(state, sim, p) {
+  const x = sim.ballOn + p.immediate.x;
+  return { centerLat: absLat(state, (sim.ballLat || 0) + p.immediate.y), yardFrom: absYard(state, x - p.length / 2), yardTo: absYard(state, x + p.length / 2), width: p.width };
+}
+/** After a play with fields: the Light recharge for non-Light participants finishing inside a Light field (once per monster per play;
+ *  never from his own field), then each field's clock (G1/G2). */
+/** The active fields in this play's frame (the engine's x from the line toward the offense's goal, y lateral in its frame). */
+const playFields = (state, t8) => toPlayFrame(T8F.activeFields(t8), { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 });
+function afterPlayFields(state, t8, slots, sim, offIds) {
+  const last = sim.frames?.[sim.frames.length - 1]; const inputs = { ...Object.fromEntries(Object.entries(slots.offense).map(([k, v]) => [`off:${k}`, v])), ...Object.fromEntries(Object.entries(slots.defense).map(([k, v]) => [`def:${k}`, v])) };
+  if (last) for (const [team, rows] of [['off', last.off], ['def', last.def]]) for (const row of rows || []) {
+    const x = inputs[`${team}:${row[0]}`]; if (!x?.id || x.type === 'Light') continue;
+    const yard = absYard(state, sim.ballOn + row[1]), lat = absLat(state, (sim.ballLat || 0) + row[2]);
+    const lights = T8F.fieldsAt(t8, yard, lat).filter((f) => f.type === 'Light' && f.owner !== x.id); if (lights.length) extraCooldownUnit(t8, x.id);
+  }
+  // M3 hook: field clocks. creatorOffense: the creator's own offensive plays (G2); team/owner Offense and Defense: the creator's club's
+  // offensive / defensive scrimmage plays, creator on the field or not (the batches named them teamX and ownerX; both are accepted)
+  T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : (f.clock === 'teamOffense' || f.clock === 'ownerOffense') ? state.possession === f.ownerTeam : (f.clock === 'teamDefense' || f.clock === 'ownerDefense') ? f.ownerTeam != null && state.possession !== f.ownerTeam : f.clock === 'scrimmageAny'));
+}
+/** M3 hook: may a pending field be created at this snap? Defensive specs (side 'def', or createOn 'ownerDefense') are created at the
+ *  opposing offense's snap, offensive ones at the creator's club's offensive snap; the creator must be on the field on that side unless
+ *  the contract allows off-field creation (benchOk / offField, N7d G3); maxOwn: one own active field of that ability at a time. */
+function pendingEligible(state, t8, p, offIds, defIds) {
+  if (p.immediate) return false; // Fire/Water: an immediate field (Splashdown) is placed at the whistle, not at a snap
+  const def = p.side === 'def' || p.side === 'defense' || p.createOn === 'ownerDefense'; // 'defense': the Nature / Electric batch's spelling
+  if (p.ownerTeam && (def ? state.possession === p.ownerTeam : state.possession !== p.ownerTeam)) return false;
+  if (!p.offField && !p.benchOk && !(def ? defIds : offIds).has(p.owner)) return false;
+  if (p.requireAble && !p.benchOk && T8S.sitsOutPlay(state, p.owner)) return false; // Psychic/Dragon (Mind Bend): a carried-over Stunned keeps it pending
+  return !(p.maxOwn && T8F.activeFields(t8).some((f) => f.owner === p.owner && f.ability === p.ability));
+}
+/** M3 hook: each on-field contract's pre-snap step (registry.js preSnap), offense then defense in slot order, before pending fields
+ *  are created. Its draws come from a stream seeded by the game seed, the play index and the monster, never the game's own dice. */
+/** M3 hook (Nature / Electric batch): every on-field contract's play-level `hooks.preSnap(pctx, self)`, with its own seeded stream. */
+function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
+  for (const [team, side, play] of [['off', slots.offense, offensePlay], ['def', slots.defense, defensePlay]]) for (const slot of play.onField) {
+    const p = side[slot]; const c = p?.id && p.species ? contractOf(p.species) : null; if (!c?.hooks?.preSnap) continue;
+    const self = { mid: p.id, family: p.species, form: p.form || `${p.species}:0`, mastery: p.mastery || 0, slot, team, type: p.type || null, name: p.name || slot };
+    let h = 2166136261; for (const ch of `${state.seed}|${state.playCount || 0}|${p.id}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+    c.hooks.preSnap({ t8, rng: createRng((h >>> 0) || 23), state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
+      queueField: (spec) => T8F.queueField(t8, spec), ballOn: state.ballOn, offensePlay, defensePlay, slots: { off: slots.offense, def: slots.defense }, playIndex: state.playCount || 0, sitsOut: T8S.sitsOutPlay(state, p.id) }, self);
+  }
+}
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
   const { r, save } = rng(state);
@@ -140,12 +246,32 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   (state.calls ||= []).push(call);
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
+  const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
+  const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
+  const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) return defensePlay.align[sl] || null; return null; };
+  preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers that queue fields for this snap
+  preSnapHooks(state, t8, slots, offensePlay, defensePlay); // M3 hook: (Nature / Electric) play-level preSnap hooks
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay, alignOf) }) : []; // G3
+  // M3 hook: the snap's pre-choice point for every on-field contract (e.g. Prism Break), after this snap's fields exist
+  for (const [team, play, map] of [['off', offensePlay, slots.offense], ['def', defensePlay, slots.defense]]) for (const [slot, m] of Object.entries(map)) {
+    if (!m?.species) continue;
+    runGameHook(state, 'preSnap', [m], { team, slot, side: team === 'off' ? state.possession : opponent(state.possession), align: play.align?.[slot] || null, teams, sitsOut: !!m.id && T8S.sitsOutPlay(state, m.id),
+      toAbs: ([x, y]) => ({ yard: absYard(state, state.ballOn + x), lat: absLat(state, (state.ballLat || 0) + y) }) }, { log: (text, extra) => log(state, text, 'ability', extra) });
+  }
+  // M3 hook: a pending temporary absence (Sovereign Arm capture) is served on its team's next offensive scrimmage play: the captured
+  // defender's slot stays vacant (no substitute) and he is not a participant (his status and stamina clocks pause)
+  const serving = (t8.absences || []).filter((x) => x.serveOn === state.possession); let vacant = null;
+  if (serving.length) { const gone = new Set(serving.map((x) => x.mid)); for (const [sl, p] of Object.entries(slots.defense)) if (p?.id && gone.has(p.id)) { delete slots.defense[sl]; (vacant ||= new Set()).add(sl); } t8.absences = t8.absences.filter((x) => !serving.includes(x)); }
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
     offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null },
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo, ...(vacant ? { vacant } : {}), ...(t8.fields?.list?.length ? { fields: playFields(state, t8) } : {}) },
   });
+  T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12): drained under the statuses active during this play (Afflicted, B10)
+  T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10), after the drain
+  if (t8.fields?.list?.length) afterPlayFields(state, t8, slots, sim, offIds); // Task 8 fields: Light recharge, then the clocks
+  if (t8.fields?.pending?.some((p) => p.immediate)) T8F.createPending(t8, { onField: new Set(), eligible: (p) => !!p.immediate, playIndex: state.playCount || 0, place: (p) => spotPlacement(state, sim, p) }); // Task 8 M3: fields created at the whistle (after the clocks: the creation play is excluded)
   if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
@@ -257,8 +383,8 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
       if (sim.result === 'fumble' && (sim.stats.receiver || sim.stats.carrier)) { if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else S.rushYards += gain; S.yards += gain; } // yards to the spot of the fumble still count
       if (sim.result === 'interception' || sim.result === 'touchback_return') lines.push(`INTERCEPTED by ${playerName(sim, 'def', sim.stats.interceptor)}!`);
       else lines.push(`FUMBLE forced by ${playerName(sim, 'def', sim.stats.forcedBy)}, recovered by the defense!`);
-      if (sim.result === 'touchback_return' || sim.endYard >= 100) { changePossession(state, FIELD.touchbackOther, lines, 'Touchback.'); }
-      else changePossession(state, clamp(100 - sim.endYard, 1, 99), lines);
+      if (sim.turnoverSpot == null && (sim.result === 'touchback_return' || sim.endYard >= 100)) { changePossession(state, FIELD.touchbackOther, lines, 'Touchback.'); }
+      else changePossession(state, sim.turnoverSpot ?? clamp(100 - sim.endYard, 1, 99), lines); // M3 hook: an ability-awarded spot (Hoard Flight)
       break;
     }
     case 'safety': { lines.push(`${playerName(sim, 'off', sim.stats.carrier)} is tackled in the end zone.`); if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else if (sim.stats.carrier) S.rushYards += gain; S.yards += gain; scored = safety(state, lines); stops = true; break; }
@@ -320,7 +446,7 @@ export function recordPlayerStats(state, sim, off, def, { toGo = 10 } = {}) {
   // Fumbles: charged to the monster who lost the ball; "lost" only when the defense recovered.
   if (st.fumbledBy && sim.names?.off?.[st.fumbledBy]) { bump(off, st.fumbledBy, 'fum'); if (st.recoveredTeam === 'def') bump(off, st.fumbledBy, 'fumLost'); }
   // Blocking: a snap per blocker, split pass/run; blocks lost; sacks and pressures allowed only when a blocker was beaten for them.
-  for (const [slot, b] of Object.entries(st.blockers || {})) { if (b.pass) bump(off, slot, 'pbSnaps'); if (b.run) bump(off, slot, 'rbSnaps'); if (b.lost) bump(off, slot, 'blocksLost', b.lost); }
+  for (const [slot, b] of Object.entries(st.blockers || {})) { if (b.pass) bump(off, slot, 'pbSnaps'); if (b.run) bump(off, slot, 'rbSnaps'); if (b.lost) bump(off, slot, 'blocksLost', b.lost); if (b.pancakes) bump(off, slot, 'pancakes', b.pancakes); if (b.pancakeAttempts) bump(off, slot, 'pancakeAttempts', b.pancakeAttempts); } // Task 8 M2: pancakes (B1)
   if (st.sackAllowedBy) bump(off, st.sackAllowedBy, 'sacksAllowed');
   if (st.pressureAllowedBy) bump(off, st.pressureAllowedBy, 'pressuresAllowed');
   // Defense.
@@ -374,6 +500,7 @@ function changePossession(state, newBallOn, lines, note = null) {
 }
 function touchdown(state, side, lines) {
   state.score[side] += 6; state.stats[side].td += 1;
+  { const L = ((state.t8 ||= { status: {} }).touchdowns ||= { home: 0, away: 0 }); L[side] += 1; } // M3 hook: the touchdown ledger by scoring club (offense, defense, returns)
   state.phase = 'try'; state.tryTeam = side; state.ballOn = 100 - FIELD.twoPointSpot; state.down = 1; state.toGo = FIELD.twoPointSpot;
   state.possession = side;
   lines.push(`${state[side].name} ${state.score.home}-${state.score.away}.`);
@@ -396,6 +523,8 @@ export function attemptTryKick(state, teams) {
   save();
   if (res.good) state.score[state.tryTeam] += 1;
   kickerStat(state, state.tryTeam, 'xpa'); if (res.good) kickerStat(state, state.tryTeam, 'xpm');
+  creditFormulaUnits(state, teams, state.tryTeam, 'xp'); // B5
+  runGameHook(state, 'extraPoint', [teams[state.tryTeam].kicker], { good: !!res.good, side: state.tryTeam }, { log: (text, extra) => log(state, text, 'ability', extra) }); // M3 hook
   finishTry(state, res.text);
   return res;
 }
@@ -404,7 +533,7 @@ export function attemptTwoPoint(state, teams, offensePlayId, defensePlayId) {
   const { r, save } = rng(state);
   const offense = teams[state.tryTeam], defense = teams[opponent(state.tryTeam)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
-  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null } });
+  const sim = simulatePlay({ offensePlay, defensePlay, offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay), ballOn: 100 - FIELD.twoPointSpot, seed: r.seed(), options: { memory: abilityMemory(state, { drive: `try@${state.playCount || 0}` }), envType: state.venue?.type || null, twoPoint: true, t8: (state.t8 ||= { status: {} }) } });
   rememberAbilities(state, sim);
   save();
   const good = sim.touchdown && !sim.stats.defensiveScore;
@@ -424,38 +553,172 @@ function finishTry(state, text) {
 }
 
 // --------------------------------------------------------------------------- kicks
+// Task 8 M2 live kickoffs (N7b P7; N7c B5, B20). Units: the kicking unit is the K plus up to six coverage players, the return unit
+// the returner plus up to six blockers, both filled from the club's depth chart (its lineups): package-slot players (not base
+// starters) first, then base starters, in the order below. Only charted monsters are used, so every participant has a stat slot.
+export const KICKOFF_UNIT = 7;
+export const COVERAGE_ORDER = Object.freeze(['SS', 'DL3', 'LB1', 'LB2', 'FS', 'CB2', 'CB1', 'DL1', 'DL2']);
+export const RETURN_BLOCK_ORDER = Object.freeze(['WR3', 'C', 'TE', 'RB', 'WR1', 'WR2', 'LG', 'RG', 'QB']);
+/**
+ * Seconds the kickoff is in the air. The approved kicking formula has no hang time; this is the kickoff flight the game already
+ * draws (kick-anim.js), reused unchanged rather than a new tuned value (unspecified: flagged for the owner's balance check).
+ */
+export const KICKOFF_HANG = 2.6;
+const KICK_SPOT = FIELD.length - FIELD.kickoffSpot; // the kick spot in the receiving team's yards (its 65)
+const filled = (p) => !!p && (!!p.id || Object.keys(p.attrs || {}).length > 0);
+/**
+ * The two kickoff units, as engine slot maps keyed by each monster's lineup slot (stats are credited to that slot).
+ * coverage: { K, ...6 from the kicking club's defense lineup }; ret: { [returnerSlot], ...6 from the receiving club's offense lineup }.
+ */
+export function kickoffUnits(kickTeam, recvTeam) {
+  const fill = (out, order, lineup, used) => { for (const s of order) { if (Object.keys(out).length >= KICKOFF_UNIT) break; const p = lineup?.[s]; if (!filled(p) || out[s] || (p.id && used.has(p.id))) continue; out[s] = p; if (p.id) used.add(p.id); } };
+  const kicker = kickTeam.kicker || { attrs: {}, name: 'K', id: null };
+  const coverage = { K: kicker }; fill(coverage, COVERAGE_ORDER, kickTeam.defense, new Set(kicker.id ? [kicker.id] : []));
+  // The returner: the club's own (lineupFromChart's pick), credited at his lineup slot; one with no id (test teams) gets slot KR.
+  const lineups = { ...(recvTeam.offense || {}), ...(recvTeam.defense || {}) };
+  let returner = recvTeam.returner || null;
+  let returnerSlot = returner?.id ? Object.keys(lineups).find((s) => lineups[s]?.id === returner.id) || null : null;
+  if (!returner) { returnerSlot = ['WR2', 'RB', 'WR1', 'CB2'].find((s) => filled(lineups[s])) || null; returner = returnerSlot ? lineups[returnerSlot] : { attrs: {}, name: 'KR', id: null }; }
+  returnerSlot ||= 'KR';
+  const ret = { [returnerSlot]: returner }; fill(ret, RETURN_BLOCK_ORDER, recvTeam.offense, new Set(returner.id ? [returner.id] : []));
+  return { coverage, ret, returnerSlot };
+}
+/** The live kickoff's two "plays": alignments and jobs for the engine (x from the kick spot, the return unit attacking +x). */
+const COVER_LANES = [-20, 20, -12, 12, -4.5, 4.5];
+const BLOCK_SPOTS = [[-15, -16, 14, -10], [-15, 16, 14, 10], [-15, -6, 12, -4], [-15, 6, 12, 4], [-40, -8, 7, -3], [-40, 8, 7, 3]]; // [x, y, setup dx, setup dy] (setup: from the landing spot)
+function kickoffPlays(units) {
+  const cov = { id: 'kickoff_coverage', side: 'defense', type: 'kickoff', tags: [], onField: [], align: {}, assignments: {} };
+  let i = 0;
+  for (const s of Object.keys(units.coverage)) {
+    cov.onField.push(s);
+    if (s === 'K') { cov.align[s] = [1, 0]; cov.assignments[s] = { a: 'cover', lane: 0, safety: true }; continue; }
+    const lane = COVER_LANES[i++ % COVER_LANES.length]; cov.align[s] = [1, lane]; cov.assignments[s] = { a: 'cover', lane: lane * 0.55 };
+  }
+  const ret = { id: 'kickoff_return', side: 'offense', type: 'run', tags: [], onField: [], align: {}, assignments: {} };
+  let j = 0;
+  for (const s of Object.keys(units.ret)) {
+    ret.onField.push(s);
+    if (s === units.returnerSlot) { ret.align[s] = [-(KICK_SPOT - 5), 0]; ret.assignments[s] = { a: 'kick_return' }; continue; }
+    const [x, y, dx, dy] = BLOCK_SPOTS[j++ % BLOCK_SPOTS.length]; ret.align[s] = [x, y]; ret.assignments[s] = { a: 'ko_block', setup: [dx, dy] };
+  }
+  return { cov, ret };
+}
+
 export function doKickoff(state, teams, { onside = false } = {}) {
   if (state.phase !== 'kickoff' && state.phase !== 'free_kick') throw new Error('not a kickoff');
   const { r, save } = rng(state);
   const kicking = state.kickingTeam, receiving = opponent(kicking);
-  let res;
+  let res; let sim = null; let units = null;
   if (state.phase === 'free_kick') {
     res = ST.punt(r, { ballOn: 20, kicker: teams[kicking].kicker, returner: teams[receiving].returner, rushPressure: 0 });
     res.text = 'Free kick: ' + res.text;
-  } else res = ST.kickoff(r, { kicker: teams[kicking].kicker, returner: teams[receiving].returner, onside });
+  } else if (onside) res = ST.kickoff(r, { kicker: teams[kicking].kicker, returner: teams[receiving].returner, onside });
+  else {
+    // Live kickoff (N7b P7): the flight and the touchback come from the approved kicking formula; the return is played in the engine.
+    units = kickoffUnits(teams[kicking], teams[receiving]);
+    const flight = ST.kickoffFlight(r, { kicker: teams[kicking].kicker });
+    if (flight.touchback) res = { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, live: true, text: 'Kickoff sails into the end zone. Touchback.' };
+    else {
+      const seed = r.seed(); const catchAt = Math.max(-9, flight.landingFromGoal);
+      const plays = kickoffPlays(units); const slots = { offense: units.ret, defense: units.coverage };
+      sim = simulatePlay({ offensePlay: plays.ret, defensePlay: plays.cov, offense: units.ret, defense: units.coverage, ballOn: KICK_SPOT, ballLat: 0, seed,
+        options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, offenseSide: receiving, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) } });
+      rememberAbilities(state, sim);
+      res = kickoffOutcome(sim, catchAt, state[receiving].name, sim.names.off[units.returnerSlot] || 'The returner');
+    }
+  }
   save();
   const lines = [res.text];
   state.phase = 'scrimmage'; state.clockRunning = false; state.ballLat = 0;
   if (res.onside && res.recovered) { state.possession = kicking; state.ballOn = res.ballOn; firstDown(state); }
+  else if (res.kickingTouchdown) { state.possession = kicking; touchdown(state, kicking, lines); }
+  else if (res.recoveredByKicking) { state.possession = kicking; state.ballOn = clamp(Math.round(res.kickingBallOn), 1, 99); firstDown(state); }
   else if (res.touchdown) { state.possession = receiving; touchdown(state, receiving, lines); }
   else { state.possession = receiving; state.ballOn = res.ballOn; firstDown(state); }
   state.drive = { team: state.possession, plays: 0, yards: 0, start: state.ballOn };
   runClock(state, 5);
   if (state.phase === 'scrimmage') lines.push(`${state[state.possession].name} ball at the ${yardLabel(state.ballOn).toLowerCase()}.`);
   const text = lines.join(' ');
-  state.lastPlay = { text, result: 'kickoff' };
-  log(state, text, 'kick', { team: kicking, important: !!res.touchdown });
+  state.lastPlay = { text, result: 'kickoff', ...(sim ? { seed: sim.seed, stats: sim.stats, kickResult: sim.result } : {}) };
+  log(state, text, 'kick', { team: kicking, important: !!res.touchdown || !!res.kickingTouchdown || !!res.recoveredByKicking, ...(sim ? { result: sim.result, repro: `kickoff|${sim.ballOn}|${sim.seed}` } : {}) });
+  // Participation and kick credit (B5, B20): special-teams snaps for both units, a kickoff for the kicker, the return's events.
+  if (units) {
+    recordKickoffStats(state, kicking, receiving, units, sim, res);
+    T8K.afterPlay(state, [...Object.values(units.coverage), ...Object.values(units.ret)]); // Task 8 stamina (before the status clocks)
+    T8S.afterPlay(state, [...Object.values(units.coverage), ...Object.values(units.ret)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
+  } else kickerStat(state, kicking, 'kickoffs'); // onside and free kicks stay formula plays: the kick itself is credited
   if (state.clock <= 0 && state.phase === 'scrimmage') endOfPeriod(state);
-  return { res, text };
+  return { res, text, sim };
+}
+/** What a live kickoff's engine result means for the game (receiving team's yards unless noted). */
+function kickoffOutcome(sim, catchAt, team, who) {
+  const end = sim.endYard; const ret = Math.round(end - catchAt);
+  if (sim.result === 'touchdown') return { touchdown: true, live: true, ballOn: 100, returnYards: Math.round(100 - catchAt), text: `${who} takes the kickoff back for a TOUCHDOWN!` };
+  if (sim.result === 'fumble') { // the kicking team recovered: its ball at the spot, or its touchdown in the receiving end zone
+    if (end <= 0) return { kickingTouchdown: true, live: true, returnYards: ret, ballOn: 100, text: `${who} fumbles the kickoff in the end zone and the kicking team recovers. TOUCHDOWN!` };
+    return { recoveredByKicking: true, live: true, returnYards: ret, kickingBallOn: 100 - end, ballOn: end, text: `${who} fumbles the return and the kicking team recovers!` };
+  }
+  if (sim.result === 'touchback' || end <= 0) return { touchback: true, live: true, returned: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, text: `${who} fields the kickoff in the end zone and is downed there. Touchback.` };
+  const ballOn = clamp(Math.round(end), 1, 99);
+  return { touchback: false, live: true, ballOn, returnYards: ret, text: `${who} returns the kickoff ${ret} yards${sim.result === 'out_of_bounds' ? ', out of bounds' : sim.stats.tackler ? `, tackled by ${sim.names.def[sim.stats.tackler] || sim.stats.tackler}` : ''}.` };
+}
+/**
+ * One live kickoff's stat lines. Everyone on either unit gets a special-teams snap (`stSnaps`: never snapsOff or snapsDef; a
+ * kickoff is not a defensive snap, B20); the kicker a kickoff. The return's actual events: the returner's return (krAtt, krYds,
+ * krLong, krTd; a kick catch is never a reception, B20), the coverage's tackles (stTackles, stAssists: kept apart from scrimmage
+ * tackles), fumbles, and the engine's juke, broken-tackle, shed and pancake events.
+ */
+export function recordKickoffStats(state, kicking, receiving, units, sim, res) {
+  const bump = (team, slot, key, n = 1) => { if (!slot || !n) return; const p = (state.stats[team].players[slot] ||= {}); p[key] = (p[key] || 0) + n; };
+  for (const slot of Object.keys(units.coverage)) bump(kicking, slot, 'stSnaps');
+  for (const slot of Object.keys(units.ret)) bump(receiving, slot, 'stSnaps');
+  kickerStat(state, kicking, 'kickoffs');
+  if (res.touchback && !res.returned) { kickerStat(state, kicking, 'koTouchbacks'); return; }
+  if (!sim) return;
+  const st = sim.stats || {}; const rs = units.returnerSlot;
+  bump(receiving, rs, 'krAtt'); bump(receiving, rs, 'krYds', res.returnYards || 0);
+  { const p = (state.stats[receiving].players[rs] ||= {}); if ((p.krLong ?? -Infinity) < (res.returnYards || 0)) p.krLong = res.returnYards || 0; }
+  if (res.touchdown) { bump(receiving, rs, 'krTd'); bump(receiving, rs, 'td'); }
+  if (st.tackler && !res.touchdown) { bump(kicking, st.tackler, 'stTackles'); if (st.assistBy && st.assistBy !== st.tackler) bump(kicking, st.assistBy, 'stAssists'); }
+  if (st.fumbledBy) { bump(receiving, st.fumbledBy, 'fum'); if (st.recoveredTeam === 'def') bump(receiving, st.fumbledBy, 'fumLost'); }
+  if (st.forcedBy) bump(kicking, st.forcedBy, 'ff');
+  if (st.recoveredSlot && st.recoveredTeam === 'def') bump(kicking, st.recoveredSlot, 'fr');
+  if (res.kickingTouchdown && st.recoveredSlot) bump(kicking, st.recoveredSlot, 'stTd');
+  for (const [slot, b] of Object.entries(st.blockers || {})) { if (b.pancakes) bump(receiving, slot, 'pancakes', b.pancakes); if (b.pancakeAttempts) bump(receiving, slot, 'pancakeAttempts', b.pancakeAttempts); }
+  const keyOf = { juke: 'jukes', broken: 'broken', shed: 'sheds', ability: 'abilities' };
+  for (const e of sim.events || []) { const k = keyOf[e.kind]; if (!k || !e.by) continue; bump(e.side === 'def' ? kicking : receiving, e.by, k); }
 }
 
+/** B5: the formula plays' units (punt, field goal, extra point), from the depth lists. Kicking unit: the K plus 6; the other unit: 7. */
+export const FG_PROTECT_ORDER = Object.freeze(['LG', 'C', 'RG', 'TE', 'RB', 'WR1', 'WR2', 'QB']);
+export const FG_BLOCK_ORDER = Object.freeze(['DL1', 'DL2', 'DL3', 'LB1', 'LB2', 'CB1', 'CB2', 'SS', 'FS']);
+export function formulaUnits(kickTeam, otherTeam, kind) {
+  if (kind === 'punt') { const u = kickoffUnits(kickTeam, otherTeam); return { kicking: u.coverage, other: u.ret }; }
+  const fill = (out, order, lineup, used) => { for (const s of order) { if (Object.keys(out).length >= KICKOFF_UNIT) break; const p = lineup?.[s]; if (!filled(p) || out[s] || (p.id && used.has(p.id))) continue; out[s] = p; if (p.id) used.add(p.id); } return out; };
+  const kicker = kickTeam.kicker || { attrs: {}, name: 'K', id: null };
+  return { kicking: fill({ K: kicker }, FG_PROTECT_ORDER, kickTeam.offense, new Set(kicker.id ? [kicker.id] : [])), other: fill({}, FG_BLOCK_ORDER, otherTeam.defense, new Set()) };
+}
+/**
+ * B5: a formula-resolved play (punt, field goal, extra point) grants its units participation (a special-teams snap, the status
+ * countdown, rewards through participation) without fabricated performance events.
+ */
+function creditFormulaUnits(state, teams, kicking, kind) {
+  const other = opponent(kicking); const u = formulaUnits(teams[kicking], teams[other], kind);
+  const bump = (team, slot) => { const p = (state.stats[team].players[slot] ||= {}); p.stSnaps = (p.stSnaps || 0) + 1; };
+  for (const slot of Object.keys(u.kicking)) bump(kicking, slot); for (const slot of Object.keys(u.other)) bump(other, slot);
+  T8K.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)]); // B5: participation drains stamina (before the status clocks)
+  T8S.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)].map((x) => x?.id).filter(Boolean));
+}
 export function doPunt(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
   const { r, save } = rng(state);
   const kicking = state.possession, receiving = opponent(kicking);
-  const res = ST.punt(r, { ballOn: state.ballOn, kicker: teams[kicking].kicker, returner: teams[receiving].returner });
+  let res = ST.punt(r, { ballOn: state.ballOn, kicker: teams[kicking].kicker, returner: teams[receiving].returner });
   save();
-  state.stats[kicking].punts += 1;
+  if (res.catchAt != null) res = kickHook((state.t8 ||= { status: {} }), teams[kicking].kicker, kicking, 'puntReturn', {}, res) || res; // M3 hook: a kicker contract on a caught, returned punt (Stone Cradle)
+  state.stats[kicking].punts += 1; kickerStat(state, kicking, 'punts'); creditFormulaUnits(state, teams, kicking, 'punt'); // B5: the K's punt and the units' participation
+  { const net = res.blocked || res.touchback || res.touchdown ? null : (100 - res.ballOn) - state.ballOn; // net yards at the final opponent spot, in the kicking club's yards
+    runGameHook(state, 'punt', [teams[kicking].kicker], { res, netYards: net, side: kicking }, { log: (text, extra) => log(state, text, 'ability', extra) }); } // M3 hook
   const lines = [res.text];
   runClock(state, 6);
   if (res.blocked) { changePossession(state, res.ballOn, lines); }
@@ -469,14 +732,37 @@ export function doPunt(state, teams) {
   return { res, text };
 }
 
-export function doFieldGoal(state, teams) {
+/** M3 hook: a kicker's player-activated field-goal signature (contract.fieldGoal), if he has one: { available, chance, distance } or null. */
+export function fieldGoalSignature(state, teams) {
+  const k = teams[state.possession]?.kicker; const c = k?.species ? contractOf(k.species) : null; if (!c?.fieldGoal || !k.id) return null;
+  const st = abilityState((state.t8 ||= { status: {} }), k.id, k.species, k.form || `${k.species}:0`, k.mastery || 0);
+  const distance = fieldGoalDistance(state.ballOn); const chance = c.fieldGoal.chance(distance);
+  return { abilityId: c.abilityId, label: c.fieldGoal.label, available: c.fieldGoal.available(st, distance), chance, distance };
+}
+export function doFieldGoal(state, teams, { signature = false } = {}) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
   const { r, save } = rng(state);
   const kicking = state.possession;
-  const res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
+  // M3 hook: an activated signature (Dragon Roar) is spent on the launch and replaces the kick's odds with its own chart; a
+  // signature that is not available cancels before launch (use preserved) and the kick is ordinary.
+  const sig = signature ? fieldGoalSignature(state, teams) : null;
+  const t8k = (state.t8 ||= { status: {} }), kickerIn = teams[kicking].kicker; // M3 hook: kicker contracts (kickHook)
+  let res;
+  if (sig?.available) {
+    const k = teams[kicking].kicker; const c = contractOf(k.species); const good = r.chance(sig.chance);
+    c.fieldGoal.spend(abilityState(state.t8, k.id, k.species, k.form || `${k.species}:0`, k.mastery || 0)); recordExecution(state.t8, k.id, k.species);
+    res = { distance: sig.distance, good, chance: sig.chance, signature: sig.abilityId, text: `${k.name || 'The kicker'}'s ${c.fieldGoal.label}: ${good ? `the field goal is GOOD from ${sig.distance} yards` : `the ${sig.distance}-yard kick is no good`}.` };
+  } else {
+    res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
+    // M3 hook: a kicker contract on a missed check (Second Chance: one fresh ordinary check, same distance and conditions, same play)
+    if (!res.good) res = kickHook(t8k, kickerIn, kicking, 'fieldGoalMiss', {}, res, () => ST.attemptFieldGoal(r, state.ballOn, kickerIn)) || res;
+  }
   save();
+  if (res.good) kickHook(t8k, kickerIn, kicking, 'fieldGoalMade', { rng: createRng(((Number(state.rngState) >>> 0) ^ 0x2c1b3c6d) >>> 0 || 7) }, res); // M3 hook: made-field-goal contracts, once, on the final result (Frostmark)
+  creditFormulaUnits(state, teams, kicking, 'fg'); // B5
   { const bin = res.distance < 30 ? 'fg0' : res.distance < 40 ? 'fg30' : res.distance < 50 ? 'fg40' : 'fg50';
-    kickerStat(state, kicking, 'fga'); kickerStat(state, kicking, bin + 'a'); if (res.good) { kickerStat(state, kicking, 'fgm'); kickerStat(state, kicking, bin + 'm'); const p = state.stats[kicking].players.K; if ((p.fgLong || 0) < res.distance) p.fgLong = res.distance; } }
+    for (let i = 0; i < (res.checks?.length || 1); i++) { // M3 hook: a Second Chance play records both checks as attempts
+      kickerStat(state, kicking, 'fga'); kickerStat(state, kicking, bin + 'a'); } if (res.good) { kickerStat(state, kicking, 'fgm'); kickerStat(state, kicking, bin + 'm'); const p = state.stats[kicking].players.K; if ((p.fgLong || 0) < res.distance) p.fgLong = res.distance; } }
   runClock(state, 5);
   const lines = [res.text];
   let scored = null;
@@ -531,13 +817,15 @@ export function endOfPeriod(state) {
   }
   state.quarter += 1; state.clock = state.quarterLength; state.clockRunning = false;
   if (state.quarter === 3) {
+    T8K.halftime(state); // Task 8 §12: halftime restores 50% of each stamina capacity (exhaustion stays)
+    if (state.t8) T8F.halftime(state.t8); // Task 8 §11: non-legendary fields clear at halftime (pending creations carry)
     state.timeouts = { home: 3, away: 3 };
     state.phase = 'kickoff'; state.possession = state.secondHalfReceiver; state.kickingTeam = opponent(state.secondHalfReceiver);
     log(state, `HALFTIME. ${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}. ${state[state.secondHalfReceiver].name} receive the second-half kickoff.`, 'period', { important: true });
   } else log(state, `End of the ${state.quarter === 2 ? 'first' : 'third'} quarter.`, 'period');
 }
 function finish(state) {
-  state.finished = true; state.phase = 'final'; state.clockRunning = false;
+  state.finished = true; state.phase = 'final'; state.clockRunning = false; T8S.atGameEnd(state); // Task 8: every status clears at the end of the game
   state.winner = state.score.home > state.score.away ? 'home' : state.score.away > state.score.home ? 'away' : null;
   log(state, `FINAL: ${state.home.name} ${state.score.home}, ${state.away.name} ${state.score.away}.`, 'period', { important: true });
 }

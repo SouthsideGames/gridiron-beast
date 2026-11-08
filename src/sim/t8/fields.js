@@ -16,7 +16,10 @@ export function placeRect({ id, type, createdAt, centerLat, yardFrom, yardTo, wi
   const y0 = Math.max(PLAYABLE.yardMin, Math.min(yardFrom, yardTo)), y1 = Math.min(PLAYABLE.yardMax, Math.max(yardFrom, yardTo));
   return Object.freeze({ id, type, createdAt, strength, owner, lat: [lo, hi], yard: [y0, y1] });
 }
-export const contains = (r, yard, lat) => yard >= r.yard[0] && yard <= r.yard[1] && lat >= r.lat[0] && lat <= r.lat[1];
+const inRect = (r, yard, lat) => yard >= r.yard[0] && yard <= r.yard[1] && lat >= r.lat[0] && lat <= r.lat[1];
+// M3 hook (Prism Break, spec §11): `holes` are removed footprints ({ yard, lat }); a point inside one is not in the field. A removed
+// footprint is never reconstituted when overlaps are recomputed.
+export const contains = (r, yard, lat) => inRect(r, yard, lat) && !(r.holes || []).some((h) => inRect(h, yard, lat));
 
 /** The six approved hybrid recipes (only these create hybrids). */
 export const RECIPES = Object.freeze([
@@ -58,3 +61,24 @@ export function effectsAt(fields, yard, lat, monsterType) {
 
 /** Same-property maximum-speed modifiers add (−15% status + −10% field = −25%); totals are bounded at −75% and +50%. */
 export function combineMaxSpeed(pcts) { const t = pcts.reduce((s, p) => s + p, 0); return Math.max(-75, Math.min(50, t)); }
+/**
+ * The shared maximum-speed aggregation for one monster (Task 8 M3; spec §11): `mods` maps a source layer (e.g. 'field', 'status')
+ * to its signed percentage; all same-property layers add and the total is bounded by combineMaxSpeed. Returns the multiplier on the
+ * monster's ordinary maximum speed (exactly 1 with no modifiers). Current-speed loss (Stumbled) is not a maximum-speed modifier.
+ */
+export function maxSpeedFactor(mods) { if (!mods) return 1; const v = Object.values(mods); return v.length ? 1 + combineMaxSpeed(v) / 100 : 1; }
+
+/**
+ * The fields of one play in the engine's play-relative frame (Task 8 M3). Fields are stored in the absolute home-goal frame
+ * (rules.js absYard/absLat); the engine's x runs from the line of scrimmage toward the offense's goal and y is lateral in the offense's
+ * frame. `home` is true when the home team has the ball. Returns plain copies (the stored fields are never mutated by a play).
+ */
+export function toPlayFrame(fields, { home, ballOn, ballLat = 0 }) {
+  const fx = (yard) => (home ? yard : 100 - yard) - ballOn, fy = (lat) => (home ? lat : -lat) - ballLat;
+  return (fields || []).map((f) => {
+    const xs = f.yard.map(fx), ys = f.lat.map(fy);
+    const hole = (h) => { const hx = h.yard.map(fx), hy = h.lat.map(fy); return { yard: [Math.min(...hx), Math.max(...hx)], lat: [Math.min(...hy), Math.max(...hy)] }; };
+    return { id: f.id, type: f.type, createdAt: f.createdAt, strength: f.strength ?? null, owner: f.owner ?? null, ability: f.ability ?? null, payload: f.payload ?? null,
+      yard: [Math.min(...xs), Math.max(...xs)], lat: [Math.min(...ys), Math.max(...ys)], ...(f.holes?.length ? { holes: f.holes.map(hole) } : {}) }; // M3 hook: removed footprints
+  });
+}

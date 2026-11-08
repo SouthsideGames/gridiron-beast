@@ -3,12 +3,15 @@
 // scene only presents the difference between two snapshots. Nothing here is invented: unchanged attributes are not
 // improvements, an ability is listed only if it differs, salary follows the contract rule (unchanged until renewal).
 import { ATTRIBUTES } from '../data/personnel.js';
-import { monsterOverall, speciesEffect, nextEvolution, resolveSpecies } from '../data/monsters.js';
+import { monsterOverall, nextEvolution, resolveSpecies } from '../data/monsters.js';
+import { familyById, abilityById } from '../data/beast-dex.js';
+/** The monster's Dex football ability (Task 8 M3), for the scene's label. */
+const footballAbilityOf = (m) => { const f = familyById(resolveSpecies(m)?.id || m.species); const a = f?.abilities?.football ? abilityById(f.abilities.football) : null; return a ? { name: a.name, kind: 'ability' } : null; };
 import { ATTR_NAME } from '../data/stat-guide.js';
 
 /** Everything the scene shows about a monster at one moment (deep copy of the values, never a reference). */
 export function evolutionSnapshot(m) {
-  const eff = speciesEffect(m);
+  const eff = footballAbilityOf(m);
   return {
     id: m.id, name: m.name, species: m.species, stage: m.stage || 0, type: m.type || resolveSpecies(m).element || null, position: m.position,
     level: m.level || 1, overall: monsterOverall(m), potential: m.potential ?? null, salary: m.salary ?? null,

@@ -710,3 +710,17 @@ Owner rulings N7g (verbatim in docs/task8/RULINGS_2026-11-07e.md).
 
 The Task 8 specification has no open decisions.
 
+
+## 24. Special-play eligibility (owner ruling N8b, 2026-11-08)
+
+Kickoffs and two-point conversions:
+- Non-kicker abilities cannot activate or charge during kickoffs or two-point conversions.
+- Kicker abilities may activate only when their own approved conditions permit; this is not blanket permission for every kicker
+  ability.
+- Effects explicitly created by an eligible kicker ability, such as Dawn Signal's teammate boost, are permitted.
+- Ordinary shared-status carryover and countdown rules are preserved; this restriction does not cleanse statuses.
+- This ruling overrides conflicting individual ability wording for these two play types.
+
+Eligibility table: docs/task8/SPECIAL_PLAY_ELIGIBILITY.md. Of the 72, the kicker abilities with a kickoff condition are Dawn Signal
+(LIG-02-F, cast on his own kickoff) and Echo Landing (PSY-04-F, banked from his own returned kickoff). None acts on a two-point
+conversion.

@@ -4,7 +4,7 @@ import * as F from '../../core/fraction.js';
 import { ATTRIBUTES, RULES } from '../../data/beast-dex.js';
 import { POSITION_WEIGHTS } from '../../data/personnel.js';
 import { CURVE, trueOnset, technicalOffset, isPhysical, physLoss, techLoss, drawLoss, ATTRIBUTE_FLOOR, peakWindowAge } from '../../data/aging.js';
-import { addLevelXp, addTrainingProgress, addBankedPoints, invest, trainingCost, evolve } from './progression.js';
+import { addLevelXp, addTrainingProgress, addBankedPoints, invest, trainingCost, evolve, effectiveCostNumber } from './progression.js';
 
 /** Weight of an attribute for AI and auto allocation (spec §4; corrected per owner instruction 2026-11-07 10:39). */
 export const ALLOCATION_TIER = Object.freeze({ approvedNonOvrUse: 0.5, apexUnusedAtPosition: 0.2 });
@@ -26,16 +26,24 @@ export function allocationWeight(d, position, a) {
  * This is ordinary AI policy. The equal-investment Apex benchmark policy is `allocateEqualBenchmark`, used only by benchmarks.
  * Returns the list of { attr, points } spent.
  */
-export function allocateTraining(d, m) {
-  const spent = [];
+/* Task 8 D7 (owner N8b): `first` (an AI club identity's attributes for this monster's position, identities.js trainingPriority) ranks
+ * those attributes ahead of the rest. Only attributes that count toward the position's OVR (POSITION_WEIGHTS) can be ranked first, so
+ * the identity never brings in an attribute the approved policy would not train; among them, and then among the rest, the score
+ * above decides as before. The banked points spent are the same. */
+export function allocateTraining(d, m, { first = null } = {}) {
+  const spent = []; const pos = POSITION_WEIGHTS[m.position] || POSITION_WEIGHTS.WR;
+  const firsts = first?.length ? new Set(first.filter((a) => pos[a] > 0)) : null;
+  const weights = ATTRIBUTES.map((a) => allocationWeight(d, m.position, a)); // fixed for the call (position and Apex do not change)
   while (F.cmp(d.bank, F.ZERO) > 0) {
-    let best = null, bestScore = 0;
-    for (const a of ATTRIBUTES) {
-      const w = allocationWeight(d, m.position, a);
+    let best = null, bestScore = 0, bestTier = 0;
+    const probe = { ...m, attributes: d.current }; // as trainingCost builds it; rebuilt after every invest
+    for (let i = 0; i < ATTRIBUTES.length; i++) {
+      const a = ATTRIBUTES[i]; const w = weights[i];
       if (!w || d.current[a] >= d.potential[a]) continue;
       const gap = d.potential[a] - d.current[a];
-      const score = (w * Math.min(1, gap / 10)) / Math.sqrt(F.toNumber(trainingCost(d, m, a).effective));
-      if (score > bestScore + 1e-12) { bestScore = score; best = a; }
+      const score = (w * Math.min(1, gap / 10)) / Math.sqrt(effectiveCostNumber(d, probe, a));
+      const tier = firsts?.has(a) ? 1 : 0;
+      if (tier > bestTier || (tier === bestTier && score > bestScore + 1e-12)) { bestScore = score; best = a; bestTier = tier; }
     }
     if (!best) break;
     const pts = F.min(d.bank, F.ONE);

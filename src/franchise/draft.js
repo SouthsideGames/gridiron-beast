@@ -10,6 +10,7 @@ import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
 import { draftNeedBonus } from './roster-plan.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
+import { clubIdentity, identityTilt } from '../data/identities.js';
 /** R7 (owner 2026-11-05): a prospect's first-season charge on his rookie deal (70% of market, as the owner's and the AI's picks are paid). */
 export const rookieCharge = (m) => Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100;
 /** R4 (owner 2026-11-05): a gym's tie-break for prospects of its element (Task 7 franchises only); as small as the market's. */
@@ -17,9 +18,10 @@ export const GYM_ELEMENT_BONUS = 1.5;
 
 export const DRAFT_ROUNDS = 3;
 export const ROOKIE_SCALE = 0.70;
-/** Draft-class scaling (Task 6 Phase A-2, D9, owner 2026-10-30): classes rise about +0.5 a season with the league, capped at +10;
- *  the gem / solid / project mix and every random draw are unchanged, and potential (quality + 6…19) rises with quality. */
-export const CLASS_GROWTH_PER_SEASON = 0.5, CLASS_GROWTH_CAP = 10;
+/** Draft-class scaling (Task 6 Phase A-2, D9, owner 2026-10-30) is RETIRED (owner ruling N8b, 2026-11-08, decision D2): classes no
+ *  longer rise each season; class strength comes from the generator alone, every season alike (N7f retired the league growth it
+ *  matched). The offset function stays (always 0) so the class shape and every random draw are unchanged. */
+export const CLASS_GROWTH_PER_SEASON = 0, CLASS_GROWTH_CAP = 0; // retired (was 0.5 a season, capped at +10)
 export const classQualityOffset = (year) => Math.min(CLASS_GROWTH_CAP, Math.max(0, Math.round(CLASS_GROWTH_PER_SEASON * ((year || 1) - 1))));
 export const CLASS_SHAPE = Object.freeze([['QB', 4], ['RB', 5], ['WR', 8], ['TE', 4], ['OL', 7], ['DL', 7], ['LB', 5], ['CB', 6], ['S', 5], ['K', 2]]); // 53
 
@@ -99,7 +101,8 @@ export function aiDraftPick(f, team, rng, { plan = null, afford = null } = {}) {
   const mode = plan?.mode || 'compete'; const pw = POTENTIAL_WEIGHT[mode] ?? 0.2;
   const ready = {}; if (mode === 'contend' && plan?.groups) for (const m of avail) { const rows = plan.groups[m.position]?.rows || []; const weakest = rows.length ? Math.min(...rows.map((r) => monsterOverall(r.starter))) : 0; if (monsterOverall(m) >= weakest) ready[m.id] = READY_BONUS; }
   const element = f.freeAgency?.v ? GYM_BY_CLUB[team]?.element : null;
-  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0) + (element && m.type === element ? GYM_ELEMENT_BONUS : 0);
+  const id = clubIdentity(f, team); const tilt = {}; if (id) for (const m of avail) tilt[m.id] = identityTilt(id, m); // Task 8 D7: identity positions and scheme fits, a tie-break (identities.js IDENTITY_TILT)
+  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0) + (element && m.type === element ? GYM_ELEMENT_BONUS : 0) + (tilt[m.id] || 0);
   return avail.sort((a, b) => score(b) - score(a))[0] || null;
 }
 
