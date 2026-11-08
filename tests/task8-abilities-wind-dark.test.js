@@ -473,7 +473,7 @@ test('Shadow Exchange: at a charged pass release, he swaps positions with the cl
   const run = (others, mastery = 0, selfAt = [0, 0]) => {
     const self = mk('FS', ...selfAt, { mastery, sx: { armed: true, fired: false }, name: 'N' }); const st = { charges: 2 };
     const ctx = { state: () => st, statusOf: (a) => a.st || null, actors: [self, ...others], dist: (p, q) => Math.hypot(p.x - q.x, p.y - q.y), bounds: { left: -20, right: 20, ownEndLine: -30, endLine: 70 }, executed: () => {}, log: () => {} };
-    mod.hooks.passRelease(ctx, self, { landing: { x: 6, y: 0 } }); return { self, st };
+    mod.hooks.passRelease(ctx, self, { ball: { landing: { x: 6, y: 0 } } }); return { self, st };
   };
   { const a = mk('CB1', 5, 0), b = mk('CB2', 7.5, 0); const { self, st } = run([a, b]); assert.deepEqual([self.x, self.y], [5, 0], 'closest to the catch point (stable ties by lineup)'); assert.deepEqual([a.x, a.y], [0, 0]); assert.equal(st.charges, 0); assert.deepEqual([self.vx, self.vy, a.vx, a.vy], [1, 2, 1, 2], 'velocities kept'); }
   { const a = mk('CB1', 9.5, 0); const { st } = run([a]); assert.equal(st.charges, 2, 'beyond 3 yards of the catch point'); }
