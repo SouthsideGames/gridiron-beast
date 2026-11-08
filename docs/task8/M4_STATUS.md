@@ -1,8 +1,13 @@
 # M4 status: Beast Clash on the Task 8 model
 
-Branch `task8-m4-core`, started from `origin/task8-implementation` at 5c059fc. Steps S0 and S1 of [M4_PLAN.md](M4_PLAN.md) §4.
-Nothing in the franchise, the UI, football, saves or `src/clash/index.js` uses the new engine yet. No owner decision from M4_PLAN §5b
-has been resolved here.
+Branch `task8-m4-core`, started from `origin/task8-implementation` at 5c059fc. Steps S0–S4 of [M4_PLAN.md](M4_PLAN.md) §4.
+Nothing in the franchise, the UI, football, saves or `src/clash/index.js` uses the new engine yet.
+
+**Owner rulings.** The N8d rulings (SPECIFICATION_BASELINE.md §25; APPROVAL_REGISTER.md "M4 decisions") are on this branch as aad7ca3,
+a cherry-pick of acdc91e from `task8-implementation`. Approved and used here: D1, D2, D3 (conditional; see S4), D4, D5, D7, D9, D10, D11,
+D12. Approved but for later steps: D15, D17, D18, D19. **Still open and not decided here:** D6 (Tank bruise: not implemented), D8
+(battle-length rules: the S1 provisional defaults stay, labelled), D13, D14, D16 (the ability-kind table; no ability batch, S6 or later,
+has been started).
 
 ## S0: freeze the legacy engine (no behaviour change)
 
@@ -85,6 +90,107 @@ New files in `src/clash/t8/`:
 - the sudden-death models E and F from exchange 12;
 - C6.
 
+## S2: statuses in Clash (commits aa4024e, 525e078)
+
+**The B12 tolerance table was frozen first** (aa4024e, `src/clash/t8/tolerances.js`), before any t8 probability test was written:
+
+| Id | p | h | N = ⌈3.29²·p(1−p)/h²⌉ | Source |
+|---|---|---|---|---|
+| `confused-redirect` | 0.25 | 0.02 | 5,074 | spec §10; STA-07 |
+
+Rows for the ability probabilities are added before their batches; a frozen row is never loosened.
+
+**Boundary.** `tests/clash/boundary.test.js` whitelists `src/sim/t8/status.js` as the one `src/sim` file `src/clash` may import. The
+test also asserts that the gate imports nothing, and its purity scan now covers that file. The gate was not moved, so football is
+untouched.
+
+**New `src/clash/t8/status.js`: the Clash side of the one shared slot.** It calls `tryApply`, `endOfUnit` and `transfer` from the shared
+gate in mode `clash`. What it adds:
+- **The gate in Clash.** Football-only statuses (Stumbled, Knocked Down) are refused, and they clear on entry from a carry. The other
+  gate rules apply as they are: a different status is blocked; equal applications add duration only; stronger ones replace strength and
+  duration, count an application and keep the episode; weaker ones are ignored and use no application; three applications block even
+  stronger attempts.
+- **Episodes and history.** Every accepted application is appended to the slot's `history`.
+- **Tie order** (§9). `orderAttempts` sorts by event order, then sourceID, then abilityID. The engine's batch applies them in that order,
+  so the first accepted one takes the slot. There is no random roll.
+- **The application turn.** `appliedThisUnit` is set only when the recipient is in its own normal turn at the moment of application. A
+  status applied during the opponent's turn is consumed by the recipient's next normal turn. This is the S1 clock's reading
+  (`application-turn-in-clash`).
+- **Durations** count down at the end of the recipient's normal turns. Stunned skips count. Reserves never take turns, so a status in
+  reserve is paused.
+- **A knockout clears the slot and episode** at once (and the D4 protection).
+- **Clash effects** (Appendix B; D10 "same percentage across modes"). The magnitude is read as in football: `payload.pct`, else
+  `strength`, in percent.
+  - Slowed and Quickened multiply initiative speed by (1 ∓ pct), and the tie band is applied to the effective speeds.
+  - Weakened and Empowered multiply outgoing damage at 8a.
+  - Guarded multiplies incoming damage at 8d.
+  - Healing Reduced multiplies healing (100% blocks it); it is used by the S3 heal path.
+  - Shielded is a pool that absorbs before HP.
+  - Confused gives a 25% redirect at launch.
+  - Afflicted gives a payload-defined tick.
+- **D7.** Afflicted has no healing factor; only Healing Reduced cuts healing.
+- **The explicit removal and replacement API.**
+  - An ordinary cleanse removes harmful statuses only, and refuses an `uncleansable` payload (Faultline).
+  - `replaceWith` starts a fresh episode, but only for a caller with explicit permission, and over an uncleansable status only with
+    `overridesUncleansable` (Mountain Shelter).
+- **The Deep Winter freeze field.** While a harmful status has `freeze > 0`, each recipient normal turn spends one freeze counter
+  instead of the expiration countdown. Harmful effects (the Afflicted tick, the Stunned skip) still run. An accepted same-status
+  application ends the freeze; a weaker one does not. No ability sets the field yet (S11).
+
+**Engine (`src/clash/t8/engine.js`).**
+- **The Stunned check** at P6 step 3.2, with D4 (below).
+- **Initiative** uses the Slowed / Quickened speeds.
+- **The ordinary attack:**
+  - the Confused redirect roll at launch (one draw, only while Confused; the full attack goes to the attacker itself);
+  - then Empowered / Weakened;
+  - then type and Tank guard, then Guarded;
+  - then the Shielded pool, with the Striker shield-break ×2 (D5: ordinary attacks only, which in S2 is every attack);
+  - then one rounding.
+- **End of turn** (P6 3.14): the Afflicted tick first (not on the application turn), then the status countdown, then the clocks. A lethal
+  tick knocks out at once, the replacement enters, and the knocked-out monster's countdowns are skipped (B3 rule 5).
+- **D12.** At the actual end of a standalone battle every status clears (logged). `config.context: 'opening' | 'overtime'` keeps the
+  slots and returns them as `carryOut`, converted to the football payload. `carryIn` (football slots) is accepted only in those two
+  contexts, and a standalone battle refuses it. S12 connects both to the game state.
+- **Reviewer hooks.**
+  - `stage` (HP and a status per combatant, applied through the real gate before the opening; the result is marked `staged`).
+  - Probe surface: `applyStatus`, `applyStatuses` (tie-ordered), `cleanse`, `replaceStatus`.
+  - New hook points: `statusIncoming` (Foresight-type veto before the slot check) and `statusApplied` (Shell Renewal-type reactions).
+  - Every blocked attempt logs `status_blocked` (or `cleanse_refused`) with an `unmet` list naming the failed condition and the gate's
+    reason.
+- **Plain battles are unchanged.** The 20 golden seeds are byte-identical (log hash and state hash). The engine version is `t8-s2`, and
+  replay keys from `t8-s1` stay accepted (`keyCompatible`). The state hash appends a status only when one is present.
+
+### D4: how the Stunned countdown handles the protected turn
+
+D4 (approved): "A monster cannot skip two consecutive normal turns. After one Stunned skip, its next normal action is protected from
+another Stunned skip. The remaining status duration is preserved."
+- **The skipped turn** is a recipient normal turn. It counts Stunned down by one (STA-01: "a skipped normal turn consumes duration").
+- **The protected turn** is the next normal turn. The monster acts, and Stunned's remaining duration is **held**: that turn does not
+  decrement it. The engine logs `stun_safeguard` at the start of the turn and `status_hold` at its end, both with the remaining count.
+- **The protection** is spent by that next normal turn, whatever happens on it, and a knockout clears it. If Stunned has expired by then,
+  the flag is still spent by that turn.
+- **The result.** A Stunned of n units applied outside the recipient's turn gives: skip, act, skip, act, … skip. That is n skips over
+  2n − 1 turns, and it expires at the end of turn 2n − 1. Each Stunned unit costs exactly one skipped normal turn, the same unit B18 uses
+  in football ("each remaining unit disables one participating football play").
+- **Flagged choice.** Spec §10 otherwise counts every recipient normal turn. The other reading, in which the protected turn also
+  decrements, would let a protected turn spend Stunned without skipping, so it would *not* preserve the remaining duration. The
+  instruction was to implement the preserving reading and flag it (`d4-protected-turn-hold`).
+- **Deep Winter.** Its freeze counter still counts the protected turn, because that turn is a recipient normal turn
+  (`deep-winter-freeze-counts-protected-turn`, S11).
+- **Code.** The comment block at the Stunned check in `takeTurn` (engine.js), and `endOfTurn({hold})` in status.js.
+
+### D10 / D11 carry payloads (Clash side only; football integration is S12)
+
+| Status | Clash → football (`toFootball`) | Football → Clash (`fromFootball`) |
+|---|---|---|
+| Slowed, Quickened, Weakened, Empowered | Same percentage, remaining duration, applications and history | Same, 1:1 |
+| Confused | `payload.pct = 20`, so football `effectiveAttr` reads −20% Awareness (D10) | The fixed 25% redirect (spec §10) |
+| Stunned | 1:1 (B18) | 1:1 |
+| Afflicted | 1:1; payload unchanged | 1:1 |
+| Shielded | Strength = original pool as a percentage of max Clash HP (the Halo's unit). Payload keeps pool, remaining HP, remaining fraction, `saveSpent`, `fumbleSaves` (1, or 0 once spent) and history | Original strength and pool = round(max Clash HP × pct), where pct is the payload's `clashPoolPct`, else the approved 15% (D11). Remaining = round(pool × fraction). Never refilled |
+| Guarded, Healing Reduced | Cleared (Clash only) | — |
+| Stumbled, Knocked Down | — | Cleared (football only) |
+
 ## Provisional defaults and the decision each waits on
 
 The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a test checks that every entry names what it waits on.
@@ -97,9 +203,16 @@ The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a t
 | `exchange-cap` | The approved cap, HP share and coin, as in values 1.1.0. What happens to pending delayed impacts at the cap is open (none exist yet) | **D8** |
 | `single-rounding` | One round-half-up at the final HP-loss conversion | **D9**; S3 for the Shared Burden raw budget |
 | `initiative-tie-band` | P6's "seeded tie-break" uses the approved band: speeds closer than 2 are a tie, decided by one coin draw | Reading of an approved value; see the findings below |
-| `ko-clears-durations-keeps-cooldowns` | A KO clears the monster's duration clocks (spec §10; B3 rule 2) and keeps its cooldowns (Second Spring: "no cooldown reset") | S2 (statuses), S5 (ledgers) |
-| `striker-shield-break-inert` | The perk is carried but has nothing to act on | **D5**; S2 (Shielded) |
-| `tank-bruise-not-implemented` | The legacy bruise (heals ×0.75) is not in t8, and no heal exists in S1 | **D6** |
+| `ko-clears-durations-keeps-cooldowns` | A KO clears the slot and episode (approved, §10) and the duration clocks, and keeps cooldowns (Second Spring: "no cooldown reset"); the cooldown half is provisional | S5 (ledgers) |
+| `tank-bruise-not-implemented` | The legacy bruise (heals ×0.75) is not in t8, as a status or as a heal factor | **D6** (open) |
+| `application-turn-in-clash` (S2) | Applied in the recipient's own turn: that turn is excluded; applied outside it: the recipient's next turn counts | Reading of §10, flagged |
+| `d4-protected-turn-hold` (S2) | The protected turn holds Stunned's remaining duration (see the D4 section) | Approved D4; countdown reading flagged |
+| `deep-winter-freeze-counts-protected-turn` (S2) | The freeze counter counts every recipient normal turn, the protected one included | S11 (Deep Winter); reading flagged |
+| `afflicted-tick-payload` (S2) | The tick is exactly its payload (`tickHp` or `tickPctMaxHp`); 0 without one | A Clash Afflicted producer (none of the 72 has one); D10 is silent on its size |
+| `afflicted-tick-mitigation` (S2) | The tick is direct HP loss (no type, guards or shield); the pre-KO hook applies from S3 | Owner (§10 / STA-05 silent) |
+| `shield-depleted-ends-status` (S2) | A pool at 0 HP ends Shielded and its episode; a converted football shield that rounds to 0 does not enter | Owner (§10 / STA-09 silent) |
+| `shield-strength-units` (S2) | Clash strength = original pool HP; in football, that pool as % of max Clash HP | Approved D11; unit reading flagged |
+| `shield-break-rounding` (S2) | Pool loss and HP loss each rounded once, half up | D9 single rounding; reading flagged |
 
 ## Test results
 
@@ -111,12 +224,17 @@ All runs are targeted only (`tests/clash/*.test.js`). The full suite was not run
 | 70373c7 (S0) | `t8-legacy-freeze` + `boundary` | 5 / 5 pass |
 | a4c5e09 (S1) | `node --test tests/clash/*.test.js` | **115 tests, 115 pass, 0 fail**, 0 cancelled, 0 skipped (40.1 s; 41.9 s on the rerun) |
 | a4c5e09 (S1) | `node tools/test-tier.mjs perf` (legacy 10,000 3v3, no log, under 5 s) | 1 / 1 pass (file 3.28 s) |
+| 525e078 (S2) | `node --test tests/clash/*.test.js` | **131 tests, 131 pass, 0 fail** (54.7 s; the B12 Confused run is about 10 s of it) |
+| 525e078 (S2) | `node tools/test-tier.mjs perf` | 1 / 1 pass (4.2 s file run) |
 
 **Per file at a4c5e09:**
 - the 15 pre-existing files are all unchanged and green, 99 / 99: boundary 3, calculators 4, conditions 9, data 4, engine 9,
   experiments 7, gateb2 5, gateb3 5, gateb4 6, gateb5 5, implementation 9, presentation 13, readiness 5, reflect-ko 8, stats 7;
 - `t8-core` 14 / 14;
 - `t8-legacy-freeze` 2 / 2.
+
+**Per file at 525e078 (S2):** the 15 pre-existing files 99 / 99 (boundary 3, with its whitelist); `t8-core` 14 / 14 (golden seeds
+unchanged); `t8-legacy-freeze` 2 / 2; `t8-status` **16 / 16**.
 
 **Timing, 10,000 3v3 battles with no log** (the perf test's 50 lineups, one script, two passes on this 2-CPU container):
 
