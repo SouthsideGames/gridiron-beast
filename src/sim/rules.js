@@ -141,6 +141,12 @@ function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...O
 const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
 const absLat = (state, l) => (state.possession === 'home' ? l : -l);
 function fieldPlacement(state, p, offensePlay = null, alignOf = () => null) {
+  if (p.span) { // M3 hook: (Psychic/Dragon batch) a span [from, to] from the line in the offense frame (negative: the backfield), shifted only enough to fit the field of play
+    let lo = state.ballOn + Math.min(...p.span), hi = state.ballOn + Math.max(...p.span); const len = hi - lo;
+    if (lo < 0) { lo = 0; hi = len; } if (hi > FIELD.length) { hi = FIELD.length; lo = hi - len; }
+    const lat = (state.ballLat || 0) + (p.centerOn === 'QB' ? offensePlay?.align?.QB?.[1] ?? 0 : 0);
+    return { centerLat: absLat(state, lat), yardFrom: absYard(state, lo), yardTo: absYard(state, hi), width: p.width };
+  }
   // M3 hook: (Nature / Electric batch) an ability-given rectangle, longitudinally in yards beyond the upcoming LOS (`from`..`to`, offense
   // frame of the creation play) and laterally centred on `lat` (engine frame: relative to the ball) or `latAbs` (offense-frame field lateral)
   if (p.rect) return { centerLat: absLat(state, p.rect.latAbs ?? (state.ballLat || 0) + (p.rect.lat || 0)), yardFrom: absYard(state, state.ballOn + p.rect.from), yardTo: absYard(state, state.ballOn + p.rect.to), width: p.width };
@@ -212,6 +218,7 @@ function pendingEligible(state, t8, p, offIds, defIds) {
   const def = p.side === 'def' || p.side === 'defense' || p.createOn === 'ownerDefense'; // 'defense': the Nature / Electric batch's spelling
   if (p.ownerTeam && (def ? state.possession === p.ownerTeam : state.possession !== p.ownerTeam)) return false;
   if (!p.offField && !p.benchOk && !(def ? defIds : offIds).has(p.owner)) return false;
+  if (p.requireAble && !p.benchOk && T8S.sitsOutPlay(state, p.owner)) return false; // Psychic/Dragon (Mind Bend): a carried-over Stunned keeps it pending
   return !(p.maxOwn && T8F.activeFields(t8).some((f) => f.owner === p.owner && f.ability === p.ability));
 }
 /** M3 hook: each on-field contract's pre-snap step (registry.js preSnap), offense then defense in slot order, before pending fields
@@ -249,11 +256,15 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
     runGameHook(state, 'preSnap', [m], { team, slot, side: team === 'off' ? state.possession : opponent(state.possession), align: play.align?.[slot] || null, teams, sitsOut: !!m.id && T8S.sitsOutPlay(state, m.id),
       toAbs: ([x, y]) => ({ yard: absYard(state, state.ballOn + x), lat: absLat(state, (state.ballLat || 0) + y) }) }, { log: (text, extra) => log(state, text, 'ability', extra) });
   }
+  // M3 hook: a pending temporary absence (Sovereign Arm capture) is served on its team's next offensive scrimmage play: the captured
+  // defender's slot stays vacant (no substitute) and he is not a participant (his status and stamina clocks pause)
+  const serving = (t8.absences || []).filter((x) => x.serveOn === state.possession); let vacant = null;
+  if (serving.length) { const gone = new Set(serving.map((x) => x.mid)); for (const [sl, p] of Object.entries(slots.defense)) if (p?.id && gone.has(p.id)) { delete slots.defense[sl]; (vacant ||= new Set()).add(sl); } t8.absences = t8.absences.filter((x) => !serving.includes(x)); }
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
     offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
-    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo, ...(t8.fields?.list?.length ? { fields: playFields(state, t8) } : {}) },
+    ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo, ...(vacant ? { vacant } : {}), ...(t8.fields?.list?.length ? { fields: playFields(state, t8) } : {}) },
   });
   T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12): drained under the statuses active during this play (Afflicted, B10)
   T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10), after the drain
@@ -370,8 +381,8 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
       if (sim.result === 'fumble' && (sim.stats.receiver || sim.stats.carrier)) { if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else S.rushYards += gain; S.yards += gain; } // yards to the spot of the fumble still count
       if (sim.result === 'interception' || sim.result === 'touchback_return') lines.push(`INTERCEPTED by ${playerName(sim, 'def', sim.stats.interceptor)}!`);
       else lines.push(`FUMBLE forced by ${playerName(sim, 'def', sim.stats.forcedBy)}, recovered by the defense!`);
-      if (sim.result === 'touchback_return' || sim.endYard >= 100) { changePossession(state, FIELD.touchbackOther, lines, 'Touchback.'); }
-      else changePossession(state, clamp(100 - sim.endYard, 1, 99), lines);
+      if (sim.turnoverSpot == null && (sim.result === 'touchback_return' || sim.endYard >= 100)) { changePossession(state, FIELD.touchbackOther, lines, 'Touchback.'); }
+      else changePossession(state, sim.turnoverSpot ?? clamp(100 - sim.endYard, 1, 99), lines); // M3 hook: an ability-awarded spot (Hoard Flight)
       break;
     }
     case 'safety': { lines.push(`${playerName(sim, 'off', sim.stats.carrier)} is tackled in the end zone.`); if (sim.stats.receiver) { S.passComp += 1; S.passYards += gain; } else if (sim.stats.carrier) S.rushYards += gain; S.yards += gain; scored = safety(state, lines); stops = true; break; }
@@ -609,7 +620,7 @@ export function doKickoff(state, teams, { onside = false } = {}) {
       const seed = r.seed(); const catchAt = Math.max(-9, flight.landingFromGoal);
       const plays = kickoffPlays(units); const slots = { offense: units.ret, defense: units.coverage };
       sim = simulatePlay({ offensePlay: plays.ret, defensePlay: plays.cov, offense: units.ret, defense: units.coverage, ballOn: KICK_SPOT, ballLat: 0, seed,
-        options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) } });
+        options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, offenseSide: receiving, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) } });
       rememberAbilities(state, sim);
       res = kickoffOutcome(sim, catchAt, state[receiving].name, sim.names.off[units.returnerSlot] || 'The returner');
     }
@@ -719,14 +730,31 @@ export function doPunt(state, teams) {
   return { res, text };
 }
 
-export function doFieldGoal(state, teams) {
+/** M3 hook: a kicker's player-activated field-goal signature (contract.fieldGoal), if he has one: { available, chance, distance } or null. */
+export function fieldGoalSignature(state, teams) {
+  const k = teams[state.possession]?.kicker; const c = k?.species ? contractOf(k.species) : null; if (!c?.fieldGoal || !k.id) return null;
+  const st = abilityState((state.t8 ||= { status: {} }), k.id, k.species, k.form || `${k.species}:0`, k.mastery || 0);
+  const distance = fieldGoalDistance(state.ballOn); const chance = c.fieldGoal.chance(distance);
+  return { abilityId: c.abilityId, label: c.fieldGoal.label, available: c.fieldGoal.available(st, distance), chance, distance };
+}
+export function doFieldGoal(state, teams, { signature = false } = {}) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
   const { r, save } = rng(state);
   const kicking = state.possession;
-  let res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
-  // M3 hook: a kicker contract on a missed check (Second Chance: one fresh ordinary check, same distance and conditions, same play)
-  const t8k = (state.t8 ||= { status: {} }), kickerIn = teams[kicking].kicker;
-  if (!res.good) res = kickHook(t8k, kickerIn, kicking, 'fieldGoalMiss', {}, res, () => ST.attemptFieldGoal(r, state.ballOn, kickerIn)) || res;
+  // M3 hook: an activated signature (Dragon Roar) is spent on the launch and replaces the kick's odds with its own chart; a
+  // signature that is not available cancels before launch (use preserved) and the kick is ordinary.
+  const sig = signature ? fieldGoalSignature(state, teams) : null;
+  const t8k = (state.t8 ||= { status: {} }), kickerIn = teams[kicking].kicker; // M3 hook: kicker contracts (kickHook)
+  let res;
+  if (sig?.available) {
+    const k = teams[kicking].kicker; const c = contractOf(k.species); const good = r.chance(sig.chance);
+    c.fieldGoal.spend(abilityState(state.t8, k.id, k.species, k.form || `${k.species}:0`, k.mastery || 0)); recordExecution(state.t8, k.id, k.species);
+    res = { distance: sig.distance, good, chance: sig.chance, signature: sig.abilityId, text: `${k.name || 'The kicker'}'s ${c.fieldGoal.label}: ${good ? `the field goal is GOOD from ${sig.distance} yards` : `the ${sig.distance}-yard kick is no good`}.` };
+  } else {
+    res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
+    // M3 hook: a kicker contract on a missed check (Second Chance: one fresh ordinary check, same distance and conditions, same play)
+    if (!res.good) res = kickHook(t8k, kickerIn, kicking, 'fieldGoalMiss', {}, res, () => ST.attemptFieldGoal(r, state.ballOn, kickerIn)) || res;
+  }
   save();
   if (res.good) kickHook(t8k, kickerIn, kicking, 'fieldGoalMade', { rng: createRng(((Number(state.rngState) >>> 0) ^ 0x2c1b3c6d) >>> 0 || 7) }, res); // M3 hook: made-field-goal contracts, once, on the final result (Frostmark)
   creditFormulaUnits(state, teams, kicking, 'fg'); // B5

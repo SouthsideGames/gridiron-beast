@@ -17,12 +17,7 @@ function side(play, overrides, seed) {
 }
 const sim = (o, d, off, def, i, memory) => simulatePlay({ offensePlay: PLAYS[o], defensePlay: PLAYS[d], offense: side(PLAYS[o], off, 1), defense: side(PLAYS[d], def, 2), ballOn: 35, seed: 100 + i, options: memory ? { memory } : {} });
 
-test('abilities: Blink fires at most once per game when the memory is carried', () => {
-  const state = { drive: { team: 'home', plays: 0 }, playCount: 0, quarter: 1, abilityMemory: {} };
-  let blinks = 0;
-  for (let i = 0; i < 40; i++) { const s = sim('inside_zone', 'run_wall', { RB: 'astralux' }, {}, i, abilityMemory(state)); rememberAbilities(state, s); state.playCount += 1; blinks += s.events.filter((e) => e.kind === 'blink').length; }
-  assert.equal(blinks, 1);
-});
+// Blink (astralux) is a Task 8 M3 contract now (PSY-06-F, once per game in the game state): tests/task8-abilities-psychic-dragon.test.js.
 
 test('abilities: Whiteout is once per drive and comes back on the next drive', () => {
   const state = { drive: { team: 'home', plays: 0 }, playCount: 0, quarter: 1, abilityMemory: {} };
@@ -37,15 +32,7 @@ test('abilities: the legacy Eruption flatten is retired (Task 8 M3: pyroclast pl
   assert.equal(n, 0);
 });
 
-test('abilities: Sovereign Arm first-read throws are never intercepted', () => {
-  let denied = 0, picks = 0, plainPicks = 0;
-  for (let i = 0; i < 600; i++) {
-    const o = ['mesh', 'smash', 'quick_slants'][i % 3], d = ['cover_1', 'man_press', 'cover_0'][i % 3];
-    const s = sim(o, d, { QB: 'aurodrax' }, {}, i); denied += s.events.filter((e) => e.kind === 'pick_denied').length; if (s.stats.interceptor) picks += 1;
-    if (sim(o, d, {}, {}, i).stats.interceptor) plainPicks += 1;
-  }
-  assert.ok(denied > 0, 'it denied picks'); assert.ok(picks < plainPicks, 'fewer interceptions than the same QB without it');
-});
+// Sovereign Arm (aurodrax) is a Task 8 M3 contract now (DRA-06-F: one protected throw after a streak): tests/task8-abilities-psychic-dragon.test.js.
 
 test('abilities: Landslide never loses a pass block, Night Veil draws throws', () => {
   for (let i = 0; i < 200; i++) { // pass protection: until a catch, a scramble or a handoff turns it into a run
@@ -66,7 +53,7 @@ test('abilities: Landslide never loses a pass block, Night Veil draws throws', (
 });
 
 test('abilities: memory keys name the monster, ability and scope', () => {
-  const s = sim('inside_zone', 'run_wall', { RB: 'astralux' }, {}, 3, { drive: 'D1', half: 'h1', quarter: 1, used: {} });
+  const s = sim('power_right', 'run_wall', { TE: 'pyroclast' }, {}, 3, { drive: 'D1', half: 'h1', quarter: 1, used: {} }); // (Blink left the legacy memory: Task 8 M3 contract)
   for (const k of s.memoryUsed) assert.match(k, /^[^:]+:(blink|eruption|whiteout|daybreak|overcharge):(g|h:h1|d:D1)$/);
 });
 

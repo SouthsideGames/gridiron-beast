@@ -33,7 +33,7 @@ function noteDefense(t, playId) { t.recentDefense.push(playId); if (t.recentDefe
  * Advance the game by exactly one event (kickoff, try, or scrimmage snap).
  * Returns a description of what happened, or null when the game is over.
  * `choices` lets the UI override the human side's decisions:
- *   { offensePlayId, defensePlayId, fourthDown, tryChoice, kickoff, tempo, timeout }
+ *   { offensePlayId, defensePlayId, fourthDown, fgSignature, tryChoice, kickoff, tempo, timeout }  (fgSignature: activate the kicker's field-goal signature, Task 8 M3)
  */
 export function step(state, teams, controllers, tendencies, choices = {}) {
   if (state.finished) return null;
@@ -88,7 +88,7 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   if (state.down === 4 || choices.fourthDown === 'fg') {
     const decision = choices.fourthDown || ctrl(side).fourthDown(state, offTeam);
     if (decision === 'punt') { done(); const from = state.ballOn; const { text, res } = R.doPunt(state, teams); return { kind: 'punt', text, res, kicking: side, from }; }
-    if (decision === 'fg') { done(); const from = state.ballOn; const { text, scored, res } = R.doFieldGoal(state, teams); return { kind: 'field_goal', text, scored, res, kicking: side, from }; }
+    if (decision === 'fg') { done(); const from = state.ballOn; const { text, scored, res } = R.doFieldGoal(state, teams, { signature: !!choices.fgSignature }); return { kind: 'field_goal', text, scored, res, kicking: side, from }; }
   }
 
   // Scrimmage play.

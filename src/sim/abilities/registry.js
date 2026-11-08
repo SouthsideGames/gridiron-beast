@@ -18,13 +18,14 @@ export const HOOKS = Object.freeze([
   'tick',             // (ctx, self)                         every engine tick while the play is live
   'engage',           // (ctx, self, other)                  a block engagement starts (self is blocker or defender)
   'tackleAttempt',    // (ctx, self, tackler) -> {prevent|skip} pre-resolution, before the tackle is decided (P6); skip: the tackler
-                      //                                     cannot initiate this attempt at all (M3 hook: no attempt, no broken tackle)
+                      //                                     cannot initiate this attempt at all (M3 hook: no attempt, no broken tackle); {avoided}: the same (Psychic/Dragon spelling)
   'juke',             // (ctx, self, defender)               M3 hook: the carrier's successful ordinary juke of that defender
   'passRelease',      // (ctx, self, { ball, passer, receiver }) -> {breakup}?  M3 hook: a forward pass has left the hand (ball.target,
                       //   ball.landing set). Defenders first in lineup order: the first {breakup} ends it as an ordinary incompletion; then everyone else observes.
   'catchPoint',       // (ctx, self, ball, other)            pre-resolution at the catch point (P6): set ball.t8.noContest / ball.t8.noInterception
   'catchMade',        // (ctx, self, receiver)               M3 hook: post-resolution, a completed pass catch (every contract on the field)
   'dropped',          // (ctx, self, ball) -> {retry}        M3 hook: the receiver's reached, not-broken-up pass fell: one more ordinary attempt
+  'tackleOdds',       // (ctx, self, tackler, p) -> p'       M3 hook: the carrier's contract replaces the ordinary contest's tackle odds
   'fumble',           // (ctx, self) -> {prevent}            after a fumble is determined; a Shielded save is applied first (B3)
   'playEnd',          // (ctx, self, result)                 the whistle: charges, clocks, field creation
   'possessionChange', // (ctx, self)

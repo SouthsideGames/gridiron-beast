@@ -166,7 +166,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     actors.push(a); bySlot[team][slot] = a; return a;
   };
   for (const slot of offensePlay.onField) makeActor('off', slot, offensePlay, offense[slot]);
-  if (!dry?.noDefense) for (const slot of defensePlay.onField) makeActor('def', slot, defensePlay, defense[slot]);
+  if (!dry?.noDefense) for (const slot of defensePlay.onField) { if (options.vacant?.has?.(slot)) continue; makeActor('def', slot, defensePlay, defense[slot]); } // M3 hook: a vacant slot (a served temporary absence, no substitute) has no actor
   // ------------------------------------------------------------ Task 8 M3: ability contract hooks (src/sim/abilities/registry.js)
   // Abilities draw from their own stream, so plays where no contract acts keep every physics draw. Game-scope state (charges,
   // cooldowns) lives in options.t8 (the football game state's Task 8 block); without one (labs, previews) it is per play only.
@@ -201,7 +201,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     displace: (a, dx, dy) => { const k = FX ? FX.resist(a) : 1; const x0 = a.x, y0 = a.y; a.x = clamp(a.x + dx * k, B.ownEndLine + 0.3, B.endLine - 0.3); a.y = clamp(a.y + dy * k, B.left + 0.3, B.right - 0.3); return Math.hypot(a.x - x0, a.y - y0); },
     tryEngage: (b, d) => tryEngage(b, d), drainStamina: (a, points) => (a?.staminaInput ? drainStaminaPoints({ t8: t8g }, a.staminaInput, points) : null),
     // M3 hook: (Nature / Electric batch) the play calls, a contest's type scaling, temporary actors (spawnActor; ctx.actors includes them)
-    offensePlay, defensePlay, scale: (p, q, contest) => scaleVs(p, q, contest), spawn: (spec) => spawnActor(spec) };
+    offensePlay, defensePlay, scale: (p, q, contest) => scaleVs(p, q, contest), spawn: (spec) => spawnActor(spec),
+    // M3 hook: (Psychic/Dragon batch) the line, the event log, a man defender's receiver; shared-status removal (cleanse) and per-play
+    // protection against new harmful statuses (status-runtime.js ward); temporary absences and a turnover's awarded spot
+    ballOn, get events() { return events; }, manTarget: (d) => (d?.team === 'def' && d.assignment?.a === 'man' ? bySlot.off[manKeys[d.assignment.key]] || null : null),
+    removeStatus: (a) => t8Remove(a), ward: (a) => { (t8g.ward ||= {})[a.mid] = true; },
+    queueAbsence: (spec) => { (t8g.absences ||= []).push({ ...spec }); }, turnoverSpot: (n) => { turnoverSpot = n; } };
+  let turnoverSpot = null; // M3 hook: an ability-awarded next-offense spot after a turnover (rules.js applies it)
+  delete t8g.ward; // M3 hook: protection is per play
   const whistleQueue = []; // M3 hook: ctx.afterWhistle callbacks
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
   // M3 hook: physical obstacles from contracts (stone walls, snowballs): kinds 'circle' {x, y, r} and 'rect' {x0, x1, y0, y1}, live until
@@ -250,6 +257,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   /** The one maximum-speed aggregation (§11): every source's signed % in a.maxSpeedMods (status, field), added and bounded, applied once. */
   function refreshMaxSpeed(a) { a.baseMaxSpeed ??= a.maxSpeed; a.maxSpeed = effectiveMaxSpeed(a.baseMaxSpeed, a.maxSpeedMods); }
+  /** M3 hook: remove a monster's shared status now (an explicit cleanse) and undo its football effect, immobilisation included. */
+  function t8Remove(a) {
+    const slot = t8g.status?.[a.mid]; if (!slot) return null; delete t8g.status[a.mid];
+    t8StatusEffect(a, null, true);
+    if (slot.id === 'stunned' || slot.id === 'knockedDown') { a.stun = 0; a.noEngage = 0; a.sitsOut = false; a.knockedDown = false; a.status = null; }
+    if (slot.id === 'stumbled') a.stumbled = false;
+    return slot;
+  }
   function t8Disengage(a) { for (const x of actors) if (x.engaged === a) x.engaged = null; a.engaged = null; a.engaged2 = null; } // M3 hook: engaged2 (a second engagement)
   /** A slot's football effect on its actor (live: applied mid-play, so immediate physical effects happen too). */
   function t8StatusEffect(a, slot, live, keepEngagement = false) {
@@ -1837,6 +1852,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const mark = TRACE ? (m, x) => { d.why = m; d.why2 = x ?? null; } : () => {}; // developer trace: the branch he acted on
     if (d.moveOverride) { mark('override'); d.moveOverride(moveApi(d)); return; } // M3 hook: a contract's per-play behaviour override
     if (d.engaged) { mark('engaged'); return; } // movement handled by the blocker's engagement
+    if (d.t8Chase) { mark('chase', 'ability'); steer(d, d.t8Chase.x, d.t8Chase.y, 1, 0.2); return; } // M3 hook: a contract's decoy holds his pursuit (ordinary movement and immobilisation apply)
     if (KO) { if (ball.inAir) { mark('cover', 'flight'); kickoffFlightDefense(d); return; } if (ball.holder?.team === 'off') { if (kickoffCover(d, ball.holder)) { mark('cover', 'lane'); return; } mark('pursue', 'kickoff'); pursue(d); return; } }
     const c = ball.holder;
     if (c && c.team === 'def') { // we have the ball: escort or carry
@@ -2115,7 +2131,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (d.noContact) return false; // M3 hook: a contract's per-play override initiates no tackle
     if (d.stun > 0 || (d.engaged && !offBlock) || dist(d, c) > 1.25) return false;
     const pre = hook('tackleAttempt', c, d); // Task 8 M3 (P6 pre-resolution)
-    if (pre?.skip) return false; // M3 hook: tackle-attempt exclusion: this defender cannot initiate this attempt (no attempt, no broken tackle)
+    if (pre?.skip || pre?.avoided) return false; // M3 hook: tackle-attempt exclusion (skip) or a relocation (avoided, Psychic/Dragon): this defender cannot initiate this attempt (no attempt, no broken tackle)
     if (offBlock) d.armTried = true;
     if (d.contract) hook('tackling', d, c); // M3 hook: the tackler's contract sees his attempt begin
     const fwd = c.team === 'off' ? 1 : -1;
@@ -2153,6 +2169,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (ce.elusive) p *= 1 - ce.elusive;
     if (ce.elusiveFirst && !c.brokeTackle) p *= 1 - ce.elusiveFirst;
     if (ce.quakeStep && d.quakeUntil > t) { p *= 1 - ce.quakeStep; abilityUsed(c, 'quakeStep'); } // Quake Step: a defender near his cut stumbles
+    { const q = hook('tackleOdds', c, d, p); if (typeof q === 'number') p = q; } // M3 hook: a carrier's contract may replace the tackle contest's odds (no physics draw)
     if (rng.chance(p)) {
       // Fumble check on contact.
       let fumbleP = 0.012 * (1.6 - norm(c.attrs.catching)) * (gang ? 1.4 : 1) * (c.slot === 'QB' ? 1.3 : 1);
@@ -2246,6 +2263,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Task 8 M3 (P6 pre-resolution at the catch point): contracts of the receiver and the nearest defender may act before the outcome
     // is decided; a hook sets ball.t8 flags (noContest: no breakup; noInterception: a would-be interception falls incomplete).
     ball.t8 = {}; hook('catchPoint', r, ball, nearest?.d || null); if (nearest) hook('catchPoint', nearest.d, ball, r);
+    { const passer = bySlot.off[stats.passer]; if (passer && passer !== r) hook('catchPoint', passer, ball, nearest?.d || null); } // M3 hook: the passer's contract too
     if (ball.t8.noContest) contested = false;
     if (thunderShield) { contested = false; abilityOutcome('no_breakup', qb, `${qb.name}'s Thunderclap beats ${nearest.d.name} to the spot`, { victim: nearest.d.slot }); }
     // Coverage responsibility: the man defender assigned to this receiver; in zone, only a defender close enough to have had him (within 2.5 yards); otherwise nobody, the zone was open.
@@ -2277,7 +2295,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       let pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.78); // v42.8: with the ball led onto the receiver, a defender who got there too has a real play on it (0.5 before, when under-led balls fell to him anyway)
       if (ball.undertow) { pickP *= ball.undertow.ability.undertow; abilityUsed(ball.undertow, 'undertow'); } // Undertow: 25% more likely
       const picked = rng.chance(pickP);
-      if (picked && ball.t8?.noInterception) { log(`${nearest.d.name} cannot hold it`, { kind: 'ability', by: r.slot, side: r.team, contract: true }); }
+      if (picked && ball.t8?.noInterception) { // M3 hook: a would-be interception falls incomplete; the denied defender is recorded for the contract
+        ball.t8.denied = nearest.d; log(`${nearest.d.name} cannot hold it`, { kind: 'ability', by: r.slot, side: r.team, contract: true, victim: nearest.d.slot });
+        ball.inAir = false; endPlay('incomplete', L.x, L.y); log('Pass falls incomplete', { kind: 'incomplete', denied: nearest.d.slot }); return;
+      }
       else if (picked && ball.sovereign) { abilityUsed(qb, 'sovereign'); abilityOutcome('pick_denied', qb, `${qb.name}'s Sovereign Arm: ${nearest.d.name} cannot hold it`, { victim: nearest.d.slot }); }
       else if (picked) {
         ball.inAir = false; ball.holder = nearest.d; stats.interceptor = nearest.d.slot; nearest.d.x = L.x; nearest.d.y = L.y;
@@ -2426,7 +2447,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   if (options.offenseSide && !options.kickoff && !options.twoPoint && !dry) { const tp = (t8g.teamPlays ||= {}), o = options.offenseSide, dfs = o === 'home' ? 'away' : 'home'; (tp[o] ||= { off: 0, def: 0 }).off += 1; (tp[dfs] ||= { off: 0, def: 0 }).def += 1; }
   { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(clamp(ball.x, B.ownEndLine, B.endLine)); const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, firstDown: options.toGo != null && g0 >= options.toGo && !['incomplete', 'throwaway', 'interception', 'fumble'].includes(result) };
     for (const a of actors) hook('playEnd', a, summary);
-    for (const fn of whistleQueue) fn(summary); } // M3 hook: ctx.afterWhistle callbacks, after every ordinary playEnd
+    for (const fn of whistleQueue) fn(summary); delete t8g.ward; } // M3 hook: ctx.afterWhistle callbacks, after every ordinary playEnd; per-play protection ends
   // M3 hook: temporary actors leave at the whistle: their shared status clears; their statistics go to their credited slot or nowhere
   const temps = actors.filter((a) => a.temp);
   if (temps.length) {
@@ -2451,6 +2472,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   };
   if (FX) { const o = FX.output(); out.fields = o.fields; if (o.clumps.length) out.fieldObjects = { clumps: o.clumps }; } // Task 8: the functional field rectangles (field view, replays)
   if (obstacles.length) out.obstacles = obstacles.map(({ blocks, ...o }) => ({ ...o })); // M3 hook: contract obstacles (field view, replays)
+  if (turnoverSpot != null) out.turnoverSpot = turnoverSpot; // M3 hook: rules.js places the next offense here
   if (KO) out.kickoff = { returner: KO.returner, catchX: stats.kickCatchX ?? null, hang: ball.flightTime };
   // Developer trace only (Phase C1 tests): each offensive player's Blocking after auras, kept out of the play's data (not enumerable,
   // so a traced play still serialises exactly as an untraced one).
