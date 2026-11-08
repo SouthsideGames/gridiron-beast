@@ -98,7 +98,7 @@ test('Vine Vault: first engagement of a pass rusher while ready; one contest (ra
     const ev = ab(r, 'NAT-02-F'); assert.ok(ev.length <= 1, 'one attempt a play');
     if (!ev.length) { assert.equal(t8.ability.X.cd, 0, 'no attempt: readiness kept'); continue; }
     assert.equal(PLAYS[r.offensePlay].type, 'pass'); assert.equal(t8.ability.X.cd, [5, 4, 3, 2][seed % 4]);
-    n++; pSum += ev[0].chance; if (ev[0].success) { wins++; assert.ok(ev[0].x < ev[0].blockerX, 'lands beyond the blocker toward the backfield'); assert.ok(r.events.some((e) => e.kind === 'vault_land' || e.kind === 'ability_end')); }
+    n++; pSum += ev[0].chance; if (ev[0].success) { wins++; assert.ok(ev[0].x < ev[0].blockerX, 'lands beyond the blocker toward the backfield'); assert.ok(r.events.some((e) => e.kind === 'vault_land' || e.kind === 'ability_end') || r.elapsed <= ev[0].t + 0.4 + 0.05, `lands, unless the whistle comes before the 0.4 s vault ends (seed ${seed}: ${r.offensePlay}, whistle ${r.elapsed} s)`) /* the released bunch plays (owner N8b) added a quick incompletion at the vault's end to the frozen sample */; }
   }
   assert.ok(n >= 40, `attempts ${n}`); // frozen: seeds 1..160, tolerance 0.10
   assert.ok(Math.abs(wins / n - pSum / n) <= 0.10, `success ${wins}/${n} vs mean chance ${(pSum / n).toFixed(3)}`);
