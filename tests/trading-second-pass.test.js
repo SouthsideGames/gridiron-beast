@@ -7,7 +7,7 @@ import { createRng } from '../src/core/rng.js';
 import { marketValue, rosterWorth, rosterNet, rosterAfter, rosterProblems, roleIn, POSITION_LEVERAGE, DEAL_RULES, positionFactor, ageFactor, contractFactor, ROLE_SHARE } from '../src/franchise/trade-value.js';
 import { evaluateProposal, DESK_RULES, buildIncomingOffer, readyReplacement, immovable, deskStamp, spendProposal, deskUsage } from '../src/franchise/trade-desk.js';
 import { pickValue, pickWorth, tradable } from '../src/franchise/trades.js';
-import { GROUP_SLOTS } from '../src/franchise/roster.js';
+import { GROUP_SLOTS, buildDepthChart } from '../src/franchise/roster.js';
 import { ALL_TEAMS } from '../src/data/league.js';
 
 const OWNER = 'Owner Club', AI = 'Rival Club', YEAR = 2;
@@ -233,6 +233,22 @@ function played(league = 52) {
   return JSON.parse(snapshots[league]);
 }
 const TRADE_LEAGUES = [51, 52, 53, 54];
+/**
+ * Prerequisite of every played-franchise test in which the owner takes a monster for a pick: a free spot on his roster (at 38 of 38 every
+ * such deal is illegal, rosterFull, and an old-style call is refused with "Roster full"). League 52's owner used to end the first offseason
+ * at 37; since the D7 identities (a different first season) he ends it at 38 (a defensive lineman who joined during the season was re-signed). The spot is made
+ * the way a player makes it, with the game's own release (allowed in the offseason): his lowest-rated reserve, not in the depth chart,
+ * not protected. A roster with room is left as it is.
+ */
+function roomForOne(f) {
+  if (f.roster.length >= ROSTER_MAX) {
+    const lineup = new Set(Object.values(buildDepthChart(f.roster)).filter(Boolean));
+    const reserve = f.roster.filter((m) => !lineup.has(m.id) && !R.isProtected(m) && !m.cornerstone).sort((a, b) => ovr(a) - ovr(b) || (a.id < b.id ? -1 : 1))[0];
+    assert.ok(reserve, 'a reserve to release'); const r = F.releaseMonster(f, reserve.id); assert.equal(r.ok, true, r.reason);
+  }
+  assert.ok(f.roster.length < ROSTER_MAX, `room for one more: ${f.roster.length} of ${ROSTER_MAX}`);
+  return f;
+}
 const aiClubs = (f) => R.leagueClubs(f).slice().sort();
 /** Find a proposal some club would accept: a bench body of theirs for the owner's cheapest pick that works. */
 function findAccepted(f, { kind = 'picks' } = {}) {
@@ -254,7 +270,7 @@ test('a played franchise: the desk lists both sides, previews a deal, and the pr
   assert.ok(pv.ok && 'legal' in pv && pv.detail && !('accept' in pv) && !('counter' in pv), 'legal, with roster, cap and depth, and nothing about the price');
 });
 test('a played franchise: an accepted deal moves the monster, the pick, the contract and the history, and leaves the league sound', () => {
-  const f = played(); const found = findAccepted(f); assert.ok(found, 'some club sells somebody for a pick');
+  const f = roomForOne(played()); const found = findAccepted(f); assert.ok(found, 'some club sells somebody for a pick');
   const { team, prop, m } = found; const before = f.roster.length; const cap0 = F.salarySummary(f).total; const pickBefore = F.myTradablePicks(f).length; const contract0 = JSON.stringify(R.clubRoster(f, team).find((x) => x.id === m.id).contract); assert.ok(contract0, 'he holds a contract at his club');
   const r = F.deskPropose(f, prop); assert.equal(r.accepted, true);
   assert.equal(f.roster.length, before + 1); const got = f.roster.find((x) => x.id === m.id); assert.ok(got);
@@ -277,7 +293,7 @@ test('a played franchise: sending a monster to a club moves him into its registr
   for (const lineup of Object.values(g.lineupManual || {})) assert.notEqual(lineup, spare.id, 'his manual lineup slot is cleared');
 });
 test('a played franchise: saving and reloading keeps the deal, the proposal count, and the same answer to the same proposal', () => {
-  const f = played(); const found = findAccepted(f); const team = found.team;
+  const f = roomForOne(played()); const found = findAccepted(f); assert.ok(found, 'some club sells somebody for a pick'); const team = found.team;
   // Task 8 M1 (fixture drift): the club's best monster for sale is no longer always worth more than the owner's last pick (Dex
   // rosters), so "bad" is now chosen explicitly: the best monster for sale whose deal for that pick the club refuses (on a copy).
   const badFor = (id) => ({ team, givePicks: [F.myTradablePicks(f).at(-1)], getMonsters: [id] });
@@ -292,7 +308,7 @@ test('a played franchise: saving and reloading keeps the deal, the proposal coun
   assert.ok(back2.roster.some((m) => m.id === found.m.id), 'an accepted deal survives a reload'); assert.deepEqual(leagueInvariants(back2, 'reloaded'), []);
 });
 test('a played franchise: a save without a trade desk record (every save before Task 5) trades as normal', () => {
-  const f = played(); delete f.tradeDesk; delete f.tradeCall; const found = findAccepted(f); assert.ok(found);
+  const f = roomForOne(played()); delete f.tradeDesk; delete f.tradeCall; const found = findAccepted(f); assert.ok(found);
   const r = F.deskPropose(f, found.prop); assert.equal(r.accepted, true); assert.ok(f.tradeDesk.total === 1);
 });
 test('incoming calls: made from the club\'s roster, shown with their effect, answered by the owner, and nothing happens until he answers', () => {
@@ -313,7 +329,7 @@ test('incoming calls: they vary across clubs and weeks, and a call made before T
   const f = played(); f.offseason ||= { items: [] }; const kinds = new Set(), teams = new Set();
   for (let seed = 1; seed <= 90; seed++) { f.seed = seed; f.callsMade = {}; f.tradeCall = null; const c = F.maybeTradeCall(f); if (c) { kinds.add(c.kind); teams.add(c.team); } }
   assert.ok(teams.size >= 2, `calls come from different clubs (${[...teams]})`); assert.ok(kinds.size >= 1);
-  const g = played(); g.offseason ||= { items: [] }; const club = aiClubs(g)[0]; const src = F.deskAssetsFor(g, club).theirs.filter((m) => !m.why && m.forSale && m.role > 0)[0];
+  const g = roomForOne(played()); g.offseason ||= { items: [] }; const club = aiClubs(g)[0]; const src = F.deskAssetsFor(g, club).theirs.filter((m) => !m.why && m.forSale && m.role > 0)[0];
   g.tradeCall = { team: club, position: src.position, playerId: src.id, player: { name: src.name, position: src.position, ovr: src.ovr, age: src.age, salary: src.salary }, give: [F.myTradablePicks(g)[0]], value: 50, expires: `off:${g.season.year}` };
   const before = g.roster.length; const r = F.answerTradeCall(g, true); assert.equal(r.ok, true, r.reason); assert.equal(g.roster.length, before + 1);
 });
