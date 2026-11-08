@@ -191,6 +191,66 @@ another Stunned skip. The remaining status duration is preserved."
 | Guarded, Healing Reduced | Cleared (Clash only) | — |
 | Stumbled, Knocked Down | — | Cleared (football only) |
 
+## S3: damage pipeline and immediate KO (commit ed33b7e)
+
+**One strike** (`strike` / `oneHit` in engine.js) follows P6 steps 3.4–3.12 with B3 step 8. Every step is a named hook point the S5
+registry will use; the engine never names an ability. Tests drive the hooks with stubs, and no contract is implemented.
+
+| Step | What happens | Hook |
+|---|---|---|
+| 3.4 launch | Costs, once-uses and target lock (hook). Then the Confused redirect, for eligible normal attacks only (`ordinary`, `special`); reactions and counters never roll. Then launch accuracy (hook) | `launch` |
+| 3.5 interception | Stone Divide | `intercept` |
+| 3.6 explicit misses | Defender miss sources only; no base evasion. `undodgeable` skips the step, with no roll | `missCheck` |
+| 8a raw once | ATK × mult × ramp × spread × Weakened/Empowered × entry penalty (S4) × ability raw modifiers. Kept exact | `rawModifiers` |
+| 8b cover | Lethality is predicted after the original target's defences, using a mitigation preview that changes nothing. A redirect sends the whole raw to the rescuer | `lethalRedirect` |
+| 8c split | The raw budget is made whole once (half up), the source share is floored, and the target gets the rest (§9: 101 at 30% gives 30 and 71). Recipients: the original target first, then stable ID | `rawSplit` |
+| 8d mitigation | Each recipient's own type, then the Tank guard (active only), then Guarded, then ability mitigation, then the shield | `mitigate` |
+| 8e pre-KO | When the loss would knock the recipient out: Last Root-type survival at 1 HP. This also applies to the Afflicted tick (`dotDamage`) | `preKO` |
+| 8f HP | The single rounding (D9), the HP loss, and the immediate KO (status cleared) | — |
+| 3.9 attached | Status attempts through the shared gate; a blocked attempt never cancels the damage | `attached` |
+| 3.10 reactions | One call per monster: the recipients first, then the rest by stable ID. A reaction strike never triggers reactions (no chains) | `reaction` |
+| 3.11 after the whole hit | Glacier Wall, Wing Shelter, Mirage Veil, Forge Swipe, Shadow Pounce counter, Rubble Reprisal | `afterWholeHit` |
+| B3 rule 4 | **The replacement enters here**: after every living monster's reactions, before the next hit or follow-up | — |
+| 3.12 follow-ups | Twin Thunder bolts, Bank Shot ricochet | `followUp` |
+
+**D5 (approved).**
+- The Striker shield-break ×2 and Disruptor pierce apply only when the tag is `ordinary`.
+- The Tank guard applies whenever the recipient is the active monster, so never on damage redirected (8b) or split (8c) onto a reserve.
+- Explicit ability exceptions are preserved through `spec.exceptions` (`shieldBreak`, `pierce`, `tankGuard`), which only a contract sets.
+- Tested: an ordinary attack breaks at ×2, a special at ×1, an exception at its own value. Pierce works likewise.
+
+**D9 (approved).** `arith.js resolveAmount(base, factors, {rounding, min, max})` multiplies every named factor and rounds **once**,
+half up. `floor` and `ceil` are used only where an approved rule names them (the §9 floors; the Dragon Pounce cost). The damage HP loss,
+heals and shield pools all use it:
+- **Heals:** entry penalty × C6 × Healing Reduced, then one rounding, capped at missing HP. D7: Afflicted has no factor.
+- **Shield pools:** entry penalty × C6, then one rounding, through the gate.
+
+The C6 scope is still D8 (provisional).
+
+**Immediate KO (B3).**
+- Rule 1: at 0 HP the monster is out at once, and its status and episode clear.
+- Rule 2: every hook item (`runDescriptors`) belongs to an owner. An item whose owner has been knocked out is **cancelled** (logged,
+  `stage: 'cleanup'`). Remaining multi-hits of a knocked-out attacker are cancelled. The knocked-out monster's later turn is cancelled
+  (S1).
+- Rule 3: an item may name one of the nine approved post-KO exceptions (`POST_KO_EXCEPTIONS`: Falling Star, Faultline, Molten Brand,
+  Shared Burden, Mountain Shelter, Riptide Pursuit, Astral Strike, Cinder Clamp, Second Spring) and then resolves. Naming any other
+  ability is refused with an error.
+- Rule 4: the replacement enters after the hit, as above.
+- Rule 5: a lethal Afflicted tick knocks out at once, the replacement enters, and the knocked-out monster's countdowns are skipped.
+- Rule 6: the end check runs after the hit's knockouts settle, and a double KO goes to the seeded coin (tested with a post-KO eruption).
+
+**Reviewer stream** (§25 standard; no UI built).
+- Every event carries `seq` (its index), `turnIndex` (the battle's normal-turn count) and `hit` (the strike id). The reviewer can
+  therefore step by event, by turn or by hit.
+- Hook-driven events carry `stage`: `trigger` (an `unmet` report), `activation` (`ability`, `redirect`, `survive`), `resolution`
+  (`raw_split`, `intercepted`, `miss`, `heal`) and `cleanup` (`cancelled`).
+- Any hook can return `{ unmet: [{condition, detail}] }`. It is logged as an `unmet` event, so a failed activation is never a silent
+  ordinary attack.
+- Provenance: every status, heal and strike records its source and abilityID.
+
+**Plain battles are unchanged.** The 20 golden seeds stay byte-identical. Draws are still spreads plus coins (plus Confused rolls when
+present). 10,000 t8 3v3 battles with no log take 1,133 ms on the first pass and 641 ms on the second (S1: 881 / 523 ms).
+
 ## Provisional defaults and the decision each waits on
 
 The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a test checks that every entry names what it waits on.
@@ -198,10 +258,9 @@ The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a t
 | Id | Default | Waits on |
 |---|---|---|
 | `ko-replacement-line-order` | First living reserve in lineup order; it enters right after the hit and does not take the cancelled turn | **D2** |
-| `sudden-death-scope` | The values 1.1.0 ramp multiplies the raw damage of every ordinary attack (the only damage path in S1) | **D8** |
-| `stalemate-c6-scope` | C6 is computed each exchange as in values 1.1.0; nothing reads it, because no heal or shield exists in S1 | **D8** |
+| `sudden-death-scope` | The values 1.1.0 ramp multiplies the 8a raw damage of every direct strike; not the Afflicted tick, heals or shields | **D8** (open) |
+| `stalemate-c6-scope` | C6 as in values 1.1.0; from S3 it multiplies every heal and every shield pool granted, not damage | **D8** (open) |
 | `exchange-cap` | The approved cap, HP share and coin, as in values 1.1.0. What happens to pending delayed impacts at the cap is open (none exist yet) | **D8** |
-| `single-rounding` | One round-half-up at the final HP-loss conversion | **D9**; S3 for the Shared Burden raw budget |
 | `initiative-tie-band` | P6's "seeded tie-break" uses the approved band: speeds closer than 2 are a tie, decided by one coin draw | Reading of an approved value; see the findings below |
 | `ko-clears-durations-keeps-cooldowns` | A KO clears the slot and episode (approved, §10) and the duration clocks, and keeps cooldowns (Second Spring: "no cooldown reset"); the cooldown half is provisional | S5 (ledgers) |
 | `tank-bruise-not-implemented` | The legacy bruise (heals ×0.75) is not in t8, as a status or as a heal factor | **D6** (open) |
@@ -213,6 +272,10 @@ The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a t
 | `shield-depleted-ends-status` (S2) | A pool at 0 HP ends Shielded and its episode; a converted football shield that rounds to 0 does not enter | Owner (§10 / STA-09 silent) |
 | `shield-strength-units` (S2) | Clash strength = original pool HP; in football, that pool as % of max Clash HP | Approved D11; unit reading flagged |
 | `shield-break-rounding` (S2) | Pool loss and HP loss each rounded once, half up | D9 single rounding; reading flagged |
+| `multi-hit-target-ko` (S3) | When a multi-hit strike's target is knocked out, the remaining hits are cancelled (no retarget) | The multi-hit contracts (S6–S11) |
+| `reaction-order` (S3) | Reactions, after-whole-hit effects and follow-ups run by owner: recipients first, then stable ID | Reading of §9, flagged |
+| `reaction-chains` (S3) | A reaction or counter strike runs its attached effects only; it triggers no reactions, after-whole-hit effects or follow-ups | B3/P6 "no chains"; reading flagged |
+| `shared-burden-budget-rounding` (S3) | With a split, the raw budget is made whole once at 8c, then each share is rounded once at its HP loss | Reading of §9 + D9, flagged (Shared Burden is S5) |
 
 ## Test results
 
@@ -226,6 +289,8 @@ All runs are targeted only (`tests/clash/*.test.js`). The full suite was not run
 | a4c5e09 (S1) | `node tools/test-tier.mjs perf` (legacy 10,000 3v3, no log, under 5 s) | 1 / 1 pass (file 3.28 s) |
 | 525e078 (S2) | `node --test tests/clash/*.test.js` | **131 tests, 131 pass, 0 fail** (54.7 s; the B12 Confused run is about 10 s of it) |
 | 525e078 (S2) | `node tools/test-tier.mjs perf` | 1 / 1 pass (4.2 s file run) |
+| ed33b7e (S3) | `node --test tests/clash/*.test.js` | **144 tests, 144 pass, 0 fail** (60.3 s) |
+| ed33b7e (S3) | `node tools/test-tier.mjs perf` | 1 / 1 pass (2.9 s) |
 
 **Per file at a4c5e09:**
 - the 15 pre-existing files are all unchanged and green, 99 / 99: boundary 3, calculators 4, conditions 9, data 4, engine 9,
@@ -235,6 +300,9 @@ All runs are targeted only (`tests/clash/*.test.js`). The full suite was not run
 
 **Per file at 525e078 (S2):** the 15 pre-existing files 99 / 99 (boundary 3, with its whitelist); `t8-core` 14 / 14 (golden seeds
 unchanged); `t8-legacy-freeze` 2 / 2; `t8-status` **16 / 16**.
+
+**Per file at ed33b7e (S3):** pre-existing 99 / 99; `t8-core` 14 / 14; `t8-legacy-freeze` 2 / 2; `t8-status` 16 / 16;
+`t8-damage` **13 / 13**.
 
 **Timing, 10,000 3v3 battles with no log** (the perf test's 50 lineups, one script, two passes on this 2-CPU container):
 
