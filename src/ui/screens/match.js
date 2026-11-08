@@ -388,7 +388,9 @@ export function registerMatchScreens(Router, app) {
     if (s.phase === 'try' && s.tryTeam !== me) { /* AI decides */ }
     if (s.phase === 'kickoff' && s.kickingTeam !== me) delete c.kickoff;
     G.lastEvent = null; G.aiCall = null;
+    const rpT = globalThis.__gbRenderPerf?.onStep ? performance.now() : 0; // render-perf harness only (inert otherwise): times the simulation step
     const ev = step(s, teams, controllers, G.tendencies, c);
+    if (rpT) globalThis.__gbRenderPerf.onStep(rpT, performance.now() - rpT, ev);
     if (ev) { ev.offenseSide = offenseSide; ev.toGo = toGo; ev.down = down; }
     afterStep(f, ev);
   }
@@ -560,6 +562,7 @@ export function registerMatchScreens(Router, app) {
   // Render-performance harness hook (tools/perf/render, docs/task8/RENDER_PERF.md). Inert: it exists only when the harness defines
   // globalThis.__gbRenderPerf before the app loads, and nothing in the game calls it. It hands a precomputed play to this screen's own
   // playback (startAnim) and says when the playback has finished; `lookup` (optional) is the effect lookup for a staged scene's monsters.
+  // If the harness also sets `onStep`, act() reports the start and duration of each simulation step (combined live-gameplay mode).
   if (globalThis.__gbRenderPerf) Object.assign(globalThis.__gbRenderPerf, {
     playMatch(ev, { lookup = null } = {}) { startAnim(app.f, ev); if (anim && lookup && !ev.sim.kick) anim.fx = buildFx(ev.sim, lookup); return !!anim; },
     matchBusy: () => !!anim,

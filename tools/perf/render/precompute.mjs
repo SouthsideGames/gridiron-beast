@@ -18,80 +18,23 @@ const HERE = path.dirname(new URL(import.meta.url).pathname);
 const ROOT = path.resolve(HERE, '..', '..', '..');
 const imp = (rel) => import(pathToFileURL(path.join(ROOT, rel)).href);
 const MANIFEST = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/perf/scenes.json'), 'utf8'));
-const R = await imp('src/sim/rules.js');
-const RNG = await imp('src/core/rng.js');
-const FIELDS = await imp('src/sim/t8/fields.js');
+const ST = await import('./staging.js');
 const SW = await imp('tools/perf/scene-worker.mjs');
 
-const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 const clone = (x) => JSON.parse(JSON.stringify(x));
-const range = ([a, b]) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 const median = (a) => { const s = [...a].sort((x, y) => x - y); const n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; };
 /** JSON-safe copy (Sets and Maps become arrays) of what the page needs. */
 export const plain = (x) => JSON.parse(JSON.stringify(x, (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v)));
 
 // ------------------------------------------------------------------------------------------------ the scene-worker rules staging
-const sceneById = (id) => { const s = MANIFEST.scenes.find((x) => x.id === id); if (!s) throw new Error(`unknown scene ${id}`); return s; };
-const callsOf = (sc) => (typeof sc.calls === 'string' ? MANIFEST.callSets[sc.calls] : sc.calls);
-const player = (p) => ({ id: p.id, name: p.name, position: p.position, type: p.type ?? null, attrs: { ...p.attrs }, permDurability: p.permDurability });
-function overlay(team, side, sc, variant) {
-  for (const [key, ov] of Object.entries(sc.abilities || {})) {
-    const [club, unit, slot] = key.split('.'); if (club !== side) continue;
-    const base = unit === 'kicker' ? team.kicker : team[unit][slot];
-    const m = { ...base, type: ov.type ?? base.type };
-    if (variant === 'ability') Object.assign(m, { species: ov.species, form: ov.form || `${ov.species}:0`, mastery: ov.mastery ?? 0 });
-    if (unit === 'kicker') team.kicker = m; else team[unit][slot] = m;
-  }
-}
-function team(key, side, sc, variant) {
-  const r = MANIFEST.rosters[key];
-  const t = { id: `${side}_${key}`, name: `Perf ${side}`, abbr: side === 'home' ? 'PFH' : 'PFA', color: '#888', bench: [], offensePlays: [], defensePlays: [],
-    offense: Object.fromEntries(Object.entries(r.offense).map(([s, p]) => [s, player(p)])), defense: Object.fromEntries(Object.entries(r.defense).map(([s, p]) => [s, player(p)])), kicker: player(r.kicker) };
-  if (variant !== 'plain') overlay(t, side, sc, variant);
-  t.returner = t.offense.RB;
-  return t;
-}
-const addField = (state, f) => { const b = (state.t8.fields ||= { list: [], pending: [], seq: 0 }); const r = FIELDS.placeRect({ id: `PF${++b.seq}`, createdAt: 0, owner: f.owner ?? null, ...f });
-  b.list.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: f.ability ?? 'perf', payload: f.payload ?? null, ownerTeam: f.ownerTeam ?? null, remaining: f.lifetime ?? 999, clock: f.clock ?? 'scrimmageAny', clearsAtHalftime: false, createdThisPlay: false }); };
-function rulesGames(sc, variant) {
-  const games = [];
-  for (const gs of range(sc.sequences)) {
-    const teams = { home: team(sc.home, 'home', sc, variant), away: team(sc.away, 'away', sc, variant) };
-    const state = R.newGame({ home: teams.home, away: teams.away, seed: gs, quarterLength: 900, coinWinner: 'home', choice: 'receive', venue: { club: 'perf', name: 'Perf Field', env: 'neutral', type: sc.envType ?? null, indoor: true, weather: null } });
-    const primes = [];
-    if (variant === 'ability') {
-      state.t8 = { status: {}, ability: {} };
-      for (const [key, ov] of Object.entries(sc.abilities || {})) {
-        if (!ov.prime) continue; const [club, unit, slot] = key.split('.'); const m = unit === 'kicker' ? teams[club].kicker : teams[club][unit][slot];
-        state.t8.ability[m.id] = clone(ov.prime); if (ov.everySnap) primes.push([m.id, ov.prime]);
-      }
-      for (const f of sc.fields || []) addField(state, f);
-    }
-    games.push({ gs, teams, state, primes });
-  }
-  return games;
-}
+// (staging.js: shared with the page's combined mode, which simulates the same snaps in the browser while they are played)
 /** One pass of a rules-tier scene: every snap's sim, its own wall time, and the teams it was played with. */
 function rulesPass(sc, variant) {
-  const games = rulesGames(sc, variant); const calls = callsOf(sc); const want = sc.unit === 'defense' ? 'away' : 'home'; const ballOn = sc.ballOn ?? 35;
-  const plays = [];
-  for (const g of games) {
-    const { state, teams } = g;
-    for (let k = 0; k < sc.snaps; k++) {
-      if (state.phase !== 'scrimmage' || state.possession !== want || sc.newDriveEachSnap) state.drive = { team: want, plays: 0, yards: 0, start: ballOn };
-      Object.assign(state, { phase: 'scrimmage', possession: want, ballOn, ballLat: 0, down: 1, toGo: 10, clock: 900, quarter: 1, finished: false });
-      state.rngState = RNG.createRng(g.gs * 1000 + k).state;
-      for (const [mid, p] of g.primes) state.t8.ability[mid] = { ...(state.t8.ability[mid] || {}), ...clone(p) };
-      const [o, d, target] = calls[k % calls.length];
-      const t0 = process.hrtime.bigint();
-      const { sim } = R.runScrimmagePlay(state, teams, o, d, target ? { forcedTarget: target } : {});
-      const ms = Number(process.hrtime.bigint() - t0) / 1e6;
-      plays.push({ gs: g.gs, k, call: [o, d], sim, ms, teams });
-    }
-  }
-  return plays;
+  return ST.rulesSnaps(MANIFEST, sc.id, variant).map(({ gs, k, run }) => { const r = run(); return { gs, k, call: r.call, sim: r.sim, ms: r.ms, teams: r.teams }; });
 }
-const lightFp = (sims) => sha(sims.map((s) => `${s.result}|${s.yards}|${s.elapsed}|${s.frames?.length}|${s.events?.length}`).join('\n'));
+const sceneById = (id) => ST.sceneById(MANIFEST, id);
+export const lightFp = (sims) => sha(sims.map(ST.lightLine).join('\n'));
 
 // ------------------------------------------------------------------------------------------------ play selection
 const ABILITY_KINDS = new Set(['ability', 'status', 'ability_ready', 'field', 'spawn', 'dragon_swallow']);
@@ -120,8 +63,7 @@ export const FOOTBALL_SCENES = [
 const playInfo = (p) => ({ gs: p.gs, k: p.k, call: p.call, result: p.sim.result, yards: p.sim.yards, frames: p.sim.frames?.length || 0, seconds: +((p.sim.frames?.length || 0) * 0.1).toFixed(1),
   abilityEvents: (p.sim.events || []).filter(isAbilityEvent).length, peakConcurrent: peakConcurrent(p.sim), fields: p.sim.fields?.length || 0, simMs: p.simMs });
 
-/** Lookup material for the effect layer: slot -> { name, type, species, form } for both units. */
-const unitMap = (u) => Object.fromEntries(Object.entries(u || {}).map(([s, m]) => [s, m ? { id: m.id, name: m.name, type: m.type ?? null, species: m.species ?? null, form: m.form ?? null } : null]));
+const unitMap = ST.unitMap;
 
 export function footballScene(def, { plays: nPlays = 8, simPasses = 3 } = {}) {
   const sc = sceneById(def.source);
@@ -152,7 +94,8 @@ export async function sovereignScene({ simPasses = 3 } = {}) {
   const withFrames = r.plays.filter((p) => p.sim?.frames?.length > 1);
   const msPerPlay = median(runs.map((x) => x.ms)) / Math.max(1, r.plays.length);
   return {
-    id: 'F5-sovereign-sequence', kind: 'football', source: 'review-sequence aurodrax main', variant: 'reviewer', what: `the football reviewer's staged Sovereign Arm sequence (aurodrax, DRA-06-F): ${r.plays.length} plays, ok=${r.ok}, activation on play ${r.activation != null ? r.activation + 1 : '-'}`, fingerprint: digest,
+    id: 'F5-sovereign-sequence', kind: 'football', source: 'review-sequence aurodrax main', variant: 'reviewer',
+    review: { family: 'aurodrax', form: 'aurodrax:0', mastery: 0, variant: 'main', seed: r.seed, snaps: r.plays.length, light: r.plays.map((p) => (p.sim ? ST.lightLine(p.sim) : `nosim|${p.kind}`)) }, what: `the football reviewer's staged Sovereign Arm sequence (aurodrax, DRA-06-F): ${r.plays.length} plays, ok=${r.ok}, activation on play ${r.activation != null ? r.activation + 1 : '-'}`, fingerprint: digest,
     sim: { passes: simPasses, plays: r.plays.length, medianMsPerPlay: +msPerPlay.toFixed(3), meanMsPerPlay: +msPerPlay.toFixed(3), chosenMedianMsPerPlay: +msPerPlay.toFixed(3), chosenMeanMsPerPlay: +msPerPlay.toFixed(3), note: 'whole sequence time (staging, snaps and phase evaluation) divided by its plays; per-play times are not separated by the runner' },
     plays: withFrames.map((p) => ({ info: { n: p.n, kind: p.kind, result: p.sim.result, yards: p.sim.yards, frames: p.sim.frames.length, seconds: +(p.sim.frames.length * 0.1).toFixed(1), abilityEvents: (p.sim.events || []).filter(isAbilityEvent).length, peakConcurrent: peakConcurrent(p.sim), fields: p.sim.fields?.length || 0, executed: !!p.executed, simMs: +msPerPlay.toFixed(3) },
       sim: plain(p.sim), off: unitMap(p.sprites?.off), def: unitMap(p.sprites?.def) })),
@@ -169,12 +112,12 @@ export async function clashScene(def, { simPasses = 3 } = {}) {
   const known = new Set(C.speciesList().map((s) => s.id ?? s));
   const pick = (ids, side) => ids.filter((id) => known.has(id)).map((id, i) => B.syntheticMonster(id, { seed: def.seed * 97 + (side === 'a' ? 0 : 50) + i, overall: 65 }));
   const a = pick(def.a, 'a'), b = pick(def.b, 'b');
-  const run = () => { const t0 = process.hrtime.bigint(); const res = CL.runBattle({ a, b, seed: def.seed }); return { res, ms: Number(process.hrtime.bigint() - t0) / 1e6 }; };
+  const run = () => { const t0 = process.hrtime.bigint(); const res = CL.runBattle({ a: clone(a), b: clone(b), seed: def.seed }); return { res, ms: Number(process.hrtime.bigint() - t0) / 1e6 }; };
   run(); const runs = []; for (let i = 0; i < simPasses; i++) runs.push(run());
   const res = runs[0].res; const h = C.logHash(res);
   if (runs.some((x) => C.logHash(x.res) !== h)) throw new Error(`${def.id}: battle not deterministic`);
   const ms = median(runs.map((x) => x.ms));
-  return { id: def.id, kind: 'clash', what: `${def.what}: ${a.length}v${b.length}, ${res.log.length} log entries, winner ${res.winner}`, fingerprint: String(h),
+  return { id: def.id, kind: 'clash', def: { a: def.a, b: def.b, seed: def.seed }, inputs: plain({ a, b }), what: `${def.what}: ${a.length}v${b.length}, ${res.log.length} log entries, winner ${res.winner}`, fingerprint: String(h),
     sim: { passes: simPasses, battles: 1, logEntries: res.log.length, msPerBattle: +ms.toFixed(3), medianMsPerPlay: null }, battle: plain(res) };
 }
 

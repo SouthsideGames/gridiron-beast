@@ -40,7 +40,12 @@ export function aggregateTrace(events) {
   const names = new Map(); for (const e of events) if (e.ph === 'M' && e.name === 'thread_name' && e.pid === pid) names.set(e.tid, e.args?.name);
   let mainTid = [...names.entries()].find(([, n]) => n === 'CrRendererMain')?.[0]; if (mainTid == null) mainTid = begin.tid;
   const t0 = begin.ts, t1 = end.ts;
-  const inWin = (e) => e.ts >= t0 && e.ts <= t1;
+  // Recorded windows: rp:on / rp:off pairs (driver.js startRec / stopRec) clipped to [rp:begin, rp:end]; without them, the whole span.
+  const marks = events.filter((e) => (e.name === 'rp:on' || e.name === 'rp:off') && e.pid === begin.pid).sort((a, b) => a.ts - b.ts);
+  const wins = []; let open = null;
+  for (const m of marks) { if (m.name === 'rp:on') open = m.ts; else if (open != null) { const a = Math.max(open, t0), b = Math.min(m.ts, t1); if (b > a) wins.push([a, b]); open = null; } }
+  if (!wins.length) wins.push([t0, t1]);
+  const inWin = (e) => wins.some(([a, b]) => e.ts >= a && e.ts <= b);
   const main = completeEvents(events.filter((e) => e.pid === pid && e.tid === mainTid && (e.ph === 'X' || e.ph === 'B' || e.ph === 'E'))).filter(inWin).sort((a, b) => a.ts - b.ts || b.dur - a.dur);
   // Self time: each event's duration minus its children's (a stack of open events per thread).
   const self = {}; const byName = {}; const stack = [];
@@ -59,13 +64,16 @@ export function aggregateTrace(events) {
   const long = tasks.filter((e) => e.dur > 50000);
   // What each long task spent its time on (self time by event name inside it), and when it ran (ms after rp:begin).
   const longDetail = long.slice(0, 40).map((L) => { const by = {}; for (const e of main) if (e.ts >= L.ts && e.ts + e.dur <= L.ts + L.dur && e !== L) by[e.name] = (by[e.name] || 0) + e._self;
-    return { atMs: Math.round((L.ts - t0) / 1000), ms: Math.round(L.dur / 100) / 10, top: Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([n, v]) => [n, Math.round(v * 10) / 10]) }; });
+    // The outermost script entry inside the task (FunctionCall / TimerFire / FireAnimationFrame args name the function or timer).
+    const entry = main.filter((e) => e.ts >= L.ts && e.ts + e.dur <= L.ts + L.dur && e !== L && (e.name === 'FunctionCall' || e.name === 'TimerFire' || e.name === 'FireAnimationFrame' || e.name === 'EventDispatch')).sort((a, b) => b.dur - a.dur)[0];
+    const d = entry?.args?.data || {};
+    return { atMs: Math.round((L.ts - t0) / 1000), ms: Math.round(L.dur / 100) / 10, entry: entry ? { name: entry.name, ms: Math.round(entry.dur / 100) / 10, fn: d.functionName || null, url: d.url ? String(d.url).replace(/^https?:\/\/[^/]+/, '') : null, line: d.lineNumber ?? null, type: d.type || null } : null, top: Object.entries(by).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([n, v]) => [n, Math.round(v * 10) / 10]) }; });
   const busy = tasks.reduce((a, e) => a + e.dur, 0) / 1000;
   const raster = events.filter((e) => e.pid === pid && e.tid !== mainTid && e.ph === 'X' && inWin(e) && (e.name === 'RasterTask' || e.name === 'ImageDecodeTask' || e.name === 'Rasterize')).reduce((a, e) => a + e.dur, 0) / 1000;
   const r2 = (x) => Math.round(x * 10) / 10;
-  const windowMs = (t1 - t0) / 1000;
+  const windowMs = wins.reduce((a, [x, y]) => a + (y - x), 0) / 1000;
   return {
-    found: true, windowMs: r2(windowMs), mainBusyMs: r2(busy), mainBusyShare: +(busy / windowMs).toFixed(3),
+    found: true, windowMs: r2(windowMs), windows: wins.length, mainBusyMs: r2(busy), mainBusyShare: +(busy / windowMs).toFixed(3),
     mainMs: Object.fromEntries(Object.entries(self).map(([k, v]) => [k, r2(v)])),
     top: Object.entries(byName).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([n, v]) => [n, r2(v)]),
     longTasks: { count: long.length, totalMs: r2(long.reduce((a, e) => a + e.dur, 0) / 1000), maxMs: r2(Math.max(0, ...long.map((e) => e.dur)) / 1000), detail: longDetail },
