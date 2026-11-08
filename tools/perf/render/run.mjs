@@ -3,7 +3,8 @@
 //
 //   node tools/perf/render/run.mjs [--modes=render,combined,live] [--repeats=3] [--warmup=1] [--plays=8] [--scenes=F1,F2,...]
 //        [--configs=full,min-probe,simple] [--combined-configs=full] [--live-configs=full,simple] [--live-steps=14] [--live-warmup=2]
-//        [--throttle=1,4] [--sim-passes=3] [--headless=new|shell] [--label=TEXT] [--out=FILE] [--no-profile]
+//        [--throttle=1,4] [--sim-passes=3] [--headless=new|shell] [--label=TEXT] [--out=FILE] [--no-profile] [--no-attribution]
+//        [--attribution-scene=F2-multi-ability]
 //
 // Three measurements, reported separately (spec §26):
 //   SIMULATION  the game logic per play: Node, before any timing (precompute.mjs), and in the page inside the combined and live runs.
@@ -21,7 +22,8 @@
 // 3. For every repeat x mode x scene x CPU throttle x configuration: real-time playback, requestAnimationFrame timestamps per frame,
 //    a Chrome trace over the recorded windows (main-thread self time by group, long tasks), CDP Performance.getMetrics, and the
 //    machine load over the same block.
-// 4. Draw profile (once per football scene and configuration, unthrottled, outside the timed blocks).
+// 4. Draw profile (once per football scene and configuration) and script attribution (a sampling CPU profile of one block per mode,
+//    bucketed by subsystem: simulation, save, field draw, screen render...), unthrottled, outside the timed blocks.
 // 5. JSON to --out (default tools/out/render-perf/render-perf-<stamp>.json) and summary tables on stdout.
 //
 // Defaults are the fixed protocol for the official run. Any run on a busy machine is PRELIMINARY (the JSON records the load).
@@ -48,7 +50,7 @@ const OPT = {
   repeats: Number(arg('repeats', 3)), warmup: Number(arg('warmup', 1)), plays: Number(arg('plays', 8)), simPasses: Number(arg('sim-passes', 3)),
   scenes: arg('scenes') ? list(arg('scenes')) : null, configs: list(arg('configs', 'full,min-probe,simple')), combinedConfigs: list(arg('combined-configs', 'full')),
   liveConfigs: list(arg('live-configs', 'full,simple')), liveSteps: Number(arg('live-steps', 14)), liveWarmup: Number(arg('live-warmup', 2)),
-  throttle: list(arg('throttle', '1,4')).map(Number), headless: arg('headless', 'new'), label: arg('label', ''), profile: !arg('no-profile'),
+  throttle: list(arg('throttle', '1,4')).map(Number), headless: arg('headless', 'new'), label: arg('label', ''), profile: !arg('no-profile'), attribution: !arg('no-attribution'), attributionScene: arg('attribution-scene', 'F2-multi-ability'),
 };
 const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const OUT = path.resolve(arg('out', path.join(ROOT, 'tools/out/render-perf', `render-perf-${stamp}.json`)));
@@ -124,6 +126,35 @@ function frameStats(runs) {
     pageSimMedianMs: sims.length ? r2(q(sims, 0.5)) : null, pageSimMaxMs: sims.length ? r2(sims[sims.length - 1]) : null, longTasksObserved: longTasks, longTaskMs: r2(longMs) };
 }
 
+// ------------------------------------------------------------------------------------------------ script attribution (CPU profile)
+/** Which subsystem a sampled stack belongs to: the first source match walking from the leaf up (native leaves inherit). */
+const BUCKETS = [
+  ['harness', (u) => u.includes('/tools/perf/')],
+  ['simulation', (u) => /\/src\/(sim|clash)\//.test(u)],
+  ['save', (u) => /\/src\/franchise\/(store|pack|save|cloud-save)\.js/.test(u)],
+  ['field draw (playback tick, field-view, effects, sprites)', (u, fn) => /\/src\/ui\/(field-view|ability-fx|sprite16|pixel-monster|kick-anim)\.js/.test(u) || (/\/src\/ui\/screens\/match\.js/.test(u) && fn === 'tick')],
+  ['Clash arena (DOM, canvas fx)', (u) => u.includes('/src/ui/clash/')],
+  ['screen render and other UI', (u) => u.includes('/src/ui/')],
+  ['franchise and data (lineups, sprites lookups)', (u) => /\/src\/(franchise|data|core)\//.test(u)],
+];
+function profileBuckets(profile) {
+  const byId = new Map(profile.nodes.map((n) => [n.id, n])); const parent = new Map(); for (const n of profile.nodes) for (const c of n.children || []) parent.set(c, n.id);
+  const memo = new Map();
+  const bucketOf = (id) => {
+    if (memo.has(id)) return memo.get(id);
+    const n = byId.get(id); const fn = n.callFrame.functionName; const u = n.callFrame.url || '';
+    let b = null;
+    if (fn === '(idle)') b = 'idle'; else if (fn === '(program)') b = 'browser (program: style, layout, paint, parse not attributed to script)'; else if (fn === '(garbage collector)') b = 'garbage collector';
+    else if (u) { const hit = BUCKETS.find(([, t]) => t(u, fn)); if (hit) b = hit[0]; }
+    if (!b) { const p = parent.get(id); b = p != null ? bucketOf(p) : 'other'; }
+    memo.set(id, b); return b;
+  };
+  const ms = {}; const dts = profile.timeDeltas;
+  for (let i = 0; i < profile.samples.length; i++) { const b = bucketOf(profile.samples[i]); ms[b] = (ms[b] || 0) + (dts[i] || 0) / 1000; }
+  const total = (profile.endTime - profile.startTime) / 1000;
+  return { seconds: r2(total / 1000), msPerSec: Object.fromEntries(Object.entries(ms).sort((a, b) => b[1] - a[1]).map(([k, x]) => [k, r2(x / (total / 1000))])) };
+}
+
 // ------------------------------------------------------------------------------------------------ main
 const freePort = () => new Promise((res) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => res(p)); }); });
 async function waitHttp(url, ms = 15000) { const t = Date.now(); while (Date.now() - t < ms) { try { const r = await fetch(url); if (r.ok) return; } catch { /* not yet */ } await new Promise((r) => setTimeout(r, 150)); } throw new Error(`server not up: ${url}`); }
@@ -143,7 +174,7 @@ async function main() {
 
   const port = await freePort(); const URL = `http://127.0.0.1:${port}/`;
   const server = spawn('python3', ['-m', 'http.server', String(port), '--bind', '127.0.0.1'], { cwd: ROOT, stdio: 'ignore' });
-  const results = []; const profiles = []; const checks = [];
+  const results = []; const profiles = []; const checks = []; const attribution = [];
   try {
     await waitHttp(URL);
     const launch = OPT.headless === 'shell' ? { headless: true } : { headless: true, channel: 'chromium' }; // 'chromium' channel = the full browser in new headless mode
@@ -233,6 +264,20 @@ async function main() {
         console.log(`  ${sc.id.padEnd(22)} ${cfgName.padEnd(9)}: build ${r2(p.buildMs.mean)} (no fx ${r2(p.buildNoFxMs.mean)}) parse ${r2(p.parseMs.mean)} style+layout ${r2(p.styleLayoutMs.mean)} ms/draw; ${Math.round(p.chars.mean)} chars (no fx ${Math.round(p.charsNoFx.mean)}), ${Math.round(p.elements.mean)} elements (max ${p.elements.max})`);
       }
     }
+    if (OPT.attribution) {
+      // Script attribution: a sampling CPU profile (outside the timed blocks: the profiler adds overhead) of one block per mode at the
+      // default configuration, unthrottled, bucketed by subsystem. It answers what the "script" share of the trace is made of.
+      console.log('[render-perf] script attribution (CPU profile, unthrottled, outside the timed blocks)');
+      const pick = scenes.find((s) => s.id === OPT.attributionScene) || scenes.find((s) => s.kind === 'football');
+      const cfg = CONFIGS.full;
+      const prof = async (label, fn) => { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 250 }); await cdp.send('Profiler.start'); await fn(); const { profile } = await cdp.send('Profiler.stop'); await cdp.send('Profiler.disable'); const b = profileBuckets(profile); attribution.push({ label, ...b }); console.log(`  ${label}: ${Object.entries(b.msPerSec).filter(([k]) => k !== 'idle').map(([k, x]) => `${k.split(' (')[0]} ${x}`).join(', ')} ms/s`); };
+      if (pick) {
+        await page.evaluate((c) => globalThis.__rpDriver.applyConfig(c), cfg.football);
+        if (OPT.modes.includes('render')) await prof(`render ${pick.id} full`, () => page.evaluate(([plays, o]) => globalThis.__rpDriver.playFootball(plays, o), [playsOf(pick), { warmup: 0 }]));
+        if (OPT.modes.includes('combined')) await prof(`combined ${pick.id} full`, () => page.evaluate((o) => globalThis.__rpDriver.combinedFootball(o), { source: pick.source, variant: pick.variant, chosen: pick.plays.map((p) => [p.info.gs, p.info.k]), warmup: 0 }));
+      }
+      if (wantLive) await prof('live L1-franchise-auto full', () => page.evaluate((o) => globalThis.__rpDriver.liveFranchise(o), { steps: OPT.liveSteps, warmup: OPT.liveWarmup, cfg: cfg.football }));
+    }
     meta.pageErrors = errors;
     await browser.close();
     if (wantLive) scenes.push({ ...LIVE, sim: null });
@@ -257,7 +302,7 @@ async function main() {
       mainBusyShare: r2(median(rows.map((r) => r.trace.mainBusyShare))), foreignLoad: r2(median(rows.map((r) => r.load.foreignShare))), busyLoad: r2(median(rows.map((r) => r.load.busyShare))),
       identityOk: rows.every((r) => r.identity == null || r.identity.ok) });
   }
-  const out = { meta: { ...meta, finishedAt: new Date().toISOString() }, configs: CONFIGS, scenes: scenes.map((s) => ({ id: s.id, kind: s.kind, source: s.source, variant: s.variant, what: s.what, fingerprint: s.fingerprint, sim: s.sim, plays: s.plays?.map((p) => p.info) })), summary, checks, profiles, blocks: results };
+  const out = { meta: { ...meta, finishedAt: new Date().toISOString() }, configs: CONFIGS, scenes: scenes.map((s) => ({ id: s.id, kind: s.kind, source: s.source, variant: s.variant, what: s.what, fingerprint: s.fingerprint, sim: s.sim, plays: s.plays?.map((p) => p.info) })), summary, checks, profiles, attribution, blocks: results };
   fs.mkdirSync(path.dirname(OUT), { recursive: true }); fs.writeFileSync(OUT, JSON.stringify(out, null, 1));
   console.log(`[render-perf] wrote ${path.relative(process.cwd(), OUT)}`);
   console.table(summary.map((s) => ({ mode: s.mode, scene: s.scene, cfg: s.config, cpu: `${s.throttle}x`, simNode: s.simNodeMs, simPage: s.simPageMedianMs, avg: s.meanMs, med: s.medianMs, p95: s.p95Ms, fps: s.avgFps, '<=20': s.share20, '>33': s.over33, '>50': s.over50, long: s.longTasks, 'script/s': s.mainMsPerSec.script, 'style+layout/s': r2(s.mainMsPerSec.style + s.mainMsPerSec.layout), 'paint/s': s.mainMsPerSec.paint, load: s.foreignLoad, id: s.identityOk ? 'ok' : 'DIFF' })));
