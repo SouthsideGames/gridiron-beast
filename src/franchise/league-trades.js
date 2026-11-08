@@ -14,6 +14,19 @@ import { modeOf } from './strategy.js';
 import { noteTraded, returnLock } from './fa-state.js';
 import { legendSide, legendCheck } from './fa-legendary.js';
 import { horizonOf, PLAN } from './roster-plan.js';
+import { GYM_BY_CLUB } from '../data/gyms.js';
+/**
+ * Owner ruling N8a (2026-11-08, D9): a gym prefers monsters of its element among similarly useful candidates. Legendary rules and legal
+ * rosters come first (judge() decides those unchanged); this is a tie-break, never a quota. In trades: an element match adds
+ * GYM_ELEMENT_TRADE_TIE to a target's ranking and an off-element spare is preferred as payment by the same amount. The value is a
+ * quarter of the minimum deal gain (DEAL_RULES.minGain 8 net units, about two overall points at an average slot), i.e. about half an
+ * overall point: the same "similarly useful" scale as the draft and free-agency tie-breaks (1.5 OVR-equivalent, R4).
+ */
+export const GYM_ELEMENT_TRADE_TIE = 2;
+const gymElement = (club) => GYM_BY_CLUB[club]?.element || null;
+const matches = (m, el) => !!el && (m.type === el);
+/** A trade target's ranking for club `club` (gain in net roster units plus the gym element tie-break). */
+export function gymTradeRank(club, m, gain) { return gain + (matches(m, gymElement(club)) ? GYM_ELEMENT_TRADE_TIE : 0); }
 
 export const AI_TRADE_RULES = Object.freeze({
   upgrade: 2,          // the incoming monster must beat the club's weakest available starter at the position by this much
@@ -78,7 +91,8 @@ function attempt(f, r, A, { year, cap, done, window }) {
     if (!tradable(f, m) || isProtected(m) || isUnavailable(m) || ovr(m) < floorAt(rosterA, m.position) + bar.upgrade) continue;
     targets.push({ B, m, rosterB, gain: rosterNet(rosterA, { get: [m] }, year) });
   } }
-  targets.sort((a, b) => b.gain - a.gain || (a.m.id < b.m.id ? -1 : 1));
+  const elA = gymElement(A); const rank = (t) => gymTradeRank(A, t.m, t.gain); // N8a: a gym's element tie-break
+  targets.sort((a, b) => rank(b) - rank(a) || (a.m.id < b.m.id ? -1 : 1));
   const mySpares = sparesOf(rosterA).filter((x) => tradable(f, x) && !isProtected(x) && !isUnavailable(x));
   const myPicks = ownedPicks(f, A, y0);
   for (const { B, m, rosterB } of targets.slice(0, AI_TRADE_RULES.targets)) {
@@ -92,7 +106,7 @@ function attempt(f, r, A, { year, cap, done, window }) {
     let best = null;
     for (const o of options) {
       const j = judge(f, { A, B, rosterA, rosterB, m, ys: o.ys, picks: o.picks, year, roomA, roomB, minGain: bar.minGain }); if (!j) continue;
-      const score = j.na + j.nb; if (!best || score > best.score + 1e-9) best = { ...o, ...j, score };
+      const score = j.na + j.nb - (elA ? o.ys.filter((y) => matches(y, elA)).length * GYM_ELEMENT_TRADE_TIE : 0); if (!best || score > best.score + 1e-9) best = { ...o, ...j, score }; // N8a: a gym pays with off-element spares first
     }
     if (best) return execute(f, { A, B, m, ys: best.ys, picks: best.picks.map((x) => x.p), year, na: best.na, nb: best.nb, fl: best.fl, sm: best.sm, got: vm, paid: best.ys.reduce((s, y) => s + marketValue(y, { year }), 0) + best.picks.reduce((s, x) => s + x.v, 0) });
   }
