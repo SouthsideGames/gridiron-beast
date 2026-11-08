@@ -11,7 +11,11 @@ import { updateGameRecords, ensureRecords } from '../src/franchise/stats.js';
 import { careerAfterGame } from '../src/franchise/career.js';
 
 let real = null;
-const franchise = () => (real ||= runFranchise(3, { difficulty: 'rookie', seasons: 3 }).f); // seed 3 wins the Beast Bowl in season 2 (Task 8 M2 rewards and live kickoffs: seeds 1, 2 and 4 win none; seed 7 before; Task 8 M1 Dex generator: seeds 1–6 and 8 win none in three seasons; seed 10 before). Earlier: seed 10 wins the Beast Bowl in season 1 with the Phase C run game, v42.16 (seed 12 with v42.15; seed 10 with v42.8 and v42.12; seed 6 with v42.14, seed 1 with v42.6, seed 3 with v42.5)
+// The real-franchise fixture needs a run that wins a title. Which seed does so drifts with every balance change (Task 8 M3 at 6614e8b:
+// seed 2, in season 3; seed 3 at the M2 rewards; seeds 10, 12, 6, 1 earlier), so the fixture takes the first of a short list that
+// wins one in three rookie seasons instead of pinning a single seed. The assertions below are about consistency, not about the seed.
+const TITLE_SEEDS = [2, 3, 1, 4, 5, 6, 7, 8];
+const franchise = () => (real ||= (() => { let last = null; for (const s of TITLE_SEEDS) { last = runFranchise(s, { difficulty: 'rookie', seasons: 3 }).f; if (last.history.some((h) => h.champion === h.club)) return last; } return last; })());
 
 const mon = (over = {}) => ({ id: 'm1', name: 'Testro', species: 'emberfox', stage: 0, type: 'Fire', position: 'QB', age: 24, level: 9, yearsPro: 0, attributes: { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 40 }, history: [], career: { v: 1, ev: [], bf: 1 }, ...over });
 const book = (year, team, reg, post = {}) => ({ year, team, reg, post });
@@ -139,7 +143,7 @@ test('the real franchise: summaries, trophies and links agree with its history; 
     for (const e of p.timeline.filter((x) => x.ref)) { linked++; const d = P.eventDetail(f, m, e.ref); if (d) opened++; }
   }
   assert.ok(linked > 0); assert.equal(opened, linked, 'every linked event opens a detail');
-  assert.ok(titleYears.length >= 1, 'seed 3 wins a title (the fixture this test relies on)');
+  assert.ok(titleYears.length >= 1, 'one of the fixture seeds wins a title (the fixture this test relies on)');
   assert.equal(JSON.stringify(f), before, 'profiles and details only read');
   const back = Save.importJson(Save.exportJson(f)); assert.ok(back);
   for (const m of f.roster.slice(0, 5)) assert.deepEqual(P.fullProfile(back, back.roster.find((x) => x.id === m.id), 'roster').trophies, P.fullProfile(f, m, 'roster').trophies);
