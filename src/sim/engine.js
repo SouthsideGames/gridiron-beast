@@ -36,6 +36,7 @@ import './abilities/index.js'; // registers every Task 8 football ability contra
 import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION } from './qb-read.js';
 // (maxSpeedFactor no longer used here: one aggregation in refreshMaxSpeed)
 import { createFieldPlay, LIVING_TERRAIN } from './t8/field-effects.js';
+import { drainPoints as drainStaminaPoints } from './t8/stamina-runtime.js'; // M3 hook: ctx.drainStamina
 
 const DT = 0.05;
 const DEFAULT_ATTRS = { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 60 };
@@ -64,6 +65,15 @@ export function chaseWeight(rx, ry, vx, vy) {
 export function effortFor(chase, carrierMax, pursuerMax) {
   const fade = Math.min(1, Math.max(0, (carrierMax - pursuerMax) / EFFORT_FADE));
   return PURSUIT_EFFORT - (PURSUIT_EFFORT - 1) * fade * chase;
+}
+
+// M3 hook: engagement attribute scaling (pure; exported for tests). blocker.pairMods (Map: defender mid -> { strength, blocking }
+// factors) applies only in engagements versus that defender (Scorch Mark); blocker.splitMods applies to each engagement while he
+// holds two (engaged2: Divided Guard). The stored ratings are never changed: a scaled copy is returned.
+export function engagementAttrs(b, d) {
+  const p = d && b.pairMods?.get(d.mid), s = b.engaged2 ? b.splitMods : null; if (!p && !s) return b.attrs;
+  const k = (key) => (p?.[key] ?? 1) * (s?.[key] ?? 1);
+  return { ...b.attrs, strength: b.attrs.strength * k('strength'), blocking: b.attrs.blocking * k('blocking') };
 }
 
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
@@ -151,6 +161,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     };
     if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
     if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; }
+    if (input?.id) a.staminaInput = { id: input.id, permDurability: input.permDurability, attrs: { durability: input.attrs?.durability } }; // M3 hook: the stamina record's input (permanent Durability), for ctx.drainStamina
     actors.push(a); bySlot[team][slot] = a; return a;
   };
   for (const slot of offensePlay.onField) makeActor('off', slot, offensePlay, offense[slot]);
@@ -180,7 +191,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     addObstacle: (o) => { const ob = { live: true, blocks: () => true, ...(o.kind ? {} : { kind: 'rect' }), ...o }; obstacles.push(ob); return ob; }, canGainCharge: (a) => !a.t8Suppressed,
     // M3 hook: (Light/Metal batch) the game's Task 8 block (ledgers), the tick length, a monster's ordinary AI decision interval and a
     // per-play movement override (fn(move) replaces his behaviour each tick). Its rect obstacles ({ x0, x1, y0, y1 }) use addObstacle above.
-    t8: t8g, dt: DT, decisionEvery: (a) => readEvery(a), override: (a, fn) => { a.moveOverride = fn; } };
+    t8: t8g, dt: DT, decisionEvery: (a) => readEvery(a), override: (a, fn) => { a.moveOverride = fn; },
+    // M3 hook: (Fire/Water batch) a monster's game side; per-team scrimmage play counters (a cooldown can recharge while its owner is
+    // benched); the possession key (= drive); a bounded contact displacement that Earth resistance reduces; an ordinary engagement
+    // attempt; an immediate drain of current stamina points
+    sideOf: (a) => (a.team === 'off' ? options.offenseSide || null : ({ home: 'away', away: 'home' })[options.offenseSide] || null),
+    teamPlays: (side) => t8g.teamPlays?.[side] || { off: 0, def: 0 }, possession: options.memory?.drive ?? null,
+    displace: (a, dx, dy) => { const k = FX ? FX.resist(a) : 1; const x0 = a.x, y0 = a.y; a.x = clamp(a.x + dx * k, B.ownEndLine + 0.3, B.endLine - 0.3); a.y = clamp(a.y + dy * k, B.left + 0.3, B.right - 0.3); return Math.hypot(a.x - x0, a.y - y0); },
+    tryEngage: (b, d) => tryEngage(b, d), drainStamina: (a, points) => (a?.staminaInput ? drainStaminaPoints({ t8: t8g }, a.staminaInput, points) : null) };
   const whistleQueue = []; // M3 hook: ctx.afterWhistle callbacks
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
   // M3 hook: physical obstacles from contracts (stone walls, snowballs): kinds 'circle' {x, y, r} and 'rect' {x0, x1, y0, y1}, live until
@@ -214,7 +232,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   }
   /** The one maximum-speed aggregation (§11): every source's signed % in a.maxSpeedMods (status, field), added and bounded, applied once. */
   function refreshMaxSpeed(a) { a.baseMaxSpeed ??= a.maxSpeed; a.maxSpeed = effectiveMaxSpeed(a.baseMaxSpeed, a.maxSpeedMods); }
-  function t8Disengage(a) { for (const x of actors) if (x.engaged === a) x.engaged = null; a.engaged = null; }
+  function t8Disengage(a) { for (const x of actors) if (x.engaged === a) x.engaged = null; a.engaged = null; a.engaged2 = null; } // M3 hook: engaged2 (a second engagement)
   /** A slot's football effect on its actor (live: applied mid-play, so immediate physical effects happen too). */
   function t8StatusEffect(a, slot, live) {
     if (!slot && !a.t8Base) return;
@@ -353,7 +371,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function separate() {
     for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
       const a = actors[i], b = actors[j];
-      if (a.engaged === b) continue;
+      if (a.engaged === b || (a.engaged2 && a.engaged2 === b)) continue; // M3 hook: engaged2
       if (a.team === b.team && (a.passAllies || b.passAllies)) continue; // M3 hook: a contract's pursuit mode ignores allied bodies (enemies still collide)
       const d = dist(a, b);
       if (d < 0.7 && d > 0.001) { const push = (0.7 - d) / 2, pa = FX ? push * FX.resist(a) : push, pb = FX ? push * FX.resist(b) : push; const ux = (b.x - a.x) / d, uy = (b.y - a.y) / d; a.x -= ux * pa; a.y -= uy * pa; b.x += ux * pb; b.y += uy * pb; } // Earth fields resist displacement
@@ -362,8 +380,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
 
 
   // ------------------------------------------------------------ blocking
+  const blockAttrs = engagementAttrs; // M3 hook
   function tryEngage(blocker, defender, soft = false) {
-    if (blocker.engaged || defender.engaged || blocker.stun > 0 || defender.noEngage > 0) return false;
+    const second = !!blocker.engaged && blocker.maxEngagements >= 2 && !blocker.engaged2 && blocker.engaged !== defender; // M3 hook: a second simultaneous engagement
+    if ((blocker.engaged && !second) || defender.engaged || blocker.stun > 0 || defender.noEngage > 0) return false;
     if (blocker.noContact || defender.noContact) return false; // M3 hook: a contract's per-play override starts no engagement
     // A missed open-field block costs him a moment before he can try again (Phase C1, F2). v42.15 set that pause on a miss but
     // never checked it, so on a run a soft block was retried every tick until it landed: a sure block. Runs only, so passes,
@@ -386,8 +406,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     if (FX && FX.defer(blocker, 'engagement', defender, null, t + readEvery(blocker)) !== defender) return false; // Metal field: the first changed decision waits one AI update
     // Open-field blocks are hit-or-miss: the defender often slips past.
-    if (soft && !rng.chance(0.25 + 0.5 * norm(blocker.attrs.blocking * (scaleVs(blocker, defender, 'block') - modOf(defender, blocker))))) { blocker.noEngage = 0.3; return false; }
-    blocker.engaged = defender; defender.engaged = blocker; defender.engagedAt = t; blocker.softBlock = soft; defender.wasBlocked = true;
+    if (soft && !rng.chance(0.25 + 0.5 * norm(blockAttrs(blocker, defender).blocking * (scaleVs(blocker, defender, 'block') - modOf(defender, blocker))))) { blocker.noEngage = 0.3; return false; } // M3 hook: blockAttrs
+    if (second) blocker.engaged2 = defender; else blocker.engaged = defender; defender.engaged = blocker; defender.engagedAt = t; if (!second) blocker.softBlock = soft; defender.wasBlocked = true; // M3 hook: engaged2
     const bk = (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }); if (isRun) bk.run = 1; else bk.pass = 1;
     hook('engage', blocker, defender); hook('engage', defender, blocker); // Task 8 M3
     pancakeOpportunity(blocker, defender);
@@ -400,10 +420,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
    * failure ends the engagement and the OL Stumbles (40% of current speed lost, ordinary acceleration, no timer, ordinary re-engagement).
    */
   function pancakeOpportunity(blocker, d) {
-    if (blocker.pancakeRolled || blocker.team !== 'off' || positionOf(blocker.slot) !== 'OL') return;
+    if (blocker.pancakeRolled || blocker.engaged2 || blocker.team !== 'off' || positionOf(blocker.slot) !== 'OL') return; // M3 hook: no pancake while double-engaged
     blocker.pancakeRolled = true;
     const sure = !!hook('pancakeOpportunity', blocker, d)?.guarantee; // M3 hook: a contract's guaranteed pancake (no opportunity, success or recovery roll)
-    const res = sure ? { outcome: 'pancake', guaranteed: true } : resolvePancakeOpportunity(prng, blocker.attrs, d.attrs, positionOf(d.slot), { blockScale: scaleVs(blocker, d, 'block'), shedScale: scaleVs(d, blocker, 'shed') });
+    const res = sure ? { outcome: 'pancake', guaranteed: true } : resolvePancakeOpportunity(prng, blockAttrs(blocker, d), d.attrs, positionOf(d.slot), { blockScale: scaleVs(blocker, d, 'block'), shedScale: scaleVs(d, blocker, 'shed') });
     if (res.outcome === 'none') return;
     const bk = (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }); bk.pancakeAttempts = (bk.pancakeAttempts || 0) + 1;
     if (res.outcome === 'pancake' && !d.knockedDown) { // the blocking outcome; Knocked Down goes through the shared gate (§10)
@@ -415,11 +435,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       bk.lost += 1; log(`${blocker.name} loses ${d.name} on a failed pancake`, { kind: 'stumble', by: blocker.slot, side: blocker.team, victim: d.slot });
     }
   }
-  function resolveEngagement(blocker) {
-    const d = blocker.engaged;
+  function resolveEngagement(blocker) { // M3 hook: each of his engagements (a second one: engaged2) resolves on its own
+    const d2 = blocker.engaged2; resolveOne(blocker, blocker.engaged);
+    if (d2 && d2.engaged === blocker && (blocker.engaged === d2 || blocker.engaged2 === d2)) resolveOne(blocker, d2);
+  }
+  function resolveOne(blocker, d) {
     const runFit = phase === 'carry' || phase === 'run';
     const be = blocker.ability || {};
-    const bScore = blocker.attrs.blocking * 0.6 + blocker.attrs.strength * 0.4 + (be.blockStrength || 0) + (!runFit ? (be.anchor || 0) : 0);
+    const ba = blockAttrs(blocker, d); // M3 hook: pair-specific / split engagement attributes
+    const bScore = ba.blocking * 0.6 + ba.strength * 0.4 + (be.blockStrength || 0) + (!runFit ? (be.anchor || 0) : 0);
     const dScore = shedScore(d.attrs, positionOf(d.slot)) + (d.ability?.shedStrength || 0) + (runFit ? (d.ability?.runStuff || 0) : 0); // N7c B2: DL/CB/S 0.5 Agility + 0.3 Strength + 0.2 Tackling; LB 0.5 Strength + 0.3 Agility + 0.2 Tackling
     if ((be.blockStrength || (!runFit && be.anchor)) && t > 0.5) abilityUsed(blocker, be.blockStrength ? 'blockStrength' : 'anchor');
     const edge = (dScore * scaleVs(d, blocker, 'shed') - bScore * scaleVs(blocker, d, 'block')) / 100; // positive when the defender is winning (type edges: the pair actually engaged)
@@ -448,7 +472,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // and where the ball plainly is; the shed is still a rate, never certain, and inside runs get no help from it.
     if (isRun && d.assignment?.a === 'contain' && ball.holder && ball.holder.team !== d.team) { const c = ball.holder; if (Math.sign(c.y) === Math.sign(d.y) && Math.abs(c.y) > Math.abs(d.y) - 1.5) shedPerSec += 1.5; }
     if (!holdsForever && rng.chance(shedPerSec * DT)) {
-      blocker.engaged = null; d.engaged = null; blocker.stun = be.rebound ? 0.1 : (0.45 + (d.ability?.blockerStun || 0)) * (be.dragonhide || 1); d.noEngage = runFit ? 0.5 : 0.85; // a beaten pass blocker cannot recover at once
+      if (blocker.engaged2 === d) blocker.engaged2 = null; else { blocker.engaged = blocker.engaged2 || null; blocker.engaged2 = null; } d.engaged = null; blocker.stun = be.rebound ? 0.1 : (0.45 + (d.ability?.blockerStun || 0)) * (be.dragonhide || 1); d.noEngage = runFit ? 0.5 : 0.85; // a beaten pass blocker cannot recover at once (M3 hook: his other engagement, engaged2, holds)
       if (be.dragonhide) abilityUsed(blocker, 'dragonhide'); // Dragonhide: recovers twice as fast
       if (d.ability?.pincer) { blocker.stun = Math.max(blocker.stun, d.ability.pincer); setStatus(blocker, 'pinched', d.ability.pincer); abilityUsed(d, 'pincer'); abilityOutcome('pinched', d, `${d.name}'s Pincer Hold keeps ${blocker.name} from getting free`, { victim: blocker.slot }); } // Pincer Hold: a full second late to the next block
       if (be.rebound) abilityUsed(blocker, 'rebound');
@@ -834,6 +858,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function screenRelease(a) {
     a.released = true;
     if (a.engaged) { const d = a.engaged; d.engaged = null; a.engaged = null; d.vx = 0; d.vy = 0; a.letGo = d; }
+    if (a.engaged2) { a.engaged2.engaged = null; a.engaged2 = null; } // M3 hook: engaged2
     log(`${a.name} releases to block downfield`, { kind: 'screen_release', by: a.slot });
   }
   function screenBlock(a) {
@@ -894,7 +919,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       steer(a, nearby.x + nearby.vx * lead, nearby.y + nearby.vy * lead, 1, 0.3);
       if (!soft && inSpace(nearby) && dist(a, nearby) <= 1.6 && !nearby.engaged && a.stun <= 0) {
         const slip = 0.5 * norm(nearby.attrs.agility * scaleVs(nearby, a, 'shed')) + 0.5 * norm(nearby.attrs.awareness); // he sees it coming (Awareness) and gets around it (Agility)
-        const p = clamp(0.25 + 0.5 * norm(a.attrs.blocking * scaleVs(a, nearby, 'block')) + 1.0 * (norm(a.attrs.blocking) - slip), 0.25, 0.9); // between equals, the open-field block's own landing rate (0.58 at 65)
+        const bk = blockAttrs(a, nearby).blocking; // M3 hook: pair-specific engagement attributes
+        const p = clamp(0.25 + 0.5 * norm(bk * scaleVs(a, nearby, 'block')) + 1.0 * (norm(bk) - slip), 0.25, 0.9); // between equals, the open-field block's own landing rate (0.58 at 65)
         if (!rng.chance(p)) { (a.whiffed ||= {})[nearby.slot] = true; log(`${nearby.name} slips ${a.name}'s block`, { kind: 'whiff', by: nearby.slot, side: nearby.team, blocker: a.slot }); return; }
       }
       tryEngage(a, nearby, soft); return;
@@ -2232,7 +2258,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
         nearest.d.laneTimer = 0; nearest.d.jukeCooldown = 0;
         if (nearest.d.ability?.pickCatching) abilityUsed(nearest.d, 'pickCatching'); log(`${nearest.d.name} intercepts the pass!`, { kind: 'interception', by: nearest.d.slot, side: 'def', ability: fired(nearest.d, 'pickCatching', 'breakRadius', 'closeSpeed', 'zoneRange', 'manCoverage', 'contest') });
         if (L.x >= B.goal) { endPlay('touchback_return', L.x, L.y, { interception: true }); return; }
-        phase = 'carry'; for (const o of offs) o.engaged = null; return;
+        phase = 'carry'; for (const o of offs) { o.engaged = null; o.engaged2 = null; } return; // M3 hook: engaged2
       }
     }
     if (rng.chance(catchP)) {
@@ -2243,12 +2269,16 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       stats.receiver = r.slot; stats.carrier = r.slot; stats.catchX = L.x;
       for (const def of defs) def.recognised = true;
       if (r.ability?.routeAgility) abilityUsed(r, 'routeAgility'); log(`${r.name} catches it${contested ? ' in traffic' : ''}`, { kind: 'catch', by: r.slot, side: 'off', contested: !!contested, ability: fired(r, 'catchContest', 'routeAgility', 'afterCatch') });
+      for (const a of actors) if (a.contract) hook('catchMade', a, r); // M3 hook: post-resolution, a completed catch (before any contact this tick)
       if (L.x >= B.goal) { endPlay('touchdown', L.x, L.y); log('TOUCHDOWN', { kind: 'touchdown' }); }
       if (L.y <= B.left || L.y >= B.right) { endPlay('out_of_bounds', L.x, clamp(L.y, B.left, B.right)); }
       for (const a of actors) if (a.contract) hook('catchMade', a, r); // M3 hook: a completed catch (after any score / out of bounds at the catch: ctx.result)
       for (const a of actors) if (a.contract) hook('reception', a, r); // M3 hook: the same moment (the Light/Metal batch's name)
       return;
     }
+    // M3 hook: a physically reached pass that was not caught and not broken up (a drop): the receiver's contract may grant one more
+    // ordinary attempt at the same live ball (resolved again from the top: coverage, interception and catch checks), once per ball.
+    if (dr <= catchRadius && !(contested && nearest) && !ball.t8retry && hook('dropped', r, ball)?.retry) { ball.t8retry = true; resolveArrival(); return; }
     ball.inAir = false;
     endPlay('incomplete', L.x, L.y);
     if (contested && nearest) stats.pbuBy = nearest.d.slot; else if (dr <= catchRadius) stats.dropped = true;
@@ -2364,6 +2394,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   if (stats.interceptor && ['tackle', 'out_of_bounds'].includes(result)) result = 'interception';
 
   // Task 8 M3: the whistle for every contract on the field (charges, clocks, field creation)
+  // M3 hook: per-team scrimmage play counters in the game state (a cooldown that recharges while its owner is benched reads them)
+  if (options.offenseSide && !options.kickoff && !options.twoPoint && !dry) { const tp = (t8g.teamPlays ||= {}), o = options.offenseSide, dfs = o === 'home' ? 'away' : 'home'; (tp[o] ||= { off: 0, def: 0 }).off += 1; (tp[dfs] ||= { off: 0, def: 0 }).def += 1; }
   { const g0 = ['incomplete', 'throwaway'].includes(result) ? 0 : Math.round(clamp(ball.x, B.ownEndLine, B.endLine)); const summary = { result, gain: g0, carrier: stats.carrier, receiver: stats.receiver, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, firstDown: options.toGo != null && g0 >= options.toGo && !['incomplete', 'throwaway', 'interception', 'fumble'].includes(result) };
     for (const a of actors) hook('playEnd', a, summary);
     for (const fn of whistleQueue) fn(summary); } // M3 hook: ctx.afterWhistle callbacks, after every ordinary playEnd

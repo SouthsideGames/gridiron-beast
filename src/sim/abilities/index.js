@@ -36,3 +36,15 @@ import './gearwing.js';
 import './ironjaw.js';
 import './metalhorn.js';
 import './aegistron.js';
+// Fire and Water (task8-m3-fire-water)
+import './ashkit.js';
+import './firestorm.js';
+import './cinderclaw.js';
+import './pyrelynx.js';
+import './pyroclast.js';
+import './tidepaw.js';
+import './mudcub.js';
+import './reefclaw.js';
+import './tidefin.js';
+import './wavehorn.js';
+import './tsunarok.js';

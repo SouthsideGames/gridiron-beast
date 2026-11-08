@@ -23,7 +23,8 @@ export const HOOKS = Object.freeze([
   'passRelease',      // (ctx, self, { ball, passer, receiver }) -> {breakup}?  M3 hook: a forward pass has left the hand (ball.target,
                       //   ball.landing set). Defenders first in lineup order: the first {breakup} ends it as an ordinary incompletion; then everyone else observes.
   'catchPoint',       // (ctx, self, ball, other)            pre-resolution at the catch point (P6): set ball.t8.noContest / ball.t8.noInterception
-  'catchMade',        // (ctx, self, receiver)               M3 hook: after a completed catch (ctx.result is set if the catch ended the play)
+  'catchMade',        // (ctx, self, receiver)               M3 hook: post-resolution, a completed pass catch (every contract on the field)
+  'dropped',          // (ctx, self, ball) -> {retry}        M3 hook: the receiver's reached, not-broken-up pass fell: one more ordinary attempt
   'fumble',           // (ctx, self) -> {prevent}            after a fumble is determined; a Shielded save is applied first (B3)
   'playEnd',          // (ctx, self, result)                 the whistle: charges, clocks, field creation
   'possessionChange', // (ctx, self)

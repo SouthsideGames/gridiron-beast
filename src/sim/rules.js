@@ -140,7 +140,14 @@ function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...O
 /** A field's absolute placement (home-goal frame; lat in the home frame) from the upcoming formation reference (spec §11). */
 const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
 const absLat = (state, l) => (state.possession === 'home' ? l : -l);
-function fieldPlacement(state, p, offensePlay = null) {
+function fieldPlacement(state, p, offensePlay = null, alignOf = () => null) {
+  // M3 hook: (Fire/Water batch) p.depth 'creator' centres the length on the creator's formation alignment (Impact Pyre: the LB's starting
+  // position), otherwise on the fixed reference p.lbDepth beyond the line (5: LB reference; Tsunami Line 12: safety reference); p.lateral
+  // 'creator' centres the width on the creator's initial alignment (Burning Wake), otherwise on the ball.
+  if (p.depth === 'creator' || p.lateral === 'creator') {
+    const at = alignOf(p.owner); const ref = state.ballOn + (p.depth === 'creator' && at ? at[0] : (p.lbDepth ?? 5));
+    return { centerLat: absLat(state, (state.ballLat || 0) + (p.lateral === 'creator' && at ? at[1] : 0)), yardFrom: absYard(state, ref - p.length / 2), yardTo: absYard(state, ref + p.length / 2), width: p.width };
+  }
   // M3 hook: (Earth/Ice batch) placement kinds. 'randomDefense': the whole rectangle between the upcoming line and `maxDepth` yards
   // downfield, lateral and depth from the fractions u, v the producer drew when it earned the field (Frostmark). 'backfield': from the
   // line `length` yards into the offensive backfield, centred on the quarterback's initial alignment (Permafrost).
@@ -174,6 +181,11 @@ function preSnapContracts(state, t8, slots) {
       fields: () => T8F.activeFields(t8), pending: () => t8.fields?.pending || [], executed: (opts) => recordExecution(t8, x.id, x.species, opts) }, self);
   }
 }
+/** Task 8 M3: an immediate field (Splashdown), placed after the play at its play-frame spot, in this play's frame. */
+function spotPlacement(state, sim, p) {
+  const x = sim.ballOn + p.immediate.x;
+  return { centerLat: absLat(state, (sim.ballLat || 0) + p.immediate.y), yardFrom: absYard(state, x - p.length / 2), yardTo: absYard(state, x + p.length / 2), width: p.width };
+}
 /** After a play with fields: the Light recharge for non-Light participants finishing inside a Light field (once per monster per play;
  *  never from his own field), then each field's clock (G1/G2). */
 /** The active fields in this play's frame (the engine's x from the line toward the offense's goal, y lateral in its frame). */
@@ -193,6 +205,7 @@ function afterPlayFields(state, t8, slots, sim, offIds) {
  *  opposing offense's snap, offensive ones at the creator's club's offensive snap; the creator must be on the field on that side unless
  *  the contract allows off-field creation (benchOk / offField, N7d G3); maxOwn: one own active field of that ability at a time. */
 function pendingEligible(state, t8, p, offIds, defIds) {
+  if (p.immediate) return false; // Fire/Water: an immediate field (Splashdown) is placed at the whistle, not at a snap
   const def = p.side === 'def' || p.createOn === 'ownerDefense';
   if (p.ownerTeam && (def ? state.possession === p.ownerTeam : state.possession !== p.ownerTeam)) return false;
   if (!p.offField && !p.benchOk && !(def ? defIds : offIds).has(p.owner)) return false;
@@ -211,8 +224,9 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
   const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
   const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
+  const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) return defensePlay.align[sl] || null; return null; };
   preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers that queue fields for this snap
-  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay) }) : []; // G3
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay, alignOf) }) : []; // G3
   // M3 hook: the snap's pre-choice point for every on-field contract (e.g. Prism Break), after this snap's fields exist
   for (const [team, play, map] of [['off', offensePlay, slots.offense], ['def', defensePlay, slots.defense]]) for (const [slot, m] of Object.entries(map)) {
     if (!m?.species) continue;
@@ -228,6 +242,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12): drained under the statuses active during this play (Afflicted, B10)
   T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10), after the drain
   if (t8.fields?.list?.length) afterPlayFields(state, t8, slots, sim, offIds); // Task 8 fields: Light recharge, then the clocks
+  if (t8.fields?.pending?.some((p) => p.immediate)) T8F.createPending(t8, { onField: new Set(), eligible: (p) => !!p.immediate, playIndex: state.playCount || 0, place: (p) => spotPlacement(state, sim, p) }); // Task 8 M3: fields created at the whistle (after the clocks: the creation play is excluded)
   if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;

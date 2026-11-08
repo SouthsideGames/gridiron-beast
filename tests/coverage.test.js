@@ -154,15 +154,12 @@ test('fix 7: Heat Haze, Sticky and Canopy Read do what their cards say, and noth
   const ident = (def, slot, seedBase) => { let s = 0; for (let i = 0; i < 20; i++) { const a = play('deep_post', def, seedBase + i), b = play('deep_post', def, seedBase + i, {}, withSpecies(slot, 'leafhorn')); if (JSON.stringify(a.frames.map((f) => f.def)) === JSON.stringify(b.frames.map((f) => f.def))) s++; } return s; };
   assert.equal(ident('cover_1', 'CB1', 90500), 20, 'Canopy Read in man coverage: no effect');
   assert.ok(ident('cover_3', 'FS', 90500) < 20, 'Canopy Read in a deep zone: it acts');
-  // Heat Haze: only on a route he can see go deep; a short route never triggers it.
+  // Heat Haze (Task 8 M3, FIR-05-F): the legacy separation delay is retired (no stacking). The contract lowers nearby opponents'
+  // effective Catching only, so it never changes how anyone moves before the ball arrives.
   const fires = (off, at, tgt) => Array.from({ length: 20 }, (_, i) => play(off, 'cover_1', 91000 + i, forced(tgt, at), withSpecies('CB1', 'pyrelynx')).events.some((e) => e.kind === 'ability' && e.key === 'heatHaze')).filter(Boolean).length;
-  assert.ok(fires('three_verticals', 2.4, 'WR1') > 10, 'Heat Haze on a go');
-  assert.equal(fires('quick_slants', 1.0, 'WR1'), 0, 'never announced on a slant');
-  // A slant's two-yard stem looks vertical for an instant: worth almost nothing; on the go the haze is real.
-  const yds = (off, at, tgt, withIt) => mean(Array.from({ length: 80 }, (_, i) => play(off, 'cover_1', 91500 + i, forced(tgt, at), withIt ? withSpecies('CB1', 'pyrelynx') : null).yards));
-  assert.ok(Math.abs(yds('quick_slants', 1.0, 'WR1', true) - yds('quick_slants', 1.0, 'WR1', false)) < 0.5, 'a slant barely notices it');
-  const sepGo = (withIt) => mean(Array.from({ length: 80 }, (_, i) => play('three_verticals', 'cover_1', 91500 + i, forced('WR1', 2.4), withIt ? withSpecies('CB1', 'pyrelynx') : null).stats.arriveSep ?? 0));
-  assert.ok(sepGo(true) < sepGo(false) - 0.3, `on a go he is closer to the ball with it (${sepGo(true).toFixed(2)} vs ${sepGo(false).toFixed(2)})`);
+  assert.equal(fires('three_verticals', 2.4, 'WR1'), 0, 'the legacy Heat Haze never runs');
+  const sepGo = (withIt) => Array.from({ length: 40 }, (_, i) => play('three_verticals', 'cover_1', 91500 + i, forced('WR1', 2.4), withIt ? withSpecies('CB1', 'pyrelynx') : null).stats.arriveSep ?? null);
+  assert.deepEqual(sepGo(true), sepGo(false), 'separation at the catch point is unchanged');
 });
 
 test('future route information: changing a receiver\'s route after a point changes no defender before the routes visibly diverge', () => {
