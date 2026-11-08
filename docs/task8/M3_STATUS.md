@@ -210,3 +210,52 @@ player wins on Rookie, and per the ruling Rookie balance is not changed on this 
     test-build-only Task 8 test tools.
   - 131 files changed out of 289. The other 158 match the previous version by hash, and no file was removed.
   - Saves stay on the same artifact origin with the same keys.
+
+## Performance against the specification's CPU gate (reconciliation, 2026-11-08)
+
+**Correction to the final-run report above.** "10,000 3v3 Clash battles in under 5 s" is the Beast Clash Phase 1 limit in
+TESTING_POLICY.md. It is not the Task 8 performance requirement. The Task 8 requirement is SPECIFICATION_BASELINE §14/§16:
+
+- CPU simulation may be no more than **10% slower than a matched baseline**, on the same hardware and scenarios.
+- A representative, ability-heavy scene set is frozen before testing. It includes overlapping fields, summons, delayed effects
+  and a legendary sequence.
+- The exact scene manifests and the warm-up remain handoff dependencies (§14).
+- BUILD_PLAN.md schedules this "CPU gate" for M6.
+
+**Status: not assessed.** No scene set has been frozen or approved. The earlier build-to-build comparisons (145897e, 0d60997 and
+05fcb52) are all Task 8 builds, so they show only that the D1 merge and the speed-up left per-play cost unchanged. They are not a
+comparison with the baseline.
+
+**Indicative measurement, not the gate.**
+- **Builds.** The pre-Task 8 baseline is `main` at 43976f4 (v42.22.0). It is compared with 05fcb52.
+- **Conditions.** Quiet machine, three interleaved rounds. Each round plays 30 full games between two generated quality-62
+  teams with the same seeds.
+- **The scenes are not matched.** Each build's own generator makes different teams.
+- **Results:**
+
+| Build | ms per game | ms per play |
+| --- | --- | --- |
+| main 43976f4 (baseline) | 229–266 | 2.84–3.30 |
+| 05fcb52 (Task 8) | 402–428 | 4.49–4.77 |
+
+Per play, Task 8 is about **45–58% slower**. If the frozen scene set confirms a gap of this size, the ≤10% gate fails.
+
+**Where the time goes**, from CPU profiles of the same 30-game run:
+
+| | Baseline | Task 8 |
+| --- | --- | --- |
+| Total time | 8.9 s | 16.0 s |
+| `sim/engine.js` | 7.2 s | 11.7 s |
+
+- Inside the engine, the largest increases are in the self time of `simulatePlay` (1.25 → 2.47 s), pairwise separation and
+  steering, `dist`, and frame recording.
+- The new Task 8 modules (field effects, pancake, fields, stamina, progression, fractions) add about 0.7 s in total.
+- The engine's per-step work grew more than the new modules did.
+
+**Next steps (M6 gate work):**
+1. Freeze and approve the scene set: overlapping fields, summons, delayed effects, a legendary sequence, plus ordinary play.
+2. Measure against the baseline on matched scenes.
+3. Optimise without changing results: the engine's per-step paths and the T8 hooks, with outcomes checked byte-identical, as
+   for the D1 speed-up.
+
+**Not authorized:** no gameplay change to meet the gate.

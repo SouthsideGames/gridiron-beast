@@ -43,3 +43,28 @@ No file under `src/sim/`, `src/data/`, `src/clash/` or `src/franchise/` differs 
 - **Beast Dex collection display (owner, 13:29).**
   - The counts are by family: original 72, Basic 120, all 192. An evolved form counts once, as its family.
   - Verified by targeted tests and a browser check only. No full regression was run (owner: not required for this fix).
+
+## 5. Preview versions 3–5 (2026-11-08)
+
+- **Version 3: the Beast Dex family counts.**
+  - Branch task8-m1-preview at 327ee1b. It merges 9a2d078 and is labelled v43.1.1-t8-m3-preview.
+  - Only the changed files were sent: `src/franchise/franchise.js`, `src/ui/screens/dex.js`, `src/ui/screens/menu.js`,
+    `src/version.js` and `index.html`. Every other file stays byte-identical to version 2.
+- **Versions 4–5: packaging only.**
+  - The artifact service publishes the page wrapped in a default document skeleton. The wrapper adds a white background,
+    `color-scheme: light` and safe-area padding on `:root`.
+  - The game's own stylesheet overrides the background and colour scheme. It does not override the root padding, which could
+    double the top inset on phones with a notch. This was not verified on a device.
+  - Version 5 adds one rule to the page head: `:root { padding-top: 0 !important; padding-bottom: 0 !important; }`. The game
+    already handles safe areas itself (`--sat`/`--sab` in `styles/app.css`).
+  - Checked by serving the published page locally beside the original:
+    - same computed background, colour scheme and root padding;
+    - screenshots differ only in the animated title area, which differs between two runs of the original too;
+    - 0 page errors.
+  - This rule exists only in the published page, not in the repository.
+- **Browser check of the Dex fix** on the staged build, at phone width:
+  - **A carried-over preview franchise.** The menu tile shows 139/192. The Dex screen shows "Original 62/72 · Basic 77/120 ·
+    All 139/192", which matches the 139 revealed cells, and the next milestone follows the original tally.
+  - **A fresh profile** shows 0/72, 0/120 and 0/192.
+  - **The developer "all revealed" view** shows 72/72, 120/120 and 192/192.
+  - 0 page errors.
