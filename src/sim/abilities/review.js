@@ -18,6 +18,7 @@
 // counted (M5 awards them in franchise games, never here).
 import { FAMILIES, formsOf, abilityById } from '../../data/beast-dex.js';
 import { contractOf, registeredFamilies } from './registry.js';
+import { specialPlayEligibility } from './eligibility.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf } from '../../data/personnel.js';
 import { generatedTeam } from '../../franchise/roster.js';
 import * as R from '../rules.js';
@@ -35,7 +36,7 @@ export function reviewCatalog() {
   return FAMILIES.filter((f) => f.abilities?.football).map((f) => {
     const ab = abilityById(f.abilities.football) || {};
     return { family: f.id, abilityId: f.abilities.football, name: ab.name || f.abilities.football, element: f.type, rarity: f.rarity, position: f.position,
-      forms: formsOf(f.id).map((x) => (typeof x === 'string' ? x : x.id)), tiers: MASTERY_TIERS, registered: reg.has(f.id) };
+      forms: formsOf(f.id).map((x) => (typeof x === 'string' ? x : x.id)), tiers: MASTERY_TIERS, registered: reg.has(f.id), specialPlays: specialPlayEligibility(f.id) };
   });
 }
 

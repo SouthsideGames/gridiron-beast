@@ -79,3 +79,13 @@ test('the engine gate: hooks run on special plays only for a kicker ability in t
   assert.match(src, /const SPECIAL_PLAY = !!\(KO \|\| options\.twoPoint\);/); assert.match(src, /const mayAct = \(a\) => !SPECIAL_PLAY \|\| \(!!KO && a\.slot === 'K' && a\.kickerAbility\);/);
   assert.match(src, /return h && mayAct\(a\) \? h\(abilityCtx, a, \.\.\.args\) : undefined;/);
 });
+
+test('the eligibility table, the reviewer catalogue and the rule agree for all 72 (docs/task8/SPECIAL_PLAY_ELIGIBILITY.md)', async () => {
+  const fs = await import('node:fs'); const { specialPlayEligibility } = await import('../src/sim/abilities/eligibility.js'); const { reviewCatalog } = await import('../src/sim/abilities/review.js');
+  const doc = fs.readFileSync(new URL('../docs/task8/SPECIAL_PLAY_ELIGIBILITY.md', import.meta.url), 'utf8');
+  const cat = reviewCatalog(); assert.equal(cat.length, 72);
+  for (const c of cat) { const e = specialPlayEligibility(c.family); assert.deepEqual(c.specialPlays, e);
+    const row = doc.split('\n').find((l) => l.includes(`| ${c.family} |`)); assert.ok(row, c.family); assert.ok(row.includes(e.kickoff) && row.includes(e.twoPoint), `${c.family} row matches`);
+    if (!e.kicker) assert.match(e.kickoff, /^No/); assert.match(e.twoPoint, /^No/); }
+  assert.deepEqual(cat.filter((c) => /^Yes/.test(c.specialPlays.kickoff)).map((c) => c.family).sort(), ['echolot', 'sunwhistle']);
+});
