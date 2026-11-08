@@ -74,6 +74,40 @@ Status at 466ee7e (2026-11-07, 23:59). Branch `task8-implementation`; nothing me
     code, as done for R4, instead of searching seeds. Separate finding for D1/economy: rookie franchises win about 1 title in 24
     seasons on both builds.
 
+## The simulated owner and what the title survey can and cannot show (owner N8c)
+
+**History-test correctness and difficulty calibration are separate questions.**
+- The career-presentation test needs one franchise with a title to check that the history, trophies and links agree. It now
+  constructs that franchise (d1b9867).
+- The 24-season survey (one title at 466ee7e, none at 75545f0; win rates 0.486 against 0.481) is not a calibration measurement.
+  The difference is within noise, and the owner it simulates manages almost nothing.
+
+**The soak owner's policy** (`tools/franchise-soak.mjs`, `newFranchise` and `runFranchise`):
+- **Creation:** the default staff; the best visible prospect with each creation-draft pick; automatic attribute points.
+- **Season:**
+  - automatic weeks to Sunday;
+  - the default depth chart;
+  - the first commissioner goal;
+  - the first named release when the commissioner demands one;
+  - byes and forfeits accepted;
+  - eliminated playoff rounds skipped.
+- **It never makes these choices:**
+  - trades;
+  - lineup or scheme choices;
+  - training priorities;
+  - press choices beyond the default;
+  - Clash choices beyond the default.
+- **Offseason:**
+  - the first postseason and legend options;
+  - every expiring contract re-signed when possible (counters accepted, otherwise he walks);
+  - in free agency, asks offered only to the cheapest monsters, just enough to reach the roster minimum;
+  - the best visible prospect in the draft;
+  - cheapest signings to the minimum, releasing the floor plan's first suggestion when short of cap;
+  - default staff rehired.
+
+A hands-off owner like this tests that the game stays legal over many seasons. It does not measure how often a managing
+player wins on Rookie, and per the ruling Rookie balance is not changed on this evidence.
+
 ## In progress
 
 - **Regression**: the M2 full run at 7093bfb is finishing; a full run on the M3 head follows the gate merge.

@@ -205,3 +205,14 @@ Verbatim: [RULINGS_2026-11-07e.md](RULINGS_2026-11-07e.md).
 | Fractional training display (spec §4 gap) | **Approved** (N7e) | Floor banked points and whole-percent bars; the exact-cost purchase is affordable on exact balances, with its cost shown to two decimals rounded up; display never changes balances, deducts extra or decides affordability; fractions preserved through saves and evolution |
 
 **Specification status: closed.** Every item has a binding ruling (N7d resolved the last gaps).
+
+## N8c (2026-11-08, 09:26)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Career-history fixture | **Approved** | A constructed title through the real season code; assertions unchanged; no inserted record and no seed search |
+| Trading test 28 (kicker) | **Approved** | Aligned with the approved trading rule; trading rules unchanged |
+| D1 founding rosters | **Approved** | Post-history strength selection; shares, Temper neutrality, one Apex roll per event and ceilings preserved; no added years or boosts |
+| task7-remediation R1 c seed | **Open: explanation for review** | [REMEDIATION_R1C_SEED.md](REMEDIATION_R1C_SEED.md) |
+| Club identities | **Approved (stands)** | Persistent AI identities; compatible coaching changes allowed; the player is unrestricted; the gym Compete floor and the Rookie adjustment kept |
+| Rookie balance | **No change** | Not recalibrated from title frequency in 24 simulated seasons |
