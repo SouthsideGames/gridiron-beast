@@ -12,7 +12,7 @@ import * as T8S from './t8/status-runtime.js';
 import * as T8K from './t8/stamina-runtime.js';
 import * as T8F from './t8/field-runtime.js';
 import { toPlayFrame } from './t8/fields.js';
-import { extraCooldownUnit } from './abilities/registry.js';
+import { extraCooldownUnit, contractOf, abilityState, recordExecution } from './abilities/registry.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
@@ -140,9 +140,27 @@ function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...O
 const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
 const absLat = (state, l) => (state.possession === 'home' ? l : -l);
 function fieldPlacement(state, p) {
+  // M3 hook: lateral from the producer: p.latHome (home frame, e.g. a breakup spot), p.latOff (offense frame), else the ball plus p.latFromBall
+  let centerLat = p.latHome ?? absLat(state, p.latOff ?? ((state.ballLat || 0) + (p.latFromBall || 0))), width = p.width;
+  if (p.clipWidth) { const lo = Math.max(-FIELD.width / 2, centerLat - width / 2), hi = Math.min(FIELD.width / 2, centerLat + width / 2); centerLat = (lo + hi) / 2; width = Math.max(0, hi - lo); } // M3 hook: clip to the legal field instead of shifting
+  if (p.los) return { centerLat, yardFrom: absYard(state, state.ballOn + p.los[0]), yardTo: absYard(state, state.ballOn + p.los[1]), width }; // M3 hook: yards past the upcoming LOS (offense frame)
   const ref = state.ballOn + (p.lbDepth ?? 5); // the fixed LB reference, offense frame
   const a = absYard(state, ref - p.length / 2), b = absYard(state, ref + p.length / 2); // the rectangle centred on the reference (placement choice, documented in M3_PLAN)
-  return { centerLat: absLat(state, state.ballLat || 0), yardFrom: a, yardTo: b, width: p.width };
+  return { centerLat, yardFrom: a, yardTo: b, width };
+}
+/**
+ * M3 hook: pre-choice producers. Before a scrimmage snap's fields are created, every on-field monster whose contract declares
+ * `preSnap(api, self)` may read its game-scope state and queue fields for this snap (they are created right after, G3). `api.able`:
+ * not held out of the play by a counted Stunned (B18); `api.side`: 'off' | 'def'; `api.teamSide`: his team ('home' | 'away').
+ */
+function preSnapContracts(state, t8, slots) {
+  for (const [side, group] of [['off', slots.offense], ['def', slots.defense]]) for (const [slot, x] of Object.entries(group)) {
+    const c = x?.id && x.species ? contractOf(x.species) : null; if (!c?.preSnap) continue;
+    const self = { mid: x.id, family: x.species, form: x.form || `${x.species}:0`, mastery: x.mastery || 0, slot, team: side, type: x.type || null, name: x.name || slot };
+    c.preSnap({ side, teamSide: side === 'off' ? state.possession : opponent(state.possession), able: !T8S.sitsOutPlay(state, x.id), playIndex: state.playCount || 0,
+      state: () => abilityState(t8, x.id, x.species, self.form, self.mastery), queueField: (spec) => T8F.queueField(t8, { side, ...spec }),
+      fields: () => T8F.activeFields(t8), pending: () => t8.fields?.pending || [], executed: (opts) => recordExecution(t8, x.id, x.species, opts) }, self);
+  }
 }
 /** After a play with fields: the Light recharge for non-Light participants finishing inside a Light field (once per monster per play;
  *  never from his own field), then each field's clock (G1/G2). */
@@ -155,7 +173,7 @@ function afterPlayFields(state, t8, slots, sim, offIds) {
     const yard = absYard(state, sim.ballOn + row[1]), lat = absLat(state, (sim.ballLat || 0) + row[2]);
     const lights = T8F.fieldsAt(t8, yard, lat).filter((f) => f.type === 'Light' && f.owner !== x.id); if (lights.length) extraCooldownUnit(t8, x.id);
   }
-  T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : f.clock === 'scrimmageAny'));
+  T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : f.clock === 'teamOffense' ? f.ownerTeam === state.possession : f.clock === 'teamDefense' ? !!f.ownerTeam && f.ownerTeam !== state.possession : f.clock === 'scrimmageAny')); // M3 hook: team clocks (the owner team's offensive / defensive scrimmage plays)
 }
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
@@ -169,7 +187,9 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
   const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
-  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: offIds, playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p) }) : []; // G3: at the creator's next eligible offensive snap
+  const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean)); // M3 hook: defensive creators too (spec.side 'def')
+  preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => (p.side === 'def' ? defIds : offIds).has(p.owner), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p) }) : []; // G3: at the creator's next eligible snap on his side
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.

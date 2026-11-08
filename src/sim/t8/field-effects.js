@@ -87,7 +87,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       st.cut = a.cutUntil;
       const ms = -(st.base.Fire?.strength ?? 0) + (st.base.Wind?.strength ?? 0); // Fire and Wind: one maximum-speed property, added
       { const had = a.maxSpeedMods?.field ?? 0; if (ms) (a.maxSpeedMods ||= {}).field = ms; else if (a.maxSpeedMods) delete a.maxSpeedMods.field; if ((ms || 0) !== had) refreshMaxSpeed?.(a); } // one aggregation with the statuses (§11)
-      layer(a, 'awareness', pct(st.base.Dark?.strength));
+      layer(a, 'awareness', a.ignoreFieldAwareness ? 0 : pct(st.base.Dark?.strength)); // M3 hook: a.ignoreFieldAwareness (set by a contract's tick) ignores only the Dark base field's Awareness term
       layer(a, 'catching', st.hybrid === 'Steam' ? STEAM.catching : 0); layer(a, 'blocking', st.hybrid === 'Steam' ? STEAM.blocking : 0);
       if (st.hybrid === 'Mindstorm' && !st.echo) { st.echo = { of: a, x: a.x, y: a.y, live: true }; echoes.push(st.echo); placeEcho(st.echo); ev(a, 'field_echo', `A Mindstorm echo trails ${a.name}`, { hybrid: 'Mindstorm', x: +st.echo.x.toFixed(2), y: +st.echo.y.toFixed(2) }); }
       else if (st.echo?.live) { if (st.hybrid === 'Mindstorm') placeEcho(st.echo); else st.echo.live = false; }

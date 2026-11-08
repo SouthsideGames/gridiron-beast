@@ -16,7 +16,7 @@ export function createPending(t8, { onField, eligible = () => true, place, playI
     if (!onField.has(p.owner) || !eligible(p)) { keep.push(p); continue; }
     const r = placeRect({ id: `F${++b.seq}`, type: p.type, createdAt: playIndex, owner: p.owner, strength: p.strength ?? null, ...place(p) });
     // `payload`: the producing ability's approved per-field data the in-play effects read (src/sim/t8/field-effects.js)
-    const f = { ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, payload: p.payload ?? null, remaining: p.lifetime, clock: p.clock, clearsAtHalftime: p.clearsAtHalftime !== false, createdThisPlay: true };
+    const f = { ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, remaining: p.lifetime, clock: p.clock, clearsAtHalftime: p.clearsAtHalftime !== false, createdThisPlay: true };
     b.list.push(f); made.push(f);
   }
   b.pending = keep; return made;
