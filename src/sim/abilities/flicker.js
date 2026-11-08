@@ -23,7 +23,7 @@ export const WIRES = Object.freeze({ partnerWithin: 5, defendersWithin: 3, aware
 export default registerAbility({
   family: 'flicker', abilityId: 'ELE-01-F', repeatableCooldown: true,
   initGame: () => ({ cd: 0, fresh: false }),
-  review: { setup: ({ teams }) => { teams.home.offensePlays = ['bunch_snag', 'bunch_whip', 'bunch_slant_arrow', 'bunch_flood', 'bunch_verticals', 'bunch_scissors']; } }, // reviewer staging: only reserve bunch plays put two route runners within 5 yd
+  review: { setup: ({ teams }) => { teams.home.offensePlays = ['bunch_snag', 'bunch_whip', 'bunch_slant_arrow', 'bunch_flood', 'bunch_verticals', 'bunch_scissors']; } }, // reviewer staging (Primed): a bunch-only game plan; the bunch plays are released (owner N8b), so natural games reach it too
   hooks: {
     playStart(ctx, self) {
       const st = ctx.state(self);

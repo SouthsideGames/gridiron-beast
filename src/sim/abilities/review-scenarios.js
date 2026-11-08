@@ -52,7 +52,7 @@ export const SCENARIOS = {
   thornback: { unit: 'offense', calls: [['stick', 'cover_3'], ['y_cross', 'cover_4'], ['flood', 'cover_2_man'], ['te_seam', 'cover_3']], target: true, snaps: 24, how: 'ready; passes to him (chosen target) until he breaks a tackle after the catch' },
   elderoot: { unit: 'defense', calls: DEF_RUN, how: 'ready; a ready defensive scrimmage snap raises the extra defender (natural trigger)' },
   // ---------------------------------------------------------------------------------------------------------------- Electric
-  flicker: { unit: 'offense', calls: [['bunch_snag', 'cover_3'], ['bunch_whip', 'cover_2_man'], ['bunch_flood', 'cover_4'], ['bunch_verticals', 'cover_3']], staged: 'staged: conditions not reached in released gameplay (no callable play aligns two route runners within 5 yd; the reserve bunch plays are called)', how: 'reserve bunch plays called (two route runners within 5 yd at the snap)' },
+  flicker: { unit: 'offense', calls: [['bunch_snag', 'cover_3'], ['bunch_whip', 'cover_2_man'], ['bunch_flood', 'cover_4'], ['bunch_verticals', 'cover_3']], how: 'released bunch plays called (owner N8b; two route runners within 5 yd at the snap)' },
   voltfin: { unit: 'offense', calls: RUN_O, how: 'ready; rushing carries until a rushing first down earns the token; the field is created at his next offensive snap' },
   voltfang: { unit: 'offense', calls: PASS_O, target: 'WR1', how: 'ready; route snaps with passes to him: the collision-and-jam bypass at a ready route snap (natural trigger)' },
   stormlynx: { unit: 'defense', calls: DEF_PASS, how: 'ready; a ready defensive pre-play raises the safety field (natural trigger)' },

@@ -31,7 +31,8 @@ import { positionOf } from '../data/personnel.js';
 import { contractOf, abilityState, recordExecution } from './abilities/registry.js';
 import { applyStatus as t8GateApply, statusOf as t8SlotOf } from './t8/status-runtime.js';
 import { maxSpeedPct, accelFactor, effectiveAttr, effectiveMaxSpeed, disablesRestOfPlay, footballApplyRefusal, STUMBLE_KEEP } from './t8/status-effects.js';
-import './abilities/index.js'; // registers every Task 8 football ability contract (M3)
+import './abilities/index.js';
+import { familyById } from '../data/beast-dex.js'; // registers every Task 8 football ability contract (M3)
 import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION } from './qb-read.js';
 // (maxSpeedFactor no longer used here: one aggregation in refreshMaxSpeed)
 import { createFieldPlay, LIVING_TERRAIN } from './t8/field-effects.js';
@@ -165,7 +166,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, baseAttrs: given,
     };
     if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
-    if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; }
+    if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; a.kickerAbility = familyById(input.species)?.position === 'K'; } // kickerAbility: N8b special-play eligibility
     if (input?.id) a.staminaInput = { id: input.id, permDurability: input.permDurability, attrs: { durability: input.attrs?.durability } }; // M3 hook: the stamina record's input (permanent Durability), for ctx.drainStamina
     actors.push(a); bySlot[team][slot] = a; return a;
   };
@@ -214,7 +215,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   let turnoverSpot = null; // M3 hook: an ability-awarded next-offense spot after a turnover (rules.js applies it)
   delete t8g.ward; // M3 hook: protection is per play
   const whistleQueue = []; // M3 hook: ctx.afterWhistle callbacks
-  const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
+  // Owner ruling N8b (special-play eligibility): on a kickoff or a two-point conversion no non-kicker ability activates or charges, so
+  // no contract hook runs for him; a kicker ability (Dex position K, the kicking unit's K on a kickoff) runs and acts only under its
+  // own approved conditions. Effects an eligible kicker ability creates (e.g. Dawn Signal's Quickened) and ordinary shared-status
+  // carryover and countdowns are unaffected (statuses are not cleansed). This overrides conflicting contract wording on these plays.
+  const SPECIAL_PLAY = !!(KO || options.twoPoint);
+  const mayAct = (a) => !SPECIAL_PLAY || (!!KO && a.slot === 'K' && a.kickerAbility);
+  const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h && mayAct(a) ? h(abilityCtx, a, ...args) : undefined; };
   // M3 hook: physical obstacles from contracts (stone walls, snowballs): kinds 'circle' {x, y, r} and 'rect' {x0, x1, y0, y1}, live until
   // removed or the whistle; `blocks(actor)` says whom it stops. Monsters it blocks are kept outside after movement (the ball is not).
   const obstacles = []; const BODY = 0.35;

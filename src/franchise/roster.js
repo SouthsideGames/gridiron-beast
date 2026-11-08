@@ -128,7 +128,8 @@ export function buildTeam({ id, name, abbr, color, roster, manual = {}, depth = 
 
 /** Quick generated team (AI clubs, tests). */
 const RUN_PLAYS = ['inside_zone', 'power_right', 'power_left', 'outside_zone', 'stretch_left', 'counter', 'toss_sweep', 'trap', 'dive', 'read_option'];
-const PASS_PLAYS = ['quick_slants', 'curl_flat', 'smash', 'mesh', 'levels', 'dagger', 'flood', 'te_seam', 'stick', 'deep_post', 'deep_corner', 'three_verticals', 'pa_post', 'pa_boot', 'rb_screen', 'wheel', 'y_cross'];
+const PASS_PLAYS = ['quick_slants', 'curl_flat', 'smash', 'mesh', 'levels', 'dagger', 'flood', 'te_seam', 'stick', 'deep_post', 'deep_corner', 'three_verticals', 'pa_post', 'pa_boot', 'rb_screen', 'wheel', 'y_cross',
+  'bunch_snag', 'bunch_whip', 'bunch_slant_arrow', 'bunch_flood']; // N8b: four of the released bunch plays join the AI pass pool (one per bunch concept: snag, whip, slant-arrow, flood)
 const ZONE_D = ['cover_3', 'cover_4', 'cover_2_zone', 'cover_6', 'tampa_2', 'max_drop', 'zone_blitz', 'corner_blitz'];
 const MAN_D = ['cover_2_man', 'cover_1', 'man_press', 'robber', 'bracket_left', 'db_blitz', 'safety_blitz', 'double_a_mug', 'cover_0'];
 /** A playbook shaped by the coach profile, so scouting an opponent means something. */

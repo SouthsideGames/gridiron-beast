@@ -361,7 +361,11 @@ function compile(play) {
 // AI club, practice field or game plan can call them until the owner releases them. They live in PLAYS
 // (so the audit, art and engine can run them) and never in OFFENSE_IDS / DEFENSE_IDS, which every
 // game system draws from.
-const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: true }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
+// Owner ruling N8b (2026-11-08, item E): the designed bunch reserve plays that align two route runners within 5 yards are released
+// into ordinary play (they make Crossed Wires, ELE-01-F, reachable in released gameplay). Their formations stay reserve formations.
+export const RELEASED_RESERVE_OFFENSE = Object.freeze(['bunch_snag', 'bunch_whip', 'whip_corner', 'y_pivot', 'bunch_slant_arrow', 'bunch_scissors', 'corner_arrow', 'bunch_flood', 'post_wheel', 'bunch_verticals']);
+const RELEASED = new Set(RELEASED_RESERVE_OFFENSE);
+const RESERVE = reservePlays({ offense: (id, name, formation, asg, opts = {}) => offense(id, name, formation, asg, { ...opts, reserve: !RELEASED.has(id) }), defense: (id, name, formation, asg, opts = {}) => defense(id, name, formation, asg, { ...opts, reserve: true }), R, BLOCK, RUNBLOCK, STALK, PULL, RELEASE, CARRY, HANDOFF, FAKE, KEEP, PA, BOOT, RUSH, MAN, ZONE, SPY, CONTAIN, BRACKET });
 // Legendary Plays (GDD §36): built on the same assignments as every play, each tied to one Legendary monster who must be on
 // the field in its slot. Like reserve plays they live in PLAYS (engine, art, audit) and never in OFFENSE_IDS / DEFENSE_IDS:
 // a club can call one only when it holds that Legendary and has put the play in one of its six slots.
@@ -390,9 +394,9 @@ const LEGENDARY_DEFENSE = [
 export const PLAYS = Object.freeze(Object.fromEntries([...OFFENSE_PLAYS, ...DEFENSE_PLAYS, ...RESERVE.offense, ...RESERVE.defense, ...LEGENDARY_OFFENSE, ...LEGENDARY_DEFENSE].map((p) => [p.id, compile(p)])));
 export const LEGENDARY_IDS = Object.freeze([...LEGENDARY_OFFENSE, ...LEGENDARY_DEFENSE].map((p) => p.id));
 export const isLegendary = (id) => !!PLAYS[id]?.legendary;
-export const OFFENSE_IDS = OFFENSE_PLAYS.map((p) => p.id);
+export const OFFENSE_IDS = [...OFFENSE_PLAYS.map((p) => p.id), ...RESERVE.offense.filter((p) => RELEASED.has(p.id)).map((p) => p.id)]; // N8b: the released bunch plays
 export const DEFENSE_IDS = DEFENSE_PLAYS.map((p) => p.id);
-export const RESERVE_OFFENSE_IDS = RESERVE.offense.map((p) => p.id);
+export const RESERVE_OFFENSE_IDS = RESERVE.offense.filter((p) => !RELEASED.has(p.id)).map((p) => p.id);
 export const RESERVE_DEFENSE_IDS = RESERVE.defense.map((p) => p.id);
 export const isReserve = (id) => !!PLAYS[id]?.reserve;
 export const getPlay = (id) => { const p = PLAYS[id]; if (!p) throw new Error(`Unknown play ${id}`); return p; };
