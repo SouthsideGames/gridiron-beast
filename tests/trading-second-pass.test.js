@@ -225,7 +225,10 @@ const snapshots = {};
 /** A franchise at the end of its first offseason (draft done, free agency done), fresh from a copy each time. `league`: the seed of the
  *  league played (51 by default). The in-season trade tests search a few leagues: whether one particular league has a club that can
  *  afford a deal is a matter of its rosters (Task 6 Phase C changed them), not of the trade rules. */
-function played(league = 51) {
+// League 52 (Task 8 M3): the played-franchise fixtures moved from league 51, whose first season under the Task 8 progression offers
+// no club willing to sell for a pick and no incoming calls; leagues 52 and 53 both pass every desk and call check (AI trade volume
+// across leagues 51-55 is unchanged: 36 deals before Task 8, 35 after).
+function played(league = 52) {
   if (!snapshots[league]) { const { problems } = runFranchise(league, { seasons: 1, check: withBoardReset(leagueInvariants), onSeason: (f) => { snapshots[league] = JSON.stringify(f); } }); assert.deepEqual(problems, []); }
   return JSON.parse(snapshots[league]);
 }
@@ -372,7 +375,7 @@ import { releaseFromClub } from '../src/franchise/league.js';
 import { validateClubs } from '../src/franchise/league-season.js';
 const regular = (week, extra = {}) => ({ fired: false, finished: false, offseason: false, draftOpen: false, playoffs: week > 10, week, ...extra });
 /** The played franchise moved to a week of the regular season (no offseason, no draft). */
-function inSeason(week, seed = 51, league = 51) { const f = played(league); f.season.finished = false; f.season.week = week; f.offseason = null; f.draft = null; f.tradeCall = null; f.callsMade = {}; f.seed = seed; return f; }
+function inSeason(week, seed = 51, league = 52) { const f = played(league); f.season.finished = false; f.season.week = week; f.offseason = null; f.draft = null; f.tradeCall = null; f.callsMade = {}; f.seed = seed; return f; }
 const sellable = (f) => { const team = aiClubs(f)[1]; const a = F.deskAssetsFor(f, team); const m = a.theirs.find((x) => !x.why && x.forSale); return { team, m, pick: F.myTradablePicks(f).at(-1) }; };
 
 test('trade deadline: the calendar is week 8 — closed in week 1, open weeks 2–8, closed after, closed in the postseason, open again when the season ends', () => {
