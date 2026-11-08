@@ -9,7 +9,7 @@ import { yearOf } from '../../data/calendar.js';
 import * as Save from '../../franchise/save.js';
 import { savePanelHtml, fillStorageMeter, offerExport, importFile, openBackups } from '../storage-ui.js';
 import { buildLabel, devDisplaysAllowed } from '../../version.js';
-import { summary, hireDefaultStaff, DIFFICULTY, dexCounts } from '../../franchise/franchise.js';
+import { summary, hireDefaultStaff, DIFFICULTY, dexCounts, DEX_GROUPS } from '../../franchise/franchise.js';
 import * as F from '../../franchise/franchise.js';
 import { BACKGROUNDS } from '../../data/staff.js';
 import { GYM_BY_CLUB } from '../../data/gyms.js';
@@ -55,7 +55,7 @@ export function registerMenuScreens(Router, app) {
         ${card}
         ${legacy && !f ? `<button class="btn block" style="margin-bottom:12px" data-action="import-legacy">Import ${esc(legacy.owner)}'s ${esc(legacy.club)} (previous version)</button>` : ''}
         <div class="menu-tiles ${hof ? 'three' : ''}">
-          ${tile('dex', '📖', 'Beast Dex', `${dexCounts(f).seen}/72`)}
+          ${tile('dex', '📖', 'Beast Dex', `${dexCounts(f).all.seen}/${dexCounts(f).all.total}`)}
           ${tile('achievements', '🏅', 'Achievements', `${Object.keys(achievementsData().earned).length}/${ACHIEVEMENTS.length}`)}
           ${hof ? tile('hof', '🏛️', 'Hall of Fame', hof) : ''}
         </div>
@@ -188,7 +188,7 @@ export function registerMenuScreens(Router, app) {
       const cards = hallOfFame();
       if (!cards.length) return '<div class="panel"><p>No careers enshrined yet. Hit every mark on the Campaign checklist and retire.</p></div>';
       return `<div class="stack">${cards.map((c) => `<div class="panel hof-card"><div class="row">${portraitSprite(`${c.portrait}|${c.owner.split(' ')[0]}`, 48)}<div class="grow"><div style="font-size:18px;font-weight:900">${esc(c.owner)}</div><div class="muted">${esc(c.club)} · ${esc(DIFF[c.difficulty]?.label || c.difficulty)} · ${c.seasons} season${c.seasons === 1 ? '' : 's'}</div></div><span class="chip accent">🏛️</span></div>
-        <div class="kv" style="margin-top:8px"><b>Record</b><span class="mono">${c.record.w}-${c.record.l}</span><b>Beast Bowls</b><span>${c.titles}</span><b>Badges</b><span>${c.badges.length} / 8</span><b>League awards</b><span>${c.awards}</span><b>Species discovered</b><span>${c.dexSeen} / 72</span>${c.rival ? `<b>Rival</b><span>${esc(c.rival)} ${c.rivalRecord ? `(${c.rivalRecord.w}-${c.rivalRecord.l})` : ''}</span>` : ''}</div>
+        <div class="kv" style="margin-top:8px"><b>Record</b><span class="mono">${c.record.w}-${c.record.l}</span><b>Beast Bowls</b><span>${c.titles}</span><b>Badges</b><span>${c.badges.length} / 8</span><b>League awards</b><span>${c.awards}</span><b>Families discovered</b><span>${c.dexGroups ? `${c.dexGroups.all} / ${DEX_GROUPS.all.length} (original ${c.dexGroups.original} / ${DEX_GROUPS.original.length}, Basic ${c.dexGroups.basic} / ${DEX_GROUPS.basic.length})` : esc(String(c.dexSeen ?? '—'))}</span>${c.rival ? `<b>Rival</b><span>${esc(c.rival)} ${c.rivalRecord ? `(${c.rivalRecord.w}-${c.rivalRecord.l})` : ''}</span>` : ''}</div>
         ${c.bestMonsters?.length ? `<div class="muted" style="margin-top:8px;font-size:12px">BEST MONSTERS</div><div class="row" style="flex-wrap:wrap;gap:8px">${c.bestMonsters.map((m, i) => c.careers?.[i] ? `<button class="hof-mon" data-hof="${esc(c.id)}" data-i="${i}" aria-label="${esc(`${m.name}: open his career`)}">${monsterSprite({ id: c.careers[i].id || m.name, name: m.name, species: m.species, stage: c.careers[i].stage || 0 }, 28)}<span style="font-size:13px">${esc(m.name)} <span class="dim">${m.position} ${m.ovr}</span>${c.careers[i].honours?.titles || c.careers[i].honours?.awards ? ' 🏆' : ''}</span><span class="tl-go">›</span></button>` : `<button class="hof-mon legacy" data-hof="${esc(c.id)}" data-i="${i}" aria-label="${esc(`${m.name}: partial history`)}">${monsterSprite({ id: m.name, name: m.name, species: m.species }, 28)}<span style="font-size:13px">${esc(m.name)} <span class="dim">${m.position} ${m.ovr}</span></span><span class="tl-go">›</span></button>`).join('')}</div><div class="dim" style="font-size:12px;margin-top:4px">${c.careers ? 'Tap a monster for his career as it stood at retirement.' : 'Tap a monster for what this card recorded: careers were not kept on cards written before v39.0, so his history is partial.'}</div>` : ''}
         <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">Season by season</summary>${(c.seasonsList || []).map((h) => `<div class="row between sub"><span>${yearOf(h.year)}</span><span class="mono">${h.w}-${h.l}${h.champion ? ' 🏆' : h.playoffs ? ' · playoffs' : ''}</span></div>`).join('')}</details>
         <div class="dim" style="margin-top:6px;font-size:12px">Retired ${new Date(c.retiredAt).toLocaleDateString()}</div></div>`).join('')}</div>`;
@@ -225,7 +225,7 @@ export function registerMenuScreens(Router, app) {
     render({ f }) {
       return `<div class="stack">
         <button class="btn block" data-action="go" data-screen="office">🪪 My office <span class="dim">${esc(f.owner.first)} ${esc(f.owner.last)}</span></button>
-        <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).seen}/72</span></button>
+        <button class="btn block" data-action="go" data-screen="dex">📖 Beast Dex <span class="dim mono">${dexCounts(f).all.seen}/${dexCounts(f).all.total}</span></button>
         <button class="btn block" data-action="statguide">📊 What the stats mean</button>
         <button class="btn block" data-action="typechart">🔺 Type Chart <span class="dim">strengths and weaknesses</span></button>
         <button class="btn block" data-action="stadiums">🏟 Stadiums <span class="dim">every club's field</span></button>

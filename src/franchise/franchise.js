@@ -29,7 +29,7 @@ import { retirementPass, agingContext, nativeAging, retirementOutlook } from './
 import { pickChannelSpecies, basicsFor, raiseToLevel } from '../data/monsters.js';
 import { BASIC_SHARE } from './t8/generation.js';
 import { createRewardLedger, prune as pruneLedger } from './reward-ledger.js';
-import { approvedRule } from '../data/beast-dex.js';
+import { approvedRule, FAMILIES, formsOf } from '../data/beast-dex.js';
 import { createRoster, generateMonster, monsterOverall, schemeFit, evolutionReady, nextEvolution, tryEvolve, autoSpendPoints as autoSpendPointsFn, ROSTER_MAX, ROSTER_MIN, NATURES, salaryFor, regionSpecies, resolveSpecies, speciesName, speciesEffect, spendPoint, FULL_ROSTER } from '../data/monsters.js';
 import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
@@ -414,7 +414,7 @@ export function retire(f) {
   const card = {
     id: `hof_${franchiseKey(f)}_${Date.now().toString(36)}`, uid: f.uid || null, seed: f.seed ?? null, owner: `${f.owner.first} ${f.owner.last}`, portrait: f.owner.portrait, club: f.club, difficulty: f.settings?.difficulty || 'pro',
     seasons: seasons.length, record: { w: wins, l: losses }, titles: f.campaign.titles || 0, badges: Object.keys(f.campaign.badges || {}).map((club) => GYM_BY_CLUB[club]?.badge || club), awards: f.campaign.awards || 0,
-    bestMonsters: best.map(({ id, ...rest }) => rest), dexSeen: dexCounts(f).seen, retiredAt: Date.now(), seasonsList: seasons, rival: f.rivals[f.tier]?.team || null, rivalRecord: f.rivals[f.tier]?.headToHead || null,
+    bestMonsters: best.map(({ id, ...rest }) => rest), dexSeen: dexCounts(f).seen, dexGroups: (({ original, basic, all }) => ({ original: original.seen, basic: basic.seen, all: all.seen }))(dexCounts(f)), retiredAt: Date.now(), seasonsList: seasons, rival: f.rivals[f.tier]?.team || null, rivalRecord: f.rivals[f.tier]?.headToHead || null,
   };
   noteHallOfFame(f.roster, best.map((b) => b.id), { year: f.season.year, club: f.club, owner: card.owner }); // Career Timeline: the Hall of Fame card
   // Career Presentation (GDD §40.5): the card outlives the franchise, so it keeps each best monster's career as it stood (about 1 KB each).
@@ -426,7 +426,7 @@ export function retire(f) {
 /** Mark a species as seen (scouted or faced) or signed; first time only, with the week it happened. */
 export function dexRecord(f, m, how = 'seen') {
   f.dex ||= { seen: {}, signed: {} };
-  const id = resolveSpecies(m).id; const stamp = { year: f.season?.year || 1, week: f.season?.week || 1, club: f.club };
+  const id = dexFamilyOf(m); const stamp = { year: f.season?.year || 1, week: f.season?.week || 1, club: f.club };
   if (!f.dex.seen[id]) f.dex.seen[id] = stamp;
   if (how === 'signed' && !f.dex.signed[id]) f.dex.signed[id] = stamp;
   dexRecordGlobal(id, how, stamp); // the player's dex outlives this franchise
@@ -441,10 +441,29 @@ export function dexStatus(f, id, { franchiseOnly = false } = {}) {
 }
 /** Highest evolved stage of a species the player has seen (any franchise). */
 export function dexFormSeen(f, id) { return Math.max(f?.dex?.forms?.[id] || 0, dexFormsGlobal()[id] || 0); }
-export function dexCounts(f) {
-  const ids = new Set(SPECIES_DEX.map((s) => s.id)); let seen = 0, signed = 0;
-  for (const id of ids) { const st = dexStatus(f, id); if (st !== 'unknown') seen++; if (st === 'signed') signed++; }
-  return { seen, signed };
+// Beast Dex collection groups (owner ruling 2026-11-07: the original 72 families, the 120 Basics and all 192 are tallied separately;
+// evolutions do not add family counts). Every record is keyed by family, so an evolved form counts once, as its family.
+export const DEX_GROUPS = Object.freeze({
+  original: Object.freeze(SPECIES_DEX.filter((s) => s.rarity !== 'basic').map((s) => s.id)),
+  basic: Object.freeze(SPECIES_DEX.filter((s) => s.rarity === 'basic').map((s) => s.id)),
+  all: Object.freeze(SPECIES_DEX.map((s) => s.id)),
+});
+const DEX_FAMILY_OF = new Map(FAMILIES.flatMap((fam) => [[fam.id, fam.id], ...formsOf(fam.id).flatMap((fm) => [[fm.id, fam.id], [fm.name, fam.id], [fm.name.toLowerCase(), fam.id]])]));
+/** The family a monster, family id, form id or form name belongs to (the Dex's key). */
+export function dexFamilyOf(m) {
+  const key = typeof m === 'string' ? m : m?.species;
+  return DEX_FAMILY_OF.get(key) || DEX_FAMILY_OF.get(String(key || '').toLowerCase()) || resolveSpecies(m).id;
+}
+function tally(ids, statusOf) {
+  let seen = 0, signed = 0;
+  for (const id of ids) { const st = statusOf(id); if (st !== 'unknown') seen++; if (st === 'signed') signed++; }
+  return { seen, signed, total: ids.length };
+}
+/** Family-based collection counts: `original` (72), `basic` (120) and `all` (192). `seen`/`signed` at the top are the all-192 tally. */
+export function dexCounts(f, { career = false } = {}) {
+  const statusOf = career ? (id) => dexStatusGlobal(id) : (id) => dexStatus(f, id);
+  const groups = Object.fromEntries(Object.entries(DEX_GROUPS).map(([k, ids]) => [k, tally(ids, statusOf)]));
+  return { seen: groups.all.seen, signed: groups.all.signed, ...groups };
 }
 function blankWeek() { return { region: null, prospects: [], recruitAttempts: 0, recruited: null, encounter: null, pregame: null, overtime: null, trainingFocus: null, scoutReport: null, plan: { offense: [], defense: [] }, lineupChecked: false, gameResult: null, events: [] }; }
 const frng = (f) => { const r = rngFromState(f.rngState); return { r, save: () => { f.rngState = r.state; } }; };

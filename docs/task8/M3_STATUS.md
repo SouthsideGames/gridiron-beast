@@ -170,3 +170,43 @@ player wins on Rookie, and per the ruling Rookie balance is not changed on this 
   only on a sack credited to Ironjaw; Bulwark Grid's pancake trigger fires only when the TE lines up in an OL slot (the engine
   credits pancakes to OL slots); Surefoot Canopy excludes every Florant; Static Field is created even when its owner sits out;
   Mind Bend's pending field waits while its creator sits out.
+
+## Final M3 run (2026-11-08)
+
+- **Tested commit:** 05fcb52, which includes the creation speed-up (61fef6b) and every approved fix. Full suite on a frozen copy:
+  **1,147 of 1,147 pass**, 0 fail, 86 minutes. Commit b3b79fc, which followed, changed documents only.
+- **Performance, measured on a quiet machine** (no other test process running). The three builds are 145897e (before D1),
+  0d60997 (D1, before the speed-up) and 05fcb52 (final).
+  - Franchise creation, warm, mean of six seeds: 607 / 2,278 / 1,084 ms.
+  - First franchise after a cold start: about 4.2 s / 5.4–6.4 s / 2.7 s.
+  - Football game simulation, 30 games on the same generated teams:
+    - 145897e: 353–382 ms per game, 4.2–4.5 ms per play;
+    - 0d60997: 367–410 ms per game, 4.1–4.6 ms per play;
+    - 05fcb52: 365–406 ms per game, 4.1–4.5 ms per play.
+    - The cost per play is unchanged. D1's rosters produce slightly more plays per game.
+    - 05fcb52 gives the same scores as 0d60997: the speed-up does not change any result.
+  - Approved limit (TESTING_POLICY.md: 10,000 3v3 Clash battles in under 5 s): 2.32 s, 2.55 s and 2.58 s in three runs. It passes.
+  - No approved limit exists for football game simulation.
+- **Browser check** on the same frozen build, Playwright, 390 px:
+  - boot;
+  - Developer → Ability Reviewer:
+    - all 72 abilities are listed and none is shown as not built;
+    - 288 deterministic scenarios ran, covering the first and last form × the lowest and highest mastery of each. Every one executed on the engine.
+    - Natural-game runs work.
+    - A verdict saves and survives a reload.
+  - Clash Lab: auto lineup and a 3v3 battle;
+  - the new-franchise flow;
+  - **0 page errors.**
+- **Save compatibility:** both builds use schema 10 and the same storage keys.
+  - A franchise created through the UI on the current preview build (v43.0.0) opened on the new build. It played a full season
+    through the test-build shortcut and saved, with 0 page errors.
+  - Separately, a v43.0.0 save played two seasons on 05fcb52 through the soak, with 0 invariant problems.
+- **Found, not fixed:** the main menu's Beast Dex tile counts seen *forms* against 72 *families*. It can show more than 72, for
+  example "139/72" after a season. The same happens on the v43.0.0 preview. The cause is `dexCounts(f)`, which iterates
+  SPECIES_DEX (192 forms). It is a display defect only. It needs a one-line fix and a targeted test, and is held for approval
+  because it falls outside the frozen build.
+- **Preview updated:** "Gridiron Beast Task 8 Preview" (https://claude.ai/artifact/3qW6dbFAZ4yCc8i1SnAVq6) is now version 2.
+  - The build is v43.1.0-t8-m3-preview, branch task8-m1-preview at 96de08d. That merges task8-implementation and keeps the
+    test-build-only Task 8 test tools.
+  - 131 files changed out of 289. The other 158 match the previous version by hash, and no file was removed.
+  - Saves stay on the same artifact origin with the same keys.
