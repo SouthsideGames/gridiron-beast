@@ -1,10 +1,12 @@
 // Developer → Ability Reviewer (Task 8 M3, M3_PLAN.md item 6). Every Dex football ability, each form and mastery tier; a scenario
-// runs on the real game runner and engine (src/sim/abilities/review.js) and replays the executing play with its cues. Nothing here
+// runs on the real game runner and engine (src/sim/abilities/review.js) and replays the executing play with its cues. "▶ Scenario"
+// (the default, deterministic: reviewScenario stages the contract's conditions from review-scenarios.js) is the direct test; "▶ Natural
+// game" (reviewAbility) is the optional demonstration that searches AI games until the ability executes on its own. Nothing here
 // writes to a franchise: no XP, mastery, collection or save writes (the owner's verdicts and notes are review notes, as in the
 // Playbook Audit). It replaces the legacy Ability Audit for football; abilities without a registered contract are listed as such.
 import { esc, delegate, sheet, toast } from '../dom.js';
 import { abilityById } from '../../data/beast-dex.js';
-import { reviewCatalog, reviewAbility } from '../../sim/abilities/review.js';
+import { reviewCatalog, reviewAbility, reviewScenario } from '../../sim/abilities/review.js';
 import { fieldSvg, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
 import { buildFx, elementFx } from '../ability-fx.js';
 import { syncReviews } from '../../franchise/review-store.js';
@@ -27,7 +29,7 @@ export function registerAbilityReviewer(Router, app) {
       const count = { approved: 0, needs_work: 0, todo: 0, pending: 0 }; for (const c of cat) { if (!c.registered) count.pending += 1; count[NEEDS_OWNER.has(state[c.abilityId]) ? 'todo' : state[c.abilityId]] += 1; }
       const ok = (c) => (st.element === 'All' || c.element === st.element) && (st.status === 'all' || (st.status === 'pending' ? !c.registered : st.status === 'todo' ? NEEDS_OWNER.has(state[c.abilityId]) : state[c.abilityId] === st.status));
       const list = cat.filter(ok);
-      return `<p class="muted">Every football ability from the Beast Dex. <b>Run on the engine</b> plays a real game with the monster in his position at the chosen stage and mastery tier until the ability executes, then replays that play. <b>Primed</b> starts with the ability's build-up already done where it has one. Nothing is written to any franchise.</p>
+      return `<p class="muted">Every football ability from the Beast Dex. <b>▶ Scenario</b> (the direct test) stages the ability's conditions on the real engine with a fixed seed, fixed plays and the build-up the contract needs, at the chosen stage and mastery tier, and replays the play where it executes: the same result every time. <b>▶ Natural game</b> is the optional demonstration: it plays real AI games until the ability executes on its own (<b>Primed</b> starts with the build-up already done where it has one). Nothing is written to any franchise.</p>
         <div class="panel tight review-summary"><div class="row between"><b>Your review</b><span class="dim">${cat.length} abilities · ${cat.length - count.pending} on the engine</span></div>
           <div class="row" style="gap:10px;font-size:13px;margin-top:4px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">🔔 ${count.todo} to review</span><span class="dim">⏳ ${count.pending} not built yet</span></div></div>
         <div class="chips" style="margin:8px 0 4px">${[['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev'], ['pending', '⏳ Not built']].map(([v, l]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${l}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
@@ -41,8 +43,9 @@ export function registerAbilityReviewer(Router, app) {
             ${c.registered ? `<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
               <select data-change="form" data-f="${c.family}">${c.forms.map((f) => `<option value="${f}" ${f === p.form ? 'selected' : ''}>${FORM_LABEL(f)}</option>`).join('')}</select>
               <select data-change="mastery" data-f="${c.family}">${c.tiers.map((t) => `<option value="${t}" ${t === p.mastery ? 'selected' : ''}>Mastery ${t}</option>`).join('')}</select>
-              <label class="row" style="gap:4px"><input type="checkbox" style="width:auto;min-height:0" data-change="primed" data-f="${c.family}" ${p.primed ? 'checked' : ''}> Primed</label>
-              <button class="btn small" data-action="run" data-f="${c.family}">▶ Run on the engine</button></div>` : '<div class="chip warn" style="margin-top:6px">⏳ contract not built yet (legacy behaviour until it is)</div>'}
+              <button class="btn small" data-action="scenario" data-f="${c.family}">▶ Scenario</button>
+              <button class="btn small ghost" data-action="run" data-f="${c.family}">▶ Natural game</button>
+              <label class="row" style="gap:4px"><input type="checkbox" style="width:auto;min-height:0" data-change="primed" data-f="${c.family}" ${p.primed ? 'checked' : ''}> Primed</label></div>` : '<div class="chip warn" style="margin-top:6px">⏳ contract not built yet (legacy behaviour until it is)</div>'}
             ${reviewHtml(NS, c.abilityId, { open: st.notesOpen.has(`${NS}:${c.abilityId}`) })}</div>`; }).join('')}</div>`;
     },
     mount(root) {
@@ -53,23 +56,30 @@ export function registerAbilityReviewer(Router, app) {
         form: (el) => { st.pick[el.dataset.f].form = el.value; },
         mastery: (el) => { st.pick[el.dataset.f].mastery = Number(el.value); },
         primed: (el) => { st.pick[el.dataset.f].primed = el.checked; },
-        run: (el) => { const c = cat.find((x) => x.family === el.dataset.f); el.disabled = true; el.textContent = 'Running…'; setTimeout(() => { try { run(c); } finally { el.disabled = false; el.textContent = '▶ Run on the engine'; } }, 20); },
+        scenario: (el) => go(el, 'scenario'),
+        run: (el) => go(el, 'natural'),
         ...sharedHandlers(() => Router.render(), st.notesOpen, () => toast('Saved on this device; the cloud copy did not save.', 'bad')),
       });
     },
     unmount() { stop(); },
   });
 
+  function go(el, mode) {
+    const c = cat.find((x) => x.family === el.dataset.f); const label = el.textContent; el.disabled = true; el.textContent = 'Running…';
+    setTimeout(() => { try { run(c, mode); } finally { el.disabled = false; el.textContent = label; } }, 20);
+  }
   function stop() { if (st.raf) cancelAnimationFrame(st.raf); st.raf = null; }
   const stateText = (x) => (x == null ? '—' : esc(JSON.stringify(x)));
 
-  function run(c) {
-    stop(); const p = pickOf(c);
-    const r = reviewAbility({ family: c.family, form: p.form, mastery: p.mastery, primed: p.primed, seed: 1, games: 3 });
-    const head = `${esc(c.name)} · ${FORM_LABEL(p.form)} · Mastery ${p.mastery}${r.primed ? ' · primed' : ''}`;
-    if (!r.found) { sheet(`<p class="muted">${head}</p><p>${esc(r.reason)}.</p><p class="dim">Some abilities need a rare situation. Try Primed, another stage, or report it with a note.</p>`, { title: c.name }); return; }
+  function run(c, mode = 'scenario') {
+    stop(); const p = pickOf(c); const scen = mode === 'scenario';
+    const r = scen ? reviewScenario({ family: c.family, form: p.form, mastery: p.mastery }) : reviewAbility({ family: c.family, form: p.form, mastery: p.mastery, primed: p.primed, seed: 1, games: 3 });
+    const modeLine = scen ? `<div class="chip" style="margin:0 0 6px">▶ Scenario: deterministic, staged on the real engine</div>${r.how ? `<div class="dim" style="font-size:12px">${esc(r.how)}</div>` : ''}${r.staged ? `<div class="chip warn" style="margin:4px 0 6px;white-space:normal">⚠ ${esc(r.staged)}</div>` : ''}`
+      : `<div class="chip" style="margin:0 0 6px">▶ Natural game: AI games searched until it executes${r.primed ? ' (primed)' : ''}</div>`;
+    const head = `${esc(c.name)} · ${FORM_LABEL(p.form)} · Mastery ${p.mastery}${!scen && r.primed ? ' · primed' : ''}`;
+    if (!r.found) { sheet(`<p class="muted">${head}</p>${modeLine}<p>${esc(r.reason)}.</p><p class="dim">${scen ? 'The scenario did not execute: report it with a note.' : 'Some abilities need a rare situation. Try ▶ Scenario, Primed, another stage, or report it with a note.'}</p>`, { title: c.name }); return; }
     const evLog = r.events.map((e) => `<div class="entry"><span class="t">${(e.t ?? 0).toFixed(1)}s</span><span>${esc(e.text || e.kind)}</span></div>`).join('') || '<div class="entry"><span>Executed (recorded for mastery) with no logged cue.</span></div>';
-    const meta = `<div class="dim" style="font-size:12px">Game ${r.game}, step ${r.step} · ${esc(r.kind)} · Q${r.situation.quarter} · his slot ${esc(r.slot)}${r.executed ? ' · valid execution recorded (mastery is awarded in franchise games only, from M5)' : ''}</div>
+    const meta = `${modeLine}<div class="dim" style="font-size:12px">${scen ? `Seed ${r.seed}, snap ${r.step}${r.calls ? ` (${esc(r.calls.offense)} vs ${esc(r.calls.defense)})` : ''}` : `Game ${r.game}, step ${r.step}`} · ${esc(r.kind)} · Q${r.situation.quarter} · his slot ${esc(r.slot)}${r.executed ? ' · valid execution recorded (mastery is awarded in franchise games only, from M5)' : ''}</div>
       <div class="dim mono" style="font-size:11px;margin-top:4px">State before: ${stateText(r.before)}<br>State after: ${stateText(r.after)}${r.fields.length ? `<br>Fields: ${esc(r.fields.map((f) => `${f.type} (${f.remaining} left)`).join(', '))}` : ''}</div>`;
     const review = `<div class="sheet-review" style="margin-top:10px">${reviewHtml(NS, c.abilityId, { open: true })}</div>`;
     if (!r.sim?.frames?.length) { sheet(`<p class="muted">${head}</p><p>${esc(r.text)}</p>${meta}<div class="log" style="margin-top:6px">${evLog}</div>${review}`, { title: c.name }); bindReview(c); return; }

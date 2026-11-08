@@ -75,6 +75,14 @@ export function engagementAttrs(b, d) {
   return { ...b.attrs, strength: b.attrs.strength * k('strength'), blocking: b.attrs.blocking * k('blocking') };
 }
 
+/**
+ * M3 hook (review only): the Ability Reviewer's dev-only staging options live under this symbol key (`options[REVIEW_ONLY]`). A
+ * symbol cannot come from a save, a setting, JSON or a UI choice, and only src/sim/abilities/review.js sets it, so no normal game,
+ * lab, franchise or AI path can reach it. Today it holds one option: `{ fumbleOnTackle: true }`, the first fumble check of an
+ * ordinary successful tackle on an offensive ball carrier fumbles (the recovery itself stays the engine's ordinary nearest-players
+ * draw), used only to stage a fumble recovery for Hoard Flight (DRA-03-F), whose trigger the engine produces on 0.4% of plays.
+ */
+export const REVIEW_ONLY = Symbol('ability-review-only');
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
   let rng = createRng(seed); // `let`: options.fork re-seeds the physics after a decision point (AI Testing Lab rollouts)
   // The quarterback's perception has its own stream, so how he reads the field never shifts the physics of the play, and the AI
@@ -2172,6 +2180,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       if (d.ability?.forceFumble) fumbleP *= d.ability.forceFumble;
       if (ce.fumbleResist) fumbleP *= ce.fumbleResist;
       if (ce.noFumble) fumbleP = 0;
+      if (options[REVIEW_ONLY]?.fumbleOnTackle && c.team === 'off' && !ce.noFumble) fumbleP = 1; // M3 hook (review only): see REVIEW_ONLY
       const forward = Math.min(1.2, Math.hypot(c.vx, c.vy) * 0.14);
       const dir = c.team === 'off' ? 1 : -1;
       c.x += dir * forward;
