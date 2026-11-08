@@ -201,7 +201,7 @@ Full text and evidence: `docs/task8/OPEN_DECISIONS.md`. None is approved.
 | D8 | Cheap free agents accepting half their ask | Consistent with the unchanged negotiation | Review with D3 at M6 |
 | D9 | Gyms' strength edge | Edge 4.9 OVR in season 1, 0.9 by season 10; **new measurement below** | Investigate structure first (below); no boosts |
 | D10 | Live kickoff returns | 1,500 kicks: average 20.2 against the formula's 23.8; 0 TD in 804 returns. **New since the legacy retirement:** shorter kicks, so 40 of 80 kicks are returned (28 before), and returns span 17–36 yards over 200 kicks | Keep live; tune only escort blocking at M6 if the season reports confirm |
-| D11 | Rebuilding clubs' starter sales | 4 sales before Task 8 against 0 now (5 leagues × 3 seasons); AI–AI trades unchanged at 36 against 35 | Investigate (below) before deciding |
+| D11 | Rebuilding clubs' starter sales | 4 sales before Task 8 against 0 now (5 leagues × 3 seasons); AI–AI trades unchanged at 36 against 35; backups now further behind starters (below) | Re-express F4 on the new rating spread (option 2 below) |
 
 ### D9: new measurement, legendary and element synergy
 
@@ -229,17 +229,32 @@ Findings:
 **Recommendation:** make element-first acquisition part of the gym identities (D7 item 3) and measure the share alongside OVR in the
 season 5 and 10 reports. This is structural, not a boost.
 
-### D11: what to investigate
+### D11: investigated
 
-The sale rules filter as written. The bottleneck is upstream:
-- few rebuilding clubs;
-- only 4 of 16 ageing starters have a replacement within 4 OVR (F4);
-- then the buyer's gain bar (8 in the offseason, 16 in season) rejects 89 of 102 fair offers.
+Measured on leagues 51–53 over 2 seasons, per club-season (90 samples). The gap is between the last starter and the first backup at
+each position, 831 to 840 samples.
 
-Next measurements before any decision:
-1. Rebuild-mode frequency before and after Task 8.
-2. The rating gap between a starter and his backup under Dex ratings, compared with the pre-Task 8 gap the F4 margin was set
-   against.
-3. How the buyer's gain for an ageing starter compares between the two builds.
+| | Before Task 8 (dd2245d) | Now |
+| --- | ---: | ---: |
+| Clubs in Rebuild mode | 3 of 90 | 7 of 90 |
+| Starters older than 26 | 33% | 46% |
+| Gap, p25 / median / p75 | 3 / 6 / 11 OVR | 5 / 9 / 16 OVR |
+| Backup within 4 OVR (F4) | 38% | 24% |
 
-If (2) shows backups now sit further behind starters, F4's "within 4" is the binding constraint, and that is your call.
+Earlier funnel, seed 11, 4 seasons:
+- 16 sellable starters;
+- 4 with a replacement within 4;
+- 102 fair offers, all failing the deal rules: 89 on the buyer's minimum gain, 11 on a full roster, 2 on the seller floor.
+
+**Finding.** Sellers are not missing; there are more rebuilding clubs and more ageing starters than before. The binding constraint is
+F4: under Dex ratings a starter's backup sits further behind him (median 9 OVR against 6), so "a replacement within 4" holds for
+24% of positions instead of 38%. The gain bar then rejects most of the remaining offers. This is a property of the new rating
+spread, not a defect in the sale code.
+
+**Options.**
+1. Keep F4 at 4. Sales stay rare and are re-measured in the season 5 and 10 reports.
+2. Express F4 relative to the spread, for example the same 38% of positions qualifying, which is about 6–7 OVR under Dex ratings.
+3. Leave F4 and relax only the sale's gain bar.
+
+Options 2 and 3 change approved rules, so they are yours to make. **Recommendation:** option 2. It restores the rule's original
+intent (sell only when a near-equal backup exists) on the new scale.
