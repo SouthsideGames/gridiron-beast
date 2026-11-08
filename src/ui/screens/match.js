@@ -557,6 +557,13 @@ export function registerMatchScreens(Router, app) {
     return (team, slot) => { const m = (team === 'off' ? T[offSide].offense : T[defSide].defense)?.[slot] || club(team === 'off' ? T[offSide] : T[defSide])[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name, species: sp?.id || null }; };
   }
   function fxQualityFor(f) { return f.settings.reducedMotion ? 'min' : f.settings.fieldMarkers === 'simple' ? 'low' : 'full'; }
+  // Render-performance harness hook (tools/perf/render, docs/task8/RENDER_PERF.md). Inert: it exists only when the harness defines
+  // globalThis.__gbRenderPerf before the app loads, and nothing in the game calls it. It hands a precomputed play to this screen's own
+  // playback (startAnim) and says when the playback has finished; `lookup` (optional) is the effect lookup for a staged scene's monsters.
+  if (globalThis.__gbRenderPerf) Object.assign(globalThis.__gbRenderPerf, {
+    playMatch(ev, { lookup = null } = {}) { startAnim(app.f, ev); if (anim && lookup && !ev.sim.kick) anim.fx = buildFx(ev.sim, lookup); return !!anim; },
+    matchBusy: () => !!anim,
+  });
   let shakeTimer = null;
   function shakeField(f) {
     if (f.settings.screenShake === false || f.settings.reducedMotion) return;
