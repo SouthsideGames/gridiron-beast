@@ -2,13 +2,14 @@
 // game state across plays. Producers are abilities (M3) and pancakes (within-play only, see engine.js); this module is the shared
 // gate and the clocks. Football clocks count completed plays the monster actually participates in; the application play does not
 // consume duration; within-play statuses clear at the whistle; everything clears at the end of the game.
-import { tryApply, atWhistle, endOfUnit, disablesPlay, transfer } from './status.js';
+import { tryApply, atWhistle, endOfUnit, disablesPlay, transfer, STATUS } from './status.js';
 
 const book = (state) => (state.t8 ||= { status: {} }).status;
 /** A monster's current status slot in this game, or null. */
 export const statusOf = (state, mid) => book(state)[mid] || null;
 /** Apply through the shared gate (football). Returns { accepted, reason, slot }. */
 export function applyStatus(state, mid, attempt) {
+  if (state.t8?.ward?.[mid] && STATUS[attempt.id]?.kind === 'harmful') return { slot: statusOf(state, mid), accepted: false, reason: 'protected this play' }; // M3 hook: per-play ward (Dragon Call)
   const r = tryApply(statusOf(state, mid), { ...attempt, mode: 'football' }); if (r.accepted) book(state)[mid] = r.slot; return r;
 }
 /** Is this monster disabled for the whole coming play by a counted Stunned carried over (B18)? */

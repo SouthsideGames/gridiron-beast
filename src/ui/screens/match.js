@@ -168,6 +168,7 @@ export function registerMatchScreens(Router, app) {
         go: () => act(f, { fourthDown: 'go' }),
         punt: () => act(f, { fourthDown: 'punt' }),
         fg: () => act(f, { fourthDown: 'fg' }),
+        fgsig: () => act(f, { fourthDown: 'fg', fgSignature: true }), // Task 8 M3: a player-activated field-goal signature (Dragon Roar)
         kickoff: () => act(f, { kickoff: 'normal' }),
         onside: () => act(f, { kickoff: 'onside' }),
         trykick: () => act(f, { tryChoice: 'kick' }),
@@ -354,6 +355,7 @@ export function registerMatchScreens(Router, app) {
       <button class="btn small" data-action="timeout" ${s.timeouts[me] ? '' : 'disabled'}>Timeout (${s.timeouts[me]})</button>
       ${myBall ? `<select class="btn small" data-change="tempo" aria-label="Tempo" style="min-height:36px;margin:0;flex:1"><option value="normal" ${(G.tempo || 'normal') === 'normal' ? 'selected' : ''}>Tempo: normal</option><option value="hurry" ${G.tempo === 'hurry' ? 'selected' : ''}>Tempo: hurry-up</option><option value="milk" ${G.tempo === 'milk' ? 'selected' : ''}>Tempo: milk clock</option></select>` : ''}
       ${fgEarly}
+      ${myBall && s.phase === 'scrimmage' ? (() => { const sg = R.fieldGoalSignature(s, teams); return sg?.available ? `<button class="btn small good" data-action="fgsig" title="Once per game: the signature kick's own chart">${esc(sg.label)} ${sg.distance} yd · ${Math.round(sg.chance * 100)}%</button>` : ''; })() : ''}
       ${myBall && AI.shouldKneel(s) ? '<button class="btn small" data-action="kneel">Kneel</button>' : ''}${myBall && !s.ot && s.clockRunning && s.quarter >= 2 && s.clock < 60 ? '<button class="btn small" data-action="spike">Spike</button>' : ''}
       <button class="btn small ${G.auto ? 'primary' : ''}" data-action="auto" title="Auto: the coach's suggested plays are called for you, every play animated, until you turn it off">${G.auto ? 'Auto ■ stop' : 'Auto ▶'}</button>
       ${G.auto ? `<button class="btn small ${(G.autoSpeed || 1) === 2 ? 'primary' : ''}" data-action="autospeed" title="Auto speed">${(G.autoSpeed || 1) === 2 ? '2× ▶▶' : '1× ▶'}</button>` : ''}

@@ -15,8 +15,9 @@ export const HOOKS = Object.freeze([
   'playStart',        // (ctx, self)                         the snap: may read/modify the actor before movement
   'tick',             // (ctx, self)                         every engine tick while the play is live
   'engage',           // (ctx, self, other)                  a block engagement starts (self is blocker or defender)
-  'tackleAttempt',    // (ctx, self, tackler) -> {prevent}   pre-resolution, before the tackle is decided (P6)
-  'catchPoint',       // (ctx, self, ball, other)            pre-resolution at the catch point (P6): set ball.t8.noContest / ball.t8.noInterception
+  'tackleAttempt',    // (ctx, self, tackler) -> {prevent}   pre-resolution, before the tackle is decided (P6); {avoided}: no attempt at all
+  'tackleOdds',       // (ctx, self, tackler, p) -> p'       M3 hook: the carrier's contract replaces the ordinary contest's tackle odds
+  'catchPoint',       // (ctx, self, ball, other)            pre-resolution at the catch point (P6): set ball.t8.noContest / ball.t8.noInterception (receiver, nearest defender, passer)
   'fumble',           // (ctx, self) -> {prevent}            after a fumble is determined; a Shielded save is applied first (B3)
   'playEnd',          // (ctx, self, result)                 the whistle: charges, clocks, field creation
   'possessionChange', // (ctx, self)

@@ -175,15 +175,15 @@ test('Bear Front lines up B-left, head-up nose, B-right', () => {
 });
 
 // ---- abilities on the read
-test('read abilities act on the read: Echo Read and Ancient Grove bite less, Cold Read reads runs sooner', () => {
+test('read abilities act on the read: Ancient Grove bites less, Cold Read reads runs sooner', () => {
   const pa = (species) => { const bites = []; for (const off of PA) for (const def of ['cover_3', 'tampa_2', 'run_wall']) for (let s = 0; s < 30; s++) {
     const sim = play({ off, def, attr: 'speed', value: 65, seed: 16000 + s, options: { trace: true }, extra: species ? (o, d) => { d.LB1.species = species; } : null });
     const th = sim.events.find((e) => e.kind === 'throw'); if (!th) continue; bites.push(sim.frames.some((f) => f.dbg && f.t <= th.t && f.dbg.find((e) => e[0] === 'LB1')?.[8]?.state === 'run') ? 1 : 0); }
     return mean(bites); };
-  const none = pa(null), echo = pa('echolot'), grove = pa('elderoot');
+  // Echolot's legacy Echo Read is gone: the family is a K with the Task 8 M3 contract Echo Landing (PSY-04-F), no stacking.
+  const none = pa(null), grove = pa('elderoot');
   assert.ok(none > 0.05, `LB1 bites on some fakes (${none.toFixed(2)})`);
-  assert.ok(echo < none, `Echo Read bites less: ${echo.toFixed(2)} vs ${none.toFixed(2)}`);
-  assert.ok(grove < echo && grove < 0.05, `Ancient Grove (nearly) never bites: ${grove.toFixed(2)}`);
+  assert.ok(grove < none && grove < 0.05, `Ancient Grove (nearly) never bites: ${grove.toFixed(2)}`);
   const rec = (species) => { const ts = []; for (const off of ['inside_zone', 'dive', 'power_right', 'counter']) for (const def of ['cover_3', 'run_wall']) for (let s = 0; s < 30; s++) {
     const sim = play({ off, def, attr: 'speed', value: 65, seed: 17000 + s, options: { trace: true }, extra: species ? (o, d) => { d.LB1.species = species; } : null });
     const f = sim.frames.find((x) => x.dbg && x.dbg.find((e) => e[0] === 'LB1')?.[8]?.state === 'run'); if (f) ts.push(f.t); }
