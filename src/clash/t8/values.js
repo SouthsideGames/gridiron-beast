@@ -8,10 +8,12 @@ const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v 
 
 export const T8_VALUES = deepFreeze({
   ruleset: 't8',
-  engineVersion: 't8-s2',
-  // Engine versions whose replay keys this build replays identically: S2 changes no battle without a status (the 20 golden seeds are
-  // byte-identical), so S1 keys stay valid. The list resets when a step changes ordinary battles.
-  keyCompatible: ['t8-s1', 't8-s2'],
+  engineVersion: 't8-s4',
+  // Engine versions whose replay keys this build replays identically. S2 and S3 changed no battle without a status or a hook; S4
+  // adds rotation (P8) with the approved AI policy as the default (D1, D2), which changes ordinary battles, so the list was reset at
+  // S4 and the golden seeds were re-recorded (tests/clash/fixtures/golden-t8.json; the S1 file is kept as golden-t8-s1.json and
+  // still replays exactly with both sides on policy 'none').
+  keyCompatible: ['t8-s4'],
   // The approved values 1.1.0 numbers the t8 engine uses unchanged.
   archetypes: L.archetypes,   // approved: HP/ATK/SPD multipliers and the perks (Tank guard 0.88, Striker shieldBreak 2, Disruptor pierce)
   stats: L.stats,             // approved: the HP/ATK/SPD formula (economy recalibration #30 is M6)
@@ -19,6 +21,7 @@ export const T8_VALUES = deepFreeze({
   damage: { spreadMin: L.damage.spreadMin, spreadMax: L.damage.spreadMax, initiativeTie: L.damage.initiativeTie }, // approved
   battle: { exchangeCap: L.battle.exchangeCap, maxPerSide: L.battle.maxPerSide, minPerSide: L.battle.minPerSide }, // approved
   tiebreak: L.tiebreak,       // approved: HP share at the cap, exact tie to the seeded coin
+  swaps: { forcedEvery: L.swaps.forcedEvery, voluntaryEvery: L.swaps.voluntaryEvery }, // approved: forced pacing 3; voluntary cadence 4 (= ROTATION_CADENCE_EXCHANGES)
   suddenDeath: L.suddenDeath, // values 1.1.0 (tagged provisional there); its t8 scope waits on D8
   stalemate: L.duration.models.C6, // approved C6; its t8 scope waits on D8 (no heal or shield exists in S1, so it changes nothing yet)
 });
@@ -28,8 +31,8 @@ export const T8_VALUES = deepFreeze({
  * decision (M4_PLAN.md §5b) or the later build step that replaces it. Tests read this list so a default cannot be added silently.
  */
 export const T8_PROVISIONAL = deepFreeze([
-  { id: 'ko-replacement-line-order', waitsOn: 'D2',
-    rule: 'A knocked-out active monster is replaced by the first living reserve in lineup order (the legacy behaviour, M4_PLAN §5c). The replacement enters right after the hit (B3 rule 4) and does not take the knocked-out monster\'s cancelled turn this exchange (B3 rule 2).' },
+  { id: 'ko-replacement-line-order', waitsOn: 'owner (D1/D2 rule on rotation and the AI; neither names the KO replacement choice)',
+    rule: 'A knocked-out active monster is replaced by the first living reserve in stable lineup order (the legacy behaviour, M4_PLAN §5c), for both the AI and the player. The replacement enters right after the hit (B3 rule 4) and does not take the knocked-out monster\'s cancelled turn this exchange (B3 rule 2).' },
   { id: 'sudden-death-scope', waitsOn: 'D8 (open: explanation requested, §25 item 8)',
     rule: 'The values 1.1.0 sudden-death ramp (Model E for 1-3 per side, Model F for 4-5, from exchange 12) multiplies the 8a raw damage of every direct strike (ordinary, special, reaction, counter, follow-up). It does not touch the Afflicted tick, heals or shields.' },
   { id: 'stalemate-c6-scope', waitsOn: 'D8 (open: explanation requested, §25 item 8)',
@@ -66,6 +69,15 @@ export const T8_PROVISIONAL = deepFreeze([
     rule: 'Reactions, after-whole-hit effects and follow-ups to one hit run by owner: the hit\'s recipients first in recipient order, then every other monster by stable ID.' },
   { id: 'reaction-chains', waitsOn: 'none (B3 / P6 "no chains"; reading flagged)',
     rule: 'A reaction or counter strike runs its own attached effects but never triggers reactions, after-whole-hit effects or follow-ups.' },
+  // ---- S4: rotation
+  { id: 'lineup-order-stable', waitsOn: 'none (reading of the contracts\' "stable lineup order", flagged)',
+    rule: 'A voluntary or forced rotation does not reorder the lineup: "first living reserve" (KO replacement, Downdraft, Feather Relay) always means the first living non-active monster in the original lineup order. (The legacy engine swapped line positions.) Second Spring\'s "back of the lineup" (D18) is S5.' },
+  { id: 'p8-pending-cleared-on-departure', waitsOn: 'none (reading of P8 "first normal turn after a voluntary rotation", flagged)',
+    rule: 'An entry penalty not yet spent (the entrant left again, by a forced rotation, before its first normal turn) ends with that entry; it does not follow the monster to a later entry.' },
+  { id: 'rotation-hook-order', waitsOn: 'S10 (the rotation contracts)',
+    rule: 'Within one side\'s rotation, hooks are asked of every monster in stable ID order: rotationDelay (Cinder Clamp), pursuit (Riptide Pursuit), cashOut (Shell Harvest), then departure, the entrant\'s onEntry, then arrival (Cold Welcome / Downdraft), as P8 orders them. A delayed rotation does not spend the cadence.' },
+  { id: 'feather-relay-not-built', waitsOn: 'owner (D3 is conditional on the contract; the contract text does not state the penalty exemption)',
+    rule: 'Feather Relay\'s rotation hook is not built. The forcedRotation / rotation primitives can take an exemption flag once the owner confirms the reading; see M4_STATUS.md S4 for the quoted contract.' },
   { id: 'shield-break-rounding', waitsOn: 'none (D9 single rounding; reading flagged)',
     rule: 'The pool loss and the HP loss are each rounded once, half up: a hit the pool fully absorbs removes round(damage x break) pool HP; a hit that breaks it removes the whole pool and loses round(damage - pool / break) HP.' },
 ]);

@@ -8,3 +8,5 @@ export { T8_CONTEXTS } from './engine.js';
 export { resolveAmount, splitRaw, ROUNDING } from './arith.js';
 export { applyClash, orderAttempts, endOfTurn as statusEndOfTurn, clashEffect, afflictedTick, absorb, cleanse, replaceWith, toFootball, fromFootball, CLASH_STATUS_VALUES } from './status.js';
 export { B12_TOLERANCES, toleranceFor, b12SampleSize } from './tolerances.js';
+export { POST_KO_EXCEPTIONS } from './engine.js';
+export { chooseRotationAI, statusDamageFactor, T8_POLICIES, T8_POLICY_LABEL } from './ai.js';

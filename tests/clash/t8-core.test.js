@@ -63,7 +63,7 @@ test('one active fighter per side; reserves never act, never take damage and nev
 });
 
 // ---------------------------------------------------------------- the P6/B3 exchange skeleton
-test('exchange skeleton: round start, initiative, the turns in initiative order, rotation phase (stub), end of exchange, end check', () => {
+test('exchange skeleton: round start, initiative, the turns in initiative order, rotation phase, end of exchange, end check', () => {
   const PHASES = ['round_start', 'initiative', 'turn', 'end_of_turn', 'rotation', 'end_of_exchange'];
   for (const { a, b, seed } of battles(200, 21)) {
     const r = run(a, b, seed); let lastEx = 0;
@@ -79,7 +79,9 @@ test('exchange skeleton: round start, initiative, the turns in initiative order,
       lastEx = ex;
     }
     assert.equal(lastEx, r.exchanges);
-    assert.ok(!r.log.some((e) => e.kind === 'swap' || e.kind === 'rotation'), 'no rotation in S1');
+    // From S4 voluntary rotations happen only in the rotation phase (P8), never at the start of the exchange.
+    assert.ok(!r.log.some((e) => e.kind === 'swap'));
+    assert.ok(r.log.filter((e) => e.kind === 'rotation').every((e) => e.phase === 'rotation' && e.voluntary));
   }
 });
 
@@ -185,7 +187,7 @@ test('KO replacement (provisional, D2): the first living reserve in line order e
     });
   }
   assert.ok(seen > 500 && cancelled > 50, `knockouts ${seen}, cancelled turns ${cancelled}`);
-  assert.ok(T8_PROVISIONAL.some((p) => p.id === 'ko-replacement-line-order' && p.waitsOn === 'D2'));
+  assert.ok(T8_PROVISIONAL.some((p) => p.id === 'ko-replacement-line-order' && p.waitsOn));
 });
 
 // ---------------------------------------------------------------- the no-contract action
@@ -236,6 +238,7 @@ test('determinism: same seed and inputs give an identical log hash and state has
 });
 
 test('determinism: 20 golden t8 seeds replay from their replay keys (tests/clash/fixtures/golden-t8.json); the router plays t8', () => {
+  // Re-recorded at S4 (tools/t8-golden.mjs): the approved D1/D2 AI rotation policy is the default and changes ordinary battles.
   const stored = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8.json', import.meta.url), 'utf8'));
   assert.equal(Object.keys(stored).length, 20);
   withoutRandomness(() => {
@@ -248,10 +251,24 @@ test('determinism: 20 golden t8 seeds replay from their replay keys (tests/clash
   });
 });
 
+test('regression: the 20 S1 golden battles (golden-t8-s1.json) end in exactly the S1 state with both sides on policy none (S2-S4 change nothing else)', () => {
+  const s1 = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-s1.json', import.meta.url), 'utf8'));
+  assert.equal(Object.keys(s1).length, 20);
+  assert.throws(() => parseT8ReplayKey(s1['1'].key), /this build plays/, 'S1 keys are no longer key-compatible');
+  withoutRandomness(() => {
+    for (const seed of Object.keys(s1)) {
+      const k = JSON.parse(s1[seed].key);
+      const r = simulateClashT8({ a: k.a, b: k.b, seed: k.seed, config: { ruleset: 't8', policies: { a: 'none', b: 'none' } } });
+      assert.equal(r.stateHash, s1[seed].state, `S1 golden seed ${seed}`);
+    }
+  });
+});
+
 test('t8 is separate from legacy: its config takes only the ruleset; probes are closed hooks; replay keys name t8; invariants over 1,000 battles', () => {
   const a = [mon('pebble', 1)], b = [mon('ashkit', 2)];
   assert.throws(() => run(a, b, 1, { config: { ruleset: 'current' } }), /plays ruleset t8/);
-  assert.throws(() => run(a, b, 1, { config: { policies: { a: 'none', b: 'none' } } }), /Unknown t8 battle option/);
+  assert.throws(() => run(a, b, 1, { config: { backRow: 'on' } }), /Unknown t8 battle option/);
+  assert.throws(() => run(a, b, 1, { config: { policies: { a: 'smart' } } }), /Unknown t8 rotation policy/);
   assert.throws(() => run(a, b, 1, { config: { ruleset: () => 't8' } }), /cannot be functions/);
   assert.throws(() => run(a, b, 1, { probes: [{ act: () => 1 }] }), /Unknown probe hook/);
   assert.throws(() => run([], b, 1), /1-5 monsters/);

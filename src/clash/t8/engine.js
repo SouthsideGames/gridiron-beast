@@ -31,14 +31,19 @@ import { T8_VALUES } from './values.js';
 import { buildT8Combatant } from './combatant.js';
 import { addClock, tickClocks, clearClocks } from './clock.js';
 import { roundHalfUp, resolveAmount, splitRaw } from './arith.js';
+import { rotationEntryPenalty, ROTATION_CADENCE_EXCHANGES } from '../../data/approved-values.js';
+import { chooseRotationAI, T8_POLICIES } from './ai.js';
 import { STATUS, applyClash, orderAttempts, endOfTurn as statusEndOfTurn, clashEffect, afflictedTick, absorb, cleanse as cleanseSlot, replaceWith, fromFootball, toFootball } from './status.js';
 
 const V = T8_VALUES;
+const L_SWAPS = T8_VALUES.swaps;
 const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v === 'object' && !Object.isFrozen(v)) deepFreeze(v); return Object.freeze(o); };
 export { roundHalfUp };
 const PROBE_HOOKS = ['initiative', 'chooseAction', 'roundStart', 'turnStart', 'endOfTurn', 'rotationPhase', 'endOfExchange', 'statusIncoming', 'statusApplied',
   // S3 damage-pipeline hook points (B3 step 8; P6 steps 3.4-3.12)
-  'launch', 'intercept', 'missCheck', 'rawModifiers', 'lethalRedirect', 'rawSplit', 'mitigate', 'preKO', 'attached', 'reaction', 'afterWholeHit', 'followUp'];
+  'launch', 'intercept', 'missCheck', 'rawModifiers', 'lethalRedirect', 'rawSplit', 'mitigate', 'preKO', 'attached', 'reaction', 'afterWholeHit', 'followUp',
+  // S4 rotation hook points (P8 resolution order; forced-rotation locks)
+  'rotationLock', 'rotationDelay', 'pursuit', 'cashOut', 'onEntry', 'arrival'];
 /**
  * B3 rule 3 (REMAINING_DECISIONS §B3, approved N7c): the ONLY effects that continue after their owner is knocked out. A hook item
  * naming any other exception is refused; an item naming none is cancelled when its owner is out (B3 rule 2).
@@ -57,7 +62,7 @@ export const POST_KO_EXCEPTIONS = Object.freeze({
 /** Battle contexts (spec §10, D12): a standalone (Tuesday) battle clears every status at its end; an opening or overtime Clash is part
  *  of a football game, so its statuses carry out (S12 connects that carry to the game state). */
 export const T8_CONTEXTS = Object.freeze(['standalone', 'opening', 'overtime']);
-const CONFIG_KEYS = ['ruleset', 'context'];
+const CONFIG_KEYS = ['ruleset', 'context', 'policies', 'decisions'];
 
 /** The t8 configuration. Unknown keys and function values are refused. */
 export function t8Config(config = {}) {
@@ -67,8 +72,17 @@ export function t8Config(config = {}) {
   }
   if (config.ruleset != null && config.ruleset !== V.ruleset) throw new Error(`The t8 engine plays ruleset t8, not ${config.ruleset}`);
   if (config.context != null && !T8_CONTEXTS.includes(config.context)) throw new Error(`Unknown t8 battle context ${config.context}`);
-  // The S1 shape is kept for a standalone battle so existing replay keys stay byte-identical.
-  return Object.freeze(config.context && config.context !== 'standalone' ? { ruleset: V.ruleset, context: config.context } : { ruleset: V.ruleset });
+  // Rotation policies (D1, approved): 'ai' is the default, because Skip, headless play and staff use the AI policy; 'manual' is the
+  // player's side in Watch; 'none' never rotates (tests and staged scenarios).
+  const policies = { a: 'ai', b: 'ai', ...(config.policies || {}) };
+  for (const [k, v] of Object.entries(policies)) { if (!['a', 'b'].includes(k)) throw new Error(`Unknown side ${k} in policies`); if (!T8_POLICIES.includes(v)) throw new Error(`Unknown t8 rotation policy ${v}`); }
+  // Recorded decisions: decisions[side][exchange] = a reserve's combatant or monster id, 'stay', or 'auto' ("Auto for the rest").
+  const decisions = {};
+  for (const [k, v] of Object.entries(config.decisions || {})) {
+    if (!['a', 'b'].includes(k)) throw new Error(`Unknown side ${k} in decisions`);
+    decisions[k] = {}; for (const [e, d] of Object.entries(v || {})) { if (!/^\d+$/.test(e)) throw new Error(`Decision exchange ${e} is not a whole number`); if (typeof d !== 'string' || !d) throw new Error(`Decision ${k}/${e} must be an id, 'stay' or 'auto'`); decisions[k][e] = d; }
+  }
+  return deepFreeze({ ruleset: V.ruleset, ...(config.context && config.context !== 'standalone' ? { context: config.context } : {}), policies, ...(Object.keys(decisions).length ? { decisions } : {}) });
 }
 
 /**
@@ -82,8 +96,10 @@ export function t8Config(config = {}) {
  *    the opening (it is an input, never a manufactured result); the result is marked `staged: true`.
  *  carryIn: opening / overtime only: { [monsterId]: football slot } carried into this Clash (spec §10; D10, D11). A standalone battle
  *    has no incoming carry (D12).
+ *  stopAt: { exchange, turn? } stops after that exchange (or after its `turn`-th turn) and returns a boundary, for turn stepping and
+ *    the B11 checkpoint (S13). A 'manual' side with no recorded decision stops the battle at its rotation phase the same way (D1).
  */
-export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'full', probes = [], stage = null, carryIn = null }) {
+export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'full', probes = [], stage = null, carryIn = null, stopAt = null }) {
   const cfg = t8Config(config); const context = cfg.context || 'standalone';
   if (carryIn && context === 'standalone') throw new Error('A standalone Clash has no incoming status carry (D12)');
   if (!a?.length || !b?.length || a.length > V.battle.maxPerSide || b.length > V.battle.maxPerSide) throw new Error('Each side needs 1-5 monsters');
@@ -108,11 +124,11 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
 
   // ---- live records
   const mkSide = (key, monsters) => {
-    const side = { key, line: [], active: null };
+    const side = { key, line: [], active: null, policy: cfg.policies[key], lastVoluntary: -99, lastForced: -99, rotations: 0, forced: 0 };
     side.line = monsters.map((m, i) => {
       const c = buildT8Combatant(m, { slot: i, side: key });
       return { c, side, slot: i, hp: c.hp, active: false, koed: false, koOrder: null, turns: 0, skips: 0, consecutiveSkips: 0, inTurn: false,
-        entries: 0, entry: null, clocks: [], status: null, stunProtected: false, stunnedSkips: 0, stats: { dealt: 0, taken: 0, kos: 0, attacks: 0 } };
+        entries: 0, entry: null, clocks: [], status: null, stunProtected: false, stunnedSkips: 0, p8pending: false, p8: null, maxHitDealt: 0, stats: { dealt: 0, taken: 0, kos: 0, attacks: 0 } };
     });
     return side;
   };
@@ -125,7 +141,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   const view = () => Object.freeze({
     ex, phase,
     active: activeIds(),
-    combatant: (id) => { const x = byId.get(id); return x ? Object.freeze({ id, hp: x.hp, maxHp: x.c.maxHp, active: x.active, koed: x.koed, turns: x.turns, skips: x.skips, inTurn: x.inTurn, stunProtected: x.stunProtected, clocks: x.clocks.map((k) => ({ ...k })), status: x.status ? structuredClone(x.status) : null }) : null; },
+    side: (k) => { const sd = S[k]; return sd ? Object.freeze({ key: k, policy: sd.policy, lastVoluntary: sd.lastVoluntary, lastForced: sd.lastForced, active: sd.active?.c.id ?? null, line: sd.line.map((x) => x.c.id) }) : null; },
+    combatant: (id) => { const x = byId.get(id); return x ? Object.freeze({ id, hp: x.hp, maxHp: x.c.maxHp, active: x.active, koed: x.koed, turns: x.turns, skips: x.skips, inTurn: x.inTurn, stunProtected: x.stunProtected, entry: x.entry ? { ...x.entry } : null, entryPenalty: x.p8?.factor ?? (x.p8pending ? 'pending' : 1), clocks: x.clocks.map((k) => ({ ...k })), status: x.status ? structuredClone(x.status) : null }) : null; },
     // The real Clash status gate, for stub contracts in tests and for reviewer staging. Every call is logged with provenance.
     applyStatus: (targetId, attempt) => { const x = byId.get(targetId); if (!x || x.koed) throw new Error(`No living combatant ${targetId}`); return applyStatus(x, { sourceId: 'probe', ...attempt }).accepted; },
     applyStatuses: (attempts) => applyStatusBatch(attempts.map((t) => ({ sourceId: 'probe', ...t }))),
@@ -179,11 +196,18 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   function enter(x, reason) {
     x.side.active = x; x.active = true; x.entries += 1; x.entry = { reason, ex };
     if (LOG) log('enter', x, null, `${x.c.name} ${reason === 'opening' ? 'starts as the active fighter' : 'enters'} (${x.c.archetype}, ${x.c.type})`, { reason, hp: x.hp, maxHp: x.c.maxHp, archetype: x.c.archetype, type: x.c.type, first: x.entries === 1 });
-    // S4/S5: entry effects (onEntry hooks) run here.
+    // Entry effects run at full strength (P8: "entry effects ... are unchanged"), for every entry reason.
+    if (probes.length) runDescriptors(hookList(probe('onEntry', x.c.id, { reason })), x.c.id, 'onEntry');
+  }
+  function depart(x, reason) {
+    x.active = false; if (x.side.active === x) x.side.active = null;
+    // PROVISIONAL 'p8-pending-cleared-on-departure': a penalty not yet spent belongs to that entry and ends with it.
+    x.p8pending = false; x.p8 = null;
+    if (LOG) log('depart', x, null, `${x.c.name} goes to reserve`, { reason, status: x.status?.id ?? null, ...(x.status ? { paused: true } : {}) });
   }
   function knockout(x, by) {
     if (x.koed) return;
-    x.koed = true; x.active = false; x.hp = 0; koSeq += 1; x.koOrder = koSeq; lastKO = ex;
+    x.koed = true; x.active = false; x.hp = 0; koSeq += 1; x.koOrder = koSeq; lastKO = ex; x.p8pending = false; x.p8 = null;
     if (x.side.active === x) x.side.active = null;
     if (by && by !== x) by.stats.kos += 1;
     const cleared = clearClocks(x, 'duration'); // spec §10: a KO clears the monster's status; B3 rule 2 (PROVISIONAL scope, see values.js)
@@ -329,6 +353,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
         const before = rec.hp; rec.hp = Math.max(0, rec.hp - loss);
         if (spec.tag === 'ordinary' || spec.tag === 'special') att.stats.attacks += rec === order[0].x ? 1 : 0;
         att.stats.dealt += before - rec.hp; rec.stats.taken += before - rec.hp;
+        if (rec.side !== att.side) att.maxHitDealt = Math.max(att.maxHitDealt, before - rec.hp); // public: the AI's "observed hit" (D2)
         if (LOG) {
           const sn = m.shield ? `, ${m.shield.poolLoss} absorbed by the shield${m.shield.broken ? ' (shield broken)' : ''}` : '';
           log('damage', att, rec, `${att.c.name}'s ${label(spec)}: ${loss} damage${sn}${m.guard < 1 ? ' (Tank guard)' : ''}${m.guarded < 1 ? ' (Guarded)' : ''}${out !== 1 ? (out > 1 ? ' (Empowered)' : ' (Weakened)') : ''}${p8 !== 1 ? ' (entry penalty)' : ''}${rec === att ? ' (Confused: hits itself)' : ''}${m.type > 1 ? ' (type advantage)' : m.type < 1 ? ' (type disadvantage)' : ''}`,
@@ -386,6 +411,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       } else if (d.kind === 'status') { const { kind, owner: _o, exception, targetId, ...attempt } = d; const x = byId.get(targetId); if (x && !x.koed) applyStatus(x, { sourceId: owner.c.id, ...attempt }); }
       else if (d.kind === 'heal') heal(owner, byId.get(d.targetId), d);
       else if (d.kind === 'shield') grantShield(owner, byId.get(d.targetId), d);
+      else if (d.kind === 'forcedRotation') { const tgt = d.side === 'own' ? owner.side : other(owner.side); forcedRotation(owner, tgt, { incoming: d.incoming, abilityId: d.abilityId ?? null }); if (settleHit()) return true; }
       else throw new Error(`Unknown hook descriptor ${d.kind}`);
     }
     return false;
@@ -421,6 +447,90 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   }
   const ordinaryAttack = (x, t) => strike(x, t, { tag: 'ordinary' });
 
+  // ---- rotation (S4; P8 approved N7b/N7c; R4, R5; D1, D2)
+  const CADENCE = ROTATION_CADENCE_EXCHANGES; // approved: at most once per side every four exchanges (values 1.1.0 voluntaryEvery 4)
+  const FORCED_EVERY = L_SWAPS.forcedEvery;   // approved: the existing side-wide forced-rotation pacing (values 1.1.0 forcedEvery 3)
+  const reservesOf = (side) => side.line.filter((x) => !x.koed && !x.active);
+  const stable = () => [...S.a.line, ...S.b.line].sort((p, q) => p.c.id.localeCompare(q.c.id));
+  /** Locks on the active (Cinder Clamp-type holds, explicit immunity): a hook answer { locked, reason, abilityId }. */
+  function lockOf(x, forced) {
+    if (!probes.length) return null;
+    for (const y of stable()) { const r = probe('rotationLock', y.c.id, { activeId: x.c.id, forced }); if (r?.locked) return { ...r, by: y.c.id }; }
+    return null;
+  }
+  /** Is a voluntary rotation legal for `side` now? Returns { legal, unmet, lock }. */
+  function voluntaryLegality(side) {
+    const unmet = [];
+    if (!side.active) unmet.push({ condition: 'active monster' });
+    if (!reservesOf(side).length) unmet.push({ condition: 'living reserve' });
+    if (ex - side.lastVoluntary < CADENCE) unmet.push({ condition: 'rotation cadence', need: CADENCE, have: ex - side.lastVoluntary });
+    const lock = !unmet.length ? lockOf(side.active, false) : null;
+    if (lock) unmet.push({ condition: 'rotation lock', detail: lock.reason || 'locked', abilityId: lock.abilityId ?? null, by: lock.by });
+    return { legal: !unmet.length, unmet, lock };
+  }
+  const optionView = (x) => ({ id: x.c.id, monsterId: x.c.monsterId, name: x.c.name, hp: x.hp, maxHp: x.c.maxHp, type: x.c.type, archetype: x.c.archetype, status: x.status ? x.status.id : null });
+  /** The side's request at the start of the phase: { incoming, by } | { pending } | null. */
+  function rotationRequest(side) {
+    if (side.policy === 'none') return null;
+    const L = voluntaryLegality(side);
+    if (!L.legal) { if (L.lock && LOG) log('rotation_unavailable', side.active, null, `${side.active.c.name} cannot rotate (${L.lock.reason || 'locked'})`, { side: side.key, unmet: L.unmet, stage: 'trigger' }); return null; }
+    const reserves = reservesOf(side);
+    if (side.policy === 'manual') {
+      const d = cfg.decisions?.[side.key]?.[ex];
+      if (d === undefined) return { pending: { kind: 'rotation', ex, side: side.key, activeId: side.active.c.id, options: ['stay', 'auto', ...reserves.map((x) => x.c.id)], reserves: reserves.map(optionView) } };
+      if (d === 'auto') { side.policy = 'ai'; if (LOG) log('rotation_decision', side.active, null, `Auto for the rest of this battle: side ${side.key.toUpperCase()} hands rotation to the AI`, { side: side.key, decision: 'auto' }); }
+      else if (d === 'stay') { if (LOG) log('rotation_decision', side.active, null, `${side.active.c.name} stays in (your call)`, { side: side.key, decision: 'stay' }); return null; }
+      else {
+        const pick = reserves.find((x) => x.c.id === d || x.c.monsterId === d);
+        if (!pick) throw new Error(`Decision ${side.key}/${ex} names ${d}, which is not a living reserve`);
+        if (LOG) log('rotation_decision', side.active, pick, `${side.active.c.name} rotates out for ${pick.c.name} (your call)`, { side: side.key, decision: pick.c.id });
+        return { incoming: pick, by: 'manual' };
+      }
+    }
+    const foe = other(side).active;
+    const pick = chooseRotationAI({ active: side.active, reserves, foe, observedFoeHit: foe?.maxHitDealt ?? 0 });
+    return pick ? { incoming: pick, by: 'ai' } : null;
+  }
+  /** Resolve one voluntary rotation in the P8 order. Returns true when the battle is decided. */
+  function executeRotation(side, incoming, by) {
+    const out = side.active; if (!out || out.koed || incoming.koed || incoming.active) return false;
+    // 1. Cinder Clamp's delay check
+    if (probes.length) for (const y of stable()) { const r = probe('rotationDelay', y.c.id, { side: side.key, out: out.c.id, in: incoming.c.id }); if (r?.delay) { if (LOG) log('rotation_delayed', out, incoming, `${out.c.name}'s rotation is delayed`, { abilityId: r.abilityId ?? null, by: y.c.id, stage: 'activation', unmet: [{ condition: 'not delayed', abilityId: r.abilityId ?? null }] }); return false; } }
+    // 2. Riptide Pursuit's hit on the departing monster; 3. Shell Harvest cash-out
+    if (probes.length) for (const hook of ['pursuit', 'cashOut']) for (const y of stable()) {
+      if (runDescriptors(hookList(probe(hook, y.c.id, { side: side.key, out: out.c.id, in: incoming.c.id })), y.c.id, hook)) return true;
+    }
+    if (out.koed) { if (LOG) log('rotation_cancelled', out, incoming, `${out.c.name} is knocked out before it can rotate`, { rule: 'B3 rule 4: ordinary replacement' }); return settleHit(); }
+    // 4. departure; 5. the entrant's entry effects (in enter); 6. Cold Welcome and Downdraft on the entrant
+    side.lastVoluntary = ex; side.rotations += 1;
+    if (LOG) log('rotation', out, incoming, `${by === 'manual' ? 'Your call' : 'AI'}: ${out.c.name} rotates out for ${incoming.c.name}`, { side: side.key, voluntary: true, out: out.c.id, in: incoming.c.id, by });
+    depart(out, 'voluntary'); enter(incoming, 'voluntary'); incoming.p8pending = true;
+    if (probes.length) for (const y of stable()) if (runDescriptors(hookList(probe('arrival', y.c.id, { side: side.key, in: incoming.c.id, reason: 'voluntary' })), y.c.id, 'arrival')) return true;
+    return settleHit();
+  }
+  /**
+   * Forced rotation (Riptide Charge, Downdraft; R5): the existing side-wide pacing (no forced rotation within 3 exchanges of the
+   * last one on that side) and the just-entered protection (an active that entered this exchange cannot be forced out) are kept, as
+   * the contracts require. No entry penalty. `incoming` is a combatant id or 'firstReserve' (first living reserve in stable lineup
+   * order). Returns true when the rotation happened; a refusal is logged with its unmet conditions.
+   */
+  function forcedRotation(src, side, { incoming = 'firstReserve', abilityId = null } = {}) {
+    const out = side.active; const unmet = [];
+    const reserves = reservesOf(side);
+    if (!out) unmet.push({ condition: 'active monster' });
+    if (!reserves.length) unmet.push({ condition: 'living reserve' });
+    if (ex - side.lastForced < FORCED_EVERY) unmet.push({ condition: 'forced-rotation pacing', need: FORCED_EVERY, have: ex - side.lastForced });
+    if (out && out.entry?.ex === ex) unmet.push({ condition: 'just-entered protection', detail: `${out.c.name} entered this exchange (${out.entry.reason})` });
+    const lock = !unmet.length ? lockOf(out, true) : null; if (lock) unmet.push({ condition: 'rotation lock or immunity', detail: lock.reason || 'locked', abilityId: lock.abilityId ?? null, by: lock.by });
+    const inc = !unmet.length ? (incoming === 'firstReserve' ? reserves[0] : reserves.find((x) => x.c.id === incoming)) : null;
+    if (!unmet.length && !inc) unmet.push({ condition: 'chosen replacement is a living reserve', detail: String(incoming) });
+    if (unmet.length) { if (LOG) log('rotation_refused', src, out || null, `${src.c.name}'s forced rotation is refused (${unmet.map((u) => u.condition).join(', ')})`, { forced: true, abilityId, unmet, stage: 'trigger' }); return false; }
+    side.lastForced = ex; side.forced += 1;
+    if (LOG) log('rotation', src, out, `${src.c.name} forces ${out.c.name} out; ${inc.c.name} comes in`, { side: side.key, voluntary: false, forced: true, out: out.c.id, in: inc.c.id, abilityId, stage: 'resolution' });
+    depart(out, 'forced'); enter(inc, 'forced');
+    return true;
+  }
+
   // ---- one normal turn (P6 step 3). Returns true when the battle is decided.
   function takeTurn(x) {
     x.turns += 1; x.inTurn = true; phase = 'turn'; turnIndex += 1;
@@ -439,6 +549,13 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       else stunnedSkip = true;
     }
     x.stunProtected = false; // spent by this normal turn, whatever happens on it
+    // P8 entry penalty (approved; src/data/approved-values.js rotationEntryPenalty): on the entrant's first normal turn after a
+    // VOLUNTARY rotation its damage multipliers, heals, shields and status-application chances are x0.5; a Stunned skip spends it.
+    // KO replacements and forced rotations never set it. Entry effects, reactions and defensive effects are unchanged.
+    if (x.p8pending) {
+      const pen = rotationEntryPenalty({ firstAfterVoluntaryRotation: true, stunnedSkip }); x.p8pending = false; x.p8 = { factor: pen.factor };
+      if (LOG) log('entry_penalty', x, null, stunnedSkip ? `${x.c.name}'s entry penalty is spent by the Stunned skip` : `${x.c.name} acts at half strength (first turn after rotating in)`, { factor: pen.factor, spentBy: stunnedSkip ? 'stunned skip' : 'turn' });
+    }
     const choice = stunnedSkip ? { kind: 'skip', cause: 'stunned' } : probe('chooseAction', x.c.id);
     let done = false;
     if (choice?.kind === 'skip' && choice.cause === 'stunned') {
@@ -456,6 +573,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       if (choice?.kind === 'attack') { if (foe) done = strike(x, foe, { tag: 'special', mult: choice.mult ?? 1, abilityId: choice.abilityId ?? null, hits: choice.hits, undodgeable: choice.undodgeable, exceptions: choice.exceptions, label: choice.label }); }
       else if (choice?.kind === 'heal') heal(x, byId.get(choice.targetId ?? x.c.id), choice);
       else if (choice?.kind === 'shield') grantShield(x, byId.get(choice.targetId ?? x.c.id), choice);
+      else if (choice?.kind === 'forcedRotation') { forcedRotation(x, choice.side === 'own' ? x.side : other(x.side), { incoming: choice.incoming, abilityId: choice.abilityId ?? null }); done = endCheck(); }
       else if (foe) done = ordinaryAttack(x, foe);
     }
     // End of turn (P6 step 3.14; B3 rule 5: a monster knocked out during its own turn has no end of turn).
@@ -476,6 +594,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       for (const k of tickClocks(x)) if (LOG) log('clock_end', x, x, `${x.c.name}: ${k.kind} ${k.id} ends`, { clock: k.id, clockKind: k.kind, turn: x.turns });
       probe('endOfTurn', x.c.id);
     }
+    x.p8 = null; // the penalty lasts exactly this one normal turn
     x.inTurn = false;
     return done || endCheck();
   }
@@ -504,6 +623,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   for (const side of [S.a, S.b]) enter(side.line[0], 'opening');
 
   // ---- the exchange loop (P6 "Beast Clash exchange", B3)
+  let stopped = null;
+  if (stopAt != null && (!Number.isInteger(stopAt.exchange) || stopAt.exchange < 1 || (stopAt.turn != null && ![1, 2].includes(stopAt.turn)))) throw new Error('stopAt needs { exchange >= 1, turn? 1 | 2 }');
   while (ex < V.battle.exchangeCap && !winner) {
     ex += 1; ramp = rampFor(model, ex, sdFrom); healMult = healMultiplier();
     // 1. Round start: reserve start-of-round windows in stable ID order. Reserves are inert: only an explicit reserve ability acts
@@ -527,19 +648,29 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     if (LOG) log('initiative', order[0], order[1], `${order[0].c.name} acts first (${why})`, { by: why, order: order.map((x) => x.c.id) });
     // 3. Each active monster's turn, in initiative order. A monster knocked out (or no longer active) before its turn loses it
     //    (B3 rule 2); its replacement does not take it.
+    let turnNo = 0;
     for (const x of order) {
-      if (x.koed || !x.active) { phase = 'turn'; if (LOG) log('turn_cancelled', x, null, `${x.c.name}'s turn is cancelled (${x.koed ? 'knocked out' : 'no longer active'})`); continue; }
-      if (takeTurn(x)) break;
+      turnNo += 1;
+      if (x.koed || !x.active) { phase = 'turn'; if (LOG) log('turn_cancelled', x, null, `${x.c.name}'s turn is cancelled (${x.koed ? 'knocked out' : 'no longer active'})`); }
+      else if (takeTurn(x)) break;
+      if (stopAt && stopAt.exchange === ex && stopAt.turn === turnNo && !winner) { stopped = { kind: 'turn', ex, turn: turnNo }; break; }
     }
-    if (winner) break;
-    // 4. Rotation phase (P8): a stub until S4. No rotation happens.
+    if (winner || stopped) break;
+    // 4. Rotation phase (P8): after both turns and before delayed impacts. Requests come from the state at the start of the phase
+    //    (both sides decided first), then resolve side A, then side B. A 'manual' side with no recorded decision stops here (D1).
     phase = 'rotation';
-    if (LOG) log('rotation_phase', null, null, 'Rotation phase: no rotation (S4)');
+    if (LOG) log('rotation_phase', null, null, 'Rotation phase', { cadence: { a: ex - S.a.lastVoluntary >= CADENCE, b: ex - S.b.lastVoluntary >= CADENCE } });
     probe('rotationPhase');
+    const requests = [];
+    for (const side of [S.a, S.b]) { const r = rotationRequest(side); if (r?.pending) { stopped = r.pending; break; } if (r?.incoming) requests.push({ side, ...r }); }
+    if (stopped) { if (LOG) log('rotation_prompt', byId.get(stopped.activeId) || null, null, `Side ${stopped.side.toUpperCase()} may rotate: waiting for a decision`, { pending: true, side: stopped.side, options: stopped.options }); break; }
+    for (const q of requests) if (executeRotation(q.side, q.incoming, q.by)) break;
+    if (winner) break;
     // 5. End of exchange: delayed impacts arrive here from S5.
     phase = 'end_of_exchange';
     probe('endOfExchange');
     if (LOG) log('exchange_end', null, null, `End of exchange ${ex}`);
+    if (stopAt && stopAt.exchange === ex && stopAt.turn == null) { phase = 'end_check'; if (!endCheck()) { stopped = { kind: 'exchange', ex }; break; } }
     // 6. End check.
     phase = 'end_check';
     if (endCheck()) break;
@@ -548,23 +679,27 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   // ---- the cap: HP share, then the seeded coin on an exact tie (approved)
   const hpShare = (side) => { const t = side.line.reduce((s, x) => s + x.c.maxHp, 0); return side.line.reduce((s, x) => s + x.hp, 0) / t; };
   const share = { a: hpShare(S.a), b: hpShare(S.b) };
-  phase = 'end';
-  if (!winner) {
+  phase = stopped ? 'boundary' : 'end';
+  if (!winner && !stopped) {
     if (share.a !== share.b) { winner = share.a > share.b ? 'a' : 'b'; by = 'hp'; if (LOG) log('cap', null, null, `Exchange cap reached: side ${winner.toUpperCase()} has more of its starting HP left (${Math.round(share.a * 100)}% v ${Math.round(share.b * 100)}%)`, { share }); }
     else { winner = rng.chance(0.5) ? 'a' : 'b'; by = 'coin'; if (LOG) log('cap', null, null, `Exchange cap reached with an exact HP tie: the seeded coin goes to side ${winner.toUpperCase()}`, { share, coin: true }); }
   }
   // Statuses at the end (D12, approved §25 item 12): a standalone battle clears every status at its actual end; an opening or
   // overtime Clash keeps its slots for the carry into football (spec §10), returned as `carryOut` (S12 applies it to the game).
   let carryOut = null;
-  if (context === 'standalone') { for (const x of [...S.a.line, ...S.b.line]) if (x.status) clearStatus(x, 'end of a standalone battle'); }
+  if (stopped) { /* a boundary is not the end of the battle: nothing clears, nothing carries */ }
+  else if (context === 'standalone') { for (const x of [...S.a.line, ...S.b.line]) if (x.status) clearStatus(x, 'end of a standalone battle'); }
   else { carryOut = {}; for (const x of [...S.a.line, ...S.b.line]) if (x.status) { const t = toFootball(x.status, x.c.maxHp); if (t) carryOut[x.c.monsterId] = t; } }
-  if (LOG) log('end', null, null, `Side ${winner.toUpperCase()} wins by ${by === 'knockout' ? 'knockout' : by === 'hp' ? 'HP share' : 'coin flip'} after ${ex} exchange${ex === 1 ? '' : 's'}`, { winner, by });
+  if (LOG && !stopped) log('end', null, null, `Side ${winner.toUpperCase()} wins by ${by === 'knockout' ? 'knockout' : by === 'hp' ? 'HP share' : 'coin flip'} after ${ex} exchange${ex === 1 ? '' : 's'}`, { winner, by });
 
   const lineOut = (side) => side.line.map((x) => ({ id: x.c.id, monsterId: x.c.monsterId, species: x.c.species, name: x.c.name, archetype: x.c.archetype, type: x.c.type, basic: x.c.basic,
     hp: x.hp, maxHp: x.c.maxHp, active: x.active, koed: x.koed, koOrder: x.koOrder, turns: x.turns, skips: x.skips, stunnedSkips: x.stunnedSkips, entries: x.entries, status: x.status ? structuredClone(x.status) : null, clocks: x.clocks.map((k) => ({ id: k.id, kind: k.kind, left: k.left })), stats: { ...x.stats }, combatant: x.c }));
   const lines = { a: lineOut(S.a), b: lineOut(S.b) };
+  const sides = { a: { policy: S.a.policy, rotations: S.a.rotations, forced: S.a.forced, lastVoluntary: S.a.lastVoluntary }, b: { policy: S.b.policy, rotations: S.b.rotations, forced: S.b.forced, lastVoluntary: S.b.lastVoluntary } };
+  const boundary = stopped ? { ...stopped, rngDraws: draws, stateHash: stateHash({ winner: null, by: null, ex, draws, lines }), lastSeq: events.length - 1 } : null;
   const result = {
-    ruleset: V.ruleset, engine: V.engineVersion, winner, by, exchanges: ex, capped: !!(ex >= V.battle.exchangeCap && by !== 'knockout'), seed, model, config: cfg,
+    ruleset: V.ruleset, engine: V.engineVersion, pending: !!stopped, boundary, sides,
+    winner: stopped ? null : winner, by: stopped ? null : by, exchanges: ex, capped: !stopped && !!(ex >= V.battle.exchangeCap && by !== 'knockout'), seed, model, config: cfg,
     context, carryOut, hpShare: share, lines, log: events, rngDraws: draws, probed: probes.length > 0, staged: !!stage,
     stateHash: stateHash({ winner, by, ex, draws, lines }),
     replayKey: t8ReplayKey({ a, b, seed, config: cfg, carryIn }),
