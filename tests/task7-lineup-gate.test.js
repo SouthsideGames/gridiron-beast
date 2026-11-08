@@ -40,7 +40,11 @@ test('a complete lineup progresses normally; an incomplete one is named exactly,
   assert.ok((g.fixes.CB || []).length > 0, 'cheapest legal free agents are listed');
   for (const x of g.fixes.CB) assert.equal(F.freeAgentMarket(f).find((y) => y.monster.id === x.id).monster.position, 'CB', 'only CBs are offered for a CB slot');
   assert.equal(canPlay('S', 'CB2'), false, 'a safety may not play CB');
-  // the game cannot be played: Sunday is a forfeit and the engine refuses a game
+  // the game cannot be played: Sunday is a forfeit and the engine refuses a game. Constructed (2026-11-08, after D1's founding rosters):
+  // the staff's Tuesday encounter may legally sign a scouted CB (here one of the CBs the AI clubs just released), which would close the
+  // hole before Sunday; the roster is filled to the maximum with non-CB reserves first, so no Tuesday signing can happen (the staff only
+  // signs below ROSTER_MAX) and the hole stays open to game day, as the scenario needs.
+  const filler = f.roster.find((x) => x.position === 'K'); while (f.roster.length < F.ROSTER_MAX) f.roster.push({ ...JSON.parse(JSON.stringify(filler)), id: `pad${f.roster.length}`, name: `Pad ${f.roster.length}` });
   F.autoRunToSunday(f); if (F.isBye(f)) { F.takeBye(f); F.autoRunToSunday(f); }
   const m = F.sundayMatchup(f); assert.ok(m.forfeit); assert.equal(F.pregamePreview(f).ok, false, 'the game screen refuses an illegal lineup (the established forfeit rule)');
 });
