@@ -5,7 +5,7 @@
 //
 // Variants: plain (an ordinary scene), inert (an ability scene with its overlays' types but no species, no primes, no staged fields:
 // an ordinary scene both builds can run), ability (the full ability scene; Task 8 builds only).
-// Each run returns { ms, plays, ticks, fp, inputs, playsHash, abilityEvents, fields }: ms is the timed section only (scene inputs,
+// Each run returns { ms (wall), cpu (process CPU time), plays, ticks, fp, inputs, playsHash, abilityEvents, fields }: ms is the timed section only (scene inputs,
 // teams and game states are built before the timer starts; fingerprints are computed after it stops).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,6 +24,8 @@ const RNG = await imp('src/core/rng.js');
 const IS_T8 = fs.existsSync(path.join(ROOT, 'src/sim/abilities/registry.js'));
 const FIELDS = IS_T8 ? await imp('src/sim/t8/fields.js') : null;
 
+/** CPU time (user + system) of this process since `c0`, in ms: robust to other processes taking the CPU, unlike wall time. */
+const cpuMs = (c0) => { const d = process.cpuUsage(c0); return (d.user + d.system) / 1000; };
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const sceneById = (id) => { const s = MANIFEST.scenes.find((x) => x.id === id); if (!s) throw new Error(`unknown scene ${id}`); return s; };
@@ -73,10 +75,10 @@ function runEngine(sc) {
   const inputs = engineInputs(sc);
   const inputsHash = sha(JSON.stringify(inputs.map((x) => ({ o: x.offensePlay.id, d: x.defensePlay.id, off: x.offense, def: x.defense, b: x.ballOn, s: x.seed, m: x.options.memory, e: x.options.envType, f: x.options.forcedTarget ?? null }))));
   const sims = new Array(inputs.length);
-  const t0 = process.hrtime.bigint();
+  const t0 = process.hrtime.bigint(), c0 = process.cpuUsage();
   for (let i = 0; i < inputs.length; i++) sims[i] = E.simulatePlay(inputs[i]);
-  const ms = Number(process.hrtime.bigint() - t0) / 1e6;
-  return { ms, sims, inputsHash, plays: inputs.length, playIds: [...new Set(inputs.flatMap((x) => [x.offensePlay.id, x.defensePlay.id]))] };
+  const ms = Number(process.hrtime.bigint() - t0) / 1e6, cpu = cpuMs(c0);
+  return { ms, cpu, sims, inputsHash, plays: inputs.length, playIds: [...new Set(inputs.flatMap((x) => [x.offensePlay.id, x.defensePlay.id]))] };
 }
 
 // ------------------------------------------------------------------------------------------------ rules tier
@@ -103,7 +105,7 @@ function rulesGames(sc, variant) {
 function runRules(sc, variant) {
   const games = rulesGames(sc, variant); const calls = callsOf(sc); const want = sc.unit === 'defense' ? 'away' : 'home'; const ballOn = sc.ballOn ?? 35;
   const sims = []; let plays = 0;
-  const t0 = process.hrtime.bigint();
+  const t0 = process.hrtime.bigint(), c0 = process.cpuUsage();
   for (const g of games) {
     const { state, teams } = g;
     for (let k = 0; k < sc.snaps; k++) {
@@ -118,10 +120,10 @@ function runRules(sc, variant) {
       sims.push(sim); plays += 1;
     }
   }
-  const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+  const ms = Number(process.hrtime.bigint() - t0) / 1e6, cpu = cpuMs(c0);
   const inputsHash = sha(JSON.stringify(games.map((g) => ({ gs: g.gs, teams: g.teams }))));
   const fields = games.reduce((n, g) => n + (g.state.t8?.fields?.seq || 0), 0);
-  return { ms, sims, inputsHash, plays, playIds: [...new Set(calls.flat().filter((x) => PB.PLAYS[x]))], games, fields };
+  return { ms, cpu, sims, inputsHash, plays, playIds: [...new Set(calls.flat().filter((x) => PB.PLAYS[x]))], games, fields };
 }
 
 const ABILITY_KINDS = new Set(['ability', 'status', 'ability_ready', 'field', 'spawn', 'dragon_swallow']);
@@ -134,7 +136,7 @@ export function runScene(id, variant = 'plain', { dump = false } = {}) {
   const TICK = E.TICK || 0.05;
   let ticks = 0, abilityEvents = 0; const light = [];
   for (const s of r.sims) { ticks += Math.round((s.elapsed || 0) / TICK); for (const e of s.events || []) if (e.ability || ABILITY_KINDS.has(e.kind)) abilityEvents += 1; light.push(`${s.result}|${s.yards}|${s.elapsed}|${s.frames?.length}|${s.events?.length}`); }
-  const out = { scene: id, variant, ms: r.ms, plays: r.plays, ticks, abilityEvents, fields: r.fields || 0, inputsHash: r.inputsHash, playsHash: sha(r.playIds.sort().map((p) => playKey(PB.getPlay(p))).join('\n')), fp: sha(light.join('\n')) };
+  const out = { scene: id, variant, ms: r.ms, cpu: r.cpu, plays: r.plays, ticks, abilityEvents, fields: r.fields || 0, inputsHash: r.inputsHash, playsHash: sha(r.playIds.sort().map((p) => playKey(PB.getPlay(p))).join('\n')), fp: sha(light.join('\n')) };
   if (dump) { // identity proof: every play's full output, and for the rules tier the game states afterwards
     const full = JSON.stringify(r.sims, (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v));
     out.full = sha(full); if (r.games) out.state = sha(JSON.stringify(r.games.map((g) => g.state), (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v)));
