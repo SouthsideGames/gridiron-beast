@@ -16,6 +16,7 @@ const rushing = (ctx) => !ctx.stats.receiver && !ctx.kickoff && !ctx.twoPoint;
 export default registerAbility({
   family: 'emberfox', abilityId: 'FIR-01-F',
   initGame: () => ({ charges: 0, ignited: false }),
+  review: { prime: () => ({ charges: 0, ignited: true }) }, // reviewer staged input: an ignition ready for the next rushing carry
   hooks: {
     playStart(ctx, self) { self.br = { encounter: null, spent: false }; },
     tackleAttempt(ctx, self, tackler) {
