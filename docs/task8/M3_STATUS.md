@@ -51,6 +51,18 @@ Status at 466ee7e (2026-11-07, 23:59). Branch `task8-implementation`; nothing me
     - a verdict saves;
     - no page errors.
 
+## Milestone regression
+
+- **Tested commit:** 466ee7e. Full suite, 1,104 tests on a frozen copy, 83 minutes.
+- **Result:** 1,103 pass, 1 fails: `tests/task6-phase-d.test.js` "R4 in play". It is left failing on purpose, pending owner decision
+  D11 (rebuilding clubs' starter sales; DECISION_PACKET_M3.md §6).
+- **Merged after 466ee7e:** the deterministic reviewer scenarios (b9317fc), the restamp (72eb868) and packet documents. Their
+  targeted tests pass: task8-review-scenarios, task8-activation-gates and task8-ability-review, 28 of 28. The browser check of the
+  scenario mode at 72eb868 ran Guiding Halo, Crossed Wires, Shadow Exchange, Hoard Flight and Fortress Gate with no page errors. These
+  are not yet covered by a full run.
+- **M3 remains open** pending the rulings in DECISION_PACKET_M3.md: Prism Break; the values; the four usability changes (Guiding
+  Halo, Crossed Wires, Shadow Exchange, Fortress Gate); the AI Dragon Roar policy; the two-point and kickoff readings.
+
 ## In progress
 
 - **Regression**: the M2 full run at 7093bfb is finishing; a full run on the M3 head follows the gate merge.
