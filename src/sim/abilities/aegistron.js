@@ -6,7 +6,8 @@
 // football (engine obstacles); no push, damage, status or extra player. One use per defensive possession; the activation play cannot
 // charge; an illegal placement keeps the full bar and the use. The panels disappear at the whistle; the charge carries over halftime
 // and possessions, and the use resets only with a new opposing possession. Safe placement only: a panel may not spawn inside a body
-// or past an end-zone boundary (or the sideline), and the pair is skipped if either is illegal. The opponent can run the centre or
+// or past an end-zone boundary (or the sideline), and the pair is skipped if either is illegal. Owner N8b: each panel is shortened
+// to its longest safe length, never below 1.5 yd, before a refusal. The opponent can run the centre or
 // pass. He keeps his normal DL role after the cast.
 // Readings where the contract is silent (documented, minimal):
 //   - "Beside": lateral; each panel's inner edge is 1 yard from his spot, its thickness centred on his depth.
@@ -22,7 +23,24 @@ import { able, scrimmage, byMastery } from './common.js';
 
 export const FORTRESS = Object.freeze({ width: [1.5, 2, 2.5, 3], thickness: 0.5, gap: 1, plays: 3, maxGain: 3, body: 0.35 });
 
-/** The two panels for a source at (x, y) and mastery m, as play-frame rectangles. */
+/** Owner ruling N8b (item F): each panel is placed at its longest safe length, from the mastery width down to (never below) the
+ *  mastery-0 width 1.5 yd, shortened from its outer end (the inner edge stays 1 yd from his spot); a panel that is not safe even at
+ *  1.5 yd is refused as before (the pair is skipped, bar and use kept). Returns { panels, refusal }. */
+export const MIN_PANEL = 1.5;
+export function safePanels(x, y, m, B, bodies) {
+  const w0 = byMastery(FORTRESS.width, m), h = FORTRESS.thickness / 2, g = FORTRESS.gap; const out = [];
+  for (const side of [-1, 1]) {
+    let placed = null, why = null;
+    for (let w = w0; w >= MIN_PANEL - 1e-9; w = Math.round((w - 0.1) * 10) / 10) {
+      const p = side < 0 ? { x0: x - h, x1: x + h, y0: y - g - w, y1: y - g } : { x0: x - h, x1: x + h, y0: y + g, y1: y + g + w };
+      why = panelRefusal(p, B, bodies); if (!why) { placed = p; break; }
+    }
+    if (!placed) return { panels: null, refusal: why };
+    out.push(placed);
+  }
+  return { panels: out, refusal: null };
+}
+/** The two full-width panels for a source at (x, y) and mastery m, as play-frame rectangles. */
 export function gatePanels(x, y, m) {
   const w = byMastery(FORTRESS.width, m), h = FORTRESS.thickness / 2, g = FORTRESS.gap;
   return [{ x0: x - h, x1: x + h, y0: y - g - w, y1: y - g }, { x0: x - h, x1: x + h, y0: y + g, y1: y + g + w }];
@@ -45,8 +63,7 @@ export default registerAbility({
       if (self.team !== 'def' || !scrimmage(ctx)) return;
       const st = ctx.state(self); if (!st.armed || !able(ctx, self)) return;
       if (ctx.drive != null && st.usedDrive === ctx.drive) return; // once per defensive possession
-      const panels = gatePanels(self.x, self.y, self.mastery);
-      const why = panels.map((p) => panelRefusal(p, ctx.bounds, ctx.actors)).find(Boolean);
+      const { panels, refusal: why } = safePanels(self.x, self.y, self.mastery, ctx.bounds, ctx.actors.filter((a) => a !== self)); // N8b: longest safe panels
       if (why) { ctx.log(`${self.name}'s Fortress Gate finds no safe ground (${why})`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'MET-06-F', reason: why }); return; } // bar and use kept
       if (!ctx.canStartSignature(self)) return; // denied: bar and use kept
       for (const p of panels) ctx.addObstacle({ ...p, owner: self.mid, ability: 'MET-06-F', kind: 'gate' });

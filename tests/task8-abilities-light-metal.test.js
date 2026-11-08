@@ -392,3 +392,13 @@ test('no stacking: every family of this batch is registered and its legacy effec
   const r = play('curl_flat', 'cover_3', 5, (o, d) => { mon(o.WR1, 'aurelion'); mon(d.LB1, 'halofang'); mon(o.LG, 'metalhorn'); }, { t8: { status: {} }, forcedTarget: 'WR1' });
   assert.ok(!r.events.some((e) => e.kind === 'ability' && e.key), 'no legacy ability effect fired');
 });
+
+test('Fortress Gate (owner N8b): each panel is placed at its longest safe length, never below 1.5 yd; refused only when even 1.5 is unsafe', async () => {
+  const { safePanels, FORTRESS, MIN_PANEL } = await import('../src/sim/abilities/aegistron.js');
+  const B = { left: -26, right: 26, ownGoal: -30, goal: 60 };
+  const full = safePanels(0, 0, 3, B, []); assert.equal(full.panels[0].y1 - full.panels[0].y0, FORTRESS.width[3], 'clear ground: the full 3-yd panel');
+  const nb = [{ x: 0, y: 3.2 }]; // a neighbour 3.2 yd to his right: a 3-yd panel (1 to 4 yd) would touch him
+  const s = safePanels(0, 0, 3, B, nb); const right = s.panels[1]; assert.ok(right.y1 - right.y0 < 3 && right.y1 - right.y0 >= MIN_PANEL, `shortened to ${(right.y1 - right.y0).toFixed(1)}`);
+  assert.ok(right.y1 <= nb[0].y - 0.35 + 1e-9, 'clear of the body'); assert.equal(s.panels[0].y1 - s.panels[0].y0, 3, 'the other side keeps its full width');
+  assert.equal(safePanels(0, 0, 3, B, [{ x: 0, y: 1.6 }]).panels, null, 'unsafe even at 1.5 yd: refused (bar and use kept by the caller)');
+});
