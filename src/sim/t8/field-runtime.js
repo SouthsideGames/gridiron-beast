@@ -13,7 +13,7 @@ export function queueField(t8, spec) { book(t8).pending.push({ ...spec }); }
 export function createPending(t8, { onField, eligible = () => true, place, playIndex }) {
   const b = book(t8); const made = []; const keep = [];
   for (const p of b.pending) {
-    if (!onField.has(p.owner) || !eligible(p)) { keep.push(p); continue; }
+    if (!(p.offField || onField.has(p.owner)) || !eligible(p)) { keep.push(p); continue; } // p.offField: an explicit off-field creation permission (Tsunami Line, Splashdown)
     const r = placeRect({ id: `F${++b.seq}`, type: p.type, createdAt: playIndex, owner: p.owner, strength: p.strength ?? null, ...place(p) });
     // `payload`: the producing ability's approved per-field data the in-play effects read (src/sim/t8/field-effects.js)
     const f = { ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, payload: p.payload ?? null, remaining: p.lifetime, clock: p.clock, clearsAtHalftime: p.clearsAtHalftime !== false, createdThisPlay: true };

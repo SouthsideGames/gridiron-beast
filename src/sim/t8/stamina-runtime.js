@@ -2,7 +2,7 @@
 // initial stamina equal the monster's permanent Durability (1:1). Every completed play a monster takes part in drains 1 (while
 // Afflicted: permanent / max(1, effective Durability)); bench and other-unit time never drain. Only halftime restores 50% of capacity.
 // At zero the monster is exhausted for the rest of the actual game: all 12 effective attributes halved once (engine.js).
-import { startGame, drainPlay, halftime as restHalf } from './stamina.js';
+import { startGame, drainPlay, drainBy, halftime as restHalf } from './stamina.js';
 import { statusOf } from './status-runtime.js';
 import { effectiveAttr } from './status-effects.js';
 
@@ -21,3 +21,5 @@ export function afterPlay(state, inputs) {
 export function halftime(state) { const b = book(state); for (const k of Object.keys(b)) b[k] = restHalf(b[k]); }
 /** The monsters exhausted in this game (their attributes are halved by the engine), or null when none. */
 export function exhaustedSet(state) { const b = state.t8?.stamina; if (!b) return null; const ids = Object.keys(b).filter((k) => b[k].exhausted); return ids.length ? new Set(ids) : null; }
+/** Task 8 M3: an ability's immediate drain of current stamina points (WAT-03-F), bounded at zero; exhaustion begins at 0 (B10). */
+export function drainPoints(state, input, points) { const s = staminaOf(state, input); if (!s) return null; return (book(state)[input.id] = drainBy(s, points)); }

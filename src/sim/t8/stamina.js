@@ -18,3 +18,5 @@ export const halftime = (s) => ({ ...s, stamina: F.min(F.frac(s.capacity), F.add
 export const exhaustionFactor = (s) => (s.exhausted ? 0.5 : 1);
 /** Low-stamina battery: informational, at 25% of capacity or below. */
 export const showBattery = (s) => F.cmp(s.stamina, F.frac(s.capacity, 4)) <= 0;
+/** Task 8 M3: subtract whole current-stamina points (an ability drain, not a play cost), bounded at zero; capacity is unchanged. */
+export function drainBy(s, points) { const left = F.max(F.ZERO, F.sub(s.stamina, F.frac(Math.max(0, points)))); return { ...s, stamina: left, exhausted: s.exhausted || F.cmp(left, F.ZERO) === 0 }; }

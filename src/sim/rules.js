@@ -139,10 +139,27 @@ function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...O
 /** A field's absolute placement (home-goal frame; lat in the home frame) from the upcoming formation reference (spec §11). */
 const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
 const absLat = (state, l) => (state.possession === 'home' ? l : -l);
-function fieldPlacement(state, p) {
-  const ref = state.ballOn + (p.lbDepth ?? 5); // the fixed LB reference, offense frame
+function fieldPlacement(state, p, alignOf = () => null) {
+  // Task 8 M3: p.depth 'creator' centres the length on the creator's formation alignment (Impact Pyre: the LB's starting position),
+  // otherwise on the fixed reference p.lbDepth beyond the line (5: LB reference; Tsunami Line 12: safety reference); p.lateral
+  // 'creator' centres the width on the creator's initial alignment (Burning Wake), otherwise on the ball.
+  const at = p.depth === 'creator' || p.lateral === 'creator' ? alignOf(p.owner) : null;
+  const ref = state.ballOn + (p.depth === 'creator' && at ? at[0] : (p.lbDepth ?? 5)); // the reference, offense frame
   const a = absYard(state, ref - p.length / 2), b = absYard(state, ref + p.length / 2); // the rectangle centred on the reference (placement choice, documented in M3_PLAN)
-  return { centerLat: absLat(state, state.ballLat || 0), yardFrom: a, yardTo: b, width: p.width };
+  return { centerLat: absLat(state, (state.ballLat || 0) + (p.lateral === 'creator' && at ? at[1] : 0)), yardFrom: a, yardTo: b, width: p.width };
+}
+/** Task 8 M3: who may create at this snap (FIELD_CLOCKS.md). Default: the creator on the field on offense (G3). side 'def': the creator
+ *  on the field on defense. offField: the creator's team's offensive snap, creator anywhere. Immediate fields wait for the whistle. */
+function snapEligible(state, p, offIds, defIds) {
+  if (p.immediate) return false;
+  if (p.side === 'def') return defIds.has(p.owner) && p.ownerTeam !== state.possession;
+  if (p.offField) return p.ownerTeam === state.possession;
+  return offIds.has(p.owner);
+}
+/** Task 8 M3: an immediate field (Splashdown), placed after the play at its play-frame spot, in this play's frame. */
+function spotPlacement(state, sim, p) {
+  const x = sim.ballOn + p.immediate.x;
+  return { centerLat: absLat(state, (sim.ballLat || 0) + p.immediate.y), yardFrom: absYard(state, x - p.length / 2), yardTo: absYard(state, x + p.length / 2), width: p.width };
 }
 /** After a play with fields: the Light recharge for non-Light participants finishing inside a Light field (once per monster per play;
  *  never from his own field), then each field's clock (G1/G2). */
@@ -169,7 +186,9 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
   const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
-  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: offIds, playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p) }) : []; // G3: at the creator's next eligible offensive snap
+  const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
+  const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) return defensePlay.align[sl] || null; return null; };
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => snapEligible(state, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, alignOf) }) : []; // G3: at the creator's next eligible snap (Task 8 M3: defensive and off-field creators too)
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
@@ -179,6 +198,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12): drained under the statuses active during this play (Afflicted, B10)
   T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10), after the drain
   if (t8.fields?.list?.length) afterPlayFields(state, t8, slots, sim, offIds); // Task 8 fields: Light recharge, then the clocks
+  if (t8.fields?.pending?.some((p) => p.immediate)) T8F.createPending(t8, { onField: new Set(), eligible: (p) => !!p.immediate, playIndex: state.playCount || 0, place: (p) => spotPlacement(state, sim, p) }); // Task 8 M3: fields created at the whistle (after the clocks: the creation play is excluded)
   if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
   call.yards = sim.yards; call.result = sim.result; call.turnover = !!sim.turnover;
