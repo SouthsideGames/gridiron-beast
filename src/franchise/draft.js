@@ -17,9 +17,10 @@ export const GYM_ELEMENT_BONUS = 1.5;
 
 export const DRAFT_ROUNDS = 3;
 export const ROOKIE_SCALE = 0.70;
-/** Draft-class scaling (Task 6 Phase A-2, D9, owner 2026-10-30): classes rise about +0.5 a season with the league, capped at +10;
- *  the gem / solid / project mix and every random draw are unchanged, and potential (quality + 6…19) rises with quality. */
-export const CLASS_GROWTH_PER_SEASON = 0.5, CLASS_GROWTH_CAP = 10;
+/** Draft-class scaling (Task 6 Phase A-2, D9, owner 2026-10-30) is RETIRED (owner ruling N8b, 2026-11-08, decision D2): classes no
+ *  longer rise each season; class strength comes from the generator alone, every season alike (N7f retired the league growth it
+ *  matched). The offset function stays (always 0) so the class shape and every random draw are unchanged. */
+export const CLASS_GROWTH_PER_SEASON = 0, CLASS_GROWTH_CAP = 0; // retired (was 0.5 a season, capped at +10)
 export const classQualityOffset = (year) => Math.min(CLASS_GROWTH_CAP, Math.max(0, Math.round(CLASS_GROWTH_PER_SEASON * ((year || 1) - 1))));
 export const CLASS_SHAPE = Object.freeze([['QB', 4], ['RB', 5], ['WR', 8], ['TE', 4], ['OL', 7], ['DL', 7], ['LB', 5], ['CB', 6], ['S', 5], ['K', 2]]); // 53
 
