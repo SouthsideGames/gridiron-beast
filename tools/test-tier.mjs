@@ -19,7 +19,7 @@ const SIM = [
   'tests/partnership-franchise.test.js', 'tests/stats-filters.test.js', 'tests/franchise-acceptance.test.js', 'tests/stats.test.js',
   'tests/rules.test.js', 'tests/uid-isolation.test.js', 'tests/engine.test.js', 'tests/partnership-play.test.js',
   'tests/league-registry.test.js', 'tests/species.test.js', 'tests/abilities.test.js', 'tests/franchise-save-compat.test.js',
-  'tests/qb-read.test.js', 'tests/coach-assist.test.js',
+  'tests/qb-read.test.js', 'tests/coach-assist.test.js', 'tests/task8-review-sequences-a.test.js', 'tests/task8-review-sequences-b.test.js',
 ];
 const PERF = { file: 'tests/clash/engine.test.js', pattern: '^performance:' };
 
