@@ -30,6 +30,8 @@ import { contestMod } from './type-matchups.js';
 import { resolvePancakeOpportunity, shedScore } from './t8/pancake.js';
 import { positionOf } from '../data/personnel.js';
 import { contractOf, abilityState, recordExecution } from './abilities/registry.js';
+import { applyStatus as t8GateApply, statusOf as t8SlotOf } from './t8/status-runtime.js';
+import { maxSpeedPct, accelFactor, effectiveAttr, effectiveMaxSpeed, disablesRestOfPlay, footballApplyRefusal, STUMBLE_KEEP } from './t8/status-effects.js';
 import './abilities/index.js'; // registers every Task 8 football ability contract (M3)
 import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION } from './qb-read.js';
 
@@ -158,8 +160,41 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const t8g = options.t8 || { status: {} };
   const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
-    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q) };
+    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
+    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null) };
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
+  // ------------------------------------------------------------ Task 8 shared statuses in play (spec §10, §11; Appendix B)
+  // One slot per monster in t8g.status (status-runtime.js gate). Effects are read at the snap and again the moment a status is accepted.
+  /** Apply a status through the shared gate (football) and take its effect now. attempt: status.js tryApply shape, plus `source` (an
+   *  actor) or `sourceId`. Logs { kind: 'status', status, by, victim, accepted, reason } unless quiet. Returns { accepted, reason }. */
+  function t8Apply(target, attempt, { quiet = false } = {}) {
+    const src = attempt.source || actors.find((x) => x.mid === attempt.sourceId) || null; const { source, ...att } = attempt;
+    if (src && att.sourceId == null) att.sourceId = src.mid;
+    const refusal = footballApplyRefusal(att);
+    const r = refusal ? { accepted: false, reason: refusal } : t8GateApply({ t8: t8g }, target.mid, att);
+    if (r.accepted) t8StatusEffect(target, r.slot, true);
+    if (!quiet) log(`${target.name} ${r.accepted ? 'is' : 'resists being'} ${att.id}`, { kind: 'status', status: att.id, by: src?.slot ?? null, side: src?.team ?? null, victim: target.slot, victimSide: target.team, accepted: r.accepted, reason: r.reason });
+    return { accepted: r.accepted, reason: r.reason };
+  }
+  /** The one maximum-speed aggregation (§11): every source's signed % in a.speedMods (status now; fields add `field`), bounded. */
+  function refreshMaxSpeed(a) { a.baseMaxSpeed ??= a.maxSpeed; a.maxSpeed = effectiveMaxSpeed(a.baseMaxSpeed, a.speedMods); }
+  function t8Disengage(a) { for (const x of actors) if (x.engaged === a) x.engaged = null; a.engaged = null; }
+  /** A slot's football effect on its actor (live: applied mid-play, so immediate physical effects happen too). */
+  function t8StatusEffect(a, slot, live) {
+    if (!slot && !a.t8Base) return;
+    a.t8Base ??= { strength: a.attrs.strength, awareness: a.baseAwareness, durability: a.attrs.durability, accel: a.accel };
+    (a.speedMods ||= {}).status = maxSpeedPct(slot); refreshMaxSpeed(a); a.accel = a.t8Base.accel * accelFactor(slot); // Slowed / Quickened
+    a.attrs.strength = effectiveAttr(slot, 'strength', a.t8Base.strength); // Weakened / Empowered
+    a.attrs.awareness = a.baseAwareness = effectiveAttr(slot, 'awareness', a.t8Base.awareness); // Confused
+    a.attrs.durability = effectiveAttr(slot, 'durability', a.t8Base.durability); // Afflicted (stamina drain: stamina-runtime.js, B10)
+    if (slot?.id === 'stunned' && !slot.restOfPlay) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // B18 carryover (rules.js also passes sitsOut)
+    if (!live || !slot) return;
+    if (disablesRestOfPlay(slot)) { // Stunned (rest of play) / Knocked Down: movement stops; cannot move, block or tackle
+      t8Disengage(a); a.stun = 1e6; a.noEngage = 1e6; a.vx = 0; a.vy = 0;
+      if (slot.id === 'knockedDown') { a.knockedDown = true; setStatus(a, 'flat', 1e6); }
+    } else if (slot.id === 'stumbled') { t8Disengage(a); a.vx *= STUMBLE_KEEP; a.vy *= STUMBLE_KEEP; a.stumbled = true; } // current speed only
+  }
+  for (const a of actors) t8StatusEffect(a, t8g.status?.[a.mid] || null, false); // the snap: statuses active before the play
   // Pre-snap motion: the motion man is snapped on the move, at his motion spot, already running (owner, 2026-10-20).
   const motion = offensePlay.motion ? { ...offensePlay.motion, man: bySlot.off[offensePlay.motion.slot], from: offensePlay.align[offensePlay.motion.slot] } : null;
   if (motion?.man) {
@@ -327,12 +362,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const res = resolvePancakeOpportunity(prng, blocker.attrs, d.attrs, positionOf(d.slot), { blockScale: scaleVs(blocker, d, 'block'), shedScale: scaleVs(d, blocker, 'shed') });
     if (res.outcome === 'none') return;
     const bk = (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }); bk.pancakeAttempts = (bk.pancakeAttempts || 0) + 1;
-    if (res.outcome === 'pancake' && !d.knockedDown) {
-      blocker.engaged = null; d.engaged = null; d.knockedDown = true; d.stun = 1e6; d.noEngage = 1e6; d.vx = 0; d.vy = 0; setStatus(d, 'flat', 1e6);
+    if (res.outcome === 'pancake' && !d.knockedDown) { // the blocking outcome; Knocked Down goes through the shared gate (§10)
+      blocker.engaged = null; d.engaged = null; t8Apply(d, { id: 'knockedDown', strength: 1, duration: 0, restOfPlay: true, source: blocker }, { quiet: true });
       bk.pancakes = (bk.pancakes || 0) + 1; stats.pancakes = (stats.pancakes || 0) + 1;
       log(`${blocker.name} pancakes ${d.name}`, { kind: 'pancake', by: blocker.slot, side: blocker.team, victim: d.slot });
     } else if (res.outcome === 'lostBlock') {
-      blocker.engaged = null; d.engaged = null; blocker.vx *= 0.6; blocker.vy *= 0.6; blocker.stumbled = true; // Stumbled: current speed only, no timer, no lock
+      blocker.engaged = null; d.engaged = null; t8Apply(blocker, { id: 'stumbled', strength: 1, duration: 0, restOfPlay: true, source: d }, { quiet: true }); // Stumbled via the gate: current speed only, no timer, no lock
       bk.lost += 1; log(`${blocker.name} loses ${d.name} on a failed pancake`, { kind: 'stumble', by: blocker.slot, side: blocker.team, victim: d.slot });
     }
   }
