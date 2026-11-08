@@ -15,6 +15,8 @@
 // - Moving, it stops at the first defender contact, and also where moving on would overlap any other monster (it never displaces).
 // - "Five additional forward yards" are his own forward progress from the catch spot; the cooldown counts his own subsequent
 //   offensive scrimmage plays; two-point tries are excluded.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the stone screen
+// after the reception is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, tier, countDown, BODY } from './earth-ice-util.js';
 

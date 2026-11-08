@@ -11,6 +11,8 @@
 // - A skipped (status-blocked) target keeps the once-per-play budget rule: that engagement's ordinary opportunity resolves as usual
 //   and the guarantee waits for a later play (the engine gives an OL one pancake opportunity per play).
 // - A play in which the activation is denied (Eclipse field, Cold Snap) leaves the guarantee banked; the ordinary roll still happens.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the guaranteed
+// pancake is the live activation (gated); banking a guarantee from an ordinary pancake is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { tryApply } from '../t8/status.js';
 import { scrimmage } from './earth-ice-util.js';

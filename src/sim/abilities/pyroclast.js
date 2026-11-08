@@ -14,6 +14,9 @@
 //  - "Offensive possession" is the drive key the game passes (rules.js abilityMemory); without one (labs) no once-per-possession
 //    limit can be told apart and only the one-pending rule applies.
 //  - A new token may be earned on the spawn play (the old one is spent at spawn), matching P9_VERIFIED_LIMITS.md.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the field is
+// created before his next offensive snap from the banked token (out of play: not gated); earning the token on the YAC run is an in-
+// play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { FIELD } from '../../core/field.js';
 import { scrimmage, byMastery } from './fw-util.js';
@@ -35,7 +38,7 @@ export default registerAbility({
       if (self.team !== 'off' || !scrimmage(ctx) || s.receiver !== self.slot || ctx.stats.catchX == null) return;
       const st = ctx.state(self);
       if (st.pending || (ctx.possession != null && st.earnedOn === ctx.possession)) return; // one pending; once per offensive possession
-      const yac = Math.max(0, Math.round(ctx.ball.x - ctx.stats.catchX)); if (yac < WAKE.minYac) return;
+      const yac = Math.max(0, Math.round(ctx.ball.x - ctx.stats.catchX)); if (yac < WAKE.minYac || !ctx.canGainCharge(self)) return;
       const width = Math.min(FIELD.width, Math.max(WAKE.minWidth, yac));
       st.pending = true; st.earnedOn = ctx.possession;
       ctx.queueField({ owner: self.mid, ownerTeam: ctx.teamSide, type: 'Fire', ability: 'FIR-06-F', strength: byMastery(WAKE.slowByMastery, self.mastery), lifetime: WAKE.lifetime,

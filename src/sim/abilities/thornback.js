@@ -14,6 +14,8 @@
 //   engine has no pre-call phase, so the target is drawn in the pre-snap step after both calls and recorded in the field (locked).
 // - A tackle broken by a teammate's contract does not count; any broken attempt against him while he carries after his own catch does.
 // - The execution (mastery event) is the earned activation.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the patch is
+// created in the pre-snap step (out of play: not gated); the token earned by the broken tackle is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, ready, spend, countPlay, bandInField } from './nature-electric-common.js';
 
@@ -36,7 +38,7 @@ export default registerAbility({
     playStart(ctx, self) { self.bt = { done: false }; },
     tackleBroken(ctx, self) {
       const st = ctx.state(self);
-      if (self.bt.done || self.team !== 'off' || !scrimmage(ctx) || ctx.stats.receiver !== self.slot || ctx.ball.holder !== self || !ready(st)) return;
+      if (self.bt.done || self.team !== 'off' || !scrimmage(ctx) || ctx.stats.receiver !== self.slot || ctx.ball.holder !== self || !ready(st) || !ctx.canGainCharge(self)) return;
       self.bt.done = true; st.token = true; ctx.executed(self);
       ctx.log(`${self.name} earns a Bramble Trap`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-05-F' });
     },

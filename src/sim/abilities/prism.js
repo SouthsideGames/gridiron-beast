@@ -20,6 +20,9 @@
 //   - An overlap is eligible only when both contributing parents are enemy-created; its creation order is the later parent's. Ties
 //     after creation order: the zone id. Removing a base zone entirely also ends any hybrid it formed (one parent is gone).
 //   - Charges come from defensive scrimmage plays only (tackles as the stat sheet credits them, pass breakups as pbuBy).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): Prism Break
+// resolves at the pre-choice point (rules.js game preSnap: out of play, not gated); tackle and breakup charges are in-play charge
+// gains (gated).
 import { registerAbility } from './registry.js';
 import { RECIPES } from '../t8/fields.js';
 import { scrimmage } from './common.js';
@@ -96,7 +99,7 @@ export default registerAbility({
       if (self.team !== 'def' || !scrimmage(ctx)) return; const st = ctx.state(self);
       if (st.noCharge) { st.noCharge = false; return; } // the activation play cannot recharge
       const S = ctx.stats; const tackle = S.tackler === self.slot && s.result !== 'sack' && s.result !== 'touchdown' && !S.defensiveScore;
-      if ((tackle || S.pbuBy === self.slot) && st.charges < PRISM.charges) st.charges += 1; // one per play; one full bar at most
+      if ((tackle || S.pbuBy === self.slot) && st.charges < PRISM.charges && ctx.canGainCharge(self)) st.charges += 1; // one per play; one full bar at most
     },
   },
 });

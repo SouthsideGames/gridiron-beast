@@ -14,6 +14,8 @@
 //  - A drop inside an Eclipse cannot start it (spec §11; nothing is spent).
 //  - The Dex's permanent Catching 78 / Speed 95 ceilings are generation and training limits, not part of the play contract; not
 //    touched here.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the second catch
+// attempt is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
 

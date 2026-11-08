@@ -15,6 +15,8 @@
 //   - A pancake is credited by the engine only to a monster in an OL slot (spec §12: OL pancakes), so as a TE this trigger fires only
 //     when he lines up in an OL slot; it is not invented for the TE.
 //   - The mastery execution is recorded when the field is banked (as Beacon Lane).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the grid is
+// created at the next offensive snap (out of play: not gated); earning it is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery } from './common.js';
 
@@ -31,7 +33,7 @@ export default registerAbility({
       st.fresh = false;
       if (st.cd !== 0 || st.banked) return;
       const catchFd = s.receiver === self.slot && s.firstDown, pancake = (ctx.stats.blockers?.[self.slot]?.pancakes || 0) > 0;
-      if (!catchFd && !pancake) return;
+      if ((!catchFd && !pancake) || !ctx.canGainCharge(self)) return;
       st.banked = true; ctx.executed(self);
       ctx.queueField({ owner: self.mid, ownerTeam: ctx.teamSide, type: 'Metal', ability: 'MET-05-F', lifetime: byMastery(BULWARK.life, self.mastery), clock: 'ownerOffense', width: BULWARK.width, length: BULWARK.length, lbDepth: BULWARK.lbDepth });
       ctx.log(`${self.name} banks a Bulwark Grid`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-05-F', via: catchFd ? 'reception' : 'pancake' });

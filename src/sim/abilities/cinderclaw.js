@@ -12,6 +12,8 @@
 //  - An engagement inside an Eclipse cannot start the mark (spec §11; nothing is spent).
 //  - The shared engine note ("displacement is Strength-based; holding uses Blocking versus defender Agility, with the LB
 //    Strength-based shed exception") is not re-implemented here: the engagement model's current contest (B2 shed) is unchanged.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the mark at his
+// first engagement while ready is the live activation (gated); cooldown only, no charge.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
 

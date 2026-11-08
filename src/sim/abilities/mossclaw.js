@@ -16,6 +16,8 @@
 // - Landing: 1.2 yards beyond the blocker along the line from the DL through the blocker, pulled toward the offense's backfield; the
 //   nearest clear spot (0.8 yards from everyone else, inside the field) among a small deterministic grid around it. Traversal 0.4 s.
 // - "Passing play" = the offense's called play is a pass (including play-action); a rush or contain assignment is "rushing the QB".
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the vault attempt
+// is the live activation (gated; readiness kept when denied); cooldown only.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, scrimmage, ready, spend, countPlay, disabled, nearestClear } from './nature-electric-common.js';
 

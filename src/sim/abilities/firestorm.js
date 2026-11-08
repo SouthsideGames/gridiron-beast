@@ -10,6 +10,8 @@
 //  - Each opponent in range is displaced the full mastery distance (the "max push"), reduced only by resistance; one directly on the
 //    catch point is pushed along the pass line. Displacement keeps him on the field; engagements are not broken.
 //  - Releases inside an Eclipse cannot start (spec §11: a blocked start spends nothing).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the powered
+// release is the live activation (gated; the shockwave is its launched effect and continues); cooldown only, no charge.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
 

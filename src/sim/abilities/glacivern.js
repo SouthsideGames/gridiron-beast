@@ -7,6 +7,8 @@
 // one final score and possession resolution; both checks and the ability use are logged. Once per GAME including overtime (no
 // halftime refresh, no mastery scaling); the rescue spends the use whether it succeeds or fails; a good original kick keeps it. Only
 // the final good result awards three points and triggers made-field-goal abilities, once.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a formula field-
+// goal retry (rules.js fieldGoalMiss), out of play; not gated.
 import { registerAbility } from './registry.js';
 
 export default registerAbility({

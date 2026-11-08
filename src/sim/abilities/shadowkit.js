@@ -13,6 +13,9 @@
 // - Cooldown plays are his own participating defensive scrimmage plays (as the pilot Beacon Lane counts its creator's plays), the
 //   creation play excluded ("after creation"); the lifetime counts his team's defensive scrimmage plays (clock 'teamDefense').
 // - "Ready": no cooldown running and no field already banked. Two-point tries neither bank nor count.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the patch is
+// created at the next defensive snap from the banked field (out of play: not gated); banking it from a pass breakup is an in-play
+// charge gain (gated).
 import { registerAbility } from './registry.js';
 import { stageOf, byMastery, scrimmage, sideOf } from './common.js';
 
@@ -29,7 +32,7 @@ export default registerAbility({
     playEnd(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'def' || !scrimmage(ctx)) return;
       if (st.fresh) st.fresh = false; else if (st.cd > 0) st.cd -= 1;
-      if (!self.ready || st.banked || ctx.stats.pbuBy !== self.slot || ctx.stats.interceptor) return;
+      if (!self.ready || st.banked || ctx.stats.pbuBy !== self.slot || ctx.stats.interceptor || !ctx.canGainCharge(self)) return;
       const side = sideOf(ctx, self); const latOff = (ctx.ballLat || 0) + ctx.ball.y; // the breakup spot, offense frame
       st.banked = true; ctx.executed(self);
       ctx.queueField({ owner: self.mid, ownerTeam: side, side: 'def', type: 'Dark', ability: 'DAR-01-F', strength: STRENGTH[Math.min(1, stageOf(self.form))], lifetime: byMastery(LIFETIME, self.mastery),

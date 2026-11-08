@@ -16,6 +16,8 @@
 // - "Nearest legal open side": first the side the defender already leans to relative to his line of travel, else the other; a side is
 //   legal when the destination is in bounds, clear of every other monster (0.7 yd) and of obstacles. Neither legal: no move.
 // - Two-point tries are excluded; the cooldown counts his own subsequent offensive scrimmage plays (as Beacon Lane's).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the charge at a
+// defender ahead is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, tier, countDown } from './earth-ice-util.js';
 

@@ -14,6 +14,9 @@
 //   from scrimmage (not a kickoff return, not a two-point try) on which he is the carrier.
 // - "Able" (common.js able): no accepted Stunned / Knocked Down status; the engine's momentary off-balance is not a status.
 // - The displaced monsters keep their velocities; engaged pairs move together (both are displaced by the same vector).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the gust at the
+// first crossing is the live activation (gated: a denied start preserves the full bar); broken-tackle charges are in-play charge gains
+// (gated).
 import { registerAbility } from './registry.js';
 import { stageOf, byMastery, scrimmage, able, pushSafely } from './common.js';
 
@@ -32,6 +35,7 @@ export default registerAbility({
       if (self.x <= 0) return;
       ss.crossed = true; // the first crossing beyond the LOS: activate now or not at all this play
       if (!able(ctx, self)) return; // an unable source preserves readiness
+      if (!ctx.canStartSignature(self)) return; // a denied start preserves the full bar (nothing spent)
       const h = ctx.heading(self) || [1, 0]; const s = Math.hypot(h[0], h[1]);
       const ux = -h[0] / s, uy = -h[1] / s;
       const movers = ctx.actors.filter((a) => a !== self);
@@ -42,7 +46,7 @@ export default registerAbility({
     },
     playEnd(ctx, self) {
       const st = ctx.state(self); if (ctx.twoPoint || self.ss?.fired) return; // the activation play cannot recharge
-      if (!self.brokeTackle) return;
+      if (!self.brokeTackle || !ctx.canGainCharge(self)) return;
       st.charges = Math.min(thresholdOf(self.form), st.charges + (self.brokeTackle || 0)); // once each, capped, no overflow
     },
   },

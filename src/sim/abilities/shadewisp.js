@@ -11,6 +11,8 @@
 // a drawn route of three or more points (the engine's planned cut; the same break the legacy Cyclone and Mind Game cards used); it is
 // read at the tick after he takes it. Only that first cut qualifies on a play (a later cut never does). Two-point tries and kickoffs
 // are not defensive plays here (scrimmage plays only), so they neither activate nor count the cooldown.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the mirror at the
+// first cut is the live activation (gated: readiness kept); cooldown only.
 import { registerAbility } from './registry.js';
 
 export const RANGE = [3, 4]; // by form
@@ -30,6 +32,7 @@ export default registerAbility({
       const st = ctx.state(self);
       if (st.cd > 0 || ctx.stats.passer || ctx.ball.inAir || self.stun > 0 || self.engaged || self.knockedDown) return; // not ready, released, or unable: readiness kept
       if (ctx.dist(self, r) > (RANGE[stageOf(self.form)] ?? RANGE[0])) return; // out of range: readiness kept
+      if (!ctx.canStartSignature(self)) return; // denied: readiness kept
       const dx = pts[2][0] - pts[1][0], dy = pts[2][1] - pts[1][1], L = Math.hypot(dx, dy) || 1; const sp = Math.hypot(self.vx, self.vy);
       self.vx = (dx / L) * sp; self.vy = (dy / L) * sp; ms.fired = true;
       st.cd = COOLDOWN[self.mastery] ?? COOLDOWN[0]; st.fresh = true; ctx.executed(self);

@@ -11,6 +11,8 @@
 // Choices where the contract is silent (minimal readings): "8 net rushing yards" is the carrier 8 yards or more past the line of
 // scrimmage; a legal landing is inside the end line and no other monster's body (0.7 yd, the engine's body separation) at the spot;
 // the solid obstacles are the engine's field obstacles (Living Terrain vine clumps); no sideways search for another landing.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the teleport at
+// the first new tackle attempt is the live activation (gated); once per game, no charge.
 import { registerAbility } from './registry.js';
 
 export const BLINK = Object.freeze({ threshold: 8, distance: [5, 6, 7, 8], body: 0.7, clump: 0.5 });

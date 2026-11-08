@@ -15,6 +15,8 @@
 //   "physical obstructions": contract obstacles (walls, snowballs) and the end line stop that target's push.
 // - A possession is the game's drive id (rules.js abilityMemory); without one (labs) every play is its own possession.
 // - The first eligible snap fires even when no defender is aligned within two yards (the use is spent; the wall has no targets).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the possession's
+// first eligible snap is the live activation (gated; the use is kept for a later snap); no charge.
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, BODY } from './earth-ice-util.js';
 

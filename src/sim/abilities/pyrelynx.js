@@ -8,6 +8,9 @@
 //    auraLayer), so every consumer of effective Catching sees it (catching, contested catches and the engine's ball security).
 //  - "Live play" is every simulated play he is on the field for, kickoffs and two-point tries included (no exclusion is stated).
 //  - Mastery: a passive, one credit per game, recorded the first time the aura affects an opponent.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a passive aura
+// (Dex category Aura) with no readiness, charge or cooldown: Eclipse leaves passives running and Cold Snap denies only new
+// activations; not gated.
 import { registerAbility } from './registry.js';
 import { auraLayer, byMastery } from './fw-util.js';
 

@@ -10,6 +10,8 @@
 // Choices where the contract is silent (reported): kickoff return blocks and two-point tries are not trigger plays (batch reading); the
 // root is the spot where he stands when the engagement starts; the pair holds its ground (an anchored blocker neither yields nor
 // drives the defender back), the shed contest itself is unchanged.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): rooting at his
+// first engagement is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, scrimmage, ready, spend, countPlay, disabled } from './nature-electric-common.js';
 

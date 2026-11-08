@@ -14,6 +14,8 @@
 //   clear = 1 yard from everyone. No legal spot: no clone, readiness kept.
 // - The source's effective ratings at the snap (after the play's own modifiers) are the 100% the fractions apply to.
 // - A source who sits out the play (B18) does not summon (readiness kept).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the snap summon is
+// the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, ready, spend, countPlay, disabled, nearestClear } from './nature-electric-common.js';
 

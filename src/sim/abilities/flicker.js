@@ -12,6 +12,8 @@
 // - "Remaining route" at the snap = the drawn route after its alignment point: each receiver's new path starts where he stands and
 //   continues with the other's waypoints 1..n; the route name (settle / vertical continuation) goes with the path.
 // - The random choices come from the abilities' own stream of the play (replayed exactly from the play seed).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the route-snap
+// activation is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, stageOf, scrimmage, ready, spend, countPlay, disabled, positionOf } from './nature-electric-common.js';
 

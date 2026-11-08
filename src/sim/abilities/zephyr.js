@@ -13,6 +13,9 @@
 // - Legal blocking assignment: block, run_block or pull (the engine's blocking jobs, AURA_BLOCK_JOBS).
 // - Kickoffs and two-point tries are not offensive scrimmage snaps (no ordinary cooldown decrement happens on them).
 // - Category Aura: its mastery credit is passive (at most one per game, registry.recordExecution), recorded when a unit is removed.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): Dex category Aura,
+// but the snap choice is a discrete use of a ready cooldown (the cooldown is spent when the unit is removed): the start of a
+// signature, gated at the snap (denied: no target, nothing spent); no charge.
 import { registerAbility, contractOf } from './registry.js';
 import { byMastery, scrimmage, able, byLineup } from './common.js';
 
@@ -32,6 +35,7 @@ export default registerAbility({
         && BLOCK_JOBS.has(b.assignment?.a) && ctx.dist(b, self) <= R && ctx.state(b).cd > 0);
       cands.sort((p, q) => ctx.dist(p, self) - ctx.dist(q, self) || byLineup(p, q));
       const b = cands[0]; if (!b) return;
+      if (!ctx.canStartSignature(self)) return; // denied: no target this play, nothing spent
       self.tw = { target: b }; // snapshot: never switched
       ctx.log(`${self.name}'s Tailwind Huddle picks ${b.name}`, { kind: 'ability_target', by: self.slot, side: self.team, ability: 'WIN-05-F', victim: b.slot, radius: R });
     },

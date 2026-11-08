@@ -12,6 +12,9 @@
 //   - "Nearest" is measured from the kicker (the source) at the snap; the stable lineup tie is the coverage unit's order.
 //   - The kicker must be the source (the K slot of the coverage unit); a Solchirp lined up as a coverage player does not cast.
 //   - The mastery execution is recorded when the status is accepted.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the cast at the
+// live kickoff's snap is the activation of the banked support (gated: the token waits); the bank itself comes from the extra-point
+// game hook (out of play: not gated).
 import { registerAbility } from './registry.js';
 import { able, stageOf, byMastery } from './common.js';
 
@@ -33,6 +36,7 @@ export default registerAbility({
       const st = ctx.state(self); if (!st.pending || !able(ctx, self)) return; // a Stunned source delays the pending token
       const mates = ctx.actors.filter((a) => a.team === self.team && a !== self && a.slot !== 'K');
       if (!mates.length) return; // no eligible target: the token waits for the next own kickoff
+      if (!ctx.canStartSignature(self)) return; // denied: the token waits
       const target = mates.reduce((b, a) => (ctx.dist(a, self) < ctx.dist(b, self) - 1e-9 ? a : b)); // first in lineup order on a tie
       st.pending = false; // consumed on the cast, even if the status is blocked
       const pct = dawnSignalPct(self.form, self.mastery);

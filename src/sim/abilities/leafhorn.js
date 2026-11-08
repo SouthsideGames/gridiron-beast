@@ -13,6 +13,9 @@
 // - Already-active Stumbled: Stumbled is a within-play status (clears at every whistle), so none can be active at a snap; the protection
 //   only refuses new applications and never removes a status.
 // - The execution (mastery event) is each play's granted protection.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): an automatic
+// protection chosen in the pre-snap step before every defensive snap, with no readiness, charge or cooldown (nothing to deny or keep):
+// treated as a passive grant, not gated.
 import { registerAbility } from './registry.js';
 
 export default registerAbility({

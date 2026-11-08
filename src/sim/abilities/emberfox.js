@@ -5,6 +5,9 @@
 // and the ignition is spent; later arrivals tackle normally. No one-second window. The consuming carry earns no charge. No charging
 // while ignited. No receiving, return or two-point charge or activation. Normal strips and fumbles remain. Unused ignition and partial
 // charge persist across possessions, halftime and overtime, reset per game (game-scope state). Not the legacy Eruption stun.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the ignition at
+// the first eligible tackle of a charged carry is the live activation (gated: a denied start is not an eligible tackle, the ignition
+// is kept); the rushing charge earned at the whistle is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { approvedValues } from '../../data/beast-dex.js';
 
@@ -23,6 +26,7 @@ export default registerAbility({
       const st = ctx.state(self); const br = self.br;
       if (br.encounter) return br.encounter.has(tackler.mid) ? { prevent: true } : undefined; // later arrivals tackle normally
       if (!st.ignited || !rushing(ctx) || ctx.stats.carrier !== self.slot) return undefined;
+      if (!ctx.canStartSignature(self)) return undefined; // a denied start is not an eligible tackle: the ignition is kept
       br.encounter = new Set(ctx.opponents(self.team).filter((d) => !(d.stun > 0) && ctx.dist(d, self) <= REACH).map((d) => d.mid));
       br.encounter.add(tackler.mid); st.ignited = false; br.spent = true; ctx.executed(self);
       ctx.log(`${self.name}'s Blazing Resolve ignites`, { kind: 'ability', by: self.slot, side: self.team, ability: 'FIR-01-F' });
@@ -32,7 +36,7 @@ export default registerAbility({
       const st = ctx.state(self);
       if (s.carrier !== self.slot || s.receiver || s.kickoff || s.twoPoint) return; // official rushing attempts only
       if (self.br?.spent || st.ignited) return; // the consuming carry earns nothing; no charging while ignited
-      if (s.gain >= THRESHOLD[stageOf(self.form)]) { st.charges += 1; if (st.charges >= 3) { st.charges = 0; st.ignited = true; } }
+      if (s.gain >= THRESHOLD[stageOf(self.form)] && ctx.canGainCharge(self)) { st.charges += 1; if (st.charges >= 3) { st.charges = 0; st.ignited = true; } }
     },
   },
 });

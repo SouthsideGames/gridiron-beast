@@ -12,6 +12,8 @@
 // - Net yards allowed: the play's gain; an interception allows 0 (the pass gained nothing). Any touchdown play (either team) is
 //   excluded. "The opposing RB" is the monster in the RB slot.
 // - "For the current play": Weakened with no counted duration and rest-of-play scope (cleared at the whistle, status.js atWhistle).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the claw launch at
+// the snap is the live activation (gated: the full charge is held); the team-stop bar is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, able } from './common.js';
 
@@ -26,6 +28,7 @@ export default registerAbility({
       self.at = { launched: false }; const st = ctx.state(self);
       if (self.team !== 'def' || !scrimmage(ctx) || st.charges < PLAYS || !able(ctx, self)) return;
       const rb = ctx.opponents(self.team).find((o) => o.slot === 'RB'); if (!rb) return; // no RB: hold the full charge
+      if (!ctx.canStartSignature(self)) return; // denied: the full charge is held
       st.charges = 0; self.at.launched = true; ctx.executed(self); // the bar empties on launch, even if blocked
       const pct = byMastery(WEAKEN, self.mastery);
       ctx.log(`${self.name}'s Ambush Tag claws at ${rb.name}`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-04-F', victim: rb.slot });
@@ -35,7 +38,7 @@ export default registerAbility({
       const st = ctx.state(self); if (self.team !== 'def' || !scrimmage(ctx) || self.at?.launched) return;
       if (s.result === 'touchdown' || ctx.stats.defensiveScore) return;
       const net = ctx.stats.interceptor ? 0 : s.gain;
-      if (net <= MAX_YARDS) st.charges = Math.min(PLAYS, st.charges + 1);
+      if (net <= MAX_YARDS && ctx.canGainCharge(self)) st.charges = Math.min(PLAYS, st.charges + 1);
     },
   },
 });

@@ -11,6 +11,8 @@
 //    cooldown counts his participating defensive plays (the pilots' convention).
 //  - Without a game (labs, previews) the drain lands on that play's throwaway record only (labs award and keep nothing).
 //  - An engagement inside an Eclipse cannot start it (spec §11; nothing is spent).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the drain at his
+// first engagement is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
 import * as F from '../../core/fraction.js';

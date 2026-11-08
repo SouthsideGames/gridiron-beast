@@ -16,6 +16,8 @@
 //  - "Free" defender: not engaged, not stunned, not in his no-engage recovery, not knocked down.
 //  - Mastery: one execution per activation (at the snap, where the contract spends it).
 //  - A snap inside an Eclipse cannot start it (spec §11; nothing is spent).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the automatic snap
+// activation is the live activation (gated); cooldown only, no charge.
 import { registerAbility } from './registry.js';
 import { stageOf, scrimmage, byMastery, cooldownStep } from './fw-util.js';
 

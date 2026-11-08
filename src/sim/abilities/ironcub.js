@@ -11,6 +11,8 @@
 //   - "Net backward displacement" is absorbed tick by tick from the positive (defender-gaining) push until the budget is used; ground
 //     he wins back does not refill it.
 //   - The play on which it is spent does not count toward the cooldown (it starts after it, as Beacon Lane's from creation).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the first absorbed
+// push is the live activation (gated once: denied, no absorption this play and the cooldown untouched); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, byMastery } from './common.js';
 
@@ -27,6 +29,7 @@ export default registerAbility({
     },
     blockPush(ctx, self, d, push) {
       const A = self.plate; if (!A?.armed || push <= 0 || A.budget <= 1e-12) return undefined;
+      if (!A.spent && !ctx.canStartSignature(self)) { A.armed = false; return undefined; } // denied: no absorption this play, the cooldown untouched
       const move = push * ctx.dt, take = Math.min(move, A.budget); A.budget -= take; A.absorbed += take;
       if (!A.spent) { A.spent = true; const st = ctx.state(self); st.cd = byMastery(ANCHOR.cooldown, self.mastery); ctx.executed(self);
         ctx.log(`${self.name}'s Anchor Plate drops`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-01-F', victim: d.slot }); }
