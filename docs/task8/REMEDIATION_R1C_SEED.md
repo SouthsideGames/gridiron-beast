@@ -54,3 +54,20 @@ both, so a searched seed decays again at the next approved change.
 
 At the current head the test fails. It is the only failure the final M3 run is expected to show, and it is left as it is pending
 this review.
+
+## Resolution (owner 2026-11-08 10:25): option 2 implemented
+
+- **The intervening-signing test is constructed** through the real free-agency code, on the fixed market of franchise 31:
+  - The spare is a legally generated TE (quality 68, age 23). Its OVR sits in the pool's keep band, 52–60, and this is asserted.
+  - The upgrade completes in a period with more periods still to come.
+  - The second club's TEs then leave the league through the ordinary silent exit, which gives it a genuine urgent TE hole. Its
+    usable cap is asserted to cover the spare's ask.
+  - Free agency runs to its end. Nobody is assigned to anybody.
+  - The later signing elsewhere is asserted. In this run Sunfire Lions sign him, while the second club takes another TE.
+  - Every atomicity, roster-size, cap, market-validity and same-year lock assertion is kept.
+- **"Never vanished" is restated** as a valid recorded destination or disposition: the market, another club, or the league exit
+  the approved pool rule allows. The last of these needs a recorded release by the club, no copy on any roster or market, and an
+  eligible castoff (OVR under 52 and older than 24).
+- **The pool rule now has separate coverage:** an eligible low-rated AI release leaves the league with a recorded release and
+  no stale copy, while one inside the keep band enters the pool.
+- **No gameplay rule changed.** `tests/task7-remediation.test.js` passes 10 of 10.
