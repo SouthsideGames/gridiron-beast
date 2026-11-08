@@ -153,6 +153,20 @@ The field limits were recalculated under these clocks: 44 rectangles, and 0 obje
 | 39 | AI use of Basics | **Approved** | R1; N7b |
 | 40 | Dex and collection | **Approved** | R1; N7b |
 
+## M3 and economy rulings (N8b, 2026-11-08 01:30; RULINGS_2026-11-08.md)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| H Special-play eligibility | **Approved (replacement)** | Kickoffs and two-point conversions: non-kicker abilities neither activate nor charge; kicker abilities only under their own approved conditions; effects an eligible kicker ability creates are allowed; statuses carry over and count down normally; overrides conflicting contract wording |
+| A Prism Break exposed-area measure | **Approved** | Footprint reading |
+| B/C/D calibration | **Approved as PROVISIONAL** | 20 / 8 / 15 yd/s; Snowfall 0.6 s; logistic (d/16) curves |
+| E Crossed Wires | **Approved** | Release the bunch/stack reserve plays with a pair within 5 yd |
+| F Fortress Gate | **Approved** | Longest safe panel, at least 1.5 yd |
+| G Dragon Roar AI | **Approved (PROVISIONAL policy)** | Including desperation attempts up to 90 yd |
+| I Shadow Exchange | **Approved** | Predicted partner position from current position, velocity and known flight time; no simulation, no RNG |
+| D1, D2, D3, D4, D6, D8, D10, D11 | **Approved** | As recommended; D11 test split, sale rules not loosened |
+| D7 identities | **Approved** | Persistent club identities; coaches may change; gyms keep the Compete floor and the soft element preference |
+
 ## M3 rulings (N8a, 2026-11-08 00:41; RULINGS_2026-11-08.md)
 
 | Item | Status | Ruling |
