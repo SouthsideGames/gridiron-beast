@@ -34,6 +34,8 @@ import { applyStatus as t8GateApply, statusOf as t8SlotOf } from './t8/status-ru
 import { maxSpeedPct, accelFactor, effectiveAttr, effectiveMaxSpeed, disablesRestOfPlay, footballApplyRefusal, STUMBLE_KEEP } from './t8/status-effects.js';
 import './abilities/index.js'; // registers every Task 8 football ability contract (M3)
 import { awarenessProfile, acceptBar, throwOdds, rejectReason, QB_MODEL_VERSION } from './qb-read.js';
+// (maxSpeedFactor no longer used here: one aggregation in refreshMaxSpeed)
+import { createFieldPlay } from './t8/field-effects.js';
 
 const DT = 0.05;
 const DEFAULT_ATTRS = { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 60 };
@@ -158,9 +160,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // cooldowns) lives in options.t8 (the football game state's Task 8 block); without one (labs, previews) it is per play only.
   const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13);
   const t8g = options.t8 || { status: {} };
+  // Task 8 M3 fields (spec §11): options.fields in this play's frame (fields.js toPlayFrame); null without fields (src/sim/t8/field-effects.js)
+  const FX = createFieldPlay({ fields: options.fields, actors, seed, log: (...x) => log(...x), t8: t8g, setStatus: (a, c, d) => setStatus(a, c, d), bounds: B, dt: DT, refreshMaxSpeed: (a) => refreshMaxSpeed(a) });
   const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
-    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
+    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => !FX || FX.canStart(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
     applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null) };
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
   // ------------------------------------------------------------ Task 8 shared statuses in play (spec §10, §11; Appendix B)
@@ -176,14 +180,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (!quiet) log(`${target.name} ${r.accepted ? 'is' : 'resists being'} ${att.id}`, { kind: 'status', status: att.id, by: src?.slot ?? null, side: src?.team ?? null, victim: target.slot, victimSide: target.team, accepted: r.accepted, reason: r.reason });
     return { accepted: r.accepted, reason: r.reason };
   }
-  /** The one maximum-speed aggregation (§11): every source's signed % in a.speedMods (status now; fields add `field`), bounded. */
-  function refreshMaxSpeed(a) { a.baseMaxSpeed ??= a.maxSpeed; a.maxSpeed = effectiveMaxSpeed(a.baseMaxSpeed, a.speedMods); }
+  /** The one maximum-speed aggregation (§11): every source's signed % in a.maxSpeedMods (status, field), added and bounded, applied once. */
+  function refreshMaxSpeed(a) { a.baseMaxSpeed ??= a.maxSpeed; a.maxSpeed = effectiveMaxSpeed(a.baseMaxSpeed, a.maxSpeedMods); }
   function t8Disengage(a) { for (const x of actors) if (x.engaged === a) x.engaged = null; a.engaged = null; }
   /** A slot's football effect on its actor (live: applied mid-play, so immediate physical effects happen too). */
   function t8StatusEffect(a, slot, live) {
     if (!slot && !a.t8Base) return;
     a.t8Base ??= { strength: a.attrs.strength, awareness: a.baseAwareness, durability: a.attrs.durability, accel: a.accel };
-    (a.speedMods ||= {}).status = maxSpeedPct(slot); refreshMaxSpeed(a); a.accel = a.t8Base.accel * accelFactor(slot); // Slowed / Quickened
+    (a.maxSpeedMods ||= {}).status = maxSpeedPct(slot); refreshMaxSpeed(a); a.accel = a.t8Base.accel * accelFactor(slot); // Slowed / Quickened
     a.attrs.strength = effectiveAttr(slot, 'strength', a.t8Base.strength); // Weakened / Empowered
     a.attrs.awareness = a.baseAwareness = effectiveAttr(slot, 'awareness', a.t8Base.awareness); // Confused
     a.attrs.durability = effectiveAttr(slot, 'durability', a.t8Base.durability); // Afflicted (stamina drain: stamina-runtime.js, B10)
@@ -274,9 +278,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // ------------------------------------------------------------ movement
   function steer(a, tx, ty, speedScale = 1, arriveRadius = 0.6, cap = Infinity) {
     if (TRACE) { a.aim = [tx, ty]; } // developer trace only (options.trace): where he is trying to go
-    if (a.stun > 0) { a.vx *= 0.93; a.vy *= 0.93; return; } // off balance: coasting, cannot steer
+    if (a.stun > 0) { const k = FX ? FX.coast(a) : 0.93; a.vx *= k; a.vy *= k; return; } // off balance: coasting, cannot steer (an Ice field extends the slide)
     const dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
-    let desired = a.maxSpeed * speedScale * burst(a) * speedMods(a);
+    let desired = a.maxSpeed * speedScale * burst(a) * speedMods(a); // Task 8: a.maxSpeed already carries the shared modifiers (refreshMaxSpeed)
     if (a.slowUntil > t) desired *= 0.7; // Bramble Shell: a tackler who missed him is slowed for a moment
     // Daybreak: anyone chasing from behind is held below his pace, so he cannot be run down.
     const h = ball.holder; if (h?.daybreak && a.team !== h.team && (a.x - h.x) * (h.team === 'off' ? 1 : -1) < 0) desired = Math.min(desired, h.maxSpeed * 0.9);
@@ -286,6 +290,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const dvx = ux * desired - a.vx, dvy = uy * desired - a.vy;
     const dv = Math.hypot(dvx, dvy), maxDv = a.accel * DT * (a.cutUntil > t ? 1.9 : 1); // planting out of a hard cut
     const k = dv > maxDv ? maxDv / dv : 1;
+    const fs = FX && FX.shapeDv(a, dvx * k, dvy * k); if (fs) { a.vx += fs[0]; a.vy += fs[1]; return; } // Nature turning, Ice braking
     a.vx += dvx * k; a.vy += dvy * k;
   }
   /** Situational speed from the species effect: after the catch, rushing the passer, closing on a throw, chasing a carrier. */
@@ -303,6 +308,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function burst(a) { if (a.ability?.burst && t < a.ability.burst.until) { if (ball.holder === a || a.assignment?.a === 'route' || a.assignment?.a === 'carry') abilityUsed(a, 'burst'); return 1 + a.ability.burst.speed; } return 1; }
   function integrate(a) {
     a.x += a.vx * DT; a.y += a.vy * DT;
+    if (FX) FX.displace(a); // Task 8 fields: Psychic pull, Froststorm drift, Magnetic pull, Living Terrain vines
     if (a.stun > 0) a.stun -= DT;
     if (a.noEngage > 0) a.noEngage -= DT;
     // Players other than the carrier stay on the field (they run along the boundary).
@@ -316,7 +322,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const a = actors[i], b = actors[j];
       if (a.engaged === b) continue;
       const d = dist(a, b);
-      if (d < 0.7 && d > 0.001) { const push = (0.7 - d) / 2; const ux = (b.x - a.x) / d, uy = (b.y - a.y) / d; a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push; }
+      if (d < 0.7 && d > 0.001) { const push = (0.7 - d) / 2, pa = FX ? push * FX.resist(a) : push, pb = FX ? push * FX.resist(b) : push; const ux = (b.x - a.x) / d, uy = (b.y - a.y) / d; a.x -= ux * pa; a.y -= uy * pa; b.x += ux * pb; b.y += uy * pb; } // Earth fields resist displacement
     }
   }
 
@@ -342,6 +348,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       abilityUsed(blocker, 'eruption'); abilityOutcome('flattened', blocker, `${blocker.name} flattens ${defender.name}`, { victim: defender.slot });
       return false;
     }
+    if (FX && FX.defer(blocker, 'engagement', defender, null, t + readEvery(blocker)) !== defender) return false; // Metal field: the first changed decision waits one AI update
     // Open-field blocks are hit-or-miss: the defender often slips past.
     if (soft && !rng.chance(0.25 + 0.5 * norm(blocker.attrs.blocking * (scaleVs(blocker, defender, 'block') - modOf(defender, blocker))))) { blocker.noEngage = 0.3; return false; }
     blocker.engaged = defender; defender.engaged = blocker; defender.engagedAt = t; blocker.softBlock = soft; defender.wasBlocked = true;
@@ -383,6 +390,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const goal = defenderGoal(d);
     const gx = goal.x - d.x, gy = goal.y - d.y, gd = Math.hypot(gx, gy) || 1;
     let push = clamp((runFit ? 0.2 : 0.75) + edge * 2.5, -0.5, 2.4); // yards/s the defender gains
+    if (FX) push *= FX.resist(push > 0 ? blocker : d); // Earth field: the one being driven back resists
     if (!runFit && be.deepRoots && push > 0) { push *= be.deepRoots; if (t > 0.5) abilityUsed(blocker, 'deepRoots'); } // Deep Roots: pass rushers drive him back at half speed
     d.x += (gx / gd) * push * DT; d.y += (gy / gd) * push * DT;
     // Riptide: run blocks drag his defender toward the nearer sideline, up to the card's yard.
@@ -1367,7 +1375,8 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     else { tx = c.x + dir * 12; ty = c.y; } // cannot catch him: cut toward his path ahead
     const aw = 0.45 + 0.55 * norm(d.attrs.awareness);
     const chaseLead = clamp(dist(d, c) / vp, 0, 1) ;
-    const ax = aw * tx + (1 - aw) * (c.x + c.vx * chaseLead), ay = aw * ty + (1 - aw) * (c.y + c.vy * chaseLead);
+    let ax = aw * tx + (1 - aw) * (c.x + c.vx * chaseLead), ay = aw * ty + (1 - aw) * (c.y + c.vy * chaseLead);
+    const echo = FX && FX.lure(d, c, t + readEvery(d)); if (echo) { ax = echo.x; ay = echo.y; } // Mindstorm echo: one decision update
     if (TRACE) { // developer trace only (Defensive scenario Lab): what this pursuit is made of
       const toC = Math.atan2(c.y - d.y, c.x - d.x), toAim = Math.atan2(ay - d.y, ax - d.x);
       d.pursuitInfo = { car: c.slot, carSpeed: c.attrs.speed, defSpeed: d.attrs.speed, effort: +effort.toFixed(3), carry: CARRY_PACE, gap: +dist(d, c).toFixed(2),
@@ -1569,7 +1578,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       R.b = clamp(R.b + Math.min(1, kappa * every) * (c.E - R.b), -1, 1);
     }
     const th = strictRead(d) ? READ.runStrict : READ.run;
-    R.committed = R.committed ? R.b >= th - READ.release : R.b >= th;
+    { const was = R.committed; const now = was ? R.b >= th - READ.release : R.b >= th; R.committed = FX ? FX.defer(d, 'read', now, was, R.next) : now; } // Metal field deferral
     // Ancient Grove / no-bite: once the fake shows (the quarterback seen dropping with the ball, or the back leaving without it),
     // the mesh no longer holds him: unless the rest of the evidence carries him by itself, he lets go at once.
     const c = R.cues; if (R.committed && c?.guarded && !c.handSeen && !c.qbRun && (c.drop > 0.8 || c.release) && c.E0 < th) {
@@ -2231,9 +2240,10 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // Ancient Grove: defenders within 5 yards of him get +5 Awareness, recomputed as they move (and never bite: groveGuards).
     for (const g of actors) if (g.ability?.grove) {
       let lifted = false;
-      for (const b of teammates(g.team)) { if (b === g) continue; const near = dist(b, g) <= g.ability.grove.radius; b.attrs.awareness = Math.min(99, b.baseAwareness + (near ? g.ability.grove.awareness : 0)); lifted ||= near; }
+      for (const b of teammates(g.team)) { if (b === g) continue; const near = dist(b, g) <= g.ability.grove.radius; b.attrs.awareness = Math.min(99, b.baseAwareness + (near ? g.ability.grove.awareness : 0)) + (b.fx?.attr?.awareness || 0); lifted ||= near; }
       if (lifted && tick > 2) abilityUsed(g, 'grove');
     }
+    if (FX) FX.tick(t); // Task 8 fields: what each monster experiences where he stands (after Ancient Grove's Awareness)
     if (KO) kickoffTargets();
     for (const a of offs) offenseTick(a);
     if (!KO) for (const d of defs) updateRead(d); // a kickoff has nothing to read
@@ -2310,6 +2320,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     touchdown: result === 'touchdown', safety: result === 'safety', bounds: B,
     qb: qr.order ? { v: QB_MODEL_VERSION, order: qr.order, reads: qr.log, decision: qr.decision, aiWould: qr.aiWould, sensedAt: qr.sensedAt, fakeAt: qr.fakeAt ?? null } : null, // the recorded read log (replays, AI Testing Lab)
   };
+  if (FX) { const o = FX.output(); out.fields = o.fields; if (o.clumps.length) out.fieldObjects = { clumps: o.clumps }; } // Task 8: the functional field rectangles (field view, replays)
   if (KO) out.kickoff = { returner: KO.returner, catchX: stats.kickCatchX ?? null, hang: ball.flightTime };
   // Developer trace only (Phase C1 tests): each offensive player's Blocking after auras, kept out of the play's data (not enumerable,
   // so a traced play still serialises exactly as an untraced one).

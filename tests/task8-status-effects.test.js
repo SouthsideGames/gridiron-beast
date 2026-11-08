@@ -167,3 +167,9 @@ test('pancakes go through the shared gate: Knocked Down lands in the slot and cl
   }
   assert.ok(blockedSeen > 0, 'pancakes still happen as a blocking outcome');
 });
+
+test('one maximum-speed aggregation for statuses and fields (§11): −15% status and −10% field give −25%, not 0.85 × 0.90', async () => {
+  const { effectiveMaxSpeed } = await import('../src/sim/t8/status-effects.js');
+  assert.equal(+effectiveMaxSpeed(8, { status: -15, field: -10 }).toFixed(6), 6);
+  assert.equal(+effectiveMaxSpeed(8, { status: -60, field: -30 }).toFixed(6), 2, 'bounded at −75%');
+});
