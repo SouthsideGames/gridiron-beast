@@ -194,3 +194,34 @@ negative case (replacement 5 behind: no sale). The sale rate is a benchmark with
 3. **Lower the buyer's gain bar for sales only.**
 
 **Recommendation:** option 1 for now, and look at the number again with the franchise-health reports at seasons 5, 10, 15 and 20. Options 2 and 3 change approved rules, so they are yours to make.
+
+### D1 update (2026-11-08): option 2 implemented on a branch, NOT merged, pending the owner
+
+Branch `task8-d1-founding` (601fd86). Each founding veteran's nine candidates live their prior careers first, and the candidate
+nearest the target percentile of post-history rating is kept.
+
+**Result: it does not restore the old founding strength.**
+
+| | Before | After | Pre-Task 8 |
+| --- | ---: | ---: | ---: |
+| Starter mean | 49.3 | 48.5 | 57.9 |
+| p10 | 34 | 33 | |
+| Lowest | 21 | 20 | |
+
+A like-for-like comparison (1,500 identical draws) shows:
+- veterans gain 0–2 OVR, and their floor rises by up to 14;
+- first-year players are unchanged at about 39.
+
+So the gap comes mostly from young players and the Dex level-1 distribution itself.
+
+**Costs and readings:**
+- **Cost:** creating a franchise takes about 3 times as long (0.6–0.9 s became 2.0–3.8 s).
+- **Temper-neutral:** a literal reading biases which Tempers are kept. The branch scores candidates under a neutral Temper, so this
+  needs confirmation.
+- **Participation profile:** it follows the target percentile, not the selected one.
+- **Scope:** it covers starters and depth.
+
+**The owner's choice:**
+1. Merge as is. Small benefit, three times the cost.
+2. Do not merge, and choose another lever: option 3 (veteran age profile), or a different target mapping.
+3. Do not merge, and keep today's founding rosters.
