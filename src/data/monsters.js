@@ -126,15 +126,11 @@ export function tryEvolve(m) {
   syncFromDev(m); m.name = formById(next).name + suffix;
   return { kind: 'evolve', id: m.id, name: m.name, from, to: formById(next).name, stage: m.stage, species: sp.id, fromForm };
 }
-/** The engine effect a monster carries: its signature ability (uncommon and up) or its species' shared trait (commons). */
-// TRANSITIONAL (Task 8 build plan): legacy signature ability effects stay until M3 registers each family's Dex contract and
-// removes the legacy effect in the same change. The ten shared traits are retired (N7c B13) and no longer reach the engine.
-export const LEGACY_ABILITY_EFFECTS_TRANSITIONAL = true;
-export function speciesEffect(m) {
-  const sp = resolveSpecies(m);
-  if (sp.ability?.effect) return { name: sp.ability.name, effect: sp.ability.effect, kind: 'ability', transitional: true };
-  return null;
-}
+/** The legacy engine effect a monster carries. Task 8 M3 is complete: every football ability is its Dex contract
+ *  (src/sim/abilities/), the legacy signature effects are retired and the ten shared traits were retired by N7c B13, so this is null
+ *  for every monster. Kept as the single switch for the callers that once read legacy effects (roster kicker, fatigue). */
+export const LEGACY_ABILITY_EFFECTS_TRANSITIONAL = false;
+export function speciesEffect(m) { void m; return null; }
 const RARITY_WEIGHT = (s) => RARITIES[s.rarity]?.weight ?? 0;
 /** Pick a species whose (only) position is `position`, by rarity weight (Task 7 D6: one position per species). */
 export function pickSpeciesForPosition(rng, position, { pool = SPECIES_DEX, exclude = new Set(), element = null, elementChance = 0.75 } = {}) {

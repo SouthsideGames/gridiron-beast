@@ -24,7 +24,6 @@
 import { createRng } from '../core/rng.js';
 import { boundsFor, FIELD, clamp } from '../core/field.js';
 import { manKeyTargets, eligibleReceivers } from '../data/playbook.js';
-import { ABILITIES, speciesEffect } from '../data/monsters.js';
 import { QUICK_ROUTES, SETTLE_ROUTES } from '../data/routes.js';
 import { contestMod } from './type-matchups.js';
 import { resolvePancakeOpportunity, shedScore } from './t8/pancake.js';
@@ -133,14 +132,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const attrs = { ...DEFAULT_ATTRS, ...(input?.attrs || {}) };
     const given = { ...attrs }; // M3 hook: the ratings the game gave this slot, before any in-play modifier (a.baseAttrs)
     if (options.exhausted?.has?.(input?.id)) for (const k of Object.keys(attrs)) attrs[k] = Math.max(1, Math.round(attrs[k] / 2)); // Task 8 §12: an exhausted monster plays the rest of the game on halved attributes (once)
-    // Signature ability: a legacy id in ABILITIES, else the species' own ability or trait.
-    // Task 8 M3: a family with a registered Dex contract uses it; its legacy effect never also applies (no stacking).
+    // Task 8 M3 (complete): every Dex football ability is a registered contract; the legacy signature effects (ABILITIES ids and the
+    // species' own legacy effect) are retired and no longer reach the engine (tests/task8-ability-gate.test.js). The engine's legacy
+    // effect branches below read a.ability, which is always null now (dead code, kept until the M6 clean-up removes it).
     const contract = input?.species ? contractOf(input.species) : null;
-    const legacy = !contract && input?.ability ? ABILITIES[input.ability] : null;
-    const sp = !contract && !legacy && input?.species ? speciesEffect(input.species) : null;
-    const ability = legacy?.effect || sp?.effect || null;
-    const abilityName = legacy?.name || sp?.name || null;
-    const abilityKind = legacy ? 'ability' : sp?.kind || null;
+    const ability = null, abilityName = null, abilityKind = null;
     if (ability?.attrs) for (const [k, v] of Object.entries(ability.attrs)) attrs[k] = Math.max(1, Math.min(99, (attrs[k] ?? 60) + v));
     if (ability?.routeAgility && play.assignments[slot]?.a === 'route') attrs.agility = Math.min(99, attrs.agility + ability.routeAgility);
     // Situational edge for a whole side (comeback mode, scheme lock): a few points on every core rating (GDD §17).

@@ -20,20 +20,20 @@ export default registerAbility({
   family: 'ironcub', abilityId: 'MET-01-F', repeatableCooldown: true,
   initGame: () => ({ cd: 0 }),
   hooks: {
-    playStart(ctx, self) { self.anchor = { ready: self.team === 'off' && scrimmage(ctx) && ctx.state(self).cd === 0, armed: false, budget: 0, absorbed: 0, spent: false, engaged: false }; },
+    playStart(ctx, self) { self.plate = { ready: self.team === 'off' && scrimmage(ctx) && ctx.state(self).cd === 0, armed: false, budget: 0, absorbed: 0, spent: false, engaged: false }; },
     engage(ctx, self, other) {
-      const A = self.anchor; if (!A || A.engaged || self.team !== 'off' || other.team === self.team) return;
+      const A = self.plate; if (!A || A.engaged || self.team !== 'off' || other.team === self.team) return;
       A.engaged = true; if (A.ready) { A.armed = true; A.budget = byMastery(ANCHOR.allowance, self.mastery); } // his first engagement only
     },
     blockPush(ctx, self, d, push) {
-      const A = self.anchor; if (!A?.armed || push <= 0 || A.budget <= 1e-12) return undefined;
+      const A = self.plate; if (!A?.armed || push <= 0 || A.budget <= 1e-12) return undefined;
       const move = push * ctx.dt, take = Math.min(move, A.budget); A.budget -= take; A.absorbed += take;
       if (!A.spent) { A.spent = true; const st = ctx.state(self); st.cd = byMastery(ANCHOR.cooldown, self.mastery); ctx.executed(self);
         ctx.log(`${self.name}'s Anchor Plate drops`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-01-F', victim: d.slot }); }
       return (move - take) / ctx.dt;
     },
     playEnd(ctx, self) {
-      const A = self.anchor; if (self.team !== 'off' || !scrimmage(ctx)) return; const st = ctx.state(self);
+      const A = self.plate; if (self.team !== 'off' || !scrimmage(ctx)) return; const st = ctx.state(self);
       if (st.cd > 0 && !A?.spent) st.cd -= 1; // subsequent offensive plays; the spending play excluded
       if (A?.spent) ctx.log(`${self.name}'s Anchor Plate absorbed ${A.absorbed.toFixed(2)} yd`, { kind: 'ability_end', by: self.slot, side: self.team, ability: 'MET-01-F', absorbed: +A.absorbed.toFixed(3) });
     },

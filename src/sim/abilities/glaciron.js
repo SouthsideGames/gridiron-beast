@@ -25,9 +25,10 @@ export default registerAbility({
   family: 'glaciron', abilityId: 'ICE-05-F', repeatableCooldown: true, passive: true,
   initGame: () => ({ cd: 0 }),
   hooks: {
-    playStart(ctx, self) { self.cold = { fired: false }; },
+    playStart(ctx, self) { self.cold ||= { fired: false }; }, // actors are new each play; lazily created too, since another contract's snap may ask first
+
     activationAttempt(ctx, self, att) {
-      const st = ctx.state(self);
+      const st = ctx.state(self); self.cold ||= { fired: false };
       if (self.cold.fired || st.cd > 0 || self.team !== 'off' || !scrimmage(ctx)) return undefined;
       if (!self.engaged || !COLD_SNAP.jobs.includes(self.assignment?.a) || disabled(ctx, self) || ctx.dist(self, att) > COLD_SNAP.radius) return undefined;
       self.cold.fired = true; st.cd = tier(COOLDOWN, self.mastery); st.fresh = true; ctx.executed(self, { passive: true });
