@@ -10,6 +10,10 @@
 // the field before kickoff (e.g. a reserve playbook, an opposing field), and `review.choices(state)` supplies a call the AI would not
 // make (e.g. a player-activated signature). Both only shape this review's own game.
 //
+// Two modes: `reviewScenario` (the direct, deterministic test: the scenario table in review-scenarios.js stages the contract's
+// conditions on the real rules.js game and engine with fixed seeds and calls; see the section at the end) and `reviewAbility` (the
+// optional natural-game demonstration below, which plays whole AI games until the subject records an execution).
+//
 // Nothing here writes progression: the clubs are generated for the review, the game state is local, mastery executions are only
 // counted (M5 awards them in franchise games, never here).
 import { FAMILIES, formsOf, abilityById } from '../../data/beast-dex.js';
@@ -19,6 +23,7 @@ import { generatedTeam } from '../../franchise/roster.js';
 import * as R from '../rules.js';
 import { step, aiController, newTendencies } from '../game-runner.js';
 import { placeRect } from '../t8/fields.js';
+import { SCENARIOS } from './review-scenarios.js';
 import './index.js';
 
 export const MASTERY_TIERS = Object.freeze([0, 1, 2, 3]);
@@ -103,4 +108,90 @@ export function reviewAbility({ family, form = null, mastery = 0, primed = true,
     }
   }
   return { found: false, plays, reason: `no execution in ${games} game(s) (${plays} plays)` };
+}
+
+// ------------------------------------------------------------------------------------------------ deterministic scenarios
+// The owner's direct test (M3 review scenarios): `reviewScenario` stages the contract's conditions from the scenario table
+// (review-scenarios.js) on the real rules.js game and the engine, with fixed seeds, fixed calls and the subject's primed game-scope
+// state. The natural-game search above (reviewAbility) stays as the optional "natural-game demonstration".
+const noAbility = (p) => (p && p.id !== REVIEW_ID ? { ...p, species: null, form: null, ability: null } : p);
+function scenarioClubs(seed, fam, form, mastery) {
+  const teams = clubs(seed); const at = placeSubject(teams.home, fam, form, mastery); if (!at) return { at: null };
+  const art = (t) => ({ offense: Object.fromEntries(Object.entries(t.offense).map(([k, v]) => [k, v.species])), defense: Object.fromEntries(Object.entries(t.defense).map(([k, v]) => [k, v.species])) });
+  const sprites = { home: art(teams.home), away: art(teams.away) };
+  for (const t of [teams.home, teams.away]) { // only the subject's contract acts, unless the scenario places another monster
+    for (const side of ['offense', 'defense']) for (const k of Object.keys(t[side])) t[side][k] = noAbility(t[side][k]);
+    t.kicker = noAbility(t.kicker);
+    if (t.returner && t.returner.id !== REVIEW_ID) t.returner = Object.values({ ...t.offense, ...t.defense }).find((p) => p.id === t.returner.id) || noAbility(t.returner);
+  }
+  return { teams, at, sprites };
+}
+/** A monster with a contract placed on a club for a scenario (an opposing Nocturne, an allied partner): `{ species, form?, mastery?, ... }`. */
+function placeMonster(team, side, slot, spec, id) {
+  const base = side === 'kicker' ? team.kicker : team[side][slot];
+  const m = { ...base, id, form: `${spec.species}:0`, mastery: 0, ...spec, name: `${spec.name || spec.species} (scenario)` };
+  if (side === 'kicker') team.kicker = m; else team[side][slot] = m;
+  return m;
+}
+const addFieldTo = (state) => (f) => { const b = (state.t8.fields ||= { list: [], pending: [], seq: 0 }); const r = placeRect({ id: `RV${++b.seq}`, createdAt: 0, owner: f.owner ?? null, ...f });
+  b.list.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: f.ability ?? 'review', payload: f.payload ?? null, ownerTeam: f.ownerTeam ?? null, remaining: f.lifetime ?? 999, clock: f.clock ?? 'scrimmageAny', clearsAtHalftime: false, createdThisPlay: false }); };
+
+/** The scenario table entry for a family (review-scenarios.js), or null. */
+export const scenarioOf = (family) => SCENARIOS[family] || null;
+
+/**
+ * The deterministic scenario for one ability: `{ family, form, mastery }` (optional `seeds` / `snaps` override the table). Same result
+ * shape as reviewAbility, plus `mode: 'scenario'`, `how` (how the conditions are staged) and `staged` (a note when the scenario stages
+ * conditions that released gameplay does not reach today, else null). Fixed seeds and calls: the same input gives the same output.
+ */
+export function reviewScenario({ family, form = null, mastery = 0, seeds = null, snaps = null } = {}) {
+  const fam = FAMILIES.find((f) => f.id === family); if (!fam?.abilities?.football) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no football ability' };
+  const contract = contractOf(family); if (!contract) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no registered contract (legacy behaviour is not reviewed here)' };
+  const sc = SCENARIOS[family]; if (!sc) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no scenario for this family' };
+  form ||= `${family}:0`; const nSeeds = seeds ?? sc.seeds ?? 12; const nSnaps = snaps ?? sc.snaps ?? 12; const QL = 900;
+  const note = typeof sc.staged === 'function' ? sc.staged(form, mastery) : sc.staged || null;
+  let plays = 0;
+  for (let g = 0; g < nSeeds; g++) {
+    const gs = (sc.seed0 ?? 1) + g; const { teams, at, sprites } = scenarioClubs(gs, fam, form, mastery); if (!at) return { found: false, executed: false, mode: 'scenario', plays, reason: `no slot for position ${fam.position}` };
+    const subject = at.side === 'kicker' ? teams.home.kicker : teams.home[at.side][at.slot];
+    const state = R.newGame({ home: teams.home, away: teams.away, seed: gs, quarterLength: QL, coinWinner: 'home', choice: 'receive' });
+    const init = sc.prime ? sc.prime(form, mastery) : contract.initGame ? contract.initGame(form, mastery) : {};
+    state.t8 = { status: {}, ability: { [REVIEW_ID]: structuredClone(init ?? {}) } };
+    const api = { state, teams, subject, slot: at.slot, form, mastery, seed: gs, addField: addFieldTo(state), place: (team, side, slot, spec, id = `scenario_${team}_${slot}`) => placeMonster(teams[team], side, slot, spec, id) };
+    sc.setup?.(api);
+    const want = sc.unit === 'defense' ? 'away' : 'home';
+    const stageScrimmage = (down = 1) => {
+      if (state.phase !== 'scrimmage' || state.possession !== want) state.drive = { team: want, plays: 0, yards: 0, start: sc.ballOn ?? 35 };
+      if (state.phase !== 'scrimmage' || state.possession !== want || sc.reset !== false) Object.assign(state, { phase: 'scrimmage', possession: want, ballOn: sc.ballOn ?? 35, ballLat: 0, down, toGo: sc.toGo ?? 10 });
+    };
+    for (let k = 0; k < nSnaps && !state.finished; k++) {
+      state.clock = QL; sc.everySnap?.(api);
+      let call; let offSide;
+      if (sc.kick === 'kickoff' || (sc.kick === 'xp' && state.phase === 'kickoff' && state.kickingTeam === 'home')) {
+        Object.assign(state, { phase: 'kickoff', kickingTeam: sc.receive ? 'away' : 'home' }); offSide = R.opponent(state.kickingTeam);
+        call = () => { const x = R.doKickoff(state, teams); return { kind: 'kickoff', text: x.text, sim: x.sim }; };
+      } else if (sc.kick === 'xp') { Object.assign(state, { phase: 'try', tryTeam: 'home', possession: 'home' }); offSide = 'home'; call = () => ({ kind: 'try', text: R.attemptTryKick(state, teams).text }); }
+      else if (sc.kick === 'fg') { stageScrimmage(4); offSide = 'home'; call = () => ({ kind: 'field_goal', text: R.doFieldGoal(state, teams, { signature: !!sc.signature }).text }); }
+      else if (sc.kick === 'punt') { stageScrimmage(4); offSide = 'home'; call = () => ({ kind: 'punt', text: R.doPunt(state, teams).text }); }
+      else {
+        stageScrimmage(); offSide = state.possession; const [off, def, callTarget] = typeof sc.calls === 'function' ? sc.calls(k, api) : sc.calls[k % sc.calls.length];
+        const target = callTarget || (sc.target === true ? at.slot : sc.target || null);
+        const options = { ...(target ? { forcedTarget: target } : {}), ...(sc.options ? sc.options(api, k) || {} : {}) };
+        call = () => { const x = R.runScrimmagePlay(state, teams, off, def, options); return { kind: 'play', text: x.outcome.text, sim: x.sim, offensePlayId: off, defensePlayId: def }; };
+      }
+      const before = structuredClone(state.t8.ability?.[REVIEW_ID] ?? null); const n0 = executionsOf(state.t8); const ballOn = state.ballOn;
+      const pre = { quarter: state.quarter, down: state.down, toGo: state.toGo, ballOn: state.ballOn, possession: state.possession };
+      const ev = call(); plays += 1;
+      if (executionsOf(state.t8) > n0) {
+        const side = offSide === 'home' ? 'off' : 'def'; const other = R.opponent(offSide);
+        const pick = (lu, art) => Object.fromEntries(Object.entries(lu || {}).map(([k2, v]) => [k2, { species: v.species || art?.[k2] || null, name: v.name, type: v.type }]));
+        return { found: true, executed: true, mode: 'scenario', how: sc.how || '', staged: note, abilityId: fam.abilities.football, family, form, mastery, primed: !!sc.prime, slot: at.slot, side: at.side,
+          game: g + 1, seed: gs, step: k + 1, kind: ev.kind, text: ev.text || '', sim: ev.sim || null, events: contractEvents(ev.sim, fam, fam.abilities.football, at.slot, side),
+          before, after: structuredClone(state.t8.ability?.[REVIEW_ID] ?? null), fields: structuredClone(state.t8.fields?.list || []), plays, ballOn, subjectOnOffense: offSide === 'home',
+          sprites: { off: pick(teams[offSide].offense, sprites[offSide].offense), def: pick(teams[other].defense, sprites[other].defense) }, situation: pre,
+          calls: ev.offensePlayId ? { offense: ev.offensePlayId, defense: ev.defensePlayId } : null };
+      }
+    }
+  }
+  return { found: false, executed: false, mode: 'scenario', how: sc.how || '', staged: note, plays, reason: `the scenario did not execute in ${nSeeds} seed(s) x ${nSnaps} snap(s) (${plays} plays)` };
 }
