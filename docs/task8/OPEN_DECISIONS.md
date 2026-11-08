@@ -33,6 +33,13 @@ percentile meaning (a 50th-percentile starter is a typical starter at his age), 
 Cost: about nine prior-career simulations per veteran generated (measured later; the reference sample would be cached per form
 and age band). Option 3 changes the league's age structure, which drives ageing and contracts.
 
+**Approved (N8b J) and implemented 2026-11-08** (branch `task8-d1-founding`; CLUB_STRENGTH_SELECTION.md item 5). The measurement
+(M1_STARTER_CALIBRATION.md, 2026-11-08) shows option 2 does **not** restore the old strength: starters average 48.5 (p10 33).
+It raises veterans and their floors, but most of the gap is in young and first-year starters, whom no post-history mapping can
+lift (a first-year founding player, no prior seasons, averages about 39 either way). The selection also had to evaluate careers under a neutral Temper to stay
+Temper-neutral (see CLUB_STRENGTH_SELECTION.md). Open for the owner: whether to address the remaining gap (option 3, or the
+calibration center/spread of the target mapping).
+
 ## D2. Draft-class growth
 
 **What happens now.** Draft classes rise +0.5 quality per season, capped at +10 (Task 6 D9). D9 existed to keep classes level with

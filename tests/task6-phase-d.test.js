@@ -83,8 +83,9 @@ function setMode(f, club, mode) { Object.assign(R.clubRecord(f, club).strategy, 
 test('R3 by mode on a league (F2/F3, owner-approved 2026-11-03): veterans past onset go only to a ready successor; a rebuilder also once 2+ past onset', () => {
   const outcome = (mode, { ready, pastBy }) => /* ready: true (within 4, slightly behind), 'equal' (as good), false (5–8 behind) */ { const f = leagueWith(73); const club = R.leagueClubs(f).slice().sort().find((c) => !isGymClub(c)); setMode(f, club, mode);
     const roster = R.clubRoster(f, club); const starters = new Set(Object.values(buildDepthChart(roster)).filter(Boolean));
-    const plan = rosterPlan(roster, null, { starters }); const row = Object.values(plan.groups).flatMap((g) => g.rows).find((r) => r.successor && !R.isProtected(r.starter) && !R.isProtected(r.successor));
+    const plan = rosterPlan(roster, null, { starters }); const row = Object.values(plan.groups).flatMap((g) => g.rows).find((r) => r.successor && !R.isProtected(r.starter) && !R.isProtected(r.successor) && GROUP_SLOTS[r.starter.position].length === 1); // a one-slot group: a successor made as good as the starter stays his successor instead of starting beside him
     assert.ok(row, 'a starter with a successor'); const st = row.starter, su = row.successor;
+    for (const k of Object.keys(st.attributes)) st.attributes[k] = Math.max(28, st.attributes[k]); // room for "7 behind" above the 20 floor (Dex founding ratings can sit in the 20s)
     su.attributes = Object.fromEntries(Object.entries(st.attributes).map(([k, v]) => [k, ready === 'equal' ? v : ready ? Math.max(20, v - 1) : Math.max(20, v - 7)])); su.potential = 99; su.age = 23; // ready and as good, or 5–8 behind (qualifies by potential, not ready)
     st.age = publicOnset(st) + pastBy; st.contract = { ends: 1 };
     const check = rosterPlan(R.clubRoster(f, club), null, { starters }).successors.get(su.id); assert.ok(check && check.ready === !!ready, `setup: successor ready=${ready}`); assert.ok(new Set(Object.values(buildDepthChart(R.clubRoster(f, club))).filter(Boolean)).has(st.id), 'setup: he still starts');
@@ -117,7 +118,7 @@ test('R5 by mode: Contend may make two upgrades, every other mode one; the pools
   const signedFor = (mode) => { const f = newFranchise(61); const cap = tierById(f.tier).cap;
     const club = R.leagueClubs(f).slice().sort().find((c) => !isGymClub(c) && !R.clubRoster(f, c).some(R.isProtected)) || R.leagueClubs(f).slice().sort()[3];
     for (const c of R.leagueClubs(f)) setMode(f, c, c === club ? mode : 'compete');
-    for (const pos of ['TE', 'RB']) for (const t of R.clubRoster(f, club).filter((m) => m.position === pos)) for (const k of Object.keys(t.attributes)) t.attributes[k] = Math.max(20, t.attributes[k] - 25); // two weak groups
+    for (const pos of ['TE', 'RB']) for (const t of R.clubRoster(f, club).filter((m) => m.position === pos)) for (const k of Object.keys(t.attributes)) t.attributes[k] = 20; // two weak groups, at the floor (on the Dex scale a -25 left some above the injected arrivals)
     const pool = (f.pool[Object.keys(f.pool)[0]] ||= []);
     for (const pos of ['TE', 'RB']) { const s = mon(pos, 82, 30); s.salary = 20000; s.history = []; R.claimMonster(f, s, `test|${pos}`); pool.push(s); }
     const out = leagueUpgrades(f, { year: 2, cap }); for (const x of out.signed) assert.ok(x.ovr >= x.replaces + UPGRADE_MIN || x.kind === 'succession');

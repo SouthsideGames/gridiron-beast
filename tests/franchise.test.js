@@ -897,7 +897,13 @@ test('the draft: class opens in the final week, Mondays scout it and Tuesdays re
   const team = aiPicks[0].team; const got = aiPicks.filter((pk) => pk.team === team).map((pk) => F.findInLeague(f, pk.id)?.m).filter(Boolean);
   assert.ok(got.length && got.every((m) => m.contract?.rookie && m.drafted?.club === team), 'the club holds its draftees on rookie deals');
   while (f.roster.length < F.ROSTER_MIN) F.signFreeAgent(f, F.offseasonMarket(f)[0].monster.id);
-  const sn = F.startNextSeason(f); assert.ok(sn.ok, sn.reason);
+  let sn = F.startNextSeason(f);
+  // the lineup safeguard (task7-lineup-gate.test.js): when the offseason left a position without a legal starter, sign one of its fixes
+  if (!sn.ok && sn.code === 'lineup') {
+    for (const list of Object.values(sn.gate.fixes)) for (const x of list) { let r = F.negotiateFreeAgent(f, x.id, { salary: x.ask, years: 1 }); if (r.ok && r.outcome === 'countered') r = F.negotiateFreeAgent(f, x.id, r.counter); if (r.ok && r.outcome === 'signed') break; }
+    sn = F.startNextSeason(f);
+  }
+  assert.ok(sn.ok, sn.reason);
   assert.ok(got.every((m) => m.yearsPro === 0), 'drafted rookies enter their first season');
   assert.equal(p.monster.yearsPro, 0); assert.ok(F.aiTeam(f, team).roster.some((m) => m.id === got[0].id), 'the AI draftee is on its club');
   assert.equal(f.draft, null);

@@ -12,7 +12,9 @@
 //   setup     (api) -> void   arrange the clubs or the field before the first snap (an opposing monster, a reserve playbook, a field)
 //   options   (api) -> engine options for each snap (forcedTarget, ...), merged into rules.js runScrimmagePlay's options
 //   seeds     how many fixed seeds are tried in order (seed0, seed0 + 1, ...; seed0 defaults to 1); snaps: how many snaps per seed. All are fixed, so the scenario is
-//             deterministic: the same seed and snap always execute, and the result is identical on every run.
+//             deterministic: the same seed and snap always execute, and the result is identical on every run. The review clubs are
+//             generated founding rosters, so a change in which individuals they keep moves these: icehorn seed0 4 -> 18 and aurodrax
+//             seeds 12 -> 24 (2026-11-08, post-history founding selection, owner ruling N8b D1; staging unchanged).
 //   staged    a note shown in the reviewer when the scenario stages conditions that released gameplay does not reach today
 //   how       one line: how the scenario stages the contract's conditions (shown in the reviewer and the M3 report)
 //
@@ -62,7 +64,7 @@ export const SCENARIOS = {
   snowmoth: { unit: 'kick', kick: 'fg', ballOn: 85, how: 'a 32 yd field goal attempt (his club on 4th down at the opponent 15) until one is made and banks the Ice patch' },
   hailfang: { unit: 'defense', calls: DEF_PASS, how: 'ready; pass plays until his tracked receiver reaches two yards of separation before the release (natural trigger)' },
   frostclaw: { unit: 'defense', calls: DEF_RUN, prime: () => ({ bar: 3 }), how: 'bar primed full (3 low-yardage plays done); his next defensive snap summons the snowballs' },
-  icehorn: { seed0: 4, unit: 'defense', calls: DEF_MIX, how: 'ready; mixed snaps until his personal tackle for loss or sack banks the zone; it is created at his next defensive pre-play' },
+  icehorn: { seed0: 18, unit: 'defense', calls: DEF_MIX, how: 'ready; mixed snaps until his personal tackle for loss or sack banks the zone; it is created at his next defensive pre-play' },
   glaciron: { unit: 'offense', calls: PASS_O, setup: ({ place }) => { place('away', 'defense', 'DL1', { species: 'mossclaw' }); place('away', 'defense', 'DL2', { species: 'mossclaw' }); },
     how: 'ready; two opposing Vine Vault DLs (ready) rush on pass plays: the first new activation attempt inside his 3 yd aura while he is block-engaged is suppressed' },
   glacivern: { unit: 'kick', kick: 'fg', ballOn: 52, how: 'a 65 yd field goal attempt until the first miss (retried at once)' },
@@ -126,5 +128,5 @@ export const SCENARIOS = {
     how: 'dev-only engine option (review only): every ordinary tackle of the ball carrier fumbles; passes to the receiver he covers until he is the ordinary recoverer' },
   scaleguard: { unit: 'offense', calls: RUN_O, how: 'run-blocking snaps: three plays finishing engaged fill the bar; the next engagement with a DL stomps (played, nothing primed)' },
   vyrnax: { unit: 'kick', kick: 'fg', ballOn: 70, signature: true, how: 'the player\'s Dragon Roar call on a 47 yd field goal (the AI\'s own call is not needed)' },
-  aurodrax: { unit: 'offense', calls: PASS_O, how: 'pass plays until three consecutive qualifying completions charge the protection, then a would-be interception (played, nothing primed)' },
+  aurodrax: { unit: 'offense', calls: PASS_O, seeds: 24, how: 'pass plays until three consecutive qualifying completions charge the protection, then a would-be interception (played, nothing primed)' },
 };
