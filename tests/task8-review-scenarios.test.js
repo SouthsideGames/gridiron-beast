@@ -58,7 +58,7 @@ test('no progression or save writes; the dev-only engine option is set by the re
   assert.equal(typeof REVIEW_ONLY, 'symbol', 'a symbol key: no save, setting, JSON or UI choice can carry it');
   const users = []; const walk = (d) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const p = `${d}/${f.name}`; if (f.isDirectory()) walk(p); else if (p.endsWith('.js') && fs.readFileSync(p, 'utf8').includes('REVIEW_ONLY')) users.push(p.replace(/^.*\/src\//, 'src/')); } };
   walk(new URL('../src', import.meta.url).pathname);
-  assert.deepEqual(users.sort(), ['src/sim/abilities/review-scenarios.js', 'src/sim/engine.js']);
+  assert.deepEqual(users.sort(), ['src/sim/abilities/review-scenarios.js', 'src/sim/abilities/review-texts.js', 'src/sim/engine.js']);
   // A scenario's game is local: the subject's mastery executions are counted in it only, never on a roster monster.
   const r = reviewScenario({ family: 'glimmer' }); assert.ok(r.found); assert.equal(typeof r.after, 'object');
   assert.equal(reviewScenario({ family: 'nonexistent' }).found, false);

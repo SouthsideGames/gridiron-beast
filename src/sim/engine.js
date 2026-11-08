@@ -79,9 +79,13 @@ export function engagementAttrs(b, d) {
 /**
  * M3 hook (review only): the Ability Reviewer's dev-only staging options live under this symbol key (`options[REVIEW_ONLY]`). A
  * symbol cannot come from a save, a setting, JSON or a UI choice, and only src/sim/abilities/review.js sets it, so no normal game,
- * lab, franchise or AI path can reach it. Today it holds one option: `{ fumbleOnTackle: true }`, the first fumble check of an
- * ordinary successful tackle on an offensive ball carrier fumbles (the recovery itself stays the engine's ordinary nearest-players
- * draw), used only to stage a fumble recovery for Hoard Flight (DRA-03-F), whose trigger the engine produces on 0.4% of plays.
+ * lab, franchise or AI path can reach it. Options (controlled prerequisites only, never an ability's result; Reviewer v2, spec §25):
+ *  - `{ fumbleOnTackle: true }`: the first fumble check of an ordinary successful tackle on an offensive ball carrier fumbles (the
+ *    recovery itself stays the engine's ordinary nearest-players draw), used only to stage a fumble recovery for Hoard Flight
+ *    (DRA-03-F), whose trigger the engine produces on 0.4% of plays.
+ *  - `{ wouldBeInterception: true }`: at the catch point the nearest defender within 2.5 yd plays the ball and his interception roll
+ *    succeeds (a would-be interception); everything after it is the ordinary code: a contract's `noInterception` (Sovereign Arm,
+ *    DRA-06-F) turns it into an incompletion, otherwise it is an ordinary interception.
  */
 export const REVIEW_ONLY = Symbol('ability-review-only');
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
@@ -2302,11 +2306,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     // A defender on the ball plays it (v42.8): within a yard, and not clearly beaten to it by the receiver (before the lead fix,
     // under-led balls fell to trailing defenders; with the ball on the receiver this keeps interceptions real without inventing them).
-    if (nearest && nearest.dd < 1.0 && nearest.dd < dr + 0.35 && !thunderShield) {
+    const reviewPick = !!options[REVIEW_ONLY]?.wouldBeInterception && !!nearest && nearest.dd <= 2.5 && !thunderShield; // M3 hook (review only): see REVIEW_ONLY
+    if (reviewPick || (nearest && nearest.dd < 1.0 && nearest.dd < dr + 0.35 && !thunderShield)) {
       const pickCatching = nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0);
       let pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.78); // v42.8: with the ball led onto the receiver, a defender who got there too has a real play on it (0.5 before, when under-led balls fell to him anyway)
       if (ball.undertow) { pickP *= ball.undertow.ability.undertow; abilityUsed(ball.undertow, 'undertow'); } // Undertow: 25% more likely
-      const picked = rng.chance(pickP);
+      const picked = rng.chance(pickP) || reviewPick;
       if (picked && ball.t8?.noInterception) { // M3 hook: a would-be interception falls incomplete; the denied defender is recorded for the contract
         ball.t8.denied = nearest.d; log(`${nearest.d.name} cannot hold it`, { kind: 'ability', by: r.slot, side: r.team, contract: true, victim: nearest.d.slot });
         ball.inAir = false; endPlay('incomplete', L.x, L.y); log('Pass falls incomplete', { kind: 'incomplete', denied: nearest.d.slot }); return;
