@@ -63,6 +63,12 @@ Status at 466ee7e (2026-11-07, 23:59). Branch `task8-implementation`; nothing me
 - **M3 remains open** pending the rulings in DECISION_PACKET_M3.md: Prism Break; the values; the four usability changes (Guiding
   Halo, Crossed Wires, Shadow Exchange, Fortress Gate); the AI Dragon Roar policy; the two-point and kickoff readings.
 
+- **Interim full run at 75545f0** (after the N8a/N8b rulings, identities, gym preference, trade fixtures; frozen copy, 87 minutes):
+  1,143 tests, 1,141 pass, 2 fail. This is not the final M3 run.
+  - `trading-second-pass` 28 "no first-round pick for a kicker": pending the owner's ruling (strict rule vs the approved rate rule).
+  - `career-presentation` "the real franchise": none of the eight fixture seeds wins a title in three rookie seasons any more.
+    Its prerequisite no longer holds; under investigation (466ee7e vs 75545f0 title survey). Not fixed by adding seeds.
+
 ## In progress
 
 - **Regression**: the M2 full run at 7093bfb is finishing; a full run on the M3 head follows the gate merge.
