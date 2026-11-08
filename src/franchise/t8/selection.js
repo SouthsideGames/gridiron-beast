@@ -58,7 +58,10 @@ export function runHistory(seed, d, { id, position, startAge, seasons, profile }
   return probe;
 }
 /** A copy of a level-1 record under the evaluation Temper (selection only; never kept). */
-const neutralCopy = (d) => ({ ...JSON.parse(JSON.stringify(d)), temper: EVALUATION_TEMPER });
+// The same copy as JSON.parse(JSON.stringify(d)) for a fresh level-1 record (plain numbers, flat attribute maps and frozen {n,d}
+// fractions, which are never mutated in place, only replaced), without the JSON round trip. Performance only.
+const flat = (o) => ({ ...o });
+const neutralCopy = (d) => ({ ...d, ref: flat(d.ref), potential: flat(d.potential), current: flat(d.current), natural: flat(d.natural), entitled: flat(d.entitled), trained: flat(d.trained), loss: flat(d.loss), invest: flat(d.invest), mastery: flat(d.mastery), temper: EVALUATION_TEMPER });
 
 /** Prior seasons covered by one cached career band: founding ages are 20-28 and careers start at 21 or 22, so at most 7. */
 export const BAND_SEASONS = 7;

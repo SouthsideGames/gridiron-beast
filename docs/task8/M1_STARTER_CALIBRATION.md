@@ -83,3 +83,50 @@ reference per form, start age and profile. Computing those references at run tim
 machine, `src/data/t8-history-reference.generated.js`, 276 KB). `createFranchise` on this 2-CPU machine, same session, alternating
 runs: first franchise in a fresh process 3.9–4.6 s → 5.4–6.7 s; each later franchise 0.6–0.9 s → 2.0–3.8 s (about +1.5 to +2.5 s,
 roughly three times). Tests that create many franchises slow down accordingly.
+
+## Franchise-creation cost after D1, profiled and reduced (owner 2026-11-08 10:33)
+
+**Matched scenario:** `createFranchise` for seeds 1–8, Pro difficulty, persistent league, the same club and cornerstones, one
+process per build. A warm-up franchise is created first, so module loading and one-time tables are excluded. Wall time was
+measured on the shared container while a full test run was going on, so compare the builds against each other rather than in
+absolute terms.
+
+| Build | Warm creation, mean (seeds 1–8) | Cold first franchise | 10 full games |
+| --- | --- | --- | --- |
+| 145897e (before D1) | 718 ms | 4.6–4.8 s | 7.2–7.3 s |
+| 0d60997 (D1, before the optimization) | 2,569 ms (3.6× before D1) | 6.8–7.3 s | 7.1–7.6 s |
+| D1 with the optimization | 1,094 ms (1.5× before D1) | 2.9–3.0 s | 7.8–7.9 s |
+
+**Startup and game simulation are separate.** Game simulation does not change across the three builds; the differences are
+within this container's noise. D1 adds cost only at creation, where each founding starter's nine candidates each live their
+prior career before one is kept.
+
+**Where the time went** (CPU profile, D1 before the optimization, three franchises plus the warm-up, 15.4 s in all):
+- `selectIndividual`: 12.3 s. Of this, the candidates' prior careers (`runHistory` → `simulateHistory`) took 7.3 s and drawing
+  the candidates took 3.6 s.
+- Inside the careers:
+  - fraction arithmetic (`frac`): 3.8 s self;
+  - the per-attribute map builder: 2.8 s;
+  - the training allocator: 3.7 s inclusive, which rebuilt a monster copy and an exact fraction for every attribute of every
+    point;
+  - the JSON-cloned neutral copy: 0.6 s.
+- One-time, per process: the D7 scheme-fit thresholds (`fitThresholds`, 3.5 s under the profiler).
+
+**What changed (performance only; nothing generated changes):**
+- Allocation scores use the cost quotient C / E directly. It is exact, because C is 1–4 and E is 2, 1 or 0.5.
+- The allocator builds one cost probe per point and reads the fixed weights once per call.
+- The whole natural entitlement is an integer quotient, the same value as the floor of the exact fraction.
+- Each form's next form is cached.
+- The attribute-map builder is a plain loop with the same keys and order.
+- The neutral evaluation copy is a field copy instead of a JSON round trip. Fractions are frozen and only ever replaced.
+
+**Verification:**
+- Eight franchises, seeds 1–8, serialize byte-identical before and after the optimization (ignoring the save's uid and creation
+  timestamp).
+- The precomputed history-reference bands still recompute exactly (task8-selection).
+- The targeted progression, selection, ageing, identity, evolution and stat-guide tests pass: 42 of 42.
+- The selection rules, Apex odds, generation shares, Temper neutrality and development history are untouched.
+
+**Remaining:**
+- Creation is still about 1.5× its pre-D1 cost, the inherent cost of ten prior careers per founding starter.
+- The one-time fit-threshold table is the largest part of the cold first franchise.

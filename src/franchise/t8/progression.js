@@ -25,7 +25,7 @@ export const APEX_START = [10, 15];
 
 const roundHalfUp = (fr) => { fr = F.frac(fr); return F.floor(F.add(fr, F.frac(1, 2))); };
 const randInt = (rng, lo, hi) => lo + rng.int(hi - lo + 1);
-const each = (fn) => Object.fromEntries(ATTRIBUTES.map((a) => [a, fn(a)]));
+const each = (fn) => { const o = {}; for (const a of ATTRIBUTES) o[a] = fn(a); return o; }; // same keys, same order as before
 
 /** Generate a level-1 individual of a form. `apex` may be forced for tests; otherwise legendaries never roll Apex. */
 export function generateIndividual(rng, formId, { apex = null } = {}) {
@@ -49,6 +49,9 @@ export function generateIndividual(rng, formId, { apex = null } = {}) {
 export const allowance = (d, a) => Math.max(0, Math.floor((d.potential[a] - d.ref[a]) / 2));
 /** Cumulative entitlement at a level (exact): allowance × (L - 1) / 49, linear over levels 2-50 (R1 item 1). */
 export const entitlementAt = (d, a, level) => F.mul(allowance(d, a), F.frac(Math.max(0, Math.min(MAX_LEVEL, level) - 1), MAX_LEVEL - 1));
+/** floor(entitlementAt(d, a, level)) in integers: the same value (an integer quotient of small integers is exact in floating point,
+ *  and a non-integer quotient sits at least 1/49 from the next integer), without building fractions. Performance only. */
+export const entitledWholeAt = (d, a, level) => Math.floor((allowance(d, a) * Math.max(0, Math.min(MAX_LEVEL, level) - 1)) / (MAX_LEVEL - 1));
 
 /** Add level XP; applies each level-up's natural growth. XP stops at level 50 and excess is not converted. Returns levels gained. */
 export function addLevelXp(d, xp) {
@@ -64,7 +67,7 @@ export function addLevelXp(d, xp) {
 /** Grant the newly earned whole natural entitlement up to the current level; points that don't fit under the ceiling are skipped. */
 export function applyNaturalGrowth(d) {
   for (const a of ATTRIBUTES) {
-    const due = F.floor(entitlementAt(d, a, d.level)) - d.entitled[a];
+    const due = entitledWholeAt(d, a, d.level) - d.entitled[a];
     if (due <= 0) continue;
     d.entitled[a] += due;
     const fit = Math.max(0, Math.min(due, d.potential[a] - d.current[a]));
@@ -74,6 +77,9 @@ export function applyNaturalGrowth(d) {
 
 // ---------------------------------------------------------------- training
 /** Neutral cost C (1-4) at the monster's current age and E (2, 1, 0.5) from Temper. `m` supplies age/position for aging.js. */
+/** The effective cost C / E as a number, for allocation scores: the same value as toNumber(trainingCost().effective) (C is 1-4 and
+ *  E is 2, 1 or 0.5, so the quotient is exact). `probe` is { ...m, attributes: d.current }, built once by the caller. */
+export function effectiveCostNumber(d, probe, a) { const C = d.apex ? 1 : attributeCost(probe, a); return C / temperEfficiency(d.temper, a); }
 export function trainingCost(d, m, a) {
   const C = d.apex ? 1 : attributeCost({ ...m, attributes: d.current }, a);
   const E = temperEfficiency(d.temper, a);
@@ -127,8 +133,10 @@ export function evolvedPotential(d, a, fromForm, toForm) {
  * residue between the ledgers and the authoritative current rating is absorbed by the natural record. Training bars, banked points,
  * investments, Temper, level and mastery are untouched. Returns the new form id, or null if not eligible.
  */
+const NEXT_FORM = new Map(); // form id -> its next form (or null); dex data is fixed, so this only saves the repeated lookup
+const nextFormOf = (from) => { if (!NEXT_FORM.has(from.id)) NEXT_FORM.set(from.id, formsOf(from.familyId).find((f) => f.stage === from.stage + 1) || null); return NEXT_FORM.get(from.id); };
 export function evolve(d) {
-  const from = formById(d.form); const next = formsOf(from.familyId).find((f) => f.stage === from.stage + 1);
+  const from = formById(d.form); const next = nextFormOf(from);
   if (!next || d.level < next.evolutionLevel) return null;
   for (const a of ATTRIBUTES) {
     const P = d.potential[a], P2 = evolvedPotential(d, a, from, next), k = F.frac(P2, P);
@@ -138,7 +146,7 @@ export function evolve(d) {
     d.loss[a] = roundHalfUp(F.mul(d.loss[a], k));
     d.potential[a] = P2; d.current[a] = cur2;
     d.natural[a] = Math.max(0, cur2 - d.ref[a] - d.trained[a] + d.loss[a]);
-    d.entitled[a] = F.floor(entitlementAt(d, a, d.level));
+    d.entitled[a] = entitledWholeAt(d, a, d.level);
   }
   d.form = next.id; return next.id;
 }
