@@ -67,7 +67,12 @@ Status at 466ee7e (2026-11-07, 23:59). Branch `task8-implementation`; nothing me
   1,143 tests, 1,141 pass, 2 fail. This is not the final M3 run.
   - `trading-second-pass` 28 "no first-round pick for a kicker": pending the owner's ruling (strict rule vs the approved rate rule).
   - `career-presentation` "the real franchise": none of the eight fixture seeds wins a title in three rookie seasons any more.
-    Its prerequisite no longer holds; under investigation (466ee7e vs 75545f0 title survey). Not fixed by adding seeds.
+    Its prerequisite no longer holds. Survey of the same eight seeds, three rookie seasons each (24 seasons per build):
+    466ee7e: 1 title, win rate 0.486; 75545f0: 0 titles, win rate 0.481. Team strength is unchanged within noise; the fixture
+    relied on a single title in 24 seasons (seed 2, season 2), which the later approved changes reshuffled away. Classified as a
+    fragile fixture, not a defect. Proposed fix (needs approval): build the title franchise explicitly through the real season
+    code, as done for R4, instead of searching seeds. Separate finding for D1/economy: rookie franchises win about 1 title in 24
+    seasons on both builds.
 
 ## In progress
 
