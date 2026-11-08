@@ -43,6 +43,9 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   const bonds = [], echoes = [];
   let t = 0;
   const ev = (a, kind, text, extra = {}) => log(text, { kind, by: a.slot, side: a.team, ...extra });
+  // A monster's per-play field state. Perf (outcome-identical): every key it can take is declared at creation (undefined reads as
+  // absent; nothing enumerates it), so all of them share one object shape.
+  const fxState = (cut) => ({ seen: new Set(), attr: {}, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined });
   const applicableMax = (a) => a.maxSpeed; // already carries the shared modifiers (engine refreshMaxSpeed)
   const unpair = (a) => { if (a.engaged) { a.engaged.engaged = null; a.engaged = null; } };
 
@@ -94,7 +97,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     if (!placed) { placed = true; clumps = placeClumps(fields, actors, rng); if (clumps.length) log(`Living Terrain raises ${clumps.length} vine clump${clumps.length > 1 ? 's' : ''}`, { kind: 'field_clumps', clumps: clumps.map((c) => [c.x, c.y]) }); }
     for (const a of actors) {
       if (a.envImmune) continue; // M3 hook: an actor immune to environmental modifiers (Stormguard's guards) never experiences a field
-      const st = (a.fx ||= { seen: new Set(), attr: {}, drift: 0, cut: a.cutUntil });
+      const st = (a.fx ||= fxState(a.cutUntil));
       const m = effectsHere(a); const e = m.e;
       st.base = m.base;
       st.hybrid = e.hybrid?.name || null;
@@ -183,7 +186,7 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   /** Mindstorm: an opposing AI pursuer of a monster with a live echo may chase the echo for one decision update. */
   function lure(d, c, until) {
     const e = c.fx?.echo; if (!e?.live || d.team === c.team) return null;
-    const st = (d.fx ||= { seen: new Set(), attr: {}, drift: 0 }); st.lured ||= new Map();
+    const st = (d.fx ||= fxState(undefined)); st.lured ||= new Map();
     const l = st.lured.get(e);
     if (l == null) { if (!rng.chance(MINDSTORM.followChance)) { st.lured.set(e, -1); return null; } st.lured.set(e, until); ev(d, 'field_lured', `${d.name} chases ${c.name}'s Mindstorm echo`, { victim: c.slot }); return e; }
     return l > t ? e : null;

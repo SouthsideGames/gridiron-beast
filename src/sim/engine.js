@@ -88,6 +88,49 @@ export function engagementAttrs(b, d) {
  *    DRA-06-F) turns it into an incompletion, otherwise it is an ordinary interception.
  */
 export const REVIEW_ONLY = Symbol('ability-review-only');
+/** The 33 values every actor is created with (makeActor; spawnActor takes them from its spec). */
+const RECORD_BASE = new Set(['team', 'slot', 'mid', 'type', 'overcharged', 'sovereignQ4', 'baseAwareness', 'attrs', 'ability', 'abilityName', 'abilityKind', 'name', 'reactionBonus', 'auraAttrs',
+  'x', 'y', 'lineX', 'vx', 'vy', 'maxSpeed', 'accel', 'assignment', 'wp', 'state', 'engaged', 'stun', 'noEngage', 'target', 'route', 'brokeTackle', 'recognised', 'reactTimer', 'baseAttrs']);
+/**
+ * An actor record. Perf (outcome-identical): every actor, the lineup's (makeActor) and a contract's temporary ones (spawnActor), is
+ * created here with every key it can take, in one order, so all of them share one object shape and the engine's property loads stay
+ * monomorphic. Keys not given are undefined, which reads exactly as an absent property: no actor's keys are ever enumerated, spread,
+ * serialised or tested with `in` (checked across src/sim).
+ */
+function actorRecord(v) {
+  const a = {
+    team: v.team, slot: v.slot, mid: v.mid, type: v.type, overcharged: v.overcharged, sovereignQ4: v.sovereignQ4, baseAwareness: v.baseAwareness, attrs: v.attrs, ability: v.ability,
+    abilityName: v.abilityName, abilityKind: v.abilityKind, name: v.name, reactionBonus: v.reactionBonus, auraAttrs: v.auraAttrs,
+    x: v.x, y: v.y, lineX: v.lineX, vx: v.vx, vy: v.vy, maxSpeed: v.maxSpeed, accel: v.accel, assignment: v.assignment, wp: v.wp, state: v.state, engaged: v.engaged, stun: v.stun, noEngage: v.noEngage,
+    target: v.target, route: v.route, brokeTackle: v.brokeTackle, recognised: v.recognised, reactTimer: v.reactTimer, baseAttrs: v.baseAttrs,
+    // the properties set or read later in a play
+    read: undefined, recognisedPass: undefined, effort: undefined, effortT: undefined, zoneTgt: undefined, softBlock: undefined, engagedAt: undefined,
+    wasBlocked: undefined, pancakeRolled: undefined, zoneTgtLeaving: undefined, cutUntil: undefined, zoneNextEval: undefined, engaged2: undefined,
+    peakSeen: undefined, lastBeat: undefined, sawRelease: undefined, breakPlant: undefined, laneTimer: undefined, jukeCooldown: undefined,
+    maxSpeedMods: undefined, baseMaxSpeed: undefined, windup: undefined, throwRead: undefined, lateralRead: undefined, laneY: undefined,
+    caughtAt: undefined, mesh: undefined, jobDone: undefined, visionTimer: undefined, landslideChecked: undefined, landslide: undefined,
+    t8Base: undefined, status: undefined, knockedDown: undefined, whiffed: undefined, leadRead: undefined, armTried: undefined, koTarget: undefined,
+    koSet: undefined, climbed: undefined, koBroke: undefined, stumbled: undefined, laneDecided: undefined, t8Suppressed: undefined,
+    optionRead: undefined, released: undefined, fx: undefined, m3Aura: undefined, ignoreFieldAwareness: undefined, immune: undefined,
+    maxEngagements: undefined, splitMods: undefined, pairMods: undefined, anchor: undefined, forcedAim: undefined, phased: undefined,
+    passAllies: undefined, moveOverride: undefined, t8Chase: undefined, noContact: undefined, temp: undefined, sitsOut: undefined,
+    noTackle: undefined, noBall: undefined, possessionEndsPlay: undefined, fixedJob: undefined, abilityLogged: undefined, roarUntil: undefined,
+    slowUntil: undefined, daybreak: undefined, prevV: undefined, contract: undefined, family: undefined, form: undefined, mastery: undefined,
+    kickerAbility: undefined, staminaInput: undefined,
+  };
+  // ... and the per-play keys ability contracts (src/sim/abilities) keep on actors, so a contract carrier keeps the same shape. Named
+  // stores in a fixed order (every actor takes the same map transitions): an object literal with more than 128 properties would be
+  // created in dictionary mode.
+  a.envImmune = undefined; a.nwCredited = undefined; a.nightWatch = undefined; a.ironLungsCounted = undefined; a.daybreakBlind = undefined;
+  a.rooted = undefined; a.powered = undefined; a.passiveCredited = undefined; a.guardUsed = undefined; a.doubled = undefined; a.pyre = undefined;
+  a.ready = undefined; a.bb = undefined; a.dr = undefined; a.guard = undefined; a.drain = undefined; a.fn = undefined; a.sw = undefined;
+  a.scorch = undefined; a.cs = undefined; a.ls = undefined; a.meteor = undefined; a.sf = undefined; a.at = undefined; a.stomp = undefined;
+  a.vv = undefined; a.haze = undefined; a.ss = undefined; a.vc = undefined; a.call = undefined; a.gate = undefined; a.sov = undefined;
+  a.cy = undefined; a.sx = undefined; a.br = undefined; a.touch = undefined; a.ms = undefined; a.ab = undefined; a.breakwater = undefined;
+  a.halo = undefined; a.plate = undefined; a.clamp = undefined; a.bt = undefined; a.cold = undefined; a.sc = undefined; a.tw = undefined;
+  a.pr = undefined; a.rp = undefined; a.pounce = undefined; a.mg = undefined; a.blink = undefined;
+  return a;
+}
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
   let rng = createRng(seed); // `let`: options.fork re-seeds the physics after a decision point (AI Testing Lab rollouts)
   // The quarterback's perception has its own stream, so how he reads the field never shifts the physics of the play, and the AI
@@ -163,38 +206,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const sovereignQ4 = !!(ability?.sovereign && quarter === 4);
     if (sovereignQ4) { attrs.arm = Math.min(99, attrs.arm + ability.sovereign); attrs.accuracy = Math.min(99, attrs.accuracy + ability.sovereign); }
     const [x, y] = play.align[slot];
-    const a = {
+    const a = actorRecord({
       team, slot, mid, type: input?.type || null, overcharged, sovereignQ4, baseAwareness: attrs.awareness, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
       x, y, lineX: x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, baseAttrs: given,
-      // Perf (outcome-identical): the properties set or read later in a play, declared here as undefined so every actor starts with
-      // one object shape (no actor's keys are ever enumerated, spread, serialised or tested with `in`; undefined reads as absent).
-      read: undefined, recognisedPass: undefined, effort: undefined, effortT: undefined, zoneTgt: undefined, softBlock: undefined, engagedAt: undefined,
-      wasBlocked: undefined, pancakeRolled: undefined, zoneTgtLeaving: undefined, cutUntil: undefined, zoneNextEval: undefined, engaged2: undefined,
-      peakSeen: undefined, lastBeat: undefined, sawRelease: undefined, breakPlant: undefined, laneTimer: undefined, jukeCooldown: undefined,
-      maxSpeedMods: undefined, baseMaxSpeed: undefined, windup: undefined, throwRead: undefined, lateralRead: undefined, laneY: undefined,
-      caughtAt: undefined, mesh: undefined, jobDone: undefined, visionTimer: undefined, landslideChecked: undefined, landslide: undefined,
-      t8Base: undefined, status: undefined, knockedDown: undefined, whiffed: undefined, leadRead: undefined, armTried: undefined, koTarget: undefined,
-      koSet: undefined, climbed: undefined, koBroke: undefined, stumbled: undefined, laneDecided: undefined, t8Suppressed: undefined,
-      optionRead: undefined, released: undefined, fx: undefined, m3Aura: undefined, ignoreFieldAwareness: undefined, immune: undefined,
-      maxEngagements: undefined, splitMods: undefined, pairMods: undefined, anchor: undefined, forcedAim: undefined, phased: undefined,
-      passAllies: undefined, moveOverride: undefined, t8Chase: undefined, noContact: undefined, temp: undefined, sitsOut: undefined,
-      noTackle: undefined, noBall: undefined, possessionEndsPlay: undefined, fixedJob: undefined, abilityLogged: undefined, roarUntil: undefined,
-      slowUntil: undefined, daybreak: undefined, prevV: undefined, contract: undefined, family: undefined, form: undefined, mastery: undefined,
-      kickerAbility: undefined,
-    };
-    // ... and the per-play keys ability contracts (src/sim/abilities) keep on actors, so a contract carrier keeps the same shape. Named
-    // stores in a fixed order (every actor takes the same map transitions): an object literal with more than 128 properties would be
-    // created in dictionary mode.
-    a.envImmune = undefined; a.nwCredited = undefined; a.nightWatch = undefined; a.ironLungsCounted = undefined; a.daybreakBlind = undefined;
-    a.rooted = undefined; a.powered = undefined; a.passiveCredited = undefined; a.guardUsed = undefined; a.doubled = undefined; a.pyre = undefined;
-    a.ready = undefined; a.bb = undefined; a.dr = undefined; a.guard = undefined; a.drain = undefined; a.fn = undefined; a.sw = undefined;
-    a.scorch = undefined; a.cs = undefined; a.ls = undefined; a.meteor = undefined; a.sf = undefined; a.at = undefined; a.stomp = undefined;
-    a.vv = undefined; a.haze = undefined; a.ss = undefined; a.vc = undefined; a.call = undefined; a.gate = undefined; a.sov = undefined;
-    a.cy = undefined; a.sx = undefined; a.br = undefined; a.touch = undefined; a.ms = undefined; a.ab = undefined; a.breakwater = undefined;
-    a.halo = undefined; a.plate = undefined; a.clamp = undefined; a.bt = undefined; a.cold = undefined; a.sc = undefined; a.tw = undefined;
-    a.pr = undefined; a.rp = undefined; a.pounce = undefined; a.mg = undefined; a.blink = undefined;
+    });
     if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
     if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; a.kickerAbility = familyById(input.species)?.position === 'K'; } // kickerAbility: N8b special-play eligibility
     if (input?.id) a.staminaInput = { id: input.id, permDurability: input.permDurability, attrs: { durability: input.attrs?.durability } }; // M3 hook: the stamina record's input (permanent Durability), for ctx.drainStamina
@@ -278,10 +295,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
    */
   function spawnActor(spec) {
     const attrs = { ...DEFAULT_ATTRS, ...(spec.attrs || {}) }; const { attrs: _given, credit = null, ...flags } = spec;
-    const a = { overcharged: false, sovereignQ4: false, ability: null, abilityName: null, abilityKind: null, reactionBonus: 0, auraAttrs: null, ...flags,
+    const v = { overcharged: false, sovereignQ4: false, ability: null, abilityName: null, abilityKind: null, reactionBonus: 0, auraAttrs: null, ...flags,
       mid: spec.mid || `${spec.team}:${spec.slot}`, type: spec.type || null, name: spec.name || spec.slot, baseAwareness: attrs.awareness, attrs, baseAttrs: { ...attrs },
       lineX: spec.x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility), wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, temp: { credit } };
+    // Perf (outcome-identical): the same values as before, in the lineup's actor shape (actorRecord); the spec's other keys follow.
+    const a = actorRecord(v); for (const k of Object.keys(v)) if (!RECORD_BASE.has(k)) a[k] = v[k];
     actors.push(a); (a.team === 'off' ? offs : defs).push(a); history.set(a, []); snapPos.set(a, { x: a.x, y: a.y });
     return a;
   }
