@@ -109,13 +109,15 @@ export function timeout(state, side) {
 
 // --------------------------------------------------------------------------- scrimmage
 /** Build the engine inputs for the current situation and chosen plays, then apply the result. */
-/** Which side comeback mode lifts right now: trailing by the margin in the fourth quarter (not overtime), else null. */
+/** Comeback mode is RETIRED (owner ruling N8a, 2026-11-08): no side is lifted, including a live game saved before the ruling
+ *  that still carries a `comeback` rule. Kept as a function so callers (the match chip, edgesFor) stay unchanged. */
+export const COMEBACK_RETIRED = true;
 export function comebackSide(state) {
-  const cb = state.comeback; if (!cb || state.ot || state.quarter < 4 || state.finished) return null;
+  const cb = COMEBACK_RETIRED ? null : state.comeback; if (!cb || state.ot || state.quarter < 4 || state.finished) return null;
   const d = state.score.home - state.score.away;
   if (d >= cb.margin) return 'away'; if (-d >= cb.margin) return 'home'; return null;
 }
-/** Per-side rating edges for this snap: comeback mode plus each team's scheme lock. */
+/** Per-side rating edges for this snap: each team's scheme lock (comeback mode is retired, N8a). */
 export function edgesFor(state, teams) {
   const off = state.possession, def = opponent(off); const cb = comebackSide(state);
   const edge = { off: 0, def: 0, why: { off: [], def: [] } };

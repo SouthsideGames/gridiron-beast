@@ -693,19 +693,16 @@ test('playtest round 2: fatigue shows all week and recovers Saturday; bye weeks 
   assert.equal(F.scoutOpponent(f, 'offense').ok, false);
 });
 
-test('playtest round 3: comeback mode lifts the trailing side in the fourth on Pro/All-Star only; scheme lock needs every starter; a badge win is remembered', () => {
+test('playtest round 3: comeback mode is retired (owner N8a); scheme lock needs every starter; a badge win is remembered', () => {
   const f = newFranchise(71);
-  assert.deepEqual(F.comebackRule(f), { margin: 10, edge: 5 });
+  assert.equal(F.comebackRule(f), null, 'Pro: no comeback rule'); const allstar = newFranchise(73); allstar.settings.difficulty = 'allstar'; assert.equal(F.comebackRule(allstar), null, 'All-Star: none');
   const rookie = newFranchise(72); rookie.settings.difficulty = 'rookie'; assert.equal(F.comebackRule(rookie), null);
   const m = F.sundayMatchup(f); const R = awaitRules;
   const st = R.newGame({ home: m.home, away: m.away, seed: 1, comeback: F.comebackRule(f) });
-  assert.equal(R.comebackSide(st), null, 'first quarter: nothing');
   st.quarter = 4; st.score.home = 3; st.score.away = 20;
-  assert.equal(R.comebackSide(st), 'home', 'home trails by 17 in the fourth');
-  st.possession = 'home'; let e = R.edgesFor(st, { home: m.home, away: m.away }); assert.equal(e.off, 5); assert.equal(e.def, 0);
-  st.possession = 'away'; e = R.edgesFor(st, { home: m.home, away: m.away }); assert.equal(e.def, 5, 'the trailing defense gets it too');
-  st.score.home = 12; assert.equal(R.comebackSide(st), null, 'inside the margin: off');
-  st.score.home = 3; st.ot = { period: 1 }; assert.equal(R.comebackSide(st), null, 'never in overtime');
+  assert.equal(R.comebackSide(st), null, 'trailing by 17 in the fourth: no lift');
+  const old = R.newGame({ home: m.home, away: m.away, seed: 1, comeback: { margin: 10, edge: 5 } }); old.quarter = 4; old.score.home = 3; old.score.away = 20; assert.equal(R.comebackSide(old), null, 'a live game saved with the old rule is not lifted either');
+  st.possession = 'home'; let e = R.edgesFor(st, { home: m.home, away: m.away }); assert.equal(e.off, 0); assert.equal(e.def, 0);
   // Scheme lock: zero unless every starter fits; when it is on the Sunday team carries it.
   const lock = F.schemeLock(f); const rf = F.rosterFit(f);
   assert.equal(lock.offense, rf.offense.fit === rf.offense.total && rf.offense.total > 0 ? 3 : 0); assert.equal(lock.defense, rf.defense.fit === rf.defense.total && rf.defense.total > 0 ? 3 : 0);

@@ -147,7 +147,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const ability = null, abilityName = null, abilityKind = null;
     if (ability?.attrs) for (const [k, v] of Object.entries(ability.attrs)) attrs[k] = Math.max(1, Math.min(99, (attrs[k] ?? 60) + v));
     if (ability?.routeAgility && play.assignments[slot]?.a === 'route') attrs.agility = Math.min(99, attrs.agility + ability.routeAgility);
-    // Situational edge for a whole side (comeback mode, scheme lock): a few points on every core rating (GDD §17).
+    // Situational edge for a whole side (scheme lock; comeback mode is retired, N8a): a few points on every core rating (GDD §17).
     const edge = options.edge?.[team] || 0;
     if (edge) for (const k of EDGE_ATTRS) attrs[k] = Math.max(1, Math.min(99, (attrs[k] ?? 60) + edge));
     const mid = input?.id || `${team}:${slot}`;

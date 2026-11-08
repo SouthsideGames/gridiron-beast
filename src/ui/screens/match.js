@@ -71,12 +71,11 @@ export function registerMatchScreens(Router, app) {
     },
   });
 
-  /** Comeback mode and scheme lock, shown while they apply (GDD §17). */
+  /** Scheme lock, shown while it applies (GDD §17; comeback mode is retired, N8a: comebackSide is always null). */
   function edgeStrip(f, s, teams, me) {
     const bits = [];
     const cb = R.comebackSide(s);
     if (cb) bits.push(`<span class="edge-chip comeback ${cb === me ? 'mine' : ''}">🔥 COMEBACK · ${esc(s[cb].abbr)} +${s.comeback.edge}</span>`);
-    else if (s.comeback && s.quarter < 4 && !s.finished) bits.push(`<span class="edge-chip dim">Comeback mode: trail by ${s.comeback.margin}+ in the 4th</span>`);
     const lock = teams[me]?.schemeLock; if (lock?.offense) bits.push('<span class="edge-chip scheme mine">✦ SCHEME LOCK · offense</span>'); if (lock?.defense) bits.push('<span class="edge-chip scheme mine">✦ SCHEME LOCK · defense</span>');
     const them = R.opponent(me); const tl = teams[them]?.schemeLock; if (tl?.offense || tl?.defense) bits.push('<span class="edge-chip scheme">✦ Their scheme is locked</span>');
     return bits.length ? `<div class="edge-strip">${bits.join('')}</div>` : '';

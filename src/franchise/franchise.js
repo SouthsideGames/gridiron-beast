@@ -710,16 +710,18 @@ export function playerTeam(f, { trainingBonus: tb = null } = {}) {
 /** Deterministic AI club for a season (quality drifts per year; the rival is slightly better). */
 /** Difficulty: how good and how smart the other 15 clubs are. */
 /** Chosen at franchise creation and locked for its life (GDD §15.2). `hof` is the Hall of Fame bar at that difficulty (§15.9). */
-/** Comeback mode (GDD §17): on Pro and All-Star, whichever side trails by 10+ in the fourth quarter gets +5 on every core rating. Symmetric, never on Rookie. */
-export const COMEBACK = Object.freeze({ margin: 10, edge: 5 });
-export function comebackRule(f) { return difficultyOf(f) === DIFFICULTY.rookie ? null : { ...COMEBACK }; }
+/** Comeback mode (GDD §17) is RETIRED (owner ruling N8a, 2026-11-08; N7f: no rubber-banding): no side gets a rating lift for
+ *  trailing. The rules engine's per-side edge stays for scheme lock; `comebackRule` returns null on every difficulty, so a game is
+ *  created with no comeback rule. Unrelated comeback abilities and mechanics (the comeback route, abilities) are untouched. */
+export const COMEBACK = Object.freeze({ margin: 10, edge: 5, retired: true }); // the former values, kept only for old saves' display text
+export function comebackRule(f) { void f; return null; }
 /** Scheme lock (GDD §17): when every starter on a side fits the coordinator's scheme, that side plays with +3 on every core rating. */
 export const SCHEME_LOCK_EDGE = 3;
 export function schemeLock(f) { const rf = rosterFit(f); const on = (x) => x.total > 0 && x.fit === x.total; return { offense: on(rf.offense) ? SCHEME_LOCK_EDGE : 0, defense: on(rf.defense) ? SCHEME_LOCK_EDGE : 0, fit: rf }; }
 export const DIFFICULTY = Object.freeze({
   rookie: { label: 'Rookie', quality: -4, iq: 0.6, text: 'Weaker clubs that call plays loosely.', hof: 'Hall of Fame: 8 badges, 1 title, 30 wins, 2 awards.', hofGoals: { badges: 8, titles: 1, wins: 30, awards: 2 }, commissionerPicks: 5 },
-  pro: { label: 'Pro', quality: -1, iq: 1, text: 'The standard league. Comeback mode: a side down 10+ in the fourth quarter gets a lift, you included.', hof: 'Hall of Fame: 8 badges, 2 titles, 50 wins, 3 awards.', hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
-  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: 'Stronger clubs whose coaches read the situation sharply. Comeback mode on.', hof: 'Hall of Fame: 8 badges, 4 titles, 80 wins, 5 awards.', hofGoals: { badges: 8, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
+  pro: { label: 'Pro', quality: -1, iq: 1, text: 'The standard league.', hof: 'Hall of Fame: 8 badges, 2 titles, 50 wins, 3 awards.', hofGoals: { badges: 8, titles: 2, wins: 50, awards: 3 }, commissionerPicks: 3 },
+  allstar: { label: 'All-Star', quality: 3, iq: 1.5, text: 'Stronger clubs whose coaches read the situation sharply.', hof: 'Hall of Fame: 8 badges, 4 titles, 80 wins, 5 awards.', hofGoals: { badges: 8, titles: 4, wins: 80, awards: 5 }, commissionerPicks: 3 },
 });
 export const difficultyOf = (f) => DIFFICULTY[f?.settings?.difficulty] || DIFFICULTY.pro;
 /** Club quality for a season: base by difficulty, gym tier, growth per season, the title raising the floor, and "studied tape" after the player first beats a gym (GDD §15.3, §15.8). */
