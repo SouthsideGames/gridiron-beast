@@ -30,13 +30,30 @@ import { rampFor, rampModelFor } from '../engine.js';
 import { T8_VALUES } from './values.js';
 import { buildT8Combatant } from './combatant.js';
 import { addClock, tickClocks, clearClocks } from './clock.js';
-import { roundHalfUp } from './arith.js';
+import { roundHalfUp, resolveAmount, splitRaw } from './arith.js';
 import { STATUS, applyClash, orderAttempts, endOfTurn as statusEndOfTurn, clashEffect, afflictedTick, absorb, cleanse as cleanseSlot, replaceWith, fromFootball, toFootball } from './status.js';
 
 const V = T8_VALUES;
 const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v === 'object' && !Object.isFrozen(v)) deepFreeze(v); return Object.freeze(o); };
 export { roundHalfUp };
-const PROBE_HOOKS = ['initiative', 'chooseAction', 'roundStart', 'turnStart', 'endOfTurn', 'rotationPhase', 'endOfExchange', 'statusIncoming', 'statusApplied'];
+const PROBE_HOOKS = ['initiative', 'chooseAction', 'roundStart', 'turnStart', 'endOfTurn', 'rotationPhase', 'endOfExchange', 'statusIncoming', 'statusApplied',
+  // S3 damage-pipeline hook points (B3 step 8; P6 steps 3.4-3.12)
+  'launch', 'intercept', 'missCheck', 'rawModifiers', 'lethalRedirect', 'rawSplit', 'mitigate', 'preKO', 'attached', 'reaction', 'afterWholeHit', 'followUp'];
+/**
+ * B3 rule 3 (REMAINING_DECISIONS §B3, approved N7c): the ONLY effects that continue after their owner is knocked out. A hook item
+ * naming any other exception is refused; an item naming none is cancelled when its owner is out (B3 rule 2).
+ */
+export const POST_KO_EXCEPTIONS = Object.freeze({
+  'FIR-03-C': 'Falling Star impact, at the owner\'s last pre-KO strength',
+  'FIR-06-C': 'Faultline impact, at the owner\'s last pre-KO strength',
+  'FIR-04-C': 'Molten Brand lethal-hit eruption ("settle both knockouts before winner")',
+  'WAT-02-C': 'Shared Burden: the current hit keeps its split; the link ends',
+  'EAR-06-C': 'Mountain Shelter protection already granted',
+  'WAT-06-C': 'Riptide Pursuit: ordinary replacement, then continue as written',
+  'PSY-06-C': 'Astral Strike: ordinary replacement, then continue as written',
+  'FIR-02-C': 'Cinder Clamp: the owner\'s KO releases the grip',
+  'NAT-01-C': 'Second Spring revival on a later own turn',
+});
 /** Battle contexts (spec §10, D12): a standalone (Tuesday) battle clears every status at its end; an opening or overtime Clash is part
  *  of a football game, so its statuses carry out (S12 connects that carry to the game state). */
 export const T8_CONTEXTS = Object.freeze(['standalone', 'opening', 'overtime']);
@@ -84,7 +101,10 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   const events = []; let ex = 0; let phase = 'opening'; let ramp = 1; let healMult = 1; let lastKO = 0; let koSeq = 0;
   const snap = (x) => (x ? { hp: x.hp, turns: x.turns, active: x.active, clocks: x.clocks.length, status: x.status ? { id: x.status.id, remaining: x.status.remaining, applications: x.status.applications, ...(x.status.id === 'shielded' ? { pool: x.status.payload.remaining } : {}) } : null } : null);
   const activeIds = () => ({ a: S.a.active?.c.id ?? null, b: S.b.active?.c.id ?? null });
-  const log = (kind, actor, target, text, extra = {}) => { events.push({ ex, phase, kind, actor: actor?.c.id ?? null, target: target?.c.id ?? null, text, ...extra, actorState: snap(actor), targetState: snap(target), active: activeIds(), ramp }); };
+  // Every event carries `seq` (its index, for event stepping), `turnIndex` (the battle's normal-turn count, for turn stepping) and
+  // `hit` (the strike it belongs to, or null), so the reviewer can step trigger -> activation -> resolution -> cleanup (§25).
+  let turnIndex = 0;
+  const log = (kind, actor, target, text, extra = {}) => { events.push({ seq: events.length, ex, phase, turnIndex, hit: curHit?.id ?? null, kind, actor: actor?.c.id ?? null, target: target?.c.id ?? null, text, ...extra, actorState: snap(actor), targetState: snap(target), active: activeIds(), ramp }); };
 
   // ---- live records
   const mkSide = (key, monsters) => {
@@ -186,46 +206,224 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     return true;
   }
 
-  // ---- the no-contract action: the ordinary attack plus archetype perks (R1 items 37-38)
-  // 8a raw damage once: attacker power and outgoing modifiers (the sudden-death ramp; the damage spread). 8d the recipient's own
-  // mitigation: type, then the Tank guard (active only; Disruptor pierce ignores it). Guarded and the shield arrive in S2/S3.
-  // Rounded once, half up (PROVISIONAL, D9). The Striker shieldBreak perk has no shield to act on yet.
-  function ordinaryAttack(x, t) {
-    // Launch: the Confused redirect roll (STA-07: 25% per eligible normal attack; the FULL intended attack goes to its own side, self
-    // as primary target). One draw, and only while the attacker is Confused, so a battle without statuses draws exactly as in S1.
-    const conf = clashEffect(x.status).confusedChance;
-    if (conf > 0) {
-      const redirected = rng.chance(conf);
-      if (LOG) log('confused_roll', x, redirected ? x : t, `${x.c.name} is Confused: ${redirected ? 'the attack turns on itself' : 'it attacks normally'}`, { chance: conf, redirected, intended: t.c.id });
-      if (redirected) t = x;
-    }
-    const spread = V.damage.spreadMin + rng.next() * (V.damage.spreadMax - V.damage.spreadMin);
-    const out = clashEffect(x.status).outgoing; // Weakened / Empowered (STA-06, STA-10)
-    const raw = x.c.atk * ramp * spread * out;
-    const type = typeFactor(x.c.type, t.c.type);
-    const guard = t.active && t.c.perks.guard < 1 && !x.c.perks.pierce ? t.c.perks.guard : 1;
-    const guarded = clashEffect(t.status).incoming; // Guarded (STA-12)
-    let exact = raw * type * guard * guarded;
-    let shieldNote = '', absorbedPart = null;
-    if (t.status?.id === 'shielded') { // STA-09: the pool absorbs before HP; Striker shield-break x2 on ordinary attacks (D5)
-      const br = x.c.perks.shieldBreak || 1; const r = absorb(t.status, exact, br);
-      t.status = r.slot; exact = r.toHp; absorbedPart = { poolLoss: r.poolLoss, broken: r.broken, breakMult: br };
-      shieldNote = `, ${r.poolLoss} absorbed by the shield${r.broken ? ' (shield broken)' : ''}`;
-    }
-    const loss = roundHalfUp(exact);
-    const before = t.hp; t.hp = Math.max(0, t.hp - loss);
-    x.stats.attacks += 1; x.stats.dealt += before - t.hp; t.stats.taken += before - t.hp;
-    if (LOG) log('damage', x, t, `${x.c.name}'s attack: ${loss} damage${shieldNote}${guard < 1 ? ' (Tank guard)' : ''}${guarded < 1 ? ' (Guarded)' : ''}${out !== 1 ? (out > 1 ? ' (Empowered)' : ' (Weakened)') : ''}${t === x ? ' (Confused: hits itself)' : ''}${type > 1 ? ' (type advantage)' : type < 1 ? ' (type disadvantage)' : ''}`,
-      { tag: 'ordinary', damage: loss, raw: Math.round(raw * 100) / 100, hpBefore: before, hpAfter: t.hp, type: typeEdge(x.c.type, t.c.type), guard: guard < 1, pierce: x.c.perks.pierce && t.c.perks.guard < 1,
-        ...(out !== 1 ? { outgoing: out } : {}), ...(guarded !== 1 ? { guarded } : {}), ...(absorbedPart ? { shield: absorbedPart } : {}), ...(t === x ? { redirected: true } : {}) });
-    if (absorbedPart?.broken && LOG) log('status_end', x, t, `${t.c.name}'s Shielded ends (shield broken)`, { status: 'shielded', reason: 'broken' });
-    if (t.hp <= 0) knockout(t, x); // B3 rule 1: out at once
-    return settleHit();
+  // ---- the no-contract action: the ordinary attack plus archetype perks (R1 items 37-38) is `ordinaryAttack` below.
+  // ---- the damage pipeline (S3; B3 step 8 as corrected by REMAINING_DECISIONS §B3; P6 steps 3.4-3.13)
+  // One strike = launch -> interception -> explicit misses -> 8a raw once -> 8b Emergency Cover -> 8c Shared Burden raw split ->
+  // 8d each recipient's mitigation (type, Tank guard, Guarded, ability mitigation, shield) -> 8e pre-KO (Last Root) -> 8f HP and the
+  // immediate KO -> attached effects -> reactions (no chains) -> after the whole hit -> the replacement (B3 rule 4) -> follow-ups.
+  // Every step is a named hook point (PROBE_HOOKS) for the S5 registry; the engine never names an ability. With no hook registered
+  // the strike draws and logs exactly as the S1/S2 ordinary attack, so plain battles are unchanged.
+  //
+  // Attack-kind tags: 'ordinary' (the plain or Basic normal attack), 'special' (a contract's normal-action attack), 'reaction',
+  // 'counter', 'followUp', 'commanded', 'delayed'. D5 (approved): the Striker shield-break and Disruptor pierce apply to ORDINARY
+  // attacks only; the Tank guard applies while the Tank is active (never in reserve, so never on redirected or transferred damage).
+  // Explicit ability exceptions are preserved through `spec.exceptions` ({ shieldBreak, pierce, tankGuard }), set only by a contract.
+  // D9 (approved): every modifier multiplies and the HP loss is rounded once, half up; the explicit floor (Shared Burden split) and
+  // round-up exceptions keep their own rounding.
+  let hitSeq = 0; let curHit = null;
+  const isNormalAttack = (tag) => tag === 'ordinary' || tag === 'special';
+  const noChain = (tag) => tag === 'reaction' || tag === 'counter';
+  const label = (spec) => spec.label || (spec.tag === 'ordinary' ? 'attack' : spec.abilityId || spec.tag);
+  /** P8 entry penalty factor for `x`'s numeric output on this normal turn (S4 sets it; 1 otherwise). */
+  const penaltyOf = (x, spec) => (isNormalAttack(spec?.tag ?? 'ordinary') || spec?.support ? x.p8?.factor ?? 1 : 1);
+  const hookList = (r) => (r == null ? [] : Array.isArray(r) ? r : [r]);
+  /** Log an `unmet` report from a hook: the ability was considered but a stated condition failed (reviewer requirement, §25). */
+  function reportUnmet(hook, ownerId, r) {
+    if (!r?.unmet || !LOG) return;
+    const o = byId.get(ownerId) || null;
+    log('unmet', o, null, `${o ? o.c.name : 'Hook'}: ${r.abilityId || hook} does not activate (${r.unmet.map((u) => u.condition).join(', ')})`, { hook, stage: 'trigger', abilityId: r.abilityId ?? null, unmet: r.unmet });
   }
+  /** Mitigation preview or application for one recipient (8d). Returns { exact, parts } with the shield applied when `commit`. */
+  function mitigate(att, rec, raw, spec, commit) {
+    const ordinary = spec.tag === 'ordinary'; const ex_ = spec.exceptions || {};
+    const type = typeFactor(att.c.type, rec.c.type);
+    const pierce = ex_.pierce ?? (ordinary && att.c.perks.pierce);
+    const guardOn = ex_.tankGuard ?? true;
+    const guard = guardOn && rec.active && rec.c.perks.guard < 1 && !pierce ? rec.c.perks.guard : 1;
+    const guarded = clashEffect(rec.status).incoming;
+    const ab = hookList(probe('mitigate', rec.c.id, { attacker: att.c.id, tag: spec.tag, raw })).reduce((k, m) => k * (m.factor ?? 1), 1);
+    let exact = raw * type * guard * guarded * ab; let shield = null;
+    if (rec.status?.id === 'shielded') {
+      const br = ex_.shieldBreak ?? (ordinary ? att.c.perks.shieldBreak || 1 : 1);
+      const r = absorb(rec.status, exact, br);
+      shield = { poolLoss: r.poolLoss, broken: r.broken, breakMult: br };
+      if (commit) rec.status = r.slot;
+      exact = r.toHp;
+    }
+    return { exact, type, guard, guarded, ab, shield, pierce: !!pierce && rec.c.perks.guard < 1 };
+  }
+  /**
+   * One strike from `att` aimed at `target`. spec: { tag, mult = 1, abilityId, label, hits = 1, undodgeable, exceptions, support,
+   *   exception } — `exception` names the B3 rule 3 post-KO exception that lets a knocked-out owner's strike resolve.
+   * Returns true when the battle is decided.
+   */
+  function strike(att, target, spec = { tag: 'ordinary' }) {
+    const hits = spec.hits || 1;
+    for (let h = 1; h <= hits; h++) {
+      if (att.koed && !spec.exception) { if (LOG) log('hits_cancelled', att, target, `${att.c.name}'s remaining hits are cancelled (knocked out)`, { remaining: hits - h + 1, rule: 'B3 rule 2' }); return endCheck(); }
+      if (h > 1 && (target.koed || !target.active)) { if (LOG) log('hits_cancelled', att, target, `${att.c.name}'s remaining hits are cancelled (target gone)`, { remaining: hits - h + 1, rule: 'multi-hit-target-ko (provisional)' }); return endCheck(); }
+      if (oneHit(att, target, spec, h)) return true;
+    }
+    return false;
+  }
+  function oneHit(att, intended, spec, hitNo) {
+    const prevHit = curHit; curHit = { id: ++hitSeq, tag: spec.tag, attacker: att.c.id, abilityId: spec.abilityId ?? null, hitNo };
+    try {
+      let t = intended;
+      // 3.4 launch: costs, once-uses and target lock are contract hooks; then the Confused redirect (STA-07: eligible normal attacks
+      // only, reactions and counters never roll); then launch accuracy (Snowbank Shot) as a hook.
+      const launch = probe('launch', att.c.id, { target: t.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null });
+      reportUnmet('launch', att.c.id, launch);
+      if (launch?.cancel) { if (LOG) log('launch_cancelled', att, t, `${att.c.name}'s ${label(spec)} does not launch (${launch.reason || 'cancelled'})`, { reason: launch.reason || 'cancelled', unmet: launch.unmet || [{ condition: 'launch', detail: launch.reason || 'cancelled' }] }); return false; }
+      const conf = isNormalAttack(spec.tag) ? clashEffect(att.status).confusedChance : 0;
+      if (conf > 0) {
+        const redirected = rng.chance(conf);
+        if (LOG) log('confused_roll', att, redirected ? att : t, `${att.c.name} is Confused: ${redirected ? 'the attack turns on itself' : 'it attacks normally'}`, { chance: conf, redirected, intended: t.c.id });
+        if (redirected) t = att;
+      }
+      // 3.5 interception (Stone Divide)
+      const icp = probe('intercept', t.c.id, { attacker: att.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null });
+      reportUnmet('intercept', t.c.id, icp);
+      if (icp?.intercepted) { if (LOG) log('intercepted', byId.get(icp.by) || null, att, `${att.c.name}'s ${label(spec)} is intercepted`, { stage: 'resolution', abilityId: icp.abilityId ?? null, by: icp.by ?? null }); return false; }
+      // 3.6 explicit miss sources only (N7a, P10): no base evasion; undodgeable attacks bypass them without a roll
+      if (!spec.undodgeable) {
+        const miss = probe('missCheck', t.c.id, { attacker: att.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null });
+        reportUnmet('missCheck', t.c.id, miss);
+        if (miss?.miss) { if (LOG) log('miss', att, t, `${att.c.name}'s ${label(spec)} misses (${miss.source || 'explicit miss effect'})`, { source: miss.source ?? null, abilityId: miss.abilityId ?? null, stage: 'resolution' }); return afterHit(att, t, spec, [], true); }
+      }
+      // 8a raw damage once: attacker power and outgoing modifiers, before any recipient's type or defence
+      const spread = V.damage.spreadMin + rng.next() * (V.damage.spreadMax - V.damage.spreadMin);
+      const out = clashEffect(att.status).outgoing; // Weakened / Empowered (STA-06, STA-10)
+      const p8 = penaltyOf(att, spec);
+      const abRaw = hookList(probe('rawModifiers', att.c.id, { target: t.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null })).reduce((k, m) => k * (m.factor ?? 1), 1);
+      const raw = att.c.atk * (spec.mult ?? 1) * ramp * spread * out * p8 * abRaw;
+      // 8b Emergency Cover: lethality predicted after the original target's defences (a mitigation preview that consults the 'mitigate'
+      //    hook but changes nothing), before any survival ability is spent
+      let recipients = [{ x: t, raw }];
+      const predicted = roundHalfUp(mitigate(att, t, raw, spec, false).exact);
+      const cover = probe('lethalRedirect', t.c.id, { attacker: att.c.id, raw, predicted, lethal: predicted >= t.hp, tag: spec.tag });
+      reportUnmet('lethalRedirect', t.c.id, cover);
+      if (cover?.to) { const r = byId.get(cover.to); if (!r || r.koed) throw new Error(`lethalRedirect to ${cover.to}: not a living combatant`); if (LOG) log('redirect', r, t, `${r.c.name} takes the hit for ${t.c.name}`, { stage: 'activation', abilityId: cover.abilityId ?? null, predicted }); recipients = [{ x: r, raw }]; }
+      // 8c Shared Burden raw split: the budget is whole (round half up once), the source share floored, the target gets the rest (§9)
+      const split = probe('rawSplit', recipients[0].x.c.id, { attacker: att.c.id, raw, tag: spec.tag });
+      reportUnmet('rawSplit', recipients[0].x.c.id, split);
+      if (split?.to) {
+        const src = byId.get(split.to); if (!src || src.koed) throw new Error(`rawSplit to ${split.to}: not a living combatant`);
+        const whole = roundHalfUp(raw); const sh = splitRaw(whole, split.pct);
+        recipients = [{ x: recipients[0].x, raw: sh.target }, { x: src, raw: sh.source }];
+        if (LOG) log('raw_split', src, recipients[0].x, `${src.c.name} shares ${sh.source} of ${whole}`, { stage: 'resolution', abilityId: split.abilityId ?? null, whole, source: sh.source, target: sh.target, pct: split.pct });
+      }
+      const order = [recipients[0], ...recipients.slice(1).sort((p, q) => p.x.c.id.localeCompare(q.x.c.id))];
+      const landed = [];
+      for (const { x: rec, raw: rr } of order) {
+        // 8d mitigation, then one rounding (D9)
+        const m = mitigate(att, rec, rr, spec, true);
+        let loss = roundHalfUp(m.exact);
+        // 8e pre-KO hook on every damage path (Last Root)
+        if (loss >= rec.hp && rec.hp > 0) {
+          const pk = probe('preKO', rec.c.id, { attacker: att.c.id, loss, tag: spec.tag });
+          reportUnmet('preKO', rec.c.id, pk);
+          if (pk?.survive) { if (LOG) log('survive', rec, att, `${rec.c.name} holds on at 1 HP`, { stage: 'activation', abilityId: pk.abilityId ?? null, prevented: loss - (rec.hp - 1) }); loss = rec.hp - 1; }
+        }
+        // 8f HP loss and the immediate KO (B3 rule 1)
+        const before = rec.hp; rec.hp = Math.max(0, rec.hp - loss);
+        if (spec.tag === 'ordinary' || spec.tag === 'special') att.stats.attacks += rec === order[0].x ? 1 : 0;
+        att.stats.dealt += before - rec.hp; rec.stats.taken += before - rec.hp;
+        if (LOG) {
+          const sn = m.shield ? `, ${m.shield.poolLoss} absorbed by the shield${m.shield.broken ? ' (shield broken)' : ''}` : '';
+          log('damage', att, rec, `${att.c.name}'s ${label(spec)}: ${loss} damage${sn}${m.guard < 1 ? ' (Tank guard)' : ''}${m.guarded < 1 ? ' (Guarded)' : ''}${out !== 1 ? (out > 1 ? ' (Empowered)' : ' (Weakened)') : ''}${p8 !== 1 ? ' (entry penalty)' : ''}${rec === att ? ' (Confused: hits itself)' : ''}${m.type > 1 ? ' (type advantage)' : m.type < 1 ? ' (type disadvantage)' : ''}`,
+            { tag: spec.tag, damage: loss, raw: Math.round(rr * 100) / 100, hpBefore: before, hpAfter: rec.hp, type: typeEdge(att.c.type, rec.c.type), guard: m.guard < 1, pierce: m.pierce,
+              ...(spec.abilityId ? { abilityId: spec.abilityId } : {}), ...(spec.mult != null && spec.mult !== 1 ? { mult: spec.mult } : {}), ...(out !== 1 ? { outgoing: out } : {}), ...(p8 !== 1 ? { penalty: p8 } : {}), ...(m.guarded !== 1 ? { guarded: m.guarded } : {}), ...(m.ab !== 1 ? { mitigation: m.ab } : {}), ...(m.shield ? { shield: m.shield } : {}), ...(rec === att ? { redirected: true } : {}), ...(hitNo > 1 ? { hitNo } : {}) });
+          if (m.shield?.broken) log('status_end', att, rec, `${rec.c.name}'s Shielded ends (shield broken)`, { status: 'shielded', reason: 'broken' });
+        }
+        landed.push({ x: rec, loss });
+        if (rec.hp <= 0) knockout(rec, att);
+      }
+      return afterHit(att, t, spec, landed, false);
+    } finally { curHit = prevHit; }
+  }
+  /** Steps 3.9-3.12 after the damage: attached effects, reactions (no chains), after the whole hit, the replacement, follow-ups. */
+  function afterHit(att, t, spec, landed, missed) {
+    const info = { attacker: att.c.id, target: t.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, missed, landed: landed.map((l) => ({ id: l.x.c.id, loss: l.loss, koed: l.x.koed })) };
+    // 3.9 attached effects through the shared gate (a blocked status never cancels the damage)
+    if (!missed) runDescriptors(hookList(probe('attached', att.c.id, info)), att.c.id, 'attached');
+    if (!noChain(spec.tag) && probes.length) {
+      // 3.10 reactions and retaliation to that hit, by every living monster that has one; a reaction never triggers reactions
+      for (const y of reactionOrder(landed, att)) runDescriptors(hookList(probe('reaction', y.c.id, info)), y.c.id, 'reaction');
+      // 3.11 after the whole hit (Glacier Wall rebuild, Wing Shelter, Mirage Veil, Forge Swipe, Shadow Pounce counter, Rubble Reprisal)
+      for (const y of reactionOrder(landed, att)) runDescriptors(hookList(probe('afterWholeHit', y.c.id, info)), y.c.id, 'afterWholeHit');
+    }
+    // B3 rule 4: the replacement enters now, after every living monster's reactions and before the next hit or follow-up.
+    if (settleHit()) return true;
+    if (!noChain(spec.tag) && probes.length) {
+      // 3.12 follow-ups that need retaliation settled first (Twin Thunder bolts, Bank Shot ricochet)
+      for (const y of reactionOrder(landed, att)) if (runDescriptors(hookList(probe('followUp', y.c.id, info)), y.c.id, 'followUp')) return true;
+    }
+    return endCheck();
+  }
+  /** Reactors in stable order: the hit's recipients first (in recipient order), then every other living monster by stable ID. */
+  function reactionOrder(landed, att) {
+    const first = landed.map((l) => l.x); const rest = [...S.a.line, ...S.b.line].filter((y) => !first.includes(y)).sort((p, q) => p.c.id.localeCompare(q.c.id));
+    void att; return [...first, ...rest];
+  }
+  /**
+   * Run what a hook returned. Each descriptor belongs to an owner. B3 rule 2: an owner knocked out before its item resolves has the
+   * item cancelled, unless the item names one of the B3 rule 3 post-KO exceptions. Returns true when the battle is decided.
+   * Descriptors: { kind: 'strike', target, mult, tag, abilityId, exceptions } | { kind: 'status', targetId, ...attempt }
+   *   | { kind: 'heal', targetId, pctMaxHp, rounding } | { kind: 'shield', targetId, pctMaxHp, duration } | { unmet: [...] }.
+   */
+  function runDescriptors(list, ownerId, hook) {
+    for (const d of list) {
+      if (d.unmet) { reportUnmet(hook, d.owner ?? ownerId, d); continue; }
+      const owner = byId.get(d.owner ?? ownerId);
+      if (d.exception && !POST_KO_EXCEPTIONS[d.exception]) throw new Error(`${d.exception} is not an approved post-KO exception (B3 rule 3)`);
+      if (owner.koed && !d.exception) { if (LOG) log('cancelled', owner, null, `${owner.c.name}'s ${d.abilityId || d.kind} is cancelled (knocked out)`, { hook, item: d.kind, abilityId: d.abilityId ?? null, rule: 'B3 rule 2', stage: 'cleanup' }); continue; }
+      if (LOG && d.abilityId) log('ability', owner, null, `${owner.c.name}: ${d.abilityId} (${hook})`, { hook, abilityId: d.abilityId, stage: 'activation', ...(owner.koed ? { postKO: d.exception } : {}) });
+      if (d.kind === 'strike') {
+        const tgt = byId.get(d.target === 'attacker' ? curHit?.attacker : d.target);
+        if (!tgt || tgt.koed) { if (LOG) log('cancelled', owner, tgt || null, `${owner.c.name}'s ${d.abilityId || 'strike'} has no target`, { hook, rule: 'no living target', stage: 'cleanup', unmet: [{ condition: 'living target' }] }); continue; }
+        if (strike(owner, tgt, { tag: d.tag || (hook === 'reaction' ? 'reaction' : hook === 'followUp' ? 'followUp' : 'counter'), mult: d.mult ?? 1, abilityId: d.abilityId ?? null, exceptions: d.exceptions, undodgeable: d.undodgeable, label: d.label, exception: d.exception })) return true;
+      } else if (d.kind === 'status') { const { kind, owner: _o, exception, targetId, ...attempt } = d; const x = byId.get(targetId); if (x && !x.koed) applyStatus(x, { sourceId: owner.c.id, ...attempt }); }
+      else if (d.kind === 'heal') heal(owner, byId.get(d.targetId), d);
+      else if (d.kind === 'shield') grantShield(owner, byId.get(d.targetId), d);
+      else throw new Error(`Unknown hook descriptor ${d.kind}`);
+    }
+    return false;
+  }
+
+  // ---- healing and shields (D9: P8 x C6 x Healing Reduced multiply, rounded once; explicit floor exceptions keep 'floor')
+  /** Heal `t` by `pctMaxHp` of its max HP (or `base` HP). Capped at missing HP. D7: Afflicted never reduces healing. */
+  function heal(src, t, { pctMaxHp, base, rounding = 'halfUp', abilityId = null, support = true } = {}) {
+    if (!t || t.koed) return 0;
+    const b = base ?? (t.c.maxHp * pctMaxHp) / 100;
+    const factors = [{ id: 'entry-penalty', factor: penaltyOf(src, { support }) }, { id: 'stalemate-c6', factor: healMult }, { id: 'healing-reduced', factor: clashEffect(t.status).heal }].filter((f) => f.factor !== 1);
+    const r = resolveAmount(b, factors, { rounding, max: t.c.maxHp - t.hp });
+    const before = t.hp; t.hp += r.amount;
+    if (LOG) log('heal', src, t, `${src.c.name} heals ${t.c.name} ${r.amount}${factors.length ? ` (${factors.map((f) => f.id).join(', ')})` : ''}`, { amount: r.amount, exact: r.exact, factors: r.factors, rounding, hpBefore: before, hpAfter: t.hp, abilityId, stage: 'resolution' });
+    return r.amount;
+  }
+  /** Grant Shielded with a pool of `pctMaxHp` of the recipient's max HP (P8 and C6 multiply, one rounding), through the gate. */
+  function grantShield(src, t, { pctMaxHp, duration, abilityId = null, support = true } = {}) {
+    if (!t || t.koed) return false;
+    const factors = [{ id: 'entry-penalty', factor: penaltyOf(src, { support }) }, { id: 'stalemate-c6', factor: healMult }].filter((f) => f.factor !== 1);
+    const r = resolveAmount((t.c.maxHp * pctMaxHp) / 100, factors);
+    if (r.amount < 1) { if (LOG) log('unmet', src, t, `${src.c.name}'s shield rounds to 0`, { unmet: [{ condition: 'positive shield pool', detail: r.exact }], abilityId }); return false; }
+    return applyStatus(t, { id: 'shielded', strength: r.amount, duration, sourceId: src.c.id, abilityId }).accepted;
+  }
+  /** Damage-over-time on `x` (the Afflicted tick): direct HP loss, then the 8e pre-KO hook, then 8f. */
+  function dotDamage(x, amount, extra) {
+    let loss = amount;
+    if (loss >= x.hp) { const pk = probe('preKO', x.c.id, { attacker: null, loss, tag: 'dot' }); reportUnmet('preKO', x.c.id, pk); if (pk?.survive) { if (LOG) log('survive', x, null, `${x.c.name} holds on at 1 HP`, { stage: 'activation', abilityId: pk.abilityId ?? null }); loss = x.hp - 1; } }
+    const before = x.hp; x.hp = Math.max(0, x.hp - loss); x.stats.taken += before - x.hp;
+    if (LOG) log('afflicted', null, x, `${x.c.name} suffers ${loss} from Afflicted`, { tag: 'dot', damage: loss, hpBefore: before, hpAfter: x.hp, ...extra });
+    if (x.hp <= 0) { knockout(x, null); return true; }
+    return false;
+  }
+  const ordinaryAttack = (x, t) => strike(x, t, { tag: 'ordinary' });
 
   // ---- one normal turn (P6 step 3). Returns true when the battle is decided.
   function takeTurn(x) {
-    x.turns += 1; x.inTurn = true; phase = 'turn';
+    x.turns += 1; x.inTurn = true; phase = 'turn'; turnIndex += 1;
     if (LOG) log('turn_start', x, null, `${x.c.name}'s turn ${x.turns}`, { turn: x.turns });
     probe('turnStart', x.c.id);
     // The Stunned check (P6 step 3.2; STA-01; D4). A skipped turn still counts as a normal turn and consumes duration.
@@ -251,19 +449,21 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       if (LOG) log('skip', x, null, `${x.c.name}'s turn is skipped`, { turn: x.turns });
     } else {
       x.consecutiveSkips = 0;
+      reportUnmet('chooseAction', x.c.id, choice);
       const foe = other(x.side).active;
-      if (foe) done = ordinaryAttack(x, foe);
+      // The normal action: the ordinary attack (no contract), or what a contract's chooseAction returns in its place: a special
+      // normal-action attack, or a support action (heal / shield). S6-S11 register the real contracts; tests use stubs.
+      if (choice?.kind === 'attack') { if (foe) done = strike(x, foe, { tag: 'special', mult: choice.mult ?? 1, abilityId: choice.abilityId ?? null, hits: choice.hits, undodgeable: choice.undodgeable, exceptions: choice.exceptions, label: choice.label }); }
+      else if (choice?.kind === 'heal') heal(x, byId.get(choice.targetId ?? x.c.id), choice);
+      else if (choice?.kind === 'shield') grantShield(x, byId.get(choice.targetId ?? x.c.id), choice);
+      else if (foe) done = ordinaryAttack(x, foe);
     }
     // End of turn (P6 step 3.14; B3 rule 5: a monster knocked out during its own turn has no end of turn).
     // Order: 1. Afflicted damage (not on the application turn); 2.-4. the countdowns (status, then the holder's clocks).
     if (!x.koed && !done) {
       phase = 'end_of_turn';
       const tick = x.status && !x.status.appliedThisUnit ? afflictedTick(x.status, x.c.maxHp) : 0;
-      if (tick > 0) {
-        const before = x.hp; x.hp = Math.max(0, x.hp - tick); x.stats.taken += before - x.hp;
-        if (LOG) log('afflicted', null, x, `${x.c.name} suffers ${tick} from Afflicted`, { tag: 'dot', damage: tick, hpBefore: before, hpAfter: x.hp, sourceId: x.status.sourceId ?? null, abilityId: x.status.abilityId ?? null });
-        if (x.hp <= 0) { knockout(x, null); done = settleHit(); } // B3 rule 5: KO at once, the replacement enters, the countdowns skip it
-      }
+      if (tick > 0 && dotDamage(x, tick, { sourceId: x.status.sourceId ?? null, abilityId: x.status.abilityId ?? null })) done = settleHit(); // B3 rule 5: KO at once, the replacement enters, the countdowns skip it
     }
     if (!x.koed) {
       phase = 'end_of_turn';
@@ -286,7 +486,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   }
 
   // ---- opening
-  if (LOG) events.push({ ex: 0, phase, kind: 'start', text: `Beast Clash (t8): ${a.length} v ${b.length}. Sudden death Model ${model} from exchange ${sdFrom}.`, model, ruleset: V.ruleset });
+  if (LOG) events.push({ seq: 0, ex: 0, phase, turnIndex: 0, hit: null, kind: 'start', text: `Beast Clash (t8): ${a.length} v ${b.length}. Sudden death Model ${model} from exchange ${sdFrom}.`, model, ruleset: V.ruleset });
   // Incoming carry (opening / overtime only; D10, D11): football slots converted through the Clash side of the gate. Unsupported
   // statuses (Stumbled, Knocked Down) clear rather than lie dormant (spec §10; STA-03, STA-04).
   if (carryIn) for (const [mid, slot] of Object.entries(carryIn)) {
