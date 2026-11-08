@@ -29,3 +29,10 @@ test('a review writes nothing outside its own game: no franchise, save or storag
 test('reviewer staging: abilities the AI or the base playbook never reaches are staged on the real engine (Crossed Wires, Dragon Roar as the player call, Night Watch)', () => {
   for (const family of ['flicker', 'vyrnax', 'nightowl']) { const r = reviewAbility({ family, seed: 1, games: 3 }); assert.ok(r.found, `${family}: ${r.reason}`); assert.equal(r.primed, true); }
 });
+
+test('a review stops only on the subject\'s own recorded execution (never a charge or ready cue, never an opposing monster of the same family)', () => {
+  for (const family of ['mudcub', 'mireclaw', 'ashkit']) { // these used to stop on a cue or on the opponent's monster (M3_RARE_ACTIVATIONS.md)
+    const r = reviewAbility({ family, seed: 1, games: 4 }); assert.ok(r.found, `${family}: ${r.reason}`); assert.equal(r.executed, true);
+    for (const e of r.events) { assert.ok(e.by == null || e.by === r.slot, `${family}: a cue from his slot only`); }
+  }
+});
