@@ -57,7 +57,8 @@ test('a kickoff that is not a touchback is a real return: caught live, then a ta
 
 test('the coverage tackles and the returner\'s yards are the events credited; long returns and touchdowns stay possible', () => {
   let tackles = 0, returns = 0, yards = []; const seen = new Set();
-  for (let seed = 1; seed <= 80; seed++) {
+  for (let seed = 1; seed <= 200; seed++) { // 200 kicks (Task 8 M3: with the legacy kicking boosts retired, more kicks are returned and
+    // 80 seeds' returns spanned 18-28 yards only; over 200 they span 17-36)
     const s = kickoffState(seed); const { sim, res } = R.doKickoff(s, teams); if (!sim) continue; returns++;
     const P = s.stats.home.players, K = s.stats.away.players;
     assert.equal(P[sim.kickoff.returner].krAtt, 1); assert.equal(P[sim.kickoff.returner].krYds ?? 0, res.returnYards || 0);

@@ -59,7 +59,7 @@ test('Mind Bend (PSY-01-F): a personal tackle after a completion while ready ban
 
 test('Mind Bend: created at his next defensive snap (G3) in the backfield LOS+3..+9 toward the opponent goal, pulls non-Psychic monsters, life by mastery, cooldown after creation, pending survives halftime', () => {
   const { g, teams } = game(3); const fs = teams.away.defense.FS; Object.assign(fs, { species: 'mindwing', form: 'mindwing:0', mastery: 2, type: 'Psychic' });
-  g.t8.fields = { list: [], pending: [{ owner: fs.id, ownerTeam: 'away', side: 'defense', type: 'Psychic', ability: 'PSY-01-F', strength: 20, lifetime: 2, clock: 'ownerDefense', width: 8, length: 6, span: [-9, -3], centerOn: 'ball' }], seq: 0 };
+  g.t8.fields = { list: [], pending: [{ requireAble: true, owner: fs.id, ownerTeam: 'away', side: 'defense', type: 'Psychic', ability: 'PSY-01-F', strength: 20, lifetime: 2, clock: 'ownerDefense', width: 8, length: 6, span: [-9, -3], centerOn: 'ball' }], seq: 0 };
   g.t8.ability = { [fs.id]: { cd: 0, banked: true } };
   // He sits out (a counted Stunned): unable source keeps it pending.
   g.t8.status[fs.id] = { id: 'stunned', strength: 1, originalStrength: 1, remaining: 1, applications: 1, appliedThisUnit: false, restOfPlay: false };
@@ -78,7 +78,7 @@ test('Mind Bend: created at his next defensive snap (G3) in the backfield LOS+3.
   }
   // Near the offense's own goal the zone shifts toward the line only enough to fit.
   const { g: g2, teams: t2 } = game(4); const fs2 = t2.away.defense.FS; Object.assign(fs2, { species: 'mindwing', form: 'mindwing:0', mastery: 0, type: 'Psychic' }); g2.ballOn = 4;
-  g2.t8.fields = { list: [], pending: [{ owner: fs2.id, ownerTeam: 'away', side: 'defense', type: 'Psychic', ability: 'PSY-01-F', strength: 20, lifetime: 1, clock: 'ownerDefense', width: 8, length: 6, span: [-9, -3], centerOn: 'ball' }], seq: 0 };
+  g2.t8.fields = { list: [], pending: [{ requireAble: true, owner: fs2.id, ownerTeam: 'away', side: 'defense', type: 'Psychic', ability: 'PSY-01-F', strength: 20, lifetime: 1, clock: 'ownerDefense', width: 8, length: 6, span: [-9, -3], centerOn: 'ball' }], seq: 0 };
   const s2 = R.runScrimmagePlay(g2, t2, 'mesh', 'cover_3').sim; assert.deepEqual(s2.fields[0].yard, [-4, 2], 'fits the field of play: the goal line to 6 yards out');
 });
 
