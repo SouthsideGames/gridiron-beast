@@ -254,7 +254,7 @@ Full text and evidence: `docs/task8/OPEN_DECISIONS.md`. None is approved.
 | D8 | Cheap free agents accepting half their ask | Consistent with the unchanged negotiation | Review with D3 at M6 |
 | D9 | Gyms' strength edge | Edge 4.9 OVR in season 1, 0.9 by season 10; **new measurement below** | Investigate structure first (below); no boosts |
 | D10 | Live kickoff returns | 1,500 kicks: average 20.2 against the formula's 23.8; 0 TD in 804 returns. **New since the legacy retirement:** shorter kicks, so 40 of 80 kicks are returned (28 before), and returns span 17–36 yards over 200 kicks | Keep live; tune only escort blocking at M6 if the season reports confirm |
-| D11 | Rebuilding clubs' starter sales | 4 sales before Task 8 against 0 now (5 leagues × 3 seasons); AI–AI trades unchanged at 36 against 35; backups now further behind starters (below) | Re-express F4 on the new rating spread (option 2 below) |
+| D11 | Rebuilding clubs' starter sales | 4 sales before Task 8 against 0 now (5 leagues × 3 seasons); AI–AI trades unchanged at 36 against 35; backups now further behind starters (below) | Keep the rules for now; recalibrate with D3 at M6 (simulated alternatives below) |
 
 ### D9: new measurement, legendary and element synergy
 
@@ -317,10 +317,24 @@ F4: under Dex ratings a starter's backup sits further behind him (median 9 OVR a
 24% of positions instead of 38%. The gain bar then rejects most of the remaining offers. This is a property of the new rating
 spread, not a defect in the sale code.
 
-**Options.**
-1. Keep F4 at 4. Sales stay rare and are re-measured in the season 5 and 10 reports.
-2. Express F4 relative to the spread, for example the same 38% of positions qualifying, which is about 6–7 OVR under Dex ratings.
-3. Leave F4 and relax only the sale's gain bar.
+**Alternatives, simulated before any change.** Leagues 51–54, 3 seasons each, 12 league-seasons per variant. Each variant ran in a
+scratch copy and nothing was changed in the build. Before Task 8 the rate was 4 sales in 15 league-seasons, about 3.2 per 12.
 
-Options 2 and 3 change approved rules, so they are yours to make. **Recommendation:** option 2. It restores the rule's original
-intent (sell only when a near-equal backup exists) on the new scale.
+| Variant | Starter sales | Sale ages | Buyer gain | All AI trades | Invariant problems |
+| --- | ---: | --- | --- | ---: | ---: |
+| Current (F4 within 4) | 1 | 30 | 19 | 32 | 0 |
+| F4 within 6 | 2 | 30, 29 | 19, 9 | 31 | 0 |
+| F4 within 7 | 2 | 30, 29 | 19, 9 | 31 | 0 |
+| Half the buyer's gain bar, for sales only | 1 | 30 | 19 | 32 | 0 |
+
+**Reading.** Neither lever restores the old rate. Widening F4 to 6 or 7 adds one sale, and halving the gain bar adds none. The two
+constraints bind together: few qualifying starters, then few offers that clear the gain bar. Overall AI trading is unaffected
+(31–32 deals). The samples are small, so differences of one sale are within noise.
+
+**Options.**
+1. Keep the rules and re-measure at the season 5 and 10 reports.
+2. Combine F4 within 6 with a lower sale gain bar, then simulate before deciding.
+3. Re-derive the sale rules from the Dex rating spread, recalibrated at M6 (#30) with D3.
+
+All change approved rules except option 1, so they are yours to make. **Recommendation:** option 1 now and option 3 at M6. A
+single-lever change does not restore sales and would only move the number slightly.
