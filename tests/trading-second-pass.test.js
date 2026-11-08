@@ -376,7 +376,14 @@ test('AI trades: a club with a full roster still trades in season (a spare goes 
       deals++; const m = f.league.monsters[d.toA]; const gave = (d.toBAll || []).map((id) => f.league.monsters[id]).filter(Boolean); const paid = (d.picks || []).reduce((x, p) => x + pickValue(p, { yearsAhead: p.year - 2 }), 0) + gave.reduce((x, y) => x + marketValue(y, { year: f.season.year }), 0);
       const ratio = paid / marketValue(m, { year: f.season.year }); assert.ok(ratio >= LT.AI_TRADE_RULES.band[0] - 0.02 && ratio <= LT.AI_TRADE_RULES.band[1] + 0.02, `fair at market value (what the shopper pays ÷ what it gets): ${ratio.toFixed(2)} (${d.kind})`);
       if (d.kind !== 'picks') swaps++;
-      if (m.position === 'K') assert.ok(!(d.picks || []).some((p) => p.round === 1), 'no first-round pick for a kicker');
+      // Kickers are not banned (TRADING_SECOND_PASS_FOLLOWUP.md, approved): a first-round pick may buy a kicker only as a real
+      // lineup gain (a hole filled or the starter upgraded), never a second kicker who changes nothing. The deal passes the same
+      // window rules as any other: the bought kicker becomes the starter and lifts the slot by at least the window's upgrade bar.
+      // How often it happens is a rate (at most 3 in 20 seeds in the benchmark), not a per-deal ban. (Owner ruling 2026-11-08 09:26.)
+      if (m.position === 'K' && (d.picks || []).some((p) => p.round === 1)) {
+        assert.ok(d.fl[1] - d.fl[0] >= LT.AI_TRADE_RULES.upgrade, `a first-round kicker is a real lineup gain (starting K ${d.fl[0]} -> ${d.fl[1]})`);
+        assert.ok(d.na >= DEAL_RULES.minGain - 1, `and the buyer gains by the usual measure (${d.na})`);
+      }
     }
     assert.deepEqual(R.verifyLeague(f), []);
   }
