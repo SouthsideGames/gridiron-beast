@@ -14,6 +14,9 @@
 //    no benched recharge is stated). Two-point tries neither trigger nor count.
 //  - No pending limit is stated: an interception while ready queues its own field even if an earlier one has not spawned yet.
 //  - The raindrop is the logged creation event; there is no football slam.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the raindrop field
+// is created before his team's next offensive snap (out of play, off-field allowed: not gated); the secured interception's earned
+// field (and the cooldown it starts) is an in-play charge gain: a suppressed safety earns nothing and stays ready (gated).
 import { registerAbility } from './registry.js';
 import { FIELD } from '../../core/field.js';
 import { scrimmage, byMastery, cooldownStep } from './fw-util.js';
@@ -27,7 +30,7 @@ export default registerAbility({
     playEnd(ctx, self) {
       if (self.team !== 'def' || !scrimmage(ctx)) return;
       const st = ctx.state(self); cooldownStep(st, false);
-      if (st.cd > 0 || ctx.stats.interceptor !== self.slot) return;
+      if (st.cd > 0 || ctx.stats.interceptor !== self.slot || !ctx.canGainCharge(self)) return;
       st.cd = TSUNAMI.cooldown; ctx.executed(self); // set after this play's step: the interception play is excluded
       ctx.queueField({ owner: self.mid, ownerTeam: ctx.sideOf(self), offField: true, type: 'Water', ability: 'WAT-06-F', strength: byMastery(TSUNAMI.slipByMastery, self.mastery),
         lifetime: TSUNAMI.lifetime, clock: 'scrimmageAny', width: FIELD.width, length: TSUNAMI.length, lbDepth: TSUNAMI.safetyDepth, clearsAtHalftime: false });

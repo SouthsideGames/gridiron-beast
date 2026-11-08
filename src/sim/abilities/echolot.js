@@ -12,6 +12,9 @@
 // Choices where the contract is silent (minimal readings): "ready" is no pending field and the cooldown run out; "returned without a
 // touchdown" includes a return the kicking team recovers by fumble short of the end zone, and excludes one it recovers in the end zone
 // (a kicking-team touchdown); live kickoffs only (an onside or free kick is a formula kick with no catch). Mastery changes life only.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the field is
+// created at the opposing offensive snap, even benched (out of play: not gated); banking it from the live kickoff's result is an in-
+// play charge gain (gated).
 import { registerAbility } from './registry.js';
 
 export const ECHO_LANDING = Object.freeze({ width: 6, length: 8, span: [-8, 0], pull: 20, cooldown: 6 });
@@ -28,6 +31,7 @@ export default registerAbility({
       if (s.result === 'touchdown' || s.result === 'touchback' || (s.result === 'fumble' && ctx.ball.x <= ctx.bounds.ownGoal)) return;
       const st = ctx.state(self); const team = other(ctx.teamSide); // the kicking team (the return unit is the play's offense)
       if (ctx.teamPlays(team).def < st.readyAt) return; // cooldown still running, or the banked field not yet created
+      if (!ctx.canGainCharge(self)) return; // a suppressed kicker banks nothing
       st.readyAt = ctx.teamPlays(team).def + 1 + ECHO_LANDING.cooldown; ctx.executed(self); // created at the next opposing offensive snap, then six
       ctx.queueField({ owner: self.mid, ownerTeam: team, side: 'defense', benchOk: true, type: 'Psychic', ability: 'PSY-04-F', strength: ECHO_LANDING.pull,
         lifetime: LIFETIME[self.mastery] ?? LIFETIME[0], clock: 'ownerDefense', width: ECHO_LANDING.width, length: ECHO_LANDING.length, span: ECHO_LANDING.span, centerOn: 'QB' });

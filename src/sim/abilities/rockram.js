@@ -13,6 +13,8 @@
 // - The breakup is credited to him as the pass breakup of the play (the ordinary stat handling of a broken-up pass).
 // - "Opponent gain" is the play's net gain; an interception counts as no gain (scored like an incompletion).
 // - Two-point tries neither charge nor launch (they are not defensive scrimmage plays).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the breakup at the
+// release is the live activation (gated); the low-yardage bar is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, allowedGain } from './earth-ice-util.js';
 

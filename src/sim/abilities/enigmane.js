@@ -14,6 +14,8 @@
 // his assignment, never immobilisation, which the engine's movement still applies); the first designated cut is the first break of a
 // drawn route of three or more points (read the tick after he takes it); "participating" is being on the field for the snap; two-point
 // tries and kickoffs neither charge nor activate.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the afterimage at
+// the charged cut is the live activation (gated: readiness kept); the no-reception bar is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 
 export const MIND_GAME = Object.freeze({ plays: 4, within: 2 });
@@ -38,6 +40,7 @@ export default registerAbility({
       const st = ctx.state(self); if (st.bar < MIND_GAME.plays || ctx.stats.passer || ctx.ball.inAir) return;
       const man = ctx.opponents(self.team).find((d) => ctx.manTarget(d) === self);
       if (!man || ctx.dist(man, self) > MIND_GAME.within) return; // no legal opportunity: readiness kept
+      if (!ctx.canStartSignature(self)) return; // denied: readiness kept
       const dx = pts[1][0] - pts[0][0], dy = pts[1][1] - pts[0][1], L = Math.hypot(dx, dy) || 1;
       Object.assign(mg, { image: { x: self.x, y: self.y }, chaser: man, ux: dx / L, uy: dy / L, speed: self.maxSpeed, at: ctx.t, fired: true });
       man.t8Chase = mg.image; st.bar = 0; ctx.executed(self);
@@ -47,7 +50,7 @@ export default registerAbility({
       const mg = self.mg; if (mg?.chaser) mg.chaser.t8Chase = null; // the whistle ends the chase
       if (self.team !== 'off' || ctx.kickoff || ctx.twoPoint || mg?.fired) return; // the activation play cannot earn charge
       const st = ctx.state(self); if (s.receiver === self.slot) return; // a reception pauses partial progress
-      if (st.bar < MIND_GAME.plays) st.bar += 1;
+      if (st.bar < MIND_GAME.plays && ctx.canGainCharge(self)) st.bar += 1;
     },
   },
 });

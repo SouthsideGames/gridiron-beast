@@ -16,6 +16,9 @@
 //     leaves the ball live (an out-of-bounds or scoring catch does not flare).
 //   - Movement checkpoints are each monster's ordinary AI decision interval (engine decisionEvery); between checkpoints he keeps his
 //     heading at his ordinary steering. Blocks in progress end at the flare (blocking is disrupted).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the flare at the
+// reception is the live activation (gated: both charges kept); the charges are the game's opposing-touchdown ledger, earned even off
+// the field (not an in-play gain): not gated.
 import { registerAbility } from './registry.js';
 import { scrimmage } from './common.js';
 
@@ -41,6 +44,7 @@ export default registerAbility({
     reception(ctx, self, r) {
       if (r !== self || self.team !== 'off' || !scrimmage(ctx) || !ctx.teamSide || ctx.result) return; // a scoring (or dead) catch keeps the readiness
       const st = ctx.state(self); if (daybreakCharges(ctx.t8, ctx.teamSide, st) < DAYBREAK.charges) return;
+      if (!ctx.canStartSignature(self)) return; // denied: both charges are kept
       st.mark = conceded(ctx.t8, ctx.teamSide); ctx.executed(self); // both charges spent
       const others = ctx.actors.filter((a) => a !== self); for (const a of others) blind(ctx, a);
       ctx.log(`${self.name}'s Daybreak flares`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-06-F', affected: others.map((a) => `${a.team}:${a.slot}`), x: +self.x.toFixed(2), y: +self.y.toFixed(2) });

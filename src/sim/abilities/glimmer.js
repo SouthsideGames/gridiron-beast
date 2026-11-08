@@ -7,6 +7,9 @@
 // offensive plays, starting at creation; it cannot receive its own field's recharge. The Light field's effect (spec §11) is applied by
 // the game (rules.js): a non-Light monster finishing a participating scrimmage play inside gets one extra cooldown unit, after the
 // ordinary decrement, on his shortest positive running repeatable-signature cooldown, once per monster per play.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the lane is
+// created at the next offensive snap from the banked field (out of play: not gated); banking it from a first-down reception is an in-
+// play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { approvedValues } from '../../data/beast-dex.js';
 
@@ -23,7 +26,7 @@ export default registerAbility({
       const st = ctx.state(self); if (self.team !== 'off' || s.kickoff || s.twoPoint) return;
       if (st.cd > 0 && !st.fresh) st.cd -= 1; // the creator's offensive plays count; the creation play starts the cooldown
       st.fresh = false;
-      if (st.cd === 0 && !st.banked && s.receiver === self.slot && s.firstDown) {
+      if (st.cd === 0 && !st.banked && s.receiver === self.slot && s.firstDown && ctx.canGainCharge(self)) {
         st.banked = true; ctx.executed(self);
         ctx.queueField({ owner: self.mid, ownerTeam: ctx.teamSide, type: 'Light', ability: 'LIG-01-F', lifetime: LIFETIME[self.mastery] ?? LIFETIME[0], clock: 'creatorOffense', width: BEACON.width, length: BEACON.length, lbDepth: BEACON.lbDepth, offenseOnly: true });
         ctx.log(`${self.name} banks a Beacon Lane`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-01-F' });

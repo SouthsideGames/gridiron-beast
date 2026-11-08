@@ -11,6 +11,9 @@
 // Choices where the contract is silent (minimal readings): "unremovable" is a status slot whose payload says so (no football status is
 // unremovable today, so every football harmful status is removable); "eligible offensive snap" excludes kickoffs and two-point tries
 // (which also never charge); an aura gives one mastery credit per game when its core effect applies (registry: passive).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): Dex category Aura,
+// but the snap pulse spends the full bar: the start of a signature, gated (the bar is kept); the participation bar is an in-play
+// charge gain (gated).
 import { registerAbility } from './registry.js';
 import { STATUS } from '../t8/status.js';
 
@@ -24,6 +27,7 @@ export default registerAbility({
     playStart(ctx, self) {
       self.call = { pulsed: false }; const st = ctx.state(self);
       if (self.team !== 'off' || ctx.kickoff || ctx.twoPoint || st.bar < DRAGON_CALL.plays) return;
+      if (!ctx.canStartSignature(self)) return; // denied: the full bar is kept
       const R = DRAGON_CALL.radius[stageOf(self.form)] ?? DRAGON_CALL.radius[0];
       const snap = ctx.actors.filter((a) => a === self || ctx.dist(a, self) <= R);
       const cleansed = [];
@@ -37,7 +41,7 @@ export default registerAbility({
     },
     playEnd(ctx, self) {
       if (self.team !== 'off' || ctx.kickoff || ctx.twoPoint || self.call?.pulsed) return; // the activation play cannot recharge
-      const st = ctx.state(self); if (st.bar < DRAGON_CALL.plays) st.bar += 1;
+      const st = ctx.state(self); if (st.bar < DRAGON_CALL.plays && ctx.canGainCharge(self)) st.bar += 1;
     },
   },
 });

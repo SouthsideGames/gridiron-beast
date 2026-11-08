@@ -14,6 +14,9 @@
 // engine's pre-resolution hook for the passer; the same throw as its release); a completion whose receiver fumbles it away does not
 // qualify; two-point tries neither count for the streak nor serve the absence (scrimmage plays only); a trick play where someone else
 // throws is a participating play without his qualifying completion (resets). The legacy first-read and fourth-quarter effects are gone.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the protected
+// throw is the live activation (gated: the charged throw is kept); streak progress is an in-play charge gain (gated: a suppressed play
+// adds no progress; the ordinary reset rules still apply).
 import { registerAbility } from './registry.js';
 
 export const SOVEREIGN = Object.freeze({ yards: [12, 10, 8, 6], streak: 3 });
@@ -26,6 +29,7 @@ export default registerAbility({
     playStart(ctx, self) { self.sov = { protected: false }; },
     catchPoint(ctx, self, ball) {
       const st = ctx.state(self); if (self.team !== 'off' || ctx.kickoff || ctx.stats.passer !== self.slot || !st.charged || st.used) return;
+      if (!ctx.canStartSignature(self)) return; // denied: the charged throw is kept (nothing spent)
       st.charged = false; st.used = true; self.sov.protected = true; ball.t8.noInterception = true; ctx.executed(self);
       ctx.log(`${self.name}'s Sovereign Arm guards the throw`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DRA-06-F' });
     },
@@ -37,7 +41,7 @@ export default registerAbility({
         ctx.log(`A spectral dragon swallows ${denied.name}`, { kind: 'dragon_swallow', by: self.slot, side: self.team, ability: 'DRA-06-F', victim: denied.slot });
       }
       const qualifying = s.receiver && ctx.stats.passer === self.slot && COMPLETE(s.result) && s.gain >= (SOVEREIGN.yards[self.mastery] ?? SOVEREIGN.yards[0]);
-      st.streak = qualifying ? st.streak + 1 : 0;
+      st.streak = qualifying ? st.streak + (ctx.canGainCharge(self) ? 1 : 0) : 0; // a suppressed play adds no charge progress
       if (st.streak >= SOVEREIGN.streak) { st.streak = 0; if (!st.used && !st.charged) { st.charged = true; ctx.log(`${self.name}'s Sovereign Arm is charged`, { kind: 'ability_ready', by: self.slot, side: self.team, ability: 'DRA-06-F' }); } }
     },
   },

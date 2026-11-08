@@ -13,6 +13,8 @@
 // - "Before pass release" is the quarterback still holding the ball with no pass thrown and no ball carrier yet (a handoff or a
 //   scramble ends the window as a release does).
 // - The cooldown counts his own subsequent defensive scrimmage plays; kickoffs and two-point tries are excluded.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the snowball
+// launch is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, stageOf, countDown } from './earth-ice-util.js';
 

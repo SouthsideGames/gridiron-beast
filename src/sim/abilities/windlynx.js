@@ -15,6 +15,8 @@
 //   takes part (only Runway and Beacon Lane pause with their creator, G2).
 // - At the pre-play only a counted Stunned carried into the play (B18) can make him unable; within-play statuses clear at the whistle.
 // - Two-point tries do not charge the bar.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the lanes are
+// created at the pre-play (out of play: not gated); pass-breakup charges are in-play charge gains (gated).
 import { registerAbility } from './registry.js';
 import { byMastery } from './common.js';
 
@@ -38,7 +40,7 @@ export default registerAbility({
       const st = ctx.state(self); if (self.team !== 'def' || ctx.kickoff) return;
       if (st.fresh) { st.fresh = false; return; } // the creation play cannot recharge
       if (ctx.twoPoint) return;
-      if (ctx.stats.pbuBy === self.slot && !ctx.stats.interceptor) st.charges = Math.min(PBUS, st.charges + 1);
+      if (ctx.stats.pbuBy === self.slot && !ctx.stats.interceptor && ctx.canGainCharge(self)) st.charges = Math.min(PBUS, st.charges + 1);
     },
   },
 });

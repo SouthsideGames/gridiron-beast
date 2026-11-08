@@ -14,6 +14,8 @@
 //   across the playbook's offensive formations (WR1 -18, WR2 +18, ...), from the ball. A fixed, seeded-free geometry snapshot.
 // - Created through the pre-snap producer pass (rules.js preSnapContracts), so it exists only in games run by rules.js; two-point
 //   tries and kickoffs neither create it nor count for its cooldown (not scrimmage plays).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): created by the
+// pre-choice producer pass (rules.js preSnapContracts: out of play); cooldown only, no charge: not gated.
 import { registerAbility } from './registry.js';
 import { PLAYS } from '../../data/playbook.js';
 import { stageOf, byMastery, scrimmage } from './common.js';

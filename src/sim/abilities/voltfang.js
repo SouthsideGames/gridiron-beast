@@ -9,6 +9,8 @@
 // Engine capability used (M3 hook): `phased` (opposing collision pushes skipped; cannot engage as a blocker).
 // Choices where the contract is silent (reported): "designated route cut" = his first drawn interior waypoint with a direction change
 // (cutsTaken); the engine has no press-jam mechanic, so "jams" are the body collisions; two-point tries are excluded (batch reading).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the route-snap
+// phase is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, scrimmage, ready, spend, countPlay, disabled, cutsTaken } from './nature-electric-common.js';
 

@@ -16,6 +16,8 @@
 // - Placement is drawn at the spawn snap (pre-snap step), from the game's pre-snap stream, and recorded in the field list; a reload of
 //   that play repeats the same draws (the stream is seeded by the play index and the monster).
 // - The execution (mastery event) is the earned activation.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the patches spawn
+// in the pre-snap step (out of play: not gated); the token earned at the route cut is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, stageOf, scrimmage, ready, spend, countPlay, cutsTaken } from './nature-electric-common.js';
 
@@ -48,7 +50,7 @@ export default registerAbility({
     tick(ctx, self) {
       const st = ctx.state(self); const cuts = cutsTaken(self, self.bb);
       if (!cuts.length || self.team !== 'off' || !scrimmage(ctx) || ctx.offensePlay.type !== 'pass' || !ready(st) || self.bb.done) return;
-      if (!cuts.some((c) => c.angle >= 45)) return;
+      if (!cuts.some((c) => c.angle >= 45) || !ctx.canGainCharge(self)) return;
       self.bb.done = true; st.token = true; ctx.executed(self);
       ctx.log(`${self.name} earns a Bloom Break`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-01-F' });
     },

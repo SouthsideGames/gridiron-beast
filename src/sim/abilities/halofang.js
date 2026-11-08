@@ -13,6 +13,8 @@
 //   - "Chasing the ball carrier" is while an opponent is actually carrying (the stat sheet's carrier holds the ball); a quarterback
 //     still in his drop is not yet a carrier.
 //   - A full bar takes no further charge until it is spent.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the snap
+// activation is the live activation (gated: the bar is kept); tackle charges are in-play charge gains (gated).
 import { registerAbility } from './registry.js';
 import { able, scrimmage, byMastery } from './common.js';
 
@@ -27,6 +29,7 @@ export default registerAbility({
       self.rp = { active: false, activated: false }; self.passAllies = false;
       if (self.team !== 'def' || !scrimmage(ctx)) return;
       const st = ctx.state(self); if (!st.armed || !able(ctx, self)) return; // Stunned / Knocked Down keeps the bar
+      if (!ctx.canStartSignature(self)) return; // denied: the bar is kept
       st.armed = false; st.tackles = 0; self.rp.active = true; self.rp.activated = true; ctx.executed(self);
       ctx.log(`${self.name}'s Radiant Pursuit lights up`, { kind: 'ability', by: self.slot, side: self.team, ability: 'LIG-05-F' });
     },
@@ -44,7 +47,7 @@ export default registerAbility({
       if (self.team !== 'def' || !scrimmage(ctx) || self.rp?.activated) return; // the activation play cannot recharge
       const st = ctx.state(self); if (st.armed) return;
       const S = ctx.stats; const rush = S.carrier && !S.receiver && !S.passer && s.result !== 'sack' && s.result !== 'touchdown' && !S.defensiveScore;
-      if (rush && (S.tackler === self.slot || S.assistBy === self.slot)) {
+      if (rush && (S.tackler === self.slot || S.assistBy === self.slot) && ctx.canGainCharge(self)) {
         st.tackles += 1; if (st.tackles >= byMastery(RADIANT.required, self.mastery)) st.armed = true;
       }
     },

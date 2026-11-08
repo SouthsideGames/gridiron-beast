@@ -17,6 +17,8 @@
 // - Placement: the ideal spot is one OL spacing (1.7 yd) outside the end lineman, level with the line; candidates step back from the line
 //   and outward, never inside the end lineman or past the LOS, clear = 1 yard from everyone; nearest first.
 // - The playbook has no RPO plays; "passing play" = the called play's type is pass (play-action and boot included).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the guards' summon
+// on a selected passing play is the live activation (gated); cooldown only.
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, ready, spend, countPlay, disabled, nearestClear, positionOf } from './nature-electric-common.js';
 

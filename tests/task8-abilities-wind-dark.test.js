@@ -165,7 +165,7 @@ test('Air Brake: on a completed catch by the receiver he guards within 8 yards, 
 
 test('Air Brake: guarded means his man key or tracked zone receiver; range 8; never on a catch that ended the play; PBUs charge (cap 3), interceptions and two-point tries do not', () => {
   const { contractOf: c } = { contractOf }; const mod = c('skywarden');
-  const mkCtx = (o = {}) => ({ state: () => o.st, statusOf: () => null, guards: (d, r) => o.guards, dist: () => o.dist, result: o.result ?? null, heading: () => [1, 0], actors: [], bounds: null, obstacles: () => [], ball: {}, executed: () => {}, log: () => {} });
+  const mkCtx = (o = {}) => ({ state: () => o.st, statusOf: () => null, canStartSignature: () => true, canGainCharge: () => true, guards: (d, r) => o.guards, dist: () => o.dist, result: o.result ?? null, heading: () => [1, 0], actors: [], bounds: null, obstacles: () => [], ball: {}, executed: () => {}, log: () => {} });
   for (const [o, fires] of [[{ guards: true, dist: 8 }, true], [{ guards: true, dist: 8.01 }, false], [{ guards: false, dist: 3 }, false], [{ guards: true, dist: 3, result: 'touchdown' }, false]]) {
     const st = { charges: 3 }, self = { team: 'def', ab: { armed: true, fired: false }, mastery: 0, name: 'A' }, r = { x: 10, y: 0, vx: 1, vy: 0, name: 'R' };
     mod.hooks.catchMade(mkCtx({ ...o, st }), self, r); assert.equal(st.charges === 0, fires, JSON.stringify(o));
@@ -231,7 +231,7 @@ test('Crosswind Rescue: the lanes count only his team\'s defensive scrimmage pla
   }
   assert.ok(counted >= 1, `defensive plays counted ${counted}, offensive plays ignored ${paused}`);
   const mod = contractOf('windlynx');
-  const st = { charges: 0, fresh: true }; const ctx = { state: () => st, kickoff: false, twoPoint: false, stats: { pbuBy: 'FS', interceptor: null } };
+  const st = { charges: 0, fresh: true }; const ctx = { state: () => st, canGainCharge: () => true, kickoff: false, twoPoint: false, stats: { pbuBy: 'FS', interceptor: null } };
   mod.hooks.playEnd(ctx, { team: 'def', slot: 'FS' }); assert.equal(st.charges, 0, 'the creation play cannot recharge');
   mod.hooks.playEnd(ctx, { team: 'def', slot: 'FS' }); assert.equal(st.charges, 1, 'one credit per breakup');
   mod.hooks.playEnd({ ...ctx, stats: { pbuBy: 'FS', interceptor: 'FS' } }, { team: 'def', slot: 'FS' }); assert.equal(st.charges, 1, 'an interception is not a breakup');
@@ -472,7 +472,7 @@ test('Shadow Exchange: at a charged pass release, he swaps positions with the cl
   const mk = (slot, x, y, extra = {}) => ({ slot, team: 'def', x, y, vx: 1, vy: 2, ...extra });
   const run = (others, mastery = 0, selfAt = [0, 0]) => {
     const self = mk('FS', ...selfAt, { mastery, sx: { armed: true, fired: false }, name: 'N' }); const st = { charges: 2 };
-    const ctx = { state: () => st, statusOf: (a) => a.st || null, actors: [self, ...others], dist: (p, q) => Math.hypot(p.x - q.x, p.y - q.y), bounds: { left: -20, right: 20, ownEndLine: -30, endLine: 70 }, executed: () => {}, log: () => {} };
+    const ctx = { state: () => st, statusOf: (a) => a.st || null, canStartSignature: () => true, canGainCharge: () => true, actors: [self, ...others], dist: (p, q) => Math.hypot(p.x - q.x, p.y - q.y), bounds: { left: -20, right: 20, ownEndLine: -30, endLine: 70 }, executed: () => {}, log: () => {} };
     mod.hooks.passRelease(ctx, self, { ball: { landing: { x: 6, y: 0 } } }); return { self, st };
   };
   { const a = mk('CB1', 5, 0), b = mk('CB2', 7.5, 0); const { self, st } = run([a, b]); assert.deepEqual([self.x, self.y], [5, 0], 'closest to the catch point (stable ties by lineup)'); assert.deepEqual([a.x, a.y], [0, 0]); assert.equal(st.charges, 0); assert.deepEqual([self.vx, self.vy, a.vx, a.vy], [1, 2, 1, 2], 'velocities kept'); }
@@ -483,7 +483,7 @@ test('Shadow Exchange: at a charged pass release, he swaps positions with the cl
   { const a = mk('CB1', 5, 0, { st: { id: 'knockedDown' } }); assert.equal(run([a]).st.charges, 2, 'a Knocked Down partner is invalid'); }
   { const a = mk('CB1', 5, 0, { team: 'off' }); assert.equal(run([a]).st.charges, 2, 'allies only'); }
   // charging: two PBUs; not on the activation play; not on two-point tries
-  const pm = { charges: 0 }; const pctx = (o) => ({ state: () => pm, twoPoint: false, stats: { pbuBy: 'FS', interceptor: null }, ...o });
+  const pm = { charges: 0 }; const pctx = (o) => ({ state: () => pm, canGainCharge: () => true, twoPoint: false, stats: { pbuBy: 'FS', interceptor: null }, ...o });
   mod.hooks.playEnd(pctx({}), { team: 'def', slot: 'FS', sx: { fired: true } }); assert.equal(pm.charges, 0, 'the activation play cannot earn charge');
   mod.hooks.playEnd(pctx({ twoPoint: true }), { team: 'def', slot: 'FS', sx: {} }); assert.equal(pm.charges, 0);
   mod.hooks.playEnd(pctx({}), { team: 'def', slot: 'FS', sx: {} }); mod.hooks.playEnd(pctx({}), { team: 'def', slot: 'FS', sx: {} }); mod.hooks.playEnd(pctx({}), { team: 'def', slot: 'FS', sx: {} });

@@ -15,6 +15,9 @@
 // - "Inside range": the attempting monster within three yards of him at the attempt.
 // - Mastery: the Aura category's passive rule (at most one mastery credit per game; M3_PLAN) applies to its suppressions.
 // - The cooldown counts his own subsequent offensive scrimmage plays; kickoffs and two-point tries are excluded.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): Cold Snap is the
+// activation-denial aura itself (Dex category Aura): it answers the gate's activationAttempt hook and is not a signature start of its
+// own; not gated (an Eclipse does not switch it off; no contract or ruling says otherwise).
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, countDown } from './earth-ice-util.js';
 

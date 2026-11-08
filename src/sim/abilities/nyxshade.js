@@ -11,6 +11,8 @@
 // Choices where the contract is silent (documented, minimal):
 // - The projected catch point is where the thrown ball will come down (ball.landing), the point the catch resolves at.
 // - Each release on which he is charged is one opportunity (the first that is valid swaps); two-point tries do not charge the bar.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the swap at a
+// release is the live activation (gated: the bar is preserved); pass-breakup charges are in-play charge gains (gated).
 import { registerAbility } from './registry.js';
 import { byMastery, able, byLineup } from './common.js';
 
@@ -32,6 +34,7 @@ export default registerAbility({
         && dP(d) <= PARTNER_RADIUS && dP(d) < mine && ctx.dist(d, self) <= byMastery(MAX_SWAP, self.mastery) && legal(d) && legal(self))
         .sort((p, q) => dP(p) - dP(q) || byLineup(p, q));
       const d = cands[0]; if (!d) return; // invalid: the bar is preserved
+      if (!ctx.canStartSignature(self)) return; // denied: the bar is preserved
       const a = [self.x, self.y], b = [d.x, d.y];
       self.x = b[0]; self.y = b[1]; d.x = a[0]; d.y = a[1]; // simultaneous exchange; velocities and assignments untouched
       ctx.state(self).charges = 0; sx.fired = true; ctx.executed(self);
@@ -39,7 +42,7 @@ export default registerAbility({
     },
     playEnd(ctx, self) {
       const st = ctx.state(self); if (self.team !== 'def' || ctx.twoPoint || self.sx?.fired) return;
-      if (ctx.stats.pbuBy === self.slot && !ctx.stats.interceptor) st.charges = Math.min(PBUS, st.charges + 1);
+      if (ctx.stats.pbuBy === self.slot && !ctx.stats.interceptor && ctx.canGainCharge(self)) st.charges = Math.min(PBUS, st.charges + 1);
     },
   },
 });

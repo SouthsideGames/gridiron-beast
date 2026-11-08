@@ -12,6 +12,9 @@
 //   `skip`: no attempt, no broken tackle). His later attempts are normal.
 // - A rushing play is a designed run from scrimmage (not a kickoff return or two-point try) on which he carries; net rushing yards
 //   are his current distance past the line of scrimmage. Cooldown plays are his participating offensive scrimmage plays.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the Vanishing Cut
+// at the first qualifying juke is the live activation (gated: denied, that juke starts nothing and the cooldown is untouched);
+// cooldown only.
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, able } from './common.js';
 
@@ -28,6 +31,7 @@ export default registerAbility({
       const st = ctx.state(self), vc = self.vc; if (!vc || vc.used || st.cd > 0) return;
       if (!ctx.isRun || !scrimmage(ctx) || self.team !== 'off' || ctx.ball.holder !== self || !able(ctx, self)) return;
       if (self.x < byMastery(YARDS, self.mastery)) return;
+      if (!ctx.canStartSignature(self)) { vc.used = true; return; } // denied: this first qualifying juke starts nothing; the cooldown is untouched
       vc.used = true; vc.token = { d, live: false }; st.cd = COOLDOWN; st.fresh = true; ctx.executed(self);
       ctx.log(`${self.name}'s Vanishing Cut leaves ${d.name} grasping at shadow`, { kind: 'ability', by: self.slot, side: self.team, ability: 'DAR-03-F', victim: d.slot, x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
     },

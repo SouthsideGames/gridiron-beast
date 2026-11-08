@@ -14,6 +14,9 @@
 //   - The 3 qualifying plays need not be consecutive and are counted on his defensive scrimmage plays (kickoffs are not defensive
 //     snaps, B20; two-point tries excluded); "gains" is the play's whole-yard gain (incompletions 0). A full bar takes no more charge.
 //   - The possession is the game's drive key (rules.js abilityMemory); without one (labs) every play is its own possession.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): raising the gate
+// at the snap is the live activation (gated after the legality check: bar and use kept); the low-yardage count is an in-play charge
+// gain (gated).
 import { registerAbility } from './registry.js';
 import { able, scrimmage, byMastery } from './common.js';
 
@@ -45,6 +48,7 @@ export default registerAbility({
       const panels = gatePanels(self.x, self.y, self.mastery);
       const why = panels.map((p) => panelRefusal(p, ctx.bounds, ctx.actors)).find(Boolean);
       if (why) { ctx.log(`${self.name}'s Fortress Gate finds no safe ground (${why})`, { kind: 'ability_blocked', by: self.slot, side: self.team, ability: 'MET-06-F', reason: why }); return; } // bar and use kept
+      if (!ctx.canStartSignature(self)) return; // denied: bar and use kept
       for (const p of panels) ctx.addObstacle({ ...p, owner: self.mid, ability: 'MET-06-F', kind: 'gate' });
       st.armed = false; st.count = 0; st.usedDrive = ctx.drive; self.gate.activated = true; ctx.executed(self);
       ctx.log(`${self.name} raises the Fortress Gate`, { kind: 'ability', by: self.slot, side: self.team, ability: 'MET-06-F', panels: panels.map((p) => [p.x0, p.x1, p.y0, p.y1].map((v) => +v.toFixed(2))) });
@@ -52,7 +56,7 @@ export default registerAbility({
     playEnd(ctx, self, s) {
       if (self.team !== 'def' || !scrimmage(ctx) || self.gate?.activated) return; // the activation play cannot charge
       const st = ctx.state(self); if (st.armed) return;
-      if (s.gain <= FORTRESS.maxGain) { st.count += 1; if (st.count >= FORTRESS.plays) st.armed = true; }
+      if (s.gain <= FORTRESS.maxGain && ctx.canGainCharge(self)) { st.count += 1; if (st.count >= FORTRESS.plays) st.armed = true; }
     },
   },
 });

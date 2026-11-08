@@ -15,6 +15,9 @@
 //   not official receptions: they neither charge nor activate).
 // - Every reception while charged activates, including one that ends the play at the catch (the emitter then ends at the whistle).
 // - Blast travel speed: 20 yd/s (a technical timing value; no value is approved, and the hit itself needs no roll).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the tornado at the
+// charged reception is the live activation (gated: the full bar is kept; launched blasts continue); reception charges are in-play
+// charge gains (gated).
 import { registerAbility } from './registry.js';
 import { scrimmage, able, byLineup } from './common.js';
 import { STUMBLE_SPEED_LOSS } from '../t8/field-effects.js';
@@ -28,6 +31,7 @@ export default registerAbility({
     playStart(ctx, self) { self.cy = { armed: ctx.state(self).charges >= CATCHES, tornado: null }; },
     catchMade(ctx, self, r) {
       const cy = self.cy; if (r !== self || !cy?.armed || cy.tornado || !scrimmage(ctx) || !able(ctx, self)) return;
+      if (!ctx.canStartSignature(self)) return; // denied: the full bar is kept
       cy.tornado = { x: self.x, y: self.y, targeted: new Set(), shots: [] };
       ctx.state(self).charges = 0; ctx.executed(self);
       ctx.log(`${self.name}'s Cyclonic Release spins up a tornado`, { kind: 'ability', by: self.slot, side: self.team, ability: 'WIN-06-F', x: +self.x.toFixed(2), y: +self.y.toFixed(2) });
@@ -48,7 +52,7 @@ export default registerAbility({
       const T = self.cy?.tornado;
       if (T) { for (const sh of T.shots) if (sh.live) { sh.live = false; ctx.log(`The whistle stops a crescent blast at ${sh.target.name}`, { kind: 'ability_cancel', by: self.slot, side: self.team, ability: 'WIN-06-F', victim: sh.target.slot }); } return; } // the activation reception cannot recharge
       if (!scrimmage(ctx) || self.team !== 'off' || s.receiver !== self.slot) return;
-      const st = ctx.state(self); st.charges = Math.min(CATCHES, st.charges + 1);
+      const st = ctx.state(self); if (ctx.canGainCharge(self)) st.charges = Math.min(CATCHES, st.charges + 1);
     },
   },
 });

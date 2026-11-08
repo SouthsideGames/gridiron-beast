@@ -9,6 +9,8 @@
 // is outside this chart: the activation is unavailable there. Normal activation availability applies.
 // Wiring: rules.js doFieldGoal(state, teams, { signature: true }) and fieldGoalSignature(state, teams) (the decision UI's availability
 // and chance). The chart is data (CHART), checked against the contract text by the tests.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a player-chosen
+// formula field goal (rules.js doFieldGoal), out of play; not gated.
 import { registerAbility } from './registry.js';
 
 export const CHART = Object.freeze([[65, 1], [70, 0.55], [75, 0.5], [80, 0.45], [85, 0.4], [90, 0.3]]); // [distance, chance]

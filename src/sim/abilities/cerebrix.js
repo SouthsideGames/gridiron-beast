@@ -13,6 +13,8 @@
 //  - "blitzes" is the engine's pass-rush assignment for a linebacker (rush or contain, the same reading as the legacy Ambush card);
 //  - "able": not immobilised (no stun, not sitting the play out);
 //  - scrimmage plays only: two-point tries and kickoffs neither activate nor count the cooldown.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the validated cast
+// at the snap is the live activation (gated after the mark: readiness kept); cooldown only.
 import { registerAbility } from './registry.js';
 import { positionOf } from '../../data/personnel.js';
 
@@ -32,6 +34,7 @@ export default registerAbility({
       ctx.log(`${self.name} foresees ${mark.name}`, { kind: 'foresight_mark', by: self.slot, side: self.team, ability: 'PSY-03-F', victim: mark.slot });
       if (!BLITZ.has(mark.assignment?.a)) return; // no eligible blitz: readiness kept
       if (self.stun > 0 || self.sitsOut) return; // unable: readiness kept
+      if (!ctx.canStartSignature(self)) return; // denied: readiness kept
       st.cd = COOLDOWN[self.mastery] ?? COOLDOWN[0]; st.fresh = true; ctx.executed(self);
       const hit = ctx.rng.chance(FORESIGHT.chance);
       const res = hit ? ctx.applyStatus(mark, { id: 'confused', strength: FORESIGHT.awarenessPct, duration: 0, restOfPlay: true, source: self, abilityId: 'PSY-03-F' }) : null;

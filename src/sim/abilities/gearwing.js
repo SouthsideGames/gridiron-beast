@@ -14,6 +14,8 @@
 //     punt: a fair catch or downed ball is its spot); blocked punts and punt-return touchdowns earn nothing.
 //   - The rectangle is centred on the LB reference (LOS + 5), as Beacon Lane's (rules.js fieldPlacement).
 //   - The mastery execution is recorded when the token is banked (as Beacon Lane).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the punt game hook
+// (a formula kick) banks the field and the field is created at the opposing snap (both out of play); not gated.
 import { registerAbility } from './registry.js';
 import { byMastery } from './common.js';
 

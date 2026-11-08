@@ -12,6 +12,9 @@
 // - A qualifying sack is any sack credited to him; a tackle for loss is a tackle (or safety) he made or assisted with a negative
 //   whole-yard gain. A strip-sack lost as a fumble is not counted (the play's result is the fumble).
 // - "Ready" = no running cooldown and nothing pending. The lifetime counts his team's defensive scrimmage plays (not two-point tries).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the zone is
+// created at the pre-play from the banked token (out of play: not gated); banking it from a TFL or sack is an in-play charge gain
+// (gated).
 import { registerAbility } from './registry.js';
 import { tier, countDown, opponentSide } from './earth-ice-util.js';
 

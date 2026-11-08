@@ -9,6 +9,8 @@
 // Choices where the contract is silent (documented, minimal):
 // - Kickoff coverage is not a defensive scrimmage play; a two-point try is (the aura is a passive effect, not a counted play).
 // - Mastery: passive credit (once per game) the first time a protected ally actually stands in a Dark base field.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a passive aura (no
+// cooldown or charges; the contract says it does not nullify Eclipse denial): not gated.
 import { registerAbility } from './registry.js';
 import { byMastery, able } from './common.js';
 

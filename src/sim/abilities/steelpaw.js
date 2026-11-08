@@ -13,6 +13,8 @@
 //   - "Ordinary stamina drain" is the 1-point participation drain; an Afflicted monster's status drain is ability drain and stays
 //     unchanged (his counter is still consumed). The relief reaches the drain through t8.drainRelief (stamina-runtime.js).
 //   - Aura mastery: one credit per game, the first time a drain is reduced.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a passive aura
+// (per-snap qualification and a per-monster ledger, no readiness): not gated.
 import { registerAbility } from './registry.js';
 import { able, scrimmage, byMastery } from './common.js';
 

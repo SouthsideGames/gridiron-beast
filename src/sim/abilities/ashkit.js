@@ -12,6 +12,9 @@
 //    play that is not a defensive score.
 //  - "Starting position" is his formation alignment spot for that snap (the play's align, before the engine's pre-snap man shading).
 //  - Two-point tries neither build nor spend the bar (they are not scrimmage plays here).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the zone is
+// created before the snap by rules.js from the full bar (out of play: not gated); the tackle charge earned at the whistle is an in-
+// play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { stageOf, scrimmage, byMastery } from './fw-util.js';
 
@@ -38,7 +41,7 @@ export default registerAbility({
       if (self.team !== 'def' || !scrimmage(ctx)) return;
       const st = ctx.state(self);
       if (self.pyre?.spawn || st.queued || st.bar >= PYRE.charges) return; // the spawn play earns nothing; no charging while full
-      if (!credited({ ...ctx.stats, result: s.result }, self.slot)) return;
+      if (!credited({ ...ctx.stats, result: s.result }, self.slot) || !ctx.canGainCharge(self)) return;
       st.bar += 1; // at most one charge a play
       ctx.log(`${self.name}'s Impact Pyre charges (${st.bar}/${PYRE.charges})`, { kind: 'ability_charge', by: self.slot, side: self.team, ability: 'FIR-02-F', charges: st.bar });
       if (st.bar >= PYRE.charges) {

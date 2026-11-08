@@ -10,6 +10,9 @@
 // off a block is a different contest with no break roll, so it neither receives nor spends the pounce); "movement restrictions" are
 // immobilisation (a stun, Knocked Down, a counted Stunned); the cap applies to the final chance as written, even if the ordinary break
 // chance alone were above 80%; a two-point run is a rushing attempt (the contract excludes only receptions and returns).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the pounce at the
+// next tackle contest is the live activation (gated: denied, no pounce on that attempt and nothing spent); per-play preparation, no
+// game-scope charge.
 import { registerAbility } from './registry.js';
 
 export const POUNCE = Object.freeze({ form: [5, 10, 15], mastery: [0, 3, 6, 9], cap: 0.8 });
@@ -25,6 +28,7 @@ export default registerAbility({
       const mine = (e) => e.by === self.slot && e.side === self.team;
       const prepared = ctx.events.some((e) => mine(e) && (e.kind === 'juke' || (e.kind === 'broken_tackle' && !e.contract))); // ordinary evasion only
       if (!prepared) return undefined;
+      if (!ctx.canStartSignature(self)) return undefined; // denied: no pounce on this attempt; nothing spent
       pc.tried = true; ctx.executed(self);
       const bonus = ((POUNCE.form[stageOf(self.form)] ?? POUNCE.form[0]) + (POUNCE.mastery[self.mastery] ?? 0)) / 100;
       const brk = Math.min(POUNCE.cap, (1 - p) + bonus);

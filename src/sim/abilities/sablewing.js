@@ -8,6 +8,9 @@
 // Choices where the contract is silent (minimal readings): the engine ends a play at the recovery (there is no live fumble return), so
 // the flight's placement replaces the recovery spot whenever that is worse; two-point tries are not defensive scrimmage plays here.
 // The ratings note in the contract (Tackling, Coverage ceilings) is an authoring task outside the ability.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the flight at a
+// validated fumble recovery is the live activation (gated at the whistle, where the recovery is known: denied, the ordinary recovery
+// spot stands); no readiness or charge.
 import { registerAbility } from './registry.js';
 
 export const HOARD_FLIGHT = Object.freeze({ spot: 65 }); // the opponent 35, in the new offense's own-goal yards
@@ -19,6 +22,7 @@ export default registerAbility({
     playEnd(ctx, self, s) {
       if (self.team !== 'def' || ctx.kickoff || ctx.twoPoint || s.result !== 'fumble') return;
       if (ctx.stats.recoveredSlot !== self.slot || ctx.stats.recoveredTeam !== 'def') return; // validated recovery ownership
+      if (!ctx.canStartSignature(self)) return; // denied: the ordinary recovery spot stands
       const recovery = 100 - Math.max(0, Math.min(100, ctx.ballOn + ctx.ball.x)); // where the recovery leaves his team's offense
       const spot = Math.max(HOARD_FLIGHT.spot, Math.round(recovery));
       ctx.turnoverSpot(Math.min(99, spot)); ctx.executed(self);

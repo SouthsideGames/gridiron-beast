@@ -14,6 +14,8 @@
 //   upcoming line), from a stream derived from the game's state, so the main game stream is untouched.
 // - "Reveal before both play choices": the field is created at the snap of that play, with the play's line (rules.js runScrimmagePlay);
 //   it is then fixed for its lifetime. The mastery execution is recorded when the field is earned.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a made formula
+// field goal banks the field and the field is created at the opposing pre-play (both out of play); not gated.
 import { registerAbility } from './registry.js';
 import { stageOf, tier } from './earth-ice-util.js';
 

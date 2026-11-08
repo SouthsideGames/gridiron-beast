@@ -9,6 +9,8 @@
 // - The punt formula's own outcomes map as follows: a returned punt (including one the formula would have returned for a touchdown)
 //   is a caught punt and is cradled at its catch spot; fair catches, touchbacks, coffin-corner downs and blocks keep the use.
 // - The kicker need not be on a scrimmage field: he is the punting team's K (formula units, rules.js formulaUnits).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a formula punt
+// (rules.js puntReturn): the kicker is not an engine actor and no field or Cold Snap reaches it; not gated.
 import { registerAbility } from './registry.js';
 
 const spot = (y) => (y <= 50 ? `${y}` : `opponent ${100 - y}`);

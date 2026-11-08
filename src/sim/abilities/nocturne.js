@@ -13,6 +13,9 @@
 // - The QB aligns on the ball (every formation: lateral 0), so the field is centred on the ball's lateral; created at his next
 //   on-field offensive snap (a QB is in every package). Cooldown plays are his participating offensive scrimmage plays, the
 //   creation play excluded; the lifetime counts his team's offensive scrimmage plays (clock 'teamOffense').
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the pocket is
+// created at the next offensive pre-choice (out of play: not gated); banking it from a 15-yard completion is an in-play charge gain
+// (gated).
 import { registerAbility } from './registry.js';
 import { byMastery, scrimmage, sideOf } from './common.js';
 
@@ -28,7 +31,7 @@ export default registerAbility({
     playEnd(ctx, self, s) {
       const st = ctx.state(self); if (self.team !== 'off' || !scrimmage(ctx)) return;
       if (st.fresh) st.fresh = false; else if (st.cd > 0) st.cd -= 1;
-      if (!self.ready || st.banked || ctx.stats.passer !== self.slot || !s.receiver || ctx.stats.interceptor || s.gain < MIN_GAIN) return;
+      if (!self.ready || st.banked || ctx.stats.passer !== self.slot || !s.receiver || ctx.stats.interceptor || s.gain < MIN_GAIN || !ctx.canGainCharge(self)) return;
       st.banked = true; ctx.executed(self);
       ctx.queueField({ owner: self.mid, ownerTeam: sideOf(ctx, self), side: 'off', type: 'Dark', ability: 'DAR-05-F', strength: STRENGTH, lifetime: byMastery(LIFETIME, self.mastery),
         clock: 'teamOffense', width: POCKET.width, los: [0, POCKET.length], latFromBall: 0 });

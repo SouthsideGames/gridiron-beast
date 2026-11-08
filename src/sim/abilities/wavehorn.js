@@ -15,6 +15,8 @@
 //    applies (the aura layer restarts from the status's value when the status takes effect; fw-util.js auraLayer).
 //  - Visual: the "water barrier" event is logged the first time each opponent is affected in a play.
 //  - Mastery: a passive, one credit per game, recorded the first time the aura affects an opponent.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): a passive aura
+// decided by the snap assignment, no readiness: not gated.
 import { registerAbility } from './registry.js';
 import { auraLayer, byMastery } from './fw-util.js';
 

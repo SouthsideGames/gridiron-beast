@@ -16,6 +16,9 @@
 //    breakup on a two-point try does not trigger.
 //  - The deflection spot is where the incomplete ball came down (the engine's catch point).
 //  - A breakup inside an Eclipse cannot start it (spec §11; nothing is spent).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the breakup
+// creates the zone at once at the deflection spot: the live activation (gated at the whistle, where the breakup is known); cooldown
+// only.
 import { registerAbility } from './registry.js';
 import { stageOf, scrimmage, byMastery } from './fw-util.js';
 

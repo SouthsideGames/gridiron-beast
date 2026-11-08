@@ -10,6 +10,9 @@
 // Choices where the contract is silent (reported): "initial alignment" = his slot's alignment in the called defensive play (no
 // pre-call phase in the engine), computed in the pre-snap step and locked in the field record; created even when he sits the play out
 // (the contract lists no source-disabled exception, unlike Crosswind Rescue).
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): created
+// automatically in the pre-snap step before each ready defensive play (rules.js preSnap: out of play, no in-play start); cooldown
+// only, no charge: not gated.
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, spend, countPlay, bandInField } from './nature-electric-common.js';
 

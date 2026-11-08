@@ -16,6 +16,8 @@
 // - "In the footprint" is a monster's body (0.35 yd) overlapping the two-yard circle.
 // - A Stunned or Knocked Down Frostclaw at the snap does not summon and keeps the bar.
 // - Opponent gain uses the play's net gain; an interception counts as no gain.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the snap summon is
+// the live activation (gated); the low-yardage bar is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { scrimmage, disabled, tier, allowedGain, BODY } from './earth-ice-util.js';
 

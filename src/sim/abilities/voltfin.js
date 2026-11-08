@@ -12,6 +12,8 @@
 //   in the pre-snap step and locked in the field record.
 // - "Rushing first down": he is the ball carrier without a reception and the gain reaches the line to gain (the engine's whistle
 //   summary); a fumble or interception never qualifies.
+// Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the strip is
+// created in the pre-snap step (out of play: not gated); the rushing first down's token is an in-play charge gain (gated).
 import { registerAbility } from './registry.js';
 import { CD_5432, byMastery, stageOf, scrimmage, ready, spend, countPlay, bandInField } from './nature-electric-common.js';
 
@@ -30,7 +32,7 @@ export default registerAbility({
     },
     playEnd(ctx, self, s) {
       const st = ctx.state(self);
-      if (self.team === 'off' && scrimmage(ctx) && ready(st) && s.carrier === self.slot && !s.receiver && s.firstDown && s.result !== 'touchdown') {
+      if (self.team === 'off' && scrimmage(ctx) && ready(st) && s.carrier === self.slot && !s.receiver && s.firstDown && s.result !== 'touchdown' && ctx.canGainCharge(self)) {
         st.token = true; ctx.executed(self);
         ctx.log(`${self.name} charges a Charge Strip`, { kind: 'ability', by: self.slot, side: self.team, ability: 'ELE-02-F' });
       }
