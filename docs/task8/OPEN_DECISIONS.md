@@ -183,6 +183,11 @@ Seed 11's four seasons show where sales stop. In those seasons:
 
 So the sale rules work as written. What has changed is the league: Task 8's ratings make a qualifying ageing starter with a close replacement rare, and the gain bar then stops the trade. `tests/task6-phase-d.test.js` "R4 in play" fails for this reason. I have left it failing rather than pick a seed.
 
+**Ruled (N8b, 2026-11-08, J):** rules kept, recalibrated with D3 at M6. The in-play test is split: `tests/task6-phase-d.test.js` now has
+a constructed rule scenario (every R4 prerequisite built and checked on league 52, the real offseason window makes the sale) and a
+negative case (replacement 5 behind: no sale). The sale rate is a benchmark without a threshold: the R4 funnel in
+`tools/t8-league-health.mjs`, reported in `LEAGUE_HEALTH_M2.md` ("D11 sale-rate benchmark").
+
 **Options**
 1. **Accept that sales are rare now.** The in-play test becomes an explicit staged scenario, and the rules stay as they are.
 2. **Loosen the replacement margin.** It is 4 now (F4, owner-approved 2026-11-03).

@@ -5,18 +5,22 @@ import assert from 'node:assert/strict';
 import { MODES, STRATEGY, rawMode, nextMode, evaluateStrategies, modeOf, strategyInputs } from '../src/franchise/strategy.js';
 import { modeLength, leagueContracts, leagueUpgrades, upgradesAllowed, CONTEND_UPGRADES, UPGRADES_PER_OFFSEASON, UPGRADE_MIN } from '../src/franchise/league-season.js';
 import { POTENTIAL_WEIGHT, READY_BONUS, aiDraftPick } from '../src/franchise/draft.js';
-import { STARTER_SALE, saleOpen, sellableStarters, aiTrades, hasReplacement } from '../src/franchise/league-trades.js';
+import { STARTER_SALE, saleOpen, sellableStarters, aiTrades, hasReplacement, AI_TRADE_RULES, inBand, starters, floorAt, sparesOf } from '../src/franchise/league-trades.js';
 import { horizonOf, PLAN, rosterPlan } from '../src/franchise/roster-plan.js';
 import * as R from '../src/franchise/league-registry.js';
 import * as F from '../src/franchise/franchise.js';
-import { newFranchise } from '../tools/franchise-soak.mjs';
+import { newFranchise, runFranchise } from '../tools/franchise-soak.mjs';
 import { createRng } from '../src/core/rng.js';
-import { generateMonster, monsterOverall } from '../src/data/monsters.js';
+import { generateMonster, monsterOverall, overall, syncFromDev } from '../src/data/monsters.js';
 import { publicOnset } from '../src/data/aging.js';
 import { isGymClub } from '../src/data/gyms.js';
 import { tierById } from '../src/data/league.js';
-import { buildDepthChart } from '../src/franchise/roster.js';
-import { marketValue } from '../src/franchise/trade-value.js';
+import { buildDepthChart, GROUP_SLOTS } from '../src/franchise/roster.js';
+import { marketValue, rosterNet, rosterAfter, rosterProblems, isUnavailable, DEAL_RULES, scoped } from '../src/franchise/trade-value.js';
+import { tradable } from '../src/franchise/trades.js';
+import { returnLock } from '../src/franchise/fa-state.js';
+import { legendSide } from '../src/franchise/fa-legendary.js';
+import * as Save from '../src/franchise/save.js';
 
 const facts = (o) => ({ win: 0.5, recent: 0.5, quality: 0, ageingShare: 0.2, committedShare: 0.8, picks: 6, extraPicks: 0, ...o });
 
@@ -165,10 +169,14 @@ test('R4 one sale per window: the offseason window and the season window are cou
   f.league.trades.push({ year: 4, week: 6, sale: true }); assert.equal(saleOpen(f, 4, 7), false); assert.equal(saleOpen(f, 5, 0), true, 'the next offseason is a new window');
 });
 
-test('R4 in play: rebuilding clubs sell ageing starters to clubs that need them, for youth or picks, at most one sale per window', async () => {
-  const { runFranchise } = await import('../tools/franchise-soak.mjs');
-  const { f, problems } = runFranchise(11, { seasons: 4 }); assert.deepEqual(problems, []); // seed 11: a sale within 4 seasons (Task 8 M1 Dex generator: seed 14 now has none, seed 9 neither; seed 14 after Nature was retired, N7c B14; seed 11 before) (the negotiation change of 2026-11-05 moved seed 9's) (sales are rare events; Task 7 changed the seeds' leagues — one position per species, the free-agency offseason, the R1 market strategy)
-  const sales = (f.league.trades || []).filter((t) => t.sale); assert.ok(sales.length >= 1, 'sales happen');
+// R4 in play, split by owner ruling N8b (docs/task8/RULINGS_2026-11-08.md, J/D11; DECISION_PACKET_M3.md §6 D11). The test that ran
+// runFranchise(11, { seasons: 4 }) and required "sales happen" is replaced by the constructed rule scenario below. Whether sales happen in
+// played leagues, and how often, is now a measurement with no pass/fail threshold: the R4 funnel in tools/t8-league-health.mjs
+// (docs/task8/LEAGUE_HEALTH_M2.md, "D11 sale-rate benchmark"). The sale rules are unchanged.
+
+/** The R4 assertions the original in-play test made on every recorded sale (unchanged). */
+function assertR4Sales(f) {
+  const sales = (f.league.trades || []).filter((t) => t.sale);
   const windows = new Map(); for (const t of sales) { const k = `${t.year}|${t.week > 0 ? 'season' : 'offseason'}`; windows.set(k, (windows.get(k) || 0) + 1); }
   for (const [k, c] of windows) assert.ok(c <= STARTER_SALE.perWindow, `one sale in window ${k}`);
   for (const s of sales) {
@@ -178,5 +186,105 @@ test('R4 in play: rebuilding clubs sell ageing starters to clubs that need them,
     const [a, b] = s.mv; assert.ok(a / b >= 0.848 && a / b <= 1.152 && b / a >= 0.848 && b / a <= 1.152, 'fair both ways');
     assert.ok(s.na >= 8 && s.nb >= 2 - 0.5, 'the existing gain and seller-floor rules');
   }
+  return sales;
+}
+
+// The fixture: league 52 after one played season (runFranchise(52, { seasons: 1 }): season 1, its offseason, free agency and the draft).
+// Its year-2 offseason trade window ran when free agency opened, with no sale, so the window is still open for one (saleOpen). Each
+// scenario works on its own copy (a save round trip).
+let played52 = null;
+const league52 = () => {
+  if (!played52) { const { f, problems } = runFranchise(52, { seasons: 1 }); assert.deepEqual(problems, []); played52 = Save.exportJson(f); }
+  return Save.importJson(played52);
+};
+/** A rating edit through the development record: every attribute moves the same share of the way from its current value toward its
+ *  own ceiling (dev.potential) until the overall reaches `target`; syncFromDev mirrors it onto the monster, as development does. */
+function rateTo(m, target) {
+  const d = m.dev, from = { ...d.current };
+  for (let i = 0; i <= 400; i++) { const t = i / 400; for (const k of Object.keys(from)) d.current[k] = Math.round(from[k] + t * ((d.potential[k] ?? from[k]) - from[k])); if (overall(d.current, m.position) >= target) break; }
+  syncFromDev(m); assert.equal(monsterOverall(m), target, `${m.name} rated ${target} within his ceilings`);
+}
+/** A ceiling edit: every attribute ceiling moves the same share of the way toward 99 until the potential (the OVR of the ceilings) is `target`. */
+function ceilingTo(m, target) {
+  const d = m.dev, from = { ...d.potential };
+  for (let i = 0; i <= 400; i++) { const t = i / 400; for (const k of Object.keys(from)) d.potential[k] = Math.round(from[k] + t * (99 - from[k])); if (overall(d.potential, m.position) >= target) break; }
+  syncFromDev(m); assert.equal(m.potential, target, `${m.name}'s ceiling ${target}`);
+}
+
+/**
+ * Build the scenario on league 52, every step an ordinary data edit (a mode, two ratings, one set of ceilings), and compute every R4
+ * prerequisite with the code's own helpers before the real code runs. `repBehind`: how far the replacement is behind the sold starter.
+ */
+function constructSale(f, { repBehind }) {
+  const year = f.season.year + 1, cap = tierById(f.tier).cap; // the offseason window's arguments, as franchise.js passes them
+  const S = 'Bayou Stalkers', B = 'Stonehaven Titans', POS = 'S', slots = GROUP_SLOTS[POS].length;
+  // Step 1, modes: the seller is in Rebuild (it is after season 1; set explicitly) and is the only rebuilding club; the buyer is not
+  // rebuilding (Retool after season 1). The seller is an ordinary club: a gym never falls below Compete.
+  R.clubRecord(f, S).strategy.mode = 'rebuild';
+  for (const c of R.leagueClubs(f)) if (c !== S && modeOf(f, c) === 'rebuild') R.clubRecord(f, c).strategy.mode = 'retool';
+  assert.equal(modeOf(f, S), 'rebuild'); assert.ok(!isGymClub(S)); assert.deepEqual(R.leagueClubs(f).filter((c) => modeOf(f, c) === 'rebuild'), [S]);
+  assert.notEqual(modeOf(f, B), 'rebuild', 'the buyer is not rebuilding');
+  const rosterS = R.clubRoster(f, S), rosterB = R.clubRoster(f, B);
+  // Step 2, the starter: the seller's sellable safety (28, within 2 seasons of his public onset), rated up to 57 OVR within his ceilings.
+  // He stays a starter (the club's other starting safety is 58).
+  const m = sellableStarters(f, rosterS).find((x) => x.position === POS); assert.ok(m, 'a sellable safety');
+  rateTo(m, 57);
+  assert.ok(starters(rosterS, POS).slice(0, slots).includes(m), 'he starts');
+  assert.ok(tradable(f, m) && !R.isProtected(m) && !isUnavailable(m), 'tradable, not protected, available');
+  assert.ok(m.age > STARTER_SALE.youngStarAge, `older than ${STARTER_SALE.youngStarAge}: ${m.age}`); assert.ok(horizonOf(m) <= PLAN.ageingHorizon, `within ${PLAN.ageingHorizon} seasons of his onset: ${horizonOf(m)}`);
+  assert.ok(sellableStarters(f, rosterS).includes(m));
+  // Step 3, the replacement (F4): the safety who would take his slot (the next available at the position), a veteran, rated `repBehind`
+  // below him.
+  const rep = starters(rosterS, POS).filter((x) => x !== m && !isUnavailable(x))[slots - 1]; assert.ok(rep && rep.age > PLAN.successorAge, 'a veteran next in line');
+  rateTo(rep, monsterOverall(m) - repBehind);
+  const replaced = monsterOverall(rep) >= monsterOverall(m) - STARTER_SALE.replacementWithin;
+  assert.equal(hasReplacement(rosterS, m), replaced, 'F4 as the code reads it');
+  // the real search reaches him first: no sellable starter ahead of him in its order has a replacement
+  if (replaced) assert.equal(sellableStarters(f, rosterS).filter((x) => hasReplacement(rosterS, x))[0], m, 'first in the search order');
+  // Step 4, the buyer's legitimate need (no edit): his weakest available starting safety (45) is beaten by the bar (AI_TRADE_RULES.upgrade).
+  assert.ok(monsterOverall(m) >= floorAt(rosterB, POS) + AI_TRADE_RULES.upgrade, `need: ${monsterOverall(m)} against ${floorAt(rosterB, POS)} + ${AI_TRADE_RULES.upgrade}`);
+  // Step 5, the payment: the buyer's deepest safety, a 22-year-old spare, with his ceilings raised to a 58 potential. A young monster's
+  // market value is mostly his upside (0.6 per point of headroom at 26 or under), so he is priced like the 57-OVR veteran.
+  const y = starters(rosterB, POS).at(-1); ceilingTo(y, 58);
+  assert.ok(sparesOf(rosterB).includes(y), 'a spare'); assert.ok(tradable(f, y) && !R.isProtected(y) && !isUnavailable(y)); assert.ok(y.age <= STARTER_SALE.youngAge, `young: ${y.age}`);
+  const vm = marketValue(m, { year }), vy = marketValue(y, { year });
+  assert.ok(inBand(vy, vm), `a fair price both ways: ${vy.toFixed(1)} for ${vm.toFixed(1)}`);
+  // Step 6, judge() (the existing deal rules), computed with the same functions: no return lock, no legendary, both rosters legal, both
+  // under the cap; the gains (buyer >= DEAL_RULES.minGain, seller >= DEAL_RULES.sellerFloor) are returned for the scenario to assert.
+  assert.equal(returnLock(f, m, B), null); assert.equal(returnLock(f, y, S), null); assert.equal(legendSide(m), null); assert.equal(legendSide(y), null);
+  const afterB = rosterAfter(rosterB, { give: [y], get: [m] }), afterS = rosterAfter(rosterS, { give: [m], get: [y] });
+  assert.deepEqual([...rosterProblems(rosterB, afterB), ...rosterProblems(rosterS, afterS)], [], 'both rosters legal');
+  const roomB = R.clubCapRoom(f, B, cap), roomS = R.clubCapRoom(f, S, cap);
+  assert.ok(roomB + y.salary - m.salary >= Math.min(0, roomB) && roomS + m.salary - y.salary >= Math.min(0, roomS), 'both under the cap');
+  const na = scoped(() => rosterNet(rosterB, { give: [y], get: [m] }, year)), nb = scoped(() => rosterNet(rosterS, { give: [m], get: [y] }, year));
+  // Step 7, the window: the year-2 offseason window has had no sale.
+  assert.ok(f.season.finished); assert.ok(saleOpen(f, year, 0), 'the sale window is open');
+  return { year, cap, S, B, m, y, rep, na, nb, salesBefore: (f.league.trades || []).filter((t) => t.sale).length };
+}
+
+test('R4 constructed scenario: every prerequisite holds, so the real offseason window sells the ageing starter by the approved rules', () => {
+  const f = league52(); const c = constructSale(f, { repBehind: 1 });
+  assert.ok(c.na >= DEAL_RULES.minGain, `buyer gain ${c.na.toFixed(1)} >= ${DEAL_RULES.minGain}`); assert.ok(c.nb >= DEAL_RULES.sellerFloor, `seller ${c.nb.toFixed(1)} >= ${DEAL_RULES.sellerFloor}`);
+  assert.equal(c.salesBefore, 0);
+  const before = Object.fromEntries(R.leagueClubs(f).map((k) => [k, R.clubRoster(f, k).slice()]));
+  const deals = aiTrades(f, createRng(52), { year: c.year, cap: c.cap, window: 'offseason' }); // the real code path (franchise.js, at free agency's opening)
+  const sale = deals.filter((d) => d.sale); assert.equal(sale.length, 1, 'one sale'); const s = sale[0];
+  assert.equal(s.seller, c.S); assert.equal(s.B, c.S); assert.equal(s.toA, c.m.id, 'the constructed starter is the one sold'); assert.equal(s.pos, 'S');
+  // the buyer the code chose meets the rules on its roster as it stood before the deal
+  const rb = before[s.A]; assert.notEqual(modeOf(f, s.A), 'rebuild'); assert.equal(s.fl[0], floorAt(rb, 'S')); assert.ok(monsterOverall(c.m) >= floorAt(rb, 'S') + AI_TRADE_RULES.upgrade);
+  for (const id of s.toBAll || []) { const p = rb.find((x) => x.id === id); assert.ok(sparesOf(rb).includes(p), 'paid from spares'); assert.ok(p.age <= STARTER_SALE.youngAge); }
+  assert.equal(s.A, c.B, 'the constructed buyer'); assert.deepEqual(s.toBAll, [c.y.id], 'the constructed payment'); assert.equal(s.na, Math.round(c.na)); assert.equal(s.nb, Math.round(c.nb));
+  assert.ok(R.clubRoster(f, s.A).includes(c.m) && R.clubRoster(f, c.S).includes(c.y), 'the monsters moved');
+  const all = assertR4Sales(f); assert.equal(all.filter((t) => t.year === c.year && t.week === 0).length, 1, 'one sale in the window');
+  assert.ok(!saleOpen(f, c.year, 0), 'the window is closed for sales');
+  assert.deepEqual(R.verifyLeague(f), []);
+});
+
+test('R4 constructed scenario, one prerequisite removed: the replacement 5 behind (F4 fails), no sale', () => {
+  const f = league52(); const c = constructSale(f, { repBehind: 5 });
+  assert.equal(monsterOverall(c.m) - monsterOverall(c.rep), 5); assert.equal(hasReplacement(R.clubRoster(f, c.S), c.m), false, 'no replacement within 4');
+  const deals = aiTrades(f, createRng(52), { year: c.year, cap: c.cap, window: 'offseason' });
+  assert.deepEqual(deals.filter((d) => d.sale), [], 'no sale'); assert.equal((f.league.trades || []).filter((t) => t.sale).length, 0);
+  assert.ok(R.clubRoster(f, c.S).includes(c.m), 'he stays'); assert.ok(saleOpen(f, c.year, 0));
   assert.deepEqual(R.verifyLeague(f), []);
 });
