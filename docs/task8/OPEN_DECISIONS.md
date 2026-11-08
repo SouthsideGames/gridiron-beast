@@ -165,3 +165,27 @@ M6. Do not reintroduce formula yards.
 - LB1 makes more tackles than LB2 (ratings, not geometry).
 
 Hang time 2.6 s and the 5 s clock runoff stay provisional. No muffed catches.
+
+## D11. Rebuilding clubs' starter sales (R4) have nearly stopped
+
+**What we measured** (leagues 51–55, three seasons each, before Task 8's progression at dd2245d against the current build):
+
+| | Before | Now |
+|---|---:|---:|
+| AI–AI trades | 36 | 35 |
+| R4 starter sales | 4 | 0 |
+
+Seed 11's four seasons show where sales stop. In those seasons:
+- rebuilding clubs looked at 16 sellable ageing starters;
+- 4 of them had a replacement within 4 overall;
+- that produced 31 buyers with a need and 102 fair-price offers;
+- every one of those offers failed the existing deal rules: 89 on the buyer's minimum gain (8 in the offseason, 16 in season), 11 on a full roster and 2 on the seller floor.
+
+So the sale rules work as written. What has changed is the league: Task 8's ratings make a qualifying ageing starter with a close replacement rare, and the gain bar then stops the trade. `tests/task6-phase-d.test.js` "R4 in play" fails for this reason. I have left it failing rather than pick a seed.
+
+**Options**
+1. **Accept that sales are rare now.** The in-play test becomes an explicit staged scenario, and the rules stay as they are.
+2. **Loosen the replacement margin.** It is 4 now (F4, owner-approved 2026-11-03).
+3. **Lower the buyer's gain bar for sales only.**
+
+**Recommendation:** option 1 for now, and look at the number again with the franchise-health reports at seasons 5, 10, 15 and 20. Options 2 and 3 change approved rules, so they are yours to make.
