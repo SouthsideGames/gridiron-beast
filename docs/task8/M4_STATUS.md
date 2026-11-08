@@ -251,16 +251,113 @@ The C6 scope is still D8 (provisional).
 **Plain battles are unchanged.** The 20 golden seeds stay byte-identical. Draws are still spreads plus coins (plus Confused rolls when
 present). 10,000 t8 3v3 battles with no log take 1,133 ms on the first pass and 641 ms on the second (S1: 881 / 523 ms).
 
+## S4: rotation (P8) and forced rotation (commit b5fea8a)
+
+**The rotation phase** (P6 step 4, P8) runs after both turns and before end of exchange (delayed impacts).
+- **Requests** for both sides come from the state at the start of the phase. They then resolve side A, then side B.
+- **A side may request** only when it has an active monster and a living reserve, `ex − lastVoluntary ≥ 4` (approved cadence;
+  `ROTATION_CADENCE_EXCHANGES`), and no `rotationLock` hook holds its active. A lock is logged as `rotation_unavailable` with its unmet
+  conditions.
+- **Resolution order** (hooks asked of every monster by stable ID):
+  1. `rotationDelay` (Cinder Clamp). A delay does not spend the cadence;
+  2. `pursuit` (Riptide Pursuit). A departing monster knocked out here gets the ordinary KO replacement instead;
+  3. `cashOut` (Shell Harvest);
+  4. the departure (the status pauses in reserve);
+  5. the entrant's `onEntry` effects, at full strength;
+  6. `arrival` (Cold Welcome / Downdraft).
+- **The entrant** first acts next exchange.
+- **The lineup is never reordered** (`lineup-order-stable`).
+
+**P8 entry penalty.** It uses the approved `rotationEntryPenalty`, set only by a voluntary rotation.
+- On the entrant's first normal turn: damage (the `penalty` factor at 8a), heals and shield pools are ×0.5.
+- `view.combatant(id).entryPenalty` exposes the factor to hooks, for contracts' status-application chances.
+- A Stunned skip spends it, and the next turn is full.
+- KO replacements and forced rotations never set it. Reactions and entry effects never read it.
+
+**D1 (approved): player rotations.**
+- **Policies** are `none`, `ai` and `manual`. The default is `ai`, so headless and Skip runs use the AI policy. `none` is for tests and
+  staged scenarios.
+- **Stopping.** A `manual` side with no recorded decision for a legal rotation phase stops the engine. The result has `pending: true`
+  and a `boundary` object: `{ kind: 'rotation', ex, side, activeId, options: ['stay', 'auto', …reserve ids], reserves, rngDraws,
+  stateHash, lastSeq }`. The last event is `rotation_prompt`.
+- **Resuming.** Re-run with `config.decisions[side][ex]` set to a reserve id (combatant or monster id), `'stay'` or `'auto'`. The log
+  is identical up to the boundary, then continues.
+- **`'auto'`** ("Auto for the rest") switches that side to the AI policy for the rest of the battle, so it is never prompted again.
+- **Invalid decisions** are refused.
+- **Turn and exchange stepping.** `stopAt: { exchange, turn? }` returns the same kind of boundary (`kind: 'turn' | 'exchange'`). Its log
+  is a prefix of the uninterrupted battle. S13 builds save/resume on this.
+
+**D2 (approved): the AI policy.** `src/clash/t8/ai.js` `chooseRotationAI` is the legacy `smart` policy carried over, with:
+- the same value formula and thresholds (gain > 1.45 × stay; or ≥ 0.8 × stay when the active is about to fall);
+- the legacy daze/shock factors replaced by the t8 statuses' real effect (Weakened / Empowered %, and Stunned ×0.5, which matches D4);
+- visible information only (`ai-visible-information`). The legacy rule read the opposing active's ATK. It now uses the largest single
+  hit that opponent has actually dealt. A test wraps the foe in a proxy that throws on any ATK read;
+- no random draw.
+
+The opponent-chosen replacement of Riptide Charge is supported by the primitive (`incoming: <id>`). Its policy belongs to that contract
+(S10).
+
+**Forced rotation (R5).** `forcedRotation(src, side, { incoming })` is reachable from a stub action or a hook item. It keeps the
+existing side-wide pacing: no forced rotation within 3 exchanges of the last one on that side, the approved values 1.1.0 `forcedEvery`.
+It also keeps the just-entered protection: an active that entered this exchange, for any reason, cannot be forced out. A refusal (no
+active, no living reserve, pacing, just entered, lock or immunity, invalid chosen replacement) is logged as `rotation_refused` with its
+unmet list. It carries no entry penalty, and the entrant acts next exchange.
+
+**Fixtures.**
+- The engine version is now `t8-s4`. The approved AI default changes ordinary battles, so `keyCompatible` was reset.
+- `tests/clash/fixtures/golden-t8.json` was re-recorded from the same 20 lineups and seeds (`tools/t8-golden.mjs`). The ruling that
+  retires the S1 fixture is D1/D2 (N8d).
+- The S1 fixture is kept as `golden-t8-s1.json`. A new t8-core test shows all 20 still end in exactly the S1 state hash with both sides
+  on policy `none`, which proves S2–S4 changed nothing else.
+
+### D3: Feather Relay (finding: not built; left for the owner)
+
+The owner's ruling (§25 item 3): "It counts as a rotation, without the 50% entry penalty, provided this matches its approved contract.
+Other rotation restrictions stay unless the contract explicitly exempts them."
+
+The approved contract (WIN-01-C, generated Dex), quoted in full where it touches rotation:
+> **Trigger / eligibility:** "Gustling family; Support. Once per Clash, while living/able in RESERVE, at own team normal action
+> opportunity if current active ally below50% HP and legal rotation available. This SUPPORT ACTION replaces team attack; not another
+> simultaneous active fighter."
+> **Targets / placement:** "Current injured active ally rotates with FIRST living reserve in stable lineup order. Gustling may become
+> incoming if it is that reserve. Respect rotation locks and legal availability."
+> **Core resolution:** "Rotate, then heal DEPARTING ally8 /10 /12% of that ally maximum HP by Gustling /Squallow /Stratosoar form.
+> Incoming receives NO normal attack that team turn. Healing Reduced/maxHP cap normal; no shield, cleanse or revive."
+> **Lifetime / persistence:** "Immediate rotation/heal only, no status or schedule. Team action consumed once, not a bonus reserve
+> normal turn; normal supported status carry remains."
+> **Progression / notes:** "… Requires reserve-origin support action, one team-action cost, rotation-first heal and incoming-action
+> suppression. No transition to multi-active combat. …"
+
+What the text supports and what it does not:
+- **"Counts as a rotation": supported.** It says "rotate", "legal rotation available" and "Respect rotation locks and legal
+  availability".
+- **"Without the P8 penalty": not stated.** The contract never mentions the entry penalty, half strength or an exemption, and P8 keeps
+  only *explicit* ability exceptions.
+- **Timing differs from P8.** It acts "at own team normal action opportunity", in place of the team attack, not in P8's rotation phase
+  "after both normal turns".
+- **What its "incoming-action suppression" refers to is unclear.** "Incoming receives NO normal attack that team turn" covers the turn
+  it is used in. The P8 penalty applies to the entrant's *next* (first) normal turn. The text does not say whether the forgone attack
+  replaces that penalty.
+
+Because the condition in D3 ("provided this matches its approved contract") is not clearly met, the Feather Relay hook was **not
+built** (`feather-relay-not-built`). Three questions are left for the owner:
+1. Does the forgone team attack count as the entry cost, so no P8 penalty?
+2. Does a Feather Relay rotation spend the 4-exchange cadence, and does it need the cadence to be available ("legal rotation
+   available")?
+3. Is it a voluntary rotation for Cinder Clamp, Riptide Pursuit, Cold Welcome and Shell Harvest?
+
+Feather Relay itself is an S10 ability. When the reading is confirmed, the rotation primitive needs only an exemption flag.
+
 ## Provisional defaults and the decision each waits on
 
 The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a test checks that every entry names what it waits on.
 
 | Id | Default | Waits on |
 |---|---|---|
-| `ko-replacement-line-order` | First living reserve in lineup order; it enters right after the hit and does not take the cancelled turn | **D2** |
+| `ko-replacement-line-order` | First living reserve in stable lineup order, for the AI and the player; it enters right after the hit and does not take the cancelled turn | Owner: D1/D2 rule on rotation and the AI, and neither names the KO replacement choice |
 | `sudden-death-scope` | The values 1.1.0 ramp multiplies the 8a raw damage of every direct strike; not the Afflicted tick, heals or shields | **D8** (open) |
 | `stalemate-c6-scope` | C6 as in values 1.1.0; from S3 it multiplies every heal and every shield pool granted, not damage | **D8** (open) |
-| `exchange-cap` | The approved cap, HP share and coin, as in values 1.1.0. What happens to pending delayed impacts at the cap is open (none exist yet) | **D8** |
+| `exchange-cap` | The approved cap, HP share and coin, as in values 1.1.0. What happens to pending delayed impacts at the cap is open (none exist yet) | **D8** (open) |
 | `initiative-tie-band` | P6's "seeded tie-break" uses the approved band: speeds closer than 2 are a tie, decided by one coin draw | Reading of an approved value; see the findings below |
 | `ko-clears-durations-keeps-cooldowns` | A KO clears the slot and episode (approved, §10) and the duration clocks, and keeps cooldowns (Second Spring: "no cooldown reset"); the cooldown half is provisional | S5 (ledgers) |
 | `tank-bruise-not-implemented` | The legacy bruise (heals ×0.75) is not in t8, as a status or as a heal factor | **D6** (open) |
@@ -276,6 +373,11 @@ The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a t
 | `reaction-order` (S3) | Reactions, after-whole-hit effects and follow-ups run by owner: recipients first, then stable ID | Reading of §9, flagged |
 | `reaction-chains` (S3) | A reaction or counter strike runs its attached effects only; it triggers no reactions, after-whole-hit effects or follow-ups | B3/P6 "no chains"; reading flagged |
 | `shared-burden-budget-rounding` (S3) | With a split, the raw budget is made whole once at 8c, then each share is rounded once at its HP loss | Reading of §9 + D9, flagged (Shared Burden is S5) |
+| `lineup-order-stable` (S4) | Rotations never reorder the lineup; "first living reserve" is always the first living non-active monster in the original order (the legacy engine swapped positions) | Reading of the contracts' "stable lineup order", flagged |
+| `p8-pending-cleared-on-departure` (S4) | An unspent entry penalty ends with that entry (if the entrant is forced out before its first turn) | Reading of P8, flagged |
+| `rotation-hook-order` (S4) | Within one side's rotation, hooks run for every monster by stable ID: delay, pursuit, cash-out, departure, the entrant's entry effects, arrival. A delayed rotation does not spend the cadence | S10 (the rotation contracts) |
+| `ai-visible-information` (S4) | The AI reads only visible information; "about to fall" uses the largest hit the foe has actually dealt, not its hidden ATK | Approved D2; reading flagged |
+| `feather-relay-not-built` (S4) | Feather Relay's rotation hook is not built | **Owner**: D3 is conditional, and the contract does not state the exemption (see S4) |
 
 ## Test results
 
@@ -291,6 +393,8 @@ All runs are targeted only (`tests/clash/*.test.js`). The full suite was not run
 | 525e078 (S2) | `node tools/test-tier.mjs perf` | 1 / 1 pass (4.2 s file run) |
 | ed33b7e (S3) | `node --test tests/clash/*.test.js` | **144 tests, 144 pass, 0 fail** (60.3 s) |
 | ed33b7e (S3) | `node tools/test-tier.mjs perf` | 1 / 1 pass (2.9 s) |
+| b5fea8a (S4) | `node --test tests/clash/*.test.js` | **155 tests, 155 pass, 0 fail** (102.7 s, on a machine at load average 5–6 from other sessions) |
+| b5fea8a (S4) | `node tools/test-tier.mjs perf` | 1 / 1 pass on the rerun. The first run failed at 6,360 ms while other sessions held a load average of about 6 on this 2-CPU container. No legacy file has changed since S0 (`git diff 081c590 -- src/clash/{engine,handlers,conditions,ai,stats,values}.js` is empty) |
 
 **Per file at a4c5e09:**
 - the 15 pre-existing files are all unchanged and green, 99 / 99: boundary 3, calculators 4, conditions 9, data 4, engine 9,
@@ -303,6 +407,16 @@ unchanged); `t8-legacy-freeze` 2 / 2; `t8-status` **16 / 16**.
 
 **Per file at ed33b7e (S3):** pre-existing 99 / 99; `t8-core` 14 / 14; `t8-legacy-freeze` 2 / 2; `t8-status` 16 / 16;
 `t8-damage` **13 / 13**.
+
+**Per file at b5fea8a (S4), each file run on its own:**
+- the 15 pre-existing files, 99 / 99: boundary 3, calculators 4, conditions 9, data 4, engine 9, experiments 7, gateb2 5, gateb3 5,
+  gateb4 6, gateb5 5, implementation 9, presentation 13, readiness 5, reflect-ko 8, stats 7. The engine file's perf case failed once
+  under the load spike and passed on the rerun;
+- `t8-core` **15 / 15** (the golden test replays the re-recorded fixture, plus the new S1-fixture regression);
+- `t8-legacy-freeze` 2 / 2;
+- `t8-status` 16 / 16;
+- `t8-damage` 13 / 13;
+- `t8-rotation` **10 / 10**.
 
 **Timing, 10,000 3v3 battles with no log** (the perf test's 50 lineups, one script, two passes on this 2-CPU container):
 
@@ -354,7 +468,7 @@ perf gate stays on the legacy test until S16.
      pauses".
    - Arc Rebound's "starts at launch" is consistent: it starts inside the owner's turn, so that turn is excluded.
 
-## What S2 needs next
+## What S2 needed (written at S1; done in S2)
 
 - **Boundary.** Whitelist `src/sim/t8/status.js` (or move it to a shared folder), since `tests/clash/boundary.test.js` allows
   only `core/rng.js`, `src/data/` and `src/clash/`.
@@ -371,3 +485,43 @@ perf gate stays on the legacy test until S16.
   the Shielded strength comparison.
 - **Owner decisions** that S2 touches: D4 (the Stunned safeguard), D10 (cross-mode magnitudes) and D11 (Shielded). Until they are
   answered, S2 will label its defaults provisional in the same way.
+
+## Findings and contradictions from S2–S4
+
+1. **D4 against spec §10.** §10 counts every recipient normal turn. D4 says the remaining duration is preserved across the protected
+   turn. The preserving reading (the protected turn holds Stunned) was implemented and flagged (see the D4 section). With it, each
+   Stunned unit costs exactly one skipped turn, the same unit B18 uses in football.
+2. **D3 against WIN-01-C.** The contract supports "counts as a rotation" but says nothing about the P8 penalty, and it acts at the team's
+   normal action, not in the rotation phase. It was not built (see the D3 section).
+3. **Shielded units across modes.** The football Guiding Halo strength is 15 (a percentage of max Clash HP, LIG-03-F). A Clash shield's
+   strength is its pool in HP (D11: "compared by original strength"). The carry converts between the two (`shield-strength-units`).
+   Neither source says this explicitly.
+4. **Silent points, labelled provisional:**
+   - whether an empty pool ends Shielded (STA-09);
+   - whether type, guards or the shield apply to the Afflicted tick (STA-05);
+   - the Afflicted tick size: no Clash producer exists, and D10 is silent.
+5. **P8 "status-application chances".** No Clash application chance exists yet (every chance belongs to a contract). The factor is
+   exposed to hooks, and each contract must apply it (S6–S11).
+6. **The legacy AI read hidden information** (the opposing active's ATK). D2 requires the approved information restrictions, so the
+   adapted policy uses the observed hit instead (`ai-visible-information`).
+7. **The plan's S0 row listed the ability-kind table.** It is still not built: D16 is open and requires owner review before the first
+   ability batch. No S6+ work was started.
+8. **Performance.** The legacy 10,000-battle perf case failed once (6,360 ms) while other sessions held the 2-CPU container at a load
+   average of about 6. It passed on the rerun, and no legacy file changed. On the same loaded machine, t8 3v3 timing with no log and the
+   AI default was 1,642 / 991 ms (first / second pass); with policies `none` it was 2,138 / 1,264 ms. The load makes these noisy;
+   S3 measured 1,133 / 641 ms when the machine was quieter.
+
+## What S5 needs next
+
+- **The registry** (`src/clash/t8/registry.js`). It must map each family's hooks onto the hook points that now exist:
+  - turn and selection: `initiative`, `chooseAction`, `turnStart`, `endOfTurn`;
+  - the strike: `launch`, `intercept`, `missCheck`, `rawModifiers`, `lethalRedirect`, `rawSplit`, `mitigate`, `preKO`;
+  - after the strike: `attached`, `reaction`, `afterWholeHit`, `followUp`;
+  - statuses: `statusIncoming`, `statusApplied`;
+  - rotation and entry: `rotationLock`, `rotationDelay`, `pursuit`, `cashOut`, `onEntry`, `arrival`;
+  - exchange boundaries: `roundStart`, `rotationPhase`, `endOfExchange`.
+
+  Contracts need RNG access, which probes deliberately lack. The registry should get a counted draw API that logs each roll.
+- **Hook descriptors exist** for `strike`, `status`, `heal`, `shield` and `forcedRotation`, and any hook can report `unmet`. S5 adds
+  delayed impacts, constructs, links, heal schedules, revive, HP transfer and the ledgers.
+- **Before S6:** the ability-kind table for owner review (D16), and the owner's answers on D3, D6, D8, D13 and D14.
