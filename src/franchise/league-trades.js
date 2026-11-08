@@ -60,7 +60,8 @@ export const floorAt = (roster, pos) => { const at = starters(roster, pos).filte
 /** A club's spares: the monsters beyond its starters (a long-injured starter counts as a spare until he is back). Only these are for sale between AI clubs. */
 export const sparesOf = (roster) => Object.keys(GROUP_SLOTS).flatMap((pos) => starters(roster, pos).slice(slotsOf(pos)));
 const salaryOf = (ms) => ms.reduce((s, m) => s + (m.salary || 0), 0);
-const ownedPicks = (f, club, y0) => { const out = []; for (let y = y0; y < y0 + AI_TRADE_RULES.picksAhead; y++) for (const p of picksOwnedBy(f, club, y, ALL_TEAMS)) if (!pickUsed(f, p)) out.push({ p, v: pickValue(p, { yearsAhead: y - y0 }) }); return out.sort((a, b) => a.v - b.v || (a.p.round - b.p.round) || (a.p.year - b.p.year) || (a.p.original < b.p.original ? -1 : 1)); };
+// ownedPicks and judge are exported (pure, unchanged) for the R4 constructed scenario test (D11): it computes every competing offer with them.
+export const ownedPicks = (f, club, y0) => { const out = []; for (let y = y0; y < y0 + AI_TRADE_RULES.picksAhead; y++) for (const p of picksOwnedBy(f, club, y, ALL_TEAMS)) if (!pickUsed(f, p)) out.push({ p, v: pickValue(p, { yearsAhead: y - y0 }) }); return out.sort((a, b) => a.v - b.v || (a.p.round - b.p.round) || (a.p.year - b.p.year) || (a.p.original < b.p.original ? -1 : 1)); };
 
 /** Mean overall of a club's starters (the best available at each position, as many as the position has slots). A record of what a deal did, never read by a decision. */
 const startersMean = (roster) => { let sum = 0, n = 0; for (const pos of Object.keys(GROUP_SLOTS)) for (const m of starters(roster, pos).filter((x) => !isUnavailable(x)).slice(0, slotsOf(pos))) { sum += ovr(m); n++; } return n ? Math.round(sum / n * 10) / 10 : 0; };
@@ -70,7 +71,7 @@ const startersMean = (roster) => { let sum = 0, n = 0; for (const pos of Object.
  * A must come out ahead by DEAL_RULES.minGain on its own measure (roster worth plus picks), B by sellerFloor; both rosters
  * stay legal, both clubs stay under the cap. Returns { na, nb } or null.
  */
-function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB, minGain = DEAL_RULES.minGain }) {
+export function judge(f, { A, B, rosterA, rosterB, m, ys, picks, year, roomA, roomB, minGain = DEAL_RULES.minGain }) {
   if (returnLock(f, m, A) || ys.some((y) => returnLock(f, y, B))) return null; // Task 7 resolution 6: no return to the club that traded him this league year
   const afterA = rosterAfter(rosterA, { give: ys, get: [m] }), afterB = rosterAfter(rosterB, { give: [m], get: ys });
   if (legendSide(m) && !legendCheck(afterA.filter((x) => x !== m), m, { final: true }).ok) return null; // the legendary limit (Task 7)
