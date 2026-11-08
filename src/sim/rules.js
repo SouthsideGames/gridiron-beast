@@ -173,8 +173,8 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
     offense: P ? boostSlots(slots.offense, P[state.possession]?.offense) : slots.offense, defense: P ? boostSlots(slots.defense, P[opponent(state.possession)]?.defense) : slots.defense,
     ballOn: state.ballOn, ballLat: state.ballLat, seed: r.seed(), options: { ...options, memory: abilityMemory(state), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8, createdFields, offenseSide: state.possession, toGo: state.toGo },
   });
-  T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
-  T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12)
+  T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12): drained under the statuses active during this play (Afflicted, B10)
+  T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10), after the drain
   if (t8.fields?.list?.length) afterPlayFields(state, t8, slots, sim, offIds); // Task 8 fields: Light recharge, then the clocks
   if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
@@ -546,8 +546,8 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   // Participation and kick credit (B5, B20): special-teams snaps for both units, a kickoff for the kicker, the return's events.
   if (units) {
     recordKickoffStats(state, kicking, receiving, units, sim, res);
+    T8K.afterPlay(state, [...Object.values(units.coverage), ...Object.values(units.ret)]); // Task 8 stamina (before the status clocks)
     T8S.afterPlay(state, [...Object.values(units.coverage), ...Object.values(units.ret)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10)
-    T8K.afterPlay(state, [...Object.values(units.coverage), ...Object.values(units.ret)]); // Task 8 stamina
   } else kickerStat(state, kicking, 'kickoffs'); // onside and free kicks stay formula plays: the kick itself is credited
   if (state.clock <= 0 && state.phase === 'scrimmage') endOfPeriod(state);
   return { res, text, sim };
@@ -608,8 +608,8 @@ function creditFormulaUnits(state, teams, kicking, kind) {
   const other = opponent(kicking); const u = formulaUnits(teams[kicking], teams[other], kind);
   const bump = (team, slot) => { const p = (state.stats[team].players[slot] ||= {}); p.stSnaps = (p.stSnaps || 0) + 1; };
   for (const slot of Object.keys(u.kicking)) bump(kicking, slot); for (const slot of Object.keys(u.other)) bump(other, slot);
+  T8K.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)]); // B5: participation drains stamina (before the status clocks)
   T8S.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)].map((x) => x?.id).filter(Boolean));
-  T8K.afterPlay(state, [...Object.values(u.kicking), ...Object.values(u.other)]); // B5: participation drains stamina
 }
 export function doPunt(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
