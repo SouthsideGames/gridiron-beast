@@ -164,9 +164,29 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   const FX = createFieldPlay({ fields: options.fields, actors, seed, log: (...x) => log(...x), t8: t8g, setStatus: (a, c, d) => setStatus(a, c, d), bounds: B, dt: DT, refreshMaxSpeed: (a) => refreshMaxSpeed(a) });
   const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
-    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => !FX || FX.canStart(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
-    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null) };
+    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => (!FX || FX.canStart(a)) && activationAllowed(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
+    applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null),
+    // M3 hook: (Earth/Ice batch) play bounds, the drive (possession) id, a defender's current coverage target, the Earth-field share of a
+    // displacement a monster still takes, physical obstacles, and the activation-denial gate's charge side (canGainCharge)
+    bounds: B, drive: options.memory?.drive ?? null, actors: () => actors, coverTarget: (d) => coverTargetOf(d), resist: (a) => (FX ? FX.resist(a) : 1),
+    addObstacle: (o) => { const ob = { live: true, blocks: () => true, ...o }; obstacles.push(ob); return ob; }, obstacles: () => obstacles, canGainCharge: (a) => !a.t8Suppressed };
   const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h ? h(abilityCtx, a, ...args) : undefined; };
+  // M3 hook: physical obstacles from contracts (stone walls, snowballs): kinds 'circle' {x, y, r} and 'rect' {x0, x1, y0, y1}, live until
+  // removed or the whistle; `blocks(actor)` says whom it stops. Monsters it blocks are kept outside after movement (the ball is not).
+  const obstacles = []; const BODY = 0.35;
+  function keepOut(a, o) {
+    if (o.kind === 'circle') { const dx = a.x - o.x, dy = a.y - o.y, d = Math.hypot(dx, dy), R = o.r + BODY; if (d >= R) return; const ux = d > 1e-6 ? dx / d : 0, uy = d > 1e-6 ? dy / d : 1; a.x = o.x + ux * R; a.y = o.y + uy * R; return; }
+    const x0 = o.x0 - BODY, x1 = o.x1 + BODY, y0 = o.y0 - BODY, y1 = o.y1 + BODY; if (a.x <= x0 || a.x >= x1 || a.y <= y0 || a.y >= y1) return;
+    const pen = [[a.x - x0, 'x', x0], [x1 - a.x, 'x', x1], [a.y - y0, 'y', y0], [y1 - a.y, 'y', y1]].sort((p, q) => p[0] - q[0])[0];
+    if (pen[1] === 'x') { a.x = pen[2]; a.vx = 0; } else { a.y = pen[2]; a.vy = 0; }
+  }
+  // M3 hook: the activation-denial gate (Cold Snap): an opposing contract may suppress a new activation for the rest of this play
+  function activationAllowed(a) {
+    if (a.t8Suppressed) return false;
+    for (const o of actors) if (o.team !== a.team && o.contract?.hooks?.activationAttempt && hook('activationAttempt', o, a)?.suppress) { a.t8Suppressed = true; return false; }
+    return true;
+  }
+  function coverTargetOf(d) { const g = d.assignment; if (g?.a === 'man') return bySlot.off[manKeys[g.key]] || null; if (g?.a === 'zone' && d.zoneTgt) return bySlot.off[d.zoneTgt] || null; return null; }
   // ------------------------------------------------------------ Task 8 shared statuses in play (spec §10, §11; Appendix B)
   // One slot per monster in t8g.status (status-runtime.js gate). Effects are read at the snap and again the moment a status is accepted.
   /** Apply a status through the shared gate (football) and take its effect now. attempt: status.js tryApply shape, plus `source` (an
@@ -279,6 +299,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function steer(a, tx, ty, speedScale = 1, arriveRadius = 0.6, cap = Infinity) {
     if (TRACE) { a.aim = [tx, ty]; } // developer trace only (options.trace): where he is trying to go
     if (a.stun > 0) { const k = FX ? FX.coast(a) : 0.93; a.vx *= k; a.vy *= k; return; } // off balance: coasting, cannot steer (an Ice field extends the slide)
+    if (a.forcedAim) { tx = a.forcedAim.x; ty = a.forcedAim.y; speedScale = 1; cap = Infinity; arriveRadius = 0; } // M3 hook: a contract's committed heading (Stone Charge)
     const dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
     let desired = a.maxSpeed * speedScale * burst(a) * speedMods(a); // Task 8: a.maxSpeed already carries the shared modifiers (refreshMaxSpeed)
     if (a.slowUntil > t) desired *= 0.7; // Bramble Shell: a tackler who missed him is slowed for a moment
@@ -366,13 +387,14 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function pancakeOpportunity(blocker, d) {
     if (blocker.pancakeRolled || blocker.team !== 'off' || positionOf(blocker.slot) !== 'OL') return;
     blocker.pancakeRolled = true;
-    const res = resolvePancakeOpportunity(prng, blocker.attrs, d.attrs, positionOf(d.slot), { blockScale: scaleVs(blocker, d, 'block'), shedScale: scaleVs(d, blocker, 'shed') });
+    const sure = !!hook('pancakeOpportunity', blocker, d)?.guarantee; // M3 hook: a contract's guaranteed pancake (no opportunity, success or recovery roll)
+    const res = sure ? { outcome: 'pancake', guaranteed: true } : resolvePancakeOpportunity(prng, blocker.attrs, d.attrs, positionOf(d.slot), { blockScale: scaleVs(blocker, d, 'block'), shedScale: scaleVs(d, blocker, 'shed') });
     if (res.outcome === 'none') return;
     const bk = (stats.blockers[blocker.slot] ||= { pass: 0, run: 0, lost: 0 }); bk.pancakeAttempts = (bk.pancakeAttempts || 0) + 1;
     if (res.outcome === 'pancake' && !d.knockedDown) { // the blocking outcome; Knocked Down goes through the shared gate (§10)
       blocker.engaged = null; d.engaged = null; t8Apply(d, { id: 'knockedDown', strength: 1, duration: 0, restOfPlay: true, source: blocker }, { quiet: true });
       bk.pancakes = (bk.pancakes || 0) + 1; stats.pancakes = (stats.pancakes || 0) + 1;
-      log(`${blocker.name} pancakes ${d.name}`, { kind: 'pancake', by: blocker.slot, side: blocker.team, victim: d.slot });
+      log(`${blocker.name} pancakes ${d.name}`, { kind: 'pancake', by: blocker.slot, side: blocker.team, victim: d.slot, ...(res.guaranteed ? { guaranteed: true } : {}) }); // M3 hook: guaranteed flag
     } else if (res.outcome === 'lostBlock') {
       blocker.engaged = null; d.engaged = null; t8Apply(blocker, { id: 'stumbled', strength: 1, duration: 0, restOfPlay: true, source: d }, { quiet: true }); // Stumbled via the gate: current speed only, no timer, no lock
       bk.lost += 1; log(`${blocker.name} loses ${d.name} on a failed pancake`, { kind: 'stumble', by: blocker.slot, side: blocker.team, victim: d.slot });
@@ -1299,6 +1321,11 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     phase = 'air'; stats.passer = passer.slot; stats.target = r.slot; stats.airYards = Math.round(landing.x);
     for (const def of defs) def.recognisedPass = true;
     log(`${passer.name} throws to ${r.name}${pressured ? ' under pressure' : ''}`, { kind: 'throw', target: r.slot, pressured });
+    // M3 hook: at release a defender's contract may break the pass up (first in lineup order); an ordinary incompletion, no catch made
+    for (const d of defs) if (d.contract?.hooks?.passRelease && hook('passRelease', d, passer, r)?.breakup) {
+      ball.inAir = false; stats.pbuBy = d.slot; endPlay('incomplete', passer.x, passer.y);
+      log(`Pass broken up by ${d.name}`, { kind: 'incomplete', dropped: false, pbu: true, by: d.slot, side: 'def', contract: d.family }); break;
+    }
   }
   function scramble(a) {
     scrambled = true; phase = 'carry'; ball.holder = a; stats.carrier = a.slot; a.laneTimer = 0; a.jukeCooldown = 0;
@@ -2015,6 +2042,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const fwd = c.team === 'off' ? 1 : -1;
     // Task 8 M3 (P6 pre-resolution): a carrier's contract may break this attempt before it is decided (normal strips still apply later)
     if (hook('tackleAttempt', c, d)?.prevent) { d.stun = Math.max(d.stun, 0.45); d.noEngage = Math.max(d.noEngage, 0.3); c.brokeTackle = (c.brokeTackle || 0) + 1; stats.brokenTackles += 1; log(`${c.name} breaks ${d.name}'s tackle`, { kind: 'broken_tackle', by: c.slot, side: c.team, victim: d.slot, contract: c.family }); return false; }
+    if (dist(d, c) > 1.25) return false; // M3 hook: a contract's contact displacement moved the tackler out of reach (no attempt, no break)
     // Daybreak: nobody can bring him down from behind.
     if (c.daybreak && (d.x - c.x) * fwd < -0.2) return false;
     if (offBlock) return armTackle(d, c);
@@ -2250,6 +2278,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     for (const d of defs) defenseTick(d);
     for (const a of actors) if (!a.engaged) integrate(a);
     separate();
+    if (obstacles.length) for (const o of obstacles) if (o.live) for (const a of actors) if (o.blocks(a)) keepOut(a, o); // M3 hook: contract obstacles
     {
       const c = ball.holder;
       // Landslide: a run that crosses the line within 2.5 yards of him gets his two extra yards when tackled (special teams excluded).
@@ -2321,6 +2350,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     qb: qr.order ? { v: QB_MODEL_VERSION, order: qr.order, reads: qr.log, decision: qr.decision, aiWould: qr.aiWould, sensedAt: qr.sensedAt, fakeAt: qr.fakeAt ?? null } : null, // the recorded read log (replays, AI Testing Lab)
   };
   if (FX) { const o = FX.output(); out.fields = o.fields; if (o.clumps.length) out.fieldObjects = { clumps: o.clumps }; } // Task 8: the functional field rectangles (field view, replays)
+  if (obstacles.length) out.obstacles = obstacles.map(({ blocks, ...o }) => ({ ...o })); // M3 hook: contract obstacles (field view, replays)
   if (KO) out.kickoff = { returner: KO.returner, catchX: stats.kickCatchX ?? null, hang: ball.flightTime };
   // Developer trace only (Phase C1 tests): each offensive player's Blocking after auras, kept out of the play's data (not enumerable,
   // so a traced play still serialises exactly as an untraced one).

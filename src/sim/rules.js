@@ -12,7 +12,7 @@ import * as T8S from './t8/status-runtime.js';
 import * as T8K from './t8/stamina-runtime.js';
 import * as T8F from './t8/field-runtime.js';
 import { toPlayFrame } from './t8/fields.js';
-import { extraCooldownUnit } from './abilities/registry.js';
+import { extraCooldownUnit, kickHook } from './abilities/registry.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
@@ -139,7 +139,18 @@ function sitsOutOf(state, slots) { if (!state.t8) return null; const ids = [...O
 /** A field's absolute placement (home-goal frame; lat in the home frame) from the upcoming formation reference (spec §11). */
 const absYard = (state, y) => (state.possession === 'home' ? y : 100 - y);
 const absLat = (state, l) => (state.possession === 'home' ? l : -l);
-function fieldPlacement(state, p) {
+function fieldPlacement(state, p, offensePlay = null) {
+  // M3 hook: (Earth/Ice batch) placement kinds. 'randomDefense': the whole rectangle between the upcoming line and `maxDepth` yards
+  // downfield, lateral and depth from the fractions u, v the producer drew when it earned the field (Frostmark). 'backfield': from the
+  // line `length` yards into the offensive backfield, centred on the quarterback's initial alignment (Permafrost).
+  if (p.place === 'randomDefense') {
+    const H = FIELD.halfWidth, w = Math.min(p.width, 2 * H), y0 = state.ballOn + p.v * Math.max(0, p.maxDepth - p.length);
+    return { centerLat: absLat(state, -H + w / 2 + p.u * (2 * H - w)), yardFrom: absYard(state, y0), yardTo: absYard(state, y0 + p.length), width: w };
+  }
+  if (p.place === 'backfield') {
+    const qbY = offensePlay?.align?.QB?.[1] ?? 0;
+    return { centerLat: absLat(state, (state.ballLat || 0) + qbY), yardFrom: absYard(state, state.ballOn - p.length), yardTo: absYard(state, state.ballOn), width: p.width };
+  }
   const ref = state.ballOn + (p.lbDepth ?? 5); // the fixed LB reference, offense frame
   const a = absYard(state, ref - p.length / 2), b = absYard(state, ref + p.length / 2); // the rectangle centred on the reference (placement choice, documented in M3_PLAN)
   return { centerLat: absLat(state, state.ballLat || 0), yardFrom: a, yardTo: b, width: p.width };
@@ -155,7 +166,7 @@ function afterPlayFields(state, t8, slots, sim, offIds) {
     const yard = absYard(state, sim.ballOn + row[1]), lat = absLat(state, (sim.ballLat || 0) + row[2]);
     const lights = T8F.fieldsAt(t8, yard, lat).filter((f) => f.type === 'Light' && f.owner !== x.id); if (lights.length) extraCooldownUnit(t8, x.id);
   }
-  T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : f.clock === 'scrimmageAny'));
+  T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : f.clock === 'ownerDefense' ? f.ownerTeam != null && f.ownerTeam !== state.possession : f.clock === 'scrimmageAny')); // M3 hook: 'ownerDefense' (the owner team's defensive scrimmage plays)
 }
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
@@ -169,7 +180,10 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
   const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
-  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: offIds, playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p) }) : []; // G3: at the creator's next eligible offensive snap
+  // M3 hook: defensive fields (spec side 'def') are created at the opposing offense's snap, with their creator on the field on defense
+  // unless the contract allows bench creation (benchOk); offensive fields as before (G3: the creator's next eligible offensive snap)
+  const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => (p.side === 'def' ? p.ownerTeam !== state.possession && (p.benchOk || defIds.has(p.owner)) : offIds.has(p.owner)), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay) }) : [];
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
@@ -618,8 +632,9 @@ export function doPunt(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
   const { r, save } = rng(state);
   const kicking = state.possession, receiving = opponent(kicking);
-  const res = ST.punt(r, { ballOn: state.ballOn, kicker: teams[kicking].kicker, returner: teams[receiving].returner });
+  let res = ST.punt(r, { ballOn: state.ballOn, kicker: teams[kicking].kicker, returner: teams[receiving].returner });
   save();
+  if (res.catchAt != null) res = kickHook((state.t8 ||= { status: {} }), teams[kicking].kicker, kicking, 'puntReturn', {}, res) || res; // M3 hook: a kicker contract on a caught, returned punt (Stone Cradle)
   state.stats[kicking].punts += 1; kickerStat(state, kicking, 'punts'); creditFormulaUnits(state, teams, kicking, 'punt'); // B5: the K's punt and the units' participation
   const lines = [res.text];
   runClock(state, 6);
@@ -638,11 +653,16 @@ export function doFieldGoal(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
   const { r, save } = rng(state);
   const kicking = state.possession;
-  const res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
+  let res = ST.attemptFieldGoal(r, state.ballOn, teams[kicking].kicker);
+  // M3 hook: a kicker contract on a missed check (Second Chance: one fresh ordinary check, same distance and conditions, same play)
+  const t8k = (state.t8 ||= { status: {} }), kickerIn = teams[kicking].kicker;
+  if (!res.good) res = kickHook(t8k, kickerIn, kicking, 'fieldGoalMiss', {}, res, () => ST.attemptFieldGoal(r, state.ballOn, kickerIn)) || res;
   save();
+  if (res.good) kickHook(t8k, kickerIn, kicking, 'fieldGoalMade', { rng: createRng(((Number(state.rngState) >>> 0) ^ 0x2c1b3c6d) >>> 0 || 7) }, res); // M3 hook: made-field-goal contracts, once, on the final result (Frostmark)
   creditFormulaUnits(state, teams, kicking, 'fg'); // B5
   { const bin = res.distance < 30 ? 'fg0' : res.distance < 40 ? 'fg30' : res.distance < 50 ? 'fg40' : 'fg50';
-    kickerStat(state, kicking, 'fga'); kickerStat(state, kicking, bin + 'a'); if (res.good) { kickerStat(state, kicking, 'fgm'); kickerStat(state, kicking, bin + 'm'); const p = state.stats[kicking].players.K; if ((p.fgLong || 0) < res.distance) p.fgLong = res.distance; } }
+    for (let i = 0; i < (res.checks?.length || 1); i++) { // M3 hook: a Second Chance play records both checks as attempts
+      kickerStat(state, kicking, 'fga'); kickerStat(state, kicking, bin + 'a'); } if (res.good) { kickerStat(state, kicking, 'fgm'); kickerStat(state, kicking, bin + 'm'); const p = state.stats[kicking].players.K; if ((p.fgLong || 0) < res.distance) p.fgLong = res.distance; } }
   runClock(state, 5);
   const lines = [res.text];
   let scored = null;

@@ -20,6 +20,14 @@ export const HOOKS = Object.freeze([
   'fumble',           // (ctx, self) -> {prevent}            after a fumble is determined; a Shielded save is applied first (B3)
   'playEnd',          // (ctx, self, result)                 the whistle: charges, clocks, field creation
   'possessionChange', // (ctx, self)
+  // M3 hook: (Earth/Ice batch) generic capability points
+  'pancakeOpportunity', // (ctx, self, defender) -> {guarantee}  an OL's once-per-play pancake opportunity, before its rolls
+  'passRelease',      // (ctx, self, passer, receiver) -> {breakup}  a forward pass leaves the hand (defenders, lineup order; first breakup wins)
+  'activationAttempt', // (ctx, self, attempter) -> {suppress}  an opposing contract asks ctx.canStartSignature (activation-denial auras)
+  // M3 hook: formula kicks (rules.js; the kicker is not an engine actor): ctx = kickCtx below, self = the kicker
+  'fieldGoalMiss',    // (ctx, self, res, retry) -> res'      a field goal check missed; `retry()` makes a fresh ordinary check
+  'fieldGoalMade',    // (ctx, self, res)                     a field goal is finally good (extra points are not field goals)
+  'puntReturn',       // (ctx, self, res) -> res'             a punt is caught in the field of play and returned (not fair catch / touchback / downed / blocked)
 ]);
 
 const MODULES = new Map();
@@ -52,6 +60,19 @@ export function recordExecution(t8, monsterId, family, { passive = false } = {})
   const rec = (log[monsterId] ||= { family, executions: 0, passiveCredited: false });
   if (passive) { if (rec.passiveCredited) return false; rec.passiveCredited = true; rec.executions += 1; return true; }
   rec.executions += 1; return true;
+}
+
+/**
+ * M3 hook: a formula kick's contract call (rules.js punts and field goals). `kicker` is the team's kicker input ({ id, species, form,
+ * mastery, name }); `side` the kicking team. Returns the hook's result, or undefined when the kicker has no contract or no such hook.
+ * The ctx gives game-scope state, mastery executions, field queueing, a log line, and the abilities' own random stream.
+ */
+export function kickHook(t8, kicker, side, name, { log = () => {}, rng = null, extra = {} } = {}, ...args) {
+  const c = kicker?.species ? contractOf(kicker.species) : null; const h = c?.hooks?.[name]; if (!h || !kicker.id) return undefined;
+  const self = { mid: kicker.id, family: kicker.species, form: kicker.form || `${kicker.species}:0`, mastery: kicker.mastery || 0, name: kicker.name || 'K', slot: 'K', team: side, contract: c };
+  const ctx = { state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8, a.mid, a.family, opts),
+    queueField: (spec) => { (t8.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, pendingFields: () => t8.fields?.pending || [], log, rng, teamSide: side, ...extra };
+  return h(ctx, self, ...args);
 }
 
 /** Light field (spec §11): one extra cooldown unit, after the ordinary decrement, on the monster's repeatable-signature cooldown if it is
