@@ -15,6 +15,7 @@ import { noteTraded, returnLock } from './fa-state.js';
 import { legendSide, legendCheck } from './fa-legendary.js';
 import { horizonOf, PLAN } from './roster-plan.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
+import { clubIdentity, identityTilt, IDENTITY_TILT } from '../data/identities.js';
 /**
  * Owner ruling N8a (2026-11-08, D9): a gym prefers monsters of its element among similarly useful candidates. Legendary rules and legal
  * rosters come first (judge() decides those unchanged); this is a tie-break, never a quota. In trades: an element match adds
@@ -27,6 +28,13 @@ const gymElement = (club) => GYM_BY_CLUB[club]?.element || null;
 const matches = (m, el) => !!el && (m.type === el);
 /** A trade target's ranking for club `club` (gain in net roster units plus the gym element tie-break). */
 export function gymTradeRank(club, m, gain) { return gain + (matches(m, gymElement(club)) ? GYM_ELEMENT_TRADE_TIE : 0); }
+/**
+ * Task 8 D7 (owner N8b): an AI club's identity tilts its trade-target ranking toward identity positions and scheme fits on the same
+ * "similarly useful" scale as the element tie-break: the full identity tilt (IDENTITY_TILT, 1.5 OVR-equivalent) is worth
+ * IDENTITY_TRADE_TIE net units (PROVISIONAL, equal to GYM_ELEMENT_TRADE_TIE). Ranking only: judge() and the deal rules are unchanged.
+ */
+export const IDENTITY_TRADE_TIE = GYM_ELEMENT_TRADE_TIE;
+export function identityTradeTie(f, club, m) { const id = clubIdentity(f, club); return id ? identityTilt(id, m) / (IDENTITY_TILT.position + IDENTITY_TILT.fit) * IDENTITY_TRADE_TIE : 0; }
 
 export const AI_TRADE_RULES = Object.freeze({
   upgrade: 2,          // the incoming monster must beat the club's weakest available starter at the position by this much
@@ -92,8 +100,8 @@ function attempt(f, r, A, { year, cap, done, window }) {
     if (!tradable(f, m) || isProtected(m) || isUnavailable(m) || ovr(m) < floorAt(rosterA, m.position) + bar.upgrade) continue;
     targets.push({ B, m, rosterB, gain: rosterNet(rosterA, { get: [m] }, year) });
   } }
-  const elA = gymElement(A); const rank = (t) => gymTradeRank(A, t.m, t.gain); // N8a: a gym's element tie-break
-  targets.sort((a, b) => rank(b) - rank(a) || (a.m.id < b.m.id ? -1 : 1));
+  const elA = gymElement(A); for (const t of targets) t.rank = gymTradeRank(A, t.m, t.gain) + identityTradeTie(f, A, t.m); // N8a: a gym's element tie-break; D7: the identity's
+  targets.sort((a, b) => b.rank - a.rank || (a.m.id < b.m.id ? -1 : 1));
   const mySpares = sparesOf(rosterA).filter((x) => tradable(f, x) && !isProtected(x) && !isUnavailable(x));
   const myPicks = ownedPicks(f, A, y0);
   for (const { B, m, rosterB } of targets.slice(0, AI_TRADE_RULES.targets)) {

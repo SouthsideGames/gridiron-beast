@@ -271,7 +271,8 @@ export function spendPoint(m, attr, { points = null } = {}) {
   return { ok: true, value: d.current[attr], increases: r.increases, refunded: r.refunded, left: d.bank };
 }
 /** AI clubs (and the staff, if asked) spend banked points with the approved allocation (career.js). */
-export function autoSpendPoints(m, rng) { const d = devOf(m); allocateTraining(d, m); syncFromDev(m); }
+/** `first`: Task 8 D7, an AI identity's attributes for his position, ranked first among his OVR attributes (career.js allocateTraining). */
+export function autoSpendPoints(m, rng, { first = null } = {}) { const d = devOf(m); allocateTraining(d, m, { first }); syncFromDev(m); }
 
 /** N7c B15: the fixed legacy cornerstone list is retired. A cornerstone is any eligible Dex family (never a kicker). */
 const OFFENSE_POS = new Set(['QB', 'RB', 'WR', 'TE', 'OL']), DEFENSE_POS = new Set(['DL', 'LB', 'CB', 'S']);
@@ -438,6 +439,22 @@ function fitThresholds() {
     vals.sort((a, b) => a - b); t[`${scheme}:${pos}`] = vals[Math.floor(vals.length * 0.6)];
   }
   FIT_THRESHOLDS = t; return t;
+}
+/**
+ * The engine attributes behind a scheme's headline keys at a position (the same composition as headlineAttributes), limited to the
+ * position's OVR attributes (POSITION_WEIGHTS). Task 8 D7: an AI identity ranks these first in training. [] for a kicker or an unknown
+ * scheme. Pure; reads no monster.
+ */
+export function schemeAttributes(scheme, position) {
+  const side = ['QB', 'RB', 'WR', 'TE', 'OL'].includes(position) ? 'offense' : ['DL', 'LB', 'CB', 'S'].includes(position) ? 'defense' : null;
+  const keys = side ? FIT_KEYS[side][scheme]?.[position] : null; if (!keys) return [];
+  const offense = side === 'offense';
+  const raw = { speed: ['speed', 'agility'],
+    power: position === 'QB' ? ['strength'] : position === 'OL' ? ['blocking', 'strength'] : offense ? ['strength', 'blocking'] : ['strength', 'tackling'],
+    hands: position === 'QB' ? ['accuracy', 'arm'] : position === 'OL' ? ['blocking'] : offense ? ['catching'] : ['coverage', 'catching'],
+    smarts: offense ? ['awareness'] : ['awareness', 'coverage'] };
+  const w = POSITION_WEIGHTS[position] || {};
+  return [...new Set(keys.flatMap((k) => raw[k] || []))].filter((a) => w[a] > 0);
 }
 export const SCHEME_LABEL = Object.freeze({ pass: 'Air Raid', run: 'Ground Attack', balanced: 'Balanced', pressure: 'Blitz Heavy', coverage: 'Zone Control', man: 'Man Coverage' });
 /** Every scheme on the monster's side, with whether it fits and how far above/below the bar it sits, so the card can say what it *prefers*. */

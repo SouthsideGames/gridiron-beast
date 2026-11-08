@@ -20,7 +20,7 @@ export const XP_MULTIPLIER = 1;
  * progress (one banked point per full bar, excess carried; continues at level 50). Returns { xp, training, events }.
  * Mastery is separate (M5) and never earned here.
  */
-export function applyAward(m, { xp, training }, rng, { autoSpend = false, autoEvolve = false } = {}) {
+export function applyAward(m, { xp, training }, rng, { autoSpend = false, autoEvolve = false, train = null } = {}) { // train: Task 8 D7, an AI identity's training priority { position: [attributes] }
   const events = []; const d = m.dev; const startLevel = m.level;
   const xpGain = d.level >= MAX_LEVEL ? 0 : FR.toNumber(FR.mul(xp, XP_MULTIPLIER));
   if (xpGain > 0) {
@@ -34,7 +34,7 @@ export function applyAward(m, { xp, training }, rng, { autoSpend = false, autoEv
     if (m.level >= MAX_LEVEL) m.xp = 0;
   }
   const points = addTrainingProgress(d, training); syncFromDev(m);
-  if (autoSpend && FR.floor(d.bank) > 0) autoSpendPoints(m, rng);
+  if (autoSpend && FR.floor(d.bank) > 0) autoSpendPoints(m, rng, { first: train?.[m.position] || null });
   return { xp: xpGain, training, points, levelsGained: m.level - startLevel, events };
 }
 /** The kicks a K made in a game (field goals, extra points, kickoffs, punts) from the slot's stats: one qualifies him (spec §6). */
@@ -46,7 +46,7 @@ const kicksOf = (st) => (st?.fga || 0) + (st?.xpa || 0) + (st?.kickoffs || 0) + 
  * once per activity through the reward ledger when one is given. The positional grade adjustment and performance bonus arrive with
  * grading (M5); until then gradeAdj is 0 (TRANSITIONAL). Participation: min(1, live snaps / 10); a kicker qualifies with one kick.
  */
-export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1, ledger = null, activityId = null } = {}) {
+export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1, ledger = null, activityId = null, train = null } = {}) {
   const events = [];
   const byId = Object.fromEntries(roster.map((m) => [m.id, m]));
   const slots = [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'];
@@ -61,7 +61,7 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
   }
   const award = (p) => {
     const a = footballAward({ position: p.m.position, liveSnaps: p.liveSnaps, kicks: p.kicks, gradeAdj: 0 });
-    const r = applyAward(p.m, { xp: xpScale === 1 ? a.xp : FR.mul(a.xp, FR.frac(Math.round(xpScale * 100), 100)), training: a.training }, rng, { autoSpend, autoEvolve });
+    const r = applyAward(p.m, { xp: xpScale === 1 ? a.xp : FR.mul(a.xp, FR.frac(Math.round(xpScale * 100), 100)), training: a.training }, rng, { autoSpend, autoEvolve, train });
     events.push(...r.events);
     events.push({ kind: 'xp', id: p.m.id, name: p.m.name, position: p.m.position, amount: r.xp, training: FR.toNumber(r.training), points: r.points, level: p.m.level, levelsGained: r.levelsGained, xp: p.m.xp, next: xpForLevel(p.m.level), max: p.m.level >= MAX_LEVEL });
   };
@@ -115,7 +115,7 @@ export const marketPriced = (m) => !m.contract || !!m.contract.permanent;
  * `ctx`: `s` = offseasons under these rules for a save made before them (the transition's decline cap; null = none);
  * `severeOf(m)` = did he suffer a severe injury last season. Draws come from `rng` in roster order, attribute by attribute.
  */
-export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate = true } = {}) {
+export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate = true, train = null } = {}) { // train: Task 8 D7 (applyAward)
   const events = [];
   for (const m of roster) {
     const ageless = isAgeless(m) || !!m.dev?.apex; // Apex is ageless (spec §5)
@@ -124,7 +124,7 @@ export function offseason(roster, rng, { s = null, severeOf = null, autoAllocate
     m.yearsPro = (m.yearsPro ?? Math.max(0, m.age - 23)) + 1; m.fatigue = 0; m.injury = null;
     // Task 8: the eligible offseason award, 2 banked training points (replaces the old direct maturation increases, spec §6).
     // AI and pool monsters allocate it with the approved policy; the owner's club passes autoAllocate: false and decides.
-    if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng); }
+    if (m.dev) { addBankedPoints(m.dev, OFFSEASON_POINTS); if (autoAllocate) autoSpendPoints(m, rng, { first: train?.[m.position] || null }); }
     if (ageless) { if (m.dev) syncFromDev(m); if (marketPriced(m)) m.salary = salaryFor(m); continue; } // ageless: banked points still mirror to m.points
     const cur = m.dev ? m.dev.current : m.attributes;
     if (m.durPeak == null && m.age >= peakWindowAge(m.position)) m.durPeak = cur.durability;

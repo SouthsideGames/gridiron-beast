@@ -35,6 +35,7 @@ import { ELEMENT_REGIONS } from '../data/species.js';
 export { ROSTER_MAX, ROSTER_MIN } from '../data/monsters.js';
 import { SPECIES_DEX, LEGEND_RULES } from '../data/species.js';
 import { dexRecordGlobal, dexStatusGlobal, dexFormGlobal, dexFormsGlobal, noteNewFranchise } from './dex-store.js';
+import { clubIdentity, identityCoach, lineupPreference, trainingPriority } from '../data/identities.js';
 import { GYMS, GYM_BY_CLUB, GYM_TIER, GYM_STUDIED_TAPE, ORDINARY_GROWTH_PER_SEASON, FREE_LEGENDARIES, gymGrowth } from '../data/gyms.js';
 import { PLAYS } from '../data/playbook.js';
 import { yearOf } from '../data/calendar.js';
@@ -735,14 +736,21 @@ export function clubQuality(f, name, year = f.season?.year || 1) {
   // Task 8 (N7f): initial strength only. No seasonal growth, title floor or 'studied tape' boost: a club changes through its own
   // roster (development, ageing, drafting, trades, free agency). `seasons` is kept for the signature, unused.
   void seasons; const growth = gym ? GYM_TIER[gym.tier] : 0; const floor = 0;
-  return Math.round(base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + D.quality + growth + floor);
+  return Math.round(base + (h % 9) - 4 + (f.rivals[f.tier]?.team === name ? 2 : 0) + difficultyQuality(D, !!gym) + growth + floor);
 }
+/** Task 8 D7 (owner N8b, AI_IDENTITIES.md §5 q4): Rookie's −4 lowers ordinary clubs only; a gym keeps the standard (Pro) level on
+ *  Rookie, so it stays the stronger strategic test. Pro and All-Star apply to every club as before. */
+export function difficultyQuality(D, gym) { return gym && D === DIFFICULTY.rookie ? DIFFICULTY.pro.quality : D.quality; }
 /** An AI club's coach: the gym's named coach, or one shaped by the club's hash; difficulty sets the IQ (GDD §15.2). */
-function aiCoach(f, name, year) {
-  const h = hashString(`${name}|${year}|${f.seed}`); const D = difficultyOf(f); const gym = GYM_BY_CLUB[name];
-  return gym
-    ? { aggression: gym.coach.aggression, passBias: gym.coach.passBias, iq: D.iq + 0.2, identity: { offense: gym.coach.offense, defense: gym.coach.defense } }
-    : { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
+/** Task 8 D7: a club's fixed identity (identities.js) travels with its coach as `identity` { offense, defense, passStyle, runStyle,
+ *  runFront }; the playbook reads it. A gym's named coach is fixed; an ordinary club's coach is still drawn from the season's hash (coaches
+ *  may change, N8b) but his tendencies are centred on the identity. The owner's club has no identity (the hash-shaped coach as before). */
+export function aiCoach(f, name, year) {
+  const h = hashString(`${name}|${year}|${f.seed}`); const D = difficultyOf(f); const gym = GYM_BY_CLUB[name]; const id = clubIdentity(f, name);
+  const identity = id ? { offense: id.offense, defense: id.defense, passStyle: id.passStyle || null, runStyle: id.runStyle || null, runFront: !!id.runFront } : null;
+  if (gym) return { aggression: gym.coach.aggression, passBias: gym.coach.passBias, iq: D.iq + 0.2, identity: identity || { offense: gym.coach.offense, defense: gym.coach.defense } };
+  if (id) return { ...identityCoach(id, h), iq: D.iq, identity };
+  return { aggression: 0.35 + ((h >>> 8) % 40) / 100, passBias: 0.45 + ((h >>> 16) % 25) / 100, iq: D.iq };
 }
 /**
  * An AI club's team for a week. With the league registry (GDD §42.6, Phase 3) it is built from the club's persistent roster;
@@ -760,7 +768,7 @@ export function legacyAiTeam(f, name, year = f.season?.year || 1, { scouting = n
   const coach = aiCoach(f, name, year);
   const rival = f.rivals[f.tier]?.team === name ? rivalSignature(f) : null;
   const evolveStage = gym ? (year >= 4 ? 2 : year >= 2 ? 1 : 0) : (year >= 5 ? 2 : year >= 3 ? 1 : 0);
-  const team = generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival, evolveStage, composition: FULL_ROSTER, afterRoster: (roster) => { const gone = new Set(f.aiTransfers?.[year]?.[name] || []); return injectDraftees(f, name, roster, year).filter((m) => !gone.has(m.id)); } });
+  const team = generatedTeam(h, { id: name, name, abbr: meta.abbr, color: meta.color, quality, coach, scouting, element: gym?.element || null, legendary: gym?.legendary || null, signature: rival, evolveStage, composition: FULL_ROSTER, prefer: lineupPreference(clubIdentity(f, name)), afterRoster: (roster) => { const gone = new Set(f.aiTransfers?.[year]?.[name] || []); return injectDraftees(f, name, roster, year).filter((m) => !gone.has(m.id)); } });
   return equipLegendaryForAI(team); // AI clubs holding a Legendary call its play too (GDD §36.6)
 }
 /** The persistent club: the registry roster (injuries and fatigue included), the same coach, playbook and scouting rules as before. */
@@ -769,7 +777,7 @@ function leagueTeam(f, name, year, { scouting = null } = {}) {
   const coach = aiCoach(f, name, year);
   let pb = playbookFor(h ^ 0x9e37, coach); let notes = [];
   if (scouting) { const a = adaptPlaybook(h, pb, scouting, { swaps: scouting.swaps ?? 2 }); pb = a; notes = a.notes; }
-  const team = buildTeam({ id: name, name, abbr: meta.abbr, color: meta.color, roster: clubRoster(f, name), coach, offensePlays: pb.offense, defensePlays: pb.defense });
+  const team = buildTeam({ id: name, name, abbr: meta.abbr, color: meta.color, roster: clubRoster(f, name), coach, offensePlays: pb.offense, defensePlays: pb.defense, prefer: lineupPreference(clubIdentity(f, name)) });
   team.scoutingNotes = notes;
   return equipLegendaryForAI(team);
 }
@@ -828,8 +836,9 @@ function aiAfterGame(f, team, game, side, r) {
   const won = game.winner === side;
   const xpScale = 1; // N7f: no rubber-banding; the decision-C development slowdown for a club above its target is retired
   const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, team.name);
-  const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale, ledger, activityId: act });
-  { const played = playedIds(team.chart); const slots = selectDevSlots(team.roster, played); events.push(...practiceAfterGame(team.roster, slots.ids, played, r, { xpScale, autoSpend: true, autoEvolve: true, ledger, activityId: `${act}:reserve` })); } // C1 development slots (Task 6 Phase C)
+  const train = trainingPriority(clubIdentity(f, team.name)); // Task 8 D7: the identity's attributes first in the AI allocation (null for none)
+  const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale, ledger, activityId: act, train });
+  { const played = playedIds(team.chart); const slots = selectDevSlots(team.roster, played); events.push(...practiceAfterGame(team.roster, slots.ids, played, r, { xpScale, autoSpend: true, autoEvolve: true, ledger, activityId: `${act}:reserve`, train })); } // C1 development slots (Task 6 Phase C)
   for (const e of events) if (e.kind === 'evolve') { const x = team.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: team.name, from: e.from, to: e.to }); } // Career Timeline (GDD §46)
   return events;
 }

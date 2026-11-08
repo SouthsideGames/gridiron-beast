@@ -10,6 +10,7 @@ import { REGIONS } from '../data/staff.js';
 import { newContract } from './contracts.js';
 import { draftNeedBonus } from './roster-plan.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
+import { clubIdentity, identityTilt } from '../data/identities.js';
 /** R7 (owner 2026-11-05): a prospect's first-season charge on his rookie deal (70% of market, as the owner's and the AI's picks are paid). */
 export const rookieCharge = (m) => Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100;
 /** R4 (owner 2026-11-05): a gym's tie-break for prospects of its element (Task 7 franchises only); as small as the market's. */
@@ -100,7 +101,8 @@ export function aiDraftPick(f, team, rng, { plan = null, afford = null } = {}) {
   const mode = plan?.mode || 'compete'; const pw = POTENTIAL_WEIGHT[mode] ?? 0.2;
   const ready = {}; if (mode === 'contend' && plan?.groups) for (const m of avail) { const rows = plan.groups[m.position]?.rows || []; const weakest = rows.length ? Math.min(...rows.map((r) => monsterOverall(r.starter))) : 0; if (monsterOverall(m) >= weakest) ready[m.id] = READY_BONUS; }
   const element = f.freeAgency?.v ? GYM_BY_CLUB[team]?.element : null;
-  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0) + (element && m.type === element ? GYM_ELEMENT_BONUS : 0);
+  const id = clubIdentity(f, team); const tilt = {}; if (id) for (const m of avail) tilt[m.id] = identityTilt(id, m); // Task 8 D7: identity positions and scheme fits, a tie-break (identities.js IDENTITY_TILT)
+  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0) + (element && m.type === element ? GYM_ELEMENT_BONUS : 0) + (tilt[m.id] || 0);
   return avail.sort((a, b) => score(b) - score(a))[0] || null;
 }
 
