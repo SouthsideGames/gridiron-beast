@@ -74,6 +74,15 @@ Status at 466ee7e (2026-11-07, 23:59). Branch `task8-implementation`; nothing me
     code, as done for R4, instead of searching seeds. Separate finding for D1/economy: rookie franchises win about 1 title in 24
     seasons on both builds.
 
+- **Drift run at 4383965** (the D1 merge, before the later fixes; frozen copy, 110 minutes): 1,146 tests, 1,142 pass, 4 fail.
+  All four are test setups that D1's rosters invalidated. None is a gameplay defect, and each was fixed and verified on later
+  commits:
+  - Tuesday encounter preview (fixed in 0d60997, owner-approved assertion);
+  - ageing veteran (e9f5116);
+  - lineup-gate forfeit (05fcb52: the staff's legal Tuesday signing closed the hole);
+  - R1 c intervening signing (5aa6cb2, the constructed scenario).
+  Verified afterwards: the career fixture (d1b9867) and test 28 (1fbde94), each with targeted runs.
+
 ## The simulated owner and what the title survey can and cannot show (owner N8c)
 
 **History-test correctness and difficulty calibration are separate questions.**
