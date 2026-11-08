@@ -13,6 +13,7 @@ import * as T8K from './t8/stamina-runtime.js';
 import * as T8F from './t8/field-runtime.js';
 import { toPlayFrame } from './t8/fields.js';
 import { extraCooldownUnit, contractOf, abilityState, recordExecution, kickHook } from './abilities/registry.js';
+import { runGameHook } from './abilities/game.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
 
@@ -184,7 +185,18 @@ function afterPlayFields(state, t8, slots, sim, offIds) {
     const yard = absYard(state, sim.ballOn + row[1]), lat = absLat(state, (sim.ballLat || 0) + row[2]);
     const lights = T8F.fieldsAt(t8, yard, lat).filter((f) => f.type === 'Light' && f.owner !== x.id); if (lights.length) extraCooldownUnit(t8, x.id);
   }
-  T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : f.clock === 'teamOffense' ? f.ownerTeam === state.possession : (f.clock === 'teamDefense' || f.clock === 'ownerDefense') ? f.ownerTeam != null && f.ownerTeam !== state.possession : f.clock === 'scrimmageAny')); // M3 hook: team clocks (the owner team's offensive / defensive scrimmage plays; 'ownerDefense' is the Earth/Ice batch's name for 'teamDefense')
+  // M3 hook: field clocks. creatorOffense: the creator's own offensive plays (G2); team/owner Offense and Defense: the creator's club's
+  // offensive / defensive scrimmage plays, creator on the field or not (the batches named them teamX and ownerX; both are accepted)
+  T8F.afterPlay(t8, (f) => (f.clock === 'creatorOffense' ? offIds.has(f.owner) : (f.clock === 'teamOffense' || f.clock === 'ownerOffense') ? state.possession === f.ownerTeam : (f.clock === 'teamDefense' || f.clock === 'ownerDefense') ? f.ownerTeam != null && state.possession !== f.ownerTeam : f.clock === 'scrimmageAny'));
+}
+/** M3 hook: may a pending field be created at this snap? Defensive specs (side 'def', or createOn 'ownerDefense') are created at the
+ *  opposing offense's snap, offensive ones at the creator's club's offensive snap; the creator must be on the field on that side unless
+ *  the contract allows off-field creation (benchOk / offField, N7d G3); maxOwn: one own active field of that ability at a time. */
+function pendingEligible(state, t8, p, offIds, defIds) {
+  const def = p.side === 'def' || p.createOn === 'ownerDefense';
+  if (p.ownerTeam && (def ? state.possession === p.ownerTeam : state.possession !== p.ownerTeam)) return false;
+  if (!p.offField && !p.benchOk && !(def ? defIds : offIds).has(p.owner)) return false;
+  return !(p.maxOwn && T8F.activeFields(t8).some((f) => f.owner === p.owner && f.ability === p.ability));
 }
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);
@@ -198,11 +210,15 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
   const P = state.partners; const pre = P ? { down: state.down, toGo: state.toGo, quarter: state.quarter, score: { ...state.score } } : null;
   const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
-  // M3 hook: defensive fields (spec side 'def') are created at the opposing offense's snap, with their creator on the field on defense
-  // unless the contract allows bench creation (benchOk); offensive fields as before (G3: the creator's next eligible offensive snap)
   const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
-  preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers
-  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => (p.side === 'def' ? (p.ownerTeam == null || p.ownerTeam !== state.possession) && (p.benchOk || defIds.has(p.owner)) : offIds.has(p.owner)), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay) }) : [];
+  preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers that queue fields for this snap
+  const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay) }) : []; // G3
+  // M3 hook: the snap's pre-choice point for every on-field contract (e.g. Prism Break), after this snap's fields exist
+  for (const [team, play, map] of [['off', offensePlay, slots.offense], ['def', defensePlay, slots.defense]]) for (const [slot, m] of Object.entries(map)) {
+    if (!m?.species) continue;
+    runGameHook(state, 'preSnap', [m], { team, slot, side: team === 'off' ? state.possession : opponent(state.possession), align: play.align?.[slot] || null, teams, sitsOut: !!m.id && T8S.sitsOutPlay(state, m.id),
+      toAbs: ([x, y]) => ({ yard: absYard(state, state.ballOn + x), lat: absLat(state, (state.ballLat || 0) + y) }) }, { log: (text, extra) => log(state, text, 'ability', extra) });
+  }
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
@@ -440,6 +456,7 @@ function changePossession(state, newBallOn, lines, note = null) {
 }
 function touchdown(state, side, lines) {
   state.score[side] += 6; state.stats[side].td += 1;
+  { const L = ((state.t8 ||= { status: {} }).touchdowns ||= { home: 0, away: 0 }); L[side] += 1; } // M3 hook: the touchdown ledger by scoring club (offense, defense, returns)
   state.phase = 'try'; state.tryTeam = side; state.ballOn = 100 - FIELD.twoPointSpot; state.down = 1; state.toGo = FIELD.twoPointSpot;
   state.possession = side;
   lines.push(`${state[side].name} ${state.score.home}-${state.score.away}.`);
@@ -463,6 +480,7 @@ export function attemptTryKick(state, teams) {
   if (res.good) state.score[state.tryTeam] += 1;
   kickerStat(state, state.tryTeam, 'xpa'); if (res.good) kickerStat(state, state.tryTeam, 'xpm');
   creditFormulaUnits(state, teams, state.tryTeam, 'xp'); // B5
+  runGameHook(state, 'extraPoint', [teams[state.tryTeam].kicker], { good: !!res.good, side: state.tryTeam }, { log: (text, extra) => log(state, text, 'ability', extra) }); // M3 hook
   finishTry(state, res.text);
   return res;
 }
@@ -655,6 +673,8 @@ export function doPunt(state, teams) {
   save();
   if (res.catchAt != null) res = kickHook((state.t8 ||= { status: {} }), teams[kicking].kicker, kicking, 'puntReturn', {}, res) || res; // M3 hook: a kicker contract on a caught, returned punt (Stone Cradle)
   state.stats[kicking].punts += 1; kickerStat(state, kicking, 'punts'); creditFormulaUnits(state, teams, kicking, 'punt'); // B5: the K's punt and the units' participation
+  { const net = res.blocked || res.touchback || res.touchdown ? null : (100 - res.ballOn) - state.ballOn; // net yards at the final opponent spot, in the kicking club's yards
+    runGameHook(state, 'punt', [teams[kicking].kicker], { res, netYards: net, side: kicking }, { log: (text, extra) => log(state, text, 'ability', extra) }); } // M3 hook
   const lines = [res.text];
   runClock(state, 6);
   if (res.blocked) { changePossession(state, res.ballOn, lines); }

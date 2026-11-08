@@ -34,6 +34,19 @@ export const HOOKS = Object.freeze([
   'fieldGoalMiss',    // (ctx, self, res, retry) -> res'      a field goal check missed; `retry()` makes a fresh ordinary check
   'fieldGoalMade',    // (ctx, self, res)                     a field goal is finally good (extra points are not field goals)
   'puntReturn',       // (ctx, self, res) -> res'             a punt is caught in the field of play and returned (not fair catch / touchback / downed / blocked)
+  // M3 hook (Light/Metal batch): generic capabilities several contracts need
+  'reception',        // (ctx, self, receiver)               every contract on the field, right after a successful catch resolves
+  'tackling',         // (ctx, self, carrier)                the tackler's own contract, when he begins a tackle attempt
+  'blockPush',        // (ctx, self, other, push) -> number  the blocker's contract: filter this tick's push (yd/s) on the pair
+  'tackleMade',       // (ctx, self, carrier, {fumbleP, sack}) -> {fumble}  the tackler's contract after a successful tackle whose
+                      //                                     first fumble check did not fumble (draws only from ctx.rng)
+]);
+// M3 hook (Light/Metal batch): game-level hook points (rules.js), for contracts whose triggers are game events, not plays.
+// A game hook gets (gctx, self, data); self = { mid, family, form, mastery, input } for a monster on either club, on the field or not.
+export const GAME_HOOKS = Object.freeze([
+  'extraPoint',       // (gctx, self, {good})                 after the kicking club's extra-point kick (self: its kicker)
+  'punt',             // (gctx, self, {res, netYards})        after the kicking club's punt (self: its kicker)
+  'preSnap',          // (gctx, self, {side, slot})           a scrimmage snap's pre-choice point, for each on-field monster
 ]);
 
 const MODULES = new Map();
@@ -42,6 +55,7 @@ export function registerAbility(mod) {
   if (!mod?.family || !mod.abilityId) throw new Error('ability module needs family and abilityId');
   if (MODULES.has(mod.family)) throw new Error(`${mod.family} already registered`);
   for (const h of Object.keys(mod.hooks || {})) if (!HOOKS.includes(h)) throw new Error(`${mod.family}: unknown hook ${h}`);
+  for (const h of Object.keys(mod.game || {})) if (!GAME_HOOKS.includes(h)) throw new Error(`${mod.family}: unknown game hook ${h}`);
   MODULES.set(mod.family, Object.freeze({ ...mod }));
   return mod;
 }
