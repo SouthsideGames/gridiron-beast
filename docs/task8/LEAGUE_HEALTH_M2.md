@@ -61,3 +61,48 @@ any boost, gyms' strength advantage over ordinary clubs shrinks from about 5 poi
 7. **The hands-off owner lags.** At 52–57, the owner's club trails the AI because the study owner never spends training points. This is a study artefact, not a game rule.
 8. **Pacing.** Mean level rises about 0.6 levels per season after season 2 across the whole league, which includes generated veterans and rookies.
    - The B6 benchmark (median level 50 in 5–8 seasons for played monsters) needs the dedicated M6 pacing run.
+
+## D11 sale-rate benchmark (R4 starter sales, owner ruling N8b, 2026-11-08)
+
+The ruling keeps the sale rules (recalibrated with D3 at M6) and moves "sales happen" out of the pass/fail suite. The rules are
+tested by a constructed scenario in `tests/task6-phase-d.test.js`. How often sales happen in played leagues is measured here, with
+**no pass/fail threshold**.
+
+- **Tool:** `tools/t8-league-health.mjs` now reports the R4 funnel: per season (`series[].r4`) and per run (`runs[].r4`). The counts
+  come from an opt-in tally in `src/franchise/league-trades.js` (`measureSales`). It is off by default, and it changes no decision,
+  draws nothing and writes nothing to the save.
+- **Funnel fields:** each is summed over the sale searches. A search is a trade window in which no sale has happened yet; in season,
+  only the weeks whose trade-attempt draw succeeds count.
+  - `rebuildClubs`: rebuilding clubs searched.
+  - `sellable`: sellable starters seen. These are tradable, not protected, older than 26 and within 2 seasons of onset. A starter
+    who stays sellable is counted again in each search.
+  - `withReplacement`: of those, the starters with a replacement within 4 (F4).
+  - `buyers`: buyers with a legitimate need.
+  - `offers`: fair-price payments in young players or picks.
+  - `passed`: offers that `judge()` accepts.
+  - `deals`: sales made.
+- **A season's row** covers that season's in-season windows and the offseason window that follows it.
+- **Build:** e6dbd7b plus this change (branch `task8-d11-sale-test`). Hands-off franchises, Pro difficulty. 0 game-invariant problems
+  in every run.
+
+| Run | Searches | Rebuild clubs | Sellable starters | With replacement | Buyers with need | Fair offers | Passed judge | Sales |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Seed 11, 4 seasons (the old test's league) | 13 | 28 | 218 | 13 | 53 | 139 | 0 | **0** |
+| Leagues 51–55, 3 seasons each | 42 | 59 | 529 | 35 | 94 | 113 | 0 | **0** |
+| — season 1 (5 leagues) | 14 | 5 | 46 | 5 | 15 | 9 | 0 | 0 |
+| — season 2 | 14 | 19 | 174 | 16 | 63 | 79 | 0 | 0 |
+| — season 3 | 14 | 35 | 309 | 14 | 16 | 25 | 0 | 0 |
+
+Seed 11 by season: sellable 14 / 40 / 51 / 113, with replacement 1 / 2 / 3 / 7, offers 31 / 46 / 44 / 18, sales 0 in every season.
+
+Commands: `node tools/t8-league-health.mjs 4 11` and `node tools/t8-league-health.mjs 3 51,52,53,54,55`.
+
+**Reading.**
+- The funnel narrows in two places:
+  - Few sellable starters have a replacement within 4 (35 of 529 starter-searches).
+  - No fair offer passes the existing deal rules, the buyer's minimum gain and the seller floor. The tally does not record which
+    rule each failed offer missed.
+- This agrees with the D11 diagnosis in `OPEN_DECISIONS.md`. The constructed scenario shows that the rules do produce a sale when
+  their prerequisites hold. One example: a near-equal veteran replacement, a buyer with a weak starter, and payment with a deep young
+  spare who would count for more at the seller.
+- The numbers go to the M6 recalibration with D3. Watch them in the season 5, 10, 15 and 20 franchise-health reports.

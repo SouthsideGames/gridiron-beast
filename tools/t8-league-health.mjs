@@ -9,6 +9,7 @@ import { monsterOverall, resolveSpecies } from '../src/data/monsters.js';
 import { buildDepthChart } from '../src/franchise/roster.js';
 import { GYM_BY_CLUB } from '../src/data/gyms.js';
 import * as FR from '../src/core/fraction.js';
+import { measureSales } from '../src/franchise/league-trades.js';
 
 const seasons = Number(process.argv[2] || 10); const seeds = (process.argv[3] || '1,2,3').split(',').map(Number); const out = process.argv[4] || null;
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -35,13 +36,19 @@ function snapshot(f, s) {
     modes: rows.reduce((m, r) => { m[r.mode] = (m[r.mode] || 0) + 1; return m; }, {}), nudge: lo.nudge ? { boosted: lo.nudge.boosted?.length ?? lo.nudge.boosted, slowed: lo.nudge.slowed?.length ?? lo.nudge.slowed } : null,
     trades: lo.trades ?? null, upgrades: lo.upgrades ?? null };
 }
+// D11 sale-rate benchmark (owner ruling N8b, 2026-11-08): the R4 starter-sale funnel per season, measured, with no pass/fail threshold.
+// It replaces the pass/fail expectation "seed 11 makes a sale within 4 seasons" (tests/task6-phase-d.test.js keeps the constructed
+// rule scenario). Each season's row covers that season's in-season windows and the offseason window that follows it.
+const FUNNEL = ['searches', 'rebuildClubs', 'sellable', 'withReplacement', 'buyers', 'offers', 'passed', 'deals'];
 const all = [];
 for (const seed of seeds) {
-  const t0 = Date.now(); const series = [];
+  const t0 = Date.now(); const series = []; const sales = measureSales({}); let seen = {};
   // the study owner is never dismissed (board misses reset before each game): the run measures the league over all the seasons
   const keep = (f) => { const b = f.board; if (b) { b.misses = 0; b.confidence = Math.max(b.confidence || 0, 3); } };
-  const { problems } = runFranchise(seed, { seasons, beforeGame: keep, onSeason: (f, s) => { series.push(snapshot(f, s)); process.stderr.write(`seed ${seed} season ${s} ${((Date.now() - t0) / 1000).toFixed(0)}s\n`); } });
-  all.push({ seed, problems: problems.slice(0, 10), problemCount: problems.length, series });
+  const { problems } = runFranchise(seed, { seasons, beforeGame: keep, onSeason: (f, s) => { const row = snapshot(f, s); row.r4 = Object.fromEntries(FUNNEL.map((k) => [k, (sales[k] || 0) - (seen[k] || 0)])); seen = { ...sales }; series.push(row); process.stderr.write(`seed ${seed} season ${s} ${((Date.now() - t0) / 1000).toFixed(0)}s\n`); } });
+  measureSales(null);
+  all.push({ seed, problems: problems.slice(0, 10), problemCount: problems.length, r4: Object.fromEntries(FUNNEL.map((k) => [k, sales[k] || 0])), series });
+  process.stderr.write(`seed ${seed} R4 funnel ${FUNNEL.map((k) => `${k} ${sales[k] || 0}`).join(', ')}\n`);
 }
 const text = JSON.stringify({ seasons, seeds, at: new Date().toISOString(), runs: all }, null, 1);
 if (out) fs.writeFileSync(out, text); else console.log(text);
