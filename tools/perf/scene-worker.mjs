@@ -4,7 +4,10 @@
 // run-scenes.mjs (IPC) or run directly: node tools/perf/scene-worker.mjs --root=DIR --scene=ID [--variant=plain|inert|ability] [--dump]
 //
 // Variants: plain (an ordinary scene), inert (an ability scene with its overlays' types but no species, no primes, no staged fields:
-// an ordinary scene both builds can run), ability (the full ability scene; Task 8 builds only).
+// an ordinary scene both builds can run), ability (the full ability scene; Task 8 builds only), only:KEY (a sub-measurement, Task 8 only:
+// the inert twin plus one overlay's species and primed state, e.g. only:home.offense.WR1, or only:fields for the staged fields alone,
+// or only:none, the control with nothing active;
+// subVariants(scene) lists them).
 // Each run returns { ms (wall), cpu (process CPU time), plays, ticks, fp, inputs, playsHash, abilityEvents, fields }: ms is the timed section only (scene inputs,
 // teams and game states are built before the timer starts; fingerprints are computed after it stops).
 import fs from 'node:fs';
@@ -36,13 +39,19 @@ const playKey = (p) => { const { desc, name, reserve, ...rest } = p; return JSON
 
 /** A roster player as both engines take it (manifest fields only). */
 const player = (p) => ({ id: p.id, name: p.name, position: p.position, type: p.type ?? null, attrs: { ...p.attrs }, permDurability: p.permDurability });
-/** Apply a scene's ability overlays to a team ('home'/'away'). variant inert: the overlay's type only; ability: type + species + form + mastery. */
+/** Is overlay `key` (or 'fields', the staged fields) active in this variant? ability: all; only:KEY: that one; inert/plain: none. */
+const active = (variant, key) => variant === 'ability' || variant === `only:${key}`;
+/** Sub-measurement variants of an ability scene: only:none (the control: nothing active, the same setup path as the others), each
+ *  overlay alone, and the staged fields alone. */
+export const subVariants = (sc) => ['none', ...Object.keys(sc.abilities || {}), ...(sc.fields?.length ? ['fields'] : [])].map((k) => `only:${k}`);
+/** Apply a scene's ability overlays to a team ('home'/'away'). variant inert: the overlay's type only; ability (or only:KEY for that
+ *  overlay): type + species + form + mastery. */
 function overlay(team, side, sc, variant) {
   for (const [key, ov] of Object.entries(sc.abilities || {})) {
     const [club, unit, slot] = key.split('.'); if (club !== side) continue;
     const base = unit === 'kicker' ? team.kicker : team[unit][slot];
     const m = { ...base, type: ov.type ?? base.type };
-    if (variant === 'ability') Object.assign(m, { species: ov.species, form: ov.form || `${ov.species}:0`, mastery: ov.mastery ?? 0 });
+    if (active(variant, key)) Object.assign(m, { species: ov.species, form: ov.form || `${ov.species}:0`, mastery: ov.mastery ?? 0 });
     if (unit === 'kicker') team.kicker = m; else team[unit][slot] = m;
   }
 }
@@ -90,13 +99,13 @@ function rulesGames(sc, variant) {
     const teams = { home: team(sc.home, 'home', sc, variant), away: team(sc.away, 'away', sc, variant) };
     const state = R.newGame({ home: teams.home, away: teams.away, seed: gs, quarterLength: 900, coinWinner: 'home', choice: 'receive', venue: { club: 'perf', name: 'Perf Field', env: 'neutral', type: sc.envType ?? null, indoor: true, weather: null } });
     const primes = [];
-    if (variant === 'ability') {
+    if (variant === 'ability' || variant.startsWith('only:')) {
       state.t8 = { status: {}, ability: {} };
       for (const [key, ov] of Object.entries(sc.abilities || {})) {
-        if (!ov.prime) continue; const [club, unit, slot] = key.split('.'); const m = unit === 'kicker' ? teams[club].kicker : teams[club][unit][slot];
+        if (!ov.prime || !active(variant, key)) continue; const [club, unit, slot] = key.split('.'); const m = unit === 'kicker' ? teams[club].kicker : teams[club][unit][slot];
         state.t8.ability[m.id] = clone(ov.prime); if (ov.everySnap) primes.push([m.id, ov.prime]);
       }
-      for (const f of sc.fields || []) addField(state, f);
+      if (active(variant, 'fields')) for (const f of sc.fields || []) addField(state, f);
     }
     games.push({ gs, teams, state, primes });
   }
@@ -129,7 +138,8 @@ function runRules(sc, variant) {
 const ABILITY_KINDS = new Set(['ability', 'status', 'ability_ready', 'field', 'spawn', 'dragon_swallow']);
 export function runScene(id, variant = 'plain', { dump = false } = {}) {
   const sc = sceneById(id);
-  if (variant === 'ability' && !IS_T8) throw new Error('ability variant needs a Task 8 build');
+  if ((variant === 'ability' || variant.startsWith('only:')) && !IS_T8) throw new Error(`${variant} variant needs a Task 8 build`);
+  if (variant.startsWith('only:') && !subVariants(sc).includes(variant)) throw new Error(`${id}: no sub-measurement ${variant}`);
   if (sc.kind === 'ordinary' && variant !== 'plain') throw new Error(`${id}: an ordinary scene has only the plain variant`);
   if (sc.kind === 'ability' && variant === 'plain') variant = 'inert';
   const r = sc.tier === 'engine' ? runEngine(sc) : runRules(sc, variant);

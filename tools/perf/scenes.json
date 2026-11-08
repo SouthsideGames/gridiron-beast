@@ -1,12 +1,20 @@
 {
  "manifest": "task8-perf-scenes",
- "version": "0.1.0-proposed",
- "status": "PROPOSED: pending owner approval (SPECIFICATION_BASELINE §14 / §16 / §25). Not frozen until approved.",
+ "version": "1.0.0",
+ "status": "APPROVED (owner ruling N8e, SPECIFICATION_BASELINE §26): the 7 ordinary and 5 ability scenes with their abilities-off twins. X1 (marked addition) and the only:KEY sub-measurements are documented additions (PERF_SCENES.md).",
+ "budgets": {
+  "engine": 1.10,
+  "ability": 1.25,
+  "engineNote": "R0 = Task 8 / pre-Task 8 baseline (main extract), per ordinary scene and per abilities-off twin, individually; never averaged",
+  "abilityNote": "R1 = Task 8 abilities on / the same Task 8 scene abilities off; provisional: over budget means investigate and report, not reject"
+ },
  "doc": "docs/task8/PERF_SCENES.md",
  "protocol": {
   "warmup": 3,
   "repeats": 15,
   "order": "interleaved ABBA per scene: base, cand, cand, base, ...",
+  "noise": 0.10,
+  "noiseNote": "a measurement is flagged noisy when its IQR / median or its coefficient of variation exceeds this",
   "statistic": "median of repeats; spread = min, max, IQR"
  },
  "callSets": {
@@ -457,6 +465,45 @@
      "type": "Electric"
     }
    }
+  },
+  {
+   "id": "X1-worst-case",
+   "kind": "ability",
+   "addition": true,
+   "tier": "rules",
+   "home": "T62a",
+   "away": "T62b",
+   "unit": "offense",
+   "calls": "WIDE",
+   "sequences": [1101, 1108],
+   "snaps": 12,
+   "ballOn": 30,
+   "note": "ADDITION to the approved set (N8e: worst-case combinations): A5's every-slot contracts with A2's summons and constructs (Stormguard, Landslide, Grove Guardian, re-primed Snowfall Slam and Aegistron), A4's Night Veil (primed) and A1's three staged overlapping fields, all at once",
+   "abilities": {
+    "home.offense.QB": { "species": "stormcrown", "type": "Electric" },
+    "home.offense.RB": { "species": "emberfox", "type": "Fire" },
+    "home.offense.WR1": { "species": "tidefin", "type": "Water" },
+    "home.offense.WR2": { "species": "thornkit", "type": "Nature" },
+    "home.offense.TE": { "species": "wavehorn", "type": "Water" },
+    "home.offense.LG": { "species": "titanolith", "type": "Earth" },
+    "home.offense.RG": { "species": "rootram", "type": "Nature" },
+    "home.offense.WR3": { "species": "flicker", "type": "Electric" },
+    "home.offense.C": { "species": "glaciron", "type": "Ice" },
+    "away.defense.DL1": { "species": "aegistron", "type": "Metal", "prime": { "count": 3, "armed": true, "usedDrive": null }, "everySnap": true },
+    "away.defense.DL2": { "species": "reefclaw", "type": "Water" },
+    "away.defense.LB1": { "species": "elderoot", "type": "Nature" },
+    "away.defense.LB2": { "species": "frostclaw", "type": "Ice", "prime": { "bar": 3 }, "everySnap": true },
+    "away.defense.CB1": { "species": "nyxshade", "type": "Dark", "prime": { "charges": 2 } },
+    "away.defense.CB2": { "species": "tidepaw", "type": "Water" },
+    "away.defense.FS": { "species": "leafhorn", "type": "Nature" },
+    "away.defense.DL3": { "species": "mossclaw", "type": "Nature" },
+    "away.defense.SS": { "species": "stormlynx", "type": "Electric" }
+   },
+   "fields": [
+    { "type": "Dark", "strength": 25, "centerLat": 0, "width": 53.3, "yardFrom": 0, "yardTo": 100, "ownerTeam": "away", "ability": "perf-dark" },
+    { "type": "Wind", "strength": 20, "centerLat": 0, "width": 12, "yardFrom": 30, "yardTo": 50, "ownerTeam": "away", "ability": "perf-wind" },
+    { "type": "Fire", "strength": 20, "centerLat": 6, "width": 14, "yardFrom": 35, "yardTo": 48, "ownerTeam": "home", "ability": "perf-fire" }
+   ]
   }
  ],
  "rosters": {
