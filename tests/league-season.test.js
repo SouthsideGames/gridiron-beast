@@ -11,6 +11,7 @@ import { offseason } from '../src/franchise/progression.js';
 import { newFranchise, runFranchise } from '../tools/franchise-soak.mjs';
 import { leagueInvariants } from '../tools/league-soak.mjs';
 import { createRng } from '../src/core/rng.js';
+import { trueOnset, ATTRIBUTE_FLOOR } from '../src/data/aging.js';
 import { monsterOverall, generateMonster, ROSTER_MAX, ROSTER_MIN } from '../src/data/monsters.js';
 import { ALL_TEAMS, tierById } from '../src/data/league.js';
 import { teamOverall } from '../src/franchise/roster.js';
@@ -24,7 +25,13 @@ test('ageing: legendaries (the owner\'s too) and the rival\'s signature monster 
   const gymClub = clubsOf(f).find((c) => R.clubRoster(f, c).some((m) => m.legendary)); const leg = R.clubRoster(f, gymClub).find((m) => m.legendary);
   const mine = generateMonster(rng, { species: 'pyroclast', position: 'QB', quality: 64 }); mine.age = 31; f.roster.push(mine); // an owner-held legendary species
   assert.ok(R.isLegendaryMonster(mine) && R.isAgeless(mine) && !R.isProtected(mine), 'ageless, but the owner manages him like any monster');
-  const old = f.roster.find((m) => m !== mine && m.age >= 30) || Object.assign(f.roster.find((m) => m !== mine), { age: 31 });
+  // The ordinary veteran: a natural 30+ monster if the founding roster has one; otherwise one whose true decline onset (position,
+  // durability, hidden longevity; data/aging.js) is before 31, made 31, with speed above the decline floor (a rating already at or
+  // below the floor never declines, R1 item 34). Constructed, not seed-dependent (2026-11-08): after D1's founding rosters the old
+  // fallback, any monster made 31, was a QB with speed 14, under the floor, so his decline went to strength and durability only.
+  const veteran = (m) => m !== mine && !R.isAgeless(m) && m.attributes.speed > ATTRIBUTE_FLOOR;
+  const old = f.roster.find((m) => veteran(m) && m.age >= 30 && trueOnset(m) < m.age) || Object.assign(f.roster.find((m) => veteran(m) && trueOnset(m) < 31), { age: 31 });
+  assert.ok(old && trueOnset(old) < old.age && old.attributes.speed > ATTRIBUTE_FLOOR, 'an ordinary veteran past his decline onset, his speed above the floor');
   const before = { sig: snap(sig), leg: snap(leg), mine: snap(mine), oldSpeed: old.attributes.speed, sigYears: sig.yearsPro, sigAge: sig.age };
   sig.age = 34; leg.age = 35; // age itself is irrelevant to them
   offseason([sig, leg, mine, old], rng);

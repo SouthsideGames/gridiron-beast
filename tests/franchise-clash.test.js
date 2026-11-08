@@ -14,7 +14,10 @@ test('encounter preview: 3v3 from healthy roster monsters, the chosen prospect i
   const f = newFranchise(21); toTuesday(f);
   f.roster[0].injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
   const pv = F.encounterPreview(f, 0); assert.ok(pv.ok);
-  assert.equal(pv.size, Math.min(3, f.week.prospects.length)); assert.equal(pv.lineup.length, pv.size); assert.ok(pv.lineup.every((m) => !m.injury));
+  // Size follows the approved Tuesday-companions rule (Task 8 M1): min(3, healthy battlers), the wild side filled out by the scout's
+  // companions, so it no longer depends on how many prospects the scout found (the old min(3, prospects) held only while the
+  // fixture's scout found three or more; after D1 it finds two). Stated exactly, and the wild side's size is now checked too.
+  assert.equal(pv.size, Math.min(3, Link.eligibleBattlers(f.roster).length)); assert.equal(pv.wild.length, pv.size); assert.equal(pv.lineup.length, pv.size); assert.ok(pv.lineup.every((m) => !m.injury));
   assert.equal(pv.wild[0], f.week.prospects[0].monster);
   assert.deepEqual(Link.eligibleBattlers(f.roster).map((m) => m.id).includes(f.roster[0].id), false);
   // nobody healthy: no battle
