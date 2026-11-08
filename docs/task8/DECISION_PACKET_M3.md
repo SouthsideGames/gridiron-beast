@@ -3,6 +3,75 @@
 Nothing in this packet is owner-approved unless marked so. "Recommendation" means mine. Every value marked **PROVISIONAL** is a
 test value in the build, labelled in code, not a balance decision.
 
+## 0. Status after the owner's rulings of 2026-11-08 00:41 (N8a)
+
+**Approved and applied:**
+- Guiding Halo radii measured from the line-of-scrimmage spot (722748f).
+- Comeback mode retired (e0fc4c3).
+- Gyms' element preference among similarly useful candidates, now in AI trades too (bf2bb9d).
+
+**Not approved:** Shadow Exchange's partner prediction (example in §3b). The AI identities are presented below for review and are
+not implemented.
+
+### Still unapproved
+
+Each item is either a **TEST** value (provisional, in the build and labelled, replaceable at any time) or a **RULE** change (a
+permanent rule, applied only with approval).
+
+| # | Item | Kind | What is in the build now | Proposal | Explained in |
+| --- | --- | --- | --- | --- | --- |
+| A | Prism Break target measure | RULE | Exposed-area footprints (needed for overlaps to be selectable at all) | Approve the footprint reading | §1 |
+| B | Cyclonic Release blast, Landslide push, Frost Nip snowball | TEST | 20 / 8 / 15 yd/s | Keep as test values until balance review | §2 |
+| C | Snowfall Slam landing time (also the LB's time out of play) | TEST | 0.6 s | Confirm, or set a value; a 2,000-play study can separate the hold from the obstacles | §2 |
+| D | Vine Vault and Stone Charge contest curves | TEST | Logistic of the difference / 16 (Vine Vault mean 45%, Stone Charge mean 75%) | Confirm the curve or give target success rates | §2 |
+| E | Crossed Wires | RULE (playbook) | Unreachable in released plays | Release the designed bunch/stack reserve plays (10 align a pair within 5 yd); the ability is unchanged | §3 |
+| F | Fortress Gate at mastery 2–3 | RULE | Whole gate refused if a panel would touch a body (legal in 3 of 60 released placements) | Each panel at its longest safe length, never below the mastery-0 width (1.5 yd) | §3 |
+| G | Dragon Roar AI selection | TEST policy | In range at a 45% chance (up to 80 yd); used when it adds more than 5 points | Also allow **desperation attempts**: on the last play of a half, or late when trailing by 3 or less, the AI may use it up to 90 yd (30%) | §4 |
+| H | Two-point and kickoff eligibility | RULE | All 72 contracts exclude two-point tries; kickoffs excluded except where a contract says otherwise | Follow each contract literally: exclude only where the contract says so, or says "scrimmage" | §5 |
+| I | Shadow Exchange partner test | RULE | Partner within 3 yd of the catch point at the release | Partner's projected position at the ball's arrival; the swap still at the release (example §3b) | §3, §3b |
+| J | D1–D4, D6–D8, D10, D11 | RULE | Today's behaviour | The recommendations in §6 | §6 |
+| K | D7 AI identities | RULE | Not implemented | The identity list below | AI_IDENTITIES.md |
+
+### D7: the proposed club identities (for review; not implemented)
+
+**Gyms:**
+
+| Club | Element | Legendary (approved ability) | Strategy | Strength | Counterplay |
+| --- | --- | --- | --- | --- | --- |
+| Harbor Sentinels | Water | Tsunarok, S (Tsunami Line) | Ball-hawk zone defence, ball-control offence | Turns risky throws into turnovers | Runs and short safe passes |
+| Sunfire Lions | Light | Aurelion, WR (Daybreak) | Air Raid with Light cooldown fields | Dangerous when trailing | Field goals keep Daybreak unarmed; QB pressure |
+| Thunder Mesa | Electric | Stormcrown, QB (Stormguard) | Quick passing behind extra protection, blitzing defence | Clean pockets, forced turnovers | Runs punish the blitz; deep coverage |
+| Canyon Crushers | Earth | Titanolith, OL (Landslide) | Ground attack, physical run front | Short yardage and goal line | Loaded boxes, fast defenders |
+| Eastport Phantoms | Dark | Nyxshade, CB (Shadow Exchange) | Man-coverage tricks, Dark fields | Breaks reads | Quick reads, misdirection runs |
+| Frostpeak Howlers | Ice | Glacivern, K (Second Chance) | Field position: bend-don't-break zone, reliable kicking | Scores on most drives | Touchdowns beat field goals; aggressive fourth downs |
+| Ironpeak Rams | Metal | Aegistron, DL (Fortress Gate) | Run-stuffing blitz front, power runs | Interior run game shut down | Outside runs, quick passes outside the panels |
+| Palmetto Vipers | Dragon | Aurodrax, QB (Sovereign Arm) | Aggressive vertical passing, man coverage | Protected deep shots | Pass rush and sacks; disciplined deep coverage |
+
+**Ordinary clubs:**
+
+| Club | Offence | Defence | Strength | Counterplay |
+| --- | --- | --- | --- | --- |
+| Ember City Beasts | Air Raid | Blitz Heavy | Explosive both ways | Patient short passing beats the blitz |
+| Stonehaven Titans | Ground Attack | Zone Control | Clock control | Slow from behind; stacked boxes |
+| Glacier Guardians | Balanced | Zone Control | Few mistakes | Speed mismatches |
+| Stormport Bolts | Air Raid | Man Coverage | Outside speed | Physical runs; press-beating receivers |
+| Northstar Wolves | Ground Attack | Blitz Heavy | Physical fourth quarters | Play-action and screens |
+| Sundown Drakes | Air Raid | Zone Control | Vertical passing | Pass rush; run defence when the zone drops |
+| Ashford Hawks | Balanced | Man Coverage | Adaptable | Whoever wins the matchups |
+| Bayou Stalkers | Ground Attack | Man Coverage | Option runs, tight coverage | Deep passes against man |
+
+Open questions with the list:
+1. Keep the gyms' Compete floor? Recommended.
+2. Fix each ordinary club's coach tendencies for the franchise? Recommended.
+3. Approve or change the tables above.
+4. Should Rookie lower ordinary clubs only? Recommended.
+
+How an identity acts (legal choices only, no boosts):
+- a fixed coach and scheme;
+- lineup preference among legal options;
+- draft and trade tilt toward identity positions;
+- identity attributes first among a position's OVR attributes in training.
+
 ## 1. Prism Break (LIG-04-F): why overlaps could not be selected, and the fix
 
 **Approved rule** (Dex, Targets / placement):
@@ -178,6 +247,29 @@ Lesser findings (correct, and usable but rare):
 - The scenarios also exposed two usability details:
   - Guiding Halo's short catches are reachable on a base play (pa_boot) when the target is chosen; the AI's reads never choose them.
   - Fortress Gate at mastery 2–3: see the table above.
+
+### 3b. Shadow Exchange: a concrete before/after example (proposal I, not approved)
+
+Real engine play: Mesh against Cover 1, ball on the 35, seed 1308. Nyxshade is placed as the free safety. Coordinates are in
+yards: x downfield from the line, y lateral.
+
+| Moment | Item | Value |
+| --- | --- | --- |
+| Throw (t = 2.2 s) | Pass to WR3; projected catch point | (1.3, 4.0) |
+| | Nyxshade (FS) | (9.3, −4.8), 11.9 yd from the catch point |
+| | Teammate LB1 | (3.2, −0.6), 5.0 yd from the catch point, moving (−0.5, +8.5) yd/s; 7.4 yd from Nyxshade (mastery-0 range 8) |
+| Arrival (t = 2.6 s, flight 0.4 s) | LB1 projected from the throw | (3.0, 2.8), 2.1 yd from the catch point |
+| | LB1 actual | (2.2, 2.5), 1.7 yd: the projection was right |
+| Result | Catch by WR3 | |
+
+- **Before (built):** at the throw LB1 is 5.0 yards from the catch point, over the 3-yard limit, so there is no partner. No swap
+  happens and Nyxshade keeps his bar.
+- **After (proposed):** LB1's projected position at arrival is 2.1 yards from the catch point. He is also closer to it than
+  Nyxshade (11.9) and within 8 yards of him, so LB1 qualifies.
+  - The swap still happens at the throw, t = 2.2 s: Nyxshade moves to (3.2, −0.6) and LB1 to (9.3, −4.8).
+  - Each keeps his own assignment, speed and heading.
+  - Legal placement: both endpoints are in bounds, and no other body is within 0.7 yd of either.
+  - Nyxshade then plays the ball from 5.0 yd away instead of 11.9. The ball and the receiver never move.
 
 ## 4. Dragon Roar (DRA-05-F): AI use (implemented, **PROVISIONAL policy**)
 
