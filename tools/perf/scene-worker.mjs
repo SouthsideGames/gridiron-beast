@@ -134,9 +134,9 @@ export function runScene(id, variant = 'plain', { dump = false } = {}) {
   if (sc.kind === 'ability' && variant === 'plain') variant = 'inert';
   const r = sc.tier === 'engine' ? runEngine(sc) : runRules(sc, variant);
   const TICK = E.TICK || 0.05;
-  let ticks = 0, abilityEvents = 0; const light = [];
-  for (const s of r.sims) { ticks += Math.round((s.elapsed || 0) / TICK); for (const e of s.events || []) if (e.ability || ABILITY_KINDS.has(e.kind)) abilityEvents += 1; light.push(`${s.result}|${s.yards}|${s.elapsed}|${s.frames?.length}|${s.events?.length}`); }
-  const out = { scene: id, variant, ms: r.ms, cpu: r.cpu, plays: r.plays, ticks, abilityEvents, fields: r.fields || 0, inputsHash: r.inputsHash, playsHash: sha(r.playIds.sort().map((p) => playKey(PB.getPlay(p))).join('\n')), fp: sha(light.join('\n')) };
+  let ticks = 0, abilityEvents = 0, engagedFrames = 0, frames = 0; const light = [];
+  for (const s of r.sims) { ticks += Math.round((s.elapsed || 0) / TICK); for (const f of s.frames || []) { frames += 1; for (const p of f.off || []) engagedFrames += p[3] ? 1 : 0; for (const p of f.def || []) engagedFrames += p[3] ? 1 : 0; } for (const e of s.events || []) if (e.ability || ABILITY_KINDS.has(e.kind)) abilityEvents += 1; light.push(`${s.result}|${s.yards}|${s.elapsed}|${s.frames?.length}|${s.events?.length}`); }
+  const out = { scene: id, variant, ms: r.ms, cpu: r.cpu, plays: r.plays, ticks, engagedPerFrame: frames ? engagedFrames / frames : 0, abilityEvents, fields: r.fields || 0, inputsHash: r.inputsHash, playsHash: sha(r.playIds.sort().map((p) => playKey(PB.getPlay(p))).join('\n')), fp: sha(light.join('\n')) };
   if (dump) { // identity proof: every play's full output, and for the rules tier the game states afterwards
     const full = JSON.stringify(r.sims, (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v));
     out.full = sha(full); if (r.games) out.state = sha(JSON.stringify(r.games.map((g) => g.state), (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v)));
