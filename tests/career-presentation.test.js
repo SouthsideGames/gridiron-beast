@@ -2,7 +2,8 @@
 // content, career links by id, the Hall of Fame snapshot, and that none of it changes the franchise.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { runFranchise } from '../tools/franchise-soak.mjs';
+import { runFranchise, newFranchise } from '../tools/franchise-soak.mjs';
+import { monsterOverall } from '../src/data/monsters.js';
 import * as P from '../src/franchise/career-profile.js';
 import { honourPills, cardStats, cardFileName, TIER_STYLE } from '../src/ui/career-card.js';
 import { withVisibility } from '../src/ui/career-ui.js';
@@ -11,11 +12,21 @@ import { updateGameRecords, ensureRecords } from '../src/franchise/stats.js';
 import { careerAfterGame } from '../src/franchise/career.js';
 
 let real = null;
-// The real-franchise fixture needs a run that wins a title. Which seed does so drifts with every balance change (Task 8 M3 at 6614e8b:
-// seed 2, in season 3; seed 3 at the M2 rewards; seeds 10, 12, 6, 1 earlier), so the fixture takes the first of a short list that
-// wins one in three rookie seasons instead of pinning a single seed. The assertions below are about consistency, not about the seed.
-const TITLE_SEEDS = [2, 3, 1, 4, 5, 6, 7, 8];
-const franchise = () => (real ||= (() => { let last = null; for (const s of TITLE_SEEDS) { last = runFranchise(s, { difficulty: 'rookie', seasons: 3 }).f; if (last.history.some((h) => h.champion === h.club)) return last; } return last; })());
+// The real-franchise fixture needs a run that wins a title. Owner ruling 2026-11-08 09:26: the title is constructed, not searched
+// for. One fixed founding (seed 2, Rookie) has its starting roster made dominant before the first kickoff (every rating, current and
+// ceiling, raised by the same margin, capped at 99); then three seasons are played by the soak owner through the real season code:
+// real games, playoffs, awards, records, offseasons and save round trips. Nothing in the history is written by the test; the title
+// record the assertions read is the one the season code produced. The assertions below are about consistency and are unchanged.
+// (Before: the first title-winning seed of a list; under later approved changes none of the eight won one in three seasons.)
+const FIXTURE_SEED = 2, FIXTURE_LIFT = 30;
+const liftAll = (o, by) => { for (const k of Object.keys(o || {})) if (typeof o[k] === 'number') o[k] = Math.min(99, o[k] + by); };
+const franchise = () => (real ||= (() => {
+  const f = newFranchise(FIXTURE_SEED, { difficulty: 'rookie' });
+  for (const m of f.roster) { liftAll(m.attributes, FIXTURE_LIFT); liftAll(m.dev?.current, FIXTURE_LIFT); liftAll(m.dev?.potential, FIXTURE_LIFT); m.potential = Math.max(m.potential || 0, monsterOverall(m)); }
+  const r = runFranchise(FIXTURE_SEED, { difficulty: 'rookie', seasons: 3, from: f });
+  assert.deepEqual(r.problems, [], 'the constructed franchise plays three legal seasons');
+  return r.f;
+})());
 
 const mon = (over = {}) => ({ id: 'm1', name: 'Testro', species: 'emberfox', stage: 0, type: 'Fire', position: 'QB', age: 24, level: 9, yearsPro: 0, attributes: { speed: 60, agility: 60, strength: 60, awareness: 60, catching: 60, arm: 60, accuracy: 60, blocking: 60, tackling: 60, coverage: 60, durability: 60, kicking: 40 }, history: [], career: { v: 1, ev: [], bf: 1 }, ...over });
 const book = (year, team, reg, post = {}) => ({ year, team, reg, post });
