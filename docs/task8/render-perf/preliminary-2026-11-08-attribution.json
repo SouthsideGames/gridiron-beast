@@ -1,0 +1,399 @@
+{
+ "meta": {
+  "harness": "tools/perf/render/run.mjs",
+  "doc": "docs/task8/RENDER_PERF.md",
+  "label": "PRELIMINARY attribution 2026-11-08",
+  "startedAt": "2026-11-08T23:32:29.142Z",
+  "commit": "b7eb077",
+  "branch": "task8-render-perf",
+  "dirty": true,
+  "options": {
+   "modes": [
+    "render",
+    "combined",
+    "live"
+   ],
+   "repeats": 0,
+   "warmup": 1,
+   "plays": 8,
+   "simPasses": 3,
+   "scenes": [
+    "F2",
+    "L1"
+   ],
+   "configs": [
+    "full",
+    "min-probe",
+    "simple"
+   ],
+   "combinedConfigs": [
+    "full"
+   ],
+   "liveConfigs": [
+    "full",
+    "simple"
+   ],
+   "liveSteps": 14,
+   "liveWarmup": 2,
+   "throttle": [
+    1,
+    4
+   ],
+   "headless": "new",
+   "label": "PRELIMINARY attribution 2026-11-08",
+   "profile": false,
+   "attribution": true,
+   "attributionScene": "F2-multi-ability"
+  },
+  "host": {
+   "cpus": 2,
+   "model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "memGB": 7.8,
+   "platform": "linux 6.18.44-fc-v310",
+   "node": "v22.22.0"
+  },
+  "idleLoad": {
+   "seconds": 3,
+   "cpus": 2,
+   "busyShare": 0.935,
+   "harnessShare": 0,
+   "foreignShare": 0.923,
+   "foreignTop": [
+    [
+     "node",
+     0.916
+    ],
+    [
+     "claude",
+     0.007
+    ]
+   ],
+   "loadavgStart": [
+    5.96,
+    5.43,
+    5.13
+   ],
+   "loadavgEnd": [
+    5.96,
+    5.43,
+    5.13
+   ]
+  },
+  "mobile": {
+   "capacitorProject": false,
+   "capacitor": {
+    "config": [],
+    "android": false,
+    "ios": false,
+    "packages": []
+   },
+   "adb": false,
+   "androidDevices": [],
+   "iosTooling": false,
+   "status": "mobile NOT VERIFIED",
+   "reason": "no Capacitor project in the repository (no capacitor.config.*, no android/ or ios/, no @capacitor/* package) and no mobile device attached (no adb devices, no iOS tooling)"
+  },
+  "status": "PRELIMINARY unless run on a quiet machine (see load per block). Headless desktop Chromium; not a phone; 4x CPU throttle is desktop emulation (an approximate indicator only), not mobile verification.",
+  "precomputeLoad": {
+   "seconds": 6.3,
+   "cpus": 2,
+   "busyShare": 0.994,
+   "harnessShare": 0.489,
+   "foreignShare": 0.499,
+   "foreignTop": [
+    [
+     "node",
+     0.495
+    ],
+    [
+     "claude",
+     0.003
+    ],
+    [
+     "rclone-filestor",
+     0.001
+    ]
+   ],
+   "loadavgStart": [
+    5.96,
+    5.43,
+    5.13
+   ],
+   "loadavgEnd": [
+    5.73,
+    5.4,
+    5.12
+   ]
+  },
+  "browser": {
+   "version": "141.0.7390.37",
+   "mode": "chromium new headless"
+  },
+  "setup": {
+   "club": "Stormport Bolts",
+   "week": 3,
+   "field": true,
+   "venue": "The Bolt Yard"
+  },
+  "liveStart": {
+   "phase": "kickoff",
+   "quarter": 1,
+   "clock": 180
+  },
+  "screen": {
+   "dpr": 3,
+   "w": 390,
+   "h": 844,
+   "field": [
+    352,
+    300
+   ],
+   "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.0.0 Safari/537.36"
+  },
+  "pageErrors": [],
+  "finishedAt": "2026-11-08T23:36:06.305Z"
+ },
+ "configs": {
+  "full": {
+   "football": {
+    "reducedMotion": false,
+    "markers": "sprites"
+   },
+   "clash": {
+    "reducedMotion": false,
+    "quality": "full"
+   },
+   "note": "default settings: monster art, effects full (football fxQuality \"full\"); Clash as the franchise battle screen mounts it"
+  },
+  "min-probe": {
+   "football": {
+    "reducedMotion": true,
+    "markers": "sprites"
+   },
+   "clash": {
+    "reducedMotion": true,
+    "quality": "full"
+   },
+   "note": "MEASUREMENT PROBE, not a player-visible mode: football plays animated with fxQuality \"min\" (badges and labels only, no particles, no signature looks, no status marks, no weather layer, no shake). A player with Reduce motion on sees no play animation at all. Clash: Reduce motion on (a player setting; the arena still plays)"
+  },
+  "simple": {
+   "football": {
+    "reducedMotion": false,
+    "markers": "simple"
+   },
+   "clash": {
+    "reducedMotion": false,
+    "quality": "low"
+   },
+   "note": "football: the player setting \"Players on the field: Simple circles and squares\" (no sprites, fxQuality \"low\": half the particles). Clash: effects quality \"low\" (a Clash Lab option only, not a franchise setting)"
+  }
+ },
+ "scenes": [
+  {
+   "id": "F2-multi-ability",
+   "kind": "football",
+   "source": "A5-full-contracts",
+   "variant": "ability",
+   "what": "several abilities at once: every on-field slot carries a Dex contract (A5); the plays with the most overlapping activations",
+   "fingerprint": "f097c6bf5915ac02",
+   "sim": {
+    "passes": 3,
+    "plays": 96,
+    "medianMsPerPlay": 8.105,
+    "meanMsPerPlay": 9.051,
+    "chosenMedianMsPerPlay": 11.716,
+    "chosenMeanMsPerPlay": 11.846
+   },
+   "plays": [
+    {
+     "gs": 1001,
+     "k": 0,
+     "call": [
+      "bunch_snag",
+      "cover_3"
+     ],
+     "result": "touchdown",
+     "yards": 70,
+     "frames": 109,
+     "seconds": 10.9,
+     "abilityEvents": 9,
+     "peakConcurrent": 5,
+     "fields": 1,
+     "simMs": 20.34110999999939
+    },
+    {
+     "gs": 1001,
+     "k": 4,
+     "call": [
+      "y_cross",
+      "man_press"
+     ],
+     "result": "touchdown",
+     "yards": 70,
+     "frames": 123,
+     "seconds": 12.3,
+     "abilityEvents": 6,
+     "peakConcurrent": 5,
+     "fields": 0,
+     "simMs": 18.086184000000685
+    },
+    {
+     "gs": 1002,
+     "k": 4,
+     "call": [
+      "y_cross",
+      "man_press"
+     ],
+     "result": "tackle",
+     "yards": 32,
+     "frames": 72,
+     "seconds": 7.2,
+     "abilityEvents": 6,
+     "peakConcurrent": 5,
+     "fields": 0,
+     "simMs": 13.192503999999644
+    },
+    {
+     "gs": 1002,
+     "k": 6,
+     "call": [
+      "counter",
+      "edge_contain"
+     ],
+     "result": "tackle",
+     "yards": 7,
+     "frames": 24,
+     "seconds": 2.4,
+     "abilityEvents": 6,
+     "peakConcurrent": 5,
+     "fields": 0,
+     "simMs": 8.320875000001251
+    },
+    {
+     "gs": 1003,
+     "k": 4,
+     "call": [
+      "y_cross",
+      "man_press"
+     ],
+     "result": "tackle",
+     "yards": 51,
+     "frames": 97,
+     "seconds": 9.7,
+     "abilityEvents": 6,
+     "peakConcurrent": 5,
+     "fields": 0,
+     "simMs": 16.86799499999961
+    },
+    {
+     "gs": 1003,
+     "k": 6,
+     "call": [
+      "counter",
+      "edge_contain"
+     ],
+     "result": "tackle",
+     "yards": 7,
+     "frames": 23,
+     "seconds": 2.3,
+     "abilityEvents": 6,
+     "peakConcurrent": 5,
+     "fields": 0,
+     "simMs": 3.0203739999997197
+    },
+    {
+     "gs": 1004,
+     "k": 0,
+     "call": [
+      "bunch_snag",
+      "cover_3"
+     ],
+     "result": "tackle",
+     "yards": 12,
+     "frames": 32,
+     "seconds": 3.2,
+     "abilityEvents": 6,
+     "peakConcurrent": 5,
+     "fields": 1,
+     "simMs": 4.7023699999999735
+    },
+    {
+     "gs": 1005,
+     "k": 4,
+     "call": [
+      "y_cross",
+      "man_press"
+     ],
+     "result": "touchdown",
+     "yards": 70,
+     "frames": 122,
+     "seconds": 12.2,
+     "abilityEvents": 7,
+     "peakConcurrent": 5,
+     "fields": 0,
+     "simMs": 10.240417999999408
+    }
+   ]
+  },
+  {
+   "id": "L1-franchise-auto",
+   "kind": "live",
+   "what": "the real franchise Sunday game (seed 3, week 3, Stormport Bolts) on the real match screen in Auto 1x: 14 measured steps after 2 warm-up steps",
+   "sim": null
+  }
+ ],
+ "summary": [],
+ "checks": [],
+ "profiles": [],
+ "attribution": [
+  {
+   "label": "render F2-multi-ability full",
+   "seconds": 65.68,
+   "msPerSec": {
+    "idle": 665.72,
+    "browser (program: style, layout, paint, parse not attributed to script)": 220.1,
+    "field draw (playback tick, field-view, effects, sprites)": 79.23,
+    "garbage collector": 20.27,
+    "save": 6.77,
+    "franchise and data (lineups, sprites lookups)": 3.18,
+    "screen render and other UI": 2.59,
+    "harness": 1.74,
+    "other": 0.37,
+    "simulation": 0.01
+   }
+  },
+  {
+   "label": "combined F2-multi-ability full",
+   "seconds": 66.82,
+   "msPerSec": {
+    "idle": 628.08,
+    "browser (program: style, layout, paint, parse not attributed to script)": 215.77,
+    "field draw (playback tick, field-view, effects, sprites)": 83.07,
+    "simulation": 32.14,
+    "garbage collector": 21.78,
+    "save": 12.17,
+    "franchise and data (lineups, sprites lookups)": 2.95,
+    "screen render and other UI": 2.07,
+    "harness": 1.83,
+    "other": 0.14
+   }
+  },
+  {
+   "label": "live L1-franchise-auto full",
+   "seconds": 65.74,
+   "msPerSec": {
+    "idle": 631.23,
+    "browser (program: style, layout, paint, parse not attributed to script)": 198.82,
+    "field draw (playback tick, field-view, effects, sprites)": 84.87,
+    "save": 46.82,
+    "garbage collector": 18.03,
+    "franchise and data (lineups, sprites lookups)": 6.6,
+    "screen render and other UI": 5.73,
+    "harness": 4.77,
+    "simulation": 2.64,
+    "other": 0.47
+   }
+  }
+ ],
+ "blocks": []
+}
