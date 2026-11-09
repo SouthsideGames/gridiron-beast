@@ -12,7 +12,7 @@ import { esc, delegate, sheet, toast } from '../dom.js';
 import { abilityById } from '../../data/beast-dex.js';
 import { reviewCatalog, reviewAbility } from '../../sim/abilities/review.js';
 import { reviewSequence, sequenceVariants } from '../../sim/abilities/review-sequence.js';
-import { fieldSvg, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
+import { fieldSvg, fieldDraw, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
 import { buildFx, elementFx, kickSim } from '../ability-fx.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, setFootballFingerprint } from '../dev-review.js';
@@ -158,7 +158,7 @@ export function registerAbilityReviewer(Router, app) {
       info.innerHTML = `<b>Play ${pb.pi + 1} / ${prepared.length}</b>${p.followUp ? ' · follow-up' : ''}${p.executed ? ' · <b>activation</b>' : ''} · ${esc(p.kind)} · ${pb.time.toFixed(1)}s / ${P.end.toFixed(1)}s · ${pb.speed}×${pb.playing ? '' : ' · paused'}${p.controls?.length ? ' · <span style="color:var(--warn)">⚙ controlled</span>' : ''}`;
       if (P.frames.length) {
         const i = frameAt(P, pb.time); const sim = P.sim; const key = `${pb.pi}:${i}:${pb.time > (P.frames[P.frames.length - 1].t ?? 0) ? pb.time.toFixed(1) : ''}`;
-        if (key !== pb.drawn) { pb.drawn = key; svg.innerHTML = fieldSvg({ time: pb.time, ballOn: sim.ballOn ?? p.ballOn ?? 35, ballLat: sim.ballLat || 0, toGo: p.situation?.toGo || 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: P.frames[i], prevFrame: pb.time < 0 ? null : P.frames[i - 1] || null, fx: P.fx, fxQuality: st.fxQuality || (app.settings?.reducedMotion ? 'min' : 'full'), fxOptions: { reducedFlash: st.reducedFlash }, sprites: P.sprites, camera: P.follow ? cameraFor(Math.max(0, P.frames[i].ball[0] - 8)) : P.cam, ownLabel: 'OWN', oppLabel: 'OPP', fields: sim.fields || null }); }
+        if (key !== pb.drawn) { pb.drawn = key; fieldDraw(svg, { time: pb.time, ballOn: sim.ballOn ?? p.ballOn ?? 35, ballLat: sim.ballLat || 0, toGo: p.situation?.toGo || 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: P.frames[i], prevFrame: pb.time < 0 ? null : P.frames[i - 1] || null, fx: P.fx, fxQuality: st.fxQuality || (app.settings?.reducedMotion ? 'min' : 'full'), fxOptions: { reducedFlash: st.reducedFlash }, sprites: P.sprites, camera: P.follow ? cameraFor(Math.max(0, P.frames[i].ball[0] - 8)) : P.cam, ownLabel: 'OWN', oppLabel: 'OPP', fields: sim.fields || null }); }
         svg.style.display = ''; kickBox.style.display = 'none';
       } else { svg.style.display = 'none'; kickBox.style.display = ''; kickBox.innerHTML = `<div class="panel tight">${esc(p.kind)} (formula play, no field animation): ${esc(p.text)}${(p.gameLog || []).filter((x) => x.kind === 'ability').map((x) => `<br>• ${esc(x.text)}`).join('')}</div>`; }
       const subj = (e) => e.ability || e.contract;

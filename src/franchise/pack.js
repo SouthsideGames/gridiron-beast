@@ -121,3 +121,41 @@ export async function gunzip(bytes) {
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
   return new Response(stream).text();
 }
+
+/**
+ * Encode one serialised save part (store.js encodePart's algorithm, here so a worker can run it too: docs/task8/RENDER_OPT.md,
+ * the end-of-play save): pack (lossless), verify by unpacking, gzip where available, checksum. `value` is the parsed form of
+ * `rawStr` when the caller already has it. Returns { part: { sum, enc, data, bytes }, entry: { sum, raw, bytes, rawBytes, packedBytes } }.
+ */
+export async function encodeRaw(rawStr, value = undefined) {
+  let packedStr = JSON.stringify(pack(value === undefined ? JSON.parse(rawStr) : value));
+  // Every part is unpacked again before it is stored: if packing ever failed to reproduce the data exactly, the plain JSON is
+  // stored instead (format 'json'), so a packer bug can cost space but never data.
+  let verified = false; try { verified = JSON.stringify(unpack(JSON.parse(packedStr))) === rawStr; } catch { verified = false; }
+  if (!verified) packedStr = JSON.stringify({ fmt: 'json', d: rawStr });
+  const gz = await gzip(packedStr);
+  const data = gz || packedStr; const enc = gz ? 'gzip' : 'none';
+  const sum = checksum(data);
+  return { part: { sum, enc, data, bytes: gz ? gz.byteLength : packedStr.length }, entry: { sum, raw: checksum(rawStr), bytes: gz ? gz.byteLength : packedStr.length, rawBytes: rawStr.length, packedBytes: packedStr.length } };
+}
+
+/**
+ * The source of the encode worker (store.js): the same encodeRaw, imported from `packUrl` (the page's resolved, release-stamped
+ * URL of this module). One message { id, raws: { name: rawStr }, skip: { name: rawChecksum } } answers { id, ok, parts } where a
+ * part whose raw checksum equals its `skip` entry comes back as { cached: true, raw } without being packed.
+ */
+export function encodeWorkerSource(packUrl) {
+  return `import { encodeRaw, checksum } from ${JSON.stringify(packUrl)};
+self.onmessage = async (e) => {
+  const { id, raws, skip } = e.data; const parts = {}; const transfer = [];
+  try {
+    for (const n of Object.keys(raws)) {
+      const raw = checksum(raws[n]);
+      if (skip && skip[n] === raw) { parts[n] = { cached: true, raw }; continue; }
+      const r = await encodeRaw(raws[n]); parts[n] = r; if (r.part.data && r.part.data.buffer) transfer.push(r.part.data.buffer);
+    }
+    self.postMessage({ id, ok: true, parts }, transfer);
+  } catch (err) { self.postMessage({ id, ok: false, error: String((err && err.message) || err) }); }
+};
+`;
+}

@@ -9,7 +9,7 @@ import { setAssist } from '../../../src/franchise/assist.js';
 import { resolveSpecies } from '../../../src/data/monsters.js';
 import { createArena } from '../../../src/ui/clash/arena.js';
 import { typeEdge } from '../../../src/clash/types.js';
-import { fieldSvg, cameraFor } from '../../../src/ui/field-view.js';
+import { fieldSvg, fieldLayers, fieldDraw, cameraFor } from '../../../src/ui/field-view.js';
 import { buildFx } from '../../../src/ui/ability-fx.js';
 import { rulesSnaps, lightLine, unitMap } from './staging.js';
 
@@ -23,7 +23,8 @@ const rec = { on: false, t: [], draws: [], lastChild: null, longtasks: [] };
 function loop(t) {
   if (!rec.on) return;
   rec.t.push(t);
-  const c = document.querySelector('#field')?.firstChild || null; // a new first child = the field was redrawn (innerHTML) since the last frame
+  const fld = document.querySelector('#field'); const dyn = fld?.querySelector(':scope > g.fv-dyn'); // layered field (RENDER_OPT): the dynamic layer is replaced per draw
+  const c = (dyn || fld)?.firstChild || null; // a new first child = the field was redrawn since the last frame
   if (c && c !== rec.lastChild) { rec.draws.push(t); rec.lastChild = c; }
   requestAnimationFrame(loop);
 }
@@ -57,7 +58,7 @@ export function applyConfig(cfg) {
 }
 
 // ------------------------------------------------------------------------------------------------ football
-const lookupFor = (p) => (team, slot) => { const m = (team === 'off' ? p.off : p.def)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name, species: sp?.id || null }; };
+export const lookupFor = (p) => (team, slot) => { const m = (team === 'off' ? p.off : p.def)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name, species: sp?.id || null }; };
 const evFor = (p) => ({ kind: 'play', sim: p.sim, offenseSide: 'home', toGo: 10, text: `Perf play: ${p.sim.result} ${p.sim.yards}` });
 
 /**
@@ -124,7 +125,7 @@ const quantiles = (a) => { const s = [...a].sort((x, y) => x - y); const q = (p)
 export async function profileDraws(plays, cfg) {
   const f = app().f; const svg = document.querySelector('#field'); if (!svg) throw new Error('no #field');
   const s = f.game.state; const sprites = spritesLikeMatch(f, cfg.markers); const fxq = cfg.reducedMotion ? 'min' : cfg.markers === 'simple' ? 'low' : 'full';
-  const build = [], parse = [], layout = [], len = [], els = [], lenNoFx = [], buildNoFx = [];
+  const build = [], parse = [], layout = [], len = [], els = [], lenNoFx = [], buildNoFx = [], draw = [], dynLen = [], dynEls = [], staticRedraws = [];
   for (const p of plays) {
     const sim = p.sim; const fx = buildFx(sim, lookupFor(p)); const cam = cameraFor(sim.ballOn);
     for (let i = 0; i < sim.frames.length; i++) {
@@ -135,10 +136,21 @@ export async function profileDraws(plays, cfg) {
       t = performance.now(); svg.getBBox(); layout.push(performance.now() - t);
       els.push(svg.getElementsByTagName('*').length);
     }
+    // The live playback path (RENDER_OPT): fieldDraw keeps the static layer and sprite symbols, replaces the dynamic layer; timed with
+    // its forced style + layout, so it compares with parse + style+layout above. The play's first draw starts from an empty svg
+    // (static layer and symbols included), as the screen's play-start render does.
+    svg.innerHTML = ''; svg.__fv = null;
+    for (let i = 0; i < sim.frames.length; i++) {
+      const o = { venue: s.venue, ballOn: sim.ballOn, ballLat: sim.ballLat, toGo: 10, colors: { off: s.home.color, def: s.away.color }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fields: sim.fields || null, fx, fxQuality: fxq, qbRead: false, ownLabel: s.home.abbr, oppLabel: s.away.abbr, camera: cam, noLines: false, event: null, sprites };
+      const L = fieldLayers(o); dynLen.push(L.dynamic.length);
+      const t = performance.now(); const r = fieldDraw(svg, o); svg.getBBox(); draw.push(performance.now() - t); staticRedraws.push(r.staticRedrawn ? 1 : 0);
+      dynEls.push(svg.querySelector(':scope > g.fv-dyn').getElementsByTagName('*').length);
+    }
     await nextFrame();
   }
   Router.render();
-  return { frames: build.length, buildMs: quantiles(build), buildNoFxMs: quantiles(buildNoFx), parseMs: quantiles(parse), styleLayoutMs: quantiles(layout), chars: quantiles(len), charsNoFx: quantiles(lenNoFx), elements: quantiles(els) };
+  return { frames: build.length, buildMs: quantiles(build), buildNoFxMs: quantiles(buildNoFx), parseMs: quantiles(parse), styleLayoutMs: quantiles(layout), chars: quantiles(len), charsNoFx: quantiles(lenNoFx), elements: quantiles(els),
+    layered: { drawMs: quantiles(draw), dynChars: quantiles(dynLen), dynElements: quantiles(dynEls), staticRedrawShare: staticRedraws.reduce((a, b) => a + b, 0) / Math.max(1, staticRedraws.length), note: 'fieldDraw (static layer kept, dynamic layer replaced) with forced style+layout, per frame; the first frame of each play includes the static layer and the sprite symbols' } };
 }
 
 // ------------------------------------------------------------------------------------------------ combined: simulate while playing

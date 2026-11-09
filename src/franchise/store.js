@@ -18,7 +18,7 @@
 // earlier one: saves run one at a time, a newer request replaces a pending one, and a manifest refuses a lower sequence from
 // the same writer.
 
-import { pack, unpack, checksum, gzip, gunzip, PACK_FORMAT } from './pack.js';
+import { unpack, checksum, gzip, gunzip, encodeRaw, encodeWorkerSource, PACK_FORMAT } from './pack.js';
 import * as Save from './save.js';
 import { newUid, legacyUid } from '../core/uid.js';
 
@@ -118,18 +118,43 @@ export function lifecycleOf(f) {
   return { status, seasonsCompleted: (f.history || []).length };
 }
 
-/** Encode one part: pack (lossless), then gzip where available. Returns { part, entry } with checksums of both forms. */
-export async function encodePart(value, raw = null) {
-  const rawStr = raw ?? JSON.stringify(value);
-  let packedStr = JSON.stringify(pack(value));
-  // Every part is unpacked again before it is stored: if packing ever failed to reproduce the data exactly, the plain JSON is
-  // stored instead (format 'json'), so a packer bug can cost space but never data.
-  let verified = false; try { verified = JSON.stringify(unpack(JSON.parse(packedStr))) === rawStr; } catch { verified = false; }
-  if (!verified) packedStr = JSON.stringify({ fmt: 'json', d: rawStr });
-  const gz = await gzip(packedStr);
-  const data = gz || packedStr; const enc = gz ? 'gzip' : 'none';
-  const sum = checksum(data);
-  return { part: { sum, enc, data, bytes: gz ? gz.byteLength : packedStr.length }, entry: { sum, raw: checksum(rawStr), bytes: gz ? gz.byteLength : packedStr.length, rawBytes: rawStr.length, packedBytes: packedStr.length } };
+/** Encode one part: pack (lossless), then gzip where available. Returns { part, entry } with checksums of both forms (pack.js encodeRaw). */
+export async function encodePart(value, raw = null) { return encodeRaw(raw ?? JSON.stringify(value), value); }
+
+// ---- encoding off the main thread (docs/task8/RENDER_OPT.md, the end-of-play save hitch)
+// Packing, verifying, compressing and checksumming the save parts is 150-300 ms of main-thread work for a season-old franchise.
+// Where the page can run a module worker, that work runs there, on the very strings freeze() captured (same code, same bytes:
+// pack.js encodeRaw, loaded by the page's release-stamped URL); the main thread keeps the snapshot, the manifest and the
+// transaction. Without a worker (Node, an old browser, a worker that fails) every encode runs inline as before.
+let encoder = null; let encoderOff = false;
+function getEncoder() {
+  if (encoder || encoderOff) return encoder;
+  try {
+    const resolve = import.meta.resolve;
+    if (typeof Worker === 'undefined' || typeof Blob === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function' || typeof resolve !== 'function') { encoderOff = true; return null; }
+    const w = new Worker(URL.createObjectURL(new Blob([encodeWorkerSource(resolve('./pack.js'))], { type: 'text/javascript' })), { type: 'module' });
+    const pending = new Map(); let seq = 0;
+    const failAll = (err) => { for (const p of pending.values()) p.reject(err); pending.clear(); };
+    w.onmessage = (e) => { const p = pending.get(e.data?.id); if (!p) return; pending.delete(e.data.id); if (e.data.ok) p.resolve(e.data.parts); else p.reject(new Error(e.data.error || 'encode failed')); };
+    w.onerror = (e) => { failAll(new Error(e?.message || 'The save encoder failed.')); dropEncoder(); };
+    w.onmessageerror = () => { failAll(new Error('The save encoder could not read a message.')); dropEncoder(); };
+    encoder = { encode: (raws, skip) => new Promise((res, rej) => { const id = ++seq; pending.set(id, { resolve: res, reject: rej }); w.postMessage({ id, raws, skip }); }), terminate: () => w.terminate() };
+  } catch { encoderOff = true; encoder = null; }
+  return encoder;
+}
+function dropEncoder() { try { encoder?.terminate(); } catch { /* gone */ } encoder = null; encoderOff = true; }
+/** For tests and diagnostics: whether saves are being encoded in a worker right now. */
+export function encodeInWorker() { return !!getEncoder(); }
+/**
+ * Encode the parts of a frozen snapshot that differ from `skip` ({ name: raw checksum }): { name: { part, entry } | { cached: true, raw } }.
+ * In the worker when there is one (falling back inline, once, if it fails), inline otherwise. Same result either way.
+ */
+async function encodeParts(raws, skip) {
+  const w = getEncoder();
+  if (w) { try { return await w.encode(raws, skip); } catch { dropEncoder(); } }
+  const out = {};
+  for (const n of Object.keys(raws)) { const raw = checksum(raws[n]); out[n] = skip && skip[n] === raw ? { cached: true, raw } : await encodeRaw(raws[n]); }
+  return out;
 }
 export async function decodePart(part, expectedSum) {
   if (!part) throw Object.assign(new Error('A part of the save is missing.'), { code: 'missing' });
@@ -200,10 +225,14 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
   }
   async function encodeFrozen(fz, useCache = true) {
     const entries = {}; const newParts = [];
+    // Parts whose raw checksum equals the last committed save's are reused from the cache; the others are packed (in the encode
+    // worker where there is one). The checksums themselves are computed where the packing runs.
+    const skip = {}; if (useCache) for (const n of PARTS) if (cache[n]) skip[n] = cache[n].raw;
+    const enc = await encodeParts(Object.fromEntries(PARTS.map((n) => [n, fz.raws[n]])), skip);
     for (const n of PARTS) {
-      const rawSum = checksum(fz.raws[n]);
-      if (useCache && cache[n] && cache[n].raw === rawSum) { entries[n] = cache[n].entry; continue; }
-      const { part, entry } = await encodePart(JSON.parse(fz.raws[n]), fz.raws[n]); entries[n] = entry; newParts.push(part);
+      const r = enc[n];
+      if (r.cached) { entries[n] = cache[n].entry; continue; }
+      entries[n] = r.entry; newParts.push(r.part);
     }
     return { entries, newParts };
   }
@@ -298,8 +327,12 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     else { emit({ state: 'saving' }); try { res = await writeNow(f); } catch (e) { res = { ok: false, error: classify(e) }; emit({ state: 'error', error: res.error }); } }
     for (const w of waiters) w(res);
   }
+  // The queue never wedges (tests/store-save-queue.test.js): a request drain takes is written now, so its debounce timer is
+  // cleared with it; and a timer can only start drain() with something pending. (Before 2026-11-09 a timer that fired after drain
+  // had taken its request started drain() with nothing to do: drain then finished synchronously, cleared `writing`, and the
+  // caller's `writing = drain()` stored the settled promise, so no later save, immediate or not, was ever written that session.)
   async function drain() {
-    while (pendingF && !reserved) { const f = pendingF; const waiters = pendingWaiters; pendingF = null; pendingWaiters = []; await writeQueued(f, waiters); }
+    while (pendingF && !reserved) { clearTimeout(timer); timer = null; const f = pendingF; const waiters = pendingWaiters; pendingF = null; pendingWaiters = []; await writeQueued(f, waiters); }
     writing = null; settle();
   }
   /** When nothing is queued or being written, the status must not say "Saving…" (a dropped request leaves nothing to wait for). */
@@ -317,7 +350,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     stamp(f);
     return new Promise((resolve) => {
       pendingF = f; pendingWaiters.push(resolve); if (status.state !== 'saving') emit({ state: 'pending' });
-      const go = () => { timer = null; if (!writing && !reserved) writing = drain(); };
+      const go = () => { timer = null; if (!writing && !reserved && pendingF) writing = drain(); };
       if (reserved) return; // an exclusive operation holds the queue: this request runs right after it (or is answered 'stale')
       if (immediate || debounce === 0) { clearTimeout(timer); timer = null; go(); } else if (!timer) timer = setTimeout(go, debounce);
     });
