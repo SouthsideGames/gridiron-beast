@@ -57,7 +57,7 @@ export function applyConfig(cfg) {
 }
 
 // ------------------------------------------------------------------------------------------------ football
-const lookupFor = (p) => (team, slot) => { const m = (team === 'off' ? p.off : p.def)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name, species: sp?.id || null }; };
+export const lookupFor = (p) => (team, slot) => { const m = (team === 'off' ? p.off : p.def)?.[slot]; if (!m) return null; const sp = resolveSpecies(m); return { element: sp?.element || m.type || null, name: m.name, species: sp?.id || null }; };
 const evFor = (p) => ({ kind: 'play', sim: p.sim, offenseSide: 'home', toGo: 10, text: `Perf play: ${p.sim.result} ${p.sim.yards}` });
 
 /**

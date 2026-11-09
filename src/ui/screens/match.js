@@ -417,8 +417,9 @@ export function registerMatchScreens(Router, app) {
     anim.fx = sim.kick ? null : buildFx(sim, fxLookup(f, ev.offenseSide || G.state.possession));
     G.lastEvent = null;
     Router.render();
-    const tick = (now) => {
+    const tick = (rafNow) => {
       if (!anim) return;
+      const now = RP_CLOCK ? RP_CLOCK(rafNow) : rafNow; // render-perf harness only (inert otherwise): a fixed clock for frame-exact screenshots
       // requestAnimationFrame timestamps can sit a hair before the performance.now() taken at start: clamp at frame 0, never finish early.
       const raw = Math.max(0, Math.floor((now - anim.start) / anim.msPerFrame));
       const idx = Math.min(sim.frames.length - 1, raw);
@@ -445,7 +446,7 @@ export function registerMatchScreens(Router, app) {
         const drawFrame = half ? midFrame(sim.frames[idx], sim.frames[idx + 1]) : sim.frames[idx];
         svg.innerHTML = fieldSvg({ venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: drawFrame, prevFrame: sim.frames[idx - 1] || null, fields: sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), qbRead: qbReadsShown(f.settings, { live: true }), ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, noLines: anim.follow, event: G.event, sprites: anim.sprites });
         if (idx > 0 && !half && shakeBetween(anim.fx, prevT, ft)) shakeField(f);
-        if (performance.now() - t0 > 18) anim.slow = true; // this device cannot afford half-steps: back off for the rest of the play
+        if (performance.now() - t0 > 18 && !(RP_CLOCK && globalThis.__gbRenderPerf.clock)) anim.slow = true; // this device cannot afford half-steps: back off for the rest of the play (never under the harness's fixed clock: frame-exact screenshots)
       }
       if (idx >= sim.frames.length - 1 && !(anim.fx && !anim.follow && endHold(anim.fx, sim.frames[sim.frames.length - 1].t ?? 0) > 0)) { finishAnim(f, false); return; }
       anim.raf = requestAnimationFrame(tick);
@@ -500,8 +501,9 @@ export function registerMatchScreens(Router, app) {
     if (G.lastEvent) G.lastEvent.fresh = false; // the touchdown flash and score pulse belong to the live play only
     Router.render();
     const zoomOn = !f.settings.reducedMotion;
-    const tick = (now) => {
+    const tick = (rafNow) => {
       if (!anim?.replay) return;
+      const now = RP_CLOCK ? RP_CLOCK(rafNow) : rafNow; // render-perf harness only (inert otherwise)
       const pos = replayPosition(plan, now - anim.start);
       if (pos.done) { endReplay(f); return; }
       const svg = document.querySelector('#field'); const wrap = document.querySelector('#fieldwrap');
@@ -563,9 +565,13 @@ export function registerMatchScreens(Router, app) {
   // globalThis.__gbRenderPerf before the app loads, and nothing in the game calls it. It hands a precomputed play to this screen's own
   // playback (startAnim) and says when the playback has finished; `lookup` (optional) is the effect lookup for a staged scene's monsters.
   // If the harness also sets `onStep`, act() reports the start and duration of each simulation step (combined live-gameplay mode).
+  // `clock(rafNow)` (optional, screenshot identity checks: tools/perf/render/shots.mjs) replaces the animation clock, so a chosen
+  // frame can be held on screen; `animInfo()` reports the running playback's timing. Both are undefined in the game.
+  const RP_CLOCK = globalThis.__gbRenderPerf ? (t) => (globalThis.__gbRenderPerf.clock ? globalThis.__gbRenderPerf.clock(t) : t) : null;
   if (globalThis.__gbRenderPerf) Object.assign(globalThis.__gbRenderPerf, {
     playMatch(ev, { lookup = null } = {}) { startAnim(app.f, ev); if (anim && lookup && !ev.sim.kick) anim.fx = buildFx(ev.sim, lookup); return !!anim; },
     matchBusy: () => !!anim,
+    animInfo: () => (anim ? { start: anim.start, msPerFrame: anim.msPerFrame ?? null, frames: anim.frames.length, key: anim.key ?? null, follow: !!anim.follow, replay: !!anim.replay, hold: anim.hold ?? null, hasFx: !!anim.fx } : null),
   });
   let shakeTimer = null;
   function shakeField(f) {
