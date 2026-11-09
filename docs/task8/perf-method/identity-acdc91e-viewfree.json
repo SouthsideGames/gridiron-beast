@@ -1,0 +1,162 @@
+{
+ "root": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/idref3",
+ "scenes": {
+  "O1-pass-T/plain": {
+   "full": "319a9472cb547b7a",
+   "state": null,
+   "fp": "e2cb0f986519d157"
+  },
+  "O2-run-M/plain": {
+   "full": "c1a652efb60212ac",
+   "state": null,
+   "fp": "b49c170a6e21d8af"
+  },
+  "O3-wide-mismatch/plain": {
+   "full": "e7a28668744aeb6b",
+   "state": null,
+   "fp": "9756c76b84b3d875"
+  },
+  "O4-redzone-cross/plain": {
+   "full": "bc0025bc0d53e09e",
+   "state": null,
+   "fp": "a5e7974dbf02f32e"
+  },
+  "O5-legendary-plays/plain": {
+   "full": "c242ace6fa58ce68",
+   "state": null,
+   "fp": "929bb718bb9eebc5"
+  },
+  "O6-rules-mix/plain": {
+   "full": "ef47280d3fae27a0",
+   "state": "cfb78cb19ad83c03",
+   "fp": "35b932c75b88220f"
+  },
+  "O7-rules-pass-T/plain": {
+   "full": "7f8e745e7fc64c92",
+   "state": "089c3e54ded3822e",
+   "fp": "fdd32ada14dd50b4"
+  },
+  "A1-overlapping-fields/inert": {
+   "full": "e8ca25db0784bc49",
+   "state": "aeec90e396c1efbf",
+   "fp": "6019892225a804d4"
+  },
+  "A1-overlapping-fields/ability": {
+   "full": "bb656ec0bb3f9601",
+   "state": "508068c9d1984858",
+   "fp": "992dc0150e08cb32"
+  },
+  "A2-summons-constructs/inert": {
+   "full": "4ed4abb9b7c73040",
+   "state": "35a4b36b34c51069",
+   "fp": "d9cf31ca2133da5f"
+  },
+  "A2-summons-constructs/ability": {
+   "full": "1dc7c2468b3cad3b",
+   "state": "b79b477c43f26879",
+   "fp": "f6ac9214eb1a310d"
+  },
+  "A3-delayed-effects/inert": {
+   "full": "d0a278c1589e41b4",
+   "state": "654afaf41f38faf2",
+   "fp": "c63fdde9f4983efc"
+  },
+  "A3-delayed-effects/ability": {
+   "full": "7456200ac74f5252",
+   "state": "8d6606d88945270d",
+   "fp": "2e5f695a91b16280"
+  },
+  "A4-legendary-sequence/inert": {
+   "full": "7445abf632140c91",
+   "state": "5fec738413c86fa2",
+   "fp": "121a98c2569f0e92"
+  },
+  "A4-legendary-sequence/ability": {
+   "full": "8d29a3745148f637",
+   "state": "c7291981911e801d",
+   "fp": "ba5dec276b62cba3"
+  },
+  "A5-full-contracts/inert": {
+   "full": "e6f1ead0a0aae0b3",
+   "state": "c5640c0a3e31f60b",
+   "fp": "ec618cd59133674a"
+  },
+  "A5-full-contracts/ability": {
+   "full": "af40c67a26a2a8bb",
+   "state": "99b77922bb9feec2",
+   "fp": "f097c6bf5915ac02"
+  },
+  "X1-worst-case/inert": {
+   "full": "6df6e60b02541759",
+   "state": "4dc4ce8dfe0e8816",
+   "fp": "e2cad514f1d7c1ef"
+  },
+  "X1-worst-case/ability": {
+   "full": "caea41f859dd067b",
+   "state": "8f7510ab1aa579f6",
+   "fp": "d2d9e660935d98a1"
+  }
+ },
+ "games": {
+  "7001": {
+   "steps": "14f109ca715ffd946176",
+   "n": 122,
+   "final": "c9ad3845e793f33a45c4"
+  },
+  "7014": {
+   "steps": "d42ed9a1048d3a21af60",
+   "n": 112,
+   "final": "74c2cea9d2524e1f1b12"
+  },
+  "7027": {
+   "steps": "079aba16529bbac5921e",
+   "n": 101,
+   "final": "a4cd6c9488dda4fa5875"
+  },
+  "7040": {
+   "steps": "3e23094d12f0c3b1adb5",
+   "n": 108,
+   "final": "1116cee4c9f6469c21e4"
+  },
+  "7053": {
+   "steps": "6c7dba2d333751b1d3dd",
+   "n": 106,
+   "final": "3115e48c4c389ca210a5"
+  },
+  "7066": {
+   "steps": "0608b0f77e00863a13b5",
+   "n": 94,
+   "final": "0f2c53fd9ae6fd8f4d27"
+  },
+  "7079": {
+   "steps": "895b3be00db7ee7528c5",
+   "n": 103,
+   "final": "620c9e2a9090a1fabe89"
+  },
+  "7092": {
+   "steps": "9dd04be2da88ce3a1fe5",
+   "n": 119,
+   "final": "3961a7a42ca565c9d658"
+  },
+  "7105": {
+   "steps": "d46fb6114c8a42386729",
+   "n": 102,
+   "final": "101457f5577b0fb34ca0"
+  },
+  "7118": {
+   "steps": "8ccfe7a51ad840f772be",
+   "n": 104,
+   "final": "7c010bb2b30162878a79"
+  },
+  "7131": {
+   "steps": "701884f96d5d5feed673",
+   "n": 112,
+   "final": "287d76cd746344fefe66"
+  },
+  "7144": {
+   "steps": "d36f61c7029e44d897b9",
+   "n": 93,
+   "final": "6e7217f6ed4c8fed55e8"
+  }
+ }
+}

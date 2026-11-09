@@ -21,7 +21,10 @@ const imp = (rel) => import(pathToFileURL(path.join(ROOT, rel)).href);
 const GR = await imp('src/sim/game-runner.js');
 const { generatedTeam } = await imp('src/franchise/roster.js');
 const IS_T8 = fs.existsSync(path.join(ROOT, 'src/sim/abilities/registry.js'));
-const rep = (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v);
+// Presentation-only fields are left out of the hashes: they never feed the simulation (Task 8 fx, 2026-11-09: the snap snapshot
+// `t8view`, a field's `fresh` / `expires` flags, a status event's `remaining` / `restOfPlay`). Everything else is compared.
+const VIEW_ONLY = new Set(['t8view', 'fresh', 'expires', 'remaining', 'restOfPlay']);
+const rep = (k, v) => (VIEW_ONLY.has(k) ? undefined : v instanceof Set ? [...v] : v instanceof Map ? [...v] : v);
 const sha = (x) => crypto.createHash('sha256').update(typeof x === 'string' ? x : JSON.stringify(x, rep)).digest('hex').slice(0, 20);
 
 const out = { root: ROOT, scenes: {}, games: {} };
