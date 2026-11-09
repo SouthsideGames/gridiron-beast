@@ -1,3 +1,6 @@
+// FROZEN LEGACY RULESET (Task 8 M4 S0, docs/task8/M4_STATUS.md): this file plays the legacy rulesets ('current' = values 1.1.0,
+// 'v1.0.0') and must not change behaviour, so finished records and the golden fixtures keep replaying exactly. The Task 8
+// engine is ruleset 't8' in src/clash/t8/; src/clash/rulesets.js picks between them.
 // Beast Clash move handlers: the code that owns each mechanic a move row can name.
 // A move is data (kind, trigger, numbers, named effects); this registry says which kinds,
 // triggers and effects exist, so validation can refuse an unknown key. The engine calls
