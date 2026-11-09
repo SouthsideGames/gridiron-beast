@@ -172,7 +172,7 @@ for (const sc of scenes) {
     row.R2 = ratio(row.abil, row.base, ms.abil, ms.base, null, { seed: seed + 3 });
     const ctl = 'only:none';
     row.sub = Object.fromEntries(subs.filter((v) => v !== ctl).map((v, i) => { const x = ratio(row[v], row[ctl], ms[v], ms[ctl], null, { gate: 'pairedMedian', seed: seed + 10 + i }); return [v, { ...x, quality: quality(x, machine), median: row[v].median, abilityEvents: row[v].abilityEvents, noisyJob: row[v].noisy }]; }));
-    row.subControl = { median: row[ctl].median, overOff: row[ctl].median / row.offA.median, noisy: row[ctl].noisy };
+    row.subControl = row[ctl] ? { median: row[ctl].median, overOff: row[ctl].median / row.offA.median, noisy: row[ctl].noisy } : null; // null with --no-sub (no control was run)
     for (const v of subs) delete row[v]; row.subRuns = Object.fromEntries(subs.map((v) => [v, { runs: ms[v], wallRuns: wall[v], fp: first[v].fp, ticksPerPlay: first[v].ticks / first[v].plays, actorTicks: first[v].actorTicks }]));
   }
   results.push(row);

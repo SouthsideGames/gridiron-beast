@@ -45,7 +45,9 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   const ev = (a, kind, text, extra = {}) => log(text, { kind, by: a.slot, side: a.team, ...extra });
   // A monster's per-play field state. Perf (outcome-identical): every key it can take is declared at creation (undefined reads as
   // absent; nothing enumerates it), so all of them share one object shape.
-  const fxState = (cut) => ({ seen: new Set(), attr: {}, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined });
+  // Same for the effective-attribute layer record (layer(): a missing key and undefined both read as 0; nothing enumerates it).
+  // Third pass: `m` is the lookup the last tick resolved for him (its entry events are done) and `byType` his type's memo map.
+  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: undefined, catching: undefined, blocking: undefined }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined, m: undefined, byType: undefined });
   const applicableMax = (a) => a.maxSpeed; // already carries the shared modifiers (engine refreshMaxSpeed)
   const unpair = (a) => { if (a.engaged) { a.engaged.engaged = null; a.engaged = null; } };
 
@@ -80,15 +82,38 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   // (monster type, set of containing fields) is resolved once per play, with the base-effect lookup built from it as before; both
   // are shared read-only (nothing writes into a.fx.base or the effectsAt result).
   const memo = new Map(); const bigList = fields.length > 30;
+  // Perf (outcome-identical, third pass): the containment test reads each field's four bounds from flat arrays filled once per play
+  // (the play-frame fields are plain copies that nothing changes during the play); a field with removed footprints (holes) keeps the
+  // full `contains` test. The test itself is fields.js inRect unchanged (>= and <= on the same values). An actor outside the union of
+  // every field's rectangle (strictly below a minimum or above a maximum) is inside no field, so his containment key is the empty one
+  // without visiting any field.
+  const NF = fields.length, FY0 = new Float64Array(NF), FY1 = new Float64Array(NF), FL0 = new Float64Array(NF), FL1 = new Float64Array(NF), HOLED = new Uint8Array(NF);
+  let UY0 = Infinity, UY1 = -Infinity, UL0 = Infinity, UL1 = -Infinity;
+  for (let i = 0; i < NF; i++) {
+    const f = fields[i]; FY0[i] = f.yard[0]; FY1[i] = f.yard[1]; FL0[i] = f.lat[0]; FL1[i] = f.lat[1]; HOLED[i] = f.holes?.length ? 1 : 0;
+    if (FY0[i] < UY0) UY0 = FY0[i]; if (FY1[i] > UY1) UY1 = FY1[i]; if (FL0[i] < UL0) UL0 = FL0[i]; if (FL1[i] > UL1) UL1 = FL1[i];
+  }
+  // The per-type base-effect lookup is created with every element key it can take (undefined reads as absent: `?.strength ?? 0`,
+  // truthiness), in one fixed order, so every lookup object shares one shape and the per-tick reads are monomorphic.
+  const baseOf = (e) => {
+    const base = { Fire: undefined, Water: undefined, Nature: undefined, Electric: undefined, Earth: undefined, Ice: undefined, Wind: undefined, Psychic: undefined, Dark: undefined, Light: undefined, Metal: undefined, Dragon: undefined };
+    for (const b of e.base) base[b.type] = { strength: b.strength, field: byId.get(b.fieldId) };
+    return base;
+  };
   function effectsHere(a) {
-    let byType = memo.get(a.type); if (!byType) { byType = new Map(); memo.set(a.type, byType); }
+    // Perf: an actor's type never changes, so his field state keeps his type's memo map once it has one (the Map lookup is skipped)
+    const st = a.fx; let byType = st ? st.byType : undefined;
+    if (!byType) { byType = memo.get(a.type); if (!byType) { byType = new Map(); memo.set(a.type, byType); } if (st) st.byType = byType; }
     let k = bigList ? '' : 0;
-    for (let i = 0; i < fields.length; i++) if (contains(fields[i], a.x, a.y)) { if (bigList) k += `${i},`; else k |= 1 << i; }
+    const x = a.x, y = a.y;
+    if (!(x < UY0 || x > UY1 || y < UL0 || y > UL1)) for (let i = 0; i < NF; i++) {
+      if (HOLED[i] ? !contains(fields[i], x, y) : !(x >= FY0[i] && x <= FY1[i] && y >= FL0[i] && y <= FL1[i])) continue;
+      if (bigList) k += `${i},`; else k |= 1 << i;
+    }
     let m = byType.get(k);
     if (!m) {
       const e = effectsAt(fields, a.x, a.y, a.type);
-      const base = {}; for (const b of e.base) base[b.type] = { strength: b.strength, field: byId.get(b.fieldId) };
-      m = { e, base }; byType.set(k, m);
+      m = { e, base: baseOf(e) }; byType.set(k, m);
     }
     return m;
   }
@@ -101,11 +126,17 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       const m = effectsHere(a); const e = m.e;
       st.base = m.base;
       st.hybrid = e.hybrid?.name || null;
-      for (const b of e.base) if (!st.seen.has(b.fieldId)) {
-        st.seen.add(b.fieldId); ev(a, 'field_enter', `${a.name} enters a ${b.type} field`, { field: b.fieldId, element: b.type });
-        if (b.type === 'Electric') electric(a, st.base.Electric);
+      // Perf (outcome-identical, third pass): the entry checks run only when his resolved lookup is not the one of his previous tick.
+      // After one pass over a lookup every one of its field ids and its hybrid name is in `seen`, so with the same lookup again every
+      // test below would be false: no entry event, no Electric roll.
+      if (m !== st.m) {
+        st.m = m;
+        for (const b of e.base) if (!st.seen.has(b.fieldId)) {
+          st.seen.add(b.fieldId); ev(a, 'field_enter', `${a.name} enters a ${b.type} field`, { field: b.fieldId, element: b.type });
+          if (b.type === 'Electric') electric(a, st.base.Electric);
+        }
+        if (st.hybrid && !st.seen.has(st.hybrid)) { st.seen.add(st.hybrid); ev(a, 'field_enter', `${a.name} enters ${st.hybrid}`, { hybrid: st.hybrid }); }
       }
-      if (st.hybrid && !st.seen.has(st.hybrid)) { st.seen.add(st.hybrid); ev(a, 'field_enter', `${a.name} enters ${st.hybrid}`, { hybrid: st.hybrid }); }
       if (st.base.Water && a.cutUntil !== st.cut && a.cutUntil > t) water(a, st.base.Water);
       st.cut = a.cutUntil;
       const ms = -(st.base.Fire?.strength ?? 0) + (st.base.Wind?.strength ?? 0); // Fire and Wind: one maximum-speed property, added
@@ -136,12 +167,15 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   }
 
   /** Steering: Nature reduces the turning (perpendicular) share of a velocity change, Ice the braking share. Null when unaffected. */
+  // Perf (outcome-identical, third pass): the result goes out in one reused pair (its caller, the engine's steer, reads both numbers
+  // at once and keeps nothing), so a shaped step allocates nothing.
+  const shaped = [0, 0];
   function shapeDv(a, dvx, dvy) {
     const nat = pct(a.fx?.base?.Nature?.strength), ice = pct(a.fx?.base?.Ice?.strength); if (!nat && !ice) return null;
     const s = Math.hypot(a.vx, a.vy); if (s < 0.05) return null;
     const ux = a.vx / s, uy = a.vy / s; let par = dvx * ux + dvy * uy; const px = (dvx - par * ux) * (1 - nat), py = (dvy - par * uy) * (1 - nat);
     if (par < 0) par *= 1 - ice;
-    return [par * ux + px, par * uy + py];
+    shaped[0] = par * ux + px; shaped[1] = par * uy + py; return shaped;
   }
   /** A stunned monster's coasting decay per tick (0.93 ordinarily): Ice extends the slide by the same braking reduction. */
   const coast = (a) => { const ice = pct(a.fx?.base?.Ice?.strength); return ice ? 1 - 0.07 * (1 - ice) : 0.93; };
@@ -198,7 +232,10 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   }
   // M3 hook: a field's Prism Break removed footprints (holes) go out with it
   const output = () => ({ fields: fields.map((f) => ({ id: f.id, type: f.type, strength: f.strength, owner: f.owner, ability: f.ability, yard: [...f.yard], lat: [...f.lat], ...(f.holes?.length ? { holes: f.holes.map((h) => ({ yard: [...h.yard], lat: [...h.lat] })) } : {}) })), clumps: clumps.map((c) => ({ x: +c.x.toFixed(2), y: +c.y.toFixed(2), d: LIVING_TERRAIN.diameter })) });
-  return { tick, shapeDv, coast, resist, displace, defer, lure, canStart, output, get clumps() { return clumps; }, bonds, echoes };
+  // hasEarth: does any field of this play have the Earth type? Without one no lookup ever carries an Earth entry, so resist() is
+  // exactly 1 for everyone (the engine's separation pass uses this to take its plain loop).
+  const hasEarth = fields.some((f) => f.type === 'Earth');
+  return { tick, shapeDv, coast, resist, displace, defer, lure, canStart, output, get clumps() { return clumps; }, bonds, echoes, hasEarth };
 }
 
 /**

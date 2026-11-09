@@ -228,9 +228,15 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // Perf (outcome-identical): the contract context (and the ability stream, a pure function of the seed that only it draws from)
   // is built at the first contract hook call, so a play where no contract acts never allocates it.
   let abilityCtx = null;
+  let tickers = null; // Perf: the actors with a contract tick hook (built at the first tick, emptied when an actor is added)
   const buildAbilityCtx = () => { const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13); return { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
-    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => (!FX || FX.canStart(a)) && activationAllowed(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
+    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => (!FX || FX.canStart(a)) && activationAllowed(a),
+    // Perf (outcome-identical, third pass): the opponents of a side are the engine's own defs / offs lists (order-preserving filters
+    // of `actors`, extended by spawnActor in the same order), handed out without a copy. Every contract only reads the list (for-of,
+    // some, find, filter, map; none keeps or changes it, and none spawns while iterating it): read-only by contract. Any other
+    // `team` value keeps the general filter.
+    opponents: (team) => (team === 'off' ? defs : team === 'def' ? offs : actors.filter((x) => x.team !== team)), dist: (p, q) => dist(p, q),
     applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null),
     // M3 hook: generic play capabilities for contracts (the actors, the play bounds and obstacles, the result so far, the ball's
     // lateral, man/zone coverage responsibility, last nonzero heading, and callbacks run after every playEnd hook)
@@ -301,7 +307,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, temp: { credit } };
     // Perf (outcome-identical): the same values as before, in the lineup's actor shape (actorRecord); the spec's other keys follow.
     const a = actorRecord(v); for (const k of Object.keys(v)) if (!RECORD_BASE.has(k)) a[k] = v[k];
-    actors.push(a); (a.team === 'off' ? offs : defs).push(a); history.set(a, []); snapPos.set(a, { x: a.x, y: a.y });
+    actors.push(a); (a.team === 'off' ? offs : defs).push(a); history.set(a, []); snapPos.set(a, { x: a.x, y: a.y }); tickers = null;
     return a;
   }
   // ------------------------------------------------------------ Task 8 shared statuses in play (spec §10, §11; Appendix B)
@@ -467,8 +473,9 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   function separate() {
     // Perf (outcome-identical): with no field and no actor carrying a body rule (engaged2, passAllies, phased, anchor; all falsy), every
     // M3 test below is false and every push is the plain one, so the plain loop (the baseline's, with the far-pair skip) gives the
-    // same pushes in the same order.
-    let rules = !!FX; if (!rules) for (let i = 0; i < actors.length; i++) { const a = actors[i]; if (a.engaged2 || a.passAllies || a.phased || a.anchor) { rules = true; break; } }
+    // same pushes in the same order. Third pass: a play whose fields include no Earth field is the same case (FX.hasEarth false: no
+    // lookup carries an Earth entry, so FX.resist is exactly 1 and push * 1 is push).
+    let rules = !!FX && FX.hasEarth; if (!rules) for (let i = 0; i < actors.length; i++) { const a = actors[i]; if (a.engaged2 || a.passAllies || a.phased || a.anchor) { rules = true; break; } }
     if (!rules) {
       for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
         const a = actors[i], b = actors[j];
@@ -2446,7 +2453,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
       const fr = ball.holder === qb && phase === 'dropback' && !scrambled ? (qb.windup ? qb.windup.r : qr.cur ? bySlot.off[qr.cur.slot] : null) : null;
       facingHist.push(fr ? { ang: Math.atan2(fr.y - qb.y, fr.x - qb.x), windup: !!qb.windup, qx: qb.x, qy: qb.y } : null); if (facingHist.length > 40) facingHist.shift();
     }
-    for (const a of actors) if (a.contract) hook('tick', a); // Task 8 M3 contracts, every tick
+    // Task 8 M3 contracts, every tick. Perf (outcome-identical, third pass): the actors whose contract has a tick hook, in actor order,
+    // are listed once per play (a contract is fixed on the actor at creation and the contract objects are frozen; a temporary added
+    // by spawnActor has none and empties the list so it is rebuilt), and each gets exactly hook()'s steps: the context is built at the
+    // first call, the hook runs when he may act on this play.
+    if (!tickers) { tickers = []; for (const a of actors) if (a.contract?.hooks?.tick) tickers.push(a); }
+    { const tk = tickers; for (let i = 0; i < tk.length; i++) { const a = tk[i]; if (!abilityCtx) abilityCtx = buildAbilityCtx(); if (mayAct(a)) a.contract.hooks.tick(abilityCtx, a); } }
     if (tick === 1) for (const a of actors) snapPos.set(a, { x: a.x, y: a.y });
 
     if (tick === 4) for (const a of actors) { if (a.ability?.aura) abilityUsed(a, 'aura'); if (a.overcharged) abilityUsed(a, 'overcharge'); if (a.sovereignQ4 && !isRun) abilityUsed(a, 'sovereign'); }
@@ -2468,7 +2480,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     for (const d of defs) defenseTick(d);
     for (const a of actors) if (!a.engaged) integrate(a);
     separate();
-    if (obstacles.length) for (const o of obstacles) if (o.live) for (const a of actors) if (o.blocks(a)) keepOut(a, o); // M3 hook: contract obstacles
+    // M3 hook: contract obstacles. Perf (outcome-identical, third pass): keepOut's own first test (a body outside the obstacle's
+    // padded footprint: nothing to do) runs before the contract's blocks() predicate, which is pure (every one is a plain test on the
+    // actor), so a far body skips both; for a circle, a body at least R apart on either axis is at least R apart (hypot >= max |d|).
+    if (obstacles.length) for (const o of obstacles) if (o.live) {
+      if (o.kind === 'circle') { const R = o.r + BODY; for (const a of actors) { const dx = a.x - o.x, dy = a.y - o.y; if (dx >= R || dx <= -R || dy >= R || dy <= -R) continue; if (o.blocks(a)) keepOut(a, o); } }
+      else { const x0 = o.x0 - BODY, x1 = o.x1 + BODY, y0 = o.y0 - BODY, y1 = o.y1 + BODY; for (const a of actors) { if (a.x <= x0 || a.x >= x1 || a.y <= y0 || a.y >= y1) continue; if (o.blocks(a)) keepOut(a, o); } }
+    }
     {
       const c = ball.holder;
       // Landslide: a run that crosses the line within 2.5 yards of him gets his two extra yards when tackled (special teams excluded).
