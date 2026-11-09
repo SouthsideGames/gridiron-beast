@@ -285,3 +285,31 @@ The proposals are in [M4_PLAN.md](M4_PLAN.md) §5. The rulings are in [SPECIFICA
 | Watch vs Skip battle equality | **Approved** | The Auto-choice log entry is preserved. Watch answered with Auto and Skip must give identical outcomes, final state, exchanges and gameplay events; only the explicitly identified Auto-selection entry (`rotation_decision`) may differ. Tests use the game's own Auto settlement, which must not advance the RNG or alter decisions relative to Skip (asserted in tests/tuesday-companions.test.js) |
 | Remaining presentation items | **Approved to finish** | Match-screen kick effects, the approved pre-snap field visibility, reduced-flash controls, and the completion matrix for all 144 abilities |
 | Milestone order | **Approved** | Targeted checks while finishing; then one milestone regression on the final frozen build, a browser check and performance measurement with the finished visuals. No further full run before the remaining runtime changes are integrated |
+
+## Owner rulings, 2026-11-09 18:14 (N9c): packet questions
+
+**Football**
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Runway, Bloom Break, Crosswind Rescue | **Approved** | Show the pending field before the choice as conditional on the creator participating. If the selected play excludes the creator, readiness is preserved. Bloom Break's patches are not rerolled: its random placement choices are preserved, and the placement is the same while the formation reference is unchanged. The handling when the ball position changes is to be explained |
+| Charge Strip, Static Field | **Approved** | Reveal after both play calls, before the snap, using the creator's actual initial alignment. No artificial fixed placement |
+| Bramble Trap | **Approved** | Its approved before-snap visibility is sufficient |
+| Foresight | **Open: proposal requested** | A concrete pre-choice setup proposal. The alignment condition and range are not to change without approval |
+| Prism Break | **Open: proposal requested** | Propose the pre-choice measuring reference and event order, including whether pending fields can be removed. No hidden future alignment |
+
+**Beast Clash**
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| A Replacement attacks | **Approved** | Replacement attacks do not receive ordinary-attack archetype perks (Iron Bite, Daybreak Lance, Circuit Breaker). Mind Game's ordinary trick attack retains them |
+| B Dawn Song | **Approved** | Heals its caster. Verify whether later pulses raise a separate recipient question after rotation |
+| C Feather Relay | **Approved** | Counts as a voluntary rotation for Cinder Clamp, Riptide Pursuit, Cold Welcome and Shell Harvest, keeping its exemption from the half-strength entry penalty |
+| D Card vs mastery values | **Open** | Show the conflicting card and mastery values for Daybreak Lance, Clear Light, Forge Swipe and Fortress. Precedence remains open |
+| E Boosted normal attacks | **Approved** | A normal attack with a damage bonus remains ordinary and retains applicable perks (Radiant Pursuit, Night Swoop, Predator Rhythm). Distinct replacement actions do not |
+| F Stone Divide | **Open: scope requested** | Provide its exact scope and the affected secondary-hit and retaliation interactions. Interception is not broadened without approval |
+| G Delayed impacts | **Approved in part** | Where the contract fixes targets when impact starts, the then-active fighter is hit. Due end-of-exchange impacts resolve before the battle-cap check. Handling of impacts not yet due at the cap: proposal requested |
+| H Clear Light cooldown | **Approved** | Counts its owner's normal turns unless its contract explicitly says otherwise; any such conflict is flagged |
+| Tank bruise; exact battle-length rules | **Open** | Remaining concrete choices to be returned together |
+
+Requests for proposals are not approval of unspecified mechanics.
