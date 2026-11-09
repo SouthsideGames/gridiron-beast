@@ -167,12 +167,15 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   }
 
   /** Steering: Nature reduces the turning (perpendicular) share of a velocity change, Ice the braking share. Null when unaffected. */
+  // Perf (outcome-identical, third pass): the result goes out in one reused pair (its caller, the engine's steer, reads both numbers
+  // at once and keeps nothing), so a shaped step allocates nothing.
+  const shaped = [0, 0];
   function shapeDv(a, dvx, dvy) {
     const nat = pct(a.fx?.base?.Nature?.strength), ice = pct(a.fx?.base?.Ice?.strength); if (!nat && !ice) return null;
     const s = Math.hypot(a.vx, a.vy); if (s < 0.05) return null;
     const ux = a.vx / s, uy = a.vy / s; let par = dvx * ux + dvy * uy; const px = (dvx - par * ux) * (1 - nat), py = (dvy - par * uy) * (1 - nat);
     if (par < 0) par *= 1 - ice;
-    return [par * ux + px, par * uy + py];
+    shaped[0] = par * ux + px; shaped[1] = par * uy + py; return shaped;
   }
   /** A stunned monster's coasting decay per tick (0.93 ordinarily): Ice extends the slide by the same braking reduction. */
   const coast = (a) => { const ice = pct(a.fx?.base?.Ice?.strength); return ice ? 1 - 0.07 * (1 - ice) : 0.93; };

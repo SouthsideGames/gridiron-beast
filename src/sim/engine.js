@@ -231,7 +231,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   let tickers = null; // Perf: the actors with a contract tick hook (built at the first tick, emptied when an actor is added)
   const buildAbilityCtx = () => { const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13); return { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
-    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => (!FX || FX.canStart(a)) && activationAllowed(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
+    queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => (!FX || FX.canStart(a)) && activationAllowed(a),
+    // Perf (outcome-identical, third pass): the opponents of a side are the engine's own defs / offs lists (order-preserving filters
+    // of `actors`, extended by spawnActor in the same order), handed out without a copy. Every contract only reads the list (for-of,
+    // some, find, filter, map; none keeps or changes it, and none spawns while iterating it): read-only by contract. Any other
+    // `team` value keeps the general filter.
+    opponents: (team) => (team === 'off' ? defs : team === 'def' ? offs : actors.filter((x) => x.team !== team)), dist: (p, q) => dist(p, q),
     applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null),
     // M3 hook: generic play capabilities for contracts (the actors, the play bounds and obstacles, the result so far, the ball's
     // lateral, man/zone coverage responsibility, last nonzero heading, and callbacks run after every playEnd hook)
