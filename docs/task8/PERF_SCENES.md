@@ -682,3 +682,68 @@ Before them, the identity proof of the build: `node tools/perf/identity.mjs --ro
 
 Raw runs: `docs/task8/data-perf-n8e-preliminary.json` (this section's run); before N8e: `docs/task8/data-perf-scenes-before.json`
 and `data-perf-scenes-after.json`.
+
+## 13. Third pass: ability overhead (2026-11-08/09, owner direction 23:13; branch `task8-sim-opt`)
+
+Targets named by the owner: repeated field exposure and overlap calculations; unnecessary summon, construct and collision
+processing. Short targeted checks only, no long benchmark cycles. **Every figure in this section is PROVISIONAL** (short runs, 5
+repeats, busy machine).
+
+**Identity after every step:** `node tools/perf/identity.mjs --root=. --compare=<hashes>`, hashes made from `git archive acdc91e` with
+this branch's `tools/perf` copied in (`--out`): **IDENTICAL, 19 scene variants (13 scenes), 12 full games**, at 5b2ae99 (start) and
+after each commit below. Targeted tests after each commit: `tests/task8-*.test.js` (34 files), `engine`, `abilities`,
+`legendary-plays`, `replay`, `pursuit`, `run-read`, `qb-read`: **349/349** (never the full suite).
+
+| Commit | Change (file) | Why it is identical |
+| --- | --- | --- |
+| b0257cc | **Field containment** (field-effects.js `effectsHere`): each field's four bounds are read from flat arrays filled once per play, and an actor outside the union of all field rectangles skips the per-field loop (empty containment key). A field with removed footprints (`holes`) keeps the full `contains()`. | The play-frame fields are plain copies that nothing changes during the play (Prism Break edits the stored list between plays). The per-field test is `inRect` unchanged (same `>=` / `<=` on the same numbers). Outside the union's bounds no `inRect` can be true. The key, the memo and `effectsAt` are unchanged. |
+| b0257cc | **One shape** for the per-type base-effect lookup (all twelve element keys declared, undefined) and for the attribute-layer record `fx.attr` (`awareness`, `catching`, `blocking`). | Undefined reads exactly as absent at every read site (`?.strength ?? 0`, truthiness, `|| 0`). Nothing enumerates either object (checked: the only reader outside field-effects.js is nightowl's `b.fx?.base?.Dark` truthiness test). |
+| b0257cc | **Separation:** a play whose fields include no Earth field takes the plain loop of #5 when no actor carries a body rule (`FX.hasEarth`). | Without an Earth field no lookup has an Earth entry, so `FX.resist` is exactly `1 - min(0.99, 0) = 1` and `push * 1 === push`. Every other M3 test in the full loop is false in that case (same as #5): same pushes, same order. |
+| b0257cc | **Obstacles:** `keepOut`'s own outside-the-footprint test runs before the contract's `blocks()` predicate (rect: the same padded `<=` / `>=` test; circle: \|dx\| or \|dy\| ≥ r + body). | All `blocks` predicates are pure (the default `() => true`, Stone Screen's `a !== self`); keepOut returns at once for every skipped actor (for a circle, `hypot >= max |component| >= R`). Same actors pushed, same order, same values. |
+| b0257cc | **Tick dispatch:** a per-play list of the actors whose contract has a `tick` hook, in actor order. `spawnActor` resets it. Each listed actor gets exactly `hook()`'s steps (context built at the first call, then `mayAct`). | A contract is set on the actor at creation and never changes, and contract objects are frozen. An actor without a tick hook made `hook()` return undefined with no side effect, whether or not a context existed (the lazy context is built only when a hook exists). |
+| 17ae6f3 | **Field entry checks** run only when an actor's resolved lookup object differs from his previous tick's. His type's memo map is kept on his field state. | After one pass over a lookup, every one of its field ids and its hybrid name is in `seen`, so with the same lookup the loop's tests are all false: no event, no Electric roll (the draw only happens inside a first entry). An actor's type never changes (no assignment anywhere in `src/sim`). |
+| c54a612 | **`ctx.opponents(team)`** returns the engine's own `defs` / `offs` list instead of a new filtered array. `shapeDv` returns one reused pair. | `defs` / `offs` are order-preserving filters of `actors`, extended by spawnActor in the same order, so the elements and order are equal to the filter. Every contract only reads the list (13 call sites: for-of, some, find, filter, map), and none spawns while iterating it. steer reads both numbers of `shapeDv` at once and keeps nothing. |
+| cdbc5a8 | Runner (tools only): `--no-sub` no longer crashes on the missing `only:none` control. | No game code. |
+
+**Tried and not kept:** none. The tick-hook dispatch and obstacle pre-test are small on these scenes (`hook` and `keepOut` self time
+are 1 to 2% of a profile). They are kept because they are exact and remove per-tick work that grows with actors and obstacles.
+
+**Short-run gains (PROVISIONAL).**
+- *In-process, same build, A1 abilities on / off* (scratch harness: 7 rounds, settle runs, alternating order; machine under other
+  load): abilities-on median CPU **297 → 254 ms after b0257cc → 238 ms after 17ae6f3**. The twin was unchanged at 176 ms in both
+  quiet-enough rounds.
+- *CPU profile, A1 abilities on, 10 passes, 100 µs sampling:* field-effects.js self time **9.2% → 6.4% of the profile** (652 of 7,065 ms
+  before, 295 of 4,597 ms after). Relative to engine.js self time, **0.155 → 0.103**. fields.js 1.9% → 1.9%; GC 12.9% → 11.6%.
+  (Shares only. The two profiles ran under different machine load, so their absolute times are not comparable.)
+- *Old build against new build, abilities on, two worker processes, 9 rounds ABBA* (fingerprints equal): A1 0.96, A2 1.04, A5 0.95,
+  X1 1.05 (IQRs about ±0.1). This is a cross-process comparison, so it carries the ±15 to 30% process-instance effect of §3.1
+  item 1. It shows no regression but does not resolve a gain.
+- *The runner's R1* (`run-scenes.mjs --scenes=A1,A2,A5,X1 --repeats=5 --no-sub`): two before/after pairs, all **PRELIMINARY (not quiet)**.
+  Competing CPU was **1.04 / 0.61 CPU (pair a)** and **1.18 / 1.24 CPU (pair b)** for the whole run (0.28 to 1.41 per scene; the quiet
+  limit is 0.05). The machine was shared with other agents throughout. At that load the R1 intervals span about 0.4 to 2.9 and
+  move by up to 0.6 between identical builds, so they cannot show a 10 to 15% change. They are kept as
+  `docs/task8/perf-runs/2026-11-09-third-pass-short-{before,after}-{a,b}.json` and are not used for any verdict:
+
+| Scene | R1 before, pair a / pair b (95% interval) | R1 after, pair a / pair b (95% interval) | per-step × volume (after, b) |
+| --- | --- | --- | --- |
+| A1 overlapping fields | 1.233 (0.86–1.75) / 1.713 (1.04–1.99) | 1.369 (0.70–1.86) / 1.545 (0.84–1.57) | 1.568 × 0.986 |
+| A2 summons, constructs | 1.242 (0.74–1.50) / 1.539 (1.14–2.94) | 1.410 (0.93–1.78) / 1.339 (0.86–2.44) | 1.360 × 0.985 |
+| A5 every slot | 0.983 (0.97–1.69) / 1.606 (0.96–1.93) | 1.369 (1.14–1.60) / 1.002 (0.36–1.25) | 0.962 × 1.041 |
+| X1 worst case | 1.350 (0.78–1.56) / 1.542 (1.23–1.96) | 1.587 (1.11–2.07) / 1.542 (1.22–1.61) | 1.510 × 1.021 |
+
+The volume factors are deterministic and unchanged (no change of outcome). The overhead is still per step. **Verdict against the
+provisional 1.25 budget: not determinable from these runs.** It needs the quiet-machine run of §11 (or at least the four scenes on
+a quiet machine, 15 repeats).
+
+**What remains (outcome-identical options not done):**
+1. *Separation with temporaries and fields* (A2, X1, any play with an Earth field): a spatial pre-filter must keep pair order and
+   in-pass pushes. A grid built before the pass can miss a pair brought together by an earlier push. Not proven identical, so not done.
+   The per-pair far skip of #1 already removes most of the work.
+2. *Whole-field fields* (A1's Dark field, X1): every actor is inside, so the union test cannot skip anyone. The remaining per-actor
+   cost is the layers and the maximum-speed refresh, which must run every tick as specified.
+3. *Allocation* (GC 11 to 13% of an A1 profile): most of it is the engine's own per-tick arrays (zone reads, read cues, blocking
+   sorts, `recordFrame`), which ordinary plays pay too. The field path's remaining allocation is `effectsAt` on a lookup miss (1 to 3%).
+   Changing the engine's sorts or frame records is possible but touches ordinary-play code. It was not attempted under "short checks".
+
+**Would need owner approval (not proposed, not done):** caching the Dark-field Awareness layer (§9.1 item 4: not bit-identical);
+evaluating field effects less often than every tick; capping simultaneous temporaries or obstacles.
