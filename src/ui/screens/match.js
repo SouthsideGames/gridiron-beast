@@ -234,13 +234,14 @@ export function registerMatchScreens(Router, app) {
     if (Router.currentScreen()?.name !== 'match' || !f?.game || !svg || !head || !after || !controls) { Router.render(); return; }
     const P = screenParts(f);
     const h1 = document.querySelector('.topbar .title'); if (h1) h1.textContent = P.title;
-    head.innerHTML = P.head;
+    const put = (el, html) => { if (el.__html !== html) { el.innerHTML = html; el.__html = html; } }; // unchanged regions are not rebuilt
+    put(head, P.head);
     wrap.className = P.wrapClass;
     fieldDraw(svg, P.field);
     while (svg.nextSibling) svg.nextSibling.remove();
     svg.insertAdjacentHTML('afterend', P.over);
-    after.innerHTML = P.after;
-    controls.innerHTML = P.controls;
+    put(after, P.after);
+    if (f.settings.liveClock) { controls.innerHTML = P.controls; controls.__html = null; } else put(controls, P.controls); // the live play clock's digits are reset by a rebuild
     afterRender(f, root);
     momentSheets(f);
   }

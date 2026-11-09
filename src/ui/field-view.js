@@ -181,7 +181,7 @@ export function fieldSvg(o) {
  * Draw the field into a live <svg> (the match screen's playback). The three children fieldSvg emits are kept across draws:
  * sprite symbols are added to <defs> as new ones appear (never removed within the element's life), the static layer is replaced
  * only when its markup changed (camera move, new situation), the dynamic layer every draw. An <svg> first filled with
- * fieldSvg() is adopted as it stands. Returns { staticRedrawn }.
+ * fieldSvg() is adopted as it stands. A layer whose markup did not change is not touched. Returns { staticRedrawn, dynamicRedrawn }.
  */
 export function fieldDraw(svg, o) {
   const L = fieldLayers(o);
@@ -191,14 +191,15 @@ export function fieldDraw(svg, o) {
     for (const c of svg.children) { const cl = c.getAttribute('class'); if (cl === 'fv-defs') defs = c; else if (cl === 'fv-static') statics = c; else if (cl === 'fv-dyn') dyn = c; }
     if (!defs || !statics || !dyn) { svg.innerHTML = '<defs class="fv-defs"></defs><g class="fv-static"></g><g class="fv-dyn"></g>'; [defs, statics, dyn] = svg.children; }
     const ids = new Set(); for (const c of defs.children) if (c.id) ids.add(c.id);
-    st = svg.__fv = { defs, statics, dyn, ids, staticStr: null, draws: 0 };
+    st = svg.__fv = { defs, statics, dyn, ids, staticStr: null, dynStr: null, draws: 0, skipped: 0 };
   }
   for (const x of L.symbols) if (!st.ids.has(x.id)) { st.ids.add(x.id); st.defs.insertAdjacentHTML('beforeend', x.symbol); }
   const staticRedrawn = L.statics !== st.staticStr;
   if (staticRedrawn) { st.statics.innerHTML = L.statics; st.staticStr = L.statics; }
-  st.dyn.innerHTML = L.dynamic;
-  st.draws++;
-  return { staticRedrawn };
+  // Nothing moved (a still frame of the end-of-play hold, a re-render of the same moment): the dynamic layer is left as it is.
+  const dynamicRedrawn = L.dynamic !== st.dynStr;
+  if (dynamicRedrawn) { st.dyn.innerHTML = L.dynamic; st.dynStr = L.dynamic; st.draws++; } else st.skipped++;
+  return { staticRedrawn, dynamicRedrawn };
 }
 
 /**
