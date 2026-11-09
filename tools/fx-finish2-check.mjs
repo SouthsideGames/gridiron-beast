@@ -148,10 +148,12 @@ try {
   await page.evaluate(async () => { const f = globalThis.__gb.f; const F = await import('/src/franchise/franchise.js'); const G = f.game; const s = G.state; const T = F.sundayMatchup(f)[G.playerSide]; const wr = T.offense.WR1;
     for (const x of [wr, f.roster.find((r) => r.id === wr.id)]) if (x) Object.assign(x, { species: 'gustling', form: 'gustling:0', type: 'Wind', mastery: 0 }); if (s.t8?.ability) delete s.t8.ability[wr.id]; if (s.t8?.fields) { s.t8.fields.list = []; s.t8.fields.pending = []; } });
   await situation(true, 11); await pickCard(0); await sleep(450); const rw0 = await field(); await shot('4a-playcall-runway-reveal'); await sleep(1600); await settle(); const rw1 = await field(); await shot('4b-playcall-runway-settled');
+  const condNote = await page.evaluate(() => document.querySelector('.t8-conditional')?.textContent.trim() || '');
   const place0 = await page.evaluate(() => { const r = document.querySelector('#field rect.t8-field'); return r ? ['x', 'y', 'width', 'height'].map((k) => r.getAttribute(k)).join(',') : null; });
   await pickCard(1); await settle(); await sleep(120); const place1 = await page.evaluate(() => { const r = document.querySelector('#field rect.t8-field'); return r ? ['x', 'y', 'width', 'height'].map((k) => r.getAttribute(k)).join(',') : null; });
   const infoR = await snap(); let rwPlay = null; if (infoR) { await holdAt(infoR, 3); rwPlay = await page.evaluate(() => { const r = document.querySelector('#field rect.t8-field'); return r ? { opacity: r.getAttribute('opacity') || '1', el: r.dataset.element } : null; }); await shot('4c-snap-runway-in-play'); await finishPlay(); }
-  report.runway = { rw0, rw1, place0, place1, rwPlay };
+  report.runway = { rw0, rw1, place0, place1, rwPlay, condNote };
+  check(/Runway is created at the snap only if .* is on the field for the play/.test(condNote), `N9c: the field is marked as conditional on its creator taking part: "${condNote}"`);
   check(rw1.rects === 1 && rw0.post + rw0.rects > 0, `Runway is drawn on the play-call screen before the snap (rect ${rw1.rects})`);
   check(!!place0 && (place1 === null || place1 === place0), `choosing another play does not move it (${place0} -> ${place1 ?? 'not on the field for that call'})`);
   check(!!rwPlay && Number(rwPlay.opacity) === 1 && rwPlay.el === 'Wind', 'the snap creates it there and the play does not reveal it a second time');
