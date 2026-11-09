@@ -25,7 +25,7 @@ import { fieldGoalDistance, yardLabel } from '../../core/field.js';
 import { teamOverall } from '../../franchise/roster.js';
 import { boxScoreHtml } from '../box-score.js';
 import { buildFx, shakeBetween, endHold } from '../ability-fx.js';
-import { kickPlay, presnapFields, presnapFx, createRevealClock, abilityTicks, absentMonsters, dexAbilityName, createAbsenceTracker, servedVacancies, inspectInfo, lastPlayNotes, findMonster } from '../fx/match-fx.js';
+import { kickPlay, presnapFields, presnapFx, createRevealClock, abilityTicks, absentMonsters, dexAbilityName, createAbsenceTracker, servedVacancies, inspectInfo, lastPlayNotes, findMonster, conditionalNotes } from '../fx/match-fx.js';
 import { fxOptionsFor, reducedFlash } from '../flash-pref.js';
 import { matchupEdges } from '../../sim/type-matchups.js';
 import { weatherClass } from '../stadium-art.js';
@@ -229,7 +229,9 @@ export function registerMatchScreens(Router, app) {
         ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
     const over = `${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> INSTANT REPLAY <b>${esc(anim.replay.reason.label)}</b></div><div class="replay-slow" aria-hidden="true">SLOW-MO</div>` : banner}`;
-    const after = `${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span><span>tap a monster to inspect</span></div>' : !anim && inspectMap ? '<div class="tm-legend"><span>Tap a monster to inspect: stamina, status, ability</span></div>' : ''}`;
+    // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
+    const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `is created at the snap only if ${esc(n.creator)} is on the field for the play` : `is not created: ${esc(n.creator)} is not on the field in this play (it stays ready)`}</span>`).join('')}</div>` : '';
+    const after = `${cond}${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span><span>tap a monster to inspect</span></div>' : !anim && inspectMap ? '<div class="tm-legend"><span>Tap a monster to inspect: stamina, status, ability</span></div>' : ''}`;
     const title = `${s.away.abbr} ${s.score.away}-${s.score.home} ${s.home.abbr}`;
     return { title, head, wrapClass, field, over, after, controls: controlsHtml(f, teams, look) };
   }
@@ -720,7 +722,8 @@ export function registerMatchScreens(Router, app) {
       const staged = A.staged.map(({ age, ...g }) => (age != null ? { ...g, t: C.time - age } : g));
       return { fields: C.fields, fx: presnapFx(C.fields, lookup, staged), time: C.time, until: Math.max(C.until, A.until), shown: C.shown, vacant: A.vacant, returning: A.returning };
     };
-    const first = at(performance.now()); if (!list.length && !first.fx && !first.returning.length) return null;
+    const first = at(performance.now()); first.notes = conditionalNotes(s, teams, list, calls); // N9c: fields shown as conditional on their creator taking part
+    if (!list.length && !first.fx && !first.returning.length && !first.notes.length) return null;
     presnapNow = { at, shown: first.shown, until: first.until, field: null };
     return first;
   }

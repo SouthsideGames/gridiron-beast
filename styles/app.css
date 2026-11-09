@@ -382,6 +382,8 @@ html[data-reduced-motion="1"] .ability-strip > span { animation: none; }
 .edge-chip.absent.returned .absent-face svg{opacity:1;filter:none}
 .edge-chip.absent .absent-face i{position:absolute;inset:-3px 0 0 0;font-style:normal;font-size:13px;line-height:18px;text-align:center}
 .ability-strip > span[data-inspect]{cursor:pointer}
+.t8-conditional{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--ink-2);margin:3px 0 0;text-align:center}
+.t8-conditional b{color:var(--ink-1,#e8f1ec)}.t8-conditional .held{color:var(--ink-3)}
 .inspect-sec{margin-top:10px;padding-top:8px;border-top:1px solid var(--line-2);font-size:13px}
 .inspect-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:5px}
 .inspect-bar i{display:block;height:100%;background:#4ade80;border-radius:999px}

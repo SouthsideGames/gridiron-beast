@@ -15,6 +15,13 @@
 // - Laterally each patch is uniform across the whole field width (the contract fixes only the depth band); non-overlap by rejection.
 // - Placement is drawn at the spawn snap (pre-snap step), from the game's pre-snap stream, and recorded in the field list; a reload of
 //   that play repeats the same draws (the stream is seeded by the play index and the monster).
+// - No reroll (owner ruling N9c, 2026-11-09): the placement choices are fixed when the activation is earned, not when it spawns. The
+//   draws come from the pre-snap stream of the play right after the earning play (`st.drawKey`, kept with the token and dropped at the
+//   spawn), so a spawn on that very next play is what it always was, and a spawn delayed by a snap he sits out, a punt or a change of
+//   possession uses the SAME draws instead of new ones. The draws are re-applied to the line of scrimmage of the spawn snap: depth is
+//   a fraction of the band beyond that LOS, lateral is a fraction of the field width (it does not follow the ball). Within 12 yards
+//   of the far end line the band is shorter, so the same fractions give shallower depths, and the non-overlap rejection is evaluated
+//   on those rectangles (FLAGGED for confirmation: the minimal reading of "same stored choices relative to the new reference").
 // - The execution (mastery event) is the earned activation.
 // Activation gates (M3 follow-up; spec §11 Eclipse, ICE-05-F Cold Snap: ctx.canStartSignature / ctx.canGainCharge): the patches spawn
 // in the pre-snap step (out of play: not gated); the token earned at the route cut is an in-play charge gain (gated).
@@ -36,22 +43,26 @@ export function drawPatches(rng, ballOn) {
   return [a, b];
 }
 
+const SNAP_INDEX = new WeakMap(); // game-scope state -> the index of the offensive snap being played (in memory, within one play)
+
 export default registerAbility({
   family: 'thornkit', abilityId: 'NAT-01-F', repeatableCooldown: true,
   initGame: () => ({ cd: 0, token: false, fresh: false }),
   hooks: {
     preSnap(pctx, self) {
-      const st = pctx.state(self); if (self.team !== 'off' || !st.token) return;
+      const st = pctx.state(self); if (self.team !== 'off') return; SNAP_INDEX.set(st, pctx.playIndex);
+      if (!st.token) return;
       const strength = TURN[stageOf(self.form)] ?? TURN[0];
-      for (const r of drawPatches(pctx.rng, pctx.ballOn)) pctx.queueField({ owner: self.mid, type: 'Nature', ability: 'NAT-01-F', strength, lifetime: 1, clock: 'scrimmageAny', width: PATCH.width, rect: r });
-      st.token = false; spend(st, byMastery(CD_5432, self.mastery));
+      const rng = st.drawKey != null && pctx.stream ? pctx.stream(st.drawKey) : pctx.rng; // the choices fixed when it was earned (N9c: never rerolled)
+      for (const r of drawPatches(rng, pctx.ballOn)) pctx.queueField({ owner: self.mid, type: 'Nature', ability: 'NAT-01-F', strength, lifetime: 1, clock: 'scrimmageAny', width: PATCH.width, rect: r });
+      st.token = false; delete st.drawKey; spend(st, byMastery(CD_5432, self.mastery));
     },
     playStart(ctx, self) { self.bb = { wp: 0 }; },
     tick(ctx, self) {
       const st = ctx.state(self); const cuts = cutsTaken(self, self.bb);
       if (!cuts.length || self.team !== 'off' || !scrimmage(ctx) || ctx.offensePlay.type !== 'pass' || !ready(st) || self.bb.done) return;
       if (!cuts.some((c) => c.angle >= 45) || !ctx.canGainCharge(self)) return;
-      self.bb.done = true; st.token = true; ctx.executed(self);
+      self.bb.done = true; st.token = true; { const at = SNAP_INDEX.get(st); if (at != null) st.drawKey = at + 1; } ctx.executed(self);
       ctx.log(`${self.name} earns a Bloom Break`, { kind: 'ability', by: self.slot, side: self.team, ability: 'NAT-01-F' });
     },
     playEnd(ctx, self) { countPlay(ctx, self, ctx.state(self), 'off'); },

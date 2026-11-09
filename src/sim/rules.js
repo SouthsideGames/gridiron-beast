@@ -258,8 +258,10 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
   for (const [team, side, play] of [['off', slots.offense, offensePlay], ['def', slots.defense, defensePlay]]) for (const slot of play.onField) {
     const p = side[slot]; const c = p?.id && p.species ? contractOf(p.species) : null; if (!c?.hooks?.preSnap) continue;
     const self = { mid: p.id, family: p.species, form: p.form || `${p.species}:0`, mastery: p.mastery || 0, slot, team, type: p.type || null, name: p.name || slot };
-    let h = 2166136261; for (const ch of `${state.seed}|${state.playCount || 0}|${p.id}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
-    c.hooks.preSnap({ t8, rng: createRng((h >>> 0) || 23), state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
+    // `stream(key)`: the same seeded stream for another key than this play's index (N9c: Bloom Break keeps the placement choices of the
+    // play it was first due on, so a snap he sits out does not reroll them); stream(playIndex) is `rng` itself.
+    const streamOf = (key) => { let h = 2166136261; for (const ch of `${state.seed}|${key}|${p.id}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return createRng((h >>> 0) || 23); };
+    c.hooks.preSnap({ t8, rng: streamOf(state.playCount || 0), stream: streamOf, state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
       queueField: (spec) => T8F.queueField(t8, spec), ballOn: state.ballOn, offensePlay, defensePlay, slots: { off: slots.offense, def: slots.defense }, playIndex: state.playCount || 0, sitsOut: T8S.sitsOutPlay(state, p.id) }, self);
   }
 }

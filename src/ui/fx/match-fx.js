@@ -65,7 +65,8 @@ export function presnapFields(state, teams, calls = null, { hideDefenseAlign = f
     banked = banked.filter((f) => !f.callDependent && (chosen || f.inSnap));
     if (hideDefenseAlign) banked = banked.filter((f) => !f.usesDefenseAlign);
     const seq = state.t8?.fields?.seq || 0;
-    toPlayFrame(banked, frame).forEach((f, i) => out.push({ field: { ...strip(f), id: `pre${seq}-${i + 1}` }, isNew: true, pending: true }));
+    // `conditional` (N9c): a field the snap creates only if its creator takes part in the play that is called
+    toPlayFrame(banked, frame).forEach((f, i) => out.push({ field: { ...strip(f), id: `pre${seq}-${i + 1}` }, isNew: true, pending: true, ...(banked[i].inSnap ? { conditional: true } : {}) }));
   }
   return out;
 }
@@ -280,5 +281,33 @@ export function inspectInfo(state, teams, mid, { formation = null, last = null, 
     }
   }
   if (full && !lungsNow && progress >= 1) out.staminaNotes.push({ tick: false, text: 'Iron Lungs: one qualifying play counted; the next one he is steadied on drains 1 less.' });
+  return out;
+}
+
+// ---- N9c (owner ruling 2026-11-09): Runway, Bloom Break and Crosswind Rescue are shown before the play choice as CONDITIONAL on
+// their creator taking part in the play. conditionalNotes() words that for the play-call screen: which shown fields are conditional,
+// and which ready ones the play as chosen leaves out (their readiness is kept: the contract only runs for a monster on the field).
+/** Ready to create at the next snap of its unit, read from the contract's game-scope state (registry.js abilityState; the contracts' own thresholds). */
+const CONDITIONAL = Object.freeze({
+  'WIN-01-F': { unit: 'offense', ready: (st) => !(st?.cd > 0) },
+  'NAT-01-F': { unit: 'offense', ready: (st) => !!st?.token },
+  'WIN-04-F': { unit: 'defense', ready: (st, state, mid) => (st?.charges || 0) >= 2 && !(state.t8?.fields?.list || []).some((f) => f.owner === mid && f.ability === 'WIN-04-F') },
+});
+/**
+ * [{ ability, name (the approved ability name), creator (monster name), mid, shown }] for the play-call screen. `list`: presnapFields()
+ * of the same situation; `calls`: the chosen plays or null. `shown` true: the field is drawn and will be created if he takes part;
+ * false: he is ready but not on the field in the play as chosen, so nothing is created and his readiness is kept. Read only.
+ */
+export function conditionalNotes(state, teams, list, calls = null) {
+  const out = []; if (!state || state.phase !== 'scrimmage' || state.finished) return out;
+  const offSide = state.possession, defSide = opponent(offSide); const seen = new Set();
+  for (const x of list || []) { if (!x.conditional || seen.has(fieldKey(x.field))) continue; seen.add(fieldKey(x.field)); const m = findMonster(teams, x.field.owner)?.monster; out.push({ ability: x.field.ability, name: dexAbilityName(x.field.ability) || x.field.ability, creator: m?.name || 'its creator', mid: x.field.owner, shown: true }); }
+  if (!(calls?.offense && calls?.defense)) return out;
+  const op = PLAYS[calls.offense], dp = PLAYS[calls.defense]; if (!op || !dp) return out;
+  const on = { offense: new Set(Object.values(pickSlots(teams[offSide].offense || {}, op.onField, teams[offSide], op)).map((m) => m?.id)), defense: new Set(Object.values(pickSlots(teams[defSide].defense || {}, dp.onField, teams[defSide], dp)).map((m) => m?.id)) };
+  for (const [unit, side] of [['offense', offSide], ['defense', defSide]]) for (const m of Object.values(teams[side]?.[unit] || {})) {
+    const id = footballAbility(m); const c = CONDITIONAL[id]; if (!m?.id || !c || c.unit !== unit || on[unit].has(m.id) || seen.has(`${m.id}|${id}`)) continue;
+    if (c.ready(state.t8?.ability?.[m.id], state, m.id)) { seen.add(`${m.id}|${id}`); out.push({ ability: id, name: dexAbilityName(id) || id, creator: m.name, mid: m.id, shown: false }); }
+  }
   return out;
 }
