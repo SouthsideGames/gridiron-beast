@@ -8,6 +8,11 @@ const psyCopy = (x, y, o, t) => `<g opacity="${op(o)}"><ellipse cx="${f2(x)}" cy
 const dragon = (x, y, s, dir, fill, o) => `<g opacity="${op(o)}" fill="${fill}" transform="translate(${f2(x)} ${f2(y)}) scale(${f2(dir * s)} ${f2(s)})"><path d="M -2.2 0.4 q 1.2 -1.6 2.6 -0.9 q 0.9 -0.6 1.8 -0.2 l 0.5 -0.5 l 0.1 0.7 l 0.6 0.3 l -0.7 0.3 q -0.4 0.8 -1.5 0.6 q -1 0.9 -2.2 0.4 Z"/><path d="M -1.2 -0.3 q -1.2 -1.8 -3 -1.6 q 1.4 0.4 1.6 1.2 q -1.2 -0.3 -2 0.6 q 1.6 -0.2 2.4 0.8 Z"/><path d="M -0.6 -0.2 q 0.4 -1.9 2.2 -2.1 q -0.9 0.8 -0.9 1.5 q 1 -0.6 2 0 q -1.4 0.1 -2 1 Z"/></g>`;
 const scales = (x, y, n, k, o) => { let s = ''; for (let i = 0; i < n; i++) { const a = (i / n) * 2 * PI; s += hex(x + cos(a) * (1.2 + k), y - 0.4 + sin(a) * (1.1 + k * 0.8), 0.5, CRIMSON, (1 - k) * o, ` stroke="${GOLD}" stroke-width="0.1"`); } return s; };
 
+/** Dragon jaws around (x, y): half-width w, opened by `gape` (three elements: two jaws, one path of teeth). */
+const maw = (x, y, gape, o, w = 2.4) => { const i = w * 0.67, a = y - gape * 0.2, b = y + gape * 0.2; let d = '';
+  for (let j = 0; j < 4; j++) { const tx = x - i + (j + 0.5) * (i / 2); d += `M ${f2(tx - 0.25)} ${f2(a)} L ${f2(tx)} ${f2(a + 0.6)} L ${f2(tx + 0.25)} ${f2(a)} Z M ${f2(tx - 0.25)} ${f2(b)} L ${f2(tx)} ${f2(b - 0.6)} L ${f2(tx + 0.25)} ${f2(b)} Z `; }
+  return poly([[x - w, y - gape], [x + w, y - gape], [x + i, a], [x - i, a]], CRIMSON, o, ` stroke="${GOLD}" stroke-width="0.14"`) + poly([[x - w, y + gape], [x + w, y + gape], [x + i, b], [x - i, b]], CRIMSON, o, ` stroke="${GOLD}" stroke-width="0.14"`) + `<path d="${d.trim()}" fill="#ffffff" opacity="${op(o)}"/>`; };
+
 export const PSYCHIC_DRAGON = {
   // PSY-01 Mind Bend: the tackle banks it; the magenta rectangle with rings and inward particles is the next play's field (fields-fx.js).
   'PSY-01-F': { id: 'PSY-01-F', na: ['target'], name: 'Mind Bend', element: 'Psychic', dur: 0.9, cue: (c) => (c.ev.field ? 'Mind Bend' : 'Mind Bend banked'), charge: { cdMax: 6 },
@@ -70,5 +75,14 @@ export const PSYCHIC_DRAGON = {
     sub: { dragon_swallow: { dur: 1.3, cue: () => 'Swallowed!', shake: true, o: (c) => { const v = c.victim; if (!v) return ''; const k = c.k; const open = k < 0.3 ? k / 0.3 : k < 0.6 ? 1 - (k - 0.3) / 0.3 : 0; const gape = 2.4 * open + 0.2; let s = '';
         s += poly([[v[0] - 2.4, v[1] - 1 - gape], [v[0] + 2.4, v[1] - 1 - gape], [v[0] + 1.6, v[1] - 1 - gape * 0.2], [v[0] - 1.6, v[1] - 1 - gape * 0.2]], CRIMSON, 0.95 * (1 - Math.max(0, k - 0.7) / 0.3), ` stroke="${GOLD}" stroke-width="0.14"`) + poly([[v[0] - 2.4, v[1] - 1 + gape], [v[0] + 2.4, v[1] - 1 + gape], [v[0] + 1.6, v[1] - 1 + gape * 0.2], [v[0] - 1.6, v[1] - 1 + gape * 0.2]], CRIMSON, 0.95 * (1 - Math.max(0, k - 0.7) / 0.3), ` stroke="${GOLD}" stroke-width="0.14"`);
         for (let i = 0; i < 5; i++) { const x = v[0] - 1.6 + i * 0.8; s += poly([[x - 0.25, v[1] - 1 - gape * 0.2], [x, v[1] - 1 - gape * 0.2 + 0.7], [x + 0.25, v[1] - 1 - gape * 0.2]], '#ffffff', 0.95 * (1 - Math.max(0, k - 0.7) / 0.3)) + poly([[x - 0.25, v[1] - 1 + gape * 0.2], [x, v[1] - 1 + gape * 0.2 - 0.7], [x + 0.25, v[1] - 1 + gape * 0.2]], '#ffffff', 0.95 * (1 - Math.max(0, k - 0.7) / 0.3)); }
-        if (k > 0.55) s += disc(v[0], v[1] - 1, 2.2 * (1 - (k - 0.55) / 0.45) + 0.1, 1.6 * (1 - (k - 0.55) / 0.45) + 0.1, '#2a1a30', 0.8 * (1 - (k - 0.55) / 0.45)) + text(v[0], v[1] - 4.6 - (k - 0.55) * 2, 1.6, GOLD, 'out next play', 1 - (k - 0.55) / 0.45); return s; } } } },
+        if (k > 0.55) s += disc(v[0], v[1] - 1, 2.2 * (1 - (k - 0.55) / 0.45) + 0.1, 1.6 * (1 - (k - 0.55) / 0.45) + 0.1, '#2a1a30', 0.8 * (1 - (k - 0.55) / 0.45)) + text(v[0], v[1] - 4.6 - (k - 0.55) * 2, 1.6, GOLD, 'out next play', 1 - (k - 0.55) / 0.45); return s; } },
+      // Staged by the host from the game's absence list (t8-fx.js meta.staged), never an engine event of the play:
+      // while he is out, his formation spot is empty under a closed dragon mouth (a still mark: no clock, safe for reduced motion);
+      dragon_absent: { dur: 1, noCue: true, o: (c) => `<ellipse cx="${f2(c.cx)}" cy="${f2(c.cy + 0.75)}" rx="1.7" ry="0.75" fill="none" stroke="${GOLD}" stroke-width="0.16" stroke-dasharray="0.45 0.35" opacity="0.9"/>` + disc(c.cx, c.cy - 0.9, 1.5, 1.2, '#2a1a30', 0.8) + maw(c.cx, c.cy - 0.9, 0.55, 0.95, 1.5) + text(c.cx, c.cy - 3.3, 1.15, GOLD, 'OUT', 0.95) },
+      // his return before the formation of the play he is back for: the mouth opens over his spot and lets him out, then lifts away.
+      dragon_return: { dur: 1.4, noCue: true, o: (c) => { const k = c.k, x = c.cx, y = c.cy - 1; const open = ease(clamp01((k - 0.15) / 0.3)); const gone = clamp01((k - 0.55) / 0.45); let s = '';
+        if (k < 0.45) { const d = 1 - k / 0.45; s += disc(x, y, 2.0 * d + 0.2, 1.5 * d + 0.2, '#2a1a30', 0.85 * d); }
+        s += maw(x, y - gone * 1.2, 0.5 + 2.2 * open, 0.95 * (1 - gone));
+        if (k > 0.35) { const r = (k - 0.35) / 0.65; s += ring(x, y + 0.4, 0.8 + r * 3.2, GOLD, 0.24, 1 - r); const n = c.n(6); for (let i = 0; i < n; i++) { const a = (i / n) * 2 * PI + h(c.sid, i) * 0.8; s += blob(x + cos(a) * (1 + r * 2.4), y + sin(a) * (0.8 + r * 1.8) - r * 1.2, 0.22, GOLD, 1 - r); } }
+        return s + text(x, y - 3.6 - k * 1.2, 1.5, GOLD, 'returns', k < 0.15 ? k / 0.15 : 1 - gone); } } } },
 };

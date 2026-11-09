@@ -14,6 +14,7 @@ import { reviewCatalog, reviewAbility } from '../../sim/abilities/review.js';
 import { reviewSequence, sequenceVariants } from '../../sim/abilities/review-sequence.js';
 import { fieldSvg, fieldDraw, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
 import { buildFx, elementFx, kickSim } from '../ability-fx.js';
+import { sequenceStaged } from '../fx/match-fx.js';
 import { reducedFlash } from '../flash-pref.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, setFootballFingerprint } from '../dev-review.js';
@@ -138,7 +139,7 @@ export function registerAbilityReviewer(Router, app) {
     const { el } = sheet(html, { title, onClose: stop });
     bindReview(c, el.querySelector('.sheet-review'));
     const svg = el.querySelector('#fbreview'); const info = el.querySelector('[data-rv2="playinfo"]'); const logBox = el.querySelector('[data-rv2="log"]'); const kickBox = el.querySelector('[data-rv2="kicktext"]');
-    const prepared = plays.map((p) => {
+    const prepared = plays.map((p, pi) => {
       // A formula kick (punt, field goal) has no engine frames: its animation is the match screen's kick animation, with the kick
       // ability's look derived from the kick result (src/ui/fx/kick-fx.js). The kicker is the subject when he kicked.
       const kick = !p.sim?.frames?.length && p.kick ? kickSim(p.kick) : null;
@@ -148,7 +149,8 @@ export function registerAbilityReviewer(Router, app) {
       const lookup = (team, slot) => { const m = p.sprites?.[team]?.[slot]; return m ? { element: m.type, name: m.name, species: m.species } : null; };
       const events = (kick ? kick.events : p.allEvents || []).filter((e) => e.kind !== 'debug' && !/^qb_/.test(e.kind || ''));
       const end = Math.max(frames.length ? frames[frames.length - 1].t ?? 0 : 0, ...events.map((e) => e.t ?? 0), frames.length ? 0 : 1.5);
-      const fx = frames.length ? buildFx(sim, lookup, { preroll: true }) : null;
+      const staged = sequenceStaged(plays, pi); // a served absence's empty spot; the absentee's return, pre-rolled before the snap of the play he is back for
+      const fx = frames.length ? buildFx(sim, lookup, { preroll: true, ...(staged.length ? { staged } : {}) }) : null;
       return { p, sim, frames, events, end, fx, preroll: fx?.preroll || 0, follow: !!kick, sprites: { off: { map: p.sprites?.off || {}, pool: [] }, def: { map: p.sprites?.def || {}, pool: [] } }, cam: cameraFor(sim?.ballOn ?? p.ballOn ?? 35) };
     });
     const pb = st.pb = { pi: 0, time: -(prepared[0]?.preroll || 0), playing: true, speed: 1, last: performance.now(), hold: 0, done: false, drawn: '' };

@@ -25,7 +25,7 @@ import { fieldGoalDistance, yardLabel } from '../../core/field.js';
 import { teamOverall } from '../../franchise/roster.js';
 import { boxScoreHtml } from '../box-score.js';
 import { buildFx, shakeBetween, endHold } from '../ability-fx.js';
-import { kickPlay, presnapFields, presnapFx, createRevealClock, abilityTicks, absentMonsters, dexAbilityName } from '../fx/match-fx.js';
+import { kickPlay, presnapFields, presnapFx, createRevealClock, abilityTicks, absentMonsters, dexAbilityName, createAbsenceTracker, servedVacancies } from '../fx/match-fx.js';
 import { fxOptionsFor, reducedFlash } from '../flash-pref.js';
 import { matchupEdges } from '../../sim/type-matchups.js';
 import { weatherClass } from '../stadium-art.js';
@@ -73,7 +73,7 @@ export function registerMatchScreens(Router, app) {
   });
 
   /** Scheme lock, shown while it applies (GDD §17; comeback mode is retired, N8a: comebackSide is always null). */
-  function edgeStrip(f, s, teams, me) {
+  function edgeStrip(f, s, teams, me, returning = []) {
     const bits = [];
     const cb = R.comebackSide(s);
     if (cb) bits.push(`<span class="edge-chip comeback ${cb === me ? 'mine' : ''}">🔥 COMEBACK · ${esc(s[cb].abbr)} +${s.comeback.edge}</span>`);
@@ -81,6 +81,8 @@ export function registerMatchScreens(Router, app) {
     const them = R.opponent(me); const tl = teams[them]?.schemeLock; if (tl?.offense || tl?.defense) bits.push('<span class="edge-chip scheme">✦ Their scheme is locked</span>');
     // Task 8 (I5, Sovereign Arm): the swallowed defender's portrait with the dragon mouth while he is out (read from the game's absence list)
     for (const a of absentMonsters(s, teams)) bits.push(`<span class="edge-chip absent ${a.team === me ? 'mine' : ''}" title="Swallowed by Sovereign Arm"><span class="absent-face">${a.monster ? monsterSprite(a.monster, 18) : ''}<i aria-hidden="true">🐲</i></span> ${esc(a.monster?.name || 'A defender')} swallowed · out for ${esc(s[a.serveOn]?.abbr || 'the')} next offensive play</span>`);
+    // ... and, on the play-call screen of the play he is back for, that he has returned (the field plays his return once: presnapT8)
+    for (const b of returning) bits.push(`<span class="edge-chip absent returned ${b.team === me ? 'mine' : ''}" title="Back from Sovereign Arm"><span class="absent-face">${b.monster ? monsterSprite(b.monster, 18) : ''}</span> ${esc(b.monster?.name || 'The defender')} is back in the formation</span>`);
     return bits.length ? `<div class="edge-strip">${bits.join('')}</div>` : '';
   }
   startSundayGame = (f) => {
@@ -188,13 +190,16 @@ export function registerMatchScreens(Router, app) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     const myBall = s.possession === me;
     const teams = teamsFor(f);
-    const look = presnapInfo(f, teams);
-    const pre8 = presnapT8(f, teams, look); // Task 8 (I2): fields visible before the snap
+    absenceTrack.observe(s.seed, s, teams); // Task 8 (I5): who is out, who has just served his absence (read only)
+    const look0 = presnapInfo(f, teams);
+    const pre8 = presnapT8(f, teams, look0); // Task 8 (I2, I5): fields visible before the snap; a swallowed defender's empty spot and his return
+    // I5: the formation is drawn without the defender who sits this snap out (his alignment stays known, for the mark on his empty spot)
+    const look = pre8?.vacant?.length && look0.presnap ? { ...look0, presnap: withoutSlots(look0.presnap, pre8.vacant) } : look0;
     const offenseTeamSide = s.possession;
     const offColor = s[offenseTeamSide].color, defColor = s[R.opponent(offenseTeamSide)].color;
     const field = anim
       ? { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event, noLines: anim.follow, sprites: spritesFor(f, anim.ev.offenseSide), ...(anim.fx && !anim.replay ? { fields: anim.ev.sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), prevFrame: anim.frames[anim.i - 1] || null, ...(anim.pre && anim.i === 0 && !anim.key ? { time: -anim.pre } : {}) } : {}) }
-      : { venue: G.state.venue, ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, typeIcons: typeIconsFor(f, teams, look), ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession), ...(pre8 ? { fields: pre8.fields, fx: pre8.fx, time: pre8.time, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings) } : {}) };
+      : { venue: G.state.venue, ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, typeIcons: typeIconsFor(f, teams, look), ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession), ...(pre8 ? { fields: pre8.fields.length ? pre8.fields : null, fx: pre8.fx, time: pre8.time, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings) } : {}) };
     if (presnapNow) presnapNow.field = field;
     const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
     const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}">${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}${x.tick ? ` <i class="ability-tick">✓ ${esc(x.tick)}</i>` : ''}</span>`).join('')}</div>` : '';
@@ -210,7 +215,7 @@ export function registerMatchScreens(Router, app) {
           <div class="team right"><span class="score ${bumpH}">${s.score.home}</span><span class="abbr"><span style="color:${s.home.color}">${esc(s.home.abbr)}</span><span class="to">${'●'.repeat(s.timeouts.home)}${'○'.repeat(3 - s.timeouts.home)}</span></span><span class="pos" style="visibility:${s.possession === 'home' && !s.finished ? 'visible' : 'hidden'}"></span></div>
         </div>
         <div class="situation"><span>${s.phase === 'scrimmage' && !s.finished ? `<b>${myBall ? 'YOUR BALL' : 'YOUR DEFENSE'}</b> · ${esc(spotFor(s.ballOn, myBall))}` : esc(sit)}</span><span>${me === 'home' ? 'Home' : 'Away'}${G.mode === 'key' ? ' · Key Moments' : ''}</span></div>
-        ${edgeStrip(f, s, teams, me)}`;
+        ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
     const over = `${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> INSTANT REPLAY <b>${esc(anim.replay.reason.label)}</b></div><div class="replay-slow" aria-hidden="true">SLOW-MO</div>` : banner}`;
     const after = `${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span></div>' : ''}`;
@@ -459,9 +464,10 @@ export function registerMatchScreens(Router, app) {
     G.lastEvent = null; G.aiCall = null;
     const rpT = globalThis.__gbRenderPerf?.onStep ? performance.now() : 0; // render-perf harness only (inert otherwise): times the simulation step
     const shownPre = s.phase === 'scrimmage' ? presnapNow?.shown || null : null; // presentation only: the fields revealed on this play-call screen
+    const servedNow = s.phase === 'scrimmage' ? absentMonsters(s, teams).filter((a) => a.serveOn === offenseSide) : []; // presentation only (I5): absences this snap serves
     const ev = step(s, teams, controllers, G.tendencies, c);
     if (rpT) globalThis.__gbRenderPerf.onStep(rpT, performance.now() - rpT, ev);
-    if (ev) { ev.offenseSide = offenseSide; ev.toGo = toGo; ev.down = down; if (shownPre?.length) ev.fxRevealed = shownPre; }
+    if (ev) { ev.offenseSide = offenseSide; ev.toGo = toGo; ev.down = down; if (shownPre?.length) ev.fxRevealed = shownPre; if (servedNow.length && ev.sim) { const vac = servedVacancies(servedNow, ev.sim, teams, R.opponent(offenseSide)); if (vac.length) ev.fxStaged = vac; } }
     afterStep(f, ev);
   }
   /** The human side: never auto-kneels, spikes or burns timeouts; tempo comes from the UI. */
@@ -654,7 +660,14 @@ export function registerMatchScreens(Router, app) {
   function kickLookup(f, kickingSide) { const base = fxLookup(f, kickingSide); return (team, slot) => base(team, team === 'off' && slot === 'P' ? 'K' : slot); }
   const kickFx = new WeakMap(); // a formula kick's effect state as buildKickFx built it (in memory only, with the kick's frames)
   /** buildFx meta: the live play opts into the pre-roll (I6; a replay keeps the pre-snap choreography inside the play); fields already revealed on the play-call screen (I2) are simply there. */
-  function fxMeta(ev, live) { return { ...(live ? { preroll: true } : {}), ...(ev?.fxRevealed?.length ? { revealed: ev.fxRevealed } : {}) }; }
+  function fxMeta(ev, live) { return { ...(live ? { preroll: true } : {}), ...(ev?.fxRevealed?.length ? { revealed: ev.fxRevealed } : {}), ...(ev?.fxStaged?.length ? { staged: ev.fxStaged } : {}) }; }
+  // ---- I5: a temporary absence (Sovereign Arm) on the formation: the empty spot while he is out, his return once (match-fx.js).
+  const absenceTrack = createAbsenceTracker();
+  /** A pre-snap look without some defensive slots: they are not drawn (the alignments stay, so a mark can sit on the empty spot). */
+  function withoutSlots(presnap, slots) {
+    const cut = (p) => ({ ...p, onField: p.onField.filter((sl) => !slots.includes(sl)) });
+    return { ...presnap, ...(presnap.defensePlay ? { defensePlay: cut(presnap.defensePlay) } : {}), ...(presnap.play?.side === 'defense' ? { play: cut(presnap.play) } : {}) };
+  }
   // ---- I2: the fields both teams may see before the snap, on the play-call screen (match-fx.js). The reveal of a new field plays once.
   const revealClock = createRevealClock(); let presnapNow = null; let presnapRaf = null;
   function presnapT8(f, teams, look) {
@@ -662,10 +675,16 @@ export function registerMatchScreens(Router, app) {
     if (anim || s.phase !== 'scrimmage' || s.finished || !look?.presnap) return null;
     const mine = s.possession === G.playerSide;
     const calls = look.myPlay ? (mine ? { offense: look.myPlay, defense: look.aiDefense } : { offense: look.aiOffense, defense: look.myPlay }) : null;
-    const list = presnapFields(s, teams, calls, { hideDefenseAlign: mine }); if (!list.length) return null;
-    const lookup = fxLookup(f, s.possession);
-    const at = (now) => { const C = revealClock.frame(s.seed, list, now, !f.settings.reducedMotion); return { fields: C.fields, fx: presnapFx(C.fields, lookup), time: C.time, until: C.until, shown: C.shown }; };
-    const first = at(performance.now()); presnapNow = { at, shown: first.shown, until: first.until, field: null };
+    const list = presnapFields(s, teams, calls, { hideDefenseAlign: mine });
+    const lookup = fxLookup(f, s.possession); const animate = !f.settings.reducedMotion; const dLook = look.presnap.defensePlay;
+    const at = (now) => {
+      const C = list.length ? revealClock.frame(s.seed, list, now, animate) : { fields: [], time: 0, until: 0, shown: [] };
+      const A = absenceTrack.frame(s, teams, dLook, now, animate); // the return's clock is its own; on the draw clock it began `age` seconds ago
+      const staged = A.staged.map(({ age, ...g }) => (age != null ? { ...g, t: C.time - age } : g));
+      return { fields: C.fields, fx: presnapFx(C.fields, lookup, staged), time: C.time, until: Math.max(C.until, A.until), shown: C.shown, vacant: A.vacant, returning: A.returning };
+    };
+    const first = at(performance.now()); if (!list.length && !first.fx && !first.returning.length) return null;
+    presnapNow = { at, shown: first.shown, until: first.until, field: null };
     return first;
   }
   /** While a reveal is running on the play-call screen, redraw the field at the reveal's clock (about 30 a second), then once more settled. */
@@ -676,7 +695,7 @@ export function registerMatchScreens(Router, app) {
     const tick = (now) => {
       presnapRaf = null; const svg = document.querySelector('#field');
       if (anim || presnapNow !== P0 || !svg || Router.currentScreen()?.name !== 'match') return;
-      if (now - last >= 33) { last = now; const C = P0.at(performance.now()); fieldDraw(svg, { ...P0.field, fields: C.fields, fx: C.fx, time: C.time }); if (!C.until) return; }
+      if (now - last >= 33) { last = now; const C = P0.at(performance.now()); fieldDraw(svg, { ...P0.field, fields: C.fields.length ? C.fields : null, fx: C.fx, time: C.time }); if (!C.until) return; }
       presnapRaf = requestAnimationFrame(tick);
     };
     presnapRaf = requestAnimationFrame(tick);

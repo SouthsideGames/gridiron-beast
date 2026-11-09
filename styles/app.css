@@ -378,6 +378,8 @@ html[data-reduced-motion="1"] .ability-strip > span { animation: none; }
 .edge-chip.absent{display:inline-flex;align-items:center;gap:5px;border-color:#f5c542;color:#ffe9a8;background:rgba(245,197,66,.1)}
 .edge-chip.absent .absent-face{position:relative;display:inline-flex;width:18px;height:18px}
 .edge-chip.absent .absent-face svg{opacity:.45;filter:grayscale(.6)}
+.edge-chip.absent.returned{border-color:#7ee0a1;color:#c9f5d8;background:rgba(126,224,161,.1)}
+.edge-chip.absent.returned .absent-face svg{opacity:1;filter:none}
 .edge-chip.absent .absent-face i{position:absolute;inset:-3px 0 0 0;font-style:normal;font-size:13px;line-height:18px;text-align:center}
 .ability-strip .ability-tick{font-style:normal;font-weight:600;opacity:.9;margin-left:2px}
 .edge-chip.dim{color:var(--ink-3);font-weight:600;letter-spacing:0}

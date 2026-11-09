@@ -5,10 +5,13 @@
 //   I2  presnapFields + createRevealClock: the fields both teams may see on the play-call screen, and their reveal, played once.
 //   I6  the match screen opts into the pre-roll (buildFx meta { preroll: true }) and starts a play at -fx.preroll.
 //   I4  abilityTicks: Anchor Plate / Iron Lungs / Night Watch ticks for the last play's ability strip.
-//   I5  absentMonsters: who is temporarily out (Sovereign Arm), for the scoreboard strip's portrait indicator.
+//   I5  absentMonsters: who is temporarily out (Sovereign Arm), for the scoreboard strip's portrait indicator;
+//       createAbsenceTracker / servedVacancies / sequenceStaged: his empty formation spot while he is out and his return before the
+//       formation of the play he is back for (drawn by the ability's own sub-looks through buildFx meta.staged).
 import { buildFx, buildKickFx } from '../ability-fx.js';
 import { toPlayFrame } from '../../sim/t8/fields.js';
-import { previewPendingFields } from '../../sim/rules.js';
+import { previewPendingFields, pickSlots, opponent } from '../../sim/rules.js';
+import { PLAYS } from '../../data/playbook.js';
 import { FIELD_REVEAL } from './fields-fx.js';
 import { LOOKS } from './looks/index.js';
 
@@ -79,7 +82,7 @@ export function createRevealClock() {
 }
 
 /** I2. The effect state of the play-call screen: the fields' decoration and reveal, nothing else (no play, no events). */
-export function presnapFx(fields, lookup = () => null) { return fields?.length ? buildFx({ frames: [], events: [], fields }, lookup, { preroll: true }) : null; }
+export function presnapFx(fields, lookup = () => null, staged = null) { return fields?.length || staged?.length ? buildFx({ frames: [], events: [], fields: fields || [] }, lookup, { preroll: true, ...(staged?.length ? { staged } : {}) }) : null; }
 
 /**
  * I4. Ticks for the last play's ability strip (the match screen's ability panel), read from the play's own events: Anchor Plate's
@@ -108,4 +111,84 @@ export function absentMonsters(state, teams) {
     out.push({ mid: a.mid, monster: found?.monster || null, team: found?.team || null, serveOn: a.serveOn || null, ability: a.ability || null });
   }
   return out;
+}
+
+// ---- I5, the rest: the swallowed defender's empty spot in the formation while he is out, and his return (Dex DRA-06-F Visuals:
+// "Portrait dragon-mouth indicator while unavailable, return animation before formation").
+/** The sub-looks (src/ui/fx/looks) that draw an ability's temporary absence: the vacant spot, the return. */
+export const ABSENCE_LOOK = Object.freeze({ 'DRA-06-F': Object.freeze({ absent: 'dragon_absent', back: 'dragon_return', returnDur: 1.4 }) });
+
+/** The defensive slot a monster fills in a call (or a pre-snap look: { onField, align }) of his team: { slot, at: [x, y] } | null. Read only. */
+export function defenseSlotOf(teams, defSide, defensePlay, mid) {
+  const T = teams?.[defSide]; if (!T || !defensePlay?.onField || !mid) return null;
+  const slots = pickSlots(T.defense || {}, defensePlay.onField, T, defensePlay);
+  for (const sl of defensePlay.onField) if (slots[sl]?.id === mid) { const at = defensePlay.align?.[sl]; return at ? { slot: sl, at: [at[0], at[1]] } : null; }
+  return null;
+}
+
+/**
+ * The play on which an absence was served: the staged marks (buildFx meta.staged) for the spots left empty. `served`: absentMonsters()
+ * entries read BEFORE the snap whose serveOn was the side on offense; `sim`: the finished play's record. A spot is marked only when the
+ * record really has nobody there. Read only.
+ */
+export function servedVacancies(served, sim, teams, defSide) {
+  const dp = PLAYS[sim?.defensePlay]; const there = new Set((sim?.frames?.[0]?.def || []).map((q) => q[0])); const out = [];
+  for (const a of served || []) { const look = ABSENCE_LOOK[a.ability]; const w = look ? defenseSlotOf(teams, defSide, dp, a.mid) : null; if (!w || there.has(w.slot)) continue;
+    out.push({ ability: a.ability, kind: look.absent, team: 'def', slot: w.slot, at: w.at, always: true, name: a.monster?.name || null }); }
+  return out;
+}
+
+/**
+ * The Ability Reviewer's sequence (review-sequence.js plays): the staged marks of play `i`. The play that serves an absence gets the
+ * vacant spot; the first later play with the defender back in his slot gets his return, which a pre-rolling host plays before the snap.
+ */
+export function sequenceStaged(plays, i) {
+  const p = plays?.[i]; const out = []; if (!p) return out;
+  for (const a of p.served || []) { const look = ABSENCE_LOOK[a.ability]; const slot = a.who?.slot; const at = look && slot ? PLAYS[p.sim?.defensePlay]?.align?.[slot] : null;
+    if (at && !p.presence?.def?.includes(slot)) out.push({ ability: a.ability, kind: look.absent, team: 'def', slot, at: [at[0], at[1]], always: true, name: a.who.name || null }); }
+  for (let j = 0; j < i; j++) for (const a of plays[j].served || []) { const look = ABSENCE_LOOK[a.ability]; const slot = a.who?.slot; if (!look || !slot) continue;
+    let back = -1; for (let q = j + 1; q < plays.length; q++) if (plays[q].presence?.def?.includes(slot)) { back = q; break; }
+    if (back === i) out.push({ ability: a.ability, kind: look.back, team: 'def', slot, name: a.who.name || null }); }
+  return out;
+}
+
+/**
+ * The match screen's memory of temporary absences (presentation only, in memory; the game state is only read). `observe(gameKey,
+ * state, teams)` on every draw: an absence that has left the game's list has been served, so its monster is "returning" until his
+ * return has been shown. `frame(state, teams, defensePlay, now, animate)` on a play-call screen (`defensePlay`: the defensive call or
+ * look drawn there) returns
+ *   vacant     the formation slots to leave empty: an absence that this snap will serve (the offense is the side he sits out for)
+ *   staged     buildFx meta.staged entries: the vacant marks (always on) and, for a defender back in this formation, his return
+ *              with `age` (seconds since it began; the caller turns it into the draw clock's `t`)
+ *   returning  [{ mid, monster, team, slot }] the monsters whose return belongs to this play-call screen (for a text chip)
+ *   until      ms: when the last running return ends (0: nothing is animating)
+ * A return plays once, from the first screen that shows him back; a re-render continues it, never restarts it; it is over at the next
+ * snap. `animate` false (reduced motion): no animation, he is simply back (the chip still says so).
+ */
+export function createAbsenceTracker() {
+  let game = null; const out = new Map(), back = new Map();
+  return {
+    observe(gameKey, state, teams) {
+      if (gameKey !== game) { game = gameKey; out.clear(); back.clear(); }
+      const now = absentMonsters(state, teams); const ids = new Set(now.map((a) => a.mid)); const n = state?.playCount || 0;
+      for (const [mid, a] of out) if (!ids.has(mid)) { out.delete(mid); if (!state?.finished && ABSENCE_LOOK[a.ability]) back.set(mid, { ...a, shownAt: null, startedAt: null }); }
+      for (const a of now) { out.set(a.mid, a); back.delete(a.mid); }
+      for (const [mid, b] of back) if (state?.finished || (b.shownAt != null && b.shownAt !== n)) back.delete(mid);
+    },
+    frame(state, teams, defensePlay, now, animate = true) {
+      const res = { vacant: [], staged: [], returning: [], until: 0 };
+      if (!state || state.phase !== 'scrimmage' || state.finished || !defensePlay) return res;
+      const defSide = opponent(state.possession); const n = state.playCount || 0;
+      for (const a of out.values()) { const look = ABSENCE_LOOK[a.ability]; if (!look || a.serveOn !== state.possession || a.team !== defSide) continue;
+        const w = defenseSlotOf(teams, defSide, defensePlay, a.mid); if (!w) continue;
+        res.vacant.push(w.slot); res.staged.push({ ability: a.ability, kind: look.absent, team: 'def', slot: w.slot, always: true, name: a.monster?.name || null }); }
+      for (const b of back.values()) { const look = ABSENCE_LOOK[b.ability]; if (b.team !== defSide) continue;
+        const w = defenseSlotOf(teams, defSide, defensePlay, b.mid); if (!w) continue;
+        if (b.shownAt == null) { b.shownAt = n; b.startedAt = animate ? now : -Infinity; }
+        res.returning.push({ mid: b.mid, monster: b.monster, team: b.team, slot: w.slot });
+        const age = (now - b.startedAt) / 1000; if (age >= 0 && age < look.returnDur) { res.staged.push({ ability: b.ability, kind: look.back, team: 'def', slot: w.slot, age, name: b.monster?.name || null }); res.until = Math.max(res.until, b.startedAt + look.returnDur * 1000); } }
+      return res;
+    },
+    reset() { game = null; out.clear(); back.clear(); },
+  };
 }
