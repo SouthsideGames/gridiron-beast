@@ -14,3 +14,4 @@
 benchmark's own processes) and steal, R1 is a same-process paired comparison with balanced order, wash-out runs and equal warm-up,
 and every result carries a GOOD / PROVISIONAL label: `docs/task8/PERF_SCENES.md` sections 1.1, 3.1 and 3.2. The two run files above
 are unchanged.
+| 2026-11-08 corrected runs 1–3 (`corrected-run{1,2,3}-sim`) | frozen 866a49b vs main 43976f4, tools e888278 | quiet under the corrected rule in every scene of all three runs: competing CPU 0.000, steal 0.014–0.016 CPU | R0 within 1.10 in every scene of every run. R1 over 1.25 in all three runs for A1, A2, A5 and X1; split for A3 and A4 | **Provisional**: noise over 10% in every scene; see `corrected-compare.txt` |
