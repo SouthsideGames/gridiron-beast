@@ -186,7 +186,9 @@ export function runScene(id, variant = 'plain', { dump = false } = {}) {
   const out = { scene: id, variant, ms: r.ms, cpu: r.cpu, main: r.main, machine, plays: r.plays, ticks, actorTicks: Math.round(actorTicks), pairTicks: Math.round(pairTicks), engagedPerFrame: frames ? engagedFrames / frames : 0, abilityEvents, fields: r.fields || 0, inputsHash: r.inputsHash, playsHash: sha(r.playIds.sort().map((p) => playKey(PB.getPlay(p))).join('\n')), fp: sha(light.join('\n')) };
   if (gcObs) out.gcWindow = [r.p0, r.p1]; // the GC entries arrive asynchronously: summed by the caller after the run (gcAfter)
   if (dump) { // identity proof: every play's full output, and for the rules tier the game states afterwards
-    const full = JSON.stringify(r.sims, (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v));
+    // Presentation-only fields (t8view, fresh, expires, remaining, restOfPlay) are left out: they never feed the simulation (Task 8 fx).
+    const VIEW_ONLY = new Set(['t8view', 'fresh', 'expires', 'remaining', 'restOfPlay']);
+    const full = JSON.stringify(r.sims, (k, v) => (VIEW_ONLY.has(k) ? undefined : v instanceof Set ? [...v] : v instanceof Map ? [...v] : v));
     out.full = sha(full); if (r.games) out.state = sha(JSON.stringify(r.games.map((g) => g.state), (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v)));
   }
   return out;
