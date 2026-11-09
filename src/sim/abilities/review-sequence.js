@@ -95,7 +95,7 @@ function playSeed({ sc, fam, contract, form, mastery, seed, spec, nSnaps, maxFol
     if (act >= 0 && plays.length - 1 - act >= maxFollowUps) break;
     const t8 = state.t8; const fieldsBefore = ownFields(t8); const absBefore = absences(t8, abilityId); const hudBefore = { status: structuredClone(t8.status || {}), ability: structuredClone(t8.ability || {}), stamina: structuredClone(t8.stamina || {}) };
     const isFollow = act >= 0; G.api.followUp = isFollow ? plays.length - act - 1 : null; const mark = state.log[state.log.length - 1]; const rec = G.snap(k, isFollow ? follow : sc);
-    const gameLog = state.log.slice(state.log.lastIndexOf(mark) + 1).map((x) => ({ text: x.text, kind: x.kind, ...(x.ability ? { ability: x.ability } : {}) }));
+    const gameLog = state.log.slice(state.log.lastIndexOf(mark) + 1).map((x) => ({ text: x.text, kind: x.kind, ...(x.ability ? { ability: x.ability } : {}), ...(x.removed ? { removed: structuredClone(x.removed) } : {}) })); // removed: Prism Break's footprint (presentation)
     const fieldsAfter = ownFields(t8); const absAfter = absences(t8, abilityId);
     const frame0 = rec.sim?.frames?.[0] || null;
     const served = absBefore.filter((a) => !absAfter.some((b) => b.mid === a.mid && b.serveOn === a.serveOn)).map((a) => ({ ...a, who: nameOf(teams, a.mid) }));

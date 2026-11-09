@@ -15,6 +15,10 @@
 import { SIG, statusMarks } from './ability-sigs.js';
 import { SPECIES_DEX } from '../data/species.js';
 import { buildT8, drawT8, t8Hold, t8Shakes, DEX_ID } from './fx/t8-fx.js';
+import { kickSim } from './fx/kick-fx.js';
+export { kickSim };
+/** Task 8: a formula kick (punt, field goal) as a drawable sim with its kick ability cue, and its fx state. `ev`: { kind, res, from }. */
+export function buildKickFx(ev, lookup, meta = null) { const sim = kickSim(ev); return sim ? { sim, fx: buildFx(sim, lookup, meta) } : null; }
 
 /**
  * Common monsters' shared traits (polish 2.0): a small icon, deliberately less than a signature

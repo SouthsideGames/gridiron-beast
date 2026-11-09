@@ -35,27 +35,29 @@ try {
     for (const [form, mastery] of variants) {
       const tag = `${c.family}:${String(form).split(':')[1]}@${mastery}`; const t0 = Date.now();
       await page.selectOption(`select[data-change="form"][data-f="${c.family}"]`, form); await page.selectOption(`select[data-change="mastery"][data-f="${c.family}"]`, String(mastery));
-      await page.click(`[data-action="scenario"][data-f="${c.family}"]`); await page.waitForSelector('#fbreview', { timeout: 120000 }); await page.waitForFunction(() => document.querySelector('#fbreview')?.__rv2, null, { timeout: 60000 });
+      await page.click(`[data-action="scenario"][data-f="${c.family}"]`); await page.waitForSelector('#fbreview', { state: 'attached', timeout: 120000 }); await page.waitForFunction(() => document.querySelector('#fbreview')?.__rv2, null, { timeout: 60000 });
       if (QUALITY) await page.click(`[data-pb="quality"][data-v="${QUALITY}"]`);
       await page.evaluate(() => document.querySelector('#toast')?.classList.remove('show')); // the Developer "new to review" toast is not the field
       // The plan: every play's Task 8 items with their windows, the pre-roll and the end; the phase moments follow from them.
       const plan = await page.evaluate(() => { const R = document.querySelector('#fbreview').__rv2; return R.prepared.map((P, i) => ({ i, preroll: P.preroll, end: P.end, frames: P.frames.length, executed: !!P.p.executed, fields: (P.sim?.fields || []).map((f) => ({ ability: f.ability, fresh: !!f.fresh })), items: (P.fx?.t8?.items || []).map((it) => ({ id: it.id, kind: it.kind, phase: it.phase, t0: it.t0, start: it.start, end: it.end, stop: it.stop, main: it.main, dur: it.dur })), badges: (P.fx?.t8?.badges || []).map((b) => ({ id: b.id, t0: b.t0, slot: b.slot })), hud: Object.keys(P.fx?.t8?.hud || {}).length })); });
       const own = (it) => it.id === c.abilityId && it.kind !== 'ambient';
-      const act = plan.find((P) => P.items.some((it) => own(it) && it.main)) || plan.find((P) => P.items.some(own)) || plan.find((P) => P.executed) || plan[0];
-      const moments = []; // [phase, play index, time]
-      if (act) {
-        const mains = act.items.filter((it) => own(it) && it.main); const m0 = mains[0] || act.items.find(own);
-        if (act.preroll > 0 || (m0 && m0.start < m0.t0)) moments.push(['anticipation', act.i, m0 && m0.start < m0.t0 ? m0.start + Math.min(0.3, (m0.t0 - m0.start) / 2) : -act.preroll / 2]);
-        else if (act.hud) moments.push(['anticipation', act.i, 0.05]);
-        if (m0) { moments.push(['activation', act.i, m0.t0 + 0.15]); moments.push(['movement', act.i, m0.t0 + Math.min(0.5, Math.max(0.3, (m0.end - m0.t0) * 0.35))]); }
-        const subs = act.items.filter((it) => own(it) && !it.main && it.kind !== 'ambient'); const impactIt = subs[0] || (m0 && m0.stop != null ? m0 : null);
-        if (impactIt) moments.push(['impact', act.i, impactIt.stop != null && impactIt === m0 ? impactIt.stop + 0.15 : impactIt.t0 + 0.15]);
-        else if (act.badges.length) moments.push(['impact', act.i, act.badges[0].t0 + 0.2]);
-        else if (m0) moments.push(['impact', act.i, m0.t0 + Math.min(0.8, (m0.end - m0.t0) * 0.7)]);
-        const later = plan.find((P) => P.i > act.i && (P.fields.some((f) => f.ability === c.abilityId) || P.items.some(own) || P.hud)); const persistIn = act.fields.some((f) => f.ability === c.abilityId) ? act : later;
-        if (persistIn) moments.push(['persistence', persistIn.i, persistIn.fields.some((f) => f.fresh) ? Math.max(0.6, persistIn.preroll * 0.6 + 0.3) : Math.min(1.2, persistIn.end * 0.5)]);
-        const endIt = act.items.filter(own).sort((a, b) => b.end - a.end)[0]; if (endIt) moments.push(['cleanup', act.i, Math.min(endIt.end - 0.1, act.end + 0.8)]);
+      const ownField = (P) => P.fields.some((f) => f.ability === c.abilityId); const freshIn = plan.find((P) => P.fields.some((f) => f.ability === c.abilityId && f.fresh));
+      const act = plan.find((P) => P.items.some((it) => own(it) && it.main)) || plan.find((P) => P.items.some(own)) || freshIn || plan.find((P) => P.executed) || plan[0];
+      const moments = []; // [phase, play index, time]: one screenshot per presentation phase
+      const m0 = act ? act.items.filter((it) => own(it) && it.main)[0] || act.items.find(own) : null;
+      if (m0) {
+        if (m0.start < m0.t0) moments.push(['anticipation', act.i, m0.start + Math.min(0.3, (m0.t0 - m0.start) / 2)]); else if (act.hud) moments.push(['anticipation', act.i, Math.max(-act.preroll, m0.t0 - 0.3)]);
+        moments.push(['activation', act.i, m0.t0 + 0.15]); moments.push(['movement', act.i, m0.t0 + Math.min(0.5, Math.max(0.3, (m0.end - m0.t0) * 0.35))]);
+        const subs = act.items.filter((it) => own(it) && !it.main); const impactIt = subs[0] || (m0.stop != null ? m0 : null);
+        moments.push(['impact', act.i, impactIt ? (impactIt === m0 ? Math.min(impactIt.stop + 0.15, impactIt.end - 0.1) : impactIt.t0 + 0.15) : m0.t0 + Math.min(0.8, (m0.end - m0.t0) * 0.6)]);
+        moments.push(['target', act.i, act.badges.length ? act.badges[0].t0 + 0.3 : m0.t0 + 0.35]);
+        const endIt = act.items.filter(own).sort((x, y) => y.end - x.end)[0]; moments.push(['cleanup', act.i, Math.min(endIt.end - 0.1, act.end + 0.8)]);
       }
+      if (freshIn) { const L = Math.max(0.2, freshIn.preroll); if (!m0 || freshIn.i !== act.i) { moments.push(['anticipation', freshIn.i, -L * 0.7]); moments.push(['activation', freshIn.i, -L * 0.25]); moments.push(['movement', freshIn.i, 0.15]); moments.push(['impact', freshIn.i, 0.45]); } }
+      const persistIn = (freshIn && freshIn.i >= (act?.i ?? 0) ? freshIn : null) || plan.find((P) => P.i > (act?.i ?? 0) && (ownField(P) || P.items.some(own) || P.hud));
+      if (persistIn) moments.push(['persistence', persistIn.i, Math.min(1.5, Math.max(0.9, persistIn.end * 0.5))]);
+      const lastF = plan.map(ownField).lastIndexOf(true); if (lastF >= 0 && lastF + 1 < plan.length) moments.push(['cleanup', lastF + 1, 0.5]); // the field is gone
+      const seen = new Set(); for (let k = moments.length - 1; k >= 0; k--) { if (seen.has(moments[k][0])) moments.splice(k, 1); else seen.add(moments[k][0]); } // the later (field) moment wins
       const counts = {}; const dir = SHOTS ? path.join(SHOTS, c.family) : null; if (dir) fs.mkdirSync(dir, { recursive: true });
       for (const [ph, pi, time] of moments) {
         const n = await page.evaluate(([pi, time]) => { const R = document.querySelector('#fbreview').__rv2; R.seek(pi, time); const svg = document.querySelector('#fbreview'); return { el: svg.querySelectorAll('*').length, chars: svg.innerHTML.length, t8: (svg.innerHTML.match(/t8-field/g) || []).length }; }, [pi, time]);

@@ -9,18 +9,18 @@ const wing = (x, y, dir, span, L, o) => `<path d="M ${f2(x)} ${f2(y)} q ${f2(dir
 
 export const WIND_DARK = {
   // WIN-01 Runway: a pale teal gust paints parallel runway lines (fields-fx.js Wind decoration and reveal); no head icon.
-  'WIN-01-F': { id: 'WIN-01-F', name: 'Runway', element: 'Wind', dur: 0.5, noCue: true, o: () => '' },
+  'WIN-01-F': { id: 'WIN-01-F', na: ['target'], name: 'Runway', element: 'Wind', dur: 0.5, noCue: true, o: () => '' },
   // WIN-02 Slipstream Step: at the line a visible gust drives everyone else opposite the runner's heading; runner and ball stay readable.
-  'WIN-02-F': { id: 'WIN-02-F', name: 'Slipstream Step', element: 'Wind', dur: 1.0, shake: true, charge: { max: 3 },
+  'WIN-02-F': { id: 'WIN-02-F', at: { impact: 0.2 }, na: ['persistence'], name: 'Slipstream Step', element: 'Wind', dur: 1.0, shake: true, charge: { max: 3 },
     u: (c) => { const [x, y] = c.origin || [c.cx, c.cy]; const [dx, dy] = c.ev.dir || [1, 0]; const [sx, sy] = c.S(dx, dy); const [ox, oy] = c.S(0, 0); let ux = sx - ox, uy = sy - oy; const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L; // the push direction in svg
       let s = ring(x, y, 0.5 + easeOut(c.k) * 6, TEAL, 0.5 * (1 - c.k) + 0.05, 1 - c.k) + gust(x, y, ux, uy, c.k, c.n(9), c.sid, 1, 3.5, 4);
       for (const m of c.ev.moves || []) { const a = c.S(m.from[0], m.from[1]), b = c.S(m.to[0], m.to[1]); const kk = clamp01(c.age / 0.4); s += line(a[0], a[1], a[0] + (b[0] - a[0]) * kk, a[1] + (b[1] - a[1]) * kk, '#ffffff', 0.3, (1 - c.k) * 0.8, ' stroke-dasharray="0.5 0.4"'); } return s; } },
   // WIN-03 Air Brake: a gust from ahead of the receiver drives him backward relative to his heading (physical movement, no badge).
-  'WIN-03-F': { id: 'WIN-03-F', name: 'Air Brake', element: 'Wind', dur: 1.0, shake: true, charge: { max: 3 },
+  'WIN-03-F': { id: 'WIN-03-F', at: { impact: 0.3 }, na: ['persistence'], name: 'Air Brake', element: 'Wind', dur: 1.0, shake: true, charge: { max: 3 },
     u: (c) => { const e = c.ev; const from = e.from ? c.S(e.from[0], e.from[1]) : c.victim, to = e.to ? c.S(e.to[0], e.to[1]) : c.victim; if (!from || !to) return ''; let ux = to[0] - from[0], uy = to[1] - from[1]; const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
       const head = [from[0] - ux * 3, from[1] - uy * 3]; let s = gust(head[0], head[1], ux, uy, c.k, c.n(8), c.sid, 1, 3, 1.4); const kk = clamp01(c.age / 0.4); s += line(from[0], from[1] + 0.8, from[0] + (to[0] - from[0]) * kk, from[1] + 0.8 + (to[1] - from[1]) * kk, '#ffffff', 0.3, (1 - c.k) * 0.8, ' stroke-dasharray="0.5 0.4"'); for (let i = 0; i < 3; i++) s += crescent(head[0] + ux * (i * 0.9 + kk * 2), head[1] + uy * (i * 0.9 + kk * 2), 1.4 - i * 0.3, Math.atan2(uy, ux), TEAL, (1 - c.k) * (0.9 - i * 0.2), 0.35); return s; } },
   // WIN-04 Crosswind Rescue: two pale teal bordered gust lanes along the sidelines (fields-fx.js Wind decoration).
-  'WIN-04-F': { id: 'WIN-04-F', name: 'Crosswind Rescue', element: 'Wind', dur: 0.5, noCue: true, charge: { max: 2 }, o: () => '' },
+  'WIN-04-F': { id: 'WIN-04-F', na: ['target'], name: 'Crosswind Rescue', element: 'Wind', dur: 0.5, noCue: true, charge: { max: 2 }, o: () => '' },
   // WIN-05 Tailwind Huddle: a low pale wind ring around the QB (ambient); the chosen blocker is linked at the snap and his bar pulses at the whistle.
   'WIN-05-F': { id: 'WIN-05-F', name: 'Tailwind Huddle', element: 'Wind', start: 'ability_target', dur: 'play', noCue: true,
     u: (c) => { const v = c.victim; if (!v || c.age > 1.2) return ''; const k = c.age / 1.2; return line(c.cx, c.cy + 0.7, v[0], v[1] + 0.7, TEAL, 0.25, (1 - k) * 0.8, ' stroke-dasharray="0.6 0.5"') + ring(v[0], v[1] + 0.7, 1.6 + sin(c.t * 5) * 0.15, TEAL_D, 0.2, (1 - k) * 0.8); },
@@ -35,10 +35,10 @@ export const WIND_DARK = {
       ability_cancel: { dur: 0.4, noCue: true, o: () => '' } } },
 
   // DAR-01 Shadow Patch: the breakup banks it (a shadow swirl at the corner); the low violet shadow is the next play's field (fields-fx.js).
-  'DAR-01-F': { id: 'DAR-01-F', name: 'Shadow Patch', element: 'Dark', dur: 0.9, cue: () => 'Shadow Patch banked', charge: { cdMax: 5 },
+  'DAR-01-F': { id: 'DAR-01-F', na: ['target'], name: 'Shadow Patch', element: 'Dark', dur: 0.9, cue: () => 'Shadow Patch banked', charge: { cdMax: 5 },
     u: (c) => { const [x, y] = c.origin || [c.cx, c.cy]; return smoke(x, y, c.k, c.n(6), c.sid, 0.9, 1.1, 1) + disc(x, y + 0.6, 1.6 + c.k, 0.7, SHADOW, 0.4 * (1 - c.k)); } },
   // DAR-02 Night Watch: a low owl-eye ring around the safety (ambient); a protected ally's eyes clear with a small sparkle. No head badge.
-  'DAR-02-F': { id: 'DAR-02-F', name: 'Night Watch', element: 'Dark', dur: 0.8, noCue: true,
+  'DAR-02-F': { id: 'DAR-02-F', at: { impact: 0.1 }, na: ['anticipation'], name: 'Night Watch', element: 'Dark', dur: 0.8, noCue: true,
     o: (c) => { const v = c.victim; if (!v) return ''; const k = c.k; return star(v[0] - 0.6, v[1] - 2.1, 0.3 * (1 - k) + 0.1, '#ffd84a', 1 - k, 4) + star(v[0] + 0.6, v[1] - 2.1, 0.3 * (1 - k) + 0.1, '#ffd84a', 1 - k, 4); } },
   // DAR-03 Vanishing Cut: a dark afterimage peels away at the cut; the actual runner keeps a bright readable outline; the defender grasps at shadow.
   'DAR-03-F': { id: 'DAR-03-F', name: 'Vanishing Cut', element: 'Dark', until: ['ability_hit'], tail: 0.8, path: true,
@@ -48,13 +48,13 @@ export const WIND_DARK = {
     o: (c) => { const o = c.stopped ? 1 - c.stopK : 1; let s = `<rect x="${f2(c.cx - 1.8)}" y="${f2(c.cy - 2.65)}" width="3.6" height="3.7" rx="0.9" fill="none" stroke="#ffffff" stroke-width="0.26" opacity="${op(0.95 * o)}"/>`; // the bright outline on the real runner
       if (c.stopped && c.stopEv?.victim) { const v = c.vpos(c.stopEv.victim); if (v) s += text(v[0], v[1] - 3.6 - c.stopK, 1.9, VIOLET, '?', 1 - c.stopK) + smoke(v[0], v[1] - 1, c.stopK, c.n(3), c.sid + 3, 0.6, 0.7, 0.8); } return s; } },
   // DAR-04 Ambush Tag: three scratch marks fill the bar (overhead); at the snap a shadow claw grips the target's silhouette, then the fist badge.
-  'DAR-04-F': { id: 'DAR-04-F', name: 'Ambush Tag', element: 'Dark', dur: 0.9, charge: { max: 3, icon: 'scratch' },
+  'DAR-04-F': { id: 'DAR-04-F', at: { impact: 0.2 }, na: ['persistence'], name: 'Ambush Tag', element: 'Dark', dur: 0.9, charge: { max: 3, icon: 'scratch' },
     o: (c) => { const v = c.victim; if (!v) return ''; const k = clamp01(c.age / 0.3); const grip = 1 - k * 0.35; let s = `<g opacity="${op(1 - c.k * c.k)}">`; for (let i = -1; i <= 1; i++) { s += `<path d="M ${f2(v[0] - 2.2 * grip + i * 0.3)} ${f2(v[1] - 2.4 + i * 0.5)} q 0.9 0.6 1.3 ${f2(1.4 * grip)}" fill="none" stroke="${SHADOW}" stroke-width="0.45" stroke-linecap="round"/><path d="M ${f2(v[0] + 2.2 * grip - i * 0.3)} ${f2(v[1] - 2.4 + i * 0.5)} q -0.9 0.6 -1.3 ${f2(1.4 * grip)}" fill="none" stroke="${SHADOW}" stroke-width="0.45" stroke-linecap="round"/>`; } s += `<rect x="${f2(v[0] - 1.7)}" y="${f2(v[1] - 2.6)}" width="3.4" height="3.6" rx="0.9" fill="${SHADOW}" fill-opacity="${f2(0.35 * k)}"/></g>`; return s + line(c.cx, c.cy - 0.5, v[0], v[1] - 0.5, VIOLET, 0.2, (1 - k) * 0.8, ' stroke-dasharray="0.5 0.4"'); } },
   // DAR-05 Blackout Pocket: the long completion banks it; next play the QB spreads wings and the dark canopy settles over the pocket (fields-fx.js).
-  'DAR-05-F': { id: 'DAR-05-F', name: 'Blackout Pocket', element: 'Dark', dur: 0.9, cue: () => 'Blackout Pocket banked', charge: { cdMax: 6 },
+  'DAR-05-F': { id: 'DAR-05-F', na: ['target'], name: 'Blackout Pocket', element: 'Dark', dur: 0.9, cue: () => 'Blackout Pocket banked', charge: { cdMax: 6 },
     o: (c) => wing(c.cx - 0.6, c.cy - 1.4, -1, 3.2 * ease(clamp01(c.age / 0.3)), SHADOW, 0.8 * (1 - c.k)) + wing(c.cx + 0.6, c.cy - 1.4, 1, 3.2 * ease(clamp01(c.age / 0.3)), SHADOW, 0.8 * (1 - c.k)) },
   // DAR-06 Shadow Exchange: both defenders dissolve into shadow and emerge at exchanged positions; football and markers stay readable.
-  'DAR-06-F': { id: 'DAR-06-F', name: 'Shadow Exchange', element: 'Dark', dur: 1.1, shake: true, charge: { max: 2 },
+  'DAR-06-F': { id: 'DAR-06-F', at: { impact: 0.3 }, na: ['persistence'], name: 'Shadow Exchange', element: 'Dark', dur: 1.1, shake: true, charge: { max: 2 },
     o: (c) => { const e = c.ev; const a = e.from ? c.S(e.from[0], e.from[1]) : [c.cx, c.cy], b = e.to ? c.S(e.to[0], e.to[1]) : [c.cx, c.cy]; const k = clamp01(c.age / 0.6); let s = ''; for (const [x, y] of [a, b]) s += smoke(x, y - 0.8, k, c.n(6), c.sid + Math.round(x), 1, 1.3, 1.2); // dissolve where each stood...
       s += path(`M ${f2(a[0])} ${f2(a[1] - 1)} Q ${f2((a[0] + b[0]) / 2)} ${f2(Math.min(a[1], b[1]) - 4)} ${f2(b[0])} ${f2(b[1] - 1)}`, VIOLET, 0.25, 1 - c.k, ' stroke-dasharray="0.6 0.5"'); // ...and the exchange arc
       if (c.age > 0.3) { const kk = clamp01((c.age - 0.3) / 0.5); for (const [x, y] of [a, b]) s += ring(x, y - 0.6, 0.5 + kk * 2, VIOLET, 0.3 * (1 - kk) + 0.05, 1 - kk); } return s; } },

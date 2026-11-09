@@ -13,7 +13,7 @@ import { abilityById } from '../../data/beast-dex.js';
 import { reviewCatalog, reviewAbility } from '../../sim/abilities/review.js';
 import { reviewSequence, sequenceVariants } from '../../sim/abilities/review-sequence.js';
 import { fieldSvg, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
-import { buildFx, elementFx } from '../ability-fx.js';
+import { buildFx, elementFx, kickSim } from '../ability-fx.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, setFootballFingerprint } from '../dev-review.js';
 
@@ -120,7 +120,7 @@ export function registerAbilityReviewer(Router, app) {
   }
 
   // ------------------------------------------------------------------------------------------------------------- the player
-  function openPlayer(c, { title, head, intro, plays, phases, ok, natural = false }) {
+  function openPlayer(c, { title, head, intro, plays, phases, ok, natural = false, r = null }) {
     const checklist = phases.length ? `<div class="panel tight" data-rv2="phases" style="margin-top:6px"><b>Phases</b>${phases.map((ph, i) => `<div class="rv2-phase" data-phase="${ph.id}" data-i="${i}" style="font-size:13px;margin-top:3px"><span class="rv2-box">☐</span> ${esc(ph.label)}${ph.play != null ? ` <span class="dim" style="font-size:11px">· play ${ph.play + 1}</span>` : ""}<div class="dim rv2-ev" style="font-size:11px;display:none">${esc(ph.evidence || '')}</div></div>`).join('')}
       <div class="dim" data-rv2="verdict" style="font-size:12px;margin-top:4px">${ok ? 'Playing…' : 'Not every phase was observed (see above).'}</div></div>` : '';
     const controls = `<div class="row rv2-controls" style="gap:4px;flex-wrap:wrap;margin:6px 0">
@@ -138,15 +138,23 @@ export function registerAbilityReviewer(Router, app) {
     bindReview(c, el.querySelector('.sheet-review'));
     const svg = el.querySelector('#fbreview'); const info = el.querySelector('[data-rv2="playinfo"]'); const logBox = el.querySelector('[data-rv2="log"]'); const kickBox = el.querySelector('[data-rv2="kicktext"]');
     const prepared = plays.map((p) => {
-      const sim = p.sim; const frames = sim?.frames || [];
+      // A formula kick (punt, field goal) has no engine frames: its animation is the match screen's kick animation, with the kick
+      // ability's look derived from the kick result (src/ui/fx/kick-fx.js). The kicker is the subject when he kicked.
+      const kick = !p.sim?.frames?.length && p.kick ? kickSim(p.kick) : null;
+      const sim = kick || p.sim; const frames = sim?.frames || [];
+      const kickArt = kick ? { off: { K: { species: c.family, name: c.name, type: c.element }, P: { species: c.family, name: c.name, type: c.element } }, def: {} } : null;
+      if (kickArt) p = { ...p, sprites: kickArt };
       const lookup = (team, slot) => { const m = p.sprites?.[team]?.[slot]; return m ? { element: m.type, name: m.name, species: m.species } : null; };
-      const events = (p.allEvents || []).filter((e) => e.kind !== 'debug' && !/^qb_/.test(e.kind || ''));
+      const events = (kick ? kick.events : p.allEvents || []).filter((e) => e.kind !== 'debug' && !/^qb_/.test(e.kind || ''));
       const end = Math.max(frames.length ? frames[frames.length - 1].t ?? 0 : 0, ...events.map((e) => e.t ?? 0), frames.length ? 0 : 1.5);
       // Task 8 presentation: the HUD snapshot at the snap (status badges, charge bars, batteries) and the pre-snap game-log cues (e.g. Prism
       // Break) feed the looks; a play whose effects start before the snap (a field reveal, a gate rising) pre-rolls from -preroll.
-      const inSim = new Set((sim?.events || []).map((e) => e.text)); const pre = (p.gameLog || []).filter((x) => x.ability && !inSim.has(x.text)).map((x) => ({ ...x, by: x.by || null, side: p.unit === 'off' ? 'off' : 'def' }));
-      const fx = frames.length ? buildFx(sim, lookup, { hud: p.hud || null, pre }) : null;
-      return { p, sim, frames, events, end, fx, preroll: fx?.preroll || 0, sprites: { off: { map: p.sprites?.off || {}, pool: [] }, def: { map: p.sprites?.def || {}, pool: [] } }, cam: cameraFor(sim?.ballOn ?? p.ballOn ?? 35) };
+      const inSim = new Set((sim?.events || []).map((e) => e.text)); const home = p.offSide === 'home'; const bOn = sim?.ballOn ?? 35, bLat = sim?.ballLat || 0;
+      const toPlay = (rm) => (rm?.yard ? { yard: rm.yard.map((y) => (home ? y : 100 - y) - bOn).sort((a, b) => a - b), lat: rm.lat.map((l) => (home ? l : -l) - bLat).sort((a, b) => a - b) } : null); // abs -> this play's frame
+      const pre = (p.gameLog || []).filter((x) => x.ability && !inSim.has(x.text)).map((x) => ({ ...x, by: r?.explain?.source?.slot || null, side: p.unit === 'off' ? 'off' : 'def', rect: toPlay(x.removed) }));
+      const expires = (sim?.fields || []).filter((f) => f.owner === 'review_subject' && f.ability && !(p.fieldsAfter?.list || []).some((g) => g.ability === f.ability && g.id === f.id)).map((f) => f.ability); // own fields whose clock runs out at this whistle
+      const fx = frames.length ? buildFx(sim, lookup, { hud: p.hud || null, pre, expires }) : null;
+      return { p, sim, frames, events, end, fx, preroll: fx?.preroll || 0, follow: !!kick, sprites: { off: { map: p.sprites?.off || {}, pool: [] }, def: { map: p.sprites?.def || {}, pool: [] } }, cam: cameraFor(sim?.ballOn ?? p.ballOn ?? 35) };
     });
     const pb = st.pb = { pi: 0, time: -(prepared[0]?.preroll || 0), playing: true, speed: 1, last: performance.now(), hold: 0, done: false, drawn: '' };
     const ticked = (ph) => ph.ok && ph.play != null && (pb.pi > ph.play || (pb.pi === ph.play && (ph.atEnd ? pb.time >= prepared[ph.play].end - 1e-6 : pb.time >= (ph.t ?? 0) - 1e-6)));
@@ -156,7 +164,7 @@ export function registerAbilityReviewer(Router, app) {
       info.innerHTML = `<b>Play ${pb.pi + 1} / ${prepared.length}</b>${p.followUp ? ' · follow-up' : ''}${p.executed ? ' · <b>activation</b>' : ''} · ${esc(p.kind)} · ${pb.time.toFixed(1)}s / ${P.end.toFixed(1)}s · ${pb.speed}×${pb.playing ? '' : ' · paused'}${p.controls?.length ? ' · <span style="color:var(--warn)">⚙ controlled</span>' : ''}`;
       if (P.frames.length) {
         const i = frameAt(P, pb.time); const sim = P.sim; const key = `${pb.pi}:${i}:${pb.time > (P.frames[P.frames.length - 1].t ?? 0) ? pb.time.toFixed(1) : ''}`;
-        if (key !== pb.drawn) { pb.drawn = key; svg.innerHTML = fieldSvg({ time: pb.time, ballOn: sim.ballOn ?? p.ballOn ?? 35, ballLat: sim.ballLat || 0, toGo: p.situation?.toGo || 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: P.frames[i], prevFrame: pb.time < 0 ? null : P.frames[i - 1] || null, fx: P.fx, fxQuality: st.fxQuality || (app.settings?.reducedMotion ? 'min' : 'full'), fxOptions: { reducedFlash: st.reducedFlash }, sprites: P.sprites, camera: P.cam, ownLabel: 'OWN', oppLabel: 'OPP', fields: sim.fields || null }); }
+        if (key !== pb.drawn) { pb.drawn = key; svg.innerHTML = fieldSvg({ time: pb.time, ballOn: sim.ballOn ?? p.ballOn ?? 35, ballLat: sim.ballLat || 0, toGo: p.situation?.toGo || 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: P.frames[i], prevFrame: pb.time < 0 ? null : P.frames[i - 1] || null, fx: P.fx, fxQuality: st.fxQuality || (app.settings?.reducedMotion ? 'min' : 'full'), fxOptions: { reducedFlash: st.reducedFlash }, sprites: P.sprites, camera: P.follow ? cameraFor(Math.max(0, P.frames[i].ball[0] - 8)) : P.cam, ownLabel: 'OWN', oppLabel: 'OPP', fields: sim.fields || null }); }
         svg.style.display = ''; kickBox.style.display = 'none';
       } else { svg.style.display = 'none'; kickBox.style.display = ''; kickBox.innerHTML = `<div class="panel tight">${esc(p.kind)} (formula play, no field animation): ${esc(p.text)}${(p.gameLog || []).filter((x) => x.kind === 'ability').map((x) => `<br>• ${esc(x.text)}`).join('')}</div>`; }
       const subj = (e) => e.ability || e.contract;

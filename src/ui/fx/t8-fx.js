@@ -35,12 +35,14 @@ export function buildT8(sim, lookup, meta = null) {
   const named = (team, slot) => lookup?.(team, slot) || null;
   const posAt = (team, slot, t) => { let best = null; for (const fr of frames) { if (fr.t > t + 1e-6) break; const p = (team === 'off' ? fr.off : fr.def).find((q) => q[0] === slot); if (p) best = p; } return best; };
   const endOf = (e, look, i) => {
-    if (look.until) { for (let j = i + 1; j < events.length; j++) { const x = events[j]; if (look.until.includes(x.kind) && (x.ability === e.ability || x.by === e.by) && x.by === e.by) return { end: x.t + (look.tail ?? TAIL), stop: x.t, stopEv: x }; } }
+    if (look.until) { for (let j = i + 1; j < events.length; j++) { const x = events[j]; if (look.until.includes(x.kind) && (x.ability === e.ability || x.by === e.by) && x.by === e.by) return { end: x.t + (look.tail ?? TAIL), stop: x.t, stopEv: x }; }
+      return { end: last + (look.tail ?? TAIL), stop: last, stopEv: null }; } // no end event before the whistle: the whistle ends it (cleanup)
     if (look.dur === 'play') return { end: last + HOLD_MAX, stop: last, stopEv: null };
     return { end: e.t + (look.dur ?? DEFAULT_DUR), stop: null, stopEv: null };
   };
   // Pre-snap events the host supplies (game-log lines before the snap, e.g. Prism Break): drawn before t = 0.
-  for (const e of meta?.pre || []) { const look = LOOKS[e.ability]; if (!look?.pre) continue; const m = named(e.side || 'def', e.by || ''); items.push({ id: e.ability, kind: 'pre', team: e.side || null, slot: e.by || null, t0: -(look.pre.lead ?? 1), dur: (look.pre.lead ?? 1) + (look.pre.dur ?? 0.4), end: look.pre.dur ?? 0.4, ev: e, look: look.pre, L: elementOf(m?.element || look.element), name: look.name, stop: null }); }
+  for (const e of meta?.pre || []) { const look = LOOKS[e.ability]; if (!look?.pre) continue; const m = named(e.side || 'def', e.by || ''); const lead = look.pre.lead ?? 1, dur = look.pre.dur ?? 0.4; const p0 = e.by ? posAt(e.side || 'def', e.by, 0) : null;
+    items.push({ id: e.ability, kind: 'pre', phase: null, team: e.side || 'def', slot: e.by || null, t0: 0, start: -lead, dur, end: dur, stop: null, stopEv: null, ev: e, look: look.pre, base: look, L: elementOf(m?.element || look.element), name: m?.name || e.by, label: look.name, species: m?.species || null, main: true, sid: 97 + items.length * 7, origin: p0 ? [p0[1], p0[2]] : null, path: null }); if (e.by) spends.push({ team: e.side || 'def', slot: e.by, t: 0 }); }
   for (let i = 0; i < events.length; i++) {
     const e = events[i];
     if (e.kind === 'status') { if (e.accepted && e.victim) badges.push({ team: e.victimSide || (e.side === 'off' ? 'def' : 'off'), slot: e.victim, id: e.status, t0: e.t, remaining: e.remaining ?? null, by: e.by || null }); continue; }
@@ -68,7 +70,7 @@ export function buildT8(sim, lookup, meta = null) {
   if (frames.length) for (const team of ['off', 'def']) for (const q of frames[0][team]) { const m = named(team, q[0]); const amb = m?.species ? AMBIENT[m.species] : null; if (!amb) continue;
     items.push({ id: amb.id, kind: 'ambient', team, slot: q[0], t0: 0, start: 0, dur: last + 0.3, end: last + 0.3, stop: last, ev: { by: q[0], side: team }, look: amb, base: amb, L: elementOf(m.element || amb.element), name: m.name, label: amb.name, species: m.species, main: false, sid: q[0].charCodeAt(0) * 13 + 5, origin: [q[1], q[2]], path: null }); }
   // Fields: the play's functional rectangles (play frame), with the reveal of the ones created at this snap (fresh).
-  const fields = (sim?.fields || []).map((f) => ({ ...f, lead: f.fresh ? (FIELD_REVEAL[f.ability]?.lead ?? 0) : 0 }));
+  const fields = (sim?.fields || []).map((f) => ({ ...f, lead: f.fresh ? (FIELD_REVEAL[f.ability]?.lead ?? 0) : 0, expiring: !!meta?.expires?.includes(f.ability) })); // expiring: its clock runs out at this whistle (cleanup)
   const obstacles = sim?.obstacles || [];
   const preroll = Math.max(0, ...items.map((it) => -it.start), ...fields.map((f) => f.lead));
   const slots = frames.length ? { off: frames[0].off.map((q) => q[0]), def: frames[0].def.map((q) => q[0]) } : { off: [], def: [] };
@@ -76,7 +78,7 @@ export function buildT8(sim, lookup, meta = null) {
 }
 
 /** The longest an effect of this state keeps drawing after the last frame (end-of-play hold). */
-export function t8Hold(state, lastT) { if (!state) return 0; let hold = 0; for (const it of state.items) if (it.start <= lastT + 1e-6 && it.end > lastT) hold = Math.max(hold, Math.min(HOLD_MAX, it.end - lastT)); for (const b of state.badges) if (b.t0 <= lastT + 1e-6 && b.t0 > lastT - 0.3) hold = Math.max(hold, 0.6); return hold; }
+export function t8Hold(state, lastT) { if (!state) return 0; let hold = state.fields.some((f) => f.expiring) ? 0.7 : 0; for (const it of state.items) if (it.start <= lastT + 1e-6 && it.end > lastT) hold = Math.max(hold, Math.min(HOLD_MAX, it.end - lastT)); for (const b of state.badges) if (b.t0 <= lastT + 1e-6 && b.t0 > lastT - 0.3) hold = Math.max(hold, 0.6); return hold; }
 /** Impact times that may shake the screen (ability activations flagged `shake`). */
 export function t8Shakes(state) { return (state?.items || []).filter((it) => it.main && it.base.shake).map((it) => it.t0); }
 
@@ -95,8 +97,10 @@ export function drawT8(state, t, pos, { quality = 'full', toSvg = null, ball = n
     const k = f.fresh ? clamp01((t + f.lead) / ((FIELD_REVEAL[f.ability]?.dur ?? 0.9) + f.lead)) : 1;
     const r = { x0: S(0, f.lat[0])[0], x1: S(0, f.lat[1])[0], y0: S(f.yard[1], 0)[1], y1: S(f.yard[0], 0)[1] };
     if (f.holes?.length) r.holes = f.holes.map((hh) => ({ x0: S(0, hh.lat[0])[0], x1: S(0, hh.lat[1])[0], y0: S(hh.yard[1], 0)[1], y1: S(hh.yard[0], 0)[1] }));
-    const d = fieldDecor(f, r, { t, k, fresh: !!f.fresh, quality, S, seed, reducedFlash, ownerPos: f.owner && state.names ? null : null });
+    const gone = f.expiring ? clamp01((t - state.last) / 0.6) : 0; // the field's clock ran out at this whistle: it dissolves in the end hold
+    const d = fieldDecor(f, r, { t, k: k * (1 - gone), fresh: !!f.fresh, quality, S, seed, reducedFlash });
     u += d.under; o += d.over;
+    if (gone > 0) { const L = elementOf(f.type); u += `<rect x="${f2(r.x0)}" y="${f2(r.y0)}" width="${f2(r.x1 - r.x0)}" height="${f2(r.y1 - r.y0)}" fill="#0b1a14" opacity="${op(0.16 * gone)}"/>`; for (let i = 0; i < countFor(6, quality); i++) { const x = r.x0 + (r.x1 - r.x0) * h(i, 3, 7), y = r.y0 + (r.y1 - r.y0) * h(i, 5, 9) - gone * 1.5; u += blob(x, y, 0.35 * (1 - gone) + 0.05, L.a, 1 - gone); } }
   }
   const rank = (p, q) => (p.main === q.main ? p.start - q.start : p.main ? 1 : -1);
   live.sort(rank);
