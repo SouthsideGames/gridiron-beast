@@ -28,7 +28,8 @@ const EXTRA_KINDS = new Set(['afterimage_end']);
 /**
  * Build the Task 8 presentation state for one play. `lookup(team, slot)` -> { element, name, species } | null.
  * `meta` (optional, reviewer / match HUD data): { hud: { 'off:WR1': { status: {id, remaining}, battery: bool, charge: {n, max, ready, cd, cdMax, spent} } },
- * pre: [events logged before the snap (game log lines with a Dex ability id)] }.
+ * pre: [events logged before the snap (game log lines with a Dex ability id)], preroll: true (the host plays the time before the snap),
+ * revealed: ['owner|ability'] (fields already revealed before the snap) }.
  */
 export function buildT8(sim, lookup, meta = null) {
   const events = sim?.events || []; const frames = sim?.frames || [];
@@ -73,7 +74,9 @@ export function buildT8(sim, lookup, meta = null) {
   if (frames.length) for (const team of ['off', 'def']) for (const q of frames[0][team]) { const m = named(team, q[0]); const amb = m?.species ? AMBIENT[m.species] : null; if (!amb) continue;
     items.push({ id: amb.id, kind: 'ambient', team, slot: q[0], t0: 0, start: 0, dur: last + 0.3, end: last + 0.3, stop: last, ev: { by: q[0], side: team }, look: amb, base: amb, L: elementOf(m.element || amb.element), name: m.name, label: amb.name, species: m.species, main: false, sid: q[0].charCodeAt(0) * 13 + 5, origin: [q[1], q[2]], path: null }); }
   // Fields: the play's functional rectangles (play frame), with the reveal of the ones created at this snap (fresh).
-  const fields = (sim?.fields || []).map((f) => ({ ...f, lead: f.fresh ? (FIELD_REVEAL[f.ability]?.lead ?? 0) : 0, expiring: !!(f.expires || meta?.expires?.includes(f.ability)) })); // expiring: its clock runs out at this whistle (cleanup)
+  // meta.revealed (['owner|ability']): fields whose reveal already played before the snap on the play-call screen (match-fx.js); they are simply there.
+  const seen = (f) => !!f.fresh && !!meta?.revealed?.includes(`${f.owner}|${f.ability}`);
+  const fields = (sim?.fields || []).map((f) => (seen(f) ? { ...f, fresh: false } : f)).map((f) => ({ ...f, lead: f.fresh ? (FIELD_REVEAL[f.ability]?.lead ?? 0) : 0, expiring: !!(f.expires || meta?.expires?.includes(f.ability)) })); // expiring: its clock runs out at this whistle (cleanup)
   const obstacles = sim?.obstacles || [];
   let preroll = Math.max(0, ...items.map((it) => -it.start), ...fields.map((f) => f.lead));
   // A host that does not play time before the snap (the match screen starts at t = 0) gets the pre-snap choreography inside the play:

@@ -164,18 +164,25 @@ export function fieldLayers(o) {
     s += layers.over + statusOver;
   } else if (presnap?.offensePlay || presnap?.defensePlay) {
     const dp = presnap.defensePlay; const op = presnap.offensePlay;
+    // Task 8 fx hook (I2): the fields visible before the snap, with their element decoration and, once, their reveal (`time` is the
+    // reveal clock; the monsters stand at their alignment). Ground marks go under the monsters like in a play.
+    const preFx = fx ? fxSvg(fx, time ?? 0, (team, slot) => { const at = (team === 'off' ? op : dp)?.align?.[slot]; return at ? [X(ballLat + at[1]), Y(ballOn + at[0]), 0, 0] : null; }, { quality: fxQuality, halfWidth: HW, toSvg: (x, y) => [X(ballLat + y), Y(ballOn + x)], ...(fxOptions || {}) }) : null;
+    if (preFx) s += preFx.under;
     pre = s; s = '';
     if (dp) for (const slot of dp.onField) { const [x, y] = dp.align[slot]; marker(slot, x, y, 'def', false, false); }
     if (op) for (const slot of op.onField) { const [x, y] = op.align[slot]; marker(slot, x, y, 'off', false, slot === 'QB'); }
     // Expected type matchups (GDD §32.4): a small badge just above the sprite's inside shoulder, never over the monster or the
     // ball, and off the line of a straight route (routes leave from the feet). Each badge is a button: tapping opens the matchup panel.
+    let tmIcons = '';
     if (typeIcons) for (const [team, play] of [['def', dp], ['off', op]]) for (const [slot, dir] of Object.entries(typeIcons[team] || {})) {
       const at = play?.align?.[slot]; if (!at || !dir) continue;
       const cx = X(ballLat + at[1]) + (at[1] > 0 ? -1.3 : 1.3), cy = Y(ballOn + at[0]) - 3.35; // over the inside shoulder, clear of the head and a straight stem
       const up = dir === 'up'; const col = up ? '#22c55e' : '#f5a524';
       const arrow = up ? `M${cx - 0.48} ${cy + 0.22} L${cx} ${cy - 0.42} L${cx + 0.48} ${cy + 0.22}` : `M${cx - 0.48} ${cy - 0.22} L${cx} ${cy + 0.42} L${cx + 0.48} ${cy - 0.22}`;
-      s += `<g class="tm-icon" data-tm="${team}:${slot}" role="button" tabindex="0" aria-label="${up ? 'Type advantage' : 'Type disadvantage'} for ${slot}"><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.1" fill="transparent"/><circle class="tm-dot" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="0.85" fill="${col}" stroke="#0b1a14" stroke-width="0.2"/><path d="${arrow}" fill="none" stroke="#0b1a14" stroke-width="0.28" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+      tmIcons += `<g class="tm-icon" data-tm="${team}:${slot}" role="button" tabindex="0" aria-label="${up ? 'Type advantage' : 'Type disadvantage'} for ${slot}"><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.1" fill="transparent"/><circle class="tm-dot" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="0.85" fill="${col}" stroke="#0b1a14" stroke-width="0.2"/><path d="${arrow}" fill="none" stroke="#0b1a14" stroke-width="0.28" stroke-linecap="round" stroke-linejoin="round"/></g>`;
     }
+    if (preFx) s += preFx.over;
+    s += tmIcons; // the tappable matchup badges stay on top
   }
   if (!frame && !(presnap?.offensePlay || presnap?.defensePlay)) { pre = s; s = ''; }
   const post = s;

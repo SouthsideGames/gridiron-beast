@@ -20,6 +20,7 @@ import { fieldSvg, fieldDraw, FIELD_VIEWBOX, cameraFor } from '../field-view.js'
 const AUDIT_VIEWBOX = FIELD_VIEWBOX.split(' ').map(Number).map((v, i) => [v / 2, 5, v / 2, 25][i]).join(' ');
 import { monsterSprite } from '../pixel-monster.js';
 import { buildFx, familyOf, FAMILY_LABEL, elementFx } from '../ability-fx.js';
+import { fxOptionsFor } from '../flash-pref.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, reviewsText, cardMismatches, cardIssue, proposalsPending } from '../dev-review.js';
 import { CARD_PROPOSALS } from '../../data/card-check.js';
@@ -217,7 +218,7 @@ export function registerAbilityAudit(Router, app) {
       note = `${found.play} vs ${found.defPlay} · ${sim.result} · loops`;
     }
     const fx = buildFx(sim, lookup); const camTop = entry.family === 'cover' ? 56 : entry.side === 'off' ? 52 : entry.family === 'move' || entry.family === 'contact' ? 44 : 48; const cam = mode === 'staged' ? { top: camTop, bottom: camTop - 46 } : cameraFor(ballOn);
-    const opts = (i, time = null) => ({ time, ballOn, ballLat: sim.ballLat || 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites, camera: cam, ownLabel: 'OWN', oppLabel: 'OPP' });
+    const opts = (i, time = null) => ({ time, ballOn, ballLat: sim.ballLat || 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', fxOptions: fxOptionsFor(app.settings), sprites, camera: cam, ownLabel: 'OWN', oppLabel: 'OPP' });
     const log = sim.events.filter((e) => e.kind === 'ability' || e.ability).map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text || e.kind)}${e.ability && e.kind !== 'ability' ? ' <b>→ outcome label</b>' : ''}</span></div>`).join('');
     sheet(`<div class="field-wrap ${mode === 'staged' ? 'audit-field' : ''}"><svg id="auditfield" viewBox="${mode === 'staged' ? AUDIT_VIEWBOX : FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${fieldSvg(opts(0))}</svg></div><p class="dim" style="margin:6px 0 0">${esc(note)}</p><div class="log" style="margin-top:6px">${log || '<div class="entry"><span>No ability event logged.</span></div>'}</div><div class="sheet-review" style="margin-top:10px">${reviewHtml('ability', entry.sp.id, { open: true })}</div>`, { title: `${elementFx(entry.sp.element).glyph} ${entry.eff.name}`, onClose: stop });
     const box = document.querySelector('.sheet .sheet-review');

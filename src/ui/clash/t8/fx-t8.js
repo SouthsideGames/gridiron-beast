@@ -23,6 +23,7 @@
 //   ind (the owner's indicator), owner, me (owner state), state }.
 import { f2, h, op, clamp01, ease, elementOf, countFor, esc } from '../../fx/prims.js';
 import { LOOKS } from './looks/index.js';
+import { setFlashSoft } from './looks/common.js';
 import { t8StateAt, HARMFUL, STATUS_NAME } from './timeline.js';
 import { clashStatusBadge, abilityIcon, pips, turnMarker } from './badges.js';
 export { clashStatusBadge, abilityIcon, pips, turnMarker };
@@ -87,8 +88,9 @@ export function t8Live(state, t) { return state.items.some((it) => t >= it.start
  * Draw one frame. `geom`: { pos(id) -> { x, y (feet), size, side, slotIndex, active, ko } | null, slot(side, i) -> { x, y, size }, W, H,
  * reduced }. Returns { under, over, hud } (hud: the information layer: badges, icons, turn markers, the provisional label).
  */
-export function drawClashT8(state, t, geom, { quality = 'full', reduced = false, maxCues = 1, seed = 0 } = {}) {
+export function drawClashT8(state, t, geom, { quality = 'full', reduced = false, reducedFlash = false, maxCues = 1, seed = 0 } = {}) {
   if (!state || !geom) return { under: '', over: '', hud: '' };
+  setFlashSoft(reducedFlash); // Reduce flashes (flash-pref.js): the looks' impact flashes are drawn dimmer for this frame
   const st = t8StateAt(state.result, (state.cues.findLast ? state.cues.findLast((c) => c.at <= t + 1e-9) : [...state.cues].reverse().find((c) => c.at <= t + 1e-9))?.i ?? 0);
   let u = '', o = '', hud = ''; let cues = 0;
   const posOf = (id) => geom.pos(id); const slot = (side, i) => geom.slot(side, i);

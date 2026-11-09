@@ -57,7 +57,9 @@ export const groundRing = (x, y, r, stroke, w, o = 1, extra = '') => `<ellipse c
 export const groundDisc = (x, y, r, fill, o = 1) => disc(x, y, r, r * 0.4, fill, o);
 /** A projectile body: an outlined square with a bright core, trail squares behind along dir. */
 export function bodyShot(p, dir, size, L, n, sid, o = 1, core = '#ffffff') { let s = `<rect x="${f2(p[0] - size / 2 - 1)}" y="${f2(p[1] - size / 2 - 1)}" width="${f2(size + 2)}" height="${f2(size + 2)}" fill="${L.b}" opacity="${op(o)}"/><rect x="${f2(p[0] - size / 2)}" y="${f2(p[1] - size / 2)}" width="${f2(size)}" height="${f2(size)}" fill="${L.a}" opacity="${op(o)}"/><rect x="${f2(p[0] - size * 0.2)}" y="${f2(p[1] - size * 0.2)}" width="${f2(size * 0.4)}" height="${f2(size * 0.4)}" fill="${core}" opacity="${op(o)}"/>`; for (let i = 1; i <= n; i++) { const d = i * size * 0.7; s += pixel(p[0] - dir[0] * d + (h(sid, i) - 0.5) * 3, p[1] - dir[1] * d + (h(sid, i, 1) - 0.5) * 3, size * (0.6 - i * 0.08), i % 2 ? L.a : L.b, o * (1 - i / (n + 1))); } return s; }
-/** A soft impact flash at p. */
-export const flash = (p, r, fill, o = 1) => blob(p[0], p[1], r, fill, o);
+/** A soft impact flash at p. Under Reduce flashes (set per drawn frame by fx-t8.js drawClashT8) it is dimmer and smaller: still an impact mark, never a bright pop. */
+let flashSoft = false;
+export function setFlashSoft(on) { flashSoft = !!on; }
+export const flash = (p, r, fill, o = 1) => (flashSoft ? blob(p[0], p[1], r * 0.75, fill, o * 0.4) : blob(p[0], p[1], r, fill, o));
 /** A hit burst ring + rays at p (the primary impact shape). */
 export function burst(p, r, L, k, n, sid, o = 1) { let s = ring(p[0], p[1], r * (0.3 + k), L.a, Math.max(1, r * 0.12 * (1 - k)), (1 - k) * o); for (let i = 0; i < n; i++) { const a = h(sid, i) * 2 * PI; const d = r * (0.4 + k * 0.9); s += pixel(p[0] + cos(a) * d, p[1] + sin(a) * d, 3 - k * 1.5, i % 2 ? L.a : L.c, (1 - k) * o); } return s; }

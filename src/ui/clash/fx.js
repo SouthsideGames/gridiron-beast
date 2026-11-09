@@ -15,12 +15,12 @@ const look = (el) => ELEMENT_FX[el] || { a: '#ffe36c', b: '#c99a1a', style: 'fla
 const CORE = { Fire: '#fff4c2', Water: '#ffffff', Nature: '#f1ffd0', Electric: '#ffffff', Ice: '#ffffff', Wind: '#ffffff', Earth: '#5a4430', Dark: '#d6c3ff', Light: '#ffffff', Metal: '#ffffff', Psychic: '#ffffff', Dragon: '#ffffff' };
 
 /**
- * createFx(canvas, { speed: () => n, reduced: () => bool, quality: () => 'full'|'low' })
+ * createFx(canvas, { speed: () => n, reduced: () => bool, quality: () => 'full'|'low', reducedFlash: () => bool })
  * Positions are stage pixels. Durations are 1x milliseconds; speed divides them.
  */
 export function createFx(canvas, opts) {
   const ctx = canvas.getContext('2d'); const P = []; const shapes = []; let raf = 0, last = 0; let W = 0, H = 0, dpr = 1;
-  const speed = () => opts.speed?.() || 1; const reduced = () => !!opts.reduced?.(); const low = () => opts.quality?.() === 'low';
+  const speed = () => opts.speed?.() || 1; const reduced = () => !!opts.reduced?.(); const low = () => opts.quality?.() === 'low'; const softFlash = () => !!opts.reducedFlash?.();
   const G = () => (low() ? 3 : 2); // pixel grid
   function resize() {
     const r = canvas.parentElement.getBoundingClientRect(); dpr = low() ? 1 : Math.min(2, window.devicePixelRatio || 1);
@@ -68,7 +68,8 @@ export function createFx(canvas, opts) {
       default: flash(at, L.a, 20 * big); for (let i = 0; i < count; i++) { const a = r() * Math.PI * 2, v = 1 + r() * 2; add({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 350, age: 0, size: 4, color: L.a }); }
     }
   }
-  function flash(at, color, radius) { const [x, y] = at; addShape(160, (c, k) => { c.globalAlpha = 0.9 * (1 - k); c.fillStyle = color; const rr = radius * (0.6 + k * 0.6), g = G(); for (let yy = -rr; yy <= rr; yy += g) { const w = Math.sqrt(Math.max(0, rr * rr - yy * yy)); c.fillRect(Math.round((x - w) / g) * g, Math.round((y + yy) / g) * g, Math.round(w * 2 / g) * g, g); } c.globalAlpha = 1; }); }
+  // Reduce flashes (flash-pref.js): the impact flash is dimmer, smaller and slower, never a bright white pop.
+  function flash(at, color, radius) { const [x, y] = at; const soft = softFlash(); addShape(soft ? 300 : 160, (c, k) => { c.globalAlpha = (soft ? 0.3 : 0.9) * (1 - k); c.fillStyle = color; const rr = radius * (soft ? 0.7 : 1) * (0.6 + k * 0.6), g = G(); for (let yy = -rr; yy <= rr; yy += g) { const w = Math.sqrt(Math.max(0, rr * rr - yy * yy)); c.fillRect(Math.round((x - w) / g) * g, Math.round((y + yy) / g) * g, Math.round(w * 2 / g) * g, g); } c.globalAlpha = 1; }); }
   function ring(at, color, width, radius, life, delay = 0) { const [x, y] = at; addShape(life + delay, (c, k, age) => { if (age < delay) return; const kk = (age - delay) / life; c.globalAlpha = 1 - kk; c.strokeStyle = color; c.lineWidth = Math.max(G(), width * (1 - kk)); c.beginPath(); c.ellipse(x, y, radius * kk + 2, (radius * kk + 2) * 0.55, 0, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; }); }
   function dust(at, count, seed) { const r = rng(seed + 3); const [x, y] = at; for (let i = 0; i < n(count); i++) { const a = Math.PI + r() * Math.PI, v = 0.8 + r() * 1.6; add({ x: x + (r() - 0.5) * 20, y: y + 6, vx: Math.cos(a) * v * (r() > 0.5 ? 1 : -1), vy: -Math.abs(Math.sin(a)) * v * 0.6, drag: 0.96, life: 600 + r() * 300, age: 0, size: 8 + r() * 8, grow: 0.7, color: 'rgba(214,190,150,0.8)', alpha: 0.7 }); } }
   function slash(at, color, len, seed) { const r = rng(seed + 5); const [x, y] = at; const a = -0.6 + (r() - 0.5) * 0.5; addShape(200, (c, k) => { c.globalAlpha = 1 - k; c.strokeStyle = color; c.lineWidth = G() * 1.5; const L2 = len * (0.4 + k * 0.6); c.beginPath(); c.moveTo(x - Math.cos(a) * L2, y - Math.sin(a) * L2); c.lineTo(x + Math.cos(a) * L2, y + Math.sin(a) * L2); c.stroke(); c.beginPath(); c.moveTo(x - Math.cos(a + 1.4) * L2 * 0.7, y - Math.sin(a + 1.4) * L2 * 0.7); c.lineTo(x + Math.cos(a + 1.4) * L2 * 0.7, y + Math.sin(a + 1.4) * L2 * 0.7); c.stroke(); c.globalAlpha = 1; }); }

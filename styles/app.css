@@ -572,6 +572,11 @@ html[data-reduced-motion="1"] .scene .talk.fresh, html[data-reduced-motion="1"] 
 .field-wrap.td-flash.theirs::after { background: radial-gradient(circle at 50% 40%, rgba(248,113,113,.45), rgba(248,113,113,0) 60%); }
 .field-wrap.to-flash::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; animation: td-flash .7s ease-out both; background: radial-gradient(circle at 50% 50%, rgba(251,191,36,.4), rgba(251,191,36,0) 60%); }
 @keyframes td-flash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+/* Reduce flashes (Settings; src/ui/flash-pref.js): no full-field score flash, no lightning flash, no blinking dot, a dim evolution flash. Text, scores and results stay. */
+html[data-reduced-flash="1"] .field-wrap.td-flash::after, html[data-reduced-flash="1"] .field-wrap.to-flash::after { animation: none; opacity: 0; }
+html[data-reduced-flash="1"] .weather-storm { animation-name: wx-fall; }
+html[data-reduced-flash="1"] .replay-badge .rec { animation: none; }
+html[data-reduced-flash="1"] .evo-scene.flashing .evo-flash { animation-duration: 1.6s; filter: opacity(.35); }
 .scoreboard .score.bump { animation: score-bump .7s cubic-bezier(.2,.9,.3,1.4) both; color: var(--accent); }
 @keyframes score-bump { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
 html[data-reduced-motion="1"] .field-banner .callout, html[data-reduced-motion="1"] .field-banner.tier-td.fresh, html[data-reduced-motion="1"] .field-wrap.td-flash::after, html[data-reduced-motion="1"] .field-wrap.to-flash::after, html[data-reduced-motion="1"] .scoreboard .score.bump { animation: none; }

@@ -11,7 +11,7 @@ import { simulatePlay } from './engine.js';
 import * as T8S from './t8/status-runtime.js';
 import * as T8K from './t8/stamina-runtime.js';
 import * as T8F from './t8/field-runtime.js';
-import { toPlayFrame } from './t8/fields.js';
+import { toPlayFrame, placeRect } from './t8/fields.js';
 import { extraCooldownUnit, contractOf, abilityState, recordExecution, kickHook } from './abilities/registry.js';
 import { runGameHook } from './abilities/game.js';
 import { getPlay } from '../data/playbook.js';
@@ -262,6 +262,33 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
     c.hooks.preSnap({ t8, rng: createRng((h >>> 0) || 23), state: (a) => abilityState(t8, a.mid, a.family, a.form, a.mastery), executed: (a, o) => recordExecution(t8, a.mid, a.family, o),
       queueField: (spec) => T8F.queueField(t8, spec), ballOn: state.ballOn, offensePlay, defensePlay, slots: { off: slots.offense, def: slots.defense }, playIndex: state.playCount || 0, sitsOut: T8S.sitsOutPlay(state, p.id) }, self);
   }
+}
+/**
+ * Task 8 presentation (read only; the simulation never calls this): the banked pending fields the next scrimmage snap would create for
+ * these two calls, placed exactly as runScrimmagePlay places them (the same slots, eligibility and placement functions), in the
+ * absolute home-goal frame. Nothing is created, queued or written: the game state, its dice and its Task 8 block are untouched, and
+ * no contract hook runs. Fields a contract queues inside the snap itself (preSnap hooks reading the chosen plays: Static Field, Charge
+ * Strip, Bramble Trap, Bloom Break, Runway, Crosswind Rescue) do not exist before it and are not listed. Each entry is the placed
+ * rectangle plus { ability, ownerTeam, payload, usesDefenseAlign } (usesDefenseAlign: its placement read a defender's alignment in
+ * the defensive call, which a caller that must not show the opponent's disguise leaves out).
+ */
+export function previewPendingFields(state, teams, offensePlayId, defensePlayId) {
+  const t8 = state?.t8; const pending = t8?.fields?.pending;
+  if (!pending?.length || !Array.isArray(t8.fields.list) || state.phase !== 'scrimmage' || state.finished) return [];
+  const offense = teams[state.possession], defense = teams[opponent(state.possession)];
+  const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
+  const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
+  const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean)), defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
+  const out = [];
+  for (const p of pending) {
+    if ((!p.benchOk && !p.offField && !offIds.has(p.owner) && !defIds.has(p.owner)) || !pendingEligible(state, t8, p, offIds, defIds)) continue;
+    if (p.maxOwn && out.some((f) => f.owner === p.owner && f.ability === p.ability)) continue; // the snap creates one; the next stays banked
+    let usesDefenseAlign = false;
+    const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) { usesDefenseAlign = true; return defensePlay.align[sl] || null; } return null; };
+    const r = placeRect({ id: `P${out.length + 1}`, type: p.type, createdAt: state.playCount || 0, owner: p.owner, strength: p.strength ?? null, ...fieldPlacement(state, p, offensePlay, alignOf) });
+    out.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, usesDefenseAlign });
+  }
+  return out;
 }
 export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, options = {}) {
   if (state.phase !== 'scrimmage' || state.finished) throw new Error(`Cannot snap in phase ${state.phase}`);

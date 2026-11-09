@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { reviewCatalog } from '../src/sim/abilities/review.js';
 import { reviewSequence } from '../src/sim/abilities/review-sequence.js';
-import { buildFx, fxSvg, endHold, shakeBetween, kickSim } from '../src/ui/ability-fx.js';
+import { buildFx, buildKickFx, fxSvg, endHold, shakeBetween, kickSim } from '../src/ui/ability-fx.js';
 import { statusBadge, chargeBar, battery } from '../src/ui/fx/overhead.js';
 import { readiness } from '../src/ui/fx/charge.js';
 import { prepare, fieldAt } from './helpers/fx-football.js';
@@ -60,7 +60,7 @@ test('over-the-head information: the shared status badge, charge and recharge ba
   assert.equal(readiness('nonexistent', { cd: 1 }), null);
 });
 
-test('a host that does not pre-roll (the match screen) gets the pre-snap choreography inside the play; the snapshot feeds the HUD', () => {
+test('a host that does not pre-roll (an instant replay, practice) gets the pre-snap choreography inside the play; the snapshot feeds the HUD', () => {
   for (const fam of ['prism', 'tsunarok', 'aegistron']) {
     const c = CAT.find((x) => x.family === fam); const r = reviewSequence({ family: c.family, form: c.forms[0], mastery: 0 });
     for (const p of r.plays) { if (!p.sim?.frames?.length) continue; const live = buildFx(p.sim, () => null); assert.equal(live.preroll, 0, `${fam}: no pre-roll without meta`);
@@ -69,4 +69,92 @@ test('a host that does not pre-roll (the match screen) gets the pre-snap choreog
   const c = CAT.find((x) => x.family === 'hailfang'); const r = reviewSequence({ family: c.family, form: c.forms[0], mastery: 0 });
   assert.ok(r.plays.some((p) => p.sim?.t8view?.hud && Object.keys(p.sim.t8view.hud).length), 'the rules engine snapshots over-the-head data at the snap');
   assert.ok(r.plays.some((p) => p.sim && buildFx(p.sim, () => null).t8.hud), 'buildFx reads it without meta');
+});
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// The match screen's integration (docs/task8/FX_FOOTBALL_MATRIX.md I1, I2, I6; src/ui/fx/match-fx.js, src/ui/screens/match.js).
+import { readFileSync } from 'node:fs';
+import * as R from '../src/sim/rules.js';
+import { PLAYS } from '../src/data/playbook.js';
+import { lineup } from './tools/lineup.js';
+import { fieldSvg, presnapLook } from '../src/ui/field-view.js';
+import { kickPlay, presnapFields, presnapFx, createRevealClock, fieldKey } from '../src/ui/fx/match-fx.js';
+import { FIELD_REVEAL } from '../src/ui/fx/fields-fx.js';
+import '../src/sim/abilities/index.js';
+
+const MATCH_SRC = readFileSync(new URL('../src/ui/screens/match.js', import.meta.url), 'utf8');
+/** A rules.js game between two synthetic clubs (ids `${club}_${slot}`), kicked off. */
+function matchGame(seed) {
+  const mk = (name, s) => { const x = lineup(s, 60); for (const side of ['offense', 'defense']) for (const [slot, p] of Object.entries(x[side])) { p.id = `${name}_${slot}`; p.type = 'Fire'; } return { id: name, name, offense: x.offense, defense: x.defense, kicker: { attrs: { kicking: 70 }, name: 'K', id: `${name}_K` } }; };
+  const teams = { home: mk('H', 11), away: mk('A', 12) };
+  const g = R.newGame({ home: teams.home, away: teams.away, seed, quarterLength: 900, coinWinner: 'home', choice: 'receive' }); R.doKickoff(g, teams);
+  return { g, teams };
+}
+const kickerLookup = (team, slot) => (team === 'off' && (slot === 'K' || slot === 'P') ? { element: 'Ice', name: 'Kicker', species: null } : null);
+
+test('I1: the match screen plays a formula kick through the reviewer\'s builder; the three kick abilities draw on it, an ordinary kick is unchanged', () => {
+  const kicks = { 'ICE-06-F': { kind: 'field_goal', from: 40, res: { good: true, distance: 57, secondChance: true, ability: 'ICE-06-F' } }, 'DRA-05-F': { kind: 'field_goal', from: 40, res: { good: true, distance: 50, signature: 'DRA-05-F' } }, 'EAR-04-F': { kind: 'punt', from: 30, res: { distance: 40, catchAt: 30, ballOn: 30, returnYards: 0, cradled: true, ability: 'EAR-04-F' } } };
+  for (const [id, ev] of Object.entries(kicks)) {
+    const K = kickPlay(ev, kickerLookup, { preroll: true }); assert.ok(K?.sim.kick && K.sim.frames.length > 5, `${id}: drawable`); assert.equal(K.sim.kickAbility, id);
+    assert.ok(K.fx, `${id}: the match gets an effect state (it was null before)`); const own = K.fx.t8.items.find((it) => it.id === id); assert.ok(own?.main, `${id}: the ability's look is on the kick`);
+    const same = buildKickFx(ev, kickerLookup, { preroll: true }); assert.deepEqual(K.sim.events, same.sim.events, `${id}: the same events the reviewer's kick carries`);
+    const t = own.t0 + 0.15; const at = (fx) => fieldAt({ sim: K.sim, fx, kick: true }, t, 'full');
+    assert.notEqual(at(K.fx), at(null), `${id}: the look changes the drawn kick`); assert.ok(!/NaN|undefined|Infinity/.test(at(K.fx)), `${id}: no NaN`);
+    assert.ok(endHold(K.fx, K.sim.frames[K.sim.frames.length - 1].t) >= 0);
+  }
+  assert.ok(kickPlay(kicks['DRA-05-F'], kickerLookup, { preroll: true }).fx.preroll > 0, 'Dragon Roar: the roar before the kick is pre-rolled');
+  for (const ev of [{ kind: 'field_goal', from: 40, res: { good: true, distance: 50 } }, { kind: 'punt', from: 30, res: { distance: 40, catchAt: 30, ballOn: 35, returnYards: 5 } }, { kind: 'kickoff', res: { touchback: true } }]) {
+    const K = kickPlay(ev, kickerLookup); assert.ok(K.sim.frames.length > 1, `${ev.kind}: still animated`); assert.equal(K.fx, null, `${ev.kind}: an ordinary kick has no effect layer (drawn as before)`); assert.equal(K.sim.events.length, 0);
+  }
+  assert.equal(kickPlay({ kind: 'field_goal' }, kickerLookup), null, 'no result: nothing to draw');
+  assert.match(MATCH_SRC, /kickPlay\(ev, kickLookup\(f, ev\.kicking\)/, 'afterStep builds the kick with kickPlay'); assert.ok(!/anim\.fx = sim\.kick \? null/.test(MATCH_SRC), 'kick animations no longer drop their effects');
+});
+
+test('I2: a banked field is previewed on the play-call screen exactly where the snap creates it; the preview never writes the game', () => {
+  const { g, teams } = matchGame(5); const dside = R.opponent(g.possession); const cb = teams[dside].defense.CB1;
+  g.t8 = { status: {}, fields: { list: [], pending: [{ owner: cb.id, ownerTeam: dside, side: 'def', type: 'Dark', ability: 'DAR-01-F', strength: 20, lifetime: 2, clock: 'teamDefense', width: 6, length: 6, lbDepth: 5, latHome: 4 }], seq: 0 } };
+  const before = JSON.stringify(g); const calls = { offense: 'quick_slants', defense: 'cover_3' };
+  const list = presnapFields(g, teams, calls); assert.equal(JSON.stringify(g), before, 'the preview reads only');
+  assert.equal(list.length, 1); assert.ok(list[0].pending && list[0].isNew); assert.equal(list[0].field.ability, 'DAR-01-F'); assert.equal(list[0].field.fresh, undefined);
+  assert.deepEqual(R.previewPendingFields(g, teams, calls.offense, calls.defense).map((f) => f.usesDefenseAlign), [false]);
+  assert.deepEqual(presnapFields(g, teams, null), [], 'without both calls a banked field is not guessed');
+  assert.deepEqual(presnapFields({ ...g, phase: 'kickoff' }, teams, calls), [], 'only before a scrimmage snap');
+  // the play-call screen draws it (rectangle + element decoration) through the real renderer, under the monsters
+  const clock = createRevealClock(); const C0 = clock.frame(g.seed, list, 1000); assert.equal(C0.fields[0].fresh, true); assert.equal(C0.time, -FIELD_REVEAL['DAR-01-F'].lead); assert.deepEqual(C0.shown, [fieldKey(list[0].field)]);
+  const pre = (C, extra = {}) => fieldSvg({ ballOn: g.ballOn, ballLat: g.ballLat, presnap: { play: PLAYS.quick_slants, offensePlay: PLAYS.quick_slants, defensePlay: presnapLook('cover_3') }, fields: C.fields, fx: presnapFx(C.fields), time: C.time, ...extra });
+  const bare = fieldSvg({ ballOn: g.ballOn, ballLat: g.ballLat, presnap: { play: PLAYS.quick_slants, offensePlay: PLAYS.quick_slants, defensePlay: presnapLook('cover_3') } });
+  assert.ok(!/t8-field/.test(bare)); const settled = clock.frame(g.seed, list, 9000); assert.equal(settled.until, 0); assert.equal(settled.fields[0].fresh, undefined);
+  const shown = pre(settled); assert.match(shown, /class="t8-field" data-element="Dark"/); assert.ok(shown.length > bare.length + 200, 'decoration drawn'); assert.ok(!/NaN|undefined|Infinity/.test(shown)); assert.equal(wellFormed(shown), null);
+  assert.ok(shown.indexOf('t8-field') < shown.indexOf('fv-pl'), 'ground marks under the monsters');
+  // the reveal: once, from the first time it is shown; a re-render continues it, never restarts it; reduced motion shows it settled
+  const mid = clock.frame(g.seed, list, 1500); assert.ok(mid.time > C0.time && mid.fields[0].fresh, 'a later render continues the same reveal');
+  assert.notEqual(pre(C0), pre(settled), 'the reveal differs from the settled field'); assert.notEqual(pre(C0), pre(mid), 'and it moves');
+  assert.equal(createRevealClock().frame(g.seed, list, 1000, false).until, 0, 'reduced motion: no reveal animation'); assert.equal(createRevealClock().frame(g.seed, list, 1000, false).fields[0].fresh, undefined);
+  assert.equal(clock.frame('another game', list, 9000).fields[0].fresh, true, 'a new game starts fresh');
+  // the snap creates the same rectangle; the play then skips the reveal it already showed
+  const ev = R.runScrimmagePlay(g, teams, calls.offense, calls.defense); const made = ev.sim.fields.find((f) => f.ability === 'DAR-01-F');
+  assert.ok(made?.fresh); assert.deepEqual(made.yard, list[0].field.yard); assert.deepEqual(made.lat, list[0].field.lat);
+  const again = buildFx(ev.sim, () => null, { preroll: true }), skip = buildFx(ev.sim, () => null, { preroll: true, revealed: C0.shown });
+  assert.ok(again.t8.fields[0].fresh && again.preroll >= FIELD_REVEAL['DAR-01-F'].lead, 'not shown before: the reveal is pre-rolled (I6)');
+  assert.equal(skip.t8.fields[0].fresh, false); assert.equal(skip.fieldAlpha(made.id, 0), 1, 'shown before: it is simply there'); assert.equal(ev.sim.fields[0].fresh, true, 'the record is not edited');
+  // now active: it stays on the next play-call screens without a second reveal
+  const next = presnapFields(g, teams, calls); const act = next.find((x) => x.field.ability === 'DAR-01-F'); if (act) { assert.equal(act.pending, false); assert.equal(act.isNew, false); }
+});
+
+test('I2: nothing hidden is shown: a field placed from a defender\'s alignment is not previewed against the opponent\'s call; offensive alignments are public', () => {
+  const { g, teams } = matchGame(7); const dside = R.opponent(g.possession); const lb = teams[dside].defense.LB1;
+  g.t8 = { status: {}, fields: { list: [], pending: [{ owner: lb.id, ownerTeam: dside, side: 'def', type: 'Fire', ability: 'FIR-02-F', strength: 20, lifetime: 2, clock: 'teamDefense', width: 6, length: 6, depth: 'creator', lateral: 'creator' }], seq: 0 } };
+  const calls = { offense: 'quick_slants', defense: 'cover_3' };
+  assert.equal(R.previewPendingFields(g, teams, calls.offense, calls.defense)[0].usesDefenseAlign, true);
+  assert.equal(presnapFields(g, teams, calls, { hideDefenseAlign: false }).length, 1, 'your own defense: you know your call');
+  assert.equal(presnapFields(g, teams, calls, { hideDefenseAlign: true }).length, 0, 'the opponent\'s defense: not shown before the snap');
+  for (const p of Object.values(PLAYS)) if (p.side === 'offense') { const look = presnapLook(p.id); for (const s of p.onField) assert.deepEqual(look.align[s], p.align[s], `${p.id} ${s}: the offense lines up as its formation shows`); }
+  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine \}\)/);
+});
+
+test('I6: the match screen opts into the pre-roll and starts the play before the snap', () => {
+  assert.match(MATCH_SRC, /preroll: true/); assert.match(MATCH_SRC, /anim\.pre = anim\.fx\?\.preroll \|\| 0/); assert.match(MATCH_SRC, /if \(anim\.pre && now < anim\.start/);
+  for (const fam of ['aegistron', 'cerebrix', 'prism']) { const c = CAT.find((x) => x.family === fam); const r = reviewSequence({ family: c.family, form: c.forms[0], mastery: 0 }); const p = r.plays[r.activation];
+    const live = buildFx(p.sim, () => null, { preroll: true }); assert.ok(live.preroll > 0, `${fam}: time before the snap`);
+    const P = { sim: p.sim, fx: live }; const a = fieldAt(P, -live.preroll + 0.05), b = fieldAt(P, 0); assert.notEqual(a, b, `${fam}: the pre-roll draws its own frames`); assert.ok(!/NaN|undefined|Infinity/.test(a)); }
 });

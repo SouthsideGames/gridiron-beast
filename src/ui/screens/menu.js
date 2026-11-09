@@ -24,6 +24,7 @@ import { openStatGuide } from '../stat-guide.js';
 import { DIFFICULTY as DIFF } from '../../franchise/franchise.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { portraitSprite } from '../pixel-monster.js';
+import { applyFlashPref } from '../flash-pref.js';
 import { reviewQueue, queueText, devBadge, devNoticesOn, cardBadge, cardMismatches } from '../dev-review.js';
 
 export function registerMenuScreens(Router, app) {
@@ -98,6 +99,7 @@ export function registerMenuScreens(Router, app) {
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="autopoints" ${s.autoPoints ? 'checked' : ''}> Trainer spends attribute points for me (off: you spend them on the monster card)</label>
           ${app.f ? assistSettingsHtml(app.f) : ''}
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reduced" ${s.reducedMotion ? 'checked' : ''}> Reduce motion (no play animation, no particles)</label>
+          <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="reducedflash" ${s.reducedFlash ? 'checked' : ''}> Reduce flashes (softer ability and score flashes, no strobing; nothing is hidden)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="shake" ${s.screenShake !== false ? 'checked' : ''}> Screen shake on big hits (and a short vibration on phones that allow it)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="evosound" ${s.evoSound ? 'checked' : ''}> Evolution sounds (off by default; the game has no other sound)</label>
           <label class="field row"><input type="checkbox" style="width:auto;min-height:0" data-change="devnotices" ${s.devNotices !== false ? 'checked' : ''}> Developer review notices (new or changed plays and abilities)</label>
@@ -109,11 +111,11 @@ export function registerMenuScreens(Router, app) {
     },
     mount(root, ctx) {
       fillStorageMeter(root, app);
-      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; };
+      const set = (k, v) => { if (app.f) { app.f.settings[k] = v; app.save(); } else app.defaultSettings[k] = v; document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); };
       delegate(root, {
         quarter: (el) => set('quarterLength', Number(el.value)), mode: (el) => set('mode', el.value), speed: (el) => set('speed', Number(el.value)),
         clashmode: (el) => set('clash', { ...clashSettings(app.settings), mode: el.value }), clashspeed: (el) => set('clash', { ...clashSettings(app.settings), speed: Number(el.value) }),
-        reduced: (el) => set('reducedMotion', el.checked), shake: (el) => set('screenShake', el.checked), evosound: (el) => set('evoSound', el.checked), qbreads: (el) => set('qbReads', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`Coach Assist: ${ASSIST_MODE_TEXT[el.dataset.v].label}.`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked),
+        reduced: (el) => set('reducedMotion', el.checked), reducedflash: (el) => set('reducedFlash', el.checked), shake: (el) => set('screenShake', el.checked), evosound: (el) => set('evoSound', el.checked), qbreads: (el) => set('qbReads', el.checked), devnotices: (el) => set('devNotices', el.checked), markers: (el) => set('fieldMarkers', el.value), typeicons: (el) => set('typeIcons', el.checked), replays: (el) => set('replays', el.checked), autopoints: (el) => set('autoPoints', el.checked), 'assist-hints': (el) => { setAssist(app.f, { hints: el.checked }); app.save(); }, 'assist-consequences': (el) => { setAssist(app.f, { consequences: el.checked }); app.save(); }, 'assist-mode': (el) => { setAssist(app.f, { mode: el.dataset.v }); app.save(); toast(`Coach Assist: ${ASSIST_MODE_TEXT[el.dataset.v].label}.`, 'good'); Router.render(); }, liveclock: (el) => set('liveClock', el.checked),
         tutreset: () => { resetTutorial(app.f); if (assistSettings(app.f).mode === 'expert') setAssist(app.f, { mode: 'standard' }); app.save(); toast('Tips will show again on each screen.', 'good'); Router.render(); },
         primer: () => sheet(primerHtml(), { title: 'How football works' }),
         export: () => { if (app.f) offerExport(app.f); },

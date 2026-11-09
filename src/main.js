@@ -42,6 +42,7 @@ import { reviewQueue, devNoticesOn, freshAnnouncement, cardMismatches } from './
 import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
 import { installCareerLinks } from './ui/career-ui.js';
+import { applyFlashPref } from './ui/flash-pref.js';
 
 const app = {
   f: null, // the franchise state (null before creation)
@@ -52,7 +53,7 @@ const app = {
   slot: 1,
   recovery: null, // set when the save failed its checks at start: the recovery screen lists the backups
   get settings() { return this.f?.settings || this.defaultSettings; },
-  defaultSettings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, liveClock: false, difficulty: 'pro' },
+  defaultSettings: { quarterLength: 180, mode: 'key', speed: 1, reducedMotion: false, reducedFlash: false, liveClock: false, difficulty: 'pro' },
   /**
    * Save the franchise. Returns a promise of { ok, savedAt } once the write is committed, or { ok: false, error }. Callers
    * that only need "save soon" can ignore it, as before: the store queues and orders every request.
@@ -190,7 +191,7 @@ function saveOutcome(r) {
   failing = true; showSaveFailure(app, r.error);
 }
 
-function applySettings() { document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; }
+function applySettings() { document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); }
 
 function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise || isArchived(app.f)) return null; // an archive shows the Legacy shell, not the weekly tabs
