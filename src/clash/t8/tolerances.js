@@ -15,6 +15,8 @@ const row = (id, p, h, source) => ({ id, p, h, n: b12SampleSize(p, h), source, f
 export const B12_TOLERANCES = deepFreeze([
   // STA-07 / spec §10: "Confused defaults to 25% redirect of an eligible normal attack". h = 0.02 (the tight end of the approved range).
   row('confused-redirect', 0.25, 0.02, 'spec §10; Appendix B STA-07 (25% per eligible normal attack)'),
+  // Added 2026-11-09 at M4 S7, before the first Snowbank Shot probability test: ICE-03-C "80% LAUNCH accuracy check first".
+  { ...row('snowbank-launch', 0.8, 0.03, 'ICE-03-C (80% launch accuracy)'), frozen: '2026-11-09 (M4 S7)' },
 ]);
 
 export function toleranceFor(id) { const t = B12_TOLERANCES.find((r) => r.id === id); if (!t) throw new Error(`No frozen B12 tolerance for ${id}`); return t; }

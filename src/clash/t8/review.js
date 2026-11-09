@@ -74,7 +74,8 @@ export function runScenario({ abilityId, stage = 0, tier = 0, scenarioId, log = 
   let result = null; let controlled = null;
   if (su.seedSearch) {
     const max = su.seedSearch.max ?? 64;
-    for (let i = 0; i < max; i++) { const r = simulateClashT8(build(seed0 + i)); if (su.seedSearch.until(r)) { result = r; controlled = { kind: 'seed selection', seed: seed0 + i, tried: i + 1, why: su.seedSearch.why || 'the scenario\'s stated prerequisite' }; break; } }
+    // the search reads the full event log; the chosen seed is then replayed with the requested log mode (log off changes no draw)
+    for (let i = 0; i < max; i++) { const args = { ...build(seed0 + i), log: 'full' }; const r = simulateClashT8(args); if (su.seedSearch.until(r)) { result = log === 'full' ? r : simulateClashT8(build(seed0 + i)); controlled = { kind: 'seed selection', seed: seed0 + i, tried: i + 1, why: su.seedSearch.why || 'the scenario\'s stated prerequisite' }; break; } }
     if (!result) { result = simulateClashT8(build(seed0)); controlled = { kind: 'seed selection', seed: seed0, tried: max, failed: true, why: su.seedSearch.why || 'the scenario\'s stated prerequisite' }; }
   } else result = simulateClashT8(build(seed0));
   const stagedInputs = [...su.a.map((sp, i) => ({ id: `a${i}`, ...sp })), ...su.b.map((sp, i) => ({ id: `b${i}`, ...sp }))].filter((sp) => sp.hp != null || sp.status || sp.ability || sp.sparring);

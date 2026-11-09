@@ -20,3 +20,17 @@ import './prism.js';
 import './echolot.js';
 import './stoneguard.js';
 import './mossclaw.js';
+// S7 batch B: protection and self / team statuses (13)
+import './reefclaw.js';
+import './thornback.js';
+import './titanolith.js';
+import './frostclaw.js';
+import './icehorn.js';
+import './glaciron.js';
+import './zephyr.js';
+import './ironcub.js';
+import './steelpaw.js';
+import './metalhorn.js';
+import './aegistron.js';
+import './shadewisp.js';
+import './scaleguard.js';
