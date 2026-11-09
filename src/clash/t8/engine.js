@@ -662,6 +662,13 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     commandStrike: (self, attackerId, targetId, spec) => { const att = need(attackerId); const tgt = need(targetId); if (att.koed || tgt.koed) return { launched: false, landed: false, missed: false, hits: [], hpDamage: 0, shieldDamage: 0, kos: [], decided: endCheck() }; return strike(att, tgt, { abilityId: self.abilityId, normalAction: false, commandedBy: self.id, ...spec }); },
     // lineup and rotation
     forcedRotation: (self, sideKey, opts) => forcedRotation(need(self.id), S[sideKey], { abilityId: self.abilityId, ...opts }),
+    /**
+     * Queue a voluntary rotation to execute at the next legal rotation phase (Cinder Clamp's delayed request; its owner's KO releases
+     * it). It runs before that phase's requests, cannot be delayed again, and waits while it is not legal.
+     */
+    queueRotation: (self, sideKey, outId, incomingId) => { queuedRotations.push({ side: sideKey, outId, inId: incomingId, abilityId: self.abilityId }); if (LOG) log('rotation_queued', byId.get(self.id), byId.get(outId), `${byId.get(outId).c.name}'s delayed rotation is released for the next legal rotation phase`, { abilityId: self.abilityId, stage: 'resolution' }); },
+    /** Would a forced rotation of this side be legal now? { legal, unmet } (no lock check for immunity: the attempt reports it) */
+    forcedLegality: (sideKey) => { const side = S[sideKey]; const unmet = []; if (!side.active) unmet.push({ condition: 'active monster' }); if (!reservesOf(side).length) unmet.push({ condition: 'living reserve' }); if (ex - side.lastForced < FORCED_EVERY) unmet.push({ condition: 'forced-rotation pacing' }); if (side.active && side.active.entry?.ex === ex) unmet.push({ condition: 'just-entered protection' }); if (!unmet.length) { const lk = lockOf(side.active, true); if (lk) unmet.push({ condition: 'rotation lock or immunity', detail: lk.reason || 'locked' }); } return { legal: !unmet.length, unmet }; },
     /** Is a voluntary rotation legal for this side now (cadence, a living reserve, no lock)? { legal, unmet } */
     rotationLegality: (sideKey) => { const L = voluntaryLegality(S[sideKey]); return { legal: L.legal, unmet: L.unmet }; },
     /**
@@ -673,7 +680,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       const side = S[sideKey]; const L = voluntaryLegality(side); if (!L.legal) return { rotated: false, decided: false, unmet: L.unmet };
       const inc = byId.get(incomingId); if (!inc || inc.koed || inc.active || inc.side !== side) return { rotated: false, decided: false, unmet: [{ condition: 'incoming is a living reserve', detail: incomingId }] };
       const out = side.active; const decided = executeRotation(side, inc, 'relay', { reason: 'relay', penalty: false, abilityId: self.abilityId });
-      return { rotated: !out.active && inc.active, decided, unmet: [] };
+      const rotated = !out.koed && !out.active && inc.active; // a departing ally knocked out before it leaves (Riptide Pursuit) is a failed rotation
+      return { rotated, decided, unmet: rotated ? [] : [{ condition: 'the rotation completed', detail: out.koed ? `${out.c.name} was knocked out before departing` : 'not completed' }] };
     },
     // delayed impacts, constructs, schedules
     delay: (self, opts) => scheduleDelayed(need(self.id), { abilityId: self.abilityId, ...opts }),
@@ -697,6 +705,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
 
   // ---- rotation (S4; P8; R5; D1, D2)
   const CADENCE = ROTATION_CADENCE_EXCHANGES;
+  const queuedRotations = [];
   const FORCED_EVERY = L_SWAPS.forcedEvery;
   function lockOf(x, forced) {
     for (const y of livingStable()) { const r = callC('rotationLock', y, { activeId: x.c.id, forced }); if (r?.locked) return { ...r, by: y.c.id }; }
@@ -736,11 +745,11 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     return pick ? { incoming: pick, by: 'ai' } : null;
   }
   const rotHooks = (hook, info) => { for (const y of livingStable()) { const r = callC(hook, y, info); if (r) return { ...r, by: y.c.id }; } return null; };
-  function executeRotation(side, incoming, by, { reason = 'voluntary', penalty = true, abilityId = null } = {}) {
+  function executeRotation(side, incoming, by, { reason = 'voluntary', penalty = true, abilityId = null, skipDelay = false } = {}) {
     const out = side.active; if (!out || out.koed || incoming.koed || incoming.active) return false;
     const info = { side: side.key, out: out.c.id, in: incoming.c.id, reason };
     // 1. Cinder Clamp's delay check
-    const dl = rotHooks('rotationDelay', info) ?? (probes.length ? (() => { for (const y of stable()) { const r = probe('rotationDelay', y.c.id, info); if (r?.delay) return { ...r, by: y.c.id }; } return null; })() : null);
+    const dl = skipDelay ? null : rotHooks('rotationDelay', info) ?? (probes.length ? (() => { for (const y of stable()) { const r = probe('rotationDelay', y.c.id, info); if (r?.delay) return { ...r, by: y.c.id }; } return null; })() : null);
     if (dl?.delay) { if (LOG) log('rotation_delayed', out, incoming, `${out.c.name}'s rotation is delayed`, { abilityId: dl.abilityId ?? null, by: dl.by, stage: 'activation', unmet: [{ condition: 'not delayed', abilityId: dl.abilityId ?? null }] }); return false; }
     // 2. Riptide Pursuit's hit on the departing monster; 3. Shell Harvest cash-out
     for (const hook of ['pursuit', 'cashOut']) {
@@ -750,7 +759,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     if (out.koed) { if (LOG) log('rotation_cancelled', out, incoming, `${out.c.name} is knocked out before it can rotate`, { rule: 'B3 rule 4: ordinary replacement' }); return settleHit(); }
     // 4. departure; 5. the entrant's entry effects (in enter); 6. Cold Welcome and Downdraft on the entrant
     side.lastVoluntary = ex; side.rotations += 1;
-    if (LOG) log('rotation', out, incoming, `${by === 'manual' ? 'Your call' : by === 'relay' ? 'Feather Relay' : 'AI'}: ${out.c.name} rotates out for ${incoming.c.name}${penalty ? '' : ' (no entry penalty)'}`, { side: side.key, voluntary: reason === 'voluntary', reason, out: out.c.id, in: incoming.c.id, by, ...(abilityId ? { abilityId, stage: 'resolution' } : {}), ...(penalty ? {} : { noPenalty: true }) });
+    if (LOG) log('rotation', out, incoming, `${by === 'manual' ? 'Your call' : by === 'relay' ? 'Feather Relay' : by === 'delayed' ? 'Delayed request' : 'AI'}: ${out.c.name} rotates out for ${incoming.c.name}${penalty ? '' : ' (no entry penalty)'}`, { side: side.key, voluntary: reason === 'voluntary', reason, out: out.c.id, in: incoming.c.id, by, ...(abilityId ? { abilityId, stage: 'resolution' } : {}), ...(penalty ? {} : { noPenalty: true }) });
     depart(out, reason); enter(incoming, reason); if (penalty) incoming.p8pending = true;
     const ar = { side: side.key, in: incoming.c.id, out: out.c.id, reason };
     for (const y of livingStable()) if (runDescriptors(hookList(callC('arrival', y, ar)), y.c.id, 'arrival')) return true;
@@ -803,6 +812,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       // The team action opportunity (Feather Relay, left unmet) before the active chooses: reserves in lineup order.
       let teamActed = false;
       for (const y of reservesOf(x.side)) { const r = callC('teamAction', y, { activeId: x.c.id }); if (r?.run) { const tr = r.run(api, y.self) || {}; if (tr.acted) { teamActed = true; done = !!tr.decided; if (LOG) log('team_action', y, x, `${y.c.name}'s ${y.mod.abilityId} took the team's normal action: no normal attack for the team this turn`, { abilityId: y.mod.abilityId, stage: 'cleanup' }); break; } } }
+      if (!teamActed && (x.koed || !x.active)) { teamActed = true; done = endCheck(); } // the active ally is gone (a failed relay): its turn ends
       // Signature restriction (Eye of the Storm): a restricted active uses the ordinary attack instead of its ready, repeatable signature;
       // its contract is not asked, so nothing is spent. Passives, entry effects, reactions and once-per-Clash casts are not restricted.
       const restricted = !!x.sigRestrict && x.mod && restrictable(x.mod.abilityId);
@@ -898,7 +908,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       if (Math.abs(sa - sb) < V.damage.initiativeTie) { order = rng.chance(0.5) ? [fa, fb] : [fb, fa]; why = 'coin'; }
       else { order = sa > sb ? [fa, fb] : [fb, fa]; why = 'speed'; }
     }
-    for (const y of reservesOf(order[1].side)) { const r = callC('preInitiative', y, { order: order.map((x) => x.c.id), activeId: order[1].c.id }); if (r?.advance) { order = [order[1], order[0]]; why = `advanced by ${y.c.name}`; break; } }
+    for (const y of reservesOf(order[1].side)) { const r = callC('preInitiative', y, { order: order.map((x) => x.c.id), activeId: order[1].c.id, by: why }); if (r?.advance) { order = [order[1], order[0]]; why = `advanced by ${y.c.name}`; break; } }
     if (LOG) log('initiative', order[0], order[1], `${order[0].c.name} acts first (${why})`, { by: why, order: order.map((x) => x.c.id) });
     // 3. Each active monster's turn, in initiative order.
     let turnNo = 0;
@@ -914,8 +924,18 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     if (LOG) log('rotation_phase', null, null, 'Rotation phase', { cadence: { a: ex - S.a.lastVoluntary >= CADENCE, b: ex - S.b.lastVoluntary >= CADENCE } });
     for (const y of livingStable()) callC('rotationPhase', y);
     probe('rotationPhase');
+    // A queued (delayed) voluntary rotation executes first, when legal; otherwise it keeps waiting.
+    for (const q of [...queuedRotations]) {
+      const side = S[q.side]; const out = byId.get(q.outId); const inc = byId.get(q.inId);
+      if (!out || out.koed || !out.active || side.active !== out) { queuedRotations.splice(queuedRotations.indexOf(q), 1); if (LOG) log('cancelled', out || null, null, 'The delayed rotation lapses (its monster is no longer active)', { abilityId: q.abilityId, stage: 'cleanup' }); continue; }
+      const target = inc && !inc.koed && !inc.active ? inc : reservesOf(side)[0]; const L = voluntaryLegality(side);
+      if (!target || !L.legal) continue;
+      queuedRotations.splice(queuedRotations.indexOf(q), 1);
+      if (step(() => executeRotation(side, target, 'delayed', { reason: 'voluntary', skipDelay: true, abilityId: q.abilityId }))) break;
+    }
+    if (winner) break;
     const requests = [];
-    for (const side of [S.a, S.b]) { const r = rotationRequest(side); if (r?.pending) { stopped = r.pending; break; } if (r?.incoming) requests.push({ side, ...r }); }
+    for (const side of [S.a, S.b]) { if (side.lastVoluntary === ex) continue; const r = rotationRequest(side); if (r?.pending) { stopped = r.pending; break; } if (r?.incoming) requests.push({ side, ...r }); }
     if (stopped) { if (LOG) log('rotation_prompt', byId.get(stopped.activeId) || null, null, `Side ${stopped.side.toUpperCase()} may rotate: waiting for a decision`, { pending: true, side: stopped.side, options: stopped.options }); break; }
     for (const q of requests) if (step(() => executeRotation(q.side, q.incoming, q.by))) break;
     if (winner) break;

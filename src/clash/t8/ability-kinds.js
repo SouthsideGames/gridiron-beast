@@ -38,7 +38,7 @@ export const ABILITY_KINDS = deepFreeze([
   row('NAT-01-C', 'thornkit', 'Second Spring', 'C', 'revive', 'once', 'none', []),
   row('NAT-02-C', 'mossclaw', 'Spore Detonation', 'A', 'enhanced normal attack', 'repeatable', 'owner-turns', [S('connected attack', 'special', false, false)], { signature: true }),
   row('NAT-03-C', 'rootram', 'Last Root', 'D', 'passive', 'once', 'none', []),
-  row('NAT-04-C', 'leafhorn', 'Canopy Assist', 'E', 'normal-action replacement', 'once', 'none', [S('assist', 'commanded', true, false, { contested: 'normalActionSpecialStrikes' })], { review: 'needs owner review', note: 'placed in rotation/lineup although no rotation occurs; the strike replaces Florant\'s normal action, so it may be a "normal-action special", which Stone Divide excludes', flag: 'stoneDivide.normalActionSpecialStrikes' }),
+  row('NAT-04-C', 'leafhorn', 'Canopy Assist', 'E', 'normal-action replacement', 'once', 'none', [S('assist', 'assist', true, false, { contested: 'normalActionSpecialStrikes' })], { review: 'needs owner review', note: 'placed in rotation/lineup although no rotation occurs; the strike replaces Florant\'s normal action, so it may be a "normal-action special", which Stone Divide excludes', flag: 'stoneDivide.normalActionSpecialStrikes' }),
   row('NAT-05-C', 'thornback', 'Shell Harvest', 'B', 'entry', 'once', 'none', []),
   row('NAT-06-C', 'elderoot', 'Root Communion', 'C', 'transfer', 'once', 'none', []),
   row('ELE-01-C', 'flicker', 'Lightning Rod', 'C', 'transfer', 'once', 'none', []),
@@ -103,7 +103,7 @@ export const kindOf = (abilityId) => BY_ID.get(abilityId) || null;
 export const kindOfFamily = (family) => BY_FAMILY.get(family) || null;
 
 /** Tags that are extra strikes by definition (plan D16): every damaging strike that is not the attacker's own normal-action attack. */
-const EXTRA_TAGS = new Set(['reaction', 'counter', 'followUp', 'commanded']);
+const EXTRA_TAGS = new Set(['reaction', 'counter', 'followUp', 'commanded', 'assist']);
 /**
  * Is this strike an "extra strike" for Stone Divide (EAR-05-C)? `spec` is the engine's strike spec: { tag, abilityId, strikeKey? }.
  * Ordinary attacks, normal-action specials, delayed impacts, DOT and transferred damage are never extra strikes. The contested

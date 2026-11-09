@@ -60,3 +60,12 @@ import './terrabull.js';
 import './boulderox.js';
 import './rootram.js';
 import './pebble.js';
+// S10 batch E: rotation and lineup (7; Shared Burden landed with the S5 pilots)
+import './ashkit.js';
+import './wavehorn.js';
+import './tsunarok.js';
+import './hailfang.js';
+import './skywarden.js';
+import './gustling.js';
+import './windlynx.js';
+import './leafhorn.js';
