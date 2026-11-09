@@ -320,7 +320,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const refusal = footballApplyRefusal(att) || (target.immune && (target.immune.has('*') || target.immune.has(att.id)) ? 'immune' : null); // M3 hook: an ability's per-play status immunity
     const r = refusal ? { accepted: false, reason: refusal } : t8GateApply({ t8: t8g }, target.mid, att);
     if (r.accepted) t8StatusEffect(target, r.slot, true, !!keepEngagement); // M3 hook: keepEngagement (an approved exception: the block continues)
-    if (!quiet) log(`${target.name} ${r.accepted ? 'is' : 'resists being'} ${att.id}`, { kind: 'status', status: att.id, by: src?.slot ?? null, side: src?.team ?? null, victim: target.slot, victimSide: target.team, accepted: r.accepted, reason: r.reason });
+    if (!quiet) log(`${target.name} ${r.accepted ? 'is' : 'resists being'} ${att.id}`, { kind: 'status', status: att.id, by: src?.slot ?? null, side: src?.team ?? null, victim: target.slot, victimSide: target.team, accepted: r.accepted, reason: r.reason, ...(r.accepted && r.slot ? { remaining: r.slot.remaining, restOfPlay: !!r.slot.restOfPlay } : {}) }); // Task 8 presentation: the badge's duration number (data only)
     return { accepted: r.accepted, reason: r.reason };
   }
   /** The one maximum-speed aggregation (§11): every source's signed % in a.maxSpeedMods (status, field), added and bounded, applied once. */
