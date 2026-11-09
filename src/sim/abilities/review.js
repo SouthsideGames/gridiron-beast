@@ -149,50 +149,79 @@ export function reviewScenario({ family, form = null, mastery = 0, seeds = null,
   const fam = FAMILIES.find((f) => f.id === family); if (!fam?.abilities?.football) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no football ability' };
   const contract = contractOf(family); if (!contract) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no registered contract (legacy behaviour is not reviewed here)' };
   const sc = SCENARIOS[family]; if (!sc) return { found: false, executed: false, mode: 'scenario', plays: 0, reason: 'no scenario for this family' };
-  form ||= `${family}:0`; const nSeeds = seeds ?? sc.seeds ?? 12; const nSnaps = snaps ?? sc.snaps ?? 12; const QL = 900;
+  form ||= `${family}:0`; const nSeeds = seeds ?? sc.seeds ?? 12; const nSnaps = snaps ?? sc.snaps ?? 12;
   const note = typeof sc.staged === 'function' ? sc.staged(form, mastery) : sc.staged || null;
   let plays = 0;
   for (let g = 0; g < nSeeds; g++) {
-    const gs = (sc.seed0 ?? 1) + g; const { teams, at, sprites } = scenarioClubs(gs, fam, form, mastery); if (!at) return { found: false, executed: false, mode: 'scenario', plays, reason: `no slot for position ${fam.position}` };
-    const subject = at.side === 'kicker' ? teams.home.kicker : teams.home[at.side][at.slot];
-    const state = R.newGame({ home: teams.home, away: teams.away, seed: gs, quarterLength: QL, coinWinner: 'home', choice: 'receive' });
-    const init = sc.prime ? sc.prime(form, mastery) : contract.initGame ? contract.initGame(form, mastery) : {};
-    state.t8 = { status: {}, ability: { [REVIEW_ID]: structuredClone(init ?? {}) } };
-    const api = { state, teams, subject, slot: at.slot, form, mastery, seed: gs, addField: addFieldTo(state), place: (team, side, slot, spec, id = `scenario_${team}_${slot}`) => placeMonster(teams[team], side, slot, spec, id) };
-    sc.setup?.(api);
-    const want = sc.unit === 'defense' ? 'away' : 'home';
-    const stageScrimmage = (down = 1) => {
-      if (state.phase !== 'scrimmage' || state.possession !== want) state.drive = { team: want, plays: 0, yards: 0, start: sc.ballOn ?? 35 };
-      if (state.phase !== 'scrimmage' || state.possession !== want || sc.reset !== false) Object.assign(state, { phase: 'scrimmage', possession: want, ballOn: sc.ballOn ?? 35, ballLat: 0, down, toGo: sc.toGo ?? 10 });
-    };
+    const gs = (sc.seed0 ?? 1) + g; const G = stageScenario({ sc, fam, contract, form, mastery, seed: gs }); if (!G.at) return { found: false, executed: false, mode: 'scenario', plays, reason: `no slot for position ${fam.position}` };
+    const { state, at } = G;
     for (let k = 0; k < nSnaps && !state.finished; k++) {
-      state.clock = QL; sc.everySnap?.(api);
-      let call; let offSide;
-      if (sc.kick === 'kickoff' || (sc.kick === 'xp' && state.phase === 'kickoff' && state.kickingTeam === 'home')) {
-        Object.assign(state, { phase: 'kickoff', kickingTeam: sc.receive ? 'away' : 'home' }); offSide = R.opponent(state.kickingTeam);
-        call = () => { const x = R.doKickoff(state, teams); return { kind: 'kickoff', text: x.text, sim: x.sim }; };
-      } else if (sc.kick === 'xp') { Object.assign(state, { phase: 'try', tryTeam: 'home', possession: 'home' }); offSide = 'home'; call = () => ({ kind: 'try', text: R.attemptTryKick(state, teams).text }); }
-      else if (sc.kick === 'fg') { stageScrimmage(4); offSide = 'home'; call = () => ({ kind: 'field_goal', text: R.doFieldGoal(state, teams, { signature: !!sc.signature }).text }); }
-      else if (sc.kick === 'punt') { stageScrimmage(4); offSide = 'home'; call = () => ({ kind: 'punt', text: R.doPunt(state, teams).text }); }
-      else {
-        stageScrimmage(); offSide = state.possession; const [off, def, callTarget] = typeof sc.calls === 'function' ? sc.calls(k, api) : sc.calls[k % sc.calls.length];
-        const target = callTarget || (sc.target === true ? at.slot : sc.target || null);
-        const options = { ...(target ? { forcedTarget: target } : {}), ...(sc.options ? sc.options(api, k) || {} : {}) };
-        call = () => { const x = R.runScrimmagePlay(state, teams, off, def, options); return { kind: 'play', text: x.outcome.text, sim: x.sim, offensePlayId: off, defensePlayId: def }; };
-      }
-      const before = structuredClone(state.t8.ability?.[REVIEW_ID] ?? null); const n0 = executionsOf(state.t8); const ballOn = state.ballOn;
-      const pre = { quarter: state.quarter, down: state.down, toGo: state.toGo, ballOn: state.ballOn, possession: state.possession };
-      const ev = call(); plays += 1;
-      if (executionsOf(state.t8) > n0) {
-        const side = offSide === 'home' ? 'off' : 'def'; const other = R.opponent(offSide);
-        const pick = (lu, art) => Object.fromEntries(Object.entries(lu || {}).map(([k2, v]) => [k2, { species: v.species || art?.[k2] || null, name: v.name, type: v.type }]));
+      const p = G.snap(k); plays += 1;
+      if (p.executed) {
         return { found: true, executed: true, mode: 'scenario', how: sc.how || '', staged: note, abilityId: fam.abilities.football, family, form, mastery, primed: !!sc.prime, slot: at.slot, side: at.side,
-          game: g + 1, seed: gs, step: k + 1, kind: ev.kind, text: ev.text || '', sim: ev.sim || null, events: contractEvents(ev.sim, fam, fam.abilities.football, at.slot, side),
-          before, after: structuredClone(state.t8.ability?.[REVIEW_ID] ?? null), fields: structuredClone(state.t8.fields?.list || []), plays, ballOn, subjectOnOffense: offSide === 'home',
-          sprites: { off: pick(teams[offSide].offense, sprites[offSide].offense), def: pick(teams[other].defense, sprites[other].defense) }, situation: pre,
-          calls: ev.offensePlayId ? { offense: ev.offensePlayId, defense: ev.defensePlayId } : null };
+          game: g + 1, seed: gs, step: k + 1, kind: p.kind, text: p.text || '', sim: p.sim || null, events: p.subjectEvents,
+          before: p.before, after: p.after, fields: structuredClone(state.t8.fields?.list || []), plays, ballOn: p.ballOn, subjectOnOffense: p.offSide === 'home',
+          sprites: p.sprites, situation: p.situation, calls: p.calls };
       }
     }
   }
   return { found: false, executed: false, mode: 'scenario', how: sc.how || '', staged: note, plays, reason: `the scenario did not execute in ${nSeeds} seed(s) x ${nSnaps} snap(s) (${plays} plays)` };
 }
+
+export const SCENARIO_QUARTER = 900;
+/**
+ * Stage one scenario game (the scenario table entry `sc`, possibly merged with a Reviewer v2 variant) for one seed: the clubs, the
+ * subject in his slot, the primed game-scope state and the entry's setup. Returns { state, teams, at, subject, api, snap(k, cfg?) }:
+ * `snap` plays the k-th staged snap on the real rules.js game and engine (`cfg` overrides the entry for that snap, e.g. a follow-up
+ * unit) and returns the play's record (the sim, the subject's events, his state before and after, whether an execution was recorded).
+ */
+export function stageScenario({ sc, fam, contract, form, mastery, seed: gs }) {
+  const QL = SCENARIO_QUARTER;
+  const { teams, at, sprites } = scenarioClubs(gs, fam, form, mastery); if (!at) return { at: null };
+  const subject = at.side === 'kicker' ? teams.home.kicker : teams.home[at.side][at.slot];
+  const state = R.newGame({ home: teams.home, away: teams.away, seed: gs, quarterLength: QL, coinWinner: 'home', choice: 'receive' });
+  const init = sc.prime ? sc.prime(form, mastery) : contract.initGame ? contract.initGame(form, mastery) : {};
+  state.t8 = { status: {}, ability: { [REVIEW_ID]: structuredClone(init ?? {}) } };
+  const api = { state, teams, subject, slot: at.slot, form, mastery, seed: gs, addField: addFieldTo(state), place: (team, side, slot, spec, id = `scenario_${team}_${slot}`) => placeMonster(teams[team], side, slot, spec, id) };
+  sc.setup?.(api);
+  const pick = (lu, art) => Object.fromEntries(Object.entries(lu || {}).map(([k2, v]) => [k2, { species: v.species || art?.[k2] || null, name: v.name, type: v.type }]));
+  function snap(k, cfg = sc) {
+    const unit = typeof cfg.unit === 'function' ? cfg.unit(k, api) : cfg.unit; // Reviewer v2: a follow-up's unit may depend on the snap
+    const want = unit === 'defense' ? 'away' : 'home';
+    const stageScrimmage = (down = 1) => {
+      if (state.phase !== 'scrimmage' || state.possession !== want) state.drive = { team: want, plays: 0, yards: 0, start: cfg.ballOn ?? 35 };
+      if (state.phase !== 'scrimmage' || state.possession !== want || cfg.reset !== false) Object.assign(state, { phase: 'scrimmage', possession: want, ballOn: cfg.ballOn ?? 35, ballLat: 0, down, toGo: cfg.toGo ?? 10 });
+    };
+    state.clock = QL; cfg.everySnap?.(api, k);
+    let call; let offSide; let controls = null;
+    if (cfg.natural && state.phase === 'kickoff') { offSide = R.opponent(state.kickingTeam); call = () => { const x = R.doKickoff(state, teams); return { kind: 'kickoff', text: x.text, sim: x.sim }; }; } // Reviewer v2: natural continuation (no restaging)
+    else if (cfg.natural && state.phase === 'try') { offSide = state.tryTeam; call = () => ({ kind: 'try', text: R.attemptTryKick(state, teams).text }); }
+    else if (cfg.natural) {
+      offSide = state.possession; const [off, def] = typeof cfg.calls === 'function' ? cfg.calls(k, api) : cfg.calls[k % cfg.calls.length];
+      call = () => { const x = R.runScrimmagePlay(state, teams, off, def, {}); return { kind: 'play', text: x.outcome.text, sim: x.sim, offensePlayId: off, defensePlayId: def }; };
+    } else if (cfg.kick === 'kickoff' || (cfg.kick === 'xp' && state.phase === 'kickoff' && state.kickingTeam === 'home')) {
+      Object.assign(state, { phase: 'kickoff', kickingTeam: cfg.receive ? 'away' : 'home' }); offSide = R.opponent(state.kickingTeam);
+      call = () => { const x = R.doKickoff(state, teams); return { kind: 'kickoff', text: x.text, sim: x.sim }; };
+    } else if (cfg.kick === 'xp') { Object.assign(state, { phase: 'try', tryTeam: 'home', possession: 'home' }); offSide = 'home'; call = () => ({ kind: 'try', text: R.attemptTryKick(state, teams).text }); }
+    else if (cfg.kick === 'fg') { stageScrimmage(4); offSide = 'home'; call = () => ({ kind: 'field_goal', text: R.doFieldGoal(state, teams, { signature: !!cfg.signature }).text }); }
+    else if (cfg.kick === 'punt') { stageScrimmage(4); offSide = 'home'; call = () => ({ kind: 'punt', text: R.doPunt(state, teams).text }); }
+    else {
+      stageScrimmage(); offSide = state.possession; const [off, def, callTarget] = typeof cfg.calls === 'function' ? cfg.calls(k, api) : cfg.calls[k % cfg.calls.length];
+      const target = callTarget || (cfg.target === true ? at.slot : cfg.target || null);
+      const extra = cfg.options ? cfg.options(api, k) || null : null;
+      controls = extra ? Object.getOwnPropertySymbols(extra).flatMap((s2) => Object.keys(extra[s2] || {}).filter((n) => extra[s2][n])) : null; if (controls && !controls.length) controls = null;
+      const options = { ...(target ? { forcedTarget: target } : {}), ...(extra || {}) };
+      call = () => { const x = R.runScrimmagePlay(state, teams, off, def, options); return { kind: 'play', text: x.outcome.text, sim: x.sim, offensePlayId: off, defensePlayId: def }; };
+    }
+    const before = structuredClone(state.t8.ability?.[REVIEW_ID] ?? null); const n0 = executionsOf(state.t8); const ballOn = state.ballOn;
+    const situation = { quarter: state.quarter, down: state.down, toGo: state.toGo, ballOn: state.ballOn, possession: state.possession, phase: state.phase };
+    const ev = call();
+    const side = offSide === 'home' ? 'off' : 'def'; const other = R.opponent(offSide);
+    return { kind: ev.kind, text: ev.text || '', sim: ev.sim || null, offSide, unit: at.side === 'kicker' ? 'kick' : side, executed: executionsOf(state.t8) > n0,
+      subjectEvents: contractEvents(ev.sim, fam, fam.abilities.football, at.slot, side), before, after: structuredClone(state.t8.ability?.[REVIEW_ID] ?? null), ballOn, situation,
+      sprites: { off: pick(teams[offSide].offense, sprites[offSide].offense), def: pick(teams[other].defense, sprites[other].defense) }, controls,
+      calls: ev.offensePlayId ? { offense: ev.offensePlayId, defense: ev.defensePlayId } : null };
+  }
+  return { state, teams, at, subject, api, snap };
+}
+export { REVIEW_ID, executionsOf, contractEvents };

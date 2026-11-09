@@ -1,0 +1,4030 @@
+{
+ "manifest": "1.0.0",
+ "runner": "run-scenes.mjs (methodology 2026-11-08 correction)",
+ "label": null,
+ "metric": "cpu",
+ "warmup": 3,
+ "repeats": 7,
+ "settle": 1,
+ "bootstrap": 2000,
+ "subRepeats": 7,
+ "noise": 0.1,
+ "schedule": "warm-up rounds identical to measured rounds; every measured run preceded by `settle` discarded runs of the same variant in the same worker; ABBA counterbalanced (rounds 0,3 of 4: A first; 1,2: B first) for base/cand and offA/abil; subs rotate",
+ "base": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/base",
+ "cand": "/home/claude/gridiron-beast/.claude/worktrees/agent-a9d282a447cce35d3",
+ "when": "2026-11-09T01:07:46.837Z",
+ "minutes": 3.427766666666667,
+ "machine": {
+  "cpus": 2,
+  "cpuModel": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "totalMemGB": 7.8,
+  "platform": "linux 6.18.44-fc-v310",
+  "node": "v22.22.0"
+ },
+ "runMachine": {
+  "seconds": 205.66,
+  "cpus": 2,
+  "available": true,
+  "busyCpus": 1.1951,
+  "ownCpus": 1.1961,
+  "competingCpus": 0,
+  "competingRawCpus": -0.001,
+  "stealCpus": 0.0137,
+  "iowaitCpus": 0,
+  "irqCpus": 0.0121,
+  "systemCpus": 0.0153,
+  "quiet": true,
+  "loadavgStart": [
+   0.15,
+   0.81,
+   0.82
+  ],
+  "loadavgEnd": [
+   1.11,
+   1.07,
+   0.94
+  ]
+ },
+ "loads": [
+  {
+   "at": "2026-11-09T01:04:21.170Z",
+   "load1": 0.15,
+   "load5": 0.81,
+   "load15": 0.82
+  },
+  {
+   "at": "2026-11-09T01:04:21.171Z",
+   "load1": 0.15,
+   "load5": 0.81,
+   "load15": 0.82,
+   "scene": "A3-delayed-effects",
+   "machine": {
+    "seconds": 57.29,
+    "cpus": 2,
+    "available": true,
+    "busyCpus": 1.262,
+    "ownCpus": 1.2639,
+    "competingCpus": 0,
+    "competingRawCpus": -0.0019,
+    "stealCpus": 0.0117,
+    "iowaitCpus": 0,
+    "irqCpus": 0.0084,
+    "systemCpus": 0.0202,
+    "quiet": true,
+    "loadavgStart": [
+     0.15,
+     0.81,
+     0.82
+    ],
+    "loadavgEnd": [
+     1.36,
+     1.03,
+     0.9
+    ]
+   }
+  },
+  {
+   "at": "2026-11-09T01:05:18.555Z",
+   "load1": 1.36,
+   "load5": 1.03,
+   "load15": 0.9,
+   "scene": "A5-full-contracts",
+   "machine": {
+    "seconds": 148.2,
+    "cpus": 2,
+    "available": true,
+    "busyCpus": 1.1691,
+    "ownCpus": 1.1698,
+    "competingCpus": 0,
+    "competingRawCpus": -0.0007,
+    "stealCpus": 0.0145,
+    "iowaitCpus": 0,
+    "irqCpus": 0.0136,
+    "systemCpus": 0.0133,
+    "quiet": true,
+    "loadavgStart": [
+     1.36,
+     1.03,
+     0.9
+    ],
+    "loadavgEnd": [
+     1.11,
+     1.07,
+     0.94
+    ]
+   }
+  },
+  {
+   "at": "2026-11-09T01:07:46.835Z",
+   "load1": 1.11,
+   "load5": 1.07,
+   "load15": 0.94
+  }
+ ],
+ "summary": {
+  "status": "quiet machine (competing CPU <= 0.05 and steal <= 0.05 CPU in every scene); official only when the owner accepts the conditions; results labelled PROVISIONAL stay provisional",
+  "quietRule": {
+   "competingCpus": 0.05,
+   "stealCpus": 0.05,
+   "since": "2026-11-08",
+   "note": "quiet = competing CPU (total busy - the benchmark's own processes) at most 0.05 CPU and steal at most 0.05 CPU, averaged over the window (/proc/stat, /proc/<pid>/stat); load averages recorded, not the rule"
+  },
+  "engineLimit": 1.1,
+  "abilityBudget": 1.25,
+  "r0": [
+   {
+    "scene": "A3-delayed-effects",
+    "kind": "abilities-off twin",
+    "addition": false,
+    "ratio": 0.6975057712669015,
+    "ci95": [
+     0.4946658585135945,
+     0.7773406066233364
+    ],
+    "pass": true,
+    "quality": "PROVISIONAL",
+    "reasons": [
+     "noisy (IQR/median or CV over 0.1)"
+    ],
+    "noisy": true,
+    "borderline": false,
+    "perStep": 0.6924602450828138,
+    "volume": 1.0072863766835947
+   },
+   {
+    "scene": "A5-full-contracts",
+    "kind": "abilities-off twin",
+    "addition": false,
+    "ratio": 0.6421873407399856,
+    "ci95": [
+     0.5640118234634593,
+     0.708223379365086
+    ],
+    "pass": true,
+    "quality": "PROVISIONAL",
+    "reasons": [
+     "noisy (IQR/median or CV over 0.1)"
+    ],
+    "noisy": true,
+    "borderline": false,
+    "perStep": 0.6335445009726577,
+    "volume": 1.0136420405418387
+   }
+  ],
+  "r1": [
+   {
+    "scene": "A3-delayed-effects",
+    "addition": false,
+    "ratio": 1.0627955325251863,
+    "ci95": [
+     1.0134997787901616,
+     1.110449636882872
+    ],
+    "within": true,
+    "quality": "PROVISIONAL",
+    "reasons": [
+     "noisy (IQR/median or CV over 0.1)",
+     "borderline (95% interval straddles the limit)"
+    ],
+    "noisy": true,
+    "borderline": true,
+    "perStep": 1.1122902545033035,
+    "volume": 0.9555019728189391,
+    "ratioOfMedians": 1.345762347007811,
+    "crossProcess": 1.306788037446436,
+    "sameProcess": 1.345762347007811,
+    "processState": 0.9710392331543297,
+    "r2": 0.9114921979414369
+   },
+   {
+    "scene": "A5-full-contracts",
+    "addition": false,
+    "ratio": 1.218306928461196,
+    "ci95": [
+     1.0575523416855526,
+     1.3451664540198116
+    ],
+    "within": true,
+    "quality": "PROVISIONAL",
+    "reasons": [
+     "noisy (IQR/median or CV over 0.1)",
+     "borderline (95% interval straddles the limit)"
+    ],
+    "noisy": true,
+    "borderline": true,
+    "perStep": 1.1701735459439306,
+    "volume": 1.041133541844375,
+    "ratioOfMedians": 1.245405370273536,
+    "crossProcess": 1.3381826839139752,
+    "sameProcess": 1.245405370273536,
+    "processState": 1.074495674946433,
+    "r2": 0.8593639792070125
+   }
+  ],
+  "r0Failures": [],
+  "r1OverBudget": [],
+  "provisional": [
+   "A3-delayed-effects R0",
+   "A5-full-contracts R0",
+   "A3-delayed-effects R1",
+   "A5-full-contracts R1"
+  ],
+  "noisy": [
+   "A3-delayed-effects R0",
+   "A5-full-contracts R0",
+   "A3-delayed-effects R1",
+   "A5-full-contracts R1"
+  ],
+  "borderline": [
+   "A3-delayed-effects R1",
+   "A5-full-contracts R1"
+  ]
+ },
+ "results": [
+  {
+   "scene": "A3-delayed-effects",
+   "kind": "ability",
+   "addition": false,
+   "tier": "rules",
+   "plays": 96,
+   "inputsHash": "0169b1a24a855c5a",
+   "machine": {
+    "seconds": 57.29,
+    "cpus": 2,
+    "available": true,
+    "busyCpus": 1.262,
+    "ownCpus": 1.2639,
+    "competingCpus": 0,
+    "competingRawCpus": -0.0019,
+    "stealCpus": 0.0117,
+    "iowaitCpus": 0,
+    "irqCpus": 0.0084,
+    "systemCpus": 0.0202,
+    "quiet": true,
+    "loadavgStart": [
+     0.15,
+     0.81,
+     0.82
+    ],
+    "loadavgEnd": [
+     1.36,
+     1.03,
+     0.9
+    ]
+   },
+   "base": {
+    "median": 288.065,
+    "min": 248.361,
+    "max": 953.59,
+    "q1": 272.2505,
+    "q3": 321.245,
+    "iqrOverMedian": 0.17008140523840112,
+    "cv": 0.6632295219522457,
+    "noisy": true,
+    "msPerPlay": 3.000677083333333,
+    "ticksPerPlay": 47.177083333333336,
+    "msPerTick": 0.06360454846544492,
+    "msPerActorTick": 0.004543182033246065,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 4529,
+    "actorTicks": 63406,
+    "pairTicks": 412139,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "841e07328fb59fc9",
+    "runs": [
+     286.021,
+     953.59,
+     301.923,
+     258.48,
+     288.065,
+     340.567,
+     248.361
+    ],
+    "wallMedian": 257.673791,
+    "wallRuns": [
+     269.724991,
+     546.001549,
+     256.618956,
+     257.673791,
+     235.626366,
+     327.094938,
+     216.102676
+    ],
+    "mainMedian": 252.778,
+    "mainRuns": [
+     268.785,
+     363.86,
+     247.228,
+     252.778,
+     215.283,
+     326.962,
+     216.121
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 28,
+      "stealTicks": 0,
+      "cpu": 286.021
+     },
+     {
+      "busyTicks": 95,
+      "stealTicks": 1,
+      "cpu": 953.59
+     },
+     {
+      "busyTicks": 30,
+      "stealTicks": 0,
+      "cpu": 301.923
+     },
+     {
+      "busyTicks": 27,
+      "stealTicks": 1,
+      "cpu": 258.48
+     },
+     {
+      "busyTicks": 30,
+      "stealTicks": 1,
+      "cpu": 288.065
+     },
+     {
+      "busyTicks": 34,
+      "stealTicks": 0,
+      "cpu": 340.567
+     },
+     {
+      "busyTicks": 24,
+      "stealTicks": 1,
+      "cpu": 248.361
+     }
+    ],
+    "runCompetingCpusMedian": 0
+   },
+   "cand": {
+    "median": 200.927,
+    "min": 149.351,
+    "max": 396.2,
+    "q1": 174.0235,
+    "q3": 262.89,
+    "iqrOverMedian": 0.44228252051740174,
+    "cv": 0.3717525360421341,
+    "noisy": true,
+    "msPerPlay": 2.0929895833333334,
+    "ticksPerPlay": 47.520833333333336,
+    "msPerTick": 0.0440436212187637,
+    "msPerActorTick": 0.0031459729441974072,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 4562,
+    "actorTicks": 63868,
+    "pairTicks": 415142,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "c63fdde9f4983efc",
+    "runs": [
+     196.803,
+     396.2,
+     149.351,
+     200.927,
+     151.244,
+     264.147,
+     261.633
+    ],
+    "wallMedian": 180.558642,
+    "wallRuns": [
+     180.558642,
+     232.77684,
+     133.750087,
+     175.391308,
+     145.977456,
+     225.853023,
+     198.439694
+    ],
+    "mainMedian": 175.172,
+    "mainRuns": [
+     180.179,
+     200.489,
+     127.051,
+     175.172,
+     144.057,
+     220.48,
+     166.657
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 20,
+      "stealTicks": 0,
+      "cpu": 196.803
+     },
+     {
+      "busyTicks": 38,
+      "stealTicks": 0,
+      "cpu": 396.2
+     },
+     {
+      "busyTicks": 15,
+      "stealTicks": 0,
+      "cpu": 149.351
+     },
+     {
+      "busyTicks": 20,
+      "stealTicks": 0,
+      "cpu": 200.927
+     },
+     {
+      "busyTicks": 16,
+      "stealTicks": 0,
+      "cpu": 151.244
+     },
+     {
+      "busyTicks": 27,
+      "stealTicks": 0,
+      "cpu": 264.147
+     },
+     {
+      "busyTicks": 27,
+      "stealTicks": 0,
+      "cpu": 261.633
+     }
+    ],
+    "runCompetingCpusMedian": 0.017706158866657863
+   },
+   "offA": {
+    "median": 195.108,
+    "min": 163.441,
+    "max": 294.758,
+    "q1": 180.868,
+    "q3": 252.0805,
+    "iqrOverMedian": 0.3649901592963897,
+    "cv": 0.22935078852717225,
+    "noisy": true,
+    "msPerPlay": 2.032375,
+    "ticksPerPlay": 47.520833333333336,
+    "msPerTick": 0.04276808417360807,
+    "msPerActorTick": 0.003054863155257719,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 4562,
+    "actorTicks": 63868,
+    "pairTicks": 415142,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "c63fdde9f4983efc",
+    "runs": [
+     195.108,
+     163.441,
+     194.474,
+     248.267,
+     255.894,
+     294.758,
+     167.262
+    ],
+    "wallMedian": 172.870469,
+    "wallRuns": [
+     172.870469,
+     136.24343,
+     165.579595,
+     185.884492,
+     228.186877,
+     240.96982,
+     140.27178
+    ],
+    "mainMedian": 165.585,
+    "mainRuns": [
+     172.438,
+     134.121,
+     165.585,
+     156.552,
+     226.861,
+     234.328,
+     135.806
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 20,
+      "stealTicks": 0,
+      "cpu": 195.108
+     },
+     {
+      "busyTicks": 16,
+      "stealTicks": 0,
+      "cpu": 163.441
+     },
+     {
+      "busyTicks": 19,
+      "stealTicks": 0,
+      "cpu": 194.474
+     },
+     {
+      "busyTicks": 24,
+      "stealTicks": 1,
+      "cpu": 248.267
+     },
+     {
+      "busyTicks": 25,
+      "stealTicks": 0,
+      "cpu": 255.894
+     },
+     {
+      "busyTicks": 29,
+      "stealTicks": 1,
+      "cpu": 294.758
+     },
+     {
+      "busyTicks": 16,
+      "stealTicks": 0,
+      "cpu": 167.262
+     }
+    ],
+    "runCompetingCpusMedian": 0
+   },
+   "abil": {
+    "median": 262.569,
+    "min": 169.52,
+    "max": 309.804,
+    "q1": 185.11950000000002,
+    "q3": 273.82550000000003,
+    "iqrOverMedian": 0.3378388157017775,
+    "cv": 0.23633999352838064,
+    "noisy": true,
+    "msPerPlay": 2.7350937500000003,
+    "ticksPerPlay": 45.40625,
+    "msPerTick": 0.06023606331727461,
+    "msPerActorTick": 0.004302575951233901,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 4359,
+    "actorTicks": 61026,
+    "pairTicks": 396669,
+    "abilityEvents": 109,
+    "fields": 21,
+    "fp": "2e5f695a91b16280",
+    "runs": [
+     262.569,
+     174.344,
+     195.895,
+     275.688,
+     271.963,
+     309.804,
+     169.52
+    ],
+    "wallMedian": 200.915731,
+    "wallRuns": [
+     215.130447,
+     142.926833,
+     161.308894,
+     200.915731,
+     239.303623,
+     228.462196,
+     145.625703
+    ],
+    "mainMedian": 195.624,
+    "mainRuns": [
+     208.637,
+     141.904,
+     154.801,
+     195.624,
+     237.009,
+     214.936,
+     142.389
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 27,
+      "stealTicks": 0,
+      "cpu": 262.569
+     },
+     {
+      "busyTicks": 18,
+      "stealTicks": 0,
+      "cpu": 174.344
+     },
+     {
+      "busyTicks": 19,
+      "stealTicks": 0,
+      "cpu": 195.895
+     },
+     {
+      "busyTicks": 27,
+      "stealTicks": 0,
+      "cpu": 275.688
+     },
+     {
+      "busyTicks": 27,
+      "stealTicks": 0,
+      "cpu": 271.963
+     },
+     {
+      "busyTicks": 33,
+      "stealTicks": 0,
+      "cpu": 309.804
+     },
+     {
+      "busyTicks": 17,
+      "stealTicks": 0,
+      "cpu": 169.52
+     }
+    ],
+    "runCompetingCpusMedian": 0.003296121427135633
+   },
+   "R0": {
+    "ratio": 0.6975057712669015,
+    "gate": "ratioOfMedians",
+    "ratioOfMedians": 0.6975057712669015,
+    "wall": 0.7007256783830219,
+    "wallPairedMedian": 0.669417547593875,
+    "main": 0.6929875226483317,
+    "mainPairedMedian": 0.6703461874732592,
+    "perTick": 0.6924602450828139,
+    "perPlay": 0.6975057712669016,
+    "pairedMedian": 0.6880718548638036,
+    "pairedQ1": 0.5098500694855651,
+    "pairedQ3": 0.7764750524506041,
+    "pairedIqrOverMedian": 0.38749584230242134,
+    "ci95": [
+     0.4946658585135945,
+     0.7773406066233364
+    ],
+    "pairedGeoMean": 0.6464085762457694,
+    "paired": [
+     0.6880718548638036,
+     0.4154825449092377,
+     0.4946658585135945,
+     0.7773406066233364,
+     0.5250342804575356,
+     0.7756094982778718,
+     1.053438341768635
+    ],
+    "limit": 1.1,
+    "pass": true,
+    "borderline": false,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      4562,
+      4529
+     ],
+     "actorTicks": [
+      63868,
+      63406
+     ],
+     "pairTicks": [
+      415142,
+      412139
+     ],
+     "volumeTicks": 1.0072863766835947,
+     "actorsPerTickRatio": 1,
+     "volume": 1.0072863766835947,
+     "perStep": 0.6924602450828138,
+     "perTickPart": 0.6924602450828138,
+     "perStepCi95": [
+      0.4910876092082572,
+      0.7717175816302259
+     ],
+     "arithmetic": "0.698 = per-step 0.692 x volume 1.007 (ticks 4562/4529 = 1.007 x actors per tick 14.00/14.00 = 1.000)"
+    },
+    "byOrder": {
+     "numFirst": 0.6351376783957332,
+     "denFirst": 0.6880718548638036,
+     "nNumFirst": 4,
+     "nDenFirst": 3
+    },
+    "quality": {
+     "label": "PROVISIONAL",
+     "reasons": [
+      "noisy (IQR/median or CV over 0.1)"
+     ]
+    }
+   },
+   "R1": {
+    "ratio": 1.0627955325251863,
+    "gate": "pairedMedian",
+    "ratioOfMedians": 1.345762347007811,
+    "wall": 1.162232810278313,
+    "wallPairedMedian": 1.0487177270934822,
+    "main": 1.1814113597246128,
+    "mainPairedMedian": 1.0484735578693136,
+    "perTick": 1.4084349224706663,
+    "perPlay": 1.3457623470078113,
+    "pairedMedian": 1.0627955325251863,
+    "pairedQ1": 1.0322725215204174,
+    "pairedQ3": 1.0885793622829445,
+    "pairedIqrOverMedian": 0.05297993738150452,
+    "ci95": [
+     1.0134997787901616,
+     1.110449636882872
+    ],
+    "pairedGeoMean": 1.0891342243126811,
+    "paired": [
+     1.345762347007811,
+     1.066709087683017,
+     1.0073068893528185,
+     1.110449636882872,
+     1.0627955325251863,
+     1.0510452642506734,
+     1.0134997787901616
+    ],
+    "limit": 1.25,
+    "pass": true,
+    "borderline": true,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      4359,
+      4562
+     ],
+     "actorTicks": [
+      61026,
+      63868
+     ],
+     "pairTicks": [
+      396669,
+      415142
+     ],
+     "volumeTicks": 0.9555019728189391,
+     "actorsPerTickRatio": 1,
+     "volume": 0.9555019728189391,
+     "perStep": 1.1122902545033035,
+     "perTickPart": 1.1122902545033035,
+     "perStepCi95": [
+      1.0606987820235643,
+      1.162163625478243
+     ],
+     "arithmetic": "1.063 = per-step 1.112 x volume 0.956 (ticks 4359/4562 = 0.956 x actors per tick 14.00/14.00 = 1.000)"
+    },
+    "byOrder": {
+     "numFirst": 1.0322725215204174,
+     "denFirst": 1.110449636882872,
+     "nNumFirst": 4,
+     "nDenFirst": 3
+    },
+    "quality": {
+     "label": "PROVISIONAL",
+     "reasons": [
+      "noisy (IQR/median or CV over 0.1)",
+      "borderline (95% interval straddles the limit)"
+     ]
+    }
+   },
+   "R1same": {
+    "ratio": 1.345762347007811,
+    "note": "old same-process figure: ratio of the medians, both in the ability worker (now with the balanced schedule)"
+   },
+   "R1cross": {
+    "ratio": 1.306788037446436,
+    "gate": "ratioOfMedians",
+    "ratioOfMedians": 1.306788037446436,
+    "wall": 1.1127450271806985,
+    "wallPairedMedian": 1.145528437475362,
+    "main": 1.1167538191035098,
+    "mainPairedMedian": 1.1167538191035098,
+    "perTick": 1.3676455670636936,
+    "perPlay": 1.3067880374464358,
+    "pairedMedian": 1.3116417031020884,
+    "pairedQ1": 0.9103887177823959,
+    "pairedQ3": 1.353126071249536,
+    "pairedIqrOverMedian": 0.33754443185211896,
+    "ci95": [
+     0.6479304980640822,
+     1.3720804073121085
+    ],
+    "pairedGeoMean": 1.0538669445528797,
+    "paired": [
+     1.3341717351869637,
+     0.44004038364462394,
+     1.3116417031020884,
+     1.3720804073121085,
+     1.7981738118536936,
+     1.1728469375007098,
+     0.6479304980640822
+    ],
+    "limit": 1.25,
+    "pass": false,
+    "borderline": true,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      4359,
+      4562
+     ],
+     "actorTicks": [
+      61026,
+      63868
+     ],
+     "pairTicks": [
+      396669,
+      415142
+     ],
+     "volumeTicks": 0.9555019728189391,
+     "actorsPerTickRatio": 1,
+     "volume": 0.9555019728189391,
+     "perStep": 1.3676455670636938,
+     "perTickPart": 1.3676455670636938,
+     "perStepCi95": [
+      0.6781048249984728,
+      1.4359786231148977
+     ],
+     "arithmetic": "1.307 = per-step 1.368 x volume 0.956 (ticks 4359/4562 = 0.956 x actors per tick 14.00/14.00 = 1.000)"
+    },
+    "quality": {
+     "label": "PROVISIONAL",
+     "reasons": [
+      "noisy (IQR/median or CV over 0.1)",
+      "borderline (95% interval straddles the limit)"
+     ]
+    },
+    "note": "old protocol R1: abilities on (ability worker) / abilities off (matched worker); two processes; reported, not the figure"
+   },
+   "processState": {
+    "ratio": 0.9710392331543297,
+    "main": 0.9452709337108671,
+    "wall": 0.9574200774062093,
+    "note": "the twin in the ability worker / the twin in the matched worker (same build, same scene): the difference between the two processes"
+   },
+   "R2": {
+    "ratio": 0.9114921979414369,
+    "gate": "ratioOfMedians",
+    "ratioOfMedians": 0.9114921979414369,
+    "wall": 0.779729014038529,
+    "wallPairedMedian": 0.6984583662373889,
+    "main": 0.7738964625086044,
+    "mainPairedMedian": 0.6588392613397125,
+    "perTick": 0.9470401845553492,
+    "perPlay": 0.911492197941437,
+    "pairedMedian": 0.9096712247516641,
+    "pairedQ1": 0.6656895992945903,
+    "pairedQ3": 0.9310544569905708,
+    "pairedIqrOverMedian": 0.29171512792264465,
+    "ci95": [
+     0.6488243691272279,
+     0.9441028934441881
+    ],
+    "pairedGeoMean": 0.6812286311809062,
+    "paired": [
+     0.9180060205369536,
+     0.18282909845950565,
+     0.6488243691272279,
+     1.0665738161559888,
+     0.9441028934441881,
+     0.9096712247516641,
+     0.6825548294619527
+    ],
+    "limit": null,
+    "pass": null,
+    "borderline": false,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      4359,
+      4529
+     ],
+     "actorTicks": [
+      61026,
+      63406
+     ],
+     "pairTicks": [
+      396669,
+      412139
+     ],
+     "volumeTicks": 0.9624641201148156,
+     "actorsPerTickRatio": 1,
+     "volume": 0.9624641201148156,
+     "perStep": 0.9470401845553493,
+     "perTickPart": 0.9470401845553493,
+     "perStepCi95": [
+      0.6741283706761217,
+      0.9809226897014746
+     ],
+     "arithmetic": "0.911 = per-step 0.947 x volume 0.962 (ticks 4359/4529 = 0.962 x actors per tick 14.00/14.00 = 1.000)"
+    }
+   },
+   "sub": {
+    "only:home.offense.TE": {
+     "ratio": 1.018046523938714,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.1195401745700417,
+     "wall": 1.0487388660109134,
+     "wallPairedMedian": 1.0355348323179407,
+     "main": 1.028650889084448,
+     "mainPairedMedian": 1.0199232564466016,
+     "perTick": 1.1195401745700417,
+     "perPlay": 1.1195401745700417,
+     "pairedMedian": 1.018046523938714,
+     "pairedQ1": 1.0132511958917683,
+     "pairedQ3": 1.214546818791821,
+     "pairedIqrOverMedian": 0.19772733187208502,
+     "ci95": [
+      1.0097090176928114,
+      1.2477492171189979
+     ],
+     "pairedGeoMean": 1.1007831578088776,
+     "paired": [
+      1.2477492171189979,
+      1.018046523938714,
+      0.9568509732822355,
+      1.181344420464644,
+      1.0167933740907251,
+      1.0097090176928114,
+      1.3285188528574405
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4562,
+       4562
+      ],
+      "actorTicks": [
+       63868,
+       63868
+      ],
+      "pairTicks": [
+       415142,
+       415142
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.018046523938714,
+      "perTickPart": 1.018046523938714,
+      "perStepCi95": [
+       1.0097090176928114,
+       1.2477492171189979
+      ],
+      "arithmetic": "1.018 = per-step 1.018 x volume 1.000 (ticks 4562/4562 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 186.109,
+     "abilityEvents": 16,
+     "noisyJob": true
+    },
+    "only:home.offense.RB": {
+     "ratio": 1.2353030582666564,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.3805169727557645,
+     "wall": 1.1329269680399308,
+     "wallPairedMedian": 1.0075040094097432,
+     "main": 1.1048897965215874,
+     "mainPairedMedian": 0.9752540130314302,
+     "perTick": 1.3793075842557594,
+     "perPlay": 1.3805169727557642,
+     "pairedMedian": 1.2353030582666564,
+     "pairedQ1": 1.0907275268440695,
+     "pairedQ3": 1.5767299608668826,
+     "pairedIqrOverMedian": 0.39342769433822855,
+     "ci95": [
+      1.05993901938628,
+      1.6967314718162838
+     ],
+     "pairedGeoMean": 1.3162880801623265,
+     "paired": [
+      1.6967314718162838,
+      1.7796639737242612,
+      1.2353030582666564,
+      1.4567284499174813,
+      1.1215160343018586,
+      1.059905215611837,
+      1.05993901938628
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4566,
+       4562
+      ],
+      "actorTicks": [
+       63924,
+       63868
+      ],
+      "pairTicks": [
+       415506,
+       415142
+      ],
+      "volumeTicks": 1.0008768084173607,
+      "actorsPerTickRatio": 1,
+      "volume": 1.0008768084173607,
+      "perStep": 1.234220883007553,
+      "perTickPart": 1.234220883007553,
+      "perStepCi95": [
+       1.0590104700920302,
+       1.6952450666723362
+      ],
+      "arithmetic": "1.235 = per-step 1.234 x volume 1.001 (ticks 4566/4562 = 1.001 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 229.493,
+     "abilityEvents": 2,
+     "noisyJob": true
+    },
+    "only:home.offense.QB": {
+     "ratio": 1.2105243112860227,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.290458802793602,
+     "wall": 1.327479452563866,
+     "wallPairedMedian": 1.159326861597474,
+     "main": 1.2774400279455331,
+     "mainPairedMedian": 1.1019482175142552,
+     "perTick": 1.2901759935008572,
+     "perPlay": 1.2904588027936021,
+     "pairedMedian": 1.2105243112860227,
+     "pairedQ1": 1.0392546087350036,
+     "pairedQ3": 1.4189318365825003,
+     "pairedIqrOverMedian": 0.3136469249792593,
+     "ci95": [
+      0.9140337476564128,
+      1.4251159489163063
+     ],
+     "pairedGeoMean": 1.194106623505517,
+     "paired": [
+      1.6580180062630478,
+      1.4251159489163063,
+      1.1644754698135944,
+      1.2105243112860227,
+      1.4127477242486943,
+      0.8048808607180062,
+      0.9140337476564128
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4563,
+       4562
+      ],
+      "actorTicks": [
+       63882,
+       63868
+      ],
+      "pairTicks": [
+       415233,
+       415142
+      ],
+      "volumeTicks": 1.0002192021043401,
+      "actorsPerTickRatio": 1,
+      "volume": 1.0002192021043401,
+      "perStep": 1.2102590199620504,
+      "perTickPart": 1.2102590199620504,
+      "perStepCi95": [
+       0.9138334334447853,
+       1.4248036289625663
+      ],
+      "arithmetic": "1.211 = per-step 1.210 x volume 1.000 (ticks 4563/4562 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 214.522,
+     "abilityEvents": 1,
+     "noisyJob": true
+    },
+    "only:home.offense.WR1": {
+     "ratio": 1.1792619773968365,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.2498902169793729,
+     "wall": 1.2275686352740593,
+     "wallPairedMedian": 1.1587157518000673,
+     "main": 1.238087880640329,
+     "mainPairedMedian": 1.1569178526725694,
+     "perTick": 1.2509870929925184,
+     "perPlay": 1.2498902169793729,
+     "pairedMedian": 1.1792619773968365,
+     "pairedQ1": 0.9908318957985698,
+     "pairedQ3": 1.478719544505045,
+     "pairedIqrOverMedian": 0.41372286909772454,
+     "ci95": [
+      0.9720852718561211,
+      1.601893681911969
+     ],
+     "pairedGeoMean": 1.205039176396195,
+     "paired": [
+      1.355545407098121,
+      1.601893681911969,
+      1.1792619773968365,
+      1.0095785197410183,
+      1.9792969642972278,
+      0.7418134205141086,
+      0.9720852718561211
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4558,
+       4562
+      ],
+      "actorTicks": [
+       63812,
+       63868
+      ],
+      "pairTicks": [
+       414778,
+       415142
+      ],
+      "volumeTicks": 0.9991231915826392,
+      "actorsPerTickRatio": 1,
+      "volume": 0.9991231915826392,
+      "perStep": 1.1802968716288653,
+      "perTickPart": 1.1802968716288653,
+      "perStepCi95": [
+       0.9729383523930726,
+       1.603299468381396
+      ],
+      "arithmetic": "1.179 = per-step 1.180 x volume 0.999 (ticks 4558/4562 = 0.999 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 207.778,
+     "abilityEvents": 16,
+     "noisyJob": true
+    },
+    "only:away.defense.LB1": {
+     "ratio": 1.1724627708934354,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.2640687692872223,
+     "wall": 1.2717181455795918,
+     "wallPairedMedian": 1.1534944696541152,
+     "main": 1.2466932238799955,
+     "mainPairedMedian": 1.1235179126836445,
+     "perTick": 1.2640687692872226,
+     "perPlay": 1.2640687692872226,
+     "pairedMedian": 1.1724627708934354,
+     "pairedQ1": 1.1264912453346776,
+     "pairedQ3": 1.4422925974081389,
+     "pairedIqrOverMedian": 0.2693487246787509,
+     "ci95": [
+      1.112320680462105,
+      1.552499076804042
+     ],
+     "pairedGeoMean": 1.2193330654709023,
+     "paired": [
+      1.6455506263048016,
+      1.3320861180122356,
+      1.1406618102072499,
+      1.112320680462105,
+      1.552499076804042,
+      0.791581400519626,
+      1.1724627708934354
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4562,
+       4562
+      ],
+      "actorTicks": [
+       63868,
+       63868
+      ],
+      "pairTicks": [
+       415142,
+       415142
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.1724627708934354,
+      "perTickPart": 1.1724627708934354,
+      "perStepCi95": [
+       1.112320680462105,
+       1.552499076804042
+      ],
+      "arithmetic": "1.172 = per-step 1.172 x volume 1.000 (ticks 4562/4562 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 210.135,
+     "abilityEvents": 30,
+     "noisyJob": true
+    },
+    "only:away.defense.LB2": {
+     "ratio": 0.9913579233765332,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.0363396837045904,
+     "wall": 1.0828321513563828,
+     "wallPairedMedian": 0.8686688030161448,
+     "main": 1.0658332269701265,
+     "mainPairedMedian": 0.8657224977979694,
+     "perTick": 1.076453013902628,
+     "perPlay": 1.0363396837045904,
+     "pairedMedian": 0.9913579233765332,
+     "pairedQ1": 0.8714848484725126,
+     "pairedQ3": 1.2473655434478144,
+     "pairedIqrOverMedian": 0.37915740229831846,
+     "ci95": [
+      0.8480331529926202,
+      1.401180242665592
+     ],
+     "pairedGeoMean": 1.0364229145421977,
+     "paired": [
+      1.416277400835073,
+      1.401180242665592,
+      0.8949365439524052,
+      1.0935508442300368,
+      0.8480331529926202,
+      0.786759831512721,
+      0.9913579233765332
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4392,
+       4562
+      ],
+      "actorTicks": [
+       61488,
+       63868
+      ],
+      "pairTicks": [
+       399672,
+       415142
+      ],
+      "volumeTicks": 0.9627356422621657,
+      "actorsPerTickRatio": 1,
+      "volume": 0.9627356422621657,
+      "perStep": 1.029730156294113,
+      "perTickPart": 1.029730156294113,
+      "perStepCi95": [
+       0.8808577513552671,
+       1.4554153613480034
+      ],
+      "arithmetic": "0.991 = per-step 1.030 x volume 0.963 (ticks 4392/4562 = 0.963 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 172.278,
+     "abilityEvents": 8,
+     "noisyJob": true
+    },
+    "only:away.defense.FS": {
+     "ratio": 1.394675874781423,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.3663684979878126,
+     "wall": 1.2928445185309214,
+     "wallPairedMedian": 1.197091468488533,
+     "main": 1.2605517899248293,
+     "mainPairedMedian": 1.1711248970217438,
+     "perTick": 1.3775410138829616,
+     "perPlay": 1.3663684979878128,
+     "pairedMedian": 1.394675874781423,
+     "pairedQ1": 1.1497707397884223,
+     "pairedQ3": 1.5049457253942724,
+     "pairedIqrOverMedian": 0.2546648952836544,
+     "ci95": [
+      1.0018034562126596,
+      1.5680925425747578
+     ],
+     "pairedGeoMean": 1.3179530210237618,
+     "paired": [
+      1.9427322546972858,
+      1.5680925425747578,
+      0.8672959798503979,
+      1.441798908213787,
+      1.2977380233641846,
+      1.0018034562126596,
+      1.394675874781423
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4525,
+       4562
+      ],
+      "actorTicks": [
+       63350,
+       63868
+      ],
+      "pairTicks": [
+       411775,
+       415142
+      ],
+      "volumeTicks": 0.9918895221394125,
+      "actorsPerTickRatio": 1,
+      "volume": 0.9918895221394125,
+      "perStep": 1.4060798543100226,
+      "perTickPart": 1.4060798543100226,
+      "perStepCi95": [
+       1.0099949982855587,
+       1.5809145147460875
+      ],
+      "arithmetic": "1.395 = per-step 1.406 x volume 0.992 (ticks 4525/4562 = 0.992 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 227.141,
+     "abilityEvents": 2,
+     "noisyJob": true
+    },
+    "only:away.defense.DL1": {
+     "ratio": 1.1444268122381618,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.2442356394785758,
+     "wall": 1.1516807238565014,
+     "wallPairedMedian": 1.2435722719254643,
+     "main": 1.1281195208953319,
+     "mainPairedMedian": 1.097565538866812,
+     "perTick": 1.2442356394785758,
+     "perPlay": 1.2442356394785758,
+     "pairedMedian": 1.1444268122381618,
+     "pairedQ1": 0.9643178580874968,
+     "pairedQ3": 1.2861301759112194,
+     "pairedIqrOverMedian": 0.28119956154675585,
+     "ci95": [
+      0.9292599630076195,
+      1.3280247123438627
+     ],
+     "pairedGeoMean": 1.134985186629979,
+     "paired": [
+      1.497820981210856,
+      1.2442356394785758,
+      0.9993757531673741,
+      1.1444268122381618,
+      1.3280247123438627,
+      0.9223772682167606,
+      0.9292599630076195
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4562,
+       4562
+      ],
+      "actorTicks": [
+       63868,
+       63868
+      ],
+      "pairTicks": [
+       415142,
+       415142
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.1444268122381618,
+      "perTickPart": 1.1444268122381618,
+      "perStepCi95": [
+       0.9292599630076195,
+       1.3280247123438627
+      ],
+      "arithmetic": "1.144 = per-step 1.144 x volume 1.000 (ticks 4562/4562 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 206.838,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.CB1": {
+     "ratio": 1.1265505552013433,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.1726992185855134,
+     "wall": 1.0781273263664677,
+     "wallPairedMedian": 1.0781273263664677,
+     "main": 1.0493211788178234,
+     "mainPairedMedian": 1.0493211788178234,
+     "perTick": 1.1726992185855134,
+     "perPlay": 1.1726992185855136,
+     "pairedMedian": 1.1265505552013433,
+     "pairedQ1": 0.9866076703025888,
+     "pairedQ3": 1.222645979087038,
+     "pairedIqrOverMedian": 0.2095230504256094,
+     "ci95": [
+      0.9481369026335996,
+      1.2374381109559478
+     ],
+     "pairedGeoMean": 1.1156328247544134,
+     "paired": [
+      1.5724425887265137,
+      1.2078538472181284,
+      1.0250784379715778,
+      1.2374381109559478,
+      0.9481369026335996,
+      0.835906072047664,
+      1.1265505552013433
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       4562,
+       4562
+      ],
+      "actorTicks": [
+       63868,
+       63868
+      ],
+      "pairTicks": [
+       415142,
+       415142
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.1265505552013433,
+      "perTickPart": 1.1265505552013433,
+      "perStepCi95": [
+       0.9481369026335996,
+       1.2374381109559478
+      ],
+      "arithmetic": "1.127 = per-step 1.127 x volume 1.000 (ticks 4562/4562 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 194.946,
+     "abilityEvents": 32,
+     "noisyJob": true
+    }
+   },
+   "subControl": {
+    "median": 166.237,
+    "overOff": 0.8520255448264551,
+    "noisy": true
+   },
+   "subRuns": {
+    "only:none": {
+     "runs": [
+      153.28,
+      166.237,
+      184.222,
+      157.54,
+      170.603,
+      242.867,
+      158.411
+     ],
+     "wallRuns": [
+      135.6273,
+      138.545919,
+      172.793826,
+      134.754456,
+      162.976608,
+      216.764722,
+      150.905932
+     ],
+     "fp": "c63fdde9f4983efc",
+     "ticksPerPlay": 47.520833333333336,
+     "actorTicks": 63868
+    },
+    "only:home.offense.TE": {
+     "runs": [
+      191.255,
+      169.237,
+      176.273,
+      186.109,
+      173.468,
+      245.225,
+      210.452
+     ],
+     "wallRuns": [
+      159.514202,
+      143.469125,
+      150.372618,
+      157.792784,
+      158.260916,
+      216.374027,
+      197.031586
+     ],
+     "fp": "d0825a0ed4996c6e",
+     "ticksPerPlay": 47.520833333333336,
+     "actorTicks": 63868
+    },
+    "only:home.offense.RB": {
+     "runs": [
+      260.075,
+      295.846,
+      227.57,
+      229.493,
+      191.334,
+      257.416,
+      167.906
+     ],
+     "wallRuns": [
+      223.242053,
+      221.488882,
+      162.28265,
+      170.9654,
+      164.199586,
+      205.9626,
+      141.009464
+     ],
+     "fp": "e101081d9f0dfa82",
+     "ticksPerPlay": 47.5625,
+     "actorTicks": 63924
+    },
+    "only:home.offense.QB": {
+     "runs": [
+      254.141,
+      236.907,
+      214.522,
+      190.706,
+      241.019,
+      195.479,
+      144.793
+     ],
+     "wallRuns": [
+      201.809578,
+      216.16824,
+      200.324524,
+      145.303843,
+      222.976985,
+      180.597711,
+      132.978682
+     ],
+     "fp": "bb93cf6ff8862824",
+     "ticksPerPlay": 47.53125,
+     "actorTicks": 63882
+    },
+    "only:home.offense.WR1": {
+     "runs": [
+      207.778,
+      266.294,
+      217.246,
+      159.049,
+      337.674,
+      180.162,
+      153.989
+     ],
+     "wallRuns": [
+      185.247389,
+      232.923378,
+      200.218928,
+      146.000905,
+      245.805304,
+      148.970221,
+      140.413319
+     ],
+     "fp": "94a7901910aba6ef",
+     "ticksPerPlay": 47.479166666666664,
+     "actorTicks": 63812
+    },
+    "only:away.defense.LB1": {
+     "runs": [
+      252.23,
+      221.442,
+      210.135,
+      175.235,
+      264.861,
+      192.249,
+      185.731
+     ],
+     "wallRuns": [
+      218.346712,
+      208.35971,
+      191.909812,
+      151.038201,
+      226.043231,
+      155.154248,
+      174.069158
+     ],
+     "fp": "8e2953f14c6ec532",
+     "ticksPerPlay": 47.520833333333336,
+     "actorTicks": 63868
+    },
+    "only:away.defense.LB2": {
+     "runs": [
+      217.087,
+      232.928,
+      164.867,
+      172.278,
+      144.677,
+      191.078,
+      157.042
+     ],
+     "wallRuns": [
+      189.177497,
+      201.083821,
+      150.100606,
+      163.405795,
+      130.587566,
+      166.151121,
+      128.617826
+     ],
+     "fp": "31ac7b870b8dbb65",
+     "ticksPerPlay": 45.75,
+     "actorTicks": 61488
+    },
+    "only:away.defense.FS": {
+     "runs": [
+      297.782,
+      260.675,
+      159.775,
+      227.141,
+      221.398,
+      243.305,
+      220.932
+     ],
+     "wallRuns": [
+      226.85412,
+      227.255729,
+      141.056692,
+      188.459978,
+      195.097907,
+      219.023327,
+      172.947172
+     ],
+     "fp": "d1b52c5f997a7fcf",
+     "ticksPerPlay": 47.135416666666664,
+     "actorTicks": 63350
+    },
+    "only:away.defense.DL1": {
+     "runs": [
+      229.586,
+      206.838,
+      184.107,
+      180.293,
+      226.565,
+      224.015,
+      147.205
+     ],
+     "wallRuns": [
+      200.396487,
+      173.795453,
+      167.477444,
+      167.576905,
+      209.486795,
+      189.141354,
+      133.8858
+     ],
+     "fp": "c63fdde9f4983efc",
+     "ticksPerPlay": 47.520833333333336,
+     "actorTicks": 63868
+    },
+    "only:away.defense.CB1": {
+     "runs": [
+      241.024,
+      200.79,
+      188.842,
+      194.946,
+      161.755,
+      203.014,
+      178.458
+     ],
+     "wallRuns": [
+      202.546169,
+      171.631601,
+      168.94873,
+      157.021637,
+      144.181514,
+      156.740014,
+      162.695809
+     ],
+     "fp": "248a2dc24fd198a5",
+     "ticksPerPlay": 47.520833333333336,
+     "actorTicks": 63868
+    }
+   }
+  },
+  {
+   "scene": "A5-full-contracts",
+   "kind": "ability",
+   "addition": false,
+   "tier": "rules",
+   "plays": 96,
+   "inputsHash": "c0c514735d69a743",
+   "machine": {
+    "seconds": 148.2,
+    "cpus": 2,
+    "available": true,
+    "busyCpus": 1.1691,
+    "ownCpus": 1.1698,
+    "competingCpus": 0,
+    "competingRawCpus": -0.0007,
+    "stealCpus": 0.0145,
+    "iowaitCpus": 0,
+    "irqCpus": 0.0136,
+    "systemCpus": 0.0133,
+    "quiet": true,
+    "loadavgStart": [
+     1.36,
+     1.03,
+     0.9
+    ],
+    "loadavgEnd": [
+     1.11,
+     1.07,
+     0.94
+    ]
+   },
+   "base": {
+    "median": 490.55,
+    "min": 449.507,
+    "max": 643.202,
+    "q1": 467.7335,
+    "q3": 538.7639999999999,
+    "iqrOverMedian": 0.14479767607787158,
+    "cv": 0.13410577697627568,
+    "noisy": true,
+    "msPerPlay": 5.109895833333334,
+    "ticksPerPlay": 108.42708333333333,
+    "msPerTick": 0.04712748582957056,
+    "msPerActorTick": 0.003366248987826469,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 10409,
+    "actorTicks": 145726,
+    "pairTicks": 947219,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "b3a0284686dec85f",
+    "runs": [
+     481.262,
+     490.55,
+     563.31,
+     514.218,
+     643.202,
+     454.205,
+     449.507
+    ],
+    "wallMedian": 438.426778,
+    "wallRuns": [
+     444.691887,
+     438.426778,
+     481.431283,
+     432.193207,
+     525.291342,
+     410.796805,
+     422.189314
+    ],
+    "mainMedian": 425.852,
+    "mainRuns": [
+     436.833,
+     423.592,
+     462.046,
+     425.852,
+     495.145,
+     405.545,
+     414.552
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 50,
+      "stealTicks": 0,
+      "cpu": 481.262
+     },
+     {
+      "busyTicks": 48,
+      "stealTicks": 1,
+      "cpu": 490.55
+     },
+     {
+      "busyTicks": 56,
+      "stealTicks": 0,
+      "cpu": 563.31
+     },
+     {
+      "busyTicks": 51,
+      "stealTicks": 1,
+      "cpu": 514.218
+     },
+     {
+      "busyTicks": 64,
+      "stealTicks": 3,
+      "cpu": 643.202
+     },
+     {
+      "busyTicks": 43,
+      "stealTicks": 0,
+      "cpu": 454.205
+     },
+     {
+      "busyTicks": 44,
+      "stealTicks": 1,
+      "cpu": 449.507
+     }
+    ],
+    "runCompetingCpusMedian": 0
+   },
+   "cand": {
+    "median": 315.025,
+    "min": 263.207,
+    "max": 390.431,
+    "q1": 290.317,
+    "q3": 340.2255,
+    "iqrOverMedian": 0.1584271089596064,
+    "cv": 0.1353265600777333,
+    "noisy": true,
+    "msPerPlay": 3.2815104166666664,
+    "ticksPerPlay": 109.90625,
+    "msPerTick": 0.029857359491991278,
+    "msPerActorTick": 0.0021326685351422342,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 10551,
+    "actorTicks": 147714,
+    "pairTicks": 960141,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "ec618cd59133674a",
+    "runs": [
+     340.841,
+     276.676,
+     390.431,
+     315.025,
+     303.958,
+     339.61,
+     263.207
+    ],
+    "wallMedian": 277.707325,
+    "wallRuns": [
+     325.572875,
+     264.645269,
+     279.481638,
+     277.707325,
+     275.503372,
+     280.688481,
+     252.452648
+    ],
+    "mainMedian": 270.138,
+    "mainRuns": [
+     324.724,
+     261.338,
+     270.138,
+     272.142,
+     268.249,
+     270.189,
+     248.445
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 34,
+      "stealTicks": 1,
+      "cpu": 340.841
+     },
+     {
+      "busyTicks": 27,
+      "stealTicks": 0,
+      "cpu": 276.676
+     },
+     {
+      "busyTicks": 39,
+      "stealTicks": 1,
+      "cpu": 390.431
+     },
+     {
+      "busyTicks": 32,
+      "stealTicks": 0,
+      "cpu": 315.025
+     },
+     {
+      "busyTicks": 31,
+      "stealTicks": 0,
+      "cpu": 303.958
+     },
+     {
+      "busyTicks": 35,
+      "stealTicks": 1,
+      "cpu": 339.61
+     },
+     {
+      "busyTicks": 26,
+      "stealTicks": 1,
+      "cpu": 263.207
+     }
+    ],
+    "runCompetingCpusMedian": 0
+   },
+   "offA": {
+    "median": 338.493,
+    "min": 259.066,
+    "max": 509.166,
+    "q1": 305.395,
+    "q3": 363.8595,
+    "iqrOverMedian": 0.1727199676211917,
+    "cv": 0.23346092167706642,
+    "noisy": true,
+    "msPerPlay": 3.52596875,
+    "ticksPerPlay": 109.90625,
+    "msPerTick": 0.03208160363946545,
+    "msPerActorTick": 0.0022915431171046754,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 10551,
+    "actorTicks": 147714,
+    "pairTicks": 960141,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "ec618cd59133674a",
+    "runs": [
+     329.613,
+     259.066,
+     281.177,
+     381.697,
+     509.166,
+     346.022,
+     338.493
+    ],
+    "wallMedian": 303.563738,
+    "wallRuns": [
+     282.854807,
+     248.703731,
+     251.881956,
+     303.563738,
+     431.077862,
+     336.78391,
+     333.797243
+    ],
+    "mainMedian": 295.991,
+    "mainRuns": [
+     273.078,
+     247.059,
+     249.829,
+     295.991,
+     419.291,
+     332.432,
+     326.396
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 32,
+      "stealTicks": 0,
+      "cpu": 329.613
+     },
+     {
+      "busyTicks": 26,
+      "stealTicks": 0,
+      "cpu": 259.066
+     },
+     {
+      "busyTicks": 28,
+      "stealTicks": 0,
+      "cpu": 281.177
+     },
+     {
+      "busyTicks": 39,
+      "stealTicks": 1,
+      "cpu": 381.697
+     },
+     {
+      "busyTicks": 51,
+      "stealTicks": 1,
+      "cpu": 509.166
+     },
+     {
+      "busyTicks": 35,
+      "stealTicks": 0,
+      "cpu": 346.022
+     },
+     {
+      "busyTicks": 33,
+      "stealTicks": 1,
+      "cpu": 338.493
+     }
+    ],
+    "runCompetingCpusMedian": 0.001934685293581611
+   },
+   "abil": {
+    "median": 421.561,
+    "min": 341.727,
+    "max": 513.446,
+    "q1": 346.688,
+    "q3": 433.5815,
+    "iqrOverMedian": 0.2061231945080309,
+    "cv": 0.1577199861218007,
+    "noisy": true,
+    "msPerPlay": 4.391260416666666,
+    "ticksPerPlay": 114.42708333333333,
+    "msPerTick": 0.03837605826126536,
+    "msPerActorTick": 0.0027411470186618114,
+    "actorsPerTick": 14,
+    "plays": 96,
+    "ticks": 10985,
+    "actorTicks": 153790,
+    "pairTicks": 999635,
+    "abilityEvents": 367,
+    "fields": 16,
+    "fp": "f097c6bf5915ac02",
+    "runs": [
+     348.583,
+     429.027,
+     341.727,
+     513.446,
+     344.793,
+     421.561,
+     438.136
+    ],
+    "wallMedian": 340.714356,
+    "wallRuns": [
+     335.495075,
+     340.714356,
+     315.665087,
+     393.705718,
+     309.123322,
+     374.05533,
+     344.823758
+    ],
+    "mainMedian": 325.263,
+    "mainRuns": [
+     317.735,
+     325.263,
+     307.656,
+     358.089,
+     304.823,
+     364.389,
+     336.432
+    ],
+    "machineRuns": [
+     {
+      "busyTicks": 35,
+      "stealTicks": 1,
+      "cpu": 348.583
+     },
+     {
+      "busyTicks": 41,
+      "stealTicks": 0,
+      "cpu": 429.027
+     },
+     {
+      "busyTicks": 35,
+      "stealTicks": 0,
+      "cpu": 341.727
+     },
+     {
+      "busyTicks": 54,
+      "stealTicks": 0,
+      "cpu": 513.446
+     },
+     {
+      "busyTicks": 35,
+      "stealTicks": 0,
+      "cpu": 344.793
+     },
+     {
+      "busyTicks": 41,
+      "stealTicks": 1,
+      "cpu": 421.561
+     },
+     {
+      "busyTicks": 43,
+      "stealTicks": 1,
+      "cpu": 438.136
+     }
+    ],
+    "runCompetingCpusMedian": 0.004223608945675203
+   },
+   "R0": {
+    "ratio": 0.6421873407399856,
+    "gate": "ratioOfMedians",
+    "ratioOfMedians": 0.6421873407399856,
+    "wall": 0.6334177995852251,
+    "wallPairedMedian": 0.6036247836120995,
+    "main": 0.6343471440782243,
+    "mainPairedMedian": 0.6169568830383955,
+    "perTick": 0.6335445009726577,
+    "perPlay": 0.6421873407399856,
+    "pairedMedian": 0.6126292739655166,
+    "pairedQ1": 0.5747788830091514,
+    "pairedQ3": 0.7006624343879451,
+    "pairedIqrOverMedian": 0.2054807968348561,
+    "ci95": [
+     0.5640118234634593,
+     0.708223379365086
+    ],
+    "pairedGeoMean": 0.6196874227269403,
+    "paired": [
+     0.708223379365086,
+     0.5640118234634593,
+     0.6931014894108041,
+     0.6126292739655166,
+     0.47257004797870655,
+     0.7477020288195859,
+     0.5855459425548434
+    ],
+    "limit": 1.1,
+    "pass": true,
+    "borderline": false,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      10551,
+      10409
+     ],
+     "actorTicks": [
+      147714,
+      145726
+     ],
+     "pairTicks": [
+      960141,
+      947219
+     ],
+     "volumeTicks": 1.0136420405418387,
+     "actorsPerTickRatio": 1,
+     "volume": 1.0136420405418387,
+     "perStep": 0.6335445009726577,
+     "perTickPart": 0.6335445009726577,
+     "perStepCi95": [
+      0.5564211042016064,
+      0.6986917975368382
+     ],
+     "arithmetic": "0.642 = per-step 0.634 x volume 1.014 (ticks 10551/10409 = 1.014 x actors per tick 14.00/14.00 = 1.000)"
+    },
+    "byOrder": {
+     "numFirst": 0.6393237159828238,
+     "denFirst": 0.6126292739655166,
+     "nNumFirst": 4,
+     "nDenFirst": 3
+    },
+    "quality": {
+     "label": "PROVISIONAL",
+     "reasons": [
+      "noisy (IQR/median or CV over 0.1)"
+     ]
+    }
+   },
+   "R1": {
+    "ratio": 1.218306928461196,
+    "gate": "pairedMedian",
+    "ratioOfMedians": 1.245405370273536,
+    "wall": 1.1223816067253725,
+    "wallPairedMedian": 1.1861034944334532,
+    "main": 1.0988948988313834,
+    "mainPairedMedian": 1.1635320311412858,
+    "perTick": 1.196201371120262,
+    "perPlay": 1.245405370273536,
+    "pairedMedian": 1.218306928461196,
+    "pairedQ1": 1.1364485622545915,
+    "pairedQ3": 1.3197694317467836,
+    "pairedIqrOverMedian": 0.15047182709839696,
+    "ci95": [
+     1.0575523416855526,
+     1.3451664540198116
+    ],
+    "pairedGeoMean": 1.1731082453646822,
+    "paired": [
+     1.0575523416855526,
+     1.6560528977171842,
+     1.2153447828236306,
+     1.3451664540198116,
+     0.6771720814037072,
+     1.218306928461196,
+     1.2943724094737559
+    ],
+    "limit": 1.25,
+    "pass": true,
+    "borderline": true,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      10985,
+      10551
+     ],
+     "actorTicks": [
+      153790,
+      147714
+     ],
+     "pairTicks": [
+      999635,
+      960141
+     ],
+     "volumeTicks": 1.041133541844375,
+     "actorsPerTickRatio": 1,
+     "volume": 1.041133541844375,
+     "perStep": 1.1701735459439306,
+     "perTickPart": 1.1701735459439306,
+     "perStepCi95": [
+      1.01577011899174,
+      1.2920210520130206
+     ],
+     "arithmetic": "1.218 = per-step 1.170 x volume 1.041 (ticks 10985/10551 = 1.041 x actors per tick 14.00/14.00 = 1.000)"
+    },
+    "byOrder": {
+     "numFirst": 1.256339668967476,
+     "denFirst": 1.0575523416855526,
+     "nNumFirst": 4,
+     "nDenFirst": 3
+    },
+    "quality": {
+     "label": "PROVISIONAL",
+     "reasons": [
+      "noisy (IQR/median or CV over 0.1)",
+      "borderline (95% interval straddles the limit)"
+     ]
+    }
+   },
+   "R1same": {
+    "ratio": 1.245405370273536,
+    "note": "old same-process figure: ratio of the medians, both in the ability worker (now with the balanced schedule)"
+   },
+   "R1cross": {
+    "ratio": 1.3381826839139752,
+    "gate": "ratioOfMedians",
+    "ratioOfMedians": 1.3381826839139752,
+    "wall": 1.2268828558987415,
+    "wallPairedMedian": 1.2874379250664028,
+    "main": 1.2040623681229594,
+    "mainPairedMedian": 1.2446066014127297,
+    "perTick": 1.2853131996337144,
+    "perPlay": 1.3381826839139752,
+    "pairedMedian": 1.2413091487294248,
+    "pairedQ1": 1.07852931104967,
+    "pairedQ3": 1.590252818387773,
+    "pairedIqrOverMedian": 0.4122450139531247,
+    "ci95": [
+     1.0227144034901905,
+     1.6298579477819222
+    ],
+    "pairedGeoMean": 1.2691073795810919,
+    "paired": [
+     1.0227144034901905,
+     1.5506476889936243,
+     0.8752558070440103,
+     1.6298579477819222,
+     1.13434421860915,
+     1.2413091487294248,
+     1.664606184485975
+    ],
+    "limit": 1.25,
+    "pass": false,
+    "borderline": true,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      10985,
+      10551
+     ],
+     "actorTicks": [
+      153790,
+      147714
+     ],
+     "pairTicks": [
+      999635,
+      960141
+     ],
+     "volumeTicks": 1.041133541844375,
+     "actorsPerTickRatio": 1,
+     "volume": 1.041133541844375,
+     "perStep": 1.2853131996337144,
+     "perTickPart": 1.2853131996337144,
+     "perStepCi95": [
+      0.9823085727105143,
+      1.565464834505877
+     ],
+     "arithmetic": "1.338 = per-step 1.285 x volume 1.041 (ticks 10985/10551 = 1.041 x actors per tick 14.00/14.00 = 1.000)"
+    },
+    "quality": {
+     "label": "PROVISIONAL",
+     "reasons": [
+      "noisy (IQR/median or CV over 0.1)",
+      "borderline (95% interval straddles the limit)"
+     ]
+    },
+    "note": "old protocol R1: abilities on (ability worker) / abilities off (matched worker); two processes; reported, not the figure"
+   },
+   "processState": {
+    "ratio": 1.074495674946433,
+    "main": 1.0957029370173763,
+    "wall": 1.0931067014526894,
+    "note": "the twin in the ability worker / the twin in the matched worker (same build, same scene): the difference between the two processes"
+   },
+   "R2": {
+    "ratio": 0.8593639792070125,
+    "gate": "ratioOfMedians",
+    "ratioOfMedians": 0.8593639792070125,
+    "wall": 0.7771294389322178,
+    "wallPairedMedian": 0.7771294389322178,
+    "main": 0.7637935245108629,
+    "mainPairedMedian": 0.7678686094166084,
+    "perTick": 0.8143031096555114,
+    "perPlay": 0.8593639792070125,
+    "pairedMedian": 0.8745836306186933,
+    "pairedQ1": 0.6654756772214148,
+    "pairedQ3": 0.951416383087383,
+    "pairedIqrOverMedian": 0.3269449551253201,
+    "ci95": [
+     0.6066411034776589,
+     0.9747033972774618
+    ],
+    "pairedGeoMean": 0.7864498812163476,
+    "paired": [
+     0.7243102509651708,
+     0.8745836306186933,
+     0.6066411034776589,
+     0.9984986912165659,
+     0.5360571018124943,
+     0.928129368897304,
+     0.9747033972774618
+    ],
+    "limit": null,
+    "pass": null,
+    "borderline": false,
+    "noisy": true,
+    "decomposition": {
+     "ticks": [
+      10985,
+      10409
+     ],
+     "actorTicks": [
+      153790,
+      145726
+     ],
+     "pairTicks": [
+      999635,
+      947219
+     ],
+     "volumeTicks": 1.055336727831684,
+     "actorsPerTickRatio": 1,
+     "volume": 1.055336727831684,
+     "perStep": 0.8143031096555114,
+     "perTickPart": 0.8143031096555114,
+     "perStepCi95": [
+      0.5748317929994494,
+      0.9235946893273647
+     ],
+     "arithmetic": "0.859 = per-step 0.814 x volume 1.055 (ticks 10985/10409 = 1.055 x actors per tick 14.00/14.00 = 1.000)"
+    }
+   },
+   "sub": {
+    "only:home.offense.QB": {
+     "ratio": 0.991305324646147,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 0.9873030137689764,
+     "wall": 0.9826241276408026,
+     "wallPairedMedian": 0.9628827185576054,
+     "main": 0.990704964514027,
+     "mainPairedMedian": 0.9594855729113294,
+     "perTick": 0.990024149237452,
+     "perPlay": 0.9873030137689764,
+     "pairedMedian": 0.991305324646147,
+     "pairedQ1": 0.7944795787289229,
+     "pairedQ3": 1.1074466238266325,
+     "pairedIqrOverMedian": 0.31571205895562526,
+     "ci95": [
+      0.7697916722639856,
+      1.201328039430449
+     ],
+     "pairedGeoMean": 0.9819304291442857,
+     "paired": [
+      1.5754307952490092,
+      0.7697916722639856,
+      0.8191674851938602,
+      1.201328039430449,
+      0.7340050341672569,
+      1.013565208222816,
+      0.991305324646147
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10522,
+       10551
+      ],
+      "actorTicks": [
+       147308,
+       147714
+      ],
+      "pairTicks": [
+       957502,
+       960141
+      ],
+      "volumeTicks": 0.9972514453606294,
+      "actorsPerTickRatio": 1,
+      "volume": 0.9972514453606294,
+      "perStep": 0.9940374910037537,
+      "perTickPart": 0.9940374910037537,
+      "perStepCi95": [
+       0.7719133181959049,
+       1.2046390556957487
+      ],
+      "arithmetic": "0.991 = per-step 0.994 x volume 0.997 (ticks 10522/10551 = 0.997 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 307.614,
+     "abilityEvents": 24,
+     "noisyJob": true
+    },
+    "only:home.offense.RB": {
+     "ratio": 1.166193792727156,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.1920306833135412,
+     "wall": 1.0103146036910349,
+     "wallPairedMedian": 1.0185804512465637,
+     "main": 0.9928217952556222,
+     "mainPairedMedian": 1.0111089586672066,
+     "perTick": 1.1920306833135412,
+     "perPlay": 1.1920306833135412,
+     "pairedMedian": 1.166193792727156,
+     "pairedQ1": 1.1224912300543401,
+     "pairedQ3": 1.2106305156271664,
+     "pairedIqrOverMedian": 0.07557859261685113,
+     "ci95": [
+      1.0930328155141562,
+      1.21256374594344
+     ],
+     "pairedGeoMean": 1.1311527708067275,
+     "paired": [
+      1.21256374594344,
+      1.0930328155141562,
+      1.1519496445945239,
+      1.630154709748083,
+      0.6753990965296786,
+      1.2086972853108926,
+      1.166193792727156
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.166193792727156,
+      "perTickPart": 1.166193792727156,
+      "perStepCi95": [
+       1.0930328155141562,
+       1.21256374594344
+      ],
+      "arithmetic": "1.166 = per-step 1.166 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 371.401,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:home.offense.WR1": {
+     "ratio": 1.201697699890471,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.1268350611419586,
+     "wall": 1.09118280712291,
+     "wallPairedMedian": 1.10361572611827,
+     "main": 1.1024954651920469,
+     "mainPairedMedian": 1.061985820852835,
+     "perTick": 1.1268350611419586,
+     "perPlay": 1.1268350611419584,
+     "pairedMedian": 1.201697699890471,
+     "pairedQ1": 0.8841371343405089,
+     "pairedQ3": 1.300097088847607,
+     "pairedIqrOverMedian": 0.3461435888119042,
+     "ci95": [
+      0.8346274781031868,
+      1.3706406263263402
+     ],
+     "pairedGeoMean": 1.1700763278078903,
+     "paired": [
+      1.3706406263263402,
+      0.7708368036711247,
+      0.8346274781031868,
+      1.201697699890471,
+      2.4682852248148075,
+      0.933646790577831,
+      1.2295535513688738
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.201697699890471,
+      "perTickPart": 1.201697699890471,
+      "perStepCi95": [
+       0.8346274781031868,
+       1.3706406263263402
+      ],
+      "arithmetic": "1.202 = per-step 1.202 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 351.088,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:home.offense.WR2": {
+     "ratio": 0.8601800884117875,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 0.938158359277209,
+     "wall": 0.9363556329739268,
+     "wallPairedMedian": 0.9411732284057946,
+     "main": 0.9494073930577812,
+     "mainPairedMedian": 0.9608354421447977,
+     "perTick": 0.938158359277209,
+     "perPlay": 0.938158359277209,
+     "pairedMedian": 0.8601800884117875,
+     "pairedQ1": 0.8171736931403415,
+     "pairedQ3": 0.9503956376039362,
+     "pairedIqrOverMedian": 0.15487680575072596,
+     "ci95": [
+      0.7849137683517409,
+      0.9793803563132418
+     ],
+     "pairedGeoMean": 0.9324656936999327,
+     "paired": [
+      0.8601800884117875,
+      0.7825481861999667,
+      0.8494336179289422,
+      1.5134686473165389,
+      0.7849137683517409,
+      0.9793803563132418,
+      0.9214109188946304
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 0.8601800884117875,
+      "perTickPart": 0.8601800884117875,
+      "perStepCi95": [
+       0.7849137683517409,
+       0.9793803563132418
+      ],
+      "arithmetic": "0.860 = per-step 0.860 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 292.302,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:home.offense.TE": {
+     "ratio": 1.0722289706318255,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.1842250537599897,
+     "wall": 0.9899639973505107,
+     "wallPairedMedian": 1.034933111066363,
+     "main": 0.9891516827219413,
+     "mainPairedMedian": 1.006610566056841,
+     "perTick": 1.1843373025802513,
+     "perPlay": 1.1842250537599897,
+     "pairedMedian": 1.0722289706318255,
+     "pairedQ1": 1.0205286248756047,
+     "pairedQ3": 1.1560730608146899,
+     "pairedIqrOverMedian": 0.12641370421022458,
+     "ci95": [
+      1.0096560469852391,
+      1.1873480657695767
+     ],
+     "pairedGeoMean": 1.1237953893011456,
+     "paired": [
+      1.03140120276597,
+      1.0096560469852391,
+      1.0722289706318255,
+      1.1247980558598027,
+      1.1873480657695767,
+      1.5747931610526626,
+      0.9639310588310813
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10550,
+       10551
+      ],
+      "actorTicks": [
+       147700,
+       147714
+      ],
+      "pairTicks": [
+       960050,
+       960141
+      ],
+      "volumeTicks": 0.9999052222538148,
+      "actorsPerTickRatio": 1,
+      "volume": 0.9999052222538148,
+      "perStep": 1.0723306037096105,
+      "perTickPart": 1.0723306037096105,
+      "perStepCi95": [
+       1.009751748980214,
+       1.187460610609934
+      ],
+      "arithmetic": "1.072 = per-step 1.072 x volume 1.000 (ticks 10550/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 368.969,
+     "abilityEvents": 46,
+     "noisyJob": true
+    },
+    "only:home.offense.LG": {
+     "ratio": 0.9106878069133743,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.0053952562826973,
+     "wall": 0.9466826902268424,
+     "wallPairedMedian": 0.9799138583857046,
+     "main": 0.9647394466653751,
+     "mainPairedMedian": 0.9823967404559344,
+     "perTick": 1.0051094702519177,
+     "perPlay": 1.005395256282697,
+     "pairedMedian": 0.9106878069133743,
+     "pairedQ1": 0.9040377571389742,
+     "pairedQ3": 0.9853418879855182,
+     "pairedIqrOverMedian": 0.08927771979522928,
+     "ci95": [
+      0.8977638152479757,
+      0.9928977272727271
+     ],
+     "pairedGeoMean": 0.9434064077856855,
+     "paired": [
+      0.9777860486983095,
+      0.8767389750726756,
+      0.9103116990299727,
+      0.9928977272727271,
+      0.8977638152479757,
+      1.0499082363252354,
+      0.9106878069133743
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10554,
+       10551
+      ],
+      "actorTicks": [
+       147756,
+       147714
+      ],
+      "pairTicks": [
+       960414,
+       960141
+      ],
+      "volumeTicks": 1.0002843332385556,
+      "actorsPerTickRatio": 1,
+      "volume": 1.0002843332385556,
+      "perStep": 0.9104289417039049,
+      "perTickPart": 0.9104289417039049,
+      "perStepCi95": [
+       0.8975086237143634,
+       0.9926154936947644
+      ],
+      "arithmetic": "0.911 = per-step 0.910 x volume 1.000 (ticks 10554/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 313.251,
+     "abilityEvents": 27,
+     "noisyJob": false
+    },
+    "only:home.offense.RG": {
+     "ratio": 1.0843213403087588,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.1581570754565587,
+     "wall": 0.9917229459470863,
+     "wallPairedMedian": 1.0172511029153746,
+     "main": 1.0056988887519152,
+     "mainPairedMedian": 1.0009110081345134,
+     "perTick": 1.1588160553003461,
+     "perPlay": 1.1581570754565587,
+     "pairedMedian": 1.0843213403087588,
+     "pairedQ1": 0.875219979658012,
+     "pairedQ3": 1.2351256119237028,
+     "pairedIqrOverMedian": 0.3319178723930752,
+     "ci95": [
+      0.8718437837518337,
+      1.2921445681505912
+     ],
+     "pairedGeoMean": 1.0572837199075675,
+     "paired": [
+      1.1781066556968143,
+      0.8718437837518337,
+      0.8465130741556578,
+      1.3798295454545453,
+      0.8785961755641905,
+      1.2921445681505912,
+      1.0843213403087588
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10545,
+       10551
+      ],
+      "actorTicks": [
+       147630,
+       147714
+      ],
+      "pairTicks": [
+       959595,
+       960141
+      ],
+      "volumeTicks": 0.9994313335228888,
+      "actorsPerTickRatio": 1,
+      "volume": 0.9994313335228888,
+      "perStep": 1.0849383083544537,
+      "perTickPart": 1.0849383083544537,
+      "perStepCi95": [
+       0.872339854183556,
+       1.2928797855435645
+      ],
+      "arithmetic": "1.084 = per-step 1.085 x volume 0.999 (ticks 10545/10551 = 0.999 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 360.847,
+     "abilityEvents": 19,
+     "noisyJob": true
+    },
+    "only:home.offense.WR3": {
+     "ratio": 0.9146804891356678,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 0.9373078280964149,
+     "wall": 0.922241042684223,
+     "wallPairedMedian": 0.968471171939489,
+     "main": 0.9383371783808534,
+     "mainPairedMedian": 0.9629697404441582,
+     "perTick": 0.9373078280964149,
+     "perPlay": 0.9373078280964149,
+     "pairedMedian": 0.9146804891356678,
+     "pairedQ1": 0.8823481936916231,
+     "pairedQ3": 0.983664028856993,
+     "pairedIqrOverMedian": 0.1107663674570219,
+     "ci95": [
+      0.8759361707034995,
+      0.9995789978094194
+     ],
+     "pairedGeoMean": 0.9244321212993273,
+     "paired": [
+      1.0926103678165424,
+      0.7665729899355727,
+      0.9677490599045666,
+      0.9995789978094194,
+      0.8887602166797466,
+      0.8759361707034995,
+      0.9146804891356678
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 0.9146804891356678,
+      "perTickPart": 0.9146804891356678,
+      "perStepCi95": [
+       0.8759361707034995,
+       0.9995789978094194
+      ],
+      "arithmetic": "0.915 = per-step 0.915 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 292.037,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:home.offense.C": {
+     "ratio": 0.9493873220153339,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 0.9684565266232308,
+     "wall": 0.9684029287114931,
+     "wallPairedMedian": 0.9462404457069208,
+     "main": 0.9417501717063205,
+     "mainPairedMedian": 0.9333821997346284,
+     "perTick": 0.9684565266232308,
+     "perPlay": 0.9684565266232308,
+     "pairedMedian": 0.9493873220153339,
+     "pairedQ1": 0.7989492166967207,
+     "pairedQ3": 1.1066159260539634,
+     "pairedIqrOverMedian": 0.32406869380153097,
+     "ci95": [
+      0.787204240455198,
+      1.120729364705417
+     ],
+     "pairedGeoMean": 0.9278299176226164,
+     "paired": [
+      1.1454778741992988,
+      0.8106941929382433,
+      0.787204240455198,
+      0.9493873220153339,
+      0.6965957161725015,
+      1.120729364705417,
+      1.09250248740251
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 0.9493873220153339,
+      "perTickPart": 0.9493873220153339,
+      "perStepCi95": [
+       0.787204240455198,
+       1.120729364705417
+      ],
+      "arithmetic": "0.949 = per-step 0.949 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 301.742,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.DL1": {
+     "ratio": 1.102705243981273,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.1951375292871587,
+     "wall": 1.064944481303647,
+     "wallPairedMedian": 1.0635744826575548,
+     "main": 1.0829720162724759,
+     "mainPairedMedian": 1.0538684204275133,
+     "perTick": 1.1623095282061768,
+     "perPlay": 1.1951375292871587,
+     "pairedMedian": 1.102705243981273,
+     "pairedQ1": 1.0269136426763292,
+     "pairedQ3": 1.1706008953097315,
+     "pairedIqrOverMedian": 0.13030431606058684,
+     "ci95": [
+      1.0030682263931952,
+      1.2269281080208372
+     ],
+     "pairedGeoMean": 1.1161716968044257,
+     "paired": [
+      1.102705243981273,
+      1.0030682263931952,
+      0.9884253474139384,
+      1.374260679079956,
+      1.1142736825986257,
+      1.2269281080208372,
+      1.0507590589594633
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10849,
+       10551
+      ],
+      "actorTicks": [
+       151886,
+       147714
+      ],
+      "pairTicks": [
+       987259,
+       960141
+      ],
+      "volumeTicks": 1.0282437683631884,
+      "actorsPerTickRatio": 1,
+      "volume": 1.0282437683631884,
+      "perStep": 1.0724161700844697,
+      "perTickPart": 1.0724161700844697,
+      "perStepCi95": [
+       0.9755159790464191,
+       1.1932268842960505
+      ],
+      "arithmetic": "1.103 = per-step 1.072 x volume 1.028 (ticks 10849/10551 = 1.028 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 372.369,
+     "abilityEvents": 24,
+     "noisyJob": true
+    },
+    "only:away.defense.DL2": {
+     "ratio": 0.9634697382253653,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 0.9934107905125654,
+     "wall": 0.9548943776004968,
+     "wallPairedMedian": 0.971437718495519,
+     "main": 0.9643942729338005,
+     "mainPairedMedian": 0.9542117436940961,
+     "perTick": 0.9934107905125653,
+     "perPlay": 0.9934107905125653,
+     "pairedMedian": 0.9634697382253653,
+     "pairedQ1": 0.8198871061906525,
+     "pairedQ3": 1.1067392614225944,
+     "pairedIqrOverMedian": 0.29772824599587394,
+     "ci95": [
+      0.7913606052627337,
+      1.1104429079956188
+     ],
+     "pairedGeoMean": 0.9411335944210493,
+     "paired": [
+      0.9634697382253653,
+      0.7913606052627337,
+      0.8484136071185713,
+      1.1104429079956188,
+      0.7405705070535765,
+      1.1030356148495701,
+      1.1145168020027603
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 0.9634697382253653,
+      "perTickPart": 0.9634697382253653,
+      "perStepCi95": [
+       0.7913606052627337,
+       1.1104429079956188
+      ],
+      "arithmetic": "0.963 = per-step 0.963 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 309.517,
+     "abilityEvents": 24,
+     "noisyJob": true
+    },
+    "only:away.defense.LB1": {
+     "ratio": 0.9687100812016562,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 0.9837821356356518,
+     "wall": 0.9755881521739026,
+     "wallPairedMedian": 0.9861297440891934,
+     "main": 0.9803427082049204,
+     "mainPairedMedian": 0.9865500885681242,
+     "perTick": 0.9837821356356516,
+     "perPlay": 0.9837821356356516,
+     "pairedMedian": 0.9687100812016562,
+     "pairedQ1": 0.83970556124796,
+     "pairedQ3": 1.152289899928972,
+     "pairedIqrOverMedian": 0.3226810010000724,
+     "ci95": [
+      0.8235232481287043,
+      1.2043982749178532
+     ],
+     "pairedGeoMean": 0.9841015153877559,
+     "paired": [
+      1.1001815249400904,
+      0.8235232481287043,
+      0.8558878743672157,
+      1.2043982749178532,
+      0.7251234615163753,
+      1.3625307663667185,
+      0.9687100812016562
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 0.9687100812016562,
+      "perTickPart": 0.9687100812016562,
+      "perStepCi95": [
+       0.8235232481287043,
+       1.2043982749178532
+      ],
+      "arithmetic": "0.969 = per-step 0.969 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 306.517,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.LB2": {
+     "ratio": 1.0371152549988767,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.0869307057804025,
+     "wall": 0.9802015528187437,
+     "wallPairedMedian": 0.9817342727667727,
+     "main": 0.999749925153655,
+     "mainPairedMedian": 0.963224639525453,
+     "perTick": 1.0876523024173963,
+     "perPlay": 1.0869307057804023,
+     "pairedMedian": 1.0371152549988767,
+     "pairedQ1": 0.9886153751016804,
+     "pairedQ3": 1.106461544420604,
+     "pairedIqrOverMedian": 0.11362880716574872,
+     "ci95": [
+      0.9635021103997733,
+      1.1603945204205584
+     ],
+     "pairedGeoMean": 1.0613512871380835,
+     "paired": [
+      1.0137286398035876,
+      0.9098688346650474,
+      1.1603945204205584,
+      1.3477033132530118,
+      1.0525285684206496,
+      0.9635021103997733,
+      1.0371152549988767
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10544,
+       10551
+      ],
+      "actorTicks": [
+       147616,
+       147714
+      ],
+      "pairTicks": [
+       959504,
+       960141
+      ],
+      "volumeTicks": 0.9993365557767037,
+      "actorsPerTickRatio": 1,
+      "volume": 0.9993365557767037,
+      "perStep": 1.0378037799215807,
+      "perTickPart": 1.0378037799215807,
+      "perStepCi95": [
+       0.9641417646839916,
+       1.161164888558167
+      ],
+      "arithmetic": "1.037 = per-step 1.038 x volume 0.999 (ticks 10544/10551 = 0.999 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 338.655,
+     "abilityEvents": 3,
+     "noisyJob": true
+    },
+    "only:away.defense.CB1": {
+     "ratio": 1.015854326396495,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.0315787784446513,
+     "wall": 0.9528330312385079,
+     "wallPairedMedian": 0.9860407596968032,
+     "main": 0.953570610922283,
+     "mainPairedMedian": 0.9676776589627777,
+     "perTick": 1.0315787784446513,
+     "perPlay": 1.0315787784446513,
+     "pairedMedian": 1.015854326396495,
+     "pairedQ1": 0.8114935359552411,
+     "pairedQ3": 1.0943358763806241,
+     "pairedIqrOverMedian": 0.27842805122334807,
+     "ci95": [
+      0.7834542426736596,
+      1.1296530474692685
+     ],
+     "pairedGeoMean": 0.9747680658950236,
+     "paired": [
+      1.3894558822569165,
+      0.7528922466832527,
+      0.8395328292368227,
+      1.015854326396495,
+      0.7834542426736596,
+      1.0590187052919797,
+      1.1296530474692685
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.015854326396495,
+      "perTickPart": 1.015854326396495,
+      "perStepCi95": [
+       0.7834542426736596,
+       1.1296530474692685
+      ],
+      "arithmetic": "1.016 = per-step 1.016 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 321.409,
+     "abilityEvents": 93,
+     "noisyJob": true
+    },
+    "only:away.defense.CB2": {
+     "ratio": 1.007348713033954,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.0433835093237476,
+     "wall": 0.9606460030516932,
+     "wallPairedMedian": 0.9586771305987519,
+     "main": 0.949988552911963,
+     "mainPairedMedian": 0.9535343745818673,
+     "perTick": 1.0433835093237476,
+     "perPlay": 1.0433835093237473,
+     "pairedMedian": 1.007348713033954,
+     "pairedQ1": 0.8256698772028521,
+     "pairedQ3": 1.0958784778579769,
+     "pairedIqrOverMedian": 0.2682374009704195,
+     "ci95": [
+      0.8041466730431325,
+      1.1304008729980421
+     ],
+     "pairedGeoMean": 0.9714798494568178,
+     "paired": [
+      1.0613560827179116,
+      0.8041466730431325,
+      0.8471930813625718,
+      1.007348713033954,
+      0.78101611699175,
+      1.2699466551563936,
+      1.1304008729980421
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.007348713033954,
+      "perTickPart": 1.007348713033954,
+      "perStepCi95": [
+       0.8041466730431325,
+       1.1304008729980421
+      ],
+      "arithmetic": "1.007 = per-step 1.007 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 325.087,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.FS": {
+     "ratio": 0.9657518593247011,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.1923644766826074,
+     "wall": 0.9790406792711792,
+     "wallPairedMedian": 0.912552059912311,
+     "main": 0.9851328742757516,
+     "mainPairedMedian": 0.9128154797987087,
+     "perTick": 1.1923644766826076,
+     "perPlay": 1.1923644766826074,
+     "pairedMedian": 0.9657518593247011,
+     "pairedQ1": 0.9366188500126968,
+     "pairedQ3": 1.051893556620277,
+     "pairedIqrOverMedian": 0.1193626556289372,
+     "ci95": [
+      0.9316928997650719,
+      1.105659752291392
+     ],
+     "pairedGeoMean": 1.0238164156524465,
+     "paired": [
+      0.9657518593247011,
+      0.998127360949162,
+      1.105659752291392,
+      1.3559761774370207,
+      0.9415448002603218,
+      0.9316928997650719,
+      0.9300702891806014
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 0.9657518593247011,
+      "perTickPart": 0.9657518593247011,
+      "perStepCi95": [
+       0.9316928997650719,
+       1.105659752291392
+      ],
+      "arithmetic": "0.966 = per-step 0.966 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 371.505,
+     "abilityEvents": 96,
+     "noisyJob": true
+    },
+    "only:away.defense.DL3": {
+     "ratio": 0.871992268865861,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 0.90480469878358,
+     "wall": 0.8927591328614588,
+     "wallPairedMedian": 0.8944126173844726,
+     "main": 0.8943169610622896,
+     "mainPairedMedian": 0.8864589753975661,
+     "perTick": 0.90480469878358,
+     "perPlay": 0.90480469878358,
+     "pairedMedian": 0.871992268865861,
+     "pairedQ1": 0.7615041556255036,
+     "pairedQ3": 0.9912082930404558,
+     "pairedIqrOverMedian": 0.26342451145090107,
+     "ci95": [
+      0.7329648954062579,
+      1.053206456735981
+     ],
+     "pairedGeoMean": 0.8709487589747915,
+     "paired": [
+      0.871992268865861,
+      0.7329648954062579,
+      0.7900434158447492,
+      1.1404641292442494,
+      0.6745162031276918,
+      1.053206456735981,
+      0.9292101293449305
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 0.871992268865861,
+      "perTickPart": 0.871992268865861,
+      "perStepCi95": [
+       0.7329648954062579,
+       1.053206456735981
+      ],
+      "arithmetic": "0.872 = per-step 0.872 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 281.91,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.SS": {
+     "ratio": 1.1031166134498227,
+     "gate": "pairedMedian",
+     "ratioOfMedians": 1.0844368841672818,
+     "wall": 0.9914833455664097,
+     "wallPairedMedian": 1.0126584708012376,
+     "main": 1.0086328654702992,
+     "mainPairedMedian": 0.9961681476818576,
+     "perTick": 1.0844368841672816,
+     "perPlay": 1.0844368841672818,
+     "pairedMedian": 1.1031166134498227,
+     "pairedQ1": 0.8249297991116153,
+     "pairedQ3": 1.2586693354845706,
+     "pairedIqrOverMedian": 0.3931946369808569,
+     "ci95": [
+      0.7683784611581883,
+      1.3226280120481926
+     ],
+     "pairedGeoMean": 1.0176839231604295,
+     "paired": [
+      1.1031166134498227,
+      0.7683784611581883,
+      0.8814811370650424,
+      1.3226280120481926,
+      0.7101190590126907,
+      1.3484943837995103,
+      1.1947106589209486
+     ],
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "decomposition": {
+      "ticks": [
+       10551,
+       10551
+      ],
+      "actorTicks": [
+       147714,
+       147714
+      ],
+      "pairTicks": [
+       960141,
+       960141
+      ],
+      "volumeTicks": 1,
+      "actorsPerTickRatio": 1,
+      "volume": 1,
+      "perStep": 1.1031166134498227,
+      "perTickPart": 1.1031166134498227,
+      "perStepCi95": [
+       0.7683784611581883,
+       1.3226280120481926
+      ],
+      "arithmetic": "1.103 = per-step 1.103 x volume 1.000 (ticks 10551/10551 = 1.000 x actors per tick 14.00/14.00 = 1.000)"
+     },
+     "quality": {
+      "label": "PROVISIONAL",
+      "reasons": [
+       "noisy (IQR/median or CV over 0.1)"
+      ]
+     },
+     "median": 337.878,
+     "abilityEvents": 0,
+     "noisyJob": true
+    }
+   },
+   "subControl": {
+    "median": 311.57,
+    "overOff": 0.9204621661304665,
+    "noisy": true
+   },
+   "subRuns": {
+    "only:none": {
+     "runs": [
+      306.294,
+      372.202,
+      344.114,
+      292.16,
+      417.944,
+      303.497,
+      311.57
+     ],
+     "wallRuns": [
+      296.870938,
+      279.974563,
+      274.991826,
+      279.776615,
+      321.261451,
+      292.687348,
+      307.733181
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:home.offense.QB": {
+     "runs": [
+      482.545,
+      286.518,
+      281.887,
+      350.98,
+      306.773,
+      307.614,
+      308.861
+     ],
+     "wallRuns": [
+      450.38162,
+      267.267501,
+      264.784877,
+      316.94707,
+      287.60165,
+      288.419522,
+      270.074936
+     ],
+     "fp": "d6e3127f63d6c777",
+     "ticksPerPlay": 109.60416666666667,
+     "actorTicks": 147308
+    },
+    "only:home.offense.RB": {
+     "runs": [
+      371.401,
+      406.829,
+      396.402,
+      476.266,
+      282.279,
+      366.836,
+      363.351
+     ],
+     "wallRuns": [
+      282.450965,
+      340.709397,
+      295.706302,
+      416.015557,
+      260.461047,
+      298.125611,
+      274.408271
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:home.offense.WR1": {
+     "runs": [
+      419.819,
+      286.907,
+      287.207,
+      351.088,
+      1031.605,
+      283.359,
+      383.092
+     ],
+     "wallRuns": [
+      364.999952,
+      262.41719,
+      265.640371,
+      319.375402,
+      618.642356,
+      267.228251,
+      339.619178
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:home.offense.WR2": {
+     "runs": [
+      263.468,
+      291.266,
+      292.302,
+      442.175,
+      328.05,
+      297.239,
+      287.084
+     ],
+     "wallRuns": [
+      247.392659,
+      281.327818,
+      274.059447,
+      317.841863,
+      302.362677,
+      264.792158,
+      271.92448
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:home.offense.TE": {
+     "runs": [
+      315.912,
+      375.796,
+      368.969,
+      328.621,
+      496.245,
+      477.945,
+      300.332
+     ],
+     "wallRuns": [
+      269.662986,
+      300.32578,
+      284.598146,
+      284.970446,
+      401.057771,
+      408.100874,
+      289.749937
+     ],
+     "fp": "5209d04550d525cf",
+     "ticksPerPlay": 109.89583333333333,
+     "actorTicks": 147700
+    },
+    "only:home.offense.LG": {
+     "runs": [
+      299.49,
+      326.324,
+      313.251,
+      290.085,
+      375.215,
+      318.644,
+      283.743
+     ],
+     "wallRuns": [
+      277.082046,
+      276.181598,
+      278.793592,
+      263.890553,
+      314.808548,
+      290.178096,
+      266.02024
+     ],
+     "fp": "d1bb70fdf4917b7a",
+     "ticksPerPlay": 109.9375,
+     "actorTicks": 147756
+    },
+    "only:home.offense.RG": {
+     "runs": [
+      360.847,
+      324.502,
+      291.297,
+      403.131,
+      367.204,
+      392.162,
+      337.842
+     ],
+     "wallRuns": [
+      290.264759,
+      284.804433,
+      258.435776,
+      324.735788,
+      335.857771,
+      311.613919,
+      289.470829
+     ],
+     "fp": "cc3c04cec0ec628f",
+     "ticksPerPlay": 109.84375,
+     "actorTicks": 147630
+    },
+    "only:home.offense.WR3": {
+     "runs": [
+      334.66,
+      285.32,
+      333.016,
+      292.037,
+      371.452,
+      265.844,
+      284.987
+     ],
+     "wallRuns": [
+      320.37911,
+      269.928285,
+      266.321656,
+      280.424047,
+      327.38076,
+      257.200405,
+      266.71465
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:home.offense.C": {
+     "runs": [
+      350.853,
+      301.742,
+      270.888,
+      277.373,
+      291.138,
+      340.138,
+      340.391
+     ],
+     "wallRuns": [
+      283.439285,
+      286.165808,
+      260.208388,
+      258.889392,
+      269.253649,
+      303.666973,
+      288.156785
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:away.defense.DL1": {
+     "runs": [
+      337.752,
+      373.344,
+      340.131,
+      401.504,
+      465.704,
+      372.369,
+      327.385
+     ],
+     "wallRuns": [
+      311.695776,
+      297.773801,
+      310.780342,
+      329.366966,
+      350.671662,
+      292.036034,
+      313.035586
+     ],
+     "fp": "aee986a20a8cd773",
+     "ticksPerPlay": 113.01041666666667,
+     "actorTicks": 151886
+    },
+    "only:away.defense.DL2": {
+     "runs": [
+      295.105,
+      294.546,
+      291.951,
+      324.427,
+      309.517,
+      334.768,
+      347.25
+     ],
+     "wallRuns": [
+      268.046996,
+      274.066797,
+      262.764652,
+      297.633667,
+      312.085491,
+      279.485503,
+      300.62175
+     ],
+     "fp": "fe020f62da7b9fc9",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:away.defense.LB1": {
+     "runs": [
+      336.979,
+      306.517,
+      294.523,
+      351.877,
+      303.061,
+      413.524,
+      301.821
+     ],
+     "wallRuns": [
+      285.542309,
+      281.253532,
+      271.177619,
+      329.737403,
+      274.993215,
+      293.80894,
+      291.694138
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:away.defense.LB2": {
+     "runs": [
+      310.499,
+      338.655,
+      399.308,
+      393.745,
+      439.898,
+      292.42,
+      323.134
+     ],
+     "wallRuns": [
+      286.892593,
+      274.860624,
+      320.054637,
+      297.529182,
+      344.517338,
+      277.725108,
+      275.965828
+     ],
+     "fp": "349a5e14cd9dec3e",
+     "ticksPerPlay": 109.83333333333333,
+     "actorTicks": 147616
+    },
+    "only:away.defense.CB1": {
+     "runs": [
+      425.582,
+      280.228,
+      288.895,
+      296.792,
+      327.44,
+      321.409,
+      351.966
+     ],
+     "wallRuns": [
+      347.844625,
+      265.071765,
+      271.291278,
+      275.871146,
+      309.325644,
+      278.882173,
+      312.36431
+     ],
+     "fp": "5e920b03ebfe030b",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:away.defense.CB2": {
+     "runs": [
+      325.087,
+      299.305,
+      291.531,
+      294.307,
+      326.421,
+      385.425,
+      352.199
+     ],
+     "wallRuns": [
+      284.603379,
+      261.774093,
+      268.209758,
+      267.231408,
+      281.168931,
+      287.55013,
+      315.765176
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:away.defense.FS": {
+     "runs": [
+      295.804,
+      371.505,
+      380.473,
+      396.162,
+      393.513,
+      282.766,
+      289.782
+     ],
+     "wallRuns": [
+      270.910186,
+      295.228432,
+      309.034025,
+      339.866099,
+      286.55282,
+      260.108806,
+      270.742832
+     ],
+     "fp": "01660d20f803fe13",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:away.defense.DL3": {
+     "runs": [
+      267.086,
+      272.811,
+      271.865,
+      333.198,
+      281.91,
+      319.645,
+      289.514
+     ],
+     "wallRuns": [
+      259.801199,
+      252.090754,
+      261.299303,
+      322.479297,
+      260.461646,
+      261.783257,
+      262.188374
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    },
+    "only:away.defense.SS": {
+     "runs": [
+      337.878,
+      285.992,
+      303.33,
+      386.419,
+      296.79,
+      409.264,
+      372.236
+     ],
+     "wallRuns": [
+      303.513094,
+      266.99414,
+      278.472802,
+      332.052054,
+      274.206511,
+      328.515937,
+      290.194631
+     ],
+     "fp": "22d978d5b9f66235",
+     "ticksPerPlay": 109.90625,
+     "actorTicks": 147714
+    }
+   }
+  }
+ ]
+}

@@ -38,7 +38,7 @@ Status at 466ee7e (2026-11-07, 23:59). Branch `task8-implementation`; nothing me
   - Shadow Exchange: the partner is tested at the release, before defenders converge.
   - Foresight, and Prism Break's overlap selection.
 - **AI use of player-selectable signatures:** the AI now calls Dragon Roar under the player's rules. This is a PROVISIONAL policy.
-- **Reviewer:**
+- **Reviewer:** (superseded for the owner's §25 standard by Reviewer v2 on branch `task8-reviewer-v2`: complete-interaction runs with a four-phase checklist, see REVIEWER_V2.md)
   - **Fixes:** it stops only on the subject's own recorded execution (it could stop on a cue or on an opponent of the same family),
     and its review namespace now exists (its cloud sync threw on mount).
   - **Strict sweep at 68add50:** 67 of 72 execute within six unstaged-or-staged games. Tsunami Line, Frostmark, Second Chance
@@ -212,6 +212,10 @@ player wins on Rookie, and per the ruling Rookie balance is not changed on this 
   - Saves stay on the same artifact origin with the same keys.
 
 ## Performance against the specification's CPU gate (reconciliation, 2026-11-08)
+
+**Update (branch task8-perf-scenes):** matched scenes (PROPOSED, pending owner approval), the profile attribution, three
+outcome-identical optimisations and the before/after ratios are in [PERF_SCENES.md](PERF_SCENES.md). The indicative figures below are
+superseded by that document's matched measurements.
 
 **Correction to the final-run report above.** "10,000 3v3 Clash battles in under 5 s" is the Beast Clash Phase 1 limit in
 TESTING_POLICY.md. It is not the Task 8 performance requirement. The Task 8 requirement is SPECIFICATION_BASELINE §14/§16:

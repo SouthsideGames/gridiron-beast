@@ -79,11 +79,58 @@ export function engagementAttrs(b, d) {
 /**
  * M3 hook (review only): the Ability Reviewer's dev-only staging options live under this symbol key (`options[REVIEW_ONLY]`). A
  * symbol cannot come from a save, a setting, JSON or a UI choice, and only src/sim/abilities/review.js sets it, so no normal game,
- * lab, franchise or AI path can reach it. Today it holds one option: `{ fumbleOnTackle: true }`, the first fumble check of an
- * ordinary successful tackle on an offensive ball carrier fumbles (the recovery itself stays the engine's ordinary nearest-players
- * draw), used only to stage a fumble recovery for Hoard Flight (DRA-03-F), whose trigger the engine produces on 0.4% of plays.
+ * lab, franchise or AI path can reach it. Options (controlled prerequisites only, never an ability's result; Reviewer v2, spec §25):
+ *  - `{ fumbleOnTackle: true }`: the first fumble check of an ordinary successful tackle on an offensive ball carrier fumbles (the
+ *    recovery itself stays the engine's ordinary nearest-players draw), used only to stage a fumble recovery for Hoard Flight
+ *    (DRA-03-F), whose trigger the engine produces on 0.4% of plays.
+ *  - `{ wouldBeInterception: true }`: at the catch point the nearest defender within 2.5 yd plays the ball and his interception roll
+ *    succeeds (a would-be interception); everything after it is the ordinary code: a contract's `noInterception` (Sovereign Arm,
+ *    DRA-06-F) turns it into an incompletion, otherwise it is an ordinary interception.
  */
 export const REVIEW_ONLY = Symbol('ability-review-only');
+/** The 33 values every actor is created with (makeActor; spawnActor takes them from its spec). */
+const RECORD_BASE = new Set(['team', 'slot', 'mid', 'type', 'overcharged', 'sovereignQ4', 'baseAwareness', 'attrs', 'ability', 'abilityName', 'abilityKind', 'name', 'reactionBonus', 'auraAttrs',
+  'x', 'y', 'lineX', 'vx', 'vy', 'maxSpeed', 'accel', 'assignment', 'wp', 'state', 'engaged', 'stun', 'noEngage', 'target', 'route', 'brokeTackle', 'recognised', 'reactTimer', 'baseAttrs']);
+/**
+ * An actor record. Perf (outcome-identical): every actor, the lineup's (makeActor) and a contract's temporary ones (spawnActor), is
+ * created here with every key it can take, in one order, so all of them share one object shape and the engine's property loads stay
+ * monomorphic. Keys not given are undefined, which reads exactly as an absent property: no actor's keys are ever enumerated, spread,
+ * serialised or tested with `in` (checked across src/sim).
+ */
+function actorRecord(v) {
+  const a = {
+    team: v.team, slot: v.slot, mid: v.mid, type: v.type, overcharged: v.overcharged, sovereignQ4: v.sovereignQ4, baseAwareness: v.baseAwareness, attrs: v.attrs, ability: v.ability,
+    abilityName: v.abilityName, abilityKind: v.abilityKind, name: v.name, reactionBonus: v.reactionBonus, auraAttrs: v.auraAttrs,
+    x: v.x, y: v.y, lineX: v.lineX, vx: v.vx, vy: v.vy, maxSpeed: v.maxSpeed, accel: v.accel, assignment: v.assignment, wp: v.wp, state: v.state, engaged: v.engaged, stun: v.stun, noEngage: v.noEngage,
+    target: v.target, route: v.route, brokeTackle: v.brokeTackle, recognised: v.recognised, reactTimer: v.reactTimer, baseAttrs: v.baseAttrs,
+    // the properties set or read later in a play
+    read: undefined, recognisedPass: undefined, effort: undefined, effortT: undefined, zoneTgt: undefined, softBlock: undefined, engagedAt: undefined,
+    wasBlocked: undefined, pancakeRolled: undefined, zoneTgtLeaving: undefined, cutUntil: undefined, zoneNextEval: undefined, engaged2: undefined,
+    peakSeen: undefined, lastBeat: undefined, sawRelease: undefined, breakPlant: undefined, laneTimer: undefined, jukeCooldown: undefined,
+    maxSpeedMods: undefined, baseMaxSpeed: undefined, windup: undefined, throwRead: undefined, lateralRead: undefined, laneY: undefined,
+    caughtAt: undefined, mesh: undefined, jobDone: undefined, visionTimer: undefined, landslideChecked: undefined, landslide: undefined,
+    t8Base: undefined, status: undefined, knockedDown: undefined, whiffed: undefined, leadRead: undefined, armTried: undefined, koTarget: undefined,
+    koSet: undefined, climbed: undefined, koBroke: undefined, stumbled: undefined, laneDecided: undefined, t8Suppressed: undefined,
+    optionRead: undefined, released: undefined, fx: undefined, m3Aura: undefined, ignoreFieldAwareness: undefined, immune: undefined,
+    maxEngagements: undefined, splitMods: undefined, pairMods: undefined, anchor: undefined, forcedAim: undefined, phased: undefined,
+    passAllies: undefined, moveOverride: undefined, t8Chase: undefined, noContact: undefined, temp: undefined, sitsOut: undefined,
+    noTackle: undefined, noBall: undefined, possessionEndsPlay: undefined, fixedJob: undefined, abilityLogged: undefined, roarUntil: undefined,
+    slowUntil: undefined, daybreak: undefined, prevV: undefined, contract: undefined, family: undefined, form: undefined, mastery: undefined,
+    kickerAbility: undefined, staminaInput: undefined,
+  };
+  // ... and the per-play keys ability contracts (src/sim/abilities) keep on actors, so a contract carrier keeps the same shape. Named
+  // stores in a fixed order (every actor takes the same map transitions): an object literal with more than 128 properties would be
+  // created in dictionary mode.
+  a.envImmune = undefined; a.nwCredited = undefined; a.nightWatch = undefined; a.ironLungsCounted = undefined; a.daybreakBlind = undefined;
+  a.rooted = undefined; a.powered = undefined; a.passiveCredited = undefined; a.guardUsed = undefined; a.doubled = undefined; a.pyre = undefined;
+  a.ready = undefined; a.bb = undefined; a.dr = undefined; a.guard = undefined; a.drain = undefined; a.fn = undefined; a.sw = undefined;
+  a.scorch = undefined; a.cs = undefined; a.ls = undefined; a.meteor = undefined; a.sf = undefined; a.at = undefined; a.stomp = undefined;
+  a.vv = undefined; a.haze = undefined; a.ss = undefined; a.vc = undefined; a.call = undefined; a.gate = undefined; a.sov = undefined;
+  a.cy = undefined; a.sx = undefined; a.br = undefined; a.touch = undefined; a.ms = undefined; a.ab = undefined; a.breakwater = undefined;
+  a.halo = undefined; a.plate = undefined; a.clamp = undefined; a.bt = undefined; a.cold = undefined; a.sc = undefined; a.tw = undefined;
+  a.pr = undefined; a.rp = undefined; a.pounce = undefined; a.mg = undefined; a.blink = undefined;
+  return a;
+}
 export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense = {}, ballOn = 25, ballLat = 0, seed = 1, options = {} }) {
   let rng = createRng(seed); // `let`: options.fork re-seeds the physics after a decision point (AI Testing Lab rollouts)
   // The quarterback's perception has its own stream, so how he reads the field never shifts the physics of the play, and the AI
@@ -159,12 +206,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     const sovereignQ4 = !!(ability?.sovereign && quarter === 4);
     if (sovereignQ4) { attrs.arm = Math.min(99, attrs.arm + ability.sovereign); attrs.accuracy = Math.min(99, attrs.accuracy + ability.sovereign); }
     const [x, y] = play.align[slot];
-    const a = {
+    const a = actorRecord({
       team, slot, mid, type: input?.type || null, overcharged, sovereignQ4, baseAwareness: attrs.awareness, attrs, ability, abilityName, abilityKind, name: input?.name || slot, reactionBonus: 0, auraAttrs: null,
       x, y, lineX: x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility),
       assignment: play.assignments[slot], wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, baseAttrs: given,
-    };
+    });
     if (options.sitsOut?.has?.(mid)) { a.stun = 1e6; a.noEngage = 1e6; a.sitsOut = true; } // Task 8 B18: a counted Stunned disables him for this whole play
     if (contract) { a.contract = contract; a.family = input.species; a.form = input.form || `${input.species}:0`; a.mastery = input.mastery || 0; a.kickerAbility = familyById(input.species)?.position === 'K'; } // kickerAbility: N8b special-play eligibility
     if (input?.id) a.staminaInput = { id: input.id, permDurability: input.permDurability, attrs: { durability: input.attrs?.durability } }; // M3 hook: the stamina record's input (permanent Durability), for ctx.drainStamina
@@ -175,11 +222,13 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // ------------------------------------------------------------ Task 8 M3: ability contract hooks (src/sim/abilities/registry.js)
   // Abilities draw from their own stream, so plays where no contract acts keep every physics draw. Game-scope state (charges,
   // cooldowns) lives in options.t8 (the football game state's Task 8 block); without one (labs, previews) it is per play only.
-  const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13);
   const t8g = options.t8 || { status: {} };
   // Task 8 M3 fields (spec §11): options.fields in this play's frame (fields.js toPlayFrame); null without fields (src/sim/t8/field-effects.js)
   const FX = createFieldPlay({ fields: options.fields, actors, seed, log: (...x) => log(...x), t8: t8g, setStatus: (a, c, d) => setStatus(a, c, d), bounds: B, dt: DT, refreshMaxSpeed: (a) => refreshMaxSpeed(a) });
-  const abilityCtx = { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
+  // Perf (outcome-identical): the contract context (and the ability stream, a pure function of the seed that only it draws from)
+  // is built at the first contract hook call, so a play where no contract acts never allocates it.
+  let abilityCtx = null;
+  const buildAbilityCtx = () => { const arng = createRng(((Number(seed) >>> 0) ^ 0x7f4a7c15) >>> 0 || 13); return { get t() { return t; }, rng: arng, log: (...x) => log(...x), get stats() { return stats; }, get ball() { return ball; }, kickoff: !!options.kickoff, twoPoint: !!options.twoPoint, get isRun() { return isRun; },
     state: (a) => abilityState(t8g, a.mid, a.family, a.form, a.mastery), executed: (a, opts) => recordExecution(t8g, a.mid, a.family, opts),
     queueField: (spec) => { (t8g.fields ||= { list: [], pending: [], seq: 0 }).pending.push({ ...spec }); }, createdFor: (mid) => (options.createdFields || []).some((f) => f.owner === mid), teamSide: options.offenseSide || null, canStartSignature: (a) => (!FX || FX.canStart(a)) && activationAllowed(a), opponents: (team) => actors.filter((x) => x.team !== team), dist: (p, q) => dist(p, q),
     applyStatus: (target, attempt) => t8Apply(target, attempt), statusOf: (a) => (a ? t8SlotOf({ t8: t8g }, a.mid) : null),
@@ -211,7 +260,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     // protection against new harmful statuses (status-runtime.js ward); temporary absences and a turnover's awarded spot
     ballOn, get events() { return events; }, manTarget: (d) => (d?.team === 'def' && d.assignment?.a === 'man' ? bySlot.off[manKeys[d.assignment.key]] || null : null),
     removeStatus: (a) => t8Remove(a), ward: (a) => { (t8g.ward ||= {})[a.mid] = true; },
-    queueAbsence: (spec) => { (t8g.absences ||= []).push({ ...spec }); }, turnoverSpot: (n) => { turnoverSpot = n; } };
+    queueAbsence: (spec) => { (t8g.absences ||= []).push({ ...spec }); }, turnoverSpot: (n) => { turnoverSpot = n; } }; };
   let turnoverSpot = null; // M3 hook: an ability-awarded next-offense spot after a turnover (rules.js applies it)
   delete t8g.ward; // M3 hook: protection is per play
   const whistleQueue = []; // M3 hook: ctx.afterWhistle callbacks
@@ -221,7 +270,7 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
   // carryover and countdowns are unaffected (statuses are not cleansed). This overrides conflicting contract wording on these plays.
   const SPECIAL_PLAY = !!(KO || options.twoPoint);
   const mayAct = (a) => !SPECIAL_PLAY || (!!KO && a.slot === 'K' && a.kickerAbility);
-  const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; return h && mayAct(a) ? h(abilityCtx, a, ...args) : undefined; };
+  const hook = (name, a, ...args) => { const h = a?.contract?.hooks?.[name]; if (h && !abilityCtx) abilityCtx = buildAbilityCtx(); return h && mayAct(a) ? h(abilityCtx, a, ...args) : undefined; };
   // M3 hook: physical obstacles from contracts (stone walls, snowballs): kinds 'circle' {x, y, r} and 'rect' {x0, x1, y0, y1}, live until
   // removed or the whistle; `blocks(actor)` says whom it stops. Monsters it blocks are kept outside after movement (the ball is not).
   const obstacles = []; const BODY = 0.35;
@@ -246,10 +295,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
    */
   function spawnActor(spec) {
     const attrs = { ...DEFAULT_ATTRS, ...(spec.attrs || {}) }; const { attrs: _given, credit = null, ...flags } = spec;
-    const a = { overcharged: false, sovereignQ4: false, ability: null, abilityName: null, abilityKind: null, reactionBonus: 0, auraAttrs: null, ...flags,
+    const v = { overcharged: false, sovereignQ4: false, ability: null, abilityName: null, abilityKind: null, reactionBonus: 0, auraAttrs: null, ...flags,
       mid: spec.mid || `${spec.team}:${spec.slot}`, type: spec.type || null, name: spec.name || spec.slot, baseAwareness: attrs.awareness, attrs, baseAttrs: { ...attrs },
       lineX: spec.x, vx: 0, vy: 0, maxSpeed: 5.4 + 4.1 * norm(attrs.speed), accel: 9 + 11 * norm(attrs.agility), wp: 0, state: 'init', engaged: null, stun: 0, noEngage: 0,
       target: null, route: null, brokeTackle: 0, recognised: false, reactTimer: 0, temp: { credit } };
+    // Perf (outcome-identical): the same values as before, in the lineup's actor shape (actorRecord); the spec's other keys follow.
+    const a = actorRecord(v); for (const k of Object.keys(v)) if (!RECORD_BASE.has(k)) a[k] = v[k];
     actors.push(a); (a.team === 'off' ? offs : defs).push(a); history.set(a, []); snapPos.set(a, { x: a.x, y: a.y });
     return a;
   }
@@ -414,8 +465,25 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     if (a.anchor) { a.x = a.anchor.x; a.y = a.anchor.y; a.vx = 0; a.vy = 0; } // M3 hook: an anchored actor never translates (own movement or forced)
   }
   function separate() {
+    // Perf (outcome-identical): with no field and no actor carrying a body rule (engaged2, passAllies, phased, anchor; all falsy), every
+    // M3 test below is false and every push is the plain one, so the plain loop (the baseline's, with the far-pair skip) gives the
+    // same pushes in the same order.
+    let rules = !!FX; if (!rules) for (let i = 0; i < actors.length; i++) { const a = actors[i]; if (a.engaged2 || a.passAllies || a.phased || a.anchor) { rules = true; break; } }
+    if (!rules) {
+      for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
+        const a = actors[i], b = actors[j];
+        const sx = a.x - b.x, sy = a.y - b.y; if (sx >= 0.7 || sx <= -0.7 || sy >= 0.7 || sy <= -0.7) continue;
+        if (a.engaged === b) continue;
+        const d = dist(a, b);
+        if (d < 0.7 && d > 0.001) { const push = (0.7 - d) / 2; const ux = (b.x - a.x) / d, uy = (b.y - a.y) / d; a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push; }
+      }
+      return;
+    }
     for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
       const a = actors[i], b = actors[j];
+      // Perf (outcome-identical): a pair at least 0.7 apart on either axis is at least 0.7 apart (Math.hypot >= max |component|), so
+      // no push; skipping it first, before the pure checks below, changes nothing.
+      const sx = a.x - b.x, sy = a.y - b.y; if (sx >= 0.7 || sx <= -0.7 || sy >= 0.7 || sy <= -0.7) continue;
       if (a.engaged === b || (a.engaged2 && a.engaged2 === b)) continue; // M3 hook: engaged2
       if (a.team === b.team && (a.passAllies || b.passAllies)) continue; // M3 hook: a contract's pursuit mode ignores allied bodies (enemies still collide)
       if ((a.phased || b.phased) && a.team !== b.team) continue; // M3 hook: a phased actor passes through opposing bodies
@@ -2302,11 +2370,12 @@ export function simulatePlay({ offensePlay, defensePlay, offense = {}, defense =
     }
     // A defender on the ball plays it (v42.8): within a yard, and not clearly beaten to it by the receiver (before the lead fix,
     // under-led balls fell to trailing defenders; with the ball on the receiver this keeps interceptions real without inventing them).
-    if (nearest && nearest.dd < 1.0 && nearest.dd < dr + 0.35 && !thunderShield) {
+    const reviewPick = !!options[REVIEW_ONLY]?.wouldBeInterception && !!nearest && nearest.dd <= 2.5 && !thunderShield; // M3 hook (review only): see REVIEW_ONLY
+    if (reviewPick || (nearest && nearest.dd < 1.0 && nearest.dd < dr + 0.35 && !thunderShield)) {
       const pickCatching = nearest.d.attrs.catching + (nearest.d.ability?.pickCatching || 0);
       let pickP = (0.05 + 0.22 * norm(pickCatching)) * (dr > catchRadius ? 1.15 : 0.78); // v42.8: with the ball led onto the receiver, a defender who got there too has a real play on it (0.5 before, when under-led balls fell to him anyway)
       if (ball.undertow) { pickP *= ball.undertow.ability.undertow; abilityUsed(ball.undertow, 'undertow'); } // Undertow: 25% more likely
-      const picked = rng.chance(pickP);
+      const picked = rng.chance(pickP) || reviewPick;
       if (picked && ball.t8?.noInterception) { // M3 hook: a would-be interception falls incomplete; the denied defender is recorded for the contract
         ball.t8.denied = nearest.d; log(`${nearest.d.name} cannot hold it`, { kind: 'ability', by: r.slot, side: r.team, contract: true, victim: nearest.d.slot });
         ball.inAir = false; endPlay('incomplete', L.x, L.y); log('Pass falls incomplete', { kind: 'incomplete', denied: nearest.d.slot }); return;
