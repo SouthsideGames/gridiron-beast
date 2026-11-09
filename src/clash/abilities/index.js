@@ -34,3 +34,15 @@ import './metalhorn.js';
 import './aegistron.js';
 import './shadewisp.js';
 import './scaleguard.js';
+// S8 batch C: healing and support (11)
+import './tidepaw.js';
+import './thornkit.js';
+import './elderoot.js';
+import './flicker.js';
+import './snowmoth.js';
+import './glimmer.js';
+import './sunwhistle.js';
+import './lumen.js';
+import './mindwing.js';
+import './wyrmkit.js';
+import './sablewing.js';

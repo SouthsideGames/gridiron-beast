@@ -441,7 +441,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
         if (m.shield?.broken) callC('statusEnded', rec, { id: 'shielded', reason: 'broken', sourceId: att.c.id, abilityId: spec.abilityId ?? null });
         landed.push({ x: rec, loss, poolLoss: m.shield?.poolLoss ?? 0, transferred: !!transferred, prevented });
         if (transferred) res.transferred.push(rec.c.id);
-        res.recipients.push(rec.c.id); res.losses[rec.c.id] = loss; res.poolLosses[rec.c.id] = m.shield?.poolLoss ?? 0; res.hpDamage += loss; res.shieldDamage += m.shield?.poolLoss ?? 0; res.prevented += prevented;
+        const actual = before - rec.hp; // actual HP lost (no overkill)
+        res.recipients.push(rec.c.id); res.losses[rec.c.id] = actual; res.poolLosses[rec.c.id] = m.shield?.poolLoss ?? 0; res.hpDamage += actual; res.shieldDamage += m.shield?.poolLoss ?? 0; res.prevented += prevented;
         if (rec.hp <= 0) { knockout(rec, att); res.kos.push(rec.c.id); }
       }
       res.decided = afterHit(att, t, spec, landed, false);
@@ -511,10 +512,11 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     return { amount: r.amount, budget, exact: r.exact };
   }
   /** Grant Shielded with a pool of pctMaxHp of the recipient's max HP (or `pool` HP); P8 and C6 multiply, one rounding, through the gate. */
-  function grantShield(src, t, { pctMaxHp, pool, duration, abilityId = null, support = true, payload = null } = {}) {
+  function grantShield(src, t, { pctMaxHp, pool, duration, abilityId = null, support = true, payload = null, noFactors = false } = {}) {
     if (!t || t.koed) return false;
     const pen = src && src.inAction ? penaltyOf(src, { support }) : 1;
-    const factors = [{ id: 'entry-penalty', factor: pen }, { id: 'stalemate-c6', factor: healMult }].filter((f) => f.factor !== 1);
+    // noFactors: the pool is an amount already factored once (Second Tide's surplus is the factored heal budget left over; D9 one rounding)
+    const factors = noFactors ? [] : [{ id: 'entry-penalty', factor: pen }, { id: 'stalemate-c6', factor: healMult }].filter((f) => f.factor !== 1);
     const r = resolveAmount(pool ?? (t.c.maxHp * pctMaxHp) / 100, factors);
     if (r.amount < 1) { if (LOG) log('unmet', src, t, `${src ? src.c.name : 'Shield'}: the shield rounds to 0`, { unmet: [{ condition: 'positive shield pool', detail: r.exact }], abilityId, stage: 'trigger' }); return false; }
     return applyStatus(t, { id: 'shielded', strength: r.amount, duration, sourceId: src?.c.id ?? null, abilityId, ...(payload ? { payload } : {}) }).accepted;
@@ -638,6 +640,9 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     heal: (self, targetId, opts) => heal(need(self.id), need(targetId), { abilityId: self.abilityId, ...opts }),
     shield: (self, targetId, opts) => grantShield(need(self.id), need(targetId), { abilityId: self.abilityId, ...opts }),
     hpCost: (self, amount) => hpCost(need(self.id), amount, self.abilityId),
+    /** An HP restoration that is not a heal() (Mind Mend's credit) raises the healed hook for the reactors (T8_PROVISIONAL healed-hook-kinds). */
+    notifyHealed: (self, targetId, amount, kind) => { if (amount > 0) for (const y of livingStable()) callC('healed', y, { targetId, amount, sourceId: self.id, abilityId: self.abilityId, kind }); },
+    healFactor: (targetId) => clashEffect(need(targetId).status).heal,
     setHp: (self, targetId, hp, why) => setHp(need(targetId), hp, need(self.id), self.abilityId, why),
     revive: (self, targetId, hp) => revive(need(targetId), hp, need(self.id), self.abilityId),
     // strikes (the real pipeline). From a reaction context, a non-attacker's strike is refused while retaliation is suppressed.
