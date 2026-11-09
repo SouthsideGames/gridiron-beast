@@ -7,10 +7,11 @@ import * as Link from '../src/franchise/clash-link.js';
 import { logHash } from '../src/clash/engine.js';
 import { monsterOverall } from '../src/data/monsters.js';
 import { exportJson, importJson } from '../src/franchise/save.js';
+import { settleHeadless } from '../src/franchise/clash-link.js';
 // Task 8 M4 (D1): a Watch battle stops at the player's rotation prompt. These tests stand in for an owner who answers the first prompt
 // with "Auto for the rest of this battle" (an approved option), so the battle runs to its end; the assertions are unchanged.
 const AUTO = { headless: true };
-const settledBattle = (f) => { let r = F.encounterBattle(f); while (r?.pending) { F.encounterDecide(f, r.pending.ex, 'auto'); r = F.encounterBattle(f); } return r; };
+const settledBattle = (f) => settleHeadless(f.week.encounter, () => F.encounterBattle(f)); // the game's own Auto settlement (D1)
 
 const ready = (seed) => { const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed }); F.hireDefaultStaff(f); while (F.creationDraftPending(f) && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); F.scoutRegion(f, 'Coral Coast'); return f; };
 
@@ -84,7 +85,11 @@ test('Play, Auto and Skip to Results still fight the same companions; Skip Encou
   const f = ready(16); const g = JSON.parse(JSON.stringify(f)); const h = JSON.parse(JSON.stringify(f));
   F.startEncounter(f, 0, { mode: 'auto' }); F.startEncounter(g, 0, { mode: 'skip' }); F.startEncounter(h, 0, { mode: 'play' });
   // Task 8 M4 (D1): 'auto' and 'play' are Watch, which prompts the player's rotations; the owner answering Auto at the first prompt plays the same battle as Skip.
-  assert.equal(logHash(settledBattle(f)), logHash(F.encounterBattle(g)));
+  // The Watch log carries one extra entry, the record of the owner's Auto answer (`rotation_decision`); every other entry and the
+  // final state are the same battle as Skip.
+  const wf = settledBattle(f), sg = F.encounterBattle(g); const fights = (r) => JSON.stringify(r.log.filter((e) => e.kind !== 'rotation_decision').map(({ seq, ...e }) => e));
+  assert.deepEqual([wf.winner, wf.by, wf.exchanges, wf.stateHash], [sg.winner, sg.by, sg.exchanges, sg.stateHash]);
+  assert.equal(fights(wf), fights(sg)); assert.equal(wf.log.filter((e) => e.kind === 'rotation_decision').length, wf.log.length - sg.log.length);
   assert.deepEqual(settledBattle(h).lines.b.map((x) => x.combatant.monsterId).sort(), settledBattle(f).lines.b.map((x) => x.combatant.monsterId).sort());
   const k = ready(17); const before = JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }); F.skipEncounter(k);
   assert.equal(k.season.day, 2); assert.equal(JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }), before);

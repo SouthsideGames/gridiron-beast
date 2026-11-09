@@ -12,10 +12,11 @@ import { createRng } from '../src/core/rng.js';
 import { exportJson, importJson } from '../src/franchise/save.js';
 import { approvedRule } from '../src/data/beast-dex.js';
 import * as FR from '../src/core/fraction.js';
+import { settleHeadless } from '../src/franchise/clash-link.js';
 // Task 8 M4 (D1): a Watch battle stops at the player's rotation prompt. These tests stand in for an owner who answers the first prompt
 // with "Auto for the rest of this battle" (an approved option), so the battle runs to its end; the assertions are unchanged.
 const AUTO = { headless: true };
-const settledBattle = (f) => { let r = F.encounterBattle(f); while (r?.pending) { F.encounterDecide(f, r.pending.ex, 'auto'); r = F.encounterBattle(f); } return r; };
+const settledBattle = (f) => settleHeadless(f.week.encounter, () => F.encounterBattle(f)); // the game's own Auto settlement (D1)
 
 const ready = (seed) => { const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', seed }); F.hireDefaultStaff(f); while (F.creationDraftPending(f) && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); F.scoutRegion(f, 'Coral Coast'); return f; };
 const basicAt = (pos) => SPECIES_DEX.find((s) => s.rarity === 'basic' && s.position === pos);
