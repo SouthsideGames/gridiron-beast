@@ -9,7 +9,7 @@
 // (src/lab/lab-store.js) and leave the device only by export.
 import { esc, delegate, toast, confirmSheet } from '../dom.js';
 import { PLAYS } from '../../data/playbook.js';
-import { fieldSvg, FIELD_VIEWBOX, presnapLook } from '../field-view.js';
+import { fieldDraw, FIELD_VIEWBOX, presnapLook } from '../field-view.js';
 import { playCardSvg } from '../play-art.js';
 import * as Lab from '../../lab/qb-lab.js';
 import { labAll, labPut, labClear, labUsage, labStorageMode, labMetaGet, labMetaPut } from '../../lab/lab-store.js';
@@ -35,7 +35,7 @@ export function registerAiLab(Router, app) {
     const fs = frames(); const f = preSnap() ? null : fs[Math.min(L.i, fs.length - 1)] || null;
     // Before the snap: the offense's own play art and the defense's base alignment, exactly what Franchise Mode shows; never the call.
     const presnap = f ? null : { play: PLAYS[L.sit.offense], offensePlay: PLAYS[L.sit.offense], defensePlay: presnapLook(L.sit.defense) };
-    svg.innerHTML = fieldSvg({ ballOn: L.sit.ballOn, ballLat: 0, toGo: L.sit.toGo, colors, frame: f, prevFrame: f ? fs[L.i - 1] || null : null, presnap, camera: cam(), sprites: sprites(), qbRead: false });
+    fieldDraw(svg, { ballOn: L.sit.ballOn, ballLat: 0, toGo: L.sit.toGo, colors, frame: f, prevFrame: f ? fs[L.i - 1] || null : null, presnap, camera: cam(), sprites: sprites(), qbRead: false });
   }
   const stop = () => { cancelAnimationFrame(L.raf); L.raf = 0; };
   const name = (slot, side) => { const inp = Lab.playInput(L.sit); return `${(side === 'def' ? inp.defense : inp.offense)[slot]?.name || slot} (${slot})`; };
