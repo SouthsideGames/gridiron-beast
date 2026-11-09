@@ -16,15 +16,15 @@ export const NATURE_ELECTRIC = {
     u: (c) => leafBurst(c.cx, c.cy + 0.3, c.k, c.n(7), c.sid, c.L) + disc(c.cx, c.cy + 0.7, 1.2 + c.k, 0.5, c.L.a, 0.3 * (1 - c.k)) },
   // NAT-02 Vine Vault: two supporting vines, the visible arc over the blocker, the leafy landing; the vines retract. Held: the vines snap.
   'NAT-02-F': { id: 'NAT-02-F', name: 'Vine Vault', element: 'Nature', until: ['vault_land', 'ability_end'], tail: 0.6, path: true, cue: (c) => (c.ev.success === false ? 'Vault held' : 'Vine Vault'),
-    u: (c) => { const e = c.ev; const [sx, sy] = c.origin || [c.cx, c.cy]; const land = e.success && e.x != null ? c.S(e.x, e.y) : null; let s = ''; const k = c.stopped ? 1 : clamp01(c.age / 0.4);
-      if (land && !e.success === false) { /* unreachable */ }
-      if (e.success === false) { for (let i = -1; i <= 1; i += 2) s += path(pathOf(jag(sx + i * 0.8, sy + 0.8, PI / 2 + i * 0.4, 1.4 * (1 - clamp01(c.age / 0.5)), c.sid + i, 3)), '#3f9a3a', 0.35, 1 - clamp01(c.age / 0.6)); return s; }
+    o: (c) => { const e = c.ev; const [sx, sy] = c.origin || [c.cx, c.cy]; const land = e.success && e.x != null ? c.S(e.x, e.y) : null; let s = ''; const k = c.stopped ? 1 : clamp01(c.age / 0.4); /* over the line: the vault reads above the bodies */
+      if (e.success === false) { const kk = clamp01(c.age / 0.6); for (let i = -1; i <= 1; i += 2) s += path(pathOf(jag(sx + i * 0.9, sy + 0.8, -PI / 2 + i * 0.5, 2.4 * (1 - kk), c.sid + i, 3)), '#2f7a2a', 0.55, 1 - kk) + leaf(sx + i * 1.6, sy - 1 + kk * 1.5, i * 70 + kk * 120, c.L, 1 - kk); return s; } /* held: the vines snap and fall */
       if (!land) return s;
-      // two short vines planted at the take-off, retracting after the landing
-      const vine = c.stopped ? 1 - c.stopK : 1; for (let i = -1; i <= 1; i += 2) s += path(pathOf(jag(sx + i * 0.7, sy + 0.8, -PI / 2 + i * 0.5, 1.8 * vine * k, c.sid + i, 3)), '#3f9a3a', 0.4, vine) + leaf(sx + i * 1.3, sy - 0.6 * vine, i * 40, c.L, vine);
-      // the arc over the blocker, drawn as he travels
-      const mx = (sx + land[0]) / 2, my = Math.min(sy, land[1]) - 3; s += `<path d="M ${f2(sx)} ${f2(sy)} Q ${f2(mx)} ${f2(my)} ${f2(land[0])} ${f2(land[1])}" fill="none" stroke="${c.L.a}" stroke-width="0.3" stroke-dasharray="0.7 0.5" opacity="${op(0.85 * (c.stopped ? 1 - c.stopK : 1))}"/>`;
-      if (c.stopped) s += leafBurst(land[0], land[1] + 0.4, c.stopK, c.n(7), c.sid + 9, c.L); return s; } },
+      const vine = c.stopped ? 1 - c.stopK : 1; for (let i = -1; i <= 1; i += 2) { const pts = jag(sx + i * 0.8, sy + 0.9, -PI / 2 + i * 0.45, 2.6 * vine * k, c.sid + i, 4); s += path(pathOf(pts), '#2a5a1a', 0.75, vine) + path(pathOf(pts), '#7ac24a', 0.3, vine); const tip = pts[pts.length - 1]; s += leaf(tip[0], tip[1], i * 50, c.L, vine, 1.4); } /* two supporting vines from the crouch, retracting after the landing */
+      const mx = (sx + land[0]) / 2, my = Math.min(sy, land[1]) - 4.2; const d = `M ${f2(sx)} ${f2(sy - 0.8)} Q ${f2(mx)} ${f2(my)} ${f2(land[0])} ${f2(land[1] - 0.8)}`; const ao = c.stopped ? 1 - c.stopK : 1;
+      s += path(d, '#2a5a1a', 0.6, 0.8 * ao, ' stroke-dasharray="0.9 0.5"') + path(d, c.L.a, 0.28, ao, ' stroke-dasharray="0.9 0.5"'); /* the visible arc over the blocker */
+      if (!c.stopped) { const kk = clamp01(c.age / 0.4); const x = (1 - kk) ** 2 * sx + 2 * (1 - kk) * kk * mx + kk * kk * land[0], y = (1 - kk) ** 2 * (sy - 0.8) + 2 * (1 - kk) * kk * my + kk * kk * (land[1] - 0.8); s += leaf(x - 0.6, y, -30, c.L, 1, 1.6) + leaf(x + 0.6, y, 30, c.L, 1, 1.6); } /* a leafy marker rides the arc */
+      if (c.stopped) s += leafBurst(land[0], land[1] + 0.4, c.stopK, c.n(8), c.sid + 9, c.L) + disc(land[0], land[1] + 0.8, 1.5 * (1 - c.stopK) + 0.4, 0.6, c.L.b, 0.4 * (1 - c.stopK)); /* the leafy landing */
+      return s; } },
   // NAT-03 Deep Roots: thick roots from his feet into the turf for the play; taut when they hold a shed; they retract at the whistle.
   'NAT-03-F': { id: 'NAT-03-F', at: { impact: 0.2 }, na: ['target'], name: 'Deep Roots', element: 'Nature', dur: 'play', sub: { shed_prevented: { dur: 0.8, cue: () => 'Roots hold', o: (c) => { const v = c.victim; if (!v) return ''; return line(c.cx, c.cy + 0.6, v[0], v[1] + 0.6, '#6a4a22', 0.5 * (1 - c.k) + 0.1, 1 - c.k) + ring(c.cx, c.cy + 0.6, 1 + c.k * 2, '#a07a44', 0.3, 1 - c.k); } } },
     u: (c) => { const grow = c.stopped ? 1 - c.stopK : ease(clamp01(c.age / 0.5)); let s = ''; for (let i = 0; i < c.n(5); i++) s += path(pathOf(jag(c.cx, c.cy + 0.8, PI / 2 + (i - 2) * 0.55, 2.4 * grow, c.sid + i, 4)), '#6a4a22', 0.55, 0.95) + path(pathOf(jag(c.cx, c.cy + 0.8, PI / 2 + (i - 2) * 0.55, 2.4 * grow, c.sid + i, 4)), '#a07a44', 0.2, 0.9); return s + disc(c.cx, c.cy + 0.8, 1.6 * grow, 0.6 * grow, '#3a2a12', 0.35); } },

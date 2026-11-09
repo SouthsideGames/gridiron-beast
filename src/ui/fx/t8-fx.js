@@ -14,6 +14,7 @@ import { f2, h, op, clamp01, ease, elementOf, countFor, ring, blob, text, esc } 
 import { LOOKS, AMBIENT } from './looks/index.js';
 import { fieldDecor, FIELD_REVEAL } from './fields-fx.js';
 import { overheadSvg, STATUS_GLYPH } from './overhead.js';
+import { readiness } from './charge.js';
 
 export const DEX_ID = /^[A-Z]{3}-\d\d-F$/;
 export const T8_REVISION = 1; // bump when the drawing of a look changes (the reviewer's fingerprint includes it)
@@ -41,7 +42,8 @@ export function buildT8(sim, lookup, meta = null) {
     return { end: e.t + (look.dur ?? DEFAULT_DUR), stop: null, stopEv: null };
   };
   // Pre-snap events the host supplies (game-log lines before the snap, e.g. Prism Break): drawn before t = 0.
-  for (const e of meta?.pre || []) { const look = LOOKS[e.ability]; if (!look?.pre) continue; const m = named(e.side || 'def', e.by || ''); const lead = look.pre.lead ?? 1, dur = look.pre.dur ?? 0.4; const p0 = e.by ? posAt(e.side || 'def', e.by, 0) : null;
+  const view = sim?.t8view || null; // the rules engine's snap snapshot (rules.js snapView), the default HUD and pre-snap lines
+  for (const e of meta?.pre || view?.pre || []) { const look = LOOKS[e.ability]; if (!look?.pre) continue; const m = named(e.side || 'def', e.by || ''); const lead = look.pre.lead ?? 1, dur = look.pre.dur ?? 0.4; const p0 = e.by ? posAt(e.side || 'def', e.by, 0) : null;
     items.push({ id: e.ability, kind: 'pre', phase: null, team: e.side || 'def', slot: e.by || null, t0: 0, start: -lead, dur, end: dur, stop: null, stopEv: null, ev: e, look: look.pre, base: look, L: elementOf(m?.element || look.element), name: m?.name || e.by, label: look.name, species: m?.species || null, main: true, sid: 97 + items.length * 7, origin: p0 ? [p0[1], p0[2]] : null, path: null }); if (e.by) spends.push({ team: e.side || 'def', slot: e.by, t: 0 }); }
   for (let i = 0; i < events.length; i++) {
     const e = events[i];
@@ -70,13 +72,38 @@ export function buildT8(sim, lookup, meta = null) {
   if (frames.length) for (const team of ['off', 'def']) for (const q of frames[0][team]) { const m = named(team, q[0]); const amb = m?.species ? AMBIENT[m.species] : null; if (!amb) continue;
     items.push({ id: amb.id, kind: 'ambient', team, slot: q[0], t0: 0, start: 0, dur: last + 0.3, end: last + 0.3, stop: last, ev: { by: q[0], side: team }, look: amb, base: amb, L: elementOf(m.element || amb.element), name: m.name, label: amb.name, species: m.species, main: false, sid: q[0].charCodeAt(0) * 13 + 5, origin: [q[1], q[2]], path: null }); }
   // Fields: the play's functional rectangles (play frame), with the reveal of the ones created at this snap (fresh).
-  const fields = (sim?.fields || []).map((f) => ({ ...f, lead: f.fresh ? (FIELD_REVEAL[f.ability]?.lead ?? 0) : 0, expiring: !!meta?.expires?.includes(f.ability) })); // expiring: its clock runs out at this whistle (cleanup)
+  const fields = (sim?.fields || []).map((f) => ({ ...f, lead: f.fresh ? (FIELD_REVEAL[f.ability]?.lead ?? 0) : 0, expiring: !!(f.expires || meta?.expires?.includes(f.ability)) })); // expiring: its clock runs out at this whistle (cleanup)
   const obstacles = sim?.obstacles || [];
-  const preroll = Math.max(0, ...items.map((it) => -it.start), ...fields.map((f) => f.lead));
+  let preroll = Math.max(0, ...items.map((it) => -it.start), ...fields.map((f) => f.lead));
+  // A host that does not play time before the snap (the match screen starts at t = 0) gets the pre-snap choreography inside the play:
+  // pre-snap lines (Prism Break) move to start at 0, field reveals run from 0, a lead-in before an event at the snap is dropped (the
+  // bar over the head is the anticipation there). A host that pre-rolls passes meta.preroll = true and starts at -preroll (reviewer).
+  if (!meta?.preroll && preroll > 0) {
+    for (const it of items) { if (it.kind === 'pre') { const sh = -it.start; it.start += sh; it.t0 += sh; it.end += sh; } else if (it.start < 0) it.start = 0; }
+    for (const f of fields) f.lead = 0;
+    preroll = 0;
+  }
   const slots = frames.length ? { off: frames[0].off.map((q) => q[0]), def: frames[0].def.map((q) => q[0]) } : { off: [], def: [] };
-  return { items, badges, spends, fields, obstacles, last, preroll, slots, hud: meta?.hud || null, names: sim?.names || null };
+  return { items, badges, spends, fields, obstacles, last, preroll, slots, hud: meta?.hud || hudOf(view), names: sim?.names || null };
 }
 
+/** A fresh field's reveal progress 0..1 at time t (1 when it is not new this play). */
+function revealK(f, t) { return f.fresh ? clamp01((t + f.lead) / ((FIELD_REVEAL[f.ability]?.dur ?? 0.9) + f.lead)) : 1; }
+/**
+ * How strongly field-view.js should paint a field's base rectangle at time t (fx hook): a field being revealed this snap fades in with
+ * its reveal (the raindrop lands before the strip shows), and one whose clock ran out at the whistle fades out in the end hold.
+ */
+export function fieldAlpha(state, id, t) {
+  const f = state?.fields.find((x) => x.id === id); if (!f) return 1;
+  const kin = f.fresh ? clamp01((revealK(f, t) - 0.35) / 0.65) : 1; const out = f.expiring ? 1 - clamp01((t - state.last) / 0.6) : 1;
+  return kin * out;
+}
+/** Over-the-head data from the snap snapshot: status slot, the bar's readiness (fx/charge.js), the low-stamina battery. */
+function hudOf(view) {
+  if (!view?.hud) return null; const out = {};
+  for (const [k, v] of Object.entries(view.hud)) { const charge = v.ability ? readiness(v.family, v.ability, v.form, v.mastery) : null; const e = { element: v.element, ...(v.status ? { status: v.status } : {}), ...(v.battery ? { battery: true, staminaFrac: 0.2 } : {}), ...(charge ? { charge } : {}) }; if (e.status || e.battery || e.charge) out[k] = e; }
+  return Object.keys(out).length ? out : null;
+}
 /** The longest an effect of this state keeps drawing after the last frame (end-of-play hold). */
 export function t8Hold(state, lastT) { if (!state) return 0; let hold = state.fields.some((f) => f.expiring) ? 0.7 : 0; for (const it of state.items) if (it.start <= lastT + 1e-6 && it.end > lastT) hold = Math.max(hold, Math.min(HOLD_MAX, it.end - lastT)); for (const b of state.badges) if (b.t0 <= lastT + 1e-6 && b.t0 > lastT - 0.3) hold = Math.max(hold, 0.6); return hold; }
 /** Impact times that may shake the screen (ability activations flagged `shake`). */
@@ -94,7 +121,7 @@ export function drawT8(state, t, pos, { quality = 'full', toSvg = null, ball = n
   const live = state.items.filter((it) => t >= it.start - 1e-6 && t < it.end + 1e-6);
   // Fields first (ground), then obstacles, then the items by their start (older under newer).
   for (const f of state.fields) {
-    const k = f.fresh ? clamp01((t + f.lead) / ((FIELD_REVEAL[f.ability]?.dur ?? 0.9) + f.lead)) : 1;
+    const k = revealK(f, t);
     const r = { x0: S(0, f.lat[0])[0], x1: S(0, f.lat[1])[0], y0: S(f.yard[1], 0)[1], y1: S(f.yard[0], 0)[1] };
     if (f.holes?.length) r.holes = f.holes.map((hh) => ({ x0: S(0, hh.lat[0])[0], x1: S(0, hh.lat[1])[0], y0: S(hh.yard[1], 0)[1], y1: S(hh.yard[0], 0)[1] }));
     const gone = f.expiring ? clamp01((t - state.last) / 0.6) : 0; // the field's clock ran out at this whistle: it dissolves in the end hold

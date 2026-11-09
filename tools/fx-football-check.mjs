@@ -53,7 +53,9 @@ try {
         moments.push(['target', act.i, act.badges.length ? act.badges[0].t0 + 0.3 : m0.t0 + 0.35]);
         const endIt = act.items.filter(own).sort((x, y) => y.end - x.end)[0]; moments.push(['cleanup', act.i, Math.min(endIt.end - 0.1, act.end + 0.8)]);
       }
-      if (freshIn) { const L = Math.max(0.2, freshIn.preroll); if (!m0 || freshIn.i !== act.i) { moments.push(['anticipation', freshIn.i, -L * 0.7]); moments.push(['activation', freshIn.i, -L * 0.25]); moments.push(['movement', freshIn.i, 0.15]); moments.push(['impact', freshIn.i, 0.45]); } }
+      if (freshIn) { const L = Math.max(0.2, freshIn.preroll);
+        if (!m0) { moments.push(['anticipation', freshIn.i, -L * 0.7]); moments.push(['activation', freshIn.i, -L * 0.25]); moments.push(['movement', freshIn.i, 0.15]); moments.push(['impact', freshIn.i, 0.45]); }
+        else if (freshIn.i !== act.i) { moments.push(['reveal-start', freshIn.i, -L * 0.7]); moments.push(['reveal-land', freshIn.i, 0.3]); } } // a banked field: its creation reveal on the later play
       const persistIn = (freshIn && freshIn.i >= (act?.i ?? 0) ? freshIn : null) || plan.find((P) => P.i > (act?.i ?? 0) && (ownField(P) || P.items.some(own) || P.hud));
       if (persistIn) moments.push(['persistence', persistIn.i, Math.min(1.5, Math.max(0.9, persistIn.end * 0.5))]);
       const lastF = plan.map(ownField).lastIndexOf(true); if (lastF >= 0 && lastF + 1 < plan.length) moments.push(['cleanup', lastF + 1, 0.5]); // the field is gone

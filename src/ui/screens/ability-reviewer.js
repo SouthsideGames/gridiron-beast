@@ -147,13 +147,7 @@ export function registerAbilityReviewer(Router, app) {
       const lookup = (team, slot) => { const m = p.sprites?.[team]?.[slot]; return m ? { element: m.type, name: m.name, species: m.species } : null; };
       const events = (kick ? kick.events : p.allEvents || []).filter((e) => e.kind !== 'debug' && !/^qb_/.test(e.kind || ''));
       const end = Math.max(frames.length ? frames[frames.length - 1].t ?? 0 : 0, ...events.map((e) => e.t ?? 0), frames.length ? 0 : 1.5);
-      // Task 8 presentation: the HUD snapshot at the snap (status badges, charge bars, batteries) and the pre-snap game-log cues (e.g. Prism
-      // Break) feed the looks; a play whose effects start before the snap (a field reveal, a gate rising) pre-rolls from -preroll.
-      const inSim = new Set((sim?.events || []).map((e) => e.text)); const home = p.offSide === 'home'; const bOn = sim?.ballOn ?? 35, bLat = sim?.ballLat || 0;
-      const toPlay = (rm) => (rm?.yard ? { yard: rm.yard.map((y) => (home ? y : 100 - y) - bOn).sort((a, b) => a - b), lat: rm.lat.map((l) => (home ? l : -l) - bLat).sort((a, b) => a - b) } : null); // abs -> this play's frame
-      const pre = (p.gameLog || []).filter((x) => x.ability && !inSim.has(x.text)).map((x) => ({ ...x, by: r?.explain?.source?.slot || null, side: p.unit === 'off' ? 'off' : 'def', rect: toPlay(x.removed) }));
-      const expires = (sim?.fields || []).filter((f) => f.owner === 'review_subject' && f.ability && !(p.fieldsAfter?.list || []).some((g) => g.ability === f.ability && g.id === f.id)).map((f) => f.ability); // own fields whose clock runs out at this whistle
-      const fx = frames.length ? buildFx(sim, lookup, { hud: p.hud || null, pre, expires }) : null;
+      const fx = frames.length ? buildFx(sim, lookup, { preroll: true }) : null;
       return { p, sim, frames, events, end, fx, preroll: fx?.preroll || 0, follow: !!kick, sprites: { off: { map: p.sprites?.off || {}, pool: [] }, def: { map: p.sprites?.def || {}, pool: [] } }, cam: cameraFor(sim?.ballOn ?? p.ballOn ?? 35) };
     });
     const pb = st.pb = { pi: 0, time: -(prepared[0]?.preroll || 0), playing: true, speed: 1, last: performance.now(), hold: 0, done: false, drawn: '' };

@@ -77,7 +77,8 @@ export function fieldSvg(o) {
   // Task 8 fields (spec §11): the functional rectangles of the play (sim.fields, play-relative), outlined and tinted by element.
   if (fields?.length) for (const f of fields) {
     const c = FIELD_TINT[f.type] || '#ffffff', x0 = X(ballLat + f.lat[0]), x1 = X(ballLat + f.lat[1]), y0 = Y(ballOn + f.yard[1]), y1 = Y(ballOn + f.yard[0]);
-    s += `<rect class="t8-field" data-element="${f.type}" x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="${c}" fill-opacity="0.16" stroke="${c}" stroke-width="0.3" stroke-opacity="0.85"/>`;
+    const fa = fx?.fieldAlpha ? fx.fieldAlpha(f.id, time ?? frame?.t ?? 0) : 1; if (fa <= 0.01) continue; // Task 8 fx hook: a field's reveal / dissolve
+    s += `<rect class="t8-field" data-element="${f.type}"${fa < 1 ? ` opacity="${fa.toFixed(2)}"` : ''} x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="${c}" fill-opacity="0.16" stroke="${c}" stroke-width="0.3" stroke-opacity="0.85"/>`;
   }
   if (underlay) s += underlay; // caller-drawn layer under the players (Playbook Audit paths)
   // Players.

@@ -59,3 +59,14 @@ test('over-the-head information: the shared status badge, charge and recharge ba
   assert.equal(readiness('hailfang', { cd: 0 }), null, 'a ready repeatable ability shows no bar'); assert.equal(readiness('hailfang', { cd: 2 }, 'hailfang:0', 0).cd, 2);
   assert.equal(readiness('nonexistent', { cd: 1 }), null);
 });
+
+test('a host that does not pre-roll (the match screen) gets the pre-snap choreography inside the play; the snapshot feeds the HUD', () => {
+  for (const fam of ['prism', 'tsunarok', 'aegistron']) {
+    const c = CAT.find((x) => x.family === fam); const r = reviewSequence({ family: c.family, form: c.forms[0], mastery: 0 });
+    for (const p of r.plays) { if (!p.sim?.frames?.length) continue; const live = buildFx(p.sim, () => null); assert.equal(live.preroll, 0, `${fam}: no pre-roll without meta`);
+      for (const it of live.t8.items) assert.ok(it.start >= 0, `${fam}: ${it.kind} starts in the play`); for (const f of live.t8.fields) assert.equal(f.lead, 0); }
+  }
+  const c = CAT.find((x) => x.family === 'hailfang'); const r = reviewSequence({ family: c.family, form: c.forms[0], mastery: 0 });
+  assert.ok(r.plays.some((p) => p.sim?.t8view?.hud && Object.keys(p.sim.t8view.hud).length), 'the rules engine snapshots over-the-head data at the snap');
+  assert.ok(r.plays.some((p) => p.sim && buildFx(p.sim, () => null).t8.hud), 'buildFx reads it without meta');
+});

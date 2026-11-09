@@ -14,7 +14,7 @@
 
 import { SIG, statusMarks } from './ability-sigs.js';
 import { SPECIES_DEX } from '../data/species.js';
-import { buildT8, drawT8, t8Hold, t8Shakes, DEX_ID } from './fx/t8-fx.js';
+import { buildT8, drawT8, t8Hold, t8Shakes, DEX_ID, fieldAlpha as t8FieldAlpha } from './fx/t8-fx.js';
 import { kickSim } from './fx/kick-fx.js';
 export { kickSim };
 /** Task 8: a formula kick (punt, field goal) as a drawable sim with its kick ability cue, and its fx state. `ev`: { kind, res, from }. */
@@ -133,7 +133,7 @@ export function buildFx(sim, lookup, meta = null) {
   const shakes = events.filter((e) => (e.kind === 'sack' || e.kind === 'fumble') && !labels.some((l) => l.t === e.t)).map((e) => e.t);
   // Every tackle and sack gets a short contact ring (movement state), ability or not.
   const contacts = events.filter((e) => e.kind === 'tackle' || e.kind === 'sack').map((e) => ({ t: e.t, team: e.side, slot: e.by }));
-  return { fx, labels, contacts, traits, shakes: shakes.concat(labels.filter((l) => l.shake).map((l) => l.t), t8Shakes(t8)), t8, preroll: t8.preroll };
+  return { fx, labels, contacts, traits, shakes: shakes.concat(labels.filter((l) => l.shake).map((l) => l.t), t8Shakes(t8)), t8, preroll: t8.preroll, fieldAlpha: (id, t) => t8FieldAlpha(t8, id, t) };
 }
 
 /** A new frame crossed an impact: true once per impact (previous frame time → this one). */

@@ -14,11 +14,7 @@ export function prepare(r, c) {
     const kick = !p.sim?.frames?.length && p.kick ? kickSim(p.kick) : null; const sim = kick || p.sim; if (!sim?.frames?.length) return { p, sim: null };
     const sprites = kick ? { off: { K: { species: c.family, name: c.name, type: c.element }, P: { species: c.family, name: c.name, type: c.element } }, def: {} } : p.sprites;
     const lookup = (team, slot) => { const m = sprites?.[team]?.[slot]; return m ? { element: m.type, name: m.name, species: m.species } : null; };
-    const inSim = new Set((sim.events || []).map((e) => e.text)); const home = p.offSide === 'home'; const bOn = sim.ballOn ?? 35, bLat = sim.ballLat || 0;
-    const toPlay = (rm) => (rm?.yard ? { yard: rm.yard.map((y) => (home ? y : 100 - y) - bOn).sort((a, b) => a - b), lat: rm.lat.map((l) => (home ? l : -l) - bLat).sort((a, b) => a - b) } : null);
-    const pre = (p.gameLog || []).filter((x) => x.ability && !inSim.has(x.text)).map((x) => ({ ...x, by: r.explain?.source?.slot || null, side: p.unit === 'off' ? 'off' : 'def', rect: toPlay(x.removed) }));
-    const expires = (sim.fields || []).filter((f) => f.owner === 'review_subject' && f.ability && !(p.fieldsAfter?.list || []).some((g) => g.ability === f.ability && g.id === f.id)).map((f) => f.ability);
-    return { p, sim, kick: !!kick, sprites, fx: buildFx(sim, lookup, { hud: p.hud || null, pre, expires }) };
+    return { p, sim, kick: !!kick, sprites, fx: buildFx(sim, lookup, { preroll: true }) };
   });
 }
 
