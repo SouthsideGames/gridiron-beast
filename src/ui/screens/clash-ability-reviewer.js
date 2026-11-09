@@ -7,8 +7,14 @@
 // failure panel (the unmet condition or the implementation error), never a silent ordinary battle. Controls: pause / play, replay,
 // 0.25× / 0.5× / 1×, step by event, by turn and by exchange. The variant list adds the separately labelled blocked, failure and
 // interaction scenarios. "▶ Natural battle" is the optional mode for ordinary activation frequency. The battle renders through the
-// existing arena (the Clash looks hook plugs in there, see src/ui/clash/t8-record.js). Nothing here writes to a franchise: no XP,
-// mastery, collection, reward or save writes; the owner's verdicts are review notes in the shared dev-review store ('clashability').
+// real arena in native t8 mode (src/ui/clash/arena.js: the t8 timeline, the ability looks of src/ui/clash/t8/looks and the two overlay
+// layers), so every scenario plays with the ability's real look. Reconciled (task8-m4-reconcile): the fx branch's presentation check
+// (the former Developer → clash-reviewer screen) is folded in: the sheet also shows the seven presentation phases (anticipation →
+// activation → movement → impact → target → persistence → cleanup, from the look descriptors, src/ui/clash/t8/evidence.js), the list has
+// reviewer-local FX quality (full / low / min) and reduced-motion toggles (never saved), and the host exposes `__crv`
+// ({ arena, prep, seek(t), close }) for tools/fx-clash-check.mjs beside `__rv2` for tools/m4-integrate-check.mjs. Nothing here writes to
+// a franchise: no XP, mastery, collection, reward or save writes; the owner's verdicts are review notes in the shared dev-review store
+// ('clashability').
 import { esc, delegate, sheet, toast } from '../dom.js';
 import { abilityById, familyById, formsOf } from '../../data/beast-dex.js';
 import { reviewMatrix, listScenarios, reviewMonster, TIERS } from '../../clash/t8/review.js';
@@ -17,12 +23,15 @@ import { simulateByRuleset } from '../../clash/index.js';
 import { typeEdge } from '../../clash/types.js';
 import { createArena } from '../clash/arena.js';
 import { nextTurnIndex, nextExchangeStart } from '../clash/t8-record.js';
+import { PHASES } from '../clash/t8/fx-t8.js';
+import { phaseEvidence, clashReviewCatalog } from '../clash/t8/evidence.js';
 import { elementFx } from '../ability-fx.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, setClashFingerprint } from '../dev-review.js';
 import { SPECIES_DEX } from '../../data/species.js';
 
 export const NS = 'clashability';
+export { clashReviewCatalog, phaseEvidence }; // the presentation catalogue and evidence rule (tools/fx-clash-check.mjs reads them from here)
 const SPEEDS = [0.25, 0.5, 1];
 const GROUP_CHIP = { main: '', blocked: '⛔ Blocked', failure: '✗ Failure / depletion', interaction: '⇄ Interaction' };
 const ARCH_GLYPH = { Tank: '🛡', Striker: '⚔️', Support: '💚', Disruptor: '🌀', Balanced: '⚖️' };
@@ -41,7 +50,7 @@ export function clashCatalog() {
 export function registerClashAbilityReviewer(Router, app) {
   const cat = clashCatalog();
   for (const c of cat) setClashFingerprint(c.abilityId, [c.name, c.mechanic, c.details, c.category, c.activation, c.scenarios]);
-  const st = { element: 'All', status: 'all', pick: {}, notesOpen: new Set(), synced: false, arena: null, pb: null };
+  const st = { element: 'All', status: 'all', pick: {}, notesOpen: new Set(), synced: false, arena: null, pb: null, quality: 'full', reducedMotion: false };
   const elements = ['All', ...new Set(cat.map((c) => c.element))];
   const pickOf = (c) => (st.pick[c.abilityId] ||= { stage: 0, tier: 1, variant: null });
   const variantsFor = (c, p) => clashVariants(c.abilityId, p.stage, p.tier);
@@ -57,6 +66,7 @@ export function registerClashAbilityReviewer(Router, app) {
         <div class="panel tight review-summary"><div class="row between"><b>Your review</b><span class="dim">${cat.length} abilities · all on the t8 engine</span></div>
           <div class="row" style="gap:10px;font-size:13px;margin-top:4px"><span style="color:var(--good)">✓ ${count.approved} good</span><span style="color:var(--warn)">✎ ${count.needs_work} need work</span><span class="dim">🔔 ${count.todo} to review</span></div></div>
         <div class="chips" style="margin:8px 0 4px">${[['all', 'All'], ['todo', '🔔 To review'], ['approved', '✓ Good'], ['needs_work', '✎ Waiting on dev']].map(([v, l]) => `<button class="chip ${v === st.status ? 'on' : ''}" data-action="st" data-v="${v}">${l}${v === 'all' ? '' : ` ${count[v]}`}</button>`).join('')}</div>
+        <div class="panel tight" style="font-size:12px;margin:4px 0" data-rv2="fx"><b>Reviewer FX</b> (local, never saved): quality ${['full', 'low', 'min'].map((q) => `<button class="chip ${st.quality === q ? 'on accent' : ''}" data-action="quality" data-v="${q}">${q}</button>`).join('')} · <button class="chip ${st.reducedMotion ? 'on accent' : ''}" data-action="reduced">reduced motion ${st.reducedMotion ? 'on' : 'off'}</button></div>
         <div class="chips" style="margin:4px 0 8px">${elements.map((el) => `<button class="chip ${el === st.element ? 'on' : ''}" data-action="el" data-v="${el}">${el === 'All' ? 'All' : elementFx(el).glyph + ' ' + el}</button>`).join('')}</div>
         <div class="stack">${list.length ? '' : '<p class="dim center">Nothing here with these filters.</p>'}${list.map((c) => {
           const L = elementFx(c.element); const p = pickOf(c); const rv = state[c.abilityId]; const vars = variantsFor(c, p); if (!vars.some((v) => v.id === p.variant)) p.variant = vars[0]?.id || null;
@@ -67,7 +77,7 @@ export function registerClashAbilityReviewer(Router, app) {
             <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
               <select data-change="form" data-id="${c.abilityId}" aria-label="Form">${c.forms.map((f) => `<option value="${f.stage}" ${f.stage === p.stage ? 'selected' : ''}>${esc(f.name)} (stage ${f.stage + 1})</option>`).join('')}</select>
               <select data-change="tier" data-id="${c.abilityId}" aria-label="Mastery tier">${c.tiers.map((t) => `<option value="${t}" ${t === p.tier ? 'selected' : ''}>${TIERS[t]}</option>`).join('')}</select>
-              <select data-change="variant" data-id="${c.abilityId}" aria-label="Scenario variant">${vars.map((v) => `<option value="${v.id}" ${v.id === p.variant ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
+              <select data-change="variant" data-id="${c.abilityId}" aria-label="Scenario variant">${vars.map((v) => `<option value="${v.id}" data-kind="${esc(v.kind)}" data-prov="${v.provisional ? '1' : ''}" ${v.id === p.variant ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
               <button class="btn small" data-action="scenario" data-id="${c.abilityId}">▶ Scenario</button>
               <button class="btn small ghost" data-action="natural" data-id="${c.abilityId}">▶ Natural battle</button></div>
             ${reviewHtml(NS, c.abilityId, { open: st.notesOpen.has(`${NS}:${c.abilityId}`) })}</div>`; }).join('')}</div>`;
@@ -77,6 +87,8 @@ export function registerClashAbilityReviewer(Router, app) {
       delegate(root, {
         el: (el) => { st.element = el.dataset.v; Router.render(); },
         st: (el) => { st.status = el.dataset.v; Router.render(); },
+        quality: (el) => { st.quality = el.dataset.v; st.arena?.setQuality(st.quality); Router.render(); },
+        reduced: () => { st.reducedMotion = !st.reducedMotion; Router.render(); },
         form: (el) => { pickOf(cat.find((c) => c.abilityId === el.dataset.id)).stage = Number(el.value); Router.render(); },
         tier: (el) => { pickOf(cat.find((c) => c.abilityId === el.dataset.id)).tier = Number(el.value); Router.render(); },
         variant: (el) => { pickOf(cat.find((c) => c.abilityId === el.dataset.id)).variant = el.value; },
@@ -118,7 +130,7 @@ export function registerClashAbilityReviewer(Router, app) {
         ${r.error ? `<pre class="mono" style="font-size:10px;white-space:pre-wrap">${esc(r.error.stack || r.error.message)}</pre>` : ''}</div>`;
     if (!r.run) { const { el } = sheet(`<p class="muted">${head}</p>${failure}<div class="sheet-review" style="margin-top:10px">${reviewHtml(NS, c.abilityId, { open: true })}</div>`, { title: c.name }); bindReview(c, el.querySelector('.sheet-review')); return; }
     const checks = `<div class="dim" style="font-size:11px;margin-top:4px" data-rv2="checks">Scenario checks: ${r.run.checks.map((x) => `<span style="color:${x.ok ? 'var(--good)' : 'var(--bad)'}">${x.ok ? '✓' : '✗'} ${esc(x.check)}</span>`).join(' · ')}</div>`;
-    openPlayer(c, { title: `${elementFx(c.element).glyph} ${c.name}`, head, intro: intro + checks + failure, result: r.run.result, phases: r.phases, ok: r.ok, abilityId: c.abilityId, owner: X?.source?.id || null });
+    openPlayer(c, { title: `${elementFx(c.element).glyph} ${c.name}`, head, intro: intro + checks + failure, result: r.run.result, phases: r.phases, ok: r.ok, abilityId: c.abilityId, owner: X?.source?.id || null, run: r.run });
   }
 
   // ------------------------------------------------------------------------------------------- ▶ Natural battle (optional)
@@ -145,7 +157,7 @@ export function registerClashAbilityReviewer(Router, app) {
   }
 
   // ------------------------------------------------------------------------------------------------------------- the player
-  function openPlayer(c, { title, head, intro, result, phases, ok, abilityId, natural = false, owner = null }) {
+  function openPlayer(c, { title, head, intro, result, phases, ok, abilityId, natural = false, owner = null, run = null }) {
     const checklist = phases.length ? `<div class="panel tight" data-rv2="phases" style="margin-top:6px"><b>Phases</b>${phases.map((ph, i) => `<div class="rv2-phase" data-phase="${ph.id}" data-i="${i}" style="font-size:13px;margin-top:3px"><span class="rv2-box">☐</span> ${esc(ph.label)}${ph.seq != null ? ` <span class="dim" style="font-size:11px">· event #${ph.seq}</span>` : ''}<div class="dim rv2-ev" style="font-size:11px;display:none">${esc(ph.evidence || 'no evidence in the engine events')}</div></div>`).join('')}
       <div class="dim" data-rv2="verdict" style="font-size:12px;margin-top:4px">${ok ? 'Playing…' : 'Not every phase was observed (see above).'}</div></div>` : '';
     const controls = `<div class="row rv2-controls" style="gap:4px;flex-wrap:wrap;margin:6px 0">
@@ -153,17 +165,22 @@ export function registerClashAbilityReviewer(Router, app) {
         ${SPEEDS.map((s) => `<button class="btn small ghost" data-pb="speed" data-v="${s}" aria-label="Speed ${s}x">${s}×</button>`).join('')}
         <button class="btn small ghost" data-pb="event" aria-label="Next event">▸ event</button><button class="btn small ghost" data-pb="turn" aria-label="Next turn">⏭ turn</button><button class="btn small ghost" data-pb="exchange" aria-label="Next exchange">⏭ exchange</button><button class="btn small ghost" data-pb="end" aria-label="To the end">⏩ end</button></div>`;
     const html = `<p class="muted" style="margin:0 0 6px">${head}</p>${intro}${checklist}
+      <div class="crv-phase" data-rv2="fxphases" style="margin-top:6px"></div>
       <div class="dim" data-rv2="playinfo" style="font-size:12px;margin-top:6px"></div>
       <div id="clreview" class="cl-review-host"></div>${controls}
       <div class="dim mono" data-rv2="state" style="font-size:11px"></div>
       <div class="log" data-rv2="log" style="margin-top:6px;max-height:200px;overflow:auto"></div>
       <div class="sheet-review" style="margin-top:10px">${reviewHtml(NS, c.abilityId, { open: true })}</div>`;
-    const { el } = sheet(html, { title, onClose: stop });
+    const { el, close } = sheet(html, { title, onClose: stop });
     bindReview(c, el.querySelector('.sheet-review'));
     const host = el.querySelector('#clreview'); const info = el.querySelector('[data-rv2="playinfo"]'); const logBox = el.querySelector('[data-rv2="log"]'); const stateBox = el.querySelector('[data-rv2="state"]');
-    // The arena renders the engine record (the looks hook plugs in through `looks`); the reviewer drives it through the player API.
-    let arena = null; arena = st.arena = createArena(host, result, { speed: 1, reducedMotion: app.settings?.reducedMotion, names: { a: 'Side A', b: 'Side B' }, edge: typeEdge, controls: false, looks: app.clashLooks || null, onCursor: () => draw(), onEnd: () => draw() });
+    // The arena renders the engine record natively (t8 timeline + the ability's look; `looks` stays an override point); the reviewer
+    // drives it through the player API. `subject` makes the reviewed ability the subject of the presentation layer.
+    let arena = null; arena = st.arena = createArena(host, result, { speed: 1, quality: st.quality, reducedMotion: st.reducedMotion || !!app.settings?.reducedMotion, subject: abilityId, names: { a: 'Side A', b: 'Side B' }, edge: typeEdge, controls: false, looks: app.clashLooks || null, onCursor: () => draw(), onEnd: () => draw() });
     const rec = arena.record; const n = rec.log.length; const pb = st.pb = { speed: 1 };
+    // the seven presentation phases of the look (the folded presentation check): evidence from the descriptors the arena draws from
+    const ev = arena.t8 ? phaseEvidence(arena.t8, abilityId) : null;
+    const fxBox = el.querySelector('[data-rv2="fxphases"]'); if (fxBox) fxBox.innerHTML = ev ? `<b style="font-size:11px">Look</b> ${PHASES.map((ph) => `<span class="${ev[ph] ? 'on' : ''}" title="${ph}">${ph}${ev[ph] === 'n/a' ? ' (n/a)' : ev[ph] ? ' ✓' : ' ✗'}</span>`).join('')}${result.provisional ? ' <span class="crv-prov">PROVISIONAL</span>' : ''}` : '';
     const ownerLine = owner ? [...result.lines.a, ...result.lines.b].find((x) => x.id === owner) : null;
     const ticked = (ph) => ph.ok && ph.seq != null && arena.cursor >= ph.seq;
     function draw() {
@@ -171,7 +188,7 @@ export function registerClashAbilityReviewer(Router, app) {
       info.innerHTML = `<b>Event ${i + 1} / ${n}</b> · exchange ${t8?.ex ?? 0} · turn ${t8?.turnIndex ?? 0} · ${esc(t8?.phase || '')} · ${pb.speed}×${arena.playing ? '' : ' · paused'}${t8?.abilityId === abilityId ? ' · <b>ability event</b>' : ''}`;
       const win = 18; const lo = Math.max(0, i - 6), hi = Math.min(n, lo + win);
       logBox.innerHTML = rec.log.slice(lo, hi).map((x, k) => { const j = lo + k; const mine = x.abilityId === abilityId; return `<div class="entry${j <= i ? '' : ' dim'}" style="${mine ? 'font-weight:700;' : ''}${j === i ? 'background:rgba(255,255,255,0.08);' : ''}${j <= i ? '' : 'opacity:0.45'}"><span class="t">#${j}</span><span>${x.t8?.stage ? `<span class="chip" style="font-size:9px;padding:0 4px">${esc(x.t8.stage)}</span> ` : ''}${esc(x.text || x.kind)}</span></div>`; }).join('');
-      if (ownerLine) { const cur = arena.record.t8 ? stateOfOwner(result, owner, i) : null; stateBox.innerHTML = `Subject ${esc(ownerLine.name)} (${esc(owner)}) · ability state now: ${stateText(cur?.ability)} · HP ${cur?.hp ?? '—'}${cur?.status ? ` · ${esc(cur.status.id)} (${cur.status.remaining})` : ''} · final: ${stateText(ownerLine.ability)}`; }
+      if (ownerLine) { const cur = result.ruleset === 't8' ? stateOfOwner(result, owner, i) : null; stateBox.innerHTML = `Subject ${esc(ownerLine.name)} (${esc(owner)}) · ability state now: ${stateText(cur?.ability)} · HP ${cur?.hp ?? '—'}${cur?.status ? ` · ${esc(cur.status.id)} (${cur.status.remaining})` : ''} · final: ${stateText(ownerLine.ability)}`; }
       el.querySelectorAll('.rv2-phase').forEach((row) => { const ph = phases[Number(row.dataset.i)]; const on = ticked(ph); row.querySelector('.rv2-box').textContent = on ? '✓' : ph.ok ? '☐' : '✗'; row.classList.toggle('ticked', on); row.querySelector('.rv2-ev').style.display = on || !ph.ok ? '' : 'none'; row.style.color = on ? 'var(--good)' : ph.ok ? '' : 'var(--bad)'; });
       const v = el.querySelector('[data-rv2="verdict"]'); if (v && ok && phases.length) { const all = phases.every(ticked); v.textContent = all ? 'Validated: every phase observed in the engine\'s events for this run (trigger, activation, resolution, cleanup).' : 'Playing… phases tick as playback reaches their engine events.'; v.dataset.done = all ? '1' : '0'; }
       el.querySelector('[data-pb="toggle"]').textContent = arena.playing ? '⏸' : '▶';
@@ -188,9 +205,13 @@ export function registerClashAbilityReviewer(Router, app) {
       else if (a === 'end') { arena.pause(); arena.setCursor(n - 1); }
       draw();
     });
-    // Test hook (browser checks, no gameplay use): seek the playback to an event index and draw at once.
-    host.__rv2 = { arena, phases, result, seek: (i) => { arena.pause(); arena.setCursor(Math.max(0, Math.min(n - 1, i))); draw(); }, natural };
-    draw(); setTimeout(() => { if (st.arena === arena) arena.play(); }, 250);
+    // Test hooks (browser checks, no gameplay use). __rv2 (tools/m4-integrate-check.mjs): seek the playback to an event index and draw
+    // at once. __crv (tools/fx-clash-check.mjs): seek to a playback time t (seconds at 1x) to frame one presentation phase. Either seek
+    // cancels the pending autoplay, so a check's frame is not overwritten by playback.
+    let auto = 0; const noAuto = () => { if (auto) { clearTimeout(auto); auto = 0; } };
+    host.__rv2 = { arena, phases, result, seek: (i) => { noAuto(); arena.pause(); arena.setCursor(Math.max(0, Math.min(n - 1, i))); draw(); }, natural };
+    host.__crv = { arena, prep: { r: run || { result, meta: { provisional: !!result.provisional, scenarioId: natural ? 'natural' : null }, ok }, cues: arena.cues, state: arena.t8, ev }, seek: (t) => { noAuto(); arena.seek(t); draw(); }, close };
+    draw(); auto = setTimeout(() => { auto = 0; if (st.arena === arena) arena.play(); }, 250);
   }
 }
 

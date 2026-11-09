@@ -142,7 +142,7 @@ export function registerMenuScreens(Router, app) {
         <button class="btn block" data-action="go" data-screen="ability-reviewer">🧪 Ability Reviewer (Task 8 football, on the engine)</button>
         <button class="btn block badge-host" data-action="go" data-screen="ability-audit">✨ Legacy Ability Audit (transitional)${devBadge(app.settings, q.abilities.length)}${cardBadge(app.settings)}</button>
         <button class="btn block" data-action="go" data-screen="ability-balance">⚖️ Ability Balance</button>
-        <button class="btn block" data-action="go" data-screen="clash-ability-reviewer">⚔️ Clash Ability Reviewer (Task 8 Beast Clash, on the engine)</button>
+        <button class="btn block" data-action="go" data-screen="clash-ability-reviewer">⚔️ Clash Ability Reviewer (Task 8 Beast Clash, on the engine, with the arena looks)</button>
         <button class="btn block" data-action="go" data-screen="clash-lab">🐾 Clash Lab (Beast Clash Phase 1)</button>
         ${app.f ? `<h3>Feature testing (this franchise)</h3><p class="dim" style="margin-top:0">For trying the new features without waiting seasons. Using these marks the franchise as developer-assisted.</p>
         <div class="row" style="gap:6px;flex-wrap:wrap">${['aurodrax', 'tempestra', 'titanolith', 'nyxshade', 'glacivern', 'elderoot'].map((sp) => `<button class="btn small" data-action="dev-legend" data-sp="${sp}">+ ${sp[0].toUpperCase() + sp.slice(1)}</button>`).join('')}</div>

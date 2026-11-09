@@ -484,7 +484,8 @@ and keeps its use. Tank bruise stays unimplemented (D6).
 engine event at the same index (`toArenaRecord`); the arena converts automatically, adds the t8 status glyphs, a `silent` tier for
 bookkeeping events, `revive`, `playTo`, `controls: false` and the **looks hook**: `createArena(root, result, { looks })` calls
 `looks(cue, api)` before every cue with `cue.event.t8` (the untranslated engine event) and a drawing api; a returned Promise takes the
-cue over. The `task8-fx-clash` branch plugs its module in as `app.clashLooks` (read by the battle screen and the reviewer). Help text
+cue over. The `task8-fx-clash` branch plugs its module in as `app.clashLooks` (read by the battle screen and the reviewer).
+(Superseded by "Presentation reconciled" below: t8 results now play natively with the fx looks; translation is an opt-in path.) Help text
 updated (one active fighter, rotations, statuses). The Clash Lab stays on the legacy ruleset (S14).
 
 ## S15 UI: Developer → Clash Ability Reviewer
@@ -510,6 +511,68 @@ updated (one active fighter, rotations, statuses). The Clash Lab stays on the le
 first run with ordered evidence and passing checks; failures are reported, never silent; determinism; the arena record and the step
 indices; no writes. `tools/m4-integrate-check.mjs` is the browser check (Tuesday encounter and Sunday gym Clash in Watch with a rotation
 prompt, the reviewer for representative rare / delayed / multi-target / multi-turn / blocked abilities, Natural battle, 0 page errors).
+
+## Presentation reconciled (branch `task8-m4-reconcile`: `task8-implementation` 762ce62 + `task8-fx-clash` 5cb27ff)
+
+The two presentation branches are merged into ONE arena (`src/ui/clash/arena.js`). Presentation only: nothing under `src/clash`
+(engine, abilities, review bridge), `src/sim` or `src/franchise` changed in the merge (`clash-link.js` and `franchise.js` untouched).
+
+**Dispatch** (`arenaMode(result, opts)`, exported and tested):
+- `native`: every t8 result (`ruleset: 't8'`). The fx branch's presentation is the primary one: `t8CuesFor` / `t8StateAt` /
+  `t8NextExchangeIndex` (`src/ui/clash/t8/timeline.js`), `buildClashT8` / `drawClashT8` / `t8Live` (`src/ui/clash/t8/fx-t8.js`), the two
+  overlay layers `.cl-t8-under` / `.cl-t8-over` (looks, status badge, ability icons, turn markers), the playback clock `t8clock` that
+  drives the looks at playback speed, the 72 per-ability looks (`src/ui/clash/t8/looks/*.js`), `STATUS_GLYPH` on the strips.
+- `translated`: a t8 result with `opts.t8 === 'translated'`: the M4 path (`toArenaRecord` + the legacy cue system with functional
+  cues). Kept for legacy-shaped consumers and as a fallback; no screen uses it now.
+- `legacy`: every pre-M4 record: the legacy choreographer path, unchanged (D19). The new test plays the frozen goldens' cues and the
+  browser check plays a golden record through the DOM arena (animated, skipped to the end, no t8 layers, record object unchanged).
+
+**The M4 player API is kept in every mode:** `playTo(i)`, `record` (the result the consumer passed; the translated record only in
+`translated` mode; `source` is always the passed result), `length`, `mode`, `controls: false`, `setSpeed` (syncs the speed buttons),
+`speed`, `revive` (native: the fx `revive` beat; translated: the M4 `enter` beat). Plus the fx API: `seek(t)`, `setQuality('full' |
+'low' | 'min')`, `quality`, `t8` (the presentation state), `t8Elements`.
+- **`silent` tier:** the native timeline now gives pure bookkeeping (`BOOKKEEPING`: turn / round starts, rotation phases, exchange ends,
+  clocks starting / ending, rolls) the M4 `silent` tier (`DURATION.silent`, 60 ms at 1x) instead of a 260 ms tick, so a Watch battle
+  does not drag; the arena's silent branch only applies the state. Events the looks anchor on (trigger, unmet, cleanup, ability
+  progress, clock adjustments) keep their tick. All 408 fx variants and the headless check pass with the shorter bookkeeping.
+- **Status glyphs:** strips and float text use `STATUS_GLYPH` (fx) with the M4 `T8_STATUS_ICON` as the fallback; the translated and
+  legacy paths keep the merged `COND_ICON` / `COND_COLOR`. In native mode the badge of the information layer is the primary status cue.
+- **`looks` option:** kept as an OVERRIDE POINT, documented on `createArena`: `looks(cue, api)` runs before every cue in every mode;
+  a truthy return (a Promise) takes that cue over and the arena then only applies the state. In native mode the built-in looks already
+  draw every ability, so no consumer needs it (`app.clashLooks` is still passed through by the battle screen and the reviewer and is
+  unset in the game); the playback clock is moved to the cue BEFORE the hook runs, so the ability layers keep drawing under an
+  override. `cue.event` is the raw t8 event in native mode (`cue.event.t8` in translated mode); the api adds `mode`, `t8`, `time()`,
+  `redraw()`.
+- **Watch rotation prompt (D1):** unchanged in `clash-battle.js`: the arena is created on the pending result (its last event is the
+  `rotation_prompt`, a silent bookkeeping tick in native mode), `onEnd` opens the prompt, the decision is recorded and the remount resumes
+  from the saved cursor. The browser check verifies the native layers on the pending record for both battles.
+
+**The two reviewer screens: folded into one.** The fx branch's `clash-reviewer` screen (Developer → "Clash Ability Reviewer (Task 8,
+t8 engine + arena looks)") is removed; its catalogue and seven-phase presentation evidence moved to `src/ui/clash/t8/evidence.js`
+(`clashReviewCatalog`, `phaseEvidence`, re-exported by the ability reviewer). The §25 Clash Ability Reviewer (`clash-ability-reviewer`,
+one Developer entry) now:
+- plays every scenario natively with the real look (`subject: abilityId`), at the reviewer-local FX quality (full / low / min) and
+  reduced-motion toggles (never saved);
+- shows the look's seven presentation phases (anticipation → cleanup, with n/a where the Dex visual has none, and PROVISIONAL) beside
+  the engine's four-phase checklist, which still ticks from engine events as the cursor reaches them;
+- keeps pause / play, replay, 0.25× / 0.5× / 1×, step by event / turn / exchange and to the end (`playTo`, `setCursor`);
+- exposes `#clreview.__rv2` (event-index seek, for `tools/m4-integrate-check.mjs`) and `#clreview.__crv` (`{ arena, prep: { r, cues,
+  state, ev }, seek(t), close }`, for `tools/fx-clash-check.mjs`); either seek cancels the pending autoplay; variant options carry
+  `data-kind` / `data-prov`.
+`tools/fx-clash-check.mjs` targets the unified screen (form / tier / variant selects; the scenario pick follows the engine's
+`listScenarios` order, the same rule as the tests and the matrix). `docs/task8/FX_CLASH_MATRIX.md` is generated by
+`tools/fx-clash-matrix.mjs --report=<check JSON>`.
+
+**Verification** (targeted): `node --test tests/clash/*.test.js tests/task8-fx-clash-*.test.js tests/franchise-clash.test.js
+tests/franchise-save-compat.test.js tests/release-stamp.test.js` all pass (new: `tests/clash/arena-reconcile.test.js`, legacy replay
+dispatch / native silent tier and revive / both APIs in the arena source); `node tools/m4-integrate-check.mjs`: all checks passed, 0
+page errors (now also: native layers in both Watch battles, each reviewer scenario draws its look at the activation, a legacy golden
+record plays in the DOM arena); `node tools/fx-clash-check.mjs`: "OK: no problems" over all 72 abilities at every form (mastery 0).
+index.html restamped (`node tools/stamp-release.mjs`).
+
+**Not reconciled / open:** the translated path no longer has a consumer (kept, tested at the cue level only); the `looks` hook has no
+implementation in the game (it is an override point by design now); the fx check runs mastery 0 at every form by default
+(`--tiers=all` for masteries 1–3 at the first form), the tests cover all 408 form × mastery variants.
 
 ## Provisional defaults and the decision each waits on
 

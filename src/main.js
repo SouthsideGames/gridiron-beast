@@ -217,7 +217,7 @@ export function start() {
   registerAbilityAudit(Router, app);
   registerAbilityReviewer(Router, app);
   registerClashLab(Router, app); // Beast Clash developer tools
-  registerClashAbilityReviewer(Router, app); // Task 8 M4 S15: Developer → Clash Ability Reviewer (72 Clash abilities on the t8 engine)
+  registerClashAbilityReviewer(Router, app); // Task 8 M4 S15 + fx: Developer → Clash Ability Reviewer (72 Clash abilities on the t8 engine, played with their arena looks; the fx presentation check folded in)
   registerAiLab(Router, app); // AI Testing Lab (GDD §53.8): Developer Tools only
   registerAttrLab(Router, app); // Attribute Testing Lab (GDD §8.2 audit): Developer Tools only
   registerEvoPreview(Router, app); // Preview Evolution: the real evolution scene on throwaway data, Developer Tools only

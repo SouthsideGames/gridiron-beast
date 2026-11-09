@@ -6,6 +6,8 @@
 //   3. opens Developer -> Clash Ability Reviewer, runs "▶ Scenario" for representative rare, delayed, multi-target and multi-turn abilities
 //      (and a blocked variant), seeks the arena to each ticked phase and screenshots it, checks the verdict line, the speed and step
 //      controls, and runs one "▶ Natural battle";
+//   4. (task8-m4-reconcile) checks that the battle screen and the reviewer play t8 natively (the t8 overlay layers and the ability's look
+//      are drawn) and plays a legacy (pre-M4) golden record through the arena on the legacy cue path (D19);
 // and reports every page error (expected: none). Nothing is written to a real franchise: the page runs on a throwaway franchise in the
 // headless browser's own storage. Screenshots go to --shots=DIR. Usage: node tools/m4-integrate-check.mjs [--shots=DIR]
 import fs from 'node:fs';
@@ -46,8 +48,9 @@ try {
     await page.evaluate((k) => import('/src/ui/router.js').then((R) => R.go('clash-battle', { kind: k, i: 0 })), kind);
     await page.waitForSelector('[data-action="enter"][data-v="watch"]', { timeout: 20000 }); await shot(page, `${label}-1-setup`);
     await page.click('[data-action="enter"][data-v="watch"]'); await page.waitForSelector('#fb-arena .cl-arena', { timeout: 20000 });
-    const rec = await page.evaluate((k) => { const f = __gb.f; const e = k === 'encounter' ? f.week.encounter : f.week.pregame; return { version: e.version, ruleset: e.ruleset, engine: e.engine, context: e.context, policies: e.policies, status: e.status }; }, kind);
+    const rec = await page.evaluate((k) => { const f = __gb.f; const e = k === 'encounter' ? f.week.encounter : f.week.pregame; return { version: e.version, ruleset: e.ruleset, engine: e.engine, context: e.context, policies: e.policies, status: e.status, native: !!document.querySelector('#fb-arena .cl-arena.t8 .cl-t8-under') && !!document.querySelector('#fb-arena .cl-arena.t8 .cl-t8-over') }; }, kind);
     ok(rec.version === 2 && rec.ruleset === 't8' && rec.policies.a === 'manual' && rec.policies.b === 'ai', `${label}: version-2 t8 record in Watch (${JSON.stringify(rec)})`);
+    ok(rec.native, `${label}: the arena plays the pending t8 record natively (t8 overlay layers present)`);
     await page.waitForTimeout(2500); await shot(page, `${label}-2-arena`);
     // the arena plays the pending log; skip to its end so the prompt appears
     if (!(await page.$('.sheet [data-rot]'))) await page.evaluate(() => document.querySelector('#fb-arena [data-cl="skip"]')?.click()); await page.waitForSelector('.sheet [data-rot]', { timeout: 30000 }); await shot(page, `${label}-3-rotation-prompt`);
@@ -92,6 +95,8 @@ try {
     const info = await page.evaluate(() => { const R = document.querySelector('#clreview').__rv2; const failure = document.querySelector('[data-rv2="failure"]')?.textContent.trim() || null; return { phases: R.phases.map((p) => ({ id: p.id, ok: p.ok, seq: p.seq })), n: R.result.log.length, failure, explain: document.querySelector('[data-rv2="explain"]')?.textContent.slice(0, 160), provisional: !!document.querySelector('[data-rv2="provisional"]'), controlled: !!document.querySelector('[data-rv2="controlled"]') }; });
     ok(info.phases.length === 4 && info.phases.every((p) => p.ok) && !info.failure, `${id} (${why}): four phases evidenced, no failure panel${info.controlled ? ' (controlled prerequisite labelled)' : ''}`);
     await shot(page, `reviewer-${id}-0-explain`);
+    { const act = info.phases.find((p) => p.id === 'activation'); const look = await page.evaluate((seq) => { const R = document.querySelector('#clreview').__rv2; R.seek(seq); const C = document.querySelector('#clreview').__crv; const it = C.prep.state.items.find((x) => x.main && x.id === C.prep.r.meta.abilityId) || C.prep.state.items.find((x) => x.id === C.prep.r.meta.abilityId); if (it) C.seek(it.t0 + 0.2); return { mode: R.arena.mode, els: R.arena.t8Elements, item: !!it, strip: document.querySelector('[data-rv2="fxphases"]')?.textContent.trim().slice(0, 120) || '' }; }, act?.seq ?? 0);
+      ok(look.mode === 'native' && look.els > 0 && /activation/.test(look.strip), `${id}: the scenario plays with the ability's look (native, ${look.els} t8 layer elements${look.item ? ' at its activation' : ''}; look phases: ${look.strip})`); await shot(page, `reviewer-${id}-look-activation`, '#clreview'); }
     for (const p of info.phases) { await page.evaluate((seq) => document.querySelector('#clreview').__rv2.seek(seq), p.seq); await page.waitForTimeout(150); await shot(page, `reviewer-${id}-${p.id}`); await shot(page, `reviewer-${id}-${p.id}-arena`, '#clreview'); }
     const verdict = await page.evaluate(() => { const R = document.querySelector('#clreview').__rv2; R.seek(R.result.log.length - 1); return document.querySelector('[data-rv2="verdict"]')?.dataset.done; });
     ok(verdict === '1', `${id}: the verdict line validates once every phase event is reached`);
@@ -113,6 +118,17 @@ try {
   const nat = await page.evaluate(() => ({ natural: document.querySelector('#clreview').__rv2.natural, text: document.querySelector('[data-rv2="explain"]')?.textContent.slice(0, 120) }));
   ok(nat.natural, `natural battle runs (${nat.text})`); await shot(page, 'reviewer-natural-battle');
   await page.evaluate(() => document.querySelector('.sheet-backdrop [data-action="sheet-close"]')?.click());
+  // ---- a legacy (pre-M4) record still plays through the arena's legacy cue path (D19)
+  const legacy = await page.evaluate(async () => {
+    const G = await (await fetch('/tests/clash/fixtures/golden.json')).json(); const E = await import('/src/clash/engine.js'); const RS = await import('/src/clash/rulesets.js'); const A = await import('/src/ui/clash/arena.js');
+    const k = E.parseReplayKey(G['3'].key); const r = RS.simulateByRuleset({ a: k.a, b: k.b, seed: k.seed, config: k.config });
+    const host = document.createElement('div'); host.style.cssText = 'position:fixed;left:0;top:0;width:390px;height:700px;z-index:9999;background:#000'; document.body.appendChild(host);
+    let ended = 0; const arena = A.createArena(host, r, { speed: 4, names: { a: 'Old A', b: 'Old B' }, onEnd: () => { ended += 1; } });
+    const mode = arena.mode; const n = arena.length; const t8Layers = host.querySelectorAll('.cl-t8').length;
+    await arena.playTo(Math.min(30, n - 1)); const reached = arena.cursor; arena.skip(); const last = arena.cursor; const sameRecord = arena.record === r;
+    arena.destroy(); host.remove(); return { mode, n, t8Layers, reached, last, sameRecord, ruleset: r.config?.ruleset || k.config.ruleset };
+  });
+  ok(legacy.mode === 'legacy' && legacy.t8Layers === 0 && legacy.reached >= Math.min(30, legacy.n - 1) && legacy.last === legacy.n - 1 && legacy.sameRecord, `legacy record (ruleset ${legacy.ruleset}, ${legacy.n} events) plays on the legacy cue path: animated to ${legacy.reached}, skipped to ${legacy.last}, no t8 layers, record unchanged`);
   // the franchise was not touched by the reviewer
   const touched = await page.evaluate(() => { const f = __gb.f; return { week: f.season.week, day: f.season.day, roster: f.roster.length, ledger: Object.keys(f.rewardLedger?.done || f.rewardLedger || {}).length }; });
   notes.push(`franchise after the reviewer: ${JSON.stringify(touched)}`);
