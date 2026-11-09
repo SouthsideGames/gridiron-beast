@@ -12,6 +12,10 @@ import { createRng } from '../src/core/rng.js';
 import { exportJson, importJson } from '../src/franchise/save.js';
 import { approvedRule } from '../src/data/beast-dex.js';
 import * as FR from '../src/core/fraction.js';
+// Task 8 M4 (D1): a Watch battle stops at the player's rotation prompt. These tests stand in for an owner who answers the first prompt
+// with "Auto for the rest of this battle" (an approved option), so the battle runs to its end; the assertions are unchanged.
+const AUTO = { headless: true };
+const settledBattle = (f) => { let r = F.encounterBattle(f); while (r?.pending) { F.encounterDecide(f, r.pending.ex, 'auto'); r = F.encounterBattle(f); } return r; };
 
 const ready = (seed) => { const f = F.createFranchise({ owner: { first: 'A', last: 'B', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', seed }); F.hireDefaultStaff(f); while (F.creationDraftPending(f) && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); F.scoutRegion(f, 'Coral Coast'); return f; };
 const basicAt = (pos) => SPECIES_DEX.find((s) => s.rarity === 'basic' && s.position === pos);
@@ -25,7 +29,7 @@ function withTarget(seed, { basic = true } = {}) {
 function wonEncounter(opts) {
   for (let seed = 1; seed < 40; seed++) {
     const f = withTarget(seed, opts); if (!F.startEncounter(f, 0).ok) continue;
-    const result = F.encounterBattle(f); if (result.winner !== 'a') continue;
+    const result = settledBattle(f); if (result.winner !== 'a') continue;
     return { f, result, seed };
   }
   throw new Error('no won encounter found');
@@ -45,7 +49,7 @@ test('the bonus is an approved shared encounter rule: 25%, active only for a Bas
 test('a won Basic encounter adds 25% level XP to every participant, recruited or not; training banks and mastery get nothing', () => {
   const { f, result } = wonEncounter();
   const xp = battleXp(result, 'a'); const tot = (m) => FR.toNumber(m.dev.bank) + FR.toNumber(m.dev.bar); const banks = Object.fromEntries(f.roster.map((m) => [m.id, tot(m)])); const inLine = new Set(result.lines.a.map((x) => x.combatant.monsterId));
-  const r = F.resolveEncounter(f); assert.ok(r.ok && r.won);
+  const r = F.resolveEncounter(f, AUTO); assert.ok(r.ok && r.won);
   const rows = r.events.filter((e) => e.kind === 'xp'); assert.ok(rows.length >= 1);
   for (const x of result.lines.a) {
     const row = rows.find((e) => e.id === x.combatant.monsterId); assert.ok(row, 'every participant is awarded');
@@ -61,12 +65,12 @@ test('a won Basic encounter adds 25% level XP to every participant, recruited or
 });
 
 test('no bonus for an ordinary target, and none on a loss', () => {
-  const { f } = wonEncounter({ basic: false }); const r = F.resolveEncounter(f);
+  const { f } = wonEncounter({ basic: false }); const r = F.resolveEncounter(f, AUTO);
   assert.ok(r.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0 && (e.max || e.amount === 25))); assert.equal(f.week.encounter.bonus, null);
   for (let seed = 1; seed < 40; seed++) {
     const g = withTarget(seed); for (const m of g.roster) for (const k of Object.keys(m.attributes)) m.attributes[k] = 1; // a club that cannot win
-    if (!F.startEncounter(g, 0).ok || F.encounterBattle(g).winner === 'a') continue;
-    const lost = F.resolveEncounter(g); assert.equal(lost.won, false); assert.equal(g.week.encounter.bonus, null);
+    if (!F.startEncounter(g, 0).ok || settledBattle(g).winner === 'a') continue;
+    const lost = F.resolveEncounter(g, AUTO); assert.equal(lost.won, false); assert.equal(g.week.encounter.bonus, null);
     assert.ok(lost.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0), 'a lost Basic encounter earns no bonus'); return;
   }
   assert.fail('no lost encounter found to check');
@@ -74,14 +78,14 @@ test('no bonus for an ordinary target, and none on a loss', () => {
 
 test('once per encounter through the reward ledger: a second resolve, a reload or a re-application awards nothing more', () => {
   const { f, result } = wonEncounter();
-  const r = F.resolveEncounter(f); const id = `encounter:${f.season.year}:w${f.season.week}:p0`;
+  const r = F.resolveEncounter(f, AUTO); const id = `encounter:${f.season.year}:w${f.season.week}:p0`;
   assert.equal(f.rewardLedger.activities[id]?.complete, true);
   const snapshot = JSON.stringify(f.roster.map((m) => [m.id, m.xp, m.level]));
-  assert.equal(F.resolveEncounter(f).already, true);
+  assert.equal(F.resolveEncounter(f, AUTO).already, true);
   const again = applyBattleEffects(f.roster, result, 'a', 'encounter', createRng(1), { bonusPct: 25, ledger: f.rewardLedger, activityId: id });
   assert.deepEqual(again, [], 'the ledger refuses a replayed award'); assert.equal(JSON.stringify(f.roster.map((m) => [m.id, m.xp, m.level])), snapshot);
   const back = importJson(exportJson(f)); assert.equal(back.rewardLedger.activities[id]?.complete, true, 'the ledger survives a reload');
-  assert.equal(F.resolveEncounter(back).already, true); assert.equal(JSON.stringify(back.roster.map((m) => [m.id, m.xp, m.level])), snapshot);
+  assert.equal(F.resolveEncounter(back, AUTO).already, true); assert.equal(JSON.stringify(back.roster.map((m) => [m.id, m.xp, m.level])), snapshot);
   assert.ok(r.events.some((e) => e.bonus > 0) || r.events.every((e) => e.base === 0));
   assert.ok(monsterOverall(f.roster[0]) > 0);
 });

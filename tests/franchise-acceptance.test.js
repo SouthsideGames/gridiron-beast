@@ -46,13 +46,17 @@ test('loading a save with two roster monsters of one name gives the later one a 
 // ---- Clash integration acceptance (M1-B): save/load in the middle of a Play battle, fatigue, and Skip Encounter costing nothing
 import * as Link from '../src/franchise/clash-link.js';
 import { exportJson, importJson } from '../src/franchise/save.js';
+// Task 8 M4 (D1): a Watch battle stops at the player's rotation prompt. These tests stand in for an owner who answers the first prompt
+// with "Auto for the rest of this battle" (an approved option), so the battle runs to its end; the assertions are unchanged.
+const AUTO = { headless: true };
+const settledBattle = (f) => { let r = F.encounterBattle(f); while (r?.pending) { F.encounterDecide(f, r.pending.ex, 'auto'); r = F.encounterBattle(f); } return r; };
 const ready = (seed) => { const f = fresh(seed); while (F.creationDraftPending(f) && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); return f; };
 
 test('a Watch battle saved and reloaded mid-way finishes as the identical battle (the app may be closed during a battle)', () => {
   for (let seed = 300; seed < 303; seed++) {
     const f = ready(seed); F.scoutRegion(f, 'Coral Coast'); F.startEncounter(f, 0, { mode: 'watch' });
     const g = importJson(exportJson(f)); // app closed mid-battle
-    assert.ok(F.resolveEncounter(f).ok); assert.ok(F.resolveEncounter(g).ok);
+    assert.ok(F.resolveEncounter(f, AUTO).ok); assert.ok(F.resolveEncounter(g, AUTO).ok);
     assert.equal(g.week.encounter.result.hash, f.week.encounter.result.hash); assert.equal(g.week.encounter.status, f.week.encounter.status);
     assert.deepEqual(g.roster.map((m) => [m.id, m.xp, m.level, m.fatigue]), f.roster.map((m) => [m.id, m.xp, m.level, m.fatigue]));
   }
@@ -62,7 +66,7 @@ test('every encounter battler takes the encounter fatigue (5) and nobody else do
   const f = ready(350); F.scoutRegion(f, 'Coral Coast'); f.roster[0].injury = { severity: 'Minor', weeks: 1, type: 'ankle' };
   for (const m of f.roster) m.fatigue = 10;
   assert.ok(F.startEncounter(f, 0).ok); const ids = new Set(f.week.encounter.mine); assert.ok(!ids.has(f.roster[0].id));
-  assert.ok(F.resolveEncounter(f).ok);
+  assert.ok(F.resolveEncounter(f, AUTO).ok);
   for (const m of f.roster) assert.equal(m.fatigue, ids.has(m.id) ? 10 + Link.CLASH_FATIGUE.encounter : 10, m.name);
 });
 
@@ -93,7 +97,7 @@ test('a lost Tuesday battle with a full roster: the one pitch can name who leave
     // Task 8 M1 (fixture drift): no seed in 400–459 loses its Tuesday battle any more (the wild companions now come out weak; see the
     // tuesday-companions failures), so the loss is made explicit: the stored wild side fights at 99 everywhere.
     for (const m of f.week.encounter.b) for (const a of Object.keys(m.attributes)) m.attributes[a] = 99;
-    F.resolveEncounter(f); if (f.week.encounter.status !== 'pitch') continue; checked++;
+    F.resolveEncounter(f, AUTO); if (f.week.encounter.status !== 'pitch') continue; checked++;
     const g = JSON.parse(JSON.stringify(f));
     const no = F.recruit(f, 0, 'development'); assert.equal(no.ok, false); assert.equal(no.needRelease, true);
     const rel = F.releaseCandidates(f, f.week.prospects[0]).list[0].id; const r = F.recruit(f, 0, 'development', { releaseId: rel });
