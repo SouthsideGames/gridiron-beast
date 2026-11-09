@@ -102,7 +102,7 @@ export function fieldLayers(o) {
   if (underlay) s += underlay; // caller-drawn layer under the players (Playbook Audit paths)
   const statics = s; s = '';
   // ---------------------------------------------------------------- dynamic layer
-  const symbols = []; const seen = new Set();
+  const symbols = []; const seen = new Set(); let pre = '';
   // Players.
   const simpleMarker = (slot, x, y, team, engaged, holder) => {
     const cx = X(ballLat + y), cy = Y(ballOn + x);
@@ -117,19 +117,25 @@ export function fieldLayers(o) {
   if (prevFrame) { for (const p of prevFrame.off) prevPos['off' + p[0]] = p; for (const p of prevFrame.def) prevPos['def' + p[0]] = p; }
   const moved = (team, slot, x, y) => { const p = prevPos[team + slot]; return p ? [X(ballLat + y) - X(ballLat + p[2]), Y(ballOn + x) - Y(ballOn + p[1])] : [0, 0]; };
   let statusOver = ''; // status marks (stars, ice, "?") drawn after every sprite so they are never hidden
+  const players = []; const keys = new Set(); // the players, in paint order, keyed by team and slot (fieldDraw keeps their nodes)
   const marker = (slot, x, y, team, engaged, holder, status = 0) => {
     const set = sprites?.[team];
     const m = set ? (set.map[slot] || (set.pool.length ? set.pool[(poolIdx[team]++) % set.pool.length] : null)) : null;
     const cx = X(ballLat + y), cy = Y(ballOn + x);
     const sm = status ? statusMarks(status, cx, cy, time ?? frame?.t ?? 0, slot.charCodeAt(0)) : null;
     if (sm?.over) statusOver += sm.over;
-    if (!m) { const base = simpleMarker(slot, x, y, team, engaged, holder); return (sm?.under || '') + (sm?.tf ? `<g transform="${sm.tf}">${base}</g>` : base); }
+    let key = `${team}:${slot}`; while (keys.has(key)) key += "'"; keys.add(key);
+    if (!m) { const base = simpleMarker(slot, x, y, team, engaged, holder); const html = (sm?.under || '') + (sm?.tf ? `<g transform="${sm.tf}">${base}</g>` : base); players.push({ key, html, sig: null }); return; }
     const base = team === 'off' ? colors.off : colors.def;
     const [mx] = moved(team, slot, x, y); const flip = Math.abs(mx) > 0.12 ? mx < 0 : team === 'def';
     // The sprite: a <use> of the monster's cached <symbol> (same viewBox, size and crisp edges as the inline art it replaces).
     const ref = monsterSpriteRef(m, { flip }); if (!seen.has(ref.id)) { seen.add(ref.id); symbols.push(ref); }
-    const art = `<use href="#${ref.id}" x="${(cx - 1.7).toFixed(2)}" y="${(cy - 2.5).toFixed(2)}" width="3.4" height="3.4" aria-hidden="true"/>`;
-    return `${sm?.under || ''}<ellipse cx="${cx.toFixed(2)}" cy="${(cy + 0.75).toFixed(2)}" rx="1.55" ry="0.7" fill="${base}" stroke="${holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17'}" stroke-width="${holder ? 0.4 : 0.2}"/>${sm?.tf ? `<g transform="${sm.tf}">${art}</g>` : art}`;
+    const ell = { cx: cx.toFixed(2), cy: (cy + 0.75).toFixed(2), fill: base, stroke: holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17', 'stroke-width': holder ? '0.4' : '0.2' };
+    const use = { href: `#${ref.id}`, x: (cx - 1.7).toFixed(2), y: (cy - 2.5).toFixed(2) };
+    const art = `<use data-fv="s" href="${use.href}" x="${use.x}" y="${use.y}" width="3.4" height="3.4" aria-hidden="true"/>`;
+    const html = `${sm?.under || ''}<ellipse data-fv="b" cx="${ell.cx}" cy="${ell.cy}" rx="1.55" ry="0.7" fill="${ell.fill}" stroke="${ell.stroke}" stroke-width="${ell['stroke-width']}"/>${sm?.tf ? `<g transform="${sm.tf}">${art}</g>` : art}`;
+    // Same signature = same element structure: a later draw only changes the base's and the sprite's attributes.
+    players.push({ key, html, sig: `${sm?.under || ''}|${sm?.tf || ''}`, ell, use });
   };
 
   if (frame) {
@@ -142,9 +148,10 @@ export function fieldLayers(o) {
     const bsvg = frame.ball ? (([x, y]) => [x, y - lift(frame.ball), frame.ball[2]])(toSvg(frame.ball[0], frame.ball[1])) : null; const pbsvg = prevFrame?.ball ? (([x, y]) => [x, y - lift(prevFrame.ball)])(toSvg(prevFrame.ball[0], prevFrame.ball[1])) : null;
     const layers = fx ? fxSvg(fx, ft, posOf, { quality: fxQuality, halfWidth: HW, toSvg, ball: bsvg, pball: pbsvg }) : { under: '', over: '', ball: '' };
     s += layers.under;
+    pre = s; s = '';
     const showStatus = fxQuality !== 'min';
-    for (const [slot, x, y, eng, st] of frame.def) s += marker(slot, x, y, 'def', eng, frame.holder === slot && frame.holderTeam === 'def', showStatus ? st : 0);
-    for (const [slot, x, y, eng, st] of frame.off) s += marker(slot, x, y, 'off', eng, frame.holder === slot && frame.holderTeam === 'off', showStatus ? st : 0);
+    for (const [slot, x, y, eng, st] of frame.def) marker(slot, x, y, 'def', eng, frame.holder === slot && frame.holderTeam === 'def', showStatus ? st : 0);
+    for (const [slot, x, y, eng, st] of frame.off) marker(slot, x, y, 'off', eng, frame.holder === slot && frame.holderTeam === 'off', showStatus ? st : 0);
     const [bx, by, air] = frame.ball;
     const cx = X(ballLat + by), cy = Y(ballOn + bx);
     s += layers.ball; // fire or wind on a ball in the air, just under the ball
@@ -156,8 +163,9 @@ export function fieldLayers(o) {
     s += layers.over + statusOver;
   } else if (presnap?.offensePlay || presnap?.defensePlay) {
     const dp = presnap.defensePlay; const op = presnap.offensePlay;
-    if (dp) for (const slot of dp.onField) { const [x, y] = dp.align[slot]; s += marker(slot, x, y, 'def', false, false); }
-    if (op) for (const slot of op.onField) { const [x, y] = op.align[slot]; s += marker(slot, x, y, 'off', false, slot === 'QB'); }
+    pre = s; s = '';
+    if (dp) for (const slot of dp.onField) { const [x, y] = dp.align[slot]; marker(slot, x, y, 'def', false, false); }
+    if (op) for (const slot of op.onField) { const [x, y] = op.align[slot]; marker(slot, x, y, 'off', false, slot === 'QB'); }
     // Expected type matchups (GDD §32.4): a small badge just above the sprite's inside shoulder, never over the monster or the
     // ball, and off the line of a straight route (routes leave from the feet). Each badge is a button: tapping opens the matchup panel.
     if (typeIcons) for (const [team, play] of [['def', dp], ['off', op]]) for (const [slot, dir] of Object.entries(typeIcons[team] || {})) {
@@ -168,7 +176,13 @@ export function fieldLayers(o) {
       s += `<g class="tm-icon" data-tm="${team}:${slot}" role="button" tabindex="0" aria-label="${up ? 'Type advantage' : 'Type disadvantage'} for ${slot}"><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.1" fill="transparent"/><circle class="tm-dot" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="0.85" fill="${col}" stroke="#0b1a14" stroke-width="0.2"/><path d="${arrow}" fill="none" stroke="#0b1a14" stroke-width="0.28" stroke-linecap="round" stroke-linejoin="round"/></g>`;
     }
   }
-  return { statics, dynamic: s, symbols };
+  if (!frame && !(presnap?.offensePlay || presnap?.defensePlay)) { pre = s; s = ''; }
+  const post = s;
+  // The dynamic layer: what lies under the players (movement trail, ground effects), the players (one <g> each), what lies over
+  // them (ball effects, ball, read ring, effects, status marks, type badges). The groups carry no attributes: paint order and
+  // pixels are those of the flat markup.
+  const dynamic = `<g class="fv-pre">${pre}</g><g class="fv-pl">${players.map((x) => `<g>${x.html}</g>`).join('')}</g><g class="fv-post">${post}</g>`;
+  return { statics, dynamic, symbols, pre, players, post };
 }
 
 /** The whole field as one SVG inner string: sprite definitions, the static layer, the dynamic layer. */
@@ -180,7 +194,8 @@ export function fieldSvg(o) {
 /**
  * Draw the field into a live <svg> (the match screen's playback). The three children fieldSvg emits are kept across draws:
  * sprite symbols are added to <defs> as new ones appear (never removed within the element's life), the static layer is replaced
- * only when its markup changed (camera move, new situation), the dynamic layer every draw. An <svg> first filled with
+ * only when its markup changed (camera move, new situation); in the dynamic layer, the parts under and over the players are
+ * replaced when they changed, and each player keeps its nodes (attributes updated in place). An <svg> first filled with
  * fieldSvg() is adopted as it stands. A layer whose markup did not change is not touched. Returns { staticRedrawn, dynamicRedrawn }.
  */
 export function fieldDraw(svg, o) {
@@ -190,15 +205,38 @@ export function fieldDraw(svg, o) {
     let defs = null, statics = null, dyn = null;
     for (const c of svg.children) { const cl = c.getAttribute('class'); if (cl === 'fv-defs') defs = c; else if (cl === 'fv-static') statics = c; else if (cl === 'fv-dyn') dyn = c; }
     if (!defs || !statics || !dyn) { svg.innerHTML = '<defs class="fv-defs"></defs><g class="fv-static"></g><g class="fv-dyn"></g>'; [defs, statics, dyn] = svg.children; }
+    if (!(dyn.children.length === 3 && dyn.children[0].getAttribute('class') === 'fv-pre' && dyn.children[1].getAttribute('class') === 'fv-pl' && dyn.children[2].getAttribute('class') === 'fv-post')) dyn.innerHTML = '<g class="fv-pre"></g><g class="fv-pl"></g><g class="fv-post"></g>';
     const ids = new Set(); for (const c of defs.children) if (c.id) ids.add(c.id);
-    st = svg.__fv = { defs, statics, dyn, ids, staticStr: null, dynStr: null, draws: 0, skipped: 0 };
+    st = svg.__fv = { defs, statics, dyn, pre: dyn.children[0], pl: dyn.children[1], post: dyn.children[2], ids, staticStr: null, dynStr: null, preStr: null, postStr: null, keys: null, recs: [], draws: 0, skipped: 0 };
   }
   for (const x of L.symbols) if (!st.ids.has(x.id)) { st.ids.add(x.id); st.defs.insertAdjacentHTML('beforeend', x.symbol); }
   const staticRedrawn = L.statics !== st.staticStr;
   if (staticRedrawn) { st.statics.innerHTML = L.statics; st.staticStr = L.statics; }
   // Nothing moved (a still frame of the end-of-play hold, a re-render of the same moment): the dynamic layer is left as it is.
   const dynamicRedrawn = L.dynamic !== st.dynStr;
-  if (dynamicRedrawn) { st.dyn.innerHTML = L.dynamic; st.dynStr = L.dynamic; st.draws++; } else st.skipped++;
+  if (!dynamicRedrawn) { st.skipped++; return { staticRedrawn, dynamicRedrawn }; }
+  st.dynStr = L.dynamic; st.draws++;
+  if (L.pre !== st.preStr) { st.pre.innerHTML = L.pre; st.preStr = L.pre; }
+  if (L.post !== st.postStr) { st.post.innerHTML = L.post; st.postStr = L.post; }
+  // Players: the same players in the same order keep their nodes. A sprite player whose structure is unchanged (same status
+  // marks) only gets its base ellipse's and its <use>'s changed attributes set, so the <use> keeps its instance of the symbol;
+  // anything else is rebuilt from its markup. A new line-up rebuilds the group.
+  const keys = L.players.map((x) => x.key).join(' ');
+  const index = (g, x) => ({ g, html: x.html, sig: x.sig, b: x.sig != null ? g.querySelector('[data-fv="b"]') : null, s: x.sig != null ? g.querySelector('[data-fv="s"]') : null, ell: x.ell ? { ...x.ell } : null, use: x.use ? { ...x.use } : null });
+  if (keys !== st.keys) {
+    st.pl.innerHTML = L.players.map((x) => `<g>${x.html}</g>`).join('');
+    st.recs = L.players.map((x, i) => index(st.pl.children[i], x)); st.keys = keys;
+  } else {
+    for (let i = 0; i < L.players.length; i++) {
+      const x = L.players[i]; const r = st.recs[i];
+      if (x.html === r.html) continue;
+      if (x.sig != null && x.sig === r.sig && r.b && r.s) {
+        for (const k in x.ell) if (r.ell[k] !== x.ell[k]) { r.b.setAttribute(k, x.ell[k]); r.ell[k] = x.ell[k]; }
+        for (const k in x.use) if (r.use[k] !== x.use[k]) { r.s.setAttribute(k, x.use[k]); r.use[k] = x.use[k]; }
+        r.html = x.html;
+      } else { r.g.innerHTML = x.html; st.recs[i] = index(r.g, x); }
+    }
+  }
   return { staticRedrawn, dynamicRedrawn };
 }
 
