@@ -711,7 +711,8 @@ export function registerMatchScreens(Router, app) {
     if (anim || s.phase !== 'scrimmage' || s.finished || !look?.presnap) return null;
     const mine = s.possession === G.playerSide;
     const calls = look.myPlay ? (mine ? { offense: look.myPlay, defense: look.aiDefense } : { offense: look.aiOffense, defense: look.myPlay }) : null;
-    const list = presnapFields(s, teams, calls, { hideDefenseAlign: mine });
+    const drawn = look.presnap.offensePlay?.id && look.presnap.defensePlay?.id ? { offense: look.presnap.offensePlay.id, defense: look.presnap.defensePlay.id } : null; // the formations on screen before a play is chosen
+    const list = presnapFields(s, teams, calls, { hideDefenseAlign: mine, formation: drawn });
     const lookup = fxLookup(f, s.possession); const animate = !f.settings.reducedMotion; const dLook = look.presnap.defensePlay;
     const at = (now) => {
       const C = list.length ? revealClock.frame(s.seed, list, now, animate) : { fields: [], time: 0, until: 0, shown: [] };

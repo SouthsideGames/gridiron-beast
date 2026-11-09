@@ -149,7 +149,7 @@ test('I2: nothing hidden is shown: a field placed from a defender\'s alignment i
   assert.equal(presnapFields(g, teams, calls, { hideDefenseAlign: false }).length, 1, 'your own defense: you know your call');
   assert.equal(presnapFields(g, teams, calls, { hideDefenseAlign: true }).length, 0, 'the opponent\'s defense: not shown before the snap');
   for (const p of Object.values(PLAYS)) if (p.side === 'offense') { const look = presnapLook(p.id); for (const s of p.onField) assert.deepEqual(look.align[s], p.align[s], `${p.id} ${s}: the offense lines up as its formation shows`); }
-  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine \}\)/);
+  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine, formation: drawn \}\)/);
 });
 
 test('I6: the match screen opts into the pre-roll and starts the play before the snap', () => {
@@ -207,5 +207,17 @@ test('in-snap fields: Runway, Crosswind Rescue and Bloom Break sit in the same p
     if (x.dependent) { assert.equal(flagged, listed, `${x.id}: always flagged as following the calls`); assert.ok(places.size > 1, `${x.id}: ${places.size} different places over the playbook: it is not fixed before the choice`); }
     else { assert.equal(flagged, 0); assert.equal(places.size, 1, `${x.id}: one place for every call that has him on the field`); }
   }
-  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine \}\)/);
+  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine, formation: drawn \}\)/);
+});
+
+test('in-snap fields: before a play is chosen, the formation on screen already shows the ones whose place does not follow the calls; nothing else is guessed', () => {
+  const drawn = { offense: 'quick_slants', defense: 'cover_3' };
+  for (const x of IN_SNAP) {
+    const { g, teams } = inSnapGame(x, 5); const before = JSON.stringify(g); const shown = presnapFields(g, teams, null, { formation: drawn }); assert.equal(JSON.stringify(g), before);
+    if (x.dependent) assert.deepEqual(shown, [], `${x.id}: its place follows the calls, so nothing is shown before them`);
+    else { assert.equal(shown.length, x.count || 1, `${x.id}: shown for the formation on screen`); assert.deepEqual(shown.map((s) => [s.field.yard, s.field.lat]), presnapFields(g, teams, drawn).map((s) => [s.field.yard, s.field.lat]), `${x.id}: where the chosen call will have it`); }
+  }
+  // a banked field is still never guessed without both calls (its place may follow them)
+  const { g, teams } = matchGame(5); const dside = R.opponent(g.possession); g.t8 = { status: {}, fields: { list: [], pending: [{ owner: teams[dside].defense.CB1.id, ownerTeam: dside, side: 'def', type: 'Dark', ability: 'DAR-01-F', strength: 20, lifetime: 2, clock: 'teamDefense', width: 6, length: 6, lbDepth: 5, latHome: 4 }], seq: 0 } };
+  assert.deepEqual(presnapFields(g, teams, null, { formation: drawn }), []); assert.equal(presnapFields(g, teams, drawn).length, 1);
 });

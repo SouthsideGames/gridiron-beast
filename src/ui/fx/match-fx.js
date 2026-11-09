@@ -47,18 +47,22 @@ export function kickPlay(ev, lookup, meta = null) {
  * is shown too when its place does not follow the calls (Runway, Crosswind Rescue, Bloom Break: the calls only decide whether its
  * creator is on the field; rules.js previewPendingFields `inSnap`, a dry run on a copy). One whose place is read from a chosen play's
  * alignment (Static Field, Charge Strip, Bramble Trap) is not fixed before the calls and is left to the pre-roll.
+ * `formation` ({ offense, defense } play ids of the formations drawn while no play is chosen yet): with no `calls`, only the in-snap
+ * fields whose place does not follow the calls are shown for it (they are the same for whatever is then called with the creator on
+ * the field); a banked field whose place may follow the calls is never guessed.
  * Returns [{ field, isNew, pending }]: `isNew` fields get a reveal.
  */
-export function presnapFields(state, teams, calls = null, { hideDefenseAlign = false } = {}) {
+export function presnapFields(state, teams, calls = null, { hideDefenseAlign = false, formation = null } = {}) {
   if (!state || state.phase !== 'scrimmage' || state.finished) return [];
   const frame = { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 };
   const strip = ({ fresh, inSnap, callDependent, ...f }) => f; // eslint-disable-line no-unused-vars
   const active = state.t8?.fields?.list || [];
   const out = toPlayFrame(active, frame).map((f, i) => ({ field: strip(f), isNew: !!active[i].createdThisPlay, pending: false }));
-  if (calls?.offense && calls?.defense) {
+  const chosen = !!(calls?.offense && calls?.defense); const using = chosen ? calls : formation?.offense && formation?.defense ? formation : null;
+  if (using) {
     let banked = [];
-    try { banked = previewPendingFields(state, teams, calls.offense, calls.defense, { inSnap: true }); } catch { banked = []; } // presentation never breaks the screen
-    banked = banked.filter((f) => !f.callDependent);
+    try { banked = previewPendingFields(state, teams, using.offense, using.defense, { inSnap: true }); } catch { banked = []; } // presentation never breaks the screen
+    banked = banked.filter((f) => !f.callDependent && (chosen || f.inSnap));
     if (hideDefenseAlign) banked = banked.filter((f) => !f.usesDefenseAlign);
     const seq = state.t8?.fields?.seq || 0;
     toPlayFrame(banked, frame).forEach((f, i) => out.push({ field: { ...strip(f), id: `pre${seq}-${i + 1}` }, isNew: true, pending: true }));

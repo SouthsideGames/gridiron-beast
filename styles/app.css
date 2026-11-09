@@ -703,7 +703,7 @@ button.type-chip { cursor: pointer; min-height: 36px; }
 .tm-rows { list-style: none; padding: 0; margin: 4px 0; } .tm-rows li { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--line); }
 .tm-reason { margin: 6px 0 4px; font-weight: 700; } .tm-their, .tm-foot { font-size: 12px; margin: 4px 0; }
 svg .tm-icon { cursor: pointer; } svg .tm-icon:focus { outline: none; } svg .tm-icon:focus-visible .tm-dot { stroke: #fff; stroke-width: 0.35; }
-.tm-legend { display: flex; gap: 10px; align-items: center; justify-content: center; font-size: 11px; color: var(--ink-3); margin: 2px 0 0; }
+.tm-legend { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: center; justify-content: center; font-size: 11px; color: var(--ink-3); margin: 2px 0 0; }
 .tm-legend b.up { color: #4ade80; } .tm-legend b.down { color: #f5a524; }
 
 /* Stadium environments (GDD §33) */

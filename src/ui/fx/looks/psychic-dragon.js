@@ -78,11 +78,11 @@ export const PSYCHIC_DRAGON = {
         if (k > 0.55) s += disc(v[0], v[1] - 1, 2.2 * (1 - (k - 0.55) / 0.45) + 0.1, 1.6 * (1 - (k - 0.55) / 0.45) + 0.1, '#2a1a30', 0.8 * (1 - (k - 0.55) / 0.45)) + text(v[0], v[1] - 4.6 - (k - 0.55) * 2, 1.6, GOLD, 'out next play', 1 - (k - 0.55) / 0.45); return s; } },
       // Staged by the host from the game's absence list (t8-fx.js meta.staged), never an engine event of the play:
       // while he is out, his formation spot is empty under a closed dragon mouth (a still mark: no clock, safe for reduced motion);
-      dragon_absent: { dur: 1, noCue: true, o: (c) => `<ellipse cx="${f2(c.cx)}" cy="${f2(c.cy + 0.75)}" rx="1.7" ry="0.75" fill="none" stroke="${GOLD}" stroke-width="0.16" stroke-dasharray="0.45 0.35" opacity="0.9"/>` + disc(c.cx, c.cy - 0.9, 1.5, 1.2, '#2a1a30', 0.8) + maw(c.cx, c.cy - 0.9, 0.55, 0.95, 1.5) + text(c.cx, c.cy - 3.3, 1.15, GOLD, 'OUT', 0.95) },
+      dragon_absent: { dur: 1, noCue: true, o: (c) => `<ellipse cx="${f2(c.cx)}" cy="${f2(c.cy + 0.75)}" rx="1.7" ry="0.75" fill="none" stroke="${GOLD}" stroke-width="0.16" stroke-dasharray="0.45 0.35" opacity="0.9"/>` + disc(c.cx, c.cy - 0.9, 1.5, 1.2, '#2a1a30', 0.8) + maw(c.cx, c.cy - 0.9, 0.55, 0.95, 1.5) + text(c.cx, c.cy + 2.6, 1.15, GOLD, 'OUT', 0.95) }, // the word under the spot: the last play's banner covers the top of the field
       // his return before the formation of the play he is back for: the mouth opens over his spot and lets him out, then lifts away.
       dragon_return: { dur: 1.4, noCue: true, o: (c) => { const k = c.k, x = c.cx, y = c.cy - 1; const open = ease(clamp01((k - 0.15) / 0.3)); const gone = clamp01((k - 0.55) / 0.45); let s = '';
         if (k < 0.45) { const d = 1 - k / 0.45; s += disc(x, y, 2.0 * d + 0.2, 1.5 * d + 0.2, '#2a1a30', 0.85 * d); }
         s += maw(x, y - gone * 1.2, 0.5 + 2.2 * open, 0.95 * (1 - gone));
         if (k > 0.35) { const r = (k - 0.35) / 0.65; s += ring(x, y + 0.4, 0.8 + r * 3.2, GOLD, 0.24, 1 - r); const n = c.n(6); for (let i = 0; i < n; i++) { const a = (i / n) * 2 * PI + h(c.sid, i) * 0.8; s += blob(x + cos(a) * (1 + r * 2.4), y + sin(a) * (0.8 + r * 1.8) - r * 1.2, 0.22, GOLD, 1 - r); } }
-        return s + text(x, y - 3.6 - k * 1.2, 1.5, GOLD, 'returns', k < 0.15 ? k / 0.15 : 1 - gone); } } } },
+        return s + text(x, c.cy + 2.7, 1.5, GOLD, 'returns', k < 0.15 ? k / 0.15 : 1 - gone); } } } },
 };
