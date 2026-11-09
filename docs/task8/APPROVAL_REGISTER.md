@@ -256,3 +256,14 @@ The proposals are in [M4_PLAN.md](M4_PLAN.md) §5. The rulings are in [SPECIFICA
 | Frame time and rendering | **Approved scope** | Measured separately from simulation. No FPS claim without real-time measurement. Mobile limits documented, never substituted |
 | Graphics quality settings | **Proposed, not authorized** | Must never change gameplay. Not to be implemented before visual testing has been reviewed |
 | M4 open items, ability table, Feather Relay, Stunned reading, KO replacement, Ball Clamp seed, Iron Lungs | **Open (unchanged)** | Not affected by N8e |
+
+## Performance follow-up (N8f, 2026-11-08 19:02)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Official benchmarks | **Approved process** | On the frozen build, with no competing workloads. Preliminary and verified results kept distinct |
+| Dark-field Awareness caching (floating-point) | **Open: explanation requested** | Not approved. Its expected benefit and its possible gameplay and determinism effects are to be explained separately |
+| Renderer optimisation | **Approved priority after the official report** | Sprite caching, reusable field layers, and no redundant drawing, where compatible with the current visuals. Investigate the end-of-play save hitch while preserving reliable saving and reward persistence |
+| Full-visual target | **Approved** | 60 FPS with full visuals. Graphics-quality controls are a supplemental option only. Lower settings must keep abilities recognizable, essential field information, and identical gameplay |
+| Reporting | **Approved** | Every simulation scene and every ability-overhead result reported individually. No averaging away of failures. The provisional 25% budget is not raised without approval |
+| Mobile | **Unverified** | Until tested on appropriate physical devices |
