@@ -14,6 +14,7 @@
 
 import { SIG, statusMarks } from './ability-sigs.js';
 import { SPECIES_DEX } from '../data/species.js';
+import { buildT8, drawT8, t8Hold, t8Shakes, DEX_ID } from './fx/t8-fx.js';
 
 /**
  * Common monsters' shared traits (polish 2.0): a small icon, deliberately less than a signature
@@ -90,8 +91,12 @@ export const MAX_FX = 2, MAX_LABELS = 1;
  * @param {object} sim engine output ({events, frames})
  * @param {(team:string, slot:string) => {element?:string, name?:string}|null} lookup monster for a slot
  */
-export function buildFx(sim, lookup) {
-  const events = sim?.events || [];
+export function buildFx(sim, lookup, meta = null) {
+  // Task 8 (docs/task8/FX_FOOTBALL_MATRIX.md): events carrying a Dex ability id and the shared status events are drawn by the Task 8
+  // looks (src/ui/fx/t8-fx.js); the legacy path below keeps only the legacy signature events (none in a Task 8 game).
+  const t8 = buildT8(sim, lookup, meta);
+  const isT8 = (e) => DEX_ID.test(e.ability || '') || e.kind === 'status' || e.kind === 'afterimage_end';
+  const events = (sim?.events || []).filter((e) => !isT8(e));
   const fx = [];
   const frames = sim?.frames || [];
   const at = (team, slot, t) => { let best = null; for (const fr of frames) { if (fr.t > t + 1e-6) break; const p = (team === 'off' ? fr.off : fr.def).find((q) => q[0] === slot); if (p) best = p; } return best; };
@@ -124,7 +129,7 @@ export function buildFx(sim, lookup) {
   const shakes = events.filter((e) => (e.kind === 'sack' || e.kind === 'fumble') && !labels.some((l) => l.t === e.t)).map((e) => e.t);
   // Every tackle and sack gets a short contact ring (movement state), ability or not.
   const contacts = events.filter((e) => e.kind === 'tackle' || e.kind === 'sack').map((e) => ({ t: e.t, team: e.side, slot: e.by }));
-  return { fx, labels, contacts, traits, shakes: shakes.concat(labels.filter((l) => l.shake).map((l) => l.t)) };
+  return { fx, labels, contacts, traits, shakes: shakes.concat(labels.filter((l) => l.shake).map((l) => l.t), t8Shakes(t8)), t8, preroll: t8.preroll };
 }
 
 /** A new frame crossed an impact: true once per impact (previous frame time → this one). */
@@ -139,7 +144,7 @@ const f2 = (n) => (+n).toFixed(2);
  * (dx, dy = movement since the previous frame) or null; `t` is the frame time.
  * `quality`: 'full' | 'low' (fewer particles) | 'min' (badges and labels only).
  */
-export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 26, toSvg = null, ball = null, pball = null } = {}) {
+export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 26, toSvg = null, ball = null, pball = null, reducedFlash = false } = {}) {
   if (!state) return { under: '', over: '', ball: '' };
   const cl = (x, pad) => Math.max(-halfWidth + pad, Math.min(halfWidth - pad, x)); // keep text inside the field
   let s = '', u = '', bl = '';
@@ -149,6 +154,8 @@ export function fxSvg(state, t, pos, { quality = 'full', seed = 0, halfWidth = 2
   live.sort((p, q) => rank(p) - rank(q));
   const labs = state.labels.filter((l) => t >= l.t && t - l.t < LABEL).sort((a, b) => b.t - a.t).slice(0, MAX_LABELS);
   let named = false; // one ability name at a time, and none while an outcome label is up: text never piles up
+  // Task 8 looks first (fields and persistent effects under everything of the legacy layer; their cue counts as the one name).
+  if (state.t8) { const T = drawT8(state.t8, t, pos, { quality, toSvg, ball, pball, halfWidth, reducedFlash, seed, maxCues: labs.length ? 0 : 1 }); u += T.under; s += T.over; bl += T.ball; if (T.cues) named = true; }
   for (const f of live.slice(0, MAX_FX)) {
     const p = pos(f.team, f.slot); if (!p) continue;
     const [cx, cy, dx, dy] = p; const age = t - f.t0; const k = age / (f.dur || ACTION); // 0 → 1
@@ -308,7 +315,7 @@ export function movementSvg(carrier, { quality = 'full' } = {}) {
  * Fortress at an incompletion) are seen: 0 when nothing is running at the end, else up to 0.9 s.
  */
 export function endHold(state, lastT) {
-  if (!state) return 0; let hold = 0;
+  if (!state) return 0; let hold = state.t8 ? t8Hold(state.t8, lastT) : 0;
   for (const f of state.fx) if (f.t0 <= lastT + 1e-6 && f.t0 + (f.dur || ACTION) > lastT) hold = Math.max(hold, Math.min(0.9, f.t0 + Math.min(f.dur || ACTION, 1.2) - lastT));
   for (const l of state.labels) if (l.t <= lastT + 1e-6 && l.t + LABEL > lastT) hold = Math.max(hold, Math.min(0.9, l.t + LABEL - lastT));
   return Math.max(0, hold);

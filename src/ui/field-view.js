@@ -27,7 +27,7 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  */
 const FIELD_TINT = { Fire: '#ff7a3d', Water: '#5fb6ff', Nature: '#7ad35a', Electric: '#ffe55a', Ice: '#bfe8ff', Wind: '#9ef0dc', Earth: '#d2a86a', Dark: '#9a7ad6', Light: '#fff0a8', Metal: '#cfd5e2', Psychic: '#ff9ae6' };
 export function fieldSvg(o) {
-  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null } = o;
+  const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null, fxOptions = null } = o; // Task 8 fx hook: fxOptions (e.g. { reducedFlash }) pass straight to fxSvg
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
   const X = (lat) => lat; // lateral yards → svg x (centred)
@@ -96,7 +96,7 @@ export function fieldSvg(o) {
   let statusOver = ''; // status marks (stars, ice, "?") drawn after every sprite so they are never hidden
   const marker = (slot, x, y, team, engaged, holder, status = 0) => {
     const set = sprites?.[team];
-    const m = set ? (set.map[slot] || (set.pool.length ? set.pool[(poolIdx[team]++) % set.pool.length] : null)) : null;
+    const m = set ? (set.map[slot] || (/\+$/.test(slot) ? set.map[slot.slice(0, -1)] || null : set.pool.length ? set.pool[(poolIdx[team]++) % set.pool.length] : null)) : null; // Task 8 fx hook: a summoned copy ('LB1+') wears its original's art
     const cx = X(ballLat + y), cy = Y(ballOn + x);
     const sm = status ? statusMarks(status, cx, cy, time ?? frame?.t ?? 0, slot.charCodeAt(0)) : null;
     if (sm?.over) statusOver += sm.over;
@@ -115,9 +115,9 @@ export function fieldSvg(o) {
     const toSvg = (x, y) => [X(ballLat + y), Y(ballOn + x)];
     const lift = (b) => (b[2] ? 1.4 : 0.7); // the ball is drawn lifted off the turf
     const bsvg = frame.ball ? (([x, y]) => [x, y - lift(frame.ball), frame.ball[2]])(toSvg(frame.ball[0], frame.ball[1])) : null; const pbsvg = prevFrame?.ball ? (([x, y]) => [x, y - lift(prevFrame.ball)])(toSvg(prevFrame.ball[0], prevFrame.ball[1])) : null;
-    const layers = fx ? fxSvg(fx, ft, posOf, { quality: fxQuality, halfWidth: HW, toSvg, ball: bsvg, pball: pbsvg }) : { under: '', over: '', ball: '' };
+    const layers = fx ? fxSvg(fx, ft, posOf, { quality: fxQuality, halfWidth: HW, toSvg, ball: bsvg, pball: pbsvg, ...(fxOptions || {}) }) : { under: '', over: '', ball: '' }; // Task 8 fx hook
     s += layers.under;
-    const showStatus = fxQuality !== 'min';
+    const showStatus = true; // Task 8 (spec §13): status information stays visible at every quality level
     for (const [slot, x, y, eng, st] of frame.def) s += marker(slot, x, y, 'def', eng, frame.holder === slot && frame.holderTeam === 'def', showStatus ? st : 0);
     for (const [slot, x, y, eng, st] of frame.off) s += marker(slot, x, y, 'off', eng, frame.holder === slot && frame.holderTeam === 'off', showStatus ? st : 0);
     const [bx, by, air] = frame.ball;

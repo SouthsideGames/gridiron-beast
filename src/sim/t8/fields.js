@@ -78,7 +78,7 @@ export function toPlayFrame(fields, { home, ballOn, ballLat = 0 }) {
   return (fields || []).map((f) => {
     const xs = f.yard.map(fx), ys = f.lat.map(fy);
     const hole = (h) => { const hx = h.yard.map(fx), hy = h.lat.map(fy); return { yard: [Math.min(...hx), Math.max(...hx)], lat: [Math.min(...hy), Math.max(...hy)] }; };
-    return { id: f.id, type: f.type, createdAt: f.createdAt, strength: f.strength ?? null, owner: f.owner ?? null, ability: f.ability ?? null, payload: f.payload ?? null,
+    return { id: f.id, type: f.type, createdAt: f.createdAt, strength: f.strength ?? null, owner: f.owner ?? null, ability: f.ability ?? null, payload: f.payload ?? null, ...(f.createdThisPlay ? { fresh: true } : {}), /* Task 8 presentation: the field's creation play (reveal), data only */
       yard: [Math.min(...xs), Math.max(...xs)], lat: [Math.min(...ys), Math.max(...ys)], ...(f.holes?.length ? { holes: f.holes.map(hole) } : {}) }; // M3 hook: removed footprints
   });
 }

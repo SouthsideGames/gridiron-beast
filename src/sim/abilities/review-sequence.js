@@ -20,6 +20,8 @@ import { contractOf } from './registry.js';
 import { SCENARIOS } from './review-scenarios.js';
 import { stageScenario, REVIEW_ID } from './review.js';
 import { phaseSpec, evaluatePhases, variantsOf, CONTROL_LABELS } from './review-phases.js';
+import { showBattery } from '../t8/stamina.js';
+import { readiness } from '../../ui/fx/charge.js';
 
 export const MAX_FOLLOW_UPS = 14;
 const ownFields = (t8) => ({
@@ -28,6 +30,21 @@ const ownFields = (t8) => ({
 });
 const statuses = (t8, abilityId) => Object.entries(t8.status || {}).filter(([, s]) => s && (s.abilityId === abilityId || s.sourceId === REVIEW_ID)).map(([mid, s]) => ({ mid, id: s.id, remaining: s.remaining, restOfPlay: !!s.restOfPlay, strength: s.strength }));
 const absences = (t8, abilityId) => (t8.absences || []).filter((a) => a.ability === abilityId).map((a) => ({ ...a }));
+/**
+ * Task 8 presentation (spec §13): the over-the-head information at the snap for every monster on the field, keyed 'off:SLOT' /
+ * 'def:SLOT' in the sim's frame: the shared status slot (id, remaining), the low-stamina battery and the ability bar readiness
+ * (ui/fx/charge.js) from the game-scope state captured before the snap. Drawing data only.
+ */
+function hudAt(before, teams, offSide, frame0) {
+  if (!frame0) return null; const other = offSide === 'home' ? 'away' : 'home'; const hud = {};
+  const club = (t) => ({ ...(t.defense || {}), ...(t.offense || {}), ...(t.kicker?.id ? { K: t.kicker } : {}) });
+  const units = { off: { ...club(teams[offSide]), ...(teams[offSide].offense || {}) }, def: { ...club(teams[other]), ...(teams[other].defense || {}) } };
+  for (const team of ['off', 'def']) for (const q of frame0[team]) { const m = units[team][q[0]]; if (!m?.id) continue; const slot = before.status?.[m.id] || null; const stam = before.stamina?.[m.id] || null; const ab = before.ability?.[m.id] || null;
+    const charge = ab && m.species ? readiness(m.species, ab, m.form || `${m.species}:0`, m.mastery || 0) : null;
+    const entry = { element: m.type || null, ...(slot ? { status: { id: slot.id, remaining: slot.restOfPlay ? null : slot.remaining } } : {}), ...(stam && showBattery(stam) ? { battery: true, staminaFrac: Math.max(0.05, Number(stam.stamina?.n ?? 0) / Math.max(1, Number(stam.stamina?.d ?? 1)) / Math.max(1, stam.capacity)) } : {}), ...(charge ? { charge } : {}) };
+    if (entry.status || entry.battery || entry.charge) hud[`${team}:${q[0]}`] = entry; }
+  return Object.keys(hud).length ? hud : null;
+}
 const nameOf = (teams, mid) => { for (const t of [teams.home, teams.away]) for (const u of ['offense', 'defense']) for (const [slot, p] of Object.entries(t[u] || {})) if (p?.id === mid) return { name: p.name, slot, team: t === teams.home ? 'home' : 'away', unit: u }; return null; };
 
 /** The labelled variants of a family: main first, then its blocked / failure / interaction scenarios. */
@@ -76,13 +93,13 @@ function playSeed({ sc, fam, contract, form, mastery, seed, spec, nSnaps, maxFol
   for (let k = 0; !state.finished; k++) {
     if (act < 0 && k >= nSnaps) break;
     if (act >= 0 && plays.length - 1 - act >= maxFollowUps) break;
-    const t8 = state.t8; const fieldsBefore = ownFields(t8); const absBefore = absences(t8, abilityId);
+    const t8 = state.t8; const fieldsBefore = ownFields(t8); const absBefore = absences(t8, abilityId); const hudBefore = { status: structuredClone(t8.status || {}), ability: structuredClone(t8.ability || {}), stamina: structuredClone(t8.stamina || {}) };
     const isFollow = act >= 0; G.api.followUp = isFollow ? plays.length - act - 1 : null; const mark = state.log[state.log.length - 1]; const rec = G.snap(k, isFollow ? follow : sc);
     const gameLog = state.log.slice(state.log.lastIndexOf(mark) + 1).map((x) => ({ text: x.text, kind: x.kind, ...(x.ability ? { ability: x.ability } : {}) }));
     const fieldsAfter = ownFields(t8); const absAfter = absences(t8, abilityId);
     const frame0 = rec.sim?.frames?.[0] || null;
     const served = absBefore.filter((a) => !absAfter.some((b) => b.mid === a.mid && b.serveOn === a.serveOn)).map((a) => ({ ...a, who: nameOf(teams, a.mid) }));
-    const p = { n: plays.length + 1, k, followUp: isFollow, ...rec, fieldsBefore, fieldsAfter, statuses: statuses(t8, abilityId), absencesBefore: absBefore, absencesAfter: absAfter, served,
+    const p = { n: plays.length + 1, k, followUp: isFollow, ...rec, fieldsBefore, fieldsAfter, statuses: statuses(t8, abilityId), absencesBefore: absBefore, absencesAfter: absAfter, served, hud: hudAt(hudBefore, teams, rec.offSide, frame0),
       presence: frame0 ? { off: frame0.off.map((x) => x[0]), def: frame0.def.map((x) => x[0]) } : null,
       allEvents: rec.sim?.events || [], gameLog, score: { ...state.score } };
     plays.push(p);
