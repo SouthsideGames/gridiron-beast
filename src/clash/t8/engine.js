@@ -1004,7 +1004,7 @@ function stateHash({ winner, by, ex, draws, lines }) {
 
 /** One line that rebuilds this battle exactly: ruleset, engine version, seed, configuration and full lineup snapshots. */
 export function t8ReplayKey({ a, b, seed, config, carryIn = null }) {
-  const snap = (m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, level: m.level, stage: m.stage || 0, fatigue: m.fatigue || 0, attributes: { ...m.attributes }, ...(m.clashMasteryTier ? { clashMasteryTier: m.clashMasteryTier } : {}) });
+  const snap = (m) => ({ id: m.id, name: m.name, species: m.species, position: m.position, level: m.level, stage: m.stage || 0, fatigue: m.fatigue || 0, attributes: { ...m.attributes }, ...(m.clashMasteryTier ? { clashMasteryTier: m.clashMasteryTier } : {}), ...(m.exhausted ? { exhausted: true } : {}) });
   return JSON.stringify({ ruleset: V.ruleset, engine: V.engineVersion, seed, config, a: a.map(snap), b: b.map(snap), ...(carryIn ? { carryIn } : {}) });
 }
 export function parseT8ReplayKey(line) {

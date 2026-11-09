@@ -6,10 +6,12 @@
 import { esc, delegate, toast, sheet, fmtMoney } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import * as F from '../../franchise/franchise.js';
-import { CLASH_MODES, CLASH_SPEEDS, clashSettings, pendingDecision, policiesOf, normalizeMode } from '../../franchise/clash-link.js';
+import { CLASH_MODES, CLASH_SPEEDS, clashSettings, pendingDecision, policiesOf, normalizeMode, isT8Record } from '../../franchise/clash-link.js';
 import { consequence } from '../../franchise/assist-advice.js';
 import { createArena } from '../clash/arena.js';
-import { stateAt } from '../clash/choreographer.js';
+import { stateAt as stateAtRecord } from '../clash/choreographer.js';
+import { toArenaRecord, T8_STATUS_ICON, T8_STATUS_NAME } from '../clash/t8-record.js';
+const stateAt = (r, i) => stateAtRecord(toArenaRecord(r), i);
 import { monsterOverall } from '../../data/monsters.js';
 import { archetypeOf } from '../../clash/stats.js';
 import { typeFactor, typeEdge } from '../../clash/types.js';
@@ -21,9 +23,10 @@ export const MODE_TEXT = Object.freeze({
   skip: { label: 'Skip to results', help: 'The same battle, resolved instantly. Skipping never changes who wins.' },
 });
 export const SPEED_LABEL = Object.freeze({ 1: 'Normal', 2: 'Fast', 4: 'Fastest' });
-export const HELP_HTML = `<p><b>Beast Clash</b> is a monster battle. Each side lines up its monsters in an order of entry; the two front monsters trade strikes, Supports and bench Disruptors act from the back. When a monster is knocked out, the next in line steps up with the battle as it stands (health and conditions carry on). The last side standing wins, or the side with more health left after 30 exchanges.</p>
-<p><b>One choice, one battle.</b> You pick your monsters and the order they enter before the battle, then it runs on its own to the end. No menus interrupt it.</p>
-<p><b>Watch battle</b> shows every exchange at the speed you choose. <b>Skip to results</b> plays the very same battle instantly: it is never a worse chance of winning, just less to watch.</p>
+export const HELP_HTML = `<p><b>Beast Clash</b> is a monster battle. Each side lines up its monsters in an order of entry. <b>One active fighter per side</b> trades strikes; the reserves wait and act only through abilities that name them (a reserve relay, a rescue, a commanded strike). When the active monster is knocked out, the next in line steps up with the battle as it stands (health, shields and statuses carry on). The last side standing wins, or the side with more health left after 30 exchanges.</p>
+<p><b>Rotations.</b> After both fighters have acted, a side may rotate its active monster out for a reserve (at most once every four exchanges). In <b>Watch battle</b> you are asked at each legal rotation: <b>Stay in</b>, bring in a reserve, or <b>Auto for the rest</b> of this battle (the game's own rotation policy, the one the other side uses). A monster that rotates in by choice acts at half strength on its first turn. Knockout replacements and forced rotations carry no penalty.</p>
+<p><b>Watch battle</b> shows every exchange at the speed you choose and asks you about rotations. <b>Skip to results</b> plays the battle instantly with the automatic rotation policy on your side. Neither is a worse chance of winning: a Watch battle in which you choose Auto at the first prompt is the very same battle as Skip.</p>
+<p><b>Statuses.</b> A monster carries one shared status at a time (Shielded, Guarded, Empowered, Weakened, Slowed, Stunned, Confused ...). In the pregame Clash and the overtime Clash, statuses carry into and out of the football game; a standalone Tuesday battle clears them at its end.</p>
 <p><b>Type edges:</b> ▲ next to a monster means its element hits the one in front of it harder; ▼ means it hits softer. Put a monster with ▲ in front, and keep your toughest for last.</p>
 <p><b>Tuesday encounters:</b> the monster you chose fights beside two wild companions. They are matched to your club's strength and cannot be signed; only the monster you chose can join you.</p>
 <p><b>Skipping a Tuesday encounter</b> is different: no battle happens, so there is no chance to sign that monster this week. Nothing else is lost.</p>

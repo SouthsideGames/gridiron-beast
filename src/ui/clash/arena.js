@@ -7,8 +7,12 @@
 import { esc } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { stateAt, cuesFor, nextExchangeIndex, DURATION } from './choreographer.js';
-import { themeFor, decorSvg, padSvg, SHADOW_SVG, shieldRingSvg, COND_ICON, COND_COLOR } from './arena-art.js';
+import { themeFor, decorSvg, padSvg, SHADOW_SVG, shieldRingSvg, COND_ICON as LEGACY_COND_ICON, COND_COLOR as LEGACY_COND_COLOR } from './arena-art.js';
 import { createFx } from './fx.js';
+import { toArenaRecord, T8_STATUS_ICON, T8_STATUS_COLOR } from './t8-record.js';
+
+// Condition glyphs: the legacy conditions and the Task 8 shared statuses (functional cues; the badge pass is M6).
+const COND_ICON = { ...LEGACY_COND_ICON, ...T8_STATUS_ICON }; const COND_COLOR = { ...LEGACY_COND_COLOR, ...T8_STATUS_COLOR };
 
 // Slot maps: percent of the arena box, [x, y] of the feet. [front, bench1, bench2, ...] in lineup order; a bench
 // slot nearer the front is "next up". Landscape: side B mirrors x. Portrait: side B has its own map (sprites hang
@@ -44,10 +48,14 @@ const spriteImg = (svg) => `<img class="cl-sprite" alt="" draggable="false" src=
  * Mount the arena into `root` for `result`. Options: { speed, reducedMotion, quality: () => 'full'|'low', onCursor(i), onEnd(), onQuality(q),
  *   names: { a, b } (team names for the strips, the matchup line and the victory banner; default 'Side A' / 'Side B'),
  *   edge: (attackerType, defenderType) => 'strong' | 'weak' | 'even' (the matchup line's type edge; the arena itself never imports the engine),
- *   simple: true (franchise battles: Watch / Speed / Skip only, no step, scrubber or FX toggle) }.
+ *   simple: true (franchise battles: Watch / Speed / Skip only, no step, scrubber or FX toggle),
+ *   controls: false (no control row at all: the host drives playback through the API, as the Clash reviewer does),
+ *   looks: (cue, api) => Promise | falsy (Task 8 M4: the Clash looks hook, see src/ui/clash/t8-record.js; a truthy return takes the cue over) }.
+ * A t8 result (ruleset 't8') is translated into the arena's record shape first (toArenaRecord); legacy results pass through unchanged.
  * Returns the player API; call destroy() on unmount.
  */
 export function createArena(root, result, opts = {}) {
+  result = toArenaRecord(result);
   const cues = cuesFor(result); const n = result.log.length;
   const perSide = Math.max(result.lines.a.length, result.lines.b.length);
   const sizeKey = perSide <= 3 ? 'small' : 'big';
@@ -58,7 +66,7 @@ export function createArena(root, result, opts = {}) {
   const all = [...result.lines.a, ...result.lines.b];
   const byId = Object.fromEntries(all.map((x) => [x.id, x]));
 
-  const names = { a: opts.names?.a || 'Side A', b: opts.names?.b || 'Side B' }; const simple = !!opts.simple;
+  const names = { a: opts.names?.a || 'Side A', b: opts.names?.b || 'Side B' }; const simple = !!opts.simple; const noControls = opts.controls === false;
   root.innerHTML = `<div class="cl-arena ${sizeKey} theme-${theme.key} ${simple ? 'simple' : ''}">
     <div class="cl-hud"><span class="cl-ex">Exchange <b>0</b> / ${result.exchanges}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}</span><div class="cl-exbar"><i></i></div></div>
     <div class="cl-matchup" aria-live="polite"></div>
@@ -70,7 +78,7 @@ export function createArena(root, result, opts = {}) {
       <div class="cl-layer"></div>
     </div><div class="cl-dim"></div></div>
     <div class="cl-strips ${perSide >= 4 ? 'compact' : ''}">${['a', 'b'].map((s) => `<div class="cl-strip-wrap"><div class="cl-strip-label ${s === 'a' ? 'mine' : ''}">${esc(names[s])}</div><div class="cl-strip cl-strip-${s}">${result.lines[s].map((x) => `<div class="cl-card" data-card="${x.id}" title="${esc(x.name)}">${spriteImg(monsterSprite(mon(x), 16, { flip: s === 'b' }))}<div class="cl-card-body"><div class="cl-card-name">${esc(x.name)}</div><div class="bar"><i></i></div><div class="cl-card-sub"><span class="cl-card-hp"></span><span class="cl-card-sh"></span><span class="cl-card-cond"></span></div></div><span class="cl-card-ko">KO</span></div>`).join('')}</div></div>`).join('')}</div>
-    <div class="cl-controls">
+    <div class="cl-controls" ${noControls ? 'style="display:none"' : ''}>
       ${simple
         ? `<div class="cl-btnrow simple"><button class="btn primary" data-cl="watch">▶ Watch</button><span class="cl-speedrow row"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s === 1 ? 'Normal' : s === 2 ? 'Fast' : 'Fastest'}</button>`).join('')}</span><button class="btn" data-cl="skip">Skip ▸▸</button></div>`
         : `<div class="cl-btnrow"><button class="btn primary" data-cl="watch">▶ Watch</button><button class="btn" data-cl="step">⏭ Step</button><button class="btn" data-cl="nextex">Next ex.</button><button class="btn" data-cl="skip">Skip</button></div>
@@ -81,6 +89,8 @@ export function createArena(root, result, opts = {}) {
   const stage = $('.cl-stage'), viewport = $('.cl-viewport'), layer = $('.cl-layer'), dimEl = $('.cl-dim'), caption = $('.cl-caption');
   const monEl = Object.fromEntries(all.map((x) => [x.id, $(`.cl-mon[data-id="${x.id}"]`)]));
   const fx = createFx($('.cl-fx'), { speed: () => speed, reduced, quality: () => quality });
+  /** The drawing api handed to the looks hook (read-only on the record; the hook draws, the arena keeps the state). */
+  const looksApi = () => Object.freeze({ chest, feet, fx, stage, layer, viewport, speed: () => speed, reduced, quality: () => quality, floatText, banner, anim, rig, body, monEl: (id) => monEl[id], applyState: (st) => applyState(st), stateAt: (i) => stateAt(result, i), byId, names, dur });
 
   function mon(x) { return { species: x.species, name: x.name, stage: x.combatant.stage, id: x.combatant.monsterId }; }
   function monsterHtml(x) {
@@ -218,6 +228,8 @@ export function createArena(root, result, opts = {}) {
   async function playCue(cue) {
     if (!root.querySelector('.cl-stage')) return;
     const e = cue.event; const D = cue.duration; const st = stateAt(result, cue.i);
+    if (opts.looks) { let took = null; try { took = opts.looks(cue, looksApi()); } catch (err) { console.error('clash looks hook', err); took = null; } if (took) { await took; applyState(st); return; } } // the looks branch takes the cue over
+    if (cue.tier === 'silent') { applyState(st); if (dur(D) > 0) await wait(dur(D)); return; }
     camera(cue.camera); setActing(e.actor && ['damage', 'heal', 'shield', 'miss', 'skip', 'buff', 'debuff'].includes(e.kind) ? e.actor : null, true);
     const name = cue.named ? byId[e.actor]?.combatant.move.name : null;
     switch (cue.move) {
@@ -337,9 +349,12 @@ export function createArena(root, result, opts = {}) {
   window.addEventListener('resize', onResize);
   setCursor(0); requestAnimationFrame(() => fx.resize());
   return {
-    get cursor() { return cursor; }, get playing() { return playing; }, cues, theme: theme.key,
+    get cursor() { return cursor; }, get playing() { return playing; }, cues, theme: theme.key, record: result, get length() { return n; },
     setCursor, play: () => runTo(n - 1), pause, step: () => runTo(cursor + 1), skip: () => { pause(); setCursor(n - 1); },
-    setSpeed(s) { speed = s; }, get fxCount() { return fx.count; }, destroy() { playing = false; token++; cancelAll(); window.removeEventListener('resize', onResize); root.innerHTML = ''; },
+    /** Play from the cursor to event index `i` (inclusive), animating each cue; resolves when it arrives or is interrupted. */
+    playTo: (i) => runTo(Math.max(cursor, Math.min(n - 1, i))),
+    setSpeed(s) { speed = s; for (const b of $$('[data-cl="speed"]')) b.classList.toggle('primary', Number(b.dataset.v) === speed); }, get speed() { return speed; }, get fxCount() { return fx.count; },
+    destroy() { playing = false; token++; cancelAll(); window.removeEventListener('resize', onResize); root.innerHTML = ''; },
   };
 }
 export { DURATION };
