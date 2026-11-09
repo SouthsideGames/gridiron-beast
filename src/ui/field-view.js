@@ -2,8 +2,23 @@
 // window of 46 yards follows the ball. Draws field markings, pre-snap play
 // art (transformed to the real ball spot and compressed before the end
 // line), engine frames, and the ball. Coordinates are yards.
+//
+// Rendering (docs/task8/RENDER_OPT.md): the field is two layers inside the one <svg>. The static layer (turf, end zones, lines,
+// numbers, hashes, sidelines, scrimmage lines, goal posts, pre-snap art, Task 8 fields, the caller's underlay) changes only when
+// the camera or the situation does; the dynamic layer (movement trail, effects, players, ball, badges, status marks) is redrawn
+// every frame. Monster sprites are SVG <symbol>s drawn once into the field's <defs> and placed with <use> (pixel-monster.js
+// monsterSpriteRef), instead of ~70 rects per player per frame. fieldSvg() returns the whole field as one string (every screen
+// that draws a field once); fieldDraw() updates a live <svg> and only replaces the layers that changed (the match screen's
+// playback). Both draw exactly the same picture.
+//
+// Effects hook (src/ui/ability-fx.js; kept stable for the fx branch): per frame the dynamic layer calls
+//   movementSvg(carrierPos, { quality })                                      → string under everything
+//   fxSvg(fx, t, posOf, { quality, halfWidth, toSvg, ball, pball })          → { under, over, ball } strings
+//   statusMarks(status, cx, cy, t, seed)                                      → { under, over, tf } per marked player
+// where posOf(team, slot) → [x, y, dx, dy] in svg units or null, toSvg(x, y) → [x, y]; `under` goes below the monsters, `over`
+// above them, `ball` just under the ball. Nothing of that interface changed.
 
-import { monsterSprite } from './pixel-monster.js';
+import { monsterSpriteRef } from './pixel-monster.js';
 import { FIELD, boundsFor } from '../core/field.js';
 import { assignmentLines } from './play-art.js';
 import { PLAYS, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
@@ -26,7 +41,12 @@ export const FIELD_VIEWBOX = `${-HW} 0 ${HW * 2} ${SPAN}`;
  *  presnap {play (compiled), offensePlay} or null, holderHighlight, camera override, dim (0..1)
  */
 const FIELD_TINT = { Fire: '#ff7a3d', Water: '#5fb6ff', Nature: '#7ad35a', Electric: '#ffe55a', Ice: '#bfe8ff', Wind: '#9ef0dc', Earth: '#d2a86a', Dark: '#9a7ad6', Light: '#fff0a8', Metal: '#cfd5e2', Psychic: '#ff9ae6' };
-export function fieldSvg(o) {
+
+/**
+ * The field as its two layers: { statics, dynamic, symbols } where `symbols` lists the sprite <symbol> definitions the dynamic
+ * layer's <use> elements need ({ id, symbol }, deduplicated).
+ */
+export function fieldLayers(o) {
   const { ballOn = 25, ballLat = 0, toGo = 10, colors = { off: '#60baff', def: '#ff9385' }, frame = null, presnap = null, ownLabel = 'OWN', oppLabel = 'OPP', camera = null, event = null, noLines = false, sprites = null, prevFrame = null, fx = null, fxQuality = 'full', time = null, underlay = '', typeIcons = null, venue = null, qbRead = false, fields = null } = o;
   const cam = camera || cameraFor(ballOn);
   const Y = (yard) => cam.top - yard; // yards → svg y
@@ -80,6 +100,9 @@ export function fieldSvg(o) {
     s += `<rect class="t8-field" data-element="${f.type}" x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="${c}" fill-opacity="0.16" stroke="${c}" stroke-width="0.3" stroke-opacity="0.85"/>`;
   }
   if (underlay) s += underlay; // caller-drawn layer under the players (Playbook Audit paths)
+  const statics = s; s = '';
+  // ---------------------------------------------------------------- dynamic layer
+  const symbols = []; const seen = new Set();
   // Players.
   const simpleMarker = (slot, x, y, team, engaged, holder) => {
     const cx = X(ballLat + y), cy = Y(ballOn + x);
@@ -103,7 +126,9 @@ export function fieldSvg(o) {
     if (!m) { const base = simpleMarker(slot, x, y, team, engaged, holder); return (sm?.under || '') + (sm?.tf ? `<g transform="${sm.tf}">${base}</g>` : base); }
     const base = team === 'off' ? colors.off : colors.def;
     const [mx] = moved(team, slot, x, y); const flip = Math.abs(mx) > 0.12 ? mx < 0 : team === 'def';
-    const art = monsterSprite(m, 16, { flip }).replace(/<svg class="sprite" width="16" height="16"/, `<svg x="${(cx - 1.7).toFixed(2)}" y="${(cy - 2.5).toFixed(2)}" width="3.4" height="3.4"`);
+    // The sprite: a <use> of the monster's cached <symbol> (same viewBox, size and crisp edges as the inline art it replaces).
+    const ref = monsterSpriteRef(m, { flip }); if (!seen.has(ref.id)) { seen.add(ref.id); symbols.push(ref); }
+    const art = `<use href="#${ref.id}" x="${(cx - 1.7).toFixed(2)}" y="${(cy - 2.5).toFixed(2)}" width="3.4" height="3.4" aria-hidden="true"/>`;
     return `${sm?.under || ''}<ellipse cx="${cx.toFixed(2)}" cy="${(cy + 0.75).toFixed(2)}" rx="1.55" ry="0.7" fill="${base}" stroke="${holder ? '#fff' : engaged ? '#ffcf5a' : '#0d1f17'}" stroke-width="${holder ? 0.4 : 0.2}"/>${sm?.tf ? `<g transform="${sm.tf}">${art}</g>` : art}`;
   };
 
@@ -143,7 +168,37 @@ export function fieldSvg(o) {
       s += `<g class="tm-icon" data-tm="${team}:${slot}" role="button" tabindex="0" aria-label="${up ? 'Type advantage' : 'Type disadvantage'} for ${slot}"><circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="2.1" fill="transparent"/><circle class="tm-dot" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="0.85" fill="${col}" stroke="#0b1a14" stroke-width="0.2"/><path d="${arrow}" fill="none" stroke="#0b1a14" stroke-width="0.28" stroke-linecap="round" stroke-linejoin="round"/></g>`;
     }
   }
-  return s;
+  return { statics, dynamic: s, symbols };
+}
+
+/** The whole field as one SVG inner string: sprite definitions, the static layer, the dynamic layer. */
+export function fieldSvg(o) {
+  const L = fieldLayers(o);
+  return `<defs class="fv-defs">${L.symbols.map((x) => x.symbol).join('')}</defs><g class="fv-static">${L.statics}</g><g class="fv-dyn">${L.dynamic}</g>`;
+}
+
+/**
+ * Draw the field into a live <svg> (the match screen's playback). The three children fieldSvg emits are kept across draws:
+ * sprite symbols are added to <defs> as new ones appear (never removed within the element's life), the static layer is replaced
+ * only when its markup changed (camera move, new situation), the dynamic layer every draw. An <svg> first filled with
+ * fieldSvg() is adopted as it stands. Returns { staticRedrawn }.
+ */
+export function fieldDraw(svg, o) {
+  const L = fieldLayers(o);
+  let st = svg.__fv;
+  if (!st || st.defs.parentNode !== svg || st.statics.parentNode !== svg || st.dyn.parentNode !== svg) {
+    let defs = null, statics = null, dyn = null;
+    for (const c of svg.children) { const cl = c.getAttribute('class'); if (cl === 'fv-defs') defs = c; else if (cl === 'fv-static') statics = c; else if (cl === 'fv-dyn') dyn = c; }
+    if (!defs || !statics || !dyn) { svg.innerHTML = '<defs class="fv-defs"></defs><g class="fv-static"></g><g class="fv-dyn"></g>'; [defs, statics, dyn] = svg.children; }
+    const ids = new Set(); for (const c of defs.children) if (c.id) ids.add(c.id);
+    st = svg.__fv = { defs, statics, dyn, ids, staticStr: null, draws: 0 };
+  }
+  for (const x of L.symbols) if (!st.ids.has(x.id)) { st.ids.add(x.id); st.defs.insertAdjacentHTML('beforeend', x.symbol); }
+  const staticRedrawn = L.statics !== st.staticStr;
+  if (staticRedrawn) { st.statics.innerHTML = L.statics; st.staticStr = L.statics; }
+  st.dyn.innerHTML = L.dynamic;
+  st.draws++;
+  return { staticRedrawn };
 }
 
 /**

@@ -279,7 +279,7 @@ async function main() {
         const cfg = CONFIGS[cfgName]; await page.evaluate((c) => globalThis.__rpDriver.applyConfig(c), cfg.football);
         const p = await page.evaluate(([plays, c]) => globalThis.__rpDriver.profileDraws(plays, c), [playsOf(sc), cfg.football]);
         profiles.push({ scene: sc.id, config: cfgName, ...p });
-        console.log(`  ${sc.id.padEnd(22)} ${cfgName.padEnd(9)}: build ${r2(p.buildMs.mean)} (no fx ${r2(p.buildNoFxMs.mean)}) parse ${r2(p.parseMs.mean)} style+layout ${r2(p.styleLayoutMs.mean)} ms/draw; ${Math.round(p.chars.mean)} chars (no fx ${Math.round(p.charsNoFx.mean)}), ${Math.round(p.elements.mean)} elements (max ${p.elements.max})`);
+        console.log(`  ${sc.id.padEnd(22)} ${cfgName.padEnd(9)}: build ${r2(p.buildMs.mean)} (no fx ${r2(p.buildNoFxMs.mean)}) parse ${r2(p.parseMs.mean)} style+layout ${r2(p.styleLayoutMs.mean)} ms/draw; ${Math.round(p.chars.mean)} chars (no fx ${Math.round(p.charsNoFx.mean)}), ${Math.round(p.elements.mean)} elements (max ${p.elements.max})${p.layered ? `; layered draw ${r2(p.layered.drawMs.mean)} ms (p95 ${r2(p.layered.drawMs.p95)}), dynamic ${Math.round(p.layered.dynChars.mean)} chars / ${Math.round(p.layered.dynElements.mean)} elements, static redrawn ${r2(p.layered.staticRedrawShare)}` : ''}`);
       }
     }
     if (OPT.attribution) {
