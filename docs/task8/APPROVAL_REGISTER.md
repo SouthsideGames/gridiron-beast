@@ -277,3 +277,11 @@ The proposals are in [M4_PLAN.md](M4_PLAN.md) §5. The rulings are in [SPECIFICA
 | D6 Tank bruise | **Open** | Explanation delivered in M4_OPEN_ITEMS.md §6; ruling pending; not implemented |
 | Renderer vs artwork | **Clarified** | Renderer optimisations are screenshot-preserving against the current visuals. Ability artwork changes intentionally, to match the approved Dex descriptions |
 | Mobile | **Unverified** | Unchanged |
+
+## Owner direction, 2026-11-09 17:07 (N9b)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Watch vs Skip battle equality | **Approved** | The Auto-choice log entry is preserved. Watch answered with Auto and Skip must give identical outcomes, final state, exchanges and gameplay events; only the explicitly identified Auto-selection entry (`rotation_decision`) may differ. Tests use the game's own Auto settlement, which must not advance the RNG or alter decisions relative to Skip (asserted in tests/tuesday-companions.test.js) |
+| Remaining presentation items | **Approved to finish** | Match-screen kick effects, the approved pre-snap field visibility, reduced-flash controls, and the completion matrix for all 144 abilities |
+| Milestone order | **Approved** | Targeted checks while finishing; then one milestone regression on the final frozen build, a browser check and performance measurement with the finished visuals. No further full run before the remaining runtime changes are integrated |

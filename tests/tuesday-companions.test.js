@@ -89,7 +89,14 @@ test('Play, Auto and Skip to Results still fight the same companions; Skip Encou
   // final state are the same battle as Skip.
   const wf = settledBattle(f), sg = F.encounterBattle(g); const fights = (r) => JSON.stringify(r.log.filter((e) => e.kind !== 'rotation_decision').map(({ seq, ...e }) => e));
   assert.deepEqual([wf.winner, wf.by, wf.exchanges, wf.stateHash], [sg.winner, sg.by, sg.exchanges, sg.stateHash]);
-  assert.equal(fights(wf), fights(sg)); assert.equal(wf.log.filter((e) => e.kind === 'rotation_decision').length, wf.log.length - sg.log.length);
+  assert.equal(fights(wf), fights(sg)); // every gameplay event, in order (owner 2026-11-09: only the Auto-selection entry may differ)
+  const extra = wf.log.filter((e) => e.kind === 'rotation_decision'); assert.equal(extra.length, wf.log.length - sg.log.length);
+  assert.ok(extra.length >= 1 && extra.every((e) => e.choice === 'auto' || /auto/i.test(JSON.stringify(e))), 'the only extra entries record the Auto answer');
+  // The Auto settlement draws nothing and decides nothing itself: the same number of RNG draws as Skip, the same final lines, and
+  // the record holds only 'auto' answers (the AI policy, the same one Skip uses, makes every rotation choice).
+  assert.equal(wf.rngDraws, sg.rngDraws);
+  assert.equal(JSON.stringify(wf.lines), JSON.stringify(sg.lines)); assert.deepEqual(wf.hpShare, sg.hpShare);
+  assert.ok(Object.values(f.week.encounter.decisions?.a || {}).every((c) => c === 'auto')); assert.ok(!Object.keys(g.week.encounter.decisions?.a || {}).length);
   assert.deepEqual(settledBattle(h).lines.b.map((x) => x.combatant.monsterId).sort(), settledBattle(f).lines.b.map((x) => x.combatant.monsterId).sort());
   const k = ready(17); const before = JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }); F.skipEncounter(k);
   assert.equal(k.season.day, 2); assert.equal(JSON.stringify({ roster: k.roster, board: k.board, rng: k.rngState }), before);
