@@ -37,6 +37,18 @@ export function chargeBar(x, y, c, colour, t, o = 1, drain = 0) {
   if (c.spent) s += `<text x="${f2(x + W / 2 + 0.75)}" y="${f2(y + 0.3)}" text-anchor="middle" font-size="0.8" font-weight="900" fill="#e9e9ee" opacity="0.8">✓</text>`;
   return s + '</g>';
 }
+/** Readiness icons the Dex names instead of a plain bar (stone fist, ready stone, sun, seal, iron jaw, scratch marks): n of max filled. */
+export function chargeIcon(x, y, icon, c, colour, t, o = 1, drain = 0) {
+  const max = Math.max(1, c.max || 1); const frac = drain > 0 ? Math.max(0, (c.ready ? 1 : (c.n || 0) / max) - drain) : c.ready ? 1 : (c.n || 0) / max; const pulse = c.ready ? 0.75 + 0.25 * Math.sin(t * 6) : 1;
+  let g = '';
+  if (icon === 'sun') { g += `<circle r="0.8" fill="#3a2a00" stroke="#ffd84a" stroke-width="0.12"/><path d="M 0 -0.8 A 0.8 0.8 0 ${frac >= 1 ? '1 1 -0.01 -0.8' : '0 1 0 0.8'} Z" fill="#ffd84a" opacity="${frac > 0 ? 1 : 0}"/>`; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; g += `<line x1="${f2(Math.cos(a) * 1)}" y1="${f2(Math.sin(a) * 1)}" x2="${f2(Math.cos(a) * 1.35)}" y2="${f2(Math.sin(a) * 1.35)}" stroke="#ffd84a" stroke-width="0.14" opacity="${f2(frac >= 1 ? pulse : 0.45)}"/>`; } }
+  else if (icon === 'fist') g += `<path d="M -0.9 0.7 L -0.9 -0.3 Q -0.9 -0.9 -0.3 -0.9 L 0.6 -0.9 Q 1 -0.9 1 -0.4 L 1 0.7 Z" fill="${frac >= 1 ? '#a89070' : '#3a2e20'}" stroke="#e0d2b4" stroke-width="0.12"/><line x1="-0.4" y1="-0.9" x2="-0.4" y2="-0.2" stroke="#5a4630" stroke-width="0.1"/><line x1="0.15" y1="-0.9" x2="0.15" y2="-0.2" stroke="#5a4630" stroke-width="0.1"/><line x1="0.6" y1="-0.9" x2="0.6" y2="-0.2" stroke="#5a4630" stroke-width="0.1"/>`;
+  else if (icon === 'stone') g += `<path d="M -0.9 0.5 L -0.7 -0.5 L 0 -0.9 L 0.8 -0.5 L 0.9 0.4 L 0.1 0.8 Z" fill="${frac >= 1 ? '#a89070' : '#3a2e20'}" stroke="#e0d2b4" stroke-width="0.12"/><rect x="-0.9" y="${f2(0.8 - 1.7 * frac)}" width="1.8" height="${f2(1.7 * frac)}" fill="#a89070" opacity="0.6" clip-path="none"/>`;
+  else if (icon === 'jaw') g += `<path d="M -0.9 -0.2 L 0.9 -0.2 L 0.6 -0.8 L -0.6 -0.8 Z M -0.9 0.2 L 0.9 0.2 L 0.6 0.8 L -0.6 0.8 Z" fill="${frac >= 1 ? '#cfd5e2' : '#2a2e38'}" stroke="#f4f4f8" stroke-width="0.1"/>`;
+  else if (icon === 'seal') g += `<circle r="0.85" fill="none" stroke="#ffd36a" stroke-width="0.18" opacity="0.5"/><path d="M 0 -0.85 A 0.85 0.85 0 ${frac > 0.5 ? 1 : 0} 1 ${f2(Math.sin(frac * 2 * Math.PI - 1e-3) * 0.85)} ${f2(-Math.cos(frac * 2 * Math.PI - 1e-3) * 0.85)}" fill="none" stroke="#ffd36a" stroke-width="0.24" opacity="${frac > 0 ? 1 : 0}"/>`;
+  else if (icon === 'scratch') for (let i = 0; i < max; i++) g += `<line x1="${f2(-0.7 + i * 0.6)}" y1="-0.7" x2="${f2(-0.3 + i * 0.6)}" y2="0.7" stroke="${i < Math.round(frac * max) ? '#9a7ad6' : '#2a1a4a'}" stroke-width="0.28" stroke-linecap="round"/>`;
+  return `<g opacity="${op(o * (c.ready ? pulse : 1))}" transform="translate(${f2(x)} ${f2(y)})">${g}</g>`;
+}
 /** The low-stamina battery (at or below 25% capacity): a red cell with its remaining sliver. */
 export function battery(x, y, frac, o = 1, t = 0) {
   const W = 2.1, H = 0.95; const blink = 0.7 + 0.3 * Math.sin(t * 5);
@@ -68,7 +80,7 @@ export function overheadSvg(state, t, pos, { quality = 'full', seed = 0 } = {}) 
       if (x.kind === 'status') return statusBadge(cx, y, x.id, x.remaining, o, x.age);
       if (x.kind === 'battery') return battery(cx, y, x.frac, o, t);
       const colour = x.colour || (state.hud?.[k]?.element ? (ELEMENT[state.hud[k].element] || {}).a : null) || '#ffe36c';
-      const drain = spend ? clamp01((t - spend.t) / 0.5) : 0; let g = chargeBar(cx, y, x.c, colour, t, o, drain);
+      const drain = spend ? clamp01((t - spend.t) / 0.5) : 0; const icon = x.icon || state.hud?.[k]?.icon; let g = icon && !(x.c.cd > 0) ? chargeIcon(cx, y, icon, x.c, colour, t, o, drain) : chargeBar(cx, y, x.c, colour, t, o, drain);
       if (x.bump != null && t - x.bump < 0.6) g += ring(cx, y, 1.2 + (t - x.bump) * 4, colour, 0.25, (1 - (t - x.bump) / 0.6) * o);
       return g; };
     if (n === 1) { s += draw(items[0], 1); continue; }

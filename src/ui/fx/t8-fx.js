@@ -15,6 +15,7 @@ import { LOOKS, AMBIENT } from './looks/index.js';
 import { fieldDecor, FIELD_REVEAL } from './fields-fx.js';
 import { overheadSvg, STATUS_GLYPH } from './overhead.js';
 import { readiness } from './charge.js';
+import { familyById } from '../../data/beast-dex.js';
 
 export const DEX_ID = /^[A-Z]{3}-\d\d-F$/;
 export const T8_REVISION = 1; // bump when the drawing of a look changes (the reviewer's fingerprint includes it)
@@ -101,7 +102,7 @@ export function fieldAlpha(state, id, t) {
 /** Over-the-head data from the snap snapshot: status slot, the bar's readiness (fx/charge.js), the low-stamina battery. */
 function hudOf(view) {
   if (!view?.hud) return null; const out = {};
-  for (const [k, v] of Object.entries(view.hud)) { const charge = v.ability ? readiness(v.family, v.ability, v.form, v.mastery) : null; const e = { element: v.element, ...(v.status ? { status: v.status } : {}), ...(v.battery ? { battery: true, staminaFrac: 0.2 } : {}), ...(charge ? { charge } : {}) }; if (e.status || e.battery || e.charge) out[k] = e; }
+  for (const [k, v] of Object.entries(view.hud)) { const charge = v.ability ? readiness(v.family, v.ability, v.form, v.mastery) : null; const look = v.family ? LOOKS[familyById(v.family)?.abilities?.football] : null; const e = { element: v.element, family: v.family || null, ...(look?.charge?.icon ? { icon: look.charge.icon } : {}), ...(v.status ? { status: v.status } : {}), ...(v.battery ? { battery: true, staminaFrac: 0.2 } : {}), ...(charge ? { charge } : {}) }; if (e.status || e.battery || e.charge) out[k] = e; }
   return Object.keys(out).length ? out : null;
 }
 /** The longest an effect of this state keeps drawing after the last frame (end-of-play hold). */
@@ -148,6 +149,10 @@ export function drawT8(state, t, pos, { quality = 'full', toSvg = null, ball = n
       if (txt) o += `<g opacity="${op(1 - kb * kb)}"><text x="${f2(cl(own[0], 8))}" y="${f2(own[1] - 5.4 - kb * 1.2)}" text-anchor="middle" font-size="2.1" font-weight="900" fill="${it.L.a}" stroke="#0b1a14" stroke-width="0.4" paint-order="stroke">${it.L.glyph} ${esc(txt)}</text></g>`;
     }
   }
+  // A ready ability's own readiness look (e.g. Blazing Resolve's body in flame at full charge), from the snap until it is spent.
+  if (state.hud) for (const [k, v] of Object.entries(state.hud)) { if (!v.charge?.ready || !v.family) continue; const look = LOOKS[familyById(v.family)?.abilities?.football]; if (!look?.ready) continue;
+    const [team, slot] = k.split(':'); const sp = state.spends.find((x) => x.team === team && x.slot === slot); if (sp && t >= sp.t) continue; const P = pos(team, slot); if (!P) continue;
+    const c = { cx: P[0], cy: P[1], t, L: elementOf(look.element), sid: slot.charCodeAt(0) * 17 + seed, n: (m) => countFor(m, quality), q: quality }; if (look.ready.u) u += look.ready.u(c); if (look.ready.o) o += look.ready.o(c); }
   // Over the head: the shared status badge, the charge / recharge bar and the low-stamina battery, alternating (never together).
   o += overheadSvg(state, t, pos, { quality, seed });
   return { under: u, over: o, ball: b, cues };

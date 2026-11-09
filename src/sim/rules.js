@@ -30,7 +30,8 @@ function snapView(state, t8, slots, home) {
     if (!m?.id) continue; const st = t8.status?.[m.id]; const ab = t8.ability?.[m.id]; const sta = t8.stamina?.[m.id];
     const low = !!(sta && showBattery(sta));
     if (!st && !ab && !low) continue;
-    hud[`${team}:${slot}`] = { ...(st ? { status: { id: st.id, remaining: st.restOfPlay ? null : st.remaining } } : {}), ...(ab && m.species ? { family: m.species, form: m.form || `${m.species}:0`, mastery: m.mastery || 0, ability: { ...ab } } : {}), ...(low ? { battery: true } : {}), element: m.type || null };
+    const side = team === 'off' ? state.possession : opponent(state.possession); const conceded = t8.touchdowns?.[side === 'home' ? 'away' : 'home'] || 0; // Daybreak's charges come from the club's conceded-touchdown ledger
+    hud[`${team}:${slot}`] = { ...(st ? { status: { id: st.id, remaining: st.restOfPlay ? null : st.remaining } } : {}), ...(ab && m.species ? { family: m.species, form: m.form || `${m.species}:0`, mastery: m.mastery || 0, ability: { ...ab, ...(conceded ? { conceded } : {}) } } : {}), ...(low ? { battery: true } : {}), element: m.type || null };
   }
   return { hud, home };
 }

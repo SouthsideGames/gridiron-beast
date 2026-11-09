@@ -10,7 +10,7 @@ function droplets(x0, y0, x1, y1, k, n, sid, L, o = 1) { let s = ''; for (let i 
 
 export const FIRE_WATER = {
   // FIR-01 Blazing Resolve: the charge bar lives over the head (overhead.js); the ignition engulfs the runner in flame for the encounter.
-  'FIR-01-F': { id: 'FIR-01-F', at: { impact: 0.1 }, na: ['target'], name: 'Blazing Resolve', element: 'Fire', dur: 1.5, shake: true, charge: { max: 3 }, cue: () => 'Ignites!',
+  'FIR-01-F': { ready: { o: (c) => flames(c.cx, c.cy - 0.6, 1.9, c.t, c.sid, c.n(5), 0.75, c.L), u: (c) => disc(c.cx, c.cy + 0.7, 2, 0.9, c.L.b, 0.3) }, id: 'FIR-01-F', at: { impact: 0.1 }, na: ['target'], name: 'Blazing Resolve', element: 'Fire', dur: 1.5, shake: true, charge: { max: 3 }, cue: () => 'Ignites!',
     u: (c) => disc(c.cx, c.cy + 0.7, 2.4 + 0.3 * sin(c.t * 9), 1.1, c.L.b, 0.45 * c.fade) + (c.age < 0.35 ? ring(c.cx, c.cy, 1 + c.age * 9, c.L.a, 0.5 * (1 - c.age / 0.35) + 0.1, 1 - c.age / 0.35) : ''),
     o: (c) => flames(c.cx, c.cy - 0.6, 2.3, c.t, c.sid, c.n(7), 0.9 * c.fade, c.L) },
   // FIR-02 Impact Pyre: charges fill a three-part bar (ability_charge events bump it); the bloom is the field's reveal at the owner's spot.
