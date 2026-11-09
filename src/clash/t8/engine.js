@@ -21,7 +21,7 @@ import { createRng } from '../../core/rng.js';
 import { typeFactor, typeEdge } from '../types.js';
 import { rampFor, rampModelFor } from '../engine.js';
 import { T8_VALUES } from './values.js';
-import { T8_FLAGS, flag } from './flags.js';
+import { T8_FLAGS, flag, provisionalPoint } from './flags.js';
 import { buildT8Combatant } from './combatant.js';
 import { addClock, tickClocks, clearClocks } from './clock.js';
 import { roundHalfUp, resolveAmount, splitRaw } from './arith.js';
@@ -55,7 +55,7 @@ export const POST_KO_EXCEPTIONS = Object.freeze({
 /** P9 diagnostic thresholds for Clash (spec §21 B4; P9_VERIFIED_LIMITS.md §6): never restrictions; an overflow logs and fails the suite. */
 export const P9_CLASH_LIMITS = Object.freeze({ delayedPerSide: 2, constructsPerBattle: 2, dawnSongSchedulesPerSide: (lineupSize) => lineupSize });
 export const T8_CONTEXTS = Object.freeze(['standalone', 'opening', 'overtime']);
-const CONFIG_KEYS = ['ruleset', 'context', 'policies', 'decisions', 'abilities'];
+const CONFIG_KEYS = ['ruleset', 'context', 'policies', 'decisions', 'abilities', 'provisional'];
 /** Attack-kind tags (plan §3.6). */
 export const ATTACK_TAGS = Object.freeze(['ordinary', 'special', 'reaction', 'counter', 'followUp', 'commanded', 'assist', 'delayed']);
 
@@ -68,6 +68,8 @@ export function t8Config(config = {}) {
   if (config.ruleset != null && config.ruleset !== V.ruleset) throw new Error(`The t8 engine plays ruleset t8, not ${config.ruleset}`);
   if (config.context != null && !T8_CONTEXTS.includes(config.context)) throw new Error(`Unknown t8 battle context ${config.context}`);
   if (config.abilities != null && !['on', 'off'].includes(config.abilities)) throw new Error(`abilities must be 'on' or 'off'`);
+  // Owner ruling 2026-11-09 (rule 1): provisional readings are OFF in normal gameplay; 'on' only in reviewer / provisional-test contexts.
+  if (config.provisional != null && !['on', 'off'].includes(config.provisional)) throw new Error(`provisional must be 'on' or 'off'`);
   const policies = { a: 'ai', b: 'ai', ...(config.policies || {}) };
   for (const [k, v] of Object.entries(policies)) { if (!['a', 'b'].includes(k)) throw new Error(`Unknown side ${k} in policies`); if (!T8_POLICIES.includes(v)) throw new Error(`Unknown t8 rotation policy ${v}`); }
   const decisions = {};
@@ -75,7 +77,7 @@ export function t8Config(config = {}) {
     if (!['a', 'b'].includes(k)) throw new Error(`Unknown side ${k} in decisions`);
     decisions[k] = {}; for (const [e, d] of Object.entries(v || {})) { if (!/^\d+$/.test(e)) throw new Error(`Decision exchange ${e} is not a whole number`); if (typeof d !== 'string' || !d) throw new Error(`Decision ${k}/${e} must be an id, 'stay' or 'auto'`); decisions[k][e] = d; }
   }
-  return deepFreeze({ ruleset: V.ruleset, ...(config.context && config.context !== 'standalone' ? { context: config.context } : {}), policies, ...(Object.keys(decisions).length ? { decisions } : {}), ...(config.abilities === 'off' ? { abilities: 'off' } : {}) });
+  return deepFreeze({ ruleset: V.ruleset, ...(config.context && config.context !== 'standalone' ? { context: config.context } : {}), policies, ...(Object.keys(decisions).length ? { decisions } : {}), ...(config.abilities === 'off' ? { abilities: 'off' } : {}), ...(config.provisional === 'on' ? { provisional: 'on' } : {}) });
 }
 
 /**
@@ -88,7 +90,7 @@ export function t8Config(config = {}) {
  *  carryIn: opening / overtime only (spec §10; D10, D11).  stopAt: { exchange, turn? } (turn stepping; the B11 checkpoint, S13).
  */
 export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'full', probes = [], stage = null, carryIn = null, stopAt = null }) {
-  const cfg = t8Config(config); const context = cfg.context || 'standalone'; const ABILITIES = cfg.abilities !== 'off';
+  const cfg = t8Config(config); const context = cfg.context || 'standalone'; const ABILITIES = cfg.abilities !== 'off'; const PROV = cfg.provisional === 'on';
   if (carryIn && context === 'standalone') throw new Error('A standalone Clash has no incoming status carry (D12)');
   if (!a?.length || !b?.length || a.length > V.battle.maxPerSide || b.length > V.battle.maxPerSide) throw new Error('Each side needs 1-5 monsters');
   if (!Array.isArray(probes)) throw new Error('probes must be an array');
@@ -347,7 +349,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       }
       out.missed = out.hits.length > 0 && out.hits.every((r) => r.missed) && !out.intercepted;
       // once per attack: the whole-attack observers (counters, memories, heals), then the follow-ups (after the replacement entered)
-      const info = { attackerId: att.c.id, targetId: t.c.id, intendedId: intended.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, strikeKey: spec.strikeKey ?? null, hits: out.hits.map((r) => ({ targetId: r.targetId, loss: r.hpDamage, poolLoss: r.shieldDamage, missed: r.missed, intercepted: r.intercepted, koed: r.kos.length > 0, recipients: r.recipients })),
+      const info = { attackerId: att.c.id, targetId: t.c.id, intendedId: intended.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, strikeKey: spec.strikeKey ?? null, hits: out.hits.map((r) => ({ targetId: r.targetId, loss: r.hpDamage, poolLoss: r.shieldDamage, missed: r.missed, intercepted: r.intercepted, koed: r.kos.length > 0, recipients: r.recipients, losses: r.losses, poolLosses: r.poolLosses })),
         hpDamage: out.hpDamage, shieldDamage: out.shieldDamage, allMissed: out.missed, landed: out.landed, redirected: out.redirected, kos: [...out.kos], retaliationAllowed: !(curAttack.suppressRetaliation || curAttack.noRetaliation), inAction: att.inAction, normal };
       if (!spec.noWholeAttackHooks) {
         const order = reactionOrder(out.hits.flatMap((r) => r.recipients.map((id) => byId.get(id))).filter(Boolean), att);
@@ -361,7 +363,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   }
   function oneHit(att, t, spec, hitNo) {
     const prevHit = curHit; curHit = { id: ++hitSeq, tag: spec.tag, attacker: att.c.id, abilityId: spec.abilityId ?? null, hitNo };
-    const res = { targetId: t.c.id, missed: false, intercepted: false, hpDamage: 0, shieldDamage: 0, kos: [], recipients: [], decided: false, prevented: 0 };
+    const res = { targetId: t.c.id, missed: false, intercepted: false, hpDamage: 0, shieldDamage: 0, kos: [], recipients: [], losses: {}, poolLosses: {}, decided: false, prevented: 0 };
     try {
       const sideOf = t.side;
       // 3.5 interception (Stone Divide): asked of the target's side in lineup order, then probes
@@ -382,8 +384,10 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       const out = att.koed && att.koSnapshot ? att.koSnapshot.outgoing : clashEffect(att.status).outgoing;
       const p8 = penaltyOf(att, spec);
       const rmInfo = { target: t.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null };
-      const abRaw = [...hookList(callC('rawModifiers', att, rmInfo)), ...hookList(probe('rawModifiers', att.c.id, rmInfo))].reduce((k, m) => k * (m.factor ?? 1), 1);
-      const raw = att.c.atk * (spec.mult ?? 1) * ramp * spread * out * p8 * abRaw;
+      const rawMods = [...hookList(callC('rawModifiers', att, rmInfo)), ...hookList(probe('rawModifiers', att.c.id, rmInfo))];
+      const abRaw = rawMods.reduce((k, m) => k * (m.factor ?? 1), 1);
+      const abAdd = rawMods.reduce((k, m) => k + (m.add ?? 0), 0); // an additive raw budget (Echo Strike's stored-hit bonus), before every defence
+      const raw = att.c.atk * (spec.mult ?? 1) * ramp * spread * out * p8 * abRaw + abAdd;
       // attacker-side shield rule (Phase Strike bypass, Iron Bite multiplier)
       const sr = callC('shieldRule', att, { target: t.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null });
       const hitSpec = sr ? { ...spec, shieldRule: sr } : spec;
@@ -436,7 +440,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
         }
         if (m.shield?.broken) callC('statusEnded', rec, { id: 'shielded', reason: 'broken', sourceId: att.c.id, abilityId: spec.abilityId ?? null });
         landed.push({ x: rec, loss, poolLoss: m.shield?.poolLoss ?? 0, transferred: !!transferred, prevented });
-        res.recipients.push(rec.c.id); res.hpDamage += loss; res.shieldDamage += m.shield?.poolLoss ?? 0; res.prevented += prevented;
+        res.recipients.push(rec.c.id); res.losses[rec.c.id] = loss; res.poolLosses[rec.c.id] = m.shield?.poolLoss ?? 0; res.hpDamage += loss; res.shieldDamage += m.shield?.poolLoss ?? 0; res.prevented += prevented;
         if (rec.hp <= 0) { knockout(rec, att); res.kos.push(rec.c.id); }
       }
       res.decided = afterHit(att, t, spec, landed, false);
@@ -541,7 +545,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   function diagnostic(kind, detail) { diag.overflow.push({ kind, ex, ...detail }); if (LOG) log('diagnostic', null, null, `P9 diagnostic: ${kind} over its threshold (${JSON.stringify(detail)})`, { kind, detail, stage: 'trigger' }); }
   /** Schedule a delayed impact for the end of exchange ex + after (default 1), marking the target side's active position (or lineup index). */
   function scheduleDelayed(owner, { abilityId, targetSide, targetId, after = 1, data = {} }) {
-    const item = { id: ++delayedSeq, ownerId: owner.c.id, abilityId, side: targetSide, slot: flag('delayedSlot') === 'lineup-index' ? byId.get(targetId)?.slot ?? 0 : 'active', launchedEx: ex, impactEx: ex + after, data: { ...data } };
+    const item = { id: ++delayedSeq, ownerId: owner.c.id, abilityId, side: targetSide, slot: 'active', launchTargetId: targetId, launchedEx: ex, impactEx: ex + after, data: { ...data } };
     delayed.push(item);
     const pending = delayed.filter((d) => d.ownerId[0] === owner.c.id[0]).length;
     if (pending > P9_CLASH_LIMITS.delayedPerSide) diagnostic('delayed impacts per side', { side: owner.side.key, pending });
@@ -554,7 +558,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       delayed.splice(delayed.indexOf(item), 1);
       const owner = byId.get(item.ownerId); const side = S[item.side];
       const occupant = item.slot === 'active' ? side.active : side.line[item.slot];
-      const frozen = { occupantId: occupant && !occupant.koed ? occupant.c.id : null, others: living(side).filter((y) => y !== occupant).map((y) => y.c.id) }; // front, then the rest front-to-back (lineup order)
+      const lt = byId.get(item.launchTargetId);
+      const frozen = { occupantId: occupant && !occupant.koed ? occupant.c.id : null, launchTargetId: item.launchTargetId, launchTargetAlive: !!lt && !lt.koed, disputed: !!occupant && occupant.c.id !== item.launchTargetId, others: living(side).filter((y) => y !== occupant).map((y) => y.c.id) }; // front, then the rest front-to-back (lineup order)
       if (LOG) log('delayed_impact', owner, occupant || null, `${owner.c.name}'s ${item.abilityId} impacts${owner.koed ? ' (at its pre-KO strength)' : ''}`, { abilityId: item.abilityId, delayedId: item.id, occupant: frozen.occupantId, others: frozen.others, stage: 'resolution', postKO: owner.koed || undefined });
       callC('delayedImpact', owner, { ...item, frozen });
       if (winner) return true;
@@ -602,6 +607,20 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     activate: (self, text, extra = {}) => { if (LOG) log('ability', byId.get(self.id), extra.targetId ? byId.get(extra.targetId) || null : null, `${self.name}: ${self.abilityId} activates (${text})`, { abilityId: self.abilityId, stage: 'activation', ...extra }); },
     cleanup: (self, text, extra = {}) => { if (LOG) log('cleanup', byId.get(self.id), extra.targetId ? byId.get(extra.targetId) || null : null, `${self.name}: ${self.abilityId} ${text}`, { abilityId: self.abilityId, stage: 'cleanup', ...extra }); },
     unmet: (self, conditions, extra = {}) => { reportUnmet(extra.hook || 'contract', self.id, { abilityId: self.abilityId, unmet: conditions.map((c) => (typeof c === 'string' ? { condition: c } : c)) }); return { unmet: conditions.map((c) => (typeof c === 'string' ? { condition: c } : c)), abilityId: self.abilityId, reported: true }; },
+    /**
+     * A decision that depends on an unruled point (flags.js PROVISIONAL_POINTS; owner ruling 2026-11-09 rule 1). Normal gameplay: logs
+     * `unmet: awaiting ruling` and returns false (the caller does not activate; its use is preserved). Provisional mode: logs the
+     * labelled reading and returns true.
+     */
+    provisional: (self, pointId, detail = '') => {
+      const p = provisionalPoint(pointId); const x = byId.get(self.id) || null;
+      if (PROV) { if (LOG) log('provisional', x, null, `${self.name}: ${self.abilityId} uses the PROVISIONAL reading ${pointId} (${p.reading})${detail ? `: ${detail}` : ''}`, { abilityId: self.abilityId, point: pointId, provisional: true, stage: 'activation', waitsOn: p.waitsOn }); return true; }
+      reportUnmet('provisional', self.id, { abilityId: self.abilityId, unmet: [{ condition: 'awaiting ruling', point: pointId, waitsOn: p.waitsOn, detail }] });
+      return false;
+    },
+    provisionalMode: () => PROV,
+    /** D5: would the ordinary-only perk change this hit? (a Striker against a Shielded target; a Disruptor against an active Tank) */
+    perkDecisive: (self, foeId) => { const me = need(self.id); const f = foeId ? byId.get(foeId) : null; if (!f) return false; return (me.c.perks.shieldBreak > 1 && f.status?.id === 'shielded' && f.status.payload?.remaining > 0) || (me.c.perks.pierce && f.active && f.c.perks.guard < 1); },
     /** Mastery execution record (spec §6): one credit per valid execution; a passive at most once per cap scope (this battle). */
     executed: (self, { passive = false } = {}) => { const x = need(self.id); if (passive) { if (x.passiveCredited) return false; x.passiveCredited = true; } x.executions += 1; if (LOG) log('execution', x, null, `${x.c.name}: ${self.abilityId} execution recorded${passive ? ' (passive, once per battle)' : ''} (${x.executions})`, { abilityId: self.abilityId, executions: x.executions, passive }); return true; },
     // statuses
@@ -631,6 +650,19 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     commandStrike: (self, attackerId, targetId, spec) => { const att = need(attackerId); const tgt = need(targetId); if (att.koed || tgt.koed) return { launched: false, landed: false, missed: false, hits: [], hpDamage: 0, shieldDamage: 0, kos: [], decided: endCheck() }; return strike(att, tgt, { abilityId: self.abilityId, normalAction: false, ...spec }); },
     // lineup and rotation
     forcedRotation: (self, sideKey, opts) => forcedRotation(need(self.id), S[sideKey], { abilityId: self.abilityId, ...opts }),
+    /** Is a voluntary rotation legal for this side now (cadence, a living reserve, no lock)? { legal, unmet } */
+    rotationLegality: (sideKey) => { const L = voluntaryLegality(S[sideKey]); return { legal: L.legal, unmet: L.unmet }; },
+    /**
+     * Feather Relay (D3 as reconciled 2026-11-09): a rotation at the team's normal action opportunity, keeping the locks, legal
+     * availability and the cadence, WITHOUT the P8 entry penalty. Reason 'relay' is passed to every rotation hook. Returns
+     * { rotated, decided, unmet }.
+     */
+    teamRotation: (self, sideKey, incomingId) => {
+      const side = S[sideKey]; const L = voluntaryLegality(side); if (!L.legal) return { rotated: false, decided: false, unmet: L.unmet };
+      const inc = byId.get(incomingId); if (!inc || inc.koed || inc.active || inc.side !== side) return { rotated: false, decided: false, unmet: [{ condition: 'incoming is a living reserve', detail: incomingId }] };
+      const out = side.active; const decided = executeRotation(side, inc, 'relay', { reason: 'relay', penalty: false, abilityId: self.abilityId });
+      return { rotated: !out.active && inc.active, decided, unmet: [] };
+    },
     // delayed impacts, constructs, schedules
     delay: (self, opts) => scheduleDelayed(need(self.id), { abilityId: self.abilityId, ...opts }),
     pendingDelayed: () => delayed.map((d) => ({ ...d })),
@@ -690,9 +722,9 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     return pick ? { incoming: pick, by: 'ai' } : null;
   }
   const rotHooks = (hook, info) => { for (const y of livingStable()) { const r = callC(hook, y, info); if (r) return { ...r, by: y.c.id }; } return null; };
-  function executeRotation(side, incoming, by) {
+  function executeRotation(side, incoming, by, { reason = 'voluntary', penalty = true, abilityId = null } = {}) {
     const out = side.active; if (!out || out.koed || incoming.koed || incoming.active) return false;
-    const info = { side: side.key, out: out.c.id, in: incoming.c.id };
+    const info = { side: side.key, out: out.c.id, in: incoming.c.id, reason };
     // 1. Cinder Clamp's delay check
     const dl = rotHooks('rotationDelay', info) ?? (probes.length ? (() => { for (const y of stable()) { const r = probe('rotationDelay', y.c.id, info); if (r?.delay) return { ...r, by: y.c.id }; } return null; })() : null);
     if (dl?.delay) { if (LOG) log('rotation_delayed', out, incoming, `${out.c.name}'s rotation is delayed`, { abilityId: dl.abilityId ?? null, by: dl.by, stage: 'activation', unmet: [{ condition: 'not delayed', abilityId: dl.abilityId ?? null }] }); return false; }
@@ -704,9 +736,9 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     if (out.koed) { if (LOG) log('rotation_cancelled', out, incoming, `${out.c.name} is knocked out before it can rotate`, { rule: 'B3 rule 4: ordinary replacement' }); return settleHit(); }
     // 4. departure; 5. the entrant's entry effects (in enter); 6. Cold Welcome and Downdraft on the entrant
     side.lastVoluntary = ex; side.rotations += 1;
-    if (LOG) log('rotation', out, incoming, `${by === 'manual' ? 'Your call' : 'AI'}: ${out.c.name} rotates out for ${incoming.c.name}`, { side: side.key, voluntary: true, out: out.c.id, in: incoming.c.id, by });
-    depart(out, 'voluntary'); enter(incoming, 'voluntary'); incoming.p8pending = true;
-    const ar = { side: side.key, in: incoming.c.id, out: out.c.id, reason: 'voluntary' };
+    if (LOG) log('rotation', out, incoming, `${by === 'manual' ? 'Your call' : by === 'relay' ? 'Feather Relay' : 'AI'}: ${out.c.name} rotates out for ${incoming.c.name}${penalty ? '' : ' (no entry penalty)'}`, { side: side.key, voluntary: reason === 'voluntary', reason, out: out.c.id, in: incoming.c.id, by, ...(abilityId ? { abilityId, stage: 'resolution' } : {}), ...(penalty ? {} : { noPenalty: true }) });
+    depart(out, reason); enter(incoming, reason); if (penalty) incoming.p8pending = true;
+    const ar = { side: side.key, in: incoming.c.id, out: out.c.id, reason };
     for (const y of livingStable()) if (runDescriptors(hookList(callC('arrival', y, ar)), y.c.id, 'arrival')) return true;
     if (probes.length) for (const y of stable()) if (runDescriptors(hookList(probe('arrival', y.c.id, ar)), y.c.id, 'arrival')) return true;
     return settleHit();
@@ -753,17 +785,19 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       callC('stunnedSkip', x, { turn: x.turns });
     } else {
       // The team action opportunity (Feather Relay, left unmet) before the active chooses: reserves in lineup order.
-      for (const y of reservesOf(x.side)) { const r = callC('teamAction', y, { activeId: x.c.id }); if (r?.run) { done = !!r.run(api, y.self); break; } }
+      let teamActed = false;
+      for (const y of reservesOf(x.side)) { const r = callC('teamAction', y, { activeId: x.c.id }); if (r?.run) { const tr = r.run(api, y.self) || {}; if (tr.acted) { teamActed = true; done = !!tr.decided; if (LOG) log('team_action', y, x, `${y.c.name}'s ${y.mod.abilityId} took the team's normal action: no normal attack for the team this turn`, { abilityId: y.mod.abilityId, stage: 'cleanup' }); break; } } }
       // Signature restriction (Eye of the Storm): a restricted active uses the ordinary attack instead of its ready, repeatable signature;
       // its contract is not asked, so nothing is spent. Passives, entry effects, reactions and once-per-Clash casts are not restricted.
       const restricted = !!x.sigRestrict && x.mod && restrictable(x.mod.abilityId);
       let choice = null;
-      if (!done) {
+      if (!done && !teamActed) {
         if (restricted) { if (LOG) log('signature_restricted', x, null, `${x.c.name} must use an ordinary attack (${x.sigRestrict.abilityId})`, { abilityId: x.sigRestrict.abilityId, restricted: x.mod.abilityId, stage: 'resolution', left: x.sigRestrict.left }); }
         else choice = callC('chooseAction', x, { foeId: other(x.side).active?.c.id ?? null, restricted: !!x.sigRestrict });
         if (choice == null) choice = probe('chooseAction', x.c.id);
       }
-      if (!done && choice?.kind === 'skip') { x.skips += 1; x.consecutiveSkips += 1; if (LOG) log('skip', x, null, `${x.c.name}'s turn is skipped`, { turn: x.turns }); }
+      if (teamActed) { /* the team's normal action was used by a reserve support action (Feather Relay) */ }
+      else if (!done && choice?.kind === 'skip') { x.skips += 1; x.consecutiveSkips += 1; if (LOG) log('skip', x, null, `${x.c.name}'s turn is skipped`, { turn: x.turns }); }
       else if (!done) {
         x.consecutiveSkips = 0; x.inAction = true;
         const foe = other(x.side).active;
@@ -881,8 +915,12 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
 
   // ---- the cap (D8 provisional): pending delayed impacts are discarded (or resolved, per the flag), then HP share, then the coin
   if (!winner && !stopped && delayed.length) {
-    if (flag('d8CapDelayed') === 'resolve') { phase = 'end_of_exchange'; resolveDelayed(); }
-    else { for (const d of delayed.splice(0)) if (LOG) log('cancelled', byId.get(d.ownerId) || null, null, `${byId.get(d.ownerId)?.c.name}'s pending ${d.abilityId} lapses at the exchange cap`, { abilityId: d.abilityId, stage: 'cleanup', rule: 'exchange-cap (provisional, D8)' }); }
+    if (PROV && flag('d8CapDelayed') === 'resolve') { phase = 'end_of_exchange'; for (const d of delayed) d.impactEx = ex; if (LOG) log('provisional', null, null, 'Pending delayed impacts resolve at the cap (PROVISIONAL reading d8-cap-delayed)', { point: 'd8-cap-delayed', provisional: true }); resolveDelayed(); }
+    else for (const d of delayed.splice(0)) {
+      const o = byId.get(d.ownerId) || null;
+      if (PROV) { if (LOG) log('provisional', o, null, `${o?.c.name}'s pending ${d.abilityId} is discarded at the cap (PROVISIONAL reading d8-cap-delayed)`, { abilityId: d.abilityId, point: 'd8-cap-delayed', provisional: true, stage: 'cleanup', rule: 'exchange-cap (provisional, D8)' }); }
+      else if (LOG) { log('unmet', o, null, `${o?.c.name}'s pending ${d.abilityId} does not resolve: the battle ends at the cap (awaiting ruling, D8)`, { abilityId: d.abilityId, stage: 'trigger', hook: 'cap', unmet: [{ condition: 'awaiting ruling', point: 'd8-cap-delayed', waitsOn: provisionalPoint('d8-cap-delayed').waitsOn }] }); log('cancelled', o, null, `${o?.c.name}'s pending ${d.abilityId} lapses with the battle (exchange-cap)`, { abilityId: d.abilityId, stage: 'cleanup', rule: 'exchange-cap (D8 open)' }); }
+    }
   }
   const hpShare = (side) => { const t = side.line.reduce((s, x) => s + x.c.maxHp, 0); return side.line.reduce((s, x) => s + x.hp, 0) / t; };
   const share = { a: hpShare(S.a), b: hpShare(S.b) };
@@ -907,7 +945,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   const result = {
     ruleset: V.ruleset, engine: V.engineVersion, pending: !!stopped, boundary, sides,
     winner: stopped ? null : winner, by: stopped ? null : by, exchanges: ex, capped: !stopped && !!(ex >= V.battle.exchangeCap && by !== 'knockout'), seed, model, config: cfg,
-    context, carryOut, hpShare: share, lines, log: events, rngDraws: draws, probed: probes.length > 0, staged: !!stage,
+    context, carryOut, hpShare: share, lines, log: events, rngDraws: draws, probed: probes.length > 0, staged: !!stage, provisional: PROV,
     mastery, delayed: delayed.map((d) => ({ ...d })), diagnostics: { overflow: diag.overflow, constructs: diag.constructs, schedules: { ...diag.schedules } },
     stateHash: stateHash({ winner, by, ex, draws, lines }),
     replayKey: t8ReplayKey({ a, b, seed, config: cfg, carryIn }),

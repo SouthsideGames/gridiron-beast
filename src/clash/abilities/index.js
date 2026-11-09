@@ -3,3 +3,6 @@
 // S5 pilots
 import './firestorm.js';
 import './mudcub.js';
+// S6 batch A: attack modifiers and enhanced attacks
+import './nightowl.js';
+import './duskrunner.js';

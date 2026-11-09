@@ -1,7 +1,7 @@
 {
  "1": {
   "hash": "12hs2di",
-  "state": "1p0zj1s",
+  "state": "1jr1atv",
   "key": "{\"ruleset\":\"t8\",\"engine\":\"t8-s5\",\"seed\":1,\"config\":{\"ruleset\":\"t8\",\"policies\":{\"a\":\"ai\",\"b\":\"ai\"}},\"a\":[{\"id\":\"m_1n3ozyw\",\"name\":\"Umbruin\",\"species\":\"umbruin\",\"position\":\"OL\",\"level\":9,\"stage\":0,\"fatigue\":0,\"attributes\":{\"speed\":21,\"agility\":34,\"strength\":13,\"awareness\":36,\"catching\":6,\"arm\":7,\"accuracy\":8,\"blocking\":25,\"tackling\":14,\"coverage\":7,\"durability\":11,\"kicking\":5}}],\"b\":[{\"id\":\"m_8dfy39\",\"name\":\"Whirlhare\",\"species\":\"whirlhare\",\"position\":\"RB\",\"level\":17,\"stage\":0,\"fatigue\":0,\"attributes\":{\"speed\":37,\"agility\":45,\"strength\":28,\"awareness\":23,\"catching\":30,\"arm\":9,\"accuracy\":8,\"blocking\":14,\"tackling\":7,\"coverage\":6,\"durability\":14,\"kicking\":5}},{\"id\":\"m_1m7cfka\",\"name\":\"Noctlet\",\"species\":\"nightowl\",\"position\":\"S\",\"level\":7,\"stage\":0,\"fatigue\":0,\"attributes\":{\"speed\":24,\"agility\":20,\"strength\":30,\"awareness\":43,\"catching\":33,\"arm\":11,\"accuracy\":13,\"blocking\":21,\"tackling\":39,\"coverage\":43,\"durability\":30,\"kicking\":9}}]}"
  },
  "2": {

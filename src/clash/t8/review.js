@@ -5,7 +5,8 @@
 // progression, saves or collections: the runner builds synthetic monsters from species data and a seed.
 //
 // A module's `review.scenarios` entries:
-//   { id, kind, title, explain(ctx) -> string,
+//   { id, kind, title, explain(ctx) -> string, provisional?: true (owner ruling 2026-11-09 rule 1: runs with config.provisional 'on',
+//     labelled PROVISIONAL; never part of the acceptance set),
 //     setup(ctx) -> { a: [spec...], b: [spec...], seed?, config?, probes?, stopAt?, seedSearch?: { until(result) -> bool, max? } },
 //     expect(result, h) }            h: the check helpers below (h.check records a named pass / fail)
 //   spec: { species, stage?, overall?, tier?, hp?, status?, ability? }  (hp / status / ability are staged inputs, labelled)
@@ -62,7 +63,7 @@ export function runScenario({ abilityId, stage = 0, tier = 0, scenarioId, log = 
     const stageIn = {};
     su.a.forEach((sp, i) => { const st = {}; if (sp.hp != null) st.hp = sp.hp; if (sp.status) st.status = sp.status; if (sp.ability) st.ability = sp.ability; if (Object.keys(st).length) stageIn[`a${i}`] = st; });
     su.b.forEach((sp, i) => { const st = {}; if (sp.hp != null) st.hp = sp.hp; if (sp.status) st.status = sp.status; if (sp.ability) st.ability = sp.ability; if (Object.keys(st).length) stageIn[`b${i}`] = st; });
-    return { a: mk(su.a, 'a'), b: mk(su.b, 'b'), seed, config: { ruleset: 't8', policies: { a: 'none', b: 'none' }, ...(su.config || {}) }, log, probes: su.probes || [], stage: Object.keys(stageIn).length ? stageIn : null, ...(su.stopAt ? { stopAt: su.stopAt } : {}) };
+    return { a: mk(su.a, 'a'), b: mk(su.b, 'b'), seed, config: { ruleset: 't8', policies: { a: 'none', b: 'none' }, ...(su.config || {}), ...(sc.provisional ? { provisional: 'on' } : {}) }, log, probes: su.probes || [], stage: Object.keys(stageIn).length ? stageIn : null, ...(su.stopAt ? { stopAt: su.stopAt } : {}) };
   };
   // Controlled seed selection (labelled): a scenario whose demonstration needs a particular roll outcome searches forward from its seed
   // through the real engine until its stated prerequisite holds. The ability's own result is checked by `expect`, never forced.
@@ -77,7 +78,7 @@ export function runScenario({ abilityId, stage = 0, tier = 0, scenarioId, log = 
   try { sc.expect(result, h); } catch (e) { checks.push({ check: 'expect() threw', ok: false, detail: String(e?.message || e) }); }
   const stream = result.log.filter((e) => e.abilityId === abilityId || (e.kind === 'unmet' && e.abilityId === abilityId));
   const unmetEvents = result.log.filter((e) => e.kind === 'unmet' && e.abilityId === abilityId).map((e) => ({ seq: e.seq, ex: e.ex, actor: e.actor, unmet: e.unmet, hook: e.hook }));
-  const meta = { abilityId, name: a.name, family: a.familyId, form: form.id, formName: form.name, stage: form.stage, tier, tierName: TIERS[tier], scenarioId, kind: sc.kind, title: sc.title, kindRow: kindOf(abilityId), seed: result.seed, controlled, stagedInputs };
+  const meta = { provisional: !!sc.provisional, label: sc.provisional ? 'PROVISIONAL reading (not approved; reviewer / provisional tests only)' : null, abilityId, name: a.name, family: a.familyId, form: form.id, formName: form.name, stage: form.stage, tier, tierName: TIERS[tier], scenarioId, kind: sc.kind, title: sc.title, kindRow: kindOf(abilityId), seed: result.seed, controlled, stagedInputs };
   return { ok: checks.every((c) => c.ok) && checks.length > 0, checks, result, controlled, unmet: unmetEvents, stream, explain: typeof sc.explain === 'function' ? sc.explain(ctx) : sc.explain || '', meta };
 }
 
@@ -101,6 +102,10 @@ function helpers(r, ctx, checks, abilityId) {
     stages: (...wanted) => { const st = r.log.filter((e) => e.abilityId === abilityId && e.stage).map((e) => e.stage); let i = 0; for (const s of st) if (s === wanted[i]) i++; return h.check(`event stream: ${wanted.join(' -> ')}`, i === wanted.length, st.join(',')); },
     executed: (n) => { const x = [...r.lines.a, ...r.lines.b].find((l) => l.abilityId === abilityId); return h.check(n == null ? 'a mastery execution is recorded' : `${n} mastery execution(s) recorded`, x && (n == null ? x.executions > 0 : x.executions === n), x?.executions); },
     unmetReported: (f = () => true) => h.check('the unmet condition is reported', ev('unmet', (e) => e.abilityId === abilityId && f(e)).length > 0),
+    /** Normal gameplay: the ability reported `awaiting ruling` for this point (owner ruling 2026-11-09 rule 1). */
+    awaiting: (point) => h.check(`awaiting ruling (${point}) is reported`, ev('unmet', (e) => e.abilityId === abilityId && e.unmet.some((u) => u.condition === 'awaiting ruling' && u.point === point)).length > 0),
+    /** Provisional mode: the labelled reading was used. */
+    provisionalUsed: (point) => h.check(`PROVISIONAL reading ${point} is labelled`, ev('provisional', (e) => e.abilityId === abilityId && e.point === point).length > 0),
   };
   return h;
 }

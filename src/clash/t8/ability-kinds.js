@@ -59,7 +59,7 @@ export const ABILITY_KINDS = deepFreeze([
   row('ICE-04-C', 'icehorn', 'Snowdrift Shelter', 'B', 'normal-action replacement', 'repeatable', 'owner-turns', [], { signature: true }),
   row('ICE-05-C', 'glaciron', 'Glacier Wall', 'B', 'entry', 'once', 'none', []),
   row('ICE-06-C', 'glacivern', 'Deep Winter', 'F', 'normal-action replacement', 'once', 'none', []),
-  row('WIN-01-C', 'gustling', 'Feather Relay', 'E', 'team action', 'once', 'none', [], { note: 'D3 ruled conditionally (§25 item 3); not built (T8_FLAGS.featherRelay)', flag: 'featherRelay' }),
+  row('WIN-01-C', 'gustling', 'Feather Relay', 'E', 'team action', 'once', 'none', [], { note: 'D3 reconciled 2026-11-09: a rotation without the P8 penalty; voluntary status for the rotation triggers unaddressed', flag: 'featherRelayVoluntary' }),
   row('WIN-02-C', 'breezefang', 'Gust Hop', 'A', 'enhanced normal attack', 'repeatable', 'performed-attacks', [S('two-hit leap', 'special', false, false)], { signature: true, review: 'needs owner review', note: 'the plan\'s extra-strike list omits the second hit, consistent with "one performed attack"; confirm' }),
   row('WIN-03-C', 'skywarden', 'Downdraft', 'E', 'normal-action replacement', 'repeatable', 'owner-turns', [], { signature: true }),
   row('WIN-04-C', 'windlynx', 'Second Wind', 'E', 'reserveWindow', 'once', 'none', [], { review: 'needs owner review', note: 'placed in rotation/lineup although it changes initiative and no rotation occurs' }),

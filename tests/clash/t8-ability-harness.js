@@ -18,12 +18,20 @@ const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'e
 /** A value is contract-sourced when its digits (or, for 0-10, its word; or its x100 percentage) appear in the contract text. */
 const inContract = (text, n) => text.includes(String(n)) || (Number.isInteger(n) && n >= 0 && n <= 10 && text.includes(WORDS[n])) || (Number.isInteger(Math.round(n * 100)) && Math.abs(n * 100 - Math.round(n * 100)) < 1e-9 && text.includes(String(Math.round(n * 100))));
 
-export function contractSuite(abilityIds, { minScenarios = 3, requiredKinds = ['valid', 'blocked'] } = {}) {
+/**
+ * The ACCEPTANCE contract cases: only scenarios that use no provisional reading (owner ruling 2026-11-09 rule 1). An ability whose
+ * functioning depends on an unruled point is accepted here by its normal-gameplay behaviour: the explicit `awaiting ruling` report.
+ * provisionalSuite() runs the labelled provisional scenarios; it is called only from tests/clash/t8-provisional-*.test.js.
+ */
+export function contractSuite(abilityIds, opts = {}) { return suite(abilityIds, { ...opts, provisional: false }); }
+export function provisionalSuite(abilityIds, opts = {}) { return suite(abilityIds, { minScenarios: 1, requiredKinds: [], ...opts, provisional: true }); }
+function suite(abilityIds, { minScenarios = 3, requiredKinds = ['valid', 'blocked'], provisional = false } = {}) {
+  const pick = (list) => list.filter((s) => !!s.provisional === provisional);
   for (const id of abilityIds) {
     const mod = clashContractById(id); const a = abilityById(id);
     test(`${id} ${a.name}: registered with a kinds row, scenarios of the required kinds, and contract-sourced values`, () => {
       assert.ok(mod, `${id} is registered`); assert.ok(kindOf(id), `${id} has an ability-kind row`); assert.equal(kindOf(id).family, a.familyId);
-      const sc = mod.review?.scenarios || []; assert.ok(sc.length >= minScenarios, `${id}: ${sc.length} scenarios (need ${minScenarios})`);
+      const sc = pick(mod.review?.scenarios || []); assert.ok(sc.length >= minScenarios, `${id}: ${sc.length} scenarios (need ${minScenarios})`);
       for (const s of sc) assert.ok(SCENARIO_KINDS.includes(s.kind), `${id}/${s.id}: kind ${s.kind}`);
       for (const k of requiredKinds) assert.ok(sc.some((s) => s.kind === k), `${id}: a '${k}' scenario`);
       assert.equal(new Set(sc.map((s) => s.id)).size, sc.length, 'scenario ids are unique');
@@ -34,11 +42,14 @@ export function contractSuite(abilityIds, { minScenarios = 3, requiredKinds = ['
       }
     });
     for (const f of formsOf(a.familyId)) for (let tier = 0; tier < 4; tier++) {
-      const scenarios = listScenarios(id, f.stage, tier);
-      test(`${id} ${f.name} (${f.id}) tier ${tier}: ${scenarios.length} contract cases run on the real engine`, () => {
+      const scenarios = pick(listScenarios(id, f.stage, tier));
+      if (!scenarios.length) continue;
+      test(`${provisional ? '[PROVISIONAL] ' : ''}${id} ${f.name} (${f.id}) tier ${tier}: ${scenarios.length} ${provisional ? 'provisional' : 'contract'} cases run on the real engine`, () => {
         withoutRandomness(() => {
           for (const s of scenarios) {
             const out = runScenario({ abilityId: id, stage: f.stage, tier, scenarioId: s.id });
+            assert.equal(out.result.provisional, provisional, `${s.id}: provisional mode ${provisional ? 'on' : 'off'}`);
+            if (!provisional) assert.ok(!out.result.log.some((e) => e.kind === 'provisional'), `${s.id}: no provisional reading in an acceptance case`);
             const bad = out.checks.filter((c) => !c.ok);
             assert.deepEqual(bad, [], `${id} ${f.id} t${tier} ${s.id} (${s.kind}): ${bad.map((c) => `${c.check}: ${JSON.stringify(c.detail)}`).join('; ')}`);
             assert.ok(out.checks.length > 0, `${s.id} has checks`);
@@ -49,8 +60,9 @@ export function contractSuite(abilityIds, { minScenarios = 3, requiredKinds = ['
         });
       });
     }
+    if (provisional) continue;
     test(`${id}: determinism (same seed -> identical log hash and state; log off -> identical outcome and draws)`, () => {
-      const sc = listScenarios(id, 0, 0);
+      const sc = pick(listScenarios(id, 0, 0));
       for (const s of sc.slice(0, 2)) { const d = determinismCheck({ abilityId: id, stage: 0, tier: 0, scenarioId: s.id }); assert.ok(d.same, `${s.id}: same inputs give the same hashes`); assert.ok(d.logIndependent, `${s.id}: log on / off agree`); }
     });
   }

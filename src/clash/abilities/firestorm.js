@@ -1,16 +1,33 @@
 // FIR-03-C Falling Star (firestorm: Pyronix). Task 8 M4 S5 pilot: the delayed, slot-marked impact with frozen targets.
 // Contract (Dex): launch a meteor in place of the normal attack, once per Clash; one meteor in flight per owner. It marks the normal
-// target's lineup position (the opposing ACTIVE position under T8_FLAGS.delayedSlot, see flags.js), not the monster. Impact at the end
-// of the following exchange after rotations: the target identities are frozen when the impact begins (the marked occupant first, then
-// every other living opponent front-to-back, reserves included). Main hit 150/160/170/180% by mastery; splash 50/55/60/65% to EVERY
-// other living opponent; an empty main slot still splashes everyone. Each hit is an independent delayed direct attack (its own type,
-// defence, shield and explicit-miss roll; one diversion cannot cancel the other hits) and each damaged target's reactions resolve
-// right after its hit. The meteor persists through the owner's rotation and knockout (B3 rule 3 exception: the owner's pre-KO strength,
-// engine.js knockout snapshot). No Burn / stun, no adjacency. Mastery execution: the launch.
+// target's lineup position, not the monster. Impact at the end of the following exchange after rotations: target identities are
+// frozen when the impact begins (the marked occupant first, then every other living opponent front-to-back, reserves included). Main
+// hit 150/160/170/180% by mastery; splash 50/55/60/65% to EVERY other living opponent; an empty main slot still splashes everyone.
+// Each hit is an independent delayed direct attack (its own type, defence, shield and explicit-miss roll) and each damaged target's
+// reactions resolve right after its hit. The meteor persists through the owner's rotation and knockout (B3 rule 3: the owner's pre-KO
+// strength, engine.js knockout snapshot). No Burn / stun, no adjacency. Mastery execution: the launch.
+//
+// Awaiting ruling ('delayed-slot', flags.js): when the launch target is no longer the active fighter at impact (it rotated out or was
+// knocked out and replaced), "the marked position" is disputed: the active position (its new occupant takes the main hit) or the
+// lineup index (the launch target, or an empty slot). In normal gameplay the undisputed splash hits resolve and the disputed hits report
+// `awaiting ruling`; the reading in T8_FLAGS.delayedSlot applies only in provisional mode. The cap case is 'd8-cap-delayed' (engine).
 import { registerClashAbility } from '../t8/registry.js';
 import { byTier, unmet } from './util.js';
 
 const MAIN = [150, 160, 170, 180], SPLASH = [50, 55, 60, 65];
+
+/** The impact's target list [{ id, mult, key }] for the given reading, or null when the reading is withheld (disputed, normal mode). */
+export function delayedTargets(api, self, item, { mainPct, splashPct }) {
+  const f = item.frozen; const main = (id) => ({ id, mult: mainPct / 100, key: 'main hit' }); const splash = (id) => ({ id, mult: splashPct / 100, key: 'splash' });
+  if (!f.disputed) return { targets: [...(f.occupantId ? [main(f.occupantId)] : []), ...f.others.map(splash)], disputed: [] };
+  const disputedIds = [f.occupantId, ...(f.launchTargetAlive ? [f.launchTargetId] : [])];
+  if (!api.provisional(self, 'delayed-slot', `the launch target ${api.get(f.launchTargetId).name} is no longer the active fighter`)) {
+    return { targets: f.others.filter((id) => !disputedIds.includes(id)).map(splash), disputed: disputedIds };
+  }
+  if (api.flags.delayedSlot.value === 'active-position') return { targets: [main(f.occupantId), ...f.others.map(splash)], disputed: [] };
+  const all = [f.occupantId, ...f.others]; // lineup index: the launch target keeps the mark (or the slot is empty when it is down)
+  return { targets: [...(f.launchTargetAlive ? [main(f.launchTargetId)] : []), ...all.filter((id) => id !== f.launchTargetId).map(splash)], disputed: [] };
+}
 
 export default registerClashAbility({
   family: 'firestorm', abilityId: 'FIR-03-C',
@@ -29,17 +46,15 @@ export default registerClashAbility({
       return { kind: 'done' };
     },
     delayedImpact(api, self, item) {
-      const v = byTier(MAIN, self.tier), s = byTier(SPLASH, self.tier);
       const me = api.me(self); const exception = me.koed ? 'FIR-03-C' : undefined;
-      const targets = [...(item.frozen.occupantId ? [{ id: item.frozen.occupantId, mult: v / 100, key: 'main hit' }] : []), ...item.frozen.others.map((id) => ({ id, mult: s / 100, key: 'splash' }))];
-      if (!targets.length) { api.cleanup(self, 'impacts with no living opponent'); self.state.inFlight = false; return; }
+      const { targets, disputed } = delayedTargets(api, self, item, { mainPct: byTier(MAIN, self.tier), splashPct: byTier(SPLASH, self.tier) });
       for (const t of targets) {
-        if (api.get(t.id).koed) continue; // knocked out by an earlier hit's reaction: frozen identity, but no target
+        if (api.get(t.id).koed) continue; // knocked out by an earlier hit's reaction: frozen identity, no target
         const r = api.strike(self, t.id, { tag: 'delayed', mult: t.mult, strikeKey: t.key, label: `Falling Star ${t.key}`, exception, normalAction: false });
         if (r.decided) break;
       }
       self.state.inFlight = false;
-      api.cleanup(self, 'meteor resolved');
+      api.cleanup(self, disputed.length ? `meteor resolved; ${disputed.length} disputed hit(s) awaiting ruling` : 'meteor resolved');
     },
   },
   review: {
@@ -64,14 +79,18 @@ export default registerClashAbility({
         explain: () => 'Pyronix launches at exchange 1 and is knocked out in exchange 2 before the end of the exchange; the meteor still impacts (B3 rule 3) with Pyronix\'s strength as it was before the knockout.',
         setup: () => ({ a: [{ species: 'firestorm', hp: 1 }, { species: 'tidepaw' }], b: [{ species: 'pebble', overall: 90 }, { species: 'lumen' }], seed: 2, stopAt: { exchange: 2 } }),
         expect: (r, h) => { const ko = h.ev('ko', (e) => e.target === 'a0')[0]; const imp = h.ab('delayed_impact')[0]; h.check('owner knocked out before the impact', ko && imp && ko.seq < imp.seq && imp.postKO === true); h.check('the impact still deals damage', h.ab('damage', (e) => e.ex === 2 && e.actor === 'a0').length >= 1); h.stages('activation', 'resolution', 'cleanup'); } },
-      { id: 'occupant-changes', kind: 'multiTarget', title: 'The marked position changes hands before impact: the current occupant takes the main hit',
-        explain: () => 'The opposing active at launch is knocked out before the impact; under the active-position reading (T8_FLAGS.delayedSlot) its replacement is the current occupant and takes the main hit, and every other living opponent takes the splash. (An empty marked position cannot occur under one active fighter: a side with no active has lost.)',
-        setup: () => ({ a: [{ species: 'firestorm', overall: 95 }, { species: 'voltfang', overall: 95 }], b: [{ species: 'tidepaw', hp: 1 }, { species: 'pebble' }, { species: 'lumen' }], seed: 7, config: { policies: { a: 'none', b: 'none' } }, stopAt: { exchange: 2 } }),
-        expect: (r, h) => { const imp = h.ab('delayed_impact')[0]; const hits = h.ab('damage', (e) => e.ex === 2); h.check('impact happened', !!imp); h.check('the replacement (now active) takes the main hit; the others splash', imp && hits.length >= 1 && hits.every((e) => (e.target === imp.occupant ? e.strikeKey === 'main hit' : e.strikeKey === 'splash'))); } },
+      { id: 'occupant-changes', kind: 'blocked', title: 'The launch target is knocked out before impact: the disputed hits report awaiting ruling; the undisputed splash resolves',
+        explain: () => 'The opposing active at launch is knocked out before the impact and replaced. Whether its replacement takes the main hit (active position) or the slot is empty (lineup index) awaits a ruling: in normal gameplay that hit is withheld with an explicit report, and the third opponent, undisputed under both readings, takes the splash.',
+        setup: () => ({ a: [{ species: 'firestorm', overall: 95 }, { species: 'voltfang', overall: 95 }], b: [{ species: 'tidepaw', hp: 1 }, { species: 'pebble' }, { species: 'lumen' }], seed: 7, stopAt: { exchange: 2 } }),
+        expect: (r, h) => { h.awaiting('delayed-slot'); const hits = h.ab('damage', (e) => e.ex === 2); h.check('only the undisputed splash resolves', hits.length === 1 && hits[0].target === 'b2' && hits[0].strikeKey === 'splash', hits.map((e) => e.target)); h.check('cleanup names the disputed hits', h.has('cleanup', (e) => e.abilityId === 'FIR-03-C' && /awaiting ruling/.test(e.text))); } },
+      { id: 'occupant-changes-provisional', kind: 'multiTarget', provisional: true, title: 'PROVISIONAL (active-position reading): the replacement takes the main hit',
+        explain: () => 'Provisional reading T8_FLAGS.delayedSlot = active position: the current occupant of the active position (the replacement) takes the main hit and every other living opponent the splash. Not approved; labelled.',
+        setup: () => ({ a: [{ species: 'firestorm', overall: 95 }, { species: 'voltfang', overall: 95 }], b: [{ species: 'tidepaw', hp: 1 }, { species: 'pebble' }, { species: 'lumen' }], seed: 7, stopAt: { exchange: 2 } }),
+        expect: (r, h) => { h.provisionalUsed('delayed-slot'); const imp = h.ab('delayed_impact')[0]; const hits = h.ab('damage', (e) => e.ex === 2); h.check('the replacement takes the main hit; the others splash', imp && hits.length >= 2 && hits.every((e) => (e.target === imp.occupant ? e.strikeKey === 'main hit' : e.strikeKey === 'splash'))); } },
       { id: 'no-target', kind: 'blocked', title: 'No opposing active (battle decided): nothing to launch at',
         explain: () => 'With the Clash decided before Pyronix acts, the meteor never launches; the state shows the use preserved.',
         setup: () => ({ a: [{ species: 'pebble', overall: 99 }, { species: 'firestorm' }], b: [{ species: 'tidepaw', hp: 1 }], seed: 1 }),
-        expect: (r, h) => { h.check('no launch', h.ab('delayed_launch').length === 0); h.check('use preserved', h.state('a1')?.used === false); } },
+        expect: (r, h) => { h.check('no launch', h.ab('delayed_launch').length === 0); h.check('use preserved (no unmet: the battle ended first)', h.state('a1')?.used === false); } },
     ],
   },
 });

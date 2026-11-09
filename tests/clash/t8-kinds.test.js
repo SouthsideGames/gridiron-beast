@@ -53,7 +53,7 @@ test('Eye of the Storm restricts only ready, REPEATABLE signatures that replace 
 
 test('T8_FLAGS: every switch names what it waits on and lists its options; the defaults are the plan\'s readings', () => {
   for (const [k, f] of Object.entries(T8_FLAGS)) { assert.ok(f.waitsOn, `${k} names what it waits on`); if ('value' in f) assert.ok(f.options.includes(f.value), `${k} default is one of its options`); }
-  assert.equal(flag('d13ValuePrecedence'), 'progression'); assert.equal(flag('d14DawnSongTarget'), 'self-only'); assert.equal(flag('featherRelay'), 'unmet');
+  assert.equal(flag('d13ValuePrecedence'), 'progression'); assert.equal(flag('d14DawnSongTarget'), 'self-only'); assert.equal(flag('featherRelayVoluntary'), 'voluntary');
   assert.equal(perkTag('MET-03-C'), 'ordinary'); assert.equal(perkTag('LIG-06-C'), 'special'); assert.throws(() => perkTag('FIR-03-C'), /No ordinary-perk reading/);
   // every ability the perk table names is a Striker or Disruptor special / modifier, or an ordinary rider (the rows where D5 matters)
   for (const id of Object.keys(T8_FLAGS.ordinaryPerks).filter((k) => k !== 'waitsOn')) assert.ok(abilityById(id), id);

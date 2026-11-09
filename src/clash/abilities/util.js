@@ -23,3 +23,19 @@ export const injured = (v) => v.hp < v.maxHp;
 export const unmet = (...conds) => ({ unmet: conds.map((c) => (typeof c === 'string' ? { condition: c } : c)) });
 /** Able to act: not held by a Stunned skip (an active on its D4-protected turn is able). */
 export const able = (v) => !!v && !v.koed && (!v.stunned || v.stunProtected);
+/** Is the slot a harmful status that an ordinary cleanse removes? */
+export const removableHarmful = (slot) => !!slot && ['stunned', 'slowed', 'afflicted', 'weakened', 'confused', 'healingReduced'].includes(slot.id) && !slot.payload?.uncleansable;
+export const BENEFICIAL = Object.freeze(['shielded', 'empowered', 'quickened', 'guarded']);
+export const isHarmful = (slot) => !!slot && !BENEFICIAL.includes(slot.id);
+
+/**
+ * D5 perk gate for a contract silent on the ordinary-only perks (PROVISIONAL_POINTS['d5-perk']; owner ruling 2026-11-09 rule 1).
+ * When the perk cannot change the hit (no Striker-vs-Shielded, no Disruptor-vs-active-Tank), the strike proceeds as a special with no
+ * reading involved. When it would change the hit: normal gameplay reports `awaiting ruling` and returns { ok: false } (the caller makes
+ * the ordinary attack and preserves its use); provisional mode applies T8_FLAGS.ordinaryPerks and returns its tag.
+ */
+export function perkGate(api, self, foeId, tagFor) {
+  if (!api.perkDecisive(self, foeId)) return { ok: true, tag: 'special', decisive: false };
+  if (!api.provisional(self, 'd5-perk', `${api.get(foeId).name} makes the ordinary-only perk decisive for this strike`)) return { ok: false, decisive: true };
+  return { ok: true, tag: tagFor, decisive: true };
+}
