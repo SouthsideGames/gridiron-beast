@@ -145,3 +145,81 @@ test('I5: the play that serves the absence carries the empty-spot mark on the ma
   assert.match(src, /absenceTrack\.observe\(s\.seed, s, teams\)/); assert.match(src, /absenceTrack\.frame\(s, teams, dLook, now, animate\)/); assert.match(src, /servedVacancies\(servedNow, ev\.sim, teams/); assert.match(src, /staged: ev\.fxStaged/); assert.match(src, /withoutSlots\(look0\.presnap, pre8\.vacant\)/); assert.match(src, /edge-chip absent returned/);
   assert.match(readFileSync(new URL('../src/ui/screens/ability-reviewer.js', import.meta.url), 'utf8'), /sequenceStaged\(plays, pi\)/);
 });
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// I4, the rest (Dex MET-02-F Visuals: "saved-drain tick on stamina inspect"; DAR-02-F Visuals: "allies inspect shows Dark-awareness
+// protection"): the match screen's monster inspect sheet (match-fx.js inspectInfo / lastPlayNotes; screens/match.js openInspect).
+import { inspectInfo, lastPlayNotes, findMonster } from '../src/ui/fx/match-fx.js';
+import { startGame, drainBy } from '../src/sim/t8/stamina.js';
+import { IRON_LUNGS } from '../src/sim/abilities/steelpaw.js';
+import { RADIUS as NW_RADIUS } from '../src/sim/abilities/nightowl.js';
+/** Two clubs whose defense is the reviewer play's own line-up (ids made from the slots), the subject at his mastery. */
+function clubsOf(p, subjectSlot, mastery) {
+  const unit = (map, pre) => Object.fromEntries(Object.entries(map || {}).map(([slot, m]) => [slot, { id: `${pre}_${slot}`, name: m.name, species: m.species, type: m.type, position: slot.replace(/\d+$/, ''), mastery: slot === subjectSlot && pre === 'd' ? mastery : 0, attrs: { durability: 60 } }]));
+  return { home: { offense: unit(p.sprites.off, 'o'), defense: {}, bench: [] }, away: { offense: {}, defense: unit(p.sprites.def, 'd'), bench: [] } };
+}
+
+test('I4: the inspect sheet carries Iron Lungs\' saved-drain tick on the stamina block and predicts who is steadied exactly as the engine does', () => {
+  const c = CAT.find((x) => x.family === 'steelpaw'); let ticks = 0;
+  for (const form of c.forms) for (const mastery of c.tiers) {
+    const r = reviewSequence({ family: c.family, form, mastery }); const slot = r.explain.source.slot;
+    for (const p of r.plays) { const evs = (p.sim?.events || []).filter((e) => e.ability === 'MET-02-F' && e.kind === 'ability'); if (!evs.length) continue;
+      const teams = clubsOf(p, slot, mastery); const before = JSON.stringify([p.sim, teams]); const last = lastPlayNotes(p.sim, teams, 'home');
+      const want = [...new Set(evs.flatMap((e) => e.targets))].map((sl) => `d_${sl}`); assert.deepEqual([...last.lungs].sort(), [...want].sort(), 'the relieved monsters, by id'); assert.equal(last.by[`def:${slot}`], `d_${slot}`, 'the strip entry knows its monster');
+      const state = { phase: 'scrimmage', possession: 'home', t8: { status: {}, stamina: {}, ironLungs: { progress: Object.fromEntries(want.map((id) => [id, 1])) } } }; // as it stood before that snap: one qualifying play counted
+      const formation = { defSide: 'away', defensePlay: PLAYS[p.sim.defensePlay], exact: true, vacant: [] };
+      for (const id of want) { const I = inspectInfo(state, teams, id, { formation, last });
+        assert.ok(I.staminaNotes.some((n) => n.tick && /Iron Lungs saved 1 stamina on the last play/.test(n.text)), 'the saved-drain tick'); ticks += 1;
+        assert.ok(I.staminaNotes.some((n) => !n.tick && /second qualifying play.*1 lower/.test(n.text)), `${id}: the engine relieved him, so the sheet had him steadied on his second qualifying play`); }
+      const R = IRON_LUNGS.radius[mastery]; const src = inspectInfo(state, teams, `d_${slot}`, { formation, last }); assert.match(src.staminaNotes.find((n) => !n.tick).text, /his own Iron Lungs/); assert.equal(src.ability.id, 'MET-02-F'); assert.equal(src.ability.name, LOOKS['MET-02-F'].name);
+      const ally = want.find((id) => id !== `d_${slot}`); if (ally) assert.match(inspectInfo(state, teams, ally, { formation, last }).staminaNotes.find((n) => !n.tick).text, new RegExp(`nearest ally within ${R} yd at the snap`));
+      // at most the linebacker and one ally are steadied, as in the contract
+      const steadied = Object.values(teams.away.defense).filter((m) => inspectInfo(state, teams, m.id, { formation }).staminaNotes.some((n) => /^Steadied/.test(n.text))); assert.ok(steadied.length <= 2 && steadied.length >= want.length);
+      assert.equal(JSON.stringify([p.sim, teams]), before, 'reading only');
+    }
+  }
+  assert.ok(ticks >= 8, `the tick was produced for ${ticks} monsters over every variant`);
+});
+
+test('I4: the inspect sheet shows stamina, the Iron Lungs progress and hides an opponent\'s numbers', () => {
+  const lb = { id: 'a', name: 'Steelpaw', species: 'steelpaw', type: 'Metal', position: 'LB', mastery: 0, attrs: { durability: 50 } }, dl = { id: 'b', name: 'Ram', species: 'icehorn', type: 'Ice', position: 'DL', attrs: { durability: 40 } }, cb = { id: 'c', name: 'Far', species: 'shadowkit', type: 'Dark', position: 'CB', attrs: { durability: 44 } };
+  const teams = { home: { offense: { QB: { id: 'q', name: 'Q', species: 'aurodrax', type: 'Dragon', position: 'QB', attrs: {} } }, defense: {}, bench: [] }, away: { offense: {}, defense: { LB1: lb, DL1: dl, CB1: cb }, bench: [] } };
+  const state = { phase: 'scrimmage', possession: 'home', t8: { status: { b: { id: 'slowed', remaining: 2 } }, stamina: { a: drainBy(startGame(50), 40), b: drainBy(startGame(40), 40) }, ironLungs: { progress: { b: 1 } }, absences: [{ mid: 'c', serveOn: 'home', ability: 'DRA-06-F' }] } };
+  const before = JSON.stringify(state); const formation = { defSide: 'away', defensePlay: PLAYS.cover_3, exact: true, vacant: [] };
+  const A = inspectInfo(state, teams, 'a', { formation }); assert.deepEqual(A.stamina, { now: 10, capacity: 50, frac: 0.2, low: true, exhausted: false, played: true }); assert.equal(A.slot, 'LB1'); assert.equal(A.team, 'away'); assert.equal(A.status, null);
+  const B = inspectInfo(state, teams, 'b', { formation }); assert.equal(B.stamina.exhausted, true); assert.equal(B.stamina.now, 0); assert.deepEqual(B.status, { id: 'slowed', remaining: 2 });
+  const near = Math.hypot(PLAYS.cover_3.align.DL1[0] - PLAYS.cover_3.align.LB1[0], PLAYS.cover_3.align.DL1[1] - PLAYS.cover_3.align.LB1[1]) <= IRON_LUNGS.radius[0];
+  if (near) assert.match(B.staminaNotes[0].text, /Steelpaw's Iron Lungs.*second qualifying play/); else assert.match(B.staminaNotes[0].text, /one qualifying play counted/);
+  const C = inspectInfo(state, teams, 'c', { formation }); assert.deepEqual(C.absent, { serveOn: 'home', ability: 'DRA-06-F' }); assert.deepEqual(C.stamina, { now: 44, capacity: 44, frac: 1, low: false, exhausted: false, played: false }, 'no record yet: full, from his Durability');
+  // his team has the ball: no formation protection is claimed; only the kept progress shows
+  assert.match(inspectInfo(state, teams, 'b', { formation: { ...formation, defSide: 'home' } }).staminaNotes[0].text, /one qualifying play counted/);
+  // the opponent's hidden call: the look's alignment is used and said so; an opponent's numbers and progress are not shown
+  const O = inspectInfo(state, teams, 'b', { formation: { ...formation, exact: false }, full: false }); assert.deepEqual(O.stamina, { low: true, exhausted: true }); assert.equal(O.full, false); for (const n of O.staminaNotes) assert.ok(!/second qualifying|counted/.test(n.text));
+  assert.equal(inspectInfo(state, teams, 'nobody'), null); assert.deepEqual(findMonster(teams, 'q'), { monster: teams.home.offense.QB, team: 'home' }); assert.equal(inspectInfo(state, teams, 'q').ability.id, 'DRA-06-F');
+  assert.equal(JSON.stringify(state), before, 'the game is only read');
+  const src = readFileSync(new URL('../src/ui/screens/match.js', import.meta.url), 'utf8');
+  assert.match(src, /data-inspect="/); assert.match(src, /openInspect\(app\.f, chip\.dataset\.inspect\)/); assert.match(src, /inspectMap\?\.\[Array\.prototype\.indexOf\.call/); assert.match(src, /inspectInfo\(G\.state, teams, mid, \{ formation: inspectForm/); assert.match(src, /data-sec="stamina"/); assert.match(src, /data-sec="awareness"/); assert.match(src, /sheet\(inspectHtml\(f, I\)/);
+});
+
+test('I4: the inspect sheet shows Night Watch\'s Dark-awareness protection on the allies inside the watch, as the engine protects them', () => {
+  const c = CAT.find((x) => x.family === 'nightowl'); let seen = 0;
+  for (const form of c.forms) for (const mastery of c.tiers) {
+    const r = reviewSequence({ family: c.family, form, mastery }); const slot = r.explain.source.slot; const R = NW_RADIUS[mastery];
+    for (const p of r.plays) { const evs = (p.sim?.events || []).filter((e) => e.ability === 'DAR-02-F' && e.kind === 'ability' && e.victim); if (!evs.length) continue;
+      const teams = clubsOf(p, slot, mastery); const last = lastPlayNotes(p.sim, teams, 'home'); assert.deepEqual(last.watch, [...new Set(evs.map((e) => `d_${e.victim}`))]);
+      const state = { phase: 'scrimmage', possession: 'home', t8: { status: {}, fields: { list: [{ type: 'Dark' }], pending: [] } } }; const dp = PLAYS[p.sim.defensePlay]; const formation = { defSide: 'away', defensePlay: dp, exact: true, vacant: [] };
+      const I = inspectInfo(state, teams, last.watch[0], { formation, last }); assert.ok(I.awarenessNotes.some((n) => n.tick && /Night Watch kept his Awareness full/.test(n.text)), 'the last play\'s protection, ticked'); seen += 1;
+      // the pre-snap note is exactly the radius test of the contract, at the alignment
+      const d = (a, b) => Math.hypot(dp.align[a][0] - dp.align[b][0], dp.align[a][1] - dp.align[b][1]); const inside = [];
+      for (const [sl, m] of Object.entries(teams.away.defense)) { if (sl === slot || !dp.onField.includes(sl)) continue; const J = inspectInfo(state, teams, m.id, { formation }); const has = J.awarenessNotes.some((n) => /^Dark-awareness protection: inside .*Night Watch/.test(n.text));
+        assert.equal(has, m.type !== 'Dark' && d(sl, slot) <= R, `${sl}: ${m.type}, ${d(sl, slot).toFixed(1)} yd from the safety, radius ${R}`); if (has) { inside.push(m.name); assert.match(J.awarenessNotes[0].text, new RegExp(`\\(${R} yd\\) at the snap`)); assert.match(J.awarenessNotes[0].text, /A Dark field is on the field now/); } }
+      const S = inspectInfo(state, teams, `d_${slot}`, { formation }); if (inside.length) for (const n of inside) assert.ok(S.awarenessNotes[0].text.includes(n), 'the safety\'s own sheet lists whom he watches'); else assert.match(S.awarenessNotes[0].text, /no ally inside the watch/);
+      assert.match(inspectInfo({ ...state, t8: { status: {} } }, teams, `d_${slot}`, { formation }).awarenessNotes[0]?.text || 'No Dark field', /No Dark field|no ally/);
+      // a stunned safety protects nobody; on offense nothing is claimed
+      const stunned = { ...state, t8: { ...state.t8, status: { [`d_${slot}`]: { id: 'stunned', remaining: 1 } } } }; for (const m of Object.values(teams.away.defense)) assert.ok(!inspectInfo(stunned, teams, m.id, { formation }).awarenessNotes.some((n) => !n.tick));
+      for (const m of Object.values(teams.away.defense)) assert.deepEqual(inspectInfo(state, teams, m.id, { formation: { ...formation, defSide: 'home' } }).awarenessNotes, []);
+      break;
+    }
+  }
+  assert.ok(seen >= 8, `Night Watch protected an ally in ${seen} variants`);
+});

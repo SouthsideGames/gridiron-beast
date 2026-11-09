@@ -25,7 +25,7 @@ import { fieldGoalDistance, yardLabel } from '../../core/field.js';
 import { teamOverall } from '../../franchise/roster.js';
 import { boxScoreHtml } from '../box-score.js';
 import { buildFx, shakeBetween, endHold } from '../ability-fx.js';
-import { kickPlay, presnapFields, presnapFx, createRevealClock, abilityTicks, absentMonsters, dexAbilityName, createAbsenceTracker, servedVacancies } from '../fx/match-fx.js';
+import { kickPlay, presnapFields, presnapFx, createRevealClock, abilityTicks, absentMonsters, dexAbilityName, createAbsenceTracker, servedVacancies, inspectInfo, lastPlayNotes, findMonster } from '../fx/match-fx.js';
 import { fxOptionsFor, reducedFlash } from '../flash-pref.js';
 import { matchupEdges } from '../../sim/type-matchups.js';
 import { weatherClass } from '../stadium-art.js';
@@ -174,9 +174,13 @@ export function registerMatchScreens(Router, app) {
       root.querySelector('#fieldwrap')?.addEventListener('click', (e) => {
         // A type icon opens its matchup panel and nothing else: no skip, no selection, no snap.
         const icon = e.target.closest?.('.tm-icon'); if (icon) { e.stopPropagation(); e.preventDefault(); openTypeIcon(icon); return; }
-        if (anim) finishAnim(f, true);
+        if (anim) { finishAnim(f, true); return; }
+        // Task 8 (I4): inspect a monster: an entry of the last play's ability strip, or a monster standing in the formation
+        const chip = e.target.closest?.('[data-inspect]'); if (chip) { e.stopPropagation(); e.preventDefault(); openInspect(app.f, chip.dataset.inspect); return; }
+        const pl = e.target.closest?.('#field .fv-pl > g'); const who = pl ? inspectMap?.[Array.prototype.indexOf.call(pl.parentNode.children, pl)] : null; if (who?.mid) openInspect(app.f, who.mid);
       });
-      root.querySelector('#fieldwrap')?.addEventListener('keydown', (e) => { const icon = e.target.closest?.('.tm-icon'); if (icon && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); openTypeIcon(icon); } });
+      root.querySelector('#fieldwrap')?.addEventListener('keydown', (e) => { if (e.key !== 'Enter' && e.key !== ' ') return; const icon = e.target.closest?.('.tm-icon'); if (icon) { e.preventDefault(); e.stopPropagation(); openTypeIcon(icon); return; }
+        const chip = !anim && e.target.closest?.('[data-inspect]'); if (chip) { e.preventDefault(); e.stopPropagation(); openInspect(app.f, chip.dataset.inspect); } });
       document.querySelector('.topbar [data-action="log"]')?.addEventListener('click', () => showLog(f));
       document.querySelector('.topbar [data-action="help"]')?.addEventListener('click', () => sheet(`${matchHelpHtml(f)}<button class="btn small" data-action="assist-help" data-screen="match" style="margin-top:8px">? More help (Coach Assist)</button>`, { title: 'How a match works' }));
       momentSheets(f);
@@ -201,8 +205,15 @@ export function registerMatchScreens(Router, app) {
       ? { venue: G.state.venue, ballOn: anim.ballOn, ballLat: anim.ballLat, toGo: anim.ev.toGo ?? 10, colors: animColors(s, anim.ev), frame: anim.frames[anim.i], ownLabel: s[anim.ev.offenseSide].abbr, oppLabel: s[R.opponent(anim.ev.offenseSide)].abbr, camera: anim.camera, event: G.event, noLines: anim.follow, sprites: spritesFor(f, anim.ev.offenseSide), ...(anim.fx && !anim.replay ? { fields: anim.ev.sim.fields || null, fx: anim.fx, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings), prevFrame: anim.frames[anim.i - 1] || null, ...(anim.pre && anim.i === 0 && !anim.key ? { time: -anim.pre } : {}) } : {}) }
       : { venue: G.state.venue, ballOn: s.ballOn, ballLat: s.ballLat, toGo: s.toGo, colors: { off: offColor, def: defColor }, frame: null, presnap: look.presnap, typeIcons: typeIconsFor(f, teams, look), ownLabel: s[s.possession].abbr, oppLabel: s[R.opponent(s.possession)].abbr, event: G.event, sprites: spritesFor(f, s.possession), ...(pre8 ? { fields: pre8.fields.length ? pre8.fields : null, fx: pre8.fx, time: pre8.time, fxQuality: fxQualityFor(f), fxOptions: fxOptionsFor(f.settings) } : {}) };
     if (presnapNow) presnapNow.field = field;
+    // Task 8 (I4): who stands where in the drawn formation (the players' paint order: defense, then offense), for the inspect sheet
+    inspectMap = null; inspectForm = null;
+    if (!anim && field.presnap && s.phase === 'scrimmage' && !s.finished) {
+      const dS = R.opponent(s.possession); const row = (side, unit, play, team) => { if (!play?.onField) return []; const sl = R.pickSlots(teams[side][unit], play.onField, teams[side], play); return play.onField.map((slot) => ({ team, slot, mid: sl[slot]?.id || null })); };
+      inspectMap = [...row(dS, 'defense', field.presnap.defensePlay, 'def'), ...row(s.possession, 'offense', field.presnap.offensePlay, 'off')];
+      inspectForm = { defSide: dS, defensePlay: look0.presnap.defensePlay, exact: dS === me && !!look0.myPlay, vacant: pre8?.vacant || [] };
+    }
     const sit = s.finished ? 'FINAL' : s.phase === 'scrimmage' ? `${s[s.possession].abbr} ${R.situationText(s).replace('OWN', 'own').replace('OPP', 'opp')}` : s.phase === 'try' ? 'Try' : s.phase === 'kickoff' ? 'Kickoff' : s.phase === 'free_kick' ? 'Free kick' : '';
-    const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}">${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}${x.tick ? ` <i class="ability-tick">✓ ${esc(x.tick)}</i>` : ''}</span>`).join('')}</div>` : '';
+    const ab = G.lastEvent?.abilities?.length ? `<div class="ability-strip">${G.lastEvent.abilities.slice(0, 3).map((x) => `<span class="${x.team === me ? 'mine' : ''} ${x.trait ? 'trait' : ''}"${x.mid ? ` role="button" tabindex="0" data-inspect="${esc(x.mid)}" aria-label="Inspect ${esc(x.who)}"` : ''}>${x.trait ? '·' : '⚡'} ${esc(x.who)} · ${esc(x.what)}${x.tick ? ` <i class="ability-tick">✓ ${esc(x.tick)}</i>` : ''}</span>`).join('')}</div>` : '';
     const co = G.lastEvent?.callout; const fresh = !!G.lastEvent?.fresh; if (G.lastEvent) G.lastEvent.fresh = false; // the pop plays once, not on every re-render
     const banner = G.lastEvent ? `<div class="field-banner ${G.lastEvent.important ? 'important' : ''} ${co ? `tier-${co.tier} ${co.mine === true ? 'mine' : co.mine === false ? 'theirs' : ''}` : ''} ${fresh ? 'fresh' : ''}" id="banner">${co && co.tier !== 'routine' ? `<div class="callout">${esc(co.text)}</div>` : co ? `<span class="callout small">${esc(co.text)}</span> ` : ''}${esc(G.lastEvent.text)}${ab}</div>` : '';
     const tdFlash = reducedFlash(f.settings) ? '' : fresh && co?.tier === 'td' ? ` td-flash ${co.mine ? 'mine' : 'theirs'}` : fresh && co?.tier === 'turnover' ? ' to-flash' : '';
@@ -218,7 +229,7 @@ export function registerMatchScreens(Router, app) {
         ${edgeStrip(f, s, teams, me, pre8?.returning || [])}`;
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
     const over = `${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> INSTANT REPLAY <b>${esc(anim.replay.reason.label)}</b></div><div class="replay-slow" aria-hidden="true">SLOW-MO</div>` : banner}`;
-    const after = `${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span></div>' : ''}`;
+    const after = `${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span><span>tap a monster to inspect</span></div>' : !anim && inspectMap ? '<div class="tm-legend"><span>Tap a monster to inspect: stamina, status, ability</span></div>' : ''}`;
     const title = `${s.away.abbr} ${s.score.away}-${s.score.home} ${s.home.abbr}`;
     return { title, head, wrapClass, field, over, after, controls: controlsHtml(f, teams, look) };
   }
@@ -383,7 +394,7 @@ export function registerMatchScreens(Router, app) {
       <h3>Timeout · Spike · Kneel · Tempo</h3><p><b>Timeout</b> (three a half) stops the clock so your next snap costs no time, on defense it is how you get the ball back from a team running the clock out. <b>Hurry-up</b> tempo cuts the runoff to ${R.RUNOFF.hurry} s for free; <b>milk clock</b> raises it to ${R.RUNOFF.milk} s when you are protecting a lead. <b>Spike</b> stops the clock for the price of a down (appears under a minute); <b>kneel</b> burns time when you are ahead, if the other side has no timeouts and less than ${R.RUNOFF.milk} s is left, the clock runs out and the game is over.</p>
       <h3>Calling plays</h3><p>Pick one of the six cards you set on Friday and press Snap; on defense pick a defense. ★ is the coach's suggestion; ✦ counters what you learned scouting; a greyed card needs a package you cannot field. <b>FG</b> kicks on any down when the kick is makeable.</p>
       <h3>Key Moments · Full Coaching · Auto · Sim</h3><p><b>Key Moments</b> simulates the routine downs and stops for the big ones; <b>Full Coaching</b> lets you call every snap. <b>Auto</b> calls the coach's plays for you (1× or 2×) until you stop it. <b>Sim to key moment</b> jumps ahead; <b>Sim to final</b> ends the game at once.</p>
-      <h3>Edges</h3><p>${F.comebackRule(f) ? `<b>Comeback mode:</b> down ${F.COMEBACK.margin}+ in the fourth, either side plays with +${F.COMEBACK.edge}. ` : ''}<b>Scheme lock:</b> all starters on a side fitting the coordinator's scheme play with +${F.SCHEME_LOCK_EDGE}. Training (T) and media day (+) lifts show on the pregame lineup. Abilities fire on the strip under the field.</p>
+      <h3>Edges</h3><p>${F.comebackRule(f) ? `<b>Comeback mode:</b> down ${F.COMEBACK.margin}+ in the fourth, either side plays with +${F.COMEBACK.edge}. ` : ''}<b>Scheme lock:</b> all starters on a side fitting the coordinator's scheme play with +${F.SCHEME_LOCK_EDGE}. Training (T) and media day (+) lifts show on the pregame lineup. Abilities fire on the strip under the field. <b>Inspect:</b> before the snap, tap a monster in the formation (or an entry of the ability strip) for its stamina, status and ability, and what is protecting it.</p>
       <h3>Type matchups</h3><p>Before the snap, a green <b>▲</b> or amber <b>▼</b> beside one of your monsters means a type advantage or disadvantage against the monster he is expected to face. Tap it to see the matchup. In the play, the edge (+4% or −4% on his side of a block, tackle, sack, separation or contested catch; Dragon +2% against neutral types) counts only against the monster he really meets. It never changes ratings. The Type Chart is under More and on every monster card.</p>`;
   }
   function controlsHtml(f, teams, look) {
@@ -486,7 +497,7 @@ export function registerMatchScreens(Router, app) {
       const K = kickPlay(ev, kickLookup(f, ev.kicking), fxMeta(ev, true));
       if (K?.sim?.frames?.length > 1) { ev.offenseSide = ev.kicking; ev.sim = K.sim; ev.kickerName = teamsFor(f)[ev.kicking]?.kicker?.name || null; if (K.fx) kickFx.set(K.sim, K.fx); startAnim(f, ev); return; }
     }
-    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), callout: callout(ev, G.playerSide), fresh: true };
+    G.lastEvent = { text: ev.text, important: ev.scored || KEY_RESULTS.has(ev.sim?.result) || ev.kind === 'field_goal', needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), fresh: true };
     app.save(); refresh(f);
   }
   function startAnim(f, ev, opts = {}) {
@@ -568,7 +579,7 @@ export function registerMatchScreens(Router, app) {
     if (anim.replay) { endReplay(f); return; }
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
     const G = f.game;
-    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), callout: callout(ev, G.playerSide), fresh: true };
+    G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), inspect: inspectNotes(ev), callout: callout(ev, G.playerSide), fresh: true };
     app.save(); refresh(f); saveWhenIdle(); // the play's result is requested above and written while the screen is idle after it
     // Instant replay (GDD §34): the outcome is final and saved above; the replay only re-draws this play's recorded frames.
     const reason = replayReason(ev, G.state, G.playerSide);
@@ -642,7 +653,10 @@ export function registerMatchScreens(Router, app) {
   }
   /** "Flaroo's Quick Feet kicks in" → "Flaroo · Quick Feet". */
   function abilityLabel(e) { const m = /^(.*)'s (.*) kicks in$/.exec(e.text || ''); return m ? m[2] : 'ability'; }
-  function abilitiesFired(ev) { const off = ev.offenseSide || 'home'; const ticks = abilityTicks(ev.sim, (side, slot) => (side === 'def' ? ev.sim?.names?.def : ev.sim?.names?.off)?.[slot] || slot); /* Task 8 (I4) */ return (ev.sim?.events || []).filter((e) => e.kind === 'ability').sort((a, b) => (a.trait ? 1 : 0) - (b.trait ? 1 : 0)).map((e) => { const m = /^(.*)'s (.*) kicks in$/.exec(e.text || ''); const dex = m ? null : dexAbilityName(e.ability); /* a Dex ability's line is its own sentence: name it from the Dex */ return { team: e.side === 'off' ? off : R.opponent(off), who: m ? m[1] : (ev.sim.kick && ev.kickerName) || (dex && (e.side === 'def' ? ev.sim.names?.def : ev.sim.names?.off)?.[e.by]) || e.by, what: m ? m[2] : dex || (ev.sim.kick && e.text) || 'ability', trait: !!e.trait, tick: ticks[`${e.side}:${e.by}:${e.ability}`] || null }; }).filter((x, i, all) => all.findIndex((y) => y.team === x.team && y.who === x.who && y.what === x.what) === i); }
+  /** Task 8 (I4): who the last play's Iron Lungs / Night Watch acted for (match-fx.js lastPlayNotes), kept with the last event for the inspect sheet. */
+  function playNotes(ev) { if (!ev?.sim?.events) return { lungs: [], watch: [], by: {} }; return (ev.fxNotes ||= lastPlayNotes(ev.sim, teamsFor(app.f), ev.offenseSide || 'home')); }
+  function inspectNotes(ev) { const n = playNotes(ev); return n.lungs.length || n.watch.length ? { lungs: n.lungs, watch: n.watch } : null; }
+  function abilitiesFired(ev) { const off = ev.offenseSide || 'home'; const notes = playNotes(ev); const ticks = abilityTicks(ev.sim, (side, slot) => (side === 'def' ? ev.sim?.names?.def : ev.sim?.names?.off)?.[slot] || slot); /* Task 8 (I4) */ return (ev.sim?.events || []).filter((e) => e.kind === 'ability').sort((a, b) => (a.trait ? 1 : 0) - (b.trait ? 1 : 0)).map((e) => { const m = /^(.*)'s (.*) kicks in$/.exec(e.text || ''); const dex = m ? null : dexAbilityName(e.ability); /* a Dex ability's line is its own sentence: name it from the Dex */ return { team: e.side === 'off' ? off : R.opponent(off), who: m ? m[1] : (ev.sim.kick && ev.kickerName) || (dex && (e.side === 'def' ? ev.sim.names?.def : ev.sim.names?.off)?.[e.by]) || e.by, what: m ? m[2] : dex || (ev.sim.kick && e.text) || 'ability', trait: !!e.trait, tick: ticks[`${e.side}:${e.by}:${e.ability}`] || null, mid: notes.by[`${e.side}:${e.by}`] || null }; }).filter((x, i, all) => all.findIndex((y) => y.team === x.team && y.who === x.who && y.what === x.what) === i); }
   function stopAnim() { if (anim) { cancelAnimationFrame(anim.raf); anim = null; } document.querySelector('#fieldwrap')?.classList.remove('shake'); }
   /** Species lookup for the effect layer: team side + slot → { element, name }. */
   function fxLookup(f, offSide) {
@@ -661,6 +675,28 @@ export function registerMatchScreens(Router, app) {
   const kickFx = new WeakMap(); // a formula kick's effect state as buildKickFx built it (in memory only, with the kick's frames)
   /** buildFx meta: the live play opts into the pre-roll (I6; a replay keeps the pre-snap choreography inside the play); fields already revealed on the play-call screen (I2) are simply there. */
   function fxMeta(ev, live) { return { ...(live ? { preroll: true } : {}), ...(ev?.fxRevealed?.length ? { revealed: ev.fxRevealed } : {}), ...(ev?.fxStaged?.length ? { staged: ev.fxStaged } : {}) }; }
+  // ---- I4: the monster inspect sheet (match-fx.js inspectInfo; the game's sheet()). Opened from the formation or the ability strip.
+  let inspectMap = null; let inspectForm = null;
+  const STATUS_NAME = { stunned: 'Stunned', slowed: 'Slowed', stumbled: 'Stumbled', knockedDown: 'Knocked Down', afflicted: 'Afflicted', weakened: 'Weakened', confused: 'Confused' };
+  function inspectHtml(f, I) {
+    const s = f.game.state; const m = I.monster; const st = I.stamina; const num = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+    const note = (n) => `<div class="inspect-note ${n.tick ? 'tick' : ''}">${n.tick ? '<b aria-hidden="true">✓</b> ' : ''}${esc(n.text)}</div>`;
+    const bar = I.full ? `<div class="inspect-bar ${st.exhausted ? 'out' : st.low ? 'low' : ''}" role="img" aria-label="Stamina ${num(st.now)} of ${st.capacity}"><i style="width:${Math.round(st.frac * 100)}%"></i></div>` : '';
+    const stamLine = I.full ? `${num(st.now)} / ${st.capacity}${st.played ? '' : ' · has not played yet'}` : st.exhausted ? 'Exhausted' : st.low ? 'Low' : 'Not low';
+    return `<div class="inspect" data-inspect-sheet="${esc(m.id)}">
+      <div class="row" style="gap:10px;align-items:center">${monsterSprite(m, 44)}<div class="grow"><b>${esc(m.name)}</b><div class="muted" style="font-size:12px">${esc(m.type || '')} ${esc(m.position || '')}${I.slot ? ` · lined up at ${esc(I.slot)}` : ''} · ${esc(s[I.team].abbr)}${I.full ? '' : ' (opponent)'}</div></div></div>
+      ${I.absent ? `<div class="inspect-note tick">🐲 Swallowed by Sovereign Arm: he misses ${esc(s[I.absent.serveOn]?.abbr || 'the offense')}'s next offensive play, then returns to his formation spot.</div>` : ''}
+      <div class="inspect-sec" data-sec="stamina"><div class="row between"><b>Stamina</b><span>${stamLine}</span></div>${bar}
+        ${st.exhausted ? '<div class="inspect-note">Exhausted for the rest of the game: every attribute is halved.</div>' : st.low ? '<div class="inspect-note">Low: the battery shows over his head.</div>' : ''}${I.staminaNotes.map(note).join('')}</div>
+      ${I.awarenessNotes.length ? `<div class="inspect-sec" data-sec="awareness"><b>Awareness</b>${I.awarenessNotes.map(note).join('')}</div>` : ''}
+      <div class="inspect-sec" data-sec="status"><div class="row between"><b>Status</b><span>${I.status ? `${esc(STATUS_NAME[I.status.id] || I.status.id)}${I.status.remaining != null ? ` · ${I.status.remaining} play${I.status.remaining === 1 ? '' : 's'} left` : ' · this play'}` : 'None'}</span></div></div>
+      ${I.ability ? `<div class="inspect-sec" data-sec="ability"><b>${esc(I.ability.name)}</b><div class="muted" style="font-size:12px">${esc(I.ability.text)}</div></div>` : ''}</div>`;
+  }
+  function openInspect(f, mid) {
+    const G = f?.game; if (!G || !mid) return; const teams = teamsFor(f); const mine = findMonster(teams, mid)?.team === G.playerSide; // an opponent shows only what the field already shows
+    const I = inspectInfo(G.state, teams, mid, { formation: inspectForm, last: G.lastEvent?.inspect || null, full: mine }); if (!I) return;
+    sheet(inspectHtml(f, I), { title: 'Inspect' });
+  }
   // ---- I5: a temporary absence (Sovereign Arm) on the formation: the empty spot while he is out, his return once (match-fx.js).
   const absenceTrack = createAbsenceTracker();
   /** A pre-snap look without some defensive slots: they are not drawn (the alignments stay, so a mark can sit on the empty spot). */
