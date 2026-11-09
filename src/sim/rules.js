@@ -267,18 +267,36 @@ function preSnapHooks(state, t8, slots, offensePlay, defensePlay) {
  * Task 8 presentation (read only; the simulation never calls this): the banked pending fields the next scrimmage snap would create for
  * these two calls, placed exactly as runScrimmagePlay places them (the same slots, eligibility and placement functions), in the
  * absolute home-goal frame. Nothing is created, queued or written: the game state, its dice and its Task 8 block are untouched, and
- * no contract hook runs. Fields a contract queues inside the snap itself (preSnap hooks reading the chosen plays: Static Field, Charge
- * Strip, Bramble Trap, Bloom Break, Runway, Crosswind Rescue) do not exist before it and are not listed. Each entry is the placed
+ * by default no contract hook runs: fields a contract queues inside the snap itself (Static Field, Charge Strip, Bramble Trap, Bloom
+ * Break, Runway, Crosswind Rescue) do not exist before it and are then not listed (see `inSnap` below). Each entry is the placed
  * rectangle plus { ability, ownerTeam, payload, usesDefenseAlign } (usesDefenseAlign: its placement read a defender's alignment in
  * the defensive call, which a caller that must not show the opponent's disguise leaves out).
+ *
+ * `inSnap: true` also lists the fields the snap's own pre-snap producers would queue (preSnapContracts, preSnapHooks). They run here
+ * exactly as at the snap (the same order, the same per-monster seeded stream: seed, play index, monster; never the game's dice), but
+ * on a structured copy of the Task 8 block, so the game is still only read. Such an entry carries `inSnap: true` and `callDependent`:
+ * true when its producer read an alignment of either chosen play (its place then follows the calls and is not fixed before them:
+ * Static Field, Charge Strip, Bramble Trap); false when the calls decide only whether its creator is on the field (Runway, Crosswind
+ * Rescue, Bloom Break: the rectangle is the same for every call he takes part in).
  */
-export function previewPendingFields(state, teams, offensePlayId, defensePlayId) {
-  const t8 = state?.t8; const pending = t8?.fields?.pending;
-  if (!pending?.length || !Array.isArray(t8.fields.list) || state.phase !== 'scrimmage' || state.finished) return [];
+export function previewPendingFields(state, teams, offensePlayId, defensePlayId, { inSnap = false } = {}) {
+  let t8 = state?.t8; if (!t8 || state.phase !== 'scrimmage' || state.finished) return [];
+  if (!inSnap && (!t8.fields?.pending?.length || !Array.isArray(t8.fields.list))) return [];
   const offense = teams[state.possession], defense = teams[opponent(state.possession)];
   const offensePlay = getPlay(offensePlayId), defensePlay = getPlay(defensePlayId);
   const slots = { offense: pickSlots(offense.offense, offensePlay.onField, offense, offensePlay), defense: pickSlots(defense.defense, defensePlay.onField, defense, defensePlay) };
   const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean)), defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
+  const born = new Map(); // a field queued by this dry run -> whether its producer read a chosen play's alignment
+  if (inSnap && [...Object.values(slots.offense), ...Object.values(slots.defense)].some((x) => { const c = x?.id && x.species ? contractOf(x.species) : null; return !!(c?.preSnap || c?.hooks?.preSnap); })) {
+    t8 = structuredClone(t8); const view = { ...state, t8 }; T8F.activeFields(t8); // the copy's own field book
+    let read = false; const pend = t8.fields.pending;
+    pend.push = function (...xs) { for (const x of xs) born.set(x, read); read = false; return Array.prototype.push.apply(this, xs); };
+    const watch = (play) => ({ ...play, align: new Proxy(play.align || {}, { get(t, k) { read = true; return t[k]; } }) });
+    preSnapContracts(view, t8, slots); read = false;
+    preSnapHooks(view, t8, slots, watch(offensePlay), watch(defensePlay));
+    state = view;
+  }
+  const pending = t8.fields?.pending; if (!pending?.length || !Array.isArray(t8.fields.list)) return [];
   const out = [];
   for (const p of pending) {
     if ((!p.benchOk && !p.offField && !offIds.has(p.owner) && !defIds.has(p.owner)) || !pendingEligible(state, t8, p, offIds, defIds)) continue;
@@ -286,7 +304,7 @@ export function previewPendingFields(state, teams, offensePlayId, defensePlayId)
     let usesDefenseAlign = false;
     const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) { usesDefenseAlign = true; return defensePlay.align[sl] || null; } return null; };
     const r = placeRect({ id: `P${out.length + 1}`, type: p.type, createdAt: state.playCount || 0, owner: p.owner, strength: p.strength ?? null, ...fieldPlacement(state, p, offensePlay, alignOf) });
-    out.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, usesDefenseAlign });
+    out.push({ ...r, lat: [...r.lat], yard: [...r.yard], ability: p.ability, ownerTeam: p.ownerTeam ?? null, payload: p.payload ?? null, usesDefenseAlign, ...(born.has(p) ? { inSnap: true, callDependent: !!born.get(p) } : {}) });
   }
   return out;
 }

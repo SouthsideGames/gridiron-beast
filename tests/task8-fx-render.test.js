@@ -158,3 +158,54 @@ test('I6: the match screen opts into the pre-roll and starts the play before the
     const live = buildFx(p.sim, () => null, { preroll: true }); assert.ok(live.preroll > 0, `${fam}: time before the snap`);
     const P = { sim: p.sim, fx: live }; const a = fieldAt(P, -live.preroll + 0.05), b = fieldAt(P, 0); assert.notEqual(a, b, `${fam}: the pre-roll draws its own frames`); assert.ok(!/NaN|undefined|Infinity/.test(a)); }
 });
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// The six fields a contract creates inside the snap (Runway, Crosswind Rescue, Bloom Break, Static Field, Charge Strip, Bramble Trap):
+// rules.js previewPendingFields { inSnap: true } runs the snap's own pre-snap producers on a copy. The preview is exactly what the snap
+// creates, never writes the game, and says whether the place follows the calls (then it is not fixed before them and not shown).
+import { toPlayFrame } from '../src/sim/t8/fields.js';
+const IN_SNAP = [
+  { id: 'WIN-01-F', family: 'gustling', unit: 'offense', slot: 'WR1', type: 'Wind', prime: null, dependent: false },
+  { id: 'WIN-04-F', family: 'windlynx', unit: 'defense', slot: 'FS', type: 'Wind', prime: { charges: 2 }, dependent: false, count: 2 },
+  { id: 'NAT-01-F', family: 'thornkit', unit: 'offense', slot: 'WR1', type: 'Nature', prime: { cd: 0, token: true, fresh: false }, dependent: false, count: 2 },
+  { id: 'ELE-04-F', family: 'stormlynx', unit: 'defense', slot: 'FS', type: 'Electric', prime: null, dependent: true },
+  { id: 'ELE-02-F', family: 'voltfin', unit: 'offense', slot: 'RB', type: 'Electric', prime: { cd: 0, token: true, fresh: false }, dependent: true },
+  { id: 'NAT-05-F', family: 'thornback', unit: 'offense', slot: 'TE', type: 'Nature', prime: { cd: 0, token: true, fresh: false }, dependent: true },
+];
+function inSnapGame(x, seed) {
+  const { g, teams } = matchGame(seed); const side = x.unit === 'offense' ? g.possession : R.opponent(g.possession); const m = teams[side][x.unit][x.slot]; assert.ok(m?.id, `${x.id}: a ${x.slot}`);
+  Object.assign(m, { species: x.family, form: `${x.family}:0`, mastery: 0, type: x.type }); g.t8 = { status: {}, ...(x.prime ? { ability: { [m.id]: { ...x.prime } } } : {}) };
+  return { g, teams, m, side };
+}
+
+test('in-snap fields: the dry-run preview is exactly the field the snap creates, for each of the six, and the game is only read', () => {
+  const calls = { offense: 'quick_slants', defense: 'cover_3' };
+  for (const x of IN_SNAP) for (const seed of [5, 6, 7]) {
+    const { g, teams, m } = inSnapGame(x, seed); const before = JSON.stringify(g); const frame = { home: g.possession === 'home', ballOn: g.ballOn, ballLat: g.ballLat || 0 };
+    assert.deepEqual(R.previewPendingFields(g, teams, calls.offense, calls.defense), [], `${x.id}: nothing banked, so the plain preview lists nothing`);
+    const pv = R.previewPendingFields(g, teams, calls.offense, calls.defense, { inSnap: true }); assert.equal(JSON.stringify(g), before, `${x.id}: the dry run never writes the game (its Task 8 block, its dice)`);
+    assert.equal(pv.length, x.count || 1, `${x.id}: ${pv.length} field(s) previewed`); for (const f of pv) { assert.equal(f.ability, x.id); assert.equal(f.owner, m.id); assert.equal(f.inSnap, true); assert.equal(f.callDependent, x.dependent, `${x.id}: place ${x.dependent ? 'follows' : 'does not follow'} the calls`); }
+    assert.deepEqual(R.previewPendingFields(g, teams, calls.offense, calls.defense, { inSnap: true }), pv, 'the same again: nothing is consumed');
+    const shown = presnapFields(g, teams, calls); assert.equal(JSON.stringify(g), before);
+    if (x.dependent) assert.deepEqual(shown, [], `${x.id}: not fixed before the calls, so the play-call screen does not show it (its reveal is pre-rolled)`);
+    else { assert.equal(shown.length, pv.length); for (const s of shown) { assert.ok(s.isNew && s.pending); assert.equal(s.field.inSnap, undefined); assert.equal(s.field.fresh, undefined); } }
+    const ev = R.runScrimmagePlay(g, teams, calls.offense, calls.defense); const made = ev.sim.fields.filter((f) => f.ability === x.id); assert.equal(made.length, pv.length, `${x.id}: the snap creates them`);
+    const want = toPlayFrame(pv, frame); made.forEach((f, i) => { assert.ok(f.fresh); assert.deepEqual(f.yard, want[i].yard, `${x.id}: same yards`); assert.deepEqual(f.lat, want[i].lat, `${x.id}: same width`); assert.equal(f.type, want[i].type); });
+    if (!x.dependent) { // revealed on the play-call screen: the play then skips the reveal
+      const key = [...new Set(shown.map((s) => fieldKey(s.field)))]; const live = buildFx(ev.sim, () => null, { preroll: true, revealed: key }); for (const f of live.t8.fields.filter((q) => q.ability === x.id)) assert.equal(f.fresh, false);
+    } else assert.ok(buildFx(ev.sim, () => null, { preroll: true }).t8.fields.filter((q) => q.ability === x.id).every((f) => f.fresh), `${x.id}: its reveal plays in the pre-roll`);
+  }
+});
+
+test('in-snap fields: Runway, Crosswind Rescue and Bloom Break sit in the same place whatever is called; the other three move with the calls', () => {
+  const offs = Object.values(PLAYS).filter((p) => p.side === 'offense' && !p.legendary).map((p) => p.id), defs = Object.values(PLAYS).filter((p) => p.side === 'defense' && !p.legendary).map((p) => p.id);
+  for (const x of IN_SNAP) {
+    const { g, teams } = inSnapGame(x, 9); const before = JSON.stringify(g); const places = new Set(); let listed = 0, flagged = 0;
+    const pairs = x.unit === 'offense' && x.id !== 'NAT-05-F' ? offs.map((o) => [o, 'cover_3']) : x.unit === 'defense' ? defs.map((d) => ['quick_slants', d]) : [...offs.slice(0, 6).map((o) => [o, 'cover_3']), ...defs.map((d) => ['quick_slants', d])];
+    for (const [o, d] of pairs) { const pv = R.previewPendingFields(g, teams, o, d, { inSnap: true }).filter((f) => f.ability === x.id); if (!pv.length) continue; listed += 1; if (pv.some((f) => f.callDependent)) flagged += 1; places.add(JSON.stringify(pv.map((f) => [f.yard, f.lat]))); }
+    assert.equal(JSON.stringify(g), before); assert.ok(listed >= 3, `${x.id}: previewed for ${listed} call pairs`);
+    if (x.dependent) { assert.equal(flagged, listed, `${x.id}: always flagged as following the calls`); assert.ok(places.size > 1, `${x.id}: ${places.size} different places over the playbook: it is not fixed before the choice`); }
+    else { assert.equal(flagged, 0); assert.equal(places.size, 1, `${x.id}: one place for every call that has him on the field`); }
+  }
+  assert.match(MATCH_SRC, /presnapFields\(s, teams, calls, \{ hideDefenseAlign: mine \}\)/);
+});

@@ -43,20 +43,24 @@ export function kickPlay(ev, lookup, meta = null) {
  * field last play and both teams have seen it), and the banked fields the next snap will create for these calls, placed where the
  * snap will place them (rules.js previewPendingFields, read only). `calls`: { offense, defense } play ids as they would be snapped
  * now. `hideDefenseAlign`: the defensive call is the opponent's; a banked field whose placement reads a defender's alignment in that
- * call is left out, because the call (and its disguise) is hidden until the snap. Fields a contract creates inside the snap itself
- * are not known before it (their reveal plays in the pre-roll). Returns [{ field, isNew, pending }]: `isNew` fields get a reveal.
+ * call is left out, because the call (and its disguise) is hidden until the snap. A field a contract creates inside the snap itself
+ * is shown too when its place does not follow the calls (Runway, Crosswind Rescue, Bloom Break: the calls only decide whether its
+ * creator is on the field; rules.js previewPendingFields `inSnap`, a dry run on a copy). One whose place is read from a chosen play's
+ * alignment (Static Field, Charge Strip, Bramble Trap) is not fixed before the calls and is left to the pre-roll.
+ * Returns [{ field, isNew, pending }]: `isNew` fields get a reveal.
  */
 export function presnapFields(state, teams, calls = null, { hideDefenseAlign = false } = {}) {
   if (!state || state.phase !== 'scrimmage' || state.finished) return [];
   const frame = { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 };
-  const strip = ({ fresh, ...f }) => f; // eslint-disable-line no-unused-vars
+  const strip = ({ fresh, inSnap, callDependent, ...f }) => f; // eslint-disable-line no-unused-vars
   const active = state.t8?.fields?.list || [];
   const out = toPlayFrame(active, frame).map((f, i) => ({ field: strip(f), isNew: !!active[i].createdThisPlay, pending: false }));
-  if (calls?.offense && calls?.defense && state.t8?.fields?.pending?.length) {
+  if (calls?.offense && calls?.defense) {
     let banked = [];
-    try { banked = previewPendingFields(state, teams, calls.offense, calls.defense); } catch { banked = []; } // presentation never breaks the screen
+    try { banked = previewPendingFields(state, teams, calls.offense, calls.defense, { inSnap: true }); } catch { banked = []; } // presentation never breaks the screen
+    banked = banked.filter((f) => !f.callDependent);
     if (hideDefenseAlign) banked = banked.filter((f) => !f.usesDefenseAlign);
-    const seq = state.t8.fields.seq || 0;
+    const seq = state.t8?.fields?.seq || 0;
     toPlayFrame(banked, frame).forEach((f, i) => out.push({ field: { ...strip(f), id: `pre${seq}-${i + 1}` }, isNew: true, pending: true }));
   }
   return out;
