@@ -267,3 +267,13 @@ The proposals are in [M4_PLAN.md](M4_PLAN.md) §5. The rulings are in [SPECIFICA
 | Full-visual target | **Approved** | 60 FPS with full visuals. Graphics-quality controls are a supplemental option only. Lower settings must keep abilities recognizable, essential field information, and identical gameplay |
 | Reporting | **Approved** | Every simulation scene and every ability-overhead result reported individually. No averaging away of failures. The provisional 25% budget is not raised without approval |
 | Mobile | **Unverified** | Until tested on appropriate physical devices |
+
+## Owner direction, 2026-11-09 01:03 (N9a)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Provisional M4 interpretations | **Isolated** | Off in normal gameplay and kept out of final acceptance tests until ruled. A switchable flag does not make a gameplay change approved. All open points go into one concise decision list (docs/task8/M4_DECISIONS_PENDING.md) |
+| D3 Feather Relay | **Approved as reconciled** | Counts as a rotation without the 50% entry penalty. Every other rotation restriction (locks, legal availability, cadence) is kept unless the contract explicitly exempts it. Any exact contract conflict is to be identified with a quotation |
+| D6 Tank bruise | **Open** | Explanation delivered in M4_OPEN_ITEMS.md §6; ruling pending; not implemented |
+| Renderer vs artwork | **Clarified** | Renderer optimisations are screenshot-preserving against the current visuals. Ability artwork changes intentionally, to match the approved Dex descriptions |
+| Mobile | **Unverified** | Unchanged |
