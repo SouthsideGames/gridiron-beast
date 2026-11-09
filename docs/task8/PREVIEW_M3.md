@@ -68,3 +68,18 @@ No file under `src/sim/`, `src/data/`, `src/clash/` or `src/franchise/` differs 
   - **A fresh profile** shows 0/72, 0/120 and 0/192.
   - **The developer "all revealed" view** shows 72/72, 120/120 and 192/192.
   - 0 page errors.
+
+## 6. Preview version 6 (2026-11-08): football reviewer v2
+
+- **Build:** branch task8-m1-preview at dbbeee7, which merges a20aa9a (task8-reviewer-v2), labelled v43.2.0-t8-m3-preview.
+- **Files sent:** 10 changed files: the reviewer modules, `src/sim/engine.js` (the review-only `wouldBeInterception` option),
+  `src/version.js` and the page. Every other file is unchanged from version 5.
+- **Engine change:**
+  - The new option is reachable only through the reviewer's private symbol. Normal play is unaffected.
+  - Checked by result signatures: 30 games on a20aa9a give the same outcomes as acdc91e.
+- **Tests:** the reviewer's targeted tests pass, 51 of 51.
+- **Browser check** on the staged build:
+  - Sovereign Arm and Blazing Resolve tick all four phases on the first run, and the verdict reads "Validated".
+  - The carried-over preview franchise continues.
+  - 0 page errors.
+- **Saves:** no reset is needed. The save format and storage keys are unchanged.

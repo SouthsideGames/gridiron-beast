@@ -824,3 +824,89 @@ The owner must never need to re-run a review hoping it activates.
 - Targeted checks are used during development, and broader regression checks at integration milestones.
 - Compatible preview saves are preserved. Any necessary reset is announced before the preview is updated.
 - Nothing merges into main, and the live game is not replaced.
+
+## 26. Approved performance testing rulings, 2026-11-08 16:15 (N8e)
+
+### Benchmark scenes
+
+The scene set in docs/task8/PERF_SCENES.md is **approved**.
+
+- **Seven ordinary scenes.** No abilities. Rosters, attributes, play calls, seeds and play counts are identical between builds.
+  These are the primary like-for-like engine comparisons.
+- **Five ability-heavy scenes:** overlapping fields; summons and constructs; delayed effects; a legendary sequence (Sovereign Arm
+  charging and protecting); every monster carrying its ability. Each has an abilities-disabled twin that runs on both builds.
+- **Methodology:**
+  - 3 warm-up passes, then 15 measured passes. The median is the primary comparison.
+  - Official runs are made on a quiet machine under consistent conditions.
+  - Variability is tracked, and potentially unreliable results are identified.
+  - Busy-machine measurements are preliminary, not official.
+
+### Method B, with two budgets
+
+- **A. Engine: at most 10% regression.**
+  - The limit applies individually to every ordinary scene and every abilities-disabled twin, against the pre-Task 8 baseline.
+  - A strong combined result never compensates for a scene over the limit.
+  - Optimization continues until every scene passes, or a remaining limitation is explained in detail.
+  - Named areas: O4 red-zone plays, O2 short runs, and O5's simulation-time versus wall-time difference (account for the change in
+    play duration).
+- **B. Abilities: provisional 25% budget.**
+  - Task 8 with abilities on, against the identical Task 8 scene with abilities off. No more than 25% additional simulation cost.
+  - This is a provisional engineering budget, not final approval of the ability system's performance.
+  - Measured: individual abilities, several abilities at once, overlapping field effects, summons and constructs, delayed effects,
+    legendary sequences and worst-case combinations, reporting which systems contribute the most overhead.
+  - Mechanics are never simplified or weakened to meet the budget. A scene over budget is investigated, and the tradeoffs are
+    reported before any change is recommended.
+
+### Frame time and rendering
+
+- The review covers:
+  - average, median and 95th-percentile frame time;
+  - frame-time spikes and visible stutter;
+  - rendering overhead from particles, animations and field effects;
+  - several abilities activating at once;
+  - ordinary football;
+  - mobile, particularly the Capacitor environment.
+- Simulation performance is reported separately from rendering performance.
+- No FPS claim is made unless measured under actual real-time rendering.
+- If representative mobile devices are unavailable, the limitation is documented. Desktop results never substitute for mobile.
+
+### Graphics quality settings (future; not authorized for implementation)
+
+- **Proposed presets:**
+  - **High:** full particles, complete ability animations, full environmental effects, maximum decorative detail.
+  - **Balanced:** reduced particle density, optimized environmental animations, fewer nonessential decorations.
+  - **Performance:** minimal decorative particles, simplified effects, reduced animation complexity where appropriate.
+- **Critical rule:** graphics settings never change gameplay outcomes. They preserve:
+  - ability mechanics and effectiveness;
+  - collision detection;
+  - player movement and positioning;
+  - status effects and field effects;
+  - timing and simulation results;
+  - competitive balance.
+- Graphics settings are not the primary optimization strategy. The underlying systems and rendering are optimized first.
+- Implementation does not begin until visual performance testing is complete and the results have been reviewed.
+
+### Optimization standard
+
+- No optimization is accepted unless gameplay results are proven identical, by full-game comparisons and targeted regression tests.
+- Determinism, seeded outcomes, player interactions, ability behaviour and the existing rules are preserved.
+- No feature removal, mechanic change or balance change for performance.
+
+### Required report
+
+After the optimization work and the official benchmarks, the report gives:
+1. before and after timings for every ordinary scene;
+2. the engine regression for each scene;
+3. the ability overhead for each ability-heavy scene;
+4. simulation time against wall-clock time;
+5. frame-time and rendering results, where measurable;
+6. the largest remaining bottlenecks;
+7. every optimization and its measured impact;
+8. the gameplay-equivalence results;
+9. any scene still over budget;
+10. recommendations, including whether graphics quality settings are warranted.
+
+Measured results are clearly distinguished from estimates and projections.
+
+The pending M4 items, the ability-table questions, the Feather Relay questions, the Stunned countdown reading, the knockout
+replacement choice and the Ball Clamp and Iron Lungs reviewer items stay unresolved and separate from this work.

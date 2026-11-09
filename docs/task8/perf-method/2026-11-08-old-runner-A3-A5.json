@@ -1,0 +1,1612 @@
+{
+ "manifest": "1.0.0",
+ "label": null,
+ "metric": "cpu",
+ "warmup": 3,
+ "repeats": 7,
+ "subRepeats": 7,
+ "noise": 0.1,
+ "base": "/tmp/claude-0/-home-claude/1937a85a-b150-5184-9ede-39d39e5f378f/scratchpad/base",
+ "cand": "/home/claude/gridiron-beast/.claude/worktrees/agent-a9d282a447cce35d3",
+ "when": "2026-11-09T00:57:59.413Z",
+ "minutes": 1.7193333333333334,
+ "machine": {
+  "cpus": 2,
+  "cpuModel": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "totalMemGB": 7.8,
+  "platform": "linux 6.18.44-fc-v310",
+  "node": "v22.22.0"
+ },
+ "loads": [
+  {
+   "at": "2026-11-09T00:56:16.253Z",
+   "load1": 0.41,
+   "load5": 0.53,
+   "load15": 0.63
+  },
+  {
+   "at": "2026-11-09T00:56:16.253Z",
+   "load1": 0.41,
+   "load5": 0.53,
+   "load15": 0.63,
+   "scene": "A3-delayed-effects"
+  },
+  {
+   "at": "2026-11-09T00:56:42.664Z",
+   "load1": 0.91,
+   "load5": 0.65,
+   "load15": 0.67,
+   "scene": "A5-full-contracts"
+  },
+  {
+   "at": "2026-11-09T00:57:59.412Z",
+   "load1": 1.34,
+   "load5": 0.9,
+   "load15": 0.76
+  }
+ ],
+ "summary": {
+  "status": "PRELIMINARY: busy machine (1-minute load above 0.5 per CPU during the run)",
+  "engineLimit": 1.1,
+  "abilityBudget": 1.25,
+  "r0": [
+   {
+    "scene": "A3-delayed-effects",
+    "kind": "abilities-off twin",
+    "addition": false,
+    "ratio": 0.7476502135541211,
+    "pass": true,
+    "noisy": true,
+    "borderline": false
+   },
+   {
+    "scene": "A5-full-contracts",
+    "kind": "abilities-off twin",
+    "addition": false,
+    "ratio": 0.8868786771988476,
+    "pass": true,
+    "noisy": true,
+    "borderline": false
+   }
+  ],
+  "r1": [
+   {
+    "scene": "A3-delayed-effects",
+    "addition": false,
+    "ratio": 1.0929603764079479,
+    "within": true,
+    "noisy": true,
+    "borderline": true,
+    "sameProcess": 1.6871838412089128,
+    "r2": 0.8171520588275948
+   },
+   {
+    "scene": "A5-full-contracts",
+    "addition": false,
+    "ratio": 0.8774088761059867,
+    "within": true,
+    "noisy": true,
+    "borderline": false,
+    "sameProcess": 1.5408777332392865,
+    "r2": 0.778155223403405
+   }
+  ],
+  "r0Failures": [],
+  "r1OverBudget": [],
+  "noisy": [
+   "A3-delayed-effects R0",
+   "A5-full-contracts R0",
+   "A3-delayed-effects R1",
+   "A5-full-contracts R1"
+  ],
+  "borderline": [
+   "A3-delayed-effects R1"
+  ]
+ },
+ "results": [
+  {
+   "scene": "A3-delayed-effects",
+   "kind": "ability",
+   "addition": false,
+   "tier": "rules",
+   "plays": 96,
+   "inputsHash": "0169b1a24a855c5a",
+   "base": {
+    "median": 289.388,
+    "min": 218.364,
+    "max": 698.126,
+    "q1": 244.333,
+    "q3": 312.229,
+    "iqrOverMedian": 0.23461926548440154,
+    "cv": 0.5014438296461862,
+    "noisy": true,
+    "msPerPlay": 3.0144583333333332,
+    "ticksPerPlay": 47.177083333333336,
+    "msPerTick": 0.06389666593066902,
+    "plays": 96,
+    "ticks": 4529,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "841e07328fb59fc9",
+    "runs": [
+     328.907,
+     295.551,
+     237.439,
+     289.388,
+     251.227,
+     218.364,
+     698.126
+    ],
+    "wallMedian": 264.190676,
+    "wallRuns": [
+     265.173784,
+     264.190676,
+     207.780105,
+     268.276207,
+     240.23066,
+     207.044116,
+     414.060523
+    ]
+   },
+   "cand": {
+    "median": 216.361,
+    "min": 146.8,
+    "max": 316.471,
+    "q1": 186.1195,
+    "q3": 263.10249999999996,
+    "iqrOverMedian": 0.3558081169896607,
+    "cv": 0.2607615745103928,
+    "noisy": true,
+    "msPerPlay": 2.2537604166666667,
+    "ticksPerPlay": 47.520833333333336,
+    "msPerTick": 0.04742678649715037,
+    "plays": 96,
+    "ticks": 4562,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "c63fdde9f4983efc",
+    "runs": [
+     316.471,
+     259.404,
+     175.515,
+     216.361,
+     146.8,
+     196.724,
+     266.801
+    ],
+    "wallMedian": 173.844499,
+    "wallRuns": [
+     194.526249,
+     226.18649,
+     141.475646,
+     185.180737,
+     134.804916,
+     173.844499,
+     163.980287
+    ]
+   },
+   "offA": {
+    "median": 140.159,
+    "min": 126.884,
+    "max": 260.836,
+    "q1": 133.08499999999998,
+    "q3": 187.4105,
+    "iqrOverMedian": 0.38759908389757375,
+    "cv": 0.2971169448771193,
+    "noisy": true,
+    "msPerPlay": 1.4599895833333332,
+    "ticksPerPlay": 47.520833333333336,
+    "msPerTick": 0.030723147742218324,
+    "plays": 96,
+    "ticks": 4562,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "c63fdde9f4983efc",
+    "runs": [
+     140.159,
+     203.148,
+     131.534,
+     134.636,
+     126.884,
+     260.836,
+     171.673
+    ],
+    "wallMedian": 148.07841,
+    "wallRuns": [
+     151.90794,
+     148.07841,
+     126.078762,
+     129.950015,
+     122.697429,
+     212.3092,
+     167.146369
+    ]
+   },
+   "abil": {
+    "median": 236.474,
+    "min": 197.279,
+    "max": 754.819,
+    "q1": 213.63150000000002,
+    "q3": 481.56899999999996,
+    "iqrOverMedian": 1.1330526823244838,
+    "cv": 0.674289750603903,
+    "noisy": true,
+    "msPerPlay": 2.463270833333333,
+    "ticksPerPlay": 45.40625,
+    "msPerTick": 0.05424959853177334,
+    "plays": 96,
+    "ticks": 4359,
+    "abilityEvents": 109,
+    "fields": 21,
+    "fp": "2e5f695a91b16280",
+    "runs": [
+     217.018,
+     706.001,
+     236.474,
+     257.137,
+     210.245,
+     754.819,
+     197.279
+    ],
+    "wallMedian": 187.402111,
+    "wallRuns": [
+     173.727799,
+     385.518327,
+     187.402111,
+     203.386259,
+     167.545939,
+     406.551243,
+     155.419756
+    ]
+   },
+   "R0": {
+    "ratio": 0.7476502135541211,
+    "wall": 0.6580266254362437,
+    "perTick": 0.7422419590501127,
+    "perPlay": 0.7476502135541212,
+    "pairedMedian": 0.7476502135541211,
+    "pairedQ1": 0.6617662410806804,
+    "pairedQ3": 0.8892978254110648,
+    "limit": 1.1,
+    "pass": true,
+    "borderline": false,
+    "noisy": true
+   },
+   "R1": {
+    "ratio": 1.0929603764079479,
+    "wall": 1.0779870060771952,
+    "perTick": 1.1438598846462624,
+    "perPlay": 1.0929603764079476,
+    "pairedMedian": 1.3473150442982083,
+    "pairedQ1": 0.9639432829376957,
+    "pairedQ3": 2.076906958581686,
+    "limit": 1.25,
+    "pass": true,
+    "borderline": true,
+    "noisy": true
+   },
+   "R1same": {
+    "ratio": 1.6871838412089128,
+    "wall": 1.265559989467742,
+    "perTick": 1.7657565229628491,
+    "perPlay": 1.6871838412089128,
+    "pairedMedian": 1.797816534128058,
+    "pairedQ1": 1.6026779869072298,
+    "pairedQ3": 2.4018566317592542,
+    "limit": 1.25,
+    "pass": false,
+    "borderline": false,
+    "noisy": true
+   },
+   "R2": {
+    "ratio": 0.8171520588275948,
+    "wall": 0.7093441518730964,
+    "perTick": 0.8490208016586778,
+    "perPlay": 0.8171520588275947,
+    "pairedMedian": 0.8885544666675882,
+    "pairedQ1": 0.7483441608589966,
+    "pairedQ3": 1.6923489027405374,
+    "limit": null,
+    "pass": null,
+    "borderline": false,
+    "noisy": true
+   },
+   "sub": {
+    "only:home.offense.TE": {
+     "ratio": 1.2374087436822547,
+     "wall": 1.1651113805712054,
+     "perTick": 1.2374087436822547,
+     "perPlay": 1.237408743682255,
+     "pairedMedian": 1.1507910309568858,
+     "pairedQ1": 1.100924241156307,
+     "pairedQ3": 1.2734685090566311,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 160.852,
+     "abilityEvents": 16,
+     "noisyJob": true
+    },
+    "only:home.offense.RB": {
+     "ratio": 1.4994499619204404,
+     "wall": 1.2089391831599008,
+     "perTick": 1.498136383329183,
+     "perPlay": 1.4994499619204404,
+     "pairedMedian": 1.4994499619204404,
+     "pairedQ1": 1.3036387440490862,
+     "pairedQ3": 1.59227462936216,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 194.915,
+     "abilityEvents": 2,
+     "noisyJob": true
+    },
+    "only:home.offense.QB": {
+     "ratio": 1.4457231654499156,
+     "wall": 1.3089682000709733,
+     "perTick": 1.4454063293408976,
+     "perPlay": 1.4457231654499156,
+     "pairedMedian": 1.2911665659269493,
+     "pairedQ1": 1.073106399299113,
+     "pairedQ3": 1.6093549841249652,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 187.931,
+     "abilityEvents": 1,
+     "noisyJob": true
+    },
+    "only:home.offense.WR1": {
+     "ratio": 1.6956327745767013,
+     "wall": 1.3057976307182457,
+     "perTick": 1.6971208244008142,
+     "perPlay": 1.6956327745767015,
+     "pairedMedian": 1.6124230103457993,
+     "pairedQ1": 1.2819777161391612,
+     "pairedQ3": 1.6882677546620608,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 220.417,
+     "abilityEvents": 16,
+     "noisyJob": true
+    },
+    "only:away.defense.LB1": {
+     "ratio": 1.4407382049526503,
+     "wall": 1.2431342744728509,
+     "perTick": 1.4407382049526503,
+     "perPlay": 1.4407382049526503,
+     "pairedMedian": 1.2995737814555124,
+     "pairedQ1": 1.2222785897954893,
+     "pairedQ3": 1.3842755729216893,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 187.283,
+     "abilityEvents": 30,
+     "noisyJob": true
+    },
+    "only:away.defense.LB2": {
+     "ratio": 1.164265218361271,
+     "wall": 1.0782219182515491,
+     "perTick": 1.2093301289080414,
+     "perPlay": 1.1642652183612712,
+     "pairedMedian": 1.124933477398442,
+     "pairedQ1": 0.9590422204811417,
+     "pairedQ3": 1.2384322075054173,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 151.344,
+     "abilityEvents": 8,
+     "noisyJob": true
+    },
+    "only:away.defense.FS": {
+     "ratio": 1.2140532806117346,
+     "wall": 1.1580110251450724,
+     "perTick": 1.2239803461106593,
+     "perPlay": 1.2140532806117346,
+     "pairedMedian": 1.1961731361576546,
+     "pairedQ1": 1.0569767154360694,
+     "pairedQ3": 1.2410159450748517,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 157.816,
+     "abilityEvents": 2,
+     "noisyJob": true
+    },
+    "only:away.defense.DL1": {
+     "ratio": 1.588740758975621,
+     "wall": 1.3504822244856143,
+     "perTick": 1.588740758975621,
+     "perPlay": 1.5887407589756213,
+     "pairedMedian": 1.4957881699502271,
+     "pairedQ1": 1.2342690919649915,
+     "pairedQ3": 1.6486739779605954,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 206.522,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.CB1": {
+     "ratio": 1.26825703317922,
+     "wall": 1.1287277580620416,
+     "perTick": 1.26825703317922,
+     "perPlay": 1.26825703317922,
+     "pairedMedian": 1.1967940137721944,
+     "pairedQ1": 1.1430972261271066,
+     "pairedQ3": 1.2224575212762323,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 164.862,
+     "abilityEvents": 32,
+     "noisyJob": true
+    }
+   },
+   "subControl": {
+    "median": 129.991,
+    "overOff": 0.9274538203040834,
+    "noisy": true
+   },
+   "subRuns": {
+    "only:none": {
+     "runs": [
+      215.734,
+      137.024,
+      129.991,
+      124.205,
+      124.018,
+      188.401,
+      127.391
+     ],
+     "wallRuns": [
+      165.995541,
+      132.947481,
+      124.889241,
+      120.341497,
+      120.485596,
+      135.191003,
+      123.409004
+     ],
+     "fp": "c63fdde9f4983efc",
+     "ticksPerPlay": 47.520833333333336
+    },
+    "only:home.offense.TE": {
+     "runs": [
+      189.665,
+      272.34,
+      146.316,
+      142.934,
+      159.273,
+      202.769,
+      160.852
+     ],
+     "wallRuns": [
+      153.670287,
+      176.371265,
+      136.019311,
+      132.273528,
+      145.509876,
+      173.311771,
+      132.786699
+     ],
+     "fp": "d0825a0ed4996c6e",
+     "ticksPerPlay": 47.520833333333336
+    },
+    "only:home.offense.RB": {
+     "runs": [
+      177.101,
+      228.13,
+      194.915,
+      160.199,
+      188.465,
+      248.215,
+      216.028
+     ],
+     "wallRuns": [
+      148.580774,
+      150.983497,
+      145.522436,
+      133.152816,
+      156.649898,
+      213.263727,
+      198.355541
+     ],
+     "fp": "e101081d9f0dfa82",
+     "ticksPerPlay": 47.5625
+    },
+    "only:home.offense.QB": {
+     "runs": [
+      187.931,
+      196.207,
+      232.267,
+      239.545,
+      158.134,
+      160.186,
+      164.483
+     ],
+     "wallRuns": [
+      165.476489,
+      163.476045,
+      173.730211,
+      198.756603,
+      139.039163,
+      142.44698,
+      155.903577
+     ],
+     "fp": "bb93cf6ff8862824",
+     "ticksPerPlay": 47.53125
+    },
+    "only:home.offense.WR1": {
+     "runs": [
+      208.579,
+      225.582,
+      239.602,
+      200.271,
+      160.809,
+      238.76,
+      220.417
+     ],
+     "wallRuns": [
+      156.956413,
+      152.831704,
+      201.771795,
+      163.080075,
+      149.258383,
+      174.397366,
+      168.345878
+     ],
+     "fp": "94a7901910aba6ef",
+     "ticksPerPlay": 47.479166666666664
+    },
+    "only:away.defense.LB1": {
+     "runs": [
+      202.575,
+      193.902,
+      187.283,
+      168.106,
+      152.939,
+      244.841,
+      154.316
+     ],
+     "wallRuns": [
+      166.58448,
+      140.01494,
+      170.889812,
+      155.254096,
+      142.364593,
+      167.169905,
+      142.717039
+     ],
+     "fp": "8e2953f14c6ec532",
+     "ticksPerPlay": 47.520833333333336
+    },
+    "only:away.defense.LB2": {
+     "runs": [
+      143.281,
+      138.947,
+      189.768,
+      160.08,
+      139.512,
+      170.324,
+      151.344
+     ],
+     "wallRuns": [
+      135.655552,
+      125.729412,
+      177.270258,
+      131.480351,
+      137.116924,
+      134.658317,
+      133.957558
+     ],
+     "fp": "31ac7b870b8dbb65",
+     "ticksPerPlay": 45.75
+    },
+    "only:away.defense.FS": {
+     "runs": [
+      208.382,
+      165.994,
+      196.723,
+      157.816,
+      148.347,
+      151.485,
+      146.249
+     ],
+     "wallRuns": [
+      150.115896,
+      147.339521,
+      179.967008,
+      144.623118,
+      136.877394,
+      136.104945,
+      135.050827
+     ],
+     "fp": "d1b52c5f997a7fcf",
+     "ticksPerPlay": 47.135416666666664
+    },
+    "only:away.defense.DL1": {
+     "runs": [
+      167.008,
+      223.979,
+      194.439,
+      206.522,
+      209.101,
+      222.133,
+      164.27
+     ],
+     "wallRuns": [
+      155.850041,
+      174.380605,
+      166.436389,
+      171.977172,
+      180.813513,
+      168.6607,
+      150.891603
+     ],
+     "fp": "c63fdde9f4983efc",
+     "ticksPerPlay": 47.520833333333336
+    },
+    "only:away.defense.CB1": {
+     "runs": [
+      173.119,
+      164.862,
+      153.099,
+      154.232,
+      148.424,
+      208.829,
+      211.353
+     ],
+     "wallRuns": [
+      155.181636,
+      138.043903,
+      139.123893,
+      140.965953,
+      136.020505,
+      153.460054,
+      176.916754
+     ],
+     "fp": "248a2dc24fd198a5",
+     "ticksPerPlay": 47.520833333333336
+    }
+   }
+  },
+  {
+   "scene": "A5-full-contracts",
+   "kind": "ability",
+   "addition": false,
+   "tier": "rules",
+   "plays": 96,
+   "inputsHash": "c0c514735d69a743",
+   "base": {
+    "median": 575.506,
+    "min": 441.014,
+    "max": 1089.318,
+    "q1": 562.7645,
+    "q3": 1018.653,
+    "iqrOverMedian": 0.7921524710428737,
+    "cv": 0.36636151457491917,
+    "noisy": true,
+    "msPerPlay": 5.994854166666666,
+    "ticksPerPlay": 108.42708333333333,
+    "msPerTick": 0.055289268901911805,
+    "plays": 96,
+    "ticks": 10409,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "b3a0284686dec85f",
+    "runs": [
+     1037.819,
+     559.766,
+     575.506,
+     1089.318,
+     565.763,
+     441.014,
+     999.487
+    ],
+    "wallMedian": 534.490664,
+    "wallRuns": [
+     695.329301,
+     465.884373,
+     534.490664,
+     723.238895,
+     472.240997,
+     415.21442,
+     656.389892
+    ]
+   },
+   "cand": {
+    "median": 510.404,
+    "min": 321.776,
+    "max": 1164.078,
+    "q1": 393.943,
+    "q3": 587.777,
+    "iqrOverMedian": 0.3797658325561713,
+    "cv": 0.5066128792136124,
+    "noisy": true,
+    "msPerPlay": 5.316708333333334,
+    "ticksPerPlay": 109.90625,
+    "msPerTick": 0.048374940763908636,
+    "plays": 96,
+    "ticks": 10551,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "ec618cd59133674a",
+    "runs": [
+     1164.078,
+     510.404,
+     523.342,
+     652.212,
+     437.895,
+     349.991,
+     321.776
+    ],
+    "wallMedian": 379.790471,
+    "wallRuns": [
+     693.468803,
+     393.372944,
+     379.790471,
+     410.740911,
+     357.058438,
+     273.197146,
+     260.490961
+    ]
+   },
+   "offA": {
+    "median": 290.635,
+    "min": 255.686,
+    "max": 500.013,
+    "q1": 267.0865,
+    "q3": 298.279,
+    "iqrOverMedian": 0.10732533934316238,
+    "cv": 0.27369129827710653,
+    "noisy": true,
+    "msPerPlay": 3.0274479166666666,
+    "ticksPerPlay": 109.90625,
+    "msPerTick": 0.027545730262534356,
+    "plays": 96,
+    "ticks": 10551,
+    "abilityEvents": 0,
+    "fields": 0,
+    "fp": "ec618cd59133674a",
+    "runs": [
+     303.118,
+     290.635,
+     293.44,
+     500.013,
+     262.318,
+     255.686,
+     271.855
+    ],
+    "wallMedian": 263.239596,
+    "wallRuns": [
+     273.826924,
+     253.74777,
+     283.986098,
+     413.681315,
+     259.214291,
+     249.415229,
+     263.239596
+    ]
+   },
+   "abil": {
+    "median": 447.833,
+    "min": 387.059,
+    "max": 475.373,
+    "q1": 431.9665,
+    "q3": 452.299,
+    "iqrOverMedian": 0.0454019690375653,
+    "cv": 0.0644615652275458,
+    "noisy": false,
+    "msPerPlay": 4.664927083333334,
+    "ticksPerPlay": 114.42708333333333,
+    "msPerTick": 0.0407676832043696,
+    "plays": 96,
+    "ticks": 10985,
+    "abilityEvents": 367,
+    "fields": 16,
+    "fp": "f097c6bf5915ac02",
+    "runs": [
+     443.697,
+     387.059,
+     420.236,
+     453.025,
+     475.373,
+     451.573,
+     447.833
+    ],
+    "wallMedian": 371.640903,
+    "wallRuns": [
+     372.580034,
+     338.549703,
+     371.640903,
+     412.604895,
+     367.615306,
+     389.383621,
+     361.211108
+    ]
+   },
+   "R0": {
+    "ratio": 0.8868786771988476,
+    "wall": 0.7105652101717533,
+    "perTick": 0.8749426737714724,
+    "perPlay": 0.8868786771988477,
+    "pairedMedian": 0.7936051916719197,
+    "pairedQ1": 0.6863622114688503,
+    "pairedQ3": 0.9105882434123856,
+    "limit": 1.1,
+    "pass": true,
+    "borderline": false,
+    "noisy": true
+   },
+   "R1": {
+    "ratio": 0.8774088761059867,
+    "wall": 0.9785419366143074,
+    "perTick": 0.8427438372138611,
+    "perPlay": 0.8774088761059866,
+    "pairedMedian": 0.8029854282667931,
+    "pairedQ1": 0.726468130734338,
+    "pairedQ3": 1.187914238242685,
+    "limit": 1.25,
+    "pass": true,
+    "borderline": false,
+    "noisy": true
+   },
+   "R1same": {
+    "ratio": 1.5408777332392865,
+    "wall": 1.4117971180900915,
+    "perTick": 1.480000087702113,
+    "perPlay": 1.5408777332392865,
+    "pairedMedian": 1.463776483085795,
+    "pairedQ1": 1.3819360262769491,
+    "pairedQ3": 1.7067231566569039,
+    "limit": 1.25,
+    "pass": false,
+    "borderline": false,
+    "noisy": true
+   },
+   "R2": {
+    "ratio": 0.778155223403405,
+    "wall": 0.6953178568522199,
+    "perTick": 0.7373525462363262,
+    "perPlay": 0.778155223403405,
+    "pairedMedian": 0.6914657196042633,
+    "pairedQ1": 0.43779558160218357,
+    "pairedQ3": 0.7852180468566798,
+    "limit": null,
+    "pass": null,
+    "borderline": false,
+    "noisy": true
+   },
+   "sub": {
+    "only:home.offense.QB": {
+     "ratio": 1.060884336993451,
+     "wall": 1.0397139579759962,
+     "perTick": 1.0638082721552844,
+     "perPlay": 1.060884336993451,
+     "pairedMedian": 1.1188282693009415,
+     "pairedQ1": 0.9793552791722929,
+     "pairedQ3": 1.2915496601965253,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 301.637,
+     "abilityEvents": 24,
+     "noisyJob": true
+    },
+    "only:home.offense.RB": {
+     "ratio": 1.2895654987584673,
+     "wall": 1.1490400209569758,
+     "perTick": 1.2895654987584673,
+     "perPlay": 1.2895654987584673,
+     "pairedMedian": 1.1373774112853814,
+     "pairedQ1": 1.100021186356913,
+     "pairedQ3": 1.401205691543272,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 366.657,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:home.offense.WR1": {
+     "ratio": 1.228575649078874,
+     "wall": 1.1717667360686201,
+     "perTick": 1.228575649078874,
+     "perPlay": 1.2285756490788742,
+     "pairedMedian": 1.2632083887857029,
+     "pairedQ1": 1.0419896583262354,
+     "pairedQ3": 1.3206046487151002,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 349.316,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:home.offense.WR2": {
+     "ratio": 1.1386647721277687,
+     "wall": 1.0369659529098263,
+     "perTick": 1.138664772127769,
+     "perPlay": 1.1386647721277687,
+     "pairedMedian": 1.050432235438157,
+     "pairedQ1": 0.9235076050511204,
+     "pairedQ3": 1.189024952059912,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 323.752,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:home.offense.TE": {
+     "ratio": 1.103328573538825,
+     "wall": 1.0450700567804234,
+     "perTick": 1.1034331544462694,
+     "perPlay": 1.103328573538825,
+     "pairedMedian": 1.1553914327917283,
+     "pairedQ1": 0.9147200040084853,
+     "pairedQ3": 1.3181531023069715,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 313.705,
+     "abilityEvents": 46,
+     "noisyJob": true
+    },
+    "only:home.offense.LG": {
+     "ratio": 1.330965159711036,
+     "wall": 1.218221315257158,
+     "perTick": 1.3305868296485825,
+     "perPlay": 1.330965159711036,
+     "pairedMedian": 1.2532432708180183,
+     "pairedQ1": 1.1754279916115968,
+     "pairedQ3": 1.3482585877354119,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 378.428,
+     "abilityEvents": 27,
+     "noisyJob": true
+    },
+    "only:home.offense.RG": {
+     "ratio": 1.1663161300760394,
+     "wall": 1.119811007209369,
+     "perTick": 1.166979752340663,
+     "perPlay": 1.1663161300760394,
+     "pairedMedian": 1.0643851931957677,
+     "pairedQ1": 0.9062893526968039,
+     "pairedQ3": 1.3412997508596811,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 331.614,
+     "abilityEvents": 19,
+     "noisyJob": true
+    },
+    "only:home.offense.WR3": {
+     "ratio": 1.0703242053136188,
+     "wall": 1.0394543548510744,
+     "perTick": 1.0703242053136188,
+     "perPlay": 1.070324205313619,
+     "pairedMedian": 1.1147191208277314,
+     "pairedQ1": 0.8890995999236027,
+     "pairedQ3": 1.1579871851419885,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 304.321,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:home.offense.C": {
+     "ratio": 1.0494573130842764,
+     "wall": 1.0440904780739524,
+     "perTick": 1.0494573130842764,
+     "perPlay": 1.0494573130842764,
+     "pairedMedian": 1.0020363948425397,
+     "pairedQ1": 0.8805809148637281,
+     "pairedQ3": 1.2510341661172073,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 298.388,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.DL1": {
+     "ratio": 1.2297890449695068,
+     "wall": 1.0777621599606069,
+     "perTick": 1.1960092371161644,
+     "perPlay": 1.2297890449695068,
+     "pairedMedian": 1.054272208661888,
+     "pairedQ1": 0.9424417560022886,
+     "pairedQ3": 1.4517923726749964,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 349.661,
+     "abilityEvents": 24,
+     "noisyJob": true
+    },
+    "only:away.defense.DL2": {
+     "ratio": 1.0604306324430406,
+     "wall": 1.0411637141442185,
+     "perTick": 1.0604306324430406,
+     "perPlay": 1.0604306324430406,
+     "pairedMedian": 1.1015715551254082,
+     "pairedQ1": 0.8566535195515657,
+     "pairedQ3": 1.3641229210179358,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 301.508,
+     "abilityEvents": 24,
+     "noisyJob": true
+    },
+    "only:away.defense.LB1": {
+     "ratio": 1.2932232718780554,
+     "wall": 1.1114645097662046,
+     "perTick": 1.2932232718780554,
+     "perPlay": 1.2932232718780554,
+     "pairedMedian": 1.066573525910952,
+     "pairedQ1": 1.032207165664678,
+     "pairedQ3": 1.2912970600677909,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 367.697,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.LB2": {
+     "ratio": 1.1027060486905875,
+     "wall": 1.0767589378726317,
+     "perTick": 1.1034381183359625,
+     "perPlay": 1.1027060486905877,
+     "pairedMedian": 1.145466767989712,
+     "pairedQ1": 1.0081409573578581,
+     "pairedQ3": 1.18798060939615,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 313.528,
+     "abilityEvents": 3,
+     "noisyJob": true
+    },
+    "only:away.defense.CB1": {
+     "ratio": 1.316414960292059,
+     "wall": 1.2295098334588275,
+     "perTick": 1.3164149602920592,
+     "perPlay": 1.3164149602920592,
+     "pairedMedian": 1.1579105044718538,
+     "pairedQ1": 0.977646086025401,
+     "pairedQ3": 1.43927350379281,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 374.291,
+     "abilityEvents": 93,
+     "noisyJob": true
+    },
+    "only:away.defense.CB2": {
+     "ratio": 1.3804330240639264,
+     "wall": 1.3724544371551752,
+     "perTick": 1.3804330240639264,
+     "perPlay": 1.3804330240639264,
+     "pairedMedian": 1.3802913640567742,
+     "pairedQ1": 1.2036812927165852,
+     "pairedQ3": 1.4560578518016314,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 392.493,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.FS": {
+     "ratio": 1.2687759824989624,
+     "wall": 1.206474975555682,
+     "perTick": 1.2687759824989622,
+     "perPlay": 1.2687759824989624,
+     "pairedMedian": 1.2351666748732089,
+     "pairedQ1": 1.189967826745329,
+     "pairedQ3": 1.341136029932486,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 360.746,
+     "abilityEvents": 96,
+     "noisyJob": true
+    },
+    "only:away.defense.DL3": {
+     "ratio": 0.9870465592313047,
+     "wall": 1.009229877235203,
+     "perTick": 0.9870465592313047,
+     "perPlay": 0.9870465592313048,
+     "pairedMedian": 1.0253222365113694,
+     "pairedQ1": 0.8002019123556585,
+     "pairedQ3": 1.2110843815542958,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 280.643,
+     "abilityEvents": 0,
+     "noisyJob": true
+    },
+    "only:away.defense.SS": {
+     "ratio": 1.4235701272482992,
+     "wall": 1.3563235520004364,
+     "perTick": 1.4235701272482992,
+     "perPlay": 1.4235701272482995,
+     "pairedMedian": 1.1984896533582745,
+     "pairedQ1": 1.072739700680499,
+     "pairedQ3": 1.5531473679626528,
+     "limit": null,
+     "pass": null,
+     "borderline": false,
+     "noisy": true,
+     "median": 404.758,
+     "abilityEvents": 0,
+     "noisyJob": true
+    }
+   },
+   "subControl": {
+    "median": 284.326,
+    "overOff": 0.9782923598327801,
+    "noisy": true
+   },
+   "subRuns": {
+    "only:none": {
+     "runs": [
+      341.885,
+      273.712,
+      284.326,
+      256.243,
+      382.253,
+      349.578,
+      265.829
+     ],
+     "wallRuns": [
+      324.922408,
+      263.04996,
+      265.782625,
+      247.851614,
+      351.401605,
+      323.861842,
+      250.551772
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:home.offense.QB": {
+     "runs": [
+      301.637,
+      294.633,
+      406.335,
+      295.7,
+      327.667,
+      504.842,
+      297.417
+     ],
+     "wallRuns": [
+      276.337905,
+      264.511189,
+      378.746184,
+      267.167277,
+      305.009335,
+      423.131702,
+      264.200204
+     ],
+     "fp": "d6e3127f63d6c777",
+     "ticksPerPlay": 109.60416666666667
+    },
+    "only:home.offense.RB": {
+     "runs": [
+      366.657,
+      357.198,
+      425.749,
+      291.445,
+      294.787,
+      394.179,
+      471.734
+     ],
+     "wallRuns": [
+      305.394873,
+      282.216504,
+      383.331576,
+      262.803565,
+      281.76038,
+      362.415185,
+      420.112404
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:home.offense.WR1": {
+     "runs": [
+      431.872,
+      280.862,
+      466.651,
+      340.072,
+      404.369,
+      322.284,
+      349.316
+     ],
+     "wallRuns": [
+      409.165712,
+      262.253001,
+      376.881705,
+      307.592186,
+      318.934293,
+      311.435239,
+      280.502021
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:home.offense.WR2": {
+     "runs": [
+      287.296,
+      275.542,
+      329.862,
+      388.251,
+      277.248,
+      367.208,
+      323.752
+     ],
+     "wallRuns": [
+      269.339733,
+      263.512509,
+      314.176935,
+      383.219742,
+      275.607533,
+      266.841701,
+      293.020057
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:home.offense.TE": {
+     "runs": [
+      395.011,
+      393.293,
+      274.365,
+      313.705,
+      288.086,
+      302.201,
+      375.366
+     ],
+     "wallRuns": [
+      365.333132,
+      284.167415,
+      257.853707,
+      268.082303,
+      272.089467,
+      277.761463,
+      353.722568
+     ],
+     "fp": "5209d04550d525cf",
+     "ticksPerPlay": 109.89583333333333
+    },
+    "only:home.offense.LG": {
+     "runs": [
+      285.191,
+      316.943,
+      388.107,
+      378.428,
+      479.056,
+      417.016,
+      353.954
+     ],
+     "wallRuns": [
+      263.861027,
+      287.718793,
+      323.782059,
+      309.457366,
+      408.130589,
+      336.100627,
+      336.495153
+     ],
+     "fp": "d1bb70fdf4917b7a",
+     "ticksPerPlay": 109.9375
+    },
+    "only:home.offense.RG": {
+     "runs": [
+      322.496,
+      291.335,
+      331.614,
+      388.537,
+      332.289,
+      294.844,
+      480.121
+     ],
+     "wallRuns": [
+      297.626309,
+      271.833315,
+      285.697686,
+      365.84424,
+      307.829877,
+      276.822731,
+      400.047747
+     ],
+     "fp": "cc3c04cec0ec628f",
+     "ticksPerPlay": 109.84375
+    },
+    "only:home.offense.WR3": {
+     "runs": [
+      400.407,
+      305.112,
+      279.663,
+      345.732,
+      303.738,
+      271.529,
+      304.321
+     ],
+     "wallRuns": [
+      322.743496,
+      272.228613,
+      270.622647,
+      324.135182,
+      287.86967,
+      276.268907,
+      263.997506
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:home.offense.C": {
+     "runs": [
+      320.128,
+      298.388,
+      284.905,
+      382.571,
+      270.997,
+      288.332,
+      375.328
+     ],
+     "wallRuns": [
+      286.809679,
+      277.501108,
+      275.377729,
+      348.323262,
+      258.743216,
+      252.696862,
+      358.844668
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:away.defense.DL1": {
+     "runs": [
+      284.192,
+      434.716,
+      299.757,
+      445.815,
+      307.438,
+      368.327,
+      349.661
+     ],
+     "wallRuns": [
+      269.761666,
+      397.308606,
+      277.555011,
+      351.639055,
+      268.259532,
+      286.450456,
+      318.253605
+     ],
+     "fp": "aee986a20a8cd773",
+     "ticksPerPlay": 113.01041666666667
+    },
+    "only:away.defense.DL2": {
+     "runs": [
+      301.508,
+      371.299,
+      390.014,
+      282.27,
+      295.362,
+      290.642,
+      399.397
+     ],
+     "wallRuns": [
+      276.723225,
+      317.169249,
+      356.872444,
+      257.1101,
+      260.476961,
+      270.926107,
+      314.618416
+     ],
+     "fp": "fe020f62da7b9fc9",
+     "ticksPerPlay": 109.90625
+    },
+    "only:away.defense.LB1": {
+     "runs": [
+      367.697,
+      412.51,
+      474.64,
+      273.302,
+      383.5,
+      308.317,
+      282.085
+     ],
+     "wallRuns": [
+      305.776877,
+      344.922,
+      377.245516,
+      259.09817,
+      295.407955,
+      285.380433,
+      264.471002
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:away.defense.LB2": {
+     "runs": [
+      305.003,
+      313.528,
+      319.628,
+      348.383,
+      273.192,
+      421.2,
+      311.307
+     ],
+     "wallRuns": [
+      286.183817,
+      296.744136,
+      301.646006,
+      259.546705,
+      258.530183,
+      331.009464,
+      279.161599
+     ],
+     "fp": "349a5e14cd9dec3e",
+     "ticksPerPlay": 109.83333333333333
+    },
+    "only:away.defense.CB1": {
+     "runs": [
+      287.605,
+      316.934,
+      374.291,
+      401.179,
+      390.113,
+      326.761,
+      415.26
+     ],
+     "wallRuns": [
+      275.075536,
+      275.893835,
+      354.674405,
+      360.606939,
+      375.549461,
+      277.067803,
+      326.782351
+     ],
+     "fp": "5e920b03ebfe030b",
+     "ticksPerPlay": 109.90625
+    },
+    "only:away.defense.CB2": {
+     "runs": [
+      490.82,
+      284.857,
+      508.569,
+      353.69,
+      522.404,
+      293.722,
+      392.493
+     ],
+     "wallRuns": [
+      423.675819,
+      272.426538,
+      422.530031,
+      327.47265,
+      432.888847,
+      275.509077,
+      364.774543
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:away.defense.FS": {
+     "runs": [
+      453.07,
+      332.228,
+      351.19,
+      410.472,
+      324.204,
+      407.66,
+      360.746
+     ],
+     "wallRuns": [
+      410.373965,
+      292.763605,
+      292.126374,
+      328.25623,
+      303.225936,
+      320.660086,
+      333.399433
+     ],
+     "fp": "01660d20f803fe13",
+     "ticksPerPlay": 109.90625
+    },
+    "only:away.defense.DL3": {
+     "runs": [
+      279.755,
+      280.643,
+      362.299,
+      301.143,
+      259.116,
+      273.416,
+      331.474
+     ],
+     "wallRuns": [
+      268.235766,
+      264.254501,
+      350.572425,
+      286.796314,
+      246.046177,
+      258.829292,
+      295.240488
+     ],
+     "fp": "ec618cd59133674a",
+     "ticksPerPlay": 109.90625
+    },
+    "only:away.defense.SS": {
+     "runs": [
+      327.726,
+      328.041,
+      404.758,
+      500.015,
+      357.275,
+      414.912,
+      447.317
+     ],
+     "wallRuns": [
+      279.661955,
+      289.445203,
+      360.487234,
+      405.08879,
+      295.926157,
+      393.285772,
+      385.633047
+     ],
+     "fp": "22d978d5b9f66235",
+     "ticksPerPlay": 109.90625
+    }
+   }
+  }
+ ]
+}

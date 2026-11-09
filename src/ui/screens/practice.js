@@ -6,7 +6,7 @@ import * as F from '../../franchise/franchise.js';
 import { PLAYS, OFFENSE_IDS, DEFENSE_IDS, RESERVE_OFFENSE_IDS, RESERVE_DEFENSE_IDS } from '../../data/playbook.js';
 import { simulatePlay } from '../../sim/engine.js';
 import { pickSlots } from '../../sim/rules.js';
-import { fieldSvg, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
+import { fieldSvg, fieldDraw, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
 import { playCardSvg, legendHtml } from '../play-art.js';
 import { playDetailHtml, lessonHtml } from './hq.js';
 import { generatedTeam } from '../../franchise/roster.js';
@@ -58,8 +58,8 @@ export function registerPracticeScreens(Router, app) {
         prac.i = 0; Router.render();
         const svg = document.querySelector('#field'); const start = performance.now(); const ms = 100 / (app.settings.speed || 1);
         const n = prac.sim.frames.length; const hold = endHold(prac.fx, prac.sim.frames[n - 1].t ?? 0);
-        const tick = (now) => { const raw = Math.floor((now - start) / ms); if (raw > n - 1) { const extra = (raw - (n - 1)) * 0.1; if (extra < hold && svg) { svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[n - 1], prevFrame: prac.sim.frames[n - 1], fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', qbRead: qbReadsShown(app.f?.settings || app.settings, { live: true }), sprites: prac.sprites, time: (prac.sim.frames[n - 1].t ?? 0) + extra, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); prac.raf = requestAnimationFrame(tick); return; } Router.render(); return; }
-          const idx = Math.min(n - 1, raw); if (idx !== prac.i && svg) { prac.i = idx; svg.innerHTML = fieldSvg({ ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[idx], prevFrame: prac.sim.frames[idx - 1] || null, fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', qbRead: qbReadsShown(app.f?.settings || app.settings, { live: true }), sprites: prac.sprites, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); } prac.raf = requestAnimationFrame(tick); };
+        const tick = (now) => { const raw = Math.floor((now - start) / ms); if (raw > n - 1) { const extra = (raw - (n - 1)) * 0.1; if (extra < hold && svg) { fieldDraw(svg, { ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[n - 1], prevFrame: prac.sim.frames[n - 1], fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', qbRead: qbReadsShown(app.f?.settings || app.settings, { live: true }), sprites: prac.sprites, time: (prac.sim.frames[n - 1].t ?? 0) + extra, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); prac.raf = requestAnimationFrame(tick); return; } Router.render(); return; }
+          const idx = Math.min(n - 1, raw); if (idx !== prac.i && svg) { prac.i = idx; fieldDraw(svg, { ballOn: prac.ballOn, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: prac.sim.frames[idx], prevFrame: prac.sim.frames[idx - 1] || null, fx: prac.fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', qbRead: qbReadsShown(app.f?.settings || app.settings, { live: true }), sprites: prac.sprites, camera: cameraFor(prac.ballOn), ownLabel: 'OWN', oppLabel: 'OPP' }); } prac.raf = requestAnimationFrame(tick); };
         cancelAnimationFrame(prac.raf); prac.raf = app.settings.reducedMotion ? (prac.i = prac.sim.frames.length - 1, Router.render(), null) : requestAnimationFrame(tick);
       };
       delegate(root, {

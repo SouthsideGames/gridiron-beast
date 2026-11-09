@@ -1,3 +1,6 @@
+// FROZEN LEGACY RULESET (Task 8 M4 S0, docs/task8/M4_STATUS.md): this file plays the legacy rulesets ('current' = values 1.1.0,
+// 'v1.0.0') and must not change behaviour, so finished records and the golden fixtures keep replaying exactly. The Task 8
+// engine is ruleset 't8' in src/clash/t8/; src/clash/rulesets.js picks between them.
 // Beast Clash battle engine: simulateClash(). One pure, seeded function: the same lineups, seed,
 // configuration and values version give the same result and the same log on every device.
 // No global random generator, no clock, no DOM, no storage. Only +, -, *, /, Math.round/floor/min/max.

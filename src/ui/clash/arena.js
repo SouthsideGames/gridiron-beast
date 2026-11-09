@@ -4,11 +4,34 @@
 // themed pixel floor with shadows, ground pads and props; side B faces side A. Portrait: B top, A bottom.
 // Landscape: A left, B right. Phase 3 adds the effects canvas (fx.js), elemental attacks, hit-stop,
 // knockback, knockout exits, entrances, name tags, tap-to-inspect and a low-effects mode.
+// Task 8 (t8 mode): a result from the t8 engine (result.ruleset === 't8') is played through the t8 timeline (./t8/timeline.js) and the
+// ability presentation layer (./t8/fx-t8.js: two SVG layers, under and over the monsters, redrawn per frame from a playback clock), with
+// the shared status badge, the ability icons and the turn markers in the information layer. The legacy path is unchanged.
+// Reconciled (task8-m4-reconcile): one arena for both Task 8 branches. Native t8 mode is the primary presentation; the M4 player API
+// (playTo, record, length, controls: false, the silent tier, revive, the looks override point, the status glyphs) works in every mode.
 import { esc } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { stateAt, cuesFor, nextExchangeIndex, DURATION } from './choreographer.js';
-import { themeFor, decorSvg, padSvg, SHADOW_SVG, shieldRingSvg, COND_ICON, COND_COLOR } from './arena-art.js';
+import { themeFor, decorSvg, padSvg, SHADOW_SVG, shieldRingSvg, COND_ICON as LEGACY_COND_ICON, COND_COLOR as LEGACY_COND_COLOR } from './arena-art.js';
 import { createFx } from './fx.js';
+import { toArenaRecord, isT8Result, T8_STATUS_ICON, T8_STATUS_COLOR } from './t8-record.js';
+import { t8StateAt, t8CuesFor, t8NextExchangeIndex, STATUS_NAME } from './t8/timeline.js';
+import { buildClashT8, drawClashT8, t8Live } from './t8/fx-t8.js';
+import { STATUS_GLYPH } from '../fx/overhead.js';
+
+// Condition glyphs: the legacy conditions and the Task 8 shared statuses (the translated path's functional cues; in native t8 mode the
+// status badge of the information layer carries the status, and the strips use STATUS_GLYPH with T8_STATUS_ICON as the fallback).
+const COND_ICON = { ...LEGACY_COND_ICON, ...T8_STATUS_ICON }; const COND_COLOR = { ...LEGACY_COND_COLOR, ...T8_STATUS_COLOR };
+const t8Glyph = (id) => STATUS_GLYPH[id] || T8_STATUS_ICON[id] || '•';
+
+/**
+ * Which presentation path a result takes (pure; the arena's dispatch, exported for the tests):
+ *   'native'     a t8 result (ruleset 't8'): the t8 timeline, the ability looks and the two overlay layers (the primary presentation);
+ *   'translated' a t8 result with opts.t8 === 'translated': translated to the legacy record shape (toArenaRecord) and played through
+ *                the legacy cue system with functional cues only (kept for legacy-shaped consumers and as a fallback);
+ *   'legacy'     a pre-M4 record (ruleset 'current' / 'v1.0.0' / none): the legacy cue path, unchanged (D19).
+ */
+export function arenaMode(result, opts = {}) { return isT8Result(result) ? (opts.t8 === 'translated' ? 'translated' : 'native') : 'legacy'; }
 
 // Slot maps: percent of the arena box, [x, y] of the feet. [front, bench1, bench2, ...] in lineup order; a bench
 // slot nearer the front is "next up". Landscape: side B mirrors x. Portrait: side B has its own map (sprites hang
@@ -41,14 +64,32 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const spriteImg = (svg) => `<img class="cl-sprite" alt="" draggable="false" src="data:image/svg+xml;utf8,${encodeURIComponent(svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '))}">`;
 
 /**
- * Mount the arena into `root` for `result`. Options: { speed, reducedMotion, quality: () => 'full'|'low', onCursor(i), onEnd(), onQuality(q),
+ * Mount the arena into `root` for `result`. Options: { speed, reducedMotion, onCursor(i), onEnd(), onQuality(q),
  *   names: { a, b } (team names for the strips, the matchup line and the victory banner; default 'Side A' / 'Side B'),
  *   edge: (attackerType, defenderType) => 'strong' | 'weak' | 'even' (the matchup line's type edge; the arena itself never imports the engine),
- *   simple: true (franchise battles: Watch / Speed / Skip only, no step, scrubber or FX toggle) }.
- * Returns the player API; call destroy() on unmount.
+ *   simple: true (franchise battles: Watch / Speed / Skip only, no step, scrubber or FX toggle),
+ *   controls: false (no control row at all: the host drives playback through the API, as the Clash reviewer does),
+ *   quality: 'full' | 'low' | 'min' (the starting effects quality; 'min' only in native t8 mode), subject: abilityId (native t8: the
+ *     reviewer's subject ability, see buildClashT8 `only`),
+ *   t8: 'native' (default) | 'translated' (play a t8 result through the translated legacy record and functional cues instead),
+ *   looks: (cue, api) => Promise | falsy (the Clash looks hook, an OVERRIDE POINT: called before every cue in every mode; a truthy return
+ *     takes that cue over and the arena then only applies the state after it; falsy lets the arena present the cue. In native t8 mode the
+ *     built-in looks (src/ui/clash/t8/looks) already draw every Clash ability from the playback clock, so no consumer needs the hook: the
+ *     clock is moved to the cue before the hook runs, so the ability layers keep drawing under an override. `cue.event` is the raw t8
+ *     event in native mode and the translated event (raw one in `cue.event.t8`) in translated mode; the api adds { mode, t8, time(), redraw() }) }.
+ * Dispatch (arenaMode): a t8 result plays natively (t8 timeline + looks + the two overlay layers); a pre-M4 record plays through the
+ * legacy cue path unchanged (D19). Returns the player API; call destroy() on unmount.
  */
 export function createArena(root, result, opts = {}) {
-  const cues = cuesFor(result); const n = result.log.length;
+  const passed = result; const mode = arenaMode(result, opts);
+  if (mode === 'translated') result = toArenaRecord(result);
+  const t8 = mode === 'native';
+  const cues = t8 ? t8CuesFor(result) : cuesFor(result); const n = result.log.length;
+  const t8state = t8 ? buildClashT8(result, cues, { only: opts.subject || null }) : null;
+  /** t8 state in the legacy arena shape ({ S: { a: { id: {...} } }, order, front, ramp, ex, i }); shield = the Shielded pool, statuses in `t8status`. */
+  const t8Legacy = (st) => { const S = { a: {}, b: {} }; for (const id of Object.keys(st.S)) { const x = st.S[id]; S[id[0]][id] = { ...x, shield: x.status?.id === 'shielded' ? x.status.pool || 0 : 0, cond: null, paused: null, t8status: x.status }; } return { S, order: st.order, front: st.front, ramp: st.ramp, ex: st.ex, i: st.i, turnOrder: st.turnOrder }; };
+  const stateOf = (i) => (t8 ? t8Legacy(t8StateAt(result, i)) : stateAt(result, i));
+  const nextEx = (i) => (t8 ? t8NextExchangeIndex(result, i) : nextExchangeIndex(result, i));
   const perSide = Math.max(result.lines.a.length, result.lines.b.length);
   const sizeKey = perSide <= 3 ? 'small' : 'big';
   const theme = themeFor(result);
@@ -58,19 +99,21 @@ export function createArena(root, result, opts = {}) {
   const all = [...result.lines.a, ...result.lines.b];
   const byId = Object.fromEntries(all.map((x) => [x.id, x]));
 
-  const names = { a: opts.names?.a || 'Side A', b: opts.names?.b || 'Side B' }; const simple = !!opts.simple;
-  root.innerHTML = `<div class="cl-arena ${sizeKey} theme-${theme.key} ${simple ? 'simple' : ''}">
-    <div class="cl-hud"><span class="cl-ex">Exchange <b>0</b> / ${result.exchanges}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}</span><div class="cl-exbar"><i></i></div></div>
+  const names = { a: opts.names?.a || 'Side A', b: opts.names?.b || 'Side B' }; const simple = !!opts.simple; const noControls = opts.controls === false;
+  root.innerHTML = `<div class="cl-arena ${sizeKey} theme-${theme.key} ${simple ? 'simple' : ''} ${t8 ? 't8' : ''}">
+    <div class="cl-hud"><span class="cl-ex">Exchange <b>0</b> / ${result.exchanges}</span><span class="cl-sd"></span><span class="cl-standing"></span><span class="cl-order muted"></span><span class="cl-theme muted">${esc(theme.name)}</span><span class="cl-exp">${result.experiments?.length ? `⚠ ${esc(result.experiments.join(', '))}` : ''}${t8 && result.provisional ? '⚠ PROVISIONAL readings on' : ''}</span><div class="cl-exbar"><i></i></div></div>
     <div class="cl-matchup" aria-live="polite"></div>
     <div class="cl-viewport"><div class="cl-stage" style="background-color:${theme.base};background-image:${theme.tile}">
       <div class="cl-half cl-half-a" style="background:${theme.halfA}"></div><div class="cl-half cl-half-b" style="background:${theme.halfB}"></div><div class="cl-mid" style="background:${theme.line}"></div>
       ${decorSvg(theme, result.seed || 1, isLandscape())}
+      ${t8 ? '<svg class="cl-t8 cl-t8-under" aria-hidden="true"></svg>' : ''}
       ${all.map((x) => monsterHtml(x)).join('')}
       <canvas class="cl-fx"></canvas>
+      ${t8 ? '<svg class="cl-t8 cl-t8-over" aria-hidden="true"><g class="fx"></g><g class="hud"></g></svg>' : ''}
       <div class="cl-layer"></div>
     </div><div class="cl-dim"></div></div>
     <div class="cl-strips ${perSide >= 4 ? 'compact' : ''}">${['a', 'b'].map((s) => `<div class="cl-strip-wrap"><div class="cl-strip-label ${s === 'a' ? 'mine' : ''}">${esc(names[s])}</div><div class="cl-strip cl-strip-${s}">${result.lines[s].map((x) => `<div class="cl-card" data-card="${x.id}" title="${esc(x.name)}">${spriteImg(monsterSprite(mon(x), 16, { flip: s === 'b' }))}<div class="cl-card-body"><div class="cl-card-name">${esc(x.name)}</div><div class="bar"><i></i></div><div class="cl-card-sub"><span class="cl-card-hp"></span><span class="cl-card-sh"></span><span class="cl-card-cond"></span></div></div><span class="cl-card-ko">KO</span></div>`).join('')}</div></div>`).join('')}</div>
-    <div class="cl-controls">
+    <div class="cl-controls" ${noControls ? 'style="display:none"' : ''}>
       ${simple
         ? `<div class="cl-btnrow simple"><button class="btn primary" data-cl="watch">▶ Watch</button><span class="cl-speedrow row"><span class="muted">Speed</span>${[1, 2, 4].map((s) => `<button class="btn small ${s === speed ? 'primary' : ''}" data-cl="speed" data-v="${s}">${s === 1 ? 'Normal' : s === 2 ? 'Fast' : 'Fastest'}</button>`).join('')}</span><button class="btn" data-cl="skip">Skip ▸▸</button></div>`
         : `<div class="cl-btnrow"><button class="btn primary" data-cl="watch">▶ Watch</button><button class="btn" data-cl="step">⏭ Step</button><button class="btn" data-cl="nextex">Next ex.</button><button class="btn" data-cl="skip">Skip</button></div>
@@ -81,6 +124,10 @@ export function createArena(root, result, opts = {}) {
   const stage = $('.cl-stage'), viewport = $('.cl-viewport'), layer = $('.cl-layer'), dimEl = $('.cl-dim'), caption = $('.cl-caption');
   const monEl = Object.fromEntries(all.map((x) => [x.id, $(`.cl-mon[data-id="${x.id}"]`)]));
   const fx = createFx($('.cl-fx'), { speed: () => speed, reduced, quality: () => quality });
+  const t8under = $('.cl-t8-under'), t8over = $('.cl-t8-over');
+  /** The drawing api handed to the looks hook (read-only on the record; the hook draws, the arena keeps the state). In native t8 mode it
+   *  adds the t8 presentation state, the playback time and the layer redraw, and `stateAt` returns the native state in the arena shape. */
+  const looksApi = () => Object.freeze({ chest, feet, fx, stage, layer, viewport, speed: () => speed, reduced, quality: () => quality, floatText, banner, anim, rig, body, monEl: (id) => monEl[id], applyState: (st) => applyState(st), stateAt: (i) => stateOf(i), byId, names, dur, mode, t8: t8state, time: () => (t8 ? t8Time() : null), redraw: () => (t8 ? t8Draw() : undefined) });
 
   function mon(x) { return { species: x.species, name: x.name, stage: x.combatant.stage, id: x.combatant.monsterId }; }
   function monsterHtml(x) {
@@ -92,7 +139,7 @@ export function createArena(root, result, opts = {}) {
   // ---- state
   function slotsFor(side, st) {
     const land = isLandscape(); const map = (land ? (stage.clientWidth < 420 ? LANDSCAPE_TIGHT : LANDSCAPE) : side === 'b' ? PORTRAIT_B : PORTRAIT)[Math.max(1, Math.min(5, result.lines[side].length))];
-    const alive = st.order[side].filter((id) => !st.S[side][id].ko); const out = {};
+    const alive = st.order[side].filter((id) => !st.S[side][id].ko).sort((p, q) => (p === st.front?.[side] ? -1 : q === st.front?.[side] ? 1 : 0)); const out = {}; // the active fighter stands at the front slot (t8: a rotation makes a reserve active without reordering the lineup)
     alive.forEach((id, i) => { const [x, y] = map[Math.min(i, map.length - 1)]; out[id] = { x: side === 'b' && land ? 100 - x : x, y, front: i === 0, row: i === 0 ? 0 : i <= 2 ? 1 : 2 }; });
     return out;
   }
@@ -118,21 +165,40 @@ export function createArena(root, result, opts = {}) {
         if (instant) el.querySelector('.cl-hp-ghost').style.width = `${pct}%`;
         el.querySelector('.cl-hp-shield').style.width = `${sh}%`;
         el.querySelector('.cl-sh').textContent = s.shield ? `🛡${s.shield}` : '';
-        const cond = s.cond || s.paused; const condEl = el.querySelector('.cl-cond'); condEl.textContent = cond ? COND_ICON[cond] : ''; condEl.title = cond ? `${cond}${s.paused && !s.cond ? ' (paused)' : ''}` : ''; condEl.style.opacity = s.paused && !s.cond ? '0.6' : '1';
+        const cond = s.cond || s.paused; const condEl = el.querySelector('.cl-cond'); condEl.textContent = cond ? COND_ICON[cond] : ''; condEl.title = cond ? `${cond}${s.paused && !s.cond ? ' (paused)' : ''}` : (s.t8status ? `${STATUS_NAME[s.t8status.id] || s.t8status.id}${s.t8status.remaining != null ? ` (${s.t8status.remaining} turns)` : ''}` : ''); condEl.style.opacity = s.paused && !s.cond ? '0.6' : '1';
         el.querySelector('.cl-ring-wrap').innerHTML = s.shield > 0 && !s.ko ? shieldRingSvg(s.shield / s.maxHp) : '';
         el.dataset.cond = s.cond || '';
         const card = $(`.cl-card[data-card="${id}"]`); card.classList.toggle('ko', !!s.ko); card.classList.toggle('front', !!slot.front && !s.ko);
         card.querySelector('.bar > i').style.width = `${pct}%`; card.querySelector('.bar').className = `bar ${pct < 30 ? 'bad' : pct < 60 ? 'warn' : ''}`;
-        card.querySelector('.cl-card-hp').textContent = `${s.hp}/${s.maxHp}`; card.querySelector('.cl-card-sh').textContent = s.shield ? `🛡${s.shield}` : ''; card.querySelector('.cl-card-cond').textContent = cond ? COND_ICON[cond] : '';
+        card.querySelector('.cl-card-hp').textContent = `${s.hp}/${s.maxHp}`; card.querySelector('.cl-card-sh').textContent = s.shield ? `🛡${s.shield}` : ''; card.querySelector('.cl-card-cond').textContent = cond ? COND_ICON[cond] : s.t8status ? `${t8Glyph(s.t8status.id)}${s.t8status.remaining ?? ''}` : '';
       }
     }
     $('.cl-ex b').textContent = String(st.ex); $('.cl-exbar i').style.width = `${Math.min(100, st.ex / 30 * 100)}%`;
     { const up = (side) => st.order[side].filter((id) => !st.S[side][id].ko).length; $('.cl-standing').textContent = `${up('a')} v ${up('b')} standing`; }
     matchup(st);
     $('.cl-sd').textContent = st.ramp > 1 ? `⚡ Sudden death ×${st.ramp.toFixed(2)}` : ''; viewport.classList.toggle('sudden', st.ramp > 1);
+    if (t8) { const o = $('.cl-order'); if (o) o.textContent = st.turnOrder ? `Turn order: ${st.turnOrder.map((id) => byId[id]?.name || id).join(' → ')}` : ''; }
     { const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(st.i); } // the host may have been emptied (destroy) mid-cue
     caption.textContent = result.log[st.i]?.text || '';
+    if (t8) t8Draw();
   }
+
+  // ---- the t8 ability presentation layer: a playback clock in seconds (1x), redrawn per frame while anything is live
+  const t8clock = { base: 0, start: 0, end: 0, override: null, raf: 0 };
+  const t8Time = () => (t8clock.override != null ? t8clock.override : playing ? Math.min(t8clock.end, t8clock.base + (performance.now() - t8clock.start) / 1000 * speed) : t8clock.end);
+  function t8Geom() {
+    const W = stage.clientWidth || 390, H = stage.clientHeight || 487; const land = isLandscape();
+    return { W, H, landscape: land, reduced: reduced(), pos: (id) => { const el = monEl[id]; if (!el || el.classList.contains('gone')) return null; return { x: parseFloat(el.style.left) / 100 * W, y: parseFloat(el.style.top) / 100 * H, size: sizeOf(id), side: id[0], active: el.classList.contains('front'), ko: false, id }; },
+      slot: (side, i) => { const map = (land ? (W < 420 ? LANDSCAPE_TIGHT : LANDSCAPE) : side === 'b' ? PORTRAIT_B : PORTRAIT)[Math.max(1, Math.min(5, result.lines[side].length))]; const [x, y] = map[Math.min(i, map.length - 1)]; const sizes = sizesFor(sizeKey, H, land); return { x: (side === 'b' && land ? 100 - x : x) / 100 * W, y: y / 100 * H, size: i === 0 ? sizes.front : sizes.bench }; } };
+  }
+  function t8Draw(t = t8Time()) {
+    if (!t8under || !t8over || !t8under.isConnected) return;
+    const g = t8Geom(); const vb = `0 0 ${g.W} ${g.H}`; if (t8under.getAttribute('viewBox') !== vb) { t8under.setAttribute('viewBox', vb); t8over.setAttribute('viewBox', vb); }
+    const d = drawClashT8(t8state, t, g, { quality, reduced: reduced() });
+    t8under.innerHTML = d.under; t8over.querySelector('.fx').innerHTML = d.over; t8over.querySelector('.hud').innerHTML = d.hud;
+  }
+  function t8Loop() { t8clock.raf = 0; if (!t8 || !root.isConnected) return; const t = t8Time(); t8Draw(t); if (playing || t8Live(t8state, t)) t8clock.raf = requestAnimationFrame(t8Loop); }
+  const t8Kick = () => { if (t8 && !t8clock.raf) t8clock.raf = requestAnimationFrame(t8Loop); };
 
   /** The matchup line: the two front monsters and who has the type edge (▲ strong, ▼ weak, = even), in words the strips echo. */
   function matchup(st) {
@@ -195,10 +261,11 @@ export function createArena(root, result, opts = {}) {
   function impact(cue, st, { heavy = false } = {}) {
     const e = cue.event; const t = e.target; if (!t || !monEl[t]) { applyState(st); return Promise.resolve(); }
     const { dx, dy } = towards(e.actor && e.actor !== t ? e.actor : t, t); const d = Math.hypot(dx, dy) || 1; const kb = (heavy ? 18 : 9) * (cue.tier === 'major' ? 1.4 : 1);
-    fx.burst(chest(t), cue.element || 'Metal', { tier: cue.tier, seed: cue.i });
-    if (cue.number?.absorbed) fx.shieldHit(chest(t));
+    const owned = t8 && !!cue.ability && t8state.items.some((it) => it.id === cue.ability && (it.seq === cue.i || (it.start <= cue.at && it.end >= cue.at))); // a look owns the impact of its ability's hits: no generic burst
+    if (!owned) fx.burst(chest(t), cue.element || 'Metal', { tier: cue.tier, seed: cue.i });
+    if (cue.number?.absorbed && !cue.number.bypassed) fx.shieldHit(chest(t));
     applyState(st);
-    if (cue.number) { floatText(t, `-${cue.number.value}`, 'dmg' + (heavy ? ' big' : '')); if (cue.number.absorbed) floatText(t, `${cue.number.absorbed} absorbed`, 'shield', 1000, 0.15); }
+    if (cue.number) { floatText(t, `-${cue.number.value}`, 'dmg' + (heavy ? ' big' : '')); if (cue.number.absorbed) floatText(t, `${cue.number.absorbed} absorbed${cue.number.broken ? ', broken' : ''}`, 'shield', 1000, 0.15); if (cue.number.bypassed) floatText(t, 'shield bypassed', 'shield', 900, 0.15); if (cue.number.capped) floatText(t, 'hit cap', 'note', 800, 0.3); }
     const R = rig(t);
     return Promise.all([
       anim(body(t), [{ filter: 'brightness(3) contrast(1.2)' }, { filter: 'brightness(3)', offset: 0.3 }, { filter: 'brightness(1)' }], heavy ? 300 : 200, 'ease-out'),
@@ -217,16 +284,26 @@ export function createArena(root, result, opts = {}) {
   // ---- one cue
   async function playCue(cue) {
     if (!root.querySelector('.cl-stage')) return;
-    const e = cue.event; const D = cue.duration; const st = stateAt(result, cue.i);
-    camera(cue.camera); setActing(e.actor && ['damage', 'heal', 'shield', 'miss', 'skip', 'buff', 'debuff'].includes(e.kind) ? e.actor : null, true);
-    const name = cue.named ? byId[e.actor]?.combatant.move.name : null;
+    const e = cue.event; const D = cue.duration; const st = stateOf(cue.i);
+    // native t8: the playback clock moves to this cue first, so the ability layers keep drawing whoever presents the cue
+    if (t8) { t8clock.base = cue.at; t8clock.start = performance.now(); t8clock.end = cue.end; t8clock.override = null; t8Kick(); }
+    // the looks hook (override point): a truthy return (a Promise) takes the cue over; the arena then only applies the state
+    if (opts.looks) { let took = null; try { took = opts.looks(cue, looksApi()); } catch (err) { console.error('clash looks hook', err); took = null; } if (took) { await took; applyState(st); return; } }
+    if (cue.tier === 'silent') { applyState(st); if (dur(D) > 0) await wait(dur(D)); return; } // bookkeeping (turn / round starts, clocks, rolls): nothing to show
+    if (t8) { const own = t8state.items.find((it) => it.seq === cue.i && it.main && it.look.shake); if (own && !reduced()) camera({ ...(cue.camera || { focus: [e.actor, e.target], zoom: 1 }), shake: Math.max(cue.camera?.shake || 0, 5) }); }
+    camera(cue.camera); setActing(e.actor && ['damage', 'heal', 'shield', 'miss', 'skip', 'buff', 'debuff', 'ability', 'delayed_launch'].includes(e.kind) ? e.actor : null, true);
+    const name = cue.named ? byId[e.actor]?.combatant?.move?.name : null;
+    const looked = t8 && cue.ability && t8state.items.some((it) => it.seq === cue.i); // an ability event with its own look: no generic burst / banner
     switch (cue.move) {
       case 'lunge': case 'lunge-heavy': {
         const heavy = cue.move === 'lunge-heavy' || cue.tier === 'major'; const A = rig(e.actor); const { dx, dy } = towards(e.actor, e.target);
         if (name && (heavy || cue.tier !== 'routine')) banner(name, cue.tier === 'major' ? 'major' : 'power', D * 0.9);
         const { back } = await windup(cue, heavy, dx, dy);
         const from = `translate(${-dx * back}px, ${-dy * back}px) scale(1.06, 0.92)`;
-        if (cue.delivery === 'melee') {
+        if (cue.delivery === 'ability') { // t8: the ability's look draws the travel and the impact; the body recoils and the hit lands on the look's beat
+          anim(A, [{ transform: from }, { transform: `translate(${dx * 0.06}px, ${dy * 0.06}px) scale(0.98, 1.03)`, offset: 0.4 }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.4, 'ease-out');
+          await wait(dur(D * 0.3)); await hitStop(cue); await impact(cue, st, { heavy });
+        } else if (cue.delivery === 'melee') {
           const c = contact(e.actor, e.target); const to = `translate(${c.dx}px, ${c.dy}px) scale(0.96, 1.06)`;
           await anim(A, [{ transform: from }, { transform: to }], D * (heavy ? 0.16 : 0.2), 'cubic-bezier(.2,.8,.3,1)');
           const hold = anim(A, [{ transform: to }, { transform: to }], heavy ? 130 : 40, 'linear'); await hitStop(cue);
@@ -247,13 +324,14 @@ export function createArena(root, result, opts = {}) {
         break;
       }
       case 'burst': { // splash onto a second target, or a retaliation from the defender
-        const a = e.actor && monEl[e.actor] ? chest(e.actor) : null; if (a && e.target) await fx.projectile(a, chest(e.target), cue.element, { ms: 200, tier: 'routine', seed: cue.i });
+        const a = e.actor && monEl[e.actor] ? chest(e.actor) : null; if (a && e.target && !looked) await fx.projectile(a, chest(e.target), cue.element, { ms: 200, tier: 'routine', seed: cue.i }); else if (looked) await wait(dur(D * 0.35));
         await impact(cue, st, { heavy: false }); break;
       }
       case 'burn-tick': { fx.condition(chest(e.target), 'burn', { seed: cue.i }); applyState(st); floatText(e.target, `-${cue.number.value}`, 'dmg burn', 700); await anim(body(e.target), [{ filter: 'sepia(1) saturate(4) hue-rotate(-20deg)' }, { filter: 'none' }], D); break; }
       case 'mend': {
-        if (e.actor && e.actor !== e.target && monEl[e.actor]) { fx.healBeam(chest(e.actor), chest(e.target)); anim(body(e.actor), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5) drop-shadow(0 0 6px #4ade80)' }, { filter: 'brightness(1)' }], D * 0.6); await wait(dur(D * 0.25)); }
-        fx.heal(chest(e.target), { seed: cue.i }); applyState(st);
+        if (!e.target || !monEl[e.target]) { applyState(st); await wait(dur(D)); break; }
+        if (e.actor && e.actor !== e.target && monEl[e.actor]) { if (!looked) fx.healBeam(chest(e.actor), chest(e.target)); anim(body(e.actor), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5) drop-shadow(0 0 6px #4ade80)' }, { filter: 'brightness(1)' }], D * 0.6); await wait(dur(D * 0.25)); }
+        if (!looked) fx.heal(chest(e.target), { seed: cue.i }); applyState(st);
         if (cue.number.value > 0) floatText(e.target, `+${cue.number.value}`, 'heal'); else floatText(e.target, 'full', 'note', 600);
         await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.6) drop-shadow(0 0 8px #4ade80)' }, { filter: 'brightness(1)' }], D * 0.75); break;
       }
@@ -264,9 +342,9 @@ export function createArena(root, result, opts = {}) {
       }
       case 'shatter': { fx.shieldBreak(chest(e.target), { seed: cue.i }); const r = monEl[e.target]?.querySelector('.cl-ring-wrap'); await anim(r, [{ transform: 'translateX(-50%) scale(1)', opacity: 1 }, { transform: 'translateX(-50%) scale(1.5)', opacity: 0 }], D * 0.6); applyState(st); floatText(e.target, 'shield broken', 'shield', 700); break; }
       case 'dodge': { const { dx, dy } = towards(e.actor, e.target); const T = rig(e.target); floatText(e.target, cue.label || 'miss', 'note', 700); const c = contact(e.actor, e.target); anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: `translate(${c.dx * 0.7}px,${c.dy * 0.7}px)`, offset: 0.4 }, { transform: 'translate(0,0)' }], D * 0.9); await wait(dur(D * 0.3)); await anim(T, [{ transform: 'translate(0,0)', filter: 'blur(0)' }, { transform: `translate(${dx > 0 ? 22 : -22}px,${dy > 0 ? 6 : -6}px)`, filter: 'blur(1px)' }, { transform: 'translate(0,0)', filter: 'blur(0)' }], D * 0.5); applyState(st); break; }
-      case 'afflict': { fx.condition(chest(e.target), e.condition, { seed: cue.i, strong: cue.tier !== 'routine' }); applyState(st); const col = COND_COLOR[e.condition] || '#fff'; floatText(e.target, `${COND_ICON[e.condition] || ''} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: `drop-shadow(0 0 0 ${col})` }, { filter: `drop-shadow(0 0 10px ${col}) brightness(1.4)` }, { filter: 'none' }], D); break; }
+      case 'afflict': { if (t8) { applyState(st); floatText(e.target, `${t8Glyph(e.status)} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)' }, { filter: 'none' }], D * 0.6); break; } fx.condition(chest(e.target), e.condition, { seed: cue.i, strong: cue.tier !== 'routine' }); applyState(st); const col = COND_COLOR[e.condition] || '#fff'; floatText(e.target, `${COND_ICON[e.condition] || ''} ${cue.label}`, 'cond', 900); await anim(body(e.target), [{ filter: `drop-shadow(0 0 0 ${col})` }, { filter: `drop-shadow(0 0 10px ${col}) brightness(1.4)` }, { filter: 'none' }], D); break; }
       case 'resist': { applyState(st); const t = e.target || e.actor; floatText(t, cue.label || 'resisted', 'note', 600); fx.dust(chest(t), 4, cue.i); await anim(body(t), [{ transform: 'rotate(0)' }, { transform: 'rotate(-4deg)' }, { transform: 'rotate(4deg)' }, { transform: 'rotate(0)' }], D); break; }
-      case 'clear': { applyState(st); floatText(e.target, cue.label, 'note', 600); fx.ring(chest(e.target), '#ffffff', 2, 24, 300); await wait(dur(D)); break; }
+      case 'clear': { applyState(st); if (e.target && monEl[e.target] && !monEl[e.target].classList.contains('gone')) { if (cue.label) floatText(e.target, cue.label, 'note', 600); if (!looked) fx.ring(chest(e.target), '#ffffff', 2, 24, 300); } await wait(dur(D)); break; }
       case 'skip': { if (/shock/i.test(cue.label || '')) fx.skipShock(chest(e.actor), { seed: cue.i }); applyState(st); floatText(e.actor, cue.label, 'cond', 900); await anim(rig(e.actor), [{ transform: 'translate(0,0)' }, { transform: 'translate(-5px,0) rotate(-3deg)' }, { transform: 'translate(5px,0) rotate(3deg)' }, { transform: 'translate(-4px,0)' }, { transform: 'translate(3px,0)' }, { transform: 'translate(0,0)' }], D * 0.6, 'linear'); break; }
       case 'yank': {
         const out = e.out; banner(e.text.split(':')[0], 'power', D * 0.8); const { dx, dy } = towards(e.actor || out, out);
@@ -304,6 +382,25 @@ export function createArena(root, result, opts = {}) {
       case 'refused': { applyState(st); floatText(e.target || e.actor, 'held', 'note', 600); await wait(dur(D * 0.6)); break; }
       case 'dim': { dimEl.classList.add('on'); applyState(st); await wait(dur(D)); dimEl.classList.remove('on'); break; }
       case 'coin-small': { applyState(st); floatText(e.actor, 'coin flip', 'note', 500); await wait(dur(D)); break; }
+      // ---- t8 moves (the ability look draws the distinctive part; these keep the state, numbers and body feedback honest)
+      case 'self-hit': { applyState(st); const T = e.target; floatText(T, `-${cue.number.value}`, 'dmg'); floatText(T, 'hits itself', 'note', 800, 0.15); await anim(body(T), [{ filter: 'brightness(1)' }, { filter: 'brightness(2.5)' }, { filter: 'brightness(1)' }], D * 0.5); break; }
+      case 'dot-tick': { applyState(st); floatText(e.target, `-${cue.number.value}`, 'dmg burn', 700); await anim(body(e.target), [{ filter: 'brightness(1)' }, { filter: 'brightness(0.6) saturate(0.5)' }, { filter: 'none' }], D); break; }
+      case 'hp-set': { applyState(st); const T = e.target; if (cue.number.value) floatText(T, `${cue.number.kind === 'heal' ? '+' : '-'}${cue.number.value}`, cue.number.kind === 'heal' ? 'heal' : 'dmg'); await wait(dur(D)); break; }
+      case 'hp-cost': { applyState(st); floatText(e.actor, `-${cue.number.value} HP`, 'dmg', 700, 0.9); await wait(dur(D)); break; }
+      case 'freeze': { applyState(st); floatText(e.target, cue.label, 'note', 700, 1.1); await wait(dur(D)); break; }
+      case 'intercept': { applyState(st); if (e.actor && e.actor !== e.target) floatText(e.actor, 'intercepts!', 'note', 800); await wait(dur(D)); break; }
+      case 'cover': { applyState(st); floatText(e.actor, 'takes the hit!', 'note', 900, 1.05); await wait(dur(D)); break; }
+      case 'survive': { applyState(st); floatText(e.actor, '1 HP!', 'cond', 900); await anim(rig(e.actor), [{ transform: 'translate(0,0) rotate(0)' }, { transform: 'translate(-4px,0) rotate(-6deg)', offset: 0.4 }, { transform: 'translate(0,0) rotate(0)' }], D * 0.6); break; }
+      case 'split': { applyState(st); if (e.actor) floatText(e.actor, `shares ${e.sourceShare}`, 'shield', 900); await wait(dur(D)); break; }
+      case 'shake-off': { applyState(st); floatText(e.actor, cue.label, 'note', 700); await anim(body(e.actor), [{ transform: 'rotate(0)' }, { transform: 'rotate(-5deg)' }, { transform: 'rotate(5deg)' }, { transform: 'rotate(0)' }], D); break; }
+      case 'held': { applyState(st); floatText(e.actor, cue.label, 'note', 900, 1.1); await wait(dur(D)); break; }
+      case 'restrict': { applyState(st); if (e.target && e.actor !== e.target) floatText(e.target, 'signature restricted', 'cond', 900, 1.1); await wait(dur(D)); break; }
+      case 'clock': { applyState(st); if (e.target) floatText(e.target, `cooldown ${cue.label}`, 'note', 900, 1.1); await wait(dur(D)); break; }
+      case 'order': { applyState(st); await wait(dur(D)); break; }
+      case 'ability': case 'launch': { applyState(st); if (e.actor && monEl[e.actor] && e.stage === 'activation') anim(rig(e.actor), [{ transform: 'translate(0,0) scale(1,1)' }, { transform: 'translate(0,-6px) scale(1.04, 0.98)', offset: 0.3 }, { transform: 'translate(0,0) scale(1,1)' }], D * 0.6); await wait(dur(D)); break; }
+      case 'impact': { applyState(st); await wait(dur(D)); break; }
+      case 'revive': { applyState(st); if (e.target && monEl[e.target]) { fx.enterPuff(feet(e.target), { seed: cue.i }); floatText(e.target, `${byId[e.target]?.name || ''} returns!`, 'heal', 1000, 1.05); await anim(rig(e.target), [{ transform: 'translateY(-14px) scale(1.04)', opacity: 0 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], D * 0.7); } else await wait(dur(D)); break; }
+      case 'note': { applyState(st); await wait(dur(D)); break; }
       default: { applyState(st); await wait(dur(D)); }
     }
     setActing(null, false);
@@ -312,34 +409,42 @@ export function createArena(root, result, opts = {}) {
 
   // ---- playback
   function cancelAll() { for (const a of live) a.cancel(); live.clear(); fx.clear(); settle(); setActing(null, false); for (const b of $$('.cl-banner, .cl-float')) b.remove(); }
-  function setCursor(i, { animate = false } = {}) { cancelAll(); cursor = Math.max(0, Math.min(n - 1, i)); applyState(stateAt(result, cursor), { instant: !animate }); opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); setButtons(); }
+  function setCursor(i, { animate = false } = {}) { cancelAll(); cursor = Math.max(0, Math.min(n - 1, i)); if (t8) { t8clock.override = null; t8clock.end = cues[cursor].end; t8clock.base = cues[cursor].at; } applyState(stateOf(cursor), { instant: !animate }); opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); setButtons(); }
   async function runTo(target) {
     if (playing) return; playing = true; const my = ++token; setButtons();
     while (playing && my === token && cursor < target) { cursor += 1; await playCue(cues[cursor]); if (my !== token) return; opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); }
     if (my === token) { playing = false; setButtons(); if (cursor >= n - 1) opts.onEnd?.(); }
   }
-  function pause() { playing = false; token++; cancelAll(); applyState(stateAt(result, cursor), { instant: true }); setButtons(); }
+  function pause() { playing = false; token++; cancelAll(); if (t8) { t8clock.override = null; t8clock.end = cues[cursor].end; } applyState(stateOf(cursor), { instant: true }); setButtons(); }
+  /** t8 (reviewer / check tool): show the arena exactly as at playback time t (seconds at 1x): the state after the cue playing then, the layer drawn at t. */
+  function seek(t) { if (!t8) return; pause(); let k = 0; for (let j = 0; j < cues.length; j++) if (cues[j].at <= t + 1e-9) k = j; cursor = k; t8clock.override = t; applyState(stateOf(cursor), { instant: true }); opts.onCursor?.(cursor); const sc = $('[data-cl="scrub"]'); if (sc) sc.value = String(cursor); t8Draw(t); }
   function setButtons() { const w = $('[data-cl="watch"]'); if (w) w.textContent = playing ? '⏸ Pause' : cursor >= n - 1 ? '↻ Replay' : '▶ Watch'; }
-  function inspect(id) { const st = stateAt(result, cursor); const s = st.S[id[0]][id]; const x = byId[id]; caption.textContent = `${x.name} · ${x.archetype} · ${x.type} · HP ${s.hp}/${s.maxHp}${s.shield ? ` · shield ${s.shield}` : ''}${s.cond ? ` · ${s.cond}` : s.paused ? ` · ${s.paused} (paused)` : ''}${s.ko ? ' · knocked out' : ''} · ${x.combatant.move.name}: ${x.combatant.move.text}`; }
+  function inspect(id) { const st = stateOf(cursor); const s = st.S[id[0]][id]; const x = byId[id]; const t8s = t8 ? t8StateAt(result, cursor).S[id] : null; caption.textContent = `${x.name} · ${x.archetype} · ${x.type} · HP ${s.hp}/${s.maxHp}${s.shield ? ` · shield ${s.shield}` : ''}${s.cond ? ` · ${s.cond}` : s.paused ? ` · ${s.paused} (paused)` : ''}${s.t8status ? ` · ${STATUS_NAME[s.t8status.id] || s.t8status.id}${s.t8status.remaining != null ? ` (${s.t8status.remaining} turns)` : ''}` : ''}${t8s?.restricted ? ` · restricted to ordinary attacks (${t8s.restricted.abilityId})` : ''}${t8s && Object.keys(t8s.clocks).length ? ` · cooldown ${Object.values(t8s.clocks).map((k) => `${k.id} ${k.left}`).join(', ')}` : ''}${s.ko ? ' · knocked out' : ''}${x.combatant?.move ? ` · ${x.combatant.move.name}: ${x.combatant.move.text}` : x.abilityId ? ` · ${x.abilityId}` : ''}`; }
   root.addEventListener('click', (ev) => {
     const m = ev.target.closest('.cl-mon, .cl-card'); if (m) { inspect(m.dataset.id || m.dataset.card); return; }
     const b = ev.target.closest('[data-cl]'); if (!b) return; const k = b.dataset.cl;
     if (k === 'watch') { if (playing) pause(); else { if (cursor >= n - 1) setCursor(0); runTo(n - 1); } }
     if (k === 'step') { if (playing) pause(); else if (cursor < n - 1) runTo(cursor + 1); }
-    if (k === 'nextex') { if (playing) pause(); else if (cursor < n - 1) runTo(Math.max(cursor + 1, nextExchangeIndex(result, cursor + 1))); }
+    if (k === 'nextex') { if (playing) pause(); else if (cursor < n - 1) runTo(Math.max(cursor + 1, nextEx(cursor + 1))); }
     if (k === 'skip') { pause(); setCursor(n - 1); if (cursor >= n - 1) opts.onEnd?.(); }
     if (k === 'speed') { speed = Number(b.dataset.v) || 1; for (const s of $$('[data-cl="speed"]')) s.classList.toggle('primary', Number(s.dataset.v) === speed); }
-    if (k === 'fxq') { quality = quality === 'low' ? 'full' : 'low'; b.textContent = `FX ${quality}`; fx.resize(); opts.onQuality?.(quality); }
+    if (k === 'fxq') { quality = t8 ? (quality === 'full' ? 'low' : quality === 'low' ? 'min' : 'full') : quality === 'low' ? 'full' : 'low'; b.textContent = `FX ${quality}`; fx.resize(); if (t8) t8Draw(); opts.onQuality?.(quality); }
   });
   $('[data-cl="scrub"]')?.addEventListener('input', (ev) => { const to = Number(ev.target.value) || 0; pause(); setCursor(to); }); // read before pause() re-syncs the slider
-  const onResize = () => { fx.resize(); $('.cl-decor')?.replaceWith(decorNode()); applyState(stateAt(result, cursor), { instant: true }); };
+  const onResize = () => { fx.resize(); $('.cl-decor')?.replaceWith(decorNode()); applyState(stateOf(cursor), { instant: true }); };
   const decorNode = () => { const t = document.createElement('template'); t.innerHTML = decorSvg(theme, result.seed || 1, isLandscape()); return t.content.firstChild; };
   window.addEventListener('resize', onResize);
   setCursor(0); requestAnimationFrame(() => fx.resize());
   return {
-    get cursor() { return cursor; }, get playing() { return playing; }, cues, theme: theme.key,
+    // `record`: the record the arena plays: the result the consumer passed (native t8 and legacy), or the translated one (opts.t8 === 'translated');
+    // `source` is always the result as passed. `mode`: 'native' | 'translated' | 'legacy' (see arenaMode).
+    get cursor() { return cursor; }, get playing() { return playing; }, cues, theme: theme.key, record: result, source: passed, mode, get length() { return n; }, t8: t8state, seek,
     setCursor, play: () => runTo(n - 1), pause, step: () => runTo(cursor + 1), skip: () => { pause(); setCursor(n - 1); },
-    setSpeed(s) { speed = s; }, get fxCount() { return fx.count; }, destroy() { playing = false; token++; cancelAll(); window.removeEventListener('resize', onResize); root.innerHTML = ''; },
+    /** Play from the cursor to event index `i` (inclusive), animating each cue; resolves when it arrives or is interrupted. */
+    playTo: (i) => runTo(Math.max(cursor, Math.min(n - 1, i))),
+    setSpeed(s) { speed = s; for (const b of $$('[data-cl="speed"]')) b.classList.toggle('primary', Number(b.dataset.v) === speed); }, get speed() { return speed; },
+    setQuality(q) { quality = q; fx.resize(); if (t8) t8Draw(); }, get quality() { return quality; }, get fxCount() { return fx.count; }, get t8Elements() { return t8 ? t8under.querySelectorAll('*').length + t8over.querySelectorAll('*').length : 0; },
+    destroy() { playing = false; token++; cancelAll(); if (t8clock.raf) cancelAnimationFrame(t8clock.raf); window.removeEventListener('resize', onResize); root.innerHTML = ''; },
   };
 }
 export { DURATION };

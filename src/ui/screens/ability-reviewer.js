@@ -12,8 +12,8 @@ import { esc, delegate, sheet, toast } from '../dom.js';
 import { abilityById } from '../../data/beast-dex.js';
 import { reviewCatalog, reviewAbility } from '../../sim/abilities/review.js';
 import { reviewSequence, sequenceVariants } from '../../sim/abilities/review-sequence.js';
-import { fieldSvg, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
-import { buildFx, elementFx } from '../ability-fx.js';
+import { fieldSvg, fieldDraw, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
+import { buildFx, elementFx, kickSim } from '../ability-fx.js';
 import { syncReviews } from '../../franchise/review-store.js';
 import { reviewHtml, reviewHandlers as sharedHandlers, reviewState, NEEDS_OWNER, STATE_BADGE, setFootballFingerprint } from '../dev-review.js';
 
@@ -25,7 +25,7 @@ const KIND_CHIP = { main: '', blocked: '⛔ Blocked', failure: '✗ Failure', in
 export function registerAbilityReviewer(Router, app) {
   const cat = reviewCatalog();
   for (const c of cat) { const a = abilityById(c.abilityId) || {}; setFootballFingerprint(c.abilityId, [a.name, a.category, a.activation, a.mechanic, a.details, a.ruling, a.values, c.registered]); }
-  const st = { element: 'All', status: 'all', pick: {}, notesOpen: new Set(), raf: null, synced: false, pb: null };
+  const st = { element: 'All', status: 'all', pick: {}, notesOpen: new Set(), raf: null, synced: false, pb: null, fxQuality: null, reducedFlash: false }; // fxQuality / reducedFlash: reviewer-local overrides (spec §13), never written to settings
   const elements = ['All', ...new Set(cat.map((c) => c.element))];
   const pickOf = (c) => (st.pick[c.family] ||= { form: c.forms[0], mastery: 0, primed: true, variant: 'main' });
 
@@ -120,13 +120,14 @@ export function registerAbilityReviewer(Router, app) {
   }
 
   // ------------------------------------------------------------------------------------------------------------- the player
-  function openPlayer(c, { title, head, intro, plays, phases, ok, natural = false }) {
+  function openPlayer(c, { title, head, intro, plays, phases, ok, natural = false, r = null }) {
     const checklist = phases.length ? `<div class="panel tight" data-rv2="phases" style="margin-top:6px"><b>Phases</b>${phases.map((ph, i) => `<div class="rv2-phase" data-phase="${ph.id}" data-i="${i}" style="font-size:13px;margin-top:3px"><span class="rv2-box">☐</span> ${esc(ph.label)}${ph.play != null ? ` <span class="dim" style="font-size:11px">· play ${ph.play + 1}</span>` : ""}<div class="dim rv2-ev" style="font-size:11px;display:none">${esc(ph.evidence || '')}</div></div>`).join('')}
       <div class="dim" data-rv2="verdict" style="font-size:12px;margin-top:4px">${ok ? 'Playing…' : 'Not every phase was observed (see above).'}</div></div>` : '';
     const controls = `<div class="row rv2-controls" style="gap:4px;flex-wrap:wrap;margin:6px 0">
         <button class="btn small" data-pb="toggle" aria-label="Pause">⏸</button><button class="btn small ghost" data-pb="replay" aria-label="Replay">↺</button>
         ${SPEEDS.map((s) => `<button class="btn small ghost" data-pb="speed" data-v="${s}" aria-label="Speed ${s}x">${s}×</button>`).join('')}
-        <button class="btn small ghost" data-pb="prevplay" aria-label="Previous play">⏮</button><button class="btn small ghost" data-pb="event" aria-label="Next event">▸ event</button><button class="btn small ghost" data-pb="play" aria-label="Next play">⏭ play</button></div>`;
+        <button class="btn small ghost" data-pb="prevplay" aria-label="Previous play">⏮</button><button class="btn small ghost" data-pb="event" aria-label="Next event">▸ event</button><button class="btn small ghost" data-pb="play" aria-label="Next play">⏭ play</button>
+        <span class="dim" style="font-size:11px;margin-left:4px">FX</span>${['full', 'low', 'min'].map((q) => `<button class="btn small ghost" data-pb="quality" data-v="${q}" aria-label="Effect quality ${q}">${q}</button>`).join('')}<button class="btn small ghost" data-pb="flash" aria-label="Reduced flash">☼ reduced flash</button></div>`;
     const html = `<p class="muted" style="margin:0 0 6px">${head}</p>${intro}${checklist}
       <div class="dim" data-rv2="playinfo" style="font-size:12px;margin-top:6px"></div>
       <div class="field-wrap"><svg id="fbreview" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -137,13 +138,19 @@ export function registerAbilityReviewer(Router, app) {
     bindReview(c, el.querySelector('.sheet-review'));
     const svg = el.querySelector('#fbreview'); const info = el.querySelector('[data-rv2="playinfo"]'); const logBox = el.querySelector('[data-rv2="log"]'); const kickBox = el.querySelector('[data-rv2="kicktext"]');
     const prepared = plays.map((p) => {
-      const sim = p.sim; const frames = sim?.frames || [];
+      // A formula kick (punt, field goal) has no engine frames: its animation is the match screen's kick animation, with the kick
+      // ability's look derived from the kick result (src/ui/fx/kick-fx.js). The kicker is the subject when he kicked.
+      const kick = !p.sim?.frames?.length && p.kick ? kickSim(p.kick) : null;
+      const sim = kick || p.sim; const frames = sim?.frames || [];
+      const kickArt = kick ? { off: { K: { species: c.family, name: c.name, type: c.element }, P: { species: c.family, name: c.name, type: c.element } }, def: {} } : null;
+      if (kickArt) p = { ...p, sprites: kickArt };
       const lookup = (team, slot) => { const m = p.sprites?.[team]?.[slot]; return m ? { element: m.type, name: m.name, species: m.species } : null; };
-      const events = (p.allEvents || []).filter((e) => e.kind !== 'debug' && !/^qb_/.test(e.kind || ''));
+      const events = (kick ? kick.events : p.allEvents || []).filter((e) => e.kind !== 'debug' && !/^qb_/.test(e.kind || ''));
       const end = Math.max(frames.length ? frames[frames.length - 1].t ?? 0 : 0, ...events.map((e) => e.t ?? 0), frames.length ? 0 : 1.5);
-      return { p, sim, frames, events, end, fx: frames.length ? buildFx(sim, lookup) : null, sprites: { off: { map: p.sprites?.off || {}, pool: [] }, def: { map: p.sprites?.def || {}, pool: [] } }, cam: cameraFor(sim?.ballOn ?? p.ballOn ?? 35) };
+      const fx = frames.length ? buildFx(sim, lookup, { preroll: true }) : null;
+      return { p, sim, frames, events, end, fx, preroll: fx?.preroll || 0, follow: !!kick, sprites: { off: { map: p.sprites?.off || {}, pool: [] }, def: { map: p.sprites?.def || {}, pool: [] } }, cam: cameraFor(sim?.ballOn ?? p.ballOn ?? 35) };
     });
-    const pb = st.pb = { pi: 0, time: 0, playing: true, speed: 1, last: performance.now(), hold: 0, done: false, drawn: '' };
+    const pb = st.pb = { pi: 0, time: -(prepared[0]?.preroll || 0), playing: true, speed: 1, last: performance.now(), hold: 0, done: false, drawn: '' };
     const ticked = (ph) => ph.ok && ph.play != null && (pb.pi > ph.play || (pb.pi === ph.play && (ph.atEnd ? pb.time >= prepared[ph.play].end - 1e-6 : pb.time >= (ph.t ?? 0) - 1e-6)));
     function frameAt(P, time) { let i = 0; while (i + 1 < P.frames.length && (P.frames[i + 1].t ?? 0) <= time + 1e-6) i++; return i; }
     function draw() {
@@ -151,7 +158,7 @@ export function registerAbilityReviewer(Router, app) {
       info.innerHTML = `<b>Play ${pb.pi + 1} / ${prepared.length}</b>${p.followUp ? ' · follow-up' : ''}${p.executed ? ' · <b>activation</b>' : ''} · ${esc(p.kind)} · ${pb.time.toFixed(1)}s / ${P.end.toFixed(1)}s · ${pb.speed}×${pb.playing ? '' : ' · paused'}${p.controls?.length ? ' · <span style="color:var(--warn)">⚙ controlled</span>' : ''}`;
       if (P.frames.length) {
         const i = frameAt(P, pb.time); const sim = P.sim; const key = `${pb.pi}:${i}:${pb.time > (P.frames[P.frames.length - 1].t ?? 0) ? pb.time.toFixed(1) : ''}`;
-        if (key !== pb.drawn) { pb.drawn = key; svg.innerHTML = fieldSvg({ time: pb.time, ballOn: sim.ballOn ?? p.ballOn ?? 35, ballLat: sim.ballLat || 0, toGo: p.situation?.toGo || 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: P.frames[i], prevFrame: P.frames[i - 1] || null, fx: P.fx, fxQuality: app.settings?.reducedMotion ? 'min' : 'full', sprites: P.sprites, camera: P.cam, ownLabel: 'OWN', oppLabel: 'OPP', fields: sim.fields || null }); }
+        if (key !== pb.drawn) { pb.drawn = key; fieldDraw(svg, { time: pb.time, ballOn: sim.ballOn ?? p.ballOn ?? 35, ballLat: sim.ballLat || 0, toGo: p.situation?.toGo || 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: P.frames[i], prevFrame: pb.time < 0 ? null : P.frames[i - 1] || null, fx: P.fx, fxQuality: st.fxQuality || (app.settings?.reducedMotion ? 'min' : 'full'), fxOptions: { reducedFlash: st.reducedFlash }, sprites: P.sprites, camera: P.follow ? cameraFor(Math.max(0, P.frames[i].ball[0] - 8)) : P.cam, ownLabel: 'OWN', oppLabel: 'OPP', fields: sim.fields || null }); }
         svg.style.display = ''; kickBox.style.display = 'none';
       } else { svg.style.display = 'none'; kickBox.style.display = ''; kickBox.innerHTML = `<div class="panel tight">${esc(p.kind)} (formula play, no field animation): ${esc(p.text)}${(p.gameLog || []).filter((x) => x.kind === 'ability').map((x) => `<br>• ${esc(x.text)}`).join('')}</div>`; }
       const subj = (e) => e.ability || e.contract;
@@ -160,16 +167,19 @@ export function registerAbilityReviewer(Router, app) {
       const v = el.querySelector('[data-rv2="verdict"]'); if (v && ok) { const all = phases.every(ticked); v.textContent = all ? 'Validated: every phase observed in the engine\'s events for this run (trigger, activation, resolution, cleanup).' : 'Playing… phases tick as playback reaches their engine events.'; v.dataset.done = all ? '1' : '0'; }
       el.querySelector('[data-pb="toggle"]').textContent = pb.playing ? '⏸' : '▶';
       el.querySelectorAll('[data-pb="speed"]').forEach((b) => b.classList.toggle('on', Number(b.dataset.v) === pb.speed));
+      el.querySelectorAll('[data-pb="quality"]').forEach((b) => b.classList.toggle('on', b.dataset.v === (st.fxQuality || (app.settings?.reducedMotion ? 'min' : 'full')))); el.querySelector('[data-pb="flash"]')?.classList.toggle('on', st.reducedFlash);
     }
-    const nextPlay = () => { if (pb.pi + 1 < prepared.length) { pb.pi += 1; pb.time = 0; pb.hold = 0; return true; } pb.time = prepared[pb.pi].end; pb.playing = false; pb.done = true; return false; };
+    const nextPlay = () => { if (pb.pi + 1 < prepared.length) { pb.pi += 1; pb.time = -(prepared[pb.pi].preroll || 0); pb.hold = 0; return true; } pb.time = prepared[pb.pi].end; pb.playing = false; pb.done = true; return false; };
     el.addEventListener('click', (e) => {
       const b = e.target.closest('[data-pb]'); if (!b) return; const a = b.dataset.pb; const P = prepared[pb.pi];
-      if (a === 'toggle') { if (pb.done) { pb.pi = 0; pb.time = 0; pb.done = false; } pb.playing = !pb.playing; }
-      else if (a === 'replay') { pb.pi = 0; pb.time = 0; pb.hold = 0; pb.done = false; pb.playing = true; }
+      if (a === 'toggle') { if (pb.done) { pb.pi = 0; pb.time = -(prepared[0]?.preroll || 0); pb.done = false; } pb.playing = !pb.playing; }
+      else if (a === 'replay') { pb.pi = 0; pb.time = -(prepared[0]?.preroll || 0); pb.hold = 0; pb.done = false; pb.playing = true; }
       else if (a === 'speed') pb.speed = Number(b.dataset.v);
+      else if (a === 'quality') st.fxQuality = b.dataset.v; // reviewer-local (spec §13 quality selection); the saved settings are untouched
+      else if (a === 'flash') st.reducedFlash = !st.reducedFlash;
       else if (a === 'event') { pb.playing = false; const nx = P.events.find((x) => (x.t ?? 0) > pb.time + 1e-6); if (nx) pb.time = nx.t; else if (pb.time < P.end - 1e-6) pb.time = P.end; else if (nextPlay()) { const f = prepared[pb.pi].events[0]; pb.time = f ? f.t ?? 0 : 0; } }
       else if (a === 'play') { pb.playing = false; if (pb.time < P.end - 1e-6 && pb.pi === prepared.length - 1) pb.time = P.end; else nextPlay(); }
-      else if (a === 'prevplay') { pb.playing = false; pb.done = false; pb.pi = Math.max(0, pb.pi - 1); pb.time = 0; }
+      else if (a === 'prevplay') { pb.playing = false; pb.done = false; pb.pi = Math.max(0, pb.pi - 1); pb.time = -(prepared[pb.pi].preroll || 0); }
       pb.last = performance.now(); pb.drawn = ''; draw();
     });
     const tick = (now) => {
@@ -178,6 +188,8 @@ export function registerAbilityReviewer(Router, app) {
       if (pb.playing) { const P = prepared[pb.pi]; if (pb.time < P.end) pb.time = Math.min(P.end, pb.time + dt * pb.speed * (app.settings?.speed || 1)); else { pb.hold += dt; if (pb.hold > 0.8) nextPlay(); } draw(); }
       st.raf = requestAnimationFrame(tick);
     };
+    // Test hook (tools/fx-football-check.mjs, no gameplay use): seek the playback to a play and time and draw it at once.
+    svg.__rv2 = { prepared, pb, seek: (pi, time) => { pb.playing = false; pb.pi = Math.max(0, Math.min(prepared.length - 1, pi)); pb.time = time; pb.drawn = ''; draw(); }, phases };
     draw(); st.raf = requestAnimationFrame(tick);
   }
 }

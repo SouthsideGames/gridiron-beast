@@ -23,6 +23,7 @@ This is the single register of every Task 8 decision item: round 1 (items 1–40
 | **N7f** | Owner rulings on club strength, franchise identity, free agency, testing record and scope, 2026-11-07 12:44 ([RULINGS_2026-11-07d.md](RULINGS_2026-11-07d.md)) |
 | **N7e** | Owner ruling on fractional training display, 2026-11-07 10:32 |
 | **N7d** | Owner rulings on G1–G3, 2026-11-07 10:21 ([RULINGS_2026-11-07c.md](RULINGS_2026-11-07c.md)) |
+| **N8e** | Owner performance-testing rulings, 2026-11-08 16:15 ([SPECIFICATION_BASELINE.md §26](../beast-dex/SPECIFICATION_BASELINE.md)) |
 | **N8d** | Owner rulings on the M4 decisions D1–D19, reviewers and performance, 2026-11-08 14:32 ([SPECIFICATION_BASELINE.md §25](../beast-dex/SPECIFICATION_BASELINE.md)) |
 
 The consolidated rules are in [SPECIFICATION_BASELINE.md §20–§21](../beast-dex/SPECIFICATION_BASELINE.md) and
@@ -245,3 +246,34 @@ The proposals are in [M4_PLAN.md](M4_PLAN.md) §5. The rulings are in [SPECIFICA
 | D19 Historical records | **Approved** | Completed pre-M4 Clash records replay through the isolated historical engine. New battles use the versioned Task 8 engine once integrated |
 | Reviewer standard | **Approved** | Both reviewers demonstrate the complete interaction on the first run (§25) |
 | Performance scenes | **Approved process** | Matched scenes established now. The ≤10% simulation CPU limit is preserved, with no weakening to pass |
+
+## Performance testing (N8e, 2026-11-08 16:15)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Benchmark scene set (PERF_SCENES.md) | **Approved** | 7 ordinary and 5 ability-heavy scenes, with abilities-off twins; 3 warm-ups, 15 passes, median; official runs on a quiet machine; variability tracked |
+| Comparison method | **Approved: Method B** | Engine: at most 10% per scene, for every ordinary scene and every abilities-off twin, with no averaging. Abilities: a provisional 25% budget, abilities-on against abilities-off on Task 8 |
+| Frame time and rendering | **Approved scope** | Measured separately from simulation. No FPS claim without real-time measurement. Mobile limits documented, never substituted |
+| Graphics quality settings | **Proposed, not authorized** | Must never change gameplay. Not to be implemented before visual testing has been reviewed |
+| M4 open items, ability table, Feather Relay, Stunned reading, KO replacement, Ball Clamp seed, Iron Lungs | **Open (unchanged)** | Not affected by N8e |
+
+## Performance follow-up (N8f, 2026-11-08 19:02)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Official benchmarks | **Approved process** | On the frozen build, with no competing workloads. Preliminary and verified results kept distinct |
+| Dark-field Awareness caching (floating-point) | **Open: explanation requested** | Not approved. Its expected benefit and its possible gameplay and determinism effects are to be explained separately |
+| Renderer optimisation | **Approved priority after the official report** | Sprite caching, reusable field layers, and no redundant drawing, where compatible with the current visuals. Investigate the end-of-play save hitch while preserving reliable saving and reward persistence |
+| Full-visual target | **Approved** | 60 FPS with full visuals. Graphics-quality controls are a supplemental option only. Lower settings must keep abilities recognizable, essential field information, and identical gameplay |
+| Reporting | **Approved** | Every simulation scene and every ability-overhead result reported individually. No averaging away of failures. The provisional 25% budget is not raised without approval |
+| Mobile | **Unverified** | Until tested on appropriate physical devices |
+
+## Owner direction, 2026-11-09 01:03 (N9a)
+
+| Item | Status | Ruling |
+| --- | --- | --- |
+| Provisional M4 interpretations | **Isolated** | Off in normal gameplay and kept out of final acceptance tests until ruled. A switchable flag does not make a gameplay change approved. All open points go into one concise decision list (docs/task8/M4_DECISIONS_PENDING.md) |
+| D3 Feather Relay | **Approved as reconciled** | Counts as a rotation without the 50% entry penalty. Every other rotation restriction (locks, legal availability, cadence) is kept unless the contract explicitly exempts it. Any exact contract conflict is to be identified with a quotation |
+| D6 Tank bruise | **Open** | Explanation delivered in M4_OPEN_ITEMS.md §6; ruling pending; not implemented |
+| Renderer vs artwork | **Clarified** | Renderer optimisations are screenshot-preserving against the current visuals. Ability artwork changes intentionally, to match the approved Dex descriptions |
+| Mobile | **Unverified** | Unchanged |

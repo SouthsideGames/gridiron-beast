@@ -16,11 +16,36 @@ import { extraCooldownUnit, contractOf, abilityState, recordExecution, kickHook 
 import { runGameHook } from './abilities/game.js';
 import { getPlay } from '../data/playbook.js';
 import * as ST from './special-teams.js';
+import { showBattery } from './t8/stamina.js';
+
+/**
+ * Task 8 presentation snapshot (docs/task8/FX_FOOTBALL_MATRIX.md; spec §13 badge / charge / battery cycle): what the field shows over
+ * each on-field monster at the snap (its shared status slot, its ability's game-scope state and a low-stamina flag), keyed 'off:SLOT' /
+ * 'def:SLOT' in the play's frame, plus the pre-snap ability log lines with a removed footprint (Prism Break) in the play's frame.
+ * Taken BEFORE the play from copies; read by src/ui/fx only. Drawing data: nothing in the simulation reads it.
+ */
+function snapView(state, t8, slots, home) {
+  const hud = {};
+  for (const [team, map] of [['off', slots.offense], ['def', slots.defense]]) for (const [slot, m] of Object.entries(map || {})) {
+    if (!m?.id) continue; const st = t8.status?.[m.id]; const ab = t8.ability?.[m.id]; const sta = t8.stamina?.[m.id];
+    const low = !!(sta && showBattery(sta));
+    if (!st && !ab && !low) continue;
+    const side = team === 'off' ? state.possession : opponent(state.possession); const conceded = t8.touchdowns?.[side === 'home' ? 'away' : 'home'] || 0; // Daybreak's charges come from the club's conceded-touchdown ledger
+    hud[`${team}:${slot}`] = { ...(st ? { status: { id: st.id, remaining: st.restOfPlay ? null : st.remaining } } : {}), ...(ab && m.species ? { family: m.species, form: m.form || `${m.species}:0`, mastery: m.mastery || 0, ability: { ...ab, ...(conceded ? { conceded } : {}) } } : {}), ...(low ? { battery: true } : {}), element: m.type || null };
+  }
+  return { hud, home };
+}
+function preSnapLines(state, mark, slots) {
+  const slotOfMid = (mid) => { for (const [team, map] of [['off', slots.offense], ['def', slots.defense]]) for (const [sl, m] of Object.entries(map || {})) if (m?.id === mid) return { team, slot: sl }; return null; };
+  const i = mark ? state.log.lastIndexOf(mark) : -1; const lines = state.log.slice(i + 1).filter((x) => x.kind === 'ability' && x.removed);
+  if (!lines.length) return null;
+  return lines.map((x) => { const [r] = toPlayFrame([{ id: 'removed', type: 'removed', yard: x.removed.yard, lat: x.removed.lat }], { home: state.possession === 'home', ballOn: state.ballOn, ballLat: state.ballLat || 0 }); const who = slotOfMid(x.by); return { text: x.text, ability: x.ability, by: who?.slot || null, side: who?.team || null, rect: { yard: r.yard, lat: r.lat } }; });
+}
 
 export const RUNOFF = { normal: 18, hurry: 8, milk: 30 };
 export const DEFAULT_QUARTER = 180;
 
-export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null, otPeriods = null, venue = null }) {
+export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null, otPeriods = null, venue = null, statusCarry = null }) {
   const rng = createRng(seed);
   const winner = coinWinner || (rng.chance(0.5) ? 'home' : 'away');
   const loser = winner === 'home' ? 'away' : 'home';
@@ -54,6 +79,9 @@ export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER,
   // Captain Partnerships (GDD §27.4B): each side's active pairs and their chemistry level, fixed here at kickoff for the whole
   // game. A game whose teams carry none gets no field at all, so its state is exactly what it always was.
   const partners = kickoffPartners(home, away); if (partners) { state.partners = partners; state.partnerCredits = { home: {}, away: {} }; }
+  // Task 8 M4 (spec §10): the opening Clash's end statuses carry into the game at kickoff, 1:1 for supported statuses (the caller
+  // passes the Clash's football-shaped payloads; unsupported ones are dropped by the shared gate's transfer).
+  if (statusCarry && Object.keys(statusCarry).length) { T8S.carryInto(state, statusCarry, 'football'); for (const [mid, s] of Object.entries(state.t8.status)) log(state, `${mid} carries ${s.id} into the game (${s.remaining} play${s.remaining === 1 ? '' : 's'}).`, 'info', { status: s.id, mid, carried: true }); }
   log(state, `${state[winner].name} wins the toss and elects to ${pick === 'defer' ? 'defer' : pick}.`, 'info');
   return state;
 }
@@ -249,6 +277,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   const t8 = (state.t8 ||= { status: {} }); const offIds = new Set(Object.values(slots.offense).map((x) => x?.id).filter(Boolean));
   const defIds = new Set(Object.values(slots.defense).map((x) => x?.id).filter(Boolean));
   const alignOf = (id) => { for (const [sl, x] of Object.entries(slots.offense)) if (x?.id === id) return offensePlay.align[sl] || null; for (const [sl, x] of Object.entries(slots.defense)) if (x?.id === id) return defensePlay.align[sl] || null; return null; };
+  const logMark = state.log[state.log.length - 1]; // Task 8 presentation: the pre-snap ability lines start after this entry
   preSnapContracts(state, t8, slots); // M3 hook: pre-choice producers that queue fields for this snap
   preSnapHooks(state, t8, slots, offensePlay, defensePlay); // M3 hook: (Nature / Electric) play-level preSnap hooks
   const createdFields = t8.fields?.pending?.length ? T8F.createPending(t8, { onField: new Set([...offIds, ...defIds]), eligible: (p) => pendingEligible(state, t8, p, offIds, defIds), playIndex: state.playCount || 0, place: (p) => fieldPlacement(state, p, offensePlay, alignOf) }) : []; // G3
@@ -262,6 +291,7 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   // defender's slot stays vacant (no substitute) and he is not a participant (his status and stamina clocks pause)
   const serving = (t8.absences || []).filter((x) => x.serveOn === state.possession); let vacant = null;
   if (serving.length) { const gone = new Set(serving.map((x) => x.mid)); for (const [sl, p] of Object.entries(slots.defense)) if (p?.id && gone.has(p.id)) { delete slots.defense[sl]; (vacant ||= new Set()).add(sl); } t8.absences = t8.absences.filter((x) => !serving.includes(x)); }
+  const view = snapView(state, t8, slots, state.possession === 'home'); const preLines = preSnapLines(state, logMark, slots); // Task 8 presentation (data only)
   const sim = simulatePlay({
     offensePlay, defensePlay,
     // The partnership bonus (GDD §27.4B): the same slot objects unless both captains of a side's active pair are on the field.
@@ -271,6 +301,8 @@ export function runScrimmagePlay(state, teams, offensePlayId, defensePlayId, opt
   T8K.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)]); // Task 8 stamina (spec §12): drained under the statuses active during this play (Afflicted, B10)
   T8S.afterPlay(state, [...Object.values(slots.offense), ...Object.values(slots.defense)].map((x) => x?.id).filter(Boolean)); // Task 8 shared status clocks (spec §10), after the drain
   if (t8.fields?.list?.length) afterPlayFields(state, t8, slots, sim, offIds); // Task 8 fields: Light recharge, then the clocks
+  sim.t8view = { ...view, ...(preLines ? { pre: preLines } : {}) }; // Task 8 presentation (data only, after the play)
+  if (sim.fields?.length) for (const f of sim.fields) if (!(t8.fields?.list || []).some((g) => g.id === f.id)) f.expires = true; // its clock ran out at this whistle (presentation: it dissolves)
   if (t8.fields?.pending?.some((p) => p.immediate)) T8F.createPending(t8, { onField: new Set(), eligible: (p) => !!p.immediate, playIndex: state.playCount || 0, place: (p) => spotPlacement(state, sim, p) }); // Task 8 M3: fields created at the whistle (after the clocks: the creation play is excluded)
   if (P) creditPartnerships(state, slots, sim, pre); // read only: tallies chemistry credits in the game state, committed after the final whistle
   rememberAbilities(state, sim);
@@ -620,10 +652,10 @@ export function doKickoff(state, teams, { onside = false } = {}) {
     if (flight.touchback) res = { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, live: true, text: 'Kickoff sails into the end zone. Touchback.' };
     else {
       const seed = r.seed(); const catchAt = Math.max(-9, flight.landingFromGoal);
-      const plays = kickoffPlays(units); const slots = { offense: units.ret, defense: units.coverage };
+      const plays = kickoffPlays(units); const slots = { offense: units.ret, defense: units.coverage }; const view = snapView(state, (state.t8 ||= { status: {} }), slots, receiving === 'home'); // Task 8 presentation (data only)
       sim = simulatePlay({ offensePlay: plays.ret, defensePlay: plays.cov, offense: units.ret, defense: units.coverage, ballOn: KICK_SPOT, ballLat: 0, seed,
         options: { kickoff: { returner: units.returnerSlot, landing: [catchAt - KICK_SPOT, 0], hang: KICKOFF_HANG }, offenseSide: receiving, memory: abilityMemory(state, { drive: `ko@${state.playCount || 0}` }), envType: state.venue?.type || null, sitsOut: sitsOutOf(state, slots), exhausted: T8K.exhaustedSet(state), t8: (state.t8 ||= { status: {} }) } });
-      rememberAbilities(state, sim);
+      rememberAbilities(state, sim); sim.t8view = view;
       res = kickoffOutcome(sim, catchAt, state[receiving].name, sim.names.off[units.returnerSlot] || 'The returner');
     }
   }
@@ -824,8 +856,11 @@ export function endOfPeriod(state) {
     log(state, `HALFTIME. ${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}. ${state[state.secondHalfReceiver].name} receive the second-half kickoff.`, 'period', { important: true });
   } else log(state, `End of the ${state.quarter === 2 ? 'first' : 'third'} quarter.`, 'period');
 }
-function finish(state) {
-  state.finished = true; state.phase = 'final'; state.clockRunning = false; T8S.atGameEnd(state); // Task 8: every status clears at the end of the game
+function finish(state, { tiebreak = false } = {}) {
+  state.finished = true; state.phase = 'final'; state.clockRunning = false;
+  // Task 8 (spec §10): every status clears at the ACTUAL end of the game. A game still tied after overtime is not over: its deciding
+  // Clash (the franchise's overtime Clash) takes the statuses and the stamina verdict with it, and clears them when it is applied.
+  if (tiebreak) state.needsTiebreak = true; else T8S.atGameEnd(state);
   state.winner = state.score.home > state.score.away ? 'home' : state.score.away > state.score.home ? 'away' : null;
   log(state, `FINAL: ${state.home.name} ${state.score.home}, ${state.away.name} ${state.score.away}.`, 'period', { important: true });
 }
@@ -852,7 +887,7 @@ export function otAfterPossession(state) {
     return;
   }
   if (state.score.home !== state.score.away) { finish(state); return; }
-  if (state.otPeriods && ot.period >= state.otPeriods) { finish(state); state.needsTiebreak = true; log(state, 'Still tied after overtime. The game goes to a tiebreaker.', 'period', { important: true }); return; }
+  if (state.otPeriods && ot.period >= state.otPeriods) { finish(state, { tiebreak: true }); log(state, 'Still tied after overtime. The game goes to a tiebreaker.', 'period', { important: true }); return; }
   ot.period += 1; ot.possessionsLeft = 2; ot.first = opponent(ot.first);
   log(state, `Still tied, overtime period ${ot.period}.${ot.period >= 3 ? ' Two-point attempts only.' : ''}`, 'period');
   state.quarter = 4 + ot.period;

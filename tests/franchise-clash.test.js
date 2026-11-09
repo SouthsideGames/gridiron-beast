@@ -3,8 +3,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as F from '../src/franchise/franchise.js';
 import * as Link from '../src/franchise/clash-link.js';
-import { logHash } from '../src/clash/engine.js';
-import { stateAt } from '../src/ui/clash/choreographer.js';
+import { logHashFor as logHash } from '../src/clash/index.js'; // the ruleset-aware hash: t8 records (M4) and legacy records alike
+import { toArenaRecord } from '../src/ui/clash/t8-record.js';
+import { stateAt as stateAtRecord } from '../src/ui/clash/choreographer.js';
+const stateAt = (r, i) => stateAtRecord(toArenaRecord(r), i); // t8 results are read through the arena adapter
 import { monsterOverall, ROSTER_MAX } from '../src/data/monsters.js';
 
 const newFranchise = (seed = 7) => { const f = F.createFranchise({ owner: { first: 'Kai', last: 'Reyes', gender: 'Male', portrait: 0, hometown: '' }, club: 'Ember City Beasts', cornerstoneOffense: 'Voltfang', cornerstoneDefense: 'Frostclaw', seed }); F.hireDefaultStaff(f); while (f.draft && !f.draft.done && F.onTheClock(f) === f.club) F.passDraftPick(f); f.settings.tutorial = false; f.welcomed = true; F.chooseGoal(f, 'wins'); return f; };
@@ -44,8 +46,9 @@ test('enter: the battle is seeded from the franchise generator, deterministic, r
   const r1 = F.encounterBattle(f), r2 = F.encounterBattle(f); assert.equal(logHash(r1), logHash(r2));
   const copy = JSON.parse(JSON.stringify(f)); assert.equal(logHash(F.encounterBattle(copy)), logHash(r1), 'rebuilt from a saved copy');
   assert.deepEqual(r1.lines.a.map((x) => x.combatant.monsterId).sort(), [...e.mine].sort()); assert.deepEqual(r1.lines.b.map((x) => x.combatant.monsterId).sort(), [...e.wild].sort());
-  assert.equal(r1.log[1].order.a[0], 'a0'); assert.equal(r1.lines.b.find((x) => x.id === 'b0').combatant.monsterId, e.wild[0], 'the chosen monster starts in the wild front');
-  assert.ok(r1.config.policies.a === 'none' && r1.config.policies.b === 'none', 'fixed order on both sides (2026-10-22): no voluntary swaps');
+  assert.equal(r1.log.find((x) => x.kind === 'enter' && x.actor?.[0] === 'a').actor, 'a0'); assert.equal(r1.lines.b.find((x) => x.id === 'b0').combatant.monsterId, e.wild[0], 'the chosen monster starts in the wild front');
+  // Task 8 M4 (S12): a version-2 record on the t8 engine; Watch prompts the player's rotations (D1), the wild side is the AI (D2)
+  assert.equal(e.version, Link.CLASH_RECORD_VERSION); assert.equal(e.ruleset, 't8'); assert.equal(r1.ruleset, 't8'); assert.deepEqual(r1.config.policies, { a: 'manual', b: 'ai' });
   assert.equal(F.startEncounter(f, 0).ok, false, 'one encounter per Tuesday');
   assert.equal(F.recruit(f, 0, 'development').ok, false, 'no pitch while the battle is open');
 });
@@ -55,7 +58,7 @@ test('win: an offer that respects the roster limit and the cap rules; decline co
   for (let seed = 30; seed < 60; seed++) {
     const f = newFranchise(seed); toTuesday(f); const n = f.roster.length; const p = f.week.prospects[0];
     const weakest = Link.eligibleBattlers(f.roster).slice().sort((x, y) => monsterOverall(x) - monsterOverall(y)).slice(0, 3).map((m) => m.id); // half the seeds field the weakest three, so both outcomes are covered
-    assert.ok(F.startEncounter(f, 0, seed % 2 ? { lineup: weakest } : {}).ok); const b = F.resolveEncounter(f); assert.ok(b.ok);
+    assert.ok(F.startEncounter(f, 0, seed % 2 ? { lineup: weakest, mode: 'skip' } : { mode: 'skip' }).ok); const b = F.resolveEncounter(f); assert.ok(b.ok, b.reason);
     assert.equal(F.resolveEncounter(f).already, true, 'idempotent');
     assert.equal(logHash(F.encounterBattle(f)), f.week.encounter.result.hash, 'replays rebuild identically after XP and fatigue were applied (snapshots)');
     const battlers = f.week.encounter.mine.map((id) => f.roster.find((m) => m.id === id));
@@ -76,7 +79,7 @@ test('win: an offer that respects the roster limit and the cap rules; decline co
   // roster full: the offer needs a release
   const f = newFranchise(61); toTuesday(f);
   while (f.roster.length < ROSTER_MAX) { const m = JSON.parse(JSON.stringify(f.roster[f.roster.length - 1])); m.id = `m_fill${f.roster.length}`; m.name = `Fill ${f.roster.length}`; delete m.cornerstone; f.roster.push(m); }
-  for (let seed = 1; ; seed++) { F.startEncounter(f, 0); const b = F.resolveEncounter(f); if (b.won) break; f.week.encounter = null; f.season.day = 1; const { r } = { r: null }; }
+  for (let seed = 1; ; seed++) { F.startEncounter(f, 0, { mode: 'skip' }); const b = F.resolveEncounter(f); if (b.won) break; f.week.encounter = null; f.season.day = 1; const { r } = { r: null }; }
   const r = F.acceptOffer(f); assert.equal(r.ok, false); assert.equal(r.needRelease, true);
   const rc = F.releaseCandidates(f, f.week.prospects[0]); assert.ok(rc.needed && rc.list.length);
   const r2 = F.acceptOffer(f, { releaseId: rc.list[0].id }); assert.ok(r2.ok); assert.equal(f.roster.length, ROSTER_MAX); assert.ok(!f.roster.find((m) => m.id === rc.list[0].id));
@@ -90,27 +93,36 @@ test('skip: no battle, no reward, no penalty; the week moves on and nothing else
   assert.equal(JSON.stringify({ roster: f.roster, rng: f.rngState, board: f.board, campaign: f.campaign, news: f.news.length }), snap);
 });
 
-test('one selection, one continuous battle: the chosen order is the order of entry, the next monster steps up on a knockout, HP carries over, and no decision is ever pending', () => {
-  let kos = 0;
+test('Watch (Task 8 M4, D1): the chosen order is the order of entry; the battle stops at the player\'s first legal rotation prompt; "Auto for the rest" hands the side to the AI and the battle runs to its end with knockout replacements in lineup order', () => {
+  let kos = 0, prompts = 0;
   for (let seed = 80; seed < 100; seed++) {
     const f = newFranchise(seed); toTuesday(f); const pv = F.encounterPreview(f, 0); if (pv.size < 3) continue;
     const order = Link.eligibleBattlers(f.roster).slice(0, 3).map((m) => m.id).reverse(); // any order the player sets
-    assert.ok(F.startEncounter(f, 0, { lineup: order, mode: 'watch' }).ok); const r = F.encounterBattle(f);
+    assert.ok(F.startEncounter(f, 0, { lineup: order, mode: 'watch' }).ok); let r = F.encounterBattle(f);
     assert.deepEqual(f.week.encounter.mine, order, 'the lineup is stored in the order chosen');
-    const byId = Object.fromEntries(r.lines.a.map((x) => [x.id, x.combatant.monsterId])); assert.deepEqual(['a0', 'a1', 'a2'].map((id) => byId[id]), order, 'slots a0, a1, a2 are the order of entry'); assert.equal(r.log[1].order.a[0], 'a0');
-    assert.equal(Link.pendingDecision(r), null, 'nothing waits on the player');
-    assert.ok(!r.log.some((x) => x.kind === 'decision'), 'no decision events');
-    assert.ok(!r.log.some((x) => x.kind === 'swap' && x.forced === false && !/lifts|steps up/.test(x.text)), 'no voluntary swaps on either side');
-    // after each knockout on side a, the front is the next alive monster in lineup order
+    const byId = Object.fromEntries(r.lines.a.map((x) => [x.id, x.combatant.monsterId])); assert.deepEqual(['a0', 'a1', 'a2'].map((id) => byId[id]), order, 'slots a0, a1, a2 are the order of entry');
+    assert.equal(r.log.find((x) => x.kind === 'enter' && x.actor?.[0] === 'a').actor, 'a0', 'the first in line opens');
+    const p = Link.pendingDecision(r);
+    if (p) {
+      prompts++; assert.equal(p.kind, 'rotation'); assert.equal(p.side, 'a'); assert.ok(p.options.includes('stay') && p.options.includes('auto')); assert.ok(p.reserves.length >= 1);
+      assert.equal(r.log[p.index].kind, 'rotation_prompt', 'the prompt is the last event of the pending log');
+      assert.equal(F.resolveEncounter(f).ok, false, 'the battle cannot settle while the prompt is open');
+      const prefix = r.log.length;
+      assert.ok(F.encounterDecide(f, p.ex, 'auto').ok); r = F.encounterBattle(f);
+      assert.equal(Link.pendingDecision(r), null, 'Auto for the rest: no further prompt'); assert.ok(r.log.length > prefix);
+      assert.ok(r.log.some((x) => x.kind === 'rotation_decision' && x.decision === 'auto'), 'the choice is recorded in the log');
+    } else assert.ok(r.winner, 'no legal rotation phase before the end: the battle ran through');
+    // after each knockout on side a, the replacement is the first living reserve in lineup order (B3 rule 4; ko-replacement-line-order)
     for (const ev of r.log.filter((x) => x.kind === 'ko' && x.target?.[0] === 'a')) {
-      const i = r.log.indexOf(ev); const after = stateAt(r, Math.min(r.log.length - 1, i + 3)); const alive = after.order.a.filter((id) => !after.S.a[id].ko);
-      if (alive.length) assert.equal(after.front.a, alive[0], 'the next in line steps up'); kos++;
+      const i = r.log.indexOf(ev); const enter = r.log.slice(i + 1).find((x) => x.kind === 'enter' && x.actor?.[0] === 'a');
+      const alive = r.lines.a.map((x) => x.id).filter((id) => !r.log.slice(0, i + 1).some((x) => x.kind === 'ko' && x.target === id)); // nobody is active right after the KO
+      if (enter && enter.ex === ev.ex) { assert.equal(enter.actor, alive[0], 'the first living reserve in lineup order steps up'); kos++; }
     }
     const last = stateAt(r, r.log.length - 1); const loser = r.winner === 'a' ? 'b' : 'a';
     if (r.by === 'knockout') assert.ok(last.order[loser].every((id) => last.S[loser][id].ko), 'a knockout win means the other side has nobody left');
     assert.ok(F.resolveEncounter(f).ok);
   }
-  assert.ok(kos > 3, 'knockouts with replacements were seen');
+  assert.ok(kos > 3, 'knockouts with replacements were seen'); assert.ok(prompts > 5, `rotation prompts were seen (${prompts})`);
 });
 
 test('staff auto-run handles Tuesday through an encounter and the week still reaches Sunday; the final week keeps the recovery day', () => {
@@ -123,7 +135,7 @@ test('staff auto-run handles Tuesday through an encounter and the week still rea
 
 test('XP and level-ups from a battle use the football progression (xpForLevel, levelUp) and never evolve a monster', () => {
   const f = newFranchise(130); toTuesday(f);
-  assert.ok(F.startEncounter(f, 0).ok); const e = f.week.encounter; const m = f.roster.find((x) => x.id === e.mine[0]); m.xp = 10_000;
+  assert.ok(F.startEncounter(f, 0, { mode: 'skip' }).ok); const e = f.week.encounter; const m = f.roster.find((x) => x.id === e.mine[0]); m.xp = 10_000;
   const lvl = m.level, stage = m.stage || 0; const b = F.resolveEncounter(f); assert.ok(b.ok);
   assert.ok(m.level > lvl, 'levelled up'); assert.equal(m.stage || 0, stage, 'no evolution from a battle'); assert.ok(b.events.some((ev) => ev.kind === 'levelup' && ev.id === m.id));
 });
@@ -137,11 +149,11 @@ test('pregame: a 3v3 between the two Sunday rosters, seeded once, rebuilt from a
   for (let seed = 200; seed < 216 || ((mine < 2 || theirs < 2) && seed < 280); seed++) {
     const f = newFranchise(seed); toSunday(f);
     const pv = F.pregamePreview(f); assert.ok(pv.ok, pv.reason); assert.equal(pv.size, 3); assert.equal(pv.wild.length, 3); assert.ok(pv.wild.every((m) => !m.injury));
-    const st = F.startPregameClash(f); assert.ok(st.ok, st.reason); const e = f.week.pregame; assert.equal(e.status, 'battle'); assert.equal(e.side, pv.matchup.playerSide);
+    const st = F.startPregameClash(f, { mode: 'skip' }); assert.ok(st.ok, st.reason); const e = f.week.pregame; assert.equal(e.status, 'battle'); assert.equal(e.side, pv.matchup.playerSide);
     const r1 = F.pregameBattle(f); const copy = JSON.parse(JSON.stringify(f)); const r2 = F.pregameBattle(copy);
     assert.equal(logHash(r1), logHash(r2), 'the AI lineup is regenerated identically from the save');
     assert.equal(F.startPregameClash(f).ok, false, 'one pregame Clash');
-    const b = F.resolvePregameClash(f); assert.ok(b.ok); assert.equal(logHash(F.pregameBattle(f)), e.result.hash, 'replay after effects');
+    const b = F.resolvePregameClash(f); assert.ok(b.ok, b.reason); assert.equal(logHash(F.pregameBattle(f)), e.result.hash, 'replay after effects');
     if (b.won) { mine++; assert.equal(e.status, 'choose'); assert.equal(F.choosePossession(f, 'punt').ok, false); assert.ok(F.choosePossession(f, 'defer').ok); assert.equal(e.status, 'done'); const p = F.pregamePossession(f); assert.equal(p.coinWinner, e.side); assert.equal(p.choice, 'defer'); }
     else { theirs++; assert.equal(e.status, 'done'); assert.ok(['defer', 'receive'].includes(e.choice)); assert.equal(F.choosePossession(f, 'receive').ok, false, 'the AI chose'); const p = F.pregamePossession(f); assert.equal(p.coinWinner, e.side === 'home' ? 'away' : 'home'); assert.equal(p.choice, e.choice); }
     const g = F.simulatePlayerGame(f); assert.equal(g.coin.winner, F.pregamePossession(f).coinWinner); assert.equal(g.coin.choice, F.pregamePossession(f).choice);
@@ -172,17 +184,23 @@ test('pregame: the player cannot start a second Clash or change the AI choice; i
 });
 
 // ---------------------------------------------------------------- Play / Auto / Skip to results (GDD §26.0)
-test('modes: Watch and Skip are the identical battle; legacy play/auto records and settings map onto them; a legacy manual record still rebuilds with its own policies', () => {
+test('modes (Task 8 M4): Watch prompts, Skip plays the AI policy; Watch with "Auto for the rest" at its first prompt is the identical battle to Skip; legacy play/auto settings map onto Watch; a FINISHED legacy record still replays on the legacy engine (D19)', () => {
   const f = newFranchise(300); toTuesday(f);
-  assert.ok(F.startEncounter(f, 0, { mode: 'watch' }).ok); const e = f.week.encounter; assert.equal(e.mode, 'watch'); assert.deepEqual(e.policies, { a: 'none', b: 'none' });
-  const watch = F.encounterBattle(f); e.mode = 'skip'; const skip = F.encounterBattle(f); assert.equal(logHash(watch), logHash(skip), 'skip = watch');
+  assert.ok(F.startEncounter(f, 0, { mode: 'watch' }).ok); const e = f.week.encounter; assert.equal(e.mode, 'watch'); assert.deepEqual(e.policies, { a: 'manual', b: 'ai' });
+  const watch = F.encounterBattle(f); const p = Link.pendingDecision(watch); assert.ok(p, 'Watch waits at the first legal rotation phase');
+  const skipRec = JSON.parse(JSON.stringify(e)); skipRec.policies = Link.t8Policies('skip'); f.week.encounter = skipRec; const skip = F.encounterBattle(f); assert.equal(Link.pendingDecision(skip), null, 'Skip never asks');
+  f.week.encounter = e; assert.ok(F.encounterDecide(f, p.ex, 'auto').ok); const watchAuto = F.encounterBattle(f);
+  assert.equal(watchAuto.stateHash, skip.stateHash, 'Watch + Auto at the first prompt = Skip: the same battle (§15: same seed and inputs)'); assert.equal(watchAuto.winner, skip.winner);
   const g = newFranchise(301); toTuesday(g); assert.ok(F.startEncounter(g, 0, { mode: 'auto' }).ok); assert.equal(g.week.encounter.mode, 'watch', "'auto' is 'watch' now");
-  const h = newFranchise(302); toTuesday(h); assert.ok(F.startEncounter(h, 0, { mode: 'play' }).ok); assert.equal(h.week.encounter.mode, 'watch'); assert.equal(Link.pendingDecision(F.encounterBattle(h)), null, "'play' no longer asks");
-  // a record written before 2026-10-22 has no policies field: it was smart vs smart (or manual with decisions) and must replay as such
-  const legacy = JSON.parse(JSON.stringify(e)); delete legacy.policies; legacy.mode = 'auto'; f.week.encounter = legacy;
-  const r = F.encounterBattle(f); assert.deepEqual(r.config.policies, { a: 'smart', b: 'smart' });
+  const h = newFranchise(302); toTuesday(h); assert.ok(F.startEncounter(h, 0, { mode: 'play' }).ok); assert.equal(h.week.encounter.mode, 'watch');
+  // D19: a FINISHED record from before M4 (no ruleset, no version) replays on the frozen legacy engine with the policies it was played with
+  const legacy = JSON.parse(JSON.stringify(e)); delete legacy.policies; delete legacy.ruleset; delete legacy.version; delete legacy.engine; delete legacy.context; legacy.decisions = {}; legacy.mode = 'auto'; legacy.status = 'offer'; legacy.result = { winner: 'a' }; f.week.encounter = legacy;
+  const r = F.encounterBattle(f); assert.equal(r.ruleset, undefined); assert.equal(r.config.ruleset, 'current', 'the historical engine'); assert.deepEqual(r.config.policies, { a: 'smart', b: 'smart' }); assert.equal(f.week.encounter.ruleset, undefined, 'the finished record is not rewritten');
   legacy.mode = 'play'; legacy.decisions = {}; assert.deepEqual(F.encounterBattle(f).config.policies, { a: 'manual', b: 'smart' });
   assert.deepEqual(Link.policiesOf({ policies: { a: 'none', b: 'none' } }), { a: 'none', b: 'none' });
+  // D19 (plan default): an UNRESOLVED legacy record (status 'battle', rewards not applied) is re-run on t8 from its seed and lineups, tagged
+  const open = JSON.parse(JSON.stringify(legacy)); open.status = 'battle'; open.result = null; open.mode = 'watch'; f.week.encounter = open;
+  const r2 = F.encounterBattle(f); assert.equal(r2.ruleset, 't8'); assert.equal(open.ruleset, 't8'); assert.equal(open.version, Link.CLASH_RECORD_VERSION); assert.equal(open.migrated.from, 'legacy'); assert.deepEqual(open.policies, { a: 'manual', b: 'ai' });
 });
 
 // ---------------------------------------------------------------- Remember my choice and battle speed (GDD §26.0)
@@ -247,7 +265,7 @@ test('tied league games are settled by a headless Clash; a search over real game
 test('XP is shown: every battler gets an xp record (amount, level, progress) that matches what was added to the monster; Tuesday is back to 3v3', () => {
   assert.equal(Link.CLASH_SIZE.encounter, 3);
   for (let seed = 500; seed < 506; seed++) {
-    const f = newFranchise(seed); toTuesday(f); assert.ok(F.startEncounter(f, 0).ok); const e = f.week.encounter;
+    const f = newFranchise(seed); toTuesday(f); assert.ok(F.startEncounter(f, 0, { mode: 'skip' }).ok); const e = f.week.encounter;
     const before = Object.fromEntries(e.mine.map((id) => { const m = f.roster.find((x) => x.id === id); return [id, { xp: m.xp, level: m.level }]; }));
     const b = F.resolveEncounter(f); assert.ok(b.ok);
     const rows = b.events.filter((x) => x.kind === 'xp'); assert.equal(rows.length, e.mine.length, 'one XP record per battler');
@@ -260,16 +278,16 @@ test('XP is shown: every battler gets an xp record (amount, level, progress) tha
 });
 
 // ---------------------------------------------------------------- one selection, one battle: 5v5 and the pregame continuation (2026-10-22)
-test('5v5 playoff overtime: five enter in the chosen order, replacements step up through four knockouts, HP persists, and the winner is the side with monsters left', () => {
+test('5v5 playoff overtime (Skip: the AI policy, no prompt): five enter in the chosen order, replacements step up through knockouts, HP persists, and the winner is the side with monsters left', () => {
   let fiveSeen = 0;
   for (const seed of [500, 501, 502, 503]) {
     const f = newFranchise(seed); f.season.week = 11; f.season.playoffs = { round: 1, fixtures: [{ round: 1, home: f.club, away: 'Bayou Stalkers', tag: 'Wild card', conf: 'Aurora' }], results: [], champion: null }; f.season.day = 6; f.week.plan = { offense: [], defense: [] };
     const m = F.sundayMatchup(f); const pv = F.overtimePreview(f); if (!pv.ok || pv.size < 5) continue; fiveSeen++;
     const order = pv.eligible.slice(0, 5).map((x) => x.id).reverse();
     const s = R.newGame({ home: m.home, away: m.away, seed: 9, otPeriods: 1 }); s.finished = true; s.phase = 'final'; s.winner = null; s.needsTiebreak = true; s.score = { home: 20, away: 20 }; f.game = { state: s, playerSide: m.playerSide };
-    assert.ok(F.startOvertimeClash(f, { lineup: order, mode: 'watch' }).ok); const e = f.week.overtime; assert.equal(e.size, 5); assert.deepEqual(e.mine, order);
+    assert.ok(F.startOvertimeClash(f, { lineup: order, mode: 'skip' }).ok); const e = f.week.overtime; assert.equal(e.size, 5); assert.deepEqual(e.mine, order);
     const r = F.overtimeBattle(f); assert.equal(r.lines.a.length, 5); assert.equal(r.lines.b.length, 5); assert.equal(Link.pendingDecision(r), null);
-    assert.ok(!r.log.some((x) => x.kind === 'decision' || (x.kind === 'swap' && x.forced === false && !/lifts|steps up/.test(x.text))));
+    assert.ok(!r.log.some((x) => x.kind === 'rotation_prompt'), 'Skip never asks');
     const last = stateAt(r, r.log.length - 1); const loser = r.winner === 'a' ? 'b' : 'a';
     if (r.by === 'knockout') { assert.ok(last.order[loser].every((id) => last.S[loser][id].ko)); assert.ok(last.order[r.winner].some((id) => !last.S[r.winner][id].ko)); }
     // HP persists through the battle: damage lowers a monster's HP in the state, and that HP is what it has at the next event

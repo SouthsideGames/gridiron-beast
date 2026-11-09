@@ -14,7 +14,7 @@ import { PLAYS } from '../../data/playbook.js';
 import { positionOf, OFFENSE_SLOTS, DEFENSE_SLOTS } from '../../data/personnel.js';
 import { simulatePlay } from '../../sim/engine.js';
 import { createRng } from '../../core/rng.js';
-import { fieldSvg, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
+import { fieldSvg, fieldDraw, FIELD_VIEWBOX, cameraFor } from '../field-view.js';
 
 /** The preview shows the middle of the camera window at twice the size (the field viewBox is 46 yards tall). */
 const AUDIT_VIEWBOX = FIELD_VIEWBOX.split(' ').map(Number).map((v, i) => [v / 2, 5, v / 2, 25][i]).join(' ');
@@ -217,9 +217,9 @@ export function registerAbilityAudit(Router, app) {
       note = `${found.play} vs ${found.defPlay} · ${sim.result} · loops`;
     }
     const fx = buildFx(sim, lookup); const camTop = entry.family === 'cover' ? 56 : entry.side === 'off' ? 52 : entry.family === 'move' || entry.family === 'contact' ? 44 : 48; const cam = mode === 'staged' ? { top: camTop, bottom: camTop - 46 } : cameraFor(ballOn);
-    const draw = (i, time = null) => fieldSvg({ time, ballOn, ballLat: sim.ballLat || 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites, camera: cam, ownLabel: 'OWN', oppLabel: 'OPP' });
+    const opts = (i, time = null) => ({ time, ballOn, ballLat: sim.ballLat || 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: app.settings.reducedMotion ? 'min' : 'full', sprites, camera: cam, ownLabel: 'OWN', oppLabel: 'OPP' });
     const log = sim.events.filter((e) => e.kind === 'ability' || e.ability).map((e) => `<div class="entry"><span class="t">${e.t.toFixed(1)}s</span><span>${esc(e.text || e.kind)}${e.ability && e.kind !== 'ability' ? ' <b>→ outcome label</b>' : ''}</span></div>`).join('');
-    sheet(`<div class="field-wrap ${mode === 'staged' ? 'audit-field' : ''}"><svg id="auditfield" viewBox="${mode === 'staged' ? AUDIT_VIEWBOX : FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${draw(0)}</svg></div><p class="dim" style="margin:6px 0 0">${esc(note)}</p><div class="log" style="margin-top:6px">${log || '<div class="entry"><span>No ability event logged.</span></div>'}</div><div class="sheet-review" style="margin-top:10px">${reviewHtml('ability', entry.sp.id, { open: true })}</div>`, { title: `${elementFx(entry.sp.element).glyph} ${entry.eff.name}`, onClose: stop });
+    sheet(`<div class="field-wrap ${mode === 'staged' ? 'audit-field' : ''}"><svg id="auditfield" viewBox="${mode === 'staged' ? AUDIT_VIEWBOX : FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${fieldSvg(opts(0))}</svg></div><p class="dim" style="margin:6px 0 0">${esc(note)}</p><div class="log" style="margin-top:6px">${log || '<div class="entry"><span>No ability event logged.</span></div>'}</div><div class="sheet-review" style="margin-top:10px">${reviewHtml('ability', entry.sp.id, { open: true })}</div>`, { title: `${elementFx(entry.sp.element).glyph} ${entry.eff.name}`, onClose: stop });
     const box = document.querySelector('.sheet .sheet-review');
     if (box) { const redraw = () => { box.innerHTML = reviewHtml('ability', entry.sp.id, { open: true }); Router.render(); }; delegate(box, reviewHandlers(redraw)); }
     const svg = document.querySelector('#auditfield'); const ms = 100 / (app.settings.speed || 1); let start = performance.now(); let last = -1;
@@ -227,7 +227,7 @@ export function registerAbilityAudit(Router, app) {
       const n = sim.frames.length; let idx = Math.floor((now - start) / ms);
       if (idx >= n + 10) { start = now; idx = 0; } // hold the last frame (effects that fire at the whistle play out), then loop
       const time = idx > n - 1 ? (sim.frames[n - 1].t ?? 0) + (idx - (n - 1)) * 0.1 : null;
-      if (idx !== last && svg) { last = idx; svg.innerHTML = draw(Math.min(n - 1, idx), time); }
+      if (idx !== last && svg) { last = idx; fieldDraw(svg, opts(Math.min(n - 1, idx), time)); }
       st.raf = requestAnimationFrame(tick);
     };
     st.raf = requestAnimationFrame(tick);
@@ -247,9 +247,9 @@ export function openAbilityPreview(settings, speciesId, { context = '' } = {}) {
   const sprites = entry.side === 'off' ? { off: { map: mine, pool: [] }, def: { map: theirs, pool: [] } } : { off: { map: theirs, pool: [] }, def: { map: mine, pool: [] } };
   const fx = buildFx(sim, (team, slot) => (slot === 'S' ? { element: sp.element, name: sp.name, species: sp.id } : { element: 'Earth', name: 'x', species: null }));
   const camTop = entry.family === 'cover' ? 56 : entry.side === 'off' ? 52 : entry.family === 'move' || entry.family === 'contact' ? 44 : 48; const cam = { top: camTop, bottom: camTop - 46 };
-  const draw = (i, time = null) => fieldSvg({ time, ballOn: 30, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: settings?.reducedMotion ? 'min' : 'full', sprites, camera: cam, noLines: true });
+  const opts = (i, time = null) => ({ time, ballOn: 30, ballLat: 0, toGo: 10, colors: { off: '#74c5ff', def: '#ff9385' }, frame: sim.frames[i], prevFrame: sim.frames[i - 1] || null, fx, fxQuality: settings?.reducedMotion ? 'min' : 'full', sprites, camera: cam, noLines: true });
   let raf = null;
-  sheet(`${context ? `<p class="muted" style="margin:0 0 8px">${context}</p>` : ''}<div class="field-wrap audit-field"><svg id="abilitypreview" viewBox="${AUDIT_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${draw(0)}</svg></div>
+  sheet(`${context ? `<p class="muted" style="margin:0 0 8px">${context}</p>` : ''}<div class="field-wrap audit-field"><svg id="abilitypreview" viewBox="${AUDIT_VIEWBOX}" preserveAspectRatio="xMidYMid meet">${fieldSvg(opts(0))}</svg></div>
     <div class="panel tight" style="margin-top:8px"><div class="row" style="gap:8px">${monsterSprite(me, 28)}<div class="grow"><b>${esc(sp.ability.name)}</b> <span class="dim">${esc(sp.name)} · ${esc(sp.rarity)}</span><div class="muted">${esc(sp.ability.text)}</div></div></div></div>`, { title: `${elementFx(sp.element).glyph} ${sp.ability.name}`, onClose: () => { if (raf) cancelAnimationFrame(raf); raf = null; } });
   const svg = document.querySelector('#abilitypreview'); const ms = 100 / (settings?.speed || 1); let start = performance.now(); let last = -1;
   const tick = (now) => {
@@ -257,7 +257,7 @@ export function openAbilityPreview(settings, speciesId, { context = '' } = {}) {
     const n = sim.frames.length; let idx = Math.floor((now - start) / ms);
     if (idx >= n + 10) { start = now; idx = 0; }
     const time = idx > n - 1 ? (sim.frames[n - 1].t ?? 0) + (idx - (n - 1)) * 0.1 : null;
-    if (idx !== last) { last = idx; svg.innerHTML = draw(Math.min(n - 1, idx), time); }
+    if (idx !== last) { last = idx; fieldDraw(svg, opts(Math.min(n - 1, idx), time)); }
     raf = requestAnimationFrame(tick);
   };
   raf = requestAnimationFrame(tick);

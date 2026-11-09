@@ -203,8 +203,8 @@ export function stageScenario({ sc, fam, contract, form, mastery, seed: gs }) {
       Object.assign(state, { phase: 'kickoff', kickingTeam: cfg.receive ? 'away' : 'home' }); offSide = R.opponent(state.kickingTeam);
       call = () => { const x = R.doKickoff(state, teams); return { kind: 'kickoff', text: x.text, sim: x.sim }; };
     } else if (cfg.kick === 'xp') { Object.assign(state, { phase: 'try', tryTeam: 'home', possession: 'home' }); offSide = 'home'; call = () => ({ kind: 'try', text: R.attemptTryKick(state, teams).text }); }
-    else if (cfg.kick === 'fg') { stageScrimmage(4); offSide = 'home'; call = () => ({ kind: 'field_goal', text: R.doFieldGoal(state, teams, { signature: !!cfg.signature }).text }); }
-    else if (cfg.kick === 'punt') { stageScrimmage(4); offSide = 'home'; call = () => ({ kind: 'punt', text: R.doPunt(state, teams).text }); }
+    else if (cfg.kick === 'fg') { stageScrimmage(4); offSide = 'home'; call = () => { const x = R.doFieldGoal(state, teams, { signature: !!cfg.signature }); return { kind: 'field_goal', text: x.text, res: x.res }; }; }
+    else if (cfg.kick === 'punt') { stageScrimmage(4); offSide = 'home'; call = () => { const x = R.doPunt(state, teams); return { kind: 'punt', text: x.text, res: x.res }; }; }
     else {
       stageScrimmage(); offSide = state.possession; const [off, def, callTarget] = typeof cfg.calls === 'function' ? cfg.calls(k, api) : cfg.calls[k % cfg.calls.length];
       const target = callTarget || (cfg.target === true ? at.slot : cfg.target || null);
@@ -220,7 +220,7 @@ export function stageScenario({ sc, fam, contract, form, mastery, seed: gs }) {
     return { kind: ev.kind, text: ev.text || '', sim: ev.sim || null, offSide, unit: at.side === 'kicker' ? 'kick' : side, executed: executionsOf(state.t8) > n0,
       subjectEvents: contractEvents(ev.sim, fam, fam.abilities.football, at.slot, side), before, after: structuredClone(state.t8.ability?.[REVIEW_ID] ?? null), ballOn, situation,
       sprites: { off: pick(teams[offSide].offense, sprites[offSide].offense), def: pick(teams[other].defense, sprites[other].defense) }, controls,
-      calls: ev.offensePlayId ? { offense: ev.offensePlayId, defense: ev.defensePlayId } : null };
+      calls: ev.offensePlayId ? { offense: ev.offensePlayId, defense: ev.defensePlayId } : null, ...(ev.res ? { kick: { kind: ev.kind, res: structuredClone(ev.res), from: ballOn } } : {}) }; // a formula kick's result (the reviewer draws its animation)
   }
   return { state, teams, at, subject, api, snap };
 }
