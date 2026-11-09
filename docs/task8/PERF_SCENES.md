@@ -23,7 +23,11 @@ Files:
 - `tools/perf/scenes.json`: the manifest (1.0.0: approved status, budgets, protocol, call sets, scenes, explicit rosters).
 - `tools/perf/scene-worker.mjs`: runs a scene against one build root (imports that build's engine and rules).
 - `tools/perf/run-scenes.mjs --base=DIR --cand=DIR --json=FILE`: the full official run in one command (section 11): R0 per scene,
-  R1, sub-measurements, variability flags, machine load.
+  R1, sub-measurements, the per-step / volume split, competing CPU and steal, a quality label per result (corrected 2026-11-08,
+  section 1.1).
+- `tools/perf/machine.mjs`: the quiet-machine accounting shared by the simulation runner and the render harness (section 1.1).
+- `tools/perf/r1-experiment.mjs`: the experiment behind the R1 method (section 3.1).
+- `tools/perf/compare-runs.mjs a.json b.json ...`: independent official runs side by side, per scene and figure (section 3.1).
 - `tools/perf/profile-scenes.mjs`: drives the scenes under `node --cpu-prof`, and summarises or diffs profiles.
 - `tools/perf/identity.mjs`: outcome-identity hashes for optimisation work.
 - `tools/perf/make-rosters.mjs`: provenance of the frozen rosters (not run by the runner).
@@ -93,9 +97,69 @@ Task 8 block: charges, fields, statuses, stamina, absences).
 - Variability (N8e): every job reports the IQR / median and the coefficient of variation; a job over `protocol.noise` (0.10) is
   flagged **noisy**; a verdict whose paired-ratio interquartile range straddles its limit is flagged **borderline**. The machine's
   1-minute load is sampled at the start, before every scene and at the end, and a run whose load ever exceeds 0.5 per CPU is marked
-  **PRELIMINARY (busy machine)** in its output.
+  **PRELIMINARY (busy machine)** in its output. **Superseded on 2026-11-08 by section 1.1** (the load rule, the schedule, the R1
+  figure, the noisy test and the quality labels); the bullets above describe the runner up to 3498ffd, which produced every result
+  in sections 6 and 7 and the two preserved runs in `docs/task8/perf-runs/`.
 - Absolute timings on the development machine (2 CPUs, shared with other agents) are noisy. **Official numbers must be re-run on a
   quiet machine** (section 11).
+
+### 1.1 Methodology correction (2026-11-08, owner instructions of 19:17)
+
+The two official-attempt runs of 2026-11-08 (`docs/task8/perf-runs/2026-11-08-run1-sim.json`, `-run2-sim.json`, frozen 866a49b
+against `main` 43976f4) are **kept unchanged** and stay **Provisional**. Under the corrected rule they cannot be re-labelled after
+the fact (they hold no /proc accounting); they are evidence of the old method's problems below. The corrections apply to
+`tools/perf/run-scenes.mjs`, `tools/perf/scene-worker.mjs` and `tools/perf/render/run.mjs` (shared code: `tools/perf/machine.mjs`).
+No game code changed (nothing under `src/`); every scene's fingerprint is unchanged (checked against run 1 for A2: base, twin and
+abilities-on fingerprints identical).
+
+**What was wrong.**
+1. *The quiet-machine check could never pass.* The runner marked a run PRELIMINARY when the 1-minute load average exceeded 0.5 per
+   CPU. The load average counts every runnable thread, the benchmark's own included: its active worker, V8's helper threads (GC,
+   compiler) and the runner. Measured on the idle development machine, the benchmark alone uses **1.2 to 1.5 CPUs** while it runs
+   (competing CPU 0.000), so on 2 CPUs its own load reaches the 1.0 threshold by itself (the preserved runs: 1-minute load 0.25 to
+   1.92 with no competing workload started).
+2. *The two R1 figures disagreed* because they compared runs made in different process states (section 3.1).
+3. *The noisy test* also flagged a job whose coefficient of variation exceeded 0.10. On this VM one run in five to fifteen takes 3 to
+   5 times the median (in every condition, quiet or not: section 3.1); one such run pushes the CV over 0.10 without moving the
+   median, which is the statistic used. Like rule 1, that made a GOOD result unreachable on this machine.
+
+**The new quiet rule** (`machine.mjs`, used by both harnesses). Over every scene (simulation) or block (render):
+- *competing CPU* = the CPU that processes used according to `/proc/stat` (user + nice + system) minus the CPU of the benchmark's own
+  processes (`/proc/<pid>/stat` utime + stime, all threads: the runner and its three workers; for the render harness its process
+  tree, i.e. Node, Chromium and the HTTP server). Interrupt time (irq + softirq) is not charged to any process, so it cannot be split
+  into own and competing; it is recorded apart (`irqCpus`) and not part of the rule (measured: 0.007 to 0.011 CPU during simulation
+  scenes, about 0.07 CPU during a render block, almost all of it the harness's own loopback traffic with the browser);
+- *steal* = the `/proc/stat` steal column (CPU time the hypervisor gave to other guests);
+- **quiet = competing CPU at most 0.05 CPU (5% of one CPU) and steal at most 0.05 CPU (5% of one CPU)**, both averaged over the
+  scene or block. This VM's resting steal is 0.01 to 0.02 CPU (0.66% of all CPU time since boot, 0.011 to 0.020 CPU in every scene
+  measured today); the limit is above that floor and flags real host contention. Accuracy of the subtraction: the two counters are
+  sampled separately; on an idle machine the raw difference is -0.004 to +0.003 CPU.
+- The load averages are still recorded (start and end of every scene and block, and the run's range), for transparency only.
+- Check: with a deliberate one-CPU busy loop beside a short run (`docs/task8/perf-method/2026-11-08-sanity-competing-load-O2.json`)
+  the scene read **competing 0.716 CPU** and the run was marked PRELIMINARY; without it every scene read 0.000.
+- A run is labelled `quiet machine` only when every scene was quiet; otherwise `PRELIMINARY: not quiet ... in <scenes>`.
+
+**The schedule** (sim runner): the warm-up rounds are the measured rounds' schedule, discarded, so both arms of every comparison get
+the same warm-up; **every measured run is preceded by one discarded settle run of the same variant in the same worker** (`--settle`,
+default 1), so no measured run is the first after an idle wait or the first after a different variant; the order is counterbalanced
+ABBA (rounds 0 and 3 of every four: A first; rounds 1 and 2: B first) for base / candidate and for abilities off / on; the
+sub-measurements rotate as before. Settle runs are not repeats: the approved 3 warm-ups and 15 measured passes are unchanged.
+
+**Noisy (corrected):** a job is noisy when its IQR / median exceeds 0.10 (`protocol.noise`); a comparison is noisy when either job is
+noisy or its paired ratios' IQR / median exceeds 0.10. The CV and the number of 3-5 x runs (`spikes`) are recorded for every job.
+
+**Quality label per result** (printed beside every R0, R1 and sub-measurement, and stored): **GOOD** only when the scene was quiet,
+no job and no paired ratio was noisy, and the result is not **borderline**: its bootstrap 95% interval does not straddle the limit,
+and its paired median and ratio of medians fall on the same side of it. Otherwise **PROVISIONAL**, with every reason (competing
+load, steal, noisy, borderline). Limits are unchanged: R0 at most 1.10 per scene and twin, R1 provisional 1.25; nothing is averaged
+across scenes.
+
+**Render harness** (`tools/perf/render/run.mjs`): the same accounting per block (`load.competingCpus`, `stealCpus`, `irqCpus`,
+`ownCpus`, `quiet`, `notQuiet`), a quality label per block and per summary row (PROVISIONAL when any of its blocks was not quiet,
+when it has fewer than 3 repeats, or when the mean or p95 frame time varies over the repeats by more than 10% of its median), and
+`meta.status` computed from them (the old status text is kept in `meta.statusNote`). Every earlier field is unchanged
+(`busyShare`, `harnessShare`, `foreignShare`, the load averages), so earlier JSONs still go through `report.mjs`, which now also
+prints a status line and a "competing / steal CPU, quality" column ("–" for older files).
 
 ## 2. The scene set (approved, N8e)
 
@@ -155,13 +219,121 @@ The baseline has no Dex abilities, so an ability scene has no exact baseline cou
 - **R0 = cand(abilities-off twin) / base(abilities-off twin):** a matched ordinary comparison on the ability scene's own clubs, calls
   and staging. **Gate: at most 1.10, for every twin individually**, exactly as for the ordinary scenes.
 - **R1 = cand(abilities on) / cand(abilities-off twin):** the abilities' cost on Task 8. **Provisional budget 1.25**; a scene over it is
-  investigated and reported (section 9), not rejected.
-- **Same-process R1 = cand(abilities on) / cand(twin), both run in the ability worker:** reported beside R1 (runner 506e5db). The
-  protocol R1 compares two processes whose JIT states differ (the matched worker has run only ordinary football; the ability worker
-  has run contracts, fields and temporaries); same-process R1 is the abilities' direct cost.
+  investigated and reported (section 9), not rejected. **Since 2026-11-08 (section 3.1) R1 is measured in one process, paired per
+  round, and its figure is the median of the paired ratios**, with IQR and bootstrap 95% interval.
+- *Until 2026-11-08:* the protocol R1 was abilities on (ability worker) / twin (matched worker), and the same-process R1 (runner
+  506e5db) the ratio of the two medians in the ability worker. Both are still reported (`R1cross`, and `R1.ratioOfMedians` =
+  `R1same`), not used for the verdict.
 - **R2 = cand(abilities on) / base(twin) = R0 x R1:** reported, not gated (Method A, not chosen).
 
 Method A (gate on R2) and Method C (legacy abilities on the baseline) were not chosen.
+
+### 3.1 R1: the method, and why the old two figures disagreed (2026-11-08)
+
+**The method (owner 19:17 item 2).** Abilities off (the twin) and abilities on run in the same worker process, in every round, as a
+pair: ABBA order (rounds 0 and 3 of every four off first, rounds 1 and 2 on first), each measured run preceded by a discarded settle
+run of the same variant, and the warm-up rounds identical to the measured rounds (so both arms get the same warm-up). Each round
+gives a paired ratio on / off. Reported for every scene: the **median of the paired ratios (the figure)**, its IQR, a percentile
+bootstrap 95% interval of the median (2,000 resamples, seeded per scene, reproducible from the stored runs), the paired geometric
+mean, the paired median split by order (on first / off first), the ratio of the two medians, and the same paired medians in wall
+time and in main-thread CPU (`process.threadCpuUsage`, i.e. without V8's helper threads). The old figures are reported too:
+`R1cross` (the old protocol R1, abilities on / the twin in the matched worker), `processState` (the twin in the ability worker / the
+twin in the matched worker) and R2. The sub-measurements `only:KEY` use the same paired median against `only:none`.
+
+**Why this is the sound measure (and the old ones are not).** R1 asks what the abilities cost on the same build, same scene, same
+inputs. A comparison is only as good as the equality of everything else between its two arms. Measured on this VM:
+
+1. *Two processes of the same build differ.* Two fresh workers running the same twin, same build, same inputs, differ in median CPU
+   per run by 15 to 30% in either direction, and not reproducibly: `r1-experiment.mjs` part 2 gave A / M (ability-history worker over
+   ordinary-history worker) of **0.625, 0.960, 0.990, 0.824, 0.747, 1.014, 1.021, 0.764** under the old schedule and **0.981, 0.852,
+   0.946, 1.139, 1.018, 1.298, 1.236, 0.992** with settle runs (three experiment runs: run 0 A3, A5; runs a and b A3, A2, A5). This is a per-process
+   effect: repeating rounds inside one run does not average it out, and the per-round intervals of a cross-process ratio do not
+   contain it. The old protocol R1 (`R1cross`) divides by a different process, so it carries this error in full.
+2. *Most of the old between-process difference was helper-thread CPU.* Under the old schedule the matched-like worker spent more CPU
+   on V8's helper threads per measured run than the ability-like one in 7 of 8 comparisons (for example A3 94.6 against 15.9 ms,
+   A5 107.5 against 29.9 ms, A2 49.6 against 12.2 ms), while main-thread CPU agreed far better (A / M main thread 0.95, 1.01, 1.03,
+   0.99, 0.89, 1.09, 1.11, 0.82). In the old schedule the matched worker ran one job per round and then waited while the ability
+   worker ran 7 to 14 jobs; the ability worker's jobs followed other variants. The preserved runs show the same: the twin took 0.67
+   to 1.04 x as long in the ability worker as in the matched worker (run 1: A1 0.871, A2 0.810, A3 0.771, A4 0.988, A5 0.867, X1
+   0.924; run 2: 0.870, 0.885, 0.669, 0.830, 1.042, 0.968), which is why the old protocol R1 was mostly below the old same-process
+   R1. Today, on the quiet machine, the old runner reproduced it (A3: twin 216 ms in the matched worker against 140 ms in the ability
+   worker; protocol R1 1.093 against same-process 1.687; A5: 510 against 291 ms, 0.877 against 1.541;
+   `docs/task8/perf-method/2026-11-08-old-runner-A3-A5.json`).
+3. *Within one process, a run depends on what ran just before it.* `r1-experiment.mjs` part 1 (the twin after its own run, after an
+   abilities-on run, or after 3 s idle) and part 3 (off and on in the sequence off off on on, so every transition occurs equally
+   often): the on / off ratio when each follows itself against when each follows the other was 1.324 / 1.157, 1.240 / 1.247,
+   1.174 / 1.257 (run a: A3, A2, A5) and 1.303 / 1.533, 1.036 / 1.243, 1.509 / 1.359 (run b). The carry-over is real (up to 0.3 on the ratio) and its sign is not stable, so a balanced order alone does not remove it
+   (an unequal carry-over biases a crossover even when the order is balanced). The settle run of the same variant before every
+   measured run is a wash-out: every measured run follows a run of its own variant. An intermediate version of the corrected runner
+   (one settle run per worker turn, then the pair back to back) still showed it: A3 paired ratios bimodal (IQR 0.96 to 1.64), on
+   first 0.957 against off first 1.617.
+4. *Rounds drift together.* In one process the off and on runs of the same round move together (A3, corrected runner, 7 rounds:
+   off 163 to 295 ms, on 170 to 310 ms, the pairs within 1 to 11% of each other except one round at 1.35), so a ratio of medians taken from
+   different rounds is unstable (A3: ratio of medians 1.346, paired median **1.063**, IQR 1.032 to 1.089, 95% interval 1.013 to 1.110;
+   `docs/task8/perf-method/2026-11-08-new-runner-A3-A5.json`). The paired median removes the common drift.
+5. *3 to 5 x runs* (spikes, mostly helper-thread CPU) occur in every condition, quiet machine included (0 to 4 in 8 runs per cell of
+   the experiment). They are kept, never removed; the median and the IQR-based tests are robust to them.
+6. *Process history (JIT state) has a smaller effect, mostly in one direction.* With settle runs, the twin's main-thread CPU in the
+   ability-history worker was 0.98 to 1.28 x that in the ordinary-history worker (1.021, 0.983, 1.029, 1.042, 1.035, 1.279, 1.101,
+   1.149: higher in 7 of 8), i.e. having run ability code may make the shared engine code somewhat slower for ordinary plays too
+   (polymorphic call sites). Under the old schedule this was hidden by the larger helper-thread difference. The same-process R1
+   does not count that effect as ability cost (both arms share the state), and R0's candidate worker never runs ability code; the
+   corrected runner reports it per scene as `processState` (process CPU, main thread and wall). It is within the process-instance
+   noise of item 1 and is not established; it is reported, not corrected for.
+
+So: **the sound R1 is the same-process, paired, washed-out, counterbalanced comparison**; its figure is the paired median with its
+interval. The old protocol R1 confounds the abilities with a process-instance effect of about the same size as the budget; the old
+same-process R1 (a ratio of medians, arms adjacent) confounds them with carry-over and drift. The corrected runner on the quiet
+machine, 7 repeats (indications, not official): A3 R1 **1.063** (95% interval 1.013 to 1.110; wall 1.049, main thread 1.048; the old
+protocol figure in the same run 1.307), A5 **1.218** (1.058 to 1.345; wall 1.186, main thread 1.164; old 1.338); `processState`
+0.971 and 1.074 in that run.
+
+**What remains uncertain.** R0 is necessarily a cross-process comparison (two builds), so it carries the process-instance effect of
+item 1 too, outside its per-round interval. R0's margins are wide (0.51 to 0.97 against 1.10 in both preserved runs), but a verdict
+near a limit needs agreement between independent runs: `tools/perf/compare-runs.mjs` puts several official runs side by side, per
+scene and figure (never averaged), and labels a figure CONSISTENT only when every run labels it GOOD and every run puts it on the
+same side of its limit. Recommended: three independent official runs (section 11).
+
+**Process CPU against main-thread CPU and wall time.** The approved metric (process CPU, every thread) counts V8's helper-thread
+work (concurrent GC marking and sweeping, background compilation). In the short corrected runs the abilities-on runs of A2 and A4
+carried much more of it than their twins: A2 R1 1.907 in process CPU against 1.360 main thread and 1.356 wall; A4 1.923 against
+1.404 and 1.399 (3 repeats each, PROVISIONAL; `2026-11-08-sanity-O5-A2.json`, `2026-11-08-sanity-A4.json`); A3 and A5 at 7 repeats
+showed little difference (1.063 / 1.048 / 1.049 and 1.218 / 1.164 / 1.186). With wash-out runs each measured run pays, in steady
+state, for the helper work its own variant causes, so the process-CPU figure is a legitimate cost (mostly the abilities'
+allocation); whether that work, which ran on the otherwise idle second CPU, counts toward the budget is the approved metric's
+answer (it does). The runner reports all three; the verdict uses process CPU, as approved, and nothing was chosen per scene.
+
+Evidence files (short runs and the experiment, quiet machine, 2026-11-08 19:40 to 20:30 EST):
+`docs/task8/perf-method/2026-11-08-r1-experiment-0.json`, `-a.json` and `-b.json` (`r1-experiment.mjs`, 8 repeats; run 0 was made
+before part 3 and the machine record were added to the tool; -b records the machine: competing 0.000 CPU, steal 0.013 to 0.014
+CPU), `2026-11-08-old-runner-A3-A5.json` (the runner as of 3498ffd, 7 repeats),
+`2026-11-08-new-runner-A3-A5.json` (the corrected runner, 7 repeats; made before the noisy test was corrected, so its stored labels
+use the old CV test).
+
+### 3.2 Two kinds of overhead: per step and volume (owner 19:17 item 3)
+
+A ratio R of times (R0 or R1) is split exactly into a per-step part and a work-volume part, using the counts of the two arms (they
+are deterministic: the same in every run of a variant):
+
+- ticks T: simulated ticks over the scene (sum over plays of elapsed / 0.05 s);
+- actor-ticks A: the sum over plays of ticks x the mean number of actors on the field in that play's frames (temporaries such as
+  Stormguard's blockers and the Grove Guardian are actors; obstacles such as Landslide's wall and Aegistron's panels are not);
+- **volume V = A(num) / A(den) = [T(num) / T(den)] x [actors per tick (num) / actors per tick (den)]**: the extra total work from
+  legitimately longer (or shorter) plays and from added actors;
+- **per-step P = R / V**: the extra processing per actor-tick (per simulated step and actor);
+- R = P x V exactly; the per-step interval is R's interval divided by V. Also stored: R / (T ratio) (per tick only), the same split
+  over actor pairs (`pairVolume`, `perPairStep`: the separation pass grows with actors squared), and ln V / ln R.
+
+The runner prints the arithmetic for every R0 and R1. Examples:
+- **O5 (R0, longer Task 8 plays):** preserved run 1, R0 0.679 = per-step 0.598 x volume 1.135 (ticks 6654 / 5865 = 1.135, 69.3
+  against 61.1 per play; actors per tick 14.00 / 14.00). Short corrected run: 0.819 = 0.722 x 1.135. The 13.5% longer plays are
+  work volume from approved mechanics; per step Task 8 is well under the baseline.
+- **A2 (R1, summons):** short corrected run, R1 1.907 = per-step 1.937 x volume 0.985 (ticks 5690 / 5950 = 0.956 x actors per tick
+  14.42 / 14.00 = 1.030): the temporaries add 3% actors but the plays are 4.4% shorter, so the volume is slightly below 1 and the
+  overhead is per step. (3 repeats, PROVISIONAL; main thread 1.360, wall 1.356: most of the process-CPU excess in that run was
+  helper-thread CPU of the abilities-on runs.)
+- Tick ratios on / off of the ability scenes (from the preserved runs; actor counts were not recorded then): A1 0.986, A2 0.956, A3
+  0.956, A4 1.014, A5 1.041, X1 0.999. Only A5 and A4 have longer plays with abilities on; A2, A4 and X1 add temporaries.
 
 ## 4. Profile of the football slowdown (ordinary matched scenes)
 
@@ -274,6 +446,10 @@ per tick O5 is at 0.98 to 1.05 of the baseline). Run-to-run spread is wide on th
 
 
 ## 7. Preliminary results under N8e (Method B, per scene)
+
+*Note (2026-11-08, section 1.1): measured with the runner as of 32f57b9 / 3498ffd, i.e. the old load rule, the old schedule and the
+old R1 figures (protocol R1 across two processes, same-process R1 as a ratio of medians). Kept as they were; section 3.1 explains
+why those R1 figures are not reliable. The R0 figures carry the process-instance uncertainty of section 3.1 item 1.*
 
 **PRELIMINARY, not official.** One full run of the official command (section 11), 2026-11-08 18:39-18:49 EST, Task 8 engine
 7f60f41 (runner 32f57b9) against the pre-Task 8 baseline (`main` 43976f4, v42.22.0). Machine: the shared 2-CPU development machine
@@ -443,35 +619,57 @@ files' own code. The contracts' own code is small everywhere (under 15%): **the 
 
 ## 10. Methods and tools in use (summary)
 
-- `tools/perf/run-scenes.mjs`: the official run (section 11), JSON with every run, R0 per scene, R1 / same-process R1 / R2, the
-  sub-measurements, variability flags and the machine load.
+- `tools/perf/run-scenes.mjs`: the official run (section 11), JSON with every run, R0 per scene, R1 (same-process paired median)
+  with the old figures beside it, R2, the sub-measurements, the per-step / volume split, competing CPU and steal per scene, and a
+  quality label per result (section 1.1).
 - `tools/perf/scene-worker.mjs`: plain, inert (abilities-off), ability and `only:KEY` variants; `runSceneDetail` lists what fired.
+  Each run also returns main-thread CPU, actor-ticks and pair-ticks, and the /proc/stat busy and steal ticks over its timed section;
+  `--gc-stats` adds V8's GC count and time (diagnostic, off by default).
+- `tools/perf/machine.mjs`: competing CPU, steal and the quiet rule (section 1.1), shared with `tools/perf/render/run.mjs`.
+- `tools/perf/r1-experiment.mjs`: the R1 experiment (section 3.1). `tools/perf/compare-runs.mjs`: independent runs side by side.
 - `tools/perf/identity.mjs`: the outcome-identity proof (section 5).
 - `tools/perf/profile-scenes.mjs`: `node --cpu-prof` driver and profile summaries / diffs (`--variant=ability|inert` for the
   attribution profiles).
 
 ## 11. The official run (one command)
 
-On a quiet machine (nothing else running; the runner records the load and marks the run PRELIMINARY when the 1-minute load exceeds
-0.5 per CPU at any sample), from a checkout of this branch:
+On a quiet machine (nothing else running; the runner measures competing CPU and steal per scene and marks the run PRELIMINARY when
+any scene is not quiet: section 1.1), from a checkout of `task8-perf-method` (tools and docs only; its `src/` is the frozen build),
+with fresh extracts of the two builds (fresh directories: a directory reused from another extract can hold stray files):
 
 ```
-mkdir -p /tmp/perf-base && (cd <repo> && git archive origin/main | tar -x -C /tmp/perf-base)
-node tools/perf/run-scenes.mjs --base=/tmp/perf-base --cand=. --json=docs/task8/data-perf-n8e-official.json --label="OFFICIAL <date> <machine>"
+rm -rf /tmp/perf-base /tmp/perf-cand && mkdir -p /tmp/perf-base /tmp/perf-cand
+git archive 43976f4 | tar -x -C /tmp/perf-base
+git archive 866a49b | tar -x -C /tmp/perf-cand
+node tools/perf/run-scenes.mjs --base=/tmp/perf-base --cand=/tmp/perf-cand --json=docs/task8/perf-runs/<date>-corrected-run1-sim.json --label="OFFICIAL corrected run 1, frozen 866a49b vs main 43976f4, <machine>"
 ```
 
 It runs, in one command: the 7 ordinary scenes (base and Task 8), the 5 ability scenes and the X1 addition (abilities-off twin on both
-builds, abilities on, the twin again in the ability worker, and every `only:KEY` sub-measurement with its control), with the approved
-protocol (3 warm-ups, 15 measured passes, medians). Output: the R0 verdict per scene at 1.10, the R1 verdict per scene at 1.25, the
-noisy and borderline flags, and the load. About 10 to 15 minutes on the development machine. Options: `--no-sub` (skip the
-sub-measurements), `--sub-repeats=N`, `--scenes=a,b`, `--metric=ms` (wall time as the primary), `--noise=0.10`.
+builds, abilities on and the twin in the ability worker, and every `only:KEY` sub-measurement with its control), with the approved
+protocol (3 warm-ups, 15 measured passes, medians) and the corrected schedule (one settle run before every measured run, ABBA).
+Output: per scene the machine (competing CPU, steal, load), R0 at 1.10 and R1 at 1.25 each with its interval, quality label and
+per-step / volume arithmetic, the old R1 figures, and the sub-measurements; then the per-scene R0 and R1 lists and the run status.
+About 20 minutes on the development machine (the settle runs double the number of runs). Options: `--no-sub`, `--sub-repeats=N`,
+`--scenes=a,b`, `--metric=cpu|ms|main` (cpu, the approved metric, is the default), `--noise=0.10`, `--settle=1`, `--bootstrap=2000`.
 
-Before it, the identity proof of the build: `node tools/perf/identity.mjs --root=. --compare=<acdc91e hashes>` (section 5).
+Recommended (section 3.1, the process-instance effect): three independent runs (`run1`, `run2`, `run3`, the same command with
+another `--json` and label), then `node tools/perf/compare-runs.mjs <run1> <run2> <run3>`: every scene and figure, one column per
+run, CONSISTENT only when all three are GOOD and on the same side of the limit.
+
+The render measurement has its own command (`docs/task8/RENDER_PERF.md` section 2), from the same checkout:
+
+```
+node tools/perf/render/run.mjs --label="OFFICIAL render, frozen 866a49b, <machine>" --out=docs/task8/render-perf/<date>-official.json
+node tools/perf/render/report.mjs docs/task8/render-perf/<date>-official.json
+```
+
+Before them, the identity proof of the build: `node tools/perf/identity.mjs --root=. --compare=<acdc91e hashes>` (section 5).
 
 ## 12. What remains
 
-1. **The official run** on a quiet machine (section 11). Today's figures are preliminary: every job was flagged noisy.
-2. **R1 over the provisional 25%:** A1 and X1 on every measure; A4 and A5 on the preliminary run (A2 and A3 within on the protocol R1,
+1. **The official run** on a quiet machine (section 11), with the corrected method (section 1.1). Every figure so far is
+   preliminary or provisional, including the two preserved runs of 2026-11-08 (`docs/task8/perf-runs/`).
+2. **R1 over the provisional 25%** (old figures; to be re-measured with the method of section 3.1): A1 and X1 on every measure; A4 and A5 on the preliminary run (A2 and A3 within on the protocol R1,
    over on the same-process R1); on the quieter same-process re-run all six are over (A2 1.26 and A4 1.27 only just). The investigation (section 9) finds the cost in effect processing (the per-tick field path for every actor once
    any field exists), extra bodies and obstacle checks (summons and constructs), and allocation; not in inefficient contract code or
    lookups. The outcome-identical options left (9.2 items 1 to 5) are moderate; the remaining field cost is structural (every actor

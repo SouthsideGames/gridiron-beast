@@ -11,9 +11,12 @@ const row = (cells) => `| ${cells.join(' | ')} |`;
 const head = (cells) => `${row(cells)}\n${row(cells.map(() => '---'))}`;
 const out = [];
 const load = (s) => `${v(s.busyLoad, 2)} / ${v(s.foreignLoad, 2)}`;
+// methodology correction 2026-11-08 (PERF_SCENES.md section 1.1): competing / steal CPU and the quality label; '–' for older JSONs
+const qual = (s) => (s.quality ? `${v(s.competingCpus, 3)} / ${v(s.stealCpus, 3)} ${s.quality.label}${s.quality.reasons.length ? ` (${s.quality.reasons.join('; ')})` : ''}` : '–');
 
 out.push(`Run: ${m.label || '(no label)'}; commit ${m.commit}${m.dirty ? ' (dirty)' : ''}; ${m.startedAt} to ${m.finishedAt}; ${m.host.cpus} CPUs (${m.host.model}); ${m.browser?.version} (${m.browser?.mode}); viewport ${m.screen?.w}x${m.screen?.h} DPR ${m.screen?.dpr}; repeats ${m.options.repeats}, warm-up ${m.options.warmup}, plays ${m.options.plays}, live ${m.options.liveSteps} steps after ${m.options.liveWarmup}.`);
 out.push(`Machine before start: busy ${m.idleLoad?.busyShare}, other processes ${m.idleLoad?.foreignShare} of all CPU time, load average ${m.idleLoad?.loadavgEnd?.join(' ')}. Mobile: ${m.mobile?.status}${m.mobile?.reason ? ` (${m.mobile.reason})` : ''}.`);
+out.push(`Status: ${m.status}`);
 out.push(`Identity checks: ${J.checks.length} blocks, ${J.checks.filter((c) => !c.ok).length} mismatches. Page errors: ${m.pageErrors?.length || 0}.`);
 out.push('');
 
@@ -32,8 +35,8 @@ out.push('');
 const table = (mode, title, extra = []) => {
   const rows = S.filter((s) => s.mode === mode); if (!rows.length) return;
   out.push(`#### ${title}`);
-  out.push(head(['Scene', 'Config', 'Platform', 'avg ms', 'median', 'p95', 'fps', '≤20 ms', '>33', '>50', 'long tasks (max ms)', 'script / style+layout / paint ms per s', ...extra.map((e) => e[0]), 'load busy / other']));
-  for (const s of rows) out.push(row([s.scene, s.config, s.throttle === 1 ? 'desktop' : `desktop CPU ${s.throttle}x (approx.)`, v(s.meanMs), v(s.medianMs), v(s.p95Ms), v(s.avgFps, 0), v(s.share20, 2), v(s.over33), v(s.over50), `${v(s.longTasks)} (${v(s.longTaskMaxMs, 0)})`, `${v(s.mainMsPerSec.script, 0)} / ${sl(s)} / ${v(s.mainMsPerSec.paint, 0)}`, ...extra.map((e) => e[1](s)), load(s)]));
+  out.push(head(['Scene', 'Config', 'Platform', 'avg ms', 'median', 'p95', 'fps', '≤20 ms', '>33', '>50', 'long tasks (max ms)', 'script / style+layout / paint ms per s', ...extra.map((e) => e[0]), 'load busy / other', 'competing / steal CPU, quality']));
+  for (const s of rows) out.push(row([s.scene, s.config, s.throttle === 1 ? 'desktop' : `desktop CPU ${s.throttle}x (approx.)`, v(s.meanMs), v(s.medianMs), v(s.p95Ms), v(s.avgFps, 0), v(s.share20, 2), v(s.over33), v(s.over50), `${v(s.longTasks)} (${v(s.longTaskMaxMs, 0)})`, `${v(s.mainMsPerSec.script, 0)} / ${sl(s)} / ${v(s.mainMsPerSec.paint, 0)}`, ...extra.map((e) => e[1](s)), load(s), qual(s)]));
   out.push('');
 };
 table('render', 'Rendering (precomputed plays; the page simulates nothing)', [['play start ms (median / max)', (s) => `${v(s.playStartMedianMs)} / ${v(s.playStartMaxMs)}`]]);

@@ -35,6 +35,11 @@ partner of each rendering scene. Rendering results are never presented as gamepl
   time (`innerHTML`), forced style + layout time, string size and element count. Outside the timed blocks.
 - Machine load: for every block, the share of all CPU time used by the harness and by other processes (`/proc`), and the load
   average; also 3 s of idle load before the run starts.
+- Machine accounting, corrected 2026-11-08 (`docs/task8/PERF_SCENES.md` section 1.1, `tools/perf/machine.mjs`): for every block also
+  the competing CPU (process CPU from `/proc/stat` minus the harness's own process tree, in CPUs), the steal and the interrupt time;
+  a block is quiet when competing CPU and steal are each at most 0.05 CPU. Every block and summary row carries a quality label (GOOD,
+  or PROVISIONAL: not quiet, fewer than 3 repeats, or mean / p95 frame time varying over 10% between repeats), and `meta.status` is
+  computed from them. The load average (which counts the harness's own browser and Node threads) is still recorded, not the rule.
 
 ### Identity checks
 
