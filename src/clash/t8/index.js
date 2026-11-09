@@ -8,5 +8,10 @@ export { T8_CONTEXTS } from './engine.js';
 export { resolveAmount, splitRaw, ROUNDING } from './arith.js';
 export { applyClash, orderAttempts, endOfTurn as statusEndOfTurn, clashEffect, afflictedTick, absorb, cleanse, replaceWith, toFootball, fromFootball, CLASH_STATUS_VALUES } from './status.js';
 export { B12_TOLERANCES, toleranceFor, b12SampleSize } from './tolerances.js';
-export { POST_KO_EXCEPTIONS } from './engine.js';
+export { POST_KO_EXCEPTIONS, P9_CLASH_LIMITS, ATTACK_TAGS } from './engine.js';
+export { T8_FLAGS, flag, perkTag } from './flags.js';
+export { ABILITY_KINDS, kindOf, kindOfFamily, isExtraStrike, restrictable } from './ability-kinds.js';
+export { CLASH_HOOKS, registerClashAbility, clashContractOf, clashContractById, registeredClashFamilies, registeredClashAbilities } from './registry.js';
+// Importing the public surface registers every Clash contract (src/clash/abilities/index.js), so any engine user has all 72.
+import '../abilities/index.js';
 export { chooseRotationAI, statusDamageFactor, T8_POLICIES, T8_POLICY_LABEL } from './ai.js';

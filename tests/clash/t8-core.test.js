@@ -10,14 +10,15 @@ import { buildCombatant, archetypeOf as legacyArchetypeOf } from '../../src/clas
 import { battleConfig } from '../../src/clash/values.js';
 import { typeFactor } from '../../src/clash/types.js';
 import { rampFor } from '../../src/clash/engine.js';
-import { archetypeOf as dexArchetypeOf, FAMILIES } from '../../src/data/beast-dex.js';
+import { archetypeOf as dexArchetypeOf, FAMILIES, abilitiesOf } from '../../src/data/beast-dex.js';
 import { SPECIES_DEX } from '../../src/data/species.js';
 import { createRng } from '../../src/core/rng.js';
 import { mon, randomLineup, withoutRandomness, deepFrozen } from './helpers.js';
 
 const ALL = SPECIES_DEX.map((s) => s.id);
 const BASICS = SPECIES_DEX.filter((s) => s.rarity === 'basic').map((s) => s.id);
-const run = (a, b, seed = 1, extra = {}) => simulateClashT8({ a, b, seed, ...extra });
+// S5: this file tests the engine's own mechanics with stubs, so the registered contracts are switched off (config.abilities 'off').
+const run = (a, b, seed = 1, extra = {}) => simulateClashT8({ a, b, seed, ...extra, config: { abilities: 'off', ...(extra.config || {}) } });
 const battles = (n, seed0, sizes = [1, 2, 3, 4, 5], pool = ALL) => { const rng = createRng(seed0); return Array.from({ length: n }, (_, i) => { const k = sizes[i % sizes.length]; return { a: randomLineup(rng, k, pool), b: randomLineup(rng, k, pool), seed: i + 1 }; }); };
 
 // ---------------------------------------------------------------- combatants: archetype from the Dex
@@ -25,7 +26,7 @@ test('t8 combatant: archetype is the Dex clashArchetype for all 192 families; HP
   assert.equal(ALL.length, 192); let differ = 0;
   for (const id of ALL) {
     const m = mon(id, 7); const c = buildT8Combatant(m);
-    assert.equal(c.archetype, dexArchetypeOf(id), id); assert.equal(c.contract, null, `${id} has no contract in S1`);
+    assert.equal(c.archetype, dexArchetypeOf(id), id); assert.equal(c.contract, abilitiesOf(id)?.clash?.id ?? null, `${id}: the contract is the Dex Clash ability id (null for Basics)`);
     assert.equal(c.basic, SPECIES_DEX.find((s) => s.id === id).rarity === 'basic');
     const L = buildCombatant(m, { config: battleConfig({}) });
     if (L.archetype === c.archetype) { assert.equal(c.hp, L.hp, id); assert.equal(c.atk, L.atk, id); assert.equal(c.spd, L.spd, id); assert.equal(c.guard, L.guard, id); }
@@ -258,7 +259,7 @@ test('regression: the 20 S1 golden battles (golden-t8-s1.json) end in exactly th
   withoutRandomness(() => {
     for (const seed of Object.keys(s1)) {
       const k = JSON.parse(s1[seed].key);
-      const r = simulateClashT8({ a: k.a, b: k.b, seed: k.seed, config: { ruleset: 't8', policies: { a: 'none', b: 'none' } } });
+      const r = simulateClashT8({ a: k.a, b: k.b, seed: k.seed, config: { ruleset: 't8', policies: { a: 'none', b: 'none' }, abilities: 'off' } });
       assert.equal(r.stateHash, s1[seed].state, `S1 golden seed ${seed}`);
     }
   });

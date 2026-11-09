@@ -12,7 +12,8 @@ import { abilityById } from '../../src/data/beast-dex.js';
 import { createRng } from '../../src/core/rng.js';
 import { mon, randomLineup, withoutRandomness } from './helpers.js';
 
-const run = (a, b, seed = 1, extra = {}) => simulateClashT8({ a, b, seed, ...extra });
+// S5: this file tests the engine's own mechanics with stubs, so the registered contracts are switched off (config.abilities 'off').
+const run = (a, b, seed = 1, extra = {}) => simulateClashT8({ a, b, seed, ...extra, config: { abilities: 'off', ...(extra.config || {}) } });
 const ev = (r, kind, f = () => true) => r.log.filter((e) => e.kind === kind && f(e));
 const M = (id, seed, ovr = 75) => mon(id, seed, { overall: ovr });
 const team = (seed) => [M('emberfox', seed), M('pebble', seed + 1), M('tidepaw', seed + 2)];

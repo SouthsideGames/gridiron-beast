@@ -12,7 +12,8 @@ import { rampFor } from '../../src/clash/engine.js';
 import { createRng } from '../../src/core/rng.js';
 import { mon, withoutRandomness } from './helpers.js';
 
-const run = (a, b, seed = 1, extra = {}) => simulateClashT8({ a, b, seed, ...extra });
+// S5: this file tests the engine's own mechanics with stubs, so the registered contracts are switched off (config.abilities 'off').
+const run = (a, b, seed = 1, extra = {}) => simulateClashT8({ a, b, seed, ...extra, config: { abilities: 'off', ...(extra.config || {}) } });
 const A = (id, strength, duration, extra = {}) => ({ id, strength, duration, ...extra });
 const tough = (id, seed) => mon(id, seed, { overall: 90 });
 const ev = (r, kind, f = () => true) => r.log.filter((e) => e.kind === kind && f(e));

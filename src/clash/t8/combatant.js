@@ -4,10 +4,12 @@
 // tilts, then the archetype multiplier last and once. The one difference is the archetype: t8 reads the Dex family's
 // clashArchetype (spec §1 totals; M4_PLAN R11/R12), never the legacy move table. No contract is attached yet: until the
 // Clash abilities land (S6-S11) every monster uses the no-contract action (the ordinary attack plus archetype perks).
-// Form, Clash mastery tier, exhaustion and the incoming status slot are S12 inputs.
+// Form and Clash mastery tier (S5): the form is the Dex form of the monster's stage (`family:stage`, clamped to the family's forms);
+// the tier is the snapshot's `clashMasteryTier` (0-3, Developing..Mastered), which S12's snapshot sets from tierIndex(credits). Both
+// default to the first form and Developing. Exhaustion and the incoming status slot are S12 inputs.
 import { effectiveAttributes, overall } from '../../data/monsters.js';
 import { SPECIES_DEX } from '../../data/species.js';
-import { archetypeOf, isBasic } from '../../data/beast-dex.js';
+import { archetypeOf, isBasic, abilitiesOf, formsOf, formId } from '../../data/beast-dex.js';
 import { T8_VALUES } from './values.js';
 
 const SPECIES = new Map(SPECIES_DEX.map((s) => [s.id, s]));
@@ -32,11 +34,14 @@ export function buildT8Combatant(m, { slot = 0, side = 'a' } = {}) {
   const hp = Math.round(hpBase * arch.hp * tilt(e.durability));
   const atk = round2(atkBase * arch.atk * tilt(e.strength));
   const spd = round2(S.spdBase + arch.spd + clamp((e.speed - mean) / S.spdTiltDiv, -S.spdTiltMax, S.spdTiltMax) + ovr * S.spdPerOverall);
+  const forms = formsOf(sp.id); const stage = Math.max(0, Math.min(forms.length - 1, m.stage || 0));
+  const tier = m.clashMasteryTier ?? 0; if (!Number.isInteger(tier) || tier < 0 || tier > 3) throw new Error(`clashMasteryTier must be 0..3 (got ${m.clashMasteryTier})`);
+  const clashAbility = abilitiesOf(sp.id)?.clash?.id || null;
   return Object.freeze({
     id: `${side}${slot}`, monsterId: m.id, name: m.name, species: sp.id, speciesName: sp.name, type: sp.element, rarity: sp.rarity,
-    basic: isBasic(sp.id), position: m.position, archetype, stage: m.stage || 0, level: m.level || 1, overall: ovr, fatigue: m.fatigue || 0,
+    basic: isBasic(sp.id), position: m.position, archetype, stage, form: formId(sp.id, stage), tier, level: m.level || 1, overall: ovr, fatigue: m.fatigue || 0,
     hp, maxHp: hp, atk, spd, guard: arch.guard, perks: perksOf(archetype),
-    contract: null, // the no-contract action (S1); S6-S11 attach the family's Clash contract here
+    contract: clashAbility, // the family's Clash ability id (null for Basics: the no-contract action); the module is resolved by the engine
     breakdown: Object.freeze({ attributes: Object.freeze({ ...e }), overall: ovr, mean: round2(mean), durabilityTilt: tilt(e.durability), strengthTilt: tilt(e.strength), hpBase, atkBase, archetype: Object.freeze({ ...arch }), hp, atk, spd }),
   });
 }

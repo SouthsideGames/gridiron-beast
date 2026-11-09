@@ -8,12 +8,12 @@ const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v 
 
 export const T8_VALUES = deepFreeze({
   ruleset: 't8',
-  engineVersion: 't8-s4',
+  engineVersion: 't8-s5',
   // Engine versions whose replay keys this build replays identically. S2 and S3 changed no battle without a status or a hook; S4
   // adds rotation (P8) with the approved AI policy as the default (D1, D2), which changes ordinary battles, so the list was reset at
   // S4 and the golden seeds were re-recorded (tests/clash/fixtures/golden-t8.json; the S1 file is kept as golden-t8-s1.json and
   // still replays exactly with both sides on policy 'none').
-  keyCompatible: ['t8-s4'],
+  keyCompatible: ['t8-s5'],
   // The approved values 1.1.0 numbers the t8 engine uses unchanged.
   archetypes: L.archetypes,   // approved: HP/ATK/SPD multipliers and the perks (Tank guard 0.88, Striker shieldBreak 2, Disruptor pierce)
   stats: L.stats,             // approved: the HP/ATK/SPD formula (economy recalibration #30 is M6)
@@ -80,6 +80,19 @@ export const T8_PROVISIONAL = deepFreeze([
     rule: 'The adapted AI policy reads only what both players see: types, HP, status badges, its own side\'s attack, and hits already dealt. The legacy smart policy\'s "about to fall" test read the opposing active\'s ATK; it now uses the largest single hit that opponent has dealt in this battle.' },
   { id: 'feather-relay-not-built', waitsOn: 'owner (D3 is conditional on the contract; the contract text does not state the penalty exemption)',
     rule: 'Feather Relay\'s rotation hook is not built. The forcedRotation / rotation primitives can take an exemption flag once the owner confirms the reading; see M4_STATUS.md S4 for the quoted contract.' },
+  // ---- S5: the contract primitives
+  { id: 'delayed-slot-active-position', waitsOn: 'none (reading of FIR-03-C / FIR-06-C "lineup position ... current occupant", flagged; T8_FLAGS.delayedSlot)',
+    rule: 'A delayed impact marks the target side\'s ACTIVE position: the occupant at impact is whoever is active then. Under lineup-order-stable a lineup index never changes hands, so the active position is the only reading in which "current occupant" can differ from the launch target.' },
+  { id: 'retaliation-suppression-scope', waitsOn: 'none (reading of LIG-06-C "suppress only ATTACK retaliation" and the no-chain tags, flagged)',
+    rule: 'While a strike suppresses retaliation (Daybreak Lance) or is itself a reaction, counter or commanded strike, any OTHER monster\'s strike from a reaction context is refused and reported unmet; non-attack responses (heals, status attempts, cleanses) and the attacker\'s own follow-ups still resolve.' },
+  { id: 'performed-attack-at-launch', waitsOn: 'none (reading of "performed normal attack" across WAT-05-C, WIN-02-C, LIG-04-C, MET-01-C, DRA-02-C, DAR-02-C, flagged)',
+    rule: 'A normal-action attack counts as performed when it launches (before explicit misses), so a missed or launch-failed attack is still performed; Stunned skips and support actions are not.' },
+  { id: 'healed-hook-kinds', waitsOn: 'owner (EAR-02-C "actual HP restoration, from self, ally or healing effect" against its exclusion of "HP redistribution")',
+    rule: 'Heals and Mind Mend donations raise the healed hook (Rubble Reprisal reacts); Root Communion redistribution, revival and HP costs do not.' },
+  { id: 'p8-status-chances-none', waitsOn: 'none (finding: no Clash contract has a status-application chance on the entrant\'s normal turn)',
+    rule: 'P8 halves "status-application chances" on the entrant\'s first normal turn. Every Clash application is a guaranteed gate attempt; the only chances (Eclipse Call from reserve, Heat Mirage diversion, Snowbank launch accuracy, the P10 dodges) are not normal-turn application chances, so the factor applies to none. It is exposed to hooks (view.combatant().entryPenalty) should a ruling add one.' },
+  { id: 'post-ko-exceptions-n7c', waitsOn: 'none (RULINGS_2026-11-07b: Riptide Pursuit removed from the B3 list)',
+    rule: 'The post-KO exception whitelist is the N7c-verified list of eight: Falling Star, Faultline, Molten Brand, Shared Burden, Mountain Shelter, Astral Strike, Cinder Clamp, Second Spring.' },
   { id: 'shield-break-rounding', waitsOn: 'none (D9 single rounding; reading flagged)',
     rule: 'The pool loss and the HP loss are each rounded once, half up: a hit the pool fully absorbs removes round(damage x break) pool HP; a hit that breaks it removes the whole pool and loses round(damage - pool / break) HP.' },
 ]);

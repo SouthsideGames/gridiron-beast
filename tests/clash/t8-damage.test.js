@@ -12,7 +12,8 @@ import { createRng } from '../../src/core/rng.js';
 import { abilityById } from '../../src/data/beast-dex.js';
 import { mon } from './helpers.js';
 
-const run = (a, b, seed = 1, extra = {}) => simulateClashT8({ a, b, seed, ...extra });
+// S5: this file tests the engine's own mechanics with stubs, so the registered contracts are switched off (config.abilities 'off').
+const run = (a, b, seed = 1, extra = {}) => simulateClashT8({ a, b, seed, ...extra, config: { abilities: 'off', ...(extra.config || {}) } });
 const ev = (r, kind, f = () => true) => r.log.filter((e) => e.kind === kind && f(e));
 const M = (id, seed, ovr = 70) => mon(id, seed, { overall: ovr });
 // Archetypes from the Dex: voltfang Striker, ashkit Disruptor, pebble / mudcub Tank, tidepaw Support, emberfox Balanced.
@@ -112,11 +113,11 @@ test('D5 Tank guard only while active: whole-hit redirect (8b) to a reserve Tank
   const a2 = [M('emberfox', 4, 80)], b2 = [M('pebble', 5, 80), M('tidepaw', 6, 80)];
   const sp = { rawSplit: (v, id) => (id === 'b0' && v.ex === 1 ? { to: 'b1', pct: 30, abilityId: 'TEST-SPLIT' } : null) };
   const r2 = run(a2, b2, 3, { probes: [sp, aFirst] });
-  const s = ev(r2, 'raw_split')[0]; assert.equal(s.source, Math.floor(s.whole * 0.3)); assert.equal(s.source + s.target, s.whole);
+  const s = ev(r2, 'raw_split')[0]; assert.equal(s.sourceShare, Math.floor(s.whole * 0.3)); assert.equal(s.sourceShare + s.targetShare, s.whole);
   const ds = ev(r2, 'damage', (e) => e.ex === 1 && e.actor === 'a0'); assert.deepEqual(ds.map((e) => e.target), ['b0', 'b1'], 'original target first');
   assert.equal(ds[0].guard, true); assert.equal(ds[1].guard, false);
   const A2 = buildT8Combatant(a2[0], { side: 'a' }), T0 = buildT8Combatant(b2[0], { side: 'b' }), T1 = buildT8Combatant(b2[1], { side: 'b', slot: 1 });
-  assert.equal(ds[0].damage, roundHalfUp(s.target * typeFactor(A2.type, T0.type) * 0.88)); assert.equal(ds[1].damage, roundHalfUp(s.source * typeFactor(A2.type, T1.type)));
+  assert.equal(ds[0].damage, roundHalfUp(s.targetShare * typeFactor(A2.type, T0.type) * 0.88)); assert.equal(ds[1].damage, roundHalfUp(s.sourceShare * typeFactor(A2.type, T1.type)));
 });
 
 // ---------------------------------------------------------------- 8e, 8f, immediate KO
@@ -143,9 +144,9 @@ test('B3 rule 2: a knocked-out monster\'s pending reactions and remaining hits a
   const rd = ev(r2, 'damage', (e) => e.actor === 'b0' && e.tag === 'reaction'); assert.equal(rd.length, 1, 'the post-KO exception resolves');
   assert.equal(ev(r2, 'ability', (e) => e.actor === 'b0')[0].postKO, 'FIR-04-C');
   assert.throws(() => run(a, b, 1, { probes: [mk('DRA-01-C'), aFirst], stage: { b0: { hp: 1 } } }), /not an approved post-KO exception/);
-  // the whitelist is exactly B3 rule 3, by contract name
+  // the whitelist is exactly B3 rule 3 as verified by N7c (RULINGS_2026-11-07b "post-KO exceptions": Riptide Pursuit is NOT one)
   const names = Object.keys(POST_KO_EXCEPTIONS).map((id) => abilityById(id).name).sort();
-  assert.deepEqual(names, ['Astral Strike', 'Cinder Clamp', 'Falling Star', 'Faultline', 'Molten Brand', 'Mountain Shelter', 'Riptide Pursuit', 'Second Spring', 'Shared Burden'].sort());
+  assert.deepEqual(names, ['Astral Strike', 'Cinder Clamp', 'Falling Star', 'Faultline', 'Molten Brand', 'Mountain Shelter', 'Second Spring', 'Shared Burden'].sort());
   // remaining multi-hits cancelled when the attacker is knocked out by a reaction to an earlier hit
   const multi = { chooseAction: (v, id) => (id === 'a0' && v.ex === 1 ? { kind: 'attack', abilityId: 'TEST-MULTI', hits: 3, mult: 0.2 } : null),
     reaction: (v, id, info) => (id === 'b0' && info.attacker === 'a0' && info.tag === 'special' ? { kind: 'strike', target: 'attacker', mult: 5, abilityId: 'TEST-RET' } : null) };
