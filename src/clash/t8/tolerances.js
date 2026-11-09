@@ -22,6 +22,8 @@ export const B12_TOLERANCES = deepFreeze([
   { ...row('shadow-pounce-umbrikit', 0.15, 0.02, 'DAR-01-C explicit dodge 15% (Umbrikit; N7b P10)'), frozen: '2026-11-09 (M4 S9)' },
   { ...row('shadow-pounce-obscurat', 0.2, 0.02, 'DAR-01-C explicit dodge 20% (Obscurat; N7b P10)'), frozen: '2026-11-09 (M4 S9)' },
   { ...row('mind-game-afterimage', 0.15, 0.02, 'PSY-05-C afterimage miss 15% (N7b P10)'), frozen: '2026-11-09 (M4 S9)' },
+  // Added 2026-11-09 at M4 S11, before any Eclipse Call test: DAR-05-C application chance 60 / 70 / 80 / 90% by mastery.
+  ...[[60, 0], [70, 1], [80, 2], [90, 3]].map(([pc, t]) => ({ ...row(`eclipse-call-t${t}`, pc / 100, 0.03, `DAR-05-C application chance ${pc}% (mastery tier ${t})`), frozen: '2026-11-09 (M4 S11)' })),
 ]);
 
 export function toleranceFor(id) { const t = B12_TOLERANCES.find((r) => r.id === id); if (!t) throw new Error(`No frozen B12 tolerance for ${id}`); return t; }

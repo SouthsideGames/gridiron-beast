@@ -69,3 +69,13 @@ import './skywarden.js';
 import './gustling.js';
 import './windlynx.js';
 import './leafhorn.js';
+// S11 batch F: disruption, control and the second delayed attack (9)
+import './tidefin.js';
+import './stormlynx.js';
+import './glacivern.js';
+import './tempestra.js';
+import './nocturne.js';
+import './nyxshade.js';
+import './cerebrix.js';
+import './astralux.js';
+import './pyroclast.js';

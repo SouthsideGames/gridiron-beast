@@ -210,9 +210,13 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     return old;
   }
   /** Status transfer (Lightning Rod, Eclipse Theft): the episode moves 1:1 (strength, remaining, applications, payload, history). */
-  function transferStatus(from, to, src, abilityId, { reason = 'transferred' } = {}) {
+  // The basic status payload a transfer keeps (Eclipse Theft: "No source ability uses, riders or flags transfer"; the shield pool,
+  // remaining fraction, spent-save flag, magnitudes and history are the status itself).
+  const BASIC_PAYLOAD = ['pool', 'remaining', 'fraction', 'saveSpent', 'fumbleSaves', 'clashPoolPct', 'pct', 'redirectPct', 'uncleansable', 'tickHp', 'tickPctMaxHp'];
+  function transferStatus(from, to, src, abilityId, { reason = 'transferred', stripRiders = false } = {}) {
     if (!from.status || to.status) return false;
     const slot = { ...from.status, appliedThisUnit: false, freeze: from.status.freeze || 0 };
+    if (stripRiders && slot.payload) slot.payload = Object.fromEntries(Object.entries(slot.payload).filter(([k]) => BASIC_PAYLOAD.includes(k)));
     removeStatus(from, src, abilityId, reason);
     to.status = slot;
     if (LOG) log('status', src, to, `${to.c.name} takes over ${from.c.name}'s ${NAME[slot.id]} (${slot.remaining} turn${slot.remaining === 1 ? '' : 's'}, ${slot.applications} of 3 applications)`, { status: slot.id, reason: reason, slot: slotView(slot), sourceId: src?.c.id ?? null, abilityId, from: from.c.id, stage: 'resolution' });
