@@ -310,12 +310,13 @@ unmet list. It carries no entry penalty, and the entrant acts next exchange.
 - The S1 fixture is kept as `golden-t8-s1.json`. A new t8-core test shows all 20 still end in exactly the S1 state hash with both sides
   on policy `none`, which proves S2–S4 changed nothing else.
 
-### D3: Feather Relay (finding: not built; left for the owner)
+### D3: Feather Relay (built per the reconciled ruling, 2026-11-09 01:03 rule 2)
 
-The owner's ruling (§25 item 3): "It counts as a rotation, without the 50% entry penalty, provided this matches its approved contract.
-Other rotation restrictions stay unless the contract explicitly exempts them."
+**The ruling.** Feather Relay counts as a rotation without the P8 entry penalty. Rotation locks, legal availability and the 4-exchange
+cadence still apply. It acts at the team's normal action opportunity when the active ally is below 50% HP and a legal rotation is
+available. It heals the departing ally 8 / 10 / 12% by form, and the incoming ally makes no normal attack that turn.
 
-The approved contract (WIN-01-C, generated Dex), quoted in full where it touches rotation:
+**The approved contract (WIN-01-C, generated Dex), quoted where it touches rotation:**
 > **Trigger / eligibility:** "Gustling family; Support. Once per Clash, while living/able in RESERVE, at own team normal action
 > opportunity if current active ally below50% HP and legal rotation available. This SUPPORT ACTION replaces team attack; not another
 > simultaneous active fighter."
@@ -325,28 +326,104 @@ The approved contract (WIN-01-C, generated Dex), quoted in full where it touches
 > Incoming receives NO normal attack that team turn. Healing Reduced/maxHP cap normal; no shield, cleanse or revive."
 > **Lifetime / persistence:** "Immediate rotation/heal only, no status or schedule. Team action consumed once, not a bonus reserve
 > normal turn; normal supported status carry remains."
-> **Progression / notes:** "… Requires reserve-origin support action, one team-action cost, rotation-first heal and incoming-action
-> suppression. No transition to multi-active combat. …"
 
-What the text supports and what it does not:
-- **"Counts as a rotation": supported.** It says "rotate", "legal rotation available" and "Respect rotation locks and legal
-  availability".
-- **"Without the P8 penalty": not stated.** The contract never mentions the entry penalty, half strength or an exemption, and P8 keeps
-  only *explicit* ability exceptions.
-- **Timing differs from P8.** It acts "at own team normal action opportunity", in place of the team attack, not in P8's rotation phase
-  "after both normal turns".
-- **What its "incoming-action suppression" refers to is unclear.** "Incoming receives NO normal attack that team turn" covers the turn
-  it is used in. The P8 penalty applies to the entrant's *next* (first) normal turn. The text does not say whether the forgone attack
-  replaces that penalty.
+**Is there a contract conflict?** No conflict between the ruling and WIN-01-C was found. Each point checked:
 
-Because the condition in D3 ("provided this matches its approved contract") is not clearly met, the Feather Relay hook was **not
-built** (`feather-relay-not-built`). Three questions are left for the owner:
-1. Does the forgone team attack count as the entry cost, so no P8 penalty?
-2. Does a Feather Relay rotation spend the 4-exchange cadence, and does it need the cadence to be available ("legal rotation
-   available")?
-3. Is it a voluntary rotation for Cinder Clamp, Riptide Pursuit, Cold Welcome and Shell Harvest?
+| Point | Contract text | Ruling | Result |
+|---|---|---|---|
+| Counts as a rotation | "rotates", "legal rotation available", "Respect rotation locks and legal availability" | Rotation | Agrees |
+| P8 entry penalty | Silent. It never mentions the penalty, half strength or an exemption | No penalty | No conflict. The contract is silent and the ruling supplies the exemption, which P8 requires to be explicit |
+| Locks and legal availability | "Respect rotation locks and legal availability" | Kept | Agrees |
+| 4-exchange cadence | "legal rotation available" (the cadence is part of what makes a rotation legal) | Kept | Agrees. Built as: requires the cadence and spends it |
+| Timing | "at own team normal action opportunity … replaces team attack" | At the normal action | Agrees with the contract |
+| Heal | "heal DEPARTING ally 8 /10 /12% … by … form" | 8 / 10 / 12% | Agrees |
+| Incoming action | "Incoming receives NO normal attack that team turn" | No normal attack that turn | Agrees |
 
-Feather Relay itself is an S10 ability. When the reading is confirmed, the rotation primitive needs only an exemption flag.
+**"Acts at the normal action" against the P8 rotation phase.** The only text in tension is P8's, not the contract's. P8 places a
+voluntary rotation in the rotation phase "after both normal turns". WIN-01-C and the ruling place Feather Relay at the team's normal
+action. The ruling decides this for Feather Relay, so it is built as a team action that executes the rotation immediately in the normal
+turn (`teamRotation` in the engine). It is not queued to the rotation phase. It still spends the side's cadence, so a P8 rotation by that
+side in the same exchange is refused for cadence.
+
+**Voluntary status for the four rotation triggers: unaddressed.** Neither WIN-01-C nor the ruling says whether a relay rotation is
+"voluntary". Each trigger names voluntary rotations:
+- Cinder Clamp (FIR-02-C): "the target side's NEXT VOLUNTARY rotation request consumes the grip".
+- Riptide Pursuit (WAT-06-C): "react to the first OPPOSING VOLUNTARY rotation"; "Forced rotations and KO replacements do not trigger it".
+- Cold Welcome (ICE-02-C): "on a SUCCESSFUL ENEMY VOLUNTARY rotation only (forced rotations and KO replacements excluded)".
+- Shell Harvest (NAT-05-C): "A SUCCESSFUL VOLUNTARY departure consumes the entire remaining ORIGINAL Shell Harvest shield".
+
+A relay is neither forced nor a KO replacement, but the texts do not classify it either way. Per rule 2 this stays provisional
+(`feather-relay-voluntary`). In normal gameplay all four report `unmet: awaiting ruling (feather-relay-voluntary)` on a relay rotation
+and do not trigger; the relay itself still happens. With `config.provisional: 'on'` they treat it as voluntary (the plan's D3
+recommendation). This is shown only in reviewer scenarios marked provisional and in `tests/clash/t8-provisional-e.test.js`.
+
+**Other readings, flagged:** `relay-turn-counts` (the active ally's turn in which the relay takes the team action counts as that ally's
+normal turn). A failed rotation keeps the use, for example when the departing ally is knocked out by a pursuit before it leaves.
+
+## S5–S11 and S15 (engine side): the 72 Clash abilities
+
+| Step | Commit | Content | Clash tests at the commit |
+|---|---|---|---|
+| merge | f62d59c | origin/task8-implementation 5b2ae99 merged in (N8e, N8f rulings; spec §26) | n/a |
+| S5 | 8f30a85 | Contract registry (`registry.js`), ability-kind table (D16, 72 rows), switchable readings (`flags.js`), the primitives (delayed impacts, revive, transfers, constructs, links, heal schedules, ledgers, deferred queue) and the two pilots: Falling Star and Shared Burden | 247 pass |
+| rule 1 | 77da2a1 | Provisional readings isolated from normal gameplay; Feather Relay team rotation; `M4_DECISIONS_PENDING.md` | n/a |
+| S6 | e751bd1 | Batch A: 16 attack modifiers and enhanced attacks | 344 pass, 1 todo (the 72-gate) |
+| S7 | 926998a | Batch B: 13 protection and self / team status abilities; two Core-vs-Progression conflicts gated | 437 pass, 1 todo |
+| S8 | 4941afa | Batch C: 11 healing and support abilities | 464 pass, 1 todo |
+| S9 | d618b85 | Batch D: 13 reactions, counters, explicit misses and survival, with the B12 probability runs | 679 pass, 1 todo |
+| S10 | 814ebc1 | Batch E: 8 rotation and lineup abilities, Feather Relay included | 756 pass, 1 todo |
+| S11 + S15 | 3d822f2 | Batch F: 9 disruption and control abilities; the cross-batch interaction suite (10 cases); the S15 reviewer test | **836 / 836 pass, 0 todo** |
+
+**How the tests are split.**
+- Acceptance: `t8-abilities-{a..f}`, `t8-pilots`, `t8-interactions`, `t8-review` and the S1–S4 mechanics files. These run with
+  `config.provisional` off.
+- Provisional (not acceptance, owner rule 1): `t8-provisional-{pilots,a..e,f}.test.js`, 86 tests. Every one is titled
+  `[PROVISIONAL]` and runs with `config.provisional: 'on'`.
+
+**Per ability** (`contractSuite`): a registration test checks the kinds row, the required scenario kinds and that every value appears in
+the contract text. One test per Dex form × mastery tier runs every applicable scenario on the real engine. A determinism test checks
+that the same seed gives the same log hash and state hash, and that turning the log off gives the same outcome and draws. The
+72-row coverage is in `M4_ABILITY_MATRIX.md`: 408 form × tier rows and 1,280 acceptance contract cases.
+
+**B12 runs against tolerances frozen before the tests** (`tolerances.js`):
+- Confused redirect
+- Snowbank launch
+- Heat Mirage t0–t3
+- Shadow Pounce (Umbrikit / Obscurat)
+- Mind Game afterimage
+- Eclipse Call t0–t3
+
+**Reviewer (S15, engine side, no UI).** `src/clash/t8/review.js` provides:
+- `reviewMatrix()`: every ability × form × tier, with no silent missing entries;
+- `listScenarios`;
+- `runScenario`: staged HP, status and ability state; labelled controlled prerequisites (sparring partners, seed selection, probes);
+  the ability's own event stream; and a meta block with the PROVISIONAL label;
+- `determinismCheck`.
+
+`tests/clash/t8-review.test.js` asserts four things:
+- all 72 abilities are in the matrix;
+- every row has at least one acceptance scenario of a known kind;
+- one scenario per ability runs, and provisional scenarios carry their label;
+- a sample of scenarios is deterministic.
+
+**Cross-batch interactions** (`t8-interactions.test.js`):
+- Phase Strike vs Last Root
+- Stone Divide vs Twin Thunder
+- Victory Surge / Arc Rebound vs Stone Divide
+- Eclipse Theft vs Glacier Wall rebuild
+- Foresight vs Eclipse Call
+- Mountain Shelter vs Faultline's uncleansable Healing Reduced
+- Emergency Cover vs Shared Burden
+- Shell Harvest vs Riptide Pursuit
+- Daybreak Lance vs Stoke the Flame
+- Circuit Breaker cooldown extension
+
+**Performance.** The legacy 10,000 3v3 perf case passed inside the full Clash run at 3d822f2. Earlier in the work it failed only while
+the 2-CPU container was loaded by parallel runs, and it passed when run alone. No legacy engine file changed.
+
+**Kept out of scope.** The t8 engine is still not wired to franchise or UI (S12). The bruise is not implemented (D6). The S1 defaults
+stay (item 8). The Daybreak Lance / Clear Light ladder is provisional, with Core one switch away (item 13). Dawn Song is literal: the
+caster (item 14). The Stunned countdown is as in S2. The KO replacement is in line order.
 
 ## Provisional defaults and the decision each waits on
 
@@ -377,7 +454,24 @@ The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a t
 | `p8-pending-cleared-on-departure` (S4) | An unspent entry penalty ends with that entry (if the entrant is forced out before its first turn) | Reading of P8, flagged |
 | `rotation-hook-order` (S4) | Within one side's rotation, hooks run for every monster by stable ID: delay, pursuit, cash-out, departure, the entrant's entry effects, arrival. A delayed rotation does not spend the cadence | S10 (the rotation contracts) |
 | `ai-visible-information` (S4) | The AI reads only visible information; "about to fall" uses the largest hit the foe has actually dealt, not its hidden ATK | Approved D2; reading flagged |
-| `feather-relay-not-built` (S4) | Feather Relay's rotation hook is not built | **Owner**: D3 is conditional, and the contract does not state the exemption (see S4) |
+| `feather-relay-voluntary` (S10) | Feather Relay is built per rule 2. Its "voluntary" status for Cinder Clamp, Riptide Pursuit, Cold Welcome and Shell Harvest is gated: awaiting ruling in normal gameplay, voluntary in provisional mode | **Owner** (D3 follow-up, see the D3 section) |
+| `delayed-slot-active-position` (S5) | A delayed impact marks the target side's active position (gated as `delayed-slot`) | Reading of FIR-03-C / FIR-06-C |
+| `retaliation-suppression-scope` (S6) | A suppressed or reaction strike refuses other monsters' reaction strikes; non-attack responses still resolve | Reading of LIG-06-C and the no-chain tags |
+| `performed-attack-at-launch` (S6) | A normal-action attack counts as performed when it launches (before misses) | Reading of "performed normal attack" |
+| `healed-hook-kinds` (S8) | Heals and Mind Mend donations trigger Rubble Reprisal; redistribution, revival and HP cost do not | **Owner** (EAR-02-C) |
+| `p8-status-chances-none` (S9) | P8 halves no Clash chance (none is a normal-turn application chance) | Finding |
+| `post-ko-exceptions-n7c` (S9) | The B3 post-KO list is the N7c eight; Riptide Pursuit removed | RULINGS_2026-11-07b |
+| `riptide-replacement-choice` (S10) | "Opposing team chooses" uses the first living reserve | D1/D2 follow-up (S13/S14 player prompt) |
+| `heat-mirage-roll-tags` (S9) | The decoy rolls against normal-action and delayed attacks only | Literal reading of FIR-05-C |
+| `second-wind-vs-interrupt` (S8) | Second Wind advances past a priority tier, not past an interrupt | Reading of WIN-04-C |
+| `hit-cap-floor` (S7) | Tempered Guard's cap is floor(30% max HP) | MET-02-C bound |
+| `transfers-no-p8-c6` (S8) | Mind Mend / Root Communion transfers take no P8 or C6 factor | Spec §9 |
+| `molten-brand-vs-suppression` (S9) | A Molten Brand eruption on a Daybreak Lance strike is suppressed as attack retaliation | **Owner** (LIG-06-C vs FIR-04-C) |
+| `relay-turn-counts` (S10) | The relay turn counts as the active ally's normal turn | Reading of WIN-01-C |
+
+The gated points (normal gameplay: awaiting ruling) are listed in `M4_DECISIONS_PENDING.md` part A and in `flags.js`
+`PROVISIONAL_POINTS`: `d13-values`, `forge-swipe-duration`, `fortress-storage-cap`, `d14-dawn-song-target`,
+`clear-light-cooldown-unit`, `d5-perk`, `stone-divide-scope`, `delayed-slot`, `d8-cap-delayed`, `feather-relay-voluntary`.
 
 ## Test results
 
@@ -395,6 +489,7 @@ All runs are targeted only (`tests/clash/*.test.js`). The full suite was not run
 | ed33b7e (S3) | `node tools/test-tier.mjs perf` | 1 / 1 pass (2.9 s) |
 | b5fea8a (S4) | `node --test tests/clash/*.test.js` | **155 tests, 155 pass, 0 fail** (102.7 s, on a machine at load average 5–6 from other sessions) |
 | b5fea8a (S4) | `node tools/test-tier.mjs perf` | 1 / 1 pass on the rerun. The first run failed at 6,360 ms while other sessions held a load average of about 6 on this 2-CPU container. No legacy file has changed since S0 (`git diff 081c590 -- src/clash/{engine,handlers,conditions,ai,stats,values}.js` is empty) |
+| 3d822f2 (S11) | `node --test tests/clash/*.test.js` | **836 tests, 836 pass, 0 fail, 0 todo** (69.3 s); of these, 86 are the provisional files |
 
 **Per file at a4c5e09:**
 - the 15 pre-existing files are all unchanged and green, 99 / 99: boundary 3, calculators 4, conditions 9, data 4, engine 9,
@@ -491,8 +586,9 @@ perf gate stays on the legacy test until S16.
 1. **D4 against spec §10.** §10 counts every recipient normal turn. D4 says the remaining duration is preserved across the protected
    turn. The preserving reading (the protected turn holds Stunned) was implemented and flagged (see the D4 section). With it, each
    Stunned unit costs exactly one skipped turn, the same unit B18 uses in football.
-2. **D3 against WIN-01-C.** The contract supports "counts as a rotation" but says nothing about the P8 penalty, and it acts at the team's
-   normal action, not in the rotation phase. It was not built (see the D3 section).
+2. **D3 against WIN-01-C (S4 finding, resolved by rule 2 on 2026-11-09).** The contract was silent on the P8 penalty and acts at the
+   team's normal action. The reconciled ruling settles both, and Feather Relay is built (see the D3 section). Only its "voluntary"
+   status stays open.
 3. **Shielded units across modes.** The football Guiding Halo strength is 15 (a percentage of max Clash HP, LIG-03-F). A Clash shield's
    strength is its pool in HP (D11: "compared by original strength"). The carry converts between the two (`shield-strength-units`).
    Neither source says this explicitly.
@@ -511,7 +607,7 @@ perf gate stays on the legacy test until S16.
    AI default was 1,642 / 991 ms (first / second pass); with policies `none` it was 2,138 / 1,264 ms. The load makes these noisy;
    S3 measured 1,133 / 641 ms when the machine was quieter.
 
-## What S5 needs next
+## What S5 needed (written at S4; done in S5–S11)
 
 - **The registry** (`src/clash/t8/registry.js`). It must map each family's hooks onto the hook points that now exist:
   - turn and selection: `initiative`, `chooseAction`, `turnStart`, `endOfTurn`;

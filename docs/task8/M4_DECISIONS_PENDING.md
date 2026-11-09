@@ -11,11 +11,13 @@ One line per open point or provisional reading. Branch `task8-m4-core`.
 
 | Point | Question | Recommended default (provisional mode) | Abilities affected |
 |---|---|---|---|
-| `d13-values` | Core flat value or Progression ladder? | Progression (145/160/175/190%; heal 8/10/12/14%) | Daybreak Lance (LIG-06-C), Clear Light (LIG-03-C) |
+| `d13-values` | Core flat value or Progression ladder? Gated only at the tiers where the two differ (both give the Core value at Practiced) | Progression (145/160/175/190%; heal 8/10/12/14%) | Daybreak Lance (LIG-06-C), Clear Light (LIG-03-C) |
+| `forge-swipe-duration` | Core "for 2 owner normal turns" or Progression "Duration 1 / 2 / 2 / 3 turns by mastery"? Gated at Developing and Mastered | Progression | Forge Swipe (MET-01-C) |
+| `fortress-storage-cap` | Core "up to 20% maxHP" or Progression "Storage cap 10 / 15 / 20 / 25% maxHP"? Gated at every tier but Expert | Progression | Fortress (MET-06-C) |
 | `clear-light-cooldown-unit` | "cooldown 5 turns fixed": whose turns? | Owner normal turns | Clear Light (LIG-03-C) |
 | `d14-dawn-song-target` | "Self only" or "self included"? Under one active fighter both give the caster | The active caster itself | Dawn Song (LIG-02-C) |
-| `d5-perk` | Do the ordinary-only perks apply to these strikes? It matters only for a Striker against a Shielded target, or a Disruptor against an active Tank | Special (no perk) for all, except Mind Game's trick attack and Astralux's own attack (ordinary) | Radiant Pursuit, Mind Game, Astral Strike (own attack), Night Swoop, Predator Rhythm (3rd strike), Daybreak Lance, Iron Bite, Circuit Breaker |
-| `stone-divide-scope` | Does Stone Divide intercept normal-action special strikes and non-attack-triggered reactions? | Yes (the plan's extra-strike list) | Stone Divide (EAR-05-C), against Bank Shot ricochet, Refraction secondary, Canopy Assist, Astral commanded attacks, Molten Brand eruption, Rubble Reprisal |
+| `d5-perk` | Do the ordinary-only perks apply to these strikes? It matters only for a Striker against a Shielded target, or a Disruptor against an active Tank | Special (no perk), except Mind Game's trick attack (ordinary) | Radiant Pursuit (LIG-05-C), Mind Game (PSY-05-C), Night Swoop (DAR-02-C), Predator Rhythm (DAR-03-C, 3rd strike), Daybreak Lance (LIG-06-C), Iron Bite (MET-04-C, always decisive in those pairings), Circuit Breaker (ELE-04-C). Astral Strike's own attack (PSY-06-C) is literally "ordinary" and is not gated |
+| `stone-divide-scope` | Does Stone Divide intercept normal-action special strikes and non-attack-triggered reactions? | Yes (the plan's extra-strike list) | Stone Divide (EAR-05-C), against Bank Shot ricochet, Refraction secondary, Canopy Assist, Astral commanded attacks, Molten Brand eruption, Rubble Reprisal. For commanded strikes, "enemy" is read as the ability's owner |
 | `delayed-slot` | "Lineup position, not identity" against "Empty main slot", when the launch target is no longer active at impact | The active position (the new occupant takes the main hit) | Falling Star (FIR-03-C), Faultline (FIR-06-C) |
 | `d8-cap-delayed` | A delayed impact still pending at the exchange cap | Discarded | Falling Star, Faultline |
 | `feather-relay-voluntary` | Is a Feather Relay rotation "voluntary" for the enemy and owner rotation triggers? The contract is silent | Voluntary (plan D3) | Feather Relay (WIN-01-C), Cinder Clamp (FIR-02-C), Riptide Pursuit (WAT-06-C), Cold Welcome (ICE-02-C), Shell Harvest (NAT-05-C) |
@@ -36,13 +38,23 @@ A battle cannot run without some rule here, so each one keeps the default named 
 | `reaction-order`, `reaction-chains`, `retaliation-suppression-scope` | Recipients first, then stable id; no chains; a suppressed strike refuses other monsters' strikes only | All reactions |
 | `performed-attack-at-launch` | An attack counts as performed when it launches | Riptide Charge, Gust Hop, Refraction, Forge Swipe, Coil Renewal, Night Swoop, Dragon Roar |
 | `healed-hook-kinds` | Heals and Mind Mend donations trigger Rubble Reprisal; redistribution, revival and HP cost do not | Rubble Reprisal |
+| `molten-brand-vs-suppression` | A Molten Brand eruption on a Daybreak Lance strike is suppressed as attack retaliation | Molten Brand, Daybreak Lance |
+| `retaliation-suppression-scope` | A suppressed or reaction strike refuses other monsters' reaction strikes; heals, statuses and the attacker's own follow-ups still resolve | Daybreak Lance; all reactions |
+| `heat-mirage-roll-tags` | The decoy rolls against normal-action and delayed attacks; follow-ups, commanded and assist strikes do not roll | Heat Mirage |
+| `second-wind-vs-interrupt` | Second Wind moves its ally past a priority tier, not past an interrupt | Second Wind |
+| `riptide-replacement-choice` | "Opposing team chooses" the replacement: the first living reserve (a player prompt is S13/S14 work) | Riptide Charge |
+| `relay-turn-counts` | The active ally's relay turn counts as its normal turn | Feather Relay |
+| `delayed-slot-active-position` | The reading behind the `delayed-slot` gate (part A) | Falling Star, Faultline |
+| `hit-cap-floor`, `transfers-no-p8-c6`, `p8-status-chances-none`, `post-ko-exceptions-n7c` | Tempered Guard cap is floor(30%); HP transfers take no P8 or C6 factor; P8 halves no Clash chance; B3 post-KO list is the N7c eight | Tempered Guard; Mind Mend, Root Communion; none; Riptide Pursuit |
 | `afflicted-tick-*`, `shield-*`, `lineup-order-stable`, `p8-*`, `ai-visible-information`, `rotation-hook-order`, `deep-winter-freeze-counts-protected-turn` | See `T8_PROVISIONAL` (S2–S4 readings) | Various |
 
 ## C. Rulings applied (not pending)
 
-- **Feather Relay (D3, reconciled 2026-11-09).** A rotation without the P8 penalty. Locks, legal availability and the 4-exchange cadence apply. It acts at the team's normal action when the active ally is below 50% HP. It heals the departing ally 8/10/12% by form, and the team makes no normal attack that turn. Only its "voluntary" status for the four trigger abilities is pending (part A).
+- **Feather Relay (D3, reconciled 2026-11-09).** A rotation without the P8 penalty. Locks, legal availability and the 4-exchange cadence apply. It acts at the team's normal action when the active ally is below 50% HP. It heals the departing ally 8/10/12% by form, and the team makes no normal attack that turn. Built at S10. Only its "voluntary" status for the four trigger abilities is pending (part A). The conflict analysis, with quotes, is in `M4_STATUS.md` (D3 section). No conflict between the ruling and WIN-01-C was found. The ruling overrides P8's rotation-phase timing for this ability.
 
 ## D. Classification rows with no behaviour change
+
+- **Tank bruise (D6, rule 3).** Pending and not implemented.
 
 These rows were marked "needs owner review" in the D16 table but are implemented from the contract text, so no ruling changes how they play:
 
@@ -57,3 +69,9 @@ These rows were marked "needs owner review" in the D16 table but are implemented
 - Echo Strike
 
 The Stone Divide question for the contested strikes is in part A.
+
+## E. Readings found during the batches (implemented literally; no gate)
+
+- **Wash Away (WAT-04-C), "normal evasion".** No miss source applies under one active fighter (plan §5a), so the clause never fires.
+- **Circuit Breaker (ELE-04-C), "ready".** Read as "no running cooldown".
+- **Deep Winter (ICE-06-C).** The freeze counts the D4 protected turn (`deep-winter-freeze-counts-protected-turn`).
