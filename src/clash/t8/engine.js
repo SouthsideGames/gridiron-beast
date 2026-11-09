@@ -349,7 +349,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       }
       out.missed = out.hits.length > 0 && out.hits.every((r) => r.missed) && !out.intercepted;
       // once per attack: the whole-attack observers (counters, memories, heals), then the follow-ups (after the replacement entered)
-      const info = { attackerId: att.c.id, targetId: t.c.id, intendedId: intended.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, strikeKey: spec.strikeKey ?? null, hits: out.hits.map((r) => ({ targetId: r.targetId, loss: r.hpDamage, poolLoss: r.shieldDamage, missed: r.missed, intercepted: r.intercepted, koed: r.kos.length > 0, recipients: r.recipients, losses: r.losses, poolLosses: r.poolLosses })),
+      const info = { attackerId: att.c.id, targetId: t.c.id, intendedId: intended.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, strikeKey: spec.strikeKey ?? null, hits: out.hits.map((r) => ({ targetId: r.targetId, loss: r.hpDamage, poolLoss: r.shieldDamage, missed: r.missed, intercepted: r.intercepted, koed: r.kos.length > 0, recipients: r.recipients, losses: r.losses, poolLosses: r.poolLosses, transferred: r.transferred, prevented: r.prevented })),
         hpDamage: out.hpDamage, shieldDamage: out.shieldDamage, allMissed: out.missed, landed: out.landed, redirected: out.redirected, kos: [...out.kos], retaliationAllowed: !(curAttack.suppressRetaliation || curAttack.noRetaliation), inAction: att.inAction, normal };
       if (!spec.noWholeAttackHooks) {
         const order = reactionOrder(out.hits.flatMap((r) => r.recipients.map((id) => byId.get(id))).filter(Boolean), att);
@@ -363,7 +363,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   }
   function oneHit(att, t, spec, hitNo) {
     const prevHit = curHit; curHit = { id: ++hitSeq, tag: spec.tag, attacker: att.c.id, abilityId: spec.abilityId ?? null, hitNo };
-    const res = { targetId: t.c.id, missed: false, intercepted: false, hpDamage: 0, shieldDamage: 0, kos: [], recipients: [], losses: {}, poolLosses: {}, decided: false, prevented: 0 };
+    const res = { targetId: t.c.id, missed: false, intercepted: false, hpDamage: 0, shieldDamage: 0, kos: [], recipients: [], losses: {}, poolLosses: {}, transferred: [], decided: false, prevented: 0 };
     try {
       const sideOf = t.side;
       // 3.5 interception (Stone Divide): asked of the target's side in lineup order, then probes
@@ -440,6 +440,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
         }
         if (m.shield?.broken) callC('statusEnded', rec, { id: 'shielded', reason: 'broken', sourceId: att.c.id, abilityId: spec.abilityId ?? null });
         landed.push({ x: rec, loss, poolLoss: m.shield?.poolLoss ?? 0, transferred: !!transferred, prevented });
+        if (transferred) res.transferred.push(rec.c.id);
         res.recipients.push(rec.c.id); res.losses[rec.c.id] = loss; res.poolLosses[rec.c.id] = m.shield?.poolLoss ?? 0; res.hpDamage += loss; res.shieldDamage += m.shield?.poolLoss ?? 0; res.prevented += prevented;
         if (rec.hp <= 0) { knockout(rec, att); res.kos.push(rec.c.id); }
       }

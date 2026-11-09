@@ -7,7 +7,7 @@
 // normal gameplay (an ordinary attack; the sequence is kept).
 import { registerClashAbility } from '../t8/registry.js';
 import { perkTag } from '../t8/flags.js';
-import { byTier, perkGate } from './util.js';
+import { byTier, perkGate, SPAR } from './util.js';
 
 const THIRD = [140, 150, 160, 170];
 const SHIELD = { id: 'shielded', strength: 999, duration: 2 };
@@ -43,7 +43,7 @@ export default registerClashAbility({
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'Two HP-damaging attacks on the same enemy, then the empowered third strike; the sequence restarts',
         explain: (c) => `Duskyre's third consecutive attack on the same enemy deals ${c.values.thirdPct}% of a normal attack, then the count cycles to zero.`,
-        setup: () => ({ a: [{ species: 'duskrunner' }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 4 } }),
+        setup: () => ({ a: [{ species: 'duskrunner', overall: 30 }], b: SPAR(), seed: 1, stopAt: { exchange: 4 } }),
         expect: (r, h) => { const d = h.ab('damage'); h.check('third strike on exchange 3 at the mastery power', d.length === 1 && d[0].ex === 3 && d[0].mult === h.values.thirdPct / 100); h.check('exchange 4 is ordinary again', h.has('damage', (e) => e.actor === 'a0' && e.ex === 4 && e.tag === 'ordinary')); h.stages('trigger', 'activation', 'resolution', 'cleanup'); h.executed(1); } },
       { id: 'shield-only-resets', kind: 'blocked', title: 'A shield-only hit does not count: no sequence builds',
         explain: () => 'The enemy carries a large shield: Duskyre\'s hits remove shield HP only, so no sequence builds and no third strike happens.',

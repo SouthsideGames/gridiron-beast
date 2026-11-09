@@ -39,3 +39,7 @@ export function perkGate(api, self, foeId, tagFor) {
   if (!api.provisional(self, 'd5-perk', `${api.get(foeId).name} makes the ordinary-only perk decisive for this strike`)) return { ok: false, decisive: true };
   return { ok: true, tag: tagFor, decisive: true };
 }
+
+/** A sparring lineup for multi-turn reviewer demonstrations: three sturdy Basic Tanks that pass their turns (CONTROLLED PREREQUISITE,
+ *  labelled by review.js; never the demonstrated ability's own result). */
+export const SPAR = (extra = {}) => [{ species: 'gravelpup', overall: 99, sparring: true, ...extra }, { species: 'tinhare', overall: 99, sparring: true }, { species: 'mudlark', overall: 99, sparring: true }];

@@ -9,7 +9,9 @@
 //     labelled PROVISIONAL; never part of the acceptance set),
 //     setup(ctx) -> { a: [spec...], b: [spec...], seed?, config?, probes?, stopAt?, seedSearch?: { until(result) -> bool, max? } },
 //     expect(result, h) }            h: the check helpers below (h.check records a named pass / fail)
-//   spec: { species, stage?, overall?, tier?, hp?, status?, ability? }  (hp / status / ability are staged inputs, labelled)
+//   spec: { species, stage?, overall?, tier?, hp?, status?, ability?, sparring? }  (hp / status / ability are staged inputs, labelled;
+//     sparring: CONTROLLED PREREQUISITE, the monster passes its normal turns so a multi-turn demonstration is not cut short; it never
+//     touches the demonstrated ability's own result, and is listed in meta.controlled)
 //   ctx: { abilityId, species, stage, tier, form }
 // kinds: valid | blocked | miss | multiTarget | depletion | cleanup | sourceKO | rotation | interaction
 import { createRng } from '../../core/rng.js';
@@ -63,7 +65,9 @@ export function runScenario({ abilityId, stage = 0, tier = 0, scenarioId, log = 
     const stageIn = {};
     su.a.forEach((sp, i) => { const st = {}; if (sp.hp != null) st.hp = sp.hp; if (sp.status) st.status = sp.status; if (sp.ability) st.ability = sp.ability; if (Object.keys(st).length) stageIn[`a${i}`] = st; });
     su.b.forEach((sp, i) => { const st = {}; if (sp.hp != null) st.hp = sp.hp; if (sp.status) st.status = sp.status; if (sp.ability) st.ability = sp.ability; if (Object.keys(st).length) stageIn[`b${i}`] = st; });
-    return { a: mk(su.a, 'a'), b: mk(su.b, 'b'), seed, config: { ruleset: 't8', policies: { a: 'none', b: 'none' }, ...(su.config || {}), ...(sc.provisional ? { provisional: 'on' } : {}) }, log, probes: su.probes || [], stage: Object.keys(stageIn).length ? stageIn : null, ...(su.stopAt ? { stopAt: su.stopAt } : {}) };
+    const sparring = [...su.a.map((sp, i) => (sp.sparring ? `a${i}` : null)), ...su.b.map((sp, i) => (sp.sparring ? `b${i}` : null))].filter(Boolean);
+    const sparProbe = sparring.length ? [{ chooseAction: (v, id) => (sparring.includes(id) ? { kind: 'skip' } : null) }] : [];
+    return { a: mk(su.a, 'a'), b: mk(su.b, 'b'), seed, config: { ruleset: 't8', policies: { a: 'none', b: 'none' }, ...(su.config || {}), ...(sc.provisional ? { provisional: 'on' } : {}) }, log, probes: [...(su.probes || []), ...sparProbe], stage: Object.keys(stageIn).length ? stageIn : null, ...(su.stopAt ? { stopAt: su.stopAt } : {}) };
   };
   // Controlled seed selection (labelled): a scenario whose demonstration needs a particular roll outcome searches forward from its seed
   // through the real engine until its stated prerequisite holds. The ability's own result is checked by `expect`, never forced.
@@ -73,7 +77,10 @@ export function runScenario({ abilityId, stage = 0, tier = 0, scenarioId, log = 
     for (let i = 0; i < max; i++) { const r = simulateClashT8(build(seed0 + i)); if (su.seedSearch.until(r)) { result = r; controlled = { kind: 'seed selection', seed: seed0 + i, tried: i + 1, why: su.seedSearch.why || 'the scenario\'s stated prerequisite' }; break; } }
     if (!result) { result = simulateClashT8(build(seed0)); controlled = { kind: 'seed selection', seed: seed0, tried: max, failed: true, why: su.seedSearch.why || 'the scenario\'s stated prerequisite' }; }
   } else result = simulateClashT8(build(seed0));
-  const stagedInputs = [...su.a.map((sp, i) => ({ id: `a${i}`, ...sp })), ...su.b.map((sp, i) => ({ id: `b${i}`, ...sp }))].filter((sp) => sp.hp != null || sp.status || sp.ability);
+  const stagedInputs = [...su.a.map((sp, i) => ({ id: `a${i}`, ...sp })), ...su.b.map((sp, i) => ({ id: `b${i}`, ...sp }))].filter((sp) => sp.hp != null || sp.status || sp.ability || sp.sparring);
+  const sparringIds = stagedInputs.filter((sp) => sp.sparring).map((sp) => sp.id);
+  if (sparringIds.length) controlled = { ...(controlled || {}), sparring: sparringIds, sparringWhy: 'controlled prerequisite: these monsters pass their normal turns so the multi-turn sequence completes' };
+  if (su.probes?.length) controlled = { ...(controlled || {}), probes: true, probesWhy: 'controlled prerequisite outcome supplied by a reviewer probe (named in the scenario explanation)' };
   const checks = []; const h = helpers(result, ctx, checks, abilityId);
   try { sc.expect(result, h); } catch (e) { checks.push({ check: 'expect() threw', ok: false, detail: String(e?.message || e) }); }
   const stream = result.log.filter((e) => e.abilityId === abilityId || (e.kind === 'unmet' && e.abilityId === abilityId));

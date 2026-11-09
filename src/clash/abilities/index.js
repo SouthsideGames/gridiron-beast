@@ -3,6 +3,20 @@
 // S5 pilots
 import './firestorm.js';
 import './mudcub.js';
-// S6 batch A: attack modifiers and enhanced attacks
+// S6 batch A: attack modifiers and enhanced attacks (16)
 import './nightowl.js';
 import './duskrunner.js';
+import './mireclaw.js';
+import './halofang.js';
+import './aurelion.js';
+import './drakeling.js';
+import './vyrnax.js';
+import './aurodrax.js';
+import './gearwing.js';
+import './ironjaw.js';
+import './voltfang.js';
+import './breezefang.js';
+import './prism.js';
+import './echolot.js';
+import './stoneguard.js';
+import './mossclaw.js';

@@ -15,7 +15,7 @@ const SHIELD = { id: 'shielded', strength: 999, duration: 2 };
 export default registerClashAbility({
   family: 'nightowl', abilityId: 'DAR-02-C',
   initBattle: () => ({ used: false }),
-  values: (form, tier) => ({ powerPct: byStage(POWER, Number(form.split(':')[1])) + byTier(MASTERY, tier) }),
+  values: (form, tier) => ({ formPowerPct: byStage(POWER, Number(form.split(':')[1])), masteryBonusPts: byTier(MASTERY, tier) }),
   hooks: {
     initiative(api, self) {
       if (self.state.used) return null; const me = api.me(self); if (!able(me)) return null;
@@ -36,11 +36,11 @@ export default registerClashAbility({
   review: {
     scenarios: [
       { id: 'activates', kind: 'valid', title: 'A slower Noctlet acts first on exchange 1 at the boosted power; from exchange 2 ordinary speed decides',
-        explain: (c) => `Noctlet's first normal attack is scheduled in the priority tier, before the (faster) opponent, and deals ${c.values.powerPct}% of a normal attack. The opportunity is spent; later exchanges use ordinary speed.`,
+        explain: (c) => `Noctlet's first normal attack is scheduled in the priority tier, before the (faster) opponent, and deals ${(c.values.formPowerPct + c.values.masteryBonusPts)}% of a normal attack. The opportunity is spent; later exchanges use ordinary speed.`,
         setup: () => ({ a: [{ species: 'nightowl', overall: 60 }], b: [{ species: 'gravelpup', overall: 99 }], seed: 1, stopAt: { exchange: 3 } }),
         expect: (r, h) => {
           const i1 = h.ev('initiative', (e) => e.ex === 1)[0]; h.check('priority tier on exchange 1', i1 && i1.by === 'priority' && i1.actor === 'a0');
-          const d = h.ab('damage', (e) => e.ex === 1)[0]; h.check(`${h.values.powerPct}% power`, d && d.mult === h.values.powerPct / 100);
+          const d = h.ab('damage', (e) => e.ex === 1)[0]; h.check(`${(h.values.formPowerPct + h.values.masteryBonusPts)}% power`, d && d.mult === (h.values.formPowerPct + h.values.masteryBonusPts) / 100);
           h.check('later exchanges: no priority', h.ev('initiative', (e) => e.ex > 1).every((e) => e.by !== 'priority'));
           h.stages('trigger', 'activation', 'resolution'); h.executed(1);
         } },
