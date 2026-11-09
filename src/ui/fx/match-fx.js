@@ -4,10 +4,16 @@
 //   I1  kickPlay: a formula kick (punt, field goal, kickoff) as the Ability Reviewer draws it, with the kick ability's cue.
 //   I2  presnapFields + createRevealClock: the fields both teams may see on the play-call screen, and their reveal, played once.
 //   I6  the match screen opts into the pre-roll (buildFx meta { preroll: true }) and starts a play at -fx.preroll.
+//   I4  abilityTicks: Anchor Plate / Iron Lungs / Night Watch ticks for the last play's ability strip.
+//   I5  absentMonsters: who is temporarily out (Sovereign Arm), for the scoreboard strip's portrait indicator.
 import { buildFx, buildKickFx } from '../ability-fx.js';
 import { toPlayFrame } from '../../sim/t8/fields.js';
 import { previewPendingFields } from '../../sim/rules.js';
 import { FIELD_REVEAL } from './fields-fx.js';
+import { LOOKS } from './looks/index.js';
+
+/** The approved name of a Dex football ability (its look's name), or null. */
+export const dexAbilityName = (id) => LOOKS[id]?.name || null;
 
 /** How a field is named across the snap (the preview has no field id yet): its creator and its ability. */
 export const fieldKey = (f) => `${f.owner}|${f.ability}`;
@@ -74,3 +80,32 @@ export function createRevealClock() {
 
 /** I2. The effect state of the play-call screen: the fields' decoration and reveal, nothing else (no play, no events). */
 export function presnapFx(fields, lookup = () => null) { return fields?.length ? buildFx({ frames: [], events: [], fields }, lookup, { preroll: true }) : null; }
+
+/**
+ * I4. Ticks for the last play's ability strip (the match screen's ability panel), read from the play's own events: Anchor Plate's
+ * absorbed push, Iron Lungs' saved stamina drain and whom it steadied, Night Watch's protected ally. Returns { 'side:slot:ability':
+ * text }. `nameOf(side, slot)` names a monster (falls back to the slot). Presentation only: the numbers are the engine's.
+ */
+export function abilityTicks(sim, nameOf = (side, slot) => slot) {
+  const out = {}; const key = (e) => `${e.side}:${e.by}:${e.ability}`;
+  for (const e of sim?.events || []) {
+    if (e.ability === 'MET-01-F' && e.kind === 'ability_end' && e.absorbed != null) out[key(e)] = `absorbed ${(+e.absorbed).toFixed(2)} yd of push`;
+    else if (e.ability === 'MET-02-F' && e.kind === 'ability' && e.targets?.length) out[key(e)] = `saved 1 stamina: ${e.targets.map((s) => nameOf(e.side, s)).join(', ')}`;
+    else if (e.ability === 'DAR-02-F' && e.kind === 'ability' && e.victim) out[key(e)] = `${nameOf(e.side, e.victim)} keeps full Awareness in the dark`;
+  }
+  return out;
+}
+
+/**
+ * I5. Monsters temporarily out of the game (Sovereign Arm's swallowed defender), from the game's own absence list: [{ mid, monster,
+ * team, serveOn, ability }] (`team`: his club's side; `serveOn`: the side whose next offensive scrimmage play he misses). Read only.
+ */
+export function absentMonsters(state, teams) {
+  const out = [];
+  for (const a of state?.t8?.absences || []) {
+    let found = null;
+    for (const side of ['home', 'away']) { const T = teams?.[side]; if (!T) continue; const m = [...Object.values(T.defense || {}), ...Object.values(T.offense || {}), ...(T.bench || [])].find((x) => x?.id === a.mid); if (m) { found = { monster: m, team: side }; break; } }
+    out.push({ mid: a.mid, monster: found?.monster || null, team: found?.team || null, serveOn: a.serveOn || null, ability: a.ability || null });
+  }
+  return out;
+}
