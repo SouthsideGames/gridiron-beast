@@ -1,0 +1,1130 @@
+{
+ "meta": {
+  "harness": "tools/perf/render/run.mjs",
+  "doc": "docs/task8/RENDER_PERF.md",
+  "label": "sanity-short",
+  "startedAt": "2026-11-09T00:53:38.784Z",
+  "commit": "3498ffd",
+  "branch": "task8-perf-method",
+  "dirty": true,
+  "options": {
+   "modes": [
+    "render",
+    "combined"
+   ],
+   "repeats": 2,
+   "warmup": 1,
+   "plays": 2,
+   "simPasses": 1,
+   "scenes": [
+    "F1-ordinary"
+   ],
+   "configs": [
+    "full"
+   ],
+   "combinedConfigs": [
+    "full"
+   ],
+   "liveConfigs": [
+    "full",
+    "simple"
+   ],
+   "liveSteps": 14,
+   "liveWarmup": 2,
+   "throttle": [
+    1
+   ],
+   "headless": "new",
+   "label": "sanity-short",
+   "profile": false,
+   "attribution": false,
+   "attributionScene": "F2-multi-ability"
+  },
+  "host": {
+   "cpus": 2,
+   "model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "memGB": 7.8,
+   "platform": "linux 6.18.44-fc-v310",
+   "node": "v22.22.0"
+  },
+  "idleLoad": {
+   "seconds": 3,
+   "cpus": 2,
+   "busyShare": 0.008,
+   "harnessShare": 0,
+   "foreignShare": 0.007,
+   "foreignTop": [
+    [
+     "claude",
+     0.007
+    ]
+   ],
+   "loadavgStart": [
+    0.31,
+    0.44,
+    0.62
+   ],
+   "loadavgEnd": [
+    0.29,
+    0.43,
+    0.62
+   ],
+   "available": true,
+   "busyCpus": 0.0133,
+   "ownCpus": 0,
+   "competingCpus": 0.0133,
+   "competingRawCpus": 0.0133,
+   "stealCpus": 0,
+   "irqCpus": 0.0033,
+   "userCpus": 0.0133,
+   "systemCpus": 0,
+   "quiet": true,
+   "notQuiet": []
+  },
+  "mobile": {
+   "capacitorProject": false,
+   "capacitor": {
+    "config": [],
+    "android": false,
+    "ios": false,
+    "packages": []
+   },
+   "adb": false,
+   "androidDevices": [],
+   "iosTooling": false,
+   "status": "mobile NOT VERIFIED",
+   "reason": "no Capacitor project in the repository (no capacitor.config.*, no android/ or ios/, no @capacitor/* package) and no mobile device attached (no adb devices, no iOS tooling)"
+  },
+  "status": "quiet machine (competing CPU <= 0.05 and steal <= 0.05 CPU in every block); 2 of 2 summary rows PROVISIONAL. Headless desktop Chromium; not a phone; 4x CPU throttle is desktop emulation (an approximate indicator only), not mobile verification.",
+  "precomputeLoad": {
+   "seconds": 1.3,
+   "cpus": 2,
+   "busyShare": 0.9,
+   "harnessShare": 0.9,
+   "foreignShare": 0,
+   "foreignTop": [],
+   "loadavgStart": [
+    0.29,
+    0.43,
+    0.62
+   ],
+   "loadavgEnd": [
+    0.29,
+    0.43,
+    0.62
+   ],
+   "available": true,
+   "busyCpus": 1.7361,
+   "ownCpus": 1.7675,
+   "competingCpus": 0,
+   "competingRawCpus": -0.0314,
+   "stealCpus": 0.0236,
+   "irqCpus": 0.0079,
+   "userCpus": 1.6104,
+   "systemCpus": 0.1257,
+   "quiet": true,
+   "notQuiet": []
+  },
+  "browser": {
+   "version": "141.0.7390.37",
+   "mode": "chromium new headless"
+  },
+  "setup": {
+   "club": "Stormport Bolts",
+   "week": 3,
+   "field": true,
+   "venue": "The Bolt Yard"
+  },
+  "liveStart": {
+   "phase": "kickoff",
+   "quarter": 1,
+   "clock": 180
+  },
+  "screen": {
+   "dpr": 3,
+   "w": 390,
+   "h": 844,
+   "field": [
+    352,
+    300
+   ],
+   "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.0.0 Safari/537.36"
+  },
+  "pageErrors": [],
+  "quietRule": {
+   "competingCpus": 0.05,
+   "stealCpus": 0.05,
+   "since": "2026-11-08",
+   "note": "quiet = competing CPU (total busy - the benchmark's own processes) at most 0.05 CPU and steal at most 0.05 CPU, averaged over the window (/proc/stat, /proc/<pid>/stat); load averages recorded, not the rule"
+  },
+  "statusNote": "PRELIMINARY unless run on a quiet machine (see load per block). Headless desktop Chromium; not a phone; 4x CPU throttle is desktop emulation (an approximate indicator only), not mobile verification.",
+  "finishedAt": "2026-11-09T00:54:16.089Z"
+ },
+ "configs": {
+  "full": {
+   "football": {
+    "reducedMotion": false,
+    "markers": "sprites"
+   },
+   "clash": {
+    "reducedMotion": false,
+    "quality": "full"
+   },
+   "note": "default settings: monster art, effects full (football fxQuality \"full\"); Clash as the franchise battle screen mounts it"
+  },
+  "min-probe": {
+   "football": {
+    "reducedMotion": true,
+    "markers": "sprites"
+   },
+   "clash": {
+    "reducedMotion": true,
+    "quality": "full"
+   },
+   "note": "MEASUREMENT PROBE, not a player-visible mode: football plays animated with fxQuality \"min\" (badges and labels only, no particles, no signature looks, no status marks, no weather layer, no shake). A player with Reduce motion on sees no play animation at all. Clash: Reduce motion on (a player setting; the arena still plays)"
+  },
+  "simple": {
+   "football": {
+    "reducedMotion": false,
+    "markers": "simple"
+   },
+   "clash": {
+    "reducedMotion": false,
+    "quality": "low"
+   },
+   "note": "football: the player setting \"Players on the field: Simple circles and squares\" (no sprites, fxQuality \"low\": half the particles). Clash: effects quality \"low\" (a Clash Lab option only, not a franchise setting)"
+  }
+ },
+ "scenes": [
+  {
+   "id": "F1-ordinary",
+   "kind": "football",
+   "source": "O6-rules-mix",
+   "variant": "plain",
+   "what": "ordinary football: no abilities; runs and passes through rules.js (approved scene O6)",
+   "fingerprint": "35b932c75b88220f",
+   "sim": {
+    "passes": 1,
+    "plays": 96,
+    "medianMsPerPlay": 2.474,
+    "meanMsPerPlay": 3.424,
+    "chosenMedianMsPerPlay": 1.236,
+    "chosenMeanMsPerPlay": 1.236
+   },
+   "plays": [
+    {
+     "gs": 401,
+     "k": 0,
+     "call": [
+      "inside_zone",
+      "cover_3"
+     ],
+     "result": "tackle",
+     "yards": 1,
+     "frames": 11,
+     "seconds": 1.1,
+     "abilityEvents": 0,
+     "peakConcurrent": 0,
+     "fields": 0,
+     "simMs": 0.9243859999996857
+    },
+    {
+     "gs": 401,
+     "k": 1,
+     "call": [
+      "quick_slants",
+      "cover_2_man"
+     ],
+     "result": "tackle",
+     "yards": 7,
+     "frames": 17,
+     "seconds": 1.7,
+     "abilityEvents": 0,
+     "peakConcurrent": 0,
+     "fields": 0,
+     "simMs": 1.5473089999995864
+    }
+   ]
+  }
+ ],
+ "summary": [
+  {
+   "mode": "render",
+   "scene": "F1-ordinary",
+   "config": "full",
+   "throttle": 1,
+   "platform": "verified desktop",
+   "repeats": 2,
+   "simNodeMs": 1.236,
+   "simPageMedianMs": null,
+   "simPageMaxMs": null,
+   "liveSim": null,
+   "meanMs": 17.72,
+   "medianMs": 16.7,
+   "p95Ms": 16.8,
+   "p99Ms": 33.3,
+   "maxMs": 133.25,
+   "avgFps": 56.44,
+   "share20": 0.98,
+   "share40": 0.99,
+   "over33": 1,
+   "over50": 1,
+   "over33AtStart": 0,
+   "over33AtEnd": 0,
+   "frames": 150.5,
+   "fieldDrawsPerSec": 21.39,
+   "playStartMedianMs": 11.25,
+   "playStartMaxMs": 13.85,
+   "session": null,
+   "longTasks": 1,
+   "longTaskMaxMs": 141.95,
+   "mainMsPerSec": {
+    "script": 105.29,
+    "gc": 19.53,
+    "style": 71.85,
+    "layout": 11.42,
+    "paint": 63.32,
+    "parse": 73.04,
+    "other": 57.36
+   },
+   "mainBusyShare": 0.4,
+   "foreignLoad": 0,
+   "busyLoad": 0.47,
+   "competingCpus": 0,
+   "competingCpusMax": 0,
+   "stealCpus": 0.02,
+   "stealCpusMax": 0.02,
+   "quality": {
+    "label": "PROVISIONAL",
+    "reasons": [
+     "2 repeats (fewer than 3)"
+    ]
+   },
+   "identityOk": true
+  },
+  {
+   "mode": "combined",
+   "scene": "F1-ordinary",
+   "config": "full",
+   "throttle": 1,
+   "platform": "verified desktop",
+   "repeats": 2,
+   "simNodeMs": 1.236,
+   "simPageMedianMs": 0.75,
+   "simPageMaxMs": 4.95,
+   "liveSim": null,
+   "meanMs": 17.95,
+   "medianMs": 16.7,
+   "p95Ms": 16.8,
+   "p99Ms": 33.35,
+   "maxMs": 166.65,
+   "avgFps": 55.71,
+   "share20": 0.98,
+   "share40": 0.99,
+   "over33": 1.5,
+   "over50": 1,
+   "over33AtStart": 0,
+   "over33AtEnd": 0,
+   "frames": 149,
+   "fieldDrawsPerSec": 20.87,
+   "playStartMedianMs": 10.55,
+   "playStartMaxMs": 18.5,
+   "session": null,
+   "longTasks": 1,
+   "longTaskMaxMs": 175.45,
+   "mainMsPerSec": {
+    "script": 116.94,
+    "gc": 22.96,
+    "style": 64.24,
+    "layout": 10.78,
+    "paint": 57.1,
+    "parse": 63.31,
+    "other": 61.13
+   },
+   "mainBusyShare": 0.4,
+   "foreignLoad": 0,
+   "busyLoad": 0.48,
+   "competingCpus": 0,
+   "competingCpusMax": 0.01,
+   "stealCpus": 0.01,
+   "stealCpusMax": 0.01,
+   "quality": {
+    "label": "PROVISIONAL",
+    "reasons": [
+     "2 repeats (fewer than 3)"
+    ]
+   },
+   "identityOk": true
+  }
+ ],
+ "checks": [
+  {
+   "mode": "combined",
+   "scene": "F1-ordinary",
+   "config": "full",
+   "throttle": 1,
+   "repeat": 1,
+   "ok": true,
+   "got": "35b932c75b88220f",
+   "want": "35b932c75b88220f"
+  },
+  {
+   "mode": "combined",
+   "scene": "F1-ordinary",
+   "config": "full",
+   "throttle": 1,
+   "repeat": 2,
+   "ok": true,
+   "got": "35b932c75b88220f",
+   "want": "35b932c75b88220f"
+  }
+ ],
+ "profiles": [],
+ "attribution": [],
+ "blocks": [
+  {
+   "mode": "render",
+   "scene": "F1-ordinary",
+   "config": "full",
+   "throttle": 1,
+   "platform": "verified desktop",
+   "repeat": 1,
+   "frames": {
+    "frames": 150,
+    "seconds": 2.67,
+    "meanMs": 17.78,
+    "medianMs": 16.7,
+    "p95Ms": 16.8,
+    "p99Ms": 33.3,
+    "maxMs": 133.3,
+    "avgFps": 56.25,
+    "share20": 0.97,
+    "share40": 0.99,
+    "over33": 1,
+    "over50": 1,
+    "over33AtStart": 0,
+    "over33AtEnd": 0,
+    "fieldDrawsPerSec": 21.36,
+    "playStartMedianMs": 12.1,
+    "playStartMaxMs": 15.6,
+    "pageSimMedianMs": null,
+    "pageSimMaxMs": null,
+    "longTasksObserved": 1,
+    "longTaskMs": 144
+   },
+   "trace": {
+    "found": true,
+    "windowMs": 2710.6,
+    "windows": 2,
+    "mainBusyMs": 1110.4,
+    "mainBusyShare": 0.41,
+    "mainMs": {
+     "style": 194.9,
+     "paint": 165.4,
+     "other": 165.9,
+     "script": 288.8,
+     "parse": 204.3,
+     "layout": 30.4,
+     "gc": 61.6
+    },
+    "top": [
+     [
+      "FunctionCall",
+      247.2
+     ],
+     [
+      "ParseHTML",
+      204.3
+     ],
+     [
+      "UpdateLayoutTree",
+      194.9
+     ],
+     [
+      "ThreadControllerImpl::RunTask",
+      118.5
+     ],
+     [
+      "Paint",
+      81.9
+     ],
+     [
+      "Layerize",
+      48.5
+     ],
+     [
+      "RunMicrotasks",
+      32.2
+     ],
+     [
+      "Layout",
+      30.2
+     ],
+     [
+      "V8.GC_MC_INCREMENTAL",
+      26.9
+     ],
+     [
+      "PrePaint",
+      23.3
+     ],
+     [
+      "RunTask",
+      17.9
+     ],
+     [
+      "CompressionStream Deflate",
+      16.4
+     ]
+    ],
+    "longTasks": {
+     "count": 1,
+     "totalMs": 144.9,
+     "maxMs": 144.9,
+     "detail": [
+      {
+       "atMs": 782,
+       "ms": 144.9,
+       "entry": {
+        "name": "TimerFire",
+        "ms": 144.8,
+        "fn": null,
+        "url": null,
+        "line": null,
+        "type": null
+       },
+       "top": [
+        [
+         "FunctionCall",
+         137.3
+        ],
+        [
+         "V8.GC_SCAVENGER_SCAVENGE_PARALLEL",
+         4.2
+        ],
+        [
+         "RunMicrotasks",
+         0.8
+        ],
+        [
+         "V8.HandleInterrupts",
+         0.7
+        ]
+       ]
+      }
+     ]
+    },
+    "rasterOffMainMs": 756.2
+   },
+   "cdpMetricsMs": {
+    "script": 782.62,
+    "layout": 46.64,
+    "recalcStyle": 290.18,
+    "task": 1803.44
+   },
+   "load": {
+    "seconds": 6.3,
+    "cpus": 2,
+    "busyShare": 0.467,
+    "harnessShare": 0.438,
+    "foreignShare": 0.005,
+    "foreignTop": [
+     [
+      "claude",
+      0.004
+     ],
+     [
+      "kworker/u8:0-events_unbound",
+      0.001
+     ]
+    ],
+    "loadavgStart": [
+     0.75,
+     0.53,
+     0.65
+    ],
+    "loadavgEnd": [
+     1.03,
+     0.59,
+     0.67
+    ],
+    "available": true,
+    "busyCpus": 0.8728,
+    "ownCpus": 0.8904,
+    "competingCpus": 0,
+    "competingRawCpus": -0.0176,
+    "stealCpus": 0.0112,
+    "irqCpus": 0.0686,
+    "userCpus": 0.7962,
+    "systemCpus": 0.0766,
+    "quiet": true,
+    "notQuiet": []
+   },
+   "identity": null,
+   "quality": {
+    "label": "GOOD",
+    "reasons": []
+   }
+  },
+  {
+   "mode": "combined",
+   "scene": "F1-ordinary",
+   "config": "full",
+   "throttle": 1,
+   "platform": "verified desktop",
+   "repeat": 1,
+   "frames": {
+    "frames": 148,
+    "seconds": 2.66,
+    "meanMs": 18.02,
+    "medianMs": 16.7,
+    "p95Ms": 16.8,
+    "p99Ms": 33.3,
+    "maxMs": 183.3,
+    "avgFps": 55.5,
+    "share20": 0.98,
+    "share40": 0.99,
+    "over33": 1,
+    "over50": 1,
+    "over33AtStart": 0,
+    "over33AtEnd": 0,
+    "fieldDrawsPerSec": 20.7,
+    "playStartMedianMs": 10.7,
+    "playStartMaxMs": 16.4,
+    "pageSimMedianMs": 0.8,
+    "pageSimMaxMs": 6.1,
+    "longTasksObserved": 2,
+    "longTaskMs": 503
+   },
+   "trace": {
+    "found": true,
+    "windowMs": 2687.5,
+    "windows": 2,
+    "mainBusyMs": 1057.9,
+    "mainBusyShare": 0.394,
+    "mainMs": {
+     "style": 172.1,
+     "paint": 150.3,
+     "layout": 28.6,
+     "other": 151.9,
+     "script": 339.1,
+     "parse": 168.2,
+     "gc": 49
+    },
+    "top": [
+     [
+      "FunctionCall",
+      297.4
+     ],
+     [
+      "UpdateLayoutTree",
+      172.1
+     ],
+     [
+      "ParseHTML",
+      168.2
+     ],
+     [
+      "ThreadControllerImpl::RunTask",
+      106.2
+     ],
+     [
+      "Paint",
+      73.6
+     ],
+     [
+      "Layerize",
+      46
+     ],
+     [
+      "RunMicrotasks",
+      28.6
+     ],
+     [
+      "Layout",
+      28.4
+     ],
+     [
+      "V8.GC_MC_INCREMENTAL",
+      22
+     ],
+     [
+      "PrePaint",
+      21.3
+     ],
+     [
+      "CompressionStream Deflate",
+      19.8
+     ],
+     [
+      "RunTask",
+      10.8
+     ]
+    ],
+    "longTasks": {
+     "count": 1,
+     "totalMs": 199,
+     "maxMs": 199,
+     "detail": [
+      {
+       "atMs": 487,
+       "ms": 199,
+       "entry": {
+        "name": "TimerFire",
+        "ms": 198.9,
+        "fn": null,
+        "url": null,
+        "line": null,
+        "type": null
+       },
+       "top": [
+        [
+         "FunctionCall",
+         191.4
+        ],
+        [
+         "V8.GC_SCAVENGER_SCAVENGE_PARALLEL_PHASE",
+         3.3
+        ],
+        [
+         "V8.BytecodeBudgetInterrupt",
+         2
+        ],
+        [
+         "V8.HandleInterrupts",
+         0.8
+        ]
+       ]
+      }
+     ]
+    },
+    "rasterOffMainMs": 707.5
+   },
+   "cdpMetricsMs": {
+    "script": 785.65,
+    "layout": 40.38,
+    "recalcStyle": 245.23,
+    "task": 2413.25
+   },
+   "load": {
+    "seconds": 6.8,
+    "cpus": 2,
+    "busyShare": 0.468,
+    "harnessShare": 0.435,
+    "foreignShare": 0.002,
+    "foreignTop": [
+     [
+      "claude",
+      0.002
+     ]
+    ],
+    "loadavgStart": [
+     1.03,
+     0.59,
+     0.67
+    ],
+    "loadavgEnd": [
+     1.03,
+     0.6,
+     0.67
+    ],
+    "available": true,
+    "busyCpus": 0.882,
+    "ownCpus": 0.8909,
+    "competingCpus": 0,
+    "competingRawCpus": -0.0088,
+    "stealCpus": 0.0118,
+    "irqCpus": 0.0648,
+    "userCpus": 0.8128,
+    "systemCpus": 0.0692,
+    "quiet": true,
+    "notQuiet": []
+   },
+   "identity": {
+    "ok": true,
+    "got": "35b932c75b88220f",
+    "want": "35b932c75b88220f"
+   },
+   "quality": {
+    "label": "GOOD",
+    "reasons": []
+   }
+  },
+  {
+   "mode": "render",
+   "scene": "F1-ordinary",
+   "config": "full",
+   "throttle": 1,
+   "platform": "verified desktop",
+   "repeat": 2,
+   "frames": {
+    "frames": 151,
+    "seconds": 2.66,
+    "meanMs": 17.66,
+    "medianMs": 16.7,
+    "p95Ms": 16.8,
+    "p99Ms": 33.3,
+    "maxMs": 133.2,
+    "avgFps": 56.62,
+    "share20": 0.98,
+    "share40": 0.99,
+    "over33": 1,
+    "over50": 1,
+    "over33AtStart": 0,
+    "over33AtEnd": 0,
+    "fieldDrawsPerSec": 21.41,
+    "playStartMedianMs": 10.4,
+    "playStartMaxMs": 12.1,
+    "pageSimMedianMs": null,
+    "pageSimMaxMs": null,
+    "longTasksObserved": 1,
+    "longTaskMs": 138
+   },
+   "trace": {
+    "found": true,
+    "windowMs": 2708,
+    "windows": 2,
+    "mainBusyMs": 1065.1,
+    "mainBusyShare": 0.393,
+    "mainMs": {
+     "style": 194.4,
+     "paint": 177.7,
+     "other": 144.9,
+     "script": 281.7,
+     "parse": 191.5,
+     "layout": 31.5,
+     "gc": 44.2
+    },
+    "top": [
+     [
+      "FunctionCall",
+      246.7
+     ],
+     [
+      "UpdateLayoutTree",
+      194.4
+     ],
+     [
+      "ParseHTML",
+      191.5
+     ],
+     [
+      "ThreadControllerImpl::RunTask",
+      99
+     ],
+     [
+      "Paint",
+      92.8
+     ],
+     [
+      "Layerize",
+      49.1
+     ],
+     [
+      "Layout",
+      31.3
+     ],
+     [
+      "RunMicrotasks",
+      25.5
+     ],
+     [
+      "PrePaint",
+      24.5
+     ],
+     [
+      "CompressionStream Deflate",
+      18.5
+     ],
+     [
+      "V8.GC_MC_INCREMENTAL",
+      18.4
+     ],
+     [
+      "RunTask",
+      13.5
+     ]
+    ],
+    "longTasks": {
+     "count": 1,
+     "totalMs": 139,
+     "maxMs": 139,
+     "detail": [
+      {
+       "atMs": 785,
+       "ms": 139,
+       "entry": {
+        "name": "TimerFire",
+        "ms": 138.9,
+        "fn": null,
+        "url": null,
+        "line": null,
+        "type": null
+       },
+       "top": [
+        [
+         "FunctionCall",
+         134.4
+        ],
+        [
+         "V8.GC_SCAVENGER_SCAVENGE_PARALLEL",
+         2.1
+        ],
+        [
+         "V8.BytecodeBudgetInterrupt",
+         0.8
+        ],
+        [
+         "V8.HandleInterrupts",
+         0.4
+        ]
+       ]
+      }
+     ]
+    },
+    "rasterOffMainMs": 750.6
+   },
+   "cdpMetricsMs": {
+    "script": 711.76,
+    "layout": 45.76,
+    "recalcStyle": 288.78,
+    "task": 1808.44
+   },
+   "load": {
+    "seconds": 6.5,
+    "cpus": 2,
+    "busyShare": 0.476,
+    "harnessShare": 0.437,
+    "foreignShare": 0.002,
+    "foreignTop": [
+     [
+      "claude",
+      0.001
+     ],
+     [
+      "rcu_sched",
+      0.001
+     ]
+    ],
+    "loadavgStart": [
+     1.03,
+     0.6,
+     0.67
+    ],
+    "loadavgEnd": [
+     1.03,
+     0.61,
+     0.67
+    ],
+    "available": true,
+    "busyCpus": 0.8932,
+    "ownCpus": 0.8947,
+    "competingCpus": 0,
+    "competingRawCpus": -0.0015,
+    "stealCpus": 0.02,
+    "irqCpus": 0.0629,
+    "userCpus": 0.8379,
+    "systemCpus": 0.0552,
+    "quiet": true,
+    "notQuiet": []
+   },
+   "identity": null,
+   "quality": {
+    "label": "GOOD",
+    "reasons": []
+   }
+  },
+  {
+   "mode": "combined",
+   "scene": "F1-ordinary",
+   "config": "full",
+   "throttle": 1,
+   "platform": "verified desktop",
+   "repeat": 2,
+   "frames": {
+    "frames": 150,
+    "seconds": 2.66,
+    "meanMs": 17.89,
+    "medianMs": 16.7,
+    "p95Ms": 16.8,
+    "p99Ms": 33.4,
+    "maxMs": 150,
+    "avgFps": 55.91,
+    "share20": 0.97,
+    "share40": 0.99,
+    "over33": 2,
+    "over50": 1,
+    "over33AtStart": 0,
+    "over33AtEnd": 0,
+    "fieldDrawsPerSec": 21.04,
+    "playStartMedianMs": 10.4,
+    "playStartMaxMs": 20.6,
+    "pageSimMedianMs": 0.7,
+    "pageSimMaxMs": 3.8,
+    "longTasksObserved": 2,
+    "longTaskMs": 486
+   },
+   "trace": {
+    "found": true,
+    "windowMs": 2691.1,
+    "windows": 2,
+    "mainBusyMs": 1072.3,
+    "mainBusyShare": 0.398,
+    "mainMs": {
+     "script": 289.9,
+     "style": 173.4,
+     "paint": 156.8,
+     "other": 176.9,
+     "parse": 172.3,
+     "layout": 29.4,
+     "gc": 74.5
+    },
+    "top": [
+     [
+      "FunctionCall",
+      246
+     ],
+     [
+      "UpdateLayoutTree",
+      173.4
+     ],
+     [
+      "ParseHTML",
+      172.3
+     ],
+     [
+      "ThreadControllerImpl::RunTask",
+      127.5
+     ],
+     [
+      "Paint",
+      77.6
+     ],
+     [
+      "Layerize",
+      46.4
+     ],
+     [
+      "RunMicrotasks",
+      32.6
+     ],
+     [
+      "V8.GC_MC_INCREMENTAL",
+      31.7
+     ],
+     [
+      "Layout",
+      29.3
+     ],
+     [
+      "PrePaint",
+      22.8
+     ],
+     [
+      "CompressionStream Deflate",
+      19
+     ],
+     [
+      "RunTask",
+      13.3
+     ]
+    ],
+    "longTasks": {
+     "count": 1,
+     "totalMs": 151.9,
+     "maxMs": 151.9,
+     "detail": [
+      {
+       "atMs": 457,
+       "ms": 151.9,
+       "entry": {
+        "name": "TimerFire",
+        "ms": 151.8,
+        "fn": null,
+        "url": null,
+        "line": null,
+        "type": null
+       },
+       "top": [
+        [
+         "FunctionCall",
+         144.3
+        ],
+        [
+         "V8.BytecodeBudgetInterrupt",
+         3.4
+        ],
+        [
+         "V8.GC_SCAVENGER_SCAVENGE_PARALLEL_PHASE",
+         2.7
+        ],
+        [
+         "V8.HandleInterrupts",
+         0.4
+        ]
+       ]
+      }
+     ]
+    },
+    "rasterOffMainMs": 697.6
+   },
+   "cdpMetricsMs": {
+    "script": 693.4,
+    "layout": 41.7,
+    "recalcStyle": 244.12,
+    "task": 2351.06
+   },
+   "load": {
+    "seconds": 6.8,
+    "cpus": 2,
+    "busyShare": 0.485,
+    "harnessShare": 0.444,
+    "foreignShare": 0.003,
+    "foreignTop": [
+     [
+      "claude",
+      0.001
+     ],
+     [
+      "process_api",
+      0.001
+     ],
+     [
+      "environment-man",
+      0.001
+     ]
+    ],
+    "loadavgStart": [
+     0.94,
+     0.6,
+     0.67
+    ],
+    "loadavgEnd": [
+     0.95,
+     0.6,
+     0.67
+    ],
+    "available": true,
+    "busyCpus": 0.9213,
+    "ownCpus": 0.9154,
+    "competingCpus": 0.0059,
+    "competingRawCpus": 0.0059,
+    "stealCpus": 0.0118,
+    "irqCpus": 0.068,
+    "userCpus": 0.8577,
+    "systemCpus": 0.0636,
+    "quiet": true,
+    "notQuiet": []
+   },
+   "identity": {
+    "ok": true,
+    "got": "35b932c75b88220f",
+    "want": "35b932c75b88220f"
+   },
+   "quality": {
+    "label": "GOOD",
+    "reasons": []
+   }
+  }
+ ]
+}

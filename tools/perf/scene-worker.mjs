@@ -8,12 +8,21 @@
 // the inert twin plus one overlay's species and primed state, e.g. only:home.offense.WR1, or only:fields for the staged fields alone,
 // or only:none, the control with nothing active;
 // subVariants(scene) lists them).
-// Each run returns { ms (wall), cpu (process CPU time), plays, ticks, fp, inputs, playsHash, abilityEvents, fields }: ms is the timed section only (scene inputs,
-// teams and game states are built before the timer starts; fingerprints are computed after it stops).
+// Each run returns { ms (wall), cpu (process CPU time), main (main-thread CPU time), plays, ticks, actorTicks, pairTicks, fp, inputs, playsHash, abilityEvents, fields,
+// machine }: ms is the timed section only (scene inputs, teams and game states are built before the timer starts; fingerprints are
+// computed after it stops). machine: the /proc/stat busy and steal clock ticks over the same timed section (methodology correction of
+// 2026-11-08: the competing CPU of one run is busy - this process's cpu; coarse, 10 ms ticks). actorTicks: the sum over plays of
+// ticks x the mean number of actors on the field (temporaries included: Stormguard, Grove Guardian), the work volume for the
+// per-step / volume decomposition (PERF_SCENES.md section 3.2); pairTicks the same with actor pairs (the separation pass's volume).
+// With --gc-stats (or IPC message gcStats) each run also reports V8's GC count and time inside the timed section and the new-space
+// size afterwards (a diagnostic for the R1 experiment; off by default so the timed path is unchanged).
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
+import v8 from 'node:v8';
+import { PerformanceObserver, performance } from 'node:perf_hooks';
+import { procStat } from './machine.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const MANIFEST = JSON.parse(fs.readFileSync(path.join(HERE, 'scenes.json'), 'utf8'));
@@ -26,9 +35,28 @@ const PB = await imp('src/data/playbook.js');
 const RNG = await imp('src/core/rng.js');
 const IS_T8 = fs.existsSync(path.join(ROOT, 'src/sim/abilities/registry.js'));
 const FIELDS = IS_T8 ? await imp('src/sim/t8/fields.js') : null;
+const GC = []; let gcObs = null;
+/** Turn V8 GC observation on (diagnostic only). */
+export function gcStatsOn() { if (gcObs) return; gcObs = new PerformanceObserver((l) => { for (const e of l.getEntries()) GC.push([e.startTime, e.duration, e.detail?.kind ?? e.kind]); }); gcObs.observe({ entryTypes: ['gc'] }); }
+if (arg('gc-stats')) gcStatsOn();
+/** GC entries that started inside [a, b] (performance.now() ms): count, ms, minor (scavenge) count, major count. Clears older ones. */
+/** The GC figures of a finished run (call after yielding to the event loop, so the entries have been delivered). */
+export function gcAfter(res) { const [a, b] = res.gcWindow; delete res.gcWindow; return gcBetween(a, b); }
+function gcBetween(a, b) {
+  let n = 0, ms = 0, minor = 0, major = 0;
+  // perf_hooks kinds: 1 minor (scavenge), 4 major (mark-compact), 8 incremental marking step, 16 weak callbacks
+  for (const [t, d, k] of GC) if (t >= a && t <= b) { n += 1; ms += d; if (k === 1) minor += 1; else if (k === 4) major += 1; }
+  GC.length = 0;
+  const ns = v8.getHeapSpaceStatistics().find((x) => x.space_name === 'new_space');
+  return { count: n, ms: +ms.toFixed(2), minor, major, newSpaceKB: ns ? Math.round(ns.space_size / 1024) : null, heapUsedMB: +(process.memoryUsage().heapUsed / 2 ** 20).toFixed(1) };
+}
 
 /** CPU time (user + system) of this process since `c0`, in ms: robust to other processes taking the CPU, unlike wall time. */
 const cpuMs = (c0) => { const d = process.cpuUsage(c0); return (d.user + d.system) / 1000; };
+/** CPU time of the main thread alone since `c0` (process.threadCpuUsage), in ms: without V8's helper threads (concurrent GC marking
+ *  and sweeping, background compilation), whose share varies with the process's state (PERF_SCENES.md section 3.1). Diagnostic. */
+const thr = () => (process.threadCpuUsage ? process.threadCpuUsage() : null);
+const mainMs = (t0) => { if (!t0) return null; const d = process.threadCpuUsage(); return (d.user - t0.user + d.system - t0.system) / 1000; };
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const sceneById = (id) => { const s = MANIFEST.scenes.find((x) => x.id === id); if (!s) throw new Error(`unknown scene ${id}`); return s; };
@@ -84,10 +112,10 @@ function runEngine(sc) {
   const inputs = engineInputs(sc);
   const inputsHash = sha(JSON.stringify(inputs.map((x) => ({ o: x.offensePlay.id, d: x.defensePlay.id, off: x.offense, def: x.defense, b: x.ballOn, s: x.seed, m: x.options.memory, e: x.options.envType, f: x.options.forcedTarget ?? null }))));
   const sims = new Array(inputs.length);
-  const t0 = process.hrtime.bigint(), c0 = process.cpuUsage();
+  const p0 = performance.now(), s0 = procStat(), m0 = thr(), t0 = process.hrtime.bigint(), c0 = process.cpuUsage();
   for (let i = 0; i < inputs.length; i++) sims[i] = E.simulatePlay(inputs[i]);
-  const ms = Number(process.hrtime.bigint() - t0) / 1e6, cpu = cpuMs(c0);
-  return { ms, cpu, sims, inputsHash, plays: inputs.length, playIds: [...new Set(inputs.flatMap((x) => [x.offensePlay.id, x.defensePlay.id]))] };
+  const ms = Number(process.hrtime.bigint() - t0) / 1e6, cpu = cpuMs(c0), main = mainMs(m0), s1 = procStat(), p1 = performance.now();
+  return { ms, cpu, main, p0, p1, s0, s1, sims, inputsHash, plays: inputs.length, playIds: [...new Set(inputs.flatMap((x) => [x.offensePlay.id, x.defensePlay.id]))] };
 }
 
 // ------------------------------------------------------------------------------------------------ rules tier
@@ -114,7 +142,7 @@ function rulesGames(sc, variant) {
 function runRules(sc, variant) {
   const games = rulesGames(sc, variant); const calls = callsOf(sc); const want = sc.unit === 'defense' ? 'away' : 'home'; const ballOn = sc.ballOn ?? 35;
   const sims = []; let plays = 0;
-  const t0 = process.hrtime.bigint(), c0 = process.cpuUsage();
+  const p0 = performance.now(), s0 = procStat(), m0 = thr(), t0 = process.hrtime.bigint(), c0 = process.cpuUsage();
   for (const g of games) {
     const { state, teams } = g;
     for (let k = 0; k < sc.snaps; k++) {
@@ -129,10 +157,10 @@ function runRules(sc, variant) {
       sims.push(sim); plays += 1;
     }
   }
-  const ms = Number(process.hrtime.bigint() - t0) / 1e6, cpu = cpuMs(c0);
+  const ms = Number(process.hrtime.bigint() - t0) / 1e6, cpu = cpuMs(c0), main = mainMs(m0), s1 = procStat(), p1 = performance.now();
   const inputsHash = sha(JSON.stringify(games.map((g) => ({ gs: g.gs, teams: g.teams }))));
   const fields = games.reduce((n, g) => n + (g.state.t8?.fields?.seq || 0), 0);
-  return { ms, cpu, sims, inputsHash, plays, playIds: [...new Set(calls.flat().filter((x) => PB.PLAYS[x]))], games, fields };
+  return { ms, cpu, main, p0, p1, s0, s1, sims, inputsHash, plays, playIds: [...new Set(calls.flat().filter((x) => PB.PLAYS[x]))], games, fields };
 }
 
 const ABILITY_KINDS = new Set(['ability', 'status', 'ability_ready', 'field', 'spawn', 'dragon_swallow']);
@@ -144,9 +172,19 @@ export function runScene(id, variant = 'plain', { dump = false } = {}) {
   if (sc.kind === 'ability' && variant === 'plain') variant = 'inert';
   const r = sc.tier === 'engine' ? runEngine(sc) : runRules(sc, variant);
   const TICK = E.TICK || 0.05;
-  let ticks = 0, abilityEvents = 0, engagedFrames = 0, frames = 0; const light = [];
-  for (const s of r.sims) { ticks += Math.round((s.elapsed || 0) / TICK); for (const f of s.frames || []) { frames += 1; for (const p of f.off || []) engagedFrames += p[3] ? 1 : 0; for (const p of f.def || []) engagedFrames += p[3] ? 1 : 0; } for (const e of s.events || []) if (e.ability || ABILITY_KINDS.has(e.kind)) abilityEvents += 1; light.push(`${s.result}|${s.yards}|${s.elapsed}|${s.frames?.length}|${s.events?.length}`); }
-  const out = { scene: id, variant, ms: r.ms, cpu: r.cpu, plays: r.plays, ticks, engagedPerFrame: frames ? engagedFrames / frames : 0, abilityEvents, fields: r.fields || 0, inputsHash: r.inputsHash, playsHash: sha(r.playIds.sort().map((p) => playKey(PB.getPlay(p))).join('\n')), fp: sha(light.join('\n')) };
+  let ticks = 0, abilityEvents = 0, engagedFrames = 0, frames = 0, actorTicks = 0, pairTicks = 0; const light = [];
+  for (const s of r.sims) {
+    const tk = Math.round((s.elapsed || 0) / TICK); ticks += tk; let nf = 0, na = 0, np = 0;
+    for (const f of s.frames || []) {
+      frames += 1; for (const p of f.off || []) engagedFrames += p[3] ? 1 : 0; for (const p of f.def || []) engagedFrames += p[3] ? 1 : 0;
+      if (f.motion || f.t < 0) continue; const n = (f.off?.length || 0) + (f.def?.length || 0); nf += 1; na += n; np += n * (n - 1) / 2; // actors on the field in this frame (temporaries included)
+    }
+    if (nf) { actorTicks += tk * na / nf; pairTicks += tk * np / nf; }
+    for (const e of s.events || []) if (e.ability || ABILITY_KINDS.has(e.kind)) abilityEvents += 1; light.push(`${s.result}|${s.yards}|${s.elapsed}|${s.frames?.length}|${s.events?.length}`);
+  }
+  const machine = r.s0 && r.s1 ? { busyTicks: r.s1.busy - r.s0.busy, stealTicks: r.s1.steal - r.s0.steal } : null;
+  const out = { scene: id, variant, ms: r.ms, cpu: r.cpu, main: r.main, machine, plays: r.plays, ticks, actorTicks: Math.round(actorTicks), pairTicks: Math.round(pairTicks), engagedPerFrame: frames ? engagedFrames / frames : 0, abilityEvents, fields: r.fields || 0, inputsHash: r.inputsHash, playsHash: sha(r.playIds.sort().map((p) => playKey(PB.getPlay(p))).join('\n')), fp: sha(light.join('\n')) };
+  if (gcObs) out.gcWindow = [r.p0, r.p1]; // the GC entries arrive asynchronously: summed by the caller after the run (gcAfter)
   if (dump) { // identity proof: every play's full output, and for the rules tier the game states afterwards
     const full = JSON.stringify(r.sims, (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v));
     out.full = sha(full); if (r.games) out.state = sha(JSON.stringify(r.games.map((g) => g.state), (k, v) => (v instanceof Set ? [...v] : v instanceof Map ? [...v] : v)));
@@ -164,11 +202,15 @@ export function runSceneDetail(id) {
 }
 
 if (process.send) {
-  process.on('message', (m) => {
-    try { if (m.cmd === 'run') process.send({ id: m.id, ok: true, res: runScene(m.scene, m.variant, m) }); else if (m.cmd === 'exit') process.exit(0); }
-    catch (e) { process.send({ id: m.id, ok: false, error: String(e?.stack || e) }); }
+  const tick = () => new Promise((r) => setImmediate(r));
+  process.on('message', async (m) => {
+    try {
+      if (m.cmd === 'gcStats') { gcStatsOn(); process.send({ id: m.id, ok: true, res: true }); }
+      else if (m.cmd === 'run') { if (gcObs) { const t = performance.now(); await tick(); gcBetween(t, t); } const res = runScene(m.scene, m.variant, m); if (gcObs) { await tick(); await tick(); res.gc = gcAfter(res); } process.send({ id: m.id, ok: true, res }); }
+      else if (m.cmd === 'exit') process.exit(0);
+    } catch (e) { process.send({ id: m.id, ok: false, error: String(e?.stack || e) }); }
   });
-  process.send({ ready: true, root: ROOT, t8: IS_T8 });
+  process.send({ ready: true, root: ROOT, t8: IS_T8, pid: process.pid });
 } else if (arg('scene')) {
   const ids = arg('scene') === 'all' ? MANIFEST.scenes.map((s) => s.id) : String(arg('scene')).split(',');
   for (const id of ids) { const sc = sceneById(id); const vs = arg('variant') ? [arg('variant')] : sc.kind === 'ordinary' ? ['plain'] : IS_T8 ? ['inert', 'ability'] : ['inert'];

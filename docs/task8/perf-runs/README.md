@@ -9,3 +9,8 @@
 - The runner's quiet-machine check reads the 1-minute load average. That figure includes the benchmark's own worker processes, so a run can never pass it on 2 CPUs.
 - Both runs are kept unchanged. The check is being corrected to separate the benchmark's own CPU use from competing load, and the correction is documented in PERF_SCENES.md.
 - Ability overhead (R1) is being remeasured with repeated paired comparisons, balanced on/off order and equivalent warm-up.
+
+**Correction made (2026-11-08, branch `task8-perf-method`).** The quiet rule now measures competing CPU (total process CPU minus the
+benchmark's own processes) and steal, R1 is a same-process paired comparison with balanced order, wash-out runs and equal warm-up,
+and every result carries a GOOD / PROVISIONAL label: `docs/task8/PERF_SCENES.md` sections 1.1, 3.1 and 3.2. The two run files above
+are unchanged.

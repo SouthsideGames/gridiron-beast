@@ -27,6 +27,12 @@
 // 5. JSON to --out (default tools/out/render-perf/render-perf-<stamp>.json) and summary tables on stdout.
 //
 // Defaults are the fixed protocol for the official run. Any run on a busy machine is PRELIMINARY (the JSON records the load).
+// Machine accounting (methodology correction 2026-11-08, docs/task8/PERF_SCENES.md section 1.1, tools/perf/machine.mjs): per block,
+// competing CPU = process CPU from /proc/stat (user + nice + system) - the harness's own process tree (this process, the browser, the
+// server); steal from /proc/stat. A block is quiet when competing <= 0.05 CPU and steal <= 0.05 CPU; the load averages and the
+// older shares (busyShare, harnessShare, foreignShare: shares of all CPUs' time) are kept unchanged for compatibility. Every block
+// and every summary row carries a quality label: GOOD, or PROVISIONAL with the reasons (not quiet, fewer than 3 repeats, or a
+// repeat-to-repeat spread of the mean or p95 frame time over 10% of its median). The run's meta.status is computed from them.
 // CPU throttle 4x is desktop emulation (an approximate indicator only), never a mobile measurement.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -37,6 +43,7 @@ import { spawn, execSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { precomputeAll } from './precompute.mjs';
 import { aggregateTrace, TRACE_CATEGORIES } from './trace.mjs';
+import { procStat, QUIET, loadReasons, CLK_TCK } from '../machine.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const ROOT = path.resolve(HERE, '..', '..', '..');
@@ -76,7 +83,7 @@ function procTicks() {
   return m;
 }
 function cpuStat() { const l = fs.readFileSync('/proc/stat', 'utf8').split('\n')[0].trim().split(/\s+/).slice(1).map(Number); const idle = l[3] + (l[4] || 0); return { total: l.reduce((a, b) => a + b, 0), idle }; }
-function loadStart() { return { at: Date.now(), cpu: cpuStat(), procs: procTicks(), loadavg: os.loadavg() }; }
+function loadStart() { return { at: Date.now(), cpu: cpuStat(), stat: procStat(), procs: procTicks(), loadavg: os.loadavg() }; }
 function loadEnd(s) {
   const cpu = cpuStat(); const procs = procTicks(); const dt = cpu.total - s.cpu.total;
   const mine = new Set([process.pid]); let grew = true; while (grew) { grew = false; for (const [pid, p] of procs) if (!mine.has(pid) && mine.has(p.ppid)) { mine.add(pid); grew = true; } }
@@ -84,9 +91,19 @@ function loadEnd(s) {
   for (const [pid, p] of procs) { const b = s.procs.get(pid); const d = p.ticks - (b ? b.ticks : 0); if (d <= 0) continue; if (mine.has(pid)) own += d; else { foreign += d; top.push([p.comm, d]); } }
   const ncpu = os.cpus().length; const share = (x) => +(x / Math.max(1, dt)).toFixed(3); // share of all CPUs' time
   const agg = {}; for (const [c, d] of top) agg[c] = (agg[c] || 0) + d;
-  return { seconds: +((Date.now() - s.at) / 1000).toFixed(1), cpus: ncpu, busyShare: share(dt - (cpu.idle - s.cpu.idle)), harnessShare: share(own), foreignShare: share(foreign),
-    foreignTop: Object.entries(agg).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c, d]) => [c, share(d)]), loadavgStart: s.loadavg.map((x) => +x.toFixed(2)), loadavgEnd: os.loadavg().map((x) => +x.toFixed(2)) };
+  // Corrected accounting (in CPUs; 1.0 = one whole CPU for the whole block): busy = user + nice + system (machine.mjs: interrupt
+  // time is not charged to processes and is reported apart, irqCpus; idle, iowait and steal excluded); own = this
+  // process tree; competing = busy - own (also counts processes this container cannot see, and the harness's children that exited
+  // during the block, so it errs on the busy side).
+  const sec = (Date.now() - s.at) / 1000; const st = procStat(); const per = (t) => t / CLK_TCK / Math.max(1e-9, sec);
+  const acct = st && s.stat ? (() => { const busy = per(st.busy - s.stat.busy), ownC = per(own), steal = per(st.steal - s.stat.steal); const comp = Math.max(0, busy - ownC);
+    const w = { available: true, busyCpus: +busy.toFixed(4), ownCpus: +ownC.toFixed(4), competingCpus: +comp.toFixed(4), competingRawCpus: +(busy - ownC).toFixed(4), stealCpus: +steal.toFixed(4), irqCpus: +per((st.irq + st.softirq) - (s.stat.irq + s.stat.softirq)).toFixed(4), userCpus: +per(st.user + st.nice - s.stat.user - s.stat.nice).toFixed(4), systemCpus: +per(st.system - s.stat.system).toFixed(4) };
+    return { ...w, quiet: comp <= QUIET.competingCpus && steal <= QUIET.stealCpus }; })() : { available: false, quiet: false };
+  return { seconds: +sec.toFixed(1), cpus: ncpu, busyShare: share(dt - (cpu.idle - s.cpu.idle)), harnessShare: share(own), foreignShare: share(foreign),
+    foreignTop: Object.entries(agg).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([c, d]) => [c, share(d)]), loadavgStart: s.loadavg.map((x) => +x.toFixed(2)), loadavgEnd: os.loadavg().map((x) => +x.toFixed(2)),
+    ...acct, notQuiet: loadReasons(acct) };
 }
+const NOISE = 0.10;
 
 // ------------------------------------------------------------------------------------------------ mobile availability
 /** Is there anything to verify mobile on? A Capacitor project in the repository, or a device attached. Recorded, never estimated. */
@@ -166,7 +183,7 @@ async function main() {
     options: OPT, host: { cpus: os.cpus().length, model: os.cpus()[0]?.model, memGB: +(os.totalmem() / 2 ** 30).toFixed(1), platform: `${os.platform()} ${os.release()}`, node: process.version }, idleLoad,
     mobile: mobileStatus(),
     status: 'PRELIMINARY unless run on a quiet machine (see load per block). Headless desktop Chromium; not a phone; 4x CPU throttle is desktop emulation (an approximate indicator only), not mobile verification.' };
-  console.log(`[render-perf] machine before start: busy ${idleLoad.busyShare} (foreign ${idleLoad.foreignShare}), loadavg ${idleLoad.loadavgEnd.join(' ')}; mobile: ${meta.mobile.status}${meta.mobile.reason ? ` (${meta.mobile.reason})` : ''}`);
+  console.log(`[render-perf] machine before start: competing ${idleLoad.competingCpus ?? '-'} CPU, steal ${idleLoad.stealCpus ?? '-'} CPU${idleLoad.quiet ? ' (quiet)' : ' (NOT QUIET)'}; busy ${idleLoad.busyShare} (foreign ${idleLoad.foreignShare}), loadavg ${idleLoad.loadavgEnd.join(' ')}; mobile: ${meta.mobile.status}${meta.mobile.reason ? ` (${meta.mobile.reason})` : ''}`);
   console.log(`[render-perf] precompute (sim passes ${OPT.simPasses}, plays per scene ${OPT.plays})`);
   const pre0 = loadStart(); const scenes = await precomputeAll({ plays: OPT.plays, simPasses: OPT.simPasses, only: OPT.scenes }); meta.precomputeLoad = loadEnd(pre0);
   for (const s of scenes) console.log(`  ${s.id}: sim ${s.kind === 'clash' ? `${s.sim.msPerBattle} ms/battle` : `${s.sim.medianMsPerPlay} ms/play median (chosen ${s.sim.chosenMedianMsPerPlay})`}${s.plays ? `, ${s.plays.length} plays, ${s.plays.reduce((a, p) => a + p.info.frames, 0)} engine frames` : ''}`);
@@ -240,11 +257,12 @@ async function main() {
       }
       const runs = mode === 'live' ? value.inPlay : value.runs;
       const row = { mode, scene: sc.id, config: cfgName, throttle: rate, platform: PLATFORM(rate), repeat: rep, frames: frameStats(runs), trace: tr,
-        cdpMetricsMs: { script: dm('ScriptDuration'), layout: dm('LayoutDuration'), recalcStyle: dm('RecalcStyleDuration'), task: dm('TaskDuration') }, load, identity };
+        cdpMetricsMs: { script: dm('ScriptDuration'), layout: dm('LayoutDuration'), recalcStyle: dm('RecalcStyleDuration'), task: dm('TaskDuration') }, load, identity,
+        quality: { label: load.notQuiet.length ? 'PROVISIONAL' : 'GOOD', reasons: load.notQuiet } };
       if (mode === 'live') { row.sessionFrames = frameStats(value.session); row.liveSteps = value.steps; row.liveSituation = value.situation; }
       results.push(row);
       const f = row.frames, t = tr.mainMs || {};
-      console.log(`  ${mode.padEnd(8)} ${sc.id.padEnd(22)} ${cfgName.padEnd(9)} x${rate} r${rep}: avg ${f.meanMs} med ${f.medianMs} p95 ${f.p95Ms} ms (${f.avgFps} fps, <=20ms ${f.share20}) >33:${f.over33} >50:${f.over50}${f.pageSimMedianMs != null ? ` sim ${f.pageSimMedianMs}/${f.pageSimMaxMs}` : ''} | script ${t.script ?? '-'} gc ${t.gc ?? '-'} style ${t.style ?? '-'} layout ${t.layout ?? '-'} paint ${t.paint ?? '-'} ms, long ${tr.longTasks?.count ?? '-'} | load busy ${load.busyShare} foreign ${load.foreignShare}`);
+      console.log(`  ${mode.padEnd(8)} ${sc.id.padEnd(22)} ${cfgName.padEnd(9)} x${rate} r${rep}: avg ${f.meanMs} med ${f.medianMs} p95 ${f.p95Ms} ms (${f.avgFps} fps, <=20ms ${f.share20}) >33:${f.over33} >50:${f.over50}${f.pageSimMedianMs != null ? ` sim ${f.pageSimMedianMs}/${f.pageSimMaxMs}` : ''} | script ${t.script ?? '-'} gc ${t.gc ?? '-'} style ${t.style ?? '-'} layout ${t.layout ?? '-'} paint ${t.paint ?? '-'} ms, long ${tr.longTasks?.count ?? '-'} | load busy ${load.busyShare} foreign ${load.foreignShare} | competing ${load.competingCpus ?? '-'} steal ${load.stealCpus ?? '-'} CPU ${row.quality.label}`);
     }
     const LIVE = { id: 'L1-franchise-auto', kind: 'live', what: `the real franchise Sunday game (seed 3, week ${meta.setup.week}, ${meta.setup.club}) on the real match screen in Auto 1x: ${OPT.liveSteps} measured steps after ${OPT.liveWarmup} warm-up steps` };
     for (let rep = 1; rep <= OPT.repeats; rep++) {
@@ -300,11 +318,20 @@ async function main() {
       longTasks: median(rows.map((r) => r.trace.longTasks?.count ?? 0)), longTaskMaxMs: r2(median(rows.map((r) => r.trace.longTasks?.maxMs ?? 0))),
       mainMsPerSec: { script: r2(T('script') / (win / 1000)), gc: r2(T('gc') / (win / 1000)), style: r2(T('style') / (win / 1000)), layout: r2(T('layout') / (win / 1000)), paint: r2(T('paint') / (win / 1000)), parse: r2(T('parse') / (win / 1000)), other: r2(T('other') / (win / 1000)) },
       mainBusyShare: r2(median(rows.map((r) => r.trace.mainBusyShare))), foreignLoad: r2(median(rows.map((r) => r.load.foreignShare))), busyLoad: r2(median(rows.map((r) => r.load.busyShare))),
+      competingCpus: r2(median(rows.map((r) => r.load.competingCpus))), competingCpusMax: r2(Math.max(...rows.map((r) => r.load.competingCpus ?? Infinity))), stealCpus: r2(median(rows.map((r) => r.load.stealCpus))), stealCpusMax: r2(Math.max(...rows.map((r) => r.load.stealCpus ?? Infinity))),
+      quality: (() => { const why = []; const nq = rows.filter((r) => r.load.notQuiet.length); if (nq.length) why.push(`${nq.length} of ${rows.length} blocks not quiet (${[...new Set(nq.flatMap((r) => r.load.notQuiet.map((x) => x.split(' ')[0])))].join(', ')})`);
+        if (rows.length < 3) why.push(`${rows.length} repeat${rows.length === 1 ? '' : 's'} (fewer than 3)`);
+        for (const k of ['meanMs', 'p95Ms']) { const a = rows.map((r) => r.frames[k]).filter((x) => x != null); const m = median(a); if (a.length > 1 && m > 0 && (Math.max(...a) - Math.min(...a)) / m > NOISE) why.push(`noisy (${k} spread over repeats ${r2((Math.max(...a) - Math.min(...a)) / m)} of the median)`); }
+        return { label: why.length ? 'PROVISIONAL' : 'GOOD', reasons: why }; })(),
       identityOk: rows.every((r) => r.identity == null || r.identity.ok) });
   }
+  const nq = results.filter((r) => r.load.notQuiet.length);
+  meta.quietRule = QUIET; meta.statusNote = meta.status;
+  meta.status = `${nq.length ? `PRELIMINARY: ${nq.length} of ${results.length} blocks not quiet (competing CPU over ${QUIET.competingCpus} or steal over ${QUIET.stealCpus} CPU)` : `quiet machine (competing CPU <= ${QUIET.competingCpus} and steal <= ${QUIET.stealCpus} CPU in every block)`}; ${summary.filter((s) => s.quality.label !== 'GOOD').length} of ${summary.length} summary rows PROVISIONAL. ${meta.statusNote.replace(/^PRELIMINARY unless run on a quiet machine \(see load per block\)\. /, '')}`;
+  console.log(`[render-perf] ${meta.status}`);
   const out = { meta: { ...meta, finishedAt: new Date().toISOString() }, configs: CONFIGS, scenes: scenes.map((s) => ({ id: s.id, kind: s.kind, source: s.source, variant: s.variant, what: s.what, fingerprint: s.fingerprint, sim: s.sim, plays: s.plays?.map((p) => p.info) })), summary, checks, profiles, attribution, blocks: results };
   fs.mkdirSync(path.dirname(OUT), { recursive: true }); fs.writeFileSync(OUT, JSON.stringify(out, null, 1));
   console.log(`[render-perf] wrote ${path.relative(process.cwd(), OUT)}`);
-  console.table(summary.map((s) => ({ mode: s.mode, scene: s.scene, cfg: s.config, cpu: `${s.throttle}x`, simNode: s.simNodeMs, simPage: s.simPageMedianMs, avg: s.meanMs, med: s.medianMs, p95: s.p95Ms, fps: s.avgFps, '<=20': s.share20, '>33': s.over33, '>50': s.over50, long: s.longTasks, 'script/s': s.mainMsPerSec.script, 'style+layout/s': r2(s.mainMsPerSec.style + s.mainMsPerSec.layout), 'paint/s': s.mainMsPerSec.paint, load: s.foreignLoad, id: s.identityOk ? 'ok' : 'DIFF' })));
+  console.table(summary.map((s) => ({ mode: s.mode, scene: s.scene, cfg: s.config, cpu: `${s.throttle}x`, simNode: s.simNodeMs, simPage: s.simPageMedianMs, avg: s.meanMs, med: s.medianMs, p95: s.p95Ms, fps: s.avgFps, '<=20': s.share20, '>33': s.over33, '>50': s.over50, long: s.longTasks, 'script/s': s.mainMsPerSec.script, 'style+layout/s': r2(s.mainMsPerSec.style + s.mainMsPerSec.layout), 'paint/s': s.mainMsPerSec.paint, load: s.foreignLoad, competing: s.competingCpus, steal: s.stealCpus, quality: s.quality.label, id: s.identityOk ? 'ok' : 'DIFF' })));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

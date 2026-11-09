@@ -1,0 +1,807 @@
+{
+ "tool": "tools/perf/r1-experiment.mjs",
+ "cand": "/home/claude/gridiron-beast/.claude/worktrees/agent-a9d282a447cce35d3",
+ "scenes": [
+  "A3-delayed-effects",
+  "A2-summons-constructs",
+  "A5-full-contracts"
+ ],
+ "repeats": 8,
+ "warmup": 3,
+ "idleMs": 3000,
+ "when": "2026-11-09T01:23:00.830Z",
+ "part1": {
+  "A3-delayed-effects": {
+   "steady": {
+    "n": 8,
+    "cpu": 165.1,
+    "main": 156.9,
+    "wall": 157.9,
+    "helper": 17.8,
+    "spikes": 1,
+    "gcMs": 10.36,
+    "majors": 0,
+    "cpuRuns": [
+     230.9,
+     733.3,
+     166,
+     164.3,
+     162.6,
+     202.9,
+     156.4,
+     129.5
+    ]
+   },
+   "switch": {
+    "n": 8,
+    "cpu": 241.8,
+    "main": 143.2,
+    "wall": 167.7,
+    "helper": 90,
+    "spikes": 4,
+    "gcMs": 14.219999999999999,
+    "majors": 2,
+    "cpuRuns": [
+     229.8,
+     262.3,
+     252.8,
+     230.9,
+     291,
+     257.9,
+     182.3,
+     138
+    ]
+   },
+   "idle": {
+    "n": 8,
+    "cpu": 207.2,
+    "main": 186.4,
+    "wall": 192.3,
+    "helper": 10.2,
+    "spikes": 1,
+    "gcMs": 10.8,
+    "majors": 0,
+    "cpuRuns": [
+     202.7,
+     147.2,
+     221.8,
+     218,
+     291.2,
+     159.9,
+     211.7,
+     164.1
+    ]
+   }
+  },
+  "A2-summons-constructs": {
+   "steady": {
+    "n": 8,
+    "cpu": 188.3,
+    "main": 170.1,
+    "wall": 175.3,
+    "helper": 22.9,
+    "spikes": 2,
+    "gcMs": 10.58,
+    "majors": 0,
+    "cpuRuns": [
+     305.3,
+     302.9,
+     182.8,
+     186,
+     180.1,
+     190.6,
+     169.9,
+     244.2
+    ]
+   },
+   "switch": {
+    "n": 8,
+    "cpu": 230.8,
+    "main": 192.2,
+    "wall": 195.9,
+    "helper": 28.2,
+    "spikes": 2,
+    "gcMs": 13.535,
+    "majors": 2,
+    "cpuRuns": [
+     345.9,
+     179.2,
+     215.3,
+     280.3,
+     170.2,
+     196.8,
+     246.3,
+     327.4
+    ]
+   },
+   "idle": {
+    "n": 8,
+    "cpu": 254.8,
+    "main": 225.1,
+    "wall": 229,
+    "helper": 22.5,
+    "spikes": 3,
+    "gcMs": 13.635000000000002,
+    "majors": 0,
+    "cpuRuns": [
+     759,
+     188.6,
+     232.4,
+     291.6,
+     176.9,
+     181.4,
+     284.6,
+     277.2
+    ]
+   }
+  },
+  "A5-full-contracts": {
+   "steady": {
+    "n": 8,
+    "cpu": 328.1,
+    "main": 263.3,
+    "wall": 272,
+    "helper": 30.8,
+    "spikes": 0,
+    "gcMs": 22.195,
+    "majors": 1,
+    "cpuRuns": [
+     389.3,
+     464.8,
+     275.5,
+     266.6,
+     299.3,
+     287.7,
+     356.9,
+     412.9
+    ]
+   },
+   "switch": {
+    "n": 8,
+    "cpu": 341.8,
+    "main": 301.2,
+    "wall": 306.2,
+    "helper": 37.3,
+    "spikes": 0,
+    "gcMs": 22.935000000000002,
+    "majors": 4,
+    "cpuRuns": [
+     385.4,
+     341.5,
+     332.4,
+     399.6,
+     342.1,
+     444.6,
+     310,
+     322.9
+    ]
+   },
+   "idle": {
+    "n": 8,
+    "cpu": 317.2,
+    "main": 296,
+    "wall": 302,
+    "helper": 16.4,
+    "spikes": 1,
+    "gcMs": 20.005,
+    "majors": 0,
+    "cpuRuns": [
+     441,
+     322.8,
+     318.2,
+     890.1,
+     316.2,
+     277.6,
+     276,
+     289.4
+    ]
+   }
+  }
+ },
+ "part2": {
+  "A3-delayed-effects settle=0": {
+   "M": {
+    "n": 8,
+    "cpu": 197.1,
+    "main": 142.5,
+    "wall": 150.4,
+    "helper": 27.8,
+    "spikes": 1,
+    "gcMs": 13.355,
+    "majors": 0,
+    "cpuRuns": [
+     177.3,
+     142.9,
+     188.8,
+     162.2,
+     205.5,
+     212.5,
+     208.9,
+     853.2
+    ]
+   },
+   "A": {
+    "n": 8,
+    "cpu": 199.8,
+    "main": 155.7,
+    "wall": 156.5,
+    "helper": 40.6,
+    "spikes": 2,
+    "gcMs": 11.685,
+    "majors": 1,
+    "cpuRuns": [
+     325.3,
+     206.3,
+     186.3,
+     138.2,
+     731,
+     193.8,
+     205.8,
+     145.8
+    ]
+   },
+   "ratioCpu": 1.0136986301369864,
+   "ratioMain": 1.0926315789473684,
+   "ratioWall": 1.0405585106382977
+  },
+  "A3-delayed-effects settle=1": {
+   "M": {
+    "n": 8,
+    "cpu": 162.1,
+    "main": 137.4,
+    "wall": 141.5,
+    "helper": 23.9,
+    "spikes": 0,
+    "gcMs": 7.43,
+    "majors": 1,
+    "cpuRuns": [
+     192.4,
+     205.3,
+     155.3,
+     169,
+     190.1,
+     126.3,
+     134.8,
+     141.2
+    ]
+   },
+   "A": {
+    "n": 8,
+    "cpu": 210.4,
+    "main": 175.8,
+    "wall": 189.9,
+    "helper": 51.6,
+    "spikes": 3,
+    "gcMs": 18.884999999999998,
+    "majors": 0,
+    "cpuRuns": [
+     771.8,
+     162.5,
+     231.3,
+     152.5,
+     189.5,
+     679,
+     657.3,
+     176.1
+    ]
+   },
+   "ratioCpu": 1.29796421961752,
+   "ratioMain": 1.279475982532751,
+   "ratioWall": 1.3420494699646643
+  },
+  "A2-summons-constructs settle=0": {
+   "M": {
+    "n": 8,
+    "cpu": 255.1,
+    "main": 198.1,
+    "wall": 203.5,
+    "helper": 57.6,
+    "spikes": 1,
+    "gcMs": 15.86,
+    "majors": 0,
+    "cpuRuns": [
+     261.2,
+     216.9,
+     264.4,
+     197.7,
+     249,
+     865.9,
+     343.1,
+     245.7
+    ]
+   },
+   "A": {
+    "n": 8,
+    "cpu": 260.5,
+    "main": 219.6,
+    "wall": 223.2,
+    "helper": 31.8,
+    "spikes": 1,
+    "gcMs": 16.295,
+    "majors": 0,
+    "cpuRuns": [
+     261.1,
+     274.5,
+     260,
+     188.2,
+     201.3,
+     242.5,
+     806.9,
+     272.7
+    ]
+   },
+   "ratioCpu": 1.0211681693453547,
+   "ratioMain": 1.1085310449268047,
+   "ratioWall": 1.0968058968058967
+  },
+  "A2-summons-constructs settle=1": {
+   "M": {
+    "n": 8,
+    "cpu": 248.8,
+    "main": 212.9,
+    "wall": 218.1,
+    "helper": 30.5,
+    "spikes": 0,
+    "gcMs": 17.28,
+    "majors": 2,
+    "cpuRuns": [
+     244.9,
+     252.7,
+     276.9,
+     193.8,
+     240.2,
+     285.2,
+     357.6,
+     180.6
+    ]
+   },
+   "A": {
+    "n": 8,
+    "cpu": 307.6,
+    "main": 234.4,
+    "wall": 254,
+    "helper": 63.3,
+    "spikes": 1,
+    "gcMs": 16.305,
+    "majors": 1,
+    "cpuRuns": [
+     318.4,
+     252.8,
+     377.6,
+     215.3,
+     944.9,
+     296.8,
+     345.4,
+     229.6
+    ]
+   },
+   "ratioCpu": 1.2363344051446945,
+   "ratioMain": 1.1009863785814937,
+   "ratioWall": 1.164603392939019
+  },
+  "A5-full-contracts settle=0": {
+   "M": {
+    "n": 8,
+    "cpu": 419.7,
+    "main": 335.4,
+    "wall": 346.1,
+    "helper": 107.5,
+    "spikes": 2,
+    "gcMs": 22.125,
+    "majors": 0,
+    "cpuRuns": [
+     292.8,
+     931.7,
+     541.8,
+     314.6,
+     360.3,
+     1144.7,
+     373.8,
+     465.6
+    ]
+   },
+   "A": {
+    "n": 8,
+    "cpu": 320.5,
+    "main": 276.5,
+    "wall": 283.3,
+    "helper": 29.9,
+    "spikes": 1,
+    "gcMs": 20.865000000000002,
+    "majors": 1,
+    "cpuRuns": [
+     278.4,
+     368.3,
+     301.7,
+     339.2,
+     904,
+     300.3,
+     278.4,
+     360.1
+    ]
+   },
+   "ratioCpu": 0.7636406957350489,
+   "ratioMain": 0.8243887895050687,
+   "ratioWall": 0.8185495521525571
+  },
+  "A5-full-contracts settle=1": {
+   "M": {
+    "n": 8,
+    "cpu": 332.8,
+    "main": 283.2,
+    "wall": 287.4,
+    "helper": 42.1,
+    "spikes": 0,
+    "gcMs": 19.59,
+    "majors": 3,
+    "cpuRuns": [
+     347.1,
+     397.9,
+     339.3,
+     339.6,
+     289.9,
+     307.6,
+     326.3,
+     265.1
+    ]
+   },
+   "A": {
+    "n": 8,
+    "cpu": 330.3,
+    "main": 293.2,
+    "wall": 296,
+    "helper": 25.6,
+    "spikes": 0,
+    "gcMs": 22.2,
+    "majors": 2,
+    "cpuRuns": [
+     279.3,
+     356.4,
+     406.9,
+     315.5,
+     305.2,
+     284.2,
+     379.8,
+     345
+    ]
+   },
+   "ratioCpu": 0.9924879807692307,
+   "ratioMain": 1.0353107344632768,
+   "ratioWall": 1.0299234516353515
+  }
+ },
+ "part3": {
+  "A3-delayed-effects": {
+   "off after off": {
+    "n": 8,
+    "cpu": 176.1,
+    "main": 137.7,
+    "wall": 151.6,
+    "helper": 26.4,
+    "spikes": 1,
+    "gcMs": 9.78,
+    "majors": 1,
+    "cpuRuns": [
+     165.2,
+     251.4,
+     141.6,
+     291,
+     143.8,
+     144.3,
+     228.3,
+     187
+    ]
+   },
+   "off after on": {
+    "n": 8,
+    "cpu": 164.6,
+    "main": 147.1,
+    "wall": 149.4,
+    "helper": 15.2,
+    "spikes": 1,
+    "gcMs": 11.625,
+    "majors": 1,
+    "cpuRuns": [
+     166.8,
+     162.2,
+     162.3,
+     269.6,
+     190.4,
+     135.1,
+     141.1,
+     197.5
+    ]
+   },
+   "on after on": {
+    "n": 8,
+    "cpu": 229.5,
+    "main": 165.3,
+    "wall": 175.7,
+    "helper": 57.3,
+    "spikes": 1,
+    "gcMs": 21.305,
+    "majors": 1,
+    "cpuRuns": [
+     257.2,
+     216.4,
+     873,
+     252.1,
+     202.5,
+     216.9,
+     174.6,
+     242.1
+    ]
+   },
+   "on after off": {
+    "n": 8,
+    "cpu": 252.4,
+    "main": 161.5,
+    "wall": 184.5,
+    "helper": 69.9,
+    "spikes": 1,
+    "gcMs": 21.18,
+    "majors": 0,
+    "cpuRuns": [
+     274.8,
+     301.9,
+     179.1,
+     267.9,
+     236.9,
+     180.4,
+     174.5,
+     802
+    ]
+   },
+   "onOverOffSelf": 1.303236797274276,
+   "onOverOffOther": 1.5334143377885785,
+   "onOverOffSelfMain": 1.2004357298474948,
+   "onOverOffOtherMain": 1.0978925900747791
+  },
+  "A2-summons-constructs": {
+   "off after off": {
+    "n": 8,
+    "cpu": 238,
+    "main": 192.4,
+    "wall": 194.8,
+    "helper": 42.2,
+    "spikes": 0,
+    "gcMs": 12.95,
+    "majors": 0,
+    "cpuRuns": [
+     281.9,
+     240.3,
+     178.5,
+     233.4,
+     305.5,
+     257.9,
+     198.6,
+     235.7
+    ]
+   },
+   "off after on": {
+    "n": 8,
+    "cpu": 243.7,
+    "main": 203.7,
+    "wall": 205.5,
+    "helper": 36,
+    "spikes": 0,
+    "gcMs": 14.205,
+    "majors": 3,
+    "cpuRuns": [
+     332.8,
+     256.2,
+     189.8,
+     238.6,
+     259.9,
+     234.3,
+     208.8,
+     248.8
+    ]
+   },
+   "on after on": {
+    "n": 8,
+    "cpu": 246.5,
+    "main": 216.4,
+    "wall": 220.6,
+    "helper": 34.2,
+    "spikes": 1,
+    "gcMs": 26.439999999999998,
+    "majors": 0,
+    "cpuRuns": [
+     333.2,
+     232.2,
+     236.2,
+     255,
+     307,
+     229.1,
+     238.1,
+     404.2
+    ]
+   },
+   "on after off": {
+    "n": 8,
+    "cpu": 302.9,
+    "main": 250.3,
+    "wall": 261.4,
+    "helper": 49,
+    "spikes": 0,
+    "gcMs": 27.075,
+    "majors": 2,
+    "cpuRuns": [
+     242.1,
+     276.1,
+     314.1,
+     291.7,
+     362.8,
+     353.6,
+     241.8,
+     329.6
+    ]
+   },
+   "onOverOffSelf": 1.0357142857142858,
+   "onOverOffOther": 1.2429216249487074,
+   "onOverOffSelfMain": 1.1247401247401247,
+   "onOverOffOtherMain": 1.2287677957781051
+  },
+  "A5-full-contracts": {
+   "off after off": {
+    "n": 8,
+    "cpu": 336.7,
+    "main": 297.3,
+    "wall": 305.4,
+    "helper": 43.4,
+    "spikes": 1,
+    "gcMs": 23.585,
+    "majors": 2,
+    "cpuRuns": [
+     473.6,
+     529.7,
+     292.4,
+     286,
+     374.5,
+     304.9,
+     319.4,
+     354.1
+    ]
+   },
+   "off after on": {
+    "n": 8,
+    "cpu": 354.1,
+    "main": 331.4,
+    "wall": 337.5,
+    "helper": 41.5,
+    "spikes": 2,
+    "gcMs": 23.130000000000003,
+    "majors": 1,
+    "cpuRuns": [
+     552.2,
+     978.6,
+     322,
+     310.2,
+     274.9,
+     365.6,
+     359.6,
+     348.5
+    ]
+   },
+   "on after on": {
+    "n": 8,
+    "cpu": 508,
+    "main": 394.2,
+    "wall": 405.2,
+    "helper": 74.3,
+    "spikes": 0,
+    "gcMs": 43.7,
+    "majors": 2,
+    "cpuRuns": [
+     560.1,
+     503.7,
+     512.4,
+     359.1,
+     408.7,
+     549.8,
+     460.7,
+     536.5
+    ]
+   },
+   "on after off": {
+    "n": 8,
+    "cpu": 481.3,
+    "main": 370.9,
+    "wall": 394.9,
+    "helper": 70.8,
+    "spikes": 0,
+    "gcMs": 39.599999999999994,
+    "majors": 3,
+    "cpuRuns": [
+     598.3,
+     527.2,
+     365.3,
+     435.3,
+     366.2,
+     663.2,
+     426.9,
+     537.1
+    ]
+   },
+   "onOverOffSelf": 1.5087615087615087,
+   "onOverOffOther": 1.3592205591640778,
+   "onOverOffSelfMain": 1.3259334006054488,
+   "onOverOffOtherMain": 1.1191913095956547
+  }
+ },
+ "machine": {
+  "A3-delayed-effects": {
+   "seconds": 88.99,
+   "cpus": 2,
+   "available": true,
+   "busyCpus": 1.0258,
+   "ownCpus": 1.0285,
+   "competingCpus": 0,
+   "competingRawCpus": -0.0027,
+   "stealCpus": 0.013,
+   "iowaitCpus": 0,
+   "irqCpus": 0.0065,
+   "systemCpus": 0.0263,
+   "quiet": true,
+   "loadavgStart": [
+    0.47,
+    0.89,
+    0.93
+   ],
+   "loadavgEnd": [
+    1.37,
+    1.04,
+    0.98
+   ]
+  },
+  "A2-summons-constructs": {
+   "seconds": 102.91,
+   "cpus": 2,
+   "available": true,
+   "busyCpus": 1.0229,
+   "ownCpus": 1.1297,
+   "competingCpus": 0,
+   "competingRawCpus": -0.1068,
+   "stealCpus": 0.0138,
+   "iowaitCpus": 0,
+   "irqCpus": 0.0078,
+   "systemCpus": 0.025,
+   "quiet": true,
+   "loadavgStart": [
+    1.37,
+    1.04,
+    0.98
+   ],
+   "loadavgEnd": [
+    1.41,
+    1.11,
+    1.01
+   ]
+  },
+  "A5-full-contracts": {
+   "seconds": 148.17,
+   "cpus": 2,
+   "available": true,
+   "busyCpus": 1.0632,
+   "ownCpus": 1.1506,
+   "competingCpus": 0,
+   "competingRawCpus": -0.0873,
+   "stealCpus": 0.014,
+   "iowaitCpus": 0,
+   "irqCpus": 0.0087,
+   "systemCpus": 0.02,
+   "quiet": true,
+   "loadavgStart": [
+    1.41,
+    1.11,
+    1.01
+   ],
+   "loadavgEnd": [
+    1.56,
+    1.32,
+    1.1
+   ]
+  }
+ }
+}
