@@ -273,7 +273,11 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
 
   // ---- the damage pipeline (S3; B3 step 8; P6 3.4-3.13). Attack-kind tags: ATTACK_TAGS. D5: the Striker shield-break and Disruptor
   // pierce apply to ORDINARY attacks only; the Tank guard while the Tank is active. Explicit ability exceptions through spec.exceptions.
-  let hitSeq = 0; let curHit = null; let curAttack = null;
+  let hitSeq = 0; let curHit = null; let curAttack = null; let attackSeq = 0;
+  // Deferred reactions (Rubble Reprisal: "Finish the entire originating healing ability ... BEFORE reaction"): queued by a hook and run
+  // when the outermost resolving step has finished (the end of the normal action, of the outermost strike, of a rotation, of a phase).
+  const deferred = [];
+  function flushDeferred() { while (deferred.length && !winner) { const d = deferred.shift(); const o = byId.get(d.ownerId); if (!o || o.koed) { if (LOG && o) log('cancelled', o, null, `${o.c.name}'s deferred ${d.abilityId} is cancelled (knocked out)`, { abilityId: d.abilityId, stage: 'cleanup', rule: 'B3 rule 2' }); continue; } d.fn(api, o.self); } }
   const isNormalAttack = (tag) => tag === 'ordinary' || tag === 'special';
   const label = (spec) => spec.label || (spec.tag === 'ordinary' ? 'attack' : spec.abilityId || spec.tag);
   const penaltyOf = (x, spec) => (isNormalAttack(spec?.tag ?? 'ordinary') || spec?.support ? x.p8?.factor ?? 1 : 1);
@@ -321,7 +325,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     const hits = spec.hits || 1; const normal = isNormalAttack(spec.tag);
     const out = { decided: false, launched: false, cancelled: false, intercepted: false, missed: false, redirected: false, hits: [], hpDamage: 0, shieldDamage: 0, kos: [], landed: false, tag: spec.tag, abilityId: spec.abilityId ?? null, attacker: att.c.id, target: intended.c.id };
     const prevAttack = curAttack;
-    curAttack = { attacker: att.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, suppressRetaliation: !!spec.suppressRetaliation, noRetaliation: spec.noRetaliation ?? (spec.tag === 'reaction' || spec.tag === 'counter' || spec.tag === 'commanded'), extra: isExtraStrike(spec) };
+    curAttack = { seq: ++attackSeq, attacker: att.c.id, owner: spec.commandedBy ?? att.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, suppressRetaliation: !!spec.suppressRetaliation, noRetaliation: spec.noRetaliation ?? (spec.tag === 'reaction' || spec.tag === 'counter' || spec.tag === 'commanded'), extra: isExtraStrike(spec) };
     try {
       if (att.koed && !spec.exception) { if (LOG) log('cancelled', att, intended, `${att.c.name}'s ${label(spec)} is cancelled (knocked out)`, { rule: 'B3 rule 2', stage: 'cleanup', abilityId: spec.abilityId ?? null }); out.cancelled = true; out.decided = endCheck(); return out; }
       // 3.4 launch: a performed normal attack is counted here (performed-attack counters); costs and once-uses are the contract's own;
@@ -359,7 +363,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       }
       out.decided = endCheck();
       return out;
-    } finally { curAttack = prevAttack; }
+    } finally { curAttack = prevAttack; if (!curAttack) flushDeferred(); }
   }
   function oneHit(att, t, spec, hitNo) {
     const prevHit = curHit; curHit = { id: ++hitSeq, tag: spec.tag, attacker: att.c.id, abilityId: spec.abilityId ?? null, hitNo };
@@ -367,12 +371,12 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     try {
       const sideOf = t.side;
       // 3.5 interception (Stone Divide): asked of the target's side in lineup order, then probes
-      const icpInfo = { attacker: att.c.id, target: t.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, strikeKey: spec.strikeKey ?? null, extra: curAttack.extra, hitNo };
+      const icpInfo = { attacker: att.c.id, owner: curAttack.owner, target: t.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, strikeKey: spec.strikeKey ?? null, extra: curAttack.extra, hitNo, attackSeq: curAttack.seq };
       const icp = firstC('intercept', lineupOrder(sideOf).filter((y) => !y.koed), icpInfo, (r) => r.intercepted) ?? probeR('intercept', t.c.id, icpInfo);
       if (icp?.intercepted) { if (LOG) log('intercepted', byId.get(icp.by) || null, att, `${att.c.name}'s ${label(spec)} is intercepted`, { stage: 'resolution', abilityId: icp.abilityId ?? null, by: icp.by ?? null, strike: spec.abilityId ?? spec.tag }); res.intercepted = true; return res; }
       // 3.6 explicit miss sources only (N7a, P10): the target's own sources; undodgeable attacks bypass them without a roll
       if (!spec.undodgeable) {
-        const mi = { attacker: att.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null, hitNo };
+        const mi = { attacker: att.c.id, owner: curAttack.owner, tag: spec.tag, abilityId: spec.abilityId ?? null, hitNo, attackSeq: curAttack.seq, hits: spec.hits || 1 };
         const miss = callC('missCheck', t, mi) ?? probeR('missCheck', t.c.id, mi);
         if (miss?.miss) { if (LOG) log('miss', att, t, `${att.c.name}'s ${label(spec)} misses (${miss.source || 'explicit miss effect'})`, { source: miss.source ?? null, abilityId: miss.abilityId ?? null, stage: 'resolution' }); res.missed = true; res.decided = afterHit(att, t, spec, [], true); return res; }
       }
@@ -588,6 +592,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
 
   // ---- the contract api (registry.js): what a hook may read and do. Views are plain snapshots; mutations go through the engine's
   //      primitives so every effect is logged with provenance and respects the gate, the pipeline and the P8 / C6 factors.
+  let inStep = false;
+  const step = (fn) => { const was = inStep; inStep = true; try { return fn(); } finally { inStep = was; if (!was && !curAttack) flushDeferred(); } };
   const viewOf = (x) => ({ id: x.c.id, name: x.c.name, side: x.side.key, slot: x.slot, species: x.c.species, type: x.c.type, archetype: x.c.archetype, basic: x.c.basic, hp: x.hp, maxHp: x.c.maxHp, atk: x.c.atk, spd: x.c.spd, active: x.active, koed: x.koed, koOrder: x.koOrder, turns: x.turns, inTurn: x.inTurn, stunProtected: x.stunProtected, entries: x.entries, entry: x.entry, performed: x.performed, status: x.status, abilityId: x.mod?.abilityId ?? null, stunned: clashEffect(x.status).stunned, able: !clashEffect(x.status).stunned || x.stunProtected, sigRestrict: x.sigRestrict ? { ...x.sigRestrict } : null, entryPenalty: x.p8?.factor ?? 1, clocks: x.clocks.map((k) => ({ id: k.id, kind: k.kind, left: k.left, source: k.source })) });
   const need = (id) => { const x = byId.get(id); if (!x) throw new Error(`No combatant ${id}`); return x; };
   const api = Object.freeze({
@@ -653,7 +659,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       return strike(att, tgt, { abilityId: self.abilityId, ...spec });
     },
     /** A strike by another monster on this contract's behalf (commanded / assist attacks): the attacker is `attackerId`. */
-    commandStrike: (self, attackerId, targetId, spec) => { const att = need(attackerId); const tgt = need(targetId); if (att.koed || tgt.koed) return { launched: false, landed: false, missed: false, hits: [], hpDamage: 0, shieldDamage: 0, kos: [], decided: endCheck() }; return strike(att, tgt, { abilityId: self.abilityId, normalAction: false, ...spec }); },
+    commandStrike: (self, attackerId, targetId, spec) => { const att = need(attackerId); const tgt = need(targetId); if (att.koed || tgt.koed) return { launched: false, landed: false, missed: false, hits: [], hpDamage: 0, shieldDamage: 0, kos: [], decided: endCheck() }; return strike(att, tgt, { abilityId: self.abilityId, normalAction: false, commandedBy: self.id, ...spec }); },
     // lineup and rotation
     forcedRotation: (self, sideKey, opts) => forcedRotation(need(self.id), S[sideKey], { abilityId: self.abilityId, ...opts }),
     /** Is a voluntary rotation legal for this side now (cadence, a living reserve, no lock)? { legal, unmet } */
@@ -685,6 +691,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     clockLeft: (holderId, id) => need(holderId).clocks.find((k) => k.id === id)?.left ?? 0,
     stateOf: (id) => need(id).ab, // another monster's ability state (read-only by convention; used by the reviewer and interactions)
     curAttack: () => (curAttack ? { ...curAttack } : null),
+    /** Queue a reaction to run after the originating step has finished (Rubble Reprisal). */
+    defer: (self, fn) => { deferred.push({ ownerId: self.id, abilityId: self.abilityId, fn }); if (!curAttack && !inStep) flushDeferred(); },
   });
 
   // ---- rotation (S4; P8; R5; D1, D2)
@@ -769,7 +777,9 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   }
 
   // ---- one normal turn (P6 step 3). Returns true when the battle is decided.
-  function takeTurn(x) {
+  /** One normal turn as one resolving step: deferred reactions run when the whole turn (action and end of turn) has finished. */
+  function takeTurn(x) { const d = step(() => takeTurnInner(x)); return d || endCheck(); }
+  function takeTurnInner(x) {
     x.turns += 1; x.inTurn = true; phase = 'turn'; turnIndex += 1;
     if (LOG) log('turn_start', x, null, `${x.c.name}'s turn ${x.turns}`, { turn: x.turns });
     callC('turnStart', x); probe('turnStart', x.c.id);
@@ -807,6 +817,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       else if (!done) {
         x.consecutiveSkips = 0; x.inAction = true;
         const foe = other(x.side).active;
+        const wasStep = inStep; inStep = true;
         try {
           if (choice?.kind === 'done') { /* the contract performed the normal action itself (a launch, a link, a cast) */ }
           else if (choice?.kind === 'run') done = !!choice.run(api, x.self);
@@ -815,7 +826,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
           else if (choice?.kind === 'shield') grantShield(x, byId.get(choice.targetId ?? x.c.id), choice);
           else if (choice?.kind === 'forcedRotation') { forcedRotation(x, choice.side === 'own' ? x.side : other(x.side), { incoming: choice.incoming, abilityId: choice.abilityId ?? null }); done = endCheck(); }
           else if (foe) done = ordinaryAttack(x, foe).decided;
-        } finally { x.inAction = false; }
+        } finally { x.inAction = false; inStep = wasStep; }
+        if (!curAttack) flushDeferred(); if (!done) done = endCheck(); // reactions to the action (Rubble Reprisal) run once the whole action has resolved, before the end of turn
       }
     }
     // End of turn (P6 step 3.14; B3 rule 5). Order: Afflicted damage (not on the application turn); the countdowns (status, then clocks).
@@ -826,7 +838,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     }
     if (!x.koed) {
       phase = 'end_of_turn';
-      if (!done) callC('endOfTurn', x);
+      if (!done) step(() => callC('endOfTurn', x));
       if (x.status) {
         const id = x.status.id; const r = statusEndOfTurn(x.status, { hold });
         if (r.held && LOG) log('status_hold', x, x, `${x.c.name}'s Stunned is held this turn (${x.status.remaining} left)`, { status: id, remaining: x.status.remaining, reason: 'D4 protected turn' });
@@ -869,7 +881,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     //    inert unless a contract's roundStart acts (Eclipse Call).
     phase = 'round_start';
     if (LOG) { if (ramp > 1) log('sudden_death', null, null, `Sudden death: damage x${ramp.toFixed(2)}`, { ramp }); log('round_start', null, null, `Exchange ${ex}`, { reserves: { a: living(S.a).filter((x) => !x.active).map((x) => x.c.id), b: living(S.b).filter((x) => !x.active).map((x) => x.c.id) } }); }
-    for (const y of [...living(S.a), ...living(S.b)]) callC('roundStart', y);
+    step(() => { for (const y of [...living(S.a), ...living(S.b)]) callC('roundStart', y); });
     probe('roundStart');
     if (winner) break;
     // 2. Initiative: explicit interrupts, then priority, then speed, then the seeded tie; then the reserve pre-initiative opening
@@ -905,7 +917,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     const requests = [];
     for (const side of [S.a, S.b]) { const r = rotationRequest(side); if (r?.pending) { stopped = r.pending; break; } if (r?.incoming) requests.push({ side, ...r }); }
     if (stopped) { if (LOG) log('rotation_prompt', byId.get(stopped.activeId) || null, null, `Side ${stopped.side.toUpperCase()} may rotate: waiting for a decision`, { pending: true, side: stopped.side, options: stopped.options }); break; }
-    for (const q of requests) if (executeRotation(q.side, q.incoming, q.by)) break;
+    for (const q of requests) if (step(() => executeRotation(q.side, q.incoming, q.by))) break;
     if (winner) break;
     // 5. End of exchange: delayed impacts (Falling Star, Faultline), in launch order, then the contracts' end-of-exchange hooks.
     phase = 'end_of_exchange';

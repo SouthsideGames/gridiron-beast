@@ -17,6 +17,11 @@ export const B12_TOLERANCES = deepFreeze([
   row('confused-redirect', 0.25, 0.02, 'spec §10; Appendix B STA-07 (25% per eligible normal attack)'),
   // Added 2026-11-09 at M4 S7, before the first Snowbank Shot probability test: ICE-03-C "80% LAUNCH accuracy check first".
   { ...row('snowbank-launch', 0.8, 0.03, 'ICE-03-C (80% launch accuracy)'), frozen: '2026-11-09 (M4 S7)' },
+  // Added 2026-11-09 at M4 S9, before any batch D probability test (N7b P10 values and the FIR-05-C diversion chances).
+  ...[[30, 0], [35, 1], [40, 2], [45, 3]].map(([pc, t]) => ({ ...row(`heat-mirage-t${t}`, pc / 100, 0.03, `FIR-05-C diversion ${pc}% (mastery tier ${t})`), frozen: '2026-11-09 (M4 S9)' })),
+  { ...row('shadow-pounce-umbrikit', 0.15, 0.02, 'DAR-01-C explicit dodge 15% (Umbrikit; N7b P10)'), frozen: '2026-11-09 (M4 S9)' },
+  { ...row('shadow-pounce-obscurat', 0.2, 0.02, 'DAR-01-C explicit dodge 20% (Obscurat; N7b P10)'), frozen: '2026-11-09 (M4 S9)' },
+  { ...row('mind-game-afterimage', 0.15, 0.02, 'PSY-05-C afterimage miss 15% (N7b P10)'), frozen: '2026-11-09 (M4 S9)' },
 ]);
 
 export function toleranceFor(id) { const t = B12_TOLERANCES.find((r) => r.id === id); if (!t) throw new Error(`No frozen B12 tolerance for ${id}`); return t; }

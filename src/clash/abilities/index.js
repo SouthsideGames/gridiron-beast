@@ -46,3 +46,17 @@ import './lumen.js';
 import './mindwing.js';
 import './wyrmkit.js';
 import './sablewing.js';
+// S9 batch D: reactions, counters, misses, survival (13)
+import './emberfox.js';
+import './cinderclaw.js';
+import './pyrelynx.js';
+import './shadowkit.js';
+import './enigmane.js';
+import './voltfin.js';
+import './rockram.js';
+import './joltrex.js';
+import './stormcrown.js';
+import './terrabull.js';
+import './boulderox.js';
+import './rootram.js';
+import './pebble.js';

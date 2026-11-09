@@ -111,7 +111,7 @@ test('team action and pre-initiative windows are asked of living reserves; onEnt
   assert.ok(ev(r, 'initiative', (e) => /advanced by/.test(e.by)).length === 1, 'Second Wind-type advance');
   assert.ok(ev(r, 'stage', (e) => e.controlled && e.abilityId === 'TEST-STUB').length === 1); assert.equal(r.lines.a[1].ability.n, 7); assert.ok(r.staged);
   assert.throws(() => run([M('charbun', 1)], [M('pebble', 2)], 1, { stage: { a0: { ability: { bogus: 1 } } } }), /not a field/);
-  assert.throws(() => run([M('charbun', 1)], [M('pebble', 2)], 1, { stage: { b0: { ability: { n: 1 } } } }), /no Clash contract/);
+  assert.throws(() => run([M('charbun', 1)], [M('gravelpup', 2)], 1, { stage: { b0: { ability: { n: 1 } } } }), /no Clash contract/);
   STUB = null;
 });
 

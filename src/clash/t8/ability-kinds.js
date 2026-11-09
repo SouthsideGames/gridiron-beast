@@ -116,5 +116,15 @@ export function isExtraStrike(spec) {
   if (s?.contested) return !!T8_FLAGS.stoneDivide[s.contested];
   return true;
 }
+/**
+ * The Stone Divide classification of a strike without applying any provisional switch: { extra, contested } where `contested` names the
+ * T8_FLAGS.stoneDivide key when the strike is one of the six the owner has not ruled on (PROVISIONAL_POINTS['stone-divide-scope']).
+ */
+export function strikeClass(spec) {
+  if (!EXTRA_TAGS.has(spec.tag)) return { extra: false, contested: null };
+  const k = spec.abilityId ? kindOf(spec.abilityId) : null;
+  const s = k?.strikes.find((x) => (spec.strikeKey ? x.key === spec.strikeKey : x.tag === spec.tag));
+  return { extra: true, contested: s?.contested || null };
+}
 /** Does Eye of the Storm (WIN-06-C) restrict this ability: a ready, repeatable signature that replaces or enhances the normal action? */
 export const restrictable = (abilityId) => !!kindOf(abilityId)?.signature;
