@@ -9,7 +9,8 @@
 import { cloudLoadReviews, cloudSaveReview } from './cloud-save.js';
 
 const NS = { ability: { key: 'gridiron-beast-ability-reviews', col: 'ability_reviews' }, play: { key: 'gridiron-beast-play-reviews', col: 'play_reviews' },
-  fbability: { key: 'gridiron-beast-football-ability-reviews', col: 'football_ability_reviews' } }; // Task 8 M3: the Ability Reviewer's verdicts (Dex ability ids)
+  fbability: { key: 'gridiron-beast-football-ability-reviews', col: 'football_ability_reviews' }, // Task 8 M3: the Ability Reviewer's verdicts (Dex ability ids)
+  clashability: { key: 'gridiron-beast-clash-ability-reviews', col: 'clash_ability_reviews' } }; // Task 8 M4 S15: the Clash Ability Reviewer's verdicts (Dex Clash ability ids)
 const cache = {};
 const listeners = new Set();
 

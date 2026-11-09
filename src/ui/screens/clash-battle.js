@@ -46,7 +46,7 @@ function bindings(app, Router) {
       record: (f) => f.week.encounter,
       preview: (f, i) => F.encounterPreview(f, i),
       start: (f, i, opts) => F.startEncounter(f, i, opts),
-      battle: (f) => F.encounterBattle(f),
+      battle: (f) => F.encounterBattle(f), decide: (f, ex, choice) => F.encounterDecide(f, ex, choice),
       resolve: (f) => F.resolveEncounter(f),
       occasion: 'encounter', mySide: 'a',
       resultHtml(f, e) {
@@ -82,7 +82,7 @@ function bindings(app, Router) {
       record: (f) => f.week.pregame,
       preview: (f) => F.pregamePreview(f),
       start: (f, i, opts) => F.startPregameClash(f, opts),
-      battle: (f) => F.pregameBattle(f),
+      battle: (f) => F.pregameBattle(f), decide: (f, ex, choice) => F.pregameDecide(f, ex, choice),
       resolve: (f) => F.resolvePregameClash(f),
       occasion: 'pregame', mySide: 'a',
       theirName: (f) => F.pregamePreview(f).opponent || 'Their team',
@@ -104,8 +104,8 @@ function bindings(app, Router) {
       title: 'Overtime · Beast Clash',
       record: (f) => f.week.overtime,
       preview: (f) => F.overtimePreview(f),
-      start: (f, i, opts) => F.startOvertimeClash(f, opts),
-      battle: (f) => F.overtimeBattle(f),
+      start: (f, i, opts) => F.startOvertimeClash(f, { ...opts, state: app.f?.game?.state || null }), // the football state: statuses and exhaustion carry into the deciding Clash (§10, §12)
+      battle: (f) => F.overtimeBattle(f), decide: (f, ex, choice) => F.overtimeDecide(f, ex, choice),
       resolve: (f) => F.resolveOvertimeClash(f),
       occasion: 'overtime', mySide: 'a',
       theirName: (f) => F.overtimePreview(f).opponent || 'Their team',
@@ -157,25 +157,55 @@ export function registerClashBattle(Router, app) {
       </div>`;
   }
 
-  // ---------- the battle itself: continuous, no decisions
+  // ---------- the battle itself: continuous; in Watch the t8 engine stops at the player's legal rotation phases (D1) and the prompt below answers them
   function battleHtml(f, e) {
-    return `<div class="row between" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><button class="btn small ghost" data-action="help">Help</button></div>
+    const pend = isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null;
+    return `<div class="row between" style="margin-bottom:4px"><span class="muted">${e.size}v${e.size} · ${esc(B().title.split('·').pop().trim())}</span><span class="row" style="gap:6px">${pend ? '<button class="btn small primary" data-action="rotprompt">⇄ Rotation: your call</button>' : ''}<button class="btn small ghost" data-action="help">Help</button></span></div>
       <div id="fb-arena"></div>`;
   }
   function teamNames(f, e) { const theirs = st.kind === 'encounter' ? 'The wild' : (e.opponent || 'The opponent'); return { a: f.club.split(' ').pop(), b: theirs }; }
   function mountBattle(root, f, e) {
     const host = root.querySelector('#fb-arena'); if (!host) return;
     st.result = B().battle(f); if (!st.result) { toast('The battle could not be rebuilt.', 'bad'); return; }
-    const legacyPend = policiesOf(e).a === 'manual' ? pendingDecision(st.result) : null; // a 'play' battle from before 2026-10-22 left mid-decision: it finishes on its own as Auto
+    const legacyPend = !isT8Record(e) && policiesOf(e).a === 'manual' ? pendingDecision(st.result) : null; // a 'play' battle from before 2026-10-22 left mid-decision: it finishes on its own as Auto
     if (legacyPend) { e.policies = { a: 'smart', b: 'smart' }; e.mode = 'watch'; app.save(); st.result = B().battle(f); }
     const end = st.result.log.length - 1;
-    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, onCursor: (i) => { st.cursor = i; }, onEnd: () => finish(f) });
+    // Looks hook (Task 8 M4): the Clash looks module (src/ui/fx/clash*, branch task8-fx-clash) plugs in here as `looks` once it exists;
+    // until then the arena plays its functional cues. See src/ui/clash/t8-record.js for the contract.
+    st.arena = createArena(host, st.result, { speed: settings().speed, reducedMotion: app.settings?.reducedMotion, names: teamNames(f, e), edge: typeEdge, simple: true, looks: app.clashLooks || null, onCursor: (i) => { st.cursor = i; }, onEnd: () => atEnd(f) });
     if (st.cursor) st.arena.setCursor(Math.min(st.cursor, end));
-    if (st.cursor >= end) { finish(f); return; }
+    if (st.cursor >= end) { atEnd(f); return; }
     setTimeout(() => st.arena?.play(), 300);
   }
+  /** The log has been played to its last event: either the battle is over (settle it) or the engine stopped at the player's rotation prompt (D1). */
+  function atEnd(f) {
+    const e = B().record(f); const p = e && isT8Record(e) && st.result?.pending ? pendingDecision(st.result) : null;
+    if (p) { promptRotation(f, e, p); return; }
+    finish(f);
+  }
+  /**
+   * The rotation prompt (owner ruling D1, §25 item 1): at a legal rotation phase of the player's side in Watch mode: Stay in, bring in
+   * a reserve, or "Auto for the rest of this battle" (the AI policy, D2, from here on; never asked again). The answer is recorded on the
+   * battle record, so a reload or a replay continues identically; the arena then plays on from the prompt.
+   */
+  function promptRotation(f, e, p) {
+    if (document.querySelector('.sheet [data-rot]')) return;
+    const act = st.result.lines[p.side].find((x) => x.id === p.activeId); const foe = st.result.lines[p.side === 'a' ? 'b' : 'a'].find((x) => x.active);
+    const stat = (x) => (x.status ? ` · ${T8_STATUS_ICON[x.status.id] || ''} ${T8_STATUS_NAME[x.status.id] || x.status.id} (${x.status.remaining})` : '');
+    const edge = (x) => (foe ? (typeFactor(x.type, foe.type) > 1 ? ' <b class="edge strong">▲</b>' : typeFactor(foe.type, x.type) > 1 ? ' <b class="edge weak">▼</b>' : '') : '');
+    const row = (x, label, rot) => `<button class="item" data-rot="${rot}" style="min-height:0;padding:8px"><div class="grow" style="min-width:0"><div><b>${esc(x.name)}</b>${edge(x)} <span class="dim">${ARCH_GLYPH[x.archetype] || ''} ${esc(x.archetype)} · ${esc(x.type)}</span></div><div class="dim" style="font-size:12px">HP ${x.hp}/${x.maxHp}${stat(x)}</div></div><span class="chip ${rot === 'stay' ? 'accent' : ''}">${label}</span></button>`;
+    const html = `<p class="muted" style="margin:0 0 6px">Exchange ${p.ex}: after both fighters acted, you may rotate. A reserve that comes in by choice acts at <b>half strength</b> on its first turn (the next rotation is four exchanges away). ${foe ? `Their active: <b>${esc(foe.name)}</b> (${esc(foe.type)}, HP ${foe.hp}/${foe.maxHp}).` : ''}</p>
+      <div class="list">${act ? row(act, 'Stay in', 'stay') : ''}${p.reserves.map((o) => row(st.result.lines[p.side].find((x) => x.id === o.id) || { ...o, status: o.status ? { id: o.status, remaining: '?' } : null }, 'Bring in', o.id)).join('')}</div>
+      <button class="btn block" data-rot="auto" style="margin-top:8px">⚙ Auto for the rest of this battle</button><p class="dim" style="margin:4px 0 0">Auto hands your rotations to the game's own policy (the one the other side uses) and never asks again in this battle.</p>`;
+    const { el, close } = sheet(html, { title: 'Rotation: your call' });
+    el.addEventListener('click', (ev) => {
+      const b = ev.target.closest('[data-rot]'); if (!b) return; const choice = b.dataset.rot; close();
+      const r = B().decide(f, p.ex, choice); if (!r.ok) { toast(r.reason, 'bad'); return; }
+      app.save(); const from = st.arena ? st.arena.cursor : st.cursor; stop(); st.cursor = from; Router.render(); // the remount rebuilds the battle from the record and plays on from the prompt
+    });
+  }
   function finish(f) {
-    const r = B().resolve(f); if (!r.ok) { toast(r.reason, 'bad'); return; }
+    const r = B().resolve(f); if (!r.ok) { if (r.pending?.kind === 'rotation') { promptRotation(f, B().record(f), r.pending); return; } toast(r.reason, 'bad'); return; }
     app.save(); stop(); st.cursor = 0; Router.render();
   }
   /** Each battler's XP: amount gained, a bar toward the next level, and any level-up. */
@@ -221,6 +251,7 @@ export function registerClashBattle(Router, app) {
       delegate(root, {
         back: () => Router.back(),
         help: () => sheet(HELP_HTML, { title: 'How Beast Clash works' }),
+        rotprompt: () => atEnd(f),
         edit: () => { st.editing = !st.editing; Router.render(); },
         autol: () => { st.lineup = null; st.editing = false; Router.render(); },
         add: (el) => { const id = el.dataset.id; const pv = b.preview(f, st.i); if (!st.lineup.includes(id) && st.lineup.length < pv.size) st.lineup.push(id); else if (st.lineup.length >= pv.size) toast(`Up to ${pv.size} monsters`, 'info'); Router.render(); },

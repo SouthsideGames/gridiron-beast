@@ -55,7 +55,7 @@ test('a schema-10 franchise round-trips through export and import, carries Clash
   const ids = g.roster.map((m) => m.id).sort();
   const pv = F.encounterPreview(g, 0); assert.ok(pv.ok, pv.reason); assert.ok(pv.size >= 1);
   const skip = JSON.parse(JSON.stringify(g)); F.skipEncounter(skip); assert.equal(skip.season.day, 2); assert.equal(skip.roster.length, g.roster.length);
-  assert.ok(F.startEncounter(g, 0).ok); const b = F.resolveEncounter(g); assert.ok(b.ok);
+  assert.ok(F.startEncounter(g, 0, { mode: 'skip' }).ok); const b = F.resolveEncounter(g); assert.ok(b.ok, b.reason); // Task 8 M4: Watch would stop at the player's rotation prompt (D1); a headless test settles with Skip
   if (b.won) assert.ok(F.declineOffer(g).ok); else { const r = F.recruit(g, 0, 'development'); assert.ok(r.ok); if (r.success) ids.push(r.monster.id); }
   assert.deepEqual(g.roster.map((m) => m.id).sort(), ids.sort(), 'no monster appeared or vanished except a signing');
   const w0 = g.season.week; for (let i = 0; i < 3; i++) week(g); assert.ok(g.season.week >= w0 + 3, 'three more weeks are played');
