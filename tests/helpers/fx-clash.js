@@ -6,6 +6,9 @@ import { runScenario, listScenarios } from '../../src/clash/t8/review.js';
 import { t8CuesFor, t8StateAt } from '../../src/ui/clash/t8/timeline.js';
 import { buildClashT8, drawClashT8, PHASES, indicatorAt } from '../../src/ui/clash/t8/fx-t8.js';
 import { LOOKS } from '../../src/ui/clash/t8/looks/index.js';
+import { abilityById, familyById, formsOf } from '../../src/data/beast-dex.js';
+import { registeredClashAbilities } from '../../src/clash/t8/registry.js';
+import assert from 'node:assert/strict';
 
 export { PHASES, LOOKS };
 export const STAGE = { W: 390, H: 487 };
@@ -61,3 +64,29 @@ export function drawSpan(prep, abilityId, quality = 'full') {
   for (let t = t0; t <= t1 + 1e-9; t += 0.1) { const d = drawAt(prep, t, quality); const s = d.under + d.over + d.hud; if (/NaN|undefined|Infinity/.test(s)) { bad = `NaN at ${t.toFixed(2)} s`; break; } maxEl = Math.max(maxEl, countEls(d.under + d.over)); frames += 1; }
   return { bad, maxEl, frames };
 }
+
+// ---- shared by tests/task8-fx-clash-{a,b}.test.js
+export const MAX_FX_ELEMENTS = 60; // per frame, the ability layers together (the information layer is counted separately)
+export const catalog = (elements) => registeredClashAbilities().map((id) => { const a = abilityById(id); const f = familyById(a.familyId); return { id, name: a.name, family: a.familyId, element: f.type, stages: formsOf(a.familyId).map((x) => x.stage) }; }).filter((c) => elements.includes(c.element));
+/** The scenario the matrix uses: the first valid, non-provisional one; a valid PROVISIONAL one (labelled) when only a gated reading demonstrates the ability. */
+export function pickScenario(id, stage, tier) { const scs = listScenarios(id, stage, tier); return scs.find((s) => s.kind === 'valid' && !s.provisional) || scs.find((s) => s.kind === 'valid') || scs.find((s) => !s.provisional) || scs[0]; }
+export function stagesOf(id) { return formsOf(abilityById(id).familyId).map((x) => x.stage); }
+
+export function runElement(el, CAT) {
+  let n = 0;
+  for (const c of CAT.filter((x) => x.element === el)) {
+    const stages = stagesOf(c.id).length ? stagesOf(c.id) : [0];
+    for (const stage of stages) for (const tier of [0, 1, 2, 3]) {
+      const tag = `${c.id} s${stage} m${tier}`; const sc = pickScenario(c.id, stage, tier); assert.ok(sc, `${tag}: a scenario`);
+      const P = prepare({ abilityId: c.id, stage, tier, scenarioId: sc.id });
+      assert.ok(P.r.ok, `${tag}: the reviewer scenario ${sc.id} passes its checks (${P.r.checks.filter((k) => !k.ok).map((k) => k.check).join('; ')})`);
+      const ev = phasesOf(P, c.id);
+      for (const ph of PHASES) assert.ok(ev[ph], `${tag}: no evidence for the ${ph} phase (items: ${P.state.items.filter((it) => it.id === c.id).map((it) => it.kind).join(',')})`);
+      for (const q of ['full', 'low', 'min']) { const d = drawSpan(P, c.id, q); assert.equal(d.bad, null, `${tag} ${q}: ${d.bad}`); assert.ok(d.maxEl <= MAX_FX_ELEMENTS, `${tag} ${q}: ${d.maxEl} effect elements in one frame`); assert.ok(d.frames > 0, `${tag} ${q}: frames drawn`); }
+      n += 1;
+    }
+  }
+  return n;
+}
+
+
