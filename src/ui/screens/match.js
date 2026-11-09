@@ -177,7 +177,7 @@ export function registerMatchScreens(Router, app) {
       momentSheets(f);
       document.querySelector('.topbar [data-action="box"]')?.addEventListener('click', () => sheet(boxScoreHtml(f.game.state, teamsFor(f), { title: f.game.state.finished ? 'Final' : `${R.quarterText(f.game.state)} ${fmtClock(f.game.state.clock)}` }), { title: 'Box score' }));
     },
-    unmount() { clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
+    unmount() { settleSave(); clearTimeout(replayTimer); replayTimer = null; stopAnim(); clearInterval(playClockTimer); playClockTimer = null; clearTimeout(autoTimer); autoTimer = null; },
   });
 
   /** Everything the match screen shows, as the strings render() and refresh() place: title, head, field options, overlays, panels, controls. */
@@ -243,6 +243,25 @@ export function registerMatchScreens(Router, app) {
     controls.innerHTML = P.controls;
     afterRender(f, root);
     momentSheets(f);
+  }
+
+  // ------------------------------------------------------------ the end-of-play save (docs/task8/RENDER_OPT.md)
+  // finishAnim requests the save as before (app.save(): stamped now, queued in the store, 350 ms debounce). What changed is when
+  // its main-thread work runs: (1) as soon as the browser is idle after the end-of-play screen update (requestIdleCallback, hard
+  // deadline 300 ms, before the debounce would fire), (2) at the latest synchronously at the next snap, replay or screen exit,
+  // before the simulation and before any animation frame. The store snapshots the franchise synchronously when the write starts
+  // and encodes it in a worker (store.js encodeParts), so what remains on the main thread is the snapshot and the IndexedDB commit.
+  // A save that is already being written is left to finish (its commit is asynchronous and small). Page hide/unload keeps the
+  // store's own guarantee (main.js leaving(): immediate save + synchronous journal of anything still queued or in flight).
+  let idleSave = null;
+  function settleSave() {
+    if (idleSave) { (globalThis.cancelIdleCallback || clearTimeout)(idleSave); idleSave = null; }
+    const st = app.storage?.store; if (st?.busy?.()) st.flush?.();
+  }
+  function saveWhenIdle() {
+    if (idleSave) return;
+    const run = () => { idleSave = null; if (!anim) settleSave(); };
+    idleSave = globalThis.requestIdleCallback ? requestIdleCallback(run, { timeout: 300 }) : setTimeout(run, 0);
   }
 
   // ------------------------------------------------------------ stadium (GDD §33)
@@ -429,6 +448,7 @@ export function registerMatchScreens(Router, app) {
     if (s.phase === 'try' && s.tryTeam === me && c.tryChoice === 'two') c.offensePlayId = G.selected.offense;
     if (s.phase === 'try' && s.tryTeam !== me) { /* AI decides */ }
     if (s.phase === 'kickoff' && s.kickingTeam !== me) delete c.kickoff;
+    settleSave(); // a save still waiting from the last play is written now, before this snap: never inside the play's animation
     G.lastEvent = null; G.aiCall = null;
     const rpT = globalThis.__gbRenderPerf?.onStep ? performance.now() : 0; // render-perf harness only (inert otherwise): times the simulation step
     const ev = step(s, teams, controllers, G.tendencies, c);
@@ -454,6 +474,7 @@ export function registerMatchScreens(Router, app) {
     app.save(); refresh(f);
   }
   function startAnim(f, ev) {
+    settleSave(); // every way into a play (snap, kneel/spike, harness): no queued save may fire inside the animation
     const G = f.game; const sim = ev.sim;
     anim = { frames: sim.frames, i: 0, ev, camera: followsBall(sim) ? cameraFor(Math.max(0, (sim.ballOn || 0) + sim.frames[0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, start: performance.now(), msPerFrame: 100 / ((f.settings.speed || 1) * (G.auto ? (G.autoSpeed || 1) : 1)), follow: followsBall(sim), sprites: spritesFor(f, ev.offenseSide || G.state.possession) };
     anim.fx = sim.kick ? null : buildFx(sim, fxLookup(f, ev.offenseSide || G.state.possession));
@@ -522,7 +543,7 @@ export function registerMatchScreens(Router, app) {
     const { ev } = anim; cancelAnimationFrame(anim.raf); anim = null;
     const G = f.game;
     G.lastEvent = { text: ev.text, important: !!ev.scored || KEY_RESULTS.has(ev.sim?.result), needsContinue: false, abilities: abilitiesFired(ev), callout: callout(ev, G.playerSide), fresh: true };
-    app.save(); refresh(f);
+    app.save(); refresh(f); saveWhenIdle(); // the play's result is requested above and written while the screen is idle after it
     // Instant replay (GDD §34): the outcome is final and saved above; the replay only re-draws this play's recorded frames.
     const reason = replayReason(ev, G.state, G.playerSide);
     if (reason) lastReplay = { ev, reason, gameKey: G.state.seed };
@@ -537,6 +558,7 @@ export function registerMatchScreens(Router, app) {
   const VB = FIELD_VIEWBOX.split(' ').map(Number); // [-HW, 0, 2HW, SPAN]
   function startReplay(f, rp) {
     const G = f.game; const sim = rp.ev.sim; if (!sim?.frames?.length || anim) return;
+    settleSave();
     const plan = replayPlan(sim, rp.reason);
     anim = { replay: rp, plan, frames: sim.frames, i: plan.i0, ev: rp.ev, camera: followsBall(sim) ? cameraFor(Math.max(0, (sim.ballOn || 0) + sim.frames[plan.i0].ball[0] + 6)) : cameraFor(sim.ballOn), ballOn: sim.ballOn, ballLat: sim.ballLat, follow: followsBall(sim), sprites: spritesFor(f, rp.ev.offenseSide || G.state.possession), start: performance.now() + REPLAY.transitionMs };
     anim.fx = sim.kick ? null : buildFx(sim, fxLookup(f, rp.ev.offenseSide || G.state.possession));
