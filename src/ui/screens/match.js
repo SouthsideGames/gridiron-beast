@@ -247,7 +247,7 @@ export function registerMatchScreens(Router, app) {
   }
 
   // ------------------------------------------------------------ the end-of-play save (docs/task8/RENDER_OPT.md)
-  // finishAnim requests the save as before (app.save(): stamped now, queued in the store, 350 ms debounce). What changed is when
+  // finishAnim requests the save as before (app.save(): stamped now, queued in the store, 1.2 s debounce in the game). What changed is when
   // its main-thread work runs: (1) as soon as the browser is idle after the end-of-play screen update (requestIdleCallback, hard
   // deadline 300 ms, before the debounce would fire), (2) at the latest synchronously at the next snap, replay or screen exit,
   // before the simulation and before any animation frame. The store snapshots the franchise synchronously when the write starts
