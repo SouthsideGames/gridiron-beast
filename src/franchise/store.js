@@ -327,8 +327,12 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     else { emit({ state: 'saving' }); try { res = await writeNow(f); } catch (e) { res = { ok: false, error: classify(e) }; emit({ state: 'error', error: res.error }); } }
     for (const w of waiters) w(res);
   }
+  // The queue never wedges (tests/store-save-queue.test.js): a request drain takes is written now, so its debounce timer is
+  // cleared with it; and a timer can only start drain() with something pending. (Before 2026-11-09 a timer that fired after drain
+  // had taken its request started drain() with nothing to do: drain then finished synchronously, cleared `writing`, and the
+  // caller's `writing = drain()` stored the settled promise, so no later save, immediate or not, was ever written that session.)
   async function drain() {
-    while (pendingF && !reserved) { const f = pendingF; const waiters = pendingWaiters; pendingF = null; pendingWaiters = []; await writeQueued(f, waiters); }
+    while (pendingF && !reserved) { clearTimeout(timer); timer = null; const f = pendingF; const waiters = pendingWaiters; pendingF = null; pendingWaiters = []; await writeQueued(f, waiters); }
     writing = null; settle();
   }
   /** When nothing is queued or being written, the status must not say "Saving…" (a dropped request leaves nothing to wait for). */
@@ -346,7 +350,7 @@ export function createStore({ backend, slot = SLOT, localStorage: ls = (() => { 
     stamp(f);
     return new Promise((resolve) => {
       pendingF = f; pendingWaiters.push(resolve); if (status.state !== 'saving') emit({ state: 'pending' });
-      const go = () => { timer = null; if (!writing && !reserved) writing = drain(); };
+      const go = () => { timer = null; if (!writing && !reserved && pendingF) writing = drain(); };
       if (reserved) return; // an exclusive operation holds the queue: this request runs right after it (or is answered 'stale')
       if (immediate || debounce === 0) { clearTimeout(timer); timer = null; go(); } else if (!timer) timer = setTimeout(go, debounce);
     });
