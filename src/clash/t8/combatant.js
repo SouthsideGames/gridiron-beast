@@ -6,7 +6,9 @@
 // Clash abilities land (S6-S11) every monster uses the no-contract action (the ordinary attack plus archetype perks).
 // Form and Clash mastery tier (S5): the form is the Dex form of the monster's stage (`family:stage`, clamped to the family's forms);
 // the tier is the snapshot's `clashMasteryTier` (0-3, Developing..Mastered), which S12's snapshot sets from tierIndex(credits). Both
-// default to the first form and Developing. Exhaustion and the incoming status slot are S12 inputs.
+// default to the first form and Developing. S12: `exhausted` (the football game's stamina book, spec §12) halves all 12 effective
+// attributes once, the same rounding as the football engine (src/sim/engine.js), before the formula; the incoming status slot is
+// the engine's `carryIn`.
 import { effectiveAttributes, overall } from '../../data/monsters.js';
 import { SPECIES_DEX } from '../../data/species.js';
 import { archetypeOf, isBasic, abilitiesOf, formsOf, formId } from '../../data/beast-dex.js';
@@ -27,6 +29,7 @@ export function buildT8Combatant(m, { slot = 0, side = 'a' } = {}) {
   const archetype = archetypeOf(sp.id); if (!archetype) throw new Error(`No Dex Clash archetype for ${sp.id}`);
   const arch = T8_VALUES.archetypes[archetype]; const S = T8_VALUES.stats;
   const e = effectiveAttributes(m, {});
+  if (m.exhausted) for (const k of Object.keys(e)) e[k] = Math.max(1, Math.round(e[k] / 2)); // §12: "halve all 12 effective attributes once ... including overtime/deciding Clash"
   const ovr = overall(e, m.position);
   const mean = (e.speed + e.agility + e.strength + e.awareness + e.durability) / 5;
   const tilt = (x) => clamp(1 + (x - mean) / S.tiltDiv, S.tiltMin, S.tiltMax);
@@ -39,7 +42,7 @@ export function buildT8Combatant(m, { slot = 0, side = 'a' } = {}) {
   const clashAbility = abilitiesOf(sp.id)?.clash?.id || null;
   return Object.freeze({
     id: `${side}${slot}`, monsterId: m.id, name: m.name, species: sp.id, speciesName: sp.name, type: sp.element, rarity: sp.rarity,
-    basic: isBasic(sp.id), position: m.position, archetype, stage, form: formId(sp.id, stage), tier, level: m.level || 1, overall: ovr, fatigue: m.fatigue || 0,
+    basic: isBasic(sp.id), position: m.position, archetype, exhausted: !!m.exhausted, stage, form: formId(sp.id, stage), tier, level: m.level || 1, overall: ovr, fatigue: m.fatigue || 0,
     hp, maxHp: hp, atk, spd, guard: arch.guard, perks: perksOf(archetype),
     contract: clashAbility, // the family's Clash ability id (null for Basics: the no-contract action); the module is resolved by the engine
     breakdown: Object.freeze({ attributes: Object.freeze({ ...e }), overall: ovr, mean: round2(mean), durabilityTilt: tilt(e.durability), strengthTilt: tilt(e.strength), hpBase, atkBase, archetype: Object.freeze({ ...arch }), hp, atk, spd }),

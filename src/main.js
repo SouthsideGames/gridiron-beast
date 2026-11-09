@@ -33,6 +33,7 @@ import { registerPracticeScreens } from './ui/screens/practice.js';
 import { registerAbilityAudit, openAbilityPreview, registerAbilityBalance } from './ui/screens/ability-audit.js';
 import { registerAbilityReviewer } from './ui/screens/ability-reviewer.js';
 import { registerClashLab } from './ui/screens/clash-lab.js';
+import { registerClashAbilityReviewer } from './ui/screens/clash-ability-reviewer.js';
 import { registerClashBattle } from './ui/screens/clash-battle.js';
 import { registerAiLab } from './ui/screens/ai-lab.js';
 import { registerAttrLab } from './ui/screens/attr-lab.js';
@@ -216,6 +217,7 @@ export function start() {
   registerAbilityAudit(Router, app);
   registerAbilityReviewer(Router, app);
   registerClashLab(Router, app); // Beast Clash developer tools
+  registerClashAbilityReviewer(Router, app); // Task 8 M4 S15: Developer → Clash Ability Reviewer (72 Clash abilities on the t8 engine)
   registerAiLab(Router, app); // AI Testing Lab (GDD §53.8): Developer Tools only
   registerAttrLab(Router, app); // Attribute Testing Lab (GDD §8.2 audit): Developer Tools only
   registerEvoPreview(Router, app); // Preview Evolution: the real evolution scene on throwaway data, Developer Tools only

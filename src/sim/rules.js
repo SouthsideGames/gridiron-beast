@@ -45,7 +45,7 @@ function preSnapLines(state, mark, slots) {
 export const RUNOFF = { normal: 18, hurry: 8, milk: 30 };
 export const DEFAULT_QUARTER = 180;
 
-export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null, otPeriods = null, venue = null }) {
+export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER, coinWinner = null, choice = null, comeback = null, otPeriods = null, venue = null, statusCarry = null }) {
   const rng = createRng(seed);
   const winner = coinWinner || (rng.chance(0.5) ? 'home' : 'away');
   const loser = winner === 'home' ? 'away' : 'home';
@@ -79,6 +79,9 @@ export function newGame({ home, away, seed = 1, quarterLength = DEFAULT_QUARTER,
   // Captain Partnerships (GDD §27.4B): each side's active pairs and their chemistry level, fixed here at kickoff for the whole
   // game. A game whose teams carry none gets no field at all, so its state is exactly what it always was.
   const partners = kickoffPartners(home, away); if (partners) { state.partners = partners; state.partnerCredits = { home: {}, away: {} }; }
+  // Task 8 M4 (spec §10): the opening Clash's end statuses carry into the game at kickoff, 1:1 for supported statuses (the caller
+  // passes the Clash's football-shaped payloads; unsupported ones are dropped by the shared gate's transfer).
+  if (statusCarry && Object.keys(statusCarry).length) { T8S.carryInto(state, statusCarry, 'football'); for (const [mid, s] of Object.entries(state.t8.status)) log(state, `${mid} carries ${s.id} into the game (${s.remaining} play${s.remaining === 1 ? '' : 's'}).`, 'info', { status: s.id, mid, carried: true }); }
   log(state, `${state[winner].name} wins the toss and elects to ${pick === 'defer' ? 'defer' : pick}.`, 'info');
   return state;
 }
@@ -853,8 +856,11 @@ export function endOfPeriod(state) {
     log(state, `HALFTIME. ${state.home.abbr} ${state.score.home}-${state.score.away} ${state.away.abbr}. ${state[state.secondHalfReceiver].name} receive the second-half kickoff.`, 'period', { important: true });
   } else log(state, `End of the ${state.quarter === 2 ? 'first' : 'third'} quarter.`, 'period');
 }
-function finish(state) {
-  state.finished = true; state.phase = 'final'; state.clockRunning = false; T8S.atGameEnd(state); // Task 8: every status clears at the end of the game
+function finish(state, { tiebreak = false } = {}) {
+  state.finished = true; state.phase = 'final'; state.clockRunning = false;
+  // Task 8 (spec §10): every status clears at the ACTUAL end of the game. A game still tied after overtime is not over: its deciding
+  // Clash (the franchise's overtime Clash) takes the statuses and the stamina verdict with it, and clears them when it is applied.
+  if (tiebreak) state.needsTiebreak = true; else T8S.atGameEnd(state);
   state.winner = state.score.home > state.score.away ? 'home' : state.score.away > state.score.home ? 'away' : null;
   log(state, `FINAL: ${state.home.name} ${state.score.home}, ${state.away.name} ${state.score.away}.`, 'period', { important: true });
 }
@@ -881,7 +887,7 @@ export function otAfterPossession(state) {
     return;
   }
   if (state.score.home !== state.score.away) { finish(state); return; }
-  if (state.otPeriods && ot.period >= state.otPeriods) { finish(state); state.needsTiebreak = true; log(state, 'Still tied after overtime. The game goes to a tiebreaker.', 'period', { important: true }); return; }
+  if (state.otPeriods && ot.period >= state.otPeriods) { finish(state, { tiebreak: true }); log(state, 'Still tied after overtime. The game goes to a tiebreaker.', 'period', { important: true }); return; }
   ot.period += 1; ot.possessionsLeft = 2; ot.first = opponent(ot.first);
   log(state, `Still tied, overtime period ${ot.period}.${ot.period >= 3 ? ' Two-point attempts only.' : ''}`, 'period');
   state.quarter = 4 + ot.period;

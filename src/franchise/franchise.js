@@ -72,7 +72,9 @@ import { playGame } from '../sim/game-runner.js';
 import { teamStrengths } from '../sim/coach-ai.js';
 import { guarded, mayStartSeason, isArchived, seasonsCompleted, SEASON_CAP } from './lifecycle.js';
 import { newUid } from '../core/uid.js';
-import { CLASH_SIZE, SWAP_EVERY, FRANCHISE_POLICIES, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES } from './clash-link.js';
+import { CLASH_SIZE, SWAP_EVERY, policiesOf, normalizeMode, snapMonster, autoLineup, eligibleBattlers, runBattle, runRecord, battleSummary, pendingDecision, applyBattleEffects, aiPossessionChoice, POSSESSION_CHOICES, newBattleRecord, isT8Record, recordDecision, settleHeadless, upgradeUnresolvedRecord, carryOutOf, masteryRecord } from './clash-link.js';
+import { carryInto as t8CarryInto, atGameEnd as t8AtGameEnd } from '../sim/t8/status-runtime.js';
+import { exhaustedSet as t8ExhaustedSet } from '../sim/t8/stamina-runtime.js';
 
 export const SCHEMA_VERSION = 10; // 10: Task 8, the fresh-save break (Dex individuals with `m.dev`; spec §15): saves 6, 8 and 9 are refused with a Start New Franchise message (save.js). Earlier: 9 Task 7 free agency, 8 the league registry, 6 every save before it
 export const LEAGUE_SCHEMA_VERSION = 8;
@@ -1643,7 +1645,7 @@ function simulateLeagueWeek(f) {
       const ig = { home: g.home, away: g.away, week: f.season.week }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
       injuriesBeforeGame(f, it, ig); // Injury History (GDD §50): who misses this game
       const toss = leaguePregame(f, r, home, away);
-      const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
+      const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
       leagueTiebreak(f, r, home, away, game);
       aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r); // persistent rosters develop as they play (GDD §42.6, decision B)
       injuriesAfterGame(f, it, ig);
@@ -1906,36 +1908,51 @@ export function startEncounter(f, prospectIndex, { lineup = null, mode = 'watch'
   const size = Math.min(pv.size, mine.length);
   const { r, save } = frng(f); const seed = r.seed(); save();
   const wild = pv.wild.slice(0, size);
-  f.week.encounter = { prospectIndex, seed, size, mine, wild: wild.map((m) => m.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: wild.map(snapMonster), mode: normalizeMode(mode) || 'watch', policies: { ...FRANCHISE_POLICIES }, decisions: {}, status: 'battle', result: null };
+  // Task 8 M4 (S12): a version-2 record on the t8 engine (standalone context: statuses clear at the end, D12). Watch prompts the player's
+  // rotations (policy 'manual', D1); Skip and staff auto-run use the AI policy (D2). The wild side is always the AI.
+  f.week.encounter = { prospectIndex, seed, size, mine, wild: wild.map((m) => m.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: wild.map((m) => snapMonster(m)), ...newBattleRecord({ occasion: 'encounter', mode }) };
   return { ok: true, encounter: f.week.encounter };
 }
-/** Rebuild the encounter's battle from the save (deterministic): the result the screen shows, or replays. */
+/** Rebuild the encounter's battle from the save (deterministic): the result the screen shows, or replays. A pending t8 result waits at the player's rotation prompt. */
 export function encounterBattle(f, { log = 'full' } = {}) {
   const e = f.week.encounter; if (!e || !e.seed) return null;
+  upgradeUnresolvedRecord(e); // D19: an unresolved pre-M4 record plays on t8 from here; finished ones keep their legacy replay
   const a = e.a || e.mine.map((id) => f.roster.find((m) => m.id === id)).filter(Boolean);
   const byId = new Map(f.week.prospects.map((p) => [p.monster.id, p.monster]));
   const b = e.b || e.wild.map((id) => byId.get(id)).filter(Boolean);
   if (!a.length || !b.length) return null;
-  return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, policies: policiesOf(e), log });
+  return runRecord(e, { a, b, log });
 }
-/** The player's answer at a swap decision (play mode): a bench monster's id, or 'stay' (recorded for this exchange and the next three, so the question is not asked every exchange). */
+/**
+ * The player's answer at a rotation prompt (t8, D1): a reserve's id, 'stay' or 'auto' ("Auto for the rest of this battle"). Legacy
+ * 'play' records keep the old swap answer ('stay' is recorded for this exchange and the next three).
+ */
 export function encounterDecide(f, ex, choice) {
   const e = f.week.encounter; if (!e || e.status !== 'battle') return { ok: false, reason: 'No battle in progress.' };
+  if (isT8Record(e)) return recordDecision(e, ex, choice) ? { ok: true } : { ok: false, reason: 'Not a legal rotation decision.' };
   if (choice === 'stay') for (let k = 0; k < SWAP_EVERY; k++) e.decisions[ex + k] = 'stay'; else e.decisions[ex] = choice;
   return { ok: true };
 }
-/** Settle the battle: record the summary, pay out XP and fatigue, and open the offer (win) or the pitch (loss). Idempotent. */
-export function resolveEncounter(f) {
+/** A record whose player side still waits at a prompt: headless settlement answers 'auto' (D1) and the AI finishes it; otherwise the open prompt is reported. */
+function battleOrPending(e, run, headless) {
+  let result = headless ? settleHeadless(e, run) : run(); if (!result) return { reason: 'The battle could not be rebuilt.' };
+  const pend = isT8Record(e) ? (result.pending ? pendingDecision(result) : null) : (policiesOf(e).a === 'manual' ? pendingDecision(result) : null);
+  if (pend) return { reason: isT8Record(e) ? 'A rotation decision is still open.' : 'A swap decision is still open.', pending: pend };
+  return { result };
+}
+/** Settle the battle: record the summary, pay out XP and fatigue, and open the offer (win) or the pitch (loss). Idempotent. `headless` settles an open prompt with Auto (staff, Skip). */
+export function resolveEncounter(f, { headless = false } = {}) {
   const e = f.week.encounter; if (!e) return { ok: false, reason: 'No encounter.' };
   if (e.status !== 'battle') return { ok: true, encounter: e, already: true };
-  const result = encounterBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
-  if (policiesOf(e).a === 'manual' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
+  const bp = battleOrPending(e, () => encounterBattle(f), headless); if (!bp.result) return { ok: false, ...bp }; const result = bp.result;
   const { r, save } = frng(f);
   // N7g: winning against a Basic recruitable target adds the Basic encounter bonus (level XP only), once per encounter via the ledger
   const bonus = basicEncounterBonus(f.week.prospects[e.prospectIndex]?.monster); const winBonus = result.winner === 'a' && bonus.active ? bonus.pct : 0;
-  const events = applyBattleEffects(f.roster, result, 'a', 'encounter', r, { autoSpend: !!f.settings.autoPoints, bonusPct: winBonus, bonusLabel: bonus.label, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `encounter:${f.season.year}:w${f.season.week}:p${e.prospectIndex}` });
+  const activityId = `encounter:${f.season.year}:w${f.season.week}:p${e.prospectIndex}`;
+  const events = applyBattleEffects(f.roster, result, 'a', 'encounter', r, { autoSpend: !!f.settings.autoPoints, bonusPct: winBonus, bonusLabel: bonus.label, ledger: (f.rewardLedger ||= createRewardLedger()), activityId });
   save(); e.bonus = winBonus ? { pct: winBonus, label: bonus.label } : null;
   e.result = battleSummary(result); e.events = events;
+  if (isT8Record(e)) { e.carryOut = carryOutOf(result); e.mastery = masteryRecord(result, `clash:${activityId}`); } // standalone: nothing carries (D12); execution counts kept per cap scope (M5 awards)
   const won = result.winner === 'a'; e.status = won ? 'offer' : 'pitch';
   const p = f.week.prospects[e.prospectIndex];
   news(f, won ? `Beast Clash won: ${p.monster.name} wants to join ${f.club}.` : `Beast Clash lost to ${p.monster.name}. One pitch left to win them over.`, won ? 'win' : 'info');
@@ -2130,8 +2147,8 @@ export function autoRunToSunday(f) {
       const pick = f.week.prospects.map((p, i) => ({ p, i })).filter(({ p }) => p.revealed >= 4 && !salarySummary(f, p.monster.salary).over && f.roster.length < ROSTER_MAX)
         .map((x) => ({ ...x, gain: monsterOverall(x.p.monster) - Math.max(0, ...f.roster.filter((m) => m.position === x.p.monster.position).map((m) => monsterOverall(m))) }))
         .filter((x) => x.gain >= 2).sort((a, b) => b.gain - a.gain)[0];
-      if (pick && startEncounter(f, pick.i).ok) {
-        const b = resolveEncounter(f);
+      if (pick && startEncounter(f, pick.i, { mode: 'skip' }).ok) { // staff auto-run: the AI rotation policy (D1)
+        const b = resolveEncounter(f, { headless: true });
         if (b.won) { const r = acceptOffer(f); did.push(r.ok ? `Beast Clash won: signed ${pick.p.monster.name}` : `Beast Clash won, but ${pick.p.monster.name} could not be fitted on the roster`); if (!r.ok) declineOffer(f); }
         else { const r = recruit(f, pick.i, 'development'); did.push(r.success ? `Beast Clash lost, but ${pick.p.monster.name} signed anyway` : `Beast Clash lost; ${pick.p.monster.name} turned us down`); }
         if (f.season.day === 1) skipRecruit(f);
@@ -2402,7 +2419,7 @@ function simulatePlayoffWeek(f) {
     const ig = { home: g.home, away: g.away, week: f.season.week, playoff: true, round: p.round }; const it = [[g.home, home.roster, g.away, home.chart], [g.away, away.roster, g.home, away.chart]];
     injuriesBeforeGame(f, it, ig);
     const toss = leaguePregame(f, r, home, away);
-    const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
+    const game = playGame({ home, away, venue: gameVenue(f, home.name), seed: r.seed(), quarterLength: 180, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
     leagueTiebreak(f, r, home, away, game, { playoff: true });
     aiAfterGame(f, home, game, 'home', r); aiAfterGame(f, away, game, 'away', r);
     injuriesAfterGame(f, it, ig);
@@ -2720,7 +2737,7 @@ export function simulatePlayerGame(f) {
   const m = sundayMatchup(f); if (!m) return null;
   const toss = pregamePossession(f); // the pregame Clash decides possession (headless: Auto, and the AI's choice when it wins)
   const { r, save } = frng(f);
-  const game = playGame({ home: m.home, away: m.away, venue: gameVenue(f, m.home.name), seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS });
+  const game = playGame({ home: m.home, away: m.away, venue: gameVenue(f, m.home.name), seed: r.seed(), quarterLength: f.settings.quarterLength, comeback: comebackRule(f), coinWinner: toss.coinWinner, choice: toss.choice, otPeriods: OT_PERIODS, statusCarry: toss.statusCarry || null });
   save();
   settleTiebreak(f, game); // still tied after the overtime quarter: the overtime Clash decides (headless: Auto)
   return game;
@@ -2740,7 +2757,17 @@ export function overtimePreview(f) {
   if (size < 1) return { ok: false, reason: 'Nobody healthy enough to battle.', eligible, size: 0, opponent: m.opponent };
   return { ok: true, eligible, size, full: n, wild: wild.slice(0, size), lineup: autoLineup(f.roster, size, hashString(`${f.seed}|ot|${f.season.year}|${f.season.week}`)), opponent: m.opponent, matchup: m, playoff: !!m.playoff };
 }
-export function startOvertimeClash(f, { lineup = null, mode = 'watch' } = {}) {
+/**
+ * The deciding Clash's continuity with its game (spec §10, §12; D10-D12): the battlers' football statuses carry in 1:1 (the engine
+ * converts the payloads: Stunned per B18, Shielded per D11, unsupported ones clear) and a monster exhausted in the game fights on
+ * halved attributes. The football state is the game on screen (`f.game.state`) or the one a headless caller passes.
+ */
+function overtimeCarry(f, state, ids) {
+  const gs = state || f.game?.state || null; if (!gs) return { carryIn: null, exhausted: null };
+  const book = gs.t8?.status || {}; const carryIn = {}; for (const id of ids) if (book[id]) carryIn[id] = book[id];
+  return { carryIn: Object.keys(carryIn).length ? carryIn : null, exhausted: t8ExhaustedSet(gs) };
+}
+export function startOvertimeClash(f, { lineup = null, mode = 'watch', state = null } = {}) {
   if (f.week.overtime && f.week.overtime.status !== 'ready') return { ok: false, reason: 'The overtime Clash is already under way.' };
   const pv = overtimePreview(f); if (!pv.ok) return pv;
   const eligibleIds = new Set(pv.eligible.map((x) => x.id));
@@ -2749,55 +2776,61 @@ export function startOvertimeClash(f, { lineup = null, mode = 'watch' } = {}) {
   const size = Math.min(pv.size, mine.length);
   const { r, save } = frng(f); const seed = r.seed(); save();
   const theirs = pv.wild.slice(0, size);
-  f.week.overtime = { opponent: pv.opponent, side: pv.matchup.playerSide, playoff: pv.playoff, seed, size, mine, theirs: theirs.map((x) => x.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: theirs.map(snapMonster), mode: normalizeMode(mode) || 'watch', policies: { ...FRANCHISE_POLICIES }, decisions: {}, status: 'battle', result: null };
+  const { carryIn, exhausted } = overtimeCarry(f, state, [...mine, ...theirs.map((x) => x.id)]);
+  const snap = (m) => snapMonster(m, { exhausted: !!exhausted?.has(m.id) });
+  f.week.overtime = { opponent: pv.opponent, side: pv.matchup.playerSide, playoff: pv.playoff, seed, size, mine, theirs: theirs.map((x) => x.id), a: mine.map((id) => snap(f.roster.find((m) => m.id === id))), b: theirs.map(snap), ...newBattleRecord({ occasion: 'overtime', mode, carryIn }) };
   return { ok: true, overtime: f.week.overtime };
 }
 export function overtimeBattle(f, { log = 'full' } = {}) {
   const e = f.week.overtime; if (!e || !e.seed) return null;
-  const a = e.a, b = e.b; if (!a || !b) return null;
-  if (!a.length || !b.length) return null;
-  return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, policies: policiesOf(e), log });
+  upgradeUnresolvedRecord(e); return runRecord(e, { log });
 }
 export function overtimeDecide(f, ex, choice) {
   const e = f.week.overtime; if (!e || e.status !== 'battle') return { ok: false, reason: 'No battle in progress.' };
+  if (isT8Record(e)) return recordDecision(e, ex, choice) ? { ok: true } : { ok: false, reason: 'Not a legal rotation decision.' };
   if (choice === 'stay') for (let k = 0; k < SWAP_EVERY; k++) e.decisions[ex + k] = 'stay'; else e.decisions[ex] = choice;
   return { ok: true };
 }
-export function resolveOvertimeClash(f) {
+export function resolveOvertimeClash(f, { headless = false } = {}) {
   const e = f.week.overtime; if (!e) return { ok: false, reason: 'No overtime Clash.' };
   if (e.status !== 'battle') return { ok: true, overtime: e, already: true, won: e.result?.winner === 'a' };
-  const result = overtimeBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
-  if (policiesOf(e).a === 'manual' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
+  const bp = battleOrPending(e, () => overtimeBattle(f), headless); if (!bp.result) return { ok: false, ...bp }; const result = bp.result;
   const { r, save } = frng(f);
   const events = applyBattleEffects(f.roster, result, 'a', 'overtime', r, { autoSpend: !!f.settings.autoPoints, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${f.season.year}:w${f.season.week}:overtime:${actClub(f.club)}` });
   save();
   e.result = battleSummary(result); e.events = events; e.status = 'done';
+  if (isT8Record(e)) { e.carryOut = carryOutOf(result); e.mastery = masteryRecord(result, `game:${f.season.year}:w${f.season.week}:${actClub(f.club)}`); } // the OT Clash shares its game's cap scope (§6)
   return { ok: true, overtime: e, won: result.winner === 'a', result, events };
 }
-/** The Clash's verdict written onto the finished football state: `winner` is set, the score is untouched, `tiebreak` records the Clash. */
+/** The Clash's verdict written onto the finished football state: `winner` is set, the score is untouched, `tiebreak` records the Clash. The game is now actually over, so every status clears (§10). */
 export function applyTiebreak(f, state) {
   const e = f.week.overtime; if (!state?.needsTiebreak || state.winner || !e || e.status !== 'done') return false;
   const won = e.result.winner === 'a'; const me = e.side; state.winner = won ? me : (me === 'home' ? 'away' : 'home');
   state.tiebreak = { kind: 'clash', size: e.size, winner: state.winner, by: e.result.by, exchanges: e.result.exchanges, playerWon: won };
+  t8AtGameEnd(state);
   return true;
 }
-/** Headless: settle a tied game with an Auto overtime Clash (a Play battle left mid-decision falls back to Auto). */
+/** Headless: settle a tied game with an Auto overtime Clash (a battle left at a prompt is finished with Auto, D1). */
 export function settleTiebreak(f, state) {
   if (!state?.needsTiebreak || state.winner) return false;
-  if (!f.week.overtime || f.week.overtime.status === 'ready') { const st = startOvertimeClash(f); if (!st.ok) { state.winner = null; return false; } }
-  const e = f.week.overtime; if (e.status === 'battle') { if (policiesOf(e).a === 'manual') { e.policies = { a: 'smart', b: 'smart' }; e.mode = 'watch'; } resolveOvertimeClash(f); } // a legacy Play battle left mid-decision: settled headless as it would have been in Auto
+  if (!f.week.overtime || f.week.overtime.status === 'ready') { const st = startOvertimeClash(f, { mode: 'skip', state }); if (!st.ok) { state.winner = null; t8AtGameEnd(state); return false; } }
+  const e = f.week.overtime;
+  if (e.status === 'battle') { if (!isT8Record(e) && policiesOf(e).a === 'manual') { e.policies = { a: 'smart', b: 'smart' }; e.mode = 'watch'; } resolveOvertimeClash(f, { headless: true }); } // a legacy Play battle left mid-decision: settled as it would have been in Auto
   return applyTiebreak(f, state);
 }
-/** Headless overtime Clash for a tied league game between two AI clubs: 3v3 in the season, 5v5 in the playoffs. */
+/** Headless overtime Clash for a tied league game between two AI clubs: 3v3 in the season, 5v5 in the playoffs. Statuses carry in from the game and clear when it is decided. */
 export function leagueTiebreak(f, r, home, away, state, { playoff = false } = {}) {
   if (!state.needsTiebreak || state.winner) return null;
   const n = playoff ? CLASH_SIZE.overtimePlayoff : CLASH_SIZE.overtime;
   const a = autoLineup(home.roster, n, hashString(`${f.seed}|ot|${f.season.year}|${f.season.week}|${home.name}`));
   const b = autoLineup(away.roster, n, hashString(`${f.seed}|ot|${f.season.year}|${f.season.week}|${away.name}`));
-  if (!a.length || !b.length) { state.winner = r.chance(0.5) ? 'home' : 'away'; return { kind: 'coin' }; }
-  const result = runBattle({ a, b, seed: r.seed(), log: 'none' });
+  if (!a.length || !b.length) { state.winner = r.chance(0.5) ? 'home' : 'away'; t8AtGameEnd(state); return { kind: 'coin' }; }
+  const { carryIn, exhausted } = overtimeCarry(f, state, [...a, ...b].map((m) => m.id));
+  const snap = (m) => snapMonster(m, { exhausted: !!exhausted?.has(m.id) });
+  const result = runBattle({ a: a.map(snap), b: b.map(snap), seed: r.seed(), log: 'none', ruleset: 't8', context: 'overtime', policies: { a: 'ai', b: 'ai' }, carryIn });
   state.winner = result.winner === 'a' ? 'home' : 'away';
   state.tiebreak = { kind: 'clash', size: Math.min(a.length, b.length), winner: state.winner, by: result.by, exchanges: result.exchanges };
+  t8AtGameEnd(state);
   return state.tiebreak;
 }
 
@@ -2826,32 +2859,33 @@ export function startPregameClash(f, { lineup = null, mode = 'watch' } = {}) {
   const size = Math.min(pv.size, mine.length);
   const { r, save } = frng(f); const seed = r.seed(); save();
   const theirs = pv.wild.slice(0, size);
-  f.week.pregame = { opponent: pv.opponent, side: pv.matchup.playerSide, seed, size, mine, theirs: theirs.map((x) => x.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: theirs.map(snapMonster), mode: normalizeMode(mode) || 'watch', policies: { ...FRANCHISE_POLICIES }, decisions: {}, status: 'battle', result: null, choice: null };
+  // Task 8 M4 (S12): the opening Clash is a version-2 t8 record in the 'opening' context: the statuses its battlers end with carry
+  // into the game at kickoff (`carryOut`, spec §10). Nothing carries in: the previous game's end cleared every status.
+  f.week.pregame = { opponent: pv.opponent, side: pv.matchup.playerSide, seed, size, mine, theirs: theirs.map((x) => x.id), a: mine.map((id) => snapMonster(f.roster.find((m) => m.id === id))), b: theirs.map((m) => snapMonster(m)), ...newBattleRecord({ occasion: 'pregame', mode }), choice: null };
   return { ok: true, pregame: f.week.pregame };
 }
 export function pregameBattle(f, { log = 'full' } = {}) {
   const e = f.week.pregame; if (!e || !e.seed) return null;
-  const a = e.a, b = e.b; if (!a || !b) return null;
-  if (!a.length || !b.length) return null;
-  return runBattle({ a, b, seed: e.seed, mode: e.mode, decisions: e.decisions, policies: policiesOf(e), log });
+  upgradeUnresolvedRecord(e); return runRecord(e, { log });
 }
 export function pregameDecide(f, ex, choice) {
   const e = f.week.pregame; if (!e || e.status !== 'battle') return { ok: false, reason: 'No battle in progress.' };
+  if (isT8Record(e)) return recordDecision(e, ex, choice) ? { ok: true } : { ok: false, reason: 'Not a legal rotation decision.' };
   if (choice === 'stay') for (let k = 0; k < SWAP_EVERY; k++) e.decisions[ex + k] = 'stay'; else e.decisions[ex] = choice;
   return { ok: true };
 }
 /** Settle the pregame Clash: XP and fatigue for your battlers; the AI's possession choice is drawn now if it won. */
-export function resolvePregameClash(f) {
+export function resolvePregameClash(f, { headless = false } = {}) {
   const e = f.week.pregame; if (!e) return { ok: false, reason: 'No pregame Clash.' };
   if (e.status !== 'battle') return { ok: true, pregame: e, already: true, won: e.result?.winner === 'a' };
-  const result = pregameBattle(f); if (!result) return { ok: false, reason: 'The battle could not be rebuilt.' };
-  if (policiesOf(e).a === 'manual' && pendingDecision(result)) return { ok: false, reason: 'A swap decision is still open.', pending: pendingDecision(result) };
+  const bp = battleOrPending(e, () => pregameBattle(f), headless); if (!bp.result) return { ok: false, ...bp }; const result = bp.result;
   const { r, save } = frng(f);
   const events = applyBattleEffects(f.roster, result, 'a', 'pregame', r, { autoSpend: !!f.settings.autoPoints, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${f.season.year}:w${f.season.week}:pregame:${actClub(f.club)}` });
   const won = result.winner === 'a';
   if (!won) e.choice = aiPossessionChoice(r);
   save();
   e.result = battleSummary(result); e.events = events; e.status = won ? 'choose' : 'done';
+  if (isT8Record(e)) { e.carryOut = carryOutOf(result); e.mastery = masteryRecord(result, `game:${f.season.year}:w${f.season.week}:${actClub(f.club)}`); } // the opening Clash shares its game's cap scope (§6)
   return { ok: true, pregame: e, won, result, events };
 }
 /** The winner's possession choice (only the player chooses here; the AI chose when the battle was settled). */
@@ -2865,18 +2899,18 @@ export function pregamePossession(f) {
   const m = sundayMatchup(f); if (!m) return { coinWinner: null, choice: null };
   if (!f.week.pregame || f.week.pregame.status === 'ready') { const st = startPregameClash(f); if (!st.ok) return { coinWinner: null, choice: null, reason: st.reason }; }
   const e = f.week.pregame;
-  if (e.status === 'battle') { if (policiesOf(e).a === 'manual') { e.policies = { a: 'smart', b: 'smart' }; e.mode = 'watch'; } resolvePregameClash(f); }
+  if (e.status === 'battle') { if (!isT8Record(e) && policiesOf(e).a === 'manual') { e.policies = { a: 'smart', b: 'smart' }; e.mode = 'watch'; } resolvePregameClash(f, { headless: true }); }
   if (e.status === 'choose') { e.choice = 'receive'; e.status = 'done'; }
   const won = e.result?.winner === 'a'; const me = e.side; const them = me === 'home' ? 'away' : 'home';
-  return { coinWinner: won ? me : them, choice: e.choice || 'receive', clash: e.result };
+  return { coinWinner: won ? me : them, choice: e.choice || 'receive', clash: e.result, statusCarry: e.carryOut || null }; // statusCarry: the opening Clash's statuses for kickoff (§10)
 }
-/** Headless pregame Clash for a league game between two AI clubs: both lineups automatic, smart policies, one seed. */
+/** Headless pregame Clash for a league game between two AI clubs: both lineups automatic, the AI policy on both sides, one seed. Its end statuses carry into the game. */
 export function leaguePregame(f, r, home, away) {
   const a = autoLineup(home.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${home.name}`));
   const b = autoLineup(away.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${away.name}`));
-  if (!a.length || !b.length) return { coinWinner: null, choice: null, clash: null };
-  const result = runBattle({ a, b, seed: r.seed(), log: 'none' });
-  return { coinWinner: result.winner === 'a' ? 'home' : 'away', choice: aiPossessionChoice(r), clash: battleSummary(result) };
+  if (!a.length || !b.length) return { coinWinner: null, choice: null, clash: null, statusCarry: null };
+  const result = runBattle({ a: a.map((m) => snapMonster(m)), b: b.map((m) => snapMonster(m)), seed: r.seed(), log: 'none', ruleset: 't8', context: 'opening', policies: { a: 'ai', b: 'ai' } });
+  return { coinWinner: result.winner === 'a' ? 'home' : 'away', choice: aiPossessionChoice(r), clash: battleSummary(result), statusCarry: carryOutOf(result) };
 }
 
 export function summary(f) {

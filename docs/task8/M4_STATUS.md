@@ -425,6 +425,92 @@ the 2-CPU container was loaded by parallel runs, and it passed when run alone. N
 stay (item 8). The Daybreak Lance / Clear Light ladder is provisional, with Core one switch away (item 13). Dawn Song is literal: the
 caster (item 14). The Stunned countdown is as in S2. The KO replacement is in line order.
 
+## S12: the franchise on the t8 engine (branch `task8-m4-integrate`, from 87eefa3)
+
+**What is wired.** Every NEW franchise battle (Tuesday encounter, pregame Clash, overtime Clash, headless league pregames and
+tiebreaks, staff auto-run) plays on ruleset `t8`. `src/clash/index.js` now exports the router (`simulateByRuleset`, `logHashFor`) and
+the t8 surface, so the game's import closure includes the 72 contracts (index.html restamped). `src/franchise/clash-link.js` stays the
+one franchise importer.
+
+**Records are versioned (D19).** A battle record names the engine that plays it:
+- version 1 (implicit: no `version`, no `ruleset`): a pre-M4 record. It replays on the frozen legacy engine with the policies it was
+  played with. Finished records are never rewritten.
+- version 2: `ruleset: 't8'`, `engine` (`t8-s5`), `context` (`standalone` | `opening` | `overtime`), `policies` (`manual` for the
+  player's side in Watch, else `ai`), `decisions.a` by exchange, `carryIn` (overtime), `carryOut` (set at settlement), `mastery`
+  (execution counts and the cap scope; no award), and the summary gains `ruleset`, `engine`, `stateHash`.
+- an UNRESOLVED pre-M4 record (status `battle`, rewards not applied) is re-run on t8 from its seed and lineups once and tagged
+  `migrated: { from: 'legacy', ... }` (the plan's D19 default; the ledger prevents a second award). **Decision to confirm:** N8d D19
+  rules on completed records only; the alternative (finish it on the legacy engine) is a one-line change in `upgradeUnresolvedRecord`.
+
+**Snapshots** (`snapMonster`) carry `clashMasteryTier = tierIndex(dev.mastery.clash)` (the tier, never the raw count) and, for the
+overtime Clash, `exhausted` from the game's stamina book; `buildT8Combatant` halves all 12 effective attributes once for an exhausted
+monster (§12), with the football engine's rounding. The t8 replay key includes both.
+
+**D1 / D2.** Watch: the player's side is `manual`; the engine stops at each legal rotation phase and the battle screen shows the
+prompt (Stay in, each reserve with HP / type edge / status, "Auto for the rest of this battle"); the answer is recorded on the record
+and the arena plays on from the prompt. Skip, headless settlement (`settleHeadless` answers `auto` at the open prompt, so the log is
+identical up to it), staff auto-run (`mode: 'skip'`) and league games use the AI policy. A Watch battle with Auto at its first prompt
+is byte-identical to Skip (tested). Riptide Charge's opponent-chosen replacement stays on the S10 default (first living reserve).
+
+**Continuity (§10, §12; D10–D12).**
+- Opening Clash: the record's `carryOut` (the engine's football-shaped payloads) is handed to kickoff by `pregamePossession`
+  (`statusCarry`) and `leaguePregame`; `newGame`/`playGame` accept `statusCarry` and call the shared `carryInto` before the first
+  play (logged). Guarded and Healing Reduced do not enter football (unsupported); Shielded enters as the §10 fumble save payload.
+- Overtime Clash: `startOvertimeClash(f, { state })` reads the football state's status book for the battlers (`carryIn`) and
+  `exhaustedSet`; the engine converts (`fromFootball`: Stunned 1:1 per B18, Shielded per D11). `applyTiebreak` and `leagueTiebreak`
+  clear every status when the verdict is written (the game is actually over).
+- `src/sim/rules.js finish()`: the plan's defect is fixed. A game still tied after the overtime period calls `finish(state,
+  { tiebreak: true })`, which sets `needsTiebreak` and KEEPS the status book for the deciding Clash; only an untied final clears.
+- The shared gate's football `endOfUnit` spends a Deep Winter freeze counter on a harmful status before its remaining duration
+  (the Clash side already did; §10 "preserve remaining freeze counters across mode transfer").
+- Standalone battles clear at their actual end (engine, D12): `carryOut` is null on every encounter record.
+- Finding: the football engine never calls `shieldedFumbleSave` (M3 left the Shielded fumble save unwired); the carry payload is right,
+  the football consumer is not this step's.
+
+**Rewards, mastery, Dex.** Unchanged ledger paths (`applyBattleEffects` through `applyActivity`); tested once-only across resolve,
+replay, reload and a direct re-call. Mastery execution counts are stored on the record (`e.mastery = { scope, counts }`; scope
+`clash:<activity>` for standalone, `game:<year>:w<week>:<club>` for opening and OT) and NO `dev.mastery` credit is written (M5).
+
+**Saves.** Schema stays 10; every new field is additive. Tested: round-trip at a prompt boundary and after settlement; the schema-10
+fixture `tests/fixtures/save-v10-season2.json` loads, plays its Tuesday encounter on t8 and a Sunday with a t8 pregame, and round-trips
+again. The B11 exchange-boundary save (S13) is not built here: a save at the rotation prompt is the boundary the engine already stops
+at (the record holds the decisions; the result is rebuilt from the seed).
+
+**Provisional readings** stay off: `runBattle` builds the t8 config without a `provisional` option (a static test checks the adapter
+and franchise.js never mention it), and a franchise-path battle through a gated ability (Dawn Song, D14) logs `unmet: awaiting ruling`
+and keeps its use. Tank bruise stays unimplemented (D6).
+
+**Presentation (S12 scope, not S14).** `src/ui/clash/t8-record.js` translates a t8 result into the arena's record one event per
+engine event at the same index (`toArenaRecord`); the arena converts automatically, adds the t8 status glyphs, a `silent` tier for
+bookkeeping events, `revive`, `playTo`, `controls: false` and the **looks hook**: `createArena(root, result, { looks })` calls
+`looks(cue, api)` before every cue with `cue.event.t8` (the untranslated engine event) and a drawing api; a returned Promise takes the
+cue over. The `task8-fx-clash` branch plugs its module in as `app.clashLooks` (read by the battle screen and the reviewer). Help text
+updated (one active fighter, rotations, statuses). The Clash Lab stays on the legacy ruleset (S14).
+
+## S15 UI: Developer → Clash Ability Reviewer
+
+`src/ui/screens/clash-ability-reviewer.js` (screen `clash-ability-reviewer`, Developer menu) over the engine-side bridge
+`src/clash/t8/review-phases.js`:
+- every ability × form × tier from `reviewMatrix()` (72 abilities, 408 rows); form, tier and variant selectors; "▶ Scenario" runs
+  `runScenario` on the real engine and renders the result through the arena (no scripted animation);
+- the explanation panel before playback: source (combatant, side, form, tier), targets seen in this run, expected result, contract
+  text, kind row, how it is staged (labelled inputs), controlled prerequisites (seed selection, sparring partners, probes) and the
+  PROVISIONAL label where the scenario uses one;
+- the four-phase checklist, evidenced by engine events (`seq`) and ticked as the arena cursor reaches them; blocked scenarios (and any
+  scenario in which the ability by design never acts) use their own four labels (trigger evaluated → blocked / not activated → ordinary
+  play continues → use or state preserved);
+- the failure panel: a failed scenario check, a phase without evidence (with the engine's `unmet` reports) or an implementation error;
+- controls: pause / play, replay, 0.25× / 0.5× / 1×, step by event, by turn (`turn_start`) and by exchange, to the end; the event log
+  window with stage chips; the subject's ability-state line;
+- "▶ Natural battle": ordinary AI battles (policies ai / ai, nothing staged), seeds tried until the ability executes;
+- verdicts in the shared dev-review store, namespace `clashability` (`gridiron-beast-clash-ability-reviews` / `clash_ability_reviews`),
+  fingerprinted on the contract text; nothing written to saves or progression (a source scan in the test enforces it).
+
+`tests/clash/t8-review-ui.test.js`: all 1,375 scenario runs (1,280 acceptance + 95 provisional) demonstrate all four phases on the
+first run with ordered evidence and passing checks; failures are reported, never silent; determinism; the arena record and the step
+indices; no writes. `tools/m4-integrate-check.mjs` is the browser check (Tuesday encounter and Sunday gym Clash in Watch with a rotation
+prompt, the reviewer for representative rare / delayed / multi-target / multi-turn / blocked abilities, Natural battle, 0 page errors).
+
 ## Provisional defaults and the decision each waits on
 
 The same list is in code as `T8_PROVISIONAL` (`src/clash/t8/values.js`), and a test checks that every entry names what it waits on.

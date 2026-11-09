@@ -10,7 +10,7 @@
 
 export const SPEEDS = Object.freeze([1, 2, 4]);
 /** Durations at 1x, in ms. Speed divides them; Skip plays none. */
-export const DURATION = Object.freeze({ tick: 260, routine: 560, power: 950, major: 1500 });
+export const DURATION = Object.freeze({ tick: 260, routine: 560, power: 950, major: 1500, silent: 60 }); // silent: t8 bookkeeping events (turn and round starts, clocks, rolls) that show nothing
 
 /** How a named move of each element reaches its target (Phase 3). Basic strikes are always melee. */
 export const DELIVERY = Object.freeze({ Fire: 'projectile', Water: 'projectile', Nature: 'projectile', Electric: 'arc', Earth: 'lob', Ice: 'projectile', Wind: 'projectile', Dark: 'projectile', Light: 'beam', Metal: 'melee', Psychic: 'wave', Dragon: 'melee' });
@@ -30,6 +30,7 @@ export function stateAt(result, i) {
     // A monster leaves the field on its 'ko' event, not on the hit that emptied its HP: the knockout cue plays in between.
     put(e.actor, e.actorState); put(e.target, e.targetState);
     if (e.kind === 'ko' && e.target) S[e.target[0]][e.target].ko = true;
+    if (e.kind === 'revive' && e.target) S[e.target[0]][e.target].ko = false; // t8 Second Spring (D18): the revived monster is back, at the back of its lineup (the event's order says where)
   }
   const front = { a: order.a.find((id) => !S.a[id].ko) || null, b: order.b.find((id) => !S.b[id].ko) || null };
   return { S, order, front, ramp, healMult, ex: result.log[last]?.ex ?? 0, i: last };
@@ -98,6 +99,8 @@ export function cuesFor(result) {
       case 'buff': case 'debuff': tier = 'routine'; move = e.kind; camera = { focus: [e.target || e.actor], zoom: 1 }; break;
       case 'bench_miss': case 'bench_blocked': case 'note': case 'start': tier = 'tick'; move = e.kind === 'bench_miss' ? 'resist' : null; break;
       case 'swap_refused': tier = 'routine'; move = 'refused'; label = 'held'; break;
+      case 'silent': tier = 'silent'; move = null; break;
+      case 'revive': tier = 'power'; move = 'enter'; camera = { focus: [e.target], zoom: 1 }; break;
       default: tier = TICK_KINDS.has(e.kind) ? 'tick' : ROUTINE_KINDS.has(e.kind) ? 'routine' : 'tick';
     }
     out.push({ i: k, ex: e.ex, kind: e.kind, tier, duration: DURATION[tier], move, number, label, camera, actor: e.actor, target: e.target, text: e.text, event: e, element: elementOf(e.actor) || elementOf(e.target), delivery, named });

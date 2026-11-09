@@ -66,6 +66,10 @@ export function atWhistle(slot) {
 export function endOfUnit(slot) {
   if (!slot) return null;
   if (slot.appliedThisUnit) return { ...slot, appliedThisUnit: false };
+  // Deep Winter (ICE-06-C; spec §10 "pauses expiry only while harmful effects continue ... preserve remaining freeze counters across
+  // mode transfer"): a frozen harmful status spends one freeze counter per counted unit instead of its remaining duration. The Clash
+  // side (src/clash/t8/status.js endOfTurn) spends its counters before calling here, so this branch only runs for football plays.
+  if (slot.freeze > 0 && STATUS[slot.id].kind === 'harmful') return { ...slot, freeze: slot.freeze - 1 };
   const remaining = slot.remaining - 1;
   return remaining > 0 ? { ...slot, remaining } : null;
 }
