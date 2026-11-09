@@ -46,7 +46,8 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
   // A monster's per-play field state. Perf (outcome-identical): every key it can take is declared at creation (undefined reads as
   // absent; nothing enumerates it), so all of them share one object shape.
   // Same for the effective-attribute layer record (layer(): a missing key and undefined both read as 0; nothing enumerates it).
-  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: undefined, catching: undefined, blocking: undefined }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined });
+  // Third pass: `m` is the lookup the last tick resolved for him (its entry events are done) and `byType` his type's memo map.
+  const fxState = (cut) => ({ seen: new Set(), attr: { awareness: undefined, catching: undefined, blocking: undefined }, drift: 0, cut, base: undefined, hybrid: undefined, echo: undefined, pend: undefined, metalUsed: undefined, slipped: undefined, lured: undefined, bonded: undefined, m: undefined, byType: undefined });
   const applicableMax = (a) => a.maxSpeed; // already carries the shared modifiers (engine refreshMaxSpeed)
   const unpair = (a) => { if (a.engaged) { a.engaged.engaged = null; a.engaged = null; } };
 
@@ -100,7 +101,9 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
     return base;
   };
   function effectsHere(a) {
-    let byType = memo.get(a.type); if (!byType) { byType = new Map(); memo.set(a.type, byType); }
+    // Perf: an actor's type never changes, so his field state keeps his type's memo map once it has one (the Map lookup is skipped)
+    const st = a.fx; let byType = st ? st.byType : undefined;
+    if (!byType) { byType = memo.get(a.type); if (!byType) { byType = new Map(); memo.set(a.type, byType); } if (st) st.byType = byType; }
     let k = bigList ? '' : 0;
     const x = a.x, y = a.y;
     if (!(x < UY0 || x > UY1 || y < UL0 || y > UL1)) for (let i = 0; i < NF; i++) {
@@ -123,11 +126,17 @@ export function createFieldPlay({ fields, actors, seed = 1, log = () => {}, t8 =
       const m = effectsHere(a); const e = m.e;
       st.base = m.base;
       st.hybrid = e.hybrid?.name || null;
-      for (const b of e.base) if (!st.seen.has(b.fieldId)) {
-        st.seen.add(b.fieldId); ev(a, 'field_enter', `${a.name} enters a ${b.type} field`, { field: b.fieldId, element: b.type });
-        if (b.type === 'Electric') electric(a, st.base.Electric);
+      // Perf (outcome-identical, third pass): the entry checks run only when his resolved lookup is not the one of his previous tick.
+      // After one pass over a lookup every one of its field ids and its hybrid name is in `seen`, so with the same lookup again every
+      // test below would be false: no entry event, no Electric roll.
+      if (m !== st.m) {
+        st.m = m;
+        for (const b of e.base) if (!st.seen.has(b.fieldId)) {
+          st.seen.add(b.fieldId); ev(a, 'field_enter', `${a.name} enters a ${b.type} field`, { field: b.fieldId, element: b.type });
+          if (b.type === 'Electric') electric(a, st.base.Electric);
+        }
+        if (st.hybrid && !st.seen.has(st.hybrid)) { st.seen.add(st.hybrid); ev(a, 'field_enter', `${a.name} enters ${st.hybrid}`, { hybrid: st.hybrid }); }
       }
-      if (st.hybrid && !st.seen.has(st.hybrid)) { st.seen.add(st.hybrid); ev(a, 'field_enter', `${a.name} enters ${st.hybrid}`, { hybrid: st.hybrid }); }
       if (st.base.Water && a.cutUntil !== st.cut && a.cutUntil > t) water(a, st.base.Water);
       st.cut = a.cutUntil;
       const ms = -(st.base.Fire?.strength ?? 0) + (st.base.Wind?.strength ?? 0); // Fire and Wind: one maximum-speed property, added
