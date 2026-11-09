@@ -142,7 +142,7 @@ test('I5: the play that serves the absence carries the empty-spot mark on the ma
   assert.deepEqual(servedVacancies(served, { ...sim, frames: [{ ...sim.frames[0], def: [['CB1', 5, 9]] }] }, teams, 'away'), [], 'somebody is in the slot: no mark');
   assert.deepEqual(servedVacancies([], sim, teams, 'away'), []); assert.deepEqual(servedVacancies(served, null, teams, 'away'), []); assert.deepEqual(servedVacancies([{ ...served[0], ability: 'XXX-00-F' }], sim, teams, 'away'), []);
   const src = readFileSync(new URL('../src/ui/screens/match.js', import.meta.url), 'utf8');
-  assert.match(src, /absenceTrack\.observe\(s\.seed, s, teams\)/); assert.match(src, /absenceTrack\.frame\(s, teams, dLook, now, animate\)/); assert.match(src, /servedVacancies\(servedNow, ev\.sim, teams/); assert.match(src, /staged: ev\.fxStaged/); assert.match(src, /withoutSlots\(look0\.presnap, pre8\.vacant\)/); assert.match(src, /edge-chip absent returned/);
+  assert.match(src, /absenceTrack\.observe\(s\.seed, s, teams, G\.fxAbsence\)/); assert.match(src, /absenceTrack\.frame\(s, teams, dLook, now, animate\)/); assert.match(src, /servedVacancies\(servedNow, ev\.sim, teams/); assert.match(src, /staged: ev\.fxStaged/); assert.match(src, /withoutSlots\(look0\.presnap, pre8\.vacant\)/); assert.match(src, /edge-chip absent returned/);
   assert.match(readFileSync(new URL('../src/ui/screens/ability-reviewer.js', import.meta.url), 'utf8'), /sequenceStaged\(plays, pi\)/);
 });
 

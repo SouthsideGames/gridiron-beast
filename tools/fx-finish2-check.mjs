@@ -30,7 +30,7 @@ const problems = []; const report = {}; const errors = [];
 const check = (ok, what) => { if (!ok) problems.push(what); console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); };
 try {
   await waitHttp(BASE + 'index.html');
-  const browser = await playwright.chromium.launch();
+  const browser = await playwright.chromium.launch({ ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}) });
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, reducedMotion: 'no-preference' });
   await ctx.addInitScript(() => { globalThis.__gbRenderPerf = {}; });
   const page = await ctx.newPage();

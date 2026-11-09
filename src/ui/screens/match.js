@@ -194,9 +194,10 @@ export function registerMatchScreens(Router, app) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     const myBall = s.possession === me;
     const teams = teamsFor(f);
-    absenceTrack.observe(s.seed, s, teams); // Task 8 (I5): who is out, who has just served his absence (read only)
+    absenceTrack.observe(s.seed, s, teams, G.fxAbsence); // presentation-only save data, outside the simulation state
     const look0 = presnapInfo(f, teams);
     const pre8 = presnapT8(f, teams, look0); // Task 8 (I2, I5): fields visible before the snap; a swallowed defender's empty spot and his return
+    G.fxAbsence = absenceTrack.snapshot(); // saved with the match; no RNG, rewards or ability state is changed
     // I5: the formation is drawn without the defender who sits this snap out (his alignment stays known, for the mark on his empty spot)
     const look = pre8?.vacant?.length && look0.presnap ? { ...look0, presnap: withoutSlots(look0.presnap, pre8.vacant) } : look0;
     const offenseTeamSide = s.possession;
