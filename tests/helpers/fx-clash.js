@@ -27,7 +27,7 @@ export function geomAt(result, cues, t) {
   const cue = [...cues].reverse().find((c) => c.at <= t + 1e-9) || cues[0]; const st = t8StateAt(result, cue?.i ?? 0);
   const sizeOf = (side) => Math.max(1, Math.min(5, result.lines[side].length)); const per = Math.max(result.lines.a.length, result.lines.b.length);
   const sizes = per <= 3 ? { front: 96, bench: 64 } : { front: 80, bench: 48 };
-  const place = (side) => { const map = (side === 'b' ? PORTRAIT_B : PORTRAIT)[sizeOf(side)]; const alive = st.order[side].filter((id) => !st.S[id].ko); const out = {}; alive.forEach((id, i) => { const [x, y] = map[Math.min(i, map.length - 1)]; out[id] = { x: x / 100 * STAGE.W, y: y / 100 * STAGE.H, size: i === 0 ? sizes.front : sizes.bench, side, slotIndex: i, active: i === 0, ko: false }; }); return out; };
+  const place = (side) => { const map = (side === 'b' ? PORTRAIT_B : PORTRAIT)[sizeOf(side)]; const alive = st.order[side].filter((id) => !st.S[id].ko).sort((p, q) => (p === st.front[side] ? -1 : q === st.front[side] ? 1 : 0)); const out = {}; alive.forEach((id, i) => { const [x, y] = map[Math.min(i, map.length - 1)]; out[id] = { x: x / 100 * STAGE.W, y: y / 100 * STAGE.H, size: i === 0 ? sizes.front : sizes.bench, side, slotIndex: i, active: i === 0, ko: false }; }); return out; };
   const P = { ...place('a'), ...place('b') };
   return { W: STAGE.W, H: STAGE.H, landscape: false, pos: (id) => P[id] || null, slot: (side, i) => { const map = (side === 'b' ? PORTRAIT_B : PORTRAIT)[sizeOf(side)]; const [x, y] = map[Math.min(i, map.length - 1)]; return { x: x / 100 * STAGE.W, y: y / 100 * STAGE.H, size: i === 0 ? sizes.front : sizes.bench }; } };
 }

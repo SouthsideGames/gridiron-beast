@@ -32,7 +32,7 @@ export function phaseEvidence(state, abilityId) {
   out.movement = na.has('movement') ? 'n/a' : items.some((it) => it.look.move) ? 'yes' : null;
   out.impact = na.has('impact') ? 'n/a' : items.some((it) => it.look.impact || ['damage', 'heal', 'status', 'status_end', 'hp_set', 'revive', 'redirect', 'survive', 'intercepted', 'raw_split', 'rotation', 'miss', 'clock_adjust', 'status_freeze', 'delayed_impact'].includes(it.kind)) ? 'yes' : null;
   out.target = na.has('target') ? 'n/a' : items.some((it) => (it.target && it.target !== it.owner && it.look.target !== false) || it.look.target) || state.pops.some((p) => p.abilityId === abilityId) ? 'yes' : null;
-  out.persistence = na.has('persistence') ? 'n/a' : look?.persistVia || items.some((it) => it.look.until || it.look.persist) || state.indicators[main?.owner]?.length || log.some((e) => e.abilityId === abilityId && (e.kind === 'clock_start' || e.kind === 'clock_adjust')) ? 'yes' : null;
+  out.persistence = na.has('persistence') ? 'n/a' : look?.persistVia || items.some((it) => it.look.until || it.look.persist) || state.indicators[main?.owner]?.length || log.some((e) => e.abilityId === abilityId && (e.kind === 'clock_start' || e.kind === 'clock_adjust')) || state.pops.some((p) => p.abilityId === abilityId && !p.end) ? 'yes' : null;
   out.cleanup = na.has('cleanup') ? 'n/a' : items.length ? 'yes' : null;
   return out;
 }

@@ -7,7 +7,8 @@ const dust = (x, y, r, n, sid, k, o = 1) => { let s = ''; for (let i = 0; i < n;
 /** A snowball at p. */
 const snowball = (p, r, o = 1) => blob(p[0], p[1], r, '#e6f7ff', o) + blob(p[0] - r * 0.3, p[1] - r * 0.3, r * 0.35, '#ffffff', o) + ring(p[0], p[1], r, '#8ac6ff', 1, o);
 /** Ice plates around a body: n plates on an ellipse, scaled, optionally cracked. */
-function plates(x, y, rx, ry, n, L, o, k, cracked = false, sid = 1) { let s = ''; for (let i = 0; i < n; i++) { const a = (i / n) * 2 * PI - PI / 2; const px = x + cos(a) * rx * k, py = y + sin(a) * ry * k; const w = rx * 0.55, hh = ry * 0.4; s += `<rect x="${f2(px - w / 2)}" y="${f2(py - hh / 2)}" width="${f2(w)}" height="${f2(hh)}" rx="1.5" fill="${L.b}" fill-opacity="0.55" stroke="${L.c}" stroke-width="1.2" transform="rotate(${f2((a * 180) / PI + 90)} ${f2(px)} ${f2(py)})" opacity="${op(o)}"/>`; if (cracked) s += path(pathOf(jag(px - w * 0.3, py - hh * 0.3, 0.6, w * 0.6, sid + i, 3, 1.2)), '#3a5a7a', 0.8, o); } return s; }
+/** The plates ring the body but leave the feet and the name tag clear (an open arc at the bottom). */
+function plates(x, y, rx, ry, n, L, o, k, cracked = false, sid = 1) { let s = ''; for (let i = 0; i < n; i++) { const a = -PI / 2 - PI * 0.78 + (i / Math.max(1, n - 1)) * PI * 1.56; const px = x + cos(a) * rx * k, py = y + sin(a) * ry * k; const w = rx * 0.55, hh = ry * 0.4; s += `<rect x="${f2(px - w / 2)}" y="${f2(py - hh / 2)}" width="${f2(w)}" height="${f2(hh)}" rx="1.5" fill="${L.b}" fill-opacity="0.55" stroke="${L.c}" stroke-width="1.2" transform="rotate(${f2((a * 180) / PI + 90)} ${f2(px)} ${f2(py)})" opacity="${op(o)}"/>`; if (cracked) s += path(pathOf(jag(px - w * 0.3, py - hh * 0.3, 0.6, w * 0.6, sid + i, 3, 1.2)), '#3a5a7a', 0.8, o); } return s; }
 
 export const EARTH_ICE = {
   // EAR-01-C Emergency Cover: the reserve source dashes in, visibly takes the impact in front of its ally, then returns to its reserve position; no lineup swap is animated.

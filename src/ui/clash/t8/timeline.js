@@ -42,7 +42,7 @@ export function t8StateAt(result, i) {
       case 'signature_restricted': if (e.target && e.actor !== e.target && S[e.target]) S[e.target].restricted = { by: e.actor, abilityId: e.abilityId, left: e.turns }; break;
       case 'signature_restriction_end': if (e.target && S[e.target]) S[e.target].restricted = null; break;
       case 'status_freeze': if (e.target && S[e.target]) { S[e.target].frozen = e.freeze || 2; S[e.target].frozenFrom = e.seq; } break;
-      case 'status_end': if (e.target && S[e.target]) { S[e.target].frozen = 0; } break;
+      case 'status_end': if (e.target && S[e.target]) { S[e.target].frozen = 0; S[e.target].status = null; } break; // the engine's cleanse() snapshots the slot before it clears it: the end is authoritative here
       case 'delayed_launch': pending = [...pending, { id: e.delayedId, abilityId: e.abilityId, owner: e.actor, target: e.target, side: e.target ? e.target[0] : null, impactEx: e.impactEx, seq: e.seq }]; break;
       case 'delayed_impact': pending = pending.filter((d) => d.id !== e.delayedId); break;
       case 'end': case 'cap': pending = []; break;

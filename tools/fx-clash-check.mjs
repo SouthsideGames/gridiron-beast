@@ -4,7 +4,8 @@
 // at every form (mastery 0; with --tiers=all also masteries 1-3 at the first form), seeks the real arena (t8 mode) to each presentation
 // phase and saves one screenshot per phase (anticipation, activation, movement, impact, target, persistence, cleanup) to
 // --shots=DIR/<family>/, reporting per variant the look items drawn, the t8 layer element count per phase, the stage's total element
-// count and any page error. Provisional scenarios are run only with --provisional (labelled). Nothing is written to a franchise.
+// count and any page error. A variant whose only valid demonstration is a PROVISIONAL scenario runs that one, labelled (the gated
+// reading is never enabled in normal play); --provisional prefers the provisional scenarios everywhere. Nothing is written to a franchise.
 //   node tools/fx-clash-check.mjs [--ids=...] [--families=...] [--shots=DIR] [--tiers=all] [--quality=full|low|min] [--provisional] [--out=report.json]
 import fs from 'node:fs';
 import path from 'node:path';
@@ -40,7 +41,9 @@ try {
       await page.selectOption(`select[data-change="pick-stage"][data-id="${c.abilityId}"]`, String(stage)); await page.selectOption(`select[data-change="pick-tier"][data-id="${c.abilityId}"]`, String(tier));
       // the scenario: the first valid one (or, with --provisional, the first provisional one when the ability has one)
       const opts = await page.evaluate((id) => Array.from(document.querySelectorAll(`select[data-change="pick-scenario"][data-id="${id}"] option`)).map((o) => ({ v: o.value, t: o.textContent })), c.abilityId);
-      const pick = PROV ? opts.find((o) => o.t.startsWith('⚠')) || opts.find((o) => /^valid/.test(o.t)) || opts[0] : opts.find((o) => /^valid/.test(o.t) && !o.t.startsWith('⚠')) || opts.find((o) => !o.t.startsWith('⚠')) || opts[0];
+      // the same rule as the tests and the matrix: a valid non-provisional scenario; else a valid PROVISIONAL one (labelled: the look exists but normal
+      // play awaits the ruling); --provisional prefers the provisional scenario where one exists
+      const pick = PROV ? opts.find((o) => o.t.startsWith('⚠')) || opts.find((o) => /^valid/.test(o.t)) || opts[0] : opts.find((o) => /^valid/.test(o.t)) || opts.find((o) => /^⚠ valid/.test(o.t)) || opts.find((o) => !o.t.startsWith('⚠')) || opts[0];
       await page.selectOption(`select[data-change="pick-scenario"][data-id="${c.abilityId}"]`, pick.v);
       await page.evaluate((id) => document.querySelector(`[data-action="scenario"][data-id="${id}"]`).click(), c.abilityId); await page.waitForFunction(() => document.querySelector('#crvhost')?.__crv, null, { timeout: 60000 });
       if (QUALITY) await page.evaluate((q) => document.querySelector('#crvhost').__crv.arena.setQuality(q), QUALITY);

@@ -107,7 +107,7 @@ export function createArena(root, result, opts = {}) {
   // ---- state
   function slotsFor(side, st) {
     const land = isLandscape(); const map = (land ? (stage.clientWidth < 420 ? LANDSCAPE_TIGHT : LANDSCAPE) : side === 'b' ? PORTRAIT_B : PORTRAIT)[Math.max(1, Math.min(5, result.lines[side].length))];
-    const alive = st.order[side].filter((id) => !st.S[side][id].ko); const out = {};
+    const alive = st.order[side].filter((id) => !st.S[side][id].ko).sort((p, q) => (p === st.front?.[side] ? -1 : q === st.front?.[side] ? 1 : 0)); const out = {}; // the active fighter stands at the front slot (t8: a rotation makes a reserve active without reordering the lineup)
     alive.forEach((id, i) => { const [x, y] = map[Math.min(i, map.length - 1)]; out[id] = { x: side === 'b' && land ? 100 - x : x, y, front: i === 0, row: i === 0 ? 0 : i <= 2 ? 1 : 2 }; });
     return out;
   }

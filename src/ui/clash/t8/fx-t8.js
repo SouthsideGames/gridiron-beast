@@ -106,8 +106,8 @@ export function drawClashT8(state, t, geom, { quality = 'full', reduced = false,
   // ---- the information layer: never hidden by effects (spec §13): status badge over the head, ability icon beside the tag, turn markers
   for (const id of Object.keys(st.S)) {
     const s = st.S[id]; if (s.ko) continue; const p = gm(id); if (!p) continue; const hu = Math.max(p.size / 16, 4.5);
-    const headY = Math.max(1.4 * hu, p.top - 1.5 * hu);
-    if (s.status) { const pop = state.pops.find((x) => x.id === id && !x.end && t >= x.t0 && t < x.t0 + 0.35); const sc = pop ? 0.6 + 0.4 * ease((t - pop.t0) / 0.35) : 1; hud += clashStatusBadge(p.x, headY, hu, s.status, { pop: sc, frozen: s.frozen, t }); }
+    const headY = Math.max(1.6 * hu, p.top - 1.7 * hu);
+    if (s.status) { const pop = state.pops.find((x) => x.id === id && !x.end && t >= x.t0 && t < x.t0 + 0.35); const sc = pop ? 0.6 + 0.4 * ease((t - pop.t0) / 0.35) : 1; hud += clashStatusBadge(p.x, headY, hu * 1.25, s.status, { pop: sc, frozen: s.frozen, t }); }
     else { const gone = state.pops.find((x) => x.id === id && x.end && t >= x.t0 && t < x.t0 + 0.5); if (gone && gone.reason !== 'end of a standalone battle') { const kk = (t - gone.t0) / 0.5; hud += clashStatusBadge(p.x, headY - kk * 6, hu, { id: gone.status, remaining: null }, { pop: 1 + kk * 0.6, o: 1 - kk }); } }
     if (s.abilityId) {
       const L = elementOf(s.type); const look = LOOKS[s.abilityId]; const ind = indicatorAt(state, id, t) || (look?.init ? look.init() : null);
