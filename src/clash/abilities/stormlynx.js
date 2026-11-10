@@ -1,3 +1,4 @@
+// Owner N9c supersedes historical awaiting-ruling comments for the resolved gates in this module.
 // ELE-04-C Circuit Breaker (stormlynx: Statyx; Disruptor). Batch F.
 // Contract (Dex, owner 2B): once per Clash, automatically replace the normal attack when the active opponent has an ability currently
 // recharging (a running cooldown; otherwise attack normally and keep the use). Deal 100 / 110 / 120 / 130% normal attack damage by mastery;
@@ -42,14 +43,10 @@ export default registerClashAbility({
         explain: () => 'Nothing to extend.',
         setup: () => ({ a: [{ species: 'stormlynx' }], b: [{ species: 'kindlet' }], seed: 1, stopAt: { exchange: 1 } }),
         expect: (r, h) => { h.check('no strike (use kept)', h.state('a0')?.used === false && h.ab('damage').length === 0); } },
-      { id: 'perk-awaiting', kind: 'blocked', title: 'An active Tank with a running cooldown: Disruptor pierce is decisive, awaiting ruling',
-        explain: () => 'The opponent Steelpaw (Tank) set up Tempered Guard (a real cooldown); whether the strike keeps Disruptor pierce awaits a ruling: ordinary attack, use kept.',
+      { id: 'perk-provisional', kind: 'valid', title: 'APPROVED N9c (plan reading: special, no pierce): the strike against the Tank extends its cooldown',
+        explain: () => 'Approved reading T8_FLAGS.ordinaryPerks[ELE-04-C] = special. Approved by N9c.',
         setup: () => ({ a: [{ species: 'stormlynx' }], b: [{ species: 'steelpaw' }], seed: 1, stopAt: { exchange: 2 }, probes: [{ initiative: (v, id) => (id === 'b0' ? { priority: 1 } : null) }] }),
-        expect: (r, h) => { h.awaiting('d5-perk'); h.check('use kept', h.state('a0')?.used === false); } },
-      { id: 'perk-provisional', kind: 'valid', provisional: true, title: 'PROVISIONAL (plan reading: special, no pierce): the strike against the Tank extends its cooldown',
-        explain: () => 'Provisional reading T8_FLAGS.ordinaryPerks[ELE-04-C] = special. Not approved; labelled.',
-        setup: () => ({ a: [{ species: 'stormlynx' }], b: [{ species: 'steelpaw' }], seed: 1, stopAt: { exchange: 2 }, probes: [{ initiative: (v, id) => (id === 'b0' ? { priority: 1 } : null) }] }),
-        expect: (r, h) => { h.provisionalUsed('d5-perk'); const d = h.ab('damage')[0]; h.check('special, no pierce', d && d.tag === 'special' && d.pierce === false); h.check('cooldown extended', h.has('clock_adjust', (e) => e.abilityId === 'ELE-04-C')); } },
+        expect: (r, h) => { h.rulingUsed('d5-perk'); const d = h.ab('damage')[0]; h.check('special, no pierce', d && d.tag === 'special' && d.pierce === false); h.check('cooldown extended', h.has('clock_adjust', (e) => e.abilityId === 'ELE-04-C')); } },
     ],
   },
 });

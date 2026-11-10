@@ -1,3 +1,4 @@
+// Owner N9c supersedes historical awaiting-ruling comments for the resolved gates in this module.
 // WIN-01-C Feather Relay (gustling: Gustling / Squallow / Stratosoar; Support). Batch E.
 // Contract (Dex) with the owner's reconciled D3 ruling (2026-11-09 01:03, rule 2): once per Clash, while living and able in RESERVE, at its
 // own team's normal action opportunity, if the current active ally is below 50% HP and a legal rotation is available. This SUPPORT ACTION
@@ -48,18 +49,14 @@ export default registerClashAbility({
         explain: () => 'The side rotated voluntarily on exchange 1; on exchange 2 the 4-exchange cadence makes a rotation illegal, so the relay reports the unmet condition and keeps its use.',
         setup: () => ({ a: [{ species: 'lumen' }, { species: 'tidepaw', hp: 25 }, { species: 'gustling' }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, config: { policies: { a: 'manual', b: 'none' }, decisions: { a: { 1: 'a1', 5: 'stay', 9: 'stay', 13: 'stay', 17: 'stay', 21: 'stay', 25: 'stay', 29: 'stay' } } }, stopAt: { exchange: 2 } }),
         expect: (r, h) => { h.unmetReported((e) => e.unmet.some((u) => u.condition === 'rotation cadence')); h.check('use kept', h.state('a2')?.used === false); } },
-      { id: 'voluntary-awaiting', kind: 'interaction', title: 'An enemy Riptide Pursuit facing a Feather Relay rotation: awaiting ruling (not pursued)',
-        explain: () => 'Whether a relay rotation is "voluntary" for the enemy\'s rotation triggers is unaddressed by the contract: in normal gameplay the enemy Tsunarok reports awaiting ruling and does not pursue.',
-        setup: () => ({ a: [{ species: 'tidepaw', hp: 30 }, { species: 'gustling' }], b: [{ species: 'tsunarok', overall: 30 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
-        expect: (r, h) => { h.check('relay happened', h.has('rotation', (e) => e.abilityId === 'WIN-01-C')); h.check('the pursuit reports awaiting ruling', h.has('unmet', (e) => e.abilityId === 'WAT-06-C' && e.unmet.some((u) => u.point === 'feather-relay-voluntary'))); h.check('no pursuit damage', !h.has('damage', (e) => e.abilityId === 'WAT-06-C')); } },
-      { id: 'failed-relay-keeps', kind: 'sourceKO', provisional: true, title: 'PROVISIONAL: the pursuit knocks the departing ally out: the relay failed, its use is kept',
-        explain: () => 'Provisional reading (relay = voluntary): the enemy Tsunarok\'s pursuit knocks the 1-HP departing ally out before it leaves. A failed rotation keeps the relay\'s use. Not approved; labelled.',
+      { id: 'failed-relay-keeps', kind: 'sourceKO', title: 'APPROVED N9c: the pursuit knocks the departing ally out: the relay failed, its use is kept',
+        explain: () => 'Approved reading (relay = voluntary): the enemy Tsunarok\'s pursuit knocks the 1-HP departing ally out before it leaves. A failed rotation keeps the relay\'s use. Approved by N9c.',
         setup: () => ({ a: [{ species: 'tidepaw', hp: 1 }, { species: 'gustling' }, { species: 'lumen' }], b: [{ species: 'tsunarok', overall: 30 }], seed: 1, stopAt: { exchange: 1, turn: 1 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
         expect: (r, h) => { h.check('knocked out by the pursuit', h.has('ko', (e) => e.target === 'a0' && e.actor === 'b0')); h.check('the relay use is kept, no execution', h.state('a1')?.used === false && h.line('a1').executions === 0); } },
-      { id: 'voluntary-provisional', kind: 'interaction', provisional: true, title: 'PROVISIONAL (plan D3: a voluntary rotation): the enemy Riptide Pursuit punishes the relay',
-        explain: () => 'Provisional reading T8_FLAGS.featherRelayVoluntary = voluntary: Tsunarok pursues the departing ally before the relay completes. Not approved; labelled.',
+      { id: 'voluntary-provisional', kind: 'interaction', title: 'APPROVED N9c (plan D3: a voluntary rotation): the enemy Riptide Pursuit punishes the relay',
+        explain: () => 'Approved reading T8_FLAGS.featherRelayVoluntary = voluntary: Tsunarok pursues the departing ally before the relay completes. Approved by N9c.',
         setup: () => ({ a: [{ species: 'tidepaw', hp: 30 }, { species: 'gustling' }], b: [{ species: 'tsunarok', overall: 30 }], seed: 1, stopAt: { exchange: 1 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
-        expect: (r, h) => { const p = h.ev('damage', (e) => e.abilityId === 'WAT-06-C')[0]; const rot = h.ev('rotation', (e) => e.abilityId === 'WIN-01-C')[0]; h.check('pursuit before the relay departure', p && rot && p.seq < rot.seq && p.target === 'a0'); h.check('labelled provisional', h.has('provisional', (e) => e.point === 'feather-relay-voluntary')); } },
+        expect: (r, h) => { const p = h.ev('damage', (e) => e.abilityId === 'WAT-06-C')[0]; const rot = h.ev('rotation', (e) => e.abilityId === 'WIN-01-C')[0]; h.check('pursuit before the relay departure', p && rot && p.seq < rot.seq && p.target === 'a0'); h.rulingUsed('feather-relay-voluntary'); } },
     ],
   },
 });

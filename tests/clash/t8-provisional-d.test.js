@@ -3,4 +3,4 @@
 import '../../src/clash/t8/index.js';
 import { provisionalSuite } from './t8-ability-harness.js';
 
-provisionalSuite(['EAR-05-C', 'PSY-05-C']);
+provisionalSuite(['EAR-05-C']);

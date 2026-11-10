@@ -137,14 +137,14 @@ for (const c of reviewCatalog()) {
 // ---------------------------------------------------------------- Clash rows
 const CM = clashMatrixRows(); const clashRows = []; const clashTotals = { complete: 0, partial: 0, awaiting: 0, variants: 0, shown: 0, unfinished: [], gated: [] };
 const pickMain = (id, stage, tier) => { const scs = listScenarios(id, stage, tier); return scs.find((s) => s.kind === 'valid' && !s.provisional) || scs.find((s) => s.kind === 'valid') || scs.find((s) => !s.provisional) || scs[0]; };
-const gatedBy = (id) => Object.entries(PROVISIONAL_POINTS).filter(([, p]) => (p.abilities || []).includes(id)).map(([k]) => k);
+const gatedBy = (id) => Object.entries(PROVISIONAL_POINTS).filter(([, p]) => !p.approved && (p.abilities || []).includes(id)).map(([k]) => k);
 for (const id of registeredClashAbilities()) {
   const a = abilityById(id); const fam = familyById(a.familyId); const forms = formsOf(a.familyId); const look = CLASH_LOOKS[id]; const m4 = CM[id] || {};
   const impl = clashContractById(id) && has(`src/clash/abilities/${a.familyId}.js`) ? `implemented (src/clash/abilities/${a.familyId}.js)` : 'MISSING';
   let shown = 0, total = 0, provOnly = 0; const failed = [];
   for (const f of forms) for (const tier of [0, 1, 2, 3]) { total += 1; const sc = pickMain(id, f.stage, tier); if (sc?.provisional) provOnly += 1; const r = reviewClashScenario({ abilityId: id, stage: f.stage, tier, scenarioId: sc.id }); if (r.ok) shown += 1; else failed.push(`${f.stage}@${tier}`); }
   clashTotals.variants += total; clashTotals.shown += shown;
-  const points = [...new Set([...gatedBy(id), ...String(m4.points || '').split(',').map((x) => x.replace(/`/g, '').trim()).filter((x) => x && x !== '-')])];
+  const points = [...new Set([...gatedBy(id), ...String(m4.points || '').split(',').map((x) => x.replace(/`/g, '').trim()).filter((x) => x && x !== '-' && !PROVISIONAL_POINTS[x]?.approved)])];
   const provScenarios = listScenarios(id, 0, 0).filter((s) => s.provisional).length;
   const missing = []; if (!look) missing.push('no look'); if (provOnly === total) missing.push('its only valid demonstration is a PROVISIONAL scenario (the gated reading awaits a ruling): the look is shown in reviewer / provisional mode only, labelled'); else if (provOnly) missing.push(`at ${provOnly}/${total} variants the only valid demonstration is PROVISIONAL (awaiting a ruling); the other variants are complete`);
   const status = !look || provOnly === total ? 'partial' : 'complete'; clashTotals[status] += 1; if (status === 'partial') clashTotals.unfinished.push([id, a.name, missing.join(' ')]);

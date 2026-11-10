@@ -78,8 +78,8 @@ export const T8_PROVISIONAL = deepFreeze([
     rule: 'Within one side\'s rotation, hooks are asked of every monster in stable ID order: rotationDelay (Cinder Clamp), pursuit (Riptide Pursuit), cashOut (Shell Harvest), then departure, the entrant\'s onEntry, then arrival (Cold Welcome / Downdraft), as P8 orders them. A delayed rotation does not spend the cadence.' },
   { id: 'ai-visible-information', waitsOn: 'none (approved D2 "approved information restrictions"; reading flagged)',
     rule: 'The adapted AI policy reads only what both players see: types, HP, status badges, its own side\'s attack, and hits already dealt. The legacy smart policy\'s "about to fall" test read the opposing active\'s ATK; it now uses the largest single hit that opponent has dealt in this battle.' },
-  { id: 'feather-relay-voluntary', waitsOn: 'owner (D3 reconciled 2026-11-09: the rotation, no P8 penalty and the kept restrictions are ruled; its "voluntary" status for the rotation triggers is not)',
-    rule: 'Feather Relay is built (team action at the normal action opportunity; cadence, locks and legality kept; no entry penalty). Cinder Clamp, Riptide Pursuit, Cold Welcome and Shell Harvest report awaiting ruling on a relay rotation in normal gameplay (flags.js PROVISIONAL_POINTS).' },
+  { id: 'feather-relay-voluntary', waitsOn: 'none (N9c C approved)',
+    rule: 'Feather Relay is built (team action at the normal action opportunity; cadence, locks and legality kept; no entry penalty). N9c C: Cinder Clamp, Riptide Pursuit, Cold Welcome and Shell Harvest treat the relay as voluntary in normal gameplay.' },
   // ---- S5: the contract primitives
   { id: 'delayed-slot-active-position', waitsOn: 'none (reading of FIR-03-C / FIR-06-C "lineup position ... current occupant", flagged; T8_FLAGS.delayedSlot)',
     rule: 'A delayed impact marks the target side\'s ACTIVE position: the occupant at impact is whoever is active then. Under lineup-order-stable a lineup index never changes hands, so the active position is the only reading in which "current occupant" can differ from the launch target.' },

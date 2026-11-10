@@ -2,6 +2,10 @@
 
 Working branch: `codex/task8-presentation-followup`.
 
+> Follow-up: approved N9c Clash gates are now implemented on this same branch. See
+> [CODEX_APPROVED_CLASH_FOLLOWUP.md](CODEX_APPROVED_CLASH_FOLLOWUP.md) for the later changes and validation.
+> The browser walkthrough was subsequently waived by the owner. Earlier results below remain historical.
+
 ## Source and integration status
 
 The GitHub development head inspected was `bd182de9a9dad7bdf782b9ed987f4f5391a01249`. The completed football
@@ -50,7 +54,7 @@ No ability mechanics, absence duration, field rules, balance values or save sche
 - Do not regenerate outcome references to hide Bloom Break's ruled change. Preserve the old reference and record
   the specific approved difference before creating a replacement baseline.
 - The separately reported 1,977/1,977 milestone result belongs to `4e41043`, not this branch.
-- Latest Clash reconciliation work is not merged here. Inspect it and preserve its independent test record before integration.
+- At the original presentation checkpoint the later Clash reconciliation had not been checked. The subsequent follow-up verified that `task8-m4-reconcile` at `30689c7` is already an ancestor of this branch; no independent work was overwritten.
 
 ## Next integration check
 

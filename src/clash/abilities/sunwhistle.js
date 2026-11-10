@@ -1,3 +1,4 @@
+// Owner N9c supersedes historical awaiting-ruling comments for the resolved gates in this module.
 // LIG-02-C Dawn Song (sunwhistle: Solchirp / Heliark; Support). Batch C.
 // Contract (Dex): a ready own normal action replaces the attack if the active front ally is injured and has an empty status slot. Target:
 // "Front ally, self only if actually front". Heal 5 / 6 / 7 / 8% max HP by mastery (both forms, P4) immediately, then the same amount at the
@@ -38,16 +39,16 @@ export default registerClashAbility({
   },
   review: {
     scenarios: [
-      { id: 'awaiting-d14', kind: 'blocked', title: 'Normal gameplay: Dawn Song awaits the D14 target ruling; ordinary attack',
-        explain: () => 'D14 asks whether "front ally, self only if actually front" means self only or self included. Until it is ruled Dawn Song reports awaiting ruling and Solchirp attacks.',
-        setup: () => ({ a: [{ species: 'sunwhistle', hp: 30 }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.awaiting('d14-dawn-song-target'); h.check('ordinary attack, no heal', h.has('damage', (e) => e.actor === 'a0') && !h.has('heal', (e) => e.abilityId === 'LIG-02-C')); } },
-      { id: 'provisional-schedule', kind: 'valid', provisional: true, title: 'PROVISIONAL (self only): immediate heal, then a pulse at the end of each of the next two own turns',
-        explain: (c) => `Provisional reading (D14 self only): Solchirp heals itself ${c.values.healPct}% now and at the end of its next two normal turns; the schedule is not a status. Not approved; labelled.`,
+      { id: 'full-health', kind: 'blocked', title: 'No injury: Dawn Song preserves readiness',
+        explain: () => 'The caster is at full HP, so no healing action is needed.',
+        setup: () => ({ a: [{ species: 'sunwhistle' }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, stopAt: { exchange: 1 } }),
+        expect: (r, h) => { h.check('no heal while uninjured', !h.has('heal', (e) => e.abilityId === 'LIG-02-C')); h.check('no cooldown spent', !h.has('clock_start', (e) => e.clock === 'LIG-02-C')); } },
+      { id: 'provisional-schedule', kind: 'valid', title: 'APPROVED N9c (self only): immediate heal, then a pulse at the end of each of the next two own turns',
+        explain: (c) => `Approved reading (D14 self only): Solchirp heals itself ${c.values.healPct}% now and at the end of its next two normal turns; the schedule is not a status. Approved by N9c.`,
         setup: () => ({ a: [{ species: 'sunwhistle', hp: 20 }], b: [{ species: 'gravelpup', sparring: true }], seed: 1, stopAt: { exchange: 3 } }),
-        expect: (r, h) => { h.provisionalUsed('d14-dawn-song-target'); const hs = h.ev('heal', (e) => e.abilityId === 'LIG-02-C'); h.check('three heals on exchanges 1, 2, 3', hs.map((e) => e.ex).join(',') === '1,2,3', hs.map((e) => e.ex)); h.check('no status used', !h.has('status', (e) => e.abilityId === 'LIG-02-C')); h.check('schedule counted for P9', r.diagnostics.overflow.length === 0); } },
-      { id: 'provisional-ko-cancels', kind: 'sourceKO', provisional: true, title: 'PROVISIONAL: a knockout cancels the pending pulses',
-        explain: () => 'Provisional reading: Solchirp casts, then is knocked out before its next turn ends: the pulses are cancelled.',
+        expect: (r, h) => { h.rulingUsed('d14-dawn-song-target'); const hs = h.ev('heal', (e) => e.abilityId === 'LIG-02-C'); h.check('three heals on exchanges 1, 2, 3', hs.map((e) => e.ex).join(',') === '1,2,3', hs.map((e) => e.ex)); h.check('no status used', !h.has('status', (e) => e.abilityId === 'LIG-02-C')); h.check('schedule counted for P9', r.diagnostics.overflow.length === 0); } },
+      { id: 'provisional-ko-cancels', kind: 'sourceKO', title: 'APPROVED N9c: a knockout cancels the pending pulses',
+        explain: () => 'Approved reading: Solchirp casts, then is knocked out before its next turn ends: the pulses are cancelled.',
         setup: () => ({ a: [{ species: 'sunwhistle', hp: 3 }, { species: 'tidepaw' }], b: [{ species: 'charbun', overall: 99 }], seed: 1, stopAt: { exchange: 3 }, probes: [{ initiative: (v, id) => (id === 'a0' ? { priority: 1 } : null) }] }),
         expect: (r, h) => { h.check('knocked out with pulses pending', h.has('cleanup', (e) => e.abilityId === 'LIG-02-C' && /cancels/.test(e.text))); } },
     ],

@@ -241,13 +241,21 @@ test('determinism: same seed and inputs give an identical log hash and state has
 test('determinism: 20 golden t8 seeds replay from their replay keys (tests/clash/fixtures/golden-t8.json); the router plays t8', () => {
   // Re-recorded at S4 (tools/t8-golden.mjs): the approved D1/D2 AI rotation policy is the default and changes ordinary battles.
   const stored = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8.json', import.meta.url), 'utf8'));
+  const n9c = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-n9c.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(n9c.changes).sort(), ['14', '4'], 'only the two Dawn Song baseline cases change under N9c B');
   assert.equal(Object.keys(stored).length, 20);
   withoutRandomness(() => {
     for (const seed of Object.keys(stored)) {
       const k = parseT8ReplayKey(stored[seed].key);
       const r = simulateClashT8({ a: k.a, b: k.b, seed: k.seed, config: k.config });
-      assert.equal(t8LogHash(r), stored[seed].hash, `golden t8 seed ${seed}`); assert.equal(r.stateHash, stored[seed].state);
-      assert.equal(t8LogHash(simulateByRuleset({ a: k.a, b: k.b, seed: k.seed, config: { ruleset: 't8' } })), stored[seed].hash);
+      const change = n9c.changes[seed];
+      if (change) {
+        assert.equal(change.previousHash, stored[seed].hash); assert.equal(change.previousState, stored[seed].state);
+        assert.ok(r.log.some((e) => e.kind === 'heal' && e.abilityId === change.ability), 'the approved caster heal actually executes');
+      }
+      const expected = change || stored[seed];
+      assert.equal(t8LogHash(r), expected.hash, `golden t8 seed ${seed}`); assert.equal(r.stateHash, expected.state);
+      assert.equal(t8LogHash(simulateByRuleset({ a: k.a, b: k.b, seed: k.seed, config: { ruleset: 't8' } })), expected.hash);
     }
   });
 });

@@ -1,3 +1,4 @@
+// Owner N9c supersedes historical awaiting-ruling comments for the resolved gates in this module.
 // PSY-05-C Mind Game (enigmane: Enigmane; Disruptor). Batch D.
 // Contract (Dex, N7b P10): a direct enemy NORMAL attack that misses Enigmane completely (every hit of a multi-hit) earns one trick (at
 // most one stored; reactions cannot earn it). While no trick is stored, each enemy normal attack against the active Enigmane has an
@@ -56,14 +57,10 @@ export default registerClashAbility({
         explain: () => 'CONTROLLED PREREQUISITE (labelled): a reviewer probe makes the opponent undodgeable, so no miss and no trick.',
         setup: () => ({ a: [{ species: 'enigmane' }], b: [{ species: 'charbun' }], seed: 1, stopAt: { exchange: 3 }, probes: [{ chooseAction: (v, id) => (id === 'b0' ? { kind: 'attack', abilityId: 'TEST-UNDODGEABLE', undodgeable: true, mult: 1 } : null) }] }),
         expect: (r, h) => { h.check('no trick (no Confused, no roll)', !h.has('status', (e) => e.abilityId === 'PSY-05-C') && !h.has('roll', (e) => e.abilityId === 'PSY-05-C')); } },
-      { id: 'perk-awaiting', kind: 'blocked', title: 'A stored trick against an active Tank: Disruptor pierce is decisive, awaiting ruling',
-        explain: () => 'Staged (controlled prerequisite): a trick is stored and the opponent is a Tank. Whether the trick attack keeps the Disruptor pierce awaits a ruling: an ordinary attack, the trick kept.',
+      { id: 'perk-provisional', kind: 'valid', title: 'APPROVED N9c (D5 proposal: ordinary, so pierce applies): the trick attack against the Tank',
+        explain: () => 'Approved reading T8_FLAGS.ordinaryPerks[PSY-05-C] = ordinary: the trick attack pierces the Tank guard and attempts Confused. Approved by N9c.',
         setup: () => ({ a: [{ species: 'enigmane', ability: { trick: true, rolled: null, armed: false } }], b: [{ species: 'gravelpup' }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.awaiting('d5-perk'); h.check('trick kept', h.state('a0')?.trick === true); } },
-      { id: 'perk-provisional', kind: 'valid', provisional: true, title: 'PROVISIONAL (D5 proposal: ordinary, so pierce applies): the trick attack against the Tank',
-        explain: () => 'Provisional reading T8_FLAGS.ordinaryPerks[PSY-05-C] = ordinary: the trick attack pierces the Tank guard and attempts Confused. Not approved; labelled.',
-        setup: () => ({ a: [{ species: 'enigmane', ability: { trick: true, rolled: null, armed: false } }], b: [{ species: 'gravelpup' }], seed: 1, stopAt: { exchange: 1 } }),
-        expect: (r, h) => { h.provisionalUsed('d5-perk'); const d = h.ev('damage', (e) => e.actor === 'a0')[0]; h.check('ordinary-tagged trick attack pierces', d && d.tag === 'ordinary' && d.pierce === true); } },
+        expect: (r, h) => { h.rulingUsed('d5-perk'); const d = h.ev('damage', (e) => e.actor === 'a0')[0]; h.check('ordinary-tagged trick attack pierces', d && d.tag === 'ordinary' && d.pierce === true); } },
     ],
   },
 });

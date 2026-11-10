@@ -1,5 +1,7 @@
 # M4 Clash ability matrix (72 abilities)
 
+> Follow-up: N9c A/B/C/E/G/H are implemented on `codex/task8-presentation-followup`. Perk identity, Dawn Song caster targeting, voluntary Feather Relay interactions, Clear Light owner-turn cooldown and active-position delayed targeting are resolved. The historical rows below may still name those gates; `ABILITY_COMPLETION_MATRIX.md` and `CODEX_APPROVED_CLASH_FOLLOWUP.md` identify the remaining unresolved points. No other decisions were approved.
+
 Branch `task8-m4-core`, head after S11 (`3d822f2`). The table is generated from the code: `reviewMatrix()`, `listScenarios()`,
 `ABILITY_KINDS` and `PROVISIONAL_POINTS`.
 

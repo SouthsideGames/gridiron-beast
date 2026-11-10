@@ -627,6 +627,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
      */
     provisional: (self, pointId, detail = '') => {
       const p = provisionalPoint(pointId); const x = byId.get(self.id) || null;
+      if (p.approved) return true; // N9c: approved behavior is available without provisional mode or labels
       if (PROV) { if (LOG) log('provisional', x, null, `${self.name}: ${self.abilityId} uses the PROVISIONAL reading ${pointId} (${p.reading})${detail ? `: ${detail}` : ''}`, { abilityId: self.abilityId, point: pointId, provisional: true, stage: 'activation', waitsOn: p.waitsOn }); return true; }
       reportUnmet('provisional', self.id, { abilityId: self.abilityId, unmet: [{ condition: 'awaiting ruling', point: pointId, waitsOn: p.waitsOn, detail }] });
       return false;

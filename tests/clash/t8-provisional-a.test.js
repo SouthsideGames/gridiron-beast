@@ -3,4 +3,4 @@
 import '../../src/clash/t8/index.js';
 import { provisionalSuite } from './t8-ability-harness.js';
 
-provisionalSuite(['DAR-02-C', 'DAR-03-C', 'LIG-05-C', 'LIG-06-C', 'MET-04-C']);
+provisionalSuite(['LIG-06-C']);
