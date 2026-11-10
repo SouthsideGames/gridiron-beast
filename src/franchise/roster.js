@@ -2,6 +2,7 @@
 // slot → attributes lineup the engine consumes.
 
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, canPlay, OFFENSE_BASE, DEFENSE_BASE, OFFENSE_PACKAGE_SLOTS, DEFENSE_PACKAGE_SLOTS } from '../data/personnel.js';
+import { tierIndex } from './t8/mastery.js';
 import { effectiveAttributes, monsterOverall, createRoster, speciesEffect } from '../data/monsters.js';
 import { OFFENSE_IDS, DEFENSE_IDS, PLAYS, counterPlays } from '../data/playbook.js';
 import { createRng } from '../core/rng.js';
@@ -68,7 +69,7 @@ export function lineupFromChart(roster, chart, { trainingBonus = null } = {}) {
   const slotInput = (slot) => {
     const m = byId[chart[slot]];
     if (!m) return { attrs: {}, name: slot, id: null };
-    return { attrs: effectiveAttributes(m, { slotPosition: positionOf(slot), trainingBonus }), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position, yearsPro: m.yearsPro ?? null, form: m.dev?.form || null, mastery: m.dev?.mastery?.football ?? 0, permDurability: m.dev?.current?.durability ?? m.attributes?.durability }; // form and mastery: the Task 8 ability contracts (M3)
+    return { attrs: effectiveAttributes(m, { slotPosition: positionOf(slot), trainingBonus }), ability: m.ability || null, name: m.name, id: m.id, type: m.type, species: m.species, age: m.age, position: m.position, yearsPro: m.yearsPro ?? null, form: m.dev?.form || null, mastery: tierIndex(m.dev?.mastery?.football ?? 0), permDurability: m.dev?.current?.durability ?? m.attributes?.durability }; // form and mastery: the Task 8 ability contracts (M3)
   };
   const offense = Object.fromEntries(OFFENSE_SLOTS.map((s) => [s, slotInput(s)]));
   const defense = Object.fromEntries(DEFENSE_SLOTS.map((s) => [s, slotInput(s)]));

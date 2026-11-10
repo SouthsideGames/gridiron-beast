@@ -9,6 +9,7 @@
 // the shared status badge, the ability icons and the turn markers in the information layer. The legacy path is unchanged.
 // Reconciled (task8-m4-reconcile): one arena for both Task 8 branches. Native t8 mode is the primary presentation; the M4 player API
 // (playTo, record, length, controls: false, the silent tier, revive, the looks override point, the status glyphs) works in every mode.
+import { frameGate } from '../frame-rate.js';
 import { esc } from '../dom.js';
 import { monsterSprite } from '../pixel-monster.js';
 import { stateAt, cuesFor, nextExchangeIndex, DURATION } from './choreographer.js';
@@ -201,7 +202,8 @@ export function createArena(root, result, opts = {}) {
     const d = drawClashT8(t8state, t, g, { quality, reduced: reduced(), reducedFlash: softFlash() });
     t8under.innerHTML = d.under; t8over.querySelector('.fx').innerHTML = d.over; t8over.querySelector('.hud').innerHTML = d.hud;
   }
-  function t8Loop() { t8clock.raf = 0; if (!t8 || !root.isConnected) return; const t = t8Time(); t8Draw(t); if (playing || t8Live(t8state, t)) t8clock.raf = requestAnimationFrame(t8Loop); }
+  const t8Gate = frameGate(); // 30 FPS battery saver: the ability layer redraws at most 30 times a second; the playback clock is unchanged
+  function t8Loop(now = performance.now()) { t8clock.raf = 0; if (!t8 || !root.isConnected) return; const t = t8Time(); if (t8Gate(now)) t8Draw(t); if (playing || t8Live(t8state, t)) t8clock.raf = requestAnimationFrame(t8Loop); }
   const t8Kick = () => { if (t8 && !t8clock.raf) t8clock.raf = requestAnimationFrame(t8Loop); };
 
   /** The matchup line: the two front monsters and who has the type edge (▲ strong, ▼ weak, = even), in words the strips echo. */

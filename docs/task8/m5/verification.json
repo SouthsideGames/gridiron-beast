@@ -1,0 +1,43 @@
+{
+  "status": "passed",
+  "date": "2026-11-10",
+  "runtime_source_tree": "d41e19b526528aae1716c2a742ce9fbf1781323d",
+  "node": "v24.22.1",
+  "full_regression": {
+    "command": "npm test",
+    "tests": 2003,
+    "passed": 2003,
+    "failed": 0,
+    "duration_ms": 450435.206014,
+    "output_sha256": "4586213ed00b06c44f5f2fa22ce57526956b6e654cf7b978462e428afc5d8ea8"
+  },
+  "focused_attribution_tests": 41,
+  "ai_benchmark": {
+    "command": "node tools/ai-franchise-benchmark.mjs --seeds=1 --seasons=1 --quiet --label=task8-m5 --json=docs/task8/m5/ai-benchmark.json",
+    "hash": "77ce08b76f1e786154b6c12300c1d27284959204649cb15fcd05cbacc516985a",
+    "hashV3": "e04831ba5375d723b570134e6573371a5a8e3c108603a5161eeb516accd10098",
+    "seeds": 1,
+    "seconds": 26,
+    "errors": 0,
+    "problems": 0,
+    "baseline": {
+      "hash": "5b794f0df00e69a68403f9303e018b794f646f5d9da9202bd3c821b05a0fa184",
+      "hashV3": "1f6fbc73b9681bb14f25b8d1d1f8c50c90c8c5f60919ba4b60f9cc0a7a6f9f7b",
+      "seeds": 1,
+      "seconds": 24,
+      "errors": 0,
+      "problems": 0
+    }
+  },
+  "other_checks": [
+    "git diff --check",
+    "node tools/stamp-release.mjs --check"
+  ],
+  "not_claimed": [
+    "M6 long-term career/economy acceptance",
+    "M6 finished-game CPU/render budgets",
+    "browser/owner visual approval",
+    "physical-device performance",
+    "preview or live deployment"
+  ]
+}

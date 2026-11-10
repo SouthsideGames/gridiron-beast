@@ -11,6 +11,7 @@ import { newContract } from './contracts.js';
 import { draftNeedBonus } from './roster-plan.js';
 import { GYM_BY_CLUB } from '../data/gyms.js';
 import { clubIdentity, identityTilt } from '../data/identities.js';
+import { createRng, hashString } from '../core/rng.js';
 /** R7 (owner 2026-11-05): a prospect's first-season charge on his rookie deal (70% of market, as the owner's and the AI's picks are paid). */
 export const rookieCharge = (m) => Math.round(salaryFor(m) * ROOKIE_SCALE / 100) * 100;
 /** R4 (owner 2026-11-05): a gym's tie-break for prospects of its element (Task 7 franchises only); as small as the market's. */
@@ -94,16 +95,37 @@ export const onTheClock = (f) => f.draft?.started && !f.draft.done ? f.draft.ord
  *  at once (his overall at or above the club's weakest starter at the position). Compete and Retool keep 0.20. */
 export const POTENTIAL_WEIGHT = Object.freeze({ contend: 0.1, compete: 0.2, retool: 0.2, rebuild: 0.35 });
 export const READY_BONUS = 2;
+/** B16: separate, saved scouting reports for each club, using the player's exact
+ * weekly full/glance rules. The local stream never consumes gameplay RNG. */
+export function aiDraftKnowledge(f, team) {
+  const d = f.draft;
+  const k = ((d.aiScouting ||= {})[team] ||= { skill: 50, revealed: d.creation ? Object.fromEntries(d.class.slice(0, 22).map((m, i) => [m.id, i < 12 ? 6 : 3])) : {}, weeks: 0 });
+  const weeks = Math.max(d.scoutWeeks || 0, Math.max(0, (f.season?.week || 0) - 9));
+  while (k.weeks < weeks) {
+    const shadow = { draft: { ...d, revealed: k.revealed, scoutWeeks: k.weeks } };
+    scoutDraftClass(shadow, createRng(hashString(`${f.seed}|${d.year}|${team}|scout:${k.weeks}`)), { skill: k.skill });
+    k.weeks += 1;
+  }
+  return k;
+}
+export function aiProspectView(f, team, m) {
+  const level = aiDraftKnowledge(f, team).revealed[m.id] || 0;
+  return { level, ovr: level >= 4 ? monsterOverall(m) : null, potential: level >= 6 ? m.potential : null };
+}
 export function aiDraftPick(f, team, rng, { plan = null, afford = null } = {}) {
   const d = f.draft; const avail = d.class.filter((m) => d.available.includes(m.id) && (!afford || afford(m))); // R7: only prospects the club can pay
   const taken = d.picks.filter((p) => p.team === team).map((p) => p.position);
-  const need = {}; if (plan) for (const m of avail) need[m.id] = draftNeedBonus(plan, m.position, m);
+  const views = Object.fromEntries(avail.map((m) => [m.id, aiProspectView(f, team, m)]));
+  const observable = (m) => ({ id: m.id, age: m.age, position: m.position, potential: views[m.id].potential ?? views[m.id].ovr ?? 0 });
+  const need = {}; if (plan) for (const m of avail) need[m.id] = draftNeedBonus(plan, m.position, observable(m), (x) => x.id === m.id ? views[m.id].ovr ?? 0 : monsterOverall(x));
   const mode = plan?.mode || 'compete'; const pw = POTENTIAL_WEIGHT[mode] ?? 0.2;
-  const ready = {}; if (mode === 'contend' && plan?.groups) for (const m of avail) { const rows = plan.groups[m.position]?.rows || []; const weakest = rows.length ? Math.min(...rows.map((r) => monsterOverall(r.starter))) : 0; if (monsterOverall(m) >= weakest) ready[m.id] = READY_BONUS; }
+  const ready = {}; if (mode === 'contend' && plan?.groups) for (const m of avail) { const rows = plan.groups[m.position]?.rows || []; const weakest = rows.length ? Math.min(...rows.map((r) => monsterOverall(r.starter))) : 0; if (views[m.id].ovr != null && views[m.id].ovr >= weakest) ready[m.id] = READY_BONUS; }
   const element = f.freeAgency?.v ? GYM_BY_CLUB[team]?.element : null;
-  const id = clubIdentity(f, team); const tilt = {}; if (id) for (const m of avail) tilt[m.id] = identityTilt(id, m); // Task 8 D7: identity positions and scheme fits, a tie-break (identities.js IDENTITY_TILT)
-  const score = (m) => monsterOverall(m) + (m.potential - 70) * pw + (rng.next() - 0.5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0) + (element && m.type === element ? GYM_ELEMENT_BONUS : 0) + (tilt[m.id] || 0);
-  return avail.sort((a, b) => score(b) - score(a))[0] || null;
+  const id = clubIdentity(f, team); const tilt = {}; if (id) for (const m of avail) if (views[m.id].level >= 6) tilt[m.id] = identityTilt(id, m);
+  // Public board order is the fallback, not a guessed hidden rating. Sample tie noise
+  // once per candidate so Array.sort cannot change its evaluations mid-comparison.
+  const scores = new Map(avail.map((m) => [m.id, (views[m.id].ovr ?? (70 - (m.boardRank || m.draftRank || d.class.indexOf(m) + 1) / 2)) + (views[m.id].potential == null ? 0 : (views[m.id].potential - 70) * pw) + (rng.next() - .5) * 3 - (taken.includes(m.position) ? 4 : 0) - (m.position === 'K' ? 6 : 0) + (need[m.id] || 0) + (ready[m.id] || 0) + (element && m.type === element ? GYM_ELEMENT_BONUS : 0) + (tilt[m.id] || 0)]));
+  return avail.sort((a, b) => scores.get(b.id) - scores.get(a.id))[0] || null;
 }
 
 function recordPick(f, team, m, { mine = false }) {

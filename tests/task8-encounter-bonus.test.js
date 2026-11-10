@@ -54,20 +54,21 @@ test('a won Basic encounter adds 25% level XP to every participant, recruited or
   const rows = r.events.filter((e) => e.kind === 'xp'); assert.ok(rows.length >= 1);
   for (const x of result.lines.a) {
     const row = rows.find((e) => e.id === x.combatant.monsterId); assert.ok(row, 'every participant is awarded');
-    // M2: the approved Clash award is 25 level XP and 25% of a training bar for every selected lineup member (spec §6); the bonus is +25% of the level XP only
-    assert.equal(row.training, 0.25, 'training progress is the standard award, never boosted');
+    // M5: the positional grade adjusts the activity; the encounter bonus still affects level XP only.
+    assert.ok(row.training >= .25 && row.training <= .30, 'only the bounded performance bonus can increase training');
     if (row.max) { assert.equal(row.amount, 0); continue; }
-    assert.equal(row.base, 25); assert.equal(row.bonus, 6.25); assert.equal(row.amount, 31.25); assert.ok(xp[x.id] != null);
+    assert.ok(row.base >= 20 && row.base <= 30); assert.equal(row.bonus, row.base * .25);
+    assert.ok(Math.abs(row.amount - row.base - Math.round(row.bonus * 100) / 100) < 1e-9); assert.ok(xp[x.id] != null);
     assert.match(row.bonusLabel, /Basic encounter bonus/);
   }
   assert.deepEqual(f.week.encounter.bonus, { pct: 25, label: F.basicEncounterBonus({ species: basicAt('RB').id }).label });
-  for (const m of f.roster) assert.equal(tot(m), banks[m.id] + (inLine.has(m.id) ? 0.25 : 0), `${m.name}: training progress is the standard 25%, not boosted`);
+  for (const m of f.roster) assert.equal(tot(m), banks[m.id] + (rows.find((e) => e.id === m.id)?.training || 0), `${m.name}: training progress is the standard 25%, not boosted`);
   assert.ok(F.declineOffer(f).ok, 'letting him go keeps the bonus already awarded');
 });
 
 test('no bonus for an ordinary target, and none on a loss', () => {
   const { f } = wonEncounter({ basic: false }); const r = F.resolveEncounter(f, AUTO);
-  assert.ok(r.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0 && (e.max || e.amount === 25))); assert.equal(f.week.encounter.bonus, null);
+  assert.ok(r.events.filter((e) => e.kind === 'xp').every((e) => e.bonus === 0 && (e.max || (e.amount >= 20 && e.amount <= 30)))); assert.equal(f.week.encounter.bonus, null);
   for (let seed = 1; seed < 40; seed++) {
     const g = withTarget(seed); for (const m of g.roster) for (const k of Object.keys(m.attributes)) m.attributes[k] = 1; // a club that cannot win
     if (!F.startEncounter(g, 0).ok || settledBattle(g).winner === 'a') continue;

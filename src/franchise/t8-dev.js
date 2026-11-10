@@ -109,6 +109,21 @@ export function devBasicProspect(f) {
   p.monster = generateMonster(rng, { species: sp.id, quality: 50, age: 21, yearsPro: 0, id: p.monster.id }); p.monster.origin = f.week.region; p.revealed = 6;
   f.devAssisted = true; return { ok: true, monster: p.monster };
 }
+/** Put an UNIDENTIFIED Apex on this Tuesday's board (prospect 1): ratings shown, potential hidden, so nothing marks him as Apex (M6, spec §5). */
+export function devApexProspect(f) {
+  if (!t8ToolsEnabled()) return off; if (!f) return { ok: false, reason: 'Open a franchise first.' };
+  const p = f.week?.prospects?.[0]; if (!p) return { ok: false, reason: 'Scout a region first (Monday), then use this on Tuesday.' };
+  if (f.week.encounter && f.week.encounter.status !== 'ready') return { ok: false, reason: 'This Tuesday\'s encounter has already started.' };
+  const pool = SPECIES_DEX.filter((s) => s.rarity !== 'basic' && s.rarity !== 'legendary'); const rng = createRng(hashString(`t8-ap|${f.seed}|${f.season.year}|${f.season.week}`));
+  const sp = pool[rng.int(pool.length)]; const m = generateMonster(rng, { species: sp.id, quality: 50, age: 20, yearsPro: 0, id: `dev_apexp_${rng.seed().toString(36)}`, apexRoll: false });
+  m.dev = generateIndividual(rng, m.dev.form, { apex: true }); m.age = 20; syncFromDev(m); m.salary = salaryFor(m); m.origin = f.week.region;
+  p.monster = m; p.revealed = 6; p.potentialKnown = false; p.natureKnown = false; f.devAssisted = true; return { ok: true, monster: m };
+}
+/** Complete the scout's report on prospect 1 (reveals potential): for an unidentified Apex this is the discovery (M6, spec §5). */
+export function devRevealProspect(f) {
+  if (!t8ToolsEnabled()) return off; const p = f?.week?.prospects?.[0]; if (!p) return { ok: false, reason: 'No prospect on the board.' };
+  p.revealed = 6; p.potentialKnown = true; p.natureKnown = true; f.devAssisted = true; return { ok: true, monster: p.monster };
+}
 /** Save check: export and re-import through the real save format; reports whether every development record came back exactly. */
 export function devSaveRoundTrip(f) {
   if (!t8ToolsEnabled()) return off; if (!f) return { ok: false, reason: 'Open a franchise first.' };

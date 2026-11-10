@@ -4,6 +4,9 @@ import { xpForLevel, levelUp, monsterOverall, salaryFor, speciesEffect, tryEvolv
 import { addBankedPoints, addTrainingProgress, MAX_LEVEL } from './t8/progression.js';
 import { OFFSEASON_POINTS, footballAward } from './t8/awards.js';
 import { applyActivity } from './reward-ledger.js';
+import { applyMastery } from './t8/mastery.js';
+import { footballGrade } from './t8/grading.js';
+import { mergePerformance } from '../sim/t8/performance.js';
 import * as FR from '../core/fraction.js';
 import { OFFENSE_SLOTS, DEFENSE_SLOTS, positionOf, POSITION_WEIGHTS } from '../data/personnel.js';
 import { isAgeless } from './league-registry.js';
@@ -43,10 +46,10 @@ const kicksOf = (st) => (st?.fga || 0) + (st?.xpa || 0) + (st?.kickoffs || 0) + 
 /** Apply one game's consequences to the roster. `chart` maps slots to monster ids; `playerStats` from the game state. */
 /**
  * Task 8 M2: level XP and training come from the approved football award (spec §6, R1 items 9-12), aggregated by monster (not slot),
- * once per activity through the reward ledger when one is given. The positional grade adjustment and performance bonus arrive with
- * grading (M5); until then gradeAdj is 0 (TRANSITIONAL). Participation: min(1, live snaps / 10); a kicker qualifies with one kick.
+ * once per activity through the reward ledger when one is given. M5 grades verified performance telemetry before applying the
+ * bounded positional adjustment and training bonus. Participation: min(1, live snaps / 10); a kicker qualifies with one kick.
  */
-export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1, ledger = null, activityId = null, train = null } = {}) {
+export function afterGame(roster, chart, playerStats, rng, { won = false, snaps = 45, autoSpend = false, autoEvolve = true, xpScale = 1, ledger = null, activityId = null, train = null, mastery = null } = {}) {
   const events = [];
   const byId = Object.fromEntries(roster.map((m) => [m.id, m]));
   const slots = [...OFFENSE_SLOTS, ...DEFENSE_SLOTS, 'K'];
@@ -54,16 +57,19 @@ export function afterGame(roster, chart, playerStats, rng, { won = false, snaps 
   const part = new Map(); const counted = Object.keys(playerStats || {}).length > 0;
   for (const slot of slots) {
     const m = byId[chart[slot]]; if (!m) continue; const st = playerStats?.[slot] || {};
-    const p = part.get(m.id) || { monsterId: m.id, m, liveSnaps: 0, kicks: 0 };
+    const p = part.get(m.id) || { monsterId: m.id, m, liveSnaps: 0, kicks: 0, performance: {} };
     p.liveSnaps += (st.snapsOff || 0) + (st.snapsDef || 0) + (st.stSnaps || 0); if (slot === 'K') p.kicks += kicksOf(st);
     if (!counted) { p.liveSnaps = Math.max(p.liveSnaps, snaps); if (slot === 'K') p.kicks = Math.max(p.kicks, 1); } // no per-slot counts at all (tools, labs): full participation
+    mergePerformance(p.performance, st.performance);
     part.set(m.id, p);
   }
   const award = (p) => {
-    const a = footballAward({ position: p.m.position, liveSnaps: p.liveSnaps, kicks: p.kicks, gradeAdj: 0 });
+    const masteryCredits = mastery && activityId ? applyMastery(p.m, 'football', mastery[p.m.id], { scope: activityId }) : 0;
+    const gradeAdj = footballGrade(p.m.position, p.performance);
+    const a = footballAward({ position: p.m.position, liveSnaps: p.liveSnaps, kicks: p.kicks, gradeAdj });
     const r = applyAward(p.m, { xp: xpScale === 1 ? a.xp : FR.mul(a.xp, FR.frac(Math.round(xpScale * 100), 100)), training: a.training }, rng, { autoSpend, autoEvolve, train });
     events.push(...r.events);
-    events.push({ kind: 'xp', id: p.m.id, name: p.m.name, position: p.m.position, amount: r.xp, training: FR.toNumber(r.training), points: r.points, level: p.m.level, levelsGained: r.levelsGained, xp: p.m.xp, next: xpForLevel(p.m.level), max: p.m.level >= MAX_LEVEL });
+    events.push({ kind: 'xp', id: p.m.id, name: p.m.name, position: p.m.position, amount: r.xp, gradeAdj, masteryCredits, training: FR.toNumber(r.training), points: r.points, level: p.m.level, levelsGained: r.levelsGained, xp: p.m.xp, next: xpForLevel(p.m.level), max: p.m.level >= MAX_LEVEL });
   };
   const entries = [...part.values()].filter((p) => p.m.dev); // a lab's synthetic monster (no development record) earns nothing; its fatigue and injury roll below still run
   if (ledger && activityId) applyActivity(ledger, activityId, entries, award); else for (const p of entries) award(p);

@@ -17,6 +17,7 @@ import { runGameHook } from './abilities/game.js';
 import { getPlay, DEFENSE_FORMATIONS, OFFENSE_FORMATIONS } from '../data/playbook.js';
 import { prismBreak } from './abilities/prism.js';
 import * as ST from './special-teams.js';
+import { recordPerformance, mergePerformance } from './t8/performance.js';
 import { showBattery } from './t8/stamina.js';
 
 /**
@@ -461,7 +462,7 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   const S = state.stats[off];
   const lines = [];
   const wasGoalToGo = state.ballOn + state.toGo >= 100;
-  const toGoBefore = state.toGo;
+  const toGoBefore = state.toGo; const downBefore = state.down;
   state.playCount += 1; S.plays += 1; state.drive.plays += 1;
   runClock(state, sim.elapsed);
   const name = (team, slot) => state[team === 'off' ? off : def].name;
@@ -521,6 +522,7 @@ export function applyScrimmageResult(state, sim, offensePlayId = null, defensePl
   state.lastPlay = { text, result: sim.result, yards: gain, offensePlayId, defensePlayId, seed: sim.seed, ballOn: sim.ballOn, stats: sim.stats };
   log(state, text, 'play', { team: off, result: sim.result, yards: gain, important: !!scored || ['interception', 'fumble', 'touchback_return'].includes(sim.result), repro: `${offensePlayId || '?'}|${defensePlayId || '?'}|${sim.ballOn}|${sim.seed}` });
   recordPlayerStats(state, sim, off, def, { toGo: toGoBefore });
+  recordPerformance(state, sim, off, def, { toGo: toGoBefore, down: downBefore });
   if (state.ot) otCheckAfterPlay(state);
   return { text, scored, result: sim.result, yards: gain };
 }
@@ -602,6 +604,7 @@ export function recordPlayerStats(state, sim, off, def, { toGo = 10 } = {}) {
       bump(team, e.by, 'abilityPlays'); bump(team, e.by, 'abilityImpact', Math.round(impact)); } }
 }
 
+function kickerPerformance(state, side, category, entries) { const p = (state.stats[side].players.K ||= {}); p.performance = mergePerformance(p.performance, { [category]: entries }); }
 function kickerStat(state, side, key, n = 1) { const p = (state.stats[side].players.K ||= {}); p[key] = (p[key] || 0) + n; }
 function nextDown(state, gain, lines) {
   state.ballOn = clamp(state.ballOn + gain, 1, 99);
@@ -644,6 +647,7 @@ export function attemptTryKick(state, teams) {
   if (state.phase !== 'try') throw new Error('not a try');
   const { r, save } = rng(state);
   const res = ST.attemptExtraPoint(r, teams[state.tryTeam].kicker);
+  kickerPerformance(state, state.tryTeam, 'pats', [{ made: res.good, probability: res.chance }]);
   save();
   if (res.good) state.score[state.tryTeam] += 1;
   kickerStat(state, state.tryTeam, 'xpa'); if (res.good) kickerStat(state, state.tryTeam, 'xpm');
@@ -740,7 +744,9 @@ export function doKickoff(state, teams, { onside = false } = {}) {
   else {
     // Live kickoff (N7b P7): the flight and the touchback come from the approved kicking formula; the return is played in the engine.
     units = kickoffUnits(teams[kicking], teams[receiving]);
+    const target = Math.max(-9, 13 - 18 * Math.max(1, Math.min(99, teams[kicking].kicker?.attrs?.kicking ?? 60)) / 99);
     const flight = ST.kickoffFlight(r, { kicker: teams[kicking].kicker });
+    kickerPerformance(state, kicking, 'kickoffs', [{ error: target <= 0 && flight.touchback ? 0 : Math.abs(flight.landingFromGoal - target), target }]);
     if (flight.touchback) res = { touchback: true, ballOn: FIELD.touchbackKickoff, returnYards: 0, live: true, text: 'Kickoff sails into the end zone. Touchback.' };
     else {
       const seed = r.seed(); const catchAt = Math.max(-9, flight.landingFromGoal);
@@ -837,7 +843,9 @@ export function doPunt(state, teams) {
   if (state.phase !== 'scrimmage') throw new Error('not scrimmage');
   const { r, save } = rng(state);
   const kicking = state.possession, receiving = opponent(kicking);
+  const puntTarget = Math.min(100, Math.max(state.ballOn + 10, Math.min(95, state.ballOn + 34 + 16 * Math.max(1, Math.min(99, teams[kicking].kicker?.attrs?.kicking ?? 60)) / 99)));
   let res = ST.punt(r, { ballOn: state.ballOn, kicker: teams[kicking].kicker, returner: teams[receiving].returner });
+  if (!res.blocked) kickerPerformance(state, kicking, 'punts', [{ error: Math.abs(state.ballOn + res.distance - puntTarget), failed: !!res.touchback && puntTarget < 100, target: puntTarget }]);
   save();
   if (res.catchAt != null) res = kickHook((state.t8 ||= { status: {} }), teams[kicking].kicker, kicking, 'puntReturn', {}, res) || res; // M3 hook: a kicker contract on a caught, returned punt (Stone Cradle)
   state.stats[kicking].punts += 1; kickerStat(state, kicking, 'punts'); creditFormulaUnits(state, teams, kicking, 'punt'); // B5: the K's punt and the units' participation
@@ -883,6 +891,7 @@ export function doFieldGoal(state, teams, { signature = false } = {}) {
   }
   save();
   if (res.good) kickHook(t8k, kickerIn, kicking, 'fieldGoalMade', { rng: createRng(((Number(state.rngState) >>> 0) ^ 0x2c1b3c6d) >>> 0 || 7) }, res); // M3 hook: made-field-goal contracts, once, on the final result (Frostmark)
+  kickerPerformance(state, kicking, 'fieldGoals', (res.checks || [{ good: res.good, chance: res.chance }]).map((c) => ({ made: c.good, probability: c.chance })));
   creditFormulaUnits(state, teams, kicking, 'fg'); // B5
   { const bin = res.distance < 30 ? 'fg0' : res.distance < 40 ? 'fg30' : res.distance < 50 ? 'fg40' : 'fg50';
     for (let i = 0; i < (res.checks?.length || 1); i++) { // M3 hook: a Second Chance play records both checks as attempts

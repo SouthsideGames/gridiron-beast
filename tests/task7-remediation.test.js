@@ -82,8 +82,8 @@ function atomicUpgradeCase(seed, { releasedSignedElsewhere = false } = {}) {
 }
 
 test('R1 c: an upgrade that needs a release is atomic — released only when the signing completes, zero dead cap, no return', () => {
-  // seed 37: the released monster is still unsigned when free agency ends (Task 8 retired Nature, N7c B14; seed 34 before)
-  assert.equal(atomicUpgradeCase(37).signed, true, 'the upgrade completes in this scenario');
+  // M5 scouting changes the founding draft: seed 31 retains this atomic signing scenario (37 before B16).
+  assert.equal(atomicUpgradeCase(31).signed, true, 'the upgrade completes in this scenario');
 });
 
 test('R1 c: an intervening signing elsewhere never makes the release-and-sign partial (the released monster legally signs with another club)', () => {

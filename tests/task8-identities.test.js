@@ -117,11 +117,11 @@ test('draft: the identity tilt breaks a tie toward a scheme fit at an identity p
   for (const a of wrs) { if (fitsIdentity(a, id)) continue; const b = wrs.find((x) => fitsIdentity(x, id) && monsterOverall(x) === monsterOverall(a)); if (b) { pair = [a, b]; break; } }
   assert.ok(pair, 'an equal-overall fit / non-fit pair exists');
   const [non, fit] = pair; const flat = { next: () => 0.5 }; // no draft noise
-  const fOf = (club) => ({ club, draft: { class: [non, fit], available: [non.id, fit.id], picks: [] } });
+  const fOf = (club) => ({ club, draft: { class: [non, fit], available: [non.id, fit.id], picks: [], aiScouting: { 'Stormport Bolts': { skill: 50, weeks: 0, revealed: { [non.id]: 6, [fit.id]: 6 } } } } });
   assert.equal(aiDraftPick(fOf('Ember City Beasts'), 'Stormport Bolts', flat).id, fit.id, 'the AI club takes the fit');
   assert.equal(aiDraftPick(fOf('Stormport Bolts'), 'Stormport Bolts', flat).id, non.id, 'the same club run by the owner: no tilt (class order decides the tie)');
   const better = wrs.find((x) => !fitsIdentity(x, id) && monsterOverall(x) >= monsterOverall(fit) + 2); assert.ok(better);
-  const f3 = { club: 'Ember City Beasts', draft: { class: [better, fit], available: [better.id, fit.id], picks: [] } };
+  const f3 = { club: 'Ember City Beasts', draft: { class: [better, fit], available: [better.id, fit.id], picks: [], aiScouting: { 'Stormport Bolts': { skill: 50, weeks: 0, revealed: { [better.id]: 6, [fit.id]: 6 } } } } };
   assert.equal(aiDraftPick(f3, 'Stormport Bolts', flat).id, better.id, 'a prospect 2 overall points better is still taken');
   assert.equal(IDENTITY_TILT.position + IDENTITY_TILT.fit, 1.5, 'at most the R4 tie-break scale');
 });

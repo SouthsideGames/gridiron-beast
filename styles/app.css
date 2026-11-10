@@ -1356,3 +1356,50 @@ html.evo-open, html.evo-open body { overflow: hidden; }
 .need-chip.pfit-offense { border-color: #5aa9ff; color: #8cc4ff; }
 .need-chip.pfit-defense { border-color: #ff7a6b; color: #ff9f94; }
 .need-chip.pfit-special { border-color: #c9d1c9; color: #dfe6df; }
+
+/* ---------------------------------------------------------------- Task 8 M6: three bars, abilities, training ceilings, Apex */
+.t8-bar-label { font-size: 12px; }
+.bar.mastery > i { background: #c9a2ff; }
+.t8-mode .btn { min-height: 30px; }
+.ab-block { margin: 6px 0 8px; padding: 8px 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; }
+.ab-block .ab-rules { margin-top: 4px; font-size: 13px; }
+.attr { position: relative; }
+.attr .bar { position: relative; overflow: visible; }
+.attr .bar > i { border-radius: 4px; }
+.attr .bar > u.ceil { position: absolute; top: -2px; width: 2px; height: 11px; background: #e9f3ee; opacity: .75; text-decoration: none; transform: translateX(-1px); }
+.attr .v small { font-size: 10px; }
+.attr > i.invest { position: absolute; left: 90px; bottom: -1px; height: 2px; max-width: calc(100% - 180px); background: var(--accent2, #5fb6ff); border-radius: 1px; }
+.attr .plus small.cost { font-size: 10px; }
+/* Apex (spec §5): an emblem on roster and profile cards and a subtle gold double outline; species colours are untouched. */
+.apex-emblem { display: inline-block; font-size: 10px; font-weight: 900; letter-spacing: .06em; color: #ffe9a8; border: 1px solid #e7c75a; border-radius: 999px; padding: 1px 7px; background: rgba(120,90,10,.35); vertical-align: middle; white-space: nowrap; }
+.panel.apex-known, .panel.apex-panel { border-color: #e7c75a; box-shadow: 0 0 0 2px #0d1a14, 0 0 0 3px rgba(231,199,90,.55); }
+.apex-facts { margin: 6px 0; padding-left: 18px; }
+.apex-facts li { margin: 1px 0; }
+html.apex-open, html.apex-open body { overflow: hidden; }
+.apex-scene { position: fixed; inset: 0; z-index: 1001; background: #04070a; color: #f4fbf6; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); touch-action: manipulation; animation: apex-in .35s ease-out both; }
+@keyframes apex-in { from { opacity: 0; } to { opacity: 1; } }
+.apex-bg { position: absolute; inset: 0; background: radial-gradient(circle at 50% 38%, rgba(231,199,90,.16), transparent 60%); opacity: 0; transition: opacity 1.2s ease; pointer-events: none; }
+.apex-top { align-self: stretch; display: flex; justify-content: flex-end; position: relative; z-index: 1; }
+.apex-show { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; position: relative; z-index: 1; }
+.apex-figure { position: relative; width: 200px; height: 200px; display: grid; place-items: center; }
+.apex-figure > svg, .apex-figure > img, .apex-figure > canvas { filter: brightness(0); transition: filter 1.1s ease; }
+.apex-ring { position: absolute; inset: 6px; border-radius: 50%; border: 2px solid #e7c75a; box-shadow: 0 0 0 4px #04070a, 0 0 0 6px rgba(255,255,255,.75); opacity: 0; transform: scale(.82); transition: opacity .9s ease, transform 1.1s cubic-bezier(.2,.8,.3,1); }
+.apex-title { font-size: 26px; font-weight: 900; letter-spacing: .12em; color: #ffe9a8; opacity: 0; transform: translateY(6px); transition: opacity .6s ease, transform .6s ease; }
+.apex-name { font-size: 20px; font-weight: 800; opacity: 0; transition: opacity .6s ease; }
+.apex-scene .apex-facts.big, .apex-current { opacity: 0; transition: opacity .7s ease; }
+.apex-scene .apex-facts.big { list-style: none; padding: 0; margin: 8px 0 0; font-size: 16px; }
+.apex-bottom { display: flex; gap: 10px; position: relative; z-index: 1; visibility: hidden; }
+.apex-scene[data-stage="reveal"] .apex-bg, .apex-scene[data-stage="title"] .apex-bg, .apex-scene[data-stage="summary"] .apex-bg { opacity: 1; }
+.apex-scene[data-stage="reveal"] .apex-ring, .apex-scene[data-stage="title"] .apex-ring, .apex-scene[data-stage="summary"] .apex-ring { opacity: 1; transform: scale(1); }
+.apex-scene[data-stage="reveal"] .apex-figure > *:not(.apex-ring), .apex-scene[data-stage="title"] .apex-figure > *:not(.apex-ring), .apex-scene[data-stage="summary"] .apex-figure > *:not(.apex-ring) { filter: none; }
+.apex-scene[data-stage="title"] .apex-title, .apex-scene[data-stage="summary"] .apex-title { opacity: 1; transform: none; }
+.apex-scene[data-stage="title"] .apex-name, .apex-scene[data-stage="summary"] .apex-name { opacity: 1; }
+.apex-scene[data-stage="summary"] .apex-facts.big, .apex-scene[data-stage="summary"] .apex-current { opacity: 1; }
+.apex-scene[data-stage="summary"] .apex-bottom { visibility: visible; }
+.apex-scene[data-stage="summary"] .apex-top { visibility: hidden; }
+.apex-scene.shake-ok[data-stage="reveal"] .apex-figure { animation: apex-shake .5s ease-out 1; }
+@keyframes apex-shake { 0%,100% { transform: none; } 25% { transform: translate(2px,-1px); } 50% { transform: translate(-2px,1px); } 75% { transform: translate(1px,1px); } }
+/* reduced flash / reduced motion: a steady outline and plain fades, no shake, no scaling */
+.apex-scene.steady .apex-ring { transform: none; transition: opacity .9s ease; }
+.apex-scene.steady .apex-title { transform: none; }
+.apex-scene.steady .apex-figure { animation: none !important; }

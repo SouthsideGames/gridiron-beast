@@ -18,3 +18,22 @@ export function creditPassive(record, mode, { applied, scope, seen }) {
 }
 /** Cap scope key for an activity. */
 export const passiveScope = ({ gameId = null, standaloneClashId = null }) => (standaloneClashId ? `clash:${standaloneClashId}` : `game:${gameId}`);
+
+/** Settle the engine's execution counter inside the activity's reward transaction.
+ * The passive scope stamp is saved on the individual and survives evolution. Opening
+ * and overtime Clash supply the same scope; mode stamps remain independent. */
+export function applyMastery(m, mode, execution, { scope } = {}) {
+  if (!['football', 'clash'].includes(mode)) throw new RangeError(`unknown mastery mode ${mode}`);
+  if (!m?.dev || !execution) return 0;
+  const n = execution.executions || 0;
+  if (!Number.isSafeInteger(n) || n < 0) throw new RangeError('invalid execution count');
+  const passive = execution.passiveCredited ? 1 : 0;
+  if (passive && (!scope || n < 1)) throw new Error('passive mastery requires a scope and execution');
+  const stamps = (m.dev.masteryPassiveScopes ||= {});
+  const scopes = Array.isArray(stamps[mode]) ? stamps[mode] : stamps[mode] ? [stamps[mode]] : [];
+  const credits = n - passive + (passive && !scopes.includes(scope) ? 1 : 0);
+  if (passive && !scopes.includes(scope)) scopes.push(scope);
+  if (passive) stamps[mode] = scopes;
+  (m.dev.mastery ||= { football: 0, clash: 0 })[mode] += credits;
+  return credits;
+}

@@ -1,3 +1,4 @@
+import { createPerformanceLedger } from './performance.js';
 // Beast Clash, ruleset 't8' (Task 8 M4): the core model, the normal-turn clock, the shared status slot, the B3 damage pipeline, P8
 // rotation and (S5) the contract primitives. One pure, seeded function; the same lineups, seed and configuration give the same
 // result and the same log on every device. No global random generator, no clock, no DOM, no storage. Nothing in the franchise or
@@ -126,6 +127,10 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     return side;
   };
   const S = { a: mkSide('a', a), b: mkSide('b', b) };
+  const performance = createPerformanceLedger();
+  const control = new Map(); let controlSeq = 0;
+  const supportKey = (src, abilityId) => `${ex}:${turnIndex}:${src?.c.id}:${abilityId || 'support'}:${curAttack?.seq || 0}`;
+  const controlUsed = (x) => control.get(x?.status?.gradeControl)?.();
   const other = (side) => (side === S.a ? S.b : S.a);
   const living = (side) => side.line.filter((x) => !x.koed);
   const byId = new Map([...S.a.line, ...S.b.line].map((x) => [x.c.id, x]));
@@ -166,12 +171,14 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   const slotView = (sl) => (sl ? { id: sl.id, strength: sl.strength, remaining: sl.remaining, applications: sl.applications, ...(sl.freeze ? { freeze: sl.freeze } : {}), ...(sl.id === 'shielded' ? { pool: sl.payload.pool, poolLeft: sl.payload.remaining } : {}) } : null);
   function applyStatus(x, attempt) {
     const src = attempt.sourceId != null ? byId.get(attempt.sourceId) || null : null;
+    const controlUse = src && src.side !== x.side && STATUS[attempt.id]?.kind === 'harmful' && attempt.id !== 'afflicted' ? performance.control(src.c.monsterId) : null;
     const veto = callC('statusIncoming', x, { ...attempt, targetId: x.c.id }) ?? probe('statusIncoming', x.c.id, { ...attempt });
     if (veto?.block) { if (LOG) log('status_blocked', src, x, `${x.c.name}: ${NAME[attempt.id]} is blocked (${veto.reason || 'blocked'})`, { status: attempt.id, reason: veto.reason || 'blocked', unmet: [{ condition: 'incoming veto', detail: veto.reason || 'blocked' }], sourceId: attempt.sourceId ?? null, abilityId: attempt.abilityId ?? null }); return { accepted: false, reason: veto.reason || 'blocked', vetoed: true }; }
     const before = x.status;
     const r = applyClash(x.status, attempt, { recipientInTurn: x.inTurn });
     if (!r.accepted) { if (LOG) log('status_blocked', src, x, `${x.c.name}: ${NAME[attempt.id]} is not applied (${r.reason})`, { status: attempt.id, reason: r.reason, unmet: [{ condition: 'shared status gate', detail: r.reason }], slot: slotView(before), sourceId: attempt.sourceId ?? null, abilityId: attempt.abilityId ?? null }); return r; }
     x.status = r.slot;
+    if (controlUse) { const token = ++controlSeq; control.set(token, controlUse); x.status = { ...x.status, gradeControl: token }; }
     if (LOG) log('status', src, x, `${x.c.name} is ${NAME[attempt.id]} (${r.reason}; ${x.status.remaining} turn${x.status.remaining === 1 ? '' : 's'}${x.status.id === 'shielded' ? `, ${x.status.payload.remaining} shield` : ''})`, { status: attempt.id, reason: r.reason, slot: slotView(x.status), excluded: x.inTurn, sourceId: attempt.sourceId ?? null, abilityId: attempt.abilityId ?? null, stage: 'resolution' });
     callC('statusApplied', x, slotView(x.status)); probe('statusApplied', x.c.id, slotView(x.status));
     return r;
@@ -183,6 +190,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     if (!x) throw new Error('No such combatant');
     const r = cleanseSlot(x.status); const old = x.status;
     if (LOG) log(r.removed ? 'status_end' : 'cleanse_refused', byId.get(sourceId) || null, x, r.removed ? `${x.c.name}'s ${NAME[x.status.id]} is cleansed` : `${x.c.name}: cleanse has no effect (${r.reason})`, { reason: r.reason, status: x.status?.id ?? null, sourceId, abilityId, stage: 'resolution', ...(r.removed ? {} : { unmet: [{ condition: 'cleansable harmful status', detail: r.reason }] }) });
+    const healer = byId.get(sourceId);
+    if (healer && healer.side === x.side) performance.support(healer.c.monsterId, supportKey(healer, abilityId), x.c.id, { maxHp: x.c.maxHp, cleansed: r.removed });
     x.status = r.slot; if (r.removed) callC('statusEnded', x, { id: old.id, reason: 'cleansed', sourceId, abilityId });
     return r.removed;
   }
@@ -191,6 +200,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     const r = replaceWith(x.status, attempt, { recipientInTurn: x.inTurn, overridesUncleansable: !!opts.overridesUncleansable });
     if (!r.accepted) { if (LOG) log('status_blocked', null, x, `${x.c.name}: ${NAME[attempt.id]} replacement refused (${r.reason})`, { status: attempt.id, reason: r.reason, unmet: [{ condition: 'explicit replacement', detail: r.reason }] }); return false; }
     const old = x.status; x.status = r.slot;
+    const src = byId.get(attempt.sourceId);
+    if (src && src.side === x.side && old && STATUS[old.id]?.kind === 'harmful') performance.support(src.c.monsterId, supportKey(src, attempt.abilityId), x.c.id, { maxHp: x.c.maxHp, cleansed: true });
     if (LOG) log('status', byId.get(attempt.sourceId) || null, x, `${x.c.name}: ${old ? `${NAME[old.id]} is replaced; ` : ''}a fresh ${NAME[attempt.id]} episode begins`, { status: attempt.id, reason: 'explicit replacement', replaced: old?.id ?? null, slot: slotView(x.status), sourceId: attempt.sourceId ?? null, abilityId: attempt.abilityId ?? null, stage: 'resolution' });
     if (old) callC('statusEnded', x, { id: old.id, reason: 'replaced', sourceId: attempt.sourceId ?? null, abilityId: attempt.abilityId ?? null });
     callC('statusApplied', x, slotView(x.status));
@@ -205,6 +216,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   /** Explicit beneficial-status removal (Wash Away) or steal (Eclipse Theft): the whole slot, pool included. Returns the removed slot. */
   function removeStatus(x, src, abilityId, reason) {
     if (!x.status) return null; const old = x.status; x.status = null;
+    if (src && src.side === x.side && STATUS[old.id]?.kind === 'harmful') performance.support(src.c.monsterId, supportKey(src, abilityId), x.c.id, { maxHp: x.c.maxHp, cleansed: true });
+    if (src && src.side !== x.side && STATUS[old.id]?.kind === 'beneficial') performance.control(src.c.monsterId)();
     if (LOG) log('status_end', src, x, `${x.c.name}'s ${NAME[old.id]} is ${reason}`, { status: old.id, reason, sourceId: src?.c.id ?? null, abilityId, stage: 'resolution' });
     callC('statusEnded', x, { id: old.id, reason, sourceId: src?.c.id ?? null, abilityId });
     return old;
@@ -218,7 +231,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     const slot = { ...from.status, appliedThisUnit: false, freeze: from.status.freeze || 0 };
     if (stripRiders && slot.payload) slot.payload = Object.fromEntries(Object.entries(slot.payload).filter(([k]) => BASIC_PAYLOAD.includes(k)));
     removeStatus(from, src, abilityId, reason);
-    to.status = slot;
+    to.status = { ...slot, gradeSource: src.c.id, gradeUnattributed: false };
+    if (STATUS[slot.id]?.kind === 'harmful' && src.side !== to.side && slot.id !== 'afflicted') { const token = ++controlSeq; control.set(token, performance.control(src.c.monsterId)); to.status.gradeControl = token; }
     if (LOG) log('status', src, to, `${to.c.name} takes over ${from.c.name}'s ${NAME[slot.id]} (${slot.remaining} turn${slot.remaining === 1 ? '' : 's'}, ${slot.applications} of 3 applications)`, { status: slot.id, reason: reason, slot: slotView(slot), sourceId: src?.c.id ?? null, abilityId, from: from.c.id, stage: 'resolution' });
     callC('statusApplied', to, slotView(to.status));
     return true;
@@ -257,6 +271,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     if (!x.koed) throw new Error(`${x.c.id} is not knocked out`);
     const side = x.side; side.line = [...side.line.filter((y) => y !== x), x]; side.line.forEach((y, i) => { y.slot = i; });
     x.koed = false; x.hp = Math.max(1, Math.min(x.c.maxHp, hp)); x.koOrder = null; x.entry = null;
+    if (src && src.side === x.side) performance.support(src.c.monsterId, supportKey(src, abilityId), x.c.id, { healed: x.hp, maxHp: x.c.maxHp });
     if (LOG) log('revive', src, x, `${src ? src.c.name : 'Revival'}: ${x.c.name} returns at ${x.hp} / ${x.c.maxHp} HP, at the back of the lineup`, { hp: x.hp, abilityId, stage: 'resolution', lineup: side.line.map((y) => y.c.id) });
     return x.hp;
   }
@@ -344,7 +359,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       if (conf > 0) {
         const redirected = rng.chance(conf);
         if (LOG) log('confused_roll', att, redirected ? att : t, `${att.c.name} is Confused: ${redirected ? 'the attack turns on itself' : 'it attacks normally'}`, { chance: conf, redirected, intended: t.c.id });
-        if (redirected) { t = att; out.redirected = true; }
+        if (redirected) { controlUsed(att); t = att; out.redirected = true; }
       }
       out.target = t.c.id;
       for (let h = 1; h <= hits; h++) {
@@ -367,7 +382,16 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       }
       out.decided = endCheck();
       return out;
-    } finally { curAttack = prevAttack; if (!curAttack) flushDeferred(); }
+    } finally {
+      if (out.launched && intended.side !== att.side) {
+        const ids = new Set(out.hits.flatMap((h) => h.recipients).filter((id) => byId.get(id)?.side !== att.side));
+        if (!ids.size) ids.add(intended.c.id);
+        const hpDamage = out.hits.reduce((sum, h) => sum + Object.entries(h.losses).reduce((n, [id, v]) => n + (byId.get(id)?.side !== att.side ? v : 0), 0), 0);
+        const shieldDamage = out.hits.reduce((sum, h) => sum + Object.entries(h.poolLosses).reduce((n, [id, v]) => n + (byId.get(id)?.side !== att.side ? v : 0), 0), 0);
+        performance.offense(att.c.monsterId, { hpDamage, shieldDamage, enemyMaxHp: [...ids].reduce((sum, id) => sum + byId.get(id).c.maxHp, 0), ko: out.kos.some((id) => byId.get(id)?.side !== att.side) });
+      }
+      curAttack = prevAttack; if (!curAttack) flushDeferred();
+    }
   }
   function oneHit(att, t, spec, hitNo) {
     const prevHit = curHit; curHit = { id: ++hitSeq, tag: spec.tag, attacker: att.c.id, abilityId: spec.abilityId ?? null, hitNo };
@@ -395,6 +419,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       const rawMods = [...hookList(callC('rawModifiers', att, rmInfo)), ...hookList(probe('rawModifiers', att.c.id, rmInfo))];
       const abRaw = rawMods.reduce((k, m) => k * (m.factor ?? 1), 1);
       const abAdd = rawMods.reduce((k, m) => k + (m.add ?? 0), 0); // an additive raw budget (Echo Strike's stored-hit bonus), before every defence
+      const unweakenedRaw = att.c.atk * (spec.mult ?? 1) * ramp * spread * p8 * abRaw + abAdd;
       const raw = att.c.atk * (spec.mult ?? 1) * ramp * spread * out * p8 * abRaw + abAdd;
       // attacker-side shield rule (Phase Strike bypass, Iron Bite multiplier)
       const sr = callC('shieldRule', att, { target: t.c.id, tag: spec.tag, abilityId: spec.abilityId ?? null });
@@ -424,6 +449,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       for (const { x: rec, raw: rr, transferred } of order) {
         // 8d mitigation, then one rounding (D9); a per-hit cap (Tempered Guard) clamps the HP loss after the shield
         const unguarded = rec.status?.id === 'guarded' ? roundHalfUp(mitigate(att, rec, rr, hitSpec, false, { noGuarded: true }).exact) : null; // preview before the commit
+        const protectiveStatus = rec.status ? { ...rec.status } : null;
         const m = mitigate(att, rec, rr, hitSpec, true);
         let loss = roundHalfUp(m.exact); let capped = false;
         if (m.capHp < loss && !transferred) { loss = Math.max(0, roundHalfUp(m.capHp)); capped = true; }
@@ -435,7 +461,35 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
           if (pk?.survive) { if (LOG) log('survive', rec, att, `${rec.c.name} holds on at 1 HP`, { stage: 'activation', abilityId: pk.abilityId ?? null, prevented: loss - (rec.hp - 1) }); loss = rec.hp - 1; }
         }
         // 8f HP loss and the immediate KO (B3 rule 1)
-        const before = rec.hp; rec.hp = Math.max(0, rec.hp - loss);
+        const before = rec.hp;
+        if (att.side !== rec.side) {
+          let budget = Math.min(before, roundHalfUp(rr * m.type));
+          const credit = (sourceId, next) => {
+            const after = Math.min(before, Math.max(0, roundHalfUp(next)));
+            const src = byId.get(sourceId);
+            if (src && src.side === rec.side) performance.defense(src.c.monsterId, curAttack.seq, rec.c.id, Math.max(0, budget - after), rec.c.maxHp);
+            budget = Math.min(budget, after);
+          };
+          credit(rec.c.id, rr * m.type * m.guard);
+          credit(protectiveStatus?.id === 'guarded' && !protectiveStatus.gradeUnattributed ? protectiveStatus.gradeSource || protectiveStatus.sourceId : null, rr * m.type * m.guard * m.guarded);
+          credit(rec.c.id, rr * m.type * m.guard * m.guarded * m.ab);
+          credit(protectiveStatus?.id === 'shielded' && !protectiveStatus.gradeUnattributed ? protectiveStatus.gradeSource || protectiveStatus.sourceId : null, m.exact);
+          credit(rec.c.id, loss);
+        }
+        // A modifier's presence is not a useful disruption. Compare the rounded
+        // HP/pool outcome on the same frozen raw draw and existing protection.
+        // Ambiguous split/cap/survival counterfactuals remain uncredited.
+        if (out < 1 && !split && !capped && m.capHp === Infinity && loss < before - 1) {
+          let preview = unweakenedRaw * m.type * m.guard * m.guarded * m.ab;
+          let pool = 0;
+          if (protectiveStatus?.id === 'shielded' && !m.shield?.bypassed) {
+            const br = m.shield?.breakMult || 1;
+            if (m.shield?.ironBite) { const S0 = protectiveStatus.payload.remaining; pool = Math.min(S0, roundHalfUp(preview * br)); preview = preview * br >= S0 ? Math.max(0, preview - S0 / br) : 0; }
+            else { const r = absorb(protectiveStatus, preview, br); pool = r.poolLoss; preview = r.toHp; }
+          }
+          if (Math.min(before, roundHalfUp(preview)) > Math.min(before, loss) || pool > (m.shield?.poolLoss || 0)) controlUsed(att);
+        }
+        rec.hp = Math.max(0, rec.hp - loss);
         if (isNormalAttack(spec.tag) && rec === order[0].x) att.stats.attacks += 1;
         att.stats.dealt += before - rec.hp; rec.stats.taken += before - rec.hp;
         if (rec.side !== att.side) att.maxHitDealt = Math.max(att.maxHitDealt, before - rec.hp);
@@ -455,6 +509,9 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
         landed.push({ x: rec, loss, poolLoss: m.shield?.poolLoss ?? 0, transferred: !!transferred, prevented });
         if (transferred) res.transferred.push(rec.c.id);
         const actual = before - rec.hp; // actual HP lost (no overkill)
+        // Taking HP damage alone earns nothing. Explicit transfer/cover can earn
+        // absorption credit for the HP actually spent protecting the original ally.
+        if (att.side !== rec.side && (transferred || cover?.to === rec.c.id) && rec !== t) performance.defense(rec.c.monsterId, curAttack.seq, t.c.id, actual, t.c.maxHp);
         res.recipients.push(rec.c.id); res.losses[rec.c.id] = actual; res.poolLosses[rec.c.id] = m.shield?.poolLoss ?? 0; res.hpDamage += actual; res.shieldDamage += m.shield?.poolLoss ?? 0; res.prevented += prevented;
         if (rec.hp <= 0) { knockout(rec, att); res.kos.push(rec.c.id); }
       }
@@ -520,6 +577,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     const r = resolveAmount(b, factors, { rounding, max: t.c.maxHp - t.hp });
     const budget = resolveAmount(b, factors, { rounding }).amount;
     const before = t.hp; t.hp += r.amount;
+    if (src && src.side === t.side) performance.support(src.c.monsterId, supportKey(src, abilityId), t.c.id, { healed: r.amount, maxHp: t.c.maxHp });
+    if (clashEffect(t.status).heal < 1 && resolveAmount(b, factors.filter((f) => f.id !== 'healing-reduced'), { rounding, max: t.c.maxHp - before }).amount > r.amount) controlUsed(t);
     if (LOG) log('heal', src, t, `${src ? src.c.name : 'Healing'} heals ${t.c.name} ${r.amount}${factors.length ? ` (${factors.map((f) => f.id).join(', ')})` : ''}`, { amount: r.amount, exact: r.exact, budget, factors: r.factors, rounding, hpBefore: before, hpAfter: t.hp, abilityId, stage: 'resolution', healKind: kind });
     if (r.amount > 0) for (const y of livingStable()) callC('healed', y, { targetId: t.c.id, amount: r.amount, sourceId: src?.c.id ?? null, abilityId, kind });
     return { amount: r.amount, budget, exact: r.exact };
@@ -538,6 +597,8 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     let loss = amount;
     if (loss >= x.hp) { const pkInfo = { attacker: null, loss, tag: 'dot' }; const pk = callC('preKO', x, pkInfo) ?? probeR('preKO', x.c.id, pkInfo); if (pk?.survive) { if (LOG) log('survive', x, null, `${x.c.name} holds on at 1 HP`, { stage: 'activation', abilityId: pk.abilityId ?? null }); loss = x.hp - 1; } }
     const before = x.hp; x.hp = Math.max(0, x.hp - loss); x.stats.taken += before - x.hp;
+    const src = x.status?.gradeUnattributed ? null : byId.get(x.status?.gradeSource || extra?.sourceId);
+    if (src && src.side !== x.side) performance.offense(src.c.monsterId, { hpDamage: before - x.hp, enemyMaxHp: x.c.maxHp, ko: x.hp <= 0 });
     if (LOG) log('afflicted', null, x, `${x.c.name} suffers ${loss} from Afflicted`, { tag: 'dot', damage: loss, hpBefore: before, hpAfter: x.hp, ...extra });
     if (x.hp <= 0) { knockout(x, null); return true; }
     return false;
@@ -551,6 +612,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   /** Set HP directly (Root Communion apportionment, donations): logged with provenance; never below 1 or above max; not a heal event. */
   function setHp(x, hp, src, abilityId, why) {
     const nh = Math.max(1, Math.min(x.c.maxHp, hp)); const before = x.hp; x.hp = nh;
+    if (src && src.side === x.side && nh > before) performance.support(src.c.monsterId, supportKey(src, abilityId), x.c.id, { healed: nh - before, maxHp: x.c.maxHp });
     if (LOG) log('hp_set', src, x, `${x.c.name}: ${before} -> ${nh} HP (${why})`, { hpBefore: before, hpAfter: nh, delta: nh - before, abilityId, stage: 'resolution', why });
     return nh - before;
   }
@@ -585,15 +647,19 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
 
   // ---- signature restriction (Eye of the Storm): engine-owned; counts the target's normal turns, pauses in reserve
   function restrictSignature(target, turns, src, abilityId) {
-    target.sigRestrict = { left: turns, by: src.c.id, abilityId, appliedInTurn: target.inTurn };
+    const token = src.side !== target.side ? ++controlSeq : null;
+    if (token) control.set(token, performance.control(src.c.monsterId));
+    target.sigRestrict = { left: turns, by: src.c.id, abilityId, appliedInTurn: target.inTurn, ...(token ? { gradeControl: token } : {}) };
     if (LOG) log('signature_restricted', src, target, `${target.c.name} is restricted to ordinary attacks for ${turns} normal turn${turns === 1 ? '' : 's'}`, { abilityId, turns, stage: 'resolution' });
   }
 
   // ---- clocks: cooldowns (owner normal turns) with extension / reduction (Circuit Breaker, Fresh Start)
   function startClock(x, spec) { const k = addClock(x, spec); if (LOG) log('clock_start', x, x, `${x.c.name}: ${k.kind} ${k.id} starts (${k.left} normal turn${k.left === 1 ? '' : 's'})`, { clock: k.id, clockKind: k.kind, left: k.left, excluded: k.excludeTurn === x.turns && x.inTurn, abilityId: spec.source ?? null }); return k; }
   function adjustClock(x, clockId, delta, src, abilityId) {
+    const used = src && src.side !== x.side ? performance.control(src.c.monsterId) : null;
     const k = x.clocks.find((c) => c.id === clockId); if (!k) return null;
     const before = k.left; k.left = Math.max(0, k.left + delta);
+    if (k.left !== before) used?.();
     if (LOG) log('clock_adjust', src, x, `${x.c.name}'s ${k.id} cooldown: ${before} -> ${k.left}`, { clock: k.id, before, after: k.left, abilityId, stage: 'resolution' });
     if (k.left <= 0) { x.clocks = x.clocks.filter((c) => c !== k); if (LOG) log('clock_end', x, x, `${x.c.name}: ${k.kind} ${k.id} ends (reduced to zero: readiness restored)`, { clock: k.id, clockKind: k.kind, turn: x.turns }); }
     return k.left;
@@ -777,6 +843,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     return settleHit();
   }
   function forcedRotation(src, side, { incoming = 'firstReserve', abilityId = null } = {}) {
+    const used = src.side !== side ? performance.control(src.c.monsterId) : null;
     const out = side.active; const unmet = [];
     const reserves = reservesOf(side);
     if (!out) unmet.push({ condition: 'active monster' });
@@ -787,7 +854,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     const inc = !unmet.length ? (incoming === 'firstReserve' ? reserves[0] : reserves.find((x) => x.c.id === incoming)) : null;
     if (!unmet.length && !inc) unmet.push({ condition: 'chosen replacement is a living reserve', detail: String(incoming) });
     if (unmet.length) { if (LOG) log('rotation_refused', src, out || null, `${src.c.name}'s forced rotation is refused (${unmet.map((u) => u.condition).join(', ')})`, { forced: true, abilityId, unmet, stage: 'trigger' }); return false; }
-    side.lastForced = ex; side.forced += 1;
+    side.lastForced = ex; side.forced += 1; used?.();
     if (LOG) log('rotation', src, out, `${src.c.name} forces ${out.c.name} out; ${inc.c.name} comes in`, { side: side.key, voluntary: false, forced: true, out: out.c.id, in: inc.c.id, abilityId, stage: 'resolution' });
     depart(out, 'forced'); enter(inc, 'forced');
     const ar = { side: side.key, in: inc.c.id, out: out.c.id, reason: 'forced' };
@@ -815,6 +882,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     }
     let done = false;
     if (stunnedSkip) {
+      controlUsed(x);
       x.skips += 1; x.consecutiveSkips += 1; x.stunnedSkips += 1; x.stunProtected = true;
       if (LOG) log('skip', x, null, `${x.c.name} is Stunned and skips its turn`, { turn: x.turns, cause: 'stunned', remaining: x.status.remaining });
       callC('stunnedSkip', x, { turn: x.turns });
@@ -828,7 +896,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       const restricted = !!x.sigRestrict && x.mod && restrictable(x.mod.abilityId);
       let choice = null;
       if (!done && !teamActed) {
-        if (restricted) { if (LOG) log('signature_restricted', x, null, `${x.c.name} must use an ordinary attack (${x.sigRestrict.abilityId})`, { abilityId: x.sigRestrict.abilityId, restricted: x.mod.abilityId, stage: 'resolution', left: x.sigRestrict.left }); }
+        if (restricted) { control.get(x.sigRestrict.gradeControl)?.(); if (LOG) log('signature_restricted', x, null, `${x.c.name} must use an ordinary attack (${x.sigRestrict.abilityId})`, { abilityId: x.sigRestrict.abilityId, restricted: x.mod.abilityId, stage: 'resolution', left: x.sigRestrict.left }); }
         else choice = callC('chooseAction', x, { foeId: other(x.side).active?.c.id ?? null, restricted: !!x.sigRestrict });
         if (choice == null) choice = probe('chooseAction', x.c.id);
       }
@@ -880,7 +948,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
   if (LOG) events.push({ seq: 0, ex: 0, phase, turnIndex: 0, hit: null, kind: 'start', text: `Beast Clash (t8): ${a.length} v ${b.length}. Sudden death Model ${model} from exchange ${sdFrom}.`, model, ruleset: V.ruleset, abilities: ABILITIES });
   if (carryIn) for (const [mid, slot] of Object.entries(carryIn)) {
     const x = all().find((y) => y.c.monsterId === mid); if (!x) throw new Error(`carryIn names ${mid}, who is not in this battle`);
-    const t = slot ? fromFootball(slot, x.c.maxHp) : null; x.status = t;
+    const t = slot ? fromFootball(slot, x.c.maxHp) : null; if (t) { delete t.gradeControl; delete t.gradeSource; t.gradeUnattributed = true; } x.status = t;
     if (LOG) log(t ? 'status_carry' : 'status_end', null, x, t ? `${x.c.name} carries ${NAME[t.id]} into the Clash (${t.remaining} turn${t.remaining === 1 ? '' : 's'}${t.id === 'shielded' ? `, ${t.payload.remaining} shield` : ''})` : `${x.c.name}'s ${NAME[slot?.id] || 'status'} clears on entering the Clash`, { status: slot?.id ?? null, slot: slotView(t), reason: t ? 'carry in' : 'unsupported in Clash' });
   }
   if (stage) for (const [id, st] of Object.entries(stage)) {
@@ -917,6 +985,11 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
       const sa = fa.c.spd * clashEffect(fa.status).initiative, sb = fb.c.spd * clashEffect(fb.status).initiative;
       if (Math.abs(sa - sb) < V.damage.initiativeTie) { order = rng.chance(0.5) ? [fa, fb] : [fb, fa]; why = 'coin'; }
       else { order = sa > sb ? [fa, fb] : [fb, fa]; why = 'speed'; }
+    }
+    if (why === 'speed') {
+      const sa = fa.c.spd * clashEffect(fa.status).initiative, sb = fb.c.spd * clashEffect(fb.status).initiative;
+      if (clashEffect(fa.status).initiative < 1 && Math.abs(fa.c.spd - sb) >= V.damage.initiativeTie && order[0] !== (fa.c.spd > sb ? fa : fb)) controlUsed(fa);
+      if (clashEffect(fb.status).initiative < 1 && Math.abs(sa - fb.c.spd) >= V.damage.initiativeTie && order[0] !== (sa > fb.c.spd ? fa : fb)) controlUsed(fb);
     }
     for (const y of reservesOf(order[1].side)) { const r = callC('preInitiative', y, { order: order.map((x) => x.c.id), activeId: order[1].c.id, by: why }); if (r?.advance) { order = [order[1], order[0]]; why = `advanced by ${y.c.name}`; break; } }
     if (LOG) log('initiative', order[0], order[1], `${order[0].c.name} acts first (${why})`, { by: why, order: order.map((x) => x.c.id) });
@@ -994,7 +1067,7 @@ export function simulateClashT8({ a, b, seed = 1, config = {}, log: logMode = 'f
     ruleset: V.ruleset, engine: V.engineVersion, pending: !!stopped, boundary, sides,
     winner: stopped ? null : winner, by: stopped ? null : by, exchanges: ex, capped: !stopped && !!(ex >= V.battle.exchangeCap && by !== 'knockout'), seed, model, config: cfg,
     context, carryOut, hpShare: share, lines, log: events, rngDraws: draws, probed: probes.length > 0, staged: !!stage, provisional: PROV,
-    mastery, delayed: delayed.map((d) => ({ ...d })), diagnostics: { overflow: diag.overflow, constructs: diag.constructs, schedules: { ...diag.schedules } },
+    performance: performance.result(), mastery, delayed: delayed.map((d) => ({ ...d })), diagnostics: { overflow: diag.overflow, constructs: diag.constructs, schedules: { ...diag.schedules } },
     stateHash: stateHash({ winner, by, ex, draws, lines }),
     replayKey: t8ReplayKey({ a, b, seed, config: cfg, carryIn }),
   };

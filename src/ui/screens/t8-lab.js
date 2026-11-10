@@ -47,7 +47,7 @@ export function registerT8Lab(Router, app) {
           <button class="btn" data-action="t8-age">Run one offseason (age, decline, +2 points)</button><button class="btn" data-action="t8-open">Open monster page</button>
         </div>
         <h3>Encounters and saving</h3>
-        <div class="grid2"><button class="btn" data-action="t8-basic-prospect">Make prospect 1 a Basic (Tuesday)</button><button class="btn" data-action="t8-save">Save round-trip check</button></div>` : '<p class="dim">Open or start a franchise (it is the preview\'s own fresh save) to use the roster tools.</p>'}
+        <div class="grid2"><button class="btn" data-action="t8-basic-prospect">Make prospect 1 a Basic (Tuesday)</button><button class="btn small" data-action="t8-apex-prospect">Unidentified Apex prospect</button><button class="btn small" data-action="t8-reveal-prospect">Finish the scout report on prospect 1</button><button class="btn" data-action="t8-save">Save round-trip check</button></div>` : '<p class="dim">Open or start a franchise (it is the preview\'s own fresh save) to use the roster tools.</p>'}
         <button class="btn block" data-action="go" data-screen="developer" style="margin-top:10px">← Return to Developer Tools</button>`;
     },
     mount(root) {
@@ -62,6 +62,8 @@ export function registerT8Lab(Router, app) {
         't8-bank': () => { const r = T.devBankPoints(app.f, V.pick || app.f.roster[0].id, 5); if (!r.ok) return toast(r.reason, 'bad'); save(); toast('5 points banked. Spend them on the monster page.', 'good'); re(); },
         't8-age': () => { const r = T.devAgeOneSeason(app.f, V.pick || app.f.roster[0].id); if (!r.ok) return toast(r.reason, 'bad'); save(); toast(`Age ${r.from.age} → ${r.to.age} · OVR ${r.from.ovr} → ${r.to.ovr}${r.changed.length ? ` · ${r.changed.length} attributes changed` : ''}`, 'info', 5000); re(); },
         't8-open': () => Router.go('monster', { id: V.pick || app.f.roster[0].id }),
+        't8-apex-prospect': () => { const r = T.devApexProspect(app.f); if (!r.ok) return toast(r.reason, 'bad'); save(); toast(`${r.monster.name} is now prospect 1: an Apex nobody has identified. Open Tuesday's prospects; nothing should mark him.`, 'good', 6000); },
+        't8-reveal-prospect': () => { const r = T.devRevealProspect(app.f); if (!r.ok) return toast(r.reason, 'bad'); save(); toast(`The scout's full report on ${r.monster.name} is in. Open Tuesday's prospects.`, 'good', 5000); },
         't8-basic-prospect': () => { const r = T.devBasicProspect(app.f); if (!r.ok) return toast(r.reason, 'bad'); save(); toast(`${r.monster.name} (Basic) is now prospect 1. Win the encounter for the +25% level XP bonus.`, 'good', 5000); },
         't8-save': () => { const r = T.devSaveRoundTrip(app.f); toast(r.ok ? `Saved and re-read: schema ${r.schemaVersion}, ${r.monsters} monsters, every development record identical.` : `Round-trip differences: ${(r.diffs || []).join(', ') || (r.ledger === false ? 'reward ledger' : r.reason)}`, r.ok ? 'good' : 'bad', 6000); },
         go: (el) => Router.go(el.dataset.screen),

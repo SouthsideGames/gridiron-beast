@@ -338,7 +338,7 @@ export const monsterNotices = (f, id) => notices(f).filter((n) => n.id === id);
  */
 export function checkAchievements(f, trigger, ctx = {}) {
   f.achievements ||= {}; f.scenes ||= [];
-  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible };
+  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible, get dex() { return dexCounts(f); } }; // dex: the family collection counts (Task 8: 72 / 120 / 192), read only by the collection achievements
   const earned = [];
   for (const a of ACHIEVEMENTS) {
     if (f.achievements[a.id] || (a.trigger !== trigger && a.trigger !== 'any')) continue;
@@ -858,7 +858,7 @@ function aiAfterGame(f, team, game, side, r) {
   const xpScale = 1; // N7f: no rubber-banding; the decision-C development slowdown for a club above its target is retired
   const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, team.name);
   const train = trainingPriority(clubIdentity(f, team.name)); // Task 8 D7: the identity's attributes first in the AI allocation (null for none)
-  const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale, ledger, activityId: act, train });
+  const events = afterGame(team.roster, team.chart, game.stats?.[side]?.players || {}, r, { won, autoSpend: true, autoEvolve: true, xpScale, ledger, activityId: act, train, mastery: game.t8?.mastery });
   { const played = playedIds(team.chart); const slots = selectDevSlots(team.roster, played); events.push(...practiceAfterGame(team.roster, slots.ids, played, r, { xpScale, autoSpend: true, autoEvolve: true, ledger, activityId: `${act}:reserve`, train })); } // C1 development slots (Task 6 Phase C)
   for (const e of events) if (e.kind === 'evolve') { const x = team.roster.find((p) => p.id === e.id); if (x) noteEvolution(x, { year: f.season.year, week: f.season.week, club: team.name, from: e.from, to: e.to }); } // Career Timeline (GDD §46)
   return events;
@@ -2287,7 +2287,7 @@ export function finishSunday(f, gameState) {
   const pg = f.week.pregame; const res = { week: f.season.week, home: m.home.name, away: m.away.name, homeScore: gameState.score.home, awayScore: gameState.score.away, ot: !!gameState.ot, player: true, winner: gameState.winner ? m[gameState.winner].name : null, clash: gameState.tiebreak || null, pregameClash: pg?.result ? { winner: gameState.coin?.winner || null, choice: gameState.coin?.choice || null, by: pg.result.by, exchanges: pg.result.exchanges, playerWon: pg.result.winner === 'a' } : null };
   const { r, save } = frng(f);
   const ledger = (f.rewardLedger ||= createRewardLedger()); const act = gameActivityId(f, f.club);
-  const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: act });
+  const events = afterGame(f.roster, m[side].chart, gameState.stats[side].players, r, { won, autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: act, mastery: gameState.t8?.mastery });
   { const played = playedIds(m[side].chart); const slots = ownerDevSlots(f, { notify: true }); events.push(...practiceAfterGame(f.roster, slots.ids, played, r, { autoSpend: !!f.settings.autoPoints, autoEvolve: false, ledger, activityId: `${act}:reserve` })); } // C1: the owner's development slots (Task 6 Phase C)
   aiAfterGame(f, m[oppSide], gameState, oppSide, r); // the persistent opponent develops from this game too (GDD §42.6)
   save();
@@ -2796,7 +2796,8 @@ export function resolveOvertimeClash(f, { headless = false } = {}) {
   if (e.status !== 'battle') return { ok: true, overtime: e, already: true, won: e.result?.winner === 'a' };
   const bp = battleOrPending(e, () => overtimeBattle(f), headless); if (!bp.result) return { ok: false, ...bp }; const result = bp.result;
   const { r, save } = frng(f);
-  const events = applyBattleEffects(f.roster, result, 'a', 'overtime', r, { autoSpend: !!f.settings.autoPoints, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${f.season.year}:w${f.season.week}:overtime:${actClub(f.club)}` });
+  const events = applyBattleEffects(f.roster, result, 'a', 'overtime', r, { autoSpend: !!f.settings.autoPoints, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${f.season.year}:w${f.season.week}:overtime:${actClub(f.club)}`, masteryScope: `game:${gameActivityId(f, f.club)}` });
+  aiClashEffects(f, aiTeam(f, e.opponent), result, 'b', 'overtime', r);
   save();
   e.result = battleSummary(result); e.events = events; e.status = 'done';
   if (isT8Record(e)) { e.carryOut = carryOutOf(result); e.mastery = masteryRecord(result, `game:${f.season.year}:w${f.season.week}:${actClub(f.club)}`); } // the OT Clash shares its game's cap scope (§6)
@@ -2828,6 +2829,7 @@ export function leagueTiebreak(f, r, home, away, state, { playoff = false } = {}
   const { carryIn, exhausted } = overtimeCarry(f, state, [...a, ...b].map((m) => m.id));
   const snap = (m) => snapMonster(m, { exhausted: !!exhausted?.has(m.id) });
   const result = runBattle({ a: a.map(snap), b: b.map(snap), seed: r.seed(), log: 'none', ruleset: 't8', context: 'overtime', policies: { a: 'ai', b: 'ai' }, carryIn });
+  aiClashEffects(f, home, result, 'a', 'overtime', r); aiClashEffects(f, away, result, 'b', 'overtime', r);
   state.winner = result.winner === 'a' ? 'home' : 'away';
   state.tiebreak = { kind: 'clash', size: Math.min(a.length, b.length), winner: state.winner, by: result.by, exchanges: result.exchanges };
   t8AtGameEnd(state);
@@ -2880,7 +2882,8 @@ export function resolvePregameClash(f, { headless = false } = {}) {
   if (e.status !== 'battle') return { ok: true, pregame: e, already: true, won: e.result?.winner === 'a' };
   const bp = battleOrPending(e, () => pregameBattle(f), headless); if (!bp.result) return { ok: false, ...bp }; const result = bp.result;
   const { r, save } = frng(f);
-  const events = applyBattleEffects(f.roster, result, 'a', 'pregame', r, { autoSpend: !!f.settings.autoPoints, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${f.season.year}:w${f.season.week}:pregame:${actClub(f.club)}` });
+  const events = applyBattleEffects(f.roster, result, 'a', 'pregame', r, { autoSpend: !!f.settings.autoPoints, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${f.season.year}:w${f.season.week}:pregame:${actClub(f.club)}`, masteryScope: `game:${gameActivityId(f, f.club)}` });
+  aiClashEffects(f, aiTeam(f, e.opponent), result, 'b', 'pregame', r);
   const won = result.winner === 'a';
   if (!won) e.choice = aiPossessionChoice(r);
   save();
@@ -2904,12 +2907,20 @@ export function pregamePossession(f) {
   const won = e.result?.winner === 'a'; const me = e.side; const them = me === 'home' ? 'away' : 'home';
   return { coinWinner: won ? me : them, choice: e.choice || 'receive', clash: e.result, statusCarry: e.carryOut || null }; // statusCarry: the opening Clash's statuses for kickoff (§10)
 }
+/** Both sides of a franchise Clash develop under the same reward/knowledge rules. */
+function aiClashEffects(f, team, result, side, occasion, r) {
+  if (!leagueBooks(f, team.name)) return [];
+  const events = applyBattleEffects(team.roster, result, side, occasion, r, { autoSpend: true, ledger: (f.rewardLedger ||= createRewardLedger()), activityId: `clash:${gameActivityId(f, team.name)}:${occasion}`, masteryScope: `game:${gameActivityId(f, team.name)}` });
+  Object.assign(team, buildTeam({ ...team, manual: team.chart }));
+  return events;
+}
 /** Headless pregame Clash for a league game between two AI clubs: both lineups automatic, the AI policy on both sides, one seed. Its end statuses carry into the game. */
 export function leaguePregame(f, r, home, away) {
   const a = autoLineup(home.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${home.name}`));
   const b = autoLineup(away.roster, CLASH_SIZE.pregame, hashString(`${f.seed}|pre|${f.season.year}|${f.season.week}|${away.name}`));
   if (!a.length || !b.length) return { coinWinner: null, choice: null, clash: null, statusCarry: null };
   const result = runBattle({ a: a.map((m) => snapMonster(m)), b: b.map((m) => snapMonster(m)), seed: r.seed(), log: 'none', ruleset: 't8', context: 'opening', policies: { a: 'ai', b: 'ai' } });
+  aiClashEffects(f, home, result, 'a', 'pregame', r); aiClashEffects(f, away, result, 'b', 'pregame', r);
   return { coinWinner: result.winner === 'a' ? 'home' : 'away', choice: aiPossessionChoice(r), clash: battleSummary(result), statusCarry: carryOutOf(result) };
 }
 
