@@ -41,10 +41,19 @@ applied only to those cases. The test verifies that the changed cases actually c
 - Broad Clash, Task 8, encounter, save and release checks: 1,181/1,181 passed before the last attack-identity and Clear Light
   scenario cleanup; this is an intermediate result, not final-revision coverage.
 - Final targeted follow-up: 120/120 passed, including the new N9c checks and Clear Light scenarios.
-- Full repository regression: running; final result to be recorded below before publication.
+- Full repository regression on the code tree published as `a536b2f78797c8e4543905d49c00101c52c96c95`:
+  **1,963/1,963 passed**, zero failures, cancellations or skipped tests, in 444,546.689 ms (about 7.4 minutes).
+  Command: `node --test "tests/**/*.test.js"`. The scenario-derived test count changes when obsolete provisional
+  cases are promoted; this is the full repository command, not a hand-picked subset.
+- Completion matrix freshness check: passed.
+- Non-browser Task 8 Clash speed smoke: three runs of 10,000 3v3 battles took 4.064, 3.595 and 3.481 seconds wall
+  time (5.265, 3.842 and 3.570 seconds total process CPU). All runs returned the same 130,616-exchange checksum.
+  Inputs: 50 fixed lineup pairs, registered abilities enabled under ordinary nonprovisional gameplay, AI rotation,
+  logs off, 1,000 warm-up battles. This is not the official football scene benchmark, a rendering/FPS measurement
+  or a physical-mobile result. Recorded in `verification/CODEX_N9C_RESULTS.json`.
 - `git diff --check`: passed.
-- Browser verification: explicitly waived by the owner. No fresh browser, physical-mobile or performance measurement
-  is claimed by this follow-up.
+- Browser verification: explicitly waived by the owner. No fresh browser, physical-mobile or rendering measurement
+  is claimed by this follow-up. The CPU speed smoke above does not replace final performance gates.
 
 ## Current completion accounting
 

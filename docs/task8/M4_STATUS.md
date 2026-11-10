@@ -1,5 +1,10 @@
 # M4 status: Beast Clash on the Task 8 model
 
+> Latest Codex follow-up: [CODEX_APPROVED_CLASH_FOLLOWUP.md](CODEX_APPROVED_CLASH_FOLLOWUP.md).
+> The current integrated branch implements N9c A/B/C/E/G/H, preserves the unresolved gates, and passes
+> 1,963/1,963 repository tests. This file retains the original per-branch milestone history below; its opening
+> S0–S4 description is historical, not the current integration state. Browser verification was waived by the owner.
+
 Branch `task8-m4-core`, started from `origin/task8-implementation` at 5c059fc. Steps S0–S4 of [M4_PLAN.md](M4_PLAN.md) §4.
 Nothing in the franchise, the UI, football, saves or `src/clash/index.js` uses the new engine yet.
 
