@@ -338,7 +338,7 @@ export const monsterNotices = (f, id) => notices(f).filter((n) => n.id === id);
  */
 export function checkAchievements(f, trigger, ctx = {}) {
   f.achievements ||= {}; f.scenes ||= [];
-  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible };
+  const c = { ...ctx, hofEligible: hallOfFameProgress(f).eligible, get dex() { return dexCounts(f); } }; // dex: the family collection counts (Task 8: 72 / 120 / 192), read only by the collection achievements
   const earned = [];
   for (const a of ACHIEVEMENTS) {
     if (f.achievements[a.id] || (a.trigger !== trigger && a.trigger !== 'any')) continue;

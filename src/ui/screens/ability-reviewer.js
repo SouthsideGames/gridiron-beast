@@ -99,8 +99,8 @@ export function registerAbilityReviewer(Router, app) {
   }
 
   // ---------------------------------------------------------------------------------- ▶ Scenario: the complete interaction
-  function runSequence(c) {
-    stop(); const p = pickOf(c);
+  function runSequence(c, player = null) { // player: { form, mastery } for the player-facing "See it" (the same engine run, without the review tools)
+    stop(); const p = player ? { form: c.forms.includes(player.form) ? player.form : c.forms[0], mastery: Math.max(0, Math.min(3, player.mastery | 0)), variant: 'main' } : pickOf(c);
     const r = reviewSequence({ family: c.family, form: p.form, mastery: p.mastery, variant: p.variant || 'main' });
     const head = `${esc(c.name)} · ${FORM_LABEL(p.form)} · Mastery ${p.mastery}${r.kind && r.kind !== 'main' ? ` · ${esc(r.label)}` : ''}`;
     const a = abilityById(c.abilityId) || {}; const X = r.explain || {};
@@ -118,11 +118,14 @@ export function registerAbilityReviewer(Router, app) {
         <div style="font-size:13px;margin-top:2px">${esc(r.failure?.condition || 'unknown')}</div>${r.failure?.detail ? `<div class="dim" style="font-size:12px">${esc(r.failure.detail)}</div>` : ''}
         ${r.error ? `<pre class="mono" style="font-size:10px;white-space:pre-wrap">${esc(r.error.stack || r.error.message)}</pre>` : ''}
         ${(r.failure?.snaps || []).length ? `<div class="dim mono" style="font-size:10px;margin-top:4px">${r.failure.snaps.map(esc).join('<br>')}</div>` : ''}</div>`;
+    if (player) { openPlayer(c, { title: `${elementFx(c.element).glyph} ${c.name}`, head, intro: `<div class="panel tight" data-see="demo"><div style="font-size:13px">${esc(X.expect || a.mechanic || '')}</div><div class="dim" style="font-size:11px;margin-top:4px">A staged demonstration played by the real game engine. Nothing here affects your franchise.</div></div>`, plays: r.plays, phases: r.ok ? r.phases : [], ok: r.ok, r, player: true }); return; }
     openPlayer(c, { title: `${elementFx(c.element).glyph} ${c.name}`, head, intro: intro + failure, plays: r.plays, phases: r.phases, ok: r.ok, r });
   }
+  /** "▶ See it" on the player's screens: the family's football ability at a form and mastery, demonstrated by the real engine. */
+  app.seeAbility = (family, { form = null, mastery = 0 } = {}) => { const c = cat.find((x) => x.family === family); if (!c || !c.registered) return false; runSequence(c, { form: c.forms.find((id) => String(id).endsWith(`:${form}`)) ?? c.forms[0], mastery }); return true; }; // form: the monster's stage (0, 1, 2)
 
   // ------------------------------------------------------------------------------------------------------------- the player
-  function openPlayer(c, { title, head, intro, plays, phases, ok, natural = false, r = null }) {
+  function openPlayer(c, { title, head, intro, plays, phases, ok, natural = false, r = null, player = false }) {
     const checklist = phases.length ? `<div class="panel tight" data-rv2="phases" style="margin-top:6px"><b>Phases</b>${phases.map((ph, i) => `<div class="rv2-phase" data-phase="${ph.id}" data-i="${i}" style="font-size:13px;margin-top:3px"><span class="rv2-box">☐</span> ${esc(ph.label)}${ph.play != null ? ` <span class="dim" style="font-size:11px">· play ${ph.play + 1}</span>` : ""}<div class="dim rv2-ev" style="font-size:11px;display:none">${esc(ph.evidence || '')}</div></div>`).join('')}
       <div class="dim" data-rv2="verdict" style="font-size:12px;margin-top:4px">${ok ? 'Playing…' : 'Not every phase was observed (see above).'}</div></div>` : '';
     const controls = `<div class="row rv2-controls" style="gap:4px;flex-wrap:wrap;margin:6px 0">
@@ -135,9 +138,9 @@ export function registerAbilityReviewer(Router, app) {
       <div class="field-wrap"><svg id="fbreview" viewBox="${FIELD_VIEWBOX}" preserveAspectRatio="xMidYMid meet"></svg></div>
       <div class="dim" data-rv2="kicktext" style="font-size:12px;display:none"></div>${controls}
       <div class="log" data-rv2="log" style="margin-top:6px;max-height:180px;overflow:auto"></div>
-      <div class="sheet-review" style="margin-top:10px">${reviewHtml(NS, c.abilityId, { open: true })}</div>`;
+      ${player ? '' : `<div class="sheet-review" style="margin-top:10px">${reviewHtml(NS, c.abilityId, { open: true })}</div>`}`;
     const { el } = sheet(html, { title, onClose: stop });
-    bindReview(c, el.querySelector('.sheet-review'));
+    if (!player) bindReview(c, el.querySelector('.sheet-review'));
     const svg = el.querySelector('#fbreview'); const info = el.querySelector('[data-rv2="playinfo"]'); const logBox = el.querySelector('[data-rv2="log"]'); const kickBox = el.querySelector('[data-rv2="kicktext"]');
     const prepared = plays.map((p, pi) => {
       // A formula kick (punt, field goal) has no engine frames: its animation is the match screen's kick animation, with the kick

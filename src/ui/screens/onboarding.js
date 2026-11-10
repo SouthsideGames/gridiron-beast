@@ -1,6 +1,7 @@
 // Commissioner's office: owner creation, club choice, rival reveal,
 // cornerstone monsters, then the five staff hires.
 
+import { abilitiesHtml } from '../ability-info.js';
 import { ASSIST_MODES, ASSIST_MODE_TEXT, assistSettings, setAssist } from '../../franchise/assist.js';
 import { esc, delegate, toast, sheet } from '../dom.js';
 import { STARTER_CLUBS, DIVISIONS, RIVAL_GMS, divisionOf, conferenceFor, TEAM_META } from '../../data/league.js';
@@ -78,7 +79,7 @@ export function registerOnboardingScreens(Router, app) {
         pick: (el) => { draft[el.dataset.side] = el.dataset.v; Router.render(); },
         difficulty: (el) => { draft.difficulty = el.dataset.v; Router.render(); },
         reroll: () => { if (draft.rerolls >= 2) return; draft.rerolls += 1; draft.offerSeed = (draft.offerSeed * 31 + 7) >>> 0; draft.offense = null; Router.render(); },
-        details: (el) => { const c = cornerstoneOffers(draft.offerSeed).find((x) => x.name === el.dataset.v); const sp = resolveSpecies(c.species); const ab = sp.ability || { name: TRAITS[sp.trait]?.name, text: TRAITS[sp.trait]?.text }; sheet(`<div class="row">${monsterSprite({ id: c.name, name: c.name, species: c.species }, 64)}<div><b>${esc(c.name)}</b><div class="muted">${c.position} · ${c.type} · ${c.rarity} · ${c.quality} OVR · ${c.archetype}</div></div></div><p style="font-style:italic">“${esc(sp.personality)}”</p><p class="dim">His Temper (how efficiently he trains each attribute) is drawn when he signs.</p><h3>${sp.ability ? 'Signature ability' : 'Trait'}</h3><p><b>${esc(ab.name)}</b>: ${esc(ab.text)}</p>${sp.ability ? `<button class="btn small see-it" data-see-it="${sp.id}">▶ See it</button>` : ''}<h3>Type</h3><p>${esc(TYPES[c.type].blurb)}.</p>`, { title: c.name }); },
+        details: (el) => { const c = cornerstoneOffers(draft.offerSeed).find((x) => x.name === el.dataset.v); const sp = resolveSpecies(c.species); sheet(`<div class="row">${monsterSprite({ id: c.name, name: c.name, species: c.species }, 64)}<div><b>${esc(c.name)}</b><div class="muted">${c.position} · ${c.type} · ${c.rarity} · ${c.quality} OVR · ${c.archetype}</div></div></div><p style="font-style:italic">“${esc(sp.personality)}”</p><p class="dim">His Temper (how efficiently he trains each attribute) is drawn when he signs.</p><h3>Signature abilities</h3>${abilitiesHtml(sp, { seeIt: true })}<h3>Type</h3><p>${esc(TYPES[c.type].blurb)}.</p>`, { title: c.name }); },
         back: () => { if (draft.step > 0) { draft.step -= 1; Router.render(); } else Router.go('menu', {}, { reset: true }); },
         next: async () => {
           const e = collect(); if (e) { err(e); return; }

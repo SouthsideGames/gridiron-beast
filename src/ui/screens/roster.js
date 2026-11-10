@@ -173,7 +173,7 @@ export function registerRosterScreens(Router, app) {
         <button class="btn block cp-open" data-career="${esc(m.id)}">📖 Full career profile ›</button>
         <div class="panel"><b>Temper: ${esc(temper.name)}</b><p class="muted" style="margin:2px 0">${esc(temper.text)}</p>
           <div class="row between" style="gap:6px"><b>Type: ${esc(m.type)}</b><button class="btn small" data-action="typechart" data-type="${esc(m.type)}">🔺 Type Chart</button></div><p class="muted" style="margin:2px 0">${esc(TYPES[m.type].blurb)}. ${(() => { const p = typeProfile(m.type); return `Strong against ${p.strong.join(' and ')}; weak against ${p.weak.join(' and ')}.`; })()}</p>
-          <b>Signature abilities</b>${abilitiesHtml(m, { monster: m })}
+          <b>Signature abilities</b>${abilitiesHtml(m, { monster: m, seeIt: true })}
           ${evolutionHtml(m)}
           <button class="btn small" data-action="species" style="margin-top:6px">📖 ${esc(resolveSpecies(m).name)} in the Beast Dex</button></div>
         <h3>Ratings</h3>${headlineHtml(m)}${schemeHtml(f, m)}

@@ -45,6 +45,7 @@ import { syncReviews, onReviews } from './franchise/review-store.js';
 import { registerDexScreens } from './ui/screens/dex.js';
 import { installCareerLinks } from './ui/career-ui.js';
 import { applyFlashPref } from './ui/flash-pref.js';
+import { applyFrameRate } from './ui/frame-rate.js';
 
 const app = {
   f: null, // the franchise state (null before creation)
@@ -193,7 +194,7 @@ function saveOutcome(r) {
   failing = true; showSaveFailure(app, r.error);
 }
 
-function applySettings() { document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); }
+function applySettings() { document.documentElement.dataset.reducedMotion = app.settings.reducedMotion ? '1' : '0'; applyFlashPref(app.settings); applyFrameRate(app.settings); }
 
 function tabs(ctx, screenName) {
   if (!app.f || !ctx.inFranchise || isArchived(app.f)) return null; // an archive shows the Legacy shell, not the weekly tabs
@@ -232,7 +233,7 @@ export function start() {
   registerClashBattle(Router, app); // Beast Clash in Franchise Mode: Tuesday encounters, the pregame Clash and the overtime Clash (GDD §26)
   registerAbilityBalance(Router);
   // "▶ See it" buttons anywhere (monster card, scout reports, free agents, sheets): one listener for all of them.
-  document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
+  document.addEventListener('click', (e) => { const b = e.target.closest?.('[data-see-it]'); if (!b) return; e.preventDefault(); e.stopPropagation(); if (!app.seeAbility?.(b.dataset.seeIt, { form: b.dataset.form != null && b.dataset.form !== '' ? Number(b.dataset.form) : null, mastery: Number(b.dataset.mastery) || 0 })) openAbilityPreview(app.settings, b.dataset.seeIt); }, true);
   // Career links anywhere (awards, news, the draft, free agency, the Hall of Fame): one listener opens a monster's career by id (GDD §40.5).
   installCareerLinks(() => app.f, (screen, params) => Router.go(screen, params), { current: () => Router.currentScreen() });
   registerDexScreens(Router, app);

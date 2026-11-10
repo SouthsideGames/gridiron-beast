@@ -5,6 +5,7 @@
 // The effects layer is presentation only. It is told what happened (element, from, to, tier) by the arena,
 // which reads the record; it never decides anything. Every effect is seeded from the cue index, so the same
 // battle draws the same particles every time, and reduced motion / low quality simply draw less.
+import { frameGate } from '../frame-rate.js';
 import { ELEMENT_FX } from '../ability-fx.js'; // read-only palette; football effects are not touched
 
 /** A tiny seeded generator for particle scatter (never used for outcomes). */
@@ -27,7 +28,9 @@ export function createFx(canvas, opts) {
     W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height)); canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
   }
+  const gate = frameGate(); // 30 FPS battery saver: particles advance by elapsed time, so skipping a draw changes nothing but the redraw rate
   function tick(t) {
+    if (!gate(t)) { raf = requestAnimationFrame(tick); return; }
     const dt = Math.min(50, t - (last || t)) * speed(); last = t; ctx.clearRect(0, 0, W, H);
     for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; p.age += dt; if (p.age >= p.life) { P.splice(i, 1); continue; } const k = p.age / p.life; p.vx += (p.ax || 0) * dt / 16; p.vy += (p.ay || 0) * dt / 16; p.x += p.vx * dt / 16; p.y += p.vy * dt / 16; if (p.drag) { p.vx *= p.drag; p.vy *= p.drag; } drawP(p, k); }
     for (let i = shapes.length - 1; i >= 0; i--) { const s = shapes[i]; s.age += dt; if (s.age >= s.life) { shapes.splice(i, 1); continue; } s.draw(ctx, s.age / s.life, s.age); }
