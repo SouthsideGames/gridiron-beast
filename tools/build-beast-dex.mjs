@@ -61,7 +61,7 @@ export function buildModule() {
   const abl = abilities.map((a) => {
     const o = overrides.abilities[a.id];
     const details = a.details.map((d) => (o?.sections[d.section] ? { section: d.section, rule: o.sections[d.section], ruling: o.ruling, supersededRule: d.rule } : { section: d.section, rule: d.rule }));
-    return { id: a.id, familyId: a.familyId, mode: a.mode === 'Football' ? 'football' : 'clash', name: a.name, category: a.category, activation: a.activation, mechanic: a.mechanic, designStatus: a.sourceDesignStatus, details, ...(o ? { ruling: o.ruling, ...(o.values ? { values: o.values } : {}) } : {}) };
+    return { id: a.id, familyId: a.familyId, mode: a.mode === 'Football' ? 'football' : 'clash', name: a.name, category: a.category, activation: a.activation, mechanic: o?.mechanic || a.mechanic, ...(o?.mechanic ? { supersededMechanic: a.mechanic } : {}), designStatus: a.sourceDesignStatus, details, ...(o ? { ruling: o.ruling, ...(o.values ? { values: o.values } : {}) } : {}) };
   });
   const rul = { attributeOrder: rules.attributeOrder, bands: rules.bands, rarityPotentialBands: rules.rarityPotentialBands, primaryAttributesByPosition: rules.primaryAttributesByPosition, rarityRules: rules.rarityRules, generation: rules.generation, evolution: rules.evolution, temper: rules.temper, apex: rules.apex, basic: rules.basic, attributeRoles: parseAttributeRoles(appendix) };
   const body = [

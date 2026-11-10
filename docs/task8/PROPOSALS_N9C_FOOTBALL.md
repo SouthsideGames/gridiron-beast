@@ -1,5 +1,8 @@
 # Proposals requested by owner ruling N9c (2026-11-09 18:14): Foresight and Prism Break before the play choice
 
+> Superseded by owner approval N9d of the nine recommendations. See `N9D_APPROVED_IMPLEMENTATION.md` for current rules and validation. This packet is retained as decision history.
+
+
 Status: **proposals only.** Nothing in this file is implemented, and no mechanic was changed to write it (N9c: "Requests for
 proposals are not approval of unspecified mechanics"). Both abilities play today exactly as they did at `4e41043`; their rows in
 `docs/task8/ABILITY_COMPLETION_MATRIX.md` stay **partial** until the owner chooses.

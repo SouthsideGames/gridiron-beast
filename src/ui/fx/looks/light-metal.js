@@ -65,3 +65,6 @@ export const LIGHT_METAL = {
       s += rect(X0, Y1 - hgt, X1 - X0, hgt, STEEL, c.fade, ` stroke="${STEEL_D}" stroke-width="0.14"`) + rect(X0 - 0.15, Y1 - hgt - 0.15, X1 - X0 + 0.3, hgt + 0.3, 'none', glow * c.fade * rise, ` stroke="${STEEL_L}" stroke-width="0.18" rx="0.2"`); for (let i = 0; i < 3; i++) s += blob(X0 + (X1 - X0) * ((i + 0.5) / 3), Y1 - hgt / 2, 0.14, STEEL_D, c.fade); }
       if (c.age < 0) s += ring(c.cx, c.cy + 0.7, 1 + rise * 3, STEEL_L, 0.3, 1 - rise); return s; } },
 };
+
+// N9d: the host supplies the completed pre-choice removal, not a simulated future event.
+LIGHT_METAL['LIG-04-F'].sub = { prism_prechoice: { dur: 1.8, cue: () => 'Prism Break', o: (c) => LIGHT_METAL['LIG-04-F'].pre.o({ ...c, age: c.age - 1.2 }) } };

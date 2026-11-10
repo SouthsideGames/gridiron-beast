@@ -1,0 +1,119 @@
+{
+  "approval": "N9d: mastery ladders, Stone Divide scope and Tank bruise",
+  "previous": "Original S1, S4 and N9c fixtures are preserved unchanged",
+  "normal": {
+    "1": {
+      "previousHash": "12hs2di",
+      "previousState": "1jr1atv",
+      "hash": "1itv3gu",
+      "state": "xdtz36",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "2": {
+      "previousHash": "1fw64d3",
+      "previousState": "ein50n",
+      "hash": "6e9nts",
+      "state": "1t071p6",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "7": {
+      "previousHash": "1gr1a3c",
+      "previousState": "1ooiuun",
+      "hash": "1wrfigy",
+      "state": "11biqrz",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "8": {
+      "previousHash": "96sfev",
+      "previousState": "11y3537",
+      "hash": "1kh8f18",
+      "state": "11y3537",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "9": {
+      "previousHash": "13xm69n",
+      "previousState": "18df4or",
+      "hash": "1i00zdv",
+      "state": "18df4or",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "10": {
+      "previousHash": "1rivwir",
+      "previousState": "1a8bz0d",
+      "hash": "gz48ik",
+      "state": "1a8bz0d",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "11": {
+      "previousHash": "ff891n",
+      "previousState": "9begmm",
+      "hash": "12ctzfg",
+      "state": "9begmm",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "13": {
+      "previousHash": "1yn6qqb",
+      "previousState": "gj2107",
+      "hash": "1ifg8tu",
+      "state": "1tkvi6o",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "14": {
+      "previousHash": "8dng8r",
+      "previousState": "1i4kw4w",
+      "hash": "k5yuon",
+      "state": "9ykt8s",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "16": {
+      "previousHash": "1t1edd0",
+      "previousState": "69wqw1",
+      "hash": "m4wpjh",
+      "state": "69wqw1",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "18": {
+      "previousHash": "1f4l2fu",
+      "previousState": "1d3mxf9",
+      "hash": "1h4213d",
+      "state": "g852dz",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "19": {
+      "previousHash": "es7cz9",
+      "previousState": "1gy9bg0",
+      "hash": "t76tk0",
+      "state": "1qh7976",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    },
+    "20": {
+      "previousHash": "10x27lv",
+      "previousState": "za9njk",
+      "hash": "19808ag",
+      "state": "zfenol",
+      "reason": "N9d approved mastery values, Stone Divide scope and Tank bruise; no seed/input changes"
+    }
+  },
+  "s1": {
+    "1": {
+      "previousState": "1p0zj1s",
+      "state": "1h2q8y7",
+      "reason": "N9d Tank bruise duration clocks; abilities remain off"
+    },
+    "2": {
+      "previousState": "7vn5ct",
+      "state": "1qbt0zw",
+      "reason": "N9d Tank bruise duration clocks; abilities remain off"
+    },
+    "9": {
+      "previousState": "1pr7iim",
+      "state": "5726id",
+      "reason": "N9d Tank bruise duration clocks; abilities remain off"
+    },
+    "18": {
+      "previousState": "1rfrj0p",
+      "state": "1t5e6xi",
+      "reason": "N9d Tank bruise duration clocks; abilities remain off"
+    }
+  }
+}

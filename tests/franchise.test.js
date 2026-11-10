@@ -449,7 +449,8 @@ test('training and media boosts reach the Sunday lineup (not just the UI)', () =
   assert.ok(Object.values(mine.boosts).every((b) => b.training?.includes('accuracy')), 'ledger marks every starter');
   // Task 8 (N7c B14): only the star and hype boosts remain, so pick the star answer where one is offered, else force the star.
   f.season.day = 5; const qs = F.mediaQuestions(f); F.answerMedia(f, qs.map((q) => Math.max(0, q.a.findIndex((x) => x.star))));
-  if (!f.week.media.star) f.week.media.star = f.roster.find((x) => Object.values(mine.offense).some((p) => p.id === x.id))?.id;
+  // M5's scouting changes can make a kicker the highest-OVR media choice. This fixture tests the existing offensive star boost.
+  if (!Object.values(mine.offense).some((p) => p.id === f.week.media.star)) f.week.media.star = f.roster.find((x) => Object.values(mine.offense).some((p) => p.id === x.id))?.id;
   const m3 = F.sundayMatchup(f); const mine3 = m3.playerSide === 'home' ? m3.home : m3.away;
   assert.ok(Object.values(mine3.boosts).some((b) => b.media), 'media boosts marked on some starters');
 });
@@ -857,7 +858,8 @@ test('contracts: two-year deals from signing, salaries frozen until renewal, the
   F.finishFreeAgency(f);
   for (let g = 0; f.roster.length < F.ROSTER_MIN && g < 60; g++) { const e = F.freeAgentMarket(f).sort((a, b) => a.ask.salary - b.ask.salary)[g]; if (!e) break; let r = F.negotiateFreeAgent(f, e.monster.id, e.ask); if (r.outcome === 'countered') r = F.negotiateFreeAgent(f, e.monster.id, r.counter); }
   assert.ok(f.roster.length >= F.ROSTER_MIN, 'the floor is reachable from the market');
-  holdDraft(f); const r3 = F.startNextSeason(f); assert.equal(r3.ok, true, r3.reason); assert.equal(f.season.year, 3); assert.equal(f.offseason, null);
+  // This fixture checks contracts and the roster floor; the separate lineup-gate suite checks missing positions.
+  holdDraft(f); const r3 = F.startNextSeason(f, { acceptForfeits: true }); assert.equal(r3.ok, true, r3.reason); assert.equal(f.season.year, 3); assert.equal(f.offseason, null);
 });
 
 test('contracts: a renewal may be one season or two, never more', async () => {

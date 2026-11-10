@@ -288,6 +288,8 @@ The proposals are in [M4_PLAN.md](M4_PLAN.md) §5. The rulings are in [SPECIFICA
 
 ## Owner rulings, 2026-11-09 18:14 (N9c): packet questions
 
+> Historical statuses below: the later N9d approval closes the remaining nine follow-up groups. Refer to the N9d table at the end for current authority.
+
 **Football**
 
 | Item | Status | Ruling |
@@ -313,3 +315,19 @@ The proposals are in [M4_PLAN.md](M4_PLAN.md) §5. The rulings are in [SPECIFICA
 | Tank bruise; exact battle-length rules | **Open** | Remaining concrete choices to be returned together |
 
 Requests for proposals are not approval of unspecified mechanics.
+
+## Owner approval N9d — nine follow-up recommendation groups
+
+Source: owner reply, “I approved all your recommendations,” to the nine-item follow-up. This approval supersedes the open N9c entries below only as specified here.
+
+| Item | Status | Approved rule |
+|---|---|---|
+| Foresight | Approved | Select and save a candidate from the initial visible formation, before both choices; at the snap validate that same monster and its final blitz assignment. No substitute or audible/reload reroll. Preserve the existing AI policy; no new blitz-weight numbers were proposed or approved. |
+| Prism Break | Approved | Before both choices, measure from 12 yards beyond the upcoming LOS at the ball lateral; require the source in initial visible defensive personnel. Existing zones only. Pending and same-snap-created fields cannot be removed. |
+| Mastery precedence | Approved | Daybreak Lance 145/160/175/190%; Clear Light 8/10/12/14%; Forge Swipe 1/2/2/3 owner turns; Fortress storage cap 10/15/20/25% maximum HP. |
+| Stone Divide | Approved | Normal-action secondary/commanded/assist hits pass. Attack-triggered retaliation, including Molten Brand eruption, can be intercepted. Healing-triggered Rubble Reprisal passes. Other explicit inclusions/exclusions remain. |
+| Pending impacts at cap | Approved | Resolve due impacts before the cap check; discard not-yet-due impacts. Do not extend the battle. |
+| Tank bruise | Approved | Connected Tank hits reduce healing 25% for two recipient normal turns outside the status slot. Refresh, never multiply-stack; pauses in reserve; duration clears on knockout. Shields and explicit HP transfers remain unaffected. |
+| Long battles | Approved | Keep the current damage ramp from exchange 12, current C6 healing/new-shield cuts and cap after exchange 30 with remaining-HP-share tiebreak and seeded exact-tie coin. |
+| Bloom Break boundary | Approved | Saved random choices are re-applied relative to the upcoming ball location; the available depth band shortens near the goal line. Never reroll. |
+| Opponent inspect | Approved | Observable statuses, low/exhausted flags and visible activity only; no exact stamina or hidden development progress. Own-monster details remain available. |

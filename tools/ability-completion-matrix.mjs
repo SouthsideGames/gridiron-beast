@@ -54,17 +54,15 @@ const DONE = {
 const IN_SNAP = new Map(fs.readdirSync(path.join(ROOT, 'src/sim/abilities')).filter((f) => f.endsWith('.js')).flatMap((f) => { const s = read(`src/sim/abilities/${f}`); return [...s.matchAll(/(?:pctx|api)\.queueField\(\{[^\n]*?ability: '([A-Z]{3}-\d\d-F)'/g)].map((m) => [m[1], { dependent: /pctx\.(?:offensePlay|defensePlay)\.align/.test(s) }]); }));
 const IN_SNAP_FIELDS = new Set(IN_SNAP.keys());
 // What is still missing after this branch, per football ability (the reason is stated; nothing here is hidden as "complete").
-const REMAINING_F = {
-  // Open by owner ruling N9c (2026-11-09 18:14): a proposal was requested, nothing is approved yet (docs/task8/PROPOSALS_N9C_FOOTBALL.md).
-  'PSY-03-F': `OPEN, owner ruling N9c: proposal requested (docs/task8/PROPOSALS_N9C_FOOTBALL.md). Dex Trigger: "${ruleOf('PSY-03-F', 'Trigger / eligibility')}" The engine draws the candidate inside the snap from the play's own stream (cerebrix.js: no pre-choice phase), so it does not exist before the choices. As built (Dex Visuals: "${visualOf('PSY-03-F')}"): the eye and the floor marker are drawn in the pre-roll, after both calls and before the snap (I6), the Confused badge after an accepted application.`,
-  'LIG-04-F': `OPEN, owner ruling N9c: proposal requested (docs/task8/PROPOSALS_N9C_FOOTBALL.md). Dex Visuals: "${visualOf('LIG-04-F')}" The engine removes the field inside the snap, after that snap's own fields are created, measuring from the safety's alignment in the defensive call (prism.js), so before the choices nothing has been removed. As built: prism, beam and fracture are drawn in the pre-roll, after both calls and before the snap (I6).`,
-};
+const REMAINING_F = {}; // N9d approved both remaining pre-choice proposals; now implemented.
 if (!DONE.I4b) { REMAINING_F['MET-02-F'] = 'The Dex puts the saved-drain tick on a stamina inspect panel; the inspect sheet is not built.'; REMAINING_F['DAR-02-F'] = 'The Dex puts the Dark-awareness protection on an ally inspect panel; the inspect sheet is not built.'; }
 if (!DONE.I5b) REMAINING_F['DRA-06-F'] = 'The return animation before the formation is not built.';
 for (const [id, x] of IN_SNAP) if (!x.dependent && !DONE.I2b) REMAINING_F[id] = 'N9c: to be shown before the play choice as conditional on its creator taking part; not built.';
 if (!DONE.NOREROLL) REMAINING_F['NAT-01-F'] = 'N9c: its placement choices must be kept (never rerolled); not built.';
 // Done by this pass, with the owner ruling or the Dex text it rests on (stated in the row).
 const DONE_F = {
+  'PSY-03-F': 'N9d: saved pre-choice candidate from the visible look; warning and marker before both calls; no redraw/reload/audible reroll',
+  'LIG-04-F': 'N9d: removal before both calls, fixed 12-yard reference, existing fields only; rainbow beam and fracture on the play-call screen',
   'MET-02-F': DONE.I4b ? `inspect sheet on the match screen (tap a monster of the formation or an ability-strip entry): the stamina block carries the saved-drain tick and the two-play progress (I4; Dex: "${visualOf('MET-02-F')}")` : null,
   'DAR-02-F': DONE.I4b ? `inspect sheet on the match screen: an ally inside the watch shows the Dark-awareness protection, ticked after a play it applied on (I4; Dex: "${visualOf('DAR-02-F')}")` : null,
   'DRA-06-F': DONE.I5b ? 'while the defender is out his formation spot is empty under a closed dragon mouth (play-call screen and the play that serves the absence) beside the portrait chip; his return plays once on the play-call screen of the play he is back for, and is pre-rolled in the reviewer (I5)' : null,
@@ -137,14 +135,14 @@ for (const c of reviewCatalog()) {
 // ---------------------------------------------------------------- Clash rows
 const CM = clashMatrixRows(); const clashRows = []; const clashTotals = { complete: 0, partial: 0, awaiting: 0, variants: 0, shown: 0, unfinished: [], gated: [] };
 const pickMain = (id, stage, tier) => { const scs = listScenarios(id, stage, tier); return scs.find((s) => s.kind === 'valid' && !s.provisional) || scs.find((s) => s.kind === 'valid') || scs.find((s) => !s.provisional) || scs[0]; };
-const gatedBy = (id) => Object.entries(PROVISIONAL_POINTS).filter(([, p]) => (p.abilities || []).includes(id)).map(([k]) => k);
+const gatedBy = (id) => Object.entries(PROVISIONAL_POINTS).filter(([, p]) => !p.approved && (p.abilities || []).includes(id)).map(([k]) => k);
 for (const id of registeredClashAbilities()) {
   const a = abilityById(id); const fam = familyById(a.familyId); const forms = formsOf(a.familyId); const look = CLASH_LOOKS[id]; const m4 = CM[id] || {};
   const impl = clashContractById(id) && has(`src/clash/abilities/${a.familyId}.js`) ? `implemented (src/clash/abilities/${a.familyId}.js)` : 'MISSING';
   let shown = 0, total = 0, provOnly = 0; const failed = [];
   for (const f of forms) for (const tier of [0, 1, 2, 3]) { total += 1; const sc = pickMain(id, f.stage, tier); if (sc?.provisional) provOnly += 1; const r = reviewClashScenario({ abilityId: id, stage: f.stage, tier, scenarioId: sc.id }); if (r.ok) shown += 1; else failed.push(`${f.stage}@${tier}`); }
   clashTotals.variants += total; clashTotals.shown += shown;
-  const points = [...new Set([...gatedBy(id), ...String(m4.points || '').split(',').map((x) => x.replace(/`/g, '').trim()).filter((x) => x && x !== '-')])];
+  const points = [...new Set([...gatedBy(id), ...String(m4.points || '').split(',').map((x) => x.replace(/`/g, '').trim()).filter((x) => x && x !== '-' && !PROVISIONAL_POINTS[x]?.approved)])];
   const provScenarios = listScenarios(id, 0, 0).filter((s) => s.provisional).length;
   const missing = []; if (!look) missing.push('no look'); if (provOnly === total) missing.push('its only valid demonstration is a PROVISIONAL scenario (the gated reading awaits a ruling): the look is shown in reviewer / provisional mode only, labelled'); else if (provOnly) missing.push(`at ${provOnly}/${total} variants the only valid demonstration is PROVISIONAL (awaiting a ruling); the other variants are complete`);
   const status = !look || provOnly === total ? 'partial' : 'complete'; clashTotals[status] += 1; if (status === 'partial') clashTotals.unfinished.push([id, a.name, missing.join(' ')]);

@@ -6,11 +6,12 @@
 import { applyActivity } from './reward-ledger.js';
 import { clashAward } from './t8/awards.js';
 import { applyAward } from './progression.js';
+import { clashGrade } from './t8/grading.js';
 import * as FR from '../core/fraction.js';
 import { simulateByRuleset, logHashFor, battleConfig, chooseLineup, archetypeOf, CLASH_VALUES, T8_RULESET, T8_VALUES, t8Config } from '../clash/index.js';
 import { createRng } from '../core/rng.js';
 import { monsterOverall, xpForLevel } from '../data/monsters.js';
-import { tierIndex } from './t8/mastery.js';
+import { tierIndex, applyMastery } from './t8/mastery.js';
 
 /** Battle sizes by occasion (GDD §26). */
 export const CLASH_SIZE = Object.freeze({ encounter: 3, pregame: 3, overtime: 3, overtimePlayoff: 5 });
@@ -175,18 +176,21 @@ export function pendingDecision(result) {
  * level XP only, never training progress or mastery). With `ledger` and `activityId` the awards go through the reward ledger
  * (spec §15): once per activity and monster, so a replay or reload awards nothing more.
  */
-export function applyBattleEffects(roster, result, side, occasion, rng, { autoSpend = false, bonusPct = 0, bonusLabel = null, ledger = null, activityId = null } = {}) {
+export function applyBattleEffects(roster, result, side, occasion, rng, { autoSpend = false, bonusPct = 0, bonusLabel = null, ledger = null, activityId = null, masteryScope = activityId } = {}) {
+  if (result.pending || result.staged || result.probed || result.provisional) return [];
   const events = []; const fatigue = CLASH_FATIGUE[occasion] || 0;
   const entries = []; for (const x of result.lines[side]) { const m = roster.find((mm) => mm.id === x.combatant.monsterId); if (m && !entries.some((e) => e.monsterId === m.id)) entries.push({ monsterId: m.id, x, m }); }
   const award = ({ x, m }) => {
+    const masteryCredits = isT8Record(result) && activityId ? applyMastery(m, 'clash', result.mastery?.[m.id], { scope: masteryScope }) : 0;
     // Task 8 M2 (spec §6): every selected lineup member, unused reserves included, gets the approved Clash award: 25 level XP and 25%
-    // of a training bar. The archetype grade adjustment arrives with grading (M5); until then 0 (TRANSITIONAL). Skips and early KOs keep it.
-    const a = clashAward({ gradeAdj: 0, involved: true }); const base = FR.toNumber(a.xp); const bonus = bonusPct ? base * bonusPct / 100 : 0;
+    // of a training bar before the M5 role grade. Never-involved reserves remain neutral; skips and early KOs keep participation.
+    const gradeAdj = clashGrade({ ...result.performance?.[m.id], archetype: x.combatant.archetype || archetypeOf(m.species), involved: !!result.performance?.[m.id] });
+    const a = clashAward({ gradeAdj, involved: !!result.performance?.[m.id] }); const base = FR.toNumber(a.xp); const bonus = bonusPct ? base * bonusPct / 100 : 0;
     const r = applyAward(m, { xp: FR.add(a.xp, FR.frac(Math.round(bonus * 100), 100)), training: a.training }, rng, { autoSpend });
     events.push(...r.events);
     m.fatigue = Math.min(100, (m.fatigue || 0) + fatigue);
     // What the result screen shows for each battler: XP gained (base + any Basic bonus), training progress and progress toward the next level.
-    events.push({ kind: 'xp', id: m.id, name: m.name, amount: r.xp, base: r.xp ? base : 0, bonus: r.xp ? bonus : 0, bonusLabel: bonus && r.xp ? bonusLabel : null, training: FR.toNumber(r.training), points: r.points, level: m.level, levelsGained: r.levelsGained, xp: m.xp, next: xpForLevel(m.level), max: m.level >= 50 });
+    events.push({ kind: 'xp', id: m.id, name: m.name, amount: r.xp, gradeAdj, masteryCredits, base: r.xp ? base : 0, bonus: r.xp ? bonus : 0, bonusLabel: bonus && r.xp ? bonusLabel : null, training: FR.toNumber(r.training), points: r.points, level: m.level, levelsGained: r.levelsGained, xp: m.xp, next: xpForLevel(m.level), max: m.level >= 50 });
   };
   if (ledger && activityId) applyActivity(ledger, activityId, entries, award); else for (const e of entries) award(e);
   return events;

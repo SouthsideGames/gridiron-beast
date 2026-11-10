@@ -81,12 +81,13 @@ function leagueWith(seed) { const f = newFranchise(seed); f.season.finished = tr
 function setMode(f, club, mode) { Object.assign(R.clubRecord(f, club).strategy, { mode, modeSince: 1 }); }
 
 test('R3 by mode on a league (F2/F3, owner-approved 2026-11-03): veterans past onset go only to a ready successor; a rebuilder also once 2+ past onset', () => {
-  const outcome = (mode, { ready, pastBy }) => /* ready: true (within 4, slightly behind), 'equal' (as good), false (5–8 behind) */ { const f = leagueWith(73); const club = R.leagueClubs(f).slice().sort().find((c) => !isGymClub(c)); setMode(f, club, mode);
+  const outcome = (mode, { ready, pastBy }) => /* ready: true (within 4, slightly behind), 'equal' (as good), false (5–8 behind) */ { const f = leagueWith(73); const club = R.leagueClubs(f).slice().sort().find((c) => !isGymClub(c) && Object.values(rosterPlan(R.clubRoster(f, c)).groups).flatMap((g) => g.rows).some((r) => r.successor && !R.isProtected(r.starter) && !R.isProtected(r.successor) && GROUP_SLOTS[r.starter.position].length === 1)); assert.ok(club, 'a club with a genuine successor'); setMode(f, club, mode);
     const roster = R.clubRoster(f, club); const starters = new Set(Object.values(buildDepthChart(roster)).filter(Boolean));
     const plan = rosterPlan(roster, null, { starters }); const row = Object.values(plan.groups).flatMap((g) => g.rows).find((r) => r.successor && !R.isProtected(r.starter) && !R.isProtected(r.successor) && GROUP_SLOTS[r.starter.position].length === 1); // a one-slot group: a successor made as good as the starter stays his successor instead of starting beside him
     assert.ok(row, 'a starter with a successor'); const st = row.starter, su = row.successor;
     for (const k of Object.keys(st.attributes)) st.attributes[k] = Math.max(28, st.attributes[k]); // room for "7 behind" above the 20 floor (Dex founding ratings can sit in the 20s)
     su.attributes = Object.fromEntries(Object.entries(st.attributes).map(([k, v]) => [k, ready === 'equal' ? v : ready ? Math.max(20, v - 1) : Math.max(20, v - 7)])); su.potential = 99; su.age = 23; // ready and as good, or 5–8 behind (qualifies by potential, not ready)
+    const ids = R.clubRecord(f, club).roster; if (ids.indexOf(st.id) > ids.indexOf(su.id)) { ids.splice(ids.indexOf(st.id), 1); ids.splice(ids.indexOf(su.id), 0, st.id); } // preserve the incumbent on an exact rating tie
     st.age = publicOnset(st) + pastBy; st.contract = { ends: 1 };
     const check = rosterPlan(R.clubRoster(f, club), null, { starters }).successors.get(su.id); assert.ok(check && check.ready === !!ready, `setup: successor ready=${ready}`); assert.ok(new Set(Object.values(buildDepthChart(R.clubRoster(f, club))).filter(Boolean)).has(st.id), 'setup: he still starts');
     leagueContracts(f, { year: 1, cap: 10 ** 9 }); return { kept: R.clubRoster(f, club).some((m) => m.id === st.id), st }; };
@@ -134,13 +135,13 @@ test('R7 by mode: potential weighted 0.35 by rebuilders, 0.20 by Compete and Ret
   for (const [m, v] of [[now, 72], [upside, 60]]) { for (let i = 0; i < 40 && monsterOverall(m) !== v; i++) { const d = v - monsterOverall(m); for (const k of Object.keys(m.attributes)) m.attributes[k] = Math.max(20, Math.min(99, m.attributes[k] + Math.sign(d) * Math.max(1, Math.abs(d) >> 1))); } m.dev.current = { ...m.attributes }; }
   const D = monsterOverall(now) - monsterOverall(upside); assert.ok(D >= 3);
   now.potential = Math.max(70, monsterOverall(now)); upside.potential = now.potential + Math.round(D / 0.27); // 0.35 × gap > D > 0.20 × gap
-  const pickFor = (mode, rows = []) => { const f = { draft: { class: [now, upside], available: [now.id, upside.id], picks: [] } };
+  const pickFor = (mode, rows = []) => { const f = { draft: { class: [now, upside], available: [now.id, upside.id], picks: [], aiScouting: { X: { skill: 50, weeks: 0, revealed: { [now.id]: 6, [upside.id]: 6 } } } } };
     return aiDraftPick(f, 'X', { next: () => 0.5 }, { plan: { mode, groups: { LB: { rows, weakNeed: 0 } } } }).id; };
   assert.equal(pickFor('rebuild'), upside.id, 'the rebuilder takes the upside');
   assert.equal(pickFor('compete'), now.id, 'Compete keeps the standing weight (0.20)'); assert.equal(pickFor('retool'), now.id);
   assert.equal(pickFor('contend', [{ starter: mon('LB', 60, 28) }]), now.id, 'the contender takes the one who starts now');
   const close = mon('LB', 61, 22); close.potential = 70; const far = mon('LB', 62, 22); far.potential = 70; // the contender's readiness bonus decides between two near-equals
-  const f2 = { draft: { class: [close, far], available: [close.id, far.id], picks: [] } }; const weakest = mon('LB', 0, 28); weakest.attributes = { ...close.attributes };
+  const f2 = { draft: { class: [close, far], available: [close.id, far.id], picks: [], aiScouting: { X: { skill: 50, weeks: 0, revealed: { [close.id]: 6, [far.id]: 6 } } } } }; const weakest = mon('LB', 0, 28); weakest.attributes = { ...close.attributes };
   if (monsterOverall(close) < monsterOverall(far) && monsterOverall(far) - monsterOverall(close) < READY_BONUS) assert.equal(aiDraftPick(f2, 'X', { next: () => 0.5 }, { plan: { mode: 'contend', groups: { LB: { rows: [{ starter: weakest }], weakNeed: 0 } } } }).id, monsterOverall(far) >= monsterOverall(weakest) ? far.id : close.id);
 });
 

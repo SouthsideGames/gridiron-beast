@@ -26,7 +26,7 @@ test('S15 UI: every variant (72 abilities x forms x 4 tiers x every scenario) de
     if (s.provisional) assert.match(r.explain.provisional || '', /PROVISIONAL/); else assert.equal(r.explain.provisional, null);
     assert.equal(r.run.result.provisional, !!s.provisional, 'provisional mode only for provisional scenarios');
   }
-  assert.ok(runs >= 1375, `runs ${runs}`); assert.ok(provisional >= 80); assert.ok(byKind.blocked > 100 && byKind.valid > 300, JSON.stringify(byKind));
+  assert.equal(runs, rows.reduce((n, row) => n + listScenarios(row.abilityId, row.stage, row.tier).length, 0), 'every current scenario was exercised'); assert.equal(provisional, rows.reduce((n, row) => n + listScenarios(row.abilityId, row.stage, row.tier).filter((s) => s.provisional).length, 0), 'every remaining provisional scenario was exercised'); assert.ok(byKind.blocked > 100 && byKind.valid > 300, JSON.stringify(byKind));
 });
 
 test('S15 UI: a failing scenario is reported, never silent: a wrong check gives a failure with the condition; a thrown setup gives an implementation error', () => {

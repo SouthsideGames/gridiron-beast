@@ -170,6 +170,10 @@ const STARTS = [
 
 function startRun(fam, side, slot, st, off, def, seed, extra = {}, mode = null) {
   const t8 = { status: {}, ability: { [midOf(side, slot)]: { ...st } } };
+  if (fam === 'cerebrix') { // controlled saved pre-choice prerequisite; this suite tests activation denial, not candidate selection
+    t8.preChoice = { key: 'activation-gate-prerequisite', play: 0 };
+    t8.ability[midOf(side, slot)].preChoiceMark = { key: t8.preChoice.key, play: 0, mid: midOf('def', 'LB1') };
+  }
   const place = { [side]: { [slot]: { species: fam, ...(extra.attrs ? { attrs: extra.attrs } : {}), mastery: extra.mastery || 0 } } };
   if (mode === 'stub') { const opp = side === 'off' ? 'def' : 'off'; place[opp] = { [stubSlot(opp, off, def, slot)]: { species: 'gatestub' } }; }
   const r = abilityPlay({ seed, off, def, place, t8, options: mode === 'eclipse' ? { fields: ECLIPSE } : {} });

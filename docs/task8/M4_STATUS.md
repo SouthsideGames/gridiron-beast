@@ -1,5 +1,13 @@
 # M4 status: Beast Clash on the Task 8 model
 
+> Current N9d follow-up: [N9D_APPROVED_IMPLEMENTATION.md](N9D_APPROVED_IMPLEMENTATION.md). All nine recommendation groups are approved and implemented. The final code passes 1,980/1,980 tests; all 144 presentations and 816 variants are accounted for with no pending ruling gates. Earlier statuses and results below are historical. Browser verification was waived; main/live/preview remain unchanged.
+
+
+> Latest Codex follow-up: [CODEX_APPROVED_CLASH_FOLLOWUP.md](CODEX_APPROVED_CLASH_FOLLOWUP.md).
+> The current integrated branch implements N9c A/B/C/E/G/H, preserves the unresolved gates, and passes
+> 1,963/1,963 repository tests. This file retains the original per-branch milestone history below; its opening
+> S0–S4 description is historical, not the current integration state. Browser verification was waived by the owner.
+
 Branch `task8-m4-core`, started from `origin/task8-implementation` at 5c059fc. Steps S0–S4 of [M4_PLAN.md](M4_PLAN.md) §4.
 Nothing in the franchise, the UI, football, saves or `src/clash/index.js` uses the new engine yet.
 

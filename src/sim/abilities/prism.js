@@ -1,3 +1,4 @@
+// N9d: removal now runs once in rules.preparePreChoice, before calls and before pending fields. Historical placement notes below are superseded.
 // LIG-04-F Prism Break (prism: Prismara; S). Task 8 M3, Light batch (special action).
 // Contract (Dex; spec §11 "Prism Break removes exactly its selected approved zone/overlap region and corresponding parent
 // contributions; do not remove all fields"): his personal tackles and pass breakups grant one charge per participating play, at most
@@ -85,15 +86,6 @@ export function prismBreak(t8, p, side, teams = null) {
 export default registerAbility({
   family: 'prism', abilityId: 'LIG-04-F',
   initGame: () => ({ charges: 0, noCharge: false }),
-  game: {
-    preSnap(g, self, { team, align, toAbs, teams, sitsOut, side }) {
-      if (team !== 'def' || !align) return; const st = g.state(self);
-      if (st.charges < PRISM.charges || sitsOut) return; // an unable source keeps his readiness
-      const z = prismBreak(g.t8, toAbs(align), side, teams); if (!z) return; // no target keeps the full bar
-      st.charges = 0; st.noCharge = true; g.executed(self);
-      g.log(`${self.name}'s Prism Break shatters ${z.kind === 'base' ? `a ${z.fields[0].type} field` : 'a hybrid overlap'}`, { by: self.mid, ability: 'LIG-04-F', removed: { kind: z.kind, fields: z.fields.map((f) => f.id), yard: z.rect.yard, lat: z.rect.lat } });
-    },
-  },
   hooks: {
     playEnd(ctx, self, s) {
       if (self.team !== 'def' || !scrimmage(ctx)) return; const st = ctx.state(self);

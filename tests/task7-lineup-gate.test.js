@@ -71,7 +71,8 @@ test('season start: the gate stops the season unknowingly starting into forfeits
   assert.ok(!JSON.stringify(back).includes('acceptForfeits'), 'no bypass is saved');
   const year = back.season.year; const ok = F.startNextSeason(back, { acceptForfeits: true }); assert.ok(ok.ok, ok.reason); assert.equal(back.season.year, year + 1, 'a deliberate start is never a dead end');
   // the forfeit rule is unchanged: Sunday's game is a forfeit, recorded as 0-21
-  F.autoRunToSunday(back); if (F.isBye(back)) { F.takeBye(back); F.autoRunToSunday(back); }
+  // Keep the deliberately open slot: staff auto-run may legitimately recruit a replacement under the new M5 draft/development outcomes.
+  back.season.day = 6; if (F.isBye(back)) { F.takeBye(back); back.season.day = 6; }
   const m = F.sundayMatchup(back); assert.ok(m.forfeit); const res = F.forfeitSunday(back); assert.ok(res.ok); assert.equal(back.lastGame.forfeit, true); assert.equal(back.lastGame.oppScore, 21);
 });
 

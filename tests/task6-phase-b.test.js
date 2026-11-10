@@ -125,7 +125,7 @@ test('R7 in the draft: the plan\'s need decides a close call; kicker and duplica
   for (let i = 0; i < 40 && base(rb) - base(qb) > 6; i++) { qb.potential += 1; }
   k.potential = 70; for (const key of Object.keys(k.attributes)) k.attributes[key] = Math.min(k.attributes[key], 60);
   const cls = [qb, rb, k];
-  const f = { draft: { class: cls, available: cls.map((m) => m.id), picks: [] } };
+  const f = { draft: { class: cls, available: cls.map((m) => m.id), picks: [], aiScouting: { X: { skill: 50, weeks: 0, revealed: Object.fromEntries(cls.map((m) => [m.id, 6])) } } } };
   const g = (x) => ({ rows: [], successionNeed: 0, weakNeed: 0, ...x });
   const plan = { groups: { QB: g({ weakNeed: 1 }), RB: g({ settled: true }), K: g({}) } }; // QB: a missing starter
   const noPlan = aiDraftPick(f, 'X', createRng(5)); const withPlan = aiDraftPick(f, 'X', createRng(5), { plan });

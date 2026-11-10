@@ -99,7 +99,9 @@ Once per Clash.
 
 ### Lifetime / persistence
 
-Once per Clash. Pending attack persists through source rotation/KO while Clash ongoing. Offensive strength recalculates at impact; KO source uses last pre-KO strength. Accepted Healing Reduced follows target through rotations, pauses in reserve, starts decrement on next normal turn, applies through final turn. Target KO clears it; entering football clears it because no Football effect is defined.
+**Approved Task 8 rule (N9d):** N9d: preserve the approved launch, charge and delayed-impact lifetime. Target the then-active position when impact starts. Due impacts resolve before the exchange-30 cap check. Not-yet-due impacts are discarded at the cap, without extending the battle. Preserve the named post-KO exception.
+
+> Superseded v18 text: Once per Clash. Pending attack persists through source rotation/KO while Clash ongoing. Offensive strength recalculates at impact; KO source uses last pre-KO strength. Accepted Healing Reduced follows target through rotations, pauses in reserve, starts decrement on next normal turn, applies through final turn. Target KO clears it; entering football clears it because no Football effect is defined.
 
 ### Exceptions / counterplay
 

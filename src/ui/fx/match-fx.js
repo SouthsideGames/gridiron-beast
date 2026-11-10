@@ -98,7 +98,12 @@ export function createRevealClock() {
 }
 
 /** I2. The effect state of the play-call screen: the fields' decoration and reveal, nothing else (no play, no events). */
-export function presnapFx(fields, lookup = () => null, staged = null) { return fields?.length || staged?.length ? buildFx({ frames: [], events: [], fields: fields || [] }, lookup, { preroll: true, ...(staged?.length ? { staged } : {}) }) : null; }
+export function presnapFx(fields, lookup = () => null, staged = null, choice = null) {
+  const pc = choice?.record; const events = [], off = [], def = [];
+  for (const m of pc?.foresight || []) { off.push([m.slot, ...m.sourceAt]); def.push([m.targetSlot, ...m.at]); events.push({ kind: 'foresight_mark', ability: 'PSY-03-F', side: 'off', by: m.slot, victim: m.targetSlot, t: choice.time - choice.age }); }
+  for (const m of pc?.prism || []) { def.push([m.slot, ...m.at]); const [r] = toPlayFrame([{ ...m.removed, id: 'removed', type: 'removed' }], choice.frame); events.push({ kind: 'prism_prechoice', ability: 'LIG-04-F', side: 'def', by: m.slot, rect: { yard: r.yard, lat: r.lat }, t: choice.time - choice.age }); }
+  return fields?.length || staged?.length || events.length ? buildFx({ frames: events.length ? [{ t: -100, off, def, ball: [0, 0, 0] }] : [], events, fields: fields || [] }, lookup, { preroll: true, ...(staged?.length ? { staged } : {}) }) : null;
+}
 
 /**
  * I4. Ticks for the last play's ability strip (the match screen's ability panel), read from the play's own events: Anchor Plate's
@@ -169,7 +174,7 @@ export function sequenceStaged(plays, i) {
 }
 
 /**
- * The match screen's memory of temporary absences (presentation only, in memory; the game state is only read). `observe(gameKey,
+ * The match screen's memory of temporary absences (presentation only; the simulation state is only read). `observe(gameKey,
  * state, teams)` on every draw: an absence that has left the game's list has been served, so its monster is "returning" until his
  * return has been shown. `frame(state, teams, defensePlay, now, animate)` on a play-call screen (`defensePlay`: the defensive call or
  * look drawn there) returns
@@ -184,8 +189,20 @@ export function sequenceStaged(plays, i) {
 export function createAbsenceTracker() {
   let game = null; const out = new Map(), back = new Map();
   return {
-    observe(gameKey, state, teams) {
-      if (gameKey !== game) { game = gameKey; out.clear(); back.clear(); }
+    observe(gameKey, state, teams, saved = null) {
+      if (gameKey !== game) {
+        game = gameKey; out.clear(); back.clear();
+        // Restore only presentation identifiers, never roster copies or wall-clock timestamps. A return already shown must not
+        // replay after reload; a defender still out (or waiting to be shown back) must survive the screen being recreated.
+        if (saved?.version === 1 && saved.game === gameKey) {
+          for (const [key, map] of [['out', out], ['back', back]]) for (const a of Array.isArray(saved[key]) ? saved[key] : []) {
+            const found = a?.mid && findMonster(teams, a.mid);
+            if (!found || !ABSENCE_LOOK[a.ability] || found.team !== a.team) continue;
+            map.set(a.mid, { mid: a.mid, monster: found.monster, team: a.team, serveOn: a.serveOn, ability: a.ability,
+              shownAt: Number.isInteger(a.shownAt) ? a.shownAt : null, startedAt: -Infinity });
+          }
+        }
+      }
       const now = absentMonsters(state, teams); const ids = new Set(now.map((a) => a.mid)); const n = state?.playCount || 0;
       for (const [mid, a] of out) if (!ids.has(mid)) { out.delete(mid); if (!state?.finished && ABSENCE_LOOK[a.ability]) back.set(mid, { ...a, shownAt: null, startedAt: null }); }
       for (const a of now) { out.set(a.mid, a); back.delete(a.mid); }
@@ -204,6 +221,10 @@ export function createAbsenceTracker() {
         res.returning.push({ mid: b.mid, monster: b.monster, team: b.team, slot: w.slot });
         const age = (now - b.startedAt) / 1000; if (age >= 0 && age < look.returnDur) { res.staged.push({ ability: b.ability, kind: look.back, team: 'def', slot: w.slot, age, name: b.monster?.name || null }); res.until = Math.max(res.until, b.startedAt + look.returnDur * 1000); } }
       return res;
+    },
+    snapshot() {
+      const entries = (map) => [...map.values()].map((a) => ({ mid: a.mid, team: a.team, serveOn: a.serveOn, ability: a.ability, shownAt: a.shownAt ?? null }));
+      return { version: 1, game, out: entries(out), back: entries(back) };
     },
     reset() { game = null; out.clear(); back.clear(); },
   };
@@ -250,7 +271,7 @@ export function inspectInfo(state, teams, mid, { formation = null, last = null, 
   const st = state?.t8 ? statusOf(state, mid) : null; const abs = (state?.t8?.absences || []).find((a) => a.mid === mid) || null; const abId = footballAbility(m);
   const out = { monster: m, team, slot: null, full: !!full, stamina: full ? { now: cur, capacity: cap, frac: cap ? Math.max(0, Math.min(1, cur / cap)) : 0, low, exhausted, played: !!rec } : { low, exhausted },
     status: st ? { id: st.id, remaining: st.restOfPlay ? null : st.remaining ?? null } : null, absent: abs ? { serveOn: abs.serveOn || null, ability: abs.ability || null } : null,
-    ability: abId ? { id: abId, name: dexAbilityName(abId) || abilityById(abId)?.name || abId, text: abilityById(abId)?.mechanic || '' } : null, staminaNotes: [], awarenessNotes: [] };
+    ability: abId ? { id: abId, name: dexAbilityName(abId) || abilityById(abId)?.name || abId, text: abId === 'MET-02-F' ? 'Steadies nearby teammates. Every second qualifying play, their ordinary stamina drain is reduced by 1. Check the stamina section for the current benefit.' : abId === 'DAR-02-F' ? 'Protects nearby teammates from Dark-field Awareness penalties while the watch is active. Check the Awareness section to see who is protected.' : abilityById(abId)?.mechanic || '' } : null, staminaNotes: [], awarenessNotes: [] };
   if (last?.lungs?.includes(mid)) out.staminaNotes.push({ tick: true, text: 'Iron Lungs saved 1 stamina on the last play (its ordinary drain was 1 lower).' });
   if (last?.watch?.includes(mid)) out.awarenessNotes.push({ tick: true, text: 'Night Watch kept his Awareness full inside the Dark field on the last play.' });
   const progress = state?.t8?.ironLungs?.progress?.[mid] || 0; let lungsNow = false;

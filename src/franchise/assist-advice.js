@@ -36,11 +36,11 @@ export function upgradeOver(f, m) {
 export function suggestProspect(f) {
   if (!suggestionsOn(f)) return null; const ps = f.week?.prospects || []; if (!ps.length) return null;
   const needs = Object.fromEntries(F.depthNeeds(f).map((n) => [n.position, n.status]));
-  const scored = ps.map((p, i) => { const u = upgradeOver(f, p.monster); const need = needs[p.monster.position]; const affordable = !F.salarySummary(f, p.monster.salary || salaryFor(p.monster)).over;
+  const scored = ps.map((p, i) => { const known = p.revealed >= 4; const u = known ? upgradeOver(f, p.monster) : { gain: 0 }; const need = needs[p.monster.position]; const affordable = known && p.potentialKnown ? !F.salarySummary(f, p.monster.salary || salaryFor(p.monster)).over : true;
     return { i, p, u, need, affordable, score: u.gain + (need === 'short' ? 12 : need === 'thin' ? 5 : 0) + (affordable ? 0 : -30) }; }).sort((a, b) => b.score - a.score);
   const top = scored[0]; if (!top || top.score < -5) return { i: null, text: 'None of these would start for you or fill a gap. Skipping the encounter costs nothing.' };
   const why = top.need === 'short' ? `you are short at ${top.p.monster.position}` : top.u.gain > 0 ? `${top.u.gain} OVR better than your best ${top.p.monster.position}` : `cover at ${top.p.monster.position}`;
-  return { i: top.i, text: `Suggested: ${top.p.monster.name} (${top.p.monster.position}, ${monsterOverall(top.p.monster)} OVR): ${why}${top.affordable ? '' : ', but the salary does not fit the cap'}.` };
+  return { i: top.i, text: `Suggested: ${top.p.monster.name} (${top.p.monster.position}, ${top.p.revealed >= 4 ? monsterOverall(top.p.monster) + ' OVR' : 'OVR unknown'}): ${why}${top.affordable ? '' : ', but the salary does not fit the cap'}.` };
 }
 
 /** Guided: the draft prospect to look at first (scouted, best OVR, a needed position breaks ties). */
@@ -49,7 +49,7 @@ export function suggestDraftPick(f) {
   const avail = d.class.filter((m) => (d.available || d.class.map((x) => x.id)).includes(m.id) && (d.revealed?.[m.id] || 0) >= 3);
   if (!avail.length) return { id: null, text: 'Your scout has not studied anyone still on the board: the public rank is all you have.' };
   const needs = Object.fromEntries(F.depthNeeds(f).map((n) => [n.position, n.status]));
-  const best = avail.map((m) => ({ m, s: monsterOverall(m) + (needs[m.position] === 'short' ? 6 : needs[m.position] === 'thin' ? 3 : 0) + (m.potential || 0) / 20 })).sort((a, b) => b.s - a.s)[0].m;
+  const best = avail.map((m) => ({ m, s: monsterOverall(m) + (needs[m.position] === 'short' ? 6 : needs[m.position] === 'thin' ? 3 : 0) + ((f.draft.revealed[m.id] || 0) >= 6 ? m.potential || 0 : 0) / 20 })).sort((a, b) => b.s - a.s)[0].m;
   return { id: best.id, text: `Suggested: ${best.name} (${best.position}, ${monsterOverall(best)} OVR)${needs[best.position] !== 'ok' ? `, a position where you need depth` : ', the best scouted monster left'}.` };
 }
 

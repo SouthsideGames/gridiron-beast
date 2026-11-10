@@ -71,6 +71,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   }
   if (state.phase !== 'scrimmage') { done(); return null; }
 
+  // N9d: Watch and Skip share the same pre-choice boundary, including period-ending runoff and fourth-down choices.
+  R.preparePreChoice(state, teams);
+
   // Defensive timeout to stop the clock?
   const defSide = R.opponent(side);
   if ((choices.timeout === defSide) || (!choices.timeout && ctrl(defSide).timeoutOnDefense(state))) { R.timeout(state, defSide); }

@@ -910,3 +910,19 @@ Measured results are clearly distinguished from estimates and projections.
 
 The pending M4 items, the ability-table questions, the Feather Relay questions, the Stunned countdown reading, the knockout
 replacement choice and the Ball Clamp and Iron Lungs reviewer items stay unresolved and separate from this work.
+
+## 27. Approved follow-up rulings N9d (2026-11-09)
+
+The owner's approval of all nine follow-up recommendations supersedes earlier open wording for those items. The precise register is [APPROVAL_REGISTER.md, N9d](../task8/APPROVAL_REGISTER.md); implementation and verification are in [N9D_APPROVED_IMPLEMENTATION.md](../task8/N9D_APPROVED_IMPLEMENTATION.md).
+
+1. Foresight chooses and saves its candidate from the initial visible formation before both calls. The same monster is validated at snap; no substitute, reload, redraw or audible reroll. No new AI blitz-weight policy is introduced.
+2. Prism Break removes an existing enemy zone before both calls, measured from 12 yards beyond the upcoming LOS at ball lateral. Source must be in initial displayed defensive personnel. Pending and same-snap-created zones are not eligible.
+3. Mastery ladders govern: Daybreak Lance 145/160/175/190% normal damage; Clear Light 8/10/12/14% maximum HP; Forge Swipe 1/2/2/3 owner turns; Fortress cap 10/15/20/25% maximum HP.
+4. Stone Divide excludes normal-action secondary, commanded and assist hits. Attack-triggered retaliation, including Molten Brand, is eligible; healing-triggered Rubble Reprisal is not. Preserve all other explicit inclusions/exclusions.
+5. Resolve due impacts before the battle-cap check. Discard not-yet-due impacts without extending the battle.
+6. Tank bruise is a non-status 25% healing reduction for two recipient normal turns, refreshing without strength stacking, pausing in reserve and clearing on knockout. Shields and explicit HP transfers are unaffected.
+7. Retain the existing late damage ramp, C6 healing/new-shield reduction and 30-exchange cap with HP-share tiebreak. Exact values and scopes are recorded in the implementation note.
+8. Bloom Break reuses its saved random choices relative to the upcoming ball location, fitting the shorter goal-line depth band without rerolling.
+9. Opponent inspect exposes observable statuses, low/exhausted flags and visible activity, not exact stamina or hidden development progress. Own-monster details remain available.
+
+Browser verification is waived for this follow-up. This does not certify physical-mobile performance, satisfy later M5/M6 work, or replace final owner visual acceptance.
