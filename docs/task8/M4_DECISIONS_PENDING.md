@@ -1,5 +1,8 @@
 # M4 decisions pending
 
+> Superseded by owner approval N9d of the nine recommendations. See `N9D_APPROVED_IMPLEMENTATION.md` for current rules and validation. This packet is retained as decision history.
+
+
 > Follow-up: N9c A/B/C/E/G/H are implemented on `codex/task8-presentation-followup`. Perk identity, Dawn Song caster targeting, voluntary Feather Relay interactions, Clear Light owner-turn cooldown and active-position delayed targeting are resolved. The historical rows below may still name those gates; `ABILITY_COMPLETION_MATRIX.md` and `CODEX_APPROVED_CLASH_FOLLOWUP.md` identify the remaining unresolved points. No other decisions were approved.
 
 One line per open point or provisional reading. Branch `task8-m4-core`.

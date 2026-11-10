@@ -45,7 +45,9 @@ Personal tackles and pass breakups grant one charge per participating play, maxi
 
 ### Targets / placement
 
-Choose nearest existing enemy-created environmental zone anywhere on field, distance to nearest edge, creation order breaks ties. Base, legendary-created and overlap zones eligible. No target preserves full bar.
+**Approved Task 8 rule (N9d):** N9d: at the pre-choice boundary, with the source in the initial displayed defensive personnel, select the nearest existing enemy zone by exposed-footprint nearest edge, measured from the fixed point 12 yards beyond the upcoming LOS at ball lateral. Preserve creation-order ties and exact base/overlap removal. Pending fields and fields created at that same snap cannot be removed; no target keeps the bar. Save once per snap.
+
+> Superseded v18 text: Choose nearest existing enemy-created environmental zone anywhere on field, distance to nearest edge, creation order breaks ties. Base, legendary-created and overlap zones eligible. No target preserves full bar.
 
 ### Core resolution
 

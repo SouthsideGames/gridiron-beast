@@ -95,6 +95,8 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
     if (decision === 'fg') { done(); const from = state.ballOn; const { text, scored, res } = R.doFieldGoal(state, teams, { signature: !!choices.fgSignature || aiSig }); return { kind: 'field_goal', text, scored, res, kicking: side, from }; }
   }
 
+  // N9d: save the shared warning/removal before either controller selects a play.
+  R.preparePreChoice(state, teams);
   // Scrimmage play.
   const offId = choices.offensePlayId || ctrl(side).offensePlay(state, offTeam, offTeam.offensePlays, tendencies[side], rng, defTeam);
   const defId = choices.defensePlayId || ctrl(defSide).defensePlay(state, defTeam, defTeam.defensePlays, tendencies[side], rng, offTeam, tendencies[defSide]);

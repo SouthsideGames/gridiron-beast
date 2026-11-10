@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-07",
+  "version": "2026-11-09",
   "precedence": "Owner-approved Task 8 rulings. Each override replaces the named Beast Dex v18 source section for implementation; the source text is kept in abilities.json as historical evidence and is exposed as `supersededRule` in the generated module. Only approved rulings appear here; open items are listed in docs/task8/APPROVAL_REGISTER.md.",
   "rulingSources": {
     "R1": "Owner rulings on Phase 1 items 1-40, 2026-11-06 23:46 (docs/task8/DECISIONS.md)",
@@ -9,7 +9,8 @@
     "N7d": "Owner rulings on G1-G3, 2026-11-07 10:21 (docs/task8/RULINGS_2026-11-07c.md)",
     "N7e": "Owner ruling on fractional training display, 2026-11-07 10:32",
     "N7f": "Owner rulings on club strength, identities and scope, 2026-11-07 12:44 (docs/task8/RULINGS_2026-11-07d.md)",
-    "N7g": "Owner rulings on the Basic encounter XP bonus, encounter companions and Glacivern, 2026-11-07 15:08 (docs/task8/RULINGS_2026-11-07e.md)"
+    "N7g": "Owner rulings on the Basic encounter XP bonus, encounter companions and Glacivern, 2026-11-07 15:08 (docs/task8/RULINGS_2026-11-07e.md)",
+    "N9d": "Owner approval of all nine follow-up recommendations, 2026-11-09; docs/task8/APPROVAL_REGISTER.md N9d"
   },
   "abilities": {
     "FIR-01-C": {
@@ -86,6 +87,64 @@
       "values": {
         "afterimageMissPct": 15
       }
+    },
+    "LIG-06-C": {
+      "sections": {
+        "Core resolution": "Deal 145 / 160 / 175 / 190% normal damage by mastery. Standard evasion, shield and damage reduction apply. Suppress only attack retaliation caused by this strike; passive damage auras and attached status responses remain. This replaces the normal attack and receives no ordinary-attack archetype perk."
+      },
+      "ruling": "N9d",
+      "mechanic": "Deal 145 / 160 / 175 / 190% normal damage by mastery. Standard evasion, shield and damage reduction apply. Suppress only attack retaliation caused by this strike; passive damage auras and attached status responses remain. This replaces the normal attack and receives no ordinary-attack archetype perk."
+    },
+    "LIG-03-C": {
+      "sections": {
+        "Core resolution": "Cleanse the selected removable harmful status first, then heal 8 / 10 / 12 / 14% maximum HP by mastery. Recharge is five owner normal turns. Preserve the approved target, status gate, once-use and exception rules."
+      },
+      "ruling": "N9d",
+      "mechanic": "Cleanse the selected removable harmful status first, then heal 8 / 10 / 12 / 14% maximum HP by mastery. Recharge is five owner normal turns. Preserve the approved target, status gate, once-use and exception rules."
+    },
+    "MET-01-C": {
+      "sections": {
+        "Core resolution": "After every third performed normal attack, attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 1 / 2 / 2 / 3 owner normal turns by mastery. Triggering attack gains no immediate bonus. The ordinary single-status gate and equal/stronger application rules apply; reset the count even if blocked."
+      },
+      "ruling": "N9d",
+      "mechanic": "After every third performed normal attack, attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 1 / 2 / 2 / 3 owner normal turns by mastery. Triggering attack gains no immediate bonus. The ordinary single-status gate and equal/stronger application rules apply; reset the count even if blocked."
+    },
+    "MET-06-C": {
+      "sections": {
+        "Core resolution": "Attempt Guarded 50% for two owner normal turns. While that own episode is active, store HP damage it prevents, capped at 10 / 15 / 20 / 25% maximum HP by mastery. Heal the stored amount only on natural expiry. Removed/replaced episodes pay nothing; no shield pool or counterattack."
+      },
+      "ruling": "N9d",
+      "mechanic": "Attempt Guarded 50% for two owner normal turns. While that own episode is active, store HP damage it prevents, capped at 10 / 15 / 20 / 25% maximum HP by mastery. Heal the stored amount only on natural expiry. Removed/replaced episodes pay nothing; no shield pool or counterattack."
+    },
+    "PSY-03-F": {
+      "sections": {
+        "Targets / placement": "N9d: before both calls, choose and save one opposing LB within 3 yards of LOS in the initial visible formation. The initial look is locked once per snap. At snap validate that same monster is participating and actually blitzes; no substitute or reload/audible/redraw reroll. No future call alignment is read. Preserve the fixed 50% Confused attempt, 20% Awareness reduction and approved cooldown."
+      },
+      "ruling": "N9d"
+    },
+    "LIG-04-F": {
+      "sections": {
+        "Targets / placement": "N9d: at the pre-choice boundary, with the source in the initial displayed defensive personnel, select the nearest existing enemy zone by exposed-footprint nearest edge, measured from the fixed point 12 yards beyond the upcoming LOS at ball lateral. Preserve creation-order ties and exact base/overlap removal. Pending fields and fields created at that same snap cannot be removed; no target keeps the bar. Save once per snap."
+      },
+      "ruling": "N9d"
+    },
+    "EAR-05-C": {
+      "sections": {
+        "Exceptions / counterplay": "N9d: ordinary attacks, normal-action specials and their secondary/commanded/assist hits, delayed impacts, DOT and transferred damage remain unaffected. Intercept eligible attack-triggered retaliation, including Molten Brand eruption. Healing-triggered Rubble Reprisal is unaffected. Preserve explicit Twin Thunder, Victory Surge, Arc Rebound and Riptide Pursuit inclusions and the active/able/once-use restrictions."
+      },
+      "ruling": "N9d"
+    },
+    "FIR-03-C": {
+      "sections": {
+        "Lifetime / persistence": "N9d: preserve the approved launch, charge and delayed-impact lifetime. Target the then-active position when impact starts. Due impacts resolve before the exchange-30 cap check. Not-yet-due impacts are discarded at the cap, without extending the battle. Preserve the named post-KO exception."
+      },
+      "ruling": "N9d"
+    },
+    "FIR-06-C": {
+      "sections": {
+        "Lifetime / persistence": "N9d: preserve the approved launch, charge and delayed-impact lifetime. Target the then-active position when impact starts. Due impacts resolve before the exchange-30 cap check. Not-yet-due impacts are discarded at the cap, without extending the battle. Preserve the named post-KO exception."
+      },
+      "ruling": "N9d"
     }
   },
   "rules": [
@@ -387,6 +446,11 @@
       "id": "glacivern-no-pilot-play",
       "ruling": "N7g",
       "rule": "Glacivern keeps K, Second Chance and Deep Winter; the Avalanche pilot play and its unlock references are retired and not replaced; not every legendary needs an unlocked play."
+    },
+    {
+      "id": "n9d-followup",
+      "ruling": "N9d",
+      "rule": "The nine-item approval in SPECIFICATION_BASELINE.md section 27 governs Foresight, Prism Break, mastery precedence, Stone Divide, pending impacts, Tank bruise, long-battle defaults, Bloom Break goal-line placement and opponent inspect."
     }
   ],
   "openGaps": []

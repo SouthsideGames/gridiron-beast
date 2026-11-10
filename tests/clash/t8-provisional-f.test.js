@@ -1,6 +1,4 @@
-// N9c: former provisional scenarios now run with provisional mode OFF.
-// PROVISIONAL (owner ruling 2026-11-09 rule 1): NOT part of the acceptance set. Batch F readings that await a ruling (delayed-slot,
-// d5-perk), exercised with config.provisional 'on' and labelled.
+// N9d: these former provisional cases are approved acceptance scenarios and run without provisional mode.
 import '../../src/clash/t8/index.js';
 import { contractSuite } from './t8-ability-harness.js';
 

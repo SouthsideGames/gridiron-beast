@@ -105,7 +105,9 @@ Instant interception; subsequent remaining strikes resolve normally. No persiste
 
 ### Exceptions / counterplay
 
-Ordinary attacks, normal-action specials, delayed meteors/fissures, DOT and transferred damage unaffected. No reflection, bonus attack, HP pool or attributes.
+**Approved Task 8 rule (N9d):** N9d: ordinary attacks, normal-action specials and their secondary/commanded/assist hits, delayed impacts, DOT and transferred damage remain unaffected. Intercept eligible attack-triggered retaliation, including Molten Brand eruption. Healing-triggered Rubble Reprisal is unaffected. Preserve explicit Twin Thunder, Victory Surge, Arc Rebound and Riptide Pursuit inclusions and the active/able/once-use restrictions.
+
+> Superseded v18 text: Ordinary attacks, normal-action specials, delayed meteors/fissures, DOT and transferred damage unaffected. No reflection, bonus attack, HP pool or attributes.
 
 ### Visuals
 

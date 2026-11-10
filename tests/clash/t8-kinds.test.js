@@ -37,7 +37,7 @@ test('extra strikes (plan D16): reactions, counters, follow-ups, commanded and a
   assert.ok(!isExtraStrike({ tag: 'ordinary' })); assert.ok(!isExtraStrike({ tag: 'special', abilityId: 'ELE-03-C' })); assert.ok(!isExtraStrike({ tag: 'delayed', abilityId: 'FIR-03-C' }));
   assert.equal(isExtraStrike({ tag: 'followUp', abilityId: 'EAR-04-C', strikeKey: 'ricochet' }), T8_FLAGS.stoneDivide.normalActionSpecialStrikes);
   assert.equal(isExtraStrike({ tag: 'commanded', abilityId: 'PSY-06-C', strikeKey: 'commanded' }), T8_FLAGS.stoneDivide.normalActionSpecialStrikes);
-  assert.equal(isExtraStrike({ tag: 'reaction', abilityId: 'FIR-04-C' }), T8_FLAGS.stoneDivide.nonAttackTriggeredReactions);
+  assert.equal(isExtraStrike({ tag: 'reaction', abilityId: 'FIR-04-C' }), T8_FLAGS.stoneDivide.attackTriggeredReactions);
   assert.equal(isExtraStrike({ tag: 'reaction', abilityId: 'EAR-02-C' }), T8_FLAGS.stoneDivide.nonAttackTriggeredReactions);
   const contested = ABILITY_KINDS.flatMap((r) => r.strikes.filter((s) => s.contested).map((s) => r.id));
   assert.deepEqual(contested.sort(), ['EAR-02-C', 'EAR-04-C', 'FIR-04-C', 'LIG-04-C', 'NAT-04-C', 'PSY-06-C']);

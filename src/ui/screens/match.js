@@ -231,8 +231,9 @@ export function registerMatchScreens(Router, app) {
     const wrapClass = `field-wrap${tdFlash}${venueClass(s.venue)}${anim?.replay ? ' replaying' : ''}`;
     const over = `${weatherLayer(f, s.venue)}${anim?.replay ? `<div class="replay-badge" role="status"><span class="rec">●</span> INSTANT REPLAY <b>${esc(anim.replay.reason.label)}</b></div><div class="replay-slow" aria-hidden="true">SLOW-MO</div>` : banner}`;
     // N9c: a field the snap creates only if its creator is in the play (Runway, Bloom Break, Crosswind Rescue) is marked as conditional
+    const warning = !anim ? (s.t8?.preChoice?.foresight || []).map((m) => `<div class="t8-conditional" role="note">Foresight: ${esc(findMonster(teams, m.targetMid)?.monster?.name || m.targetSlot)} is marked. Blitzing risks Confused this play.</div>`).join('') + (s.t8?.preChoice?.prism || []).map(() => '<div class="t8-conditional" role="note">Prism Break shattered an existing enemy zone before play selection.</div>').join('') : '';
     const cond = !anim && pre8?.notes?.length ? `<div class="t8-conditional" role="note">${pre8.notes.map((n) => `<span class="${n.shown ? '' : 'held'}" data-ability="${esc(n.ability)}">◇ <b>${esc(n.name)}</b> ${n.shown ? `is created at the snap only if ${esc(n.creator)} is on the field for the play` : `is not created: ${esc(n.creator)} is not on the field in this play (it stays ready)`}</span>`).join('')}</div>` : '';
-    const after = `${cond}${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span><span>tap a monster to inspect</span></div>' : !anim && inspectMap ? '<div class="tm-legend"><span>Tap a monster to inspect: stamina, status, ability</span></div>' : ''}`;
+    const after = `${cond}${warning}${anim?.replay && anim.ev?.sim?.qb && qbReadsShown(f.settings) ? qbReadPanelHtml(anim.ev.sim, (slot, side) => `${(side === 'def' ? anim.ev.sim.names?.def : anim.ev.sim.names?.off)?.[slot] || slot} (${slot})`, { title: 'QB reads on this play' }) : ''}${!anim && presnapEdges.length ? '<div class="tm-legend"><span><b class="up">▲</b> type advantage</span><span><b class="down">▼</b> disadvantage</span><span>tap an icon</span><span>tap a monster to inspect</span></div>' : !anim && inspectMap ? '<div class="tm-legend"><span>Tap a monster to inspect: stamina, status, ability</span></div>' : ''}`;
     const title = `${s.away.abbr} ${s.score.away}-${s.score.home} ${s.home.abbr}`;
     return { title, head, wrapClass, field, over, after, controls: controlsHtml(f, teams, look) };
   }
@@ -341,14 +342,17 @@ export function registerMatchScreens(Router, app) {
   function presnapInfo(f, teams) {
     const G = f.game; const s = G.state; const me = G.playerSide, them = R.opponent(me);
     if (s.phase !== 'scrimmage' || s.finished) return { presnap: null };
+    const previousChoice = s.t8?.preChoice;
+    const preChoice = anim ? null : R.preparePreChoice(s, teams);
+    if (preChoice && preChoice !== previousChoice && (preChoice.foresight.length || preChoice.prism.length)) app.save();
     const ai = aiCall(f, teams, them);
     if (s.possession === me) {
       const mine = G.selected.offense && teams[me].offensePlays.includes(G.selected.offense) ? G.selected.offense : null;
-      const defLook = presnapLook(ai.defense);
+      const defLook = presnapLook(preChoice?.defense || ai.defense);
       return { presnap: { play: mine ? PLAYS[mine] : null, offensePlay: mine ? PLAYS[mine] : presnapLook(teams[me].offensePlays[0]), defensePlay: defLook }, aiDefense: ai.defense, myPlay: mine };
     }
     const mine = G.selected.defense && teams[me].defensePlays.includes(G.selected.defense) ? G.selected.defense : null;
-    const offLook = presnapLook(ai.offense);
+    const offLook = presnapLook(preChoice?.offense || ai.offense);
     return { presnap: { play: mine ? PLAYS[mine] : null, offensePlay: offLook, defensePlay: mine ? PLAYS[mine] : presnapLook(teams[me].defensePlays[0]) }, aiOffense: ai.offense, myPlay: mine };
   }
 
@@ -708,6 +712,7 @@ export function registerMatchScreens(Router, app) {
     return { ...presnap, ...(presnap.defensePlay ? { defensePlay: cut(presnap.defensePlay) } : {}), ...(presnap.play?.side === 'defense' ? { play: cut(presnap.play) } : {}) };
   }
   // ---- I2: the fields both teams may see before the snap, on the play-call screen (match-fx.js). The reveal of a new field plays once.
+  let choiceClock = { key: null, start: 0 };
   const revealClock = createRevealClock(); let presnapNow = null; let presnapRaf = null;
   function presnapT8(f, teams, look) {
     const G = f.game, s = G.state; presnapNow = null;
@@ -717,11 +722,13 @@ export function registerMatchScreens(Router, app) {
     const drawn = look.presnap.offensePlay?.id && look.presnap.defensePlay?.id ? { offense: look.presnap.offensePlay.id, defense: look.presnap.defensePlay.id } : null; // the formations on screen before a play is chosen
     const list = presnapFields(s, teams, calls, { hideDefenseAlign: mine, formation: drawn });
     const lookup = fxLookup(f, s.possession); const animate = !f.settings.reducedMotion; const dLook = look.presnap.defensePlay;
+    const choiceKey = `${s.seed}|${s.t8?.preChoice?.key}`;
+    if (choiceClock.key !== choiceKey) choiceClock = { key: choiceKey, start: performance.now() };
     const at = (now) => {
       const C = list.length ? revealClock.frame(s.seed, list, now, animate) : { fields: [], time: 0, until: 0, shown: [] };
       const A = absenceTrack.frame(s, teams, dLook, now, animate); // the return's clock is its own; on the draw clock it began `age` seconds ago
       const staged = A.staged.map(({ age, ...g }) => (age != null ? { ...g, t: C.time - age } : g));
-      return { fields: C.fields, fx: presnapFx(C.fields, lookup, staged), time: C.time, until: Math.max(C.until, A.until), shown: C.shown, vacant: A.vacant, returning: A.returning };
+      return { fields: C.fields, fx: presnapFx(C.fields, lookup, staged, { record: s.t8?.preChoice, time: C.time, age: animate ? (now - choiceClock.start) / 1000 : 2, frame: { home: s.possession === 'home', ballOn: s.ballOn, ballLat: s.ballLat || 0 } }), time: C.time, until: Math.max(C.until, A.until, animate && (s.t8?.preChoice?.prism?.length || s.t8?.preChoice?.foresight?.length) ? choiceClock.start + 2000 : 0), shown: C.shown, vacant: A.vacant, returning: A.returning };
     };
     const first = at(performance.now()); first.notes = conditionalNotes(s, teams, list, calls); // N9c: fields shown as conditional on their creator taking part
     if (!list.length && !first.fx && !first.returning.length && !first.notes.length) return null;

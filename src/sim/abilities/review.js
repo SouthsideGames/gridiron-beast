@@ -211,7 +211,7 @@ export function stageScenario({ sc, fam, contract, form, mastery, seed: gs }) {
       const extra = cfg.options ? cfg.options(api, k) || null : null;
       controls = extra ? Object.getOwnPropertySymbols(extra).flatMap((s2) => Object.keys(extra[s2] || {}).filter((n) => extra[s2][n])) : null; if (controls && !controls.length) controls = null;
       const options = { ...(target ? { forcedTarget: target } : {}), ...(extra || {}) };
-      call = () => { const x = R.runScrimmagePlay(state, teams, off, def, options); return { kind: 'play', text: x.outcome.text, sim: x.sim, offensePlayId: off, defensePlayId: def }; };
+      call = () => { R.preparePreChoice(state, teams, cfg.look || {}); const x = R.runScrimmagePlay(state, teams, off, def, options); return { kind: 'play', text: x.outcome.text, sim: x.sim, offensePlayId: off, defensePlayId: def }; };
     }
     const before = structuredClone(state.t8.ability?.[REVIEW_ID] ?? null); const n0 = executionsOf(state.t8); const ballOn = state.ballOn;
     const situation = { quarter: state.quarter, down: state.down, toGo: state.toGo, ballOn: state.ballOn, possession: state.possession, phase: state.phase };

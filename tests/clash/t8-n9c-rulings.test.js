@@ -15,9 +15,9 @@ test('N9c approved attack classifications retain their identity even when shield
   }
 });
 
-test('N9c resolves only the approved gates and leaves value conflicts, Stone Divide and not-yet-due cap impacts open', () => {
+test('N9c resolves only the approved gates and records the later approval of value conflicts, Stone Divide and not-yet-due cap impacts', () => {
   for (const id of ['d5-perk', 'd14-dawn-song-target', 'feather-relay-voluntary', 'clear-light-cooldown-unit', 'delayed-slot']) assert.equal(PROVISIONAL_POINTS[id].approved, 'N9c', id);
-  for (const id of ['d13-values', 'forge-swipe-duration', 'fortress-storage-cap', 'stone-divide-scope', 'd8-cap-delayed']) assert.equal(PROVISIONAL_POINTS[id].approved, undefined, id);
+  for (const id of ['d13-values', 'forge-swipe-duration', 'fortress-storage-cap', 'stone-divide-scope', 'd8-cap-delayed']) assert.equal(PROVISIONAL_POINTS[id].approved, 'N9d', id);
 });
 
 test('approved valid demonstrations run without provisional mode at every form and mastery', () => {

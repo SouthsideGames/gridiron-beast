@@ -99,7 +99,9 @@ Once per Clash; one meteor in flight per owner.
 
 ### Lifetime / persistence
 
-Once launched, persists through owner rotation/knockout while Clash ongoing. Recalculate offensive strength at impact; if owner is knocked out, use strength immediately before knockout, including for remaining hits. Targets use current defense/type/shield/evasion at their hit.
+**Approved Task 8 rule (N9d):** N9d: preserve the approved launch, charge and delayed-impact lifetime. Target the then-active position when impact starts. Due impacts resolve before the exchange-30 cap check. Not-yet-due impacts are discarded at the cap, without extending the battle. Preserve the named post-KO exception.
+
+> Superseded v18 text: Once launched, persists through owner rotation/knockout while Clash ongoing. Recalculate offensive strength at impact; if owner is knocked out, use strength immediately before knockout, including for remaining hits. Targets use current defense/type/shield/evasion at their hit.
 
 ### Exceptions / counterplay
 

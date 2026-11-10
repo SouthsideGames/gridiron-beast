@@ -77,7 +77,7 @@ Ability ID: `LIG-06-C`. Category: Signature action.
 
 Aurelion; legendary; WR; Clash archetype Striker → Striker. Once per Clash on own ready normal action; replaces attack.
 
-Daybreak Lance: 160% normal damage, standard evasion/shield/DR. Suppress only ATTACK retaliation caused by this strike; passive damage auras and attached status responses still resolve. No skipped enemy normal turn.
+Deal 145 / 160 / 175 / 190% normal damage by mastery. Standard evasion, shield and damage reduction apply. Suppress only attack retaliation caused by this strike; passive damage auras and attached status responses remain. This replaces the normal attack and receives no ordinary-attack archetype perk.
 
 Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.
 
@@ -91,7 +91,9 @@ Current enemy active target.
 
 ### Core resolution
 
-160% normal damage, standard evasion/shield/DR. Suppress only ATTACK retaliation caused by this strike; passive damage auras and attached status responses still resolve. No skipped enemy normal turn.
+**Approved Task 8 rule (N9d):** Deal 145 / 160 / 175 / 190% normal damage by mastery. Standard evasion, shield and damage reduction apply. Suppress only attack retaliation caused by this strike; passive damage auras and attached status responses remain. This replaces the normal attack and receives no ordinary-attack archetype perk.
+
+> Superseded v18 text: 160% normal damage, standard evasion/shield/DR. Suppress only ATTACK retaliation caused by this strike; passive damage auras and attached status responses still resolve. No skipped enemy normal turn.
 
 ### Recharge / frequency
 

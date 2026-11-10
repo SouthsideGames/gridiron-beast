@@ -98,7 +98,7 @@ Ability ID: `MET-01-C`. Category: Signature action.
 
 Ferrcub; common; OL; Clash archetype Balanced → Balanced. Every third performed normal attack attempts self Empowered AFTER full attack resolves if alive.
 
-Forge Swipe: Attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 2 owner normal turns. Repeated equal application extends duration, never adds strength. No instant bonus on triggering attack.
+After every third performed normal attack, attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 1 / 2 / 2 / 3 owner normal turns by mastery. Triggering attack gains no immediate bonus. The ordinary single-status gate and equal/stronger application rules apply; reset the count even if blocked.
 
 Source: workbook v18. Apply the later shared overrides in [Approved Rules](../APPROVED_RULES.md) and the Task 8 specification.
 
@@ -112,7 +112,9 @@ Self only; normal one-status gate.
 
 ### Core resolution
 
-Attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 2 owner normal turns. Repeated equal application extends duration, never adds strength. No instant bonus on triggering attack.
+**Approved Task 8 rule (N9d):** After every third performed normal attack, attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 1 / 2 / 2 / 3 owner normal turns by mastery. Triggering attack gains no immediate bonus. The ordinary single-status gate and equal/stronger application rules apply; reset the count even if blocked.
+
+> Superseded v18 text: Attempt Empowered +10 / +15% outgoing damage by Ferrcub / Forgursa for 2 owner normal turns. Repeated equal application extends duration, never adds strength. No instant bonus on triggering attack.
 
 ### Recharge / frequency
 

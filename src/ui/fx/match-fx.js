@@ -98,7 +98,12 @@ export function createRevealClock() {
 }
 
 /** I2. The effect state of the play-call screen: the fields' decoration and reveal, nothing else (no play, no events). */
-export function presnapFx(fields, lookup = () => null, staged = null) { return fields?.length || staged?.length ? buildFx({ frames: [], events: [], fields: fields || [] }, lookup, { preroll: true, ...(staged?.length ? { staged } : {}) }) : null; }
+export function presnapFx(fields, lookup = () => null, staged = null, choice = null) {
+  const pc = choice?.record; const events = [], off = [], def = [];
+  for (const m of pc?.foresight || []) { off.push([m.slot, ...m.sourceAt]); def.push([m.targetSlot, ...m.at]); events.push({ kind: 'foresight_mark', ability: 'PSY-03-F', side: 'off', by: m.slot, victim: m.targetSlot, t: choice.time - choice.age }); }
+  for (const m of pc?.prism || []) { def.push([m.slot, ...m.at]); const [r] = toPlayFrame([{ ...m.removed, id: 'removed', type: 'removed' }], choice.frame); events.push({ kind: 'prism_prechoice', ability: 'LIG-04-F', side: 'def', by: m.slot, rect: { yard: r.yard, lat: r.lat }, t: choice.time - choice.age }); }
+  return fields?.length || staged?.length || events.length ? buildFx({ frames: events.length ? [{ t: -100, off, def, ball: [0, 0, 0] }] : [], events, fields: fields || [] }, lookup, { preroll: true, ...(staged?.length ? { staged } : {}) }) : null;
+}
 
 /**
  * I4. Ticks for the last play's ability strip (the match screen's ability panel), read from the play's own events: Anchor Plate's
@@ -266,7 +271,7 @@ export function inspectInfo(state, teams, mid, { formation = null, last = null, 
   const st = state?.t8 ? statusOf(state, mid) : null; const abs = (state?.t8?.absences || []).find((a) => a.mid === mid) || null; const abId = footballAbility(m);
   const out = { monster: m, team, slot: null, full: !!full, stamina: full ? { now: cur, capacity: cap, frac: cap ? Math.max(0, Math.min(1, cur / cap)) : 0, low, exhausted, played: !!rec } : { low, exhausted },
     status: st ? { id: st.id, remaining: st.restOfPlay ? null : st.remaining ?? null } : null, absent: abs ? { serveOn: abs.serveOn || null, ability: abs.ability || null } : null,
-    ability: abId ? { id: abId, name: dexAbilityName(abId) || abilityById(abId)?.name || abId, text: abilityById(abId)?.mechanic || '' } : null, staminaNotes: [], awarenessNotes: [] };
+    ability: abId ? { id: abId, name: dexAbilityName(abId) || abilityById(abId)?.name || abId, text: abId === 'MET-02-F' ? 'Steadies nearby teammates. Every second qualifying play, their ordinary stamina drain is reduced by 1. Check the stamina section for the current benefit.' : abId === 'DAR-02-F' ? 'Protects nearby teammates from Dark-field Awareness penalties while the watch is active. Check the Awareness section to see who is protected.' : abilityById(abId)?.mechanic || '' } : null, staminaNotes: [], awarenessNotes: [] };
   if (last?.lungs?.includes(mid)) out.staminaNotes.push({ tick: true, text: 'Iron Lungs saved 1 stamina on the last play (its ordinary drain was 1 lower).' });
   if (last?.watch?.includes(mid)) out.awarenessNotes.push({ tick: true, text: 'Night Watch kept his Awareness full inside the Dark field on the last play.' });
   const progress = state?.t8?.ironLungs?.progress?.[mid] || 0; let lungsNow = false;

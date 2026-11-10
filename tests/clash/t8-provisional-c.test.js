@@ -1,6 +1,5 @@
-// PROVISIONAL (owner ruling 2026-11-09 rule 1): NOT part of the acceptance set. Batch C readings that await a ruling
-// (d14-dawn-song-target, clear-light-cooldown-unit, d13-values), exercised with config.provisional 'on' and labelled.
+// N9d: these former provisional cases are approved acceptance scenarios and run without provisional mode.
 import '../../src/clash/t8/index.js';
-import { provisionalSuite } from './t8-ability-harness.js';
+import { contractSuite } from './t8-ability-harness.js';
 
-provisionalSuite(['LIG-03-C']);
+contractSuite(['LIG-03-C'], { minScenarios: 1, requiredKinds: [] });

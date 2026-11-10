@@ -1,5 +1,8 @@
 # Outstanding-work packet: abilities (Task 8, branch task8-implementation at 4e41043)
 
+> Superseded by owner approval N9d of the nine recommendations. See `N9D_APPROVED_IMPLEMENTATION.md` for current rules and validation. This packet is retained as decision history.
+
+
 Read-only review. Nothing was changed. Where I interpret rather than quote, the text says "inference".
 
 State of the 144 abilities (completion matrix): all 144 are built and every reviewer variant runs first time (816 of 816). What is left: 11 football and 3 Clash abilities whose presentation is partial, and 25 Clash abilities with one path switched off "awaiting ruling".

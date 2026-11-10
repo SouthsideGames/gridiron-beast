@@ -45,7 +45,9 @@ Before either side selects plays while ready, randomly mark one initially aligne
 
 ### Targets / placement
 
-Only marked LB. No future defensive choice inspection, substitute target or new audible selection. Keep same candidate through audibles and use final assignment at snap.
+**Approved Task 8 rule (N9d):** N9d: before both calls, choose and save one opposing LB within 3 yards of LOS in the initial visible formation. The initial look is locked once per snap. At snap validate that same monster is participating and actually blitzes; no substitute or reload/audible/redraw reroll. No future call alignment is read. Preserve the fixed 50% Confused attempt, 20% Awareness reduction and approved cooldown.
+
+> Superseded v18 text: Only marked LB. No future defensive choice inspection, substitute target or new audible selection. Keep same candidate through audibles and use final assignment at snap.
 
 ### Core resolution
 

@@ -182,7 +182,7 @@ test('KO replacement (provisional, D2): the first living reserve in line order e
         assert.equal(next.kind, 'enter', 'the replacement is the next event after the KO'); assert.equal(next.reason, 'ko');
         assert.equal(next.actor, living[0].id, 'first living in line order');
         assert.ok(!r.log.some((f) => f.ex === e.ex && f.kind === 'turn_start' && f.actor === next.actor), 'replacement waits for the next exchange');
-      } else assert.ok(r.log.slice(i + 1).every((f) => f.kind === 'end' || f.kind === 'cap'), 'side out: the battle ends after the hit');
+      } else assert.ok(r.log.slice(i + 1).every((f) => f.kind === 'end' || f.kind === 'cap' || (f.kind === 'clock_end' && f.clock === 'tank-bruise')), 'side out: no further gameplay; only the completed turn may expire its bruise clock');
       const later = r.log.slice(i + 1).find((f) => f.ex === e.ex && f.actor === e.target && f.kind === 'turn_cancelled');
       if (later) cancelled++;
     });
@@ -243,6 +243,7 @@ test('determinism: 20 golden t8 seeds replay from their replay keys (tests/clash
   const stored = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8.json', import.meta.url), 'utf8'));
   const n9c = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-n9c.json', import.meta.url), 'utf8'));
   assert.deepEqual(Object.keys(n9c.changes).sort(), ['14', '4'], 'only the two Dawn Song baseline cases change under N9c B');
+  const n9d = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-n9d.json', import.meta.url), 'utf8'));
   assert.equal(Object.keys(stored).length, 20);
   withoutRandomness(() => {
     for (const seed of Object.keys(stored)) {
@@ -253,22 +254,27 @@ test('determinism: 20 golden t8 seeds replay from their replay keys (tests/clash
         assert.equal(change.previousHash, stored[seed].hash); assert.equal(change.previousState, stored[seed].state);
         assert.ok(r.log.some((e) => e.kind === 'heal' && e.abilityId === change.ability), 'the approved caster heal actually executes');
       }
-      const expected = change || stored[seed];
+      const before = change || stored[seed];
+      const current = n9d.normal[seed];
+      if (current) { assert.equal(current.previousHash, before.hash); assert.equal(current.previousState, before.state); }
+      const expected = current || before;
       assert.equal(t8LogHash(r), expected.hash, `golden t8 seed ${seed}`); assert.equal(r.stateHash, expected.state);
       assert.equal(t8LogHash(simulateByRuleset({ a: k.a, b: k.b, seed: k.seed, config: { ruleset: 't8' } })), expected.hash);
     }
   });
 });
 
-test('regression: the 20 S1 golden battles (golden-t8-s1.json) end in exactly the S1 state with both sides on policy none (S2-S4 change nothing else)', () => {
+test('regression: the 20 S1 golden battles (golden-t8-s1.json) retain the S1 reference plus explicit N9d Tank-perk changes, with both sides on policy none', () => {
   const s1 = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-s1.json', import.meta.url), 'utf8'));
+  const n9d = JSON.parse(fs.readFileSync(new URL('./fixtures/golden-t8-n9d.json', import.meta.url), 'utf8'));
   assert.equal(Object.keys(s1).length, 20);
   assert.throws(() => parseT8ReplayKey(s1['1'].key), /this build plays/, 'S1 keys are no longer key-compatible');
   withoutRandomness(() => {
     for (const seed of Object.keys(s1)) {
       const k = JSON.parse(s1[seed].key);
       const r = simulateClashT8({ a: k.a, b: k.b, seed: k.seed, config: { ruleset: 't8', policies: { a: 'none', b: 'none' }, abilities: 'off' } });
-      assert.equal(r.stateHash, s1[seed].state, `S1 golden seed ${seed}`);
+      if (n9d.s1[seed]) assert.equal(n9d.s1[seed].previousState, s1[seed].state);
+      assert.equal(r.stateHash, (n9d.s1[seed] || s1[seed]).state, `S1 plus approved N9d perk seed ${seed}`);
     }
   });
 });
