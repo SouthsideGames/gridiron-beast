@@ -83,3 +83,21 @@ No file under `src/sim/`, `src/data/`, `src/clash/` or `src/franchise/` differs 
   - The carried-over preview franchise continues.
   - 0 page errors.
 - **Saves:** no reset is needed. The save format and storage keys are unchanged.
+
+## 7. Preview versions 7–8
+
+- **Version 7 (2026-11-09):** branch task8-m1-preview at 46be582, which merges 30689c7 (integrated M4, effects, renderer),
+  labelled v43.3.0-t8-m4-preview.
+- **Version 8 (2026-11-10):** branch task8-m1-preview at 1b49d45, which merges `codex/task8-presentation-followup` at bdeb1fa
+  (N9c and N9d rulings), labelled v43.4.0-t8-n9d-preview.
+  - **Tested runtime:** c510e25, full suite 1,980 of 1,980. bdeb1fa adds documents only.
+  - **Difference from c510e25 under `src/` and `styles/`:** the preview-only test tools and labels listed in section 1, and
+    the packaging edits of section 2 (build label, `test: true`, title, restamp, root-padding rule). Nothing else.
+  - **Merge:** one conflict, the `index.html` stamp; restamped (404 modules).
+  - **Checks on 1b49d45:** 100 of 100 targeted tests (test tools, release stamp, saves, N9c and N9d rulings, both reviewers,
+    Dex counts, Watch/Skip); stamp, completion-matrix and generated-Dex freshness checks pass; the staged page loads with 0
+    page errors. No browser walkthrough (waived by the owner). No full regression on 1b49d45.
+  - **Saves:** schema 10 and the storage keys are unchanged. Four franchises made on the version 7 build load, round-trip
+    and play to the end of the regular season on this build. `tools/save-compat-check.mjs` reports its own offseason step as
+    failed on both builds: the tool predates the free-agency-before-draft order.
+  - **Files sent:** 49 changed files; the other 363 are unchanged from version 7.
