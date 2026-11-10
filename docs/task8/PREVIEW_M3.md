@@ -101,3 +101,18 @@ No file under `src/sim/`, `src/data/`, `src/clash/` or `src/franchise/` differs 
     and play to the end of the regular season on this build. `tools/save-compat-check.mjs` reports its own offseason step as
     failed on both builds: the tool predates the free-agency-before-draft order.
   - **Files sent:** 49 changed files; the other 363 are unchanged from version 7.
+
+## 8. Preview version 9 (2026-11-10): M5 and the M6 player screens
+
+- **Build:** branch task8-m1-preview at 8d12d2e, labelled v43.5.0-t8-m6-preview. It merges `task8-m6-presentation` at c8a679c,
+  which is `codex/task8-m5` at f716b02 (M5; includes the N9c and N9d work) plus the M6 player screens.
+- **Tested runtime:** f9e7581 on `task8-m6-presentation`, full suite 2,013 of 2,013 on a frozen copy. c8a679c adds a document
+  and one test only.
+- **Difference from the tested runtime:** the preview-only test tools (two new ones: an unidentified Apex prospect, finish the
+  scout report) and the packaging edits of section 2. The M6 screens replace the inactive "transitional" label code.
+- **Checks on the staged build:** build label and Developer button shown; all 412 module requests carry `?v=43.5.0`; the new
+  test tools work; both reviewers open; 0 page errors. No full regression on 8d12d2e.
+- **Saves:** schema 10 and the storage keys are unchanged. Eight franchises made on versions 7 and 8 load, round-trip and play on.
+  A carried-over franchise with an Apex on its roster plays his first-discovery panel once.
+- **Files sent:** 36 changed files, 9 of them new; 419 in all.
+- **Not in this build:** results of the long-term career, economy and performance benchmarks (run separately on f716b02).
