@@ -1,5 +1,8 @@
 # Task 8 presentation follow-up — 2026-11-09
 
+> Current N9d follow-up: [N9D_APPROVED_IMPLEMENTATION.md](N9D_APPROVED_IMPLEMENTATION.md). All nine recommendation groups are approved and implemented. The final code passes 1,980/1,980 tests; all 144 presentations and 816 variants are accounted for with no pending ruling gates. Earlier statuses and results below are historical. Browser verification was waived; main/live/preview remain unchanged.
+
+
 Working branch: `codex/task8-presentation-followup`.
 
 > Follow-up: approved N9c Clash gates are now implemented on this same branch. See

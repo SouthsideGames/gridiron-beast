@@ -1,0 +1,111 @@
+{
+  "ownerApproval": "N9d, 2026-11-09",
+  "codeCommit": "c510e25bc0a47167f1634088afa861629110d380",
+  "codeTree": "5fff9662acbe8d114338abbb3c372d4a2bd7841f",
+  "regressionHistory": [
+    {
+      "codeCommit": "66d8608b1b0018388df1de6e75af080385d923b0",
+      "command": "node --test \"tests/**/*.test.js\"",
+      "stdoutSha256": "e6ae9c0bd4e64a87fc60a47065b793b91bd6675cf09135b2d90a5ef9c2568e7d",
+      "tests": 1978,
+      "pass": 1978,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 450766.566547
+    },
+    {
+      "codeCommit": "d71cbd18e6f610329b75938f6c21f25d5045c922",
+      "command": "node --test \"tests/**/*.test.js\"",
+      "stdoutSha256": "e4aebd0a0245413c487cec9afdcdc1f6a6b4380eefb337ab3a09d00884302a27",
+      "tests": 1979,
+      "pass": 1979,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 428826.476591
+    },
+    {
+      "codeCommit": "c510e25bc0a47167f1634088afa861629110d380",
+      "command": "node --test \"tests/**/*.test.js\"",
+      "stdoutSha256": "fc80869cdcdce360bfeff48d08935056e8468cd5c13dbcf1d2ffdcfcd72d9598",
+      "tests": 1980,
+      "pass": 1980,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "durationMs": 424853.200465
+    }
+  ],
+  "targetedFinalReadinessTests": {
+    "tests": 30,
+    "pass": 30,
+    "fail": 0
+  },
+  "completion": {
+    "footballImplemented": 72,
+    "footballPresentationComplete": 72,
+    "footballPartial": 0,
+    "clashImplemented": 72,
+    "clashPresentationComplete": 72,
+    "clashPartial": 0,
+    "awaitingRulingPaths": 0,
+    "reviewerVariantsCompleted": 816,
+    "reviewerVariantsTotal": 816,
+    "freshness": "passed"
+  },
+  "dexValidation": {
+    "assertions": 28484,
+    "errors": 0,
+    "families": 192,
+    "forms": 222,
+    "modeAbilities": 144,
+    "generatedModuleFreshness": "passed"
+  },
+  "preservedHistoricalFixtures": {
+    "golden-t8.json": "e0831651eb4a881cca80df9e3de2eed34dd7f2d1187f71fc63ffd36e7c81a882",
+    "golden-t8-s1.json": "b9339a0a5815585bd03127bd703030f66c7d928171e46024dc517a9dc80de1b1",
+    "golden-t8-n9c.json": "5685514e941c6f60f5648ac9ef7d6517a87f804f99f0b4b07a7c52b6d1a81812"
+  },
+  "newExplicitOverlay": "tests/clash/fixtures/golden-t8-n9d.json",
+  "clashSpeedSmoke": {
+    "codeCommit": "c510e25bc0a47167f1634088afa861629110d380",
+    "kind": "non-browser speed smoke; not official Task 8 scene/FPS/mobile verification",
+    "node": "v24.22.1",
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "warmupBattles": 1000,
+    "lineupPairs": 50,
+    "abilities": "registered, all N9d approvals enabled, normal nonprovisional gameplay",
+    "runs": [
+      {
+        "run": 1,
+        "battles": 10000,
+        "wallMs": 3791.237623,
+        "totalCpuMs": 4696.391,
+        "exchangeChecksum": 130119
+      },
+      {
+        "run": 2,
+        "battles": 10000,
+        "wallMs": 3843.249309,
+        "totalCpuMs": 4518.286,
+        "exchangeChecksum": 130119
+      },
+      {
+        "run": 3,
+        "battles": 10000,
+        "wallMs": 3506.2475510000004,
+        "totalCpuMs": 3619.225,
+        "exchangeChecksum": 130119
+      }
+    ]
+  },
+  "browser": "waived by owner; not performed",
+  "physicalMobile": "not verified",
+  "officialFinishedVisualPerformance": "not claimed; speed smoke is not scene/FPS/mobile verification",
+  "deployment": "development branch only; main, live and preview unchanged"
+}

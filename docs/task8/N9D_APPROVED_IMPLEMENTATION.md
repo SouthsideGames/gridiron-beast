@@ -20,3 +20,18 @@ The knockout-order assertion now permits only the new informational `clock_end` 
 New tests cover saved-look selection, redraw/audible/reload stability, no game-RNG spending, hidden-call alignment exclusion, fixed Prism targeting, pending/same-snap exclusions, approved Stone Divide classifications, and bruise healing/duration/status coexistence. Existing contract and presentation suites exercise every form/mastery.
 
 The first frozen run passed 1,978/1,978 on `66d8608`, before the additional clock-boundary parity fix. A standalone check then demonstrated a real Watch/Skip difference when runoff ended the half (Prism charges 0 vs 3). The runner now prepares the boundary before runoff/timeout/fourth-down decisions, matching Watch, and an exact whole-state parity test covers it. The second full run passed 1,979/1,979 on `d71cbd1`. A separate readiness check then found that Prism’s no-recharge flag could survive a benched activation play followed by a possession change. Cleanup now occurs before the no-specialist fast path; a focused regression covers it. Final validation follows below. Generated completion accounting is 72/72 football and 72/72 Clash presentations, with all 816 reviewer variants completing. This is code/runtime evidence, not fresh browser verification, physical-mobile performance or final owner visual acceptance. M5/M6 requirements remain separate.
+
+
+## Final verification
+
+Code tested and saved on GitHub: `c510e25bc0a47167f1634088afa861629110d380` (tree `5fff9662acbe8d114338abbb3c372d4a2bd7841f`). Later handoff changes are documentation only.
+
+- Full repository regression: **1,980/1,980 passed**, no failures, cancellations, skipped tests or TODOs; 424,853.200 ms (about 7.1 minutes). Command: `node --test "tests/**/*.test.js"`.
+- Final readiness/ability targeted set: **30/30 passed**. The two added boundary tests are included in the full result.
+- Both generated-module and ability-matrix freshness checks pass.
+- Beast Dex validator: **28,484 assertions, zero errors**; 192 families, 222 forms, 144 mode abilities.
+- Completion: **144/144 implemented and presentation-complete**, no partials or pending ruling paths; **816/816** reviewer variants complete. Owner visual acceptance remains separate.
+- Three non-browser speed-smoke runs of 10,000 3v3 Clashes: **3.791 / 3.843 / 3.506 seconds wall**, **4.696 / 4.518 / 3.619 seconds total CPU**. Each has the identical 130,119-exchange checksum. Fifty fixed lineup pairs, 1,000 warm-ups, registered abilities and normal approved rules, AI rotation, logging off. This does not replace the official football scene/FPS/mobile benchmarks.
+- Full evidence summary and historical-fixture hashes: [CODEX_N9D_RESULTS.json](verification/CODEX_N9D_RESULTS.json).
+
+No owner decision remains from this nine-item packet. Browser checks were waived. Physical-mobile performance, official finished-visual measurements, final owner visual acceptance and remaining M5–M6 work are not certified by these tests. Main, the live game and the private preview have not been modified.

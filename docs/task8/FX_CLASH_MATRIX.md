@@ -1,5 +1,8 @@
 # FX matrix: Beast Clash ability presentation (Task 8)
 
+> N9d current accounting: **72 complete, 0 partial**; all Clash ruling gates are resolved. See [N9D_APPROVED_IMPLEMENTATION.md](N9D_APPROVED_IMPLEMENTATION.md) and `ABILITY_COMPLETION_MATRIX.md`. The detailed headless evidence below is historical for its stated build, not fresh browser validation.
+
+
 > Historical headless evidence below belongs to its stated build, not the Codex follow-up.
 > N9c now enables Iron Bite and Dawn Song in ordinary gameplay: current DOM-free accounting is
 > **71 complete, 1 partial (Clear Light)**. No new browser result is claimed; the owner waived it.
