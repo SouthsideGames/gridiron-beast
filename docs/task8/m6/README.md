@@ -1,4 +1,6 @@
-# M6 baseline testing — pinned M5
+# M6 testing — pinned M5 and verified screens carryover
+
+Latest status: [M6 handoff and merge-readiness](HANDOFF.md). Detailed results: [careers and franchise](CAREER_FINDINGS.md), [pancakes](PANCAKE_FINDINGS.md), [performance](PERFORMANCE_FINDINGS.md). Three 20-season franchises, 11,000 controlled career runs, an outcome-identical production observer, and exact presentation-build carryover have now been checked. M6 acceptance remains open: controlled participation is not a full played-career study, and Apex/mastery/economy questions remain.
 
 Source: `f716b02c41c81211d80e7389dc0cefd4c16ae155`; exact root tree `d4e36b76eae24ca7c4aac9fbdc8f13e588f8afd2`. Tests run in a separate worktree. No production settings or gameplay files changed. Claude's presentation work is outside this snapshot.
 
@@ -27,7 +29,7 @@ Raw evidence: `apex-resource-bound.json` (every sampled individual and every aut
 
 ## Production franchise baseline
 
-The existing production lifecycle benchmark completed seed 1 through twenty seasons. It includes staff automation, real football and Clash settlement, contracts, free agency, draft, trades, aging, retirement and save round trips. Its hands-off-owner policy and diagnostic board reinstatement are documented in `tools/ai-franchise-benchmark.mjs` and `docs/AI_FRANCHISE_BENCHMARK.md`. It is an initial single-seed health diagnostic, not statistical balance approval.
+The existing production lifecycle benchmark completed seed 1 through twenty seasons. It includes staff automation, real football and Clash settlement, contracts, free agency, draft, trades, aging, retirement and save round trips. Its hands-off-owner policy and diagnostic board reinstatement are documented in `tools/ai-franchise-benchmark.mjs` and `AI_FRANCHISE_BENCHMARK.md`. It is an initial single-seed health diagnostic, not statistical balance approval.
 
 Command:
 
@@ -50,9 +52,11 @@ Raw evidence: `ai-20-season-seed-1.json`; reproducible checkpoint calculations: 
 
 ## Remaining acceptance work
 
-- Freeze the exact three career schedules, creation ages, allocation policies, retirement-inclusive median convention and ceiling observation window; run all matched 100-per-position cohorts without survivor selection.
+- Use the recorded diagnostic career manifest and all matched cohorts as evidence; validate actual sustained starter participation and injury/grade exposure before closing career acceptance.
 - Measure mastery from actual eligible engine executions, separating football/Clash and rare triggers; do not infer use from lineup membership or invent credits.
-- Extend production recording for Apex acquisition/retention, per-position/Temper growth and mastery without changing simulation behavior.
+- Production Apex/mastery recording is implemented and twenty-season noninterference is verified; acquisition-cost, eligible-roll and sustained-use exposure analysis remain.
 - Broaden franchise seeds and review salaries/cap pressure, rebuilding, trades, gym strength/synergy, legendary limits and pancake targets against their approved definitions.
 - Run final regression and CPU/render measurements after Claude's work is integrated. Baseline timings during concurrent checks are not CPU acceptance evidence.
 - Owner visual approval and actual physical-device frame pacing remain separate and unverified.
+
+Deterministic gameplay replay is now separately verified: 100/100 identical-input football comparisons and 100/100 t8 Clash comparisons (`gameplay-replay.json`). This supersedes the earlier generation-only scope for the replay check, without claiming UI save/reload coverage.

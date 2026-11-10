@@ -1,0 +1,162 @@
+{
+ "root": "/workspace/scratch/9ad0f6fef45f/m6-benchmarks",
+ "scenes": {
+  "O1-pass-T/plain": {
+   "full": "948e3a668930eb56",
+   "state": null,
+   "fp": "e2cb0f986519d157"
+  },
+  "O2-run-M/plain": {
+   "full": "eced51b4eebc1506",
+   "state": null,
+   "fp": "b49c170a6e21d8af"
+  },
+  "O3-wide-mismatch/plain": {
+   "full": "d2e8da5413616f11",
+   "state": null,
+   "fp": "9756c76b84b3d875"
+  },
+  "O4-redzone-cross/plain": {
+   "full": "98401f680af9d150",
+   "state": null,
+   "fp": "a5e7974dbf02f32e"
+  },
+  "O5-legendary-plays/plain": {
+   "full": "1edc01318a393d41",
+   "state": null,
+   "fp": "929bb718bb9eebc5"
+  },
+  "O6-rules-mix/plain": {
+   "full": "010517758b76b0d6",
+   "state": "e4f9f66602577128",
+   "fp": "35b932c75b88220f"
+  },
+  "O7-rules-pass-T/plain": {
+   "full": "bc3b3d720d3c99a1",
+   "state": "71ebfbc3c4ab1a35",
+   "fp": "fdd32ada14dd50b4"
+  },
+  "A1-overlapping-fields/inert": {
+   "full": "cbd56d094a635741",
+   "state": "ececbf43a12c4cba",
+   "fp": "6019892225a804d4"
+  },
+  "A1-overlapping-fields/ability": {
+   "full": "51785f2ebb88ad0b",
+   "state": "14d94772d86feadc",
+   "fp": "992dc0150e08cb32"
+  },
+  "A2-summons-constructs/inert": {
+   "full": "ea19ccc5d5464d7d",
+   "state": "cfc901663565a39b",
+   "fp": "d9cf31ca2133da5f"
+  },
+  "A2-summons-constructs/ability": {
+   "full": "a4ba9f32d2c72732",
+   "state": "cfe8dd675f4ba5dc",
+   "fp": "f6ac9214eb1a310d"
+  },
+  "A3-delayed-effects/inert": {
+   "full": "fd86fda2e0c873be",
+   "state": "1d62e4bc2c1d58b3",
+   "fp": "c63fdde9f4983efc"
+  },
+  "A3-delayed-effects/ability": {
+   "full": "dca67f3814b12d62",
+   "state": "5eda9d927dbec0f5",
+   "fp": "2e5f695a91b16280"
+  },
+  "A4-legendary-sequence/inert": {
+   "full": "f3de81fdc4fd36aa",
+   "state": "173ff7084c484fd9",
+   "fp": "121a98c2569f0e92"
+  },
+  "A4-legendary-sequence/ability": {
+   "full": "ccedbd0ac7a6bf4c",
+   "state": "febbdd10fa94f551",
+   "fp": "ba5dec276b62cba3"
+  },
+  "A5-full-contracts/inert": {
+   "full": "449c4f3a6357238f",
+   "state": "a8ec71f19e45692f",
+   "fp": "ec618cd59133674a"
+  },
+  "A5-full-contracts/ability": {
+   "full": "b7f51596cbf690b2",
+   "state": "19fd56ef6776f7f7",
+   "fp": "f097c6bf5915ac02"
+  },
+  "X1-worst-case/inert": {
+   "full": "e9474506f4f3e31c",
+   "state": "4fe527de2a4c418b",
+   "fp": "e2cad514f1d7c1ef"
+  },
+  "X1-worst-case/ability": {
+   "full": "9db05573960b6545",
+   "state": "98d81a56ca084985",
+   "fp": "d2d9e660935d98a1"
+  }
+ },
+ "games": {
+  "7001": {
+   "steps": "a427e9b79d12d0924658",
+   "n": 122,
+   "final": "ca4f533925b74eef712c"
+  },
+  "7014": {
+   "steps": "930c8d5298314255e61f",
+   "n": 105,
+   "final": "58a9cee50a1e2b3dba20"
+  },
+  "7027": {
+   "steps": "6b7f83835e30492dee4c",
+   "n": 101,
+   "final": "4ec91e43ff707cf8c3ce"
+  },
+  "7040": {
+   "steps": "e04f3a2d3e0c8d7016bc",
+   "n": 126,
+   "final": "c8e2aa5a59ac548b52bf"
+  },
+  "7053": {
+   "steps": "175e01ba9423a38d049b",
+   "n": 111,
+   "final": "9545d05f2eaefb85515b"
+  },
+  "7066": {
+   "steps": "df392edd9e43614783bf",
+   "n": 94,
+   "final": "deb527bab45a982d855c"
+  },
+  "7079": {
+   "steps": "ac214ec6e7305aecb0f4",
+   "n": 103,
+   "final": "dcf75390a04cb9f658d8"
+  },
+  "7092": {
+   "steps": "d4c17c72ad716ae748db",
+   "n": 119,
+   "final": "883ee11b62b4d0772699"
+  },
+  "7105": {
+   "steps": "81715ad133b0403c36b9",
+   "n": 102,
+   "final": "bf47e651c380168c2887"
+  },
+  "7118": {
+   "steps": "318bdbc2743245296d4b",
+   "n": 104,
+   "final": "709fbc2bd4e90851ec20"
+  },
+  "7131": {
+   "steps": "4453dad4becb0f4771fa",
+   "n": 112,
+   "final": "8bc00f771afa7893212b"
+  },
+  "7144": {
+   "steps": "748f3f0f4dd3b1d7bb91",
+   "n": 93,
+   "final": "7a046f5ab744815b9ebc"
+  }
+ }
+}

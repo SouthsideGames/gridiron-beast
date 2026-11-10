@@ -1,0 +1,46 @@
+{
+  "sourceCommit": "f9e758119d9bd1bce9ef859b2cdb0d2fe6341fed",
+  "sourceTree": "e06cdd2c8923fdd6713dbdfbdf67e4cc8c7ef5a3",
+  "status": "blocked before measured browser frames",
+  "requested": {
+    "modes": [
+      "combined",
+      "live"
+    ],
+    "scenes": [
+      "F2-multi-ability",
+      "F3-overlapping-fields",
+      "L1-franchise-auto"
+    ],
+    "repeats": 3,
+    "warmup": 1,
+    "plays": 8,
+    "throttle": 1,
+    "graphics": "existing full defaults"
+  },
+  "precomputeCompleted": {
+    "F2": {
+      "plays": 8,
+      "frames": 602
+    },
+    "F3": {
+      "plays": 8,
+      "frames": 168
+    }
+  },
+  "attempts": [
+    {
+      "browser": "Playwright-managed Chromium",
+      "failure": "Executable missing: chromium-1234/chrome-linux64/chrome"
+    },
+    {
+      "browser": "installed /usr/bin/chromium via harness-only launch override",
+      "failure": "Browser aborts at process_singleton_posix.cc:297: socket() failed: Operation not permitted (1)"
+    }
+  ],
+  "measuredFrames": 0,
+  "desktopRenderVerified": false,
+  "mobileVerified": false,
+  "mobileReason": "No mobile device/tooling available; no Capacitor project in this snapshot",
+  "productionChanges": false
+}

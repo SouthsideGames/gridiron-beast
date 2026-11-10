@@ -1,0 +1,95 @@
+{
+  "source": "f716b02",
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "totalSeasons": 60,
+  "errors": 0,
+  "problems": 0,
+  "checkpoints": [
+    {
+      "year": 5,
+      "clubObservations": 45,
+      "lineupProblems": 0,
+      "capRoom": {
+        "min": 308100,
+        "mean": 353407.1111111111,
+        "max": 505400
+      },
+      "rosterSize": {
+        "min": 32,
+        "mean": 37.55555555555556,
+        "max": 38
+      },
+      "teamOverall": {
+        "min": 52,
+        "mean": 59.62222222222222,
+        "max": 67
+      }
+    },
+    {
+      "year": 10,
+      "clubObservations": 45,
+      "lineupProblems": 0,
+      "capRoom": {
+        "min": 273900,
+        "mean": 376394.22222222225,
+        "max": 494360
+      },
+      "rosterSize": {
+        "min": 32,
+        "mean": 36.577777777777776,
+        "max": 38
+      },
+      "teamOverall": {
+        "min": 53,
+        "mean": 59.93333333333333,
+        "max": 67
+      }
+    },
+    {
+      "year": 15,
+      "clubObservations": 45,
+      "lineupProblems": 0,
+      "capRoom": {
+        "min": 308500,
+        "mean": 393434.6666666667,
+        "max": 543080
+      },
+      "rosterSize": {
+        "min": 31,
+        "mean": 36.44444444444444,
+        "max": 38
+      },
+      "teamOverall": {
+        "min": 51,
+        "mean": 58.888888888888886,
+        "max": 68
+      }
+    },
+    {
+      "year": 20,
+      "clubObservations": 45,
+      "lineupProblems": 1,
+      "capRoom": {
+        "min": 282860,
+        "mean": 401933.77777777775,
+        "max": 517300
+      },
+      "rosterSize": {
+        "min": 34,
+        "mean": 36.666666666666664,
+        "max": 38
+      },
+      "teamOverall": {
+        "min": 53,
+        "mean": 59.733333333333334,
+        "max": 66
+      }
+    }
+  ],
+  "trades": 182,
+  "limits": "Three-seed health diagnostic, not statistical balance approval. All snapshots at season end."
+}
