@@ -68,3 +68,14 @@ test('30 FPS battery saver: the gate passes every frame at 60 and about every se
   applyFrameRate({ frameRate: 30 }); g = frameGate(); assert.equal(frames.filter((t) => g(t)).length, 60);
   applyFrameRate({});
 });
+
+test('an Apex is ageless in fact: generated at a fixed young age, so his retirement chance is zero in the worst case (spec §5)', async () => {
+  const { generateMonster } = await import('../src/data/monsters.js'); const { createRng } = await import('../src/core/rng.js'); const { retireChance, trueOnset } = await import('../src/data/aging.js');
+  const { offseason } = await import('../src/franchise/progression.js');
+  const rng = createRng(4242); const P = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'CB', 'S', 'K']; const apex = [];
+  for (let i = 0; i < 12000; i++) { const m = generateMonster(rng, { position: P[i % 10], quality: 40 + (i % 45), channel: ['roster', 'draft', 'scouting', 'encounter', 'arrival'][i % 5], age: i % 3 ? null : 20 + (i % 14), yearsPro: i % 3 ? null : i % 14 }); if (m.dev.apex) apex.push(m); }
+  assert.ok(apex.length >= 60, `${apex.length} Apex in 12,000 events`);
+  const before = apex.map((m) => m.age); offseason(apex, createRng(7), { autoAllocate: false }); offseason(apex, createRng(8), { autoAllocate: false });
+  assert.deepEqual(apex.map((m) => m.age), before, 'two offseasons do not age an Apex');
+  for (const m of apex) { const y = (m.age + 1) - (trueOnset(m) + 4); for (const o of [{}, { unsigned: true, injury: 'severe' }, { declinedReserve: true, injury: 'severe' }]) assert.equal(retireChance(y, o), 0, `${m.id} age ${m.age}`); }
+});
