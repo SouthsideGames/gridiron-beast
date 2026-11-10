@@ -38,3 +38,13 @@ test('N9d Prism: no target keeps readiness and does not remove a zone created la
  state.t8.fields={list:[{...placeRect({id:'later',type:'Wind',centerLat:0,width:4,yardFrom:40,yardTo:44,createdAt:0,owner:'home_QB'}),ownerTeam:'home'}],pending:[],seq:1};
  R.preparePreChoice(state,teams);assert.equal(state.t8.fields.list.length,1);assert.equal(st.charges,3);
 });
+
+import { step, newTendencies } from '../src/sim/game-runner.js';
+test('N9d pre-choice timing: Watch and headless Skip agree when runoff ends the half before a snap',()=>{
+ const {state,teams}=setup();Object.assign(teams.away.defense.FS,{species:'prism',type:'Light'});teams.away.defensePlays=['cover_3'];Object.assign(state,{quarter:2,clock:1,clockRunning:true});
+ abilityState(state.t8,'away_FS','prism','prism:0',0).charges=3;
+ state.t8.fields={list:[{...placeRect({id:'old',type:'Wind',centerLat:0,width:4,yardFrom:41,yardTo:43,createdAt:0,owner:'home_QB'}),ownerTeam:'home'}],pending:[],seq:1};
+ const watch=structuredClone(state),skip=structuredClone(state);R.preparePreChoice(watch,teams);
+ for(const st of [watch,skip])step(st,teams,{}, {home:newTendencies(),away:newTendencies()}, {timeout:'none',tempo:'normal'});
+ assert.equal(watch.t8.ability.away_FS.charges,0,'removal happens at the shared pre-choice opportunity');assert.deepEqual(skip,watch,'same result, ledger, fields and RNG even without an actual snap');
+});

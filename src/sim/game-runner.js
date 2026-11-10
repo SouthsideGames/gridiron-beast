@@ -71,6 +71,9 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
   }
   if (state.phase !== 'scrimmage') { done(); return null; }
 
+  // N9d: Watch and Skip share the same pre-choice boundary, including period-ending runoff and fourth-down choices.
+  R.preparePreChoice(state, teams);
+
   // Defensive timeout to stop the clock?
   const defSide = R.opponent(side);
   if ((choices.timeout === defSide) || (!choices.timeout && ctrl(defSide).timeoutOnDefense(state))) { R.timeout(state, defSide); }
@@ -95,8 +98,6 @@ export function step(state, teams, controllers, tendencies, choices = {}) {
     if (decision === 'fg') { done(); const from = state.ballOn; const { text, scored, res } = R.doFieldGoal(state, teams, { signature: !!choices.fgSignature || aiSig }); return { kind: 'field_goal', text, scored, res, kicking: side, from }; }
   }
 
-  // N9d: save the shared warning/removal before either controller selects a play.
-  R.preparePreChoice(state, teams);
   // Scrimmage play.
   const offId = choices.offensePlayId || ctrl(side).offensePlay(state, offTeam, offTeam.offensePlays, tendencies[side], rng, defTeam);
   const defId = choices.defensePlayId || ctrl(defSide).defensePlay(state, defTeam, defTeam.defensePlays, tendencies[side], rng, offTeam, tendencies[defSide]);
