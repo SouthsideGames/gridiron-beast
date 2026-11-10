@@ -1,0 +1,47 @@
+{
+  "source": "f716b02c41c81211d80e7389dc0cefd4c16ae155",
+  "sourceTree": "d4e36b76eae24ca7c4aac9fbdc8f13e588f8afd2",
+  "scope": "Individual generation only; does not certify franchise pool generation or full-game replay.",
+  "manifest": {
+    "seed": 870006,
+    "individuals": 100000,
+    "formSelection": "uniform across all stage-0 forms",
+    "apexEligibleRolls": 10000,
+    "replaySeeds": [
+      1,
+      100
+    ]
+  },
+  "invariants": {
+    "checked": 100000,
+    "failures": 0,
+    "examples": [],
+    "byPosition": {
+      "OL": 9901,
+      "LB": 9972,
+      "CB": 10449,
+      "S": 9981,
+      "K": 9711,
+      "TE": 10041,
+      "RB": 9876,
+      "QB": 9913,
+      "WR": 10454,
+      "DL": 9702
+    }
+  },
+  "apex": {
+    "rolls": 10000,
+    "count": 99,
+    "rate": 0.0099,
+    "wilson95": [
+      0.008138971998042465,
+      0.012037437032664302
+    ]
+  },
+  "replay": {
+    "checked": 100,
+    "failures": 0
+  },
+  "coverage": true,
+  "resultHash": "2e227623d403743a7f3afd5730169b164f5fd305eeb54abbbfa18a23875fc419"
+}
