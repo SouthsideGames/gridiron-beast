@@ -27,7 +27,7 @@ Raw evidence: `apex-resource-bound.json` (every sampled individual and every aut
 
 ## Production franchise baseline
 
-The existing production lifecycle benchmark is running for seed 1 through twenty seasons. It includes staff automation, real football and Clash settlement, contracts, free agency, draft, trades, aging, retirement and save round trips. Its hands-off-owner policy and diagnostic board reinstatement are documented in `tools/ai-franchise-benchmark.mjs` and `docs/AI_FRANCHISE_BENCHMARK.md`. It is an initial single-seed health diagnostic, not statistical balance approval.
+The existing production lifecycle benchmark completed seed 1 through twenty seasons. It includes staff automation, real football and Clash settlement, contracts, free agency, draft, trades, aging, retirement and save round trips. Its hands-off-owner policy and diagnostic board reinstatement are documented in `tools/ai-franchise-benchmark.mjs` and `docs/AI_FRANCHISE_BENCHMARK.md`. It is an initial single-seed health diagnostic, not statistical balance approval.
 
 Command:
 
@@ -35,7 +35,18 @@ Command:
 node tools/ai-franchise-benchmark.mjs --seeds=1 --seasons=20 --label=task8-m6-pinned-m5-baseline --json=docs/task8/m6/ai-20-season-seed-1.json
 ```
 
-Results and checkpoint summaries will be added when the run finishes. The existing snapshot schema does not explicitly record Apex status, Temper, per-attribute ceilings or mastery credits, so this report cannot use it to certify those career gates.
+Result: **20/20 seasons, zero reported errors or invariant violations**, 300 AI club-season rows, 62 trades. All AI lineups were legal at every recorded season end; no negative cap room was recorded. Runtime was 226 seconds with a sampled peak heap of 561 MB (diagnostic only).
+
+| Season | AI roster sizes | Mean team OVR | Mean cap room | Mean unused cap |
+| --- | --- | --- | --- | --- |
+| 5 | 36–38 | 59.47 | $349,639 | 19.42% |
+| 10 | 34–38 | 59.73 | $370,548 | 20.59% |
+| 15 | 34–38 | 59.40 | $385,471 | 21.42% |
+| 20 | 35–38 | 59.67 | $398,435 | 22.14% |
+
+**Economy review flag:** every AI club retained at least $283,800 of cap room at all twenty season-end observations. Spare room grows at the checkpoints. This warrants broader-seed and in-season offer-pressure analysis before approving salary/cap balance; no arbitrary new pass threshold or tuning was applied.
+
+Raw evidence: `ai-20-season-seed-1.json`; reproducible checkpoint calculations: `node tools/task8-m6-summarize.mjs`; compact result: `franchise-summary.json`. The existing snapshot schema does not explicitly record Apex status, Temper, per-attribute ceilings or mastery credits, so this report cannot use it to certify those career gates.
 
 ## Remaining acceptance work
 
