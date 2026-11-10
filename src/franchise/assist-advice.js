@@ -21,7 +21,7 @@ export function rosterWarnings(f, { all = false } = {}) {
   if (needs.length) out.push({ level: 'warn', key: 'depth', text: `Short at ${needs.map((n) => n.position).join(', ')}: fewer healthy monsters than starting spots. Scout for ${needs.length === 1 ? 'that position' : 'those positions'}.`, screen: 'scout' });
   const hurt = f.roster.filter((m) => m.injury).length; if (hurt >= 3) out.push({ level: 'warn', key: 'hurt', text: `${hurt} monsters injured. Easier training and a bye help them recover.`, screen: 'roster' });
   if (!cap.over && cap.remaining < cap.cap * 0.03) out.push({ level: 'warn', key: 'tight', text: `Only ${fmt(cap.remaining)} cr of cap room left: a new signing may not fit.`, screen: 'contracts' });
-  const pts = f.roster.filter((m) => (m.points || 0) > 0).length; if (pts && !f.settings?.autoPoints) out.push({ level: 'warn', key: 'points', text: `${pts} monster${pts === 1 ? ' has' : 's have'} attribute points to spend (tap them on the Roster).`, screen: 'roster' });
+  const pts = f.roster.filter((m) => (m.points || 0) > 0).length; if (pts && !f.settings?.autoPoints) out.push({ level: 'warn', key: 'points', text: `${pts} monster${pts === 1 ? ' has' : 's have'} training points to invest (tap them on the Roster).`, screen: 'roster' });
   if (f.offseason) { const n = F.offseasonPending(f).length; if (n) out.push({ level: 'warn', key: 'expiring', text: `${n} contract${n === 1 ? '' : 's'} to decide before the draft.`, screen: 'offseason' }); }
   return out;
 }

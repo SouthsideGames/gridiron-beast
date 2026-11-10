@@ -14,6 +14,7 @@ import { abilitiesHtml, masteryBarHtml, hasAbilities, MODE_LABEL } from '../abil
 import { apexEmblem, apexClass, apexFactsHtml, openApexDiscovery } from '../apex-ui.js';
 import { apexKnown } from '../../franchise/t8/discovery.js';
 import { trainingCost, attributeBar } from '../../franchise/t8/progression.js';
+import { reserveAward } from '../../franchise/t8/awards.js';
 import { speciesSheet, silhouette } from './dex.js';
 import { buildDepthChart, depthOrder, GROUP_SLOTS, OFFENSE_GROUPS, DEFENSE_GROUPS, borrowedSlots } from '../../franchise/roster.js';
 import { monsterSprite, typeGlyph, portraitSprite } from '../pixel-monster.js';
@@ -118,7 +119,7 @@ export function registerRosterScreens(Router, app) {
     const v = F.devSlotsView(f);
     const line = (x, inSlot) => `<div class="item static dev-row"><div class="grow"><div class="name">${esc(x.name)} <span class="dim">${esc(x.position)}</span>${inSlot ? (x.manual ? ' <span class="chip accent">your pick</span>' : ' <span class="chip">auto</span>') : ''}</div><div class="sub">age ${x.age} · ${x.ovr} OVR · potential ${x.potential}</div></div>${inSlot ? `<button class="btn small" data-action="dev-off" data-id="${x.id}" aria-label="Take ${esc(x.name)} out of development">Remove</button>` : `<button class="btn small primary" data-action="dev-on" data-id="${x.id}" aria-label="Put ${esc(x.name)} in a development slot">Develop</button>`}</div>`;
     return `<h3>Development slots (${v.slots.length}/${v.size})</h3>
-      <p class="dim">Reserves aged 25 or under with room to grow (potential at least 3 above overall) practise with the first team: <b>+${v.xpPerGame} XP</b> after every game they do not start. At most ${v.perPosition} per position. Slots fill automatically, successors first, then the biggest upside; your own picks stay until you change them.</p>
+      <p class="dim">Reserves aged 25 or under with room to grow (an attribute their position uses at least 3 below its ceiling) practise with the first team: <b>+${FR.toNumber(reserveAward().xp)} level XP</b> and <b>${FR.toNumber(reserveAward().training) * 100}% of a training bar</b> (a quarter of a starter's share) after every game they do not start. At level 50 they earn the training only. A discovered Apex is eligible at any age. At most ${v.perPosition} per position. Slots fill automatically, successors first, then the biggest upside; your own picks stay until you change them.</p>
       <div class="list">${v.slots.map((x) => line(x, true)).join('') || '<p class="dim">Nobody is eligible right now.</p>'}</div>
       ${v.candidates.length ? `<details style="margin-top:6px"><summary class="muted" style="cursor:pointer">Other eligible reserves (${v.candidates.length})</summary><div class="list" style="margin-top:6px">${v.candidates.map((x) => line(x, false)).join('')}</div></details>` : ''}
       ${f.devSlots ? '<button class="btn small ghost" data-action="dev-reset" style="margin-top:6px">Let the coaches fill every slot</button>' : ''}`;
